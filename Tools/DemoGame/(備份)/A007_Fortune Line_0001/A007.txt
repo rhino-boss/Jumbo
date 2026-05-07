@@ -1,0 +1,50 @@
+
+(方法一)
+
+主要打包用到的
+
+pyinstaller -F -w Game.py --icon=Source\img\icon.png
+
+
+新建環境(終端機)
+
+python -m venv new_env
+
+
+
+(方法二)
+
+設定路徑
+
+cd C:\Users\rhinshen\Mine\Employee_0419\4_DemoGame (PY)\A007_Fortune Line
+
+
+主要打包用到的
+
+pyinstaller -F -w Game.py --icon=Source\img\icon.png
+
+
+環境設定
+
+conda create -n PyexeForge python=3.5
+activate PyexeForge
+conda install -c conda-forge numpy
+pip install pyinstaller 
+
+
+conda create -n PyexeForge python=3.5
+activate PyexeForge
+conda install -c conda-forge numpy blas=*=openblas
+pip install pyinstaller
+
+
+
+
+
+
+
+
+
+
+
+

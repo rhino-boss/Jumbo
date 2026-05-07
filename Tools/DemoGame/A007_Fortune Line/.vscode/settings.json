@@ -1,0 +1,14 @@
+{
+    // "python.pythonPath": "c:\\Users\\rhinshen\\Anaconda3\\python.exe",
+    "python.formatting.provider": "none",
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "160"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    // "python.linting.enabled": true,
+    // "python.linting.pylintEnabled": true,
+    // referrnce url: https://blog.csdn.net/qq_34801642/article/details/106475019
+}

@@ -1,0 +1,5 @@
+
+cd C:\Users\rhinshen\Mine\Employee_0419\Theme\Demogame_pygame\demogame_wukong
+
+pyinstaller -F -w FreeGame_v2.py --icon=Source\img\icon.png
+

@@ -1,0 +1,50 @@
+
+### 特色活耀→Free Game活耀度
+(arctan((FeatureHitRate-0.78)*25)+1.7)*100/3.4
+
+FeatureHitRate=觸發特色的頻率(free觸發週期)
+
+
+
+### 和諧度
+
+(ContinuityRate*0.7 + WinStopRate*0.3-15)*100/(75-15)
+
+Continuity = 倍數介於平均倍數的0.5倍到2倍之間
+WinStopRate=倍數介於 200~500 倍之間
+
+
+### 輸贏比
+
+描述遊戲每把或每次Free Game會贏的機率高低
+
+((BonusGameOdds*FeatureRTP+BaseGameOdds*(RTP-FeatureRTP))/RTP-15)*100/(90-15)
+
+BaseGameOdds = 大於1倍
+BonusGameOdds = 大於1倍
+
+
+### 特色強度
+
+85+(FeatureRatio-1)*15/1.7 , FeatureRatio>1
+(FeatureRatio-0.35)*85/0.65 , else
+
+FeatureRatio=Free game RTP~/~ Base game RTP
+
+### 劇烈度
+
+(CV-3)*100/15
+
+CV=Coefficient~of~Variation
+
+### 好壞差
+
+90+(GB-300)*10/250，GB>250
+
+GB*90/250，else
+
+GB=第95百分位數-第20百分位數
+
+
+
+

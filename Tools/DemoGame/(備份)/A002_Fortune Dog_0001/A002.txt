@@ -1,0 +1,42 @@
+
+cd C:\Users\rhinshen\Mine\Employee_0419\Theme\Demogame_pygame\demogame_howl_wolf
+
+pyinstaller -F -w BaseGame_v2.py --icon=Source\img\icon.png
+pyinstaller -F -w FreeGame_v2.py --icon=Source\img\icon.png
+
+
+---
+
+
+
+python -m venv new_env
+activate
+
+
+---
+
+
+pyinstaller -F PyinstallerDemo.py
+
+
+conda create -n PyexeForge python=3.5
+activate PyexeForge
+conda install -c conda-forge numpy
+pip install pyinstaller 
+
+
+conda create -n PyexeForge python=3.5
+activate PyexeForge
+conda install -c conda-forge numpy blas=*=openblas
+pip install pyinstaller
+
+
+
+
+
+
+
+
+
+
+
