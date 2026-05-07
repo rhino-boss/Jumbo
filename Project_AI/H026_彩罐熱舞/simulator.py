@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import math
 import random
 import sys
 import time
@@ -53,7 +54,7 @@ DEFAULT_RECORD_DIR = SCRIPT_DIR / "Record"
 
 # Interactive / 直接執行時的預設設定
 INTERACTIVE_BET = 1
-INTERACTIVE_ROUNDS = 10**5
+INTERACTIVE_ROUNDS = 10**7
 INTERACTIVE_BET_MODE = "normal"  # "normal" or "featurebuy"
 INTERACTIVE_OUTPUT_XLSX = ""
 
@@ -79,7 +80,151 @@ def load_config(path: Path) -> dict[str, Any]:
             raw = raw.split("=", 1)[1].strip()
         if raw.endswith(";"):
             raw = raw[:-1].strip()
-    return json.loads(raw)
+    config = json.loads(raw)
+    if "rows" not in config and "arr_reels" in config:
+        return normalize_box_config(config)
+    return config
+
+
+def normalize_box_config(config: dict[str, Any]) -> dict[str, Any]:
+    base_codes = ["WW", "C1", "M1", "M2", "M3", "M4", "M5", "A", "K", "Q", "J"]
+    kind_map = {
+        "WW": "wild",
+        "C1": "scatter",
+        "M1": "high",
+        "M2": "high",
+        "M3": "high",
+        "M4": "high",
+        "M5": "high",
+        "A": "low",
+        "K": "low",
+        "Q": "low",
+        "J": "low",
+    }
+    scene_defs = {
+        "BG": ("weight_table_bg", [0, 1, 2]),
+        "FG": ("weight_table_fg", [3, 4, 5]),
+        "BF": ("weight_table_bf", [6]),
+    }
+    base_symbol_of = [int(value) for value in config["base_symbol_of"]]
+    is_gold_symbol = [int(value) for value in config["is_gold_symbol"]]
+    is_score_symbol = [int(value) for value in config["is_score_symbol"]]
+    symbol_str = {int(key): str(value) for key, value in config["symbol_str"].items()}
+    arr_reels = config["arr_reels"]
+    arr_reels_weight = config["arr_reels_weight"]
+    reels_len = config["reels_len"]
+
+    def scene_symbol_weights(scene: str) -> list[dict[str, int]]:
+        table_key, strip_indexes = scene_defs[scene]
+        table_weights = [int(value) for value in config[table_key]]
+        totals = [dict.fromkeys(base_codes, 0) for _ in range(int(config["reel_num"]))]
+        for local_idx, strip_idx in enumerate(strip_indexes):
+            table_weight = table_weights[local_idx]
+            if table_weight <= 0:
+                continue
+            for reel_idx in range(int(config["reel_num"])):
+                limit = int(reels_len[strip_idx][reel_idx])
+                for row_idx in range(limit):
+                    symbol_id = int(arr_reels[strip_idx][row_idx][reel_idx])
+                    base_id = base_symbol_of[symbol_id]
+                    code = symbol_str[base_id]
+                    weight = int(arr_reels_weight[strip_idx][row_idx][reel_idx])
+                    if code in totals[reel_idx]:
+                        totals[reel_idx][code] += table_weight * weight
+        result: list[dict[str, int]] = []
+        for reel_map in totals:
+            gcd_value = 0
+            for code, value in reel_map.items():
+                if code != "WW" and value > 0:
+                    gcd_value = math.gcd(gcd_value, value)
+            gcd_value = gcd_value or 1
+            result.append({code: value // gcd_value for code, value in reel_map.items() if code != "WW" and value > 0})
+        return result
+
+    def scene_gold_chance(scene: str) -> float:
+        table_key, strip_indexes = scene_defs[scene]
+        table_weights = [int(value) for value in config[table_key]]
+        total_score = 0
+        total_gold = 0
+        for local_idx, strip_idx in enumerate(strip_indexes):
+            table_weight = table_weights[local_idx]
+            if table_weight <= 0:
+                continue
+            for reel_idx in (1, 2, 3):
+                limit = int(reels_len[strip_idx][reel_idx])
+                for row_idx in range(limit):
+                    symbol_id = int(arr_reels[strip_idx][row_idx][reel_idx])
+                    base_id = base_symbol_of[symbol_id]
+                    weight = int(arr_reels_weight[strip_idx][row_idx][reel_idx]) * table_weight
+                    if is_score_symbol[base_id]:
+                        total_score += weight
+                        if is_gold_symbol[symbol_id]:
+                            total_gold += weight
+        return round(total_gold / total_score, 6) if total_score else 0.0
+
+    def average_multiplier_weights() -> list[int]:
+        matrix_names = [
+            "weight_multiple_before",
+            "weight_multiple_after",
+            "weight_multiple_r3_before",
+            "weight_multiple_r3_after",
+            "weight_multiple_special",
+        ]
+        values: list[int] = []
+        for row_idx, _multiplier in enumerate(config["value_multiplier_range"]):
+            samples: list[int] = []
+            for matrix_name in matrix_names:
+                row = config[matrix_name][row_idx]
+                samples.extend(int(value) for value in row if int(value) > 0)
+            values.append(int(round(sum(samples) / len(samples))) if samples else 0)
+        return values
+
+    symbols: dict[str, Any] = {}
+    pay_table = config["pay_table"]
+    default_coin_in = float(config["default_coin_in"])
+    asset_map = config.get("asset_map", {})
+    for base_id, code in sorted(symbol_str.items()):
+        if code not in base_codes:
+            continue
+        symbol_info: dict[str, Any] = {
+            "kind": kind_map[code],
+            "asset": asset_map.get(code, ""),
+        }
+        if code not in {"WW", "C1"}:
+            symbol_info["goldable"] = True
+            symbol_info["pays"] = {}
+            for offset, hit_count in enumerate((3, 4, 5)):
+                pay = float(pay_table[base_id][offset]) / default_coin_in
+                if pay:
+                    symbol_info["pays"][str(hit_count)] = int(pay) if pay.is_integer() else pay
+        symbols[code] = symbol_info
+
+    return {
+        "game_id": str(config["game_id"]),
+        "game_name": str(config.get("game_name", "")),
+        "display_name": str(config.get("display_name", config.get("game_name", ""))),
+        "rows": int(config["window_size"]),
+        "cols": int(config["reel_num"]),
+        "default_bet": int(config["bet_options"][0]),
+        "bet_options": [int(value) for value in config["bet_options"]],
+        "buy_feature_cost": int(config["featurebuy"]),
+        "fg_awards": {"3": 15, "4": 17, "5": 19},
+        "gold_reels": [1, 2, 3],
+        "gold_chance": {scene: scene_gold_chance(scene) for scene in ("BG", "FG", "BF")},
+        "multiplier_values": [int(value) for value in config["value_multiplier_range"]],
+        "multiplier_weights": average_multiplier_weights(),
+        "strip_name_map": list(config["strip_name_map"]),
+        "weight_table_bg": [int(value) for value in config["weight_table_bg"]],
+        "weight_table_fg": [int(value) for value in config["weight_table_fg"]],
+        "weight_table_bf": [int(value) for value in config["weight_table_bf"]],
+        "weight_cum_table_bg": [int(value) for value in config["weight_cum_table_bg"]],
+        "weight_cum_table_fg": [int(value) for value in config["weight_cum_table_fg"]],
+        "weight_cum_table_bf": [int(value) for value in config["weight_cum_table_bf"]],
+        "fg_table_rule": config["fg_table_rule"],
+        "symbols": symbols,
+        "line_patterns": [[int(value) for value in row] for row in config["paylines"]],
+        "reel_symbol_weights": {scene: scene_symbol_weights(scene) for scene in ("BG", "FG", "BF")},
+    }
 
 
 def run_original_h026_simulation(rounds: int, bet: int, mode: str, output_xlsx: str) -> tuple[dict[str, Any], Path]:
