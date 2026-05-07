@@ -1,0 +1,12 @@
+{
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "editor.formatOnSave": true,
+    "black-formatter.args": [
+        "--line-length",
+        "300"
+    ],
+    "editor.wordWrap": "off", // 開啟自動換行
+    "editor.wordWrapColumn": 300 // 設定每行最大字數（超過80字自動換行）
+}

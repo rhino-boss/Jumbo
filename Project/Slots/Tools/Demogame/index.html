@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H026 Demogame Offline</title>
+  <style>
+    :root {
+      --bg-a: #130723;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section { margin-bottom: 12px; }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top { margin-bottom: 10px; }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255,255,255,0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255,255,255,0.1), var(--slot-shadow);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255,255,255,0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    @keyframes reelSpin {
+      0% { transform: translateY(-12px); }
+      100% { transform: translateY(12px); }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0,0,0,0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      bottom: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      top: 6px;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255,255,255,0.18);
+    }
+
+    .detail-stack { display: grid; gap: 10px; }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .headline {
+      font-size: 1.28rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b4;
+    }
+
+    .subline {
+      margin-top: 4px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #dff6ff;
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .rng-row,
+    .spin-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <section class="section">
+      <div class="card title-card">
+        <div class="title-id" id="gameId">Game ID H026</div>
+        <div class="title-name" id="gameName">H026 Demogame</div>
+        <div class="title-sub">Offline Single File Playable Demo</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="card feature-card">
+        <div class="feature-top">
+          <div class="feature-mode" id="modeText">Base Game</div>
+          <div class="feature-status" id="featureStatus">Spins Left 0 | Drop -</div>
+        </div>
+        <div class="feature-bottom">
+          <div class="feature-pill-group">
+            <div class="feature-pill"><span class="k">Current Spin</span><span class="v" id="spinMultiValue">x1</span></div>
+            <div class="feature-pill"><span class="k">Accum</span><span class="v" id="carryMultiValue">x0</span></div>
+            <div class="feature-pill"><span class="k">Scatter</span><span class="v" id="scatterValue">0</span></div>
+            <div class="feature-pill"><span class="k">FG Left</span><span class="v" id="fgLeftValue">0</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="board-shell"><div class="board-grid" id="board"></div></div>
+      <div class="message-bar" id="messageBar">Ready</div>
+    </section>
+
+    <section class="section">
+      <button class="buy-button" id="buyFeatureBtn" type="button">Buy Feature</button>
+    </section>
+
+    <section class="section">
+      <div class="player-grid">
+        <div class="player-card"><span class="k">Balance</span><span class="v" id="balanceValue">100,000.00</span></div>
+        <div class="player-card"><span class="k">Bet</span><span class="v" id="betValue">100.00</span></div>
+        <div class="player-card"><span class="k">Win</span><span class="v" id="winValue">0.00</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="controls">
+        <button class="control" id="resetBtn" type="button">Reset</button>
+        <button class="control" id="betBtn" type="button">Bet</button>
+        <button class="spin-button" id="spinBtn" type="button">Spin</button>
+        <div class="control disabled">Auto</div>
+        <div class="control disabled">Turbo</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="stats-grid">
+        <div class="stat-card"><span class="k">RTP</span><span class="v" id="rtpValue">0.00%</span></div>
+        <div class="stat-card"><span class="k">Hit Rate</span><span class="v" id="hitRateValue">0.00%</span></div>
+        <div class="stat-card"><span class="k">FG Trigger</span><span class="v" id="fgTriggerValue">0</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="detail-stack">
+        <div class="detail-card">
+          <span class="detail-title">Recent Spin</span>
+          <div class="headline" id="headline">Ready To Spin</div>
+          <div class="subline" id="subline">Open directly from file system. No network required.</div>
+          <div class="spin-list" id="spinList"></div>
+        </div>
+        <div class="detail-card">
+          <span class="detail-title">Line Wins</span>
+          <div class="line-list" id="lineList"></div>
+        </div>
+        <div class="detail-card">
+          <span class="detail-title">Reel RNG</span>
+          <div class="rng-list" id="rngList"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click this HTML to play offline. No server. No fetch.</div>
+  </main>
+
+  <script src="./H026_Demogame_data.js"></script>
+  <script>
+    const Box = window.H026_BOX_DATA;
+    const state = {
+      balance: 100000,
+      totalBet: 0,
+      totalWin: 0,
+      totalSpins: 0,
+      hitSpins: 0,
+      freegameTriggerCount: 0,
+      normalTriggerCount: 0,
+      featurebuyTriggerCount: 0,
+      retriggerCount: 0,
+      roundCount: 0,
+      betIndex: 0,
+      activeRound: null,
+      activeSpin: null,
+      isBusy: false,
+      pendingRound: null,
+      pendingSpinIndex: 0
+    };
+
+    const boardEl = document.getElementById("board");
+    const messageBarEl = document.getElementById("messageBar");
+    const modeTextEl = document.getElementById("modeText");
+    const featureStatusEl = document.getElementById("featureStatus");
+    const spinMultiValueEl = document.getElementById("spinMultiValue");
+    const carryMultiValueEl = document.getElementById("carryMultiValue");
+    const scatterValueEl = document.getElementById("scatterValue");
+    const fgLeftValueEl = document.getElementById("fgLeftValue");
+    const balanceValueEl = document.getElementById("balanceValue");
+    const betValueEl = document.getElementById("betValue");
+    const winValueEl = document.getElementById("winValue");
+    const rtpValueEl = document.getElementById("rtpValue");
+    const hitRateValueEl = document.getElementById("hitRateValue");
+    const fgTriggerValueEl = document.getElementById("fgTriggerValue");
+    const headlineEl = document.getElementById("headline");
+    const sublineEl = document.getElementById("subline");
+    const lineListEl = document.getElementById("lineList");
+    const rngListEl = document.getElementById("rngList");
+    const spinListEl = document.getElementById("spinList");
+    const gameIdEl = document.getElementById("gameId");
+    const gameNameEl = document.getElementById("gameName");
+    const spinBtn = document.getElementById("spinBtn");
+    const buyFeatureBtn = document.getElementById("buyFeatureBtn");
+    const betBtn = document.getElementById("betBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+    function randInt(max) { return Math.floor(Math.random() * max); }
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    function formatMoney(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatPercent(rate) { return `${(Number(rate) * 100).toFixed(2)}%`; }
+    function getBetMulti() { return Box.bet_options[state.betIndex] || Box.bet_options[0]; }
+    function writeMessage(text) { messageBarEl.textContent = text; }
+
+    function coinIn(betMode) {
+      const base = getBetMulti() * Box.default_coin_in * Box.normalbet;
+      return betMode === Box.mode_featurebuy ? base * Box.featurebuy : base;
+    }
+
+    function normalizeAssetPath(path) {
+      if (!path) return "";
+      const normalized = String(path).replace(/\\/g, "/");
+      if (normalized.startsWith("./") || normalized.startsWith("../")) return normalized;
+      if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("file:///")) {
+        const marker = "/Source/";
+        const sourceIndex = normalized.indexOf(marker);
+        if (sourceIndex >= 0) {
+          return `.${normalized.slice(sourceIndex)}`;
+        }
+      }
+      if (normalized.startsWith("Source/")) return `./${normalized}`;
+      return normalized;
+    }
+
+    function getAsset(symbolCode) {
+      return normalizeAssetPath(Box.asset_map[symbolCode] || "");
+    }
+
+    function symbolName(symbolId) {
+      const code = Box.symbol_str[String(symbolId)];
+      if (code === "WW") return "Wild";
+      if (code === "C1") return "Scatter";
+      return code;
+    }
+
+    function pickByCum(cumWeight) {
+      const total = cumWeight[cumWeight.length - 1];
+      if (total <= 0) return { index: 0, rng_value: 0, rng_total: total };
+      const rngValue = randInt(total);
+      for (let index = 0; index < cumWeight.length; index += 1) {
+        if (rngValue < cumWeight[index]) {
+          return { index, rng_value: rngValue, rng_total: total };
+        }
+      }
+      return { index: cumWeight.length - 1, rng_value: rngValue, rng_total: total };
+    }
+
+    function pickMultiplier(cumMatrix, stripIdx) {
+      const pick = pickByCum(cumMatrix.map((row) => row[stripIdx]));
+      return {
+        multiplier: Box.value_multiplier_range[pick.index],
+        multiplier_index: pick.index,
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total
+      };
+    }
+
+    function pickInitialMultiplier(tableId, col) {
+      return col === 2
+        ? pickMultiplier(Box.weight_cum_multiple_r3_before, tableId)
+        : pickMultiplier(Box.weight_cum_multiple_before, tableId);
+    }
+
+    function pickDropMultiplier(tableId, col) {
+      return col === 2
+        ? pickMultiplier(Box.weight_cum_multiple_r3_after, tableId)
+        : pickMultiplier(Box.weight_cum_multiple_after, tableId);
+    }
+
+    function serializeBoard(board, goldMask, multiMask, specialMask) {
+      return board.map((row, rowIndex) => row.map((symbol, colIndex) => {
+        if (symbol < 0) {
+          return { symbol_id: -1, symbol_code: "", symbol_name: "Empty", image: "", is_gold: false, is_wild: false, is_scatter: false, multiplier: 0, is_special_gold: false };
+        }
+        const code = Box.symbol_str[String(symbol)];
+        return {
+          symbol_id: symbol,
+          symbol_code: code,
+          symbol_name: symbolName(symbol),
+          image: getAsset(code),
+          is_gold: Boolean(goldMask[rowIndex][colIndex]),
+          is_wild: symbol === 0,
+          is_scatter: symbol === 1,
+          multiplier: multiMask[rowIndex][colIndex],
+          is_special_gold: Boolean(specialMask?.[rowIndex]?.[colIndex])
+        };
+      }));
+    }
+
+    function chooseTable(sceneMode) {
+      let pick;
+      let tableId;
+      let weights;
+      if (sceneMode === Box.scene_bg) {
+        pick = pickByCum(Box.weight_cum_table_bg);
+        tableId = pick.index;
+        weights = Box.weight_table_bg;
+      } else if (sceneMode === Box.scene_fg) {
+        pick = pickByCum(Box.weight_cum_table_fg);
+        tableId = 3 + pick.index;
+        weights = Box.weight_table_fg;
+      } else {
+        pick = pickByCum(Box.weight_cum_table_bf);
+        tableId = 6 + pick.index;
+        weights = Box.weight_table_bf;
+      }
+      return {
+        table_id: tableId,
+        table_name: Box.strip_name_map[tableId],
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total,
+        weights
+      };
+    }
+
+    function generateBoard(tableId) {
+      const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const goldMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const multiMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const reelRng = [];
+
+      for (let col = 0; col < Box.reel_num; col += 1) {
+        const reelLength = Box.reels_len[tableId][col];
+        const pick = pickByCum(Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]));
+        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength });
+        for (let row = 0; row < Box.window_size; row += 1) {
+          const symbol = Box.arr_reels[tableId][(pick.index + row) % reelLength][col];
+          const baseSymbol = Box.base_symbol_of[symbol];
+          board[row][col] = baseSymbol;
+          goldMask[row][col] = Box.is_gold_symbol[symbol];
+        }
+      }
+      return { board, goldMask, multiMask, reelRng };
+    }
+
+    function countScatter(board) {
+      return board.flat().filter((symbol) => symbol === 1).length;
+    }
+
+    function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
+      const goldPositions = [];
+      for (let row = 0; row < Box.window_size; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (goldMask[row][col] === 1) goldPositions.push([row, col]);
+        }
+      }
+      const specialPool = {
+        gold_count: goldPositions.length,
+        candidate_weight: 0,
+        rng_value: null,
+        rng_total: Box.special_pool_weight_base,
+        triggered: false,
+        special_index: null
+      };
+      const assignments = [];
+      if (goldPositions.length === 0) return { special_pool: specialPool, assignments };
+
+      let specialIdx = -1;
+      if (tableId < 3) {
+        const candidateWeight = Box.weight_special_pool[Math.min(goldPositions.length, 9)][tableId];
+        specialPool.candidate_weight = candidateWeight;
+        if (candidateWeight > 0) {
+          const poolRng = randInt(Box.special_pool_weight_base);
+          specialPool.rng_value = poolRng;
+          if (poolRng < candidateWeight) {
+            specialIdx = randInt(goldPositions.length);
+            specialPool.triggered = true;
+            specialPool.special_index = specialIdx;
+          }
+        }
+      }
+
+      goldPositions.forEach(([row, col], index) => {
+        const picked = index === specialIdx
+          ? pickMultiplier(Box.weight_cum_multiple_special, tableId)
+          : pickInitialMultiplier(tableId, col);
+        multiMask[row][col] = picked.multiplier;
+        specialMask[row][col] = index === specialIdx ? 1 : 0;
+        assignments.push({
+          row,
+          col,
+          multiplier: picked.multiplier,
+          multiplier_index: picked.multiplier_index,
+          rng_value: picked.rng_value,
+          rng_total: picked.rng_total,
+          weight_source: index === specialIdx ? "special" : "before"
+        });
+      });
+
+      return { special_pool: specialPool, assignments };
+    }
+
+    function getPay(symbol, lineLen, betMulti) {
+      if (symbol < 0 || Box.is_score_symbol[symbol] === 0 || lineLen < 3) return 0;
+      return Box.pay_table[symbol][lineLen - 3] * betMulti;
+    }
+
+    function evaluateBoard(board, betMulti, cascadeIndex) {
+      const hitMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const lineWins = [];
+      let totalPay = 0;
+
+      for (let lineIndex = 0; lineIndex < Box.paylines.length; lineIndex += 1) {
+        let bestSymbol = -1;
+        let bestLen = 0;
+        let bestPay = 0;
+        let triggeredByWild = false;
+        const firstRow = Box.paylines[lineIndex][0];
+        const firstSymbol = board[firstRow][0];
+        if (firstSymbol === 1) continue;
+
+        if (firstSymbol === 0) {
+          Box.symbols_score.forEach((symbol) => {
+            let lineLen = 0;
+            let usedWild = false;
+            for (let reel = 0; reel < Box.reel_num; reel += 1) {
+              const row = Box.paylines[lineIndex][reel];
+              const symbolOnLine = board[row][reel];
+              if (symbolOnLine === symbol || symbolOnLine === 0) {
+                if (symbolOnLine === 0) usedWild = true;
+                lineLen += 1;
+              } else {
+                break;
+              }
+            }
+            const pay = getPay(symbol, lineLen, betMulti);
+            if (pay > bestPay) {
+              bestSymbol = symbol;
+              bestLen = lineLen;
+              bestPay = pay;
+              triggeredByWild = usedWild;
+            }
+          });
+        } else {
+          let lineLen = 0;
+          let usedWild = false;
+          for (let reel = 0; reel < Box.reel_num; reel += 1) {
+            const row = Box.paylines[lineIndex][reel];
+            const symbolOnLine = board[row][reel];
+            if (symbolOnLine === firstSymbol || symbolOnLine === 0) {
+              if (symbolOnLine === 0) usedWild = true;
+              lineLen += 1;
+            } else {
+              break;
+            }
+          }
+          bestSymbol = firstSymbol;
+          bestLen = lineLen;
+          bestPay = getPay(bestSymbol, bestLen, betMulti);
+          triggeredByWild = usedWild;
+        }
+
+        if (bestPay <= 0) continue;
+
+        const positions = [];
+        for (let reel = 0; reel < bestLen; reel += 1) {
+          const row = Box.paylines[lineIndex][reel];
+          hitMask[row][reel] = 1;
+          positions.push([row, reel]);
+        }
+        totalPay += bestPay;
+        lineWins.push({
+          line_index: lineIndex + 1,
+          symbol_id: bestSymbol,
+          symbol_code: Box.symbol_str[String(bestSymbol)],
+          symbol_name: symbolName(bestSymbol),
+          line_length: bestLen,
+          line_pay: bestPay,
+          positions,
+          cascade_index: cascadeIndex,
+          is_triggered_by_wild: triggeredByWild
+        });
+      }
+
+      return { total_pay: totalPay, hit_mask: hitMask, line_wins: lineWins };
+    }
+
+    function applyHitAndTransform(board, goldMask, multiMask, hitMask, multiplierSum) {
+      let addedMultiplier = 0;
+      const hitPositions = [];
+      const convertedGoldPositions = [];
+      for (let row = 0; row < Box.window_size; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (hitMask[row][col] !== 1) continue;
+          hitPositions.push([row, col]);
+          if (goldMask[row][col] === 1) {
+            const gained = multiMask[row][col];
+            addedMultiplier += gained;
+            multiplierSum += gained;
+            convertedGoldPositions.push({ row, col, multiplier: gained });
+            hitMask[row][col] = 2;
+          } else {
+            board[row][col] = -1;
+            goldMask[row][col] = 0;
+            multiMask[row][col] = 0;
+          }
+        }
+      }
+      return { multiplier_sum: multiplierSum, hit_positions: hitPositions, converted_gold_positions: convertedGoldPositions, added_multiplier: addedMultiplier };
+    }
+
+    function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask) {
+      const dropEvents = [];
+      for (let col = 0; col < Box.reel_num; col += 1) {
+        const keep = [];
+        for (let row = Box.window_size - 1; row >= 0; row -= 1) {
+          if (hitMask[row][col] === 0) {
+            keep.push([board[row][col], goldMask[row][col], multiMask[row][col], specialMask[row][col]]);
+          }
+        }
+
+        let keepIndex = 0;
+        for (let row = Box.window_size - 1; row >= 0; row -= 1) {
+          if (hitMask[row][col] === 2) {
+            board[row][col] = 0;
+            goldMask[row][col] = 0;
+            multiMask[row][col] = 0;
+            specialMask[row][col] = 0;
+            dropEvents.push({ row, col, event: "gold_to_wild", symbol_id: 0, symbol_code: "WW" });
+          } else if (keepIndex < keep.length) {
+            const [symbol, isGold, multiplier, isSpecial] = keep[keepIndex];
+            board[row][col] = symbol;
+            goldMask[row][col] = isGold;
+            multiMask[row][col] = multiplier;
+            specialMask[row][col] = isSpecial;
+            keepIndex += 1;
+          } else {
+            const cum = useDropA ? Box.drop_weight_a_cum[tableId].map((v) => v[col]) : Box.drop_weight_b_cum[tableId].map((v) => v[col]);
+            const picked = pickByCum(cum);
+            const dropSymbol = Box.symbol_id[picked.index];
+            const baseSymbol = Box.base_symbol_of[dropSymbol];
+            board[row][col] = baseSymbol;
+            goldMask[row][col] = Box.is_gold_symbol[dropSymbol];
+            specialMask[row][col] = 0;
+            let multiplierInfo = null;
+            if (goldMask[row][col] === 1) {
+              const multiPicked = pickDropMultiplier(tableId, col);
+              multiMask[row][col] = multiPicked.multiplier;
+              multiplierInfo = multiPicked;
+            } else {
+              multiMask[row][col] = 0;
+            }
+            dropEvents.push({
+              row,
+              col,
+              event: "drop_fill",
+              drop_mode: useDropA ? "A" : "B",
+              rng_value: picked.rng_value,
+              rng_total: picked.rng_total,
+              drop_symbol_id: dropSymbol,
+              symbol_id: baseSymbol,
+              symbol_code: Box.symbol_str[String(baseSymbol)],
+              is_gold: Boolean(goldMask[row][col]),
+              multiplier_info: multiplierInfo
+            });
+          }
+        }
+      }
+      return dropEvents;
+    }
+
+    function runSpin(sceneMode, fgMultiplierSum, betMulti) {
+      const table = chooseTable(sceneMode);
+      const useDropRaw = randInt(2);
+      const useDropA = useDropRaw === 1;
+      const generated = generateBoard(table.table_id);
+      const board = generated.board;
+      const goldMask = generated.goldMask;
+      const multiMask = generated.multiMask;
+      const specialMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const scatterCount = countScatter(board);
+      const initialMultiplierInfo = assignInitialMultiplier(table.table_id, goldMask, multiMask, specialMask);
+
+      let rawPay = 0;
+      let multiplierSum = fgMultiplierSum;
+      const boardSteps = [];
+      const lineWins = [];
+      let lineWinTotal = 0;
+      let hitAny = false;
+      let cascadeIndex = 0;
+      let latestHitPositions = [];
+      const boardInit = serializeBoard(board, goldMask, multiMask, specialMask);
+
+      while (true) {
+        cascadeIndex += 1;
+        const boardBefore = serializeBoard(board, goldMask, multiMask, specialMask);
+        const evaluated = evaluateBoard(board, betMulti, cascadeIndex);
+        if (evaluated.total_pay <= 0) break;
+
+        hitAny = true;
+        rawPay += evaluated.total_pay;
+        evaluated.line_wins.forEach((item) => lineWins.push(item));
+        lineWinTotal += evaluated.line_wins.reduce((sum, item) => sum + item.line_pay, 0);
+
+        const applied = applyHitAndTransform(board, goldMask, multiMask, evaluated.hit_mask, multiplierSum);
+        multiplierSum = applied.multiplier_sum;
+        latestHitPositions = applied.hit_positions;
+        const boardAfterEliminate = serializeBoard(board, goldMask, multiMask, specialMask);
+        const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask);
+        const boardAfterDrop = serializeBoard(board, goldMask, multiMask, specialMask);
+
+        boardSteps.push({
+          cascade_index: cascadeIndex,
+          board_before: boardBefore,
+          hit_positions: applied.hit_positions,
+          line_wins: evaluated.line_wins,
+          board_after_eliminate: boardAfterEliminate,
+          board_after_drop: boardAfterDrop,
+          added_multiplier: applied.added_multiplier,
+          multiplier_sum_after_cascade: multiplierSum,
+          cascade_pay: evaluated.total_pay,
+          drop_events: dropEvents,
+          converted_gold_positions: applied.converted_gold_positions
+        });
+      }
+
+      const finalMultiplier = multiplierSum > 0 ? multiplierSum : 1;
+      const finalPay = rawPay * finalMultiplier;
+      return {
+        scene_mode: sceneMode,
+        scene_name: sceneMode === Box.scene_bg ? "BG" : sceneMode === Box.scene_fg ? "FG" : "BF",
+        table_id: table.table_id,
+        table_name: table.table_name,
+        drop_mode: useDropA ? "A" : "B",
+        rng_info: {
+          table,
+          reels: generated.reelRng,
+          drop_mode: { rng_value: useDropRaw, rng_total: 2, drop_mode: useDropA ? "A" : "B" },
+          initial_multipliers: initialMultiplierInfo,
+          drop_events: boardSteps.flatMap((step) => step.drop_events)
+        },
+        scatter_count: scatterCount,
+        raw_pay: rawPay,
+        final_multiplier: finalMultiplier,
+        final_pay: finalPay,
+        multiplier_sum_before_spin: fgMultiplierSum,
+        multiplier_sum_after_spin: multiplierSum,
+        board_init: boardInit,
+        board_steps: boardSteps,
+        line_wins: lineWins,
+        line_win_total: lineWinTotal,
+        board_final: serializeBoard(board, goldMask, multiMask, specialMask),
+        hit_any: hitAny,
+        latest_hit_positions: latestHitPositions
+      };
+    }
+
+    function runRound(betMode) {
+      const currentCoinIn = coinIn(betMode);
+      if (state.balance < currentCoinIn) throw new Error(`餘額不足，需 ${formatMoney(currentCoinIn)}`);
+
+      const spins = [];
+      let baseTotalWin = 0;
+      let freeTotalWin = 0;
+      let totalWin = 0;
+      let freeSpinsAwarded = 0;
+      let freeSpinsPlayed = 0;
+      let fgMultiplierSum = 0;
+      let triggerSource = null;
+
+      const baseScene = betMode === Box.mode_featurebuy ? Box.scene_bf : Box.scene_bg;
+      const baseSpin = runSpin(baseScene, 0, getBetMulti());
+      baseSpin.spin_index = 1;
+      baseSpin.remaining_free_spins_before = 0;
+      baseSpin.remaining_free_spins_after = 0;
+      baseSpin.retrigger_awarded = 0;
+      spins.push(baseSpin);
+      baseTotalWin += baseSpin.final_pay;
+      totalWin += baseSpin.final_pay;
+
+      if (betMode === Box.mode_featurebuy) {
+        triggerSource = "feature_buy";
+        freeSpinsAwarded = baseSpin.scatter_count < 3 ? 15 : 15 + (baseSpin.scatter_count - 3) * 2;
+        state.featurebuyTriggerCount += 1;
+        state.freegameTriggerCount += 1;
+      } else if (baseSpin.scatter_count >= 3) {
+        triggerSource = "normal_trigger";
+        freeSpinsAwarded = 15 + (baseSpin.scatter_count - 3) * 2;
+        state.normalTriggerCount += 1;
+        state.freegameTriggerCount += 1;
+      }
+
+      let remainingFreespins = freeSpinsAwarded;
+      while (remainingFreespins > 0) {
+        const before = remainingFreespins;
+        const spin = runSpin(Box.scene_fg, fgMultiplierSum, getBetMulti());
+        fgMultiplierSum = spin.multiplier_sum_after_spin;
+        remainingFreespins -= 1;
+        let retriggerAwarded = 0;
+        if (spin.scatter_count >= 3) {
+          retriggerAwarded = 15 + (spin.scatter_count - 3) * 2;
+          remainingFreespins += retriggerAwarded;
+          state.retriggerCount += 1;
+        }
+        freeSpinsPlayed += 1;
+        spin.spin_index = spins.length + 1;
+        spin.remaining_free_spins_before = before;
+        spin.remaining_free_spins_after = remainingFreespins;
+        spin.retrigger_awarded = retriggerAwarded;
+        spins.push(spin);
+        freeTotalWin += spin.final_pay;
+        totalWin += spin.final_pay;
+      }
+
+      state.balance += totalWin - currentCoinIn;
+      state.totalBet += currentCoinIn;
+      state.totalWin += totalWin;
+      state.totalSpins += spins.length;
+      state.hitSpins += spins.filter((spin) => spin.hit_any).length;
+      state.roundCount += 1;
+
+      return {
+        bet_mode: betMode,
+        bet_mode_name: betMode === Box.mode_featurebuy ? "Feature Buy" : "Normal Bet",
+        bet_multi: getBetMulti(),
+        coin_in: currentCoinIn,
+        base_spin: baseSpin,
+        free_spins_awarded: freeSpinsAwarded,
+        free_spins_played: freeSpinsPlayed,
+        total_win: totalWin,
+        base_total_win: baseTotalWin,
+        free_total_win: freeTotalWin,
+        final_fg_multiplier_sum: fgMultiplierSum,
+        spins,
+        rtp_overall: state.totalBet > 0 ? state.totalWin / state.totalBet : 0,
+        hit_rate_overall: state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0,
+        freegame_trigger_count: state.freegameTriggerCount,
+        trigger_source: triggerSource,
+        display_spin: spins[spins.length - 1]
+      };
+    }
+
+    function renderBoard(board, options = {}) {
+      const hitSet = new Set((options.hitPositions || []).map(([row, col]) => `${row}-${col}`));
+      const convertSet = new Set((options.convertPositions || []).map((item) => `${item.row}-${item.col}`));
+      const reelSpin = Boolean(options.reelSpin);
+      boardEl.innerHTML = "";
+      board.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+          const cellEl = document.createElement("div");
+          cellEl.className = ["cell", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
+          const wrap = document.createElement("div");
+          wrap.className = "symbol-wrap";
+          if (cell.is_gold) {
+            const frameBg = document.createElement("img");
+            frameBg.className = "frame-bg";
+            frameBg.src = normalizeAssetPath(Box.frame_bg);
+            wrap.appendChild(frameBg);
+          }
+          if (cell.image) {
+            const img = document.createElement("img");
+            img.className = "symbol-img";
+            img.src = cell.image;
+            img.alt = cell.symbol_name;
+            wrap.appendChild(img);
+          }
+          if (cell.is_gold) {
+            const frameTop = document.createElement("img");
+            frameTop.className = "frame-top";
+            frameTop.src = normalizeAssetPath(Box.frame_top);
+            wrap.appendChild(frameTop);
+          }
+          const code = document.createElement("div");
+          code.className = "symbol-code";
+          code.textContent = cell.symbol_code || "-";
+          cellEl.appendChild(wrap);
+          cellEl.appendChild(code);
+          if (cell.is_scatter) {
+            const scatter = document.createElement("div");
+            scatter.className = "scatter-badge";
+            scatter.textContent = "SC";
+            cellEl.appendChild(scatter);
+          }
+          if (cell.is_gold && cell.multiplier > 0) {
+            const multi = document.createElement("div");
+            multi.className = "multi-badge";
+            multi.textContent = `x${cell.multiplier}`;
+            cellEl.appendChild(multi);
+          }
+          boardEl.appendChild(cellEl);
+        });
+      });
+    }
+
+    function updateSessionCards() {
+      const activeBetMode = state.pendingRound ? state.pendingRound.bet_mode : state.activeRound ? state.activeRound.bet_mode : Box.mode_normalbet;
+      balanceValueEl.textContent = formatMoney(state.balance);
+      betValueEl.textContent = formatMoney(coinIn(activeBetMode));
+      winValueEl.textContent = formatMoney(state.activeRound ? state.activeRound.total_win : 0);
+      rtpValueEl.textContent = formatPercent(state.totalBet > 0 ? state.totalWin / state.totalBet : 0);
+      hitRateValueEl.textContent = formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0);
+      fgTriggerValueEl.textContent = String(state.freegameTriggerCount);
+    }
+
+    function updateSpinButtonState() {
+      spinBtn.textContent = state.pendingRound ? "Next FG" : "Spin";
+      buyFeatureBtn.disabled = Boolean(state.pendingRound);
+      betBtn.disabled = Boolean(state.pendingRound);
+    }
+
+    function getVisibleSpins(round) {
+      if (!round) return [];
+      if (state.pendingRound === round) {
+        return round.spins.slice(0, Math.max(1, state.pendingSpinIndex));
+      }
+      return round.spins;
+    }
+
+    function updateSceneTheme(spin = null) {
+      document.body.classList.toggle("fg-mode", Boolean(spin && spin.scene_name === "FG"));
+    }
+
+    function updateFeatureBar(spin = null, round = null) {
+      if (!spin || !round) {
+        modeTextEl.textContent = "Base Game";
+        featureStatusEl.textContent = "Spins Left 0 | Drop -";
+        spinMultiValueEl.textContent = "x1";
+        carryMultiValueEl.textContent = "x0";
+        scatterValueEl.textContent = "0";
+        fgLeftValueEl.textContent = "0";
+        updateSceneTheme(null);
+        return;
+      }
+      const modeName = round.bet_mode === Box.mode_featurebuy && spin.scene_name === "BF" ? "Feature Buy" : spin.scene_name === "FG" ? "Free Game" : "Base Game";
+      const fgLeft = spin.scene_name === "FG" ? (spin.remaining_free_spins_after || 0) : (round.free_spins_awarded || 0);
+      modeTextEl.textContent = `${modeName} | ${spin.table_name}`;
+      featureStatusEl.textContent = `${spin.scene_name === "FG" ? `FG Left ${fgLeft}` : "Base Scene"} | Drop ${spin.drop_mode}`;
+      spinMultiValueEl.textContent = `x${spin.final_multiplier}`;
+      carryMultiValueEl.textContent = `x${spin.multiplier_sum_after_spin}`;
+      scatterValueEl.textContent = String(spin.scatter_count);
+      fgLeftValueEl.textContent = String(fgLeft);
+      updateSceneTheme(spin);
+    }
+
+    function renderSpinList(round) {
+      spinListEl.innerHTML = "";
+      if (!round) return;
+      getVisibleSpins(round).forEach((spin) => {
+        const row = document.createElement("div");
+        row.className = "spin-row";
+        row.innerHTML = `<span>${String(spin.spin_index).padStart(2, "0")} | ${spin.scene_name} | ${spin.table_name}${spin.retrigger_awarded > 0 ? ` | +${spin.retrigger_awarded} FG` : ""}</span><span>Win ${formatMoney(spin.final_pay)}</span>`;
+        spinListEl.appendChild(row);
+      });
+    }
+
+    function renderLineList(spin) {
+      lineListEl.innerHTML = "";
+      if (!spin || spin.line_wins.length === 0) {
+        lineListEl.innerHTML = '<div class="line-row"><span>No winning line</span><span>Pay 0.00</span></div>';
+        return;
+      }
+      spin.line_wins.slice(0, 8).forEach((line) => {
+        const row = document.createElement("div");
+        row.className = "line-row";
+        row.innerHTML = `<span>L${String(line.line_index).padStart(2, "0")} | ${line.symbol_code} x${line.line_length} | C${line.cascade_index}</span><span>Pay ${formatMoney(line.line_pay)}</span>`;
+        lineListEl.appendChild(row);
+      });
+    }
+
+    function renderRngList(spin) {
+      rngListEl.innerHTML = "";
+      if (!spin) return;
+      const rows = [
+        { left: `Table ${spin.table_name}`, right: `${spin.rng_info.table.rng_value}/${spin.rng_info.table.rng_total}` },
+        { left: `Drop ${spin.drop_mode}`, right: `${spin.rng_info.drop_mode.rng_value}/${spin.rng_info.drop_mode.rng_total}` }
+      ];
+      spin.rng_info.reels.forEach((reel) => rows.push({ left: `R${reel.reel_index} stop ${reel.stop_index}`, right: `${reel.rng_value}/${reel.rng_total}` }));
+      rows.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "rng-row";
+        row.innerHTML = `<span>${item.left}</span><span>${item.right}</span>`;
+        rngListEl.appendChild(row);
+      });
+    }
+
+    function updateHeadline(round, spin) {
+      if (!round || !spin) {
+        headlineEl.textContent = "Ready To Spin";
+        sublineEl.textContent = "Open directly from file system. No network required.";
+        return;
+      }
+      const topLine = spin.line_wins[0];
+      headlineEl.textContent = topLine ? `${topLine.symbol_code} ${topLine.line_length} Of A Kind` : spin.scatter_count >= 3 ? "Scatter Trigger" : "No Win";
+      sublineEl.textContent = `${round.bet_mode_name} | Raw ${formatMoney(spin.raw_pay)} | Final ${formatMoney(spin.final_pay)} | Total ${formatMoney(round.total_win)}`;
+    }
+
+    function renderAll(round = null, spin = null) {
+      state.activeRound = round;
+      state.activeSpin = spin;
+      updateSessionCards();
+      updateFeatureBar(spin, round);
+      updateHeadline(round, spin);
+      renderSpinList(round);
+      renderLineList(spin);
+      renderRngList(spin);
+      updateSpinButtonState();
+    }
+
+    function sampleBoard() {
+      const ids = Box.symbol_id.slice(0, 11);
+      const board = [];
+      for (let row = 0; row < Box.window_size; row += 1) {
+        const line = [];
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          const symbol = ids[randInt(ids.length)];
+          const base = Box.base_symbol_of[symbol];
+          const code = Box.symbol_str[String(base)];
+          line.push({ symbol_id: base, symbol_code: code, symbol_name: symbolName(base), image: getAsset(code), is_gold: false, is_wild: base === 0, is_scatter: base === 1, multiplier: 0 });
+        }
+        board.push(line);
+      }
+      return board;
+    }
+
+    async function animateReels() {
+      for (let i = 0; i < 8; i += 1) {
+        renderBoard(sampleBoard(), { reelSpin: true });
+        await sleep(65);
+      }
+    }
+
+    async function playbackSpin(round, spin) {
+      renderAll(round, spin);
+      renderBoard(clone(spin.board_init));
+      writeMessage(`Spin ${spin.spin_index} | ${spin.scene_name} | Reel stop ready`);
+      await sleep(280);
+      if (spin.board_steps.length === 0) {
+        renderBoard(clone(spin.board_final));
+        writeMessage(`Spin ${spin.spin_index} finished | No cascade`);
+        return;
+      }
+      for (const step of spin.board_steps) {
+        renderBoard(clone(step.board_before), { hitPositions: step.hit_positions });
+        writeMessage(`Cascade ${step.cascade_index} | Pay ${formatMoney(step.cascade_pay)}`);
+        await sleep(360);
+        renderBoard(clone(step.board_after_eliminate), { hitPositions: step.hit_positions, convertPositions: step.converted_gold_positions });
+        writeMessage(`Cascade ${step.cascade_index} | +Multiplier x${step.added_multiplier}`);
+        await sleep(280);
+        renderBoard(clone(step.board_after_drop));
+        writeMessage(`Cascade ${step.cascade_index} | Drop complete`);
+        await sleep(320);
+      }
+      renderBoard(clone(spin.board_final));
+      writeMessage(`Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`);
+    }
+
+    async function doSpin(betMode) {
+      if (state.isBusy) return;
+      state.isBusy = true;
+      try {
+        spinBtn.disabled = true;
+        buyFeatureBtn.disabled = true;
+        if (state.pendingRound && state.pendingSpinIndex < state.pendingRound.spins.length) {
+          const round = state.pendingRound;
+          const spin = round.spins[state.pendingSpinIndex];
+          writeMessage(`FG Spin ${spin.spin_index} rolling...`);
+          await animateReels();
+          await playbackSpin(round, spin);
+          state.pendingSpinIndex += 1;
+          if (state.pendingSpinIndex >= round.spins.length) {
+            state.pendingRound = null;
+            writeMessage(`FG finished | Total ${formatMoney(round.total_win)}`);
+          } else {
+            const nextSpin = round.spins[state.pendingSpinIndex];
+            renderAll(round, spin);
+            writeMessage(`FG ready | ${nextSpin.remaining_free_spins_before} spins left, press Spin`);
+          }
+        } else {
+          writeMessage("Reels spinning...");
+          await animateReels();
+          const round = runRound(betMode);
+          await playbackSpin(round, round.spins[0]);
+          renderAll(round, round.spins[0]);
+          if (round.spins.length > 1) {
+            state.pendingRound = round;
+            state.pendingSpinIndex = 1;
+            writeMessage(`FG triggered | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
+          } else {
+            state.pendingRound = null;
+            state.pendingSpinIndex = 0;
+          }
+        }
+      } catch (error) {
+        writeMessage(error.message);
+      } finally {
+        state.isBusy = false;
+        spinBtn.disabled = false;
+        updateSessionCards();
+        updateSpinButtonState();
+      }
+    }
+
+    betBtn.addEventListener("click", () => {
+      if (state.pendingRound) return;
+      state.betIndex = (state.betIndex + 1) % Box.bet_options.length;
+      updateSessionCards();
+      writeMessage(`Bet x${getBetMulti()}`);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      state.balance = 100000;
+      state.totalBet = 0;
+      state.totalWin = 0;
+      state.totalSpins = 0;
+      state.hitSpins = 0;
+      state.freegameTriggerCount = 0;
+      state.normalTriggerCount = 0;
+      state.featurebuyTriggerCount = 0;
+      state.retriggerCount = 0;
+      state.roundCount = 0;
+      state.betIndex = 0;
+      state.activeRound = null;
+      state.activeSpin = null;
+      state.pendingRound = null;
+      state.pendingSpinIndex = 0;
+      renderBoard(sampleBoard());
+      renderAll(null, null);
+      writeMessage("Session reset");
+    });
+
+    spinBtn.addEventListener("click", () => doSpin(Box.mode_normalbet));
+    buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
+
+    gameIdEl.textContent = `Game ID ${Box.game_id}`;
+    gameNameEl.textContent = Box.game_name;
+    renderBoard(sampleBoard());
+    renderAll(null, null);
+  </script>
+</body>
+</html>

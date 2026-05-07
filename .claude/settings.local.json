@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sort find:*)",
+      "Bash(sort echo:*)"
+    ]
+  }
+}
