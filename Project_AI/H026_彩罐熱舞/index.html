@@ -637,8 +637,48 @@
       return `${RESOURCE_PATHS.imageBase}${fileName}`;
     }
 
+    function toCumWeights(weights) {
+      if (!Array.isArray(weights) || !weights.length) return null;
+      let sum = 0;
+      return weights.map((weight) => {
+        sum += Number(weight) || 0;
+        return sum;
+      });
+    }
+
     function normalizeConfigAssets(config) {
-      const nextConfig = clone(config);
+      const nextConfig = {
+        ...clone(EMBEDDED_CONFIG),
+        ...clone(config || {})
+      };
+      nextConfig.symbols = {
+        ...(clone(EMBEDDED_CONFIG.symbols) || {}),
+        ...(clone(config?.symbols) || {})
+      };
+      nextConfig.reel_symbol_weights = {
+        ...(clone(EMBEDDED_CONFIG.reel_symbol_weights) || {}),
+        ...(clone(config?.reel_symbol_weights) || {})
+      };
+      nextConfig.fg_awards = {
+        ...(clone(EMBEDDED_CONFIG.fg_awards) || {}),
+        ...(clone(config?.fg_awards) || {})
+      };
+      nextConfig.gold_chance = {
+        ...(clone(EMBEDDED_CONFIG.gold_chance) || {}),
+        ...(clone(config?.gold_chance) || {})
+      };
+      nextConfig.fg_table_rule = clone(config?.fg_table_rule || EMBEDDED_CONFIG.fg_table_rule);
+
+      if (!nextConfig.weight_cum_table_bg?.length) {
+        nextConfig.weight_cum_table_bg = toCumWeights(nextConfig.weight_table_bg) || clone(EMBEDDED_CONFIG.weight_cum_table_bg);
+      }
+      if (!nextConfig.weight_cum_table_fg?.length) {
+        nextConfig.weight_cum_table_fg = toCumWeights(nextConfig.weight_table_fg) || clone(EMBEDDED_CONFIG.weight_cum_table_fg);
+      }
+      if (!nextConfig.weight_cum_table_bf?.length) {
+        nextConfig.weight_cum_table_bf = toCumWeights(nextConfig.weight_table_bf) || clone(EMBEDDED_CONFIG.weight_cum_table_bf);
+      }
+
       if (!nextConfig.symbols) return nextConfig;
 
       Object.values(nextConfig.symbols).forEach((symbol) => {
