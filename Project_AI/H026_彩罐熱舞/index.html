@@ -469,6 +469,13 @@
   </main>
 
   <script>
+    const RESOURCE_PATHS = {
+      config: "./config.js",
+      imageBase: "./Source/Image/",
+      goldFrameBg: "pinata-wins_symbol_s_frame_bg.png",
+      goldFrameTop: "pinata-wins_symbol_s_frame.png"
+    };
+
     const state = {
       config: null,
       ready: false,
@@ -521,17 +528,17 @@
         ]
       },
       symbols: {
-        WW: { kind: "wild", asset: "Source/Image/pinata-wins_symbol_s_wild.png" },
-        C1: { kind: "scatter", asset: "Source/Image/pinata-wins_symbol_s_scatter.png" },
-        M1: { kind: "high", goldable: true, asset: "Source/Image/pinata-wins_symbol_m1_skull.png", pays: { "3": 2.5, "4": 12.5, "5": 50 } },
-        M2: { kind: "high", goldable: true, asset: "Source/Image/pinata-wins_symbol_m2_sombrero.png", pays: { "3": 1.0, "4": 5.0, "5": 20.0 } },
-        M3: { kind: "high", goldable: true, asset: "Source/Image/pinata-wins_symbol_m3_maracas.png", pays: { "3": 0.75, "4": 2.5, "5": 10.0 } },
-        M4: { kind: "high", goldable: true, asset: "Source/Image/pinata-wins_symbol_m4_taco.png", pays: { "3": 0.5, "4": 2.0, "5": 7.5 } },
-        M5: { kind: "high", goldable: true, asset: "Source/Image/pinata-wins_symbol_m5_chilli.png", pays: { "3": 0.25, "4": 1.0, "5": 5.0 } },
-        A: { kind: "low", goldable: true, asset: "Source/Image/pinata-wins_symbol_l4_a.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } },
-        K: { kind: "low", goldable: true, asset: "Source/Image/pinata-wins_symbol_l3_k.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } },
-        Q: { kind: "low", goldable: true, asset: "Source/Image/pinata-wins_symbol_l2_q.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } },
-        J: { kind: "low", goldable: true, asset: "Source/Image/pinata-wins_symbol_l1_j.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } }
+        WW: { kind: "wild", asset: "pinata-wins_symbol_s_wild.png" },
+        C1: { kind: "scatter", asset: "pinata-wins_symbol_s_scatter.png" },
+        M1: { kind: "high", goldable: true, asset: "pinata-wins_symbol_m1_skull.png", pays: { "3": 2.5, "4": 12.5, "5": 50 } },
+        M2: { kind: "high", goldable: true, asset: "pinata-wins_symbol_m2_sombrero.png", pays: { "3": 1.0, "4": 5.0, "5": 20.0 } },
+        M3: { kind: "high", goldable: true, asset: "pinata-wins_symbol_m3_maracas.png", pays: { "3": 0.75, "4": 2.5, "5": 10.0 } },
+        M4: { kind: "high", goldable: true, asset: "pinata-wins_symbol_m4_taco.png", pays: { "3": 0.5, "4": 2.0, "5": 7.5 } },
+        M5: { kind: "high", goldable: true, asset: "pinata-wins_symbol_m5_chilli.png", pays: { "3": 0.25, "4": 1.0, "5": 5.0 } },
+        A: { kind: "low", goldable: true, asset: "pinata-wins_symbol_l4_a.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } },
+        K: { kind: "low", goldable: true, asset: "pinata-wins_symbol_l3_k.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } },
+        Q: { kind: "low", goldable: true, asset: "pinata-wins_symbol_l2_q.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } },
+        J: { kind: "low", goldable: true, asset: "pinata-wins_symbol_l1_j.png", pays: { "3": 0.1, "4": 0.5, "5": 2.5 } }
       },
       line_patterns: [
         [1, 1, 1, 1, 1], [0, 0, 0, 0, 0], [2, 2, 2, 2, 2], [0, 1, 2, 1, 0], [2, 1, 0, 1, 2],
@@ -617,8 +624,30 @@
       return Number(state.config.bet_options[state.betIndex] || state.config.bet_options[0]);
     }
 
-    function imagePath(relativePath) {
-      return relativePath;
+    function imagePath(assetPath) {
+      if (!assetPath) return "";
+      if (/^(?:https?:|data:|blob:)/i.test(assetPath)) return assetPath;
+
+      const normalized = String(assetPath).replace(/\\/g, "/");
+      if (normalized.startsWith("./") || normalized.startsWith("../")) {
+        return normalized;
+      }
+
+      const fileName = normalized.includes("/") ? normalized.split("/").pop() : normalized;
+      return `${RESOURCE_PATHS.imageBase}${fileName}`;
+    }
+
+    function normalizeConfigAssets(config) {
+      const nextConfig = clone(config);
+      if (!nextConfig.symbols) return nextConfig;
+
+      Object.values(nextConfig.symbols).forEach((symbol) => {
+        if (symbol && symbol.asset) {
+          symbol.asset = imagePath(symbol.asset);
+        }
+      });
+
+      return nextConfig;
     }
 
     function weightedChoice(weightMap) {
@@ -969,7 +998,7 @@
             if (cell.is_gold) {
               const frameBg = document.createElement("img");
               frameBg.className = "frame";
-              frameBg.src = imagePath("Source/Image/pinata-wins_symbol_s_frame_bg.png");
+              frameBg.src = imagePath(RESOURCE_PATHS.goldFrameBg);
               frameBg.alt = "";
               cellEl.appendChild(frameBg);
             }
@@ -981,7 +1010,7 @@
             if (cell.is_gold) {
               const frameTop = document.createElement("img");
               frameTop.className = "frame";
-              frameTop.src = imagePath("Source/Image/pinata-wins_symbol_s_frame.png");
+              frameTop.src = imagePath(RESOURCE_PATHS.goldFrameTop);
               frameTop.alt = "";
               cellEl.appendChild(frameTop);
             }
@@ -1327,11 +1356,11 @@
     async function bootstrap() {
       try {
         if (window.location.protocol === "file:") {
-          state.config = clone(EMBEDDED_CONFIG);
+          state.config = normalizeConfigAssets(EMBEDDED_CONFIG);
         } else {
-          const response = await fetch("./config.js", { cache: "no-store" });
+          const response = await fetch(RESOURCE_PATHS.config, { cache: "no-store" });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          state.config = JSON.parse(await response.text());
+          state.config = normalizeConfigAssets(JSON.parse(await response.text()));
         }
         state.ready = true;
         setSceneTheme("BG");
