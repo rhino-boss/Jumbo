@@ -766,7 +766,7 @@
       }));
     }
 
-    function chooseTable(sceneMode) {
+    function chooseTable(sceneMode, fgMultiplierSum = 0) {
       let pick;
       let tableId;
       let weights;
@@ -775,8 +775,20 @@
         tableId = pick.index;
         weights = Box.weight_table_bg;
       } else if (sceneMode === Box.scene_fg) {
-        pick = pickByCum(Box.weight_cum_table_fg);
-        tableId = 3 + pick.index;
+        const matchedRule = (Box.fg_table_rule?.rules || []).find((rule) => {
+          const minMultiplier = Number(rule.min_multiplier || 0);
+          const maxExclusive = rule.max_exclusive;
+          if (fgMultiplierSum < minMultiplier) return false;
+          if (maxExclusive !== null && maxExclusive !== undefined && fgMultiplierSum >= Number(maxExclusive)) return false;
+          return true;
+        });
+        if (matchedRule) {
+          tableId = Number(matchedRule.table_id);
+          pick = { index: tableId - 3, rng_value: 0, rng_total: 1 };
+        } else {
+          pick = pickByCum(Box.weight_cum_table_fg);
+          tableId = 3 + pick.index;
+        }
         weights = Box.weight_table_fg;
       } else {
         pick = pickByCum(Box.weight_cum_table_bf);
@@ -789,6 +801,21 @@
         rng_value: pick.rng_value,
         rng_total: pick.rng_total,
         weights
+      };
+    }
+
+    function chooseEliminateMode(sceneMode) {
+      const bg = Box.eliminate_table_weight_cum_bg || [1, 2];
+      const fg = Box.eliminate_table_weight_cum_fg || [1, 2];
+      const bf = Box.eliminate_table_weight_cum_bf || fg;
+      const cumWeight = sceneMode === Box.scene_bg ? bg : sceneMode === Box.scene_fg ? fg : bf;
+      const pick = pickByCum(cumWeight);
+      const useDropA = pick.index === 0;
+      return {
+        use_drop_a: useDropA,
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total,
+        drop_mode: useDropA ? "A" : "B"
       };
     }
 
@@ -1039,9 +1066,9 @@
     }
 
     function runSpin(sceneMode, fgMultiplierSum, betMulti) {
-      const table = chooseTable(sceneMode);
-      const useDropRaw = randInt(2);
-      const useDropA = useDropRaw === 1;
+      const table = chooseTable(sceneMode, fgMultiplierSum);
+      const eliminateMode = chooseEliminateMode(sceneMode);
+      const useDropA = eliminateMode.use_drop_a;
       const generated = generateBoard(table.table_id);
       const board = generated.board;
       const goldMask = generated.goldMask;
@@ -1104,7 +1131,7 @@
         rng_info: {
           table,
           reels: generated.reelRng,
-          drop_mode: { rng_value: useDropRaw, rng_total: 2, drop_mode: useDropA ? "A" : "B" },
+          drop_mode: eliminateMode,
           initial_multipliers: initialMultiplierInfo,
           drop_events: boardSteps.flatMap((step) => step.drop_events)
         },
