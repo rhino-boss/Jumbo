@@ -18,7 +18,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 TOTAL_ROUNDS = 10**8
 BET_MULTI = 1
 BET_MODE = 0
-THREADS = max(1, min(8, os.cpu_count() or 1))
+THREADS = max(1, max(8, os.cpu_count() or 1))
 FG_SPIN_CAP = 50
 
 OUTPUT_REPORT = True
