@@ -1164,29 +1164,38 @@
       let fgMultiplierSum = 0;
       let triggerSource = null;
 
-      const baseScene = betMode === Box.mode_featurebuy ? Box.scene_bf : Box.scene_bg;
-      let baseSpin = runSpin(baseScene, 0, getBetMulti());
+      let baseSpin = null;
+      if (betMode === Box.mode_normalbet) {
+        baseSpin = runSpin(Box.scene_bg, 0, getBetMulti());
+        baseSpin.spin_index = 1;
+        baseSpin.remaining_free_spins_before = 0;
+        baseSpin.remaining_free_spins_after = 0;
+        baseSpin.retrigger_awarded = 0;
+        spins.push(baseSpin);
+        baseTotalWin += baseSpin.final_pay;
+        totalWin += baseSpin.final_pay;
+      }
+
       if (betMode === Box.mode_featurebuy) {
+        let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti());
         let rerollCount = 0;
-        while (baseSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+        while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
           rerollCount += 1;
           if (rerollCount > 5000) {
             throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
           }
-          baseSpin = runSpin(baseScene, 0, getBetMulti());
+          triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti());
         }
-      }
-      baseSpin.spin_index = 1;
-      baseSpin.remaining_free_spins_before = 0;
-      baseSpin.remaining_free_spins_after = 0;
-      baseSpin.retrigger_awarded = 0;
-      spins.push(baseSpin);
-      baseTotalWin += baseSpin.final_pay;
-      totalWin += baseSpin.final_pay;
-
-      if (betMode === Box.mode_featurebuy) {
+        triggerSpin.spin_index = 1;
+        triggerSpin.remaining_free_spins_before = 0;
+        triggerSpin.remaining_free_spins_after = 0;
+        triggerSpin.retrigger_awarded = 0;
+        baseSpin = triggerSpin;
+        spins.push(triggerSpin);
+        baseTotalWin += triggerSpin.final_pay;
+        totalWin += triggerSpin.final_pay;
         triggerSource = "feature_buy";
-        freeSpinsAwarded = 15 + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
+        freeSpinsAwarded = 15 + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
         state.featurebuyTriggerCount += 1;
         state.freegameTriggerCount += 1;
       } else if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
@@ -1511,7 +1520,7 @@
           if (round.spins.length > 1) {
             state.pendingRound = round;
             state.pendingSpinIndex = 1;
-            writeMessage(`FG triggered | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
+            writeMessage(`${round.trigger_source === "feature_buy" ? "Feature Buy entered FG" : "FG triggered"} | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
           } else {
             state.pendingRound = null;
             state.pendingSpinIndex = 0;

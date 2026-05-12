@@ -724,6 +724,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                 record_data[R_ALL, RA_TRIGGER_FREEGAME] += 1
                 record_data[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
         else:
+            reroll_count = 0
             bf_result = run_spin(
                 SCENE_BF,
                 0,
@@ -740,6 +741,26 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                 keep_gold,
                 keep_multi,
             )
+            while bf_result[1] < 3:
+                reroll_count += 1
+                if reroll_count > 5000:
+                    break
+                bf_result = run_spin(
+                    SCENE_BF,
+                    0,
+                    bet_multi,
+                    board,
+                    gold_mask,
+                    multi_mask,
+                    hit_mask,
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    gold_pos,
+                    keep_symbol,
+                    keep_gold,
+                    keep_multi,
+                )
             pay_bg = bf_result[0]
             apply_spin_log(
                 record_data,
@@ -758,7 +779,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                 bf_result[10],
                 coin_in,
             )
-            free_spins = 15 if bf_result[1] < 3 else 15 + (bf_result[1] - 3) * 2
+            free_spins = 15 + (bf_result[1] - 3) * 2 if bf_result[1] >= 3 else 15
             record_data[R_ALL, RA_TRIGGER_FREEGAME] += 1
             record_data[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
 
