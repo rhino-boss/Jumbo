@@ -786,14 +786,14 @@
           tableId = Number(matchedRule.table_id);
           pick = { index: tableId - 3, rng_value: 0, rng_total: 1 };
         } else {
-          pick = pickByCum(Box.weight_cum_table_fg);
-          tableId = 3 + pick.index;
+          tableId = 3;
+          pick = { index: 0, rng_value: 0, rng_total: 1 };
         }
-        weights = Box.weight_table_fg;
+        weights = [];
       } else {
-        pick = pickByCum(Box.weight_cum_table_bf);
-        tableId = 6 + pick.index;
-        weights = Box.weight_table_bf;
+        pick = { index: 0, rng_value: 0, rng_total: 1 };
+        tableId = 6;
+        weights = [];
       }
       return {
         table_id: tableId,

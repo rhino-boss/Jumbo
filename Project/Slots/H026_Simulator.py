@@ -1068,8 +1068,11 @@ def simulater_result(show_result=False, show_detail=False, show_multi_line=False
     total_spins = total_round + fg_spins
     hit_rate_fg = record_data_float[Box.R_all, Box.RA_hits_FG] / fg_spins if fg_spins > 0 else 0
     hit_rate_total = (record_data_float[Box.R_all, Box.RA_hits_BG] + record_data_float[Box.R_all, Box.RA_hits_FG]) / total_spins if total_spins > 0 else 0
-    trigger_rate_fg = record_data_float[Box.R_all, Box.RA_trigger_freegame] / total_round
+    fg_trigger_count = record_data_float[Box.R_all, Box.RA_trigger_freegame]
+    trigger_rate_fg = fg_trigger_count / total_round if total_round > 0 else 0
     retrigger_rate = record_data_float[Box.R_all, Box.RA_re_trigger] / fg_spins if fg_spins > 0 else 0
+    avg_fg_spins = fg_spins / fg_trigger_count if fg_trigger_count > 0 else 0
+    avg_fg_multiplier = rtp_fg / trigger_rate_fg if trigger_rate_fg > 0 else 0
 
     eliminate_0_rate = record_data_float[Box.R_all, Box.RA_eliminate_0] / total_spins if total_spins > 0 else 0
     eliminate_1_rate = record_data_float[Box.R_all, Box.RA_eliminate_1] / total_spins if total_spins > 0 else 0
@@ -1110,6 +1113,8 @@ def simulater_result(show_result=False, show_detail=False, show_multi_line=False
     write_data(df_base, "Hit Rate - Overall", f"{hit_rate_total:0.6f}")
     write_data(df_base, "FG Trigger Rate", f"{trigger_rate_fg:0.6f}")
     write_data(df_base, "Retrigger Rate", f"{retrigger_rate:0.6f}")
+    write_data(df_base, "平均一場 FG 可以獲得幾倍", f"{avg_fg_multiplier:0.6f}")
+    write_data(df_base, "平均一場 FG 可以玩幾次 Free Spin", f"{avg_fg_spins:0.6f}")
 
     write_data(df_base, "Eliminate 0 Rate", f"{eliminate_0_rate:0.6f}", int(record_data[Box.R_all, Box.RA_eliminate_0]))
     write_data(df_base, "Eliminate 1 Rate", f"{eliminate_1_rate:0.6f}", int(record_data[Box.R_all, Box.RA_eliminate_1]))

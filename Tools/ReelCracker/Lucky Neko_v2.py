@@ -273,7 +273,7 @@ x1, y1 = 950, 920
 x2, y2 = 952, 794
 x3, y3 = 1051, 706
 x4, y4 = 948, 928
-times = 10 * 3  # 點擊次數
+times = 10**4  # 點擊次數
 
 chrome_window = get_chrome_window()
 if chrome_window is None:

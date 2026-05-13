@@ -15,7 +15,7 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\H026_�
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**8
+TOTAL_ROUNDS = 10**6
 BET_MULTI = 1
 BET_MODE = 0
 THREADS = max(1, max(8, os.cpu_count() or 1))
@@ -154,8 +154,6 @@ SYMBOLS_SCORE = np.asarray(CFG_RAW["symbols_score"], dtype=np.int64)
 VALUE_MULTIPLIER_RANGE = np.asarray(CFG_RAW["value_multiplier_range"], dtype=np.int64)
 
 WEIGHT_CUM_TABLE_BG = np.asarray(CFG_RAW["weight_cum_table_bg"], dtype=np.int64)
-WEIGHT_CUM_TABLE_FG = np.asarray(CFG_RAW["weight_cum_table_fg"], dtype=np.int64)
-WEIGHT_CUM_TABLE_BF = np.asarray(CFG_RAW["weight_cum_table_bf"], dtype=np.int64)
 
 WEIGHT_SPECIAL_POOL = np.asarray(CFG_RAW["weight_special_pool"], dtype=np.int64)
 WEIGHT_CUM_MULTIPLE_SPECIAL = np.asarray(CFG_RAW["weight_cum_multiple_special"], dtype=np.int64)
@@ -256,7 +254,7 @@ def choose_table(scene_mode, fg_multiplier_sum):
         if fg_multiplier_sum < 20:
             return 4
         return 5
-    return 6 + pick_by_cum(WEIGHT_CUM_TABLE_BF)
+    return 6
 
 
 @njit(nogil=True)
@@ -917,8 +915,11 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     hit_rate_bg = record_data_float[R_ALL, RA_HITS_BG] / total_round if total_round > 0 else 0.0
     hit_rate_fg = record_data_float[R_ALL, RA_HITS_FG] / fg_spins if fg_spins > 0 else 0.0
     hit_rate_total = (record_data_float[R_ALL, RA_HITS_BG] + record_data_float[R_ALL, RA_HITS_FG]) / total_spins if total_spins > 0 else 0.0
-    trigger_rate_fg = record_data_float[R_ALL, RA_TRIGGER_FREEGAME] / total_round if total_round > 0 else 0.0
+    fg_trigger_count = record_data_float[R_ALL, RA_TRIGGER_FREEGAME]
+    trigger_rate_fg = fg_trigger_count / total_round if total_round > 0 else 0.0
     retrigger_rate = record_data_float[R_ALL, RA_RE_TRIGGER] / fg_spins if fg_spins > 0 else 0.0
+    avg_fg_spins = fg_spins / fg_trigger_count if fg_trigger_count > 0 else 0.0
+    avg_fg_multiplier = rtp_fg / trigger_rate_fg if trigger_rate_fg > 0 else 0.0
 
     std = math.sqrt(max(0.0, x_square / total_round - (x_sum / total_round) ** 2)) if total_round > 0 else 0.0
     gold_usage_rate = record_data_float[R_ALL, RA_GOLD_USED_SPINS] / record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS] if record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS] > 0 else 0.0
@@ -945,6 +946,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("hit_rate_total", f"{hit_rate_total:.6f}", ""),
         ("fg_trigger_rate", f"{trigger_rate_fg:.6f}", ""),
         ("retrigger_rate", f"{retrigger_rate:.6f}", ""),
+        ("avg_fg_multiplier", f"{avg_fg_multiplier:.6f}", ""),
+        ("avg_fg_spins", f"{avg_fg_spins:.6f}", ""),
         ("free_spins", free_spins_text, ""),
         ("volatility_std", f"{std:.6f}", ""),
         ("max_win_hits", int(record_data[R_ALL, RA_MAX_WIN_HITS]), ""),
@@ -980,7 +983,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "hit_rate_total": hit_rate_total,
         "fg_trigger_rate": trigger_rate_fg,
         "retrigger_rate": retrigger_rate,
-        "free_spins": int(fg_spins),
+        "avg_fg_multiplier": avg_fg_multiplier,
+        "avg_fg_spins": avg_fg_spins,
         "max_win_x": record_data[R_ALL, RA_MAX_SINGLE_WIN] / coin_in,
         "max_multiplier": int(record_data[R_ALL, RA_MAX_MULTIPLIER]),
         "volatility_std": std,
@@ -1009,7 +1013,8 @@ def print_console_result(df_base, df_hits, df_pay, df_eliminate):
             ("hit_rate_total", summary_map["hit_rate_total"][0]),
             ("fg_trigger_rate", summary_map["fg_trigger_rate"][0]),
             ("retrigger_rate", summary_map["retrigger_rate"][0]),
-            ("free_spins", summary_map["free_spins"][0]),
+            ("avg_fg_multiplier", summary_map["avg_fg_multiplier"][0]),
+            ("avg_fg_spins", summary_map["avg_fg_spins"][0]),
             ("", ""),
             ("volatility_std", summary_map["volatility_std"][0]),
             ("max_win_hits", summary_map["max_win_hits"][0]),

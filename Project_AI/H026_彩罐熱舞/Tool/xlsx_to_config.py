@@ -308,11 +308,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
         "symbols_score": symbols_score,
         "value_multiplier_range": value_multiplier_range,
         "weight_table_bg": weight_table_bg,
-        "weight_table_fg": weight_table_fg,
-        "weight_table_bf": weight_table_bf,
         "weight_cum_table_bg": cumulative(weight_table_bg),
-        "weight_cum_table_fg": cumulative(weight_table_fg),
-        "weight_cum_table_bf": cumulative(weight_table_bf),
         "fg_table_rule": template["fg_table_rule"],
         "weight_special_pool": parse_special_pool_weight(parameter),
         "arr_reels": arr_reels,
@@ -344,7 +340,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
 
 
 def write_config(path: Path, data: dict[str, Any]) -> None:
-    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    payload = json.dumps(data, ensure_ascii=False, indent=2)
     path.write_text(f"window.H026_BOX_DATA = {payload};\n", encoding="utf-8")
 
 

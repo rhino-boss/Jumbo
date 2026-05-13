@@ -65,11 +65,7 @@
 | `symbols_score` | 由 `Overview` 工作表 `Pay Table：` 區塊可得分符號 id 清單產生 | 衍生 | `430`, `576`, `619` | `892` | 盤面評獎迴圈使用 |
 | `value_multiplier_range` | `Parameter` 工作表 `Multiplier` 區塊 | 直接 | `341`, `381`, `447` | `730` | 倍數值清單 |
 | `weight_table_bg` | `Parameter` 工作表 BG table weight 區塊 | 直接 | `272`, `384`, `465` | `776` | BG 選 table 權重 |
-| `weight_table_fg` | `Parameter` 工作表 FG table weight 區塊 | 直接 | `273`, `385`, `469` | `780` | FG 選 table 權重 |
-| `weight_table_bf` | `Parameter` 工作表 BF table weight 區塊 | 直接 | `274`, `386`, `473` | `784` | BF 選 table 權重 |
 | `weight_cum_table_bg` | 由 `Parameter` 工作表 BG table weight 區塊累加 | 衍生 | `387`, `463` | `774` | BG 選 table 用 cumulative weight |
-| `weight_cum_table_fg` | 由 `Parameter` 工作表 FG table weight 區塊累加 | 衍生 | `388`, `467` | `778` | FG 選 table 用 cumulative weight |
-| `weight_cum_table_bf` | 由 `Parameter` 工作表 BF table weight 區塊累加 | 衍生 | `389`, `471` | `782` | BF 選 table 用 cumulative weight |
 | `fg_table_rule` | 推定來自 generator / 規則設定 | 靜態/外部 | `390` | 未使用 | 目前 runtime 沒拿它做 FG table 選擇 |
 | `weight_multiple_special` | `Parameter` 工作表 special multiplier weight 區塊 | 直接 | `338` | 未直接取 raw weight | special gold 倍數 raw weight |
 | `weight_multiple_r3_before` | `Parameter` 工作表 R3 before multiplier weight 區塊 | 直接 | `336` | 未直接取 raw weight | R3 初始 gold 倍數 raw weight |
@@ -122,8 +118,8 @@
 | --- | --- | --- |
 | 第 5 列起第 B~G 欄盤線表 | `paylines` | 例如 `11111` 轉為 `[1,1,1,1,1]` |
 | 第 5 列起第 J/K 欄 BG table weights | `weight_table_bg` / `weight_cum_table_bg` | BG 選 table 權重 |
-| 第 12 列起第 J/K 欄 FG table weights | `weight_table_fg` / `weight_cum_table_fg` | FG 選 table 權重 |
-| 第 19 列起第 J/K 欄 BF table weights | `weight_table_bf` / `weight_cum_table_bf` | BF 選 table 權重 |
+| 第 12 列起第 J/K 欄 FG table weights | 未輸出 | FG 目前直接由 `fg_table_rule` 決定 table |
+| 第 19 列起第 J/K 欄 BF table weights | 未輸出 | BF 目前固定使用 `BF` table |
 | 第 I 欄 `Multiplier` 區塊 | `value_multiplier_range` | 倍數值清單 |
 | 第 O~AA 欄 multiplier weight 各區塊 | `weight_multiple_*` / `weight_cum_multiple_*` | 各情境 gold multiplier 權重 |
 | 第 AD~AK 欄 special pool 區塊 | `weight_special_pool` | 特殊池觸發權重 |
