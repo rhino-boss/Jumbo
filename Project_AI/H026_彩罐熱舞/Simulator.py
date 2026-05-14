@@ -15,7 +15,7 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\H026_�
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**6
+TOTAL_ROUNDS = 10**8
 BET_MULTI = 1
 BET_MODE = 0
 THREADS = max(1, max(8, os.cpu_count() or 1))
@@ -25,6 +25,7 @@ OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = True
 RUN_SINGLE_SPIN_DEBUG = False
+TRACE_RETRY_FAILURE = False
 
 THRESHOLD_RECORD = np.array(
     [
@@ -121,6 +122,38 @@ def _pad_nested_tables(raw_tables, fill_value):
     return arr
 
 
+def _build_card_profile_tables(card_system_raw):
+    profile_names = ("normal_bet", "free_game", "buy_feature")
+    card_type_map = {"range": 0, "free_game": 1}
+    profile_cards = []
+    for profile_name in profile_names:
+        cards = list(card_system_raw.get("profiles", {}).get(profile_name, []))
+        profile_cards.append(cards)
+
+    max_cards = max((len(cards) for cards in profile_cards), default=0)
+    if max_cards <= 0:
+        max_cards = 1
+
+    card_types = np.full((len(profile_names), max_cards), -1, dtype=np.int64)
+    card_min = np.zeros((len(profile_names), max_cards), dtype=np.float64)
+    card_max = np.zeros((len(profile_names), max_cards), dtype=np.float64)
+    card_weight_cum = np.zeros((len(profile_names), max_cards), dtype=np.int64)
+    card_counts = np.zeros(len(profile_names), dtype=np.int64)
+
+    for profile_idx, cards in enumerate(profile_cards):
+        running = 0
+        for card_idx, card in enumerate(cards):
+            weight = int(card.get("weight", 0))
+            running += weight
+            card_types[profile_idx, card_idx] = card_type_map.get(str(card.get("type", "range")), 0)
+            card_min[profile_idx, card_idx] = float(card.get("min", 0.0))
+            card_max[profile_idx, card_idx] = float(card.get("max", 0.0))
+            card_weight_cum[profile_idx, card_idx] = running
+        card_counts[profile_idx] = len(cards)
+
+    return card_types, card_min, card_max, card_weight_cum, card_counts
+
+
 CFG_RAW = _load_config(CONFIG_PATH)
 
 GAME_ID = CFG_RAW["game_id"]
@@ -172,6 +205,11 @@ STRIP_NAME_MAP = list(CFG_RAW["strip_name_map"])
 ELIMINATE_TABLE_WEIGHT_CUM_BG = np.asarray(CFG_RAW["eliminate_table_weight_cum_bg"], dtype=np.int64)
 ELIMINATE_TABLE_WEIGHT_CUM_FG = np.asarray(CFG_RAW["eliminate_table_weight_cum_fg"], dtype=np.int64)
 
+CARD_SYSTEM_RAW = CFG_RAW.get("card_system", {})
+CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled"))
+CARD_RETRY_LIMIT = int(CARD_SYSTEM_RAW.get("retry_limit", 0))
+CARD_TYPES, CARD_MIN, CARD_MAX, CARD_WEIGHT_CUM, CARD_COUNTS = _build_card_profile_tables(CARD_SYSTEM_RAW)
+
 SYMBOLS_COUNT = int(len(SYMBOL_ID))
 LINE_NUM = int(PAYLINES.shape[0])
 RECORD_COLS = max(len(THRESHOLD_RECORD), SYMBOLS_COUNT * 2, 100)
@@ -208,10 +246,16 @@ RA_ELIMINATE_2 = 13
 RA_ELIMINATE_3 = 14
 RA_ELIMINATE_4 = 15
 RA_ELIMINATE_5 = 16
+RA_RETRY_TOTAL = 17
+RA_RETRY_LIMIT_EXCEEDED = 18
+RA_RETRY_LIMIT_BG_RANGE = 19
+RA_RETRY_LIMIT_BG_FREEGAME = 20
 RA_GOLD_APPEAR_SPINS = 21
 RA_GOLD_USED_SPINS = 22
 RA_MULTI_APPEAR_SPINS = 23
 RA_MULTI_USED_SPINS = 24
+RA_RETRY_LIMIT_FG = 25
+RA_RETRY_LIMIT_BG_FREEGAME_NEVER_TRIGGER = 26
 RA_ELIMINATE_0_FG = 31
 RA_ELIMINATE_1_FG = 32
 RA_ELIMINATE_2_FG = 33
@@ -220,6 +264,15 @@ RA_ELIMINATE_4_FG = 35
 RA_ELIMINATE_5_FG = 36
 RA_FINAL_GOLD_COUNT_BG_0 = 40
 RA_FINAL_GOLD_COUNT_FG_0 = 50
+PROFILE_NORMAL_BET = 0
+PROFILE_FREE_GAME = 1
+PROFILE_BUY_FEATURE = 2
+CARD_TYPE_RANGE = 0
+CARD_TYPE_FREE_GAME = 1
+RETRY_FAIL_NONE = 0
+RETRY_FAIL_BG_RANGE = 1
+RETRY_FAIL_BG_FREEGAME = 2
+RETRY_FAIL_FG = 3
 
 
 # ===== Numba Core =====
@@ -235,6 +288,65 @@ def pick_by_cum(cum_weight):
         if rd < cum_weight[idx]:
             return idx
     return cum_weight.shape[0] - 1
+
+
+@njit(nogil=True)
+def pick_card(profile_idx):
+    card_count = CARD_COUNTS[profile_idx]
+    if card_count <= 0:
+        return -1
+
+    total = CARD_WEIGHT_CUM[profile_idx, card_count - 1]
+    if total <= 0:
+        return -1
+
+    rd = np.random.randint(0, total)
+    for idx in range(card_count):
+        if rd < CARD_WEIGHT_CUM[profile_idx, idx]:
+            return idx
+    return card_count - 1
+
+
+@njit(nogil=True)
+def is_range_match(min_value, max_value, score, coin_in):
+    if coin_in <= 0:
+        return False
+    multiplier = score / coin_in
+    return multiplier > min_value and multiplier <= max_value
+
+
+@njit(nogil=True)
+def is_card_match(profile_idx, card_idx, score, coin_in, triggered_free_game):
+    if card_idx < 0:
+        return True
+    card_type = CARD_TYPES[profile_idx, card_idx]
+    if card_type == CARD_TYPE_FREE_GAME:
+        return triggered_free_game == 1
+    return is_range_match(CARD_MIN[profile_idx, card_idx], CARD_MAX[profile_idx, card_idx], score, coin_in)
+
+
+@njit(nogil=True)
+def calc_free_spins(scatter_count, force_trigger):
+    if scatter_count >= 3:
+        return 15 + (scatter_count - 3) * 2
+    if force_trigger == 1:
+        return 15
+    return 0
+
+
+@njit(nogil=True)
+def merge_round_record(record_data, round_record):
+    current_max_single = record_data[R_ALL, RA_MAX_SINGLE_WIN]
+    current_max_multi = record_data[R_ALL, RA_MAX_MULTIPLIER]
+    round_max_single = round_record[R_ALL, RA_MAX_SINGLE_WIN]
+    round_max_multi = round_record[R_ALL, RA_MAX_MULTIPLIER]
+
+    for i in range(record_data.shape[0]):
+        for j in range(record_data.shape[1]):
+            record_data[i, j] += round_record[i, j]
+
+    record_data[R_ALL, RA_MAX_SINGLE_WIN] = current_max_single if current_max_single > round_max_single else round_max_single
+    record_data[R_ALL, RA_MAX_MULTIPLIER] = current_max_multi if current_max_multi > round_max_multi else round_max_multi
 
 
 @njit(nogil=True)
@@ -470,11 +582,19 @@ def update_spin_flags(gold_mask, multi_mask, gold_seen, multi_seen):
 
 
 @njit(nogil=True)
+def copy_layout(target, source):
+    for row in range(WINDOW_SIZE):
+        for col in range(REEL_NUM):
+            target[row, col] = source[row, col]
+
+
+@njit(nogil=True)
 def run_spin(
     scene_mode,
     fg_multiplier_sum,
     bet_multi,
     board,
+    board_initial,
     gold_mask,
     multi_mask,
     hit_mask,
@@ -497,6 +617,7 @@ def run_spin(
     table_id = choose_table(scene_mode, fg_multiplier_sum)
     use_drop_a = choose_eliminate_table(scene_mode)
     generate_board(table_id, board, gold_mask, multi_mask)
+    copy_layout(board_initial, board)
     scatter_count = count_scatter(board)
     assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
     pre_eliminate_gold_count = count_gold_mask(gold_mask)
@@ -557,6 +678,32 @@ def run_spin(
         multi_used,
         pre_eliminate_gold_count,
     )
+
+
+@njit(nogil=True)
+def copy_board_snapshot(history, attempt_idx, board):
+    for row in range(WINDOW_SIZE):
+        for col in range(REEL_NUM):
+            history[attempt_idx, row, col] = board[row, col]
+
+
+@njit(nogil=True)
+def print_retry_failure_trace(attempt_count, scatter_history, board_history, retry_fail_reason):
+    print("")
+    print("=== Retry Failure Trace ===")
+    print("retry_fail_reason =", retry_fail_reason)
+    print("attempt_count =", attempt_count)
+    for attempt_idx in range(attempt_count):
+        print("attempt", attempt_idx + 1, "scatter_count =", scatter_history[attempt_idx])
+        for row in range(WINDOW_SIZE):
+            print(
+                board_history[attempt_idx, row, 0],
+                board_history[attempt_idx, row, 1],
+                board_history[attempt_idx, row, 2],
+                board_history[attempt_idx, row, 3],
+                board_history[attempt_idx, row, 4],
+            )
+        print("")
 
 
 @njit(nogil=True)
@@ -663,9 +810,82 @@ def apply_spin_log(
         record_data[R_ALL, RA_MAX_MULTIPLIER] = final_multiplier
 
 
+@njit(nogil=True)
+def run_free_game_session(
+    record_data,
+    free_spins,
+    bet_multi,
+    coin_in,
+    board,
+    board_initial,
+    gold_mask,
+    multi_mask,
+    hit_mask,
+    spin_hits,
+    spin_pay,
+    spin_eliminate,
+    gold_pos,
+    keep_symbol,
+    keep_gold,
+    keep_multi,
+):
+    pay_fg = 0
+    fg_multiplier_sum = 0
+    remaining_freespin = free_spins if free_spins < FG_SPIN_CAP else FG_SPIN_CAP
+
+    while remaining_freespin > 0:
+        fg_result = run_spin(
+            SCENE_FG,
+            fg_multiplier_sum,
+            bet_multi,
+            board,
+            board_initial,
+            gold_mask,
+            multi_mask,
+            hit_mask,
+            spin_hits,
+            spin_pay,
+            spin_eliminate,
+            gold_pos,
+            keep_symbol,
+            keep_gold,
+            keep_multi,
+        )
+        pay_fg += fg_result[0]
+        fg_multiplier_sum = fg_result[3]
+        apply_spin_log(
+            record_data,
+            SCENE_FG,
+            fg_result[0],
+            fg_result[2],
+            fg_result[4],
+            spin_hits,
+            spin_pay,
+            spin_eliminate,
+            fg_result[5],
+            fg_result[6],
+            fg_result[7],
+            fg_result[8],
+            fg_result[9],
+            fg_result[10],
+            coin_in,
+        )
+
+        record_data[R_ALL, RA_FREE_SPINS] += 1
+        remaining_freespin -= 1
+
+        if fg_result[1] >= 3:
+            extra_spins = 15 + (fg_result[1] - 3) * 2
+            remaining_freespin = min(remaining_freespin + extra_spins, FG_SPIN_CAP)
+            record_data[R_ALL, RA_RE_TRIGGER] += 1
+
+    return pay_fg
+
+
 @njit("int64[:, :](int64[:, :], int64, int64, int64, int64)", nogil=True)
 def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
     board = np.zeros(LAYOUT_SHAPE, np.int64)
+    board_initial = np.zeros(LAYOUT_SHAPE, np.int64)
     gold_mask = np.zeros(LAYOUT_SHAPE, np.int64)
     multi_mask = np.zeros(LAYOUT_SHAPE, np.int64)
     hit_mask = np.zeros(LAYOUT_SHAPE, np.int64)
@@ -676,78 +896,45 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
     keep_symbol = np.zeros(WINDOW_SIZE, np.int64)
     keep_gold = np.zeros(WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(WINDOW_SIZE, np.int64)
+    round_record = np.zeros(RECORD_SIZE, np.int64)
+    bg_round_record = np.zeros(RECORD_SIZE, np.int64)
+    fg_round_record = np.zeros(RECORD_SIZE, np.int64)
+    scatter_history = np.zeros(CARD_RETRY_LIMIT, np.int64)
+    board_history = np.zeros((CARD_RETRY_LIMIT, WINDOW_SIZE, REEL_NUM), np.int64)
 
     for _ in range(total_round):
-        pay_bg = 0
-        pay_fg = 0
+        retry_count = 0
+        normal_card_idx = -1
+        fg_card_idx = -2
+        buy_feature_card_idx = -1
+        bg_freegame_triggered_once = 0
 
         if bet_mode == MODE_NORMALBET:
-            bg_result = run_spin(
-                SCENE_BG,
-                0,
-                bet_multi,
-                board,
-                gold_mask,
-                multi_mask,
-                hit_mask,
-                spin_hits,
-                spin_pay,
-                spin_eliminate,
-                gold_pos,
-                keep_symbol,
-                keep_gold,
-                keep_multi,
-            )
-            pay_bg = bg_result[0]
-            apply_spin_log(
-                record_data,
-                SCENE_BG,
-                bg_result[0],
-                bg_result[2],
-                bg_result[4],
-                spin_hits,
-                spin_pay,
-                spin_eliminate,
-                bg_result[5],
-                bg_result[6],
-                bg_result[7],
-                bg_result[8],
-                bg_result[9],
-                bg_result[10],
-                coin_in,
-            )
-            free_spins = 0
-            if bg_result[1] >= 3:
-                free_spins = 15 + (bg_result[1] - 3) * 2
-                record_data[R_ALL, RA_TRIGGER_FREEGAME] += 1
-                record_data[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
+            normal_card_idx = pick_card(PROFILE_NORMAL_BET) if CARD_SYSTEM_ENABLED else -1
         else:
-            reroll_count = 0
-            bf_result = run_spin(
-                SCENE_BF,
-                0,
-                bet_multi,
-                board,
-                gold_mask,
-                multi_mask,
-                hit_mask,
-                spin_hits,
-                spin_pay,
-                spin_eliminate,
-                gold_pos,
-                keep_symbol,
-                keep_gold,
-                keep_multi,
-            )
-            while bf_result[1] < 3:
-                reroll_count += 1
-                if reroll_count > 5000:
-                    break
-                bf_result = run_spin(
-                    SCENE_BF,
+            buy_feature_card_idx = pick_card(PROFILE_BUY_FEATURE) if CARD_SYSTEM_ENABLED else -1
+
+        if bet_mode == MODE_NORMALBET and CARD_SYSTEM_ENABLED and normal_card_idx >= 0 and CARD_TYPES[PROFILE_NORMAL_BET, normal_card_idx] == CARD_TYPE_FREE_GAME:
+            clear_2d(round_record)
+            clear_2d(bg_round_record)
+            clear_2d(fg_round_record)
+
+            pay_bg = 0
+            pay_fg = 0
+            pay_total = 0
+            free_spins = 0
+            triggered_bg_fg = 0
+            retry_fail_reason = RETRY_FAIL_NONE
+
+            while True:
+                clear_2d(bg_round_record)
+
+                bg_result = run_spin(
+                    SCENE_BG,
                     0,
                     bet_multi,
                     board,
+                    board_initial,
                     gold_mask,
                     multi_mask,
                     hit_mask,
@@ -759,84 +946,315 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_gold,
                     keep_multi,
                 )
-            pay_bg = bf_result[0]
-            apply_spin_log(
-                record_data,
-                SCENE_BG,
-                bf_result[0],
-                bf_result[2],
-                bf_result[4],
-                spin_hits,
-                spin_pay,
-                spin_eliminate,
-                bf_result[5],
-                bf_result[6],
-                bf_result[7],
-                bf_result[8],
-                bf_result[9],
-                bf_result[10],
-                coin_in,
-            )
-            free_spins = 15 + (bf_result[1] - 3) * 2 if bf_result[1] >= 3 else 15
-            record_data[R_ALL, RA_TRIGGER_FREEGAME] += 1
-            record_data[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
+                pay_bg = bg_result[0]
+                triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
+                free_spins = calc_free_spins(bg_result[1], 0)
 
-        fg_multiplier_sum = 0
-        remaining_freespin = free_spins if free_spins < FG_SPIN_CAP else FG_SPIN_CAP
-        while remaining_freespin > 0:
-            fg_result = run_spin(
-                SCENE_FG,
-                fg_multiplier_sum,
-                bet_multi,
-                board,
-                gold_mask,
-                multi_mask,
-                hit_mask,
-                spin_hits,
-                spin_pay,
-                spin_eliminate,
-                gold_pos,
-                keep_symbol,
-                keep_gold,
-                keep_multi,
-            )
-            pay_fg += fg_result[0]
-            fg_multiplier_sum = fg_result[3]
-            apply_spin_log(
-                record_data,
-                SCENE_FG,
-                fg_result[0],
-                fg_result[2],
-                fg_result[4],
-                spin_hits,
-                spin_pay,
-                spin_eliminate,
-                fg_result[5],
-                fg_result[6],
-                fg_result[7],
-                fg_result[8],
-                fg_result[9],
-                fg_result[10],
-                coin_in,
-            )
+                apply_spin_log(
+                    bg_round_record,
+                    SCENE_BG,
+                    bg_result[0],
+                    bg_result[2],
+                    bg_result[4],
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    bg_result[5],
+                    bg_result[6],
+                    bg_result[7],
+                    bg_result[8],
+                    bg_result[9],
+                    bg_result[10],
+                    coin_in,
+                )
 
-            record_data[R_ALL, RA_FREE_SPINS] += 1
-            remaining_freespin -= 1
+                if TRACE_RETRY_FAILURE and retry_count < CARD_RETRY_LIMIT:
+                    scatter_history[retry_count] = bg_result[1]
+                    copy_board_snapshot(board_history, retry_count, board_initial)
 
-            if fg_result[1] >= 3:
-                extra_spins = 15 + (fg_result[1] - 3) * 2
-                remaining_freespin = min(remaining_freespin + extra_spins, FG_SPIN_CAP)
-                record_data[R_ALL, RA_RE_TRIGGER] += 1
+                if triggered_bg_fg == 1:
+                    bg_freegame_triggered_once = 1
+                    bg_round_record[R_ALL, RA_TRIGGER_FREEGAME] += 1
+                    bg_round_record[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
+                    break
 
-        pay_total = pay_bg + pay_fg
+                retry_count += 1
+                retry_fail_reason = RETRY_FAIL_BG_FREEGAME
+                if retry_count >= CARD_RETRY_LIMIT:
+                    if TRACE_RETRY_FAILURE:
+                        print_retry_failure_trace(retry_count, scatter_history, board_history, retry_fail_reason)
+                    bg_round_record[R_ALL, RA_RETRY_LIMIT_EXCEEDED] += 1
+                    bg_round_record[R_ALL, RA_RETRY_LIMIT_BG_FREEGAME] += 1
+                    bg_round_record[R_ALL, RA_RETRY_LIMIT_BG_FREEGAME_NEVER_TRIGGER] += 1
+                    break
+
+            merge_round_record(round_record, bg_round_record)
+
+            if triggered_bg_fg == 1:
+                if fg_card_idx == -2:
+                    fg_card_idx = pick_card(PROFILE_FREE_GAME)
+
+                fg_retry_count = 0
+                while True:
+                    clear_2d(fg_round_record)
+                    pay_fg = run_free_game_session(
+                        fg_round_record,
+                        free_spins,
+                        bet_multi,
+                        coin_in,
+                        board,
+                        board_initial,
+                        gold_mask,
+                        multi_mask,
+                        hit_mask,
+                        spin_hits,
+                        spin_pay,
+                        spin_eliminate,
+                        gold_pos,
+                        keep_symbol,
+                        keep_gold,
+                        keep_multi,
+                    )
+                    if is_card_match(PROFILE_FREE_GAME, fg_card_idx, pay_fg, coin_in, 1):
+                        break
+
+                    fg_retry_count += 1
+                    retry_fail_reason = RETRY_FAIL_FG
+                    if fg_retry_count >= CARD_RETRY_LIMIT:
+                        fg_round_record[R_ALL, RA_RETRY_LIMIT_EXCEEDED] += 1
+                        fg_round_record[R_ALL, RA_RETRY_LIMIT_FG] += 1
+                        break
+
+                retry_count += fg_retry_count
+                merge_round_record(round_record, fg_round_record)
+
+            pay_total = pay_bg + pay_fg
+            round_record[R_ALL, RA_RETRY_TOTAL] += retry_count
+
+            pay_x = pay_total / coin_in
+            round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
+            round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
+
+            log_multi_line(round_record, OUTPUT_BG, pay_bg, coin_in)
+            if pay_fg > 0:
+                log_multi_line(round_record, OUTPUT_FG, pay_fg, coin_in)
+            log_multi_line(round_record, OUTPUT_OA, pay_total, coin_in)
+
+            merge_round_record(record_data, round_record)
+            continue
+
+        while True:
+            clear_2d(round_record)
+
+            pay_bg = 0
+            pay_fg = 0
+            pay_total = 0
+            free_spins = 0
+            triggered_bg_fg = 0
+            accepted = 1
+            retry_fail_reason = RETRY_FAIL_NONE
+
+            if bet_mode == MODE_NORMALBET:
+                bg_result = run_spin(
+                    SCENE_BG,
+                    0,
+                    bet_multi,
+                    board,
+                    board_initial,
+                    gold_mask,
+                    multi_mask,
+                    hit_mask,
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    gold_pos,
+                    keep_symbol,
+                    keep_gold,
+                    keep_multi,
+                )
+                pay_bg = bg_result[0]
+                triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
+                free_spins = calc_free_spins(bg_result[1], 0)
+
+                apply_spin_log(
+                    round_record,
+                    SCENE_BG,
+                    bg_result[0],
+                    bg_result[2],
+                    bg_result[4],
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    bg_result[5],
+                    bg_result[6],
+                    bg_result[7],
+                    bg_result[8],
+                    bg_result[9],
+                    bg_result[10],
+                    coin_in,
+                )
+
+                if TRACE_RETRY_FAILURE and retry_count < CARD_RETRY_LIMIT:
+                    scatter_history[retry_count] = bg_result[1]
+                    copy_board_snapshot(board_history, retry_count, board_initial)
+
+                if triggered_bg_fg == 1:
+                    round_record[R_ALL, RA_TRIGGER_FREEGAME] += 1
+                    round_record[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
+
+                if CARD_SYSTEM_ENABLED and normal_card_idx >= 0:
+                    if CARD_TYPES[PROFILE_NORMAL_BET, normal_card_idx] == CARD_TYPE_FREE_GAME:
+                        if triggered_bg_fg == 0:
+                            accepted = 0
+                            retry_fail_reason = RETRY_FAIL_BG_FREEGAME
+                        else:
+                            bg_freegame_triggered_once = 1
+                            if fg_card_idx == -2:
+                                fg_card_idx = pick_card(PROFILE_FREE_GAME)
+                            pay_fg = run_free_game_session(
+                                round_record,
+                                free_spins,
+                                bet_multi,
+                                coin_in,
+                                board,
+                                board_initial,
+                                gold_mask,
+                                multi_mask,
+                                hit_mask,
+                                spin_hits,
+                                spin_pay,
+                                spin_eliminate,
+                                gold_pos,
+                                keep_symbol,
+                                keep_gold,
+                                keep_multi,
+                            )
+                            if is_card_match(PROFILE_FREE_GAME, fg_card_idx, pay_fg, coin_in, 1) is False:
+                                accepted = 0
+                                retry_fail_reason = RETRY_FAIL_FG
+                    else:
+                        if triggered_bg_fg == 1 or is_card_match(PROFILE_NORMAL_BET, normal_card_idx, pay_bg, coin_in, 0) is False:
+                            accepted = 0
+                            retry_fail_reason = RETRY_FAIL_BG_RANGE
+                else:
+                    if triggered_bg_fg == 1:
+                        pay_fg = run_free_game_session(
+                            round_record,
+                            free_spins,
+                            bet_multi,
+                            coin_in,
+                            board,
+                            board_initial,
+                            gold_mask,
+                            multi_mask,
+                            hit_mask,
+                            spin_hits,
+                            spin_pay,
+                            spin_eliminate,
+                            gold_pos,
+                            keep_symbol,
+                            keep_gold,
+                            keep_multi,
+                        )
+            else:
+                bf_result = run_spin(
+                    SCENE_BF,
+                    0,
+                    bet_multi,
+                    board,
+                    board_initial,
+                    gold_mask,
+                    multi_mask,
+                    hit_mask,
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    gold_pos,
+                    keep_symbol,
+                    keep_gold,
+                    keep_multi,
+                )
+                pay_bg = bf_result[0]
+                free_spins = calc_free_spins(bf_result[1], 1)
+
+                apply_spin_log(
+                    round_record,
+                    SCENE_BG,
+                    bf_result[0],
+                    bf_result[2],
+                    bf_result[4],
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    bf_result[5],
+                    bf_result[6],
+                    bf_result[7],
+                    bf_result[8],
+                    bf_result[9],
+                    bf_result[10],
+                    coin_in,
+                )
+
+                round_record[R_ALL, RA_TRIGGER_FREEGAME] += 1
+                round_record[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
+                pay_fg = run_free_game_session(
+                    round_record,
+                    free_spins,
+                    bet_multi,
+                    coin_in,
+                    board,
+                    board_initial,
+                    gold_mask,
+                    multi_mask,
+                    hit_mask,
+                    spin_hits,
+                    spin_pay,
+                    spin_eliminate,
+                    gold_pos,
+                    keep_symbol,
+                    keep_gold,
+                    keep_multi,
+                )
+
+                if CARD_SYSTEM_ENABLED and buy_feature_card_idx >= 0:
+                    pay_total = pay_bg + pay_fg
+                    if is_card_match(PROFILE_BUY_FEATURE, buy_feature_card_idx, pay_total, coin_in, 1) is False:
+                        accepted = 0
+                        retry_fail_reason = RETRY_FAIL_FG
+
+            if pay_total <= 0:
+                pay_total = pay_bg + pay_fg
+
+            if accepted == 1:
+                break
+
+            retry_count += 1
+            if retry_count >= CARD_RETRY_LIMIT:
+                if TRACE_RETRY_FAILURE:
+                    print_retry_failure_trace(retry_count, scatter_history, board_history, retry_fail_reason)
+                round_record[R_ALL, RA_RETRY_LIMIT_EXCEEDED] += 1
+                if retry_fail_reason == RETRY_FAIL_BG_RANGE:
+                    round_record[R_ALL, RA_RETRY_LIMIT_BG_RANGE] += 1
+                elif retry_fail_reason == RETRY_FAIL_BG_FREEGAME:
+                    round_record[R_ALL, RA_RETRY_LIMIT_BG_FREEGAME] += 1
+                    if bg_freegame_triggered_once == 0:
+                        round_record[R_ALL, RA_RETRY_LIMIT_BG_FREEGAME_NEVER_TRIGGER] += 1
+                elif retry_fail_reason == RETRY_FAIL_FG:
+                    round_record[R_ALL, RA_RETRY_LIMIT_FG] += 1
+                break
+
+        round_record[R_ALL, RA_RETRY_TOTAL] += retry_count
+
         pay_x = pay_total / coin_in
-        record_data[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
-        record_data[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
+        round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
+        round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
 
-        log_multi_line(record_data, OUTPUT_BG, pay_bg, coin_in)
+        log_multi_line(round_record, OUTPUT_BG, pay_bg, coin_in)
         if pay_fg > 0:
-            log_multi_line(record_data, OUTPUT_FG, pay_fg, coin_in)
-        log_multi_line(record_data, OUTPUT_OA, pay_total, coin_in)
+            log_multi_line(round_record, OUTPUT_FG, pay_fg, coin_in)
+        log_multi_line(round_record, OUTPUT_OA, pay_total, coin_in)
+
+        merge_round_record(record_data, round_record)
 
     return record_data
 
@@ -875,6 +1293,8 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     total_round = int(total_round)
     bet_mode = int(bet_mode)
     bet_multi = int(bet_multi)
+    if TRACE_RETRY_FAILURE:
+        threads = 1
     coin_in = int(calc_coin_in(bet_mode, bet_multi))
 
     simulator_chunk(np.zeros(RECORD_SIZE, dtype=np.int64), 1, bet_mode, bet_multi, coin_in)
@@ -920,6 +1340,13 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     retrigger_rate = record_data_float[R_ALL, RA_RE_TRIGGER] / fg_spins if fg_spins > 0 else 0.0
     avg_fg_spins = fg_spins / fg_trigger_count if fg_trigger_count > 0 else 0.0
     avg_fg_multiplier = rtp_fg / trigger_rate_fg if trigger_rate_fg > 0 else 0.0
+    retry_total = record_data_float[R_ALL, RA_RETRY_TOTAL]
+    retry_limit_exceeded = record_data_float[R_ALL, RA_RETRY_LIMIT_EXCEEDED]
+    retry_limit_bg_range = record_data_float[R_ALL, RA_RETRY_LIMIT_BG_RANGE]
+    retry_limit_bg_freegame = record_data_float[R_ALL, RA_RETRY_LIMIT_BG_FREEGAME]
+    retry_limit_fg = record_data_float[R_ALL, RA_RETRY_LIMIT_FG]
+    retry_limit_bg_freegame_never_trigger = record_data_float[R_ALL, RA_RETRY_LIMIT_BG_FREEGAME_NEVER_TRIGGER]
+    avg_retry = retry_total / total_round if total_round > 0 else 0.0
 
     std = math.sqrt(max(0.0, x_square / total_round - (x_sum / total_round) ** 2)) if total_round > 0 else 0.0
     gold_usage_rate = record_data_float[R_ALL, RA_GOLD_USED_SPINS] / record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS] if record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS] > 0 else 0.0
@@ -948,6 +1375,15 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("retrigger_rate", f"{retrigger_rate:.6f}", ""),
         ("avg_fg_multiplier", f"{avg_fg_multiplier:.6f}", ""),
         ("avg_fg_spins", f"{avg_fg_spins:.6f}", ""),
+        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
+        ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
+        ("retry_total", int(retry_total), ""),
+        ("avg_retry", f"{avg_retry:.6f}", ""),
+        ("retry_limit_exceeded", int(retry_limit_exceeded), ""),
+        ("retry_limit_bg_range", int(retry_limit_bg_range), ""),
+        ("retry_limit_bg_freegame", int(retry_limit_bg_freegame), ""),
+        ("retry_limit_bg_freegame_never_trigger", int(retry_limit_bg_freegame_never_trigger), ""),
+        ("retry_limit_fg", int(retry_limit_fg), ""),
         ("free_spins", free_spins_text, ""),
         ("volatility_std", f"{std:.6f}", ""),
         ("max_win_hits", int(record_data[R_ALL, RA_MAX_WIN_HITS]), ""),
@@ -985,6 +1421,13 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "retrigger_rate": retrigger_rate,
         "avg_fg_multiplier": avg_fg_multiplier,
         "avg_fg_spins": avg_fg_spins,
+        "retry_total": retry_total,
+        "avg_retry": avg_retry,
+        "retry_limit_exceeded": retry_limit_exceeded,
+        "retry_limit_bg_range": retry_limit_bg_range,
+        "retry_limit_bg_freegame": retry_limit_bg_freegame,
+        "retry_limit_bg_freegame_never_trigger": retry_limit_bg_freegame_never_trigger,
+        "retry_limit_fg": retry_limit_fg,
         "max_win_x": record_data[R_ALL, RA_MAX_SINGLE_WIN] / coin_in,
         "max_multiplier": int(record_data[R_ALL, RA_MAX_MULTIPLIER]),
         "volatility_std": std,
@@ -1015,6 +1458,15 @@ def print_console_result(df_base, df_hits, df_pay, df_eliminate):
             ("retrigger_rate", summary_map["retrigger_rate"][0]),
             ("avg_fg_multiplier", summary_map["avg_fg_multiplier"][0]),
             ("avg_fg_spins", summary_map["avg_fg_spins"][0]),
+            ("card_system", summary_map["card_system"][0]),
+            ("retry_limit", summary_map["retry_limit"][0]),
+            ("retry_total", summary_map["retry_total"][0]),
+            ("avg_retry", summary_map["avg_retry"][0]),
+            ("retry_limit_exceeded", summary_map["retry_limit_exceeded"][0]),
+            ("retry_limit_bg_range", summary_map["retry_limit_bg_range"][0]),
+            ("retry_limit_bg_freegame", summary_map["retry_limit_bg_freegame"][0]),
+            ("retry_limit_bg_freegame_never_trigger", summary_map["retry_limit_bg_freegame_never_trigger"][0]),
+            ("retry_limit_fg", summary_map["retry_limit_fg"][0]),
             ("", ""),
             ("volatility_std", summary_map["volatility_std"][0]),
             ("max_win_hits", summary_map["max_win_hits"][0]),
@@ -1056,6 +1508,7 @@ def output_report(df_base, df_hits, df_pay, df_eliminate, df_multiplier, record_
 def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     coin_in = calc_coin_in(bet_mode, bet_multi)
     board = np.zeros(LAYOUT_SHAPE, np.int64)
+    board_initial = np.zeros(LAYOUT_SHAPE, np.int64)
     gold_mask = np.zeros(LAYOUT_SHAPE, np.int64)
     multi_mask = np.zeros(LAYOUT_SHAPE, np.int64)
     hit_mask = np.zeros(LAYOUT_SHAPE, np.int64)
@@ -1071,6 +1524,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
         0,
         bet_multi,
         board,
+        board_initial,
         gold_mask,
         multi_mask,
         hit_mask,
@@ -1090,6 +1544,9 @@ def main():
     if RUN_SINGLE_SPIN_DEBUG:
         run_single_spin_debug()
         return
+
+    if TRACE_RETRY_FAILURE:
+        print("TRACE_RETRY_FAILURE is on; simulation will run with a single thread.")
 
     record_data, duration, coin_in = run_simulation()
     df_base, df_hits, df_pay, df_eliminate, df_multiplier, _ = build_result_frames(

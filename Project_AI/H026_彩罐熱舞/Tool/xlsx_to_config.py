@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -49,6 +50,15 @@ STATIC_DEFAULTS: dict[str, Any] = {
         "Q": "Source/Image/pinata-wins_symbol_l2_q.png",
         "J": "Source/Image/pinata-wins_symbol_l1_j.png",
     },
+    "card_system": {
+        "enabled": True,
+        "retry_limit": 5000,
+        "profiles": {
+            "normal_bet": [],
+            "free_game": [],
+            "buy_feature": [],
+        },
+    },
 }
 STRIP_SHEETS = [
     "BG_Symbol",
@@ -80,6 +90,15 @@ def load_template(path: Path) -> dict[str, Any]:
     data = json.loads(raw)
     merged = dict(STATIC_DEFAULTS)
     merged.update(data)
+    if isinstance(merged.get("card_system"), dict) and isinstance(data.get("card_system"), dict):
+        merged_card_system = dict(STATIC_DEFAULTS["card_system"])
+        merged_card_system.update(merged["card_system"])
+        if isinstance(STATIC_DEFAULTS["card_system"].get("profiles"), dict):
+            merged_profiles = dict(STATIC_DEFAULTS["card_system"]["profiles"])
+            if isinstance(merged["card_system"].get("profiles"), dict):
+                merged_profiles.update(merged["card_system"]["profiles"])
+            merged_card_system["profiles"] = merged_profiles
+        merged["card_system"] = merged_card_system
     return merged
 
 
@@ -222,6 +241,70 @@ def parse_strip_sheet(ws: Any) -> dict[str, Any]:
     }
 
 
+def parse_card_range_label(label: Any) -> tuple[float, float] | None:
+    if label is None:
+        return None
+    match = re.match(r"^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]$", str(label).strip())
+    if not match:
+        return None
+    return float(match.group(1)), float(match.group(2))
+
+
+def parse_multiplier_weight(ws: Any) -> dict[str, list[dict[str, Any]]]:
+    header_row = find_row(ws, 2, "Range")
+    profiles: dict[str, list[dict[str, Any]]] = {
+        "normal_bet": [],
+        "free_game": [],
+        "buy_feature": [],
+    }
+    profile_cols = {
+        "normal_bet": 3,
+        "free_game": 4,
+        "buy_feature": 5,
+    }
+
+    row = header_row + 1
+    while True:
+        label = ws.cell(row, 2).value
+        if label is None:
+            break
+
+        label_text = str(label).strip()
+        range_pair = parse_card_range_label(label_text)
+        for profile_name, col in profile_cols.items():
+            weight = to_int(ws.cell(row, col).value)
+            if label_text.lower() == "free game":
+                profiles[profile_name].append(
+                    {
+                        "type": "free_game",
+                        "weight": weight,
+                    }
+                )
+            elif range_pair is not None:
+                profiles[profile_name].append(
+                    {
+                        "type": "range",
+                        "min": range_pair[0],
+                        "max": range_pair[1],
+                        "weight": weight,
+                    }
+                )
+        row += 1
+
+    return profiles
+
+
+def build_card_system(template: dict[str, Any], ws: Any | None) -> dict[str, Any]:
+    template_card_system = template.get("card_system") if isinstance(template.get("card_system"), dict) else {}
+    sheet_profiles = parse_multiplier_weight(ws) if ws is not None else dict(STATIC_DEFAULTS["card_system"]["profiles"])
+
+    return {
+        "enabled": bool(template_card_system.get("enabled", True)),
+        "retry_limit": int(template_card_system.get("retry_limit", 5000)),
+        "profiles": sheet_profiles,
+    }
+
+
 def build_symbol_flags(symbol_codes: list[str]) -> tuple[list[int], list[int], list[int], list[int]]:
     code_to_id = {code: idx for idx, code in enumerate(symbol_codes)}
     base_symbol_of: list[int] = []
@@ -263,6 +346,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
     wb = load_workbook(xlsx_path, data_only=True, read_only=True)
     overview = parse_overview(wb["Overview"])
     parameter = wb["Parameter"]
+    multiplier_weight_ws = wb["Multiplier_Weight"] if "Multiplier_Weight" in wb.sheetnames else None
 
     weight_table_bg = parse_table_weights(parameter, 5)
     weight_table_fg = parse_table_weights(parameter, 12)
@@ -323,6 +407,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
         "frame_bg": template["frame_bg"],
         "frame_top": template["frame_top"],
         "asset_map": template["asset_map"],
+        "card_system": build_card_system(template, multiplier_weight_ws),
         "eliminate_table_weight_bg": eliminate_bg,
         "eliminate_table_weight_fg": eliminate_fg,
         "eliminate_table_weight_bf": eliminate_bf,
