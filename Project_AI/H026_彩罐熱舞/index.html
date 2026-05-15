@@ -843,6 +843,25 @@
       return board.flat().filter((symbol) => symbol === 1).length;
     }
 
+    function columnHasScatter(board, col) {
+      for (let row = 0; row < Box.window_size; row += 1) {
+        if (board[row][col] === 1) return true;
+      }
+      return false;
+    }
+
+    function pickDropSymbol(tableId, useDropA, col, board) {
+      const hasScatter = columnHasScatter(board, col);
+      while (true) {
+        const cum = useDropA ? Box.drop_weight_a_cum[tableId].map((v) => v[col]) : Box.drop_weight_b_cum[tableId].map((v) => v[col]);
+        const picked = pickByCum(cum);
+        const dropSymbol = Box.symbol_id[picked.index];
+        const baseSymbol = Box.base_symbol_of[dropSymbol];
+        if (hasScatter && baseSymbol === 1) continue;
+        return { picked, dropSymbol, baseSymbol };
+      }
+    }
+
     function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
       const goldPositions = [];
       for (let row = 0; row < Box.window_size; row += 1) {
@@ -911,6 +930,7 @@
         let bestLen = 0;
         let bestPay = 0;
         let triggeredByWild = false;
+        // Line wins must start from the leftmost reel on the payline.
         const firstRow = Box.paylines[lineIndex][0];
         const firstSymbol = board[firstRow][0];
         if (firstSymbol === 1) continue;
@@ -1031,10 +1051,7 @@
             specialMask[row][col] = isSpecial;
             keepIndex += 1;
           } else {
-            const cum = useDropA ? Box.drop_weight_a_cum[tableId].map((v) => v[col]) : Box.drop_weight_b_cum[tableId].map((v) => v[col]);
-            const picked = pickByCum(cum);
-            const dropSymbol = Box.symbol_id[picked.index];
-            const baseSymbol = Box.base_symbol_of[dropSymbol];
+            const { picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, board);
             board[row][col] = baseSymbol;
             goldMask[row][col] = Box.is_gold_symbol[dropSymbol];
             specialMask[row][col] = 0;
@@ -1074,7 +1091,6 @@
       const goldMask = generated.goldMask;
       const multiMask = generated.multiMask;
       const specialMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
-      const scatterCount = countScatter(board);
       const initialMultiplierInfo = assignInitialMultiplier(table.table_id, goldMask, multiMask, specialMask);
 
       let rawPay = 0;
@@ -1083,6 +1099,7 @@
       const lineWins = [];
       let lineWinTotal = 0;
       let hitAny = false;
+      let multiUsed = false;
       let cascadeIndex = 0;
       let latestHitPositions = [];
       const boardInit = serializeBoard(board, goldMask, multiMask, specialMask);
@@ -1100,6 +1117,7 @@
 
         const applied = applyHitAndTransform(board, goldMask, multiMask, evaluated.hit_mask, multiplierSum);
         multiplierSum = applied.multiplier_sum;
+        if (applied.added_multiplier > 0) multiUsed = true;
         latestHitPositions = applied.hit_positions;
         const boardAfterEliminate = serializeBoard(board, goldMask, multiMask, specialMask);
         const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask);
@@ -1120,7 +1138,8 @@
         });
       }
 
-      const finalMultiplier = multiplierSum > 0 ? multiplierSum : 1;
+      const scatterCount = countScatter(board);
+      const finalMultiplier = multiUsed && multiplierSum > 0 ? multiplierSum : 1;
       const finalPay = rawPay * finalMultiplier;
       return {
         scene_mode: sceneMode,
@@ -1147,6 +1166,7 @@
         line_win_total: lineWinTotal,
         board_final: serializeBoard(board, goldMask, multiMask, specialMask),
         hit_any: hitAny,
+        multi_used: multiUsed,
         latest_hit_positions: latestHitPositions
       };
     }

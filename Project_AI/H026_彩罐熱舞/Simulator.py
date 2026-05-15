@@ -15,15 +15,16 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\H026_�
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**8
+TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0
 THREADS = max(1, max(8, os.cpu_count() or 1))
 FG_SPIN_CAP = 50
+ALLOW_MULTI_C1_PER_CASCADE_REEL = False
 
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
-SHOW_CONSOLE_DETAIL = True
+SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 TRACE_RETRY_FAILURE = False
 
@@ -209,6 +210,7 @@ CARD_SYSTEM_RAW = CFG_RAW.get("card_system", {})
 CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled"))
 CARD_RETRY_LIMIT = int(CARD_SYSTEM_RAW.get("retry_limit", 0))
 CARD_TYPES, CARD_MIN, CARD_MAX, CARD_WEIGHT_CUM, CARD_COUNTS = _build_card_profile_tables(CARD_SYSTEM_RAW)
+CASCADE_SCATTER_LIMIT_PER_REEL = 0 if ALLOW_MULTI_C1_PER_CASCADE_REEL else 1
 
 SYMBOLS_COUNT = int(len(SYMBOL_ID))
 LINE_NUM = int(PAYLINES.shape[0])
@@ -256,14 +258,26 @@ RA_MULTI_APPEAR_SPINS = 23
 RA_MULTI_USED_SPINS = 24
 RA_RETRY_LIMIT_FG = 25
 RA_RETRY_LIMIT_BG_FREEGAME_NEVER_TRIGGER = 26
+RA_GOLD_APPEAR_SPINS_BG = 27
+RA_GOLD_USED_SPINS_BG = 28
+RA_GOLD_APPEAR_SPINS_FG = 29
+RA_GOLD_USED_SPINS_FG = 30
 RA_ELIMINATE_0_FG = 31
 RA_ELIMINATE_1_FG = 32
 RA_ELIMINATE_2_FG = 33
 RA_ELIMINATE_3_FG = 34
 RA_ELIMINATE_4_FG = 35
 RA_ELIMINATE_5_FG = 36
+RA_MULTI_APPEAR_SPINS_BG = 37
+RA_MULTI_USED_SPINS_BG = 38
+RA_MULTI_APPEAR_SPINS_FG = 39
 RA_FINAL_GOLD_COUNT_BG_0 = 40
 RA_FINAL_GOLD_COUNT_FG_0 = 50
+RA_MULTI_USED_SPINS_FG = 60
+RA_MAX_MULTIPLIER_BG = 61
+RA_MAX_MULTIPLIER_FG = 62
+RA_FINAL_C1_PRESENT_BG = 63
+RA_FINAL_C1_PRESENT_FG = 64
 PROFILE_NORMAL_BET = 0
 PROFILE_FREE_GAME = 1
 PROFILE_BUY_FEATURE = 2
@@ -338,8 +352,12 @@ def calc_free_spins(scatter_count, force_trigger):
 def merge_round_record(record_data, round_record):
     current_max_single = record_data[R_ALL, RA_MAX_SINGLE_WIN]
     current_max_multi = record_data[R_ALL, RA_MAX_MULTIPLIER]
+    current_max_multi_bg = record_data[R_ALL, RA_MAX_MULTIPLIER_BG]
+    current_max_multi_fg = record_data[R_ALL, RA_MAX_MULTIPLIER_FG]
     round_max_single = round_record[R_ALL, RA_MAX_SINGLE_WIN]
     round_max_multi = round_record[R_ALL, RA_MAX_MULTIPLIER]
+    round_max_multi_bg = round_record[R_ALL, RA_MAX_MULTIPLIER_BG]
+    round_max_multi_fg = round_record[R_ALL, RA_MAX_MULTIPLIER_FG]
 
     for i in range(record_data.shape[0]):
         for j in range(record_data.shape[1]):
@@ -347,6 +365,8 @@ def merge_round_record(record_data, round_record):
 
     record_data[R_ALL, RA_MAX_SINGLE_WIN] = current_max_single if current_max_single > round_max_single else round_max_single
     record_data[R_ALL, RA_MAX_MULTIPLIER] = current_max_multi if current_max_multi > round_max_multi else round_max_multi
+    record_data[R_ALL, RA_MAX_MULTIPLIER_BG] = current_max_multi_bg if current_max_multi_bg > round_max_multi_bg else round_max_multi_bg
+    record_data[R_ALL, RA_MAX_MULTIPLIER_FG] = current_max_multi_fg if current_max_multi_fg > round_max_multi_fg else round_max_multi_fg
 
 
 @njit(nogil=True)
@@ -422,6 +442,29 @@ def count_scatter(board):
 
 
 @njit(nogil=True)
+def column_has_scatter(board, col):
+    for row in range(WINDOW_SIZE):
+        if board[row, col] == C1:
+            return 1
+    return 0
+
+
+@njit(nogil=True)
+def pick_drop_symbol(table_id, use_drop_a, col, board):
+    has_scatter = column_has_scatter(board, col)
+    while True:
+        if use_drop_a == 1:
+            drop_idx = pick_by_cum(DROP_WEIGHT_A_CUM[table_id, :, col])
+        else:
+            drop_idx = pick_by_cum(DROP_WEIGHT_B_CUM[table_id, :, col])
+        drop_symbol = SYMBOL_ID[drop_idx]
+        base_symbol = BASE_SYMBOL_OF[drop_symbol]
+        if CASCADE_SCATTER_LIMIT_PER_REEL == 1 and has_scatter == 1 and base_symbol == C1:
+            continue
+        return drop_symbol, base_symbol
+
+
+@njit(nogil=True)
 def collect_gold_positions(gold_mask, gold_pos):
     gold_count = 0
     for row in range(WINDOW_SIZE):
@@ -485,6 +528,7 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
         best_len = 0
         best_pay = 0
 
+        # Line wins must start from the leftmost reel on the payline.
         first_row = PAYLINES[line_idx, 0]
         first_symbol = board[first_row, 0]
         if first_symbol == C1:
@@ -557,12 +601,8 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
                 multi_mask[row, col] = keep_multi[keep_idx]
                 keep_idx += 1
             else:
-                if use_drop_a == 1:
-                    drop_idx = pick_by_cum(DROP_WEIGHT_A_CUM[table_id, :, col])
-                else:
-                    drop_idx = pick_by_cum(DROP_WEIGHT_B_CUM[table_id, :, col])
-                drop_symbol = SYMBOL_ID[drop_idx]
-                board[row, col] = BASE_SYMBOL_OF[drop_symbol]
+                drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, board)
+                board[row, col] = base_symbol
                 gold_mask[row, col] = IS_GOLD_SYMBOL[drop_symbol]
                 if gold_mask[row, col] == 1:
                     multi_mask[row, col] = pick_drop_multiplier_by_col(table_id, col)
@@ -618,7 +658,6 @@ def run_spin(
     use_drop_a = choose_eliminate_table(scene_mode)
     generate_board(table_id, board, gold_mask, multi_mask)
     copy_layout(board_initial, board)
-    scatter_count = count_scatter(board)
     assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
     pre_eliminate_gold_count = count_gold_mask(gold_mask)
 
@@ -663,7 +702,8 @@ def run_spin(
         gold_appear, multi_appear = update_spin_flags(gold_mask, multi_mask, gold_appear, multi_appear)
         combo_idx += 1
 
-    final_multiplier = multiplier_sum if multiplier_sum > 0 else 1
+    scatter_count = count_scatter(board)
+    final_multiplier = multiplier_sum if multi_used == 1 and multiplier_sum > 0 else 1
     final_pay = raw_pay * final_multiplier
     return (
         final_pay,
@@ -740,6 +780,20 @@ def log_multi_line(record_data, scene_idx, score, coin_in):
 
 
 @njit(nogil=True)
+def log_round_multiplier_lines(record_data, pay_bg, pay_fg, pay_total, triggered_bg_fg, coin_in):
+    if triggered_bg_fg == 1:
+        if pay_fg > 0:
+            log_multi_line(record_data, OUTPUT_FG, pay_fg, coin_in)
+            log_multi_line(record_data, OUTPUT_OA, pay_fg, coin_in)
+        return
+
+    log_multi_line(record_data, OUTPUT_BG, pay_bg, coin_in)
+    if pay_fg > 0:
+        log_multi_line(record_data, OUTPUT_FG, pay_fg, coin_in)
+    log_multi_line(record_data, OUTPUT_OA, pay_total, coin_in)
+
+
+@njit(nogil=True)
 def apply_spin_log(
     record_data,
     scene_idx,
@@ -755,6 +809,7 @@ def apply_spin_log(
     multi_appear,
     multi_used,
     final_gold_count,
+    final_scatter_count,
     coin_in,
 ):
     if scene_idx == SCENE_BG:
@@ -782,6 +837,18 @@ def apply_spin_log(
         else:
             record_data[R_ALL, RA_ELIMINATE_5] += 1
         record_data[R_ALL, RA_FINAL_GOLD_COUNT_BG_0 + min(final_gold_count, 9)] += 1
+        if gold_appear == 1:
+            record_data[R_ALL, RA_GOLD_APPEAR_SPINS_BG] += 1
+        if gold_used == 1:
+            record_data[R_ALL, RA_GOLD_USED_SPINS_BG] += 1
+        if multi_appear == 1:
+            record_data[R_ALL, RA_MULTI_APPEAR_SPINS_BG] += 1
+        if multi_used == 1:
+            record_data[R_ALL, RA_MULTI_USED_SPINS_BG] += 1
+        if final_scatter_count > 0:
+            record_data[R_ALL, RA_FINAL_C1_PRESENT_BG] += 1
+        if final_multiplier > record_data[R_ALL, RA_MAX_MULTIPLIER_BG]:
+            record_data[R_ALL, RA_MAX_MULTIPLIER_BG] = final_multiplier
     else:
         if eliminate_count == 0:
             record_data[R_ALL, RA_ELIMINATE_0_FG] += 1
@@ -796,6 +863,18 @@ def apply_spin_log(
         else:
             record_data[R_ALL, RA_ELIMINATE_5_FG] += 1
         record_data[R_ALL, RA_FINAL_GOLD_COUNT_FG_0 + min(final_gold_count, 9)] += 1
+        if gold_appear == 1:
+            record_data[R_ALL, RA_GOLD_APPEAR_SPINS_FG] += 1
+        if gold_used == 1:
+            record_data[R_ALL, RA_GOLD_USED_SPINS_FG] += 1
+        if multi_appear == 1:
+            record_data[R_ALL, RA_MULTI_APPEAR_SPINS_FG] += 1
+        if multi_used == 1:
+            record_data[R_ALL, RA_MULTI_USED_SPINS_FG] += 1
+        if final_scatter_count > 0:
+            record_data[R_ALL, RA_FINAL_C1_PRESENT_FG] += 1
+        if final_multiplier > record_data[R_ALL, RA_MAX_MULTIPLIER_FG]:
+            record_data[R_ALL, RA_MAX_MULTIPLIER_FG] = final_multiplier
 
     record_data[R_ALL, RA_GOLD_APPEAR_SPINS] += gold_appear
     record_data[R_ALL, RA_GOLD_USED_SPINS] += gold_used
@@ -868,6 +947,7 @@ def run_free_game_session(
             fg_result[8],
             fg_result[9],
             fg_result[10],
+            fg_result[1],
             coin_in,
         )
 
@@ -965,6 +1045,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     bg_result[8],
                     bg_result[9],
                     bg_result[10],
+                    bg_result[1],
                     coin_in,
                 )
 
@@ -1035,10 +1116,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
             round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
             round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
 
-            log_multi_line(round_record, OUTPUT_BG, pay_bg, coin_in)
-            if pay_fg > 0:
-                log_multi_line(round_record, OUTPUT_FG, pay_fg, coin_in)
-            log_multi_line(round_record, OUTPUT_OA, pay_total, coin_in)
+            log_round_multiplier_lines(round_record, pay_bg, pay_fg, pay_total, triggered_bg_fg, coin_in)
 
             merge_round_record(record_data, round_record)
             continue
@@ -1091,6 +1169,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     bg_result[8],
                     bg_result[9],
                     bg_result[10],
+                    bg_result[1],
                     coin_in,
                 )
 
@@ -1192,6 +1271,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     bf_result[8],
                     bf_result[9],
                     bf_result[10],
+                    bf_result[1],
                     coin_in,
                 )
 
@@ -1249,10 +1329,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
         round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
         round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
 
-        log_multi_line(round_record, OUTPUT_BG, pay_bg, coin_in)
-        if pay_fg > 0:
-            log_multi_line(round_record, OUTPUT_FG, pay_fg, coin_in)
-        log_multi_line(round_record, OUTPUT_OA, pay_total, coin_in)
+        log_round_multiplier_lines(round_record, pay_bg, pay_fg, pay_total, triggered_bg_fg, coin_in)
 
         merge_round_record(record_data, round_record)
 
@@ -1276,6 +1353,8 @@ def merge_record_data(chunks):
         merged += chunk
     merged[R_ALL, RA_MAX_SINGLE_WIN] = max(int(chunk[R_ALL, RA_MAX_SINGLE_WIN]) for chunk in chunks)
     merged[R_ALL, RA_MAX_MULTIPLIER] = max(int(chunk[R_ALL, RA_MAX_MULTIPLIER]) for chunk in chunks)
+    merged[R_ALL, RA_MAX_MULTIPLIER_BG] = max(int(chunk[R_ALL, RA_MAX_MULTIPLIER_BG]) for chunk in chunks)
+    merged[R_ALL, RA_MAX_MULTIPLIER_FG] = max(int(chunk[R_ALL, RA_MAX_MULTIPLIER_FG]) for chunk in chunks)
     return merged
 
 
@@ -1340,6 +1419,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     retrigger_rate = record_data_float[R_ALL, RA_RE_TRIGGER] / fg_spins if fg_spins > 0 else 0.0
     avg_fg_spins = fg_spins / fg_trigger_count if fg_trigger_count > 0 else 0.0
     avg_fg_multiplier = rtp_fg / trigger_rate_fg if trigger_rate_fg > 0 else 0.0
+    trigger_fg_bg_pay = record_data_float[R_ALL, RA_TRIGGER_FG_PAY_BG]
+    trigger_fg_bg_count = int(record_data[R_ALL, RA_TRIGGER_FREEGAME])
     retry_total = record_data_float[R_ALL, RA_RETRY_TOTAL]
     retry_limit_exceeded = record_data_float[R_ALL, RA_RETRY_LIMIT_EXCEEDED]
     retry_limit_bg_range = record_data_float[R_ALL, RA_RETRY_LIMIT_BG_RANGE]
@@ -1349,32 +1430,42 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     avg_retry = retry_total / total_round if total_round > 0 else 0.0
 
     std = math.sqrt(max(0.0, x_square / total_round - (x_sum / total_round) ** 2)) if total_round > 0 else 0.0
-    gold_usage_rate = record_data_float[R_ALL, RA_GOLD_USED_SPINS] / record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS] if record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS] > 0 else 0.0
-    multi_usage_rate = record_data_float[R_ALL, RA_MULTI_USED_SPINS] / record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS] if record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS] > 0 else 0.0
-    free_spins_text = f"{int(fg_spins):,}/{total_round:,}  %"
-    bet_mode_label = "Normal"
-    bet_mode_value = "Bet"
+    gold_usage_rate_bg = record_data_float[R_ALL, RA_GOLD_USED_SPINS_BG] / record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS_BG] if record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS_BG] > 0 else 0.0
+    gold_usage_rate_fg = record_data_float[R_ALL, RA_GOLD_USED_SPINS_FG] / record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS_FG] if record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS_FG] > 0 else 0.0
+    multi_usage_rate_bg = record_data_float[R_ALL, RA_MULTI_USED_SPINS_BG] / record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_BG] if record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_BG] > 0 else 0.0
+    multi_usage_rate_fg = record_data_float[R_ALL, RA_MULTI_USED_SPINS_FG] / record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_FG] if record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_FG] > 0 else 0.0
+    max_multiplier_bg = int(record_data[R_ALL, RA_MAX_MULTIPLIER_BG])
+    max_multiplier_fg = int(record_data[R_ALL, RA_MAX_MULTIPLIER_FG])
+    final_c1_present_bg = int(record_data[R_ALL, RA_FINAL_C1_PRESENT_BG])
+    final_c1_present_fg = int(record_data[R_ALL, RA_FINAL_C1_PRESENT_FG])
+    bet_mode_label = "Normal Bet"
     if bet_mode == MODE_FEATUREBUY:
         bet_mode_label = "Feature Buy"
 
     base_rows = [
         ("game_id", GAME_ID, ""),
-        ("bet_mode", bet_mode_label, bet_mode_value),
+        ("bet_mode", bet_mode_label, ""),
         ("bet_multi", bet_multi, ""),
         ("coin_in", coin_in, ""),
         ("total_rounds", f"{total_round:,}", ""),
         ("threads", threads, ""),
-        ("duration_sec", f"{duration:.2f}", ""),
+        ("duration_sec", f"{duration:.2f}s", ""),
+        ("", "", ""),
         ("rtp_total", f"{rtp_total:.6f}", ""),
         ("rtp_bg", f"{rtp_bg:.6f}", ""),
         ("rtp_fg", f"{rtp_fg:.6f}", ""),
+        ("", "", ""),
         ("hit_rate_bg", f"{hit_rate_bg:.6f}", ""),
         ("hit_rate_fg", f"{hit_rate_fg:.6f}", ""),
         ("hit_rate_total", f"{hit_rate_total:.6f}", ""),
+        ("", "", ""),
         ("fg_trigger_rate", f"{trigger_rate_fg:.6f}", ""),
         ("retrigger_rate", f"{retrigger_rate:.6f}", ""),
         ("avg_fg_multiplier", f"{avg_fg_multiplier:.6f}", ""),
         ("avg_fg_spins", f"{avg_fg_spins:.6f}", ""),
+        ("trigger_fg_bg_pay", int(trigger_fg_bg_pay), ""),
+        ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
+        ("", "", ""),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
         ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
         ("retry_total", int(retry_total), ""),
@@ -1384,13 +1475,20 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("retry_limit_bg_freegame", int(retry_limit_bg_freegame), ""),
         ("retry_limit_bg_freegame_never_trigger", int(retry_limit_bg_freegame_never_trigger), ""),
         ("retry_limit_fg", int(retry_limit_fg), ""),
-        ("free_spins", free_spins_text, ""),
+        ("", "", ""),
         ("volatility_std", f"{std:.6f}", ""),
         ("max_win_hits", int(record_data[R_ALL, RA_MAX_WIN_HITS]), ""),
         ("max_win_x", f"{record_data[R_ALL, RA_MAX_SINGLE_WIN] / coin_in:.2f}", ""),
-        ("gold_usage_rate", f"{gold_usage_rate:.6f}", ""),
-        ("multiplier_usage_rate", f"{multi_usage_rate:.6f}", ""),
-        ("max_multiplier", int(record_data[R_ALL, RA_MAX_MULTIPLIER]), ""),
+        ("", "", ""),
+        ("gold_usage_rate_bg", f"{gold_usage_rate_bg:.6f}", ""),
+        ("gold_usage_rate_fg", f"{gold_usage_rate_fg:.6f}", ""),
+        ("multiplier_usage_rate_bg", f"{multi_usage_rate_bg:.6f}", ""),
+        ("multiplier_usage_rate_fg", f"{multi_usage_rate_fg:.6f}", ""),
+        ("max_multiplier_bg", max_multiplier_bg, ""),
+        ("max_multiplier_fg", max_multiplier_fg, ""),
+        ("", "", ""),
+        ("final_c1_present_bg", final_c1_present_bg, ""),
+        ("final_c1_present_fg", final_c1_present_fg, ""),
     ]
     df_base = pd.DataFrame(base_rows, columns=["Index", "Value", "Value2"])
 
@@ -1421,6 +1519,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "retrigger_rate": retrigger_rate,
         "avg_fg_multiplier": avg_fg_multiplier,
         "avg_fg_spins": avg_fg_spins,
+        "trigger_fg_bg_pay": trigger_fg_bg_pay,
+        "trigger_fg_bg_count": trigger_fg_bg_count,
         "retry_total": retry_total,
         "avg_retry": avg_retry,
         "retry_limit_exceeded": retry_limit_exceeded,
@@ -1429,7 +1529,14 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "retry_limit_bg_freegame_never_trigger": retry_limit_bg_freegame_never_trigger,
         "retry_limit_fg": retry_limit_fg,
         "max_win_x": record_data[R_ALL, RA_MAX_SINGLE_WIN] / coin_in,
-        "max_multiplier": int(record_data[R_ALL, RA_MAX_MULTIPLIER]),
+        "gold_usage_rate_bg": gold_usage_rate_bg,
+        "gold_usage_rate_fg": gold_usage_rate_fg,
+        "multi_usage_rate_bg": multi_usage_rate_bg,
+        "multi_usage_rate_fg": multi_usage_rate_fg,
+        "max_multiplier_bg": max_multiplier_bg,
+        "max_multiplier_fg": max_multiplier_fg,
+        "final_c1_present_bg": final_c1_present_bg,
+        "final_c1_present_fg": final_c1_present_fg,
         "volatility_std": std,
     }
     return df_base, df_hits, df_pay, df_eliminate, df_multiplier, summary
@@ -1438,46 +1545,11 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
 def print_console_result(df_base, df_hits, df_pay, df_eliminate):
     if SHOW_CONSOLE_SUMMARY:
         print("\n=== Fixed Result ===")
-        summary_map = {str(row.Index): (str(row.Value), str(row.Value2)) for row in df_base.itertuples(index=False)}
-        ordered_lines = [
-            ("game_id", summary_map["game_id"][0]),
-            (f"bet_mode {summary_map['bet_mode'][0]}", summary_map["bet_mode"][1]),
-            ("bet_multi", summary_map["bet_multi"][0]),
-            ("coin_in", summary_map["coin_in"][0]),
-            ("total_rounds", summary_map["total_rounds"][0]),
-            ("threads", summary_map["threads"][0]),
-            ("duration_sec", summary_map["duration_sec"][0]),
-            ("", ""),
-            ("rtp_total", summary_map["rtp_total"][0]),
-            ("rtp_bg", summary_map["rtp_bg"][0]),
-            ("rtp_fg", summary_map["rtp_fg"][0]),
-            ("hit_rate_bg", summary_map["hit_rate_bg"][0]),
-            ("hit_rate_fg", summary_map["hit_rate_fg"][0]),
-            ("hit_rate_total", summary_map["hit_rate_total"][0]),
-            ("fg_trigger_rate", summary_map["fg_trigger_rate"][0]),
-            ("retrigger_rate", summary_map["retrigger_rate"][0]),
-            ("avg_fg_multiplier", summary_map["avg_fg_multiplier"][0]),
-            ("avg_fg_spins", summary_map["avg_fg_spins"][0]),
-            ("card_system", summary_map["card_system"][0]),
-            ("retry_limit", summary_map["retry_limit"][0]),
-            ("retry_total", summary_map["retry_total"][0]),
-            ("avg_retry", summary_map["avg_retry"][0]),
-            ("retry_limit_exceeded", summary_map["retry_limit_exceeded"][0]),
-            ("retry_limit_bg_range", summary_map["retry_limit_bg_range"][0]),
-            ("retry_limit_bg_freegame", summary_map["retry_limit_bg_freegame"][0]),
-            ("retry_limit_bg_freegame_never_trigger", summary_map["retry_limit_bg_freegame_never_trigger"][0]),
-            ("retry_limit_fg", summary_map["retry_limit_fg"][0]),
-            ("", ""),
-            ("volatility_std", summary_map["volatility_std"][0]),
-            ("max_win_hits", summary_map["max_win_hits"][0]),
-            ("max_win_x", summary_map["max_win_x"][0]),
-            ("", ""),
-            ("gold_usage_rate", summary_map["gold_usage_rate"][0]),
-            ("multiplier_usage_rate", summary_map["multiplier_usage_rate"][0]),
-            ("max_multiplier", summary_map["max_multiplier"][0]),
-        ]
-        key_width = max(len(label) for label, _ in ordered_lines if label)
-        for label, value in ordered_lines:
+        summary_rows = list(df_base.itertuples(index=False))
+        key_width = max(len(str(row.Index)) for row in summary_rows if str(row.Index))
+        for row in summary_rows:
+            label = str(row.Index)
+            value = str(row.Value)
             if not label:
                 print("")
                 continue
