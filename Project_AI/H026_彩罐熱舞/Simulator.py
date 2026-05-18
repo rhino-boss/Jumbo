@@ -420,10 +420,11 @@ def choose_eliminate_table(scene_mode):
 
 
 @njit(nogil=True)
-def generate_board(table_id, board, gold_mask, multi_mask):
+def generate_board(table_id, board, gold_mask, multi_mask, next_above_idx):
     for col in range(REEL_NUM):
         reel_length = REELS_LEN[table_id, col]
         stop_idx = pick_by_cum(ARR_REELS_WEIGHT_CUM[table_id, :reel_length, col])
+        next_above_idx[col] = (stop_idx - 1 + reel_length) % reel_length
         for row in range(WINDOW_SIZE):
             symbol = ARR_REELS[table_id, (stop_idx + row) % reel_length, col]
             board[row, col] = BASE_SYMBOL_OF[symbol]
@@ -462,6 +463,15 @@ def pick_drop_symbol(table_id, use_drop_a, col, board):
         if CASCADE_SCATTER_LIMIT_PER_REEL == 1 and has_scatter == 1 and base_symbol == C1:
             continue
         return drop_symbol, base_symbol
+
+
+@njit(nogil=True)
+def take_reel_above_symbol(table_id, col, next_above_idx):
+    reel_length = REELS_LEN[table_id, col]
+    strip_idx = next_above_idx[col]
+    symbol = ARR_REELS[table_id, strip_idx, col]
+    next_above_idx[col] = (strip_idx - 1 + reel_length) % reel_length
+    return symbol, BASE_SYMBOL_OF[symbol]
 
 
 @njit(nogil=True)
@@ -579,9 +589,10 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
 
 
 @njit(nogil=True)
-def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi):
+def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi, next_above_idx):
     for col in range(REEL_NUM):
         keep_count = 0
+        used_reel_above = 0
         for row in range(WINDOW_SIZE - 1, -1, -1):
             if hit_mask[row, col] == 0:
                 keep_symbol[keep_count] = board[row, col]
@@ -601,7 +612,11 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
                 multi_mask[row, col] = keep_multi[keep_idx]
                 keep_idx += 1
             else:
-                drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, board)
+                if used_reel_above == 0:
+                    drop_symbol, base_symbol = take_reel_above_symbol(table_id, col, next_above_idx)
+                    used_reel_above = 1
+                else:
+                    drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, board)
                 board[row, col] = base_symbol
                 gold_mask[row, col] = IS_GOLD_SYMBOL[drop_symbol]
                 if gold_mask[row, col] == 1:
@@ -645,6 +660,7 @@ def run_spin(
     keep_symbol,
     keep_gold,
     keep_multi,
+    next_above_idx,
 ):
     clear_2d(board)
     clear_2d(gold_mask)
@@ -656,7 +672,7 @@ def run_spin(
 
     table_id = choose_table(scene_mode, fg_multiplier_sum)
     use_drop_a = choose_eliminate_table(scene_mode)
-    generate_board(table_id, board, gold_mask, multi_mask)
+    generate_board(table_id, board, gold_mask, multi_mask, next_above_idx)
     copy_layout(board_initial, board)
     assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
     pre_eliminate_gold_count = count_gold_mask(gold_mask)
@@ -698,7 +714,7 @@ def run_spin(
                         gold_mask[row, col] = 0
                         multi_mask[row, col] = 0
 
-        cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi)
+        cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi, next_above_idx)
         gold_appear, multi_appear = update_spin_flags(gold_mask, multi_mask, gold_appear, multi_appear)
         combo_idx += 1
 
@@ -907,6 +923,7 @@ def run_free_game_session(
     keep_symbol,
     keep_gold,
     keep_multi,
+    next_above_idx,
 ):
     pay_fg = 0
     fg_multiplier_sum = 0
@@ -929,6 +946,7 @@ def run_free_game_session(
             keep_symbol,
             keep_gold,
             keep_multi,
+            next_above_idx,
         )
         pay_fg += fg_result[0]
         fg_multiplier_sum = fg_result[3]
@@ -976,6 +994,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
     keep_symbol = np.zeros(WINDOW_SIZE, np.int64)
     keep_gold = np.zeros(WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(WINDOW_SIZE, np.int64)
+    next_above_idx = np.zeros(REEL_NUM, np.int64)
     round_record = np.zeros(RECORD_SIZE, np.int64)
     bg_round_record = np.zeros(RECORD_SIZE, np.int64)
     fg_round_record = np.zeros(RECORD_SIZE, np.int64)
@@ -1025,6 +1044,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_symbol,
                     keep_gold,
                     keep_multi,
+                    next_above_idx,
                 )
                 pay_bg = bg_result[0]
                 triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
@@ -1095,6 +1115,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                         keep_symbol,
                         keep_gold,
                         keep_multi,
+                        next_above_idx,
                     )
                     if is_card_match(PROFILE_FREE_GAME, fg_card_idx, pay_fg, coin_in, 1):
                         break
@@ -1149,6 +1170,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_symbol,
                     keep_gold,
                     keep_multi,
+                    next_above_idx,
                 )
                 pay_bg = bg_result[0]
                 triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
@@ -1207,6 +1229,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                                 keep_symbol,
                                 keep_gold,
                                 keep_multi,
+                                next_above_idx,
                             )
                             if is_card_match(PROFILE_FREE_GAME, fg_card_idx, pay_fg, coin_in, 1) is False:
                                 accepted = 0
@@ -1234,6 +1257,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                             keep_symbol,
                             keep_gold,
                             keep_multi,
+                            next_above_idx,
                         )
             else:
                 bf_result = run_spin(
@@ -1252,6 +1276,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_symbol,
                     keep_gold,
                     keep_multi,
+                    next_above_idx,
                 )
                 pay_bg = bf_result[0]
                 free_spins = calc_free_spins(bf_result[1], 1)
@@ -1294,6 +1319,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_symbol,
                     keep_gold,
                     keep_multi,
+                    next_above_idx,
                 )
 
                 if CARD_SYSTEM_ENABLED and buy_feature_card_idx >= 0:
@@ -1591,6 +1617,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     keep_symbol = np.zeros(WINDOW_SIZE, np.int64)
     keep_gold = np.zeros(WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(WINDOW_SIZE, np.int64)
+    next_above_idx = np.zeros(REEL_NUM, np.int64)
     result = run_spin(
         SCENE_BG if bet_mode == MODE_NORMALBET else SCENE_BF,
         0,
@@ -1607,6 +1634,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
         keep_symbol,
         keep_gold,
         keep_multi,
+        next_above_idx,
     )
     print("Single spin result:")
     print(f"coin_in={coin_in}, pay={result[0]}, scatter={result[1]}, final_multiplier={result[4]}, cascades={result[5]}")

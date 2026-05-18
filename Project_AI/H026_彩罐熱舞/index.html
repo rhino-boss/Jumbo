@@ -823,12 +823,14 @@
       const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
       const goldMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
       const multiMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const nextAboveIndex = Array(Box.reel_num).fill(0);
       const reelRng = [];
 
       for (let col = 0; col < Box.reel_num; col += 1) {
         const reelLength = Box.reels_len[tableId][col];
         const pick = pickByCum(Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]));
-        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength });
+        nextAboveIndex[col] = (pick.index - 1 + reelLength) % reelLength;
+        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength, next_above_index: nextAboveIndex[col] });
         for (let row = 0; row < Box.window_size; row += 1) {
           const symbol = Box.arr_reels[tableId][(pick.index + row) % reelLength][col];
           const baseSymbol = Box.base_symbol_of[symbol];
@@ -836,7 +838,7 @@
           goldMask[row][col] = Box.is_gold_symbol[symbol];
         }
       }
-      return { board, goldMask, multiMask, reelRng };
+      return { board, goldMask, multiMask, reelRng, nextAboveIndex };
     }
 
     function countScatter(board) {
@@ -860,6 +862,15 @@
         if (hasScatter && baseSymbol === 1) continue;
         return { picked, dropSymbol, baseSymbol };
       }
+    }
+
+    function takeReelAboveSymbol(tableId, col, nextAboveIndex) {
+      const reelLength = Box.reels_len[tableId][col];
+      const stripIndex = nextAboveIndex[col];
+      const dropSymbol = Box.arr_reels[tableId][stripIndex][col];
+      const baseSymbol = Box.base_symbol_of[dropSymbol];
+      nextAboveIndex[col] = (stripIndex - 1 + reelLength) % reelLength;
+      return { dropSymbol, baseSymbol, stripIndex };
     }
 
     function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
@@ -1025,10 +1036,11 @@
       return { multiplier_sum: multiplierSum, hit_positions: hitPositions, converted_gold_positions: convertedGoldPositions, added_multiplier: addedMultiplier };
     }
 
-    function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask) {
+    function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask, nextAboveIndex) {
       const dropEvents = [];
       for (let col = 0; col < Box.reel_num; col += 1) {
         const keep = [];
+        let usedReelAbove = false;
         for (let row = Box.window_size - 1; row >= 0; row -= 1) {
           if (hitMask[row][col] === 0) {
             keep.push([board[row][col], goldMask[row][col], multiMask[row][col], specialMask[row][col]]);
@@ -1051,7 +1063,19 @@
             specialMask[row][col] = isSpecial;
             keepIndex += 1;
           } else {
-            const { picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, board);
+            let picked = null;
+            let dropSymbol;
+            let baseSymbol;
+            let dropSource;
+            let stripIndex = null;
+            if (!usedReelAbove) {
+              ({ dropSymbol, baseSymbol, stripIndex } = takeReelAboveSymbol(tableId, col, nextAboveIndex));
+              usedReelAbove = true;
+              dropSource = "reel_above";
+            } else {
+              ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, board));
+              dropSource = "weight";
+            }
             board[row][col] = baseSymbol;
             goldMask[row][col] = Box.is_gold_symbol[dropSymbol];
             specialMask[row][col] = 0;
@@ -1067,9 +1091,11 @@
               row,
               col,
               event: "drop_fill",
-              drop_mode: useDropA ? "A" : "B",
-              rng_value: picked.rng_value,
-              rng_total: picked.rng_total,
+              drop_mode: dropSource === "reel_above" ? "reel_above" : useDropA ? "A" : "B",
+              drop_source: dropSource,
+              rng_value: picked ? picked.rng_value : null,
+              rng_total: picked ? picked.rng_total : null,
+              strip_index: stripIndex,
               drop_symbol_id: dropSymbol,
               symbol_id: baseSymbol,
               symbol_code: Box.symbol_str[String(baseSymbol)],
@@ -1090,6 +1116,7 @@
       const board = generated.board;
       const goldMask = generated.goldMask;
       const multiMask = generated.multiMask;
+      const nextAboveIndex = generated.nextAboveIndex;
       const specialMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
       const initialMultiplierInfo = assignInitialMultiplier(table.table_id, goldMask, multiMask, specialMask);
 
@@ -1120,7 +1147,7 @@
         if (applied.added_multiplier > 0) multiUsed = true;
         latestHitPositions = applied.hit_positions;
         const boardAfterEliminate = serializeBoard(board, goldMask, multiMask, specialMask);
-        const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask);
+        const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask, nextAboveIndex);
         const boardAfterDrop = serializeBoard(board, goldMask, multiMask, specialMask);
 
         boardSteps.push({
