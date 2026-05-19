@@ -20,6 +20,7 @@ from openpyxl.utils import get_column_letter
 
 THRESHOLD = 10_000_000_000
 BET_LEVELS = 30
+BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Tools\PyTools\Xlwings"
 
 # Parameter_List 欄位（1-based）
 COL_ID        = 1
@@ -180,18 +181,18 @@ def process_file(src_path):
     try:
         wb_src = openpyxl.load_workbook(src_path, read_only=True, data_only=True)
     except Exception as e:
-        print(f"  ✗ 無法開啟來源檔: {e}")
+        print(f"  [ERR] 無法開啟來源檔: {e}")
         return
 
     param_name   = next((s for s in wb_src.sheetnames if s.lower() == "parameter_list"), None)
     setting_name = next((s for s in wb_src.sheetnames if s.lower() == "setting"), None)
 
     if not param_name:
-        print(f"  ✗ 找不到 Parameter_List 工作頁")
+        print(f"  [ERR] 找不到 Parameter_List 工作頁")
         wb_src.close()
         return
     if not setting_name:
-        print(f"  ✗ 找不到 Setting 工作頁")
+        print(f"  [ERR] 找不到 Setting 工作頁")
         wb_src.close()
         return
 
@@ -203,7 +204,7 @@ def process_file(src_path):
     wb_src.close()
 
     if not params:
-        print(f"  ✗ Parameter_List 無資料")
+        print(f"  [ERR] Parameter_List 無資料")
         return
 
     print(f"  共 {len(params)} 筆 (ID, Bet) 組合，計算中...")
@@ -230,11 +231,11 @@ def process_file(src_path):
 
     try:
         wb_out.save(out_path)
-        print(f"  ✓ 已儲存: {out_path}")
+        print(f"  [OK] 已儲存: {out_path}")
     except PermissionError:
-        print(f"  ✗ 無法儲存 {out_path}（檔案可能已在 Excel 中開啟）")
+        print(f"  [ERR] 無法儲存 {out_path}（檔案可能已在 Excel 中開啟）")
     except Exception as e:
-        print(f"  ✗ 儲存失敗: {e}")
+        print(f"  [ERR] 儲存失敗: {e}")
 
 
 def main():
@@ -243,22 +244,16 @@ def main():
     targets  = [p for p in raw_args if p.lower().endswith((".xlsm", ".xlsx"))]
 
     if not targets:
-        # 自動搜尋：優先腳本所在目錄，其次 cwd
-        try:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-        except NameError:
-            script_dir = ""
-        cwd = os.getcwd()
-        search_dirs = list(dict.fromkeys(d for d in [script_dir, cwd] if d))
-
-        for d in search_dirs:
-            for f in glob.glob(os.path.join(d, "JP*.xlsm")):
-                if f not in targets:
-                    targets.append(f)
+        # 固定使用絕對路徑，避免執行位置影響搜尋結果
+        os.chdir(BASE_DIR)
+        for f in glob.glob(os.path.join(BASE_DIR, "JP*.xlsm")):
+            if f not in targets:
+                targets.append(f)
 
     if not targets:
         print("找不到符合條件的 JP*.xlsm 檔案。")
-        print("請將此腳本放在與 JP*.xlsm 相同目錄，或直接傳入檔案路徑。")
+        print(f"搜尋目錄: {BASE_DIR}")
+        print("請確認來源檔位於上述目錄，或直接傳入完整檔案路徑。")
         return
 
     for t in targets:

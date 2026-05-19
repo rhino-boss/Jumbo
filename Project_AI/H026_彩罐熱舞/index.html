@@ -845,32 +845,31 @@
       return board.flat().filter((symbol) => symbol === 1).length;
     }
 
-    function columnHasScatter(board, col) {
-      for (let row = 0; row < Box.window_size; row += 1) {
-        if (board[row][col] === 1) return true;
-      }
-      return false;
+    function boardHasScatter(board) {
+      return board.some((row) => row.some((symbol) => symbol === 1));
     }
 
-    function pickDropSymbol(tableId, useDropA, col, board) {
-      const hasScatter = columnHasScatter(board, col);
+    function pickDropSymbol(tableId, useDropA, col, boardHasC1) {
       while (true) {
         const cum = useDropA ? Box.drop_weight_a_cum[tableId].map((v) => v[col]) : Box.drop_weight_b_cum[tableId].map((v) => v[col]);
         const picked = pickByCum(cum);
         const dropSymbol = Box.symbol_id[picked.index];
         const baseSymbol = Box.base_symbol_of[dropSymbol];
-        if (hasScatter && baseSymbol === 1) continue;
+        if (boardHasC1 && baseSymbol === 1) continue;
         return { picked, dropSymbol, baseSymbol };
       }
     }
 
-    function takeReelAboveSymbol(tableId, col, nextAboveIndex) {
+    function takeReelAboveSymbol(tableId, col, nextAboveIndex, boardHasC1) {
       const reelLength = Box.reels_len[tableId][col];
-      const stripIndex = nextAboveIndex[col];
-      const dropSymbol = Box.arr_reels[tableId][stripIndex][col];
-      const baseSymbol = Box.base_symbol_of[dropSymbol];
-      nextAboveIndex[col] = (stripIndex - 1 + reelLength) % reelLength;
-      return { dropSymbol, baseSymbol, stripIndex };
+      while (true) {
+        const stripIndex = nextAboveIndex[col];
+        const dropSymbol = Box.arr_reels[tableId][stripIndex][col];
+        const baseSymbol = Box.base_symbol_of[dropSymbol];
+        nextAboveIndex[col] = (stripIndex - 1 + reelLength) % reelLength;
+        if (boardHasC1 && baseSymbol === 1) continue;
+        return { dropSymbol, baseSymbol, stripIndex };
+      }
     }
 
     function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
@@ -1038,6 +1037,7 @@
 
     function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask, nextAboveIndex) {
       const dropEvents = [];
+      let hasC1OnBoard = boardHasScatter(board);
       for (let col = 0; col < Box.reel_num; col += 1) {
         const keep = [];
         let usedReelAbove = false;
@@ -1069,11 +1069,11 @@
             let dropSource;
             let stripIndex = null;
             if (!usedReelAbove) {
-              ({ dropSymbol, baseSymbol, stripIndex } = takeReelAboveSymbol(tableId, col, nextAboveIndex));
+              ({ dropSymbol, baseSymbol, stripIndex } = takeReelAboveSymbol(tableId, col, nextAboveIndex, hasC1OnBoard));
               usedReelAbove = true;
               dropSource = "reel_above";
             } else {
-              ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, board));
+              ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, hasC1OnBoard));
               dropSource = "weight";
             }
             board[row][col] = baseSymbol;
@@ -1087,6 +1087,7 @@
             } else {
               multiMask[row][col] = 0;
             }
+            if (baseSymbol === 1) hasC1OnBoard = true;
             dropEvents.push({
               row,
               col,

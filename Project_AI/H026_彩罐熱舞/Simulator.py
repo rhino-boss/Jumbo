@@ -15,12 +15,12 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\H026_�
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**7
+TOTAL_ROUNDS = 10**8
 BET_MULTI = 1
 BET_MODE = 0
 THREADS = max(1, max(8, os.cpu_count() or 1))
 FG_SPIN_CAP = 50
-ALLOW_MULTI_C1_PER_CASCADE_REEL = False
+ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 = False
 
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
@@ -210,7 +210,7 @@ CARD_SYSTEM_RAW = CFG_RAW.get("card_system", {})
 CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled"))
 CARD_RETRY_LIMIT = int(CARD_SYSTEM_RAW.get("retry_limit", 0))
 CARD_TYPES, CARD_MIN, CARD_MAX, CARD_WEIGHT_CUM, CARD_COUNTS = _build_card_profile_tables(CARD_SYSTEM_RAW)
-CASCADE_SCATTER_LIMIT_PER_REEL = 0 if ALLOW_MULTI_C1_PER_CASCADE_REEL else 1
+CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 = 0 if ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 else 1
 
 SYMBOLS_COUNT = int(len(SYMBOL_ID))
 LINE_NUM = int(PAYLINES.shape[0])
@@ -443,16 +443,16 @@ def count_scatter(board):
 
 
 @njit(nogil=True)
-def column_has_scatter(board, col):
+def board_has_scatter(board):
     for row in range(WINDOW_SIZE):
-        if board[row, col] == C1:
-            return 1
+        for col in range(REEL_NUM):
+            if board[row, col] == C1:
+                return 1
     return 0
 
 
 @njit(nogil=True)
-def pick_drop_symbol(table_id, use_drop_a, col, board):
-    has_scatter = column_has_scatter(board, col)
+def pick_drop_symbol(table_id, use_drop_a, col, board_has_c1):
     while True:
         if use_drop_a == 1:
             drop_idx = pick_by_cum(DROP_WEIGHT_A_CUM[table_id, :, col])
@@ -460,18 +460,22 @@ def pick_drop_symbol(table_id, use_drop_a, col, board):
             drop_idx = pick_by_cum(DROP_WEIGHT_B_CUM[table_id, :, col])
         drop_symbol = SYMBOL_ID[drop_idx]
         base_symbol = BASE_SYMBOL_OF[drop_symbol]
-        if CASCADE_SCATTER_LIMIT_PER_REEL == 1 and has_scatter == 1 and base_symbol == C1:
+        if CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 == 1 and board_has_c1 == 1 and base_symbol == C1:
             continue
         return drop_symbol, base_symbol
 
 
 @njit(nogil=True)
-def take_reel_above_symbol(table_id, col, next_above_idx):
+def take_reel_above_symbol(table_id, col, next_above_idx, board_has_c1):
     reel_length = REELS_LEN[table_id, col]
-    strip_idx = next_above_idx[col]
-    symbol = ARR_REELS[table_id, strip_idx, col]
-    next_above_idx[col] = (strip_idx - 1 + reel_length) % reel_length
-    return symbol, BASE_SYMBOL_OF[symbol]
+    while True:
+        strip_idx = next_above_idx[col]
+        symbol = ARR_REELS[table_id, strip_idx, col]
+        next_above_idx[col] = (strip_idx - 1 + reel_length) % reel_length
+        base_symbol = BASE_SYMBOL_OF[symbol]
+        if CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 == 1 and board_has_c1 == 1 and base_symbol == C1:
+            continue
+        return symbol, base_symbol
 
 
 @njit(nogil=True)
@@ -590,6 +594,7 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
 
 @njit(nogil=True)
 def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi, next_above_idx):
+    has_c1_on_board = board_has_scatter(board)
     for col in range(REEL_NUM):
         keep_count = 0
         used_reel_above = 0
@@ -613,16 +618,18 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
                 keep_idx += 1
             else:
                 if used_reel_above == 0:
-                    drop_symbol, base_symbol = take_reel_above_symbol(table_id, col, next_above_idx)
+                    drop_symbol, base_symbol = take_reel_above_symbol(table_id, col, next_above_idx, has_c1_on_board)
                     used_reel_above = 1
                 else:
-                    drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, board)
+                    drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, has_c1_on_board)
                 board[row, col] = base_symbol
                 gold_mask[row, col] = IS_GOLD_SYMBOL[drop_symbol]
                 if gold_mask[row, col] == 1:
                     multi_mask[row, col] = pick_drop_multiplier_by_col(table_id, col)
                 else:
                     multi_mask[row, col] = 0
+                if base_symbol == C1:
+                    has_c1_on_board = 1
 
 
 @njit(nogil=True)
