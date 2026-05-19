@@ -3,14 +3,25 @@ import ast
 import json
 import time
 from pathlib import Path
+from datetime import timedelta
 
 import pandas as pd
 
-DEFAULT_INPUT_FILE = "spin_responses_lucky_neko.xlsx"
+DEFAULT_INPUT_FILE = "spin_responses_lucky_neko_all.xlsx"
+DEFAULT_SHEET_NAME = "spin_data_new"
+DEFAULT_MAX_ROWS = 69779
+# DEFAULT_MAX_ROWS = 5000
+DEFAULT_OUTPUT_DIR = "analysis_output"
 SHOW_OVERVIEW = True
-SHOW_MULTIPLIER_RANGE = False
+SHOW_MULTIPLIER_RANGE = True
+SHOW_COMBO_RATE = True
 SHOW_REEL_HIGH_DISTRIBUTION = True
 SHOW_SILVER_DISTRIBUTION = True
+SHOW_EXTRA_REEL = True
+SHOW_SYMBOL_SIZE_DISTRIBUTION = True
+SHOW_M1_METRICS = True
+SHOW_RTP_HIT_RATE = True
+SHOW_SYMBOL_OCCURRENCE_RATE = True
 REQUIRED_COLUMNS = [
     "si_sid",
     "si_psid",
@@ -107,9 +118,20 @@ def parse_args():
         help="Path to the Excel file to analyze.",
     )
     parser.add_argument(
+        "--sheet-name",
+        default=DEFAULT_SHEET_NAME,
+        help="Worksheet name to analyze.",
+    )
+    parser.add_argument(
+        "--max-rows",
+        type=int,
+        default=DEFAULT_MAX_ROWS,
+        help="Maximum number of rows to analyze from the worksheet.",
+    )
+    parser.add_argument(
         "--output-dir",
-        default=None,
-        help="Optional directory for generated CSV/JSON reports.",
+        default=DEFAULT_OUTPUT_DIR,
+        help="Directory for the generated analysis workbook.",
     )
     args, _unknown_args = parser.parse_known_args()
     return args
@@ -271,6 +293,21 @@ def get_reel_index(position, reel_ranges):
     return None
 
 
+def get_frame_kind(item):
+    if not isinstance(item, dict):
+        return None
+
+    bt = to_int(item.get("bt"))
+    ls = to_int(item.get("ls"))
+    if bt == 1 and ls == 2:
+        return "silver"
+    if bt == 1 and ls == 1:
+        return "gold"
+    if bt == 2 and ls == 1:
+        return "normal"
+    return None
+
+
 def count_silver_frames(eb_value, nowpr_counts):
     eb = parse_cell(eb_value)
     if not isinstance(eb, dict):
@@ -280,9 +317,7 @@ def count_silver_frames(eb_value, nowpr_counts):
     silver_counts = [0] * len(nowpr_counts)
 
     for item in eb.values():
-        if not isinstance(item, dict):
-            continue
-        if item.get("bt") != 2:
+        if get_frame_kind(item) != "silver":
             continue
         fp = item.get("fp")
         lp = item.get("lp")
@@ -303,9 +338,7 @@ def extract_silver_positions(eb_value):
 
     positions = set()
     for item in eb.values():
-        if not isinstance(item, dict):
-            continue
-        if item.get("bt") != 2:
+        if get_frame_kind(item) != "silver":
             continue
         fp = item.get("fp")
         lp = item.get("lp")
@@ -378,7 +411,7 @@ def analyze_round(round_df):
         "derived_row_count": derived_rows,
         "base_spin_state": state_name(to_int(first_row.get("si_st"))),
         "final_state": state_name(to_int(last_row.get("si_st"))),
-        "has_line_win": bool(round_df["si_lw"].notna().any()),
+        "has_line_win": bool(round_df["si_lw"].notna().any()) if "si_lw" in round_df.columns else False,
         "has_cascade": derived_rows > 0,
         "cascade_row_count": cascade_rows,
         "has_free_spin_trigger": free_spin_total > 0 or free_spin_rows > 0,
@@ -496,6 +529,460 @@ def build_cascade_distribution(round_df):
     }
 
 
+def build_combo_rate_rows(combo_counts, denominator):
+    rows = []
+    for combo_value in range(1, 10):
+        count = sum(1 for value in combo_counts if value == combo_value)
+        rate = 0.0 if denominator == 0 else round(count / denominator, 6)
+        rows.append(
+            {
+                "label": f"Combo {combo_value}",
+                "combo_count": combo_value,
+                "hit_count": count,
+                "rate": rate,
+            }
+        )
+
+    combo_10_plus_count = sum(1 for value in combo_counts if value >= 10)
+    combo_10_plus_rate = 0.0 if denominator == 0 else round(combo_10_plus_count / denominator, 6)
+    rows.append(
+        {
+            "label": "Combo 10+",
+            "combo_count": "10+",
+            "hit_count": combo_10_plus_count,
+            "rate": combo_10_plus_rate,
+        }
+    )
+    rows.append(
+        {
+            "label": "Max Hit",
+            "combo_count": max(combo_counts, default=0),
+            "hit_count": "",
+            "rate": "",
+        }
+    )
+    return rows
+
+
+def build_combo_rate_payload(df):
+    ordered = df.copy()
+    ordered["root_spin_id"] = ordered.apply(root_spin_id, axis=1)
+    ordered["row_order"] = range(len(ordered))
+    ordered["row_state"] = ordered["si_st"].apply(to_int)
+    ordered["row_tw"] = ordered["si_tw"].apply(to_float)
+
+    bg_combo_counts = []
+    fg_combo_counts = []
+
+    for _, group in ordered.groupby("root_spin_id", sort=False):
+        group = group.sort_values("row_order").reset_index(drop=True)
+        if group.empty:
+            continue
+
+        first_state = to_int(group.iloc[0].get("si_st"))
+        if first_state == 1:
+            bg_end = 1
+            while bg_end < len(group) and to_int(group.iloc[bg_end].get("si_st")) == 4:
+                bg_end += 1
+
+            bg_segment = group.iloc[:bg_end]
+            bg_combo = 0 if bg_segment["row_tw"].sum() <= 0 else 1 + int((bg_segment["row_state"] == 4).sum())
+            bg_combo_counts.append(bg_combo)
+
+        index = 0
+        while index < len(group):
+            if to_int(group.iloc[index].get("si_st")) != 21:
+                index += 1
+                continue
+
+            end = index + 1
+            while end < len(group) and to_int(group.iloc[end].get("si_st")) == 22:
+                end += 1
+
+            fg_segment = group.iloc[index:end]
+            fg_combo = 0 if fg_segment["row_tw"].sum() <= 0 else 1 + int((fg_segment["row_state"] == 22).sum())
+            fg_combo_counts.append(fg_combo)
+            index = end
+
+    return {
+        "bg": {
+            "sample_count": int(len(bg_combo_counts)),
+            "distribution": build_combo_rate_rows(bg_combo_counts, len(bg_combo_counts)),
+        },
+        "fg": {
+            "sample_count": int(len(fg_combo_counts)),
+            "distribution": build_combo_rate_rows(fg_combo_counts, len(fg_combo_counts)),
+        },
+    }
+
+
+def build_extra_reel_same_symbol_payload(df):
+    symbol_counts = {}
+    valid_row_count = 0
+
+    for value in df.get("si_trl", []):
+        trl = parse_cell(value)
+        if not isinstance(trl, list) or len(trl) != 4:
+            continue
+
+        normalized = []
+        for item in trl:
+            item_int = to_int(item)
+            if item_int is None:
+                normalized = []
+                break
+            normalized.append(item_int)
+
+        if len(normalized) != 4:
+            continue
+
+        valid_row_count += 1
+        if len(set(normalized)) != 1:
+            continue
+
+        symbol_id = normalized[0]
+        symbol_counts[symbol_id] = symbol_counts.get(symbol_id, 0) + 1
+
+    rows = []
+    for symbol_id in sorted(symbol_counts.keys()):
+        count = symbol_counts[symbol_id]
+        rate = 0.0 if valid_row_count == 0 else round(count / valid_row_count, 6)
+        rows.append(
+            {
+                "symbol_id": symbol_id,
+                "hit_count": count,
+                "rate": rate,
+            }
+        )
+
+    return {
+        "sample_count": int(valid_row_count),
+        "distribution": rows,
+    }
+
+
+def iter_symbol_runs(board_value, nowpr_value):
+    board = parse_cell(board_value)
+    nowpr_counts = normalize_nowpr(nowpr_value)
+    if not isinstance(board, list):
+        return
+
+    start = 0
+    for reel_count in nowpr_counts:
+        end = start + max(int(reel_count), 0)
+        reel_symbols = board[start:end]
+        start = end
+        if not reel_symbols:
+            continue
+
+        run_symbol = reel_symbols[0]
+        run_length = 1
+        for symbol in reel_symbols[1:]:
+            if symbol == run_symbol:
+                run_length += 1
+                continue
+            yield run_symbol, run_length
+            run_symbol = symbol
+            run_length = 1
+        yield run_symbol, run_length
+
+
+def build_symbol_size_distribution_payload(df):
+    working = df.copy()
+    working["row_state"] = working["si_st"].apply(to_int)
+
+    def build_for_states(states):
+        symbol_size_counts = {}
+        total_size_counts = {1: 0, 2: 0, 3: 0, 4: 0}
+        subset = working[working["row_state"].isin(states)]
+        for _, row in subset.iterrows():
+            for symbol_id, run_length in iter_symbol_runs(row.get("si_orl"), row.get("si_nowpr")):
+                symbol_id = to_int(symbol_id)
+                if symbol_id is None:
+                    continue
+                if run_length not in (1, 2, 3, 4):
+                    continue
+                size_counts = symbol_size_counts.setdefault(symbol_id, {1: 0, 2: 0, 3: 0, 4: 0})
+                size_counts[run_length] += 1
+                total_size_counts[run_length] += 1
+
+        rows = []
+        for symbol_id in sorted(symbol_size_counts.keys()):
+            size_counts = symbol_size_counts[symbol_id]
+            total = sum(size_counts.values())
+            rows.append(
+                {
+                    "symbol_id": symbol_id,
+                    "1x1": 0.0 if total_size_counts[1] == 0 else round(size_counts[1] / total_size_counts[1], 6),
+                    "2x1": 0.0 if total_size_counts[2] == 0 else round(size_counts[2] / total_size_counts[2], 6),
+                    "3x1": 0.0 if total_size_counts[3] == 0 else round(size_counts[3] / total_size_counts[3], 6),
+                    "4x1": 0.0 if total_size_counts[4] == 0 else round(size_counts[4] / total_size_counts[4], 6),
+                    "symbol_total_count": total,
+                }
+            )
+        return rows
+
+    return {
+        "bg": build_for_states([1]),
+        "fg": build_for_states([21]),
+    }
+
+
+def build_m1_metrics_payload(df, symbol_id=2):
+    ordered = df.copy()
+    ordered["root_spin_id"] = ordered.apply(root_spin_id, axis=1)
+    ordered["row_order"] = range(len(ordered))
+
+    total_rounds = 0
+    rounds_with_m1 = 0
+    rounds_with_m1_and_win = 0
+
+    for _, group in ordered.groupby("root_spin_id", sort=False):
+        group = group.sort_values("row_order")
+        total_rounds += 1
+
+        has_m1 = False
+        for board_value in group["si_orl"].tolist():
+            board = parse_cell(board_value)
+            if isinstance(board, list) and symbol_id in board:
+                has_m1 = True
+                break
+
+        if not has_m1:
+            continue
+
+        rounds_with_m1 += 1
+        total_win = max((to_float(value) for value in group["si_aw"].tolist()), default=0.0)
+        if total_win > 0:
+            rounds_with_m1_and_win += 1
+
+    appearance_rate = 0.0 if total_rounds == 0 else round(rounds_with_m1 / total_rounds, 6)
+    usage_rate = 0.0 if rounds_with_m1 == 0 else round(rounds_with_m1_and_win / rounds_with_m1, 6)
+
+    return {
+        "symbol_id": symbol_id,
+        "total_rounds": total_rounds,
+        "rounds_with_symbol": rounds_with_m1,
+        "rounds_with_symbol_and_win": rounds_with_m1_and_win,
+        "appearance_rate": appearance_rate,
+        "usage_rate": usage_rate,
+    }
+
+
+def extract_symbol_line_entries(row):
+    bwp = parse_cell(row.get("si_bwp"))
+    snww = parse_cell(row.get("si_snww"))
+    rwsp = parse_cell(row.get("si_rwsp"))
+    twp = parse_cell(row.get("si_twp"))
+    row_ctw = to_float(row.get("si_ctw"))
+
+    if not isinstance(bwp, dict) or not isinstance(snww, dict) or not isinstance(rwsp, dict):
+        return []
+
+    entries = []
+    raw_total = 0.0
+    for symbol_key, groups in bwp.items():
+        if not isinstance(groups, list):
+            continue
+        symbol_id = to_int(symbol_key)
+        ways = to_float(snww.get(symbol_key)) if isinstance(snww, dict) else 0.0
+        payout = to_float(rwsp.get(symbol_key)) if isinstance(rwsp, dict) else 0.0
+        extra_groups = 0
+        if isinstance(twp, dict):
+            twp_value = twp.get(symbol_key)
+            if isinstance(twp_value, list):
+                extra_groups = len(twp_value)
+
+        line_count = len(groups) + extra_groups
+        if line_count < 3:
+            continue
+        if line_count > 6:
+            line_count = 6
+
+        raw_value = payout * ways
+        if symbol_id is None or raw_value <= 0:
+            continue
+        raw_total += raw_value
+        entries.append(
+            {
+                "symbol_id": symbol_id,
+                "line_count": line_count,
+                "raw_value": raw_value,
+            }
+        )
+
+    if raw_total <= 0 or row_ctw <= 0:
+        return []
+
+    for entry in entries:
+        entry["win_value"] = row_ctw * (entry["raw_value"] / raw_total)
+    return entries
+
+
+def build_symbol_line_rtp_hit_payload(df):
+    working = df.copy()
+    working["root_spin_id"] = working.apply(root_spin_id, axis=1)
+    working["row_order"] = range(len(working))
+    working["row_state"] = working["si_st"].apply(to_int)
+
+    symbol_ids = set()
+    for board_value in working["si_orl"].tolist():
+        board = parse_cell(board_value)
+        if isinstance(board, list):
+            for symbol in board:
+                symbol_id = to_int(symbol)
+                if symbol_id is not None:
+                    symbol_ids.add(symbol_id)
+    symbol_ids = sorted(symbol_ids)
+    line_keys = [3, 4, 5, 6]
+
+    bg_rtp_wins = {(symbol_id, line_count): 0.0 for symbol_id in symbol_ids for line_count in line_keys}
+    fg_rtp_wins = {(symbol_id, line_count): 0.0 for symbol_id in symbol_ids for line_count in line_keys}
+    bg_hit_counts = {(symbol_id, line_count): 0 for symbol_id in symbol_ids for line_count in line_keys}
+    fg_hit_counts = {(symbol_id, line_count): 0 for symbol_id in symbol_ids for line_count in line_keys}
+
+    total_rounds = 0
+    total_free_spins = 0
+
+    for _, group in working.groupby("root_spin_id", sort=False):
+        group = group.sort_values("row_order").reset_index(drop=True)
+        total_rounds += 1
+
+        bg_hits_this_round = set()
+        bg_end = 0
+        while bg_end < len(group) and to_int(group.iloc[bg_end].get("si_st")) in (1, 4):
+            bg_end += 1
+        bg_segment = group.iloc[:bg_end]
+        for _, row in bg_segment.iterrows():
+            for entry in extract_symbol_line_entries(row):
+                key = (entry["symbol_id"], entry["line_count"])
+                if key in bg_rtp_wins:
+                    bg_rtp_wins[key] += entry["win_value"]
+                    bg_hits_this_round.add(key)
+        for key in bg_hits_this_round:
+            bg_hit_counts[key] += 1
+
+        index = 0
+        while index < len(group):
+            if to_int(group.iloc[index].get("si_st")) != 21:
+                index += 1
+                continue
+            end = index + 1
+            while end < len(group) and to_int(group.iloc[end].get("si_st")) == 22:
+                end += 1
+
+            total_free_spins += 1
+            fg_segment = group.iloc[index:end]
+            fg_hits_this_spin = set()
+            for _, row in fg_segment.iterrows():
+                for entry in extract_symbol_line_entries(row):
+                    key = (entry["symbol_id"], entry["line_count"])
+                    if key in fg_rtp_wins:
+                        fg_rtp_wins[key] += entry["win_value"]
+                        fg_hits_this_spin.add(key)
+            for key in fg_hits_this_spin:
+                fg_hit_counts[key] += 1
+            index = end
+
+    def build_rows(win_map, hit_map, rtp_denominator, hit_denominator):
+        rows = []
+        for symbol_id in symbol_ids:
+            row = {"symbol_id": symbol_id}
+            for line_count in line_keys:
+                rtp_key = f"{line_count}line_rtp"
+                hit_key = f"{line_count}line_hit_rate"
+                key = (symbol_id, line_count)
+                row[rtp_key] = 0.0 if rtp_denominator == 0 else round(win_map[key] / rtp_denominator, 6)
+                row[hit_key] = 0.0 if hit_denominator == 0 else round(hit_map[key] / hit_denominator, 6)
+            rows.append(row)
+        return rows
+
+    return {
+        "rtp_bg": build_rows(bg_rtp_wins, bg_hit_counts, total_rounds, total_rounds),
+        "rtp_fg": build_rows(fg_rtp_wins, fg_hit_counts, total_free_spins, total_free_spins),
+        "hit_bg": build_rows(bg_rtp_wins, bg_hit_counts, total_rounds, total_rounds),
+        "hit_fg": build_rows(fg_rtp_wins, fg_hit_counts, total_free_spins, total_free_spins),
+        "total_rounds": total_rounds,
+        "total_free_spins": total_free_spins,
+    }
+
+
+def build_symbol_occurrence_payload(df, reel_count=6):
+    working = df.copy()
+    working["row_state"] = working["si_st"].apply(to_int)
+
+    def empty_counts():
+        return {}
+
+    def count_initial(states):
+        counts = empty_counts()
+        totals = [0] * reel_count
+        subset = working[working["row_state"].isin(states)]
+        for _, row in subset.iterrows():
+            board = parse_cell(row.get("si_orl"))
+            nowpr_counts = normalize_nowpr(row.get("si_nowpr"), reel_count=reel_count)
+            if not isinstance(board, list):
+                continue
+
+            start = 0
+            for reel_index, visible_count in enumerate(nowpr_counts):
+                end = start + max(int(visible_count), 0)
+                reel_symbols = board[start:end]
+                start = end
+                for symbol in reel_symbols:
+                    symbol_id = to_int(symbol)
+                    if symbol_id is None:
+                        continue
+                    totals[reel_index] += 1
+                    counts.setdefault(symbol_id, [0] * reel_count)[reel_index] += 1
+        return counts, totals
+
+    def count_drop(states):
+        counts = empty_counts()
+        totals = [0] * reel_count
+        subset = working[working["row_state"].isin(states)]
+        for _, row in subset.iterrows():
+            rs = parse_cell(row.get("si_rs"))
+            if not isinstance(rs, dict):
+                continue
+            rns = rs.get("rns")
+            if not isinstance(rns, list):
+                continue
+            for reel_index, dropped_symbols in enumerate(rns[:reel_count]):
+                if not isinstance(dropped_symbols, list):
+                    continue
+                for symbol in dropped_symbols:
+                    symbol_id = to_int(symbol)
+                    if symbol_id is None:
+                        continue
+                    totals[reel_index] += 1
+                    counts.setdefault(symbol_id, [0] * reel_count)[reel_index] += 1
+        return counts, totals
+
+    def to_rows(counts, totals):
+        rows = []
+        for symbol_id in sorted(counts.keys()):
+            row = {"symbol_id": symbol_id}
+            for reel_index in range(reel_count):
+                denominator = totals[reel_index]
+                value = counts[symbol_id][reel_index]
+                row[f"R{reel_index + 1}"] = 0.0 if denominator == 0 else round(value / denominator, 6)
+            rows.append(row)
+        return rows
+
+    bg_initial_counts, bg_initial_totals = count_initial([1])
+    bg_drop_counts, bg_drop_totals = count_drop([4])
+    fg_initial_counts, fg_initial_totals = count_initial([21])
+    fg_drop_counts, fg_drop_totals = count_drop([22])
+
+    return {
+        "bg_initial": to_rows(bg_initial_counts, bg_initial_totals),
+        "bg_drop": to_rows(bg_drop_counts, bg_drop_totals),
+        "fg_initial": to_rows(fg_initial_counts, fg_initial_totals),
+        "fg_drop": to_rows(fg_drop_counts, fg_drop_totals),
+    }
+
+
 def build_reel_symbol_count_distribution(round_df, reel_count=6, symbol_counts=None):
     if symbol_counts is None:
         symbol_counts = [2, 3, 4, 5, 6]
@@ -527,9 +1014,7 @@ def build_reel_high_distribution_payload(df):
     working = df.copy()
     working["row_state"] = working["si_st"].apply(to_int)
     working["nowpr_counts"] = working["si_nowpr"].apply(normalize_nowpr)
-    working["reel_symbol_counts"] = working["nowpr_counts"].apply(
-        lambda value: json.dumps(value, ensure_ascii=True)
-    )
+    working["reel_symbol_counts"] = working["nowpr_counts"].apply(lambda value: json.dumps(value, ensure_ascii=True))
 
     def from_states(states):
         subset = working[working["row_state"].isin(states)].copy()
@@ -586,9 +1071,7 @@ def build_silver_distribution_payload(df):
 
     def from_states(states, source_column):
         subset = working[working["row_state"].isin(states)].copy()
-        subset["reel_silver_counts"] = subset[source_column].apply(
-            lambda value: json.dumps(value, ensure_ascii=True)
-        )
+        subset["reel_silver_counts"] = subset[source_column].apply(lambda value: json.dumps(value, ensure_ascii=True))
         return build_reel_occurrence_distribution(
             subset,
             "reel_silver_counts",
@@ -624,15 +1107,23 @@ def infer_coin_in(round_df):
     return round(float(round_df["base_bet"].iloc[0]), 6)
 
 
-def format_metric_block(summary, round_df, input_path, duration_sec):
+def build_metric_rows(summary, round_df, df, duration_sec, max_rows):
     fg_triggered = round_df[round_df["has_free_spin_trigger"]].copy()
     fg_hit_rate = float((round_df["free_game_win"] > 0).sum() / len(round_df)) if len(round_df) else 0.0
     bg_hit_rate = float((round_df["base_game_win"] > 0).mean()) if len(round_df) else 0.0
     total_hit_rate = float((round_df["total_win"] > 0).mean()) if len(round_df) else 0.0
     retrigger_rate = float((fg_triggered["free_spin_awarded"] > 10).mean()) if len(fg_triggered) else 0.0
     avg_fg_multiplier = float(fg_triggered["fg_multiplier"].mean()) if len(fg_triggered) else 0.0
+    median_fg_multiplier = float(fg_triggered["fg_multiplier"].median()) if len(fg_triggered) else 0.0
+    working = df.copy()
+    working["row_state"] = working["si_st"].apply(to_int)
+    working["row_tw"] = working["si_tw"].apply(to_float)
+    fg_rows = working[working["row_state"].isin([21, 22])].copy()
+    fg_hit_rate = float((fg_rows["row_tw"] > 0).mean()) if len(fg_rows) else 0.0
+    formatted_duration = str(timedelta(seconds=round(duration_sec)))
 
     rows = [
+        ("source_rows_limit", max_rows if max_rows is not None else "all"),
         ("total_rounds", summary["total_root_spins"]),
         ("fg_count", int(round_df["has_free_spin_trigger"].sum())),
         ("rtp_total", f'{summary["total_rtp"]:.6f}'),
@@ -644,8 +1135,16 @@ def format_metric_block(summary, round_df, input_path, duration_sec):
         ("fg_trigger_rate", f'{summary["free_spin_trigger_rate"]:.6f}'),
         ("retrigger_rate", f"{retrigger_rate:.6f}"),
         ("avg_fg_multiplier", f"{avg_fg_multiplier:.6f}"),
+        ("median_fg_multiplier", f"{median_fg_multiplier:.6f}"),
         ("avg_free_spins", f'{summary["avg_free_spins_per_trigger"]:.6f}'),
+        ("execution_time_sec", f"{duration_sec:.3f}"),
+        ("execution_time", formatted_duration),
     ]
+    return rows
+
+
+def format_metric_block(summary, round_df, df, duration_sec, max_rows):
+    rows = build_metric_rows(summary, round_df, df, duration_sec, max_rows)
 
     label_width = max(len(label) for label, _ in rows if label)
     lines = []
@@ -673,6 +1172,23 @@ def format_cascade_distribution(title, payload):
     return "\n".join(lines)
 
 
+def format_combo_rate_distribution(title, payload):
+    lines = [title, f"sample_count : {payload['sample_count']}", "label       combo_count  hit_count    rate"]
+    for item in payload["distribution"]:
+        rate_text = "" if item["rate"] == "" else f"{item['rate']:.6f}"
+        lines.append(f"{item['label']:<11} {str(item['combo_count']):<12} {str(item['hit_count']):<12} {rate_text}")
+    return "\n".join(lines)
+
+
+def format_combo_rate_frame(title, frame):
+    sample_count = frame["sample_count"].iloc[0] if not frame.empty else 0
+    lines = [title, f"sample_count : {sample_count}", "label       combo_count  hit_count    rate"]
+    for _, row in frame.iterrows():
+        rate_text = "" if row["rate"] == "" else f"{float(row['rate']):.6f}"
+        lines.append(f"{row['label']:<11} {str(row['combo_count']):<12} {str(row['hit_count']):<12} {rate_text}")
+    return "\n".join(lines)
+
+
 def format_reel_symbol_count_distribution(title, payload):
     reel_names = [f"R{index}" for index in range(1, 7)]
     header = "     " + " ".join(f"{name:>8}" for name in reel_names)
@@ -693,12 +1209,162 @@ def format_reel_silver_distribution(title, payload):
     return "\n".join(lines)
 
 
+def format_extra_reel_distribution(title, payload):
+    lines = [title, f"sample_count : {payload['sample_count']}", "symbol_id   hit_count   rate"]
+    for item in payload["distribution"]:
+        lines.append(f"{item['symbol_id']:<11} {item['hit_count']:<11} {item['rate']:.6f}")
+    return "\n".join(lines)
+
+
+def format_symbol_size_distribution(title, rows):
+    lines = [title, "symbol_id   1x1        2x1        3x1        4x1        symbol_total_count"]
+    for item in rows:
+        lines.append(f"{item['symbol_id']:<11} {item['1x1']:<10.6f} {item['2x1']:<10.6f} {item['3x1']:<10.6f} {item['4x1']:<10.6f} {item['symbol_total_count']}")
+    return "\n".join(lines)
+
+
+def format_m1_metrics(title, payload):
+    rows = [
+        ("symbol_id", payload["symbol_id"]),
+        ("total_rounds", payload["total_rounds"]),
+        ("rounds_with_symbol", payload["rounds_with_symbol"]),
+        ("rounds_with_symbol_and_win", payload["rounds_with_symbol_and_win"]),
+        ("appearance_rate", f'{payload["appearance_rate"]:.6f}'),
+        ("usage_rate", f'{payload["usage_rate"]:.6f}'),
+    ]
+    label_width = max(len(label) for label, _ in rows)
+    lines = [title]
+    for label, value in rows:
+        lines.append(f"{label:<{label_width}} : {value}")
+    return "\n".join(lines)
+
+
+def format_symbol_line_table(title, rows, value_suffix):
+    lines = [title, f"symbol_id   3line{value_suffix}  4line{value_suffix}  5line{value_suffix}  6line{value_suffix}"]
+    for item in rows:
+        value_3 = item[f"3line_{value_suffix}"]
+        value_4 = item[f"4line_{value_suffix}"]
+        value_5 = item[f"5line_{value_suffix}"]
+        value_6 = item[f"6line_{value_suffix}"]
+        lines.append(f"{item['symbol_id']:<11} {value_3:<12.6f} {value_4:<12.6f} {value_5:<12.6f} {value_6:<12.6f}")
+    return "\n".join(lines)
+
+
+def format_symbol_occurrence_table(title, rows):
+    lines = [title, "symbol_id   R1         R2         R3         R4         R5         R6"]
+    for item in rows:
+        lines.append(f"{item['symbol_id']:<11} {item['R1']:<10.6f} {item['R2']:<10.6f} {item['R3']:<10.6f} {item['R4']:<10.6f} {item['R5']:<10.6f} {item['R6']:<10.6f}")
+    return "\n".join(lines)
+
+
+def build_metric_dataframe(summary, round_df, df, duration_sec, max_rows):
+    return pd.DataFrame(build_metric_rows(summary, round_df, df, duration_sec, max_rows), columns=["metric", "value"])
+
+
+def build_multiplier_distribution_dataframe(payload):
+    return pd.DataFrame(payload["distribution"])[["range", "count", "rate"]]
+
+
+def build_multiplier_comparison_dataframe(bg_payload, fg_payload):
+    bg_frame = pd.DataFrame(bg_payload["distribution"])[["range", "count", "rate"]].rename(columns={"count": "count_BG", "rate": "rate_BG"})
+    fg_frame = pd.DataFrame(fg_payload["distribution"])[["range", "count", "rate"]].rename(columns={"count": "count_FG", "rate": "rate_FG"})
+    return bg_frame.merge(fg_frame, on="range", how="outer")
+
+
+def build_cascade_distribution_dataframe(payload):
+    return pd.DataFrame(payload["distribution"])[["cascade_count", "count", "rate"]]
+
+
+def build_extra_reel_same_symbol_dataframe(payload):
+    frame = pd.DataFrame(payload["distribution"], columns=["symbol_id", "hit_count", "rate"])
+    frame.insert(0, "sample_count", payload["sample_count"])
+    return frame
+
+
+def build_symbol_size_distribution_dataframe(rows):
+    return pd.DataFrame(rows, columns=["symbol_id", "1x1", "2x1", "3x1", "4x1", "symbol_total_count"])
+
+
+def build_m1_metrics_dataframe(payload):
+    return pd.DataFrame(
+        [
+            ("symbol_id", payload["symbol_id"]),
+            ("total_rounds", payload["total_rounds"]),
+            ("rounds_with_symbol", payload["rounds_with_symbol"]),
+            ("rounds_with_symbol_and_win", payload["rounds_with_symbol_and_win"]),
+            ("appearance_rate", payload["appearance_rate"]),
+            ("usage_rate", payload["usage_rate"]),
+        ],
+        columns=["metric", "value"],
+    )
+
+
+def build_symbol_line_rtp_dataframe(rows):
+    return pd.DataFrame(rows, columns=["symbol_id", "3line_rtp", "4line_rtp", "5line_rtp", "6line_rtp"])
+
+
+def build_symbol_line_hit_dataframe(rows):
+    return pd.DataFrame(rows, columns=["symbol_id", "3line_hit_rate", "4line_hit_rate", "5line_hit_rate", "6line_hit_rate"])
+
+
+def build_symbol_occurrence_dataframe(rows):
+    return pd.DataFrame(rows, columns=["symbol_id", "R1", "R2", "R3", "R4", "R5", "R6"])
+
+
+def build_named_distribution_dataframe(payload, name):
+    frame = pd.DataFrame(payload["distribution"]).copy()
+    frame.insert(0, "section", name)
+    return frame
+
+
+def build_combo_rate_dataframe(payload, cascade_payload):
+    frame = pd.DataFrame(payload["distribution"])[["label", "combo_count", "hit_count", "rate"]].copy()
+    cascade_count_map = {int(item["cascade_count"]): item["count"] for item in cascade_payload["distribution"]}
+    cascade_rate_map = {int(item["cascade_count"]): item["rate"] for item in cascade_payload["distribution"]}
+    for row_index, row in frame.iterrows():
+        combo_count = row["combo_count"]
+        if isinstance(combo_count, int):
+            frame.at[row_index, "hit_count"] = cascade_count_map.get(combo_count - 1, row["hit_count"])
+            frame.at[row_index, "rate"] = cascade_rate_map.get(combo_count - 1, row["rate"])
+    frame.insert(0, "sample_count", payload["sample_count"])
+    return frame
+
+
+def write_stacked_frames(writer, sheet_name, sections, blank_rows=1):
+    current_row = 0
+    for title, frame in sections:
+        pd.DataFrame([[title]], columns=[title]).to_excel(
+            writer,
+            sheet_name=sheet_name,
+            index=False,
+            header=False,
+            startrow=current_row,
+        )
+        current_row += 1
+        frame.to_excel(
+            writer,
+            sheet_name=sheet_name,
+            index=False,
+            startrow=current_row,
+        )
+        current_row += len(frame) + 1 + blank_rows
+
+
+def build_occurrence_distribution_dataframe(payload, index_label):
+    frame = pd.DataFrame(payload["rows"]).T
+    frame.index.name = index_label
+    return frame.reset_index()
+
+
 def main():
     started_at = time.perf_counter()
     args = parse_args()
     input_path = Path(args.input_file).resolve()
 
-    df = pd.read_excel(input_path)
+    read_kwargs = {"sheet_name": args.sheet_name}
+    if args.max_rows is not None and args.max_rows > 0:
+        read_kwargs["nrows"] = args.max_rows
+    df = pd.read_excel(input_path, **read_kwargs)
     validate_columns(df)
     df.attrs["source_file"] = str(input_path)
 
@@ -706,6 +1372,12 @@ def main():
     summary = summarize(df, round_df)
     distributions = build_distribution_payload(round_df)
     cascade_distribution = build_cascade_distribution(round_df)
+    combo_rate_payload = build_combo_rate_payload(df)
+    extra_reel_same_symbol_payload = build_extra_reel_same_symbol_payload(df)
+    symbol_size_distribution_payload = build_symbol_size_distribution_payload(df)
+    m1_metrics_payload = build_m1_metrics_payload(df, symbol_id=2)
+    symbol_line_rtp_hit_payload = build_symbol_line_rtp_hit_payload(df)
+    symbol_occurrence_payload = build_symbol_occurrence_payload(df)
     reel_high_distribution_payload = build_reel_high_distribution_payload(df)
     silver_distribution_payload = build_silver_distribution_payload(df)
     duration_sec = time.perf_counter() - started_at
@@ -713,7 +1385,7 @@ def main():
     output_sections = []
 
     if SHOW_OVERVIEW:
-        output_sections.append("=== Overview ===\n" + format_metric_block(summary, round_df, input_path, duration_sec))
+        output_sections.append("=== Overview ===\n" + format_metric_block(summary, round_df, df, duration_sec, args.max_rows))
 
     if SHOW_MULTIPLIER_RANGE:
         multiplier_parts = [
@@ -722,6 +1394,16 @@ def main():
             format_multiplier_distribution("Multiplier Range FG", distributions["fg"]),
         ]
         output_sections.append("\n\n".join(multiplier_parts))
+
+    if SHOW_COMBO_RATE:
+        combo_rate_bg_frame = build_combo_rate_dataframe(combo_rate_payload["bg"], cascade_distribution["bg"])
+        combo_rate_fg_frame = build_combo_rate_dataframe(combo_rate_payload["fg"], cascade_distribution["fg"])
+        combo_parts = [
+            "=== Combo Rate ===",
+            format_combo_rate_frame("Combo Rate BG", combo_rate_bg_frame),
+            format_combo_rate_frame("Combo Rate FG", combo_rate_fg_frame),
+        ]
+        output_sections.append("\n\n".join(combo_parts))
 
     if SHOW_REEL_HIGH_DISTRIBUTION:
         reel_parts = [
@@ -759,47 +1441,205 @@ def main():
         ]
         output_sections.append("\n\n".join(silver_parts))
 
+    if SHOW_EXTRA_REEL:
+        output_sections.append(
+            "=== Extra Reel ===\n"
+            + format_extra_reel_distribution(
+                "Extra Reel Same Symbol Rate",
+                extra_reel_same_symbol_payload,
+            )
+        )
+
+    if SHOW_SYMBOL_SIZE_DISTRIBUTION:
+        output_sections.append(
+            "=== Symbol Size Distribution ===\n"
+            + "\n\n".join(
+                [
+                    format_symbol_size_distribution("BG Initial Symbol Size", symbol_size_distribution_payload["bg"]),
+                    format_symbol_size_distribution("FG Initial Symbol Size", symbol_size_distribution_payload["fg"]),
+                ]
+            )
+        )
+
+    if SHOW_M1_METRICS:
+        output_sections.append(
+            "=== M1 Metrics ===\n"
+            + format_m1_metrics(
+                "M1 Appearance And Usage",
+                m1_metrics_payload,
+            )
+        )
+
+    if SHOW_RTP_HIT_RATE:
+        output_sections.append(
+            "=== RTP / Hit Rate ===\n"
+            + "\n\n".join(
+                [
+                    format_symbol_line_table("RTP BG", symbol_line_rtp_hit_payload["rtp_bg"], "rtp"),
+                    format_symbol_line_table("RTP FG", symbol_line_rtp_hit_payload["rtp_fg"], "rtp"),
+                    format_symbol_line_table("Hit Rate BG", symbol_line_rtp_hit_payload["hit_bg"], "hit_rate"),
+                    format_symbol_line_table("Hit Rate FG", symbol_line_rtp_hit_payload["hit_fg"], "hit_rate"),
+                ]
+            )
+        )
+
+    if SHOW_SYMBOL_OCCURRENCE_RATE:
+        output_sections.append(
+            "=== Symbol Occurrence Rate ===\n"
+            + "\n\n".join(
+                [
+                    format_symbol_occurrence_table("BG Initial Symbols", symbol_occurrence_payload["bg_initial"]),
+                    format_symbol_occurrence_table("BG Drop Symbols", symbol_occurrence_payload["bg_drop"]),
+                    format_symbol_occurrence_table("FG Initial Symbols", symbol_occurrence_payload["fg_initial"]),
+                    format_symbol_occurrence_table("FG Drop Symbols", symbol_occurrence_payload["fg_drop"]),
+                ]
+            )
+        )
+
     print("\n\n".join(output_sections))
 
     if args.output_dir:
         output_dir = Path(args.output_dir).resolve()
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        summary_path = output_dir / f"{input_path.stem}_summary.json"
-        round_path = output_dir / f"{input_path.stem}_rounds.csv"
-        distribution_path = output_dir / f"{input_path.stem}_multiplier_distribution.json"
-        cascade_path = output_dir / f"{input_path.stem}_cascade_distribution.json"
-        reel_symbol_count_path = output_dir / f"{input_path.stem}_reel_high_distribution.json"
-        reel_silver_path = output_dir / f"{input_path.stem}_silver_distribution.json"
+        workbook_path = output_dir / f"{input_path.stem}_analysis.xlsx"
 
-        summary_path.write_text(
-            json.dumps(summary, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        distribution_path.write_text(
-            json.dumps(distributions, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        cascade_path.write_text(
-            json.dumps(cascade_distribution, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        reel_symbol_count_path.write_text(
-            json.dumps(reel_high_distribution_payload, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        reel_silver_path.write_text(
-            json.dumps(silver_distribution_payload, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        round_df.to_csv(round_path, index=False, encoding="utf-8-sig")
+        with pd.ExcelWriter(workbook_path) as writer:
+            build_metric_dataframe(summary, round_df, df, duration_sec, args.max_rows).to_excel(
+                writer,
+                sheet_name="Overview",
+                index=False,
+            )
+            build_multiplier_comparison_dataframe(distributions["bg"], distributions["fg"]).to_excel(
+                writer,
+                sheet_name="Multiplier",
+                index=False,
+            )
+            write_stacked_frames(
+                writer,
+                "ComboRate",
+                [
+                    ("BG", build_combo_rate_dataframe(combo_rate_payload["bg"], cascade_distribution["bg"])),
+                    ("FG", build_combo_rate_dataframe(combo_rate_payload["fg"], cascade_distribution["fg"])),
+                ],
+            )
+            build_extra_reel_same_symbol_dataframe(extra_reel_same_symbol_payload).to_excel(
+                writer,
+                sheet_name="ExtraReelSame",
+                index=False,
+            )
+            write_stacked_frames(
+                writer,
+                "SymbolSize",
+                [
+                    ("BG", build_symbol_size_distribution_dataframe(symbol_size_distribution_payload["bg"])),
+                    ("FG", build_symbol_size_distribution_dataframe(symbol_size_distribution_payload["fg"])),
+                ],
+            )
+            build_m1_metrics_dataframe(m1_metrics_payload).to_excel(
+                writer,
+                sheet_name="M1Metrics",
+                index=False,
+            )
+            write_stacked_frames(
+                writer,
+                "RTP",
+                [
+                    ("BG", build_symbol_line_rtp_dataframe(symbol_line_rtp_hit_payload["rtp_bg"])),
+                    ("FG", build_symbol_line_rtp_dataframe(symbol_line_rtp_hit_payload["rtp_fg"])),
+                ],
+            )
+            write_stacked_frames(
+                writer,
+                "HitRate",
+                [
+                    ("BG", build_symbol_line_hit_dataframe(symbol_line_rtp_hit_payload["hit_bg"])),
+                    ("FG", build_symbol_line_hit_dataframe(symbol_line_rtp_hit_payload["hit_fg"])),
+                ],
+            )
+            write_stacked_frames(
+                writer,
+                "SymbolOcc_Init",
+                [
+                    ("BG", build_symbol_occurrence_dataframe(symbol_occurrence_payload["bg_initial"])),
+                    ("FG", build_symbol_occurrence_dataframe(symbol_occurrence_payload["fg_initial"])),
+                ],
+            )
+            write_stacked_frames(
+                writer,
+                "SymbolOcc_Drop",
+                [
+                    ("BG", build_symbol_occurrence_dataframe(symbol_occurrence_payload["bg_drop"])),
+                    ("FG", build_symbol_occurrence_dataframe(symbol_occurrence_payload["fg_drop"])),
+                ],
+            )
+            write_stacked_frames(
+                writer,
+                "ReelHigh_Init",
+                [
+                    (
+                        "BG",
+                        build_occurrence_distribution_dataframe(
+                            reel_high_distribution_payload["bg_initial"],
+                            "symbol_count",
+                        ),
+                    ),
+                    (
+                        "FG",
+                        build_occurrence_distribution_dataframe(
+                            reel_high_distribution_payload["fg_initial"],
+                            "symbol_count",
+                        ),
+                    ),
+                ],
+            )
+            write_stacked_frames(
+                writer,
+                "Silver_Init",
+                [
+                    (
+                        "BG",
+                        build_occurrence_distribution_dataframe(
+                            silver_distribution_payload["bg_initial"],
+                            "silver_count",
+                        ),
+                    ),
+                    (
+                        "FG",
+                        build_occurrence_distribution_dataframe(
+                            silver_distribution_payload["fg_initial"],
+                            "silver_count",
+                        ),
+                    ),
+                ],
+            )
+            write_stacked_frames(
+                writer,
+                "Silver_Drop",
+                [
+                    (
+                        "BG",
+                        build_occurrence_distribution_dataframe(
+                            silver_distribution_payload["bg_drop"],
+                            "silver_count",
+                        ),
+                    ),
+                    (
+                        "FG",
+                        build_occurrence_distribution_dataframe(
+                            silver_distribution_payload["fg_drop"],
+                            "silver_count",
+                        ),
+                    ),
+                ],
+            )
+            round_df.to_excel(
+                writer,
+                sheet_name="Rounds",
+                index=False,
+            )
 
-        print(f"Saved round report: {round_path}")
-        print(f"Saved summary report: {summary_path}")
-        print(f"Saved multiplier distribution: {distribution_path}")
-        print(f"Saved cascade distribution: {cascade_path}")
-        print(f"Saved reel symbol count distribution: {reel_symbol_count_path}")
-        print(f"Saved reel silver distribution: {reel_silver_path}")
+        print(f"Saved analysis workbook: {workbook_path}")
 
 
 if __name__ == "__main__":
