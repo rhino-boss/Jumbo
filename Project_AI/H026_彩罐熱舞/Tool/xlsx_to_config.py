@@ -158,6 +158,7 @@ def parse_overview(ws: Any) -> dict[str, Any]:
 
     return {
         "game_id": str(ws["B2"].value).strip(),
+        "excel_version": str(ws["B3"].value).strip(),
         "default_coin_in": to_int(ws["A7"].value),
         "normalbet": to_int(ws["B11"].value),
         "featurebuy": to_int(ws["B12"].value),
@@ -368,6 +369,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "source_box": template["source_box"],
         "game_id": overview["game_id"],
+        "excel_version": overview["excel_version"],
         "game_name": template["game_name"],
         "display_name": template["display_name"],
         "bet_options": template["bet_options"],

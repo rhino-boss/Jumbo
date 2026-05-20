@@ -544,18 +544,21 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
 
         # Line wins must start from the leftmost reel on the payline.
         first_row = PAYLINES[line_idx, 0]
-        first_symbol = board[first_row, 0]
-        if first_symbol == C1:
+        first_symbol_raw = board[first_row, 0]
+        if first_symbol_raw == C1:
             continue
+        first_symbol = BASE_SYMBOL_OF[first_symbol_raw]
 
-        if first_symbol == WW:
+        if first_symbol_raw == WW:
             for sym_idx in range(SYMBOLS_SCORE.shape[0]):
                 symbol = SYMBOLS_SCORE[sym_idx]
                 line_len = 0
                 for reel in range(REEL_NUM):
                     row = PAYLINES[line_idx, reel]
                     symbol_on_line = board[row, reel]
-                    if symbol_on_line == symbol or symbol_on_line == WW:
+                    if symbol_on_line == C1:
+                        break
+                    if BASE_SYMBOL_OF[symbol_on_line] == symbol or symbol_on_line == WW:
                         line_len += 1
                     else:
                         break
@@ -569,7 +572,9 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
             for reel in range(REEL_NUM):
                 row = PAYLINES[line_idx, reel]
                 symbol_on_line = board[row, reel]
-                if symbol_on_line == first_symbol or symbol_on_line == WW:
+                if symbol_on_line == C1:
+                    break
+                if BASE_SYMBOL_OF[symbol_on_line] == first_symbol or symbol_on_line == WW:
                     line_len += 1
                 else:
                     break
@@ -604,14 +609,15 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
                 keep_gold[keep_count] = gold_mask[row, col]
                 keep_multi[keep_count] = multi_mask[row, col]
                 keep_count += 1
+            elif hit_mask[row, col] == 2:
+                keep_symbol[keep_count] = WW
+                keep_gold[keep_count] = 0
+                keep_multi[keep_count] = 0
+                keep_count += 1
 
         keep_idx = 0
         for row in range(WINDOW_SIZE - 1, -1, -1):
-            if hit_mask[row, col] == 2:
-                board[row, col] = WW
-                gold_mask[row, col] = 0
-                multi_mask[row, col] = 0
-            elif keep_idx < keep_count:
+            if keep_idx < keep_count:
                 board[row, col] = keep_symbol[keep_idx]
                 gold_mask[row, col] = keep_gold[keep_idx]
                 multi_mask[row, col] = keep_multi[keep_idx]

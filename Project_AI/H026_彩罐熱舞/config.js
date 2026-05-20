@@ -1,7 +1,8 @@
 window.H026_BOX_DATA = {
-  "generated_at": "2026-05-19T09:58:29",
+  "generated_at": "2026-05-20T15:51:24",
   "source_box": "Project.Slots.Source.H026_Box",
   "game_id": "H026192",
+  "excel_version": "0.0.1.3",
   "game_name": "彩罐熱舞",
   "display_name": "彩罐熱舞",
   "bet_options": [

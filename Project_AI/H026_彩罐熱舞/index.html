@@ -942,17 +942,19 @@
         let triggeredByWild = false;
         // Line wins must start from the leftmost reel on the payline.
         const firstRow = Box.paylines[lineIndex][0];
-        const firstSymbol = board[firstRow][0];
-        if (firstSymbol === 1) continue;
+        const firstSymbolRaw = board[firstRow][0];
+        if (firstSymbolRaw === 1) continue;
+        const firstSymbol = Box.base_symbol_of[firstSymbolRaw];
 
-        if (firstSymbol === 0) {
+        if (firstSymbolRaw === 0) {
           Box.symbols_score.forEach((symbol) => {
             let lineLen = 0;
             let usedWild = false;
             for (let reel = 0; reel < Box.reel_num; reel += 1) {
               const row = Box.paylines[lineIndex][reel];
               const symbolOnLine = board[row][reel];
-              if (symbolOnLine === symbol || symbolOnLine === 0) {
+              if (symbolOnLine === 1) break;
+              if (Box.base_symbol_of[symbolOnLine] === symbol || symbolOnLine === 0) {
                 if (symbolOnLine === 0) usedWild = true;
                 lineLen += 1;
               } else {
@@ -973,7 +975,8 @@
           for (let reel = 0; reel < Box.reel_num; reel += 1) {
             const row = Box.paylines[lineIndex][reel];
             const symbolOnLine = board[row][reel];
-            if (symbolOnLine === firstSymbol || symbolOnLine === 0) {
+            if (symbolOnLine === 1) break;
+            if (Box.base_symbol_of[symbolOnLine] === firstSymbol || symbolOnLine === 0) {
               if (symbolOnLine === 0) usedWild = true;
               lineLen += 1;
             } else {
@@ -1044,18 +1047,15 @@
         for (let row = Box.window_size - 1; row >= 0; row -= 1) {
           if (hitMask[row][col] === 0) {
             keep.push([board[row][col], goldMask[row][col], multiMask[row][col], specialMask[row][col]]);
+          } else if (hitMask[row][col] === 2) {
+            keep.push([0, 0, 0, 0]);
+            dropEvents.push({ row, col, event: "gold_to_wild", symbol_id: 0, symbol_code: "WW" });
           }
         }
 
         let keepIndex = 0;
         for (let row = Box.window_size - 1; row >= 0; row -= 1) {
-          if (hitMask[row][col] === 2) {
-            board[row][col] = 0;
-            goldMask[row][col] = 0;
-            multiMask[row][col] = 0;
-            specialMask[row][col] = 0;
-            dropEvents.push({ row, col, event: "gold_to_wild", symbol_id: 0, symbol_code: "WW" });
-          } else if (keepIndex < keep.length) {
+          if (keepIndex < keep.length) {
             const [symbol, isGold, multiplier, isSpecial] = keep[keepIndex];
             board[row][col] = symbol;
             goldMask[row][col] = isGold;

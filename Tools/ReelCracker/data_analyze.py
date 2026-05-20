@@ -216,6 +216,26 @@ def is_state(row, value):
     return row["row_state"] == value
 
 
+def iter_free_spin_segments(group):
+    ordered_group = group.reset_index(drop=True)
+    index = 0
+    while index < len(ordered_group):
+        if to_int(ordered_group.iloc[index].get("si_st")) != 21:
+            index += 1
+            continue
+
+        end = index + 1
+        while end < len(ordered_group) and to_int(ordered_group.iloc[end].get("si_st")) == 22:
+            end += 1
+
+        segment = ordered_group.iloc[index:end].copy()
+        last_next_state = to_int(segment.iloc[-1].get("si_nst"))
+        if last_next_state in (1, 21):
+            yield segment
+
+        index = end
+
+
 def format_bin_label(lower, upper):
     return f"({lower}, {upper}]"
 
@@ -410,6 +430,9 @@ def analyze_round(round_df):
     cascade_rows = int((round_df["row_state"] == 4).sum() + (round_df["row_state"] == 22).sum())
     free_spin_rows = int((round_df["row_state"] == 21).sum())
     fg_rows = round_df[round_df["row_state"].isin([21, 22])]
+    fg_segments = list(iter_free_spin_segments(round_df))
+    free_spin_count = len(fg_segments)
+    free_spin_hit_count = sum(1 for segment in fg_segments if float(segment["si_tw"].apply(to_float).sum()) > 0)
 
     fg_total_win = float(fg_rows["si_tw"].sum()) if len(fg_rows) else 0.0
     bg_total_win = float(round_df["si_aw"].max()) - fg_total_win
@@ -435,8 +458,10 @@ def analyze_round(round_df):
         "has_line_win": bool(round_df["si_lw"].notna().any()) if "si_lw" in round_df.columns else False,
         "has_cascade": derived_rows > 0,
         "cascade_row_count": cascade_rows,
-        "has_free_spin_trigger": free_spin_total > 0 or free_spin_rows > 0,
+        "has_free_spin_trigger": free_spin_total > 0 or free_spin_rows > 0 or free_spin_count > 0,
         "free_spin_awarded": free_spin_total,
+        "free_spin_count": free_spin_count,
+        "free_spin_hit_count": free_spin_hit_count,
         "free_spin_row_count": free_spin_rows,
         "total_bet": to_float(first_row.get("si_tb")),
         "base_bet": base_bet,
@@ -465,7 +490,7 @@ def build_round_dataframe(df):
 
     round_rows = []
     for _, group in ordered.groupby("root_spin_id", sort=False):
-        group = group.sort_values("row_order")
+        group = group.sort_values("row_order").reset_index(drop=True)
         round_rows.append(analyze_round(group))
 
     return pd.DataFrame(round_rows)
@@ -494,8 +519,8 @@ def summarize(df, round_df):
         "cascade_trigger_rate": round(float(round_df["has_cascade"].mean()), 6) if len(round_df) else 0.0,
         "spins_with_free_spin_trigger": int(round_df["has_free_spin_trigger"].sum()),
         "free_spin_trigger_rate": round(float(round_df["has_free_spin_trigger"].mean()), 6) if len(round_df) else 0.0,
-        "total_free_spins_awarded": int(round_df["free_spin_awarded"].sum()),
-        "avg_free_spins_per_trigger": round(float(fg_triggered["free_spin_awarded"].mean()), 6) if len(fg_triggered) else 0.0,
+        "total_free_spins_awarded": int(round_df["free_spin_count"].sum()),
+        "avg_free_spins_per_trigger": round(float(fg_triggered["free_spin_count"].mean()), 6) if len(fg_triggered) else 0.0,
         "total_free_spin_rows": int(round_df["free_spin_row_count"].sum()),
         "max_single_spin_win": round(float(round_df["total_win"].max()), 4) if len(round_df) else 0.0,
     }
@@ -610,20 +635,9 @@ def build_combo_rate_payload(df):
             bg_combo = 0 if bg_segment["row_tw"].sum() <= 0 else 1 + int((bg_segment["row_state"] == 4).sum())
             bg_combo_counts.append(bg_combo)
 
-        index = 0
-        while index < len(group):
-            if to_int(group.iloc[index].get("si_st")) != 21:
-                index += 1
-                continue
-
-            end = index + 1
-            while end < len(group) and to_int(group.iloc[end].get("si_st")) == 22:
-                end += 1
-
-            fg_segment = group.iloc[index:end]
+        for fg_segment in iter_free_spin_segments(group):
             fg_combo = 0 if fg_segment["row_tw"].sum() <= 0 else 1 + int((fg_segment["row_state"] == 22).sum())
             fg_combo_counts.append(fg_combo)
-            index = end
 
     return {
         "bg": {
@@ -802,23 +816,13 @@ def build_m1_metrics_payload(df, symbol_id=2):
                 if bg_has_win:
                     bg_spins_with_m1_and_win += 1
 
-        while index < len(group):
-            if group.iloc[index]["row_state"] != 21:
-                index += 1
-                continue
-
-            fg_rows = [group.iloc[index]]
-            index += 1
-            while index < len(group) and group.iloc[index]["row_state"] == 22:
-                fg_rows.append(group.iloc[index])
-                index += 1
-
+        for fg_segment in iter_free_spin_segments(group):
             fg_total_spins += 1
-            fg_board = parse_cell(fg_rows[0].get("si_orl"))
+            fg_board = parse_cell(fg_segment.iloc[0].get("si_orl"))
             fg_has_m1 = isinstance(fg_board, list) and any(to_int(symbol) == symbol_id for symbol in fg_board)
             if fg_has_m1:
                 fg_spins_with_m1 += 1
-                fg_has_win = any(to_float(row.get("si_tw")) > 0 for row in fg_rows)
+                fg_has_win = any(to_float(row.get("si_tw")) > 0 for _, row in fg_segment.iterrows())
                 if fg_has_win:
                     fg_spins_with_m1_and_win += 1
 
@@ -832,31 +836,30 @@ def build_m1_metrics_payload(df, symbol_id=2):
     sample_counts = {column: 0 for column in distribution_columns}
 
     for _, group in ordered.groupby("root_spin_id", sort=False):
-        group = group.sort_values("row_order")
+        group = group.sort_values("row_order").reset_index(drop=True)
         free_spin_index = 0
 
-        for _, row in group.iterrows():
-            row_state = row["row_state"]
-            if row_state == 1:
-                board = parse_cell(row.get("si_orl"))
-                if isinstance(board, list):
-                    sample_counts["BG"] += 1
-                    symbol_count = sum(1 for symbol in board if to_int(symbol) == symbol_id)
-                    if symbol_count > 0:
-                        bucket = "15顆+" if symbol_count >= 15 else f"{symbol_count}顆"
-                        distribution_counts[bucket]["BG"] += 1
-            elif row_state == 21:
-                free_spin_index += 1
-                if free_spin_index > 10:
-                    continue
-                board = parse_cell(row.get("si_orl"))
-                if isinstance(board, list):
-                    column = f"F{free_spin_index}"
-                    sample_counts[column] += 1
-                    symbol_count = sum(1 for symbol in board if to_int(symbol) == symbol_id)
-                    if symbol_count > 0:
-                        bucket = "10顆+" if symbol_count >= 10 else f"{symbol_count}顆"
-                        distribution_counts[bucket][column] += 1
+        if not group.empty and group.iloc[0]["row_state"] == 1:
+            board = parse_cell(group.iloc[0].get("si_orl"))
+            if isinstance(board, list):
+                sample_counts["BG"] += 1
+                symbol_count = sum(1 for symbol in board if to_int(symbol) == symbol_id)
+                if symbol_count > 0:
+                    bucket = "15顆+" if symbol_count >= 15 else f"{symbol_count}顆"
+                    distribution_counts[bucket]["BG"] += 1
+
+        for fg_segment in iter_free_spin_segments(group):
+            free_spin_index += 1
+            if free_spin_index > 10:
+                continue
+            board = parse_cell(fg_segment.iloc[0].get("si_orl"))
+            if isinstance(board, list):
+                column = f"F{free_spin_index}"
+                sample_counts[column] += 1
+                symbol_count = sum(1 for symbol in board if to_int(symbol) == symbol_id)
+                if symbol_count > 0:
+                    bucket = "15顆+" if symbol_count >= 15 else f"{symbol_count}顆"
+                    distribution_counts[bucket][column] += 1
 
     distribution_rows = []
     for bucket in bucket_labels:
@@ -977,17 +980,8 @@ def build_symbol_line_rtp_hit_payload(df):
         for key in bg_hits_this_round:
             bg_hit_counts[key] += 1
 
-        index = 0
-        while index < len(group):
-            if to_int(group.iloc[index].get("si_st")) != 21:
-                index += 1
-                continue
-            end = index + 1
-            while end < len(group) and to_int(group.iloc[end].get("si_st")) == 22:
-                end += 1
-
+        for fg_segment in iter_free_spin_segments(group):
             total_free_spins += 1
-            fg_segment = group.iloc[index:end]
             fg_hits_this_spin = set()
             for _, row in fg_segment.iterrows():
                 for entry in extract_symbol_line_entries(row):
@@ -997,7 +991,6 @@ def build_symbol_line_rtp_hit_payload(df):
                         fg_hits_this_spin.add(key)
             for key in fg_hits_this_spin:
                 fg_hit_counts[key] += 1
-            index = end
 
     def build_rows(win_map, hit_map, rtp_denominator, hit_denominator):
         rows = []
@@ -1213,25 +1206,25 @@ def build_silver_init_count_distribution_payload(df):
     sample_counts = {column: 0 for column in distribution_columns}
 
     for _, group in ordered.groupby("root_spin_id", sort=False):
-        group = group.sort_values("row_order")
+        group = group.sort_values("row_order").reset_index(drop=True)
         free_spin_index = 0
 
-        for _, row in group.iterrows():
-            row_state = row["row_state"]
-            if row_state not in (1, 21):
+        if not group.empty and group.iloc[0]["row_state"] == 1:
+            nowpr_counts = normalize_nowpr(group.iloc[0].get("si_nowpr"))
+            silver_count = sum(count_silver_frames(group.iloc[0].get("si_eb"), nowpr_counts))
+            sample_counts["BG"] += 1
+            if silver_count > 0:
+                bucket = "15顆+" if silver_count >= 15 else f"{silver_count}顆"
+                distribution_counts[bucket]["BG"] += 1
+
+        for fg_segment in iter_free_spin_segments(group):
+            free_spin_index += 1
+            if free_spin_index > 10:
                 continue
-
-            nowpr_counts = normalize_nowpr(row.get("si_nowpr"))
-            silver_count = sum(count_silver_frames(row.get("si_eb"), nowpr_counts))
-
-            if row_state == 1:
-                column = "BG"
-            else:
-                free_spin_index += 1
-                if free_spin_index > 10:
-                    continue
-                column = f"F{free_spin_index}"
-
+            first_row = fg_segment.iloc[0]
+            nowpr_counts = normalize_nowpr(first_row.get("si_nowpr"))
+            silver_count = sum(count_silver_frames(first_row.get("si_eb"), nowpr_counts))
+            column = f"F{free_spin_index}"
             sample_counts[column] += 1
             if silver_count <= 0:
                 continue
@@ -1276,23 +1269,20 @@ def infer_coin_in(round_df):
 
 def build_metric_rows(summary, round_df, df, duration_sec, max_rows):
     fg_triggered = round_df[round_df["has_free_spin_trigger"]].copy()
-    fg_hit_rate = float((round_df["free_game_win"] > 0).sum() / len(round_df)) if len(round_df) else 0.0
     bg_hit_rate = float((round_df["base_game_win"] > 0).mean()) if len(round_df) else 0.0
     total_hit_rate = float((round_df["total_win"] > 0).mean()) if len(round_df) else 0.0
-    retrigger_rate = float((fg_triggered["free_spin_awarded"] > 10).mean()) if len(fg_triggered) else 0.0
+    retrigger_rate = float((fg_triggered["free_spin_count"] > 10).mean()) if len(fg_triggered) else 0.0
     avg_fg_multiplier = float(fg_triggered["fg_multiplier"].mean()) if len(fg_triggered) else 0.0
     median_fg_multiplier = float(fg_triggered["fg_multiplier"].median()) if len(fg_triggered) else 0.0
-    working = df.copy()
-    working["row_state"] = working["si_st"].apply(to_int)
-    working["row_tw"] = working["si_tw"].apply(to_float)
-    fg_rows = working[working["row_state"].isin([21, 22])].copy()
-    fg_hit_rate = float((fg_rows["row_tw"] > 0).mean()) if len(fg_rows) else 0.0
+    total_free_spins = int(round_df["free_spin_count"].sum()) if "free_spin_count" in round_df.columns else 0
+    total_free_spin_hits = int(round_df["free_spin_hit_count"].sum()) if "free_spin_hit_count" in round_df.columns else 0
+    fg_hit_rate = float(total_free_spin_hits / total_free_spins) if total_free_spins else 0.0
     formatted_duration = str(timedelta(seconds=round(duration_sec)))
 
     rows = [
         ("source_rows_limit", max_rows if max_rows is not None else "all"),
         ("total_rounds", summary["total_root_spins"]),
-        ("fg_count", int(round_df["has_free_spin_trigger"].sum())),
+        ("fg_count", total_free_spins),
         ("rtp_total", f'{summary["total_rtp"]:.6f}'),
         ("rtp_bg", f'{summary["bg_rtp"]:.6f}'),
         ("rtp_fg", f'{summary["fg_rtp"]:.6f}'),
@@ -1552,15 +1542,16 @@ def build_named_distribution_dataframe(payload, name):
     return frame
 
 
-def build_combo_rate_dataframe(payload, cascade_payload):
+def build_combo_rate_dataframe(payload, cascade_payload, apply_cascade_distribution=True):
     frame = pd.DataFrame(payload["distribution"])[["label", "combo_count", "hit_count", "rate"]].copy()
-    cascade_count_map = {int(item["cascade_count"]): item["count"] for item in cascade_payload["distribution"]}
-    cascade_rate_map = {int(item["cascade_count"]): item["rate"] for item in cascade_payload["distribution"]}
-    for row_index, row in frame.iterrows():
-        combo_count = row["combo_count"]
-        if isinstance(combo_count, int):
-            frame.at[row_index, "hit_count"] = cascade_count_map.get(combo_count - 1, row["hit_count"])
-            frame.at[row_index, "rate"] = cascade_rate_map.get(combo_count - 1, row["rate"])
+    if apply_cascade_distribution:
+        cascade_count_map = {int(item["cascade_count"]): item["count"] for item in cascade_payload["distribution"]}
+        cascade_rate_map = {int(item["cascade_count"]): item["rate"] for item in cascade_payload["distribution"]}
+        for row_index, row in frame.iterrows():
+            combo_count = row["combo_count"]
+            if isinstance(combo_count, int):
+                frame.at[row_index, "hit_count"] = cascade_count_map.get(combo_count - 1, row["hit_count"])
+                frame.at[row_index, "rate"] = cascade_rate_map.get(combo_count - 1, row["rate"])
     frame.insert(0, "sample_count", payload["sample_count"])
     return frame
 
@@ -1633,7 +1624,11 @@ def main():
 
     if SHOW_COMBO_RATE:
         combo_rate_bg_frame = build_combo_rate_dataframe(combo_rate_payload["bg"], cascade_distribution["bg"])
-        combo_rate_fg_frame = build_combo_rate_dataframe(combo_rate_payload["fg"], cascade_distribution["fg"])
+        combo_rate_fg_frame = build_combo_rate_dataframe(
+            combo_rate_payload["fg"],
+            cascade_distribution["fg"],
+            apply_cascade_distribution=False,
+        )
         combo_parts = [
             "=== Combo Rate ===",
             format_combo_rate_frame("Combo Rate BG", combo_rate_bg_frame),
@@ -1760,7 +1755,14 @@ def main():
                 "ComboRate",
                 [
                     ("BG", build_combo_rate_dataframe(combo_rate_payload["bg"], cascade_distribution["bg"])),
-                    ("FG", build_combo_rate_dataframe(combo_rate_payload["fg"], cascade_distribution["fg"])),
+                    (
+                        "FG",
+                        build_combo_rate_dataframe(
+                            combo_rate_payload["fg"],
+                            cascade_distribution["fg"],
+                            apply_cascade_distribution=False,
+                        ),
+                    ),
                 ],
             )
             build_extra_reel_same_symbol_dataframe(extra_reel_same_symbol_payload).to_excel(
