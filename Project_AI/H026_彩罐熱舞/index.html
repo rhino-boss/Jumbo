@@ -265,6 +265,14 @@
       animation: reelSpin 180ms linear infinite;
     }
 
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
     @keyframes reelSpin {
       0% {
         transform: translateY(-12px);
@@ -278,6 +286,13 @@
     .symbol-wrap {
       position: absolute;
       inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
     }
 
     .symbol-img,
@@ -349,6 +364,12 @@
       font-size: 0.62rem;
       color: #3f0061;
       background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .multi-badge,
+    .cell.peek-row .scatter-badge {
+      display: none;
     }
 
     .buy-button {
@@ -580,6 +601,9 @@
     const INITIAL_BALANCE_MONEY = 10000;
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
     const FEATURE_TRIGGER_SCATTER_MIN = 3;
+    const SCORE_WINDOW_SIZE = Box.window_size;
+    const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
+    const SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - SCORE_WINDOW_SIZE;
     const FG_SPIN_CAP = 50;
     const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
     const state = {
@@ -821,33 +845,42 @@
     }
 
     function generateBoard(tableId) {
-      const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
-      const goldMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
-      const multiMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
-      const nextAboveIndex = Array(Box.reel_num).fill(0);
+      const board = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const goldMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const multiMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const reelRng = [];
 
       for (let col = 0; col < Box.reel_num; col += 1) {
         const reelLength = Box.reels_len[tableId][col];
         const pick = pickByCum(Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]));
-        nextAboveIndex[col] = (pick.index - 1 + reelLength) % reelLength;
-        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength, next_above_index: nextAboveIndex[col] });
-        for (let row = 0; row < Box.window_size; row += 1) {
+        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength });
+        for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
           const symbol = Box.arr_reels[tableId][(pick.index + row) % reelLength][col];
           const baseSymbol = Box.base_symbol_of[symbol];
           board[row][col] = baseSymbol;
           goldMask[row][col] = Box.is_gold_symbol[symbol];
         }
       }
-      return { board, goldMask, multiMask, reelRng, nextAboveIndex };
+      return { board, goldMask, multiMask, reelRng };
     }
 
     function countScatter(board) {
-      return board.flat().filter((symbol) => symbol === 1).length;
+      let total = 0;
+      for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (board[row][col] === 1) total += 1;
+        }
+      }
+      return total;
     }
 
     function boardHasScatter(board) {
-      return board.some((row) => row.some((symbol) => symbol === 1));
+      for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (board[row][col] === 1) return true;
+        }
+      }
+      return false;
     }
 
     function pickDropSymbol(tableId, useDropA, col, boardHasC1) {
@@ -861,21 +894,9 @@
       }
     }
 
-    function takeReelAboveSymbol(tableId, col, nextAboveIndex, boardHasC1) {
-      const reelLength = Box.reels_len[tableId][col];
-      while (true) {
-        const stripIndex = nextAboveIndex[col];
-        const dropSymbol = Box.arr_reels[tableId][stripIndex][col];
-        const baseSymbol = Box.base_symbol_of[dropSymbol];
-        nextAboveIndex[col] = (stripIndex - 1 + reelLength) % reelLength;
-        if (boardHasC1 && baseSymbol === 1) continue;
-        return { dropSymbol, baseSymbol, stripIndex };
-      }
-    }
-
     function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
       const goldPositions = [];
-      for (let row = 0; row < Box.window_size; row += 1) {
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
         for (let col = 0; col < Box.reel_num; col += 1) {
           if (goldMask[row][col] === 1) goldPositions.push([row, col]);
         }
@@ -932,7 +953,7 @@
     }
 
     function evaluateBoard(board, betMulti, cascadeIndex) {
-      const hitMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const hitMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const lineWins = [];
       let totalPay = 0;
 
@@ -942,7 +963,7 @@
         let bestPay = 0;
         let triggeredByWild = false;
         // Line wins must start from the leftmost reel on the payline.
-        const firstRow = Box.paylines[lineIndex][0];
+        const firstRow = Box.paylines[lineIndex][0] + SCORE_ROW_OFFSET;
         const firstSymbolRaw = board[firstRow][0];
         if (firstSymbolRaw === 1) continue;
         const firstSymbol = Box.base_symbol_of[firstSymbolRaw];
@@ -952,7 +973,7 @@
             let lineLen = 0;
             let usedWild = false;
             for (let reel = 0; reel < Box.reel_num; reel += 1) {
-              const row = Box.paylines[lineIndex][reel];
+              const row = Box.paylines[lineIndex][reel] + SCORE_ROW_OFFSET;
               const symbolOnLine = board[row][reel];
               if (symbolOnLine === 1) break;
               if (Box.base_symbol_of[symbolOnLine] === symbol || symbolOnLine === 0) {
@@ -974,7 +995,7 @@
           let lineLen = 0;
           let usedWild = false;
           for (let reel = 0; reel < Box.reel_num; reel += 1) {
-            const row = Box.paylines[lineIndex][reel];
+            const row = Box.paylines[lineIndex][reel] + SCORE_ROW_OFFSET;
             const symbolOnLine = board[row][reel];
             if (symbolOnLine === 1) break;
             if (Box.base_symbol_of[symbolOnLine] === firstSymbol || symbolOnLine === 0) {
@@ -994,7 +1015,7 @@
 
         const positions = [];
         for (let reel = 0; reel < bestLen; reel += 1) {
-          const row = Box.paylines[lineIndex][reel];
+          const row = Box.paylines[lineIndex][reel] + SCORE_ROW_OFFSET;
           hitMask[row][reel] = 1;
           positions.push([row, reel]);
         }
@@ -1019,7 +1040,7 @@
       let addedMultiplier = 0;
       const hitPositions = [];
       const convertedGoldPositions = [];
-      for (let row = 0; row < Box.window_size; row += 1) {
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
         for (let col = 0; col < Box.reel_num; col += 1) {
           if (hitMask[row][col] !== 1) continue;
           hitPositions.push([row, col]);
@@ -1039,13 +1060,11 @@
       return { multiplier_sum: multiplierSum, hit_positions: hitPositions, converted_gold_positions: convertedGoldPositions, added_multiplier: addedMultiplier };
     }
 
-    function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask, nextAboveIndex) {
+    function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask) {
       const dropEvents = [];
-      let hasC1OnBoard = boardHasScatter(board);
       for (let col = 0; col < Box.reel_num; col += 1) {
         const keep = [];
-        let usedReelAbove = false;
-        for (let row = Box.window_size - 1; row >= 0; row -= 1) {
+        for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
           if (hitMask[row][col] === 0) {
             keep.push([board[row][col], goldMask[row][col], multiMask[row][col], specialMask[row][col]]);
           } else if (hitMask[row][col] === 2) {
@@ -1055,7 +1074,7 @@
         }
 
         let keepIndex = 0;
-        for (let row = Box.window_size - 1; row >= 0; row -= 1) {
+        for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
           if (keepIndex < keep.length) {
             const [symbol, isGold, multiplier, isSpecial] = keep[keepIndex];
             board[row][col] = symbol;
@@ -1064,47 +1083,49 @@
             specialMask[row][col] = isSpecial;
             keepIndex += 1;
           } else {
-            let picked = null;
-            let dropSymbol;
-            let baseSymbol;
-            let dropSource;
-            let stripIndex = null;
-            if (!usedReelAbove) {
-              ({ dropSymbol, baseSymbol, stripIndex } = takeReelAboveSymbol(tableId, col, nextAboveIndex, hasC1OnBoard));
-              usedReelAbove = true;
-              dropSource = "reel_above";
-            } else {
-              ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, hasC1OnBoard));
-              dropSource = "weight";
-            }
-            board[row][col] = baseSymbol;
-            goldMask[row][col] = Box.is_gold_symbol[dropSymbol];
+            board[row][col] = -1;
+            goldMask[row][col] = 0;
+            multiMask[row][col] = 0;
             specialMask[row][col] = 0;
-            let multiplierInfo = null;
-            if (goldMask[row][col] === 1) {
-              const multiPicked = pickDropMultiplier(tableId, col);
-              multiMask[row][col] = multiPicked.multiplier;
-              multiplierInfo = multiPicked;
-            } else {
-              multiMask[row][col] = 0;
-            }
-            if (baseSymbol === 1) hasC1OnBoard = true;
-            dropEvents.push({
-              row,
-              col,
-              event: "drop_fill",
-              drop_mode: dropSource === "reel_above" ? "reel_above" : useDropA ? "A" : "B",
-              drop_source: dropSource,
-              rng_value: picked ? picked.rng_value : null,
-              rng_total: picked ? picked.rng_total : null,
-              strip_index: stripIndex,
-              drop_symbol_id: dropSymbol,
-              symbol_id: baseSymbol,
-              symbol_code: Box.symbol_str[String(baseSymbol)],
-              is_gold: Boolean(goldMask[row][col]),
-              multiplier_info: multiplierInfo
-            });
           }
+        }
+
+        let hasC1OnBoard = boardHasScatter(board);
+        for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
+          if (board[row][col] >= 0) continue;
+          let picked = null;
+          let dropSymbol;
+          let baseSymbol;
+          ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, hasC1OnBoard));
+          const dropSource = "weight";
+          const dropMode = useDropA ? "A" : "B";
+          board[row][col] = baseSymbol;
+          goldMask[row][col] = Box.is_gold_symbol[dropSymbol];
+          specialMask[row][col] = 0;
+          let multiplierInfo = null;
+          if (goldMask[row][col] === 1) {
+            const multiPicked = pickDropMultiplier(tableId, col);
+            multiMask[row][col] = multiPicked.multiplier;
+            multiplierInfo = multiPicked;
+          } else {
+            multiMask[row][col] = 0;
+          }
+          if (baseSymbol === 1 && row >= SCORE_ROW_OFFSET) hasC1OnBoard = true;
+          dropEvents.push({
+            row,
+            col,
+            event: "drop_fill",
+            drop_mode: dropMode,
+            drop_source: dropSource,
+            rng_value: picked.rng_value,
+            rng_total: picked.rng_total,
+            strip_index: null,
+            drop_symbol_id: dropSymbol,
+            symbol_id: baseSymbol,
+            symbol_code: Box.symbol_str[String(baseSymbol)],
+            is_gold: Boolean(goldMask[row][col]),
+            multiplier_info: multiplierInfo
+          });
         }
       }
       return dropEvents;
@@ -1118,8 +1139,7 @@
       const board = generated.board;
       const goldMask = generated.goldMask;
       const multiMask = generated.multiMask;
-      const nextAboveIndex = generated.nextAboveIndex;
-      const specialMask = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+      const specialMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const initialMultiplierInfo = assignInitialMultiplier(table.table_id, goldMask, multiMask, specialMask);
 
       let rawPay = 0;
@@ -1149,7 +1169,7 @@
         if (applied.added_multiplier > 0) multiUsed = true;
         latestHitPositions = applied.hit_positions;
         const boardAfterEliminate = serializeBoard(board, goldMask, multiMask, specialMask);
-        const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask, nextAboveIndex);
+        const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask);
         const boardAfterDrop = serializeBoard(board, goldMask, multiMask, specialMask);
 
         boardSteps.push({
@@ -1312,7 +1332,7 @@
       board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
           const cellEl = document.createElement("div");
-          cellEl.className = ["cell", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
+          cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
           const wrap = document.createElement("div");
           wrap.className = "symbol-wrap";
           if (cell.is_gold) {
@@ -1486,7 +1506,7 @@
     function sampleBoard() {
       const ids = Box.symbol_id.slice(0, 11);
       const board = [];
-      for (let row = 0; row < Box.window_size; row += 1) {
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
         const line = [];
         for (let col = 0; col < Box.reel_num; col += 1) {
           const symbol = ids[randInt(ids.length)];

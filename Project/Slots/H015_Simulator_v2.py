@@ -24,7 +24,7 @@ bet_mode = Box.mode_normalbet
 # bet_mode = Box.mode_featurebuy
 # bet_mode = Box.mode_superfeaturebuy
 
-total_round = 10**7  # 測試1
+total_round = 10**8  # 測試1
 # total_round = 10**4  # 測試2
 # total_round = 10**0  # 測試3
 # total_round = 10**9  # 標準，時間: s

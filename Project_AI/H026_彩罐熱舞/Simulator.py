@@ -169,8 +169,10 @@ OUTPUT_FG = 1
 OUTPUT_OA = 2
 
 WINDOW_SIZE = int(CFG_RAW["window_size"])
+DISPLAY_WINDOW_SIZE = WINDOW_SIZE + 1
+SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - WINDOW_SIZE
 REEL_NUM = int(CFG_RAW["reel_num"])
-LAYOUT_SHAPE = (WINDOW_SIZE, REEL_NUM)
+LAYOUT_SHAPE = (DISPLAY_WINDOW_SIZE, REEL_NUM)
 DEFAULT_COIN_IN = int(CFG_RAW["default_coin_in"])
 NORMALBET = int(CFG_RAW["normalbet"])
 FEATUREBUY = int(CFG_RAW["featurebuy"])
@@ -427,7 +429,7 @@ def generate_board(table_id, board, gold_mask, multi_mask, next_above_idx):
         reel_length = REELS_LEN[table_id, col]
         stop_idx = pick_by_cum(ARR_REELS_WEIGHT_CUM[table_id, :reel_length, col])
         next_above_idx[col] = (stop_idx - 1 + reel_length) % reel_length
-        for row in range(WINDOW_SIZE):
+        for row in range(DISPLAY_WINDOW_SIZE):
             symbol = ARR_REELS[table_id, (stop_idx + row) % reel_length, col]
             board[row, col] = BASE_SYMBOL_OF[symbol]
             gold_mask[row, col] = IS_GOLD_SYMBOL[symbol]
@@ -437,7 +439,7 @@ def generate_board(table_id, board, gold_mask, multi_mask, next_above_idx):
 @njit(nogil=True)
 def count_scatter(board):
     total = 0
-    for row in range(WINDOW_SIZE):
+    for row in range(SCORE_ROW_OFFSET, DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             if board[row, col] == C1:
                 total += 1
@@ -446,7 +448,7 @@ def count_scatter(board):
 
 @njit(nogil=True)
 def board_has_scatter(board):
-    for row in range(WINDOW_SIZE):
+    for row in range(SCORE_ROW_OFFSET, DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             if board[row, col] == C1:
                 return 1
@@ -483,7 +485,7 @@ def take_reel_above_symbol(table_id, col, next_above_idx, board_has_c1):
 @njit(nogil=True)
 def collect_gold_positions(gold_mask, gold_pos):
     gold_count = 0
-    for row in range(WINDOW_SIZE):
+    for row in range(DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             if gold_mask[row, col] == 1:
                 gold_pos[gold_count, 0] = row
@@ -495,7 +497,7 @@ def collect_gold_positions(gold_mask, gold_pos):
 @njit(nogil=True)
 def count_gold_mask(gold_mask):
     gold_count = 0
-    for row in range(WINDOW_SIZE):
+    for row in range(DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             gold_count += gold_mask[row, col]
     return gold_count
@@ -545,7 +547,7 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
         best_pay = 0
 
         # Line wins must start from the leftmost reel on the payline.
-        first_row = PAYLINES[line_idx, 0]
+        first_row = PAYLINES[line_idx, 0] + SCORE_ROW_OFFSET
         first_symbol_raw = board[first_row, 0]
         if first_symbol_raw == C1:
             continue
@@ -556,7 +558,7 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
                 symbol = SYMBOLS_SCORE[sym_idx]
                 line_len = 0
                 for reel in range(REEL_NUM):
-                    row = PAYLINES[line_idx, reel]
+                    row = PAYLINES[line_idx, reel] + SCORE_ROW_OFFSET
                     symbol_on_line = board[row, reel]
                     if symbol_on_line == C1:
                         break
@@ -572,7 +574,7 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
         else:
             line_len = 0
             for reel in range(REEL_NUM):
-                row = PAYLINES[line_idx, reel]
+                row = PAYLINES[line_idx, reel] + SCORE_ROW_OFFSET
                 symbol_on_line = board[row, reel]
                 if symbol_on_line == C1:
                     break
@@ -593,7 +595,7 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
         spin_pay[best_len - 3, best_symbol] += best_pay
 
         for reel in range(best_len):
-            row = PAYLINES[line_idx, reel]
+            row = PAYLINES[line_idx, reel] + SCORE_ROW_OFFSET
             hit_mask[row, reel] = 1
 
     return total_pay, total_hits
@@ -601,11 +603,9 @@ def evaluate_board(board, hit_mask, spin_hits, spin_pay, bet_multi):
 
 @njit(nogil=True)
 def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi, next_above_idx):
-    has_c1_on_board = board_has_scatter(board)
     for col in range(REEL_NUM):
         keep_count = 0
-        used_reel_above = 0
-        for row in range(WINDOW_SIZE - 1, -1, -1):
+        for row in range(DISPLAY_WINDOW_SIZE - 1, -1, -1):
             if hit_mask[row, col] == 0:
                 keep_symbol[keep_count] = board[row, col]
                 keep_gold[keep_count] = gold_mask[row, col]
@@ -618,31 +618,35 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
                 keep_count += 1
 
         keep_idx = 0
-        for row in range(WINDOW_SIZE - 1, -1, -1):
+        for row in range(DISPLAY_WINDOW_SIZE - 1, -1, -1):
             if keep_idx < keep_count:
                 board[row, col] = keep_symbol[keep_idx]
                 gold_mask[row, col] = keep_gold[keep_idx]
                 multi_mask[row, col] = keep_multi[keep_idx]
                 keep_idx += 1
             else:
-                if used_reel_above == 0:
-                    drop_symbol, base_symbol = take_reel_above_symbol(table_id, col, next_above_idx, has_c1_on_board)
-                    used_reel_above = 1
-                else:
-                    drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, has_c1_on_board)
-                board[row, col] = base_symbol
-                gold_mask[row, col] = IS_GOLD_SYMBOL[drop_symbol]
-                if gold_mask[row, col] == 1:
-                    multi_mask[row, col] = pick_drop_multiplier_by_col(table_id, col)
-                else:
-                    multi_mask[row, col] = 0
-                if base_symbol == C1:
-                    has_c1_on_board = 1
+                board[row, col] = -1
+                gold_mask[row, col] = 0
+                multi_mask[row, col] = 0
+
+        has_c1_on_board = board_has_scatter(board)
+        for row in range(DISPLAY_WINDOW_SIZE - 1, -1, -1):
+            if board[row, col] >= 0:
+                continue
+            drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, has_c1_on_board)
+            board[row, col] = base_symbol
+            gold_mask[row, col] = IS_GOLD_SYMBOL[drop_symbol]
+            if gold_mask[row, col] == 1:
+                multi_mask[row, col] = pick_drop_multiplier_by_col(table_id, col)
+            else:
+                multi_mask[row, col] = 0
+            if row >= SCORE_ROW_OFFSET and base_symbol == C1:
+                has_c1_on_board = 1
 
 
 @njit(nogil=True)
 def update_spin_flags(gold_mask, multi_mask, gold_seen, multi_seen):
-    for row in range(WINDOW_SIZE):
+    for row in range(DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             if gold_mask[row, col] == 1:
                 gold_seen = 1
@@ -653,7 +657,7 @@ def update_spin_flags(gold_mask, multi_mask, gold_seen, multi_seen):
 
 @njit(nogil=True)
 def copy_layout(target, source):
-    for row in range(WINDOW_SIZE):
+    for row in range(DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             target[row, col] = source[row, col]
 
@@ -715,7 +719,7 @@ def run_spin(
         raw_pay += pay_cascade
         hit_any = 1
 
-        for row in range(WINDOW_SIZE):
+        for row in range(DISPLAY_WINDOW_SIZE):
             for col in range(REEL_NUM):
                 if hit_mask[row, col] == 1:
                     if gold_mask[row, col] == 1:
@@ -753,7 +757,7 @@ def run_spin(
 
 @njit(nogil=True)
 def copy_board_snapshot(history, attempt_idx, board):
-    for row in range(WINDOW_SIZE):
+    for row in range(DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             history[attempt_idx, row, col] = board[row, col]
 
@@ -766,7 +770,7 @@ def print_retry_failure_trace(attempt_count, scatter_history, board_history, ret
     print("attempt_count =", attempt_count)
     for attempt_idx in range(attempt_count):
         print("attempt", attempt_idx + 1, "scatter_count =", scatter_history[attempt_idx])
-        for row in range(WINDOW_SIZE):
+        for row in range(DISPLAY_WINDOW_SIZE):
             print(
                 board_history[attempt_idx, row, 0],
                 board_history[attempt_idx, row, 1],
@@ -1005,16 +1009,16 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
     spin_hits = np.zeros((3, SYMBOLS_COUNT), np.int64)
     spin_pay = np.zeros((3, SYMBOLS_COUNT), np.int64)
     spin_eliminate = np.zeros((3, SYMBOLS_COUNT), np.int64)
-    gold_pos = np.zeros((WINDOW_SIZE * REEL_NUM, 2), np.int64)
-    keep_symbol = np.zeros(WINDOW_SIZE, np.int64)
-    keep_gold = np.zeros(WINDOW_SIZE, np.int64)
-    keep_multi = np.zeros(WINDOW_SIZE, np.int64)
+    gold_pos = np.zeros((DISPLAY_WINDOW_SIZE * REEL_NUM, 2), np.int64)
+    keep_symbol = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
+    keep_gold = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
+    keep_multi = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     next_above_idx = np.zeros(REEL_NUM, np.int64)
     round_record = np.zeros(RECORD_SIZE, np.int64)
     bg_round_record = np.zeros(RECORD_SIZE, np.int64)
     fg_round_record = np.zeros(RECORD_SIZE, np.int64)
     scatter_history = np.zeros(CARD_RETRY_LIMIT, np.int64)
-    board_history = np.zeros((CARD_RETRY_LIMIT, WINDOW_SIZE, REEL_NUM), np.int64)
+    board_history = np.zeros((CARD_RETRY_LIMIT, DISPLAY_WINDOW_SIZE, REEL_NUM), np.int64)
 
     for _ in range(total_round):
         retry_count = 0
@@ -1635,10 +1639,10 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     spin_hits = np.zeros((3, SYMBOLS_COUNT), np.int64)
     spin_pay = np.zeros((3, SYMBOLS_COUNT), np.int64)
     spin_eliminate = np.zeros((3, SYMBOLS_COUNT), np.int64)
-    gold_pos = np.zeros((WINDOW_SIZE * REEL_NUM, 2), np.int64)
-    keep_symbol = np.zeros(WINDOW_SIZE, np.int64)
-    keep_gold = np.zeros(WINDOW_SIZE, np.int64)
-    keep_multi = np.zeros(WINDOW_SIZE, np.int64)
+    gold_pos = np.zeros((DISPLAY_WINDOW_SIZE * REEL_NUM, 2), np.int64)
+    keep_symbol = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
+    keep_gold = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
+    keep_multi = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     next_above_idx = np.zeros(REEL_NUM, np.int64)
     result = run_spin(
         SCENE_BG if bet_mode == MODE_NORMALBET else SCENE_BF,
