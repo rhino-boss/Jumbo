@@ -205,6 +205,7 @@ STRIP_NAME_MAP = list(CFG_RAW["strip_name_map"])
 
 ELIMINATE_TABLE_WEIGHT_CUM_BG = np.asarray(CFG_RAW["eliminate_table_weight_cum_bg"], dtype=np.int64)
 ELIMINATE_TABLE_WEIGHT_CUM_FG = np.asarray(CFG_RAW["eliminate_table_weight_cum_fg"], dtype=np.int64)
+ELIMINATE_TABLE_WEIGHT_CUM_BF = np.asarray(CFG_RAW["eliminate_table_weight_cum_bf"], dtype=np.int64)
 
 CARD_SYSTEM_RAW = CFG_RAW.get("card_system", {})
 CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled"))
@@ -416,7 +417,8 @@ def choose_eliminate_table(scene_mode):
     if scene_mode == SCENE_FG:
         choice = pick_by_cum(ELIMINATE_TABLE_WEIGHT_CUM_FG)
         return 1 if choice == 0 else 0
-    return np.random.randint(0, 2)
+    choice = pick_by_cum(ELIMINATE_TABLE_WEIGHT_CUM_BF)
+    return 1 if choice == 0 else 0
 
 
 @njit(nogil=True)
@@ -1273,26 +1275,33 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                             next_above_idx,
                         )
             else:
-                bf_result = run_spin(
-                    SCENE_BF,
-                    0,
-                    bet_multi,
-                    board,
-                    board_initial,
-                    gold_mask,
-                    multi_mask,
-                    hit_mask,
-                    spin_hits,
-                    spin_pay,
-                    spin_eliminate,
-                    gold_pos,
-                    keep_symbol,
-                    keep_gold,
-                    keep_multi,
-                    next_above_idx,
-                )
+                bf_retry_count = 0
+                while True:
+                    bf_result = run_spin(
+                        SCENE_BF,
+                        0,
+                        bet_multi,
+                        board,
+                        board_initial,
+                        gold_mask,
+                        multi_mask,
+                        hit_mask,
+                        spin_hits,
+                        spin_pay,
+                        spin_eliminate,
+                        gold_pos,
+                        keep_symbol,
+                        keep_gold,
+                        keep_multi,
+                        next_above_idx,
+                    )
+                    if bf_result[1] >= 3:
+                        break
+                    bf_retry_count += 1
+                    if bf_retry_count > 5000:
+                        raise ValueError("Buy Feature reroll exceeded 5000 attempts; check BF trigger condition.")
                 pay_bg = bf_result[0]
-                free_spins = calc_free_spins(bf_result[1], 1)
+                free_spins = calc_free_spins(bf_result[1], 0)
 
                 apply_spin_log(
                     round_record,

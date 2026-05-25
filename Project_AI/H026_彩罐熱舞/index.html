@@ -580,6 +580,7 @@
     const INITIAL_BALANCE_MONEY = 10000;
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
     const FEATURE_TRIGGER_SCATTER_MIN = 3;
+    const FG_SPIN_CAP = 50;
     const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
     const state = {
       balance: INITIAL_BALANCE,
@@ -1253,7 +1254,7 @@
         state.freegameTriggerCount += 1;
       }
 
-      let remainingFreespins = freeSpinsAwarded;
+      let remainingFreespins = Math.min(freeSpinsAwarded, FG_SPIN_CAP);
       while (remainingFreespins > 0) {
         const before = remainingFreespins;
         const spin = runSpin(Box.scene_fg, fgMultiplierSum, getBetMulti());
@@ -1262,7 +1263,7 @@
         let retriggerAwarded = 0;
         if (spin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
           retriggerAwarded = 15 + (spin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
-          remainingFreespins += retriggerAwarded;
+          remainingFreespins = Math.min(remainingFreespins + retriggerAwarded, FG_SPIN_CAP);
           state.retriggerCount += 1;
         }
         freeSpinsPlayed += 1;
