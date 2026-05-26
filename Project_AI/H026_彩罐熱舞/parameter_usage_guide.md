@@ -90,6 +90,7 @@
 - BG 要抽哪張 table
 - 金框初始倍數怎麼抽
 - Cascade 後補進來的金框倍數怎麼抽
+- Special Pool 是否啟用、特殊格選到哪一顆
 - 消除階段要用哪套 drop table
 
 ### 3.3 `BG_Symbol* / FG_Symbol* / BF_Symbol`
@@ -103,14 +104,14 @@
 
 這些資料會影響：
 
-- 初始 3x5 停輪畫面怎麼生成
-- Cascade 後第 2、3 顆補牌怎麼抽
+- 初始 4x5 停輪畫面怎麼生成
+- Cascade 後空格補牌怎麼抽
 - FG / BF 使用哪套 strip
 
 補充：
 
-- 目前專案已經改成「每個 reel 在 cascade 補牌時，第 1 顆優先承接可見畫面上方那顆隱藏輪帶符號」
-- 所以 `Drop_Weight_A/B` 不再控制每一顆補牌，而是主要控制同一個 reel 該次 cascade 的第 2 顆之後的補牌
+- 目前專案的初始盤面是 4x5，但只有底部 3x5 是記分區
+- Cascade 補牌已改成：先讓現有符號往下掉補空格，剩下的頂部空格再用 `Drop_Weight_A/B` 補滿
 
 ---
 
@@ -172,7 +173,8 @@
 
 - BG 先決定要用哪張 table
 - 每個 reel 再依 strip weight 抽 stop index
-- 用 stop index 展開成可見 3x5 畫面
+- 用 stop index 展開成可見 4x5 畫面
+- 其中只有底部 3x5 參與實際計分
 
 ### 4.4 倍數分配
 
@@ -188,7 +190,7 @@
 
 用途：
 
-- 初始盤面上的金框抽 `before` 倍數
+- 初始盤面上的金框依位置抽 `before / after` 倍數
 - Cascade 補進來的金框抽 `after` 倍數
 - 特殊池觸發時改抽 `special` 倍數
 
@@ -196,6 +198,12 @@
 
 - 金框符號本身可以來自輪帶或 drop weight
 - 但它上面的 multiplier 不是從輪帶直接讀，而是另外依對應權重抽出來
+- `Special Pool` 是否啟用先看 `weight_special_pool`
+- `Special Pool` 若啟用，只會從記分區 3x5 的金框中任選 1 顆抽 `special` 倍數
+- 只有 `BG_Symbol (2)`、`FG_Symbol`、`FG_Symbol (2)`、`FG_Symbol (3)` 這幾張表的 `R3` 會吃 `weight_cum_multiple_r3_before/after`
+- 其他欄位都吃一般的 `weight_cum_multiple_before/after`
+- `Before` 指的是「初始滾停時位於記分區 3x5 的金框」
+- `After` 指的是「初始滾停時位於最上排非記分區的金框」以及「Cascade 後掉落補進來的金框」
 
 ### 4.5 Cascade 補牌
 
@@ -209,14 +217,15 @@
 用途：
 
 - 先決定這次消除用 A 還是 B 的 drop 模式
-- 再決定每個 reel 第 2 顆之後的補牌內容
+- 再決定每個 reel 補到頂部空格時的補牌內容
 
 目前專案中的補牌邏輯是：
 
 1. 初始盤面仍然由 reel strip 停輪決定
-2. 每個 reel 在某次 cascade 補牌時，第 1 顆優先吃可見畫面上方那顆隱藏輪帶符號
-3. 如果同一個 reel 同次 cascade 還要補第 2 顆、第 3 顆，才改用 `drop_weight_a/b`
-4. 若補進來的是金框，倍數用 `after multiplier weight` 抽
+2. 消除後，普通中獎符號先清空；中獎的金框符號先轉成 Wild
+3. 同一個 reel 先讓現有符號往下掉補空格
+4. 還留在頂部的空格，再用 `drop_weight_a/b` 補滿
+5. 若補進來的是金框，倍數用對應的 `after multiplier weight` 抽
 
 ---
 
@@ -304,7 +313,8 @@
 
 - 改了 raw weight，但 runtime 實際吃的是 `*_cum`
 - 以為 multiplier 跟著輪帶走，但實際上 multiplier 是另外抽的
-- 以為所有補牌都吃 drop weight，但目前第 1 顆補牌先吃 reel 上方隱藏符號
+- 以為初始盤面所有金框都吃 `before`，但最上排非記分區金框其實吃 `after`
+- 以為所有 R3 金框都吃 `Reel3 Before/After`，但目前只有指定輪帶表的 R3 才會用到
 
 ---
 
@@ -315,15 +325,14 @@
 初始盤面與 cascade 補牌不是完全同一套來源：
 
 - 初始盤面：看 `arr_reels` + `arr_reels_weight_cum`
-- cascade 第 1 顆：看目前可見畫面上方的隱藏輪帶符號
-- cascade 第 2 顆之後：看 `drop_weight_a/b`
+- cascade 掉落：先由盤面現有符號自然下落
+- cascade 補空：再看 `drop_weight_a/b`
 
 ### 8.2 金框符號與倍數不是同一個來源
 
 金框符號可能來自：
 
 - 初始輪帶
-- reel 上方隱藏符號
 - drop weight
 
 但它的 multiplier 來源是：
@@ -332,7 +341,7 @@
 - `after multiplier weight`
 - `special multiplier weight`
 
-不是直接跟著 strip 綁死。
+不是直接跟著 strip 綁死，而且 `before / after / special / reel3 before / reel3 after` 的使用情境由盤面位置、輪帶表與是否被選成特殊格共同決定。
 
 ### 8.3 xlsx 改完不代表 simulator 自動更新
 
@@ -353,4 +362,3 @@
 - [config.js](./config.js)
 - [Simulator.py](./Simulator.py)
 - [index.html](./index.html)
-

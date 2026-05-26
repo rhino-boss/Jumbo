@@ -173,6 +173,7 @@ DISPLAY_WINDOW_SIZE = WINDOW_SIZE + 1
 SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - WINDOW_SIZE
 REEL_NUM = int(CFG_RAW["reel_num"])
 LAYOUT_SHAPE = (DISPLAY_WINDOW_SIZE, REEL_NUM)
+REEL3_SPECIAL_TABLE_IDS = np.asarray([1, 3, 4, 5], dtype=np.int64)
 DEFAULT_COIN_IN = int(CFG_RAW["default_coin_in"])
 NORMALBET = int(CFG_RAW["normalbet"])
 FEATUREBUY = int(CFG_RAW["featurebuy"])
@@ -398,15 +399,34 @@ def pick_multiplier(cum_matrix, strip_idx):
 
 
 @njit(nogil=True)
-def pick_initial_multiplier_by_col(table_id, col):
-    if col == 2:
-        return pick_multiplier(WEIGHT_CUM_MULTIPLE_R3_BEFORE, table_id)
-    return pick_multiplier(WEIGHT_CUM_MULTIPLE_BEFORE, table_id)
+def is_scoring_row(row):
+    return 1 if row >= SCORE_ROW_OFFSET else 0
+
+
+@njit(nogil=True)
+def uses_reel3_multiplier_table(table_id, col):
+    if col != 2:
+        return 0
+    for idx in range(REEL3_SPECIAL_TABLE_IDS.shape[0]):
+        if table_id == REEL3_SPECIAL_TABLE_IDS[idx]:
+            return 1
+    return 0
+
+
+@njit(nogil=True)
+def pick_initial_multiplier_by_pos(table_id, row, col):
+    if uses_reel3_multiplier_table(table_id, col) == 1:
+        if is_scoring_row(row) == 1:
+            return pick_multiplier(WEIGHT_CUM_MULTIPLE_R3_BEFORE, table_id)
+        return pick_multiplier(WEIGHT_CUM_MULTIPLE_R3_AFTER, table_id)
+    if is_scoring_row(row) == 1:
+        return pick_multiplier(WEIGHT_CUM_MULTIPLE_BEFORE, table_id)
+    return pick_multiplier(WEIGHT_CUM_MULTIPLE_AFTER, table_id)
 
 
 @njit(nogil=True)
 def pick_drop_multiplier_by_col(table_id, col):
-    if col == 2:
+    if uses_reel3_multiplier_table(table_id, col) == 1:
         return pick_multiplier(WEIGHT_CUM_MULTIPLE_R3_AFTER, table_id)
     return pick_multiplier(WEIGHT_CUM_MULTIPLE_AFTER, table_id)
 
@@ -495,6 +515,18 @@ def collect_gold_positions(gold_mask, gold_pos):
 
 
 @njit(nogil=True)
+def collect_scoring_gold_positions(gold_mask, gold_pos):
+    gold_count = 0
+    for row in range(SCORE_ROW_OFFSET, DISPLAY_WINDOW_SIZE):
+        for col in range(REEL_NUM):
+            if gold_mask[row, col] == 1:
+                gold_pos[gold_count, 0] = row
+                gold_pos[gold_count, 1] = col
+                gold_count += 1
+    return gold_count
+
+
+@njit(nogil=True)
 def count_gold_mask(gold_mask):
     gold_count = 0
     for row in range(DISPLAY_WINDOW_SIZE):
@@ -509,22 +541,29 @@ def assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos):
     if gold_count == 0:
         return
 
+    scoring_gold_pos = np.zeros((DISPLAY_WINDOW_SIZE * REEL_NUM, 2), np.int64)
+    scoring_gold_count = collect_scoring_gold_positions(gold_mask, scoring_gold_pos)
     special_idx = -1
-    if table_id < 3:
-        pool_row = gold_count
+    if scoring_gold_count > 0:
+        pool_row = scoring_gold_count
         if pool_row >= WEIGHT_SPECIAL_POOL.shape[0]:
             pool_row = WEIGHT_SPECIAL_POOL.shape[0] - 1
         special_weight = WEIGHT_SPECIAL_POOL[pool_row, table_id]
         if special_weight > 0 and np.random.randint(0, SPECIAL_POOL_WEIGHT_BASE) < special_weight:
-            special_idx = np.random.randint(0, gold_count)
+            special_idx = np.random.randint(0, scoring_gold_count)
 
     for idx in range(gold_count):
         row = gold_pos[idx, 0]
         col = gold_pos[idx, 1]
-        if idx == special_idx:
+        scoring_match_idx = -1
+        for scoring_idx in range(scoring_gold_count):
+            if scoring_gold_pos[scoring_idx, 0] == row and scoring_gold_pos[scoring_idx, 1] == col:
+                scoring_match_idx = scoring_idx
+                break
+        if scoring_match_idx >= 0 and scoring_match_idx == special_idx:
             multi_mask[row, col] = pick_multiplier(WEIGHT_CUM_MULTIPLE_SPECIAL, table_id)
         else:
-            multi_mask[row, col] = pick_initial_multiplier_by_col(table_id, col)
+            multi_mask[row, col] = pick_initial_multiplier_by_pos(table_id, row, col)
 
 
 @njit(nogil=True)

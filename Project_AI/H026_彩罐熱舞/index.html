@@ -337,7 +337,7 @@
 
     .symbol-code {
       left: 6px;
-      bottom: 6px;
+      top: 6px;
       padding: 2px 7px;
       background: rgba(14, 12, 50, 0.78);
       border: 1px solid rgba(200, 242, 255, 0.24);
@@ -346,7 +346,9 @@
     }
 
     .multi-badge {
-      top: 6px;
+      right: 6px;
+      bottom: 6px;
+      top: auto;
       right: 6px;
       min-width: 34px;
       padding: 2px 6px;
@@ -367,9 +369,16 @@
     }
 
     .cell.peek-row .symbol-code,
-    .cell.peek-row .multi-badge,
     .cell.peek-row .scatter-badge {
       display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
     }
 
     .buy-button {
@@ -604,6 +613,7 @@
     const SCORE_WINDOW_SIZE = Box.window_size;
     const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
     const SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - SCORE_WINDOW_SIZE;
+    const REEL3_SPECIAL_TABLE_IDS = new Set([1, 3, 4, 5]);
     const FG_SPIN_CAP = 50;
     const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
     const state = {
@@ -759,14 +769,27 @@
       };
     }
 
-    function pickInitialMultiplier(tableId, col) {
-      return col === 2
-        ? pickMultiplier(Box.weight_cum_multiple_r3_before, tableId)
-        : pickMultiplier(Box.weight_cum_multiple_before, tableId);
+    function isScoringRow(row) {
+      return row >= SCORE_ROW_OFFSET;
+    }
+
+    function usesReel3MultiplierTable(tableId, col) {
+      return col === 2 && REEL3_SPECIAL_TABLE_IDS.has(tableId);
+    }
+
+    function pickInitialMultiplier(tableId, row, col) {
+      if (usesReel3MultiplierTable(tableId, col)) {
+        return isScoringRow(row)
+          ? pickMultiplier(Box.weight_cum_multiple_r3_before, tableId)
+          : pickMultiplier(Box.weight_cum_multiple_r3_after, tableId);
+      }
+      return isScoringRow(row)
+        ? pickMultiplier(Box.weight_cum_multiple_before, tableId)
+        : pickMultiplier(Box.weight_cum_multiple_after, tableId);
     }
 
     function pickDropMultiplier(tableId, col) {
-      return col === 2
+      return usesReel3MultiplierTable(tableId, col)
         ? pickMultiplier(Box.weight_cum_multiple_r3_after, tableId)
         : pickMultiplier(Box.weight_cum_multiple_after, tableId);
     }
@@ -896,13 +919,16 @@
 
     function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
       const goldPositions = [];
+      const scoringGoldPositions = [];
       for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
         for (let col = 0; col < Box.reel_num; col += 1) {
-          if (goldMask[row][col] === 1) goldPositions.push([row, col]);
+          if (goldMask[row][col] !== 1) continue;
+          goldPositions.push([row, col]);
+          if (isScoringRow(row)) scoringGoldPositions.push([row, col]);
         }
       }
       const specialPool = {
-        gold_count: goldPositions.length,
+        gold_count: scoringGoldPositions.length,
         candidate_weight: 0,
         rng_value: null,
         rng_total: Box.special_pool_weight_base,
@@ -913,14 +939,14 @@
       if (goldPositions.length === 0) return { special_pool: specialPool, assignments };
 
       let specialIdx = -1;
-      if (tableId < 3) {
-        const candidateWeight = Box.weight_special_pool[Math.min(goldPositions.length, 9)][tableId];
+      if (scoringGoldPositions.length > 0) {
+        const candidateWeight = Box.weight_special_pool[Math.min(scoringGoldPositions.length, 7)][tableId];
         specialPool.candidate_weight = candidateWeight;
         if (candidateWeight > 0) {
           const poolRng = randInt(Box.special_pool_weight_base);
           specialPool.rng_value = poolRng;
           if (poolRng < candidateWeight) {
-            specialIdx = randInt(goldPositions.length);
+            specialIdx = randInt(scoringGoldPositions.length);
             specialPool.triggered = true;
             specialPool.special_index = specialIdx;
           }
@@ -928,11 +954,12 @@
       }
 
       goldPositions.forEach(([row, col], index) => {
-        const picked = index === specialIdx
+        const scoringIndex = scoringGoldPositions.findIndex(([goldRow, goldCol]) => goldRow === row && goldCol === col);
+        const picked = scoringIndex >= 0 && scoringIndex === specialIdx
           ? pickMultiplier(Box.weight_cum_multiple_special, tableId)
-          : pickInitialMultiplier(tableId, col);
+          : pickInitialMultiplier(tableId, row, col);
         multiMask[row][col] = picked.multiplier;
-        specialMask[row][col] = index === specialIdx ? 1 : 0;
+        specialMask[row][col] = scoringIndex >= 0 && scoringIndex === specialIdx ? 1 : 0;
         assignments.push({
           row,
           col,
@@ -940,7 +967,11 @@
           multiplier_index: picked.multiplier_index,
           rng_value: picked.rng_value,
           rng_total: picked.rng_total,
-          weight_source: index === specialIdx ? "special" : "before"
+          weight_source: specialMask[row][col] === 1
+            ? "special"
+            : usesReel3MultiplierTable(tableId, col)
+              ? isScoringRow(row) ? "reel3_before" : "reel3_after"
+              : isScoringRow(row) ? "before" : "after"
         });
       });
 
@@ -1356,14 +1387,10 @@
           }
           const code = document.createElement("div");
           code.className = "symbol-code";
-          code.textContent = cell.symbol_code || "-";
           cellEl.appendChild(wrap);
-          cellEl.appendChild(code);
-          if (cell.is_scatter) {
-            const scatter = document.createElement("div");
-            scatter.className = "scatter-badge";
-            scatter.textContent = "SC";
-            cellEl.appendChild(scatter);
+          if (cell.symbol_id >= 0) {
+            code.textContent = cell.symbol_name || cell.symbol_code || "-";
+            cellEl.appendChild(code);
           }
           if (cell.is_gold && cell.multiplier > 0) {
             const multi = document.createElement("div");
