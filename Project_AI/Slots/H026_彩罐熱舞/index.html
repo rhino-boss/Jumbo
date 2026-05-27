@@ -249,6 +249,11 @@
       box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
     }
 
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
     .cell.hit {
       border-color: rgba(255, 233, 116, 0.96);
       box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
@@ -940,7 +945,8 @@
 
       let specialIdx = -1;
       if (scoringGoldPositions.length > 0) {
-        const candidateWeight = Box.weight_special_pool[Math.min(scoringGoldPositions.length, 7)][tableId];
+        const poolRow = Math.min(scoringGoldPositions.length - 1, Box.weight_special_pool.length - 1);
+        const candidateWeight = Box.weight_special_pool[poolRow][tableId];
         specialPool.candidate_weight = candidateWeight;
         if (candidateWeight > 0) {
           const poolRng = randInt(Box.special_pool_weight_base);

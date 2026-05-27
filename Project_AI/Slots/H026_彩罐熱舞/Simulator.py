@@ -11,11 +11,11 @@ from numba import njit
 
 # ===== User Settings =====
 
-BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\H026_彩罐熱舞"
+BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H026_彩罐熱舞"
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**8
+TOTAL_ROUNDS = 10**6
 BET_MULTI = 1
 BET_MODE = 0
 THREADS = max(1, max(8, os.cpu_count() or 1))
@@ -159,12 +159,7 @@ CFG_RAW = _load_config(CONFIG_PATH)
 
 GAME_ID = CFG_RAW["game_id"]
 GAME_NAME = CFG_RAW.get("display_name") or CFG_RAW.get("game_name") or GAME_ID
-CONFIG_VERSION = (
-    CFG_RAW.get("excel_version")
-    or CFG_RAW.get("game_version")
-    or CFG_RAW.get("version")
-    or ""
-)
+CONFIG_VERSION = CFG_RAW.get("excel_version") or CFG_RAW.get("game_version") or CFG_RAW.get("version") or ""
 MODE_NORMALBET = int(CFG_RAW["mode_normalbet"])
 MODE_FEATUREBUY = int(CFG_RAW["mode_featurebuy"])
 SCENE_BG = int(CFG_RAW["scene_bg"])
@@ -551,7 +546,9 @@ def assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos):
     scoring_gold_count = collect_scoring_gold_positions(gold_mask, scoring_gold_pos)
     special_idx = -1
     if scoring_gold_count > 0:
-        pool_row = scoring_gold_count
+        pool_row = scoring_gold_count - 1
+        if scoring_gold_count == 0:
+            pool_row = 0
         if pool_row >= WEIGHT_SPECIAL_POOL.shape[0]:
             pool_row = WEIGHT_SPECIAL_POOL.shape[0] - 1
         special_weight = WEIGHT_SPECIAL_POOL[pool_row, table_id]

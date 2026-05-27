@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G Symbol Reorder Tool</title>
+  <style>
+    :root {
+      --bg: #f4f0dd;
+      --panel: #fffdf4;
+      --ink: #213019;
+      --accent: #587c3e;
+      --accent-2: #d8ea65;
+      --line: #c9d6a6;
+      --warn: #b2472f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(216, 234, 101, 0.42), transparent 30%),
+        linear-gradient(180deg, #eef7d2, var(--bg));
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 28px;
+    }
+
+    p {
+      margin: 0 0 10px;
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 14px 40px rgba(64, 92, 34, 0.12);
+    }
+
+    .controls {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid #b9c995;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      background: #fffffb;
+      color: inherit;
+    }
+
+    textarea {
+      min-height: 360px;
+      resize: vertical;
+      font-family: Consolas, "Courier New", monospace;
+      line-height: 1.35;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fffef2;
+      background: linear-gradient(135deg, var(--accent), #3f5d2f);
+      box-shadow: 0 8px 18px rgba(63, 93, 47, 0.24);
+    }
+
+    button.secondary {
+      color: var(--ink);
+      background: linear-gradient(135deg, #ecf7c6, #d7ec87);
+      box-shadow: none;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #445337;
+    }
+
+    .weight-grid {
+      display: grid;
+      grid-template-columns: 56px repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      align-items: center;
+    }
+
+    .weight-grid strong {
+      font-size: 14px;
+    }
+
+    .weight-grid span {
+      font-size: 12px;
+      color: #445337;
+      text-align: center;
+    }
+
+    .weight-grid input {
+      padding: 8px 10px;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f5f9e5;
+      border: 1px solid #d7e4b0;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .status.warn {
+      background: #fff2ea;
+      border-color: #f0c4b7;
+      color: var(--warn);
+    }
+
+    .tables {
+      display: grid;
+      gap: 18px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    th,
+    td {
+      border: 1px solid #909c74;
+      min-width: 62px;
+      padding: 8px 10px;
+      text-align: center;
+      font-weight: 600;
+      background: #fff;
+    }
+
+    th {
+      background: #e6f0bf;
+    }
+
+    td.g {
+      background: #fff05a;
+    }
+
+    td.group-end {
+      box-shadow: inset 0 -3px 0 rgba(88, 124, 62, 0.45);
+    }
+
+    .output-box {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fafde9;
+      border: 1px solid #d8e8b0;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>G 符號上下重排工具</h1>
+    <p>用途：只允許同一欄上下重排，不換欄；欄內原本連在一起的相同符號會視為同一個 block，不會拆開。</p>
+    <p>目標：讓每一欄中，`G` 開頭 block 之間至少隔開指定格數。若原始資料本身不可能滿足，工具會保留最佳努力結果並標示哪幾欄不足。</p>
+
+    <div class="layout">
+      <section class="panel controls">
+        <label>
+          貼上盤面資料
+          <textarea id="inputGrid">M5	M5	M5	GK	M4
+K	M1	K	Q	M2
+M4	G4	GK	M3	M2
+A	A	M4	M3	J
+K	M5	M2	GK	K
+A	G2	A	GQ	J
+K	A	G5	M5	A
+K	A	Q	M1	A
+A	A	K	G2	M4
+M5	M4	K	A	Q
+A	J	M5	G5	K
+M5	A	A	K	M1
+A	G1	A	K	M2
+K	M1	A	M3	Q
+M5	A	G4	K	Q
+K	A	K	A	M2
+Q	Q	M5	M1	M5
+M4	GK	K	Q	J
+A	G3	A	M4	Q
+M4	M5	GA	G4	M1
+A	K	A	M4	Q
+M4	A	Q	M4	J
+Q	Q	M4	Q	K
+M4	M5	K	M1	M2
+K	K	M4	Q	M1</textarea>
+        </label>
+
+        <label>
+          G block 最小間隔格數
+          <input id="minGap" type="number" min="0" value="4">
+        </label>
+
+        <div>
+          <div style="font-weight: 600; margin-bottom: 8px;">各欄金框群比例</div>
+          <div id="perColumnWeights" style="display: grid; gap: 8px;"></div>
+        </div>
+
+        <div class="button-row">
+          <button id="runBtn" type="button">重新排序</button>
+          <button id="copyBtn" class="secondary" type="button">複製輸出</button>
+        </div>
+
+        <div class="hint">支援 Tab、空白或逗號分隔。判斷 `G` 開頭時，像 `G1 / G4 / GK / GQ / GA` 都算。每一欄都可分開設定 `3堆 / 2堆 / 單個` 比例。</div>
+        <div id="status" class="status">尚未執行。</div>
+      </section>
+
+      <section class="tables">
+        <div class="panel">
+          <h2>重排結果</h2>
+          <div id="outputTable" class="table-wrap"></div>
+          <div class="output-box">
+            <pre id="outputText"></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    function parseGrid(text) {
+      const rows = text
+        .trim()
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.split(/\t|,|\s+/).filter(Boolean));
+
+      if (!rows.length) {
+        throw new Error("沒有可解析的資料。");
+      }
+
+      const width = rows[0].length;
+      if (!width) {
+        throw new Error("第一列沒有內容。");
+      }
+
+      rows.forEach((row, index) => {
+        if (row.length !== width) {
+          throw new Error(`第 ${index + 1} 列欄數不一致。`);
+        }
+      });
+
+      return rows;
+    }
+
+    function isGSymbol(symbol) {
+      return /^G/i.test(symbol);
+    }
+
+    function transpose(rows) {
+      return rows[0].map((_, colIndex) => rows.map((row) => row[colIndex]));
+    }
+
+    function shuffle(items) {
+      const result = items.slice();
+      for (let i = result.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function toRows(columns) {
+      return columns[0].map((_, rowIndex) => columns.map((col) => col[rowIndex]));
+    }
+
+    function buildBlocks(column) {
+      const blocks = [];
+      let start = 0;
+
+      while (start < column.length) {
+        const symbol = column[start];
+        let end = start + 1;
+        while (end < column.length && column[end] === symbol) {
+          end += 1;
+        }
+        blocks.push({
+          symbol,
+          items: column.slice(start, end),
+          size: end - start,
+          isG: isGSymbol(symbol)
+        });
+        start = end;
+      }
+
+      return blocks;
+    }
+
+    function chunkNonGBlocks(nonGBlocks, gapCount) {
+      const groups = Array.from({ length: gapCount }, () => []);
+      const sizes = Array(gapCount).fill(0);
+      const shuffledBlocks = shuffle(nonGBlocks);
+
+      shuffledBlocks.forEach((block) => {
+        let candidateIndexes;
+        if (gapCount <= 2) {
+          candidateIndexes = Array.from({ length: gapCount }, (_, index) => index);
+        } else {
+          candidateIndexes = Array.from({ length: gapCount - 2 }, (_, index) => index + 1);
+        }
+        const minSize = Math.min(...candidateIndexes.map((index) => sizes[index]));
+        const eligible = candidateIndexes.filter((index) => sizes[index] === minSize);
+        const target = eligible[Math.floor(Math.random() * eligible.length)];
+
+        groups[target].push(block);
+        sizes[target] += block.size;
+      });
+
+      return { groups, sizes };
+    }
+
+    function groupGBlocks(gBlocks, nonGTotalSize, minGap, maxStickyCount) {
+      if (gBlocks.length <= 1) {
+        return gBlocks.map((block) => [block]);
+      }
+
+      const neededGapGroups = Math.floor(nonGTotalSize / Math.max(minGap, 1));
+      const minClusterCount = Math.ceil(gBlocks.length / maxStickyCount);
+      const preferredClusterCount = Math.min(gBlocks.length, neededGapGroups + 1);
+      const clusterCount = Math.max(1, Math.max(minClusterCount, preferredClusterCount));
+
+      const clusters = Array.from({ length: clusterCount }, () => []);
+      let blockIndex = 0;
+      for (let clusterIndex = 0; clusterIndex < clusterCount; clusterIndex += 1) {
+        const remainingBlocks = gBlocks.length - blockIndex;
+        const remainingClusters = clusterCount - clusterIndex;
+        const clusterSize = Math.min(
+          maxStickyCount,
+          Math.ceil(remainingBlocks / remainingClusters)
+        );
+        for (let offset = 0; offset < clusterSize; offset += 1) {
+          clusters[clusterIndex].push(gBlocks[blockIndex]);
+          blockIndex += 1;
+        }
+      }
+
+      return clusters.filter((cluster) => cluster.length > 0);
+    }
+
+    function chooseWeightedSize(remainingBlocks, remainingMinSingles, weights, maxStickyCount) {
+      const options = [];
+      for (let size = 1; size <= maxStickyCount; size += 1) {
+        if (size > remainingBlocks) continue;
+        const blocksLeft = remainingBlocks - size;
+        if (blocksLeft < remainingMinSingles) continue;
+        const weight = size === 3 ? weights[3] : size === 2 ? weights[2] : weights[1];
+        options.push({ size, weight: Math.max(0, weight) });
+      }
+
+      if (!options.length) return 1;
+
+      const totalWeight = options.reduce((sum, item) => sum + item.weight, 0);
+      if (totalWeight <= 0) {
+        return options[Math.floor(Math.random() * options.length)].size;
+      }
+
+      let pick = Math.random() * totalWeight;
+      for (const option of options) {
+        pick -= option.weight;
+        if (pick <= 0) return option.size;
+      }
+      return options[options.length - 1].size;
+    }
+
+    function groupGBlocksByRatio(gBlocks, weights, maxStickyCount) {
+      const clusters = [];
+      let remainingBlocks = gBlocks.length;
+      let blockIndex = 0;
+
+      while (remainingBlocks > 0) {
+        const minClustersAfterPick = Math.ceil(Math.max(0, remainingBlocks - maxStickyCount) / maxStickyCount);
+        const clusterSize = chooseWeightedSize(
+          remainingBlocks,
+          minClustersAfterPick,
+          weights,
+          maxStickyCount
+        );
+        const cluster = [];
+        for (let i = 0; i < clusterSize; i += 1) {
+          cluster.push(gBlocks[blockIndex]);
+          blockIndex += 1;
+        }
+        clusters.push(cluster);
+        remainingBlocks -= clusterSize;
+      }
+
+      return clusters;
+    }
+
+    function balanceClusterOrder(clusters) {
+      if (clusters.length <= 2) {
+        return shuffle(clusters);
+      }
+
+      const singles = shuffle(clusters.filter((cluster) => cluster.length === 1));
+      const multis = shuffle(clusters.filter((cluster) => cluster.length > 1));
+      const result = [];
+
+      while (singles.length || multis.length) {
+        const useSingle = result.length % 2 === 0;
+        if (useSingle && singles.length) {
+          result.push(singles.pop());
+        } else if (!useSingle && multis.length) {
+          result.push(multis.pop());
+        } else if (singles.length) {
+          result.push(singles.pop());
+        } else if (multis.length) {
+          result.push(multis.pop());
+        }
+      }
+
+      return result;
+    }
+
+    function reorderColumn(column, minGap, stackWeights) {
+      const blocks = buildBlocks(column);
+      const gBlocks = blocks.filter((block) => block.isG);
+      const nonGBlocks = blocks.filter((block) => !block.isG);
+
+      if (gBlocks.length <= 1) {
+        return {
+          column: column.slice(),
+          ok: true,
+          minGapFound: null
+        };
+      }
+
+      const maxStickyCount = 3;
+      const shuffledGBlocks = shuffle(gBlocks);
+      const nonGTotalSize = nonGBlocks.reduce((sum, block) => sum + block.size, 0);
+      const preferredClusters = groupGBlocksByRatio(shuffledGBlocks, stackWeights, maxStickyCount);
+      const minClusterCount = Math.ceil(shuffledGBlocks.length / maxStickyCount);
+      const preferredClusterCount = Math.min(shuffledGBlocks.length, Math.floor(nonGTotalSize / Math.max(minGap, 1)) + 1);
+      let gClusters = preferredClusters;
+      if (gClusters.length < minClusterCount || gClusters.length > Math.max(minClusterCount, preferredClusterCount)) {
+        gClusters = groupGBlocks(
+          shuffledGBlocks,
+          nonGTotalSize,
+          minGap,
+          maxStickyCount
+        );
+      }
+      gClusters = balanceClusterOrder(gClusters);
+      const gapCount = gClusters.length + 1;
+      const { groups, sizes } = chunkNonGBlocks(nonGBlocks, gapCount);
+      const innerSizes = sizes.slice(1, -1);
+      const minInnerGap = innerSizes.length ? Math.min(...innerSizes) : null;
+      const ok = minInnerGap >= minGap;
+
+      const orderedBlocks = [];
+      groups[0].forEach((block) => orderedBlocks.push(block));
+      gClusters.forEach((cluster, index) => {
+        cluster.forEach((gBlock) => orderedBlocks.push(gBlock));
+        groups[index + 1].forEach((block) => orderedBlocks.push(block));
+      });
+
+      return {
+        column: orderedBlocks.flatMap((block) => block.items),
+        ok,
+        minGapFound: minInnerGap,
+        maxStickyUsed: Math.max(...gClusters.map((cluster) => cluster.length))
+      };
+    }
+
+    function renderTable(container, rows) {
+      if (!rows.length) {
+        container.innerHTML = "";
+        return;
+      }
+
+      const columns = transpose(rows);
+      const blocksByColumn = columns.map((column) => buildBlocks(column));
+      const blockEndRows = columns.map((column, colIndex) => {
+        const ends = new Set();
+        let rowCursor = 0;
+        blocksByColumn[colIndex].forEach((block) => {
+          rowCursor += block.size;
+          ends.add(rowCursor - 1);
+        });
+        return ends;
+      });
+
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      rows[0].forEach((_, colIndex) => {
+        const th = document.createElement("th");
+        th.textContent = `R${colIndex + 1}`;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      rows.forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+        row.forEach((cell, colIndex) => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          if (isGSymbol(cell)) td.classList.add("g");
+          if (blockEndRows[colIndex].has(rowIndex)) td.classList.add("group-end");
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+
+      container.innerHTML = "";
+      container.appendChild(table);
+    }
+
+    function stringifyGrid(rows) {
+      return rows.map((row) => row.join("\t")).join("\n");
+    }
+
+    function syncPerColumnWeightInputs(columnCount) {
+      const container = document.getElementById("perColumnWeights");
+      const existing = new Map(
+        Array.from(container.querySelectorAll(".weight-grid[data-col]")).map((row) => [
+          Number(row.dataset.col),
+          {
+            3: row.querySelector('[data-size="3"]').value,
+            2: row.querySelector('[data-size="2"]').value,
+            1: row.querySelector('[data-size="1"]').value
+          }
+        ])
+      );
+
+      container.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.className = "weight-grid";
+      header.innerHTML = "<div></div><span>3堆</span><span>2堆</span><span>單個</span>";
+      container.appendChild(header);
+
+      for (let col = 0; col < columnCount; col += 1) {
+        const values = existing.get(col) || { 3: "1", 2: "1", 1: "1" };
+        const row = document.createElement("div");
+        row.className = "weight-grid";
+        row.dataset.col = String(col);
+        row.innerHTML = `
+          <strong>R${col + 1}</strong>
+          <input type="number" min="0" value="${values[3]}" data-size="3">
+          <input type="number" min="0" value="${values[2]}" data-size="2">
+          <input type="number" min="0" value="${values[1]}" data-size="1">
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    function readPerColumnWeights(columnCount) {
+      const container = document.getElementById("perColumnWeights");
+      return Array.from({ length: columnCount }, (_, col) => {
+        const row = container.querySelector(`.weight-grid[data-col="${col}"]`);
+        return {
+          3: Math.max(0, Number(row?.querySelector('[data-size="3"]')?.value) || 0),
+          2: Math.max(0, Number(row?.querySelector('[data-size="2"]')?.value) || 0),
+          1: Math.max(0, Number(row?.querySelector('[data-size="1"]')?.value) || 0)
+        };
+      });
+    }
+
+    function run() {
+      const statusEl = document.getElementById("status");
+      try {
+        const rows = parseGrid(document.getElementById("inputGrid").value);
+        const minGap = Math.max(0, Number(document.getElementById("minGap").value) || 0);
+        syncPerColumnWeightInputs(rows[0].length);
+        const stackWeightsByColumn = readPerColumnWeights(rows[0].length);
+        const columns = transpose(rows);
+        const results = columns.map((column, index) => reorderColumn(column, minGap, stackWeightsByColumn[index]));
+        const outputRows = toRows(results.map((item) => item.column));
+        const failed = results
+          .map((result, index) => ({ ...result, col: index + 1 }))
+          .filter((result) => !result.ok);
+
+        renderTable(document.getElementById("outputTable"), outputRows);
+        document.getElementById("outputText").textContent = stringifyGrid(outputRows);
+
+        if (failed.length) {
+          statusEl.className = "status warn";
+          statusEl.textContent =
+            `已重排，但仍有欄位無法滿足 G block 至少間隔 ${minGap} 格：\n` +
+            failed.map((item) => `R${item.col}：目前最小間隔 ${item.minGapFound ?? 0} 格，連續 G block 最多 ${item.maxStickyUsed} 個`).join("\n");
+        } else {
+          statusEl.className = "status";
+          statusEl.textContent = `完成。所有欄位的 G block 都至少間隔 ${minGap} 格。`;
+        }
+      } catch (error) {
+        statusEl.className = "status warn";
+        statusEl.textContent = error.message;
+      }
+    }
+
+    document.getElementById("runBtn").addEventListener("click", run);
+    document.getElementById("inputGrid").addEventListener("change", () => {
+      try {
+        const rows = parseGrid(document.getElementById("inputGrid").value);
+        syncPerColumnWeightInputs(rows[0].length);
+      } catch (error) {
+        // Ignore invalid intermediate input.
+      }
+    });
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      const text = document.getElementById("outputText").textContent;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        const statusEl = document.getElementById("status");
+        statusEl.className = "status";
+        statusEl.textContent = "輸出結果已複製到剪貼簿。";
+      } catch (error) {
+        const statusEl = document.getElementById("status");
+        statusEl.className = "status warn";
+        statusEl.textContent = "無法直接複製，請手動複製下方輸出文字。";
+      }
+    });
+
+    syncPerColumnWeightInputs(5);
+    run();
+  </script>
+</body>
+</html>

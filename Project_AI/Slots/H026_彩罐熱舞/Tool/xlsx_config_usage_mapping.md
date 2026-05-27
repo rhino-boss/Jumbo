@@ -122,7 +122,7 @@
 | 第 19 列起第 J/K 欄 BF table weights | 未輸出 | BF 目前固定使用 `BF` table |
 | 第 I 欄 `Multiplier` 區塊 | `value_multiplier_range` | 倍數值清單 |
 | 第 O~AA 欄 multiplier weight 各區塊 | `weight_multiple_*` / `weight_cum_multiple_*` | 各情境 gold multiplier 權重 |
-| 第 AD~AK 欄 special pool 區塊 | `weight_special_pool` | 特殊池觸發權重 |
+| 第 AD~AL 欄 special pool 區塊 | `weight_special_pool` | 特殊池觸發權重 |
 | 第 J/K 欄 `Eliminate Table Weight` 區塊 | `eliminate_table_weight_*` / `eliminate_table_weight_cum_*` | 消除階段 table 權重 |
 
 ### B3. `BG_Symbol`, `BG_Symbol (2)`, `BG_Symbol (3)`, `FG_Symbol`, `FG_Symbol (2)`, `FG_Symbol (3)`, `BF_Symbol`

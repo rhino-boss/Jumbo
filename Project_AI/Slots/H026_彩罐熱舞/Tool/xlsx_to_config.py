@@ -209,7 +209,7 @@ def parse_multiplier_section(ws: Any, start_row: int, end_row: int) -> list[list
 def parse_special_pool_weight(ws: Any) -> list[list[int]]:
     rows: list[list[int]] = []
     for row in range(5, 12):
-        rows.append([to_int(ws.cell(row, col).value) for col in range(30, 38)])
+        rows.append([to_int(ws.cell(row, col).value) for col in range(30, 39)])
     if not rows:
         return []
     return [list(column) for column in zip(*rows)]
