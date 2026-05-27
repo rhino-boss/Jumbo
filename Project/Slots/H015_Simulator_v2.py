@@ -24,7 +24,7 @@ bet_mode = Box.mode_normalbet
 # bet_mode = Box.mode_featurebuy
 # bet_mode = Box.mode_superfeaturebuy
 
-total_round = 10**9  # 測試1
+total_round = 10**10  # 測試1
 # total_round = 10**4  # 測試2
 # total_round = 10**0  # 測試3
 # total_round = 10**9  # 標準，時間: s
@@ -179,6 +179,10 @@ def simulator_game(record_data, total_round):  # 完整遊戲模擬
         record_data[Box.R_eliminate[0] : Box.R_eliminate[1], :][idx, symbol + len(Box.symbols_all) * posi_y_fix] += way  # posi_y_fix: 0->BG, 1->FG
 
     # tool - bygame
+    # H015 v2 沒有獨立的「炸彈 symbol / 爆炸函式」。
+    # 特殊演出實際由兩段機制組成：
+    # 1. 金框符號在參與得分消除後，不會直接重抽，而是轉成 Wild。
+    # 2. 每次 cascade 另外抽選「閃電數量」，用來推進整局乘數等級。
     def arr_result_generator_C(table_id, rng_C, arr_result_C):
         window_size, reel_num = arr_result_C.shape
 
@@ -203,6 +207,8 @@ def simulator_game(record_data, total_round):  # 完整遊戲模擬
                     arr_result_C[i, j] = 99  # 0:不消除, 1:消除, 2:轉WW, 99:不計算區域
 
     def set_golden_flame_area_C(arr_result_C, arr_golden_symbol_posi_C):
+        # 金框符號先轉回一般 symbol 參與 ways 計算，位置另外用 mask 記錄。
+        # 後續若該格被命中，remove_and_fall_C 會把它轉成 Wild，而不是直接消失補牌。
         for i in range(arr_result_C.shape[0]):
             for j in range(arr_result_C.shape[1]):
                 if arr_result_C[i, j] in Box.symbols_gold:
@@ -221,6 +227,11 @@ def simulator_game(record_data, total_round):  # 完整遊戲模擬
         return pay
 
     def get_spin_result(arr_result, arr_special_posi, arr_golden_symbol_posi):
+        # arr_special_posi:
+        # 0  -> 一般可計算位置，這輪未命中
+        # 1  -> 一般命中格，本輪消除後會依掉落表補新 symbol
+        # 2  -> 金框命中格，本輪不重抽，落下後改成 Wild
+        # 99 -> 不在有效盤面內
 
         # initial setting
         arr_pay_symbol = np.full(3, 99, np.int64)
@@ -280,6 +291,8 @@ def simulator_game(record_data, total_round):  # 完整遊戲模擬
         return pay_symbol_sum, arr_pay_symbol, arr_pay_way_cnt, arr_pay_line, arr_pay_symbol_pay
 
     def remove_and_fall_C(table_id, combo_id, arr_result, arr_special_posi, arr_golden_symbol_posi, weight_drop_choose):
+        # 一般命中格直接依 combo 掉落表補牌；
+        # 金框命中格則保留為特效格，結算後轉成 Wild，形成下一段 cascade 的延續價值。
         for window in range(arr_result.shape[0]):
             for reel in range(arr_result.shape[1]):
                 if arr_special_posi[window, reel] == 1:
@@ -303,7 +316,7 @@ def simulator_game(record_data, total_round):  # 完整遊戲模擬
         2. 轉換金框符號Idx
         3. 決定掉落表與閃電出現表
         --- 進入circle ---
-        4. 抽選幾個閃電
+        4. 抽選幾個閃電（不是炸彈位置，而是本段 cascade 增加幾階乘數）
         5. 計算得分
         6. 消除並掉落新符號
         7. 轉換金框符號
@@ -390,6 +403,7 @@ def simulator_game(record_data, total_round):  # 完整遊戲模擬
             multi_value = Box.value_multiplier_range[multi_lv_idx]
             multi_lv_idx = get_multi_idx(multi_lv_idx, 1)  # 更新消除累積倍數
             combo_idx += 1
+            # 本段實際乘數 =「閃電推進後的等級」對應到的 multiplier value。
 
             pay_BS += pay_cascade * multi_value
             if num_multi_appear > 0 and pay_cascade * multi_value > 0:

@@ -159,6 +159,12 @@ CFG_RAW = _load_config(CONFIG_PATH)
 
 GAME_ID = CFG_RAW["game_id"]
 GAME_NAME = CFG_RAW.get("display_name") or CFG_RAW.get("game_name") or GAME_ID
+CONFIG_VERSION = (
+    CFG_RAW.get("excel_version")
+    or CFG_RAW.get("game_version")
+    or CFG_RAW.get("version")
+    or ""
+)
 MODE_NORMALBET = int(CFG_RAW["mode_normalbet"])
 MODE_FEATUREBUY = int(CFG_RAW["mode_featurebuy"])
 SCENE_BG = int(CFG_RAW["scene_bg"])
@@ -1535,6 +1541,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
 
     base_rows = [
         ("game_id", GAME_ID, ""),
+        ("version", CONFIG_VERSION, ""),
         ("bet_mode", bet_mode_label, ""),
         ("bet_multi", bet_multi, ""),
         ("coin_in", coin_in, ""),
