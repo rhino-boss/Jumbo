@@ -24,7 +24,7 @@ bet_mode = Box.mode_normalbet
 # bet_mode = Box.mode_featurebuy
 # bet_mode = Box.mode_superfeaturebuy
 
-total_round = 10**8  # 測試1
+total_round = 10**9  # 測試1
 # total_round = 10**4  # 測試2
 # total_round = 10**0  # 測試3
 # total_round = 10**9  # 標準，時間: s
@@ -656,6 +656,7 @@ def simulater_result(show_result=False, show_detail=False, show_multi_line=False
         p_trigger_FG = record_data[Box.R_all, Box.RA_trigger_freegame] / total_round
         p_retrigger = record_data[Box.R_all, Box.RA_re_trigger] / record_data[Box.R_all, Box.RA_trigger_freegame]
         avg_multi_FG = rtp_FG_FS / p_trigger_FG
+        avg_multi_per_free_spin = rtp_FG_FS / (record_data[Box.R_all, Box.RA_free_spins] / total_round)
         std = ((record_data[Box.R_all, Box.RA_x_square] - ((record_data[Box.R_all, Box.RA_x_sum]) ** 2 / total_round)) / total_round) ** 0.5
         median = Mat.threshold_record[Mat.cfunc.get_median_idx_from_multiplier_line(record_data[Box.R_multiplier_range_cnt_FG])]
         pay_trigger_FG_pay_BG = record_data[Box.R_all, Box.RA_trigger_FG_pay_BG]
@@ -695,6 +696,7 @@ def simulater_result(show_result=False, show_detail=False, show_multi_line=False
         f_write_data("免費遊戲再觸發機率", "{0:0.5f}".format(p_retrigger), "{:0.2f}場".format(1 / p_retrigger))
         f_write_data("FG平均轉數", "{0:0.5f}".format(p_avg_spin_FG))
         f_write_data("FG平均倍數", "{0:0.2f}".format(avg_multi_FG))
+        f_write_data("每把FG平均倍數", "{0:0.2f}".format(avg_multi_per_free_spin))
         f_write_data("expected value", "{0:0.6f}".format(rtp_BG_BS + rtp_FG_FS))
         f_write_data("standard deviation", "{0:0.6f}".format(std))
         f_write_data("median", "{0:0.2f}".format(median))

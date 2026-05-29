@@ -468,16 +468,15 @@ def count_scatter(board):
 
 
 @njit(nogil=True)
-def board_has_scatter(board):
+def column_has_scatter(board, col):
     for row in range(SCORE_ROW_OFFSET, DISPLAY_WINDOW_SIZE):
-        for col in range(REEL_NUM):
-            if board[row, col] == C1:
-                return 1
+        if board[row, col] == C1:
+            return 1
     return 0
 
 
 @njit(nogil=True)
-def pick_drop_symbol(table_id, use_drop_a, col, board_has_c1):
+def pick_drop_symbol(table_id, use_drop_a, col, column_has_c1):
     while True:
         if use_drop_a == 1:
             drop_idx = pick_by_cum(DROP_WEIGHT_A_CUM[table_id, :, col])
@@ -485,20 +484,20 @@ def pick_drop_symbol(table_id, use_drop_a, col, board_has_c1):
             drop_idx = pick_by_cum(DROP_WEIGHT_B_CUM[table_id, :, col])
         drop_symbol = SYMBOL_ID[drop_idx]
         base_symbol = BASE_SYMBOL_OF[drop_symbol]
-        if CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 == 1 and board_has_c1 == 1 and base_symbol == C1:
+        if CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 == 1 and column_has_c1 == 1 and base_symbol == C1:
             continue
         return drop_symbol, base_symbol
 
 
 @njit(nogil=True)
-def take_reel_above_symbol(table_id, col, next_above_idx, board_has_c1):
+def take_reel_above_symbol(table_id, col, next_above_idx, column_has_c1):
     reel_length = REELS_LEN[table_id, col]
     while True:
         strip_idx = next_above_idx[col]
         symbol = ARR_REELS[table_id, strip_idx, col]
         next_above_idx[col] = (strip_idx - 1 + reel_length) % reel_length
         base_symbol = BASE_SYMBOL_OF[symbol]
-        if CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 == 1 and board_has_c1 == 1 and base_symbol == C1:
+        if CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 == 1 and column_has_c1 == 1 and base_symbol == C1:
             continue
         return symbol, base_symbol
 
@@ -671,11 +670,11 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
                 gold_mask[row, col] = 0
                 multi_mask[row, col] = 0
 
-        has_c1_on_board = board_has_scatter(board)
+        has_c1_in_col = column_has_scatter(board, col)
         for row in range(DISPLAY_WINDOW_SIZE - 1, -1, -1):
             if board[row, col] >= 0:
                 continue
-            drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, has_c1_on_board)
+            drop_symbol, base_symbol = pick_drop_symbol(table_id, use_drop_a, col, has_c1_in_col)
             board[row, col] = base_symbol
             gold_mask[row, col] = IS_GOLD_SYMBOL[drop_symbol]
             if gold_mask[row, col] == 1:
@@ -683,7 +682,7 @@ def cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, k
             else:
                 multi_mask[row, col] = 0
             if row >= SCORE_ROW_OFFSET and base_symbol == C1:
-                has_c1_on_board = 1
+                has_c1_in_col = 1
 
 
 @njit(nogil=True)

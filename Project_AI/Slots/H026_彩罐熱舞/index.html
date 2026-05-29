@@ -902,22 +902,20 @@
       return total;
     }
 
-    function boardHasScatter(board) {
+    function columnHasScatter(board, col) {
       for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
-        for (let col = 0; col < Box.reel_num; col += 1) {
-          if (board[row][col] === 1) return true;
-        }
+        if (board[row][col] === 1) return true;
       }
       return false;
     }
 
-    function pickDropSymbol(tableId, useDropA, col, boardHasC1) {
+    function pickDropSymbol(tableId, useDropA, col, columnHasC1) {
       while (true) {
         const cum = useDropA ? Box.drop_weight_a_cum[tableId].map((v) => v[col]) : Box.drop_weight_b_cum[tableId].map((v) => v[col]);
         const picked = pickByCum(cum);
         const dropSymbol = Box.symbol_id[picked.index];
         const baseSymbol = Box.base_symbol_of[dropSymbol];
-        if (boardHasC1 && baseSymbol === 1) continue;
+        if (columnHasC1 && baseSymbol === 1) continue;
         return { picked, dropSymbol, baseSymbol };
       }
     }
@@ -1127,13 +1125,13 @@
           }
         }
 
-        let hasC1OnBoard = boardHasScatter(board);
+        let hasC1InCol = columnHasScatter(board, col);
         for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
           if (board[row][col] >= 0) continue;
           let picked = null;
           let dropSymbol;
           let baseSymbol;
-          ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, hasC1OnBoard));
+          ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, hasC1InCol));
           const dropSource = "weight";
           const dropMode = useDropA ? "A" : "B";
           board[row][col] = baseSymbol;
@@ -1147,7 +1145,7 @@
           } else {
             multiMask[row][col] = 0;
           }
-          if (baseSymbol === 1 && row >= SCORE_ROW_OFFSET) hasC1OnBoard = true;
+          if (baseSymbol === 1 && row >= SCORE_ROW_OFFSET) hasC1InCol = true;
           dropEvents.push({
             row,
             col,
