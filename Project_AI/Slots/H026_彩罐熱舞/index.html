@@ -903,7 +903,7 @@
     }
 
     function columnHasScatter(board, col) {
-      for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
         if (board[row][col] === 1) return true;
       }
       return false;

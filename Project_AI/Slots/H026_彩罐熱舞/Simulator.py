@@ -469,7 +469,7 @@ def count_scatter(board):
 
 @njit(nogil=True)
 def column_has_scatter(board, col):
-    for row in range(SCORE_ROW_OFFSET, DISPLAY_WINDOW_SIZE):
+    for row in range(DISPLAY_WINDOW_SIZE):
         if board[row, col] == C1:
             return 1
     return 0
