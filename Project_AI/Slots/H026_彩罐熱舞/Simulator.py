@@ -15,7 +15,7 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**8
+TOTAL_ROUNDS = 10**6
 BET_MULTI = 1
 BET_MODE = 0
 THREADS = max(1, max(8, os.cpu_count() or 1))
@@ -283,6 +283,9 @@ RA_MAX_MULTIPLIER_BG = 61
 RA_MAX_MULTIPLIER_FG = 62
 RA_FINAL_C1_PRESENT_BG = 63
 RA_FINAL_C1_PRESENT_FG = 64
+RA_FINAL_GOLD_COUNT_FG_LT10_0 = 65
+RA_FINAL_GOLD_COUNT_FG_GE10_0 = 75
+RA_FINAL_GOLD_COUNT_FG_GE20_0 = 85
 PROFILE_NORMAL_BET = 0
 PROFILE_FREE_GAME = 1
 PROFILE_BUY_FEATURE = 2
@@ -392,6 +395,15 @@ def choose_table(scene_mode, fg_multiplier_sum):
             return 4
         return 5
     return 6
+
+
+@njit(nogil=True)
+def get_fg_gold_count_bucket(fg_multiplier_sum):
+    if fg_multiplier_sum < 10:
+        return 0
+    if fg_multiplier_sum < 20:
+        return 1
+    return 2
 
 
 @njit(nogil=True)
@@ -527,9 +539,9 @@ def collect_scoring_gold_positions(gold_mask, gold_pos):
 
 
 @njit(nogil=True)
-def count_gold_mask(gold_mask):
+def count_scoring_gold_mask(gold_mask):
     gold_count = 0
-    for row in range(DISPLAY_WINDOW_SIZE):
+    for row in range(SCORE_ROW_OFFSET, DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
             gold_count += gold_mask[row, col]
     return gold_count
@@ -735,7 +747,7 @@ def run_spin(
     generate_board(table_id, board, gold_mask, multi_mask, next_above_idx)
     copy_layout(board_initial, board)
     assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
-    pre_eliminate_gold_count = count_gold_mask(gold_mask)
+    pre_eliminate_gold_count = count_scoring_gold_mask(gold_mask)
 
     raw_pay = 0
     combo_idx = 0
@@ -873,6 +885,7 @@ def log_round_multiplier_lines(record_data, pay_bg, pay_fg, pay_total, triggered
 def apply_spin_log(
     record_data,
     scene_idx,
+    fg_gold_count_bucket,
     spin_pay_total,
     hit_any,
     final_multiplier,
@@ -939,6 +952,12 @@ def apply_spin_log(
         else:
             record_data[R_ALL, RA_ELIMINATE_5_FG] += 1
         record_data[R_ALL, RA_FINAL_GOLD_COUNT_FG_0 + min(final_gold_count, 9)] += 1
+        if fg_gold_count_bucket == 0:
+            record_data[R_ALL, RA_FINAL_GOLD_COUNT_FG_LT10_0 + min(final_gold_count, 9)] += 1
+        elif fg_gold_count_bucket == 1:
+            record_data[R_ALL, RA_FINAL_GOLD_COUNT_FG_GE10_0 + min(final_gold_count, 9)] += 1
+        else:
+            record_data[R_ALL, RA_FINAL_GOLD_COUNT_FG_GE20_0 + min(final_gold_count, 9)] += 1
         if gold_appear == 1:
             record_data[R_ALL, RA_GOLD_APPEAR_SPINS_FG] += 1
         if gold_used == 1:
@@ -990,6 +1009,7 @@ def run_free_game_session(
     remaining_freespin = free_spins if free_spins < FG_SPIN_CAP else FG_SPIN_CAP
 
     while remaining_freespin > 0:
+        fg_gold_count_bucket = get_fg_gold_count_bucket(fg_multiplier_sum)
         fg_result = run_spin(
             SCENE_FG,
             fg_multiplier_sum,
@@ -1013,6 +1033,7 @@ def run_free_game_session(
         apply_spin_log(
             record_data,
             SCENE_FG,
+            fg_gold_count_bucket,
             fg_result[0],
             fg_result[2],
             fg_result[4],
@@ -1113,6 +1134,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                 apply_spin_log(
                     bg_round_record,
                     SCENE_BG,
+                    -1,
                     bg_result[0],
                     bg_result[2],
                     bg_result[4],
@@ -1239,6 +1261,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                 apply_spin_log(
                     round_record,
                     SCENE_BG,
+                    -1,
                     bg_result[0],
                     bg_result[2],
                     bg_result[4],
@@ -1351,6 +1374,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                 apply_spin_log(
                     round_record,
                     SCENE_BG,
+                    -1,
                     bf_result[0],
                     bf_result[2],
                     bf_result[4],
@@ -1493,6 +1517,42 @@ def format_threshold_labels(thresholds):
     return labels
 
 
+def build_gold_count_distribution_frame(record_data):
+    def extract_distribution(start_idx):
+        counts = np.asarray(record_data[R_ALL, start_idx : start_idx + 10], dtype=np.float64)
+        total = counts.sum()
+        ratio = counts / total if total > 0 else np.zeros(10, dtype=np.float64)
+        average = float(np.dot(np.arange(10, dtype=np.float64), counts) / total) if total > 0 else 0.0
+        return ratio, average
+
+    bg_ratio, bg_average = extract_distribution(RA_FINAL_GOLD_COUNT_BG_0)
+    fg_ratio, fg_average = extract_distribution(RA_FINAL_GOLD_COUNT_FG_LT10_0)
+    fg10_ratio, fg10_average = extract_distribution(RA_FINAL_GOLD_COUNT_FG_GE10_0)
+    fg20_ratio, fg20_average = extract_distribution(RA_FINAL_GOLD_COUNT_FG_GE20_0)
+
+    rows = []
+    for gold_count in range(10):
+        rows.append(
+            {
+                "金框分布": gold_count,
+                "BG": bg_ratio[gold_count],
+                "FG": fg_ratio[gold_count],
+                "FG10": fg10_ratio[gold_count],
+                "FG20": fg20_ratio[gold_count],
+            }
+        )
+    rows.append(
+        {
+            "金框分布": "平均數量",
+            "BG": bg_average,
+            "FG": fg_average,
+            "FG10": fg10_average,
+            "FG20": fg20_average,
+        }
+    )
+    return pd.DataFrame(rows, columns=["金框分布", "BG", "FG", "FG10", "FG20"])
+
+
 def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, bet_multi, threads=THREADS):
     record_data_float = record_data.astype(np.float64)
     x_sum = record_data_float[R_ALL, RA_X_SUM] / 1000000
@@ -1590,6 +1650,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     df_hits = pd.DataFrame(record_data_float[R_HITS[0] : R_HITS[1], : SYMBOLS_COUNT * 2], columns=column_labels, index=["3", "4", "5"])
     df_pay = pd.DataFrame(record_data_float[R_PAY[0] : R_PAY[1], : SYMBOLS_COUNT * 2] / coin_in / total_round, columns=column_labels, index=["3", "4", "5"])
     df_eliminate = pd.DataFrame(record_data_float[R_ELIMINATE[0] : R_ELIMINATE[1], : SYMBOLS_COUNT * 2], columns=column_labels, index=["3", "4", "5"])
+    df_gold_count = build_gold_count_distribution_frame(record_data)
     df_multiplier = pd.DataFrame(
         {
             "Interval": format_threshold_labels(THRESHOLD_RECORD),
@@ -1633,7 +1694,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "final_c1_present_fg": final_c1_present_fg,
         "volatility_std": std,
     }
-    return df_base, df_hits, df_pay, df_eliminate, df_multiplier, summary
+    return df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, summary
 
 
 def print_console_result(df_base, df_hits, df_pay, df_eliminate):
@@ -1657,17 +1718,26 @@ def print_console_result(df_base, df_hits, df_pay, df_eliminate):
         print(df_eliminate.to_string())
 
 
-def output_report(df_base, df_hits, df_pay, df_eliminate, df_multiplier, record_data, bet_mode):
+def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, record_data, bet_mode):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
     path = os.path.join(OUTPUT_DIR, f"{GAME_ID}_{timestamp}_betmode{bet_mode}.xlsx")
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
+        df_gold_count.to_excel(writer, sheet_name="Gold Count", index=False)
         df_multiplier.to_excel(writer, sheet_name="Multiplier Line", index=False)
         df_hits.to_excel(writer, sheet_name="Hits")
         df_pay.to_excel(writer, sheet_name="Pay")
         df_eliminate.to_excel(writer, sheet_name="Eliminate")
         pd.DataFrame(record_data).to_excel(writer, sheet_name="Record Data", index=False)
+        worksheet = writer.sheets["Gold Count"]
+        worksheet.freeze_panes = "A2"
+        worksheet.column_dimensions["A"].width = 12
+        for col in ("B", "C", "D", "E"):
+            worksheet.column_dimensions[col].width = 12
+            for row in range(2, 12):
+                worksheet[f"{col}{row}"].number_format = "0.00%"
+            worksheet[f"{col}12"].number_format = "0.00"
     return path
 
 
@@ -1717,7 +1787,7 @@ def main():
         print("TRACE_RETRY_FAILURE is on; simulation will run with a single thread.")
 
     record_data, duration, coin_in = run_simulation()
-    df_base, df_hits, df_pay, df_eliminate, df_multiplier, _ = build_result_frames(
+    df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, _ = build_result_frames(
         record_data=record_data,
         total_round=TOTAL_ROUNDS,
         duration=duration,
@@ -1729,7 +1799,7 @@ def main():
     print_console_result(df_base, df_hits, df_pay, df_eliminate)
 
     if OUTPUT_REPORT:
-        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_multiplier, record_data, BET_MODE)
+        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, record_data, BET_MODE)
         print(f"\nReport: {report_path}")
 
 
