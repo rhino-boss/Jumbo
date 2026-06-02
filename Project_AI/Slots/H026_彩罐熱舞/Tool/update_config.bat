@@ -14,7 +14,6 @@ if "%~1"=="" (
 )
 
 echo [H026] Updating config.js...
-echo [H026] Note    : FG/BF table weight fields will not be exported
 echo [H026] XLSX    : "%XLSX_PATH%"
 echo [H026] Output  : "%OUTPUT_PATH%"
 echo [H026] Template: "%TEMPLATE_PATH%"

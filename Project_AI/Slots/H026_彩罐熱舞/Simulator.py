@@ -15,9 +15,11 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**6
+TOTAL_ROUNDS = 10**5
 BET_MULTI = 1
-BET_MODE = 0
+BET_MODE = 2  # 0 for normal bet, 2 for feature buy
+CARD_SYSTEM_IS_NEWBIE = False
+
 THREADS = max(1, max(8, os.cpu_count() or 1))
 FG_SPIN_CAP = 50
 ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 = False
@@ -27,6 +29,8 @@ SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 TRACE_RETRY_FAILURE = False
+TRACE_BF_BG_WIN = True
+TRACE_BF_BG_WIN_LIMIT = 20
 
 THRESHOLD_RECORD = np.array(
     [
@@ -123,12 +127,47 @@ def _pad_nested_tables(raw_tables, fill_value):
     return arr
 
 
+def _normalize_card_profiles(card_system_raw):
+    if not isinstance(card_system_raw, dict):
+        return {
+            "newbie_bg": [],
+            "newbie_fg": [],
+            "oldhand_bg": [],
+            "oldhand_fg": [],
+            "weight_bf": [],
+        }
+
+    if "profiles" in card_system_raw:
+        profiles = card_system_raw.get("profiles", {})
+        normal_bet = list(profiles.get("normal_bet", []))
+        free_game = list(profiles.get("free_game", []))
+        buy_feature = list(profiles.get("buy_feature", []))
+        return {
+            "newbie_bg": normal_bet,
+            "newbie_fg": free_game,
+            "oldhand_bg": list(normal_bet),
+            "oldhand_fg": list(free_game),
+            "weight_bf": buy_feature,
+        }
+
+    newbie = card_system_raw.get("newbie", {}) if isinstance(card_system_raw.get("newbie"), dict) else {}
+    oldhand = card_system_raw.get("oldhand", {}) if isinstance(card_system_raw.get("oldhand"), dict) else {}
+    return {
+        "newbie_bg": list(newbie.get("weight_bg", [])),
+        "newbie_fg": list(newbie.get("weight_fg", [])),
+        "oldhand_bg": list(oldhand.get("weight_bg", [])),
+        "oldhand_fg": list(oldhand.get("weight_fg", [])),
+        "weight_bf": list(card_system_raw.get("weight_bf", [])),
+    }
+
+
 def _build_card_profile_tables(card_system_raw):
-    profile_names = ("normal_bet", "free_game", "buy_feature")
+    profile_names = ("newbie_bg", "newbie_fg", "oldhand_bg", "oldhand_fg", "weight_bf")
     card_type_map = {"range": 0, "free_game": 1}
+    normalized_profiles = _normalize_card_profiles(card_system_raw)
     profile_cards = []
     for profile_name in profile_names:
-        cards = list(card_system_raw.get("profiles", {}).get(profile_name, []))
+        cards = list(normalized_profiles.get(profile_name, []))
         profile_cards.append(cards)
 
     max_cards = max((len(cards) for cards in profile_cards), default=0)
@@ -286,15 +325,19 @@ RA_FINAL_C1_PRESENT_FG = 64
 RA_FINAL_GOLD_COUNT_FG_LT10_0 = 65
 RA_FINAL_GOLD_COUNT_FG_GE10_0 = 75
 RA_FINAL_GOLD_COUNT_FG_GE20_0 = 85
-PROFILE_NORMAL_BET = 0
-PROFILE_FREE_GAME = 1
-PROFILE_BUY_FEATURE = 2
+PROFILE_NEWBIE_BG = 0
+PROFILE_NEWBIE_FG = 1
+PROFILE_OLDHAND_BG = 2
+PROFILE_OLDHAND_FG = 3
+PROFILE_WEIGHT_BF = 4
 CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
 RETRY_FAIL_NONE = 0
 RETRY_FAIL_BG_RANGE = 1
 RETRY_FAIL_BG_FREEGAME = 2
 RETRY_FAIL_FG = 3
+ACTIVE_PROFILE_BG = PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_BG
+ACTIVE_PROFILE_FG = PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_FG
 
 
 # ===== Numba Core =====
@@ -461,9 +504,10 @@ def generate_board(table_id, board, gold_mask, multi_mask, next_above_idx):
     for col in range(REEL_NUM):
         reel_length = REELS_LEN[table_id, col]
         stop_idx = pick_by_cum(ARR_REELS_WEIGHT_CUM[table_id, :reel_length, col])
-        next_above_idx[col] = (stop_idx - 1 + reel_length) % reel_length
+        visible_start_idx = (stop_idx - SCORE_ROW_OFFSET + reel_length) % reel_length
+        next_above_idx[col] = (visible_start_idx - 1 + reel_length) % reel_length
         for row in range(DISPLAY_WINDOW_SIZE):
-            symbol = ARR_REELS[table_id, (stop_idx + row) % reel_length, col]
+            symbol = ARR_REELS[table_id, (visible_start_idx + row) % reel_length, col]
             board[row, col] = BASE_SYMBOL_OF[symbol]
             gold_mask[row, col] = IS_GOLD_SYMBOL[symbol]
             multi_mask[row, col] = 0
@@ -733,6 +777,7 @@ def run_spin(
     keep_gold,
     keep_multi,
     next_above_idx,
+    reel_stop_idx,
 ):
     clear_2d(board)
     clear_2d(gold_mask)
@@ -745,6 +790,9 @@ def run_spin(
     table_id = choose_table(scene_mode, fg_multiplier_sum)
     use_drop_a = choose_eliminate_table(scene_mode)
     generate_board(table_id, board, gold_mask, multi_mask, next_above_idx)
+    for col in range(REEL_NUM):
+        reel_length = REELS_LEN[table_id, col]
+        reel_stop_idx[col] = (next_above_idx[col] + SCORE_ROW_OFFSET + 1) % reel_length
     copy_layout(board_initial, board)
     assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
     pre_eliminate_gold_count = count_scoring_gold_mask(gold_mask)
@@ -805,6 +853,8 @@ def run_spin(
         multi_appear,
         multi_used,
         pre_eliminate_gold_count,
+        table_id,
+        use_drop_a,
     )
 
 
@@ -832,6 +882,39 @@ def print_retry_failure_trace(attempt_count, scatter_history, board_history, ret
                 board_history[attempt_idx, row, 4],
             )
         print("")
+
+
+@njit(nogil=True)
+def print_bf_bg_win_trace(trace_idx, pay_bg, scatter_count, final_multiplier, combo_idx, board_initial, board_final, reel_stop_idx, table_id, use_drop_a):
+    print("")
+    print("=== BF BG Win Trace ===")
+    print("trace_idx =", trace_idx)
+    print("table_id =", table_id)
+    print("use_drop_a =", use_drop_a)
+    print("reel_stop_idx =", reel_stop_idx[0], reel_stop_idx[1], reel_stop_idx[2], reel_stop_idx[3], reel_stop_idx[4])
+    print("pay_bg =", pay_bg)
+    print("scatter_count =", scatter_count)
+    print("final_multiplier =", final_multiplier)
+    print("combo_idx =", combo_idx)
+    print("initial_board")
+    for row in range(DISPLAY_WINDOW_SIZE):
+        print(
+            board_initial[row, 0],
+            board_initial[row, 1],
+            board_initial[row, 2],
+            board_initial[row, 3],
+            board_initial[row, 4],
+        )
+    print("final_board")
+    for row in range(DISPLAY_WINDOW_SIZE):
+        print(
+            board_final[row, 0],
+            board_final[row, 1],
+            board_final[row, 2],
+            board_final[row, 3],
+            board_final[row, 4],
+        )
+    print("")
 
 
 @njit(nogil=True)
@@ -1007,6 +1090,7 @@ def run_free_game_session(
     pay_fg = 0
     fg_multiplier_sum = 0
     remaining_freespin = free_spins if free_spins < FG_SPIN_CAP else FG_SPIN_CAP
+    reel_stop_idx = np.zeros(REEL_NUM, np.int64)
 
     while remaining_freespin > 0:
         fg_gold_count_bucket = get_fg_gold_count_bucket(fg_multiplier_sum)
@@ -1027,6 +1111,7 @@ def run_free_game_session(
             keep_gold,
             keep_multi,
             next_above_idx,
+            reel_stop_idx,
         )
         pay_fg += fg_result[0]
         fg_multiplier_sum = fg_result[3]
@@ -1061,8 +1146,8 @@ def run_free_game_session(
     return pay_fg
 
 
-@njit("int64[:, :](int64[:, :], int64, int64, int64, int64)", nogil=True)
-def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
+@njit("int64[:, :](int64[:, :], int64, int64, int64, int64, int64)", nogil=True)
+def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card_system_coin_in):
     board = np.zeros(LAYOUT_SHAPE, np.int64)
     board_initial = np.zeros(LAYOUT_SHAPE, np.int64)
     gold_mask = np.zeros(LAYOUT_SHAPE, np.int64)
@@ -1076,11 +1161,13 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
     keep_gold = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     next_above_idx = np.zeros(REEL_NUM, np.int64)
+    reel_stop_idx = np.zeros(REEL_NUM, np.int64)
     round_record = np.zeros(RECORD_SIZE, np.int64)
     bg_round_record = np.zeros(RECORD_SIZE, np.int64)
     fg_round_record = np.zeros(RECORD_SIZE, np.int64)
     scatter_history = np.zeros(CARD_RETRY_LIMIT, np.int64)
     board_history = np.zeros((CARD_RETRY_LIMIT, DISPLAY_WINDOW_SIZE, REEL_NUM), np.int64)
+    bf_bg_win_trace_count = 0
 
     for _ in range(total_round):
         retry_count = 0
@@ -1090,11 +1177,11 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
         bg_freegame_triggered_once = 0
 
         if bet_mode == MODE_NORMALBET:
-            normal_card_idx = pick_card(PROFILE_NORMAL_BET) if CARD_SYSTEM_ENABLED else -1
+            normal_card_idx = pick_card(ACTIVE_PROFILE_BG) if CARD_SYSTEM_ENABLED else -1
         else:
-            buy_feature_card_idx = pick_card(PROFILE_BUY_FEATURE) if CARD_SYSTEM_ENABLED else -1
+            buy_feature_card_idx = pick_card(PROFILE_WEIGHT_BF) if CARD_SYSTEM_ENABLED else -1
 
-        if bet_mode == MODE_NORMALBET and CARD_SYSTEM_ENABLED and normal_card_idx >= 0 and CARD_TYPES[PROFILE_NORMAL_BET, normal_card_idx] == CARD_TYPE_FREE_GAME:
+        if bet_mode == MODE_NORMALBET and CARD_SYSTEM_ENABLED and normal_card_idx >= 0 and CARD_TYPES[ACTIVE_PROFILE_BG, normal_card_idx] == CARD_TYPE_FREE_GAME:
             clear_2d(round_record)
             clear_2d(bg_round_record)
             clear_2d(fg_round_record)
@@ -1126,6 +1213,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_gold,
                     keep_multi,
                     next_above_idx,
+                    reel_stop_idx,
                 )
                 pay_bg = bg_result[0]
                 triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
@@ -1175,7 +1263,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
 
             if triggered_bg_fg == 1:
                 if fg_card_idx == -2:
-                    fg_card_idx = pick_card(PROFILE_FREE_GAME)
+                    fg_card_idx = pick_card(ACTIVE_PROFILE_FG)
 
                 fg_retry_count = 0
                 while True:
@@ -1199,7 +1287,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                         keep_multi,
                         next_above_idx,
                     )
-                    if is_card_match(PROFILE_FREE_GAME, fg_card_idx, pay_fg, coin_in, 1):
+                    if is_card_match(ACTIVE_PROFILE_FG, fg_card_idx, pay_fg, coin_in, 1):
                         break
 
                     fg_retry_count += 1
@@ -1253,6 +1341,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     keep_gold,
                     keep_multi,
                     next_above_idx,
+                    reel_stop_idx,
                 )
                 pay_bg = bg_result[0]
                 triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
@@ -1287,14 +1376,14 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                     round_record[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
 
                 if CARD_SYSTEM_ENABLED and normal_card_idx >= 0:
-                    if CARD_TYPES[PROFILE_NORMAL_BET, normal_card_idx] == CARD_TYPE_FREE_GAME:
+                    if CARD_TYPES[ACTIVE_PROFILE_BG, normal_card_idx] == CARD_TYPE_FREE_GAME:
                         if triggered_bg_fg == 0:
                             accepted = 0
                             retry_fail_reason = RETRY_FAIL_BG_FREEGAME
                         else:
                             bg_freegame_triggered_once = 1
                             if fg_card_idx == -2:
-                                fg_card_idx = pick_card(PROFILE_FREE_GAME)
+                                fg_card_idx = pick_card(ACTIVE_PROFILE_FG)
                             pay_fg = run_free_game_session(
                                 round_record,
                                 free_spins,
@@ -1314,11 +1403,11 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                                 keep_multi,
                                 next_above_idx,
                             )
-                            if is_card_match(PROFILE_FREE_GAME, fg_card_idx, pay_fg, coin_in, 1) is False:
+                            if is_card_match(ACTIVE_PROFILE_FG, fg_card_idx, pay_fg, coin_in, 1) is False:
                                 accepted = 0
                                 retry_fail_reason = RETRY_FAIL_FG
                     else:
-                        if triggered_bg_fg == 1 or is_card_match(PROFILE_NORMAL_BET, normal_card_idx, pay_bg, coin_in, 0) is False:
+                        if triggered_bg_fg == 1 or is_card_match(ACTIVE_PROFILE_BG, normal_card_idx, pay_bg, coin_in, 0) is False:
                             accepted = 0
                             retry_fail_reason = RETRY_FAIL_BG_RANGE
                 else:
@@ -1362,6 +1451,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                         keep_gold,
                         keep_multi,
                         next_above_idx,
+                        reel_stop_idx,
                     )
                     if bf_result[1] >= 3:
                         break
@@ -1370,6 +1460,20 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
                         raise ValueError("Buy Feature reroll exceeded 5000 attempts; check BF trigger condition.")
                 pay_bg = bf_result[0]
                 free_spins = calc_free_spins(bf_result[1], 0)
+                if TRACE_BF_BG_WIN and pay_bg > 0 and bf_bg_win_trace_count < TRACE_BF_BG_WIN_LIMIT:
+                    bf_bg_win_trace_count += 1
+                    print_bf_bg_win_trace(
+                        bf_bg_win_trace_count,
+                        pay_bg,
+                        bf_result[1],
+                        bf_result[4],
+                        bf_result[5],
+                        board_initial,
+                        board,
+                        reel_stop_idx,
+                        bf_result[11],
+                        bf_result[12],
+                    )
 
                 apply_spin_log(
                     round_record,
@@ -1415,7 +1519,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in):
 
                 if CARD_SYSTEM_ENABLED and buy_feature_card_idx >= 0:
                     pay_total = pay_bg + pay_fg
-                    if is_card_match(PROFILE_BUY_FEATURE, buy_feature_card_idx, pay_total, coin_in, 1) is False:
+                    if is_card_match(PROFILE_WEIGHT_BF, buy_feature_card_idx, pay_total, card_system_coin_in, 1) is False:
                         accepted = 0
                         retry_fail_reason = RETRY_FAIL_FG
 
@@ -1464,6 +1568,12 @@ def calc_coin_in(bet_mode, bet_multi):
     raise ValueError(f"Unsupported bet mode: {bet_mode}")
 
 
+def calc_card_system_coin_in(bet_mode, bet_multi):
+    if bet_mode == MODE_FEATUREBUY:
+        return bet_multi * DEFAULT_COIN_IN * NORMALBET
+    return calc_coin_in(bet_mode, bet_multi)
+
+
 def merge_record_data(chunks):
     merged = np.zeros(RECORD_SIZE, dtype=np.int64)
     for chunk in chunks:
@@ -1492,16 +1602,28 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     if TRACE_RETRY_FAILURE:
         threads = 1
     coin_in = int(calc_coin_in(bet_mode, bet_multi))
+    card_system_coin_in = int(calc_card_system_coin_in(bet_mode, bet_multi))
 
-    simulator_chunk(np.zeros(RECORD_SIZE, dtype=np.int64), 1, bet_mode, bet_multi, coin_in)
+    simulator_chunk(np.zeros(RECORD_SIZE, dtype=np.int64), 1, bet_mode, bet_multi, coin_in, card_system_coin_in)
 
     chunk_rounds = build_chunk_rounds(total_round, threads)
     start = time.perf_counter()
     if len(chunk_rounds) == 1:
-        record_data = simulator_chunk(np.zeros(RECORD_SIZE, dtype=np.int64), chunk_rounds[0], bet_mode, bet_multi, coin_in)
+        record_data = simulator_chunk(np.zeros(RECORD_SIZE, dtype=np.int64), chunk_rounds[0], bet_mode, bet_multi, coin_in, card_system_coin_in)
     else:
         with ThreadPoolExecutor(max_workers=len(chunk_rounds)) as executor:
-            futures = [executor.submit(simulator_chunk, np.zeros(RECORD_SIZE, dtype=np.int64), rounds, bet_mode, bet_multi, coin_in) for rounds in chunk_rounds]
+            futures = [
+                executor.submit(
+                    simulator_chunk,
+                    np.zeros(RECORD_SIZE, dtype=np.int64),
+                    rounds,
+                    bet_mode,
+                    bet_multi,
+                    coin_in,
+                    card_system_coin_in,
+                )
+                for rounds in chunk_rounds
+            ]
             record_data = merge_record_data([future.result() for future in futures])
     duration = time.perf_counter() - start
     return record_data, duration, coin_in
@@ -1621,6 +1743,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
         ("", "", ""),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
+        ("card_system_profile", "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand", ""),
         ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
         ("retry_total", int(retry_total), ""),
         ("avg_retry", f"{avg_retry:.6f}", ""),
@@ -1756,6 +1879,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     keep_gold = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     next_above_idx = np.zeros(REEL_NUM, np.int64)
+    reel_stop_idx = np.zeros(REEL_NUM, np.int64)
     result = run_spin(
         SCENE_BG if bet_mode == MODE_NORMALBET else SCENE_BF,
         0,
@@ -1773,6 +1897,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
         keep_gold,
         keep_multi,
         next_above_idx,
+        reel_stop_idx,
     )
     print("Single spin result:")
     print(f"coin_in={coin_in}, pay={result[0]}, scatter={result[1]}, final_multiplier={result[4]}, cascades={result[5]}")

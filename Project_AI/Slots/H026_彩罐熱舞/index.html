@@ -615,6 +615,8 @@
     const INITIAL_BALANCE_MONEY = 10000;
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
     const FEATURE_TRIGGER_SCATTER_MIN = 3;
+    const CARD_SYSTEM_ENABLED = true;
+    const CARD_SYSTEM_IS_NEWBIE = false;
     const SCORE_WINDOW_SIZE = Box.window_size;
     const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
     const SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - SCORE_WINDOW_SIZE;
@@ -726,6 +728,10 @@
       return betMode === Box.mode_featurebuy ? base * Box.featurebuy : base;
     }
 
+    function cardSystemCoinIn(betMode) {
+      return getBetMulti() * Box.default_coin_in * Box.normalbet;
+    }
+
     function normalizeAssetPath(path) {
       if (!path) return "";
       const normalized = String(path).replace(/\\/g, "/");
@@ -743,6 +749,74 @@
 
     function getAsset(symbolCode) {
       return normalizeAssetPath(Box.asset_map[symbolCode] || "");
+    }
+
+    function getCardSystemProfileCards(profileKey) {
+      const cardSystem = Box.card_system || {};
+      if (cardSystem.profiles) {
+        const legacyKeyMap = {
+          weight_bg: "normal_bet",
+          weight_fg: "free_game",
+          weight_bf: "buy_feature"
+        };
+        const legacyKey = legacyKeyMap[profileKey] || profileKey;
+        return Array.isArray(cardSystem.profiles[legacyKey]) ? cardSystem.profiles[legacyKey] : [];
+      }
+      if (profileKey === "weight_bf") {
+        return Array.isArray(cardSystem.weight_bf) ? cardSystem.weight_bf : [];
+      }
+      const segmentKey = CARD_SYSTEM_IS_NEWBIE ? "newbie" : "oldhand";
+      const segment = cardSystem[segmentKey] || {};
+      if (profileKey === "weight_bg") {
+        return Array.isArray(segment.weight_bg) ? segment.weight_bg : [];
+      }
+      if (profileKey === "weight_fg") {
+        return Array.isArray(segment.weight_fg) ? segment.weight_fg : [];
+      }
+      return [];
+    }
+
+    function pickCardSystemEntry(profileKey) {
+      if (!CARD_SYSTEM_ENABLED) return null;
+      const cards = getCardSystemProfileCards(profileKey);
+      if (!cards.length) return null;
+      let running = 0;
+      const cum = cards.map((card) => {
+        running += Number(card.weight || 0);
+        return running;
+      });
+      if (running <= 0) return null;
+      const pick = pickByCum(cum);
+      const card = cards[pick.index];
+      const label = card.type === "free_game"
+        ? "free_game"
+        : `${Number(card.min)}x ~ ${Number(card.max)}x`;
+      return {
+        profile_key: profileKey,
+        card_type: card.type || "range",
+        min: card.min ?? null,
+        max: card.max ?? null,
+        weight: Number(card.weight || 0),
+        label,
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total
+      };
+    }
+
+    function getCardSystemRetryLimit() {
+      return Number(Box.card_system?.retry_limit || 5000);
+    }
+
+    function isRangeMatch(cardInfo, score, targetCoinIn) {
+      if (!cardInfo || cardInfo.card_type !== "range" || targetCoinIn <= 0) return false;
+      const multiplier = score / targetCoinIn;
+      return multiplier > Number(cardInfo.min || 0) && multiplier <= Number(cardInfo.max || 0);
+    }
+
+    function isCardSystemMatch(cardInfo, score, targetCoinIn, triggeredFreeGame) {
+      if (!cardInfo) return true;
+      if (cardInfo.card_type === "free_game") return Boolean(triggeredFreeGame);
+      return isRangeMatch(cardInfo, score, targetCoinIn);
     }
 
     function symbolName(symbolId) {
@@ -881,9 +955,10 @@
       for (let col = 0; col < Box.reel_num; col += 1) {
         const reelLength = Box.reels_len[tableId][col];
         const pick = pickByCum(Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]));
+        const visibleStartIndex = (pick.index - SCORE_ROW_OFFSET + reelLength) % reelLength;
         reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength });
         for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
-          const symbol = Box.arr_reels[tableId][(pick.index + row) % reelLength][col];
+          const symbol = Box.arr_reels[tableId][(visibleStartIndex + row) % reelLength][col];
           const baseSymbol = Box.base_symbol_of[symbol];
           board[row][col] = baseSymbol;
           goldMask[row][col] = Box.is_gold_symbol[symbol];
@@ -1166,7 +1241,7 @@
       return dropEvents;
     }
 
-    function runSpin(sceneMode, fgMultiplierSum, betMulti) {
+    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null) {
       const table = chooseTable(sceneMode, fgMultiplierSum);
       const eliminateMode = chooseEliminateMode(sceneMode);
       const useDropA = eliminateMode.use_drop_a;
@@ -1235,6 +1310,7 @@
           table,
           reels: generated.reelRng,
           drop_mode: eliminateMode,
+          card_system: cardSystemInfo,
           initial_multipliers: initialMultiplierInfo,
           drop_events: boardSteps.flatMap((step) => step.drop_events)
         },
@@ -1255,6 +1331,39 @@
       };
     }
 
+    function runFreeGameSequence(freeSpinsAwarded, fgCardSystemInfo = null) {
+      const spins = [];
+      let freeTotalWin = 0;
+      let freeSpinsPlayed = 0;
+      let fgMultiplierSum = 0;
+      let remainingFreespins = Math.min(freeSpinsAwarded, FG_SPIN_CAP);
+
+      while (remainingFreespins > 0) {
+        const before = remainingFreespins;
+        const spin = runSpin(Box.scene_fg, fgMultiplierSum, getBetMulti(), fgCardSystemInfo);
+        fgMultiplierSum = spin.multiplier_sum_after_spin;
+        remainingFreespins -= 1;
+        let retriggerAwarded = 0;
+        if (spin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+          retriggerAwarded = 15 + (spin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
+          remainingFreespins = Math.min(remainingFreespins + retriggerAwarded, FG_SPIN_CAP);
+        }
+        freeSpinsPlayed += 1;
+        spin.remaining_free_spins_before = before;
+        spin.remaining_free_spins_after = remainingFreespins;
+        spin.retrigger_awarded = retriggerAwarded;
+        spins.push(spin);
+        freeTotalWin += spin.final_pay;
+      }
+
+      return {
+        spins,
+        free_total_win: freeTotalWin,
+        free_spins_played: freeSpinsPlayed,
+        final_fg_multiplier_sum: fgMultiplierSum
+      };
+    }
+
     function runRound(betMode) {
       const currentCoinIn = coinIn(betMode);
       if (state.balance < currentCoinIn) throw new Error(`餘額不足，需 ${formatMoney(currentCoinIn)}`);
@@ -1267,69 +1376,149 @@
       let freeSpinsPlayed = 0;
       let fgMultiplierSum = 0;
       let triggerSource = null;
+      const bgCardSystemInfo = betMode === Box.mode_normalbet ? pickCardSystemEntry("weight_bg") : null;
+      const fgCardSystemInfo = betMode === Box.mode_normalbet ? pickCardSystemEntry("weight_fg") : null;
+      const bfCardSystemInfo = betMode === Box.mode_featurebuy ? pickCardSystemEntry("weight_bf") : null;
+      const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
+      const retryLimit = getCardSystemRetryLimit();
 
       let baseSpin = null;
       if (betMode === Box.mode_normalbet) {
-        baseSpin = runSpin(Box.scene_bg, 0, getBetMulti());
-        baseSpin.spin_index = 1;
-        baseSpin.remaining_free_spins_before = 0;
-        baseSpin.remaining_free_spins_after = 0;
-        baseSpin.retrigger_awarded = 0;
-        spins.push(baseSpin);
-        baseTotalWin += baseSpin.final_pay;
-        totalWin += baseSpin.final_pay;
-      }
+        if (CARD_SYSTEM_ENABLED && bgCardSystemInfo?.card_type === "free_game") {
+          let rerollCount = 0;
+          while (true) {
+            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo);
+            if (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+              rerollCount += 1;
+              if (rerollCount >= retryLimit) {
+                throw new Error("BG free game card retry exceeded limit.");
+              }
+              continue;
+            }
 
-      if (betMode === Box.mode_featurebuy) {
-        let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti());
-        let rerollCount = 0;
-        while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
-          rerollCount += 1;
-          if (rerollCount > 5000) {
-            throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
+            const awarded = 15 + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
+            const fgResult = runFreeGameSequence(awarded, fgCardSystemInfo);
+            if (!isCardSystemMatch(fgCardSystemInfo, fgResult.free_total_win, currentCoinIn, true)) {
+              rerollCount += 1;
+              if (rerollCount >= retryLimit) {
+                throw new Error("FG card retry exceeded limit.");
+              }
+              continue;
+            }
+
+            baseSpin = triggerSpin;
+            baseSpin.spin_index = 1;
+            baseSpin.remaining_free_spins_before = 0;
+            baseSpin.remaining_free_spins_after = 0;
+            baseSpin.retrigger_awarded = 0;
+            spins.push(baseSpin);
+            fgResult.spins.forEach((spin, index) => {
+              spin.spin_index = index + 2;
+              spins.push(spin);
+            });
+            baseTotalWin = baseSpin.final_pay;
+            freeTotalWin = fgResult.free_total_win;
+            totalWin = baseTotalWin + freeTotalWin;
+            freeSpinsAwarded = awarded;
+            freeSpinsPlayed = fgResult.free_spins_played;
+            fgMultiplierSum = fgResult.final_fg_multiplier_sum;
+            triggerSource = "normal_trigger";
+            state.normalTriggerCount += 1;
+            state.freegameTriggerCount += 1;
+            break;
           }
-          triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti());
+        } else {
+          let rerollCount = 0;
+          while (true) {
+            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo);
+            const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
+
+            if (CARD_SYSTEM_ENABLED && bgCardSystemInfo) {
+              if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, currentCoinIn, false)) {
+                rerollCount += 1;
+                if (rerollCount >= retryLimit) {
+                  throw new Error("BG range card retry exceeded limit.");
+                }
+                continue;
+              }
+            }
+
+            baseSpin = normalSpin;
+            baseSpin.spin_index = 1;
+            baseSpin.remaining_free_spins_before = 0;
+            baseSpin.remaining_free_spins_after = 0;
+            baseSpin.retrigger_awarded = 0;
+            spins.push(baseSpin);
+            baseTotalWin = baseSpin.final_pay;
+            totalWin = baseTotalWin;
+            break;
+          }
+
+          if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+            const awarded = 15 + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
+            const fgResult = runFreeGameSequence(awarded, null);
+            freeSpinsAwarded = awarded;
+            freeSpinsPlayed = fgResult.free_spins_played;
+            fgMultiplierSum = fgResult.final_fg_multiplier_sum;
+            fgResult.spins.forEach((spin, index) => {
+              spin.spin_index = index + 2;
+              spins.push(spin);
+            });
+            freeTotalWin = fgResult.free_total_win;
+            totalWin += freeTotalWin;
+            triggerSource = "normal_trigger";
+            state.normalTriggerCount += 1;
+            state.freegameTriggerCount += 1;
+          }
         }
-        triggerSpin.spin_index = 1;
-        triggerSpin.remaining_free_spins_before = 0;
-        triggerSpin.remaining_free_spins_after = 0;
-        triggerSpin.retrigger_awarded = 0;
-        baseSpin = triggerSpin;
-        spins.push(triggerSpin);
-        baseTotalWin += triggerSpin.final_pay;
-        totalWin += triggerSpin.final_pay;
-        triggerSource = "feature_buy";
-        freeSpinsAwarded = 15 + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
-        state.featurebuyTriggerCount += 1;
-        state.freegameTriggerCount += 1;
-      } else if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
-        triggerSource = "normal_trigger";
-        freeSpinsAwarded = 15 + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
-        state.normalTriggerCount += 1;
-        state.freegameTriggerCount += 1;
+      } else {
+        let roundRetryCount = 0;
+        while (true) {
+          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
+          let triggerRetryCount = 0;
+          while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+            triggerRetryCount += 1;
+            if (triggerRetryCount > 5000) {
+              throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
+            }
+            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
+          }
+
+          const awarded = 15 + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
+          const fgResult = runFreeGameSequence(awarded, null);
+          const roundTotalWin = triggerSpin.final_pay + fgResult.free_total_win;
+          if (CARD_SYSTEM_ENABLED && bfCardSystemInfo && !isCardSystemMatch(bfCardSystemInfo, roundTotalWin, roundCardSystemCoinIn, true)) {
+            roundRetryCount += 1;
+            if (roundRetryCount >= retryLimit) {
+              throw new Error("BF card retry exceeded limit.");
+            }
+            continue;
+          }
+
+          baseSpin = triggerSpin;
+          baseSpin.spin_index = 1;
+          baseSpin.remaining_free_spins_before = 0;
+          baseSpin.remaining_free_spins_after = 0;
+          baseSpin.retrigger_awarded = 0;
+          spins.push(baseSpin);
+          fgResult.spins.forEach((spin, index) => {
+            spin.spin_index = index + 2;
+            spins.push(spin);
+          });
+          baseTotalWin = baseSpin.final_pay;
+          freeTotalWin = fgResult.free_total_win;
+          totalWin = baseTotalWin + freeTotalWin;
+          freeSpinsAwarded = awarded;
+          freeSpinsPlayed = fgResult.free_spins_played;
+          fgMultiplierSum = fgResult.final_fg_multiplier_sum;
+          triggerSource = "feature_buy";
+          state.featurebuyTriggerCount += 1;
+          state.freegameTriggerCount += 1;
+          break;
+        }
       }
 
-      let remainingFreespins = Math.min(freeSpinsAwarded, FG_SPIN_CAP);
-      while (remainingFreespins > 0) {
-        const before = remainingFreespins;
-        const spin = runSpin(Box.scene_fg, fgMultiplierSum, getBetMulti());
-        fgMultiplierSum = spin.multiplier_sum_after_spin;
-        remainingFreespins -= 1;
-        let retriggerAwarded = 0;
-        if (spin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
-          retriggerAwarded = 15 + (spin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
-          remainingFreespins = Math.min(remainingFreespins + retriggerAwarded, FG_SPIN_CAP);
-          state.retriggerCount += 1;
-        }
-        freeSpinsPlayed += 1;
-        spin.spin_index = spins.length + 1;
-        spin.remaining_free_spins_before = before;
-        spin.remaining_free_spins_after = remainingFreespins;
-        spin.retrigger_awarded = retriggerAwarded;
-        spins.push(spin);
-        freeTotalWin += spin.final_pay;
-        totalWin += spin.final_pay;
-      }
+      state.retriggerCount += spins.reduce((sum, spin) => sum + (spin.retrigger_awarded > 0 ? 1 : 0), 0);
 
       state.balance += totalWin - currentCoinIn;
       state.totalBet += currentCoinIn;
@@ -1350,6 +1539,7 @@
         base_total_win: baseTotalWin,
         free_total_win: freeTotalWin,
         final_fg_multiplier_sum: fgMultiplierSum,
+        card_system_coin_in: roundCardSystemCoinIn,
         spins,
         rtp_overall: state.totalBet > 0 ? state.totalWin / state.totalBet : 0,
         hit_rate_overall: state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0,
@@ -1480,8 +1670,13 @@
       rngListEl.innerHTML = "";
       if (!spin) return;
       const formatRngDetail = (value, total) => `${value}/${total} | range 0-${Math.max(0, total - 1)}`;
+      const cardSystemInfo = spin.rng_info.card_system;
+      const cardSystemText = cardSystemInfo
+        ? `${cardSystemInfo.label} | ${formatRngDetail(cardSystemInfo.rng_value, cardSystemInfo.rng_total)}`
+        : "false";
       const rows = [
         { left: "Mode", right: spin.scene_name },
+        { left: "Card System", right: cardSystemText },
         { left: `Table ${spin.table_name}`, right: formatRngDetail(spin.rng_info.table.rng_value, spin.rng_info.table.rng_total) },
         { left: `Drop ${spin.drop_mode}`, right: formatRngDetail(spin.rng_info.drop_mode.rng_value, spin.rng_info.drop_mode.rng_total) }
       ];

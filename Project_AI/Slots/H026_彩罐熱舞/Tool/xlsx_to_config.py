@@ -53,11 +53,15 @@ STATIC_DEFAULTS: dict[str, Any] = {
     "card_system": {
         "enabled": True,
         "retry_limit": 5000,
-        "profiles": {
-            "normal_bet": [],
-            "free_game": [],
-            "buy_feature": [],
+        "newbie": {
+            "weight_bg": [],
+            "weight_fg": [],
         },
+        "oldhand": {
+            "weight_bg": [],
+            "weight_fg": [],
+        },
+        "weight_bf": [],
     },
 }
 STRIP_SHEETS = [
@@ -93,11 +97,13 @@ def load_template(path: Path) -> dict[str, Any]:
     if isinstance(merged.get("card_system"), dict) and isinstance(data.get("card_system"), dict):
         merged_card_system = dict(STATIC_DEFAULTS["card_system"])
         merged_card_system.update(merged["card_system"])
-        if isinstance(STATIC_DEFAULTS["card_system"].get("profiles"), dict):
-            merged_profiles = dict(STATIC_DEFAULTS["card_system"]["profiles"])
-            if isinstance(merged["card_system"].get("profiles"), dict):
-                merged_profiles.update(merged["card_system"]["profiles"])
-            merged_card_system["profiles"] = merged_profiles
+        for segment_name in ("newbie", "oldhand"):
+            default_segment = STATIC_DEFAULTS["card_system"].get(segment_name)
+            merged_segment = dict(default_segment) if isinstance(default_segment, dict) else {}
+            incoming_segment = merged["card_system"].get(segment_name)
+            if isinstance(incoming_segment, dict):
+                merged_segment.update(incoming_segment)
+            merged_card_system[segment_name] = merged_segment
         merged["card_system"] = merged_card_system
     return merged
 
@@ -251,17 +257,25 @@ def parse_card_range_label(label: Any) -> tuple[float, float] | None:
     return float(match.group(1)), float(match.group(2))
 
 
-def parse_multiplier_weight(ws: Any) -> dict[str, list[dict[str, Any]]]:
+def parse_multiplier_weight(ws: Any) -> dict[str, Any]:
     header_row = find_row(ws, 2, "Range")
-    profiles: dict[str, list[dict[str, Any]]] = {
-        "normal_bet": [],
-        "free_game": [],
-        "buy_feature": [],
+    profiles: dict[str, Any] = {
+        "newbie": {
+            "weight_bg": [],
+            "weight_fg": [],
+        },
+        "oldhand": {
+            "weight_bg": [],
+            "weight_fg": [],
+        },
+        "weight_bf": [],
     }
     profile_cols = {
-        "normal_bet": 3,
-        "free_game": 4,
-        "buy_feature": 5,
+        ("newbie", "weight_bg"): 3,
+        ("newbie", "weight_fg"): 4,
+        ("oldhand", "weight_bg"): 5,
+        ("oldhand", "weight_fg"): 6,
+        ("weight_bf", None): 7,
     }
 
     row = header_row + 1
@@ -272,17 +286,22 @@ def parse_multiplier_weight(ws: Any) -> dict[str, list[dict[str, Any]]]:
 
         label_text = str(label).strip()
         range_pair = parse_card_range_label(label_text)
-        for profile_name, col in profile_cols.items():
+        for profile_key, col in profile_cols.items():
             weight = to_int(ws.cell(row, col).value)
+            if profile_key[0] == "weight_bf":
+                target_profile = profiles["weight_bf"]
+            else:
+                target_profile = profiles[profile_key[0]][profile_key[1]]
+
             if label_text.lower() == "free game":
-                profiles[profile_name].append(
+                target_profile.append(
                     {
                         "type": "free_game",
                         "weight": weight,
                     }
                 )
             elif range_pair is not None:
-                profiles[profile_name].append(
+                target_profile.append(
                     {
                         "type": "range",
                         "min": range_pair[0],
@@ -297,12 +316,25 @@ def parse_multiplier_weight(ws: Any) -> dict[str, list[dict[str, Any]]]:
 
 def build_card_system(template: dict[str, Any], ws: Any | None) -> dict[str, Any]:
     template_card_system = template.get("card_system") if isinstance(template.get("card_system"), dict) else {}
-    sheet_profiles = parse_multiplier_weight(ws) if ws is not None else dict(STATIC_DEFAULTS["card_system"]["profiles"])
+    default_profiles = {
+        "newbie": {
+            "weight_bg": [],
+            "weight_fg": [],
+        },
+        "oldhand": {
+            "weight_bg": [],
+            "weight_fg": [],
+        },
+        "weight_bf": [],
+    }
+    sheet_profiles = parse_multiplier_weight(ws) if ws is not None else default_profiles
 
     return {
         "enabled": bool(template_card_system.get("enabled", True)),
         "retry_limit": int(template_card_system.get("retry_limit", 5000)),
-        "profiles": sheet_profiles,
+        "newbie": sheet_profiles["newbie"],
+        "oldhand": sheet_profiles["oldhand"],
+        "weight_bf": sheet_profiles["weight_bf"],
     }
 
 
