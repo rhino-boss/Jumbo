@@ -15,7 +15,7 @@ BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H
 CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**9
+TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 2  # 0 for normal bet, 2 for feature buy
 CARD_SYSTEM_IS_NEWBIE = False
