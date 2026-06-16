@@ -17,7 +17,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
-BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
+BET_MODE = 1  # 0 for normal bet, 1 for extra bet, 2 for feature buy
 CARD_SYSTEM_IS_NEWBIE = False
 
 THREADS = max(1, max(8, os.cpu_count() - 5 or 1))
@@ -1385,7 +1385,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         keep_multi,
                         next_above_idx,
                     )
-                    if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, coin_in, 1):
+                    if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, card_system_coin_in, 1):
                         break
 
                     fg_retry_count += 1
@@ -1501,11 +1501,11 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                                 keep_multi,
                                 next_above_idx,
                             )
-                            if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, coin_in, 1) is False:
+                            if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, card_system_coin_in, 1) is False:
                                 accepted = 0
                                 retry_fail_reason = RETRY_FAIL_FG
                     else:
-                        if triggered_bg_fg == 1 or is_card_match(bg_profile_idx, normal_card_idx, pay_bg, coin_in, 0) is False:
+                        if triggered_bg_fg == 1 or is_card_match(bg_profile_idx, normal_card_idx, pay_bg, card_system_coin_in, 0) is False:
                             accepted = 0
                             retry_fail_reason = RETRY_FAIL_BG_RANGE
                 else:
@@ -1669,7 +1669,7 @@ def calc_coin_in(bet_mode, bet_multi):
 
 
 def calc_card_system_coin_in(bet_mode, bet_multi):
-    if bet_mode == MODE_FEATUREBUY:
+    if bet_mode == MODE_EXTRABET or bet_mode == MODE_FEATUREBUY:
         return bet_multi * DEFAULT_COIN_IN * NORMALBET
     return calc_coin_in(bet_mode, bet_multi)
 
