@@ -17,10 +17,10 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
-BET_MODE = 2  # 0 for normal bet, 2 for feature buy
+BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
 CARD_SYSTEM_IS_NEWBIE = False
 
-THREADS = max(1, max(8, os.cpu_count() or 1))
+THREADS = max(1, max(8, os.cpu_count() - 5 or 1))
 FG_SPIN_CAP = 50
 ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 = False
 
@@ -128,12 +128,40 @@ def _pad_nested_tables(raw_tables, fill_value):
 
 
 def _normalize_card_profiles(card_system_raw):
+    def _profile_segment_weights(segment_raw, segment_key, legacy_fallback=None):
+        if not isinstance(segment_raw, dict):
+            return []
+        profile_raw = segment_raw.get(segment_key)
+        if isinstance(profile_raw, dict):
+            weights = list(profile_raw.get("weight_fg" if segment_key == "buy_feature" else "weight_bg", []))
+            if weights:
+                return weights
+        if legacy_fallback is not None:
+            return list(segment_raw.get(legacy_fallback, []))
+        return []
+
+    def _profile_segment_freegame(segment_raw, segment_key, legacy_fallback=None):
+        if not isinstance(segment_raw, dict):
+            return []
+        profile_raw = segment_raw.get(segment_key)
+        if isinstance(profile_raw, dict):
+            weights = list(profile_raw.get("weight_fg", []))
+            if weights:
+                return weights
+        if legacy_fallback is not None:
+            return list(segment_raw.get(legacy_fallback, []))
+        return []
+
     if not isinstance(card_system_raw, dict):
         return {
             "newbie_bg": [],
             "newbie_fg": [],
+            "newbie_extra_bg": [],
+            "newbie_extra_fg": [],
             "oldhand_bg": [],
             "oldhand_fg": [],
+            "oldhand_extra_bg": [],
+            "oldhand_extra_fg": [],
             "weight_bf": [],
         }
 
@@ -141,28 +169,70 @@ def _normalize_card_profiles(card_system_raw):
         profiles = card_system_raw.get("profiles", {})
         normal_bet = list(profiles.get("normal_bet", []))
         free_game = list(profiles.get("free_game", []))
+        extra_bet = list(profiles.get("extra_bet") or normal_bet)
+        extra_free_game = list(profiles.get("extra_free_game") or free_game)
         buy_feature = list(profiles.get("buy_feature", []))
         return {
             "newbie_bg": normal_bet,
             "newbie_fg": free_game,
             "oldhand_bg": list(normal_bet),
             "oldhand_fg": list(free_game),
+            "newbie_extra_bg": extra_bet,
+            "newbie_extra_fg": extra_free_game,
+            "oldhand_extra_bg": list(extra_bet),
+            "oldhand_extra_fg": list(extra_free_game),
             "weight_bf": buy_feature,
         }
 
     newbie = card_system_raw.get("newbie", {}) if isinstance(card_system_raw.get("newbie"), dict) else {}
     oldhand = card_system_raw.get("oldhand", {}) if isinstance(card_system_raw.get("oldhand"), dict) else {}
+    legacy_extra_bet = card_system_raw.get("extra_bet", {}) if isinstance(card_system_raw.get("extra_bet"), dict) else {}
+    newbie_bg = _profile_segment_weights(newbie, "normal_bet", "weight_bg")
+    newbie_fg = _profile_segment_freegame(newbie, "normal_bet", "weight_fg")
+    oldhand_bg = _profile_segment_weights(oldhand, "normal_bet", "weight_bg")
+    oldhand_fg = _profile_segment_freegame(oldhand, "normal_bet", "weight_fg")
+    fallback_bg = oldhand_bg or newbie_bg
+    fallback_fg = oldhand_fg or newbie_fg
+    newbie_extra_bg = _profile_segment_weights(newbie, "extra_bet")
+    newbie_extra_fg = _profile_segment_freegame(newbie, "extra_bet")
+    oldhand_extra_bg = _profile_segment_weights(oldhand, "extra_bet")
+    oldhand_extra_fg = _profile_segment_freegame(oldhand, "extra_bet")
+    if not newbie_extra_bg:
+        newbie_extra_bg = list(legacy_extra_bet.get("weight_bg") or newbie_bg or fallback_bg)
+    if not newbie_extra_fg:
+        newbie_extra_fg = list(legacy_extra_bet.get("weight_fg") or newbie_fg or fallback_fg)
+    if not oldhand_extra_bg:
+        oldhand_extra_bg = list(legacy_extra_bet.get("weight_bg") or oldhand_bg or fallback_bg)
+    if not oldhand_extra_fg:
+        oldhand_extra_fg = list(legacy_extra_bet.get("weight_fg") or oldhand_fg or fallback_fg)
+    buy_feature_fg = _profile_segment_freegame(oldhand, "buy_feature")
+    if not buy_feature_fg:
+        buy_feature_fg = list(card_system_raw.get("weight_bf", []))
     return {
-        "newbie_bg": list(newbie.get("weight_bg", [])),
-        "newbie_fg": list(newbie.get("weight_fg", [])),
-        "oldhand_bg": list(oldhand.get("weight_bg", [])),
-        "oldhand_fg": list(oldhand.get("weight_fg", [])),
-        "weight_bf": list(card_system_raw.get("weight_bf", [])),
+        "newbie_bg": list(newbie_bg),
+        "newbie_fg": list(newbie_fg),
+        "newbie_extra_bg": list(newbie_extra_bg),
+        "newbie_extra_fg": list(newbie_extra_fg),
+        "oldhand_bg": list(oldhand_bg or fallback_bg),
+        "oldhand_fg": list(oldhand_fg or fallback_fg),
+        "oldhand_extra_bg": list(oldhand_extra_bg),
+        "oldhand_extra_fg": list(oldhand_extra_fg),
+        "weight_bf": list(buy_feature_fg),
     }
 
 
 def _build_card_profile_tables(card_system_raw):
-    profile_names = ("newbie_bg", "newbie_fg", "oldhand_bg", "oldhand_fg", "weight_bf")
+    profile_names = (
+        "newbie_bg",
+        "newbie_fg",
+        "newbie_extra_bg",
+        "newbie_extra_fg",
+        "oldhand_bg",
+        "oldhand_fg",
+        "oldhand_extra_bg",
+        "oldhand_extra_fg",
+        "weight_bf",
+    )
     card_type_map = {"range": 0, "free_game": 1}
     normalized_profiles = _normalize_card_profiles(card_system_raw)
     profile_cards = []
@@ -200,6 +270,7 @@ GAME_ID = CFG_RAW["game_id"]
 GAME_NAME = CFG_RAW.get("display_name") or CFG_RAW.get("game_name") or GAME_ID
 CONFIG_VERSION = CFG_RAW.get("excel_version") or CFG_RAW.get("game_version") or CFG_RAW.get("version") or ""
 MODE_NORMALBET = int(CFG_RAW["mode_normalbet"])
+MODE_EXTRABET = int(CFG_RAW.get("mode_extrabet", 1))
 MODE_FEATUREBUY = int(CFG_RAW["mode_featurebuy"])
 SCENE_BG = int(CFG_RAW["scene_bg"])
 SCENE_FG = int(CFG_RAW["scene_fg"])
@@ -216,6 +287,7 @@ LAYOUT_SHAPE = (DISPLAY_WINDOW_SIZE, REEL_NUM)
 REEL3_SPECIAL_TABLE_IDS = np.asarray([1, 3, 4, 5], dtype=np.int64)
 DEFAULT_COIN_IN = int(CFG_RAW["default_coin_in"])
 NORMALBET = int(CFG_RAW["normalbet"])
+EXTRABET = int(CFG_RAW.get("extrabet", NORMALBET * 2))
 FEATUREBUY = int(CFG_RAW["featurebuy"])
 SPECIAL_POOL_WEIGHT_BASE = int(CFG_RAW["special_pool_weight_base"])
 MAX_WIN_MULTIPLIER = 5000
@@ -327,9 +399,13 @@ RA_FINAL_GOLD_COUNT_FG_GE10_0 = 75
 RA_FINAL_GOLD_COUNT_FG_GE20_0 = 85
 PROFILE_NEWBIE_BG = 0
 PROFILE_NEWBIE_FG = 1
-PROFILE_OLDHAND_BG = 2
-PROFILE_OLDHAND_FG = 3
-PROFILE_WEIGHT_BF = 4
+PROFILE_NEWBIE_EXTRA_BG = 2
+PROFILE_NEWBIE_EXTRA_FG = 3
+PROFILE_OLDHAND_BG = 4
+PROFILE_OLDHAND_FG = 5
+PROFILE_OLDHAND_EXTRA_BG = 6
+PROFILE_OLDHAND_EXTRA_FG = 7
+PROFILE_WEIGHT_BF = 8
 CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
 RETRY_FAIL_NONE = 0
@@ -338,6 +414,25 @@ RETRY_FAIL_BG_FREEGAME = 2
 RETRY_FAIL_FG = 3
 ACTIVE_PROFILE_BG = PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_BG
 ACTIVE_PROFILE_FG = PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_FG
+
+
+@njit(nogil=True)
+def is_base_bet_mode(bet_mode):
+    return bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET
+
+
+@njit(nogil=True)
+def get_bg_profile_idx(bet_mode):
+    if bet_mode == MODE_EXTRABET:
+        return PROFILE_NEWBIE_EXTRA_BG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_EXTRA_BG
+    return PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_BG
+
+
+@njit(nogil=True)
+def get_fg_profile_idx(bet_mode):
+    if bet_mode == MODE_EXTRABET:
+        return PROFILE_NEWBIE_EXTRA_FG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_EXTRA_FG
+    return PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else PROFILE_OLDHAND_FG
 
 
 # ===== Numba Core =====
@@ -1176,12 +1271,15 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
         buy_feature_card_idx = -1
         bg_freegame_triggered_once = 0
 
-        if bet_mode == MODE_NORMALBET:
-            normal_card_idx = pick_card(ACTIVE_PROFILE_BG) if CARD_SYSTEM_ENABLED else -1
+        bg_profile_idx = get_bg_profile_idx(bet_mode)
+        fg_profile_idx = get_fg_profile_idx(bet_mode)
+
+        if is_base_bet_mode(bet_mode):
+            normal_card_idx = pick_card(bg_profile_idx) if CARD_SYSTEM_ENABLED else -1
         else:
             buy_feature_card_idx = pick_card(PROFILE_WEIGHT_BF) if CARD_SYSTEM_ENABLED else -1
 
-        if bet_mode == MODE_NORMALBET and CARD_SYSTEM_ENABLED and normal_card_idx >= 0 and CARD_TYPES[ACTIVE_PROFILE_BG, normal_card_idx] == CARD_TYPE_FREE_GAME:
+        if is_base_bet_mode(bet_mode) and CARD_SYSTEM_ENABLED and normal_card_idx >= 0 and CARD_TYPES[bg_profile_idx, normal_card_idx] == CARD_TYPE_FREE_GAME:
             clear_2d(round_record)
             clear_2d(bg_round_record)
             clear_2d(fg_round_record)
@@ -1263,7 +1361,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
 
             if triggered_bg_fg == 1:
                 if fg_card_idx == -2:
-                    fg_card_idx = pick_card(ACTIVE_PROFILE_FG)
+                    fg_card_idx = pick_card(fg_profile_idx)
 
                 fg_retry_count = 0
                 while True:
@@ -1287,7 +1385,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         keep_multi,
                         next_above_idx,
                     )
-                    if is_card_match(ACTIVE_PROFILE_FG, fg_card_idx, pay_fg, coin_in, 1):
+                    if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, coin_in, 1):
                         break
 
                     fg_retry_count += 1
@@ -1323,7 +1421,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
             accepted = 1
             retry_fail_reason = RETRY_FAIL_NONE
 
-            if bet_mode == MODE_NORMALBET:
+            if is_base_bet_mode(bet_mode):
                 bg_result = run_spin(
                     SCENE_BG,
                     0,
@@ -1376,14 +1474,14 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     round_record[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
 
                 if CARD_SYSTEM_ENABLED and normal_card_idx >= 0:
-                    if CARD_TYPES[ACTIVE_PROFILE_BG, normal_card_idx] == CARD_TYPE_FREE_GAME:
+                    if CARD_TYPES[bg_profile_idx, normal_card_idx] == CARD_TYPE_FREE_GAME:
                         if triggered_bg_fg == 0:
                             accepted = 0
                             retry_fail_reason = RETRY_FAIL_BG_FREEGAME
                         else:
                             bg_freegame_triggered_once = 1
                             if fg_card_idx == -2:
-                                fg_card_idx = pick_card(ACTIVE_PROFILE_FG)
+                                fg_card_idx = pick_card(fg_profile_idx)
                             pay_fg = run_free_game_session(
                                 round_record,
                                 free_spins,
@@ -1403,11 +1501,11 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                                 keep_multi,
                                 next_above_idx,
                             )
-                            if is_card_match(ACTIVE_PROFILE_FG, fg_card_idx, pay_fg, coin_in, 1) is False:
+                            if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, coin_in, 1) is False:
                                 accepted = 0
                                 retry_fail_reason = RETRY_FAIL_FG
                     else:
-                        if triggered_bg_fg == 1 or is_card_match(ACTIVE_PROFILE_BG, normal_card_idx, pay_bg, coin_in, 0) is False:
+                        if triggered_bg_fg == 1 or is_card_match(bg_profile_idx, normal_card_idx, pay_bg, coin_in, 0) is False:
                             accepted = 0
                             retry_fail_reason = RETRY_FAIL_BG_RANGE
                 else:
@@ -1563,6 +1661,8 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
 def calc_coin_in(bet_mode, bet_multi):
     if bet_mode == MODE_NORMALBET:
         return bet_multi * DEFAULT_COIN_IN * NORMALBET
+    if bet_mode == MODE_EXTRABET:
+        return bet_multi * DEFAULT_COIN_IN * EXTRABET
     if bet_mode == MODE_FEATUREBUY:
         return bet_multi * DEFAULT_COIN_IN * NORMALBET * FEATUREBUY
     raise ValueError(f"Unsupported bet mode: {bet_mode}")
@@ -1714,7 +1814,9 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     final_c1_present_bg = int(record_data[R_ALL, RA_FINAL_C1_PRESENT_BG])
     final_c1_present_fg = int(record_data[R_ALL, RA_FINAL_C1_PRESENT_FG])
     bet_mode_label = "Normal Bet"
-    if bet_mode == MODE_FEATUREBUY:
+    if bet_mode == MODE_EXTRABET:
+        bet_mode_label = "Extra Bet"
+    elif bet_mode == MODE_FEATUREBUY:
         bet_mode_label = "Feature Buy"
 
     base_rows = [
@@ -1743,7 +1845,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
         ("", "", ""),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
-        ("card_system_profile", "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand", ""),
+        ("card_system_profile", "extra_bet" if bet_mode == MODE_EXTRABET else ("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"), ""),
         ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
         ("retry_total", int(retry_total), ""),
         ("avg_retry", f"{avg_retry:.6f}", ""),
@@ -1881,7 +1983,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     next_above_idx = np.zeros(REEL_NUM, np.int64)
     reel_stop_idx = np.zeros(REEL_NUM, np.int64)
     result = run_spin(
-        SCENE_BG if bet_mode == MODE_NORMALBET else SCENE_BF,
+        SCENE_BG if is_base_bet_mode(bet_mode) else SCENE_BF,
         0,
         bet_multi,
         board,

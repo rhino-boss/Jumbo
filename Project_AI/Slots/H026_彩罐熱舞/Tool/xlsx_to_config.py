@@ -19,6 +19,7 @@ STATIC_DEFAULTS: dict[str, Any] = {
     "display_name": "彩罐熱舞",
     "bet_options": [1, 2, 3, 5, 10],
     "mode_normalbet": 0,
+    "mode_extrabet": 1,
     "mode_featurebuy": 2,
     "scene_bg": 0,
     "scene_fg": 1,
@@ -54,14 +55,28 @@ STATIC_DEFAULTS: dict[str, Any] = {
         "enabled": True,
         "retry_limit": 5000,
         "newbie": {
-            "weight_bg": [],
-            "weight_fg": [],
+            "normal_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "extra_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
         },
         "oldhand": {
-            "weight_bg": [],
-            "weight_fg": [],
+            "normal_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "extra_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "buy_feature": {
+                "weight_fg": [],
+            },
         },
-        "weight_bf": [],
     },
 }
 STRIP_SHEETS = [
@@ -102,7 +117,14 @@ def load_template(path: Path) -> dict[str, Any]:
             merged_segment = dict(default_segment) if isinstance(default_segment, dict) else {}
             incoming_segment = merged["card_system"].get(segment_name)
             if isinstance(incoming_segment, dict):
-                merged_segment.update(incoming_segment)
+                for profile_name, default_profile in merged_segment.items():
+                    incoming_profile = incoming_segment.get(profile_name)
+                    profile_value = dict(default_profile) if isinstance(default_profile, dict) else default_profile
+                    if isinstance(profile_value, dict) and isinstance(incoming_profile, dict):
+                        profile_value.update(incoming_profile)
+                    elif incoming_profile is not None:
+                        profile_value = incoming_profile
+                    merged_segment[profile_name] = profile_value
             merged_card_system[segment_name] = merged_segment
         merged["card_system"] = merged_card_system
     return merged
@@ -148,6 +170,15 @@ def find_row(ws: Any, column: int, value: str) -> int:
 
 
 def parse_overview(ws: Any) -> dict[str, Any]:
+    def find_row_by_first_col(label: str) -> int:
+        return find_row(ws, 1, label)
+
+    def find_bet_type_row(label: str) -> int:
+        for row in range(1, ws.max_row + 1):
+            if ws.cell(row, 4).value == label:
+                return row
+        raise ValueError(f"Could not find bet type {label!r} in sheet {ws.title}")
+
     pay_header_row = find_row(ws, 1, "Pay Table：")
     pay_row = pay_header_row + 1
     pay_table: list[list[int]] = []
@@ -162,14 +193,20 @@ def parse_overview(ws: Any) -> dict[str, Any]:
         pay_table.append([to_int(ws.cell(row, 3).value), to_int(ws.cell(row, 4).value), to_int(ws.cell(row, 5).value)])
         row += 1
 
+    normal_bet_row = find_bet_type_row("Normal Bet")
+    extra_bet_row = find_bet_type_row("Extra Bet")
+    buy_feature_row = find_bet_type_row("Buy Feature")
+    visible_window_row = find_row_by_first_col("Visible Window Size")
+
     return {
         "game_id": str(ws["B2"].value).strip(),
         "excel_version": str(ws["B3"].value).strip(),
         "default_coin_in": to_int(ws["A7"].value),
-        "normalbet": to_int(ws["B11"].value),
-        "featurebuy": to_int(ws["B12"].value),
+        "normalbet": to_int(ws.cell(normal_bet_row, 2).value),
+        "extrabet": to_int(ws.cell(extra_bet_row, 2).value),
+        "featurebuy": to_int(ws.cell(buy_feature_row, 2).value),
         "reel_num": 5,
-        "window_size": to_int(ws["B26"].value),
+        "window_size": to_int(ws.cell(visible_window_row, 2).value),
         "pay_table": pay_table,
         "symbol_id": symbol_id,
         "symbol_str": symbol_str,
@@ -261,22 +298,69 @@ def parse_multiplier_weight(ws: Any) -> dict[str, Any]:
     header_row = find_row(ws, 2, "Range")
     profiles: dict[str, Any] = {
         "newbie": {
-            "weight_bg": [],
-            "weight_fg": [],
+            "normal_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "extra_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
         },
         "oldhand": {
-            "weight_bg": [],
-            "weight_fg": [],
+            "normal_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "extra_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "buy_feature": {
+                "weight_fg": [],
+            },
         },
-        "weight_bf": [],
     }
-    profile_cols = {
-        ("newbie", "weight_bg"): 3,
-        ("newbie", "weight_fg"): 4,
-        ("oldhand", "weight_bg"): 5,
-        ("oldhand", "weight_fg"): 6,
-        ("weight_bf", None): 7,
+    profile_cols: dict[tuple[str, str, str], int] = {}
+    exact_header_map = {
+        "Weight_NB_BG": ("newbie", "normal_bet", "weight_bg"),
+        "Weight_NB_FG": ("newbie", "normal_bet", "weight_fg"),
+        "Weight_EB_BG": ("newbie", "extra_bet", "weight_bg"),
+        "Weight_EB_FG": ("newbie", "extra_bet", "weight_fg"),
+        "Weight_BF_FG": ("oldhand", "buy_feature", "weight_fg"),
     }
+    exact_header_map_oldhand = {
+        "Weight_NB_BG": ("oldhand", "normal_bet", "weight_bg"),
+        "Weight_NB_FG": ("oldhand", "normal_bet", "weight_fg"),
+        "Weight_EB_BG": ("oldhand", "extra_bet", "weight_bg"),
+        "Weight_EB_FG": ("oldhand", "extra_bet", "weight_fg"),
+        "Weight_BF_FG": ("oldhand", "buy_feature", "weight_fg"),
+    }
+
+    for col in range(3, ws.max_column + 1):
+        top_header = ws.cell(header_row - 1, col).value
+        header_value = ws.cell(header_row, col).value
+        if header_value is None:
+            continue
+
+        header_text = str(header_value).strip()
+        top_text = str(top_header).strip() if top_header is not None else ""
+
+        if header_text in exact_header_map:
+            target_key = exact_header_map_oldhand[header_text] if top_text == "Oldhand" else exact_header_map[header_text]
+            profile_cols[target_key] = col
+            continue
+
+        if top_text == "Newbie" and header_text == "Weight_BG":
+            profile_cols[("newbie", "normal_bet", "weight_bg")] = col
+        elif top_text == "Newbie" and header_text == "Weight_FG":
+            profile_cols[("newbie", "normal_bet", "weight_fg")] = col
+        elif top_text == "Oldhand" and header_text == "Weight_BG":
+            profile_cols[("oldhand", "normal_bet", "weight_bg")] = col
+        elif top_text == "Oldhand" and header_text == "Weight_FG":
+            profile_cols[("oldhand", "normal_bet", "weight_fg")] = col
+        elif top_text == "Oldhand" and header_text == "Weight_BF":
+            profile_cols[("oldhand", "buy_feature", "weight_fg")] = col
 
     row = header_row + 1
     while True:
@@ -288,10 +372,7 @@ def parse_multiplier_weight(ws: Any) -> dict[str, Any]:
         range_pair = parse_card_range_label(label_text)
         for profile_key, col in profile_cols.items():
             weight = to_int(ws.cell(row, col).value)
-            if profile_key[0] == "weight_bf":
-                target_profile = profiles["weight_bf"]
-            else:
-                target_profile = profiles[profile_key[0]][profile_key[1]]
+            target_profile = profiles[profile_key[0]][profile_key[1]][profile_key[2]]
 
             if label_text.lower() == "free game":
                 target_profile.append(
@@ -318,23 +399,36 @@ def build_card_system(template: dict[str, Any], ws: Any | None) -> dict[str, Any
     template_card_system = template.get("card_system") if isinstance(template.get("card_system"), dict) else {}
     default_profiles = {
         "newbie": {
-            "weight_bg": [],
-            "weight_fg": [],
+            "normal_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "extra_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
         },
         "oldhand": {
-            "weight_bg": [],
-            "weight_fg": [],
+            "normal_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "extra_bet": {
+                "weight_bg": [],
+                "weight_fg": [],
+            },
+            "buy_feature": {
+                "weight_fg": [],
+            },
         },
-        "weight_bf": [],
     }
     sheet_profiles = parse_multiplier_weight(ws) if ws is not None else default_profiles
 
     return {
         "enabled": bool(template_card_system.get("enabled", True)),
         "retry_limit": int(template_card_system.get("retry_limit", 5000)),
-        "newbie": sheet_profiles["newbie"],
-        "oldhand": sheet_profiles["oldhand"],
-        "weight_bf": sheet_profiles["weight_bf"],
+        "newbie": sheet_profiles.get("newbie", default_profiles["newbie"]),
+        "oldhand": sheet_profiles.get("oldhand", default_profiles["oldhand"]),
     }
 
 
@@ -406,6 +500,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
         "display_name": template["display_name"],
         "bet_options": template["bet_options"],
         "mode_normalbet": template["mode_normalbet"],
+        "mode_extrabet": template["mode_extrabet"],
         "mode_featurebuy": template["mode_featurebuy"],
         "scene_bg": template["scene_bg"],
         "scene_fg": template["scene_fg"],
@@ -414,6 +509,7 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
         "window_size": overview["window_size"],
         "default_coin_in": overview["default_coin_in"],
         "normalbet": overview["normalbet"],
+        "extrabet": overview.get("extrabet", template.get("extrabet", overview["normalbet"] * 2)),
         "featurebuy": overview["featurebuy"],
         "special_pool_weight_base": template["special_pool_weight_base"],
         "paylines": parse_paylines(parameter),
