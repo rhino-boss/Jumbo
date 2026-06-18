@@ -169,6 +169,16 @@ def find_row(ws: Any, column: int, value: str) -> int:
     raise ValueError(f"Could not find {value!r} in sheet {ws.title}")
 
 
+def find_multiplier_weight_header_row(ws: Any) -> int:
+    expected_headers = {"Weight_NB_BG", "Weight_NB_FG", "Weight_EB_BG", "Weight_EB_FG", "Weight_BF_FG", "Weight_BG", "Weight_FG", "Weight_BF"}
+    for row in range(1, ws.max_row + 1):
+        for col in range(1, ws.max_column + 1):
+            value = ws.cell(row, col).value
+            if value is not None and str(value).strip() in expected_headers:
+                return row
+    raise ValueError(f"Could not find multiplier weight header row in sheet {ws.title}")
+
+
 def parse_overview(ws: Any) -> dict[str, Any]:
     def find_row_by_first_col(label: str) -> int:
         return find_row(ws, 1, label)
@@ -295,7 +305,7 @@ def parse_card_range_label(label: Any) -> tuple[float, float] | None:
 
 
 def parse_multiplier_weight(ws: Any) -> dict[str, Any]:
-    header_row = find_row(ws, 2, "Range")
+    header_row = find_multiplier_weight_header_row(ws)
     profiles: dict[str, Any] = {
         "newbie": {
             "normal_bet": {

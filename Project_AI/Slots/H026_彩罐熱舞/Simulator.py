@@ -17,7 +17,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
-BET_MODE = 1  # 0 for normal bet, 1 for extra bet, 2 for feature buy
+BET_MODE = 0  # 0 for normal bet, 1 for extra bet, 2 for feature buy
 CARD_SYSTEM_IS_NEWBIE = False
 
 THREADS = max(1, max(8, os.cpu_count() - 5 or 1))
@@ -330,7 +330,7 @@ CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 = 0 if ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 else 1
 
 SYMBOLS_COUNT = int(len(SYMBOL_ID))
 LINE_NUM = int(PAYLINES.shape[0])
-RECORD_COLS = max(len(THRESHOLD_RECORD), SYMBOLS_COUNT * 2, 100)
+RECORD_COLS = max(len(THRESHOLD_RECORD), SYMBOLS_COUNT * 2, 140)
 RECORD_SIZE = (20, RECORD_COLS)
 
 WW = int(next(key for key, value in SYMBOL_STR.items() if value == "WW"))
@@ -397,6 +397,20 @@ RA_FINAL_C1_PRESENT_FG = 64
 RA_FINAL_GOLD_COUNT_FG_LT10_0 = 65
 RA_FINAL_GOLD_COUNT_FG_GE10_0 = 75
 RA_FINAL_GOLD_COUNT_FG_GE20_0 = 85
+RA_SPECIAL_TRIGGER_SPINS_BG = 95
+RA_SPECIAL_TRIGGER_SPINS_FG = 96
+RA_BG_TABLE0_SPINS = 97
+RA_BG_TABLE0_HITS = 98
+RA_BG_TABLE1_SPINS = 99
+RA_BG_TABLE1_HITS = 100
+RA_BG_TABLE2_SPINS = 101
+RA_BG_TABLE2_HITS = 102
+RA_COMBO_BG_TABLE0_1 = 103
+RA_COMBO_BG_TABLE1_1 = 108
+RA_COMBO_BG_TABLE2_1 = 113
+RA_COMBO_FG_TABLE0_1 = 118
+RA_COMBO_FG_TABLE1_1 = 123
+RA_COMBO_FG_TABLE2_1 = 128
 PROFILE_NEWBIE_BG = 0
 PROFILE_NEWBIE_FG = 1
 PROFILE_NEWBIE_EXTRA_BG = 2
@@ -690,7 +704,7 @@ def count_scoring_gold_mask(gold_mask):
 def assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos):
     gold_count = collect_gold_positions(gold_mask, gold_pos)
     if gold_count == 0:
-        return
+        return 0
 
     scoring_gold_pos = np.zeros((DISPLAY_WINDOW_SIZE * REEL_NUM, 2), np.int64)
     scoring_gold_count = collect_scoring_gold_positions(gold_mask, scoring_gold_pos)
@@ -717,6 +731,7 @@ def assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos):
             multi_mask[row, col] = pick_multiplier(WEIGHT_CUM_MULTIPLE_SPECIAL, table_id)
         else:
             multi_mask[row, col] = pick_initial_multiplier_by_pos(table_id, row, col)
+    return 1 if special_idx >= 0 else 0
 
 
 @njit(nogil=True)
@@ -889,7 +904,7 @@ def run_spin(
         reel_length = REELS_LEN[table_id, col]
         reel_stop_idx[col] = (next_above_idx[col] + SCORE_ROW_OFFSET + 1) % reel_length
     copy_layout(board_initial, board)
-    assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
+    special_triggered = assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
     pre_eliminate_gold_count = count_scoring_gold_mask(gold_mask)
 
     raw_pay = 0
@@ -948,6 +963,7 @@ def run_spin(
         multi_appear,
         multi_used,
         pre_eliminate_gold_count,
+        special_triggered,
         table_id,
         use_drop_a,
     )
@@ -1060,6 +1076,47 @@ def log_round_multiplier_lines(record_data, pay_bg, pay_fg, pay_total, triggered
 
 
 @njit(nogil=True)
+def log_bg_table_hit(record_data, table_id, hit_any):
+    if table_id == 0:
+        record_data[R_ALL, RA_BG_TABLE0_SPINS] += 1
+        if hit_any == 1:
+            record_data[R_ALL, RA_BG_TABLE0_HITS] += 1
+    elif table_id == 1:
+        record_data[R_ALL, RA_BG_TABLE1_SPINS] += 1
+        if hit_any == 1:
+            record_data[R_ALL, RA_BG_TABLE1_HITS] += 1
+    elif table_id == 2:
+        record_data[R_ALL, RA_BG_TABLE2_SPINS] += 1
+        if hit_any == 1:
+            record_data[R_ALL, RA_BG_TABLE2_HITS] += 1
+
+
+@njit(nogil=True)
+def log_combo_table_count(record_data, scene_idx, table_id, combo_idx):
+    if combo_idx <= 0:
+        return
+    bucket = combo_idx
+    if bucket > 5:
+        bucket = 5
+    offset = bucket - 1
+
+    if scene_idx == SCENE_BG:
+        if table_id == 0:
+            record_data[R_ALL, RA_COMBO_BG_TABLE0_1 + offset] += 1
+        elif table_id == 1:
+            record_data[R_ALL, RA_COMBO_BG_TABLE1_1 + offset] += 1
+        elif table_id == 2:
+            record_data[R_ALL, RA_COMBO_BG_TABLE2_1 + offset] += 1
+    elif scene_idx == SCENE_FG:
+        if table_id == 3:
+            record_data[R_ALL, RA_COMBO_FG_TABLE0_1 + offset] += 1
+        elif table_id == 4:
+            record_data[R_ALL, RA_COMBO_FG_TABLE1_1 + offset] += 1
+        elif table_id == 5:
+            record_data[R_ALL, RA_COMBO_FG_TABLE2_1 + offset] += 1
+
+
+@njit(nogil=True)
 def apply_spin_log(
     record_data,
     scene_idx,
@@ -1077,6 +1134,7 @@ def apply_spin_log(
     multi_used,
     final_gold_count,
     final_scatter_count,
+    special_triggered,
     coin_in,
 ):
     if scene_idx == SCENE_BG:
@@ -1114,6 +1172,8 @@ def apply_spin_log(
             record_data[R_ALL, RA_MULTI_USED_SPINS_BG] += 1
         if final_scatter_count > 0:
             record_data[R_ALL, RA_FINAL_C1_PRESENT_BG] += 1
+        if special_triggered == 1:
+            record_data[R_ALL, RA_SPECIAL_TRIGGER_SPINS_BG] += 1
         if final_multiplier > record_data[R_ALL, RA_MAX_MULTIPLIER_BG]:
             record_data[R_ALL, RA_MAX_MULTIPLIER_BG] = final_multiplier
     else:
@@ -1146,6 +1206,8 @@ def apply_spin_log(
             record_data[R_ALL, RA_MULTI_USED_SPINS_FG] += 1
         if final_scatter_count > 0:
             record_data[R_ALL, RA_FINAL_C1_PRESENT_FG] += 1
+        if special_triggered == 1:
+            record_data[R_ALL, RA_SPECIAL_TRIGGER_SPINS_FG] += 1
         if final_multiplier > record_data[R_ALL, RA_MAX_MULTIPLIER_FG]:
             record_data[R_ALL, RA_MAX_MULTIPLIER_FG] = final_multiplier
 
@@ -1210,6 +1272,7 @@ def run_free_game_session(
         )
         pay_fg += fg_result[0]
         fg_multiplier_sum = fg_result[3]
+        log_combo_table_count(record_data, SCENE_FG, fg_result[12], fg_result[5])
         apply_spin_log(
             record_data,
             SCENE_FG,
@@ -1227,6 +1290,7 @@ def run_free_game_session(
             fg_result[9],
             fg_result[10],
             fg_result[1],
+            fg_result[11],
             coin_in,
         )
 
@@ -1316,6 +1380,8 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                 pay_bg = bg_result[0]
                 triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
                 free_spins = calc_free_spins(bg_result[1], 0)
+                log_bg_table_hit(bg_round_record, bg_result[12], bg_result[2])
+                log_combo_table_count(bg_round_record, SCENE_BG, bg_result[12], bg_result[5])
 
                 apply_spin_log(
                     bg_round_record,
@@ -1334,6 +1400,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     bg_result[9],
                     bg_result[10],
                     bg_result[1],
+                    bg_result[11],
                     coin_in,
                 )
 
@@ -1444,6 +1511,8 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                 pay_bg = bg_result[0]
                 triggered_bg_fg = 1 if bg_result[1] >= 3 else 0
                 free_spins = calc_free_spins(bg_result[1], 0)
+                log_bg_table_hit(round_record, bg_result[12], bg_result[2])
+                log_combo_table_count(round_record, SCENE_BG, bg_result[12], bg_result[5])
 
                 apply_spin_log(
                     round_record,
@@ -1462,6 +1531,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     bg_result[9],
                     bg_result[10],
                     bg_result[1],
+                    bg_result[11],
                     coin_in,
                 )
 
@@ -1569,8 +1639,8 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         board_initial,
                         board,
                         reel_stop_idx,
-                        bf_result[11],
                         bf_result[12],
+                        bf_result[13],
                     )
 
                 apply_spin_log(
@@ -1590,6 +1660,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     bf_result[9],
                     bf_result[10],
                     bf_result[1],
+                    bf_result[11],
                     coin_in,
                 )
 
@@ -1775,6 +1846,79 @@ def build_gold_count_distribution_frame(record_data):
     return pd.DataFrame(rows, columns=["金框分布", "BG", "FG", "FG10", "FG20"])
 
 
+def build_combo_distribution_frame(record_data, total_round, fg_spins):
+    table_specs = [
+        ("BG_Symbol", RA_COMBO_BG_TABLE0_1),
+        ("BG_Symbol (2)", RA_COMBO_BG_TABLE1_1),
+        ("BG_Symbol (3)", RA_COMBO_BG_TABLE2_1),
+        ("FG_Symbol", RA_COMBO_FG_TABLE0_1),
+        ("FG_Symbol (2)", RA_COMBO_FG_TABLE1_1),
+        ("FG_Symbol (3)", RA_COMBO_FG_TABLE2_1),
+    ]
+    combo_labels = ["Combo 1", "Combo 2", "Combo 3", "Combo 4", "Combo 5+"]
+    rows = []
+    bg_total_counts = [0, 0, 0, 0, 0]
+    fg_total_counts = [0, 0, 0, 0, 0]
+    for table_label, start_idx in table_specs:
+        counts = [int(record_data[R_ALL, start_idx + offset]) for offset in range(5)]
+        total_count = sum(counts)
+        if table_label.startswith("BG_"):
+            for idx, count in enumerate(counts):
+                bg_total_counts[idx] += count
+        else:
+            for idx, count in enumerate(counts):
+                fg_total_counts[idx] += count
+        for combo_label, count in zip(combo_labels, counts):
+            rows.append(
+                {
+                    "Table": table_label,
+                    "Combo": combo_label,
+                    "Count": count,
+                    "Rate": (count / total_count) if total_count > 0 else 0.0,
+                }
+            )
+    bg_total = sum(bg_total_counts)
+    fg_total = sum(fg_total_counts)
+    for combo_label, count in zip(combo_labels, bg_total_counts):
+        rows.append(
+            {
+                "Table": "BG",
+                "Combo": combo_label,
+                "Count": count,
+                "Rate": (count / bg_total) if bg_total > 0 else 0.0,
+            }
+        )
+    for combo_label, count in zip(combo_labels, fg_total_counts):
+        rows.append(
+            {
+                "Table": "FG",
+                "Combo": combo_label,
+                "Count": count,
+                "Rate": (count / fg_total) if fg_total > 0 else 0.0,
+            }
+        )
+    return pd.DataFrame(rows, columns=["Table", "Combo", "Count", "Rate"])
+
+
+def build_bg_symbol_hit_frame(record_data):
+    rows = []
+    labels = ["BG_Symbol", "BG_Symbol (2)", "BG_Symbol (3)"]
+    spin_indices = [RA_BG_TABLE0_SPINS, RA_BG_TABLE1_SPINS, RA_BG_TABLE2_SPINS]
+    hit_indices = [RA_BG_TABLE0_HITS, RA_BG_TABLE1_HITS, RA_BG_TABLE2_HITS]
+    for label, spin_idx, hit_idx in zip(labels, spin_indices, hit_indices):
+        spin_count = int(record_data[R_ALL, spin_idx])
+        hit_count = int(record_data[R_ALL, hit_idx])
+        rows.append(
+            {
+                "BG_Symbol": label,
+                "Spin_Count": spin_count,
+                "Hit_Count": hit_count,
+                "Hit_Rate": (hit_count / spin_count) if spin_count > 0 else 0.0,
+            }
+        )
+    return pd.DataFrame(rows, columns=["BG_Symbol", "Spin_Count", "Hit_Count", "Hit_Rate"])
+
+
 def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, bet_multi, threads=THREADS):
     record_data_float = record_data.astype(np.float64)
     x_sum = record_data_float[R_ALL, RA_X_SUM] / 1000000
@@ -1809,6 +1953,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     gold_usage_rate_fg = record_data_float[R_ALL, RA_GOLD_USED_SPINS_FG] / record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS_FG] if record_data_float[R_ALL, RA_GOLD_APPEAR_SPINS_FG] > 0 else 0.0
     multi_usage_rate_bg = record_data_float[R_ALL, RA_MULTI_USED_SPINS_BG] / record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_BG] if record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_BG] > 0 else 0.0
     multi_usage_rate_fg = record_data_float[R_ALL, RA_MULTI_USED_SPINS_FG] / record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_FG] if record_data_float[R_ALL, RA_MULTI_APPEAR_SPINS_FG] > 0 else 0.0
+    special_trigger_rate_bg = record_data_float[R_ALL, RA_SPECIAL_TRIGGER_SPINS_BG] / total_round if total_round > 0 else 0.0
+    special_trigger_rate_fg = record_data_float[R_ALL, RA_SPECIAL_TRIGGER_SPINS_FG] / fg_spins if fg_spins > 0 else 0.0
     max_multiplier_bg = int(record_data[R_ALL, RA_MAX_MULTIPLIER_BG])
     max_multiplier_fg = int(record_data[R_ALL, RA_MAX_MULTIPLIER_FG])
     final_c1_present_bg = int(record_data[R_ALL, RA_FINAL_C1_PRESENT_BG])
@@ -1863,6 +2009,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("gold_usage_rate_fg", f"{gold_usage_rate_fg:.6f}", ""),
         ("multiplier_usage_rate_bg", f"{multi_usage_rate_bg:.6f}", ""),
         ("multiplier_usage_rate_fg", f"{multi_usage_rate_fg:.6f}", ""),
+        ("special_trigger_rate_bg", f"{special_trigger_rate_bg:.6f}", ""),
+        ("special_trigger_rate_fg", f"{special_trigger_rate_fg:.6f}", ""),
         ("max_multiplier_bg", max_multiplier_bg, ""),
         ("max_multiplier_fg", max_multiplier_fg, ""),
         ("", "", ""),
@@ -1876,6 +2024,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     df_pay = pd.DataFrame(record_data_float[R_PAY[0] : R_PAY[1], : SYMBOLS_COUNT * 2] / coin_in / total_round, columns=column_labels, index=["3", "4", "5"])
     df_eliminate = pd.DataFrame(record_data_float[R_ELIMINATE[0] : R_ELIMINATE[1], : SYMBOLS_COUNT * 2], columns=column_labels, index=["3", "4", "5"])
     df_gold_count = build_gold_count_distribution_frame(record_data)
+    df_combo = build_combo_distribution_frame(record_data, total_round, fg_spins)
+    df_bg_symbol_hit = build_bg_symbol_hit_frame(record_data)
     df_multiplier = pd.DataFrame(
         {
             "Interval": format_threshold_labels(THRESHOLD_RECORD),
@@ -1913,13 +2063,15 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "gold_usage_rate_fg": gold_usage_rate_fg,
         "multi_usage_rate_bg": multi_usage_rate_bg,
         "multi_usage_rate_fg": multi_usage_rate_fg,
+        "special_trigger_rate_bg": special_trigger_rate_bg,
+        "special_trigger_rate_fg": special_trigger_rate_fg,
         "max_multiplier_bg": max_multiplier_bg,
         "max_multiplier_fg": max_multiplier_fg,
         "final_c1_present_bg": final_c1_present_bg,
         "final_c1_present_fg": final_c1_present_fg,
         "volatility_std": std,
     }
-    return df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, summary
+    return df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary
 
 
 def print_console_result(df_base, df_hits, df_pay, df_eliminate):
@@ -1943,13 +2095,16 @@ def print_console_result(df_base, df_hits, df_pay, df_eliminate):
         print(df_eliminate.to_string())
 
 
-def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, record_data, bet_mode):
+def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, record_data, bet_mode):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    path = os.path.join(OUTPUT_DIR, f"{GAME_ID}_{timestamp}_betmode{bet_mode}.xlsx")
+    card_suffix = "_card" if CARD_SYSTEM_ENABLED else ""
+    path = os.path.join(OUTPUT_DIR, f"{GAME_ID}_{timestamp}_betmode{bet_mode}{card_suffix}.xlsx")
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_gold_count.to_excel(writer, sheet_name="Gold Count", index=False)
+        df_combo.to_excel(writer, sheet_name="Combo Dist", index=False)
+        df_bg_symbol_hit.to_excel(writer, sheet_name="BG Symbol Hit", index=False)
         df_multiplier.to_excel(writer, sheet_name="Multiplier Line", index=False)
         df_hits.to_excel(writer, sheet_name="Hits")
         df_pay.to_excel(writer, sheet_name="Pay")
@@ -2014,7 +2169,7 @@ def main():
         print("TRACE_RETRY_FAILURE is on; simulation will run with a single thread.")
 
     record_data, duration, coin_in = run_simulation()
-    df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, _ = build_result_frames(
+    df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, _ = build_result_frames(
         record_data=record_data,
         total_round=TOTAL_ROUNDS,
         duration=duration,
@@ -2026,7 +2181,7 @@ def main():
     print_console_result(df_base, df_hits, df_pay, df_eliminate)
 
     if OUTPUT_REPORT:
-        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_multiplier, record_data, BET_MODE)
+        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, record_data, BET_MODE)
         print(f"\nReport: {report_path}")
 
 

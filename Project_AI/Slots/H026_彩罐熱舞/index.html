@@ -406,6 +406,11 @@
       gap: 8px;
     }
 
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
     .control,
     .spin-button {
       border: 0;
@@ -569,7 +574,7 @@
 
     <section class="section">
       <div class="controls">
-        <button class="control" id="resetBtn" type="button">Reset</button>
+        <button class="control" id="extraBetBtn" type="button">Extra Bet</button>
         <button class="control" id="betBtn" type="button">Bet</button>
         <button class="spin-button" id="spinBtn" type="button">Spin</button>
         <button class="control" id="autoBtn" type="button">Auto</button>
@@ -605,6 +610,12 @@
       </div>
     </section>
 
+    <section class="section">
+      <div class="reset-row">
+        <button class="control" id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
     <div class="footer-note">Double-click this HTML to play offline. No server. No fetch.</div>
   </main>
 
@@ -615,7 +626,7 @@
     const INITIAL_BALANCE_MONEY = 10000;
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
     const FEATURE_TRIGGER_SCATTER_MIN = 3;
-    const CARD_SYSTEM_ENABLED = true;
+    const CARD_SYSTEM_ENABLED = Box.card_system?.enabled ?? true;
     const CARD_SYSTEM_IS_NEWBIE = false;
     const SCORE_WINDOW_SIZE = Box.window_size;
     const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
@@ -645,6 +656,7 @@
       pendingRound: null,
       pendingSpinIndex: 0,
       autoEnabled: false,
+      extraBetEnabled: false,
       turboEnabled: false,
       autoTimer: null
     };
@@ -669,6 +681,7 @@
     const gameIdEl = document.getElementById("gameId");
     const gameNameEl = document.getElementById("gameName");
     const spinBtn = document.getElementById("spinBtn");
+    const extraBetBtn = document.getElementById("extraBetBtn");
     const buyFeatureBtn = document.getElementById("buyFeatureBtn");
     const betBtn = document.getElementById("betBtn");
     const resetBtn = document.getElementById("resetBtn");
@@ -720,12 +733,14 @@
     function queueAutoSpin() {
       clearTimeout(state.autoTimer);
       if (!state.autoEnabled || state.isBusy) return;
-      state.autoTimer = setTimeout(() => doSpin(Box.mode_normalbet), getPlaybackDelay(240));
+      state.autoTimer = setTimeout(() => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet), getPlaybackDelay(240));
     }
 
     function coinIn(betMode) {
       const base = getBetMulti() * Box.default_coin_in * Box.normalbet;
-      return betMode === Box.mode_featurebuy ? base * Box.featurebuy : base;
+      if (betMode === Box.mode_featurebuy) return base * Box.featurebuy;
+      if (betMode === Box.mode_extrabet) return getBetMulti() * Box.default_coin_in * Box.extrabet;
+      return base;
     }
 
     function cardSystemCoinIn(betMode) {
@@ -751,7 +766,7 @@
       return normalizeAssetPath(Box.asset_map[symbolCode] || "");
     }
 
-    function getCardSystemProfileCards(profileKey) {
+    function getCardSystemProfileCards(profileKey, betMode = Box.mode_normalbet) {
       const cardSystem = Box.card_system || {};
       if (cardSystem.profiles) {
         const legacyKeyMap = {
@@ -762,23 +777,37 @@
         const legacyKey = legacyKeyMap[profileKey] || profileKey;
         return Array.isArray(cardSystem.profiles[legacyKey]) ? cardSystem.profiles[legacyKey] : [];
       }
-      if (profileKey === "weight_bf") {
-        return Array.isArray(cardSystem.weight_bf) ? cardSystem.weight_bf : [];
-      }
       const segmentKey = CARD_SYSTEM_IS_NEWBIE ? "newbie" : "oldhand";
+      const fallbackSegmentKey = segmentKey === "newbie" ? "oldhand" : "newbie";
       const segment = cardSystem[segmentKey] || {};
+      const fallbackSegment = cardSystem[fallbackSegmentKey] || {};
+      const betProfileKey = betMode === Box.mode_extrabet ? "extra_bet" : "normal_bet";
+      const betProfile = segment[betProfileKey] || {};
+      const fallbackBetProfile = fallbackSegment[betProfileKey] || {};
       if (profileKey === "weight_bg") {
-        return Array.isArray(segment.weight_bg) ? segment.weight_bg : [];
+        const primary = Array.isArray(betProfile.weight_bg) ? betProfile.weight_bg : [];
+        if (primary.length) return primary;
+        return Array.isArray(fallbackBetProfile.weight_bg) ? fallbackBetProfile.weight_bg : [];
       }
       if (profileKey === "weight_fg") {
-        return Array.isArray(segment.weight_fg) ? segment.weight_fg : [];
+        const primary = Array.isArray(betProfile.weight_fg) ? betProfile.weight_fg : [];
+        if (primary.length) return primary;
+        return Array.isArray(fallbackBetProfile.weight_fg) ? fallbackBetProfile.weight_fg : [];
+      }
+      if (profileKey === "weight_bf") {
+        const primary = Array.isArray(segment.buy_feature?.weight_fg) ? segment.buy_feature.weight_fg : [];
+        if (primary.length) return primary;
+        return Array.isArray(fallbackSegment.buy_feature?.weight_fg) ? fallbackSegment.buy_feature.weight_fg : [];
+      }
+      if (profileKey === "weight_bf" && Array.isArray(cardSystem.weight_bf)) {
+        return cardSystem.weight_bf;
       }
       return [];
     }
 
-    function pickCardSystemEntry(profileKey) {
+    function pickCardSystemEntry(profileKey, betMode = Box.mode_normalbet) {
       if (!CARD_SYSTEM_ENABLED) return null;
-      const cards = getCardSystemProfileCards(profileKey);
+      const cards = getCardSystemProfileCards(profileKey, betMode);
       if (!cards.length) return null;
       let running = 0;
       const cum = cards.map((card) => {
@@ -1376,14 +1405,14 @@
       let freeSpinsPlayed = 0;
       let fgMultiplierSum = 0;
       let triggerSource = null;
-      const bgCardSystemInfo = betMode === Box.mode_normalbet ? pickCardSystemEntry("weight_bg") : null;
-      const fgCardSystemInfo = betMode === Box.mode_normalbet ? pickCardSystemEntry("weight_fg") : null;
-      const bfCardSystemInfo = betMode === Box.mode_featurebuy ? pickCardSystemEntry("weight_bf") : null;
+      const bgCardSystemInfo = betMode === Box.mode_featurebuy ? null : pickCardSystemEntry("weight_bg", betMode);
+      const fgCardSystemInfo = betMode === Box.mode_featurebuy ? null : pickCardSystemEntry("weight_fg", betMode);
+      const bfCardSystemInfo = betMode === Box.mode_featurebuy ? pickCardSystemEntry("weight_bf", betMode) : null;
       const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
       const retryLimit = getCardSystemRetryLimit();
 
       let baseSpin = null;
-      if (betMode === Box.mode_normalbet) {
+      if (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet) {
         if (CARD_SYSTEM_ENABLED && bgCardSystemInfo?.card_type === "free_game") {
           let rerollCount = 0;
           while (true) {
@@ -1398,7 +1427,7 @@
 
             const awarded = 15 + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
             const fgResult = runFreeGameSequence(awarded, fgCardSystemInfo);
-            if (!isCardSystemMatch(fgCardSystemInfo, fgResult.free_total_win, currentCoinIn, true)) {
+            if (!isCardSystemMatch(fgCardSystemInfo, fgResult.free_total_win, roundCardSystemCoinIn, true)) {
               rerollCount += 1;
               if (rerollCount >= retryLimit) {
                 throw new Error("FG card retry exceeded limit.");
@@ -1434,7 +1463,7 @@
             const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
 
             if (CARD_SYSTEM_ENABLED && bgCardSystemInfo) {
-              if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, currentCoinIn, false)) {
+              if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
                 rerollCount += 1;
                 if (rerollCount >= retryLimit) {
                   throw new Error("BG range card retry exceeded limit.");
@@ -1529,7 +1558,7 @@
 
       return {
         bet_mode: betMode,
-        bet_mode_name: betMode === Box.mode_featurebuy ? "Feature Buy" : "Normal Bet",
+        bet_mode_name: betMode === Box.mode_featurebuy ? "Feature Buy" : betMode === Box.mode_extrabet ? "Extra Bet" : "Normal Bet",
         bet_multi: getBetMulti(),
         coin_in: currentCoinIn,
         base_spin: baseSpin,
@@ -1598,7 +1627,13 @@
     }
 
     function updateSessionCards() {
-      const activeBetMode = state.pendingRound ? state.pendingRound.bet_mode : state.activeRound ? state.activeRound.bet_mode : Box.mode_normalbet;
+      const activeBetMode = state.pendingRound
+        ? state.pendingRound.bet_mode
+        : state.activeRound
+          ? state.activeRound.bet_mode
+          : state.extraBetEnabled
+            ? Box.mode_extrabet
+            : Box.mode_normalbet;
       setText(balanceValueEl, formatMoney(state.displayBalance));
       setText(betValueEl, formatMoney(coinIn(activeBetMode)));
       setText(winValueEl, formatMoney(state.displayWin));
@@ -1609,6 +1644,8 @@
 
     function updateSpinButtonState() {
       setText(spinBtn, state.pendingRound ? "Next FG" : "Spin");
+      extraBetBtn.disabled = Boolean(state.pendingRound);
+      extraBetBtn.classList.toggle("is-active", state.extraBetEnabled);
       buyFeatureBtn.disabled = Boolean(state.pendingRound);
       betBtn.disabled = Boolean(state.pendingRound);
       autoBtn.classList.toggle("is-active", state.autoEnabled);
@@ -1860,6 +1897,7 @@
       state.pendingRound = null;
       state.pendingSpinIndex = 0;
       state.autoEnabled = false;
+      state.extraBetEnabled = false;
       state.turboEnabled = false;
       resetDisplayState();
       renderBoard(sampleBoard());
@@ -1883,7 +1921,14 @@
       writeMessage(state.turboEnabled ? "Turbo x2 enabled" : "Turbo x2 disabled");
     });
 
-    spinBtn.addEventListener("click", () => doSpin(Box.mode_normalbet));
+    spinBtn.addEventListener("click", () => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet));
+    extraBetBtn.addEventListener("click", () => {
+      if (state.pendingRound) return;
+      state.extraBetEnabled = !state.extraBetEnabled;
+      updateSessionCards();
+      updateSpinButtonState();
+      writeMessage(state.extraBetEnabled ? "Extra Bet enabled" : "Extra Bet disabled");
+    });
     buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
 
     setText(gameIdEl, `Game ID ${Box.game_id}`);
