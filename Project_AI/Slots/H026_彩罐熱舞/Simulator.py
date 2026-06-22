@@ -17,10 +17,10 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
-BET_MODE = 0  # 0 for normal bet, 1 for extra bet, 2 for feature buy
+BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
 CARD_SYSTEM_IS_NEWBIE = False
 
-THREADS = max(1, max(8, os.cpu_count() - 5 or 1))
+THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
 FG_SPIN_CAP = 50
 ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 = False
 
@@ -613,7 +613,7 @@ def generate_board(table_id, board, gold_mask, multi_mask, next_above_idx):
     for col in range(REEL_NUM):
         reel_length = REELS_LEN[table_id, col]
         stop_idx = pick_by_cum(ARR_REELS_WEIGHT_CUM[table_id, :reel_length, col])
-        visible_start_idx = (stop_idx - SCORE_ROW_OFFSET + reel_length) % reel_length
+        visible_start_idx = stop_idx % reel_length
         next_above_idx[col] = (visible_start_idx - 1 + reel_length) % reel_length
         for row in range(DISPLAY_WINDOW_SIZE):
             symbol = ARR_REELS[table_id, (visible_start_idx + row) % reel_length, col]
@@ -902,7 +902,7 @@ def run_spin(
     generate_board(table_id, board, gold_mask, multi_mask, next_above_idx)
     for col in range(REEL_NUM):
         reel_length = REELS_LEN[table_id, col]
-        reel_stop_idx[col] = (next_above_idx[col] + SCORE_ROW_OFFSET + 1) % reel_length
+        reel_stop_idx[col] = (next_above_idx[col] + 1) % reel_length
     copy_layout(board_initial, board)
     special_triggered = assign_initial_multiplier(table_id, gold_mask, multi_mask, gold_pos)
     pre_eliminate_gold_count = count_scoring_gold_mask(gold_mask)
