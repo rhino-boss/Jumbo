@@ -2,6 +2,8 @@ import json
 import math
 import os
 import re
+import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -10,24 +12,58 @@ import numpy as np
 import pandas as pd
 from numba import njit
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+
 # ===== User Settings =====
 
-BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H026_彩罐熱舞"
-CONFIG_PATH = os.path.join(BASE_DIR, "config_92.js")
-# CONFIG_PATH = os.path.join(BASE_DIR, "config_94.js")
+# Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
+CONFIG_FILE = "config_94.js"
+TOTAL_ROUNDS = 10**7
+BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
+CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
+
+# Batch runs. Edit this list directly when you want to run a custom set once.
+RUN_ALL_COMBINATIONS = True
+BATCH_RUNS = [
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_is_newbie": True},
+    # {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_is_newbie": True},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True},
+    {"config_file": "config_94.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": True},
+]
+
+
+def parse_env_bool(name, default):
+    raw_value = os.environ.get(name)
+    if raw_value is None:
+        return default
+    return raw_value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**3
 BET_MULTI = 1
-BET_MODE = 0  # 0 for normal bet, 1 for extra bet, 2 for feature buy
-CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
+CONFIG_FILE = os.environ.get("H026_CONFIG_FILE", CONFIG_FILE)
+CONFIG_PATH = os.path.join(BASE_DIR, CONFIG_FILE)
+TOTAL_ROUNDS = int(os.environ.get("H026_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
+BET_MODE = int(os.environ.get("H026_BET_MODE", str(BET_MODE)))
+CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H026_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+RUN_ALL_COMBINATIONS = parse_env_bool("H026_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
+BATCH_COMBINATIONS = list(BATCH_RUNS)
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
 FG_SPIN_CAP = 50
 ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 = False
 
 OUTPUT_REPORT = True
-SHOW_CONSOLE_SUMMARY = True
+SHOW_CONSOLE_SUMMARY = False
 SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 TRACE_RETRY_FAILURE = False
@@ -2048,6 +2084,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "hit_rate_fg": hit_rate_fg,
         "hit_rate_total": hit_rate_total,
         "fg_trigger_rate": trigger_rate_fg,
+        "fg_trigger_count": fg_trigger_count,
         "retrigger_rate": retrigger_rate,
         "avg_fg_multiplier": avg_fg_multiplier,
         "avg_fg_spins": avg_fg_spins,
@@ -2124,6 +2161,39 @@ def format_rtp_tag(rtp_value):
         return "0000"
 
 
+def format_elapsed_time(seconds):
+    total_seconds = max(0, int(round(float(seconds))))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours}h {minutes}m {secs}s"
+
+
+def format_bet_mode_label(bet_mode):
+    if bet_mode == MODE_EXTRABET:
+        return "Extra Bet"
+    if bet_mode == MODE_FEATUREBUY:
+        return "Feature Buy"
+    return "Normal Bet"
+
+
+def print_batch_summary(duration, summary, bet_mode):
+    fg_trigger_count = int(round(float(summary.get("fg_trigger_count", 0))))
+    print(f"* game_id: {GAME_ID}", flush=True)
+    print(f"* version: {CONFIG_VERSION}", flush=True)
+    print(f"* bet_mode: {format_bet_mode_label(bet_mode)}", flush=True)
+    print(f"* duration: {format_elapsed_time(duration)}", flush=True)
+    print(f"* rtp_total: {float(summary.get('rtp_total', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* rtp_bg: {float(summary.get('rtp_bg', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* rtp_fg: {float(summary.get('rtp_fg', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* hit_rate_bg: {float(summary.get('hit_rate_bg', 0.0)):.2f}", flush=True)
+    print(f"* hit_rate_fg: {float(summary.get('hit_rate_fg', 0.0)):.2f}", flush=True)
+    print(f"* fg_trigger_rate: {float(summary.get('fg_trigger_rate', 0.0)):.2f} ({fg_trigger_count} spins)", flush=True)
+    print(f"* retrigger_rate: {float(summary.get('retrigger_rate', 0.0)):.2f}", flush=True)
+    print(f"* avg_fg_multiplier: {float(summary.get('avg_fg_multiplier', 0.0)):.2f} x", flush=True)
+    print(f"* avg_fg_spins: {float(summary.get('avg_fg_spins', 0.0)):.2f} spins", flush=True)
+    print(f"* card_system: {'on' if CARD_SYSTEM_ENABLED else 'off'}", flush=True)
+
+
 def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary, record_data, bet_mode, total_round):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
@@ -2136,7 +2206,9 @@ def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_comb
     filename_parts = [GAME_ID]
     if version_tag:
         filename_parts.append(version_tag)
-    filename_parts.extend([timestamp, f"betmode{bet_mode}", rounds_tag, f"{rtp_tag}{profile_suffix}{card_suffix}"])
+    filename_parts.extend([timestamp, f"betmode{bet_mode}", rounds_tag])
+    if CARD_SYSTEM_ENABLED:
+        filename_parts.append(f"{rtp_tag}{profile_suffix}{card_suffix}")
     path = os.path.join(OUTPUT_DIR, f"{'_'.join(filename_parts)}.xlsx")
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
@@ -2198,7 +2270,39 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     print(f"coin_in={coin_in}, pay={result[0]}, scatter={result[1]}, final_multiplier={result[4]}, cascades={result[5]}")
 
 
+def run_all_combinations():
+    total_jobs = len(BATCH_COMBINATIONS)
+    for index, combo in enumerate(BATCH_COMBINATIONS, start=1):
+        combo_env = os.environ.copy()
+        combo_env["PYTHONUNBUFFERED"] = "1"
+        combo_env["H026_CONFIG_FILE"] = combo["config_file"]
+        combo_env["H026_BET_MODE"] = str(combo["bet_mode"])
+        combo_env["H026_TOTAL_ROUNDS"] = str(combo["total_rounds"])
+        combo_env["H026_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo["card_system_is_newbie"] else "false"
+        combo_env["H026_RUN_ALL_COMBINATIONS"] = "false"
+        combo_env["H026_BATCH_CHILD"] = "1"
+
+        print(f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, " f"total_rounds={combo['total_rounds']}, " f"card_system_is_newbie={combo['card_system_is_newbie']} ===", flush=True)
+        result = subprocess.run(
+            [sys.executable, os.path.abspath(__file__)],
+            check=True,
+            env=combo_env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if result.stdout:
+            print(result.stdout.rstrip(), flush=True)
+        if result.stderr:
+            print(result.stderr.rstrip(), file=sys.stderr, flush=True)
+
+
 def main():
+    if RUN_ALL_COMBINATIONS and os.environ.get("H026_BATCH_CHILD") != "1":
+        run_all_combinations()
+        return
+
     if RUN_SINGLE_SPIN_DEBUG:
         run_single_spin_debug()
         return
@@ -2217,6 +2321,7 @@ def main():
         threads=THREADS,
     )
     print_console_result(df_base, df_hits, df_pay, df_eliminate)
+    print_batch_summary(duration, summary, BET_MODE)
 
     if OUTPUT_REPORT:
         report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary, record_data, BET_MODE, TOTAL_ROUNDS)
