@@ -9,10 +9,12 @@ from typing import Any
 
 from openpyxl import load_workbook
 
-
-PROJECT_DIR = Path(__file__).resolve().parents[1]
-DEFAULT_XLSX = PROJECT_DIR / "Source" / "H026192.xlsx"
-DEFAULT_OUTPUT = PROJECT_DIR / "config.js"
+SOURCE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = SOURCE_DIR.parent
+# DEFAULT_XLSX = SOURCE_DIR / "H026192.xlsx"
+# DEFAULT_OUTPUT = PROJECT_DIR / "config_92.js"
+DEFAULT_XLSX = SOURCE_DIR / "H026194.xlsx"
+DEFAULT_OUTPUT = PROJECT_DIR / "config_94.js"
 STATIC_DEFAULTS: dict[str, Any] = {
     "source_box": "Project.Slots.Source.H026_Box",
     "game_name": "彩罐熱舞",

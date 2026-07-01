@@ -1,5 +1,5 @@
 window.H026_BOX_DATA = {
-  "generated_at": "2026-07-01T09:36:29",
+  "generated_at": "2026-07-01T09:00:16",
   "source_box": "Project.Slots.Source.H026_Box",
   "game_id": "H026194",
   "excel_version": "2.0.0.4",

@@ -1,18 +1,34 @@
 import asyncio
 import html
+import io
 import os
 import re
+import shutil
+import socket
+import subprocess
+import tempfile
 import unicodedata
 import zipfile
 from datetime import datetime
 from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font
-from telegram import Update
+from telegram import Bot, Update
+from telegram.error import Conflict
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
+import rarfile
+
+r"""
 
 # 從專案根目錄執行：
-# .\.venv\Scripts\python.exe Tools\TelegramBot\walking_encyclopedia_bot.py
+.\.venv\Scripts\python.exe Tools\TelegramBot\walking_encyclopedia_bot.py
+
+# 功能介紹
+  * 整理報表：支援 zip/rar、多檔合併、巢狀壓縮檔，並自動轉成 Excel。
+  * 壓測資料重點整理：抓取 RTP、Spin、Coin in、各 pool RTP 等重點欄位。
+  * AI 機器人：開發中。
+
+"""
 
 # ==================== 🔑 核心金鑰設定 ====================
 TG_TOKEN = "8817922272:AAGAGwyjZQLMHcEE8iRs2Au9XK1EJpgEVVk"
@@ -28,6 +44,14 @@ MSG_LIMIT = 5  # 每滿 5 條群組訊息，就自動觸發一次「固定格式
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "generated_reports"
 MAX_REPORT_FILES = 20
+ARCHIVE_EXTENSIONS = {".zip", ".rar"}
+MAX_ARCHIVE_DEPTH = 10
+ARCHIVE_BATCH_DELAY_SECONDS = 2
+BOT_INSTANCE_LOCK_PORT = 48726
+SEVENZIP_CANDIDATES = [
+    r"C:\Program Files\7-Zip\7z.exe",
+    r"C:\Program Files (x86)\7-Zip\7z.exe",
+]
 
 VALIDATOR_HEADER_PATTERNS = {
     "GameID": r"GameID\s*=\s*(\d+)",
@@ -45,8 +69,38 @@ VALIDATOR_HEADER_PATTERNS = {
 
 # 記憶暫存區
 chat_buffers = {}
+archive_batches = {}
+bot_instance_lock = None
 
 # ==================== 💾 本地文字檔儲存邏輯 ====================
+
+
+def acquire_bot_instance_lock() -> bool:
+    """避免同一支 bot 在本機重複啟動，造成 Telegram getUpdates Conflict。"""
+    global bot_instance_lock
+
+    lock_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        lock_socket.bind(("127.0.0.1", BOT_INSTANCE_LOCK_PORT))
+        lock_socket.listen(1)
+    except OSError:
+        lock_socket.close()
+        return False
+
+    bot_instance_lock = lock_socket
+    return True
+
+
+async def check_telegram_polling_available() -> bool:
+    try:
+        async with Bot(TG_TOKEN) as bot:
+            await bot.get_updates(timeout=0, limit=1)
+        return True
+    except Conflict:
+        return False
+    except Exception as e:
+        print(f"[警告] Telegram polling 預檢失敗，將繼續嘗試啟動: {e}")
+        return True
 
 
 def save_to_text_file(chat_title: str, content_text: str):
@@ -90,8 +144,20 @@ def extract_validator_field(pattern: str, text: str) -> str:
     return groups[0] if groups else match.group(1)
 
 
+def get_source_txt_filename(source_name: str) -> str:
+    return Path(source_name.replace("\\", "/").split("!")[-1]).name
+
+
+def get_source_txt_folder_name(source_name: str) -> str:
+    txt_path = Path(source_name.replace("\\", "/").split("!")[-1])
+    return txt_path.parent.name if str(txt_path.parent) != "." else ""
+
+
 def parse_validator_txt(text: str, source_name: str) -> dict[str, str]:
-    row = {"source_txt": source_name}
+    row = {
+        "source_txt": get_source_txt_filename(source_name),
+        "txt在的資料夾名稱": get_source_txt_folder_name(source_name),
+    }
 
     for field, pattern in VALIDATOR_HEADER_PATTERNS.items():
         row[field] = extract_validator_field(pattern, text)
@@ -102,18 +168,167 @@ def parse_validator_txt(text: str, source_name: str) -> dict[str, str]:
     return row
 
 
-def collect_validator_rows(zip_path: Path) -> tuple[list[dict[str, str]], list[str]]:
+def is_supported_archive_name(name: str) -> bool:
+    return Path(name).suffix.lower() in ARCHIVE_EXTENSIONS
+
+
+def is_supported_archive_bytes(data: bytes) -> bool:
+    return data.startswith(b"PK\x03\x04") or data.startswith(b"Rar!\x1a\x07")
+
+
+def collect_validator_rows_from_zip(zf: zipfile.ZipFile, archive_label: str, depth: int) -> list[dict[str, str]]:
+    rows = []
+    for info in zf.infolist():
+        if info.is_dir():
+            continue
+        name = info.filename
+        data = zf.read(info)
+        rows.extend(collect_validator_rows_from_member(data, f"{archive_label}!{name}", depth + 1))
+
+    return rows
+
+
+def collect_validator_rows_from_rar(rf: rarfile.RarFile, archive_label: str, depth: int) -> list[dict[str, str]]:
+    rows = []
+    for info in rf.infolist():
+        if info.isdir():
+            continue
+        name = info.filename
+        data = rf.read(info)
+        rows.extend(collect_validator_rows_from_member(data, f"{archive_label}!{name}", depth + 1))
+
+    return rows
+
+
+def collect_validator_rows_from_extracted_dir(extract_dir: Path, archive_label: str, depth: int) -> list[dict[str, str]]:
+    rows = []
+    for path in extract_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        relative_name = path.relative_to(extract_dir).as_posix()
+        rows.extend(collect_validator_rows_from_member(path.read_bytes(), f"{archive_label}!{relative_name}", depth + 1))
+    return rows
+
+
+def find_sevenzip_tool() -> str | None:
+    tool = shutil.which("7z") or shutil.which("7zz")
+    if tool:
+        return tool
+
+    for candidate in SEVENZIP_CANDIDATES:
+        if Path(candidate).exists():
+            return candidate
+
+    return None
+
+
+def configure_rarfile_tools():
+    sevenzip = find_sevenzip_tool()
+    if sevenzip:
+        rarfile.SEVENZIP_TOOL = sevenzip
+    elif shutil.which("tar") and not shutil.which("bsdtar"):
+        rarfile.BSDTAR_TOOL = "tar"
+
+    try:
+        rarfile.tool_setup(force=True)
+    except rarfile.RarCannotExec:
+        pass
+
+
+def extract_archive_with_external_tool(archive_path: Path, extract_dir: Path):
+    sevenzip = find_sevenzip_tool()
+    unrar = shutil.which("unrar")
+    tar = shutil.which("tar") or shutil.which("bsdtar")
+
+    if sevenzip:
+        command = [sevenzip, "x", "-y", f"-o{extract_dir}", str(archive_path)]
+    elif unrar:
+        command = [unrar, "x", "-y", str(archive_path), str(extract_dir)]
+    elif tar:
+        command = [tar, "-xf", str(archive_path), "-C", str(extract_dir)]
+    else:
+        raise RuntimeError("找不到可用的 RAR 解壓工具，請安裝 7-Zip 或 UnRAR。")
+
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if result.returncode != 0:
+        error_output = (result.stderr or result.stdout).strip()
+        raise RuntimeError(f"RAR 解壓失敗: {error_output}")
+
+
+def collect_validator_rows_from_rar_path(rar_path: Path, archive_label: str, depth: int) -> list[dict[str, str]]:
+    configure_rarfile_tools()
+    try:
+        with rarfile.RarFile(rar_path) as rf:
+            return collect_validator_rows_from_rar(rf, archive_label, depth)
+    except Exception as rar_error:
+        extract_dir = Path(tempfile.mkdtemp(prefix="telegram_bot_rar_"))
+        try:
+            try:
+                extract_archive_with_external_tool(rar_path, extract_dir)
+            except Exception as extract_error:
+                raise RuntimeError(f"RAR 讀取失敗: {rar_error}; 外部解壓也失敗: {extract_error}") from extract_error
+            return collect_validator_rows_from_extracted_dir(extract_dir, archive_label, depth)
+        finally:
+            shutil.rmtree(extract_dir, ignore_errors=True)
+
+
+def collect_validator_rows_from_member(data: bytes, source_name: str, depth: int = 0) -> list[dict[str, str]]:
+    if depth > MAX_ARCHIVE_DEPTH:
+        raise ValueError(f"壓縮檔巢狀層數超過 {MAX_ARCHIVE_DEPTH} 層: {source_name}")
+
+    lower_name = source_name.lower()
+    if lower_name.endswith(".txt"):
+        text = data.decode("utf-8", errors="replace")
+        return [parse_validator_txt(text, source_name)]
+
+    if not is_supported_archive_name(source_name) and not is_supported_archive_bytes(data):
+        return []
+
+    archive_bytes = io.BytesIO(data)
+    if lower_name.endswith(".zip") or data.startswith(b"PK\x03\x04"):
+        with zipfile.ZipFile(archive_bytes) as zf:
+            return collect_validator_rows_from_zip(zf, source_name, depth)
+
+    if lower_name.endswith(".rar") or data.startswith(b"Rar!\x1a\x07"):
+        ensure_output_dir()
+        temp_rar_path = None
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".rar", dir=OUTPUT_DIR) as temp_rar:
+                temp_rar.write(data)
+                temp_rar_path = Path(temp_rar.name)
+
+            return collect_validator_rows_from_rar_path(temp_rar_path, source_name, depth)
+        finally:
+            if temp_rar_path and temp_rar_path.exists():
+                temp_rar_path.unlink()
+
+    return []
+
+
+def collect_validator_rows(archive_path: Path) -> tuple[list[dict[str, str]], list[str]]:
+    lower_name = archive_path.name.lower()
+    if lower_name.endswith(".zip"):
+        with zipfile.ZipFile(archive_path) as zf:
+            rows = collect_validator_rows_from_zip(zf, archive_path.name, 0)
+    elif lower_name.endswith(".rar"):
+        rows = collect_validator_rows_from_rar_path(archive_path, archive_path.name, 0)
+    else:
+        rows = collect_validator_rows_from_member(archive_path.read_bytes(), archive_path.name)
+
+    pool_fields = {field for row in rows for field in row if field.startswith("pool[")}
+
+    pool_headers = sorted(pool_fields, key=lambda value: int(re.search(r"\[(\d+)\]", value).group(1)))
+    return rows, pool_headers
+
+
+def collect_validator_rows_from_archives(archive_paths: list[Path]) -> tuple[list[dict[str, str]], list[str]]:
     rows = []
     pool_fields = set()
 
-    with zipfile.ZipFile(zip_path) as zf:
-        for name in zf.namelist():
-            if not name.endswith(".txt"):
-                continue
-            text = zf.read(name).decode("utf-8", errors="replace")
-            row = parse_validator_txt(text, Path(name).name)
-            rows.append(row)
-            pool_fields.update(field for field in row if field.startswith("pool["))
+    for archive_path in archive_paths:
+        archive_rows, _ = collect_validator_rows(archive_path)
+        rows.extend(archive_rows)
+        pool_fields.update(field for row in archive_rows for field in row if field.startswith("pool["))
 
     pool_headers = sorted(pool_fields, key=lambda value: int(re.search(r"\[(\d+)\]", value).group(1)))
     return rows, pool_headers
@@ -126,6 +341,7 @@ def write_validator_xlsx(rows: list[dict[str, str]], pool_headers: list[str], ou
 
     headers = [
         "source_txt",
+        "txt在的資料夾名稱",
         "GameID",
         "optionID",
         "Coin in",
@@ -154,32 +370,61 @@ def write_validator_xlsx(rows: list[dict[str, str]], pool_headers: list[str], ou
     workbook.save(output_path)
 
 
-def generate_xlsx_from_zip(zip_path: Path, output_path: Path):
-    rows, pool_headers = collect_validator_rows(zip_path)
+def generate_xlsx_from_archive(archive_path: Path, output_path: Path):
+    rows, pool_headers = collect_validator_rows(archive_path)
     write_validator_xlsx(rows, pool_headers, output_path)
     return output_path
 
 
-async def build_validator_report_from_document(document, context: ContextTypes.DEFAULT_TYPE) -> Path:
-    """下載 Telegram zip 文件並轉成 xlsx。"""
-    ensure_output_dir()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+def generate_xlsx_from_archives(archive_paths: list[Path], output_path: Path):
+    rows, pool_headers = collect_validator_rows_from_archives(archive_paths)
+    write_validator_xlsx(rows, pool_headers, output_path)
+    return output_path
+
+
+async def download_validator_archive(document, context: ContextTypes.DEFAULT_TYPE, timestamp: str, index: int) -> Path:
+    """下載 Telegram 壓縮檔並轉成 xlsx。"""
     source_name = document.file_name or f"validator_{timestamp}.zip"
     safe_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(source_name).stem).strip("._") or f"validator_{timestamp}"
-    zip_path = OUTPUT_DIR / f"{timestamp}_{safe_stem}.zip"
-    xlsx_path = OUTPUT_DIR / f"{timestamp}_{safe_stem}.xlsx"
+    source_suffix = Path(source_name).suffix.lower()
+    archive_suffix = source_suffix if source_suffix in ARCHIVE_EXTENSIONS else ".zip"
+    archive_path = OUTPUT_DIR / f"{timestamp}_{index:02d}_{safe_stem}{archive_suffix}"
 
     telegram_file = await context.bot.get_file(document.file_id)
-    await telegram_file.download_to_drive(custom_path=str(zip_path))
+    await telegram_file.download_to_drive(custom_path=str(archive_path))
+    return archive_path
 
+
+async def build_validator_report_from_documents(documents, context: ContextTypes.DEFAULT_TYPE, batch_name: str | None = None) -> Path:
+    """下載 Telegram 壓縮檔並合併轉成 xlsx。"""
+    ensure_output_dir()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    if batch_name:
+        safe_output_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", batch_name).strip("._") or f"validator_{timestamp}"
+    elif len(documents) == 1:
+        source_name = documents[0].file_name or f"validator_{timestamp}.zip"
+        safe_output_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(source_name).stem).strip("._") or f"validator_{timestamp}"
+    else:
+        safe_output_stem = f"validator_batch_{timestamp}"
+
+    archive_paths = []
+    xlsx_path = OUTPUT_DIR / f"{timestamp}_{safe_output_stem}.xlsx"
     try:
-        generate_xlsx_from_zip(zip_path, xlsx_path)
+        for index, document in enumerate(documents, start=1):
+            archive_paths.append(await download_validator_archive(document, context, timestamp, index))
+
+        generate_xlsx_from_archives(archive_paths, xlsx_path)
     finally:
-        if zip_path.exists():
-            zip_path.unlink()
+        for archive_path in archive_paths:
+            if archive_path.exists():
+                archive_path.unlink()
 
     prune_old_reports()
     return xlsx_path
+
+
+async def build_validator_report_from_document(document, context: ContextTypes.DEFAULT_TYPE) -> Path:
+    return await build_validator_report_from_documents([document], context)
 
 
 # ==================== 🧠 AI 大腦與防呆邏輯 ====================
@@ -233,7 +478,7 @@ async def ask_claude_question(question: str) -> str:
 
 
 async def send_typing_while_waiting(chat_id: int, context: ContextTypes.DEFAULT_TYPE, stop_event: asyncio.Event):
-    """在 AI 回覆完成前，持續顯示 Telegram typing 狀態。"""
+    """在長時間處理完成前，持續顯示 Telegram typing 狀態。"""
     while not stop_event.is_set():
         try:
             await context.bot.send_chat_action(chat_id=chat_id, action="typing")
@@ -245,6 +490,45 @@ async def send_typing_while_waiting(chat_id: int, context: ContextTypes.DEFAULT_
             await asyncio.wait_for(stop_event.wait(), timeout=4)
         except asyncio.TimeoutError:
             continue
+
+
+def is_supported_archive_document(document) -> bool:
+    file_name = (document.file_name or "").lower()
+    mime_type = (document.mime_type or "").lower()
+    is_supported_archive = Path(file_name).suffix.lower() in ARCHIVE_EXTENSIONS
+    is_supported_mime = "zip" in mime_type or "rar" in mime_type
+    return is_supported_archive or is_supported_mime
+
+
+async def process_archive_batch_after_delay(batch_key, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        await asyncio.sleep(ARCHIVE_BATCH_DELAY_SECONDS)
+    except asyncio.CancelledError:
+        return
+
+    batch = archive_batches.pop(batch_key, None)
+    if not batch:
+        return
+
+    message = batch["message"]
+    documents = batch["documents"]
+    chat_id = message.chat.id
+    batch_name = f"validator_batch_{len(documents)}files"
+
+    stop_typing_event = asyncio.Event()
+    typing_task = asyncio.create_task(send_typing_while_waiting(chat_id, context, stop_typing_event))
+
+    try:
+        xlsx_path = await build_validator_report_from_documents(documents, context, batch_name=batch_name)
+    except Exception as e:
+        print(f"[系統日誌] 批次轉換壓縮檔為 xlsx 失敗: {e}")
+        await message.reply_text("批次轉換壓縮檔失敗，請確認 zip/rar 檔案格式是否正確。")
+    else:
+        with xlsx_path.open("rb") as report_file:
+            await message.reply_document(document=report_file, filename=xlsx_path.name)
+    finally:
+        stop_typing_event.set()
+        await typing_task
 
 
 def parse_rtp_report(report_text: str):
@@ -452,11 +736,27 @@ async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     document = update.message.document
-    file_name = (document.file_name or "").lower()
-    mime_type = (document.mime_type or "").lower()
+    if not is_supported_archive_document(document):
+        await update.message.reply_text("目前只支援上傳 RTP Validator 的 zip/rar 壓縮檔。")
+        return
 
-    if not file_name.endswith(".zip") and "zip" not in mime_type:
-        await update.message.reply_text("目前只支援上傳 RTP Validator 的 zip 檔。")
+    media_group_id = update.message.media_group_id
+    if media_group_id:
+        batch_key = (update.message.chat.id, media_group_id)
+        batch = archive_batches.setdefault(
+            batch_key,
+            {
+                "documents": [],
+                "message": update.message,
+                "task": None,
+            },
+        )
+        batch["documents"].append(document)
+        batch["message"] = update.message
+
+        if batch["task"] and not batch["task"].done():
+            batch["task"].cancel()
+        batch["task"] = asyncio.create_task(process_archive_batch_after_delay(batch_key, context))
         return
 
     stop_typing_event = asyncio.Event()
@@ -465,8 +765,8 @@ async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         xlsx_path = await build_validator_report_from_document(document, context)
     except Exception as e:
-        print(f"[系統日誌] 轉換 zip 為 xlsx 失敗: {e}")
-        await update.message.reply_text("轉換 zip 失敗，請確認檔案格式是否正確。")
+        print(f"[系統日誌] 轉換壓縮檔為 xlsx 失敗: {e}")
+        await update.message.reply_text("轉換壓縮檔失敗，請確認 zip/rar 檔案格式是否正確。")
     else:
         with xlsx_path.open("rb") as report_file:
             await update.message.reply_document(document=report_file, filename=xlsx_path.name)
@@ -541,6 +841,15 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 if __name__ == "__main__":
+    if not acquire_bot_instance_lock():
+        print("[錯誤] 機器人已經在本機執行中，請先關閉另一個 bot 終端後再啟動。")
+        raise SystemExit(1)
+
+    if not asyncio.run(check_telegram_polling_available()):
+        print("[錯誤] Telegram Bot Token 正在被另一個 getUpdates 程序使用。")
+        print("請關閉其他 bot 程序，或到 BotFather 重新產生 token 後再啟動。")
+        raise SystemExit(1)
+
     print("正在啟動混合規則與 AI 捕捉型機器人 中...")
     app = Application.builder().token(TG_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, main_handler))

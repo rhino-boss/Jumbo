@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -12,13 +13,14 @@ from numba import njit
 # ===== User Settings =====
 
 BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H026_彩罐熱舞"
-CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
+CONFIG_PATH = os.path.join(BASE_DIR, "config_92.js")
+# CONFIG_PATH = os.path.join(BASE_DIR, "config_94.js")
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
-TOTAL_ROUNDS = 10**7
+TOTAL_ROUNDS = 10**3
 BET_MULTI = 1
-BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
-CARD_SYSTEM_IS_NEWBIE = False
+BET_MODE = 0  # 0 for normal bet, 1 for extra bet, 2 for feature buy
+CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
 FG_SPIN_CAP = 50
@@ -2095,11 +2097,47 @@ def print_console_result(df_base, df_hits, df_pay, df_eliminate):
         print(df_eliminate.to_string())
 
 
-def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, record_data, bet_mode):
+def format_rounds_tag(total_round):
+    total_round = int(total_round)
+    if total_round > 0:
+        exponent = 0
+        value = total_round
+        while value % 10 == 0:
+            value //= 10
+            exponent += 1
+        if value == 1 and exponent > 0:
+            return f"10{exponent}"
+    return str(total_round)
+
+
+def format_version_tag(version):
+    version_text = str(version or "").strip()
+    if not version_text:
+        return ""
+    return re.sub(r"[^0-9A-Za-z]+", "", version_text)
+
+
+def format_rtp_tag(rtp_value):
+    try:
+        return f"{float(rtp_value):.4f}".split(".", 1)[1]
+    except (TypeError, ValueError):
+        return "0000"
+
+
+def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary, record_data, bet_mode, total_round):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
+    rounds_tag = format_rounds_tag(total_round)
+    version_tag = format_version_tag(CONFIG_VERSION)
+    rtp_tag = format_rtp_tag(summary.get("rtp_total"))
+    show_profile_suffix = CARD_SYSTEM_ENABLED and bet_mode != MODE_FEATUREBUY
+    profile_suffix = "_newbie" if show_profile_suffix and CARD_SYSTEM_IS_NEWBIE else ("_oldhand" if show_profile_suffix else "")
     card_suffix = "_card" if CARD_SYSTEM_ENABLED else ""
-    path = os.path.join(OUTPUT_DIR, f"{GAME_ID}_{timestamp}_betmode{bet_mode}{card_suffix}.xlsx")
+    filename_parts = [GAME_ID]
+    if version_tag:
+        filename_parts.append(version_tag)
+    filename_parts.extend([timestamp, f"betmode{bet_mode}", rounds_tag, f"{rtp_tag}{profile_suffix}{card_suffix}"])
+    path = os.path.join(OUTPUT_DIR, f"{'_'.join(filename_parts)}.xlsx")
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_gold_count.to_excel(writer, sheet_name="Gold Count", index=False)
@@ -2169,7 +2207,7 @@ def main():
         print("TRACE_RETRY_FAILURE is on; simulation will run with a single thread.")
 
     record_data, duration, coin_in = run_simulation()
-    df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, _ = build_result_frames(
+    df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary = build_result_frames(
         record_data=record_data,
         total_round=TOTAL_ROUNDS,
         duration=duration,
@@ -2181,7 +2219,7 @@ def main():
     print_console_result(df_base, df_hits, df_pay, df_eliminate)
 
     if OUTPUT_REPORT:
-        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, record_data, BET_MODE)
+        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary, record_data, BET_MODE, TOTAL_ROUNDS)
         print(f"\nReport: {report_path}")
 
 

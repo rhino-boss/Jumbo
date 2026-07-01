@@ -10,7 +10,7 @@
 
 如果你要看更細的欄位對欄位對照，請搭配：
 
-- [xlsx_config_usage_mapping.md](./Tool/xlsx_config_usage_mapping.md)
+- [xlsx_config_usage_mapping.md](./Source/xlsx_config_usage_mapping.md)
 
 ---
 
@@ -19,7 +19,7 @@
 這個專案的參數流向很單純：
 
 1. 企劃或數學先把資料填在 `H026192.xlsx`
-2. `Tool/xlsx_to_config.py` 讀 xlsx，整理後輸出成 `config.js`
+2. `Source/xlsx_to_config.py` 讀 xlsx，整理後輸出成 `config.js`
 3. `Simulator.py` 讀 `config.js` 跑大量模擬
 4. `index.html` 讀同一份 `config.js` 跑單局展示
 
@@ -33,7 +33,7 @@
 
 ## 2. xlsx 轉成 `config.js` 之後，資料被分成哪幾類
 
-`Tool/xlsx_to_config.py` 不只是把欄位原封不動搬過去，而是會先整理成比較好用的 runtime 結構。
+`Source/xlsx_to_config.py` 不只是把欄位原封不動搬過去，而是會先整理成比較好用的 runtime 結構。
 
 最常見的轉換有這幾種：
 
@@ -399,7 +399,7 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 建議順序：
 
 1. 先在 xlsx 找到原始欄位
-2. 到 `Tool/xlsx_to_config.py` 找它被轉成哪個 `config.js` 欄位
+2. 到 `Source/xlsx_to_config.py` 找它被轉成哪個 `config.js` 欄位
 3. 到 `config.js` 確認產出的值是不是你預期的
 4. 在 `Simulator.py` / `index.html` 搜尋這個欄位名
 5. 確認程式是直接使用它，還是只使用它的 cumulative / 衍生版本
@@ -408,8 +408,8 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 
 ## 9. 建議搭配查看的檔案
 
-- [xlsx_to_config.py](./Tool/xlsx_to_config.py)
-- [xlsx_config_usage_mapping.md](./Tool/xlsx_config_usage_mapping.md)
+- [xlsx_to_config.py](./Source/xlsx_to_config.py)
+- [xlsx_config_usage_mapping.md](./Source/xlsx_config_usage_mapping.md)
 - [config.js](./config.js)
 - [Simulator.py](./Simulator.py)
 - [index.html](./index.html)
