@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font
-from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import Bot, BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.error import Conflict
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, MessageHandler, filters, ContextTypes
@@ -75,14 +75,39 @@ VALIDATOR_HEADER_PATTERNS = {
     "LinkJP Rtp": r"LinkJP\s+Rtp\s*=\s*([0-9.]+)|LinkJP\s+RTP\s*=\s*([0-9.]+)",
 }
 
-# ==================== 🎰 H026 模擬器設定 ====================
-GAME_DIR = BASE_DIR / "games" / "H026"
-GAME_SCRIPT = GAME_DIR / "Simulator.py"
-CONFIGS = {"92A", "92B", "94A", "94B"}
+# ==================== 🎰 模擬器設定 ====================
+GAMES_ROOT = Path("/root/Simulator")  # 每個子資料夾＝一個遊戲，例如 H026_彩罐熱舞
 BET_MODES = {"0": "Normal Bet", "1": "Extra Bet", "2": "Feature Buy"}
 MAX_ROUNDS = int(os.environ.get("MAX_ROUNDS", "20000000"))
 SUMMARY_LINE_RE = re.compile(r"^\* .+$", re.MULTILINE)
 REPORT_LINE_RE = re.compile(r"^Report: (.+)$", re.MULTILINE)
+
+
+def discover_games() -> dict[str, Path]:
+    """掃描 GAMES_ROOT 底下有 Simulator.py 的資料夾，即時抓目前有哪些遊戲。"""
+    games = {}
+    if not GAMES_ROOT.is_dir():
+        return games
+    for entry in sorted(GAMES_ROOT.iterdir()):
+        if entry.is_dir() and (entry / "Simulator.py").exists():
+            games[entry.name] = entry
+    return games
+
+
+def get_game_id(folder_name: str) -> str:
+    return folder_name.split("_", 1)[0]
+
+
+def find_game_by_id(game_id: str) -> tuple[str, Path] | None:
+    game_id_upper = game_id.strip().upper()
+    for name, path in discover_games().items():
+        if get_game_id(name).upper() == game_id_upper:
+            return name, path
+    return None
+
+
+def discover_configs(game_dir: Path) -> list[str]:
+    return [f.stem[len("config_") :] for f in sorted(game_dir.glob("config_*.js"))]
 
 current_job = None  # dict: {"proc", "chat_id", "started_at", "label"}
 job_lock = asyncio.Lock()
@@ -752,28 +777,30 @@ async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def build_help_text() -> str:
+    games = discover_games()
+    game_list = ", ".join(get_game_id(name) for name in games) if games else "(尚未找到任何遊戲資料夾)"
     return (
         "🤖 *Jumbo 工具機器人 — 功能說明*\n\n"
         "📄 *RTP Validator 壓縮檔轉表格*\n"
         "直接丟 zip/rar 壓縮檔給我（支援巢狀壓縮、多檔一起丟），我會抓出 GameID、Coin in、TotalSpin、各項 RTP、pool RTP 等欄位，自動轉成 xlsx 傳回來。\n\n"
         "📊 *RTP Report 文字摘要*\n"
         "私訊我或在群組 @我，貼上 Formal RTP Report 文字，我會幫你整理成表格摘要（GameRTP / Jackpot / BonusRTP / Total RTP）。\n\n"
-        "🎰 *H026 模擬器指令*（僅限管理者）:\n"
-        "`/simulator` 開啟選單，按按鈕操作\n"
-        "`/run_start <config> <bet_mode> <rounds> [card]` 一行直接執行\n\n"
-        f"config: {', '.join(sorted(CONFIGS))}\n"
+        "🎰 *模擬器指令*（僅限管理者):\n"
+        "`/simulator` 開啟選單，按按鈕一步一步選\n"
+        "`/run_start <game> <config> <bet_mode> <rounds> [card]` 一行直接執行\n\n"
+        f"game: {game_list}\n"
         "bet_mode: 0=一般 / 1=加碼 / 2=買免費 (Feature Buy)\n"
         f"rounds: 模擬局數（最大 {MAX_ROUNDS:,}）\n"
         "card: new=新手卡池 / old=一般卡池（預設 old）\n\n"
         "範例:\n"
-        "`/run_start 92A 0 1000000 old`\n\n"
+        "`/run_start H026 92A 0 1000000 old`\n\n"
         "`/run_status` 查看目前是否有模擬在跑\n"
         "`/run_cancel` 中止目前模擬"
     )
 
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(build_help_text(), parse_mode=ParseMode.MARKDOWN)
+    await update.message.reply_text(build_help_text(), parse_mode=ParseMode.MARKDOWN, reply_markup=build_menu_keyboard())
 
 
 def build_status_text() -> str:
@@ -793,28 +820,30 @@ async def cancel_current_job() -> str:
     return f"🛑 已送出中止指令: {label}"
 
 
-async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int, config: str, bet_mode: str, rounds: int, card: str) -> str:
+async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int, game_name: str, game_dir: Path, config: str, bet_mode: str, rounds: int, card: str) -> str:
     """驗證參數並啟動模擬工作，回傳要回覆給使用者的訊息文字。"""
     global current_job
 
+    game_script = game_dir / "Simulator.py"
+    configs = discover_configs(game_dir)
     config = config.upper()
-    if config not in CONFIGS:
-        return f"❌ config 必須是: {', '.join(sorted(CONFIGS))}"
+    if config not in configs:
+        return f"❌ {game_name} 的 config 必須是: {', '.join(configs) if configs else '(找不到 config_*.js 檔案)'}"
     if bet_mode not in BET_MODES:
         return "❌ bet_mode 必須是 0, 1 或 2"
     if rounds < 1000 or rounds > MAX_ROUNDS:
         return f"❌ rounds 必須介於 1,000 ~ {MAX_ROUNDS:,} 之間"
     if card not in {"new", "old"}:
         return "❌ card 必須是 new 或 old"
-    if not GAME_SCRIPT.exists():
-        return f"❌ 找不到模擬器腳本: {GAME_SCRIPT}"
+    if not game_script.exists():
+        return f"❌ 找不到模擬器腳本: {game_script}"
 
     async with job_lock:
         if current_job is not None:
             elapsed = int(time.time() - current_job["started_at"])
             return f"⏳ 已經有模擬在跑了（{current_job['label']}，已耗時 {elapsed}s），請先 /run_cancel 或等它跑完。"
 
-        label = f"config={config} bet_mode={BET_MODES[bet_mode]} rounds={rounds:,} card={card}"
+        label = f"game={game_name} config={config} bet_mode={BET_MODES[bet_mode]} rounds={rounds:,} card={card}"
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
         env["H026_RUN_ALL_COMBINATIONS"] = "false"
@@ -825,8 +854,8 @@ async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
 
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
-            str(GAME_SCRIPT),
-            cwd=str(GAME_DIR),
+            str(game_script),
+            cwd=str(game_dir),
             env=env,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -840,21 +869,31 @@ async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
 @authorized
 async def run_start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
-    if len(args) < 3:
+    if len(args) < 4:
+        games = discover_games()
+        game_list = ", ".join(get_game_id(name) for name in games) if games else "(尚未找到任何遊戲資料夾)"
         await update.message.reply_text(
-            "用法: /run_start <config> <bet_mode> <rounds> [card]\n"
-            "範例: /run_start 92A 0 1000000 old"
+            "用法: /run_start <game> <config> <bet_mode> <rounds> [card]\n"
+            f"可用遊戲: {game_list}\n"
+            "範例: /run_start H026 92A 0 1000000 old",
+            reply_markup=build_menu_keyboard(),
         )
         return
 
-    config, bet_mode, rounds_raw = args[0], args[1], args[2]
-    card = args[3].lower() if len(args) > 3 else "old"
+    game_id, config, bet_mode, rounds_raw = args[0], args[1], args[2], args[3]
+    card = args[4].lower() if len(args) > 4 else "old"
+
+    found = find_game_by_id(game_id)
+    if not found:
+        await update.message.reply_text(f"❌ 找不到遊戲: {game_id}")
+        return
+    game_name, game_dir = found
 
     if not rounds_raw.isdigit():
         await update.message.reply_text("❌ rounds 必須是正整數")
         return
 
-    reply = await start_simulation_job(context, update.effective_chat.id, config, bet_mode, int(rounds_raw), card)
+    reply = await start_simulation_job(context, update.effective_chat.id, game_name, game_dir, config, bet_mode, int(rounds_raw), card)
     await update.message.reply_text(reply)
 
 
@@ -881,20 +920,20 @@ async def watch_simulator_job(context: ContextTypes.DEFAULT_TYPE, proc, chat_id,
 
     text = f"✅ 模擬完成: {label}\n\n" + "\n".join(summary_lines)
     if report_match:
-        report_name = os.path.basename(report_match.group(1).strip())
-        text += f"\n\n報表檔案（存在 VM 上）: {report_name}"
+        report_path = report_match.group(1).strip()
+        text += f"\n\n報表檔案（存在 VM 上）: {report_path}"
 
     await context.bot.send_message(chat_id, text)
 
 
 @authorized
 async def run_status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(build_status_text())
+    await update.message.reply_text(build_status_text(), reply_markup=build_menu_keyboard())
 
 
 @authorized
 async def run_cancel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(await cancel_current_job())
+    await update.message.reply_text(await cancel_current_job(), reply_markup=build_menu_keyboard())
 
 
 async def on_error(update, context: ContextTypes.DEFAULT_TYPE):
@@ -904,28 +943,48 @@ async def on_error(update, context: ContextTypes.DEFAULT_TYPE):
 # ==================== 🕹️ /simulator 按鈕選單 ====================
 
 
+def build_abort_button() -> InlineKeyboardButton:
+    return InlineKeyboardButton("❌ 取消選單", callback_data="sim:abort:x")
+
+
 def build_menu_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [InlineKeyboardButton("📖 Help", callback_data="sim:menu:help"), InlineKeyboardButton("🚀 Run", callback_data="sim:menu:run")],
             [InlineKeyboardButton("📊 Status", callback_data="sim:menu:status"), InlineKeyboardButton("🛑 Cancel", callback_data="sim:menu:cancel")],
+            [InlineKeyboardButton("❌ Close", callback_data="sim:menu:close")],
         ]
     )
 
 
-def build_config_keyboard() -> InlineKeyboardMarkup:
-    row = [InlineKeyboardButton(config, callback_data=f"sim:config:{config}") for config in sorted(CONFIGS)]
-    return InlineKeyboardMarkup([row])
+def build_menu_title() -> str:
+    return "🤖 *Jumbo 工具機器人*\n請選擇要做什麼:"
+
+
+def build_game_keyboard() -> InlineKeyboardMarkup:
+    rows = [[InlineKeyboardButton(name, callback_data=f"sim:game:{get_game_id(name)}")] for name in discover_games()]
+    rows.append([build_abort_button()])
+    return InlineKeyboardMarkup(rows)
+
+
+def build_config_keyboard(configs: list[str]) -> InlineKeyboardMarkup:
+    buttons = [InlineKeyboardButton(config, callback_data=f"sim:config:{config}") for config in configs]
+    rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
+    rows.append([build_abort_button()])
+    return InlineKeyboardMarkup(rows)
 
 
 def build_bet_keyboard() -> InlineKeyboardMarkup:
     row = [InlineKeyboardButton(label, callback_data=f"sim:bet:{key}") for key, label in BET_MODES.items()]
-    return InlineKeyboardMarkup([row])
+    return InlineKeyboardMarkup([row, [build_abort_button()]])
 
 
 def build_card_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        [[InlineKeyboardButton("新手卡池 (new)", callback_data="sim:card:new"), InlineKeyboardButton("一般卡池 (old)", callback_data="sim:card:old")]]
+        [
+            [InlineKeyboardButton("新手卡池 (new)", callback_data="sim:card:new"), InlineKeyboardButton("一般卡池 (old)", callback_data="sim:card:old")],
+            [build_abort_button()],
+        ]
     )
 
 
@@ -933,6 +992,7 @@ def build_rounds_keyboard() -> InlineKeyboardMarkup:
     preset_buttons = [InlineKeyboardButton(label, callback_data=f"sim:rounds:{value}") for label, value in ROUNDS_PRESETS]
     rows = [preset_buttons[i : i + 2] for i in range(0, len(preset_buttons), 2)]
     rows.append([InlineKeyboardButton("✏️ 其他（輸入數字）", callback_data="sim:rounds:custom")])
+    rows.append([build_abort_button()])
     return InlineKeyboardMarkup(rows)
 
 
@@ -943,6 +1003,7 @@ def build_confirm_keyboard() -> InlineKeyboardMarkup:
 def build_wizard_summary_text(state: dict) -> str:
     return (
         "請確認模擬參數:\n"
+        f"遊戲: {state['game_name']}\n"
         f"config: {state['config']}\n"
         f"bet_mode: {BET_MODES[state['bet_mode']]}\n"
         f"rounds: {state['rounds']:,}\n"
@@ -954,7 +1015,7 @@ async def simulator_menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if update.effective_user is None or update.effective_user.id != ALLOWED_USER_ID:
         await update.message.reply_text("🚫 你沒有權限使用這個指令。")
         return
-    await update.message.reply_text("請選擇要做什麼:", reply_markup=build_menu_keyboard())
+    await update.message.reply_text(build_menu_title(), parse_mode=ParseMode.MARKDOWN, reply_markup=build_menu_keyboard())
 
 
 async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -970,33 +1031,58 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
     _, stage, value = parts
     chat_id = query.message.chat.id
 
+    if stage == "abort":
+        simulator_wizard_state.pop(chat_id, None)
+        await query.edit_message_text("已取消選單。")
+        return
+
     if stage == "menu":
         if value == "help":
-            await query.edit_message_text(build_help_text(), parse_mode=ParseMode.MARKDOWN)
+            await query.edit_message_text(build_help_text(), parse_mode=ParseMode.MARKDOWN, reply_markup=build_menu_keyboard())
         elif value == "status":
-            await query.edit_message_text(build_status_text())
+            await query.edit_message_text(build_status_text(), reply_markup=build_menu_keyboard())
         elif value == "cancel":
-            await query.edit_message_text(await cancel_current_job())
+            await query.edit_message_text(await cancel_current_job(), reply_markup=build_menu_keyboard())
         elif value == "run":
             simulator_wizard_state[chat_id] = {}
-            await query.edit_message_text("步驟 1/4：請選擇 config", reply_markup=build_config_keyboard())
+            await query.edit_message_text("步驟 1/5：請選擇遊戲", reply_markup=build_game_keyboard())
+        elif value == "close":
+            await query.message.delete()
+            simulator_wizard_state.pop(chat_id, None)
         return
 
     state = simulator_wizard_state.setdefault(chat_id, {})
 
+    if stage == "game":
+        found = find_game_by_id(value)
+        if not found:
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text("❌ 找不到這個遊戲，請重新 /simulator。")
+            return
+        game_name, game_dir = found
+        configs = discover_configs(game_dir)
+        if not configs:
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text(f"❌ {game_name} 資料夾裡沒有 config_*.js 檔案。")
+            return
+        state["game_name"] = game_name
+        state["game_dir"] = str(game_dir)
+        await query.edit_message_text(f"步驟 2/5：請選擇 config（{game_name}）", reply_markup=build_config_keyboard(configs))
+        return
+
     if stage == "config":
         state["config"] = value
-        await query.edit_message_text("步驟 2/4：請選擇 bet_mode", reply_markup=build_bet_keyboard())
+        await query.edit_message_text("步驟 3/5：請選擇 bet_mode", reply_markup=build_bet_keyboard())
         return
 
     if stage == "bet":
         state["bet_mode"] = value
-        await query.edit_message_text("步驟 3/4：請選擇卡池", reply_markup=build_card_keyboard())
+        await query.edit_message_text("步驟 4/5：請選擇卡池", reply_markup=build_card_keyboard())
         return
 
     if stage == "card":
         state["card"] = value
-        await query.edit_message_text("步驟 4/4：請選擇模擬局數", reply_markup=build_rounds_keyboard())
+        await query.edit_message_text("步驟 5/5：請選擇模擬局數", reply_markup=build_rounds_keyboard())
         return
 
     if stage == "rounds":
@@ -1015,10 +1101,12 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await query.edit_message_text("已取消。")
             return
         final_state = simulator_wizard_state.pop(chat_id, None)
-        if not final_state or not all(key in final_state for key in ("config", "bet_mode", "rounds", "card")):
+        if not final_state or not all(key in final_state for key in ("game_name", "game_dir", "config", "bet_mode", "rounds", "card")):
             await query.edit_message_text("❌ 選單狀態不完整，請重新 /simulator。")
             return
-        reply = await start_simulation_job(context, chat_id, final_state["config"], final_state["bet_mode"], final_state["rounds"], final_state["card"])
+        reply = await start_simulation_job(
+            context, chat_id, final_state["game_name"], Path(final_state["game_dir"]), final_state["config"], final_state["bet_mode"], final_state["rounds"], final_state["card"]
+        )
         await query.edit_message_text(reply)
         return
 
@@ -1062,6 +1150,19 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(reply)
 
 
+async def post_init(application: Application) -> None:
+    """把指令註冊進 Telegram 的「/」選單，這樣可以直接點選，不用打字。"""
+    await application.bot.set_my_commands(
+        [
+            BotCommand("help", "顯示功能說明"),
+            BotCommand("simulator", "開啟模擬器選單（按鈕操作）"),
+            BotCommand("run_start", "直接執行模擬（一行指令）"),
+            BotCommand("run_status", "查看模擬進度"),
+            BotCommand("run_cancel", "中止模擬"),
+        ]
+    )
+
+
 if __name__ == "__main__":
     if not acquire_bot_instance_lock():
         print("[錯誤] 機器人已經在本機執行中，請先關閉另一個 bot 程序後再啟動。")
@@ -1073,7 +1174,7 @@ if __name__ == "__main__":
         raise SystemExit(1)
 
     print("正在啟動混合規則型機器人 中...")
-    app = Application.builder().token(TG_TOKEN).build()
+    app = Application.builder().token(TG_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("simulator", simulator_menu_cmd))
     app.add_handler(CommandHandler("run_start", run_start_cmd))
