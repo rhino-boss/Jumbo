@@ -18,15 +18,16 @@
 
 這個專案的參數流向很單純：
 
-1. 企劃或數學先把資料填在 `H026192.xlsx`
-2. `Source/xlsx_to_config.py` 讀 xlsx，整理後輸出成 `config.js`
-3. `Simulator.py` 讀 `config.js` 跑大量模擬
-4. `index.html` 讀同一份 `config.js` 跑單局展示
+1. 企劃或數學先把資料填在對應版本的 xlsx（目前專案內可見 `H026192A / 192B / 194A / 194B`）
+2. `Source/xlsx_to_config.py` 讀 xlsx，整理後輸出成對應的 `config_*.js`
+3. `Simulator.py` 透過 `CONFIG_FILE` / `H026_CONFIG_FILE` 指向其中一份 `config_*.js` 跑大量模擬
+4. `index.html` 目前預設載入 `./config.js`，通常要先準備對應 alias，或手動改成你要看的 `config_*.js`
 
 先記住一個核心觀念：
 
 - xlsx 不是 runtime 直接使用的資料
-- runtime 真正吃的是 `config.js`
+- `Simulator.py` 真正吃的是當前指定的 `config_*.js`
+- `index.html` 目前不是直接跟著 `Simulator.py` 的 `CONFIG_FILE` 走
 - 如果你想知道某個參數如何影響遊戲結果，最後一定要回到單局流程看它在什麼時點被用到
 
 ---
@@ -49,19 +50,23 @@
 代表欄位：
 
 - `mode_normalbet`
+- `mode_extrabet`
 - `mode_featurebuy`
 - `scene_bg`
 - `scene_fg`
 - `scene_bf`
 - `default_coin_in`
 - `normalbet`
+- `extrabet`
 - `featurebuy`
+- `card_system`
 
 主要用途：
 
-- 決定這局是一般下注還是買入免費遊戲
+- 決定這局是 `Normal Bet`、`Extra Bet` 還是 `Feature Buy`
 - 決定現在是在 BG、FG 還是 BF 場景
 - 決定這局成本怎麼算
+- 若有開 `card_system`，決定這局是否要套用對應 profile 的重抽條件
 
 ### 2.2 判獎相關
 
@@ -193,16 +198,20 @@
 
 這一段是整份文件最重要的部分。前面那些參數，最後都會在這個流程裡被消耗掉。
 
-### 4.1 Base Game 單局流程
+### 4.1 Base Game / Extra Bet 單局流程
 
 1. 先依下注模式計算本局成本。
    - `Normal Bet` 用一般倍率
+   - `Extra Bet` 用 `extrabet`
    - `Feature Buy` 用買入倍率
 2. 依目前場景決定這局要用哪一類 table。
    - BG 用 BG 的 table
    - FG 用 FG 的 table
    - BF 用 BF 的 table
-3. 如果是在 FG，還會再看目前已累積的倍數，切到對應強度的機率區段。
+3. 如果是在 FG，還會再看目前已累積的倍數，直接切到固定 table。
+   - `< 10` 用 table `3`
+   - `< 20` 用 table `4`
+   - `>= 20` 用 table `5`
 4. 系統再抽出這局要使用 `Drop A` 還是 `Drop B`。
 5. 根據該局採用的 reel strip 與停輪權重，產生初始 4x5 畫面。
 6. 初始盤面上的金框符號先被分配倍數。
@@ -219,6 +228,7 @@
 14. 直到盤面不再形成新中獎，才統計最終盤面上的 Scatter 數量。
 15. 若這一整局曾實際收集到倍數，才在整局結束後把累積倍數一次乘上整局總得分。
 16. 若最終盤面 Scatter 達門檻，就進入免費遊戲。
+17. 若 `card_system` 有啟用，模擬器還可能依目前抽到的 card profile 做 BG / FG / BF 的重抽；不符合目標區間時，會重跑直到符合或達 retry limit。
 
 ### 4.2 這個流程中最重要的 4 個規則
 
@@ -253,7 +263,7 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 
 - 場景切到 `scene_fg`
 - 使用 FG 專用的 table、reel strip、補牌權重
-- FG 的 table 選擇會受到目前已累積倍數影響
+- FG 的 table 選擇不是再抽權重，而是依目前累積倍數固定切到 `3 / 4 / 5`
 - 單局 FG 結束後若最終盤面再出現 `3+ Scatter`，會 retrigger `15 / 17 / 19`
 - 單次進入 FG 後，包含 retrigger 在內，總場數上限是 50
 
@@ -349,16 +359,16 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 常見原因如下：
 
 1. 你改的是 xlsx 裡的某組原始權重。
-2. 但沒有重新產生 `config.js`。
-3. runtime 其實還在讀舊資料。
+2. 但沒有重新產生對應的 `config_*.js`。
+3. `Simulator.py` 其實還在讀另一份舊的 `config_*.js`。
 4. 或者你改的是原始權重，但 runtime 實際使用的是轉換後的累積權重。
 5. 或者你改的是某張 table，但實際測試的場景根本抽不到那張 table。
 
 排查順序建議固定：
 
 1. 先確認 xlsx 原值是否改對
-2. 再確認 `config.js` 是否重新生成
-3. 再確認 `Simulator.py` / `index.html` 是否真的讀到那個欄位
+2. 再確認對應的 `config_*.js` 是否重新生成
+3. 再確認 `Simulator.py` / `index.html` 是否真的讀到同一份設定檔
 4. 最後確認該欄位是在 BG、FG 還是 BF 場景被使用
 
 ---
@@ -384,6 +394,7 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 - `arr_reels_weight`
 - `drop_weight_a/b`
 - `value_multiplier_range`
+- `card_system`
 
 ### 7.3 最容易誤判的地方
 
@@ -391,6 +402,7 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 - 以為 multiplier 跟著輪帶固定綁死，但實際上是另外抽的
 - 以為所有初始金框都吃同一套 `before` 規則，但最上排非記分區金框其實吃 `after`
 - 以為所有 R3 金框都吃 `Reel3 Before/After`，但目前只有指定輪帶表的 R3 會用到
+- 以為 `Extra Bet` / `Feature Buy` 的 FG 差異直接寫死在主流程裡，但目前還混有 `card_system` 的 profile 重抽
 
 ---
 
@@ -399,8 +411,8 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 建議順序：
 
 1. 先在 xlsx 找到原始欄位
-2. 到 `Source/xlsx_to_config.py` 找它被轉成哪個 `config.js` 欄位
-3. 到 `config.js` 確認產出的值是不是你預期的
+2. 到 `Source/xlsx_to_config.py` 找它被轉成哪個 `config_*.js` 欄位
+3. 到目前實際使用的 `config_*.js` 確認產出的值是不是你預期的
 4. 在 `Simulator.py` / `index.html` 搜尋這個欄位名
 5. 確認程式是直接使用它，還是只使用它的 cumulative / 衍生版本
 
@@ -410,6 +422,6 @@ FG 不是另一套完全不同的玩法，而是在同一條主流程上切換�
 
 - [xlsx_to_config.py](./Source/xlsx_to_config.py)
 - [xlsx_config_usage_mapping.md](./Source/xlsx_config_usage_mapping.md)
-- [config.js](./config.js)
+- `config_92A.js / config_92B.js / config_94A.js / config_94B.js`
 - [Simulator.py](./Simulator.py)
 - [index.html](./index.html)

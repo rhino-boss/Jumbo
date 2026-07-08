@@ -1,4 +1,4 @@
-# 彩罐熱舞 (Pinata Wins) 遊戲規則說明
+# 彩罐熱舞 (Pinata Beat 1000) 遊戲規則說明
 
 > 文件版本：v0.3
 > 編號：H0261
@@ -11,7 +11,7 @@
 | 項目 | 說明 |
 | --- | --- |
 | 遊戲名稱（內部代號） | 彩罐熱舞（H0261） |
-| 遊戲英文名 | Pinata Wins |
+| 遊戲英文名 | Pinata Beat 1000 |
 | 遊戲類型 | Video Slot - 20 Line / Cascade |
 | 盤面規格 | 5 輪盤、3 列固定盤面 |
 | 中獎方式 | 固定 20 線，依線型由左至右連續判定 |
@@ -62,7 +62,7 @@
 | 符號 | 出現位置 | 行為 |
 | --- | --- | --- |
 | **Wild** | 不自然掉落；主要由金框中獎符號轉化而成 | 替代除 **Scatter** 外的所有符號 |
-| **Scatter** | 可出現在 5 輪任意位置 | 當本次 Spin 無法再消除後，若最終盤面有 3 個以上可觸發 FG；Cascade 補牌時，只要該輪盤面已經有任意 1 個 Scatter，後續補牌就不可再補入 Scatter |
+| **Scatter** | 可出現在 5 輪任意位置 | 當本次 Spin 無法再消除後，若最終盤面有 3 個以上可觸發 FG；Cascade 補牌時，同一輪盤欄位只要已經有 1 個 Scatter，該欄後續補牌就不可再補入 Scatter |
 
 ---
 
@@ -93,7 +93,7 @@
 3. 若有中獎，先計算該輪所有 line win；每條線只取最高獎。
 4. 盤面上的中獎符號消除；若消除後形成空格，才由上方符號往下掉落補位，形成 Cascade。
 5. 若前一輪中獎組合中含有金框符號，該位置在消除後會留在原位並轉化為 Wild，因此不視為空格，不參與本次補位。
-6. Cascade 補牌時，只要該輪盤面已經有任意 1 個 Scatter，後續補牌就不可再補入 Scatter；若抽中 Scatter，需改抽其他符號。
+6. Cascade 補牌時，同一輪盤欄位只要已經有 1 個 Scatter，該欄後續補牌就不可再補入 Scatter；若抽中 Scatter，需改抽其他符號。
 7. 只有當前一輪實際消除到帶倍數的金框符號時，才會收集其倍數值並累積到盤面上方。
 8. 重複步驟 3-7，直到盤面不再形成新的中獎組合。
 9. 當本次 Spin 無法再消除時，只有在本次 Spin 曾實際收集到倍數的情況下，才將目前累積的總倍數乘上該次 Spin 的總得分。
@@ -109,7 +109,7 @@
 * **Extra Bet** 的押注價格為 **2x Bet**。
 * Extra Bet 仍沿用本作既有的 Base Game / Cascade / Free Game 主流程，無獨立盤面或額外輪帶。
 * Extra Bet 下，金框上的倍數配置會套用調整後的倍數內容。
-* Extra Bet 下，玩家有五倍的觸發 Free Game 的機率
+* 目前 `Simulator.py` / `index.html` 若有啟用 `card_system`，會另外套用 `extra_bet` profile 做 BG / FG 的重抽條件；主盤面流程本身沒有另外寫死一個 `5x` 的 Scatter 觸發常數。
 
 ---
 
@@ -161,8 +161,9 @@
 
 ## §8. Buy Feature（購買特色）
 
-* 玩家可支付 **75x Bet**，直接購買進入一次 Free Game。
-* Buy Feature 進場後直接套用一般 Free Game 規格，無額外保證盤面或專用 strip。
+* 玩家可支付 **75x Bet**，先進行一局 `BF` 進場 Spin，再接續進入 Free Game。
+* `BF` 進場 Spin 使用 `scene_bf` 專用場景；目前實作會重抽直到該局最終盤面達到 `3+ Scatter`，再依 `15 / 17 / 19` 場進入 FG。
+* `BF` 進場 Spin 的得分會保留，並與後續 FG 總得分一起計入本次 Buy Feature 結果。
 
 ---
 
@@ -185,7 +186,7 @@
 
 * **9.3.1 Scatter 可在 5 輪出現**。
 * **9.3.2 Wild 不可替代 Scatter**。
-* **9.3.3 Cascade 補牌的 Scatter 限制**：只要該輪盤面已經有任意 1 顆 Scatter，後續掉落若再次抽中 Scatter，必須改抽其他符號。
+* **9.3.3 Cascade 補牌的 Scatter 限制**：同一輪盤欄位只要已經有 1 顆 Scatter，該欄後續掉落若再次抽中 Scatter，必須改抽其他符號。
 * **9.3.4 FG 觸發判定時點**：在本次 Spin 無法再消除後，依最終盤面的 Scatter 數量判定是否觸發 FG。
 * **9.3.5 FG 可 retrigger**：若 Free Game 單局在連消結束後再次達到 Scatter 觸發條件，依相同規則加局。
 
@@ -197,7 +198,7 @@
 ### 9.5 Buy Feature 相關
 
 * **9.5.1 Buy 價格固定**：75x Bet。
-* **9.5.2 Buy 後玩法**：Buy 進場後直接套用一般 Free Game 規格，無特殊保證盤面或專用 strip。
+* **9.5.2 Buy 後玩法**：Buy 會先跑一局 `BF` 進場 Spin；該局使用 `scene_bf`，並保證最終會以 `3+ Scatter` 進入一般 Free Game 規格。
 
 ### 9.6 Line Game 計算相關
 
@@ -226,5 +227,5 @@
 * Free Game 場次採 **15 / 17 / 19**。
 * 倍數清單採 **x2、x3、x5、x8、x10、x15、x20、x25、x50、x100、x500、x1000**。
 * 倍數僅在實際消除到帶倍數的金框符號時收集。
-* Buy Feature 進場後直接套用一般 Free Game 規格。
-* Cascade 補牌時，只要該輪盤面已經有任意 1 個 Scatter，後續補牌就不可再補入 Scatter。
+* Buy Feature 會先跑一局 `BF` 進場 Spin，再以 `3+ Scatter` 進入一般 Free Game 規格。
+* Cascade 補牌時，同一輪盤欄位只要已經有 1 個 Scatter，該欄後續補牌就不可再補入 Scatter。

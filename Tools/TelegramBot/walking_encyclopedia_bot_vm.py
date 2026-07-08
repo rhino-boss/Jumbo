@@ -36,7 +36,7 @@ python3 walking_encyclopedia_bot_vm.py
 # 功能介紹（VM 版，移植自 walking_encyclopedia_bot.py）
   * 整理報表：支援 zip/rar、多檔合併、巢狀壓縮檔，並自動轉成 Excel。
   * 壓測資料重點整理：抓取 RTP、Spin、Coin in、各 pool RTP 等重點欄位。
-  * H026 模擬器指令（/run_start、/run_status、/run_cancel，僅限管理者）。
+  * /simulator 開啟按鈕選單執行多遊戲模擬（僅限管理者）。
   * /help 說明本檔案完整功能。
   * 本版不包含 AI 問答功能（原版透過本機 Claude CLI 回答，VM 上未設置）。
 
@@ -118,10 +118,21 @@ ROUNDS_PRESETS = [
     ("2000 萬（上限）", 20_000_000),
 ]
 
+MENTION_WINDOW_SECONDS = 180  # 群組裡 @機器人 一次後，3 分鐘內符合條件的內容都會自動處理
+
 # 記憶暫存區
 archive_batches = {}
 bot_instance_lock = None
 simulator_wizard_state = {}  # chat_id -> {"config", "bet_mode", "card", "rounds", "awaiting_rounds"}
+mention_window_expiry = {}  # chat_id -> 這個時間之前都算「已 @ 過」
+
+
+def activate_mention_window(chat_id: int):
+    mention_window_expiry[chat_id] = time.time() + MENTION_WINDOW_SECONDS
+
+
+def is_mention_window_active(chat_id: int) -> bool:
+    return time.time() < mention_window_expiry.get(chat_id, 0)
 
 
 def authorized(func):
@@ -131,6 +142,18 @@ def authorized(func):
         if update.effective_user is None or update.effective_user.id != ALLOWED_USER_ID:
             await update.message.reply_text("🚫 你沒有權限使用這個指令。")
             return
+        await func(update, context)
+
+    return wrapper
+
+
+def require_mention_in_groups(func):
+    """群組裡一定要 @機器人 才會回應指令；私訊則不受限制。"""
+
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.message.chat.type != "private":
+            if f"@{context.bot.username}" not in (update.message.text or ""):
+                return
         await func(update, context)
 
     return wrapper
@@ -733,6 +756,15 @@ async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.document:
         return
 
+    chat_id = update.message.chat.id
+    if update.message.chat.type != "private":
+        caption = update.message.caption or ""
+        mentioned = f"@{context.bot.username}" in caption
+        if mentioned:
+            activate_mention_window(chat_id)
+        elif not is_mention_window_active(chat_id):
+            return
+
     document = update.message.document
     if not is_supported_archive_document(document):
         await update.message.reply_text("目前只支援上傳 RTP Validator 的 zip/rar 壓縮檔。")
@@ -782,23 +814,18 @@ def build_help_text() -> str:
     return (
         "🤖 *Jumbo 工具機器人 — 功能說明*\n\n"
         "📄 *RTP Validator 壓縮檔轉表格*\n"
-        "直接丟 zip/rar 壓縮檔給我（支援巢狀壓縮、多檔一起丟），我會抓出 GameID、Coin in、TotalSpin、各項 RTP、pool RTP 等欄位，自動轉成 xlsx 傳回來。\n\n"
+        "私訊直接丟 zip/rar 壓縮檔（支援巢狀壓縮、多檔一起丟）；群組裡上傳要附文字 @我，我會抓出 GameID、Coin in、TotalSpin、各項 RTP、pool RTP 等欄位，自動轉成 xlsx 傳回來。\n\n"
         "📊 *RTP Report 文字摘要*\n"
         "私訊我或在群組 @我，貼上 Formal RTP Report 文字，我會幫你整理成表格摘要（GameRTP / Jackpot / BonusRTP / Total RTP）。\n\n"
-        "🎰 *模擬器指令*（僅限管理者):\n"
-        "`/simulator` 開啟選單，按按鈕一步一步選\n"
-        "`/run_start <game> <config> <bet_mode> <rounds> [card]` 一行直接執行\n\n"
-        f"game: {game_list}\n"
-        "bet_mode: 0=一般 / 1=加碼 / 2=買免費 (Feature Buy)\n"
-        f"rounds: 模擬局數（最大 {MAX_ROUNDS:,}）\n"
-        "card: new=新手卡池 / old=一般卡池（預設 old）\n\n"
-        "範例:\n"
-        "`/run_start H026 92A 0 1000000 old`\n\n"
-        "`/run_status` 查看目前是否有模擬在跑\n"
-        "`/run_cancel` 中止目前模擬"
+        "🕐 *群組 3 分鐘窗口*\n"
+        f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟壓縮檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
+        "🎰 *模擬器*（僅限管理者）\n"
+        "傳送 `/simulator` 開啟按鈕選單，依步驟選遊戲、config、bet_mode、卡池、局數即可執行，跑完會自動把摘要跟報表路徑傳回來。\n"
+        f"目前可用遊戲: {game_list}"
     )
 
 
+@require_mention_in_groups
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(build_help_text(), parse_mode=ParseMode.MARKDOWN, reply_markup=build_menu_keyboard())
 
@@ -841,7 +868,7 @@ async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
     async with job_lock:
         if current_job is not None:
             elapsed = int(time.time() - current_job["started_at"])
-            return f"⏳ 已經有模擬在跑了（{current_job['label']}，已耗時 {elapsed}s），請先 /run_cancel 或等它跑完。"
+            return f"⏳ 已經有模擬在跑了（{current_job['label']}，已耗時 {elapsed}s），請先用 /simulator 選單的 Cancel 或等它跑完。"
 
         label = f"game={game_name} config={config} bet_mode={BET_MODES[bet_mode]} rounds={rounds:,} card={card}"
         env = os.environ.copy()
@@ -864,37 +891,6 @@ async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
 
     asyncio.create_task(watch_simulator_job(context, proc, chat_id, label))
     return f"🚀 開始模擬: {label}\n跑完會傳結果回來。"
-
-
-@authorized
-async def run_start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    args = context.args
-    if len(args) < 4:
-        games = discover_games()
-        game_list = ", ".join(get_game_id(name) for name in games) if games else "(尚未找到任何遊戲資料夾)"
-        await update.message.reply_text(
-            "用法: /run_start <game> <config> <bet_mode> <rounds> [card]\n"
-            f"可用遊戲: {game_list}\n"
-            "範例: /run_start H026 92A 0 1000000 old",
-            reply_markup=build_menu_keyboard(),
-        )
-        return
-
-    game_id, config, bet_mode, rounds_raw = args[0], args[1], args[2], args[3]
-    card = args[4].lower() if len(args) > 4 else "old"
-
-    found = find_game_by_id(game_id)
-    if not found:
-        await update.message.reply_text(f"❌ 找不到遊戲: {game_id}")
-        return
-    game_name, game_dir = found
-
-    if not rounds_raw.isdigit():
-        await update.message.reply_text("❌ rounds 必須是正整數")
-        return
-
-    reply = await start_simulation_job(context, update.effective_chat.id, game_name, game_dir, config, bet_mode, int(rounds_raw), card)
-    await update.message.reply_text(reply)
 
 
 async def watch_simulator_job(context: ContextTypes.DEFAULT_TYPE, proc, chat_id, label):
@@ -926,16 +922,6 @@ async def watch_simulator_job(context: ContextTypes.DEFAULT_TYPE, proc, chat_id,
     await context.bot.send_message(chat_id, text)
 
 
-@authorized
-async def run_status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(build_status_text(), reply_markup=build_menu_keyboard())
-
-
-@authorized
-async def run_cancel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(await cancel_current_job(), reply_markup=build_menu_keyboard())
-
-
 async def on_error(update, context: ContextTypes.DEFAULT_TYPE):
     logger.exception("Unhandled error", exc_info=context.error)
 
@@ -944,21 +930,19 @@ async def on_error(update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def build_abort_button() -> InlineKeyboardButton:
-    return InlineKeyboardButton("❌ 取消選單", callback_data="sim:abort:x")
+    return InlineKeyboardButton("取消", callback_data="sim:abort:x")
 
 
 def build_menu_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("📖 Help", callback_data="sim:menu:help"), InlineKeyboardButton("🚀 Run", callback_data="sim:menu:run")],
-            [InlineKeyboardButton("📊 Status", callback_data="sim:menu:status"), InlineKeyboardButton("🛑 Cancel", callback_data="sim:menu:cancel")],
-            [InlineKeyboardButton("❌ Close", callback_data="sim:menu:close")],
-        ]
-    )
+    rows = [[InlineKeyboardButton("Help", callback_data="sim:menu:help"), InlineKeyboardButton("Run", callback_data="sim:menu:run")]]
+    if current_job is not None:
+        rows.append([InlineKeyboardButton("Status", callback_data="sim:menu:status"), InlineKeyboardButton("Cancel", callback_data="sim:menu:cancel")])
+    rows.append([InlineKeyboardButton("Close", callback_data="sim:menu:close")])
+    return InlineKeyboardMarkup(rows)
 
 
 def build_menu_title() -> str:
-    return "🤖 *Jumbo 工具機器人*\n請選擇要做什麼:"
+    return "請選擇要做什麼:"
 
 
 def build_game_keyboard() -> InlineKeyboardMarkup:
@@ -975,8 +959,10 @@ def build_config_keyboard(configs: list[str]) -> InlineKeyboardMarkup:
 
 
 def build_bet_keyboard() -> InlineKeyboardMarkup:
-    row = [InlineKeyboardButton(label, callback_data=f"sim:bet:{key}") for key, label in BET_MODES.items()]
-    return InlineKeyboardMarkup([row, [build_abort_button()]])
+    buttons = [InlineKeyboardButton(label, callback_data=f"sim:bet:{key}") for key, label in BET_MODES.items()]
+    rows = [buttons[i : i + 2] for i in range(0, len(buttons), 2)]
+    rows.append([build_abort_button()])
+    return InlineKeyboardMarkup(rows)
 
 
 def build_card_keyboard() -> InlineKeyboardMarkup:
@@ -991,13 +977,13 @@ def build_card_keyboard() -> InlineKeyboardMarkup:
 def build_rounds_keyboard() -> InlineKeyboardMarkup:
     preset_buttons = [InlineKeyboardButton(label, callback_data=f"sim:rounds:{value}") for label, value in ROUNDS_PRESETS]
     rows = [preset_buttons[i : i + 2] for i in range(0, len(preset_buttons), 2)]
-    rows.append([InlineKeyboardButton("✏️ 其他（輸入數字）", callback_data="sim:rounds:custom")])
+    rows.append([InlineKeyboardButton("其他（輸入數字）", callback_data="sim:rounds:custom")])
     rows.append([build_abort_button()])
     return InlineKeyboardMarkup(rows)
 
 
 def build_confirm_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[InlineKeyboardButton("✅ 確認執行", callback_data="sim:confirm:yes"), InlineKeyboardButton("❌ 取消", callback_data="sim:confirm:no")]])
+    return InlineKeyboardMarkup([[InlineKeyboardButton("確認執行", callback_data="sim:confirm:yes"), InlineKeyboardButton("取消", callback_data="sim:confirm:no")]])
 
 
 def build_wizard_summary_text(state: dict) -> str:
@@ -1011,6 +997,7 @@ def build_wizard_summary_text(state: dict) -> str:
     )
 
 
+@require_mention_in_groups
 async def simulator_menu_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user is None or update.effective_user.id != ALLOWED_USER_ID:
         await update.message.reply_text("🚫 你沒有權限使用這個指令。")
@@ -1134,31 +1121,45 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(build_wizard_summary_text(wizard_state), reply_markup=build_confirm_keyboard())
         return
 
-    # 只處理主動對話（私訊或群組標記），其他群組閒聊一律忽略
-    if chat_type == "private" or f"@{bot_username}" in text:
-        # 移除訊息中的 @BotName，拿到純文字
+    is_private = chat_type == "private"
+    mentioned = f"@{bot_username}" in text
+    if not is_private and mentioned:
+        activate_mention_window(chat_id)
+
+    # 情況一：私訊，或群組裡直接 @機器人 → 完整回應（解析 RTP 報表，不然就回「你好」）
+    if is_private or mentioned:
         clean_text = text.replace(f"@{bot_username}", "").strip()
+        normalized_command = clean_text.lstrip("/").strip().lower()
+
+        # 容錯：允許「@機器人 simulator」「@機器人 /simulator」這種先 @ 再打指令名稱的寫法
+        if normalized_command == "simulator":
+            await simulator_menu_cmd(update, context)
+            return
+        if normalized_command == "help":
+            await help_cmd(update, context)
+            return
 
         if parsed_report := parse_rtp_report(clean_text):
             reply = format_rtp_report_summary(parsed_report)
             await update.message.reply_text(reply, parse_mode="HTML")
             return
 
-        # 不是可解析的 RTP 報表，一律冷酷秒回「你好」
-        reply = "你好"
+        await update.message.reply_text("你好")
+        return
 
-        await update.message.reply_text(reply)
+    # 情況二：群組裡在 3 分鐘的 @ 窗口內 → 只默默處理符合條件的內容，不然一律忽略
+    if is_mention_window_active(chat_id):
+        if parsed_report := parse_rtp_report(text):
+            reply = format_rtp_report_summary(parsed_report)
+            await update.message.reply_text(reply, parse_mode="HTML")
 
 
 async def post_init(application: Application) -> None:
     """把指令註冊進 Telegram 的「/」選單，這樣可以直接點選，不用打字。"""
     await application.bot.set_my_commands(
         [
-            BotCommand("help", "顯示功能說明"),
+            BotCommand("help", "顯示機器人有哪些功能"),
             BotCommand("simulator", "開啟模擬器選單（按鈕操作）"),
-            BotCommand("run_start", "直接執行模擬（一行指令）"),
-            BotCommand("run_status", "查看模擬進度"),
-            BotCommand("run_cancel", "中止模擬"),
         ]
     )
 
@@ -1177,9 +1178,6 @@ if __name__ == "__main__":
     app = Application.builder().token(TG_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("simulator", simulator_menu_cmd))
-    app.add_handler(CommandHandler("run_start", run_start_cmd))
-    app.add_handler(CommandHandler("run_status", run_status_cmd))
-    app.add_handler(CommandHandler("run_cancel", run_cancel_cmd))
     app.add_handler(CallbackQueryHandler(simulator_callback, pattern=r"^sim:"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, main_handler))
     app.add_handler(MessageHandler(filters.Document.ALL, document_handler))
