@@ -378,8 +378,12 @@ CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 = 0 if ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 else 1
 
 SYMBOLS_COUNT = int(len(SYMBOL_ID))
 LINE_NUM = int(PAYLINES.shape[0])
-RECORD_COLS = max(len(THRESHOLD_RECORD), SYMBOLS_COUNT * 2, 140)
-RECORD_SIZE = (20, RECORD_COLS)
+VALUE_MULTIPLIER_COUNT = int(len(VALUE_MULTIPLIER_RANGE))
+RECORD_COLS = max(len(THRESHOLD_RECORD), SYMBOLS_COUNT * 2, VALUE_MULTIPLIER_COUNT, 140)
+R_FG_FINAL_MULTI_BUCKET = 19
+R_FG_SPIN_MULTI_HIT = 20
+R_BG_SPIN_MULTI_HIT = 21
+RECORD_SIZE = (22, RECORD_COLS)
 
 WW = int(next(key for key, value in SYMBOL_STR.items() if value == "WW"))
 C1 = int(next(key for key, value in SYMBOL_STR.items() if value == "C1"))
@@ -459,6 +463,17 @@ RA_COMBO_BG_TABLE2_1 = 113
 RA_COMBO_FG_TABLE0_1 = 118
 RA_COMBO_FG_TABLE1_1 = 123
 RA_COMBO_FG_TABLE2_1 = 128
+
+FG_FINAL_MULTI_BUCKET_LABELS = [
+    "0",
+    "1-10",
+    "11-20",
+    "21-30",
+    "31-40",
+    "41-50",
+    "51-100",
+    "100+",
+]
 PROFILE_NEWBIE_BG = 0
 PROFILE_NEWBIE_FG = 1
 PROFILE_NEWBIE_EXTRA_BG = 2
@@ -585,6 +600,12 @@ def clear_2d(arr):
 
 
 @njit(nogil=True)
+def clear_1d(arr):
+    for i in range(arr.shape[0]):
+        arr[i] = 0
+
+
+@njit(nogil=True)
 def choose_table(scene_mode, fg_multiplier_sum):
     if scene_mode == SCENE_BG:
         return pick_by_cum(WEIGHT_CUM_TABLE_BG)
@@ -604,6 +625,25 @@ def get_fg_gold_count_bucket(fg_multiplier_sum):
     if fg_multiplier_sum < 20:
         return 1
     return 2
+
+
+@njit(nogil=True)
+def get_fg_final_multiplier_bucket(fg_multiplier_sum):
+    if fg_multiplier_sum <= 0:
+        return 0
+    if fg_multiplier_sum <= 10:
+        return 1
+    if fg_multiplier_sum <= 20:
+        return 2
+    if fg_multiplier_sum <= 30:
+        return 3
+    if fg_multiplier_sum <= 40:
+        return 4
+    if fg_multiplier_sum <= 50:
+        return 5
+    if fg_multiplier_sum <= 100:
+        return 6
+    return 7
 
 
 @njit(nogil=True)
@@ -911,6 +951,27 @@ def update_spin_flags(gold_mask, multi_mask, gold_seen, multi_seen):
 
 
 @njit(nogil=True)
+def mark_spin_multiplier_hits(gold_mask, multi_mask, spin_multiplier_seen):
+    for row in range(DISPLAY_WINDOW_SIZE):
+        for col in range(REEL_NUM):
+            if gold_mask[row, col] != 1:
+                continue
+            multiplier_value = multi_mask[row, col]
+            if multiplier_value <= 0:
+                continue
+            for idx in range(VALUE_MULTIPLIER_COUNT):
+                if VALUE_MULTIPLIER_RANGE[idx] == multiplier_value:
+                    spin_multiplier_seen[idx] = 1
+                    break
+
+
+@njit(nogil=True)
+def add_spin_multiplier_hit_record(record_data, row_idx, spin_multiplier_seen):
+    for idx in range(VALUE_MULTIPLIER_COUNT):
+        record_data[row_idx, idx] += spin_multiplier_seen[idx]
+
+
+@njit(nogil=True)
 def copy_layout(target, source):
     for row in range(DISPLAY_WINDOW_SIZE):
         for col in range(REEL_NUM):
@@ -935,6 +996,7 @@ def run_spin(
     keep_gold,
     keep_multi,
     next_above_idx,
+    spin_multiplier_seen,
     reel_stop_idx,
 ):
     clear_2d(board)
@@ -964,7 +1026,9 @@ def run_spin(
     multi_appear = 0
     multi_used = 0
 
+    clear_1d(spin_multiplier_seen)
     gold_appear, multi_appear = update_spin_flags(gold_mask, multi_mask, gold_appear, multi_appear)
+    mark_spin_multiplier_hits(gold_mask, multi_mask, spin_multiplier_seen)
 
     while True:
         if combo_idx == 0:
@@ -994,6 +1058,7 @@ def run_spin(
 
         cascade_drop(table_id, use_drop_a, board, gold_mask, multi_mask, hit_mask, keep_symbol, keep_gold, keep_multi, next_above_idx)
         gold_appear, multi_appear = update_spin_flags(gold_mask, multi_mask, gold_appear, multi_appear)
+        mark_spin_multiplier_hits(gold_mask, multi_mask, spin_multiplier_seen)
         combo_idx += 1
 
     scatter_count = count_scatter(board)
@@ -1291,6 +1356,7 @@ def run_free_game_session(
     keep_gold,
     keep_multi,
     next_above_idx,
+    spin_multiplier_seen,
 ):
     pay_fg = 0
     fg_multiplier_sum = 0
@@ -1316,6 +1382,7 @@ def run_free_game_session(
             keep_gold,
             keep_multi,
             next_above_idx,
+            spin_multiplier_seen,
             reel_stop_idx,
         )
         pay_fg += fg_result[0]
@@ -1343,6 +1410,7 @@ def run_free_game_session(
         )
 
         record_data[R_ALL, RA_FREE_SPINS] += 1
+        add_spin_multiplier_hit_record(record_data, R_FG_SPIN_MULTI_HIT, spin_multiplier_seen)
         remaining_freespin -= 1
 
         if fg_result[1] >= 3:
@@ -1350,6 +1418,7 @@ def run_free_game_session(
             remaining_freespin = min(remaining_freespin + extra_spins, FG_SPIN_CAP)
             record_data[R_ALL, RA_RE_TRIGGER] += 1
 
+    record_data[R_FG_FINAL_MULTI_BUCKET, get_fg_final_multiplier_bucket(fg_multiplier_sum)] += 1
     return pay_fg
 
 
@@ -1368,6 +1437,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
     keep_gold = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     next_above_idx = np.zeros(REEL_NUM, np.int64)
+    spin_multiplier_seen = np.zeros(VALUE_MULTIPLIER_COUNT, np.int64)
     reel_stop_idx = np.zeros(REEL_NUM, np.int64)
     round_record = np.zeros(RECORD_SIZE, np.int64)
     bg_round_record = np.zeros(RECORD_SIZE, np.int64)
@@ -1423,6 +1493,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     keep_gold,
                     keep_multi,
                     next_above_idx,
+                    spin_multiplier_seen,
                     reel_stop_idx,
                 )
                 pay_bg = bg_result[0]
@@ -1451,6 +1522,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     bg_result[11],
                     coin_in,
                 )
+                add_spin_multiplier_hit_record(bg_round_record, R_BG_SPIN_MULTI_HIT, spin_multiplier_seen)
 
                 if TRACE_RETRY_FAILURE and retry_count < CARD_RETRY_LIMIT:
                     scatter_history[retry_count] = bg_result[1]
@@ -1499,6 +1571,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         keep_gold,
                         keep_multi,
                         next_above_idx,
+                        spin_multiplier_seen,
                     )
                     if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, card_system_coin_in, 1):
                         break
@@ -1554,6 +1627,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     keep_gold,
                     keep_multi,
                     next_above_idx,
+                    spin_multiplier_seen,
                     reel_stop_idx,
                 )
                 pay_bg = bg_result[0]
@@ -1582,6 +1656,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     bg_result[11],
                     coin_in,
                 )
+                add_spin_multiplier_hit_record(round_record, R_BG_SPIN_MULTI_HIT, spin_multiplier_seen)
 
                 if TRACE_RETRY_FAILURE and retry_count < CARD_RETRY_LIMIT:
                     scatter_history[retry_count] = bg_result[1]
@@ -1618,6 +1693,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                                 keep_gold,
                                 keep_multi,
                                 next_above_idx,
+                                spin_multiplier_seen,
                             )
                             if is_card_match(fg_profile_idx, fg_card_idx, pay_fg, card_system_coin_in, 1) is False:
                                 accepted = 0
@@ -1646,6 +1722,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                             keep_gold,
                             keep_multi,
                             next_above_idx,
+                            spin_multiplier_seen,
                         )
             else:
                 bf_retry_count = 0
@@ -1662,13 +1739,14 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         spin_hits,
                         spin_pay,
                         spin_eliminate,
-                        gold_pos,
-                        keep_symbol,
-                        keep_gold,
-                        keep_multi,
-                        next_above_idx,
-                        reel_stop_idx,
-                    )
+                    gold_pos,
+                    keep_symbol,
+                    keep_gold,
+                    keep_multi,
+                    next_above_idx,
+                    spin_multiplier_seen,
+                    reel_stop_idx,
+                )
                     if bf_result[1] >= 3:
                         break
                     bf_retry_count += 1
@@ -1711,6 +1789,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     bf_result[11],
                     coin_in,
                 )
+                add_spin_multiplier_hit_record(round_record, R_BG_SPIN_MULTI_HIT, spin_multiplier_seen)
 
                 round_record[R_ALL, RA_TRIGGER_FREEGAME] += 1
                 round_record[R_ALL, RA_TRIGGER_FG_PAY_BG] += pay_bg
@@ -1732,6 +1811,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     keep_gold,
                     keep_multi,
                     next_above_idx,
+                    spin_multiplier_seen,
                 )
 
                 if CARD_SYSTEM_ENABLED and buy_feature_card_idx >= 0:
@@ -1967,6 +2047,54 @@ def build_bg_symbol_hit_frame(record_data):
     return pd.DataFrame(rows, columns=["BG_Symbol", "Spin_Count", "Hit_Count", "Hit_Rate"])
 
 
+def build_fg_final_multiplier_bucket_frame(record_data):
+    counts = np.asarray(record_data[R_FG_FINAL_MULTI_BUCKET, : len(FG_FINAL_MULTI_BUCKET_LABELS)], dtype=np.float64)
+    total = counts.sum()
+    rows = []
+    for idx, label in enumerate(FG_FINAL_MULTI_BUCKET_LABELS):
+        count = int(counts[idx])
+        rows.append(
+            {
+                "FG_Final_Multiplier_Range": label,
+                "Count": count,
+                "Rate": (count / total) if total > 0 else 0.0,
+            }
+        )
+    return pd.DataFrame(rows, columns=["FG_Final_Multiplier_Range", "Count", "Rate"])
+
+
+def build_fg_spin_multiplier_hit_frame(record_data):
+    fg_spins = int(record_data[R_ALL, RA_FREE_SPINS])
+    rows = []
+    for idx, multiplier_value in enumerate(VALUE_MULTIPLIER_RANGE):
+        hit_count = int(record_data[R_FG_SPIN_MULTI_HIT, idx])
+        rows.append(
+            {
+                "Multiplier": f"{int(multiplier_value)}x",
+                "FG_Spin_Count": fg_spins,
+                "Hit_Count": hit_count,
+                "Hit_Rate": (hit_count / fg_spins) if fg_spins > 0 else 0.0,
+            }
+        )
+    return pd.DataFrame(rows, columns=["Multiplier", "FG_Spin_Count", "Hit_Count", "Hit_Rate"])
+
+
+def build_bg_spin_multiplier_hit_frame(record_data, total_round):
+    bg_spins = int(total_round)
+    rows = []
+    for idx, multiplier_value in enumerate(VALUE_MULTIPLIER_RANGE):
+        hit_count = int(record_data[R_BG_SPIN_MULTI_HIT, idx])
+        rows.append(
+            {
+                "Multiplier": f"{int(multiplier_value)}x",
+                "BG_Spin_Count": bg_spins,
+                "Hit_Count": hit_count,
+                "Hit_Rate": (hit_count / bg_spins) if bg_spins > 0 else 0.0,
+            }
+        )
+    return pd.DataFrame(rows, columns=["Multiplier", "BG_Spin_Count", "Hit_Count", "Hit_Rate"])
+
+
 def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, bet_multi, threads=THREADS):
     record_data_float = record_data.astype(np.float64)
     x_sum = record_data_float[R_ALL, RA_X_SUM] / 1000000
@@ -2074,6 +2202,9 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     df_gold_count = build_gold_count_distribution_frame(record_data)
     df_combo = build_combo_distribution_frame(record_data, total_round, fg_spins)
     df_bg_symbol_hit = build_bg_symbol_hit_frame(record_data)
+    df_bg_spin_multiplier_hit = build_bg_spin_multiplier_hit_frame(record_data, total_round)
+    df_fg_final_multiplier_bucket = build_fg_final_multiplier_bucket_frame(record_data)
+    df_fg_spin_multiplier_hit = build_fg_spin_multiplier_hit_frame(record_data)
     df_multiplier = pd.DataFrame(
         {
             "Interval": format_threshold_labels(THRESHOLD_RECORD),
@@ -2120,7 +2251,20 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "final_c1_present_fg": final_c1_present_fg,
         "volatility_std": std,
     }
-    return df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary
+    return (
+        df_base,
+        df_hits,
+        df_pay,
+        df_eliminate,
+        df_gold_count,
+        df_combo,
+        df_bg_symbol_hit,
+        df_bg_spin_multiplier_hit,
+        df_fg_final_multiplier_bucket,
+        df_fg_spin_multiplier_hit,
+        df_multiplier,
+        summary,
+    )
 
 
 def print_console_result(df_base, df_hits, df_pay, df_eliminate):
@@ -2204,7 +2348,23 @@ def print_batch_summary(duration, summary, bet_mode):
     print(f"* card_system: {'on' if CARD_SYSTEM_ENABLED else 'off'}", flush=True)
 
 
-def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary, record_data, bet_mode, total_round):
+def output_report(
+    df_base,
+    df_hits,
+    df_pay,
+    df_eliminate,
+    df_gold_count,
+    df_combo,
+    df_bg_symbol_hit,
+    df_bg_spin_multiplier_hit,
+    df_fg_final_multiplier_bucket,
+    df_fg_spin_multiplier_hit,
+    df_multiplier,
+    summary,
+    record_data,
+    bet_mode,
+    total_round,
+):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
     rounds_tag = format_rounds_tag(total_round)
@@ -2225,6 +2385,9 @@ def output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_comb
         df_gold_count.to_excel(writer, sheet_name="Gold Count", index=False)
         df_combo.to_excel(writer, sheet_name="Combo Dist", index=False)
         df_bg_symbol_hit.to_excel(writer, sheet_name="BG Symbol Hit", index=False)
+        df_bg_spin_multiplier_hit.to_excel(writer, sheet_name="BG Spin Multi", index=False)
+        df_fg_final_multiplier_bucket.to_excel(writer, sheet_name="FG Final Multi", index=False)
+        df_fg_spin_multiplier_hit.to_excel(writer, sheet_name="FG Spin Multi", index=False)
         df_multiplier.to_excel(writer, sheet_name="Multiplier Line", index=False)
         df_hits.to_excel(writer, sheet_name="Hits")
         df_pay.to_excel(writer, sheet_name="Pay")
@@ -2256,6 +2419,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
     keep_gold = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     keep_multi = np.zeros(DISPLAY_WINDOW_SIZE, np.int64)
     next_above_idx = np.zeros(REEL_NUM, np.int64)
+    spin_multiplier_seen = np.zeros(VALUE_MULTIPLIER_COUNT, np.int64)
     reel_stop_idx = np.zeros(REEL_NUM, np.int64)
     result = run_spin(
         SCENE_BG if is_base_bet_mode(bet_mode) else SCENE_BF,
@@ -2274,6 +2438,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
         keep_gold,
         keep_multi,
         next_above_idx,
+        spin_multiplier_seen,
         reel_stop_idx,
     )
     print("Single spin result:")
@@ -2321,7 +2486,20 @@ def main():
         print("TRACE_RETRY_FAILURE is on; simulation will run with a single thread.")
 
     record_data, duration, coin_in = run_simulation()
-    df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary = build_result_frames(
+    (
+        df_base,
+        df_hits,
+        df_pay,
+        df_eliminate,
+        df_gold_count,
+        df_combo,
+        df_bg_symbol_hit,
+        df_bg_spin_multiplier_hit,
+        df_fg_final_multiplier_bucket,
+        df_fg_spin_multiplier_hit,
+        df_multiplier,
+        summary,
+    ) = build_result_frames(
         record_data=record_data,
         total_round=TOTAL_ROUNDS,
         duration=duration,
@@ -2334,7 +2512,23 @@ def main():
     print_batch_summary(duration, summary, BET_MODE)
 
     if OUTPUT_REPORT:
-        report_path = output_report(df_base, df_hits, df_pay, df_eliminate, df_gold_count, df_combo, df_bg_symbol_hit, df_multiplier, summary, record_data, BET_MODE, TOTAL_ROUNDS)
+        report_path = output_report(
+            df_base,
+            df_hits,
+            df_pay,
+            df_eliminate,
+            df_gold_count,
+            df_combo,
+            df_bg_symbol_hit,
+            df_bg_spin_multiplier_hit,
+            df_fg_final_multiplier_bucket,
+            df_fg_spin_multiplier_hit,
+            df_multiplier,
+            summary,
+            record_data,
+            BET_MODE,
+            TOTAL_ROUNDS,
+        )
         print(f"\nReport: {report_path}")
 
 
