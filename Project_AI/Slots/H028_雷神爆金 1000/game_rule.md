@@ -1,8 +1,10 @@
-# 幸運喵掌 (Lucky Cat) 遊戲規則說明
+# 雷神爆金1000 (Thunder Boost 1000) 遊戲規則說明
 
-> 文件版本：v0.1（草稿）
+> 文件版本：v0.2（草稿）
+> 對標競品：PG - Lucky Neko
+> 撰寫依據：`../iGaming 遊戲代號一覽.xlsx`（遊戲名稱、Game ID、PARsheet ID）及 `../其他遊戲/101016/101016 simulation.py`（遊戲邏輯）；本次以 101016 模擬程式的遊戲邏輯為主
 > 編號：H028
-> 撰寫日期：2026-05-26
+> 撰寫日期：2026-07-13
 
 ---
 
@@ -10,13 +12,15 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 幸運喵掌（H028） |
-| 遊戲英文名 | Lucky Cat |
+| 遊戲名稱 | 雷神爆金1000 |
+| Game ID | 101016 |
+| PARsheet ID | H0281 |
+| 遊戲英文名 | Thunder Boost 1000 |
 | 遊戲類型 | Video Slot - Megaways / Cascade |
 | 盤面規格 | 6 輪盤、主盤面最高 5 列，另有位於 R2-R5 上方的 Extra Reel |
 | 中獎方式 | Way Game，自左至右連續相鄰輪判定 |
 | 最小 / 最大 Ways | 2,025 Ways / 32,400 Ways |
-| 押注規格 | 一般押注規格，無額外加收機制 |
+| 押注模式 | **Normal Bet**：提供，一般押注；**Extra Bet**：不提供；**Buy Feature**：提供，75 × Bet |
 | Buy Feature | 有；價格為 75x Bet |
 
 ---
@@ -242,4 +246,10 @@
 
 ## 附錄 B. 文件註記
 
-本文件為 H028《幸運喵掌》正式規格說明。
+* 遊戲名稱、Game ID、PARsheet ID：`../iGaming 遊戲代號一覽.xlsx`
+* 遊戲邏輯來源：`../其他遊戲/101016/101016 simulation.py`
+* 目前實作：`Simulator.py`
+* 數學資料：`Source/H028192A.xlsx`、`config_92.js`
+* 架構參考：`../H026_彩罐熱舞 1000/Simulator.py`
+
+本文件為 H028《雷神爆金1000》規格說明。
