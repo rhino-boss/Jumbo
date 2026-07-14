@@ -15,8 +15,11 @@
 | `Description!D5:D6` | `ReelWeight` | BG 參數組選擇權重 |
 | `Description!G5:G7` | `FreeReelWeight` | FG 初始場次參數組權重 |
 | `Description!D18:D20` | `FreeTriggerReel` | Retrigger 場次參數組權重 |
+| `Multiplier_Weight` 新手 `Weight_NB_BG` / `Weight_NB_FG` | `card_system.newbie.normal_bet` | 新手 Normal Bet 的 BG 卡與 FG 卡權重 |
+| `Multiplier_Weight` 老手 `Weight_NB_BG` / `Weight_NB_FG` | `card_system.oldhand.normal_bet` | 老手 Normal Bet 的 BG 卡與 FG 卡權重 |
+| `Multiplier_Weight` 老手 `Weight_BF_FG` | `card_system.oldhand.buy_feature.weight_fg` | Buy Feature 整場 FG 結果權重 |
 
-`config_92.js` 的 Game ID、PARsheet ID、名稱與版本 metadata 由 `xlsx_to_config.py` 固定補入；官方 ID 對應以 `../../iGaming 遊戲代號一覽.xlsx` 為準。
+`config_92A.js` 的 Game ID、PARsheet ID、名稱與版本 metadata 由 `xlsx_to_config.py` 固定補入；官方 ID 對應以 `../../iGaming 遊戲代號一覽.xlsx` 為準。卡片倍率區間依 `Multiplier_Weight` B 欄解析，邊界為 `(min, max]`，並保留 `Free Game` 類型。
 
 ## `update_config.bat` 使用方式
 
@@ -28,4 +31,4 @@
 * `H028192B.xlsx` → `config_92B.js`
 * `H028194A.xlsx` → `config_94A.js`
 
-為相容目前 Simulator，轉換預設來源 `H028192A.xlsx` 時也會同步更新 `config_92.js`。Excel 可以保持開啟，但執行前必須先儲存，轉換器只會讀到磁碟上的已儲存內容。
+Simulator 預設直接使用 `config_92A.js`；`update_config.bat` 仍會同步一份相容舊流程的 `config_92.js`。Excel 可以保持開啟，但執行前必須先儲存，轉換器只會讀到磁碟上的已儲存內容。

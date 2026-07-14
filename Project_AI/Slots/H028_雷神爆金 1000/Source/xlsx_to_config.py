@@ -51,6 +51,59 @@ def extract_linkpoint(overview):
     raise ValueError("Pay-table start symbol M1 was not found in Overview")
 
 
+def parse_card_range(label):
+    if label is None:
+        return None
+    match = re.fullmatch(r"\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]", str(label).strip())
+    if not match:
+        return None
+    return float(match.group(1)), float(match.group(2))
+
+
+def parse_card_system(ws):
+    profiles = {
+        "newbie": {"normal_bet": {"weight_bg": [], "weight_fg": []}},
+        "oldhand": {
+            "normal_bet": {"weight_bg": [], "weight_fg": []},
+            "buy_feature": {"weight_fg": []},
+        },
+    }
+    header_row = next(
+        row for row in range(1, ws.max_row + 1)
+        if str(ws.cell(row, 2).value).strip().lower() == "range"
+    )
+    profile_columns = {}
+    for col in range(3, ws.max_column + 1):
+        player = str(ws.cell(header_row - 1, col).value or "").strip().lower()
+        header = str(ws.cell(header_row, col).value or "").strip()
+        if player == "newbie" and header == "Weight_NB_BG":
+            profile_columns[col] = ("newbie", "normal_bet", "weight_bg")
+        elif player == "newbie" and header == "Weight_NB_FG":
+            profile_columns[col] = ("newbie", "normal_bet", "weight_fg")
+        elif player == "oldhand" and header == "Weight_NB_BG":
+            profile_columns[col] = ("oldhand", "normal_bet", "weight_bg")
+        elif player == "oldhand" and header == "Weight_NB_FG":
+            profile_columns[col] = ("oldhand", "normal_bet", "weight_fg")
+        elif player == "oldhand" and header == "Weight_BF_FG":
+            profile_columns[col] = ("oldhand", "buy_feature", "weight_fg")
+
+    row = header_row + 1
+    while ws.cell(row, 2).value is not None:
+        label = str(ws.cell(row, 2).value).strip()
+        range_pair = parse_card_range(label)
+        for col, (player, mode, segment) in profile_columns.items():
+            weight = int(ws.cell(row, col).value or 0)
+            if label.lower() == "free game":
+                card = {"type": "free_game", "weight": weight}
+            elif range_pair is not None:
+                card = {"type": "range", "min": range_pair[0], "max": range_pair[1], "weight": weight}
+            else:
+                continue
+            profiles[player][mode][segment].append(card)
+        row += 1
+    return {"enabled": True, "retry_limit": 5000, **profiles}
+
+
 def build_config(source_path):
     workbook = load_workbook(source_path, read_only=True, data_only=True)
     output = dict(METADATA)
@@ -62,6 +115,7 @@ def build_config(source_path):
         raise ValueError("Overview!B3 (Version) is empty")
     output["excel_version"] = str(excel_version).strip()
     output["linkpoint"] = extract_linkpoint(overview)
+    output["card_system"] = parse_card_system(workbook["Multiplier_Weight"])
 
     base = get_sheet(workbook, "Base Game Symbol", "BG_Symbol")
     base_ranges = {

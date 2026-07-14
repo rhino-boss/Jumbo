@@ -31,6 +31,7 @@ BATCH_RUNS = [
     # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True},
     {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**2, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**2, "card_system_is_newbie": True},
     # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False},
     # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
     # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
@@ -1739,14 +1740,14 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         spin_hits,
                         spin_pay,
                         spin_eliminate,
-                    gold_pos,
-                    keep_symbol,
-                    keep_gold,
-                    keep_multi,
-                    next_above_idx,
-                    spin_multiplier_seen,
-                    reel_stop_idx,
-                )
+                        gold_pos,
+                        keep_symbol,
+                        keep_gold,
+                        keep_multi,
+                        next_above_idx,
+                        spin_multiplier_seen,
+                        reel_stop_idx,
+                    )
                     if bf_result[1] >= 3:
                         break
                     bf_retry_count += 1

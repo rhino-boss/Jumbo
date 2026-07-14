@@ -227,6 +227,16 @@
 * 大符號每格都算 1 個獨立計數單位。
 * Extra Reel 僅對應 R2-R5 上方位置，不延伸新增第 7 輪。
 
+### 9.7 Simulator 卡片系統（測試功能）
+
+* 卡片系統是模擬器的結果篩選／重試功能，不改變玩家端玩法與派彩公式。
+* Normal Bet 可選新手或老手權重；BG 卡與 FG 卡分開抽取。
+* 區間卡的倍率邊界為 `(min, max]`，且 Normal Bet 區間卡只接受未觸發 FG 的 BG 結果。
+* Free Game 卡會先重試至 BG 觸發 FG，再依同身分的 FG 卡篩選整場 FG 派彩。
+* Buy Feature 使用 `Weight_BF_FG` 篩選整場 FG 結果。
+* 卡片倍率分母均使用 Normal Bet coin-in；每個階段最多重試 `card_system.retry_limit` 次，超限時保留最後一次結果並記錄於報表。
+* 權重來源為 `Source/H028192A.xlsx` 的 `Multiplier_Weight`，由 `Source/xlsx_to_config.py` 寫入 config。
+
 ---
 
 ## 附錄 A. 詞彙對照
@@ -249,7 +259,7 @@
 * 遊戲名稱、Game ID、PARsheet ID：`../iGaming 遊戲代號一覽.xlsx`
 * 遊戲邏輯來源：`../其他遊戲/101016/101016 simulation.py`
 * 目前實作：`Simulator.py`
-* 數學資料：`Source/H028192A.xlsx`、`config_92.js`
+* 數學資料：`Source/H028192A.xlsx`、`config_92A.js`
 * 架構參考：`../H026_彩罐熱舞 1000/Simulator.py`
 
 本文件為 H028《雷神爆金1000》規格說明。

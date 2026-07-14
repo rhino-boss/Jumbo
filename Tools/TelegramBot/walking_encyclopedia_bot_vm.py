@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import html
 import io
@@ -79,6 +80,7 @@ VALIDATOR_HEADER_PATTERNS = {
 GAMES_ROOT = Path("/root/Simulator")  # 每個子資料夾＝一個遊戲，例如 H026_彩罐熱舞
 BET_MODES = {"0": "Normal Bet", "1": "Extra Bet", "2": "Feature Buy"}
 MAX_ROUNDS = int(os.environ.get("MAX_ROUNDS", "20000000"))
+MAX_BATCH_COMBINATIONS = 20
 SUMMARY_LINE_RE = re.compile(r"^\* .+$", re.MULTILINE)
 REPORT_LINE_RE = re.compile(r"^Report: (.+)$", re.MULTILINE)
 
@@ -109,7 +111,137 @@ def find_game_by_id(game_id: str) -> tuple[str, Path] | None:
 def discover_configs(game_dir: Path) -> list[str]:
     return [f.stem[len("config_") :] for f in sorted(game_dir.glob("config_*.js"))]
 
+
+def build_batch_template(game_name: str, configs: list[str]) -> str:
+    """建立可直接複製、修改並回傳給 bot 的批次參數範本。"""
+    examples = configs[:2] or ["92A"]
+    if len(examples) == 1:
+        examples.append(examples[0])
+    include_enabled = get_game_id(game_name).upper() != "H026"
+    rows = []
+    for index, config in enumerate(examples):
+        enabled_part = ', "card_system_enabled": True' if include_enabled else ""
+        rows.append(
+            f'    {{"config_file": "config_{config}.js", "bet_mode": {index}, '
+            f'"total_rounds": 10**4{enabled_part}, "card_system_is_newbie": False}},'
+        )
+    return "BATCH_COMBINATIONS = [\n" + "\n".join(rows) + "\n]"
+
+
+def _safe_batch_value(node: ast.AST):
+    """只解析批次範本需要的常值，允許 10**4，但不執行任意程式碼。"""
+    if isinstance(node, ast.Constant) and isinstance(node.value, (str, int, bool)):
+        return node.value
+    if isinstance(node, ast.List):
+        return [_safe_batch_value(item) for item in node.elts]
+    if isinstance(node, ast.Dict):
+        result = {}
+        for key_node, value_node in zip(node.keys, node.values):
+            if key_node is None:
+                raise ValueError("不支援 **dict 展開語法")
+            key = _safe_batch_value(key_node)
+            if not isinstance(key, str):
+                raise ValueError("參數欄位名稱必須是文字")
+            result[key] = _safe_batch_value(value_node)
+        return result
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+        value = _safe_batch_value(node.operand)
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError("正負號只能套用在整數")
+        return value if isinstance(node.op, ast.UAdd) else -value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Pow):
+        base = _safe_batch_value(node.left)
+        exponent = _safe_batch_value(node.right)
+        if not isinstance(base, int) or isinstance(base, bool) or not isinstance(exponent, int) or isinstance(exponent, bool):
+            raise ValueError("次方的底數與指數必須是整數")
+        if exponent < 0 or exponent > 12:
+            raise ValueError("次方指數必須介於 0 ~ 12")
+        return base**exponent
+    raise ValueError(f"不支援的語法: {type(node).__name__}")
+
+
+def parse_batch_combinations(text: str) -> list[dict]:
+    """解析 `BATCH_COMBINATIONS = [...]` 或單純 `[...]` 格式。"""
+    cleaned = text.strip()
+    if cleaned.startswith("```") and cleaned.endswith("```"):
+        lines = cleaned.splitlines()
+        cleaned = "\n".join(lines[1:-1]).strip()
+    try:
+        module = ast.parse(cleaned, mode="exec")
+    except SyntaxError as exc:
+        raise ValueError(f"第 {exc.lineno or '?'} 行語法錯誤: {exc.msg}") from exc
+    if len(module.body) != 1:
+        raise ValueError("請只傳送一份 BATCH_COMBINATIONS 清單")
+    statement = module.body[0]
+    if isinstance(statement, ast.Assign):
+        if len(statement.targets) != 1 or not isinstance(statement.targets[0], ast.Name) or statement.targets[0].id != "BATCH_COMBINATIONS":
+            raise ValueError("指定名稱必須是 BATCH_COMBINATIONS")
+        value_node = statement.value
+    elif isinstance(statement, ast.Expr):
+        value_node = statement.value
+    else:
+        raise ValueError("格式必須是 BATCH_COMBINATIONS = [...] 或直接 [...]")
+    combinations = _safe_batch_value(value_node)
+    if not isinstance(combinations, list) or not combinations:
+        raise ValueError("BATCH_COMBINATIONS 必須是非空白清單")
+    if len(combinations) > MAX_BATCH_COMBINATIONS:
+        raise ValueError(f"一次最多 {MAX_BATCH_COMBINATIONS} 組參數")
+    if not all(isinstance(item, dict) for item in combinations):
+        raise ValueError("清單中的每一組參數都必須是 {...}")
+    return combinations
+
+
+def normalize_batch_combinations(game_name: str, game_dir: Path, combinations: list[dict]) -> list[dict]:
+    """驗證欄位並轉成 start_simulation_job 使用的標準格式。"""
+    configs = {value.upper() for value in discover_configs(game_dir)}
+    jobs = []
+    allowed_keys = {"config_file", "bet_mode", "total_rounds", "card_system_enabled", "card_system_is_newbie"}
+    for index, combo in enumerate(combinations, start=1):
+        unknown = set(combo) - allowed_keys
+        if unknown:
+            raise ValueError(f"第 {index} 組有未知欄位: {', '.join(sorted(str(key) for key in unknown))}")
+        missing = {"config_file", "bet_mode", "total_rounds"} - set(combo)
+        if missing:
+            raise ValueError(f"第 {index} 組缺少欄位: {', '.join(sorted(missing))}")
+
+        config_file = combo["config_file"]
+        if not isinstance(config_file, str):
+            raise ValueError(f"第 {index} 組 config_file 必須是文字")
+        config = config_file.strip()
+        if config.lower().startswith("config_"):
+            config = config[len("config_") :]
+        if config.lower().endswith(".js"):
+            config = config[:-3]
+        config = config.upper()
+        if config not in configs:
+            raise ValueError(f"第 {index} 組 config_file 不存在；{game_name} 可用: {', '.join(sorted(configs))}")
+
+        bet_mode = combo["bet_mode"]
+        rounds = combo["total_rounds"]
+        enabled = combo.get("card_system_enabled", True)
+        newbie = combo.get("card_system_is_newbie", False)
+        if not isinstance(bet_mode, int) or isinstance(bet_mode, bool) or str(bet_mode) not in BET_MODES:
+            raise ValueError(f"第 {index} 組 bet_mode 必須是 {', '.join(BET_MODES)}")
+        if not isinstance(rounds, int) or isinstance(rounds, bool) or not (1000 <= rounds <= MAX_ROUNDS):
+            raise ValueError(f"第 {index} 組 total_rounds 必須介於 1,000 ~ {MAX_ROUNDS:,}")
+        if not isinstance(enabled, bool) or not isinstance(newbie, bool):
+            raise ValueError(f"第 {index} 組卡片系統欄位必須填 True 或 False")
+        jobs.append(
+            {
+                "game_name": game_name,
+                "game_dir": game_dir,
+                "config": config,
+                "bet_mode": str(bet_mode),
+                "rounds": rounds,
+                "card": "new" if newbie else "old",
+                "card_enabled": enabled,
+            }
+        )
+    return jobs
+
+
 current_job = None  # dict: {"proc", "chat_id", "started_at", "label"}
+current_batch = None  # dict: {"chat_id", "jobs", "total", "completed", "cancelled"}
 job_lock = asyncio.Lock()
 ROUNDS_PRESETS = [
     ("10 萬", 100_000),
@@ -820,7 +952,7 @@ def build_help_text() -> str:
         "🕐 *群組 3 分鐘窗口*\n"
         f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟壓縮檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
         "🎰 *模擬器*（僅限管理者）\n"
-        "傳送 `/simulator` 開啟按鈕選單，依步驟選遊戲、config、bet_mode、卡池、局數即可執行，跑完會自動把摘要跟報表路徑傳回來。\n"
+        "傳送 `/simulator` 開啟按鈕選單；Run 可逐步設定單次模擬，Batch 會提供可直接修改後送出的多組參數範本。跑完會自動把摘要跟報表路徑傳回來。\n"
         f"目前可用遊戲: {game_list}"
     )
 
@@ -834,20 +966,42 @@ def build_status_text() -> str:
     if current_job is None:
         return "目前沒有模擬在跑。"
     elapsed = int(time.time() - current_job["started_at"])
-    return f"⏳ 執行中: {current_job['label']}\n已耗時 {elapsed}s"
+    batch_text = ""
+    if current_batch is not None:
+        running_number = current_batch["completed"] + 1
+        batch_text = f"\n批次進度: {running_number}/{current_batch['total']}"
+    return f"⏳ 執行中: {current_job['label']}\n已耗時 {elapsed}s{batch_text}"
 
 
 async def cancel_current_job() -> str:
-    global current_job
+    global current_job, current_batch
     async with job_lock:
         if current_job is None:
+            current_batch = None
             return "目前沒有模擬在跑。"
+        queued_count = len(current_batch["jobs"]) if current_batch is not None else 0
+        if current_batch is not None:
+            current_batch["cancelled"] = True
+            current_batch["jobs"].clear()
+            current_batch = None
         current_job["proc"].terminate()
         label = current_job["label"]
-    return f"🛑 已送出中止指令: {label}"
+    queue_text = f"；並清除後續 {queued_count} 組批次" if queued_count else ""
+    return f"🛑 已送出中止指令: {label}{queue_text}"
 
 
-async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int, game_name: str, game_dir: Path, config: str, bet_mode: str, rounds: int, card: str) -> str:
+async def start_simulation_job(
+    context: ContextTypes.DEFAULT_TYPE,
+    chat_id: int,
+    game_name: str,
+    game_dir: Path,
+    config: str,
+    bet_mode: str,
+    rounds: int,
+    card: str,
+    card_enabled: bool = True,
+    batch_job: bool = False,
+) -> str:
     """驗證參數並啟動模擬工作，回傳要回覆給使用者的訊息文字。"""
     global current_job
 
@@ -866,18 +1020,23 @@ async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
         return f"❌ 找不到模擬器腳本: {game_script}"
 
     async with job_lock:
+        if current_batch is not None and not batch_job:
+            return "⏳ 已經有批次在跑，請先取消或等它跑完。"
         if current_job is not None:
             elapsed = int(time.time() - current_job["started_at"])
             return f"⏳ 已經有模擬在跑了（{current_job['label']}，已耗時 {elapsed}s），請先用 /simulator 選單的 Cancel 或等它跑完。"
 
-        label = f"game={game_name} config={config} bet_mode={BET_MODES[bet_mode]} rounds={rounds:,} card={card}"
+        card_label = card if card_enabled else "off"
+        label = f"game={game_name} config={config} bet_mode={BET_MODES[bet_mode]} rounds={rounds:,} card={card_label}"
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
-        env["H026_RUN_ALL_COMBINATIONS"] = "false"
-        env["H026_CONFIG_FILE"] = f"config_{config}.js"
-        env["H026_BET_MODE"] = bet_mode
-        env["H026_TOTAL_ROUNDS"] = str(rounds)
-        env["H026_CARD_SYSTEM_IS_NEWBIE"] = "true" if card == "new" else "false"
+        env_prefix = get_game_id(game_name).upper()
+        env[f"{env_prefix}_RUN_ALL_COMBINATIONS"] = "false"
+        env[f"{env_prefix}_CONFIG_FILE"] = f"config_{config}.js"
+        env[f"{env_prefix}_BET_MODE"] = bet_mode
+        env[f"{env_prefix}_TOTAL_ROUNDS"] = str(rounds)
+        env[f"{env_prefix}_CARD_SYSTEM_ENABLED"] = "true" if card_enabled else "false"
+        env[f"{env_prefix}_CARD_SYSTEM_IS_NEWBIE"] = "true" if card == "new" else "false"
 
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
@@ -893,11 +1052,51 @@ async def start_simulation_job(context: ContextTypes.DEFAULT_TYPE, chat_id: int,
     return f"🚀 開始模擬: {label}\n跑完會傳結果回來。"
 
 
+async def start_simulation_batch(context: ContextTypes.DEFAULT_TYPE, chat_id: int, jobs: list[dict]) -> str:
+    """建立批次佇列並啟動第一組；其餘工作由 watcher 依序接續。"""
+    global current_batch
+    async with job_lock:
+        if current_job is not None or current_batch is not None:
+            return "⏳ 已經有模擬或批次在跑，請先取消或等它跑完。"
+        current_batch = {"chat_id": chat_id, "jobs": list(jobs), "total": len(jobs), "completed": 0, "cancelled": False}
+
+    first_job = current_batch["jobs"].pop(0)
+    reply = await start_simulation_job(context, chat_id, batch_job=True, **first_job)
+    if not reply.startswith("🚀"):
+        current_batch = None
+        return reply
+    return f"📚 已接受 {len(jobs)} 組批次參數，會依序執行。\n\n[1/{len(jobs)}] {reply}"
+
+
+async def advance_simulation_batch(context: ContextTypes.DEFAULT_TYPE, chat_id: int) -> None:
+    """目前工作結束後推進同一批次的下一組。"""
+    global current_batch
+    batch = current_batch
+    if batch is None or batch["chat_id"] != chat_id or batch["cancelled"]:
+        return
+    batch["completed"] += 1
+    if not batch["jobs"]:
+        total = batch["total"]
+        current_batch = None
+        await context.bot.send_message(chat_id, f"🏁 批次執行完成，共 {total} 組。")
+        return
+
+    next_number = batch["completed"] + 1
+    next_job = batch["jobs"].pop(0)
+    reply = await start_simulation_job(context, chat_id, batch_job=True, **next_job)
+    if not reply.startswith("🚀"):
+        current_batch = None
+        await context.bot.send_message(chat_id, f"❌ 批次在第 {next_number} 組停止：\n{reply}")
+        return
+    await context.bot.send_message(chat_id, f"[{next_number}/{batch['total']}] {reply}")
+
+
 async def watch_simulator_job(context: ContextTypes.DEFAULT_TYPE, proc, chat_id, label):
     global current_job
     stdout, stderr = await proc.communicate()
     async with job_lock:
-        current_job = None
+        if current_job is not None and current_job["proc"] is proc:
+            current_job = None
 
     stdout_text = stdout.decode("utf-8", errors="replace")
     stderr_text = stderr.decode("utf-8", errors="replace")
@@ -905,21 +1104,20 @@ async def watch_simulator_job(context: ContextTypes.DEFAULT_TYPE, proc, chat_id,
     if proc.returncode != 0:
         tail = stderr_text[-1500:] if stderr_text else "(無錯誤輸出)"
         await context.bot.send_message(chat_id, f"❌ 模擬失敗（{label}）\nexit code={proc.returncode}\n```\n{tail}\n```", parse_mode=ParseMode.MARKDOWN)
-        return
+    else:
+        summary_lines = SUMMARY_LINE_RE.findall(stdout_text)
+        report_match = REPORT_LINE_RE.search(stdout_text)
 
-    summary_lines = SUMMARY_LINE_RE.findall(stdout_text)
-    report_match = REPORT_LINE_RE.search(stdout_text)
+        if not summary_lines:
+            await context.bot.send_message(chat_id, f"⚠️ 模擬跑完但沒有解析到摘要（{label}）\n輸出最後 1000 字:\n```\n{stdout_text[-1000:]}\n```", parse_mode=ParseMode.MARKDOWN)
+        else:
+            text = f"✅ 模擬完成: {label}\n\n" + "\n".join(summary_lines)
+            if report_match:
+                report_path = report_match.group(1).strip()
+                text += f"\n\n報表檔案（存在 VM 上）: {report_path}"
+            await context.bot.send_message(chat_id, text)
 
-    if not summary_lines:
-        await context.bot.send_message(chat_id, f"⚠️ 模擬跑完但沒有解析到摘要（{label}）\n輸出最後 1000 字:\n```\n{stdout_text[-1000:]}\n```", parse_mode=ParseMode.MARKDOWN)
-        return
-
-    text = f"✅ 模擬完成: {label}\n\n" + "\n".join(summary_lines)
-    if report_match:
-        report_path = report_match.group(1).strip()
-        text += f"\n\n報表檔案（存在 VM 上）: {report_path}"
-
-    await context.bot.send_message(chat_id, text)
+    await advance_simulation_batch(context, chat_id)
 
 
 async def on_error(update, context: ContextTypes.DEFAULT_TYPE):
@@ -934,7 +1132,10 @@ def build_abort_button() -> InlineKeyboardButton:
 
 
 def build_menu_keyboard() -> InlineKeyboardMarkup:
-    rows = [[InlineKeyboardButton("Help", callback_data="sim:menu:help"), InlineKeyboardButton("Run", callback_data="sim:menu:run")]]
+    rows = [
+        [InlineKeyboardButton("Help", callback_data="sim:menu:help")],
+        [InlineKeyboardButton("Run（單組）", callback_data="sim:menu:run"), InlineKeyboardButton("Batch（多組）", callback_data="sim:menu:batch")],
+    ]
     if current_job is not None:
         rows.append([InlineKeyboardButton("Status", callback_data="sim:menu:status"), InlineKeyboardButton("Cancel", callback_data="sim:menu:cancel")])
     rows.append([InlineKeyboardButton("Close", callback_data="sim:menu:close")])
@@ -945,8 +1146,8 @@ def build_menu_title() -> str:
     return "請選擇要做什麼:"
 
 
-def build_game_keyboard() -> InlineKeyboardMarkup:
-    rows = [[InlineKeyboardButton(name, callback_data=f"sim:game:{get_game_id(name)}")] for name in discover_games()]
+def build_game_keyboard(stage: str = "game") -> InlineKeyboardMarkup:
+    rows = [[InlineKeyboardButton(name, callback_data=f"sim:{stage}:{get_game_id(name)}")] for name in discover_games()]
     rows.append([build_abort_button()])
     return InlineKeyboardMarkup(rows)
 
@@ -1033,12 +1234,36 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
         elif value == "run":
             simulator_wizard_state[chat_id] = {}
             await query.edit_message_text("步驟 1/5：請選擇遊戲", reply_markup=build_game_keyboard())
+        elif value == "batch":
+            simulator_wizard_state[chat_id] = {}
+            await query.edit_message_text("批次模式：請先選擇遊戲", reply_markup=build_game_keyboard("batchgame"))
         elif value == "close":
             await query.message.delete()
             simulator_wizard_state.pop(chat_id, None)
         return
 
     state = simulator_wizard_state.setdefault(chat_id, {})
+
+    if stage == "batchgame":
+        found = find_game_by_id(value)
+        if not found:
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text("❌ 找不到這個遊戲，請重新 /simulator。")
+            return
+        game_name, game_dir = found
+        configs = discover_configs(game_dir)
+        if not configs:
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text(f"❌ {game_name} 資料夾裡沒有 config_*.js 檔案。")
+            return
+        state.update({"game_name": game_name, "game_dir": str(game_dir), "awaiting_batch": True})
+        template = build_batch_template(game_name, configs)
+        await query.edit_message_text(
+            f"已選擇 {game_name}。\n請複製下一則範本，直接修改後整段送出。\n"
+            f"可增刪 {{...}}；局數可寫 10000 或 10**4；布林值請用 True / False；一次最多 {MAX_BATCH_COMBINATIONS} 組。"
+        )
+        await query.message.reply_text(f"<pre>{html.escape(template)}</pre>", parse_mode=ParseMode.HTML)
+        return
 
     if stage == "game":
         found = find_game_by_id(value)
@@ -1112,6 +1337,18 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # /simulator 選單正在等待使用者輸入自訂局數
     wizard_state = simulator_wizard_state.get(chat_id)
+    if wizard_state and wizard_state.get("awaiting_batch") and update.effective_user and update.effective_user.id == ALLOWED_USER_ID:
+        batch_text = text.replace(f"@{bot_username}", "").strip()
+        try:
+            combinations = parse_batch_combinations(batch_text)
+            jobs = normalize_batch_combinations(wizard_state["game_name"], Path(wizard_state["game_dir"]), combinations)
+        except ValueError as exc:
+            await update.message.reply_text(f"❌ 批次格式有誤：{exc}\n\n請修改後重新整段送出；目前仍在等待批次參數。")
+            return
+        simulator_wizard_state.pop(chat_id, None)
+        await update.message.reply_text(await start_simulation_batch(context, chat_id, jobs))
+        return
+
     if wizard_state and wizard_state.get("awaiting_rounds") and update.effective_user and update.effective_user.id == ALLOWED_USER_ID:
         if not text.isdigit() or not (1000 <= int(text) <= MAX_ROUNDS):
             await update.message.reply_text(f"❌ 請輸入 1,000 ~ {MAX_ROUNDS:,} 之間的正整數。")
