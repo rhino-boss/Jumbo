@@ -3,7 +3,6 @@ const data = {
   "parsheet_id": "H0281",
   "display_name": "Thunder Boost 1000",
   "game_name_zh": "雷神爆金1000",
-  "excel_version": "1.0.0.1",
   "default_coin_in": 100,
   "mode_normalbet": 0,
   "mode_extrabet": 1,
@@ -14,6 +13,7 @@ const data = {
     0,
     2
   ],
+  "excel_version": "1.0.0.3",
   "linkpoint": [
     [
       150,
@@ -5798,7 +5798,7 @@ const data = {
   ],
   "ReelWeight": [
     1500,
-    0
+    1200
   ],
   "FreeReelWeight": [
     800,

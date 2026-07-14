@@ -1,16 +1,16 @@
 # Game Help Draft
 
-這份 md 是 `Lucky_Cat_Help.xlsx` 的前置確認稿。  
+這份 md 是 `Thunder_Boost_1000_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 
 ## Game Meta
 
 | Field | Value |
 | --- | --- |
-| game_id | H028 |
-| parsheet_id | 待确认 |
-| name_zh | 幸运喵掌 |
-| name_en | Lucky Cat |
+| game_id | 101016 |
+| parsheet_id | H0281 |
+| name_zh | 雷神爆金1000 |
+| name_en | Thunder Boost 1000 |
 
 ---
 
@@ -34,8 +34,7 @@
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 散布符号 | SCATTER SYMBOL |
-| 規則說明 | [SCATTER] 可出现在主盘面任意转轮位置。出现 {4} 个或以上 [SCATTER] 可触发免费游戏。 | [SCATTER] MAY APPEAR ANYWHERE ON THE MAIN REELS. {4} OR MORE [SCATTER] WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | 大型 [SCATTER] 可能覆盖 {2}、{3} 或 {4} 格；触发判定时，每一格均视为 {1} 个 [SCATTER]。 | A LARGE [SCATTER] MAY COVER {2}, {3}, OR {4} POSITIONS, AND EACH POSITION COUNTS AS {1} [SCATTER] WHEN EVALUATING THE TRIGGER. |
+| 規則說明 | [SCATTER] 可出现在主盘面任意转轮位置。 | [SCATTER] MAY APPEAR ANYWHERE ON THE MAIN REELS. |
 
 ### MULTIPLIER SYMBOL
 
@@ -43,25 +42,40 @@
 | --- | --- | --- |
 | 副標題 | 倍数符号 | MULTIPLIER SYMBOL |
 | 規則說明 | [M1] 为倍数符号，可出现在主盘面与额外转轮位置。 | [M1] IS THE MULTIPLIER SYMBOL AND MAY APPEAR ON THE MAIN REELS AND THE EXTRA REELS. |
-| 規則說明 | [M1] 不提供一般连线赔付。 | [M1] DOES NOT AWARD A REGULAR LINE WIN. |
 
 ### 賠率表
 
-| 中文欄 | 中文欄 | 中文欄 |
-| --- | --- | --- |
-| 招财猫 {6} - {4} | 招财猫 {5} - {2.5} | 招财猫 {4} - {2} |
-| 招财猫 {3} - {1.5} | 日式鼓 {6} - {2.5} | 日式鼓 {5} - {1.5} |
-| 日式鼓 {4} - {1.25} | 日式鼓 {3} - {1} | 灯笼 {6} - {2} |
-| 灯笼 {5} - {1.5} | 灯笼 {4} - {1.25} | 灯笼 {3} - {0.5} |
-| 扇子 {6} - {1.5} | 扇子 {5} - {1} | 扇子 {4} - {0.75} |
-| 扇子 {3} - {0.4} | 握寿司 {6} - {0.75} | 握寿司 {5} - {0.6} |
-| 握寿司 {4} - {0.5} | 握寿司 {3} - {0.3} | 寿司 {6} - {0.75} |
-| 寿司 {5} - {0.6} | 寿司 {4} - {0.5} | 寿司 {3} - {0.3} |
-| [A]、[K] {6} - {0.5} | [A]、[K] {5} - {0.4} | [A]、[K] {4} - {0.3} |
-| [A]、[K] {3} - {0.2} | [Q]、[J]、[10] {6} - {0.2} | [Q]、[J]、[10] {5} - {0.15} |
-| [Q]、[J]、[10] {4} - {0.1} | [Q]、[J]、[10] {3} - {0.05} |  |
+简中：
 
-英文欄與中文欄相同，xlsx 會左右各放一份完整賠率表。
+| 符号 | {6} 连 | {5} 连 | {4} 连 | {3} 连 |
+| --- | ---: | ---: | ---: | ---: |
+| [M1] 招财猫 | {4} | {2.5} | {2} | {1.5} |
+| [M2] 日式鼓 | {2.5} | {1.5} | {1.25} | {1} |
+| [M3] 灯笼 | {2} | {1.5} | {1.25} | {0.5} |
+| [M4] 扇子 | {1.5} | {1} | {0.75} | {0.4} |
+| [M5] 握寿司 | {0.75} | {0.6} | {0.5} | {0.3} |
+| [M6] 寿司 | {0.75} | {0.6} | {0.5} | {0.3} |
+| [A] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [K] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [J] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [10] | {0.2} | {0.15} | {0.1} | {0.05} |
+
+英文：
+
+| SYMBOL | {6} OF A KIND | {5} OF A KIND | {4} OF A KIND | {3} OF A KIND |
+| --- | ---: | ---: | ---: | ---: |
+| [M1] | {4} | {2.5} | {2} | {1.5} |
+| [M2] | {2.5} | {1.5} | {1.25} | {1} |
+| [M3] | {2} | {1.5} | {1.25} | {0.5} |
+| [M4] | {1.5} | {1} | {0.75} | {0.4} |
+| [M5] | {0.75} | {0.6} | {0.5} | {0.3} |
+| [M6] | {0.75} | {0.6} | {0.5} | {0.3} |
+| [A] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [K] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [J] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [10] | {0.2} | {0.15} | {0.1} | {0.05} |
 
 ---
 
@@ -74,7 +88,6 @@
 | 主要標題 | 消除特色 | CASCADING FEATURE |
 | 規則說明 | 每次结算后，中奖符号会被移除，剩余符号会向下掉落并由新符号补满空位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED, THE REMAINING SYMBOLS CASCADE DOWN, AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
 | 規則說明 | 盘面补满后会再次结算新的中奖组合，直到不再形成新的中奖组合为止。 | AFTER THE REELS ARE REFILLED, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS CONTINUES UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
-| 規則說明 | 若金框符号参与中奖并被移除，该位置会直接转为 [WW] 并保留至下一次结算。 | IF A GOLD FRAMED SYMBOL PARTICIPATES IN A WIN AND IS REMOVED, THAT POSITION CHANGES DIRECTLY INTO [WW] AND REMAINS FOR THE NEXT EVALUATION. |
 
 ---
 
@@ -112,25 +125,12 @@
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免费游戏特色 | FREE GAME FEATURE |
-| 規則說明 | 主盘面任意位置出现 {4} 个或以上 [SCATTER] 时，可触发免费游戏。 | {4} OR MORE [SCATTER] APPEARING ANYWHERE ON THE MAIN REELS WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | {4} 个 [SCATTER] 可获得 {10} 场免费游戏；每多 {1} 个 [SCATTER]，额外增加 {2} 场。 | {4} [SCATTER] AWARD {10} FREE SPINS, AND EACH ADDITIONAL [SCATTER] AWARDS {2} MORE FREE SPINS. |
+| 規則說明 | 主盘面出现 {4} 个或以上 [SCATTER] 可触发免费游戏。 | {4} OR MORE [SCATTER] APPEARING ON THE MAIN REELS WILL TRIGGER THE FREE GAME FEATURE. |
+| 規則說明 | {4} 个 [SCATTER] 可获得 {8} 场免费游戏；每多出现 {1} 个 [SCATTER]，额外获得 {2} 场免费游戏。 | {4} [SCATTER] AWARD {8} FREE SPINS. EACH ADDITIONAL [SCATTER] AWARDS {2} MORE FREE SPINS. |
+| 規則說明 | 每次免费游戏特色最多可进行 {50} 场免费游戏。 | A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
 | 規則說明 | 进入免费游戏时，累积倍数由 X{2} 开始。 | THE ACCUMULATED MULTIPLIER STARTS AT X{2} WHEN THE FREE GAME FEATURE BEGINS. |
 | 規則說明 | 免费游戏期间，累积倍数不会在每场之间重置，并会持续保留至整段免费游戏结束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FEATURE ENDS. |
-| 規則說明 | 免费游戏期间仍可再次出现 {4} 个或以上 [SCATTER] 以加局。 | DURING FREE GAME, {4} OR MORE [SCATTER] CAN APPEAR AGAIN TO RETRIGGER ADDITIONAL FREE SPINS. |
-
-### FREE SPINS AWARD
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 免费游戏场次 | FREE SPINS AWARD |
-
-### 賠率表
-
-| 中文欄 | 中文欄 | 中文欄 |
-| --- | --- | --- |
-| {4} SC - {10} FG | {5} SC - {12} FG | {6} SC - {14} FG |
-
-英文欄與中文欄相同，xlsx 會左右各放一份完整賠率表。
+| 規則說明 | 免费游戏期间再次出现 {4} 个或以上 [SCATTER] 可触发加局；加局场次与一般触发规则相同，且总场次不超过 {50} 场。 | DURING FREE GAME, {4} OR MORE [SCATTER] WILL RETRIGGER ADDITIONAL FREE SPINS. THE SAME FREE SPIN AWARD RULE APPLIES, UP TO A MAXIMUM OF {50} FREE SPINS IN TOTAL. |
 
 ---
 
@@ -142,7 +142,7 @@
 | --- | --- | --- |
 | 主要標題 | 购买特色 | BUY FEATURE |
 | 規則說明 | 玩家可支付 {75}x 总投注，直接购买一次免费游戏进场机会。 | BUY FEATURE CAN BE PURCHASED FOR {75}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
-| 規則說明 | 购买后将直接套用一般免费游戏规则与倍数机制。 | AFTER PURCHASE, THE STANDARD FREE GAME RULES AND MULTIPLIER MECHANICS ARE APPLIED DIRECTLY. |
+| 規則說明 | 完成购买后，将直接触发一次免费游戏特色。 | COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
 
 ---
 

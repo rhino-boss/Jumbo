@@ -20,16 +20,19 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_92.js"
+CONFIG_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**7
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
 ENABLE_M1_MULTIPLIER = True
 
-RUN_ALL_COMBINATIONS = False
+RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**2},
-    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8},
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8},
+    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**7},
+    # {"config_file": "config_92B.js", "bet_mode": 2, "total_rounds": 10**7},
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -39,8 +42,73 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 THRESHOLD_RECORD = np.array(
-    [0, 1, 2, 3, 5, 10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000],
-    dtype=np.int64,
+    [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40,
+        45,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        120,
+        140,
+        160,
+        180,
+        200,
+        250,
+        300,
+        350,
+        400,
+        450,
+        500,
+        550,
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950,
+        1000,
+        2000,
+        3000,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+        20000,
+        30000,
+        40000,
+        50000,
+        60000,
+        70000,
+        80000,
+        90000,
+        100000,
+        9999999,
+    ],
+    dtype=np.float64,
 )
 
 
@@ -2304,7 +2372,7 @@ def output_report(
 ):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    filename = f"{GAME_ID}_{format_version_tag(CONFIG_VERSION)}_{timestamp}_" f"betmode{bet_mode}_{format_rounds_tag(total_round)}.xlsx"
+    filename = f"{PARSHEET_ID}_{format_version_tag(CONFIG_VERSION)}_{timestamp}_" f"betmode{bet_mode}_{format_rounds_tag(total_round)}.xlsx"
     path = OUTPUT_DIR / filename
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
