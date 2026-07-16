@@ -30,13 +30,7 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {
-        "config_file": "config_92A.js",
-        "bet_mode": 0,
-        "total_rounds": 10**5,
-        "card_system_enabled": True,
-        "card_system_is_newbie": False,
-    },
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8},
     # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8},
     # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**7},
@@ -2152,11 +2146,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
 
             if scatter_count >= 4:
                 fg_triggered = 1
-                needs_fg_card = (
-                    CARD_SYSTEM_ENABLED
-                    and bg_card_index >= 0
-                    and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
-                )
+                needs_fg_card = CARD_SYSTEM_ENABLED and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
                 fg_card_index = pick_card(fg_card_profile) if needs_fg_card else -1
                 fg_retry_count = 0
                 while True:
@@ -2565,10 +2555,7 @@ def output_report(
     if CARD_SYSTEM_ENABLED and bet_mode == MODE_NORMALBET:
         profile_suffix = "_newbie" if CARD_SYSTEM_IS_NEWBIE else "_oldhand"
     card_suffix = "_card" if CARD_SYSTEM_ENABLED else ""
-    filename = (
-        f"{PARSHEET_ID}_{format_version_tag(CONFIG_VERSION)}_{timestamp}_"
-        f"betmode{bet_mode}_{format_rounds_tag(total_round)}{profile_suffix}{card_suffix}.xlsx"
-    )
+    filename = f"{PARSHEET_ID}_{format_version_tag(CONFIG_VERSION)}_{timestamp}_" f"betmode{bet_mode}_{format_rounds_tag(total_round)}{profile_suffix}{card_suffix}.xlsx"
     path = OUTPUT_DIR / filename
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
@@ -2601,10 +2588,7 @@ def run_all_combinations():
         combo_env["H028_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H028_BATCH_CHILD"] = "1"
         print(
-            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, "
-            f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, "
-            f"card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, "
-            f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
+            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, " f"card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, " f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
             flush=True,
         )
         result = subprocess.run(

@@ -15,7 +15,7 @@ from numba import njit
 
 # ===== User settings =====
 
-CONFIG_FILE = "config_92.js"
+CONFIG_FILE = "Source/config_92.js"
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
@@ -30,11 +30,11 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "Source/config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "Source/config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "Source/config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "Source/config_92.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "Source/config_92.js", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(

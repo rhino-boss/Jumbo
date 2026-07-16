@@ -170,7 +170,12 @@
     if (forceTrigger && scene === "BG") {
       const active = [];
       for (let reel = 0; reel < REELS; reel++) for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) active.push([row, reel]);
-      for (let i = 0; i < 3; i++) first.board[active[active.length - 1 - i * 3][0]][active[active.length - 1 - i * 3][1]] = C1;
+      const present = first.board.flat().filter((symbol) => symbol === C1).length;
+      const candidates = active.filter(([row, reel]) => first.board[row][reel] !== C1);
+      for (let i = 0; i < Math.max(0, 3 - present); i++) {
+        const [row, reel] = candidates[candidates.length - 1 - i * 3];
+        first.board[row][reel] = C1;
+      }
     }
     const board = first.board; const gold = normalizeGold(board); const dropIndex = cumulativeChoice(scene === "BG" ? Box.weight_cum_drop_choose_bg : Box.weight_cum_drop_choose_fg);
     const multiProfile = scene === "BG" ? Box.weight_cum_multi_appear_bg : Box.weight_cum_multi_appear_fg;

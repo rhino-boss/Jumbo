@@ -272,7 +272,7 @@ def derive_output_path(source_path):
     match = re.fullmatch(r"H0191(?P<rtp>\d{2})(?P<variant>[A-Za-z0-9_-]*)", source_path.stem, re.IGNORECASE)
     if not match:
         raise ValueError(f"Unsupported xlsx name: {source_path.name}; expected H019192.xlsx or H019194.xlsx")
-    return PROJECT_DIR / f"config_{match.group('rtp')}{match.group('variant')}.js"
+    return BASE_DIR / f"config_{match.group('rtp')}{match.group('variant')}.js"
 
 
 def load_js_config(path):

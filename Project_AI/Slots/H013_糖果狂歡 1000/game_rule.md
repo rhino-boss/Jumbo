@@ -1,6 +1,6 @@
 # 糖果狂歡 (Sweet Bonanza 1000) 遊戲規則說明
 
-> 文件版本：v0.1
+> 文件版本：v1.0
 > 編號：H013
 > 撰寫日期：2026-05-21
 
@@ -11,6 +11,8 @@
 | 項目 | 說明 |
 | --- | --- |
 | 遊戲名稱（內部代號） | 糖果狂歡（H013） |
+| Game ID | `101001` |
+| PARsheet ID | `H0131` |
 | 遊戲英文名 | Sweet Bonanza 1000 |
 | 遊戲類型 | Video Slot - Cluster Pays / Cascade |
 | 盤面規格 | 6 輪盤、5 列固定盤面 |
@@ -159,7 +161,7 @@
 
 ## §8. Buy Feature（購買特色）
 
-* `Feature Buy` 價格為 **75x Bet**。
+* `Feature Buy` 依目前數學檔與模擬器，價格為 **75x Bet**。
 * `Super Feature Buy` 價格為 **500x Bet**。
 * Buy 進場時不先玩一般 Base Game，而是直接切入對應的 Buy 輪帶與 FG 輪帶配置。
 * `Feature Buy` 會使用 `FB` 輪帶組；`Super Feature Buy` 會使用 `SB` 輪帶組。
@@ -226,3 +228,4 @@
 
 * 若歷史 xlsx / Help 與目前程式行為不一致，**以目前程式行為為準**。
 * 本文件已知採用的現行程式規格包含：FG 初始 **2 高表 + 8 低表**、FG retrigger **+1 高表 + 4 低表**、FG 上限 **50 場**。
+* `iGaming 遊戲代號一覽.xlsx` 的 BF 欄為 **100x**，但 `H013197.xlsx` 與舊版模擬器為 **75x**；本版 Simulator 為保持數學行為一致採 **75x**，正式上線成本仍需企劃確認。

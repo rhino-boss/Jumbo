@@ -16,7 +16,34 @@
     [MODE_BUY]: "featurebuy",
     [MODE_SUPER]: "superfeaturebuy"
   };
+  const LANGUAGE_STORAGE_KEY = "slotDemoLanguage";
+  const UI_TEXT = {
+    en: {
+      gameName: "Egypt's Treasure", baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
+      superFeature: "Super Feature", cascade: "Cascade", multiplier: "Mult", fgLeft: "FG Left", credit: "Credit",
+      bet: "Bet", win: "Win", stats: "Simulation Stats", rounds: "Total Rounds", hitRate: "Hit Rate",
+      maxMultiplier: "Max Multiplier", play: "Play", spin: "Spin", auto: "Auto", stop: "Stop", speed: "Speed",
+      betMode: "Bet Mode", normalBet: "Normal Bet", debugMode: "Debug Mode", forceFg: "Force FG", setting: "Setting",
+      language: "Language", help: "Help", reset: "Reset", reelRng: "Reel RNG", spinResult: "Spin Result",
+      clusterWins: "Cluster Wins", clear: "Clear", close: "Close", loading: "Loading game rules...",
+      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay"
+    },
+    zh: {
+      gameName: "埃及秘寶", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
+      superFeature: "超級特色", cascade: "連消", multiplier: "倍數", fgLeft: "FG 剩餘", credit: "餘額",
+      bet: "押注", win: "得分", stats: "模擬統計", rounds: "總局數", hitRate: "中獎率",
+      maxMultiplier: "最高倍數", play: "遊戲", spin: "Spin", auto: "自動", stop: "停止", speed: "速度",
+      betMode: "押注模式", normalBet: "一般押注", debugMode: "除錯模式", forceFg: "強制 FG", setting: "設定",
+      language: "語言", help: "Help", reset: "重置", reelRng: "輪帶 RNG", spinResult: "Spin 結果",
+      clusterWins: "Cluster 得獎", clear: "清除", close: "關閉", loading: "正在載入遊戲規則…",
+      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Cluster 得獎", pay: "得分"
+    }
+  };
+  function savedLanguage() {
+    try { return localStorage.getItem(LANGUAGE_STORAGE_KEY) === "zh" ? "zh" : "en"; } catch (_) { return "en"; }
+  }
   const state = {
+    language: savedLanguage(),
     balance: INITIAL_BALANCE,
     totalBet: 0,
     totalWin: 0,
@@ -84,6 +111,12 @@
     helpDialog: byId("helpDialog"),
     closeHelp: byId("closeHelpBtn")
   };
+  el.language = byId("languageSelect");
+  el.helpContent = byId("helpContent");
+  el.helpFrame = byId("helpFrame");
+
+  const t = (key) => UI_TEXT[state.language][key] || UI_TEXT.en[key] || key;
+  const tr = (english, chinese) => state.language === "zh" ? chinese : english;
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(18, ms / state.speed)));
   const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -402,20 +435,20 @@
   function updateFeatureBar(spin = null) {
     const inFg = spin?.scene === "FG" || Boolean(state.pendingFg);
     document.body.classList.toggle("fg-mode", inFg);
-    setText(el.mode, inFg ? "Free Game" : state.selectedMode === MODE_BUY ? "Buy Feature" : state.selectedMode === MODE_SUPER ? "Super Feature" : "Base Game");
+    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : t("baseGame"));
     setText(el.cascade, String(spin?.steps.length || 0));
     const multiplier = inFg ? state.pendingFg?.carry || 0 : spin?.effectiveMultiplier || 0;
     setText(el.multiplier, `x${multiplier || 1}`);
     el.fgPill.classList.toggle("hidden", !state.pendingFg);
     if (state.pendingFg) setText(el.fgLeft, `${state.pendingFg.queue.length}/${state.pendingFg.total}`);
-    setText(el.featureStatus, state.pendingFg ? `FG Win ${money(state.pendingFg.win)}` : "");
+    setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
   }
 
   function renderClusterWins(spin) {
     el.lineList.innerHTML = "";
     const allWins = spin.steps.flatMap((step) => step.wins.map((win) => ({ ...win, cascadeIndex: step.cascadeIndex })));
     if (!allWins.length) {
-      el.lineList.innerHTML = '<div class="line-row"><span>No cluster win</span><span>Pay 0.00</span></div>';
+      el.lineList.innerHTML = `<div class="line-row"><span>${t("noWin")}</span><span>${t("pay")} 0.00</span></div>`;
       return;
     }
     allWins.forEach((win) => {
@@ -493,7 +526,7 @@
     setText(el.hitRate, state.roundCount > 0 ? `${(state.hitCount / state.roundCount * 100).toFixed(2)}%` : "0.00%");
     setText(el.fgTriggers, String(state.fgTriggerCount));
     setText(el.maxMultiplier, `x${state.maxMultiplier}`);
-    setText(el.betButton, `Bet ${money(betMoney())}`);
+    setText(el.betButton, `${t("bet")} ${money(betMoney())}`);
   }
 
   function updateControls() {
@@ -510,7 +543,7 @@
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
     el.buy.classList.remove("is-active");
     el.super.classList.remove("is-active");
-    setText(el.auto, state.auto ? "Stop" : "Auto");
+    setText(el.auto, state.auto ? t("stop") : t("auto"));
     updateDebugButtons();
   }
 
@@ -536,13 +569,13 @@
     await animateReels();
     renderBoard(boardCells(spin.initialBoard));
     updateFeatureBar({ ...spin, steps: [] });
-    writeMessage(`${spin.scene} | ${spin.tableName} | Reel stop`);
+    writeMessage(tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`));
     await sleep(260);
 
     for (const step of spin.steps) {
       renderBoard(boardCells(step.before), { hitPositions: step.hitPositions });
       setText(el.cascade, String(step.cascadeIndex));
-      writeMessage(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, "win");
+      writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
       await sleep(360);
       renderBoard(boardCells(step.after));
       await sleep(260);
@@ -550,7 +583,7 @@
 
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));
     updateFeatureBar(spin);
-    writeMessage(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, spin.finalPay > 0 ? "win" : "");
+    writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : "");
     renderClusterWins(spin);
     renderRng(spin);
     renderResultStages(spin);
@@ -562,7 +595,7 @@
     const queue = buildFreeSchedule("initial");
     state.pendingFg = { queue, total: queue.length, played: 0, carry: 0, win: 0 };
     state.fgTriggerCount += 1;
-    appendLog(`Free Game triggered | ${queue.length} spins`, "result");
+    appendLog(tr(`Free Game triggered | ${queue.length} spins`, `觸發免費遊戲 | ${queue.length} 次`), "result");
     updateFeatureBar();
   }
 
@@ -580,7 +613,7 @@
       const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - fg.total);
       fg.queue.push(...extra);
       fg.total += extra.length;
-      appendLog(`FG Retrigger | +${extra.length} spins`, "result");
+      appendLog(tr(`FG Retrigger | +${extra.length} spins`, `FG 再觸發 | +${extra.length} 次`), "result");
     }
     await playback(spin);
     updateStats();
@@ -598,7 +631,7 @@
     state.selectedMode = MODE_NORMAL;
     document.body.classList.remove("fg-mode");
     updateFeatureBar();
-    writeMessage(`Free Game complete | Total ${money(fg.win)}`, "win");
+    writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
     updateStats();
   }
 
@@ -617,7 +650,7 @@
       }
 
       const wager = wagerMoney();
-      if (state.balance < wager) throw new Error("Insufficient balance");
+      if (state.balance < wager) throw new Error(tr("Insufficient balance", "餘額不足"));
       state.balance -= wager;
       state.totalBet += wager;
       state.roundCount += 1;
@@ -638,7 +671,7 @@
       const triggered = spin.scatterCount >= 4 || state.selectedMode !== MODE_NORMAL;
       if (triggered) {
         startFreeGame();
-        writeMessage(`${state.selectedMode === MODE_BUY ? "Buy Feature" : state.selectedMode === MODE_SUPER ? "Super Feature" : "C1"} entered Free Game`, "win");
+        writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
@@ -712,7 +745,123 @@
     updateFeatureBar();
     updateStats();
     updateControls();
-    writeMessage("Ready — press Spin", "result");
+    writeMessage(t("ready"), "result");
+  }
+
+  function parseHelp(markdown) {
+    const sections = [];
+    let section = null;
+    let group = null;
+    for (const rawLine of markdown.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (line.startsWith("## ")) {
+        section = { fallback: line.slice(3), titleZh: "", titleEn: "", groups: [] };
+        sections.push(section);
+        group = { titleZh: "", titleEn: "", rules: [], payouts: [] };
+        section.groups.push(group);
+      } else if (line.startsWith("### ") && section) {
+        group = { titleZh: line.slice(4), titleEn: line.slice(4), rules: [], payouts: [] };
+        section.groups.push(group);
+      } else if (line.startsWith("|") && section && group) {
+        const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+        if (!cells.length || cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
+        if (["Item", "Field", "中文欄", "符号"].includes(cells[0])) continue;
+        if (cells.length === 3 && cells[0] === "主要標題") {
+          section.titleZh = cells[1]; section.titleEn = cells[2];
+        } else if (cells.length === 3 && cells[0] === "副標題") {
+          group.titleZh = cells[1]; group.titleEn = cells[2];
+        } else if (cells.length === 3 && cells[0] === "規則說明") {
+          group.rules.push({ zh: cells[1], en: cells[2] });
+        } else if (cells.length === 3) {
+          group.payouts.push(...cells.filter(Boolean));
+        }
+      }
+    }
+    return sections.filter((item) => item.titleZh || item.titleEn || item.groups.some((itemGroup) => itemGroup.rules.length || itemGroup.payouts.length));
+  }
+
+  function renderHelp(markdown) {
+    el.helpContent.innerHTML = "";
+    for (const section of parseHelp(markdown)) {
+      const card = document.createElement("section");
+      card.className = "help-section";
+      const title = document.createElement("h3");
+      title.className = "help-section-title";
+      title.textContent = state.language === "zh" ? (section.titleZh || section.titleEn || section.fallback) : (section.titleEn || section.titleZh || section.fallback);
+      card.appendChild(title);
+      for (const group of section.groups) {
+        if ((group.titleZh || group.titleEn) && (group.rules.length || group.payouts.length)) {
+          const heading = document.createElement("h4");
+          heading.className = "help-group-title";
+          heading.textContent = state.language === "zh" ? (group.titleZh || group.titleEn) : (group.titleEn || group.titleZh);
+          card.appendChild(heading);
+        }
+        for (const rule of group.rules) {
+          const row = document.createElement("div");
+          row.className = "help-rule";
+          row.textContent = state.language === "zh" ? rule.zh : rule.en;
+          card.appendChild(row);
+        }
+        if (group.payouts.length) {
+          const grid = document.createElement("div");
+          grid.className = "help-payout-grid";
+          for (const payout of group.payouts) {
+            const item = document.createElement("div");
+            item.className = "help-payout-item";
+            item.textContent = payout.replaceAll("[", "").replaceAll("]", "");
+            grid.appendChild(item);
+          }
+          card.appendChild(grid);
+        }
+      }
+      el.helpContent.appendChild(card);
+    }
+    if (!el.helpContent.children.length) el.helpContent.innerHTML = `<div class="help-load-error">${tr("Unable to load game rules.", "無法載入遊戲規則。")}</div>`;
+  }
+
+  async function loadHelp() {
+    el.helpContent.innerHTML = `<div class="help-loading">${t("loading")}</div>`;
+    let markdown = "";
+    try {
+      const response = await fetch("./Source/game_help_draft.md", { cache: "no-store" });
+      if (response.ok) markdown = await response.text();
+    } catch (_) {}
+    if (!markdown) {
+      try { markdown = el.helpFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
+    }
+    state.helpMarkdown = markdown;
+    renderHelp(markdown);
+  }
+
+  function applyLanguage(showMessage = false) {
+    document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
+    el.language.value = state.language;
+    try { localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language); } catch (_) {}
+    setText(byId("gameName"), t("gameName"));
+    const creditLabels = document.querySelectorAll("#credit-bar .i-label");
+    [t("credit"), t("bet"), t("win")].forEach((value, index) => setText(creditLabels[index], value));
+    setText(document.querySelector("#simulation-stats h3"), t("stats"));
+    const statLabels = document.querySelectorAll("#simulation-stats .s-label");
+    [t("rounds"), "RTP", t("hitRate"), "FG Trigger", t("maxMultiplier")].forEach((value, index) => setText(statLabels[index], value));
+    setText(document.querySelector("#play-panel .zone-label"), t("play"));
+    setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
+    setText(el.normal, t("normalBet"));
+    setText(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`);
+    setText(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`);
+    setText(document.querySelector("#settings-wrap .setting-header"), t("setting"));
+    setText(document.querySelector('label[for="languageSelect"] span'), t("language"));
+    setText(el.help, t("help")); setText(el.reset, t("reset")); setText(byId("helpDialogTitle"), t("helpTitle")); setText(el.closeHelp, t("close"));
+    setText(document.querySelector("#rng-wrap .diagnostic-header"), t("reelRng"));
+    setText(byId("log-header"), t("spinResult")); setText(document.querySelector("#log-body .log-subheader"), t("clusterWins")); setText(el.clearLog, t("clear"));
+    const debugLabel = document.querySelector('label[for="debugModeInput"]');
+    if (debugLabel?.lastChild) debugLabel.lastChild.textContent = ` ${t("debugMode")}`;
+    const forceLabel = document.querySelector('label[for="forceFgInput"]');
+    if (forceLabel?.lastChild) forceLabel.lastChild.textContent = ` ${t("forceFg")}`;
+    const speedLabel = document.querySelector('label[for="speedRange"]');
+    if (speedLabel?.firstChild) speedLabel.firstChild.textContent = `${t("speed")} `;
+    updateFeatureBar(state.lastSpin); updateStats(); updateControls();
+    if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
+    if (showMessage) writeMessage(tr("Language changed to English", "語言已切換為中文"), "result");
   }
 
   el.spin.addEventListener("click", doSpin);
@@ -751,7 +900,7 @@
   el.rngReset.addEventListener("click", () => {
     el.rngInput.value = "";
     updateControls();
-    writeMessage("Reel RNG reset");
+    writeMessage(tr("Reel RNG reset", "輪帶 RNG 已重置"));
   });
   el.clearLog.addEventListener("click", () => { el.liveLog.innerHTML = ""; });
   el.reset.addEventListener("click", resetSession);
@@ -760,25 +909,31 @@
     url.searchParams.set("config", el.config.value);
     window.location.href = url.href;
   });
-  el.help.addEventListener("click", () => el.helpDialog.showModal());
+  el.language.addEventListener("change", () => {
+    state.language = el.language.value === "zh" ? "zh" : "en";
+    applyLanguage(true);
+  });
+  el.help.addEventListener("click", () => { el.helpDialog.showModal(); loadHelp(); });
   el.closeHelp.addEventListener("click", () => el.helpDialog.close());
   el.helpDialog.addEventListener("click", (event) => {
     if (event.target === el.helpDialog) el.helpDialog.close();
   });
+  el.helpFrame.addEventListener("load", () => {
+    if (el.helpDialog.open && !state.helpMarkdown) loadHelp();
+  });
 
   byId("gameId").textContent = "H019";
-  byId("gameName").textContent = Box.game_name_zh;
-  el.buy.textContent = `Buy Feature (${Box.featurebuy}x)`;
-  el.super.textContent = `Super Feature (${Box.superfeaturebuy}x)`;
+  byId("gameName").textContent = t("gameName");
   el.config.value = H019_ACTIVE_CONFIG;
   el.cardRange.closest("label").firstChild.textContent = "Card BG Range ";
   el.cardRange.disabled = true;
-  document.title = `H019 ${Box.game_name_zh} — Demo`;
+  document.title = `H019 ${Box.display_name} — Demo`;
   renderBetMenu();
   renderBoard(sampleBoard());
   updateFeatureBar();
   updateStats();
   updateControls();
   toggleDebug(false);
+  applyLanguage();
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();

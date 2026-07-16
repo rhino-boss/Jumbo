@@ -1568,11 +1568,60 @@
       cursor: pointer;
     }
 
+    .help-content {
+      min-height: 0;
+      padding: 16px;
+      overflow-y: auto;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .help-section {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .help-section-title,
+    .help-group-title {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-group-title {
+      margin-top: 14px;
+      color: var(--blue);
+      font-size: 12px;
+    }
+
+    .help-rule,
+    .help-payout-item {
+      margin: 6px 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      line-height: 1.55;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .help-loading,
+    .help-load-error {
+      padding: 20px;
+      color: var(--sub);
+      text-align: center;
+    }
+
     #helpFrame {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #ffffff;
+      display: none;
     }
 
     .spin-result-row {
@@ -1926,6 +1975,13 @@
             <option value="config_94.js">94</option>
           </select>
         </label>
+        <label class="config-control" for="languageSelect">
+          <span>Language</span>
+          <select id="languageSelect">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
         <button id="helpBtn" type="button">Help</button>
         <button id="resetBtn" type="button">Reset</button>
       </div>
@@ -1940,7 +1996,10 @@
         <h2 id="helpDialogTitle">Game Help</h2>
         <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
       </div>
-      <iframe id="helpFrame" title="Game Help content" src="./game_help_draft.md"></iframe>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading game rules...</div>
+      </div>
+      <iframe id="helpFrame" title="Game Help content" src="./Source/game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
 
@@ -1948,7 +2007,7 @@
     const H019_CONFIG_FILES = ["config_92.js", "config_94.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H019_ACTIVE_CONFIG = H019_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H019_CONFIG_FILES[0];
-    document.write(`<script src="./${H019_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./Source/${H019_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
     if (false) {
@@ -3743,7 +3802,7 @@
     appendLiveLog("Ready — press Spin", "result");
     }
   </script>
-  <script src="./h019_demogame.js"></script>
+  <script src="./Source/h019_demogame.js"></script>
 </body>
 
 </html>
