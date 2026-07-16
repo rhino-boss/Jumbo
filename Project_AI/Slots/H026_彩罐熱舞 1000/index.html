@@ -701,6 +701,8 @@
     .info-box,
     #credit-bar,
     #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
     #rng-wrap,
     #controls,
     #live-log-wrap,
@@ -862,6 +864,127 @@
       padding: 10px 14px;
     }
 
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .set-rng-controls {
+      display: grid;
+      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
+      align-items: end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .debug-rng-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .debug-rng-field input,
+    .debug-rng-field select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .debug-rng-field input::placeholder {
+      color: var(--sub);
+      opacity: 0.7;
+    }
+
+    #setRngResetBtn {
+      width: 82px;
+      min-width: 82px;
+      align-self: end;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
     #simulation-stats h3,
     #rng-wrap h3 {
       margin: 0 0 7px;
@@ -971,19 +1094,23 @@
       display: grid;
       grid-template-columns: minmax(0, 1.25fr) minmax(302px, 1fr);
       align-items: stretch;
-      gap: 10px;
+      gap: 12px;
       margin-top: 10px;
-      padding: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
     }
 
     .control-zone {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 7px 8px;
-      border-radius: 8px;
-      background: rgba(12, 34, 64, 0.62);
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
     }
 
     .zone-label {
@@ -1001,7 +1128,11 @@
       min-height: 34px;
     }
 
-    .action-zone .zone-body {
+    .zone-body.set-rng-controls {
+      display: grid;
+    }
+
+    .action-zone .play-main-controls {
       display: grid;
       grid-template-columns: auto auto minmax(160px, 1fr) 116px;
       gap: 6px;
@@ -1018,7 +1149,9 @@
     }
 
     #controls #betMinusBtn,
-    #controls #betPlusBtn {
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
       width: 32px;
       min-width: 32px;
       padding-inline: 0;
@@ -1026,7 +1159,8 @@
       font-size: 17px;
     }
 
-    #controls #betBtn {
+    #controls #betBtn,
+    #play-panel #betBtn {
       min-width: 88px;
       color: var(--text);
     }
@@ -1053,14 +1187,16 @@
       display: none;
     }
 
-    #controls .bet-option {
+    #controls .bet-option,
+    #play-panel .bet-option {
       padding: 7px 6px;
       color: var(--sub);
       background: var(--surface);
       text-align: right;
     }
 
-    #controls .bet-option.is-active {
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
       color: #041710;
       background: var(--green);
     }
@@ -1093,7 +1229,9 @@
       font-weight: 800;
     }
 
-    #controls button {
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
       width: auto;
       height: 34px;
       padding: 8px 10px;
@@ -1110,51 +1248,92 @@
       cursor: pointer;
     }
 
-    #controls button:disabled {
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
       opacity: 0.4;
       cursor: default;
     }
 
-    #controls button:not(:disabled):hover {
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
       opacity: 0.85;
     }
 
-    #controls #spinBtn {
+    #controls #spinBtn,
+    #play-panel #spinBtn {
       min-width: 72px;
       background: #0077cc;
     }
 
-    #controls #autoBtn {
+    #controls #autoBtn,
+    #play-panel #autoBtn {
       min-width: 56px;
     }
 
     #controls #normalBetBtn,
-    #controls #extraBetBtn {
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
       color: var(--blue);
     }
 
-    #controls #autoBtn {
+    #controls #autoBtn,
+    #play-panel #autoBtn {
       background: #007755;
     }
 
     #controls #normalBetBtn,
-    #controls #extraBetBtn {
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
       min-width: 80px;
     }
 
-    #controls #buyFeatureBtn {
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
       min-width: 110px;
     }
 
-    #controls #buyFeatureBtn {
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
       color: var(--accent);
       border: 1px solid rgba(0, 221, 192, 0.4);
     }
 
-    #controls .is-active {
+    #controls .is-active,
+    #bet-mode-panel .is-active {
       color: #041710;
       background: var(--green);
       box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
     }
 
     .ctrl-sep {
@@ -1167,13 +1346,38 @@
     #rng-wrap {
       width: 100%;
       margin-top: 10px;
-      padding: 10px 14px;
+      padding: 0;
     }
 
-    #live-log-wrap {
+    .diagnostic-region {
       width: 100%;
       margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
       overflow: hidden;
+    }
+
+    #rng-wrap .diagnostic-header,
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    #rng-wrap .rng-list {
+      padding: 8px 12px;
     }
 
     .live-log-header {
@@ -1181,12 +1385,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 7px 12px;
-      border-bottom: 1px solid var(--surface);
-      color: var(--sub);
-      font-size: 12px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
     }
 
     #clearLogBtn {
@@ -1237,12 +1435,8 @@
     }
 
     #log-header {
-      padding: 6px 12px;
-      border-bottom: 1px solid var(--surface);
-      color: var(--sub);
-      font-size: 12px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      display: flex;
+      align-items: center;
     }
 
     #log-body {
@@ -1267,12 +1461,8 @@
     }
 
     .setting-header {
-      padding: 7px 12px;
-      border-bottom: 1px solid var(--surface);
-      color: var(--sub);
-      font-size: 12px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      display: flex;
+      align-items: center;
     }
 
     .setting-body {
@@ -1281,6 +1471,22 @@
       justify-content: flex-end;
       gap: 8px;
       padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
     }
 
     .setting-body button {
@@ -1349,6 +1555,14 @@
         grid-template-columns: 1fr;
       }
 
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      .set-rng-controls {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
+      }
+
       #grid-panel {
         overflow-x: auto;
       }
@@ -1366,7 +1580,9 @@
         min-width: max-content;
       }
 
-      #controls button {
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
         flex: 1 1 92px;
       }
 
@@ -1375,12 +1591,12 @@
       }
 
       .zone-body,
-      .action-zone .zone-body {
+      .action-zone .play-main-controls {
         flex-wrap: wrap;
         justify-content: flex-start;
       }
 
-      .action-zone .zone-body {
+      .action-zone .play-main-controls {
         display: flex;
       }
 
@@ -1403,7 +1619,8 @@
         margin-left: 0;
       }
 
-      #controls #betBtn {
+      #controls #betBtn,
+      #play-panel #betBtn {
         flex: 1 1 auto;
       }
 
@@ -1413,6 +1630,17 @@
 
       .setting-body .config-control {
         width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .set-rng-controls {
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      }
+
+      #controls #setRngResetBtn {
+        grid-column: 1 / -1;
+        width: 100%;
       }
     }
   </style>
@@ -1457,47 +1685,71 @@
           <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi" id="fgTriggerValue">0</span></div>
           <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
         </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+          </div>
+        </section>
       </aside>
     </div>
 
-    <section id="controls">
-      <div class="control-zone action-zone">
-        <span class="zone-label">Play</span>
-        <div class="zone-body">
-          <button id="spinBtn" type="button">Spin</button>
-          <button id="autoBtn" type="button">Auto</button>
-          <div class="bet-stepper">
-            <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
-            <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
-            <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
-            <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
-          </div>
-          <label class="speed-control" for="speedRange">
-            Speed
-            <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
-            <span id="speedValue">x1</span>
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect"><option value="">Auto</option></select>
           </label>
-        </div>
-      </div>
-
-      <div class="control-zone mode-zone">
-        <span class="zone-label">Bet Mode</span>
-        <div class="zone-body">
-          <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
-          <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
-          <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+          <label class="debug-rng-field" for="reelRngInput">
+            Reel RNG
+            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
         </div>
       </div>
 
     </section>
 
-    <section id="rng-wrap">
-      <h3>Reel RNG</h3>
+    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
+      <h3 class="diagnostic-header">Reel RNG</h3>
       <div class="rng-list" id="rngList"></div>
     </section>
 
-    <section id="log-wrap">
-      <div id="log-header">Spin Result</div>
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
       <div id="log-body">
         <div class="log-subheader">Line Wins</div>
         <div class="line-list" id="lineList"></div>
@@ -1505,17 +1757,21 @@
       </div>
     </section>
 
-    <section id="live-log-wrap">
-      <div class="live-log-header">
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
         <span>Log</span>
         <button id="clearLogBtn" type="button">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
     </section>
 
-    <section id="settings-wrap">
-      <div class="setting-header">Setting</div>
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
       <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
@@ -1561,6 +1817,7 @@
       freegameTriggerCount: 0,
       normalTriggerCount: 0,
       featurebuyTriggerCount: 0,
+      forcedTriggerCount: 0,
       retriggerCount: 0,
       roundCount: 0,
       maxMultiplier: 0,
@@ -1577,6 +1834,13 @@
       autoEnabled: false,
       extraBetEnabled: false,
       speedMultiplier: 1,
+      autoDelayMs: 700,
+      debugEnabled: false,
+      stepSnapshots: [],
+      stepViewIndex: -1,
+      debugSpinQueued: false,
+      debugSkipPlayback: false,
+      forceFg: false,
       autoTimer: null,
       liveLog: []
     };
@@ -1617,6 +1881,19 @@
     const configSelectEl = document.getElementById("configSelect");
     const liveLogBodyEl = document.getElementById("liveLogBody");
     const clearLogBtn = document.getElementById("clearLogBtn");
+    const previousStepBtn = document.getElementById("previousStepBtn");
+    const nextStepBtn = document.getElementById("nextStepBtn");
+    const forceFgInputEl = document.getElementById("forceFgInput");
+    const debugModeInputEl = document.getElementById("debugModeInput");
+    const playDebugControlsEl = document.getElementById("play-debug-controls");
+    const setRngPanelEl = document.getElementById("set-rng-panel");
+    const controlsEl = document.getElementById("controls");
+    const rngWrapEl = document.getElementById("rng-wrap");
+    const spinResultWrapEl = document.getElementById("log-wrap");
+    const liveLogWrapEl = document.getElementById("live-log-wrap");
+    const cardRangeSelectEl = document.getElementById("cardRangeSelect");
+    const reelRngInputEl = document.getElementById("reelRngInput");
+    const setRngResetBtn = document.getElementById("setRngResetBtn");
 
     function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
     function randInt(max) { return Math.floor(Math.random() * max); }
@@ -1658,7 +1935,113 @@
     }
     function getPlaybackDelay(ms) { return Math.max(16, Math.round(ms / state.speedMultiplier)); }
     function getReelSpinFrames() { return Math.max(2, Math.round(8 / state.speedMultiplier)); }
-    function getNaturalRoundCount() { return Math.max(0, state.roundCount - state.featurebuyTriggerCount); }
+    function getNaturalRoundCount() { return Math.max(0, state.roundCount - state.featurebuyTriggerCount - state.forcedTriggerCount); }
+
+    function renderCardRangeOptions() {
+      const current = cardRangeSelectEl.value;
+      const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
+      const cards = getCardSystemProfileCards("weight_bg", betMode);
+      cardRangeSelectEl.innerHTML = '<option value="">Auto</option>';
+      cards.forEach((card, index) => {
+        if (Number(card.weight || 0) <= 0) return;
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = card.type === "free_game"
+          ? "Free Game"
+          : `${Number(card.min)}x ~ ${Number(card.max)}x`;
+        cardRangeSelectEl.appendChild(option);
+      });
+      if (Array.from(cardRangeSelectEl.options).some((option) => option.value === current)) {
+        cardRangeSelectEl.value = current;
+      }
+    }
+
+    function collectDebugOverrides() {
+      if (!state.debugEnabled) return null;
+      const rawReels = reelRngInputEl.value.trim();
+      const cardIndex = cardRangeSelectEl.value === "" ? null : Number(cardRangeSelectEl.value);
+      if (rawReels !== "" && cardIndex !== null) {
+        throw new Error("Card BG Range 與 Reel RNG 只能擇一指定");
+      }
+      let reels = Array(Box.reel_num).fill(null);
+      if (rawReels !== "") {
+        const parts = rawReels.split(/\s+/);
+        if (parts.length !== Box.reel_num) {
+          throw new Error(`Reel RNG 請輸入 ${Box.reel_num} 個數值，並以空格分隔`);
+        }
+        reels = parts.map((raw, index) => {
+          const value = Number(raw);
+          if (!Number.isInteger(value) || value < 0) {
+            throw new Error(`R${index + 1} RNG 必須是 0 以上的整數`);
+          }
+          return value;
+        });
+      }
+      if (cardIndex === null && rawReels === "") return null;
+      return { card_index: cardIndex, reels };
+    }
+
+    function resetSetRng(writeLog = true) {
+      cardRangeSelectEl.value = "";
+      reelRngInputEl.value = "";
+      updateDebugControls();
+      if (writeLog) writeMessage("Set RNG reset");
+    }
+
+    function updateSetRngAvailability(debugInputLocked) {
+      const hasCardRange = cardRangeSelectEl.value !== "";
+      const hasReelRng = reelRngInputEl.value.trim() !== "";
+      cardRangeSelectEl.disabled = !state.debugEnabled || debugInputLocked || hasReelRng;
+      reelRngInputEl.disabled = !state.debugEnabled || debugInputLocked || hasCardRange;
+      setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasReelRng);
+    }
+
+    function renderStepSnapshot(index) {
+      const snapshot = state.stepSnapshots[index];
+      if (!snapshot) return;
+      state.stepViewIndex = index;
+      snapshot.render();
+      updateDebugControls();
+    }
+
+    function goPreviousStep() {
+      if (state.isBusy || state.stepViewIndex <= 0) return;
+      renderStepSnapshot(state.stepViewIndex - 1);
+    }
+
+    function goNextStep() {
+      if (state.isBusy || state.stepSnapshots.length === 0) return;
+      if (state.stepViewIndex < state.stepSnapshots.length - 1) {
+        renderStepSnapshot(state.stepViewIndex + 1);
+      }
+    }
+
+    function updateDebugControls() {
+      playDebugControlsEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      setRngPanelEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      controlsEl.classList.toggle("debug-off", !state.debugEnabled);
+      rngWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      spinResultWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      liveLogWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      debugModeInputEl.checked = state.debugEnabled;
+      const hasStepHistory = state.debugEnabled && !state.isBusy && state.stepSnapshots.length > 0;
+      const latestStepIndex = state.stepSnapshots.length - 1;
+      previousStepBtn.disabled = !hasStepHistory || state.stepViewIndex <= 0;
+      nextStepBtn.disabled = !hasStepHistory || state.stepViewIndex >= latestStepIndex;
+      const debugInputLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
+      forceFgInputEl.disabled = !state.debugEnabled || state.isBusy;
+      updateSetRngAvailability(debugInputLocked);
+    }
+
+    async function waitPlaybackStep(label, fallbackMs, snapshotRenderer = null) {
+      if (typeof snapshotRenderer === "function") {
+        state.stepSnapshots.push({ label, render: snapshotRenderer });
+        state.stepViewIndex = state.stepSnapshots.length - 1;
+        updateDebugControls();
+      }
+      if (state.debugSkipPlayback) return;
+      await sleep(getPlaybackDelay(fallbackMs));
+    }
 
     function closeBetMenu() {
       betMenuEl.classList.add("hidden");
@@ -1737,7 +2120,7 @@
     function queueAutoSpin() {
       clearTimeout(state.autoTimer);
       if (!state.autoEnabled || state.isBusy) return;
-      state.autoTimer = setTimeout(() => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet), getPlaybackDelay(240));
+      state.autoTimer = setTimeout(() => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet), state.autoDelayMs);
     }
 
     function coinIn(betMode) {
@@ -1809,7 +2192,7 @@
       return [];
     }
 
-    function pickCardSystemEntry(profileKey, betMode = Box.mode_normalbet) {
+    function pickCardSystemEntry(profileKey, betMode = Box.mode_normalbet, forcedCardIndex = null) {
       if (!CARD_SYSTEM_ENABLED) return null;
       const cards = getCardSystemProfileCards(profileKey, betMode);
       if (!cards.length) return null;
@@ -1819,20 +2202,36 @@
         return running;
       });
       if (running <= 0) return null;
-      const pick = pickByCum(cum);
+      let pick;
+      if (forcedCardIndex !== null && forcedCardIndex !== undefined) {
+        const index = Number(forcedCardIndex);
+        if (!Number.isInteger(index) || index < 0 || index >= cards.length || Number(cards[index].weight || 0) <= 0) {
+          throw new Error("指定的 Card BG Range 無效");
+        }
+        pick = {
+          index,
+          rng_value: index === 0 ? 0 : cum[index - 1],
+          rng_total: running,
+          forced: true
+        };
+      } else {
+        pick = pickByCum(cum);
+      }
       const card = cards[pick.index];
       const label = card.type === "free_game"
         ? "free_game"
         : `${Number(card.min)}x ~ ${Number(card.max)}x`;
       return {
         profile_key: profileKey,
+        card_index: pick.index,
         card_type: card.type || "range",
         min: card.min ?? null,
         max: card.max ?? null,
         weight: Number(card.weight || 0),
         label,
         rng_value: pick.rng_value,
-        rng_total: pick.rng_total
+        rng_total: pick.rng_total,
+        forced: Boolean(pick.forced)
       };
     }
 
@@ -1859,16 +2258,21 @@
       return code;
     }
 
-    function pickByCum(cumWeight) {
+    function pickByCum(cumWeight, forcedRngValue = null) {
       const total = cumWeight[cumWeight.length - 1];
       if (total <= 0) return { index: 0, rng_value: 0, rng_total: total };
-      const rngValue = randInt(total);
+      const rngValue = forcedRngValue === null || forcedRngValue === undefined
+        ? randInt(total)
+        : Number(forcedRngValue);
+      if (!Number.isInteger(rngValue) || rngValue < 0 || rngValue >= total) {
+        throw new Error(`指定 RNG ${forcedRngValue} 超出範圍 0-${total - 1}`);
+      }
       for (let index = 0; index < cumWeight.length; index += 1) {
         if (rngValue < cumWeight[index]) {
-          return { index, rng_value: rngValue, rng_total: total };
+          return { index, rng_value: rngValue, rng_total: total, forced: forcedRngValue !== null && forcedRngValue !== undefined };
         }
       }
-      return { index: cumWeight.length - 1, rng_value: rngValue, rng_total: total };
+      return { index: cumWeight.length - 1, rng_value: rngValue, rng_total: total, forced: forcedRngValue !== null && forcedRngValue !== undefined };
     }
 
     function pickMultiplier(cumMatrix, stripIdx) {
@@ -1979,7 +2383,7 @@
       };
     }
 
-    function generateBoard(tableId) {
+    function generateBoard(tableId, reelRngOverrides = null) {
       const board = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const goldMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const multiMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
@@ -1987,9 +2391,13 @@
 
       for (let col = 0; col < Box.reel_num; col += 1) {
         const reelLength = Box.reels_len[tableId][col];
-        const pick = pickByCum(Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]));
+        const forcedRng = reelRngOverrides?.[col] ?? null;
+        const pick = pickByCum(
+          Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]),
+          forcedRng
+        );
         const visibleStartIndex = (pick.index - SCORE_ROW_OFFSET + reelLength) % reelLength;
-        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength });
+        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength, forced: Boolean(pick.forced) });
         for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
           const symbol = Box.arr_reels[tableId][(visibleStartIndex + row) % reelLength][col];
           const baseSymbol = Box.base_symbol_of[symbol];
@@ -2274,11 +2682,11 @@
       return dropEvents;
     }
 
-    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null) {
+    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelRngOverrides = null) {
       const table = chooseTable(sceneMode, fgMultiplierSum);
       const eliminateMode = chooseEliminateMode(sceneMode);
       const useDropA = eliminateMode.use_drop_a;
-      const generated = generateBoard(table.table_id);
+      const generated = generateBoard(table.table_id, reelRngOverrides);
       const board = generated.board;
       const goldMask = generated.goldMask;
       const multiMask = generated.multiMask;
@@ -2397,7 +2805,7 @@
       };
     }
 
-    function runRound(betMode) {
+    function runRound(betMode, forceFg = false, debugOverrides = null) {
       const currentCoinIn = coinIn(betMode);
       if (state.balance < currentCoinIn) throw new Error(`餘額不足，需 ${formatMoney(currentCoinIn)}`);
 
@@ -2409,7 +2817,12 @@
       let freeSpinsPlayed = 0;
       let fgMultiplierSum = 0;
       let triggerSource = null;
-      const bgCardSystemInfo = betMode === Box.mode_featurebuy ? null : pickCardSystemEntry("weight_bg", betMode);
+      const forcedReels = debugOverrides?.reels || null;
+      const hasForcedReels = Array.isArray(forcedReels) && forcedReels.some((value) => value !== null && value !== undefined);
+      const hasForcedCard = debugOverrides?.card_index !== null && debugOverrides?.card_index !== undefined;
+      const bgCardSystemInfo = betMode === Box.mode_featurebuy || (hasForcedReels && !hasForcedCard)
+        ? null
+        : pickCardSystemEntry("weight_bg", betMode, debugOverrides?.card_index ?? null);
       const fgCardSystemInfo = betMode === Box.mode_featurebuy ? null : pickCardSystemEntry("weight_fg", betMode);
       const bfCardSystemInfo = betMode === Box.mode_featurebuy ? pickCardSystemEntry("weight_bf", betMode) : null;
       const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
@@ -2420,8 +2833,9 @@
         if (CARD_SYSTEM_ENABLED && bgCardSystemInfo?.card_type === "free_game") {
           let rerollCount = 0;
           while (true) {
-            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo);
+            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo, forcedReels);
             if (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+              if (hasForcedReels) throw new Error("指定 Reel RNG 與 Card FG 區間衝突");
               rerollCount += 1;
               if (rerollCount >= retryLimit) {
                 throw new Error("BG free game card retry exceeded limit.");
@@ -2455,19 +2869,30 @@
             freeSpinsAwarded = awarded;
             freeSpinsPlayed = fgResult.free_spins_played;
             fgMultiplierSum = fgResult.final_fg_multiplier_sum;
-            triggerSource = "normal_trigger";
-            state.normalTriggerCount += 1;
+            triggerSource = forceFg ? "force_fg" : "normal_trigger";
+            if (forceFg) state.forcedTriggerCount += 1;
+            else state.normalTriggerCount += 1;
             state.freegameTriggerCount += 1;
             break;
           }
         } else {
           let rerollCount = 0;
           while (true) {
-            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo);
+            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo, forcedReels);
             const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
 
-            if (CARD_SYSTEM_ENABLED && bgCardSystemInfo) {
+            if (forceFg && !triggered) {
+              if (hasForcedReels) throw new Error("指定 Reel RNG 無法觸發 Force FG");
+              rerollCount += 1;
+              if (rerollCount > 5000) {
+                throw new Error("Force FG 重抽超過上限，請檢查 BG 觸發條件");
+              }
+              continue;
+            }
+
+            if (!forceFg && CARD_SYSTEM_ENABLED && bgCardSystemInfo) {
               if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
+                if (hasForcedReels) throw new Error("指定 Reel RNG 與 Card BG Range 衝突");
                 rerollCount += 1;
                 if (rerollCount >= retryLimit) {
                   throw new Error("BG range card retry exceeded limit.");
@@ -2499,22 +2924,24 @@
             });
             freeTotalWin = fgResult.free_total_win;
             totalWin += freeTotalWin;
-            triggerSource = "normal_trigger";
-            state.normalTriggerCount += 1;
+            triggerSource = forceFg ? "force_fg" : "normal_trigger";
+            if (forceFg) state.forcedTriggerCount += 1;
+            else state.normalTriggerCount += 1;
             state.freegameTriggerCount += 1;
           }
         }
       } else {
         let roundRetryCount = 0;
         while (true) {
-          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
+          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels);
           let triggerRetryCount = 0;
           while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+            if (hasForcedReels) throw new Error("指定 Reel RNG 無法觸發 Buy Feature");
             triggerRetryCount += 1;
             if (triggerRetryCount > 5000) {
               throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
             }
-            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
+            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels);
           }
 
           const awarded = 15 + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * 2;
@@ -2648,19 +3075,28 @@
     }
 
     function updateSpinButtonState() {
-      setText(spinBtn, state.pendingRound ? "Next FG" : "Spin");
-      spinBtn.disabled = state.isBusy || state.autoEnabled;
-      normalBetBtn.disabled = Boolean(state.pendingRound);
-      extraBetBtn.disabled = Boolean(state.pendingRound);
+      const wagerLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
+      const canQueueDebugSpin = state.debugEnabled && state.isBusy && !state.debugSpinQueued;
+      setText(spinBtn, state.debugSpinQueued
+        ? "Queued"
+        : canQueueDebugSpin
+          ? "Next Spin"
+          : state.pendingRound
+            ? "Next FG"
+            : "Spin");
+      spinBtn.disabled = state.autoEnabled || (state.isBusy && !canQueueDebugSpin);
+      normalBetBtn.disabled = wagerLocked;
+      extraBetBtn.disabled = wagerLocked;
       normalBetBtn.classList.toggle("is-active", !state.extraBetEnabled);
       extraBetBtn.classList.toggle("is-active", state.extraBetEnabled);
-      buyFeatureBtn.disabled = Boolean(state.pendingRound);
-      betBtn.disabled = Boolean(state.pendingRound);
-      betMinusBtn.disabled = Boolean(state.pendingRound) || state.betIndex === 0;
-      betPlusBtn.disabled = Boolean(state.pendingRound) || state.betIndex === BET_OPTIONS_MONEY.length - 1;
-      if (state.pendingRound) closeBetMenu();
+      buyFeatureBtn.disabled = wagerLocked;
+      betBtn.disabled = wagerLocked;
+      betMinusBtn.disabled = wagerLocked || state.betIndex === 0;
+      betPlusBtn.disabled = wagerLocked || state.betIndex === BET_OPTIONS_MONEY.length - 1;
+      if (wagerLocked) closeBetMenu();
       autoBtn.classList.toggle("is-active", state.autoEnabled);
       setText(speedValueEl, `x${state.speedMultiplier}`);
+      updateDebugControls();
     }
 
     function getVisibleSpins(round) {
@@ -2718,10 +3154,10 @@
     function renderRngList(spin) {
       rngListEl.innerHTML = "";
       if (!spin) return;
-      const formatRngDetail = (value, total) => `${value}/${total} | range 0-${Math.max(0, total - 1)}`;
+      const formatRngDetail = (value, total, forced = false) => `${value}/${total} | range 0-${Math.max(0, total - 1)}${forced ? " | forced" : ""}`;
       const cardSystemInfo = spin.rng_info.card_system;
       const cardSystemText = cardSystemInfo
-        ? `${cardSystemInfo.label} | ${formatRngDetail(cardSystemInfo.rng_value, cardSystemInfo.rng_total)}`
+        ? `${cardSystemInfo.label} | ${formatRngDetail(cardSystemInfo.rng_value, cardSystemInfo.rng_total, cardSystemInfo.forced)}`
         : "false";
       const rows = [
         { left: "Mode", right: spin.scene_name },
@@ -2729,7 +3165,7 @@
         { left: `Table ${spin.table_name}`, right: formatRngDetail(spin.rng_info.table.rng_value, spin.rng_info.table.rng_total) },
         { left: `Drop ${spin.drop_mode}`, right: formatRngDetail(spin.rng_info.drop_mode.rng_value, spin.rng_info.drop_mode.rng_total) }
       ];
-      spin.rng_info.reels.forEach((reel) => rows.push({ left: `R${reel.reel_index} stop ${reel.stop_index}`, right: formatRngDetail(reel.rng_value, reel.rng_total) }));
+      spin.rng_info.reels.forEach((reel) => rows.push({ left: `R${reel.reel_index} stop ${reel.stop_index}`, right: formatRngDetail(reel.rng_value, reel.rng_total, reel.forced) }));
       rows.forEach((item) => {
         const row = document.createElement("div");
         row.className = "rng-row";
@@ -2796,54 +3232,120 @@
 
     async function animateReels() {
       for (let i = 0; i < getReelSpinFrames(); i += 1) {
+        if (state.debugSkipPlayback) break;
         renderBoard(sampleBoard(), { reelSpin: true });
         await sleep(getPlaybackDelay(65));
       }
     }
 
     async function playbackSpin(round, spin) {
+      state.stepSnapshots = [];
+      state.stepViewIndex = -1;
       renderAll(round, spin);
-      updateFeatureBar(spin, round, { cascadeCount: 0, multiplier: spin.multiplier_sum_before_spin || 0 });
-      renderBoard(clone(spin.board_init));
+      const reelStopMessage = `Spin ${spin.spin_index} | ${spin.scene_name} | Reel stop ready`;
+      const renderReelStop = () => {
+        updateFeatureBar(spin, round, { cascadeCount: 0, multiplier: spin.multiplier_sum_before_spin || 0 });
+        renderBoard(clone(spin.board_init));
+        setText(messageBarEl, reelStopMessage);
+      };
+      renderReelStop();
       renderSpinResultList(spin);
-      writeMessage(`Spin ${spin.spin_index} | ${spin.scene_name} | Reel stop ready`);
-      await sleep(getPlaybackDelay(280));
+      writeMessage(reelStopMessage);
+      await waitPlaybackStep("Reel stop", 280, renderReelStop);
       if (spin.board_steps.length === 0) {
-        renderBoard(clone(spin.board_final));
+        const finalMessage = `Spin ${spin.spin_index} finished | No cascade`;
+        const renderFinal = () => {
+          renderBoard(clone(spin.board_final));
+          updateFeatureBar(spin, round);
+          setText(messageBarEl, finalMessage);
+        };
+        renderFinal();
         state.maxMultiplier = Math.max(state.maxMultiplier, Number(spin.multiplier_sum_after_spin || 0));
         applyDisplaySpinWin(round, spin.final_pay);
         updateSessionCards();
-        updateFeatureBar(spin, round);
-        writeMessage(`Spin ${spin.spin_index} finished | No cascade`);
+        writeMessage(finalMessage);
+        await waitPlaybackStep("Final", 16, renderFinal);
         return;
       }
-      for (const step of spin.board_steps) {
-        renderBoard(clone(step.board_before), { hitPositions: step.hit_positions });
-        writeMessage(`Cascade ${step.cascade_index} | Pay ${formatMoney(step.cascade_pay)}`);
-        await sleep(getPlaybackDelay(360));
-        renderBoard(clone(step.board_after_eliminate), { hitPositions: step.hit_positions, convertPositions: step.converted_gold_positions });
+      for (let stepIndex = 0; stepIndex < spin.board_steps.length; stepIndex += 1) {
+        const step = spin.board_steps[stepIndex];
+        const beforeMultiplier = stepIndex === 0
+          ? Number(spin.multiplier_sum_before_spin || 0)
+          : Number(spin.board_steps[stepIndex - 1].multiplier_sum_after_cascade || 0);
+        const payMessage = `Cascade ${step.cascade_index} | Pay ${formatMoney(step.cascade_pay)}`;
+        const renderPay = () => {
+          renderBoard(clone(step.board_before), { hitPositions: step.hit_positions });
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index - 1, multiplier: beforeMultiplier });
+          setText(messageBarEl, payMessage);
+        };
+        renderPay();
+        writeMessage(payMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} pay`, 360, renderPay);
+        const multiplierMessage = `Cascade ${step.cascade_index} | +Multiplier x${step.added_multiplier}`;
+        const renderMultiplier = () => {
+          renderBoard(clone(step.board_after_eliminate), { hitPositions: step.hit_positions, convertPositions: step.converted_gold_positions });
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
+          setText(messageBarEl, multiplierMessage);
+        };
+        renderMultiplier();
         state.maxMultiplier = Math.max(state.maxMultiplier, Number(step.multiplier_sum_after_cascade || 0));
-        updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
         updateSessionCards();
-        writeMessage(`Cascade ${step.cascade_index} | +Multiplier x${step.added_multiplier}`);
-        await sleep(getPlaybackDelay(280));
-        renderBoard(clone(step.board_after_drop));
-        writeMessage(`Cascade ${step.cascade_index} | Drop complete`);
-        await sleep(getPlaybackDelay(320));
+        writeMessage(multiplierMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} multiplier`, 280, renderMultiplier);
+        const dropMessage = `Cascade ${step.cascade_index} | Drop complete`;
+        const renderDrop = () => {
+          renderBoard(clone(step.board_after_drop));
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
+          setText(messageBarEl, dropMessage);
+        };
+        renderDrop();
+        writeMessage(dropMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, 320, renderDrop);
       }
-      renderBoard(clone(spin.board_final));
+      const finalMessage = `Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`;
+      const renderFinal = () => {
+        renderBoard(clone(spin.board_final));
+        updateFeatureBar(spin, round);
+        setText(messageBarEl, finalMessage);
+      };
+      renderFinal();
       applyDisplaySpinWin(round, spin.final_pay);
       updateSessionCards();
-      updateFeatureBar(spin, round);
-      writeMessage(`Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`);
+      writeMessage(finalMessage);
+      await waitPlaybackStep("Final", 16, renderFinal);
     }
 
     async function doSpin(betMode) {
       if (state.isBusy) return;
+      let spinFailed = false;
+      let debugOverrides = null;
+      if (!state.pendingRound) {
+        try {
+          debugOverrides = collectDebugOverrides();
+        } catch (error) {
+          writeMessage(error.message, "error");
+          return;
+        }
+      }
+      const forceFgThisSpin = state.forceFg
+        && !state.pendingRound
+        && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
+      if (forceFgThisSpin) {
+        state.forceFg = false;
+        forceFgInputEl.checked = false;
+        appendLiveLog("Force FG applied to this spin", "mode");
+      }
+      if (debugOverrides) {
+        const reelText = debugOverrides.reels
+          .map((value, index) => value === null ? null : `R${index + 1}=${value}`)
+          .filter(Boolean)
+          .join(", ");
+        const cardText = debugOverrides.card_index === null ? "" : `Card #${debugOverrides.card_index}`;
+        appendLiveLog(`RNG override | ${[cardText, reelText].filter(Boolean).join(" | ")}`, "mode");
+      }
       state.isBusy = true;
+      updateSpinButtonState();
       try {
-        spinBtn.disabled = true;
-        buyFeatureBtn.disabled = true;
         if (state.pendingRound && state.pendingSpinIndex < state.pendingRound.spins.length) {
           const round = state.pendingRound;
           const spin = round.spins[state.pendingSpinIndex];
@@ -2862,7 +3364,7 @@
         } else {
           writeMessage("Reels spinning...");
           await animateReels();
-          const round = runRound(betMode);
+          const round = runRound(betMode, forceFgThisSpin, debugOverrides);
           syncDisplayForRoundStart(round);
           renderAll(round, round.spins[0]);
           await playbackSpin(round, round.spins[0]);
@@ -2870,22 +3372,35 @@
           if (round.spins.length > 1) {
             state.pendingRound = round;
             state.pendingSpinIndex = 1;
-            writeMessage(`${round.trigger_source === "feature_buy" ? "Feature Buy entered FG" : "FG triggered"} | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
+            const triggerLabel = round.trigger_source === "feature_buy"
+              ? "Feature Buy entered FG"
+              : round.trigger_source === "force_fg"
+                ? "Force FG triggered"
+                : "FG triggered";
+            writeMessage(`${triggerLabel} | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
           } else {
             state.pendingRound = null;
             state.pendingSpinIndex = 0;
           }
         }
       } catch (error) {
+        spinFailed = true;
         state.autoEnabled = false;
         clearTimeout(state.autoTimer);
-        writeMessage(error.message);
+        writeMessage(error.message, "error");
       } finally {
+        const queuedDebugSpin = state.debugSpinQueued;
+        state.debugSpinQueued = false;
+        state.debugSkipPlayback = false;
         state.isBusy = false;
-        spinBtn.disabled = false;
         updateSessionCards();
         updateSpinButtonState();
-        queueAutoSpin();
+        updateDebugControls();
+        if (queuedDebugSpin && state.debugEnabled && !state.autoEnabled && !spinFailed) {
+          queueMicrotask(() => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet));
+        } else {
+          queueAutoSpin();
+        }
       }
     }
 
@@ -2923,6 +3438,7 @@
       state.freegameTriggerCount = 0;
       state.normalTriggerCount = 0;
       state.featurebuyTriggerCount = 0;
+      state.forcedTriggerCount = 0;
       state.retriggerCount = 0;
       state.roundCount = 0;
       state.maxMultiplier = 0;
@@ -2934,12 +3450,24 @@
       state.autoEnabled = false;
       state.extraBetEnabled = false;
       state.speedMultiplier = 1;
+      state.autoDelayMs = 700;
+      state.debugEnabled = false;
+      state.stepSnapshots = [];
+      state.stepViewIndex = -1;
+      state.debugSpinQueued = false;
+      state.debugSkipPlayback = false;
+      state.forceFg = false;
       speedRangeEl.value = "1";
+      debugModeInputEl.checked = false;
+      forceFgInputEl.checked = false;
+      renderCardRangeOptions();
+      resetSetRng(false);
       closeBetMenu();
       clearLiveLog();
       resetDisplayState();
       renderBoard(sampleBoard());
       renderAll(null, null);
+      updateDebugControls();
       writeMessage("Session reset");
     });
 
@@ -2963,8 +3491,58 @@
       writeMessage(`Speed x${state.speedMultiplier}`);
     });
 
+    previousStepBtn.addEventListener("click", goPreviousStep);
+    nextStepBtn.addEventListener("click", goNextStep);
+
+    debugModeInputEl.addEventListener("change", () => {
+      state.debugEnabled = debugModeInputEl.checked;
+      if (!state.debugEnabled) {
+        state.debugSpinQueued = false;
+        state.debugSkipPlayback = false;
+        state.forceFg = false;
+        forceFgInputEl.checked = false;
+      }
+      updateDebugControls();
+      writeMessage(`Debug Mode ${state.debugEnabled ? "enabled" : "disabled"}`);
+    });
+
+    cardRangeSelectEl.addEventListener("change", () => {
+      if (cardRangeSelectEl.value !== "") reelRngInputEl.value = "";
+      updateDebugControls();
+      writeMessage(cardRangeSelectEl.value === ""
+        ? "Card BG Range set to Auto"
+        : `Card BG Range selected | ${cardRangeSelectEl.selectedOptions[0].textContent}`);
+    });
+
+    reelRngInputEl.addEventListener("input", () => {
+      if (reelRngInputEl.value.trim() !== "") cardRangeSelectEl.value = "";
+      updateDebugControls();
+    });
+
+    reelRngInputEl.addEventListener("change", () => {
+      if (reelRngInputEl.value.trim() !== "") writeMessage(`Reel RNG set | ${reelRngInputEl.value.trim()}`);
+    });
+
+    setRngResetBtn.addEventListener("click", () => resetSetRng(true));
+
+    forceFgInputEl.addEventListener("change", () => {
+      state.forceFg = forceFgInputEl.checked;
+      updateDebugControls();
+      writeMessage(state.forceFg
+        ? "Force FG armed for next Normal/Extra spin"
+        : "Force FG cancelled");
+    });
+
     spinBtn.addEventListener("click", () => {
       if (state.autoEnabled) return;
+      if (state.isBusy) {
+        if (!state.debugEnabled || state.debugSpinQueued) return;
+        state.debugSpinQueued = true;
+        state.debugSkipPlayback = true;
+        appendLiveLog("Next spin queued | Current playback fast-forwarded", "mode");
+        updateSpinButtonState();
+        return;
+      }
       doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet);
     });
     normalBetBtn.addEventListener("click", () => {
@@ -2972,6 +3550,7 @@
       state.extraBetEnabled = false;
       updateSessionCards();
       updateSpinButtonState();
+      renderCardRangeOptions();
       writeMessage(`Normal Bet selected | Bet ${getSelectedBetCostMoney().toFixed(2)}`);
     });
     extraBetBtn.addEventListener("click", () => {
@@ -2979,12 +3558,14 @@
       state.extraBetEnabled = true;
       updateSessionCards();
       updateSpinButtonState();
+      renderCardRangeOptions();
       writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${getSelectedBetCostMoney().toFixed(2)}`);
     });
     buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
     clearLogBtn.addEventListener("click", clearLiveLog);
 
     renderBetMenu();
+    renderCardRangeOptions();
     setText(gameIdEl, Box.game_id);
     setText(gameNameEl, Box.game_name);
     setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
@@ -2993,6 +3574,7 @@
     resetDisplayState();
     renderBoard(sampleBoard());
     renderAll(null, null);
+    updateDebugControls();
     appendLiveLog("Ready — press Spin", "result");
   </script>
 </body>
