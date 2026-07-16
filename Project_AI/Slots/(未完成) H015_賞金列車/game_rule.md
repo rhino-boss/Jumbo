@@ -1,8 +1,8 @@
-# 賞金列車 (Wild Bounty Showdown) 遊戲規則說明
+# 賞金列車 (Wild Train) 遊戲規則說明
 
-> 文件版本：v0.1（草稿）
+> 文件版本：v1.0
 > 對標競品：PG - Wild Bounty Showdown
-> 撰寫依據：`C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots` 為主，`C:\Users\rhinshen\Mine\個人工作區\1_Survey (市場資訊)\H5\遊戲資源\PG\PG - Wild Bounty Showdown` 為輔
+> 撰寫依據：`Source/H015192.xlsx`、`config.js` 與 `Simulator.py`；競品資料僅作玩法參考
 > 編號：H015
 > 撰寫日期：2026-05-29
 
@@ -13,7 +13,7 @@
 | 項目 | 說明 |
 | --- | --- |
 | 遊戲名稱（內部代號） | 賞金列車（H015） |
-| 遊戲英文名 | Wild Bounty Showdown |
+| 遊戲英文名 | Wild Train |
 | 遊戲類型 | Video Slot - Ways / Cascade / Progressive Multiplier |
 | 盤面規格 | 6 輪盤、5 層顯示；有效記分區固定為 24 格，排列為每輪 `3 / 4 / 5 / 5 / 4 / 3` |
 | 中獎方式 | 由左至右連續 Ways 計獎 |
@@ -24,7 +24,7 @@
 補充說明：
 
 * 本作採固定有效格，不是每把改變高度的動態 Megaways。
-* 文件內容以目前 `Project\Slots` 中的 H015 數學與模擬邏輯為準；若與競品資料不一致，採用 `Project\Slots`。
+* 文件內容以本專案的 `Source/H015192.xlsx`、生成後的 `config.js` 與 `Simulator.py` 為準；若與競品資料不一致，採用本專案資料。
 
 ---
 
@@ -260,17 +260,17 @@
 
 ### 主來源
 
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\Source\H015_math_data_送驗版.xlsx`
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\Source\H015_Box.py`
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\H015_Simulator_v2.py`
+* `Source/H015192.xlsx`
+* `config.js`
+* `Simulator.py`
+* `Source/xlsx_config_usage_mapping.md`
 
 ### 輔助參考
 
-* `C:\Users\rhinshen\Mine\個人工作區\1_Survey (市場資訊)\H5\遊戲資源\PG\PG - Wild Bounty Showdown\遊玩資料\spin_responses_wild_bounty_showdown.xlsx`
-* `C:\Users\rhinshen\Mine\個人工作區\1_Survey (市場資訊)\H5\遊戲資源\PG\PG - Wild Bounty Showdown\遊玩資料\spin_responses_2512182203.xlsx`
-* `C:\Users\rhinshen\Mine\個人工作區\1_Survey (市場資訊)\H5\遊戲資源\PG\PG - Wild Bounty Showdown\遊玩資料\spin_responses_2512181836.xlsx`
+* PG - Wild Bounty Showdown 競品遊玩資料
+* `../iGaming 遊戲代號一覽.xlsx`（正式 Game ID / PARsheet ID / 中英文名稱）
 
 ### 採信原則
 
-* 本次使用複數來源，且使用者已明確指定：**若與 `Project\Slots` 衝突，一律以 `Project\Slots` 為主。**
+* 數學值以 `Source/H015192.xlsx` 為主，程式行為須與 `config.js` 和 `Simulator.py` 一致。
 * 競品資料僅用於輔助理解主題與驗證玩法脈絡，不覆蓋主來源的數學與流程定義。

@@ -9,14 +9,25 @@
 | `H025192B.xlsx` | `H026(果醬罐B) 93 92.xlsx` | B 組、92 版數學來源 |
 | `H025194B.xlsx` | `H026(果醬罐B) 93 94.xlsx` | B 組、94 版數學來源 |
 | `../config.js` | `data.js` | 101013 現有模擬器使用的基準設定 |
+| `../config_92A.js` | `H025192A.xlsx` | A 組、92 版可重新產生設定 |
+| `../config_92B.js` | `H025192B.xlsx` | B 組、92 版可重新產生設定 |
+| `../config_94A.js` | `H025194A.xlsx` | A 組、94 版可重新產生設定 |
+| `../config_94B.js` | `H025194B.xlsx` | B 組、94 版可重新產生設定 |
 
 ## 目前限制
 
-1. 101013 沒有提供 Excel 轉 `data.js` 的生成程式。
-2. `config.js` 的賠率表與四份 Excel 相同，但尚無足夠證據將完整輪帶／權重資料歸屬到某個 A/B、92/94 版本。
-3. 因此 `config.js` 暫時維持「101013 基準版」命名；不可直接視為 `92A`。
-4. 修改四份 Excel 不會自動更新 `config.js`。在建立並驗證專用轉換器前，不應宣稱 Simulator 已切換到新 Excel 數值。
-5. Excel 內原有 H026 字樣是來源舊代號；本次只重新命名專案副本，不修改原始活頁簿內容與格式。
+1. 101013 沒有提供 Excel 轉 `data.js` 的生成程式；H025 已依活頁簿實際區塊補上 `xlsx_to_config.py`。
+2. `config.js` 保留為 101013 `data.js` 的位元相同基準檔，不直接視為某個 A/B、92/94 版本。
+3. 四份活頁簿可透過 `update_config.bat` 產生對應的 `config_92A.js`、`config_92B.js`、`config_94A.js`、`config_94B.js`。
+4. Excel 內原有 H026 字樣是來源舊代號；本專案不改寫原始活頁簿內容與格式。
+
+## 產生與驗證
+
+```powershell
+py -3 '.\Project_AI\Slots\H025_多採多汁\Source\xlsx_to_config.py' --all --check
+```
+
+Simulator 可透過 `H025_CONFIG_FILE` 切換設定，例如 `config_92A.js`。
 
 ## 規則採信順序
 

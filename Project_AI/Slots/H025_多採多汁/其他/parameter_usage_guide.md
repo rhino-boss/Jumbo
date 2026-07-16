@@ -2,14 +2,15 @@
 
 ## 設定檔
 
-- 預設：`config.js`
+- 預設：`config.js`（101013 原始基準）
 - 環境變數覆寫：`H025_CONFIG_FILE`
 - 設定檔路徑以 `Simulator.py` 所在資料夾為基準。
+- 可選設定：`config_92A.js`、`config_92B.js`、`config_94A.js`、`config_94B.js`。
 
 例如：
 
 ```powershell
-$env:H025_CONFIG_FILE='config.js'
+$env:H025_CONFIG_FILE='config_92A.js'
 $env:PYTHONUTF8='1'
 .\.venv\Scripts\python.exe '.\Project_AI\Slots\H025_多採多汁\Simulator.py' -r 10000 -w 1 --seed 25025
 ```

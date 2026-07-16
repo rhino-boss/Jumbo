@@ -2331,6 +2331,7 @@
     function localizeMessage(text) {
       if (state.language !== "zh") return text;
       const exact = {
+        "Ready — press Spin": "Ready — 按 Spin",
         "Set RNG reset": "Set RNG 已重置",
         "Force FG applied to this spin": "Force FG 已套用至本次 Spin",
         "Reels spinning...": "Reel 轉動中...",
@@ -2498,6 +2499,7 @@
       document.querySelectorAll("[data-i18n]").forEach((element) => {
         element.textContent = tr(element.dataset.i18n);
       });
+      closeHelpBtn.setAttribute("aria-label", state.language === "zh" ? "關閉遊戲 Help" : "Close game help");
       setText(messageBarEl, localizeMessage(state.lastMessage));
       setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
       setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
@@ -2527,7 +2529,7 @@
       if (state.liveLog.length > 500) state.liveLog.splice(0, state.liveLog.length - 500);
       const line = document.createElement("div");
       line.className = `live-log-line ${type}`;
-      line.textContent = `[${timestamp}] ${text}`;
+      line.textContent = `[${timestamp}] ${localizeMessage(text)}`;
       liveLogBodyEl.appendChild(line);
       while (liveLogBodyEl.children.length > 500) liveLogBodyEl.firstElementChild.remove();
       liveLogBodyEl.scrollTop = liveLogBodyEl.scrollHeight;
@@ -2537,7 +2539,8 @@
       liveLogBodyEl.innerHTML = "";
     }
     function writeMessage(text, type) {
-      messageBarEl.textContent = text;
+      state.lastMessage = text;
+      messageBarEl.textContent = localizeMessage(text);
       appendLiveLog(text, type);
     }
     function getPlaybackDelay(ms) { return Math.max(16, Math.round(ms / state.speedMultiplier)); }
@@ -2701,7 +2704,7 @@
       const triggerCount = state.normalTriggerCount;
       const rate = naturalRounds > 0 ? triggerCount / naturalRounds : 0;
       const cycle = triggerCount > 0 ? Math.round(naturalRounds / triggerCount) : "--";
-      return `${formatPercent(rate)} (${cycle}場)`;
+      return `${formatPercent(rate)} (${cycle}${state.language === "zh" ? "場" : " rounds"})`;
     }
 
     function resetDisplayState() {
@@ -3685,7 +3688,7 @@
       const wagerLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
       const canQueueDebugSpin = state.debugEnabled && state.isBusy && !state.debugSpinQueued;
       setText(spinBtn, state.debugSpinQueued
-        ? "Queued"
+        ? (state.language === "zh" ? "已排入" : "Queued")
         : canQueueDebugSpin
           ? "Next Spin"
           : state.pendingRound
@@ -3747,7 +3750,14 @@
     function renderLineList(spin) {
       lineListEl.innerHTML = "";
       if (!spin || spin.line_wins.length === 0) {
-        lineListEl.innerHTML = '<div class="line-row"><span>No winning line</span><span>Pay 0.00</span></div>';
+        const emptyRow = document.createElement("div");
+        emptyRow.className = "line-row";
+        const emptyText = document.createElement("span");
+        const emptyPay = document.createElement("span");
+        emptyText.textContent = tr("noWinningLine");
+        emptyPay.textContent = "Pay 0.00";
+        emptyRow.append(emptyText, emptyPay);
+        lineListEl.appendChild(emptyRow);
         return;
       }
       spin.line_wins.slice(0, 8).forEach((line) => {
@@ -3788,7 +3798,10 @@
     function renderSpinResultList(spin) {
       spinResultListEl.innerHTML = "";
       if (!spin) {
-        spinResultListEl.innerHTML = '<div class="spin-result-row"><div class="spin-result-head"><span>Awaiting spin</span><span>-</span></div><pre class="spin-result-board">No board result yet.</pre></div>';
+        const row = document.createElement("div");
+        row.className = "spin-result-row";
+        row.innerHTML = `<div class="spin-result-head"><span>${tr("awaitingSpin")}</span><span>-</span></div><pre class="spin-result-board">${tr("noBoardResult")}</pre>`;
+        spinResultListEl.appendChild(row);
         return;
       }
       const stages = [{ label: "Init", board: spin.board_init, meta: `${spin.scene_name} | ${spin.table_name}` }];
@@ -4018,6 +4031,12 @@
       window.location.href = nextUrl.href;
     });
 
+    languageSelectEl.addEventListener("change", () => {
+      state.language = languageSelectEl.value === "zh" ? "zh" : "en";
+      applyLanguage();
+      writeMessage(`Language | ${state.language === "zh" ? "中文" : "English"}`);
+    });
+
     betBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       if (state.pendingRound) return;
@@ -4193,6 +4212,7 @@
     renderBoard(sampleBoard());
     renderAll(null, null);
     updateDebugControls();
+    applyLanguage();
     appendLiveLog("Ready — press Spin", "result");
   </script>
 </body>

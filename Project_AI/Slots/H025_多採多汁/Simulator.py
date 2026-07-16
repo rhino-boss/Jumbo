@@ -28,8 +28,8 @@ def load_game_data():
         file_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
         print(f"正在加载数据文件: {file_path}")
         with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            json_str = content.replace('const data = ', '').rstrip(';')
+            content = f.read().strip()
+            json_str = content.removeprefix('const data = ').removesuffix(';').strip()
             data = json.loads(json_str)
             
             # 打印 DropWeight 的维度信息

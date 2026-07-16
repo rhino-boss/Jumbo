@@ -14,6 +14,7 @@
 - 卡片、標題列、按鈕、欄位及間距規則。
 - 主畫面資訊架構。
 - Play、Bet Mode、Setting 的操作方式。
+- Language 中英切換與專有名詞規則。
 - Debug Mode 的顯示範圍與控制邏輯。
 - Set RNG、Reel RNG、Spin Result、Log 的基本功能。
 - 統計欄位與計算口徑。
@@ -45,6 +46,8 @@
 - 預設餘額。
 - Denomination（DENOM）。
 - Bet Level 清單。
+- 預設介面語言（中文或 English）。
+- 是否要保存玩家最後選擇的語言；共用預設為保存。
 
 ### 2.2 數學與盤面資料
 
@@ -99,6 +102,7 @@
 - 简中及英文規則文字。
 - Paytable。
 - 不應顯示的內部內容，例如 Game Meta、來源說明、待確認事項及編輯備註。
+- English Help 必須使用 `game_help_draft.md` 的英文欄，不另外建立另一份英文規則。
 
 ## 3. 建議檔案結構
 
@@ -402,6 +406,7 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 
 - `Debug Mode` 開關。
 - `Config` 選單。
+- `Language` 中文／English 選單。
 - `Help` 按鈕。
 - `Reset` 按鈕。
 
@@ -409,17 +414,37 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 
 - Debug Mode 開啟後才顯示 Debug 專用區域。
 - Config 切換方式需明確；重新載入後應套用選定 Config。
+- Language 切換後必須立即更新主介面、狀態訊息及 Help，不需重新載入頁面。
+- Language 選擇必須保存；切換 Config 或重新開啟 Demo Game 後維持最後選擇。
 - Reset 重置 Credit、統計、Auto、Bet Mode、FG、Debug 暫存、指定 RNG 與畫面狀態。
+- Reset 不重置 Language，避免玩家每次 Reset 都要重新選擇。
 - Reset 後回到預設 Config 或保留目前 Config，必須在專案開始前決定並保持一致。
 
-### 6.16 Help
+### 6.16 Language
+
+- Setting 必須提供「中文／English」切換。
+- 預設語言由專案規格決定；未指定時沿用玩家最後選擇，第一次開啟預設 English。
+- 切換語言時不得改變 RNG、盤面結果、Credit、Bet、Win、統計或目前遊戲流程。
+- 所有一般介面標題、狀態說明、操作訊息與錯誤提示都要依語言切換。
+- 遊戲及測試專有名詞維持英文，不翻譯成容易產生歧義的中文。
+- 建議維持英文的專有名詞包括：`Spin`、`Auto`、`Bet`、`Bet Mode`、`Normal Bet`、`Extra Bet`、`Buy Feature`、`Credit`、`Win`、`RTP`、`RNG`、`Reel`、`Scatter`、`Wild`、`Cascade`、`Multiplier`、`Base Game`、`Free Game`、`FG`、`Feature`、`Config`、`Debug Mode`、`Set RNG`、`Line Wins`、`Log`、`Help`。
+- 中文模式只翻譯一般敘述與動作，例如「設定」、「總局數」、「命中率」、「清除」、「關閉」、「已開啟」、「已完成」與「剩餘場次」。
+- 中英文字串必須集中管理，不可散落在多個 Event Handler 內。
+- 動態訊息應保留未翻譯的原始訊息或 Message Key，再依目前 Language Render；不可只保存已翻譯文字。
+- `document.documentElement.lang` 應依語言設為 `zh-Hant` 或 `en`。
+- Language 切換控制在 Spin、Auto、FG、History View 等狀態下都可使用。
+
+### 6.17 Help
 
 - Help 按鈕放在 Setting。
 - 點擊後使用彈窗顯示 `game_help_draft.md` 的規則內容。
 - 規則文字必須與 `game_help_draft.md` 完全相同，不可在 HTML 中另外改寫。
 - 只顯示正式規則與 Paytable。
 - 不顯示文件前言、Game Meta、來源說明、待確認事項或編輯備註。
-- 简中與英文並排顯示；小螢幕可改為上下排列。
+- Help 一次只顯示目前選擇的語言，不使用中英並排。
+- 中文模式使用 `game_help_draft.md` 的简中欄。
+- English 模式直接使用 `game_help_draft.md` 的英文欄，文字不可重新翻譯或改寫。
+- Language 切換時，已開啟的 Help 必須立即切換內容。
 - 規則以區域卡片整理，不直接顯示原始 Markdown 表格。
 - 必須支援 Close 按鈕、`Esc` 與點擊背景關閉。
 - 必須提供離線備援內容，確保雙擊 `index.html` 時仍可閱讀。
@@ -427,13 +452,13 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 
 ## 7. 操作鎖定矩陣
 
-| 狀態 | Spin | Auto | Bet | Bet Mode | Speed | Previous／Next | Set RNG |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Idle | 可用 | 可切換 | 可用 | 可用 | 可用 | 依歷史狀態 | 可用（Debug） |
-| Spinning | 一般模式不可用；Debug 可排入 Next Spin | 可關閉 | 鎖定 | 鎖定 | 可用 | 鎖定 | 鎖定 |
-| Auto | 不可用 | 可關閉 | 鎖定 | 鎖定 | 可用 | 鎖定 | 鎖定 |
-| Pending FG | 顯示下一場 FG 操作 | 依設計 | 鎖定 | 鎖定 | 可用 | 依播放狀態 | 鎖定 |
-| History View | 可開始下一次 Spin | 可切換 | 依 Idle | 依 Idle | 可用 | 依前後歷史 | 可用（Debug） |
+| 狀態 | Spin | Auto | Bet | Bet Mode | Speed | Language | Previous／Next | Set RNG |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Idle | 可用 | 可切換 | 可用 | 可用 | 可用 | 可切換 | 依歷史狀態 | 可用（Debug） |
+| Spinning | 一般模式不可用；Debug 可排入 Next Spin | 可關閉 | 鎖定 | 鎖定 | 可用 | 可切換 | 鎖定 | 鎖定 |
+| Auto | 不可用 | 可關閉 | 鎖定 | 鎖定 | 可用 | 可切換 | 鎖定 | 鎖定 |
+| Pending FG | 顯示下一場 FG 操作 | 依設計 | 鎖定 | 鎖定 | 可用 | 可切換 | 依播放狀態 | 鎖定 |
+| History View | 可開始下一次 Spin | 可切換 | 依 Idle | 依 Idle | 可用 | 可切換 | 依前後歷史 | 可用（Debug） |
 
 ## 8. 遊戲流程與帳務規格
 
@@ -502,6 +527,8 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 - 先產生可重現的 Round Result，再依結果播放動畫。
 - Debug 畫面只讀取已產生的結果，不另外改算結果。
 - 所有 UI 狀態集中由單一 State 管理。
+- Language 與原始 Message Key／未翻譯訊息存入 State；畫面顯示時才套用語系文字。
+- Language 字典集中管理，專有名詞使用共用英文常數，避免不同區域翻譯不一致。
 - 顯示金額、倍數、百分比與 RNG 範圍使用共用格式化函式。
 - 所有按鈕狀態由統一更新函式處理，避免只在個別事件內修改。
 - 即時 Log 最多保留 500 筆，資料與 DOM 都要裁切。
@@ -519,8 +546,9 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 7. 完成遊戲 Feature 與 FG 流程。
 8. 完成統計與帳務更新。
 9. 完成 Debug Mode、Set RNG、RNG、Spin Result、Log 與歷史控制。
-10. 接上 Help 並建立離線備援。
-11. 依第 12 節完成驗收。
+10. 完成 Language 中英切換與專有名詞檢查。
+11. 接上 Help、單語顯示與離線備援。
+12. 依第 12 節完成驗收。
 
 ## 12. 最低驗收清單
 
@@ -557,20 +585,34 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 - [ ] Spin Result 依播放階段即時更新。
 - [ ] Log 即時更新、最多 500 行且可 Clear。
 
-### 12.4 Help
+### 12.4 Language
+
+- [ ] Setting 中有中文／English 選單。
+- [ ] Language 切換不需重新載入頁面。
+- [ ] 切換後主介面、狀態訊息、錯誤提示與 Help 同步更新。
+- [ ] `Spin`、`Bet`、`RNG`、`FG`、`Multiplier` 等專有名詞維持英文。
+- [ ] Language 在 Spin、Auto、FG 與 History View 狀態下都可切換。
+- [ ] Language 選擇在切換 Config 或重新開啟後仍保留。
+- [ ] Reset 不會改變目前 Language。
+- [ ] Language 切換不影響 RNG、盤面、帳務與統計。
+
+### 12.5 Help
 
 - [ ] Setting 中有 Help 按鈕。
 - [ ] Help 只顯示正式規則與 Paytable。
 - [ ] Help 文字與 `game_help_draft.md` 完全一致。
+- [ ] Help 一次只顯示目前選擇的語言。
+- [ ] 中文使用 Markdown 简中欄；English 直接使用 Markdown 英文欄。
+- [ ] Help 開啟時切換 Language，內容會立即更新。
 - [ ] Help 可用 Close、Esc 及背景點擊關閉。
 - [ ] 離線開啟時 Help 仍可閱讀。
 
-### 12.5 技術檢查
+### 12.6 技術檢查
 
 - [ ] HTML 內嵌 JavaScript 語法檢查通過。
 - [ ] HTML ID 無重複。
 - [ ] 瀏覽器 Console 無未處理錯誤。
-- [ ] Normal、Extra、Feature Buy、FG、Auto、Debug 至少各完成一次實際操作測試。
+- [ ] Normal、Extra、Feature Buy、FG、Auto、Debug、中文、English 至少各完成一次實際操作測試。
 - [ ] 指定 RNG 可重現預期盤面或抽獎區間。
 - [ ] Help、Bet 選單與所有彈窗沒有版面溢出。
 
@@ -615,6 +657,11 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 ## Help
 - 規則來源：
 - 排除章節：
+
+## Language（與共用規格不同時才填）
+- 預設語言：
+- 不保存 Language 的原因：
+- 額外維持英文的專有名詞：
 
 ## Special Cases
 - 該遊戲額外限制或例外：

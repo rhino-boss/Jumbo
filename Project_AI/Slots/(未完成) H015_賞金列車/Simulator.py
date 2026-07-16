@@ -11,13 +11,12 @@ from numba import njit
 
 # ===== User Settings =====
 
-BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Project_AI\Slots\H015_賞金列車"
-CONFIG_PATH = os.path.join(BASE_DIR, "config.js")
-OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
-
+CONFIG_FILE = "config.js"
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0
+CARD_SYSTEM_ENABLED = True
+CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 THREADS = max(1, min(8, os.cpu_count() or 1))
 
 OUTPUT_REPORT = True
@@ -25,6 +24,34 @@ SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = True
 RUN_SINGLE_SPIN_DEBUG = False
 DEBUG_ROUNDS = 1
+
+
+def _parse_env_bool(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be true/false, got {value!r}")
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.environ.get("H015_CONFIG_FILE", CONFIG_FILE)
+CONFIG_PATH = os.path.join(BASE_DIR, CONFIG_FILE)
+OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
+TOTAL_ROUNDS = int(os.environ.get("H015_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
+BET_MULTI = int(os.environ.get("H015_BET_MULTI", str(BET_MULTI)))
+BET_MODE = int(os.environ.get("H015_BET_MODE", str(BET_MODE)))
+CARD_SYSTEM_ENABLED = _parse_env_bool("H015_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
+CARD_SYSTEM_IS_NEWBIE = _parse_env_bool("H015_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+THREADS = int(os.environ.get("H015_THREADS", str(THREADS)))
+OUTPUT_REPORT = _parse_env_bool("H015_OUTPUT_REPORT", OUTPUT_REPORT)
+SHOW_CONSOLE_SUMMARY = _parse_env_bool("H015_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
+SHOW_CONSOLE_DETAIL = _parse_env_bool("H015_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
+RUN_SINGLE_SPIN_DEBUG = _parse_env_bool("H015_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 
 THRESHOLD_RECORD = np.array(
     [
@@ -43,20 +70,54 @@ THRESHOLD_RECORD = np.array(
         20,
         25,
         30,
+        35,
         40,
+        45,
         50,
         60,
+        70,
         80,
+        90,
         100,
         120,
+        140,
         160,
+        180,
         200,
+        250,
         300,
+        350,
+        400,
+        450,
         500,
+        550,
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950,
         1000,
         2000,
+        3000,
+        4000,
         5000,
+        6000,
+        7000,
+        8000,
+        9000,
         10000,
+        20000,
+        30000,
+        40000,
+        50000,
+        60000,
+        70000,
+        80000,
+        90000,
+        100000,
         9999999,
     ],
     dtype=np.float64,
@@ -89,7 +150,9 @@ def _combo_map_to_array(raw_tables):
 CFG = _load_config(CONFIG_PATH)
 
 GAME_ID = CFG["game_id"]
+PARSHEET_ID = CFG.get("parsheet_id", "H0151")
 GAME_NAME = CFG["display_name"]
+GAME_VERSION = CFG.get("excel_version") or CFG.get("game_version") or ""
 MODE_NORMALBET = int(CFG["mode_normalbet"])
 MODE_FEATUREBUY = int(CFG["mode_featurebuy"])
 SCENE_BG = int(CFG["scene_bg"])
@@ -134,6 +197,48 @@ SYMBOL_COUNT = int(CFG["symbols_count"])
 WW = int(next(k for k, v in SYMBOL_STR.items() if v == "WW"))
 C1 = int(next(k for k, v in SYMBOL_STR.items() if v == "C1"))
 STRIP_BF = int(CFG["strip_bf"])
+SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_FEATUREBUY)
+
+CARD_SYSTEM = CFG.get("card_system", {})
+CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM.get("enabled", False))
+CARD_RETRY_LIMIT = max(1, int(CARD_SYSTEM.get("retry_limit", 5000)))
+CARD_TYPE_RANGE = 0
+CARD_TYPE_FREE_GAME = 1
+CARD_PROFILE_NEWBIE_BG = 0
+CARD_PROFILE_NEWBIE_FG = 1
+CARD_PROFILE_OLDHAND_BG = 2
+CARD_PROFILE_OLDHAND_FG = 3
+CARD_PROFILE_BUY_FEATURE = 4
+
+
+def _get_card_list(player, mode, segment):
+    player_data = CARD_SYSTEM.get(player, {})
+    mode_data = player_data.get(mode, {}) if isinstance(player_data, dict) else {}
+    return list(mode_data.get(segment, [])) if isinstance(mode_data, dict) else []
+
+
+CARD_PROFILE_LISTS = [
+    _get_card_list("newbie", "normal_bet", "weight_bg"),
+    _get_card_list("newbie", "normal_bet", "weight_fg"),
+    _get_card_list("oldhand", "normal_bet", "weight_bg"),
+    _get_card_list("oldhand", "normal_bet", "weight_fg"),
+    _get_card_list("oldhand", "buy_feature", "weight_fg"),
+]
+MAX_CARDS = max(1, max((len(cards) for cards in CARD_PROFILE_LISTS), default=0))
+CARD_TYPES = np.full((len(CARD_PROFILE_LISTS), MAX_CARDS), -1, dtype=np.int64)
+CARD_MIN = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
+CARD_MAX = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
+CARD_WEIGHT_CUM = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.int64)
+CARD_COUNTS = np.zeros(len(CARD_PROFILE_LISTS), dtype=np.int64)
+for profile_idx, cards in enumerate(CARD_PROFILE_LISTS):
+    running_weight = 0
+    for card_idx, card in enumerate(cards):
+        running_weight += max(0, int(card.get("weight", 0)))
+        CARD_TYPES[profile_idx, card_idx] = CARD_TYPE_FREE_GAME if card.get("type") == "free_game" else CARD_TYPE_RANGE
+        CARD_MIN[profile_idx, card_idx] = float(card.get("min", 0.0))
+        CARD_MAX[profile_idx, card_idx] = float(card.get("max", 0.0))
+        CARD_WEIGHT_CUM[profile_idx, card_idx] = running_weight
+    CARD_COUNTS[profile_idx] = len(cards)
 
 SCORE_SYMBOL_MASK = np.zeros(SYMBOL_COUNT, dtype=np.int64)
 for symbol in SYMBOLS_SCORE:
@@ -159,9 +264,16 @@ SUMMARY_FIELDS = [
     "max_win_multiplier",
     "max_combo_bg",
     "max_combo_fg",
+    "retry_total",
+    "retry_limit_exceeded",
+    "retry_fail_bg_range",
+    "retry_fail_bg_freegame",
+    "retry_fail_fg",
+    "win_x_sum",
+    "win_x_square",
 ]
 SUMMARY_IDX = {name: idx for idx, name in enumerate(SUMMARY_FIELDS)}
-SUMMARY_SIZE = 14
+SUMMARY_SIZE = len(SUMMARY_FIELDS)
 I_ROUNDS = 0
 I_COIN_IN_TOTAL = 1
 I_PAY_BG_TOTAL = 2
@@ -176,6 +288,13 @@ I_BOMB_USED_FG = 10
 I_MAX_WIN_MULTIPLIER = 11
 I_MAX_COMBO_BG = 12
 I_MAX_COMBO_FG = 13
+I_RETRY_TOTAL = 14
+I_RETRY_LIMIT_EXCEEDED = 15
+I_RETRY_FAIL_BG_RANGE = 16
+I_RETRY_FAIL_BG_FREEGAME = 17
+I_RETRY_FAIL_FG = 18
+I_WIN_X_SUM = 19
+I_WIN_X_SQUARE = 20
 
 SCENE_LABELS = ("BG", "FG")
 
@@ -193,6 +312,24 @@ def _rand_cum_index(cum_arr):
         if pick < cum_arr[idx]:
             return idx
     return cum_arr.shape[0] - 1
+
+
+@njit
+def _pick_card(profile_idx):
+    card_count = CARD_COUNTS[profile_idx]
+    if card_count <= 0:
+        return -1
+    return _rand_cum_index(CARD_WEIGHT_CUM[profile_idx, :card_count])
+
+
+@njit
+def _is_card_match(profile_idx, card_idx, score, card_coin_in, triggered_free_game):
+    if card_idx < 0:
+        return True
+    if CARD_TYPES[profile_idx, card_idx] == CARD_TYPE_FREE_GAME:
+        return triggered_free_game == 1
+    multiplier = score / card_coin_in
+    return multiplier > CARD_MIN[profile_idx, card_idx] and multiplier <= CARD_MAX[profile_idx, card_idx]
 
 
 @njit
@@ -229,8 +366,6 @@ def _restore_gold_symbols(board, gold_mask):
             if symbol >= 0 and symbol < SYMBOL_COUNT and GOLD_SYMBOL_MASK[symbol] == 1:
                 board[row_idx, reel_idx] = symbol - 8
                 gold_mask[row_idx, reel_idx] = 1
-            else:
-                gold_mask[row_idx, reel_idx] = 0
 
 
 @njit
@@ -355,11 +490,11 @@ def _get_free_spins_award(scatter_count):
 
 
 @njit
-def _record_hits_pay(hit_counts, pay_amounts, scene_idx, pay_symbol, pay_way, pay_line, pay_unit, hit_count, applied_multiplier):
+def _record_hits_pay(hit_counts, pay_amounts, scene_idx, pay_symbol, pay_way, pay_line, pay_unit, hit_count, applied_multiplier, bet_multi):
     for idx in range(hit_count):
         symbol = pay_symbol[idx]
         hit_counts[scene_idx, symbol] += pay_way[idx]
-        pay_amounts[scene_idx, symbol] += pay_unit[idx] * pay_way[idx] * applied_multiplier
+        pay_amounts[scene_idx, symbol] += pay_unit[idx] * pay_way[idx] * applied_multiplier * bet_multi
 
 
 @njit
@@ -374,7 +509,7 @@ def _record_threshold(threshold_count, threshold_pay, scene_idx, value, pay_valu
 
 
 @njit
-def _run_spin(scene_mode, bet_mode, summary, hit_counts, pay_amounts, combo_counts, threshold_count, threshold_pay):
+def _run_spin(scene_mode, bet_mode, bet_multi, force_first_light, summary, hit_counts, pay_amounts, combo_counts):
     rng = np.zeros(REEL_NUM, dtype=np.int64)
     board = np.zeros((WINDOW_SIZE, REEL_NUM), dtype=np.int64)
     gold_mask = np.zeros((WINDOW_SIZE, REEL_NUM), dtype=np.int64)
@@ -413,9 +548,6 @@ def _run_spin(scene_mode, bet_mode, summary, hit_counts, pay_amounts, combo_coun
     total_pay = 0
     winning_cascades = 0
     used_bomb = 0
-    must_hit_idx = _rand_cum_index(WEIGHT_CUM_MUST_APPEAR_1_FG) if scene_mode == SCENE_FG else -1
-    spin_index = 0
-
     while True:
         special_pos = _copy_special_area()
 
@@ -434,7 +566,7 @@ def _run_spin(scene_mode, bet_mode, summary, hit_counts, pay_amounts, combo_coun
         _apply_cascade(table_id, combo_idx, board, special_pos, gold_mask, drop_table)
         _restore_gold_symbols(board, gold_mask)
 
-        if scene_mode == SCENE_FG and combo_idx == 0 and must_hit_idx == spin_index + 1 and bomb_count == 0:
+        if scene_mode == SCENE_FG and combo_idx == 0 and force_first_light == 1 and bomb_count == 0:
             multiplier_level = min(multiplier_level + 1, MULTIPLIER_LEVELS - 1)
         else:
             multiplier_level = min(multiplier_level + bomb_count, MULTIPLIER_LEVELS - 1)
@@ -447,10 +579,20 @@ def _run_spin(scene_mode, bet_mode, summary, hit_counts, pay_amounts, combo_coun
             break
 
         winning_cascades += 1
-        cascade_pay = cascade_pay_raw * multiplier_value
+        cascade_pay = cascade_pay_raw * multiplier_value * bet_multi
         total_pay += cascade_pay
-        _record_hits_pay(hit_counts, pay_amounts, 0 if scene_mode == SCENE_BG else 1, pay_symbol, pay_way, pay_line, pay_unit, hit_count, multiplier_value)
-        _record_threshold(threshold_count, threshold_pay, 0 if scene_mode == SCENE_BG else 1, multiplier_value, cascade_pay)
+        _record_hits_pay(
+            hit_counts,
+            pay_amounts,
+            0 if scene_mode == SCENE_BG else 1,
+            pay_symbol,
+            pay_way,
+            pay_line,
+            pay_unit,
+            hit_count,
+            multiplier_value,
+            bet_multi,
+        )
         if bomb_count > 0 and cascade_pay > 0:
             used_bomb = 1
 
@@ -467,6 +609,38 @@ def _run_spin(scene_mode, bet_mode, summary, hit_counts, pay_amounts, combo_coun
 
 
 @njit
+def _run_free_game_session(scatter_bg, bet_mode, bet_multi, summary, hit_counts, pay_amounts, combo_counts):
+    pay_fg = 0.0
+    summary[I_FG_TRIGGER_SPINS] += 1
+    free_spins = _get_free_spins_award(scatter_bg)
+    guaranteed_light_spin = _rand_cum_index(WEIGHT_CUM_MUST_APPEAR_1_FG)
+    fg_spin_idx = 0
+    while fg_spin_idx < free_spins and fg_spin_idx < MAX_SPIN_FREE_GAME:
+        force_first_light = 1 if guaranteed_light_spin == fg_spin_idx + 1 else 0
+        spin_pay, spin_scatter, hit_fg, bomb_fg = _run_spin(
+            SCENE_FG,
+            bet_mode,
+            bet_multi,
+            force_first_light,
+            summary,
+            hit_counts,
+            pay_amounts,
+            combo_counts,
+        )
+        pay_fg += spin_pay
+        summary[I_FG_SPINS] += 1
+        if hit_fg:
+            summary[I_HIT_FG_SPINS] += 1
+        if bomb_fg:
+            summary[I_BOMB_USED_FG] += 1
+        if spin_scatter >= 3:
+            free_spins += _get_free_spins_award(spin_scatter)
+            summary[I_RETRIGGER_COUNT] += 1
+        fg_spin_idx += 1
+    return pay_fg
+
+
+@njit
 def _simulate_chunk(total_rounds, bet_mode, bet_multi, seed):
     np.random.seed(seed)
 
@@ -474,18 +648,51 @@ def _simulate_chunk(total_rounds, bet_mode, bet_multi, seed):
     hit_counts = np.zeros((2, SYMBOL_COUNT), dtype=np.float64)
     pay_amounts = np.zeros((2, SYMBOL_COUNT), dtype=np.float64)
     combo_counts = np.zeros((2, 6), dtype=np.float64)
-    threshold_count = np.zeros((2, len(THRESHOLD_RECORD)), dtype=np.float64)
-    threshold_pay = np.zeros((2, len(THRESHOLD_RECORD)), dtype=np.float64)
+    threshold_count = np.zeros((3, len(THRESHOLD_RECORD)), dtype=np.float64)
+    threshold_pay = np.zeros((3, len(THRESHOLD_RECORD)), dtype=np.float64)
 
     coin_in = bet_multi * DEFAULT_COIN_IN * NORMALBET
     if bet_mode == MODE_FEATUREBUY:
         coin_in *= FEATUREBUY
 
-    for _ in range(total_rounds):
+    card_coin_in = bet_multi * DEFAULT_COIN_IN * NORMALBET
+    bg_profile = CARD_PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BG
+    fg_profile = CARD_PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_FG
+    accepted_rounds = 0
+    retry_count = 0
+    retry_total = 0
+    retry_limit_exceeded = 0
+    retry_fail_bg_range = 0
+    retry_fail_bg_freegame = 0
+    retry_fail_fg = 0
+    bg_card_idx = -1
+    fg_card_idx = -1
+    package_card_idx = -1
+
+    while accepted_rounds < total_rounds:
+        if retry_count == 0:
+            bg_card_idx = -1
+            fg_card_idx = -1
+            package_card_idx = -1
+            if CARD_SYSTEM_ENABLED:
+                if bet_mode == MODE_NORMALBET:
+                    bg_card_idx = _pick_card(bg_profile)
+                    if bg_card_idx >= 0 and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME:
+                        fg_card_idx = _pick_card(fg_profile)
+                else:
+                    package_card_idx = _pick_card(CARD_PROFILE_BUY_FEATURE)
+
+        summary_before = summary.copy()
+        hit_counts_before = hit_counts.copy()
+        pay_amounts_before = pay_amounts.copy()
+        combo_counts_before = combo_counts.copy()
+        threshold_count_before = threshold_count.copy()
+        threshold_pay_before = threshold_pay.copy()
+
         summary[I_ROUNDS] += 1
         summary[I_COIN_IN_TOTAL] += coin_in
 
-        pay_bg, scatter_bg, hit_bg, bomb_bg = _run_spin(SCENE_BG, bet_mode, summary, hit_counts, pay_amounts, combo_counts, threshold_count, threshold_pay)
+        pay_bg, scatter_bg, hit_bg, bomb_bg = _run_spin(SCENE_BG, bet_mode, bet_multi, 0, summary, hit_counts, pay_amounts, combo_counts)
         summary[I_PAY_BG_TOTAL] += pay_bg
         if hit_bg:
             summary[I_HIT_BG_SPINS] += 1
@@ -494,26 +701,87 @@ def _simulate_chunk(total_rounds, bet_mode, bet_multi, seed):
 
         pay_fg = 0.0
         if scatter_bg >= 3:
-            summary[I_FG_TRIGGER_SPINS] += 1
-            free_spins = _get_free_spins_award(scatter_bg)
-            fg_spin_idx = 0
-            while fg_spin_idx < free_spins and fg_spin_idx < MAX_SPIN_FREE_GAME:
-                spin_pay, spin_scatter, hit_fg, bomb_fg = _run_spin(SCENE_FG, bet_mode, summary, hit_counts, pay_amounts, combo_counts, threshold_count, threshold_pay)
-                pay_fg += spin_pay
-                summary[I_FG_SPINS] += 1
-                if hit_fg:
-                    summary[I_HIT_FG_SPINS] += 1
-                if bomb_fg:
-                    summary[I_BOMB_USED_FG] += 1
-                if spin_scatter >= 3:
-                    free_spins += _get_free_spins_award(spin_scatter)
-                    summary[I_RETRIGGER_COUNT] += 1
-                fg_spin_idx += 1
+            summary_after_bg = summary.copy()
+            hit_counts_after_bg = hit_counts.copy()
+            pay_amounts_after_bg = pay_amounts.copy()
+            combo_counts_after_bg = combo_counts.copy()
+            fg_retry_count = 0
+            while True:
+                if fg_retry_count > 0:
+                    summary = summary_after_bg.copy()
+                    hit_counts = hit_counts_after_bg.copy()
+                    pay_amounts = pay_amounts_after_bg.copy()
+                    combo_counts = combo_counts_after_bg.copy()
+                pay_fg = _run_free_game_session(scatter_bg, bet_mode, bet_multi, summary, hit_counts, pay_amounts, combo_counts)
+                needs_fg_match = (
+                    CARD_SYSTEM_ENABLED
+                    and bet_mode == MODE_NORMALBET
+                    and bg_card_idx >= 0
+                    and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME
+                )
+                if not needs_fg_match or _is_card_match(fg_profile, fg_card_idx, pay_fg, card_coin_in, 1):
+                    break
+                retry_total += 1
+                retry_fail_fg += 1
+                fg_retry_count += 1
+                if fg_retry_count >= CARD_RETRY_LIMIT:
+                    retry_limit_exceeded += 1
+                    break
 
         summary[I_PAY_FG_TOTAL] += pay_fg
+        _record_threshold(threshold_count, threshold_pay, 0, pay_bg / coin_in, pay_bg)
+        if scatter_bg >= 3:
+            _record_threshold(threshold_count, threshold_pay, 1, pay_fg / coin_in, pay_fg)
+        _record_threshold(threshold_count, threshold_pay, 2, (pay_bg + pay_fg) / coin_in, pay_bg + pay_fg)
         win_mult = (pay_bg + pay_fg) / coin_in if coin_in > 0 else 0.0
+        summary[I_WIN_X_SUM] += win_mult
+        summary[I_WIN_X_SQUARE] += win_mult * win_mult
         if win_mult > summary[I_MAX_WIN_MULTIPLIER]:
             summary[I_MAX_WIN_MULTIPLIER] = win_mult
+
+        accepted = True
+        fail_reason = 0
+        triggered_free_game = 1 if scatter_bg >= 3 else 0
+        if CARD_SYSTEM_ENABLED:
+            if bet_mode == MODE_NORMALBET:
+                if bg_card_idx >= 0 and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME:
+                    if triggered_free_game == 0:
+                        accepted = False
+                        fail_reason = 2
+                elif triggered_free_game == 1 or not _is_card_match(bg_profile, bg_card_idx, pay_bg, card_coin_in, 0):
+                    accepted = False
+                    fail_reason = 1
+            elif not _is_card_match(CARD_PROFILE_BUY_FEATURE, package_card_idx, pay_bg + pay_fg, card_coin_in, triggered_free_game):
+                accepted = False
+                fail_reason = 3
+
+        if not accepted:
+            retry_total += 1
+            if fail_reason == 1:
+                retry_fail_bg_range += 1
+            elif fail_reason == 2:
+                retry_fail_bg_freegame += 1
+            else:
+                retry_fail_fg += 1
+            retry_count += 1
+            if retry_count < CARD_RETRY_LIMIT:
+                summary = summary_before
+                hit_counts = hit_counts_before
+                pay_amounts = pay_amounts_before
+                combo_counts = combo_counts_before
+                threshold_count = threshold_count_before
+                threshold_pay = threshold_pay_before
+                continue
+            retry_limit_exceeded += 1
+
+        accepted_rounds += 1
+        retry_count = 0
+
+    summary[I_RETRY_TOTAL] += retry_total
+    summary[I_RETRY_LIMIT_EXCEEDED] += retry_limit_exceeded
+    summary[I_RETRY_FAIL_BG_RANGE] += retry_fail_bg_range
+    summary[I_RETRY_FAIL_BG_FREEGAME] += retry_fail_bg_freegame
+    summary[I_RETRY_FAIL_FG] += retry_fail_fg
 
     return summary, hit_counts, pay_amounts, combo_counts, threshold_count, threshold_pay
 
@@ -526,6 +794,15 @@ def _merge_arrays(target, source):
 
 
 def simulate(total_rounds, bet_mode, bet_multi, threads):
+    if bet_mode not in SUPPORTED_BET_MODES:
+        supported = ", ".join(str(mode) for mode in SUPPORTED_BET_MODES)
+        raise ValueError(f"Unsupported BET_MODE={bet_mode}; H015 supports: {supported}")
+    if total_rounds <= 0:
+        raise ValueError("TOTAL_ROUNDS must be greater than 0")
+    if bet_multi <= 0:
+        raise ValueError("BET_MULTI must be greater than 0")
+    if threads <= 0:
+        raise ValueError("THREADS must be greater than 0")
     chunk = total_rounds // threads
     remainder = total_rounds % threads
     jobs = []
@@ -546,8 +823,8 @@ def simulate(total_rounds, bet_mode, bet_multi, threads):
     hit_counts = np.zeros((2, SYMBOL_COUNT), dtype=np.float64)
     pay_amounts = np.zeros((2, SYMBOL_COUNT), dtype=np.float64)
     combo_counts = np.zeros((2, 6), dtype=np.float64)
-    threshold_count = np.zeros((2, len(THRESHOLD_RECORD)), dtype=np.float64)
-    threshold_pay = np.zeros((2, len(THRESHOLD_RECORD)), dtype=np.float64)
+    threshold_count = np.zeros((3, len(THRESHOLD_RECORD)), dtype=np.float64)
+    threshold_pay = np.zeros((3, len(THRESHOLD_RECORD)), dtype=np.float64)
     for item in results:
         _merge_arrays(summary, item[0])
         _merge_arrays(hit_counts, item[1])
@@ -555,6 +832,10 @@ def simulate(total_rounds, bet_mode, bet_multi, threads):
         _merge_arrays(combo_counts, item[3])
         _merge_arrays(threshold_count, item[4])
         _merge_arrays(threshold_pay, item[5])
+
+    summary[I_MAX_WIN_MULTIPLIER] = max(item[0][I_MAX_WIN_MULTIPLIER] for item in results)
+    summary[I_MAX_COMBO_BG] = max(item[0][I_MAX_COMBO_BG] for item in results)
+    summary[I_MAX_COMBO_FG] = max(item[0][I_MAX_COMBO_FG] for item in results)
 
     return {
         "duration": duration,
@@ -584,9 +865,20 @@ def _build_summary_rows(result, bet_mode, bet_multi):
     pay_total = pay_bg + pay_fg
     fg_triggers = summary[SUMMARY_IDX["fg_trigger_spins"]]
     fg_spins = summary[SUMMARY_IDX["fg_spins"]]
+    expected_value = summary[SUMMARY_IDX["win_x_sum"]] / rounds
+    variance = max(0.0, summary[SUMMARY_IDX["win_x_square"]] / rounds - expected_value * expected_value)
+    standard_deviation = math.sqrt(variance)
     rows = [
+        ("parsheet_id", PARSHEET_ID),
         ("game_id", GAME_ID),
         ("game_name", GAME_NAME),
+        ("game_version", GAME_VERSION),
+        ("config_file", CONFIG_FILE),
+        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off"),
+        (
+            "card_system_profile",
+            "off" if not CARD_SYSTEM_ENABLED else ("buy_feature" if bet_mode == MODE_FEATUREBUY else ("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")),
+        ),
         ("bet_mode", _mode_name(bet_mode)),
         ("bet_multi", int(bet_multi)),
         ("coin_in", int(bet_multi * DEFAULT_COIN_IN * NORMALBET * (FEATUREBUY if bet_mode == MODE_FEATUREBUY else 1))),
@@ -595,6 +887,8 @@ def _build_summary_rows(result, bet_mode, bet_multi):
         ("rtp_total", pay_total / coin_in_total),
         ("rtp_bg", pay_bg / coin_in_total),
         ("rtp_fg", pay_fg / coin_in_total),
+        ("standard_deviation", standard_deviation),
+        ("standard_error", standard_deviation / math.sqrt(rounds)),
         ("hit_rate_bg", summary[SUMMARY_IDX["hit_bg_spins"]] / rounds),
         ("fg_trigger_rate", fg_triggers / rounds),
         ("fg_trigger_cycle", (rounds / fg_triggers) if fg_triggers > 0 else math.inf),
@@ -606,6 +900,11 @@ def _build_summary_rows(result, bet_mode, bet_multi):
         ("max_win_multiplier", summary[SUMMARY_IDX["max_win_multiplier"]]),
         ("max_combo_bg", int(summary[SUMMARY_IDX["max_combo_bg"]])),
         ("max_combo_fg", int(summary[SUMMARY_IDX["max_combo_fg"]])),
+        ("retry_total", int(summary[SUMMARY_IDX["retry_total"]])),
+        ("retry_limit_exceeded", int(summary[SUMMARY_IDX["retry_limit_exceeded"]])),
+        ("retry_fail_bg_range", int(summary[SUMMARY_IDX["retry_fail_bg_range"]])),
+        ("retry_fail_bg_freegame", int(summary[SUMMARY_IDX["retry_fail_bg_freegame"]])),
+        ("retry_fail_fg", int(summary[SUMMARY_IDX["retry_fail_fg"]])),
     ]
     return rows
 
@@ -636,7 +935,14 @@ def _build_detail_frames(result):
     combo_df["BG"] = combo_df["BG"] / rounds
     combo_df["FG"] = combo_df["FG"] / fg_spins
 
-    threshold_labels = [f"<= {int(v)}" if v < 9999999 else "> 10000" for v in THRESHOLD_RECORD]
+    threshold_labels = []
+    for idx, upper in enumerate(THRESHOLD_RECORD):
+        if idx == 0:
+            threshold_labels.append("0")
+        else:
+            lower = int(THRESHOLD_RECORD[idx - 1])
+            upper_label = "+∞" if upper == 9999999 else str(int(upper))
+            threshold_labels.append(f"({lower}, {upper_label}]")
     multiplier_df = pd.DataFrame(
         {
             "bucket": threshold_labels,
@@ -644,6 +950,8 @@ def _build_detail_frames(result):
             "bg_pay": result["threshold_pay"][0],
             "fg_cnt": result["threshold_count"][1],
             "fg_pay": result["threshold_pay"][1],
+            "oa_cnt": result["threshold_count"][2],
+            "oa_pay": result["threshold_pay"][2],
         }
     )
 
@@ -675,7 +983,19 @@ def print_console(result, bet_mode, bet_multi):
 def output_report(result, bet_mode, bet_multi):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    path = os.path.join(OUTPUT_DIR, f"{GAME_NAME}_{timestamp}_betmode{bet_mode}.xlsx")
+    version_tag = "".join(char for char in str(GAME_VERSION) if char.isdigit())
+    rounds = int(result["summary"][SUMMARY_IDX["rounds"]])
+    exponent = int(round(math.log10(rounds))) if rounds > 0 else 0
+    rounds_tag = f"10{exponent}" if rounds == 10**exponent else str(rounds)
+    filename_parts = [PARSHEET_ID]
+    if version_tag:
+        filename_parts.append(version_tag)
+    filename_parts.extend([timestamp, f"betmode{bet_mode}", rounds_tag])
+    if CARD_SYSTEM_ENABLED:
+        if bet_mode == MODE_NORMALBET:
+            filename_parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
+        filename_parts.append("card")
+    path = os.path.join(OUTPUT_DIR, f"{'_'.join(filename_parts)}.xlsx")
     summary_rows = _build_summary_rows(result, bet_mode, bet_multi)
     hits_df, pay_df, combo_df, multiplier_df, record_df = _build_detail_frames(result)
     base_info_df = pd.DataFrame(summary_rows, columns=["field", "value"])

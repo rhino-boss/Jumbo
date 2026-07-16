@@ -13,6 +13,9 @@ PROJECT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_XLSX = PROJECT_DIR / "Source" / "H015192.xlsx"
 DEFAULT_OUTPUT = PROJECT_DIR / "config.js"
 TABLE_SHEETS = ["BG_Symbol", "BG_Symbol (2)", "FG_Symbol", "FG_Symbol (2)", "BF_Symbol"]
+PARSHEET_ID = "H0151"
+GAME_NAME = "賞金列車"
+ENGLISH_NAME = "Wild Train"
 SYMBOL_TO_BASE = {
     "G1": "M1",
     "G2": "M2",
@@ -60,9 +63,10 @@ def cumulative_by_row(rows: list[list[int]]) -> list[list[int]]:
 
 def load_template(path: Path) -> dict[str, Any]:
     defaults: dict[str, Any] = {
-        "game_name": "賞金列車",
-        "display_name": "賞金列車",
-        "english_name": "Wild Bounty Showdown",
+        "parsheet_id": PARSHEET_ID,
+        "game_name": GAME_NAME,
+        "display_name": GAME_NAME,
+        "english_name": ENGLISH_NAME,
         "game_version": "2.0.0.1",
         "bet_options": [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500],
         "denom": 0.002,
@@ -200,45 +204,82 @@ def parse_multi_appear(ws: Any, row_start: int) -> list[list[list[int]]]:
     return tables
 
 
+def parse_drop_combo(
+    ws: Any,
+    row_start: int,
+    symbol_code_to_id: dict[str, int],
+    symbol_count: int,
+    symbol_col: int,
+    weight_start_col: int,
+) -> list[list[int]]:
+    rows = [[0] * 6 for _ in range(symbol_count)]
+    for row in range(row_start, row_start + symbol_count):
+        symbol_value = ws.cell(row, symbol_col).value
+        if symbol_value is None:
+            continue
+        symbol_code = str(symbol_value).strip()
+        # The drop blocks are stored in symbol-ID order. Some gold-symbol rows
+        # intentionally display the corresponding base symbol label, so the
+        # label is descriptive and must not be used as the array index.
+        symbol_id = row - row_start
+        rows[symbol_id] = [to_int(ws.cell(row, weight_start_col + reel_idx).value) for reel_idx in range(6)]
+    return cumulative_by_row(rows)
+
+
 def parse_table_sheet(ws: Any, symbol_code_to_id: dict[str, int]) -> dict[str, Any]:
     arr_reels: list[list[int]] = []
     arr_reels_weight: list[list[int]] = []
-    for row in range(4, 46):
-        if ws.cell(row, 12).value == "R1":
+    for row in range(4, ws.max_row + 1):
+        if not isinstance(ws.cell(row, 11).value, (int, float)):
             continue
         line_values = [ws.cell(row, col).value for col in range(12, 18)]
-        weight_values = [ws.cell(row, col).value for col in range(19, 25)]
         if all(value is None for value in line_values):
             continue
-        arr_reels.append([symbol_code_to_id[str(value).strip()] for value in line_values])
-        arr_reels_weight.append([to_int(value, 1) for value in weight_values])
+        symbols: list[int] = []
+        for value in line_values:
+            symbol_code = str(value).strip()
+            if symbol_code not in symbol_code_to_id:
+                raise ValueError(f"{ws.title}!{ws.cell(row, 12).coordinate}: unknown reel symbol {symbol_code!r}")
+            symbols.append(symbol_code_to_id[symbol_code])
+        arr_reels.append(symbols)
+        # Z:AE is the reel-stop weight block. S:X contains symbol IDs, not weights.
+        arr_reels_weight.append([to_int(ws.cell(row, col).value) for col in range(26, 32)])
 
-    drop_rows: list[list[int]] = []
-    for row in range(27, 45):
-        weights: list[int] = []
-        for reel_idx, col in enumerate(range(3, 9)):
-            base_weight = ws.cell(row, col).value
-            if base_weight is None:
-                weights.append(0)
-                continue
-            value = float(base_weight)
-            scaled = int(round(value * 10000)) if value <= 1 else to_int(value)
-            allow_flag = to_int(ws.cell(row, 26 + reel_idx).value, 1)
-            weights.append(scaled if allow_flag > 0 else 0)
-        drop_rows.append(weights)
+    if not arr_reels:
+        raise ValueError(f"{ws.title}: no reel-strip rows found")
+    for reel_idx in range(6):
+        if sum(row[reel_idx] for row in arr_reels_weight) <= 0:
+            raise ValueError(f"{ws.title}: reel {reel_idx + 1} has no positive stop weight")
 
-    drop_cum = cumulative_by_row(drop_rows)
-    combo_map = {
-        "combo0": drop_cum,
-        "combo1": drop_cum,
-        "combo2": drop_cum,
-        "combo3_plus": drop_cum,
+    symbol_count = len(symbol_code_to_id)
+    combo_start_rows = (6, 29, 52, 75)
+    drop_blocks = {
+        "combo0": combo_start_rows[0],
+        "combo1": combo_start_rows[1],
+        "combo2": combo_start_rows[2],
+        "combo3_plus": combo_start_rows[3],
     }
+
+    def build_drop_map(symbol_col: int, weight_start_col: int) -> dict[str, list[list[int]]]:
+        return {
+            combo_name: parse_drop_combo(
+                ws,
+                row_start,
+                symbol_code_to_id,
+                symbol_count,
+                symbol_col,
+                weight_start_col,
+            )
+            for combo_name, row_start in drop_blocks.items()
+        }
+
     return {
         "arr_reels": arr_reels,
         "arr_reels_weight_cum": cumulative_by_row(arr_reels_weight),
         "reels_len": [len(arr_reels) for _ in range(6)],
-        "drop_combo": combo_map,
+        "drop_combo_a": build_drop_map(33, 34),  # AG, AH:AM
+        "drop_combo_b": build_drop_map(41, 42),  # AO, AP:AU
+        "drop_combo_c": build_drop_map(49, 50),  # AW, AX:BC
     }
 
 
@@ -271,8 +312,45 @@ def parse_free_spin_awards(awards_map: dict[int, int]) -> list[int]:
     return result
 
 
+def parse_card_range_rows(ws: Any, row_start: int, row_end: int) -> list[dict[str, Any]]:
+    cards: list[dict[str, Any]] = []
+    for row in range(row_start, row_end + 1):
+        lower = ws.cell(row, 1).value
+        upper = ws.cell(row, 2).value
+        weight = to_int(ws.cell(row, 12).value)
+        if not isinstance(lower, (int, float)) or not isinstance(upper, (int, float)):
+            continue
+        cards.append({"type": "range", "min": float(lower), "max": float(upper), "weight": weight})
+    return cards
+
+
+def parse_card_profile(ws: Any, include_buy_feature: bool) -> dict[str, Any]:
+    bg_cards = parse_card_range_rows(ws, 15, 78)
+    bg_cards.append({"type": "free_game", "weight": to_int(ws.cell(79, 12).value)})
+    profile: dict[str, Any] = {
+        "normal_bet": {
+            "weight_bg": bg_cards,
+            "weight_fg": parse_card_range_rows(ws, 87, 150),
+        }
+    }
+    if include_buy_feature:
+        profile["buy_feature"] = {"weight_fg": parse_card_range_rows(ws, 157, 220)}
+    return profile
+
+
+def parse_card_system(wb: Any) -> dict[str, Any]:
+    return {
+        "enabled": True,
+        "retry_limit": 5000,
+        "newbie": parse_card_profile(wb["Multiplier_Weight_Newbie"], False),
+        "oldhand": parse_card_profile(wb["Multiplier_Weight_Oldhand"], True),
+    }
+
+
 def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]:
-    wb = load_workbook(xlsx_path, data_only=True, read_only=True)
+    # The parser performs many targeted cell lookups; normal mode avoids the
+    # repeated stream rescans that make read_only worksheets extremely slow.
+    wb = load_workbook(xlsx_path, data_only=True, read_only=False)
     overview = parse_overview(wb["Overview"])
     parameter = parse_parameter(wb["Parameter"])
     symbol_code_to_id = {code: int(symbol_id) for symbol_id, code in overview["symbol_str"].items()}
@@ -282,12 +360,13 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
 
     config: dict[str, Any] = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "source_xlsx": str(xlsx_path),
+        "source_xlsx": "Source/H015192.xlsx",
         "source_box": "Source/H015192.xlsx",
         "game_id": overview["game_id"],
-        "game_name": template["game_name"],
-        "display_name": template["display_name"],
-        "english_name": template["english_name"],
+        "parsheet_id": PARSHEET_ID,
+        "game_name": GAME_NAME,
+        "display_name": GAME_NAME,
+        "english_name": ENGLISH_NAME,
         "game_version": overview["excel_version"] or template["game_version"],
         "bet_options": template["bet_options"],
         "denom": template["denom"],
@@ -322,13 +401,14 @@ def generate_config(xlsx_path: Path, template: dict[str, Any]) -> dict[str, Any]
         "arr_reels": [item["arr_reels"] for item in table_data],
         "arr_reels_weight_cum": [item["arr_reels_weight_cum"] for item in table_data],
         "reels_len": [item["reels_len"] for item in table_data],
-        "weight_cum_drop_symbol_a": [item["drop_combo"] for item in table_data],
-        "weight_cum_drop_symbol_b": [item["drop_combo"] for item in table_data],
-        "weight_cum_drop_symbol_c": [item["drop_combo"] for item in table_data],
+        "weight_cum_drop_symbol_a": [item["drop_combo_a"] for item in table_data],
+        "weight_cum_drop_symbol_b": [item["drop_combo_b"] for item in table_data],
+        "weight_cum_drop_symbol_c": [item["drop_combo_c"] for item in table_data],
         "paytable_lines": [3, 4, 5, 6],
     }
     config.update(parameter)
     config.update(symbol_groups)
+    config["card_system"] = parse_card_system(wb)
     return config
 
 
