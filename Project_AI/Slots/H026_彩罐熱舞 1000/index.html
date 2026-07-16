@@ -1506,6 +1506,182 @@
       opacity: 0.85;
     }
 
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      background: #06111f;
+    }
+
+    .help-loading,
+    .help-load-error {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--sub);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 14px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 9px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .help-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-2);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-section-title .help-en {
+      color: var(--blue);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .help-group-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 9px 12px 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .help-group-title .help-en {
+      color: var(--sub);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .help-rule {
+      display: block;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(17, 50, 82, 0.85);
+      line-height: 1.55;
+    }
+
+    .help-rule-zh,
+    .help-rule-en {
+      min-width: 0;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .help-rule-en {
+      color: #a9cce8;
+      font-size: 11px;
+    }
+
+    .help-lang-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--sub);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      padding: 8px 12px 12px;
+    }
+
+    .help-payout-item {
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    #helpSourceFrame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
     .spin-result-row {
       display: block;
       margin: 0;
@@ -1628,6 +1804,10 @@
         flex-wrap: wrap;
       }
 
+      .help-payout-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .setting-body .config-control {
         width: auto;
       }
@@ -1682,16 +1862,16 @@
         </section>
 
         <section id="simulation-stats">
-          <h3>Simulation Stats</h3>
-          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+          <h3 data-i18n="simulationStats">Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
               id="roundCountValue">0</span></div>
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
           </div>
-          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
               id="hitRateValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
               id="fgTriggerValue">0</span></div>
-          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
         </section>
 
@@ -1755,14 +1935,14 @@
     </section>
 
     <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
-      <h3 class="diagnostic-header">Reel RNG</h3>
+      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
       <div class="rng-list" id="rngList"></div>
     </section>
 
     <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
-      <div id="log-header" class="diagnostic-header">Spin Result</div>
+      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
       <div id="log-body">
-        <div class="log-subheader">Line Wins</div>
+        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
         <div class="line-list" id="lineList"></div>
         <div class="spin-result-list" id="spinResultList"></div>
       </div>
@@ -1771,13 +1951,13 @@
     <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="live-log-header diagnostic-header">
         <span>Log</span>
-        <button id="clearLogBtn" type="button">Clear</button>
+        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
-      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
       <div class="setting-body">
         <label class="setting-toggle" for="debugModeInput">
           <input id="debugModeInput" type="checkbox">
@@ -1792,12 +1972,180 @@
             <option value="config_94B.js">94B</option>
           </select>
         </label>
-        <button id="resetBtn" type="button">Reset</button>
+        <label class="config-control" for="languageSelect">
+          <span data-i18n="language">Language</span>
+          <select id="languageSelect">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
       </div>
     </section>
 
     <div class="footer-note">Double-click to play offline. No server needed.</div>
   </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+      </div>
+      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+  </dialog>
+
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+## PAYTABLE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符号赔付值 | SYMBOL PAYOUT VALUES |
+
+### WILD SYMBOL
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符号 | WILD SYMBOL |
+| 規則說明 | [WW] 可替代除 [Scatter] 外的所有符号。 | [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
+
+### SCATTER SYMBOL
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 散布符号 | SCATTER SYMBOL |
+| 規則說明 | 当本次旋转连消结束后，若最终盘面出现 {3} 个或以上 [C1]，将触发免费游戏。 | WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
+
+### 賠率表
+
+| 中文欄 | 中文欄 | 中文欄 |
+| --- | --- | --- |
+| [M1] 5 - 5000 | [M2] 5 - 2000 | [M3] 5 - 1000 |
+| [M1] 4 - 1250 | [M2] 4 - 500 | [M3] 4 - 250 |
+| [M1] 3 - 250 | [M2] 3 - 100 | [M3] 3 - 75 |
+| [M4] 5 - 750 | [M5] 5 - 500 | [A] 5 - 250 |
+| [M4] 4 - 200 | [M5] 4 - 100 | [A] 4 - 50 |
+| [M4] 3 - 50 | [M5] 3 - 25 | [A] 3 - 10 |
+| [K] 5 - 250 | [Q] 5 - 250 | [J] 5 - 250 |
+| [K] 4 - 50 | [Q] 4 - 50 | [J] 4 - 50 |
+| [K] 3 - 10 | [Q] 3 - 10 | [J] 3 - 10 |
+
+---
+
+## CASCADING FEATURE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 消除特色 | CASCADING FEATURE |
+| 規則說明 | 每轮结算后，中奖符号会被消除；消除后产生的空格由上方符号向下掉落补位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
+| 規則說明 | 连消期间，若某轮盘已出现 {1} 个 [Scatter]，该轮盘将不会再出现更多 [Scatter]。 | DURING CASCADING, IF A REEL ALREADY CONTAINS {1} [Scatter], NO MORE [Scatter] WILL APPEAR ON THAT REEL. |
+| 規則說明 | 补牌后会再次检查新的中奖组合，直到不再形成新的中奖组合为止。 | AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
+
+---
+
+## MULTIPLIER FEATURE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 倍数特色 | MULTIPLIER FEATURE |
+| 規則說明 | 金框符号可能附带倍数。倍数等级为：X{2}、X{3}、X{5}、X{8}、X{10}、X{15}、X{20}、X{25}、X{50}、X{100}、X{500}、X{1000}。 | GOLD FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, AND X{1000}. |
+| 規則說明 | 仅当带倍数的金框符号实际参与得分并被消除时，其倍数才会被收集并累积。 | THE MULTIPLIER IS ONLY COLLECTED AND ADDED TO THE ACCUMULATED TOTAL WHEN THE GOLD FRAMED SYMBOL WITH A MULTIPLIER ACTUALLY PARTICIPATES IN A WIN AND IS CLEARED. |
+| 規則說明 | 当本次旋转无法再消除时，若本次旋转有实际收集到倍数，则将当前累积总倍数乘上本次旋转的总赢分。 | WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
+
+---
+
+## GOLDEN FRAMED FEATURE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金框符号 | GOLDEN FRAMED FEATURE |
+| 規則說明 | 第 {2}、{3}、{4} 轮的一般符号有机会带有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, AND {4} MAY APPEAR WITH A GOLD FRAME. |
+| 規則說明 | 金框符号与原始符号具有相同的基础赔率。 | GOLD FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
+| 規則說明 | 主游戏中，第 {3} 轮有机会随机出现整列带倍数的金框符号。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. |
+| 規則說明 | 若前一轮中奖组合中含有金框符号，该位置会保留并转化为 [WW]，因此不视为空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
+
+---
+
+## FREE GAME FEATURE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免费游戏特色 | FREE GAME FEATURE |
+| 規則說明 | 当本次旋转连消结束后，若最终盘面出现 {3}、{4} 或 {5} 个 [C1]，将触发免费游戏，并分别获得 {15}、{17} 或 {19} 场免费游戏。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
+| 規則說明 | 免费游戏期间，累积倍数不会重置，并会持续保留到整段免费游戏结束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
+| 規則說明 | 免费游戏期间，第 {3} 轮的一般符号必定带有金框与倍数。 | DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLD FRAMES AND MULTIPLIERS. |
+| 規則說明 | 单次进入免费游戏后，包含加局在内，最多进行 {50} 场。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
+| 規則說明 | 免费游戏可加局。加局条件与一般触发相同：{3}、{4} 或 {5} 个 [C1] 分别对应加 {15}、{17} 或 {19} 场免费游戏。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
+
+---
+
+## EXTRA BET
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 额外投注 | EXTRA BET |
+| 規則說明 | 玩家可选择额外投注模式进行旋转。 | THE PLAYER MAY SELECT THE EXTRA BET MODE. |
+| 規則說明 | 额外投注沿用相同的主游戏、连消与免费游戏流程。 | EXTRA BET USES THE SAME BASE GAME, CASCADING, AND FREE GAME FLOW. |
+| 規則說明 | 额外投注的投注金额为 {2}x 总投注，并可提高触发免费游戏的机会。 | EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
+
+---
+
+## BUY FEATURE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 购买特色 | BUY FEATURE |
+| 規則說明 | 玩家可支付 {75}x 总投注，购买一次免费游戏进场机会。 | BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. |
+| 規則說明 | 购买免费游戏特色后即可进入免费游戏。 | PURCHASING THE FREE GAME FEATURE GUARANTEES FREE GAME. |
+| 規則說明 | 进场旋转的得分会保留，并与后续免费游戏总得分一并结算。 | WINS FROM THE TRIGGER SPIN ARE KEPT AND PAID TOGETHER WITH THE TOTAL WIN FROM THE FREE GAME FEATURE. |
+
+---
+
+## OP JACKPOT
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号，即可获得该 OP JACKPOT 并结算总奖金。 | IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
+| 規則說明 | [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
+| 規則說明 | [MINOR] 为红利彩金，依照投注选项改变。 | [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | [MINI] 为红利彩金，依照投注选项改变。 | [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | 玩家投注越高，触发 OP JACKPOT 特色的机会越高。 | THE HIGHER THE PLAYER BETS, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+
+---
+
+## LINE GAME
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 赔线说明 | LINE GAME |
+| 規則說明 | 本游戏共有 {20} 条固定赔线。 | THE GAME HAS {20} FIXED PAY LINES. |
+| 規則說明 | 中奖组合必须由最左侧开始，由左至右连续出现才算中奖。 | WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. |
+| 規則說明 | 单一赔线仅支付最高奖项。 | ONLY THE HIGHEST WIN PER PAY LINE IS PAID. |
+| 規則說明 | [走线图 20 LINE] | [PAYLINE DIAGRAM 20 LINE] |
+| 規則說明 | 请参考走线图了解 {20} 条固定赔线的连线方式。 | PLEASE REFER TO THE PAYLINE DIAGRAM FOR THE {20} FIXED PAY LINE PATTERNS. |
+
+---
+
+## GAME RULE
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 游戏规则 | GAME RULES |
+| 規則說明 | 选择您想要玩的投注选项。 | SELECT BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | 所有中奖金额均乘以投注选项，除非是累积奖。 | ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
+| 規則說明 | 游戏出现故障，所有赔付和游戏都视为无效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | 若玩家在免费游戏特色期间中断游戏，系统将会自动计算游戏结果，并将获奖金额加入至余额中。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
+  </script>
 
   <script>
     const H026_CONFIG_FILES = ["config_92A.js", "config_92B.js", "config_94A.js", "config_94B.js"];
@@ -1819,6 +2167,13 @@
     const REEL3_SPECIAL_TABLE_IDS = new Set([1, 3, 4, 5]);
     const FG_SPIN_CAP = 50;
     const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
+    const SAVED_LANGUAGE = (() => {
+      try {
+        return localStorage.getItem("slotDemoLanguage") === "zh" ? "zh" : "en";
+      } catch (_) {
+        return "en";
+      }
+    })();
     const state = {
       balance: INITIAL_BALANCE,
       totalBet: 0,
@@ -1853,7 +2208,9 @@
       debugSkipPlayback: false,
       forceFg: false,
       autoTimer: null,
-      liveLog: []
+      liveLog: [],
+      language: SAVED_LANGUAGE,
+      lastMessage: "Ready — press Spin"
     };
 
     const boardEl = document.getElementById("board");
@@ -1890,6 +2247,13 @@
     const speedRangeEl = document.getElementById("speedRange");
     const speedValueEl = document.getElementById("speedValue");
     const configSelectEl = document.getElementById("configSelect");
+    const languageSelectEl = document.getElementById("languageSelect");
+    const helpBtn = document.getElementById("helpBtn");
+    const helpDialogEl = document.getElementById("helpDialog");
+    const closeHelpBtn = document.getElementById("closeHelpBtn");
+    const helpContentEl = document.getElementById("helpContent");
+    const helpSourceFrameEl = document.getElementById("helpSourceFrame");
+    const embeddedGameHelpMarkdownEl = document.getElementById("embeddedGameHelpMarkdown");
     const liveLogBodyEl = document.getElementById("liveLogBody");
     const clearLogBtn = document.getElementById("clearLogBtn");
     const previousStepBtn = document.getElementById("previousStepBtn");
@@ -1918,6 +2282,238 @@
     function getExtraBetMultiplier() { return Number(Box.extrabet || Box.normalbet) / Number(Box.normalbet || 1); }
     function getSelectedBetCostMoney() { return getBetMoney() * (state.extraBetEnabled ? getExtraBetMultiplier() : 1); }
     function setText(el, text) { if (el) el.textContent = text; }
+
+    const UI_TEXT = {
+      en: {
+        simulationStats: "Simulation Stats",
+        totalRounds: "Total Rounds",
+        hitRate: "Hit Rate",
+        maxMultiplier: "Max Multiplier",
+        reelRng: "Reel RNG",
+        spinResult: "Spin Result",
+        lineWins: "Line Wins",
+        clear: "Clear",
+        setting: "Setting",
+        language: "Language",
+        reset: "Reset",
+        gameHelp: "Game Help",
+        close: "Close",
+        loadingRules: "Loading game rules...",
+        noWinningLine: "No winning line",
+        awaitingSpin: "Awaiting Spin",
+        noBoardResult: "No board result yet."
+      },
+      zh: {
+        simulationStats: "模擬統計",
+        totalRounds: "總局數",
+        hitRate: "命中率",
+        maxMultiplier: "最大 Multiplier",
+        reelRng: "Reel RNG",
+        spinResult: "Spin 結果",
+        lineWins: "Line Wins",
+        clear: "清除",
+        setting: "設定",
+        language: "語言",
+        reset: "重置",
+        gameHelp: "遊戲 Help",
+        close: "關閉",
+        loadingRules: "正在載入遊戲規則...",
+        noWinningLine: "沒有 Line Win",
+        awaitingSpin: "等待 Spin",
+        noBoardResult: "尚無盤面結果。"
+      }
+    };
+
+    function tr(key) {
+      return UI_TEXT[state.language]?.[key] || UI_TEXT.en[key] || key;
+    }
+
+    function localizeMessage(text) {
+      if (state.language !== "zh") return text;
+      const exact = {
+        "Set RNG reset": "Set RNG 已重置",
+        "Force FG applied to this spin": "Force FG 已套用至本次 Spin",
+        "Reels spinning...": "Reel 轉動中...",
+        "Session reset": "Session 已重置",
+        "Auto enabled": "Auto 已開啟",
+        "Auto disabled": "Auto 已關閉",
+        "Next spin queued | Current playback fast-forwarded": "下一次 Spin 已排入 | 目前播放已快轉"
+      };
+      if (exact[text]) return exact[text];
+      return text
+        .replace(/^Spin (\d+) \| (.+) \| Reel stop ready$/, "Spin $1 | $2 | Reel 已停止")
+        .replace(/^Spin (\d+) finished \| No cascade$/, "Spin $1 完成 | 無 Cascade")
+        .replace(/^Spin (\d+) done \| Final (.+)$/, "Spin $1 完成 | Final $2")
+        .replace(/ \| Drop complete$/, " | Drop 完成")
+        .replace(/^FG Spin (\d+) rolling\.\.\.$/, "FG Spin $1 轉動中...")
+        .replace(/^FG finished \| Total (.+)$/, "FG 完成 | Total $1")
+        .replace(/^FG ready \| (\d+) spins left, press Spin$/, "FG 準備完成 | 剩餘 $1 場，按 Spin")
+        .replace(/^Feature Buy entered FG \| (\d+) spins left, press Spin$/, "Feature Buy 已進入 FG | 剩餘 $1 場，按 Spin")
+        .replace(/^Force FG triggered \| (\d+) spins left, press Spin$/, "Force FG 已觸發 | 剩餘 $1 場，按 Spin")
+        .replace(/^FG triggered \| (\d+) spins left, press Spin$/, "FG 已觸發 | 剩餘 $1 場，按 Spin")
+        .replace(/^Debug Mode enabled$/, "Debug Mode 已開啟")
+        .replace(/^Debug Mode disabled$/, "Debug Mode 已關閉")
+        .replace(/^Card BG Range set to Auto$/, "Card BG Range 已設為 Auto")
+        .replace(/^Card BG Range selected \| (.+)$/, "Card BG Range 已選擇 | $1")
+        .replace(/^Reel RNG set \| (.+)$/, "Reel RNG 已設定 | $1")
+        .replace(/^Force FG armed for next Normal\/Extra spin$/, "Force FG 已設定於下一次 Normal／Extra Spin")
+        .replace(/^Force FG cancelled$/, "Force FG 已取消")
+        .replace(/^Normal Bet selected \| Bet (.+)$/, "Normal Bet 已選擇 | Bet $1")
+        .replace(/^Extra Bet \((.+)x\) selected \| Bet (.+)$/, "Extra Bet ($1x) 已選擇 | Bet $2");
+    }
+
+    let gameHelpLoaded = false;
+    let gameHelpMarkdown = "";
+
+    function getMarkdownCells(line) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return null;
+      return trimmed.slice(1, -1).split("|").map((cell) => cell.trim());
+    }
+
+    function parseGameHelpRules(markdown) {
+      const sections = [];
+      let section = null;
+      let group = null;
+
+      for (const rawLine of markdown.split(/\r?\n/)) {
+        const line = rawLine.trim();
+        const sectionMatch = line.match(/^##\s+(.+)$/);
+        if (sectionMatch) {
+          const key = sectionMatch[1].trim();
+          section = key === "Game Meta" ? null : { key, titleZh: "", titleEn: key, rules: [], groups: [] };
+          group = null;
+          if (section) sections.push(section);
+          continue;
+        }
+
+        const groupMatch = line.match(/^###\s+(.+)$/);
+        if (groupMatch && section) {
+          group = { key: groupMatch[1].trim(), titleZh: "", titleEn: groupMatch[1].trim(), rules: [], payouts: [] };
+          section.groups.push(group);
+          continue;
+        }
+
+        if (!section) continue;
+        const cells = getMarkdownCells(line);
+        if (!cells || cells.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
+
+        const [item, zh = "", en = ""] = cells;
+        if (item === "主要標題") {
+          section.titleZh = zh;
+          section.titleEn = en;
+        } else if (item === "副標題" && group) {
+          group.titleZh = zh;
+          group.titleEn = en;
+        } else if (item === "規則說明") {
+          (group || section).rules.push({ zh, en });
+        } else if (section.key === "PAYTABLE" && group?.key === "賠率表" && item !== "中文欄") {
+          group.payouts.push(...cells.filter(Boolean));
+        }
+      }
+
+      return sections.filter((entry) => entry.rules.length || entry.groups.some((item) => item.rules.length || item.payouts.length));
+    }
+
+    function appendHelpTitle(parent, className, zh, en) {
+      const title = document.createElement(className === "help-section-title" ? "h3" : "h4");
+      title.className = className;
+      title.textContent = state.language === "zh" ? (zh || en) : en;
+      parent.appendChild(title);
+    }
+
+    function appendHelpRule(parent, rule) {
+      const row = document.createElement("div");
+      row.className = "help-rule";
+      const cell = document.createElement("div");
+      cell.className = state.language === "zh" ? "help-rule-zh" : "help-rule-en";
+      cell.textContent = state.language === "zh" ? rule.zh : rule.en;
+      row.appendChild(cell);
+      parent.appendChild(row);
+    }
+
+    function renderGameHelpRules(markdown) {
+      const sections = parseGameHelpRules(markdown);
+      if (!sections.length) throw new Error("No game rules found");
+      gameHelpMarkdown = markdown;
+      helpContentEl.innerHTML = "";
+
+      for (const section of sections) {
+        const card = document.createElement("section");
+        card.className = "help-section";
+        appendHelpTitle(card, "help-section-title", section.titleZh, section.titleEn);
+        section.rules.forEach((rule) => appendHelpRule(card, rule));
+
+        for (const group of section.groups) {
+          if (!group.rules.length && !group.payouts.length) continue;
+          appendHelpTitle(card, "help-group-title", group.titleZh || group.key, group.titleEn);
+          group.rules.forEach((rule) => appendHelpRule(card, rule));
+          if (group.payouts.length) {
+            const payoutGrid = document.createElement("div");
+            payoutGrid.className = "help-payout-grid";
+            for (const payout of group.payouts) {
+              const item = document.createElement("div");
+              item.className = "help-payout-item";
+              item.textContent = payout;
+              payoutGrid.appendChild(item);
+            }
+            card.appendChild(payoutGrid);
+          }
+        }
+        helpContentEl.appendChild(card);
+      }
+      gameHelpLoaded = true;
+    }
+
+    async function loadGameHelpRules() {
+      if (gameHelpLoaded) return;
+      let markdown = "";
+      try {
+        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        if (response.ok) markdown = await response.text();
+      } catch (_) {
+        // file:// blocks fetch in some browsers; the same-folder iframe is the offline fallback.
+      }
+
+      if (!markdown) {
+        try {
+          markdown = helpSourceFrameEl.contentDocument?.body?.innerText || "";
+        } catch (_) {
+          markdown = "";
+        }
+      }
+
+      if (!markdown) markdown = embeddedGameHelpMarkdownEl.textContent.trim();
+
+      try {
+        renderGameHelpRules(markdown);
+      } catch (_) {
+        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help_draft.md is in the same folder as index.html.</div>';
+      }
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
+      languageSelectEl.value = state.language;
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        element.textContent = tr(element.dataset.i18n);
+      });
+      setText(messageBarEl, localizeMessage(state.lastMessage));
+      setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
+      setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
+      updateSpinButtonState();
+      updateFeatureBar(state.activeSpin, state.activeRound);
+      renderLineList(state.activeSpin);
+      renderSpinResultList(state.activeSpin);
+      renderRngList(state.activeSpin);
+      if (gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
+      try {
+        localStorage.setItem("slotDemoLanguage", state.language);
+      } catch (_) {
+        // Language still works for this session when storage is unavailable.
+      }
+    }
+
     function getLogType(text) {
       if (/error|failed|insufficient/i.test(text)) return "error";
       if (/cascade|multiplier/i.test(text)) return "cascade";
@@ -3574,6 +4170,17 @@
     });
     buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
     clearLogBtn.addEventListener("click", clearLiveLog);
+    helpBtn.addEventListener("click", () => {
+      helpDialogEl.showModal();
+      loadGameHelpRules();
+    });
+    closeHelpBtn.addEventListener("click", () => helpDialogEl.close());
+    helpDialogEl.addEventListener("click", (event) => {
+      if (event.target === helpDialogEl) helpDialogEl.close();
+    });
+    helpSourceFrameEl.addEventListener("load", () => {
+      if (helpDialogEl.open && !gameHelpLoaded) loadGameHelpRules();
+    });
 
     renderBetMenu();
     renderCardRangeOptions();
