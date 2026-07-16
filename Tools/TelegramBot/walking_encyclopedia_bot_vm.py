@@ -482,7 +482,9 @@ def collect_validator_rows_from_member(data: bytes, source_name: str, depth: int
     lower_name = source_name.lower()
     if lower_name.endswith(".txt"):
         text = data.decode("utf-8", errors="replace")
-        return [parse_validator_txt(text, source_name)]
+        row = parse_validator_txt(text, source_name)
+        # 壓縮檔可能混有執行 log；只有帶 GameID 的 TXT 才是 Validator 報表。
+        return [row] if row.get("GameID") else []
 
     if not is_supported_archive_name(source_name) and not is_supported_archive_bytes(data):
         return []
@@ -952,8 +954,27 @@ def build_help_text() -> str:
         "🕐 *群組 3 分鐘窗口*\n"
         f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟壓縮檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
         "🎰 *模擬器*（僅限管理者）\n"
-        "傳送 `/simulator` 開啟按鈕選單；Run 可逐步設定單次模擬，Batch 會提供可直接修改後送出的多組參數範本。跑完會自動把摘要跟報表路徑傳回來。\n"
+        "傳送 `/simulator` 後選擇「開始模擬」；選好遊戲後，可在步驟 2 選擇單一 config 或 Batch 多組執行。跑完會自動把摘要跟報表路徑傳回來。\n"
         f"目前可用遊戲: {game_list}"
+    )
+
+
+def build_simulator_help_text() -> str:
+    """Simulator 選單內的 Help：只說明模擬功能，顯示後直接結束選單。"""
+    games = discover_games()
+    game_list = ", ".join(get_game_id(name) for name in games) if games else "(尚未找到任何遊戲資料夾)"
+    return (
+        "🎰 Simulator 功能說明\n\n"
+        "• 開始模擬：先選擇遊戲，再於步驟 2 選擇單一 config 或 Batch (多組)。\n"
+        "• 單組：選擇 config 後，繼續設定 bet_mode、卡池與局數。\n"
+        "• Batch (多組)：取得 BATCH_COMBINATIONS 範本；複製、修改並整段送出，即可依序執行多組參數。\n"
+        "• Status：查看目前執行項目、耗時與批次進度。\n"
+        "• Cancel：停止目前模擬，並清除尚未執行的批次。\n"
+        "• 完成後會回傳模擬摘要與 VM 上的報表路徑。\n\n"
+        f"目前可用遊戲：{game_list}\n"
+        f"單組局數範圍：1,000 ~ {MAX_ROUNDS:,}\n"
+        f"批次上限：一次 {MAX_BATCH_COMBINATIONS} 組\n\n"
+        "說明結束；需要操作時請重新傳送 /simulator。"
     )
 
 
@@ -1133,17 +1154,22 @@ def build_abort_button() -> InlineKeyboardButton:
 
 def build_menu_keyboard() -> InlineKeyboardMarkup:
     rows = [
-        [InlineKeyboardButton("Help", callback_data="sim:menu:help")],
-        [InlineKeyboardButton("Run（單組）", callback_data="sim:menu:run"), InlineKeyboardButton("Batch（多組）", callback_data="sim:menu:batch")],
+        [InlineKeyboardButton("開始模擬", callback_data="sim:menu:run")],
+        [InlineKeyboardButton("功能說明", callback_data="sim:menu:help")],
+        [InlineKeyboardButton("Cancel", callback_data="sim:menu:close")],
     ]
     if current_job is not None:
-        rows.append([InlineKeyboardButton("Status", callback_data="sim:menu:status"), InlineKeyboardButton("Cancel", callback_data="sim:menu:cancel")])
-    rows.append([InlineKeyboardButton("Close", callback_data="sim:menu:close")])
+        rows.extend(
+            [
+                [InlineKeyboardButton("⌛️顯示狀態", callback_data="sim:menu:status")],
+                [InlineKeyboardButton("⌛️取消模擬", callback_data="sim:menu:cancel")],
+            ]
+        )
     return InlineKeyboardMarkup(rows)
 
 
 def build_menu_title() -> str:
-    return "請選擇要做什麼:"
+    return "請選擇你接下來要做什麼:"
 
 
 def build_game_keyboard(stage: str = "game") -> InlineKeyboardMarkup:
@@ -1152,16 +1178,17 @@ def build_game_keyboard(stage: str = "game") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 
-def build_config_keyboard(configs: list[str]) -> InlineKeyboardMarkup:
-    buttons = [InlineKeyboardButton(config, callback_data=f"sim:config:{config}") for config in configs]
-    rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
+def build_config_keyboard(configs: list[str], include_batch: bool = False) -> InlineKeyboardMarkup:
+    rows = [[InlineKeyboardButton(f"config_{config}", callback_data=f"sim:config:{config}")] for config in configs]
+    if include_batch:
+        rows.append([InlineKeyboardButton("Batch (多組)", callback_data="sim:batchtemplate:x")])
     rows.append([build_abort_button()])
     return InlineKeyboardMarkup(rows)
 
 
 def build_bet_keyboard() -> InlineKeyboardMarkup:
     buttons = [InlineKeyboardButton(label, callback_data=f"sim:bet:{key}") for key, label in BET_MODES.items()]
-    rows = [buttons[i : i + 2] for i in range(0, len(buttons), 2)]
+    rows = [[button] for button in buttons]
     rows.append([build_abort_button()])
     return InlineKeyboardMarkup(rows)
 
@@ -1169,7 +1196,8 @@ def build_bet_keyboard() -> InlineKeyboardMarkup:
 def build_card_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("新手卡池 (new)", callback_data="sim:card:new"), InlineKeyboardButton("一般卡池 (old)", callback_data="sim:card:old")],
+            [InlineKeyboardButton("新手卡池 (new)", callback_data="sim:card:new")],
+            [InlineKeyboardButton("一般卡池 (old)", callback_data="sim:card:old")],
             [build_abort_button()],
         ]
     )
@@ -1177,14 +1205,19 @@ def build_card_keyboard() -> InlineKeyboardMarkup:
 
 def build_rounds_keyboard() -> InlineKeyboardMarkup:
     preset_buttons = [InlineKeyboardButton(label, callback_data=f"sim:rounds:{value}") for label, value in ROUNDS_PRESETS]
-    rows = [preset_buttons[i : i + 2] for i in range(0, len(preset_buttons), 2)]
+    rows = [[button] for button in preset_buttons]
     rows.append([InlineKeyboardButton("其他（輸入數字）", callback_data="sim:rounds:custom")])
     rows.append([build_abort_button()])
     return InlineKeyboardMarkup(rows)
 
 
 def build_confirm_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[InlineKeyboardButton("確認執行", callback_data="sim:confirm:yes"), InlineKeyboardButton("取消", callback_data="sim:confirm:no")]])
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("確認執行", callback_data="sim:confirm:yes")],
+            [InlineKeyboardButton("取消", callback_data="sim:confirm:no")],
+        ]
+    )
 
 
 def build_wizard_summary_text(state: dict) -> str:
@@ -1226,7 +1259,8 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if stage == "menu":
         if value == "help":
-            await query.edit_message_text(build_help_text(), parse_mode=ParseMode.MARKDOWN, reply_markup=build_menu_keyboard())
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text(build_simulator_help_text())
         elif value == "status":
             await query.edit_message_text(build_status_text(), reply_markup=build_menu_keyboard())
         elif value == "cancel":
@@ -1244,6 +1278,28 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     state = simulator_wizard_state.setdefault(chat_id, {})
 
+    if stage == "batchtemplate":
+        game_name = state.get("game_name")
+        game_dir_value = state.get("game_dir")
+        if not game_name or not game_dir_value:
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text("❌ 選單狀態不完整，請重新 /simulator。")
+            return
+        game_dir = Path(game_dir_value)
+        configs = discover_configs(game_dir)
+        if not configs:
+            simulator_wizard_state.pop(chat_id, None)
+            await query.edit_message_text(f"❌ {game_name} 資料夾裡沒有 config_*.js 檔案。")
+            return
+        state["awaiting_batch"] = True
+        template = build_batch_template(game_name, configs)
+        await query.edit_message_text(
+            f"已進入 {game_name} 的 Batch 模式。\n請複製下一則範本，直接修改後整段送出。\n"
+            f"可增刪 {{...}}；局數可寫 10000 或 10**4；布林值請用 True / False；一次最多 {MAX_BATCH_COMBINATIONS} 組。"
+        )
+        await query.message.reply_text(f"<pre>{html.escape(template)}</pre>", parse_mode=ParseMode.HTML)
+        return
+
     if stage == "batchgame":
         found = find_game_by_id(value)
         if not found:
@@ -1256,7 +1312,8 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
             simulator_wizard_state.pop(chat_id, None)
             await query.edit_message_text(f"❌ {game_name} 資料夾裡沒有 config_*.js 檔案。")
             return
-        state.update({"game_name": game_name, "game_dir": str(game_dir), "awaiting_batch": True})
+        state.update({"game_name": game_name, "game_dir": str(game_dir)})
+        state["awaiting_batch"] = True
         template = build_batch_template(game_name, configs)
         await query.edit_message_text(
             f"已選擇 {game_name}。\n請複製下一則範本，直接修改後整段送出。\n"
@@ -1279,7 +1336,7 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
         state["game_name"] = game_name
         state["game_dir"] = str(game_dir)
-        await query.edit_message_text(f"步驟 2/5：請選擇 config（{game_name}）", reply_markup=build_config_keyboard(configs))
+        await query.edit_message_text(f'步驟 2/5：請選擇 "{game_name}" 的配置', reply_markup=build_config_keyboard(configs, include_batch=True))
         return
 
     if stage == "config":

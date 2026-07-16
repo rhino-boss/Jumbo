@@ -25,7 +25,7 @@
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 百搭符号 | WILD SYMBOL |
-| 規則說明 | [WW] 可替代一般符号并帮助形成中奖组合。 | [WW] SUBSTITUTES FOR REGULAR SYMBOLS TO HELP FORM WINNING COMBINATIONS. |
+| 規則說明 | [WW] 可替代除 [Scatter] 外的所有符号。 | [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
 
 ### SCATTER SYMBOL
 
@@ -38,17 +38,15 @@
 
 | 中文欄 | 中文欄 | 中文欄 |
 | --- | --- | --- |
-| [M1] 5 - 50 | [M2] 5 - 20 | [M3] 5 - 10 |
-| [M1] 4 - 12.5 | [M2] 4 - 5 | [M3] 4 - 2.5 |
-| [M1] 3 - 2.5 | [M2] 3 - 1 | [M3] 3 - 0.75 |
-| [M4] 5 - 7.5 | [M5] 5 - 5 | [A] 5 - 2.5 |
-| [M4] 4 - 2 | [M5] 4 - 1 | [A] 4 - 0.5 |
-| [M4] 3 - 0.5 | [M5] 3 - 0.25 | [A] 3 - 0.1 |
-| [K] 5 - 2.5 | [Q] 5 - 2.5 | [J] 5 - 2.5 |
-| [K] 4 - 0.5 | [Q] 4 - 0.5 | [J] 4 - 0.5 |
-| [K] 3 - 0.1 | [Q] 3 - 0.1 | [J] 3 - 0.1 |
-
-英文欄與中文欄相同，xlsx 會左右各放一份完整賠率表。
+| [M1] 5 - 5000 | [M2] 5 - 2000 | [M3] 5 - 1000 |
+| [M1] 4 - 1250 | [M2] 4 - 500 | [M3] 4 - 250 |
+| [M1] 3 - 250 | [M2] 3 - 100 | [M3] 3 - 75 |
+| [M4] 5 - 750 | [M5] 5 - 500 | [A] 5 - 250 |
+| [M4] 4 - 200 | [M5] 4 - 100 | [A] 4 - 50 |
+| [M4] 3 - 50 | [M5] 3 - 25 | [A] 3 - 10 |
+| [K] 5 - 250 | [Q] 5 - 250 | [J] 5 - 250 |
+| [K] 4 - 50 | [Q] 4 - 50 | [J] 4 - 50 |
+| [K] 3 - 10 | [Q] 3 - 10 | [J] 3 - 10 |
 
 ---
 
@@ -58,7 +56,7 @@
 | --- | --- | --- |
 | 主要標題 | 消除特色 | CASCADING FEATURE |
 | 規則說明 | 每轮结算后，中奖符号会被消除；消除后产生的空格由上方符号向下掉落补位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
-| 規則說明 | 若前一轮中奖组合中含有金框符号，该位置会保留并转化为 [WW]，因此不视为空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
+| 規則說明 | 连消期间，若某轮盘已出现 {1} 个 [Scatter]，该轮盘将不会再出现更多 [Scatter]。 | DURING CASCADING, IF A REEL ALREADY CONTAINS {1} [Scatter], NO MORE [Scatter] WILL APPEAR ON THAT REEL. |
 | 規則說明 | 补牌后会再次检查新的中奖组合，直到不再形成新的中奖组合为止。 | AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
 
 ---
@@ -81,8 +79,8 @@
 | 主要標題 | 金框符号 | GOLDEN FRAMED FEATURE |
 | 規則說明 | 第 {2}、{3}、{4} 轮的一般符号有机会带有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, AND {4} MAY APPEAR WITH A GOLD FRAME. |
 | 規則說明 | 金框符号与原始符号具有相同的基础赔率。 | GOLD FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
-| 規則說明 | 主游戏中，第 {3} 轮有机会随机出现整列带倍数的金框符号；免费游戏中，第 {3} 轮必定为整列带倍数的金框符号。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. DURING FREE GAME, REEL {3} IS GUARANTEED TO BE AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. |
-| 規則說明 | 若金框符号参与得分并被消除，该位置会在下一轮转化为 [WW]。 | IF A GOLD FRAMED SYMBOL PARTICIPATES IN A WIN AND IS CLEARED, THAT POSITION IS TRANSFORMED INTO [WW] IN THE NEXT ROUND. |
+| 規則說明 | 主游戏中，第 {3} 轮有机会随机出现整列带倍数的金框符号。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. |
+| 規則說明 | 若前一轮中奖组合中含有金框符号，该位置会保留并转化为 [WW]，因此不视为空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
 
 ---
 
@@ -105,7 +103,6 @@
 | --- | --- | --- |
 | 主要標題 | 额外投注 | EXTRA BET |
 | 規則說明 | 玩家可选择额外投注模式进行旋转。 | THE PLAYER MAY SELECT THE EXTRA BET MODE. |
-| 規則說明 | 额外投注的价格为 {2}x 总投注。 | EXTRA BET COSTS {2}X TOTAL BET. |
 | 規則說明 | 额外投注沿用相同的主游戏、连消与免费游戏流程。 | EXTRA BET USES THE SAME BASE GAME, CASCADING, AND FREE GAME FLOW. |
 | 規則說明 | 额外投注的投注金额为 {2}x 总投注，并可提高触发免费游戏的机会。 | EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
 
@@ -124,23 +121,18 @@
 
 ## OP JACKPOT
 
-來源說明：
-- 文案骨架目前取自 `H000_範例/文件/101010_Help.xlsx` 的 `OP JACKPOT` 區塊
-- 這款 `101014` 的 jackpot 類型來自 `Game List_Online.xlsx`
-- `game_rule.md` 目前未記載 OP Jackpot 細節，以下內容暫列為待確認版本
-
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | ▪ 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | ▪ OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
-| 規則說明 | ▪ 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
-| 規則說明 | ▪ 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号，即可获得该 OP JACKPOT 并结算总奖金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
-| 規則說明 | ▪ [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
-| 規則說明 | ▪ [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
-| 規則說明 | ▪ [MINOR] 为红利彩金，依照投注选项改变。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | ▪ [MINI] 为红利彩金，依照投注选项改变。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | ▪ 玩家投注越高，触发 OP JACKPOT 特色的机会越高。 | ▪ THE HIGHER THE PLAYER BETS, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+| 規則說明 | 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号，即可获得该 OP JACKPOT 并结算总奖金。 | IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
+| 規則說明 | [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
+| 規則說明 | [MINOR] 为红利彩金，依照投注选项改变。 | [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | [MINI] 为红利彩金，依照投注选项改变。 | [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | 玩家投注越高，触发 OP JACKPOT 特色的机会越高。 | THE HIGHER THE PLAYER BETS, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
 
 ---
 
