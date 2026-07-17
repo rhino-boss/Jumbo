@@ -2888,6 +2888,35 @@
     renderHelp(markdown);
   }
 
+  let betModeLayoutFrame = 0;
+  function setBetModeButtonLabel(button, fullLabel, shortLabel) {
+    if (!button) return;
+    button.dataset.fullLabel = fullLabel;
+    button.dataset.shortLabel = shortLabel;
+  }
+  function refreshBetModeLabels() {
+    const body = document.querySelector("#bet-mode-panel .zone-body");
+    if (!body) return;
+    const buttons = [...body.querySelectorAll("button[data-full-label]")];
+    cancelAnimationFrame(betModeLayoutFrame);
+    for (const button of buttons) {
+      button.style.minWidth = "";
+      button.style.flex = "";
+      button.textContent = button.dataset.fullLabel;
+    }
+    betModeLayoutFrame = requestAnimationFrame(() => {
+      const visible = buttons.filter((button) => getComputedStyle(button).display !== "none");
+      const firstTop = visible[0]?.offsetTop;
+      const compact = body.scrollWidth > body.clientWidth + 1 || visible.some((button) => button.offsetTop !== firstTop);
+      for (const button of buttons) {
+        button.textContent = compact ? button.dataset.shortLabel : button.dataset.fullLabel;
+        button.style.minWidth = compact ? "0" : "";
+        button.style.flex = compact ? "0 1 auto" : "";
+      }
+    });
+  }
+  addEventListener("resize", refreshBetModeLabels);
+
   function applyLanguage(showMessage = false) {
     document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
     el.language.value = state.language;
@@ -2900,9 +2929,10 @@
     [t("rounds"), "RTP", t("hitRate"), "FG Trigger", t("maxMultiplier")].forEach((value, index) => setText(statLabels[index], value));
     setText(document.querySelector("#play-panel .zone-label"), t("play"));
     setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
-    setText(el.normal, t("normalBet"));
-    setText(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`);
-    setText(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`);
+    setBetModeButtonLabel(el.normal, t("normalBet"), "NB");
+    setBetModeButtonLabel(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
+    setBetModeButtonLabel(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`, `SF (${Box.superfeaturebuy}x)`);
+    refreshBetModeLabels();
     setText(document.querySelector("#settings-wrap .setting-header"), t("setting"));
     setText(document.querySelector('label[for="languageSelect"] span'), t("language"));
     setText(el.help, t("help")); setText(el.reset, t("reset")); setText(byId("helpDialogTitle"), t("helpTitle")); setText(el.closeHelp, t("close"));
