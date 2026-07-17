@@ -79,6 +79,24 @@ def find_bet_row(ws, label):
     raise ValueError(f"Could not find bet type {label!r} in {ws.title}")
 
 
+def find_first_bet_row(ws, *labels):
+    for label in labels:
+        try:
+            return find_bet_row(ws, label)
+        except ValueError:
+            continue
+    raise ValueError(f"Could not find any bet type {labels!r} in {ws.title}")
+
+
+def to_float(value, default=None):
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def parse_overview(ws):
     pay_header = find_row(ws, 1, "Pay Table：")
     symbol_codes = []
@@ -92,11 +110,13 @@ def parse_overview(ws):
         row += 1
 
     visible_row = find_row(ws, 1, "Visible Window Size")
-    bet_rows = {
-        "normal_newbie": find_bet_row(ws, "Normal Bet Newbie"),
-        "normal": find_bet_row(ws, "Normal Bet Oldhand"),
-        "featurebuy": find_bet_row(ws, "Buy Feature"),
-    }
+    # Older H019-derived sheets split Normal Bet into Newbie/Oldhand rows.
+    # H027192A now uses one row per actual bet mode.  Support both layouts so
+    # the converter follows the workbook instead of depending on stale labels.
+    normal_row = find_first_bet_row(ws, "Normal Bet Oldhand", "Normal Bet")
+    newbie_row = find_first_bet_row(ws, "Normal Bet Newbie", "Normal Bet")
+    extra_row = find_first_bet_row(ws, "Extra Bet")
+    featurebuy_row = find_first_bet_row(ws, "Buy Feature")
     return {
         "model": str(ws["B2"].value).strip(),
         "excel_version": str(ws["B3"].value).strip(),
@@ -108,15 +128,15 @@ def parse_overview(ws):
         "pay_table": pay_table,
         "pay_count_bounds": [8, 10, 12],
         "scatter_pay_counts": [4, 5, 6],
-        "normalbet": to_int(ws.cell(bet_rows["normal"], 2).value),
-        "extrabet": 2,
-        "featurebuy": to_int(ws.cell(bet_rows["featurebuy"], 2).value),
+        "normalbet": to_int(ws.cell(normal_row, 2).value),
+        "extrabet": to_int(ws.cell(extra_row, 2).value),
+        "featurebuy": to_int(ws.cell(featurebuy_row, 2).value),
         "rtp_targets": {
-            "normal_newbie": float(ws.cell(bet_rows["normal_newbie"], 3).value),
-            "normal_oldhand": float(ws.cell(bet_rows["normal"], 3).value),
-            "normal": float(ws.cell(bet_rows["normal"], 3).value),
-            "extrabet": None,
-            "featurebuy": float(ws.cell(bet_rows["featurebuy"], 3).value),
+            "normal_newbie": to_float(ws.cell(newbie_row, 3).value),
+            "normal_oldhand": to_float(ws.cell(normal_row, 3).value),
+            "normal": to_float(ws.cell(normal_row, 3).value),
+            "extrabet": to_float(ws.cell(extra_row, 3).value),
+            "featurebuy": to_float(ws.cell(featurebuy_row, 3).value),
         },
     }
 
@@ -264,6 +284,14 @@ def parse_strip_sheet(ws):
 
 def build_config(source_path):
     workbook = load_workbook(source_path, read_only=False, data_only=True)
+    missing_sheets = [name for name in STRIP_SHEETS if name not in workbook.sheetnames]
+    if missing_sheets:
+        workbook.close()
+        joined = ", ".join(missing_sheets)
+        raise ValueError(
+            f"{source_path.name} is missing reel worksheets required by Parameter: {joined}. "
+            "Provide the complete H027 parsheet before regenerating config."
+        )
     overview = parse_overview(workbook["Overview"])
     parameter = apply_h027_c2_levels(parse_parameter(workbook["Parameter"]))
     card_system = parse_card_system(workbook["Multiplier_Weight"])

@@ -1,11 +1,67 @@
 (() => {
   "use strict";
 
-  const Box = data;
+  function adaptH013(raw) {
+    const symbolCodes = Object.keys(raw.symbol_str)
+      .map(Number)
+      .sort((left, right) => left - right)
+      .map((key) => raw.symbol_str[String(key)]);
+    const strips = raw.arr_reels.map((symbols, tableId) => {
+      const lengths = raw.reels_len[tableId];
+      const previous = Array(raw.reel_num).fill(0);
+      const weights = raw.arr_reels_weight_cum[tableId].map((row, rowIndex) =>
+        row.map((value, reel) => {
+          if (rowIndex >= lengths[reel]) return 0;
+          const weight = Math.max(0, Number(value) - previous[reel]);
+          previous[reel] = Number(value);
+          return weight;
+        })
+      );
+      return { symbols, weights, reel_lengths: lengths };
+    });
+    const freeTable = (low, high) => ({
+      names: [raw.strip_name_map[low], raw.strip_name_map[high]],
+      initial: [raw.initial_free_spins_low, raw.initial_free_spins_high],
+      retrigger: [raw.retrigger_free_spins_low, raw.retrigger_free_spins_high]
+    });
+    const profile = (baseIds, baseWeights, freeLow, freeHigh) => ({
+      base_reel_names: baseIds.map((id) => raw.strip_name_map[id]),
+      base_reel_weights: baseWeights,
+      free_table: freeTable(freeLow, freeHigh),
+      c2_mode_weights: { base: [1, 0, 0], free: [1, 0, 0] },
+      c2: { multipliers: raw.value_multiplier, weights: { base_direct: raw.weight_multiplier_fg_low, free_direct: raw.weight_multiplier_fg_low } }
+    });
+    return {
+      ...raw,
+      symbol_codes: symbolCodes,
+      strip_names: raw.strip_name_map,
+      strips,
+      max_free_spins: raw.max_spin_free_game,
+      model: raw.source_game_id,
+      excel_version: raw.game_version,
+      parameter: {
+        normal: profile([0, 1, 2], raw.weight_table_normal_bet, 7, 8),
+        extrabet: profile([4, 5, 6], raw.weight_table_extra_bet, 7, 8),
+        featurebuy: profile([3], [1], 9, 10),
+        superfeaturebuy: profile([3], [1], 11, 12)
+      },
+      multiplier_weights: [
+        raw.weight_multiplier_fg_low,
+        raw.weight_multiplier_fg_high,
+        raw.weight_multiplier_fb_low,
+        raw.weight_multiplier_fb_high,
+        raw.weight_multiplier_sb_low,
+        raw.weight_multiplier_sb_high
+      ]
+    };
+  }
+
+  const Box = adaptH013(window.H013_BOX_DATA);
   const DENOM = 0.002;
   const INITIAL_BALANCE = 10000;
   const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
   const MODE_NORMAL = Box.mode_normalbet;
+  const MODE_EXTRA = Box.mode_extrabet;
   const MODE_BUY = Box.mode_featurebuy;
   const MODE_SUPER = Box.mode_superfeaturebuy;
   const WW = Box.symbol_codes.indexOf("WW");
@@ -13,13 +69,14 @@
   const C2 = Box.symbol_codes.indexOf("C2");
   const PROFILE_NAMES = {
     [MODE_NORMAL]: "normal",
+    [MODE_EXTRA]: "extrabet",
     [MODE_BUY]: "featurebuy",
     [MODE_SUPER]: "superfeaturebuy"
   };
   const LANGUAGE_STORAGE_KEY = "slotDemoLanguage";
   const UI_TEXT = {
     en: {
-      gameName: "Egypt's Treasure", baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
+      gameName: "Sugar Bonanza 1000", baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
       superFeature: "Super Feature", cascade: "Cascade", multiplier: "Mult", fgLeft: "FG Left", credit: "Credit",
       bet: "Bet", win: "Win", stats: "Simulation Stats", rounds: "Total Rounds", hitRate: "Hit Rate",
       maxMultiplier: "Max Multiplier", play: "Play", spin: "Spin", auto: "Auto", stop: "Stop", speed: "Speed",
@@ -29,7 +86,7 @@
       helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay"
     },
     zh: {
-      gameName: "埃及秘寶", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
+      gameName: "糖果狂歡 1000", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
       superFeature: "超級特色", cascade: "連消", multiplier: "倍數", fgLeft: "FG 剩餘", credit: "餘額",
       bet: "押注", win: "得分", stats: "模擬統計", rounds: "總局數", hitRate: "中獎率",
       maxMultiplier: "最高倍數", play: "遊戲", spin: "Spin", auto: "自動", stop: "停止", speed: "速度",
@@ -85,8 +142,9 @@
     spin: byId("spinBtn"),
     auto: byId("autoBtn"),
     normal: byId("normalBetBtn"),
-    buy: byId("extraBetBtn"),
-    super: byId("buyFeatureBtn"),
+    extra: byId("extraBetBtn"),
+    buy: byId("buyFeatureBtn"),
+    super: byId("superFeatureBtn"),
     betButton: byId("betBtn"),
     betMinus: byId("betMinusBtn"),
     betPlus: byId("betPlusBtn"),
@@ -174,7 +232,9 @@
       ? Box.featurebuy
       : state.selectedMode === MODE_SUPER
         ? Box.superfeaturebuy
-        : Box.normalbet;
+        : state.selectedMode === MODE_EXTRA
+          ? Box.extrabet
+          : Box.normalbet;
     return betMoney() * modeCost;
   }
 
@@ -219,7 +279,7 @@
 
   function evaluateClusters(board) {
     const flat = board.flat();
-    const wildCount = flat.filter((symbol) => symbol === WW).length;
+    const wildCount = 0;
     const wins = [];
     const hitPositions = [];
     let pay = 0;
@@ -253,11 +313,7 @@
       for (let row = Box.window_size - 1; row >= 0; row -= 1) {
         const symbol = spin.board[row][reel];
         if (symbol === C1) hasScatter = true;
-        if (symbol === WW) {
-          kept.push(C2);
-          keptWild.push(true);
-          keptC2Values.push(drawC2Value(scene, true, c2Mode));
-        } else if (!winningSymbols.has(symbol)) {
+        if (!winningSymbols.has(symbol)) {
           kept.push(symbol);
           keptWild.push(spin.fromWild[row][reel]);
           keptC2Values.push(symbol === C2 ? spin.c2Values[row][reel] : 0);
@@ -285,22 +341,17 @@
         if (symbol === C1) hasScatter = true;
         spin.board[outputRow][reel] = symbol;
         spin.fromWild[outputRow][reel] = false;
-        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, false, c2Mode) : 0;
+        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, spin.tableId) : 0;
         outputRow -= 1;
       }
     }
   }
 
-  function drawC2Value(scene, cameFromWild, c2Mode) {
-    const c2 = currentProfile().c2;
-    const key = c2Mode === 1
-      ? "super"
-      : c2Mode === 2
-        ? "ultimate"
-        : scene === "FG"
-          ? cameFromWild ? "free_wild" : "free_direct"
-          : cameFromWild ? "base_wild" : "base_direct";
-    return c2.multipliers[pickWeighted(c2.weights[key])] || 0;
+  function drawC2Value(scene, tableId) {
+    if (scene !== "FG") return 0;
+    const tableToWeight = new Map([[7, 0], [8, 1], [9, 2], [10, 3], [11, 4], [12, 5]]);
+    const weightIndex = tableToWeight.get(tableId) ?? 0;
+    return Box.value_multiplier[pickWeighted(Box.multiplier_weights[weightIndex])] || 0;
   }
 
   function chooseC2Mode(scene) {
@@ -313,7 +364,7 @@
     spin.c2Values = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
     for (let row = 0; row < Box.window_size; row += 1) {
       for (let reel = 0; reel < Box.reel_num; reel += 1) {
-        if (spin.board[row][reel] === C2) spin.c2Values[row][reel] = drawC2Value(scene, false, c2Mode);
+        if (spin.board[row][reel] === C2) spin.c2Values[row][reel] = drawC2Value(scene, spin.tableId);
       }
     }
   }
@@ -368,7 +419,7 @@
     const c2 = summarizeC2Values(spin, c2Mode);
     const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
     const scatterWin = scatterPay(scatterCount);
-    const effectiveMultiplier = scene === "FG" ? carriedMultiplier + c2.total : c2.total;
+    const effectiveMultiplier = scene === "FG" ? Math.max(1, c2.total) : 1;
     const finalPay = rawPay * (effectiveMultiplier || 1) + scatterWin;
     return {
       scene,
@@ -392,7 +443,7 @@
     const freeTable = currentProfile().free_table;
     const schedule = [];
     freeTable[kind].forEach((count, index) => {
-      const selectedTable = state.selectedMode === MODE_SUPER ? 9 + index : tableIndex(freeTable.names[index]);
+      const selectedTable = tableIndex(freeTable.names[index]);
       for (let repeat = 0; repeat < count; repeat += 1) schedule.push(selectedTable);
     });
     for (let index = schedule.length - 1; index > 0; index -= 1) {
@@ -464,7 +515,7 @@
   function updateFeatureBar(spin = null) {
     const inFg = spin?.scene === "FG" || Boolean(state.pendingFg);
     document.body.classList.toggle("fg-mode", inFg);
-    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : t("baseGame"));
+    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : state.selectedMode === MODE_EXTRA ? "Extra Bet" : t("baseGame"));
     setText(el.cascade, String(spin?.steps.length || 0));
     const multiplier = inFg ? state.pendingFg?.carry || 0 : spin?.effectiveMultiplier || 0;
     setText(el.multiplier, `x${multiplier || 1}`);
@@ -561,6 +612,7 @@
   function updateControls() {
     const wagerLocked = state.busy || Boolean(state.pendingFg);
     el.normal.disabled = wagerLocked;
+    el.extra.disabled = wagerLocked;
     el.buy.disabled = wagerLocked;
     el.super.disabled = wagerLocked;
     el.betMinus.disabled = wagerLocked;
@@ -570,8 +622,9 @@
     el.rngReset.disabled = state.busy || !el.rngInput.value.trim();
     el.spin.disabled = state.busy;
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
-    el.buy.classList.remove("is-active");
-    el.super.classList.remove("is-active");
+    el.extra.classList.toggle("is-active", state.selectedMode === MODE_EXTRA);
+    el.buy.classList.toggle("is-active", state.selectedMode === MODE_BUY);
+    el.super.classList.toggle("is-active", state.selectedMode === MODE_SUPER);
     setText(el.auto, state.auto ? t("stop") : t("auto"));
     updateDebugButtons();
   }
@@ -634,7 +687,7 @@
     const tableId = fg.queue.shift();
     const spin = playSpin(tableId, "FG", fg.carry);
     fg.played += 1;
-    fg.carry += spin.c2.total;
+    fg.carry = spin.effectiveMultiplier;
     fg.win += toMoney(spin.finalPay);
     state.maxMultiplier = Math.max(state.maxMultiplier, fg.carry);
 
@@ -665,7 +718,7 @@
   }
 
   function forcedTriggerSpin(forcedStops = null) {
-    return playSpin(tableIndex("BF_Symbol"), "BG", 0, forcedStops);
+    return playSpin(tableIndex("BG_strip (4)"), "BG", 0, forcedStops);
   }
 
   async function doSpin() {
@@ -687,8 +740,8 @@
       updateStats();
 
       const forcedStops = parseForcedStops();
-      const forceFeature = el.forceFg.checked || state.selectedMode !== MODE_NORMAL;
-      const tableId = forceFeature ? tableIndex("BF_Symbol") : chooseBaseTable();
+      const forceFeature = el.forceFg.checked || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+      const tableId = forceFeature ? tableIndex("BG_strip (4)") : chooseBaseTable();
       const spin = forceFeature ? forcedTriggerSpin(forcedStops) : playSpin(tableId, "BG", 0, forcedStops);
       el.forceFg.checked = false;
       await playback(spin);
@@ -697,7 +750,7 @@
       state.balance += state.lastWin;
       state.totalWin += state.lastWin;
       state.maxMultiplier = Math.max(state.maxMultiplier, spin.c2.total);
-      const triggered = spin.scatterCount >= 4 || state.selectedMode !== MODE_NORMAL;
+      const triggered = spin.scatterCount >= 4 || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
       if (triggered) {
         startFreeGame();
         writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
@@ -740,6 +793,7 @@
     state.betIndex = Math.max(0, Math.min(index, BET_OPTIONS.length - 1));
     updateStats();
     renderBetMenu();
+    if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
   }
 
   function toggleDebug(enabled) {
@@ -818,6 +872,15 @@
       title.className = "help-section-title";
       title.textContent = state.language === "zh" ? (section.titleZh || section.titleEn || section.fallback) : (section.titleEn || section.titleZh || section.fallback);
       card.appendChild(title);
+      if (section.fallback === "PAYTABLE") {
+        const note = document.createElement("div");
+        note.className = "help-rule";
+        note.textContent = tr(
+          `Payouts below are shown for the current bet of ${money(betMoney() / DENOM)}.`,
+          `以下派彩金額依目前押注 ${money(betMoney() / DENOM)} 顯示。`
+        );
+        card.appendChild(note);
+      }
       for (const group of section.groups) {
         if ((group.titleZh || group.titleEn) && (group.rules.length || group.payouts.length)) {
           const heading = document.createElement("h4");
@@ -837,7 +900,10 @@
           for (const payout of group.payouts) {
             const item = document.createElement("div");
             item.className = "help-payout-item";
-            item.textContent = payout.replaceAll("[", "").replaceAll("]", "");
+            item.textContent = payout.replaceAll("[", "").replaceAll("]", "").replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+              const payoutCredits = Number(rawValue) * betMultiplier();
+              return `${separator}${money(payoutCredits)}`;
+            });
             grid.appendChild(item);
           }
           card.appendChild(grid);
@@ -852,7 +918,7 @@
     el.helpContent.innerHTML = `<div class="help-loading">${t("loading")}</div>`;
     let markdown = "";
     try {
-      const response = await fetch("./Source/game_help_draft.md", { cache: "no-store" });
+      const response = await fetch("./game_help_draft.md", { cache: "no-store" });
       if (response.ok) markdown = await response.text();
     } catch (_) {}
     if (!markdown) {
@@ -875,6 +941,7 @@
     setText(document.querySelector("#play-panel .zone-label"), t("play"));
     setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
     setText(el.normal, t("normalBet"));
+    setText(el.extra, `Extra Bet (${Box.extrabet}x)`);
     setText(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`);
     setText(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`);
     setText(document.querySelector("#settings-wrap .setting-header"), t("setting"));
@@ -901,6 +968,7 @@
     if (state.auto && !state.busy) doSpin();
   });
   el.normal.addEventListener("click", () => selectMode(MODE_NORMAL));
+  el.extra.addEventListener("click", () => selectMode(MODE_EXTRA));
   el.buy.addEventListener("click", () => purchaseFeature(MODE_BUY));
   el.super.addEventListener("click", () => purchaseFeature(MODE_SUPER));
   el.betMinus.addEventListener("click", () => setBetIndex(state.betIndex - 1));
@@ -951,12 +1019,12 @@
     if (el.helpDialog.open && !state.helpMarkdown) loadHelp();
   });
 
-  byId("gameId").textContent = "H019";
+  byId("gameId").textContent = "H013";
   byId("gameName").textContent = t("gameName");
-  el.config.value = H019_ACTIVE_CONFIG;
+  el.config.value = H013_ACTIVE_CONFIG;
   el.cardRange.closest("label").firstChild.textContent = "Card BG Range ";
   el.cardRange.disabled = true;
-  document.title = `H019 ${Box.display_name} — Demo`;
+  document.title = `H013 ${Box.display_name} — Demo`;
   renderBetMenu();
   renderBoard(sampleBoard());
   updateFeatureBar();

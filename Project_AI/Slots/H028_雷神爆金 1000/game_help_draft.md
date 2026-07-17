@@ -18,43 +18,47 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 符号赔付值 | SYMBOL PAYOUT VALUES |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
 
 ### WILD SYMBOL
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 百搭符号 | WILD SYMBOL |
-| 規則說明 | [WW] 仅出现在第 {2}、{3}、{4}、{5} 轮，并可替代除 [SCATTER] 外的所有符号以帮助形成中奖组合。 | [WW] APPEARS ON REELS {2}, {3}, {4}, AND {5} ONLY, AND SUBSTITUTES FOR ALL SYMBOLS EXCEPT [SCATTER] TO HELP FORM WINNING COMBINATIONS. |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | [WW] 僅出現在第 {2}、{3}、{4}、{5} 輪，並可替代除 [SCATTER] 外的所有符號以幫助形成中獎組合。 | [WW] APPEARS ON REELS {2}, {3}, {4}, AND {5} ONLY, AND SUBSTITUTES FOR ALL SYMBOLS EXCEPT [SCATTER] TO HELP FORM WINNING COMBINATIONS. |
 
 ### SCATTER SYMBOL
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 散布符号 | SCATTER SYMBOL |
-| 規則說明 | [SCATTER] 可出现在主盘面任意转轮位置。 | [SCATTER] MAY APPEAR ANYWHERE ON THE MAIN REELS. |
+| 副標題 | 散佈符號 | SCATTER SYMBOL |
+| 規則說明 | [SCATTER] 可出現在主盤面任意轉輪位置。 | [SCATTER] MAY APPEAR ANYWHERE ON THE MAIN REELS. |
 
 ### MULTIPLIER SYMBOL
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 倍数符号 | MULTIPLIER SYMBOL |
-| 規則說明 | [M1] 为倍数符号，可出现在主盘面与额外转轮位置。 | [M1] IS THE MULTIPLIER SYMBOL AND MAY APPEAR ON THE MAIN REELS AND THE EXTRA REELS. |
+| 副標題 | 倍數符號 | MULTIPLIER SYMBOL |
+| 規則說明 | [M1] 為倍數符號，可出現在主盤面與額外轉輪位置。 | [M1] IS THE MULTIPLIER SYMBOL AND MAY APPEAR ON THE MAIN REELS AND THE EXTRA REELS. |
 
 ### 賠率表
 
-简中：
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
 
-| 符号 | {6} 连 | {5} 连 | {4} 连 | {3} 连 |
+繁中：
+
+| 符號 | {6} 連 | {5} 連 | {4} 連 | {3} 連 |
 | --- | ---: | ---: | ---: | ---: |
-| [M1] 招财猫 | {4} | {2.5} | {2} | {1.5} |
+| [M1] 招財貓 | {4} | {2.5} | {2} | {1.5} |
 | [M2] 日式鼓 | {2.5} | {1.5} | {1.25} | {1} |
-| [M3] 灯笼 | {2} | {1.5} | {1.25} | {0.5} |
+| [M3] 燈籠 | {2} | {1.5} | {1.25} | {0.5} |
 | [M4] 扇子 | {1.5} | {1} | {0.75} | {0.4} |
-| [M5] 握寿司 | {0.75} | {0.6} | {0.5} | {0.3} |
-| [M6] 寿司 | {0.75} | {0.6} | {0.5} | {0.3} |
+| [M5] 握壽司 | {0.75} | {0.6} | {0.5} | {0.3} |
+| [M6] 壽司 | {0.75} | {0.6} | {0.5} | {0.3} |
 | [A] | {0.5} | {0.4} | {0.3} | {0.2} |
 | [K] | {0.5} | {0.4} | {0.3} | {0.2} |
 | [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
@@ -83,11 +87,11 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | 每次结算后，中奖符号会被移除，剩余符号会向下掉落并由新符号补满空位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED, THE REMAINING SYMBOLS CASCADE DOWN, AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
-| 規則說明 | 盘面补满后会再次结算新的中奖组合，直到不再形成新的中奖组合为止。 | AFTER THE REELS ARE REFILLED, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS CONTINUES UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
+| 規則說明 | 每次結算後，中獎符號會被移除，剩餘符號會向下掉落並由新符號補滿空位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED, THE REMAINING SYMBOLS CASCADE DOWN, AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
+| 規則說明 | 盤面補滿後會再次結算新的中獎組合，直到不再形成新的中獎組合為止。 | AFTER THE REELS ARE REFILLED, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS CONTINUES UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
 
 ---
 
@@ -95,13 +99,13 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 倍数特色 | MULTIPLIER FEATURE |
-| 規則說明 | [M1] 为本游戏的主要倍数来源；同一回合出现多个 [M1] 时，倍数会累积相加。 | [M1] IS THE MAIN MULTIPLIER SOURCE IN THIS GAME. IF MULTIPLE [M1] SYMBOLS APPEAR IN THE SAME ROUND, THEIR VALUES ARE ADDED TOGETHER. |
-| 規則說明 | 主盘面上的 [M1] 依尺寸提供倍数：{1}x{1} = X{2}、{1}x{2} = X{3}、{1}x{3} = X{4}、{1}x{4} = X{5}。 | ON THE MAIN REELS, [M1] AWARDS A MULTIPLIER BASED ON ITS SIZE: {1}X{1} = X{2}, {1}X{2} = X{3}, {1}X{3} = X{4}, AND {1}X{4} = X{5}. |
-| 規則說明 | 额外转轮上的每个 [M1] 固定提供 X{2} 倍数。 | EACH [M1] ON THE EXTRA REELS AWARDS A FIXED X{2} MULTIPLIER. |
-| 規則說明 | 当局所有中奖金额会乘上该局累积的总倍数。 | ALL WINS IN THE CURRENT ROUND ARE MULTIPLIED BY THE TOTAL ACCUMULATED MULTIPLIER FOR THAT ROUND. |
+| 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
+| 規則說明 | [M1] 為本遊戲的主要倍數來源；同一回合出現多個 [M1] 時，倍數會累積相加。 | [M1] IS THE MAIN MULTIPLIER SOURCE IN THIS GAME. IF MULTIPLE [M1] SYMBOLS APPEAR IN THE SAME ROUND, THEIR VALUES ARE ADDED TOGETHER. |
+| 規則說明 | 主盤面上的 [M1] 依尺寸提供倍數：{1}x{1} = X{2}、{1}x{2} = X{3}、{1}x{3} = X{4}、{1}x{4} = X{5}。 | ON THE MAIN REELS, [M1] AWARDS A MULTIPLIER BASED ON ITS SIZE: {1}X{1} = X{2}, {1}X{2} = X{3}, {1}X{3} = X{4}, AND {1}X{4} = X{5}. |
+| 規則說明 | 額外轉輪上的每個 [M1] 固定提供 X{2} 倍數。 | EACH [M1] ON THE EXTRA REELS AWARDS A FIXED X{2} MULTIPLIER. |
+| 規則說明 | 當局所有中獎金額會乘上該局累積的總倍數。 | ALL WINS IN THE CURRENT ROUND ARE MULTIPLIED BY THE TOTAL ACCUMULATED MULTIPLIER FOR THAT ROUND. |
 
 ---
 
@@ -109,12 +113,12 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 金框符号特色 | GOLDEN FRAMED FEATURE |
-| 規則說明 | 第 {2}、{3}、{4}、{5} 轮的一般符号有机会带有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, {4}, AND {5} MAY APPEAR WITH A GOLD FRAME. |
-| 規則說明 | 金框符号只有在实际参与中奖并被移除时，才会在原位置转为 [WW]。 | A GOLD FRAMED SYMBOL ONLY CHANGES INTO [WW] ON THE SAME POSITION AFTER IT ACTUALLY PARTICIPATES IN A WIN AND IS REMOVED. |
-| 規則說明 | 转化后的 [WW] 可参与下一次掉落后的中奖判定。 | THE TRANSFORMED [WW] CAN PARTICIPATE IN THE NEXT WIN EVALUATION AFTER THE CASCADE. |
+| 主要標題 | 金框符號特色 | GOLDEN FRAMED FEATURE |
+| 規則說明 | 第 {2}、{3}、{4}、{5} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, {4}, AND {5} MAY APPEAR WITH A GOLD FRAME. |
+| 規則說明 | 金框符號只有在實際參與中獎並被移除時，才會在原位置轉為 [WW]。 | A GOLD FRAMED SYMBOL ONLY CHANGES INTO [WW] ON THE SAME POSITION AFTER IT ACTUALLY PARTICIPATES IN A WIN AND IS REMOVED. |
+| 規則說明 | 轉化後的 [WW] 可參與下一次掉落後的中獎判定。 | THE TRANSFORMED [WW] CAN PARTICIPATE IN THE NEXT WIN EVALUATION AFTER THE CASCADE. |
 
 ---
 
@@ -122,15 +126,15 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 免费游戏特色 | FREE GAME FEATURE |
-| 規則說明 | 主盘面出现 {4} 个或以上 [SCATTER] 可触发免费游戏。 | {4} OR MORE [SCATTER] APPEARING ON THE MAIN REELS WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | {4} 个 [SCATTER] 可获得 {8} 场免费游戏；每多出现 {1} 个 [SCATTER]，额外获得 {2} 场免费游戏。 | {4} [SCATTER] AWARD {8} FREE SPINS. EACH ADDITIONAL [SCATTER] AWARDS {2} MORE FREE SPINS. |
-| 規則說明 | 每次免费游戏特色最多可进行 {50} 场免费游戏。 | A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
-| 規則說明 | 进入免费游戏时，累积倍数由 X{2} 开始。 | THE ACCUMULATED MULTIPLIER STARTS AT X{2} WHEN THE FREE GAME FEATURE BEGINS. |
-| 規則說明 | 免费游戏期间，累积倍数不会在每场之间重置，并会持续保留至整段免费游戏结束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FEATURE ENDS. |
-| 規則說明 | 免费游戏期间再次出现 {4} 个或以上 [SCATTER] 可触发加局；加局场次与一般触发规则相同，且总场次不超过 {50} 场。 | DURING FREE GAME, {4} OR MORE [SCATTER] WILL RETRIGGER ADDITIONAL FREE SPINS. THE SAME FREE SPIN AWARD RULE APPLIES, UP TO A MAXIMUM OF {50} FREE SPINS IN TOTAL. |
+| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
+| 規則說明 | 主盤面出現 {4} 個或以上 [SCATTER] 可觸發免費遊戲。 | {4} OR MORE [SCATTER] APPEARING ON THE MAIN REELS WILL TRIGGER THE FREE GAME FEATURE. |
+| 規則說明 | {4} 個 [SCATTER] 可獲得 {8} 場免費遊戲；每多出現 {1} 個 [SCATTER]，額外獲得 {2} 場免費遊戲。 | {4} [SCATTER] AWARD {8} FREE SPINS. EACH ADDITIONAL [SCATTER] AWARDS {2} MORE FREE SPINS. |
+| 規則說明 | 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
+| 規則說明 | 進入免費遊戲時，累積倍數由 X{2} 開始。 | THE ACCUMULATED MULTIPLIER STARTS AT X{2} WHEN THE FREE GAME FEATURE BEGINS. |
+| 規則說明 | 免費遊戲期間，累積倍數不會在每場之間重置，並會持續保留至整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FEATURE ENDS. |
+| 規則說明 | 免費遊戲期間再次出現 {4} 個或以上 [SCATTER] 可觸發加局；加局場次與一般觸發規則相同，且總場次不超過 {50} 場。 | DURING FREE GAME, {4} OR MORE [SCATTER] WILL RETRIGGER ADDITIONAL FREE SPINS. THE SAME FREE SPIN AWARD RULE APPLIES, UP TO A MAXIMUM OF {50} FREE SPINS IN TOTAL. |
 
 ---
 
@@ -138,11 +142,11 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 购买特色 | BUY FEATURE |
-| 規則說明 | 玩家可支付 {75}x 总投注，直接购买一次免费游戏进场机会。 | BUY FEATURE CAN BE PURCHASED FOR {75}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
-| 規則說明 | 完成购买后，将直接触发一次免费游戏特色。 | COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
+| 主要標題 | 購買特色 | BUY FEATURE |
+| 規則說明 | 玩家可支付 {75}x 總投注，直接購買一次免費遊戲進場機會。 | BUY FEATURE CAN BE PURCHASED FOR {75}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | 完成購買後，將直接觸發一次免費遊戲特色。 | COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
 
 ---
 
@@ -150,13 +154,13 @@
 
 來源：rule-derived
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 路数说明 | WAY GAME |
-| 規則說明 | 本游戏采用由左至右连续相邻转轮判定的 WAY GAME 玩法。 | THIS GAME USES A WAY GAME MECHANIC THAT PAYS FOR MATCHING SYMBOLS ON CONSECUTIVE ADJACENT REELS FROM LEFT TO RIGHT. |
-| 規則說明 | 主盘面为 {6} 轮可变高度盘面，并在第 {2} 至第 {5} 轮上方各配置 {1} 个额外转轮位置。 | THE MAIN REELS CONSIST OF {6} VARIABLE-HEIGHT REELS, WITH {1} EXTRA REEL POSITION ABOVE REELS {2} TO {5}. |
-| 規則說明 | 本游戏的路数范围为 {2,025} WAYS 至 {32,400} WAYS。 | THE NUMBER OF WAYS IN THIS GAME RANGES FROM {2,025} WAYS TO {32,400} WAYS. |
-| 規則說明 | 大型符号覆盖多个位置时，每一格均视为 {1} 个独立符号参与 WAY 计算。 | WHEN A LARGE SYMBOL COVERS MULTIPLE POSITIONS, EACH POSITION COUNTS AS {1} INDIVIDUAL SYMBOL FOR WAY CALCULATION. |
+| 主要標題 | 路數說明 | WAY GAME |
+| 規則說明 | 本遊戲採用由左至右連續相鄰轉輪判定的 WAY GAME 玩法。 | THIS GAME USES A WAY GAME MECHANIC THAT PAYS FOR MATCHING SYMBOLS ON CONSECUTIVE ADJACENT REELS FROM LEFT TO RIGHT. |
+| 規則說明 | 主盤面為 {6} 輪可變高度盤面，並在第 {2} 至第 {5} 輪上方各配置 {1} 個額外轉輪位置。 | THE MAIN REELS CONSIST OF {6} VARIABLE-HEIGHT REELS, WITH {1} EXTRA REEL POSITION ABOVE REELS {2} TO {5}. |
+| 規則說明 | 本遊戲的路數範圍為 {2,025} WAYS 至 {32,400} WAYS。 | THE NUMBER OF WAYS IN THIS GAME RANGES FROM {2,025} WAYS TO {32,400} WAYS. |
+| 規則說明 | 大型符號覆蓋多個位置時，每一格均視為 {1} 個獨立符號參與 WAY 計算。 | WHEN A LARGE SYMBOL COVERS MULTIPLE POSITIONS, EACH POSITION COUNTS AS {1} INDIVIDUAL SYMBOL FOR WAY CALCULATION. |
 
 ---
 
@@ -164,10 +168,10 @@
 
 來源：mixed（template-copy + rule-derived）
 
-| Item | 简中 | 英文 |
+| Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 游戏规则 | GAME RULES |
-| 規則說明 | 选择您想要进行的投注后，主盘面与额外转轮会同步开始旋转。 | AFTER THE PLAYER SELECTS A BET, THE MAIN REELS AND THE EXTRA REELS SPIN TOGETHER. |
-| 規則說明 | 中奖组合依 WAY GAME 规则判定，中奖金额会依该局累积的总倍数进行结算。 | WINNING COMBINATIONS ARE EVALUATED BY THE WAY GAME RULE, AND WINS ARE PAID WITH THE TOTAL MULTIPLIER ACCUMULATED IN THAT ROUND. |
-| 規則說明 | 游戏出现故障时，所有赔付与游戏结果均视为无效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
-| 規則說明 | 若玩家在免费游戏期间中断连接，系统将自动完成该局结算，并将中奖金额加入余额。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | 選擇您想要進行的投注後，主盤面與額外轉輪會同步開始旋轉。 | AFTER THE PLAYER SELECTS A BET, THE MAIN REELS AND THE EXTRA REELS SPIN TOGETHER. |
+| 規則說明 | 中獎組合依 WAY GAME 規則判定，中獎金額會依該局累積的總倍數進行結算。 | WINNING COMBINATIONS ARE EVALUATED BY THE WAY GAME RULE, AND WINS ARE PAID WITH THE TOTAL MULTIPLIER ACCUMULATED IN THAT ROUND. |
+| 規則說明 | 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |

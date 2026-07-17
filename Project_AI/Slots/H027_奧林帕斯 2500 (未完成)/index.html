@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pinata Beat 1000 — Demo Game</title>
+  <title>H027 奧林帕斯 2500 — Demo Game</title>
   <style>
     :root {
       --bg-a: #130722;
@@ -1569,117 +1569,59 @@
     }
 
     .help-content {
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
+      min-height: 0;
       padding: 16px;
-      background: #06111f;
-    }
-
-    .help-loading,
-    .help-load-error {
-      display: grid;
-      min-height: 180px;
-      place-items: center;
-      color: var(--sub);
-      font-size: 12px;
-      text-align: center;
+      overflow-y: auto;
+      color: var(--text);
+      background: var(--bg);
     }
 
     .help-section {
-      margin-bottom: 14px;
-      border: 1px solid rgba(38, 92, 137, 0.55);
-      border-radius: 9px;
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
       background: var(--panel);
-      overflow: hidden;
     }
 
-    .help-section-title {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 16px;
-      margin: 0;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--surface-2);
+    .help-section-title,
+    .help-group-title {
+      margin: 0 0 10px;
       color: var(--accent);
       font-size: 14px;
     }
 
-    .help-section-title .help-en {
-      color: var(--blue);
-      font-size: 11px;
-      text-align: right;
-    }
-
     .help-group-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      margin: 0;
-      padding: 9px 12px 5px;
-      color: var(--text);
+      margin-top: 14px;
+      color: var(--blue);
       font-size: 12px;
     }
 
-    .help-group-title .help-en {
-      color: var(--sub);
-      font-size: 10px;
-      text-align: right;
-    }
-
-    .help-rule {
-      display: block;
-      padding: 9px 12px;
-      border-top: 1px solid rgba(17, 50, 82, 0.85);
+    .help-rule,
+    .help-payout-item {
+      margin: 6px 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
       line-height: 1.55;
-    }
-
-    .help-rule-zh,
-    .help-rule-en {
-      min-width: 0;
-      color: var(--text);
-      font-size: 12px;
-      overflow-wrap: anywhere;
-    }
-
-    .help-rule-en {
-      color: #a9cce8;
-      font-size: 11px;
-    }
-
-    .help-lang-label {
-      display: block;
-      margin-bottom: 3px;
-      color: var(--sub);
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
     }
 
     .help-payout-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 5px;
-      padding: 8px 12px 12px;
+      gap: 6px;
     }
 
-    .help-payout-item {
-      padding: 7px 9px;
-      border-radius: 5px;
-      color: var(--text);
-      background: var(--surface);
-      font-family: Consolas, monospace;
-      font-size: 11px;
+    .help-loading,
+    .help-load-error {
+      padding: 20px;
+      color: var(--sub);
+      text-align: center;
     }
 
-    #helpSourceFrame {
+    #helpFrame {
       display: none;
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #ffffff;
     }
 
     .spin-result-row {
@@ -1804,10 +1746,6 @@
         flex-wrap: wrap;
       }
 
-      .help-payout-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       .setting-body .config-control {
         width: auto;
       }
@@ -1824,12 +1762,79 @@
       }
     }
   </style>
+  <style id="h019-layout-adapter">
+    .board-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
+    .cell {
+      width: 100%;
+      height: auto;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border-color: rgba(38, 92, 137, 0.28);
+    }
+    .cell.peek-row { display: grid; }
+    .cell .symbol-wrap {
+      inset: 0;
+      overflow: hidden;
+    }
+    .h019-glyph {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 4px;
+      overflow: hidden;
+      color: #d8e8f4;
+      font: 800 clamp(0.82rem, 1.45vw, 1.12rem) / 1 Consolas, "Courier New", monospace;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.72);
+    }
+    .cell .symbol-code { display: none; }
+    .cell.symbol-a,
+    .cell.symbol-k,
+    .cell.symbol-q,
+    .cell.symbol-j,
+    .cell.symbol-te {
+      border-color: rgba(38, 92, 137, 0.28);
+      background: #060d1a;
+    }
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.h019-scatter {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.h019-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
+    }
+    .multiplier-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 5;
+      padding: 2px 6px;
+      border-radius: 999px;
+      color: #3b1d00;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 2px 8px rgba(16, 8, 28, 0.5);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+    @media (max-width: 1040px) {
+      .board-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
+    }
+  </style>
 </head>
 
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">H026</span> <span id="gameName">彩罐熱舞</span></span>
+      <span id="game-title"><span id="gameId">H027</span> <span id="gameName">奧林帕斯 2500</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -1868,7 +1873,7 @@
             <button id="autoBtn" type="button">Auto</button>
             <div class="bet-stepper">
               <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
-              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
               <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
               <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
             </div>
@@ -1899,16 +1904,16 @@
         </section>
 
         <section id="simulation-stats">
-          <h3 data-i18n="simulationStats">Simulation Stats</h3>
-          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
               id="roundCountValue">0</span></div>
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
           </div>
-          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
               id="hitRateValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
               id="fgTriggerValue">0</span></div>
-          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
         </section>
       </aside>
@@ -1926,7 +1931,7 @@
           </label>
           <label class="debug-rng-field" for="reelRngInput">
             Reel RNG
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
+              <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5 6">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -1935,14 +1940,14 @@
     </section>
 
     <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
-      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
+      <h3 class="diagnostic-header">Reel RNG</h3>
       <div class="rng-list" id="rngList"></div>
     </section>
 
     <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
-      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
       <div id="log-body">
-        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
+        <div class="log-subheader">Line Wins</div>
         <div class="line-list" id="lineList"></div>
         <div class="spin-result-list" id="spinResultList"></div>
       </div>
@@ -1951,13 +1956,13 @@
     <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="live-log-header diagnostic-header">
         <span>Log</span>
-        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
+        <button id="clearLogBtn" type="button">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
-      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
+      <div class="setting-header diagnostic-header">Setting</div>
       <div class="setting-body">
         <label class="setting-toggle" for="debugModeInput">
           <input id="debugModeInput" type="checkbox">
@@ -1967,20 +1972,17 @@
           Config
           <select id="configSelect">
             <option value="config_92A.js">92A</option>
-            <option value="config_92B.js">92B</option>
-            <option value="config_94A.js">94A</option>
-            <option value="config_94B.js">94B</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
-          <span data-i18n="language">Language</span>
+          <span>Language</span>
           <select id="languageSelect">
             <option value="zh">繁中</option>
             <option value="en">English</option>
           </select>
         </label>
         <button id="helpBtn" type="button">Help</button>
-        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
+        <button id="resetBtn" type="button">Reset</button>
       </div>
     </section>
 
@@ -1990,190 +1992,24 @@
   <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
     <div class="help-dialog-shell">
       <div class="help-dialog-header">
-        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
-        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
       </div>
       <div id="helpContent" class="help-content">
-        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+        <div class="help-loading">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpFrame" title="Game Help content" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
 
-  <script id="embeddedGameHelpMarkdown" type="text/plain">
-# 101014 Game Help Draft
-
-這份 md 是 `Pinata_Beat_1000_Help.xlsx` 的前置確認稿。
-之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
-
-## Game Meta
-
-| Field | Value |
-| --- | --- |
-| game_id | 101014 |
-| parsheet_id | H0261 |
-| name_zh | 彩罐熱舞 |
-| name_en | Pinata Beat 1000 |
-
----
-
-## PAYTABLE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
-
-### WILD SYMBOL
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 百搭符號 | WILD SYMBOL |
-| 規則說明 | [WW] 可替代除 [Scatter] 外的所有符號。 | [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
-
-### SCATTER SYMBOL
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 散佈符號 | SCATTER SYMBOL |
-| 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
-
-### 賠率表
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 賠率表 | PAYTABLE |
-
-| 中文欄 | 中文欄 | 中文欄 |
-| --- | --- | --- |
-| [M1] 5 - 5000 | [M2] 5 - 2000 | [M3] 5 - 1000 |
-| [M1] 4 - 1250 | [M2] 4 - 500 | [M3] 4 - 250 |
-| [M1] 3 - 250 | [M2] 3 - 100 | [M3] 3 - 75 |
-| [M4] 5 - 750 | [M5] 5 - 500 | [A] 5 - 250 |
-| [M4] 4 - 200 | [M5] 4 - 100 | [A] 4 - 50 |
-| [M4] 3 - 50 | [M5] 3 - 25 | [A] 3 - 10 |
-| [K] 5 - 250 | [Q] 5 - 250 | [J] 5 - 250 |
-| [K] 4 - 50 | [Q] 4 - 50 | [J] 4 - 50 |
-| [K] 3 - 10 | [Q] 3 - 10 | [J] 3 - 10 |
-
----
-
-## CASCADING FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | 每輪結算後，中獎符號會被消除；消除後產生的空格由上方符號向下掉落補位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
-| 規則說明 | 連消期間，若某輪盤已出現 {1} 個 [Scatter]，該輪盤將不會再出現更多 [Scatter]。 | DURING CASCADING, IF A REEL ALREADY CONTAINS {1} [Scatter], NO MORE [Scatter] WILL APPEAR ON THAT REEL. |
-| 規則說明 | 補牌後會再次檢查新的中獎組合，直到不再形成新的中獎組合為止。 | AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
-
----
-
-## MULTIPLIER FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
-| 規則說明 | 金框符號可能附帶倍數。倍數等級為：X{2}、X{3}、X{5}、X{8}、X{10}、X{15}、X{20}、X{25}、X{50}、X{100}、X{500}、X{1000}。 | GOLD FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, AND X{1000}. |
-| 規則說明 | 僅當帶倍數的金框符號實際參與得分並被消除時，其倍數才會被收集並累積。 | THE MULTIPLIER IS ONLY COLLECTED AND ADDED TO THE ACCUMULATED TOTAL WHEN THE GOLD FRAMED SYMBOL WITH A MULTIPLIER ACTUALLY PARTICIPATES IN A WIN AND IS CLEARED. |
-| 規則說明 | 當本次旋轉無法再消除時，若本次旋轉有實際收集到倍數，則將當前累積總倍數乘上本次旋轉的總贏分。 | WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
-
----
-
-## GOLDEN FRAMED FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 金框符號 | GOLDEN FRAMED FEATURE |
-| 規則說明 | 第 {2}、{3}、{4} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, AND {4} MAY APPEAR WITH A GOLD FRAME. |
-| 規則說明 | 金框符號與原始符號具有相同的基礎賠率。 | GOLD FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
-| 規則說明 | 主遊戲中，第 {3} 輪有機會隨機出現整列帶倍數的金框符號。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. |
-| 規則說明 | 若前一輪中獎組合中含有金框符號，該位置會保留並轉化為 [WW]，因此不視為空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
-
----
-
-## FREE GAME FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [C1]，將觸發免費遊戲，並分別獲得 {15}、{17} 或 {19} 場免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
-| 規則說明 | 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
-| 規則說明 | 免費遊戲期間，第 {3} 輪的一般符號必定帶有金框與倍數。 | DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLD FRAMES AND MULTIPLIERS. |
-| 規則說明 | 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
-| 規則說明 | 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {15}、{17} 或 {19} 場免費遊戲。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
-
----
-
-## EXTRA BET
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 額外投注 | EXTRA BET |
-| 規則說明 | 玩家可選擇額外投注模式進行旋轉。 | THE PLAYER MAY SELECT THE EXTRA BET MODE. |
-| 規則說明 | 額外投注沿用相同的主遊戲、連消與免費遊戲流程。 | EXTRA BET USES THE SAME BASE GAME, CASCADING, AND FREE GAME FLOW. |
-| 規則說明 | 額外投注的投注金額為 {2}x 總投注，並可提高觸發免費遊戲的機會。 | EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
-
----
-
-## BUY FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | 玩家可支付 {75}x 總投注，購買一次免費遊戲進場機會。 | BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. |
-| 規則說明 | 購買免費遊戲特色後即可進入免費遊戲。 | PURCHASING THE FREE GAME FEATURE GUARANTEES FREE GAME. |
-| 規則說明 | 進場旋轉的得分會保留，並與後續免費遊戲總得分一併結算。 | WINS FROM THE TRIGGER SPIN ARE KEPT AND PAID TOGETHER WITH THE TOTAL WIN FROM THE FREE GAME FEATURE. |
-
----
-
-## OP JACKPOT
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | 在遊戲中，OP JACKPOT 特色由特色轉輪上 [C1] 隨機觸發。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
-| 規則說明 | 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
-| 規則說明 | 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
-| 規則說明 | [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
-| 規則說明 | [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
-| 規則說明 | [MINOR] 為紅利彩金，依照投注選項改變。 | [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | [MINI] 為紅利彩金，依照投注選項改變。 | [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | 玩家投注越高，觸發 OP JACKPOT 特色的機會越高。 | THE HIGHER THE PLAYER BETS, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
-
----
-
-## LINE GAME
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 賠線說明 | LINE GAME |
-| 規則說明 | 本遊戲共有 {20} 條固定賠線。 | THE GAME HAS {20} FIXED PAY LINES. |
-| 規則說明 | 中獎組合必須由最左側開始，由左至右連續出現才算中獎。 | WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. |
-| 規則說明 | 單一賠線僅支付最高獎項。 | ONLY THE HIGHEST WIN PER PAY LINE IS PAID. |
-| 規則說明 | [走線圖 20 LINE] | [PAYLINE DIAGRAM 20 LINE] |
-| 規則說明 | 請參考走線圖瞭解 {20} 條固定賠線的連線方式。 | PLEASE REFER TO THE PAYLINE DIAGRAM FOR THE {20} FIXED PAY LINE PATTERNS. |
-
----
-
-## GAME RULE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | 選擇您想要玩的投注選項。 | SELECT BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | 所有中獎金額均乘以投注選項，除非是累積獎。 | ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
-| 規則說明 | 遊戲出現故障，所有賠付和遊戲都視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
-| 規則說明 | 若玩家在免費遊戲特色期間中斷遊戲，系統將會自動計算遊戲結果，並將獲獎金額加入至餘額中。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
-  </script>
-
   <script>
-    const H026_CONFIG_FILES = ["config_92A.js", "config_92B.js", "config_94A.js", "config_94B.js"];
+    const H027_CONFIG_FILES = ["config_92A.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
-    document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
+    const H027_ACTIVE_CONFIG = H027_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H027_CONFIG_FILES[0];
+    document.write(`<script src="./${H027_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
+    if (false) {
     const Box = window.H026_BOX_DATA;
     const DENOM = 0.002;
     const INITIAL_BALANCE_MONEY = 10000;
@@ -2187,13 +2023,6 @@
     const REEL3_SPECIAL_TABLE_IDS = new Set([1, 3, 4, 5]);
     const FG_SPIN_CAP = 50;
     const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
-    const SAVED_LANGUAGE = (() => {
-      try {
-        return localStorage.getItem("slotDemoLanguage") === "zh" ? "zh" : "en";
-      } catch (_) {
-        return "en";
-      }
-    })();
     const state = {
       balance: INITIAL_BALANCE,
       totalBet: 0,
@@ -2228,9 +2057,7 @@
       debugSkipPlayback: false,
       forceFg: false,
       autoTimer: null,
-      liveLog: [],
-      language: SAVED_LANGUAGE,
-      lastMessage: "Ready — press Spin"
+      liveLog: []
     };
 
     const boardEl = document.getElementById("board");
@@ -2267,13 +2094,9 @@
     const speedRangeEl = document.getElementById("speedRange");
     const speedValueEl = document.getElementById("speedValue");
     const configSelectEl = document.getElementById("configSelect");
-    const languageSelectEl = document.getElementById("languageSelect");
     const helpBtn = document.getElementById("helpBtn");
     const helpDialogEl = document.getElementById("helpDialog");
     const closeHelpBtn = document.getElementById("closeHelpBtn");
-    const helpContentEl = document.getElementById("helpContent");
-    const helpSourceFrameEl = document.getElementById("helpSourceFrame");
-    const embeddedGameHelpMarkdownEl = document.getElementById("embeddedGameHelpMarkdown");
     const liveLogBodyEl = document.getElementById("liveLogBody");
     const clearLogBtn = document.getElementById("clearLogBtn");
     const previousStepBtn = document.getElementById("previousStepBtn");
@@ -2296,268 +2119,12 @@
     function toMoney(value) { return Number(value) * DENOM; }
     function formatMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
-    function formatCompactNumber(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
     function formatPercent(rate) { return `${(Number(rate) * 100).toFixed(2)}%`; }
     function getBetMoney() { return BET_OPTIONS_MONEY[state.betIndex] || BET_OPTIONS_MONEY[0]; }
     function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
     function getExtraBetMultiplier() { return Number(Box.extrabet || Box.normalbet) / Number(Box.normalbet || 1); }
     function getSelectedBetCostMoney() { return getBetMoney() * (state.extraBetEnabled ? getExtraBetMultiplier() : 1); }
     function setText(el, text) { if (el) el.textContent = text; }
-
-    const UI_TEXT = {
-      en: {
-        simulationStats: "Simulation Stats",
-        totalRounds: "Total Rounds",
-        hitRate: "Hit Rate",
-        maxMultiplier: "Max Multiplier",
-        reelRng: "Reel RNG",
-        spinResult: "Spin Result",
-        lineWins: "Line Wins",
-        clear: "Clear",
-        setting: "Setting",
-        language: "Language",
-        reset: "Reset",
-        gameHelp: "Game Help",
-        close: "Close",
-        loadingRules: "Loading game rules...",
-        noWinningLine: "No winning line",
-        awaitingSpin: "Awaiting Spin",
-        noBoardResult: "No board result yet."
-      },
-      zh: {
-        simulationStats: "模擬統計",
-        totalRounds: "總局數",
-        hitRate: "命中率",
-        maxMultiplier: "最大 Multiplier",
-        reelRng: "Reel RNG",
-        spinResult: "Spin 結果",
-        lineWins: "Line Wins",
-        clear: "清除",
-        setting: "設定",
-        language: "語言",
-        reset: "重置",
-        gameHelp: "遊戲 Help",
-        close: "關閉",
-        loadingRules: "正在載入遊戲規則...",
-        noWinningLine: "沒有 Line Win",
-        awaitingSpin: "等待 Spin",
-        noBoardResult: "尚無盤面結果。"
-      }
-    };
-
-    function tr(key) {
-      return UI_TEXT[state.language]?.[key] || UI_TEXT.en[key] || key;
-    }
-
-    function localizeMessage(text) {
-      if (state.language !== "zh") return text;
-      const exact = {
-        "Ready — press Spin": "Ready — 按 Spin",
-        "Set RNG reset": "Set RNG 已重置",
-        "Force FG applied to this spin": "Force FG 已套用至本次 Spin",
-        "Reels spinning...": "Reel 轉動中...",
-        "Session reset": "Session 已重置",
-        "Auto enabled": "Auto 已開啟",
-        "Auto disabled": "Auto 已關閉",
-        "Next spin queued | Current playback fast-forwarded": "下一次 Spin 已排入 | 目前播放已快轉"
-      };
-      if (exact[text]) return exact[text];
-      return text
-        .replace(/^Spin (\d+) \| (.+) \| Reel stop ready$/, "Spin $1 | $2 | Reel 已停止")
-        .replace(/^Spin (\d+) finished \| No cascade$/, "Spin $1 完成 | 無 Cascade")
-        .replace(/^Spin (\d+) done \| Final (.+)$/, "Spin $1 完成 | Final $2")
-        .replace(/ \| Drop complete$/, " | Drop 完成")
-        .replace(/^FG Spin (\d+) rolling\.\.\.$/, "FG Spin $1 轉動中...")
-        .replace(/^FG finished \| Total (.+)$/, "FG 完成 | Total $1")
-        .replace(/^FG ready \| (\d+) spins left, press Spin$/, "FG 準備完成 | 剩餘 $1 場，按 Spin")
-        .replace(/^Feature Buy entered FG \| (\d+) spins left, press Spin$/, "Feature Buy 已進入 FG | 剩餘 $1 場，按 Spin")
-        .replace(/^Force FG triggered \| (\d+) spins left, press Spin$/, "Force FG 已觸發 | 剩餘 $1 場，按 Spin")
-        .replace(/^FG triggered \| (\d+) spins left, press Spin$/, "FG 已觸發 | 剩餘 $1 場，按 Spin")
-        .replace(/^Debug Mode enabled$/, "Debug Mode 已開啟")
-        .replace(/^Debug Mode disabled$/, "Debug Mode 已關閉")
-        .replace(/^Card BG Range set to Auto$/, "Card BG Range 已設為 Auto")
-        .replace(/^Card BG Range selected \| (.+)$/, "Card BG Range 已選擇 | $1")
-        .replace(/^Reel RNG set \| (.+)$/, "Reel RNG 已設定 | $1")
-        .replace(/^Force FG armed for next Normal\/Extra spin$/, "Force FG 已設定於下一次 Normal／Extra Spin")
-        .replace(/^Force FG cancelled$/, "Force FG 已取消")
-        .replace(/^Normal Bet selected \| Bet (.+)$/, "Normal Bet 已選擇 | Bet $1")
-        .replace(/^Extra Bet \((.+)x\) selected \| Bet (.+)$/, "Extra Bet ($1x) 已選擇 | Bet $2");
-    }
-
-    let gameHelpLoaded = false;
-    let gameHelpMarkdown = "";
-
-    function getMarkdownCells(line) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return null;
-      return trimmed.slice(1, -1).split("|").map((cell) => cell.trim());
-    }
-
-    function parseGameHelpRules(markdown) {
-      const sections = [];
-      let section = null;
-      let group = null;
-
-      for (const rawLine of markdown.split(/\r?\n/)) {
-        const line = rawLine.trim();
-        const sectionMatch = line.match(/^##\s+(.+)$/);
-        if (sectionMatch) {
-          const key = sectionMatch[1].trim();
-          section = key === "Game Meta" ? null : { key, titleZh: "", titleEn: key, rules: [], groups: [] };
-          group = null;
-          if (section) sections.push(section);
-          continue;
-        }
-
-        const groupMatch = line.match(/^###\s+(.+)$/);
-        if (groupMatch && section) {
-          group = { key: groupMatch[1].trim(), titleZh: "", titleEn: groupMatch[1].trim(), rules: [], payouts: [] };
-          section.groups.push(group);
-          continue;
-        }
-
-        if (!section) continue;
-        const cells = getMarkdownCells(line);
-        if (!cells || cells.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
-
-        const [item, zh = "", en = ""] = cells;
-        if (item === "主要標題") {
-          section.titleZh = zh;
-          section.titleEn = en;
-        } else if (item === "副標題" && group) {
-          group.titleZh = zh;
-          group.titleEn = en;
-        } else if (item === "規則說明") {
-          (group || section).rules.push({ zh, en });
-        } else if (section.key === "PAYTABLE" && group?.key === "賠率表" && item !== "中文欄") {
-          group.payouts.push(...cells.filter(Boolean));
-        }
-      }
-
-      return sections.filter((entry) => entry.rules.length || entry.groups.some((item) => item.rules.length || item.payouts.length));
-    }
-
-    function appendHelpTitle(parent, className, zh, en) {
-      const title = document.createElement(className === "help-section-title" ? "h3" : "h4");
-      title.className = className;
-      title.textContent = state.language === "zh" ? (zh || en) : en;
-      parent.appendChild(title);
-    }
-
-    function appendHelpRule(parent, rule) {
-      const row = document.createElement("div");
-      row.className = "help-rule";
-      const cell = document.createElement("div");
-      cell.className = state.language === "zh" ? "help-rule-zh" : "help-rule-en";
-      cell.textContent = state.language === "zh" ? rule.zh : rule.en;
-      row.appendChild(cell);
-      parent.appendChild(row);
-    }
-
-    function formatHelpPayout(payout) {
-      return payout.replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
-        const amount = Number(rawValue) * getBetMulti() * DENOM;
-        return `${separator}${formatCompactNumber(amount)}`;
-      });
-    }
-
-    function renderGameHelpRules(markdown) {
-      const sections = parseGameHelpRules(markdown);
-      if (!sections.length) throw new Error("No game rules found");
-      gameHelpMarkdown = markdown;
-      helpContentEl.innerHTML = "";
-
-      for (const section of sections) {
-        const card = document.createElement("section");
-        card.className = "help-section";
-        appendHelpTitle(card, "help-section-title", section.titleZh, section.titleEn);
-        if (section.key === "PAYTABLE") {
-          const note = document.createElement("div");
-          note.className = "help-rule";
-          const baseBetText = formatCompactNumber(getBetMoney());
-          const extraBetText = formatCompactNumber(getSelectedBetCostMoney());
-          note.textContent = state.language === "zh"
-            ? `以下派彩金額依目前投注級距 ${baseBetText} 顯示。${state.extraBetEnabled ? `Extra Bet 的總成本為 ${extraBetText}，額外成本不會放大符號賠率。` : ""}`
-            : `Payouts below are shown for the current base bet of ${baseBetText}.${state.extraBetEnabled ? ` The total Extra Bet cost is ${extraBetText}; its additional cost does not multiply symbol payouts.` : ""}`;
-          card.appendChild(note);
-        }
-        section.rules.forEach((rule) => appendHelpRule(card, rule));
-
-        for (const group of section.groups) {
-          if (!group.rules.length && !group.payouts.length) continue;
-          appendHelpTitle(card, "help-group-title", group.titleZh || group.key, group.titleEn);
-          group.rules.forEach((rule) => appendHelpRule(card, rule));
-          if (group.payouts.length) {
-            const payoutGrid = document.createElement("div");
-            payoutGrid.className = "help-payout-grid";
-            for (const payout of group.payouts) {
-              const item = document.createElement("div");
-              item.className = "help-payout-item";
-              item.textContent = formatHelpPayout(payout);
-              payoutGrid.appendChild(item);
-            }
-            card.appendChild(payoutGrid);
-          }
-        }
-        helpContentEl.appendChild(card);
-      }
-      gameHelpLoaded = true;
-    }
-
-    async function loadGameHelpRules() {
-      if (gameHelpLoaded) {
-        renderGameHelpRules(gameHelpMarkdown);
-        return;
-      }
-      let markdown = "";
-      try {
-        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
-        if (response.ok) markdown = await response.text();
-      } catch (_) {
-        // file:// blocks fetch in some browsers; the same-folder iframe is the offline fallback.
-      }
-
-      if (!markdown) {
-        try {
-          markdown = helpSourceFrameEl.contentDocument?.body?.innerText || "";
-        } catch (_) {
-          markdown = "";
-        }
-      }
-
-      if (!markdown) markdown = embeddedGameHelpMarkdownEl.textContent.trim();
-
-      try {
-        renderGameHelpRules(markdown);
-      } catch (_) {
-        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help_draft.md is in the same folder as index.html.</div>';
-      }
-    }
-
-    function applyLanguage() {
-      document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
-      languageSelectEl.value = state.language;
-      setText(gameNameEl, state.language === "zh" ? "彩罐熱舞1000" : "Pinata Beat 1000");
-      document.querySelectorAll("[data-i18n]").forEach((element) => {
-        element.textContent = tr(element.dataset.i18n);
-      });
-      closeHelpBtn.setAttribute("aria-label", state.language === "zh" ? "關閉遊戲 Help" : "Close game help");
-      setText(messageBarEl, localizeMessage(state.lastMessage));
-      setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
-      setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
-      updateSpinButtonState();
-      updateFeatureBar(state.activeSpin, state.activeRound);
-      renderLineList(state.activeSpin);
-      renderSpinResultList(state.activeSpin);
-      renderRngList(state.activeSpin);
-      if (gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
-      try {
-        localStorage.setItem("slotDemoLanguage", state.language);
-      } catch (_) {
-        // Language still works for this session when storage is unavailable.
-      }
-    }
-
     function getLogType(text) {
       if (/error|failed|insufficient/i.test(text)) return "error";
       if (/cascade|multiplier/i.test(text)) return "cascade";
@@ -2571,7 +2138,7 @@
       if (state.liveLog.length > 500) state.liveLog.splice(0, state.liveLog.length - 500);
       const line = document.createElement("div");
       line.className = `live-log-line ${type}`;
-      line.textContent = `[${timestamp}] ${localizeMessage(text)}`;
+      line.textContent = `[${timestamp}] ${text}`;
       liveLogBodyEl.appendChild(line);
       while (liveLogBodyEl.children.length > 500) liveLogBodyEl.firstElementChild.remove();
       liveLogBodyEl.scrollTop = liveLogBodyEl.scrollHeight;
@@ -2581,8 +2148,7 @@
       liveLogBodyEl.innerHTML = "";
     }
     function writeMessage(text, type) {
-      state.lastMessage = text;
-      messageBarEl.textContent = localizeMessage(text);
+      messageBarEl.textContent = text;
       appendLiveLog(text, type);
     }
     function getPlaybackDelay(ms) { return Math.max(16, Math.round(ms / state.speedMultiplier)); }
@@ -2720,8 +2286,7 @@
       updateSessionCards();
       updateSpinButtonState();
       updateBetMenuSelection();
-      if (helpDialogEl.open && gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
-      writeMessage(`Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+      writeMessage(`Bet ${getSelectedBetCostMoney().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
     }
 
     function renderBetMenu() {
@@ -2731,7 +2296,7 @@
         option.type = "button";
         option.className = "bet-option";
         option.setAttribute("role", "option");
-        option.textContent = formatCompactNumber(amount);
+        option.textContent = amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         option.addEventListener("click", (event) => {
           event.stopPropagation();
           setBetIndex(index);
@@ -2747,7 +2312,7 @@
       const triggerCount = state.normalTriggerCount;
       const rate = naturalRounds > 0 ? triggerCount / naturalRounds : 0;
       const cycle = triggerCount > 0 ? Math.round(naturalRounds / triggerCount) : "--";
-      return `${formatPercent(rate)} (${cycle}${state.language === "zh" ? "場" : " rounds"})`;
+      return `${formatPercent(rate)} (${cycle}場)`;
     }
 
     function resetDisplayState() {
@@ -3719,7 +3284,7 @@
       setText(balanceValueEl, formatDisplayMoney(state.displayBalance));
       setText(betValueEl, formatDisplayMoney(coinIn(activeBetMode)));
       setText(winValueEl, formatDisplayMoney(state.displayWin));
-      setText(betBtn, `Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+      setText(betBtn, `Bet ${getSelectedBetCostMoney().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
       setText(roundCountValueEl, state.roundCount.toLocaleString("en-US"));
       setText(rtpValueEl, formatPercent(state.totalBet > 0 ? state.totalWin / state.totalBet : 0));
       setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
@@ -3731,7 +3296,7 @@
       const wagerLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
       const canQueueDebugSpin = state.debugEnabled && state.isBusy && !state.debugSpinQueued;
       setText(spinBtn, state.debugSpinQueued
-        ? (state.language === "zh" ? "已排入" : "Queued")
+        ? "Queued"
         : canQueueDebugSpin
           ? "Next Spin"
           : state.pendingRound
@@ -3793,14 +3358,7 @@
     function renderLineList(spin) {
       lineListEl.innerHTML = "";
       if (!spin || spin.line_wins.length === 0) {
-        const emptyRow = document.createElement("div");
-        emptyRow.className = "line-row";
-        const emptyText = document.createElement("span");
-        const emptyPay = document.createElement("span");
-        emptyText.textContent = tr("noWinningLine");
-        emptyPay.textContent = "Pay 0.00";
-        emptyRow.append(emptyText, emptyPay);
-        lineListEl.appendChild(emptyRow);
+        lineListEl.innerHTML = '<div class="line-row"><span>No winning line</span><span>Pay 0.00</span></div>';
         return;
       }
       spin.line_wins.slice(0, 8).forEach((line) => {
@@ -3841,10 +3399,7 @@
     function renderSpinResultList(spin) {
       spinResultListEl.innerHTML = "";
       if (!spin) {
-        const row = document.createElement("div");
-        row.className = "spin-result-row";
-        row.innerHTML = `<div class="spin-result-head"><span>${tr("awaitingSpin")}</span><span>-</span></div><pre class="spin-result-board">${tr("noBoardResult")}</pre>`;
-        spinResultListEl.appendChild(row);
+        spinResultListEl.innerHTML = '<div class="spin-result-row"><div class="spin-result-head"><span>Awaiting spin</span><span>-</span></div><pre class="spin-result-board">No board result yet.</pre></div>';
         return;
       }
       const stages = [{ label: "Init", board: spin.board_init, meta: `${spin.scene_name} | ${spin.table_name}` }];
@@ -4074,12 +3629,6 @@
       window.location.href = nextUrl.href;
     });
 
-    languageSelectEl.addEventListener("change", () => {
-      state.language = languageSelectEl.value === "zh" ? "zh" : "en";
-      applyLanguage();
-      writeMessage(`Language | ${state.language === "zh" ? "中文" : "English"}`);
-    });
-
     betBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       if (state.pendingRound) return;
@@ -4220,7 +3769,7 @@
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
-      writeMessage(`Normal Bet selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+      writeMessage(`Normal Bet selected | Bet ${getSelectedBetCostMoney().toFixed(2)}`);
     });
     extraBetBtn.addEventListener("click", () => {
       if (state.pendingRound) return;
@@ -4228,20 +3777,14 @@
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
-      writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+      writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${getSelectedBetCostMoney().toFixed(2)}`);
     });
     buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
     clearLogBtn.addEventListener("click", clearLiveLog);
-    helpBtn.addEventListener("click", () => {
-      helpDialogEl.showModal();
-      loadGameHelpRules();
-    });
+    helpBtn.addEventListener("click", () => helpDialogEl.showModal());
     closeHelpBtn.addEventListener("click", () => helpDialogEl.close());
     helpDialogEl.addEventListener("click", (event) => {
       if (event.target === helpDialogEl) helpDialogEl.close();
-    });
-    helpSourceFrameEl.addEventListener("load", () => {
-      if (helpDialogEl.open && !gameHelpLoaded) loadGameHelpRules();
     });
 
     renderBetMenu();
@@ -4250,14 +3793,15 @@
     setText(gameNameEl, Box.game_name);
     setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
     setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
-    document.title = "Pinata Beat 1000 — Demo Game";
+      document.title = `${Box.game_id} ${Box.game_name} — Demo Game`;
     resetDisplayState();
     renderBoard(sampleBoard());
     renderAll(null, null);
     updateDebugControls();
-    applyLanguage();
     appendLiveLog("Ready — press Spin", "result");
+    }
   </script>
+  <script src="./Source/h027_demogame.js"></script>
 </body>
 
 </html>
