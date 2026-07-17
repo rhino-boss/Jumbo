@@ -23,7 +23,7 @@ import pandas as pd
 # ===== User Settings =====
 
 CONFIG_FILE = "config_92B.js"
-TOTAL_ROUNDS = 10**7
+TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
 RUN_ALL_COMBINATIONS = False
@@ -86,11 +86,14 @@ def resolve_base_dir():
     if file_parent is not None:
         anchors.extend([file_parent, *file_parent.parents])
     for anchor in anchors:
-        candidates.extend([
-            anchor / "H025_多採多汁",
-            anchor / "Slots" / "H025_多採多汁",
-            anchor / "Project_AI" / "Slots" / "H025_多採多汁",
-        ])
+        search_roots = [anchor, anchor / "Slots", anchor / "Project_AI" / "Slots"]
+        for search_root in search_roots:
+            candidates.extend([
+                search_root / "H025_多採多汁",
+                search_root / "H025_多採多汁 (未完成)",
+            ])
+            if search_root.is_dir():
+                candidates.extend(search_root.glob("H025_多採多汁*"))
     checked = []
     seen = set()
     for candidate in candidates:
@@ -277,6 +280,7 @@ def run_simulation(total_round=TOTAL_ROUNDS, threads=THREADS, seed_base=SEED_BAS
         raise ValueError("total_round must be greater than zero")
 
     # H026 pattern: warm up once before timing.
+    print("Numba warm-up: compiling H025 game functions...", flush=True)
     simulator_chunk((1, 0, enable_multiplier, FG_SPIN_CAP))
     chunk_rounds = build_chunk_rounds(total_round, threads)
     jobs = [

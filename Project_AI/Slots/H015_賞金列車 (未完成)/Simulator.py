@@ -7,6 +7,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -27,7 +28,7 @@ CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 # H026-style batch runner. Keep False for an ordinary single run.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_is_newbie": False, "card_system_enabled": True},
+    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_is_newbie": False, "card_system_enabled": True, "output_report": True},
     # {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True, "card_system_enabled": True},
     # {"config_file": "config.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False, "card_system_enabled": True},
 ]
@@ -55,10 +56,54 @@ def _parse_env_bool(name, default):
     raise ValueError(f"{name} must be true/false, got {value!r}")
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.environ.get("H015_CONFIG_FILE", CONFIG_FILE)
-CONFIG_PATH = os.path.join(BASE_DIR, CONFIG_FILE)
-OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
+
+
+def resolve_base_dir():
+    override = os.environ.get("H015_BASE_DIR")
+    cwd = Path.cwd().resolve()
+    folder_names = ("H015_賞金列車 (未完成)", "H015_賞金列車")
+    candidates = []
+    if override:
+        candidates.append(Path(override).expanduser())
+    candidates.append(cwd)
+    for parent in (cwd, *cwd.parents):
+        for folder_name in folder_names:
+            candidates.append(parent / "Project_AI" / "Slots" / folder_name)
+            candidates.append(parent / "Slots" / folder_name)
+    file_value = globals().get("__file__")
+    if file_value:
+        file_dir = Path(file_value).resolve().parent
+        candidates.append(file_dir)
+        for parent in (file_dir, *file_dir.parents):
+            for folder_name in folder_names:
+                candidates.append(parent / "Project_AI" / "Slots" / folder_name)
+
+    checked = []
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        if candidate in checked:
+            continue
+        checked.append(candidate)
+        config_path = candidate / CONFIG_FILE
+        if not config_path.is_file():
+            continue
+        try:
+            header = config_path.read_text(encoding="utf-8-sig")
+        except OSError:
+            continue
+        if "H015_BOX_DATA" in header or '"parsheet_id": "H0151"' in header:
+            return candidate
+    raise FileNotFoundError(
+        f"Cannot locate H015 base directory containing a valid {CONFIG_FILE}. "
+        "Set H015_BASE_DIR to the H015 project folder when running outside the workspace."
+    )
+
+
+BASE_DIR = resolve_base_dir()
+CONFIG_PATH = BASE_DIR / CONFIG_FILE
+OUTPUT_DIR = BASE_DIR / "Record"
+SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 TOTAL_ROUNDS = int(os.environ.get("H015_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
 BET_MULTI = int(os.environ.get("H015_BET_MULTI", str(BET_MULTI)))
 BET_MODE = int(os.environ.get("H015_BET_MODE", str(BET_MODE)))
@@ -1115,17 +1160,27 @@ def run_all_combinations():
         combo_env["H015_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         combo_env["H015_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", False) else "false"
         combo_env["H015_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", True) else "false"
+        combo_env["H015_OUTPUT_REPORT"] = "true" if combo.get("output_report", True) else "false"
         combo_env["H015_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H015_BATCH_CHILD"] = "1"
         print(
             f"\n=== Batch {index}/{total_jobs}: " f"config={combo_env['H015_CONFIG_FILE']}, " f"bet_mode={combo_env['H015_BET_MODE']}, " f"total_rounds={combo_env['H015_TOTAL_ROUNDS']}, " f"card_system_is_newbie={combo_env['H015_CARD_SYSTEM_IS_NEWBIE']} ===",
             flush=True,
         )
+        batch_started_at = time.time()
         subprocess.run(
-            [sys.executable, os.path.abspath(__file__)],
+            [sys.executable, str(SIMULATOR_PATH)],
             check=True,
             env=combo_env,
         )
+        if combo.get("output_report", True):
+            reports = sorted(Path(OUTPUT_DIR).glob("*.xlsx"), key=lambda path: path.stat().st_mtime, reverse=True)
+            if reports and reports[0].stat().st_mtime >= batch_started_at - 2:
+                print(f"Batch report: {reports[0]}", flush=True)
+            else:
+                print(f"Batch completed, but no new report was found in {OUTPUT_DIR}", flush=True)
+        else:
+            print("Batch completed; report output is disabled for this combination.", flush=True)
 
 
 def main():

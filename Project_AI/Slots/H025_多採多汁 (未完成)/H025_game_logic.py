@@ -394,6 +394,37 @@ def is_valid_hex_cell(col, row):
     return False
 
 
+def _build_mega_block_candidates():
+    """依 Java 掃描順序預先建立不含中央 Wild 的合法菱形位置。"""
+    candidates = []
+    is_valid = is_valid_hex_cell.py_func
+    for center_col in range(COLS - 1):
+        for center_row in range(ROWS - 1):
+            if center_col < CENTER_COL:
+                block_cells = (
+                    (center_col, center_row),
+                    (center_col, center_row + 1),
+                    (center_col + 1, center_row),
+                    (center_col + 1, center_row + 1),
+                )
+            else:
+                block_cells = (
+                    (center_col, center_row),
+                    (center_col, center_row + 1),
+                    (center_col + 1, center_row - 1),
+                    (center_col + 1, center_row),
+                )
+            if not all(is_valid(c, r) for c, r in block_cells):
+                continue
+            if (CENTER_COL, CENTER_ROW) in block_cells:
+                continue
+            candidates.append(block_cells)
+    return tuple(candidates)
+
+
+MEGA_BLOCK_CANDIDATES = _build_mega_block_candidates()
+
+
 @jit(nopython=True, cache=True)
 def get_hex_neighbors(col, row):
     """获取六角网格中(col, row)的6个相邻格子坐标（对标Java ScreenCalculator.dfsHelperNest）
@@ -1409,7 +1440,7 @@ class Game7x7:
 
         return total_removed, total_score, details
 
-    def remove_symbols_and_score_fast(self, num_matches, match_symbols, match_counts, all_positions, position_starts):
+    def remove_symbols_and_score_fast(self, num_matches, match_symbols, match_counts, all_positions, position_starts, collect_details=True):
         """快速批处理版本：消除符号并计算得分（完全numba优化）"""
         if num_matches == 0:
             return 0, 0, [], 0
@@ -1418,18 +1449,16 @@ class Game7x7:
 
         total_removed = np.sum(match_counts)
 
-        # 构建详情（用于调试/记录）
         details = []
-        for i in range(num_matches):
-            start_pos = position_starts[i]
-            if i < num_matches - 1:
-                end_pos = position_starts[i + 1]
-            else:
-                end_pos = len(all_positions)
-
-            positions = [(int(all_positions[j, 0]), int(all_positions[j, 1])) for j in range(start_pos, end_pos)]
-
-            details.append({"symbol": f"M{int(match_symbols[i])-1}", "count": int(match_counts[i]), "score": int(final_scores[i]), "positions": positions})
+        if collect_details:
+            for i in range(num_matches):
+                start_pos = position_starts[i]
+                if i < num_matches - 1:
+                    end_pos = position_starts[i + 1]
+                else:
+                    end_pos = len(all_positions)
+                positions = [(int(all_positions[j, 0]), int(all_positions[j, 1])) for j in range(start_pos, end_pos)]
+                details.append({"symbol": f"M{int(match_symbols[i])-1}", "count": int(match_counts[i]), "score": int(final_scores[i]), "positions": positions})
 
         return int(total_removed), int(total_score), details, wild_group_count
 
@@ -1480,7 +1509,7 @@ class Game7x7:
             # ✅ 使用新函数：优先保留已存在的C1
             fix_c1_preserve_existing_numba(self.board, existing_c1_mask)
 
-    def process_cascades(self):
+    def process_cascades(self, collect_details=True):
         cascade_count = 0
         total_removed = 0
         total_score = 0
@@ -1503,7 +1532,14 @@ class Game7x7:
                     break
 
             # 使用快速版本处理匹配
-            removed, score, details, wild_group_count = self.remove_symbols_and_score_fast(num_matches, match_symbols, match_counts, all_positions, position_starts)
+            removed, score, details, wild_group_count = self.remove_symbols_and_score_fast(
+                num_matches,
+                match_symbols,
+                match_counts,
+                all_positions,
+                position_starts,
+                collect_details=collect_details,
+            )
 
             # 清除被消除位置的 fixed_cells 标记（匹配 Java 的 occupied 重置逻辑）
             # 这样被消除的位置可以再次放置 Mega 符号
@@ -1546,14 +1582,15 @@ class Game7x7:
             cascade_count += 1
             self.eliminate_count += 1
 
-            all_details.append({"cascade": cascade_count, "matches": details})
+            if collect_details:
+                all_details.append({"cascade": cascade_count, "matches": details})
 
             self.drop_symbols()
             self.fill_empty_spaces()
 
         return cascade_count, total_removed, total_score, all_details
 
-    def play_round(self, keep_multipliers=False):
+    def play_round(self, keep_multipliers=False, collect_details=True):
         """执行一轮游戏
 
         Args:
@@ -1576,7 +1613,7 @@ class Game7x7:
         self.fixed_mask[CENTER_COL, CENTER_ROW] = True
         self.fixed_cells.add((CENTER_COL, CENTER_ROW))
 
-        cascade_count, total_removed, round_score, details = self.process_cascades()
+        cascade_count, total_removed, round_score, details = self.process_cascades(collect_details=collect_details)
         self.score += round_score
 
         return cascade_count, total_removed, round_score, details
@@ -1628,43 +1665,19 @@ class Game7x7:
             return False
 
         placed_blocks = 0
-        occupied_cells = set(self.fixed_cells)
+        occupied_mask = self.fixed_mask.copy()
 
         for _ in range(num_blocks):
-            # 动态遍历所有可能的中心点位置（Java版本对标）
-            # Java遍历范围：col [0, COLS-1), row [0, ROWS-1)
-            # 也就是 col [0, 6), row [0, 6)，因为钻石需要col+1和row+1
             valid_centers = []
-
-            for center_col in range(self.cols - 1):  # 0-5，因为需要col+1
-                for center_row in range(self.rows - 1):  # 0-5，因为需要row+1
-                    # 根据centerCol确定钻石形状的4格（Java版本逻辑）
-                    if center_col < CENTER_COL:
-                        # 左侧：[(0,0), (0,1), (1,0), (1,1)]
-                        block_cells = [(center_col, center_row), (center_col, center_row + 1), (center_col + 1, center_row), (center_col + 1, center_row + 1)]
-                    else:
-                        # 右侧（包括中央列）：[(0,0), (0,1), (1,-1), (1,0)]
-                        block_cells = [(center_col, center_row), (center_col, center_row + 1), (center_col + 1, center_row - 1), (center_col + 1, center_row)]
-
-                    # 检查所有4格是否都有效且在范围内
-                    if not all(0 <= c < self.cols and 0 <= r < self.rows and is_valid_hex_cell(c, r) for c, r in block_cells):
-                        continue
-
-                    # 限制1: 不能覆盖中央Wild位置[CENTER_COL, CENTER_ROW]
-                    if any(c == CENTER_COL and r == CENTER_ROW for c, r in block_cells):
-                        continue
-
-                    # 限制2: 不能放在空标记或Wild位置（Java版本检查）
-                    # Java: if (screenSymbol[bc][br] == 9 || screenSymbol[bc][br] == 0) return false;
-                    if any(self.board[c, r] == EMPTY_MARKER or self.board[c, r] == WILD_SYMBOL for c, r in block_cells):
-                        continue
-
-                    # 限制3: 不能互相覆盖（occupied_cells包含所有已固定的格子）
-                    if any(cell in occupied_cells for cell in block_cells):
-                        continue
-
-                    # 这个中心点可用
-                    valid_centers.append((center_col, center_row, block_cells))
+            for block_cells in MEGA_BLOCK_CANDIDATES:
+                valid = True
+                for c, r in block_cells:
+                    symbol = self.board[c, r]
+                    if symbol == EMPTY_MARKER or symbol == WILD_SYMBOL or occupied_mask[c, r]:
+                        valid = False
+                        break
+                if valid:
+                    valid_centers.append(block_cells)
 
             # 没有可放置位置 → 对标Java dropMegaSymbols：直接停止（放较少个），不抛错、不重试整轮
             if len(valid_centers) == 0:
@@ -1672,7 +1685,7 @@ class Game7x7:
 
             # 从可放置位置中随机选择一个
             selected_idx = random.randint(0, len(valid_centers) - 1)
-            center_col, center_row, block_cells = valid_centers[selected_idx]
+            block_cells = valid_centers[selected_idx]
 
             # 放置4格钻石形状（如果是C1则跳过，保持C1不变）
             for c, r in block_cells:
@@ -1680,7 +1693,7 @@ class Game7x7:
                     continue
 
                 self.board[c, r] = mega_symbol_id
-                occupied_cells.add((c, r))
+                occupied_mask[c, r] = True
                 self.fixed_cells.add((c, r))
                 self.fixed_mask[c, r] = True
 
@@ -2218,7 +2231,7 @@ def _play_spin(game, keep_multipliers=False, max_retries=100):
             game.load_drop_data()
             game.initialize_board()
             initial_c1 = int(np.count_nonzero(game.board == 1))
-            cascade, _, score, _ = game.play_round(keep_multipliers=keep_multipliers)
+            cascade, _, score, _ = game.play_round(keep_multipliers=keep_multipliers, collect_details=False)
             final_c1 = int(np.count_nonzero(game.board == 1))
             return {
                 "score": int(score),

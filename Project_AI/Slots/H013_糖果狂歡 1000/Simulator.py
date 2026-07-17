@@ -1,22 +1,39 @@
 import json
 import math
 import os
+import re
+import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from numba import njit
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
+
 
 # ===== User Settings =====
 
+# Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
 CONFIG_FILE = "config.js"
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
-THREADS = max(1, min(8, os.cpu_count() or 1))
+CARD_SYSTEM_IS_NEWBIE = False  # Reserved for H026-compatible settings; H013 config currently has no card system.
+
+# Batch runs. Edit this list directly when you want to run a custom set once.
+RUN_ALL_COMBINATIONS = True
+BATCH_RUNS = [
+    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_is_newbie": False},
+    # {"config_file": "config.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
+    # {"config_file": "config.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
+    # {"config_file": "config.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_is_newbie": False},
+]
 
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
@@ -25,7 +42,7 @@ RUN_SINGLE_SPIN_DEBUG = False
 DEBUG_ROUNDS = 1
 
 
-def _env_bool(name, default):
+def parse_env_bool(name, default):
     value = os.environ.get(name)
     if value is None:
         return default
@@ -37,16 +54,66 @@ def _env_bool(name, default):
     raise ValueError(f"{name} must be true/false, got {value!r}")
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.environ.get("H013_CONFIG_FILE", CONFIG_FILE)
+
+
+def resolve_base_dir():
+    override = os.environ.get("H013_BASE_DIR")
+    cwd = Path.cwd().resolve()
+    folder_names = ("H013_糖果狂歡 1000 (未完成)", "H013_糖果狂歡 1000")
+    candidates = []
+    if override:
+        candidates.append(Path(override).expanduser())
+    candidates.append(cwd)
+    for parent in (cwd, *cwd.parents):
+        for folder_name in folder_names:
+            candidates.append(parent / "Project_AI" / "Slots" / folder_name)
+            candidates.append(parent / "Slots" / folder_name)
+    file_value = globals().get("__file__")
+    if file_value:
+        file_dir = Path(file_value).resolve().parent
+        candidates.append(file_dir)
+        for parent in (file_dir, *file_dir.parents):
+            for folder_name in folder_names:
+                candidates.append(parent / "Project_AI" / "Slots" / folder_name)
+
+    checked = []
+    for candidate in candidates:
+        candidate = candidate.resolve()
+        if candidate in checked:
+            continue
+        checked.append(candidate)
+        config_path = candidate / CONFIG_FILE
+        if not config_path.is_file():
+            continue
+        try:
+            header = config_path.read_text(encoding="utf-8-sig")
+        except OSError:
+            continue
+        if "H013_BOX_DATA" in header or '"parsheet_id": "H0131"' in header:
+            return candidate
+    raise FileNotFoundError(
+        f"Cannot locate H013 base directory containing a valid {CONFIG_FILE}. "
+        "Set H013_BASE_DIR to the H013 project folder when running outside the workspace."
+    )
+
+
+BASE_DIR = resolve_base_dir()
+OUTPUT_DIR = BASE_DIR / "Record"
+CONFIG_PATH = BASE_DIR / CONFIG_FILE
+SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 TOTAL_ROUNDS = int(os.environ.get("H013_TOTAL_ROUNDS", TOTAL_ROUNDS))
 BET_MULTI = int(os.environ.get("H013_BET_MULTI", BET_MULTI))
 BET_MODE = int(os.environ.get("H013_BET_MODE", BET_MODE))
-THREADS = int(os.environ.get("H013_THREADS", THREADS))
-OUTPUT_REPORT = _env_bool("H013_OUTPUT_REPORT", OUTPUT_REPORT)
-SHOW_CONSOLE_SUMMARY = _env_bool("H013_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
-SHOW_CONSOLE_DETAIL = _env_bool("H013_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
-RUN_SINGLE_SPIN_DEBUG = _env_bool("H013_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
+CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H013_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+RUN_ALL_COMBINATIONS = parse_env_bool("H013_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
+BATCH_COMBINATIONS = list(BATCH_RUNS)
+
+THREADS = int(os.environ.get("H013_THREADS", max(1, min(8, os.cpu_count() or 1))))
+OUTPUT_REPORT = parse_env_bool("H013_OUTPUT_REPORT", OUTPUT_REPORT)
+SHOW_CONSOLE_SUMMARY = parse_env_bool("H013_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
+SHOW_CONSOLE_DETAIL = parse_env_bool("H013_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
+RUN_SINGLE_SPIN_DEBUG = parse_env_bool("H013_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 
 THRESHOLD_RECORD = np.asarray(
     [
@@ -69,11 +136,13 @@ def _load_config(path):
     return json.loads(raw[raw.find("{") : raw.rfind("}") + 1])
 
 
-CFG = _load_config(os.path.join(BASE_DIR, CONFIG_FILE))
+CFG = _load_config(CONFIG_PATH)
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])
 GAME_VERSION = str(CFG["game_version"])
+CARD_SYSTEM_RAW = CFG.get("card_system", {})
+CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled", False))
 
 MODE_NORMALBET = int(CFG["mode_normalbet"])
 MODE_EXTRABET = int(CFG["mode_extrabet"])
@@ -429,8 +498,8 @@ def _safe_div(numerator, denominator):
     return numerator / denominator if denominator else 0.0
 
 
-def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, duration):
-    coin_in = DEFAULT_COIN_IN * BET_FACTORS[BET_MODE] * BET_MULTI
+def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, duration, bet_mode=BET_MODE, bet_multi=BET_MULTI, threads=THREADS):
+    coin_in = DEFAULT_COIN_IN * BET_FACTORS[bet_mode] * bet_multi
     total_coin_in = coin_in * rounds
     fg_spins = stats[S_FREE_SPINS]
     triggers = stats[S_FG_TRIGGER]
@@ -440,10 +509,10 @@ def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, durat
         ("Game ID", GAME_ID, ""),
         ("PARsheet ID", PARSHEET_ID, ""),
         ("Game Version", GAME_VERSION, ""),
-        ("Bet Mode", BET_MODE, MODE_NAMES[BET_MODE]),
+        ("Bet Mode", bet_mode, MODE_NAMES[bet_mode]),
         ("Coin In / Round", coin_in, "credit"),
         ("Total Rounds", rounds, ""),
-        ("Threads", min(THREADS, rounds), ""),
+        ("Threads", min(threads, rounds), ""),
         ("Duration", duration, "seconds"),
         ("RTP", _safe_div(stats[S_TOTAL_WIN], total_coin_in), ""),
         ("RTP - Base", _safe_div(stats[S_BG_PAY], total_coin_in), ""),
@@ -510,12 +579,117 @@ def _print_outputs(df_base, df_detail):
         print(grouped.to_string(index=False))
 
 
-def _write_report(df_base, df_detail, df_multiplier, df_record):
-    output_dir = os.path.join(BASE_DIR, "Record")
-    os.makedirs(output_dir, exist_ok=True)
+def format_rounds_tag(total_round):
+    total_round = int(total_round)
+    if total_round > 0:
+        exponent = 0
+        value = total_round
+        while value % 10 == 0:
+            value //= 10
+            exponent += 1
+        if value == 1 and exponent > 0:
+            return f"10{exponent}"
+    return str(total_round)
+
+
+def format_version_tag(version):
+    return re.sub(r"[^0-9A-Za-z]+", "", str(version or "").strip())
+
+
+def format_elapsed_time(seconds):
+    total_seconds = max(0, int(round(float(seconds))))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours}h {minutes}m {secs}s"
+
+
+def format_bet_mode_label(bet_mode):
+    return MODE_NAMES.get(int(bet_mode), f"Bet Mode {bet_mode}")
+
+
+def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MULTI, threads=THREADS):
+    if bet_mode not in SUPPORTED_BET_MODES:
+        raise ValueError(f"Unsupported H013 bet mode {bet_mode}; valid modes: {SUPPORTED_BET_MODES}")
+    if total_round <= 0 or bet_multi <= 0 or threads <= 0:
+        raise ValueError("total_round, bet_multi, and threads must be positive")
+    print(
+        f"Starting H013 simulation | config={CONFIG_FILE} | mode={format_bet_mode_label(bet_mode)} | "
+        f"rounds={total_round} | threads={threads} | card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
+        flush=True,
+    )
+    print("Compiling Numba core...", flush=True)
+    _simulate_chunk(1, bet_mode, bet_multi)
+    print("Numba ready. Simulation running...", flush=True)
+    stats, hits, pays, eliminates, multiplier_line, duration = _run_parallel(
+        total_round, threads, bet_mode, bet_multi
+    )
+    coin_in = DEFAULT_COIN_IN * BET_FACTORS[bet_mode] * bet_multi
+    return stats, hits, pays, eliminates, multiplier_line, duration, coin_in
+
+
+def build_result_frames(stats, hits, pays, eliminates, multiplier_line, total_round, duration, bet_mode=BET_MODE, bet_multi=BET_MULTI, threads=THREADS):
+    frames = _build_outputs(
+        stats,
+        hits,
+        pays,
+        eliminates,
+        multiplier_line,
+        total_round,
+        duration,
+        bet_mode,
+        bet_multi,
+        threads,
+    )
+    coin_in = DEFAULT_COIN_IN * BET_FACTORS[bet_mode] * bet_multi
+    total_coin_in = coin_in * total_round
+    fg_spins = stats[S_FREE_SPINS]
+    triggers = stats[S_FG_TRIGGER]
+    summary = {
+        "rtp_total": _safe_div(stats[S_TOTAL_WIN], total_coin_in),
+        "rtp_bg": _safe_div(stats[S_BG_PAY], total_coin_in),
+        "rtp_scatter": _safe_div(stats[S_SCATTER_PAY], total_coin_in),
+        "rtp_fg": _safe_div(stats[S_FG_PAY], total_coin_in),
+        "hit_rate_bg": _safe_div(stats[S_BG_HITS], total_round),
+        "hit_rate_fg": _safe_div(stats[S_FG_HITS], fg_spins),
+        "fg_trigger_count": triggers,
+        "fg_trigger_rate": _safe_div(triggers, total_round),
+        "retrigger_rate": _safe_div(stats[S_RETRIGGER], triggers),
+        "avg_fg_multiplier": _safe_div(stats[S_FG_MULTI_SUM], fg_spins),
+        "avg_fg_spins": _safe_div(fg_spins, triggers),
+        "max_win_multiplier": _safe_div(stats[S_MAX_WIN], coin_in),
+    }
+    return (*frames, summary)
+
+
+def print_batch_summary(duration, summary, bet_mode):
+    fg_trigger_count = int(round(float(summary.get("fg_trigger_count", 0))))
+    print(f"* game_id: {GAME_ID}", flush=True)
+    print(f"* version: {GAME_VERSION}", flush=True)
+    print(f"* bet_mode: {format_bet_mode_label(bet_mode)}", flush=True)
+    print(f"* duration: {format_elapsed_time(duration)}", flush=True)
+    print(f"* rtp_total: {summary['rtp_total'] * 100:.2f}%", flush=True)
+    print(f"* rtp_bg: {summary['rtp_bg'] * 100:.2f}%", flush=True)
+    print(f"* rtp_scatter: {summary['rtp_scatter'] * 100:.2f}%", flush=True)
+    print(f"* rtp_fg: {summary['rtp_fg'] * 100:.2f}%", flush=True)
+    print(f"* hit_rate_bg: {summary['hit_rate_bg']:.4f}", flush=True)
+    print(f"* hit_rate_fg: {summary['hit_rate_fg']:.4f}", flush=True)
+    print(f"* fg_trigger_rate: {summary['fg_trigger_rate']:.4f} ({fg_trigger_count} spins)", flush=True)
+    print(f"* retrigger_rate: {summary['retrigger_rate']:.4f}", flush=True)
+    print(f"* avg_fg_multiplier: {summary['avg_fg_multiplier']:.2f} x", flush=True)
+    print(f"* avg_fg_spins: {summary['avg_fg_spins']:.2f} spins", flush=True)
+    print(f"* max_win_multiplier: {summary['max_win_multiplier']:.2f} x", flush=True)
+    print(f"* card_system: {'on' if CARD_SYSTEM_ENABLED else 'off'}", flush=True)
+
+
+def output_report(df_base, df_detail, df_multiplier, df_record, bet_mode, total_round):
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     stamp = datetime.now().strftime("%y%m%d%H%M")
-    filename = f"{PARSHEET_ID}_{GAME_VERSION}_{stamp}_betmode{BET_MODE}_{TOTAL_ROUNDS}.xlsx"
-    path = os.path.join(output_dir, filename)
+    parts = [GAME_ID]
+    version_tag = format_version_tag(GAME_VERSION)
+    if version_tag:
+        parts.append(version_tag)
+    parts.extend([stamp, f"betmode{bet_mode}", format_rounds_tag(total_round)])
+    path = os.path.join(OUTPUT_DIR, f"{'_'.join(parts)}.xlsx")
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_detail[["Scene", "Symbol", "Count", "Hits"]].to_excel(writer, sheet_name="Hits", index=False)
@@ -523,26 +697,90 @@ def _write_report(df_base, df_detail, df_multiplier, df_record):
         df_detail[["Scene", "Symbol", "Count", "Eliminate"]].to_excel(writer, sheet_name="Eliminate", index=False)
         df_multiplier.to_excel(writer, sheet_name="Multiplier Line", index=False)
         df_record.to_excel(writer, sheet_name="Record Data", index=False)
-    print(f"Report: {path}")
     return path
 
 
-def main():
-    _validate_settings()
-    rounds = DEBUG_ROUNDS if RUN_SINGLE_SPIN_DEBUG else TOTAL_ROUNDS
-    stats, hits, pays, eliminates, multiplier_line, duration = _run_parallel(
-        rounds, 1 if RUN_SINGLE_SPIN_DEBUG else THREADS, BET_MODE, BET_MULTI
+def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
+    stats, hits, pays, eliminates, multiplier_line, duration, coin_in = run_simulation(
+        total_round=DEBUG_ROUNDS,
+        bet_mode=bet_mode,
+        bet_multi=bet_multi,
+        threads=1,
     )
-    df_base, df_detail, df_multiplier, df_record = _build_outputs(
-        stats, hits, pays, eliminates, multiplier_line, rounds, duration
+    print(
+        f"Single spin result: coin_in={coin_in}, total_win={stats[S_TOTAL_WIN]}, "
+        f"scatter_triggers={int(stats[S_FG_TRIGGER])}, duration={duration:.4f}s",
+        flush=True,
+    )
+
+
+def run_all_combinations():
+    total_jobs = len(BATCH_COMBINATIONS)
+    for index, combo in enumerate(BATCH_COMBINATIONS, start=1):
+        combo_env = os.environ.copy()
+        combo_env["PYTHONUNBUFFERED"] = "1"
+        combo_env["H013_CONFIG_FILE"] = str(combo["config_file"])
+        combo_env["H013_BET_MODE"] = str(combo["bet_mode"])
+        combo_env["H013_TOTAL_ROUNDS"] = str(combo["total_rounds"])
+        combo_env["H013_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", False) else "false"
+        combo_env["H013_RUN_ALL_COMBINATIONS"] = "false"
+        combo_env["H013_BATCH_CHILD"] = "1"
+        print(
+            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, "
+            f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, "
+            f"card_system_is_newbie={combo.get('card_system_is_newbie', False)} ===",
+            flush=True,
+        )
+        result = subprocess.run(
+            [sys.executable, str(SIMULATOR_PATH)],
+            check=True,
+            env=combo_env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if result.stdout:
+            print(result.stdout.rstrip(), flush=True)
+        if result.stderr:
+            print(result.stderr.rstrip(), file=sys.stderr, flush=True)
+
+
+def main():
+    if RUN_ALL_COMBINATIONS and os.environ.get("H013_BATCH_CHILD") != "1":
+        run_all_combinations()
+        return
+    if RUN_SINGLE_SPIN_DEBUG:
+        run_single_spin_debug()
+        return
+
+    _validate_settings()
+    stats, hits, pays, eliminates, multiplier_line, duration, _coin_in = run_simulation()
+    df_base, df_detail, df_multiplier, df_record, summary = build_result_frames(
+        stats,
+        hits,
+        pays,
+        eliminates,
+        multiplier_line,
+        TOTAL_ROUNDS,
+        duration,
+        BET_MODE,
+        BET_MULTI,
+        THREADS,
     )
     if SHOW_CONSOLE_SUMMARY:
         _print_outputs(df_base, df_detail)
-    else:
-        rtp = _safe_div(stats[S_TOTAL_WIN], DEFAULT_COIN_IN * BET_FACTORS[BET_MODE] * BET_MULTI * rounds)
-        print(f"{GAME_ID} {PARSHEET_ID} mode={BET_MODE} rounds={rounds} duration={duration:.2f}s RTP={rtp:.6f}")
-    if OUTPUT_REPORT and not RUN_SINGLE_SPIN_DEBUG:
-        _write_report(df_base, df_detail, df_multiplier, df_record)
+    print_batch_summary(duration, summary, BET_MODE)
+    if OUTPUT_REPORT:
+        report_path = output_report(
+            df_base,
+            df_detail,
+            df_multiplier,
+            df_record,
+            BET_MODE,
+            TOTAL_ROUNDS,
+        )
+        print(f"\nReport: {report_path}")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@
 | 項目 | 預設值 |
 | --- | ---: |
 | Config | `config_92B.js` |
-| Paid rounds | `10,000,000` |
+| Paid rounds | `100,000` |
 | Threads | 最多 `8`，不超過電腦 CPU 數；使用 `ThreadPoolExecutor` |
 | Coin in | `100` |
 | Report | 開啟，輸出到 `Record/` |

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>H015 Wild Train — Demo</title>
+  <title>H015 Wild Train — Demo Game</title>
   <style>
     :root {
       --bg-a: #130722;
@@ -538,7 +538,7 @@
       --green: #33ff99;
       --blue: #33bbff;
       --mauve: #b06aff;
-      --cell-size: 60px;
+      --cell-size: 78px;
     }
 
     * {
@@ -566,7 +566,7 @@
 
     .phone {
       width: 100%;
-      max-width: 1020px;
+      max-width: 920px;
       min-height: auto;
       padding: 0;
     }
@@ -691,7 +691,7 @@
     #app-shell {
       width: 100%;
       display: grid;
-      grid-template-columns: 500px minmax(0, 1fr);
+      grid-template-columns: 420px minmax(0, 1fr);
       gap: 12px;
       margin-top: 10px;
       align-items: start;
@@ -1724,7 +1724,7 @@
 
     @media (max-width: 760px) {
       :root {
-        --cell-size: min(11.5vw, 60px);
+        --cell-size: min(17vw, 70px);
       }
 
       #app-shell {
@@ -1861,20 +1861,6 @@
           <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
         </section>
 
-        <section id="simulation-stats">
-          <h3 data-i18n="simulationStats">Simulation Stats</h3>
-          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
-              id="roundCountValue">0</span></div>
-          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
-          </div>
-          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
-              id="hitRateValue">0.00%</span></div>
-          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
-              id="fgTriggerValue">0</span></div>
-          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
-              id="maxMultiplierValue">x0</span></div>
-        </section>
-
         <section id="play-panel" class="control-zone action-zone">
           <span class="zone-label">Play</span>
           <div class="zone-body play-main-controls">
@@ -1882,7 +1868,7 @@
             <button id="autoBtn" type="button">Auto</button>
             <div class="bet-stepper">
               <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
-              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1</button>
               <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
               <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
             </div>
@@ -1909,6 +1895,20 @@
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
             <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
           </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3 data-i18n="simulationStats">Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
         </section>
       </aside>
     </div>
@@ -1965,13 +1965,13 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-              <option value="config.js">H015192</option>
+            <option value="config.js">H015192</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
           <span data-i18n="language">Language</span>
           <select id="languageSelect">
-            <option value="zh">中文</option>
+            <option value="zh">繁中</option>
             <option value="en">English</option>
           </select>
         </label>
@@ -2098,153 +2098,7 @@
 | 主要標題 | 游戏规则 | GAME RULE |
 | 規則說明 | 所有奖金以游戏点数显示。基础下注为 {100} 点，实际下注会依所选 Bet 倍率调整。 | ALL WINS ARE SHOWN IN GAME CREDITS. THE BASE WAGER IS {100} CREDITS AND IS ADJUSTED BY THE SELECTED BET MULTIPLIER. |
 | 規則說明 | 理论返还率：一般下注 {92.00%}；购买特色 {92.50%}。 | THEORETICAL RTP: NORMAL BET {92.00%}; BUY FEATURE {92.50%}. |
-  </script>
 
-  <script id="legacyH026GameHelpMarkdown" type="text/plain">
-## PAYTABLE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 符号赔付值 | SYMBOL PAYOUT VALUES |
-
-### WILD SYMBOL
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 百搭符号 | WILD SYMBOL |
-| 規則說明 | [WW] 可替代除 [Scatter] 外的所有符号。 | [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
-
-### SCATTER SYMBOL
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 散布符号 | SCATTER SYMBOL |
-| 規則說明 | 当本次旋转连消结束后，若最终盘面出现 {3} 个或以上 [C1]，将触发免费游戏。 | WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
-
-### 賠率表
-
-| 中文欄 | 中文欄 | 中文欄 |
-| --- | --- | --- |
-| [M1] 5 - 5000 | [M2] 5 - 2000 | [M3] 5 - 1000 |
-| [M1] 4 - 1250 | [M2] 4 - 500 | [M3] 4 - 250 |
-| [M1] 3 - 250 | [M2] 3 - 100 | [M3] 3 - 75 |
-| [M4] 5 - 750 | [M5] 5 - 500 | [A] 5 - 250 |
-| [M4] 4 - 200 | [M5] 4 - 100 | [A] 4 - 50 |
-| [M4] 3 - 50 | [M5] 3 - 25 | [A] 3 - 10 |
-| [K] 5 - 250 | [Q] 5 - 250 | [J] 5 - 250 |
-| [K] 4 - 50 | [Q] 4 - 50 | [J] 4 - 50 |
-| [K] 3 - 10 | [Q] 3 - 10 | [J] 3 - 10 |
-
----
-
-## CASCADING FEATURE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | 每轮结算后，中奖符号会被消除；消除后产生的空格由上方符号向下掉落补位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
-| 規則說明 | 连消期间，若某轮盘已出现 {1} 个 [Scatter]，该轮盘将不会再出现更多 [Scatter]。 | DURING CASCADING, IF A REEL ALREADY CONTAINS {1} [Scatter], NO MORE [Scatter] WILL APPEAR ON THAT REEL. |
-| 規則說明 | 补牌后会再次检查新的中奖组合，直到不再形成新的中奖组合为止。 | AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
-
----
-
-## MULTIPLIER FEATURE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 倍数特色 | MULTIPLIER FEATURE |
-| 規則說明 | 金框符号可能附带倍数。倍数等级为：X{2}、X{3}、X{5}、X{8}、X{10}、X{15}、X{20}、X{25}、X{50}、X{100}、X{500}、X{1000}。 | GOLD FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, AND X{1000}. |
-| 規則說明 | 仅当带倍数的金框符号实际参与得分并被消除时，其倍数才会被收集并累积。 | THE MULTIPLIER IS ONLY COLLECTED AND ADDED TO THE ACCUMULATED TOTAL WHEN THE GOLD FRAMED SYMBOL WITH A MULTIPLIER ACTUALLY PARTICIPATES IN A WIN AND IS CLEARED. |
-| 規則說明 | 当本次旋转无法再消除时，若本次旋转有实际收集到倍数，则将当前累积总倍数乘上本次旋转的总赢分。 | WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
-
----
-
-## GOLDEN FRAMED FEATURE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 金框符号 | GOLDEN FRAMED FEATURE |
-| 規則說明 | 第 {2}、{3}、{4} 轮的一般符号有机会带有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, AND {4} MAY APPEAR WITH A GOLD FRAME. |
-| 規則說明 | 金框符号与原始符号具有相同的基础赔率。 | GOLD FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
-| 規則說明 | 主游戏中，第 {3} 轮有机会随机出现整列带倍数的金框符号。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS. |
-| 規則說明 | 若前一轮中奖组合中含有金框符号，该位置会保留并转化为 [WW]，因此不视为空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
-
----
-
-## FREE GAME FEATURE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 免费游戏特色 | FREE GAME FEATURE |
-| 規則說明 | 当本次旋转连消结束后，若最终盘面出现 {3}、{4} 或 {5} 个 [C1]，将触发免费游戏，并分别获得 {15}、{17} 或 {19} 场免费游戏。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
-| 規則說明 | 免费游戏期间，累积倍数不会重置，并会持续保留到整段免费游戏结束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
-| 規則說明 | 免费游戏期间，第 {3} 轮的一般符号必定带有金框与倍数。 | DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLD FRAMES AND MULTIPLIERS. |
-| 規則說明 | 单次进入免费游戏后，包含加局在内，最多进行 {50} 场。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
-| 規則說明 | 免费游戏可加局。加局条件与一般触发相同：{3}、{4} 或 {5} 个 [C1] 分别对应加 {15}、{17} 或 {19} 场免费游戏。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
-
----
-
-## EXTRA BET
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 额外投注 | EXTRA BET |
-| 規則說明 | 玩家可选择额外投注模式进行旋转。 | THE PLAYER MAY SELECT THE EXTRA BET MODE. |
-| 規則說明 | 额外投注沿用相同的主游戏、连消与免费游戏流程。 | EXTRA BET USES THE SAME BASE GAME, CASCADING, AND FREE GAME FLOW. |
-| 規則說明 | 额外投注的投注金额为 {2}x 总投注，并可提高触发免费游戏的机会。 | EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
-
----
-
-## BUY FEATURE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 购买特色 | BUY FEATURE |
-| 規則說明 | 玩家可支付 {75}x 总投注，购买一次免费游戏进场机会。 | BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. |
-| 規則說明 | 购买免费游戏特色后即可进入免费游戏。 | PURCHASING THE FREE GAME FEATURE GUARANTEES FREE GAME. |
-| 規則說明 | 进场旋转的得分会保留，并与后续免费游戏总得分一并结算。 | WINS FROM THE TRIGGER SPIN ARE KEPT AND PAID TOGETHER WITH THE TOTAL WIN FROM THE FREE GAME FEATURE. |
-
----
-
-## OP JACKPOT
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
-| 規則說明 | 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
-| 規則說明 | 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号，即可获得该 OP JACKPOT 并结算总奖金。 | IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
-| 規則說明 | [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
-| 規則說明 | [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
-| 規則說明 | [MINOR] 为红利彩金，依照投注选项改变。 | [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | [MINI] 为红利彩金，依照投注选项改变。 | [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | 玩家投注越高，触发 OP JACKPOT 特色的机会越高。 | THE HIGHER THE PLAYER BETS, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
-
----
-
-## LINE GAME
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 赔线说明 | LINE GAME |
-| 規則說明 | 本游戏共有 {20} 条固定赔线。 | THE GAME HAS {20} FIXED PAY LINES. |
-| 規則說明 | 中奖组合必须由最左侧开始，由左至右连续出现才算中奖。 | WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. |
-| 規則說明 | 单一赔线仅支付最高奖项。 | ONLY THE HIGHEST WIN PER PAY LINE IS PAID. |
-| 規則說明 | [走线图 20 LINE] | [PAYLINE DIAGRAM 20 LINE] |
-| 規則說明 | 请参考走线图了解 {20} 条固定赔线的连线方式。 | PLEASE REFER TO THE PAYLINE DIAGRAM FOR THE {20} FIXED PAY LINE PATTERNS. |
-
----
-
-## GAME RULE
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 游戏规则 | GAME RULES |
-| 規則說明 | 选择您想要玩的投注选项。 | SELECT BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | 所有中奖金额均乘以投注选项，除非是累积奖。 | ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
-| 規則說明 | 游戏出现故障，所有赔付和游戏都视为无效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
-| 規則說明 | 若玩家在免费游戏特色期间中断游戏，系统将会自动计算游戏结果，并将获奖金额加入至余额中。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
   </script>
 
   <script id="legacyH026ConfigLoader" type="text/plain">
@@ -2376,6 +2230,7 @@
     function toMoney(value) { return Number(value) * DENOM; }
     function formatMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    function formatCompactNumber(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
     function formatPercent(rate) { return `${(Number(rate) * 100).toFixed(2)}%`; }
     function getBetMoney() { return BET_OPTIONS_MONEY[state.betIndex] || BET_OPTIONS_MONEY[0]; }
     function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
@@ -2533,6 +2388,13 @@
       parent.appendChild(row);
     }
 
+    function formatHelpPayout(payout) {
+      return payout.replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+        const amount = Number(rawValue) * getBetMulti() * DENOM;
+        return `${separator}${formatCompactNumber(amount)}`;
+      });
+    }
+
     function renderGameHelpRules(markdown) {
       const sections = parseGameHelpRules(markdown);
       if (!sections.length) throw new Error("No game rules found");
@@ -2543,6 +2405,16 @@
         const card = document.createElement("section");
         card.className = "help-section";
         appendHelpTitle(card, "help-section-title", section.titleZh, section.titleEn);
+        if (section.key === "PAYTABLE") {
+          const note = document.createElement("div");
+          note.className = "help-rule";
+          const baseBetText = formatCompactNumber(getBetMoney());
+          const extraBetText = formatCompactNumber(getSelectedBetCostMoney());
+          note.textContent = state.language === "zh"
+            ? `以下派彩金額依目前投注級距 ${baseBetText} 顯示。${state.extraBetEnabled ? `Extra Bet 的總成本為 ${extraBetText}，額外成本不會放大符號賠率。` : ""}`
+            : `Payouts below are shown for the current base bet of ${baseBetText}.${state.extraBetEnabled ? ` The total Extra Bet cost is ${extraBetText}; its additional cost does not multiply symbol payouts.` : ""}`;
+          card.appendChild(note);
+        }
         section.rules.forEach((rule) => appendHelpRule(card, rule));
 
         for (const group of section.groups) {
@@ -2555,7 +2427,7 @@
             for (const payout of group.payouts) {
               const item = document.createElement("div");
               item.className = "help-payout-item";
-              item.textContent = payout;
+              item.textContent = formatHelpPayout(payout);
               payoutGrid.appendChild(item);
             }
             card.appendChild(payoutGrid);
@@ -2567,7 +2439,10 @@
     }
 
     async function loadGameHelpRules() {
-      if (gameHelpLoaded) return;
+      if (gameHelpLoaded) {
+        renderGameHelpRules(gameHelpMarkdown);
+        return;
+      }
       let markdown = "";
       try {
         const response = await fetch("./game_help_draft.md", { cache: "no-store" });
@@ -2593,16 +2468,48 @@
       }
     }
 
+    let betModeLayoutFrame = 0;
+    function setBetModeButtonLabel(button, fullLabel, shortLabel) {
+      if (!button) return;
+      button.dataset.fullLabel = fullLabel;
+      button.dataset.shortLabel = shortLabel;
+    }
+    function refreshBetModeLabels() {
+      const body = document.querySelector("#bet-mode-panel .zone-body");
+      if (!body) return;
+      const buttons = [...body.querySelectorAll("button[data-full-label]")];
+      cancelAnimationFrame(betModeLayoutFrame);
+      for (const button of buttons) {
+        button.style.minWidth = "";
+        button.style.flex = "";
+        button.textContent = button.dataset.fullLabel;
+      }
+      betModeLayoutFrame = requestAnimationFrame(() => {
+        const visible = buttons.filter((button) => getComputedStyle(button).display !== "none");
+        const firstTop = visible[0]?.offsetTop;
+        const compact = body.scrollWidth > body.clientWidth + 1 || visible.some((button) => button.offsetTop !== firstTop);
+        for (const button of buttons) {
+          button.textContent = compact ? button.dataset.shortLabel : button.dataset.fullLabel;
+          button.style.minWidth = compact ? "0" : "";
+          button.style.flex = compact ? "0 1 auto" : "";
+        }
+      });
+    }
+    addEventListener("resize", refreshBetModeLabels);
+
     function applyLanguage() {
       document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
       languageSelectEl.value = state.language;
+      setText(gameNameEl, state.language === "zh" ? "彩罐熱舞1000" : "Pinata Beat 1000");
       document.querySelectorAll("[data-i18n]").forEach((element) => {
         element.textContent = tr(element.dataset.i18n);
       });
       closeHelpBtn.setAttribute("aria-label", state.language === "zh" ? "關閉遊戲 Help" : "Close game help");
       setText(messageBarEl, localizeMessage(state.lastMessage));
-      setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
-      setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
+      setBetModeButtonLabel(normalBetBtn, "Normal Bet", "NB");
+      setBetModeButtonLabel(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`, `EX (${getExtraBetMultiplier()}x)`);
+      setBetModeButtonLabel(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
+      refreshBetModeLabels();
       updateSpinButtonState();
       updateFeatureBar(state.activeSpin, state.activeRound);
       renderLineList(state.activeSpin);
@@ -2778,7 +2685,8 @@
       updateSessionCards();
       updateSpinButtonState();
       updateBetMenuSelection();
-      writeMessage(`Bet ${getSelectedBetCostMoney().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      if (helpDialogEl.open && gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
+      writeMessage(`Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
     }
 
     function renderBetMenu() {
@@ -2788,7 +2696,7 @@
         option.type = "button";
         option.className = "bet-option";
         option.setAttribute("role", "option");
-        option.textContent = amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        option.textContent = formatCompactNumber(amount);
         option.addEventListener("click", (event) => {
           event.stopPropagation();
           setBetIndex(index);
@@ -3776,7 +3684,7 @@
       setText(balanceValueEl, formatDisplayMoney(state.displayBalance));
       setText(betValueEl, formatDisplayMoney(coinIn(activeBetMode)));
       setText(winValueEl, formatDisplayMoney(state.displayWin));
-      setText(betBtn, `Bet ${getSelectedBetCostMoney().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      setText(betBtn, `Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
       setText(roundCountValueEl, state.roundCount.toLocaleString("en-US"));
       setText(rtpValueEl, formatPercent(state.totalBet > 0 ? state.totalWin / state.totalBet : 0));
       setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
@@ -4277,7 +4185,7 @@
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
-      writeMessage(`Normal Bet selected | Bet ${getSelectedBetCostMoney().toFixed(2)}`);
+      writeMessage(`Normal Bet selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
     });
     extraBetBtn.addEventListener("click", () => {
       if (state.pendingRound) return;
@@ -4285,7 +4193,7 @@
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
-      writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${getSelectedBetCostMoney().toFixed(2)}`);
+      writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
     });
     buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
     clearLogBtn.addEventListener("click", clearLiveLog);
@@ -4307,7 +4215,7 @@
     setText(gameNameEl, Box.game_name);
     setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
     setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
-    document.title = `${Box.game_id} ${Box.game_name} — Demo`;
+    document.title = "Pinata Beat 1000 — Demo Game";
     resetDisplayState();
     renderBoard(sampleBoard());
     renderAll(null, null);
@@ -4316,7 +4224,7 @@
     appendLiveLog("Ready — press Spin", "result");
   </script>
   <script src="./config.js"></script>
-  <script src="./demogame.js"></script>
+  <script src="./Source/demogame.js"></script>
 </body>
 
 </html>

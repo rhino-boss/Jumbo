@@ -589,7 +589,6 @@
         linear-gradient(180deg, rgba(255, 244, 173, .35), transparent 42%),
         linear-gradient(180deg, #d9a923, #7d4b06);
       box-shadow:
-        0 0 14px rgba(255, 210, 64, .82),
         inset 0 0 0 1px rgba(255, 249, 201, .42),
         inset 0 -12px 18px rgba(93, 47, 0, .28);
     }
@@ -600,9 +599,23 @@
         linear-gradient(180deg, rgba(218, 252, 255, .34), transparent 42%),
         linear-gradient(180deg, #31bdd6, #08708d);
       box-shadow:
-        0 0 15px rgba(63, 220, 247, .86),
         inset 0 0 0 1px rgba(215, 252, 255, .42),
         inset 0 -12px 18px rgba(0, 57, 81, .3);
+    }
+    body.h028 .m1-multiplier {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 5;
+      min-width: 24px;
+      padding: 2px 5px;
+      border: 1px solid rgba(255, 226, 126, .8);
+      border-radius: 999px;
+      color: #3b2100;
+      background: linear-gradient(180deg, #ffe98b, #efaa32);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .42);
+      font: 900 11px/1.1 "Segoe UI", system-ui, sans-serif;
+      text-align: center;
     }
     body.h028 .cell.hit { border-color: var(--green); box-shadow: 0 0 14px rgba(51, 255, 153, 0.46); }
     body.h028 .cell.reel-spin { animation: h028ReelRoll 105ms linear infinite; filter: blur(.35px) brightness(1.15); }
@@ -2298,7 +2311,7 @@
   function renderFeature(scene='BASE GAME',cascade=0,multi=1,ways='—'){set('modeText',state.language==='zh'?(scene==='FREE GAME'?'免費遊戲':'主遊戲'):scene);set('carryMultiValue',cascade);set('spinMultiValue',`x${multi}`);set('featureStatus',ways==='—'?'':`Ways ${ways}`);$('fgLeftPill').classList.toggle('hidden',!state.fg);if(state.fg)set('fgLeftValue',`${state.fg.left}/${state.fg.total}`);document.body.classList.toggle('fg-mode',scene==='FREE GAME')}
   function renderBoard(screen,hits=[],rolling=false){if(!screen)return;let hitSet=new Set(hits);el.board.innerHTML='';for(let c=0;c<4;c++){let node=symbolEl(screen.extra[c],`e-${c}`,hitSet,rolling,false,true);node.style.gridColumn=String(c+2);node.style.gridRow='1';el.board.appendChild(node)}for(let r=0;r<6;r++){let row=2;screen.main[r].forEach((b,bi)=>{if(row>6)return;let h=Math.max(1,Math.min(6-row+1,Math.trunc(b.h)||1)),node=symbolEl(b,`m-${r}-${bi}`,hitSet,rolling,h>1,false);node.style.gridColumn=String(r+1);node.style.gridRow=`${row} / span ${h}`;el.board.appendChild(node);row+=h});while(row<=6){let node=symbolEl({id:-1,h:1},'',hitSet,rolling);node.style.gridColumn=String(r+1);node.style.gridRow=String(row++);el.board.appendChild(node)}}}
   function symbolClass(id){let b=base(id);if(b===0)return'symbol-wild';if(b===1)return'symbol-scatter';if(b>=2&&b<=7)return`symbol-m${b-1}`;if(b>=8&&b<=12)return'symbol-low';return'symbol-mystery'}
-  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false){let d=document.createElement('div'),id=b?.id??-1;d.className=['cell',extra?'peek-row':'',symbolClass(id),isGold(id)?'gold':'',hitSetHas(hits,key)?'hit':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap"><span class="symbol-code">${displayCode(id)}</span></div>`;return d}
+  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false){let d=document.createElement('div'),id=b?.id??-1,m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),isGold(id)?'gold':'',hitSetHas(hits,key)?'hit':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap"><span class="symbol-code">${displayCode(id)}</span></div>${m1}`;return d}
   function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
   async function animateReels(finalScreen){let frames=10+Math.max(0,6-state.speed);for(let frame=0;frame<frames;frame++){let sample={main:Array.from({length:6},()=>Array.from({length:5},()=>({id:pickInt(26),h:1}))),extra:Array.from({length:4},()=>({id:pickInt(26),h:1}))};renderBoard(sample,[],true);message('Reels spinning...');await sleep(105)}renderBoard(finalScreen)}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}

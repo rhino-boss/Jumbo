@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Egypt's Treasure — Demo Game</title>
+  <title>Sugar Bonanza 1000 — Demo Game</title>
   <style>
     :root {
       --bg-a: #130722;
@@ -1834,7 +1834,7 @@
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">H019</span> <span id="gameName">埃及秘寶</span></span>
+      <span id="game-title"><span id="gameId">H013</span> <span id="gameName">糖果狂歡 1000</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -1873,7 +1873,7 @@
             <button id="autoBtn" type="button">Auto</button>
             <div class="bet-stepper">
               <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
-              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
               <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
               <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
             </div>
@@ -1900,6 +1900,7 @@
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
             <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
             <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+            <button id="superFeatureBtn" type="button">Super Feature (500x)</button>
           </div>
         </section>
 
@@ -1971,8 +1972,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92.js">92</option>
-            <option value="config_94.js">94</option>
+            <option value="config.js">H013197</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2004,19 +2004,21 @@
   </dialog>
 
   <script id="embeddedGameHelpMarkdown" type="text/plain">
-# 101006 Game Help Draft
+# H013 Sugar Bonanza 1000 — Help Draft
 
-這份 md 是 `H5企劃書_101006_Egypt's Treasure_埃及秘寶.xlsx` 的 Help 前置確認稿。
-後續如需製作 Help xlsx，應先確認並修改這份 md，再轉換為結構化 spec / xlsx。
+本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以 `config.js` 及 `Simulator.py` 的實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
 
 ## Game Meta
 
 | Field | Value |
 | --- | --- |
-| game_id | 101006 |
-| parsheet_id | H0191 |
-| name_zh | 埃及秘寶 |
-| name_en | Egypt's Treasure |
+| game_id | 101001 |
+| parsheet_id | H0131 |
+| name_zh | 糖果狂歡 1000 |
+| name_en | Sugar Bonanza 1000 |
+| board | 6 reels × 5 rows |
+| modes | Normal Bet / Extra Bet (1.25x) / Feature Buy (75x) / Super Feature (500x) |
+| runtime_note | 官方遊戲清單記載 Feature Buy 為 100x，但目前 config 與 Simulator 實際使用 75x；本文件依可執行邏輯顯示 75x。 |
 
 ---
 
@@ -2025,28 +2027,14 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
-| 規則說明 | 符號可在畫面任意位置賠付。旋轉結束時，依畫面上相同符號的總數量決定贏分。 | SYMBOLS PAY ANYWHERE ON THE SCREEN. THE TOTAL NUMBER OF THE SAME SYMBOL ON THE SCREEN AT THE END OF A SPIN DETERMINES THE VALUE OF THE WIN. |
+| 規則說明 | 同一個一般符號在盤面任意位置出現 8 個或以上即可得獎，符號不必相鄰或連線。 | EIGHT OR MORE MATCHING REGULAR SYMBOLS ANYWHERE ON THE GRID AWARD A WIN. SYMBOLS DO NOT NEED TO BE ADJACENT OR CONNECTED. |
+| 規則說明 | 以下派彩金額會依目前選擇的押注即時換算。 | THE PAYOUT AMOUNTS BELOW ARE CALCULATED FROM THE CURRENTLY SELECTED BET. |
 
-### WILD SYMBOL
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 轉化百搭符號 | TRANSFORMING WILD SYMBOL |
-| 規則說明 | [WW] 為轉化百搭符號。 | [WW] IS TRANSFORMING WILD SYMBOL. |
-| 規則說明 | [WW] 可替代除 [C1] 與 [C2] 外的所有一般符號。 | [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [C1] OR [C2]. |
-| 規則說明 | 當 [WW] 在消除掉落過程中參與得獎並被消除時，該符號將轉化為 [C2]。 | WHEN [WW] IS ELIMINATED DURING A TUMBLE, IT TRANSFORMS INTO [C2]. |
-
-### SCATTER SYMBOL
+### 賠率表
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 分散符號 | SCATTER SYMBOL |
-| 規則說明 | [C1] 為分散符號，可出現在所有轉輪上，並在任意位置賠付。 | [C1] IS THE SCATTER SYMBOL. IT APPEARS ON ALL REELS AND PAYS ON ANY POSITION. |
-
-### PAYTABLE
-
-| 中文欄 | 中文欄 | 中文欄 |
-| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
 | [M1] 12+ - 5000 | [M2] 12+ - 2500 | [M3] 12+ - 1500 |
 | [M1] 10–11 - 2500 | [M2] 10–11 - 1000 | [M3] 10–11 - 500 |
 | [M1] 8–9 - 1000 | [M2] 8–9 - 250 | [M3] 8–9 - 200 |
@@ -2056,7 +2044,14 @@
 | [Q] 12+ - 500 | [J] 12+ - 400 | [TE] 12+ - 200 |
 | [Q] 10–11 - 100 | [J] 10–11 - 90 | [TE] 10–11 - 75 |
 | [Q] 8–9 - 50 | [J] 8–9 - 40 | [TE] 8–9 - 25 |
-| [C1] 6 - 100X | [C1] 5 - 5X | [C1] 4 - 3X |
+
+### SCATTER SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 分散符號 | SCATTER SYMBOL |
+| 規則說明 | [C1] 為分散符號。主遊戲的所有消除結束後，最終盤面出現 4、5 或 6 個 [C1] 時，分別支付 3x、5x 或 100x 押注。 | [C1] IS THE SCATTER SYMBOL. AFTER ALL BASE GAME CASCADES END, 4, 5, OR 6 [C1] ON THE FINAL GRID PAY 3X, 5X, OR 100X BET RESPECTIVELY. |
+| [C1] 6 - 10000 | [C1] 5 - 500 | [C1] 4 - 300 |
 
 ---
 
@@ -2065,8 +2060,8 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 消除掉落特色 | CASCADING FEATURE |
-| 規則說明 | 每次旋轉後，得獎符號會被消除。其餘符號將掉落至畫面底部，並由上方補入新符號。 | WINNING COMBINATIONS ON THE SCREEN DISAPPEAR, AND NEW SYMBOLS DROP DOWN TO FILL THE EMPTY POSITIONS. |
-| 規則說明 | 消除掉落特色會持續進行，直到畫面不再形成新的得獎組合。 | CASCADING FEATURE CONTINUES UNTIL NO MORE WINNING. |
+| 規則說明 | 每次得獎後，得獎符號會被消除；其餘符號向下掉落，並由上方補入新符號。 | AFTER EACH WIN, WINNING SYMBOLS ARE REMOVED. THE REMAINING SYMBOLS DROP DOWN AND NEW SYMBOLS ENTER FROM ABOVE. |
+| 規則說明 | 只要新盤面再次形成得獎，消除掉落便會繼續，直到不再形成新得獎。 | CASCADES CONTINUE WHILE NEW WINS ARE FORMED AND END WHEN NO NEW WIN REMAINS. |
 
 ---
 
@@ -2074,9 +2069,10 @@
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 倍數符號特色 | MULTIPLIER SYMBOL FEATURE |
-| 規則說明 | 每當 [C2] 出現時，將隨機顯示以下倍數之一：X{2}、X{3}、X{4}、X{5}、X{6}、X{8}、X{10}、X{12}、X{15}、X{20}、X{25}、X{50}、X{100} 或 X{1000}。 | WHEN [C2] APPEARS, A RANDOM MULTIPLIER WILL BE APPLIED: X{2}, X{3}, X{4}, X{5}, X{6}, X{8}, X{10}, X{12}, X{15}, X{20}, X{25}, X{50}, X{100}, OR X{1000}. |
-| 規則說明 | 消除掉落特色結束時，畫面上所有 [C2] 的倍數值將相加，並以其總和乘上本次旋轉的消除總贏分。 | WHEN THE CASCADING FEATURE ENDS, ALL MULTIPLIER VALUES FROM [C2] ON THE SCREEN ARE ADDED TOGETHER, AND THE TOTAL CASCADE WIN IS MULTIPLIED BY THE SUM OF THESE MULTIPLIERS. |
+| 主要標題 | 倍數炸彈特色 | MULTIPLIER BOMB FEATURE |
+| 規則說明 | 免費遊戲中，每個 [C2] 會分別取得一個倍數值。 | DURING FREE GAMES, EACH [C2] RECEIVES A MULTIPLIER VALUE. |
+| 規則說明 | 可出現的倍數為 X{2}、X{3}、X{4}、X{5}、X{6}、X{8}、X{10}、X{12}、X{15}、X{20}、X{25}、X{50}、X{100} 或 X{1000}。 | AVAILABLE MULTIPLIERS ARE X{2}, X{3}, X{4}, X{5}, X{6}, X{8}, X{10}, X{12}, X{15}, X{20}, X{25}, X{50}, X{100}, OR X{1000}. |
+| 規則說明 | 該次免費遊戲所有消除結束後，最終盤面上的 [C2] 倍數會相加；該次免費遊戲的所有一般符號得獎均乘以倍數總和。若最終盤面沒有 [C2]，則使用 X{1}。 | AFTER ALL CASCADES IN THAT FREE GAME END, THE [C2] MULTIPLIERS ON THE FINAL GRID ARE ADDED TOGETHER. ALL REGULAR-SYMBOL WINS FROM THAT FREE GAME ARE MULTIPLIED BY THE TOTAL. IF NO [C2] REMAINS, X{1} APPLIES. |
 
 ---
 
@@ -2085,47 +2081,22 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | 任意位置出現 {4} 個或以上 [C1]，即可觸發免費遊戲特色。 | {4} OR MORE [C1] APPEARING IN ANY POSITION WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | 點擊開始按鈕即可啟動免費遊戲特色，並獲得 {15} 次免費旋轉。 | CLICK THE START BUTTON TO START THE FREE GAME FEATURE WITH {15} FREE SPINS. |
-| 規則說明 | 免費遊戲期間出現 {3} 個或以上 [C1]，將獲得 {5} 次額外免費旋轉；免費旋轉次數最多為 {50} 次。 | DURING THE FREE GAME, {3} OR MORE [C1] AWARD {5} ADDITIONAL FREE SPINS. THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
-| 規則說明 | 免費遊戲期間，每次旋轉的投注額與觸發免費遊戲特色時相同。 | DURING THE FREE GAME, BET PER SPIN REMAINS THE SAME AS WHEN THE FREE GAME FEATURE IS TRIGGERED. |
-| 規則說明 | 免費旋轉中出現 [C2] 且該次旋轉形成得獎時，其倍數將加入累計總倍數。 | DURING FREE SPINS, WHEN [C2] APPEARS AND THE SPIN RESULTS IN A WIN, ITS MULTIPLIER IS ADDED TO THE ACCUMULATED TOTAL MULTIPLIER. |
-| 規則說明 | 累計總倍數會在整段免費遊戲期間持續保留；免費遊戲中的所有贏分均乘以該累計總倍數，直到免費旋轉結束。 | THE ACCUMULATED TOTAL MULTIPLIER REMAINS ACTIVE THROUGHOUT THE FREE GAME. ALL WINS ARE MULTIPLIED BY THIS VALUE UNTIL THE FREE SPINS END. |
+| 規則說明 | 主遊戲的所有消除結束後，最終盤面出現 4 個或以上 [C1]，即可觸發 10 次免費遊戲。 | AFTER ALL BASE GAME CASCADES END, 4 OR MORE [C1] ON THE FINAL GRID TRIGGER 10 FREE GAMES. |
+| 規則說明 | 每組 10 次免費遊戲由 8 次一般免費遊戲與 2 次高階免費遊戲組成，實際出現順序會隨機排列。 | EACH SET OF 10 FREE GAMES CONSISTS OF 8 REGULAR FREE GAMES AND 2 HIGH-TIER FREE GAMES, PRESENTED IN RANDOM ORDER. |
+| 規則說明 | 免費遊戲的所有消除結束後，最終盤面出現 3 個或以上 [C1]，會增加 5 次免費遊戲，其中包含 4 次一般免費遊戲與 1 次高階免費遊戲。 | AFTER ALL CASCADES IN A FREE GAME END, 3 OR MORE [C1] ON THE FINAL GRID ADD 5 FREE GAMES, CONSISTING OF 4 REGULAR FREE GAMES AND 1 HIGH-TIER FREE GAME. |
+| 規則說明 | 單次免費遊戲特色最多進行 50 次免費遊戲。 | A SINGLE FREE GAME FEATURE IS CAPPED AT 50 FREE GAMES. |
 
 ---
 
-## BUY FEATURE
+## BET OPTIONS
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 購買免費遊戲特色 | BUY FEATURE |
-| 規則說明 | 可支付相當於 {100}X 總投注的金額購買免費遊戲特色。 | BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {100}X TOTAL BET. |
-| 規則說明 | 購買免費遊戲特色後，保證觸發免費遊戲。 | PURCHASING THE FREE GAME FEATURE GUARANTEES FREE GAME. |
-
----
-
-## SUPER FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 超級免費遊戲特色 | SUPER FEATURE |
-| 規則說明 | 可支付相當於 {500}X 總投注的金額購買超級免費遊戲特色。 | SUPER FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {500}X TOTAL BET. |
-| 規則說明 | 購買超級免費遊戲特色後，保證觸發免費遊戲。 | PURCHASING THE SUPER FEATURE GUARANTEES FREE GAME. |
-| 規則說明 | 此模式中的所有倍數符號，最低倍數為 X{10}。 | IN THIS MODE, ALL MULTIPLIER SYMBOLS CARRY A MINIMUM MULTIPLIER OF X{10}. |
-
----
-
-## OP JACKPOT
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | 遊戲中，OP JACKPOT 特色由特色轉輪上的 {1} 個或以上 [C1] 隨機觸發。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | OP JACKPOT 特色會在畫面中顯示 {12} 個 [硬幣]，其中包含 [硬幣-GRAND]、[硬幣-MAJOR]、[硬幣-MINOR] 與 [硬幣-MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [COIN-GRAND], [COIN-MAJOR], [COIN-MINOR], AND [COIN-MINI]. |
-| 規則說明 | 選擇 {1} 個 [硬幣]，以揭示 [硬幣-GRAND]、[硬幣-MAJOR]、[硬幣-MINOR] 或 [硬幣-MINI]。獲得 {3} 個相同的 OP JACKPOT 符號，即可贏得對應彩金並結算總獎金。 | SELECT {1} [COIN] TO REVEAL [COIN-GRAND], [COIN-MAJOR], [COIN-MINOR], OR [COIN-MINI]. OBTAIN {3} IDENTICAL OP JACKPOT SYMBOLS TO WIN THE CORRESPONDING JACKPOT AND CALCULATE THE TOTAL WIN. |
-| 規則說明 | [GRAND] 與 [MAJOR] 為連機累進彩金。單場遊戲的投注選項達到 {2.00} 或以上時，即可解鎖 [GRAND] 與 [MAJOR]。 | [GRAND] AND [MAJOR] ARE LINKED PROGRESSIVE JACKPOTS. A BET OPTION OF {2.00} OR ABOVE UNLOCKS [GRAND] AND [MAJOR] FOR THE SINGLE GAME. |
-| 規則說明 | [MINOR] 與 [MINI] 為紅利彩金，彩金數值會依投注選項改變。 | [MINOR] AND [MINI] ARE BONUS JACKPOTS. THEIR VALUES CHANGE ACCORDING TO THE SELECTED BET OPTION. |
-| 規則說明 | 投注越高，觸發 OP JACKPOT 特色的機會越高。 | THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
+| 主要標題 | 投注模式 | BET OPTIONS |
+| 規則說明 | 一般投注的成本為目前選擇押注的 1x。 | NORMAL BET COSTS 1X THE CURRENTLY SELECTED BET. |
+| 規則說明 | 額外投注的成本為目前選擇押注的 1.25x，並使用提高特色觸發機會的專用盤帶設定。 | EXTRA BET COSTS 1.25X THE CURRENTLY SELECTED BET AND USES DEDICATED REEL SETTINGS WITH A HIGHER FEATURE CHANCE. |
+| 規則說明 | 購買特色的成本為目前選擇押注的 75x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 75X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | 超級特色的成本為目前選擇押注的 500x，並直接進入使用強化倍數權重的免費遊戲特色。 | SUPER FEATURE COSTS 500X THE CURRENTLY SELECTED BET AND ENTERS A FREE GAME FEATURE WITH ENHANCED MULTIPLIER WEIGHTS. |
 
 ---
 
@@ -2134,30 +2105,83 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | 選擇您想要遊玩的投注選項。 | SELECT THE BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | 除累進獎外，所有中獎金額均乘以所選投注選項。 | ALL WINS ARE MULTIPLIED BY THE BET OPTION EXCEPT PROGRESSIVE BONUSES. |
-| 規則說明 | 所有符號均可出現在畫面任意位置並構成得獎組合。 | SYMBOLS PAY ANYWHERE. |
-| 規則說明 | 同一局出現多個得獎組合時，所有贏分將加總為該局總贏分。 | WHEN WINNING WITH MULTIPLE SYMBOLS, ALL WINS ARE ADDED TO THE TOTAL WIN. |
+| 規則說明 | 選擇押注與投注模式後，按下 Spin 開始遊戲。 | SELECT A BET AND BET MODE, THEN PRESS SPIN TO PLAY. |
+| 規則說明 | 同一局形成多個得獎時，所有得獎金額會加總。 | WHEN MULTIPLE WINS OCCUR IN THE SAME ROUND, ALL WIN AMOUNTS ARE ADDED TOGETHER. |
 | 規則說明 | 遊戲發生故障時，所有賠付與遊戲均視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
-| 規則說明 | 玩家在免費遊戲特色期間中斷遊戲時，系統將自動計算遊戲結果，並將得獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND ADD THE WINNING PRIZES TO THE BALANCE. |
 
   </script>
 
   <script>
-    const H019_CONFIG_FILES = ["config_92.js", "config_94.js"];
+    const H013_CONFIG_FILES = ["config.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H019_ACTIVE_CONFIG = H019_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H019_CONFIG_FILES[0];
-    document.write(`<script src="./${H019_ACTIVE_CONFIG}"><\/script>`);
+    const H013_ACTIVE_CONFIG = H013_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H013_CONFIG_FILES[0];
+    document.write(`<script src="./${H013_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
 (() => {
   "use strict";
 
-  const Box = data;
+  function adaptH013(raw) {
+    const symbolCodes = Object.keys(raw.symbol_str)
+      .map(Number)
+      .sort((left, right) => left - right)
+      .map((key) => raw.symbol_str[String(key)]);
+    const strips = raw.arr_reels.map((symbols, tableId) => {
+      const lengths = raw.reels_len[tableId];
+      const previous = Array(raw.reel_num).fill(0);
+      const weights = raw.arr_reels_weight_cum[tableId].map((row, rowIndex) =>
+        row.map((value, reel) => {
+          if (rowIndex >= lengths[reel]) return 0;
+          const weight = Math.max(0, Number(value) - previous[reel]);
+          previous[reel] = Number(value);
+          return weight;
+        })
+      );
+      return { symbols, weights, reel_lengths: lengths };
+    });
+    const freeTable = (low, high) => ({
+      names: [raw.strip_name_map[low], raw.strip_name_map[high]],
+      initial: [raw.initial_free_spins_low, raw.initial_free_spins_high],
+      retrigger: [raw.retrigger_free_spins_low, raw.retrigger_free_spins_high]
+    });
+    const profile = (baseIds, baseWeights, freeLow, freeHigh) => ({
+      base_reel_names: baseIds.map((id) => raw.strip_name_map[id]),
+      base_reel_weights: baseWeights,
+      free_table: freeTable(freeLow, freeHigh),
+      c2_mode_weights: { base: [1, 0, 0], free: [1, 0, 0] },
+      c2: { multipliers: raw.value_multiplier, weights: { base_direct: raw.weight_multiplier_fg_low, free_direct: raw.weight_multiplier_fg_low } }
+    });
+    return {
+      ...raw,
+      symbol_codes: symbolCodes,
+      strip_names: raw.strip_name_map,
+      strips,
+      max_free_spins: raw.max_spin_free_game,
+      model: raw.source_game_id,
+      excel_version: raw.game_version,
+      parameter: {
+        normal: profile([0, 1, 2], raw.weight_table_normal_bet, 7, 8),
+        extrabet: profile([4, 5, 6], raw.weight_table_extra_bet, 7, 8),
+        featurebuy: profile([3], [1], 9, 10),
+        superfeaturebuy: profile([3], [1], 11, 12)
+      },
+      multiplier_weights: [
+        raw.weight_multiplier_fg_low,
+        raw.weight_multiplier_fg_high,
+        raw.weight_multiplier_fb_low,
+        raw.weight_multiplier_fb_high,
+        raw.weight_multiplier_sb_low,
+        raw.weight_multiplier_sb_high
+      ]
+    };
+  }
+
+  const Box = adaptH013(window.H013_BOX_DATA);
   const DENOM = 0.002;
   const INITIAL_BALANCE = 10000;
   const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
   const MODE_NORMAL = Box.mode_normalbet;
+  const MODE_EXTRA = Box.mode_extrabet;
   const MODE_BUY = Box.mode_featurebuy;
   const MODE_SUPER = Box.mode_superfeaturebuy;
   const WW = Box.symbol_codes.indexOf("WW");
@@ -2165,13 +2189,14 @@
   const C2 = Box.symbol_codes.indexOf("C2");
   const PROFILE_NAMES = {
     [MODE_NORMAL]: "normal",
+    [MODE_EXTRA]: "extrabet",
     [MODE_BUY]: "featurebuy",
     [MODE_SUPER]: "superfeaturebuy"
   };
   const LANGUAGE_STORAGE_KEY = "slotDemoLanguage";
   const UI_TEXT = {
     en: {
-      gameName: "Egypt's Treasure", baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
+      gameName: "Sugar Bonanza 1000", baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
       superFeature: "Super Feature", cascade: "Cascade", multiplier: "Mult", fgLeft: "FG Left", credit: "Credit",
       bet: "Bet", win: "Win", stats: "Simulation Stats", rounds: "Total Rounds", hitRate: "Hit Rate",
       maxMultiplier: "Max Multiplier", play: "Play", spin: "Spin", auto: "Auto", stop: "Stop", speed: "Speed",
@@ -2181,7 +2206,7 @@
       helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay"
     },
     zh: {
-      gameName: "埃及秘寶", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
+      gameName: "糖果狂歡 1000", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
       superFeature: "超級特色", cascade: "連消", multiplier: "倍數", fgLeft: "FG 剩餘", credit: "餘額",
       bet: "押注", win: "得分", stats: "模擬統計", rounds: "總局數", hitRate: "中獎率",
       maxMultiplier: "最高倍數", play: "遊戲", spin: "Spin", auto: "自動", stop: "停止", speed: "速度",
@@ -2237,8 +2262,9 @@
     spin: byId("spinBtn"),
     auto: byId("autoBtn"),
     normal: byId("normalBetBtn"),
-    buy: byId("extraBetBtn"),
-    super: byId("buyFeatureBtn"),
+    extra: byId("extraBetBtn"),
+    buy: byId("buyFeatureBtn"),
+    super: byId("superFeatureBtn"),
     betButton: byId("betBtn"),
     betMinus: byId("betMinusBtn"),
     betPlus: byId("betPlusBtn"),
@@ -2328,7 +2354,9 @@
       ? Box.featurebuy
       : state.selectedMode === MODE_SUPER
         ? Box.superfeaturebuy
-        : Box.normalbet;
+        : state.selectedMode === MODE_EXTRA
+          ? Box.extrabet
+          : Box.normalbet;
     return betMoney() * modeCost;
   }
 
@@ -2373,7 +2401,7 @@
 
   function evaluateClusters(board) {
     const flat = board.flat();
-    const wildCount = flat.filter((symbol) => symbol === WW).length;
+    const wildCount = 0;
     const wins = [];
     const hitPositions = [];
     let pay = 0;
@@ -2404,14 +2432,12 @@
       const keptWild = [];
       const keptC2Values = [];
       let hasScatter = false;
+      let hasMultiplier = false;
       for (let row = Box.window_size - 1; row >= 0; row -= 1) {
         const symbol = spin.board[row][reel];
         if (symbol === C1) hasScatter = true;
-        if (symbol === WW) {
-          kept.push(C2);
-          keptWild.push(true);
-          keptC2Values.push(drawC2Value(scene, true, c2Mode));
-        } else if (!winningSymbols.has(symbol)) {
+        if (symbol === C2) hasMultiplier = true;
+        if (!winningSymbols.has(symbol)) {
           kept.push(symbol);
           keptWild.push(spin.fromWild[row][reel]);
           keptC2Values.push(symbol === C2 ? spin.c2Values[row][reel] : 0);
@@ -2431,30 +2457,26 @@
         spin.drops[reel] += 1;
         let stripIndex = (spin.starts[reel] - spin.drops[reel] + length) % length;
         let symbol = strip.symbols[stripIndex][reel];
-        if (symbol === C1 && hasScatter) {
+        while ((symbol === C1 && hasScatter) || (symbol === C2 && hasMultiplier)) {
           spin.drops[reel] += 1;
           stripIndex = (spin.starts[reel] - spin.drops[reel] + length) % length;
           symbol = strip.symbols[stripIndex][reel];
         }
         if (symbol === C1) hasScatter = true;
+        if (symbol === C2) hasMultiplier = true;
         spin.board[outputRow][reel] = symbol;
         spin.fromWild[outputRow][reel] = false;
-        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, false, c2Mode) : 0;
+        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, spin.tableId) : 0;
         outputRow -= 1;
       }
     }
   }
 
-  function drawC2Value(scene, cameFromWild, c2Mode) {
-    const c2 = currentProfile().c2;
-    const key = c2Mode === 1
-      ? "super"
-      : c2Mode === 2
-        ? "ultimate"
-        : scene === "FG"
-          ? cameFromWild ? "free_wild" : "free_direct"
-          : cameFromWild ? "base_wild" : "base_direct";
-    return c2.multipliers[pickWeighted(c2.weights[key])] || 0;
+  function drawC2Value(scene, tableId) {
+    if (scene !== "FG") return 0;
+    const tableToWeight = new Map([[7, 0], [8, 1], [9, 2], [10, 3], [11, 4], [12, 5]]);
+    const weightIndex = tableToWeight.get(tableId) ?? 0;
+    return Box.value_multiplier[pickWeighted(Box.multiplier_weights[weightIndex])] || 0;
   }
 
   function chooseC2Mode(scene) {
@@ -2467,7 +2489,7 @@
     spin.c2Values = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
     for (let row = 0; row < Box.window_size; row += 1) {
       for (let reel = 0; reel < Box.reel_num; reel += 1) {
-        if (spin.board[row][reel] === C2) spin.c2Values[row][reel] = drawC2Value(scene, false, c2Mode);
+        if (spin.board[row][reel] === C2) spin.c2Values[row][reel] = drawC2Value(scene, spin.tableId);
       }
     }
   }
@@ -2522,7 +2544,7 @@
     const c2 = summarizeC2Values(spin, c2Mode);
     const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
     const scatterWin = scatterPay(scatterCount);
-    const effectiveMultiplier = scene === "FG" ? carriedMultiplier + c2.total : c2.total;
+    const effectiveMultiplier = scene === "FG" ? Math.max(1, c2.total) : 1;
     const finalPay = rawPay * (effectiveMultiplier || 1) + scatterWin;
     return {
       scene,
@@ -2546,7 +2568,7 @@
     const freeTable = currentProfile().free_table;
     const schedule = [];
     freeTable[kind].forEach((count, index) => {
-      const selectedTable = state.selectedMode === MODE_SUPER ? 9 + index : tableIndex(freeTable.names[index]);
+      const selectedTable = tableIndex(freeTable.names[index]);
       for (let repeat = 0; repeat < count; repeat += 1) schedule.push(selectedTable);
     });
     for (let index = schedule.length - 1; index > 0; index -= 1) {
@@ -2618,7 +2640,7 @@
   function updateFeatureBar(spin = null) {
     const inFg = spin?.scene === "FG" || Boolean(state.pendingFg);
     document.body.classList.toggle("fg-mode", inFg);
-    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : t("baseGame"));
+    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : state.selectedMode === MODE_EXTRA ? "Extra Bet" : t("baseGame"));
     setText(el.cascade, String(spin?.steps.length || 0));
     const multiplier = inFg ? state.pendingFg?.carry || 0 : spin?.effectiveMultiplier || 0;
     setText(el.multiplier, `x${multiplier || 1}`);
@@ -2715,6 +2737,7 @@
   function updateControls() {
     const wagerLocked = state.busy || Boolean(state.pendingFg);
     el.normal.disabled = wagerLocked;
+    el.extra.disabled = wagerLocked;
     el.buy.disabled = wagerLocked;
     el.super.disabled = wagerLocked;
     el.betMinus.disabled = wagerLocked;
@@ -2724,8 +2747,9 @@
     el.rngReset.disabled = state.busy || !el.rngInput.value.trim();
     el.spin.disabled = state.busy;
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
-    el.buy.classList.remove("is-active");
-    el.super.classList.remove("is-active");
+    el.extra.classList.toggle("is-active", state.selectedMode === MODE_EXTRA);
+    el.buy.classList.toggle("is-active", state.selectedMode === MODE_BUY);
+    el.super.classList.toggle("is-active", state.selectedMode === MODE_SUPER);
     setText(el.auto, state.auto ? t("stop") : t("auto"));
     updateDebugButtons();
   }
@@ -2788,7 +2812,7 @@
     const tableId = fg.queue.shift();
     const spin = playSpin(tableId, "FG", fg.carry);
     fg.played += 1;
-    fg.carry += spin.c2.total;
+    fg.carry = spin.effectiveMultiplier;
     fg.win += toMoney(spin.finalPay);
     state.maxMultiplier = Math.max(state.maxMultiplier, fg.carry);
 
@@ -2819,7 +2843,7 @@
   }
 
   function forcedTriggerSpin(forcedStops = null) {
-    return playSpin(tableIndex("BF_Symbol"), "BG", 0, forcedStops);
+    return playSpin(tableIndex("BG_strip (4)"), "BG", 0, forcedStops);
   }
 
   async function doSpin() {
@@ -2841,8 +2865,8 @@
       updateStats();
 
       const forcedStops = parseForcedStops();
-      const forceFeature = el.forceFg.checked || state.selectedMode !== MODE_NORMAL;
-      const tableId = forceFeature ? tableIndex("BF_Symbol") : chooseBaseTable();
+      const forceFeature = el.forceFg.checked || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+      const tableId = forceFeature ? tableIndex("BG_strip (4)") : chooseBaseTable();
       const spin = forceFeature ? forcedTriggerSpin(forcedStops) : playSpin(tableId, "BG", 0, forcedStops);
       el.forceFg.checked = false;
       await playback(spin);
@@ -2851,7 +2875,7 @@
       state.balance += state.lastWin;
       state.totalWin += state.lastWin;
       state.maxMultiplier = Math.max(state.maxMultiplier, spin.c2.total);
-      const triggered = spin.scatterCount >= 4 || state.selectedMode !== MODE_NORMAL;
+      const triggered = spin.scatterCount >= 4 || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
       if (triggered) {
         startFreeGame();
         writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
@@ -3051,7 +3075,9 @@
     betModeLayoutFrame = requestAnimationFrame(() => {
       const visible = buttons.filter((button) => getComputedStyle(button).display !== "none");
       const firstTop = visible[0]?.offsetTop;
-      const compact = body.scrollWidth > body.clientWidth + 1 || visible.some((button) => button.offsetTop !== firstTop);
+      const compact = body.scrollWidth > body.clientWidth + 1
+        || visible.some((button) => button.offsetTop !== firstTop)
+        || visible.some((button) => button.scrollWidth > button.clientWidth + 1);
       for (const button of buttons) {
         button.textContent = compact ? button.dataset.shortLabel : button.dataset.fullLabel;
         button.style.minWidth = compact ? "0" : "";
@@ -3074,6 +3100,7 @@
     setText(document.querySelector("#play-panel .zone-label"), t("play"));
     setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
     setBetModeButtonLabel(el.normal, t("normalBet"), "NB");
+    setBetModeButtonLabel(el.extra, `Extra Bet (${Box.extrabet}x)`, `EX (${Box.extrabet}x)`);
     setBetModeButtonLabel(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
     setBetModeButtonLabel(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`, `SF (${Box.superfeaturebuy}x)`);
     refreshBetModeLabels();
@@ -3101,6 +3128,7 @@
     if (state.auto && !state.busy) doSpin();
   });
   el.normal.addEventListener("click", () => selectMode(MODE_NORMAL));
+  el.extra.addEventListener("click", () => selectMode(MODE_EXTRA));
   el.buy.addEventListener("click", () => purchaseFeature(MODE_BUY));
   el.super.addEventListener("click", () => purchaseFeature(MODE_SUPER));
   el.betMinus.addEventListener("click", () => setBetIndex(state.betIndex - 1));
@@ -3151,12 +3179,12 @@
     if (el.helpDialog.open && !state.helpMarkdown) loadHelp();
   });
 
-  byId("gameId").textContent = "H019";
+  byId("gameId").textContent = "H013";
   byId("gameName").textContent = t("gameName");
-  el.config.value = H019_ACTIVE_CONFIG;
+  el.config.value = H013_ACTIVE_CONFIG;
   el.cardRange.closest("label").firstChild.textContent = "Card BG Range ";
   el.cardRange.disabled = true;
-  document.title = `${Box.display_name} — Demo Game`;
+  document.title = `${Box.english_name || "Sugar Bonanza 1000"} — Demo Game`;
   renderBetMenu();
   renderBoard(sampleBoard());
   updateFeatureBar();
