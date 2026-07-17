@@ -350,6 +350,7 @@
     if (!markdown) {
       try { markdown = el.helpSourceFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
     }
+    if (!markdown) markdown = document.getElementById("embeddedH015GameHelpMarkdown")?.textContent?.trim() || "";
     state.helpMarkdown = markdown; renderHelp(markdown);
   }
 

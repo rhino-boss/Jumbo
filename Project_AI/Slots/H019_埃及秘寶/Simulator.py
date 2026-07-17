@@ -30,8 +30,8 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
-    {"config_file": "Source/config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "Source/config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "Source/config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "Source/config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "Source/config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "Source/config_92.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "Source/config_92.js", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
@@ -1006,10 +1006,7 @@ def run_batch_combinations():
     total_jobs = len(BATCH_COMBINATIONS)
     for index, combo in enumerate(BATCH_COMBINATIONS, start=1):
         print(
-            f"\n=== Batch {index}/{total_jobs}: "
-            f"config={combo['config_file']}, bet_mode={combo['bet_mode']}, "
-            f"rounds={combo['total_rounds']}, card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, "
-            f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
+            f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}, bet_mode={combo['bet_mode']}, " f"rounds={combo['total_rounds']}, card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, " f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
             flush=True,
         )
         env = os.environ.copy()

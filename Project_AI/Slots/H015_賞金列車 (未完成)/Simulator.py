@@ -1,6 +1,9 @@
 import json
 import math
 import os
+import re
+import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -8,6 +11,9 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from numba import njit
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
 
 # ===== User Settings =====
 
@@ -17,11 +23,22 @@ BET_MULTI = 1
 BET_MODE = 0
 CARD_SYSTEM_ENABLED = True
 CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
+
+# H026-style batch runner. Keep False for an ordinary single run.
+RUN_ALL_COMBINATIONS = True
+BATCH_RUNS = [
+    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False, "card_system_enabled": True},
+]
+
+# H015's card filtering can be memory-heavy. Keep the H026-style configurable
+# threading, but cap the safe default so running from an IDE does not exhaust it.
 THREADS = max(1, min(8, os.cpu_count() or 1))
 
 OUTPUT_REPORT = True
-SHOW_CONSOLE_SUMMARY = True
-SHOW_CONSOLE_DETAIL = True
+SHOW_CONSOLE_SUMMARY = False
+SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 DEBUG_ROUNDS = 1
 
@@ -47,6 +64,8 @@ BET_MULTI = int(os.environ.get("H015_BET_MULTI", str(BET_MULTI)))
 BET_MODE = int(os.environ.get("H015_BET_MODE", str(BET_MODE)))
 CARD_SYSTEM_ENABLED = _parse_env_bool("H015_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
 CARD_SYSTEM_IS_NEWBIE = _parse_env_bool("H015_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+RUN_ALL_COMBINATIONS = _parse_env_bool("H015_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
+BATCH_COMBINATIONS = list(BATCH_RUNS)
 THREADS = int(os.environ.get("H015_THREADS", str(THREADS)))
 OUTPUT_REPORT = _parse_env_bool("H015_OUTPUT_REPORT", OUTPUT_REPORT)
 SHOW_CONSOLE_SUMMARY = _parse_env_bool("H015_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
@@ -713,12 +732,7 @@ def _simulate_chunk(total_rounds, bet_mode, bet_multi, seed):
                     pay_amounts = pay_amounts_after_bg.copy()
                     combo_counts = combo_counts_after_bg.copy()
                 pay_fg = _run_free_game_session(scatter_bg, bet_mode, bet_multi, summary, hit_counts, pay_amounts, combo_counts)
-                needs_fg_match = (
-                    CARD_SYSTEM_ENABLED
-                    and bet_mode == MODE_NORMALBET
-                    and bg_card_idx >= 0
-                    and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME
-                )
+                needs_fg_match = CARD_SYSTEM_ENABLED and bet_mode == MODE_NORMALBET and bg_card_idx >= 0 and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME
                 if not needs_fg_match or _is_card_match(fg_profile, fg_card_idx, pay_fg, card_coin_in, 1):
                     break
                 retry_total += 1
@@ -793,7 +807,14 @@ def _merge_arrays(target, source):
     target += source
 
 
-def simulate(total_rounds, bet_mode, bet_multi, threads):
+def build_chunk_rounds(total_rounds, threads):
+    threads = max(1, min(int(threads), int(total_rounds) if total_rounds > 0 else 1))
+    base = total_rounds // threads
+    extra = total_rounds % threads
+    return [base + (1 if idx < extra else 0) for idx in range(threads) if base + (1 if idx < extra else 0) > 0]
+
+
+def run_simulation(total_rounds=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MULTI, threads=THREADS):
     if bet_mode not in SUPPORTED_BET_MODES:
         supported = ", ".join(str(mode) for mode in SUPPORTED_BET_MODES)
         raise ValueError(f"Unsupported BET_MODE={bet_mode}; H015 supports: {supported}")
@@ -803,21 +824,30 @@ def simulate(total_rounds, bet_mode, bet_multi, threads):
         raise ValueError("BET_MULTI must be greater than 0")
     if threads <= 0:
         raise ValueError("THREADS must be greater than 0")
-    chunk = total_rounds // threads
-    remainder = total_rounds % threads
-    jobs = []
-    for idx in range(threads):
-        rounds = chunk + (1 if idx < remainder else 0)
-        if rounds > 0:
-            jobs.append((rounds, 20260529 + idx * 97))
+    print(
+        f"Starting H015 simulation | config={CONFIG_FILE} | mode={_mode_name(bet_mode)} | "
+        f"rounds={total_rounds:,} | threads={min(threads, total_rounds)} | "
+        f"card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
+        flush=True,
+    )
+    print("Compiling Numba core...", flush=True)
+    # Compile the active Numba path before timing, matching H026 behavior.
+    _simulate_chunk(1, bet_mode, bet_multi, 20260529)
+    print("Numba ready. Simulation running...", flush=True)
+
+    chunk_rounds = build_chunk_rounds(total_rounds, threads)
+    jobs = [(rounds, 20260529 + idx * 97) for idx, rounds in enumerate(chunk_rounds)]
 
     results = []
-    start = time.time()
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        futures = [executor.submit(_simulate_chunk, rounds, bet_mode, bet_multi, seed) for rounds, seed in jobs]
-        for future in futures:
-            results.append(future.result())
-    duration = time.time() - start
+    start = time.perf_counter()
+    if len(jobs) == 1:
+        results.append(_simulate_chunk(jobs[0][0], bet_mode, bet_multi, jobs[0][1]))
+    else:
+        with ThreadPoolExecutor(max_workers=len(jobs)) as executor:
+            futures = [executor.submit(_simulate_chunk, rounds, bet_mode, bet_multi, seed) for rounds, seed in jobs]
+            for future in futures:
+                results.append(future.result())
+    duration = time.perf_counter() - start
 
     summary = np.zeros(len(SUMMARY_FIELDS), dtype=np.float64)
     hit_counts = np.zeros((2, SYMBOL_COUNT), dtype=np.float64)
@@ -848,12 +878,48 @@ def simulate(total_rounds, bet_mode, bet_multi, threads):
     }
 
 
+def simulate(total_rounds, bet_mode, bet_multi, threads):
+    """Backward-compatible alias for callers that used the old H015 API."""
+    return run_simulation(total_rounds, bet_mode, bet_multi, threads)
+
+
 def _mode_name(mode):
     if mode == MODE_NORMALBET:
         return "Normal Bet"
     if mode == MODE_FEATUREBUY:
         return "Buy Feature"
     return f"Mode {mode}"
+
+
+def format_rounds_tag(total_round):
+    total_round = int(total_round)
+    if total_round > 0:
+        exponent = 0
+        value = total_round
+        while value % 10 == 0:
+            value //= 10
+            exponent += 1
+        if value == 1 and exponent > 0:
+            return f"10{exponent}"
+    return str(total_round)
+
+
+def format_version_tag(version):
+    return re.sub(r"[^0-9A-Za-z]+", "", str(version or "").strip())
+
+
+def format_rtp_tag(rtp_value):
+    try:
+        return f"{float(rtp_value):.4f}".split(".", 1)[1]
+    except (TypeError, ValueError):
+        return "0000"
+
+
+def format_elapsed_time(seconds):
+    total_seconds = max(0, int(round(float(seconds))))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    return f"{hours}h {minutes}m {secs}s"
 
 
 def _build_summary_rows(result, bet_mode, bet_multi):
@@ -980,23 +1046,45 @@ def print_console(result, bet_mode, bet_multi):
         print(multiplier_df.to_string(index=False))
 
 
+def print_batch_summary(result, bet_mode, bet_multi):
+    summary = dict(_build_summary_rows(result, bet_mode, bet_multi))
+    fg_triggers = int(round(float(result["summary"][SUMMARY_IDX["fg_trigger_spins"]])))
+    print(f"* game_id: {GAME_ID}", flush=True)
+    print(f"* parsheet_id: {PARSHEET_ID}", flush=True)
+    print(f"* version: {GAME_VERSION}", flush=True)
+    print(f"* bet_mode: {_mode_name(bet_mode)}", flush=True)
+    print(f"* duration: {format_elapsed_time(result['duration'])}", flush=True)
+    print(f"* rtp_total: {float(summary.get('rtp_total', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* rtp_bg: {float(summary.get('rtp_bg', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* rtp_fg: {float(summary.get('rtp_fg', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* hit_rate_bg: {float(summary.get('hit_rate_bg', 0.0)):.4f}", flush=True)
+    print(f"* hit_rate_fg: {float(summary.get('hit_rate_fg', 0.0)):.4f}", flush=True)
+    print(f"* fg_trigger_rate: {float(summary.get('fg_trigger_rate', 0.0)):.4f} ({fg_triggers} spins)", flush=True)
+    print(f"* retrigger_rate: {float(summary.get('retrigger_rate', 0.0)):.4f}", flush=True)
+    print(f"* avg_fg_spins: {float(summary.get('avg_fg_spins', 0.0)):.2f} spins", flush=True)
+    print(f"* max_win_multiplier: {float(summary.get('max_win_multiplier', 0.0)):.2f} x", flush=True)
+    print(f"* card_system: {'on' if CARD_SYSTEM_ENABLED else 'off'}", flush=True)
+
+
 def output_report(result, bet_mode, bet_multi):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    version_tag = "".join(char for char in str(GAME_VERSION) if char.isdigit())
+    version_tag = format_version_tag(GAME_VERSION)
     rounds = int(result["summary"][SUMMARY_IDX["rounds"]])
-    exponent = int(round(math.log10(rounds))) if rounds > 0 else 0
-    rounds_tag = f"10{exponent}" if rounds == 10**exponent else str(rounds)
+    rounds_tag = format_rounds_tag(rounds)
+    summary_rows = _build_summary_rows(result, bet_mode, bet_multi)
+    summary_map = dict(summary_rows)
+    rtp_tag = format_rtp_tag(summary_map.get("rtp_total"))
     filename_parts = [PARSHEET_ID]
     if version_tag:
         filename_parts.append(version_tag)
     filename_parts.extend([timestamp, f"betmode{bet_mode}", rounds_tag])
     if CARD_SYSTEM_ENABLED:
+        filename_parts.append(rtp_tag)
         if bet_mode == MODE_NORMALBET:
             filename_parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
         filename_parts.append("card")
     path = os.path.join(OUTPUT_DIR, f"{'_'.join(filename_parts)}.xlsx")
-    summary_rows = _build_summary_rows(result, bet_mode, bet_multi)
     hits_df, pay_df, combo_df, multiplier_df, record_df = _build_detail_frames(result)
     base_info_df = pd.DataFrame(summary_rows, columns=["field", "value"])
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
@@ -1010,17 +1098,48 @@ def output_report(result, bet_mode, bet_multi):
 
 
 def run_single_spin_debug():
-    result = simulate(DEBUG_ROUNDS, BET_MODE, BET_MULTI, 1)
+    result = run_simulation(DEBUG_ROUNDS, BET_MODE, BET_MULTI, 1)
     print_console(result, BET_MODE, BET_MULTI)
+    print_batch_summary(result, BET_MODE, BET_MULTI)
+
+
+def run_all_combinations():
+    if not BATCH_COMBINATIONS:
+        raise ValueError("RUN_ALL_COMBINATIONS is enabled, but BATCH_RUNS is empty")
+    total_jobs = len(BATCH_COMBINATIONS)
+    for index, combo in enumerate(BATCH_COMBINATIONS, start=1):
+        combo_env = os.environ.copy()
+        combo_env["PYTHONUNBUFFERED"] = "1"
+        combo_env["H015_CONFIG_FILE"] = str(combo.get("config_file", CONFIG_FILE))
+        combo_env["H015_BET_MODE"] = str(combo["bet_mode"])
+        combo_env["H015_TOTAL_ROUNDS"] = str(combo["total_rounds"])
+        combo_env["H015_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", False) else "false"
+        combo_env["H015_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", True) else "false"
+        combo_env["H015_RUN_ALL_COMBINATIONS"] = "false"
+        combo_env["H015_BATCH_CHILD"] = "1"
+        print(
+            f"\n=== Batch {index}/{total_jobs}: " f"config={combo_env['H015_CONFIG_FILE']}, " f"bet_mode={combo_env['H015_BET_MODE']}, " f"total_rounds={combo_env['H015_TOTAL_ROUNDS']}, " f"card_system_is_newbie={combo_env['H015_CARD_SYSTEM_IS_NEWBIE']} ===",
+            flush=True,
+        )
+        subprocess.run(
+            [sys.executable, os.path.abspath(__file__)],
+            check=True,
+            env=combo_env,
+        )
 
 
 def main():
+    if RUN_ALL_COMBINATIONS and os.environ.get("H015_BATCH_CHILD") != "1":
+        run_all_combinations()
+        return
+
     if RUN_SINGLE_SPIN_DEBUG:
         run_single_spin_debug()
         return
 
-    result = simulate(TOTAL_ROUNDS, BET_MODE, BET_MULTI, THREADS)
+    result = run_simulation()
     print_console(result, BET_MODE, BET_MULTI)
+    print_batch_summary(result, BET_MODE, BET_MULTI)
     if OUTPUT_REPORT:
         report_path = output_report(result, BET_MODE, BET_MULTI)
         print(f"\nReport: {report_path}")

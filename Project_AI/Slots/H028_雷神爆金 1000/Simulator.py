@@ -31,6 +31,7 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8},
     # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8},
     # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**7},

@@ -1,6 +1,7 @@
 # 101006 Game Help Draft
 
-這份 md 是 H019 Help 的前置確認稿。內容採用與 H026 相同的 `Item／简中／英文` 格式。
+这份 md 是 `H5企劃書_101006_Egypt's Treasure_埃及祕寶.xlsx` 的 Help 前置确认稿。
+后续如需制作 Help xlsx，应先确认并修改这份 md，再转换为结构化 spec / xlsx。
 
 ## Game Meta
 
@@ -18,53 +19,38 @@
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 符号赔付值 | SYMBOL PAYOUT VALUES |
+| 規則說明 | ▪ 符号可在画面任意位置赔付。旋转结束时，依画面上相同符号的总数量决定赢分。 | ▪ SYMBOLS PAY ANYWHERE ON THE SCREEN. THE TOTAL NUMBER OF THE SAME SYMBOL ON THE SCREEN AT THE END OF A SPIN DETERMINES THE VALUE OF THE WIN. |
 
 ### WILD SYMBOL
 
 | Item | 简中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 百搭符号 | WILD SYMBOL |
-| 規則說明 | [WW] 可替代所有一般赔付符号，但不可替代 [C1] 或 [C2]。 | [WW] SUBSTITUTES FOR ALL REGULAR PAYING SYMBOLS, BUT NOT [C1] OR [C2]. |
-| 規則說明 | 只有实际参与中奖消除的 [WW] 才会转换为 [C2]。 | ONLY [WW] SYMBOLS THAT PARTICIPATE IN A WIN ARE CONVERTED INTO [C2]. |
+| 副標題 | 转化百搭符号 | TRANSFORMING WILD SYMBOL |
+| 規則說明 | ▪ [WW] 为转化百搭符号。 | ▪ [WW] IS TRANSFORMING WILD SYMBOL. |
+| 規則說明 | ▪ [WW] 可替代除 [C1] 与 [C2] 外的所有一般符号。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [C1] OR [C2]. |
+| 規則說明 | ▪ 当 [WW] 在消除掉落过程中参与得奖并被消除时，该符号将转化为 [C2]。 | ▪ WHEN [WW] IS ELIMINATED DURING A TUMBLE, IT TRANSFORMS INTO [C2]. |
 
 ### SCATTER SYMBOL
 
 | Item | 简中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 散布符号 | SCATTER SYMBOL |
-| 規則說明 | 基础游戏的所有连消结束后，最终盘面出现 {4} 个或以上 [C1]，将触发免费游戏。 | AFTER ALL CASCADES ARE COMPLETE, {4} OR MORE [C1] ON THE FINAL BASE GAME GRID TRIGGER THE FREE GAME FEATURE. |
-
-### C2 SYMBOL
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 倍数符号 | MULTIPLIER SYMBOL |
-| 規則說明 | [C2] 不参与一般符号中奖计算。 | [C2] DOES NOT PARTICIPATE IN REGULAR SYMBOL WIN EVALUATION. |
+| 副標題 | 分散符号 | SCATTER SYMBOL |
+| 規則說明 | ▪ [C1] 为分散符号，可出现在所有转轮上，并在任意位置赔付。 | ▪ [C1] IS THE SCATTER SYMBOL. IT APPEARS ON ALL REELS AND PAYS ON ANY POSITION. |
 
 ### 賠率表
 
 | 中文欄 | 中文欄 | 中文欄 |
 | --- | --- | --- |
-| [M1] 8–9 - 10 | [M1] 10–11 - 25 | [M1] 12+ - 50 |
-| [M2] 8–9 - 2.5 | [M2] 10–11 - 10 | [M2] 12+ - 25 |
-| [M3] 8–9 - 2 | [M3] 10–11 - 5 | [M3] 12+ - 15 |
-| [M4] 8–9 - 1.5 | [M4] 10–11 - 2 | [M4] 12+ - 12 |
-| [A] 8–9 - 1 | [A] 10–11 - 1.5 | [A] 12+ - 10 |
-| [K] 8–9 - 0.8 | [K] 10–11 - 1.2 | [K] 12+ - 8 |
-| [Q] 8–9 - 0.5 | [Q] 10–11 - 1 | [Q] 12+ - 5 |
-| [J] 8–9 - 0.4 | [J] 10–11 - 0.9 | [J] 12+ - 4 |
-| [TE] 8–9 - 0.25 | [TE] 10–11 - 0.75 | [TE] 12+ - 2 |
-
----
-
-## HOW TO WIN
-
-| Item | 简中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 中奖方式 | HOW TO WIN |
-| 規則說明 | 游戏使用 {6} 轮、{5} 行盘面。相同一般符号与百搭符号合计达到 {8} 个或以上即可中奖。 | THE GAME USES A {6}-REEL, {5}-ROW GRID. A WIN IS FORMED WHEN {8} OR MORE MATCHING REGULAR SYMBOLS AND WILD SYMBOLS APPEAR. |
-| 規則說明 | 同一盘面可同时形成多个符号奖项。 | MULTIPLE SYMBOL WINS MAY BE AWARDED ON THE SAME GRID. |
-| 規則說明 | 赔付表数值为总投注的倍数。 | PAYTABLE VALUES ARE MULTIPLIERS OF THE TOTAL BET. |
+| [M1] 12+ - 5000 | [M2] 12+ - 2500 | [M3] 12+ - 1500 |
+| [M1] 10–11 - 2500 | [M2] 10–11 - 1000 | [M3] 10–11 - 500 |
+| [M1] 8–9 - 1000 | [M2] 8–9 - 250 | [M3] 8–9 - 200 |
+| [M4] 12+ - 1200 | [A] 12+ - 1000 | [K] 12+ - 800 |
+| [M4] 10–11 - 200 | [A] 10–11 - 150 | [K] 10–11 - 120 |
+| [M4] 8–9 - 150 | [A] 8–9 - 100 | [K] 8–9 - 80 |
+| [Q] 12+ - 500 | [J] 12+ - 400 | [TE] 12+ - 200 |
+| [Q] 10–11 - 100 | [J] 10–11 - 90 | [TE] 10–11 - 75 |
+| [Q] 8–9 - 50 | [J] 8–9 - 40 | [TE] 8–9 - 25 |
+| [C1] 6 - 100X | [C1] 5 - 5X | [C1] 4 - 3X |
 
 ---
 
@@ -72,9 +58,9 @@
 
 | Item | 简中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | 中奖符号会被移除，其余符号向下掉落，新符号补满空位后再次结算。 | WINNING SYMBOLS ARE REMOVED. REMAINING SYMBOLS CASCADE DOWN AND NEW SYMBOLS FILL THE EMPTY POSITIONS BEFORE WINS ARE EVALUATED AGAIN. |
-| 規則說明 | 连消会持续进行，直到盘面不再形成新中奖。 | CASCADES CONTINUE UNTIL NO NEW WIN IS FORMED. |
+| 主要標題 | 消除掉落特色 | CASCADING FEATURE |
+| 規則說明 | ▪ 每次旋转后，得奖符号会被消除。其余符号将掉落至画面底部，并由上方补入新符号。 | ▪ WINNING COMBINATIONS ON THE SCREEN DISAPPEAR, AND NEW SYMBOLS DROP DOWN TO FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 消除掉落特色会持续进行，直到画面不再形成新的得奖组合。 | ▪ CASCADING FEATURE CONTINUES UNTIL NO MORE WINNING. |
 
 ---
 
@@ -82,9 +68,9 @@
 
 | Item | 简中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | C2 倍数特色 | C2 MULTIPLIER FEATURE |
-| 規則說明 | 最终盘面上的所有 [C2] 倍数相加，并乘上该次旋转的连消总赢分；没有 [C2] 时倍数为 {1}。 | ALL [C2] VALUES ON THE FINAL GRID ARE ADDED TOGETHER AND APPLIED TO THE TOTAL CASCADE WIN OF THAT SPIN. THE MULTIPLIER IS {1} WHEN NO [C2] IS PRESENT. |
-| 規則說明 | [C2] 可能显示 X{2}、X{3}、X{4}、X{5}、X{8}、X{10}、X{12}、X{15}、X{20}、X{25}、X{50}、X{100}、X{150}、X{200}、X{250}、X{500} 或 X{1000}。 | [C2] MAY REVEAL X{2}, X{3}, X{4}, X{5}, X{8}, X{10}, X{12}, X{15}, X{20}, X{25}, X{50}, X{100}, X{150}, X{200}, X{250}, X{500}, OR X{1000}. |
+| 主要標題 | 倍数符号特色 | MULTIPLIER SYMBOL FEATURE |
+| 規則說明 | ▪ 每当 [C2] 出现时，将随机显示以下倍数之一：X{2}、X{3}、X{4}、X{5}、X{6}、X{8}、X{10}、X{12}、X{15}、X{20}、X{25}、X{50}、X{100} 或 X{1000}。 | ▪ WHEN [C2] APPEARS, A RANDOM MULTIPLIER WILL BE APPLIED: X{2}, X{3}, X{4}, X{5}, X{6}, X{8}, X{10}, X{12}, X{15}, X{20}, X{25}, X{50}, X{100}, OR X{1000}. |
+| 規則說明 | ▪ 消除掉落特色结束时，画面上所有 [C2] 的倍数值将相加，并以其总和乘上本次旋转的消除总赢分。 | ▪ WHEN THE CASCADING FEATURE ENDS, ALL MULTIPLIER VALUES FROM [C2] ON THE SCREEN ARE ADDED TOGETHER, AND THE TOTAL CASCADE WIN IS MULTIPLIED BY THE SUM OF THESE MULTIPLIERS. |
 
 ---
 
@@ -93,9 +79,12 @@
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免费游戏特色 | FREE GAME FEATURE |
-| 規則說明 | 基础游戏最终盘面出现 {4} 个或以上 [C1]，可获得 {15} 次免费旋转。 | {4} OR MORE [C1] ON THE FINAL BASE GAME GRID AWARD {15} FREE SPINS. |
-| 規則說明 | 免费游戏最终盘面出现 {3} 个或以上 [C1]，可增加 {5} 次免费旋转；单场最多进行 {50} 次免费旋转。 | {3} OR MORE [C1] ON A FINAL FREE GAME GRID AWARD {5} ADDITIONAL FREE SPINS, UP TO {50} FREE SPINS PER FEATURE. |
-| 規則說明 | 免费游戏中的 [C2] 倍数会持续累积，直到整段免费游戏结束。 | [C2] MULTIPLIERS ACCUMULATE THROUGHOUT THE FREE GAME UNTIL THE FEATURE ENDS. |
+| 規則說明 | ▪ 任意位置出现 {4} 个或以上 [C1]，即可触发免费游戏特色。 | ▪ {4} OR MORE [C1] APPEARING IN ANY POSITION WILL TRIGGER THE FREE GAME FEATURE. |
+| 規則說明 | ▪ 点击开始按钮即可启动免费游戏特色，并获得 {15} 次免费旋转。 | ▪ CLICK THE START BUTTON TO START THE FREE GAME FEATURE WITH {15} FREE SPINS. |
+| 規則說明 | ▪ 免费游戏期间出现 {3} 个或以上 [C1]，将获得 {5} 次额外免费旋转；免费旋转次数最多为 {50} 次。 | ▪ DURING THE FREE GAME, {3} OR MORE [C1] AWARD {5} ADDITIONAL FREE SPINS. THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
+| 規則說明 | ▪ 免费游戏期间，每次旋转的投注额与触发免费游戏特色时相同。 | ▪ DURING THE FREE GAME, BET PER SPIN REMAINS THE SAME AS WHEN THE FREE GAME FEATURE IS TRIGGERED. |
+| 規則說明 | ▪ 免费旋转中出现 [C2] 且该次旋转形成得奖时，其倍数将加入累计总倍数。 | ▪ DURING FREE SPINS, WHEN [C2] APPEARS AND THE SPIN RESULTS IN A WIN, ITS MULTIPLIER IS ADDED TO THE ACCUMULATED TOTAL MULTIPLIER. |
+| 規則說明 | ▪ 累计总倍数会在整段免费游戏期间持续保留；免费游戏中的所有赢分均乘以该累计总倍数，直到免费旋转结束。 | ▪ THE ACCUMULATED TOTAL MULTIPLIER REMAINS ACTIVE THROUGHOUT THE FREE GAME. ALL WINS ARE MULTIPLIED BY THIS VALUE UNTIL THE FREE SPINS END. |
 
 ---
 
@@ -103,8 +92,9 @@
 
 | Item | 简中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 购买特色 | BUY FEATURE |
-| 規則說明 | 玩家可支付 {100}X 总投注购买免费游戏；按下按钮后会立即进行保证触发免费游戏的旋转，并非持续模式切换。 | THE PLAYER MAY PAY {100}X TOTAL BET TO BUY FREE GAME. PRESSING THE BUTTON IMMEDIATELY PLAYS A SPIN GUARANTEED TO TRIGGER FREE GAME; IT IS NOT A PERSISTENT MODE. |
+| 主要標題 | 购买免费游戏特色 | BUY FEATURE |
+| 規則說明 | ▪ 可支付相当于 {100}X 总投注的金额购买免费游戏特色。 | ▪ BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {100}X TOTAL BET. |
+| 規則說明 | ▪ 购买免费游戏特色后，保证触发免费游戏。 | ▪ PURCHASING THE FREE GAME FEATURE GUARANTEES FREE GAME. |
 
 ---
 
@@ -112,9 +102,24 @@
 
 | Item | 简中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 超级特色 | SUPER FEATURE |
-| 規則說明 | 玩家可支付 {500}X 总投注购买超级免费游戏。超级免费游戏使用专用轮带，且 [C2] 最小为 X{10}。 | THE PLAYER MAY PAY {500}X TOTAL BET TO BUY SUPER FREE GAME. SUPER FREE GAME USES DEDICATED REELS AND [C2] STARTS AT X{10}. |
-| 規則說明 | 按下按钮后会立即进行保证触发超级免费游戏的旋转，并非持续模式切换。 | PRESSING THE BUTTON IMMEDIATELY PLAYS A SPIN GUARANTEED TO TRIGGER SUPER FREE GAME; IT IS NOT A PERSISTENT MODE. |
+| 主要標題 | 超级免费游戏特色 | SUPER FEATURE |
+| 規則說明 | ▪ 可支付相当于 {500}X 总投注的金额购买超级免费游戏特色。 | ▪ SUPER FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {500}X TOTAL BET. |
+| 規則說明 | ▪ 购买超级免费游戏特色后，保证触发免费游戏。 | ▪ PURCHASING THE SUPER FEATURE GUARANTEES FREE GAME. |
+| 規則說明 | ▪ 此模式中的所有倍数符号，最低倍数为 X{10}。 | ▪ IN THIS MODE, ALL MULTIPLIER SYMBOLS CARRY A MINIMUM MULTIPLIER OF X{10}. |
+
+---
+
+## OP JACKPOT
+
+| Item | 简中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 游戏中，OP JACKPOT 特色由特色转轮上的 {1} 个或以上 [C1] 随机触发。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ OP JACKPOT 特色会在画面中显示 {12} 个 [硬币]，其中包含 [硬币-GRAND]、[硬币-MAJOR]、[硬币-MINOR] 与 [硬币-MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [COIN-GRAND], [COIN-MAJOR], [COIN-MINOR], AND [COIN-MINI]. |
+| 規則說明 | ▪ 选择 {1} 个 [硬币]，以揭示 [硬币-GRAND]、[硬币-MAJOR]、[硬币-MINOR] 或 [硬币-MINI]。获得 {3} 个相同的 OP JACKPOT 符号，即可赢得对应彩金并结算总奖金。 | ▪ SELECT {1} [COIN] TO REVEAL [COIN-GRAND], [COIN-MAJOR], [COIN-MINOR], OR [COIN-MINI]. OBTAIN {3} IDENTICAL OP JACKPOT SYMBOLS TO WIN THE CORRESPONDING JACKPOT AND CALCULATE THE TOTAL WIN. |
+| 規則說明 | ▪ [GRAND] 与 [MAJOR] 为连机累进彩金。单场游戏的投注选项达到 {2.00} 或以上时，即可解锁 [GRAND] 与 [MAJOR]。 | ▪ [GRAND] AND [MAJOR] ARE LINKED PROGRESSIVE JACKPOTS. A BET OPTION OF {2.00} OR ABOVE UNLOCKS [GRAND] AND [MAJOR] FOR THE SINGLE GAME. |
+| 規則說明 | ▪ [MINOR] 与 [MINI] 为红利彩金，彩金数值会依投注选项改变。 | ▪ [MINOR] AND [MINI] ARE BONUS JACKPOTS. THEIR VALUES CHANGE ACCORDING TO THE SELECTED BET OPTION. |
+| 規則說明 | ▪ 投注越高，触发 OP JACKPOT 特色的机会越高。 | ▪ THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
 
 ---
 
@@ -123,6 +128,9 @@
 | Item | 简中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 游戏规则 | GAME RULES |
-| 規則說明 | 选择您想要玩的投注选项。 | SELECT THE BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | 所有中奖金额均依所选投注计算。 | ALL WINS ARE CALCULATED ACCORDING TO THE SELECTED BET. |
-| 規則說明 | 游戏发生故障时，所有赔付和游戏均视为无效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 选择您想要游玩的投注选项。 | ▪ SELECT THE BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 除累进奖外，所有中奖金额均乘以所选投注选项。 | ▪ ALL WINS ARE MULTIPLIED BY THE BET OPTION EXCEPT PROGRESSIVE BONUSES. |
+| 規則說明 | ▪ 所有符号均可出现在画面任意位置并构成得奖组合。 | ▪ SYMBOLS PAY ANYWHERE. |
+| 規則說明 | ▪ 同一局出现多个得奖组合时，所有赢分将加总为该局总赢分。 | ▪ WHEN WINNING WITH MULTIPLE SYMBOLS, ALL WINS ARE ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ 游戏发生故障时，所有赔付与游戏均视为无效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 玩家在免费游戏特色期间中断游戏时，系统将自动计算游戏结果，并将得奖金额加入余额。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND ADD THE WINNING PRIZES TO THE BALANCE. |

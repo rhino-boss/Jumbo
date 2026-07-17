@@ -241,13 +241,14 @@
     return { wins, hitPositions, pay };
   }
 
-  function applyCascade(spin, wins) {
+  function applyCascade(spin, wins, scene, c2Mode) {
     const winningSymbols = new Set(wins.map((win) => win.symbol));
     const strip = Box.strips[spin.tableId];
 
     for (let reel = 0; reel < Box.reel_num; reel += 1) {
       const kept = [];
       const keptWild = [];
+      const keptC2Values = [];
       let hasScatter = false;
       for (let row = Box.window_size - 1; row >= 0; row -= 1) {
         const symbol = spin.board[row][reel];
@@ -255,9 +256,11 @@
         if (symbol === WW) {
           kept.push(C2);
           keptWild.push(true);
+          keptC2Values.push(drawC2Value(scene, true, c2Mode));
         } else if (!winningSymbols.has(symbol)) {
           kept.push(symbol);
           keptWild.push(spin.fromWild[row][reel]);
+          keptC2Values.push(symbol === C2 ? spin.c2Values[row][reel] : 0);
         }
       }
 
@@ -265,6 +268,7 @@
       for (let index = 0; index < kept.length; index += 1) {
         spin.board[outputRow][reel] = kept[index];
         spin.fromWild[outputRow][reel] = keptWild[index];
+        spin.c2Values[outputRow][reel] = keptC2Values[index];
         outputRow -= 1;
       }
 
@@ -281,6 +285,7 @@
         if (symbol === C1) hasScatter = true;
         spin.board[outputRow][reel] = symbol;
         spin.fromWild[outputRow][reel] = false;
+        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, false, c2Mode) : 0;
         outputRow -= 1;
       }
     }
@@ -298,23 +303,33 @@
     return c2.multipliers[pickWeighted(c2.weights[key])] || 0;
   }
 
-  function assignC2Values(spin, scene) {
+  function chooseC2Mode(scene) {
     const profile = currentProfile();
     const modeWeights = profile.c2_mode_weights[scene === "FG" ? "free" : "base"];
-    const c2Mode = pickWeighted(modeWeights);
-    const values = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+    return pickWeighted(modeWeights);
+  }
+
+  function initializeC2Values(spin, scene, c2Mode) {
+    spin.c2Values = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        if (spin.board[row][reel] === C2) spin.c2Values[row][reel] = drawC2Value(scene, false, c2Mode);
+      }
+    }
+  }
+
+  function summarizeC2Values(spin, c2Mode) {
     let total = 0;
     let count = 0;
     for (let row = 0; row < Box.window_size; row += 1) {
       for (let reel = 0; reel < Box.reel_num; reel += 1) {
         if (spin.board[row][reel] !== C2) continue;
-        const value = drawC2Value(scene, spin.fromWild[row][reel], c2Mode);
-        values[row][reel] = value;
+        const value = spin.c2Values[row][reel];
         total += value;
         count += 1;
       }
     }
-    return { values, total, count, mode: c2Mode };
+    return { values: clone(spin.c2Values), total, count, mode: c2Mode };
   }
 
   function scatterPay(count) {
@@ -324,7 +339,10 @@
 
   function playSpin(tableId, scene, carriedMultiplier = 0, forcedStops = null) {
     const spin = generateBoard(tableId, forcedStops);
+    const c2Mode = chooseC2Mode(scene);
+    initializeC2Values(spin, scene, c2Mode);
     const initialBoard = clone(spin.board);
+    const initialC2Values = clone(spin.c2Values);
     const steps = [];
     let rawPay = 0;
 
@@ -332,19 +350,22 @@
       const evaluated = evaluateClusters(spin.board);
       if (!evaluated.wins.length) break;
       const before = clone(spin.board);
+      const beforeC2Values = clone(spin.c2Values);
       rawPay += evaluated.pay;
-      applyCascade(spin, evaluated.wins);
+      applyCascade(spin, evaluated.wins, scene, c2Mode);
       steps.push({
         cascadeIndex: index + 1,
         before,
         after: clone(spin.board),
+        beforeC2Values,
+        afterC2Values: clone(spin.c2Values),
         hitPositions: evaluated.hitPositions,
         wins: evaluated.wins,
         pay: evaluated.pay
       });
     }
 
-    const c2 = assignC2Values(spin, scene);
+    const c2 = summarizeC2Values(spin, c2Mode);
     const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
     const scatterWin = scatterPay(scatterCount);
     const effectiveMultiplier = scene === "FG" ? carriedMultiplier + c2.total : c2.total;
@@ -354,6 +375,7 @@
       tableId,
       tableName: Box.strip_names[tableId],
       initialBoard,
+      initialC2Values,
       finalBoard: clone(spin.board),
       starts: spin.starts,
       steps,
@@ -424,10 +446,17 @@
     );
   }
 
-  async function animateReels() {
+  async function animateReels(spin) {
     const frames = Math.max(2, Math.round(8 / state.speed));
     for (let frame = 0; frame < frames; frame += 1) {
-      renderBoard(sampleBoard(), { spinning: true });
+      const rollingBoard = Array.from({ length: Box.window_size }, (_, row) =>
+        Array.from({ length: Box.reel_num }, (_, reel) => {
+          const offset = (frames - frame + reel) % Box.window_size;
+          const sourceRow = (row + offset) % Box.window_size;
+          return symbolCell(spin.initialBoard[sourceRow][reel], spin.initialC2Values[sourceRow][reel]);
+        })
+      );
+      renderBoard(rollingBoard, { spinning: true });
       await sleep(55);
     }
   }
@@ -492,10 +521,10 @@
   }
 
   function captureSnapshots(spin) {
-    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard), hits: [] }];
+    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialC2Values), hits: [] }];
     spin.steps.forEach((step) => {
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before), hits: step.hitPositions });
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after), hits: [] });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeC2Values), hits: step.hitPositions });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterC2Values), hits: [] });
     });
     state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.c2.values), hits: [] });
     state.snapshotIndex = state.snapshots.length - 1;
@@ -566,18 +595,18 @@
   }
 
   async function playback(spin) {
-    await animateReels();
-    renderBoard(boardCells(spin.initialBoard));
+    await animateReels(spin);
+    renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
     updateFeatureBar({ ...spin, steps: [] });
     writeMessage(tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`));
     await sleep(260);
 
     for (const step of spin.steps) {
-      renderBoard(boardCells(step.before), { hitPositions: step.hitPositions });
+      renderBoard(boardCells(step.before, step.beforeC2Values), { hitPositions: step.hitPositions });
       setText(el.cascade, String(step.cascadeIndex));
       writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
       await sleep(360);
-      renderBoard(boardCells(step.after));
+      renderBoard(boardCells(step.after, step.afterC2Values));
       await sleep(260);
     }
 
