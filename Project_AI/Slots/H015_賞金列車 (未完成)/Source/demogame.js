@@ -19,7 +19,6 @@
   const HELP_PATH = "./game_help_draft.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
-  const IMG_MAP = { M1: "M1", M2: "M2", M3: "M3", M4: "M4", A: "M5", K: "M6", Q: "M7", J: "M8", C1: "C1" };
 
   const T = {
     en: {
@@ -203,9 +202,8 @@
 
   function symbolMarkup(symbol, isGold) {
     if (symbol === 99) return "";
-    const code = CODE[symbol] || `S${symbol}`; const img = IMG_MAP[code];
-    const image = img ? `<img src="./Source/Image/H015_Symbol/${img}_Symbol.png" alt="${code}">` : `<span class="symbol-code">${code}</span>`;
-    return `<div class="symbol-wrap">${image}<span class="symbol-code">${code}</span>${isGold ? '<span class="multi-badge">GOLD</span>' : ""}</div>`;
+    const code = CODE[symbol] || `S${symbol}`;
+    return `<div class="symbol-wrap"><span class="symbol-code">${code}</span>${isGold ? '<span class="multi-badge">GOLD</span>' : ""}</div>`;
   }
 
   function renderBoard(board, gold = [], hit = []) {
