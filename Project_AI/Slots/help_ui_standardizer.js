@@ -6,6 +6,13 @@
 
   const style = document.createElement("style");
   style.textContent = `
+    #grid-panel {
+      transition: background-color 220ms ease, box-shadow 220ms ease;
+    }
+    body.fg-mode #grid-panel {
+      background: #174a70;
+      box-shadow: inset 0 0 0 1px rgba(119, 199, 255, 0.38);
+    }
     #helpDialog {
       box-sizing: border-box;
       width: min(960px, calc(100vw - 32px));

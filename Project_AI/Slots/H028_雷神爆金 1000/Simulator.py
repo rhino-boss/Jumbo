@@ -25,6 +25,7 @@ TOTAL_ROUNDS = 10**7
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
 ENABLE_M1_MULTIPLIER = True
+FG_INITIAL_MULTIPLIER = 2
 CARD_SYSTEM_ENABLED = True
 CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
@@ -1018,9 +1019,8 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
                     pos += 1
                     continue
                 if sym == 2 or sym == 13:  # M1 或 GM1
+                    # FG 固定由 x2 開始，每顆 M1 都完整累加其標示倍數。
                     bonus = L + 1
-                    if m1_count == 0:
-                        bonus -= 1
                     multiplier += bonus
                     m1_count += 1
                 pos += L
@@ -1174,8 +1174,6 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
                 new_len[new_pos] = 1  # 補充符號皆 1x1
                 if enable_m1_multiplier and (new_symbol == 2 or new_symbol == 13):
                     bonus = 2
-                    if m1_count == 0:
-                        bonus -= 1
                     multiplier += bonus
                     m1_count += 1
                 new_pos += 1
@@ -1216,8 +1214,6 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
             r7_symbols[r7_pos] = new_symbol
             if enable_m1_multiplier and (new_symbol == 2 or new_symbol == 13):
                 bonus = 2
-                if m1_count == 0:
-                    bonus -= 1
                 multiplier += bonus
                 m1_count += 1
             r7_pos += 1
@@ -1557,7 +1553,7 @@ def freegame(trigger_c1_count, verbose=False, enable_m1_multiplier=True):
 
     # 初始化
     total_win = 0.0
-    multiplier = 1
+    multiplier = FG_INITIAL_MULTIPLIER
     m1_count = 0
     total_spins_done = 0
     retrigger_count = 0
@@ -2036,7 +2032,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
     max_rounds = 50
 
     total_win = 0.0
-    multiplier = 1
+    multiplier = FG_INITIAL_MULTIPLIER
     m1_count = 0
     total_spins = 0
     hit_spins = 0

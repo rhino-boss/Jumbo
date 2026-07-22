@@ -93,11 +93,11 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [C1]，將觸發免費遊戲，並分別獲得 {15}、{17} 或 {19} 場免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
+| 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [C1]，將觸發免費遊戲，並分別獲得 {12}、{14} 或 {16} 場免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
 | 規則說明 | 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
 | 規則說明 | 免費遊戲期間，第 {3} 輪的一般符號必定帶有金框與倍數。 | DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLD FRAMES AND MULTIPLIERS. |
 | 規則說明 | 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
-| 規則說明 | 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {15}、{17} 或 {19} 場免費遊戲。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {15}, {17}, OR {19} FREE SPINS RESPECTIVELY. |
+| 規則說明 | 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {12}、{14} 或 {16} 場免費遊戲。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
 
 ---
 

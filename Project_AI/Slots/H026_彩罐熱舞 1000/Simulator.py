@@ -27,24 +27,25 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 # Batch runs. Edit this list directly when you want to run a custom set once.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 
@@ -70,6 +71,8 @@ BATCH_COMBINATIONS = list(BATCH_RUNS)
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
 FG_SPIN_CAP = 50
+FG_TRIGGER_BASE_SPINS = 12
+FG_EXTRA_SPINS_PER_SCATTER = 2
 ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 = False
 
 OUTPUT_REPORT = True
@@ -383,7 +386,9 @@ RECORD_COLS = max(len(THRESHOLD_RECORD), SYMBOLS_COUNT * 2, VALUE_MULTIPLIER_COU
 R_FG_FINAL_MULTI_BUCKET = 19
 R_FG_SPIN_MULTI_HIT = 20
 R_BG_SPIN_MULTI_HIT = 21
-RECORD_SIZE = (22, RECORD_COLS)
+R_FG_INTERVAL_SPIN_CNT = 22
+R_FG_INTERVAL_HIT_CNT = 23
+RECORD_SIZE = (24, RECORD_COLS)
 
 WW = int(next(key for key, value in SYMBOL_STR.items() if value == "WW"))
 C1 = int(next(key for key, value in SYMBOL_STR.items() if value == "C1"))
@@ -567,9 +572,9 @@ def is_card_match(profile_idx, card_idx, score, coin_in, triggered_free_game):
 @njit(nogil=True)
 def calc_free_spins(scatter_count, force_trigger):
     if scatter_count >= 3:
-        return 15 + (scatter_count - 3) * 2
+        return FG_TRIGGER_BASE_SPINS + (scatter_count - 3) * FG_EXTRA_SPINS_PER_SCATTER
     if force_trigger == 1:
-        return 15
+        return FG_TRIGGER_BASE_SPINS
     return 0
 
 
@@ -1154,6 +1159,17 @@ def add_line_record(record_data, row_start, data, factor, scene_idx):
 
 
 @njit(nogil=True)
+def get_multiplier_range_bucket(score, coin_in):
+    multi = score / coin_in
+    target = THRESHOLD_RECORD.shape[0] - 1
+    for idx in range(THRESHOLD_RECORD.shape[0]):
+        if multi <= THRESHOLD_RECORD[idx]:
+            target = idx
+            break
+    return target
+
+
+@njit(nogil=True)
 def log_multi_line(record_data, scene_idx, score, coin_in):
     if scene_idx == OUTPUT_BG:
         cnt_idx = R_MULTIPLIER_RANGE_CNT_BG
@@ -1165,12 +1181,7 @@ def log_multi_line(record_data, scene_idx, score, coin_in):
         cnt_idx = R_MULTIPLIER_RANGE_CNT_OA
         pay_idx = R_MULTIPLIER_RANGE_PAY_OA
 
-    multi = score / coin_in
-    target = THRESHOLD_RECORD.shape[0] - 1
-    for idx in range(THRESHOLD_RECORD.shape[0]):
-        if multi <= THRESHOLD_RECORD[idx]:
-            target = idx
-            break
+    target = get_multiplier_range_bucket(score, coin_in)
 
     record_data[cnt_idx, target] += 1
     record_data[pay_idx, target] += score
@@ -1362,6 +1373,8 @@ def run_free_game_session(
 ):
     pay_fg = 0
     fg_multiplier_sum = 0
+    fg_spin_count = 0
+    fg_hit_count = 0
     remaining_freespin = free_spins if free_spins < FG_SPIN_CAP else FG_SPIN_CAP
     reel_stop_idx = np.zeros(REEL_NUM, np.int64)
 
@@ -1388,6 +1401,9 @@ def run_free_game_session(
             reel_stop_idx,
         )
         pay_fg += fg_result[0]
+        fg_spin_count += 1
+        if fg_result[0] > 0:
+            fg_hit_count += 1
         fg_multiplier_sum = fg_result[3]
         log_combo_table_count(record_data, SCENE_FG, fg_result[12], fg_result[5])
         apply_spin_log(
@@ -1416,10 +1432,13 @@ def run_free_game_session(
         remaining_freespin -= 1
 
         if fg_result[1] >= 3:
-            extra_spins = 15 + (fg_result[1] - 3) * 2
+            extra_spins = FG_TRIGGER_BASE_SPINS + (fg_result[1] - 3) * FG_EXTRA_SPINS_PER_SCATTER
             remaining_freespin = min(remaining_freespin + extra_spins, FG_SPIN_CAP)
             record_data[R_ALL, RA_RE_TRIGGER] += 1
 
+    interval_idx = get_multiplier_range_bucket(pay_fg, coin_in)
+    record_data[R_FG_INTERVAL_SPIN_CNT, interval_idx] += fg_spin_count
+    record_data[R_FG_INTERVAL_HIT_CNT, interval_idx] += fg_hit_count
     record_data[R_FG_FINAL_MULTI_BUCKET, get_fg_final_multiplier_bucket(fg_multiplier_sum)] += 1
     return pay_fg
 
@@ -2211,6 +2230,14 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     df_bg_spin_multiplier_hit = build_bg_spin_multiplier_hit_frame(record_data, total_round)
     df_fg_final_multiplier_bucket = build_fg_final_multiplier_bucket_frame(record_data)
     df_fg_spin_multiplier_hit = build_fg_spin_multiplier_hit_frame(record_data)
+    fg_interval_spin_cnt = record_data_float[R_FG_INTERVAL_SPIN_CNT, : len(THRESHOLD_RECORD)]
+    fg_interval_hit_cnt = record_data_float[R_FG_INTERVAL_HIT_CNT, : len(THRESHOLD_RECORD)]
+    fg_interval_hit_rate = np.divide(
+        fg_interval_hit_cnt,
+        fg_interval_spin_cnt,
+        out=np.zeros_like(fg_interval_hit_cnt),
+        where=fg_interval_spin_cnt > 0,
+    )
     df_multiplier = pd.DataFrame(
         {
             "Interval": format_threshold_labels(THRESHOLD_RECORD),
@@ -2218,6 +2245,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
             "base_game_pay": record_data_float[R_MULTIPLIER_RANGE_PAY_BG, : len(THRESHOLD_RECORD)],
             "free_game_cnt": record_data_float[R_MULTIPLIER_RANGE_CNT_FG, : len(THRESHOLD_RECORD)],
             "free_game_pay": record_data_float[R_MULTIPLIER_RANGE_PAY_FG, : len(THRESHOLD_RECORD)],
+            "free_game_hit_rate": fg_interval_hit_rate,
             "overall_cnt": record_data_float[R_MULTIPLIER_RANGE_CNT_OA, : len(THRESHOLD_RECORD)],
             "overall_pay": record_data_float[R_MULTIPLIER_RANGE_PAY_OA, : len(THRESHOLD_RECORD)],
         }
@@ -2409,6 +2437,10 @@ def output_report(
             for row in range(2, 12):
                 worksheet[f"{col}{row}"].number_format = "0.00%"
             worksheet[f"{col}12"].number_format = "0.00"
+        worksheet = writer.sheets["Multiplier Line"]
+        hit_rate_col = df_multiplier.columns.get_loc("free_game_hit_rate") + 1
+        for row in range(2, len(df_multiplier) + 2):
+            worksheet.cell(row=row, column=hit_rate_col).number_format = "0.00%"
     return path
 
 

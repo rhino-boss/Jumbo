@@ -272,6 +272,7 @@
   }
 
   function updateStats() {
+    document.body.classList.toggle("fg-mode", state.fg.remaining > 0);
     el.balanceValue.textContent = format(state.balance); el.betValue.textContent = formatBet(activeBet()); el.winValue.textContent = format(state.lastWin);
     el.roundCountValue.textContent = format(state.rounds); el.rtpValue.textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
     el.hitRateValue.textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
