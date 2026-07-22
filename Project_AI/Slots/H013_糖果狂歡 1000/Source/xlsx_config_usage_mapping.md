@@ -1,49 +1,67 @@
-# H013197.xlsx → config.js 欄位對照
+# H013192 / H013194.xlsx → config JSON/JS 欄位對照
 
-## 識別資料
+## 來源與輸出
 
-- 正式 Game ID：`101001`。
-- 正式 PARsheet ID：`H0131`。
-- 中文／英文名：`糖果狂歡 1000`／`Sugar Bonanza 1000`。
-- `overview!B1`：舊數學識別碼 `H013197-0.0.0.4`，保留為 `source_game_id`。
-- `overview!B2`：數學版本 `0004`。
+- 唯一數學來源：`H013192.xlsx`、`H013194.xlsx`。
+- `H013192.xlsx` → `config_92.js`。
+- `H013194.xlsx` → `config_94.js`。
+- `Overview!B2/B3` → `model`、`game_version`、`excel_version`。
+- 正式識別固定為 `game_id=101001`、`parsheet_id=H0131`。
+- 輸出仍使用 `window.H013_BOX_DATA = {...};`，內容為合法 JSON，供 Simulator 與 DemoGame 共用。
 
-## 盤面與賠率
+## Overview
 
-- 固定盤面：6 輪 × 5 列。
-- `pay_table`：`Symbol`、`4/5/6/8/10/12` 與 `Id` 轉成 `symbol_str`、`symbol_id`、`pay_awards`、`pay_table`。
-- 一般符號 `M1~M4/A/K/Q/J/TE` 以全盤面顆數 `8-9/10-11/12+` 判獎。
-- `C1` 以 4／5／6 顆支付並觸發 FG；`C2` 為 FG 倍數符號。
+- 第 6–9 列 → Normal / Extra / Feature Buy / Super Feature Buy 成本與 `rtp_targets`。
+- 第 33 列 `B:G` → 6 軸可視高度、`window_size`、`reel_num`。
+- Free Spins Setting → `free_spin_awards`。
+- Retrigger Setting → `retrigger_awards`。
+- 第 57 列起符號表 → `symbol_str`、`symbol_codes`、`symbol_id`、`pay_table`。
+- 一般符號獎級固定對應 `8–9 / 10–11 / 12+`；C1 使用 `4 / 5 / 6`。
 
-## Reel Strip 與 Stop Weight
+## Parameter
 
-以下 13 組輪帶與同名 `_weight` 工作表依序映射：
+- `[A]`、第二組 `[A]` 與 `[B]` 全部保留在 `parameter_blocks`。
+- 第一組 `[A]` 是舊 Simulator 的預設相容組：
+  - Normal / Extra 選表權重 → `weight_table_normal_bet`、`weight_table_extra_bet`。
+  - C2 倍率值 → `value_multiplier`。
+  - FG / FB / SB 兩張表的倍率權重 → 六個 `weight_multiplier_*` 欄位。
+- 權重會以最大公因數約分；抽選機率不變，可避免不必要的大整數。
+- Free Game 高低表組合 → 初始 8 low + 2 high；Retrigger 依 5 場等比例轉為 4 low + 1 high。
 
-1. `BG_strip`、`BG_strip (2)`、`BG_strip (3)`、`BG_strip (4)`
-2. `EB_strip`、`EB_strip (2)`、`EB_strip (3)`
-3. `FG_strip`、`FG_strip (2)`
-4. `FB_strip`、`FB_strip (2)`
-5. `SB_strip`、`SB_strip (2)`
+## 13 張 Symbol 工作表
 
-每張表 `R1:R6` 轉為 `arr_reels`；stop weight 轉為逐輪累積的 `arr_reels_weight_cum`。空白輪帶補 `-1`，空白權重補 `0`，不會形成可抽選 stop。
+工作表順序：
 
-## Table 與倍數權重
+1. `Base Game Symbol (1..4)`
+2. `Extra Bet Symbol (1..3)`
+3. `Free Game Symbol (1..2)`
+4. `Feature Buy Symbol (1..2)`
+5. `Super Feature Buy Symbol (1..2)`
 
-- `weight.table_normal_bet`：Normal Bet 的 BG A/B/C 表選擇權重。
-- `weight.table_extra_bet`：Extra Bet 的 EB A/B/C 表選擇權重。
-- `value.multiplier_range`：C2 可抽倍率值。
-- `weight.multiplier_range_FG_low/high`：自然 FG 低／高表倍率權重。
-- `weight.multiplier_range_FB_low/high`：Feature Buy 低／高表倍率權重。
-- `weight.multiplier_range_SB_low/high`：Super Feature Buy 低／高表倍率權重。
+- `L:Q` → 六軸輪帶符號。
+- `AG:AL` → 六軸 stop weight。
+- stop weight 轉為 `arr_reels_weight_cum`；原始資料另保留在 `strips[].weights`。
+- `AN:AO` → 該 FG / FB / SB 工作表上的 C2 倍率與權重。
+- `arr_reels`、`reels_len` 與舊 `strip_name_map` 會同步輸出，維持現有 Simulator / DemoGame 相容。
 
-## 固定流程參數
+## Card System
 
-- 初始 FG：8 場低表 + 2 場高表。
-- Retrigger：4 場低表 + 1 場高表。
-- 單次 FG 上限：50 場。
-- 模式：0 Normal、1 Extra、2 Feature Buy、3 Super Feature Buy。
-- 成本：1x、1.25x、75x、500x。
+- `Multiplier_Weight_Newbie`：Normal、Extra、Free Game。
+- `Multiplier_Weight_Oldhand`：Normal、Extra、Free Game、Buy Feature、Super Feature。
+- `A:B` → 倍率區間；`M` → 使用 A/B 表；`R` → 權重。
+- FG Trigger 會輸出成 `type=free_game`；其餘輸出成 `type=range`。
+- `card_system.enabled=true`、`retry_limit=5000`。
 
-## 已知來源差異
+## 指令
 
-官方遊戲清單的 BF 欄是 100x，舊數學檔與舊 Simulator 是 75x。本專案為可重現舊數學採 75x，並在 `config.js` 的 `source_conflicts` 保留差異。
+```powershell
+# 產生 config_92.js 與 config_94.js
+python Tool/xlsx_to_config.py --all
+
+# 驗證兩份輸出與 Excel 是否一致，不寫檔
+python Tool/xlsx_to_config.py --all --check
+
+# 單檔轉換或指定輸出
+python Tool/xlsx_to_config.py --source Source/H013192.xlsx
+python Tool/xlsx_to_config.py --source Source/H013192.xlsx --output config.js
+```

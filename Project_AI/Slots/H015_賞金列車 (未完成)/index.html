@@ -234,7 +234,7 @@
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
     }
 
-    .cell.gold {
+    #board .cell.gold {
       border-color: rgba(255, 217, 92, 0.9);
       background:
         linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
@@ -538,7 +538,8 @@
       --green: #33ff99;
       --blue: #33bbff;
       --mauve: #b06aff;
-      --cell-size: 78px;
+      /* Six reels must fit inside the 420px game panel (400px inner width). */
+      --cell-size: 60px;
     }
 
     * {
@@ -657,10 +658,6 @@
       color: var(--text);
     }
 
-    #multPill .v {
-      color: var(--blue);
-    }
-
     #cascadePill .v {
       color: var(--red);
     }
@@ -729,6 +726,62 @@
       box-shadow: none;
     }
 
+    .multiplier-track {
+      width: min(100%, 380px);
+      height: 36px;
+      margin: 0 auto 8px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: linear-gradient(90deg, rgba(4, 14, 26, 0.92), rgba(12, 34, 64, 0.7), rgba(4, 14, 26, 0.92));
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+
+    .multiplier-window {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+      will-change: transform, opacity, filter;
+    }
+
+    .multiplier-window.roll-one {
+      animation: multiplierRollOne 180ms cubic-bezier(0.22, 0.72, 0.24, 1);
+    }
+
+    .multiplier-step {
+      min-width: 0;
+      color: var(--sub);
+      font: 800 clamp(0.68rem, 1.35vw, 0.92rem) / 1 Consolas, "Courier New", monospace;
+      text-align: center;
+      opacity: 0.22;
+      white-space: nowrap;
+    }
+
+    .multiplier-step.is-previous {
+      color: #876b35;
+      opacity: 0.42;
+    }
+
+    .multiplier-step.is-active {
+      color: var(--blue);
+      opacity: 1;
+      font-size: clamp(0.92rem, 1.8vw, 1.18rem);
+      text-shadow: 0 0 10px rgba(51, 187, 255, 0.58);
+    }
+
+    @keyframes multiplierRollOne {
+      from {
+        transform: translateX(20%);
+        opacity: 0.38;
+        filter: blur(2px);
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
     body.fg-mode .board-shell {
       border: 0;
       background: transparent;
@@ -759,9 +812,12 @@
       border-radius: 8px;
     }
 
-    .cell.gold {
-      border-color: rgba(255, 217, 92, 0.75);
-      background: #101827;
+    #board .cell.gold {
+      border-color: #ffe078;
+      background:
+        linear-gradient(180deg, rgba(255, 244, 173, 0.35), transparent 42%),
+        linear-gradient(180deg, #d9a923, #7d4b06);
+      box-shadow: none;
     }
 
     .cell.special-gold {
@@ -791,6 +847,49 @@
       color: var(--text);
       background: rgba(4, 14, 26, 0.8);
       font-size: 10px;
+    }
+
+    /* Demo symbols follow H013's image-free, code-glyph presentation. */
+    .cell .symbol-wrap {
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .h015-glyph {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 4px;
+      color: #d8e8f4;
+      font: 800 clamp(0.86rem, 1.7vw, 1.2rem) / 1 Consolas, "Courier New", monospace;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.72);
+    }
+
+    .cell.symbol-a,
+    .cell.symbol-k,
+    .cell.symbol-q,
+    .cell.symbol-j {
+      border-color: rgba(38, 92, 137, 0.28);
+      background: #060d1a;
+    }
+
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.symbol-c1 {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.symbol-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
     }
 
     .multi-badge {
@@ -1724,7 +1823,7 @@
 
     @media (max-width: 760px) {
       :root {
-        --cell-size: min(17vw, 70px);
+        --cell-size: min(60px, calc((100vw - 64px) / 6));
       }
 
       #app-shell {
@@ -1838,8 +1937,6 @@
         <span id="featureStatus"></span>
         <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
             id="carryMultiValue">0</span></span>
-        <span class="feature-pill" id="multPill"><span class="k">Mult</span><span class="v"
-            id="spinMultiValue">x0</span></span>
         <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
             id="fgLeftValue">0/0</span></span>
       </div>
@@ -1848,6 +1945,9 @@
     <div id="app-shell">
       <section id="grid-panel">
         <div class="board-shell">
+          <div class="multiplier-track" aria-label="Multiplier progression">
+            <div class="multiplier-window" id="multiplierWindow"></div>
+          </div>
           <div class="board-grid" id="board"></div>
         </div>
         <div class="message-bar" id="messageBar">Ready — press Spin</div>
@@ -1857,7 +1957,7 @@
         <section id="credit-bar" aria-label="Player values">
           <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
               id="balanceValue">10,000</span></div>
-          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
           <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
         </section>
 
@@ -1868,7 +1968,7 @@
             <button id="autoBtn" type="button">Auto</button>
             <div class="bet-stepper">
               <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
-              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
               <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
               <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
             </div>
@@ -2229,8 +2329,9 @@
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
     function toMoney(value) { return Number(value) * DENOM; }
     function formatMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-    function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function formatCompactNumber(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    function formatBetMoney(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function formatPercent(rate) { return `${(Number(rate) * 100).toFixed(2)}%`; }
     function getBetMoney() { return BET_OPTIONS_MONEY[state.betIndex] || BET_OPTIONS_MONEY[0]; }
     function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
@@ -2686,7 +2787,7 @@
       updateSpinButtonState();
       updateBetMenuSelection();
       if (helpDialogEl.open && gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
-      writeMessage(`Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+      writeMessage(`Bet ${formatBetMoney(getSelectedBetCostMoney())}`);
     }
 
     function renderBetMenu() {
@@ -2696,7 +2797,7 @@
         option.type = "button";
         option.className = "bet-option";
         option.setAttribute("role", "option");
-        option.textContent = formatCompactNumber(amount);
+        option.textContent = formatBetMoney(amount);
         option.addEventListener("click", (event) => {
           event.stopPropagation();
           setBetIndex(index);
@@ -3684,7 +3785,7 @@
       setText(balanceValueEl, formatDisplayMoney(state.displayBalance));
       setText(betValueEl, formatDisplayMoney(coinIn(activeBetMode)));
       setText(winValueEl, formatDisplayMoney(state.displayWin));
-      setText(betBtn, `Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+      setText(betBtn, `Bet ${formatBetMoney(getSelectedBetCostMoney())}`);
       setText(roundCountValueEl, state.roundCount.toLocaleString("en-US"));
       setText(rtpValueEl, formatPercent(state.totalBet > 0 ? state.totalWin / state.totalBet : 0));
       setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
@@ -4225,6 +4326,7 @@
   </script>
   <script src="./config.js"></script>
   <script src="./Source/demogame.js"></script>
+  <script src="../help_ui_standardizer.js"></script>
 </body>
 
 </html>

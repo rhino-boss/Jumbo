@@ -1862,7 +1862,7 @@
         <section id="credit-bar" aria-label="Player values">
           <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
               id="balanceValue">10,000</span></div>
-          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
           <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
         </section>
 
@@ -1972,7 +1972,8 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config.js">H013197</option>
+            <option value="config_92.js">H013192</option>
+            <option value="config_94.js">H013194</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2006,7 +2007,7 @@
   <script id="embeddedGameHelpMarkdown" type="text/plain">
 # H013 Sugar Bonanza 1000 — Help Draft
 
-本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以 `config.js` 及 `Simulator.py` 的實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
+本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以目前選擇的 `config_92.js`／`config_94.js` 及 `Simulator.py` 實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
 
 ## Game Meta
 
@@ -2112,7 +2113,7 @@
   </script>
 
   <script>
-    const H013_CONFIG_FILES = ["config.js"];
+    const H013_CONFIG_FILES = ["config_92.js", "config_94.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H013_ACTIVE_CONFIG = H013_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H013_CONFIG_FILES[0];
     document.write(`<script src="./${H013_ACTIVE_CONFIG}"><\/script>`);
@@ -2302,6 +2303,7 @@
   const randomIndex = (length) => Math.floor(Math.random() * length);
   const money = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const compactMoney = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const formatBetMoney = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const toMoney = (credit) => Number(credit) * DENOM;
 
   function setText(node, value) {
@@ -2724,14 +2726,14 @@
 
   function updateStats() {
     setText(el.balance, money(state.balance));
-    setText(el.bet, compactMoney(wagerMoney()));
+    setText(el.bet, formatBetMoney(wagerMoney()));
     setText(el.win, money(state.lastWin));
     setText(el.rounds, String(state.roundCount));
     setText(el.rtp, state.totalBet > 0 ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%");
     setText(el.hitRate, state.roundCount > 0 ? `${(state.hitCount / state.roundCount * 100).toFixed(2)}%` : "0.00%");
     setText(el.fgTriggers, String(state.fgTriggerCount));
     setText(el.maxMultiplier, `x${state.maxMultiplier}`);
-    setText(el.betButton, `${t("bet")} ${compactMoney(betMoney())}`);
+    setText(el.betButton, `${t("bet")} ${formatBetMoney(betMoney())}`);
   }
 
   function updateControls() {
@@ -2759,7 +2761,7 @@
     BET_OPTIONS.forEach((value, index) => {
       const option = document.createElement("button");
       option.type = "button";
-      option.textContent = compactMoney(value);
+      option.textContent = formatBetMoney(value);
       option.className = index === state.betIndex ? "is-active" : "";
       option.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -3195,6 +3197,7 @@
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
+  <script src="../help_ui_standardizer.js"></script>
 </body>
 
 </html>

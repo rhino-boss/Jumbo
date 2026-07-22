@@ -66,12 +66,78 @@ def _require_shape(key: str, value: list[Any], expected: tuple[int, ...]) -> Non
         raise ValueError(f"{key}: expected shape {expected}, got {actual}")
 
 
+def _parse_card_range(label: Any) -> tuple[float, float] | None:
+    match = re.match(r"^\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]$", str(label or "").strip())
+    if not match:
+        return None
+    return float(match.group(1)), float(match.group(2))
+
+
+def _card_entries(rows: list[tuple[Any, ...]], header_index: int, weight_column: int) -> list[dict[str, Any]]:
+    cards: list[dict[str, Any]] = []
+    for row in rows[header_index + 2:]:
+        label = row[15] if len(row) > 15 else None
+        if label is None:
+            break
+        weight_value = row[weight_column] if len(row) > weight_column else 0
+        if not isinstance(weight_value, (int, float)) or weight_value <= 0:
+            continue
+        label_text = str(label).strip()
+        if label_text.lower() in {"fg trigger", "free game"}:
+            cards.append({"type": "free_game", "weight": int(weight_value)})
+            continue
+        card_range = _parse_card_range(label_text)
+        if card_range is not None:
+            cards.append({
+                "type": "range",
+                "min": card_range[0],
+                "max": card_range[1],
+                "weight": int(weight_value),
+            })
+    return cards
+
+
+def _parse_card_system(ws: Any) -> dict[str, Any]:
+    rows = [tuple(row) for row in ws.iter_rows(values_only=True)]
+    sections: dict[str, int] = {}
+    for index, row in enumerate(rows):
+        if len(row) > 16 and str(row[15] or "").strip() == "Range":
+            sections[str(row[16] or "").strip().lower()] = index
+
+    if "base game" not in sections or "free game" not in sections:
+        raise ValueError("Card: Base Game or Free Game section is missing")
+
+    base_index = sections["base game"]
+    free_index = sections["free game"]
+    buy_index = sections.get("buy feature")
+    newbie_bg = _card_entries(rows, base_index, 42)
+    oldhand_bg = _card_entries(rows, base_index, 43)
+    newbie_fg = _card_entries(rows, free_index, 42)
+    oldhand_fg = _card_entries(rows, free_index, 43)
+    buy_feature = _card_entries(rows, buy_index, 42) if buy_index is not None else []
+    if not all((newbie_bg, oldhand_bg, newbie_fg, oldhand_fg)):
+        raise ValueError("Card: active newbie/oldhand BG/FG weights are incomplete")
+
+    return {
+        "enabled": True,
+        "retry_limit": 5000,
+        "newbie": {
+            "normal_bet": {"weight_bg": newbie_bg, "weight_fg": newbie_fg},
+        },
+        "oldhand": {
+            "normal_bet": {"weight_bg": oldhand_bg, "weight_fg": oldhand_fg},
+            "buy_feature": {"weight_fg": buy_feature},
+        },
+    }
+
+
 def generate_config(xlsx_path: Path) -> dict[str, Any]:
     workbook = load_workbook(xlsx_path, read_only=True, data_only=True)
     try:
         required = {
             "Overview",
             "Description",
+            "Card",
             "BaseGameSymbol",
             "BaseGameSymbolDrop",
             "FreeGameSymbol",
@@ -84,6 +150,7 @@ def generate_config(xlsx_path: Path) -> dict[str, Any]:
 
         config: dict[str, Any] = {
             "linkpoint": _matrix(workbook["Overview"], "B36:K42"),
+            "card_system": _parse_card_system(workbook["Card"]),
         }
 
         for prefix, sheet_name in (

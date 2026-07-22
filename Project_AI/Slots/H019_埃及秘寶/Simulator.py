@@ -30,11 +30,14 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -866,7 +869,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "retrigger_rate": values[R_ALL, RA_RETRIGGER] / fg_sessions if fg_sessions else 0,
         "avg_fg_multiplier": (pay_fg / coin_in_sum) / (fg_sessions / total_round) if coin_in_sum and fg_sessions else 0,
         "avg_fg_spins": fg_spins / fg_sessions if fg_sessions else 0,
-        "stddev_x": math.sqrt(max(0.0, variance)),
+        "volatility_std": math.sqrt(max(0.0, variance)),
         "max_win_x": values[R_ALL, RA_MAX_SINGLE_WIN] / coin_in if coin_in else 0,
         "max_c2_multiplier": int(values[R_ALL, RA_MAX_C2_MULTIPLIER]),
         "avg_bg_cascades": values[R_ALL, RA_BG_CASCADES] / total_round,

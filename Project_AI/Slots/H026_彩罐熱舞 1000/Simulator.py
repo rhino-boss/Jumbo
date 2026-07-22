@@ -21,32 +21,30 @@ if hasattr(sys.stdout, "reconfigure"):
 CONFIG_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**7
 BET_MODE = 2  # 0 for normal bet, 1 for extra bet, 2 for feature buy
+CARD_SYSTEM_ENABLED = True  # True to enable cards, False to run without cards
 CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 # Batch runs. Edit this list directly when you want to run a custom set once.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True},
-    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**2, "card_system_is_newbie": True},
-    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**2, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": True},
-    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_92B.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
-    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True},
-    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": True},
-    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config_94B.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
-    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True},
-    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 
@@ -65,6 +63,7 @@ CONFIG_FILE = os.environ.get("H026_CONFIG_FILE", CONFIG_FILE)
 CONFIG_PATH = os.path.join(BASE_DIR, CONFIG_FILE)
 TOTAL_ROUNDS = int(os.environ.get("H026_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
 BET_MODE = int(os.environ.get("H026_BET_MODE", str(BET_MODE)))
+CARD_SYSTEM_ENABLED = parse_env_bool("H026_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
 CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H026_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
 RUN_ALL_COMBINATIONS = parse_env_bool("H026_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
 BATCH_COMBINATIONS = list(BATCH_RUNS)
@@ -372,7 +371,7 @@ ELIMINATE_TABLE_WEIGHT_CUM_FG = np.asarray(CFG_RAW["eliminate_table_weight_cum_f
 ELIMINATE_TABLE_WEIGHT_CUM_BF = np.asarray(CFG_RAW["eliminate_table_weight_cum_bf"], dtype=np.int64)
 
 CARD_SYSTEM_RAW = CFG_RAW.get("card_system", {})
-CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled"))
+CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_ENABLED and CARD_SYSTEM_RAW.get("enabled"))
 CARD_RETRY_LIMIT = int(CARD_SYSTEM_RAW.get("retry_limit", 0))
 CARD_TYPES, CARD_MIN, CARD_MAX, CARD_WEIGHT_CUM, CARD_COUNTS = _build_card_profile_tables(CARD_SYSTEM_RAW)
 CASCADE_BLOCK_C1_WHEN_BOARD_HAS_C1 = 0 if ALLOW_C1_DROP_WHEN_BOARD_HAS_C1 else 1
@@ -405,6 +404,8 @@ RA_HITS_FG = 1
 RA_TRIGGER_FREEGAME = 2
 RA_RE_TRIGGER = 3
 RA_FREE_SPINS = 4
+# Per paid Spin moments.  One triggered FG session is folded into the paid
+# Spin's pay_total, so FG spins are not separate standard-deviation samples.
 RA_X_SUM = 5
 RA_X_SQUARE = 6
 RA_TRIGGER_FG_PAY_BG = 7
@@ -1590,6 +1591,8 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
             pay_total = pay_bg + pay_fg
             round_record[R_ALL, RA_RETRY_TOTAL] += retry_count
 
+            # One paid Spin is one sample.  If it triggers FG, pay_total is
+            # BG + the complete FG session before the multiplier is recorded.
             pay_x = pay_total / coin_in
             round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
             round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
@@ -1844,6 +1847,8 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
 
         round_record[R_ALL, RA_RETRY_TOTAL] += retry_count
 
+        # One paid Spin is one sample.  If it triggers FG, pay_total is
+        # BG + the complete FG session before the multiplier is recorded.
         pay_x = pay_total / coin_in
         round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
         round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
@@ -2381,7 +2386,9 @@ def output_report(
     if CARD_SYSTEM_ENABLED:
         filename_parts.append(f"{rtp_tag}{profile_suffix}{card_suffix}")
     path = os.path.join(OUTPUT_DIR, f"{'_'.join(filename_parts)}.xlsx")
-    with pd.ExcelWriter(path) as writer:
+    # 下方欄寬、凍結窗格與儲存格格式使用 openpyxl API，固定引擎以避免
+    # pandas 選到 xlsxwriter 時產生 Worksheet API 不相容。
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_gold_count.to_excel(writer, sheet_name="Gold Count", index=False)
         df_combo.to_excel(writer, sheet_name="Combo Dist", index=False)
@@ -2454,11 +2461,15 @@ def run_all_combinations():
         combo_env["H026_CONFIG_FILE"] = combo["config_file"]
         combo_env["H026_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H026_TOTAL_ROUNDS"] = str(combo["total_rounds"])
+        combo_env["H026_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", True) else "false"
         combo_env["H026_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo["card_system_is_newbie"] else "false"
         combo_env["H026_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H026_BATCH_CHILD"] = "1"
 
-        print(f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, " f"total_rounds={combo['total_rounds']}, " f"card_system_is_newbie={combo['card_system_is_newbie']} ===", flush=True)
+        print(
+            f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, " f"total_rounds={combo['total_rounds']}, " f"card_system_enabled={combo.get('card_system_enabled', True)}, " f"card_system_is_newbie={combo['card_system_is_newbie']} ===",
+            flush=True,
+        )
         result = subprocess.run(
             [sys.executable, os.path.abspath(__file__)],
             check=True,

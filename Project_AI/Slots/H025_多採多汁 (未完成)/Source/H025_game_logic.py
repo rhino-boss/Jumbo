@@ -59,20 +59,21 @@ def resolve_base_dir():
     file_value = globals().get("__file__")
     file_parent = Path(file_value).resolve().parent if file_value else None
     if file_parent is not None:
-        candidates.append(file_parent)
+        candidates.extend([file_parent, file_parent.parent])
 
     candidates.append(cwd)
     anchors = [cwd, *cwd.parents]
     if file_parent is not None:
         anchors.extend([file_parent, *file_parent.parents])
     for anchor in anchors:
-        candidates.extend(
-            [
-                anchor / "H025_多採多汁",
-                anchor / "Slots" / "H025_多採多汁",
-                anchor / "Project_AI" / "Slots" / "H025_多採多汁",
-            ]
-        )
+        search_roots = [anchor, anchor / "Slots", anchor / "Project_AI" / "Slots"]
+        for search_root in search_roots:
+            candidates.extend([
+                search_root / "H025_多採多汁",
+                search_root / "H025_多採多汁 (未完成)",
+            ])
+            if search_root.is_dir():
+                candidates.extend(search_root.glob("H025_多採多汁*"))
 
     checked = []
     seen = set()

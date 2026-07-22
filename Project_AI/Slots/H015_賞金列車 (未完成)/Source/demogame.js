@@ -72,12 +72,15 @@
     "speedRange", "speedValue", "normalBetBtn", "buyFeatureBtn", "debugModeInput", "languageSelect", "configSelect",
     "helpBtn", "resetBtn", "helpDialog", "closeHelpBtn", "helpContent", "helpSourceFrame", "rngList", "lineList",
     "spinResultList", "liveLogBody", "clearLogBtn", "reelRngInput", "setRngResetBtn", "previousStepBtn", "nextStepBtn",
-    "forceFgInput", "modeText", "featureStatus", "carryMultiValue", "spinMultiValue", "fgLeftPill", "fgLeftValue",
-    "cardRangeSelect", "gameId", "gameName"
+    "forceFgInput", "modeText", "featureStatus", "carryMultiValue", "fgLeftPill", "fgLeftValue",
+    "cardRangeSelect", "gameId", "gameName", "multiplierWindow"
   ].map((id) => [id, $(id)]));
+
+  let displayedMultiplierIndex = 0;
 
   function text(key) { return T[state.language][key] || T.en[key] || key; }
   function format(value, digits = 0) { return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: digits }); }
+  function formatBet(value) { return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function cumulativeChoice(cum) {
     const max = cum[cum.length - 1];
     if (!(max > 0)) return 0;
@@ -89,6 +92,37 @@
   function activeBet() { return BET_LEVELS[state.betIndex]; }
   function coinIn(mode = MODE_NORMAL) { return Box.default_coin_in * Box.normalbet * activeBet() * (mode === MODE_BUY ? Box.featurebuy : 1); }
   function payAmount(raw, multiplier) { return raw * multiplier * activeBet(); }
+
+  function multiplierIndex(value) {
+    const index = MULTIPLIERS.indexOf(Number(value));
+    return index < 0 ? 0 : index;
+  }
+
+  function renderMultiplierTrack(index = displayedMultiplierIndex, animate = false) {
+    displayedMultiplierIndex = Math.max(0, Math.min(index, MULTIPLIERS.length - 1));
+    const values = [-2, -1, 0, 1, 2].map((offset) => {
+      const target = displayedMultiplierIndex + offset;
+      if (target < 0) return MULTIPLIERS[MULTIPLIERS.length + target];
+      return MULTIPLIERS[target] ?? null;
+    });
+    el.multiplierWindow.classList.remove("roll-one");
+    el.multiplierWindow.innerHTML = values.map((value, slot) => {
+      const classes = ["multiplier-step", slot < 2 ? "is-previous" : "", slot === 2 ? "is-active" : ""].filter(Boolean).join(" ");
+      return `<span class="${classes}">${value == null ? "" : `x${value}`}</span>`;
+    }).join("");
+    if (animate) {
+      void el.multiplierWindow.offsetWidth;
+      el.multiplierWindow.classList.add("roll-one");
+    }
+  }
+
+  async function rollMultiplierTo(value) {
+    const target = Math.max(displayedMultiplierIndex, multiplierIndex(value));
+    while (displayedMultiplierIndex < target) {
+      renderMultiplierTrack(displayedMultiplierIndex + 1, true);
+      await new Promise((resolve) => setTimeout(resolve, Math.max(45, 150 / Number(el.speedRange.value || 1))));
+    }
+  }
 
   function generateBoard(tableId, forcedStops = null) {
     const board = Array.from({ length: ROWS }, () => Array(REELS).fill(99));
@@ -203,15 +237,17 @@
   function symbolMarkup(symbol, isGold) {
     if (symbol === 99) return "";
     const code = CODE[symbol] || `S${symbol}`;
-    return `<div class="symbol-wrap"><span class="symbol-code">${code}</span>${isGold ? '<span class="multi-badge">GOLD</span>' : ""}</div>`;
+    return `<div class="symbol-wrap"><span class="h015-glyph">${code}</span></div>`;
   }
 
-  function renderBoard(board, gold = [], hit = []) {
+  function renderBoard(board, gold = [], hit = [], options = {}) {
     el.board.style.gridTemplateColumns = `repeat(${REELS}, var(--cell-size, 74px))`;
     el.board.innerHTML = "";
     for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
       const cell = document.createElement("div"); const active = Box.score_area[row][reel];
-      cell.className = `cell${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${active ? "" : " peek-row"}`;
+      const code = CODE[board[row][reel]] || `S${board[row][reel]}`;
+      const symbolClass = `symbol-${code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
+      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
       if (!active) cell.style.visibility = "hidden";
       cell.innerHTML = symbolMarkup(board[row][reel], gold[row]?.[reel]); el.board.appendChild(cell);
     }
@@ -222,11 +258,12 @@
     el.lineList.innerHTML = step.wins.length ? step.wins.map((win) => `<div>${CODE[win.symbol]} · ${win.length} reels · ${win.ways} ways · ${format(win.unit * win.ways)}</div>`).join("") : `<div>${text("noWin")}</div>`;
     el.spinResultList.innerHTML = `<div>${text("cascade")} ${step.combo} · +${step.lightning} · x${step.multiplier} · ${format(step.win)}</div>`;
   }
-  function showSnapshot(index) {
+  function showSnapshot(index, syncMultiplier = true) {
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1)); const step = state.snapshots[state.snapshotIndex];
     renderBoard(step.board, step.gold, step.hit); renderRng(step.stops); renderWins(step);
-    el.carryMultiValue.textContent = step.combo; el.spinMultiValue.textContent = `x${step.multiplier}`;
+    el.carryMultiValue.textContent = step.combo;
+    if (syncMultiplier) renderMultiplierTrack(multiplierIndex(step.multiplier));
     el.previousStepBtn.disabled = state.snapshotIndex <= 0; el.nextStepBtn.disabled = state.snapshotIndex >= state.snapshots.length - 1;
   }
   function addLog(message) {
@@ -235,18 +272,53 @@
   }
 
   function updateStats() {
-    el.balanceValue.textContent = format(state.balance); el.betValue.textContent = format(coinIn()); el.winValue.textContent = format(state.lastWin);
+    el.balanceValue.textContent = format(state.balance); el.betValue.textContent = formatBet(activeBet()); el.winValue.textContent = format(state.lastWin);
     el.roundCountValue.textContent = format(state.rounds); el.rtpValue.textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
     el.hitRateValue.textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
     el.fgTriggerValue.textContent = state.normalRounds ? `${(state.naturalFg / state.normalRounds * 100).toFixed(3)}% (${state.naturalFg})` : "0.000% (0)";
-    el.maxMultiplierValue.textContent = `x${state.maxMultiplier}`; el.betBtn.textContent = `${text("bet")} ${activeBet()}`;
+    el.maxMultiplierValue.textContent = `x${state.maxMultiplier}`; el.betBtn.textContent = `${text("bet")} ${formatBet(activeBet())}`;
     el.fgLeftPill.classList.toggle("hidden", state.fg.remaining <= 0); el.fgLeftValue.textContent = `${state.fg.remaining}/${state.fg.total}`;
     el.modeText.textContent = state.fg.remaining ? text("free") : text("base"); el.spinBtn.textContent = state.fg.remaining ? text("nextFg") : text("spin");
   }
 
+  async function animateReels(spin) {
+    const initial = spin.steps[0];
+    if (!initial) return;
+    const frames = Math.max(2, Math.round(8 / Number(el.speedRange.value || 1)));
+    for (let frame = 0; frame < frames; frame++) {
+      const rollingBoard = clone(initial.board);
+      const rollingGold = clone(initial.gold);
+      for (let reel = 0; reel < REELS; reel++) {
+        const activeRows = [];
+        for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) activeRows.push(row);
+        const offset = (frames - frame + reel) % activeRows.length;
+        for (let position = 0; position < activeRows.length; position++) {
+          const targetRow = activeRows[position];
+          const sourceRow = activeRows[(position + offset) % activeRows.length];
+          rollingBoard[targetRow][reel] = initial.board[sourceRow][reel];
+          rollingGold[targetRow][reel] = initial.gold[sourceRow][reel];
+        }
+      }
+      renderBoard(rollingBoard, rollingGold, [], { spinning: true });
+      await new Promise((resolve) => setTimeout(resolve, 55));
+    }
+  }
+
   async function animateSpin(spin) {
     state.snapshots = spin.steps; state.snapshotIndex = -1;
-    for (let i = 0; i < spin.steps.length; i++) { showSnapshot(i); await delay(); }
+    const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
+    renderMultiplierTrack(startIndex);
+    el.carryMultiValue.textContent = "0";
+    await animateReels(spin);
+    if (spin.steps[0]) {
+      renderBoard(spin.steps[0].board, spin.steps[0].gold);
+      await delay();
+    }
+    for (let i = 0; i < spin.steps.length; i++) {
+      showSnapshot(i, false);
+      await rollMultiplierTo(spin.steps[i].multiplier);
+      await delay();
+    }
     renderBoard(spin.board, spin.gold); renderRng(spin.stops);
   }
 
@@ -324,11 +396,11 @@
   }
 
   function renderHelp(markdown) {
-    const lines = markdown.split(/\r?\n/); let html = ""; let inTable = false;
+    const lines = markdown.split(/\r?\n/); let html = ""; let inTable = false; let sectionOpen = false;
     const closeTable = () => { if (inTable) { html += "</div>"; inTable = false; } };
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (/^## /.test(line)) { closeTable(); html += `<section class="help-section"><h3 class="help-section-title">${line.slice(3)}</h3>`; }
+      if (/^## /.test(line)) { closeTable(); if (sectionOpen) html += "</section>"; html += `<section class="help-section"><h3 class="help-section-title">${line.slice(3)}</h3>`; sectionOpen = true; }
       else if (/^### /.test(line)) { closeTable(); html += `<h4 class="help-group-title">${line.slice(4)}</h4>`; }
       else if (line.startsWith("|")) {
         const cells = line.split("|").slice(1, -1).map((v) => v.trim());
@@ -339,7 +411,7 @@
         if (value) html += `<div class="help-payout-item">${value.replace(/\[([^\]]+)\]/g, "<b>$1</b>")}</div>`;
       } else if (line === "---") closeTable();
     }
-    closeTable(); el.helpContent.innerHTML = html || `<div class="help-load-error">${text("loadFail")}</div>`;
+    closeTable(); if (sectionOpen) html += "</section>"; el.helpContent.innerHTML = html || `<div class="help-load-error">${text("loadFail")}</div>`;
   }
 
   async function loadHelp() {
@@ -363,11 +435,11 @@
     state.rounds = state.normalRounds = state.totalBet = state.totalWin = state.hitRounds = state.naturalFg = state.lastWin = 0;
     state.maxMultiplier = 1; state.snapshots = []; state.snapshotIndex = -1; state.log = [];
     el.liveLogBody.innerHTML = el.lineList.innerHTML = el.spinResultList.innerHTML = el.rngList.innerHTML = "";
-    const initial = generateBoard(0); renderBoard(initial.board, normalizeGold(initial.board)); el.messageBar.textContent = text("resetDone"); updateStats(); updateControls();
+    const initial = generateBoard(0); renderBoard(initial.board, normalizeGold(initial.board)); renderMultiplierTrack(0); el.messageBar.textContent = text("resetDone"); updateStats(); updateControls();
   }
 
   function buildBetMenu() {
-    el.betMenu.innerHTML = BET_LEVELS.map((v, i) => `<button type="button" data-index="${i}">${v}</button>`).join("");
+    el.betMenu.innerHTML = BET_LEVELS.map((v, i) => `<button type="button" data-index="${i}">${formatBet(v)}</button>`).join("");
     el.betMenu.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => { state.betIndex = Number(button.dataset.index); el.betMenu.classList.add("hidden"); updateStats(); }));
   }
 
@@ -385,5 +457,5 @@
   el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
 
   document.title = `${Box.game_id} ${Box.english_name} — Demo`; el.gameId.textContent = Box.game_id; el.configSelect.disabled = true; el.configSelect.title = text("configFixed");
-  buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderRng(initial.stops); applyLanguage();
+  buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();

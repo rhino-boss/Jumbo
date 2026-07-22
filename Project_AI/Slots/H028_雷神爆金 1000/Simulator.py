@@ -30,12 +30,16 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8},
-    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**7},
-    # {"config_file": "config_92B.js", "bet_mode": 2, "total_rounds": 10**7},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))

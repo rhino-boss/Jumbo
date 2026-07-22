@@ -28,9 +28,10 @@ CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 # H026-style batch runner. Keep False for an ordinary single run.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_is_newbie": False, "card_system_enabled": True, "output_report": True},
-    # {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_is_newbie": True, "card_system_enabled": False, "output_report": True},
+    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": True, "card_system_enabled": True, "output_report": True},
+    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True, "output_report": True},
+    {"config_file": "config.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False, "card_system_enabled": True, "output_report": True},
 ]
 
 # H015's card filtering can be memory-heavy. Keep the H026-style configurable
@@ -94,10 +95,7 @@ def resolve_base_dir():
             continue
         if "H015_BOX_DATA" in header or '"parsheet_id": "H0151"' in header:
             return candidate
-    raise FileNotFoundError(
-        f"Cannot locate H015 base directory containing a valid {CONFIG_FILE}. "
-        "Set H015_BASE_DIR to the H015 project folder when running outside the workspace."
-    )
+    raise FileNotFoundError(f"Cannot locate H015 base directory containing a valid {CONFIG_FILE}. " "Set H015_BASE_DIR to the H015 project folder when running outside the workspace.")
 
 
 BASE_DIR = resolve_base_dir()
@@ -870,9 +868,7 @@ def run_simulation(total_rounds=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_M
     if threads <= 0:
         raise ValueError("THREADS must be greater than 0")
     print(
-        f"Starting H015 simulation | config={CONFIG_FILE} | mode={_mode_name(bet_mode)} | "
-        f"rounds={total_rounds:,} | threads={min(threads, total_rounds)} | "
-        f"card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
+        f"Starting H015 simulation | config={CONFIG_FILE} | mode={_mode_name(bet_mode)} | " f"rounds={total_rounds:,} | threads={min(threads, total_rounds)} | " f"card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
         flush=True,
     )
     print("Compiling Numba core...", flush=True)
@@ -998,7 +994,7 @@ def _build_summary_rows(result, bet_mode, bet_multi):
         ("rtp_total", pay_total / coin_in_total),
         ("rtp_bg", pay_bg / coin_in_total),
         ("rtp_fg", pay_fg / coin_in_total),
-        ("standard_deviation", standard_deviation),
+        ("volatility_std", standard_deviation),
         ("standard_error", standard_deviation / math.sqrt(rounds)),
         ("hit_rate_bg", summary[SUMMARY_IDX["hit_bg_spins"]] / rounds),
         ("fg_trigger_rate", fg_triggers / rounds),

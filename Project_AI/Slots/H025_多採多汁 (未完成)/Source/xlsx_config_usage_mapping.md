@@ -21,6 +21,13 @@
 3. 四份活頁簿可透過 `update_config.bat` 產生對應的 `config_92A.js`、`config_92B.js`、`config_94A.js`、`config_94B.js`。
 4. Excel 內原有 H026 字樣是來源舊代號；本專案不改寫原始活頁簿內容與格式。
 
+## 卡片系統
+
+- `Card` 工作表的 `Base Game` 與 `Free Game` 區段會寫入 `card_system`。
+- `Weight 1` 對應新手，`Weight 2` 對應老手；`FG Trigger` 會轉成 `free_game` 類型，其餘 `(min, max]` 轉成倍數區間卡。
+- `Buy Feature` 的 `Weight 1` 會保留在 `oldhand.buy_feature.weight_fg`，目前 H025 Simulator 的正式執行模式仍為 Normal Bet。
+- Config 預設 `retry_limit` 為 `5000`；卡片條件使用 `(min, max]` 判定。
+
 ## 產生與驗證
 
 ```powershell

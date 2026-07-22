@@ -1862,7 +1862,7 @@
         <section id="credit-bar" aria-label="Player values">
           <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
               id="balanceValue">10,000</span></div>
-          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
           <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
         </section>
 
@@ -2118,7 +2118,8 @@
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
     function toMoney(value) { return Number(value) * DENOM; }
     function formatMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-    function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatBetMoney(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function formatPercent(rate) { return `${(Number(rate) * 100).toFixed(2)}%`; }
     function getBetMoney() { return BET_OPTIONS_MONEY[state.betIndex] || BET_OPTIONS_MONEY[0]; }
     function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
@@ -2286,7 +2287,7 @@
       updateSessionCards();
       updateSpinButtonState();
       updateBetMenuSelection();
-      writeMessage(`Bet ${getSelectedBetCostMoney().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      writeMessage(`Bet ${formatBetMoney(getSelectedBetCostMoney())}`);
     }
 
     function renderBetMenu() {
@@ -2296,7 +2297,7 @@
         option.type = "button";
         option.className = "bet-option";
         option.setAttribute("role", "option");
-        option.textContent = amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        option.textContent = formatBetMoney(amount);
         option.addEventListener("click", (event) => {
           event.stopPropagation();
           setBetIndex(index);
@@ -3284,7 +3285,7 @@
       setText(balanceValueEl, formatDisplayMoney(state.displayBalance));
       setText(betValueEl, formatDisplayMoney(coinIn(activeBetMode)));
       setText(winValueEl, formatDisplayMoney(state.displayWin));
-      setText(betBtn, `Bet ${getSelectedBetCostMoney().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+      setText(betBtn, `Bet ${formatBetMoney(getSelectedBetCostMoney())}`);
       setText(roundCountValueEl, state.roundCount.toLocaleString("en-US"));
       setText(rtpValueEl, formatPercent(state.totalBet > 0 ? state.totalWin / state.totalBet : 0));
       setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
@@ -3802,6 +3803,7 @@
     }
   </script>
   <script src="./Source/h027_demogame.js"></script>
+  <script src="../help_ui_standardizer.js"></script>
 </body>
 
 </html>

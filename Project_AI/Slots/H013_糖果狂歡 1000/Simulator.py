@@ -20,19 +20,27 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 # Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
-CONFIG_FILE = "config.js"
+CONFIG_FILE = "config_92.js"
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
+CARD_SYSTEM_ENABLED = True  # True: use card system when config supports it; False: force it off.
 CARD_SYSTEM_IS_NEWBIE = False  # Reserved for H026-compatible settings; H013 config currently has no card system.
 
 # Batch runs. Edit this list directly when you want to run a custom set once.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_is_newbie": False},
-    # {"config_file": "config.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 OUTPUT_REPORT = True
@@ -92,10 +100,7 @@ def resolve_base_dir():
             continue
         if "H013_BOX_DATA" in header or '"parsheet_id": "H0131"' in header:
             return candidate
-    raise FileNotFoundError(
-        f"Cannot locate H013 base directory containing a valid {CONFIG_FILE}. "
-        "Set H013_BASE_DIR to the H013 project folder when running outside the workspace."
-    )
+    raise FileNotFoundError(f"Cannot locate H013 base directory containing a valid {CONFIG_FILE}. " "Set H013_BASE_DIR to the H013 project folder when running outside the workspace.")
 
 
 BASE_DIR = resolve_base_dir()
@@ -105,6 +110,7 @@ SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 TOTAL_ROUNDS = int(os.environ.get("H013_TOTAL_ROUNDS", TOTAL_ROUNDS))
 BET_MULTI = int(os.environ.get("H013_BET_MULTI", BET_MULTI))
 BET_MODE = int(os.environ.get("H013_BET_MODE", BET_MODE))
+CARD_SYSTEM_ENABLED = parse_env_bool("H013_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
 CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H013_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
 RUN_ALL_COMBINATIONS = parse_env_bool("H013_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
 BATCH_COMBINATIONS = list(BATCH_RUNS)
@@ -117,13 +123,69 @@ RUN_SINGLE_SPIN_DEBUG = parse_env_bool("H013_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_
 
 THRESHOLD_RECORD = np.asarray(
     [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-        15, 20, 25, 30, 35, 40, 45, 50,
-        60, 70, 80, 90, 100, 120, 140, 160, 180,
-        200, 250, 300, 350, 400, 450, 500, 550, 600, 650,
-        700, 750, 800, 850, 900, 950, 1000,
-        2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
-        20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35,
+        40,
+        45,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        120,
+        140,
+        160,
+        180,
+        200,
+        250,
+        300,
+        350,
+        400,
+        450,
+        500,
+        550,
+        600,
+        650,
+        700,
+        750,
+        800,
+        850,
+        900,
+        950,
+        1000,
+        2000,
+        3000,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+        20000,
+        30000,
+        40000,
+        50000,
+        60000,
+        70000,
+        80000,
+        90000,
+        100000,
         9999999,
     ],
     dtype=np.float64,
@@ -142,7 +204,7 @@ PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])
 GAME_VERSION = str(CFG["game_version"])
 CARD_SYSTEM_RAW = CFG.get("card_system", {})
-CARD_SYSTEM_ENABLED = bool(CARD_SYSTEM_RAW.get("enabled", False))
+CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM_RAW.get("enabled", False))
 
 MODE_NORMALBET = int(CFG["mode_normalbet"])
 MODE_EXTRABET = int(CFG["mode_extrabet"])
@@ -177,9 +239,12 @@ WEIGHT_TABLE_NORMAL = np.asarray(CFG["weight_table_normal_bet"], dtype=np.int64)
 WEIGHT_TABLE_EXTRA = np.asarray(CFG["weight_table_extra_bet"], dtype=np.int64)
 MULTI_WEIGHTS = np.asarray(
     [
-        CFG["weight_multiplier_fg_low"], CFG["weight_multiplier_fg_high"],
-        CFG["weight_multiplier_fb_low"], CFG["weight_multiplier_fb_high"],
-        CFG["weight_multiplier_sb_low"], CFG["weight_multiplier_sb_high"],
+        CFG["weight_multiplier_fg_low"],
+        CFG["weight_multiplier_fg_high"],
+        CFG["weight_multiplier_fb_low"],
+        CFG["weight_multiplier_fb_high"],
+        CFG["weight_multiplier_sb_low"],
+        CFG["weight_multiplier_sb_high"],
     ],
     dtype=np.int64,
 )
@@ -434,9 +499,7 @@ def _simulate_chunk(rounds, mode, bet_multi):
                     retriggers += 1
 
                 multiplier = _draw_multiplier(profile + (1 if is_high else 0), _count_symbol(preview, C2))
-                spin_pay, cascades = _cascade(
-                    fg_table, fg_board, fg_stops, multiplier * bet_multi, 1, True, hits, pays, eliminates
-                )
+                spin_pay, cascades = _cascade(fg_table, fg_board, fg_stops, multiplier * bet_multi, 1, True, hits, pays, eliminates)
                 fg_pay += spin_pay
                 fg_spins += 1
                 fg_cascades += cascades
@@ -488,9 +551,7 @@ def _run_parallel(total_rounds, threads, mode, bet_multi):
     hits = sum((item[1] for item in results), np.zeros((2, SYMBOL_COUNT, 3)))
     pays = sum((item[2] for item in results), np.zeros((2, SYMBOL_COUNT, 3)))
     eliminates = sum((item[3] for item in results), np.zeros((2, SYMBOL_COUNT, 3)))
-    multiplier_line = sum(
-        (item[4] for item in results), np.zeros((3, THRESHOLD_RECORD.shape[0]))
-    )
+    multiplier_line = sum((item[4] for item in results), np.zeros((3, THRESHOLD_RECORD.shape[0])))
     return stats, hits, pays, eliminates, multiplier_line, time.perf_counter() - started
 
 
@@ -528,7 +589,7 @@ def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, durat
         ("Average BG Cascades", _safe_div(stats[S_BG_CASCADES], rounds), ""),
         ("Average FG Cascades", _safe_div(stats[S_FG_CASCADES], fg_spins), ""),
         ("Max Win", _safe_div(stats[S_MAX_WIN], coin_in), "x Bet"),
-        ("Standard Deviation", math.sqrt(variance), ""),
+        ("volatility_std", math.sqrt(variance), ""),
     ]
     df_base = pd.DataFrame(base_rows, columns=["Index", "Value", "Value2"])
 
@@ -613,16 +674,13 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     if total_round <= 0 or bet_multi <= 0 or threads <= 0:
         raise ValueError("total_round, bet_multi, and threads must be positive")
     print(
-        f"Starting H013 simulation | config={CONFIG_FILE} | mode={format_bet_mode_label(bet_mode)} | "
-        f"rounds={total_round} | threads={threads} | card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
+        f"Starting H013 simulation | config={CONFIG_FILE} | mode={format_bet_mode_label(bet_mode)} | " f"rounds={total_round} | threads={threads} | card={'on' if CARD_SYSTEM_ENABLED else 'off'}",
         flush=True,
     )
     print("Compiling Numba core...", flush=True)
     _simulate_chunk(1, bet_mode, bet_multi)
     print("Numba ready. Simulation running...", flush=True)
-    stats, hits, pays, eliminates, multiplier_line, duration = _run_parallel(
-        total_round, threads, bet_mode, bet_multi
-    )
+    stats, hits, pays, eliminates, multiplier_line, duration = _run_parallel(total_round, threads, bet_mode, bet_multi)
     coin_in = DEFAULT_COIN_IN * BET_FACTORS[bet_mode] * bet_multi
     return stats, hits, pays, eliminates, multiplier_line, duration, coin_in
 
@@ -708,8 +766,7 @@ def run_single_spin_debug(bet_mode=BET_MODE, bet_multi=BET_MULTI):
         threads=1,
     )
     print(
-        f"Single spin result: coin_in={coin_in}, total_win={stats[S_TOTAL_WIN]}, "
-        f"scatter_triggers={int(stats[S_FG_TRIGGER])}, duration={duration:.4f}s",
+        f"Single spin result: coin_in={coin_in}, total_win={stats[S_TOTAL_WIN]}, " f"scatter_triggers={int(stats[S_FG_TRIGGER])}, duration={duration:.4f}s",
         flush=True,
     )
 
@@ -722,13 +779,12 @@ def run_all_combinations():
         combo_env["H013_CONFIG_FILE"] = str(combo["config_file"])
         combo_env["H013_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H013_TOTAL_ROUNDS"] = str(combo["total_rounds"])
+        combo_env["H013_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", True) else "false"
         combo_env["H013_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", False) else "false"
         combo_env["H013_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H013_BATCH_CHILD"] = "1"
         print(
-            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, "
-            f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, "
-            f"card_system_is_newbie={combo.get('card_system_is_newbie', False)} ===",
+            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, " f"card_system_enabled={combo.get('card_system_enabled', True)}, " f"card_system_is_newbie={combo.get('card_system_is_newbie', False)} ===",
             flush=True,
         )
         result = subprocess.run(
