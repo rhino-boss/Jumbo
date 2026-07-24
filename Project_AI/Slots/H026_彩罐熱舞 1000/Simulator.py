@@ -28,18 +28,21 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
-    # # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False}, # Test
-    # # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False}, # Test
-    # # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False}, # ?
+    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
     # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
     # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
     # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR 1
-    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR 1
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
     # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
     # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
     # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
@@ -48,8 +51,7 @@ BATCH_RUNS = [
     # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 
 
@@ -1192,17 +1194,17 @@ def log_multi_line(record_data, scene_idx, score, coin_in):
 
 
 @njit(nogil=True)
-def log_round_multiplier_lines(record_data, pay_bg, pay_fg, pay_total, triggered_bg_fg, coin_in):
+def log_round_multiplier_lines(record_data, pay_bg, pay_fg, pay_total, triggered_bg_fg, multiplier_line_coin_in):
     if triggered_bg_fg == 1:
         if pay_fg > 0:
-            log_multi_line(record_data, OUTPUT_FG, pay_fg, coin_in)
-            log_multi_line(record_data, OUTPUT_OA, pay_fg, coin_in)
+            log_multi_line(record_data, OUTPUT_FG, pay_fg, multiplier_line_coin_in)
+            log_multi_line(record_data, OUTPUT_OA, pay_fg, multiplier_line_coin_in)
         return
 
-    log_multi_line(record_data, OUTPUT_BG, pay_bg, coin_in)
+    log_multi_line(record_data, OUTPUT_BG, pay_bg, multiplier_line_coin_in)
     if pay_fg > 0:
-        log_multi_line(record_data, OUTPUT_FG, pay_fg, coin_in)
-    log_multi_line(record_data, OUTPUT_OA, pay_total, coin_in)
+        log_multi_line(record_data, OUTPUT_FG, pay_fg, multiplier_line_coin_in)
+    log_multi_line(record_data, OUTPUT_OA, pay_total, multiplier_line_coin_in)
 
 
 @njit(nogil=True)
@@ -1360,6 +1362,7 @@ def run_free_game_session(
     free_spins,
     bet_multi,
     coin_in,
+    multiplier_line_coin_in,
     board,
     board_initial,
     gold_mask,
@@ -1440,7 +1443,7 @@ def run_free_game_session(
             remaining_freespin = min(remaining_freespin + extra_spins, FG_SPIN_CAP)
             record_data[R_ALL, RA_RE_TRIGGER] += 1
 
-    interval_idx = get_multiplier_range_bucket(pay_fg, coin_in)
+    interval_idx = get_multiplier_range_bucket(pay_fg, multiplier_line_coin_in)
     record_data[R_FG_INTERVAL_SPIN_CNT, interval_idx] += fg_spin_count
     record_data[R_FG_INTERVAL_HIT_CNT, interval_idx] += fg_hit_count
     record_data[R_FG_FINAL_MULTI_BUCKET, get_fg_final_multiplier_bucket(fg_multiplier_sum)] += 1
@@ -1583,6 +1586,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                         free_spins,
                         bet_multi,
                         coin_in,
+                        card_system_coin_in,
                         board,
                         board_initial,
                         gold_mask,
@@ -1620,7 +1624,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
             round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
             round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
 
-            log_round_multiplier_lines(round_record, pay_bg, pay_fg, pay_total, triggered_bg_fg, coin_in)
+            log_round_multiplier_lines(round_record, pay_bg, pay_fg, pay_total, triggered_bg_fg, card_system_coin_in)
 
             merge_round_record(record_data, round_record)
             continue
@@ -1707,6 +1711,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                                 free_spins,
                                 bet_multi,
                                 coin_in,
+                                card_system_coin_in,
                                 board,
                                 board_initial,
                                 gold_mask,
@@ -1736,6 +1741,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                             free_spins,
                             bet_multi,
                             coin_in,
+                            card_system_coin_in,
                             board,
                             board_initial,
                             gold_mask,
@@ -1825,6 +1831,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
                     free_spins,
                     bet_multi,
                     coin_in,
+                    card_system_coin_in,
                     board,
                     board_initial,
                     gold_mask,
@@ -1876,7 +1883,7 @@ def simulator_chunk(record_data, total_round, bet_mode, bet_multi, coin_in, card
         round_record[R_ALL, RA_X_SUM] += int(pay_x * 1000000)
         round_record[R_ALL, RA_X_SQUARE] += int((pay_x * pay_x) * 1000000)
 
-        log_round_multiplier_lines(round_record, pay_bg, pay_fg, pay_total, triggered_bg_fg, coin_in)
+        log_round_multiplier_lines(round_record, pay_bg, pay_fg, pay_total, triggered_bg_fg, card_system_coin_in)
 
         merge_round_record(record_data, round_record)
 
@@ -2169,6 +2176,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         bet_mode_label = "Extra Bet"
     elif bet_mode == MODE_FEATUREBUY:
         bet_mode_label = "Feature Buy"
+    multiplier_line_coin_in = int(calc_card_system_coin_in(bet_mode, bet_multi))
 
     base_rows = [
         ("game_id", GAME_ID, ""),
@@ -2176,6 +2184,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("bet_mode", bet_mode_label, ""),
         ("bet_multi", bet_multi, ""),
         ("coin_in", coin_in, ""),
+        ("multiplier_line_basis", "normal_bet", ""),
+        ("multiplier_line_coin_in", multiplier_line_coin_in, ""),
         ("total_rounds", f"{total_round:,}", ""),
         ("threads", threads, ""),
         ("duration_sec", f"{duration:.2f}s", ""),
