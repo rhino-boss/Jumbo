@@ -79,7 +79,7 @@ VALIDATOR_HEADER_PATTERNS = {
 # ==================== 🎰 模擬器設定 ====================
 GAMES_ROOT = Path("/root/Simulator")  # 每個子資料夾＝一個遊戲，例如 H026_彩罐熱舞
 BET_MODES = {"0": "Normal Bet", "1": "Extra Bet", "2": "Feature Buy"}
-MAX_ROUNDS = int(os.environ.get("MAX_ROUNDS", "20000000"))
+MAX_ROUNDS = int(os.environ.get("MAX_ROUNDS", "1000000000"))
 MAX_BATCH_COMBINATIONS = 20
 SUMMARY_LINE_RE = re.compile(r"^\* .+$", re.MULTILINE)
 REPORT_LINE_RE = re.compile(r"^Report: (.+)$", re.MULTILINE)
@@ -110,6 +110,24 @@ def find_game_by_id(game_id: str) -> tuple[str, Path] | None:
 
 def discover_configs(game_dir: Path) -> list[str]:
     return [f.stem[len("config_") :] for f in sorted(game_dir.glob("config_*.js"))]
+
+
+def get_config_math_version(game_dir: Path, config: str) -> str | None:
+    """從 config JS 讀取數學版本，優先採用 Excel 來源版本。"""
+    config_path = game_dir / f"config_{config}.js"
+    try:
+        content = config_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None
+
+    for key in ("excel_version", "game_version", "version"):
+        match = re.search(
+            rf"""["']{re.escape(key)}["']\s*:\s*["']([^"']+)["']""",
+            content,
+        )
+        if match:
+            return match.group(1).strip()
+    return None
 
 
 def build_batch_template(game_name: str, configs: list[str]) -> str:
@@ -247,7 +265,8 @@ ROUNDS_PRESETS = [
     ("10 萬", 100_000),
     ("100 萬", 1_000_000),
     ("1000 萬", 10_000_000),
-    ("2000 萬（上限）", 20_000_000),
+    ("1 億", 100_000_000),
+    ("10 億（上限）", 1_000_000_000),
 ]
 
 MENTION_WINDOW_SECONDS = 180  # 群組裡 @機器人 一次後，3 分鐘內符合條件的內容都會自動處理
@@ -1178,8 +1197,19 @@ def build_game_keyboard(stage: str = "game") -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 
-def build_config_keyboard(configs: list[str], include_batch: bool = False) -> InlineKeyboardMarkup:
-    rows = [[InlineKeyboardButton(f"config_{config}", callback_data=f"sim:config:{config}")] for config in configs]
+def build_config_keyboard(game_dir: Path, configs: list[str], include_batch: bool = False) -> InlineKeyboardMarkup:
+    rows = []
+    for config in configs:
+        math_version = get_config_math_version(game_dir, config)
+        version_label = math_version or "未知"
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    f"config_{config}｜數學版本 {version_label}",
+                    callback_data=f"sim:config:{config}",
+                )
+            ]
+        )
     if include_batch:
         rows.append([InlineKeyboardButton("Batch (多組)", callback_data="sim:batchtemplate:x")])
     rows.append([build_abort_button()])
@@ -1336,7 +1366,10 @@ async def simulator_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
         state["game_name"] = game_name
         state["game_dir"] = str(game_dir)
-        await query.edit_message_text(f'步驟 2/5：請選擇 "{game_name}" 的配置', reply_markup=build_config_keyboard(configs, include_batch=True))
+        await query.edit_message_text(
+            f'步驟 2/5：請選擇 "{game_name}" 的配置',
+            reply_markup=build_config_keyboard(game_dir, configs, include_batch=True),
+        )
         return
 
     if stage == "config":

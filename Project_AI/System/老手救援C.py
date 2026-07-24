@@ -1,32 +1,28 @@
 """老手救援 C 模擬器。
 
-目前提供 H026 遊戲 Adapter：
+目前使用 Fixed Weight 倍率線型：
 
-* 每個自然 Spin 直接使用 H026 Simulator，且卡片系統保持開啟。
-* 前 200 轉使用 H026 newbie Profile，201 轉後使用 oldhand Profile。
-* 救援結果固定為 FG，使用 H026 BG／FG 盤面邏輯重骰至指定 Tier。
-* 遊戲層透過 GameAdapter 隔離；新增遊戲時只需實作 Adapter 並加入
-  GAME_ADAPTERS，不需修改老手救援規則。
+* 自然 Spin 依倍率區間與 Fixed Weight 抽樣。
+* 自然 FG 以獨立機率抽樣；預設 1%，可由 ``--natural-fg-rate`` 修改。
+* 救援固定為 FG，倍率直接落在指定 Tier 區間。
+* 遊戲層透過 GameAdapter 隔離，日後可加入其他獨立遊戲模型。
 
 預設每 50 轉檢查一次。這是尚未定案的模擬參數，可由
 ``--check-interval`` 修改。
 
 範例：
 
-    python 老手救援C.py --game H026 --players 1000 --spins 1000
-    python 老手救援C.py --game H026 --config config_94A.js --players 100
+    python 老手救援C.py --players 1000 --spins 1000
+    python 老手救援C.py --players 100 --natural-fg-rate 0.01
 """
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
-import os
 import sys
 import time
 from abc import ABC, abstractmethod
 from collections import Counter
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -34,14 +30,32 @@ from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
-from numba import njit
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_AI_DIR = SCRIPT_DIR.parent
+def _locate_script_dir() -> Path:
+    """定位本程式資料夾；避免 Jupyter 沿用其他檔案的 __file__。"""
+
+    candidates: list[Path] = []
+    try:
+        file_path = Path(__file__).resolve()
+        if file_path.name == "老手救援C.py":
+            candidates.append(file_path.parent)
+    except NameError:
+        pass
+
+    current = Path.cwd().resolve()
+    for base in (current, *current.parents):
+        candidates.extend((base / "Project_AI" / "System", base / "System", base))
+
+    for candidate in candidates:
+        if (candidate / "老手救援C.py").is_file():
+            return candidate.resolve()
+
+    raise FileNotFoundError("無法定位 Project_AI/System/老手救援C.py；請先將 Jupyter 工作目錄切到 2_Program")
+
+
+SCRIPT_DIR = _locate_script_dir()
 DEFAULT_REPORT_DIR = SCRIPT_DIR / "Record"
-H026_DIR = PROJECT_AI_DIR / "Slots" / "H026_彩罐熱舞 1000"
-H026_SIMULATOR = H026_DIR / "Simulator.py"
 
 NEWBIE_LAST_SPIN = 200
 
@@ -66,10 +80,68 @@ TIER_RANGES = {
     "T6": (10.0, 15.0),
 }
 
-
-@njit
-def _seed_numba(seed: int) -> None:
-    np.random.seed(seed)
+# Fixed Weight 只決定自然 Spin 倍率區間；
+# 是否觸發 FG 由獨立的可調機率決定。
+FIXED_WEIGHT_MULTIPLIER_CURVE = (
+    (-1.0, 0.0, 886736787),
+    (0.0, 1.0, 11694229),
+    (1.0, 2.0, 16256897),
+    (2.0, 3.0, 11555104),
+    (3.0, 4.0, 12298861),
+    (4.0, 5.0, 10019810),
+    (5.0, 6.0, 7927665),
+    (6.0, 7.0, 2020123),
+    (7.0, 8.0, 8363309),
+    (8.0, 9.0, 3070235),
+    (9.0, 10.0, 6145390),
+    (10.0, 15.0, 9801988),
+    (15.0, 20.0, 5837980),
+    (20.0, 25.0, 2443119),
+    (25.0, 30.0, 2129736),
+    (30.0, 35.0, 405781),
+    (35.0, 40.0, 951038),
+    (40.0, 45.0, 219578),
+    (45.0, 50.0, 1102108),
+    (50.0, 60.0, 428617),
+    (60.0, 70.0, 44267),
+    (70.0, 80.0, 189364),
+    (80.0, 90.0, 73075),
+    (90.0, 100.0, 137368),
+    (100.0, 120.0, 86777),
+    (120.0, 140.0, 21079),
+    (140.0, 160.0, 14053),
+    (160.0, 180.0, 12647),
+    (180.0, 200.0, 5621),
+    (200.0, 250.0, 5972),
+    (250.0, 300.0, 702),
+    (300.0, 350.0, 351),
+    (350.0, 400.0, 0),
+    (400.0, 450.0, 0),
+    (450.0, 500.0, 0),
+    (500.0, 550.0, 0),
+    (550.0, 600.0, 0),
+    (600.0, 650.0, 0),
+    (650.0, 700.0, 0),
+    (700.0, 750.0, 0),
+    (750.0, 800.0, 0),
+    (800.0, 850.0, 0),
+    (850.0, 900.0, 0),
+    (900.0, 950.0, 0),
+    (950.0, 1000.0, 351),
+    (1000.0, 2000.0, 0),
+    (2000.0, 3000.0, 0),
+    (3000.0, 4000.0, 0),
+    (4000.0, 5000.0, 0),
+    (5000.0, 6000.0, 0),
+    (6000.0, 7000.0, 0),
+    (7000.0, 8000.0, 0),
+    (8000.0, 9000.0, 0),
+    (9000.0, 10000.0, 0),
+    (10000.0, 20000.0, 0),
+    (20000.0, 30000.0, 0),
+    (30000.0, 100000.0, 0),
+    (100000.0, 999999.0, 0),
+)
 
 
 @dataclass(frozen=True)
@@ -96,13 +168,6 @@ class RescueDecision:
         return self.tier is not None
 
 
-@dataclass(frozen=True)
-class ForcedFGSample:
-    multiplier: float
-    target_attempts: int
-    bg_attempts: int
-
-
 class GameAdapter(ABC):
     """遊戲模擬介面；救援規則只依賴這個介面。"""
 
@@ -120,281 +185,99 @@ class GameAdapter(ABC):
     def metadata(self) -> dict[str, Any]:
         """回傳報表用遊戲設定。"""
 
-    def rescue_pool_rows(self) -> list[dict[str, Any]]:
+    def multiplier_curve_rows(self) -> list[dict[str, Any]]:
         return []
 
 
-@contextmanager
-def _temporary_environment(values: dict[str, str]):
-    previous = {key: os.environ.get(key) for key in values}
-    os.environ.update(values)
-    try:
-        yield
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
+class FixedWeightAdapter(GameAdapter):
+    game_key = "FIXED_WEIGHT"
 
-
-def _load_h026_module(config_file: str, is_newbie: bool) -> Any:
-    if not H026_SIMULATOR.exists():
-        raise FileNotFoundError(f"找不到 H026 Simulator：{H026_SIMULATOR}")
-    config_path = H026_DIR / config_file
-    if not config_path.exists():
-        raise FileNotFoundError(f"找不到 H026 config：{config_path}")
-
-    profile_name = "newbie" if is_newbie else "oldhand"
-    module_name = f"_oldhand_c_h026_{profile_name}_{config_path.stem}_{time.time_ns()}"
-    env = {
-        "H026_CONFIG_FILE": config_file,
-        "H026_CARD_SYSTEM_ENABLED": "true",
-        "H026_CARD_SYSTEM_IS_NEWBIE": "true" if is_newbie else "false",
-        "H026_RUN_ALL_COMBINATIONS": "false",
-        "H026_BET_MODE": "0",
-        "H026_TOTAL_ROUNDS": "1",
-    }
-    with _temporary_environment(env):
-        spec = importlib.util.spec_from_file_location(module_name, H026_SIMULATOR)
-        if spec is None or spec.loader is None:
-            raise ImportError(f"無法載入 H026 Simulator：{H026_SIMULATOR}")
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[module_name] = module
-        spec.loader.exec_module(module)
-    return module
-
-
-class _H026Runtime:
-    def __init__(self, module: Any, bet_mode: int, bet_multi: int):
-        self.module = module
-        self.bet_mode = int(bet_mode)
-        self.bet_multi = int(bet_multi)
-        self.coin_in = int(module.calc_coin_in(self.bet_mode, self.bet_multi))
-        self.card_system_coin_in = int(module.calc_card_system_coin_in(self.bet_mode, self.bet_multi))
-        self.record_buffer = np.zeros(module.RECORD_SIZE, dtype=np.int64)
-        self._scratch = self._create_scratch()
-
-    def _create_scratch(self) -> dict[str, np.ndarray]:
-        m = self.module
-        return {
-            "board": np.zeros(m.LAYOUT_SHAPE, np.int64),
-            "board_initial": np.zeros(m.LAYOUT_SHAPE, np.int64),
-            "gold_mask": np.zeros(m.LAYOUT_SHAPE, np.int64),
-            "multi_mask": np.zeros(m.LAYOUT_SHAPE, np.int64),
-            "hit_mask": np.zeros(m.LAYOUT_SHAPE, np.int64),
-            "spin_hits": np.zeros((3, m.SYMBOLS_COUNT), np.int64),
-            "spin_pay": np.zeros((3, m.SYMBOLS_COUNT), np.int64),
-            "spin_eliminate": np.zeros((3, m.SYMBOLS_COUNT), np.int64),
-            "gold_pos": np.zeros((m.DISPLAY_WINDOW_SIZE * m.REEL_NUM, 2), np.int64),
-            "keep_symbol": np.zeros(m.DISPLAY_WINDOW_SIZE, np.int64),
-            "keep_gold": np.zeros(m.DISPLAY_WINDOW_SIZE, np.int64),
-            "keep_multi": np.zeros(m.DISPLAY_WINDOW_SIZE, np.int64),
-            "next_above_idx": np.zeros(m.REEL_NUM, np.int64),
-            "spin_multiplier_seen": np.zeros(m.VALUE_MULTIPLIER_COUNT, np.int64),
-            "reel_stop_idx": np.zeros(m.REEL_NUM, np.int64),
-            "fg_record": np.zeros(m.RECORD_SIZE, np.int64),
-        }
-
-    def natural_spin(self) -> SpinOutcome:
-        m = self.module
-        self.record_buffer.fill(0)
-        result = m.simulator_chunk(
-            self.record_buffer,
-            1,
-            self.bet_mode,
-            self.bet_multi,
-            self.coin_in,
-            self.card_system_coin_in,
-        )
-        multiplier = float(result[m.R_ALL, m.RA_X_SUM]) / 1_000_000.0
-        triggered_fg = bool(result[m.R_ALL, m.RA_TRIGGER_FREEGAME] > 0)
-        return SpinOutcome(multiplier=multiplier, triggered_fg=triggered_fg)
-
-    def forced_fg(self, low: float, high: float, retry_limit: int) -> ForcedFGSample:
-        """用 H026 盤面與 FG 邏輯重骰到目標總倍數。"""
-
-        m = self.module
-        s = self._scratch
-        total_bg_attempts = 0
-        bg_retry_limit = max(1, int(getattr(m, "CARD_RETRY_LIMIT", retry_limit) or retry_limit))
-
-        for target_attempt in range(1, retry_limit + 1):
-            bg_result = None
-            for _ in range(bg_retry_limit):
-                total_bg_attempts += 1
-                candidate = m.run_spin(
-                    m.SCENE_BG,
-                    0,
-                    self.bet_multi,
-                    s["board"],
-                    s["board_initial"],
-                    s["gold_mask"],
-                    s["multi_mask"],
-                    s["hit_mask"],
-                    s["spin_hits"],
-                    s["spin_pay"],
-                    s["spin_eliminate"],
-                    s["gold_pos"],
-                    s["keep_symbol"],
-                    s["keep_gold"],
-                    s["keep_multi"],
-                    s["next_above_idx"],
-                    s["spin_multiplier_seen"],
-                    s["reel_stop_idx"],
-                )
-                if candidate[1] >= 3:
-                    bg_result = candidate
-                    break
-            if bg_result is None:
-                raise RuntimeError(f"H026 在 {bg_retry_limit} 次內無法產生 FG 觸發盤面")
-
-            s["fg_record"].fill(0)
-            free_spins = int(m.calc_free_spins(bg_result[1], 0))
-            pay_fg = int(
-                m.run_free_game_session(
-                    s["fg_record"],
-                    free_spins,
-                    self.bet_multi,
-                    self.coin_in,
-                    s["board"],
-                    s["board_initial"],
-                    s["gold_mask"],
-                    s["multi_mask"],
-                    s["hit_mask"],
-                    s["spin_hits"],
-                    s["spin_pay"],
-                    s["spin_eliminate"],
-                    s["gold_pos"],
-                    s["keep_symbol"],
-                    s["keep_gold"],
-                    s["keep_multi"],
-                    s["next_above_idx"],
-                    s["spin_multiplier_seen"],
-                )
-            )
-            multiplier = (float(bg_result[0]) + pay_fg) / self.coin_in
-            if low <= multiplier <= high:
-                return ForcedFGSample(
-                    multiplier=multiplier,
-                    target_attempts=target_attempt,
-                    bg_attempts=total_bg_attempts,
-                )
-
-        raise RuntimeError(
-            f"H026 無法在 {retry_limit} 次 FG 重骰內產生 {low:g}～{high:g}× 結果"
-        )
-
-
-class H026Adapter(GameAdapter):
-    game_key = "H026"
-
-    def __init__(
-        self,
-        config_file: str,
-        bet_mode: int,
-        bet_multi: int,
-        seed: int,
-        rescue_pool_size: int,
-        rescue_retry_limit: int,
-    ):
-        if bet_mode not in (0, 1):
-            raise ValueError("老手救援 C 目前只支援 H026 bet mode 0（Normal）或 1（Extra）")
-        self.config_file = config_file
-        self.bet_mode = int(bet_mode)
-        self.bet_multi = int(bet_multi)
+    def __init__(self, seed: int, natural_fg_rate: float):
+        if not 0.0 <= natural_fg_rate <= 1.0:
+            raise ValueError("--natural-fg-rate 必須介於 0 與 1")
         self.seed = int(seed)
-        self.rescue_pool_size = max(1, int(rescue_pool_size))
-        self.rescue_retry_limit = max(1, int(rescue_retry_limit))
+        self.natural_fg_rate = float(natural_fg_rate)
         self.rng = np.random.default_rng(self.seed)
-        self._rescue_pools: dict[str, list[ForcedFGSample]] = {}
 
-        print("載入 H026 newbie 卡片 Profile…", flush=True)
-        newbie_module = _load_h026_module(config_file, is_newbie=True)
-        print("載入 H026 oldhand 卡片 Profile…", flush=True)
-        oldhand_module = _load_h026_module(config_file, is_newbie=False)
-        if not bool(newbie_module.CARD_SYSTEM_ENABLED) or not bool(oldhand_module.CARD_SYSTEM_ENABLED):
-            raise RuntimeError("H026 config 的 card_system 未啟用")
+        curve = np.asarray(FIXED_WEIGHT_MULTIPLIER_CURVE, dtype=np.float64)
+        self._curve_lower = curve[:, 0]
+        self._curve_upper = curve[:, 1]
+        curve_weights = curve[:, 2]
+        self._curve_total_weight = int(curve_weights.sum())
+        self._curve_cdf = np.cumsum(curve_weights / curve_weights.sum())
+        bin_means = np.where(
+            self._curve_upper <= 0.0,
+            0.0,
+            (self._curve_lower + self._curve_upper) / 2.0,
+        )
+        self._curve_expected_rtp = float(np.sum(bin_means * curve_weights) / curve_weights.sum())
 
-        self.newbie = _H026Runtime(newbie_module, self.bet_mode, self.bet_multi)
-        self.oldhand = _H026Runtime(oldhand_module, self.bet_mode, self.bet_multi)
-        _seed_numba(self.seed)
+    def _sample_natural_multiplier(self) -> float:
+        draw = float(self.rng.random())
+        index = min(
+            int(np.searchsorted(self._curve_cdf, draw, side="right")),
+            len(self._curve_cdf) - 1,
+        )
+        lower = float(self._curve_lower[index])
+        upper = float(self._curve_upper[index])
+        return 0.0 if upper <= 0.0 else float(self.rng.uniform(lower, upper))
 
     def natural_spin(self, is_newbie: bool) -> SpinOutcome:
-        runtime = self.newbie if is_newbie else self.oldhand
-        return runtime.natural_spin()
-
-    def _ensure_rescue_pool(self, tier: str) -> None:
-        if tier in self._rescue_pools:
-            return
-        low, high = TIER_RANGES[tier]
-        print(f"建立 {tier} H026 FG 樣本池（{low:g}～{high:g}×）…", flush=True)
-        samples = [
-            self.oldhand.forced_fg(low, high, self.rescue_retry_limit)
-            for _ in range(self.rescue_pool_size)
-        ]
-        self._rescue_pools[tier] = samples
+        del is_newbie
+        multiplier = self._sample_natural_multiplier()
+        triggered_fg = bool(self.rng.random() < self.natural_fg_rate)
+        return SpinOutcome(multiplier=multiplier, triggered_fg=triggered_fg)
 
     def rescue_fg(self, tier: str) -> SpinOutcome:
         if tier not in TIER_RANGES:
             raise KeyError(f"未知 Tier：{tier}")
-        self._ensure_rescue_pool(tier)
-        samples = self._rescue_pools[tier]
-        sample = samples[int(self.rng.integers(0, len(samples)))]
-        return SpinOutcome(multiplier=sample.multiplier, triggered_fg=True)
+        low, high = TIER_RANGES[tier]
+        return SpinOutcome(
+            multiplier=float(self.rng.uniform(low, high)),
+            triggered_fg=True,
+        )
 
     def metadata(self) -> dict[str, Any]:
-        module = self.oldhand.module
         return {
             "game": self.game_key,
-            "game_id": str(getattr(module, "GAME_ID", "H026")),
-            "config": self.config_file,
-            "version": str(getattr(module, "CONFIG_VERSION", "")),
-            "bet_mode": self.bet_mode,
-            "bet_multi": self.bet_multi,
-            "coin_in": self.oldhand.coin_in,
-            "card_system": "on",
-            "newbie_profile_spins": f"1～{NEWBIE_LAST_SPIN}",
-            "oldhand_profile_spins": f"{NEWBIE_LAST_SPIN + 1}+",
-            "rescue_pool_size_per_tier": self.rescue_pool_size,
-            "rescue_retry_limit": self.rescue_retry_limit,
+            "natural_multiplier_model": "fixed-weight",
+            "fixed_weight_total": self._curve_total_weight,
+            "fixed_weight_expected_rtp_%": self._curve_expected_rtp * 100.0,
+            "natural_fg_rate_%": self.natural_fg_rate * 100.0,
+            "fg_and_multiplier_relation": "獨立抽樣",
+            "rescue_result": "Tier 區間內均勻抽樣 FG",
         }
 
-    def rescue_pool_rows(self) -> list[dict[str, Any]]:
+    def multiplier_curve_rows(self) -> list[dict[str, Any]]:
+        total = float(self._curve_total_weight)
         rows: list[dict[str, Any]] = []
-        for tier, samples in sorted(self._rescue_pools.items()):
-            low, high = TIER_RANGES[tier]
-            for index, sample in enumerate(samples, start=1):
-                rows.append(
-                    {
-                        "Tier": tier,
-                        "Sample": index,
-                        "Low_X": low,
-                        "High_X": high,
-                        "Result_X": sample.multiplier,
-                        "FG_Target_Attempts": sample.target_attempts,
-                        "BG_Attempts": sample.bg_attempts,
-                    }
-                )
+        for lower, upper, weight in FIXED_WEIGHT_MULTIPLIER_CURVE:
+            bin_mean = 0.0 if upper <= 0.0 else (lower + upper) / 2.0
+            rows.append(
+                {
+                    "Lower": lower,
+                    "Upper": upper,
+                    "Fixed Weight": weight,
+                    "Probability_%": weight / total * 100.0,
+                    "Assumed_Bin_Mean_X": bin_mean,
+                    "RTP_Contribution_%": bin_mean * weight / total * 100.0,
+                }
+            )
         return rows
 
 
 GameFactory = Callable[[argparse.Namespace], GameAdapter]
 
 
-def _create_h026(args: argparse.Namespace) -> GameAdapter:
-    return H026Adapter(
-        config_file=args.config,
-        bet_mode=args.bet_mode,
-        bet_multi=args.bet_multi,
+def _create_fixed_weight(args: argparse.Namespace) -> GameAdapter:
+    return FixedWeightAdapter(
         seed=args.seed,
-        rescue_pool_size=args.rescue_pool_size,
-        rescue_retry_limit=args.rescue_retry_limit,
+        natural_fg_rate=args.natural_fg_rate,
     )
 
 
 GAME_ADAPTERS: dict[str, GameFactory] = {
-    "H026": _create_h026,
+    "FIXED_WEIGHT": _create_fixed_weight,
 }
 
 
@@ -597,10 +480,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "D_NO_LONG_WINDOW": "D：長期資料未滿 500 轉",
         "NO_RESCUE": "未符合救援條件",
     }
-    rule_rows = [
-        {"Rule_ID": rule_id, "Description": rule_descriptions.get(rule_id, rule_id), "Count": count}
-        for rule_id, count in sorted(rule_counts.items())
-    ]
+    rule_rows = [{"Rule_ID": rule_id, "Description": rule_descriptions.get(rule_id, rule_id), "Count": count} for rule_id, count in sorted(rule_counts.items())]
 
     summary = {
         **adapter.metadata(),
@@ -629,7 +509,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "checkpoint_rows": checkpoints,
         "trigger_rows": triggers,
         "player_rows": players,
-        "rescue_pool_rows": adapter.rescue_pool_rows(),
+        "multiplier_curve_rows": adapter.multiplier_curve_rows(),
     }
 
 
@@ -663,22 +543,21 @@ def write_report(result: dict[str, Any], report_path: Path) -> Path:
         _safe_frame(result["checkpoint_rows"]).to_excel(writer, sheet_name="判定明細", index=False)
         _safe_frame(result["trigger_rows"]).to_excel(writer, sheet_name="觸發明細", index=False)
         _safe_frame(result["player_rows"]).to_excel(writer, sheet_name="玩家統計", index=False)
-        _safe_frame(result["rescue_pool_rows"]).to_excel(writer, sheet_name="FG樣本池", index=False)
+        _safe_frame(result["multiplier_curve_rows"]).to_excel(writer, sheet_name="倍率線型", index=False)
         _format_excel(writer)
     return report_path
 
 
 def _default_report_path(args: argparse.Namespace) -> Path:
     timestamp = datetime.now().strftime("%y%m%d%H%M%S")
-    config_tag = Path(args.config).stem
-    filename = f"老手救援C_{args.game}_{config_tag}_{args.players}p_{args.spins}s_{timestamp}.xlsx"
+    filename = f"老手救援C_{args.players}p_{args.spins}s_{timestamp}.xlsx"
     return Path(args.report_dir) / filename
 
 
 def print_summary(result: dict[str, Any]) -> None:
     summary = result["summary"]
     print("\n=== 老手救援 C 模擬結果 ===")
-    print(f"遊戲／設定：{summary['game']} / {summary['config']}")
+    print(f"遊戲模型：{summary['game']}")
     print(f"玩家／每人轉數：{summary['players']:,} / {summary['spins_per_player']:,}")
     print(f"判定次數：{summary['checkpoint_count']:,}")
     print(f"救援觸發次數：{summary['rescue_trigger_count']:,}")
@@ -691,16 +570,17 @@ def print_summary(result: dict[str, Any]) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="老手救援 C 模擬器（可切換遊戲 Adapter）")
-    parser.add_argument("--game", default="H026", choices=sorted(GAME_ADAPTERS), help="遊戲 Adapter")
-    parser.add_argument("--config", default="config_92A.js", help="遊戲設定檔；H026 使用 config_*.js")
-    parser.add_argument("--players", type=int, default=1000, help="模擬玩家數")
+    parser = argparse.ArgumentParser(description="老手救援 C Fixed Weight 模擬器")
+    parser.add_argument("--game", default="FIXED_WEIGHT", choices=sorted(GAME_ADAPTERS), help="遊戲模型")
+    parser.add_argument("--players", type=int, default=10000, help="模擬玩家數")
     parser.add_argument("--spins", type=int, default=1000, help="每位玩家付費 Spin 數")
-    parser.add_argument("--bet-mode", type=int, default=0, choices=(0, 1), help="H026：0 Normal、1 Extra")
-    parser.add_argument("--bet-multi", type=int, default=1, help="投注倍率")
+    parser.add_argument(
+        "--natural-fg-rate",
+        type=float,
+        default=0.01,
+        help="自然 Spin 進入 FG 的獨立機率，預設 0.01（1%）",
+    )
     parser.add_argument("--check-interval", type=int, default=50, help="老手期判定間隔，預設每 50 轉")
-    parser.add_argument("--rescue-pool-size", type=int, default=32, help="每個有使用 Tier 的 H026 FG 樣本數")
-    parser.add_argument("--rescue-retry-limit", type=int, default=5000, help="單筆 FG 樣本的目標區間重骰上限")
     parser.add_argument("--seed", type=int, default=20260721, help="亂數種子")
     parser.add_argument("--progress-every", type=int, default=100, help="每幾位玩家顯示進度；0 表示關閉")
     parser.add_argument("--report-dir", default=str(DEFAULT_REPORT_DIR), help="Excel 報表資料夾")
@@ -716,13 +596,17 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--spins 必須大於 0")
     if args.check_interval <= 0:
         raise ValueError("--check-interval 必須大於 0")
-    if args.bet_multi <= 0:
-        raise ValueError("--bet-multi 必須大於 0")
+    if not 0.0 <= args.natural_fg_rate <= 1.0:
+        raise ValueError("--natural-fg-rate 必須介於 0 與 1")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    if argv is None and Path(sys.argv[0]).stem == "ipykernel_launcher":
+        # 直接在 Jupyter / VS Code Interactive Window 執行整份程式時，
+        # 不解析 kernel 自動加入的 -f/--f=... 連線參數。
+        argv = []
+    args = parser.parse_args(argv)
     try:
         validate_args(args)
         adapter = GAME_ADAPTERS[args.game](args)
