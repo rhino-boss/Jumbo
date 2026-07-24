@@ -701,6 +701,7 @@
     .info-box,
     #credit-bar,
     #simulation-stats,
+    #batch-simulation,
     #play-panel,
     #bet-mode-panel,
     #rng-wrap,
@@ -864,6 +865,60 @@
       padding: 10px 14px;
     }
 
+    #batch-simulation {
+      padding: 10px 14px;
+    }
+
+    .batch-simulation-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .batch-simulation-note {
+      margin: -2px 0 8px;
+      color: var(--sub);
+      font-size: 10px;
+    }
+
+    #batchSimulationRounds {
+      min-width: 0;
+      padding: 7px 9px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    #batchSimulationRounds::-webkit-inner-spin-button,
+    #batchSimulationRounds::-webkit-outer-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
+    }
+
+    #batchSimulationStartBtn {
+      padding: 7px 12px;
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      border-radius: 6px;
+      color: #001c19;
+      background: var(--accent);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #batchSimulationStartBtn:disabled {
+      cursor: wait;
+      opacity: 0.55;
+    }
+
     .play-debug-controls {
       display: flex;
       align-items: center;
@@ -986,6 +1041,7 @@
     }
 
     #simulation-stats h3,
+    #batch-simulation h3,
     #rng-wrap h3 {
       margin: 0 0 7px;
       color: var(--sub);
@@ -1762,10 +1818,6 @@
         flex: 1 1 92px;
       }
 
-      #controls {
-        grid-template-columns: 1fr;
-      }
-
       .zone-body,
       .action-zone .play-main-controls {
         flex-wrap: wrap;
@@ -1911,10 +1963,33 @@
           <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
         </section>
+
       </aside>
     </div>
 
     <section id="controls" class="debug-off">
+      <section id="batch-simulation" class="control-zone debug-only debug-hidden">
+        <span class="zone-label" data-i18n="naturalSimulation">Simulation</span>
+        <div id="batchSimulationNote" class="batch-simulation-note">Current Card Profile</div>
+        <div class="batch-simulation-controls">
+          <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="1000"
+            inputmode="numeric" aria-label="Simulation rounds">
+          <button id="batchSimulationStartBtn" type="button" data-i18n="startSimulation">Start</button>
+        </div>
+        <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span
+            class="s-value" id="batchSimulationRoundCount">0</span></div>
+        <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value"
+            id="batchSimulationRtp">0.00%</span></div>
+        <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+            id="batchSimulationHitRate">0.00%</span></div>
+        <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+            id="batchSimulationFgTrigger">0.00% (-- rounds)</span></div>
+        <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span
+            class="s-value hi" id="batchSimulationMaxMultiplier">x0</span></div>
+        <div class="simulation-row"><span class="s-label" data-i18n="retryLimitExceeded">Retry Limit Exceeded</span><span
+            class="s-value" id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
+      </section>
+
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
@@ -1970,6 +2045,13 @@
             <option value="config_92B.js">92B</option>
             <option value="config_94A.js">94A</option>
             <option value="config_94B.js">94B</option>
+          </select>
+        </label>
+        <label class="config-control" for="cardProfileSelect">
+          <span data-i18n="playerProfile">Player</span>
+          <select id="cardProfileSelect">
+            <option value="newbie">Newbie</option>
+            <option value="oldhand">Oldhand</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2180,7 +2262,6 @@
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
     const FEATURE_TRIGGER_SCATTER_MIN = 3;
     const CARD_SYSTEM_ENABLED = Box.card_system?.enabled ?? true;
-    const CARD_SYSTEM_IS_NEWBIE = false;
     const SCORE_WINDOW_SIZE = Box.window_size;
     const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
     const SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - SCORE_WINDOW_SIZE;
@@ -2194,6 +2275,13 @@
         return localStorage.getItem("slotDemoLanguage") === "zh" ? "zh" : "en";
       } catch (_) {
         return "en";
+      }
+    })();
+    const SAVED_CARD_PROFILE = (() => {
+      try {
+        return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand";
+      } catch (_) {
+        return "oldhand";
       }
     })();
     const state = {
@@ -2232,6 +2320,8 @@
       autoTimer: null,
       liveLog: [],
       language: SAVED_LANGUAGE,
+      cardProfile: SAVED_CARD_PROFILE,
+      batchSimulationRunning: false,
       lastMessage: "Ready — press Spin"
     };
 
@@ -2251,6 +2341,16 @@
     const fgTriggerValueEl = document.getElementById("fgTriggerValue");
     const roundCountValueEl = document.getElementById("roundCountValue");
     const maxMultiplierValueEl = document.getElementById("maxMultiplierValue");
+    const batchSimulationPanelEl = document.getElementById("batch-simulation");
+    const batchSimulationNoteEl = document.getElementById("batchSimulationNote");
+    const batchSimulationRoundsEl = document.getElementById("batchSimulationRounds");
+    const batchSimulationStartBtn = document.getElementById("batchSimulationStartBtn");
+    const batchSimulationRoundCountEl = document.getElementById("batchSimulationRoundCount");
+    const batchSimulationRtpEl = document.getElementById("batchSimulationRtp");
+    const batchSimulationHitRateEl = document.getElementById("batchSimulationHitRate");
+    const batchSimulationFgTriggerEl = document.getElementById("batchSimulationFgTrigger");
+    const batchSimulationMaxMultiplierEl = document.getElementById("batchSimulationMaxMultiplier");
+    const batchSimulationRetryLimitExceededEl = document.getElementById("batchSimulationRetryLimitExceeded");
     const lineListEl = document.getElementById("lineList");
     const rngListEl = document.getElementById("rngList");
     const spinResultListEl = document.getElementById("spinResultList");
@@ -2269,6 +2369,7 @@
     const speedRangeEl = document.getElementById("speedRange");
     const speedValueEl = document.getElementById("speedValue");
     const configSelectEl = document.getElementById("configSelect");
+    const cardProfileSelectEl = document.getElementById("cardProfileSelect");
     const languageSelectEl = document.getElementById("languageSelect");
     const helpBtn = document.getElementById("helpBtn");
     const helpDialogEl = document.getElementById("helpDialog");
@@ -2310,14 +2411,18 @@
     const UI_TEXT = {
       en: {
         simulationStats: "Simulation Stats",
+        naturalSimulation: "Simulation",
+        startSimulation: "Start",
         totalRounds: "Total Rounds",
         hitRate: "Hit Rate",
         maxMultiplier: "Max Multiplier",
+        retryLimitExceeded: "Retry Limit Exceeded",
         reelRng: "Reel RNG",
         spinResult: "Spin Result",
         lineWins: "Line Wins",
         clear: "Clear",
         setting: "Setting",
+        playerProfile: "Player",
         language: "Language",
         reset: "Reset",
         gameHelp: "Game Help",
@@ -2329,14 +2434,18 @@
       },
       zh: {
         simulationStats: "模擬統計",
+        naturalSimulation: "模擬",
+        startSimulation: "開始模擬",
         totalRounds: "總局數",
         hitRate: "命中率",
         maxMultiplier: "最大 Multiplier",
+        retryLimitExceeded: "Retry Limit 超限",
         reelRng: "Reel RNG",
         spinResult: "Spin 結果",
         lineWins: "Line Wins",
         clear: "清除",
         setting: "設定",
+        playerProfile: "玩家",
         language: "語言",
         reset: "重置",
         gameHelp: "遊戲 Help",
@@ -2569,6 +2678,7 @@
     function applyLanguage() {
       document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
       languageSelectEl.value = state.language;
+      cardProfileSelectEl.value = state.cardProfile;
       setText(gameNameEl, state.language === "zh" ? "彩罐熱舞1000" : "Pinata Beat 1000");
       document.querySelectorAll("[data-i18n]").forEach((element) => {
         element.textContent = tr(element.dataset.i18n);
@@ -2584,6 +2694,7 @@
       renderLineList(state.activeSpin);
       renderSpinResultList(state.activeSpin);
       renderRngList(state.activeSpin);
+      updateBatchSimulationContext();
       if (gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
       try {
         localStorage.setItem("slotDemoLanguage", state.language);
@@ -2629,7 +2740,6 @@
       const cards = getCardSystemProfileCards("weight_bg", betMode);
       cardRangeSelectEl.innerHTML = '<option value="">Auto</option>';
       cards.forEach((card, index) => {
-        if (Number(card.weight || 0) <= 0) return;
         const option = document.createElement("option");
         option.value = String(index);
         option.textContent = card.type === "free_game"
@@ -2664,7 +2774,27 @@
         });
       }
       if (cardIndex === null && rawReels === "") return null;
-      return { card_index: cardIndex, reels };
+      let cardRange = null;
+      if (cardIndex !== null) {
+        const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
+        const cards = getCardSystemProfileCards("weight_bg", betMode);
+        const card = cards[cardIndex];
+        if (!card) throw new Error("指定的 Card BG Range 無效");
+        cardRange = {
+          profile_key: "set_rng",
+          card_index: cardIndex,
+          card_type: card.type || "range",
+          min: card.min ?? null,
+          max: card.max ?? null,
+          weight: 0,
+          label: card.type === "free_game"
+            ? "free_game"
+            : `${Number(card.min)}x ~ ${Number(card.max)}x`,
+          forced: true,
+          source: "set_rng"
+        };
+      }
+      return { card_range: cardRange, reels };
     }
 
     function resetSetRng(writeLog = true) {
@@ -2709,6 +2839,7 @@
       rngWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
       spinResultWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
       liveLogWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      batchSimulationPanelEl.classList.toggle("debug-hidden", !state.debugEnabled);
       debugModeInputEl.checked = state.debugEnabled;
       const hasStepHistory = state.debugEnabled && !state.isBusy && state.stepSnapshots.length > 0;
       const latestStepIndex = state.stepSnapshots.length - 1;
@@ -2851,7 +2982,7 @@
         const legacyKey = legacyKeyMap[profileKey] || profileKey;
         return Array.isArray(cardSystem.profiles[legacyKey]) ? cardSystem.profiles[legacyKey] : [];
       }
-      const segmentKey = CARD_SYSTEM_IS_NEWBIE ? "newbie" : "oldhand";
+      const segmentKey = state.cardProfile === "newbie" ? "newbie" : "oldhand";
       const fallbackSegmentKey = segmentKey === "newbie" ? "oldhand" : "newbie";
       const segment = cardSystem[segmentKey] || {};
       const fallbackSegment = cardSystem[fallbackSegmentKey] || {};
@@ -2892,7 +3023,7 @@
       let pick;
       if (forcedCardIndex !== null && forcedCardIndex !== undefined) {
         const index = Number(forcedCardIndex);
-        if (!Number.isInteger(index) || index < 0 || index >= cards.length || Number(cards[index].weight || 0) <= 0) {
+        if (!Number.isInteger(index) || index < 0 || index >= cards.length) {
           throw new Error("指定的 Card BG Range 無效");
         }
         pick = {
@@ -3504,38 +3635,51 @@
       let freeSpinsPlayed = 0;
       let fgMultiplierSum = 0;
       let triggerSource = null;
+      let retryCount = 0;
+      let retryLimitExceeded = false;
+      let retryFailReason = null;
       const forcedReels = debugOverrides?.reels || null;
       const hasForcedReels = Array.isArray(forcedReels) && forcedReels.some((value) => value !== null && value !== undefined);
-      const hasForcedCard = debugOverrides?.card_index !== null && debugOverrides?.card_index !== undefined;
-      const bgCardSystemInfo = betMode === Box.mode_featurebuy || (hasForcedReels && !hasForcedCard)
+      const forcedCardRange = debugOverrides?.card_range || null;
+      const hasForcedCard = Boolean(forcedCardRange);
+      const bgCardSystemInfo = hasForcedCard
+        ? forcedCardRange
+        : betMode === Box.mode_featurebuy || hasForcedReels
+          ? null
+          : pickCardSystemEntry("weight_bg", betMode);
+      const runSpinCardSystemInfo = hasForcedCard ? null : bgCardSystemInfo;
+      const fgCardSystemInfo = betMode === Box.mode_featurebuy || hasForcedCard
         ? null
-        : pickCardSystemEntry("weight_bg", betMode, debugOverrides?.card_index ?? null);
-      const fgCardSystemInfo = betMode === Box.mode_featurebuy ? null : pickCardSystemEntry("weight_fg", betMode);
+        : pickCardSystemEntry("weight_fg", betMode);
       const bfCardSystemInfo = betMode === Box.mode_featurebuy ? pickCardSystemEntry("weight_bf", betMode) : null;
       const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
       const retryLimit = getCardSystemRetryLimit();
+      const markRetryLimitExceeded = (reason, count) => {
+        retryLimitExceeded = true;
+        retryFailReason = reason;
+        retryCount = Math.max(retryCount, count);
+      };
 
       let baseSpin = null;
       if (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet) {
-        if (CARD_SYSTEM_ENABLED && bgCardSystemInfo?.card_type === "free_game") {
-          let rerollCount = 0;
+        if (bgCardSystemInfo?.card_type === "free_game") {
+          let bgRerollCount = 0;
           while (true) {
-            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo, forcedReels);
+            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels);
             if (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
               if (hasForcedReels) throw new Error("指定 Reel RNG 與 Card FG 區間衝突");
-              rerollCount += 1;
-              if (rerollCount >= retryLimit) {
-                throw new Error("BG free game card retry exceeded limit.");
-              }
-              continue;
-            }
-
-            const awarded = FG_TRIGGER_BASE_SPINS + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
-            const fgResult = runFreeGameSequence(awarded, fgCardSystemInfo);
-            if (!isCardSystemMatch(fgCardSystemInfo, fgResult.free_total_win, roundCardSystemCoinIn, true)) {
-              rerollCount += 1;
-              if (rerollCount >= retryLimit) {
-                throw new Error("FG card retry exceeded limit.");
+              bgRerollCount += 1;
+              if (bgRerollCount >= retryLimit) {
+                markRetryLimitExceeded("bg_free_game", bgRerollCount);
+                baseSpin = triggerSpin;
+                baseSpin.spin_index = 1;
+                baseSpin.remaining_free_spins_before = 0;
+                baseSpin.remaining_free_spins_after = 0;
+                baseSpin.retrigger_awarded = 0;
+                spins.push(baseSpin);
+                baseTotalWin = baseSpin.final_pay;
+                totalWin = baseTotalWin;
+                break;
               }
               continue;
             }
@@ -3546,6 +3690,23 @@
             baseSpin.remaining_free_spins_after = 0;
             baseSpin.retrigger_awarded = 0;
             spins.push(baseSpin);
+            break;
+          }
+
+          if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+            const awarded = FG_TRIGGER_BASE_SPINS + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
+            let fgResult = null;
+            let fgRerollCount = 0;
+            while (true) {
+              fgResult = runFreeGameSequence(awarded, fgCardSystemInfo);
+              if (isCardSystemMatch(fgCardSystemInfo, fgResult.free_total_win, roundCardSystemCoinIn, true)) break;
+              fgRerollCount += 1;
+              if (fgRerollCount >= retryLimit) {
+                markRetryLimitExceeded("fg", bgRerollCount + fgRerollCount);
+                break;
+              }
+            }
+
             fgResult.spins.forEach((spin, index) => {
               spin.spin_index = index + 2;
               spins.push(spin);
@@ -3560,12 +3721,11 @@
             if (forceFg) state.forcedTriggerCount += 1;
             else state.normalTriggerCount += 1;
             state.freegameTriggerCount += 1;
-            break;
           }
         } else {
           let rerollCount = 0;
           while (true) {
-            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), bgCardSystemInfo, forcedReels);
+            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels);
             const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
 
             if (forceFg && !triggered) {
@@ -3577,14 +3737,15 @@
               continue;
             }
 
-            if (!forceFg && CARD_SYSTEM_ENABLED && bgCardSystemInfo) {
+            if (!forceFg && bgCardSystemInfo) {
               if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
                 if (hasForcedReels) throw new Error("指定 Reel RNG 與 Card BG Range 衝突");
                 rerollCount += 1;
                 if (rerollCount >= retryLimit) {
-                  throw new Error("BG range card retry exceeded limit.");
+                  markRetryLimitExceeded("bg_range", rerollCount);
+                } else {
+                  continue;
                 }
-                continue;
               }
             }
 
@@ -3599,7 +3760,7 @@
             break;
           }
 
-          if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+          if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN && !(retryLimitExceeded && retryFailReason === "bg_range")) {
             const awarded = FG_TRIGGER_BASE_SPINS + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
             const fgResult = runFreeGameSequence(awarded, null);
             freeSpinsAwarded = awarded;
@@ -3611,6 +3772,11 @@
             });
             freeTotalWin = fgResult.free_total_win;
             totalWin += freeTotalWin;
+            triggerSource = forceFg ? "force_fg" : "normal_trigger";
+            if (forceFg) state.forcedTriggerCount += 1;
+            else state.normalTriggerCount += 1;
+            state.freegameTriggerCount += 1;
+          } else if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
             triggerSource = forceFg ? "force_fg" : "normal_trigger";
             if (forceFg) state.forcedTriggerCount += 1;
             else state.normalTriggerCount += 1;
@@ -3637,9 +3803,10 @@
           if (CARD_SYSTEM_ENABLED && bfCardSystemInfo && !isCardSystemMatch(bfCardSystemInfo, roundTotalWin, roundCardSystemCoinIn, true)) {
             roundRetryCount += 1;
             if (roundRetryCount >= retryLimit) {
-              throw new Error("BF card retry exceeded limit.");
+              markRetryLimitExceeded("fg", roundRetryCount);
+            } else {
+              continue;
             }
-            continue;
           }
 
           baseSpin = triggerSpin;
@@ -3692,8 +3859,152 @@
         hit_rate_overall: state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0,
         freegame_trigger_count: state.freegameTriggerCount,
         trigger_source: triggerSource,
+        retry_count: retryCount,
+        retry_limit_exceeded: retryLimitExceeded,
+        retry_fail_reason: retryFailReason,
         display_spin: spins[spins.length - 1]
       };
+    }
+
+    function summarizeBatchSimulationRound(round) {
+      return {
+        coin_in: round.coin_in,
+        total_win: round.total_win,
+        fg_triggered: Boolean(round.trigger_source),
+        retry_limit_exceeded: Boolean(round.retry_limit_exceeded),
+        spin_count: round.spins.length,
+        hit_count: round.spins.filter((spin) => spin.hit_any).length,
+        max_multiplier: round.spins.reduce(
+          (maximum, spin) => Math.max(maximum, Number(spin.multiplier_sum_after_spin || 0)),
+          0
+        )
+      };
+    }
+
+    function renderBatchSimulationStats(stats) {
+      const rounds = Number(stats.rounds || 0);
+      const triggerCount = Number(stats.fgTriggers || 0);
+      const triggerRate = rounds > 0 ? triggerCount / rounds : 0;
+      const triggerCycle = triggerCount > 0 ? Math.round(rounds / triggerCount) : "--";
+      const retryLimitExceeded = Number(stats.retryLimitExceeded || 0);
+      setText(batchSimulationRoundCountEl, rounds.toLocaleString("en-US"));
+      setText(batchSimulationRtpEl, formatPercent(stats.totalBet > 0 ? stats.totalWin / stats.totalBet : 0));
+      setText(batchSimulationHitRateEl, formatPercent(stats.totalSpins > 0 ? stats.hitSpins / stats.totalSpins : 0));
+      setText(
+        batchSimulationFgTriggerEl,
+        `${formatPercent(triggerRate)} (${triggerCycle}${state.language === "zh" ? "場" : " rounds"})`
+      );
+      setText(batchSimulationMaxMultiplierEl, `x${stats.maxMultiplier || 0}`);
+      setText(
+        batchSimulationRetryLimitExceededEl,
+        `${retryLimitExceeded.toLocaleString("en-US")} (${formatPercent(rounds > 0 ? retryLimitExceeded / rounds : 0)})`
+      );
+    }
+
+    function updateBatchSimulationContext() {
+      const configLabel = H026_ACTIVE_CONFIG
+        .replace(/^config_/, "")
+        .replace(/\.js$/i, "");
+      const modeLabel = state.extraBetEnabled ? `Extra Bet (${getExtraBetMultiplier()}x)` : "Normal Bet";
+      const playerLabel = state.cardProfile === "newbie" ? "Newbie" : "Oldhand";
+      const cardLabel = CARD_SYSTEM_ENABLED
+        ? `Card System ${playerLabel}`
+        : "Card System Off";
+      setText(
+        batchSimulationNoteEl,
+        `Config ${configLabel} · ${cardLabel} · ${modeLabel} · Bet ${formatBetMoney(getSelectedBetCostMoney())}`
+      );
+    }
+
+    async function runBatchSimulation() {
+      if (state.batchSimulationRunning) return;
+      const requestedRounds = Number(batchSimulationRoundsEl.value);
+      if (!Number.isInteger(requestedRounds) || requestedRounds < 1 || requestedRounds > 1000000) {
+        batchSimulationRoundsEl.setCustomValidity(
+          state.language === "zh" ? "請輸入 1～1,000,000 的整數" : "Enter an integer from 1 to 1,000,000"
+        );
+        batchSimulationRoundsEl.reportValidity();
+        return;
+      }
+      batchSimulationRoundsEl.setCustomValidity("");
+
+      clearTimeout(state.autoTimer);
+      state.autoEnabled = false;
+      state.batchSimulationRunning = true;
+      batchSimulationRoundsEl.disabled = true;
+      batchSimulationStartBtn.disabled = true;
+      setText(batchSimulationStartBtn, state.language === "zh" ? "模擬中…" : "Running…");
+      updateSpinButtonState();
+
+      const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
+      const liveStateSnapshot = {
+        balance: state.balance,
+        totalBet: state.totalBet,
+        totalWin: state.totalWin,
+        totalSpins: state.totalSpins,
+        hitSpins: state.hitSpins,
+        freegameTriggerCount: state.freegameTriggerCount,
+        normalTriggerCount: state.normalTriggerCount,
+        featurebuyTriggerCount: state.featurebuyTriggerCount,
+        forcedTriggerCount: state.forcedTriggerCount,
+        retriggerCount: state.retriggerCount,
+        roundCount: state.roundCount
+      };
+      Object.assign(state, {
+        balance: Number.MAX_SAFE_INTEGER / 4,
+        totalBet: 0,
+        totalWin: 0,
+        totalSpins: 0,
+        hitSpins: 0,
+        freegameTriggerCount: 0,
+        normalTriggerCount: 0,
+        featurebuyTriggerCount: 0,
+        forcedTriggerCount: 0,
+        retriggerCount: 0,
+        roundCount: 0
+      });
+      const stats = {
+        rounds: 0,
+        totalBet: 0,
+        totalWin: 0,
+        totalSpins: 0,
+        hitSpins: 0,
+        fgTriggers: 0,
+        retryLimitExceeded: 0,
+        maxMultiplier: 0
+      };
+      renderBatchSimulationStats(stats);
+
+      try {
+        for (let roundIndex = 0; roundIndex < requestedRounds; roundIndex += 1) {
+          const result = summarizeBatchSimulationRound(runRound(betMode, false, null));
+          stats.rounds += 1;
+          stats.totalBet += result.coin_in;
+          stats.totalWin += result.total_win;
+          stats.totalSpins += result.spin_count;
+          stats.hitSpins += result.hit_count;
+          stats.fgTriggers += result.fg_triggered ? 1 : 0;
+          stats.retryLimitExceeded += result.retry_limit_exceeded ? 1 : 0;
+          stats.maxMultiplier = Math.max(stats.maxMultiplier, result.max_multiplier);
+
+          if (stats.rounds % 50 === 0 || stats.rounds === requestedRounds) {
+            renderBatchSimulationStats(stats);
+            await sleep(0);
+          }
+        }
+        writeMessage(
+          `Simulation finished | ${requestedRounds.toLocaleString("en-US")} rounds | Retry Limit Exceeded ${stats.retryLimitExceeded.toLocaleString("en-US")}`
+        );
+      } catch (error) {
+        writeMessage(`Simulation failed | ${error.message}`, "error");
+      } finally {
+        Object.assign(state, liveStateSnapshot);
+        state.batchSimulationRunning = false;
+        batchSimulationRoundsEl.disabled = false;
+        batchSimulationStartBtn.disabled = false;
+        setText(batchSimulationStartBtn, tr("startSimulation"));
+        updateSpinButtonState();
+      }
     }
 
     function renderBoard(board, options = {}) {
@@ -3759,10 +4070,11 @@
       setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
       setText(fgTriggerValueEl, calcFgTriggerText());
       setText(maxMultiplierValueEl, `x${state.maxMultiplier}`);
+      updateBatchSimulationContext();
     }
 
     function updateSpinButtonState() {
-      const wagerLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
+      const wagerLocked = state.isBusy || state.autoEnabled || state.batchSimulationRunning || Boolean(state.pendingRound);
       const canQueueDebugSpin = state.debugEnabled && state.isBusy && !state.debugSpinQueued;
       setText(spinBtn, state.debugSpinQueued
         ? (state.language === "zh" ? "已排入" : "Queued")
@@ -3771,7 +4083,7 @@
           : state.pendingRound
             ? "Next FG"
             : "Spin");
-      spinBtn.disabled = state.autoEnabled || (state.isBusy && !canQueueDebugSpin);
+      spinBtn.disabled = state.batchSimulationRunning || state.autoEnabled || (state.isBusy && !canQueueDebugSpin);
       normalBetBtn.disabled = wagerLocked;
       extraBetBtn.disabled = wagerLocked;
       normalBetBtn.classList.toggle("is-active", !state.extraBetEnabled);
@@ -3780,6 +4092,11 @@
       betBtn.disabled = wagerLocked;
       betMinusBtn.disabled = wagerLocked || state.betIndex === 0;
       betPlusBtn.disabled = wagerLocked || state.betIndex === BET_OPTIONS_MONEY.length - 1;
+      autoBtn.disabled = state.batchSimulationRunning;
+      resetBtn.disabled = state.batchSimulationRunning;
+      debugModeInputEl.disabled = state.batchSimulationRunning;
+      configSelectEl.disabled = state.batchSimulationRunning;
+      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED || state.batchSimulationRunning;
       if (wagerLocked) closeBetMenu();
       autoBtn.classList.toggle("is-active", state.autoEnabled);
       setText(speedValueEl, `x${state.speedMultiplier}`);
@@ -4037,7 +4354,7 @@
           .map((value, index) => value === null ? null : `R${index + 1}=${value}`)
           .filter(Boolean)
           .join(", ");
-        const cardText = debugOverrides.card_index === null ? "" : `Card #${debugOverrides.card_index}`;
+        const cardText = debugOverrides.card_range ? `BG Range ${debugOverrides.card_range.label}` : "";
         appendLiveLog(`RNG override | ${[cardText, reelText].filter(Boolean).join(" | ")}`, "mode");
       }
       state.isBusy = true;
@@ -4102,16 +4419,37 @@
     }
 
     configSelectEl.value = H026_ACTIVE_CONFIG;
+    cardProfileSelectEl.value = state.cardProfile;
+    cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
     configSelectEl.addEventListener("change", () => {
       const nextUrl = new URL(window.location.href);
       nextUrl.searchParams.set("config", configSelectEl.value);
       window.location.href = nextUrl.href;
     });
 
+    cardProfileSelectEl.addEventListener("change", () => {
+      state.cardProfile = cardProfileSelectEl.value === "newbie" ? "newbie" : "oldhand";
+      try {
+        localStorage.setItem("slotDemoCardProfile", state.cardProfile);
+      } catch (_) {
+        // Player profile still works for this session when storage is unavailable.
+      }
+      renderCardRangeOptions();
+      resetSetRng(false);
+      updateBatchSimulationContext();
+      writeMessage(`Player Profile | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`);
+    });
+
     languageSelectEl.addEventListener("change", () => {
       state.language = languageSelectEl.value === "zh" ? "zh" : "en";
       applyLanguage();
       writeMessage(`Language | ${state.language === "zh" ? "中文" : "English"}`);
+    });
+
+    batchSimulationStartBtn.addEventListener("click", runBatchSimulation);
+    batchSimulationRoundsEl.addEventListener("input", () => batchSimulationRoundsEl.setCustomValidity(""));
+    batchSimulationRoundsEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") runBatchSimulation();
     });
 
     betBtn.addEventListener("click", (event) => {
