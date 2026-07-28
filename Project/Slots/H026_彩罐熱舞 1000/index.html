@@ -256,14 +256,17 @@
 
     .cell.hit {
       border-color: rgba(255, 233, 116, 0.96);
-      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
-      transform: scale(1.04);
+      box-shadow: inset 0 0 18px rgba(255, 210, 100, 0.32);
+      transform: none;
+      z-index: auto;
       filter: brightness(1.08);
     }
 
     .cell.convert {
       border-color: rgba(126, 255, 199, 0.96);
-      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+      box-shadow:
+        inset 0 0 0 2px rgba(126, 255, 199, 0.8),
+        inset 0 0 16px rgba(107, 255, 192, 0.3);
     }
 
     .cell.reel-spin {
@@ -318,16 +321,16 @@
     }
 
     .frame-bg {
-      inset: -6%;
-      width: 112%;
-      height: 112%;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       z-index: 0;
     }
 
     .frame-top {
-      inset: -6%;
-      width: 112%;
-      height: 112%;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       z-index: 2;
     }
 
@@ -566,7 +569,7 @@
 
     .phone {
       width: 100%;
-      max-width: 920px;
+      max-width: 950px;
       min-height: auto;
       padding: 0;
     }
@@ -691,7 +694,7 @@
     #app-shell {
       width: 100%;
       display: grid;
-      grid-template-columns: 420px minmax(0, 1fr);
+      grid-template-columns: 446px minmax(0, 1fr);
       gap: 12px;
       margin-top: 10px;
       align-items: start;
@@ -714,7 +717,7 @@
     }
 
     #grid-panel {
-      padding: 10px;
+      padding: 10px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -773,14 +776,17 @@
 
     .cell.hit {
       border-color: var(--accent);
-      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
-      transform: scale(1.03);
+      box-shadow: inset 0 0 12px rgba(0, 221, 192, 0.3);
+      transform: none;
+      z-index: auto;
       filter: brightness(1.12);
     }
 
     .cell.convert {
       border-color: var(--green);
-      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+      box-shadow:
+        inset 0 0 0 1px var(--green),
+        inset 0 0 10px rgba(51, 255, 153, 0.28);
     }
 
     .symbol-code {
@@ -1780,7 +1786,7 @@
 
     @media (max-width: 760px) {
       :root {
-        --cell-size: min(17vw, 70px);
+        --cell-size: min(16vw, 70px);
       }
 
       #app-shell {
@@ -1796,6 +1802,7 @@
       }
 
       #grid-panel {
+        padding-inline: 16px;
         overflow-x: auto;
       }
 
@@ -2000,8 +2007,8 @@
             </select>
           </label>
           <label class="debug-rng-field" for="reelRngInput">
-            Reel RNG
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
+            Reel Stop
+            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="R1 R2 R3 R4 R5 Table RNG">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2393,8 +2400,46 @@
     const reelRngInputEl = document.getElementById("reelRngInput");
     const setRngResetBtn = document.getElementById("setRngResetBtn");
 
+    let replayRandom = null;
+
     function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-    function randInt(max) { return Math.floor(Math.random() * max); }
+    function randInt(max) { return Math.floor((replayRandom ? replayRandom() : Math.random()) * max); }
+    function createReplayRandom(seedText) {
+      let seed = 2166136261;
+      for (let index = 0; index < seedText.length; index += 1) {
+        seed ^= seedText.charCodeAt(index);
+        seed = Math.imul(seed, 16777619);
+      }
+      return () => {
+        seed += 0x6D2B79F5;
+        let value = seed;
+        value = Math.imul(value ^ (value >>> 15), value | 1);
+        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function runRoundWithReplay(betMode, forceFg, debugOverrides) {
+      const reelStops = debugOverrides?.reels || null;
+      const hasReelStops = Array.isArray(reelStops)
+        && reelStops.some((value) => value !== null && value !== undefined);
+      if (!hasReelStops) return runRound(betMode, forceFg, debugOverrides);
+
+      const previousRandom = replayRandom;
+      const seedText = [
+        Box.game_id,
+        betMode,
+        getBetMoney(),
+        state.extraBetEnabled ? 1 : 0,
+        reelStops.join(","),
+        debugOverrides?.table_rng ?? ""
+      ].join("|");
+      replayRandom = createReplayRandom(seedText);
+      try {
+        return runRound(betMode, forceFg, debugOverrides);
+      } finally {
+        replayRandom = previousRandom;
+      }
+    }
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
     function toMoney(value) { return Number(value) * DENOM; }
     function formatMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -2489,7 +2534,7 @@
         .replace(/^Debug Mode disabled$/, "Debug Mode 已關閉")
         .replace(/^Card BG Range set to Auto$/, "Card BG Range 已設為 Auto")
         .replace(/^Card BG Range selected \| (.+)$/, "Card BG Range 已選擇 | $1")
-        .replace(/^Reel RNG set \| (.+)$/, "Reel RNG 已設定 | $1")
+        .replace(/^Reel Stop \/ Table RNG set \| (.+)$/, "Reel Stop／Table RNG 已設定 | $1")
         .replace(/^Force FG armed for next Normal\/Extra spin$/, "Force FG 已設定於下一次 Normal／Extra Spin")
         .replace(/^Force FG cancelled$/, "Force FG 已取消")
         .replace(/^Normal Bet selected \| Bet (.+)$/, "Normal Bet 已選擇 | Bet $1")
@@ -2757,21 +2802,26 @@
       const rawReels = reelRngInputEl.value.trim();
       const cardIndex = cardRangeSelectEl.value === "" ? null : Number(cardRangeSelectEl.value);
       if (rawReels !== "" && cardIndex !== null) {
-        throw new Error("Card BG Range 與 Reel RNG 只能擇一指定");
+        throw new Error("Card BG Range 與 Reel Stop／Table RNG 只能擇一指定");
       }
       let reels = Array(Box.reel_num).fill(null);
+      let tableRng = null;
       if (rawReels !== "") {
         const parts = rawReels.split(/\s+/);
-        if (parts.length !== Box.reel_num) {
-          throw new Error(`Reel RNG 請輸入 ${Box.reel_num} 個數值，並以空格分隔`);
+        const expectedCount = Box.reel_num + 1;
+        if (parts.length !== expectedCount) {
+          throw new Error(`Set RNG 請依序輸入 R1～R${Box.reel_num} Stop 與 Table RNG，共 ${expectedCount} 個數值`);
         }
-        reels = parts.map((raw, index) => {
+        const values = parts.map((raw, index) => {
           const value = Number(raw);
           if (!Number.isInteger(value) || value < 0) {
-            throw new Error(`R${index + 1} RNG 必須是 0 以上的整數`);
+            const label = index < Box.reel_num ? `R${index + 1} Stop` : "Table RNG";
+            throw new Error(`${label} 必須是 0 以上的整數`);
           }
           return value;
         });
+        reels = values.slice(0, Box.reel_num);
+        tableRng = values[Box.reel_num];
       }
       if (cardIndex === null && rawReels === "") return null;
       let cardRange = null;
@@ -2794,7 +2844,7 @@
           source: "set_rng"
         };
       }
-      return { card_range: cardRange, reels };
+      return { card_range: cardRange, reels, table_rng: tableRng };
     }
 
     function resetSetRng(writeLog = true) {
@@ -3093,6 +3143,26 @@
       return { index: cumWeight.length - 1, rng_value: rngValue, rng_total: total, forced: forcedRngValue !== null && forcedRngValue !== undefined };
     }
 
+    function pickByStop(cumWeight, forcedStopIndex) {
+      const total = cumWeight[cumWeight.length - 1];
+      const stopIndex = Number(forcedStopIndex);
+      if (!Number.isInteger(stopIndex) || stopIndex < 0 || stopIndex >= cumWeight.length) {
+        throw new Error(`指定 Stop ${forcedStopIndex} 超出範圍 0-${cumWeight.length - 1}`);
+      }
+      const rngMin = stopIndex === 0 ? 0 : Number(cumWeight[stopIndex - 1]);
+      const rngMax = Number(cumWeight[stopIndex]) - 1;
+      if (rngMin > rngMax) {
+        throw new Error(`指定 Stop ${stopIndex} 的自然權重為 0，無法停在此位置`);
+      }
+      return {
+        index: stopIndex,
+        rng_value: rngMin,
+        rng_total: total,
+        forced: true,
+        forced_stop: true
+      };
+    }
+
     function pickMultiplier(cumMatrix, stripIdx) {
       const pick = pickByCum(cumMatrix.map((row) => row[stripIdx]));
       return {
@@ -3148,12 +3218,12 @@
       }));
     }
 
-    function chooseTable(sceneMode, fgMultiplierSum = 0) {
+    function chooseTable(sceneMode, fgMultiplierSum = 0, forcedTableRng = null) {
       let pick;
       let tableId;
       let weights;
       if (sceneMode === Box.scene_bg) {
-        pick = pickByCum(Box.weight_cum_table_bg);
+        pick = pickByCum(Box.weight_cum_table_bg, forcedTableRng);
         tableId = pick.index;
         weights = Box.weight_table_bg;
       } else if (sceneMode === Box.scene_fg) {
@@ -3182,6 +3252,7 @@
         table_name: Box.strip_name_map[tableId],
         rng_value: pick.rng_value,
         rng_total: pick.rng_total,
+        forced: Boolean(pick.forced),
         weights
       };
     }
@@ -3201,7 +3272,7 @@
       };
     }
 
-    function generateBoard(tableId, reelRngOverrides = null) {
+    function generateBoard(tableId, reelStopOverrides = null) {
       const board = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const goldMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
       const multiMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
@@ -3209,11 +3280,13 @@
 
       for (let col = 0; col < Box.reel_num; col += 1) {
         const reelLength = Box.reels_len[tableId][col];
-        const forcedRng = reelRngOverrides?.[col] ?? null;
-        const pick = pickByCum(
-          Box.arr_reels_weight_cum[tableId].slice(0, reelLength).map((row) => row[col]),
-          forcedRng
-        );
+        const forcedStop = reelStopOverrides?.[col] ?? null;
+        const reelCumWeight = Box.arr_reels_weight_cum[tableId]
+          .slice(0, reelLength)
+          .map((row) => row[col]);
+        const pick = forcedStop === null || forcedStop === undefined
+          ? pickByCum(reelCumWeight)
+          : pickByStop(reelCumWeight, forcedStop);
         const visibleStartIndex = (pick.index - SCORE_ROW_OFFSET + reelLength) % reelLength;
         reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength, forced: Boolean(pick.forced) });
         for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
@@ -3500,11 +3573,11 @@
       return dropEvents;
     }
 
-    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelRngOverrides = null) {
-      const table = chooseTable(sceneMode, fgMultiplierSum);
+    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelStopOverrides = null, forcedTableRng = null) {
+      const table = chooseTable(sceneMode, fgMultiplierSum, forcedTableRng);
       const eliminateMode = chooseEliminateMode(sceneMode);
       const useDropA = eliminateMode.use_drop_a;
-      const generated = generateBoard(table.table_id, reelRngOverrides);
+      const generated = generateBoard(table.table_id, reelStopOverrides);
       const board = generated.board;
       const goldMask = generated.goldMask;
       const multiMask = generated.multiMask;
@@ -3640,6 +3713,7 @@
       let retryFailReason = null;
       const forcedReels = debugOverrides?.reels || null;
       const hasForcedReels = Array.isArray(forcedReels) && forcedReels.some((value) => value !== null && value !== undefined);
+      const forcedTableRng = debugOverrides?.table_rng ?? null;
       const forcedCardRange = debugOverrides?.card_range || null;
       const hasForcedCard = Boolean(forcedCardRange);
       const bgCardSystemInfo = hasForcedCard
@@ -3651,7 +3725,9 @@
       const fgCardSystemInfo = betMode === Box.mode_featurebuy || hasForcedCard
         ? null
         : pickCardSystemEntry("weight_fg", betMode);
-      const bfCardSystemInfo = betMode === Box.mode_featurebuy ? pickCardSystemEntry("weight_bf", betMode) : null;
+      const bfCardSystemInfo = betMode === Box.mode_featurebuy && !hasForcedReels
+        ? pickCardSystemEntry("weight_bf", betMode)
+        : null;
       const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
       const retryLimit = getCardSystemRetryLimit();
       const markRetryLimitExceeded = (reason, count) => {
@@ -3665,9 +3741,9 @@
         if (bgCardSystemInfo?.card_type === "free_game") {
           let bgRerollCount = 0;
           while (true) {
-            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels);
+            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels, forcedTableRng);
             if (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
-              if (hasForcedReels) throw new Error("指定 Reel RNG 與 Card FG 區間衝突");
+              if (hasForcedReels) throw new Error("指定 Reel Stop 與 Card FG 區間衝突");
               bgRerollCount += 1;
               if (bgRerollCount >= retryLimit) {
                 markRetryLimitExceeded("bg_free_game", bgRerollCount);
@@ -3725,11 +3801,11 @@
         } else {
           let rerollCount = 0;
           while (true) {
-            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels);
+            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels, forcedTableRng);
             const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
 
             if (forceFg && !triggered) {
-              if (hasForcedReels) throw new Error("指定 Reel RNG 無法觸發 Force FG");
+              if (hasForcedReels) throw new Error("指定 Reel Stop 無法觸發 Force FG");
               rerollCount += 1;
               if (rerollCount > 5000) {
                 throw new Error("Force FG 重抽超過上限，請檢查 BG 觸發條件");
@@ -3739,7 +3815,7 @@
 
             if (!forceFg && bgCardSystemInfo) {
               if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
-                if (hasForcedReels) throw new Error("指定 Reel RNG 與 Card BG Range 衝突");
+                if (hasForcedReels) throw new Error("指定 Reel Stop 與 Card BG Range 衝突");
                 rerollCount += 1;
                 if (rerollCount >= retryLimit) {
                   markRetryLimitExceeded("bg_range", rerollCount);
@@ -3786,15 +3862,15 @@
       } else {
         let roundRetryCount = 0;
         while (true) {
-          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels);
+          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels, forcedTableRng);
           let triggerRetryCount = 0;
           while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
-            if (hasForcedReels) throw new Error("指定 Reel RNG 無法觸發 Buy Feature");
+            if (hasForcedReels) throw new Error("指定 Reel Stop 無法觸發 Buy Feature");
             triggerRetryCount += 1;
             if (triggerRetryCount > 5000) {
               throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
             }
-            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels);
+            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels, forcedTableRng);
           }
 
           const awarded = FG_TRIGGER_BASE_SPINS + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
@@ -4180,7 +4256,7 @@
       const rows = [
         { left: "Mode", right: spin.scene_name },
         { left: "Card System", right: cardSystemText },
-        { left: `Table ${spin.table_name}`, right: formatRngDetail(spin.rng_info.table.rng_value, spin.rng_info.table.rng_total) },
+        { left: `Table ${spin.table_name}`, right: formatRngDetail(spin.rng_info.table.rng_value, spin.rng_info.table.rng_total, spin.rng_info.table.forced) },
         { left: `Drop ${spin.drop_mode}`, right: formatRngDetail(spin.rng_info.drop_mode.rng_value, spin.rng_info.drop_mode.rng_total) }
       ];
       spin.rng_info.reels.forEach((reel) => rows.push({ left: `R${reel.reel_index} stop ${reel.stop_index}`, right: formatRngDetail(reel.rng_value, reel.rng_total, reel.forced) }));
@@ -4375,8 +4451,11 @@
           .map((value, index) => value === null ? null : `R${index + 1}=${value}`)
           .filter(Boolean)
           .join(", ");
+        const tableText = debugOverrides.table_rng === null || debugOverrides.table_rng === undefined
+          ? ""
+          : `Table RNG=${debugOverrides.table_rng}`;
         const cardText = debugOverrides.card_range ? `BG Range ${debugOverrides.card_range.label}` : "";
-        appendLiveLog(`RNG override | ${[cardText, reelText].filter(Boolean).join(" | ")}`, "mode");
+        appendLiveLog(`Set RNG replay | ${[cardText, reelText, tableText].filter(Boolean).join(" | ")}`, "mode");
       }
       state.isBusy = true;
       updateSpinButtonState();
@@ -4399,7 +4478,7 @@
         } else {
           writeMessage("Reels spinning...");
           await animateReels();
-          const round = runRound(betMode, forceFgThisSpin, debugOverrides);
+          const round = runRoundWithReplay(betMode, forceFgThisSpin, debugOverrides);
           syncDisplayForRoundStart(round);
           renderAll(round, round.spins[0]);
           await playbackSpin(round, round.spins[0]);
@@ -4582,7 +4661,7 @@
     });
 
     reelRngInputEl.addEventListener("change", () => {
-      if (reelRngInputEl.value.trim() !== "") writeMessage(`Reel RNG set | ${reelRngInputEl.value.trim()}`);
+      if (reelRngInputEl.value.trim() !== "") writeMessage(`Reel Stop / Table RNG set | ${reelRngInputEl.value.trim()}`);
     });
 
     setRngResetBtn.addEventListener("click", () => resetSetRng(true));
@@ -4651,7 +4730,7 @@
     applyLanguage();
     appendLiveLog("Ready — press Spin", "result");
   </script>
-  <script src="../help_ui_standardizer.js"></script>
+  <script src="../help_ui_standardizer.js?v=20260728-h026-ui-v3"></script>
 </body>
 
 </html>

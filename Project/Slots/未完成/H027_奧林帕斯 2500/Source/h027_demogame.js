@@ -442,7 +442,7 @@
       node.className = `cell ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${clearedSet.has(`${rowIndex}-${reelIndex}`) ? "symbol-cleared" : ""} ${dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : ""} ${options.spinning ? "reel-spin" : ""}`;
       if (dropMotion) {
         node.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
-        node.style.setProperty("--drop-duration", `${Math.max(320, 640 / state.speed)}ms`);
+        node.style.setProperty("--drop-duration", `${Math.max(320, 640 / state.speed) / 2}ms`);
         node.style.setProperty("--drop-delay", "0ms");
       }
       const wrap = document.createElement("div");
@@ -636,7 +636,7 @@
       await sleep(180);
       const dropMotion = window.slotBuildDropMotion?.(step.before.length, step.before[0].length, step.hitPositions) || {};
       renderBoard(boardCells(step.after, step.afterC2Values), { dropMotion });
-      await sleep((Math.max(320, 640 / state.speed) + 180) * state.speed);
+      await sleep((Math.max(320, 640 / state.speed) / 2 + 180) * state.speed);
     }
 
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));
