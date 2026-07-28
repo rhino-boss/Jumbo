@@ -1789,6 +1789,23 @@
       letter-spacing: 0.02em;
       text-shadow: 0 2px 3px rgba(0, 0, 0, 0.72);
     }
+    .h019-glyph[hidden] {
+      display: none;
+    }
+    .h013-symbol-image {
+      position: absolute;
+      inset: 3%;
+      z-index: 1;
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
+      object-fit: contain;
+      object-position: center;
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.42));
+    }
     .cell .symbol-code { display: none; }
     .cell.symbol-a,
     .cell.symbol-k,
@@ -1824,9 +1841,51 @@
       font-size: 0.72rem;
       font-weight: 900;
     }
+    .help-payout-item.with-symbol-image {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .help-symbol-image {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.36));
+    }
+    .help-payout-text {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    #helpContent .help-table-symbol {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 72px;
+    }
+    #helpContent .help-table-symbol-image {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.36));
+    }
+    #helpContent .help-table-symbol-code {
+      color: #00ddc0;
+      font-weight: 800;
+    }
     @media (max-width: 1040px) {
       .board-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
       #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
+    }
+    @media (max-width: 520px) {
+      .help-payout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .help-symbol-image {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+      }
     }
   </style>
 </head>
@@ -1898,8 +1957,8 @@
           <span class="zone-label">Bet Mode</span>
           <div class="zone-body">
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
-            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
-            <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (1.25x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (100x)</button>
             <button id="superFeatureBtn" type="button">Super Feature (500x)</button>
           </div>
         </section>
@@ -1925,9 +1984,11 @@
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
           <label class="debug-rng-field" for="cardRangeSelect">
-            Card BG Range
+            Card System
             <select id="cardRangeSelect">
-              <option value="">Auto</option>
+              <option value="off">Off</option>
+              <option value="newbie">Newbie</option>
+              <option value="oldhand">Oldhand</option>
             </select>
           </label>
           <label class="debug-rng-field" for="reelRngInput">
@@ -2018,8 +2079,8 @@
 | name_zh | 糖果狂歡 1000 |
 | name_en | Sugar Bonanza 1000 |
 | board | 6 reels × 5 rows |
-| modes | Normal Bet / Extra Bet (1.25x) / Feature Buy (75x) / Super Feature (500x) |
-| runtime_note | 官方遊戲清單記載 Feature Buy 為 100x，但目前 config 與 Simulator 實際使用 75x；本文件依可執行邏輯顯示 75x。 |
+| modes | Normal Bet / Extra Bet (1.25x) / Feature Buy (100x) / Super Feature (500x) |
+| runtime_note | Feature Buy 依主 Overview、目前 config 與 Simulator 的實際執行值顯示為 100x。 |
 
 ---
 
@@ -2096,7 +2157,7 @@
 | 主要標題 | 投注模式 | BET OPTIONS |
 | 規則說明 | 一般投注的成本為目前選擇押注的 1x。 | NORMAL BET COSTS 1X THE CURRENTLY SELECTED BET. |
 | 規則說明 | 額外投注的成本為目前選擇押注的 1.25x，並使用提高特色觸發機會的專用盤帶設定。 | EXTRA BET COSTS 1.25X THE CURRENTLY SELECTED BET AND USES DEDICATED REEL SETTINGS WITH A HIGHER FEATURE CHANCE. |
-| 規則說明 | 購買特色的成本為目前選擇押注的 75x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 75X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | 購買特色的成本為目前選擇押注的 100x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 100X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
 | 規則說明 | 超級特色的成本為目前選擇押注的 500x，並直接進入使用強化倍數權重的免費遊戲特色。 | SUPER FEATURE COSTS 500X THE CURRENTLY SELECTED BET AND ENTERS A FREE GAME FEATURE WITH ENHANCED MULTIPLIER WEIGHTS. |
 
 ---
@@ -2140,18 +2201,36 @@
       );
       return { symbols, weights, reel_lengths: lengths };
     });
-    const freeTable = (low, high) => ({
+    const activeMix = (block, mode) => {
+      const choices = block.free_spin_mix.filter((item) => Number(item.weights[mode]) > 0);
+      if (choices.length !== 1) throw new Error(`Parameter ${block.name}: invalid ${mode} free-spin mix`);
+      return choices[0];
+    };
+    const freeTable = (low, high, block, mode) => {
+      const mix = activeMix(block, mode);
+      return {
       names: [raw.strip_name_map[low], raw.strip_name_map[high]],
-      initial: [raw.initial_free_spins_low, raw.initial_free_spins_high],
+      initial: [mix.low, mix.high],
       retrigger: [raw.retrigger_free_spins_low, raw.retrigger_free_spins_high]
-    });
-    const profile = (baseIds, baseWeights, freeLow, freeHigh) => ({
+      };
+    };
+    const profile = (block, baseIds, baseWeights, freeLow, freeHigh, mode) => ({
       base_reel_names: baseIds.map((id) => raw.strip_name_map[id]),
       base_reel_weights: baseWeights,
-      free_table: freeTable(freeLow, freeHigh),
+      free_table: freeTable(freeLow, freeHigh, block, mode),
       c2_mode_weights: { base: [1, 0, 0], free: [1, 0, 0] },
-      c2: { multipliers: raw.value_multiplier, weights: { base_direct: raw.weight_multiplier_fg_low, free_direct: raw.weight_multiplier_fg_low } }
+      multiplier_weights: block.multiplier_sources.map((source) => block.multiplier_weights[source])
     });
+    const parameterSet = (block) => ({
+      normal: profile(block, [0, 1, 2], block.table_weights.normal, 7, 8, "normal"),
+      extrabet: profile(block, [4, 5, 6], block.table_weights.extrabet, 7, 8, "normal"),
+      featurebuy: profile(block, [3], [1], 9, 10, "featurebuy"),
+      superfeaturebuy: profile(block, [3], [1], 11, 12, "superfeaturebuy")
+    });
+    const parameterTables = {
+      A: parameterSet(raw.parameter_blocks.A),
+      B: parameterSet(raw.parameter_blocks.B)
+    };
     return {
       ...raw,
       symbol_codes: symbolCodes,
@@ -2160,20 +2239,8 @@
       max_free_spins: raw.max_spin_free_game,
       model: raw.source_game_id,
       excel_version: raw.game_version,
-      parameter: {
-        normal: profile([0, 1, 2], raw.weight_table_normal_bet, 7, 8),
-        extrabet: profile([4, 5, 6], raw.weight_table_extra_bet, 7, 8),
-        featurebuy: profile([3], [1], 9, 10),
-        superfeaturebuy: profile([3], [1], 11, 12)
-      },
-      multiplier_weights: [
-        raw.weight_multiplier_fg_low,
-        raw.weight_multiplier_fg_high,
-        raw.weight_multiplier_fb_low,
-        raw.weight_multiplier_fb_high,
-        raw.weight_multiplier_sb_low,
-        raw.weight_multiplier_sb_high
-      ]
+      parameter: parameterTables.A,
+      parameter_tables: parameterTables
     };
   }
 
@@ -2188,6 +2255,28 @@
   const WW = Box.symbol_codes.indexOf("WW");
   const C1 = Box.symbol_codes.indexOf("C1");
   const C2 = Box.symbol_codes.indexOf("C2");
+  const SYMBOL_IMAGE_FILES = Object.freeze({
+    C1: "C1_Symbol.png",
+    C2: "C2_Symbol.png",
+    M1: "M1_Symbol.png",
+    M2: "M2_Symbol.png",
+    M3: "M3_Symbol.png",
+    M4: "M4_Symbol.png",
+    A: "M5_Symbol.png",
+    K: "M6_Symbol.png",
+    Q: "M7_Symbol.png",
+    J: "M8_Symbol.png",
+    TE: "M9_Symbol.png"
+  });
+  window.H013_SYMBOL_IMAGE_FILES = SYMBOL_IMAGE_FILES;
+  const DISPLAY_SYMBOL_IDS = Box.symbol_codes
+    .map((code, symbol) => ({ code, symbol }))
+    .filter((item) => Boolean(SYMBOL_IMAGE_FILES[item.code]))
+    .map((item) => item.symbol);
+  const symbolImageSource = (code) => {
+    const filename = SYMBOL_IMAGE_FILES[code];
+    return filename ? `./Source/Image/${filename}` : "";
+  };
   const PROFILE_NAMES = {
     [MODE_NORMAL]: "normal",
     [MODE_EXTRA]: "extrabet",
@@ -2236,6 +2325,9 @@
     auto: false,
     autoTimer: null,
     lastWin: 0,
+    cardMode: "off",
+    cardProfileUsed: "off",
+    cardRetries: 0,
     pendingFg: null,
     snapshots: [],
     snapshotIndex: -1,
@@ -2322,6 +2414,55 @@
     return safe.length - 1;
   }
 
+  function pickCard(cards) {
+    if (!Array.isArray(cards) || !cards.length) return null;
+    return cards[pickWeighted(cards.map((card) => card.weight))] || null;
+  }
+
+  function cardSystemActive() {
+    return Boolean(Box.card_system?.enabled) && state.cardMode !== "off";
+  }
+
+  function cardModeKey(mode) {
+    return mode === MODE_EXTRA ? "extra_bet" : "normal_bet";
+  }
+
+  function prepareCardSelection(mode) {
+    if (!cardSystemActive()) return null;
+    const cards = Box.card_system;
+    if (mode === MODE_BUY) {
+      return { kind: "package", profile: "oldhand", card: pickCard(cards.oldhand?.buy_feature?.weight_fg) };
+    }
+    if (mode === MODE_SUPER) {
+      return { kind: "package", profile: "oldhand", card: pickCard(cards.oldhand?.super_feature?.weight_fg) };
+    }
+    const player = state.cardMode === "newbie" ? "newbie" : "oldhand";
+    const modeCards = cards[player]?.[cardModeKey(mode)] || {};
+    const bgCard = pickCard(modeCards.weight_bg);
+    return bgCard?.type === "free_game"
+      ? { kind: "free_game", profile: player, bgCard, fgCard: pickCard(modeCards.weight_fg) }
+      : { kind: "base", profile: player, card: bgCard };
+  }
+
+  function cardMatches(card, score, triggeredFreeGame) {
+    if (!card) return true;
+    if (card.type === "free_game") return triggeredFreeGame;
+    const cardCoinIn = Box.default_coin_in * Box.normalbet * betMultiplier();
+    const multiplier = cardCoinIn > 0 ? score / cardCoinIn : 0;
+    return multiplier > Number(card.min || 0) && multiplier <= Number(card.max || 0);
+  }
+
+  function cardAccepts(selection, candidate) {
+    if (!selection) return true;
+    if (selection.kind === "package") {
+      return cardMatches(selection.card, candidate.totalPay, candidate.triggered);
+    }
+    if (selection.kind === "free_game") {
+      return candidate.triggered && cardMatches(selection.fgCard, candidate.freePay, true);
+    }
+    return !candidate.triggered && cardMatches(selection.card, candidate.base.finalPay, false);
+  }
+
   function writeMessage(text, type = "") {
     setText(el.message, text);
     el.message.className = `message-bar ${type}`;
@@ -2339,8 +2480,12 @@
     el.liveLog.scrollTop = el.liveLog.scrollHeight;
   }
 
-  function currentProfile() {
-    return Box.parameter[PROFILE_NAMES[state.selectedMode]];
+  function parameterName(value) {
+    return String(value || "A").trim().toUpperCase() === "B" ? "B" : "A";
+  }
+
+  function currentProfile(selectedParameter = "A") {
+    return Box.parameter_tables[parameterName(selectedParameter)][PROFILE_NAMES[state.selectedMode]];
   }
 
   function betMoney() {
@@ -2366,8 +2511,8 @@
     return Box.strip_names.indexOf(name);
   }
 
-  function chooseBaseTable() {
-    const profile = currentProfile();
+  function chooseBaseTable(selectedParameter = "A") {
+    const profile = currentProfile(selectedParameter);
     const selected = pickWeighted(profile.base_reel_weights);
     return tableIndex(profile.base_reel_names[selected]);
   }
@@ -2425,7 +2570,7 @@
     return { wins, hitPositions, pay };
   }
 
-  function applyCascade(spin, wins, scene, c2Mode) {
+  function applyCascade(spin, wins, scene, c2Mode, selectedParameter) {
     const winningSymbols = new Set(wins.map((win) => win.symbol));
     const strip = Box.strips[spin.tableId];
 
@@ -2468,30 +2613,33 @@
         if (symbol === C2) hasMultiplier = true;
         spin.board[outputRow][reel] = symbol;
         spin.fromWild[outputRow][reel] = false;
-        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, spin.tableId) : 0;
+        spin.c2Values[outputRow][reel] = symbol === C2 ? drawC2Value(scene, spin.tableId, selectedParameter) : 0;
         outputRow -= 1;
       }
     }
   }
 
-  function drawC2Value(scene, tableId) {
+  function drawC2Value(scene, tableId, selectedParameter) {
     if (scene !== "FG") return 0;
     const tableToWeight = new Map([[7, 0], [8, 1], [9, 2], [10, 3], [11, 4], [12, 5]]);
     const weightIndex = tableToWeight.get(tableId) ?? 0;
-    return Box.value_multiplier[pickWeighted(Box.multiplier_weights[weightIndex])] || 0;
+    const weights = currentProfile(selectedParameter).multiplier_weights[weightIndex];
+    return Box.value_multiplier[pickWeighted(weights)] || 0;
   }
 
-  function chooseC2Mode(scene) {
-    const profile = currentProfile();
+  function chooseC2Mode(scene, selectedParameter) {
+    const profile = currentProfile(selectedParameter);
     const modeWeights = profile.c2_mode_weights[scene === "FG" ? "free" : "base"];
     return pickWeighted(modeWeights);
   }
 
-  function initializeC2Values(spin, scene, c2Mode) {
+  function initializeC2Values(spin, scene, c2Mode, selectedParameter) {
     spin.c2Values = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
     for (let row = 0; row < Box.window_size; row += 1) {
       for (let reel = 0; reel < Box.reel_num; reel += 1) {
-        if (spin.board[row][reel] === C2) spin.c2Values[row][reel] = drawC2Value(scene, spin.tableId);
+        if (spin.board[row][reel] === C2) {
+          spin.c2Values[row][reel] = drawC2Value(scene, spin.tableId, selectedParameter);
+        }
       }
     }
   }
@@ -2515,22 +2663,24 @@
     return (Box.pay_table[C1][count - 4] || 0) * betMultiplier();
   }
 
-  function playSpin(tableId, scene, carriedMultiplier = 0, forcedStops = null) {
+  function playSpin(tableId, scene, forcedStops = null, selectedParameter = "A") {
+    selectedParameter = parameterName(selectedParameter);
     const spin = generateBoard(tableId, forcedStops);
-    const c2Mode = chooseC2Mode(scene);
-    initializeC2Values(spin, scene, c2Mode);
+    const c2Mode = chooseC2Mode(scene, selectedParameter);
+    initializeC2Values(spin, scene, c2Mode, selectedParameter);
     const initialBoard = clone(spin.board);
     const initialC2Values = clone(spin.c2Values);
     const steps = [];
     let rawPay = 0;
 
-    for (let index = 0; index < 100; index += 1) {
+    let index = 0;
+    while (true) {
       const evaluated = evaluateClusters(spin.board);
       if (!evaluated.wins.length) break;
       const before = clone(spin.board);
       const beforeC2Values = clone(spin.c2Values);
       rawPay += evaluated.pay;
-      applyCascade(spin, evaluated.wins, scene, c2Mode);
+      applyCascade(spin, evaluated.wins, scene, c2Mode, selectedParameter);
       steps.push({
         cascadeIndex: index + 1,
         before,
@@ -2541,6 +2691,7 @@
         wins: evaluated.wins,
         pay: evaluated.pay
       });
+      index += 1;
     }
 
     const c2 = summarizeC2Values(spin, c2Mode);
@@ -2550,6 +2701,7 @@
     const finalPay = rawPay * (effectiveMultiplier || 1) + scatterWin;
     return {
       scene,
+      selectedParameter,
       tableId,
       tableName: Box.strip_names[tableId],
       initialBoard,
@@ -2566,8 +2718,8 @@
     };
   }
 
-  function buildFreeSchedule(kind) {
-    const freeTable = currentProfile().free_table;
+  function buildFreeSchedule(kind, selectedParameter = "A") {
+    const freeTable = currentProfile(selectedParameter).free_table;
     const schedule = [];
     freeTable[kind].forEach((count, index) => {
       const selectedTable = tableIndex(freeTable.names[index]);
@@ -2602,6 +2754,20 @@
       const glyph = document.createElement("span");
       glyph.className = "h019-glyph";
       glyph.textContent = cell.glyph;
+      const imageSource = symbolImageSource(cell.code);
+      if (imageSource) {
+        glyph.hidden = true;
+        const image = document.createElement("img");
+        image.className = "h013-symbol-image";
+        image.src = imageSource;
+        image.alt = cell.code;
+        image.draggable = false;
+        image.addEventListener("error", () => {
+          image.remove();
+          glyph.hidden = false;
+        }, { once: true });
+        wrap.appendChild(image);
+      }
       wrap.appendChild(glyph);
       node.appendChild(wrap);
       const code = document.createElement("div");
@@ -2620,7 +2786,7 @@
 
   function sampleBoard() {
     return Array.from({ length: Box.window_size }, () =>
-      Array.from({ length: Box.reel_num }, () => symbolCell(randomIndex(Box.symbol_codes.length)))
+      Array.from({ length: Box.reel_num }, () => symbolCell(DISPLAY_SYMBOL_IDS[randomIndex(DISPLAY_SYMBOL_IDS.length)]))
     );
   }
 
@@ -2644,10 +2810,12 @@
     document.body.classList.toggle("fg-mode", inFg);
     setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : state.selectedMode === MODE_EXTRA ? "Extra Bet" : t("baseGame"));
     setText(el.cascade, String(spin?.steps.length || 0));
-    const multiplier = inFg ? state.pendingFg?.carry || 0 : spin?.effectiveMultiplier || 0;
+    const multiplier = spin?.scene === "FG" ? spin.effectiveMultiplier : 1;
     setText(el.multiplier, `x${multiplier || 1}`);
     el.fgPill.classList.toggle("hidden", !state.pendingFg);
-    if (state.pendingFg) setText(el.fgLeft, `${state.pendingFg.queue.length}/${state.pendingFg.total}`);
+    if (state.pendingFg) {
+      setText(el.fgLeft, `${Math.max(0, state.pendingFg.total - state.pendingFg.played)}/${state.pendingFg.total}`);
+    }
     setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
   }
 
@@ -2670,7 +2838,9 @@
     el.rngList.innerHTML = "";
     const rows = [
       [`Table`, `${spin.tableName} (#${spin.tableId})`],
-      [`C2`, `count ${spin.c2.count} | x${spin.c2.total} | mode ${spin.c2.mode}`]
+      [`Parameter`, spin.selectedParameter],
+      [`C2`, `count ${spin.c2.count} | x${spin.c2.total} | mode ${spin.c2.mode}`],
+      [`Card`, `${state.cardProfileUsed} | retries ${state.cardRetries}`]
     ];
     spin.starts.forEach((start, index) => rows.push([`R${index + 1}`, `stop ${start}`]));
     rows.forEach(([left, right]) => {
@@ -2747,6 +2917,7 @@
     el.betButton.disabled = wagerLocked;
     el.rngInput.disabled = state.busy;
     el.rngReset.disabled = state.busy || !el.rngInput.value.trim();
+    el.cardRange.disabled = !el.debug.checked || wagerLocked || !Box.card_system?.enabled;
     el.spin.disabled = state.busy;
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
     el.extra.classList.toggle("is-active", state.selectedMode === MODE_EXTRA);
@@ -2800,29 +2971,110 @@
     state.lastSpin = spin;
   }
 
-  function startFreeGame() {
-    const queue = buildFreeSchedule("initial");
-    state.pendingFg = { queue, total: queue.length, played: 0, carry: 0, win: 0 };
+  function cardParameters(selection) {
+    if (!selection) return { base: "A", free: "A" };
+    if (selection.kind === "package") {
+      const selected = parameterName(selection.card?.table);
+      return { base: selected, free: selected };
+    }
+    if (selection.kind === "free_game") {
+      return {
+        base: parameterName(selection.bgCard?.table),
+        free: parameterName(selection.fgCard?.table)
+      };
+    }
+    return { base: parameterName(selection.card?.table), free: "A" };
+  }
+
+  function simulateFreePackage(selectedParameter) {
+    const queue = buildFreeSchedule("initial", selectedParameter);
+    const spins = [];
+    let total = queue.length;
+    let totalPay = 0;
+    while (queue.length) {
+      const tableId = queue.shift();
+      const spin = playSpin(tableId, "FG", null, selectedParameter);
+      spin.retriggerAdded = 0;
+      if (spin.scatterCount >= 3 && total < Box.max_free_spins) {
+        const extra = buildFreeSchedule("retrigger", selectedParameter).slice(0, Box.max_free_spins - total);
+        queue.push(...extra);
+        total += extra.length;
+        spin.retriggerAdded = extra.length;
+      }
+      totalPay += spin.finalPay;
+      spins.push(spin);
+    }
+    return { spins, totalPay };
+  }
+
+  function simulateRoundCandidate(forceFeature, forcedStops, parameters) {
+    const tableId = forceFeature ? tableIndex("BG_strip (4)") : chooseBaseTable(parameters.base);
+    const base = playSpin(tableId, "BG", forcedStops, parameters.base);
+    const purchased = state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+    const triggered = base.scatterCount >= 4 || forceFeature || purchased;
+    const freeGame = triggered ? simulateFreePackage(parameters.free) : { spins: [], totalPay: 0 };
+    return {
+      base,
+      freeSpins: freeGame.spins,
+      freePay: freeGame.totalPay,
+      totalPay: base.finalPay + freeGame.totalPay,
+      triggered
+    };
+  }
+
+  async function generateAcceptedRound(forceFeature, forcedStops = null) {
+    if (forcedStops && cardSystemActive()) {
+      throw new Error(tr(
+        "Turn Card System Off before using fixed Reel RNG.",
+        "使用固定輪帶 RNG 前，請先關閉 Card System。"
+      ));
+    }
+    const selection = prepareCardSelection(state.selectedMode);
+    const parameters = cardParameters(selection);
+    state.cardProfileUsed = selection?.profile || "off";
+    const retryLimit = Math.max(1, Number(Box.card_system?.retry_limit) || 5000);
+    let candidate = null;
+    let retries = 0;
+    while (retries < retryLimit) {
+      candidate = simulateRoundCandidate(forceFeature, forcedStops, parameters);
+      if (cardAccepts(selection, candidate)) break;
+      retries += 1;
+      if (retries % 25 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    state.cardRetries = retries;
+    if (selection) {
+      appendLog(
+        retries >= retryLimit
+          ? `Card System ${state.cardProfileUsed} | retry limit ${retryLimit} reached`
+          : `Card System ${state.cardProfileUsed} | accepted after ${retries} retries`,
+        retries >= retryLimit ? "error" : "result"
+      );
+    }
+    return candidate;
+  }
+
+  function startFreeGame(spins) {
+    const queue = spins.slice();
+    const initialTotal = Number(Box.initial_free_spins_low) + Number(Box.initial_free_spins_high);
+    state.pendingFg = { queue, total: initialTotal, played: 0, win: 0 };
     state.fgTriggerCount += 1;
-    appendLog(tr(`Free Game triggered | ${queue.length} spins`, `觸發免費遊戲 | ${queue.length} 次`), "result");
+    appendLog(tr(`Free Game triggered | ${initialTotal} spins`, `觸發免費遊戲 | ${initialTotal} 次`), "result");
     updateFeatureBar();
   }
 
   async function playFreeSpin() {
     const fg = state.pendingFg;
     if (!fg || !fg.queue.length) return finishFreeGame();
-    const tableId = fg.queue.shift();
-    const spin = playSpin(tableId, "FG", fg.carry);
+    const spin = fg.queue.shift();
     fg.played += 1;
-    fg.carry = spin.effectiveMultiplier;
     fg.win += toMoney(spin.finalPay);
-    state.maxMultiplier = Math.max(state.maxMultiplier, fg.carry);
-
-    if (spin.scatterCount >= 3 && fg.total < Box.max_free_spins) {
-      const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - fg.total);
-      fg.queue.push(...extra);
-      fg.total += extra.length;
-      appendLog(tr(`FG Retrigger | +${extra.length} spins`, `FG 再觸發 | +${extra.length} 次`), "result");
+    state.maxMultiplier = Math.max(state.maxMultiplier, spin.effectiveMultiplier);
+    if (spin.retriggerAdded > 0) {
+      fg.total += spin.retriggerAdded;
+      appendLog(tr(
+        `FG Retrigger | +${spin.retriggerAdded} spins`,
+        `FG 再觸發 | +${spin.retriggerAdded} 次`
+      ), "result");
     }
     await playback(spin);
     updateStats();
@@ -2842,10 +3094,6 @@
     updateFeatureBar();
     writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
     updateStats();
-  }
-
-  function forcedTriggerSpin(forcedStops = null) {
-    return playSpin(tableIndex("BG_strip (4)"), "BG", 0, forcedStops);
   }
 
   async function doSpin() {
@@ -2868,8 +3116,8 @@
 
       const forcedStops = parseForcedStops();
       const forceFeature = el.forceFg.checked || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
-      const tableId = forceFeature ? tableIndex("BG_strip (4)") : chooseBaseTable();
-      const spin = forceFeature ? forcedTriggerSpin(forcedStops) : playSpin(tableId, "BG", 0, forcedStops);
+      const candidate = await generateAcceptedRound(forceFeature, forcedStops);
+      const spin = candidate.base;
       el.forceFg.checked = false;
       await playback(spin);
 
@@ -2877,9 +3125,8 @@
       state.balance += state.lastWin;
       state.totalWin += state.lastWin;
       state.maxMultiplier = Math.max(state.maxMultiplier, spin.c2.total);
-      const triggered = spin.scatterCount >= 4 || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
-      if (triggered) {
-        startFreeGame();
+      if (candidate.triggered) {
+        startFreeGame(candidate.freeSpins);
         writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
@@ -2929,6 +3176,7 @@
     });
     byId("controls").classList.toggle("debug-off", !enabled);
     updateDebugButtons();
+    updateControls();
   }
 
   function resetSession() {
@@ -2943,6 +3191,8 @@
       fgTriggerCount: 0,
       maxMultiplier: 0,
       lastWin: 0,
+      cardProfileUsed: state.cardMode,
+      cardRetries: 0,
       selectedMode: MODE_NORMAL,
       auto: false,
       pendingFg: null,
@@ -3027,10 +3277,30 @@
           for (const payout of group.payouts) {
             const item = document.createElement("div");
             item.className = "help-payout-item";
-            item.textContent = payout.replaceAll("[", "").replaceAll("]", "").replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+            const symbolMatch = payout.match(/^\[([^\]]+)\]\s*(.*)$/);
+            const payoutText = (symbolMatch ? symbolMatch[2] : payout.replaceAll("[", "").replaceAll("]", "")).replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
               const payoutCredits = Number(rawValue) * betMultiplier();
               return `${separator}${compactMoney(toMoney(payoutCredits))}`;
             });
+            const imageSource = symbolMatch ? symbolImageSource(symbolMatch[1]) : "";
+            if (imageSource) {
+              item.classList.add("with-symbol-image");
+              const image = document.createElement("img");
+              image.className = "help-symbol-image";
+              image.src = imageSource;
+              image.alt = symbolMatch[1];
+              image.loading = "lazy";
+              image.draggable = false;
+              const text = document.createElement("span");
+              text.className = "help-payout-text";
+              text.textContent = `${symbolMatch[1]} ${payoutText}`;
+              image.addEventListener("error", () => {
+                image.remove();
+              }, { once: true });
+              item.append(image, text);
+            } else {
+              item.textContent = symbolMatch ? `${symbolMatch[1]} ${payoutText}` : payoutText;
+            }
             grid.appendChild(item);
           }
           card.appendChild(grid);
@@ -3115,6 +3385,8 @@
     if (debugLabel?.lastChild) debugLabel.lastChild.textContent = ` ${t("debugMode")}`;
     const forceLabel = document.querySelector('label[for="forceFgInput"]');
     if (forceLabel?.lastChild) forceLabel.lastChild.textContent = ` ${t("forceFg")}`;
+    const cardLabel = el.cardRange.closest("label");
+    if (cardLabel?.firstChild) cardLabel.firstChild.textContent = ` ${tr("Card System", "卡片系統")} `;
     const speedLabel = document.querySelector('label[for="speedRange"]');
     if (speedLabel?.firstChild) speedLabel.firstChild.textContent = `${t("speed")} `;
     updateFeatureBar(state.lastSpin); updateStats(); updateControls();
@@ -3155,6 +3427,12 @@
   el.previous.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1));
   el.next.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
   el.debug.addEventListener("change", () => toggleDebug(el.debug.checked));
+  el.cardRange.addEventListener("change", () => {
+    state.cardMode = ["newbie", "oldhand"].includes(el.cardRange.value) ? el.cardRange.value : "off";
+    state.cardProfileUsed = state.cardMode;
+    appendLog(`Card System ${state.cardMode}`, "mode");
+    updateControls();
+  });
   el.rngInput.addEventListener("input", updateControls);
   el.rngReset.addEventListener("click", () => {
     el.rngInput.value = "";
@@ -3184,8 +3462,7 @@
   byId("gameId").textContent = "H013";
   byId("gameName").textContent = t("gameName");
   el.config.value = H013_ACTIVE_CONFIG;
-  el.cardRange.closest("label").firstChild.textContent = "Card BG Range ";
-  el.cardRange.disabled = true;
+  el.cardRange.value = state.cardMode;
   document.title = `${Box.english_name || "Sugar Bonanza 1000"} — Demo Game`;
   renderBetMenu();
   renderBoard(sampleBoard());
@@ -3198,6 +3475,51 @@
 })();
   </script>
   <script src="../help_ui_standardizer.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const root = document.getElementById("helpContent");
+      const files = window.H013_SYMBOL_IMAGE_FILES || {};
+      if (!root) return;
+
+      let scheduled = false;
+      function decorateHelpPaytable() {
+        scheduled = false;
+        for (const cell of root.querySelectorAll("table.help-paytable tbody td:first-child, table.paytable tbody td:first-child")) {
+          if (cell.querySelector(".help-table-symbol")) continue;
+          const code = cell.textContent.trim();
+          const filename = files[code];
+          if (!filename) continue;
+
+          const wrap = document.createElement("span");
+          wrap.className = "help-table-symbol";
+          const image = document.createElement("img");
+          image.className = "help-table-symbol-image";
+          image.src = `./Source/Image/${filename}`;
+          image.alt = code;
+          image.loading = "lazy";
+          image.draggable = false;
+          image.addEventListener("error", () => image.remove(), { once: true });
+          const label = document.createElement("span");
+          label.className = "help-table-symbol-code";
+          label.textContent = code;
+          wrap.append(image, label);
+          cell.replaceChildren(wrap);
+        }
+      }
+
+      function scheduleDecorate() {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(decorateHelpPaytable);
+      }
+
+      new MutationObserver(scheduleDecorate).observe(root, { childList: true, subtree: true });
+      document.getElementById("helpBtn")?.addEventListener("click", () => setTimeout(scheduleDecorate));
+      scheduleDecorate();
+    })();
+  </script>
 </body>
 
 </html>

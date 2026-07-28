@@ -1,6 +1,6 @@
 # H013 Sugar Bonanza 1000 — Help Draft
 
-本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以 `config.js` 及 `Simulator.py` 的實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
+本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以目前選擇的 `config_92.js`／`config_94.js` 及 `Simulator.py` 實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
 
 ## Game Meta
 
@@ -11,8 +11,8 @@
 | name_zh | 糖果狂歡 1000 |
 | name_en | Sugar Bonanza 1000 |
 | board | 6 reels × 5 rows |
-| modes | Normal Bet / Extra Bet (1.25x) / Feature Buy (75x) / Super Feature (500x) |
-| runtime_note | 官方遊戲清單記載 Feature Buy 為 100x，但目前 config 與 Simulator 實際使用 75x；本文件依可執行邏輯顯示 75x。 |
+| modes | Normal Bet / Extra Bet (1.25x) / Feature Buy (100x) / Super Feature (500x) |
+| runtime_note | Feature Buy 依主 Overview、目前 config 與 Simulator 的實際執行值顯示為 100x。 |
 
 ---
 
@@ -89,7 +89,7 @@
 | 主要標題 | 投注模式 | BET OPTIONS |
 | 規則說明 | 一般投注的成本為目前選擇押注的 1x。 | NORMAL BET COSTS 1X THE CURRENTLY SELECTED BET. |
 | 規則說明 | 額外投注的成本為目前選擇押注的 1.25x，並使用提高特色觸發機會的專用盤帶設定。 | EXTRA BET COSTS 1.25X THE CURRENTLY SELECTED BET AND USES DEDICATED REEL SETTINGS WITH A HIGHER FEATURE CHANCE. |
-| 規則說明 | 購買特色的成本為目前選擇押注的 75x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 75X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | 購買特色的成本為目前選擇押注的 100x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 100X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
 | 規則說明 | 超級特色的成本為目前選擇押注的 500x，並直接進入使用強化倍數權重的免費遊戲特色。 | SUPER FEATURE COSTS 500X THE CURRENTLY SELECTED BET AND ENTERS A FREE GAME FEATURE WITH ENHANCED MULTIPLIER WEIGHTS. |
 
 ---

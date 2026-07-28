@@ -26,18 +26,31 @@ BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
 CARD_SYSTEM_ENABLED = True  # True: use card system when config supports it; False: force it off.
 CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
+PARAMETER_TABLE = "AUTO"  # AUTO is official; A/B are diagnostic overrides only.
 
 # Batch runs. Edit this list directly when you want to run a custom set once.
+# A/B is selected by each Card System card, so every official run uses AUTO.
+# Newbie only has Normal / Extra sections; Feature Buy / Super Feature use Oldhand.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},  # test
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # config_92: Newbie NB / EB
+    {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # config_92: Newbie NB / EB
+    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # # config_92: Oldhand NB / EB / BF / SF
+    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # config_94: Newbie NB / EB
+    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # # config_94: Oldhand NB / EB / BF / SF
+    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 OUTPUT_REPORT = True
@@ -109,6 +122,10 @@ BET_MULTI = int(os.environ.get("H013_BET_MULTI", BET_MULTI))
 BET_MODE = int(os.environ.get("H013_BET_MODE", BET_MODE))
 CARD_SYSTEM_ENABLED = parse_env_bool("H013_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
 CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H013_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+PARAMETER_TABLE = os.environ.get("H013_PARAMETER_TABLE", PARAMETER_TABLE).strip().upper()
+if PARAMETER_TABLE not in {"AUTO", "A", "B"}:
+    raise ValueError(f"H013_PARAMETER_TABLE must be AUTO, A, or B; got {PARAMETER_TABLE!r}")
+PARAMETER_TABLE_OVERRIDE = -1 if PARAMETER_TABLE == "AUTO" else 0 if PARAMETER_TABLE == "A" else 1
 RUN_ALL_COMBINATIONS = parse_env_bool("H013_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
 BATCH_COMBINATIONS = list(BATCH_RUNS)
 
@@ -238,6 +255,7 @@ MAX_CARDS = max(1, max((len(cards) for cards in CARD_PROFILE_LISTS), default=0))
 CARD_TYPES = np.full((len(CARD_PROFILE_LISTS), MAX_CARDS), -1, dtype=np.int64)
 CARD_MIN = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
 CARD_MAX = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
+CARD_PARAMETER = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.int64)
 CARD_WEIGHT_CUM = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.int64)
 CARD_COUNTS = np.zeros(len(CARD_PROFILE_LISTS), dtype=np.int64)
 for profile_idx, cards in enumerate(CARD_PROFILE_LISTS):
@@ -247,6 +265,7 @@ for profile_idx, cards in enumerate(CARD_PROFILE_LISTS):
         CARD_TYPES[profile_idx, card_idx] = CARD_TYPE_FREE_GAME if card.get("type") == "free_game" else CARD_TYPE_RANGE
         CARD_MIN[profile_idx, card_idx] = float(card.get("min", 0.0))
         CARD_MAX[profile_idx, card_idx] = float(card.get("max", 0.0))
+        CARD_PARAMETER[profile_idx, card_idx] = 1 if str(card.get("table", "A")).strip().upper() == "B" else 0
         CARD_WEIGHT_CUM[profile_idx, card_idx] = running_weight
     CARD_COUNTS[profile_idx] = len(cards)
 
@@ -265,8 +284,6 @@ BET_FACTORS = np.asarray(
     dtype=np.float64,
 )
 MAX_FREE_SPINS = int(CFG["max_spin_free_game"])
-INITIAL_LOW = int(CFG["initial_free_spins_low"])
-INITIAL_HIGH = int(CFG["initial_free_spins_high"])
 RETRIGGER_LOW = int(CFG["retrigger_free_spins_low"])
 RETRIGGER_HIGH = int(CFG["retrigger_free_spins_high"])
 
@@ -279,17 +296,35 @@ SYMBOL_COUNT = len(SYMBOL_STR)
 SYMBOLS_SCORE = np.asarray(CFG["symbols_score"], dtype=np.int64)
 VALUE_MULTIPLIER = np.asarray(CFG["value_multiplier"], dtype=np.int64)
 
-WEIGHT_TABLE_NORMAL = np.asarray(CFG["weight_table_normal_bet"], dtype=np.int64)
-WEIGHT_TABLE_EXTRA = np.asarray(CFG["weight_table_extra_bet"], dtype=np.int64)
-MULTI_WEIGHTS = np.asarray(
-    [
-        CFG["weight_multiplier_fg_low"],
-        CFG["weight_multiplier_fg_high"],
-        CFG["weight_multiplier_fb_low"],
-        CFG["weight_multiplier_fb_high"],
-        CFG["weight_multiplier_sb_low"],
-        CFG["weight_multiplier_sb_high"],
-    ],
+PARAMETER_NAMES = ("A", "B")
+PARAMETER_BLOCKS = [CFG["parameter_blocks"][name] for name in PARAMETER_NAMES]
+PARAM_WEIGHT_TABLE_NORMAL = np.asarray(
+    [block["table_weights"]["normal"] for block in PARAMETER_BLOCKS],
+    dtype=np.int64,
+)
+PARAM_WEIGHT_TABLE_EXTRA = np.asarray(
+    [block["table_weights"]["extrabet"] for block in PARAMETER_BLOCKS],
+    dtype=np.int64,
+)
+
+
+def _parameter_mix(block, mode):
+    active = [item for item in block["free_spin_mix"] if int(item["weights"][mode]) > 0]
+    if len(active) != 1:
+        raise ValueError(f"Parameter block {block['name']}: expected one active {mode} free-spin mix")
+    return int(active[0]["low"]), int(active[0]["high"])
+
+
+PARAM_INITIAL_LOW = np.asarray(
+    [[_parameter_mix(block, mode)[0] for mode in ("normal", "featurebuy", "superfeaturebuy")] for block in PARAMETER_BLOCKS],
+    dtype=np.int64,
+)
+PARAM_INITIAL_HIGH = np.asarray(
+    [[_parameter_mix(block, mode)[1] for mode in ("normal", "featurebuy", "superfeaturebuy")] for block in PARAMETER_BLOCKS],
+    dtype=np.int64,
+)
+PARAM_MULTI_WEIGHTS = np.asarray(
+    [[block["multiplier_weights"][source] for source in block["multiplier_sources"]] for block in PARAMETER_BLOCKS],
     dtype=np.int64,
 )
 
@@ -501,11 +536,11 @@ def _count_symbol(board, symbol):
 
 
 @njit(nogil=True)
-def _base_table(mode):
+def _base_table(mode, parameter_idx):
     if mode == MODE_NORMALBET:
-        return _weighted_index(WEIGHT_TABLE_NORMAL)
+        return _weighted_index(PARAM_WEIGHT_TABLE_NORMAL[parameter_idx])
     if mode == MODE_EXTRABET:
-        return 4 + _weighted_index(WEIGHT_TABLE_EXTRA)
+        return 4 + _weighted_index(PARAM_WEIGHT_TABLE_EXTRA[parameter_idx])
     return 3
 
 
@@ -519,11 +554,11 @@ def _fg_tables_and_profile(mode):
 
 
 @njit(nogil=True)
-def _draw_multiplier(profile_row, count):
+def _draw_multiplier(parameter_idx, profile_row, count):
     if count <= 0:
         return 1
     total = 0
-    weights = MULTI_WEIGHTS[profile_row]
+    weights = PARAM_MULTI_WEIGHTS[parameter_idx, profile_row]
     for _ in range(count):
         total += VALUE_MULTIPLIER[_weighted_index(weights)]
     return total
@@ -544,24 +579,37 @@ def _simulate_chunk(rounds, mode, bet_multi):
     bg_card_idx = -1
     fg_card_idx = -1
     package_card_idx = -1
+    bg_parameter_idx = 0
+    fg_parameter_idx = 0
 
     while accepted_rounds < rounds:
         if retry_count == 0:
             bg_card_idx = -1
             fg_card_idx = -1
             package_card_idx = -1
+            bg_parameter_idx = 0
+            fg_parameter_idx = 0
             if CARD_SYSTEM_ENABLED:
                 if package_profile >= 0:
                     package_card_idx = _pick_card(package_profile)
+                    if package_card_idx >= 0:
+                        fg_parameter_idx = CARD_PARAMETER[package_profile, package_card_idx]
                 else:
                     bg_card_idx = _pick_card(bg_profile)
+                    if bg_card_idx >= 0:
+                        bg_parameter_idx = CARD_PARAMETER[bg_profile, bg_card_idx]
                     if bg_card_idx >= 0 and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME:
                         fg_card_idx = _pick_card(fg_profile)
+                        if fg_card_idx >= 0:
+                            fg_parameter_idx = CARD_PARAMETER[fg_profile, fg_card_idx]
+            if PARAMETER_TABLE_OVERRIDE >= 0:
+                bg_parameter_idx = PARAMETER_TABLE_OVERRIDE
+                fg_parameter_idx = PARAMETER_TABLE_OVERRIDE
 
         round_hits = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
         round_pays = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
         round_eliminates = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
-        table_id = _base_table(mode)
+        table_id = _base_table(mode, bg_parameter_idx)
         board, stops = _generate_board(table_id)
         bg_regular, bg_cascades = _cascade(table_id, board, stops, bet_multi, 0, True, round_hits, round_pays, round_eliminates)
         scatter_count = _count_symbol(board, C1)
@@ -580,12 +628,16 @@ def _simulate_chunk(rounds, mode, bet_multi):
 
         if scatter_pay > 0:
             low_table, high_table, profile = _fg_tables_and_profile(mode)
-            low_total = INITIAL_LOW
-            high_total = INITIAL_HIGH
+            mix_mode = 1 if mode == MODE_FEATUREBUY else 2 if mode == MODE_SUPERFEATUREBUY else 0
+            low_total = PARAM_INITIAL_LOW[fg_parameter_idx, mix_mode]
+            high_total = PARAM_INITIAL_HIGH[fg_parameter_idx, mix_mode]
             low_done = 0
             high_done = 0
             while high_done < high_total or low_done < low_total:
-                is_high = high_done < high_total
+                high_remaining = high_total - high_done
+                low_remaining = low_total - low_done
+                remaining = high_remaining + low_remaining
+                is_high = high_remaining > 0 and (low_remaining <= 0 or np.random.randint(0, remaining) < high_remaining)
                 if is_high:
                     fg_table = high_table
                     high_done += 1
@@ -606,7 +658,11 @@ def _simulate_chunk(rounds, mode, bet_multi):
                     high_total += RETRIGGER_HIGH
                     retriggers += 1
 
-                multiplier = _draw_multiplier(profile + (1 if is_high else 0), _count_symbol(preview, C2))
+                multiplier = _draw_multiplier(
+                    fg_parameter_idx,
+                    profile + (1 if is_high else 0),
+                    _count_symbol(preview, C2),
+                )
                 spin_pay, cascades = _cascade(fg_table, fg_board, fg_stops, multiplier * bet_multi, 1, True, round_hits, round_pays, round_eliminates)
                 fg_pay += spin_pay
                 fg_spins += 1
@@ -700,6 +756,14 @@ def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, durat
         ("Game ID", GAME_ID, ""),
         ("PARsheet ID", PARSHEET_ID, ""),
         ("Game Version", GAME_VERSION, ""),
+        ("Config File", CONFIG_FILE, ""),
+        ("Parameter Table", PARAMETER_TABLE, ""),
+        ("Card Profile Requested", "Newbie" if CARD_SYSTEM_IS_NEWBIE else "Oldhand", ""),
+        (
+            "Card Profile Applied",
+            "Off" if not CARD_SYSTEM_ENABLED else "Oldhand" if bet_mode in (MODE_FEATUREBUY, MODE_SUPERFEATUREBUY) else "Newbie" if CARD_SYSTEM_IS_NEWBIE else "Oldhand",
+            "",
+        ),
         ("Bet Mode", bet_mode, MODE_NAMES[bet_mode]),
         ("Coin In / Round", coin_in, "credit"),
         ("Total Rounds", rounds, ""),
@@ -862,6 +926,9 @@ def print_batch_summary(duration, summary, bet_mode):
     fg_trigger_count = int(round(float(summary.get("fg_trigger_count", 0))))
     print(f"* game_id: {GAME_ID}", flush=True)
     print(f"* version: {GAME_VERSION}", flush=True)
+    print(f"* config: {CONFIG_FILE}", flush=True)
+    print(f"* parameter_table: {PARAMETER_TABLE}", flush=True)
+    print(f"* card_profile_requested: {'newbie' if CARD_SYSTEM_IS_NEWBIE else 'oldhand'}", flush=True)
     print(f"* bet_mode: {format_bet_mode_label(bet_mode)}", flush=True)
     print(f"* duration: {format_elapsed_time(duration)}", flush=True)
     print(f"* rtp_total: {summary['rtp_total'] * 100:.2f}%", flush=True)
@@ -886,7 +953,21 @@ def output_report(df_base, df_detail, df_multiplier, df_record, bet_mode, total_
     version_tag = format_version_tag(GAME_VERSION)
     if version_tag:
         parts.append(version_tag)
-    parts.extend([stamp, f"betmode{bet_mode}", format_rounds_tag(total_round)])
+    config_tag = Path(CONFIG_FILE).stem.replace("config_", "cfg")
+    parameter_tag = f"param{PARAMETER_TABLE.lower()}"
+    profile_tag = "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"
+    card_tag = "cardon" if CARD_SYSTEM_ENABLED else "cardoff"
+    parts.extend(
+        [
+            config_tag,
+            parameter_tag,
+            profile_tag,
+            card_tag,
+            stamp,
+            f"betmode{bet_mode}",
+            format_rounds_tag(total_round),
+        ]
+    )
     path = os.path.join(OUTPUT_DIR, f"{'_'.join(parts)}.xlsx")
     with pd.ExcelWriter(path) as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
@@ -917,6 +998,7 @@ def run_all_combinations():
         combo_env = os.environ.copy()
         combo_env["PYTHONUNBUFFERED"] = "1"
         combo_env["H013_CONFIG_FILE"] = str(combo["config_file"])
+        combo_env["H013_PARAMETER_TABLE"] = str(combo.get("parameter_table", "AUTO"))
         combo_env["H013_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H013_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         combo_env["H013_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", True) else "false"
@@ -924,7 +1006,11 @@ def run_all_combinations():
         combo_env["H013_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H013_BATCH_CHILD"] = "1"
         print(
-            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, " f"card_system_enabled={combo.get('card_system_enabled', True)}, " f"card_system_is_newbie={combo.get('card_system_is_newbie', False)} ===",
+            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, "
+            f"parameter_table={combo.get('parameter_table', 'AUTO')}, "
+            f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, "
+            f"card_system_enabled={combo.get('card_system_enabled', True)}, "
+            f"card_system_is_newbie={combo.get('card_system_is_newbie', False)} ===",
             flush=True,
         )
         result = subprocess.run(

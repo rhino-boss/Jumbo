@@ -1789,6 +1789,16 @@
       letter-spacing: 0.02em;
       text-shadow: 0 2px 3px rgba(0, 0, 0, 0.72);
     }
+    .h019-symbol-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      padding: 3px;
+      object-fit: contain;
+      object-position: center;
+      user-select: none;
+      pointer-events: none;
+    }
     .cell .symbol-code { display: none; }
     .cell.symbol-a,
     .cell.symbol-k,
@@ -2163,6 +2173,21 @@
   const WW = Box.symbol_codes.indexOf("WW");
   const C1 = Box.symbol_codes.indexOf("C1");
   const C2 = Box.symbol_codes.indexOf("C2");
+  const SYMBOL_IMAGE_FILES = {
+    WW: "WW_Symbol.png",
+    C1: "C1_Symbol.png",
+    C2: "C2_Symbol.png",
+    M1: "M1_Symbol.png",
+    M2: "M2_Symbol.png",
+    M3: "M3_Symbol.png",
+    M4: "M4_Symbol.png",
+    A: "M5_Symbol.png",
+    K: "M6_Symbol.png",
+    Q: "M7_Symbol.png",
+    J: "M8_Symbol.png",
+    TE: "M9_Symbol.png"
+  };
+  const SYMBOL_IMAGE_BASE = "./Source/Image/";
   const PROFILE_NAMES = {
     [MODE_NORMAL]: "normal",
     [MODE_BUY]: "featurebuy",
@@ -2559,7 +2584,7 @@
 
   function symbolCell(symbol, value = 0) {
     const code = Box.symbol_codes[symbol] || "?";
-    return { symbol, code, glyph: code, value };
+    return { symbol, code, glyph: code, image: SYMBOL_IMAGE_FILES[code] || "", value };
   }
 
   function boardCells(board, values = null) {
@@ -2579,6 +2604,19 @@
       const glyph = document.createElement("span");
       glyph.className = "h019-glyph";
       glyph.textContent = cell.glyph;
+      if (cell.image) {
+        const image = document.createElement("img");
+        image.className = "h019-symbol-image";
+        image.src = `${SYMBOL_IMAGE_BASE}${cell.image}`;
+        image.alt = cell.code;
+        image.draggable = false;
+        glyph.hidden = true;
+        image.addEventListener("error", () => {
+          image.remove();
+          glyph.hidden = false;
+        }, { once: true });
+        wrap.appendChild(image);
+      }
       wrap.appendChild(glyph);
       node.appendChild(wrap);
       const code = document.createElement("div");

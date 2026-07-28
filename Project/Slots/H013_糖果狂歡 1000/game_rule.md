@@ -1,6 +1,6 @@
 # 糖果狂歡 1000 (Sugar Bonanza 1000) 遊戲規則說明
 
-> 文件版本：v1.0
+> 文件版本：v1.1
 > 編號：H013
 > 撰寫日期：2026-05-21
 
@@ -18,12 +18,11 @@
 | 盤面規格 | 6 輪盤、5 列固定盤面 |
 | 中獎方式 | 同一符號在整個盤面出現達門檻即可得分，無賠線 |
 | 最小 / 最大 Ways | 不適用，本作為全盤面計數型玩法 |
-| 押注規格 | `Normal Bet`、`Extra Bet (1.25x)`、`Feature Buy (75x)`、`Super Feature Buy (500x)` |
-| Buy Feature | 有，`Feature Buy = 75x Bet`；`Super Feature Buy = 500x Bet` |
+| 押注規格 | `Normal Bet`、`Extra Bet (1.25x)`、`Feature Buy (100x)`、`Super Feature Buy (500x)` |
+| Buy Feature | 有，`Feature Buy = 100x Bet`；`Super Feature Buy = 500x Bet` |
 
 補充說明：
-* Help 畫面標示本作可達 `25,000x Bet`。
-* 本文件以目前 `H013_Simulator.py` 與 `H013_Box.py` 的實際程式行為為主來源。
+* 本文件以 `H013192.xlsx`、`H013194.xlsx` 的主 `Overview` 數值，以及目前 `Simulator.py`、`config_92.js`、`config_94.js` 的實際程式行為為主來源。
 
 ---
 
@@ -145,7 +144,7 @@
 
 ### 7.2 FG 玩法
 
-* 目前 `H013_Simulator.py` 以固定拆法執行：**2 場高表 + 8 場低表**。
+* 每組初始 Free Game 固定包含：**2 場高表 + 8 場低表**，執行順序會隨機排列。
 * 高表 / 低表使用不同的 `FG strip` 與不同的 `multiplier_range` 權重。
 * 每一局 FG 都會先完整模擬該局的連消結果，再依該局最終盤面上的 `C2` 決定總倍數。
 * 該局所有連消得分都乘上同一個總倍數後，累加到本次 FG 總得分。
@@ -161,7 +160,7 @@
 
 ## §8. Buy Feature（購買特色）
 
-* `Feature Buy` 依目前數學檔與模擬器，價格為 **75x Bet**。
+* `Feature Buy` 依主 `Overview` 數值與模擬器，價格為 **100x Bet**。
 * `Super Feature Buy` 價格為 **500x Bet**。
 * Buy 進場時不先玩一般 Base Game，而是直接切入對應的 Buy 輪帶與 FG 輪帶配置。
 * `Feature Buy` 會使用 `FB` 輪帶組；`Super Feature Buy` 會使用 `SB` 輪帶組。
@@ -193,6 +192,14 @@
 * **9.4.1 Feature Buy 與 Super Feature Buy 為不同模式**：兩者成本與使用輪帶不同，不應混用。
 * **9.4.2 Buy 模式仍沿用 FG 核心規則**：進入 Buy 後，倍率、retrigger、50 場上限等核心邏輯仍依 Free Game 規則執行。
 
+### 9.5 Card System（內部模擬 / 除錯）
+
+* Card System 為內部結果篩選機制，不屬於玩家可操作的遊戲特色，因此不列入玩家 Help。
+* `Simulator.py` 可設定開關及 Newbie / Oldhand；DemoGame 僅在 Debug Mode 提供 Off / Newbie / Oldhand。
+* Card System 開啟時會先依 config 抽出目標卡片，再重抽完整回合直到符合區間、FG 條件或達到 `retry_limit`。
+* 卡片上的 A / B 表別會同步決定 BG 選表權重、FG 高低表組合與 C2 倍數權重。
+* Buy Feature 與 Super Feature 的 Card System 依 Oldhand 對應資料執行，與 Simulator 一致。
+
 ---
 
 ## 附錄 A. 詞彙對照
@@ -214,18 +221,16 @@
 
 ### 主來源
 
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\H013_Simulator.py`
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\Source\H013_Box.py`
-
-### 補充來源
-
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\Source\General\Math.py`
-* `C:\Users\rhinshen\Mine\個人工作區\2_Program\Project\Slots\Source\General\RedBox.py`
-* `C:\Users\rhinshen\Mine\個人工作區\0_Project (專案相關)\IGaming\1_專案\遊戲開發\所有遊戲\H013_糖果狂歡\歷史紀錄\v1\H013197-0.0.0.1.xlsx`
-* `C:\Users\rhinshen\Mine\個人工作區\0_Project (專案相關)\IGaming\1_專案\遊戲開發\所有遊戲\H013_糖果狂歡\遊戲畫面_Help\*.png`
+* `Source/H013192.xlsx`
+* `Source/H013194.xlsx`
+* `Source/xlsx_to_config.py`
+* `config_92.js`
+* `config_94.js`
+* `Simulator.py`
+* `index.html`
 
 ### 採信原則
 
-* 若歷史 xlsx / Help 與目前程式行為不一致，**以目前程式行為為準**。
-* 本文件已知採用的現行程式規格包含：FG 初始 **2 高表 + 8 低表**、FG retrigger **+1 高表 + 4 低表**、FG 上限 **50 場**。
-* `iGaming 遊戲代號一覽.xlsx` 的 BF 欄為 **100x**，但 `H013197.xlsx` 與舊版模擬器為 **75x**；本版 Simulator 為保持數學行為一致採 **75x**，正式上線成本仍需企劃確認。
+* 數值以 `H013192.xlsx`、`H013194.xlsx` 主 `Overview` 與其生成 config 為準；同一 Excel 內的歷史 Description 若衝突，不覆蓋主 Overview。
+* Feature Buy 正式採主 Overview 的 **100x**；Description / Feature Buy Overview 中殘留的 **75x** 視為舊版文字。
+* 現行規格包含：FG 初始 **2 高表 + 8 低表**、FG retrigger **+1 高表 + 4 低表**、各組順序隨機、FG 上限 **50 場**。

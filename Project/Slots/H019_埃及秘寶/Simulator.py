@@ -30,12 +30,21 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # Test
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # H019192：NB Newbie／NB Oldhand／BF／SF
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # # H019194：NB Newbie／NB Oldhand／BF／SF
+    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -130,6 +139,19 @@ SHOW_CONSOLE_DETAIL = parse_env_bool("H019_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DE
 RUN_SINGLE_SPIN_DEBUG = parse_env_bool("H019_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 
 
+def is_h019_config(path):
+    try:
+        text = path.read_text(encoding="utf-8-sig").strip()
+        start = text.find("{")
+        end = text.rfind("}")
+        if start < 0 or end <= start:
+            return False
+        config = json.loads(text[start : end + 1])
+    except (OSError, ValueError, json.JSONDecodeError):
+        return False
+    return str(config.get("game_id")) == "101006" and str(config.get("parsheet_id")) == "H0191"
+
+
 def resolve_base_dir():
     override = os.environ.get("H019_BASE_DIR")
     candidates = []
@@ -139,15 +161,16 @@ def resolve_base_dir():
     if file_value:
         candidates.append(Path(file_value).resolve().parent)
     cwd = Path.cwd().resolve()
-    candidates.extend([cwd, cwd / "Project_AI" / "Slots" / "H019_埃及秘寶"])
+    candidates.append(cwd)
     for parent in [cwd, *cwd.parents]:
+        candidates.append(parent / "Project" / "Slots" / "H019_埃及秘寶")
         candidates.append(parent / "Project_AI" / "Slots" / "H019_埃及秘寶")
         candidates.append(parent / "Slots" / "H019_埃及秘寶")
     for candidate in candidates:
         candidate = candidate.resolve()
-        if (candidate / CONFIG_FILE).is_file():
+        if is_h019_config(candidate / CONFIG_FILE):
             return candidate
-    raise FileNotFoundError(f"Cannot locate H019 base directory containing {CONFIG_FILE}")
+    raise FileNotFoundError(f"Cannot locate H019 base directory containing a valid H019 {CONFIG_FILE}")
 
 
 BASE_DIR = resolve_base_dir()

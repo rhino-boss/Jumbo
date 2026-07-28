@@ -1,0 +1,2893 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H015 Wild Train — Demo Game</title>
+  <style>
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    #board .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .rng-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      /* Six reels must fit inside the 420px game panel (400px inner width). */
+      --cell-size: 60px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 920px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    #modeText {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .feature-strip {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
+    #rng-wrap,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-shell {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .multiplier-track {
+      width: min(100%, 380px);
+      height: 36px;
+      margin: 0 auto 8px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: linear-gradient(90deg, rgba(4, 14, 26, 0.92), rgba(12, 34, 64, 0.7), rgba(4, 14, 26, 0.92));
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+
+    .multiplier-window {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+      will-change: transform, opacity, filter;
+    }
+
+    .multiplier-window.roll-one {
+      animation: multiplierRollOne 180ms cubic-bezier(0.22, 0.72, 0.24, 1);
+    }
+
+    .multiplier-step {
+      min-width: 0;
+      color: var(--sub);
+      font: 800 clamp(0.68rem, 1.35vw, 0.92rem) / 1 Consolas, "Courier New", monospace;
+      text-align: center;
+      opacity: 0.22;
+      white-space: nowrap;
+    }
+
+    .multiplier-step.is-previous {
+      color: #876b35;
+      opacity: 0.42;
+    }
+
+    .multiplier-step.is-active {
+      color: var(--blue);
+      opacity: 1;
+      font-size: clamp(0.92rem, 1.8vw, 1.18rem);
+      text-shadow: 0 0 10px rgba(51, 187, 255, 0.58);
+    }
+
+    @keyframes multiplierRollOne {
+      from {
+        transform: translateX(20%);
+        opacity: 0.38;
+        filter: blur(2px);
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: var(--cell-size);
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    #board .cell.gold {
+      border-color: #ffe078;
+      background:
+        linear-gradient(180deg, rgba(255, 244, 173, 0.35), transparent 42%),
+        linear-gradient(180deg, #d9a923, #7d4b06);
+      box-shadow: none;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
+      transform: scale(1.03);
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    /* H015 symbol artwork is scaled into every cell without cropping. */
+    .cell .symbol-wrap {
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 3px;
+    }
+
+    .h015-symbol-img {
+      position: relative;
+      inset: auto;
+      display: block;
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
+      object-fit: contain;
+      object-position: center;
+      transform: none;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .h015-symbol-svg {
+      display: block;
+      width: 90%;
+      height: 90%;
+      overflow: visible;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .cell.gold .h015-symbol-img {
+      width: 76%;
+      height: 76%;
+      max-width: 76%;
+      max-height: 76%;
+    }
+
+    .h015-frame-img {
+      position: absolute;
+      inset: 1%;
+      z-index: 2;
+      display: block;
+      width: 98%;
+      height: 98%;
+      object-fit: contain;
+      object-position: center;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.58));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .cell.symbol-a,
+    .cell.symbol-k,
+    .cell.symbol-q,
+    .cell.symbol-j {
+      border-color: rgba(38, 92, 137, 0.28);
+      background: #060d1a;
+    }
+
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.symbol-c1 {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.symbol-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .set-rng-controls {
+      display: grid;
+      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
+      align-items: end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .debug-rng-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .debug-rng-field input,
+    .debug-rng-field select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .debug-rng-field input::placeholder {
+      color: var(--sub);
+      opacity: 0.7;
+    }
+
+    #setRngResetBtn {
+      width: 82px;
+      min-width: 82px;
+      align-self: end;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3,
+    #rng-wrap h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row,
+    .rng-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .zone-body.set-rng-controls {
+      display: grid;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    #rng-wrap {
+      width: 100%;
+      margin-top: 10px;
+      padding: 0;
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #rng-wrap .diagnostic-header,
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    #rng-wrap .rng-list {
+      padding: 8px 12px;
+    }
+
+    .live-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      background: #06111f;
+    }
+
+    .help-loading,
+    .help-load-error {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--sub);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 14px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 9px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .help-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-2);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-section-title .help-en {
+      color: var(--blue);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .help-group-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 9px 12px 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .help-group-title .help-en {
+      color: var(--sub);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .help-rule {
+      display: block;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(17, 50, 82, 0.85);
+      line-height: 1.55;
+    }
+
+    .help-rule-zh,
+    .help-rule-en {
+      min-width: 0;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .help-rule-en {
+      color: #a9cce8;
+      font-size: 11px;
+    }
+
+    .help-lang-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--sub);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      padding: 8px 12px 12px;
+    }
+
+    .help-payout-item {
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    #helpSourceFrame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(60px, calc((100vw - 64px) / 6));
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      .set-rng-controls {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
+      }
+
+      #grid-panel {
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      #controls {
+        grid-template-columns: 1fr;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .help-payout-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .set-rng-controls {
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      }
+
+      #controls #setRngResetBtn {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId">H015192</span> <span id="gameName">Wild Train</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
+            id="carryMultiValue">0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="multiplier-track" aria-label="Multiplier progression">
+            <div class="multiplier-window" id="multiplierWindow"></div>
+          </div>
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3 data-i18n="simulationStats">Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect">
+              <option value="">Auto</option>
+            </select>
+          </label>
+          <label class="debug-rng-field" for="reelRngInput">
+            Reel RNG
+            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
+      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
+      <div class="rng-list" id="rngList"></div>
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect">
+            <option value="config_92.js">H015192</option>
+            <option value="config_94.js">H015194</option>
+          </select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span data-i18n="language">Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+      </div>
+      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+  </dialog>
+  <script id="embeddedH015GameHelpMarkdown" type="text/plain">
+# 101015 Game Help Draft
+
+這份 md 是 H015「賞金列車 / Wild Train」的 Help 前置確認稿。
+之後若要調整遊戲 Help，應先修改這份 md，再同步內嵌至 `index.html`。
+
+## Game Meta
+
+| Field | Value |
+| --- | --- |
+| game_id | 101015 |
+| parsheet_id | H0151 |
+| name_zh | 賞金列車 |
+| name_en | Wild Train |
+
+---
+
+## PAYTABLE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+
+### WILD SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | [WW] 可替代除 [C1] 外的所有賠付符號。 | [WW] SUBSTITUTES FOR ALL PAYING SYMBOLS EXCEPT [C1]. |
+
+### SCATTER SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 散佈符號 | SCATTER SYMBOL |
+| 規則說明 | 所有連消結束後，最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | AFTER ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS TRIGGER THE FREE GAME FEATURE. |
+
+### 賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+| 中文欄 | 中文欄 | 中文欄 |
+| --- | --- | --- |
+| [M1] 3 - 50 | [M1] 4 - 100 | [M1] 5 - 150 |
+| [M1] 6 - 250 | [M2] 3 - 40 | [M2] 4 - 75 |
+| [M2] 5 - 100 | [M2] 6 - 150 | [M3] 3 - 25 |
+| [M3] 4 - 50 | [M3] 5 - 75 | [M3] 6 - 100 |
+| [M4] 3 - 25 | [M4] 4 - 50 | [M4] 5 - 75 |
+| [M4] 6 - 100 | [A] 3 - 10 | [A] 4 - 20 |
+| [A] 5 - 30 | [A] 6 - 50 | [K] 3 - 10 |
+| [K] 4 - 20 | [K] 5 - 30 | [K] 6 - 50 |
+| [Q] 3 - 5 | [Q] 4 - 10 | [Q] 5 - 15 |
+| [Q] 6 - 25 | [J] 3 - 5 | [J] 4 - 10 |
+| [J] 5 - 15 | [J] 6 - 25 |  |
+
+---
+
+## WAYS FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 3600 路賠付 | 3600 WAYS |
+| 規則說明 | 盤面共有 {6} 輪，有效格數依序為 {3、4、5、5、4、3}。 | THE GAME USES {6} REELS WITH {3, 4, 5, 5, 4, 3} ACTIVE POSITIONS. |
+| 規則說明 | 相同符號由最左輪開始，在連續相鄰輪出現至少 {3} 輪即可得獎；每種 Ways 組合分別計獎。 | MATCHING SYMBOLS PAY FROM THE LEFTMOST REEL ACROSS AT LEAST {3} CONSECUTIVE REELS. EACH WAY IS AWARDED SEPARATELY. |
+
+---
+
+## CASCADING FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 連消特色 | CASCADING FEATURE |
+| 規則說明 | 每次中獎後，中獎符號會被消除並依掉落表補入新符號，再次檢查中獎組合。 | AFTER EACH WIN, WINNING SYMBOLS ARE REMOVED AND REPLACED USING THE CASCADE TABLE, THEN THE REELS ARE EVALUATED AGAIN. |
+| 規則說明 | 連消會持續進行，直到盤面不再形成新的中獎組合。 | CASCADES CONTINUE UNTIL NO NEW WINNING COMBINATION IS FORMED. |
+
+---
+
+## GOLDEN SYMBOL FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金框符號 | GOLDEN SYMBOL FEATURE |
+| 規則說明 | 金框符號以對應的一般符號參與計獎；若金框符號屬於中獎組合，該位置會在下一次連消轉換為 [WW]。 | A GOLDEN SYMBOL PAYS AS ITS MATCHING REGULAR SYMBOL. WHEN IT PARTICIPATES IN A WIN, THAT POSITION CHANGES TO [WW] FOR THE NEXT CASCADE. |
+
+---
+
+## MULTIPLIER FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 累進倍數 | PROGRESSIVE MULTIPLIER |
+| 規則說明 | 基礎遊戲每次旋轉由 x1 開始；免費遊戲每次旋轉由 x8 開始。 | EACH BASE GAME SPIN STARTS AT x1. EACH FREE GAME SPIN STARTS AT x8. |
+| 規則說明 | 每完成一次中獎連消，倍數等級向上提升一級。倍數等級為 x1、x2、x4、x8、x16、x32、x64、x128、x256、x512、x1024。 | AFTER EACH WINNING CASCADE, THE MULTIPLIER ADVANCES ONE LEVEL: x1, x2, x4, x8, x16, x32, x64, x128, x256, x512 AND x1024. |
+| 規則說明 | 閃電效果可能額外提升倍數等級；本次連消的獎金乘以提升後的倍數。 | THE LIGHTNING EFFECT MAY ADVANCE ADDITIONAL MULTIPLIER LEVELS. THE CURRENT CASCADE WIN IS MULTIPLIED BY THE UPDATED VALUE. |
+
+---
+
+## FREE GAME FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
+| 規則說明 | {3、4、5} 個 [C1] 分別獲得 {10、12、14} 次免費旋轉。 | {3, 4 OR 5} [C1] AWARD {10, 12 OR 14} FREE SPINS RESPECTIVELY. |
+| 規則說明 | 免費遊戲中再次出現 {3} 個或以上 [C1]，會依相同規則追加免費旋轉；單次免費遊戲最多進行 {50} 次旋轉。 | {3} OR MORE [C1] DURING THE FREE GAME AWARD ADDITIONAL FREE SPINS BY THE SAME RULE. A FREE GAME SESSION IS CAPPED AT {50} SPINS. |
+| 規則說明 | 系統會依權重指定其中一場免費遊戲；若該場首段連消未出現閃電，會強制提升 {1} 階倍數。 | ONE WEIGHTED FREE SPIN IS DESIGNATED PER FEATURE. IF ITS FIRST CASCADE HAS NO LIGHTNING, THE MULTIPLIER IS FORCED UP BY {1} LEVEL. |
+
+---
+
+## BUY FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 購買特色 | BUY FEATURE |
+| 規則說明 | 購買特色的費用為目前投注的 {75} 倍。按下購買特色會立即進行一次保證觸發免費遊戲的旋轉，並直接進入免費遊戲；這不是持續狀態切換。 | BUY FEATURE COSTS {75} TIMES THE CURRENT BET. PRESSING BUY FEATURE IMMEDIATELY PLAYS ONE SPIN GUARANTEED TO TRIGGER THE FREE GAME, THEN ENTERS THE FEATURE. IT IS NOT A PERSISTENT MODE. |
+| 規則說明 | 購買特色使用 BF 進場輪帶；進入免費遊戲後，使用 BF 對應的免費遊戲 table 權重。 | BUY FEATURE USES THE BF ENTRY STRIP. AFTER ENTRY, THE FEATURE USES THE BF-SPECIFIC FREE GAME TABLE WEIGHTS. |
+
+---
+
+## GAME RULE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | 所有獎金以遊戲點數顯示。基礎投注為 {100} 點，實際投注會依所選 Bet 倍率調整。 | ALL WINS ARE SHOWN IN GAME CREDITS. THE BASE WAGER IS {100} CREDITS AND IS ADJUSTED BY THE SELECTED BET MULTIPLIER. |
+| 規則說明 | H015192 理論返還率：一般投注 {92.00%}、購買特色 {92.50%}；H015194 理論返還率：一般投注 {94.00%}、購買特色 {92.50%}。 | H015192 THEORETICAL RTP: NORMAL BET {92.00%}, BUY FEATURE {92.50%}. H015194 THEORETICAL RTP: NORMAL BET {94.00%}, BUY FEATURE {92.50%}. |
+  </script>
+
+  <script>
+    const H015_CONFIG_FILES = ["config_92.js", "config_94.js"];
+    const configFromQuery = new URLSearchParams(window.location.search).get("config");
+    const H015_ACTIVE_CONFIG = H015_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H015_CONFIG_FILES[0];
+    document.write(`<script src="./${H015_ACTIVE_CONFIG}"><\/script>`);
+  </script>
+  <script>
+(() => {
+  "use strict";
+
+  const Box = window.H015_BOX_DATA;
+  if (!Box) throw new Error("H015 config was not loaded.");
+
+  const $ = (id) => document.getElementById(id);
+  const SCORE = new Set(Box.symbols_score || []);
+  const GOLD = new Set(Box.symbols_gold || []);
+  const CODE = Object.fromEntries(Object.entries(Box.symbol_str).map(([id, code]) => [Number(id), code]));
+  const ID = Object.fromEntries(Object.entries(CODE).map(([id, code]) => [code, Number(id)]));
+  const WW = ID.WW;
+  const C1 = ID.C1;
+  const REELS = Box.reel_num;
+  const ROWS = Box.window_size;
+  const MODE_NORMAL = Box.mode_normalbet;
+  const MODE_BUY = Box.mode_featurebuy;
+  const MULTIPLIERS = Box.value_multiplier_range;
+  const SYMBOL_ASSET_BY_CODE = Object.freeze({
+    M1: "./Source/Image/M1_Symbol.png",
+    M2: "./Source/Image/M2_Symbol.png",
+    M3: "./Source/Image/M3_Symbol.png",
+    M4: "./Source/Image/M4_Symbol.png",
+    A: "./Source/Image/M5_Symbol.png",
+    K: "./Source/Image/M6_Symbol.png",
+    Q: "./Source/Image/M7_Symbol.png",
+    J: "./Source/Image/M8_Symbol.png",
+    C1: "./Source/Image/C1_Symbol.png",
+    C2: "./Source/Image/C2_Symbol.png",
+    WW: "./Source/Image/WW_Symbol.png"
+  });
+  const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.png";
+  const HELP_PATH = "./game_help_draft.md";
+  const STORAGE_KEY = "slotDemoLanguage";
+  const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
+
+  const T = {
+    en: {
+      game: "Wild Train", base: "Base Game", free: "Free Game", ready: "Ready — press Spin",
+      cascade: "Cascade", mult: "Mult", fgLeft: "FG Left", credit: "Credit", bet: "Bet", win: "Win",
+      stats: "Simulation Stats", rounds: "Total Rounds", hit: "Hit Rate", maxMult: "Max Multiplier",
+      play: "Play", spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", speed: "Speed",
+      betMode: "Bet Mode", normal: "Normal Bet", buy: "Buy Feature (75x)", setting: "Setting",
+      debug: "Debug Mode", language: "Language", help: "Help", reset: "Reset", clear: "Clear",
+      reelRng: "Reel RNG", result: "Spin Result", wins: "Way Wins", setRng: "Set RNG",
+      rngPlaceholder: "6 stop indexes, e.g. 1 2 3 4 5 6", previous: "◀◀ Previous", next: "Next ▶▶",
+      forceFg: "Force FG", buyStart: "Buy Feature paid — guaranteed FG trigger spin",
+      insufficient: "Insufficient credit", invalidRng: "RNG needs exactly 6 valid stop indexes",
+      noWin: "No win", complete: "complete", triggered: "Free Game triggered", retrigger: "Free Game retriggered",
+      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_help_draft.md.",
+      footer: "Double-click to play offline. No server needed.", configFixed: "H015192 (xlsx)",
+      languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
+    },
+    zh: {
+      game: "賞金列車", base: "基礎遊戲", free: "免費遊戲", ready: "準備完成 — 請按 Spin",
+      cascade: "連消", mult: "倍數", fgLeft: "FG 剩餘", credit: "餘額", bet: "押注", win: "得分",
+      stats: "模擬統計", rounds: "總局數", hit: "中獎率", maxMult: "最高倍數",
+      play: "遊戲", spin: "Spin", nextFg: "下一次 FG", auto: "自動", stop: "停止", speed: "速度",
+      betMode: "押注模式", normal: "一般押注", buy: "購買特色 (75x)", setting: "設定",
+      debug: "除錯模式", language: "語言", help: "Help", reset: "重置", clear: "清除",
+      reelRng: "輪帶 RNG", result: "Spin 結果", wins: "Ways 得獎", setRng: "指定 RNG",
+      rngPlaceholder: "輸入 6 個停輪位置，例如 1 2 3 4 5 6", previous: "◀◀ 上一步", next: "下一步 ▶▶",
+      forceFg: "強制 FG", buyStart: "已支付購買特色費用 — 本局保證觸發 FG",
+      insufficient: "餘額不足", invalidRng: "RNG 必須是 6 個有效停輪位置",
+      noWin: "未得獎", complete: "完成", triggered: "已觸發免費遊戲", retrigger: "免費遊戲再觸發",
+      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_help_draft.md。",
+      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H015192（xlsx）",
+      languageChanged: "語言已切換為中文", resetDone: "遊戲與統計已重置"
+    }
+  };
+
+  const initialLanguage = (() => {
+    try { return localStorage.getItem(STORAGE_KEY) === "zh" ? "zh" : "en"; } catch (_) { return "en"; }
+  })();
+
+  const state = {
+    language: initialLanguage, balance: 10000, betIndex: 0, busy: false, auto: false, debug: false,
+    fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 },
+    rounds: 0, normalRounds: 0, totalBet: 0, totalWin: 0,
+    hitRounds: 0, naturalFg: 0, maxMultiplier: 1, lastWin: 0, lastSpin: null, snapshots: [], snapshotIndex: -1,
+    log: [], helpMarkdown: ""
+  };
+
+  const el = Object.fromEntries([
+    "board", "messageBar", "balanceValue", "betValue", "winValue", "roundCountValue", "rtpValue", "hitRateValue",
+    "fgTriggerValue", "maxMultiplierValue", "spinBtn", "autoBtn", "betMinusBtn", "betPlusBtn", "betBtn", "betMenu",
+    "speedRange", "speedValue", "normalBetBtn", "buyFeatureBtn", "debugModeInput", "languageSelect", "configSelect",
+    "helpBtn", "resetBtn", "helpDialog", "closeHelpBtn", "helpContent", "helpSourceFrame", "rngList", "lineList",
+    "spinResultList", "liveLogBody", "clearLogBtn", "reelRngInput", "setRngResetBtn", "previousStepBtn", "nextStepBtn",
+    "forceFgInput", "modeText", "featureStatus", "carryMultiValue", "fgLeftPill", "fgLeftValue",
+    "cardRangeSelect", "gameId", "gameName", "multiplierWindow"
+  ].map((id) => [id, $(id)]));
+
+  let displayedMultiplierIndex = 0;
+
+  function text(key) { return T[state.language][key] || T.en[key] || key; }
+  function format(value, digits = 0) { return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: digits }); }
+  function formatBet(value) { return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function cumulativeChoice(cum) {
+    const max = cum[cum.length - 1];
+    if (!(max > 0)) return 0;
+    const roll = Math.floor(Math.random() * max) + 1;
+    return cum.findIndex((value) => roll <= value);
+  }
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+  function delay() { return new Promise((resolve) => setTimeout(resolve, Math.max(25, 260 / Number(el.speedRange.value || 1)))); }
+  function activeBet() { return BET_LEVELS[state.betIndex]; }
+  function coinIn(mode = MODE_NORMAL) { return Box.default_coin_in * Box.normalbet * activeBet() * (mode === MODE_BUY ? Box.featurebuy : 1); }
+  function payAmount(raw, multiplier) { return raw * multiplier * activeBet(); }
+
+  function multiplierIndex(value) {
+    const index = MULTIPLIERS.indexOf(Number(value));
+    return index < 0 ? 0 : index;
+  }
+
+  function renderMultiplierTrack(index = displayedMultiplierIndex, animate = false) {
+    displayedMultiplierIndex = Math.max(0, Math.min(index, MULTIPLIERS.length - 1));
+    const values = [-2, -1, 0, 1, 2].map((offset) => {
+      const target = displayedMultiplierIndex + offset;
+      if (target < 0) return MULTIPLIERS[MULTIPLIERS.length + target];
+      return MULTIPLIERS[target] ?? null;
+    });
+    el.multiplierWindow.classList.remove("roll-one");
+    el.multiplierWindow.innerHTML = values.map((value, slot) => {
+      const classes = ["multiplier-step", slot < 2 ? "is-previous" : "", slot === 2 ? "is-active" : ""].filter(Boolean).join(" ");
+      return `<span class="${classes}">${value == null ? "" : `x${value}`}</span>`;
+    }).join("");
+    if (animate) {
+      void el.multiplierWindow.offsetWidth;
+      el.multiplierWindow.classList.add("roll-one");
+    }
+  }
+
+  async function rollMultiplierTo(value) {
+    const target = Math.max(displayedMultiplierIndex, multiplierIndex(value));
+    while (displayedMultiplierIndex < target) {
+      renderMultiplierTrack(displayedMultiplierIndex + 1, true);
+      await new Promise((resolve) => setTimeout(resolve, Math.max(45, 150 / Number(el.speedRange.value || 1))));
+    }
+  }
+
+  function generateBoard(tableId, forcedStops = null) {
+    const board = Array.from({ length: ROWS }, () => Array(REELS).fill(99));
+    const stops = [];
+    for (let reel = 0; reel < REELS; reel++) {
+      const length = Box.reels_len[tableId][reel];
+      const stop = forcedStops ? forcedStops[reel] % length : cumulativeChoice(Box.arr_reels_weight_cum[tableId].slice(0, length).map((row) => row[reel]));
+      stops.push(stop);
+      for (let row = 0; row < ROWS; row++) {
+        if (Box.score_area[row][reel]) board[row][reel] = Box.arr_reels[tableId][(stop + row) % length][reel];
+      }
+    }
+    return { board, stops };
+  }
+
+  function normalizeGold(board) {
+    const gold = Array.from({ length: ROWS }, () => Array(REELS).fill(false));
+    for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+      if (GOLD.has(board[row][reel])) { board[row][reel] -= 8; gold[row][reel] = true; }
+    }
+    return gold;
+  }
+
+  function evaluate(board, gold) {
+    const symbols = [...new Set(board.map((row) => row[0]).filter((symbol) => SCORE.has(symbol)))];
+    const wins = []; const hit = Array.from({ length: ROWS }, () => Array(REELS).fill(0)); let raw = 0;
+    for (const symbol of symbols) {
+      let length = 0; let ways = 1;
+      for (let reel = 0; reel < REELS; reel++) {
+        let count = 0;
+        for (let row = 0; row < ROWS; row++) if (board[row][reel] === symbol || board[row][reel] === WW) count++;
+        if (!count) break;
+        length++; ways *= count;
+      }
+      const unit = length >= 3 ? Number(Box.pay_table[symbol][length - 3] || 0) : 0;
+      if (!unit) continue;
+      raw += unit * ways; wins.push({ symbol, length, ways, unit });
+      for (let reel = 0; reel < length; reel++) for (let row = 0; row < ROWS; row++) {
+        if (board[row][reel] === symbol || board[row][reel] === WW) hit[row][reel] = gold[row][reel] ? 2 : 1;
+      }
+    }
+    return { raw, wins, hit };
+  }
+
+  function comboTable(raw, tableId, combo, reel) {
+    const key = combo < 3 ? `combo${combo}` : "combo3_plus";
+    return raw[tableId][key].map((row) => row[reel]);
+  }
+
+  function drop(board, gold, hit, tableId, combo, dropIndex) {
+    const source = dropIndex === 1 ? Box.weight_cum_drop_symbol_b : dropIndex === 2 ? Box.weight_cum_drop_symbol_c : Box.weight_cum_drop_symbol_a;
+    for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+      if (hit[row][reel] === 1) board[row][reel] = cumulativeChoice(comboTable(source, tableId, combo, reel));
+      if (hit[row][reel] === 2) { board[row][reel] = WW; gold[row][reel] = false; }
+    }
+    for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+      if (GOLD.has(board[row][reel])) { board[row][reel] -= 8; gold[row][reel] = true; }
+    }
+  }
+
+  function chooseTable(scene, mode) {
+    if (scene === "BG" && mode === MODE_BUY) return Box.strip_bf;
+    if (scene === "BG") return cumulativeChoice(Box.weight_cum_table_bg);
+    return cumulativeChoice(mode === MODE_BUY ? Box.weight_cum_table_bf : Box.weight_cum_table_fg) + 2;
+  }
+
+  function forcedStops() {
+    const value = el.reelRngInput.value.trim();
+    if (!value) return null;
+    const stops = value.split(/[\s,]+/).map(Number);
+    if (stops.length !== REELS || stops.some((n) => !Number.isInteger(n) || n < 0)) throw new Error(text("invalidRng"));
+    return stops;
+  }
+
+  function simulateScene(scene, mode, forceTrigger = false, forceFirstLightning = false) {
+    const tableId = chooseTable(scene, mode);
+    let first = generateBoard(tableId, forcedStops());
+    if (forceTrigger && scene === "BG") {
+      const active = [];
+      for (let reel = 0; reel < REELS; reel++) for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) active.push([row, reel]);
+      const present = first.board.flat().filter((symbol) => symbol === C1).length;
+      const candidates = active.filter(([row, reel]) => first.board[row][reel] !== C1);
+      for (let i = 0; i < Math.max(0, 3 - present); i++) {
+        const [row, reel] = candidates[candidates.length - 1 - i * 3];
+        first.board[row][reel] = C1;
+      }
+    }
+    const board = first.board; const gold = normalizeGold(board); const dropIndex = cumulativeChoice(scene === "BG" ? Box.weight_cum_drop_choose_bg : Box.weight_cum_drop_choose_fg);
+    const multiProfile = scene === "BG" ? Box.weight_cum_multi_appear_bg : Box.weight_cum_multi_appear_fg;
+    const multiBase = scene === "BG" ? (mode === MODE_BUY ? dropIndex : tableId * 3 + dropIndex) : (tableId - 2) * 3 + dropIndex;
+    let level = scene === "BG" ? 0 : 3; let combo = 0; let total = 0; const steps = [];
+    while (combo < 200) {
+      const before = clone(board); const result = evaluate(board, gold);
+      const profileLevel = Math.max(0, Math.min(4, scene === "BG" ? level : level - 3));
+      const bombCum = multiProfile[profileLevel].map((row) => row[multiBase]);
+      let lightning = cumulativeChoice(bombCum);
+      if (scene === "FG" && combo === 0 && forceFirstLightning && lightning === 0) lightning = 1;
+      level = Math.min(MULTIPLIERS.length - 1, level + lightning);
+      const multiplier = MULTIPLIERS[level];
+      level = Math.min(MULTIPLIERS.length - 1, level + 1);
+      const win = payAmount(result.raw, multiplier); total += win;
+      const snapshot = { board: before, gold: clone(gold), hit: result.hit, wins: result.wins, combo: combo + 1, lightning, multiplier, win, total, stops: first.stops, scene };
+      steps.push(snapshot);
+      if (!result.raw) break;
+      drop(board, gold, result.hit, tableId, combo, dropIndex); combo++;
+    }
+    const scatter = board.flat().filter((symbol) => symbol === C1).length;
+    return {
+      scene,
+      board: clone(board),
+      gold: clone(gold),
+      stops: first.stops,
+      steps,
+      total,
+      scatter,
+      maxMultiplier: steps.length ? Math.max(...steps.map((step) => step.multiplier)) : 1
+    };
+  }
+
+  function freeAward(scatter) { return Number(Box.free_spin_awards?.[scatter] || (scatter >= 3 ? 10 + (scatter - 3) * 2 : 0)); }
+
+  function symbolMarkup(symbol, isGold) {
+    if (symbol === 99) return "";
+    const code = CODE[symbol] || `S${symbol}`;
+    const asset = SYMBOL_ASSET_BY_CODE[code];
+    if (asset) {
+      const frame = isGold
+        ? `<img class="h015-frame-img" src="${GOLD_FRAME_ASSET}" alt="" aria-hidden="true" draggable="false">`
+        : "";
+      return `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${asset}" alt="${code}" draggable="false">${frame}</div>`;
+    }
+    const accent = code === "WW" ? "#46f0c2" : "#ffd86a";
+    const glow = code === "WW" ? "#0d705d" : "#7d4b06";
+    return `<div class="symbol-wrap">
+      <svg class="h015-symbol-svg" viewBox="0 0 100 100" role="img" aria-label="${code}">
+        <defs>
+          <linearGradient id="symbol-${code}-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff"></stop>
+            <stop offset="0.42" stop-color="${accent}"></stop>
+            <stop offset="1" stop-color="${glow}"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M50 5 61 24 83 17 77 39 96 50 77 61 83 83 61 76 50 95 39 76 17 83 23 61 4 50 23 39 17 17 39 24Z"
+          fill="rgba(4,14,26,.92)" stroke="${accent}" stroke-width="4"></path>
+        <text x="50" y="58" text-anchor="middle" fill="url(#symbol-${code}-fill)"
+          stroke="#031018" stroke-width="2" paint-order="stroke" font-family="Arial Black, sans-serif"
+          font-size="${code.length > 2 ? 27 : 34}" font-weight="900">${code}</text>
+      </svg>
+    </div>`;
+  }
+
+  function renderBoard(board, gold = [], hit = [], options = {}) {
+    el.board.style.gridTemplateColumns = `repeat(${REELS}, var(--cell-size, 74px))`;
+    el.board.innerHTML = "";
+    for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+      const cell = document.createElement("div"); const active = Box.score_area[row][reel];
+      const code = CODE[board[row][reel]] || `S${board[row][reel]}`;
+      const symbolClass = `symbol-${code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
+      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
+      if (!active) cell.style.visibility = "hidden";
+      cell.innerHTML = symbolMarkup(board[row][reel], gold[row]?.[reel]); el.board.appendChild(cell);
+    }
+  }
+
+  function renderRng(stops = []) { el.rngList.innerHTML = stops.map((stop, i) => `<span class="rng-chip">R${i + 1}: ${stop}</span>`).join(""); }
+  function renderWins(step) {
+    el.lineList.innerHTML = step.wins.length ? step.wins.map((win) => `<div>${CODE[win.symbol]} · ${win.length} reels · ${win.ways} ways · ${format(win.unit * win.ways)}</div>`).join("") : `<div>${text("noWin")}</div>`;
+    el.spinResultList.innerHTML = `<div>${text("cascade")} ${step.combo} · +${step.lightning} · x${step.multiplier} · ${format(step.win)}</div>`;
+  }
+  function showSnapshot(index, syncMultiplier = true) {
+    if (!state.snapshots.length) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1)); const step = state.snapshots[state.snapshotIndex];
+    renderBoard(step.board, step.gold, step.hit); renderRng(step.stops); renderWins(step);
+    el.carryMultiValue.textContent = step.combo;
+    if (syncMultiplier) renderMultiplierTrack(multiplierIndex(step.multiplier));
+    el.previousStepBtn.disabled = state.snapshotIndex <= 0; el.nextStepBtn.disabled = state.snapshotIndex >= state.snapshots.length - 1;
+  }
+  function addLog(message) {
+    state.log.unshift(`${new Date().toLocaleTimeString()}  ${message}`); state.log = state.log.slice(0, 80);
+    el.liveLogBody.innerHTML = state.log.map((item) => `<div>${item}</div>`).join("");
+  }
+
+  function updateStats() {
+    document.body.classList.toggle("fg-mode", state.fg.remaining > 0);
+    el.balanceValue.textContent = format(state.balance); el.betValue.textContent = formatBet(activeBet()); el.winValue.textContent = format(state.lastWin);
+    el.roundCountValue.textContent = format(state.rounds); el.rtpValue.textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
+    el.hitRateValue.textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
+    el.fgTriggerValue.textContent = state.normalRounds ? `${(state.naturalFg / state.normalRounds * 100).toFixed(3)}% (${state.naturalFg})` : "0.000% (0)";
+    el.maxMultiplierValue.textContent = `x${state.maxMultiplier}`; el.betBtn.textContent = `${text("bet")} ${formatBet(activeBet())}`;
+    el.fgLeftPill.classList.toggle("hidden", state.fg.remaining <= 0); el.fgLeftValue.textContent = `${state.fg.remaining}/${state.fg.total}`;
+    el.modeText.textContent = state.fg.remaining ? text("free") : text("base"); el.spinBtn.textContent = state.fg.remaining ? text("nextFg") : text("spin");
+  }
+
+  async function animateReels(spin) {
+    const initial = spin.steps[0];
+    if (!initial) return;
+    const frames = Math.max(2, Math.round(8 / Number(el.speedRange.value || 1)));
+    for (let frame = 0; frame < frames; frame++) {
+      const rollingBoard = clone(initial.board);
+      const rollingGold = clone(initial.gold);
+      for (let reel = 0; reel < REELS; reel++) {
+        const activeRows = [];
+        for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) activeRows.push(row);
+        const offset = (frames - frame + reel) % activeRows.length;
+        for (let position = 0; position < activeRows.length; position++) {
+          const targetRow = activeRows[position];
+          const sourceRow = activeRows[(position + offset) % activeRows.length];
+          rollingBoard[targetRow][reel] = initial.board[sourceRow][reel];
+          rollingGold[targetRow][reel] = initial.gold[sourceRow][reel];
+        }
+      }
+      renderBoard(rollingBoard, rollingGold, [], { spinning: true });
+      await new Promise((resolve) => setTimeout(resolve, 55));
+    }
+  }
+
+  async function animateSpin(spin) {
+    state.snapshots = spin.steps; state.snapshotIndex = -1;
+    const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
+    renderMultiplierTrack(startIndex);
+    el.carryMultiValue.textContent = "0";
+    await animateReels(spin);
+    if (spin.steps[0]) {
+      renderBoard(spin.steps[0].board, spin.steps[0].gold);
+      await delay();
+    }
+    for (let i = 0; i < spin.steps.length; i++) {
+      showSnapshot(i, false);
+      await rollMultiplierTo(spin.steps[i].multiplier);
+      await delay();
+    }
+    renderBoard(spin.board, spin.gold); renderRng(spin.stops);
+  }
+
+  async function playFreeSpin() {
+    const forceFirstLightning = state.fg.guaranteedLightningSpin === state.fg.played + 1;
+    const spin = simulateScene("FG", state.fg.mode, false, forceFirstLightning); await animateSpin(spin);
+    state.fg.remaining--; state.fg.played++; state.lastWin = spin.total; state.totalWin += spin.total;
+    if (spin.scatter >= 3 && state.fg.played < Box.max_spin_free_game) {
+      const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game - state.fg.played - state.fg.remaining);
+      state.fg.remaining += award; state.fg.total += award; addLog(`${text("retrigger")} +${award}`);
+    }
+    state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier); addLog(`FG ${state.fg.played} · ${format(spin.total)}`);
+    el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${format(spin.total)}`;
+  }
+
+  async function playPaid(mode) {
+    const cost = coinIn(mode);
+    if (state.balance < cost) throw new Error(text("insufficient"));
+    state.balance -= cost; state.totalBet += cost; state.rounds++; if (mode === MODE_NORMAL) state.normalRounds++;
+    const force = mode === MODE_BUY || el.forceFgInput.checked;
+    if (mode === MODE_BUY) el.messageBar.textContent = text("buyStart");
+    const spin = simulateScene("BG", mode, force); await animateSpin(spin);
+    state.lastWin = spin.total; state.totalWin += spin.total; state.balance += spin.total;
+    if (spin.total > 0) state.hitRounds++;
+    state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier);
+    if (spin.scatter >= 3) {
+      const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game);
+      state.fg = {
+        remaining: award,
+        total: award,
+        played: 0,
+        mode,
+        guaranteedLightningSpin: cumulativeChoice(Box.weight_cum_must_appear_1_fg || [1])
+      };
+      if (mode === MODE_NORMAL) state.naturalFg++;
+      addLog(`${text("triggered")} · ${spin.scatter} C1 · ${award} FG`);
+    }
+    addLog(`${mode === MODE_BUY ? "Buy Feature" : "BG"} · ${format(spin.total)}`);
+    el.messageBar.textContent = `${spin.scene} ${text("complete")} · ${format(spin.total)}${state.fg.remaining ? ` · ${text("triggered")}` : ""}`;
+  }
+
+  async function play(mode = MODE_NORMAL) {
+    if (state.busy) return; state.busy = true; updateControls();
+    try { if (state.fg.remaining) await playFreeSpin(); else await playPaid(mode); }
+    catch (error) { el.messageBar.textContent = error.message; addLog(`Error · ${error.message}`); }
+    finally { state.busy = false; updateStats(); updateControls(); }
+  }
+
+  async function autoLoop() {
+    state.auto = !state.auto; updateControls();
+    while (state.auto) { await play(MODE_NORMAL); if (state.balance < coinIn()) state.auto = false; }
+    updateControls();
+  }
+
+  function updateControls() {
+    el.spinBtn.disabled = state.busy; el.buyFeatureBtn.disabled = state.busy || state.fg.remaining > 0;
+    el.autoBtn.textContent = state.auto ? text("stop") : text("auto"); el.betMinusBtn.disabled = state.busy || state.betIndex === 0;
+    el.betPlusBtn.disabled = state.busy || state.betIndex === BET_LEVELS.length - 1;
+  }
+
+  function applyLanguage(logChange = false) {
+    document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en"; el.languageSelect.value = state.language;
+    try { localStorage.setItem(STORAGE_KEY, state.language); } catch (_) {}
+    el.gameName.textContent = text("game"); el.modeText.textContent = state.fg.remaining ? text("free") : text("base");
+    document.querySelector("#simulation-stats h3").textContent = text("stats");
+    const statLabels = document.querySelectorAll("#simulation-stats .s-label"); [text("rounds"), "RTP", text("hit"), "FG Trigger", text("maxMult")].forEach((v, i) => { if (statLabels[i]) statLabels[i].textContent = v; });
+    const creditLabels = document.querySelectorAll("#credit-bar .i-label"); [text("credit"), text("bet"), text("win")].forEach((v, i) => { if (creditLabels[i]) creditLabels[i].textContent = v; });
+    document.querySelector("#play-panel .zone-label").textContent = text("play"); document.querySelector("#bet-mode-panel .zone-label").textContent = text("betMode");
+    el.normalBetBtn.textContent = text("normal"); el.buyFeatureBtn.textContent = text("buy");
+    document.querySelector("#settings-wrap .setting-header").textContent = text("setting");
+    el.debugModeInput.parentElement.lastChild.textContent = ` ${text("debug")}`; el.helpBtn.textContent = text("help"); el.resetBtn.textContent = text("reset");
+    el.clearLogBtn.textContent = text("clear"); el.previousStepBtn.textContent = text("previous"); el.nextStepBtn.textContent = text("next");
+    el.reelRngInput.placeholder = text("rngPlaceholder"); el.closeHelpBtn.textContent = text("close"); $("helpDialogTitle").textContent = text("helpTitle");
+    document.querySelector(".footer-note").textContent = text("footer");
+    document.querySelector('label[for="languageSelect"] span').textContent = text("language");
+    document.querySelector('label[for="reelRngInput"]').childNodes[0].textContent = `${text("reelRng")} `;
+    document.querySelector("#set-rng-panel .zone-label").textContent = text("setRng");
+    el.cardRangeSelect.closest("label").style.display = "none";
+    if (!state.lastSpin && !logChange) el.messageBar.textContent = text("ready");
+    if (logChange) { el.messageBar.textContent = text("languageChanged"); addLog(text("languageChanged")); }
+    updateStats(); updateControls(); if (el.helpDialog.open && state.helpMarkdown) renderHelp(state.helpMarkdown);
+  }
+
+  function getHelpMarkdownCells(line) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return null;
+    return trimmed.slice(1, -1).split("|").map((cell) => cell.trim());
+  }
+
+  function parseHelpRules(markdown) {
+    const sections = [];
+    let section = null;
+    let group = null;
+    for (const rawLine of markdown.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      const sectionMatch = line.match(/^##\s+(.+)$/);
+      if (sectionMatch) {
+        const key = sectionMatch[1].trim();
+        section = key === "Game Meta" ? null : { key, titleZh: "", titleEn: key, rules: [], groups: [] };
+        group = null;
+        if (section) sections.push(section);
+        continue;
+      }
+      const groupMatch = line.match(/^###\s+(.+)$/);
+      if (groupMatch && section) {
+        group = { key: groupMatch[1].trim(), titleZh: "", titleEn: groupMatch[1].trim(), rules: [], payouts: [] };
+        section.groups.push(group);
+        continue;
+      }
+      if (!section) continue;
+      const cells = getHelpMarkdownCells(line);
+      if (!cells || cells.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
+      const [item, zh = "", en = ""] = cells;
+      if (item === "主要標題") {
+        section.titleZh = zh;
+        section.titleEn = en;
+      } else if (item === "副標題" && group) {
+        group.titleZh = zh;
+        group.titleEn = en;
+      } else if (item === "規則說明") {
+        (group || section).rules.push({ zh, en });
+      } else if (section.key === "PAYTABLE" && group?.key === "賠率表" && item !== "中文欄") {
+        group.payouts.push(...cells.filter(Boolean));
+      }
+    }
+    return sections.filter((entry) => entry.rules.length || entry.groups.some((item) => item.rules.length || item.payouts.length));
+  }
+
+  function appendHelpTitle(parent, className, zh, en) {
+    const title = document.createElement(className === "help-section-title" ? "h3" : "h4");
+    title.className = className;
+    title.textContent = state.language === "zh" ? (zh || en) : en;
+    parent.appendChild(title);
+  }
+
+  function appendHelpRule(parent, rule) {
+    const row = document.createElement("div");
+    row.className = "help-rule";
+    const cell = document.createElement("div");
+    cell.className = state.language === "zh" ? "help-rule-zh" : "help-rule-en";
+    cell.textContent = state.language === "zh" ? rule.zh : rule.en;
+    row.appendChild(cell);
+    parent.appendChild(row);
+  }
+
+  function formatHelpPayout(payout) {
+    return payout.replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+      const amount = Number(rawValue) * activeBet();
+      return `${separator}${format(amount, 2)}`;
+    });
+  }
+
+  function renderHelp(markdown) {
+    const sections = parseHelpRules(markdown);
+    if (!sections.length) {
+      el.helpContent.innerHTML = `<div class="help-load-error">${text("loadFail")}</div>`;
+      return;
+    }
+    state.helpMarkdown = markdown;
+    el.helpContent.innerHTML = "";
+    for (const section of sections) {
+      const card = document.createElement("section");
+      card.className = "help-section";
+      appendHelpTitle(card, "help-section-title", section.titleZh, section.titleEn);
+      if (section.key === "PAYTABLE") {
+        const note = document.createElement("div");
+        note.className = "help-rule";
+        note.textContent = state.language === "zh"
+          ? `以下派彩金額依目前投注級距 ${formatBet(activeBet())} 顯示。`
+          : `Payouts below are shown for the current bet of ${formatBet(activeBet())}.`;
+        card.appendChild(note);
+      }
+      section.rules.forEach((rule) => appendHelpRule(card, rule));
+      for (const helpGroup of section.groups) {
+        if (!helpGroup.rules.length && !helpGroup.payouts.length) continue;
+        appendHelpTitle(card, "help-group-title", helpGroup.titleZh || helpGroup.key, helpGroup.titleEn);
+        helpGroup.rules.forEach((rule) => appendHelpRule(card, rule));
+        if (helpGroup.payouts.length) {
+          const payoutGrid = document.createElement("div");
+          payoutGrid.className = "help-payout-grid";
+          for (const payout of helpGroup.payouts) {
+            const item = document.createElement("div");
+            item.className = "help-payout-item";
+            item.textContent = formatHelpPayout(payout);
+            payoutGrid.appendChild(item);
+          }
+          card.appendChild(payoutGrid);
+        }
+      }
+      el.helpContent.appendChild(card);
+    }
+  }
+
+  async function loadHelp() {
+    el.helpContent.innerHTML = `<div class="help-loading">${text("loading")}</div>`; let markdown = "";
+    try { const response = await fetch(HELP_PATH, { cache: "no-store" }); if (response.ok) markdown = await response.text(); } catch (_) {}
+    if (!markdown) {
+      try { markdown = el.helpSourceFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
+    }
+    if (!markdown) markdown = document.getElementById("embeddedH015GameHelpMarkdown")?.textContent?.trim() || "";
+    state.helpMarkdown = markdown; renderHelp(markdown);
+  }
+
+  function setDebug(enabled) {
+    state.debug = enabled; document.querySelectorAll(".debug-hidden").forEach((node) => node.classList.toggle("debug-hidden", !enabled));
+    document.querySelectorAll(".debug-only").forEach((node) => node.style.display = enabled ? "" : "none");
+    document.querySelector("#controls").classList.toggle("debug-off", !enabled);
+  }
+
+  function reset() {
+    state.balance = 10000; state.busy = false; state.auto = false;
+    state.fg = { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 };
+    state.rounds = state.normalRounds = state.totalBet = state.totalWin = state.hitRounds = state.naturalFg = state.lastWin = 0;
+    state.maxMultiplier = 1; state.snapshots = []; state.snapshotIndex = -1; state.log = [];
+    el.liveLogBody.innerHTML = el.lineList.innerHTML = el.spinResultList.innerHTML = el.rngList.innerHTML = "";
+    const initial = generateBoard(0); renderBoard(initial.board, normalizeGold(initial.board)); renderMultiplierTrack(0); el.messageBar.textContent = text("resetDone"); updateStats(); updateControls();
+  }
+
+  function buildBetMenu() {
+    el.betMenu.innerHTML = BET_LEVELS.map((v, i) => `<button type="button" data-index="${i}">${formatBet(v)}</button>`).join("");
+    el.betMenu.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => { state.betIndex = Number(button.dataset.index); el.betMenu.classList.add("hidden"); updateStats(); }));
+  }
+
+  el.spinBtn.addEventListener("click", () => play(MODE_NORMAL)); el.buyFeatureBtn.addEventListener("click", () => play(MODE_BUY)); el.autoBtn.addEventListener("click", autoLoop);
+  el.betMinusBtn.addEventListener("click", () => { state.betIndex = Math.max(0, state.betIndex - 1); updateStats(); });
+  el.betPlusBtn.addEventListener("click", () => { state.betIndex = Math.min(BET_LEVELS.length - 1, state.betIndex + 1); updateStats(); });
+  el.betBtn.addEventListener("click", () => el.betMenu.classList.toggle("hidden")); el.speedRange.addEventListener("input", () => { el.speedValue.textContent = `x${el.speedRange.value}`; });
+  el.debugModeInput.addEventListener("change", () => setDebug(el.debugModeInput.checked));
+  el.languageSelect.addEventListener("change", () => { state.language = el.languageSelect.value === "zh" ? "zh" : "en"; applyLanguage(true); });
+  el.helpBtn.addEventListener("click", () => { el.helpDialog.showModal(); loadHelp(); }); el.closeHelpBtn.addEventListener("click", () => el.helpDialog.close());
+  el.helpDialog.addEventListener("click", (event) => { if (event.target === el.helpDialog) el.helpDialog.close(); });
+  el.helpSourceFrame.addEventListener("load", () => { if (el.helpDialog.open && !state.helpMarkdown) loadHelp(); });
+  el.resetBtn.addEventListener("click", reset); el.clearLogBtn.addEventListener("click", () => { state.log = []; el.liveLogBody.innerHTML = ""; });
+  el.setRngResetBtn.addEventListener("click", () => { el.reelRngInput.value = ""; el.forceFgInput.checked = false; });
+  el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
+
+  document.title = `${Box.game_id} ${Box.english_name} — Demo`;
+  el.gameId.textContent = Box.game_id;
+  el.configSelect.value = H015_ACTIVE_CONFIG;
+  el.configSelect.disabled = false;
+  el.configSelect.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("config", el.configSelect.value);
+    window.location.href = url.href;
+  });
+  buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
+})();
+  </script>
+  <script src="../help_ui_standardizer.js"></script>
+</body>
+
+</html>
