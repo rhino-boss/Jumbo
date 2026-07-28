@@ -4010,12 +4010,19 @@
     function renderBoard(board, options = {}) {
       const hitSet = new Set((options.hitPositions || []).map(([row, col]) => `${row}-${col}`));
       const convertSet = new Set((options.convertPositions || []).map((item) => `${item.row}-${item.col}`));
+      const clearedSet = new Set((options.clearedPositions || []).map(([row, col]) => `${row}-${col}`));
       const reelSpin = Boolean(options.reelSpin);
       boardEl.innerHTML = "";
       board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
           const cellEl = document.createElement("div");
-          cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
+          const dropMotion = options.dropMotion?.[`${rowIndex}-${colIndex}`];
+          cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", clearedSet.has(`${rowIndex}-${colIndex}`) ? "symbol-cleared" : "", dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
+          if (dropMotion) {
+            cellEl.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
+            cellEl.style.setProperty("--drop-duration", `${Math.max(320, 640 / state.speedMultiplier) / 2}ms`);
+            cellEl.style.setProperty("--drop-delay", "0ms");
+          }
           const wrap = document.createElement("div");
           wrap.className = "symbol-wrap";
           if (cell.is_gold) {
@@ -4306,15 +4313,29 @@
         updateSessionCards();
         writeMessage(multiplierMessage);
         await waitPlaybackStep(`Cascade ${step.cascade_index} multiplier`, 280, renderMultiplier);
+        const clearedPositions = [];
+        step.board_after_eliminate.forEach((row, rowIndex) => row.forEach((cell, colIndex) => {
+          if (Number(cell.symbol_id) < 0) clearedPositions.push([rowIndex, colIndex]);
+        }));
+        const clearMessage = `Cascade ${step.cascade_index} | Symbols cleared`;
+        const renderClear = () => {
+          renderBoard(clone(step.board_after_eliminate), { clearedPositions });
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
+          setText(messageBarEl, clearMessage);
+        };
+        renderClear();
+        writeMessage(clearMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} clear`, 180, renderClear);
         const dropMessage = `Cascade ${step.cascade_index} | Drop complete`;
         const renderDrop = () => {
-          renderBoard(clone(step.board_after_drop));
+          const dropMotion = window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {};
+          renderBoard(clone(step.board_after_drop), { dropMotion });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
           setText(messageBarEl, dropMessage);
         };
         renderDrop();
         writeMessage(dropMessage);
-        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, 320, renderDrop);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (Math.max(320, 640 / state.speedMultiplier) / 2 + 180) * state.speedMultiplier, renderDrop);
       }
       const finalMessage = `Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`;
       const renderFinal = () => {

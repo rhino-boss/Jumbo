@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>H015 Wild Train — Demo Game</title>
+  <title>Wild Train — Demo Game</title>
   <style>
     :root {
       --bg-a: #130722;
@@ -2566,7 +2566,10 @@
       const cell = document.createElement("div"); const active = Box.score_area[row][reel];
       const code = CODE[board[row][reel]] || `S${board[row][reel]}`;
       const symbolClass = `symbol-${code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
-      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
+      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${options.refill?.[row]?.[reel] ? " symbol-refill" : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
+      if (options.refill?.[row]?.[reel]) {
+        cell.style.setProperty("--refill-duration", `${Math.max(420, 700 / Number(el.speedRange.value || 1))}ms`);
+      }
       if (!active) cell.style.visibility = "hidden";
       cell.innerHTML = symbolMarkup(board[row][reel], gold[row]?.[reel]); el.board.appendChild(cell);
     }
@@ -2635,9 +2638,18 @@
       await delay();
     }
     for (let i = 0; i < spin.steps.length; i++) {
+      const step = spin.steps[i];
       showSnapshot(i, false);
-      await rollMultiplierTo(spin.steps[i].multiplier);
+      await rollMultiplierTo(step.multiplier);
       await delay();
+      if (step.wins.length) {
+        renderBoard(step.board, step.gold, [], { cleared: step.hit });
+        await new Promise((resolve) => setTimeout(resolve, Math.max(70, 120 / Number(el.speedRange.value || 1))));
+        const next = spin.steps[i + 1];
+        const refillDuration = Math.max(420, 700 / Number(el.speedRange.value || 1));
+        renderBoard(next?.board || spin.board, next?.gold || spin.gold, [], { refill: step.hit });
+        await new Promise((resolve) => setTimeout(resolve, refillDuration + 100));
+      }
     }
     renderBoard(spin.board, spin.gold); renderRng(spin.stops);
   }
@@ -2875,7 +2887,7 @@
   el.setRngResetBtn.addEventListener("click", () => { el.reelRngInput.value = ""; el.forceFgInput.checked = false; });
   el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
 
-  document.title = `${Box.game_id} ${Box.english_name} — Demo`;
+  document.title = `${Box.english_name || "Wild Train"} — Demo Game`;
   el.gameId.textContent = Box.game_id;
   el.configSelect.value = H015_ACTIVE_CONFIG;
   el.configSelect.disabled = false;

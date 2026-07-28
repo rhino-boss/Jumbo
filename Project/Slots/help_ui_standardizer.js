@@ -6,8 +6,69 @@
 
   const style = document.createElement("style");
   style.textContent = `
+    @keyframes slot-symbol-clear {
+      0% { opacity: 1; transform: scale(1); filter: brightness(1.35); }
+      55% { opacity: .35; transform: scale(.72); filter: brightness(1.8); }
+      100% { opacity: 0; transform: scale(.18); filter: brightness(2); }
+    }
+    @keyframes slot-symbol-drop {
+      0% { transform: translateY(var(--drop-start, -105%)); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes slot-symbol-refill {
+      0% { opacity: 0; transform: scale(.2); filter: brightness(1.8); }
+      72% { opacity: 1; transform: scale(1.08); filter: brightness(1.2); }
+      100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+    }
+    @keyframes slot-symbol-settle {
+      0% { transform: translateY(var(--drop-start, -105%)); }
+      100% { transform: translateY(0); }
+    }
+    .cell.symbol-cleared {
+      pointer-events: none;
+    }
+    .cell.symbol-cleared > .symbol-wrap,
+    .cell.symbol-cleared > .icon,
+    .cell.symbol-cleared > .code,
+    .cell.symbol-cleared > .symbol-code,
+    .cell.symbol-cleared > .multi-badge,
+    .cell.symbol-cleared > .m1-multiplier {
+      animation: slot-symbol-clear 180ms ease-in forwards;
+    }
+    .cell.symbol-drop {
+      z-index: 4;
+      opacity: 1;
+      filter: none;
+      overflow: visible;
+      will-change: transform;
+      animation: slot-symbol-drop var(--drop-duration, 280ms) linear var(--drop-delay, 0ms) both;
+    }
+    .cell.symbol-settle {
+      z-index: 3;
+      opacity: 1;
+      filter: none;
+      overflow: visible;
+      will-change: transform;
+      animation: slot-symbol-settle var(--drop-duration, 280ms) linear var(--drop-delay, 0ms) both;
+    }
+    .cell.symbol-refill > .symbol-wrap,
+    .cell.symbol-refill > .icon,
+    .cell.symbol-refill > .code,
+    .cell.symbol-refill > .symbol-code,
+    .cell.symbol-refill > .multi-badge,
+    .cell.symbol-refill > .m1-multiplier {
+      animation: slot-symbol-refill var(--refill-duration, 420ms) cubic-bezier(.2, .75, .25, 1) both;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cell.symbol-cleared > * {
+        animation-duration: 1ms !important;
+      }
+    }
     #grid-panel {
       transition: background-color 220ms ease, box-shadow 220ms ease;
+    }
+    #board {
+      overflow: hidden;
     }
     body.fg-mode #grid-panel {
       background: #174a70;
@@ -249,6 +310,34 @@
     }
   `;
   document.head.appendChild(style);
+
+  window.slotBuildDropMotion = (rowCountOrList, columnCount, clearedPositions = []) => {
+    const rowCounts = Array.isArray(rowCountOrList)
+      ? rowCountOrList
+      : Array(columnCount).fill(Number(rowCountOrList) || 0);
+    const cleared = new Set(clearedPositions.map(([row, col]) => `${row}-${col}`));
+    const motion = {};
+    for (let col = 0; col < columnCount; col += 1) {
+      const rowCount = rowCounts[col] || 0;
+      const survivors = [];
+      for (let row = 0; row < rowCount; row += 1) {
+        if (!cleared.has(`${row}-${col}`)) survivors.push(row);
+      }
+      const firstSurvivorRow = rowCount - survivors.length;
+      for (let row = 0; row < firstSurvivorRow; row += 1) {
+        motion[`${row}-${col}`] = {
+          type: "new",
+          rows: firstSurvivorRow,
+          groupSize: firstSurvivorRow
+        };
+      }
+      survivors.forEach((oldRow, index) => {
+        const newRow = firstSurvivorRow + index;
+        if (newRow > oldRow) motion[`${newRow}-${col}`] = { type: "settle", rows: newRow - oldRow };
+      });
+    }
+    return motion;
+  };
 
   const acronyms = new Map([
     ["bg", "BG"], ["fg", "FG"], ["op", "OP"], ["rng", "RNG"],

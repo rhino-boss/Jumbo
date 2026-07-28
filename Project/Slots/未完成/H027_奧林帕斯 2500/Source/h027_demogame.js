@@ -432,12 +432,19 @@
 
   function renderBoard(board, options = {}) {
     const hitSet = new Set((options.hitPositions || []).map(([row, reel]) => `${row}-${reel}`));
+    const clearedSet = new Set((options.clearedPositions || []).map(([row, reel]) => `${row}-${reel}`));
     el.board.innerHTML = "";
     board.forEach((row, rowIndex) => row.forEach((cell, reelIndex) => {
       const node = document.createElement("div");
+      const dropMotion = options.dropMotion?.[`${rowIndex}-${reelIndex}`];
       const special = cell.code === "C1" ? "h019-scatter" : cell.code === "C2" ? "h019-c2" : "";
       const symbolClass = `symbol-${cell.code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
-      node.className = `cell ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${options.spinning ? "reel-spin" : ""}`;
+      node.className = `cell ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${clearedSet.has(`${rowIndex}-${reelIndex}`) ? "symbol-cleared" : ""} ${dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : ""} ${options.spinning ? "reel-spin" : ""}`;
+      if (dropMotion) {
+        node.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
+        node.style.setProperty("--drop-duration", `${Math.max(320, 640 / state.speed)}ms`);
+        node.style.setProperty("--drop-delay", "0ms");
+      }
       const wrap = document.createElement("div");
       wrap.className = "symbol-wrap";
       const glyph = document.createElement("span");
@@ -625,8 +632,11 @@
       setText(el.cascade, String(step.cascadeIndex));
       writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
       await sleep(360);
-      renderBoard(boardCells(step.after, step.afterC2Values));
-      await sleep(260);
+      renderBoard(boardCells(step.before, step.beforeC2Values), { clearedPositions: step.hitPositions });
+      await sleep(180);
+      const dropMotion = window.slotBuildDropMotion?.(step.before.length, step.before[0].length, step.hitPositions) || {};
+      renderBoard(boardCells(step.after, step.afterC2Values), { dropMotion });
+      await sleep((Math.max(320, 640 / state.speed) + 180) * state.speed);
     }
 
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));
@@ -892,13 +902,15 @@
 
   async function loadHelp() {
     el.helpContent.innerHTML = `<div class="help-loading">${t("loading")}</div>`;
-    let markdown = "";
-    try {
-      const response = await fetch("./game_help_draft.md", { cache: "no-store" });
-      if (response.ok) markdown = await response.text();
-    } catch (_) {}
+    let markdown = byId("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
     if (!markdown) {
       try { markdown = el.helpFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
+    }
+    if (!markdown && location.protocol !== "file:") {
+      try {
+        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        if (response.ok) markdown = await response.text();
+      } catch (_) {}
     }
     state.helpMarkdown = markdown;
     renderHelp(markdown);
@@ -998,7 +1010,7 @@
   el.config.value = H027_ACTIVE_CONFIG;
   el.cardRange.closest("label").firstChild.textContent = "Card BG Range ";
   el.cardRange.disabled = true;
-  document.title = `H027 ${Box.display_name} — Demo`;
+  document.title = `${Box.display_name || "Olympus 2500"} — Demo Game`;
   renderBetMenu();
   renderBoard(sampleBoard());
   updateFeatureBar();
