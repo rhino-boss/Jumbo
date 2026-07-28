@@ -14,6 +14,7 @@ import time
 import unicodedata
 import zipfile
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font
@@ -35,7 +36,7 @@ r"""
 python3 walking_encyclopedia_bot_vm.py
 
 # 功能介紹（VM 版，移植自 walking_encyclopedia_bot.py）
-  * 整理報表：支援 zip/rar、多檔合併、巢狀壓縮檔，並自動轉成 Excel。
+  * 整理報表：支援 txt/zip/rar、多檔合併、巢狀壓縮檔，並自動轉成 Excel。
   * 壓測資料重點整理：抓取 RTP、Spin、Coin in、各 pool RTP 等重點欄位。
   * /simulator 開啟按鈕選單執行多遊戲模擬（僅限管理者）。
   * /help 說明本檔案完整功能。
@@ -53,6 +54,7 @@ BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "generated_reports"
 MAX_REPORT_FILES = 20
 ARCHIVE_EXTENSIONS = {".zip", ".rar"}
+REPORT_FILE_EXTENSIONS = ARCHIVE_EXTENSIONS | {".txt"}
 MAX_ARCHIVE_DEPTH = 10
 ARCHIVE_BATCH_DELAY_SECONDS = 2
 BOT_INSTANCE_LOCK_PORT = 48726
@@ -75,6 +77,57 @@ VALIDATOR_HEADER_PATTERNS = {
     "BonusJP Rtp": r"BonusJP\s+Rtp\s*=\s*([0-9.]+)|BonusJP\s+RTP\s*=\s*([0-9.]+)",
     "LinkJP Rtp": r"LinkJP\s+Rtp\s*=\s*([0-9.]+)|LinkJP\s+RTP\s*=\s*([0-9.]+)",
 }
+
+HIDDEN_VALIDATOR_COLUMNS = {
+    "source_txt",
+}
+
+VALIDATOR_OUTPUT_COLUMNS = [
+    ("source_txt", "source_txt"),
+    ("txt在的資料夾名稱", "資料夾名稱"),
+    ("GameID", "Game ID"),
+    ("optionID", "Option ID"),
+    ("Coin in", "Coin in"),
+    ("TotalSpin", "Total Spin"),
+    ("avgPeriod", "JP 週期"),
+    ("TotalRtp (including JP/bonus)", "RTP Total"),
+    ("LinkJP Rtp", "RTP JP Link"),
+    ("BonusJP Rtp", "RTP JP Bonus"),
+    ("RTP Game", "RTP Game"),
+    ("BaseGameRtp", "RTP BG"),
+    ("ScatterRtp", "RTP SC"),
+    ("FreeGameRtp", "RTP FG"),
+    ("BaseGame最大倍數", "最大倍數 BG"),
+    ("FreeGame最大倍數", "最大倍數 FG"),
+    ("BG進FG最大倍數", "最大倍數 B2F"),
+]
+
+RTP_OUTPUT_FIELDS = {
+    "TotalRtp (including JP/bonus)",
+    "LinkJP Rtp",
+    "BonusJP Rtp",
+    "RTP Game",
+    "BaseGameRtp",
+    "ScatterRtp",
+    "FreeGameRtp",
+}
+
+THOUSANDS_OUTPUT_FIELDS = {
+    "Coin in",
+    "TotalSpin",
+}
+
+MULTIPLIER_SECTION_FIELDS = {
+    "BaseGame 倍數": "BaseGame最大倍數",
+    "FreeGame 倍數": "FreeGame最大倍數",
+    "整場FreeGame 倍數": "FreeGame最大倍數",
+    "整場 FreeGame 倍數": "FreeGame最大倍數",
+    "BaseGame 進 FreeGame 倍數": "BG進FG最大倍數",
+}
+
+
+class NoValidatorReportError(ValueError):
+    """上傳內容中找不到 RTP Validator 報表。"""
 
 # ==================== 🎰 模擬器設定 ====================
 GAMES_ROOT = Path("/root/Simulator")  # 每個子資料夾＝一個遊戲，例如 H026_彩罐熱舞
@@ -375,6 +428,111 @@ def get_source_txt_folder_name(source_name: str) -> str:
     return txt_path.parent.name if str(txt_path.parent) != "." else ""
 
 
+def decode_report_text(data: bytes) -> str:
+    """兼容常見的 UTF-8、UTF-16 與繁中 Windows TXT 編碼。"""
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return data.decode("utf-16", errors="replace")
+
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return data.decode("cp950", errors="replace")
+
+
+def normalize_report_heading(line: str) -> str:
+    return re.sub(r"\s+", " ", line.strip().strip("=").strip())
+
+
+def extract_max_multiplier_fields(text: str) -> dict[str, str]:
+    """依報表區段抓出該列任一統計值大於 0 的最大倍數。"""
+    maxima: dict[str, float] = {}
+    current_field = None
+
+    for line in text.splitlines():
+        heading = normalize_report_heading(line)
+        current_field = MULTIPLIER_SECTION_FIELDS.get(heading, current_field)
+
+        # 遇到下一個 =====標題===== 時結束上一個倍數區段。
+        if re.match(r"^\s*=+.*=+\s*$", line) and heading not in MULTIPLIER_SECTION_FIELDS:
+            current_field = None
+            continue
+
+        if not current_field:
+            continue
+
+        match = re.match(
+            r"^\s*(?:BaseGame|FreeGame)\s+([0-9]+(?:\.[0-9]+)?)x\s*=\s*(.*)$",
+            line,
+            re.IGNORECASE,
+        )
+        if not match:
+            continue
+
+        statistics = re.findall(
+            r"(?:^|,\s*(?:Pay|\d+C\d+)\s*=\s*)([0-9]+(?:\.[0-9]+)?)",
+            match.group(2),
+            re.IGNORECASE,
+        )
+        if not statistics or not any(float(value) > 0 for value in statistics):
+            continue
+
+        multiplier = float(match.group(1))
+        maxima[current_field] = max(maxima.get(current_field, multiplier), multiplier)
+
+    return {
+        field: str(int(value)) if value.is_integer() else str(value)
+        for field, value in maxima.items()
+    }
+
+
+def has_stress_test_summary(text: str) -> bool:
+    """圖 1 的 Newbie/Veteran Total RTP 摘要代表壓測報表。"""
+    return bool(
+        re.search(r"Taste\s*\(\s*Newbie\s*\)\s+TotalWin\s*=", text, re.IGNORECASE)
+        or re.search(r"Relief\s*\(\s*Veteran\s*\)\s+TotalWin\s*=", text, re.IGNORECASE)
+    )
+
+
+def calculate_game_rtp(base_game_rtp: str, free_game_rtp: str) -> str:
+    """RTP Game 按需求只加總 BG 與 FG，不包含 Scatter。"""
+    values = [value for value in (base_game_rtp, free_game_rtp) if value]
+    if not values:
+        return ""
+
+    try:
+        total = sum((Decimal(value) for value in values), Decimal("0"))
+    except InvalidOperation:
+        return ""
+
+    result = format(total, "f")
+    if "." in result:
+        result = result.rstrip("0").rstrip(".")
+    return result or "0"
+
+
+def is_rtp_output_field(source_name: str) -> bool:
+    return source_name in RTP_OUTPUT_FIELDS or bool(re.fullmatch(r"pool\[\d+\]\s+rtp", source_name))
+
+
+def to_excel_rtp_value(value):
+    if value in ("", None):
+        return ""
+    try:
+        return float(Decimal(str(value)))
+    except (InvalidOperation, ValueError):
+        return value
+
+
+def to_excel_number_value(value):
+    if value in ("", None):
+        return ""
+    try:
+        number = Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return value
+    return int(number) if number == number.to_integral_value() else float(number)
+
+
 def parse_validator_txt(text: str, source_name: str) -> dict[str, str]:
     row = {
         "source_txt": get_source_txt_filename(source_name),
@@ -384,9 +542,13 @@ def parse_validator_txt(text: str, source_name: str) -> dict[str, str]:
     for field, pattern in VALIDATOR_HEADER_PATTERNS.items():
         row[field] = extract_validator_field(pattern, text)
 
+    row["RTP Game"] = calculate_game_rtp(row["BaseGameRtp"], row["FreeGameRtp"])
+
     for pool_index, rtp in re.findall(r"pool\[(\d+)\].*?rtp\s*=\s*([0-9.]+)", text):
         row[f"pool[{pool_index}] rtp"] = rtp
 
+    row.update(extract_max_multiplier_fields(text))
+    row["_is_stress_test"] = "1" if has_stress_test_summary(text) else ""
     return row
 
 
@@ -500,7 +662,7 @@ def collect_validator_rows_from_member(data: bytes, source_name: str, depth: int
 
     lower_name = source_name.lower()
     if lower_name.endswith(".txt"):
-        text = data.decode("utf-8", errors="replace")
+        text = decode_report_text(data)
         row = parse_validator_txt(text, source_name)
         # 壓縮檔可能混有執行 log；只有帶 GameID 的 TXT 才是 Validator 報表。
         return [row] if row.get("GameID") else []
@@ -559,37 +721,42 @@ def collect_validator_rows_from_archives(archive_paths: list[Path]) -> tuple[lis
 
 
 def write_validator_xlsx(rows: list[dict[str, str]], pool_headers: list[str], output_path: Path):
+    if not rows:
+        raise NoValidatorReportError("檔案內找不到含 GameID 的 RTP Validator 報表。")
+
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Summary"
 
-    headers = [
-        "source_txt",
-        "txt在的資料夾名稱",
-        "GameID",
-        "optionID",
-        "Coin in",
-        "TotalSpin",
-        "TotalRtp (including JP/bonus)",
-        "avgPeriod",
-        "BaseGameRtp",
-        "ScatterRtp",
-        "FreeGameRtp",
-        "BonusJP Rtp",
-        "LinkJP Rtp",
-        *pool_headers,
-    ]
+    output_columns = [*VALIDATOR_OUTPUT_COLUMNS, *((header, header) for header in pool_headers)]
+    headers = [display_name for _, display_name in output_columns]
 
     sheet.append(headers)
     for cell in sheet[1]:
         cell.font = Font(bold=True)
 
-    for row in rows:
-        sheet.append([row.get(header, "") for header in headers])
+    for row_index, row in enumerate(rows, start=2):
+        sheet.append(
+            [
+                to_excel_rtp_value(row.get(source_name, ""))
+                if is_rtp_output_field(source_name)
+                else to_excel_number_value(row.get(source_name, ""))
+                if source_name in THOUSANDS_OUTPUT_FIELDS
+                else row.get(source_name, "")
+                for source_name, _ in output_columns
+            ]
+        )
+        for column_index, (source_name, _) in enumerate(output_columns, start=1):
+            if is_rtp_output_field(source_name):
+                sheet.cell(row=row_index, column=column_index).number_format = "0.00%"
+            elif source_name in THOUSANDS_OUTPUT_FIELDS:
+                sheet.cell(row=row_index, column=column_index).number_format = "#,##0"
 
-    for column_cells in sheet.columns:
+    for column_cells, (source_name, _) in zip(sheet.columns, output_columns):
         max_length = max(len(str(cell.value or "")) for cell in column_cells)
-        sheet.column_dimensions[column_cells[0].column_letter].width = min(max_length + 2, 32)
+        column_dimension = sheet.column_dimensions[column_cells[0].column_letter]
+        column_dimension.width = min(max_length + 2, 32)
+        column_dimension.hidden = source_name in HIDDEN_VALIDATOR_COLUMNS
 
     workbook.save(output_path)
 
@@ -607,11 +774,13 @@ def generate_xlsx_from_archives(archive_paths: list[Path], output_path: Path):
 
 
 async def download_validator_archive(document, context: ContextTypes.DEFAULT_TYPE, timestamp: str, index: int) -> Path:
-    """下載 Telegram 壓縮檔並轉成 xlsx。"""
-    source_name = document.file_name or f"validator_{timestamp}.zip"
+    """下載 Telegram 報表檔（TXT/ZIP/RAR）。"""
+    mime_type = (document.mime_type or "").lower()
+    fallback_suffix = ".txt" if mime_type.startswith("text/plain") else ".zip"
+    source_name = document.file_name or f"validator_{timestamp}{fallback_suffix}"
     safe_stem = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(source_name).stem).strip("._") or f"validator_{timestamp}"
     source_suffix = Path(source_name).suffix.lower()
-    archive_suffix = source_suffix if source_suffix in ARCHIVE_EXTENSIONS else ".zip"
+    archive_suffix = source_suffix if source_suffix in REPORT_FILE_EXTENSIONS else ".zip"
     archive_path = OUTPUT_DIR / f"{timestamp}_{index:02d}_{safe_stem}{archive_suffix}"
 
     telegram_file = await context.bot.get_file(document.file_id)
@@ -620,7 +789,7 @@ async def download_validator_archive(document, context: ContextTypes.DEFAULT_TYP
 
 
 async def build_validator_report_from_documents(documents, context: ContextTypes.DEFAULT_TYPE, batch_name: str | None = None) -> Path:
-    """下載 Telegram 壓縮檔並合併轉成 xlsx。"""
+    """下載 Telegram 報表檔，確認內容有效後合併轉成 xlsx。"""
     ensure_output_dir()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     if batch_name:
@@ -637,7 +806,14 @@ async def build_validator_report_from_documents(documents, context: ContextTypes
         for index, document in enumerate(documents, start=1):
             archive_paths.append(await download_validator_archive(document, context, timestamp, index))
 
-        generate_xlsx_from_archives(archive_paths, xlsx_path)
+        rows, pool_headers = collect_validator_rows_from_archives(archive_paths)
+        if not rows:
+            raise NoValidatorReportError("上傳檔案不是 RTP Validator 報表，或報表內缺少 GameID。")
+
+        if any(row.get("_is_stress_test") for row in rows):
+            xlsx_path = OUTPUT_DIR / f"{timestamp}_{safe_output_stem}_壓測.xlsx"
+
+        write_validator_xlsx(rows, pool_headers, xlsx_path)
     finally:
         for archive_path in archive_paths:
             if archive_path.exists():
@@ -669,9 +845,12 @@ async def send_typing_while_waiting(chat_id: int, context: ContextTypes.DEFAULT_
 def is_supported_archive_document(document) -> bool:
     file_name = (document.file_name or "").lower()
     mime_type = (document.mime_type or "").lower()
-    is_supported_archive = Path(file_name).suffix.lower() in ARCHIVE_EXTENSIONS
-    is_supported_mime = "zip" in mime_type or "rar" in mime_type
-    return is_supported_archive or is_supported_mime
+    file_suffix = Path(file_name).suffix.lower()
+    if file_suffix:
+        return file_suffix in REPORT_FILE_EXTENSIONS
+
+    is_supported_mime = "zip" in mime_type or "rar" in mime_type or mime_type.startswith("text/plain")
+    return is_supported_mime
 
 
 async def process_archive_batch_after_delay(batch_key, context: ContextTypes.DEFAULT_TYPE):
@@ -694,9 +873,12 @@ async def process_archive_batch_after_delay(batch_key, context: ContextTypes.DEF
 
     try:
         xlsx_path = await build_validator_report_from_documents(documents, context, batch_name=batch_name)
+    except NoValidatorReportError as e:
+        print(f"[系統日誌] 上傳檔案不是有效報表: {e}")
+        await message.reply_text("找不到 RTP Validator 報表，請確認 TXT 內含 GameID，或 ZIP/RAR 內含有效報表 TXT。")
     except Exception as e:
-        print(f"[系統日誌] 批次轉換壓縮檔為 xlsx 失敗: {e}")
-        await message.reply_text("批次轉換壓縮檔失敗，請確認 zip/rar 檔案格式是否正確。")
+        print(f"[系統日誌] 批次轉換報表檔為 xlsx 失敗: {e}")
+        await message.reply_text("報表檔轉換失敗，請確認 txt/zip/rar 檔案格式是否正確。")
     else:
         with xlsx_path.open("rb") as report_file:
             await message.reply_document(document=report_file, filename=xlsx_path.name)
@@ -920,7 +1102,7 @@ async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     document = update.message.document
     if not is_supported_archive_document(document):
-        await update.message.reply_text("目前只支援上傳 RTP Validator 的 zip/rar 壓縮檔。")
+        await update.message.reply_text("目前只支援上傳 RTP Validator 的 txt、zip、rar 檔案。")
         return
 
     media_group_id = update.message.media_group_id
@@ -947,9 +1129,12 @@ async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         xlsx_path = await build_validator_report_from_document(document, context)
+    except NoValidatorReportError as e:
+        print(f"[系統日誌] 上傳檔案不是有效報表: {e}")
+        await update.message.reply_text("這個檔案不是 RTP Validator 報表，請確認 TXT 內含 GameID。")
     except Exception as e:
-        print(f"[系統日誌] 轉換壓縮檔為 xlsx 失敗: {e}")
-        await update.message.reply_text("轉換壓縮檔失敗，請確認 zip/rar 檔案格式是否正確。")
+        print(f"[系統日誌] 轉換報表檔為 xlsx 失敗: {e}")
+        await update.message.reply_text("報表檔轉換失敗，請確認 txt/zip/rar 檔案格式是否正確。")
     else:
         with xlsx_path.open("rb") as report_file:
             await update.message.reply_document(document=report_file, filename=xlsx_path.name)
@@ -966,12 +1151,12 @@ def build_help_text() -> str:
     game_list = ", ".join(get_game_id(name) for name in games) if games else "(尚未找到任何遊戲資料夾)"
     return (
         "🤖 *Jumbo 工具機器人 — 功能說明*\n\n"
-        "📄 *RTP Validator 壓縮檔轉表格*\n"
-        "私訊直接丟 zip/rar 壓縮檔（支援巢狀壓縮、多檔一起丟）；群組裡上傳要附文字 @我，我會抓出 GameID、Coin in、TotalSpin、各項 RTP、pool RTP 等欄位，自動轉成 xlsx 傳回來。\n\n"
+        "📄 *RTP Validator 報表轉表格*\n"
+        "私訊直接丟 txt/zip/rar 檔案（支援巢狀壓縮、多檔一起丟）；群組裡上傳要附文字 @我，我會先判斷是否為報表，再抓出各項 RTP、最大倍數與 pool RTP 等欄位，自動轉成 xlsx 傳回來。\n\n"
         "📊 *RTP Report 文字摘要*\n"
         "私訊我或在群組 @我，貼上 Formal RTP Report 文字，我會幫你整理成表格摘要（GameRTP / Jackpot / BonusRTP / Total RTP）。\n\n"
         "🕐 *群組 3 分鐘窗口*\n"
-        f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟壓縮檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
+        f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟報表檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
         "🎰 *模擬器*（僅限管理者）\n"
         "傳送 `/simulator` 後選擇「開始模擬」；選好遊戲後，可在步驟 2 選擇單一 config 或 Batch 多組執行。跑完會自動把摘要跟報表路徑傳回來。\n"
         f"目前可用遊戲: {game_list}"

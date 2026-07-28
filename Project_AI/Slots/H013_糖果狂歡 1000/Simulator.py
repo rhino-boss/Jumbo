@@ -25,22 +25,19 @@ TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
 CARD_SYSTEM_ENABLED = True  # True: use card system when config supports it; False: force it off.
-CARD_SYSTEM_IS_NEWBIE = False  # Reserved for H026-compatible settings; H013 config currently has no card system.
+CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 
 # Batch runs. Edit this list directly when you want to run a custom set once.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},  # test
     # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 OUTPUT_REPORT = True
@@ -205,6 +202,53 @@ GAME_NAME = str(CFG["display_name"])
 GAME_VERSION = str(CFG["game_version"])
 CARD_SYSTEM_RAW = CFG.get("card_system", {})
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM_RAW.get("enabled", False))
+CARD_RETRY_LIMIT = max(1, int(CARD_SYSTEM_RAW.get("retry_limit", 5000)))
+
+CARD_TYPE_RANGE = 0
+CARD_TYPE_FREE_GAME = 1
+CARD_PROFILE_NEWBIE_NORMAL_BG = 0
+CARD_PROFILE_NEWBIE_NORMAL_FG = 1
+CARD_PROFILE_NEWBIE_EXTRA_BG = 2
+CARD_PROFILE_NEWBIE_EXTRA_FG = 3
+CARD_PROFILE_OLDHAND_NORMAL_BG = 4
+CARD_PROFILE_OLDHAND_NORMAL_FG = 5
+CARD_PROFILE_OLDHAND_EXTRA_BG = 6
+CARD_PROFILE_OLDHAND_EXTRA_FG = 7
+CARD_PROFILE_BUY_FEATURE = 8
+CARD_PROFILE_SUPER_FEATURE = 9
+
+
+def _card_list(player, mode, segment):
+    return list(CARD_SYSTEM_RAW.get(player, {}).get(mode, {}).get(segment, []))
+
+
+CARD_PROFILE_LISTS = [
+    _card_list("newbie", "normal_bet", "weight_bg"),
+    _card_list("newbie", "normal_bet", "weight_fg"),
+    _card_list("newbie", "extra_bet", "weight_bg"),
+    _card_list("newbie", "extra_bet", "weight_fg"),
+    _card_list("oldhand", "normal_bet", "weight_bg"),
+    _card_list("oldhand", "normal_bet", "weight_fg"),
+    _card_list("oldhand", "extra_bet", "weight_bg"),
+    _card_list("oldhand", "extra_bet", "weight_fg"),
+    _card_list("oldhand", "buy_feature", "weight_fg"),
+    _card_list("oldhand", "super_feature", "weight_fg"),
+]
+MAX_CARDS = max(1, max((len(cards) for cards in CARD_PROFILE_LISTS), default=0))
+CARD_TYPES = np.full((len(CARD_PROFILE_LISTS), MAX_CARDS), -1, dtype=np.int64)
+CARD_MIN = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
+CARD_MAX = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
+CARD_WEIGHT_CUM = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.int64)
+CARD_COUNTS = np.zeros(len(CARD_PROFILE_LISTS), dtype=np.int64)
+for profile_idx, cards in enumerate(CARD_PROFILE_LISTS):
+    running_weight = 0
+    for card_idx, card in enumerate(cards):
+        running_weight += max(0, int(card.get("weight", 0)))
+        CARD_TYPES[profile_idx, card_idx] = CARD_TYPE_FREE_GAME if card.get("type") == "free_game" else CARD_TYPE_RANGE
+        CARD_MIN[profile_idx, card_idx] = float(card.get("min", 0.0))
+        CARD_MAX[profile_idx, card_idx] = float(card.get("max", 0.0))
+        CARD_WEIGHT_CUM[profile_idx, card_idx] = running_weight
+    CARD_COUNTS[profile_idx] = len(cards)
 
 MODE_NORMALBET = int(CFG["mode_normalbet"])
 MODE_EXTRABET = int(CFG["mode_extrabet"])
@@ -268,7 +312,9 @@ S_BG_CASCADES = 12
 S_FG_CASCADES = 13
 S_FG_MULTI_SUM = 14
 S_FG_MULTI_MAX = 15
-STAT_COUNT = 16
+S_RETRY_TOTAL = 16
+S_RETRY_LIMIT_EXCEEDED = 17
+STAT_COUNT = 18
 
 
 def _validate_settings():
@@ -310,6 +356,46 @@ def _weighted_cumulative_index(cumulative):
         if pick < cumulative[idx]:
             return idx
     return cumulative.shape[0] - 1
+
+
+@njit(nogil=True)
+def _pick_card(profile_idx):
+    card_count = CARD_COUNTS[profile_idx]
+    if card_count <= 0:
+        return -1
+    total = CARD_WEIGHT_CUM[profile_idx, card_count - 1]
+    if total <= 0:
+        return -1
+    pick = np.random.randint(0, total)
+    for card_idx in range(card_count):
+        if pick < CARD_WEIGHT_CUM[profile_idx, card_idx]:
+            return card_idx
+    return card_count - 1
+
+
+@njit(nogil=True)
+def _is_card_match(profile_idx, card_idx, score, card_coin_in, triggered_free_game):
+    if card_idx < 0:
+        return True
+    if CARD_TYPES[profile_idx, card_idx] == CARD_TYPE_FREE_GAME:
+        return triggered_free_game == 1
+    multiplier = score / card_coin_in
+    return multiplier > CARD_MIN[profile_idx, card_idx] and multiplier <= CARD_MAX[profile_idx, card_idx]
+
+
+@njit(nogil=True)
+def _card_profiles(mode):
+    if mode == MODE_FEATUREBUY:
+        return -1, -1, CARD_PROFILE_BUY_FEATURE
+    if mode == MODE_SUPERFEATUREBUY:
+        return -1, -1, CARD_PROFILE_SUPER_FEATURE
+    if CARD_SYSTEM_IS_NEWBIE:
+        if mode == MODE_EXTRABET:
+            return CARD_PROFILE_NEWBIE_EXTRA_BG, CARD_PROFILE_NEWBIE_EXTRA_FG, -1
+        return CARD_PROFILE_NEWBIE_NORMAL_BG, CARD_PROFILE_NEWBIE_NORMAL_FG, -1
+    if mode == MODE_EXTRABET:
+        return CARD_PROFILE_OLDHAND_EXTRA_BG, CARD_PROFILE_OLDHAND_EXTRA_FG, -1
+    return CARD_PROFILE_OLDHAND_NORMAL_BG, CARD_PROFILE_OLDHAND_NORMAL_FG, -1
 
 
 @njit(nogil=True)
@@ -451,11 +537,33 @@ def _simulate_chunk(rounds, mode, bet_multi):
     eliminates = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
     multiplier_line = np.zeros((3, THRESHOLD_RECORD.shape[0]), dtype=np.float64)
     coin_in = DEFAULT_COIN_IN * BET_FACTORS[mode] * bet_multi
+    card_coin_in = DEFAULT_COIN_IN * BET_FACTORS[MODE_NORMALBET] * bet_multi
+    bg_profile, fg_profile, package_profile = _card_profiles(mode)
+    accepted_rounds = 0
+    retry_count = 0
+    bg_card_idx = -1
+    fg_card_idx = -1
+    package_card_idx = -1
 
-    for _ in range(rounds):
+    while accepted_rounds < rounds:
+        if retry_count == 0:
+            bg_card_idx = -1
+            fg_card_idx = -1
+            package_card_idx = -1
+            if CARD_SYSTEM_ENABLED:
+                if package_profile >= 0:
+                    package_card_idx = _pick_card(package_profile)
+                else:
+                    bg_card_idx = _pick_card(bg_profile)
+                    if bg_card_idx >= 0 and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME:
+                        fg_card_idx = _pick_card(fg_profile)
+
+        round_hits = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
+        round_pays = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
+        round_eliminates = np.zeros((2, SYMBOL_COUNT, 3), dtype=np.float64)
         table_id = _base_table(mode)
         board, stops = _generate_board(table_id)
-        bg_regular, bg_cascades = _cascade(table_id, board, stops, bet_multi, 0, True, hits, pays, eliminates)
+        bg_regular, bg_cascades = _cascade(table_id, board, stops, bet_multi, 0, True, round_hits, round_pays, round_eliminates)
         scatter_count = _count_symbol(board, C1)
         scatter_pay = 0.0
         if 4 <= scatter_count <= 6:
@@ -499,7 +607,7 @@ def _simulate_chunk(rounds, mode, bet_multi):
                     retriggers += 1
 
                 multiplier = _draw_multiplier(profile + (1 if is_high else 0), _count_symbol(preview, C2))
-                spin_pay, cascades = _cascade(fg_table, fg_board, fg_stops, multiplier * bet_multi, 1, True, hits, pays, eliminates)
+                spin_pay, cascades = _cascade(fg_table, fg_board, fg_stops, multiplier * bet_multi, 1, True, round_hits, round_pays, round_eliminates)
                 fg_pay += spin_pay
                 fg_spins += 1
                 fg_cascades += cascades
@@ -510,6 +618,26 @@ def _simulate_chunk(rounds, mode, bet_multi):
                     fg_hit_spins += 1
 
         total_win = bg_pay + fg_pay
+        triggered_free_game = 1 if scatter_pay > 0 else 0
+        accepted = True
+        if CARD_SYSTEM_ENABLED:
+            if package_profile >= 0:
+                accepted = _is_card_match(package_profile, package_card_idx, total_win, card_coin_in, triggered_free_game)
+            elif bg_card_idx >= 0 and CARD_TYPES[bg_profile, bg_card_idx] == CARD_TYPE_FREE_GAME:
+                accepted = triggered_free_game == 1 and _is_card_match(fg_profile, fg_card_idx, fg_pay, card_coin_in, 1)
+            else:
+                accepted = triggered_free_game == 0 and _is_card_match(bg_profile, bg_card_idx, bg_pay, card_coin_in, 0)
+
+        if not accepted:
+            stats[S_RETRY_TOTAL] += 1
+            retry_count += 1
+            if retry_count < CARD_RETRY_LIMIT:
+                continue
+            stats[S_RETRY_LIMIT_EXCEEDED] += 1
+
+        hits += round_hits
+        pays += round_pays
+        eliminates += round_eliminates
         stats[S_TOTAL_WIN] += total_win
         stats[S_BG_PAY] += bg_regular
         stats[S_SCATTER_PAY] += scatter_pay
@@ -535,6 +663,8 @@ def _simulate_chunk(rounds, mode, bet_multi):
         if scatter_pay > 0:
             multiplier_line[1, _threshold_index(fg_pay / coin_in)] += 1
         multiplier_line[2, _threshold_index(x)] += 1
+        accepted_rounds += 1
+        retry_count = 0
 
     return stats, hits, pays, eliminates, multiplier_line
 
@@ -575,6 +705,9 @@ def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, durat
         ("Total Rounds", rounds, ""),
         ("Threads", min(threads, rounds), ""),
         ("Duration", duration, "seconds"),
+        ("rtp_total", _safe_div(stats[S_TOTAL_WIN], total_coin_in), ""),
+        ("rtp_bg", _safe_div(stats[S_BG_PAY] + stats[S_SCATTER_PAY], total_coin_in), ""),
+        ("rtp_fg", _safe_div(stats[S_FG_PAY], total_coin_in), ""),
         ("RTP", _safe_div(stats[S_TOTAL_WIN], total_coin_in), ""),
         ("RTP - Base", _safe_div(stats[S_BG_PAY], total_coin_in), ""),
         ("RTP - Scatter", _safe_div(stats[S_SCATTER_PAY], total_coin_in), ""),
@@ -590,6 +723,11 @@ def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, durat
         ("Average FG Cascades", _safe_div(stats[S_FG_CASCADES], fg_spins), ""),
         ("Max Win", _safe_div(stats[S_MAX_WIN], coin_in), "x Bet"),
         ("volatility_std", math.sqrt(variance), ""),
+        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
+        ("card_system_profile", "newbie" if CARD_SYSTEM_IS_NEWBIE and bet_mode in (MODE_NORMALBET, MODE_EXTRABET) else "oldhand", ""),
+        ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
+        ("retry_total", int(stats[S_RETRY_TOTAL]), ""),
+        ("retry_limit_exceeded", int(stats[S_RETRY_LIMIT_EXCEEDED]), ""),
     ]
     df_base = pd.DataFrame(base_rows, columns=["Index", "Value", "Value2"])
 
@@ -704,7 +842,7 @@ def build_result_frames(stats, hits, pays, eliminates, multiplier_line, total_ro
     triggers = stats[S_FG_TRIGGER]
     summary = {
         "rtp_total": _safe_div(stats[S_TOTAL_WIN], total_coin_in),
-        "rtp_bg": _safe_div(stats[S_BG_PAY], total_coin_in),
+        "rtp_bg": _safe_div(stats[S_BG_PAY] + stats[S_SCATTER_PAY], total_coin_in),
         "rtp_scatter": _safe_div(stats[S_SCATTER_PAY], total_coin_in),
         "rtp_fg": _safe_div(stats[S_FG_PAY], total_coin_in),
         "hit_rate_bg": _safe_div(stats[S_BG_HITS], total_round),
@@ -715,6 +853,7 @@ def build_result_frames(stats, hits, pays, eliminates, multiplier_line, total_ro
         "avg_fg_multiplier": _safe_div(stats[S_FG_MULTI_SUM], fg_spins),
         "avg_fg_spins": _safe_div(fg_spins, triggers),
         "max_win_multiplier": _safe_div(stats[S_MAX_WIN], coin_in),
+        "volatility_std": math.sqrt(max(0.0, stats[S_X_SQUARE] / total_round - (stats[S_X_SUM] / total_round) ** 2)),
     }
     return (*frames, summary)
 
@@ -729,6 +868,7 @@ def print_batch_summary(duration, summary, bet_mode):
     print(f"* rtp_bg: {summary['rtp_bg'] * 100:.2f}%", flush=True)
     print(f"* rtp_scatter: {summary['rtp_scatter'] * 100:.2f}%", flush=True)
     print(f"* rtp_fg: {summary['rtp_fg'] * 100:.2f}%", flush=True)
+    print(f"* volatility_std: {summary['volatility_std']:.6f}", flush=True)
     print(f"* hit_rate_bg: {summary['hit_rate_bg']:.4f}", flush=True)
     print(f"* hit_rate_fg: {summary['hit_rate_fg']:.4f}", flush=True)
     print(f"* fg_trigger_rate: {summary['fg_trigger_rate']:.4f} ({fg_trigger_count} spins)", flush=True)

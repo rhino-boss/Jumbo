@@ -27,31 +27,15 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 # Batch runs. Edit this list directly when you want to run a custom set once.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92B.js", "bet_mode": 1, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 
@@ -2387,6 +2371,7 @@ def print_batch_summary(duration, summary, bet_mode):
     print(f"* rtp_total: {float(summary.get('rtp_total', 0.0)) * 100:.2f}%", flush=True)
     print(f"* rtp_bg: {float(summary.get('rtp_bg', 0.0)) * 100:.2f}%", flush=True)
     print(f"* rtp_fg: {float(summary.get('rtp_fg', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* volatility_std: {float(summary.get('volatility_std', 0.0)):.6f}", flush=True)
     print(f"* hit_rate_bg: {float(summary.get('hit_rate_bg', 0.0)):.2f}", flush=True)
     print(f"* hit_rate_fg: {float(summary.get('hit_rate_fg', 0.0)):.2f}", flush=True)
     print(f"* fg_trigger_rate: {float(summary.get('fg_trigger_rate', 0.0)):.2f} ({fg_trigger_count} spins)", flush=True)

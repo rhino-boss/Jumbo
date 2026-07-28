@@ -34,10 +34,8 @@ BATCH_COMBINATIONS = [
     # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},
     {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -949,6 +947,7 @@ def show_console(summary):
     print(f"* rtp_total: {summary['rtp_total'] * 100:.2f}%", flush=True)
     print(f"* rtp_bg: {summary['rtp_bg'] * 100:.2f}%", flush=True)
     print(f"* rtp_fg: {summary['rtp_fg'] * 100:.2f}%", flush=True)
+    print(f"* volatility_std: {summary['volatility_std']:.6f}", flush=True)
     print(f"* hit_rate_bg: {summary['hit_rate_bg']:.2f}", flush=True)
     print(f"* hit_rate_fg: {summary['hit_rate_fg']:.2f}", flush=True)
     print(f"* fg_trigger_rate: {summary['fg_trigger_rate']:.2f} ({fg_trigger_count} spins)", flush=True)

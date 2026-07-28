@@ -1098,6 +1098,7 @@ def print_batch_summary(result, bet_mode, bet_multi):
     print(f"* rtp_total: {float(summary.get('rtp_total', 0.0)) * 100:.2f}%", flush=True)
     print(f"* rtp_bg: {float(summary.get('rtp_bg', 0.0)) * 100:.2f}%", flush=True)
     print(f"* rtp_fg: {float(summary.get('rtp_fg', 0.0)) * 100:.2f}%", flush=True)
+    print(f"* volatility_std: {float(summary.get('volatility_std', 0.0)):.6f}", flush=True)
     print(f"* hit_rate_bg: {float(summary.get('hit_rate_bg', 0.0)):.4f}", flush=True)
     print(f"* hit_rate_fg: {float(summary.get('hit_rate_fg', 0.0)):.4f}", flush=True)
     print(f"* fg_trigger_rate: {float(summary.get('fg_trigger_rate', 0.0)):.4f} ({fg_triggers} spins)", flush=True)
