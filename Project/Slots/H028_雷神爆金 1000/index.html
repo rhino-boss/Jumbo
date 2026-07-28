@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thunder Boost 1000 — Demo Game</title>
+  <style>
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .rng-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+
+    /* H028 overrides: H026 shell with 6 reels and four Extra Reel cells. */
+    body.h028 { --cell-size: 62px; }
+    body.h028 .board-grid { grid-template-columns: repeat(6, var(--cell-size)); }
+    body.h028 #extraBetBtn { display: none !important; }
+    body.h028 .cell.extra-gap { visibility: hidden; }
+    body.h028 .cell.peek-row .symbol-wrap { inset: 3%; }
+    body.h028 .cell.peek-row .symbol-code,
+    body.h028 .cell.peek-row .scatter-badge { display: block; }
+    body.h028 #featureStatus { display: inline; color: var(--mauve); }
+    body.h028 .cell {
+      border-width: 2px;
+      border-color: rgba(38, 92, 137, .28);
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+    }
+    body.h028 .cell.peek-row {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+    body.h028 .cell.jumbo {
+      height: auto;
+      min-height: 0;
+    }
+    body.h028 .cell .symbol-wrap,
+    body.h028 .cell.peek-row .symbol-wrap { inset: 0; display: grid; place-items: center; overflow: hidden; }
+    body.h028 .cell .symbol-code,
+    body.h028 .cell.peek-row .symbol-code,
+    body.h028 .cell.jumbo .symbol-code {
+      position: static;
+      display: block;
+      max-width: 100%;
+      padding: 0;
+      border: 0;
+      color: #d8e8f4;
+      background: transparent;
+      font: 800 clamp(.82rem, 1.45vw, 1.12rem) / 1 Consolas, "Courier New", monospace;
+      letter-spacing: .02em;
+      text-align: center;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, .72);
+      transform: none;
+    }
+    body.h028 .cell .multi-badge,
+    body.h028 .cell .scatter-badge { display: none; }
+    body.h028 .cell.symbol-wild { border-color: #39d6a2; background: rgba(20, 75, 64, .32); }
+    body.h028 .cell.symbol-scatter { border-color: #62dff4; background: #081923; }
+    body.h028 .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, .3); }
+    body.h028 .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, .3); }
+    body.h028 .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, .32); }
+    body.h028 .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, .32); }
+    body.h028 .cell.symbol-m5 { border-color: #f0c643; background: #18170e; }
+    body.h028 .cell.symbol-m6 { border-color: #42cfb3; background: #0a1918; }
+    body.h028 .cell.symbol-low { border-color: rgba(38, 92, 137, .28); background: #060d1a; }
+    body.h028 .cell.symbol-mystery { border-color: #d594f4; background: #171020; }
+    body.h028 .cell.gold {
+      border-color: #ffe078;
+      background:
+        linear-gradient(180deg, rgba(255, 244, 173, .35), transparent 42%),
+        linear-gradient(180deg, #d9a923, #7d4b06);
+      box-shadow: none;
+    }
+    body.h028 .cell.symbol-scatter {
+      border-color: #71ecff;
+      background:
+        linear-gradient(180deg, rgba(218, 252, 255, .34), transparent 42%),
+        linear-gradient(180deg, #31bdd6, #08708d);
+      box-shadow: none;
+    }
+    body.h028 .m1-multiplier {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 5;
+      min-width: 24px;
+      padding: 2px 5px;
+      border: 1px solid rgba(255, 226, 126, .8);
+      border-radius: 999px;
+      color: #3b2100;
+      background: linear-gradient(180deg, #ffe98b, #efaa32);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .42);
+      font: 900 11px/1.1 "Segoe UI", system-ui, sans-serif;
+      text-align: center;
+    }
+    body.h028 .cell.hit { border-color: var(--green); box-shadow: 0 0 14px rgba(51, 255, 153, 0.46); }
+    body.h028 .cell.reel-spin { animation: h028ReelRoll 105ms linear infinite; filter: blur(.35px) brightness(1.15); }
+    body.h028 .cell.extra-reel-spin { animation: h028ExtraRoll 105ms linear infinite; filter: blur(.35px) brightness(1.15); }
+    @keyframes h028ReelRoll { 0% { transform: translateY(-16px); opacity: .68; } 50% { opacity: 1; } 100% { transform: translateY(16px); opacity: .68; } }
+    @keyframes h028ExtraRoll { 0% { transform: translateX(16px); opacity: .68; } 50% { opacity: 1; } 100% { transform: translateX(-16px); opacity: .68; } }
+    body.h028 .help-payout-table { display: grid; gap: 4px; padding: 8px 12px 12px; overflow-x: auto; }
+    body.h028 .help-payout-row { display: grid; grid-template-columns: minmax(110px, 1.4fr) repeat(4, minmax(72px, 1fr)); gap: 4px; min-width: 460px; }
+    body.h028 .help-payout-cell { padding: 7px 8px; border-radius: 5px; color: var(--text); background: var(--surface); font: 11px/1.35 Consolas, monospace; text-align: center; }
+    body.h028 .help-payout-cell:first-child { text-align: left; color: var(--accent); }
+    @media (max-width: 760px) { body.h028 { --cell-size: min(14vw, 62px); overflow-x: hidden; } body.h028 .board-grid { grid-template-columns: repeat(6, minmax(0, var(--cell-size))); } }
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      --cell-size: 78px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 920px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    #modeText {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .feature-strip {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #multPill .v {
+      color: var(--blue);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
+    #rng-wrap,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-shell {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: var(--cell-size);
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.75);
+      background: #101827;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
+      transform: scale(1.03);
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .set-rng-controls {
+      display: grid;
+      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
+      align-items: end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .debug-rng-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .debug-rng-field input,
+    .debug-rng-field select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .debug-rng-field input::placeholder {
+      color: var(--sub);
+      opacity: 0.7;
+    }
+
+    #setRngResetBtn {
+      width: 82px;
+      min-width: 82px;
+      align-self: end;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3,
+    #rng-wrap h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row,
+    .rng-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .zone-body.set-rng-controls {
+      display: grid;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    #rng-wrap {
+      width: 100%;
+      margin-top: 10px;
+      padding: 0;
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #rng-wrap .diagnostic-header,
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    #rng-wrap .rng-list {
+      padding: 8px 12px;
+    }
+
+    .live-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      background: #06111f;
+    }
+
+    .help-loading,
+    .help-load-error {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--sub);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 14px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 9px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .help-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-2);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-section-title .help-en {
+      color: var(--blue);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .help-group-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 9px 12px 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .help-group-title .help-en {
+      color: var(--sub);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .help-rule {
+      display: block;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(17, 50, 82, 0.85);
+      line-height: 1.55;
+    }
+
+    .help-rule-zh,
+    .help-rule-en {
+      min-width: 0;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .help-rule-en {
+      color: #a9cce8;
+      font-size: 11px;
+    }
+
+    .help-lang-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--sub);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      padding: 8px 12px 12px;
+    }
+
+    .help-payout-item {
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    #helpSourceFrame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(17vw, 70px);
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      .set-rng-controls {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
+      }
+
+      #grid-panel {
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      #controls {
+        grid-template-columns: 1fr;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .help-payout-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .set-rng-controls {
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      }
+
+      #controls #setRngResetBtn {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body class="h028">
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId">101016</span> <span id="gameName">Thunder Boost 1000</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
+            id="carryMultiValue">0</span></span>
+        <span class="feature-pill" id="multPill"><span class="k">Mult</span><span class="v"
+            id="spinMultiValue">x1</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn hidden" id="extraBetBtn" type="button">Extra Bet (2x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3 data-i18n="simulationStats">Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect">
+              <option value="">Auto</option>
+            </select>
+          </label>
+          <label class="debug-rng-field" for="reelRngInput">
+            Reel RNG
+            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="R1 R2 R3 R4 R5 R6 EXTRA">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
+      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
+      <div class="rng-list" id="rngList"></div>
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect">
+            <option value="config_92A.js">92A</option>
+          </select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span data-i18n="language">Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+      </div>
+      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+  </dialog>
+
+    <script id="embeddedGameHelpMarkdown" type="text/plain">
+# Game Help Draft
+
+這份 md 是 `Thunder_Boost_1000_Help.xlsx` 的前置確認稿。
+之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
+
+## Game Meta
+
+| Field | Value |
+| --- | --- |
+| game_id | 101016 |
+| parsheet_id | H0281 |
+| name_zh | 雷神爆金1000 |
+| name_en | Thunder Boost 1000 |
+
+---
+
+## PAYTABLE
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+
+### WILD SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | [WW] 僅出現在第 {2}、{3}、{4}、{5} 輪，並可替代除 [SCATTER] 外的所有符號以幫助形成中獎組合。 | [WW] APPEARS ON REELS {2}, {3}, {4}, AND {5} ONLY, AND SUBSTITUTES FOR ALL SYMBOLS EXCEPT [SCATTER] TO HELP FORM WINNING COMBINATIONS. |
+
+### SCATTER SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 散佈符號 | SCATTER SYMBOL |
+| 規則說明 | [SCATTER] 可出現在主盤面任意轉輪位置。 | [SCATTER] MAY APPEAR ANYWHERE ON THE MAIN REELS. |
+
+### MULTIPLIER SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 倍數符號 | MULTIPLIER SYMBOL |
+| 規則說明 | [M1] 為倍數符號，可出現在主盤面與額外轉輪位置。 | [M1] IS THE MULTIPLIER SYMBOL AND MAY APPEAR ON THE MAIN REELS AND THE EXTRA REELS. |
+
+### 賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+繁中：
+
+| 符號 | {6} 連 | {5} 連 | {4} 連 | {3} 連 |
+| --- | ---: | ---: | ---: | ---: |
+| [M1] 招財貓 | {4} | {2.5} | {2} | {1.5} |
+| [M2] 日式鼓 | {2.5} | {1.5} | {1.25} | {1} |
+| [M3] 燈籠 | {2} | {1.5} | {1.25} | {0.5} |
+| [M4] 扇子 | {1.5} | {1} | {0.75} | {0.4} |
+| [M5] 握壽司 | {0.75} | {0.6} | {0.5} | {0.3} |
+| [M6] 壽司 | {0.75} | {0.6} | {0.5} | {0.3} |
+| [A] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [K] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [J] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [10] | {0.2} | {0.15} | {0.1} | {0.05} |
+
+英文：
+
+| SYMBOL | {6} OF A KIND | {5} OF A KIND | {4} OF A KIND | {3} OF A KIND |
+| --- | ---: | ---: | ---: | ---: |
+| [M1] | {4} | {2.5} | {2} | {1.5} |
+| [M2] | {2.5} | {1.5} | {1.25} | {1} |
+| [M3] | {2} | {1.5} | {1.25} | {0.5} |
+| [M4] | {1.5} | {1} | {0.75} | {0.4} |
+| [M5] | {0.75} | {0.6} | {0.5} | {0.3} |
+| [M6] | {0.75} | {0.6} | {0.5} | {0.3} |
+| [A] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [K] | {0.5} | {0.4} | {0.3} | {0.2} |
+| [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [J] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [10] | {0.2} | {0.15} | {0.1} | {0.05} |
+
+---
+
+## CASCADING FEATURE
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 消除特色 | CASCADING FEATURE |
+| 規則說明 | 每次結算後，中獎符號會被移除，剩餘符號會向下掉落並由新符號補滿空位。 | AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED, THE REMAINING SYMBOLS CASCADE DOWN, AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
+| 規則說明 | 盤面補滿後會再次結算新的中獎組合，直到不再形成新的中獎組合為止。 | AFTER THE REELS ARE REFILLED, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS CONTINUES UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
+
+---
+
+## MULTIPLIER FEATURE
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
+| 規則說明 | [M1] 為本遊戲的主要倍數來源；同一回合出現多個 [M1] 時，倍數會累積相加。 | [M1] IS THE MAIN MULTIPLIER SOURCE IN THIS GAME. IF MULTIPLE [M1] SYMBOLS APPEAR IN THE SAME ROUND, THEIR VALUES ARE ADDED TOGETHER. |
+| 規則說明 | 主盤面上的 [M1] 依尺寸提供倍數：{1}x{1} = X{2}、{1}x{2} = X{3}、{1}x{3} = X{4}、{1}x{4} = X{5}。 | ON THE MAIN REELS, [M1] AWARDS A MULTIPLIER BASED ON ITS SIZE: {1}X{1} = X{2}, {1}X{2} = X{3}, {1}X{3} = X{4}, AND {1}X{4} = X{5}. |
+| 規則說明 | 額外轉輪上的每個 [M1] 固定提供 X{2} 倍數。 | EACH [M1] ON THE EXTRA REELS AWARDS A FIXED X{2} MULTIPLIER. |
+| 規則說明 | 當局所有中獎金額會乘上該局累積的總倍數。 | ALL WINS IN THE CURRENT ROUND ARE MULTIPLIED BY THE TOTAL ACCUMULATED MULTIPLIER FOR THAT ROUND. |
+
+---
+
+## GOLDEN FRAMED FEATURE
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金框符號特色 | GOLDEN FRAMED FEATURE |
+| 規則說明 | 第 {2}、{3}、{4}、{5} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, {4}, AND {5} MAY APPEAR WITH A GOLD FRAME. |
+| 規則說明 | 金框符號只有在實際參與中獎並被移除時，才會在原位置轉為 [WW]。 | A GOLD FRAMED SYMBOL ONLY CHANGES INTO [WW] ON THE SAME POSITION AFTER IT ACTUALLY PARTICIPATES IN A WIN AND IS REMOVED. |
+| 規則說明 | 轉化後的 [WW] 可參與下一次掉落後的中獎判定。 | THE TRANSFORMED [WW] CAN PARTICIPATE IN THE NEXT WIN EVALUATION AFTER THE CASCADE. |
+
+---
+
+## FREE GAME FEATURE
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
+| 規則說明 | 主盤面出現 {4} 個或以上 [SCATTER] 可觸發免費遊戲。 | {4} OR MORE [SCATTER] APPEARING ON THE MAIN REELS WILL TRIGGER THE FREE GAME FEATURE. |
+| 規則說明 | {4} 個 [SCATTER] 可獲得 {8} 場免費遊戲；每多出現 {1} 個 [SCATTER]，額外獲得 {2} 場免費遊戲。 | {4} [SCATTER] AWARD {8} FREE SPINS. EACH ADDITIONAL [SCATTER] AWARDS {2} MORE FREE SPINS. |
+| 規則說明 | 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
+| 規則說明 | 進入免費遊戲時，累積倍數由 X{2} 開始。 | THE ACCUMULATED MULTIPLIER STARTS AT X{2} WHEN THE FREE GAME FEATURE BEGINS. |
+| 規則說明 | 免費遊戲期間，累積倍數不會在每場之間重置，並會持續保留至整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FEATURE ENDS. |
+| 規則說明 | 免費遊戲期間再次出現 {4} 個或以上 [SCATTER] 可觸發加局；加局場次與一般觸發規則相同，且總場次不超過 {50} 場。 | DURING FREE GAME, {4} OR MORE [SCATTER] WILL RETRIGGER ADDITIONAL FREE SPINS. THE SAME FREE SPIN AWARD RULE APPLIES, UP TO A MAXIMUM OF {50} FREE SPINS IN TOTAL. |
+
+---
+
+## BUY FEATURE
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 購買特色 | BUY FEATURE |
+| 規則說明 | 玩家可支付 {75}x 總投注，直接購買一次免費遊戲進場機會。 | BUY FEATURE CAN BE PURCHASED FOR {75}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | 完成購買後，將直接觸發一次免費遊戲特色。 | COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
+
+---
+
+## WAY GAME
+
+來源：rule-derived
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 路數說明 | WAY GAME |
+| 規則說明 | 本遊戲採用由左至右連續相鄰轉輪判定的 WAY GAME 玩法。 | THIS GAME USES A WAY GAME MECHANIC THAT PAYS FOR MATCHING SYMBOLS ON CONSECUTIVE ADJACENT REELS FROM LEFT TO RIGHT. |
+| 規則說明 | 主盤面為 {6} 輪可變高度盤面，並在第 {2} 至第 {5} 輪上方各配置 {1} 個額外轉輪位置。 | THE MAIN REELS CONSIST OF {6} VARIABLE-HEIGHT REELS, WITH {1} EXTRA REEL POSITION ABOVE REELS {2} TO {5}. |
+| 規則說明 | 本遊戲的路數範圍為 {2,025} WAYS 至 {32,400} WAYS。 | THE NUMBER OF WAYS IN THIS GAME RANGES FROM {2,025} WAYS TO {32,400} WAYS. |
+| 規則說明 | 大型符號覆蓋多個位置時，每一格均視為 {1} 個獨立符號參與 WAY 計算。 | WHEN A LARGE SYMBOL COVERS MULTIPLE POSITIONS, EACH POSITION COUNTS AS {1} INDIVIDUAL SYMBOL FOR WAY CALCULATION. |
+
+---
+
+## GAME RULE
+
+來源：mixed（template-copy + rule-derived）
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | 選擇您想要進行的投注後，主盤面與額外轉輪會同步開始旋轉。 | AFTER THE PLAYER SELECTS A BET, THE MAIN REELS AND THE EXTRA REELS SPIN TOGETHER. |
+| 規則說明 | 中獎組合依 WAY GAME 規則判定，中獎金額會依該局累積的總倍數進行結算。 | WINNING COMBINATIONS ARE EVALUATED BY THE WAY GAME RULE, AND WINS ARE PAID WITH THE TOTAL MULTIPLIER ACCUMULATED IN THAT ROUND. |
+| 規則說明 | 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
+  </script>
+
+  <script src="./config_92A.js"></script>
+  <script>
+(()=>{"use strict";
+  const $=id=>document.getElementById(id), D=0.002, START_MONEY=10000, BETS=[1,2,3,4,5,6,8,10,12,16,20,30,40,60,100,200,300,600,1000,1500];
+  const PATTERNS=[[4,1],[1,4],[3,2],[2,3],[3,1,1],[1,3,1],[1,1,3],[2,2,1],[2,1,2],[1,2,2],[2,1,1,1],[1,2,1,1],[1,1,2,1],[1,1,1,2],[1,1,1,1,1]];
+  const CODES=["WW","SC","M1","M2","M3","M4","M5","M6","A","K","Q","J","10","G-M1","G-M2","G-M3","G-M4","G-M5","G-M6","G-A","G-K","G-Q","G-J","G-10","MY","G-MY"];
+  const B=typeof data!=="undefined"?data:null;if(!B){document.body.innerHTML='<div class="config-error"><b>CONFIG LOAD ERROR</b><br>config_92A.js could not be loaded. Keep it beside index.html and reopen this file.</div>';return}
+  const state={credit:START_MONEY/D,betIndex:0,busy:false,auto:false,debug:false,speed:3,rounds:0,totalBet:0,totalWin:0,hits:0,naturalRounds:0,naturalFg:0,buyRounds:0,forcedRounds:0,maxMulti:1,logs:[],history:[],historyIndex:-1,historyFloor:0,queued:false,fg:null,awaitingFgSpin:false,fgSpinResolve:null,lastBoard:null,language:(()=>{try{return localStorage.getItem('slotDemoLanguage')==='en'?'en':'zh'}catch(_){return'zh'}})(),lastMessage:'Ready. Config 92A loaded.'};
+  const el={board:$('board'),msg:$('messageBar'),spin:$('spinBtn'),auto:$('autoBtn'),betMinus:$('betMinusBtn'),betPlus:$('betPlusBtn'),betBtn:$('betBtn'),betMenu:$('betMenu'),normal:$('normalBetBtn'),buy:$('buyFeatureBtn'),speed:$('speedRange'),debug:$('debugModeInput'),card:$('cardRangeSelect'),reel:$('reelRngInput'),force:$('forceFgInput')};
+  const clone=o=>JSON.parse(JSON.stringify(o)), sleep=ms=>new Promise(r=>setTimeout(r,Math.max(12,ms/state.speed))), money=c=>(c*D).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), compactMoney=c=>(c*D).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}), formatBetMoney=v=>Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), compactNumber=v=>Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}), pickInt=n=>Math.floor(Math.random()*n);
+  function weighted(weights,forced=null){let total=weights.reduce((a,v)=>a+Math.max(0,+v||0),0);if(total<=0)return{index:pickInt(weights.length),rng:0,total:0};let rng=forced==null?pickInt(total):Math.trunc(forced);if(rng<0||rng>=total)throw Error(`RNG ${rng} outside 0-${total-1}`);let sum=0;for(let i=0;i<weights.length;i++){sum+=Math.max(0,+weights[i]||0);if(rng<sum)return{index:i,rng,total}}return{index:weights.length-1,rng,total}}
+  function code(id){return CODES[id]||`S${id}`}function base(id){return id>=13&&id<=23?id-11:id}function isGold(id){return id>=13&&id<=23}function displayCode(id){return isGold(id)?code(base(id)):code(id)}function betCoins(){return BETS[state.betIndex]/D}function betMultiplier(){return BETS[state.betIndex]/(B.default_coin_in*D*B.normalbet)}function delay(){return 520}
+  function log(text,type=''){state.logs.push({text,type,time:new Date().toLocaleTimeString('en-GB',{hour12:false})});if(state.logs.length>500)state.logs.splice(0,state.logs.length-500);renderLog()}
+  function message(text,type=false){let isError=type===true||type==='error';state.lastMessage=text;el.msg.textContent=localizeMessage(text);el.msg.style.color=isError?'var(--red)':'var(--accent)';log(text,typeof type==='string'?(type==='winValue'?'result':type):(isError?'error':''))}
+  function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','set-rng-panel','rng-wrap','log-wrap','live-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);updateControls()}
+  function renderLog(){if(!state.debug)return;$('liveLogBody').innerHTML=state.logs.map(x=>`<div class="live-log-line ${x.type}">[${x.time}] ${esc(x.text)}</div>`).join('');$('liveLogBody').scrollTop=$('liveLogBody').scrollHeight}
+  function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+  const UI_TEXT={en:{simulationStats:'Simulation Stats',totalRounds:'Total Rounds',hitRate:'Hit Rate',maxMultiplier:'Max Multiplier',reelRng:'Reel RNG',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',totalRounds:'總局數',hitRate:'命中率',maxMultiplier:'最大倍數',reelRng:'滾輪 RNG',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
+  const tr=key=>UI_TEXT[state.language]?.[key]||UI_TEXT.en[key]||key;
+  function localizeMessage(text){if(state.language!=='zh')return text;const exact={'Ready. Config 92A loaded.':'Ready — 按下 Spin','Reels spinning...':'滾輪轉動中...','Session reset.':'遊戲已重置。','Auto started.':'自動遊戲已開啟。','Auto stopped.':'自動遊戲已關閉。','Set RNG reset.':'指定 RNG 已重置。','Insufficient credit.':'餘額不足。'};if(exact[text])return exact[text];return text.replace(/^Round complete · Win /,'本局完成 · 得分 ').replace(/^Free Game started: (\d+) spins$/,'免費遊戲開始：$1 場').replace(/^Free Game ready · (\d+) spins left · press Spin$/,'免費遊戲待命 · 剩餘 $1 場 · 請按 Spin').replace(/^Free Game complete · final /,'免費遊戲結束 · 最終 ').replace(/^FG retrigger \+(\d+)$/,'免費遊戲加局 +$1').replace(/^History /,'歷史畫面 ').replace(/Cascade (\d+) · evaluating/,'Cascade $1 · 判定').replace(/Cascade (\d+) · score /,'Cascade $1 · 得分 ')}
+  let gameHelpMarkdown='';
+  let betModeLayoutFrame=0;
+  function setBetModeButtonLabel(button,fullLabel,shortLabel){if(!button)return;button.dataset.fullLabel=fullLabel;button.dataset.shortLabel=shortLabel}
+  function refreshBetModeLabels(){let body=document.querySelector('#bet-mode-panel .zone-body');if(!body)return;let buttons=[...body.querySelectorAll('button[data-full-label]')];cancelAnimationFrame(betModeLayoutFrame);for(const button of buttons){button.style.minWidth='';button.style.flex='';button.textContent=button.dataset.fullLabel}betModeLayoutFrame=requestAnimationFrame(()=>{let visible=buttons.filter(button=>getComputedStyle(button).display!=='none'),firstTop=visible[0]?.offsetTop,compact=body.scrollWidth>body.clientWidth+1||visible.some(button=>button.offsetTop!==firstTop);for(const button of buttons){button.textContent=compact?button.dataset.shortLabel:button.dataset.fullLabel;button.style.minWidth=compact?'0':'';button.style.flex=compact?'0 1 auto':''}})}
+  addEventListener('resize',refreshBetModeLabels);
+  function applyLanguage(){document.documentElement.lang=state.language==='zh'?'zh-Hant':'en';$('languageSelect').value=state.language;set('gameName',state.language==='zh'?'雷神爆金1000':'Thunder Boost 1000');document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=tr(node.dataset.i18n));set('spinBtn',state.language==='zh'?'旋轉':'SPIN');setBetModeButtonLabel($('normalBetBtn'),state.language==='zh'?'一般投注':'NORMAL BET','NB');setBetModeButtonLabel($('extraBetBtn'),`EXTRA BET (2X)`,`EX (2X)`);setBetModeButtonLabel($('buyFeatureBtn'),`${state.language==='zh'?'購買特色':'BUY FEATURE'} (${B.featurebuy}X)`,`BF (${B.featurebuy}X)`);refreshBetModeLabels();set('helpBtn',state.language==='zh'?'說明':'HELP');set('setRngResetBtn',state.language==='zh'?'重置':'RESET');let playLabel=document.querySelector('#play-panel .zone-label'),modeLabel=document.querySelector('#bet-mode-panel .zone-label'),rngLabel=document.querySelector('#set-rng-panel .zone-label');if(playLabel)playLabel.textContent=state.language==='zh'?'操作':'PLAY';if(modeLabel)modeLabel.textContent=state.language==='zh'?'投注模式':'BET MODE';if(rngLabel)rngLabel.textContent=state.language==='zh'?'指定 RNG':'SET RNG';el.msg.textContent=localizeMessage(state.lastMessage);renderStats();renderFeature(state.fg?'FREE GAME':'BASE GAME',Number($('carryMultiValue').textContent)||0,Number($('spinMultiValue').textContent.replace('x',''))||1,($('featureStatus').textContent||'').replace('Ways ','')||'—');updateControls();if(gameHelpMarkdown)renderHelp(gameHelpMarkdown);try{localStorage.setItem('slotDemoLanguage',state.language)}catch(_){}}
+  function renderStats(displayWin=null){set('balanceValue',money(state.credit));set('betValue',formatBetMoney(BETS[state.betIndex]));set('winValue',money(displayWin==null?(state.currentWin||0):displayWin));set('roundCountValue',state.rounds.toLocaleString());set('rtpValue',state.totalBet?`${(state.totalWin/state.totalBet*100).toFixed(2)}%`:'0.00%');set('hitRateValue',state.rounds?`${(state.hits/state.rounds*100).toFixed(2)}%`:'0.00%');let rate=state.naturalRounds?state.naturalFg/state.naturalRounds:0,cycle=state.naturalFg?Math.round(state.naturalRounds/state.naturalFg):'--';set('fgTriggerValue',`${(rate*100).toFixed(2)}% (${cycle}${state.language==='zh'?'場':' rounds'})`);set('maxMultiplierValue',`x${state.maxMulti}`);set('betBtn',`${state.language==='zh'?'投注':'BET'} ${formatBetMoney(BETS[state.betIndex])}`)}
+  function set(id,v){let node=$(id);if(node)node.textContent=v}
+  function renderFeature(scene='BASE GAME',cascade=0,multi=1,ways='—'){set('modeText',state.language==='zh'?(scene==='FREE GAME'?'免費遊戲':'主遊戲'):scene);set('carryMultiValue',cascade);set('spinMultiValue',`x${multi}`);set('featureStatus',ways==='—'?'':`Ways ${ways}`);$('fgLeftPill').classList.toggle('hidden',!state.fg);if(state.fg)set('fgLeftValue',`${state.fg.left}/${state.fg.total}`);document.body.classList.toggle('fg-mode',scene==='FREE GAME')}
+  function renderBoard(screen,hits=[],rolling=false){if(!screen)return;let hitSet=new Set(hits);el.board.innerHTML='';for(let c=0;c<4;c++){let node=symbolEl(screen.extra[c],`e-${c}`,hitSet,rolling,false,true);node.style.gridColumn=String(c+2);node.style.gridRow='1';el.board.appendChild(node)}for(let r=0;r<6;r++){let row=2;screen.main[r].forEach((b,bi)=>{if(row>6)return;let h=Math.max(1,Math.min(6-row+1,Math.trunc(b.h)||1)),node=symbolEl(b,`m-${r}-${bi}`,hitSet,rolling,h>1,false);node.style.gridColumn=String(r+1);node.style.gridRow=`${row} / span ${h}`;el.board.appendChild(node);row+=h});while(row<=6){let node=symbolEl({id:-1,h:1},'',hitSet,rolling);node.style.gridColumn=String(r+1);node.style.gridRow=String(row++);el.board.appendChild(node)}}}
+  function symbolClass(id){let b=base(id);if(b===0)return'symbol-wild';if(b===1)return'symbol-scatter';if(b>=2&&b<=7)return`symbol-m${b-1}`;if(b>=8&&b<=12)return'symbol-low';return'symbol-mystery'}
+  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false){let d=document.createElement('div'),id=b?.id??-1,m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),isGold(id)?'gold':'',hitSetHas(hits,key)?'hit':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap"><span class="symbol-code">${displayCode(id)}</span></div>${m1}`;return d}
+  function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
+  async function animateReels(finalScreen){let frames=10+Math.max(0,6-state.speed);for(let frame=0;frame<frames;frame++){let sample={main:Array.from({length:6},()=>Array.from({length:5},()=>({id:pickInt(26),h:1}))),extra:Array.from({length:4},()=>({id:pickInt(26),h:1}))};renderBoard(sample,[],true);message('Reels spinning...');await sleep(105)}renderBoard(finalScreen)}
+  function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}
+  function postWeights(scene,suffix){let v=B[`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}PostC1`];return Array.isArray(v[0])?v[1]:v}
+  function makeScreen(scene='BG',overrides=null,retrigger=false,forcedScatterCount=null){let chosen=chooseParams(scene,retrigger),prefix=scene==='BG'?'BaseGame':'FreeGame',s=chosen.suffix,symbols=B[`${prefix}Symbol${s}`],weights=B[`${prefix}SymbolWeight${s}`],mega=B[`${prefix}MegaWay${s}`],my=B[`${prefix}MY${s}`];let main=[],rng=[],mystery=weighted(my).index;
+    for(let r=0;r<6;r++){let pattern=weighted(mega[r]).index,p=PATTERNS[pattern],stop=weighted(weights[r],overrides?.[r]);rng.push({reel:r+1,...stop,length:symbols[r].length});let pos=stop.index,blocks=[];for(const h of p){let id=symbols[r][pos%symbols[r].length];id=id===24?mystery:id===25?mystery+11:id;blocks.push({id,h});pos+=h}main.push(blocks)}
+    let exStop=weighted(weights[6],overrides?.[6]);rng.push({reel:'EXTRA',...exStop,length:symbols[6].length});let extra=Array.from({length:4},(_,i)=>{let id=symbols[6][(exStop.index+i)%symbols[6].length];id=id===24?mystery:id===25?mystery+11:id;return{id,h:1}});
+    let scPick=weighted(postWeights(scene,s)),scCount=forcedScatterCount==null?scPick.index:Math.max(0,Math.min(7,Math.trunc(forcedScatterCount)));if(scCount>0){let targets=Array.from({length:7},(_,i)=>i);for(let n=0;n<Math.min(scCount,7);n++){let x=targets.splice(pickInt(targets.length),1)[0];if(x===6){extra[pickInt(4)]={id:1,h:1}}else{let min=Math.min(...main[x].map(b=>b.h)),cands=main[x].map((b,i)=>b.h===min?i:-1).filter(i=>i>=0),i=cands[pickInt(cands.length)];main[x][i]={id:1,h:main[x][i].h}}}}
+    return{main,extra,rng,table:{scene,suffix:s,rng:chosen.rng},mystery,postScatter:{count:scCount,rng:scPick,forced:forcedScatterCount!=null}}}
+  function scatterCount(screen){return screen.main.flat().filter(b=>base(b.id)===1).length+screen.extra.filter(b=>base(b.id)===1).length}
+  function collectM1(screen,firstAlready=false){let add=0,count=0;for(const b of [...screen.main.flat(),...screen.extra])if(base(b.id)===2){let v=b.h+1;if(!firstAlready&&count===0)v--;add+=v;count++}return{add,count}}
+  function reelBlocks(screen,r){return r>=1&&r<=4?[screen.extra[r-1],...screen.main[r]]:screen.main[r]}
+  function evaluate(screen,multi,cascade){let wins=[],hit=[],total=0;for(let target=2;target<=12;target++){let counts=[],reels=0;for(let r=0;r<6;r++){let c=reelBlocks(screen,r).filter(b=>{let x=base(b.id);return x===target||x===0}).length;if(c){counts.push(c);reels++}else break}if(reels>=3){let ways=counts.reduce((a,v)=>a*v,1),pay=(B.linkpoint[target-2]?.[reels-3]||0)*ways*betMultiplier(),totalPay=pay*multi;total+=totalPay;wins.push({symbol:code(target),length:reels,ways,cascade,pay:totalPay});for(let r=0;r<reels;r++){screen.main[r].forEach((b,i)=>{let x=base(b.id);if(x===target||x===0)hit.push(`m-${r}-${i}`)});if(r>=1&&r<=4){let x=base(screen.extra[r-1].id);if(x===target||x===0)hit.push(`e-${r-1}`)}}}}return{wins,hit,total,ways:wins.reduce((a,w)=>a+w.ways,0)}}
+  function pickDrop(scene,suffix,dropIndex,reel){let key=`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}Drop${Math.min(5,dropIndex+1)}`,w=B[key][reel],p=weighted(w),id=p.index;return{id,rng:p}}
+  function cascade(screen,evalResult,scene,suffix,dropIndex,mystery){let hit=new Set(evalResult.hit),events=[],newM1=[];for(let r=0;r<6;r++){let kept=[];screen.main[r].forEach((b,i)=>{if(!hit.has(`m-${r}-${i}`))kept.push(b);else if(isGold(b.id)){kept.push({id:0,h:b.h});events.push(`R${r+1} ${code(b.id)} → WW`)}});let height=kept.reduce((a,b)=>a+b.h,0);while(height<5){let p=pickDrop(scene,suffix,dropIndex,r),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};kept.unshift(block);if(base(id)===2)newM1.push(block);events.push(`R${r+1} drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`);height++}screen.main[r]=kept}let keptExtra=[];screen.extra.forEach((b,i)=>{if(!hit.has(`e-${i}`))keptExtra.push(b);else if(isGold(b.id)){keptExtra.push({id:0,h:1});events.push(`EXTRA ${code(b.id)} → WW`)}});while(keptExtra.length<4){let p=pickDrop(scene,suffix,dropIndex,6),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};keptExtra.push(block);if(base(id)===2)newM1.push(block);events.push(`EXTRA drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`)}screen.extra=keptExtra;return{events,newM1}}
+  function parseOverrides(){let raw=el.reel.value.trim();if(!raw)return null;let a=raw.split(/\s+/).map(Number);if(a.length!==7||a.some(v=>!Number.isInteger(v)||v<0))throw Error('Reel RNG requires exactly 7 non-negative integers.');return a}
+  async function buildSpin(scene='BG',retrigger=false){let overrides=parseOverrides(),screen=makeScreen(scene,overrides,retrigger),multi=scene==='FG'?(state.fg?.multi||2):1,m1=collectM1(screen,multi>1);multi+=m1.add;let steps=[],wins=[],total=0;for(let c=0;c<50;c++){let e=evaluate(screen,multi,c);steps.push({screen:clone(screen),eval:e,multi});wins.push(...e.wins);if(!e.wins.length)break;total+=e.total;let dropped=cascade(screen,e,scene,screen.table.suffix,c,screen.mystery);for(const block of dropped.newM1){let bonus=block.h+1;if(m1.count===0)bonus--;multi+=bonus;m1.count++}steps[steps.length-1].dropEvents=dropped.events}return{scene,screen,steps,wins,total,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
+  function buildBuyFeatureTrigger(){let screen=makeScreen('BG',parseOverrides(),false,4),multi=1,m1=collectM1(screen);multi+=m1.add;let evalResult={wins:[],hit:[],total:0,ways:0};return{scene:'BG',screen,steps:[{screen:clone(screen),eval:evalResult,multi}],wins:[],total:0,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
+  async function playSpin(result){state.historyIndex=state.history.length-1;state.historyFloor=state.history.length;await animateReels(result.steps[0]?.screen||result.screen);for(let i=0;i<result.steps.length;i++){let s=result.steps[i],scene=result.scene==='FG'?'FREE GAME':'BASE GAME',ways=s.eval.ways||'—';renderFeature(scene,i,s.multi,ways);renderBoard(s.screen);message(`${result.scene} · Cascade ${i} · evaluating`);saveSnapshot(result,{screen:s.screen,step:s,phase:'evaluation',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · evaluating`});await sleep(delay());if(s.eval.wins.length){renderBoard(s.screen,s.eval.hit);state.currentWin+=s.eval.total;renderStats();message(`Cascade ${i} win ${money(s.eval.total)} · x${s.multi}`);saveSnapshot(result,{screen:s.screen,hits:s.eval.hit,step:s,phase:'score',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · score ${money(s.eval.total)}`});await sleep(delay());}}renderBoard(result.screen);state.maxMulti=Math.max(state.maxMulti,result.multi);renderDebug(result);renderStats()}
+  function renderDebug(r,historyView=null){let step=historyView?.step,wins=step?.eval?.wins||r.wins,table=`Scene: ${r.scene}\nParameter Set: ${r.table.suffix}\nTable RNG: ${r.table.rng.rng} / ${r.table.rng.total} | range 0-${Math.max(0,r.table.rng.total-1)}\nPost SC: ${r.postScatter.rng.rng} / ${r.postScatter.rng.total} | count ${r.postScatter.count}`;$('rngList').textContent=table+'\n'+r.rng.map(x=>`Reel ${x.reel}: ${x.rng} / ${x.total} | range 0-${x.total-1} | Stop ${x.index} | Reel Length ${x.length}`).join('\n');$('lineList').textContent=wins.length?wins.map(w=>`C${w.cascade} | ${w.symbol} | ${w.length} reels | ${w.ways} ways | Pay ${money(w.pay)}`).join('\n'):'No wins.';$('spinResultList').textContent=historyView?`Scene: ${r.scene}\nCascade: ${historyView.cascade}\nPhase: ${historyView.phase}\nStep Win: ${money(step?.eval?.total||0)}\nAccumulated Win: ${money(historyView.currentWin)}\nMultiplier: x${historyView.multi}`:`Scene: ${r.scene}\nTotal Win: ${money(r.total)}\nFinal Multiplier: x${r.multi}\nScatter: ${r.scatter}`}
+  function saveSnapshot(r,view={}){state.history.splice(state.historyIndex+1);state.history.push({result:clone(r),screen:clone(view.screen||r.screen),hits:[...(view.hits||[])],step:view.step?clone(view.step):null,phase:view.phase||'result',label:view.label||'Spin result',currentWin:state.currentWin,feature:{scene:view.scene||(r.scene==='FG'?'FREE GAME':'BASE GAME'),cascade:view.cascade??0,multi:view.multi??r.multi,ways:view.ways||'—'}});if(state.history.length>100){state.history.shift();state.historyFloor=Math.max(0,state.historyFloor-1)}state.historyIndex=state.history.length-1;updateControls()}
+  function showHistory(i){if(i<state.historyFloor)return;let h=state.history[i];if(!h)return;state.historyIndex=i;renderBoard(h.screen||h.result.screen,h.hits||[]);renderDebug(h.result,{step:h.step,phase:h.phase,cascade:h.feature.cascade,multi:h.feature.multi,currentWin:h.currentWin});renderFeature(h.feature.scene,h.feature.cascade,h.feature.multi,h.feature.ways);renderStats(h.currentWin);message(`History ${i-state.historyFloor+1} / ${state.history.length-state.historyFloor} · ${h.label||'Spin result'}`);updateControls()}
+  async function waitForFgSpin(){state.auto=false;state.awaitingFgSpin=true;state.busy=false;renderFeature('FREE GAME',0,state.fg.multi,'—');message(`Free Game ready · ${state.fg.left} spins left · press Spin`,'mode');updateControls();await new Promise(resolve=>state.fgSpinResolve=resolve);state.fgSpinResolve=null;state.awaitingFgSpin=false;state.busy=true;state.historyIndex=state.history.length-1;renderStats();updateControls()}
+  async function runFg(initial){state.fg={left:initial,total:initial,initialLeft:initial,multi:2};message(`Free Game started: ${initial} spins`,'mode');while(state.fg.left>0&&state.fg.total<=50){await waitForFgSpin();let useTriggerReels=state.fg.initialLeft<=0;state.fg.left--;if(state.fg.initialLeft>0)state.fg.initialLeft--;let r=await buildSpin('FG',useTriggerReels);await playSpin(r);state.fg.multi=r.multi;if(r.scatter>=4){let add=Math.min(10+(r.scatter-4)*2,50-state.fg.total);state.fg.left+=add;state.fg.total+=add;message(`FG retrigger +${add}`,'mode')}renderFeature('FREE GAME',0,state.fg.multi,'—')}let m=state.fg.multi;state.fg=null;renderFeature('BASE GAME',0,1,'—');message(`Free Game complete · final x${m}`,'winValue')}
+  async function buildSelectedBg(){let selected=el.card.value;if(selected==='')return buildSpin('BG');let cards=B.card_system?.oldhand?.normal_bet?.weight_bg||[],card=cards[+selected],limit=Math.min(5000,Math.max(1,B.card_system?.retry_limit||1)),last=null;for(let retry=1;retry<=limit;retry++){last=await buildSpin('BG');let mult=last.total/betCoins(),ok=card.type==='free_game'?last.scatter>=4:(mult>Number(card.min)&&mult<=Number(card.max)&&last.scatter<4);if(ok){log(`Card ${selected} matched after ${retry} attempt(s).`,'mode');return last}}log(`Card ${selected} retry limit reached; last result used.`,'error');return last}
+  async function round(kind='normal'){if(state.busy){if(state.debug&&kind==='normal'){state.queued=true;message('Next Spin queued; current playback fast-forwarded.')}return}state.historyIndex=state.history.length-1;let cost=betCoins()*(kind==='buy'?B.featurebuy:1);if(state.credit<cost){message('Insufficient credit.',true);return}state.busy=true;state.currentWin=0;state.credit-=cost;renderStats();updateControls();try{if(kind==='buy'){state.buyRounds++;let trigger=buildBuyFeatureTrigger();await playSpin(trigger);message(`Buy Feature · ${trigger.scatter} SC · Free Game triggered`,'mode');await runFg(10)}else if(kind==='force'){state.forcedRounds++;await runFg(10)}else{state.naturalRounds++;let r=await buildSelectedBg();await playSpin(r);if(r.scatter>=4){state.naturalFg++;await runFg(Math.min(14,10+(r.scatter-4)*2))}}state.credit+=state.currentWin;state.rounds++;state.totalBet+=cost;state.totalWin+=state.currentWin;if(state.currentWin>0)state.hits++;renderStats();message(`Round complete · Win ${money(state.currentWin)}`,'winValue');el.reel.value='';if(el.card.value!=='')el.card.value=''}catch(e){message(e.message||String(e),true);console.error(e)}finally{state.busy=false;updateControls();if(state.queued){state.queued=false;setTimeout(()=>round('normal'),0)}else if(state.auto)setTimeout(()=>round('normal'),80)}}
+  function updateControls(){let featureLock=!!state.fg,lock=state.busy||state.auto||featureLock;el.spin.disabled=state.auto||(state.busy&&!state.debug);el.auto.disabled=featureLock;el.auto.classList.toggle('active',state.auto);el.auto.textContent=state.language==='zh'?(state.auto?'自動開啟':'自動'):(state.auto?'AUTO ON':'AUTO');for(const x of [el.betMinus,el.betPlus,el.betBtn,el.normal,el.buy])x.disabled=lock;el.card.disabled=lock||!!el.reel.value.trim();el.reel.disabled=lock||el.card.value!=='';$('setRngResetBtn').disabled=lock;$('previousStepBtn').disabled=state.busy||state.historyIndex<=state.historyFloor;$('nextStepBtn').disabled=state.busy||state.historyIndex<state.historyFloor||state.historyIndex>=state.history.length-1;el.force.disabled=lock;$('resetBtn').disabled=state.busy||featureLock}
+  function reset(){state.auto=false;Object.assign(state,{credit:START_MONEY/D,busy:false,rounds:0,totalBet:0,totalWin:0,hits:0,naturalRounds:0,naturalFg:0,buyRounds:0,forcedRounds:0,maxMulti:1,currentWin:0,history:[],historyIndex:-1,historyFloor:0,queued:false,fg:null,awaitingFgSpin:false,fgSpinResolve:null});state.logs=[];el.reel.value='';el.card.value='';renderStats();renderFeature();makeIdleBoard();renderLog();message('Session reset.');updateControls()}
+  function makeIdleBoard(){let main=Array.from({length:6},(_,r)=>Array.from({length:5},(_,i)=>({id:2+(r+i)%11,h:1}))),extra=Array.from({length:4},(_,i)=>({id:8+i,h:1}));renderBoard({main,extra})}
+  function initCards(){let cards=B.card_system?.oldhand?.normal_bet?.weight_bg||[];cards.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.textContent=c.type==='free_game'?`Card ${i}: Free Game`:`Card ${i}: (${c.min}, ${c.max}]`;el.card.appendChild(o)})}
+  function renderBetMenu(){el.betMenu.innerHTML='';BETS.forEach((b,i)=>{let x=document.createElement('button');x.className='btn'+(i===state.betIndex?' active':'');x.textContent=formatBetMoney(b);x.onclick=()=>{state.betIndex=i;el.betMenu.classList.add('hidden');renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betMenu.appendChild(x)})}
+  function helpCells(line){let t=line.trim();return t.startsWith('|')&&t.endsWith('|')?t.slice(1,-1).split('|').map(x=>x.trim()):null}
+  function parseHelpData(md){let sections=[],section=null,group=null,payLang='zh';for(const raw of md.split(/\r?\n/)){let line=raw.trim(),m;if(/^(?:繁中|简中)[：:]$/.test(line)){payLang='zh';continue}if(/^英文[：:]$/.test(line)){payLang='en';continue}if((m=line.match(/^##\s+(.+)/))){let key=m[1].trim();section=/meta|來源|来源|待確認|待确认|編輯|编辑|文件|前言/i.test(key)?null:{key,titleZh:'',titleEn:key,rules:[],groups:[]};if(section)sections.push(section);group=null;payLang='zh';continue}if((m=line.match(/^###\s+(.+)/))&&section){group={key:m[1].trim(),titleZh:'',titleEn:m[1].trim(),rules:[],payouts:[]};section.groups.push(group);continue}if(!section)continue;let cells=helpCells(line);if(!cells||cells.every(x=>/^:?-{3,}:?$/.test(x)))continue;let[item,zh='',en='']=cells;if(item==='主要標題'){section.titleZh=zh;section.titleEn=en}else if(item==='副標題'&&group){group.titleZh=zh;group.titleEn=en}else if(item==='規則說明'){(group||section).rules.push({zh,en})}else if(group?.key==='賠率表'&&cells.length>=5){group.payouts.push({lang:payLang,cells})}}return sections.filter(s=>s.rules.length||s.groups.some(g=>g.rules.length||g.payouts.length))}
+  function helpTitle(parent,className,zh,en){let h=document.createElement(className==='help-section-title'?'h3':'h4');h.className=className;h.textContent=state.language==='zh'?(zh||en):(en||zh);parent.appendChild(h)}
+  function helpRule(parent,rule){let row=document.createElement('div'),cell=document.createElement('div');row.className='help-rule';cell.className=state.language==='zh'?'help-rule-zh':'help-rule-en';cell.textContent=state.language==='zh'?rule.zh:rule.en;row.appendChild(cell);parent.appendChild(row)}
+  function renderHelp(md){gameHelpMarkdown=md;let root=$('helpContent'),sections=parseHelpData(md);root.innerHTML='';for(const section of sections){let card=document.createElement('section');card.className='help-section';helpTitle(card,'help-section-title',section.titleZh,section.titleEn);if(section.key==='PAYTABLE'){let note=document.createElement('div');note.className='help-rule';note.textContent=state.language==='zh'?`以下派彩金額依目前押注 ${BETS[state.betIndex]} 顯示。`:`Payouts below are shown for the current bet of ${BETS[state.betIndex]}.`;card.appendChild(note)}section.rules.forEach(rule=>helpRule(card,rule));for(const group of section.groups){let payouts=group.payouts.filter(x=>x.lang===state.language);if(!group.rules.length&&!payouts.length)continue;helpTitle(card,'help-group-title',group.titleZh||(state.language==='zh'?group.key:'PAYTABLE'),group.titleEn);group.rules.forEach(rule=>helpRule(card,rule));if(payouts.length){let table=document.createElement('div');table.className='help-payout-table';for(let rowIndex=0;rowIndex<payouts.length;rowIndex++){let payout=payouts[rowIndex],row=document.createElement('div');row.className='help-payout-row';for(let cellIndex=0;cellIndex<payout.cells.length;cellIndex++){let value=payout.cells[cellIndex],cell=document.createElement('div');cell.className='help-payout-cell';let clean=value.replace(/[{}]/g,'');cell.textContent=rowIndex>0&&cellIndex>0&&Number.isFinite(Number(clean))?compactNumber(Number(clean)*BETS[state.betIndex]):clean;row.appendChild(cell)}table.appendChild(row)}card.appendChild(table)}}root.appendChild(card)}if(!sections.length)root.textContent=state.language==='zh'?'無法載入遊戲規則。':'Unable to load game rules.'}
+  async function openHelp(){let md=$('embeddedGameHelpMarkdown').textContent.trim();try{let r=await fetch('./game_help_draft.md',{cache:'no-store'});if(r.ok)md=await r.text()}catch(_){log('Offline Help fallback used.')}renderHelp(md);$('helpDialog').showModal()}
+  el.spin.onclick=()=>{if(state.awaitingFgSpin&&state.fgSpinResolve){let go=state.fgSpinResolve;state.fgSpinResolve=null;go();return}round('normal')};el.auto.onclick=()=>{state.auto=!state.auto;updateControls();message(state.auto?'Auto started.':'Auto stopped.','mode');if(state.auto&&!state.busy)round('normal')};el.buy.onclick=()=>round('buy');el.force.onchange=()=>{if(el.force.checked){el.force.checked=false;round('force')}};el.betMinus.onclick=()=>{state.betIndex=Math.max(0,state.betIndex-1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betPlus.onclick=()=>{state.betIndex=Math.min(BETS.length-1,state.betIndex+1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betBtn.onclick=()=>el.betMenu.classList.toggle('hidden');el.speed.oninput=()=>{state.speed=+el.speed.value;set('speedValue',`x${state.speed}`)};el.debug.onchange=()=>setDebug(el.debug.checked);el.card.onchange=updateControls;el.reel.oninput=updateControls;$('setRngResetBtn').onclick=()=>{el.card.value='';el.reel.value='';updateControls();message('Set RNG reset.')};$('previousStepBtn').onclick=()=>showHistory(state.historyIndex-1);$('nextStepBtn').onclick=()=>showHistory(state.historyIndex+1);$('clearLogBtn').onclick=()=>{state.logs=[];renderLog()};$('resetBtn').onclick=reset;$('helpBtn').onclick=openHelp;$('closeHelpBtn').onclick=()=>$('helpDialog').close();$('helpDialog').onclick=e=>{if(e.target===$('helpDialog'))$('helpDialog').close()};addEventListener('keydown',e=>{if(e.key==='Escape'&&$('helpDialog').open)$('helpDialog').close()});$('configSelect').onchange=()=>{let q=new URL(location.href);q.searchParams.set('config',$('configSelect').value);location.href=q.href};$('languageSelect').onchange=()=>{state.language=$('languageSelect').value;applyLanguage()};
+  set('gameId',B.game_id);set('gameName',B.display_name);initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready. Config 92A loaded.');applyLanguage();
+})();
+  </script>
+  <script src="../help_ui_standardizer.js"></script>
+</body>
+</html>
