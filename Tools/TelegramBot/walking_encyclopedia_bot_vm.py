@@ -2,6 +2,7 @@ import ast
 import asyncio
 import html
 import io
+import json
 import logging
 import os
 import re
@@ -12,6 +13,7 @@ import sys
 import tempfile
 import time
 import unicodedata
+import urllib.request
 import zipfile
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -892,18 +894,38 @@ def parse_rtp_report(report_text: str):
     if "Formal RTP Report" not in report_text or "Scenario RTP" not in report_text:
         return None
 
+    report_id = ""
+    generated_at = ""
     machine_type = ""
     extra_bet = ""
     bet = ""
+    old_hand_init = ""
     section = None
-    summary_rows = []
+    scenario_rows = []
+    setting_rows = []
     current_row = None
+
+    def finish_current_row():
+        nonlocal current_row
+        if not current_row:
+            return
+        if current_row["section"] == "scenario":
+            scenario_rows.append(current_row)
+        elif current_row["section"] == "setting":
+            setting_rows.append(current_row)
+        current_row = None
 
     for raw_line in report_text.splitlines():
         line = raw_line.strip()
         if not line:
             continue
 
+        if line.startswith("Report ID:"):
+            report_id = line.split(":", 1)[1].strip()
+            continue
+        if line.startswith("Generated At:"):
+            generated_at = line.split(":", 1)[1].strip()
+            continue
         if line.startswith("- machineType ="):
             machine_type = line.split("=", 1)[1].strip()
             continue
@@ -913,45 +935,35 @@ def parse_rtp_report(report_text: str):
         if line.startswith("- Bet ="):
             bet = line.split("=", 1)[1].strip()
             continue
+        if line.startswith("- OldHand Init ="):
+            old_hand_init = line.split("=", 1)[1].strip()
+            continue
 
         if line == "Scenario RTP":
+            finish_current_row()
             section = "scenario"
-            current_row = None
             continue
         if line == "SettingID RTP":
-            if current_row:
-                summary_rows.append(current_row)
+            finish_current_row()
             section = "setting"
-            current_row = None
             continue
         if line == "SettingID Trigger Count":
-            if current_row:
-                summary_rows.append(current_row)
-                current_row = None
+            finish_current_row()
             break
 
         if section not in {"scenario", "setting"}:
             continue
 
-        is_new_row = False
-        if section == "scenario" and not line.startswith("-"):
-            is_new_row = True
-        elif section == "setting" and re.match(r"^SettingID \d+", line):
-            is_new_row = True
-
-        if is_new_row:
-            if section == "scenario" and line != "整體 RTP":
-                if current_row:
-                    summary_rows.append(current_row)
-                current_row = None
-                continue
-            if current_row:
-                summary_rows.append(current_row)
+        is_scenario_row = section == "scenario" and not line.startswith("-")
+        is_setting_row = section == "setting" and bool(re.match(r"^SettingID \d+", line))
+        if is_scenario_row or is_setting_row:
+            finish_current_row()
             current_row = {
                 "label": line,
                 "game": "",
                 "jackpot": "",
                 "bonus": "",
+                "section": section,
             }
             continue
 
@@ -967,17 +979,20 @@ def parse_rtp_report(report_text: str):
             elif rtp_type == "Bonus Game":
                 current_row["bonus"] = value
 
-    if current_row:
-        summary_rows.append(current_row)
+    finish_current_row()
 
-    if not summary_rows:
+    if not scenario_rows:
         return None
 
     return {
+        "report_id": report_id,
+        "generated_at": generated_at,
         "machine_type": machine_type,
         "extra_bet": extra_bet,
         "bet": bet,
-        "rows": summary_rows,
+        "old_hand_init": old_hand_init,
+        "scenario_rows": scenario_rows,
+        "setting_rows": setting_rows,
     }
 
 
@@ -1035,6 +1050,20 @@ def extract_bet_type(extra_bet: str) -> str:
     return match.group(1) if match else extra_bet
 
 
+BF_ZERO_LINK_FOUR_BONUS_BETS = {
+    "3": {Decimal("40.5"), Decimal("50"), Decimal("75"), Decimal("100")},
+    "4": {Decimal("250"), Decimal("500")},
+}
+
+
+def is_zero_link_four_bonus_bf_bet(bet_type: str, bet: str) -> bool:
+    try:
+        bet_value = Decimal(bet.strip())
+    except (InvalidOperation, AttributeError):
+        return False
+    return bet_value in BF_ZERO_LINK_FOUR_BONUS_BETS.get(bet_type, set())
+
+
 def percent_to_float(value: str) -> float:
     """將百分比字串轉成數值。"""
     return float(value.rstrip("%"))
@@ -1045,46 +1074,269 @@ def float_to_percent(value: float) -> str:
     return f"{value:.2f}%"
 
 
+SCENARIO_COLUMN_SPECS = [
+    ("overall", "整體"),
+    ("first_50", "~50"),
+    ("first_200", "~200"),
+    ("old_before_200", "OG ~200"),
+    ("old_after_200", "OG 200~"),
+]
+
+
+def classify_scenario_row(label: str) -> str | None:
+    compact_label = re.sub(r"\s+", "", label)
+    if "整體RTP" in compact_label:
+        return "overall"
+    if "前50次Spin" in compact_label:
+        return "first_50"
+    if "前200次Spin" in compact_label or "前100次Spin" in compact_label:
+        return "first_200"
+    if "RTP" in compact_label and any(marker in compact_label for marker in ("<=200", "≤200", "<=100", "≤100")):
+        return "old_before_200"
+    if "RTP" in compact_label and (
+        "以後" in compact_label or any(marker in compact_label for marker in (">200", ">100"))
+    ):
+        return "old_after_200"
+    return None
+
+
+def normalize_percent(value: str) -> str:
+    if not value:
+        return "-"
+    try:
+        return float_to_percent(percent_to_float(value))
+    except ValueError:
+        return "-"
+
+
+def get_setting_game_rtp(setting_rows: list[dict], setting_kind: str) -> str:
+    matched_values = []
+    for row in setting_rows:
+        label = row["label"]
+        if setting_kind == "newbie":
+            is_match = bool(re.search(r"SettingID\s+(?:2|4|5|6|7|8)\b", label))
+        else:
+            is_match = bool(re.search(r"SettingID\s+3\b", label))
+        if is_match and row["game"]:
+            matched_values.append(percent_to_float(row["game"]))
+    return float_to_percent(sum(matched_values)) if matched_values else ""
+
+
+def values_pass(values: list[str], targets: list[float], tolerance: float, skip_indexes: set[int] | None = None) -> bool | None:
+    skip_indexes = skip_indexes or set()
+    checked_count = 0
+    for index, (value, target) in enumerate(zip(values, targets)):
+        if index in skip_indexes:
+            continue
+        if not value:
+            return False
+        checked_count += 1
+        if abs(percent_to_float(value) - target) > tolerance:
+            return False
+    return True if checked_count else None
+
+
+def game_values_pass(values: list[str], targets: list[float], tolerance: float) -> bool:
+    """Game 前三格只需小於 100%，後兩格才依雙基準判斷。"""
+    if len(values) < 5 or any(not value for value in values[:5]):
+        return False
+
+    if any(not 0 <= percent_to_float(value) < 100 for value in values[:3]):
+        return False
+
+    return all(
+        abs(percent_to_float(values[index]) - targets[index]) <= tolerance
+        for index in (3, 4)
+    )
+
+
+def format_check_result(result: bool | None) -> str:
+    if result is None:
+        return "—"
+    return "✅" if result else "❌"
+
+
+def format_rtp_value_line(values: list[str]) -> str:
+    normalized = [normalize_percent(value) for value in values]
+    return "|".join(normalized)
+
+
+def format_rtp_table_value(value: str, standard: str = "") -> str:
+    """格式化 Rich Message 表格中的 RTP 數值與該格判斷標準。"""
+    normalized = normalize_percent(value)
+    if not normalized:
+        return "-"
+    escaped_value = html.escape(normalized)
+    return f"{escaped_value} ({html.escape(standard)})" if standard else escaped_value
+
+
 def format_rtp_report_summary(parsed_report: dict) -> str:
-    """輸出適合 Telegram 顯示的 RTP 摘要。"""
-    parsed_rows = [
+    """依 Scenario/SettingID 輸出 Telegram Rich Message RTP 驗收表格。"""
+    scenario_by_key = {}
+    for row in parsed_report["scenario_rows"]:
+        if key := classify_scenario_row(row["label"]):
+            scenario_by_key[key] = row
+
+    ordered_rows = [scenario_by_key.get(key, {}) for key, _ in SCENARIO_COLUMN_SPECS]
+    game_values = [row.get("game", "") for row in ordered_rows]
+    link_values = [row.get("jackpot", "") for row in ordered_rows]
+    bonus_values = [row.get("bonus", "") for row in ordered_rows]
+    bet_type = extract_bet_type(parsed_report["extra_bet"])
+    is_bf = bet_type in {"3", "4"}
+    is_special_bf_bet = is_bf and is_zero_link_four_bonus_bf_bet(bet_type, parsed_report["bet"])
+    old_hand_init = parsed_report.get("old_hand_init", "").strip().lower()
+    is_old_hand = (
+        old_hand_init == "enabled"
+        if old_hand_init
+        else any(value and percent_to_float(value) > 0 for value in link_values)
+    )
+    try:
+        bet_value = Decimal(parsed_report["bet"].strip())
+    except (InvalidOperation, AttributeError):
+        bet_value = None
+    is_low_bet_old_hand = (
+        not is_bf and is_old_hand and bet_value is not None and bet_value < Decimal("2")
+    )
+    is_standard_bet_old_hand = (
+        not is_bf and is_old_hand and bet_value is not None and bet_value >= Decimal("2")
+    )
+    mode = "BF" if is_bf else ("老手" if is_old_hand else "新手")
+
+    if is_bf:
+        game_targets = [92.5] * len(game_values)
+        game_target_label = "【92.50%|92.50%】"
+    else:
+        game_after_target = 94.0 if is_low_bet_old_hand else 92.0
+        game_targets = [93.0, 93.0, 93.0, 93.0, game_after_target]
+        game_target_label = f"【93.00%|{game_after_target:.2f}%】"
+
+    if is_bf:
+        link_target = 0.0 if is_special_bf_bet else 2.0
+        bonus_target = 4.0 if is_special_bf_bet else 2.0
+        link_targets = [link_target] * len(link_values)
+        bonus_targets = [bonus_target] * len(bonus_values)
+        link_target_label = f"【{link_target:.2f}%|{link_target:.2f}%】"
+        bonus_target_label = f"【{bonus_target:.2f}%|{bonus_target:.2f}%】"
+    else:
+        link_after_target = 0.0 if is_low_bet_old_hand else (2.0 if is_old_hand else 0.0)
+        if is_standard_bet_old_hand:
+            # 老手且 Bet >= 2 時，所有情境的 Link 目標都是 2%。
+            link_targets = [2.0] * len(link_values)
+        else:
+            link_targets = [link_after_target, 0.0, 0.0, 0.0, link_after_target]
+        bonus_targets = [2.0] * len(bonus_values)
+        link_target_label = f"【0.00%|{link_after_target:.2f}%】"
+        bonus_target_label = "【2.00%|2.00%】"
+
+    game_result = game_values_pass(game_values, game_targets, 1.0)
+    link_skip_indexes = {0, 1, 2} if is_bf else (set() if is_standard_bet_old_hand else {0})
+    link_tolerance = 0.0 if is_low_bet_old_hand else 1.5
+    link_result = values_pass(link_values, link_targets, link_tolerance, skip_indexes=link_skip_indexes)
+    bonus_skip_indexes = set() if is_standard_bet_old_hand else {0, 1, 2}
+    bonus_result = values_pass(bonus_values, bonus_targets, 0.5, skip_indexes=bonus_skip_indexes)
+
+    newbie_value = get_setting_game_rtp(parsed_report["setting_rows"], "newbie")
+    veteran_value = get_setting_game_rtp(parsed_report["setting_rows"], "veteran")
+    newbie_result = values_pass([newbie_value], [1.0], 1.0) if newbie_value else None
+    veteran_result = values_pass([veteran_value], [1.0], 1.0) if veteran_value else None
+
+    if is_bf:
+        column_title = "整體|~50|~100|OG ~100|OG 100~"
+    else:
+        column_title = "|".join(label for _, label in SCENARIO_COLUMN_SPECS)
+
+    column_labels = column_title.split("|")
+    game_standards = ["<100%", "<100%", "<100%", f"{game_targets[3]:g}%", f"{game_targets[4]:g}%"]
+    if is_bf:
+        link_standards = ["", "", "", f"{link_targets[3]:g}%", f"{link_targets[4]:g}%"]
+    elif is_standard_bet_old_hand:
+        link_standards = ["2%"] * len(link_values)
+    else:
+        link_standards = ["", "0%", "0%", "0%", f"{link_targets[4]:g}%"]
+    if is_standard_bet_old_hand:
+        bonus_standards = ["2%"] * len(bonus_values)
+    else:
+        bonus_standards = ["", "", "", f"{bonus_targets[3]:g}%", f"{bonus_targets[4]:g}%"]
+
+    def table_row(label: str, values: list[str], standards: list[str], result: bool | None) -> str:
+        cells = "".join(
+            f"<td>{format_rtp_table_value(value, standard)}</td>"
+            for value, standard in zip(values, standards)
+        )
+        return f"<tr><th>{html.escape(label)}</th>{cells}<td>{format_check_result(result)}</td></tr>"
+
+    rows = [
+        table_row("Game", game_values, game_standards, game_result),
+        table_row("Link", link_values, link_standards, link_result),
+        table_row("Bonus", bonus_values, bonus_standards, bonus_result),
+    ]
+    if not is_bf and newbie_value:
+        rows.append(
+            table_row(
+                "新手體驗",
+                [newbie_value, "", "", newbie_value, ""],
+                ["1%", "", "", "1%", ""],
+                newbie_result,
+            )
+        )
+    if not is_bf:
+        rows.append(
+            table_row(
+                "老手救援",
+                [veteran_value, "", "", "", veteran_value],
+                ["1%", "", "", "", "1%"],
+                veteran_result,
+            )
+        )
+
+    headers = "".join(f"<th>{html.escape(label)}</th>" for label in column_labels)
+    basic_info = "\n".join(
+        [
+            f"* Report ID: {parsed_report['report_id']}",
+            f"* Time: {parsed_report['generated_at']}",
+            f"* Game ID: {parsed_report['machine_type']}",
+            f"* BetType: {bet_type}",
+            f"* Bet: {parsed_report['bet']}",
+            f"* Mode: {mode}",
+        ]
+    )
+    return "\n".join(
+        [
+            "<h3>📋 基本資訊</h3>",
+            f"<pre>{html.escape(basic_info)}</pre>",
+            "<p><br></p>",
+            "<h3>📊 RTP 資訊</h3>",
+            "<table bordered striped>",
+            f"<tr><th>項目</th>{headers}<th>結果</th></tr>",
+            *rows,
+            "</table>",
+        ]
+    )
+
+
+async def send_rtp_report_summary(message, parsed_report: dict) -> None:
+    """透過 Bot API 傳送支援原生表格的 Rich Message。"""
+    payload = json.dumps(
         {
-            **row,
-            "display_label": normalize_row_label(row["label"]),
-        }
-        for row in parsed_report["rows"]
-    ]
+            "chat_id": message.chat.id,
+            "rich_message": {"html": format_rtp_report_summary(parsed_report)},
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
 
-    display_rows = [row for row in parsed_rows if row["display_label"] != "Total RTP"]
-    total_game = sum(percent_to_float(row["game"]) for row in display_rows)
-    total_jackpot = sum(percent_to_float(row["jackpot"]) for row in display_rows)
-    total_bonus = sum(percent_to_float(row["bonus"]) for row in display_rows)
-    total_rtp = float_to_percent(total_game + total_jackpot + total_bonus)
+    def send_request() -> None:
+        request = urllib.request.Request(
+            f"https://api.telegram.org/bot{TG_TOKEN}/sendRichMessage",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            result = json.load(response)
+        if not result.get("ok"):
+            raise RuntimeError(f"sendRichMessage failed: {result.get('description', 'unknown error')}")
 
-    item_width = max(get_display_width(format_item_label("項目")), *(get_display_width(format_item_label(row["display_label"])) for row in display_rows), get_display_width("Total RTP"))
-    game_width = max(get_display_width("GameRTP"), *(get_display_width(row["game"]) for row in display_rows))
-    jackpot_width = max(get_display_width("Jackpot"), *(get_display_width(row["jackpot"]) for row in display_rows))
-    bonus_width = max(get_display_width("BonusRTP"), *(get_display_width(row["bonus"]) for row in display_rows))
-
-    def build_row(item: str, game: str, jackpot: str, bonus: str) -> str:
-        display_item = format_item_label(item)
-        return f"{pad_item_label(display_item, item_width)} | " f"{pad_display_text(game.rjust(game_width), game_width)} | " f"{pad_display_text(jackpot.rjust(jackpot_width), jackpot_width)} | " f"{pad_display_text(bonus.rjust(bonus_width), bonus_width)}"
-
-    separator = "---------------------------------------"
-    table_lines = [
-        f'ID: {parsed_report["machine_type"]} | BetType: {extract_bet_type(parsed_report["extra_bet"])} | Bet: {parsed_report["bet"]}',
-        separator,
-        build_row("項目", "GameRTP", "Jackpot", "BonusRTP"),
-        separator,
-    ]
-
-    for row in display_rows:
-        table_lines.append(build_row(row["display_label"], row["game"], row["jackpot"], row["bonus"]))
-
-    table_lines.append(separator)
-    table_lines.append(f"Total RTP | {total_rtp}")
-    escaped_table = html.escape("\n".join(table_lines))
-    return f"<pre>{escaped_table}</pre>"
+    await asyncio.to_thread(send_request)
 
 
 async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1154,7 +1406,7 @@ def build_help_text() -> str:
         "📄 *RTP Validator 報表轉表格*\n"
         "私訊直接丟 txt/zip/rar 檔案（支援巢狀壓縮、多檔一起丟）；群組裡上傳要附文字 @我，我會先判斷是否為報表，再抓出各項 RTP、最大倍數與 pool RTP 等欄位，自動轉成 xlsx 傳回來。\n\n"
         "📊 *RTP Report 文字摘要*\n"
-        "私訊我或在群組 @我，貼上 Formal RTP Report 文字，我會幫你整理成表格摘要（GameRTP / Jackpot / BonusRTP / Total RTP）。\n\n"
+        "私訊我或在群組 @我，貼上 Formal RTP Report 文字，我會整理五個 Scenario 的 Game / Link / Bonus RTP、新手體驗與老手救援，並依容許範圍標示是否通過。\n\n"
         "🕐 *群組 3 分鐘窗口*\n"
         f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟報表檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
         "🎰 *模擬器*（僅限管理者）\n"
@@ -1652,8 +1904,7 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         if parsed_report := parse_rtp_report(clean_text):
-            reply = format_rtp_report_summary(parsed_report)
-            await update.message.reply_text(reply, parse_mode="HTML")
+            await send_rtp_report_summary(update.message, parsed_report)
             return
 
         await update.message.reply_text("你好")
@@ -1662,8 +1913,7 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 情況二：群組裡在 3 分鐘的 @ 窗口內 → 只默默處理符合條件的內容，不然一律忽略
     if is_mention_window_active(chat_id):
         if parsed_report := parse_rtp_report(text):
-            reply = format_rtp_report_summary(parsed_report)
-            await update.message.reply_text(reply, parse_mode="HTML")
+            await send_rtp_report_summary(update.message, parsed_report)
 
 
 async def post_init(application: Application) -> None:

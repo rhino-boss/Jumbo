@@ -20,7 +20,7 @@ import win32gui
 import win32api
 import win32con
 
-os.chdir(r"C:\Users\rhinshen\Mine\個人工作區\2_Program")
+os.chdir(r"C:\Users\rhinshen\Mine\個人工作區\工作區")
 
 
 # %% 設定

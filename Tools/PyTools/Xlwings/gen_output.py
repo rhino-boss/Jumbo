@@ -20,7 +20,7 @@ from openpyxl.utils import get_column_letter
 
 THRESHOLD = 10_000_000_000
 BET_LEVELS = 30
-BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\2_Program\Tools\PyTools\Xlwings"
+BASE_DIR = r"C:\Users\rhinshen\Mine\個人工作區\工作區\Tools\PyTools\Xlwings"
 
 # Parameter_List 欄位（1-based）
 COL_ID        = 1

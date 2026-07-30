@@ -18,7 +18,7 @@
 
 ## PowerShell 執行範例
 
-在 `C:\Users\rhinshen\Mine\個人工作區\2_Program` 執行：
+在 `C:\Users\rhinshen\Mine\個人工作區\工作區` 執行：
 
 ```powershell
 $env:PYTHONUTF8='1'
