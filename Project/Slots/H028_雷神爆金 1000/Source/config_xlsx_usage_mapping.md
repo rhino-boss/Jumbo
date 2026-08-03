@@ -93,6 +93,24 @@ config 只保存公式計算後的資料，無法由 config 還原原始公式�
 
 ## 使用方式
 
+### 雙擊 update_xlsx.bat
+
+直接執行：
+
+```text
+update_xlsx.bat
+```
+
+批次工具會依序詢問 config 與來源 xlsx；直接按 Enter 使用 `config_92A.js` 和 `H028192A.xlsx`。輸出採另存副本並自動執行 round-trip 驗證，不會覆寫來源 xlsx。
+
+也可以從命令列直接指定：
+
+```powershell
+& "Project\Slots\H028_雷神爆金 1000\Source\update_xlsx.bat" `
+  "config_92A.js" `
+  "H028192A.xlsx"
+```
+
 ### 預設另存副本
 
 ```powershell

@@ -8,6 +8,7 @@ set "SCRIPT_PATH=%SCRIPT_DIR%\xlsx_to_config.py"
 set "DEFAULT_XLSX=%SCRIPT_DIR%\H027192A.xlsx"
 set "VENV_PYTHON=%SCRIPT_DIR%\..\..\..\..\.venv\Scripts\python.exe"
 set "CONVERT_ALL=0"
+set "INTERACTIVE=1"
 
 if "%~1"=="" (
     echo [H027] Available xlsx files:
@@ -16,6 +17,7 @@ if "%~1"=="" (
     echo.
     set /p "XLSX_INPUT=[H027] Enter xlsx path or file name (blank = H027192A.xlsx, ALL = convert all): "
 ) else (
+    set "INTERACTIVE=0"
     set "XLSX_INPUT=%~1"
 )
 
@@ -69,7 +71,7 @@ if errorlevel 1 goto failed
 echo.
 echo [SUCCESS] Selected xlsx file(s) were converted and verified.
 popd
-pause
+if "%INTERACTIVE%"=="1" pause
 exit /b 0
 
 :failed
@@ -78,5 +80,5 @@ if "%EXIT_CODE%"=="0" set "EXIT_CODE=1"
 echo.
 echo [FAILED] Config update failed. See the message above.
 popd 2>nul
-pause
+if "%INTERACTIVE%"=="1" pause
 exit /b %EXIT_CODE%
