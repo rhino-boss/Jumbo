@@ -657,8 +657,8 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
 
             for reel_idx in range(6):
                 matching = 0
-                # 依 lengths 逐 MegaWay block 走訪，每個 block head 各算 1 個
-                # (與後端以 link>0 計 head 一致：同一輪相鄰兩個大符號即使同符號也算 2 個)
+                # 依 lengths 逐 MegaWay block 走訪；大型符號覆蓋的每一格
+                # 均視為一個獨立符號參與 Ways 計算。
                 c = 0
                 while c < 6:
                     sym = board[reel_idx, c]
@@ -667,7 +667,7 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
                         c += 1
                         continue
                     if sym == target_symbol or sym == gold_symbol or sym == 0:
-                        matching += 1
+                        matching += L
                     c += L
 
                 if matching > 0:
@@ -1046,8 +1046,8 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
 
             for reel_idx in range(6):
                 matching = 0
-                # 依 lengths 逐 MegaWay block 走訪，每個 block head 各算 1 個
-                # (與後端以 link>0 計 head 一致：同一輪相鄰兩個大符號即使同符號也算 2 個)
+                # 依 lengths 逐 MegaWay block 走訪；大型符號覆蓋的每一格
+                # 均視為一個獨立符號參與 Ways 計算。
                 c = 0
                 while c < 6:
                     sym = board[reel_idx, c]
@@ -1056,7 +1056,7 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
                         c += 1
                         continue
                     if sym == target_symbol or sym == gold_symbol or sym == 0:
-                        matching += 1
+                        matching += L
                     c += L
 
                 if matching > 0:

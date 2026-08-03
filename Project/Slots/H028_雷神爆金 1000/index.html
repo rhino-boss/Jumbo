@@ -553,6 +553,20 @@
     }
     body.h028 .cell .symbol-wrap,
     body.h028 .cell.peek-row .symbol-wrap { inset: 0; display: grid; place-items: center; overflow: hidden; }
+    body.h028 .symbol-art,
+    body.h028 .symbol-art-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      user-select: none;
+    }
+    body.h028 .symbol-art-layer { object-fit: fill; }
+    body.h028 .symbol-art-icon { object-fit: contain; z-index: 2; }
+    body.h028 .symbol-art-frame { z-index: 3; }
+    body.h028 .cell.has-symbol-art .symbol-code { display: none; }
+    body.h028 .cell.peek-row.has-symbol-art .symbol-code { display: none; }
     body.h028 .cell .symbol-code,
     body.h028 .cell.peek-row .symbol-code,
     body.h028 .cell.jumbo .symbol-code {
@@ -613,8 +627,17 @@
     body.h028 .cell.hit { border-color: var(--green); box-shadow: 0 0 14px rgba(51, 255, 153, 0.46); }
     body.h028 .cell.reel-spin { animation: h028ReelRoll 105ms linear infinite; filter: blur(.35px) brightness(1.15); }
     body.h028 .cell.extra-reel-spin { animation: h028ExtraRoll 105ms linear infinite; filter: blur(.35px) brightness(1.15); }
+    body.h028 .cell.symbol-extra-slide {
+      z-index: 4;
+      animation: h028ExtraSlide var(--drop-duration, 320ms) cubic-bezier(.18, .78, .28, 1) both;
+    }
     @keyframes h028ReelRoll { 0% { transform: translateY(-16px); opacity: .68; } 50% { opacity: 1; } 100% { transform: translateY(16px); opacity: .68; } }
     @keyframes h028ExtraRoll { 0% { transform: translateX(16px); opacity: .68; } 50% { opacity: 1; } 100% { transform: translateX(-16px); opacity: .68; } }
+    @keyframes h028ExtraSlide {
+      0% { transform: translateX(var(--extra-start, 105%)); opacity: .32; filter: blur(.7px) brightness(1.15); }
+      55% { opacity: 1; filter: blur(.2px) brightness(1.06); }
+      100% { transform: translateX(0); opacity: 1; filter: none; }
+    }
     body.h028 .help-payout-table { display: grid; gap: 4px; padding: 8px 12px 12px; overflow-x: auto; }
     body.h028 .help-payout-row { display: grid; grid-template-columns: minmax(110px, 1.4fr) repeat(4, minmax(72px, 1fr)); gap: 4px; min-width: 460px; }
     body.h028 .help-payout-cell { padding: 7px 8px; border-radius: 5px; color: var(--text); background: var(--surface); font: 11px/1.35 Consolas, monospace; text-align: center; }
@@ -2283,10 +2306,11 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
-| 規則說明 | [M1] 為本遊戲的主要倍數來源；同一回合出現多個 [M1] 時，倍數會累積相加。 | [M1] IS THE MAIN MULTIPLIER SOURCE IN THIS GAME. IF MULTIPLE [M1] SYMBOLS APPEAR IN THE SAME ROUND, THEIR VALUES ARE ADDED TOGETHER. |
-| 規則說明 | 主盤面上的 [M1] 依尺寸提供倍數：{1}x{1} = X{2}、{1}x{2} = X{3}、{1}x{3} = X{4}、{1}x{4} = X{5}。 | ON THE MAIN REELS, [M1] AWARDS A MULTIPLIER BASED ON ITS SIZE: {1}X{1} = X{2}, {1}X{2} = X{3}, {1}X{3} = X{4}, AND {1}X{4} = X{5}. |
+| 規則說明 | 同一回合出現多個 [M1] 時，其倍數數值會累積相加。 | IF MULTIPLE [M1] SYMBOLS APPEAR IN THE SAME ROUND, THEIR MULTIPLIER VALUES ARE ADDED TOGETHER. |
+| 規則說明 | 主盤面上的 [M1] 所提供的倍數，將依其符號尺寸決定。 | THE MULTIPLIER AWARDED BY [M1] ON THE MAIN REELS IS DETERMINED BY THE SYMBOL SIZE. |
 | 規則說明 | 額外轉輪上的每個 [M1] 固定提供 X{2} 倍數。 | EACH [M1] ON THE EXTRA REELS AWARDS A FIXED X{2} MULTIPLIER. |
 | 規則說明 | 當局所有中獎金額會乘上該局累積的總倍數。 | ALL WINS IN THE CURRENT ROUND ARE MULTIPLIED BY THE TOTAL ACCUMULATED MULTIPLIER FOR THAT ROUND. |
+| 規則說明 | [M1大小對應倍數示意圖] | [M1大小對應倍數示意圖] |
 
 ---
 
@@ -2331,6 +2355,23 @@
 
 ---
 
+## OP JACKPOT
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | ▪ 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR],OR [MINI]. |
+| 規則說明 | ▪ 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号即可获得该 OP JACKPOT 并结算总奖金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | ▪  [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
+| 規則說明 | ▪  [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
+| 規則說明 | ▪  [MINOR] 为红利彩金，依照投注选项改变。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪  [MINI] 为红利彩金，依照投注选项改变。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高触发 OP JACKPOT 特色的机会越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
+
+---
+
 ## WAY GAME
 
 來源：rule-derived
@@ -2342,6 +2383,9 @@
 | 規則說明 | 主盤面為 {6} 輪可變高度盤面，並在第 {2} 至第 {5} 輪上方各配置 {1} 個額外轉輪位置。 | THE MAIN REELS CONSIST OF {6} VARIABLE-HEIGHT REELS, WITH {1} EXTRA REEL POSITION ABOVE REELS {2} TO {5}. |
 | 規則說明 | 本遊戲的路數範圍為 {2,025} WAYS 至 {32,400} WAYS。 | THE NUMBER OF WAYS IN THIS GAME RANGES FROM {2,025} WAYS TO {32,400} WAYS. |
 | 規則說明 | 大型符號覆蓋多個位置時，每一格均視為 {1} 個獨立符號參與 WAY 計算。 | WHEN A LARGE SYMBOL COVERS MULTIPLE POSITIONS, EACH POSITION COUNTS AS {1} INDIVIDUAL SYMBOL FOR WAY CALCULATION. |
+| 規則說明 | [走線圖- 32,400 MAX WAY] | [走線圖- 32,400 MAX WAY] |
+| 規則說明 | [走線圖-3 OF A KIND PAYS 2 WAYS] | [走線圖-3 OF A KIND PAYS 2 WAYS] |
+| 規則說明 | [走線圖-NO WIN] | [走線圖-NO WIN] |
 
 ---
 
@@ -2387,10 +2431,16 @@
   function renderStats(displayWin=null){set('balanceValue',money(state.credit));set('betValue',formatBetMoney(BETS[state.betIndex]));set('winValue',money(displayWin==null?(state.currentWin||0):displayWin));set('roundCountValue',state.rounds.toLocaleString());set('rtpValue',state.totalBet?`${(state.totalWin/state.totalBet*100).toFixed(2)}%`:'0.00%');set('hitRateValue',state.rounds?`${(state.hits/state.rounds*100).toFixed(2)}%`:'0.00%');let rate=state.naturalRounds?state.naturalFg/state.naturalRounds:0,cycle=state.naturalFg?Math.round(state.naturalRounds/state.naturalFg):'--';set('fgTriggerValue',`${(rate*100).toFixed(2)}% (${cycle}${state.language==='zh'?'場':' rounds'})`);set('maxMultiplierValue',`x${state.maxMulti}`);set('betBtn',`${state.language==='zh'?'投注':'BET'} ${formatBetMoney(BETS[state.betIndex])}`);updateBatchSimulationContext()}
   function set(id,v){let node=$(id);if(node)node.textContent=v}
   function renderFeature(scene='BASE GAME',cascade=0,multi=1,ways='—'){set('modeText',state.language==='zh'?(scene==='FREE GAME'?'免費遊戲':'主遊戲'):scene);set('carryMultiValue',cascade);set('spinMultiValue',`x${multi}`);set('featureStatus',ways==='—'?'':`Ways ${ways}`);$('fgLeftPill').classList.toggle('hidden',!state.fg);if(state.fg)set('fgLeftValue',`${state.fg.left}/${state.fg.total}`);document.body.classList.toggle('fg-mode',scene==='FREE GAME')}
-  function h028DropMotion(before,after,hits=[]){let hitSet=new Set(hits),motion={};for(let r=0;r<6;r++){let oldRow=2,survivors=[];before.main[r].forEach((block,index)=>{if(!hitSet.has(`m-${r}-${index}`)||isGold(block.id))survivors.push({row:oldRow});oldRow+=Math.max(1,Math.trunc(block.h)||1)});let newCount=Math.max(0,after.main[r].length-survivors.length),newRow=2;after.main[r].forEach((block,index)=>{let key=`m-${r}-${index}`;if(index<newCount)motion[key]={type:'new',rows:newCount,groupSize:newCount};else{let survivor=survivors[index-newCount];if(survivor&&newRow>survivor.row)motion[key]={type:'settle',rows:newRow-survivor.row}}newRow+=Math.max(1,Math.trunc(block.h)||1)})}let extraSurvivors=before.extra.filter((block,index)=>!hitSet.has(`e-${index}`)||isGold(block.id)).length;for(let index=extraSurvivors;index<after.extra.length;index++)motion[`e-${index}`]={type:'refill',rows:0};return motion}
-  function renderBoard(screen,hits=[],rolling=false,options={}){if(!screen)return;let hitSet=new Set(hits),clearedSet=new Set(options.cleared||[]),dropDuration=Math.max(320,640/state.speed)/2;el.board.innerHTML='';for(let c=0;c<4;c++){let motion=options.dropMotion?.[`e-${c}`],node=symbolEl(screen.extra[c],`e-${c}`,hitSet,rolling,false,true,clearedSet,false);node.classList.toggle('symbol-refill',motion?.type==='refill');node.style.gridColumn=String(c+2);node.style.gridRow='1';el.board.appendChild(node)}for(let r=0;r<6;r++){let row=2;screen.main[r].forEach((b,bi)=>{if(row>6)return;let motion=options.dropMotion?.[`m-${r}-${bi}`],h=Math.max(1,Math.min(6-row+1,Math.trunc(b.h)||1)),node=symbolEl(b,`m-${r}-${bi}`,hitSet,rolling,h>1,false,clearedSet,false);node.classList.toggle('symbol-drop',motion?.type==='new');node.classList.toggle('symbol-settle',motion?.type==='settle');node.style.gridColumn=String(r+1);node.style.gridRow=`${row} / span ${h}`;if(motion){node.style.setProperty('--drop-start',`${-motion.rows*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`);node.style.setProperty('--drop-delay','0ms')}el.board.appendChild(node);row+=h});while(row<=6){let node=symbolEl({id:-1,h:1},'',hitSet,rolling,false,false,clearedSet,false);node.style.gridColumn=String(r+1);node.style.gridRow=String(row++);el.board.appendChild(node)}}}
+  function h028DropMotion(before,after,hits=[]){let hitSet=new Set(hits),motion={};for(let r=0;r<6;r++){let oldRow=2,survivors=[];before.main[r].forEach((block,index)=>{if(!hitSet.has(`m-${r}-${index}`)||isGold(block.id))survivors.push({row:oldRow});oldRow+=Math.max(1,Math.trunc(block.h)||1)});let newCount=Math.max(0,after.main[r].length-survivors.length),newRow=2;after.main[r].forEach((block,index)=>{let key=`m-${r}-${index}`;if(index<newCount)motion[key]={type:'new',rows:newCount,groupSize:newCount};else{let survivor=survivors[index-newCount];if(survivor&&newRow>survivor.row)motion[key]={type:'settle',rows:newRow-survivor.row}}newRow+=Math.max(1,Math.trunc(block.h)||1)})}let extraSurvivors=[];before.extra.forEach((block,index)=>{if(!hitSet.has(`e-${index}`)||isGold(block.id))extraSurvivors.push({oldIndex:index})});let extraNewCount=Math.max(0,after.extra.length-extraSurvivors.length);after.extra.forEach((block,index)=>{let key=`e-${index}`;if(index<extraSurvivors.length){let cols=extraSurvivors[index].oldIndex-index;if(cols>0)motion[key]={type:'extra-slide',cols}}else motion[key]={type:'extra-slide',cols:extraNewCount}});return motion}
+  function renderBoard(screen,hits=[],rolling=false,options={}){if(!screen)return;let hitSet=new Set(hits),clearedSet=new Set(options.cleared||[]),dropDuration=Math.max(320,640/state.speed)/2;el.board.innerHTML='';for(let c=0;c<4;c++){let motion=options.dropMotion?.[`e-${c}`],node=symbolEl(screen.extra[c],`e-${c}`,hitSet,rolling,false,true,clearedSet,false);node.classList.toggle('symbol-extra-slide',motion?.type==='extra-slide');if(motion?.type==='extra-slide'){node.style.setProperty('--extra-start',`${motion.cols*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`)}node.style.gridColumn=String(c+2);node.style.gridRow='1';el.board.appendChild(node)}for(let r=0;r<6;r++){let row=2;screen.main[r].forEach((b,bi)=>{if(row>6)return;let motion=options.dropMotion?.[`m-${r}-${bi}`],h=Math.max(1,Math.min(6-row+1,Math.trunc(b.h)||1)),node=symbolEl(b,`m-${r}-${bi}`,hitSet,rolling,h>1,false,clearedSet,false);node.classList.toggle('symbol-drop',motion?.type==='new');node.classList.toggle('symbol-settle',motion?.type==='settle');node.style.gridColumn=String(r+1);node.style.gridRow=`${row} / span ${h}`;if(motion){node.style.setProperty('--drop-start',`${-motion.rows*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`);node.style.setProperty('--drop-delay','0ms')}el.board.appendChild(node);row+=h});while(row<=6){let node=symbolEl({id:-1,h:1},'',hitSet,rolling,false,false,clearedSet,false);node.style.gridColumn=String(r+1);node.style.gridRow=String(row++);el.board.appendChild(node)}}}
   function symbolClass(id){let b=base(id);if(b===0)return'symbol-wild';if(b===1)return'symbol-scatter';if(b>=2&&b<=7)return`symbol-m${b-1}`;if(b>=8&&b<=12)return'symbol-low';return'symbol-mystery'}
-  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),isGold(id)?'gold':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap"><span class="symbol-code">${displayCode(id)}</span></div>${m1}`;return d}
+  const SYMBOL_IMAGE_ROOT='./Source/Image/';
+  const HIGH_SYMBOL_ART={2:{color:'red',icon:'neko'},3:{color:'orange',icon:'drum'},4:{color:'blue',icon:'lantern'},5:{color:'violet',icon:'fan'},6:{color:'yellow',icon:'f_sushi'},7:{color:'green',icon:'sushi'}};
+  const LOW_SYMBOL_ART={8:{color:'red',icon:'a'},9:{color:'orange',icon:'k'},10:{color:'purple',icon:'q'},11:{color:'blue',icon:'j'},12:{color:'green',icon:'10'}};
+  function symbolSizeVariant(height){return['a','b','c','d'][Math.max(1,Math.min(4,Math.trunc(height)||1))-1]}
+  function symbolImage(path,className){return`<img class="symbol-art-layer ${className}" src="${SYMBOL_IMAGE_ROOT}${path}" alt="" draggable="false">`}
+  function symbolArt(id,height=1){let symbol=base(id),size=symbolSizeVariant(height),gold=isGold(id);if(symbol===0)return symbolImage(`lucky-neko_s_wild_${size}.png`,'symbol-art-icon');if(symbol===1){let scatterSize=size==='a'?'a':'b';return symbolImage(`lucky-neko_s_scatter_${scatterSize}.png`,'symbol-art-icon')}let spec=HIGH_SYMBOL_ART[symbol],prefix='h';if(!spec){spec=LOW_SYMBOL_ART[symbol];prefix='l'}if(!spec)return'';let icon=spec.icon==='neko'?`lucky-neko_h_neko_${size==='a'?'a':size==='b'?'b':'cd'}.png`:`lucky-neko_${prefix}_${spec.icon}_b.png`,block=`lucky-neko_${prefix}_block_${size}_${spec.color}.png`,frame=`lucky-neko_s_${gold?'gold':'silver'}_frame_${size}.png`;return`<span class="symbol-art">${symbolImage(block,'symbol-art-block')}${symbolImage(icon,'symbol-art-icon')}${symbolImage(frame,'symbol-art-frame')}</span>`}
+  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,art=symbolArt(id,b?.h),m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),art?'has-symbol-art':'',isGold(id)?'gold':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap">${art}<span class="symbol-code">${displayCode(id)}</span></div>${m1}`;d.querySelectorAll('.symbol-art-layer').forEach(image=>image.addEventListener('error',()=>d.classList.remove('has-symbol-art'),{once:true}));return d}
   function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
   async function animateReels(finalScreen){let frames=10+Math.max(0,6-state.speed);for(let frame=0;frame<frames;frame++){let sample={main:Array.from({length:6},()=>Array.from({length:5},()=>({id:pickInt(26),h:1}))),extra:Array.from({length:4},()=>({id:pickInt(26),h:1}))};renderBoard(sample,[],true);message('Reels spinning...');await sleep(105)}renderBoard(finalScreen)}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}
@@ -2403,7 +2453,7 @@
   function scatterCount(screen){return screen.main.flat().filter(b=>base(b.id)===1).length+screen.extra.filter(b=>base(b.id)===1).length}
   function collectM1(screen,firstAlready=false){let add=0,count=0;for(const b of [...screen.main.flat(),...screen.extra])if(base(b.id)===2){let v=b.h+1;if(!firstAlready&&count===0)v--;add+=v;count++}return{add,count}}
   function reelBlocks(screen,r){return r>=1&&r<=4?[screen.extra[r-1],...screen.main[r]]:screen.main[r]}
-  function evaluate(screen,multi,cascade){let wins=[],hit=[],total=0;for(let target=2;target<=12;target++){let counts=[],reels=0;for(let r=0;r<6;r++){let c=reelBlocks(screen,r).filter(b=>{let x=base(b.id);return x===target||x===0}).length;if(c){counts.push(c);reels++}else break}if(reels>=3){let ways=counts.reduce((a,v)=>a*v,1),pay=(B.linkpoint[target-2]?.[reels-3]||0)*ways*betMultiplier(),totalPay=pay*multi;total+=totalPay;wins.push({symbol:code(target),length:reels,ways,cascade,pay:totalPay});for(let r=0;r<reels;r++){screen.main[r].forEach((b,i)=>{let x=base(b.id);if(x===target||x===0)hit.push(`m-${r}-${i}`)});if(r>=1&&r<=4){let x=base(screen.extra[r-1].id);if(x===target||x===0)hit.push(`e-${r-1}`)}}}}return{wins,hit,total,ways:wins.reduce((a,w)=>a+w.ways,0)}}
+  function evaluate(screen,multi,cascade){let wins=[],hit=[],total=0;for(let target=2;target<=12;target++){let counts=[],reels=0;for(let r=0;r<6;r++){let c=reelBlocks(screen,r).reduce((sum,b)=>{let x=base(b.id);return sum+(x===target||x===0?Math.max(1,Math.trunc(b.h)||1):0)},0);if(c){counts.push(c);reels++}else break}if(reels>=3){let ways=counts.reduce((a,v)=>a*v,1),pay=(B.linkpoint[target-2]?.[reels-3]||0)*ways*betMultiplier(),totalPay=pay*multi;total+=totalPay;wins.push({symbol:code(target),length:reels,ways,cascade,pay:totalPay});for(let r=0;r<reels;r++){screen.main[r].forEach((b,i)=>{let x=base(b.id);if(x===target||x===0)hit.push(`m-${r}-${i}`)});if(r>=1&&r<=4){let x=base(screen.extra[r-1].id);if(x===target||x===0)hit.push(`e-${r-1}`)}}}}return{wins,hit,total,ways:wins.reduce((a,w)=>a+w.ways,0)}}
   function pickDrop(scene,suffix,dropIndex,reel){let key=`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}Drop${Math.min(5,dropIndex+1)}`,w=B[key][reel],p=weighted(w),id=p.index;return{id,rng:p}}
   function cascade(screen,evalResult,scene,suffix,dropIndex,mystery){let hit=new Set(evalResult.hit),events=[],newM1=[];for(let r=0;r<6;r++){let kept=[];screen.main[r].forEach((b,i)=>{if(!hit.has(`m-${r}-${i}`))kept.push(b);else if(isGold(b.id)){kept.push({id:0,h:b.h});events.push(`R${r+1} ${code(b.id)} → WW`)}});let height=kept.reduce((a,b)=>a+b.h,0);while(height<5){let p=pickDrop(scene,suffix,dropIndex,r),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};kept.unshift(block);if(base(id)===2)newM1.push(block);events.push(`R${r+1} drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`);height++}screen.main[r]=kept}let keptExtra=[];screen.extra.forEach((b,i)=>{if(!hit.has(`e-${i}`))keptExtra.push(b);else if(isGold(b.id)){keptExtra.push({id:0,h:1});events.push(`EXTRA ${code(b.id)} → WW`)}});while(keptExtra.length<4){let p=pickDrop(scene,suffix,dropIndex,6),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};keptExtra.push(block);if(base(id)===2)newM1.push(block);events.push(`EXTRA drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`)}screen.extra=keptExtra;return{events,newM1}}
   function parseOverrides(){let raw=el.reel.value.trim();if(!raw)return null;let a=raw.split(/\s+/).map(Number);if(a.length!==7||a.some(v=>!Number.isInteger(v)||v<0))throw Error('Reel RNG requires exactly 7 non-negative integers.');return a}
