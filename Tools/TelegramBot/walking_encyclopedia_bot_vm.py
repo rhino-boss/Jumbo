@@ -54,6 +54,26 @@ ALLOWED_USER_ID = 5539551776  # 只有這個 Telegram 使用者 ID 可以下模�
 # ==================== ⚙️ 機器人參數設定 ====================
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "generated_reports"
+STRESS_PROGRESS_FILE = BASE_DIR / "stress_test_progress.json"
+STRESS_GAME_LIST_CANDIDATES = [
+    BASE_DIR / "game_list.md",
+    BASE_DIR.parent.parent / "Project" / "Slots" / "game_list.md",
+]
+STRESS_GAMES_PER_PAGE = 8
+BET_TYPE_TO_STRESS_MODE = {
+    "0": "NB",
+    "1": "EX1",
+    "2": "EX2",
+    "3": "BF",
+    "4": "SF",
+}
+STRESS_MODE_TO_COLUMN = {
+    "NB": "押注-NB",
+    "EX1": "押注-EX1",
+    "EX2": "押注-EX2",
+    "BF": "押注-BF",
+    "SF": "押注-SF",
+}
 MAX_REPORT_FILES = 20
 ARCHIVE_EXTENSIONS = {".zip", ".rar"}
 REPORT_FILE_EXTENSIONS = ARCHIVE_EXTENSIONS | {".txt"}
@@ -330,6 +350,7 @@ MENTION_WINDOW_SECONDS = 180  # 群組裡 @機器人 一次後，3 分鐘內符�
 archive_batches = {}
 bot_instance_lock = None
 simulator_wizard_state = {}  # chat_id -> {"config", "bet_mode", "card", "rounds", "awaiting_rounds"}
+stress_test_search_state = {}  # chat_id -> 搜尋提示訊息 ID
 mention_window_expiry = {}  # chat_id -> 這個時間之前都算「已 @ 過」
 
 
@@ -1136,6 +1157,26 @@ def values_pass(values: list[str], targets: list[float], tolerance: float, skip_
     return True if checked_count else None
 
 
+def values_pass_with_tolerances(
+    values: list[str],
+    targets: list[float],
+    tolerances: list[float],
+    skip_indexes: set[int] | None = None,
+) -> bool | None:
+    """依各欄不同容許範圍判斷 RTP。"""
+    skip_indexes = skip_indexes or set()
+    checked_count = 0
+    for index, (value, target, tolerance) in enumerate(zip(values, targets, tolerances)):
+        if index in skip_indexes:
+            continue
+        if not value:
+            return False
+        checked_count += 1
+        if abs(percent_to_float(value) - target) > tolerance:
+            return False
+    return True if checked_count else None
+
+
 def game_values_pass(values: list[str], targets: list[float], tolerance: float) -> bool:
     """Game 前三格只需小於 100%，後兩格才依雙基準判斷。"""
     if len(values) < 5 or any(not value for value in values[:5]):
@@ -1183,7 +1224,6 @@ def format_rtp_report_summary(parsed_report: dict) -> str:
     bonus_values = [row.get("bonus", "") for row in ordered_rows]
     bet_type = extract_bet_type(parsed_report["extra_bet"])
     is_bf = bet_type in {"3", "4"}
-    is_special_bf_bet = is_bf and is_zero_link_four_bonus_bf_bet(bet_type, parsed_report["bet"])
     old_hand_init = parsed_report.get("old_hand_init", "").strip().lower()
     is_old_hand = (
         old_hand_init == "enabled"
@@ -1194,69 +1234,105 @@ def format_rtp_report_summary(parsed_report: dict) -> str:
         bet_value = Decimal(parsed_report["bet"].strip())
     except (InvalidOperation, AttributeError):
         bet_value = None
-    is_low_bet_old_hand = (
-        not is_bf and is_old_hand and bet_value is not None and bet_value < Decimal("2")
-    )
-    is_standard_bet_old_hand = (
-        not is_bf and is_old_hand and bet_value is not None and bet_value >= Decimal("2")
-    )
-    mode = "BF" if is_bf else ("老手" if is_old_hand else "新手")
+    # 一般模式直接看實際 Bet；Bet < 2 為低押注，Bet >= 2 為高押注。
+    # 不套用 NB／EX1 等模式倍率。
+    is_low_bet = bet_value is not None and bet_value < Decimal("2")
+    mode = "老手" if is_old_hand else "新手"
+    special_mode_name = BET_TYPE_TO_STRESS_MODE.get(bet_type, "")
+    special_multiplier = None
+    special_setting_missing = False
+    if is_bf:
+        game = next(
+            (
+                game
+                for game in load_stress_games()
+                if game["game_id"] == parsed_report.get("machine_type", "")
+            ),
+            None,
+        )
+        if game is not None:
+            special_multiplier = parse_stress_multiplier(
+                game["bets"].get(special_mode_name, "")
+            )
+        special_setting_missing = special_multiplier is None or bet_value is None
 
     if is_bf:
         game_targets = [92.5] * len(game_values)
-        game_target_label = "【92.50%|92.50%】"
+        game_result = game_values_pass(game_values, game_targets, 1.0)
     else:
-        game_after_target = 94.0 if is_low_bet_old_hand else 92.0
-        game_targets = [93.0, 93.0, 93.0, 93.0, game_after_target]
-        game_target_label = f"【93.00%|{game_after_target:.2f}%】"
+        if is_old_hand:
+            game_before_target = 94.0 if is_low_bet else 92.0
+        else:
+            game_before_target = 93.0
+        game_after_target = 94.0 if is_low_bet else 92.0
+        game_targets = [0.0, 0.0, 0.0, game_before_target, game_after_target]
+        game_result = game_values_pass(game_values, game_targets, 1.0)
 
     if is_bf:
-        link_target = 0.0 if is_special_bf_bet else 2.0
-        bonus_target = 4.0 if is_special_bf_bet else 2.0
-        link_targets = [link_target] * len(link_values)
-        bonus_targets = [bonus_target] * len(bonus_values)
-        link_target_label = f"【{link_target:.2f}%|{link_target:.2f}%】"
-        bonus_target_label = f"【{bonus_target:.2f}%|{bonus_target:.2f}%】"
-    else:
-        link_after_target = 0.0 if is_low_bet_old_hand else (2.0 if is_old_hand else 0.0)
-        if is_standard_bet_old_hand:
-            # 老手且 Bet >= 2 時，所有情境的 Link 目標都是 2%。
-            link_targets = [2.0] * len(link_values)
+        is_special_low_bet = (
+            special_multiplier is not None
+            and bet_value is not None
+            and bet_value / special_multiplier < Decimal("2")
+        )
+        if is_special_low_bet:
+            link_before_target = 0.0
+            bonus_before_target = 4.0
+            link_after_target = 0.0
+            bonus_after_target = 4.0
         else:
-            link_targets = [link_after_target, 0.0, 0.0, 0.0, link_after_target]
-        bonus_targets = [2.0] * len(bonus_values)
-        link_target_label = f"【0.00%|{link_after_target:.2f}%】"
-        bonus_target_label = "【2.00%|2.00%】"
+            link_before_target = 2.0 if is_old_hand else 0.0
+            bonus_before_target = 2.0 if is_old_hand else 4.0
+            link_after_target = 2.0
+            bonus_after_target = 2.0
+        link_targets = [0.0, 0.0, 0.0, link_before_target, link_after_target]
+        bonus_targets = [0.0, 0.0, 0.0, bonus_before_target, bonus_after_target]
+    else:
+        if is_old_hand:
+            link_before_target = 0.0 if is_low_bet else 2.0
+        else:
+            link_before_target = 0.0
+        link_after_target = 0.0 if is_low_bet else 2.0
+        link_targets = [0.0, 0.0, 0.0, link_before_target, link_after_target]
+        bonus_targets = [0.0, 0.0, 0.0, 2.0, 2.0]
 
-    game_result = game_values_pass(game_values, game_targets, 1.0)
-    link_skip_indexes = {0, 1, 2} if is_bf else (set() if is_standard_bet_old_hand else {0})
-    link_tolerance = 0.0 if is_low_bet_old_hand else 1.5
-    link_result = values_pass(link_values, link_targets, link_tolerance, skip_indexes=link_skip_indexes)
-    bonus_skip_indexes = set() if is_standard_bet_old_hand else {0, 1, 2}
-    bonus_result = values_pass(bonus_values, bonus_targets, 0.5, skip_indexes=bonus_skip_indexes)
+    # 全域規則：Link 目標為 0%時必須精確等於 0%；
+    # 只有非 0%的 Link 目標才套用 ±1.5%容許範圍。
+    link_tolerances = [0.0 if target == 0.0 else 1.5 for target in link_targets]
+
+    judged_scenario_skip_indexes = {0, 1, 2}
+    link_result = values_pass_with_tolerances(
+        link_values,
+        link_targets,
+        link_tolerances,
+        skip_indexes=judged_scenario_skip_indexes,
+    )
+    bonus_result = values_pass(
+        bonus_values,
+        bonus_targets,
+        0.5,
+        skip_indexes=judged_scenario_skip_indexes,
+    )
+    if special_setting_missing:
+        link_result = None
+        bonus_result = None
 
     newbie_value = get_setting_game_rtp(parsed_report["setting_rows"], "newbie")
     veteran_value = get_setting_game_rtp(parsed_report["setting_rows"], "veteran")
     newbie_result = values_pass([newbie_value], [1.0], 1.0) if newbie_value else None
     veteran_result = values_pass([veteran_value], [1.0], 1.0) if veteran_value else None
 
-    if is_bf:
-        column_title = "整體|~50|~100|OG ~100|OG 100~"
-    else:
-        column_title = "|".join(label for _, label in SCENARIO_COLUMN_SPECS)
-
+    column_title = "|".join(label for _, label in SCENARIO_COLUMN_SPECS)
     column_labels = column_title.split("|")
     game_standards = ["<100%", "<100%", "<100%", f"{game_targets[3]:g}%", f"{game_targets[4]:g}%"]
-    if is_bf:
-        link_standards = ["", "", "", f"{link_targets[3]:g}%", f"{link_targets[4]:g}%"]
-    elif is_standard_bet_old_hand:
-        link_standards = ["2%"] * len(link_values)
-    else:
-        link_standards = ["", "0%", "0%", "0%", f"{link_targets[4]:g}%"]
-    if is_standard_bet_old_hand:
-        bonus_standards = ["2%"] * len(bonus_values)
-    else:
-        bonus_standards = ["", "", "", f"{bonus_targets[3]:g}%", f"{bonus_targets[4]:g}%"]
+    link_standards = ["", "", "", f"{link_targets[3]:g}%", f"{link_targets[4]:g}%"]
+    bonus_standards = ["", "", "", f"{bonus_targets[3]:g}%", f"{bonus_targets[4]:g}%"]
+    if special_setting_missing:
+        missing_label = f"缺{special_mode_name}設定"
+        if is_old_hand:
+            link_standards[3] = missing_label
+            bonus_standards[3] = missing_label
+        link_standards[4] = missing_label
+        bonus_standards[4] = missing_label
 
     def table_row(label: str, values: list[str], standards: list[str], result: bool | None) -> str:
         cells = "".join(
@@ -1300,18 +1376,22 @@ def format_rtp_report_summary(parsed_report: dict) -> str:
             f"* Mode: {mode}",
         ]
     )
-    return "\n".join(
-        [
-            "<h3>📋 基本資訊</h3>",
-            f"<pre>{html.escape(basic_info)}</pre>",
-            "<p><br></p>",
-            "<h3>📊 RTP 資訊</h3>",
-            "<table bordered striped>",
-            f"<tr><th>項目</th>{headers}<th>結果</th></tr>",
-            *rows,
-            "</table>",
-        ]
-    )
+    report_blocks = [
+        "<h3>📋 基本資訊</h3>",
+        f"<pre>{html.escape(basic_info)}</pre>",
+        "<p><br></p>",
+        "<h3>📊 RTP 資訊</h3>",
+        "<table bordered striped>",
+        f"<tr><th>項目</th>{headers}<th>結果</th></tr>",
+        *rows,
+        "</table>",
+    ]
+    if special_setting_missing:
+        report_blocks.append(
+            f"<p>⚠️ game_list.md 缺少 Game ID {html.escape(parsed_report.get('machine_type', ''))}"
+            f" 的{html.escape(special_mode_name)}押注設定，無法依倍率判斷特殊模式。</p>"
+        )
+    return "\n".join(report_blocks)
 
 
 async def send_rtp_report_summary(message, parsed_report: dict) -> None:
@@ -1337,6 +1417,371 @@ async def send_rtp_report_summary(message, parsed_report: dict) -> None:
             raise RuntimeError(f"sendRichMessage failed: {result.get('description', 'unknown error')}")
 
     await asyncio.to_thread(send_request)
+
+
+def find_stress_game_list_path() -> Path | None:
+    return next((path for path in STRESS_GAME_LIST_CANDIDATES if path.is_file()), None)
+
+
+def load_stress_games() -> list[dict]:
+    """從 game_list.md 讀取可供壓測選擇的遊戲及押注倍率。"""
+    game_list_path = find_stress_game_list_path()
+    if game_list_path is None:
+        return []
+
+    lines = game_list_path.read_text(encoding="utf-8").splitlines()
+    headers = []
+    games_by_id = {}
+    for line in lines:
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if not headers and "Game ID" in cells and "遊戲中文名稱" in cells:
+            headers = cells
+            continue
+        if not headers or len(cells) != len(headers) or all(set(cell) <= {"-", ":"} for cell in cells):
+            continue
+        row = dict(zip(headers, cells))
+        game_id = row.get("Game ID", "").strip()
+        chinese_name = row.get("遊戲中文名稱", "").strip()
+        if not game_id.isdigit() or not chinese_name:
+            continue
+        games_by_id[game_id] = {
+            "game_id": game_id,
+            "parsheet_id": row.get("ParSheet ID", "").strip(),
+            "english_name": row.get("遊戲英文名稱", "").strip(),
+            "chinese_name": chinese_name,
+            "bets": {
+                mode: row.get(column, "").strip()
+                for mode, column in STRESS_MODE_TO_COLUMN.items()
+            },
+        }
+    return list(games_by_id.values())
+
+
+def parse_stress_multiplier(value: str) -> Decimal | None:
+    value = (value or "").strip()
+    if not value or value == "-":
+        return None
+    try:
+        multiplier = Decimal(value)
+    except InvalidOperation:
+        return None
+    return multiplier if multiplier > 0 else None
+
+
+def format_stress_number(value: Decimal) -> str:
+    normalized = value.normalize()
+    return format(normalized, "f")
+
+
+def get_stress_bet_boundaries(mode: str, multiplier: Decimal) -> tuple[Decimal, Decimal]:
+    """一般模式固定用2／100；BF、SF才乘上Game List倍率。"""
+    if mode in {"NB", "EX1", "EX2"}:
+        return Decimal("2"), Decimal("100")
+    return multiplier * Decimal("2"), multiplier * Decimal("100")
+
+
+def build_stress_test_items(game: dict) -> list[dict]:
+    """依一般／特殊模式級距建立小／中／大押注與新／老手測項。"""
+    items = []
+    for mode in ("NB", "EX1", "EX2", "BF", "SF"):
+        multiplier = parse_stress_multiplier(game["bets"].get(mode, ""))
+        if multiplier is None:
+            continue
+        medium_start, large_start = get_stress_bet_boundaries(mode, multiplier)
+        ranges = [
+            ("small", "小押注", f"x < {format_stress_number(medium_start)}"),
+            (
+                "medium",
+                "中押注",
+                f"{format_stress_number(medium_start)} ≤ x < {format_stress_number(large_start)}",
+            ),
+            ("large", "大押注", f"{format_stress_number(large_start)} ≤ x"),
+        ]
+        for size_key, size_label, range_text in ranges:
+            if mode in {"NB", "EX1", "EX2"}:
+                if size_key == "small" and multiplier >= Decimal("2"):
+                    continue
+                if size_key == "medium" and multiplier >= Decimal("100"):
+                    continue
+            for hand_key, hand_label in (("new", "新手"), ("old", "老手")):
+                if mode in {"NB", "EX1", "EX2"} and size_key == "large" and hand_key == "new":
+                    continue
+                items.append(
+                    {
+                        "key": f"{mode}:{size_key}:{hand_key}",
+                        "mode": mode,
+                        "size": size_key,
+                        "hand": hand_key,
+                        "label": f"{mode} {size_label} {hand_label}",
+                        "range": range_text,
+                    }
+                )
+    return items
+
+
+def load_stress_progress() -> dict:
+    if not STRESS_PROGRESS_FILE.is_file():
+        return {}
+    try:
+        data = json.loads(STRESS_PROGRESS_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        logger.exception("無法讀取壓測進度檔：%s", STRESS_PROGRESS_FILE)
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_stress_progress(progress: dict) -> None:
+    STRESS_PROGRESS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = STRESS_PROGRESS_FILE.with_suffix(".json.tmp")
+    temporary_path.write_text(
+        json.dumps(progress, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    temporary_path.replace(STRESS_PROGRESS_FILE)
+
+
+def build_stress_game_keyboard(games: list[dict], page: int = 0) -> InlineKeyboardMarkup:
+    page_count = max(1, (len(games) + STRESS_GAMES_PER_PAGE - 1) // STRESS_GAMES_PER_PAGE)
+    page = min(max(page, 0), page_count - 1)
+    start = page * STRESS_GAMES_PER_PAGE
+    rows = [[InlineKeyboardButton("🔍 直接輸入搜尋", callback_data="stress:search:x")]]
+    game_buttons = [
+        InlineKeyboardButton(
+            game["chinese_name"],
+            callback_data=f"stress:game:{game['game_id']}",
+        )
+        for game in games[start:start + STRESS_GAMES_PER_PAGE]
+    ]
+    rows.extend(
+        game_buttons[index:index + 2]
+        for index in range(0, len(game_buttons), 2)
+    )
+    if page > 0:
+        rows.append([InlineKeyboardButton("⬅️ 上一頁", callback_data=f"stress:page:{page - 1}")])
+    if page + 1 < page_count:
+        rows.append([InlineKeyboardButton("下一頁 ➡️", callback_data=f"stress:page:{page + 1}")])
+    rows.append([InlineKeyboardButton("關閉", callback_data="stress:close:x")])
+    return InlineKeyboardMarkup(rows)
+
+
+def search_stress_games(games: list[dict], query: str) -> list[dict]:
+    keyword = re.sub(r"\s+", "", query).casefold()
+    if not keyword:
+        return []
+
+    def searchable_values(game: dict) -> list[str]:
+        return [
+            game.get("game_id", ""),
+            game.get("parsheet_id", ""),
+            game.get("english_name", ""),
+            game.get("chinese_name", ""),
+        ]
+
+    exact_matches = [
+        game
+        for game in games
+        if any(re.sub(r"\s+", "", value).casefold() == keyword for value in searchable_values(game))
+    ]
+    if exact_matches:
+        return exact_matches
+    return [
+        game
+        for game in games
+        if any(keyword in re.sub(r"\s+", "", value).casefold() for value in searchable_values(game))
+    ]
+
+
+def build_stress_search_results_keyboard(matches: list[dict]) -> InlineKeyboardMarkup:
+    result_buttons = [
+        InlineKeyboardButton(
+            game["chinese_name"],
+            callback_data=f"stress:game:{game['game_id']}",
+        )
+        for game in matches[:20]
+    ]
+    rows = [
+        result_buttons[index:index + 2]
+        for index in range(0, len(result_buttons), 2)
+    ]
+    rows.append([InlineKeyboardButton("重新搜尋", callback_data="stress:search:x")])
+    rows.append([InlineKeyboardButton("返回所有遊戲", callback_data="stress:page:0")])
+    return InlineKeyboardMarkup(rows)
+
+
+def format_stress_test_list(game: dict) -> str:
+    items = build_stress_test_items(game)
+    if not items:
+        return (
+            f"🧪 {game['game_id']}_{game['chinese_name']}\n\n"
+            "game_list.md 沒有寫 NB、EX1、EX2、BF 或 SF 的押注設定，請先更新。"
+        )
+
+    completed = load_stress_progress().get(game["game_id"], {})
+    lines = [
+        f"🧪 {game['game_id']}_{game['chinese_name']}",
+        f"進度：{sum(item['key'] in completed for item in items)}/{len(items)}",
+        "",
+    ]
+    current_mode = None
+    for item in items:
+        if item["mode"] != current_mode:
+            if current_mode is not None:
+                lines.append("")
+            current_mode = item["mode"]
+            lines.append(current_mode)
+        marker = "✅" if item["key"] in completed else "⬜"
+        lines.append(f"{marker} {item['label']}（{item['range']}）")
+    return "\n".join(lines)
+
+
+def stress_report_core_passed(parsed_report: dict) -> bool:
+    summary = format_rtp_report_summary(parsed_report)
+    for label in ("Game", "Link", "Bonus"):
+        match = re.search(
+            rf"<tr><th>{label}</th>.*?<td>(✅|❌|—)</td></tr>",
+            summary,
+            flags=re.DOTALL,
+        )
+        if not match or match.group(1) != "✅":
+            return False
+    return True
+
+
+def is_stress_report_old_hand(parsed_report: dict) -> bool:
+    old_hand_init = parsed_report.get("old_hand_init", "").strip().lower()
+    if old_hand_init:
+        return old_hand_init == "enabled"
+    return any(
+        row.get("jackpot") and percent_to_float(row["jackpot"]) > 0
+        for row in parsed_report.get("scenario_rows", [])
+    )
+
+
+def update_stress_progress_from_report(parsed_report: dict) -> str | None:
+    """通過的 RTP 報表自動更新對應壓測測項，回傳更新說明。"""
+    if not stress_report_core_passed(parsed_report):
+        return None
+
+    games = {game["game_id"]: game for game in load_stress_games()}
+    game_id = parsed_report.get("machine_type", "")
+    game = games.get(game_id)
+    bet_type = extract_bet_type(parsed_report.get("extra_bet", ""))
+    mode = BET_TYPE_TO_STRESS_MODE.get(bet_type)
+    if game is None or mode is None:
+        return None
+
+    multiplier = parse_stress_multiplier(game["bets"].get(mode, ""))
+    if multiplier is None:
+        return None
+    try:
+        bet_value = Decimal(parsed_report["bet"].strip())
+    except (InvalidOperation, AttributeError):
+        return None
+
+    medium_start, large_start = get_stress_bet_boundaries(mode, multiplier)
+    if bet_value < medium_start:
+        size = "small"
+    elif bet_value < large_start:
+        size = "medium"
+    else:
+        size = "large"
+    hand = "old" if is_stress_report_old_hand(parsed_report) else "new"
+    item_key = f"{mode}:{size}:{hand}"
+    item = next((item for item in build_stress_test_items(game) if item["key"] == item_key), None)
+    if item is None:
+        return None
+
+    progress = load_stress_progress()
+    game_progress = progress.setdefault(game_id, {})
+    already_completed = item_key in game_progress
+    game_progress[item_key] = {
+        "report_id": parsed_report.get("report_id", ""),
+        "time": parsed_report.get("generated_at", ""),
+        "bet": parsed_report.get("bet", ""),
+    }
+    save_stress_progress(progress)
+    status = "已更新" if not already_completed else "已覆寫"
+    return f"✅ /stress_test {status}：{game_id}_{game['chinese_name']}｜{item['label']}"
+
+
+@require_mention_in_groups
+async def stress_test_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user is None or update.effective_user.id != ALLOWED_USER_ID:
+        await update.message.reply_text("🚫 你沒有權限使用這個指令。")
+        return
+    games = load_stress_games()
+    if not games:
+        await update.message.reply_text("找不到 game_list.md，請先更新並上傳檔案。")
+        return
+    if context.args:
+        keyword = " ".join(context.args)
+        matches = search_stress_games(games, keyword)
+        if len(matches) == 1:
+            await update.message.reply_text(
+                format_stress_test_list(matches[0]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("返回遊戲列表", callback_data="stress:page:0")]]
+                ),
+            )
+        elif matches:
+            await update.message.reply_text(
+                f"找到 {len(matches)} 個結果，請選擇：",
+                reply_markup=build_stress_search_results_keyboard(matches),
+            )
+        else:
+            await update.message.reply_text(f"找不到「{keyword}」，請確認 game_list.md 是否已更新。")
+        return
+    await update.message.reply_text(
+        "請選擇要查看的遊戲：",
+        reply_markup=build_stress_game_keyboard(games),
+    )
+
+
+async def stress_test_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if query.from_user is None or query.from_user.id != ALLOWED_USER_ID:
+        await query.answer("🚫 你沒有權限", show_alert=True)
+        return
+    await query.answer()
+    parts = (query.data or "").split(":")
+    if len(parts) != 3 or parts[0] != "stress":
+        return
+    _, action, value = parts
+    games = load_stress_games()
+    if not games:
+        await query.edit_message_text("找不到 game_list.md，請先更新並上傳檔案。")
+        return
+    if action == "page":
+        stress_test_search_state.pop(query.message.chat.id, None)
+        await query.edit_message_text(
+            "請選擇要查看的遊戲：",
+            reply_markup=build_stress_game_keyboard(games, int(value)),
+        )
+    elif action == "search":
+        await query.edit_message_text(
+            "請直接輸入 Game ID、遊戲中文／英文名稱或 ParSheet ID：",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("取消搜尋", callback_data="stress:page:0")]]
+            ),
+        )
+        stress_test_search_state[query.message.chat.id] = query.message.message_id
+    elif action == "game":
+        stress_test_search_state.pop(query.message.chat.id, None)
+        game = next((game for game in games if game["game_id"] == value), None)
+        if game is None:
+            await query.edit_message_text("game_list.md 找不到這個遊戲，請更新資料。")
+            return
+        await query.edit_message_text(
+            format_stress_test_list(game),
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("返回遊戲列表", callback_data="stress:page:0")]]
+            ),
+        )
+    elif action == "close":
+        stress_test_search_state.pop(query.message.chat.id, None)
+        await query.message.delete()
 
 
 async def document_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1409,6 +1854,8 @@ def build_help_text() -> str:
         "私訊我或在群組 @我，貼上 Formal RTP Report 文字，我會整理五個 Scenario 的 Game / Link / Bonus RTP、新手體驗與老手救援，並依容許範圍標示是否通過。\n\n"
         "🕐 *群組 3 分鐘窗口*\n"
         f"在群組裡 @我一次之後，{MENTION_WINDOW_SECONDS // 60} 分鐘內丟報表檔或貼 RTP Report 文字都會自動處理，不用每次都 @我。\n\n"
+        "🧪 *壓測清單*（僅限管理者）\n"
+        "傳送 `/stress_test` 後可從全部遊戲選擇，或直接輸入 Game ID、遊戲名稱、ParSheet ID 搜尋；通過的 Formal RTP Report 會自動更新對應壓測項目。\n\n"
         "🎰 *模擬器*（僅限管理者）\n"
         "傳送 `/simulator` 後選擇「開始模擬」；選好遊戲後，可在步驟 2 選擇單一 config 或 Batch 多組執行。跑完會自動把摘要跟報表路徑傳回來。\n"
         f"目前可用遊戲: {game_list}"
@@ -1862,6 +2309,42 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_type = update.message.chat.type
     bot_username = context.bot.username
 
+    if (
+        chat_id in stress_test_search_state
+        and update.effective_user
+        and update.effective_user.id == ALLOWED_USER_ID
+    ):
+        keyword = text.replace(f"@{bot_username}", "").strip()
+        games = load_stress_games()
+        matches = search_stress_games(games, keyword)
+        if not matches:
+            await update.message.reply_text(
+                f"找不到「{keyword}」。請重新輸入，或確認 game_list.md 是否已更新。",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("取消搜尋", callback_data="stress:page:0")]]
+                ),
+            )
+            return
+        prompt_message_id = stress_test_search_state.pop(chat_id, None)
+        if prompt_message_id is not None:
+            try:
+                await context.bot.delete_message(chat_id=chat_id, message_id=prompt_message_id)
+            except Exception as exc:
+                logger.warning("無法刪除壓測搜尋提示訊息：%s", exc)
+        if len(matches) == 1:
+            await update.message.reply_text(
+                format_stress_test_list(matches[0]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("返回遊戲列表", callback_data="stress:page:0")]]
+                ),
+            )
+        else:
+            await update.message.reply_text(
+                f"找到 {len(matches)} 個結果，請選擇：",
+                reply_markup=build_stress_search_results_keyboard(matches),
+            )
+        return
+
     # /simulator 選單正在等待使用者輸入自訂局數
     wizard_state = simulator_wizard_state.get(chat_id)
     if wizard_state and wizard_state.get("awaiting_batch") and update.effective_user and update.effective_user.id == ALLOWED_USER_ID:
@@ -1905,6 +2388,8 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if parsed_report := parse_rtp_report(clean_text):
             await send_rtp_report_summary(update.message, parsed_report)
+            if stress_update := update_stress_progress_from_report(parsed_report):
+                await update.message.reply_text(stress_update)
             return
 
         await update.message.reply_text("你好")
@@ -1914,6 +2399,8 @@ async def main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_mention_window_active(chat_id):
         if parsed_report := parse_rtp_report(text):
             await send_rtp_report_summary(update.message, parsed_report)
+            if stress_update := update_stress_progress_from_report(parsed_report):
+                await update.message.reply_text(stress_update)
 
 
 async def post_init(application: Application) -> None:
@@ -1922,6 +2409,7 @@ async def post_init(application: Application) -> None:
         [
             BotCommand("help", "顯示機器人有哪些功能"),
             BotCommand("simulator", "開啟模擬器選單（按鈕操作）"),
+            BotCommand("stress_test", "查看遊戲壓測項目與完成進度"),
         ]
     )
 
@@ -1940,7 +2428,9 @@ if __name__ == "__main__":
     app = Application.builder().token(TG_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(CommandHandler("simulator", simulator_menu_cmd))
+    app.add_handler(CommandHandler("stress_test", stress_test_cmd))
     app.add_handler(CallbackQueryHandler(simulator_callback, pattern=r"^sim:"))
+    app.add_handler(CallbackQueryHandler(stress_test_callback, pattern=r"^stress:"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, main_handler))
     app.add_handler(MessageHandler(filters.Document.ALL, document_handler))
     app.add_error_handler(on_error)

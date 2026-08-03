@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H902 Super Bang Bang — Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #040e1a;
+      --panel:   #071528;
+      --surface: #0c2240;
+      --text:    #b0d4f0;
+      --sub:     #5a88aa;
+      --gold:    #00ddc0;
+      --red:     #ff5f8a;
+      --green:   #33ff99;
+      --blue:    #33bbff;
+      --mauve:   #b06aff;
+      --cell:    80px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 12px; gap: 10px;
+    }
+    body.fg-mode { background: #020d16; }
+
+    /* ── Feature Bar ── */
+    #feature-bar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      background: var(--panel); padding: 8px 16px;
+      border-radius: 8px; width: 100%; max-width: 920px;
+    }
+    #game-title { font-size: 13px; font-weight: 700; color: var(--sub); letter-spacing: .5px; margin-right: 6px; }
+    #game-title span { color: var(--text); }
+    #modeLabel { font-size: 12px; color: var(--sub); }
+    #featureStatus { display: none; }
+    .feat-pill {
+      padding: 4px 14px; border-radius: 20px;
+      background: var(--surface); font-weight: 700; font-size: 13px; user-select: none;
+    }
+    .feat-pill.hidden { display: none; }
+    #feat-cascade-pill { color: var(--red); }
+    #feat-mult-pill    { color: var(--blue); }
+    #fgPill            { color: var(--gold); }
+
+    /* ── Strip Bar ── */
+    #strip-bar { width: 100%; max-width: 920px; }
+    .multi-strip-outer {
+      overflow: hidden; position: relative; height: 52px;
+      background: var(--panel); border-radius: 8px;
+      border: 1px solid var(--surface);
+    }
+    .multi-strip-outer::before, .multi-strip-outer::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 30%; z-index: 3; pointer-events: none;
+    }
+    .multi-strip-outer::before { left: 0; background: linear-gradient(to right, var(--panel), transparent); }
+    .multi-strip-outer::after  { right: 0; background: linear-gradient(to left,  var(--panel), transparent); }
+    .multi-strip-track { display: flex; align-items: center; position: absolute; top: 0; height: 100%; }
+    .multi-strip-cell {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; height: 100%;
+      font-weight: 700; font-size: 13px; color: var(--sub); letter-spacing: .5px;
+    }
+    .multi-strip-cell.active {
+      font-size: 1.4rem; font-weight: 900; color: var(--gold);
+      text-shadow: 0 0 12px rgba(0,221,192,0.65);
+    }
+
+    /* ── App Shell ── */
+    #app-shell { display: flex; gap: 12px; width: 100%; max-width: 920px; }
+
+    /* ── Grid Panel ── */
+    #grid-panel {
+      background: var(--panel); border-radius: 10px; padding: 10px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    #board { display: grid; grid-template-columns: repeat(5, var(--cell)); gap: 4px; }
+    #msgBar {
+      width: 100%; padding: 6px 10px; border-radius: 6px;
+      background: var(--surface); color: var(--sub);
+      font-size: 12px; font-family: 'Consolas', monospace;
+      text-align: center; min-height: 30px;
+    }
+
+    /* ── Cell ── */
+    .cell {
+      width: var(--cell); height: var(--cell); border-radius: 8px;
+      border: 2px solid transparent; background: #060d1a;
+      overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      user-select: none;
+      transition: border-color .15s, filter .15s, transform .15s;
+    }
+    .cell.gold    { border-color: rgba(255,217,92,0.75); }
+    .cell.wild    { border-color: rgba(0,221,192,0.8); }
+    .cell.scatter { border-color: rgba(255,230,80,0.8); }
+    .cell.hit     { border-color: var(--gold); box-shadow: 0 0 14px rgba(0,221,192,0.45); transform: scale(1.04); filter: brightness(1.15); }
+    .cell.convert { border-color: var(--green); box-shadow: 0 0 12px rgba(51,255,153,0.4); }
+    .cell.empty   { opacity: 0.18; }
+    .cell.spin-anim { animation: cellSpin 120ms ease-in-out infinite alternate; }
+    .sym-label { font-size: 1.6rem; font-weight: 900; text-align: center; line-height: 1; z-index: 1; }
+    .sym-sub   { font-size: 1rem;   font-weight: 800; color: rgba(255,220,100,0.9); margin-top: 2px; z-index: 1; }
+    @keyframes cellSpin { from { transform: scaleY(0.7); } to { transform: scaleY(1.0); } }
+    @keyframes reelDrop { from { transform: translateY(-90px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes reelExit { from { transform: translateY(0); opacity: 1; } to { transform: translateY(90px); opacity: 0; } }
+
+    /* ── Right Panel ── */
+    #right-panel { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
+    .info-box { background: var(--panel); border-radius: 10px; padding: 10px 14px; }
+    .info-box h3 {
+      font-size: 11px; color: var(--sub); margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .info-row {
+      display: flex; align-items: center; padding: 5px 0;
+      border-bottom: 1px solid var(--surface); gap: 8px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .i-label { color: var(--sub); font-size: 13px; flex: 1; }
+    .info-row .i-value { font-weight: 700; font-size: 14px; color: var(--text); min-width: 60px; text-align: right; }
+    .i-value.hi { color: var(--gold); }
+    .line-list, .rng-list { margin-top: 4px; }
+    .line-row, .rng-row {
+      display: flex; justify-content: space-between; padding: 3px 6px;
+      border-radius: 4px; background: var(--surface); font-size: 12px; margin-bottom: 3px;
+    }
+
+    /* ── Controls ── */
+    #controls {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      background: var(--panel); padding: 10px 14px;
+      border-radius: 10px; width: 100%; max-width: 920px;
+    }
+    button {
+      padding: 8px 18px; border: none; border-radius: 6px;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: opacity .15s; white-space: nowrap;
+    }
+    button:disabled { opacity: .4; cursor: default; }
+    button:not(:disabled):hover { opacity: .85; }
+    #spinBtn  { background: #0077cc; color: #fff; padding: 8px 28px; }
+    #autoBtn  { background: #007755; color: #fff; }
+    #turboBtn { background: var(--mauve); color: #fff; }
+    #betBtn   { background: var(--surface); color: var(--text); }
+    #buyBtn   { background: var(--surface); color: var(--gold); border: 1px solid rgba(0,221,192,0.4); font-size: 13px; }
+    #buyBtn:not(:disabled):hover { background: rgba(0,221,192,0.08); opacity: 1; }
+    #resetBtn { background: #2a3050; color: var(--sub); }
+    #autoBtn.is-active  { background: var(--green); color: #1e1e2e; }
+    #turboBtn.is-active { background: var(--gold);  color: #1e1e2e; }
+    .ctrl-sep { width: 1px; height: 28px; background: var(--surface); margin: 0 2px; }
+
+    /* ── Stats Bar ── */
+    #stats-bar {
+      display: flex; gap: 2px; background: var(--panel);
+      border-radius: 10px; overflow: hidden; width: 100%; max-width: 920px;
+    }
+    .stat-cell { flex: 1; padding: 8px 10px; text-align: center; border-right: 1px solid var(--surface); }
+    .stat-cell:last-child { border-right: none; }
+    .stat-cell .s-label { font-size: 11px; color: var(--sub); display: block; }
+    .stat-cell .s-value { font-size: 15px; font-weight: 700; color: var(--text); }
+    .stat-cell .s-value.hi { color: var(--gold); }
+
+    /* ── Log / Spin Result ── */
+    #log-wrap { background: var(--panel); border-radius: 10px; width: 100%; max-width: 920px; overflow: hidden; }
+    #log-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 12px; border-bottom: 1px solid var(--surface);
+      color: var(--sub); font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
+    }
+    #log-body { max-height: 200px; overflow-y: auto; padding: 6px 12px; scrollbar-width: thin; }
+    .spin-result-row { padding: 5px 4px; border-bottom: 1px solid var(--surface); font-size: 12px; }
+    .spin-result-row:last-child { border-bottom: none; }
+    .spin-result-head { display: flex; justify-content: space-between; color: var(--gold); margin-bottom: 3px; }
+    .spin-result-board {
+      margin: 0; white-space: pre-wrap; word-break: break-word;
+      font-family: 'Consolas', monospace; font-size: 11px; color: var(--text); line-height: 1.4;
+    }
+    .footer-note { color: var(--sub); font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<!-- Feature Bar -->
+<div id="feature-bar">
+  <span id="game-title">H902 <span>Super Bang Bang</span></span>
+  <span id="modeLabel"></span>
+  <span id="featureStatus"></span>
+  <span class="feat-pill" id="feat-cascade-pill">Cascade <span id="cascadeValue">0</span></span>
+  <span class="feat-pill" id="feat-mult-pill">Mult <span id="cumulMultValue">—</span></span>
+  <span class="feat-pill hidden" id="fgPill">FG Left <span id="fgLeftValue">0</span></span>
+</div>
+
+<!-- Multiplier Strip -->
+<div id="strip-bar">
+  <div class="multi-strip-outer" id="multiOuter">
+    <div class="multi-strip-track" id="multiTrack">
+      <div class="multi-strip-cell" id="mc0"></div>
+      <div class="multi-strip-cell" id="mc1"></div>
+      <div class="multi-strip-cell" id="mc2"></div>
+      <div class="multi-strip-cell active" id="mc3"></div>
+      <div class="multi-strip-cell" id="mc4"></div>
+      <div class="multi-strip-cell" id="mc5"></div>
+      <div class="multi-strip-cell" id="mc6"></div>
+    </div>
+  </div>
+</div>
+
+<!-- App Shell -->
+<div id="app-shell">
+
+  <!-- Grid Panel -->
+  <div id="grid-panel">
+    <div id="board"></div>
+    <div id="msgBar">Ready — press Spin</div>
+  </div>
+
+  <!-- Right Panel -->
+  <div id="right-panel">
+
+    <div class="info-box">
+      <h3>本局資訊</h3>
+      <div class="info-row"><span class="i-label">Win</span><span class="i-value hi" id="winVal">0</span></div>
+      <div class="info-row"><span class="i-label">Balance</span><span class="i-value" id="balVal">100,000</span></div>
+      <div class="info-row"><span class="i-label">Bet</span><span class="i-value" id="betVal">10</span></div>
+    </div>
+
+    <div class="info-box">
+      <h3>Ways Wins</h3>
+      <div class="line-list" id="lineList"></div>
+    </div>
+
+    <div class="info-box">
+      <h3>RNG Info</h3>
+      <div class="rng-list" id="rngList"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <button id="spinBtn">▶ SPIN</button>
+  <button id="autoBtn">⚡ AUTO</button>
+  <button id="turboBtn">TURBO</button>
+  <div class="ctrl-sep"></div>
+  <button id="betBtn">BET</button>
+  <button id="buyBtn">BUY FEATURE (100×)</button>
+  <div class="ctrl-sep"></div>
+  <button id="resetBtn">↺ RESET</button>
+  <button id="noop1" style="display:none" disabled></button>
+</div>
+
+<!-- Stats Bar -->
+<div id="stats-bar">
+  <div class="stat-cell"><span class="s-label">RTP</span><span class="s-value" id="rtpVal">—</span></div>
+  <div class="stat-cell"><span class="s-label">Hit Rate</span><span class="s-value" id="hitVal">—</span></div>
+  <div class="stat-cell"><span class="s-label">FG Triggers</span><span class="s-value hi" id="fgTrigVal">0</span></div>
+</div>
+
+<!-- Spin Result Log -->
+<div id="log-wrap">
+  <div id="log-header"><span>Spin Result</span></div>
+  <div id="log-body"><div class="spin-result-list" id="resultList"></div></div>
+</div>
+
+<div class="footer-note">Double-click to play offline. No server needed.</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const COLS = 5, ROWS = 4;
+const SCATTER_MIN = 3, FG_INIT = 10, FG_RETRIG = 5;
+const BUY_MULT = 100, MAX_WIN_MULT = 1024;
+const BET_OPTIONS = [1,2,5,10,20,50,100,200,500,1000];
+
+// Symbol IDs
+const S = { WW:0, SC:1, ACE:2, K:3, Q:4, J:5, SP:6, HT:7, DM:8, CL:9, GC:10 };
+const SYMS = [
+  {id:0, code:'WW',  label:'Wild',    bg:'rgba(40,120,50,0.7)',   color:'#7fff7f'},
+  {id:1, code:'SC',  label:'★',       bg:'rgba(120,100,0,0.7)',   color:'#ffdd55'},
+  {id:2, code:'ACE', label:'ACE',     bg:'rgba(100,60,0,0.7)',    color:'#ffd700'},
+  {id:3, code:'K',   label:'K',       bg:'rgba(80,50,0,0.7)',     color:'#ffbe76'},
+  {id:4, code:'Q',   label:'Q',       bg:'rgba(80,20,20,0.7)',    color:'#ff7675'},
+  {id:5, code:'J',   label:'J',       bg:'rgba(40,20,80,0.7)',    color:'#a29bfe'},
+  {id:6, code:'♠',   label:'♠',       bg:'rgba(20,40,80,0.7)',    color:'#74b9ff'},
+  {id:7, code:'♥',   label:'♥',       bg:'rgba(80,20,50,0.7)',    color:'#fd79a8'},
+  {id:8, code:'♦',   label:'♦',       bg:'rgba(20,70,70,0.7)',    color:'#81ecec'},
+  {id:9, code:'♣',   label:'♣',       bg:'rgba(20,60,40,0.7)',    color:'#55efc4'},
+  {id:10,code:'GC',  label:'Gold',    bg:'rgba(100,70,0,0.7)',    color:'#fdcb6e'},
+];
+const PAY = {
+  2:[0.5,1.5,2.5], 3:[0.4,1.2,2.0], 4:[0.3,0.9,1.5], 5:[0.2,0.6,1.0],
+  6:[0.1,0.3,0.5], 7:[0.1,0.3,0.5], 8:[0.05,0.15,0.25], 9:[0.05,0.15,0.25],
+};
+const SCORE_IDS = [2,3,4,5,6,7,8,9];
+const MULTI_STRIP = [
+   1,  5,  2, 10,  1,  3, 25,  2,  1, 15,
+   3,  5,  2,100,  1,  3, 10,  2,  5, 20,
+   1, 15,  3, 50,  2, 10,  1,500,  5, 25,
+   3,  2, 20,  1,  5, 10,  2,  1, 25,  3
+];
+// Symbol weights per column: [WW,SC,ACE,K,Q,J,SP,HT,DM,CL,GC]
+const W_NORMAL = [3,2,8,8,10,10,13,13,16,16,0];
+const W_GOLD   = [3,2,7,7, 9, 9,12,12,15,15,5];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const st = {
+  balance: 100000, totalBet:0, totalWin:0,
+  totalSpins:0, hitSpins:0, fgTriggers:0, roundCount:0,
+  betIdx:3, autoOn:false, turboOn:false, busy:false,
+  pendingRound:null, pendingSpinIdx:0, displayWin:0, autoTimer:null,
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const ri = n => Math.floor(Math.random() * n);
+const cloneBoard = b => b.map(row => row.map(c => ({...c})));
+const fmt = n => Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtI = n => Math.round(n).toLocaleString('en-US');
+const getBet = () => BET_OPTIONS[st.betIdx];
+const delay = ms => new Promise(r => setTimeout(r, st.turboOn ? Math.max(16,ms>>2) : ms));
+
+function pickW(weights) {
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total;
+  for(let i=0;i<weights.length;i++){ r-=weights[i]; if(r<=0) return i; }
+  return weights.length-1;
+}
+function randSymbol(col) {
+  const w = (col>=1&&col<=3) ? W_GOLD : W_NORMAL;
+  const symOrder = [S.WW,S.SC,S.ACE,S.K,S.Q,S.J,S.SP,S.HT,S.DM,S.CL,S.GC];
+  return symOrder[pickW(w)];
+}
+function makeCell(sym, base=null) {
+  const b = base !== null ? base : (sym===S.GC ? SCORE_IDS[ri(SCORE_IDS.length)] : sym);
+  return { sym, base:b, isGold:sym===S.GC, isWild:sym===S.WW, isScat:sym===S.SC, isEmpty:false };
+}
+function genBoard() {
+  return Array.from({length:ROWS}, (_,row) =>
+    Array.from({length:COLS}, (_,col) => makeCell(randSymbol(col)))
+  );
+}
+function randStripIdx() { return Math.floor(Math.random()*MULTI_STRIP.length); }
+
+// ─── 1024 WAYS EVALUATION ─────────────────────────────────────────────────────
+function evalWays(board) {
+  const wins = [];
+  for(const sym of SCORE_IDS) {
+    // Count per reel: positions matching sym OR Wild
+    const counts = Array.from({length:COLS}, (_,col) => {
+      let n=0;
+      for(let row=0;row<ROWS;row++) {
+        const c=board[row][col];
+        if(!c.isEmpty && (c.base===sym || c.sym===S.WW)) n++;
+      }
+      return n;
+    });
+    let ways=1, len=0;
+    for(let col=0;col<COLS;col++) {
+      if(counts[col]===0) break;
+      ways*=counts[col]; len++;
+    }
+    if(len>=3) {
+      const base=PAY[sym][len-3];
+      wins.push({sym, len, ways, base, raw:base*ways});
+    }
+  }
+  return wins;
+}
+
+// Build hit mask: mark all cells contributing to at least one win
+function buildHitMask(board, wins) {
+  const hit = Array.from({length:ROWS},()=>Array(COLS).fill(false));
+  for(const w of wins) {
+    for(let col=0;col<w.len;col++) {
+      for(let row=0;row<ROWS;row++) {
+        const c=board[row][col];
+        if(!c.isEmpty && (c.base===w.sym || c.sym===S.WW)) hit[row][col]=true;
+      }
+    }
+  }
+  return hit;
+}
+
+// Count scatters on board
+function countScatter(board) {
+  let n=0;
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(!board[r][c].isEmpty&&board[r][c].isScat) n++;
+  return n;
+}
+
+// ─── CASCADE LOGIC ────────────────────────────────────────────────────────────
+// Process one cascade step: convert GC→Wild, eliminate hits, apply Joker, drop, fill
+function cascade(board, hit) {
+  const converts = []; // {row,col} GC→Wild positions
+  // 1. Convert hit Golden Cards to Wild
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
+    if(hit[r][c] && board[r][c].isGold) {
+      board[r][c] = makeCell(S.WW);
+      converts.push({row:r,col:c});
+    }
+  }
+  // 2. Joker effect: if any GC converted, decide Big/Little Joker
+  if(converts.length>0) {
+    const bigJoker = Math.random()<0.5;
+    if(bigJoker) {
+      // Big Joker: randomly replace 1-4 non-SC/non-WW in cols 1-4 (R2-R5)
+      const candidates=[];
+      for(let r=0;r<ROWS;r++) for(let c=1;c<COLS;c++) {
+        const cell=board[r][c];
+        if(!cell.isEmpty&&!cell.isWild&&!cell.isScat&&!hit[r][c]) candidates.push({r,c});
+      }
+      const count=1+ri(Math.min(4,candidates.length));
+      for(let i=0;i<count&&candidates.length;i++) {
+        const pick=ri(candidates.length);
+        const {r,c}=candidates.splice(pick,1)[0];
+        board[r][c]=makeCell(S.WW);
+        hit[r][c]=true; // mark as hit so they get removed next? 
+        // Actually Big Joker Wilds stay - they converted, not eliminated
+        hit[r][c]=false; // they stay on board as Wilds
+        board[r][c].isNewJoker=true;
+      }
+    }
+    // Little Joker: only the converted positions become Wild (already done)
+  }
+  // 3. Eliminate non-Wild hit cells (set isEmpty)
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
+    if(hit[r][c] && !board[r][c].isWild) board[r][c].isEmpty=true;
+  }
+  // 4. Drop: per column, compact non-empty to bottom, fill top with new
+  for(let c=0;c<COLS;c++) {
+    const keep=[];
+    for(let r=ROWS-1;r>=0;r--) { if(!board[r][c].isEmpty) keep.push(board[r][c]); }
+    for(let r=ROWS-1;r>=0;r--) {
+      if(keep.length>0) board[r][c]=keep.shift();
+      else board[r][c]=makeCell(randSymbol(c));
+    }
+  }
+  return converts;
+}
+
+// ─── SPIN ─────────────────────────────────────────────────────────────────────
+function runSpin(mode, stripStartIdx=0) {
+  // mode: 'BG' | 'FG'
+  const board = genBoard();
+  let cumulSum = 0;  // accumulates strip values as cascades happen
+
+  let totalRaw = 0;
+  let cascadeCount = 0;
+  const steps = [];
+  const allWins = [];
+  let scatterCount = countScatter(board);
+  const initBoard = cloneBoard(board);
+
+  while(true) {
+    const wins = evalWays(board);
+    if(!wins.length) break;
+    const rawSum = wins.reduce((s,w)=>s+w.raw, 0);
+    const stripVal = MULTI_STRIP[(stripStartIdx + cascadeCount) % MULTI_STRIP.length];
+    cumulSum += stripVal;
+    const pay = rawSum * cumulSum;
+    totalRaw += pay;
+    allWins.push(...wins.map(w=>({...w, mult:cumulSum, stripVal, pay:w.raw*cumulSum, cascade:cascadeCount+1})));
+
+    const hit = buildHitMask(board, wins);
+    const boardBefore = cloneBoard(board);
+    const converts = cascade(board, hit);
+    cascadeCount++;
+
+    // Check scatter after drop (for retrigger in FG)
+    const newScat = countScatter(board);
+    if(newScat>scatterCount) scatterCount=newScat;
+
+    steps.push({
+      cascadeIdx: cascadeCount,
+      boardBefore,
+      boardAfter: cloneBoard(board),
+      wins, rawSum, mult:cumulSum, stripVal, pay, converts
+    });
+
+    if(totalRaw >= getBet()*MAX_WIN_MULT) break;
+  }
+
+  return { mode, board:cloneBoard(board), initBoard, steps, allWins, totalRaw, cascadeCount, scatterCount, stripStartIdx };
+}
+
+// ─── ROUND ────────────────────────────────────────────────────────────────────
+function runRound(isBuy=false) {
+  const bet = getBet();
+  const coinIn = isBuy ? bet*BUY_MULT : bet;
+  if(st.balance<coinIn) throw new Error('Balance insufficient');
+
+  st.balance -= coinIn;
+  st.totalBet += coinIn;
+
+  const spins=[];
+  const base = runSpin('BG', randStripIdx());
+  base.spinIdx=1; base.isTrigger=false;
+  spins.push(base);
+  st.totalSpins++;
+  if(base.totalRaw>0) st.hitSpins++;
+
+  let fgRemain = (base.scatterCount>=SCATTER_MIN||isBuy) ? FG_INIT : 0;
+  if(fgRemain>0) st.fgTriggers++;
+
+  while(fgRemain>0) {
+    const fg = runSpin('FG', randStripIdx());
+    fg.spinIdx = spins.length+1;
+    fg.remainBefore = fgRemain;
+    fgRemain--;
+    if(fg.scatterCount>=SCATTER_MIN) { fgRemain+=FG_RETRIG; fg.retrigger=FG_RETRIG; }
+    fg.remainAfter = fgRemain;
+    spins.push(fg);
+    st.totalSpins++;
+    if(fg.totalRaw>0) st.hitSpins++;
+  }
+
+  const totalWin = spins.reduce((s,sp)=>s+sp.totalRaw,0);
+  st.balance += totalWin;
+  st.totalWin += totalWin;
+  st.roundCount++;
+
+  return { bet, coinIn, spins, totalWin, isBuy };
+}
+
+// ─── RENDERING ───────────────────────────────────────────────────────────────
+const boardEl = document.getElementById('board');
+const msgEl   = document.getElementById('msgBar');
+const modeLbl = document.getElementById('modeLabel');
+const featSt  = document.getElementById('featureStatus');
+const cascEl     = document.getElementById('cascadeValue');
+const cumulMultEl= document.getElementById('cumulMultValue');
+const fgPill  = document.getElementById('fgPill');
+const fgLeftEl= document.getElementById('fgLeftValue');
+const balEl   = document.getElementById('balVal');
+const betEl   = document.getElementById('betVal');
+const winEl   = document.getElementById('winVal');
+const rtpEl   = document.getElementById('rtpVal');
+const hitEl   = document.getElementById('hitVal');
+const fgTrigEl= document.getElementById('fgTrigVal');
+const lineEl  = document.getElementById('lineList');
+const rngEl   = document.getElementById('rngList');
+const resEl   = document.getElementById('resultList');
+const spinBtn = document.getElementById('spinBtn');
+const betBtn  = document.getElementById('betBtn');
+const buyBtn  = document.getElementById('buyBtn');
+const autoBtn = document.getElementById('autoBtn');
+const turboBtn= document.getElementById('turboBtn');
+const resetBtn= document.getElementById('resetBtn');
+
+function renderCell(cell, opts={}) {
+  const info = SYMS[cell.sym] || SYMS[0];
+  const el = document.createElement('div');
+  const cls = ['cell'];
+  if(cell.isGold) cls.push('gold');
+  if(cell.isWild) cls.push('wild');
+  if(cell.isScat) cls.push('scatter');
+  if(cell.isEmpty) cls.push('empty');
+  if(opts.hit) cls.push('hit');
+  if(opts.convert) cls.push('convert');
+  if(opts.spin) cls.push('spin-anim');
+  el.className = cls.join(' ');
+  el.style.background = cell.isEmpty ? '' : info.bg;
+  const lbl = document.createElement('div');
+  lbl.className='sym-label';
+  lbl.style.color = info.color;
+  lbl.textContent = cell.isEmpty ? '' : info.label;
+  el.appendChild(lbl);
+  if(cell.isGold) {
+    const sub=document.createElement('div');
+    sub.className='sym-sub';
+    sub.textContent='Gold';
+    el.appendChild(sub);
+  }
+  return el;
+}
+
+function renderBoard(board, hitMask=null, convertSet=null, spinning=false, slideIn=false) {
+  boardEl.innerHTML='';
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
+    const cell=board[r][c];
+    const isHit = hitMask&&hitMask[r][c];
+    const isCvt = convertSet&&convertSet.some(x=>x.row===r&&x.col===c);
+    const el=renderCell(cell,{hit:isHit,convert:isCvt,spin:spinning});
+    if(slideIn) {
+      const dur=st.turboOn?150:360;
+      const stagger=st.turboOn?35:90;
+      el.style.animation=`reelDrop ${dur}ms cubic-bezier(0.22,0.85,0.30,1.05) ${c*stagger}ms both`;
+    }
+    boardEl.appendChild(el);
+  }
+}
+
+function randomBoard() {
+  return Array.from({length:ROWS},()=>Array.from({length:COLS},(_,c)=>makeCell(randSymbol(c))));
+}
+
+function updateCards(win=null) {
+  balEl.textContent = fmtI(st.balance);
+  betEl.textContent = fmtI(getBet());
+  winEl.textContent = win!==null ? fmtI(win) : fmtI(st.displayWin);
+  if(st.totalBet>0) rtpEl.textContent=(st.totalWin/st.totalBet*100).toFixed(1)+'%';
+  if(st.totalSpins>0) hitEl.textContent=(st.hitSpins/st.totalSpins*100).toFixed(1)+'%';
+  fgTrigEl.textContent = st.fgTriggers;
+}
+
+function updateFeatureBar(spin=null, fgLeft=null) {
+  if(!spin) {
+    modeLbl.textContent=''; featSt.textContent='';
+    cascEl.textContent='0'; cumulMultEl.textContent='—';
+    fgPill.classList.add('hidden');
+    document.body.classList.remove('fg-mode');
+    return;
+  }
+  const isFG = spin.mode==='FG';
+  modeLbl.textContent = '';
+  cascEl.textContent = spin.cascadeCount;
+  if(isFG&&fgLeft!=null) {
+    fgPill.classList.remove('hidden');
+    fgLeftEl.textContent = fgLeft;
+  } else {
+    fgPill.classList.add('hidden');
+  }
+  document.body.classList.toggle('fg-mode', isFG);
+}
+
+function renderWaysList(wins) {
+  lineEl.innerHTML='';
+  if(!wins||!wins.length) {
+    lineEl.innerHTML='<div class="line-row"><span>No win</span><span>0</span></div>'; return;
+  }
+  wins.slice(0,10).forEach(w=>{
+    const info=SYMS[w.sym]||SYMS[0];
+    const row=document.createElement('div'); row.className='line-row';
+    row.innerHTML=`<span style="color:${info.color}">${info.label} × ${w.len}R × ${w.ways}W | C${w.cascade} ×${w.mult}</span><span>${fmt(w.pay)}</span>`;
+    lineEl.appendChild(row);
+  });
+}
+
+function renderRngList(spin) {
+  rngEl.innerHTML='';
+  if(!spin) return;
+  const rows=[
+    {l:'Mode', r:spin.mode},
+    {l:'Strip Start', r:'pos '+spin.stripStartIdx+' (×'+MULTI_STRIP[spin.stripStartIdx]+')'},
+    {l:'Cascades', r:spin.cascadeCount},
+    {l:'Scatter', r:spin.scatterCount},
+    {l:'Total Win', r:fmt(spin.totalRaw)},
+  ];
+  rows.forEach(({l,r})=>{
+    const el=document.createElement('div'); el.className='rng-row';
+    el.innerHTML=`<span>${l}</span><span>${r}</span>`; rngEl.appendChild(el);
+  });
+}
+
+function boardToText(board) {
+  return board.map(row=>row.map(c=>(c.isEmpty?'--':SYMS[c.sym].code).padEnd(3)).join(' ')).join('\n');
+}
+
+function renderResultList(spin) {
+  resEl.innerHTML='';
+  if(!spin) { resEl.innerHTML='<div class="spin-result-row"><div class="spin-result-head"><span>—</span></div></div>'; return; }
+  const stages=[{label:'Init', board:spin.initBoard, meta:spin.mode+' | strip ×'+MULTI_STRIP[spin.stripStartIdx]}];
+  spin.steps.forEach(s=>stages.push({
+    label:`Cascade ${s.cascadeIdx}`,
+    board:s.boardAfter,
+    meta:`Raw ${fmt(s.rawSum)} × ${s.mult} = ${fmt(s.pay)}`
+  }));
+  stages.forEach(st=>{
+    const row=document.createElement('div'); row.className='spin-result-row';
+    row.innerHTML=`<div class="spin-result-head"><span>${st.label}</span><span>${st.meta}</span></div><pre class="spin-result-board">${boardToText(st.board)}</pre>`;
+    resEl.appendChild(row);
+  });
+}
+
+// ─── PLAYBACK ────────────────────────────────────────────────────────────────
+async function animateSpin() {
+  // board stays visible while strip spins — transition handled in playSpin
+}
+
+async function playSpin(spin, fgLeft=null) {
+  updateFeatureBar(spin, fgLeft);
+  // 1. 輪帶先滾停
+  cascEl.textContent='0'; cumulMultEl.textContent='—';
+  msgEl.textContent=`${spin.mode} Spin ${spin.spinIdx} | Rolling strip...`;
+  // 2. 倍數區與符號區同時開始；符號先滑出，倍數滾完後新符號補入
+  {
+    const oldCells = Array.from(boardEl.children);
+    if(oldCells.length) {
+      const dur = st.turboOn ? 110 : 200;
+      const stagger = st.turboOn ? 25 : 50;
+      oldCells.forEach((el, idx) => {
+        el.style.animation = `reelExit ${dur}ms ease-in ${(idx%COLS)*stagger}ms both`;
+      });
+    }
+    // 與符號退場同時滾 strip，strip 較慢所以後停
+    await spinTrackAnim(spin.stripStartIdx);
+    await delay(200);
+    renderBoard(spin.initBoard, null, null, false, true);
+    await delay(st.turboOn ? 220 : 560);
+  }
+  renderResultList(spin);
+  renderWaysList([]);
+  renderRngList(spin);
+  msgEl.textContent=`${spin.mode} Spin ${spin.spinIdx} | Strip start: ×${MULTI_STRIP[spin.stripStartIdx]}`;
+  await delay(300);
+
+  for(const step of spin.steps) {
+    const hit=buildHitMask(step.boardBefore, step.wins);
+    const cvtSet=step.converts.map(c=>({row:c.row,col:c.col}));
+    renderBoard(step.boardBefore, hit, cvtSet);
+    renderWaysList(spin.allWins.filter(w=>w.cascade===step.cascadeIdx));
+    cascEl.textContent = step.cascadeIdx;
+    cumulMultEl.textContent = '×'+step.mult;
+    msgEl.textContent=`Cascade ${step.cascadeIdx} | ×${step.stripVal}→Σ×${step.mult} | +${fmt(step.pay)}`;
+    await stepTrackForward();
+    await delay(200);
+    renderBoard(step.boardAfter);
+    await delay(240);
+  }
+  renderBoard(spin.board);
+  renderResultList(spin);
+  renderRngList(spin);
+  renderWaysList(spin.allWins);
+  msgEl.textContent=`${spin.mode} Spin ${spin.spinIdx} done | Win ${fmt(spin.totalRaw)}`;
+  st.displayWin = spin.totalRaw;
+  updateCards();
+}
+
+// ─── MAIN SPIN HANDLER ───────────────────────────────────────────────────────
+async function doSpin(isBuy=false) {
+  if(st.busy) return;
+  st.busy=true;
+  spinBtn.disabled=true; buyBtn.disabled=true; betBtn.disabled=true;
+
+  try {
+    if(st.pendingRound && st.pendingSpinIdx<st.pendingRound.spins.length) {
+      const round=st.pendingRound;
+      const spin=round.spins[st.pendingSpinIdx];
+      const fgLeft=spin.remainAfter!=null?spin.remainAfter:0;
+      msgEl.textContent=`FG Spin ${spin.spinIdx} rolling...`;
+      await animateSpin();
+      await playSpin(spin, fgLeft);
+      st.pendingSpinIdx++;
+      if(st.pendingSpinIdx>=round.spins.length) {
+        st.pendingRound=null;
+        msgEl.textContent=`Round done | Total Win ${fmt(round.totalWin)}`;
+        st.displayWin=round.totalWin;
+        updateCards();
+        updateFeatureBar(null);
+        document.body.classList.remove('fg-mode');
+      } else {
+        const next=round.spins[st.pendingSpinIdx];
+        msgEl.textContent=`FG ready | ${next.remainBefore} spins left — press Spin`;
+      }
+    } else {
+      msgEl.textContent='Spinning...';
+      await animateSpin();
+      const round=runRound(isBuy);
+      st.displayWin=0;
+      updateCards(0);
+      await playSpin(round.spins[0]);
+      updateCards(round.spins[0].totalRaw);
+      if(round.spins.length>1) {
+        st.pendingRound=round; st.pendingSpinIdx=1;
+        msgEl.textContent=`${isBuy?'Buy Feature':'Scatter'} → FG x${FG_INIT} | press Spin`;
+      } else {
+        st.pendingRound=null; st.pendingSpinIdx=0;
+        st.displayWin=round.totalWin;
+        updateCards(round.totalWin);
+      }
+    }
+  } catch(e) {
+    st.autoOn=false; clearTimeout(st.autoTimer);
+    msgEl.textContent=e.message;
+  } finally {
+    st.busy=false;
+    spinBtn.disabled=false; buyBtn.disabled=false;
+    betBtn.disabled=!!st.pendingRound;
+    spinBtn.textContent=st.pendingRound?'Next FG':'Spin';
+    autoBtn.classList.toggle('is-active',st.autoOn);
+    if(st.autoOn&&!st.pendingRound) {
+      clearTimeout(st.autoTimer);
+      st.autoTimer=setTimeout(()=>doSpin(false), st.turboOn?120:600);
+    }
+  }
+}
+
+
+// ─── MULTI STRIP TRACK ───────────────────────────────────────────────────────
+let trackCenter = 0;
+const mOuter  = document.getElementById('multiOuter');
+const mTrack  = document.getElementById('multiTrack');
+const mCells  = [0,1,2,3,4,5,6].map(i=>document.getElementById('mc'+i));
+// 7 cells total; show 5 at once (mc1–mc5 visible, mc0/mc6 are buffer)
+// active cell = mc3 (center of visible 5)
+
+function initTrack() {
+  const cw = mOuter.offsetWidth / 5;
+  mCells.forEach(c=>{ c.style.width=cw+'px'; });
+  mTrack.style.width=(cw*7)+'px';
+  mTrack.style.transition='none';
+  mTrack.style.left=(-cw)+'px';
+  setTrackContent(0);
+}
+
+function setTrackContent(ci) {
+  const n=MULTI_STRIP.length;
+  ci=((ci%n)+n)%n; trackCenter=ci;
+  // offset: mc0=ci-3, mc1=ci-2, mc2=ci-1, mc3=ci, mc4=ci+1, mc5=ci+2, mc6=ci+3
+  const ids=[-3,-2,-1,0,1,2,3].map(o=>((ci+o)%n+n)%n);
+  mCells.forEach((c,i)=>{ c.textContent='×'+MULTI_STRIP[ids[i]]; c.classList.toggle('active',i===3); });
+}
+
+async function spinTrackAnim(targetIdx) {
+  const n=MULTI_STRIP.length;
+  const frames=st.turboOn?4:16; const ms=st.turboOn?30:48;
+  for(let i=0;i<frames;i++){ setTrackContent(Math.floor(Math.random()*n)); await delay(ms); }
+  setTrackContent(targetIdx);
+}
+
+async function stepTrackForward() {
+  const cw=mOuter.offsetWidth/5;
+  const n=MULTI_STRIP.length;
+  const newIdx=(trackCenter+1)%n;
+  const ids=[-2,-1,0,1,2,3,4].map(o=>((trackCenter+o)%n+n)%n);
+  mCells.forEach((c,i)=>{ c.textContent='×'+MULTI_STRIP[ids[i]]; c.classList.toggle('active',i===2); });
+  mTrack.style.transition='none';
+  mTrack.style.left=(-cw)+'px';
+  await new Promise(r=>{
+    requestAnimationFrame(()=>{
+      mTrack.style.transition='left 170ms ease-out';
+      mTrack.style.left=(-2*cw)+'px';
+      setTimeout(()=>{ mTrack.style.transition='none'; mTrack.style.left=(-cw)+'px'; setTrackContent(newIdx); r(); },185);
+    });
+  });
+}
+
+// ─── EVENTS ──────────────────────────────────────────────────────────────────
+spinBtn.addEventListener('click',()=>doSpin(false));
+buyBtn.addEventListener('click',()=>doSpin(true));
+betBtn.addEventListener('click',()=>{
+  if(st.pendingRound) return;
+  st.betIdx=(st.betIdx+1)%BET_OPTIONS.length;
+  updateCards(); betEl.textContent=fmtI(getBet());
+  msgEl.textContent='Bet: '+fmtI(getBet());
+});
+autoBtn.addEventListener('click',()=>{
+  st.autoOn=!st.autoOn;
+  autoBtn.classList.toggle('is-active',st.autoOn);
+  if(st.autoOn&&!st.busy&&!st.pendingRound) { clearTimeout(st.autoTimer); st.autoTimer=setTimeout(()=>doSpin(false),200); }
+  else if(!st.autoOn) clearTimeout(st.autoTimer);
+});
+turboBtn.addEventListener('click',()=>{
+  st.turboOn=!st.turboOn;
+  turboBtn.classList.toggle('is-active',st.turboOn);
+  msgEl.textContent=st.turboOn?'Turbo on':'Turbo off';
+});
+resetBtn.addEventListener('click',()=>{
+  clearTimeout(st.autoTimer);
+  Object.assign(st,{balance:100000,totalBet:0,totalWin:0,totalSpins:0,hitSpins:0,fgTriggers:0,
+    roundCount:0,betIdx:3,autoOn:false,busy:false,pendingRound:null,pendingSpinIdx:0,displayWin:0});
+  spinBtn.disabled=false; buyBtn.disabled=false; betBtn.disabled=false;
+  spinBtn.textContent='Spin';
+  autoBtn.classList.remove('is-active'); turboBtn.classList.remove('is-active');
+  updateFeatureBar(null); updateCards(0);
+  renderBoard(randomBoard()); renderWaysList([]); renderRngList(null); renderResultList(null);
+setTimeout(initTrack,80);
+  msgEl.textContent='Reset — press Spin';
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+updateFeatureBar(null); updateCards(0);
+renderBoard(randomBoard()); renderWaysList([]); renderRngList(null); renderResultList(null);
+setTimeout(initTrack,80);
+</script>
+</body>
+</html>
+</body>
+</html>
