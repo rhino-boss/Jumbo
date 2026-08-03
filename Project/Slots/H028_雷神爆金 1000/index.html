@@ -827,6 +827,7 @@
     #controls,
     #live-log-wrap,
     #log-wrap,
+    #change-log-wrap,
     #settings-wrap {
       background: var(--panel);
       border-radius: 10px;
@@ -1537,6 +1538,7 @@
     #rng-wrap .diagnostic-header,
     #log-wrap .diagnostic-header,
     #live-log-wrap .diagnostic-header,
+    #change-log-wrap .diagnostic-header,
     #settings-wrap .diagnostic-header {
       min-height: 36px;
       height: 36px;
@@ -1587,6 +1589,7 @@
       word-break: break-word;
     }
 
+
     .live-log-line.cascade {
       color: #d28cff;
     }
@@ -1601,6 +1604,52 @@
 
     .live-log-line.error {
       color: #ff6f91;
+    }
+
+    #changeLogBody {
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 10px 14px 14px;
+      color: var(--text);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .change-log-entry + .change-log-entry {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--surface);
+    }
+
+    .change-log-entry h4,
+    .change-log-entry h5 {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    .change-log-entry h5 {
+      margin-top: 9px;
+      color: var(--sub);
+      font-size: 11px;
+    }
+
+    .change-log-entry ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .change-log-entry li + li {
+      margin-top: 3px;
+    }
+
+    .change-log-entry code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #9ddcff;
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 10px;
     }
 
     #log-wrap {
@@ -2153,6 +2202,165 @@
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
     </section>
 
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
+      <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>2026-08-03：改回填 Symbol 並修正 calcChain</h4>
+          <ul>
+            <li>修正上一版錯誤：config 輪帶不再寫入 <code>U:AA</code> 的 Symbol ID／公式結果區。</li>
+            <li><code>config_to_xlsx.py</code> 會依各 Symbol 工作表 <code>A4:J29</code> 的 ID 對照，將 config 數字 ID 轉成符號名稱後寫入真正的輪帶區 <code>M:S</code>。</li>
+            <li><code>xlsx_to_config.py</code> 改從 <code>M:S</code> 讀取符號名稱並轉回數字 ID，不依賴公式快取值。</li>
+            <li>回填時會恢復 <code>U:AA</code> 的原始公式格式，移除失效的 <code>xl/calcChain.xml</code> 及其關聯，並設定 Excel 開啟時完整重算。</li>
+            <li>未調整的 <code>BG_Symbol (2)</code> 與三組 FG 輪帶已從現有 xlsx 的 <code>M:S</code> 重新同步至 config，避免被舊版錯誤 ID 資料覆蓋。</li>
+            <li>已重新直接覆寫 <code>H028192A.xlsx</code>；最終雙向差異為 0，<code>M:S</code> 150 格 Symbol 完整、<code>U:AA</code> 公式完整，OOXML 與 calcChain 清理檢查通過。</li>
+            <li>數學內容與 <code>config_92A.js</code> 版本維持 <code>2.0.0.5</code>。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：config 150 格 BG 輪帶回填 xlsx</h4>
+          <ul>
+            <li>將目前 <code>config_92A.js</code> 直接回填至 <code>Source/H028192A.xlsx</code>，未建立另一份 xlsx。</li>
+            <li>xlsx 版本同步更新為 <code>2.0.0.5</code>。</li>
+            <li><code>BG_Symbol</code> 的 R1～R7 輪帶與權重均已寫入 150 格範圍。</li>
+            <li>同步寫入目前的參數組選擇權重，BG／FG／Retrigger 均只會使用第一組工作表。</li>
+            <li>共映射 14,399 格、實際變更 1,234 格，config → xlsx → config round-trip 驗證通過。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：BG 七輪長度統一為 150</h4>
+          <ul>
+            <li><code>BaseGameSymbol1</code> 的 R1～R7 全部調整為精確 150 格，對應的 <code>BaseGameSymbolWeight1</code> 也全部調整為 150 個權重。</li>
+            <li>R1～R6 重新依 Lucky Neko <code>SymbolOcc_Init</code>／BG 比例量化為 150 格，並以固定亂數種子 <code>20260803</code> 打亂。</li>
+            <li>R7／Extra Reel 沒有 Lucky Neko 直接比例，因此依修改前 R7 的有效加權符號比例量化為 150 格。</li>
+            <li>七輪位置權重全部統一為 1，確保輪帶格數比例等於實際抽取比例。</li>
+            <li>xlsx ↔ config 共用映射同步由 <code>U4:AA124</code>／<code>AC4:AI124</code> 延伸為 <code>U4:AA153</code>／<code>AC4:AI153</code>，讓 <code>update_xlsx.bat</code> 可直接回填 150 格輪帶。</li>
+            <li><code>config_92A.js</code> 版本由 <code>2.0.0.4</code> 升為 <code>2.0.0.5</code>。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：BG 輪帶套用 Lucky Neko 符號比例</h4>
+          <ul>
+            <li>依 <code>其他/參考資料/analysis_lucky_neko.xlsx</code> 的 <code>SymbolOcc_Init</code>／BG／R1～R6 比例，重建 <code>config_92A.js</code> 的 <code>BaseGameSymbol1</code> 前六輪。</li>
+            <li>每輪維持 121 格，先以最大餘數法換算各 Symbol 數量，再使用固定亂數種子 <code>20260803</code> 打亂排列，結果可重現。</li>
+            <li><code>BaseGameSymbolWeight1</code> 前六輪統一設為 1，避免舊位置權重使實際抽取比例偏離新輪帶。</li>
+            <li>參考資料沒有 R7／Extra Reel 的直接符號比例，因此第七輪及其權重維持原值。</li>
+            <li>未修改 <code>BaseGameSymbol2</code>、FG 輪帶與 Drop 權重。</li>
+            <li><code>config_92A.js</code> 版本由 <code>2.0.0.3</code> 升為 <code>2.0.0.4</code>。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：update_xlsx.bat 改為直接覆寫 xlsx</h4>
+          <ul>
+            <li><code>update_xlsx.bat</code> 改用 <code>config_to_xlsx.py --in-place --overwrite-formulas</code>。</li>
+            <li>執行後直接更新所選 xlsx，不再建立 <code>*_from_config_*.xlsx</code>。</li>
+            <li>批次畫面會明確顯示原地覆寫警告，並提醒先關閉 Excel。</li>
+            <li>完成覆寫後仍會執行 config → xlsx → config round-trip 驗證。</li>
+            <li><code>config_to_xlsx.py</code> 直接執行時仍保留另存副本的預設行為。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：config 鎖定第一組 BG／FG 參數</h4>
+          <ul>
+            <li><code>config_92A.js</code> 版本由 <code>2.0.0.2</code> 升為 <code>2.0.0.3</code>。</li>
+            <li><code>ReelWeight</code> 由 <code>[2000, 2000]</code> 改為 <code>[4000, 0]</code>，只會選用 <code>BG_Symbol</code>。</li>
+            <li><code>FreeReelWeight</code> 由 <code>[8000, 3000, 4000]</code> 改為 <code>[15000, 0, 0]</code>，FG 初始場次只會選用 <code>FG_Symbol</code>。</li>
+            <li><code>FreeTriggerReel</code> 由 <code>[4000, 0, 8000]</code> 改為 <code>[12000, 0, 0]</code>，FG Retrigger 也只會選用 <code>FG_Symbol</code>。</li>
+            <li>各選擇器的原始總權重保持不變，未修改任何輪帶或掉落權重內容。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：修改紀錄改為 Debug Mode 顯示</h4>
+          <ul>
+            <li>修改紀錄面板預設隱藏。</li>
+            <li>只有開啟 Debug Mode 時才顯示，關閉 Debug Mode 後立即隱藏。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：index 新增修改紀錄區</h4>
+          <ul>
+            <li>將 <code>修改紀錄.md</code> 的內容完整嵌入 index。</li>
+            <li>顯示位置位於 Log 與設定區域之間。</li>
+            <li>內容使用固定高度的可捲動面板，避免影響主要操作區。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：重新校正 xlsx / config 雙向位置</h4>
+          <h5>問題原因</h5>
+          <ul>
+            <li>目前 <code>H028192A.xlsx</code> 已改為每組參數各自一張 Symbol 工作表，但工具仍使用舊版「同張表向右延伸」的位置。</li>
+            <li>輪帶 ID、輪帶權重、MegaWay、Mystery、Post Scatter 與五段 Drop 權重皆存在一欄或一列偏移。</li>
+            <li>參數組選擇權重已由 <code>Description</code> 移至 <code>Parameter</code>，舊工具仍讀寫原位置。</li>
+          </ul>
+          <h5>修正內容</h5>
+          <ul>
+            <li>BG 組 1／2 改對應 <code>BG_Symbol</code>、<code>BG_Symbol (2)</code>。</li>
+            <li>FG 組 1／2／3 改對應 <code>FG_Symbol</code>、<code>FG_Symbol (2)</code>、<code>FG_Symbol (3)</code>。</li>
+            <li>共用位置校正為：輪帶 ID <code>U4:AA124</code>、權重 <code>AC4:AI124</code>、MegaWay <code>C33:H47</code>、Mystery <code>C51:C63</code>、Post Scatter <code>B67:C74</code>。</li>
+            <li>Drop 1～5 校正為 <code>AL:AR</code>，起始列依序為 4、33、62、91、120，各 26 列。</li>
+            <li><code>ReelWeight</code>、<code>FreeReelWeight</code>、<code>FreeTriggerReel</code> 改讀寫 <code>Parameter!C5:C6</code>、<code>C11:C13</code>、<code>C18:C20</code>。</li>
+            <li><code>xlsx_to_config.py</code> 與 <code>config_to_xlsx.py</code> 改共用同一份映射常數，避免雙向工具日後各自漂移。</li>
+            <li>依校正後位置重新產生目前使用的 <code>config_92A.js</code>。</li>
+            <li>同步重寫 <code>xlsx_config_usage_mapping.md</code> 與 <code>config_xlsx_usage_mapping.md</code>。</li>
+          </ul>
+          <h5>驗證</h5>
+          <ul>
+            <li>Python 語法檢查通過。</li>
+            <li>xlsx → config 再次讀取比對通過。</li>
+            <li><code>config_92A.js</code> 的輪帶為 7×121、MegaWay 為 6×15、Drop 為 7×26，且三組參數選擇權重皆有正確數值。</li>
+            <li>config → xlsx → config 完整 round-trip 驗證通過，共映射 13,993 格。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：還原 Git 後改用系統預設符號</h4>
+          <h5>還原範圍</h5>
+          <ul>
+            <li>先將 <code>Project/Slots/H028_雷神爆金 1000</code> 全部已追蹤檔案還原至目前 Git <code>HEAD</code>。</li>
+            <li>Git 追蹤的 <code>Source/Image</code> 圖片素材已恢復，但新版 index 不會使用或載入這些圖片。</li>
+            <li>未追蹤的 <code>config_92.js</code> 與 <code>config_92A_v1.js</code> 保留，未刪除或修改。</li>
+          </ul>
+          <h5>index 變更</h5>
+          <ul>
+            <li>新增固定設定 <code>USE_SYMBOL_IMAGES=false</code>。</li>
+            <li><code>symbolArt()</code> 在系統模式直接回傳空字串，不建立 <code>&lt;img&gt;</code> 元素，也不向 <code>Source/Image</code> 發出圖片請求。</li>
+            <li>所有有效符號使用 Git 版本原有的系統預設框、背景色與文字代碼。</li>
+            <li>無效、空值或負數符號 ID 顯示空白，不產生 <code>S-1</code>，也不套用 Mystery 系統框。</li>
+            <li>未修改 config、Simulator 或遊戲數學。</li>
+          </ul>
+          <h5>驗證</h5>
+          <ul>
+            <li>H028 主要 inline JavaScript 已通過 Node 語法解析。</li>
+            <li>已確認圖片開關固定為 <code>false</code>，且 <code>symbolArt()</code> 在任何圖片路徑建立前即返回。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-03：新增 update_xlsx.bat</h4>
+          <h5>工具內容</h5>
+          <ul>
+            <li>新增 <code>Source/update_xlsx.bat</code>，作為 <code>config_to_xlsx.py</code> 的雙擊入口。</li>
+            <li>預設 config 為專案根目錄的 <code>config_92A.js</code>，xlsx 為 <code>Source/H028192A.xlsx</code>。</li>
+            <li>雙擊執行時會列出並詢問 config 與來源 xlsx；直接按 Enter 使用預設值。</li>
+            <li>命令列亦可依序傳入 config 與 xlsx 路徑。</li>
+            <li>優先使用工作區 <code>.venv</code>，找不到時改用 <code>py -3</code>。</li>
+            <li>固定另存成 <code>*_from_config_*.xlsx</code>，不覆寫原始數學表。</li>
+            <li>同名輸出已存在時使用 <code>--force</code> 更新。</li>
+            <li>輸出後由 <code>config_to_xlsx.py</code> 自動執行 round-trip 驗證。</li>
+            <li><code>Source/config_xlsx_usage_mapping.md</code> 已補上雙擊與命令列使用方式。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
     <section id="settings-wrap" class="diagnostic-region">
       <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
       <div class="setting-body">
@@ -2416,10 +2624,10 @@
   function code(id){return Number.isInteger(id)&&id>=0?(CODES[id]||`S${id}`):''}function base(id){return id>=13&&id<=23?id-11:id}function isGold(id){return id>=13&&id<=23}function displayCode(id){return isGold(id)?code(base(id)):code(id)}function betCoins(){return BETS[state.betIndex]/D}function betMultiplier(){return BETS[state.betIndex]/(B.default_coin_in*D*B.normalbet)}function delay(){return 520}
   function log(text,type=''){state.logs.push({text,type,time:new Date().toLocaleTimeString('en-GB',{hour12:false})});if(state.logs.length>500)state.logs.splice(0,state.logs.length-500);renderLog()}
   function message(text,type=false){let isError=type===true||type==='error';state.lastMessage=text;el.msg.textContent=localizeMessage(text);el.msg.style.color=isError?'var(--red)':'var(--accent)';log(text,typeof type==='string'?(type==='winValue'?'result':type):(isError?'error':''))}
-  function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','batch-simulation','set-rng-panel','rng-wrap','log-wrap','live-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);updateControls()}
+  function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','batch-simulation','set-rng-panel','rng-wrap','log-wrap','live-log-wrap','change-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);updateControls()}
   function renderLog(){if(!state.debug)return;$('liveLogBody').innerHTML=state.logs.map(x=>`<div class="live-log-line ${x.type}">[${x.time}] ${esc(x.text)}</div>`).join('');$('liveLogBody').scrollTop=$('liveLogBody').scrollHeight}
   function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-  const UI_TEXT={en:{simulationStats:'Simulation Stats',naturalSimulation:'Simulation',startSimulation:'Start',totalRounds:'Total Rounds',hitRate:'Hit Rate',maxMultiplier:'Max Multiplier',retryLimitExceeded:'Retry Limit Exceeded',playerProfile:'Player',reelRng:'Reel RNG',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',naturalSimulation:'模擬',startSimulation:'開始模擬',totalRounds:'總局數',hitRate:'命中率',maxMultiplier:'最大倍數',retryLimitExceeded:'Retry Limit 超限',playerProfile:'玩家',reelRng:'滾輪 RNG',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
+  const UI_TEXT={en:{simulationStats:'Simulation Stats',naturalSimulation:'Simulation',startSimulation:'Start',totalRounds:'Total Rounds',hitRate:'Hit Rate',maxMultiplier:'Max Multiplier',retryLimitExceeded:'Retry Limit Exceeded',playerProfile:'Player',reelRng:'Reel RNG',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',changeLog:'Change Log',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',naturalSimulation:'模擬',startSimulation:'開始模擬',totalRounds:'總局數',hitRate:'命中率',maxMultiplier:'最大倍數',retryLimitExceeded:'Retry Limit 超限',playerProfile:'玩家',reelRng:'滾輪 RNG',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',changeLog:'修改紀錄',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
   const tr=key=>UI_TEXT[state.language]?.[key]||UI_TEXT.en[key]||key;
   function localizeMessage(text){if(state.language!=='zh')return text;const exact={'Ready. Config 92A loaded.':'Ready — 按下 Spin','Reels spinning...':'滾輪轉動中...','Session reset.':'遊戲已重置。','Auto started.':'自動遊戲已開啟。','Auto stopped.':'自動遊戲已關閉。','Set RNG reset.':'指定 RNG 已重置。','Insufficient credit.':'餘額不足。'};if(exact[text])return exact[text];return text.replace(/^Round complete · Win /,'本局完成 · 得分 ').replace(/^Free Game started: (\d+) spins$/,'免費遊戲開始：$1 場').replace(/^Free Game ready · (\d+) spins left · press Spin$/,'免費遊戲待命 · 剩餘 $1 場 · 請按 Spin').replace(/^Free Game complete · final /,'免費遊戲結束 · 最終 ').replace(/^FG retrigger \+(\d+)$/,'免費遊戲加局 +$1').replace(/^History /,'歷史畫面 ').replace(/Cascade (\d+) · evaluating/,'Cascade $1 · 判定').replace(/Cascade (\d+) · score /,'Cascade $1 · 得分 ')}
   let gameHelpMarkdown='';

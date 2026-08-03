@@ -3042,10 +3042,9 @@
     const selection = prepareCardSelection(state.selectedMode);
     const parameters = cardParameters(selection);
     state.cardProfileUsed = selection?.profile || "off";
-    const retryLimit = Math.max(1, Number(Box.card_system?.retry_limit) || 5000);
     let candidate = null;
     let retries = 0;
-    while (retries < retryLimit) {
+    while (true) {
       candidate = simulateRoundCandidate(forceFeature, forcedStops, parameters);
       if (cardAccepts(selection, candidate)) break;
       retries += 1;
@@ -3054,10 +3053,8 @@
     state.cardRetries = retries;
     if (selection) {
       appendLog(
-        retries >= retryLimit
-          ? `Card System ${state.cardProfileUsed} | retry limit ${retryLimit} reached`
-          : `Card System ${state.cardProfileUsed} | accepted after ${retries} retries`,
-        retries >= retryLimit ? "error" : "result"
+        `Card System ${state.cardProfileUsed} | accepted after ${retries} retries`,
+        "result"
       );
     }
     return candidate;

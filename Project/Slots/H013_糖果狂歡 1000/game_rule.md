@@ -196,7 +196,7 @@
 
 * Card System 為內部結果篩選機制，不屬於玩家可操作的遊戲特色，因此不列入玩家 Help。
 * `Simulator.py` 可設定開關及 Newbie / Oldhand；DemoGame 僅在 Debug Mode 提供 Off / Newbie / Oldhand。
-* Card System 開啟時會先依 config 抽出目標卡片，再重抽完整回合直到符合區間、FG 條件或達到 `retry_limit`。
+* Card System 開啟時會先依 config 抽出目標卡片，再重抽完整回合直到符合區間與 FG 條件；不符合的結果不得計入。
 * 卡片上的 A / B 表別會同步決定 BG 選表權重、FG 高低表組合與 C2 倍數權重。
 * Buy Feature 與 Super Feature 的 Card System 依 Oldhand 對應資料執行，與 Simulator 一致。
 

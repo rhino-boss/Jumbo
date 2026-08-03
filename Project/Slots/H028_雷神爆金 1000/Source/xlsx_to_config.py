@@ -24,6 +24,29 @@ METADATA = {
     "supported_bet_modes": [0, 2],
 }
 
+SYMBOL_SHEET_GROUPS = (
+    ("BaseGame", 1, "BG_Symbol", 150),
+    ("BaseGame", 2, "BG_Symbol (2)", 121),
+    ("FreeGame", 1, "FG_Symbol", 121),
+    ("FreeGame", 2, "FG_Symbol (2)", 121),
+    ("FreeGame", 3, "FG_Symbol (3)", 121),
+)
+
+# H028192A current layout. Keep this as the single source of truth for both
+# xlsx_to_config.py and config_to_xlsx.py.
+SYMBOL_SHEET_RANGES = {
+    "MegaWay": "C33:H47",
+    "MY": "C51:C63",
+    "PostC1": "B67:C74",
+}
+DROP_START_ROWS = (4, 33, 62, 91, 120)
+
+PARAMETER_RANGES = {
+    "ReelWeight": "C5:C6",
+    "FreeReelWeight": "C11:C13",
+    "FreeTriggerReel": "C18:C20",
+}
+
 
 def extract_transposed(sheet, range_text):
     rows = [[cell.value for cell in row] for row in sheet[range_text]]
@@ -35,6 +58,24 @@ def extract_transposed(sheet, range_text):
 
 def extract_no_transpose(sheet, range_text):
     return [[cell.value for cell in row] for row in sheet[range_text]]
+
+
+def extract_symbol_ids(sheet, range_text):
+    symbol_to_id = {
+        str(sheet.cell(row, 1).value): int(sheet.cell(row, 10).value)
+        for row in range(4, 30)
+        if sheet.cell(row, 1).value is not None and sheet.cell(row, 10).value is not None
+    }
+    symbol_reels = extract_transposed(sheet, range_text)
+    result = []
+    for reel_index, reel in enumerate(symbol_reels, start=1):
+        try:
+            result.append([symbol_to_id[str(symbol)] for symbol in reel])
+        except KeyError as error:
+            raise ValueError(
+                f"Unknown symbol {error.args[0]!r} in {sheet.title} reel R{reel_index}"
+            ) from error
+    return result
 
 
 def get_sheet(workbook, *names):
@@ -117,54 +158,24 @@ def build_config(source_path):
     output["linkpoint"] = extract_linkpoint(overview)
     output["card_system"] = parse_card_system(workbook["Multiplier_Weight"])
 
-    base = get_sheet(workbook, "Base Game Symbol", "BG_Symbol")
-    base_ranges = {
-        "BaseGameSymbol1": "T4:Z124",
-        "BaseGameSymbolWeight1": "AB4:AH124",
-        "BaseGameMegaWay1": "B33:G47",
-        "BaseGameMY1": "B50:B62",
-        "BaseGame1PostC1": "A65:B72",
-        "BaseGameSymbol2": "BM4:BS124",
-        "BaseGameSymbolWeight2": "BU4:CA124",
-        "BaseGameMegaWay2": "AU33:AZ47",
-        "BaseGameMY2": "AU50:AU62",
-        "BaseGame2PostC1": "AT65:AU72",
-    }
-    for drop_index, first_row in enumerate((5, 34, 63, 92, 121), start=1):
-        base_ranges[f"BaseGame1Drop{drop_index}"] = f"AK{first_row}:AQ{first_row + 25}"
-        base_ranges[f"BaseGame2Drop{drop_index}"] = f"CD{first_row}:CJ{first_row + 25}"
-    for key, range_text in base_ranges.items():
-        output[key] = extract_transposed(base, range_text)
+    for scene, group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS:
+        sheet = workbook[sheet_name]
+        last_row = 3 + reel_length
+        output[f"{scene}Symbol{group_index}"] = extract_symbol_ids(sheet, f"M4:S{last_row}")
+        output[f"{scene}SymbolWeight{group_index}"] = extract_transposed(sheet, f"AC4:AI{last_row}")
+        for field, range_text in SYMBOL_SHEET_RANGES.items():
+            if field == "PostC1":
+                key = f"{scene}{group_index}PostC1"
+            else:
+                key = f"{scene}{field}{group_index}"
+            output[key] = extract_transposed(sheet, range_text)
+        for drop_index, first_row in enumerate(DROP_START_ROWS, start=1):
+            key = f"{scene}{group_index}Drop{drop_index}"
+            output[key] = extract_transposed(sheet, f"AL{first_row}:AR{first_row + 25}")
 
-    description = workbook["Description"]
-    output["ReelWeight"] = extract_transposed(description, "D5:D6")
-    output["FreeReelWeight"] = extract_transposed(description, "G5:G7")
-    output["FreeTriggerReel"] = extract_transposed(description, "D18:D20")
-
-    free = get_sheet(workbook, "Free Game Symbol", "FG_Symbol")
-    free_ranges = {
-        "FreeGameSymbol1": "T4:Z124",
-        "FreeGameSymbolWeight1": "AB4:AH124",
-        "FreeGameMegaWay1": "B33:G47",
-        "FreeGameMY1": "B50:B62",
-        "FreeGame1PostC1": "A65:B72",
-        "FreeGameSymbol2": "BM4:BS124",
-        "FreeGameSymbolWeight2": "BU4:CA124",
-        "FreeGameMegaWay2": "AU33:AZ47",
-        "FreeGameMY2": "AU50:AU62",
-        "FreeGame2PostC1": "AU65:AU72",
-        "FreeGameSymbol3": "DF4:DL124",
-        "FreeGameSymbolWeight3": "DN4:DT124",
-        "FreeGameMegaWay3": "CN33:CS47",
-        "FreeGameMY3": "CN50:CN62",
-        "FreeGame3PostC1": "CM65:CN72",
-    }
-    for drop_index, first_row in enumerate((5, 34, 63, 92, 121), start=1):
-        free_ranges[f"FreeGame1Drop{drop_index}"] = f"AK{first_row}:AQ{first_row + 25}"
-        free_ranges[f"FreeGame2Drop{drop_index}"] = f"CD{first_row}:CJ{first_row + 25}"
-        free_ranges[f"FreeGame3Drop{drop_index}"] = f"DW{first_row}:EC{first_row + 25}"
-    for key, range_text in free_ranges.items():
-        output[key] = extract_transposed(free, range_text)
+    parameter = workbook["Parameter"]
+    for key, range_text in PARAMETER_RANGES.items():
+        output[key] = extract_transposed(parameter, range_text)
 
     workbook.close()
     return output

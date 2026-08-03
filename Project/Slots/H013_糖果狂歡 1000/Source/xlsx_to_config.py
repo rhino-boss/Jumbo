@@ -350,7 +350,6 @@ def parse_card_profile(ws: Any, include_feature_modes: bool) -> dict[str, Any]:
 def parse_card_system(workbook: Any) -> dict[str, Any]:
     return {
         "enabled": True,
-        "retry_limit": 5000,
         "newbie": parse_card_profile(workbook["Multiplier_Weight_Newbie"], False),
         "oldhand": parse_card_profile(workbook["Multiplier_Weight_Oldhand"], True),
     }

@@ -219,7 +219,6 @@ GAME_NAME = str(CFG["display_name"])
 GAME_VERSION = str(CFG["game_version"])
 CARD_SYSTEM_RAW = CFG.get("card_system", {})
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM_RAW.get("enabled", False))
-CARD_RETRY_LIMIT = max(1, int(CARD_SYSTEM_RAW.get("retry_limit", 5000)))
 
 CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
@@ -687,9 +686,7 @@ def _simulate_chunk(rounds, mode, bet_multi):
         if not accepted:
             stats[S_RETRY_TOTAL] += 1
             retry_count += 1
-            if retry_count < CARD_RETRY_LIMIT:
-                continue
-            stats[S_RETRY_LIMIT_EXCEEDED] += 1
+            continue
 
         hits += round_hits
         pays += round_pays
@@ -789,7 +786,7 @@ def _build_outputs(stats, hits, pays, eliminates, multiplier_line, rounds, durat
         ("volatility_std", math.sqrt(variance), ""),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
         ("card_system_profile", "newbie" if CARD_SYSTEM_IS_NEWBIE and bet_mode in (MODE_NORMALBET, MODE_EXTRABET) else "oldhand", ""),
-        ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
+        ("retry_limit", "unlimited" if CARD_SYSTEM_ENABLED else 0, ""),
         ("retry_total", int(stats[S_RETRY_TOTAL]), ""),
         ("retry_limit_exceeded", int(stats[S_RETRY_LIMIT_EXCEEDED]), ""),
     ]

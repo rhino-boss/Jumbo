@@ -65,13 +65,14 @@ if not exist "!XLSX_PATH!" (
 if exist "%SCRIPT_DIR%\~$*.xlsx" (
     echo.
     echo [WARNING] One or more xlsx files are open in Excel.
-    echo [WARNING] Close Excel before replacing an existing output workbook.
+    echo [WARNING] Close Excel before overwriting the selected workbook.
 )
 
 echo.
 echo [H028] Config: "!CONFIG_PATH!"
-echo [H028] Source: "!XLSX_PATH!"
-echo [H028] Mode: create or replace a separate *_from_config_*.xlsx file
+echo [H028] XLSX: "!XLSX_PATH!"
+echo [H028] Mode: overwrite the selected xlsx in place
+echo [WARNING] The selected xlsx will be replaced. No separate copy will be created.
 
 if exist "%VENV_PYTHON%" goto use_venv
 
@@ -81,18 +82,18 @@ if errorlevel 1 (
     goto failed
 )
 echo [H028] Python: py -3
-py -3 "%SCRIPT_PATH%" --config "!CONFIG_PATH!" --source "!XLSX_PATH!" --force
+py -3 "%SCRIPT_PATH%" --config "!CONFIG_PATH!" --source "!XLSX_PATH!" --in-place --overwrite-formulas
 if errorlevel 1 goto failed
 goto succeeded
 
 :use_venv
 echo [H028] Python: %VENV_PYTHON%
-"%VENV_PYTHON%" "%SCRIPT_PATH%" --config "!CONFIG_PATH!" --source "!XLSX_PATH!" --force
+"%VENV_PYTHON%" "%SCRIPT_PATH%" --config "!CONFIG_PATH!" --source "!XLSX_PATH!" --in-place --overwrite-formulas
 if errorlevel 1 goto failed
 
 :succeeded
 echo.
-echo [SUCCESS] Xlsx was updated as a separate copy and round-trip verified.
+echo [SUCCESS] Selected xlsx was overwritten and round-trip verified.
 popd
 pause
 exit /b 0

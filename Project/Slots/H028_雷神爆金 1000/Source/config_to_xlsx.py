@@ -13,56 +13,18 @@ from xml.sax.saxutils import escape
 from openpyxl import load_workbook
 from openpyxl.utils.cell import column_index_from_string, get_column_letter, range_boundaries
 
-from xlsx_to_config import build_config
+from xlsx_to_config import (
+    DROP_START_ROWS,
+    PARAMETER_RANGES,
+    SYMBOL_SHEET_GROUPS,
+    SYMBOL_SHEET_RANGES,
+    build_config,
+)
 
 
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_SOURCE = BASE_DIR / "H028192A.xlsx"
 DEFAULT_CONFIG = BASE_DIR.parent / "config_92A.js"
-
-BASE_RANGES = {
-    "BaseGameSymbol1": "T4:Z124",
-    "BaseGameSymbolWeight1": "AB4:AH124",
-    "BaseGameMegaWay1": "B33:G47",
-    "BaseGameMY1": "B50:B62",
-    "BaseGame1PostC1": "A65:B72",
-    "BaseGameSymbol2": "BM4:BS124",
-    "BaseGameSymbolWeight2": "BU4:CA124",
-    "BaseGameMegaWay2": "AU33:AZ47",
-    "BaseGameMY2": "AU50:AU62",
-    "BaseGame2PostC1": "AT65:AU72",
-}
-for drop_index, first_row in enumerate((5, 34, 63, 92, 121), start=1):
-    BASE_RANGES[f"BaseGame1Drop{drop_index}"] = f"AK{first_row}:AQ{first_row + 25}"
-    BASE_RANGES[f"BaseGame2Drop{drop_index}"] = f"CD{first_row}:CJ{first_row + 25}"
-
-FREE_RANGES = {
-    "FreeGameSymbol1": "T4:Z124",
-    "FreeGameSymbolWeight1": "AB4:AH124",
-    "FreeGameMegaWay1": "B33:G47",
-    "FreeGameMY1": "B50:B62",
-    "FreeGame1PostC1": "A65:B72",
-    "FreeGameSymbol2": "BM4:BS124",
-    "FreeGameSymbolWeight2": "BU4:CA124",
-    "FreeGameMegaWay2": "AU33:AZ47",
-    "FreeGameMY2": "AU50:AU62",
-    "FreeGame2PostC1": "AU65:AU72",
-    "FreeGameSymbol3": "DF4:DL124",
-    "FreeGameSymbolWeight3": "DN4:DT124",
-    "FreeGameMegaWay3": "CN33:CS47",
-    "FreeGameMY3": "CN50:CN62",
-    "FreeGame3PostC1": "CM65:CN72",
-}
-for drop_index, first_row in enumerate((5, 34, 63, 92, 121), start=1):
-    FREE_RANGES[f"FreeGame1Drop{drop_index}"] = f"AK{first_row}:AQ{first_row + 25}"
-    FREE_RANGES[f"FreeGame2Drop{drop_index}"] = f"CD{first_row}:CJ{first_row + 25}"
-    FREE_RANGES[f"FreeGame3Drop{drop_index}"] = f"DW{first_row}:EC{first_row + 25}"
-
-DESCRIPTION_RANGES = {
-    "ReelWeight": "D5:D6",
-    "FreeReelWeight": "G5:G7",
-    "FreeTriggerReel": "D18:D20",
-}
 
 CELL_PATTERN = re.compile(
     r'<c(?P<selfattrs>[^>]*?\br="(?P<selfref>[A-Z]{1,3}[1-9][0-9]*)"[^>]*?)\s*/>'
@@ -187,8 +149,20 @@ def discover_layout(source_path):
         warnings.simplefilter("ignore", UserWarning)
         workbook = load_workbook(source_path, read_only=True, data_only=True)
     try:
-        base_name = get_sheet_name(workbook, "Base Game Symbol", "BG_Symbol")
-        free_name = get_sheet_name(workbook, "Free Game Symbol", "FG_Symbol")
+        missing_symbol_sheets = [
+            sheet_name for _scene, _group_index, sheet_name, _reel_length in SYMBOL_SHEET_GROUPS
+            if sheet_name not in workbook.sheetnames
+        ]
+        if missing_symbol_sheets:
+            raise KeyError(f"Missing symbol worksheets: {missing_symbol_sheets}")
+        symbol_by_id = {}
+        for _scene, _group_index, sheet_name, _reel_length in SYMBOL_SHEET_GROUPS:
+            sheet = workbook[sheet_name]
+            symbol_by_id[sheet_name] = {
+                int(sheet.cell(row, 10).value): str(sheet.cell(row, 1).value)
+                for row in range(4, 30)
+                if sheet.cell(row, 1).value is not None and sheet.cell(row, 10).value is not None
+            }
         overview = workbook["Overview"]
         linkpoint_row = next(
             row for row in range(1, overview.max_row + 1)
@@ -224,9 +198,8 @@ def discover_layout(source_path):
             labels.append((row, multiplier.cell(row, 2).value))
             row += 1
         return {
-            "base_name": base_name,
-            "free_name": free_name,
             "linkpoint_row": linkpoint_row,
+            "symbol_by_id": symbol_by_id,
             "profile_columns": profile_columns,
             "card_labels": labels,
         }
@@ -274,26 +247,58 @@ def build_updates(source_path, config):
         require_key(config, "linkpoint"),
         "linkpoint",
     )
-    for key, range_text in BASE_RANGES.items():
+    for scene, group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS:
+        last_row = 3 + reel_length
+        symbol_key = f"{scene}Symbol{group_index}"
+        symbol_map = layout["symbol_by_id"][sheet_name]
+        symbol_values = []
+        for reel_index, reel in enumerate(require_key(config, symbol_key), start=1):
+            try:
+                symbol_values.append([symbol_map[int(symbol_id)] for symbol_id in reel])
+            except (KeyError, TypeError, ValueError) as error:
+                raise ValueError(
+                    f"{symbol_key} reel R{reel_index} contains an unknown Symbol ID"
+                ) from error
         add_transposed_range(
             updates,
-            layout["base_name"],
-            range_text,
-            require_key(config, key),
-            key,
+            sheet_name,
+            f"M4:S{last_row}",
+            symbol_values,
+            symbol_key,
         )
-    for key, range_text in FREE_RANGES.items():
+        weight_key = f"{scene}SymbolWeight{group_index}"
         add_transposed_range(
             updates,
-            layout["free_name"],
-            range_text,
-            require_key(config, key),
-            key,
+            sheet_name,
+            f"AC4:AI{last_row}",
+            require_key(config, weight_key),
+            weight_key,
         )
-    for key, range_text in DESCRIPTION_RANGES.items():
+        for field, range_text in SYMBOL_SHEET_RANGES.items():
+            if field == "PostC1":
+                key = f"{scene}{group_index}PostC1"
+            else:
+                key = f"{scene}{field}{group_index}"
+            add_transposed_range(
+                updates,
+                sheet_name,
+                range_text,
+                require_key(config, key),
+                key,
+            )
+        for drop_index, first_row in enumerate(DROP_START_ROWS, start=1):
+            key = f"{scene}{group_index}Drop{drop_index}"
+            add_transposed_range(
+                updates,
+                sheet_name,
+                f"AL{first_row}:AR{first_row + 25}",
+                require_key(config, key),
+                key,
+            )
+    for key, range_text in PARAMETER_RANGES.items():
         add_transposed_range(
             updates,
-            "Description",
+            "Parameter",
             range_text,
             require_key(config, key),
             key,
@@ -468,6 +473,119 @@ def patch_sheet_xml(xml_bytes, sheet_name, cell_updates, overwrite_formulas=Fals
     return payload
 
 
+def restore_symbol_id_formulas(xml_bytes, sheet_name, last_row):
+    """Restore U:AA formulas after older tool versions replaced them with values."""
+    text = xml_bytes.decode("utf-8")
+    restored = set()
+
+    def replace_cell(match):
+        address = match.group("ref") or match.group("selfref")
+        column_match = re.fullmatch(r"([A-Z]+)([1-9][0-9]*)", address)
+        column = column_index_from_string(column_match.group(1))
+        row = int(column_match.group(2))
+        if not (column_index_from_string("U") <= column <= column_index_from_string("AA")):
+            return match.group(0)
+        if not (4 <= row <= last_row):
+            return match.group(0)
+        source_column = get_column_letter(column - 8)
+        attrs = match.group("attrs") or match.group("selfattrs") or ""
+        attrs = re.sub(r'\s+t="[^"]*"', "", attrs.rstrip())
+        restored.add(address)
+        return (
+            f"<c{attrs}><f>VLOOKUP({source_column}{row}, "
+            "$A$4:$J$29, 9, 0)</f></c>"
+        )
+
+    patched = CELL_PATTERN.sub(replace_cell, text)
+
+    missing_by_row = {}
+    for row in range(4, last_row + 1):
+        for column in range(column_index_from_string("U"), column_index_from_string("AA") + 1):
+            address = f"{get_column_letter(column)}{row}"
+            if address not in restored:
+                missing_by_row.setdefault(row, []).append(address)
+
+    def insert_formula_cells(match):
+        row = int(match.group("row"))
+        if row not in missing_by_row:
+            return match.group(0)
+        body = match.group("body")
+        for address in missing_by_row[row]:
+            column = column_index_from_string(re.match(r"[A-Z]+", address).group(0))
+            source_column = get_column_letter(column - 8)
+            insert_at = len(body)
+            for cell_match in CELL_PATTERN.finditer(body):
+                existing_address = cell_match.group("ref") or cell_match.group("selfref")
+                existing_column = column_index_from_string(
+                    re.match(r"[A-Z]+", existing_address).group(0)
+                )
+                if existing_column > column:
+                    insert_at = cell_match.start()
+                    break
+            formula_xml = (
+                f'<c r="{address}"><f>VLOOKUP({source_column}{row}, '
+                "$A$4:$J$29, 9, 0)</f></c>"
+            )
+            body = body[:insert_at] + formula_xml + body[insert_at:]
+            restored.add(address)
+        return f'<row{match.group("attrs")}>{body}</row>'
+
+    if missing_by_row:
+        patched = ROW_PATTERN.sub(insert_formula_cells, patched)
+    expected = 7 * (last_row - 3)
+    if len(restored) != expected:
+        raise ValueError(
+            f"Could not restore every Symbol ID formula in {sheet_name}: "
+            f"restored {len(restored)} of {expected}"
+        )
+    payload = patched.encode("utf-8")
+    ET.fromstring(payload)
+    return payload
+
+
+def remove_calc_chain_metadata(filename, payload):
+    if filename == "xl/_rels/workbook.xml.rels":
+        text = payload.decode("utf-8")
+        text = re.sub(
+            r'<Relationship\b[^>]*\bType="[^"]*/calcChain"[^>]*/>',
+            "",
+            text,
+        )
+        return text.encode("utf-8")
+    if filename == "[Content_Types].xml":
+        text = payload.decode("utf-8")
+        text = re.sub(
+            r'<Override\b[^>]*\bPartName="/xl/calcChain\.xml"[^>]*/>',
+            "",
+            text,
+        )
+        return text.encode("utf-8")
+    if filename == "xl/workbook.xml":
+        text = payload.decode("utf-8")
+
+        def update_calc_properties(match):
+            attrs = match.group(1)
+            for name, value in (
+                ("calcMode", "auto"),
+                ("fullCalcOnLoad", "1"),
+                ("forceFullCalc", "1"),
+            ):
+                if re.search(rf'\b{name}="[^"]*"', attrs):
+                    attrs = re.sub(rf'\b{name}="[^"]*"', f'{name}="{value}"', attrs)
+                else:
+                    attrs += f' {name}="{value}"'
+            return f"<calcPr{attrs}/>"
+
+        text, count = re.subn(r"<calcPr\b([^>]*)/>", update_calc_properties, text, count=1)
+        if count == 0:
+            text = text.replace(
+                "</workbook>",
+                '<calcPr calcMode="auto" fullCalcOnLoad="1" forceFullCalc="1"/></workbook>',
+            )
+        return text.encode("utf-8")
+    return payload
+
+
 def write_patched_workbook(
     source_path,
     output_path,
@@ -491,8 +609,14 @@ def write_patched_workbook(
                 if sheet_name not in parts:
                     raise KeyError(f"Worksheet part not found: {sheet_name}")
                 part_updates[parts[sheet_name]] = (sheet_name, cells)
+            symbol_formula_repairs = {
+                parts[sheet_name]: (sheet_name, 3 + reel_length)
+                for _scene, _group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS
+            }
             with zipfile.ZipFile(temporary_path, "w") as output_zip:
                 for info in source_zip.infolist():
+                    if info.filename == "xl/calcChain.xml":
+                        continue
                     payload = source_zip.read(info.filename)
                     if info.filename in part_updates:
                         sheet_name, cells = part_updates[info.filename]
@@ -502,6 +626,10 @@ def write_patched_workbook(
                             cells,
                             overwrite_formulas=overwrite_formulas,
                         )
+                    if info.filename in symbol_formula_repairs:
+                        sheet_name, last_row = symbol_formula_repairs[info.filename]
+                        payload = restore_symbol_id_formulas(payload, sheet_name, last_row)
+                    payload = remove_calc_chain_metadata(info.filename, payload)
                     output_zip.writestr(info, payload)
         os.replace(temporary_path, output_path)
     finally:
@@ -573,7 +701,10 @@ def main():
     )
     overwrite_formulas = args.overwrite_formulas or output_path != source_path
     if overwrite_formulas:
-        print("Mapped formula cells will be replaced by fixed config values in the output workbook.")
+        print(
+            "Mapped formula cells may be replaced by fixed config values; "
+            "Symbol ID U:AA formulas are restored and Excel will rebuild the calculation chain."
+        )
     write_patched_workbook(
         source_path,
         output_path,

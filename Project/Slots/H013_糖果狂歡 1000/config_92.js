@@ -52175,7 +52175,6 @@ window.H013_BOX_DATA = {
   ],
   "card_system": {
     "enabled": true,
-    "retry_limit": 5000,
     "newbie": {
       "normal_bet": {
         "weight_bg": [

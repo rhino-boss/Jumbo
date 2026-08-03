@@ -61,7 +61,7 @@
 - 卡片的 A/B 表別會在 Simulator 與 DemoGame 套用對應 `parameter_blocks` 的 BG 選表、FG 組合及 C2 權重。
 - 正式模擬使用 `parameter_table=AUTO`；強制 A/B 僅供診斷，不是正式版本組合。
 - FG Trigger 會輸出成 `type=free_game`；其餘輸出成 `type=range`。
-- `card_system.enabled=true`、`retry_limit=5000`。
+- `card_system.enabled=true`；卡片未符合時會持續重抽，不設重抽上限。
 
 ## 指令
 
