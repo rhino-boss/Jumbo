@@ -29,7 +29,7 @@
 | Item | 中文欄 | English |
 | --- | --- | --- |
 | 副標題 | Scatter 獎金 | SCATTER PAYS |
-| 規則說明 | 4／5／6 個 Scatter 分別支付 3／5／100 × Bet。3 個 Scatter 不支付獎金。Scatter 獎金不乘 C2 倍數。 | 4 / 5 / 6 SCATTERS PAY 3 / 5 / 100 × BET. THREE SCATTERS DO NOT PAY. SCATTER PAYS ARE NOT MULTIPLIED BY C2. |
+| 規則說明 | 4／5／6 個 Scatter 分別支付 3／5／100 × Bet。3 個 Scatter 不支付獎金。Scatter 獎金不乘 C2／C3 倍數；Scatter 也會打擊 OP Jackpot 符號。 | 4 / 5 / 6 SCATTERS PAY 3 / 5 / 100 × BET. THREE SCATTERS DO NOT PAY. SCATTER PAYS ARE NOT MULTIPLIED BY C2 OR C3; SCATTERS ALSO HIT OP JACKPOT SYMBOLS. |
 
 ## CASCADING FEATURE
 
@@ -44,15 +44,15 @@
 
 ## MULTIPLIER
 
-### C2 Multiplier
+### C2 / C3 Multiplier
 
 | Item | 中文欄 | English |
 | --- | --- | --- |
 | 主要標題 | 倍數符號 | MULTIPLIER |
-| 副標題 | C2 倍數 | C2 MULTIPLIER |
-| 規則說明 | C2 倍數級距為 2x、3x、4x、5x、8x、10x、12x、15x、20x、25x、50x、100x、500x、1000x、2500x。 | C2 MULTIPLIER LEVELS ARE 2X, 3X, 4X, 5X, 8X, 10X, 12X, 15X, 20X, 25X, 50X, 100X, 500X, 1000X, AND 2500X. |
-| 規則說明 | 每次發生中獎消除，消除前已在盤面的每顆 C2 升一個級距；本次補入的新 C2 要到下一次消除才升級。 | EACH WINNING CLEAR UPGRADES EVERY C2 ALREADY ON THE GRID BY ONE LEVEL. A NEW C2 THAT DROPS IN IS NOT UPGRADED UNTIL A LATER CLEAR. |
-| 規則說明 | C2 不會被消除。同一 Spin 最終盤面有多顆 C2 時，其倍數相加；沒有 C2 時使用 1x。 | C2 SYMBOLS ARE NOT CLEARED. MULTIPLE C2 VALUES ON THE FINAL GRID ARE ADDED; IF NO C2 IS PRESENT, 1X APPLIES. |
+| 副標題 | C2／C3 倍數 | C2 / C3 MULTIPLIER |
+| 規則說明 | C2 與 C3 的完整倍數級距尚未定案；兩者單顆最高倍數均為 2500x。 | THE COMPLETE C2 AND C3 MULTIPLIER LEVELS ARE TO BE FINALIZED. THE MAXIMUM VALUE OF EACH C2 OR C3 SYMBOL IS 2500X. |
+| 規則說明 | C2 維持出現時的倍數。每次發生中獎消除，消除前已在盤面的每顆 C3 升一個級距；本次補入的新 C3 要到下一次消除才升級。 | C2 KEEPS ITS ORIGINAL VALUE. EACH WINNING CLEAR UPGRADES EVERY C3 ALREADY ON THE GRID BY ONE LEVEL. A NEW C3 THAT DROPS IN IS NOT UPGRADED UNTIL A LATER CLEAR. |
+| 規則說明 | C2 與 C3 不會被消除。同一 Spin 最終盤面的所有 C2／C3 倍數相加；沒有倍數符號時使用 1x。 | C2 AND C3 SYMBOLS ARE NOT CLEARED. ALL FINAL C2 AND C3 VALUES ARE ADDED; IF NO MULTIPLIER SYMBOL IS PRESENT, 1X APPLIES. |
 
 ## FREE GAME
 
@@ -64,7 +64,7 @@
 | 副標題 | 觸發 | TRIGGER |
 | 規則說明 | Base Game 的最終盤面出現 4 個以上 Scatter 時，觸發 15 次 Free Game。觸發判定在所有 Cascade 結束後進行。 | FOUR OR MORE SCATTERS ON THE FINAL BASE GAME GRID AWARD 15 FREE GAME SPINS. THE TRIGGER IS EVALUATED AFTER ALL CASCADES END. |
 | 規則說明 | Free Game 最終盤面出現 3 個以上 Scatter 時加 5 Spins；總場次上限為 50 Spins。 | THREE OR MORE SCATTERS ON A FINAL FREE GAME GRID ADD 5 SPINS, UP TO A MAXIMUM OF 50 TOTAL SPINS. |
-| 規則說明 | Free Game 每次 Spin 最終盤面的 C2 值會加入累積倍數，並跨 Spin 保留至整場 Free Game 結束。 | THE FINAL C2 VALUES FROM EACH FREE GAME SPIN ARE ADDED TO A CARRYING MULTIPLIER THAT PERSISTS UNTIL THE FREE GAME ENDS. |
+| 規則說明 | Free Game 每次 Spin 最終盤面的 C2／C3 值均會加入累積倍數並立即作用於該次 Spin；累積倍數跨 Spin 保留至整場 Free Game 結束。 | THE FINAL C2 AND C3 VALUES FROM EACH FREE GAME SPIN ARE ADDED TO THE CARRYING MULTIPLIER AND APPLY TO THAT SPIN IMMEDIATELY. THE CARRYING MULTIPLIER PERSISTS UNTIL THE FREE GAME ENDS. |
 
 ## BET MODES
 
@@ -74,6 +74,6 @@
 | --- | --- | --- |
 | 主要標題 | 押注模式 | BET MODES |
 | 副標題 | Extra Bet | EXTRA BET |
-| 規則說明 | Extra Bet 成本為 2 × Normal Bet，Free Game 觸發機率目標為 Normal Bet 的 5 倍。 | EXTRA BET COSTS 2 × NORMAL BET AND TARGETS FIVE TIMES THE NORMAL BET FREE GAME TRIGGER CHANCE. |
+| 規則說明 | Extra Bet 扣款為 2 × 玩家所選基礎 Bet，獎金仍以該基礎 Bet 計算；Free Game 觸發機率目標為 Normal Bet 的 5 倍。 | EXTRA BET COSTS 2 × THE SELECTED BASE BET, WHILE WINS ARE STILL CALCULATED FROM THAT BASE BET. IT TARGETS FIVE TIMES THE NORMAL BET FREE GAME TRIGGER CHANCE. |
 | 副標題 | Buy Feature | BUY FEATURE |
-| 規則說明 | Buy Feature 成本為 100 × Bet，使用保證觸發盤面進入一般 Free Game。本遊戲不提供 Super Feature。 | BUY FEATURE COSTS 100 × BET AND USES A GUARANTEED TRIGGER GRID TO ENTER THE REGULAR FREE GAME. SUPER FEATURE IS NOT AVAILABLE. |
+| 規則說明 | Buy Feature 扣款為 100 × 玩家所選基礎 Bet，FG 獎金仍以該基礎 Bet 計算；使用保證觸發盤面進入一般 Free Game。本遊戲不提供 Super Feature。 | BUY FEATURE COSTS 100 × THE SELECTED BASE BET, AND FREE GAME WINS ARE CALCULATED FROM THAT BASE BET. IT USES A GUARANTEED TRIGGER GRID TO ENTER THE REGULAR FREE GAME. SUPER FEATURE IS NOT AVAILABLE. |

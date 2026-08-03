@@ -1,4 +1,5 @@
 import argparse
+import copy
 import json
 import re
 from pathlib import Path
@@ -23,17 +24,16 @@ METADATA = {
     "extra_fg_probability_multiplier": 5,
     "has_super_feature": False,
     "has_wild": False,
-    "has_jackpot": False,
-    "c2_multiplier_levels": [2, 3, 4, 5, 8, 10, 12, 15, 20, 25, 50, 100, 500, 1000, 2500],
+    "has_jackpot": True,
+    "multiplier_max_value": 2500,
     "max_free_spins": 50,
     "reference_presentation": "文件/260630_Olympus 2500.pptx",
-    "rule_document": "game_rule_H027.md",
+    "rule_document": "game_rule.md",
     "model_status": "rules_confirmed_math_draft",
     "pending_math_items": [
         "Extra Bet dedicated reel and card weights",
         "WW-free recalibrated strips",
-        "Initial 2500x C2 weight",
-        "Max Win cap",
+        "C2/C3 multiplier pools and weights",
     ],
 }
 
@@ -41,11 +41,9 @@ STRIP_SHEETS = [
     "BG_Symbol",
     "BG_Symbol (2)",
     "BG_Symbol (3)",
-    "BG_Symbol (4)",
     "FG_Symbol",
     "FG_Symbol (2)",
     "FG_Symbol (3)",
-    "FG_Symbol (4)",
     "BF_Symbol",
 ]
 
@@ -152,11 +150,11 @@ def parse_named_weights(ws, label_col, weight_col, start_row):
     return names, weights
 
 
-def parse_free_table(ws, name_col, free_col, retrigger_col):
+def parse_free_table(ws, name_col, free_col, retrigger_col, start_row):
     names = []
     free = []
     retrigger = []
-    row = 14
+    row = start_row
     while ws.cell(row, name_col).value is not None:
         names.append(str(ws.cell(row, name_col).value).strip())
         free.append(to_int(ws.cell(row, free_col).value))
@@ -165,66 +163,89 @@ def parse_free_table(ws, name_col, free_col, retrigger_col):
     return {"names": names, "initial": free, "retrigger": retrigger}
 
 
-def parse_c2_block(ws, multiplier_col, first_weight_col):
+def parse_horizontal_weight_block(ws, label, label_col=7):
+    anchor_row = find_row(ws, label_col, label)
+    header_row = anchor_row + 1
     multipliers = []
-    weights = [[] for _ in range(7)]
-    row = 28
-    while ws.cell(row, multiplier_col).value is not None:
-        multipliers.append(to_int(ws.cell(row, multiplier_col).value))
-        for index in range(7):
-            weights[index].append(to_int(ws.cell(row, first_weight_col + index).value))
+    col = label_col + 1
+    while ws.cell(header_row, col).value is not None:
+        multipliers.append(to_int(ws.cell(header_row, col).value))
+        col += 1
+
+    names = []
+    weights = {}
+    row = header_row + 1
+    while ws.cell(row, label_col).value is not None:
+        name = str(ws.cell(row, label_col).value).strip()
+        if name.startswith("#"):
+            break
+        names.append(name)
+        weights[name] = [to_int(ws.cell(row, label_col + 1 + index).value) for index in range(len(multipliers))]
         row += 1
-    names = ["base_direct", "base_wild", "free_direct", "free_wild", "super", "ultimate", "bad"]
     return {
         "multipliers": multipliers,
-        "weights": {name: values for name, values in zip(names, weights)},
-        "weights_cum": {name: cumulative(values) for name, values in zip(names, weights)},
+        "table_names": names,
+        "weights": weights,
+        "weights_cum": {name: cumulative(values) for name, values in weights.items()},
     }
+
+
+def parse_named_single_weights(ws, label, label_col=2, weight_col=3):
+    anchor_row = find_row(ws, label_col, label)
+    names = []
+    weights = []
+    row = anchor_row + 2
+    while ws.cell(row, label_col).value is not None:
+        name = str(ws.cell(row, label_col).value).strip()
+        if name.startswith("#"):
+            break
+        names.append(name)
+        weights.append(to_int(ws.cell(row, weight_col).value))
+        row += 1
+    return {"table_names": names, "weights": weights, "weights_cum": cumulative(weights)}
+
+
+def parse_multiplier_levels(ws):
+    anchor_row = find_row(ws, 2, "multiplier_level")
+    levels = []
+    row = anchor_row + 2
+    while ws.cell(row, 2).value is not None:
+        levels.append(to_int(ws.cell(row, 3).value))
+        row += 1
+    return levels
 
 
 def parse_parameter(ws):
-    normal_names, normal_bg_weights = parse_named_weights(ws, 2, 3, 6)
-    buy_names, buy_bg_weights = parse_named_weights(ws, 12, 13, 6)
-    return {
-        "normal": {
-            "base_reel_names": normal_names,
-            "base_reel_weights": normal_bg_weights,
-            "base_reel_weights_cum": cumulative(normal_bg_weights),
-            "free_table": parse_free_table(ws, 2, 3, 4),
-            "c2_mode_weights": {
-                "base": [to_int(ws.cell(22, col).value) for col in range(3, 6)],
-                "free": [to_int(ws.cell(23, col).value) for col in range(3, 6)],
-            },
-            "c2": parse_c2_block(ws, 2, 3),
-        },
-        "featurebuy": {
-            "base_reel_names": buy_names,
-            "base_reel_weights": buy_bg_weights,
-            "base_reel_weights_cum": cumulative(buy_bg_weights),
-            "free_table": parse_free_table(ws, 12, 13, 14),
-            "c2_mode_weights": {
-                "base": [to_int(ws.cell(22, col).value) for col in range(13, 16)],
-                "free": [to_int(ws.cell(23, col).value) for col in range(13, 16)],
-            },
-            "c2": parse_c2_block(ws, 12, 13),
-        },
+    base = parse_named_single_weights(ws, "weight_base_game_table")
+    free_anchor = find_row(ws, 2, "free_game_table_setting")
+    free_table = parse_free_table(ws, 2, 3, 4, free_anchor + 2)
+    use_c3 = parse_named_single_weights(ws, "weight_use_super_multiplier")
+    use_c3.pop("weights_cum")
+    use_c3["denominator"] = 10000
+    c2 = parse_horizontal_weight_block(ws, "weight_C2_multiplier")
+    c3 = parse_horizontal_weight_block(ws, "weight_C3_multiplier")
+    super_multiplier = parse_horizontal_weight_block(ws, "weight_super_multiplier")
+    multiplier_levels = parse_multiplier_levels(ws)
+
+    normal = {
+        "base_reel_names": base["table_names"],
+        "base_reel_weights": base["weights"],
+        "base_reel_weights_cum": base["weights_cum"],
+        "free_table": free_table,
+        "use_c3": use_c3,
+        "c2": c2,
+        "c3": c3,
     }
-
-
-def apply_h027_c2_levels(parameter):
-    levels = list(METADATA["c2_multiplier_levels"])
-    active_weight_names = ("base_direct", "free_direct", "super", "ultimate", "bad")
-    for profile in parameter.values():
-        c2 = profile["c2"]
-        original_index = {int(value): index for index, value in enumerate(c2["multipliers"])}
-        filtered_weights = {}
-        for name in active_weight_names:
-            values = c2["weights"][name]
-            filtered_weights[name] = [int(values[original_index[level]]) if level in original_index else 0 for level in levels]
-        c2["multipliers"] = levels
-        c2["weights"] = filtered_weights
-        c2["weights_cum"] = {name: cumulative(values) for name, values in filtered_weights.items()}
-    return parameter
+    featurebuy = copy.deepcopy(normal)
+    featurebuy["base_reel_names"] = ["BF_Symbol"]
+    featurebuy["base_reel_weights"] = [1]
+    featurebuy["base_reel_weights_cum"] = [1]
+    return {
+        "multiplier_levels": multiplier_levels,
+        "super_multiplier": super_multiplier,
+        "normal": normal,
+        "featurebuy": featurebuy,
+    }
 
 
 def parse_card_range(label):
@@ -268,17 +289,27 @@ def parse_card_system(ws):
     return {"enabled": True, "retry_limit": 5000, **profiles}
 
 
-def parse_strip_sheet(ws):
-    rows = []
-    weights = []
+def parse_strip_sheet(ws, code_to_id):
+    reel_symbols = [[] for _ in range(6)]
+    reel_weights = [[] for _ in range(6)]
     row = 4
-    while any(ws.cell(row, col).value is not None for col in range(19, 25)):
-        rows.append([to_int(ws.cell(row, col).value, -1) for col in range(19, 25)])
-        weights.append([to_int(ws.cell(row, col).value) for col in range(26, 32)])
+    while ws.cell(row, 11).value is not None:
+        for reel, col in enumerate(range(12, 18)):
+            code = ws.cell(row, col).value
+            if code is None or str(code).strip() == "":
+                continue
+            code = str(code).strip()
+            if code == "WW":
+                continue
+            if code not in code_to_id:
+                raise ValueError(f"Unknown symbol {code!r} in {ws.title}!{ws.cell(row, col).coordinate}")
+            reel_symbols[reel].append(code_to_id[code])
+            reel_weights[reel].append(to_int(ws.cell(row, 26 + reel).value))
         row += 1
-    reel_lengths = []
-    for reel in range(6):
-        reel_lengths.append(sum(1 for item in rows if item[reel] != -1))
+    reel_lengths = [len(values) for values in reel_symbols]
+    max_length = max(reel_lengths, default=0)
+    rows = [[reel_symbols[reel][index] if index < reel_lengths[reel] else -1 for reel in range(6)] for index in range(max_length)]
+    weights = [[reel_weights[reel][index] if index < reel_lengths[reel] else 0 for reel in range(6)] for index in range(max_length)]
     return {"symbols": rows, "weights": weights, "reel_lengths": reel_lengths}
 
 
@@ -293,17 +324,19 @@ def build_config(source_path):
             "Provide the complete H027 parsheet before regenerating config."
         )
     overview = parse_overview(workbook["Overview"])
-    parameter = apply_h027_c2_levels(parse_parameter(workbook["Parameter"]))
+    parameter = parse_parameter(workbook["Parameter"])
     card_system = parse_card_system(workbook["Multiplier_Weight"])
-    strip_data = [parse_strip_sheet(workbook[name]) for name in STRIP_SHEETS]
+    code_to_id = dict(zip(overview["symbol_codes"], overview["symbol_ids"]))
+    strip_data = [parse_strip_sheet(workbook[name], code_to_id) for name in STRIP_SHEETS]
     workbook.close()
 
     config = dict(METADATA)
     config.update(overview)
-    # H027192A is currently an H019-based draft workbook.  Use the actual
-    # source filename as the model name so reports cannot be mistaken for H019.
+    # Use the actual source filename as the model name so generated reports and
+    # configs retain the selected PAR sheet variant.
     config["source_model"] = overview["model"]
     config["model"] = source_path.stem
+    config["multiplier_levels"] = parameter["multiplier_levels"]
     config["parameter"] = parameter
     config["card_system"] = card_system
     config["strip_names"] = STRIP_SHEETS
