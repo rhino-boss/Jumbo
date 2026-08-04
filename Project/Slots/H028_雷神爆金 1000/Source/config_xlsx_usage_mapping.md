@@ -12,9 +12,9 @@
 
 | config 參數組 | xlsx 工作表 | 輪帶範圍／長度 |
 | --- | --- | --- |
-| `BaseGame*1` | `BG_Symbol` | `M4:S153`、150 格 |
+| `BaseGame*1` | `BG_Symbol` | `M4:S203`、200 格 |
 | `BaseGame*2` | `BG_Symbol (2)` | `M4:S124`、121 格 |
-| `FreeGame*1` | `FG_Symbol` | `M4:S124`、121 格 |
+| `FreeGame*1` | `FG_Symbol` | `M4:S203`、200 格 |
 | `FreeGame*2` | `FG_Symbol (2)` | `M4:S124`、121 格 |
 | `FreeGame*3` | `FG_Symbol (3)` | `M4:S124`、121 格 |
 
@@ -22,8 +22,9 @@
 
 | config 欄位 | xlsx 範圍 | 資料形狀 |
 | --- | --- | --- |
-| `BaseGameSymbol1`／`BaseGameSymbolWeight1` | `BG_Symbol!M4:S153`／`AC4:AI153` | 7 輪 × 150 格 |
-| 其他 `*Symbol*`／`*SymbolWeight*` | 各自工作表的 `M4:S124`／`AC4:AI124` | 7 輪 × 121 格 |
+| `BaseGameSymbol1`／`BaseGameSymbolWeight1` | `BG_Symbol!M4:S203`／`AC4:AI203` | 7 輪 × 200 格 |
+| `FreeGameSymbol1`／`FreeGameSymbolWeight1` | `FG_Symbol!M4:S203`／`AC4:AI203` | 7 輪 × 200 格 |
+| 其他未啟用的 `*Symbol*`／`*SymbolWeight*` | 各自工作表的 `M4:S124`／`AC4:AI124` | 7 輪 × 121 格 |
 | `*MegaWay*` | `C33:H47` | 6 輪 × 15 種大符號組合權重 |
 | `*MY*` | `C51:C63` | 13 個 Mystery 權重 |
 | `*PostC1` | `B67:C74` | 8 個 Scatter 數量與對應權重 |
@@ -33,7 +34,7 @@
 | `*Drop4` | `AL91:AR116` | 7 輪 × 26 個符號權重 |
 | `*Drop5` | `AL120:AR145` | 7 輪 × 26 個符號權重 |
 
-啟用中的 `BaseGameSymbol1` 會先依工作表 `A4:J29` 的 ID 對照轉成符號名稱，再回填到真正的輪帶區 `BG_Symbol!M4:S153`。`U:AA` 的 Symbol ID／公式區不再寫入固定值；工具會恢復該區公式、移除失效的 `calcChain.xml` 關聯，並要求 Excel 開啟時完整重算。工具使用暫存檔完成原子置換，但不另外保留備份，因此執行前必須關閉 Excel，並確認所選檔案正確。
+啟用中的 `BaseGameSymbol1`／`FreeGameSymbol1` 會先依工作表 `A4:J29` 的 ID 對照轉成符號名稱，再回填到真正的輪帶區 `M4:S203`。`U:AA` 的 Symbol ID／公式區不再寫入固定值；工具會恢復該區公式、移除失效的 `calcChain.xml` 關聯，並要求 Excel 開啟時完整重算。工具使用暫存檔完成原子置換，但不另外保留備份，因此執行前必須關閉 Excel，並確認所選檔案正確。
 
 ## 其他回填位置
 

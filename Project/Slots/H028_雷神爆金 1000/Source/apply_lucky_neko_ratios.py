@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import heapq
 import json
+import math
 import random
 import re
 from pathlib import Path
@@ -13,11 +15,20 @@ from openpyxl import load_workbook
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ANALYSIS = ROOT / "其他" / "參考資料" / "analysis_lucky_neko.xlsx"
+DEFAULT_ANALYSIS = ROOT / "其他" / "參考資料" / "analysis_lucky_neko_final.xlsx"
 DEFAULT_CONFIG = ROOT / "config_92A.js"
 SYMBOL_COUNT = 26
 BASE_SYMBOL_COUNT = 13
 DROP_WEIGHT_TOTAL = 1_000_000
+MEGAWAY_WEIGHT_TOTAL = 10_000
+R7_OPTIMIZATION_STEPS = 400_000
+MEGAWAY_PATTERNS = [
+    [4, 1], [1, 4], [3, 2], [2, 3],
+    [3, 1, 1], [1, 3, 1], [1, 1, 3],
+    [2, 2, 1], [2, 1, 2], [1, 2, 2],
+    [2, 1, 1, 1], [1, 2, 1, 1], [1, 1, 2, 1], [1, 1, 1, 2],
+    [1, 1, 1, 1, 1],
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -27,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--analysis", type=Path, default=DEFAULT_ANALYSIS)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--seed", type=int, default=20260803)
+    parser.add_argument("--reel-length", type=int, default=200)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--keep-version", action="store_true")
     return parser.parse_args()
@@ -139,17 +151,25 @@ def allocate_initial_counts(probabilities: list[float], total: int) -> list[int]
     collapsed = probabilities[:BASE_SYMBOL_COUNT]
     for symbol_id in range(2, 13):
         collapsed[symbol_id] += probabilities[symbol_id + 11]
-    base_counts = largest_remainder(collapsed, total)
+    # Every SymbolOcc_Init source symbol with a non-zero ratio must remain
+    # visible as at least one ordinary (non-silver) symbol on the reel.
+    base_counts = largest_remainder_keep_positive(collapsed, total)
 
     silver_probabilities = [probabilities[symbol_id + 11] for symbol_id in range(2, 13)]
     silver_total = min(round(sum(silver_probabilities) * total), sum(base_counts[2:13]))
     if silver_total:
         normalized = normalize(silver_probabilities)
         exact = [value * silver_total for value in normalized]
-        silver_counts = [min(int(value), base_counts[index + 2]) for index, value in enumerate(exact)]
+        silver_caps = [
+            max(0, base_counts[index + 2] - (1 if collapsed[index + 2] > 0 else 0))
+            for index in range(11)
+        ]
+        silver_total = min(silver_total, sum(silver_caps))
+        exact = [value * silver_total for value in normalized]
+        silver_counts = [min(int(value), silver_caps[index]) for index, value in enumerate(exact)]
         while sum(silver_counts) < silver_total:
             candidates = [
-                index for index in range(11) if silver_counts[index] < base_counts[index + 2]
+                index for index in range(11) if silver_counts[index] < silver_caps[index]
             ]
             best = max(candidates, key=lambda index: (exact[index] - silver_counts[index], -index))
             silver_counts[best] += 1
@@ -165,16 +185,323 @@ def allocate_initial_counts(probabilities: list[float], total: int) -> list[int]
     return result
 
 
-def read_r7_ratios(wb, mode: str) -> list[float]:
-    ws = wb["ExtraReelSame"]
-    rate_column = 6 if mode == "BG" else 9
+def read_extra_reel_ratios(wb, sheet: str, mode: str) -> list[float]:
+    ws = wb[sheet]
+    rate_column = 3 if mode == "BG" else 4
     values = [0.0] * SYMBOL_COUNT
-    for row in range(2, ws.max_row + 1):
-        symbol_id = ws.cell(row, 3).value
-        if symbol_id is None:
+    for row in range(3, ws.max_row + 1):
+        symbol_id = ws.cell(row, 1).value
+        if symbol_id is None or not isinstance(symbol_id, (int, float)):
             continue
         values[int(symbol_id)] = float(ws.cell(row, rate_column).value or 0)
     return normalize(values)
+
+
+def read_extra_reel_same(wb, mode: str) -> dict[str, list[float]]:
+    ws = wb["ExtraReelSame"]
+    all_column, more_column, denominator_column = (
+        (4, 5, 4) if mode == "BG" else (6, 7, 6)
+    )
+    denominator = float(ws.cell(31, denominator_column).value or 0)
+    if denominator <= 0:
+        raise ValueError(f"ExtraReelSame/{mode}: invalid denominator")
+    all_rates = [0.0] * SYMBOL_COUNT
+    more_rates = [0.0] * SYMBOL_COUNT
+    for row in range(19, 31):
+        symbol_id = int(ws.cell(row, 3).value)
+        # The published ExtraReelSame comparison starts at M1 (config ID 2).
+        # ID 1 is Scatter and is not part of the Extra Reel same-symbol target.
+        if symbol_id == 1:
+            continue
+        all_rates[symbol_id] = float(ws.cell(row, all_column).value or 0) / denominator
+        more_rates[symbol_id] = float(ws.cell(row, more_column).value or 0) / denominator
+    return {"all4": all_rates, "more2": more_rates}
+
+
+def extra_reel_same_counts(reel: list[int]) -> dict[str, list[int]]:
+    all_counts = [0] * SYMBOL_COUNT
+    more_counts = [0] * SYMBOL_COUNT
+    length = len(reel)
+    for start in range(length):
+        counts: dict[int, int] = {}
+        for offset in range(4):
+            symbol_id = reel[(start + offset) % length]
+            counts[symbol_id] = counts.get(symbol_id, 0) + 1
+        for symbol_id, count in counts.items():
+            if count == 4:
+                all_counts[symbol_id] += 1
+            if count >= 2:
+                more_counts[symbol_id] += 1
+    return {"all4": all_counts, "more2": more_counts}
+
+
+def optimize_extra_reel_order(
+    reel: list[int], targets: dict[str, list[float]], seed: int
+) -> list[int]:
+    """Reorder a fixed R7 multiset to fit Lucky Neko's cyclic four-symbol windows."""
+    rng = random.Random(seed)
+    length = len(reel)
+    target_all = [rate * length for rate in targets["all4"]]
+    target_more = [rate * length for rate in targets["more2"]]
+    # Prefer the upper adjacent 0.5 pp step so the reel contains slightly more
+    # four-connected same-symbol windows than the fractional competitor target.
+    target_all_total = math.ceil(sum(target_all) - 1e-12)
+
+    symbol_totals = [reel.count(symbol_id) for symbol_id in range(SYMBOL_COUNT)]
+    desired_all = [
+        min(int(target_all[symbol_id]), symbol_totals[symbol_id] // 4)
+        for symbol_id in range(SYMBOL_COUNT)
+    ]
+    desired_total = target_all_total
+    while sum(desired_all) < desired_total:
+        candidates = [
+            symbol_id for symbol_id in range(SYMBOL_COUNT)
+            if desired_all[symbol_id] < symbol_totals[symbol_id] // 4
+        ]
+        if not candidates:
+            break
+        best_symbol = min(
+            candidates,
+            key=lambda symbol_id: (
+                (desired_all[symbol_id] + 1 - target_all[symbol_id]) ** 2
+                - (desired_all[symbol_id] - target_all[symbol_id]) ** 2,
+                symbol_id,
+            ),
+        )
+        desired_all[best_symbol] += 1
+
+    remaining = symbol_totals[:]
+    cluster_symbols: list[int] = []
+    for symbol_id, all_count in enumerate(desired_all):
+        cluster_symbols.extend([symbol_id] * all_count)
+        remaining[symbol_id] -= 4 * all_count
+
+    def constraints_ok(sequence: list[int]) -> bool:
+        boundary = next(
+            (index for index in range(length) if sequence[index] != sequence[index - 1]),
+            None,
+        )
+        if boundary is None:
+            return False
+        runs: list[int] = []
+        traversed = 0
+        index = boundary
+        while traversed < length:
+            symbol_id = sequence[index]
+            run_length = 0
+            while traversed < length and sequence[index] == symbol_id:
+                run_length += 1
+                traversed += 1
+                index = (index + 1) % length
+            runs.append(run_length)
+        return max(runs) <= 4 and not any(
+            runs[index] >= 2 and runs[(index + 1) % len(runs)] >= 2
+            for index in range(len(runs))
+        )
+
+    def arrange_singletons() -> list[int] | None:
+        for _ in range(500):
+            heap = [
+                (-count, rng.random(), symbol_id)
+                for symbol_id, count in enumerate(remaining)
+                if count > 0
+            ]
+            heapq.heapify(heap)
+            result: list[int] = []
+            while heap:
+                first = heapq.heappop(heap)
+                if result and first[2] == result[-1]:
+                    if not heap:
+                        result = []
+                        break
+                    second = heapq.heappop(heap)
+                    heapq.heappush(heap, first)
+                    first = second
+                count, _, symbol_id = first
+                result.append(symbol_id)
+                count += 1
+                if count < 0:
+                    heapq.heappush(heap, (count, rng.random(), symbol_id))
+            if result and result[0] != result[-1]:
+                return result
+        return None
+
+    candidate = None
+    for _ in range(500):
+        singletons = arrange_singletons()
+        if not singletons:
+            continue
+        clusters = cluster_symbols[:]
+        rng.shuffle(clusters)
+        available_gaps = set(range(len(singletons)))
+        placed: dict[int, int] = {}
+        failed = False
+        for symbol_id in clusters:
+            compatible = [
+                gap for gap in available_gaps
+                if singletons[gap] != symbol_id
+                and singletons[(gap + 1) % len(singletons)] != symbol_id
+            ]
+            if not compatible:
+                failed = True
+                break
+            gap = rng.choice(compatible)
+            placed[gap] = symbol_id
+            available_gaps.remove(gap)
+        if failed:
+            continue
+        built: list[int] = []
+        for gap, symbol_id in enumerate(singletons):
+            built.append(symbol_id)
+            if gap in placed:
+                built.extend([placed[gap]] * 4)
+        if len(built) == length and constraints_ok(built):
+            candidate = built
+            break
+    if candidate is None:
+        raise ValueError("Could not build a valid R7 sequence with separated runs")
+
+    def loss(metrics: dict[str, list[int]]) -> float:
+        all_counts, more_counts = metrics["all4"], metrics["more2"]
+        symbol_error = sum(
+            2.0 * (all_counts[symbol_id] - target_all[symbol_id]) ** 2
+            + (more_counts[symbol_id] - target_more[symbol_id]) ** 2
+            for symbol_id in range(SYMBOL_COUNT)
+        )
+        aggregate_error = (
+            5.0 * (sum(all_counts) - target_all_total) ** 2
+            + 1.5 * (sum(more_counts) - sum(target_more)) ** 2
+        )
+        return symbol_error + aggregate_error
+
+    def window_contributions(start: int) -> tuple[int | None, tuple[int, ...]]:
+        counts: dict[int, int] = {}
+        for offset in range(4):
+            symbol_id = candidate[(start + offset) % length]
+            counts[symbol_id] = counts.get(symbol_id, 0) + 1
+        all_symbol = next((symbol_id for symbol_id, count in counts.items() if count == 4), None)
+        more_symbols = tuple(symbol_id for symbol_id, count in counts.items() if count >= 2)
+        return all_symbol, more_symbols
+
+    def local_constraints_ok(centers: tuple[int, int]) -> bool:
+        for center in centers:
+            for offset in range(-6, 7):
+                index = (center + offset) % length
+                symbol_id = candidate[index]
+                run_length = 1
+                step = 1
+                while step <= 4 and candidate[(index - step) % length] == symbol_id:
+                    run_length += 1
+                    step += 1
+                step = 1
+                while step <= 4 and candidate[(index + step) % length] == symbol_id:
+                    run_length += 1
+                    step += 1
+                if run_length > 4:
+                    return False
+                next_index = (index + 1) % length
+                if candidate[index] == candidate[next_index]:
+                    continue
+                left_repeated = candidate[(index - 1) % length] == candidate[index]
+                right_repeated = candidate[(next_index + 1) % length] == candidate[next_index]
+                if left_repeated and right_repeated:
+                    return False
+        return True
+
+    metrics = extra_reel_same_counts(candidate)
+    current_loss = loss(metrics)
+    best = candidate[:]
+    best_loss = current_loss
+    for step in range(R7_OPTIMIZATION_STEPS):
+        left = rng.randrange(length)
+        right = rng.randrange(length - 1)
+        if right >= left:
+            right += 1
+        if candidate[left] == candidate[right]:
+            continue
+        affected = {
+            (position - offset) % length
+            for position in (left, right)
+            for offset in range(4)
+        }
+        old_contributions = {start: window_contributions(start) for start in affected}
+        old_all = metrics["all4"][:]
+        old_more = metrics["more2"][:]
+        for all_symbol, more_symbols in old_contributions.values():
+            if all_symbol is not None:
+                metrics["all4"][all_symbol] -= 1
+            for symbol_id in more_symbols:
+                metrics["more2"][symbol_id] -= 1
+        candidate[left], candidate[right] = candidate[right], candidate[left]
+        if not local_constraints_ok((left, right)):
+            candidate[left], candidate[right] = candidate[right], candidate[left]
+            metrics["all4"] = old_all
+            metrics["more2"] = old_more
+            continue
+        for start in affected:
+            all_symbol, more_symbols = window_contributions(start)
+            if all_symbol is not None:
+                metrics["all4"][all_symbol] += 1
+            for symbol_id in more_symbols:
+                metrics["more2"][symbol_id] += 1
+        if sum(metrics["all4"]) < target_all_total:
+            candidate[left], candidate[right] = candidate[right], candidate[left]
+            metrics["all4"] = old_all
+            metrics["more2"] = old_more
+            continue
+        new_loss = loss(metrics)
+        temperature = max(0.02, 2.5 * (1.0 - step / R7_OPTIMIZATION_STEPS))
+        accept = new_loss <= current_loss or rng.random() < math.exp((current_loss - new_loss) / temperature)
+        if accept:
+            current_loss = new_loss
+            if new_loss < best_loss:
+                best_loss = new_loss
+                best = candidate[:]
+        else:
+            candidate[left], candidate[right] = candidate[right], candidate[left]
+            metrics["all4"] = old_all
+            metrics["more2"] = old_more
+    if not constraints_ok(best):
+        raise ValueError("Optimized R7 sequence violates consecutive-symbol constraints")
+    return best
+
+
+def read_symbol_size(wb, mode: str, symbol_id: int = 12) -> list[float]:
+    ws = wb["SymbolSize"]
+    for row in section_rows(ws, mode):
+        if int(ws.cell(row, 1).value) == symbol_id:
+            return normalize([float(ws.cell(row, column).value or 0) for column in range(2, 6)])
+    raise ValueError(f"SymbolSize/{mode}: missing symbol ID {symbol_id}")
+
+
+def build_megaway_weights(wb, mode: str, reel_height: list[dict[int, float]]) -> list[list[int]]:
+    # H028's pattern describes only the main reel blocks. Lucky Neko's ReelHigh_Init
+    # includes one Extra Reel symbol, so a source count of N maps to N-1 pattern parts.
+    size_probabilities = read_symbol_size(wb, mode, symbol_id=12)
+    result: list[list[int]] = []
+    for reel in range(6):
+        if reel in (0, 5):
+            weights = [0] * len(MEGAWAY_PATTERNS)
+            weights[-1] = 1
+            result.append(weights)
+            continue
+
+        probabilities = [0.0] * len(MEGAWAY_PATTERNS)
+        for part_count in range(2, 6):
+            indices = [
+                index for index, pattern in enumerate(MEGAWAY_PATTERNS)
+                if len(pattern) == part_count
+            ]
+            raw = [
+                math.prod(size_probabilities[size - 1] for size in MEGAWAY_PATTERNS[index])
+                for index in indices
+            ]
+            conditional = normalize(raw)
+            group_probability = reel_height[reel].get(part_count + 1, 0.0)
+            for index, value in zip(indices, conditional):
+                probabilities[index] = group_probability * value
+        result.append(largest_remainder(probabilities, MEGAWAY_WEIGHT_TOTAL))
+    return result
 
 
 def bump_version(version: str) -> str:
@@ -208,16 +535,25 @@ def build_mode_targets(wb, mode: str) -> dict:
         initial_probabilities.append(split_silver(initial_base[reel], initial_share))
         drop_probabilities.append(split_silver(drop_base[reel], drop_share))
 
-    r7 = read_r7_ratios(wb, mode)
+    r7_initial = read_extra_reel_ratios(wb, "Extra Reel_Init", mode)
+    r7_drop = read_extra_reel_ratios(wb, "Extra Reel_Drop", mode)
     return {
-        "initial": initial_probabilities + [r7],
-        "drop": drop_probabilities + [r7],
+        "initial": initial_probabilities + [r7_initial],
+        "drop": drop_probabilities + [r7_drop],
+        "megaway": build_megaway_weights(wb, mode, reel_height),
+        "extra_reel_same": read_extra_reel_same(wb, mode),
         "initial_silver_shares": initial_silver_shares,
         "drop_silver_shares": drop_silver_shares,
     }
 
 
-def update_config(config: dict, wb, seed: int, keep_version: bool = False) -> dict:
+def update_config(
+    config: dict,
+    wb,
+    seed: int,
+    reel_length: int = 200,
+    keep_version: bool = False,
+) -> dict:
     targets = {mode: build_mode_targets(wb, mode) for mode in ("BG", "FG")}
     mode_settings = {
         "BG": ("BaseGame", "BaseGameSymbol1", "BaseGameSymbolWeight1"),
@@ -225,8 +561,10 @@ def update_config(config: dict, wb, seed: int, keep_version: bool = False) -> di
     }
 
     for mode, (prefix, symbol_key, weight_key) in mode_settings.items():
-        lengths = [len(reel) for reel in config[symbol_key]]
-        if len(lengths) != 7 or any(length <= 0 for length in lengths):
+        if reel_length <= 0:
+            raise ValueError("Reel length must be positive")
+        lengths = [reel_length] * 7
+        if len(config[symbol_key]) != 7:
             raise ValueError(f"{symbol_key}: expected seven non-empty reels")
 
         new_reels = []
@@ -237,8 +575,14 @@ def update_config(config: dict, wb, seed: int, keep_version: bool = False) -> di
                 else largest_remainder_keep_positive(targets[mode]["initial"][reel], length)
             )
             new_reels.append(shuffled_reel(counts, seed + (0 if mode == "BG" else 10_000) + reel))
+        new_reels[6] = optimize_extra_reel_order(
+            new_reels[6],
+            targets[mode]["extra_reel_same"],
+            seed + (30_000 if mode == "BG" else 40_000),
+        )
         config[symbol_key] = new_reels
         config[weight_key] = [[1] * length for length in lengths]
+        config[f"{prefix}MegaWay1"] = [row[:] for row in targets[mode]["megaway"]]
 
         drop_weights = [
             largest_remainder(targets[mode]["drop"][reel], DROP_WEIGHT_TOTAL)
@@ -246,6 +590,20 @@ def update_config(config: dict, wb, seed: int, keep_version: bool = False) -> di
         ]
         for combo in range(1, 6):
             config[f"{prefix}1Drop{combo}"] = [row[:] for row in drop_weights]
+
+        for reel, symbols in enumerate(new_reels):
+            if len(symbols) != reel_length or len(config[weight_key][reel]) != reel_length:
+                raise ValueError(f"{mode} R{reel + 1}: reel/weight length is not {reel_length}")
+            source = targets[mode]["initial"][reel]
+            required_ids = range(BASE_SYMBOL_COUNT) if reel < 6 else range(SYMBOL_COUNT)
+            missing = [symbol_id for symbol_id in required_ids if source[symbol_id] > 0 and symbol_id not in symbols]
+            if missing:
+                raise ValueError(f"{mode} R{reel + 1}: missing non-zero source IDs {missing}")
+        if any(config[f"{prefix}1Drop{combo}"] != drop_weights for combo in range(1, 6)):
+            raise ValueError(f"{mode}: Drop1-Drop5 are not identical")
+        mega_sums = [sum(weights) for weights in config[f"{prefix}MegaWay1"]]
+        if mega_sums != [1, MEGAWAY_WEIGHT_TOTAL, MEGAWAY_WEIGHT_TOTAL, MEGAWAY_WEIGHT_TOTAL, MEGAWAY_WEIGHT_TOTAL, 1]:
+            raise ValueError(f"{mode}: invalid MegaWay totals {mega_sums}")
 
     if not keep_version:
         config["excel_version"] = bump_version(str(config["excel_version"]))
@@ -258,7 +616,13 @@ def main() -> int:
     original_version = str(config["excel_version"])
     wb = load_workbook(args.analysis, read_only=True, data_only=True)
     try:
-        targets = update_config(config, wb, args.seed, args.keep_version)
+        targets = update_config(
+            config,
+            wb,
+            args.seed,
+            reel_length=args.reel_length,
+            keep_version=args.keep_version,
+        )
     finally:
         wb.close()
 
@@ -273,6 +637,18 @@ def main() -> int:
         drop = ", ".join(f"{value:.6%}" for value in targets[mode]["drop_silver_shares"])
         print(f"{mode} Silver_Init shares R1-R6: {initial}")
         print(f"{mode} Silver_Drop shares R1-R6: {drop}")
+        for reel, weights in enumerate(targets[mode]["megaway"], start=1):
+            print(f"{mode} MegaWay R{reel}: {weights}")
+        r7_metrics = extra_reel_same_counts(config[("BaseGame" if mode == "BG" else "FreeGame") + "Symbol1"][6])
+        target_same = targets[mode]["extra_reel_same"]
+        print(
+            f"{mode} ExtraReelSame all4: target={sum(target_same['all4']):.6%}, "
+            f"actual={sum(r7_metrics['all4']) / 200:.6%}"
+        )
+        print(
+            f"{mode} ExtraReelSame more2: target={sum(target_same['more2']):.6%}, "
+            f"actual={sum(r7_metrics['more2']) / 200:.6%}"
+        )
 
     if args.check:
         return 1 if changed else 0

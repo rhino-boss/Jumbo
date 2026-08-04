@@ -6,9 +6,9 @@
 
 | config 參數組 | xlsx 工作表 | 輪帶範圍／長度 |
 | --- | --- | --- |
-| `BaseGame*1` | `BG_Symbol` | `M4:S153`、150 格 |
+| `BaseGame*1` | `BG_Symbol` | `M4:S203`、200 格 |
 | `BaseGame*2` | `BG_Symbol (2)` | `M4:S124`、121 格 |
-| `FreeGame*1` | `FG_Symbol` | `M4:S124`、121 格 |
+| `FreeGame*1` | `FG_Symbol` | `M4:S203`、200 格 |
 | `FreeGame*2` | `FG_Symbol (2)` | `M4:S124`、121 格 |
 | `FreeGame*3` | `FG_Symbol (3)` | `M4:S124`、121 格 |
 
@@ -16,8 +16,9 @@
 
 | xlsx 範圍 | config 欄位 | 資料形狀 |
 | --- | --- | --- |
-| `M4:S153`／`AC4:AI153` | `BaseGameSymbol1`／`BaseGameSymbolWeight1` | 7 輪 × 150 格 |
-| `M4:S124`／`AC4:AI124` | 其他 `*Symbol*`／`*SymbolWeight*` | 7 輪 × 121 格 |
+| `BG_Symbol!M4:S203`／`AC4:AI203` | `BaseGameSymbol1`／`BaseGameSymbolWeight1` | 7 輪 × 200 格 |
+| `FG_Symbol!M4:S203`／`AC4:AI203` | `FreeGameSymbol1`／`FreeGameSymbolWeight1` | 7 輪 × 200 格 |
+| `M4:S124`／`AC4:AI124` | 其他未啟用的 `*Symbol*`／`*SymbolWeight*` | 7 輪 × 121 格 |
 | `C33:H47` | `*MegaWay*` | 6 輪 × 15 種大符號組合權重 |
 | `C51:C63` | `*MY*` | 13 個 Mystery 權重 |
 | `B67:C74` | `*PostC1` | 8 個 Scatter 數量與對應權重 |

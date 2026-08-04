@@ -2206,6 +2206,86 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-04：大型符號在 Ways 中只計一個符號</h4>
+          <ul>
+            <li>大型符號無論覆蓋幾格，在單輪 Ways 數量中都只計 1 個符號。</li>
+            <li>同步修正 Simulator、index 算分與 Help 中英文規則說明。</li>
+            <li>截圖局面重新計算為 M4 2 Ways、M5 1 Way、K 4 Ways、J 1 Way，該次 Cascade 合計 2.35。</li>
+            <li>Numba 重新編譯及統計筆數守恆檢查通過；config、xlsx 與版本號未變更。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：完整主模擬迴圈改用 Numba</h4>
+          <ul>
+            <li>主模擬迴圈、參數抽選、Card 判斷、Free Game Session 與統計累加皆進入 nopython／nogil 路徑。</li>
+            <li>正式計時前先預熱完整主迴圈，首次 JIT 編譯時間不會混入模擬耗時。</li>
+            <li>100,000 局、Card 關閉：單執行緒約 214,412 局／秒，18 執行緒約 1,363,983 局／秒。</li>
+            <li>正確性與統計守恆檢查通過；未修改數學參數、config、xlsx 或版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：R7 重複群組分隔且最多四連</h4>
+          <ul>
+            <li>同一 Symbol 最多連續 4 格；兩段重複群組之間至少插入 1 格單獨 Symbol。</li>
+            <li>BG 14 段、FG 18 段獨立四同符；最大連續長度均為 4，相鄰重複群組為 0。</li>
+            <li>四同符維持 BG 7.0%、FG 9.0%；至少兩同符為 BG 35.0%、FG 46.5%。</li>
+            <li>版本升為 <code>2.0.0.11</code>，並直接覆寫原本的 xlsx。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：增加 R7 四個相同符號相連</h4>
+          <ul>
+            <li>R7 各 Symbol 的 200 格總數不變，只再次調整排列。</li>
+            <li>BG 四同符由 6.5% 提高至 7.0%，FG 由 8.5% 提高至 9.0%。</li>
+            <li>至少兩同符維持 BG 29.5%、FG 45.0%，仍貼近 Lucky Neko。</li>
+            <li>config／xlsx 版本升為 <code>2.0.0.10</code>，並直接覆寫原本的 xlsx。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：R7 排列校正 ExtraReelSame</h4>
+          <ul>
+            <li>保留 R7 的 200 格 Symbol 數量，只重新排列順序，同時校正四格全同符與至少兩格同符率。</li>
+            <li>BG 調整為 6.5%／29.5%，目標為 6.712378%／29.237693%。</li>
+            <li>FG 調整為 8.5%／45.0%，目標為 8.684211%／44.934211%。</li>
+            <li>config／xlsx 版本升為 <code>2.0.0.9</code>，並直接覆寫原本的 <code>H028192A.xlsx</code>。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：合併競品比例報告</h4>
+          <ul>
+            <li>將兩份 Lucky Neko 比例文件整合為 <code>其他/競品參考數值比較.md</code>。</li>
+            <li>目前 <code>2.0.0.8 / 200 格 / final</code> 正式結果與舊版 <code>2.0.0.5 / 150 格</code> 歷史比較分區呈現。</li>
+            <li>保留金框、Mega Way、驗證結果、歷史量化誤差與舊版 R7 資訊。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：改用 analysis_lucky_neko_final 完整同步比例</h4>
+          <ul>
+            <li>初始、掉落、Extra Reel 初始／補入與金框比例，全部改用 <code>analysis_lucky_neko_final.xlsx</code>。</li>
+            <li>每輪維持 200 格；來源比例非 0 的本體 Symbol 至少保留 1 顆非金框符號。</li>
+            <li>所有 Symbol 使用 symbol 12 的 <code>SymbolSize</code>，搭配 <code>ReelHigh_Init</code> 換算 BG／FG 的 15 組 Mega Way 權重。</li>
+            <li>Drop1～Drop5 的金框與 Symbol 分布相同；初始 R7 與消除補入 R7 分別使用對應 Extra Reel 分頁。</li>
+            <li>config／xlsx 版本為 <code>2.0.0.8</code>，雙向差異為 0，<code>calcChain.xml</code> 不存在。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：啟用中的 BG／FG 每輪擴充為 200 格</h4>
+          <ul>
+            <li><code>BaseGameSymbol1</code> 與 <code>FreeGameSymbol1</code> 的 R1～R7，以及對應權重，全部改為精確 200 格。</li>
+            <li>依 Lucky Neko 初始 Symbol、銀框與 R7 比例重新量化，Drop 權重維持上一版同步結果。</li>
+            <li><code>BG_Symbol</code>／<code>FG_Symbol</code> 的 Symbol、Symbol ID 公式與權重延伸至第 203 列。</li>
+            <li>config／xlsx 版本升為 <code>2.0.0.7</code>，雙向差異為 0，<code>calcChain.xml</code> 維持移除。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-03：同步 Lucky Neko 初始、掉落、銀框與 R7 比例</h4>
           <ul>
             <li>版本由 <code>2.0.0.5</code> 升為 <code>2.0.0.6</code>，並直接同步覆寫 <code>Source/H028192A.xlsx</code>。</li>
@@ -2601,7 +2681,7 @@
 | 規則說明 | 本遊戲採用由左至右連續相鄰轉輪判定的 WAY GAME 玩法。 | THIS GAME USES A WAY GAME MECHANIC THAT PAYS FOR MATCHING SYMBOLS ON CONSECUTIVE ADJACENT REELS FROM LEFT TO RIGHT. |
 | 規則說明 | 主盤面為 {6} 輪可變高度盤面，並在第 {2} 至第 {5} 輪上方各配置 {1} 個額外轉輪位置。 | THE MAIN REELS CONSIST OF {6} VARIABLE-HEIGHT REELS, WITH {1} EXTRA REEL POSITION ABOVE REELS {2} TO {5}. |
 | 規則說明 | 本遊戲的路數範圍為 {2,025} WAYS 至 {32,400} WAYS。 | THE NUMBER OF WAYS IN THIS GAME RANGES FROM {2,025} WAYS TO {32,400} WAYS. |
-| 規則說明 | 大型符號覆蓋多個位置時，每一格均視為 {1} 個獨立符號參與 WAY 計算。 | WHEN A LARGE SYMBOL COVERS MULTIPLE POSITIONS, EACH POSITION COUNTS AS {1} INDIVIDUAL SYMBOL FOR WAY CALCULATION. |
+| 規則說明 | 大型符號無論覆蓋多少位置，WAY 計算時均僅視為 {1} 個符號。 | A LARGE SYMBOL COUNTS AS {1} SYMBOL FOR WAY CALCULATION, REGARDLESS OF HOW MANY POSITIONS IT COVERS. |
 | 規則說明 | [走線圖- 32,400 MAX WAY] | [走線圖- 32,400 MAX WAY] |
 | 規則說明 | [走線圖-3 OF A KIND PAYS 2 WAYS] | [走線圖-3 OF A KIND PAYS 2 WAYS] |
 | 規則說明 | [走線圖-NO WIN] | [走線圖-NO WIN] |
@@ -2673,7 +2753,7 @@
   function scatterCount(screen){return screen.main.flat().filter(b=>base(b.id)===1).length+screen.extra.filter(b=>base(b.id)===1).length}
   function collectM1(screen,firstAlready=false){let add=0,count=0;for(const b of [...screen.main.flat(),...screen.extra])if(base(b.id)===2){let v=b.h+1;if(!firstAlready&&count===0)v--;add+=v;count++}return{add,count}}
   function reelBlocks(screen,r){return r>=1&&r<=4?[screen.extra[r-1],...screen.main[r]]:screen.main[r]}
-  function evaluate(screen,multi,cascade){let wins=[],hit=[],total=0;for(let target=2;target<=12;target++){let counts=[],reels=0;for(let r=0;r<6;r++){let c=reelBlocks(screen,r).reduce((sum,b)=>{let x=base(b.id);return sum+(x===target||x===0?Math.max(1,Math.trunc(b.h)||1):0)},0);if(c){counts.push(c);reels++}else break}if(reels>=3){let ways=counts.reduce((a,v)=>a*v,1),pay=(B.linkpoint[target-2]?.[reels-3]||0)*ways*betMultiplier(),totalPay=pay*multi;total+=totalPay;wins.push({symbol:code(target),length:reels,ways,cascade,pay:totalPay});for(let r=0;r<reels;r++){screen.main[r].forEach((b,i)=>{let x=base(b.id);if(x===target||x===0)hit.push(`m-${r}-${i}`)});if(r>=1&&r<=4){let x=base(screen.extra[r-1].id);if(x===target||x===0)hit.push(`e-${r-1}`)}}}}return{wins,hit,total,ways:wins.reduce((a,w)=>a+w.ways,0)}}
+  function evaluate(screen,multi,cascade){let wins=[],hit=[],total=0;for(let target=2;target<=12;target++){let counts=[],reels=0;for(let r=0;r<6;r++){let c=reelBlocks(screen,r).reduce((sum,b)=>{let x=base(b.id);return sum+(x===target||x===0?1:0)},0);if(c){counts.push(c);reels++}else break}if(reels>=3){let ways=counts.reduce((a,v)=>a*v,1),pay=(B.linkpoint[target-2]?.[reels-3]||0)*ways*betMultiplier(),totalPay=pay*multi;total+=totalPay;wins.push({symbol:code(target),length:reels,ways,cascade,pay:totalPay});for(let r=0;r<reels;r++){screen.main[r].forEach((b,i)=>{let x=base(b.id);if(x===target||x===0)hit.push(`m-${r}-${i}`)});if(r>=1&&r<=4){let x=base(screen.extra[r-1].id);if(x===target||x===0)hit.push(`e-${r-1}`)}}}}return{wins,hit,total,ways:wins.reduce((a,w)=>a+w.ways,0)}}
   function pickDrop(scene,suffix,dropIndex,reel){let key=`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}Drop${Math.min(5,dropIndex+1)}`,w=B[key][reel],p=weighted(w),id=p.index;return{id,rng:p}}
   function cascade(screen,evalResult,scene,suffix,dropIndex,mystery){let hit=new Set(evalResult.hit),events=[],newM1=[];for(let r=0;r<6;r++){let kept=[];screen.main[r].forEach((b,i)=>{if(!hit.has(`m-${r}-${i}`))kept.push(b);else if(isGold(b.id)){kept.push({id:0,h:b.h});events.push(`R${r+1} ${code(b.id)} → WW`)}});let height=kept.reduce((a,b)=>a+b.h,0);while(height<5){let p=pickDrop(scene,suffix,dropIndex,r),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};kept.unshift(block);if(base(id)===2)newM1.push(block);events.push(`R${r+1} drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`);height++}screen.main[r]=kept}let keptExtra=[];screen.extra.forEach((b,i)=>{if(!hit.has(`e-${i}`))keptExtra.push(b);else if(isGold(b.id)){keptExtra.push({id:0,h:1});events.push(`EXTRA ${code(b.id)} → WW`)}});while(keptExtra.length<4){let p=pickDrop(scene,suffix,dropIndex,6),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};keptExtra.push(block);if(base(id)===2)newM1.push(block);events.push(`EXTRA drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`)}screen.extra=keptExtra;return{events,newM1}}
   function parseOverrides(){let raw=el.reel.value.trim();if(!raw)return null;let a=raw.split(/\s+/).map(Number);if(a.length!==7||a.some(v=>!Number.isInteger(v)||v<0))throw Error('Reel RNG requires exactly 7 non-negative integers.');return a}

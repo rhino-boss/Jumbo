@@ -31,7 +31,7 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
@@ -657,8 +657,8 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
 
             for reel_idx in range(6):
                 matching = 0
-                # 依 lengths 逐 MegaWay block 走訪；大型符號覆蓋的每一格
-                # 均視為一個獨立符號參與 Ways 計算。
+                # 依 lengths 逐 MegaWay block 走訪；大型符號無論覆蓋幾格，
+                # 在 Ways 計算中只視為一個符號。
                 c = 0
                 while c < 6:
                     sym = board[reel_idx, c]
@@ -667,7 +667,7 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
                         c += 1
                         continue
                     if sym == target_symbol or sym == gold_symbol or sym == 0:
-                        matching += L
+                        matching += 1
                     c += L
 
                 if matching > 0:
@@ -1046,8 +1046,8 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
 
             for reel_idx in range(6):
                 matching = 0
-                # 依 lengths 逐 MegaWay block 走訪；大型符號覆蓋的每一格
-                # 均視為一個獨立符號參與 Ways 計算。
+                # 依 lengths 逐 MegaWay block 走訪；大型符號無論覆蓋幾格，
+                # 在 Ways 計算中只視為一個符號。
                 c = 0
                 while c < 6:
                     sym = board[reel_idx, c]
@@ -1056,7 +1056,7 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
                         c += 1
                         continue
                     if sym == target_symbol or sym == gold_symbol or sym == 0:
-                        matching += L
+                        matching += 1
                     c += L
 
                 if matching > 0:
@@ -1244,8 +1244,9 @@ def freegame_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights
 # ========== 多進程支持 ==========
 
 
+@njit(nogil=True)
 def single_spin(param_set, enable_m1_multiplier=True):
-    """執行單次 spin (Python wrapper)，返回 (win, c1_count, multiplier, init_c1_count, c1_len_stats, cascade_scores)
+    """執行單次 spin，返回 (win, c1_count, multiplier, init_c1_count, c1_len_stats, cascade_scores)
 
     參數:
     - param_set: 參數組 (1 或 2)
@@ -1512,6 +1513,7 @@ def basegame(n_simulations, n_cores=None, enable_m1_multiplier=True):
 # ========== FreeGame 函數 ==========
 
 
+@njit(nogil=True)
 def freegame_single_spin(param_set, current_multiplier, current_m1_count, enable_m1_multiplier=True):
     """執行 FreeGame 單次 spin，返回 (win, c1_count, new_multiplier, new_m1_count, cascade_scores)
 
@@ -1973,6 +1975,7 @@ CASCADE_LABELS = ["Cascade 1", "Cascade 2", "Cascade 3", "Cascade 4", "Cascade 5
 FG_MULTIPLIER_LABELS = [str(value) for value in range(1, 15)] + ["15+"]
 
 
+@njit(nogil=True)
 def calc_coin_in(bet_mode, bet_multi):
     if bet_mode == MODE_NORMALBET:
         return DEFAULT_COIN_IN * NORMALBET * bet_multi
@@ -1991,6 +1994,7 @@ def format_bet_mode_label(bet_mode):
     return "Normal Bet"
 
 
+@njit(nogil=True)
 def choose_parameter_set(weights):
     total = float(np.sum(weights))
     if total <= 0:
@@ -2004,6 +2008,7 @@ def choose_parameter_set(weights):
     return len(weights)
 
 
+@njit(nogil=True)
 def pick_card(card_profile_index):
     card_count = int(CARD_COUNTS[card_profile_index])
     if card_count <= 0:
@@ -2015,6 +2020,7 @@ def pick_card(card_profile_index):
     return int(np.searchsorted(CARD_WEIGHT_CUM[card_profile_index, :card_count], pick, side="right"))
 
 
+@njit(nogil=True)
 def is_card_match(card_profile_index, card_index, score, card_coin_in, triggered_free_game):
     if card_index < 0:
         return True
@@ -2024,6 +2030,7 @@ def is_card_match(card_profile_index, card_index, score, card_coin_in, triggered
     return multiplier > CARD_MIN[card_profile_index, card_index] and multiplier <= CARD_MAX[card_profile_index, card_index]
 
 
+@njit(nogil=True)
 def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
     initial_spins = 10 + max(0, trigger_c1_count - 4) * 2
     remaining_spins = initial_spins
@@ -2078,6 +2085,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
     )
 
 
+@njit(nogil=True)
 def threshold_index(win_multiplier):
     for index, upper_bound in enumerate(THRESHOLD_RECORD):
         if win_multiplier <= upper_bound:
@@ -2085,6 +2093,7 @@ def threshold_index(win_multiplier):
     return len(THRESHOLD_RECORD) - 1
 
 
+@njit(nogil=True)
 def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
     record_data = np.zeros(RECORD_SIZE, dtype=np.int64)
     coin_in = calc_coin_in(bet_mode, bet_multi)
@@ -2287,9 +2296,10 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     if bet_mode not in SUPPORTED_BET_MODES:
         calc_coin_in(bet_mode, bet_multi)
 
-    # Compile both BG and FG Numba paths before timing the requested run.
+    # Compile the BG/FG paths and the complete chunk loop before timing.
     single_spin(1, ENABLE_M1_MULTIPLIER)
     freegame_single_spin(1, 1, 0, ENABLE_M1_MULTIPLIER)
+    simulator_chunk(1, bet_mode, bet_multi, ENABLE_M1_MULTIPLIER)
 
     chunk_rounds = build_chunk_rounds(total_round, threads)
     start = time.perf_counter()
