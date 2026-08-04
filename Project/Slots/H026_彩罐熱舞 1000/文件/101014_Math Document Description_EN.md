@@ -92,10 +92,7 @@ Provides the game specification and the mathematical target values.
 | Block | Content | Used by program |
 | --- | --- | --- |
 | Model / Version | Model code and version | Yes (written into the output file name) |
-| Base Bet | Bet basis | Yes (Coin In calculation) |
-| Hold | Operator hold, equal to `1 − Total Pay Back` | No (target value) |
-| RTP row | Breakdown and totals of the pay-back rates (see below) | No (target values) |
-| Feature-probability row | Free Game trigger rate and cycle, Hit JP Symbol appear rate, simulated spin count | No (target values) |
+| RTP row | Bet basis and the pay-back rates (see below) | `Base Bet` only; the rest are target values |
 | Reel # / Visible Window Size | Reel count and scoring row count | Yes (board dimensions) |
 | Free Spins Setting | Free-spin count per Scatter count, and the overall cap | Yes (see 3-7) |
 | Pay Table | Symbol code, Id and 3 / 4 / 5-of-a-kind pay values | Yes (win evaluation) |
@@ -104,34 +101,26 @@ Provides the game specification and the mathematical target values.
 
 | Field | Meaning |
 | --- | --- |
-| `Coin` | Bet basis |
-| `Payline` | Number of paylines |
-| `Hit%` | Line-win hit rate |
-| `Link Pay Back` | Pay-back rate of the linked progressive jackpots (OP Jackpot GRAND + MAJOR) |
-| `Bonus Pay Back` | Pay-back rate of the fixed jackpot pools (OP Jackpot MINOR + MINI) |
-| `Base Game Pay Back` | Pay-back rate of the Base Game |
-| `Free Game Pay Back` | Pay-back rate of the Free Game |
-| `Game Pay Back` | `Base Game Pay Back + Free Game Pay Back`, i.e. the RTP of the game itself |
-| `Total Pay Back` | `Game Pay Back + Bonus Pay Back + Link Pay Back`, i.e. the total pay-back including the jackpot |
-
-**Fields of the feature-probability row**
-
-| Field | Meaning |
-| --- | --- |
-| `Free Game Hits` | Free Game trigger rate |
-| `Free Game Cycle` | Free Game cycle, the reciprocal of the trigger rate |
+| `Base Bet` | Bet basis |
+| `Game RTP` | Pay-back rate of the game itself, the sum of the Base Game and Free Game contributions |
+| `Bonus RTP` | Pay-back rate of the fixed jackpot pools (OP Jackpot MINOR + MINI) |
+| `Link RTP` | Pay-back rate of the linked progressive jackpots (OP Jackpot GRAND + MAJOR) |
+| `Total RTP` | `Game RTP + Bonus RTP + Link RTP`, i.e. the total pay-back including the jackpot |
 | `Hit JP Symbol appear rate` | Probability that at least one Hit JP Symbol (the Scatter in this game) appears on the screen per spin, expressed as a weight out of Threshold 10,000,000,000; used by the jackpot module to derive its actual hit probability |
-| `Simulation Time` | Number of simulated spins behind the statistics above |
 
 **Coin In calculation**
 
 ```
-Coin In = bet multiplier × Base Bet
+Coin In = bet multiplier x Base Bet
 ```
 
 All RTP and multiplier statistics are expressed as "total win of the round ÷ Coin In".
 
-> The `Game Pay Back` of the two math files is 92% and 94% respectively, but their `Link Pay Back` is 2% and 0% respectively, so **`Total Pay Back` is identical in both** (96%), as is `Hold` (4%).
+> The `Game RTP` of the two math files is 92% and 94% respectively, but their `Link RTP` is 2% and 0% respectively, so **`Total RTP` is identical in both (96%)**.
+>
+> This mirrors the two OP Jackpot configurations: `JP0100B` funds GRAND 1% + MAJOR 1% (Link 2%), while `JP0100A` sets both to 0% (Link 0%). MINOR 0.8% + MINI 1.2% exist in both configurations, so `Bonus RTP` is fixed at 2%.
+>
+> The Base Game / Free Game breakdown behind `Game RTP` is recorded on `Multiplier_Weight_Detail` (see [1-7](#1-7-multiplier_weight_detail)), together with the Free Game trigger rate and cycle.
 >
 > The `Hit JP Symbol appear rate` value is taken from the `SCR` field of the `OP Jackpot` worksheet, which is recorded together with `C1 cnt` and `Spin` from the same simulation run.
 

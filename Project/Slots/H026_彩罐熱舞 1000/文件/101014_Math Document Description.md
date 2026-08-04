@@ -92,11 +92,7 @@
 | 區塊 | 內容 | 程式使用 |
 | --- | --- | --- |
 | Model / Version | 模型代號與版本 | ✅ 寫入輸出檔名 |
-| Base Bet | 押注基準 | ✅ 計算 Coin In |
-| Hold | 押注方保留率，等於 `1 − Total Pay Back` | ❌ 目標值 |
-| Base Bet | 押注基準 | ✅ 計算 Coin In |
-| RTP 主列 | 各項派彩率的拆解與合計（見下表） | ❌ 目標值 |
-| 功能機率副列 | FG 觸發率、FG 週期、Hit JP Symbol 出現率、模擬局數 | ❌ 目標值 |
+| RTP 主列 | 押注基準與各項派彩率（見下表） | 僅 `Base Bet` ✅，其餘為目標值 |
 | Reel # / Visible Window Size | 輪數與記分列數 | ✅ 建立盤面尺寸 |
 | Free Spins Setting | 記分區 Scatter 數量對應的免費場次，以及總場次上限 | ✅（見 3-7） |
 | Pay Table | 各符號的代號、Id 與 3／4／5 連線賠率 | ✅ 判獎 |
@@ -105,24 +101,12 @@
 
 | 欄位 | 意義 |
 | --- | --- |
-| `Coin` | 押注基準 |
-| `Payline` | 線數 |
-| `Hit%` | 連線中獎率 |
-| `Link Pay Back` | 連線累積彩金的派彩率（OP Jackpot 的 GRAND + MAJOR） |
-| `Bonus Pay Back` | 固定彩金池的派彩率（OP Jackpot 的 MINOR + MINI） |
-| `Base Game Pay Back` | Base Game 的派彩率 |
-| `Free Game Pay Back` | Free Game 的派彩率 |
-| `Game Pay Back` | `Base Game Pay Back + Free Game Pay Back`，即遊戲本身的 RTP |
-| `Total Pay Back` | `Game Pay Back + Bonus Pay Back + Link Pay Back`，即含彩金的總派彩率 |
-
-**功能機率副列的欄位**
-
-| 欄位 | 意義 |
-| --- | --- |
-| `Free Game Hits` | Free Game 的觸發率 |
-| `Free Game Cycle` | Free Game 的週期，即觸發率的倒數 |
+| `Base Bet` | 押注基準 |
+| `Game RTP` | 遊戲本身的派彩率，等於 Base Game 與 Free Game 兩段之和 |
+| `Bonus RTP` | 固定彩金池的派彩率（OP Jackpot 的 MINOR + MINI） |
+| `Link RTP` | 連線累積彩金的派彩率（OP Jackpot 的 GRAND + MAJOR） |
+| `Total RTP` | `Game RTP + Bonus RTP + Link RTP`，即含彩金的總派彩率 |
 | `Hit JP Symbol appear rate` | 每次 spin 畫面上至少出現一顆 Hit JP Symbol（本遊戲為 Scatter）的機率，以 Threshold 10,000,000,000 為分母表示；供彩金模組換算實際判定機率使用 |
-| `Simulation Time` | 產生上述統計所用的模擬局數 |
 
 **Coin In 的計算**
 
@@ -132,7 +116,11 @@ Coin In = 下注倍數 × Base Bet
 
 所有 RTP 與倍率統計都以「該局總得分 ÷ Coin In」為單位。
 
-> 兩份 math file 的 `Game Pay Back` 分別為 92% 與 94%，但 `Link Pay Back` 分別為 2% 與 0%，因此 **`Total Pay Back` 兩版一致**（96%），`Hold` 也一致（4%）。
+> 兩份 math file 的 `Game RTP` 分別為 92% 與 94%，但 `Link RTP` 分別為 2% 與 0%，因此 **`Total RTP` 兩版一致（96%）**。
+>
+> 這對應 OP Jackpot 的兩組設定：`JP0100B` 募集 GRAND 1% + MAJOR 1%（Link 2%），`JP0100A` 則將兩者設為 0%（Link 0%）；MINOR 0.8% + MINI 1.2% 在兩組設定中都存在，因此 `Bonus RTP` 固定為 2%。
+>
+> `Game RTP` 的 Base Game 與 Free Game 拆解值記錄在 `Multiplier_Weight_Detail`（見 [1-7](#1-7-multiplier_weight_detail)），FG 的觸發率與週期亦同。
 >
 > `Hit JP Symbol appear rate` 的數值取自 `OP Jackpot` 工作表的 `SCR` 欄位，該欄與 `C1 cnt`／`Spin` 為同一次模擬的紀錄。
 

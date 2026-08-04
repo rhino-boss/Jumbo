@@ -2037,8 +2037,18 @@
       background: linear-gradient(145deg,rgba(40,174,205,.92),rgba(9,67,96,.96)) !important;
     }
     .cell.gold {
-      border-color: rgba(255,216,106,.96) !important;
-      background: rgba(87,63,23,.38) !important;
+      border-color: #ffe681 !important;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,246,174,.32) 18%, rgba(255,222,91,0) 43%),
+        linear-gradient(180deg, #ffdc58 0%, #dda01d 53%, #b87306 100%) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.88),
+        inset 0 -3px 8px rgba(101,53,0,.28),
+        0 0 8px rgba(255,199,52,.28) !important;
+    }
+    .cell.gold .h027-glyph {
+      color: #fff !important;
+      text-shadow: 0 2px 2px rgba(88,45,0,.72), 0 0 5px rgba(255,244,175,.55);
     }
     .cell.symbol-cleared {
       animation: h047-symbol-clear var(--clear-duration,260ms) ease-in forwards;
@@ -2050,7 +2060,7 @@
       will-change: transform,opacity;
     }
     .cell.convert {
-      animation: h047-gold-to-wild 320ms ease-out both;
+      animation: h047-gold-to-wild 960ms ease-out both;
     }
     @keyframes h047-symbol-clear {
       0% { transform: scale(1); opacity: 1; filter: brightness(1.25); }
@@ -2423,6 +2433,7 @@ function countScatter(board) {
 // Process one cascade step: convert GC→Wild, eliminate hits, apply Joker, drop, fill
 function cascade(board, hit, tableName) {
   const converts = [];
+  const convertedKeys = new Set();
   const cleared = Array.from({length:ROWS},()=>Array(COLS).fill(false));
   const dropMotion = {};
   // 1. Convert hit Golden Cards to Wild
@@ -2430,8 +2441,11 @@ function cascade(board, hit, tableName) {
     if(hit[r][c] && board[r][c].isGold) {
       board[r][c] = makeCell(S.WW);
       converts.push({row:r,col:c});
+      convertedKeys.add(`${r}-${c}`);
     }
   }
+  // Snapshot before Big Joker copies extra WW, for the two-stage animation.
+  const boardGoldConverted = cloneBoard(board);
   // 2. Joker effect: if any GC converted, decide Big/Little Joker
   if(converts.length>0) {
     const bigJoker = Math.random()<0.5;
@@ -2450,6 +2464,7 @@ function cascade(board, hit, tableName) {
         hit[r][c]=false;
         board[r][c].isNewJoker=true;
         converts.push({row:r,col:c,big:true});
+        convertedKeys.add(`${r}-${c}`);
       }
     }
     // Little Joker: only the converted positions become Wild (already done)
@@ -2457,33 +2472,42 @@ function cascade(board, hit, tableName) {
   // Preserve visible symbols for the eliminate animation after all WW conversions.
   const boardConverted = cloneBoard(board);
 
-  // 3. Eliminate every winning cell, including WW and gold cards converted to WW.
+  // 3. Existing winning WW disappear. A gold card converted this cascade stays
+  //    in its original position and can only participate as WW from next cascade.
   for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) {
-    if(hit[r][c]) {
+    if(hit[r][c] && !convertedKeys.has(`${r}-${c}`)) {
       cleared[r][c]=true;
       board[r][c].isEmpty=true;
     }
   }
-  // 4. Drop: per column, compact non-empty to bottom, fill top with new
+  // 4. Drop around newly converted WW anchors; anchors never move this cascade.
   for(let c=0;c<COLS;c++) {
-    const survivors=[];
-    for(let r=ROWS-1;r>=0;r--) {
-      if(!board[r][c].isEmpty) survivors.push({cell:board[r][c],oldRow:r});
+    const anchors=converts.filter(pos=>pos.col===c).map(pos=>pos.row).sort((a,b)=>a-b);
+    const fillSegment=(top,bottom)=>{
+      if(top>bottom) return;
+      const survivors=[];
+      for(let r=bottom;r>=top;r--) if(!board[r][c].isEmpty) survivors.push({cell:board[r][c],oldRow:r});
+      let targetRow=bottom;
+      for(const survivor of survivors) {
+        board[targetRow][c]=survivor.cell;
+        const rows=targetRow-survivor.oldRow;
+        if(rows>0) dropMotion[`${targetRow}-${c}`]={type:'settle',rows};
+        targetRow--;
+      }
+      while(targetRow>=top) {
+        board[targetRow][c]=reelCell(tableName,c);
+        dropMotion[`${targetRow}-${c}`]={type:'new',rows:bottom-targetRow+1};
+        targetRow--;
+      }
+    };
+    let segmentTop=0;
+    for(const anchorRow of anchors) {
+      fillSegment(segmentTop,anchorRow-1);
+      segmentTop=anchorRow+1;
     }
-    let targetRow=ROWS-1;
-    for(const survivor of survivors) {
-      board[targetRow][c]=survivor.cell;
-      const rows=targetRow-survivor.oldRow;
-      if(rows>0) dropMotion[`${targetRow}-${c}`]={type:'settle',rows};
-      targetRow--;
-    }
-    while(targetRow>=0) {
-      board[targetRow][c]=reelCell(tableName,c);
-      dropMotion[`${targetRow}-${c}`]={type:'new',rows:ROWS-targetRow};
-      targetRow--;
-    }
+    fillSegment(segmentTop,ROWS-1);
   }
-  return {converts,cleared,boardConverted,dropMotion};
+  return {converts,cleared,boardGoldConverted,boardConverted,dropMotion};
 }
 
 // ─── SPIN ─────────────────────────────────────────────────────────────────────
@@ -2523,6 +2547,7 @@ function runSpin(mode, stripStartIdx=0, options={}) {
     steps.push({
       cascadeIdx: cascadeCount,
       boardBefore,
+      boardGoldConverted: transition.boardGoldConverted,
       boardConverted: transition.boardConverted,
       boardAfter: cloneBoard(board),
       wins, rawSum, mult:cumulSum, stripVal, pay,
@@ -2681,7 +2706,7 @@ function updateCards(win=null) {
   balEl.textContent = fmtI(st.balance);
   betEl.textContent = fmtBet(getBet());
   betBtn.textContent = `Bet ${fmtBet(getBet())}`;
-  winEl.textContent = win!==null ? fmtI(win) : fmtI(st.displayWin);
+  winEl.textContent = win!==null ? fmt(win) : fmt(st.displayWin);
   if(st.totalBet>0) rtpEl.textContent=(st.totalWin/st.totalBet*100).toFixed(1)+'%';
   if(st.totalSpins>0) hitEl.textContent=(st.hitSpins/st.totalSpins*100).toFixed(1)+'%';
   roundEl.textContent = fmtI(st.roundCount);
@@ -2826,9 +2851,12 @@ function prepareDebugFrames(spin) {
   const frames=[{phase:'stopped',board:spin.initBoard,message:`${spin.mode} stopped | ${spin.tableName} | RNG ${spin.reelStops.join(' ')}`}];
   for(const step of spin.steps) {
     const hit=buildHitMask(step.boardBefore,step.wins);
-    const converts=step.converts.map(c=>({row:c.row,col:c.col}));
-    frames.push({phase:'score',board:step.boardBefore,hit,converts,message:`Cascade ${step.cascadeIdx} | Score +${fmt(step.pay)}`});
-    frames.push({phase:'eliminate',board:step.boardConverted,converts,cleared:step.cleared,message:`Cascade ${step.cascadeIdx} | Eliminate`});
+    const goldConverts=step.converts.filter(c=>!c.big).map(c=>({row:c.row,col:c.col}));
+    const bigConverts=step.converts.filter(c=>c.big).map(c=>({row:c.row,col:c.col}));
+    frames.push({phase:'score',board:step.boardBefore,hit,message:`Cascade ${step.cascadeIdx} | Score +${fmt(step.pay)}`});
+    if(goldConverts.length) frames.push({phase:'gold-to-wild',board:step.boardGoldConverted,converts:goldConverts,message:`Cascade ${step.cascadeIdx} | Golden → WW`});
+    if(bigConverts.length) frames.push({phase:'big-joker',board:step.boardConverted,converts:bigConverts,message:`Cascade ${step.cascadeIdx} | Big Joker → WW ×${bigConverts.length}`});
+    frames.push({phase:'eliminate',board:step.boardConverted,cleared:step.cleared,message:`Cascade ${step.cascadeIdx} | Eliminate`});
     frames.push({phase:'drop',board:step.boardAfter,dropMotion:step.dropMotion,message:`Cascade ${step.cascadeIdx} | Drop`});
   }
   frames.push({phase:'complete',board:spin.board,message:`${spin.mode} complete | Win ${fmt(spin.totalRaw)}`});
@@ -2887,6 +2915,9 @@ async function animateReels(initialBoard, isExtraReelDone) {
 
 async function playSpin(spin, fgLeft=null) {
   updateFeatureBar(spin, fgLeft);
+  let cascadeWin=0;
+  st.displayWin=0;
+  updateCards(0);
   cascEl.textContent='0'; cumulMultEl.textContent='x1';
   msgEl.textContent=`${spin.mode} Spin ${spin.spinIdx} | Rolling reels...`;
   let extraReelDone=false;
@@ -2906,18 +2937,36 @@ async function playSpin(spin, fgLeft=null) {
 
   for(const step of spin.steps) {
     const hit=buildHitMask(step.boardBefore, step.wins);
-    const cvtSet=step.converts.map(c=>({row:c.row,col:c.col}));
+    const goldCvtSet=step.converts.filter(c=>!c.big).map(c=>({row:c.row,col:c.col}));
+    const bigCvtSet=step.converts.filter(c=>c.big).map(c=>({row:c.row,col:c.col}));
     boardEl.dataset.phase='score';
-    renderBoard(step.boardBefore, hit, cvtSet);
+    renderBoard(step.boardBefore, hit);
     renderWaysList(spin.allWins.filter(w=>w.cascade===step.cascadeIdx));
     cascEl.textContent = step.cascadeIdx;
     cumulMultEl.textContent = 'x'+step.mult;
+    cascadeWin+=step.pay;
+    st.displayWin=cascadeWin;
+    updateCards(cascadeWin);
     msgEl.textContent=`Cascade ${step.cascadeIdx} | Score lines | ×${step.stripVal}→Σ×${step.mult} | +${fmt(step.pay)}`;
     await Promise.all([stepTrackForward(),delay(420)]);
 
+    if(goldCvtSet.length) {
+      boardEl.dataset.phase='gold-to-wild';
+      renderBoard(step.boardGoldConverted,null,goldCvtSet);
+      msgEl.textContent=`Cascade ${step.cascadeIdx} | Golden → WW ×${goldCvtSet.length}`;
+      await delay(960);
+    }
+
+    if(bigCvtSet.length) {
+      boardEl.dataset.phase='big-joker';
+      renderBoard(step.boardConverted,null,bigCvtSet);
+      msgEl.textContent=`Cascade ${step.cascadeIdx} | Big Joker | Random symbols → WW ×${bigCvtSet.length}`;
+      await delay(1260);
+    }
+
     boardEl.dataset.phase='eliminate';
-    renderBoard(step.boardConverted,null,cvtSet,false,false,{cleared:step.cleared});
-    msgEl.textContent=`Cascade ${step.cascadeIdx} | Eliminate${cvtSet.length?` | Golden → WW ×${cvtSet.length}`:''}`;
+    renderBoard(step.boardConverted,null,null,false,false,{cleared:step.cleared});
+    msgEl.textContent=`Cascade ${step.cascadeIdx} | Eliminate`;
     await delay(320);
 
     boardEl.dataset.phase='drop';
