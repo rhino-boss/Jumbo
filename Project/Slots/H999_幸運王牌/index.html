@@ -844,7 +844,7 @@
       z-index: 3;
       border-color: #ffe56b;
       box-shadow: 0 0 10px rgba(255, 229, 107, 0.95), inset 0 0 18px rgba(255, 229, 107, 0.35);
-      animation: h016WildMark 180ms ease-in-out infinite alternate;
+      animation: h999WildMark 180ms ease-in-out infinite alternate;
     }
 
     .cell.wild-mark::after {
@@ -863,7 +863,7 @@
       pointer-events: none;
     }
 
-    @keyframes h016WildMark {
+    @keyframes h999WildMark {
       from { transform: scale(0.96); filter: brightness(1); }
       to { transform: scale(1.05); filter: brightness(1.35); }
     }
@@ -879,7 +879,7 @@
       font-size: 10px;
     }
 
-    /* H016 symbol artwork is scaled into every cell without cropping. */
+    /* H999 symbol artwork is scaled into every cell without cropping. */
     .cell .symbol-wrap {
       inset: 0;
       z-index: 1;
@@ -2046,7 +2046,7 @@
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">H016192</span> <span id="gameName">Lucky Ace</span></span>
+      <span id="game-title"><span id="gameId">H999192</span> <span id="gameName">Lucky Ace</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2184,8 +2184,8 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92.js">H016192</option>
-            <option value="config_94.js">H016194</option>
+            <option value="config_92.js">H999192</option>
+            <option value="config_94.js">H999194</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2212,18 +2212,17 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule_H999.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
-  <script id="embeddedH016GameRuleMarkdown" type="text/plain">
-
+  <script id="embeddedH999GameRuleMarkdown" type="text/plain">
 # 幸運王牌 (Lucky Ace) 遊戲規則說明
 
-> 文件版本：v0.1（草稿）
+> 文件版本：v0.2（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
-> 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016192.xlsx`、`Source/H016194.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
-> 編號：H016
-> 撰寫日期：2026-07-28
+> 撰寫依據：以 `H016_幸運王牌` 現行專案為主來源完整複製；遊戲設定與數值使用 `Source/H999192.xlsx`、`Source/H999194.xlsx`；本版依企劃指示將 BG / FG 連消倍數擴充為五階
+> 編號：H999
+> 撰寫日期：2026-08-04
 
 ---
 
@@ -2231,9 +2230,9 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 幸運王牌（H016） |
-| Game ID | H016 |
-| PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H016 PARsheet ID 待數值檔改名時確認） |
+| 遊戲名稱（內部代號） | 幸運王牌（H999） |
+| Game ID | H999 |
+| PARsheet ID | H999192、H999194 |
 | 遊戲英文名 | Lucky Ace |
 | 遊戲類型 | Video Slot - Ways / Cascade / Progressive Win Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
@@ -2246,9 +2245,9 @@
 
 補充說明：
 
-* 遊戲設定、賠率與購買價格沿用 H016；玩法執行順序、權重使用、消除補位與金框處理採 101003。
+* 遊戲設定、賠率與購買價格由 H016 複製；玩法執行順序、權重使用、消除補位與金框處理採 101003。
 * 來源中的 Coin / Credit 基準為 100；Help 顯示賠率亦以 100 Credit Bet 為基準。
-* H016192 與 H016194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
+* H999192 與 H999194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
 
 ---
 
@@ -2327,7 +2326,7 @@
 ## §5. 核心遊戲流程（Base Game）
 
 1. 玩家選擇 Normal Bet 並開始 Spin。
-2. 系統先依 H016 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
+2. 系統先依 H999 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪、每輪 4 列盤面。
 4. 本局 Win Multiplier 從 `×1` 開始。
 5. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
@@ -2337,7 +2336,7 @@
 9. 參與中獎的金框符號不留空格；該位置保留並轉成 `WW1`，再依 Random Wild 權重判定是否啟動 WW2 複製模式。
 10. 其餘空格先由同輪上方既有符號依序落下，再以本局選定表的同輪 Symbol Weight 逐格加權抽取新符號補滿。
 11. 補位完成後，若本次有啟動 WW2 複製模式，先完成金框位置的 Wild 轉換，再將額外 `WW2` 放入合格位置。
-12. 進入下一次 Ways 判定；每完成一次有效中獎 Cascade，下一次 Cascade 的倍數依序提升為 `×2`、`×3`、`×5`，到 `×5` 後不再上升。
+12. 進入下一次 Ways 判定；每完成一次有效中獎 Cascade，下一次 Cascade 的倍數依序提升為 `×2`、`×3`、`×5`、`×10`，到 `×10` 後不再上升。
 13. 重複判獎、消除、金框轉換、掉落與補位，直到盤面沒有新的中獎。
 14. 所有 Cascade 結束後統計最終盤面 `C1` 總數；若 `C1 >= 3`，觸發 10 場 Free Game。
 
@@ -2388,10 +2387,10 @@
 
 ### 6.4 Win Multiplier
 
-| 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次起 |
-| --- | ---: | ---: | ---: | ---: |
-| Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 |
-| Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 |
+| 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次中獎 | 第 5 次起 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 | ×10 |
+| Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 | ×20 |
 
 * 每一次 Cascade 的得分使用該次表列倍數。
 * 倍數只在同一 Spin 的 Cascade 期間推進。
@@ -2410,10 +2409,10 @@
 
 ### 7.2 FG 玩法
 
-* 每次進入 FG，依 H016 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
+* 每次進入 FG，依 H999 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
 * 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
 * FG 的盤面生成、Ways、Cascade、金框轉 Wild、WW2 複製與 Scatter 保留規則同 BG。
-* FG 的 Win Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`。
+* FG 的 Win Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`、`×20`。
 * 依 101003 邏輯，FG 每次 Cascade 只要有金框轉換，都可再次進行 Random Wild 判定；不受 BG「成功啟動一次後鎖定」限制。
 * FG 場次使用觸發時的 Bet，不可中途變更。
 
@@ -2470,7 +2469,7 @@
 * **9.2.1 倍數依 Cascade 次序固定**：不是從權重隨機抽取。
 * **9.2.2 倍數使用當次階級**：BG 第一次中獎用 `×1`、FG 第一次中獎用 `×2`。
 * **9.2.3 倍數不跨 Spin**：每個新 Spin 重置到該模式第一階。
-* **9.2.4 倍數達上限後維持**：BG 維持 `×5`，FG 維持 `×10`。
+* **9.2.4 倍數達上限後維持**：BG 維持 `×10`，FG 維持 `×20`。
 
 ### 9.3 Scatter 相關
 
@@ -2541,9 +2540,10 @@
 
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
-* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016192.xlsx`
-* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016194.xlsx`
-* **Help 文案主來源**：`Project/Slots/H016_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
+* **主要複製來源**：`Project/Slots/H016_幸運王牌`
+* **設定與數值檔**：`Project/Slots/H999_幸運王牌/Source/H999192.xlsx`
+* **設定與數值檔**：`Project/Slots/H999_幸運王牌/Source/H999194.xlsx`
+* **Help 文案來源**：`Project/Slots/H999_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
 * **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
 
@@ -2556,17 +2556,17 @@
   </script>
 
   <script>
-    const H016_CONFIG_FILES = ["config_92.js", "config_94.js"];
+    const H999_CONFIG_FILES = ["config_92.js", "config_94.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H016_ACTIVE_CONFIG = H016_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H016_CONFIG_FILES[0];
-    window.H016_ACTIVE_CONFIG = H016_ACTIVE_CONFIG;
-    document.write(`<script src="./${H016_ACTIVE_CONFIG}"><\/script>`);
+    const H999_ACTIVE_CONFIG = H999_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H999_CONFIG_FILES[0];
+    window.H999_ACTIVE_CONFIG = H999_ACTIVE_CONFIG;
+    document.write(`<script src="./${H999_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
 (() => {
   "use strict";
 
-  const Box = window.H016_BOX_DATA;
+  const Box = window.H999_BOX_DATA;
   if (!Box) return;
 
   const $ = (id) => document.getElementById(id);
@@ -2595,7 +2595,7 @@
     WW: "./Source/Image/WW_Symbol.png"
   });
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.png";
-  const HELP_PATH = "./game_rule.md";
+  const HELP_PATH = "./game_rule_H999.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
 
@@ -2612,8 +2612,8 @@
       forceFg: "Force FG", buyStart: "Buy Feature paid — guaranteed FG trigger spin",
       insufficient: "Insufficient credit", invalidRng: "RNG needs exactly 6 valid stop indexes",
       noWin: "No win", complete: "complete", triggered: "Free Game triggered", retrigger: "Free Game retriggered",
-      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_rule.md.",
-      footer: "Double-click to play offline. No server needed.", configFixed: "H016192 (xlsx)",
+      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_rule_H999.md.",
+      footer: "Double-click to play offline. No server needed.", configFixed: "H999192 (xlsx)",
       languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
     },
     zh: {
@@ -2628,8 +2628,8 @@
       forceFg: "強制 FG", buyStart: "已支付購買特色費用 — 本局保證觸發 FG",
       insufficient: "餘額不足", invalidRng: "RNG 必須是 6 個有效停輪位置",
       noWin: "未得獎", complete: "完成", triggered: "已觸發免費遊戲", retrigger: "免費遊戲再觸發",
-      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_rule.md。",
-      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H016192（xlsx）",
+      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_rule_H999.md。",
+      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H999192（xlsx）",
       languageChanged: "語言已切換為中文", resetDone: "遊戲與統計已重置"
     }
   };
@@ -3145,7 +3145,7 @@
     if (!markdown) {
       try { markdown = el.helpSourceFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
     }
-    if (!markdown) markdown = document.getElementById("embeddedH016GameRuleMarkdown")?.textContent?.trim() || "";
+    if (!markdown) markdown = document.getElementById("embeddedH999GameRuleMarkdown")?.textContent?.trim() || "";
     state.helpMarkdown = markdown; renderHelp(markdown);
   }
 
@@ -3184,7 +3184,7 @@
 
   document.title = `${Box.english_name || "Lucky Ace"} — Demo Game`;
   el.gameId.textContent = Box.game_id;
-  el.configSelect.value = H016_ACTIVE_CONFIG;
+  el.configSelect.value = H999_ACTIVE_CONFIG;
   el.configSelect.disabled = false;
   el.configSelect.addEventListener("change", () => {
     const url = new URL(window.location.href);
@@ -3198,15 +3198,15 @@
 (() => {
   "use strict";
 
-  const cfg = window.H016_CONFIG;
-  if (!cfg) throw new Error("H016 config was not loaded.");
+  const cfg = window.H999_CONFIG;
+  if (!cfg) throw new Error("H999 config was not loaded.");
   const $ = id => document.getElementById(id);
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   const WW = 0, W2 = 1, C1 = 2;
   const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
   const DISPLAY = {WW:"WILD",WW1:"WILD",WW2:"W2",C1:"C1",M1:"A♠",M2:"K♥",M3:"Q♦",M4:"J♣",A:"A",K:"K",Q:"Q",J:"J",M1G:"A♠",M2G:"K♥",M3G:"Q♦",M4G:"J♣",AG:"A",KG:"K",QG:"Q",JG:"J"};
-  const H016_IMAGE_ROOT = "./Source/Image/";
+  const H999_IMAGE_ROOT = "./Source/Image/";
   const SYMBOL_ASSET = {
     WW1:"W1_Symbol.png", WW2:"W2_Symbol.png", C1:"C1_Symbol.png", C2:"C2_Symbol.png",
     M1:"M1_Symbol.png", M2:"M2_Symbol.png", M3:"M3_Symbol.png", M4:"M4_Symbol.png",
@@ -3227,17 +3227,17 @@
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
-    #multiplierWindow{grid-template-columns:repeat(4,minmax(0,1fr))!important;transform:none!important}
-    #board .h016-face{font:900 clamp(1rem,2.4vw,1.7rem)/1 Georgia,serif;color:#fff6cc;text-shadow:0 2px 5px #000;text-align:center}
+    #multiplierWindow{grid-template-columns:repeat(5,minmax(0,1fr))!important;transform:none!important}
+    #board .h999-face{font:900 clamp(1rem,2.4vw,1.7rem)/1 Georgia,serif;color:#fff6cc;text-shadow:0 2px 5px #000;text-align:center}
     #board .symbol-ww,#board .symbol-ww2{background:radial-gradient(circle,#d43c4a,#5b0713)!important}
     #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
     #board .symbol-code{display:none!important}
     #board .cell.gold .h015-symbol-img{width:94%;height:94%;max-width:94%;max-height:94%}
     #board .symbol-drop,#board .symbol-settle{
-      animation:h016-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
+      animation:h999-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
       will-change:transform;
     }
-    @keyframes h016-symbol-drop{
+    @keyframes h999-symbol-drop{
       from{transform:translateY(var(--drop-start,-112%))}
       82%{transform:translateY(3%)}
       to{transform:translateY(0)}
@@ -3326,7 +3326,7 @@
 
   function spin(tableName, freeGame = false) {
     const table = tables[tableName];
-    const multipliers = table.multipliers?.length ? table.multipliers : (freeGame ? [2,4,6,10] : [1,2,3,5]);
+    const multipliers = table.multipliers?.length ? table.multipliers : (freeGame ? [2,4,6,10,20] : [1,2,3,5,10]);
     const board = makeBoard(tableName), snapshots = [];
     let pay = 0, combo = 0, pendingGold = [], bgW2Used = false, golden = 0, w2Events = 0;
     snapshots.push({type:"initial", board: cloneBoard(board), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin"});
@@ -3337,9 +3337,9 @@
           const marked = selection.positions.map(([reel, row]) => `${reel},${row}`);
           w2Events++;
           bgW2Used = true;
-          snapshots.push({type:"wild-mark", board:cloneBoard(board), hits:[], marked, combo, multiplier:multipliers[Math.min(combo,3)], message:`Mark W2 area × ${selection.count}`});
+          snapshots.push({type:"wild-mark", board:cloneBoard(board), hits:[], marked, combo, multiplier:multipliers[Math.min(combo, multipliers.length - 1)], message:`Mark W2 area × ${selection.count}`});
           applyW2(board, selection.positions);
-          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:marked, combo, multiplier:multipliers[Math.min(combo,3)], message:`Big Ghost W2 × ${selection.count}`});
+          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:marked, combo, multiplier:multipliers[Math.min(combo, multipliers.length - 1)], message:`Big Ghost W2 × ${selection.count}`});
         }
       }
       pendingGold = [];
@@ -3364,7 +3364,7 @@
           cleared.push(key);
         }
       }
-      snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplier: multipliers[Math.min(combo,3)], message: "Eliminate + WW"});
+      snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Eliminate + WW"});
       const drop = [];
       for (let reel = 0; reel < 5; reel++) {
         const survivors = board[reel].map((symbol, oldRow) => ({symbol, oldRow})).filter(item => item.symbol !== -1);
@@ -3380,7 +3380,7 @@
         }
         board[reel] = nextReel;
       }
-      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplier: multipliers[Math.min(combo,3)], message: "Drop"});
+      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop"});
     }
     return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
   }
@@ -3443,9 +3443,9 @@
   }
 
   function renderMultiplier(freeGame, index = 0) {
-    const values = freeGame ? [2,4,6,10] : [1,2,3,5];
+    const values = freeGame ? [2,4,6,10,20] : [1,2,3,5,10];
     $("multiplierWindow").classList.remove("roll-one");
-    $("multiplierWindow").innerHTML = values.map((value, step) => `<span class="multiplier-step ${step < index ? "is-previous" : ""} ${step === Math.min(index,3) ? "is-active" : ""}">×${value}</span>`).join("");
+    $("multiplierWindow").innerHTML = values.map((value, step) => `<span class="multiplier-step ${step < index ? "is-previous" : ""} ${step === Math.min(index, values.length - 1) ? "is-active" : ""}">×${value}</span>`).join("");
   }
 
   function renderBoard(board, hitList = [], options = {}) {
@@ -3465,7 +3465,7 @@
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
       const asset = SYMBOL_ASSET[code];
-      cell.innerHTML = asset ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H016_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div>` : `<div class="symbol-wrap"><span class="h016-face">${DISPLAY[code] || code}</span><span class="symbol-code">${code}</span></div>`;
+      cell.innerHTML = asset ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H999_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div>` : `<div class="symbol-wrap"><span class="h999-face">${DISPLAY[code] || code}</span><span class="symbol-code">${code}</span></div>`;
       root.append(cell);
     }
   }
@@ -3656,7 +3656,7 @@
   }
 
   function helpHtml() {
-    const markdown = document.getElementById("embeddedH016GameRuleMarkdown")?.textContent?.trim() || "";
+    const markdown = document.getElementById("embeddedH999GameRuleMarkdown")?.textContent?.trim() || "";
     return renderGameRuleMarkdown(markdown);
   }
 
@@ -3683,7 +3683,7 @@
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
-  $("configSelect").value=window.H016_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
+  $("configSelect").value=window.H999_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
   document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
 })();
   </script>

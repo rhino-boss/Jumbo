@@ -1969,6 +1969,7 @@ RA_RETRY_LIMIT_EXCEEDED = 20
 RA_RETRY_FAIL_BG_RANGE = 21
 RA_RETRY_FAIL_BG_FREEGAME = 22
 RA_RETRY_FAIL_FG = 23
+RA_TRIGGER_FG_PAY_BG = 24
 
 SCENE_BG_SPINS = 0
 SCENE_FG_SESSIONS = 1
@@ -2235,6 +2236,8 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         record_data[R_ALL, RA_PAY_TOTAL] += int(round(total_win))
         record_data[R_ALL, RA_PAY_BG] += int(round(bg_win))
         record_data[R_ALL, RA_PAY_FG] += int(round(fg_win))
+        if fg_triggered:
+            record_data[R_ALL, RA_TRIGGER_FG_PAY_BG] += int(round(bg_win))
         record_data[R_ALL, RA_HITS_TOTAL] += int(total_win > 0)
         record_data[R_ALL, RA_HITS_BG] += int(bg_win > 0)
         record_data[R_ALL, RA_HITS_FG_SPIN] += fg_hit_spins
@@ -2366,6 +2369,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     fg_trigger_rate = values[R_ALL, RA_FG_TRIGGER] / total_round if total_round else 0.0
     retrigger_rate = values[R_ALL, RA_FG_RETRIGGER] / fg_sessions if fg_sessions else 0.0
     avg_fg_spins = fg_spins / fg_sessions if fg_sessions else 0.0
+    trigger_fg_bg_pay = values[R_ALL, RA_TRIGGER_FG_PAY_BG]
+    trigger_fg_bg_count = int(values[R_ALL, RA_FG_TRIGGER])
     x_sum = values[R_ALL, RA_X_SUM] / 1_000_000
     x_square = values[R_ALL, RA_X_SQUARE] / 1_000_000
     volatility_std = math.sqrt(max(0.0, x_square / total_round - (x_sum / total_round) ** 2))
@@ -2397,6 +2402,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("fg_trigger_rate", fg_trigger_rate),
         ("retrigger_per_fg", retrigger_rate),
         ("avg_fg_spins", avg_fg_spins),
+        ("trigger_fg_bg_pay", int(trigger_fg_bg_pay)),
+        ("trigger_fg_bg_count", trigger_fg_bg_count),
         ("volatility_std", volatility_std),
         ("max_win_x", max_win_x),
         ("max_win_hits", int(values[R_ALL, RA_MAX_WIN_HITS])),
@@ -2498,6 +2505,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "hit_rate_fg": hit_rate_fg,
         "fg_trigger_rate": fg_trigger_rate,
         "fg_trigger_count": int(values[R_ALL, RA_FG_TRIGGER]),
+        "trigger_fg_bg_pay": int(trigger_fg_bg_pay),
+        "trigger_fg_bg_count": trigger_fg_bg_count,
         "retrigger_rate": retrigger_rate,
         "avg_fg_spins": avg_fg_spins,
         "volatility_std": volatility_std,
