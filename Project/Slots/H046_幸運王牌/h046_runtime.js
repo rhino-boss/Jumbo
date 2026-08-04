@@ -19,7 +19,7 @@
   };
   const BET_LEVELS = [0.20, 0.50, 1, 2, 5, 10];
   const MAX_RETRY = 20000;
-  const DROP_SPEED_MULTIPLIER = 3;
+  const DROP_SPEED_MULTIPLIER = 9;
   const tables = {};
   const state = {
     balance: 10000, betIndex: 2, busy: false, auto: false, language: "zh",
@@ -35,6 +35,15 @@
     #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
     #board .symbol-code{display:none!important}
     #board .cell.gold .h015-symbol-img{width:94%;height:94%;max-width:94%;max-height:94%}
+    #board .symbol-drop,#board .symbol-settle{
+      animation:h046-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
+      will-change:transform;
+    }
+    @keyframes h046-symbol-drop{
+      from{transform:translateY(var(--drop-start,-112%))}
+      82%{transform:translateY(3%)}
+      to{transform:translateY(0)}
+    }
   </style>`);
 
   for (const [name, raw] of Object.entries(cfg.tables)) {
@@ -241,7 +250,7 @@
       cell.className = `cell symbol-${code.toLowerCase()}${symbol >= 11 ? " gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${options.spinning ? " reel-spin" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
-        const dropDuration = Math.max(85, 520 / speed / DROP_SPEED_MULTIPLIER);
+        const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
         cell.style.setProperty("--drop-duration", `${dropDuration}ms`);
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
@@ -286,8 +295,8 @@
         renderBoard(snapshot.board, [], {cleared:snapshot.cleared || [], converted:snapshot.converted || []});
         await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
       } else if (snapshot.type === "cascade") {
-        const duration = Math.max(85, 520 / Number($("speedRange").value || 1) / DROP_SPEED_MULTIPLIER);
-        renderBoard(snapshot.board, [], {drop:snapshot.drop || []}); await wait(duration + 90);
+        const duration = Math.max(28, 520 / Number($("speedRange").value || 1) / DROP_SPEED_MULTIPLIER);
+        renderBoard(snapshot.board, [], {drop:snapshot.drop || []}); await wait(duration + 30);
       } else {
         renderBoard(snapshot.board, [], {converted:snapshot.converted || []}); await wait(delay());
       }

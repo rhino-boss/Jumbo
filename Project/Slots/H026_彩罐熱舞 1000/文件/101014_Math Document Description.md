@@ -93,21 +93,48 @@
 | --- | --- | --- |
 | Model / Version | 模型代號與版本 | ✅ 寫入輸出檔名 |
 | Base Bet | 押注基準 | ✅ 計算 Coin In |
-| Coin in / Price(x) / Total RTP / Bet Type | 押注模式的成本倍率與總 RTP | ✅ 取 Price(x) 計算成本 |
-| Total Pay Back Percentage | 將總 RTP 拆成 Base Game 與 Free Game 兩段的貢獻，並記錄 FG 觸發率與 FG 週期 | ❌ 目標值 |
+| Hold | 押注方保留率，等於 `1 − Total Pay Back` | ❌ 目標值 |
+| Base Bet | 押注基準 | ✅ 計算 Coin In |
+| RTP 主列 | 各項派彩率的拆解與合計（見下表） | ❌ 目標值 |
+| 功能機率副列 | FG 觸發率、FG 週期、Hit JP Symbol 出現率、模擬局數 | ❌ 目標值 |
 | Reel # / Visible Window Size | 輪數與記分列數 | ✅ 建立盤面尺寸 |
 | Free Spins Setting | 記分區 Scatter 數量對應的免費場次，以及總場次上限 | ✅（見 3-7） |
 | Pay Table | 各符號的代號、Id 與 3／4／5 連線賠率 | ✅ 判獎 |
 
+**RTP 主列的欄位**
+
+| 欄位 | 意義 |
+| --- | --- |
+| `Coin` | 押注基準 |
+| `Payline` | 線數 |
+| `Hit%` | 連線中獎率 |
+| `Link Pay Back` | 連線累積彩金的派彩率（OP Jackpot 的 GRAND + MAJOR） |
+| `Bonus Pay Back` | 固定彩金池的派彩率（OP Jackpot 的 MINOR + MINI） |
+| `Base Game Pay Back` | Base Game 的派彩率 |
+| `Free Game Pay Back` | Free Game 的派彩率 |
+| `Game Pay Back` | `Base Game Pay Back + Free Game Pay Back`，即遊戲本身的 RTP |
+| `Total Pay Back` | `Game Pay Back + Bonus Pay Back + Link Pay Back`，即含彩金的總派彩率 |
+
+**功能機率副列的欄位**
+
+| 欄位 | 意義 |
+| --- | --- |
+| `Free Game Hits` | Free Game 的觸發率 |
+| `Free Game Cycle` | Free Game 的週期，即觸發率的倒數 |
+| `Hit JP Symbol appear rate` | 每次 spin 畫面上至少出現一顆 Hit JP Symbol（本遊戲為 Scatter）的機率，以 Threshold 10,000,000,000 為分母表示；供彩金模組換算實際判定機率使用 |
+| `Simulation Time` | 產生上述統計所用的模擬局數 |
+
 **Coin In 的計算**
 
 ```
-Coin In = 下注倍數 × Base Bet × Price(x)
+Coin In = 下注倍數 × Base Bet
 ```
 
 所有 RTP 與倍率統計都以「該局總得分 ÷ Coin In」為單位。
 
-> `Total Pay Back Percentage` 區塊的 `Hit%` 欄位填的是 **FG 觸發率**（其值等於 `Pulls/Hit` 的倒數，`Pulls/Hit` 即 FG 週期），並不是連線中獎率。連線中獎率請看模擬報表的 `hit_rate` 欄位。
+> 兩份 math file 的 `Game Pay Back` 分別為 92% 與 94%，但 `Link Pay Back` 分別為 2% 與 0%，因此 **`Total Pay Back` 兩版一致**（96%），`Hold` 也一致（4%）。
+>
+> `Hit JP Symbol appear rate` 的數值取自 `OP Jackpot` 工作表的 `SCR` 欄位，該欄與 `C1 cnt`／`Spin` 為同一次模擬的紀錄。
 
 ### 1-4 Description
 
@@ -431,7 +458,7 @@ BG 與 FG 共用同一套流程，差別只在使用哪一組參數。
 ### 3-8 一局（一次付費 spin）的完整流程
 
 ```
-1. 計算本局成本：Coin In = 下注倍數 × Base Bet × Price(x)
+1. 計算本局成本：Coin In = 下注倍數 × Base Bet
 2. 抽一張 Base Game 卡片（見第四章）
 3. 執行一次 BG spin（流程見 3-3）
 4. 若最終盤面記分區的 Scatter 達門檻：

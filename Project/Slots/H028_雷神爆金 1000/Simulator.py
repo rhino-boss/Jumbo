@@ -614,7 +614,8 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
 
     # M1 倍數累加 (初始盤面)
     # M1=2, GM1=13, 長度1=+2, 長度2=+3, 長度3=+4, 長度4=+5
-    # 第一個 M1 只加 +1 (即 +2-1)
+    # BG 第一顆 M1 用大小建立倍數：1x1 使 x1→x2、2x1 使 x1→x3，以此類推。
+    # 後續 M1 才完整累加其標示倍數。
     multiplier = 1.0
     m1_count = 0
 
@@ -630,7 +631,7 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
                 if sym == 2 or sym == 13:  # M1 或 GM1
                     bonus = L + 1  # 長度1=+2, 長度2=+3...
                     if m1_count == 0:
-                        bonus -= 1  # 第一個 M1 扣 1
+                        bonus -= 1
                     multiplier += bonus
                     m1_count += 1
                 pos += L
@@ -1938,9 +1939,11 @@ R_FG_CASCADE_PAY = 4
 R_SCATTER_COUNT = 5
 R_FG_FINAL_MULTIPLIER = 6
 R_SCENE = 7
+R_BG_CASCADE_DIST = 8
+R_FG_CASCADE_DIST = 9
 
 RECORD_COLS = max(64, len(THRESHOLD_RECORD))
-RECORD_SIZE = (8, RECORD_COLS)
+RECORD_SIZE = (10, RECORD_COLS)
 
 RA_TOTAL_ROUNDS = 0
 RA_COIN_IN_SUM = 1
@@ -1972,6 +1975,7 @@ SCENE_FG_SESSIONS = 1
 SCENE_FG_SPINS = 2
 
 CASCADE_LABELS = ["Cascade 1", "Cascade 2", "Cascade 3", "Cascade 4", "Cascade 5+"]
+CASCADE_DIST_LABELS = ["0", "1", "2", "3", "4", "5+"]
 FG_MULTIPLIER_LABELS = [str(value) for value in range(1, 15)] + ["15+"]
 
 
@@ -2045,6 +2049,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
     hit_spins = 0
     retrigger_count = 0
     cascade_pay = np.zeros(5, dtype=np.float64)
+    cascade_dist = np.zeros(6, dtype=np.int64)
 
     while remaining_spins > 0:
         if initial_remaining > 0:
@@ -2063,6 +2068,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
         total_spins += 1
         remaining_spins -= 1
         cascade_pay += spin_cascade_pay
+        cascade_dist[min(int(np.count_nonzero(spin_cascade_pay)), 5)] += 1
         if win > 0:
             hit_spins += 1
 
@@ -2082,6 +2088,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
         hit_spins,
         retrigger_count,
         cascade_pay,
+        cascade_dist,
     )
 
 
@@ -2111,6 +2118,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         fg_win = 0.0
         bg_cascade_pay = np.zeros(5, dtype=np.float64)
         fg_cascade_pay = np.zeros(5, dtype=np.float64)
+        fg_cascade_dist = np.zeros(6, dtype=np.int64)
         scatter_count = 4 if bet_mode == MODE_FEATUREBUY else 0
         fg_spins = 0
         fg_hit_spins = 0
@@ -2167,6 +2175,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                         fg_hit_spins,
                         fg_retriggers,
                         fg_cascade_pay,
+                        fg_cascade_dist,
                     ) = run_freegame_session_stats(scatter_count, enable_m1_multiplier)
                     if not needs_fg_card or is_card_match(
                         fg_card_profile,
@@ -2194,6 +2203,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                     fg_hit_spins,
                     fg_retriggers,
                     fg_cascade_pay,
+                    fg_cascade_dist,
                 ) = run_freegame_session_stats(4, enable_m1_multiplier)
                 if not CARD_SYSTEM_ENABLED or is_card_match(
                     CARD_PROFILE_BUY_FEATURE,
@@ -2251,6 +2261,11 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         for index in range(5):
             record_data[R_BG_CASCADE_PAY, index] += int(round(bg_cascade_pay[index]))
             record_data[R_FG_CASCADE_PAY, index] += int(round(fg_cascade_pay[index]))
+        if bet_mode == MODE_NORMALBET:
+            bg_cascade_index = min(int(np.count_nonzero(bg_cascade_pay)), 5)
+            record_data[R_BG_CASCADE_DIST, bg_cascade_index] += 1
+        for index in range(6):
+            record_data[R_FG_CASCADE_DIST, index] += fg_cascade_dist[index]
         scatter_index = min(max(int(scatter_count), 0), 7)
         record_data[R_SCATTER_COUNT, scatter_index] += 1
         if fg_triggered:
@@ -2433,6 +2448,23 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
             )
     df_cascade = pd.DataFrame(cascade_rows)
 
+    cascade_dist_rows = []
+    for scene, row_index, denominator in (
+        ("BG", R_BG_CASCADE_DIST, bg_spins),
+        ("FG", R_FG_CASCADE_DIST, fg_spins),
+    ):
+        for index, label in enumerate(CASCADE_DIST_LABELS):
+            count = int(record_data[row_index, index])
+            cascade_dist_rows.append(
+                {
+                    "Scene": scene,
+                    "Cascade_Count": label,
+                    "Count": count,
+                    "Rate": count / denominator if denominator else 0.0,
+                }
+            )
+    df_cascade_dist = pd.DataFrame(cascade_dist_rows)
+
     scatter_total = values[R_SCATTER_COUNT, :8].sum()
     df_scatter = pd.DataFrame(
         {
@@ -2479,10 +2511,10 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "retry_fail_bg_freegame": int(values[R_ALL, RA_RETRY_FAIL_BG_FREEGAME]),
         "retry_fail_fg": int(values[R_ALL, RA_RETRY_FAIL_FG]),
     }
-    return df_base, df_scene, df_cascade, df_scatter, df_fg_multiplier, df_multiplier_line, df_record, summary
+    return df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier, df_multiplier_line, df_record, summary
 
 
-def print_console_result(df_base, df_scene, df_cascade, df_scatter, df_fg_multiplier):
+def print_console_result(df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier):
     if SHOW_CONSOLE_SUMMARY:
         print("\n=== Fixed Result ===")
         for row in df_base.itertuples(index=False):
@@ -2492,6 +2524,8 @@ def print_console_result(df_base, df_scene, df_cascade, df_scatter, df_fg_multip
         print(df_scene.to_string(index=False))
         print("\n=== By Game Result: Cascade ===")
         print(df_cascade.to_string(index=False))
+        print("\n=== By Game Result: Cascade Distribution ===")
+        print(df_cascade_dist.to_string(index=False))
         print("\n=== By Game Result: Scatter ===")
         print(df_scatter.to_string(index=False))
         print("\n=== By Game Result: FG Final Multiplier ===")
@@ -2553,6 +2587,7 @@ def output_report(
     df_base,
     df_scene,
     df_cascade,
+    df_cascade_dist,
     df_scatter,
     df_fg_multiplier,
     df_multiplier_line,
@@ -2572,6 +2607,7 @@ def output_report(
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_scene.to_excel(writer, sheet_name="Scene Summary", index=False)
         df_cascade.to_excel(writer, sheet_name="Cascade", index=False)
+        df_cascade_dist.to_excel(writer, sheet_name="Cascade Dist", index=False)
         df_scatter.to_excel(writer, sheet_name="Scatter Dist", index=False)
         df_fg_multiplier.to_excel(writer, sheet_name="FG Final Multi", index=False)
         df_multiplier_line.to_excel(writer, sheet_name="Multiplier Line", index=False)
@@ -2635,8 +2671,8 @@ def main():
         BET_MULTI,
         THREADS,
     )
-    df_base, df_scene, df_cascade, df_scatter, df_fg_multiplier, df_multiplier_line, df_record, summary = frames
-    print_console_result(df_base, df_scene, df_cascade, df_scatter, df_fg_multiplier)
+    df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier, df_multiplier_line, df_record, summary = frames
+    print_console_result(df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier)
     print_batch_summary(duration, summary, BET_MODE)
 
     if OUTPUT_REPORT:
@@ -2644,6 +2680,7 @@ def main():
             df_base,
             df_scene,
             df_cascade,
+            df_cascade_dist,
             df_scatter,
             df_fg_multiplier,
             df_multiplier_line,

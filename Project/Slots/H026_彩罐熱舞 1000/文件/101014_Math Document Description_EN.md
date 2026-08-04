@@ -40,7 +40,7 @@
   - [3-2 Symbols and roles](#3-2-symbols-and-roles)
   - [3-3 Flow of a single spin](#3-3-flow-of-a-single-spin)
   - [3-4 Win evaluation](#3-4-win-evaluation)
-  - [3-5 Cascading and gold-framed symbols turning into Wild](#3-5-cascading-and-gold-framed-symbols-turning-into-wild)
+  - [3-5 Cascading and golden-framed symbols turning into Wild](#3-5-cascading-and-golden-framed-symbols-turning-into-wild)
   - [3-6 Multiplier assignment, collection and application](#3-6-multiplier-assignment-collection-and-application)
   - [3-7 Free Game](#3-7-free-game)
   - [3-8 Flow of one round (one paid spin)](#3-8-flow-of-one-round-one-paid-spin)
@@ -63,9 +63,9 @@
 1. **Weights are relative values only.**
    Every field labelled Weight is a relative weight. It does not need to be a probability and does not need to sum to 100%. When drawing, the program takes a random value within the total of that weight group, then maps it to the corresponding entry in proportion to the weights. **The total of each weight group is that group's denominator**, so raising one entry within a group simultaneously dilutes the others.
 
-2. **A gold-framed symbol is held as two layers of information.**
-   The board stores the *base symbol* (for example, the gold-framed `G1` is stored on the board as `M1`). Two separate masks record whether each cell is gold-framed and what multiplier that cell carries.
-   Consequently the program never reads the pay values of the `G1`–`GJ` rows in the `Overview` Pay Table; win evaluation always uses the base symbol's pay values. Those 9 rows exist for reference, to confirm that a gold-framed symbol pays the same as its base symbol.
+2. **A golden-framed symbol is held as two layers of information.**
+   The board stores the *base symbol* (for example, the golden-framed `G1` is stored on the board as `M1`). Two separate masks record whether each cell is golden-framed and what multiplier that cell carries.
+   Consequently the program never reads the pay values of the `G1`–`GJ` rows in the `Overview` Pay Table; win evaluation always uses the base symbol's pay values. Those 9 rows exist for reference, to confirm that a golden-framed symbol pays the same as its base symbol.
 
 3. **Not every field is used by the program.**
    The symbol-count statistics, ratios and averages on the left side of each worksheet, together with the `Description`, `Multiplier_Weight_Detail` and `OP Jackpot` worksheets, are for design and verification purposes only. Each section below states which fields the program uses.
@@ -93,21 +93,47 @@ Provides the game specification and the mathematical target values.
 | --- | --- | --- |
 | Model / Version | Model code and version | Yes (written into the output file name) |
 | Base Bet | Bet basis | Yes (Coin In calculation) |
-| Coin in / Price(x) / Total RTP / Bet Type | Cost multiplier and total RTP of the bet mode | Yes (Price(x) for cost) |
-| Total Pay Back Percentage | Splits the total RTP into the Base Game and Free Game contributions, and records the Free Game trigger rate and cycle | No (target values) |
+| Hold | Operator hold, equal to `1 − Total Pay Back` | No (target value) |
+| RTP row | Breakdown and totals of the pay-back rates (see below) | No (target values) |
+| Feature-probability row | Free Game trigger rate and cycle, Hit JP Symbol appear rate, simulated spin count | No (target values) |
 | Reel # / Visible Window Size | Reel count and scoring row count | Yes (board dimensions) |
 | Free Spins Setting | Free-spin count per Scatter count, and the overall cap | Yes (see 3-7) |
 | Pay Table | Symbol code, Id and 3 / 4 / 5-of-a-kind pay values | Yes (win evaluation) |
 
+**Fields of the RTP row**
+
+| Field | Meaning |
+| --- | --- |
+| `Coin` | Bet basis |
+| `Payline` | Number of paylines |
+| `Hit%` | Line-win hit rate |
+| `Link Pay Back` | Pay-back rate of the linked progressive jackpots (OP Jackpot GRAND + MAJOR) |
+| `Bonus Pay Back` | Pay-back rate of the fixed jackpot pools (OP Jackpot MINOR + MINI) |
+| `Base Game Pay Back` | Pay-back rate of the Base Game |
+| `Free Game Pay Back` | Pay-back rate of the Free Game |
+| `Game Pay Back` | `Base Game Pay Back + Free Game Pay Back`, i.e. the RTP of the game itself |
+| `Total Pay Back` | `Game Pay Back + Bonus Pay Back + Link Pay Back`, i.e. the total pay-back including the jackpot |
+
+**Fields of the feature-probability row**
+
+| Field | Meaning |
+| --- | --- |
+| `Free Game Hits` | Free Game trigger rate |
+| `Free Game Cycle` | Free Game cycle, the reciprocal of the trigger rate |
+| `Hit JP Symbol appear rate` | Probability that at least one Hit JP Symbol (the Scatter in this game) appears on the screen per spin, expressed as a weight out of Threshold 10,000,000,000; used by the jackpot module to derive its actual hit probability |
+| `Simulation Time` | Number of simulated spins behind the statistics above |
+
 **Coin In calculation**
 
 ```
-Coin In = bet multiplier × Base Bet × Price(x)
+Coin In = bet multiplier × Base Bet
 ```
 
 All RTP and multiplier statistics are expressed as "total win of the round ÷ Coin In".
 
-> In the `Total Pay Back Percentage` block, the `Hit%` field holds the **Free Game trigger rate** (it is the reciprocal of `Pulls/Hit`, which is the Free Game cycle). It is not the line-win hit rate; for that, refer to the `hit_rate` fields of the simulation report.
+> The `Game Pay Back` of the two math files is 92% and 94% respectively, but their `Link Pay Back` is 2% and 0% respectively, so **`Total Pay Back` is identical in both** (96%), as is `Hold` (4%).
+>
+> The `Hit JP Symbol appear rate` value is taken from the `SCR` field of the `OP Jackpot` worksheet, which is recorded together with `C1 cnt` and `Spin` from the same simulation run.
 
 ### 1-4 Description
 
@@ -161,8 +187,8 @@ Records the spin count, the scoring-area Scatter count and the cumulative Scatte
 | Field group | Content | Used by program |
 | --- | --- | --- |
 | Leftmost Symbol / Description / R1–R5 / ID | Symbol counts on that table's reel strip and the per-reel totals | No (verification) |
-| Normal / Golden Symbol ratio | Ratio of normal to gold-framed symbols | No (verification) |
-| Combined statistics | Combined count of a base symbol and its gold-framed version | No (verification) |
+| Normal / Golden Symbol ratio | Ratio of normal to golden-framed symbols | No (verification) |
+| Combined statistics | Combined count of a base symbol and its golden-framed version | No (verification) |
 | `Symbol` | Reel strip content (text) | No (human readable) |
 | `Symbol ID R1~R5` | Reel strip content (codes) | Yes (the actual reel strip) |
 | `Symbol Weight R1~R5` | Weight of each reel-strip position | Yes (determines the stop position) |
@@ -173,9 +199,9 @@ Records the spin count, the scoring-area Scatter count and the cumulative Scatte
 
 | Table | Role | Characteristics |
 | --- | --- | --- |
-| `BG_Symbol` | Ordinary round | Gold frames appear on reels 2, 3 and 4 only; the Scatter distribution cannot reach the trigger threshold |
-| `BG_Symbol (2)` | Full gold-frame round | Reel 3 is entirely gold-framed and always carries a multiplier; Scatter distribution as above |
-| `BG_Symbol (3)` | Free Game trigger round | Scatters are distributed across all five reels; the gold-frame multiplier configuration is zero, so no large multiplier is collected before entering Free Game |
+| `BG_Symbol` | Ordinary round | Golden frames appear on reels 2, 3 and 4 only; the Scatter distribution cannot reach the trigger threshold |
+| `BG_Symbol (2)` | Full golden-frame round | Reel 3 is entirely golden-framed and always carries a multiplier; Scatter distribution as above |
+| `BG_Symbol (3)` | Free Game trigger round | Scatters are distributed across all five reels; the golden-frame multiplier configuration is zero, so no large multiplier is collected before entering Free Game |
 
 > It follows that in Normal Bet, **Free Game can only be triggered in a round that draws `BG_Symbol (3)`**.
 
@@ -197,7 +223,7 @@ The field group is laid out as three blocks, `1 Combo`, `2 Combo` and `3+ Combo`
 
 The three tables are switched according to the current accumulated multiplier (see [3-7](#3-7-free-game)). Their common characteristics are:
 
-- Reel 3 is always gold-framed and always carries a multiplier
+- Reel 3 is always golden-framed and always carries a multiplier
 - Reel 3 contains no Scatter, so **the maximum number of Scatters obtainable inside Free Game is one reel fewer than in the Base Game**
 - The tables differ in the expected value of their multiplier configuration, so that growth slows down as the accumulated multiplier rises
 
@@ -225,9 +251,9 @@ Free Game has no corresponding block, because Free Game reel tables are not draw
 
 ### 2-3 Multiplier Range
 
-The list of multipliers a gold-framed symbol may carry. **This is an index table** — the column order of every `Multiple Selection Weight` block below corresponds to this list.
+The list of multipliers a golden-framed symbol may carry. **This is an index table** — the column order of every `Multiple Selection Weight` block below corresponds to this list.
 
-Drawing a multiplier always follows the same sequence: draw an *index* from a weight group, then convert it to the actual multiplier through this list. The first entry of the list is `0`, meaning "this gold-framed symbol carries no multiplier" (the frame exists, but no multiplier can be collected).
+Drawing a multiplier always follows the same sequence: draw an *index* from a weight group, then convert it to the actual multiplier through this list. The first entry of the list is `0`, meaning "this golden-framed symbol carries no multiplier" (the frame exists, but no multiplier can be collected).
 
 The non-zero multipliers of the list, in order, are: `x2`, `x3`, `x5`, `x8`, `x10`, `x15`, `x20`, `x25`, `x50`, `x100`, `x500`, `x1000`.
 
@@ -235,21 +261,21 @@ The non-zero multipliers of the list, in order, are: `x2`, `x3`, `x5`, `x8`, `x1
 
 Decides whether the special multiplier pool is activated.
 
-- The columns are the **number of gold-framed symbols in the scoring area** (the more gold frames, the higher the activation chance)
+- The columns are the **number of golden-framed symbols in the scoring area** (the more golden frames, the higher the activation chance)
 - Each row corresponds to one reel table
 - The denominator is fixed at 10000
 
 **Logic**
 
-1. Before multipliers are assigned at the start of a spin, count the gold-framed symbols in the scoring area.
+1. Before multipliers are assigned at the start of a spin, count the golden-framed symbols in the scoring area.
 2. Look up the weight by that count and the reel table of the round, and decide whether the special pool activates.
-3. If it activates, **one** gold-framed symbol in the scoring area is chosen with equal probability, and that symbol draws its multiplier from `Multiple Selection Weight - Special Pool` instead.
+3. If it activates, **one** golden-framed symbol in the scoring area is chosen with equal probability, and that symbol draws its multiplier from `Multiple Selection Weight - Special Pool` instead.
 
 Notes:
 
-- The special pool is evaluated **only once, at the initial multiplier assignment**. Gold-framed symbols added by cascading never get this chance.
-- At most **one** gold-framed symbol per round receives a special-pool multiplier.
-- Only gold-framed symbols in the scoring area are eligible. Those in the top preview row are neither counted nor selected.
+- The special pool is evaluated **only once, at the initial multiplier assignment**. Golden-framed symbols added by cascading never get this chance.
+- At most **one** golden-framed symbol per round receives a special-pool multiplier.
+- Only golden-framed symbols in the scoring area are eligible. Those in the top preview row are neither counted nor selected.
 
 ### 2-5 Multiple Selection Weight (five blocks)
 
@@ -257,20 +283,20 @@ The columns of all five blocks correspond to the multiplier list in [2-3](#2-3-m
 
 | Block | When it is used |
 | --- | --- |
-| `Special Pool` | The single gold-framed symbol that hits the special pool at the start of a spin |
-| `Before Eliminate` | Gold-framed symbols at the start of a spin, in the **scoring area**, not on reel 3 |
-| `After Eliminate` | Gold-framed symbols at the start of a spin located in the **preview row** (not reel 3), and gold-framed symbols added by cascading (not reel 3) |
-| `Reel3 Before Eliminate` | Gold-framed symbols at the start of a spin, in the scoring area, on **reel 3** (specific reel tables only) |
-| `Reel3 After Eliminate` | Reel-3 gold-framed symbols at the start of a spin located in the preview row, and reel-3 gold-framed symbols added by cascading (specific reel tables only) |
+| `Special Pool` | The single golden-framed symbol that hits the special pool at the start of a spin |
+| `Before Eliminate` | Golden-framed symbols at the start of a spin, in the **scoring area**, not on reel 3 |
+| `After Eliminate` | Golden-framed symbols at the start of a spin located in the **preview row** (not reel 3), and golden-framed symbols added by cascading (not reel 3) |
+| `Reel3 Before Eliminate` | Golden-framed symbols at the start of a spin, in the scoring area, on **reel 3** (specific reel tables only) |
+| `Reel3 After Eliminate` | Reel-3 golden-framed symbols at the start of a spin located in the preview row, and reel-3 golden-framed symbols added by cascading (specific reel tables only) |
 
 **When the reel-3 blocks apply**
 
-Only reel tables whose third reel is entirely gold-framed (the Base Game full gold-frame table and the three Free Game tables) use the two reel-3 blocks for their third reel. On all other reel tables, reel 3 still uses the ordinary Before / After blocks.
+Only reel tables whose third reel is entirely golden-framed (the Base Game full golden-frame table and the three Free Game tables) use the two reel-3 blocks for their third reel. On all other reel tables, reel 3 still uses the ordinary Before / After blocks.
 
 **Full selection order**
 
 ```
-Initial assignment (every gold-framed symbol on the board, preview row included)
+Initial assignment (every golden-framed symbol on the board, preview row included)
     |- the single symbol that hit the special pool ------> Special Pool
     |- reel 3 AND the table uses the reel-3 blocks
     |      |- in the scoring area --------------------> Reel3 Before Eliminate
@@ -279,14 +305,12 @@ Initial assignment (every gold-framed symbol on the board, preview row included)
            |- in the scoring area --------------------> Before Eliminate
            +- in the preview row ---------------------> After  Eliminate
 
-Cascade fill (newly added gold-framed symbols)
+Cascade fill (newly added golden-framed symbols)
     |- reel 3 AND the table uses the reel-3 blocks ---> Reel3 After Eliminate
     +- otherwise -------------------------------------> After Eliminate
 ```
 
 > Although the preview row (the non-scoring top row) is produced at the start of a spin, it can only take part in a win after it has dropped down. It therefore uses **After Eliminate**, not Before Eliminate. This is the single easiest point to misread on these worksheets.
-
-Each block has one further field on its right holding an average multiplier, defined as the average multiplier excluding the value 0. It is for design reference and is not read by the program.
 
 ### 2-6 Eliminate Table Weight
 
@@ -308,7 +332,7 @@ Decides whether the cascading of the round uses `Eliminate Wheel Weight A` or `B
 
 ```
 preview row   <- does not pay, is not counted for Scatters,
-                 but its gold-framed symbols do receive a multiplier
+                 but its golden-framed symbols do receive a multiplier
 scoring row 1 -+
 scoring row 2  |- 3 x 5: line evaluation and Scatter counting use only this area
 scoring row 3 -+
@@ -324,15 +348,15 @@ At each stop, four consecutive cells of the reel strip fill these four rows. The
 | `C1` | Scatter | Counted only; breaks a line; carries no pay value of its own |
 | `M1`–`M5` | High-pay symbols | Paying |
 | `A`, `K`, `Q`, `J` | Low-pay symbols | Paying |
-| `G1`–`G5`, `GA`, `GK`, `GQ`, `GJ` | Gold-framed versions of the paying symbols above | Treated as the corresponding base symbol for win evaluation; may additionally carry a multiplier |
+| `G1`–`G5`, `GA`, `GK`, `GQ`, `GJ` | Golden-framed versions of the paying symbols above | Treated as the corresponding base symbol for win evaluation; may additionally carry a multiplier |
 
 Three derived lookups are used by the program:
 
-- **Base symbol mapping**: which ordinary symbol a gold-framed symbol maps back to (used when writing the board at stop and at cascade fill)
-- **Is gold-framed**: decides whether a cell enters multiplier assignment
-- **Is paying**: `WW`, `C1` and every gold-framed code are false; win evaluation filters on this
+- **Base symbol mapping**: which ordinary symbol a golden-framed symbol maps back to (used when writing the board at stop and at cascade fill)
+- **Is golden-framed**: decides whether a cell enters multiplier assignment
+- **Is paying**: `WW`, `C1` and every golden-framed code are false; win evaluation filters on this
 
-**`WW` never lands from a reel stop.** Neither the reel strips nor the cascade-fill wheels of the six reel tables contain `WW`. A Wild on the board has exactly one source: a winning gold-framed symbol turning into a Wild in place (see [3-5](#3-5-cascading-and-gold-framed-symbols-turning-into-wild)).
+**`WW` never lands from a reel stop.** Neither the reel strips nor the cascade-fill wheels of the six reel tables contain `WW`. A Wild on the board has exactly one source: a winning golden-framed symbol turning into a Wild in place (see [3-5](#3-5-cascading-and-golden-framed-symbols-turning-into-wild)).
 
 ### 3-3 Flow of a single spin
 
@@ -344,7 +368,7 @@ The Base Game and Free Game share the same flow; only the parameter groups diffe
       Free Game: switch by the current accumulated multiplier (see 3-7)
 2. Draw cascade-fill group A or B from Eliminate Table Weight (fixed for this spin)
 3. Draw a stop position per reel from Symbol Weight, then expand Symbol ID into the 4 x 5 board
-4. Assign a multiplier to every gold-framed symbol on the board, preview row included
+4. Assign a multiplier to every golden-framed symbol on the board, preview row included
       First evaluate the special pool, then select the weight block by position and
       timing (see 2-4 and 2-5)
 5. Cascade loop:
@@ -352,12 +376,12 @@ The Base Game and Free Game share the same flow; only the parameter groups diffe
    5-2 If no award at all -> exit the loop
    5-3 Add this pass's line awards to the running total
    5-4 Process the winning positions:
-          gold-framed -> collect its multiplier; the cell does not disappear but
+          golden-framed -> collect its multiplier; the cell does not disappear but
                          turns into a Wild
           otherwise   -> clear the cell
    5-5 Remaining symbols in the reel drop down; empty positions are filled from the
        cascade-fill wheel of this spin
-          a newly added gold-framed symbol draws its multiplier from the block
+          a newly added golden-framed symbol draws its multiplier from the block
           matching its position
           if the reel already holds a Scatter, drawing a Scatter is re-drawn
    5-6 Return to 5-1
@@ -386,24 +410,24 @@ For each payline:
 Notes:
 
 - A line must start from **reel 1** (leftmost).
-- A gold-framed symbol has already been reduced to its base symbol at evaluation time, so it is exactly equivalent to that base symbol for line purposes.
+- A golden-framed symbol has already been reduced to its base symbol at evaluation time, so it is exactly equivalent to that base symbol for line purposes.
 - The sum of the 20 lines is the total line award of that evaluation pass.
 
-### 3-5 Cascading and gold-framed symbols turning into Wild
+### 3-5 Cascading and golden-framed symbols turning into Wild
 
 1. Winning ordinary symbols are removed.
-2. A winning gold-framed symbol is **not** removed: its multiplier is collected first, and the position becomes `WW` and stays on the board, so it is not treated as an empty position.
+2. A winning golden-framed symbol is **not** removed: its multiplier is collected first, and the position becomes `WW` and stays on the board, so it is not treated as an empty position.
 3. Remaining symbols in that reel drop down.
 4. Positions that are still empty are filled by drawing again from the cascade-fill wheel selected for this spin.
-5. If a newly added symbol is gold-framed, its multiplier is drawn from the block matching its reel.
+5. If a newly added symbol is golden-framed, its multiplier is drawn from the block matching its reel.
 6. **A second Scatter is never added to the same reel**: if the reel already holds a Scatter, a drawn Scatter is re-drawn.
 7. After filling, win evaluation runs again, until no new winning combination is formed.
 
 ### 3-6 Multiplier assignment, collection and application
 
-**Assignment (start of a spin)**: every gold-framed symbol on the board is assigned a multiplier, which may be 0. The weight block is selected by three conditions: whether the special pool was hit, whether the symbol is on reel 3 of a table that uses the reel-3 blocks, and whether it sits in the scoring area or the preview row (see [2-4](#2-4-used-special-pool-weight) and [2-5](#2-5-multiple-selection-weight-five-blocks)).
+**Assignment (start of a spin)**: every golden-framed symbol on the board is assigned a multiplier, which may be 0. The weight block is selected by three conditions: whether the special pool was hit, whether the symbol is on reel 3 of a table that uses the reel-3 blocks, and whether it sits in the scoring area or the preview row (see [2-4](#2-4-used-special-pool-weight) and [2-5](#2-5-multiple-selection-weight-five-blocks)).
 
-**Collection**: a gold-framed symbol first takes part in line evaluation as its base symbol. **Its multiplier is collected only if that symbol is actually cleared by a win.** A gold-framed symbol that does not win contributes no multiplier.
+**Collection**: a golden-framed symbol first takes part in line evaluation as its base symbol. **Its multiplier is collected only if that symbol is actually cleared by a win.** A golden-framed symbol that does not win contributes no multiplier.
 
 **Application**: within a single spin the multipliers are only accumulated; they are **not applied immediately**. Once the board forms no further winning combination, the accumulated multiplier is applied once to the total line award of that spin.
 
@@ -438,7 +462,7 @@ Once Free Game is entered, the total number of free spins, **including retrigger
 ### 3-8 Flow of one round (one paid spin)
 
 ```
-1. Compute the cost: Coin In = bet multiplier x Base Bet x Price(x)
+1. Compute the cost: Coin In = bet multiplier x Base Bet
 2. Draw one Base Game card (see Section 4)
 3. Run one Base Game spin (flow as in 3-3)
 4. If the scoring area of the final board reaches the Scatter threshold:
@@ -460,15 +484,15 @@ Once Free Game is entered, the total number of free spins, **including retrigger
 ### 3-9 Key rules summary
 
 1. **Multipliers are not applied immediately.** They accumulate within a spin and are applied once, to that spin's total line award, when no further cascade is possible.
-2. **A gold-framed symbol must win before its multiplier is collected.** After being cleared it turns into a Wild and stays on the board; it neither disappears nor drops.
+2. **A golden-framed symbol must win before its multiplier is collected.** After being cleared it turns into a Wild and stays on the board; it neither disappears nor drops.
 3. **The accumulated multiplier of Free Game does not apply on every spin.** It applies only on those spins that actually collected a multiplier greater than 0.
 4. **The accumulated multiplier is carried across Free Game spins and determines the reel table of the next spin.** A retrigger only adds spins; it does not clear the accumulated value.
 5. **Scatters are counted only on the final board after the whole cascade sequence has finished** — not while cascading, and never in the preview row.
 6. **In Normal Bet, Free Game can only be triggered in a round that draws `BG_Symbol (3)`.**
-7. **Gold-framed symbols in the preview row use `After Eliminate`, not `Before Eliminate`.**
-8. **Only reel tables whose third reel is entirely gold-framed use the reel-3 multiplier blocks for reel 3.**
+7. **Golden-framed symbols in the preview row use `After Eliminate`, not `Before Eliminate`.**
+8. **Only reel tables whose third reel is entirely golden-framed use the reel-3 multiplier blocks for reel 3.**
 9. **Cascade fill draws again from an independent cascade-fill wheel**; it does not continue taking symbols from the reel strip.
-10. **`WW` never lands from a reel stop**; every Wild on the board comes from a winning gold-framed symbol.
+10. **`WW` never lands from a reel stop**; every Wild on the board comes from a winning golden-framed symbol.
 
 ---
 
