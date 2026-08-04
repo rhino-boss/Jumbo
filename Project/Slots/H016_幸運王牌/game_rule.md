@@ -3,7 +3,7 @@
 > 文件版本：v0.1（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
 > 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016192.xlsx`、`Source/H016194.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
-> 編號：H046
+> 編號：H016
 > 撰寫日期：2026-07-28
 
 ---
@@ -12,9 +12,9 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 幸運王牌（H046） |
-| Game ID | H046 |
-| PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H046 PARsheet ID 待數值檔改名時確認） |
+| 遊戲名稱（內部代號） | 幸運王牌（H016） |
+| Game ID | H016 |
+| PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H016 PARsheet ID 待數值檔改名時確認） |
 | 遊戲英文名 | Lucky Ace |
 | 遊戲類型 | Video Slot - Ways / Cascade / Progressive Win Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
@@ -322,9 +322,9 @@
 
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
-* **設定與數值主來源**：`Project/Slots/H046_幸運王牌/Source/H016192.xlsx`
-* **設定與數值主來源**：`Project/Slots/H046_幸運王牌/Source/H016194.xlsx`
-* **Help 文案主來源**：`Project/Slots/H046_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016192.xlsx`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016194.xlsx`
+* **Help 文案主來源**：`Project/Slots/H016_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
 * **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
 
@@ -333,4 +333,4 @@
 1. 權重如何使用、如何消除、金框消除與 WW2 產生順序：以 101003 為準。
 2. 盤面、Ways、賠率、FG 場次、購買價格與模式：以 H016 為準。
 3. 對玩家顯示的 Help 敘述：以 Lucky Ace 企劃書為準。
-4. 若後續正式 H046 數值檔與本草稿不同，以正式 H046 PARsheet 為準並升版更新。
+4. 若後續正式 H016 數值檔與本草稿不同，以正式 H016 PARsheet 為準並升版更新。

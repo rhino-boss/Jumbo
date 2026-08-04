@@ -1,4 +1,4 @@
-"""Build H046 runtime data from the H016 PARsheet layout.
+"""Build H016 runtime data from the H016 PARsheet layout.
 
 The source xlsx files remain authoritative.  This module is shared by
 Simulator.py and the browser-config exporter so Python and index.html use the
@@ -217,7 +217,7 @@ def load_game_config(xlsx_path: str | Path) -> dict[str, Any]:
     parsheet = path.stem
     rtp = 92 if "192" in parsheet else 94 if "194" in parsheet else None
     return {
-        "game_id": "H046",
+        "game_id": "H016",
         "parsheet_id": parsheet,
         "name_zh": "幸運王牌",
         "name_en": "Lucky Ace",
@@ -246,14 +246,14 @@ def write_js(config: dict[str, Any], output_path: str | Path) -> Path:
     payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
     output.write_text(
         "/* Generated from the H016 source xlsx. Do not edit by hand. */\n"
-        f"window.H046_CONFIG={payload};\n",
+        f"window.H016_CONFIG={payload};\n",
         encoding="utf-8",
     )
     return output
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate H046 browser config from H016 xlsx")
+    parser = argparse.ArgumentParser(description="Generate H016 browser config from H016 xlsx")
     parser.add_argument("xlsx", type=Path)
     parser.add_argument("output", type=Path)
     args = parser.parse_args()

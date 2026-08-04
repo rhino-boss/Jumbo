@@ -2233,6 +2233,54 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-04：移除 H028 MegaWay1 權重表</h4>
+          <ul>
+            <li>競品比較報告移除 MegaWay1 版型順序及 BG／FG R1～R6 的 15 組權重表。</li>
+            <li>保留 SymbolSize／ReelHigh 說明與 Extra Reel 比較內容。</li>
+            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：主輪符號比例拆成 R1～R6 欄位</h4>
+          <ul>
+            <li>四張主輪符號表改用 R1～R6 六個獨立欄位，不再以斜線串接。</li>
+            <li>每個 Symbol 分列 Lucky Neko 與 H028，保留原本 1,000,000 次模擬數值。</li>
+            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：主輪符號比例恢復四區塊顯示</h4>
+          <ul>
+            <li>主輪符號比例拆為 BG 初始、BG 掉落、FG 初始、FG 掉落四個獨立表格。</li>
+            <li>保留各 1,000,000 次實際模擬值，只調整報告顯示方式。</li>
+            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：符號分布改用實際模擬值並合併初始／掉落</h4>
+          <ul>
+            <li>主輪符號分布改用目前模型各 1,000,000 次 BG／FG 初始盤面與掉落抽樣。</li>
+            <li>BG、FG 各一張表，依 Symbol 列出 R1→R6 的初始與掉落 Lucky／H028 實際比例。</li>
+            <li>Extra Reel 初始與掉落合併左右並列；M1 表移除結論欄與結論文字。</li>
+            <li>未修改 config、xlsx、Simulator、輪帶、權重及版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-04：競品比較改為數值表格並加入金框模擬比例</h4>
+          <ul>
+            <li>Overview 核心指標合併為單一比較表；Extra Reel 新增 Lucky Neko／H028／差異。</li>
+            <li>消除率拆成 BG、FG 兩張表，固定使用 0、1、2、3、4、5+。</li>
+            <li>金銀框改用比例比較；H028 各抽樣 1,000,000 次 BG／FG 初始盤面與掉落 Symbol。</li>
+            <li>Drop 金框比例接近競品，初始盤面主要在 BG R2～R5 偏低 4.5738～7.6386 pp。</li>
+            <li>未修改 config、xlsx、Simulator、輪帶、權重及版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-04：重整競品參考數值比較章節</h4>
           <ul>
             <li>依指定架構重整目錄、Overview、賠率、符號／消除／M1／金框／大小輪高與 Extra Reel 章節。</li>

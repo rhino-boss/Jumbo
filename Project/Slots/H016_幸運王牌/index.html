@@ -851,7 +851,7 @@
       font-size: 10px;
     }
 
-    /* H046 symbol artwork is scaled into every cell without cropping. */
+    /* H016 symbol artwork is scaled into every cell without cropping. */
     .cell .symbol-wrap {
       inset: 0;
       z-index: 1;
@@ -1817,6 +1817,52 @@
       font-size: 11px;
     }
 
+    .help-rule code,
+    .help-payout-item code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #d9f5ff;
+      background: var(--surface);
+      font-family: Consolas, monospace;
+    }
+
+    .help-rule pre {
+      margin: 0;
+      overflow-x: auto;
+      color: #d9f5ff;
+      font: 11px/1.5 Consolas, monospace;
+      white-space: pre;
+    }
+
+    .game-rule-doc {
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .game-rule-doc h1,
+    .game-rule-doc h2,
+    .game-rule-doc h3 {
+      margin: 18px 0 8px;
+      color: var(--accent);
+      line-height: 1.35;
+    }
+
+    .game-rule-doc h1 { margin-top: 0; font-size: 19px; }
+    .game-rule-doc h2 { padding-bottom: 6px; border-bottom: 1px solid var(--surface-2); font-size: 16px; }
+    .game-rule-doc h3 { color: var(--blue); font-size: 13px; }
+    .game-rule-doc p { margin: 7px 0; }
+    .game-rule-doc .game-rule-note { padding: 8px 10px; border-left: 3px solid var(--blue); color: var(--sub); background: var(--surface); }
+    .game-rule-doc .game-rule-list-item { position: relative; margin: 5px 0; padding-left: 18px; }
+    .game-rule-doc .game-rule-list-item::before { content: "▪"; position: absolute; left: 3px; color: var(--accent); }
+    .game-rule-doc code { padding: 1px 4px; border-radius: 4px; color: #d9f5ff; background: var(--surface); font-family: Consolas, monospace; }
+    .game-rule-doc pre { overflow-x: auto; padding: 10px; border-radius: 6px; color: #d9f5ff; background: #030b15; font: 11px/1.5 Consolas, monospace; }
+    .game-rule-table-wrap { margin: 9px 0 14px; overflow-x: auto; }
+    .game-rule-doc table { width: 100%; border-collapse: collapse; background: var(--panel); }
+    .game-rule-doc th,
+    .game-rule-doc td { min-width: 92px; padding: 7px 9px; border: 1px solid var(--surface-2); text-align: left; vertical-align: top; }
+    .game-rule-doc th { color: var(--accent); background: var(--surface); }
+
     #helpSourceFrame {
       display: none;
       width: 100%;
@@ -1972,7 +2018,7 @@
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">H046192</span> <span id="gameName">Lucky Ace</span></span>
+      <span id="game-title"><span id="gameId">H016192</span> <span id="gameName">Lucky Ace</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2110,8 +2156,8 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92.js">H046192</option>
-            <option value="config_94.js">H046194</option>
+            <option value="config_92.js">H016192</option>
+            <option value="config_94.js">H016194</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2138,150 +2184,361 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
-  <script id="embeddedH046GameHelpMarkdown" type="text/plain">
-# 101015 Game Help Draft
+  <script id="embeddedH016GameRuleMarkdown" type="text/plain">
 
-這份 md 是 H046「幸運王牌 / Lucky Ace」的 Help 前置確認稿。
-之後若要調整遊戲 Help，應先修改這份 md，再同步內嵌至 `index.html`。
+# 幸運王牌 (Lucky Ace) 遊戲規則說明
 
-## Game Meta
+> 文件版本：v0.1（草稿）
+> 對標玩法：101003 Lucky Ace / Super Ace
+> 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016192.xlsx`、`Source/H016194.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
+> 編號：H016
+> 撰寫日期：2026-07-28
 
-| Field | Value |
+---
+
+## §1. 遊戲基本資訊
+
+| 項目 | 說明 |
 | --- | --- |
-| game_id | 101015 |
-| parsheet_id | H0461 |
-| name_zh | 幸運王牌 |
-| name_en | Lucky Ace |
+| 遊戲名稱（內部代號） | 幸運王牌（H016） |
+| Game ID | H016 |
+| PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H016 PARsheet ID 待數值檔改名時確認） |
+| 遊戲英文名 | Lucky Ace |
+| 遊戲類型 | Video Slot - Ways / Cascade / Progressive Win Multiplier |
+| 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
+| 中獎方式 | 由最左輪開始，連續 3 輪以上相同符號或可替代 Wild 即成立 Ways 中獎 |
+| 最小 / 最大 Ways | 最大 1024 Ways（`4 × 4 × 4 × 4 × 4`） |
+| Normal Bet | 提供；每局以所選 Bet 計算派彩 |
+| Extra Bet | 無 |
+| Buy Feature | 提供，價格為 40.5 × Bet |
+| Buy Super Feature | 提供，價格為 250 × Bet |
+
+補充說明：
+
+* 遊戲設定、賠率與購買價格沿用 H016；玩法執行順序、權重使用、消除補位與金框處理採 101003。
+* 來源中的 Coin / Credit 基準為 100；Help 顯示賠率亦以 100 Credit Bet 為基準。
+* H016192 與 H016194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
 
 ---
 
-## PAYTABLE
+## §2. 盤面結構
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+```text
+   R1   R2   R3   R4   R5
+   ↓    ↓    ↓    ↓    ↓
+┌────┬────┬────┬────┬────┐
+│    │    │    │    │    │
+├────┼────┼────┼────┼────┤
+│    │    │    │    │    │
+├────┼────┼────┼────┼────┤
+│    │    │    │    │    │
+├────┼────┼────┼────┼────┤
+│    │    │    │    │    │
+└────┴────┴────┴────┴────┘
+```
 
-### WILD SYMBOL
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 百搭符號 | WILD SYMBOL |
-| 規則說明 | [WW] 可替代除 [C1] 外的所有賠付符號。 | [WW] SUBSTITUTES FOR ALL PAYING SYMBOLS EXCEPT [C1]. |
-
-### SCATTER SYMBOL
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 散佈符號 | SCATTER SYMBOL |
-| 規則說明 | 所有連消結束後，最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | AFTER ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS TRIGGER THE FREE GAME FEATURE. |
-
-### 賠率表
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 賠率表 | PAYTABLE |
-
-| 中文欄 | 中文欄 | 中文欄 |
-| --- | --- | --- |
-| [M1] 3 - 50 | [M1] 4 - 100 | [M1] 5 - 150 |
-| [M1] 6 - 250 | [M2] 3 - 40 | [M2] 4 - 75 |
-| [M2] 5 - 100 | [M2] 6 - 150 | [M3] 3 - 25 |
-| [M3] 4 - 50 | [M3] 5 - 75 | [M3] 6 - 100 |
-| [M4] 3 - 25 | [M4] 4 - 50 | [M4] 5 - 75 |
-| [M4] 6 - 100 | [A] 3 - 10 | [A] 4 - 20 |
-| [A] 5 - 30 | [A] 6 - 50 | [K] 3 - 10 |
-| [K] 4 - 20 | [K] 5 - 30 | [K] 6 - 50 |
-| [Q] 3 - 5 | [Q] 4 - 10 | [Q] 5 - 15 |
-| [Q] 6 - 25 | [J] 3 - 5 | [J] 4 - 10 |
-| [J] 5 - 15 | [J] 6 - 25 |  |
+* 主盤面固定為 5 輪、每輪 4 個可見符號，共 20 格。
+* 本作沒有獨立 Extra Reel。
+* 相同一般符號須由 R1 起向右連續出現至少 3 輪才成立中獎。
+* 同一輪可有多顆相同符號，同輪命中數會相乘形成 Ways 數量。
+* 若同一符號同時成立不同連線長度，只支付該符號可成立的最高連線長度。
 
 ---
 
-## WAYS FEATURE
+## §3. 符號類別
 
-| Item | 繁中 | 英文 |
+### 3.1 一般符號
+
+| 類別 | 符號 |
+| --- | --- |
+| 高分符號 | `M1`、`M2`、`M3`、`M4` |
+| 低分符號 | `A`、`K`、`Q`、`J` |
+
+* 所有一般符號皆為 1×1；本作沒有 Block / Fat Symbol。
+* `M1G ~ M4G`、`AG`、`KG`、`QG`、`JG` 為一般符號的金框版本。
+* 金框版本判獎時視為對應的一般符號，賠率不變。
+* 金框符號只會出現在 R2、R3、R4。
+
+### 3.2 特殊符號
+
+| 符號 | 出現位置 | 行為 |
 | --- | --- | --- |
-| 主要標題 | 3600 路賠付 | 3600 WAYS |
-| 規則說明 | 盤面共有 {6} 輪，有效格數依序為 {3、4、5、5、4、3}。 | THE GAME USES {6} REELS WITH {3, 4, 5, 5, 4, 3} ACTIVE POSITIONS. |
-| 規則說明 | 相同符號由最左輪開始，在連續相鄰輪出現至少 {3} 輪即可得獎；每種 Ways 組合分別計獎。 | MATCHING SYMBOLS PAY FROM THE LEFTMOST REEL ACROSS AT LEAST {3} CONSECUTIVE REELS. EACH WAY IS AWARDED SEPARATELY. |
+| **WW1 / 一般 Wild** | 不由一般權重自然產生；由中獎金框轉換 | 替代除 `C1` 外的所有一般符號；可參與後續 Ways，命中後可被消除 |
+| **WW2 / 複製 Wild** | 由金框特色的第二模式產生 | 替代除 `C1` 外的所有一般符號；可在原金框位置生成並額外複製到 R2～R5 |
+| **C1 / Scatter** | R1～R5 均可出現；同一輪可超過 1 顆 | 不參與 Ways、不被一般中獎消除；所有 Cascade 結束後統計總數 |
 
 ---
 
-## CASCADING FEATURE
+## §4. 賠率表（Pay Table）
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 連消特色 | CASCADING FEATURE |
-| 規則說明 | 每次中獎後，中獎符號會被消除並依掉落表補入新符號，再次檢查中獎組合。 | AFTER EACH WIN, WINNING SYMBOLS ARE REMOVED AND REPLACED USING THE CASCADE TABLE, THEN THE REELS ARE EVALUATED AGAIN. |
-| 規則說明 | 連消會持續進行，直到盤面不再形成新的中獎組合。 | CASCADES CONTINUE UNTIL NO NEW WINNING COMBINATION IS FORMED. |
+**單位：Credit；來源以 100 Credit Bet 顯示。**
 
----
+| 符號 | 5 連 | 4 連 | 3 連 |
+| --- | ---: | ---: | ---: |
+| `M1` | 250 | 150 | 50 |
+| `M2` | 200 | 120 | 40 |
+| `M3` | 150 | 90 | 30 |
+| `M4` | 100 | 60 | 20 |
+| `A` | 50 | 30 | 10 |
+| `K` | 50 | 30 | 10 |
+| `Q` | 25 | 15 | 5 |
+| `J` | 25 | 15 | 5 |
 
-## GOLDEN SYMBOL FEATURE
+計算規則：
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 金框符號 | GOLDEN SYMBOL FEATURE |
-| 規則說明 | 金框符號以對應的一般符號參與計獎；若金框符號屬於中獎組合，該位置會在下一次連消轉換為 [WW]。 | A GOLDEN SYMBOL PAYS AS ITS MATCHING REGULAR SYMBOL. WHEN IT PARTICIPATES IN A WIN, THAT POSITION CHANGES TO [WW] FOR THE NEXT CASCADE. |
-
----
-
-## MULTIPLIER FEATURE
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 累進倍數 | PROGRESSIVE MULTIPLIER |
-| 規則說明 | 基礎遊戲每次旋轉由 x1 開始；免費遊戲每次旋轉由 x8 開始。 | EACH BASE GAME SPIN STARTS AT x1. EACH FREE GAME SPIN STARTS AT x8. |
-| 規則說明 | 每完成一次中獎連消，倍數等級向上提升一級。倍數等級為 x1、x2、x4、x8、x16、x32、x64、x128、x256、x512、x1024。 | AFTER EACH WINNING CASCADE, THE MULTIPLIER ADVANCES ONE LEVEL: x1, x2, x4, x8, x16, x32, x64, x128, x256, x512 AND x1024. |
-| 規則說明 | 閃電效果可能額外提升倍數等級；本次連消的獎金乘以提升後的倍數。 | THE LIGHTNING EFFECT MAY ADVANCE ADDITIONAL MULTIPLIER LEVELS. THE CURRENT CASCADE WIN IS MULTIPLIED BY THE UPDATED VALUE. |
+* `WW1`、`WW2`、`C1` 沒有自身一般賠率。
+* 每一符號的得分為：`賠率 × 該符號 Ways 數量 × Bet 基準 × 當次 Cascade 倍數`。
+* 同一盤面若有多種符號同時中獎，各符號獨立計算後相加。
+* `C1` 僅用於觸發 Free Game / Retrigger，不提供 Scatter Pay。
 
 ---
 
-## FREE GAME FEATURE
+## §5. 核心遊戲流程（Base Game）
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | {3、4、5} 個 [C1] 分別獲得 {10、12、14} 次免費旋轉。 | {3, 4 OR 5} [C1] AWARD {10, 12 OR 14} FREE SPINS RESPECTIVELY. |
-| 規則說明 | 免費遊戲中再次出現 {3} 個或以上 [C1]，會依相同規則追加免費旋轉；單次免費遊戲最多進行 {50} 次旋轉。 | {3} OR MORE [C1] DURING THE FREE GAME AWARD ADDITIONAL FREE SPINS BY THE SAME RULE. A FREE GAME SESSION IS CAPPED AT {50} SPINS. |
-| 規則說明 | 系統會依權重指定其中一場免費遊戲；若該場首段連消未出現閃電，會強制提升 {1} 階倍數。 | ONE WEIGHTED FREE SPIN IS DESIGNATED PER FEATURE. IF ITS FIRST CASCADE HAS NO LIGHTNING, THE MULTIPLIER IS FORCED UP BY {1} LEVEL. |
+1. 玩家選擇 Normal Bet 並開始 Spin。
+2. 系統先依 H016 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
+3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪、每輪 4 列盤面。
+4. 本局 Win Multiplier 從 `×1` 開始。
+5. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
+6. 若沒有中獎，停止 Cascade，進入最終 `C1` 統計。
+7. 若有中獎，先以本次 Cascade 對應倍數計算並累加得分。
+8. 參與中獎的一般符號、`WW1`、`WW2` 會被消除。
+9. 參與中獎的金框符號不留空格；該位置保留並轉成 `WW1`，再依 Random Wild 權重判定是否啟動 WW2 複製模式。
+10. 其餘空格先由同輪上方既有符號依序落下，再以本局選定表的同輪 Symbol Weight 逐格加權抽取新符號補滿。
+11. 補位完成後，若本次有啟動 WW2 複製模式，先完成金框位置的 Wild 轉換，再將額外 `WW2` 放入合格位置。
+12. 進入下一次 Ways 判定；每完成一次有效中獎 Cascade，下一次 Cascade 的倍數依序提升為 `×2`、`×3`、`×5`，到 `×5` 後不再上升。
+13. 重複判獎、消除、金框轉換、掉落與補位，直到盤面沒有新的中獎。
+14. 所有 Cascade 結束後統計最終盤面 `C1` 總數；若 `C1 >= 3`，觸發 10 場 Free Game。
+
+### 5.1 權重使用原則
+
+* 權重僅決定「抽到哪一個符號」，不改變已落在盤面上的符號順序。
+* 初始盤面與 Cascade 補牌皆按各輪自己的 Symbol Weight 獨立抽取。
+* Base Game 高表 / 低表、Free Game 高表 / 低表、Buy Feature 進場表與 Super Free Game 各自使用獨立設定。
+* 同一局 Cascade 的補牌沿用該局已選定的盤面表，不在每一格補牌時重新選高表 / 低表。
+* Random Wild 的 `0 / 2 / 3 / 4` 亦依該模式專屬權重抽取；抽到 0 代表本次金框只轉成 `WW1`，不複製 `WW2`。
 
 ---
 
-## BUY FEATURE
+## §6. 核心特色
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | 購買特色的費用為目前投注的 {75} 倍。按下購買特色會立即進行一次保證觸發免費遊戲的旋轉，並直接進入免費遊戲；這不是持續狀態切換。 | BUY FEATURE COSTS {75} TIMES THE CURRENT BET. PRESSING BUY FEATURE IMMEDIATELY PLAYS ONE SPIN GUARANTEED TO TRIGGER THE FREE GAME, THEN ENTERS THE FEATURE. IT IS NOT A PERSISTENT MODE. |
-| 規則說明 | 購買特色使用 BF 進場輪帶；進入免費遊戲後，使用 BF 對應的免費遊戲 table 權重。 | BUY FEATURE USES THE BF ENTRY STRIP. AFTER ENTRY, THE FEATURE USES THE BF-SPECIFIC FREE GAME TABLE WEIGHTS. |
+### 6.1 Cascade 消除與補位
+
+* 一次盤面上所有成立的 Ways 同時結算。
+* 所有參與中獎的非金框符號同時消除。
+* 同一格即使同時參與多個 Ways，也只消除一次。
+* `C1` 不參與一般連線，因此不會因一般中獎被消除。
+* 同輪剩餘符號往下落到底部空格；空出的上方位置再依該輪權重逐格補牌。
+* Cascade 持續至新盤面沒有任何 3 輪以上 Ways 為止。
+
+### 6.2 金框轉 Wild
+
+* 金框只存在於 R2、R3、R4 的一般符號。
+* 金框符號未參與本次中獎時保持原符號與金框，不會轉 Wild。
+* 金框符號參與中獎時，原位置不會變成待補空格，而是保留並轉成 Wild。
+* 轉換分為兩種模式：
+  * **模式 1**：原位置轉成 1 顆 `WW1`。
+  * **模式 2**：原位置轉成 `WW2`，並依 Random Wild 結果額外複製 2～4 顆 `WW2`。
+* 額外 `WW2` 只會取代 R2～R5 的合格一般符號，不會覆蓋 `C1`、既有 `WW1` 或既有 `WW2`。
+* 若同一次 Cascade 有多顆金框參與中獎，所有金框都會轉 Wild，但只有一顆可作為該次 WW2 複製模式的來源，其餘轉成 `WW1`。
+* BG 同一 Spin 在 WW2 複製模式成功啟動後不會再次啟動；若先前抽到 0，後續 Cascade 再消到金框時仍可再次依權重判定。
+
+### 6.3 WW2 處理順序
+
+玩法顯示順序固定為：
+
+1. 結算本次 Ways。
+2. 消除所有中獎的非金框符號。
+3. 同輪符號下落並依權重補滿空格。
+4. 所有中獎金框位置顯示轉換。
+5. 金框位置形成 `WW1` 或觸發來源 `WW2`。
+6. 若啟動複製模式，最後選取 R2～R5 的合格位置並放置額外 `WW2`。
+7. 以完成後的新盤面進行下一次 Cascade 判獎。
+
+### 6.4 Win Multiplier
+
+| 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次起 |
+| --- | ---: | ---: | ---: | ---: |
+| Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 |
+| Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 |
+
+* 每一次 Cascade 的得分使用該次表列倍數。
+* 倍數只在同一 Spin 的 Cascade 期間推進。
+* 新 Spin 開始時，倍數回到該模式的第一階：BG 為 `×1`，FG 為 `×2`。
+* 上排倍數為固定階梯顯示，不做滾動抽取。
 
 ---
 
-## GAME RULE
+## §7. 免費遊戲（Free Spins / Free Game, FG）
 
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | 所有獎金以遊戲點數顯示。基礎投注為 {100} 點，實際投注會依所選 Bet 倍率調整。 | ALL WINS ARE SHOWN IN GAME CREDITS. THE BASE WAGER IS {100} CREDITS AND IS ADJUSTED BY THE SELECTED BET MULTIPLIER. |
-| 規則說明 | H046192 理論返還率：一般投注 {92.00%}、購買特色 {92.50%}；H046194 理論返還率：一般投注 {94.00%}、購買特色 {92.50%}。 | H046192 THEORETICAL RTP: NORMAL BET {92.00%}, BUY FEATURE {92.50%}. H046194 THEORETICAL RTP: NORMAL BET {94.00%}, BUY FEATURE {92.50%}. |
+### 7.1 觸發
+
+* BG 所有 Cascade 結束後，最終盤面出現 3 顆以上 `C1`，觸發 10 場 Free Game。
+* `C1` 可位於任意輪、任意位置，同一輪可有多顆。
+* 觸發判定只看 Cascade 結束後仍在盤面上的 `C1` 總數。
+
+### 7.2 FG 玩法
+
+* 每次進入 FG，依 H016 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
+* 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
+* FG 的盤面生成、Ways、Cascade、金框轉 Wild、WW2 複製與 Scatter 保留規則同 BG。
+* FG 的 Win Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`。
+* 依 101003 邏輯，FG 每次 Cascade 只要有金框轉換，都可再次進行 Random Wild 判定；不受 BG「成功啟動一次後鎖定」限制。
+* FG 場次使用觸發時的 Bet，不可中途變更。
+
+### 7.3 Retrigger（加局）
+
+* FG 單場所有 Cascade 結束後，若最終盤面 `C1 >= 3`，固定增加 5 場。
+* Retrigger 新增場次包含 1 場高表與 4 場低表，加入後隨機排列。
+* FG 最後一場仍可 Retrigger。
+* 單次 FG 包含所有 Retrigger，最多進行 50 場。
+
+---
+
+## §8. Buy Feature（購買特色）
+
+### 8.1 Buy Feature
+
+* 價格：`40.5 × Bet`。
+* 購買後先使用 Buy Feature 專用初始盤面權重，產生保證含 3 顆以上 `C1` 的進場 Spin。
+* 進場 Spin 的判獎、Cascade、倍率與金框規則同 BG。
+* 進場局所有 Cascade 結束後，以最終 `C1` 觸發 10 場 FG。
+* 進入 FG 後沿用 §7 的一般 FG 規則。
+
+### 8.2 Buy Super Feature
+
+* 價格：`250 × Bet`。
+* 進場方式同 Buy Feature，但進入後使用 Super Free Game 專用符號權重。
+* Super Free Game 中，每次有金框符號參與中獎並轉換時，Random Wild 不會抽到 0；必定進入 WW2 模式並額外複製 2～4 顆 `WW2`。
+* 其餘盤面、Cascade、FG 倍率、Retrigger 與 50 場上限同一般 FG。
+
+### 8.3 批次購買操作
+
+* Buy Feature 與 Buy Super Feature 最多可一次選擇 99 次。
+* `總價 = 單次價格 × 數量`，確認後依所選數量逐局執行。
+* 第一局後，玩家可逐次按 Spin 繼續，或使用 Auto Spin 自動完成剩餘次數。
+* 剩餘購買次數完成前不可調整 Bet 或取消剩餘次數。
+* 網路中斷或瀏覽器關閉時，剩餘未執行次數取消；已完成局數依平台帳務結果結算。
+* 全部購買局完成後，Bet 回復至購買前設定。
+
+---
+
+## §9. 邊界 / 例外情境（Edge Cases）
+
+### 9.1 金框 / Wild 相關
+
+* **9.1.1 金框只出現在 R2～R4**：R1、R5 不自然產生金框。
+* **9.1.2 金框未中獎不轉換**：只有實際參與 Ways 的金框才轉 Wild。
+* **9.1.3 金框位置不補牌**：轉 Wild 的位置不是空格，不參與該次重力補位。
+* **9.1.4 Wild 不保留金框屬性**：轉換完成後不會再次以金框身分觸發特色。
+* **9.1.5 Wild 可被後續中獎消除**：`WW1` / `WW2` 參與後續 Ways 時，會像其他非金框中獎符號一樣消除。
+* **9.1.6 WW2 不覆蓋特殊符號**：額外複製不覆蓋 `C1`、`WW1`、`WW2`；若合格位置不足，只能使用實際可選位置。
+
+### 9.2 倍數機制相關
+
+* **9.2.1 倍數依 Cascade 次序固定**：不是從權重隨機抽取。
+* **9.2.2 倍數使用當次階級**：BG 第一次中獎用 `×1`、FG 第一次中獎用 `×2`。
+* **9.2.3 倍數不跨 Spin**：每個新 Spin 重置到該模式第一階。
+* **9.2.4 倍數達上限後維持**：BG 維持 `×5`，FG 維持 `×10`。
+
+### 9.3 Scatter 相關
+
+* **9.3.1 每輪可有多顆 C1**：不限制每輪最多 1 顆。
+* **9.3.2 C1 不參與 Ways 與 Cascade 消除**。
+* **9.3.3 觸發判定在所有 Cascade 結束後**：中途出現 3 顆不會立即中止 Cascade。
+* **9.3.4 Wild 不可替代 C1**。
+
+### 9.4 Free Game 相關
+
+* **9.4.1 FG 可 Retrigger**：3+ `C1` 固定增加 5 場。
+* **9.4.2 FG 總場數上限 50**：達上限後不再增加剩餘場次。
+* **9.4.3 最後一場仍可加局**：只要尚未達 50 場上限。
+* **9.4.4 FG 每場倍率重置**：每一場從 `×2` 重新開始。
+* **9.4.5 FG 可多次判定 WW2**：同一 FG Spin 的不同 Cascade 均可依金框轉換再次判定。
+
+### 9.5 Buy Feature 相關
+
+* **9.5.1 Buy 進場使用專用權重**：不可直接以一般 BG 權重代替。
+* **9.5.2 Buy 進場局仍完整結算**：進場盤面的 Ways / Cascade 得分正常計入。
+* **9.5.3 一般 Buy 與 Super Buy 使用不同 FG 權重**。
+* **9.5.4 Super Buy 金框必定啟動 WW2 模式**：額外數量仍依 2 / 3 / 4 權重決定。
+
+### 9.6 Ways 計算相關
+
+* **9.6.1 由最左輪開始**：R2 起始但 R1 缺少匹配符號不成立。
+* **9.6.2 同輪多顆命中會增加 Ways 數**。
+* **9.6.3 Wild 替代依同一 Ways 規則計算**。
+* **9.6.4 多種符號同時成立時獨立計算後相加**。
+* **9.6.5 同一符號只支付最高連線長度**。
+
+### 9.7 Cascade 相關
+
+* **9.7.1 同盤所有中獎同時消除**。
+* **9.7.2 同一格只消除一次**：即使參與多條 Ways。
+* **9.7.3 補位順序固定**：既有符號下落後，再以同輪權重抽新符號。
+* **9.7.4 終止條件**：補位後沒有任何新 Ways 即結束本次 Spin。
+
+### 9.8 操作 / 帳務相關
+
+* **9.8.1 故障處理**：遊戲故障時，相關派彩與遊戲結果視為無效。
+* **9.8.2 FG 中斷**：平台自動完成剩餘結果並將有效獎金加入餘額。
+* **9.8.3 批次 Buy 中斷**：已執行局依結果結算，未執行的剩餘數量依平台規則取消。
+
+---
+
+## 附錄 A. 詞彙對照
+
+| 詞彙 | 說明 |
+| --- | --- |
+| BG / Base Game | 主遊戲 |
+| FG / Free Game | 免費遊戲 |
+| Ways | 由左至右連續輪上的符號組合數 |
+| Cascade / Combo | 中獎符號消除、掉落補位後再次判獎 |
+| Golden Symbol | 金框一般符號，參與中獎後原地轉 Wild |
+| WW1 | 一般 Wild，由金框模式 1 產生 |
+| WW2 | 複製 Wild，由金框模式 2 產生 |
+| C1 / Scatter | FG / Retrigger 觸發符號 |
+| Symbol Weight | 各輪抽取符號時使用的相對權重 |
+| High / Low Table | 由卡片系統選定的高表 / 低表盤面權重組 |
+| Win Multiplier | 依同一 Spin 的 Cascade 次序提升的固定得分倍數 |
+| Buy Feature | 40.5 × Bet 的一般購買特色 |
+| Buy Super Feature | 250 × Bet 的超級購買特色 |
+
+---
+
+## 附錄 B. 文件來源 / 參考
+
+* **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
+* **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016192.xlsx`
+* **設定與數值主來源**：`Project/Slots/H016_幸運王牌/Source/H016194.xlsx`
+* **Help 文案主來源**：`Project/Slots/H016_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
+* **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
+* **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
+
+### 來源優先級
+
+1. 權重如何使用、如何消除、金框消除與 WW2 產生順序：以 101003 為準。
+2. 盤面、Ways、賠率、FG 場次、購買價格與模式：以 H016 為準。
+3. 對玩家顯示的 Help 敘述：以 Lucky Ace 企劃書為準。
+4. 若後續正式 H016 數值檔與本草稿不同，以正式 H016 PARsheet 為準並升版更新。
   </script>
 
   <script>
-    const H046_CONFIG_FILES = ["config_92.js", "config_94.js"];
+    const H016_CONFIG_FILES = ["config_92.js", "config_94.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H046_ACTIVE_CONFIG = H046_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H046_CONFIG_FILES[0];
-    window.H046_ACTIVE_CONFIG = H046_ACTIVE_CONFIG;
-    document.write(`<script src="./${H046_ACTIVE_CONFIG}"><\/script>`);
+    const H016_ACTIVE_CONFIG = H016_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H016_CONFIG_FILES[0];
+    window.H016_ACTIVE_CONFIG = H016_ACTIVE_CONFIG;
+    document.write(`<script src="./${H016_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
 (() => {
   "use strict";
 
-  const Box = window.H046_BOX_DATA;
+  const Box = window.H016_BOX_DATA;
   if (!Box) return;
 
   const $ = (id) => document.getElementById(id);
@@ -2310,7 +2567,7 @@
     WW: "./Source/Image/WW_Symbol.png"
   });
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.png";
-  const HELP_PATH = "./game_help_draft.md";
+  const HELP_PATH = "./game_rule.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
 
@@ -2327,8 +2584,8 @@
       forceFg: "Force FG", buyStart: "Buy Feature paid — guaranteed FG trigger spin",
       insufficient: "Insufficient credit", invalidRng: "RNG needs exactly 6 valid stop indexes",
       noWin: "No win", complete: "complete", triggered: "Free Game triggered", retrigger: "Free Game retriggered",
-      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_help_draft.md.",
-      footer: "Double-click to play offline. No server needed.", configFixed: "H046192 (xlsx)",
+      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_rule.md.",
+      footer: "Double-click to play offline. No server needed.", configFixed: "H016192 (xlsx)",
       languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
     },
     zh: {
@@ -2343,8 +2600,8 @@
       forceFg: "強制 FG", buyStart: "已支付購買特色費用 — 本局保證觸發 FG",
       insufficient: "餘額不足", invalidRng: "RNG 必須是 6 個有效停輪位置",
       noWin: "未得獎", complete: "完成", triggered: "已觸發免費遊戲", retrigger: "免費遊戲再觸發",
-      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_help_draft.md。",
-      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H046192（xlsx）",
+      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_rule.md。",
+      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H016192（xlsx）",
       languageChanged: "語言已切換為中文", resetDone: "遊戲與統計已重置"
     }
   };
@@ -2860,7 +3117,7 @@
     if (!markdown) {
       try { markdown = el.helpSourceFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
     }
-    if (!markdown) markdown = document.getElementById("embeddedH046GameHelpMarkdown")?.textContent?.trim() || "";
+    if (!markdown) markdown = document.getElementById("embeddedH016GameRuleMarkdown")?.textContent?.trim() || "";
     state.helpMarkdown = markdown; renderHelp(markdown);
   }
 
@@ -2899,7 +3156,7 @@
 
   document.title = `${Box.english_name || "Lucky Ace"} — Demo Game`;
   el.gameId.textContent = Box.game_id;
-  el.configSelect.value = H046_ACTIVE_CONFIG;
+  el.configSelect.value = H016_ACTIVE_CONFIG;
   el.configSelect.disabled = false;
   el.configSelect.addEventListener("change", () => {
     const url = new URL(window.location.href);
@@ -2909,7 +3166,485 @@
   buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();
   </script>
-  <script src="./h046_runtime.js"></script>
+  <script>
+(() => {
+  "use strict";
+
+  const cfg = window.H016_CONFIG;
+  if (!cfg) throw new Error("H016 config was not loaded.");
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const WW = 0, W2 = 1, C1 = 2;
+  const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
+  const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
+  const DISPLAY = {WW:"WILD",WW1:"WILD",WW2:"W2",C1:"C1",M1:"A♠",M2:"K♥",M3:"Q♦",M4:"J♣",A:"A",K:"K",Q:"Q",J:"J",M1G:"A♠",M2G:"K♥",M3G:"Q♦",M4G:"J♣",AG:"A",KG:"K",QG:"Q",JG:"J"};
+  const H016_IMAGE_ROOT = "./Source/Image/";
+  const SYMBOL_ASSET = {
+    WW1:"W1_Symbol.png", WW2:"W2_Symbol.png", C1:"C1_Symbol.png", C2:"C2_Symbol.png",
+    M1:"M1_Symbol.png", M2:"M2_Symbol.png", M3:"M3_Symbol.png", M4:"M4_Symbol.png",
+    A:"M5_Symbol.png", K:"M6_Symbol.png", Q:"M7_Symbol.png", J:"M8_Symbol.png",
+    M1G:"G1_Symbol.png", M2G:"G2_Symbol.png", M3G:"G3_Symbol.png", M4G:"G4_Symbol.png",
+    AG:"G5_Symbol.png", KG:"G6_Symbol.png", QG:"G7_Symbol.png", JG:"G8_Symbol.png"
+  };
+  const BASE_BET = 100;
+  const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
+  const MAX_RETRY = 20000;
+  const DROP_SPEED_MULTIPLIER = 9;
+  const tables = {};
+  const state = {
+    balance: 10000, betIndex: 0, busy: false, auto: false, language: "zh",
+    rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
+    maxMultiplier: 1, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
+    fg: {spins: [], index: 0, total: 0, mode: 0}
+  };
+
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    #multiplierWindow{grid-template-columns:repeat(4,minmax(0,1fr))!important;transform:none!important}
+    #board .h016-face{font:900 clamp(1rem,2.4vw,1.7rem)/1 Georgia,serif;color:#fff6cc;text-shadow:0 2px 5px #000;text-align:center}
+    #board .symbol-ww,#board .symbol-ww2{background:radial-gradient(circle,#d43c4a,#5b0713)!important}
+    #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
+    #board .symbol-code{display:none!important}
+    #board .cell.gold .h015-symbol-img{width:94%;height:94%;max-width:94%;max-height:94%}
+    #board .symbol-drop,#board .symbol-settle{
+      animation:h016-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
+      will-change:transform;
+    }
+    @keyframes h016-symbol-drop{
+      from{transform:translateY(var(--drop-start,-112%))}
+      82%{transform:translateY(3%)}
+      to{transform:translateY(0)}
+    }
+  </style>`);
+
+  for (const [name, raw] of Object.entries(cfg.tables)) {
+    tables[name] = {...raw, cumulative: raw.weights.map(weights => {
+      let sum = 0;
+      return weights.map(weight => sum += Math.max(0, Number(weight)));
+    })};
+  }
+
+  function pick(values, weights) {
+    let total = weights.reduce((sum, weight) => sum + Math.max(0, Number(weight) || 0), 0);
+    if (total <= 0) return values[0];
+    let target = Math.random() * total;
+    for (let index = 0; index < values.length; index++) {
+      target -= Math.max(0, Number(weights[index]) || 0);
+      if (target < 0) return values[index];
+    }
+    return values.at(-1);
+  }
+
+  function draw(tableName, reel) {
+    const table = tables[tableName], cumulative = table.cumulative[reel];
+    const target = Math.random() * cumulative.at(-1);
+    let low = 0, high = cumulative.length - 1;
+    while (low < high) {
+      const middle = (low + high) >> 1;
+      if (target < cumulative[middle]) high = middle;
+      else low = middle + 1;
+    }
+    return Number(table.reels[reel][low]);
+  }
+
+  const cloneBoard = board => board.map(reel => reel.slice());
+  const canonical = symbol => symbol >= 11 && symbol <= 18 ? symbol - 8 : symbol;
+  const makeBoard = table => Array.from({length: 5}, (_, reel) => Array.from({length: 4}, () => draw(table, reel)));
+  const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
+  const format = value => Number(value).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  function evaluate(board) {
+    let rawPay = 0;
+    const hits = new Set(), details = [];
+    for (const target of SCORE) {
+      const counts = [], positions = [];
+      for (let reel = 0; reel < 5; reel++) {
+        const matched = [];
+        for (let row = 0; row < 4; row++) {
+          const symbol = board[reel][row];
+          if (symbol === WW || symbol === W2 || canonical(symbol) === target) matched.push([reel, row]);
+        }
+        if (!matched.length) break;
+        counts.push(matched.length); positions.push(matched);
+      }
+      if (counts.length < 3) continue;
+      const ways = counts.reduce((product, count) => product * count, 1);
+      const pay = Number(cfg.pays[String(target)][counts.length - 3]) * ways;
+      if (pay <= 0) continue;
+      rawPay += pay;
+      positions.flat().forEach(([reel, row]) => hits.add(`${reel},${row}`));
+      details.push({symbol: CODE[target], length: counts.length, ways, pay});
+    }
+    return {rawPay, hits, details};
+  }
+
+  function addW2(board, tableName, gold) {
+    if (!gold.length) return 0;
+    const randomWild = tables[tableName].random_wild;
+    const count = Number(pick(randomWild.values, randomWild.weights)) || 0;
+    if (count <= 0) return 0;
+    const source = gold[Math.floor(Math.random() * gold.length)];
+    board[source[0]][source[1]] = W2;
+    const candidates = [];
+    for (let reel = 1; reel < 5; reel++) for (let row = 0; row < 4; row++) {
+      if (![WW, W2, C1].includes(board[reel][row])) candidates.push([reel, row]);
+    }
+    candidates.sort(() => Math.random() - 0.5).slice(0, count).forEach(([reel, row]) => board[reel][row] = W2);
+    return Math.min(count, candidates.length);
+  }
+
+  function spin(tableName, freeGame = false) {
+    const table = tables[tableName];
+    const multipliers = table.multipliers?.length ? table.multipliers : (freeGame ? [2,4,6,10] : [1,2,3,5]);
+    const board = makeBoard(tableName), snapshots = [];
+    let pay = 0, combo = 0, pendingGold = [], bgW2Used = false, golden = 0, w2Events = 0;
+    snapshots.push({type:"initial", board: cloneBoard(board), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin"});
+    while (true) {
+      if (pendingGold.length && (freeGame || !bgW2Used)) {
+        const made = addW2(board, tableName, pendingGold);
+        if (made) { w2Events++; bgW2Used = true; snapshots.push({type:"convert", board: cloneBoard(board), hits: [], converted: pendingGold.map(([reel,row])=>`${reel},${row}`), combo, multiplier: multipliers[Math.min(combo,3)], message: `W2 × ${made}`}); }
+      }
+      pendingGold = [];
+      const win = evaluate(board);
+      if (!win.rawPay) break;
+      const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
+      const cascadePay = win.rawPay * multiplier * BASE_BET * BET_LEVELS[state.betIndex];
+      pay += cascadePay;
+      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, message: `WIN ${format(cascadePay)}`, details: win.details});
+      const transitionBoard = cloneBoard(board), cleared = [], converted = [];
+      combo++;
+      for (const key of win.hits) {
+        const [reel, row] = key.split(",").map(Number), symbol = board[reel][row];
+        if (symbol >= 11 && symbol <= 18) {
+          board[reel][row] = WW;
+          transitionBoard[reel][row] = WW;
+          pendingGold.push([reel, row]);
+          converted.push(key);
+          golden++;
+        } else {
+          board[reel][row] = -1;
+          cleared.push(key);
+        }
+      }
+      snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplier: multipliers[Math.min(combo,3)], message: "Eliminate + WW"});
+      const drop = [];
+      for (let reel = 0; reel < 5; reel++) {
+        const survivors = board[reel].map((symbol, oldRow) => ({symbol, oldRow})).filter(item => item.symbol !== -1);
+        const nextReel = survivors.map(item => item.symbol);
+        survivors.forEach((item, finalRow) => {
+          const rows = item.oldRow - finalRow;
+          if (rows > 0) drop.push({key:`${reel},${finalRow}`, rows, isNew:false, delay:reel * 24});
+        });
+        while (nextReel.length < 4) {
+          const finalRow = nextReel.length;
+          nextReel.push(draw(tableName, reel));
+          drop.push({key:`${reel},${finalRow}`, rows:4 - finalRow, isNew:true, delay:reel * 24 + (3 - finalRow) * 18});
+        }
+        board[reel] = nextReel;
+      }
+      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplier: multipliers[Math.min(combo,3)], message: "Drop"});
+    }
+    return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
+  }
+
+  function freeQueue() {
+    const choices = cfg.free_game_mix.choices;
+    const choice = pick(choices, choices.map(item => item.weight)), queue = [];
+    for (let i = 0; i < choice.high; i++) queue.push("high");
+    for (let i = 0; i < choice.low; i++) queue.push("low");
+    return queue.sort(() => Math.random() - 0.5);
+  }
+
+  function highTable() {
+    return pick(["fg_high_a","fg_high_k","fg_high_q","fg_high_j"], cfg.free_game_mix.high_variant_weights);
+  }
+
+  function freeSession(superMode = false) {
+    let remaining = Number(cfg.free_spins), played = 0, pay = 0, retriggers = 0;
+    const queue = freeQueue(), spins = [], snapshots = [];
+    while (remaining > 0 && played < Number(cfg.free_spin_cap)) {
+      remaining--; played++;
+      const surface = queue.shift() || "low";
+      const table = superMode ? "super" : surface === "high" ? highTable() : "fg_low";
+      const result = spin(table, true);
+      pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
+      if (result.scatter >= 3 && played + remaining < Number(cfg.free_spin_cap)) {
+        const add = Math.min(Number(cfg.retrigger_spins), Number(cfg.free_spin_cap) - played - remaining);
+        remaining += add; retriggers += add > 0 ? 1 : 0;
+        queue.push("high", ...Array(Math.max(0, add - 1)).fill("low"));
+      }
+    }
+    return {pay, played, retriggers, spins, snapshots, maxMultiplier: Math.max(1, ...spins.map(item => item.maxMultiplier))};
+  }
+
+  function cardProfile() { return "weight_2"; }
+  function pickCard(section, profile = cardProfile()) {
+    const cards = cfg.card_system?.profiles?.[profile]?.[section];
+    if (!cards?.length) return null;
+    return pick(cards, cards.map(card => card.weight));
+  }
+  function cardMatches(card, pay) {
+    const ratio = pay / (BASE_BET * BET_LEVELS[state.betIndex]);
+    return Number(card.min) < ratio && ratio <= Number(card.max);
+  }
+  function cardSpin(card) {
+    if (!card) return spin("bg_high");
+    if (card.type === "free_game") {
+      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("bg_low"); if (result.scatter >= 3) return result; }
+    } else {
+      const table = card.table === "A" ? "bg_low" : "bg_high";
+      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin(table); if (result.scatter < 3 && cardMatches(card, result.pay)) return result; }
+    }
+    throw new Error("Card retry limit exceeded");
+  }
+  function cardFeature(section, superMode) {
+    const card = pickCard(section, section === "super_feature" ? "weight_1" : cardProfile());
+    if (!card) return freeSession(superMode);
+    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = freeSession(superMode); if (cardMatches(card, result.pay)) return result; }
+    throw new Error(`${section} retry limit exceeded`);
+  }
+
+  function renderMultiplier(freeGame, index = 0) {
+    const values = freeGame ? [2,4,6,10] : [1,2,3,5];
+    $("multiplierWindow").classList.remove("roll-one");
+    $("multiplierWindow").innerHTML = values.map((value, step) => `<span class="multiplier-step ${step < index ? "is-previous" : ""} ${step === Math.min(index,3) ? "is-active" : ""}">×${value}</span>`).join("");
+  }
+
+  function renderBoard(board, hitList = [], options = {}) {
+    const hits = new Set(hitList), cleared = new Set(options.cleared || []), converted = new Set(options.converted || []), root = $("board");
+    const drop = new Map((options.drop || []).map(item => [item.key, item]));
+    root.innerHTML = "";
+    for (let row = 3; row >= 0; row--) for (let reel = 0; reel < 5; reel++) {
+      const symbol = board[reel][row], code = CODE[symbol], cell = document.createElement("div");
+      const key = `${reel},${row}`;
+      const motion = drop.get(key), speed = Number($("speedRange").value || 1);
+      cell.className = `cell symbol-${code.toLowerCase()}${symbol >= 11 ? " gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${options.spinning ? " reel-spin" : ""}`;
+      if (motion) {
+        cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
+        const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
+        cell.style.setProperty("--drop-duration", `${dropDuration}ms`);
+        cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
+        if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
+      }
+      const asset = SYMBOL_ASSET[code];
+      cell.innerHTML = asset ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H016_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div>` : `<div class="symbol-wrap"><span class="h016-face">${DISPLAY[code] || code}</span><span class="symbol-code">${code}</span></div>`;
+      root.append(cell);
+    }
+  }
+
+  function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
+  async function animateReels(initialBoard) {
+    const frames = Math.max(2, Math.round(8 / Number($("speedRange").value || 1)));
+    for (let frame = 0; frame < frames; frame++) {
+      const rolling = cloneBoard(initialBoard);
+      for (let reel = 0; reel < 5; reel++) {
+        const offset = (frames - frame + reel) % 4;
+        for (let row = 0; row < 4; row++) rolling[reel][row] = initialBoard[reel][(row + offset) % 4];
+      }
+      renderBoard(rolling, [], {spinning:true});
+      await wait(55);
+    }
+  }
+
+  function renderWinDetails(snapshot) {
+    $("lineList").innerHTML = snapshot.details?.length ? snapshot.details.map(win => `<div>${win.symbol} · ${win.length} reels · ${win.ways} ways · ${format(win.pay)}</div>`).join("") : "<div>No Win</div>";
+    $("spinResultList").innerHTML = `<div>Run ${snapshot.combo + 1} · ×${snapshot.multiplier} · ${snapshot.message}</div>`;
+    $("carryMultiValue").textContent = snapshot.combo;
+  }
+
+  async function animateSnapshots(snapshots, freeGame = false) {
+    state.snapshots = snapshots; state.snapshotIndex = -1;
+    renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
+    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board); await wait(delay()); }
+    for (let index = 1; index < snapshots.length; index++) {
+      const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
+      $("messageBar").textContent = snapshot.message || "Cascade";
+      if (snapshot.type === "win") {
+        renderWinDetails(snapshot);
+        renderBoard(snapshot.board, snapshot.hits); await wait(delay());
+      } else if (snapshot.type === "eliminate") {
+        renderBoard(snapshot.board, [], {cleared:snapshot.cleared || [], converted:snapshot.converted || []});
+        await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
+      } else if (snapshot.type === "cascade") {
+        const duration = Math.max(28, 520 / Number($("speedRange").value || 1) / DROP_SPEED_MULTIPLIER);
+        renderBoard(snapshot.board, [], {drop:snapshot.drop || []}); await wait(duration + 30);
+      } else {
+        renderBoard(snapshot.board, [], {converted:snapshot.converted || []}); await wait(delay());
+      }
+    }
+    const finalSnapshot = snapshots.at(-1); if (finalSnapshot) renderBoard(finalSnapshot.board);
+    updateDebugButtons();
+  }
+
+  function showSnapshot(index) {
+    if (!state.snapshots.length) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    const snapshot = state.snapshots[state.snapshotIndex]; renderBoard(snapshot.board, snapshot.hits, {cleared:snapshot.cleared || [], drop:snapshot.drop || [], converted:snapshot.converted || []}); renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo); if (snapshot.type === "win") renderWinDetails(snapshot); updateDebugButtons();
+  }
+  function updateDebugButtons() {
+    $("previousStepBtn").disabled = state.snapshotIndex <= 0;
+    $("nextStepBtn").disabled = state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  function updateStats() {
+    const bet = BET_LEVELS[state.betIndex];
+    $("balanceValue").textContent = format(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = format(state.lastWin || 0);
+    $("roundCountValue").textContent = state.rounds.toLocaleString();
+    $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
+    $("hitRateValue").textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
+    $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers/state.rounds*100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)"; $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
+    const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
+    document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
+    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = remaining ? (state.fg.mode === 3 ? "Super Free Game" : "Free Game") : "Base Game";
+    $("spinBtn").textContent = remaining ? "Next FG" : "Spin";
+  }
+  function setBusy(value) {
+    state.busy = value;
+    const inFeature = state.fg.index < state.fg.spins.length;
+    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature; $("buySuperFeatureBtn").disabled = value || inFeature;
+    $("betMinusBtn").disabled = value || inFeature || state.betIndex === 0; $("betPlusBtn").disabled = value || inFeature || state.betIndex === BET_LEVELS.length - 1;
+  }
+
+  function activateFeature(feature, mode) {
+    state.fg = {spins:feature.spins, index:0, total:feature.spins.length, mode}; state.fgTriggers++;
+    $("featureStatus").textContent = mode === 3 ? "Super Feature" : "Free Game Triggered"; updateStats();
+  }
+
+  function buyEntry() {
+    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("buy", false); if (result.scatter >= 3) return result; }
+    throw new Error("Buy entry retry limit exceeded");
+  }
+
+  async function playFeatureSpin() {
+    const item = state.fg.spins[state.fg.index]; if (!item) return;
+    await animateSnapshots(item.snapshots, true); state.fg.index++;
+    state.lastWin = item.pay; state.totalWin += item.pay; state.balance += item.pay; state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
+    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${format(item.pay)}` : "No Win"}`;
+    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = {spins:[],index:0,total:0,mode:0}; }
+  }
+
+  async function play(mode = 0) {
+    if (state.busy) return; setBusy(true); state.lastWin = 0;
+    try {
+      if (state.fg.index < state.fg.spins.length) {
+        await playFeatureSpin();
+      } else {
+        state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1);
+        if (state.balance < cost) throw new Error("Insufficient balance");
+        state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
+        let base;
+        if (mode === 0) base = $("forceFgInput").checked ? cardSpin({type:"free_game"}) : cardSpin(pickCard("base_game"));
+        else base = buyEntry();
+        await animateSnapshots(base.snapshots, false); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
+        $("messageBar").textContent = base.pay > 0 ? `WIN ${format(base.pay)}` : "No Win";
+        if (base.scatter >= 3 || mode !== 0) {
+          const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
+          activateFeature(cardFeature(section, superMode), mode);
+        }
+      }
+    } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
+    updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(0), 180);
+  }
+
+  function gameRuleInline(text) {
+    return String(text)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  }
+
+  function renderGameRuleMarkdown(markdown) {
+    const lines = String(markdown || "").split(/\r?\n/), output = [];
+    let inCode = false, codeLines = [], sectionOpen = false;
+    const closeSection = () => { if (sectionOpen) output.push("</section>"); sectionOpen = false; };
+    for (let index = 0; index < lines.length; index++) {
+      const raw = lines[index], line = raw.trim();
+      if (line.startsWith("```")) {
+        if (inCode) {
+          if (sectionOpen) output.push(`<div class="help-rule"><pre>${gameRuleInline(codeLines.join("\n"))}</pre></div>`);
+          codeLines = [];
+        }
+        inCode = !inCode;
+        continue;
+      }
+      if (inCode) { codeLines.push(raw); continue; }
+      if (!line || line === "---") continue;
+      const sectionHeading = line.match(/^##\s+(.+)$/);
+      if (sectionHeading) {
+        closeSection();
+        output.push(`<section class="help-section"><h3 class="help-section-title">${gameRuleInline(sectionHeading[1])}</h3>`);
+        sectionOpen = true;
+        continue;
+      }
+      const groupHeading = line.match(/^###\s+(.+)$/);
+      if (groupHeading && sectionOpen) {
+        output.push(`<h4 class="help-group-title">${gameRuleInline(groupHeading[1])}</h4>`);
+        continue;
+      }
+      if (!sectionOpen) continue;
+      if (line.startsWith("|") && line.endsWith("|")) {
+        const tableLines = [];
+        while (index < lines.length && lines[index].trim().startsWith("|") && lines[index].trim().endsWith("|")) {
+          tableLines.push(lines[index].trim()); index++;
+        }
+        index--;
+        const rows = tableLines.map(item => item.slice(1, -1).split("|").map(cell => cell.trim()));
+        const hasSeparator = rows[1]?.every(cell => /^:?-{3,}:?$/.test(cell));
+        const header = hasSeparator ? rows[0] : [];
+        const dataRows = rows.filter((row, rowIndex) => !hasSeparator || rowIndex !== 0 && rowIndex !== 1);
+        if (header.length) output.push(`<h4 class="help-group-title">${header.map(gameRuleInline).join(" · ")}</h4>`);
+        if (dataRows.length) {
+          output.push('<div class="help-payout-grid">');
+          dataRows.forEach(row => output.push(`<div class="help-payout-item">${row.map(gameRuleInline).join(" · ")}</div>`));
+          output.push("</div>");
+        }
+        continue;
+      }
+      if (/^>\s*/.test(line)) { output.push(`<div class="help-rule help-rule-en">${gameRuleInline(line.replace(/^>\s*/, ""))}</div>`); continue; }
+      const listItem = line.match(/^([-*]|\d+\.)\s+(.+)$/);
+      if (listItem) {
+        const prefix = /^\d/.test(listItem[1]) ? `${listItem[1]} ` : "▪ ";
+        output.push(`<div class="help-rule">${prefix}${gameRuleInline(listItem[2])}</div>`);
+        continue;
+      }
+      output.push(`<div class="help-rule">${gameRuleInline(line)}</div>`);
+    }
+    if (codeLines.length && sectionOpen) output.push(`<div class="help-rule"><pre>${gameRuleInline(codeLines.join("\n"))}</pre></div>`);
+    closeSection();
+    return output.join("");
+  }
+
+  function helpHtml() {
+    const markdown = document.getElementById("embeddedH016GameRuleMarkdown")?.textContent?.trim() || "";
+    return renderGameRuleMarkdown(markdown);
+  }
+
+  function applyLanguage() {
+    $("gameId").textContent = cfg.game_id; $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
+    $("buyFeatureBtn").textContent = state.language === "zh" ? "購買特色 (40.5x)" : "Buy Feature (40.5x)";
+    $("buySuperFeatureBtn").textContent = state.language === "zh" ? "購買超級特色 (250x)" : "Buy Super Feature (250x)";
+  }
+  function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
+  function reset() {
+    Object.assign(state, {balance:10000, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,mode:0}});
+    $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_low")); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
+  }
+  function buildBetMenu() {
+    $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
+    $("betMenu").querySelectorAll("button").forEach(button => button.onclick = () => {state.betIndex=Number(button.dataset.index);$("betMenu").classList.add("hidden");updateStats();});
+  }
+
+  $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2); $("buySuperFeatureBtn").onclick = () => play(3);
+  $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=state.auto?"Stop":"Auto";if(state.auto&&!state.busy)play(0);};
+  $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);updateStats();};
+  $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent=`x${$("speedRange").value}`;
+  $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
+  $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
+  $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
+  $("configSelect").value=window.H016_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
+  document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
+})();
+  </script>
   <script src="../help_ui_standardizer.js?v=20260728-h026-ui-v3"></script>
 </body>
 

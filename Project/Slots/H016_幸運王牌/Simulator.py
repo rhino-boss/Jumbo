@@ -1,7 +1,7 @@
-"""H046 幸運王牌 simulator.
+"""H016 幸運王牌 simulator.
 
 The runner, environment settings, batch workflow and Excel report layout follow
-H015.  The game engine follows 101003 and reads the H016-derived H046 configs:
+H015.  The game engine follows 101003 and reads the H016-derived H016 configs:
 5x4 Ways, cascades, golden-symbol retention, WW/W2 conversion and fixed combo
 multipliers.
 """
@@ -77,7 +77,7 @@ def _env_bool(name: str, default: bool) -> bool:
     raise ValueError(f"{name} must be true/false, got {value!r}")
 
 
-CONFIG_FILE = os.environ.get("H046_CONFIG_FILE", CONFIG_FILE)
+CONFIG_FILE = os.environ.get("H016_CONFIG_FILE", CONFIG_FILE)
 
 
 def _load_config(path: Path) -> dict[str, Any]:
@@ -88,7 +88,7 @@ def _load_config(path: Path) -> dict[str, Any]:
     return json.loads(raw[start : end + 1])
 
 
-def _is_h046_config(path: Path) -> bool:
+def _is_h016_config(path: Path) -> bool:
     if not path.is_file():
         return False
     try:
@@ -96,14 +96,14 @@ def _is_h046_config(path: Path) -> bool:
     except (OSError, ValueError, json.JSONDecodeError):
         return False
     required = {"tables", "symbol_names", "pays", "free_game_mix"}
-    return str(data.get("game_id")) == "H046" and required.issubset(data)
+    return str(data.get("game_id")) == "H016" and required.issubset(data)
 
 
 def resolve_base_dir() -> Path:
-    """Locate H046 safely when run as a file, `%run`, or a Notebook cell."""
+    """Locate H016 safely when run as a file, `%run`, or a Notebook cell."""
     cwd = Path.cwd().resolve()
     candidates: list[Path] = []
-    override = os.environ.get("H046_BASE_DIR")
+    override = os.environ.get("H016_BASE_DIR")
     if override:
         candidates.append(Path(override).expanduser())
 
@@ -115,9 +115,9 @@ def resolve_base_dir() -> Path:
     for parent in (cwd, *cwd.parents):
         candidates.extend(
             [
-                parent / "Project" / "Slots" / "H046_幸運王牌",
-                parent / "Project_AI" / "Slots" / "H046_幸運王牌",
-                parent / "Slots" / "H046_幸運王牌",
+                parent / "Project" / "Slots" / "H016_幸運王牌",
+                parent / "Project_AI" / "Slots" / "H016_幸運王牌",
+                parent / "Slots" / "H016_幸運王牌",
             ]
         )
 
@@ -130,29 +130,29 @@ def resolve_base_dir() -> Path:
         if candidate in checked:
             continue
         checked.append(candidate)
-        if _is_h046_config(candidate / CONFIG_FILE):
+        if _is_h016_config(candidate / CONFIG_FILE):
             return candidate
 
     locations = "\n  - ".join(str(path / CONFIG_FILE) for path in checked)
-    raise FileNotFoundError(f"Cannot locate a valid H046 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H046_BASE_DIR to the H046_幸運王牌 folder when running from another workspace.")
+    raise FileNotFoundError(f"Cannot locate a valid H016 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H016_BASE_DIR to the H016_幸運王牌 folder when running from another workspace.")
 
 
 BASE_DIR = resolve_base_dir()
 OUTPUT_DIR = BASE_DIR / "Record"
 SIMULATOR_PATH = BASE_DIR / "Simulator.py"
-TOTAL_ROUNDS = int(os.environ.get("H046_TOTAL_ROUNDS", TOTAL_ROUNDS))
-BET_MULTI = int(os.environ.get("H046_BET_MULTI", BET_MULTI))
-BET_MODE = int(os.environ.get("H046_BET_MODE", BET_MODE))
-CARD_SYSTEM_ENABLED = _env_bool("H046_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
-CARD_SYSTEM_IS_NEWBIE = _env_bool("H046_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
-RUN_ALL_COMBINATIONS = _env_bool("H046_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
-OUTPUT_REPORT = _env_bool("H046_OUTPUT_REPORT", OUTPUT_REPORT)
-SHOW_CONSOLE_SUMMARY = _env_bool("H046_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
-SHOW_CONSOLE_DETAIL = _env_bool("H046_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
-RUN_SINGLE_SPIN_DEBUG = _env_bool("H046_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
-THREADS = max(1, int(os.environ.get("H046_THREADS", THREADS)))
+TOTAL_ROUNDS = int(os.environ.get("H016_TOTAL_ROUNDS", TOTAL_ROUNDS))
+BET_MULTI = int(os.environ.get("H016_BET_MULTI", BET_MULTI))
+BET_MODE = int(os.environ.get("H016_BET_MODE", BET_MODE))
+CARD_SYSTEM_ENABLED = _env_bool("H016_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
+CARD_SYSTEM_IS_NEWBIE = _env_bool("H016_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+RUN_ALL_COMBINATIONS = _env_bool("H016_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
+OUTPUT_REPORT = _env_bool("H016_OUTPUT_REPORT", OUTPUT_REPORT)
+SHOW_CONSOLE_SUMMARY = _env_bool("H016_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
+SHOW_CONSOLE_DETAIL = _env_bool("H016_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
+RUN_SINGLE_SPIN_DEBUG = _env_bool("H016_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
+THREADS = max(1, int(os.environ.get("H016_THREADS", THREADS)))
 CFG = _load_config(BASE_DIR / CONFIG_FILE)
-GAME_ID = str(CFG.get("game_id", "H046"))
+GAME_ID = str(CFG.get("game_id", "H016"))
 PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
 GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
 SYMBOL_STR = {int(k): v for k, v in CFG["symbol_names"].items()}
@@ -206,6 +206,8 @@ class SpinResult:
     w2_events: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
+    initial_symbols: Counter = field(default_factory=Counter)
+    drop_symbols: Counter = field(default_factory=Counter)
     initial_board: list[list[int]] = field(default_factory=list)
     final_board: list[list[int]] = field(default_factory=list)
 
@@ -224,6 +226,10 @@ class RoundResult:
     w2_events: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
+    bg_initial_symbols: Counter = field(default_factory=Counter)
+    bg_drop_symbols: Counter = field(default_factory=Counter)
+    fg_initial_symbols: Counter = field(default_factory=Counter)
+    fg_drop_symbols: Counter = field(default_factory=Counter)
 
     @property
     def pay(self) -> float:
@@ -301,6 +307,7 @@ class LuckyAce:
         multipliers = table.multipliers or ([2, 4, 6, 10] if free_game else [1, 2, 3, 5])
         board = self.board(table_name)
         result = SpinResult(initial_board=[reel[:] for reel in board])
+        result.initial_symbols.update((reel, symbol) for reel, symbols in enumerate(board) for symbol in symbols)
         pending_gold: list[tuple[int, int]] = []
         bg_w2_used = False
         while True:
@@ -330,7 +337,9 @@ class LuckyAce:
                     board[reel][row] = -1
             for reel in range(5):
                 remaining = [symbol for symbol in board[reel] if symbol != -1]
-                board[reel] = remaining + [table.reels[reel].pick(self.rng) for _ in range(4 - len(remaining))]
+                dropped = [table.reels[reel].pick(self.rng) for _ in range(4 - len(remaining))]
+                result.drop_symbols.update((reel, symbol) for symbol in dropped)
+                board[reel] = remaining + dropped
         result.scatter_count = sum(symbol == C1 for reel in board for symbol in reel)
         result.final_board = [reel[:] for reel in board]
         return result
@@ -387,6 +396,8 @@ class LuckyAce:
             result.w2_events += spin.w2_events
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
+            result.fg_initial_symbols.update(spin.initial_symbols)
+            result.fg_drop_symbols.update(spin.drop_symbols)
             if spin.scatter_count >= 3 and played + remaining < int(self.config["free_spin_cap"]):
                 add = min(int(self.config["retrigger_spins"]), int(self.config["free_spin_cap"]) - played - remaining)
                 remaining += add
@@ -417,6 +428,10 @@ class LuckyAce:
         target.w2_events += source.w2_events
         target.symbol_hits.update(source.symbol_hits)
         target.symbol_pay.update(source.symbol_pay)
+        target.bg_initial_symbols.update(source.bg_initial_symbols)
+        target.bg_drop_symbols.update(source.bg_drop_symbols)
+        target.fg_initial_symbols.update(source.fg_initial_symbols)
+        target.fg_drop_symbols.update(source.fg_drop_symbols)
 
     def round(self, bet_mode: int) -> RoundResult:
         if bet_mode in (MODE_FEATUREBUY, MODE_SUPERBUY):
@@ -434,6 +449,8 @@ class LuckyAce:
         result.w2_events = spin.w2_events
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
+        result.bg_initial_symbols.update(spin.initial_symbols)
+        result.bg_drop_symbols.update(spin.drop_symbols)
         if spin.scatter_count >= 3:
             feature = self.card_feature("free_game") if self.card_enabled else self.free_session()
             self.merge(result, feature)
@@ -467,6 +484,10 @@ def _empty_stats() -> dict[str, Any]:
         "buckets": Counter(),
         "symbol_hits": Counter(),
         "symbol_pay": Counter(),
+        "bg_initial_symbols": Counter(),
+        "bg_drop_symbols": Counter(),
+        "fg_initial_symbols": Counter(),
+        "fg_drop_symbols": Counter(),
     }
 
 
@@ -498,11 +519,18 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int) -> dict[str, Any]:
         stats["buckets"][label] += 1
         stats["symbol_hits"].update(result.symbol_hits)
         stats["symbol_pay"].update(result.symbol_pay)
+        stats["bg_initial_symbols"].update(result.bg_initial_symbols)
+        stats["bg_drop_symbols"].update(result.bg_drop_symbols)
+        stats["fg_initial_symbols"].update(result.fg_initial_symbols)
+        stats["fg_drop_symbols"].update(result.fg_drop_symbols)
     return stats
 
 
 def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
-    counter_fields = {"combo_bg", "combo_fg", "buckets", "symbol_hits", "symbol_pay"}
+    counter_fields = {
+        "combo_bg", "combo_fg", "buckets", "symbol_hits", "symbol_pay",
+        "bg_initial_symbols", "bg_drop_symbols", "fg_initial_symbols", "fg_drop_symbols",
+    }
     for key, value in source.items():
         if key in counter_fields:
             target[key].update(value)
@@ -579,14 +607,45 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     ]
 
 
+def symbol_ratio_df(counter: Counter) -> pd.DataFrame:
+    reel_totals = [sum(counter[(reel, symbol)] for symbol in SYMBOL_STR) for reel in range(5)]
+    symbols = [symbol for symbol in sorted(SYMBOL_STR) if any(counter[(reel, symbol)] for reel in range(5))]
+    rows = []
+    for symbol in symbols:
+        row: dict[str, Any] = {"Symbol": SYMBOL_STR[symbol]}
+        for reel in range(5):
+            total = reel_totals[reel]
+            row[f"R{reel + 1}"] = counter[(reel, symbol)] / total if total else 0.0
+        rows.append(row)
+    return pd.DataFrame(rows, columns=["Symbol", "R1", "R2", "R3", "R4", "R5"])
+
+
+def symbol_ratio_tables(result: dict[str, Any]) -> list[tuple[str, pd.DataFrame]]:
+    s = result["stats"]
+    return [
+        ("BG 初始 R1-R5", symbol_ratio_df(s["bg_initial_symbols"])),
+        ("BG 掉落 R1-R5", symbol_ratio_df(s["bg_drop_symbols"])),
+        ("FG 初始 R1-R5", symbol_ratio_df(s["fg_initial_symbols"])),
+        ("FG 掉落 R1-R5", symbol_ratio_df(s["fg_drop_symbols"])),
+    ]
+
+
+def print_symbol_ratio_tables(result: dict[str, Any]) -> None:
+    formatters = {f"R{reel}": (lambda value: f"{value:.4%}") for reel in range(1, 6)}
+    for title, frame in symbol_ratio_tables(result):
+        print(f"\n=== {title} ===")
+        print("No samples" if frame.empty else frame.to_string(index=False, formatters=formatters))
+
+
 def print_console(result: dict[str, Any]) -> None:
     if SHOW_CONSOLE_SUMMARY:
-        print("\n=== H046 幸運王牌 Simulation ===")
+        print("\n=== H016 幸運王牌 Simulation ===")
         for key, value in summary_rows(result):
             if key.startswith("rtp_") or key.endswith("_rate"):
                 print(f"{key:22s}: {float(value) * 100:.6f}%")
             else:
                 print(f"{key:22s}: {value}")
+        print_symbol_ratio_tables(result)
     if SHOW_CONSOLE_DETAIL:
         print("\nPay buckets:", dict(result["stats"]["buckets"]))
 
@@ -608,12 +667,27 @@ def output_report(result: dict[str, Any]) -> Path:
     combo_df = pd.DataFrame({"combo": ["0", "1", "2", "3", "4", "5+"], "BG": [s["combo_bg"][i] for i in range(6)], "FG": [s["combo_fg"][i] for i in range(6)]})
     bucket_df = pd.DataFrame({"bucket": ["0", "(0,1)", "[1,10)", "[10,100)", "100+"], "count": [s["buckets"][key] for key in ["0", "(0,1)", "[1,10)", "[10,100)", "100+"]]})
     record_df = pd.DataFrame({"field": list(s.keys()), "value": [dict(v) if isinstance(v, Counter) else v for v in s.values()]})
+    ratio_sheets = [
+        ("BG Initial Symbol", symbol_ratio_df(s["bg_initial_symbols"])),
+        ("BG Drop Symbol", symbol_ratio_df(s["bg_drop_symbols"])),
+        ("FG Initial Symbol", symbol_ratio_df(s["fg_initial_symbols"])),
+        ("FG Drop Symbol", symbol_ratio_df(s["fg_drop_symbols"])),
+    ]
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
         base_df.to_excel(writer, sheet_name="Base Info", index=False)
         hits_df.to_excel(writer, sheet_name="Hits", index=False)
         combo_df.to_excel(writer, sheet_name="Eliminate", index=False)
         bucket_df.to_excel(writer, sheet_name="Multiplier Line", index=False)
         record_df.to_excel(writer, sheet_name="Record Data", index=False)
+        for sheet_name, frame in ratio_sheets:
+            frame.to_excel(writer, sheet_name=sheet_name, index=False)
+            worksheet = writer.sheets[sheet_name]
+            worksheet.freeze_panes = "B2"
+            worksheet.column_dimensions["A"].width = 14
+            for column in "BCDEF":
+                worksheet.column_dimensions[column].width = 13
+                for row in range(2, len(frame) + 2):
+                    worksheet[f"{column}{row}"].number_format = "0.0000%"
     return path
 
 
@@ -635,13 +709,13 @@ def run_all_combinations() -> None:
         env["PYTHONUNBUFFERED"] = "1"
         env.update(
             {
-                "H046_CONFIG_FILE": str(combo.get("config_file", CONFIG_FILE)),
-                "H046_BET_MODE": str(combo.get("bet_mode", 0)),
-                "H046_TOTAL_ROUNDS": str(combo.get("total_rounds", TOTAL_ROUNDS)),
-                "H046_CARD_SYSTEM_IS_NEWBIE": str(bool(combo.get("card_system_is_newbie", False))).lower(),
-                "H046_CARD_SYSTEM_ENABLED": str(bool(combo.get("card_system_enabled", True))).lower(),
-                "H046_RUN_ALL_COMBINATIONS": "false",
-                "H046_BATCH_CHILD": "1",
+                "H016_CONFIG_FILE": str(combo.get("config_file", CONFIG_FILE)),
+                "H016_BET_MODE": str(combo.get("bet_mode", 0)),
+                "H016_TOTAL_ROUNDS": str(combo.get("total_rounds", TOTAL_ROUNDS)),
+                "H016_CARD_SYSTEM_IS_NEWBIE": str(bool(combo.get("card_system_is_newbie", False))).lower(),
+                "H016_CARD_SYSTEM_ENABLED": str(bool(combo.get("card_system_enabled", True))).lower(),
+                "H016_RUN_ALL_COMBINATIONS": "false",
+                "H016_BATCH_CHILD": "1",
             }
         )
         print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {combo} ===", flush=True)
@@ -661,7 +735,7 @@ def run_all_combinations() -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="H046 幸運王牌 simulator (H015 runner structure)")
+    parser = argparse.ArgumentParser(description="H016 幸運王牌 simulator (H015 runner structure)")
     parser.add_argument("rounds", nargs="?", type=int)
     parser.add_argument("bet_mode", nargs="?", type=int, choices=SUPPORTED_BET_MODES)
     parser.add_argument("--bet-multi", type=int, default=BET_MULTI)
@@ -676,7 +750,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     explicit_single_run = args.rounds is not None or args.bet_mode is not None or args.debug_spin
-    if RUN_ALL_COMBINATIONS and not explicit_single_run and os.environ.get("H046_BATCH_CHILD") != "1":
+    if RUN_ALL_COMBINATIONS and not explicit_single_run and os.environ.get("H016_BATCH_CHILD") != "1":
         run_all_combinations()
         return
     if RUN_SINGLE_SPIN_DEBUG or args.debug_spin:
