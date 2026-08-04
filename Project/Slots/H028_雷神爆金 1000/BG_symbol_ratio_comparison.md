@@ -1,5 +1,7 @@
 # BG Symbol 比例比較
 
+> 本文件保留版本 `2.0.0.5`、尚未拆分銀框前的歷史比較結果。版本 `2.0.0.6` 的完整同步結果請見 `Lucky_Neko_ratio_sync_report.md`。
+
 ## 比較結果
 
 - Lucky Neko 來源：`analysis_lucky_neko.xlsx` → `SymbolOcc_Init` → `BG`。

@@ -2206,6 +2206,17 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-03：同步 Lucky Neko 初始、掉落、銀框與 R7 比例</h4>
+          <ul>
+            <li>版本由 <code>2.0.0.5</code> 升為 <code>2.0.0.6</code>，並直接同步覆寫 <code>Source/H028192A.xlsx</code>。</li>
+            <li><code>SymbolOcc_Init</code>／<code>SymbolOcc_Drop</code> 的 BG、FG 比例已套用至啟用中的初始輪帶與 Drop1～Drop5。</li>
+            <li><code>Silver_Init</code>／<code>Silver_Drop</code> 已轉換為銀框 ID 13～23；<code>ExtraReelSame</code> 已正規化套用至 R7。</li>
+            <li>新增 <code>Source/apply_lucky_neko_ratios.py</code> 與 <code>Lucky_Neko_ratio_sync_report.md</code>。</li>
+            <li>config ↔ xlsx 雙向差異為 0，工作簿不含 <code>calcChain.xml</code>。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-03：改回填 Symbol 並修正 calcChain</h4>
           <ul>
             <li>修正上一版錯誤：config 輪帶不再寫入 <code>U:AA</code> 的 Symbol ID／公式結果區。</li>
