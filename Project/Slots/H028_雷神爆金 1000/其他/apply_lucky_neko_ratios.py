@@ -740,10 +740,17 @@ def update_config(
     for mode, (prefix, group_indices) in mode_settings.items():
         if reel_length <= 0:
             raise ValueError("Reel length must be positive")
+        table1_drop_targets = targets[mode]["drop"]
+        if mode == "BG":
+            table1_drop_targets = [
+                boost_absolute_share(targets[mode]["drop"][reel], (2, 13), 0.5)
+                for reel in range(7)
+            ]
         base_drop_weights = [
-            largest_remainder(targets[mode]["drop"][reel], DROP_WEIGHT_TOTAL)
+            largest_remainder(table1_drop_targets[reel], DROP_WEIGHT_TOTAL)
             for reel in range(7)
         ]
+        targets[mode]["table1_drop_weights"] = [row[:] for row in base_drop_weights]
 
         for group_index in group_indices:
             symbol_key = f"{prefix}Symbol{group_index}"
@@ -871,10 +878,7 @@ def main() -> int:
         print(f"{mode} Silver_Drop shares R1-R6: {drop}")
         post_weights = largest_remainder(targets[mode]["post_scatter"], POST_WEIGHT_TOTAL)
         print(f"{mode} Post Scatter counts 0-7: {post_weights}")
-        drop_scatter = [
-            largest_remainder(targets[mode]["drop"][reel], DROP_WEIGHT_TOTAL)[1]
-            for reel in range(7)
-        ]
+        drop_scatter = [row[1] for row in targets[mode]["table1_drop_weights"]]
         print(f"{mode} Drop Scatter weights R1-R7: {drop_scatter}")
         for reel, weights in enumerate(targets[mode]["megaway"], start=1):
             print(f"{mode} MegaWay R{reel}: {weights}")

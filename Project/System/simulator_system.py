@@ -6,6 +6,7 @@
 * 超級寶石沒有自然 FG；彩罐熱舞由 BG Free Game 卡觸發後另抽 FG 卡。
 * 前 200 轉套用新手體驗 D，第 50／150 轉依累積 RTP 改寫得分。
 * 老手救援固定為 15× 或 30× FG，且不會低於該轉自然得分。
+* 每次 Spin 使用共用權重池抽取至多一個 JP4／JP3／JP2／JP1 彩金，彩金倍率加在該轉得分上。
 * 遊戲層透過 GameAdapter 隔離。
 
 第 200 轉後，每 50 轉為一個週期：前 40 轉隨機安排 1 次判定，
@@ -62,7 +63,7 @@ BASE_GAME_DATA = {
     "彩罐熱舞": SCRIPT_DIR / "Data" / "彩罐熱舞_基礎遊戲_1000人_1000轉.csv.gz",
 }
 DEFAULT_BASE_GAME = "超級寶石"
-SYSTEM_VERSION = "b07c.2"
+SYSTEM_VERSION = "b07c.4"
 
 SUMMARY_FIELD_INFO = {
     "game": ("遊戲模型", "模擬器使用的遊戲資料模型。"),
@@ -90,6 +91,8 @@ SUMMARY_FIELD_INFO = {
     "platform_rtp_cap_cancel_count": ("平台 RTP 上限取消次數", "因預估平台 RTP 超過 97% 而取消的次數。"),
     "oldhand_budget_cancel_count": ("老手增量上限取消次數", "因老手 C RTP 增量將超過 1 個百分點而取消的次數。"),
     "personal_pool_cancel_count": ("個人 Pool 取消次數", "玩家個人累積 RTP 達 200% 以上而不救援的次數。"),
+    "low_reward_short_rtp_threshold_%": ("15×短期 RTP 門檻", "個人累積 RTP 為 97%～200% 時，短期 RTP 必須低於此門檻才可取得 15×。"),
+    "low_reward_short_threshold_cancel_count": ("15×短期門檻取消次數", "階段條件符合且個人累積 RTP 為 97%～200%，但短期 RTP 未低於 30% 而取消的次數。"),
     "scheduled_checkpoint_count": ("預定判定點總數", "所有玩家原先安排的判定點總數。"),
     "checkpoint_count": ("實際判定次數", "扣除取消後實際執行規則判斷的次數。"),
     "cancelled_checkpoint_count": ("取消判定次數", "同區間已觸發救援而取消的剩餘判定數。"),
@@ -113,6 +116,14 @@ SUMMARY_FIELD_INFO = {
     "rtp_delta_pp": ("總 RTP 增量", "最終 RTP 相對自然 RTP 增加的總百分點。"),
     "natural_fg_count": ("本次自然 FG 次數", "本次模擬範圍內固定逐轉資料的自然 FG 次數。"),
     "actual_fg_count": ("本次實際 FG 總數", "自然 FG 加上老手救援 FG 後的實際 FG 次數。"),
+    "jackpot_weight_denominator": ("彩金權重分母", "每轉使用彩金權重除以此數值作為觸發機率。"),
+    "jackpot_theoretical_hit_rate_%": ("彩金理論觸發率", "每轉觸發任一彩金的理論機率。"),
+    "jackpot_theoretical_rtp_%": ("彩金理論 RTP", "各彩金觸發機率乘以獎項倍率後的理論 RTP 貢獻。"),
+    "jackpot_trigger_count": ("彩金實際觸發次數", "本次模擬觸發任一彩金的總次數。"),
+    "jackpot_actual_hit_rate_%": ("彩金實際觸發率", "彩金實際觸發次數除以付費轉數。"),
+    "jackpot_actual_rtp_%": ("彩金實際 RTP", "彩金實際派彩金額除以 Total Bet。"),
+    "base_game_rtp_%": ("基礎遊戲 RTP", "固定 Row Data 原始遊戲結果、不含彩金與機制的 RTP。"),
+    "game_rtp_with_jackpot_%": ("含彩金 Game RTP", "固定 Row Data 自然得分加上彩金後、尚未套用新手 D 與老手 C 的 RTP。"),
     "duration_sec": ("執行時間（秒）", "本次模擬所需時間。"),
     "seed": ("亂數種子", "判定點與救援倍率使用的固定亂數種子。"),
 }
@@ -159,6 +170,7 @@ REPORT_COLUMN_NAMES = {
     "Short_Threshold_%": "短期門檻(%)",
     "Mid_Threshold_%": "中期門檻(%)",
     "Short_RTP_%": "短期RTP(%)",
+    "Low_Reward_Short_Threshold_%": "15×短期RTP門檻(%)",
     "Mid_RTP_%": "中期RTP(%)",
     "Long_RTP_%": "長期RTP(%)",
     "No_FG_Spins": "連續未進FG轉數",
@@ -192,6 +204,17 @@ REPORT_COLUMN_NAMES = {
     "Projected_Platform_RTP_%": "救援後預估平台RTP(%)",
     "Projected_Oldhand_Delta_pp": "救援後預估老手增量(百分點)",
     "Pool_Result": "Pool判定結果",
+    "Jackpot": "彩金",
+    "Jackpot_Weight": "彩金權重",
+    "Jackpot_Probability_%": "彩金理論觸發率(%)",
+    "Jackpot_Award_Cents": "彩金金額(分)",
+    "Jackpot_X": "彩金倍率",
+    "Jackpot_Theoretical_RTP_%": "彩金理論RTP(%)",
+    "Jackpot_Trigger_Count": "彩金觸發次數",
+    "Jackpot_Actual_RTP_%": "彩金實際RTP(%)",
+    "Base_Game_X": "基礎遊戲倍率",
+    "Game_X_With_Jackpot": "含彩金遊戲倍率",
+    "Base_Game_RTP_%": "基礎遊戲RTP(%)",
 }
 
 RULE_NAMES_ZH = {
@@ -237,6 +260,7 @@ CHECKPOINT_INTERVAL_SPINS = 50
 CHECKPOINT_ACTIVE_SPINS = 40
 CHECKPOINT_COOLDOWN_SPINS = 10
 SHORT_RTP_THRESHOLD = 0.40
+LOW_REWARD_SHORT_RTP_THRESHOLD = 0.30
 PLATFORM_RTP_CAP = 0.97
 OLDHAND_RTP_BUDGET = 0.01
 PERSONAL_RTP_HIGH_REWARD_THRESHOLD = 0.97
@@ -244,6 +268,25 @@ PERSONAL_RTP_MAX_THRESHOLD = 2.00
 REWARD_HIGH_X = 30.0
 REWARD_LOW_X = 15.0
 REWARD_LABELS = ("15×", "30×")
+
+JACKPOT_WEIGHT_DENOMINATOR = 10_000_000_000
+JACKPOT_CONFIG = (
+    ("JP4", 3_120, 2_000),
+    ("JP3", 12_000, 10_000),
+    ("JP2", 120_000_000, 20_000_000),
+    ("JP1", 600_000_000, 7_923_100),
+)
+
+
+def _jackpot_from_draw(draw: int) -> tuple[str, float]:
+    """以單一共用權重池抽出至多一個彩金，回傳（彩金名稱, 倍率）。"""
+
+    cumulative_weight = 0
+    for jackpot, weight, award_cents in JACKPOT_CONFIG:
+        cumulative_weight += weight
+        if draw < cumulative_weight:
+            return jackpot, award_cents / 100.0
+    return "", 0.0
 
 STAGE_MID_RTP = {
     "A": 0.60,
@@ -678,6 +721,7 @@ def _run_simulation_legacy(args: argparse.Namespace, adapter: GameAdapter) -> di
     stop_after_rescue_rows: list[dict[str, Any]] = []
     fg_exit_rows: list[dict[str, Any]] = []
     completed_stage_rows: list[dict[str, Any]] = []
+    jackpot_rows: list[dict[str, Any]] = []
     players: list[dict[str, Any]] = []
     block_definitions = _oldhand_blocks(args.spins)
     reporting_blocks = _reporting_blocks(args.spins)
@@ -1119,6 +1163,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
     stop_after_rescue_rows: list[dict[str, Any]] = []
     fg_exit_rows: list[dict[str, Any]] = []
     completed_stage_rows: list[dict[str, Any]] = []
+    jackpot_rows: list[dict[str, Any]] = []
 
     reporting_blocks = _reporting_blocks(args.spins)
     checkpoint_windows = _checkpoint_windows(args.spins)
@@ -1141,6 +1186,9 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         states[player_id] = {
             "history": [],
             "no_fg_spins": 0,
+            "base_total": 0.0,
+            "jackpot_total": 0.0,
+            "jackpot_counts": Counter(),
             "natural_total": 0.0,
             "newbie_total": 0.0,
             "actual_total": 0.0,
@@ -1160,6 +1208,10 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
     rule_counts: Counter[str] = Counter()
     newbie_d_rule_counts: Counter[str] = Counter()
 
+    base_win_total = 0.0
+    jackpot_win_total = 0.0
+    jackpot_trigger_total = 0
+    jackpot_counts: Counter[str] = Counter()
     natural_win_total = 0.0
     newbie_d_win_total = 0.0
     actual_win_total = 0.0
@@ -1170,22 +1222,53 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
     platform_rtp_cap_cancel_count = 0
     oldhand_budget_cancel_count = 0
     personal_pool_cancel_count = 0
+    low_reward_short_threshold_cancel_count = 0
 
     order_rng = np.random.default_rng(np.random.SeedSequence([args.seed, 0xC07]))
+    jackpot_rng = np.random.default_rng(np.random.SeedSequence([args.seed, 0x4A50]))
 
     for spin_no in range(1, args.spins + 1):
         player_order = np.arange(1, args.players + 1)
         order_rng.shuffle(player_order)
+        jackpot_draws = jackpot_rng.integers(
+            0,
+            JACKPOT_WEIGHT_DENOMINATOR,
+            size=args.players,
+            dtype=np.int64,
+        )
 
         for player_value in player_order:
             player_id = int(player_value)
             state = states[player_id]
             history: list[float] = state["history"]
 
-            natural = adapter.natural_spin_at(player_id, spin_no)
+            base_natural = adapter.natural_spin_at(player_id, spin_no)
+            jackpot, jackpot_x = _jackpot_from_draw(int(jackpot_draws[player_id - 1]))
+            natural = SpinOutcome(
+                multiplier=base_natural.multiplier + jackpot_x,
+                triggered_fg=base_natural.triggered_fg,
+            )
+            state["base_total"] += base_natural.multiplier
+            state["jackpot_total"] += jackpot_x
             state["natural_total"] += natural.multiplier
+            base_win_total += base_natural.multiplier
+            jackpot_win_total += jackpot_x
             natural_win_total += natural.multiplier
             natural_fg_total += int(natural.triggered_fg)
+            if jackpot:
+                jackpot_trigger_total += 1
+                jackpot_counts[jackpot] += 1
+                state["jackpot_counts"][jackpot] += 1
+                jackpot_rows.append(
+                    {
+                        "Player": player_id,
+                        "Spin": spin_no,
+                        "Jackpot": jackpot,
+                        "Jackpot_X": jackpot_x,
+                        "Base_Game_X": base_natural.multiplier,
+                        "Game_X_With_Jackpot": natural.multiplier,
+                    }
+                )
 
             after_newbie_d = natural
             newbie_d_decision = decide_newbie_d(history, spin_no)
@@ -1193,7 +1276,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
                 newbie_d_rule_counts[newbie_d_decision.rule] += 1
                 if newbie_d_decision.triggered:
                     after_newbie_d = SpinOutcome(
-                        multiplier=float(newbie_d_decision.reward_multiplier),
+                        multiplier=float(newbie_d_decision.reward_multiplier) + jackpot_x,
                         triggered_fg=natural.triggered_fg,
                     )
                     state["newbie_trigger_count"] += 1
@@ -1227,6 +1310,9 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
                         "Rule_ID": newbie_d_decision.rule,
                         "Triggered": newbie_d_decision.triggered,
                         "Natural_X": natural.multiplier,
+                        "Base_Game_X": base_natural.multiplier,
+                        "Jackpot": jackpot,
+                        "Jackpot_X": jackpot_x,
                         "Newbie_D_X": after_newbie_d.multiplier,
                         "Delta_X": after_newbie_d.multiplier - natural.multiplier,
                         "Natural_FG": natural.triggered_fg,
@@ -1261,14 +1347,20 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
                 elif personal_rtp < PERSONAL_RTP_HIGH_REWARD_THRESHOLD:
                     reward_x = REWARD_HIGH_X
                 elif personal_rtp < PERSONAL_RTP_MAX_THRESHOLD:
-                    reward_x = REWARD_LOW_X
+                    if decision.short_rtp < LOW_REWARD_SHORT_RTP_THRESHOLD:
+                        reward_x = REWARD_LOW_X
+                    else:
+                        low_reward_short_threshold_cancel_count += 1
+                        stage_cancelled_counts[stage] += 1
+                        pool_result = "個人RTP為97%～200%，但短期RTP未低於30%，取消救援"
                 else:
                     personal_pool_cancel_count += 1
                     stage_cancelled_counts[stage] += 1
                     pool_result = "個人RTP達200%，取消救援"
 
                 if reward_x is not None:
-                    candidate_multiplier = max(after_newbie_d.multiplier, reward_x)
+                    after_newbie_without_jackpot = after_newbie_d.multiplier - jackpot_x
+                    candidate_multiplier = max(after_newbie_without_jackpot, reward_x) + jackpot_x
                     incremental_cost = candidate_multiplier - after_newbie_d.multiplier
                     projected_bet = platform_bet_total + 1
                     projected_platform_rtp = (actual_win_total + candidate_multiplier) / projected_bet
@@ -1313,6 +1405,9 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
                             "Mid_RTP_%": _pct(decision.mid_rtp),
                             "Long_RTP_%": _pct(decision.long_rtp),
                             "Natural_X": natural.multiplier,
+                            "Base_Game_X": base_natural.multiplier,
+                            "Jackpot": jackpot,
+                            "Jackpot_X": jackpot_x,
                             "Reward_X": reward_x,
                             "Rescue_FG_X": actual.multiplier,
                             "Delta_X": incremental_cost,
@@ -1350,6 +1445,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
                         "Short_Threshold_%": SHORT_RTP_THRESHOLD * 100.0,
                         "Mid_Threshold_%": STAGE_MID_RTP[stage] * 100.0,
                         "Short_RTP_%": _pct(decision.short_rtp),
+                        "Low_Reward_Short_Threshold_%": LOW_REWARD_SHORT_RTP_THRESHOLD * 100.0,
                         "Mid_RTP_%": _pct(decision.mid_rtp),
                         "Long_RTP_%": _pct(decision.long_rtp),
                         "Short_Bad": decision.short_bad,
@@ -1439,6 +1535,8 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         player_row: dict[str, Any] = {
             "Player": player_id,
             "Spins": args.spins,
+            "Base_Game_RTP_%": state["base_total"] / args.spins * 100.0,
+            "Jackpot_Actual_RTP_%": state["jackpot_total"] / args.spins * 100.0,
             "Natural_RTP_%": state["natural_total"] / args.spins * 100.0,
             "Newbie_D_RTP_%": state["newbie_total"] / args.spins * 100.0,
             "Rescue_RTP_%": state["actual_total"] / args.spins * 100.0,
@@ -1446,13 +1544,36 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
             "Oldhand_C_Delta_pp": (state["actual_total"] - state["newbie_total"]) / args.spins * 100.0,
             "RTP_Delta_pp": (state["actual_total"] - state["natural_total"]) / args.spins * 100.0,
             "Newbie_D_Trigger_Count": state["newbie_trigger_count"],
+            "Jackpot_Trigger_Count": sum(state["jackpot_counts"].values()),
             "Trigger_Count": sum(state["trigger_counts"].values()),
         }
+        for jackpot, _, _ in JACKPOT_CONFIG:
+            player_row[jackpot] = state["jackpot_counts"][jackpot]
         for reward_label in REWARD_LABELS:
             player_row[reward_label] = state["trigger_counts"][reward_label]
         players.append(player_row)
 
     total_paid_spins = args.players * args.spins
+    jackpot_weight_total = sum(weight for _, weight, _ in JACKPOT_CONFIG)
+    jackpot_theoretical_rtp = sum(
+        weight / JACKPOT_WEIGHT_DENOMINATOR * (award_cents / 100.0)
+        for _, weight, award_cents in JACKPOT_CONFIG
+    )
+    jackpot_stat_rows = []
+    for jackpot, weight, award_cents in JACKPOT_CONFIG:
+        award_x = award_cents / 100.0
+        jackpot_stat_rows.append(
+            {
+                "Jackpot": jackpot,
+                "Jackpot_Weight": weight,
+                "Jackpot_Probability_%": weight / JACKPOT_WEIGHT_DENOMINATOR * 100.0,
+                "Jackpot_Award_Cents": award_cents,
+                "Jackpot_X": award_x,
+                "Jackpot_Theoretical_RTP_%": weight / JACKPOT_WEIGHT_DENOMINATOR * award_x * 100.0,
+                "Jackpot_Trigger_Count": jackpot_counts[jackpot],
+                "Jackpot_Actual_RTP_%": jackpot_counts[jackpot] * award_x / total_paid_spins * 100.0,
+            }
+        )
     total_checks = sum(stage_check_counts.values())
     total_triggers = sum(reward_counts.values())
     duration = time.perf_counter() - started
@@ -1573,6 +1694,8 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "platform_rtp_cap_cancel_count": platform_rtp_cap_cancel_count,
         "oldhand_budget_cancel_count": oldhand_budget_cancel_count,
         "personal_pool_cancel_count": personal_pool_cancel_count,
+        "low_reward_short_rtp_threshold_%": LOW_REWARD_SHORT_RTP_THRESHOLD * 100.0,
+        "low_reward_short_threshold_cancel_count": low_reward_short_threshold_cancel_count,
         "rescue_trigger_count": total_triggers,
         "rescue_trigger_rate_per_checkpoint_%": total_triggers / total_checks * 100.0 if total_checks else 0.0,
         "players_with_rescue": len(oldhand_players),
@@ -1584,6 +1707,14 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "player_oldhand_c_rate_%": len(oldhand_players) / args.players * 100.0,
         "oldhand_avg_triggers_all_players": total_triggers / args.players,
         "oldhand_avg_triggers_triggered_players": total_triggers / len(oldhand_players) if oldhand_players else 0.0,
+        "jackpot_weight_denominator": JACKPOT_WEIGHT_DENOMINATOR,
+        "jackpot_theoretical_hit_rate_%": jackpot_weight_total / JACKPOT_WEIGHT_DENOMINATOR * 100.0,
+        "jackpot_theoretical_rtp_%": jackpot_theoretical_rtp * 100.0,
+        "jackpot_trigger_count": jackpot_trigger_total,
+        "jackpot_actual_hit_rate_%": jackpot_trigger_total / total_paid_spins * 100.0,
+        "jackpot_actual_rtp_%": jackpot_win_total / total_paid_spins * 100.0,
+        "base_game_rtp_%": base_win_total / total_paid_spins * 100.0,
+        "game_rtp_with_jackpot_%": natural_win_total / total_paid_spins * 100.0,
         "natural_rtp_%": natural_win_total / total_paid_spins * 100.0,
         "newbie_d_rtp_%": newbie_d_win_total / total_paid_spins * 100.0,
         "newbie_d_rtp_delta_pp": (newbie_d_win_total - natural_win_total) / total_paid_spins * 100.0,
@@ -1610,6 +1741,8 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "stop_after_rescue_rows": stop_after_rescue_rows,
         "completed_stage_rows": completed_stage_rows,
         "player_rows": players,
+        "jackpot_stat_rows": jackpot_stat_rows,
+        "jackpot_rows": jackpot_rows,
         "multiplier_curve_rows": adapter.multiplier_curve_rows(),
     }
 
@@ -1692,6 +1825,8 @@ def write_report(result: dict[str, Any], report_path: Path) -> Path:
         _localized_frame(result["checkpoint_rows"]).to_excel(writer, sheet_name="判定明細", index=False)
         _localized_frame(result["trigger_rows"]).to_excel(writer, sheet_name="觸發明細", index=False)
         _localized_frame(result["player_rows"]).to_excel(writer, sheet_name="玩家統計", index=False)
+        _localized_frame(result["jackpot_stat_rows"]).to_excel(writer, sheet_name="彩金統計", index=False)
+        _localized_frame(result["jackpot_rows"]).to_excel(writer, sheet_name="彩金明細", index=False)
         winning_player_rows = sorted(
             (
                 row
@@ -1729,11 +1864,20 @@ def print_summary(result: dict[str, Any]) -> None:
     print(f"Pool 取消救援：{summary['cancelled_checkpoint_count']:,}")
     print(f"  平台 RTP 上限：{summary['platform_rtp_cap_cancel_count']:,}")
     print(f"  老手增量上限：{summary['oldhand_budget_cancel_count']:,}")
+    print(f"  15×短期 RTP 未低於 30%：{summary['low_reward_short_threshold_cancel_count']:,}")
     print(f"  個人 RTP 達 200%：{summary['personal_pool_cancel_count']:,}")
     print(f"救援觸發次數：{summary['rescue_trigger_count']:,}")
     print(f"任一機制玩家：{summary['players_with_any_mechanism']:,}" f"（{summary['player_any_mechanism_rate_%']:.2f}%）")
     print(f"新手 D 玩家：{summary['players_with_newbie_d']:,}" f"（{summary['player_newbie_d_rate_%']:.2f}%）")
     print(f"老手 C 玩家：{summary['players_with_oldhand_c']:,}" f"（{summary['player_oldhand_c_rate_%']:.2f}%）")
+    print(f"基礎遊戲 RTP：{summary['base_game_rtp_%']:.4f}%")
+    print(
+        f"彩金：{summary['jackpot_trigger_count']:,} 次"
+        f"（觸發率 {summary['jackpot_actual_hit_rate_%']:.6f}%，"
+        f"實際 RTP {summary['jackpot_actual_rtp_%']:.4f}%；"
+        f"理論 RTP {summary['jackpot_theoretical_rtp_%']:.4f}%）"
+    )
+    print(f"含彩金 Game RTP：{summary['game_rtp_with_jackpot_%']:.4f}%")
     print(f"自然 RTP：{summary['natural_rtp_%']:.4f}%")
     print(f"新手 D 後 RTP：{summary['newbie_d_rtp_%']:.4f}%" f"（觸發 {summary['newbie_d_trigger_count']:,} 次，" f"{summary['newbie_d_rtp_delta_pp']:+.4f} 個百分點）")
     print(f"老手 C 後 RTP：{summary['rescue_rtp_%']:.4f}%" f"（老手增量 {summary['oldhand_c_rtp_delta_pp']:+.4f} 個百分點）")
