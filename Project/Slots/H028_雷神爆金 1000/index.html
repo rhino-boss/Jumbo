@@ -2233,6 +2233,46 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-05：五組輪帶統一 200 格並禁止 BG Table 2 觸發 FG</h4>
+          <ul>
+            <li>五張 BG／FG Symbol 表的 R1～R7 全部統一為 200 格，Symbol、ID、Weight 完整對應。</li>
+            <li>BG Table 2 的 Post Scatter 最多 3 顆，Drop1～5 的 SC 權重全為 0，保證不觸發 FG。</li>
+            <li>固定種子實跑 100,000 次 Table 2，最終 SC 最大 3 顆、FG Trigger 0 次。</li>
+            <li>移除多餘 config_92.js，轉換工具預設輸出改為 config_92A.js。</li>
+            <li>版本升為 2.0.0.15，並同步原 XLSX、比較報告與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-05：新增 BG Table 2 特殊 M1／Post Scatter 設定</h4>
+          <ul>
+            <li>競品為 0 的 Post Scatter 顆數統一配置 0.01%；FG 5～7 顆均為 100／1,000,000。</li>
+            <li>BG Table 2 複製 Table 1，輪帶 M1 目標提高 2 倍；Drop 僅將 M1／Golden M1 權重乘 3，其他權重不變。</li>
+            <li>BG Table 2 Post Scatter 最多 3 顆；ReelWeight 改為 [6000, 4000]，使用率 40%。</li>
+            <li>版本升為 2.0.0.14，並同步 Config、原 XLSX、比較報告與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-05：Drop SC 對齊 Lucky Neko，補入 Post Scatter 6／7 顆</h4>
+          <ul>
+            <li>初始輪帶維持無 SC；Drop1～5 的 SC 權重改採 Lucky Neko SymbolOcc_Drop／Extra Reel_Drop。</li>
+            <li>PostC1 的 6 顆與 7 顆各設定 100／1,000,000（0.01%）。</li>
+            <li>版本升為 2.0.0.13，並更新規則、Help、映射文件與競品比較報告。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-05：SC 改由 Post Scatter 單一路徑產生</h4>
+          <ul>
+            <li>全部 BG／FG 初始輪帶與 Drop1～5 移除 SC，SC 僅由 PostC1 產生。</li>
+            <li>非 SC 符號依 Lucky Neko final 比例重新正規化，並同步 Config 與原 XLSX。</li>
+            <li>BG PostC1 的 4+ 權重合計 0.3078%；100 萬局實測 FG Trigger Rate 為 0.3105%。</li>
+            <li>版本升為 2.0.0.12；0～3 顆 SC 依平均顆數使用最大熵分布補齊。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-05：Overview 新增 FG 觸發局最大 BG 得分</h4>
           <ul>
             <li>Simulator 報表新增 trigger_fg_bg_max_pay，記錄成功觸發 FG 的單把最大 BG Pay。</li>
@@ -2690,7 +2730,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 散佈符號 | SCATTER SYMBOL |
-| 規則說明 | [SCATTER] 可出現在主盤面任意轉輪位置。 | [SCATTER] MAY APPEAR ANYWHERE ON THE MAIN REELS. |
+| 規則說明 | [SCATTER] 不會配置於初始輪帶；主盤面停定後，系統可依 [Post Scatter] 機制使其出現在任意轉輪位置，後續消除掉落亦可依掉落權重補入 [SCATTER]。 | [SCATTER] IS NOT PLACED ON THE INITIAL REEL STRIPS. AFTER THE MAIN REELS STOP, IT MAY BE ADDED TO ANY REEL BY THE [POST SCATTER] FEATURE, AND MAY ALSO APPEAR IN SUBSEQUENT CASCADE DROPS ACCORDING TO THE DROP WEIGHTS. |
 
 ### MULTIPLIER SYMBOL
 

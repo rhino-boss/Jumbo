@@ -2159,6 +2159,7 @@
 | 規則說明 | 額外投注的成本為目前選擇押注的 1.25x，並使用提高特色觸發機會的專用盤帶設定。 | EXTRA BET COSTS 1.25X THE CURRENTLY SELECTED BET AND USES DEDICATED REEL SETTINGS WITH A HIGHER FEATURE CHANCE. |
 | 規則說明 | 購買特色的成本為目前選擇押注的 100x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 100X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
 | 規則說明 | 超級特色的成本為目前選擇押注的 500x，並直接進入使用強化倍數權重的免費遊戲特色。 | SUPER FEATURE COSTS 500X THE CURRENTLY SELECTED BET AND ENTERS A FREE GAME FEATURE WITH ENHANCED MULTIPLIER WEIGHTS. |
+| 規則說明 | 每次超級特色的初始 10 場中，必定有且僅有 1 顆 X{2500} 倍數球。 | EACH SUPER FEATURE IS GUARANTEED TO CONTAIN EXACTLY ONE X{2500} MULTIPLIER BALL WITHIN ITS INITIAL 10 FREE GAMES. |
 
 ---
 
@@ -2252,6 +2253,7 @@
   const MODE_EXTRA = Box.mode_extrabet;
   const MODE_BUY = Box.mode_featurebuy;
   const MODE_SUPER = Box.mode_superfeaturebuy;
+  const SF_GUARANTEED_MULTIPLIER = Number(Box.super_feature_guaranteed_multiplier || 2500);
   const WW = Box.symbol_codes.indexOf("WW");
   const C1 = Box.symbol_codes.indexOf("C1");
   const C2 = Box.symbol_codes.indexOf("C2");
@@ -2732,6 +2734,30 @@
     return schedule;
   }
 
+  function applySfGuaranteedMultiplier(spin) {
+    const candidates = [];
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        if (spin.finalBoard[row][reel] === C2) candidates.push([row, reel]);
+      }
+    }
+    if (!candidates.length) {
+      for (let row = 0; row < Box.window_size; row += 1) {
+        for (let reel = 0; reel < Box.reel_num; reel += 1) {
+          if (spin.finalBoard[row][reel] !== C1) candidates.push([row, reel]);
+        }
+      }
+    }
+    const [row, reel] = candidates[randomIndex(candidates.length)];
+    spin.finalBoard[row][reel] = C2;
+    spin.c2.values[row][reel] = SF_GUARANTEED_MULTIPLIER;
+    spin.c2.count = spin.finalBoard.flat().filter((symbol) => symbol === C2).length;
+    spin.c2.total = spin.c2.values.flat().reduce((sum, value) => sum + Number(value || 0), 0);
+    spin.effectiveMultiplier = Math.max(1, spin.c2.total);
+    spin.finalPay = spin.rawPay * spin.effectiveMultiplier + spin.scatterWin;
+    spin.sfGuaranteed2500 = true;
+  }
+
   function symbolCell(symbol, value = 0) {
     const code = Box.symbol_codes[symbol] || "?";
     return { symbol, code, glyph: code, value };
@@ -2998,12 +3024,14 @@
 
   function simulateFreePackage(selectedParameter) {
     const queue = buildFreeSchedule("initial", selectedParameter);
+    const guaranteedSpinIndex = state.selectedMode === MODE_SUPER ? randomIndex(queue.length) : -1;
     const spins = [];
     let total = queue.length;
     let totalPay = 0;
     while (queue.length) {
       const tableId = queue.shift();
       const spin = playSpin(tableId, "FG", null, selectedParameter);
+      if (spins.length === guaranteedSpinIndex) applySfGuaranteedMultiplier(spin);
       spin.retriggerAdded = 0;
       if (spin.scatterCount >= 3 && total < Box.max_free_spins) {
         const extra = buildFreeSchedule("retrigger", selectedParameter).slice(0, Box.max_free_spins - total);
@@ -3013,6 +3041,9 @@
       }
       totalPay += spin.finalPay;
       spins.push(spin);
+    }
+    if (state.selectedMode === MODE_SUPER && spins.filter((spin) => spin.sfGuaranteed2500).length !== 1) {
+      throw new Error("Super Feature must contain exactly one guaranteed x2500 multiplier ball.");
     }
     return { spins, totalPay };
   }

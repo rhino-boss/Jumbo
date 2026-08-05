@@ -40,6 +40,7 @@ window.H998_BOX_DATA = {
   "initial_free_spins_high": 2,
   "retrigger_free_spins_low": 4,
   "retrigger_free_spins_high": 1,
+  "super_feature_guaranteed_multiplier": 2500,
   "free_spin_awards": {
     "4": 10,
     "5": 10,
@@ -51381,7 +51382,7 @@ window.H998_BOX_DATA = {
         254,
         44,
         38,
-        38
+        0
       ]
     },
     "Super Feature FG Symbol (2)": {
@@ -51417,7 +51418,7 @@ window.H998_BOX_DATA = {
         254,
         44,
         38,
-        38
+        0
       ]
     }
   },
@@ -51531,7 +51532,7 @@ window.H998_BOX_DATA = {
     254,
     44,
     38,
-    38
+    0
   ],
   "weight_multiplier_sb_high": [
     0,
@@ -51548,7 +51549,7 @@ window.H998_BOX_DATA = {
     254,
     44,
     38,
-    38
+    0
   ],
   "parameter_blocks": {
     "A": {
@@ -51775,7 +51776,7 @@ window.H998_BOX_DATA = {
           254,
           44,
           38,
-          38
+          0
         ],
         "Super Feature FG Symbol (2)": [
           0,
@@ -51792,7 +51793,7 @@ window.H998_BOX_DATA = {
           254,
           44,
           38,
-          38
+          0
         ]
       }
     },
@@ -52020,7 +52021,7 @@ window.H998_BOX_DATA = {
           1,
           1,
           1,
-          1
+          0
         ],
         "Super Feature FG Symbol (2)": [
           0,
@@ -52037,7 +52038,7 @@ window.H998_BOX_DATA = {
           1,
           1,
           1,
-          1
+          0
         ]
       }
     }

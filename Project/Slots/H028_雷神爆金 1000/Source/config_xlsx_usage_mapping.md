@@ -1,6 +1,6 @@
 # H028 config → xlsx 回填對照
 
-`config_to_xlsx.py` 將 `config_92A.js` 回填至目前的 H028 工作簿配置。`update_xlsx.bat` 會直接覆寫所選 xlsx，不再建立另一份 xlsx。
+`config_to_xlsx.py` 將 `config_92A.js` 回填至目前的 H028 工作簿配置。`update_xlsx.bat` 會直接覆寫所選 xlsx，不再建立另一份 xlsx；五張 Symbol 表的 Symbol、Symbol ID、Symbol Weight 均同步至第 200 格。
 
 `update_xlsx.bat` 預設來源：
 
@@ -35,6 +35,8 @@
 | `*Drop5` | `AL120:AR145` | 7 輪 × 26 個符號權重 |
 
 啟用中的 `BaseGameSymbol1`／`FreeGameSymbol1` 會先依工作表 `A4:J29` 的 ID 對照轉成符號名稱，再回填到真正的輪帶區 `M4:S203`。`U:AA` 的 Symbol ID／公式區不再寫入固定值；工具會恢復該區公式、移除失效的 `calcChain.xml` 關聯，並要求 Excel 開啟時完整重算。工具使用暫存檔完成原子置換，但不另外保留備份，因此執行前必須關閉 Excel，並確認所選檔案正確。
+
+SC（ID 1）不配置於 BG／FG 初始輪帶；各參數組 `B67:C74` 的 `*PostC1` 負責初始停輪後的 SC 顆數，`Drop1～Drop5` 則依 Lucky Neko `SymbolOcc_Drop`／`Extra Reel_Drop` 的 SC 比例回填。其餘符號沿用相同競品分布。
 
 ## 其他回填位置
 

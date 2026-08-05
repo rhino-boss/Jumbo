@@ -1,8 +1,8 @@
 # 糖果狂歡 2500 (Sugar Bonanza 2500) 遊戲規則說明
 
-> 文件版本：v1.1
+> 文件版本：v1.2
 > 編號：H998
-> 撰寫日期：2026-05-21
+> 撰寫日期：2026-08-05
 
 ---
 
@@ -18,11 +18,12 @@
 | 盤面規格 | 6 輪盤、5 列固定盤面 |
 | 中獎方式 | 同一符號在整個盤面出現達門檻即可得分，無賠線 |
 | 最小 / 最大 Ways | 不適用，本作為全盤面計數型玩法 |
-| 押注規格 | `Normal Bet`、`Extra Bet (1.25x)`、`Feature Buy (100x)`、`Super Feature Buy (500x)` |
+| 押注模式 | `Normal Bet`、`Extra Bet (1.25x)`、`Feature Buy (100x)`、`Super Feature Buy (500x)` |
 | Buy Feature | 有，`Feature Buy = 100x Bet`；`Super Feature Buy = 500x Bet` |
 
 補充說明：
 * 本文件以 `H998192.xlsx`、`H998194.xlsx` 的主 `Overview` 數值，以及目前 `Simulator.py`、`config_92.js`、`config_94.js` 的實際程式行為為主來源。
+* v1.2 的 SF `2500x` 保證機制，以 2026-08-05 企劃確認的「SF 一整場必定出現一次 `2500x`」為主規格。
 
 ---
 
@@ -165,6 +166,8 @@
 * `Super Feature Buy` 價格為 **500x Bet**。
 * Buy 進場時不先玩一般 Base Game，而是直接切入對應的 Buy 輪帶與 FG 輪帶配置。
 * `Feature Buy` 會使用 `FB` 輪帶組；`Super Feature Buy` 會使用 `SB` 輪帶組。
+* **每次 Super Feature 的初始 10 場中，系統會隨機指定 1 場，並保證該場有且僅有 1 顆 `C2` 的倍數為 `2500x`。**
+* SF 一般倍數抽選不再隨機抽出 `2500x`，因此包含 retrigger 在內的整次 SF 流程，`2500x` 總共只會出現 1 次。
 
 ---
 
@@ -187,6 +190,7 @@
 * **9.3.2 無倍數時視為 1x**：若該局最終盤面沒有 `C2`，該局得分不額外放大。
 * **9.3.3 Retrigger 低門檻**：BG 需要 `4+ Scatter` 觸發 FG，但 FG 內 retrigger 只需 `3+ Scatter`。
 * **9.3.4 FG 總場次封頂**：同一次 FG 流程最多進行 50 場，超過上限時不再加局。
+* **9.3.5 SF 保證 `2500x`**：SF 開始時會從初始 10 場隨機指定 1 場。指定場有 `C2` 時，其中 1 顆固定為 `2500x`；若最終盤面沒有 `C2`，系統會補入 1 顆 `2500x C2`。其他 SF 場次與其餘 `C2` 不可再抽中 `2500x`。
 
 ### 9.4 買入相關
 

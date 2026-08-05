@@ -5,12 +5,11 @@
 * 可切換超級寶石與彩罐熱舞的 1000 人 × 1000 轉固定 CSV.GZ 資料。
 * 超級寶石沒有自然 FG；彩罐熱舞由 BG Free Game 卡觸發後另抽 FG 卡。
 * 前 200 轉套用新手體驗 D，第 50／150 轉依累積 RTP 改寫得分。
-* 救援固定為 FG，倍率直接落在指定 Tier 區間。
+* 老手救援固定為 15× 或 30× FG，且不會低於該轉自然得分。
 * 遊戲層透過 GameAdapter 隔離。
 
-老手 A、B、C 各自在 100 轉區間內隨機安排 2 次判定；
-老手 D 自第 501 轉起，每 100 轉區間重新隨機安排 2 次判定。
-同一區間若已觸發救援，剩餘判定取消。
+第 200 轉後，每 50 轉為一個週期：前 40 轉隨機安排 1 次判定，
+後 10 轉為固定不判定區。
 
 範例：
 
@@ -63,7 +62,7 @@ BASE_GAME_DATA = {
     "彩罐熱舞": SCRIPT_DIR / "Data" / "彩罐熱舞_基礎遊戲_1000人_1000轉.csv.gz",
 }
 DEFAULT_BASE_GAME = "超級寶石"
-SYSTEM_VERSION = "b06c.4"
+SYSTEM_VERSION = "b07c.2"
 
 SUMMARY_FIELD_INFO = {
     "game": ("遊戲模型", "模擬器使用的遊戲資料模型。"),
@@ -83,6 +82,14 @@ SUMMARY_FIELD_INFO = {
     "spins_per_player": ("每位玩家模擬轉數", "本次每位玩家執行的付費轉數。"),
     "total_paid_spins": ("付費轉數總計", "玩家數乘以每位玩家轉數。"),
     "checks_per_100_spin_block": ("每百轉預定判定次數", "每個 100 轉區間預定安排的判定點數。"),
+    "checkpoint_interval_spins": ("判定週期轉數", "老手 C 每 50 轉為一個判定週期。"),
+    "checkpoint_active_spins": ("可判定區轉數", "每週期前 40 轉隨機安排一次判定。"),
+    "checkpoint_cooldown_spins": ("固定不判定轉數", "每週期後 10 轉不安排判定。"),
+    "platform_rtp_cap_%": ("平台 RTP 上限", "預估發出救援後超過此 RTP 即取消。"),
+    "oldhand_rtp_budget_pp": ("老手 C RTP 增量上限", "老手 C 累積增加的得分不可超過當前付費轉數的 1%。"),
+    "platform_rtp_cap_cancel_count": ("平台 RTP 上限取消次數", "因預估平台 RTP 超過 97% 而取消的次數。"),
+    "oldhand_budget_cancel_count": ("老手增量上限取消次數", "因老手 C RTP 增量將超過 1 個百分點而取消的次數。"),
+    "personal_pool_cancel_count": ("個人 Pool 取消次數", "玩家個人累積 RTP 達 200% 以上而不救援的次數。"),
     "scheduled_checkpoint_count": ("預定判定點總數", "所有玩家原先安排的判定點總數。"),
     "checkpoint_count": ("實際判定次數", "扣除取消後實際執行規則判斷的次數。"),
     "cancelled_checkpoint_count": ("取消判定次數", "同區間已觸發救援而取消的剩餘判定數。"),
@@ -95,6 +102,8 @@ SUMMARY_FIELD_INFO = {
     "player_newbie_d_rate_%": ("新手 D 玩家比例", "觸發新手 D 的玩家比例。"),
     "players_with_oldhand_c": ("使用老手 C 玩家數", "至少觸發一次老手 C 的玩家數。"),
     "player_oldhand_c_rate_%": ("老手 C 玩家比例", "觸發老手 C 的玩家比例。"),
+    "oldhand_avg_triggers_all_players": ("全玩家平均老手觸發次數", "老手 C 總觸發次數除以全部玩家數。"),
+    "oldhand_avg_triggers_triggered_players": ("觸發玩家平均老手觸發次數", "老手 C 總觸發次數除以至少觸發一次的玩家數。"),
     "natural_rtp_%": ("自然 RTP", "完全沒有新手 D 與老手 C 時的 RTP。"),
     "newbie_d_rtp_%": ("新手 D 後 RTP", "只套用新手 D 後的 RTP。"),
     "newbie_d_rtp_delta_pp": ("新手 D RTP 增量", "新手 D 相對自然 RTP 增加的百分點。"),
@@ -115,7 +124,7 @@ REPORT_COLUMN_NAMES = {
     "Mid_RTP_Threshold_%": "中期RTP門檻(%)",
     "Scheduled_Checkpoint_Count": "預定判定點數",
     "Evaluated_Checkpoint_Count": "實際判定次數",
-    "Cancelled_Checkpoint_Count": "取消判定次數",
+    "Cancelled_Checkpoint_Count": "Pool取消救援次數",
     "Trigger_Count": "觸發次數",
     "Trigger_Rate_%": "觸發率(%)",
     "Tier": "獎項級別",
@@ -176,6 +185,13 @@ REPORT_COLUMN_NAMES = {
     "Probability_%": "抽中率(%)",
     "Multi_X": "平均倍率",
     "RTP_Contribution_%": "RTP貢獻(%)",
+    "Personal_RTP_%": "個人Pool RTP(%)",
+    "Reward_X": "預定救援倍率",
+    "Condition_Matched": "階段條件是否符合",
+    "Platform_RTP_Before_%": "判定前平台RTP(%)",
+    "Projected_Platform_RTP_%": "救援後預估平台RTP(%)",
+    "Projected_Oldhand_Delta_pp": "救援後預估老手增量(百分點)",
+    "Pool_Result": "Pool判定結果",
 }
 
 RULE_NAMES_ZH = {
@@ -209,6 +225,7 @@ BOOLEAN_REPORT_COLUMNS = {
     "Mid_Bad",
     "Long_Bad",
     "Rescue_Triggered",
+    "Condition_Matched",
 }
 
 NEWBIE_LAST_SPIN = 200
@@ -216,9 +233,17 @@ NEWBIE_LAST_SPIN = 200
 WINDOW_SHORT = 50
 WINDOW_MID = 200
 WINDOW_LONG = 500
-NO_FG_LIMIT = 100
-CHECKS_PER_BLOCK = 2
+CHECKPOINT_INTERVAL_SPINS = 50
+CHECKPOINT_ACTIVE_SPINS = 40
+CHECKPOINT_COOLDOWN_SPINS = 10
 SHORT_RTP_THRESHOLD = 0.40
+PLATFORM_RTP_CAP = 0.97
+OLDHAND_RTP_BUDGET = 0.01
+PERSONAL_RTP_HIGH_REWARD_THRESHOLD = 0.97
+PERSONAL_RTP_MAX_THRESHOLD = 2.00
+REWARD_HIGH_X = 30.0
+REWARD_LOW_X = 15.0
+REWARD_LABELS = ("15×", "30×")
 
 STAGE_MID_RTP = {
     "A": 0.60,
@@ -352,6 +377,11 @@ class GameAdapter(ABC):
     def start_player(self, player_id: int) -> None:
         """切換至指定玩家；固定 Row Data Adapter 會重設該玩家的 Spin 游標。"""
 
+    def natural_spin_at(self, player_id: int, spin_no: int) -> SpinOutcome:
+        """依玩家與轉數讀取自然結果；共用平台 Pool 模擬使用。"""
+
+        raise NotImplementedError("此遊戲 Adapter 不支援依玩家／轉數讀取結果")
+
     @abstractmethod
     def rescue_fg(self, tier: str) -> SpinOutcome:
         """產生符合指定 Tier 的 FG 救援結果。"""
@@ -443,6 +473,16 @@ class FixedRowDataAdapter(GameAdapter):
         self._spin_index += 1
         return SpinOutcome(multiplier=multiplier, triggered_fg=triggered_fg)
 
+    def natural_spin_at(self, player_id: int, spin_no: int) -> SpinOutcome:
+        if not 1 <= player_id <= self.data_players:
+            raise ValueError(f"固定 Row Data 只有 {self.data_players:,} 位玩家，無法執行 Player {player_id}")
+        if not 1 <= spin_no <= self.data_spins:
+            raise ValueError(f"固定 Row Data 每位玩家只有 {self.data_spins:,} 轉")
+        return SpinOutcome(
+            multiplier=float(self._natural_multiplier[player_id - 1, spin_no - 1]),
+            triggered_fg=bool(self._natural_fg[player_id - 1, spin_no - 1]),
+        )
+
     def rescue_fg(self, tier: str) -> SpinOutcome:
         if tier not in TIER_RANGES:
             raise KeyError(f"未知 Tier：{tier}")
@@ -464,7 +504,7 @@ class FixedRowDataAdapter(GameAdapter):
             "base_data_rtp_%": self._base_rtp * 100.0,
             "base_data_natural_fg_count": self._base_fg_count,
             "natural_multiplier_model": "fixed-row-data",
-            "rescue_result": "Tier 區間內均勻抽樣 FG",
+            "rescue_result": "依個人 Pool 固定給 15× 或 30× FG，且不低於自然得分",
         }
         if self.base_game == "超級寶石":
             metadata["fixed_weight_total"] = self._curve_total_weight
@@ -542,21 +582,31 @@ def _reporting_blocks(total_spins: int) -> list[tuple[str, int, int, str, str]]:
     return [block for block in blocks if block[2] <= total_spins]
 
 
+def _checkpoint_windows(total_spins: int) -> list[tuple[str, int, int, str, str]]:
+    """第 200 轉後每 50 轉一段，回傳前 40 轉的可判定區。"""
+
+    windows: list[tuple[str, int, int, str, str]] = []
+    for start in range(201, total_spins + 1, CHECKPOINT_INTERVAL_SPINS):
+        active_end = min(start + CHECKPOINT_ACTIVE_SPINS - 1, total_spins)
+        if active_end < start:
+            continue
+        stage = get_stage(start)
+        if stage is None:
+            continue
+        window_id = f"CHECK_{start}_{active_end}"
+        windows.append((stage, start, active_end, window_id, f"{start}～{active_end}"))
+    return windows
+
+
 def _random_checkpoints(total_spins: int, player_id: int, seed: int) -> dict[int, tuple[str, str]]:
-    """每個完整 100 轉區間隨機選 2 個不重複的判定點。"""
+    """每個 50 轉週期的前 40 轉隨機選 1 個判定點。"""
 
     rng = np.random.default_rng(np.random.SeedSequence([seed, player_id, 0xC]))
 
     checkpoints: dict[int, tuple[str, str]] = {}
-    for stage, start, end, block_id, _ in _oldhand_blocks(total_spins):
-        selected = rng.choice(
-            np.arange(start, end + 1),
-            size=CHECKS_PER_BLOCK,
-            replace=False,
-        )
-        for spin_no in sorted(int(value) for value in selected):
-            if spin_no <= total_spins:
-                checkpoints[spin_no] = (stage, block_id)
+    for stage, start, end, window_id, _ in _checkpoint_windows(total_spins):
+        spin_no = int(rng.integers(start, end + 1))
+        checkpoints[spin_no] = (stage, window_id)
     return checkpoints
 
 
@@ -600,28 +650,19 @@ def decide_rescue(history: list[float], no_fg_spins: int, stage: str) -> RescueD
     if short_rtp is None or mid_rtp is None:
         raise ValueError("救援判定前沒有足夠的短期／中期資料")
 
-    no_fg_bad = no_fg_spins > NO_FG_LIMIT
     short_bad = short_rtp < SHORT_RTP_THRESHOLD
     mid_bad = mid_rtp < STAGE_MID_RTP[stage]
     long_bad: bool | None = None if long_rtp is None else long_rtp < 1.0
 
     if stage in {"A", "B", "C"}:
-        if short_bad and mid_bad and no_fg_bad:
-            return RescueDecision(stage, "AC_COMBINED", "短期 RTP < 40%、中期 RTP 低於門檻且超過 100 轉未進 FG", "T2", short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
-        if short_bad and no_fg_bad:
-            return RescueDecision(stage, "AC_NO_FG", "短期 RTP < 40% 且超過 100 轉未進 FG", "T5", short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
         if short_bad and mid_bad:
             return RescueDecision(stage, "AC_MID_RTP", "短期 RTP < 40% 且中期 RTP 低於階段門檻", "T5", short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
         return RescueDecision(stage, "NO_RESCUE", "未符合救援條件", None, short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
 
     if long_rtp is None:
         return RescueDecision(stage, "D_NO_LONG_WINDOW", "長期資料尚未滿 500 轉", None, short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
-    if short_bad and mid_bad and no_fg_bad and bool(long_bad):
-        return RescueDecision(stage, "D_COMBINED", "短期 RTP < 40%，且中期 RTP、未進 FG 與長期 RTP 皆符合", "T1", short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
     if short_bad and mid_bad and bool(long_bad):
         return RescueDecision(stage, "D_MID_LONG", "短期 RTP < 40%，且中期 RTP 與長期 RTP 符合", "T3", short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
-    if short_bad and no_fg_bad and bool(long_bad):
-        return RescueDecision(stage, "D_NO_FG_LONG", "短期 RTP < 40%，且未進 FG 與長期 RTP 符合", "T6", short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
     return RescueDecision(stage, "NO_RESCUE", "未符合救援條件", None, short_rtp, mid_rtp, long_rtp, no_fg_spins, mid_bad, long_bad)
 
 
@@ -629,7 +670,7 @@ def _pct(value: float | None) -> float | None:
     return None if value is None else value * 100.0
 
 
-def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, Any]:
+def _run_simulation_legacy(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, Any]:
     started = time.perf_counter()
     checkpoints: list[dict[str, Any]] = []
     triggers: list[dict[str, Any]] = []
@@ -1068,6 +1109,511 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
     }
 
 
+def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, Any]:
+    """以轉數為時間軸模擬共用平台 Pool 與個人 Pool。"""
+
+    started = time.perf_counter()
+    checkpoints: list[dict[str, Any]] = []
+    triggers: list[dict[str, Any]] = []
+    newbie_d_rows: list[dict[str, Any]] = []
+    stop_after_rescue_rows: list[dict[str, Any]] = []
+    fg_exit_rows: list[dict[str, Any]] = []
+    completed_stage_rows: list[dict[str, Any]] = []
+
+    reporting_blocks = _reporting_blocks(args.spins)
+    checkpoint_windows = _checkpoint_windows(args.spins)
+    checkpoint_by_id = {
+        window_id: (stage, start, end, display_range)
+        for stage, start, end, window_id, display_range in checkpoint_windows
+    }
+    block_by_end = {
+        end: (stage, start, block_id, display_range)
+        for stage, start, end, block_id, display_range in reporting_blocks
+    }
+    reporting_block_by_spin = {
+        spin: (stage, start, end, block_id, display_range)
+        for stage, start, end, block_id, display_range in reporting_blocks
+        for spin in range(start, end + 1)
+    }
+
+    states: dict[int, dict[str, Any]] = {}
+    for player_id in range(1, args.players + 1):
+        states[player_id] = {
+            "history": [],
+            "no_fg_spins": 0,
+            "natural_total": 0.0,
+            "newbie_total": 0.0,
+            "actual_total": 0.0,
+            "trigger_counts": Counter(),
+            "newbie_trigger_count": 0,
+            "scheduled_checkpoints": _random_checkpoints(args.spins, player_id, args.seed),
+            "actual_exit_blocks": set(),
+            "natural_exit_blocks": set(),
+            "block_triggers": {},
+        }
+
+    stage_scheduled_counts: Counter[str] = Counter()
+    stage_check_counts: Counter[str] = Counter()
+    stage_cancelled_counts: Counter[str] = Counter()
+    stage_trigger_counts: Counter[str] = Counter()
+    reward_counts: Counter[str] = Counter()
+    rule_counts: Counter[str] = Counter()
+    newbie_d_rule_counts: Counter[str] = Counter()
+
+    natural_win_total = 0.0
+    newbie_d_win_total = 0.0
+    actual_win_total = 0.0
+    platform_bet_total = 0
+    oldhand_increment_total = 0.0
+    natural_fg_total = 0
+    actual_fg_total = 0
+    platform_rtp_cap_cancel_count = 0
+    oldhand_budget_cancel_count = 0
+    personal_pool_cancel_count = 0
+
+    order_rng = np.random.default_rng(np.random.SeedSequence([args.seed, 0xC07]))
+
+    for spin_no in range(1, args.spins + 1):
+        player_order = np.arange(1, args.players + 1)
+        order_rng.shuffle(player_order)
+
+        for player_value in player_order:
+            player_id = int(player_value)
+            state = states[player_id]
+            history: list[float] = state["history"]
+
+            natural = adapter.natural_spin_at(player_id, spin_no)
+            state["natural_total"] += natural.multiplier
+            natural_win_total += natural.multiplier
+            natural_fg_total += int(natural.triggered_fg)
+
+            after_newbie_d = natural
+            newbie_d_decision = decide_newbie_d(history, spin_no)
+            if newbie_d_decision is not None:
+                newbie_d_rule_counts[newbie_d_decision.rule] += 1
+                if newbie_d_decision.triggered:
+                    after_newbie_d = SpinOutcome(
+                        multiplier=float(newbie_d_decision.reward_multiplier),
+                        triggered_fg=natural.triggered_fg,
+                    )
+                    state["newbie_trigger_count"] += 1
+                    newbie_block_id = "NEWBIE_1_100" if spin_no == 50 else "NEWBIE_101_200"
+                    newbie_display_range = "0～100" if spin_no == 50 else "100～200"
+                    newbie_block_start = 1 if spin_no == 50 else 101
+                    block_payout = sum(history[newbie_block_start - 1 :]) + after_newbie_d.multiplier
+                    block_spins = spin_no - newbie_block_start + 1
+                    trigger_info = {"Spin": spin_no, "Tier": f"{after_newbie_d.multiplier:g}×"}
+                    state["block_triggers"][newbie_block_id] = trigger_info
+                    stop_after_rescue_rows.append(
+                        {
+                            "Player": player_id,
+                            "Stage": "新手 D",
+                            "Display_Range": newbie_display_range,
+                            "Actual_Spin_Range": "1～100" if spin_no == 50 else "101～200",
+                            "Trigger_Spin": spin_no,
+                            "Tier": trigger_info["Tier"],
+                            "RTP_Before_Rescue_Mid_%": newbie_d_decision.rtp * 100.0,
+                            "Rescue_FG_X": after_newbie_d.multiplier,
+                            "RTP_If_Stop_Block_%": block_payout / block_spins * 100.0,
+                            "RTP_If_Stop_Cumulative_%": (state["actual_total"] + after_newbie_d.multiplier) / spin_no * 100.0,
+                            "RTP_If_Stop_Natural_Cumulative_%": state["natural_total"] / spin_no * 100.0,
+                        }
+                    )
+                newbie_d_rows.append(
+                    {
+                        "Player": player_id,
+                        "Spin": spin_no,
+                        "RTP_Before_%": newbie_d_decision.rtp * 100.0,
+                        "Rule_ID": newbie_d_decision.rule,
+                        "Triggered": newbie_d_decision.triggered,
+                        "Natural_X": natural.multiplier,
+                        "Newbie_D_X": after_newbie_d.multiplier,
+                        "Delta_X": after_newbie_d.multiplier - natural.multiplier,
+                        "Natural_FG": natural.triggered_fg,
+                    }
+                )
+
+            state["newbie_total"] += after_newbie_d.multiplier
+            newbie_d_win_total += after_newbie_d.multiplier
+
+            decision: RescueDecision | None = None
+            actual = after_newbie_d
+            actual_rescue_triggered = False
+            reward_x: float | None = None
+            reward_label = ""
+            pool_result = "未安排判定"
+            personal_rtp: float | None = None
+            platform_rtp_before = actual_win_total / platform_bet_total if platform_bet_total else 0.0
+            projected_platform_rtp: float | None = None
+            projected_oldhand_delta: float | None = None
+            checkpoint = state["scheduled_checkpoints"].get(spin_no)
+
+            if checkpoint is not None:
+                stage, checkpoint_id = checkpoint
+                stage_scheduled_counts[stage] += 1
+                stage_check_counts[stage] += 1
+                decision = decide_rescue(history, state["no_fg_spins"], stage)
+                rule_counts[decision.rule_id] += 1
+                personal_rtp = state["actual_total"] / len(history) if history else 0.0
+
+                if not decision.triggered:
+                    pool_result = "階段條件未符合"
+                elif personal_rtp < PERSONAL_RTP_HIGH_REWARD_THRESHOLD:
+                    reward_x = REWARD_HIGH_X
+                elif personal_rtp < PERSONAL_RTP_MAX_THRESHOLD:
+                    reward_x = REWARD_LOW_X
+                else:
+                    personal_pool_cancel_count += 1
+                    stage_cancelled_counts[stage] += 1
+                    pool_result = "個人RTP達200%，取消救援"
+
+                if reward_x is not None:
+                    candidate_multiplier = max(after_newbie_d.multiplier, reward_x)
+                    incremental_cost = candidate_multiplier - after_newbie_d.multiplier
+                    projected_bet = platform_bet_total + 1
+                    projected_platform_rtp = (actual_win_total + candidate_multiplier) / projected_bet
+                    projected_oldhand_delta = (oldhand_increment_total + incremental_cost) / projected_bet
+
+                    if projected_platform_rtp > PLATFORM_RTP_CAP:
+                        platform_rtp_cap_cancel_count += 1
+                        stage_cancelled_counts[stage] += 1
+                        pool_result = "預估平台RTP超過97%，取消救援"
+                    elif projected_oldhand_delta > OLDHAND_RTP_BUDGET:
+                        oldhand_budget_cancel_count += 1
+                        stage_cancelled_counts[stage] += 1
+                        pool_result = "預估老手增量超過1%，取消救援"
+                    else:
+                        reward_label = f"{reward_x:g}×"
+                        actual = SpinOutcome(multiplier=candidate_multiplier, triggered_fg=True)
+                        actual_rescue_triggered = True
+                        pool_result = "通過，發出救援"
+                        oldhand_increment_total += incremental_cost
+                        stage_trigger_counts[stage] += 1
+                        reward_counts[reward_label] += 1
+                        state["trigger_counts"][reward_label] += 1
+
+                        check_stage, check_start, check_end, check_display = checkpoint_by_id[checkpoint_id]
+                        reporting_info = reporting_block_by_spin[spin_no]
+                        _, report_start, report_end, report_block_id, report_display = reporting_info
+                        block_payout = sum(history[report_start - 1 :]) + actual.multiplier
+                        block_spins = spin_no - report_start + 1
+                        cumulative_payout = state["actual_total"] + actual.multiplier
+                        trigger_row = {
+                            "Player": player_id,
+                            "Spin": spin_no,
+                            "Stage": stage,
+                            "Block": checkpoint_id,
+                            "Display_Range": report_display,
+                            "Actual_Spin_Range": check_display,
+                            "Rule_ID": decision.rule_id,
+                            "Rule": decision.rule_description,
+                            "Tier": reward_label,
+                            "Personal_RTP_%": personal_rtp * 100.0,
+                            "Short_RTP_%": _pct(decision.short_rtp),
+                            "Mid_RTP_%": _pct(decision.mid_rtp),
+                            "Long_RTP_%": _pct(decision.long_rtp),
+                            "Natural_X": natural.multiplier,
+                            "Reward_X": reward_x,
+                            "Rescue_FG_X": actual.multiplier,
+                            "Delta_X": incremental_cost,
+                            "Platform_RTP_Before_%": platform_rtp_before * 100.0,
+                            "Projected_Platform_RTP_%": projected_platform_rtp * 100.0,
+                            "Projected_Oldhand_Delta_pp": projected_oldhand_delta * 100.0,
+                            "Stop_After_Rescue_Block_RTP_%": block_payout / block_spins * 100.0,
+                            "Stop_After_Rescue_Cumulative_RTP_%": cumulative_payout / spin_no * 100.0,
+                        }
+                        triggers.append(trigger_row)
+                        state["block_triggers"][report_block_id] = trigger_row
+                        stop_after_rescue_rows.append(
+                            {
+                                "Player": player_id,
+                                "Stage": stage,
+                                "Display_Range": report_display,
+                                "Actual_Spin_Range": f"{report_start}～{report_end}",
+                                "Trigger_Spin": spin_no,
+                                "Tier": reward_label,
+                                "RTP_Before_Rescue_Mid_%": _pct(decision.mid_rtp),
+                                "Rescue_FG_X": actual.multiplier,
+                                "RTP_If_Stop_Block_%": block_payout / block_spins * 100.0,
+                                "RTP_If_Stop_Cumulative_%": cumulative_payout / spin_no * 100.0,
+                                "RTP_If_Stop_Natural_Cumulative_%": state["natural_total"] / spin_no * 100.0,
+                            }
+                        )
+
+                checkpoints.append(
+                    {
+                        "Player": player_id,
+                        "Spin": spin_no,
+                        "Stage": stage,
+                        "Block": checkpoint_id,
+                        "Status": "已判定",
+                        "Short_Threshold_%": SHORT_RTP_THRESHOLD * 100.0,
+                        "Mid_Threshold_%": STAGE_MID_RTP[stage] * 100.0,
+                        "Short_RTP_%": _pct(decision.short_rtp),
+                        "Mid_RTP_%": _pct(decision.mid_rtp),
+                        "Long_RTP_%": _pct(decision.long_rtp),
+                        "Short_Bad": decision.short_bad,
+                        "Mid_Bad": decision.mid_bad,
+                        "Long_Bad": decision.long_bad,
+                        "Rule_ID": decision.rule_id,
+                        "Condition_Matched": decision.triggered,
+                        "Personal_RTP_%": personal_rtp * 100.0 if personal_rtp is not None else None,
+                        "Reward_X": reward_x,
+                        "Platform_RTP_Before_%": platform_rtp_before * 100.0,
+                        "Projected_Platform_RTP_%": _pct(projected_platform_rtp),
+                        "Projected_Oldhand_Delta_pp": _pct(projected_oldhand_delta),
+                        "Pool_Result": pool_result,
+                        "Tier": reward_label,
+                        "Triggered": actual_rescue_triggered,
+                    }
+                )
+
+            reporting_block = reporting_block_by_spin.get(spin_no)
+            if reporting_block is not None:
+                block_stage, _, _, reporting_block_id, display_range = reporting_block
+                mechanism_triggered = (
+                    newbie_d_decision is not None and newbie_d_decision.triggered
+                ) or actual_rescue_triggered
+                if (
+                    (actual.triggered_fg or mechanism_triggered)
+                    and reporting_block_id not in state["actual_exit_blocks"]
+                ):
+                    state["actual_exit_blocks"].add(reporting_block_id)
+                    fg_exit_rows.append(
+                        {
+                            "Player": player_id,
+                            "Stage": block_stage,
+                            "Display_Range": display_range,
+                            "Scenario": "有機制",
+                            "Exit_Spin": spin_no,
+                            "Exit_RTP_%": (state["actual_total"] + actual.multiplier) / spin_no * 100.0,
+                        }
+                    )
+                if natural.triggered_fg and reporting_block_id not in state["natural_exit_blocks"]:
+                    state["natural_exit_blocks"].add(reporting_block_id)
+                    fg_exit_rows.append(
+                        {
+                            "Player": player_id,
+                            "Stage": block_stage,
+                            "Display_Range": display_range,
+                            "Scenario": "無機制",
+                            "Exit_Spin": spin_no,
+                            "Exit_RTP_%": state["natural_total"] / spin_no * 100.0,
+                        }
+                    )
+
+            history.append(actual.multiplier)
+            state["actual_total"] += actual.multiplier
+            actual_win_total += actual.multiplier
+            platform_bet_total += 1
+            actual_fg_total += int(actual.triggered_fg)
+            state["no_fg_spins"] = 0 if actual.triggered_fg else state["no_fg_spins"] + 1
+
+            completed_block = block_by_end.get(spin_no)
+            if completed_block is not None:
+                block_stage, block_start, completed_block_id, display_range = completed_block
+                trigger_info = state["block_triggers"].get(completed_block_id)
+                block_values = history[block_start - 1 : spin_no]
+                completed_stage_rows.append(
+                    {
+                        "Player": player_id,
+                        "Stage": block_stage,
+                        "Display_Range": display_range,
+                        "Actual_Spin_Range": f"{block_start}～{spin_no}",
+                        "Completed_Spin": spin_no,
+                        "Rescue_Triggered": trigger_info is not None,
+                        "Trigger_Spin": trigger_info["Spin"] if trigger_info is not None else "",
+                        "Tier": trigger_info["Tier"] if trigger_info is not None else "",
+                        "Completed_Block_RTP_%": sum(block_values) / len(block_values) * 100.0,
+                        "Completed_Cumulative_RTP_%": state["actual_total"] / spin_no * 100.0,
+                    }
+                )
+
+        if args.progress_every > 0 and (
+            spin_no % args.progress_every == 0 or spin_no == args.spins
+        ):
+            print(f"進度：第 {spin_no:,}/{args.spins:,} 轉", flush=True)
+
+    players: list[dict[str, Any]] = []
+    for player_id, state in states.items():
+        player_row: dict[str, Any] = {
+            "Player": player_id,
+            "Spins": args.spins,
+            "Natural_RTP_%": state["natural_total"] / args.spins * 100.0,
+            "Newbie_D_RTP_%": state["newbie_total"] / args.spins * 100.0,
+            "Rescue_RTP_%": state["actual_total"] / args.spins * 100.0,
+            "Newbie_D_Delta_pp": (state["newbie_total"] - state["natural_total"]) / args.spins * 100.0,
+            "Oldhand_C_Delta_pp": (state["actual_total"] - state["newbie_total"]) / args.spins * 100.0,
+            "RTP_Delta_pp": (state["actual_total"] - state["natural_total"]) / args.spins * 100.0,
+            "Newbie_D_Trigger_Count": state["newbie_trigger_count"],
+            "Trigger_Count": sum(state["trigger_counts"].values()),
+        }
+        for reward_label in REWARD_LABELS:
+            player_row[reward_label] = state["trigger_counts"][reward_label]
+        players.append(player_row)
+
+    total_paid_spins = args.players * args.spins
+    total_checks = sum(stage_check_counts.values())
+    total_triggers = sum(reward_counts.values())
+    duration = time.perf_counter() - started
+    newbie_d_players = {int(row["Player"]) for row in newbie_d_rows if bool(row["Triggered"])}
+    oldhand_players = {int(row["Player"]) for row in triggers}
+    any_mechanism_players = newbie_d_players | oldhand_players
+
+    def usage_row(
+        scope: str,
+        mechanism: str,
+        player_ids: set[int],
+        actual_fg_count: int | None = None,
+        actual_avg_exit_spin: float | None = None,
+        actual_fg_stop_rtp: float | None = None,
+        natural_fg_count: int | None = None,
+        natural_avg_exit_spin: float | None = None,
+        natural_fg_stop_rtp: float | None = None,
+        completed_rtp: float | None = None,
+    ) -> dict[str, Any]:
+        count = len(player_ids)
+        return {
+            "Scope": scope,
+            "Mechanism": mechanism,
+            "Players_Used_Rescue": count,
+            "Total_Players": args.players,
+            "Player_Usage_Rate_%": count / args.players * 100.0,
+            "Players_With_FG_有機制": actual_fg_count,
+            "Avg_Exit_Spin_有機制": actual_avg_exit_spin,
+            "RTP_有機制遇到FG就走_%": actual_fg_stop_rtp,
+            "Players_With_FG_無機制": natural_fg_count,
+            "Avg_Exit_Spin_無機制": natural_avg_exit_spin,
+            "RTP_無機制遇到FG就走_%": natural_fg_stop_rtp,
+            "RTP_完整階段_%": completed_rtp,
+        }
+
+    rescue_usage_rows = [
+        usage_row("任一機制", "新手 D 或老手 C", any_mechanism_players),
+        usage_row("新手期", "新手 D", newbie_d_players),
+        usage_row("老手全期間", "老手 C", oldhand_players),
+    ]
+    for block_stage, _, _, _, display_range in reporting_blocks:
+        block_stop_rows = [row for row in stop_after_rescue_rows if row["Display_Range"] == display_range]
+        block_players = {int(row["Player"]) for row in block_stop_rows}
+        actual_exit_rows = [row for row in fg_exit_rows if row["Display_Range"] == display_range and row["Scenario"] == "有機制"]
+        natural_exit_rows = [row for row in fg_exit_rows if row["Display_Range"] == display_range and row["Scenario"] == "無機制"]
+        block_completed_rows = [row for row in completed_stage_rows if row["Display_Range"] == display_range]
+        rescue_usage_rows.append(
+            usage_row(
+                display_range,
+                "新手 D" if block_stage == "新手 D" else "老手 C",
+                block_players,
+                actual_fg_count=len(actual_exit_rows),
+                actual_avg_exit_spin=float(np.mean([int(row["Exit_Spin"]) for row in actual_exit_rows])) if actual_exit_rows else None,
+                actual_fg_stop_rtp=float(np.mean([float(row["Exit_RTP_%"]) for row in actual_exit_rows])) if actual_exit_rows else None,
+                natural_fg_count=len(natural_exit_rows),
+                natural_avg_exit_spin=float(np.mean([int(row["Exit_Spin"]) for row in natural_exit_rows])) if natural_exit_rows else None,
+                natural_fg_stop_rtp=float(np.mean([float(row["Exit_RTP_%"]) for row in natural_exit_rows])) if natural_exit_rows else None,
+                completed_rtp=float(np.mean([float(row["Completed_Block_RTP_%"]) for row in block_completed_rows])) if block_completed_rows else None,
+            )
+        )
+
+    stage_rows = []
+    for stage in ("A", "B", "C", "D"):
+        checks = stage_check_counts[stage]
+        trigger_count = stage_trigger_counts[stage]
+        row: dict[str, Any] = {
+            "Stage": stage,
+            "Spin_Range": {"A": "201～300", "B": "301～400", "C": "401～500", "D": "501+"}[stage],
+            "Short_RTP_Threshold_%": SHORT_RTP_THRESHOLD * 100.0,
+            "Mid_RTP_Threshold_%": STAGE_MID_RTP[stage] * 100.0,
+            "Scheduled_Checkpoint_Count": stage_scheduled_counts[stage],
+            "Evaluated_Checkpoint_Count": checks,
+            "Cancelled_Checkpoint_Count": stage_cancelled_counts[stage],
+            "Trigger_Count": trigger_count,
+            "Trigger_Rate_%": trigger_count / checks * 100.0 if checks else 0.0,
+        }
+        for reward_label in REWARD_LABELS:
+            row[reward_label] = sum(1 for item in triggers if item["Stage"] == stage and item["Tier"] == reward_label)
+        stage_rows.append(row)
+
+    tier_rows = []
+    for reward_x in (REWARD_LOW_X, REWARD_HIGH_X):
+        reward_label = f"{reward_x:g}×"
+        tier_rows.append(
+            {
+                "Tier": reward_label,
+                "Low_X": reward_x,
+                "High_X": reward_x,
+                "Trigger_Count": reward_counts[reward_label],
+                "Share_of_Triggers_%": reward_counts[reward_label] / total_triggers * 100.0 if total_triggers else 0.0,
+            }
+        )
+
+    rule_descriptions = {
+        "AC_MID_RTP": "A～C：短期 RTP < 40% 且中期 RTP 低於階段門檻",
+        "D_MID_LONG": "D：短期 RTP < 40%，且中期 RTP 與長期 RTP 符合",
+        "D_NO_LONG_WINDOW": "D：長期資料未滿 500 轉",
+        "NO_RESCUE": "未符合救援條件",
+    }
+    rule_rows = [
+        {"Rule_ID": rule_id, "Description": rule_descriptions.get(rule_id, rule_id), "Count": count}
+        for rule_id, count in sorted(rule_counts.items())
+    ]
+
+    summary = {
+        **adapter.metadata(),
+        "players": args.players,
+        "spins_per_player": args.spins,
+        "total_paid_spins": total_paid_spins,
+        "checkpoint_interval_spins": CHECKPOINT_INTERVAL_SPINS,
+        "checkpoint_active_spins": CHECKPOINT_ACTIVE_SPINS,
+        "checkpoint_cooldown_spins": CHECKPOINT_COOLDOWN_SPINS,
+        "platform_rtp_cap_%": PLATFORM_RTP_CAP * 100.0,
+        "oldhand_rtp_budget_pp": OLDHAND_RTP_BUDGET * 100.0,
+        "scheduled_checkpoint_count": sum(stage_scheduled_counts.values()),
+        "checkpoint_count": total_checks,
+        "cancelled_checkpoint_count": sum(stage_cancelled_counts.values()),
+        "platform_rtp_cap_cancel_count": platform_rtp_cap_cancel_count,
+        "oldhand_budget_cancel_count": oldhand_budget_cancel_count,
+        "personal_pool_cancel_count": personal_pool_cancel_count,
+        "rescue_trigger_count": total_triggers,
+        "rescue_trigger_rate_per_checkpoint_%": total_triggers / total_checks * 100.0 if total_checks else 0.0,
+        "players_with_rescue": len(oldhand_players),
+        "players_with_any_mechanism": len(any_mechanism_players),
+        "player_any_mechanism_rate_%": len(any_mechanism_players) / args.players * 100.0,
+        "players_with_newbie_d": len(newbie_d_players),
+        "player_newbie_d_rate_%": len(newbie_d_players) / args.players * 100.0,
+        "players_with_oldhand_c": len(oldhand_players),
+        "player_oldhand_c_rate_%": len(oldhand_players) / args.players * 100.0,
+        "oldhand_avg_triggers_all_players": total_triggers / args.players,
+        "oldhand_avg_triggers_triggered_players": total_triggers / len(oldhand_players) if oldhand_players else 0.0,
+        "natural_rtp_%": natural_win_total / total_paid_spins * 100.0,
+        "newbie_d_rtp_%": newbie_d_win_total / total_paid_spins * 100.0,
+        "newbie_d_rtp_delta_pp": (newbie_d_win_total - natural_win_total) / total_paid_spins * 100.0,
+        "newbie_d_trigger_count": sum(count for rule, count in newbie_d_rule_counts.items() if "NO_RESCUE" not in rule),
+        "rescue_rtp_%": actual_win_total / total_paid_spins * 100.0,
+        "oldhand_c_rtp_delta_pp": (actual_win_total - newbie_d_win_total) / total_paid_spins * 100.0,
+        "rtp_delta_pp": (actual_win_total - natural_win_total) / total_paid_spins * 100.0,
+        "natural_fg_count": natural_fg_total,
+        "actual_fg_count": actual_fg_total,
+        "duration_sec": duration,
+        "seed": args.seed,
+    }
+
+    return {
+        "summary": summary,
+        "stage_rows": stage_rows,
+        "tier_rows": tier_rows,
+        "rule_rows": rule_rows,
+        "checkpoint_rows": checkpoints,
+        "trigger_rows": triggers,
+        "newbie_d_rows": newbie_d_rows,
+        "newbie_d_rule_rows": [{"Rule_ID": rule, "Count": count} for rule, count in sorted(newbie_d_rule_counts.items())],
+        "rescue_usage_rows": rescue_usage_rows,
+        "stop_after_rescue_rows": stop_after_rescue_rows,
+        "completed_stage_rows": completed_stage_rows,
+        "player_rows": players,
+        "multiplier_curve_rows": adapter.multiplier_curve_rows(),
+    }
+
+
 def _summary_frame(summary: dict[str, Any]) -> pd.DataFrame:
     rows = []
     for key, value in summary.items():
@@ -1096,7 +1642,7 @@ def _display_block_name(value: Any) -> Any:
         if len(parts) == 3:
             return f"{parts[1]}～{parts[2]}"
     parts = value.split("_")
-    if len(parts) == 3 and parts[0] in {"A", "B", "C", "D"}:
+    if len(parts) == 3 and parts[0] in {"A", "B", "C", "D", "CHECK"}:
         return f"{parts[1]}～{parts[2]}"
     return value
 
@@ -1180,7 +1726,10 @@ def print_summary(result: dict[str, Any]) -> None:
     print(f"玩家／每人轉數：{summary['players']:,} / {summary['spins_per_player']:,}")
     print(f"預定判定點：{summary['scheduled_checkpoint_count']:,}")
     print(f"實際判定次數：{summary['checkpoint_count']:,}")
-    print(f"同區間觸發後取消：{summary['cancelled_checkpoint_count']:,}")
+    print(f"Pool 取消救援：{summary['cancelled_checkpoint_count']:,}")
+    print(f"  平台 RTP 上限：{summary['platform_rtp_cap_cancel_count']:,}")
+    print(f"  老手增量上限：{summary['oldhand_budget_cancel_count']:,}")
+    print(f"  個人 RTP 達 200%：{summary['personal_pool_cancel_count']:,}")
     print(f"救援觸發次數：{summary['rescue_trigger_count']:,}")
     print(f"任一機制玩家：{summary['players_with_any_mechanism']:,}" f"（{summary['player_any_mechanism_rate_%']:.2f}%）")
     print(f"新手 D 玩家：{summary['players_with_newbie_d']:,}" f"（{summary['player_newbie_d_rate_%']:.2f}%）")
@@ -1189,7 +1738,7 @@ def print_summary(result: dict[str, Any]) -> None:
     print(f"新手 D 後 RTP：{summary['newbie_d_rtp_%']:.4f}%" f"（觸發 {summary['newbie_d_trigger_count']:,} 次，" f"{summary['newbie_d_rtp_delta_pp']:+.4f} 個百分點）")
     print(f"老手 C 後 RTP：{summary['rescue_rtp_%']:.4f}%" f"（老手增量 {summary['oldhand_c_rtp_delta_pp']:+.4f} 個百分點）")
     print(f"總 RTP 增量：{summary['rtp_delta_pp']:+.4f} 個百分點")
-    print("Tier 觸發：" + ", ".join(f"{row['Tier']}={row['Trigger_Count']:,}" for row in result["tier_rows"]))
+    print("獎項觸發：" + ", ".join(f"{row['Tier']}={row['Trigger_Count']:,}" for row in result["tier_rows"]))
     print(f"耗時：{summary['duration_sec']:.2f} 秒")
 
 

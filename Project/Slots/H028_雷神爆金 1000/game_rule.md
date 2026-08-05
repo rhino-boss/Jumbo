@@ -77,7 +77,7 @@
 | 符號 | 出現位置 | 行為 |
 | --- | --- | --- |
 | **Wild** | 僅出現在 R2、R3、R4、R5 | 替代除 Scatter 外的所有符號。 |
-| **Scatter** | 主盤面可出現在任意輪，且可為 1x1、1x2、1x3、1x4 | 4 個以上觸發 Free Game；FG 內可再次作為 retrigger 來源。 |
+| **Scatter** | 不配置於初始輪帶；盤面停定後可由 Post Scatter 於任意輪產生，Cascade Drop 亦依掉落權重補入，且可為 1x1、1x2、1x3、1x4 | 4 個以上觸發 Free Game；FG 內可再次作為 retrigger 來源。 |
 | **M1** | 主盤面與 Extra Reel | 主盤面用於累積倍數；Extra Reel 上的 M1 出現即計入當局倍數。 |
 
 ---
@@ -112,7 +112,8 @@
 5. 將當局所有中獎賠付乘上目前累積總倍數。
 6. 中獎符號消除並觸發 Cascade；若金框符號參與中獎，消除後直接在原位轉為 Wild。
 7. 補入新符號後再次判定中獎、倍數與 Cascade，直到盤面不再形成新中獎。
-8. 當整個 Spin 結束後，再判定 Scatter 是否觸發 Free Game。
+8. 初始盤面停定後依 Post Scatter 權重產生 Scatter；後續 Cascade 補牌亦可依 Drop 權重補入 Scatter。
+9. 當整個 Spin 結束後，再判定 Scatter 是否觸發 Free Game。
 
 ---
 
@@ -166,7 +167,7 @@
 * 進入 FG 時，累積倍數從 **x2** 開始。
 * FG 期間倍數 **不重置**，會跨局持續累積到整段 FG 結束。
 * 金框直轉 Wild 機制於 FG 期間持續有效。
-* FG 期間 Scatter 仍可出現，並可用於 retrigger。
+* FG 期間 Scatter 可由每次初始盤面停定後的 Post Scatter 或 Cascade Drop 產生，並可用於 retrigger。
 * Extra Reel 上的 M1 出現即計入該局倍數累積。
 
 ### 7.3 Retrigger（加局）

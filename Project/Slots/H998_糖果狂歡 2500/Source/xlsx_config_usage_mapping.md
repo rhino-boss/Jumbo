@@ -28,8 +28,9 @@
 - 正式來源只有 `A44:H83` 的 `[A]` 與 `A84:H123` 的 `[B]`；輸出的 `parameter_blocks` 只保留 `A`、`B`，不產生 `A_2`。
 - A/B 不是獨立遊戲版本，而是由 Card System 每張卡的「使用的表」欄位在每局動態指定：
   - Normal / Extra 選表權重 → `weight_table_normal_bet`、`weight_table_extra_bet`。
-  - C2 倍率值 → `value_multiplier`。
-  - FG / FB / SB 兩張表的倍率權重 → 六個 `weight_multiplier_*` 欄位。
+- C2 倍率值 → `value_multiplier`。
+- FG / FB / SB 兩張表的倍率權重 → 六個 `weight_multiplier_*` 欄位。
+- `super_feature_guaranteed_multiplier=2500` 為 SF 整場保證值；SB 權重表中 `2500x` 的隨機權重固定為 `0`，由 Simulator / Demo 在初始 10 場中只強制放入 1 次。
 - 權重會以最大公因數約分；抽選機率不變，可避免不必要的大整數。
 - `[A]` 的 Normal / Extra 選表權重為 `[1, 0, 0]`；`[B]` 為 `[0, 1, 0]`。
 - `[A]` 的 Free Game 高低表組合為初始 8 low + 2 high；`[B]` 為 2 low + 8 high。

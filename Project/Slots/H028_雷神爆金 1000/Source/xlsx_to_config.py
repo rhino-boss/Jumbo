@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_SOURCE = BASE_DIR / "H028192A.xlsx"
-DEFAULT_OUTPUT = BASE_DIR.parent / "config_92.js"
+DEFAULT_OUTPUT = BASE_DIR.parent / "config_92A.js"
 
 METADATA = {
     "game_id": "101016",
@@ -26,10 +26,10 @@ METADATA = {
 
 SYMBOL_SHEET_GROUPS = (
     ("BaseGame", 1, "BG_Symbol", 200),
-    ("BaseGame", 2, "BG_Symbol (2)", 121),
+    ("BaseGame", 2, "BG_Symbol (2)", 200),
     ("FreeGame", 1, "FG_Symbol", 200),
-    ("FreeGame", 2, "FG_Symbol (2)", 121),
-    ("FreeGame", 3, "FG_Symbol (3)", 121),
+    ("FreeGame", 2, "FG_Symbol (2)", 200),
+    ("FreeGame", 3, "FG_Symbol (3)", 200),
 )
 
 # H028192A current layout. Keep this as the single source of truth for both

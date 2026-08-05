@@ -294,6 +294,7 @@ SYMBOL_STR = {int(key): value for key, value in CFG["symbol_str"].items()}
 SYMBOL_COUNT = len(SYMBOL_STR)
 SYMBOLS_SCORE = np.asarray(CFG["symbols_score"], dtype=np.int64)
 VALUE_MULTIPLIER = np.asarray(CFG["value_multiplier"], dtype=np.int64)
+SF_GUARANTEED_MULTIPLIER = int(CFG["super_feature_guaranteed_multiplier"])
 
 PARAMETER_NAMES = ("A", "B")
 PARAMETER_BLOCKS = [CFG["parameter_blocks"][name] for name in PARAMETER_NAMES]
@@ -553,12 +554,13 @@ def _fg_tables_and_profile(mode):
 
 
 @njit(nogil=True)
-def _draw_multiplier(parameter_idx, profile_row, count):
-    if count <= 0:
+def _draw_multiplier(parameter_idx, profile_row, count, guaranteed_multiplier):
+    if count <= 0 and guaranteed_multiplier <= 0:
         return 1
-    total = 0
+    total = guaranteed_multiplier if guaranteed_multiplier > 0 else 0
+    random_count = count - 1 if guaranteed_multiplier > 0 and count > 0 else count
     weights = PARAM_MULTI_WEIGHTS[parameter_idx, profile_row]
-    for _ in range(count):
+    for _ in range(random_count):
         total += VALUE_MULTIPLIER[_weighted_index(weights)]
     return total
 
@@ -630,6 +632,10 @@ def _simulate_chunk(rounds, mode, bet_multi):
             mix_mode = 1 if mode == MODE_FEATUREBUY else 2 if mode == MODE_SUPERFEATUREBUY else 0
             low_total = PARAM_INITIAL_LOW[fg_parameter_idx, mix_mode]
             high_total = PARAM_INITIAL_HIGH[fg_parameter_idx, mix_mode]
+            sf_guaranteed_spin = -1
+            if mode == MODE_SUPERFEATUREBUY:
+                sf_guaranteed_spin = np.random.randint(0, low_total + high_total)
+            sf_guaranteed_count = 0
             low_done = 0
             high_done = 0
             while high_done < high_total or low_done < low_total:
@@ -657,10 +663,14 @@ def _simulate_chunk(rounds, mode, bet_multi):
                     high_total += RETRIGGER_HIGH
                     retriggers += 1
 
+                guaranteed_multiplier = SF_GUARANTEED_MULTIPLIER if fg_spins == sf_guaranteed_spin else 0
+                if guaranteed_multiplier > 0:
+                    sf_guaranteed_count += 1
                 multiplier = _draw_multiplier(
                     fg_parameter_idx,
                     profile + (1 if is_high else 0),
                     _count_symbol(preview, C2),
+                    guaranteed_multiplier,
                 )
                 spin_pay, cascades = _cascade(fg_table, fg_board, fg_stops, multiplier * bet_multi, 1, True, round_hits, round_pays, round_eliminates)
                 fg_pay += spin_pay
@@ -671,6 +681,8 @@ def _simulate_chunk(rounds, mode, bet_multi):
                     fg_multiplier_max = multiplier
                 if spin_pay > 0:
                     fg_hit_spins += 1
+            if mode == MODE_SUPERFEATUREBUY and sf_guaranteed_count != 1:
+                raise RuntimeError("Super Feature must apply exactly one guaranteed 2500x multiplier")
 
         total_win = bg_pay + fg_pay
         triggered_free_game = 1 if scatter_pay > 0 else 0

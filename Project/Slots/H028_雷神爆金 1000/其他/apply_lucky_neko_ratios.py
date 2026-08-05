@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply Lucky Neko BG/FG symbol, silver-frame, drop, and R7 ratios to H028."""
+"""Apply Lucky Neko ratios with initial Scatter from PostC1 and Drop Scatter weights."""
 
 from __future__ import annotations
 
@@ -20,6 +20,8 @@ DEFAULT_CONFIG = ROOT / "config_92A.js"
 SYMBOL_COUNT = 26
 BASE_SYMBOL_COUNT = 13
 DROP_WEIGHT_TOTAL = 1_000_000
+POST_WEIGHT_TOTAL = 1_000_000
+POST_SCATTER_RARE_RATE = 1 / 10_000
 MEGAWAY_WEIGHT_TOTAL = 10_000
 R7_OPTIMIZATION_STEPS = 400_000
 MEGAWAY_PATTERNS = [
@@ -101,8 +103,19 @@ def normalize(values: list[float]) -> list[float]:
     return [value / total for value in values]
 
 
-def split_silver(base_probabilities: list[float], silver_share: float) -> list[float]:
-    base = normalize(base_probabilities)
+def without_scatter(values: list[float]) -> list[float]:
+    result = list(values)
+    result[1] = 0.0
+    return normalize(result)
+
+
+def split_silver(
+    base_probabilities: list[float],
+    silver_share: float,
+    *,
+    remove_scatter: bool,
+) -> list[float]:
+    base = without_scatter(base_probabilities) if remove_scatter else normalize(base_probabilities)
     eligible_total = sum(base[2:13])
     silver_share = min(max(float(silver_share), 0.0), eligible_total)
     silver_fraction = silver_share / eligible_total if eligible_total else 0.0
@@ -114,6 +127,106 @@ def split_silver(base_probabilities: list[float], silver_share: float) -> list[f
         result[symbol_id] = base[symbol_id] - silver_probability
         result[symbol_id + 11] = silver_probability
     return normalize(result)
+
+
+def boost_absolute_share(
+    probabilities: list[float], symbol_ids: tuple[int, ...], factor: float
+) -> list[float]:
+    """Multiply the selected symbols' absolute share and rescale all other symbols."""
+    result = normalize(list(probabilities))
+    selected_share = sum(result[symbol_id] for symbol_id in symbol_ids)
+    if selected_share <= 0 or selected_share >= 1:
+        return result
+    target_share = min(1.0, selected_share * factor)
+    selected_scale = target_share / selected_share
+    other_scale = (1.0 - target_share) / (1.0 - selected_share)
+    for symbol_id in range(len(result)):
+        result[symbol_id] *= selected_scale if symbol_id in symbol_ids else other_scale
+    return normalize(result)
+
+
+def max_entropy_low_counts(total_mass: float, target_mean: float) -> list[float]:
+    """Maximum-entropy probabilities for counts 0..3 with fixed mass and mean."""
+    if total_mass <= 0:
+        return [0.0] * 4
+    conditional_mean = min(3.0, max(0.0, target_mean / total_mass))
+    low, high = -40.0, 40.0
+    for _ in range(160):
+        midpoint = (low + high) / 2.0
+        values = [math.exp(midpoint * count) for count in range(4)]
+        mean = sum(count * value for count, value in enumerate(values)) / sum(values)
+        if mean < conditional_mean:
+            low = midpoint
+        else:
+            high = midpoint
+    values = [math.exp(((low + high) / 2.0) * count) for count in range(4)]
+    scale = total_mass / sum(values)
+    return [value * scale for value in values]
+
+
+def overview_metric(wb, name: str) -> float:
+    ws = wb["Overview"]
+    for row in range(2, ws.max_row + 1):
+        if ws.cell(row, 1).value == name:
+            return float(ws.cell(row, 2).value)
+    raise ValueError(f"Overview: missing metric {name}")
+
+
+def rounds_scatter_tail(wb) -> tuple[dict[int, int], int]:
+    """Return inferred BG initial SC counts and FG retrigger event count."""
+    ws = wb["Rounds"]
+    headers = {str(cell.value): index for index, cell in enumerate(next(ws.iter_rows(values_only=False)))}
+    required = {"has_free_spin_trigger", "free_spin_awarded"}
+    if not required.issubset(headers):
+        raise ValueError(f"Rounds: missing columns {sorted(required - headers.keys())}")
+    bg_counts = {count: 0 for count in range(4, 8)}
+    retrigger_events = 0
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not bool(row[headers["has_free_spin_trigger"]]):
+            continue
+        awarded = int(row[headers["free_spin_awarded"]] or 0)
+        remainder = awarded % 10
+        initial_award = 10 if remainder == 0 else 12 if remainder == 2 else 14 if remainder == 4 else 10
+        initial_count = min(7, 4 + max(0, (initial_award - 10) // 2))
+        bg_counts[initial_count] += 1
+        retrigger_events += max(0, (awarded - initial_award) // 10)
+    return bg_counts, retrigger_events
+
+
+def build_post_scatter_distribution(
+    wb,
+    mode: str,
+    initial_base: list[list[float]],
+    reel_height: list[dict[int, float]],
+    r7_initial: list[float],
+) -> list[float]:
+    expected_main = sum(
+        initial_base[reel][1] * expected_value(reel_height[reel])
+        for reel in range(6)
+    )
+    target_mean = expected_main + r7_initial[1] * 4.0
+    bg_tail_counts, retrigger_events = rounds_scatter_tail(wb)
+    probabilities = [0.0] * 8
+    if mode == "BG":
+        denominator = overview_metric(wb, "total_rounds")
+        for count, occurrences in bg_tail_counts.items():
+            probabilities[count] = occurrences / denominator
+    else:
+        denominator = overview_metric(wb, "fg_count")
+        probabilities[4] = retrigger_events / denominator
+
+    # Every zero-probability count receives the explicit H028 floor of 1/10,000.
+    # BG parameter group 2 applies its own 0..3-only override in update_config().
+    for count in range(8):
+        if probabilities[count] <= 0:
+            probabilities[count] = POST_SCATTER_RARE_RATE
+
+    tail_mass = sum(probabilities[4:])
+    tail_mean = sum(count * probabilities[count] for count in range(4, 8))
+    residual_mass = max(0.0, 1.0 - tail_mass)
+    residual_mean = max(0.0, target_mean - tail_mean)
+    probabilities[:4] = max_entropy_low_counts(residual_mass, residual_mean)
+    return normalize(probabilities)
 
 
 def largest_remainder(probabilities: list[float], total: int) -> list[int]:
@@ -182,6 +295,56 @@ def allocate_initial_counts(probabilities: list[float], total: int) -> list[int]
     for index, symbol_id in enumerate(range(2, 13)):
         result[symbol_id] = base_counts[symbol_id] - silver_counts[index]
         result[symbol_id + 11] = silver_counts[index]
+    return result
+
+
+def force_nearest_symbol_total(
+    counts: list[int],
+    probabilities: list[float],
+    symbol_ids: tuple[int, ...],
+    total: int,
+) -> list[int]:
+    """Force a combined symbol count to the nearest representable reel share."""
+    result = list(counts)
+    target_count = round(sum(probabilities[symbol_id] for symbol_id in symbol_ids) * total)
+    current_count = sum(result[symbol_id] for symbol_id in symbol_ids)
+    while current_count > target_count:
+        candidates = [
+            symbol_id for symbol_id in symbol_ids
+            if result[symbol_id] > (1 if symbol_id < BASE_SYMBOL_COUNT and probabilities[symbol_id] > 0 else 0)
+        ]
+        remove_id = max(
+            candidates,
+            key=lambda symbol_id: result[symbol_id] - probabilities[symbol_id] * total,
+        )
+        donors = [
+            symbol_id for symbol_id in range(len(result))
+            if symbol_id not in symbol_ids and probabilities[symbol_id] > 0
+        ]
+        add_id = max(
+            donors,
+            key=lambda symbol_id: probabilities[symbol_id] * total - result[symbol_id],
+        )
+        result[remove_id] -= 1
+        result[add_id] += 1
+        current_count -= 1
+    while current_count < target_count:
+        donors = [
+            symbol_id for symbol_id in range(len(result))
+            if symbol_id not in symbol_ids
+            and result[symbol_id] > (1 if symbol_id < BASE_SYMBOL_COUNT and probabilities[symbol_id] > 0 else 0)
+        ]
+        remove_id = max(
+            donors,
+            key=lambda symbol_id: result[symbol_id] - probabilities[symbol_id] * total,
+        )
+        add_id = max(
+            symbol_ids,
+            key=lambda symbol_id: probabilities[symbol_id] * total - result[symbol_id],
+        )
+        result[remove_id] -= 1
+        result[add_id] += 1
+        current_count += 1
     return result
 
 
@@ -532,14 +695,28 @@ def build_mode_targets(wb, mode: str) -> dict:
         drop_share = expected_value(silver_drop[reel]) / 5.0
         initial_silver_shares.append(initial_share)
         drop_silver_shares.append(drop_share)
-        initial_probabilities.append(split_silver(initial_base[reel], initial_share))
-        drop_probabilities.append(split_silver(drop_base[reel], drop_share))
+        initial_probabilities.append(
+            split_silver(initial_base[reel], initial_share, remove_scatter=True)
+        )
+        drop_probabilities.append(
+            split_silver(drop_base[reel], drop_share, remove_scatter=False)
+        )
 
-    r7_initial = read_extra_reel_ratios(wb, "Extra Reel_Init", mode)
-    r7_drop = read_extra_reel_ratios(wb, "Extra Reel_Drop", mode)
+    r7_initial_source = read_extra_reel_ratios(wb, "Extra Reel_Init", mode)
+    r7_drop_source = read_extra_reel_ratios(wb, "Extra Reel_Drop", mode)
+    post_scatter = build_post_scatter_distribution(
+        wb,
+        mode,
+        initial_base,
+        reel_height,
+        r7_initial_source,
+    )
+    r7_initial = without_scatter(r7_initial_source)
+    r7_drop = normalize(r7_drop_source)
     return {
         "initial": initial_probabilities + [r7_initial],
         "drop": drop_probabilities + [r7_drop],
+        "post_scatter": post_scatter,
         "megaway": build_megaway_weights(wb, mode, reel_height),
         "extra_reel_same": read_extra_reel_same(wb, mode),
         "initial_silver_shares": initial_silver_shares,
@@ -556,54 +733,109 @@ def update_config(
 ) -> dict:
     targets = {mode: build_mode_targets(wb, mode) for mode in ("BG", "FG")}
     mode_settings = {
-        "BG": ("BaseGame", "BaseGameSymbol1", "BaseGameSymbolWeight1"),
-        "FG": ("FreeGame", "FreeGameSymbol1", "FreeGameSymbolWeight1"),
+        "BG": ("BaseGame", (1, 2)),
+        "FG": ("FreeGame", (1, 2, 3)),
     }
 
-    for mode, (prefix, symbol_key, weight_key) in mode_settings.items():
+    for mode, (prefix, group_indices) in mode_settings.items():
         if reel_length <= 0:
             raise ValueError("Reel length must be positive")
-        lengths = [reel_length] * 7
-        if len(config[symbol_key]) != 7:
-            raise ValueError(f"{symbol_key}: expected seven non-empty reels")
-
-        new_reels = []
-        for reel, length in enumerate(lengths):
-            counts = (
-                allocate_initial_counts(targets[mode]["initial"][reel], length)
-                if reel < 6
-                else largest_remainder_keep_positive(targets[mode]["initial"][reel], length)
-            )
-            new_reels.append(shuffled_reel(counts, seed + (0 if mode == "BG" else 10_000) + reel))
-        new_reels[6] = optimize_extra_reel_order(
-            new_reels[6],
-            targets[mode]["extra_reel_same"],
-            seed + (30_000 if mode == "BG" else 40_000),
-        )
-        config[symbol_key] = new_reels
-        config[weight_key] = [[1] * length for length in lengths]
-        config[f"{prefix}MegaWay1"] = [row[:] for row in targets[mode]["megaway"]]
-
-        drop_weights = [
+        base_drop_weights = [
             largest_remainder(targets[mode]["drop"][reel], DROP_WEIGHT_TOTAL)
             for reel in range(7)
         ]
-        for combo in range(1, 6):
-            config[f"{prefix}1Drop{combo}"] = [row[:] for row in drop_weights]
 
-        for reel, symbols in enumerate(new_reels):
-            if len(symbols) != reel_length or len(config[weight_key][reel]) != reel_length:
-                raise ValueError(f"{mode} R{reel + 1}: reel/weight length is not {reel_length}")
-            source = targets[mode]["initial"][reel]
-            required_ids = range(BASE_SYMBOL_COUNT) if reel < 6 else range(SYMBOL_COUNT)
-            missing = [symbol_id for symbol_id in required_ids if source[symbol_id] > 0 and symbol_id not in symbols]
-            if missing:
-                raise ValueError(f"{mode} R{reel + 1}: missing non-zero source IDs {missing}")
-        if any(config[f"{prefix}1Drop{combo}"] != drop_weights for combo in range(1, 6)):
-            raise ValueError(f"{mode}: Drop1-Drop5 are not identical")
+        for group_index in group_indices:
+            symbol_key = f"{prefix}Symbol{group_index}"
+            weight_key = f"{prefix}SymbolWeight{group_index}"
+            if len(config[symbol_key]) != 7:
+                raise ValueError(f"{symbol_key}: expected seven non-empty reels")
+            lengths = [
+                reel_length
+                for reel in range(7)
+            ]
+            group_initial_targets = targets[mode]["initial"]
+            if mode == "BG" and group_index == 2:
+                group_initial_targets = []
+                for reel_symbols in config["BaseGameSymbol1"]:
+                    copied_distribution = [
+                        reel_symbols.count(symbol_id) / len(reel_symbols)
+                        for symbol_id in range(SYMBOL_COUNT)
+                    ]
+                    group_initial_targets.append(
+                        boost_absolute_share(copied_distribution, (2, 13), 2.0)
+                    )
+            if mode == "BG" and group_index == 2:
+                drop_weights = [row[:] for row in base_drop_weights]
+                for row in drop_weights:
+                    row[1] = 0
+                    row[2] *= 3
+                    row[13] *= 3
+            else:
+                drop_weights = [row[:] for row in base_drop_weights]
+
+            new_reels = []
+            group_seed = seed + (0 if mode == "BG" else 10_000) + group_index * 1_000
+            for reel, length in enumerate(lengths):
+                counts = (
+                    allocate_initial_counts(group_initial_targets[reel], length)
+                    if reel < 6
+                    else largest_remainder_keep_positive(group_initial_targets[reel], length)
+                )
+                if mode == "BG" and group_index == 2:
+                    counts = force_nearest_symbol_total(
+                        counts, group_initial_targets[reel], (2, 13), length
+                    )
+                new_reels.append(shuffled_reel(counts, group_seed + reel))
+            if group_index == 1:
+                new_reels[6] = optimize_extra_reel_order(
+                    new_reels[6],
+                    targets[mode]["extra_reel_same"],
+                    seed + (30_000 if mode == "BG" else 40_000),
+                )
+            config[symbol_key] = new_reels
+            config[weight_key] = [[1] * length for length in lengths]
+            for combo in range(1, 6):
+                config[f"{prefix}{group_index}Drop{combo}"] = [row[:] for row in drop_weights]
+            post_weights = largest_remainder(targets[mode]["post_scatter"], POST_WEIGHT_TOTAL)
+            if mode == "BG" and group_index == 2:
+                post_weights[4:] = [0, 0, 0, 0]
+            config[f"{prefix}{group_index}PostC1"] = [list(range(8)), post_weights]
+
+            for reel, symbols in enumerate(new_reels):
+                if len(symbols) != lengths[reel] or len(config[weight_key][reel]) != lengths[reel]:
+                    raise ValueError(f"{mode} group {group_index} R{reel + 1}: invalid reel/weight length")
+                source = group_initial_targets[reel]
+                required_ids = range(BASE_SYMBOL_COUNT) if reel < 6 else range(SYMBOL_COUNT)
+                missing = [
+                    symbol_id for symbol_id in required_ids
+                    if symbol_id != 1 and source[symbol_id] > 0 and symbol_id not in symbols
+                ]
+                if missing:
+                    raise ValueError(
+                        f"{mode} group {group_index} R{reel + 1}: missing non-zero source IDs {missing}"
+                    )
+                if 1 in symbols:
+                    raise ValueError(f"{mode} group {group_index} R{reel + 1}: Scatter remains on reel")
+            for reel, row in enumerate(drop_weights):
+                expected_scatter = 0 if mode == "BG" and group_index == 2 else base_drop_weights[reel][1]
+                if row[1] != expected_scatter:
+                    raise ValueError(
+                        f"{mode} group {group_index} R{reel + 1}: "
+                        f"Drop Scatter {row[1]} != target {expected_scatter}"
+                    )
+            if any(config[f"{prefix}{group_index}Drop{combo}"] != drop_weights for combo in range(1, 6)):
+                raise ValueError(f"{mode} group {group_index}: Drop1-Drop5 are not identical")
+
+        config[f"{prefix}MegaWay1"] = [row[:] for row in targets[mode]["megaway"]]
         mega_sums = [sum(weights) for weights in config[f"{prefix}MegaWay1"]]
         if mega_sums != [1, MEGAWAY_WEIGHT_TOTAL, MEGAWAY_WEIGHT_TOTAL, MEGAWAY_WEIGHT_TOTAL, MEGAWAY_WEIGHT_TOTAL, 1]:
             raise ValueError(f"{mode}: invalid MegaWay totals {mega_sums}")
+
+    # BG table 2 copies table 1 except for its M1 and Post Scatter overrides.
+    config["BaseGameMegaWay2"] = [row[:] for row in config["BaseGameMegaWay1"]]
+    config["BaseGameMY2"] = list(config["BaseGameMY1"])
+    config["ReelWeight"] = [6000, 4000]
 
     if not keep_version:
         config["excel_version"] = bump_version(str(config["excel_version"]))
@@ -637,6 +869,13 @@ def main() -> int:
         drop = ", ".join(f"{value:.6%}" for value in targets[mode]["drop_silver_shares"])
         print(f"{mode} Silver_Init shares R1-R6: {initial}")
         print(f"{mode} Silver_Drop shares R1-R6: {drop}")
+        post_weights = largest_remainder(targets[mode]["post_scatter"], POST_WEIGHT_TOTAL)
+        print(f"{mode} Post Scatter counts 0-7: {post_weights}")
+        drop_scatter = [
+            largest_remainder(targets[mode]["drop"][reel], DROP_WEIGHT_TOTAL)[1]
+            for reel in range(7)
+        ]
+        print(f"{mode} Drop Scatter weights R1-R7: {drop_scatter}")
         for reel, weights in enumerate(targets[mode]["megaway"], start=1):
             print(f"{mode} MegaWay R{reel}: {weights}")
         r7_metrics = extra_reel_same_counts(config[("BaseGame" if mode == "BG" else "FreeGame") + "Symbol1"][6])

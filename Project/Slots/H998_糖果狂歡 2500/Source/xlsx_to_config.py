@@ -462,6 +462,7 @@ def build_config(source_path: Path) -> dict[str, Any]:
         "initial_free_spins_high": high_spins,
         "retrigger_free_spins_low": retrigger_low,
         "retrigger_free_spins_high": retrigger_high,
+        "super_feature_guaranteed_multiplier": 2500,
         "free_spin_awards": overview["free_spin_awards"],
         "retrigger_awards": overview["retrigger_awards"],
         "strip_name_map": LEGACY_STRIP_NAMES,
@@ -504,6 +505,8 @@ def validate_config(config: dict[str, Any], source_path: Path) -> None:
         raise ValueError("symbol IDs are not contiguous")
     if len(config["value_multiplier"]) != 15:
         raise ValueError("expected 15 C2 multiplier values")
+    if config["super_feature_guaranteed_multiplier"] not in config["value_multiplier"]:
+        raise ValueError("Super Feature guaranteed multiplier is missing from C2 multiplier values")
     for key in (
         "weight_multiplier_fg_low",
         "weight_multiplier_fg_high",
