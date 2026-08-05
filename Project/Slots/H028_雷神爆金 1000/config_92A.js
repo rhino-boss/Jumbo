@@ -13,7 +13,7 @@ const data = {
     0,
     2
   ],
-  "excel_version": "2.0.0.20",
+  "excel_version": "2.0.0.21",
   "linkpoint": [
     [
       150,

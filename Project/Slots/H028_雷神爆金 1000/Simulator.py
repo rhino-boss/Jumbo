@@ -31,7 +31,7 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
@@ -876,7 +876,15 @@ def single_spin_core(symbol_reels, reel_lengths, weight_reels, megaway_weights, 
                 c1_final_count += 1
             c += L
 
-    return total_win, c1_final_count, np.int32(multiplier), np.int32(init_c1_count), init_c1_len_counts, cascade_scores
+    return (
+        total_win,
+        c1_final_count,
+        np.int32(multiplier),
+        np.int32(init_c1_count),
+        init_c1_len_counts,
+        cascade_scores,
+        np.int32(m1_count),
+    )
 
 
 # ========== FreeGame Spin 核心函數 ==========
@@ -1293,7 +1301,7 @@ def run_simulations(n_sims, enable_m1_multiplier=True):
         # 選擇參數組
         r = np.random.random() * reel_weight_sum
         param_set = 1 if r < REEL_WEIGHT[0] else 2
-        win, c1, mult, init_c1, c1_lens, cascade_scores = single_spin(param_set, enable_m1_multiplier)
+        win, c1, mult, init_c1, c1_lens, cascade_scores, _ = single_spin(param_set, enable_m1_multiplier)
         results[i] = win
         c1_counts[i] = c1
         multipliers[i] = mult
@@ -1753,7 +1761,7 @@ def single_full_game(enable_m1_multiplier=True):
     r = np.random.random() * reel_weight_sum
     param_set = 1 if r < REEL_WEIGHT[0] else 2
 
-    bg_win, c1_count, mult, init_c1, _, bg_cascade_scores = single_spin(param_set, enable_m1_multiplier)
+    bg_win, c1_count, mult, init_c1, _, bg_cascade_scores, _ = single_spin(param_set, enable_m1_multiplier)
 
     fg_win = 0.0
     fg_triggered = 0
@@ -1943,18 +1951,48 @@ SYMBOL_NAMES = {0: "WD", 1: "SP", 2: "M1", 3: "M2", 4: "M3", 5: "M4", 6: "M5", 7
 # ===== H026-style runner / aggregation / reporting =====
 
 R_ALL = 0
-R_MULTIPLIER_COUNT = 1
-R_MULTIPLIER_PAY = 2
-R_BG_CASCADE_PAY = 3
-R_FG_CASCADE_PAY = 4
-R_SCATTER_COUNT = 5
-R_FG_FINAL_MULTIPLIER = 6
-R_SCENE = 7
-R_BG_CASCADE_DIST = 8
-R_FG_CASCADE_DIST = 9
+R_MULTIPLIER_COUNT_BG = 1
+R_MULTIPLIER_COUNT_FG = 2
+R_MULTIPLIER_COUNT_OA = 3
+R_MULTIPLIER_PAY_BG = 4
+R_MULTIPLIER_PAY_FG = 5
+R_MULTIPLIER_PAY_OA = 6
+R_BG_CASCADE_PAY = 7
+R_FG_CASCADE_PAY = 8
+R_SCATTER_COUNT = 9
+R_FG_FINAL_MULTIPLIER = 10
+R_SCENE = 11
+R_BG_CASCADE_DIST = 12
+R_FG_CASCADE_DIST = 13
+
+# Multiplier Line interval metrics. BG rows use one paid BG spin as the
+# denominator. FG rows group complete FG sessions by session pay interval;
+# spin-level rates use the FG spins inside those sessions as denominator.
+R_BG_INTERVAL_HITS = 14
+R_BG_INTERVAL_M1 = 15
+R_BG_INTERVAL_BIG_M1 = 16
+R_BG_INTERVAL_CASCADE_1 = 17
+R_BG_INTERVAL_CASCADE_2 = 18
+R_BG_INTERVAL_CASCADE_3 = 19
+R_BG_INTERVAL_CASCADE_4 = 20
+R_BG_INTERVAL_CASCADE_5P = 21
+R_BG_INTERVAL_MULT_SUM = 22
+R_BG_INTERVAL_MULT_MAX = 23
+R_FG_INTERVAL_SPINS = 24
+R_FG_INTERVAL_HIT_SPINS = 25
+R_FG_INTERVAL_M1_SPINS = 26
+R_FG_INTERVAL_BIG_M1_SPINS = 27
+R_FG_INTERVAL_CASCADE_1 = 28
+R_FG_INTERVAL_CASCADE_2 = 29
+R_FG_INTERVAL_CASCADE_3 = 30
+R_FG_INTERVAL_CASCADE_4 = 31
+R_FG_INTERVAL_CASCADE_5P = 32
+R_FG_INTERVAL_RETRIGGER_SESSIONS = 33
+R_FG_INTERVAL_FINAL_MULT_SUM = 34
+R_FG_INTERVAL_FINAL_MULT_MAX = 35
 
 RECORD_COLS = max(64, len(THRESHOLD_RECORD))
-RECORD_SIZE = (10, RECORD_COLS)
+RECORD_SIZE = (36, RECORD_COLS)
 
 RA_TOTAL_ROUNDS = 0
 RA_COIN_IN_SUM = 1
@@ -2061,6 +2099,8 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
     total_spins = 0
     hit_spins = 0
     retrigger_count = 0
+    m1_spin_count = 0
+    big_m1_spin_count = 0
     cascade_pay = np.zeros(5, dtype=np.float64)
     cascade_dist = np.zeros(6, dtype=np.int64)
 
@@ -2071,12 +2111,19 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
         else:
             param_set = choose_parameter_set(FREE_TRIGGER_REEL)
 
+        previous_multiplier = multiplier
+        previous_m1_count = m1_count
         win, c1_final, multiplier, m1_count, spin_cascade_pay = freegame_single_spin(
             param_set,
             multiplier,
             m1_count,
             enable_m1_multiplier,
         )
+        spin_m1_count = m1_count - previous_m1_count
+        if spin_m1_count > 0:
+            m1_spin_count += 1
+            if multiplier - previous_multiplier > 2 * spin_m1_count:
+                big_m1_spin_count += 1
         total_win += win
         total_spins += 1
         remaining_spins -= 1
@@ -2102,6 +2149,8 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
         retrigger_count,
         cascade_pay,
         cascade_dist,
+        m1_spin_count,
+        big_m1_spin_count,
     )
 
 
@@ -2137,14 +2186,26 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         fg_hit_spins = 0
         fg_retriggers = 0
         fg_final_multiplier = 1
+        fg_m1_spins = 0
+        fg_big_m1_spins = 0
         fg_triggered = 0
+        bg_final_multiplier = 1
+        bg_m1_count = 0
 
         if bet_mode == MODE_NORMALBET:
             bg_card_index = pick_card(bg_card_profile) if CARD_SYSTEM_ENABLED else -1
             bg_retry_count = 0
             while True:
                 param_set = choose_parameter_set(REEL_WEIGHT)
-                bg_win, scatter_count, _, _, _, bg_cascade_pay = single_spin(
+                (
+                    bg_win,
+                    scatter_count,
+                    bg_final_multiplier,
+                    _,
+                    _,
+                    bg_cascade_pay,
+                    bg_m1_count,
+                ) = single_spin(
                     param_set,
                     enable_m1_multiplier,
                 )
@@ -2189,6 +2250,8 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                         fg_retriggers,
                         fg_cascade_pay,
                         fg_cascade_dist,
+                        fg_m1_spins,
+                        fg_big_m1_spins,
                     ) = run_freegame_session_stats(scatter_count, enable_m1_multiplier)
                     if not needs_fg_card or is_card_match(
                         fg_card_profile,
@@ -2208,7 +2271,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
             # BF_Symbol only builds the trigger screen. Its restricted stop
             # weights must never produce a Ways payout; four SC are supplied
             # by the Feature Buy flow rather than the reel strip.
-            bf_win, _, _, _, _, _ = single_spin(3, enable_m1_multiplier)
+            bf_win, _, _, _, _, _, _ = single_spin(3, enable_m1_multiplier)
             if bf_win != 0.0:
                 raise RuntimeError("BF_Symbol produced an unexpected payout")
             bg_win = 0.0
@@ -2225,6 +2288,8 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                     fg_retriggers,
                     fg_cascade_pay,
                     fg_cascade_dist,
+                    fg_m1_spins,
+                    fg_big_m1_spins,
                 ) = run_freegame_session_stats(4, enable_m1_multiplier)
                 if not CARD_SYSTEM_ENABLED or is_card_match(
                     CARD_PROFILE_BUY_FEATURE,
@@ -2282,9 +2347,45 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         elif rounded_total_win == record_data[R_ALL, RA_MAX_SINGLE_WIN]:
             record_data[R_ALL, RA_MAX_WIN_HITS] += 1
 
-        line_index = threshold_index(win_multiplier)
-        record_data[R_MULTIPLIER_COUNT, line_index] += 1
-        record_data[R_MULTIPLIER_PAY, line_index] += rounded_total_win
+        multiplier_line_coin_in = card_coin_in
+        bg_line_index = threshold_index(bg_win / multiplier_line_coin_in if multiplier_line_coin_in else 0.0)
+        fg_line_index = threshold_index(fg_win / multiplier_line_coin_in if multiplier_line_coin_in else 0.0)
+        overall_line_index = threshold_index(total_win / multiplier_line_coin_in if multiplier_line_coin_in else 0.0)
+
+        record_data[R_MULTIPLIER_COUNT_BG, bg_line_index] += 1
+        record_data[R_MULTIPLIER_PAY_BG, bg_line_index] += int(round(bg_win))
+        record_data[R_MULTIPLIER_COUNT_OA, overall_line_index] += 1
+        record_data[R_MULTIPLIER_PAY_OA, overall_line_index] += rounded_total_win
+
+        bg_cascade_count = min(int(np.count_nonzero(bg_cascade_pay)), 5)
+        record_data[R_BG_INTERVAL_HITS, bg_line_index] += int(bg_win > 0)
+        record_data[R_BG_INTERVAL_M1, bg_line_index] += int(bg_m1_count > 0)
+        record_data[R_BG_INTERVAL_BIG_M1, bg_line_index] += int(
+            bg_m1_count > 0 and bg_final_multiplier > 2 * bg_m1_count
+        )
+        if bg_cascade_count > 0:
+            record_data[R_BG_INTERVAL_CASCADE_1 + bg_cascade_count - 1, bg_line_index] += 1
+        record_data[R_BG_INTERVAL_MULT_SUM, bg_line_index] += int(bg_final_multiplier)
+        record_data[R_BG_INTERVAL_MULT_MAX, bg_line_index] = max(
+            record_data[R_BG_INTERVAL_MULT_MAX, bg_line_index],
+            int(bg_final_multiplier),
+        )
+
+        if fg_triggered:
+            record_data[R_MULTIPLIER_COUNT_FG, fg_line_index] += 1
+            record_data[R_MULTIPLIER_PAY_FG, fg_line_index] += int(round(fg_win))
+            record_data[R_FG_INTERVAL_SPINS, fg_line_index] += fg_spins
+            record_data[R_FG_INTERVAL_HIT_SPINS, fg_line_index] += fg_hit_spins
+            record_data[R_FG_INTERVAL_M1_SPINS, fg_line_index] += fg_m1_spins
+            record_data[R_FG_INTERVAL_BIG_M1_SPINS, fg_line_index] += fg_big_m1_spins
+            for cascade_index in range(1, 6):
+                record_data[R_FG_INTERVAL_CASCADE_1 + cascade_index - 1, fg_line_index] += fg_cascade_dist[cascade_index]
+            record_data[R_FG_INTERVAL_RETRIGGER_SESSIONS, fg_line_index] += int(fg_retriggers > 0)
+            record_data[R_FG_INTERVAL_FINAL_MULT_SUM, fg_line_index] += int(fg_final_multiplier)
+            record_data[R_FG_INTERVAL_FINAL_MULT_MAX, fg_line_index] = max(
+                record_data[R_FG_INTERVAL_FINAL_MULT_MAX, fg_line_index],
+                int(fg_final_multiplier),
+            )
         for index in range(5):
             record_data[R_BG_CASCADE_PAY, index] += int(round(bg_cascade_pay[index]))
             record_data[R_FG_CASCADE_PAY, index] += int(round(fg_cascade_pay[index]))
@@ -2321,11 +2422,19 @@ def merge_record_data(chunks):
     merged = np.zeros(RECORD_SIZE, dtype=np.int64)
     global_max = max(int(chunk[R_ALL, RA_MAX_SINGLE_WIN]) for chunk in chunks)
     global_max_multiplier = max(int(chunk[R_ALL, RA_MAX_FG_MULTIPLIER]) for chunk in chunks)
+    bg_interval_max = np.max(
+        np.stack([chunk[R_BG_INTERVAL_MULT_MAX] for chunk in chunks]), axis=0
+    )
+    fg_interval_max = np.max(
+        np.stack([chunk[R_FG_INTERVAL_FINAL_MULT_MAX] for chunk in chunks]), axis=0
+    )
     for chunk in chunks:
         merged += chunk
     merged[R_ALL, RA_MAX_SINGLE_WIN] = global_max
     merged[R_ALL, RA_MAX_WIN_HITS] = sum(int(chunk[R_ALL, RA_MAX_WIN_HITS]) for chunk in chunks if int(chunk[R_ALL, RA_MAX_SINGLE_WIN]) == global_max)
     merged[R_ALL, RA_MAX_FG_MULTIPLIER] = global_max_multiplier
+    merged[R_BG_INTERVAL_MULT_MAX] = bg_interval_max
+    merged[R_FG_INTERVAL_FINAL_MULT_MAX] = fg_interval_max
     return merged
 
 
@@ -2406,46 +2515,118 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     if CARD_SYSTEM_ENABLED:
         card_profile = ("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand") if bet_mode == MODE_NORMALBET else "buy_feature"
 
+    bg_interval_count = values[R_MULTIPLIER_COUNT_BG, : len(THRESHOLD_RECORD)]
+    fg_interval_count = values[R_MULTIPLIER_COUNT_FG, : len(THRESHOLD_RECORD)]
+    overall_interval_count = values[R_MULTIPLIER_COUNT_OA, : len(THRESHOLD_RECORD)]
+    fg_interval_spins = values[R_FG_INTERVAL_SPINS, : len(THRESHOLD_RECORD)]
+
+    def divide(numerator, denominator):
+        numerator = np.asarray(numerator, dtype=np.float64)
+        denominator = np.asarray(denominator, dtype=np.float64)
+        return np.divide(
+            numerator,
+            denominator,
+            out=np.zeros_like(numerator, dtype=np.float64),
+            where=denominator > 0,
+        )
+
+    bg_m1_rate = (
+        values[R_BG_INTERVAL_M1, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum()
+        if bg_interval_count.sum()
+        else 0.0
+    )
+    bg_big_m1_rate = (
+        values[R_BG_INTERVAL_BIG_M1, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum()
+        if bg_interval_count.sum()
+        else 0.0
+    )
+    fg_m1_rate = (
+        values[R_FG_INTERVAL_M1_SPINS, : len(THRESHOLD_RECORD)].sum() / fg_interval_spins.sum()
+        if fg_interval_spins.sum()
+        else 0.0
+    )
+    fg_big_m1_rate = (
+        values[R_FG_INTERVAL_BIG_M1_SPINS, : len(THRESHOLD_RECORD)].sum() / fg_interval_spins.sum()
+        if fg_interval_spins.sum()
+        else 0.0
+    )
+    fg_retrigger_session_rate = (
+        values[R_FG_INTERVAL_RETRIGGER_SESSIONS, : len(THRESHOLD_RECORD)].sum() / fg_interval_count.sum()
+        if fg_interval_count.sum()
+        else 0.0
+    )
+    avg_bg_final_multiplier = (
+        values[R_BG_INTERVAL_MULT_SUM, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum()
+        if bg_interval_count.sum()
+        else 0.0
+    )
+    avg_fg_final_multiplier = (
+        values[R_FG_INTERVAL_FINAL_MULT_SUM, : len(THRESHOLD_RECORD)].sum() / fg_interval_count.sum()
+        if fg_interval_count.sum()
+        else 0.0
+    )
+    max_bg_final_multiplier = int(values[R_BG_INTERVAL_MULT_MAX, : len(THRESHOLD_RECORD)].max())
+    max_fg_final_multiplier = int(values[R_FG_INTERVAL_FINAL_MULT_MAX, : len(THRESHOLD_RECORD)].max())
+    multiplier_line_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
+
     base_rows = [
-        ("game_id", GAME_ID),
-        ("parsheet_id", PARSHEET_ID),
-        ("game_name", GAME_NAME),
-        ("game_name_zh", GAME_NAME_ZH),
-        ("version", CONFIG_VERSION),
-        ("config", CONFIG_FILE),
-        ("bet_mode", format_bet_mode_label(bet_mode)),
-        ("bet_multi", bet_multi),
-        ("coin_in", coin_in),
-        ("total_rounds", int(total_round)),
-        ("threads", int(threads)),
-        ("duration_sec", round(duration, 6)),
-        ("rtp_total", rtp_total),
-        ("rtp_bg", rtp_bg),
-        ("rtp_fg", rtp_fg),
-        ("hit_rate_total", hit_rate_total),
-        ("hit_rate_bg", hit_rate_bg),
-        ("hit_rate_fg_spin", hit_rate_fg),
-        ("fg_trigger_rate", fg_trigger_rate),
-        ("retrigger_per_fg", retrigger_rate),
-        ("avg_fg_spins", avg_fg_spins),
-        ("trigger_fg_bg_pay", int(trigger_fg_bg_pay)),
-        ("trigger_fg_bg_count", trigger_fg_bg_count),
-        ("trigger_fg_bg_max_pay", trigger_fg_bg_max_pay),
-        ("volatility_std", volatility_std),
-        ("max_win_x", max_win_x),
-        ("max_win_hits", int(values[R_ALL, RA_MAX_WIN_HITS])),
-        ("max_fg_multiplier", int(values[R_ALL, RA_MAX_FG_MULTIPLIER])),
-        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off"),
-        ("card_system_profile", card_profile),
-        ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0),
-        ("retry_total", retry_total),
-        ("avg_retry", retry_total / total_round if total_round else 0.0),
-        ("retry_limit_exceeded", int(values[R_ALL, RA_RETRY_LIMIT_EXCEEDED])),
-        ("retry_fail_bg_range", int(values[R_ALL, RA_RETRY_FAIL_BG_RANGE])),
-        ("retry_fail_bg_freegame", int(values[R_ALL, RA_RETRY_FAIL_BG_FREEGAME])),
-        ("retry_fail_fg", int(values[R_ALL, RA_RETRY_FAIL_FG])),
+        ("game_id", GAME_ID, ""),
+        ("parsheet_id", PARSHEET_ID, ""),
+        ("game_name", GAME_NAME, ""),
+        ("game_name_zh", GAME_NAME_ZH, ""),
+        ("version", CONFIG_VERSION, ""),
+        ("config", CONFIG_FILE, ""),
+        ("bet_mode", format_bet_mode_label(bet_mode), ""),
+        ("bet_multi", bet_multi, ""),
+        ("coin_in", coin_in, ""),
+        ("multiplier_line_basis", "normal_bet", "all intervals use Normal Bet coin-in"),
+        ("multiplier_line_coin_in", multiplier_line_coin_in, "interval divisor"),
+        ("multiplier_line_bg_basis", "BG spin", "BG rates use paid BG spins in each BG-pay interval"),
+        ("multiplier_line_fg_basis", "FG session", "FG sessions are grouped by total session pay; spin rates use spins in those sessions"),
+        ("total_rounds", int(total_round), ""),
+        ("threads", int(threads), ""),
+        ("duration_sec", round(duration, 6), ""),
+        ("", "", ""),
+        ("rtp_total", rtp_total, ""),
+        ("rtp_bg", rtp_bg, ""),
+        ("rtp_fg", rtp_fg, ""),
+        ("", "", ""),
+        ("hit_rate_total", hit_rate_total, ""),
+        ("hit_rate_bg", hit_rate_bg, ""),
+        ("hit_rate_fg", hit_rate_fg, ""),
+        ("m1_appear_rate_bg", bg_m1_rate, "BG spins containing at least one M1 / BG spins"),
+        ("m1_appear_rate_fg", fg_m1_rate, "FG spins containing at least one M1 / FG spins"),
+        ("m1_2x1_plus_rate_bg", bg_big_m1_rate, "BG spins containing at least one M1 of size 2x1 or larger / BG spins"),
+        ("m1_2x1_plus_rate_fg", fg_big_m1_rate, "FG spins containing at least one M1 of size 2x1 or larger / FG spins"),
+        ("", "", ""),
+        ("fg_trigger_rate", fg_trigger_rate, ""),
+        ("retrigger_per_fg", retrigger_rate, "events / FG session"),
+        ("retrigger_rate", fg_retrigger_session_rate, "sessions with retrigger / FG sessions"),
+        ("avg_fg_spins", avg_fg_spins, ""),
+        ("cascade_rate_basis", "exact", "Cascade 1/2/3/4 are exact counts; Cascade 5+ is capped into one group"),
+        ("avg_final_multiplier_bg", avg_bg_final_multiplier, "average final accumulated multiplier per BG spin"),
+        ("max_final_multiplier_bg", max_bg_final_multiplier, "maximum final accumulated multiplier among BG spins"),
+        ("avg_final_multiplier_fg", avg_fg_final_multiplier, "average final accumulated multiplier per FG session"),
+        ("max_final_multiplier_fg", max_fg_final_multiplier, "maximum final accumulated multiplier among FG sessions"),
+        ("trigger_fg_bg_pay", int(trigger_fg_bg_pay), ""),
+        ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
+        ("trigger_fg_bg_max_pay", trigger_fg_bg_max_pay, ""),
+        ("", "", ""),
+        ("volatility_std", volatility_std, ""),
+        ("max_win_x", max_win_x, ""),
+        ("max_win_hits", int(values[R_ALL, RA_MAX_WIN_HITS]), ""),
+        ("", "", ""),
+        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
+        ("card_system_profile", card_profile, ""),
+        ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
+        ("retry_total", retry_total, ""),
+        ("avg_retry", retry_total / total_round if total_round else 0.0, ""),
+        ("retry_limit_exceeded", int(values[R_ALL, RA_RETRY_LIMIT_EXCEEDED]), ""),
+        ("retry_fail_bg_range", int(values[R_ALL, RA_RETRY_FAIL_BG_RANGE]), ""),
+        ("retry_fail_bg_freegame", int(values[R_ALL, RA_RETRY_FAIL_BG_FREEGAME]), ""),
+        ("retry_fail_fg", int(values[R_ALL, RA_RETRY_FAIL_FG]), ""),
     ]
-    df_base = pd.DataFrame(base_rows, columns=["Index", "Value"])
+    df_base = pd.DataFrame(base_rows, columns=["Index", "Value", "Value2"])
 
     scene_rows = [
         {
@@ -2518,8 +2699,34 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     df_multiplier_line = pd.DataFrame(
         {
             "Interval": format_threshold_labels(THRESHOLD_RECORD),
-            "Count": record_data[R_MULTIPLIER_COUNT, : len(THRESHOLD_RECORD)],
-            "Pay": record_data[R_MULTIPLIER_PAY, : len(THRESHOLD_RECORD)],
+            "BG_Count": record_data[R_MULTIPLIER_COUNT_BG, : len(THRESHOLD_RECORD)],
+            "BG_Pay": record_data[R_MULTIPLIER_PAY_BG, : len(THRESHOLD_RECORD)],
+            "BG_Hit_Rate": divide(values[R_BG_INTERVAL_HITS, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_M1_Appear_Rate": divide(values[R_BG_INTERVAL_M1, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_M1_2x1Plus_Rate": divide(values[R_BG_INTERVAL_BIG_M1, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Cascade_1_Rate": divide(values[R_BG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Cascade_2_Rate": divide(values[R_BG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Cascade_3_Rate": divide(values[R_BG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Cascade_4_Rate": divide(values[R_BG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Cascade_5Plus_Rate": divide(values[R_BG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Final_Avg_Multiplier": divide(values[R_BG_INTERVAL_MULT_SUM, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Final_Max_Multiplier": record_data[R_BG_INTERVAL_MULT_MAX, : len(THRESHOLD_RECORD)],
+            "FG_Session_Count": record_data[R_MULTIPLIER_COUNT_FG, : len(THRESHOLD_RECORD)],
+            "FG_Pay": record_data[R_MULTIPLIER_PAY_FG, : len(THRESHOLD_RECORD)],
+            "FG_Spin_Count": record_data[R_FG_INTERVAL_SPINS, : len(THRESHOLD_RECORD)],
+            "FG_Hit_Rate": divide(values[R_FG_INTERVAL_HIT_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_M1_Appear_Rate": divide(values[R_FG_INTERVAL_M1_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_M1_2x1Plus_Rate": divide(values[R_FG_INTERVAL_BIG_M1_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Cascade_1_Rate": divide(values[R_FG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Cascade_2_Rate": divide(values[R_FG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Cascade_3_Rate": divide(values[R_FG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Cascade_4_Rate": divide(values[R_FG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Cascade_5Plus_Rate": divide(values[R_FG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Retrigger_Rate": divide(values[R_FG_INTERVAL_RETRIGGER_SESSIONS, : len(THRESHOLD_RECORD)], fg_interval_count),
+            "FG_Final_Avg_Multiplier": divide(values[R_FG_INTERVAL_FINAL_MULT_SUM, : len(THRESHOLD_RECORD)], fg_interval_count),
+            "FG_Final_Max_Multiplier": record_data[R_FG_INTERVAL_FINAL_MULT_MAX, : len(THRESHOLD_RECORD)],
+            "Overall_Count": record_data[R_MULTIPLIER_COUNT_OA, : len(THRESHOLD_RECORD)],
+            "Overall_Pay": record_data[R_MULTIPLIER_PAY_OA, : len(THRESHOLD_RECORD)],
         }
     )
     df_record = pd.DataFrame(record_data)
@@ -2530,13 +2737,22 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "hit_rate_total": hit_rate_total,
         "hit_rate_bg": hit_rate_bg,
         "hit_rate_fg": hit_rate_fg,
+        "m1_appear_rate_bg": bg_m1_rate,
+        "m1_appear_rate_fg": fg_m1_rate,
+        "m1_2x1_plus_rate_bg": bg_big_m1_rate,
+        "m1_2x1_plus_rate_fg": fg_big_m1_rate,
         "fg_trigger_rate": fg_trigger_rate,
         "fg_trigger_count": int(values[R_ALL, RA_FG_TRIGGER]),
         "trigger_fg_bg_pay": int(trigger_fg_bg_pay),
         "trigger_fg_bg_count": trigger_fg_bg_count,
         "trigger_fg_bg_max_pay": trigger_fg_bg_max_pay,
         "retrigger_rate": retrigger_rate,
+        "retrigger_session_rate": fg_retrigger_session_rate,
         "avg_fg_spins": avg_fg_spins,
+        "avg_final_multiplier_bg": avg_bg_final_multiplier,
+        "max_final_multiplier_bg": max_bg_final_multiplier,
+        "avg_final_multiplier_fg": avg_fg_final_multiplier,
+        "max_final_multiplier_fg": max_fg_final_multiplier,
         "volatility_std": volatility_std,
         "max_win_x": max_win_x,
         "card_system": "on" if CARD_SYSTEM_ENABLED else "off",
@@ -2640,7 +2856,7 @@ def output_report(
     card_suffix = "_card" if CARD_SYSTEM_ENABLED else ""
     filename = f"{PARSHEET_ID}_{format_version_tag(CONFIG_VERSION)}_{timestamp}_" f"betmode{bet_mode}_{format_rounds_tag(total_round)}{profile_suffix}{card_suffix}.xlsx"
     path = OUTPUT_DIR / filename
-    with pd.ExcelWriter(path) as writer:
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_scene.to_excel(writer, sheet_name="Scene Summary", index=False)
         df_cascade.to_excel(writer, sheet_name="Cascade", index=False)
@@ -2649,6 +2865,39 @@ def output_report(
         df_fg_multiplier.to_excel(writer, sheet_name="FG Final Multi", index=False)
         df_multiplier_line.to_excel(writer, sheet_name="Multiplier Line", index=False)
         df_record.to_excel(writer, sheet_name="Record Data", index=False)
+
+        base_sheet = writer.sheets["Base Info"]
+        base_sheet.freeze_panes = "A2"
+        base_sheet.auto_filter.ref = base_sheet.dimensions
+        base_sheet.column_dimensions["A"].width = 34
+        base_sheet.column_dimensions["B"].width = 22
+        base_sheet.column_dimensions["C"].width = 42
+        for row_index in range(2, len(df_base) + 2):
+            metric_name = str(base_sheet.cell(row=row_index, column=1).value or "")
+            if metric_name.startswith("rtp_") or "rate" in metric_name:
+                base_sheet.cell(row=row_index, column=2).number_format = "0.0000%"
+            elif "multiplier" in metric_name or metric_name in ("avg_fg_spins", "avg_retry"):
+                base_sheet.cell(row=row_index, column=2).number_format = "0.0000"
+
+        multiplier_sheet = writer.sheets["Multiplier Line"]
+        multiplier_sheet.freeze_panes = "B2"
+        multiplier_sheet.auto_filter.ref = multiplier_sheet.dimensions
+        multiplier_sheet.column_dimensions["A"].width = 22
+        for column_index, column_name in enumerate(df_multiplier_line.columns, start=1):
+            column_letter = multiplier_sheet.cell(row=1, column=column_index).column_letter
+            multiplier_sheet.column_dimensions[column_letter].width = max(
+                14, min(28, len(str(column_name)) + 3)
+            )
+            if column_name.endswith("_Rate"):
+                number_format = "0.0000%"
+            elif column_name.endswith("_Count") or column_name.endswith("_Pay"):
+                number_format = "#,##0"
+            elif "Multiplier" in column_name:
+                number_format = "0.0000"
+            else:
+                continue
+            for row_index in range(2, len(df_multiplier_line) + 2):
+                multiplier_sheet.cell(row=row_index, column=column_index).number_format = number_format
     return path
 
 
