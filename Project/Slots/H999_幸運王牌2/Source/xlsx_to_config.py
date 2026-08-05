@@ -219,7 +219,7 @@ def load_game_config(xlsx_path: str | Path) -> dict[str, Any]:
     return {
         "game_id": "H999",
         "parsheet_id": parsheet,
-        "name_zh": "幸運王牌",
+        "name_zh": "幸運王牌2",
         "name_en": "Lucky Ace",
         "rtp_label": rtp,
         "reel_num": 5,

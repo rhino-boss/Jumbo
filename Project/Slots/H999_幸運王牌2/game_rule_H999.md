@@ -1,10 +1,10 @@
-# 幸運王牌 (Lucky Ace) 遊戲規則說明
+# 幸運王牌2 (Lucky Ace) 遊戲規則說明
 
-> 文件版本：v0.2（草稿）
+> 文件版本：v0.3（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
 > 撰寫依據：以 `H016_幸運王牌` 現行專案為主來源完整複製；遊戲設定與數值使用 `Source/H999192.xlsx`、`Source/H999194.xlsx`；本版依企劃指示將 BG / FG 連消倍數擴充為五階
 > 編號：H999
-> 撰寫日期：2026-08-04
+> 撰寫日期：2026-08-05
 
 ---
 
@@ -12,7 +12,7 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 幸運王牌（H999） |
+| 遊戲名稱（內部代號） | 幸運王牌2（H999） |
 | Game ID | H999 |
 | PARsheet ID | H999192、H999194 |
 | 遊戲英文名 | Lucky Ace |
@@ -323,9 +323,9 @@
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
 * **主要複製來源**：`Project/Slots/H016_幸運王牌`
-* **設定與數值檔**：`Project/Slots/H999_幸運王牌/Source/H999192.xlsx`
-* **設定與數值檔**：`Project/Slots/H999_幸運王牌/Source/H999194.xlsx`
-* **Help 文案來源**：`Project/Slots/H999_幸運王牌/其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx` 的 `7.Help`
+* **設定與數值檔**：`Project/Slots/H999_幸運王牌2/Source/H999192.xlsx`
+* **設定與數值檔**：`Project/Slots/H999_幸運王牌2/Source/H999194.xlsx`
+* **Help 文案來源**：`Project/Slots/H999_幸運王牌2/其他/H5企劃書_101003_Lucky Ace_幸運王牌2.xlsx` 的 `7.Help`
 * **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
 

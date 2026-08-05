@@ -1,4 +1,4 @@
-"""H999 幸運王牌 simulator.
+"""H999 幸運王牌2 simulator.
 
 The runner, environment settings, batch workflow and Excel report layout follow
 H015.  The game engine follows 101003 and reads the H999-derived H999 configs:
@@ -115,9 +115,9 @@ def resolve_base_dir() -> Path:
     for parent in (cwd, *cwd.parents):
         candidates.extend(
             [
-                parent / "Project" / "Slots" / "H999_幸運王牌",
-                parent / "Project_AI" / "Slots" / "H999_幸運王牌",
-                parent / "Slots" / "H999_幸運王牌",
+                parent / "Project" / "Slots" / "H999_幸運王牌2",
+                parent / "Project_AI" / "Slots" / "H999_幸運王牌2",
+                parent / "Slots" / "H999_幸運王牌2",
             ]
         )
 
@@ -134,7 +134,7 @@ def resolve_base_dir() -> Path:
             return candidate
 
     locations = "\n  - ".join(str(path / CONFIG_FILE) for path in checked)
-    raise FileNotFoundError(f"Cannot locate a valid H999 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H999_BASE_DIR to the H999_幸運王牌 folder when running from another workspace.")
+    raise FileNotFoundError(f"Cannot locate a valid H999 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H999_BASE_DIR to the H999_幸運王牌2 folder when running from another workspace.")
 
 
 BASE_DIR = resolve_base_dir()
@@ -154,7 +154,7 @@ THREADS = max(1, int(os.environ.get("H999_THREADS", THREADS)))
 CFG = _load_config(BASE_DIR / CONFIG_FILE)
 GAME_ID = str(CFG.get("game_id", "H999"))
 PARSHEET_ID = str(CFG.get("parsheet_id", "H999192"))
-GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
+GAME_NAME = str(CFG.get("name_zh", "幸運王牌2"))
 SYMBOL_STR = {int(k): v for k, v in CFG["symbol_names"].items()}
 
 
@@ -639,7 +639,7 @@ def print_symbol_ratio_tables(result: dict[str, Any]) -> None:
 
 def print_console(result: dict[str, Any]) -> None:
     if SHOW_CONSOLE_SUMMARY:
-        print("\n=== H999 幸運王牌 Simulation ===")
+        print("\n=== H999 幸運王牌2 Simulation ===")
         for key, value in summary_rows(result):
             if key.startswith("rtp_") or key.endswith("_rate"):
                 print(f"{key:22s}: {float(value) * 100:.6f}%")
@@ -735,7 +735,7 @@ def run_all_combinations() -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="H999 幸運王牌 simulator (H015 runner structure)")
+    parser = argparse.ArgumentParser(description="H999 幸運王牌2 simulator (H015 runner structure)")
     parser.add_argument("rounds", nargs="?", type=int)
     parser.add_argument("bet_mode", nargs="?", type=int, choices=SUPPORTED_BET_MODES)
     parser.add_argument("--bet-multi", type=int, default=BET_MULTI)

@@ -1,9 +1,9 @@
-# H999 幸運王牌 — Index UI/UX 與動畫 QA
+# H999 幸運王牌2 — Index UI/UX 與動畫 QA
 
 ## 比對基準
 
 - Source of truth：`Project/Slots/H015_賞金列車/index.html`
-- Implementation：`Project/Slots/H999_幸運王牌/index.html`（runtime 已內嵌）
+- Implementation：`Project/Slots/H999_幸運王牌2/index.html`（runtime 已內嵌）
 - 完整畫面比對：`QA/h015-h999-comparison.png`
 - H015 基準截圖：`QA/h015-reference.png`
 - H999 實作截圖：`QA/h999-images.png`（已套用專屬圖片）

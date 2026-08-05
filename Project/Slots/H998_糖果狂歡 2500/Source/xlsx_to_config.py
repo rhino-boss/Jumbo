@@ -502,8 +502,8 @@ def validate_config(config: dict[str, Any], source_path: Path) -> None:
         raise ValueError(f"unexpected pay awards: {config['pay_awards']}")
     if config["symbol_id"] != list(range(len(config["symbol_id"]))):
         raise ValueError("symbol IDs are not contiguous")
-    if len(config["value_multiplier"]) != 14:
-        raise ValueError("expected 14 C2 multiplier values")
+    if len(config["value_multiplier"]) != 15:
+        raise ValueError("expected 15 C2 multiplier values")
     for key in (
         "weight_multiplier_fg_low",
         "weight_multiplier_fg_high",

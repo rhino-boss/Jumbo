@@ -51219,7 +51219,8 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "weights": [
         9500,
@@ -51235,6 +51236,7 @@ window.H998_BOX_DATA = {
         700,
         900,
         100,
+        1,
         1
       ]
     },
@@ -51253,7 +51255,8 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "weights": [
         9500,
@@ -51269,6 +51272,7 @@ window.H998_BOX_DATA = {
         700,
         900,
         100,
+        1,
         1
       ]
     },
@@ -51287,10 +51291,12 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "weights": [
         1,
+        0,
         0,
         0,
         0,
@@ -51321,10 +51327,12 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "weights": [
         1,
+        0,
         0,
         0,
         0,
@@ -51355,7 +51363,8 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "weights": [
         0,
@@ -51371,6 +51380,7 @@ window.H998_BOX_DATA = {
         1010,
         254,
         44,
+        38,
         38
       ]
     },
@@ -51389,7 +51399,8 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "weights": [
         0,
@@ -51405,6 +51416,7 @@ window.H998_BOX_DATA = {
         1010,
         254,
         44,
+        38,
         38
       ]
     }
@@ -51423,7 +51435,8 @@ window.H998_BOX_DATA = {
     25,
     50,
     100,
-    1000
+    1000,
+    2500
   ],
   "weight_table_normal_bet": [
     1,
@@ -51449,6 +51462,7 @@ window.H998_BOX_DATA = {
     700,
     900,
     100,
+    1,
     1
   ],
   "weight_multiplier_fg_high": [
@@ -51465,10 +51479,12 @@ window.H998_BOX_DATA = {
     700,
     900,
     100,
+    1,
     1
   ],
   "weight_multiplier_fb_low": [
     1,
+    0,
     0,
     0,
     0,
@@ -51497,6 +51513,7 @@ window.H998_BOX_DATA = {
     0,
     0,
     0,
+    0,
     0
   ],
   "weight_multiplier_sb_low": [
@@ -51513,6 +51530,7 @@ window.H998_BOX_DATA = {
     1010,
     254,
     44,
+    38,
     38
   ],
   "weight_multiplier_sb_high": [
@@ -51529,6 +51547,7 @@ window.H998_BOX_DATA = {
     1010,
     254,
     44,
+    38,
     38
   ],
   "parameter_blocks": {
@@ -51661,7 +51680,8 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "multiplier_sources": [
         "Free Game Symbol (1)",
@@ -51686,6 +51706,7 @@ window.H998_BOX_DATA = {
           700,
           900,
           100,
+          1,
           1
         ],
         "Free Game Symbol (2)": [
@@ -51702,10 +51723,12 @@ window.H998_BOX_DATA = {
           700,
           900,
           100,
+          1,
           1
         ],
         "Buy Feature FG Symbol (1)": [
           1,
+          0,
           0,
           0,
           0,
@@ -51734,6 +51757,7 @@ window.H998_BOX_DATA = {
           0,
           0,
           0,
+          0,
           0
         ],
         "Super Feature FG Symbol (1)": [
@@ -51750,6 +51774,7 @@ window.H998_BOX_DATA = {
           1010,
           254,
           44,
+          38,
           38
         ],
         "Super Feature FG Symbol (2)": [
@@ -51766,6 +51791,7 @@ window.H998_BOX_DATA = {
           1010,
           254,
           44,
+          38,
           38
         ]
       }
@@ -51899,7 +51925,8 @@ window.H998_BOX_DATA = {
         25,
         50,
         100,
-        1000
+        1000,
+        2500
       ],
       "multiplier_sources": [
         "Free Game Symbol (1)",
@@ -51924,6 +51951,7 @@ window.H998_BOX_DATA = {
           1400,
           1800,
           200,
+          1,
           1
         ],
         "Free Game Symbol (2)": [
@@ -51940,10 +51968,12 @@ window.H998_BOX_DATA = {
           2800,
           3600,
           400,
+          1,
           1
         ],
         "Buy Feature FG Symbol (1)": [
           1,
+          0,
           0,
           0,
           0,
@@ -51972,6 +52002,7 @@ window.H998_BOX_DATA = {
           0,
           0,
           0,
+          0,
           0
         ],
         "Super Feature FG Symbol (1)": [
@@ -51988,6 +52019,7 @@ window.H998_BOX_DATA = {
           1,
           1,
           1,
+          1,
           1
         ],
         "Super Feature FG Symbol (2)": [
@@ -52000,6 +52032,7 @@ window.H998_BOX_DATA = {
           0,
           0,
           0,
+          1,
           1,
           1,
           1,

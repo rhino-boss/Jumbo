@@ -2233,6 +2233,15 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-05：Overview 新增 FG 觸發局最大 BG 得分</h4>
+          <ul>
+            <li>Simulator 報表新增 trigger_fg_bg_max_pay，記錄成功觸發 FG 的單把最大 BG Pay。</li>
+            <li>數值包含 bet_multi，但不包含後續 FG Session 得分。</li>
+            <li>未修改 RTP 結算、config、xlsx 來源、遊戲權重及版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-04：Overview 新增 FG 觸發局 BG 得分</h4>
           <ul>
             <li>Simulator 報表比照 H026 新增 trigger_fg_bg_pay 與 trigger_fg_bg_count。</li>
