@@ -2233,6 +2233,17 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-05：FG 全面使用 Table 1，M1 放大 5 倍</h4>
+          <ul>
+            <li>FG 初始與 Retrigger 均改為只使用 FG_Symbol；FreeReelWeight、FreeTriggerReel 為 [15000,0,0]。</li>
+            <li>FG1 的 M1／Golden M1 顆數由 [3,5,5,4,4,4,4] 改為 [15,25,25,20,20,20,20]，每輪維持 200 格。</li>
+            <li>1,000,000 段 FG-only：平均 430.5531x、最大 22,561.35x；10,000x+ 42 次，20,000x+ 1 次。</li>
+            <li>最終平均／最大累積倍率為 x67.7196／x346，Retrigger Session Rate 為 3.6822%。</li>
+            <li>版本升為 2.0.0.23，並同步原 XLSX 與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-05：擴充 Base Info 與 Multiplier Line 區間指標</h4>
           <ul>
             <li>Base Info 依 H026 格式補入 BG／FG 區間統計口徑與新增指標。</li>

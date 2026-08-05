@@ -35,7 +35,7 @@ SC（ID 1）不配置於任何 BG／FG 初始輪帶；初始停輪後的顆數�
 
 `BF_Symbol` 讀入 `BaseGame*3`。除 Symbol Weight 外均與 `BaseGame*1` 相同；BF 權重保留多組不形成 Ways 的 RNG，只將可能得分的停輪位置設為 0，並只在 Feature Buy 觸發畫面使用。
 
-`FG_Symbol (2)` 對應初始 FG 的 40% 參數組；MY／Golden MY 權重皆為 0，M1／Golden M1 相對 FG Table 1 的 R1～R7 顆數差為 `[0,+1,+1,+2,+2,0,-2]`，R4／R5 使用調整後的 MegaWay 權重。`FreeTriggerReel` 維持只選 FG Table 1。
+目前 `Parameter!C11:C13`、`C18:C20` 均為 `[15000,0,0]`，FG 初始與 Retrigger 全部只使用 `FG_Symbol`。`FG_Symbol` 的 M1／Golden M1 合計顆數 R1～R7 為 `[15,25,25,20,20,20,20]`；`FG_Symbol (2)`、`FG_Symbol (3)` 仍保留，但目前不會被選用。
 
 ## 其他位置
 

@@ -41,7 +41,7 @@ SC（ID 1）不配置於 BG／FG 初始輪帶；各參數組 `B67:C74` 的 `*Pos
 
 `BF_Symbol` 對應 `BaseGame*3`，其 Symbol、MegaWay、MY、PostC1 與 Drop1～Drop5 複製 `BG_Symbol`。Symbol Weight 保留多組安全 RNG，只將可能造成 Ways 的停輪位置設為 0；目前 R1～R7 的非零 RNG 數量為 `[48,43,200,200,200,200,96]`。一般 BG 的 `ReelWeight` 仍只選 Table 1／2，BF 僅供 Feature Buy 強制補入 4 顆 SC 的觸發畫面使用。
 
-`FG_Symbol (2)` 為初始 FG 的 40% 低連線參數組：不含 MY／Golden MY；M1／Golden M1 相對 FG Table 1 的 R1～R7 顆數差為 `[0,+1,+1,+2,+2,0,-2]`，實際顆數為 `[3,6,6,6,6,4,2]`。R4／R5 的大型符號版型權重依指定倍率提高，Retrigger 不使用此表。
+目前 `FreeReelWeight`、`FreeTriggerReel` 均為 `[15000,0,0]`，FG 初始與 Retrigger 全部只使用 `FG_Symbol`。`FG_Symbol` 的 M1／Golden M1 合計顆數 R1～R7 為 `[15,25,25,20,20,20,20]`；`FG_Symbol (2)`、`FG_Symbol (3)` 仍保留在工作簿，但目前選表權重為 0。
 
 ## 其他回填位置
 
