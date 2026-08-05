@@ -348,6 +348,113 @@ def force_nearest_symbol_total(
     return result
 
 
+def base_symbol_id(symbol_id: int) -> int:
+    return symbol_id - 11 if 13 <= symbol_id <= 23 else symbol_id
+
+
+def build_featurebuy_no_win_weights(reels: list[list[int]]) -> list[list[int]]:
+    """Keep varied BF stops while guaranteeing no R1-R2 Ways match."""
+    if len(reels) != 7 or any(not reel for reel in reels):
+        raise ValueError("BF reels must contain seven non-empty reels")
+
+    forbidden = {0, 24, 25}
+    pay_symbols = tuple(range(2, 13))
+    r1_windows = []
+    r2_windows = []
+    for reel, output in ((reels[0], r1_windows), (reels[1], r2_windows)):
+        for stop in range(len(reel)):
+            symbols = {
+                base_symbol_id(reel[(stop + offset) % len(reel)])
+                for offset in range(5)
+            }
+            if not symbols & forbidden:
+                output.append((stop, symbols))
+    extra_symbols = [base_symbol_id(symbol_id) for symbol_id in reels[6]]
+
+    best = None
+    for mask in range(1, (1 << len(pay_symbols)) - 1):
+        r1_allowed_symbols = {
+            symbol_id for bit, symbol_id in enumerate(pay_symbols) if mask & (1 << bit)
+        }
+        r2_allowed_symbols = set(pay_symbols) - r1_allowed_symbols
+        r1_stops = [stop for stop, symbols in r1_windows if symbols <= r1_allowed_symbols]
+        r2_stops = [stop for stop, symbols in r2_windows if symbols <= r2_allowed_symbols]
+        extra_stops = [
+            stop for stop, symbol_id in enumerate(extra_symbols)
+            if symbol_id in r2_allowed_symbols
+        ]
+        if not r1_stops or not r2_stops or not extra_stops:
+            continue
+        score = (
+            len(r1_stops) * len(r2_stops) * len(extra_stops),
+            len(r1_stops) + len(r2_stops) + len(extra_stops),
+        )
+        if best is None or score > best[0]:
+            best = (score, r1_stops, r2_stops, extra_stops)
+
+    if best is None:
+        raise ValueError("Unable to find varied BF stops that guarantee zero Ways wins")
+
+    allowed_stops = [
+        best[1],
+        best[2],
+        list(range(len(reels[2]))),
+        list(range(len(reels[3]))),
+        list(range(len(reels[4]))),
+        list(range(len(reels[5]))),
+        best[3],
+    ]
+    weights = []
+    for reel, stops in zip(reels, allowed_stops):
+        row = [0] * len(reel)
+        for stop in stops:
+            row[stop] = 1
+        weights.append(row)
+    return weights
+
+
+def build_fg2_reel(reel: list[int], seed: int, m1_delta: int = 0) -> list[int]:
+    """Remove Mystery symbols and apply an exact combined M1 count delta."""
+    counts = [reel.count(symbol_id) for symbol_id in range(SYMBOL_COUNT)]
+    removed_mystery = counts[24] + counts[25]
+    counts[24] = 0
+    counts[25] = 0
+    for _ in range(removed_mystery):
+        donor = max(range(2, 13), key=lambda symbol_id: (counts[symbol_id], -symbol_id))
+        counts[donor] += 1
+    for _ in range(max(0, m1_delta)):
+        donors = [
+            symbol_id for symbol_id in range(SYMBOL_COUNT)
+            if symbol_id not in (0, 1, 2, 13, 24, 25) and counts[symbol_id] > 1
+        ]
+        if not donors:
+            raise ValueError("FG2 reel has no donor symbol available for the M1 increase")
+        donor = max(donors, key=lambda symbol_id: (counts[symbol_id], -symbol_id))
+        counts[donor] -= 1
+        counts[2] += 1
+    for _ in range(max(0, -m1_delta)):
+        m1_donors = [symbol_id for symbol_id in (2, 13) if counts[symbol_id] > 0]
+        if not m1_donors:
+            raise ValueError("FG2 reel has insufficient M1 symbols for the requested decrease")
+        donor = max(m1_donors, key=lambda symbol_id: (counts[symbol_id], -symbol_id))
+        recipients = [
+            symbol_id for symbol_id in range(SYMBOL_COUNT)
+            if symbol_id not in (0, 1, 2, 13, 24, 25)
+        ]
+        recipient = max(recipients, key=lambda symbol_id: (counts[symbol_id], -symbol_id))
+        counts[donor] -= 1
+        counts[recipient] += 1
+    return shuffled_reel(counts, seed)
+
+
+def remove_mystery_drop_weights(weights: list[int]) -> list[int]:
+    result = list(weights)
+    total = int(round(sum(result)))
+    result[24] = 0
+    result[25] = 0
+    return largest_remainder(result, total)
+
+
 def read_extra_reel_ratios(wb, sheet: str, mode: str) -> list[float]:
     ws = wb[sheet]
     rate_column = 3 if mode == "BG" else 4
@@ -770,7 +877,7 @@ def update_config(
                         for symbol_id in range(SYMBOL_COUNT)
                     ]
                     group_initial_targets.append(
-                        boost_absolute_share(copied_distribution, (2, 13), 2.0)
+                        boost_absolute_share(copied_distribution, (2, 13), 4.0)
                     )
             if mode == "BG" and group_index == 2:
                 drop_weights = [row[:] for row in base_drop_weights]
@@ -843,6 +950,92 @@ def update_config(
     config["BaseGameMegaWay2"] = [row[:] for row in config["BaseGameMegaWay1"]]
     config["BaseGameMY2"] = list(config["BaseGameMY1"])
     config["ReelWeight"] = [6000, 4000]
+
+    # FG tables 2/3 are exact copies of FG table 1 for every mathematical field.
+    for group_index in (2, 3):
+        config[f"FreeGameSymbol{group_index}"] = [
+            row[:] for row in config["FreeGameSymbol1"]
+        ]
+        config[f"FreeGameSymbolWeight{group_index}"] = [
+            row[:] for row in config["FreeGameSymbolWeight1"]
+        ]
+        config[f"FreeGameMegaWay{group_index}"] = [
+            row[:] for row in config["FreeGameMegaWay1"]
+        ]
+        config[f"FreeGameMY{group_index}"] = list(config["FreeGameMY1"])
+        config[f"FreeGame{group_index}PostC1"] = [
+            row[:] for row in config["FreeGame1PostC1"]
+        ]
+        for combo in range(1, 6):
+            config[f"FreeGame{group_index}Drop{combo}"] = [
+                row[:] for row in config[f"FreeGame1Drop{combo}"]
+            ]
+
+    # FG table 2 is the lower-hit table: selected in 40% of initial FG spins,
+    # contains no Mystery, applies reel-specific M1 deltas, and favors larger
+    # symbols on R4/R5. Retrigger selection remains on table 1.
+    fg2_m1_deltas = [0, 1, 1, 2, 2, 0, -2]
+    fg2_source_m1 = [
+        sum(symbol_id in (2, 13) for symbol_id in reel)
+        for reel in config["FreeGameSymbol1"]
+    ]
+    config["FreeGameSymbol2"] = [
+        build_fg2_reel(reel, seed + 52_000 + reel_index, fg2_m1_deltas[reel_index])
+        for reel_index, reel in enumerate(config["FreeGameSymbol1"])
+    ]
+    config["FreeGameSymbolWeight2"] = [
+        [1] * len(reel) for reel in config["FreeGameSymbol2"]
+    ]
+    config["FreeGameMY2"] = [0] * len(config["FreeGameMY1"])
+    for combo in range(1, 6):
+        config[f"FreeGame2Drop{combo}"] = [
+            remove_mystery_drop_weights(row)
+            for row in config[f"FreeGame1Drop{combo}"]
+        ]
+    config["FreeGameMegaWay2"] = [
+        row[:] for row in config["FreeGameMegaWay1"]
+    ]
+    for reel_index in (3, 4):
+        config["FreeGameMegaWay2"][reel_index] = [
+            value * (2 if pattern_index < 4 else 1.5 if pattern_index < 10 else 1)
+            for pattern_index, value in enumerate(config["FreeGameMegaWay1"][reel_index])
+        ]
+    config["FreeReelWeight"] = [9000, 6000, 0]
+
+    for reel_index, reel in enumerate(config["FreeGameSymbol2"]):
+        actual_m1 = sum(symbol_id in (2, 13) for symbol_id in reel)
+        if (
+            len(reel) != reel_length
+            or actual_m1 != fg2_source_m1[reel_index] + fg2_m1_deltas[reel_index]
+        ):
+            raise ValueError(
+                f"FG2 R{reel_index + 1}: length/M1 mismatch "
+                f"({len(reel)}, {actual_m1})"
+            )
+        if any(symbol_id in (24, 25) for symbol_id in reel):
+            raise ValueError(f"FG2 R{reel_index + 1}: Mystery remains on reel")
+    if any(config["FreeGameMY2"]):
+        raise ValueError("FG2 MY weights must all be zero")
+    for combo in range(1, 6):
+        for reel_index, row in enumerate(config[f"FreeGame2Drop{combo}"]):
+            if row[24] != 0 or row[25] != 0 or sum(row) != DROP_WEIGHT_TOTAL:
+                raise ValueError(
+                    f"FG2 Drop{combo} R{reel_index + 1}: invalid Mystery/total weights"
+                )
+
+    # BF uses BG table 1 data, with stop weights restricted to a guaranteed
+    # no-win screen. Feature Buy supplies the four trigger Scatters separately.
+    config["BaseGameSymbol3"] = [row[:] for row in config["BaseGameSymbol1"]]
+    config["BaseGameSymbolWeight3"] = build_featurebuy_no_win_weights(
+        config["BaseGameSymbol3"]
+    )
+    config["BaseGameMegaWay3"] = [row[:] for row in config["BaseGameMegaWay1"]]
+    config["BaseGameMY3"] = list(config["BaseGameMY1"])
+    config["BaseGame3PostC1"] = [row[:] for row in config["BaseGame1PostC1"]]
+    for combo in range(1, 6):
+        config[f"BaseGame3Drop{combo}"] = [
+            row[:] for row in config[f"BaseGame1Drop{combo}"]
+        ]
 
     if not keep_version:
         config["excel_version"] = bump_version(str(config["excel_version"]))

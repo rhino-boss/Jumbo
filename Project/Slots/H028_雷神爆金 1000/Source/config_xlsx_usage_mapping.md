@@ -1,6 +1,6 @@
 # H028 config → xlsx 回填對照
 
-`config_to_xlsx.py` 將 `config_92A.js` 回填至目前的 H028 工作簿配置。`update_xlsx.bat` 會直接覆寫所選 xlsx，不再建立另一份 xlsx；五張 Symbol 表的 Symbol、Symbol ID、Symbol Weight 均同步至第 200 格。
+`config_to_xlsx.py` 將 `config_92A.js` 回填至目前的 H028 工作簿配置。`update_xlsx.bat` 會直接覆寫所選 xlsx，不再建立另一份 xlsx；六張 Symbol 表的 Symbol、Symbol ID、Symbol Weight 均同步至第 200 格。
 
 `update_xlsx.bat` 預設來源：
 
@@ -13,10 +13,11 @@
 | config 參數組 | xlsx 工作表 | 輪帶範圍／長度 |
 | --- | --- | --- |
 | `BaseGame*1` | `BG_Symbol` | `M4:S203`、200 格 |
-| `BaseGame*2` | `BG_Symbol (2)` | `M4:S124`、121 格 |
+| `BaseGame*2` | `BG_Symbol (2)` | `M4:S203`、200 格 |
+| `BaseGame*3` | `BF_Symbol` | `M4:S203`、200 格 |
 | `FreeGame*1` | `FG_Symbol` | `M4:S203`、200 格 |
-| `FreeGame*2` | `FG_Symbol (2)` | `M4:S124`、121 格 |
-| `FreeGame*3` | `FG_Symbol (3)` | `M4:S124`、121 格 |
+| `FreeGame*2` | `FG_Symbol (2)` | `M4:S203`、200 格 |
+| `FreeGame*3` | `FG_Symbol (3)` | `M4:S203`、200 格 |
 
 ## 每張 Symbol 工作表的共用回填位置
 
@@ -24,7 +25,7 @@
 | --- | --- | --- |
 | `BaseGameSymbol1`／`BaseGameSymbolWeight1` | `BG_Symbol!M4:S203`／`AC4:AI203` | 7 輪 × 200 格 |
 | `FreeGameSymbol1`／`FreeGameSymbolWeight1` | `FG_Symbol!M4:S203`／`AC4:AI203` | 7 輪 × 200 格 |
-| 其他未啟用的 `*Symbol*`／`*SymbolWeight*` | 各自工作表的 `M4:S124`／`AC4:AI124` | 7 輪 × 121 格 |
+| 其他 `*Symbol*`／`*SymbolWeight*` | 各自工作表的 `M4:S203`／`AC4:AI203` | 7 輪 × 200 格 |
 | `*MegaWay*` | `C33:H47` | 6 輪 × 15 種大符號組合權重 |
 | `*MY*` | `C51:C63` | 13 個 Mystery 權重 |
 | `*PostC1` | `B67:C74` | 8 個 Scatter 數量與對應權重 |
@@ -37,6 +38,10 @@
 啟用中的 `BaseGameSymbol1`／`FreeGameSymbol1` 會先依工作表 `A4:J29` 的 ID 對照轉成符號名稱，再回填到真正的輪帶區 `M4:S203`。`U:AA` 的 Symbol ID／公式區不再寫入固定值；工具會恢復該區公式、移除失效的 `calcChain.xml` 關聯，並要求 Excel 開啟時完整重算。工具使用暫存檔完成原子置換，但不另外保留備份，因此執行前必須關閉 Excel，並確認所選檔案正確。
 
 SC（ID 1）不配置於 BG／FG 初始輪帶；各參數組 `B67:C74` 的 `*PostC1` 負責初始停輪後的 SC 顆數，`Drop1～Drop5` 則依 Lucky Neko `SymbolOcc_Drop`／`Extra Reel_Drop` 的 SC 比例回填。其餘符號沿用相同競品分布。
+
+`BF_Symbol` 對應 `BaseGame*3`，其 Symbol、MegaWay、MY、PostC1 與 Drop1～Drop5 複製 `BG_Symbol`。Symbol Weight 保留多組安全 RNG，只將可能造成 Ways 的停輪位置設為 0；目前 R1～R7 的非零 RNG 數量為 `[48,43,200,200,200,200,96]`。一般 BG 的 `ReelWeight` 仍只選 Table 1／2，BF 僅供 Feature Buy 強制補入 4 顆 SC 的觸發畫面使用。
+
+`FG_Symbol (2)` 為初始 FG 的 40% 低連線參數組：不含 MY／Golden MY；M1／Golden M1 相對 FG Table 1 的 R1～R7 顆數差為 `[0,+1,+1,+2,+2,0,-2]`，實際顆數為 `[3,6,6,6,6,4,2]`。R4／R5 的大型符號版型權重依指定倍率提高，Retrigger 不使用此表。
 
 ## 其他回填位置
 

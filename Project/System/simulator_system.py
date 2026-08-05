@@ -63,7 +63,7 @@ BASE_GAME_DATA = {
     "彩罐熱舞": SCRIPT_DIR / "Data" / "彩罐熱舞_基礎遊戲_1000人_1000轉.csv.gz",
 }
 DEFAULT_BASE_GAME = "超級寶石"
-SYSTEM_VERSION = "b07c.4"
+SYSTEM_VERSION = "b07c.7"
 
 SUMMARY_FIELD_INFO = {
     "game": ("遊戲模型", "模擬器使用的遊戲資料模型。"),
@@ -91,6 +91,7 @@ SUMMARY_FIELD_INFO = {
     "platform_rtp_cap_cancel_count": ("平台 RTP 上限取消次數", "因預估平台 RTP 超過 97% 而取消的次數。"),
     "oldhand_budget_cancel_count": ("老手增量上限取消次數", "因老手 C RTP 增量將超過 1 個百分點而取消的次數。"),
     "personal_pool_cancel_count": ("個人 Pool 取消次數", "玩家個人累積 RTP 達 200% 以上而不救援的次數。"),
+    "upper_limit_cancel_count": ("全體／個人上限取消合計", "因平台 RTP 上限或個人累積 RTP 上限而無法救援的合計次數。"),
     "low_reward_short_rtp_threshold_%": ("15×短期 RTP 門檻", "個人累積 RTP 為 97%～200% 時，短期 RTP 必須低於此門檻才可取得 15×。"),
     "low_reward_short_threshold_cancel_count": ("15×短期門檻取消次數", "階段條件符合且個人累積 RTP 為 97%～200%，但短期 RTP 未低於 30% 而取消的次數。"),
     "scheduled_checkpoint_count": ("預定判定點總數", "所有玩家原先安排的判定點總數。"),
@@ -215,6 +216,17 @@ REPORT_COLUMN_NAMES = {
     "Base_Game_X": "基礎遊戲倍率",
     "Game_X_With_Jackpot": "含彩金遊戲倍率",
     "Base_Game_RTP_%": "基礎遊戲RTP(%)",
+    "Limit_Level": "統計層級",
+    "Limit_Type": "上限類型",
+    "Cancel_Reason": "取消原因",
+    "Share_Within_Limit_%": "占同類上限取消比例(%)",
+    "Avg_Personal_RTP_%": "平均個人Pool RTP(%)",
+    "Avg_Platform_RTP_Before_%": "平均判定前平台RTP(%)",
+    "Avg_Projected_Platform_RTP_%": "平均救援後預估平台RTP(%)",
+    "Avg_Short_RTP_%": "平均短期RTP(%)",
+    "Avg_Mid_RTP_%": "平均中期RTP(%)",
+    "Avg_Long_RTP_%": "平均長期RTP(%)",
+    "Scenario_Summary": "情境概述",
 }
 
 RULE_NAMES_ZH = {
@@ -271,10 +283,10 @@ REWARD_LABELS = ("15×", "30×")
 
 JACKPOT_WEIGHT_DENOMINATOR = 10_000_000_000
 JACKPOT_CONFIG = (
-    ("JP4", 3_120, 2_000),
-    ("JP3", 12_000, 10_000),
-    ("JP2", 120_000_000, 20_000_000),
-    ("JP1", 600_000_000, 7_923_100),
+    ("JP1", 130, 76_923_076.92),
+    ("JP2", 500, 20_000_000),
+    ("JP3", 1_600_000, 5_000),
+    ("JP4", 12_000_000, 1_000),
 )
 
 
@@ -287,6 +299,7 @@ def _jackpot_from_draw(draw: int) -> tuple[str, float]:
         if draw < cumulative_weight:
             return jackpot, award_cents / 100.0
     return "", 0.0
+
 
 STAGE_MID_RTP = {
     "A": 0.60,
@@ -917,14 +930,8 @@ def _run_simulation_legacy(args: argparse.Namespace, adapter: GameAdapter) -> di
             reporting_block = reporting_block_by_spin.get(spin_no)
             if reporting_block is not None:
                 block_stage, reporting_block_id, display_range = reporting_block
-                mechanism_triggered = (
-                    newbie_d_decision is not None
-                    and newbie_d_decision.triggered
-                ) or (decision is not None and decision.triggered)
-                if (
-                    (actual.triggered_fg or mechanism_triggered)
-                    and reporting_block_id not in actual_fg_exit_blocks
-                ):
+                mechanism_triggered = (newbie_d_decision is not None and newbie_d_decision.triggered) or (decision is not None and decision.triggered)
+                if (actual.triggered_fg or mechanism_triggered) and reporting_block_id not in actual_fg_exit_blocks:
                     actual_fg_exit_blocks.add(reporting_block_id)
                     fg_exit_rows.append(
                         {
@@ -1167,19 +1174,9 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
 
     reporting_blocks = _reporting_blocks(args.spins)
     checkpoint_windows = _checkpoint_windows(args.spins)
-    checkpoint_by_id = {
-        window_id: (stage, start, end, display_range)
-        for stage, start, end, window_id, display_range in checkpoint_windows
-    }
-    block_by_end = {
-        end: (stage, start, block_id, display_range)
-        for stage, start, end, block_id, display_range in reporting_blocks
-    }
-    reporting_block_by_spin = {
-        spin: (stage, start, end, block_id, display_range)
-        for stage, start, end, block_id, display_range in reporting_blocks
-        for spin in range(start, end + 1)
-    }
+    checkpoint_by_id = {window_id: (stage, start, end, display_range) for stage, start, end, window_id, display_range in checkpoint_windows}
+    block_by_end = {end: (stage, start, block_id, display_range) for stage, start, end, block_id, display_range in reporting_blocks}
+    reporting_block_by_spin = {spin: (stage, start, end, block_id, display_range) for stage, start, end, block_id, display_range in reporting_blocks for spin in range(start, end + 1)}
 
     states: dict[int, dict[str, Any]] = {}
     for player_id in range(1, args.players + 1):
@@ -1467,13 +1464,8 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
             reporting_block = reporting_block_by_spin.get(spin_no)
             if reporting_block is not None:
                 block_stage, _, _, reporting_block_id, display_range = reporting_block
-                mechanism_triggered = (
-                    newbie_d_decision is not None and newbie_d_decision.triggered
-                ) or actual_rescue_triggered
-                if (
-                    (actual.triggered_fg or mechanism_triggered)
-                    and reporting_block_id not in state["actual_exit_blocks"]
-                ):
+                mechanism_triggered = (newbie_d_decision is not None and newbie_d_decision.triggered) or actual_rescue_triggered
+                if (actual.triggered_fg or mechanism_triggered) and reporting_block_id not in state["actual_exit_blocks"]:
                     state["actual_exit_blocks"].add(reporting_block_id)
                     fg_exit_rows.append(
                         {
@@ -1525,9 +1517,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
                     }
                 )
 
-        if args.progress_every > 0 and (
-            spin_no % args.progress_every == 0 or spin_no == args.spins
-        ):
+        if args.progress_every > 0 and (spin_no % args.progress_every == 0 or spin_no == args.spins):
             print(f"進度：第 {spin_no:,}/{args.spins:,} 轉", flush=True)
 
     players: list[dict[str, Any]] = []
@@ -1555,10 +1545,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
 
     total_paid_spins = args.players * args.spins
     jackpot_weight_total = sum(weight for _, weight, _ in JACKPOT_CONFIG)
-    jackpot_theoretical_rtp = sum(
-        weight / JACKPOT_WEIGHT_DENOMINATOR * (award_cents / 100.0)
-        for _, weight, award_cents in JACKPOT_CONFIG
-    )
+    jackpot_theoretical_rtp = sum(weight / JACKPOT_WEIGHT_DENOMINATOR * (award_cents / 100.0) for _, weight, award_cents in JACKPOT_CONFIG)
     jackpot_stat_rows = []
     for jackpot, weight, award_cents in JACKPOT_CONFIG:
         award_x = award_cents / 100.0
@@ -1576,6 +1563,92 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         )
     total_checks = sum(stage_check_counts.values())
     total_triggers = sum(reward_counts.values())
+    pool_limit_specs = (
+        (
+            "全體平台RTP上限",
+            "預估平台RTP超過97%，取消救援",
+            "階段與個人 Pool 條件已符合，但加入預定救援後的全體平台 RTP 會超過 97%，因此不發出救援。",
+        ),
+        (
+            "個人累積RTP上限",
+            "個人RTP達200%，取消救援",
+            "階段條件已符合，但判定前個人累積 RTP 已達 200%，因此個人 Pool 不發出救援。",
+        ),
+    )
+
+    def pool_limit_row(
+        level: str,
+        limit_type: str,
+        cancel_reason: str,
+        source_rows: list[dict[str, Any]],
+        type_total: int,
+        stage: str,
+        reward_x: float | str | None,
+        scenario_summary: str,
+    ) -> dict[str, Any]:
+        def average(field: str) -> float | None:
+            values = [float(row[field]) for row in source_rows if row.get(field) is not None]
+            return float(np.mean(values)) if values else None
+
+        return {
+            "Limit_Level": level,
+            "Limit_Type": limit_type,
+            "Cancel_Reason": cancel_reason,
+            "Stage": stage,
+            "Reward_X": reward_x,
+            "Count": len(source_rows),
+            "Share_Within_Limit_%": len(source_rows) / type_total * 100.0 if type_total else 0.0,
+            "Avg_Personal_RTP_%": average("Personal_RTP_%"),
+            "Avg_Platform_RTP_Before_%": average("Platform_RTP_Before_%"),
+            "Avg_Projected_Platform_RTP_%": average("Projected_Platform_RTP_%"),
+            "Avg_Short_RTP_%": average("Short_RTP_%"),
+            "Avg_Mid_RTP_%": average("Mid_RTP_%"),
+            "Avg_Long_RTP_%": average("Long_RTP_%"),
+            "Scenario_Summary": scenario_summary,
+        }
+
+    pool_limit_rows: list[dict[str, Any]] = []
+    for limit_type, cancel_reason, summary_text in pool_limit_specs:
+        limit_rows = [row for row in checkpoints if row["Pool_Result"] == cancel_reason]
+        pool_limit_rows.append(
+            pool_limit_row(
+                "總計",
+                limit_type,
+                cancel_reason,
+                limit_rows,
+                len(limit_rows),
+                "全部",
+                "全部",
+                summary_text if limit_rows else f"本次模擬未發生{limit_type}取消。",
+            )
+        )
+        grouped_keys = sorted(
+            {(str(row["Stage"]), row.get("Reward_X")) for row in limit_rows},
+            key=lambda item: (item[0], float(item[1]) if item[1] is not None else -1.0),
+        )
+        for stage, reward_x in grouped_keys:
+            grouped_rows = [
+                row
+                for row in limit_rows
+                if str(row["Stage"]) == stage and row.get("Reward_X") == reward_x
+            ]
+            reward_text = f"{float(reward_x):g}×" if reward_x is not None else "不適用"
+            if limit_type == "全體平台RTP上限":
+                scenario = f"{stage} 階段原預定給 {reward_text}，但救援後預估全體平台 RTP 超過 97%。"
+            else:
+                scenario = f"{stage} 階段條件符合，但玩家判定前個人累積 RTP 已達 200%。"
+            pool_limit_rows.append(
+                pool_limit_row(
+                    "情境",
+                    limit_type,
+                    cancel_reason,
+                    grouped_rows,
+                    len(limit_rows),
+                    stage,
+                    reward_text,
+                    scenario,
+                )
+            )
     duration = time.perf_counter() - started
     newbie_d_players = {int(row["Player"]) for row in newbie_d_rows if bool(row["Triggered"])}
     oldhand_players = {int(row["Player"]) for row in triggers}
@@ -1673,10 +1746,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "D_NO_LONG_WINDOW": "D：長期資料未滿 500 轉",
         "NO_RESCUE": "未符合救援條件",
     }
-    rule_rows = [
-        {"Rule_ID": rule_id, "Description": rule_descriptions.get(rule_id, rule_id), "Count": count}
-        for rule_id, count in sorted(rule_counts.items())
-    ]
+    rule_rows = [{"Rule_ID": rule_id, "Description": rule_descriptions.get(rule_id, rule_id), "Count": count} for rule_id, count in sorted(rule_counts.items())]
 
     summary = {
         **adapter.metadata(),
@@ -1694,6 +1764,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "platform_rtp_cap_cancel_count": platform_rtp_cap_cancel_count,
         "oldhand_budget_cancel_count": oldhand_budget_cancel_count,
         "personal_pool_cancel_count": personal_pool_cancel_count,
+        "upper_limit_cancel_count": platform_rtp_cap_cancel_count + personal_pool_cancel_count,
         "low_reward_short_rtp_threshold_%": LOW_REWARD_SHORT_RTP_THRESHOLD * 100.0,
         "low_reward_short_threshold_cancel_count": low_reward_short_threshold_cancel_count,
         "rescue_trigger_count": total_triggers,
@@ -1741,6 +1812,7 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "stop_after_rescue_rows": stop_after_rescue_rows,
         "completed_stage_rows": completed_stage_rows,
         "player_rows": players,
+        "pool_limit_rows": pool_limit_rows,
         "jackpot_stat_rows": jackpot_stat_rows,
         "jackpot_rows": jackpot_rows,
         "multiplier_curve_rows": adapter.multiplier_curve_rows(),
@@ -1823,16 +1895,13 @@ def write_report(result: dict[str, Any], report_path: Path) -> Path:
         _localized_frame(result["newbie_d_rule_rows"]).to_excel(writer, sheet_name="新手D統計", index=False)
         _localized_frame(result["newbie_d_rows"]).to_excel(writer, sheet_name="新手D明細", index=False)
         _localized_frame(result["checkpoint_rows"]).to_excel(writer, sheet_name="判定明細", index=False)
+        _localized_frame(result["pool_limit_rows"]).to_excel(writer, sheet_name="Pool上限統計", index=False)
         _localized_frame(result["trigger_rows"]).to_excel(writer, sheet_name="觸發明細", index=False)
         _localized_frame(result["player_rows"]).to_excel(writer, sheet_name="玩家統計", index=False)
         _localized_frame(result["jackpot_stat_rows"]).to_excel(writer, sheet_name="彩金統計", index=False)
         _localized_frame(result["jackpot_rows"]).to_excel(writer, sheet_name="彩金明細", index=False)
         winning_player_rows = sorted(
-            (
-                row
-                for row in result["player_rows"]
-                if float(row["Rescue_RTP_%"]) > 100.0
-            ),
+            (row for row in result["player_rows"] if float(row["Rescue_RTP_%"]) > 100.0),
             key=lambda row: float(row["Rescue_RTP_%"]),
             reverse=True,
         )
@@ -1862,6 +1931,7 @@ def print_summary(result: dict[str, Any]) -> None:
     print(f"預定判定點：{summary['scheduled_checkpoint_count']:,}")
     print(f"實際判定次數：{summary['checkpoint_count']:,}")
     print(f"Pool 取消救援：{summary['cancelled_checkpoint_count']:,}")
+    print(f"  全體／個人上限合計：{summary['upper_limit_cancel_count']:,}")
     print(f"  平台 RTP 上限：{summary['platform_rtp_cap_cancel_count']:,}")
     print(f"  老手增量上限：{summary['oldhand_budget_cancel_count']:,}")
     print(f"  15×短期 RTP 未低於 30%：{summary['low_reward_short_threshold_cancel_count']:,}")
@@ -1871,12 +1941,7 @@ def print_summary(result: dict[str, Any]) -> None:
     print(f"新手 D 玩家：{summary['players_with_newbie_d']:,}" f"（{summary['player_newbie_d_rate_%']:.2f}%）")
     print(f"老手 C 玩家：{summary['players_with_oldhand_c']:,}" f"（{summary['player_oldhand_c_rate_%']:.2f}%）")
     print(f"基礎遊戲 RTP：{summary['base_game_rtp_%']:.4f}%")
-    print(
-        f"彩金：{summary['jackpot_trigger_count']:,} 次"
-        f"（觸發率 {summary['jackpot_actual_hit_rate_%']:.6f}%，"
-        f"實際 RTP {summary['jackpot_actual_rtp_%']:.4f}%；"
-        f"理論 RTP {summary['jackpot_theoretical_rtp_%']:.4f}%）"
-    )
+    print(f"彩金：{summary['jackpot_trigger_count']:,} 次" f"（觸發率 {summary['jackpot_actual_hit_rate_%']:.6f}%，" f"實際 RTP {summary['jackpot_actual_rtp_%']:.4f}%；" f"理論 RTP {summary['jackpot_theoretical_rtp_%']:.4f}%）")
     print(f"含彩金 Game RTP：{summary['game_rtp_with_jackpot_%']:.4f}%")
     print(f"自然 RTP：{summary['natural_rtp_%']:.4f}%")
     print(f"新手 D 後 RTP：{summary['newbie_d_rtp_%']:.4f}%" f"（觸發 {summary['newbie_d_trigger_count']:,} 次，" f"{summary['newbie_d_rtp_delta_pp']:+.4f} 個百分點）")

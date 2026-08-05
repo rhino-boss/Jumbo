@@ -1,16 +1,17 @@
 # H028 xlsx → config 使用對照
 
-`xlsx_to_config.py` 以目前 `H028192A.xlsx` 的分頁配置為準。每一組數學參數使用獨立的 Symbol 工作表，不再使用同一張表右側的舊版橫向區塊；五張 Symbol 表的 R1～R7 均固定讀取 200 格。
+`xlsx_to_config.py` 以目前 `H028192A.xlsx` 的分頁配置為準。每一組數學參數使用獨立的 Symbol 工作表，不再使用同一張表右側的舊版橫向區塊；六張 Symbol 表的 R1～R7 均固定讀取 200 格。
 
 ## 參數組與工作表
 
 | config 參數組 | xlsx 工作表 | 輪帶範圍／長度 |
 | --- | --- | --- |
 | `BaseGame*1` | `BG_Symbol` | `M4:S203`、200 格 |
-| `BaseGame*2` | `BG_Symbol (2)` | `M4:S124`、121 格 |
+| `BaseGame*2` | `BG_Symbol (2)` | `M4:S203`、200 格 |
+| `BaseGame*3` | `BF_Symbol` | `M4:S203`、200 格 |
 | `FreeGame*1` | `FG_Symbol` | `M4:S203`、200 格 |
-| `FreeGame*2` | `FG_Symbol (2)` | `M4:S124`、121 格 |
-| `FreeGame*3` | `FG_Symbol (3)` | `M4:S124`、121 格 |
+| `FreeGame*2` | `FG_Symbol (2)` | `M4:S203`、200 格 |
+| `FreeGame*3` | `FG_Symbol (3)` | `M4:S203`、200 格 |
 
 ## 每張 Symbol 工作表的共用位置
 
@@ -18,7 +19,7 @@
 | --- | --- | --- |
 | `BG_Symbol!M4:S203`／`AC4:AI203` | `BaseGameSymbol1`／`BaseGameSymbolWeight1` | 7 輪 × 200 格 |
 | `FG_Symbol!M4:S203`／`AC4:AI203` | `FreeGameSymbol1`／`FreeGameSymbolWeight1` | 7 輪 × 200 格 |
-| `M4:S124`／`AC4:AI124` | 其他未啟用的 `*Symbol*`／`*SymbolWeight*` | 7 輪 × 121 格 |
+| `M4:S203`／`AC4:AI203` | 其他 `*Symbol*`／`*SymbolWeight*` | 7 輪 × 200 格 |
 | `C33:H47` | `*MegaWay*` | 6 輪 × 15 種大符號組合權重 |
 | `C51:C63` | `*MY*` | 13 個 Mystery 權重 |
 | `B67:C74` | `*PostC1` | 8 個 Scatter 數量與對應權重 |
@@ -31,6 +32,10 @@
 `M:S` 是真正的輪帶 Symbol。xlsx → config 會依每張工作表 `A4:J29` 的 Symbol／ID 對照表，把 `M:S` 的符號名稱轉成 Simulator 使用的數字 ID；`U:AA` 保留為 Excel 公式區，不作為回填來源。
 
 SC（ID 1）不配置於任何 BG／FG 初始輪帶；初始停輪後的顆數由各參數組 `B67:C74` 的 `*PostC1` 權重產生，`Drop1～Drop5` 則保留 `analysis_lucky_neko_final.xlsx` 的 `SymbolOcc_Drop`／`Extra Reel_Drop` SC 比例。初始非 SC 符號移除 SC 後重新正規化。
+
+`BF_Symbol` 讀入 `BaseGame*3`。除 Symbol Weight 外均與 `BaseGame*1` 相同；BF 權重保留多組不形成 Ways 的 RNG，只將可能得分的停輪位置設為 0，並只在 Feature Buy 觸發畫面使用。
+
+`FG_Symbol (2)` 對應初始 FG 的 40% 參數組；MY／Golden MY 權重皆為 0，M1／Golden M1 相對 FG Table 1 的 R1～R7 顆數差為 `[0,+1,+1,+2,+2,0,-2]`，R4／R5 使用調整後的 MegaWay 權重。`FreeTriggerReel` 維持只選 FG Table 1。
 
 ## 其他位置
 

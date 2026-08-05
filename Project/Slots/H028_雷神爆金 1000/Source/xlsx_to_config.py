@@ -27,6 +27,7 @@ METADATA = {
 SYMBOL_SHEET_GROUPS = (
     ("BaseGame", 1, "BG_Symbol", 200),
     ("BaseGame", 2, "BG_Symbol (2)", 200),
+    ("BaseGame", 3, "BF_Symbol", 200),
     ("FreeGame", 1, "FG_Symbol", 200),
     ("FreeGame", 2, "FG_Symbol (2)", 200),
     ("FreeGame", 3, "FG_Symbol (3)", 200),

@@ -355,9 +355,10 @@ def prepare_freegame_param_arrays(suffix):
     return symbol_reels, reel_lengths, weight_reels, megaway_weights, my_weights, post_c1_weights, drop_weights
 
 
-# 預先準備兩套參數 (展開為獨立全局變量)
+# 預先準備三套參數；第 3 套僅供 Feature Buy 觸發盤面使用。
 _p1 = prepare_param_arrays(1)
 _p2 = prepare_param_arrays(2)
+_p3 = prepare_param_arrays(3)
 
 # 參數組1
 SYMBOL_REELS_1 = _p1[0]
@@ -376,6 +377,15 @@ MEGAWAY_WEIGHTS_2 = _p2[3]
 MY_WEIGHTS_2 = _p2[4]
 POST_C1_WEIGHTS_2 = _p2[5]
 DROP_WEIGHTS_2 = _p2[6]
+
+# 參數組3（BF_Symbol）
+SYMBOL_REELS_3 = _p3[0]
+REEL_LENGTHS_3 = _p3[1]
+WEIGHT_REELS_3 = _p3[2]
+MEGAWAY_WEIGHTS_3 = _p3[3]
+MY_WEIGHTS_3 = _p3[4]
+POST_C1_WEIGHTS_3 = _p3[5]
+DROP_WEIGHTS_3 = _p3[6]
 
 # FreeGame 參數組
 _fp1 = prepare_freegame_param_arrays(1)
@@ -1250,13 +1260,14 @@ def single_spin(param_set, enable_m1_multiplier=True):
     """執行單次 spin，返回 (win, c1_count, multiplier, init_c1_count, c1_len_stats, cascade_scores)
 
     參數:
-    - param_set: 參數組 (1 或 2)
+    - param_set: 參數組 (1、2 或 BF 專用的 3)
     - enable_m1_multiplier: 是否開啟 M1 倍數特色 (預設 True)
     """
     if param_set == 1:
         return single_spin_core(SYMBOL_REELS_1, REEL_LENGTHS_1, WEIGHT_REELS_1, MEGAWAY_WEIGHTS_1, MY_WEIGHTS_1, POST_C1_WEIGHTS_1, DROP_WEIGHTS_1, MEGAWAY_PATTERNS, LINKPOINT, TARGET_HEIGHTS, enable_m1_multiplier)
-    else:
+    if param_set == 2:
         return single_spin_core(SYMBOL_REELS_2, REEL_LENGTHS_2, WEIGHT_REELS_2, MEGAWAY_WEIGHTS_2, MY_WEIGHTS_2, POST_C1_WEIGHTS_2, DROP_WEIGHTS_2, MEGAWAY_PATTERNS, LINKPOINT, TARGET_HEIGHTS, enable_m1_multiplier)
+    return single_spin_core(SYMBOL_REELS_3, REEL_LENGTHS_3, WEIGHT_REELS_3, MEGAWAY_WEIGHTS_3, MY_WEIGHTS_3, POST_C1_WEIGHTS_3, DROP_WEIGHTS_3, MEGAWAY_PATTERNS, LINKPOINT, TARGET_HEIGHTS, enable_m1_multiplier)
 
 
 # 全域變數，用於 worker 傳遞參數
@@ -2194,6 +2205,14 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                         retry_limit_exceeded += 1
                         break
         elif bet_mode == MODE_FEATUREBUY:
+            # BF_Symbol only builds the trigger screen. Its restricted stop
+            # weights must never produce a Ways payout; four SC are supplied
+            # by the Feature Buy flow rather than the reel strip.
+            bf_win, _, _, _, _, _ = single_spin(3, enable_m1_multiplier)
+            if bf_win != 0.0:
+                raise RuntimeError("BF_Symbol produced an unexpected payout")
+            bg_win = 0.0
+            scatter_count = 4
             fg_triggered = 1
             package_card_index = pick_card(CARD_PROFILE_BUY_FEATURE) if CARD_SYSTEM_ENABLED else -1
             fg_retry_count = 0
@@ -2321,6 +2340,7 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
 
     # Compile the BG/FG paths and the complete chunk loop before timing.
     single_spin(1, ENABLE_M1_MULTIPLIER)
+    single_spin(3, ENABLE_M1_MULTIPLIER)
     freegame_single_spin(1, 1, 0, ENABLE_M1_MULTIPLIER)
     simulator_chunk(1, bet_mode, bet_multi, ENABLE_M1_MULTIPLIER)
 

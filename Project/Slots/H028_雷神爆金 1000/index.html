@@ -2233,6 +2233,50 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-05：修正 FG Table 2 各輪 M1 顆數</h4>
+          <ul>
+            <li>FG2 相對 FG1 的 M1 顆數改為 R1 ±0、R2 +1、R3 +1、R4 +2、R5 +2、R6 ±0、R7 −2。</li>
+            <li>FG2 最終 M1／Golden M1 顆數為 [3,6,6,6,6,4,2]。</li>
+            <li>各模擬 100,000 次後，Table 1／2 命中率為 42.5470%／40.4260%，平均連消為 0.906210／0.853150。</li>
+            <li>版本升為 2.0.0.20，並同步原 XLSX、映射文件與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-05：FG Table 2 改為 40% 低連線參數組</h4>
+          <ul>
+            <li>FreeReelWeight 改為 [9000,6000,0]，初始 FG 有 40% 使用 FG Table 2；Retrigger 仍只使用 Table 1。</li>
+            <li>FG Table 2 的初始輪帶、MY 權重及 Drop1～5 全部移除 MY／Golden MY，WW 維持原設定。</li>
+            <li>FG Table 2 的 M1／Golden M1 每輪增加 2 顆，R1～R7 為 [5,7,7,6,6,6,6]。</li>
+            <li>R4、R5 的前四種 MegaWay 版型權重提高 2 倍，接續六種提高 1.5 倍。</li>
+            <li>各模擬 100,000 次後，Table 1／2 命中率為 42.5470%／40.5960%，平均連消為 0.906210／0.845970。</li>
+            <li>版本升為 2.0.0.19，並同步原 XLSX、映射文件與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-05：BF 改為多組安全 RNG</h4>
+          <ul>
+            <li>取消 BF 每輪只保留一個 RNG 的限制，避免每次出現相同盤面。</li>
+            <li>只將可能造成 Ways 的 RNG 權重設為 0；R1～R7 保留 [48,43,200,200,200,200,96] 個非零 RNG。</li>
+            <li>使用多組 RNG 實跑 100,000 次 BF，得分次數與最大得分仍皆為 0。</li>
+            <li>Feature Buy 仍固定補入 4 顆 SC；版本升為 2.0.0.18 並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-05：BG2 M1 再加倍、FG 參數統一並啟用 BF_Symbol</h4>
+          <ul>
+            <li>BG Table 2 的 M1／Golden M1 顆數再乘 2，R1～R7 改為 [8,4,4,8,8,8,8]。</li>
+            <li>FG Table 2、3 的全部數學參數完整複製 FG Table 1。</li>
+            <li>BF_Symbol 對應 BaseGame Table 3；除 Symbol Weight 外均複製 BG Table 1。</li>
+            <li>BF 七輪僅保留零 Ways 的停輪權重，實跑 10,000 次得分皆為 0；Feature Buy 固定用 BF 畫面補入 4 顆 SC。</li>
+            <li>固定種子模擬 100,000 場 BG，M1 出現率為 37.7320%；Lucky Neko 為 16.7661%，H028 高 20.9659 pp。</li>
+            <li>版本升為 2.0.0.17，並同步原 XLSX、映射文件與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-05：BG Table 1 M1 掉落機率減半</h4>
           <ul>
             <li>Table 1 Drop1～5 的 M1／Golden M1 合計機率精確除以 2，每輪總權重維持 1,000,000。</li>
@@ -2949,7 +2993,7 @@
   async function animateReels(finalScreen){let frames=10+Math.max(0,6-state.speed);for(let frame=0;frame<frames;frame++){let sample={main:Array.from({length:6},()=>Array.from({length:5},()=>({id:pickInt(26),h:1}))),extra:Array.from({length:4},()=>({id:pickInt(26),h:1}))};renderBoard(sample,[],true);message('Reels spinning...');await sleep(105)}renderBoard(finalScreen)}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}
   function postWeights(scene,suffix){let v=B[`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}PostC1`];return Array.isArray(v[0])?v[1]:v}
-  function makeScreen(scene='BG',overrides=null,retrigger=false,forcedScatterCount=null){let chosen=chooseParams(scene,retrigger),prefix=scene==='BG'?'BaseGame':'FreeGame',s=chosen.suffix,symbols=B[`${prefix}Symbol${s}`],weights=B[`${prefix}SymbolWeight${s}`],mega=B[`${prefix}MegaWay${s}`],my=B[`${prefix}MY${s}`];let main=[],rng=[],mystery=weighted(my).index;
+  function makeScreen(scene='BG',overrides=null,retrigger=false,forcedScatterCount=null,forcedSuffix=null){let chosen=forcedSuffix==null?chooseParams(scene,retrigger):{suffix:forcedSuffix,rng:{index:forcedSuffix-1,rng:0,total:0}},prefix=scene==='BG'?'BaseGame':'FreeGame',s=chosen.suffix,symbols=B[`${prefix}Symbol${s}`],weights=B[`${prefix}SymbolWeight${s}`],mega=B[`${prefix}MegaWay${s}`],my=B[`${prefix}MY${s}`];let main=[],rng=[],mystery=weighted(my).index;
     for(let r=0;r<6;r++){let pattern=weighted(mega[r]).index,p=PATTERNS[pattern],stop=weighted(weights[r],overrides?.[r]);rng.push({reel:r+1,...stop,length:symbols[r].length});let pos=stop.index,blocks=[];for(const h of p){let id=symbols[r][pos%symbols[r].length];id=id===24?mystery:id===25?mystery+11:id;blocks.push({id,h});pos+=h}main.push(blocks)}
     let exStop=weighted(weights[6],overrides?.[6]);rng.push({reel:'EXTRA',...exStop,length:symbols[6].length});let extra=Array.from({length:4},(_,i)=>{let id=symbols[6][(exStop.index+i)%symbols[6].length];id=id===24?mystery:id===25?mystery+11:id;return{id,h:1}});
     let scPick=weighted(postWeights(scene,s)),scCount=forcedScatterCount==null?scPick.index:Math.max(0,Math.min(7,Math.trunc(forcedScatterCount)));if(scCount>0){let targets=Array.from({length:7},(_,i)=>i);for(let n=0;n<Math.min(scCount,7);n++){let x=targets.splice(pickInt(targets.length),1)[0];if(x===6){extra[pickInt(4)]={id:1,h:1}}else{let min=Math.min(...main[x].map(b=>b.h)),cands=main[x].map((b,i)=>b.h===min?i:-1).filter(i=>i>=0),i=cands[pickInt(cands.length)];main[x][i]={id:1,h:main[x][i].h}}}}
@@ -2962,7 +3006,7 @@
   function cascade(screen,evalResult,scene,suffix,dropIndex,mystery){let hit=new Set(evalResult.hit),events=[],newM1=[];for(let r=0;r<6;r++){let kept=[];screen.main[r].forEach((b,i)=>{if(!hit.has(`m-${r}-${i}`))kept.push(b);else if(isGold(b.id)){kept.push({id:0,h:b.h});events.push(`R${r+1} ${code(b.id)} → WW`)}});let height=kept.reduce((a,b)=>a+b.h,0);while(height<5){let p=pickDrop(scene,suffix,dropIndex,r),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};kept.unshift(block);if(base(id)===2)newM1.push(block);events.push(`R${r+1} drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`);height++}screen.main[r]=kept}let keptExtra=[];screen.extra.forEach((b,i)=>{if(!hit.has(`e-${i}`))keptExtra.push(b);else if(isGold(b.id)){keptExtra.push({id:0,h:1});events.push(`EXTRA ${code(b.id)} → WW`)}});while(keptExtra.length<4){let p=pickDrop(scene,suffix,dropIndex,6),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};keptExtra.push(block);if(base(id)===2)newM1.push(block);events.push(`EXTRA drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`)}screen.extra=keptExtra;return{events,newM1}}
   function parseOverrides(){let raw=el.reel.value.trim();if(!raw)return null;let a=raw.split(/\s+/).map(Number);if(a.length!==7||a.some(v=>!Number.isInteger(v)||v<0))throw Error('Reel RNG requires exactly 7 non-negative integers.');return a}
   async function buildSpin(scene='BG',retrigger=false){let overrides=parseOverrides(),screen=makeScreen(scene,overrides,retrigger),multi=scene==='FG'?(state.fg?.multi||2):1,m1=collectM1(screen,scene==='BG');multi+=m1.add;let steps=[],wins=[],total=0;for(let c=0;c<50;c++){let e=evaluate(screen,multi,c);steps.push({screen:clone(screen),eval:e,multi});wins.push(...e.wins);if(!e.wins.length)break;total+=e.total;let dropped=cascade(screen,e,scene,screen.table.suffix,c,screen.mystery);for(const block of dropped.newM1){let bonus=block.h+1;if(scene==='BG'&&m1.count===0)bonus--;multi+=bonus;m1.count++}steps[steps.length-1].dropEvents=dropped.events}return{scene,screen,steps,wins,total,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
-  function buildBuyFeatureTrigger(){let screen=makeScreen('BG',parseOverrides(),false,4),multi=1,m1=collectM1(screen,true);multi+=m1.add;let evalResult={wins:[],hit:[],total:0,ways:0};return{scene:'BG',screen,steps:[{screen:clone(screen),eval:evalResult,multi}],wins:[],total:0,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
+  function buildBuyFeatureTrigger(){let screen=makeScreen('BG',parseOverrides(),false,4,3),multi=1,m1=collectM1(screen,true);multi+=m1.add;let evalResult=evaluate(screen,multi,0);if(evalResult.total!==0)throw Error('BF_Symbol produced an unexpected payout');return{scene:'BG',screen,steps:[{screen:clone(screen),eval:evalResult,multi}],wins:[],total:0,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
   async function playSpin(result){state.historyIndex=state.history.length-1;state.historyFloor=state.history.length;await animateReels(result.steps[0]?.screen||result.screen);for(let i=0;i<result.steps.length;i++){let s=result.steps[i],scene=result.scene==='FG'?'FREE GAME':'BASE GAME',ways=s.eval.ways||'—';renderFeature(scene,i,s.multi,ways);renderBoard(s.screen);message(`${result.scene} · Cascade ${i} · evaluating`);saveSnapshot(result,{screen:s.screen,step:s,phase:'evaluation',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · evaluating`});await sleep(delay());if(s.eval.wins.length){renderBoard(s.screen,s.eval.hit);state.currentWin+=s.eval.total;renderStats();message(`Cascade ${i} win ${money(s.eval.total)} · x${s.multi}`);saveSnapshot(result,{screen:s.screen,hits:s.eval.hit,step:s,phase:'score',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · score ${money(s.eval.total)}`});await sleep(delay());renderBoard(s.screen,[],false,{cleared:s.eval.hit});message(`Cascade ${i} · symbols cleared`);await sleep(Math.max(70,delay()*.45));let nextScreen=result.steps[i+1]?.screen||result.screen,dropMotion=h028DropMotion(s.screen,nextScreen,s.eval.hit);renderBoard(nextScreen,[],false,{dropMotion});message(`Cascade ${i} · drop complete`);await sleep((Math.max(320,640/state.speed)/2+180)*state.speed)}}renderBoard(result.screen);state.maxMulti=Math.max(state.maxMulti,result.multi);renderDebug(result);renderStats()}
   function appendDebugPair(list,className,left,right){let row=document.createElement('div'),leftText=document.createElement('span'),rightText=document.createElement('span');row.className=className;leftText.textContent=left;rightText.textContent=right;row.append(leftText,rightText);list.appendChild(row)}
   function rngDetail(value,total,extra=''){return`${value} / ${total} | range 0-${Math.max(0,total-1)}${extra}`}
