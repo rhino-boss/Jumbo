@@ -2233,6 +2233,87 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-06：FG1／FG2 掉落金框比例還原為 10%</h4>
+          <ul>
+            <li>FG 選表率維持 40%／30%／30%，初始與 Retrigger 權重維持 [6000,4500,4500]。</li>
+            <li>FG1、FG2 的 Drop1～Drop5、R1～R7 金框權重全部改回 10%。</li>
+            <li>Golden M1 掉落權重仍為 0；各符號家族總權重、各列總權重及 FG3 掉落參數不變。</li>
+            <li>版本升為 2.0.0.31，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：所有 Table 移除 Golden M1</h4>
+          <ul>
+            <li>BG、BF、FG 全部 Table 的初始輪帶與 Drop1～Drop5 均移除 G1；G1 數量／權重併回一般 M1。</li>
+            <li>初始輪帶共轉換 11 顆 G1，掉落共重新分配 153,740 G1 權重；最終所有 Table 的 G1 均為 0。</li>
+            <li>移除的金框額度轉移給其他非 M1 符號，維持原本總金框比例及各符號家族總量／總權重。</li>
+            <li>FG 選表率仍為 40%／30%／30%；版本升為 2.0.0.30，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：FG1／FG2 掉落金框比例改為 15%／20%</h4>
+          <ul>
+            <li>FG 三張表的使用率維持 40%／30%／30%，初始與 Retrigger 權重維持 [6000,4500,4500]。</li>
+            <li>FG1 的 Drop1～Drop5、R1～R7 金框權重均改為 15%；FG2 均改為 20%。</li>
+            <li>普通／金框只在同一符號家族內重新分配，各家族總掉落率、各列總權重及 FG3 掉落參數不變。</li>
+            <li>版本升為 2.0.0.29，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：FG 選表改為 40%／30%／30% 並調整 FG1 金框與 FG3 M1</h4>
+          <ul>
+            <li>FreeReelWeight、FreeTriggerReel 均改為 [6000,4500,4500]，三張 FG 表使用率為 40%／30%／30%。</li>
+            <li>FG1 的 R1～R7 金框均改為 30/200，也就是 15%；符號家族合計與輪長不變。</li>
+            <li>FG3 的 R2、R3 M1 各改為 20 顆；R4、R5 各改為 12 顆，R1～R7 合計為 [3,20,20,12,12,4,4]。</li>
+            <li>FG3 原本金框數量不變；版本升為 2.0.0.28，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：新增 FG3 累積倍數表並改為 50%／30%／20%</h4>
+          <ul>
+            <li>FG_Symbol、FG_Symbol (2)、FG_Symbol (3) 分別作為競品表、連消表與累積倍數表。</li>
+            <li>FreeReelWeight、FreeTriggerReel 均改為 [7500,4500,3000]，初始與 Retrigger 都以 50%／30%／20% 選表。</li>
+            <li>FG3 的 R2、R3 M1 各由 5 顆增至 15 顆；R4、R5 各由 4 顆增至 8 顆，R1～R7 合計為 [3,15,15,8,8,4,4]。</li>
+            <li>FG3 各輪金框總數與每輪 200 格不變；版本升為 2.0.0.27，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：FG 競品表／連消表改為 70%／30%</h4>
+          <ul>
+            <li>FG_Symbol 為競品表，FG_Symbol (2) 為連消表，FG_Symbol (3) 暫不使用。</li>
+            <li>FreeReelWeight、FreeTriggerReel 均改為 [10500,4500,0]，初始與 Retrigger 都以 70%／30% 選表。</li>
+            <li>FG_Symbol (2) 的 R1～R7 金框均改為 40/200，也就是 20%；符號家族總量與每輪 200 格不變。</li>
+            <li>版本升為 2.0.0.26，並同步原 XLSX 與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：FG1／FG2 以 FG3 為基準並改為 1:1 選表</h4>
+          <ul>
+            <li>FG1、FG2 的非輪帶差異參數全部複製 FG3，包括 Symbol Weight、MegaWay、MY、Post Scatter 與 Drop1～5。</li>
+            <li>FG1 M1 為 [2,3,3,2,2,2,2]，FG2 M1 為 [12,20,20,16,16,16,16]。</li>
+            <li>FG2 M2／M3 分別為 [9,18,21,24,15,12,12]／[12,15,27,18,15,15,15]；FG1、FG2 金框均為 20%。</li>
+            <li>FreeReelWeight、FreeTriggerReel 均改為 [7500,7500,0]，FG1／FG2 使用率為 1:1。</li>
+            <li>版本升為 2.0.0.25，並同步原 XLSX 與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：調整 FG1 的 M1／M2／M3 與金框比例</h4>
+          <ul>
+            <li>FG1 的 M1／Golden M1 顆數改為 [10,20,20,15,15,15,10]。</li>
+            <li>M2／Golden M2 改為 [9,18,21,24,15,12,12]，M3／Golden M3 改為 [12,12,24,18,12,15,12]。</li>
+            <li>七輪金框均為 40/200，也就是輪帶格數的 20%；每輪維持 200 格與 200 個 Symbol Weight。</li>
+            <li>版本升為 2.0.0.24，並同步原 XLSX 與修改紀錄。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-05：FG 全面使用 Table 1，M1 放大 5 倍</h4>
           <ul>
             <li>FG 初始與 Retrigger 均改為只使用 FG_Symbol；FreeReelWeight、FreeTriggerReel 為 [15000,0,0]。</li>

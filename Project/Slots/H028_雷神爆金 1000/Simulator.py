@@ -31,8 +31,8 @@ CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
@@ -2361,9 +2361,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         bg_cascade_count = min(int(np.count_nonzero(bg_cascade_pay)), 5)
         record_data[R_BG_INTERVAL_HITS, bg_line_index] += int(bg_win > 0)
         record_data[R_BG_INTERVAL_M1, bg_line_index] += int(bg_m1_count > 0)
-        record_data[R_BG_INTERVAL_BIG_M1, bg_line_index] += int(
-            bg_m1_count > 0 and bg_final_multiplier > 2 * bg_m1_count
-        )
+        record_data[R_BG_INTERVAL_BIG_M1, bg_line_index] += int(bg_m1_count > 0 and bg_final_multiplier > 2 * bg_m1_count)
         if bg_cascade_count > 0:
             record_data[R_BG_INTERVAL_CASCADE_1 + bg_cascade_count - 1, bg_line_index] += 1
         record_data[R_BG_INTERVAL_MULT_SUM, bg_line_index] += int(bg_final_multiplier)
@@ -2423,12 +2421,8 @@ def merge_record_data(chunks):
     merged = np.zeros(RECORD_SIZE, dtype=np.int64)
     global_max = max(int(chunk[R_ALL, RA_MAX_SINGLE_WIN]) for chunk in chunks)
     global_max_multiplier = max(int(chunk[R_ALL, RA_MAX_FG_MULTIPLIER]) for chunk in chunks)
-    bg_interval_max = np.max(
-        np.stack([chunk[R_BG_INTERVAL_MULT_MAX] for chunk in chunks]), axis=0
-    )
-    fg_interval_max = np.max(
-        np.stack([chunk[R_FG_INTERVAL_FINAL_MULT_MAX] for chunk in chunks]), axis=0
-    )
+    bg_interval_max = np.max(np.stack([chunk[R_BG_INTERVAL_MULT_MAX] for chunk in chunks]), axis=0)
+    fg_interval_max = np.max(np.stack([chunk[R_FG_INTERVAL_FINAL_MULT_MAX] for chunk in chunks]), axis=0)
     for chunk in chunks:
         merged += chunk
     merged[R_ALL, RA_MAX_SINGLE_WIN] = global_max
@@ -2531,41 +2525,13 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
             where=denominator > 0,
         )
 
-    bg_m1_rate = (
-        values[R_BG_INTERVAL_M1, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum()
-        if bg_interval_count.sum()
-        else 0.0
-    )
-    bg_big_m1_rate = (
-        values[R_BG_INTERVAL_BIG_M1, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum()
-        if bg_interval_count.sum()
-        else 0.0
-    )
-    fg_m1_rate = (
-        values[R_FG_INTERVAL_M1_SPINS, : len(THRESHOLD_RECORD)].sum() / fg_interval_spins.sum()
-        if fg_interval_spins.sum()
-        else 0.0
-    )
-    fg_big_m1_rate = (
-        values[R_FG_INTERVAL_BIG_M1_SPINS, : len(THRESHOLD_RECORD)].sum() / fg_interval_spins.sum()
-        if fg_interval_spins.sum()
-        else 0.0
-    )
-    fg_retrigger_session_rate = (
-        values[R_FG_INTERVAL_RETRIGGER_SESSIONS, : len(THRESHOLD_RECORD)].sum() / fg_interval_count.sum()
-        if fg_interval_count.sum()
-        else 0.0
-    )
-    avg_bg_final_multiplier = (
-        values[R_BG_INTERVAL_MULT_SUM, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum()
-        if bg_interval_count.sum()
-        else 0.0
-    )
-    avg_fg_final_multiplier = (
-        values[R_FG_INTERVAL_FINAL_MULT_SUM, : len(THRESHOLD_RECORD)].sum() / fg_interval_count.sum()
-        if fg_interval_count.sum()
-        else 0.0
-    )
+    bg_m1_rate = values[R_BG_INTERVAL_M1, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum() if bg_interval_count.sum() else 0.0
+    bg_big_m1_rate = values[R_BG_INTERVAL_BIG_M1, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum() if bg_interval_count.sum() else 0.0
+    fg_m1_rate = values[R_FG_INTERVAL_M1_SPINS, : len(THRESHOLD_RECORD)].sum() / fg_interval_spins.sum() if fg_interval_spins.sum() else 0.0
+    fg_big_m1_rate = values[R_FG_INTERVAL_BIG_M1_SPINS, : len(THRESHOLD_RECORD)].sum() / fg_interval_spins.sum() if fg_interval_spins.sum() else 0.0
+    fg_retrigger_session_rate = values[R_FG_INTERVAL_RETRIGGER_SESSIONS, : len(THRESHOLD_RECORD)].sum() / fg_interval_count.sum() if fg_interval_count.sum() else 0.0
+    avg_bg_final_multiplier = values[R_BG_INTERVAL_MULT_SUM, : len(THRESHOLD_RECORD)].sum() / bg_interval_count.sum() if bg_interval_count.sum() else 0.0
+    avg_fg_final_multiplier = values[R_FG_INTERVAL_FINAL_MULT_SUM, : len(THRESHOLD_RECORD)].sum() / fg_interval_count.sum() if fg_interval_count.sum() else 0.0
     max_bg_final_multiplier = int(values[R_BG_INTERVAL_MULT_MAX, : len(THRESHOLD_RECORD)].max())
     max_fg_final_multiplier = int(values[R_FG_INTERVAL_FINAL_MULT_MAX, : len(THRESHOLD_RECORD)].max())
     multiplier_line_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
@@ -2886,9 +2852,7 @@ def output_report(
         multiplier_sheet.column_dimensions["A"].width = 22
         for column_index, column_name in enumerate(df_multiplier_line.columns, start=1):
             column_letter = multiplier_sheet.cell(row=1, column=column_index).column_letter
-            multiplier_sheet.column_dimensions[column_letter].width = max(
-                14, min(28, len(str(column_name)) + 3)
-            )
+            multiplier_sheet.column_dimensions[column_letter].width = max(14, min(28, len(str(column_name)) + 3))
             if column_name.endswith("_Rate"):
                 number_format = "0.0000%"
             elif column_name.endswith("_Count") or column_name.endswith("_Pay"):

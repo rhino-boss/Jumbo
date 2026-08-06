@@ -35,7 +35,7 @@ SC（ID 1）不配置於任何 BG／FG 初始輪帶；初始停輪後的顆數�
 
 `BF_Symbol` 讀入 `BaseGame*3`。除 Symbol Weight 外均與 `BaseGame*1` 相同；BF 權重保留多組不形成 Ways 的 RNG，只將可能得分的停輪位置設為 0，並只在 Feature Buy 觸發畫面使用。
 
-目前 `Parameter!C11:C13`、`C18:C20` 均為 `[15000,0,0]`，FG 初始與 Retrigger 全部只使用 `FG_Symbol`。`FG_Symbol` 的 M1／Golden M1 合計顆數 R1～R7 為 `[15,25,25,20,20,20,20]`；`FG_Symbol (2)`、`FG_Symbol (3)` 仍保留，但目前不會被選用。
+FG1 為競品表、FG2 為連消表、FG3 為累積倍數表。`Parameter!C11:C13`、`C18:C20` 均為 `[6000,4500,4500]`，因此初始 FG 與 Retrigger 都以 40%／30%／30% 使用 FG1／FG2／FG3。FG1、FG2 的 R1～R7 初始金框分別為 30/200（15%）、40/200（20%），兩表 Drop1～Drop5 的 R1～R7 金框權重均為 10%。BG、BF、FG 全部 Table 的初始輪帶及 Drop1～Drop5 均禁止 Golden M1（ID 13）；M1 只使用普通 ID 2，金框總量由其他非 M1 符號承接。FG3 的 R1～R7 M1 合計為 `[3,20,20,12,12,4,4]`，每輪維持 200 格。
 
 ## 其他位置
 
