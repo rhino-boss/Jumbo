@@ -2218,9 +2218,9 @@
   <script id="embeddedH999GameRuleMarkdown" type="text/plain">
 # 幸運王牌2 (Lucky Ace) 遊戲規則說明
 
-> 文件版本：v0.4（草稿）
+> 文件版本：v0.5（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
-> 撰寫依據：以 `H016_幸運王牌` 現行專案為主來源完整複製；遊戲設定與數值使用 `Source/H999192.xlsx`、`Source/H999194.xlsx`；本版依企劃指示加入 BG / FG 每次 Spin 10% 機率從最後階倍數開始
+> 撰寫依據：以 `H016_幸運王牌` 現行專案為主來源完整複製；遊戲設定與數值使用 `Source/H999192.xlsx`、`Source/H999194.xlsx`
 > 編號：H999
 > 撰寫日期：2026-08-06
 
@@ -2328,8 +2328,7 @@
 1. 玩家選擇 Normal Bet 並開始 Spin。
 2. 系統先依 H999 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪、每輪 4 列盤面。
-4. 每次 BG / Buy 進場 Spin 獨立判定一次 Win Multiplier 起始模式：90% 從 `×1` 開始，10% 直接從最後階 `×10` 開始。
-   * 命中最後階起始時，盤面先開始滾動，上方倍數再直接切換至 `×10`，完成切換後盤面才滾停。
+4. 每次 BG / Buy 進場 Spin 的 Win Multiplier 固定從 `×1` 開始。
 5. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
 6. 若沒有中獎，停止 Cascade，進入最終 `C1` 統計。
 7. 若有中獎，先以本次 Cascade 對應倍數計算並累加得分。
@@ -2337,7 +2336,7 @@
 9. 參與中獎的金框符號不留空格；該位置保留並轉成 `WW1`，再依 Random Wild 權重判定是否啟動 WW2 複製模式。
 10. 其餘空格先由同輪上方既有符號依序落下，再以本局選定表的同輪 Symbol Weight 逐格加權抽取新符號補滿。
 11. 補位完成後，若本次有啟動 WW2 複製模式，先完成金框位置的 Wild 轉換，再將額外 `WW2` 放入合格位置。
-12. 進入下一次 Ways 判定；一般起始 Spin 每完成一次有效中獎 Cascade，下一次 Cascade 的倍數依序提升為 `×2`、`×3`、`×5`、`×10`；最後階起始 Spin 則整個 Spin 都維持 `×10`。
+12. 進入下一次 Ways 判定；每完成一次有效中獎 Cascade，下一次 Cascade 的倍數依序提升為 `×2`、`×3`、`×5`、`×10`。
 13. 重複判獎、消除、金框轉換、掉落與補位，直到盤面沒有新的中獎。
 14. 所有 Cascade 結束後統計最終盤面 `C1` 總數；若 `C1 >= 3`，觸發 10 場 Free Game。
 
@@ -2395,10 +2394,8 @@
 
 * 每一次 Cascade 的得分使用該次表列倍數。
 * 倍數只在同一 Spin 的 Cascade 期間推進。
-* **每次 BG / Buy 進場 Spin 有 10% 機率直接從最後階 `×10` 開始；每次 FG / Super FG Spin 有 10% 機率直接從最後階 `×20` 開始。**
-* 最後階起始判定彼此獨立；未命中時，BG 從 `×1`、FG 從 `×2` 開始。
-* 命中最後階起始後，該 Spin 的第一次中獎及所有後續 Cascade 都使用最後階倍數，不再回到較低階。
-* 動畫順序固定為：盤面開始滾動 → 上方倍數直接切換至最後階 → 盤面滾停 → 進行判獎。
+* BG / Buy 進場局固定從 `×1` 開始；FG / Super FG 固定從 `×2` 開始。
+* 倍數只會隨有效中獎 Cascade 逐階提升，不會跳階。
 
 ---
 
@@ -2415,7 +2412,7 @@
 * 每次進入 FG，依 H999 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
 * 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
 * FG 的盤面生成、Ways、Cascade、金框轉 Wild、WW2 複製與 Scatter 保留規則同 BG。
-* 每場 FG Spin 獨立判定：90% 從 `×2` 開始並依 Cascade 提升為 `×4`、`×6`、`×10`、`×20`；10% 直接從 `×20` 開始，該 Spin 全程維持 `×20`。
+* 每場 FG Spin 固定從 `×2` 開始，並依有效中獎 Cascade 提升為 `×4`、`×6`、`×10`、`×20`。
 * 依 101003 邏輯，FG 每次 Cascade 只要有金框轉換，都可再次進行 Random Wild 判定；不受 BG「成功啟動一次後鎖定」限制。
 * FG 場次使用觸發時的 Bet，不可中途變更。
 
@@ -2469,13 +2466,10 @@
 
 ### 9.2 倍數機制相關
 
-* **9.2.1 一般起始的倍數依 Cascade 次序固定**：只有「是否直接從最後階開始」使用 10% 機率判定，各階之間不做權重抽取。
-* **9.2.2 倍數使用當次階級**：未命中最後階起始時，BG 第一次中獎用 `×1`、FG 第一次中獎用 `×2`；命中時第一次中獎即用 BG `×10` / FG `×20`。
-* **9.2.3 倍數不跨 Spin**：每個新 Spin 都重新獨立進行 10% 最後階起始判定。
+* **9.2.1 倍數依 Cascade 次序固定**：BG 依序為 `×1、×2、×3、×5、×10`；FG 依序為 `×2、×4、×6、×10、×20`，各階之間不做權重抽取。
+* **9.2.2 倍數使用當次階級**：BG 第一次中獎使用 `×1`，FG 第一次中獎使用 `×2`；每完成一次有效中獎 Cascade，下一次 Cascade 才提升一階。
+* **9.2.3 倍數不跨 Spin**：每個新 Spin 都回到所屬模式的第一階。
 * **9.2.4 倍數達上限後維持**：BG 維持 `×10`，FG 維持 `×20`。
-* **9.2.5 無中獎仍視為已完成判定**：即使該 Spin 沒有中獎，10% 判定也不延用至下一個 Spin。
-* **9.2.6 最後階動畫早於停輪**：命中時必須先開始盤面滾動，倍數依各階逐階滑動至最後階，不得直接跳階；抵達最後階後以明顯紅色文字與發光效果標示，最後才讓盤面滾停。
-* **9.2.7 卡片系統內部重試不得重抽**：同一次玩家可見 Spin 的 10% 判定須在重試前固定；若卡片範圍條件導致內部重試，所有候選結果沿用相同判定，避免條件篩選改變實際出現率。FG Feature 的各 Spin 判定序列亦須在整段 Feature 重試前固定。
 
 ### 9.3 Scatter 相關
 
@@ -2489,7 +2483,7 @@
 * **9.4.1 FG 可 Retrigger**：3+ `C1` 固定增加 5 場。
 * **9.4.2 FG 總場數上限 50**：達上限後不再增加剩餘場次。
 * **9.4.3 最後一場仍可加局**：只要尚未達 50 場上限。
-* **9.4.4 FG 每場倍率獨立判定**：每一場重新進行 10% 最後階起始判定；未命中才從 `×2` 開始。
+* **9.4.4 FG 每場倍率重置**：每一場都從 `×2` 開始，僅依該場 Cascade 次數逐階提升。
 * **9.4.5 FG 可多次判定 WW2**：同一 FG Spin 的不同 Cascade 均可依金框轉換再次判定。
 
 ### 9.5 Buy Feature 相關
@@ -3233,17 +3227,7 @@
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
-    #multiplierWindow{grid-template-columns:repeat(5,minmax(0,1fr))!important}
-    #multiplierWindow.max-start-final .multiplier-step.is-active{
-      color:#ff3b3b!important;
-      font-size:clamp(1.04rem,2.05vw,1.34rem);
-      text-shadow:0 0 6px #fff,0 0 14px rgba(255,45,45,.95),0 0 26px rgba(255,0,0,.75);
-      animation:h999-max-multiplier-pulse 520ms ease-in-out infinite alternate;
-    }
-    @keyframes h999-max-multiplier-pulse{
-      from{transform:scale(1);filter:brightness(1)}
-      to{transform:scale(1.12);filter:brightness(1.38)}
-    }
+    #multiplierWindow{grid-template-columns:repeat(5,minmax(0,1fr))!important;transform:none!important}
     #board .h999-face{font:900 clamp(1rem,2.4vw,1.7rem)/1 Georgia,serif;color:#fff6cc;text-shadow:0 2px 5px #000;text-align:center}
     #board .symbol-ww,#board .symbol-ww2{background:radial-gradient(circle,#d43c4a,#5b0713)!important}
     #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
@@ -3340,20 +3324,14 @@
     positions.forEach(([reel, row]) => board[reel][row] = W2);
   }
 
-  function rollMaxMultiplierStart() {
-    const chance = Math.min(1, Math.max(0, Number(cfg.max_multiplier_start_chance ?? 0.1)));
-    return Math.random() < chance;
-  }
-
-  function spin(tableName, freeGame = false, forcedMaxMultiplierStart = null) {
+  function spin(tableName, freeGame = false) {
     const table = tables[tableName];
     const multipliers = table.multipliers?.length ? table.multipliers : (freeGame ? [2,4,6,10,20] : [1,2,3,5,10]);
-    const maxMultiplierStart = forcedMaxMultiplierStart == null ? rollMaxMultiplierStart() : Boolean(forcedMaxMultiplierStart);
-    const multiplierIndex = comboIndex => maxMultiplierStart ? multipliers.length - 1 : Math.min(comboIndex, multipliers.length - 1);
+    const multiplierIndex = comboIndex => Math.min(comboIndex, multipliers.length - 1);
     const multiplierAt = comboIndex => multipliers[multiplierIndex(comboIndex)];
     const board = makeBoard(tableName), snapshots = [];
     let pay = 0, combo = 0, pendingGold = [], bgW2Used = false, golden = 0, w2Events = 0;
-    snapshots.push({type:"initial", board: cloneBoard(board), hits: [], combo: 0, multiplierIndex: multiplierIndex(0), multiplier: multiplierAt(0), maxMultiplierStart, message: maxMultiplierStart ? `MAX START ×${multipliers.at(-1)}` : "Spin"});
+    snapshots.push({type:"initial", board: cloneBoard(board), hits: [], combo: 0, multiplierIndex: multiplierIndex(0), multiplier: multiplierAt(0), message: "Spin"});
     while (true) {
       if (pendingGold.length && (freeGame || !bgW2Used)) {
         const selection = selectW2Targets(board, tableName, pendingGold);
@@ -3361,9 +3339,9 @@
           const marked = selection.positions.map(([reel, row]) => `${reel},${row}`);
           w2Events++;
           bgW2Used = true;
-          snapshots.push({type:"wild-mark", board:cloneBoard(board), hits:[], marked, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), maxMultiplierStart, message:`Mark W2 area × ${selection.count}`});
+          snapshots.push({type:"wild-mark", board:cloneBoard(board), hits:[], marked, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), message:`Mark W2 area × ${selection.count}`});
           applyW2(board, selection.positions);
-          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:marked, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), maxMultiplierStart, message:`Big Ghost W2 × ${selection.count}`});
+          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:marked, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), message:`Big Ghost W2 × ${selection.count}`});
         }
       }
       pendingGold = [];
@@ -3372,7 +3350,7 @@
       const multiplier = multiplierAt(combo);
       const cascadePay = win.rawPay * multiplier * BASE_BET * BET_LEVELS[state.betIndex];
       pay += cascadePay;
-      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplierIndex:multiplierIndex(combo), multiplier, maxMultiplierStart, message: `WIN ${format(cascadePay)}`, details: win.details});
+      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplierIndex:multiplierIndex(combo), multiplier, message: `WIN ${format(cascadePay)}`, details: win.details});
       const transitionBoard = cloneBoard(board), cleared = [], converted = [];
       combo++;
       for (const key of win.hits) {
@@ -3388,7 +3366,7 @@
           cleared.push(key);
         }
       }
-      snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), maxMultiplierStart, message: "Eliminate + WW"});
+      snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), message: "Eliminate + WW"});
       const drop = [];
       for (let reel = 0; reel < 5; reel++) {
         const survivors = board[reel].map((symbol, oldRow) => ({symbol, oldRow})).filter(item => item.symbol !== -1);
@@ -3404,9 +3382,9 @@
         }
         board[reel] = nextReel;
       }
-      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), maxMultiplierStart, message: "Drop"});
+      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), message: "Drop"});
     }
-    return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, maxMultiplierStart, maxMultiplier: maxMultiplierStart ? multipliers.at(-1) : multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
+    return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
   }
 
   function freeQueue() {
@@ -3421,15 +3399,14 @@
     return pick(["fg_high_a","fg_high_k","fg_high_q","fg_high_j"], cfg.free_game_mix.high_variant_weights);
   }
 
-  function freeSession(superMode = false, maxStartFlags = null) {
+  function freeSession(superMode = false) {
     let remaining = Number(cfg.free_spins), played = 0, pay = 0, retriggers = 0;
     const queue = freeQueue(), spins = [], snapshots = [];
     while (remaining > 0 && played < Number(cfg.free_spin_cap)) {
       remaining--; played++;
       const surface = queue.shift() || "low";
       const table = superMode ? "super" : surface === "high" ? highTable() : "fg_low";
-      const forcedMaxStart = maxStartFlags && played <= maxStartFlags.length ? maxStartFlags[played - 1] : null;
-      const result = spin(table, true, forcedMaxStart);
+      const result = spin(table, true);
       pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
       if (result.scatter >= 3 && played + remaining < Number(cfg.free_spin_cap)) {
         const add = Math.min(Number(cfg.retrigger_spins), Number(cfg.free_spin_cap) - played - remaining);
@@ -3452,41 +3429,28 @@
   }
   function cardSpin(card) {
     if (!card) return spin("bg_high");
-    const maxMultiplierStart = rollMaxMultiplierStart();
     if (card.type === "free_game") {
-      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("bg_low", false, maxMultiplierStart); if (result.scatter >= 3) return result; }
+      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("bg_low"); if (result.scatter >= 3) return result; }
     } else {
       const table = card.table === "A" ? "bg_low" : "bg_high";
-      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin(table, false, maxMultiplierStart); if (result.scatter < 3 && cardMatches(card, result.pay)) return result; }
+      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin(table); if (result.scatter < 3 && cardMatches(card, result.pay)) return result; }
     }
     throw new Error("Card retry limit exceeded");
   }
   function cardFeature(section, superMode) {
     const card = pickCard(section, section === "super_feature" ? "weight_1" : cardProfile());
     if (!card) return freeSession(superMode);
-    const maxStartFlags = Array.from({length: Number(cfg.free_spin_cap)}, () => rollMaxMultiplierStart());
-    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = freeSession(superMode, maxStartFlags); if (cardMatches(card, result.pay)) return result; }
+    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = freeSession(superMode); if (cardMatches(card, result.pay)) return result; }
     throw new Error(`${section} retry limit exceeded`);
   }
 
-  function renderMultiplier(freeGame, index = 0, animate = false, maxStart = false) {
+  function renderMultiplier(freeGame, index = 0, animate = false) {
     const values = freeGame ? [2,4,6,10,20] : [1,2,3,5,10];
-    const activeIndex = Math.min(index, values.length - 1);
-    const multiplierWindow = $("multiplierWindow");
-    multiplierWindow.classList.remove("roll-one");
-    multiplierWindow.classList.toggle("max-start-final", maxStart && activeIndex === values.length - 1);
-    multiplierWindow.innerHTML = values.map((value, step) => `<span class="multiplier-step ${step < activeIndex ? "is-previous" : ""} ${step === activeIndex ? "is-active" : ""}">×${value}</span>`).join("");
+    $("multiplierWindow").classList.remove("roll-one");
+    $("multiplierWindow").innerHTML = values.map((value, step) => `<span class="multiplier-step ${step < index ? "is-previous" : ""} ${step === Math.min(index, values.length - 1) ? "is-active" : ""}">×${value}</span>`).join("");
     if (animate) {
-      void multiplierWindow.offsetWidth;
-      multiplierWindow.classList.add("roll-one");
-    }
-  }
-
-  async function slideMultiplierToFinal(freeGame, targetMultiplierIndex) {
-    const speed = Number($("speedRange").value || 1);
-    for (let index = 1; index <= targetMultiplierIndex; index++) {
-      renderMultiplier(freeGame, index, true, index === targetMultiplierIndex);
-      await wait(Math.max(100, 210 / speed));
+      void $("multiplierWindow").offsetWidth;
+      $("multiplierWindow").classList.add("roll-one");
     }
   }
 
@@ -3513,10 +3477,8 @@
   }
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
-  async function animateReels(initialBoard, freeGame = false, targetMultiplierIndex = 0) {
+  async function animateReels(initialBoard) {
     const frames = Math.max(2, Math.round(8 / Number($("speedRange").value || 1)));
-    const switchFrame = Math.max(0, Math.floor(frames / 3));
-    let multiplierSwitched = targetMultiplierIndex <= 0;
     for (let frame = 0; frame < frames; frame++) {
       const rolling = cloneBoard(initialBoard);
       for (let reel = 0; reel < 5; reel++) {
@@ -3524,12 +3486,6 @@
         for (let row = 0; row < 4; row++) rolling[reel][row] = initialBoard[reel][(row + offset) % 4];
       }
       renderBoard(rolling, [], {spinning:true});
-      if (!multiplierSwitched && frame >= switchFrame) {
-        await slideMultiplierToFinal(freeGame, targetMultiplierIndex);
-        $("messageBar").textContent = freeGame ? "MAX MULTIPLIER ×20" : "MAX MULTIPLIER ×10";
-        multiplierSwitched = true;
-        await wait(Math.max(120, 220 / Number($("speedRange").value || 1)));
-      }
       await wait(55);
     }
   }
@@ -3543,9 +3499,9 @@
   async function animateSnapshots(snapshots, freeGame = false) {
     state.snapshots = snapshots; state.snapshotIndex = -1;
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
-    if (snapshots[0]) { await animateReels(snapshots[0].board, freeGame, snapshots[0].multiplierIndex ?? 0); renderBoard(snapshots[0].board); await wait(delay()); }
+    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
-      const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.multiplierIndex ?? snapshot.combo, false, Boolean(snapshot.maxMultiplierStart));
+      const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.multiplierIndex ?? snapshot.combo);
       $("messageBar").textContent = snapshot.message || "Cascade";
       if (snapshot.type === "win") {
         renderWinDetails(snapshot);
@@ -3570,7 +3526,7 @@
   function showSnapshot(index) {
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
-    const snapshot = state.snapshots[state.snapshotIndex]; renderBoard(snapshot.board, snapshot.hits, {cleared:snapshot.cleared || [], drop:snapshot.drop || [], converted:snapshot.converted || [], marked:snapshot.marked || []}); renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.multiplierIndex ?? snapshot.combo, false, Boolean(snapshot.maxMultiplierStart)); if (snapshot.type === "win") renderWinDetails(snapshot); updateDebugButtons();
+    const snapshot = state.snapshots[state.snapshotIndex]; renderBoard(snapshot.board, snapshot.hits, {cleared:snapshot.cleared || [], drop:snapshot.drop || [], converted:snapshot.converted || [], marked:snapshot.marked || []}); renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.multiplierIndex ?? snapshot.combo); if (snapshot.type === "win") renderWinDetails(snapshot); updateDebugButtons();
   }
   function updateDebugButtons() {
     $("previousStepBtn").disabled = state.snapshotIndex <= 0;

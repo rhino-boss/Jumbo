@@ -18,7 +18,7 @@
 - 命中、消除、補牌、金框轉換分別使用 H015 的 `hit`、`symbol-cleared`、`symbol-refill`、`convert` 動畫狀態。
 - Free Game 採 H015 的逐局 UX：觸發後由後續 Spin／Auto 逐局播放，並更新 FG Left。
 - 上排倍數依需求固定為 BG `×1、×2、×3、×5、×10`，FG `×2、×4、×6、×10、×20`。
-- 每次 BG / FG Spin 有 10% 機率直接從最後階開始；命中時動畫順序為「盤面開始滾動 → 倍數逐階滑動到最後階 → 最後階顯示紅色發光字 → 盤面滾停」。
+- BG / FG 倍數僅依有效中獎 Cascade 次序逐階提升，沒有跳階起始機制。
 
 ## 五個視覺面向
 
@@ -45,7 +45,6 @@
 - 掉落階段依每個保留符號實際下降格數播放 `symbol-settle`；新補入符號由盤面上方播放 `symbol-drop`，並按輪帶入短暫 stagger。
 - Simulator 設定解析新增 H999 身分與必要欄位驗證，避免 Notebook／不同工作目錄誤載同名 config。
 - CLI 指定 rounds 或 bet mode 時不再被 `RUN_ALL_COMBINATIONS` 改成批次執行。
-- 新增 BG / FG 10% 最後階起始判定，並確保倍數切換動畫發生在停輪之前。
-- 卡片系統的候選結果重試固定沿用同一次 10% 判定；FG Feature 重試固定沿用整段 Spin 判定序列，避免實際機率受卡片篩選影響。
+- 倍數流程統一為只依有效中獎 Cascade 次序推進。
 
 final result: passed

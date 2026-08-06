@@ -235,7 +235,6 @@ def load_game_config(xlsx_path: str | Path) -> dict[str, Any]:
         "free_spins": 10,
         "retrigger_spins": 5,
         "free_spin_cap": 50,
-        "max_multiplier_start_chance": 0.1,
         "buy_price": 40.5,
         "super_buy_price": 250.0,
         "source_xlsx": path.name,
