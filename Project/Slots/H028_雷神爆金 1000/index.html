@@ -2233,6 +2233,36 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-06：BG1／BG2 金框掉落權重改為 2.0.0.31 的 5 倍</h4>
+          <ul>
+            <li>還原 2.0.0.31 的 BG1、BG2 Drop1～Drop5 基準，只將 Golden M2～Golden TE 權重乘以 5。</li>
+            <li>一般符號權重使用 2.0.0.31 原值；Golden M1 仍為 0，初始輪帶不變。</li>
+            <li>BG1 實際金框機率為 [0%,10.0841%,10.7387%,10.7003%,5.072%,2.6429%,0%]；BG2 為 [0%,10.3398%,11.0109%,11.0425%,5.226%,2.7516%,0%]。</li>
+            <li>版本升為 2.0.0.34，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：BG1／BG2 的 R2～R5 掉落金框再增加 3 個百分點</h4>
+          <ul>
+            <li>只修改 BG1、BG2 的 Drop1～Drop5；所有初始輪帶完全不變。</li>
+            <li>BG1 的 R2～R5 掉落金框改為 [7.1938%,7.3496%,7.3404%,6.0573%]。</li>
+            <li>BG2 的 R2～R5 掉落金框改為 [7.2544%,7.4149%,7.4226%,6.0908%]；Golden M1 仍為 0。</li>
+            <li>版本升為 2.0.0.33，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-06：BG1／BG2 的 R2～R5 金框比例增加 2 個百分點</h4>
+          <ul>
+            <li>依前文兩張 BG 表的比較需求，同時調整 BG_Symbol 與 BG_Symbol (2)。</li>
+            <li>R2～R5 初始輪帶各增加 4 顆金框；BG1 比例為 [28.5%,26.5%,20%,22%]，BG2 為 [28%,26%,19.5%,21.5%]。</li>
+            <li>Drop1～Drop5 的 R2～R5 也各增加 2 個百分點；R1、R6、R7及 Golden M1 規則不變。</li>
+            <li>版本升為 2.0.0.32，並同步原 XLSX。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-06：FG1／FG2 掉落金框比例還原為 10%</h4>
           <ul>
             <li>FG 選表率維持 40%／30%／30%，初始與 Retrigger 權重維持 [6000,4500,4500]。</li>

@@ -115,9 +115,9 @@ def resolve_base_dir() -> Path:
     for parent in (cwd, *cwd.parents):
         candidates.extend(
             [
-                parent / "Project" / "Slots" / "H999_幸運王牌2",
-                parent / "Project_AI" / "Slots" / "H999_幸運王牌2",
-                parent / "Slots" / "H999_幸運王牌2",
+                parent / "Project" / "Slots" / "H999_幸運王牌 2",
+                parent / "Project_AI" / "Slots" / "H999_幸運王牌 2",
+                parent / "Slots" / "H999_幸運王牌 2",
             ]
         )
 
@@ -134,7 +134,7 @@ def resolve_base_dir() -> Path:
             return candidate
 
     locations = "\n  - ".join(str(path / CONFIG_FILE) for path in checked)
-    raise FileNotFoundError(f"Cannot locate a valid H999 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H999_BASE_DIR to the H999_幸運王牌2 folder when running from another workspace.")
+    raise FileNotFoundError(f"Cannot locate a valid H999 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H999_BASE_DIR to the H999_幸運王牌 2 folder when running from another workspace.")
 
 
 BASE_DIR = resolve_base_dir()
@@ -202,6 +202,7 @@ class SpinResult:
     scatter_count: int = 0
     cascades: int = 0
     max_multiplier: int = 1
+    max_multiplier_start: bool = False
     golden_converted: int = 0
     w2_events: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
@@ -222,6 +223,8 @@ class RoundResult:
     cascades_bg: int = 0
     cascades_fg: int = 0
     max_multiplier: int = 1
+    max_multiplier_starts_bg: int = 0
+    max_multiplier_starts_fg: int = 0
     golden_converted: int = 0
     w2_events: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
@@ -302,11 +305,26 @@ class LuckyAce:
             board[reel][row] = W2
         return min(count, len(candidates))
 
-    def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
+    def roll_max_multiplier_start(self) -> bool:
+        chance = min(1.0, max(0.0, float(self.config.get("max_multiplier_start_chance", 0.1))))
+        return self.rng.random() < chance
+
+    def spin(
+        self,
+        table_name: str,
+        free_game: bool = False,
+        max_multiplier_start: bool | None = None,
+    ) -> SpinResult:
         table = self.tables[table_name]
         multipliers = table.multipliers or ([2, 4, 6, 10, 20] if free_game else [1, 2, 3, 5, 10])
+        if max_multiplier_start is None:
+            max_multiplier_start = self.roll_max_multiplier_start()
         board = self.board(table_name)
-        result = SpinResult(initial_board=[reel[:] for reel in board])
+        result = SpinResult(
+            initial_board=[reel[:] for reel in board],
+            max_multiplier=multipliers[-1] if max_multiplier_start else multipliers[0],
+            max_multiplier_start=max_multiplier_start,
+        )
         result.initial_symbols.update((reel, symbol) for reel, symbols in enumerate(board) for symbol in symbols)
         pending_gold: list[tuple[int, int]] = []
         bg_w2_used = False
@@ -320,7 +338,8 @@ class LuckyAce:
             raw_pay, hit_positions, details = self.evaluate(board)
             if raw_pay <= 0:
                 break
-            multiplier = multipliers[min(result.cascades, len(multipliers) - 1)]
+            multiplier_index = len(multipliers) - 1 if max_multiplier_start else min(result.cascades, len(multipliers) - 1)
+            multiplier = multipliers[multiplier_index]
             result.pay += raw_pay * multiplier * BASE_BET * BET_MULTI
             result.max_multiplier = max(result.max_multiplier, multiplier)
             result.cascades += 1
@@ -355,15 +374,16 @@ class LuckyAce:
         return float(card["min"]) < ratio <= float(card["max"])
 
     def card_spin(self, card: dict[str, Any]) -> SpinResult:
+        max_multiplier_start = self.roll_max_multiplier_start()
         if card.get("type") == "free_game":
             for _ in range(CARD_RETRY_LIMIT):
-                spin = self.spin("bg_low")
+                spin = self.spin("bg_low", max_multiplier_start=max_multiplier_start)
                 if spin.scatter_count >= 3:
                     return spin
             raise RuntimeError("FG trigger card retry limit exceeded")
         table_name = "bg_low" if card.get("table") == "A" else "bg_high"
         for _ in range(CARD_RETRY_LIMIT):
-            spin = self.spin(table_name)
+            spin = self.spin(table_name, max_multiplier_start=max_multiplier_start)
             if spin.scatter_count < 3 and self.card_matches(card, spin.pay):
                 return spin
         raise RuntimeError(f"BG card range retry limit exceeded: ({card['min']}, {card['max']}]")
@@ -378,7 +398,11 @@ class LuckyAce:
     def high_table(self) -> str:
         return str(weighted_pick(self.rng, ["fg_high_a", "fg_high_k", "fg_high_q", "fg_high_j"], self.config["free_game_mix"]["high_variant_weights"]))
 
-    def free_session(self, super_mode: bool = False) -> RoundResult:
+    def free_session(
+        self,
+        super_mode: bool = False,
+        max_start_flags: list[bool] | None = None,
+    ) -> RoundResult:
         result = RoundResult(fg_triggered=True)
         remaining, played = int(self.config["free_spins"]), 0
         queue = self.free_queue()
@@ -387,11 +411,13 @@ class LuckyAce:
             played += 1
             surface = queue.pop(0) if queue else "low"
             table_name = "super" if super_mode else self.high_table() if surface == "high" else "fg_low"
-            spin = self.spin(table_name, free_game=True)
+            max_multiplier_start = max_start_flags[played - 1] if max_start_flags and played <= len(max_start_flags) else None
+            spin = self.spin(table_name, free_game=True, max_multiplier_start=max_multiplier_start)
             result.pay_fg += spin.pay
             result.fg_spins += 1
             result.cascades_fg += spin.cascades
             result.max_multiplier = max(result.max_multiplier, spin.max_multiplier)
+            result.max_multiplier_starts_fg += int(spin.max_multiplier_start)
             result.golden_converted += spin.golden_converted
             result.w2_events += spin.w2_events
             result.symbol_hits.update(spin.symbol_hits)
@@ -408,8 +434,9 @@ class LuckyAce:
     def card_feature(self, section: str, super_mode: bool = False) -> RoundResult:
         profile = "weight_1" if section == "super_feature" else self.profile
         card = self.pick_card(section, profile)
+        max_start_flags = [self.roll_max_multiplier_start() for _ in range(int(self.config["free_spin_cap"]))]
         for _ in range(CARD_RETRY_LIMIT):
-            result = self.free_session(super_mode)
+            result = self.free_session(super_mode, max_start_flags=max_start_flags)
             if self.card_matches(card, result.pay_fg):
                 return result
         raise RuntimeError(f"{section} card range retry limit exceeded: ({card['min']}, {card['max']}]")
@@ -424,6 +451,8 @@ class LuckyAce:
         target.cascades_bg += source.cascades_bg
         target.cascades_fg += source.cascades_fg
         target.max_multiplier = max(target.max_multiplier, source.max_multiplier)
+        target.max_multiplier_starts_bg += source.max_multiplier_starts_bg
+        target.max_multiplier_starts_fg += source.max_multiplier_starts_fg
         target.golden_converted += source.golden_converted
         target.w2_events += source.w2_events
         target.symbol_hits.update(source.symbol_hits)
@@ -445,6 +474,7 @@ class LuckyAce:
         result.pay_bg = spin.pay
         result.cascades_bg = spin.cascades
         result.max_multiplier = spin.max_multiplier
+        result.max_multiplier_starts_bg = int(spin.max_multiplier_start)
         result.golden_converted = spin.golden_converted
         result.w2_events = spin.w2_events
         result.symbol_hits.update(spin.symbol_hits)
@@ -477,6 +507,8 @@ def _empty_stats() -> dict[str, Any]:
         "golden_converted": 0,
         "w2_events": 0,
         "max_multiplier": 1,
+        "max_multiplier_starts_bg": 0,
+        "max_multiplier_starts_fg": 0,
         "win_x_sum": 0.0,
         "win_x_square": 0.0,
         "combo_bg": Counter(),
@@ -511,6 +543,8 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int) -> dict[str, Any]:
         stats["golden_converted"] += result.golden_converted
         stats["w2_events"] += result.w2_events
         stats["max_multiplier"] = max(stats["max_multiplier"], result.max_multiplier)
+        stats["max_multiplier_starts_bg"] += result.max_multiplier_starts_bg
+        stats["max_multiplier_starts_fg"] += result.max_multiplier_starts_fg
         stats["win_x_sum"] += ratio
         stats["win_x_square"] += ratio * ratio
         stats["combo_bg"][min(result.cascades_bg, 5)] += 1
@@ -600,6 +634,8 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("retriggers", s["retriggers"]),
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
         ("avg_cascades_fg", s["cascades_fg"] / max(1, s["fg_spins"])),
+        ("max_start_rate_bg", s["max_multiplier_starts_bg"] / rounds),
+        ("max_start_rate_fg", s["max_multiplier_starts_fg"] / max(1, s["fg_spins"])),
         ("golden_converted", s["golden_converted"]),
         ("w2_events", s["w2_events"]),
         ("max_win_multiplier", s["max_multiplier"]),
@@ -700,7 +736,7 @@ def run_single_spin_debug() -> None:
     spin = game.spin("bg_high")
     print("\nInitial board:\n" + format_board(spin.initial_board))
     print("\nFinal board:\n" + format_board(spin.final_board))
-    print(f"pay={spin.pay}, cascades={spin.cascades}, scatter={spin.scatter_count}, max=x{spin.max_multiplier}")
+    print(f"pay={spin.pay}, cascades={spin.cascades}, scatter={spin.scatter_count}, max=x{spin.max_multiplier}, max_start={spin.max_multiplier_start}")
 
 
 def run_all_combinations() -> None:
