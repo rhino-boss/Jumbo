@@ -2788,7 +2788,8 @@
     const strip = Box.strips[tableId];
     const triggerStops = Array.from({ length: Box.reel_num }, (_, reel) => {
       const length = strip.reel_lengths[reel];
-      if (reel < 4) {
+      // Scatter is guaranteed on reels 2-5 (index 1-4), matching the BF_Symbol strip.
+      if (reel >= 1 && reel <= 4) {
         const candidates = [];
         for (let start = 0; start < length; start += 1) {
           for (let row = 0; row < Box.window_size; row += 1) {

@@ -30,7 +30,7 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -466,7 +466,9 @@ def generate_board(table_id, profile_index):
             if pick < running:
                 start = row
                 break
-        if table_id == BF_TABLE_ID and reel < 4:
+        # Buy Feature guarantees a scatter on reels 2-5 (index 1-4), matching the
+        # BF_Symbol strip layout; reels 1 and 6 (index 0 and 5) stay unforced.
+        if table_id == BF_TABLE_ID and 1 <= reel <= 4:
             candidate_count = 0
             for candidate in range(length):
                 for visible_row in range(WINDOW_SIZE):

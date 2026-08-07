@@ -844,7 +844,7 @@
       z-index: 3;
       border-color: #ffe56b;
       box-shadow: 0 0 10px rgba(255, 229, 107, 0.95), inset 0 0 18px rgba(255, 229, 107, 0.35);
-      animation: h999WildMark 180ms ease-in-out infinite alternate;
+      animation: H045WildMark 180ms ease-in-out infinite alternate;
     }
 
     .cell.wild-mark::after {
@@ -863,7 +863,7 @@
       pointer-events: none;
     }
 
-    @keyframes h999WildMark {
+    @keyframes H045WildMark {
       from { transform: scale(0.96); filter: brightness(1); }
       to { transform: scale(1.05); filter: brightness(1.35); }
     }
@@ -879,7 +879,7 @@
       font-size: 10px;
     }
 
-    /* H999 symbol artwork is scaled into every cell without cropping. */
+    /* H045 symbol artwork is scaled into every cell without cropping. */
     .cell .symbol-wrap {
       inset: 0;
       z-index: 1;
@@ -1459,16 +1459,12 @@
     }
 
     #controls #buyFeatureBtn,
-    #bet-mode-panel #buyFeatureBtn,
-    #controls #buySuperFeatureBtn,
-    #bet-mode-panel #buySuperFeatureBtn {
+    #bet-mode-panel #buyFeatureBtn {
       min-width: 110px;
     }
 
     #controls #buyFeatureBtn,
-    #bet-mode-panel #buyFeatureBtn,
-    #controls #buySuperFeatureBtn,
-    #bet-mode-panel #buySuperFeatureBtn {
+    #bet-mode-panel #buyFeatureBtn {
       color: var(--accent);
       border: 1px solid rgba(0, 221, 192, 0.4);
     }
@@ -2046,7 +2042,7 @@
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">H999192</span> <span id="gameName">Lucky Ace</span></span>
+      <span id="game-title"><span id="gameId">H045192</span> <span id="gameName">Lucky Ace</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2112,7 +2108,6 @@
           <div class="zone-body">
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
             <button id="buyFeatureBtn" type="button">Buy Feature (40.5x)</button>
-            <button id="buySuperFeatureBtn" type="button">Buy Super Feature (250x)</button>
           </div>
         </section>
 
@@ -2184,8 +2179,8 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92.js">H999192</option>
-            <option value="config_94.js">H999194</option>
+            <option value="config_92.js">H045192</option>
+            <option value="config_94.js">H045194</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2212,17 +2207,26 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule_H999.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule_H045.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
-  <script id="embeddedH999GameRuleMarkdown" type="text/plain">
+  <script id="embeddedH045GameRuleMarkdown" type="text/plain">
 # 幸運王牌2 (Lucky Ace) 遊戲規則說明
 
-> 文件版本：v0.5（草稿）
+> 文件版本：v1.0
 > 對標玩法：101003 Lucky Ace / Super Ace
-> 撰寫依據：以 `H016_幸運王牌` 現行專案為主來源完整複製；遊戲設定與數值使用 `Source/H999192.xlsx`、`Source/H999194.xlsx`
-> 編號：H999
-> 撰寫日期：2026-08-06
+> 撰寫依據：數學模型沿用 `H016_幸運王牌`；遊戲設定與數值使用 `Source/H045192.xlsx`、`Source/H045194.xlsx`
+> 編號：H045
+> 撰寫日期：2026-08-06（2026-08-07 更新：移除 SF、倍數階梯增為 5 階、PARsheet ID 改為 H045）
+
+### 與 H016 的差異
+
+| 項目 | H016 | H045 |
+| --- | --- | --- |
+| Super Feature（Buy Super Feature / Super Free Game） | 提供 | **不提供** |
+| BG 連消倍數 | ×1 ×2 ×3 ×5 | **×1 ×2 ×3 ×5 ×10** |
+| FG 連消倍數 | ×2 ×4 ×6 ×10 | **×2 ×4 ×6 ×10 ×20** |
+| 符號權重、賠率、卡片系統 | — | 與 H016 完全相同 |
 
 ---
 
@@ -2230,9 +2234,9 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 幸運王牌2（H999） |
-| Game ID | H999 |
-| PARsheet ID | H999192、H999194 |
+| 遊戲名稱（內部代號） | 幸運王牌2（H045） |
+| Game ID | H045 |
+| PARsheet ID | H045192、H045194 |
 | 遊戲英文名 | Lucky Ace |
 | 遊戲類型 | Video Slot - Ways / Cascade / Progressive Win Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
@@ -2241,13 +2245,13 @@
 | Normal Bet | 提供；每局以所選 Bet 計算派彩 |
 | Extra Bet | 無 |
 | Buy Feature | 提供，價格為 40.5 × Bet |
-| Buy Super Feature | 提供，價格為 250 × Bet |
+| Buy Super Feature | **不提供** |
 
 補充說明：
 
 * 遊戲設定、賠率與購買價格由 H016 複製；玩法執行順序、權重使用、消除補位與金框處理採 101003。
 * 來源中的 Coin / Credit 基準為 100；Help 顯示賠率亦以 100 Credit Bet 為基準。
-* H999192 與 H999194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
+* H045192 與 H045194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
 
 ---
 
@@ -2326,7 +2330,7 @@
 ## §5. 核心遊戲流程（Base Game）
 
 1. 玩家選擇 Normal Bet 並開始 Spin。
-2. 系統先依 H999 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
+2. 系統先依 H045 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪、每輪 4 列盤面。
 4. 每次 BG / Buy 進場 Spin 的 Win Multiplier 固定從 `×1` 開始。
 5. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
@@ -2344,7 +2348,7 @@
 
 * 權重僅決定「抽到哪一個符號」，不改變已落在盤面上的符號順序。
 * 初始盤面與 Cascade 補牌皆按各輪自己的 Symbol Weight 獨立抽取。
-* Base Game 高表 / 低表、Free Game 高表 / 低表、Buy Feature 進場表與 Super Free Game 各自使用獨立設定。
+* Base Game 高表 / 低表、Free Game 高表（A / K / Q / J）/ 低表與 Buy Feature 進場表各自使用獨立設定，分別對應工作頁 `BG_Symbol`、`BG_Symbol (2)`、`FG_Symbol` ~ `FG_Symbol (4)`、`FG_Symbol (5)`、`BF_Symbol`。
 * 同一局 Cascade 的補牌沿用該局已選定的盤面表，不在每一格補牌時重新選高表 / 低表。
 * Random Wild 的 `0 / 2 / 3 / 4` 亦依該模式專屬權重抽取；抽到 0 代表本次金框只轉成 `WW1`，不複製 `WW2`。
 
@@ -2390,11 +2394,11 @@
 | 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次中獎 | 第 5 次起 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 | ×10 |
-| Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 | ×20 |
+| Free Game | ×2 | ×4 | ×6 | ×10 | ×20 |
 
 * 每一次 Cascade 的得分使用該次表列倍數。
 * 倍數只在同一 Spin 的 Cascade 期間推進。
-* BG / Buy 進場局固定從 `×1` 開始；FG / Super FG 固定從 `×2` 開始。
+* BG / Buy 進場局固定從 `×1` 開始；FG 固定從 `×2` 開始。
 * 倍數只會隨有效中獎 Cascade 逐階提升，不會跳階。
 
 ---
@@ -2409,7 +2413,8 @@
 
 ### 7.2 FG 玩法
 
-* 每次進入 FG，依 H999 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
+* 每次進入 FG，依卡片系統該張卡的「使用的表」代碼（D / E）取得對應的 Free Game Table Mix 組別，再依該組權重決定 10 場中高表與低表的場數組合，最後隨機排列其出現順序。
+* 目前 PARsheet 中 Free Game 與 Buy Feature 的卡片皆使用 E 組，即固定 10 場高表。
 * 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
 * FG 的盤面生成、Ways、Cascade、金框轉 Wild、WW2 複製與 Scatter 保留規則同 BG。
 * 每場 FG Spin 固定從 `×2` 開始，並依有效中獎 Cascade 提升為 `×4`、`×6`、`×10`、`×20`。
@@ -2435,16 +2440,11 @@
 * 進場局所有 Cascade 結束後，以最終 `C1` 觸發 10 場 FG。
 * 進入 FG 後沿用 §7 的一般 FG 規則。
 
-### 8.2 Buy Super Feature
+> 本作不提供 Buy Super Feature / Super Free Game。
 
-* 價格：`250 × Bet`。
-* 進場方式同 Buy Feature，但進入後使用 Super Free Game 專用符號權重。
-* Super Free Game 中，每次有金框符號參與中獎並轉換時，Random Wild 不會抽到 0；必定進入 WW2 模式並額外複製 2～4 顆 `WW2`。
-* 其餘盤面、Cascade、FG 倍率、Retrigger 與 50 場上限同一般 FG。
+### 8.2 批次購買操作
 
-### 8.3 批次購買操作
-
-* Buy Feature 與 Buy Super Feature 最多可一次選擇 99 次。
+* Buy Feature 最多可一次選擇 99 次。
 * `總價 = 單次價格 × 數量`，確認後依所選數量逐局執行。
 * 第一局後，玩家可逐次按 Spin 繼續，或使用 Auto Spin 自動完成剩餘次數。
 * 剩餘購買次數完成前不可調整 Bet 或取消剩餘次數。
@@ -2490,8 +2490,7 @@
 
 * **9.5.1 Buy 進場使用專用權重**：不可直接以一般 BG 權重代替。
 * **9.5.2 Buy 進場局仍完整結算**：進場盤面的 Ways / Cascade 得分正常計入。
-* **9.5.3 一般 Buy 與 Super Buy 使用不同 FG 權重**。
-* **9.5.4 Super Buy 金框必定啟動 WW2 模式**：額外數量仍依 2 / 3 / 4 權重決定。
+* **9.5.3 無 Super Buy**：本作僅提供一般 Buy Feature。
 
 ### 9.6 Ways 計算相關
 
@@ -2532,7 +2531,6 @@
 | High / Low Table | 由卡片系統選定的高表 / 低表盤面權重組 |
 | Win Multiplier | 依同一 Spin 的 Cascade 次序提升的固定得分倍數 |
 | Buy Feature | 40.5 × Bet 的一般購買特色 |
-| Buy Super Feature | 250 × Bet 的超級購買特色 |
 
 ---
 
@@ -2541,32 +2539,47 @@
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
 * **主要複製來源**：`Project/Slots/H016_幸運王牌`
-* **設定與數值檔**：`Project/Slots/H999_幸運王牌 2/Source/H999192.xlsx`
-* **設定與數值檔**：`Project/Slots/H999_幸運王牌 2/Source/H999194.xlsx`
-* **Help 文案來源**：`Project/Slots/H999_幸運王牌 2/其他/H5企劃書_101003_Lucky Ace_幸運王牌2.xlsx` 的 `7.Help`
-* **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
+* **設定與數值檔**：`Project/Slots/H045_幸運王牌 2/Source/H045192.xlsx`
+* **設定與數值檔**：`Project/Slots/H045_幸運王牌 2/Source/H045194.xlsx`
+* **Help 文案來源**：`Project/Slots/H045_幸運王牌 2/其他/H5企劃書_101003_Lucky Ace_幸運王牌2.xlsx` 的 `7.Help`
+* **檔案架構與活頁簿格式參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
+
+活頁簿工作頁對應：
+
+| 工作頁 | 內容 |
+| --- | --- |
+| `Overview` | Model / RTP / Free Spins Setting / Pay Table / Feature |
+| `Description` | BG / FG / Buy Feature 流程 |
+| `Parameter` | 選表、Random Wild 權重、倍數階梯、FG 表組合權重、Feature 設定 |
+| `Multiplier_Weight` | 卡片系統區間權重（新手 / 老手並列） |
+| `Multiplier_Weight_Newbie` / `_Oldhand` | 各 Profile 的完整卡片系統資料 |
+| `OP Jackpot` | C1 出現次數統計 |
+| `BG_Symbol` / `BG_Symbol (2)` | BG 高表 / 低表 |
+| `FG_Symbol` ~ `FG_Symbol (4)` | FG 高表 A / K / Q / J |
+| `FG_Symbol (5)` | FG 低表 |
+| `BF_Symbol` | Buy Feature 進場表 |
 
 ### 來源優先級
 
 1. 權重如何使用、如何消除、金框消除與 WW2 產生順序：以 101003 為準。
-2. 盤面、Ways、賠率、FG 場次、購買價格與模式：以 H999 PARsheet 為準。
+2. 盤面、Ways、賠率、FG 場次、購買價格與模式：以 H045 PARsheet 為準。
 3. 對玩家顯示的 Help 敘述：以 Lucky Ace 企劃書為準。
-4. 若後續正式 H999 數值檔與本草稿不同，以正式 H999 PARsheet 為準並升版更新。
+4. 若後續正式 H045 數值檔與本草稿不同，以正式 H045 PARsheet 為準並升版更新。
   </script>
 
   <script>
-    const H999_CONFIG_FILES = ["config_92.js", "config_94.js"];
+    const H045_CONFIG_FILES = ["config_92.js", "config_94.js"];
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H999_ACTIVE_CONFIG = H999_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H999_CONFIG_FILES[0];
-    window.H999_ACTIVE_CONFIG = H999_ACTIVE_CONFIG;
-    document.write(`<script src="./${H999_ACTIVE_CONFIG}"><\/script>`);
+    const H045_ACTIVE_CONFIG = H045_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H045_CONFIG_FILES[0];
+    window.H045_ACTIVE_CONFIG = H045_ACTIVE_CONFIG;
+    document.write(`<script src="./${H045_ACTIVE_CONFIG}"><\/script>`);
   </script>
   <script>
 (() => {
   "use strict";
 
-  const Box = window.H999_BOX_DATA;
+  const Box = window.H045_BOX_DATA;
   if (!Box) return;
 
   const $ = (id) => document.getElementById(id);
@@ -2595,7 +2608,7 @@
     WW: "./Source/Image/WW_Symbol.png"
   });
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.png";
-  const HELP_PATH = "./game_rule_H999.md";
+  const HELP_PATH = "./game_rule_H045.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
 
@@ -2612,8 +2625,8 @@
       forceFg: "Force FG", buyStart: "Buy Feature paid — guaranteed FG trigger spin",
       insufficient: "Insufficient credit", invalidRng: "RNG needs exactly 6 valid stop indexes",
       noWin: "No win", complete: "complete", triggered: "Free Game triggered", retrigger: "Free Game retriggered",
-      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_rule_H999.md.",
-      footer: "Double-click to play offline. No server needed.", configFixed: "H999192 (xlsx)",
+      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_rule_H045.md.",
+      footer: "Double-click to play offline. No server needed.", configFixed: "H045192 (xlsx)",
       languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
     },
     zh: {
@@ -2628,8 +2641,8 @@
       forceFg: "強制 FG", buyStart: "已支付購買特色費用 — 本局保證觸發 FG",
       insufficient: "餘額不足", invalidRng: "RNG 必須是 6 個有效停輪位置",
       noWin: "未得獎", complete: "完成", triggered: "已觸發免費遊戲", retrigger: "免費遊戲再觸發",
-      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_rule_H999.md。",
-      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H999192（xlsx）",
+      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_rule_H045.md。",
+      footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H045192（xlsx）",
       languageChanged: "語言已切換為中文", resetDone: "遊戲與統計已重置"
     }
   };
@@ -3145,7 +3158,7 @@
     if (!markdown) {
       try { markdown = el.helpSourceFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
     }
-    if (!markdown) markdown = document.getElementById("embeddedH999GameRuleMarkdown")?.textContent?.trim() || "";
+    if (!markdown) markdown = document.getElementById("embeddedH045GameRuleMarkdown")?.textContent?.trim() || "";
     state.helpMarkdown = markdown; renderHelp(markdown);
   }
 
@@ -3184,7 +3197,7 @@
 
   document.title = `${Box.english_name || "Lucky Ace"} — Demo Game`;
   el.gameId.textContent = Box.game_id;
-  el.configSelect.value = H999_ACTIVE_CONFIG;
+  el.configSelect.value = H045_ACTIVE_CONFIG;
   el.configSelect.disabled = false;
   el.configSelect.addEventListener("change", () => {
     const url = new URL(window.location.href);
@@ -3198,15 +3211,15 @@
 (() => {
   "use strict";
 
-  const cfg = window.H999_CONFIG;
-  if (!cfg) throw new Error("H999 config was not loaded.");
+  const cfg = window.H045_CONFIG;
+  if (!cfg) throw new Error("H045 config was not loaded.");
   const $ = id => document.getElementById(id);
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   const WW = 0, W2 = 1, C1 = 2;
   const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
   const DISPLAY = {WW:"WILD",WW1:"WILD",WW2:"W2",C1:"C1",M1:"A♠",M2:"K♥",M3:"Q♦",M4:"J♣",A:"A",K:"K",Q:"Q",J:"J",M1G:"A♠",M2G:"K♥",M3G:"Q♦",M4G:"J♣",AG:"A",KG:"K",QG:"Q",JG:"J"};
-  const H999_IMAGE_ROOT = "./Source/Image/";
+  const H045_IMAGE_ROOT = "./Source/Image/";
   const SYMBOL_ASSET = {
     WW1:"W1_Symbol.png", WW2:"W2_Symbol.png", C1:"C1_Symbol.png", C2:"C2_Symbol.png",
     M1:"M1_Symbol.png", M2:"M2_Symbol.png", M3:"M3_Symbol.png", M4:"M4_Symbol.png",
@@ -3228,16 +3241,16 @@
 
   document.head.insertAdjacentHTML("beforeend", `<style>
     #multiplierWindow{grid-template-columns:repeat(5,minmax(0,1fr))!important;transform:none!important}
-    #board .h999-face{font:900 clamp(1rem,2.4vw,1.7rem)/1 Georgia,serif;color:#fff6cc;text-shadow:0 2px 5px #000;text-align:center}
+    #board .H045-face{font:900 clamp(1rem,2.4vw,1.7rem)/1 Georgia,serif;color:#fff6cc;text-shadow:0 2px 5px #000;text-align:center}
     #board .symbol-ww,#board .symbol-ww2{background:radial-gradient(circle,#d43c4a,#5b0713)!important}
     #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
     #board .symbol-code{display:none!important}
     #board .cell.gold .h015-symbol-img{width:94%;height:94%;max-width:94%;max-height:94%}
     #board .symbol-drop,#board .symbol-settle{
-      animation:h999-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
+      animation:H045-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
       will-change:transform;
     }
-    @keyframes h999-symbol-drop{
+    @keyframes H045-symbol-drop{
       from{transform:translateY(var(--drop-start,-112%))}
       82%{transform:translateY(3%)}
       to{transform:translateY(0)}
@@ -3368,12 +3381,17 @@
       }
       snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), message: "Eliminate + WW"});
       const drop = [];
+      // Gravity moves the WW1 cells left behind by golden hits, so remap the
+      // pending positions before the next loop reads them for the W2 pass.
+      const goldKeys = new Set(pendingGold.map(([reel, row]) => `${reel},${row}`));
+      const remappedGold = [];
       for (let reel = 0; reel < 5; reel++) {
         const survivors = board[reel].map((symbol, oldRow) => ({symbol, oldRow})).filter(item => item.symbol !== -1);
         const nextReel = survivors.map(item => item.symbol);
         survivors.forEach((item, finalRow) => {
           const rows = item.oldRow - finalRow;
           if (rows > 0) drop.push({key:`${reel},${finalRow}`, rows, isNew:false, delay:reel * 24});
+          if (goldKeys.has(`${reel},${item.oldRow}`)) remappedGold.push([reel, finalRow]);
         });
         while (nextReel.length < 4) {
           const finalRow = nextReel.length;
@@ -3382,13 +3400,15 @@
         }
         board[reel] = nextReel;
       }
+      pendingGold = remappedGold;
       snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplierIndex:multiplierIndex(combo), multiplier:multiplierAt(combo), message: "Drop"});
     }
     return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
   }
 
-  function freeQueue() {
-    const choices = cfg.free_game_mix.choices;
+  function freeQueue(group) {
+    const groups = cfg.free_game_mix.groups;
+    const choices = groups[group]?.length ? groups[group] : Object.values(groups).find(items => items.length);
     const choice = pick(choices, choices.map(item => item.weight)), queue = [];
     for (let i = 0; i < choice.high; i++) queue.push("high");
     for (let i = 0; i < choice.low; i++) queue.push("low");
@@ -3399,19 +3419,21 @@
     return pick(["fg_high_a","fg_high_k","fg_high_q","fg_high_j"], cfg.free_game_mix.high_variant_weights);
   }
 
-  function freeSession(superMode = false) {
+  function freeSession(group = "E") {
     let remaining = Number(cfg.free_spins), played = 0, pay = 0, retriggers = 0;
-    const queue = freeQueue(), spins = [], snapshots = [];
+    const queue = freeQueue(group), spins = [], snapshots = [];
+    const trigger = Number(cfg.scatter_trigger || 3);
     while (remaining > 0 && played < Number(cfg.free_spin_cap)) {
       remaining--; played++;
       const surface = queue.shift() || "low";
-      const table = superMode ? "super" : surface === "high" ? highTable() : "fg_low";
+      const table = surface === "high" ? highTable() : "fg_low";
       const result = spin(table, true);
       pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
-      if (result.scatter >= 3 && played + remaining < Number(cfg.free_spin_cap)) {
+      if (result.scatter >= trigger && played + remaining < Number(cfg.free_spin_cap)) {
         const add = Math.min(Number(cfg.retrigger_spins), Number(cfg.free_spin_cap) - played - remaining);
         remaining += add; retriggers += add > 0 ? 1 : 0;
-        queue.push("high", ...Array(Math.max(0, add - 1)).fill("low"));
+        const high = Math.min(Number(cfg.retrigger_high || 1), add);
+        queue.push(...Array(high).fill("high"), ...Array(Math.max(0, add - high)).fill("low"));
       }
     }
     return {pay, played, retriggers, spins, snapshots, maxMultiplier: Math.max(1, ...spins.map(item => item.maxMultiplier))};
@@ -3437,10 +3459,11 @@
     }
     throw new Error("Card retry limit exceeded");
   }
-  function cardFeature(section, superMode) {
-    const card = pickCard(section, section === "super_feature" ? "weight_1" : cardProfile());
-    if (!card) return freeSession(superMode);
-    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = freeSession(superMode); if (cardMatches(card, result.pay)) return result; }
+  function cardFeature(section) {
+    const card = pickCard(section);
+    if (!card) return freeSession("E");
+    const group = String(card.table || "E");
+    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = freeSession(group); if (cardMatches(card, result.pay)) return result; }
     throw new Error(`${section} retry limit exceeded`);
   }
 
@@ -3471,7 +3494,7 @@
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
       const asset = SYMBOL_ASSET[code];
-      cell.innerHTML = asset ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H999_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div>` : `<div class="symbol-wrap"><span class="h999-face">${DISPLAY[code] || code}</span><span class="symbol-code">${code}</span></div>`;
+      cell.innerHTML = asset ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H045_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div>` : `<div class="symbol-wrap"><span class="H045-face">${DISPLAY[code] || code}</span><span class="symbol-code">${code}</span></div>`;
       root.append(cell);
     }
   }
@@ -3542,19 +3565,19 @@
     $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers/state.rounds*100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)"; $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
     const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
     document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
-    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = remaining ? (state.fg.mode === 3 ? "Super Free Game" : "Free Game") : "Base Game";
+    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = remaining ? "Free Game" : "Base Game";
     $("spinBtn").textContent = remaining ? "Next FG" : "Spin";
   }
   function setBusy(value) {
     state.busy = value;
     const inFeature = state.fg.index < state.fg.spins.length;
-    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature; $("buySuperFeatureBtn").disabled = value || inFeature;
+    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature;
     $("betMinusBtn").disabled = value || inFeature || state.betIndex === 0; $("betPlusBtn").disabled = value || inFeature || state.betIndex === BET_LEVELS.length - 1;
   }
 
   function activateFeature(feature, mode) {
     state.fg = {spins:feature.spins, index:0, total:feature.spins.length, mode}; state.fgTriggers++;
-    $("featureStatus").textContent = mode === 3 ? "Super Feature" : "Free Game Triggered"; updateStats();
+    $("featureStatus").textContent = "Free Game Triggered"; updateStats();
   }
 
   function buyEntry() {
@@ -3576,7 +3599,7 @@
       if (state.fg.index < state.fg.spins.length) {
         await playFeatureSpin();
       } else {
-        state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1);
+        state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
         let base;
@@ -3584,9 +3607,8 @@
         else base = buyEntry();
         await animateSnapshots(base.snapshots, false); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${format(base.pay)}` : "No Win";
-        if (base.scatter >= 3 || mode !== 0) {
-          const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
-          activateFeature(cardFeature(section, superMode), mode);
+        if (base.scatter >= Number(cfg.scatter_trigger || 3) || mode !== 0) {
+          activateFeature(cardFeature(mode === 0 ? "free_game" : "buy_feature"), mode);
         }
       }
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
@@ -3662,14 +3684,13 @@
   }
 
   function helpHtml() {
-    const markdown = document.getElementById("embeddedH999GameRuleMarkdown")?.textContent?.trim() || "";
+    const markdown = document.getElementById("embeddedH045GameRuleMarkdown")?.textContent?.trim() || "";
     return renderGameRuleMarkdown(markdown);
   }
 
   function applyLanguage() {
     $("gameId").textContent = cfg.game_id; $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
     $("buyFeatureBtn").textContent = state.language === "zh" ? "購買特色 (40.5x)" : "Buy Feature (40.5x)";
-    $("buySuperFeatureBtn").textContent = state.language === "zh" ? "購買超級特色 (250x)" : "Buy Super Feature (250x)";
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
@@ -3681,7 +3702,7 @@
     $("betMenu").querySelectorAll("button").forEach(button => button.onclick = () => {state.betIndex=Number(button.dataset.index);$("betMenu").classList.add("hidden");updateStats();});
   }
 
-  $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2); $("buySuperFeatureBtn").onclick = () => play(3);
+  $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2);
   $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=state.auto?"Stop":"Auto";if(state.auto&&!state.busy)play(0);};
   $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);updateStats();};
   $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent=`x${$("speedRange").value}`;
@@ -3689,7 +3710,7 @@
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
-  $("configSelect").value=window.H999_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
+  $("configSelect").value=window.H045_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
   document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
 })();
   </script>

@@ -1,10 +1,19 @@
 # 幸運王牌2 (Lucky Ace) 遊戲規則說明
 
-> 文件版本：v0.5（草稿）
+> 文件版本：v1.0
 > 對標玩法：101003 Lucky Ace / Super Ace
-> 撰寫依據：以 `H016_幸運王牌` 現行專案為主來源完整複製；遊戲設定與數值使用 `Source/H999192.xlsx`、`Source/H999194.xlsx`
-> 編號：H999
-> 撰寫日期：2026-08-06
+> 撰寫依據：數學模型沿用 `H016_幸運王牌`；遊戲設定與數值使用 `Source/H045192.xlsx`、`Source/H045194.xlsx`
+> 編號：H045
+> 撰寫日期：2026-08-06（2026-08-07 更新：移除 SF、倍數階梯增為 5 階、PARsheet ID 改為 H045）
+
+### 與 H016 的差異
+
+| 項目 | H016 | H045 |
+| --- | --- | --- |
+| Super Feature（Buy Super Feature / Super Free Game） | 提供 | **不提供** |
+| BG 連消倍數 | ×1 ×2 ×3 ×5 | **×1 ×2 ×3 ×5 ×10** |
+| FG 連消倍數 | ×2 ×4 ×6 ×10 | **×2 ×4 ×6 ×10 ×20** |
+| 符號權重、賠率、卡片系統 | — | 與 H016 完全相同 |
 
 ---
 
@@ -12,9 +21,9 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 幸運王牌2（H999） |
-| Game ID | H999 |
-| PARsheet ID | H999192、H999194 |
+| 遊戲名稱（內部代號） | 幸運王牌2（H045） |
+| Game ID | H045 |
+| PARsheet ID | H045192、H045194 |
 | 遊戲英文名 | Lucky Ace |
 | 遊戲類型 | Video Slot - Ways / Cascade / Progressive Win Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
@@ -23,13 +32,13 @@
 | Normal Bet | 提供；每局以所選 Bet 計算派彩 |
 | Extra Bet | 無 |
 | Buy Feature | 提供，價格為 40.5 × Bet |
-| Buy Super Feature | 提供，價格為 250 × Bet |
+| Buy Super Feature | **不提供** |
 
 補充說明：
 
 * 遊戲設定、賠率與購買價格由 H016 複製；玩法執行順序、權重使用、消除補位與金框處理採 101003。
 * 來源中的 Coin / Credit 基準為 100；Help 顯示賠率亦以 100 Credit Bet 為基準。
-* H999192 與 H999194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
+* H045192 與 H045194 分別提供 92% 與 94% 設定，實際載入哪一組由使用的 PARsheet / config 決定。
 
 ---
 
@@ -108,7 +117,7 @@
 ## §5. 核心遊戲流程（Base Game）
 
 1. 玩家選擇 Normal Bet 並開始 Spin。
-2. 系統先依 H999 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
+2. 系統先依 H045 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪、每輪 4 列盤面。
 4. 每次 BG / Buy 進場 Spin 的 Win Multiplier 固定從 `×1` 開始。
 5. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
@@ -126,7 +135,7 @@
 
 * 權重僅決定「抽到哪一個符號」，不改變已落在盤面上的符號順序。
 * 初始盤面與 Cascade 補牌皆按各輪自己的 Symbol Weight 獨立抽取。
-* Base Game 高表 / 低表、Free Game 高表 / 低表、Buy Feature 進場表與 Super Free Game 各自使用獨立設定。
+* Base Game 高表 / 低表、Free Game 高表（A / K / Q / J）/ 低表與 Buy Feature 進場表各自使用獨立設定，分別對應工作頁 `BG_Symbol`、`BG_Symbol (2)`、`FG_Symbol` ~ `FG_Symbol (4)`、`FG_Symbol (5)`、`BF_Symbol`。
 * 同一局 Cascade 的補牌沿用該局已選定的盤面表，不在每一格補牌時重新選高表 / 低表。
 * Random Wild 的 `0 / 2 / 3 / 4` 亦依該模式專屬權重抽取；抽到 0 代表本次金框只轉成 `WW1`，不複製 `WW2`。
 
@@ -172,11 +181,11 @@
 | 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次中獎 | 第 5 次起 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 | ×10 |
-| Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 | ×20 |
+| Free Game | ×2 | ×4 | ×6 | ×10 | ×20 |
 
 * 每一次 Cascade 的得分使用該次表列倍數。
 * 倍數只在同一 Spin 的 Cascade 期間推進。
-* BG / Buy 進場局固定從 `×1` 開始；FG / Super FG 固定從 `×2` 開始。
+* BG / Buy 進場局固定從 `×1` 開始；FG 固定從 `×2` 開始。
 * 倍數只會隨有效中獎 Cascade 逐階提升，不會跳階。
 
 ---
@@ -191,7 +200,8 @@
 
 ### 7.2 FG 玩法
 
-* 每次進入 FG，依 H999 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
+* 每次進入 FG，依卡片系統該張卡的「使用的表」代碼（D / E）取得對應的 Free Game Table Mix 組別，再依該組權重決定 10 場中高表與低表的場數組合，最後隨機排列其出現順序。
+* 目前 PARsheet 中 Free Game 與 Buy Feature 的卡片皆使用 E 組，即固定 10 場高表。
 * 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
 * FG 的盤面生成、Ways、Cascade、金框轉 Wild、WW2 複製與 Scatter 保留規則同 BG。
 * 每場 FG Spin 固定從 `×2` 開始，並依有效中獎 Cascade 提升為 `×4`、`×6`、`×10`、`×20`。
@@ -217,16 +227,11 @@
 * 進場局所有 Cascade 結束後，以最終 `C1` 觸發 10 場 FG。
 * 進入 FG 後沿用 §7 的一般 FG 規則。
 
-### 8.2 Buy Super Feature
+> 本作不提供 Buy Super Feature / Super Free Game。
 
-* 價格：`250 × Bet`。
-* 進場方式同 Buy Feature，但進入後使用 Super Free Game 專用符號權重。
-* Super Free Game 中，每次有金框符號參與中獎並轉換時，Random Wild 不會抽到 0；必定進入 WW2 模式並額外複製 2～4 顆 `WW2`。
-* 其餘盤面、Cascade、FG 倍率、Retrigger 與 50 場上限同一般 FG。
+### 8.2 批次購買操作
 
-### 8.3 批次購買操作
-
-* Buy Feature 與 Buy Super Feature 最多可一次選擇 99 次。
+* Buy Feature 最多可一次選擇 99 次。
 * `總價 = 單次價格 × 數量`，確認後依所選數量逐局執行。
 * 第一局後，玩家可逐次按 Spin 繼續，或使用 Auto Spin 自動完成剩餘次數。
 * 剩餘購買次數完成前不可調整 Bet 或取消剩餘次數。
@@ -272,8 +277,7 @@
 
 * **9.5.1 Buy 進場使用專用權重**：不可直接以一般 BG 權重代替。
 * **9.5.2 Buy 進場局仍完整結算**：進場盤面的 Ways / Cascade 得分正常計入。
-* **9.5.3 一般 Buy 與 Super Buy 使用不同 FG 權重**。
-* **9.5.4 Super Buy 金框必定啟動 WW2 模式**：額外數量仍依 2 / 3 / 4 權重決定。
+* **9.5.3 無 Super Buy**：本作僅提供一般 Buy Feature。
 
 ### 9.6 Ways 計算相關
 
@@ -314,7 +318,6 @@
 | High / Low Table | 由卡片系統選定的高表 / 低表盤面權重組 |
 | Win Multiplier | 依同一 Spin 的 Cascade 次序提升的固定得分倍數 |
 | Buy Feature | 40.5 × Bet 的一般購買特色 |
-| Buy Super Feature | 250 × Bet 的超級購買特色 |
 
 ---
 
@@ -323,15 +326,30 @@
 * **玩法主來源**：`Project/Slots/其他/模擬程式_Lin/101003/simulation_clean.py`
 * **玩法權重資料參考**：`Project/Slots/其他/模擬程式_Lin/101003/data.js`
 * **主要複製來源**：`Project/Slots/H016_幸運王牌`
-* **設定與數值檔**：`Project/Slots/H999_幸運王牌 2/Source/H999192.xlsx`
-* **設定與數值檔**：`Project/Slots/H999_幸運王牌 2/Source/H999194.xlsx`
-* **Help 文案來源**：`Project/Slots/H999_幸運王牌 2/其他/H5企劃書_101003_Lucky Ace_幸運王牌2.xlsx` 的 `7.Help`
-* **檔案架構參考**：`Project/Slots/H026_彩罐熱舞 1000`
+* **設定與數值檔**：`Project/Slots/H045_幸運王牌 2/Source/H045192.xlsx`
+* **設定與數值檔**：`Project/Slots/H045_幸運王牌 2/Source/H045194.xlsx`
+* **Help 文案來源**：`Project/Slots/H045_幸運王牌 2/其他/H5企劃書_101003_Lucky Ace_幸運王牌2.xlsx` 的 `7.Help`
+* **檔案架構與活頁簿格式參考**：`Project/Slots/H026_彩罐熱舞 1000`
 * **index 介面參考**：`Project/Slots/H015_賞金列車/index.html`
+
+活頁簿工作頁對應：
+
+| 工作頁 | 內容 |
+| --- | --- |
+| `Overview` | Model / RTP / Free Spins Setting / Pay Table / Feature |
+| `Description` | BG / FG / Buy Feature 流程 |
+| `Parameter` | 選表、Random Wild 權重、倍數階梯、FG 表組合權重、Feature 設定 |
+| `Multiplier_Weight` | 卡片系統區間權重（新手 / 老手並列） |
+| `Multiplier_Weight_Newbie` / `_Oldhand` | 各 Profile 的完整卡片系統資料 |
+| `OP Jackpot` | C1 出現次數統計 |
+| `BG_Symbol` / `BG_Symbol (2)` | BG 高表 / 低表 |
+| `FG_Symbol` ~ `FG_Symbol (4)` | FG 高表 A / K / Q / J |
+| `FG_Symbol (5)` | FG 低表 |
+| `BF_Symbol` | Buy Feature 進場表 |
 
 ### 來源優先級
 
 1. 權重如何使用、如何消除、金框消除與 WW2 產生順序：以 101003 為準。
-2. 盤面、Ways、賠率、FG 場次、購買價格與模式：以 H999 PARsheet 為準。
+2. 盤面、Ways、賠率、FG 場次、購買價格與模式：以 H045 PARsheet 為準。
 3. 對玩家顯示的 Help 敘述：以 Lucky Ace 企劃書為準。
-4. 若後續正式 H999 數值檔與本草稿不同，以正式 H999 PARsheet 為準並升版更新。
+4. 若後續正式 H045 數值檔與本草稿不同，以正式 H045 PARsheet 為準並升版更新。

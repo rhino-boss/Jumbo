@@ -1,7 +1,7 @@
-"""H999 幸運王牌2 simulator.
+"""H045 幸運王牌2 simulator.
 
 The runner, environment settings, batch workflow and Excel report layout follow
-H015.  The game engine follows 101003 and reads the H999-derived H999 configs:
+H015.  The game engine follows 101003 and reads the H045-derived H045 configs:
 5x4 Ways, cascades, golden-symbol retention, WW/W2 conversion and fixed combo
 multipliers.
 """
@@ -35,7 +35,7 @@ if hasattr(sys.stdout, "reconfigure"):
 CONFIG_FILE = "config_92.js"
 TOTAL_ROUNDS = 100_000
 BET_MULTI = 1
-BET_MODE = 0  # 0=Normal Bet, 2=Buy Feature, 3=Buy Super Feature
+BET_MODE = 0  # 0=Normal Bet, 2=Buy Feature (H045 has no Super Feature)
 CARD_SYSTEM_ENABLED = True
 CARD_SYSTEM_IS_NEWBIE = False
 
@@ -55,8 +55,7 @@ CARD_RETRY_LIMIT = 200_000
 BASE_BET = 100.0
 MODE_NORMALBET = 0
 MODE_FEATUREBUY = 2
-MODE_SUPERBUY = 3
-SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_FEATUREBUY, MODE_SUPERBUY)
+SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_FEATUREBUY)
 WW = 0
 W2 = 1
 C1 = 2
@@ -77,7 +76,7 @@ def _env_bool(name: str, default: bool) -> bool:
     raise ValueError(f"{name} must be true/false, got {value!r}")
 
 
-CONFIG_FILE = os.environ.get("H999_CONFIG_FILE", CONFIG_FILE)
+CONFIG_FILE = os.environ.get("H045_CONFIG_FILE", CONFIG_FILE)
 
 
 def _load_config(path: Path) -> dict[str, Any]:
@@ -88,7 +87,7 @@ def _load_config(path: Path) -> dict[str, Any]:
     return json.loads(raw[start : end + 1])
 
 
-def _is_h999_config(path: Path) -> bool:
+def _is_H045_config(path: Path) -> bool:
     if not path.is_file():
         return False
     try:
@@ -96,14 +95,14 @@ def _is_h999_config(path: Path) -> bool:
     except (OSError, ValueError, json.JSONDecodeError):
         return False
     required = {"tables", "symbol_names", "pays", "free_game_mix"}
-    return str(data.get("game_id")) == "H999" and required.issubset(data)
+    return str(data.get("game_id")) == "H045" and required.issubset(data)
 
 
 def resolve_base_dir() -> Path:
-    """Locate H999 safely when run as a file, `%run`, or a Notebook cell."""
+    """Locate H045 safely when run as a file, `%run`, or a Notebook cell."""
     cwd = Path.cwd().resolve()
     candidates: list[Path] = []
-    override = os.environ.get("H999_BASE_DIR")
+    override = os.environ.get("H045_BASE_DIR")
     if override:
         candidates.append(Path(override).expanduser())
 
@@ -115,9 +114,9 @@ def resolve_base_dir() -> Path:
     for parent in (cwd, *cwd.parents):
         candidates.extend(
             [
-                parent / "Project" / "Slots" / "H999_幸運王牌 2",
-                parent / "Project_AI" / "Slots" / "H999_幸運王牌 2",
-                parent / "Slots" / "H999_幸運王牌 2",
+                parent / "Project" / "Slots" / "H045_幸運王牌 2",
+                parent / "Project_AI" / "Slots" / "H045_幸運王牌 2",
+                parent / "Slots" / "H045_幸運王牌 2",
             ]
         )
 
@@ -130,30 +129,30 @@ def resolve_base_dir() -> Path:
         if candidate in checked:
             continue
         checked.append(candidate)
-        if _is_h999_config(candidate / CONFIG_FILE):
+        if _is_H045_config(candidate / CONFIG_FILE):
             return candidate
 
     locations = "\n  - ".join(str(path / CONFIG_FILE) for path in checked)
-    raise FileNotFoundError(f"Cannot locate a valid H999 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H999_BASE_DIR to the H999_幸運王牌 2 folder when running from another workspace.")
+    raise FileNotFoundError(f"Cannot locate a valid H045 {CONFIG_FILE}. Checked:\n  - {locations}\n" "Set H045_BASE_DIR to the H045_幸運王牌 2 folder when running from another workspace.")
 
 
 BASE_DIR = resolve_base_dir()
 OUTPUT_DIR = BASE_DIR / "Record"
 SIMULATOR_PATH = BASE_DIR / "Simulator.py"
-TOTAL_ROUNDS = int(os.environ.get("H999_TOTAL_ROUNDS", TOTAL_ROUNDS))
-BET_MULTI = int(os.environ.get("H999_BET_MULTI", BET_MULTI))
-BET_MODE = int(os.environ.get("H999_BET_MODE", BET_MODE))
-CARD_SYSTEM_ENABLED = _env_bool("H999_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
-CARD_SYSTEM_IS_NEWBIE = _env_bool("H999_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
-RUN_ALL_COMBINATIONS = _env_bool("H999_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
-OUTPUT_REPORT = _env_bool("H999_OUTPUT_REPORT", OUTPUT_REPORT)
-SHOW_CONSOLE_SUMMARY = _env_bool("H999_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
-SHOW_CONSOLE_DETAIL = _env_bool("H999_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
-RUN_SINGLE_SPIN_DEBUG = _env_bool("H999_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
-THREADS = max(1, int(os.environ.get("H999_THREADS", THREADS)))
+TOTAL_ROUNDS = int(os.environ.get("H045_TOTAL_ROUNDS", TOTAL_ROUNDS))
+BET_MULTI = int(os.environ.get("H045_BET_MULTI", BET_MULTI))
+BET_MODE = int(os.environ.get("H045_BET_MODE", BET_MODE))
+CARD_SYSTEM_ENABLED = _env_bool("H045_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
+CARD_SYSTEM_IS_NEWBIE = _env_bool("H045_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+RUN_ALL_COMBINATIONS = _env_bool("H045_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
+OUTPUT_REPORT = _env_bool("H045_OUTPUT_REPORT", OUTPUT_REPORT)
+SHOW_CONSOLE_SUMMARY = _env_bool("H045_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
+SHOW_CONSOLE_DETAIL = _env_bool("H045_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
+RUN_SINGLE_SPIN_DEBUG = _env_bool("H045_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
+THREADS = max(1, int(os.environ.get("H045_THREADS", THREADS)))
 CFG = _load_config(BASE_DIR / CONFIG_FILE)
-GAME_ID = str(CFG.get("game_id", "H999"))
-PARSHEET_ID = str(CFG.get("parsheet_id", "H999192"))
+GAME_ID = str(CFG.get("game_id", "H045"))
+PARSHEET_ID = str(CFG.get("parsheet_id", "H045192"))
 GAME_NAME = str(CFG.get("name_zh", "幸運王牌2"))
 SYMBOL_STR = {int(k): v for k, v in CFG["symbol_names"].items()}
 
@@ -242,6 +241,7 @@ class LuckyAce:
         self.rng = random.Random(seed)
         self.card_enabled = card_enabled and bool(config.get("card_system", {}).get("enabled"))
         self.profile = "weight_1" if newbie else "weight_2"
+        self.scatter_trigger = int(config.get("scatter_trigger", 3))
         self.tables = {name: self._prepare(raw) for name, raw in config["tables"].items()}
 
     @staticmethod
@@ -294,7 +294,12 @@ class LuckyAce:
         count = int(weighted_pick(self.rng, table.random_wild_values, table.random_wild_weights))
         if count <= 0:
             return 0
-        source = self.rng.choice(gold)
+        # Only a cell still holding the WW1 produced by a golden hit may become
+        # the WW2 source; anything else means the position was already reused.
+        sources = [(reel, row) for reel, row in gold if board[reel][row] == WW]
+        if not sources:
+            return 0
+        source = self.rng.choice(sources)
         board[source[0]][source[1]] = W2
         candidates = [(reel, row) for reel in range(1, 5) for row, symbol in enumerate(board[reel]) if symbol not in (WW, W2, C1)]
         self.rng.shuffle(candidates)
@@ -339,11 +344,20 @@ class LuckyAce:
                     result.golden_converted += 1
                 else:
                     board[reel][row] = -1
+            # Gravity shifts surviving cells, so the golden positions recorded
+            # above have to be remapped before the WW2 pass reads them.
+            gold_rows = {(reel, row) for reel, row in pending_gold}
+            remapped: list[tuple[int, int]] = []
             for reel in range(5):
-                remaining = [symbol for symbol in board[reel] if symbol != -1]
+                kept = [row for row, symbol in enumerate(board[reel]) if symbol != -1]
+                remaining = [board[reel][row] for row in kept]
                 dropped = [table.reels[reel].pick(self.rng) for _ in range(4 - len(remaining))]
                 result.drop_symbols.update((reel, symbol) for symbol in dropped)
                 board[reel] = remaining + dropped
+                for new_row, old_row in enumerate(kept):
+                    if (reel, old_row) in gold_rows:
+                        remapped.append((reel, new_row))
+            pending_gold = remapped
         result.scatter_count = sum(symbol == C1 for reel in board for symbol in reel)
         result.final_board = [reel[:] for reel in board]
         return result
@@ -362,18 +376,21 @@ class LuckyAce:
         if card.get("type") == "free_game":
             for _ in range(CARD_RETRY_LIMIT):
                 spin = self.spin("bg_low")
-                if spin.scatter_count >= 3:
+                if spin.scatter_count >= self.scatter_trigger:
                     return spin
             raise RuntimeError("FG trigger card retry limit exceeded")
         table_name = "bg_low" if card.get("table") == "A" else "bg_high"
         for _ in range(CARD_RETRY_LIMIT):
             spin = self.spin(table_name)
-            if spin.scatter_count < 3 and self.card_matches(card, spin.pay):
+            if spin.scatter_count < self.scatter_trigger and self.card_matches(card, spin.pay):
                 return spin
         raise RuntimeError(f"BG card range retry limit exceeded: ({card['min']}, {card['max']}]")
 
-    def free_queue(self) -> list[str]:
-        choices = self.config["free_game_mix"]["choices"]
+    def free_queue(self, group: str) -> list[str]:
+        # The card's 使用的表 code selects the Free Game Table Mix group; the
+        # weights inside that group then pick the high/low split.
+        groups = self.config["free_game_mix"]["groups"]
+        choices = groups.get(group) or next(items for items in groups.values() if items)
         choice = weighted_pick(self.rng, choices, [float(item["weight"]) for item in choices])
         queue = ["high"] * int(choice["high"]) + ["low"] * int(choice["low"])
         self.rng.shuffle(queue)
@@ -382,15 +399,15 @@ class LuckyAce:
     def high_table(self) -> str:
         return str(weighted_pick(self.rng, ["fg_high_a", "fg_high_k", "fg_high_q", "fg_high_j"], self.config["free_game_mix"]["high_variant_weights"]))
 
-    def free_session(self, super_mode: bool = False) -> RoundResult:
+    def free_session(self, group: str = "E") -> RoundResult:
         result = RoundResult(fg_triggered=True)
         remaining, played = int(self.config["free_spins"]), 0
-        queue = self.free_queue()
+        queue = self.free_queue(group)
         while remaining > 0 and played < int(self.config["free_spin_cap"]):
             remaining -= 1
             played += 1
             surface = queue.pop(0) if queue else "low"
-            table_name = "super" if super_mode else self.high_table() if surface == "high" else "fg_low"
+            table_name = self.high_table() if surface == "high" else "fg_low"
             spin = self.spin(table_name, free_game=True)
             result.pay_fg += spin.pay
             result.fg_spins += 1
@@ -402,18 +419,18 @@ class LuckyAce:
             result.symbol_pay.update(spin.symbol_pay)
             result.fg_initial_symbols.update(spin.initial_symbols)
             result.fg_drop_symbols.update(spin.drop_symbols)
-            if spin.scatter_count >= 3 and played + remaining < int(self.config["free_spin_cap"]):
+            if spin.scatter_count >= self.scatter_trigger and played + remaining < int(self.config["free_spin_cap"]):
                 add = min(int(self.config["retrigger_spins"]), int(self.config["free_spin_cap"]) - played - remaining)
                 remaining += add
                 result.retriggers += int(add > 0)
-                queue.extend(["high"] + ["low"] * max(0, add - 1))
+                high = min(int(self.config.get("retrigger_high", 1)), add)
+                queue.extend(["high"] * high + ["low"] * max(0, add - high))
         return result
 
-    def card_feature(self, section: str, super_mode: bool = False) -> RoundResult:
-        profile = "weight_1" if section == "super_feature" else self.profile
-        card = self.pick_card(section, profile)
+    def card_feature(self, section: str) -> RoundResult:
+        card = self.pick_card(section)
         for _ in range(CARD_RETRY_LIMIT):
-            result = self.free_session(super_mode)
+            result = self.free_session(str(card.get("table") or "E"))
             if self.card_matches(card, result.pay_fg):
                 return result
         raise RuntimeError(f"{section} card range retry limit exceeded: ({card['min']}, {card['max']}]")
@@ -438,9 +455,8 @@ class LuckyAce:
         target.fg_drop_symbols.update(source.fg_drop_symbols)
 
     def round(self, bet_mode: int) -> RoundResult:
-        if bet_mode in (MODE_FEATUREBUY, MODE_SUPERBUY):
-            super_mode = bet_mode == MODE_SUPERBUY
-            return self.card_feature("super_feature" if super_mode else "buy_feature", super_mode) if self.card_enabled else self.free_session(super_mode)
+        if bet_mode == MODE_FEATUREBUY:
+            return self.card_feature("buy_feature") if self.card_enabled else self.free_session("E")
         result = RoundResult()
         if self.card_enabled:
             spin = self.card_spin(self.pick_card("base_game"))
@@ -455,14 +471,14 @@ class LuckyAce:
         result.symbol_pay.update(spin.symbol_pay)
         result.bg_initial_symbols.update(spin.initial_symbols)
         result.bg_drop_symbols.update(spin.drop_symbols)
-        if spin.scatter_count >= 3:
-            feature = self.card_feature("free_game") if self.card_enabled else self.free_session()
+        if spin.scatter_count >= self.scatter_trigger:
+            feature = self.card_feature("free_game") if self.card_enabled else self.free_session("E")
             self.merge(result, feature)
         return result
 
 
 def wager_for_mode(mode: int) -> float:
-    factor = 1.0 if mode == MODE_NORMALBET else float(CFG["buy_price"] if mode == MODE_FEATUREBUY else CFG["super_buy_price"])
+    factor = 1.0 if mode == MODE_NORMALBET else float(CFG["buy_price"])
     return BASE_BET * BET_MULTI * factor
 
 
@@ -568,7 +584,7 @@ simulate = run_simulation
 
 
 def mode_name(mode: int) -> str:
-    return {0: "Normal Bet", 2: "Buy Feature", 3: "Buy Super Feature"}.get(mode, f"Mode {mode}")
+    return {0: "Normal Bet", 2: "Buy Feature"}.get(mode, f"Mode {mode}")
 
 
 def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
@@ -578,8 +594,6 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     mean = s["win_x_sum"] / rounds
     variance = max(0.0, s["win_x_square"] / rounds - mean * mean)
     profile = "off" if not CARD_SYSTEM_ENABLED else "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"
-    if result["bet_mode"] == MODE_SUPERBUY and CARD_SYSTEM_ENABLED:
-        profile += " / super weight_1"
     return [
         ("parsheet_id", PARSHEET_ID),
         ("game_id", GAME_ID),
@@ -643,7 +657,7 @@ def print_symbol_ratio_tables(result: dict[str, Any]) -> None:
 
 def print_console(result: dict[str, Any]) -> None:
     if SHOW_CONSOLE_SUMMARY:
-        print("\n=== H999 幸運王牌2 Simulation ===")
+        print("\n=== H045 幸運王牌2 Simulation ===")
         for key, value in summary_rows(result):
             if key.startswith("rtp_") or key.endswith("_rate"):
                 print(f"{key:22s}: {float(value) * 100:.6f}%")
@@ -713,13 +727,13 @@ def run_all_combinations() -> None:
         env["PYTHONUNBUFFERED"] = "1"
         env.update(
             {
-                "H999_CONFIG_FILE": str(combo.get("config_file", CONFIG_FILE)),
-                "H999_BET_MODE": str(combo.get("bet_mode", 0)),
-                "H999_TOTAL_ROUNDS": str(combo.get("total_rounds", TOTAL_ROUNDS)),
-                "H999_CARD_SYSTEM_IS_NEWBIE": str(bool(combo.get("card_system_is_newbie", False))).lower(),
-                "H999_CARD_SYSTEM_ENABLED": str(bool(combo.get("card_system_enabled", True))).lower(),
-                "H999_RUN_ALL_COMBINATIONS": "false",
-                "H999_BATCH_CHILD": "1",
+                "H045_CONFIG_FILE": str(combo.get("config_file", CONFIG_FILE)),
+                "H045_BET_MODE": str(combo.get("bet_mode", 0)),
+                "H045_TOTAL_ROUNDS": str(combo.get("total_rounds", TOTAL_ROUNDS)),
+                "H045_CARD_SYSTEM_IS_NEWBIE": str(bool(combo.get("card_system_is_newbie", False))).lower(),
+                "H045_CARD_SYSTEM_ENABLED": str(bool(combo.get("card_system_enabled", True))).lower(),
+                "H045_RUN_ALL_COMBINATIONS": "false",
+                "H045_BATCH_CHILD": "1",
             }
         )
         print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {combo} ===", flush=True)
@@ -739,7 +753,7 @@ def run_all_combinations() -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="H999 幸運王牌2 simulator (H015 runner structure)")
+    parser = argparse.ArgumentParser(description="H045 幸運王牌2 simulator (H015 runner structure)")
     parser.add_argument("rounds", nargs="?", type=int)
     parser.add_argument("bet_mode", nargs="?", type=int, choices=SUPPORTED_BET_MODES)
     parser.add_argument("--bet-multi", type=int, default=BET_MULTI)
@@ -754,7 +768,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     explicit_single_run = args.rounds is not None or args.bet_mode is not None or args.debug_spin
-    if RUN_ALL_COMBINATIONS and not explicit_single_run and os.environ.get("H999_BATCH_CHILD") != "1":
+    if RUN_ALL_COMBINATIONS and not explicit_single_run and os.environ.get("H045_BATCH_CHILD") != "1":
         run_all_combinations()
         return
     if RUN_SINGLE_SPIN_DEBUG or args.debug_spin:

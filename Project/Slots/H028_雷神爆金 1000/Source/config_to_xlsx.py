@@ -493,7 +493,7 @@ def restore_symbol_id_formulas(xml_bytes, sheet_name, last_row):
         restored.add(address)
         return (
             f"<c{attrs}><f>VLOOKUP({source_column}{row}, "
-            "$A$4:$J$29, 9, 0)</f></c>"
+            "$A$4:$J$29, 10, 0)</f></c>"
         )
 
     patched = CELL_PATTERN.sub(replace_cell, text)
@@ -524,7 +524,7 @@ def restore_symbol_id_formulas(xml_bytes, sheet_name, last_row):
                     break
             formula_xml = (
                 f'<c r="{address}"><f>VLOOKUP({source_column}{row}, '
-                "$A$4:$J$29, 9, 0)</f></c>"
+                "$A$4:$J$29, 10, 0)</f></c>"
             )
             body = body[:insert_at] + formula_xml + body[insert_at:]
             restored.add(address)

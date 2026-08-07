@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(sort find:*)",
-      "Bash(sort echo:*)"
+      "Bash(sort echo:*)",
+      "Bash(cd \"c:/Users/rhinshen/Mine/個人工作區/工作區\" && find . -iname \"*202608061420294437457119082066884391*\" 2>/dev/null; ls ~/Desktop 2>/dev/null | head -40)",
+      "Read(//c/Users/rhinshen/Desktop/**)",
+      "Bash(python -c ' *)",
+      "Bash(dir /AD /B)"
     ]
   }
 }
