@@ -9,7 +9,9 @@ from openpyxl import load_workbook
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent
-DEFAULT_SOURCE = BASE_DIR / "H027192A.xlsx"
+DEFAULT_SOURCE = BASE_DIR / "H0271.xlsx"
+DEFAULT_CARD_SOURCE = BASE_DIR / "H027194A.xlsx"
+DEFAULT_OUTPUT = PROJECT_DIR / "config_92A.js"
 
 METADATA = {
     "game_id": "101027",
@@ -27,13 +29,13 @@ METADATA = {
     "has_jackpot": True,
     "multiplier_max_value": 2500,
     "max_free_spins": 50,
-    "reference_presentation": "文件/260630_Olympus 2500.pptx",
+    "reference_presentation": "參考資料/260630_Olympus 2500.pptx",
     "rule_document": "game_rule.md",
     "model_status": "rules_confirmed_math_draft",
     "pending_math_items": [
         "Extra Bet dedicated reel and card weights",
-        "WW-free recalibrated strips",
-        "C2/C3 multiplier pools and weights",
+        "Formal RTP target confirmation and final calibration",
+        "C3 multiplier pool and appearance weights",
     ],
 }
 
@@ -109,7 +111,7 @@ def parse_overview(ws):
 
     visible_row = find_row(ws, 1, "Visible Window Size")
     # Older H019-derived sheets split Normal Bet into Newbie/Oldhand rows.
-    # H027192A now uses one row per actual bet mode.  Support both layouts so
+    # Support both split Newbie/Oldhand rows and one-row-per-mode layouts so
     # the converter follows the workbook instead of depending on stale labels.
     normal_row = find_first_bet_row(ws, "Normal Bet Oldhand", "Normal Bet")
     newbie_row = find_first_bet_row(ws, "Normal Bet Newbie", "Normal Bet")
@@ -135,6 +137,11 @@ def parse_overview(ws):
             "normal": to_float(ws.cell(normal_row, 3).value),
             "extrabet": to_float(ws.cell(extra_row, 3).value),
             "featurebuy": to_float(ws.cell(featurebuy_row, 3).value),
+        },
+        "rtp_components": {
+            "normal": {"bg": to_float(ws["B18"].value), "fg": to_float(ws["B19"].value)},
+            "extra": {"bg": to_float(ws["B22"].value), "fg": to_float(ws["B23"].value)},
+            "featurebuy": {"bg": to_float(ws["B26"].value), "fg": to_float(ws["B27"].value)},
         },
     }
 
@@ -163,8 +170,18 @@ def parse_free_table(ws, name_col, free_col, retrigger_col, start_row):
     return {"names": names, "initial": free, "retrigger": retrigger}
 
 
-def parse_horizontal_weight_block(ws, label, label_col=7):
-    anchor_row = find_row(ws, label_col, label)
+def parse_horizontal_weight_block(ws, label, label_cols=(10, 7)):
+    anchor_row = None
+    label_col = None
+    for candidate in label_cols:
+        try:
+            anchor_row = find_row(ws, candidate, label)
+            label_col = candidate
+            break
+        except ValueError:
+            continue
+    if anchor_row is None:
+        raise ValueError(f"Could not find {label!r} in {ws.title}")
     header_row = anchor_row + 1
     multipliers = []
     col = label_col + 1
@@ -205,6 +222,29 @@ def parse_named_single_weights(ws, label, label_col=2, weight_col=3):
     return {"table_names": names, "weights": weights, "weights_cum": cumulative(weights)}
 
 
+def parse_use_c3_weights(ws):
+    anchor_row = find_row(ws, 2, "weight_use_super_multiplier")
+    names = []
+    weights = []
+    weights_by_reel = {}
+    row = anchor_row + 2
+    while ws.cell(row, 2).value is not None:
+        name = str(ws.cell(row, 2).value).strip()
+        if name.startswith("#"):
+            break
+        reel_weights = [to_int(ws.cell(row, column).value) for column in range(3, 9)]
+        names.append(name)
+        weights.append(reel_weights[0])
+        weights_by_reel[name] = reel_weights
+        row += 1
+    return {
+        "table_names": names,
+        "weights": weights,
+        "weights_by_reel": weights_by_reel,
+        "denominator": 10000,
+    }
+
+
 def parse_multiplier_levels(ws):
     anchor_row = find_row(ws, 2, "multiplier_level")
     levels = []
@@ -219,9 +259,7 @@ def parse_parameter(ws):
     base = parse_named_single_weights(ws, "weight_base_game_table")
     free_anchor = find_row(ws, 2, "free_game_table_setting")
     free_table = parse_free_table(ws, 2, 3, 4, free_anchor + 2)
-    use_c3 = parse_named_single_weights(ws, "weight_use_super_multiplier")
-    use_c3.pop("weights_cum")
-    use_c3["denominator"] = 10000
+    use_c3 = parse_use_c3_weights(ws)
     c2 = parse_horizontal_weight_block(ws, "weight_C2_multiplier")
     c3 = parse_horizontal_weight_block(ws, "weight_C3_multiplier")
     super_multiplier = parse_horizontal_weight_block(ws, "weight_super_multiplier")
@@ -289,6 +327,18 @@ def parse_card_system(ws):
     return {"enabled": True, "retry_limit": 5000, **profiles}
 
 
+def disabled_card_system():
+    return {
+        "enabled": False,
+        "retry_limit": 0,
+        "newbie": {"normal_bet": {"weight_bg": [], "weight_fg": []}},
+        "oldhand": {
+            "normal_bet": {"weight_bg": [], "weight_fg": []},
+            "buy_feature": {"weight_fg": []},
+        },
+    }
+
+
 def parse_strip_sheet(ws, code_to_id):
     reel_symbols = [[] for _ in range(6)]
     reel_weights = [[] for _ in range(6)]
@@ -313,7 +363,7 @@ def parse_strip_sheet(ws, code_to_id):
     return {"symbols": rows, "weights": weights, "reel_lengths": reel_lengths}
 
 
-def build_config(source_path):
+def build_config(source_path, card_source_path=None):
     workbook = load_workbook(source_path, read_only=False, data_only=True)
     missing_sheets = [name for name in STRIP_SHEETS if name not in workbook.sheetnames]
     if missing_sheets:
@@ -325,7 +375,18 @@ def build_config(source_path):
         )
     overview = parse_overview(workbook["Overview"])
     parameter = parse_parameter(workbook["Parameter"])
-    card_system = parse_card_system(workbook["Multiplier_Weight"])
+    if "Multiplier_Weight" in workbook.sheetnames:
+        card_system = parse_card_system(workbook["Multiplier_Weight"])
+    elif card_source_path is not None and card_source_path.exists():
+        card_workbook = load_workbook(card_source_path, read_only=False, data_only=True)
+        if "Multiplier_Weight" not in card_workbook.sheetnames:
+            card_workbook.close()
+            workbook.close()
+            raise ValueError(f"{card_source_path.name} has no Multiplier_Weight worksheet")
+        card_system = parse_card_system(card_workbook["Multiplier_Weight"])
+        card_workbook.close()
+    else:
+        card_system = disabled_card_system()
     code_to_id = dict(zip(overview["symbol_codes"], overview["symbol_ids"]))
     strip_data = [parse_strip_sheet(workbook[name], code_to_id) for name in STRIP_SHEETS]
     workbook.close()
@@ -345,9 +406,11 @@ def build_config(source_path):
 
 
 def derive_output_path(source_path):
+    if source_path.stem.upper() == "H0271":
+        return DEFAULT_OUTPUT
     match = re.fullmatch(r"H0271(?P<rtp>\d{2})(?P<variant>[A-Za-z0-9_-]*)", source_path.stem, re.IGNORECASE)
     if not match:
-        raise ValueError(f"Unsupported xlsx name: {source_path.name}; expected a name such as H027192A.xlsx")
+        raise ValueError(f"Unsupported xlsx name: {source_path.name}; expected H0271.xlsx or a name such as H027192A.xlsx")
     return PROJECT_DIR / f"config_{match.group('rtp')}{match.group('variant')}.js"
 
 
@@ -364,8 +427,8 @@ def write_js_config(path, data):
     path.write_text("const data = " + json.dumps(data, ensure_ascii=False, indent=2) + ";\n", encoding="utf-8")
 
 
-def process_source(source_path, output_path, check=False):
-    generated = build_config(source_path)
+def process_source(source_path, output_path, check=False, card_source_path=None):
+    generated = build_config(source_path, card_source_path)
     if check:
         current = load_js_config(output_path)
         if generated != current:
@@ -382,18 +445,29 @@ def process_source(source_path, output_path, check=False):
 def main():
     parser = argparse.ArgumentParser(description="Build H027 config files from xlsx")
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
+    parser.add_argument("--card-source", type=Path, default=DEFAULT_CARD_SOURCE)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
-    sources = sorted(path for path in BASE_DIR.glob("H0271*.xlsx") if not path.name.startswith("~$")) if args.all else [args.source.resolve()]
+    candidates = sorted(path for path in BASE_DIR.glob("H0271*.xlsx") if not path.name.startswith("~$"))
+    sources = []
+    if args.all:
+        for path in candidates:
+            workbook = load_workbook(path, read_only=True, data_only=False)
+            is_complete = "Parameter" in workbook.sheetnames and all(name in workbook.sheetnames for name in STRIP_SHEETS)
+            workbook.close()
+            if is_complete:
+                sources.append(path)
+    else:
+        sources = [args.source.resolve()]
     if not sources:
         raise FileNotFoundError(f"No H0271*.xlsx files found in {BASE_DIR}")
 
     for source_path in sources:
         output_path = args.output.resolve() if args.output and len(sources) == 1 else derive_output_path(source_path)
-        process_source(source_path, output_path, args.check)
+        process_source(source_path, output_path, args.check, args.card_source.resolve() if args.card_source else None)
     print(f"Processed {len(sources)} xlsx file(s).")
 
 

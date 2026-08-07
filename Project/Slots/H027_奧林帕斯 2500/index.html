@@ -1971,7 +1971,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92A.js">92A</option>
+            <option value="config_92A.js">H0271 競品參考版</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2086,9 +2086,10 @@
 
   <script>
     const H027_CONFIG_FILES = ["config_92A.js"];
+    const H027_CONFIG_VERSION = "20260806-h0271-competitor";
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H027_ACTIVE_CONFIG = H027_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H027_CONFIG_FILES[0];
-    document.write(`<script src="./${H027_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}"><\/script>`);
   </script>
   <script>
 (() => {
@@ -2246,10 +2247,12 @@
     return index >= 0 ? Number(block.weights[index] || 0) : 0;
   }
 
-  function maybeUseC3(symbol, tableName) {
+  function maybeUseC3(symbol, tableName, reel) {
     if (symbol !== C2) return symbol;
     const useC3 = currentProfile().use_c3;
-    return Math.random() * Number(useC3.denominator || 10000) < tableWeight(useC3, tableName) ? C3 : C2;
+    const byReel = useC3.weights_by_reel?.[tableName];
+    const weight = Array.isArray(byReel) ? Number(byReel[reel] || 0) : tableWeight(useC3, tableName);
+    return Math.random() * Number(useC3.denominator || 10000) < weight ? C3 : C2;
   }
 
   function drawMultiplierValue(symbol, tableName) {
@@ -2337,7 +2340,7 @@
       starts.push(start);
       for (let row = 0; row < Box.window_size; row += 1) {
         const symbol = strip.symbols[(start + row) % length][reel];
-        board[row][reel] = maybeUseC3(symbol, tableName);
+        board[row][reel] = maybeUseC3(symbol, tableName, reel);
       }
     }
     return { tableId, board, starts, drops };
@@ -2402,7 +2405,7 @@
           stripIndex = (spin.starts[reel] - spin.drops[reel] + length) % length;
           symbol = strip.symbols[stripIndex][reel];
         }
-        symbol = maybeUseC3(symbol, tableName);
+        symbol = maybeUseC3(symbol, tableName, reel);
         if (symbol === C1) hasScatter = true;
         spin.board[outputRow][reel] = symbol;
         spin.multiplierValues[outputRow][reel] = symbol === C2 || symbol === C3 ? drawMultiplierValue(symbol, tableName) : 0;

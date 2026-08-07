@@ -19,7 +19,7 @@ CONFIG_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
-CARD_SYSTEM_ENABLED = True
+CARD_SYSTEM_ENABLED = False
 CARD_SYSTEM_IS_NEWBIE = False
 THREADS = max(1, max(8, (os.cpu_count() or 2) - 2))
 
@@ -30,10 +30,7 @@ SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**4, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -231,7 +228,7 @@ BASE_REEL_TABLE_IDS = np.full((PROFILE_COUNT, MAX_BASE_TABLES), -1, dtype=np.int
 FREE_INITIAL_COUNTS = np.zeros((PROFILE_COUNT, MAX_FREE_TABLES), dtype=np.int64)
 FREE_RETRIGGER_COUNTS = np.zeros((PROFILE_COUNT, MAX_FREE_TABLES), dtype=np.int64)
 FREE_TABLE_IDS = np.full((PROFILE_COUNT, MAX_FREE_TABLES), -1, dtype=np.int64)
-USE_C3_WEIGHT = np.zeros((PROFILE_COUNT, TABLE_COUNT), dtype=np.int64)
+USE_C3_WEIGHT = np.zeros((PROFILE_COUNT, TABLE_COUNT, REEL_NUM), dtype=np.int64)
 USE_C3_DENOMINATOR = np.full(PROFILE_COUNT, 10000, dtype=np.int64)
 C2_MULTIPLIERS = np.zeros((PROFILE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
 C3_MULTIPLIERS = np.zeros((PROFILE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
@@ -251,7 +248,8 @@ for profile_index, profile_name in enumerate(PROFILE_NAMES):
         FREE_TABLE_IDS[profile_index, index] = TABLE_BY_NAME[name]
     USE_C3_DENOMINATOR[profile_index] = int(profile["use_c3"].get("denominator", 10000))
     for name, weight in zip(profile["use_c3"]["table_names"], profile["use_c3"]["weights"]):
-        USE_C3_WEIGHT[profile_index, TABLE_BY_NAME[name]] = int(weight)
+        reel_weights = profile["use_c3"].get("weights_by_reel", {}).get(name, [weight] * REEL_NUM)
+        USE_C3_WEIGHT[profile_index, TABLE_BY_NAME[name], : len(reel_weights)] = np.asarray(reel_weights, dtype=np.int64)
     for target, block in ((C2_MULTIPLIERS, profile["c2"]), (C3_MULTIPLIERS, profile["c3"])):
         target[profile_index, : len(block["multipliers"])] = np.asarray(block["multipliers"], dtype=np.int64)
     for table_name in profile["c2"]["table_names"]:
@@ -430,11 +428,11 @@ def draw_initial_multiplier(profile_index, table_id, use_c3):
 
 
 @njit(nogil=True)
-def prepare_multiplier_symbol(symbol, profile_index, table_id):
+def prepare_multiplier_symbol(symbol, profile_index, table_id, reel):
     if symbol != C2:
         return symbol, 0
     denominator = USE_C3_DENOMINATOR[profile_index]
-    use_c3 = 1 if denominator > 0 and np.random.randint(0, denominator) < USE_C3_WEIGHT[profile_index, table_id] else 0
+    use_c3 = 1 if denominator > 0 and np.random.randint(0, denominator) < USE_C3_WEIGHT[profile_index, table_id, reel] else 0
     final_symbol = C3 if use_c3 == 1 else C2
     return final_symbol, draw_initial_multiplier(profile_index, table_id, use_c3)
 
@@ -492,7 +490,7 @@ def generate_board(table_id, profile_index):
         starts[reel] = start
         for visible_row in range(WINDOW_SIZE):
             symbol = STRIPS[table_id, (start + visible_row) % length, reel]
-            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id)
+            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id, reel)
             board[visible_row, reel] = symbol
             multiplier_values[visible_row, reel] = value
     return board, multiplier_values, starts, drop_counts
@@ -570,7 +568,7 @@ def cascade_board(board, multiplier_values, table_id, profile_index, starts, dro
                 drop_counts[reel] += 1
                 strip_index = (starts[reel] - drop_counts[reel]) % length
                 symbol = STRIPS[table_id, strip_index, reel]
-            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id)
+            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id, reel)
             if symbol == C1:
                 has_scatter = 1
             board[output_row, reel] = symbol
@@ -924,6 +922,12 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     fg_spins = values[R_ALL, RA_FG_SPINS]
     variance = values[R_ALL, RA_X_SQUARE] / total_round - (values[R_ALL, RA_X_SUM] / total_round) ** 2
     card_system_active = CARD_SYSTEM_ENABLED and bet_mode != MODE_EXTRABET
+    rtp_target_key = {
+        MODE_NORMALBET: "normal",
+        MODE_EXTRABET: "extrabet",
+        MODE_FEATUREBUY: "featurebuy",
+    }.get(bet_mode)
+    rtp_target = CFG.get("rtp_targets", {}).get(rtp_target_key) if rtp_target_key else None
 
     summary = {
         "game_id": GAME_ID,
@@ -937,12 +941,14 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "extra_fg_probability_multiplier": EXTRA_FG_PROBABILITY_MULTIPLIER if bet_mode == MODE_EXTRABET else 1,
         "multiplier_levels": ",".join(str(int(value)) for value in MULTIPLIER_LEVELS),
         "bet_mode": format_bet_mode_label(bet_mode),
+        "bet_mode_id": bet_mode,
         "total_rounds": total_round,
         "threads": THREADS,
         "duration_seconds": duration,
         "games_per_second": total_round / duration if duration else 0,
         "coin_in": coin_in,
         "rtp_total": pay_total / coin_in_sum if coin_in_sum else 0,
+        "rtp_target": rtp_target,
         "rtp_bg_cluster": pay_bg_cluster / coin_in_sum if coin_in_sum else 0,
         "rtp_bg_scatter": pay_bg_scatter / coin_in_sum if coin_in_sum else 0,
         "rtp_bg": (pay_bg_cluster + pay_bg_scatter) / coin_in_sum if coin_in_sum else 0,
@@ -1006,8 +1012,8 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     c2_frame = pd.DataFrame(
         {
             "Multiplier": multiplier_values[valid],
-            "BG_Count": values[R_C2_VALUE_BG, : MULTIPLIER_LEVEL_COUNT][valid],
-            "FG_Count": values[R_C2_VALUE_FG, : MULTIPLIER_LEVEL_COUNT][valid],
+            "BG_Count": values[R_C2_VALUE_BG, :MULTIPLIER_LEVEL_COUNT][valid],
+            "FG_Count": values[R_C2_VALUE_FG, :MULTIPLIER_LEVEL_COUNT][valid],
         }
     )
     scatter_frame = pd.DataFrame(
@@ -1034,13 +1040,17 @@ def show_console(summary):
     print(f"* model_status: {summary['model_status']}", flush=True)
     print(f"* bet_mode: {summary['bet_mode']}", flush=True)
     print(f"* duration: {format_elapsed_time(summary['duration_seconds'])}", flush=True)
-    print(f"* rtp_total: {summary['rtp_total'] * 100:.2f}%", flush=True)
-    print(f"* rtp_bg: {summary['rtp_bg'] * 100:.2f}%", flush=True)
-    print(f"* rtp_fg: {summary['rtp_fg'] * 100:.2f}%", flush=True)
-    print(f"* hit_rate_bg: {summary['hit_rate_bg']:.2f}", flush=True)
-    print(f"* hit_rate_fg: {summary['hit_rate_fg']:.2f}", flush=True)
-    print(f"* fg_trigger_rate: {summary['fg_trigger_rate']:.2f} ({fg_trigger_count} spins)", flush=True)
-    print(f"* retrigger_rate: {summary['retrigger_rate']:.2f}", flush=True)
+    print(f"* rtp_total: {summary['rtp_total'] * 100:.4f}%", flush=True)
+    rtp_target = summary.get("rtp_target")
+    if rtp_target:
+        print(f"* rtp_target: {rtp_target * 100:.4f}%", flush=True)
+        print(f"* rtp_delta: {(summary['rtp_total'] - rtp_target) * 100:+.4f} percentage points", flush=True)
+    print(f"* rtp_bg: {summary['rtp_bg'] * 100:.4f}%", flush=True)
+    print(f"* rtp_fg: {summary['rtp_fg'] * 100:.4f}%", flush=True)
+    print(f"* hit_rate_bg: {summary['hit_rate_bg'] * 100:.4f}%", flush=True)
+    print(f"* hit_rate_fg: {summary['hit_rate_fg'] * 100:.4f}%", flush=True)
+    print(f"* fg_trigger_rate: {summary['fg_trigger_rate'] * 100:.4f}% ({fg_trigger_count} spins)", flush=True)
+    print(f"* retrigger_rate: {summary['retrigger_rate'] * 100:.4f}%", flush=True)
     print(f"* avg_fg_multiplier: {summary['avg_fg_multiplier']:.2f} x", flush=True)
     print(f"* avg_fg_spins: {summary['avg_fg_spins']:.2f} spins", flush=True)
     print(f"* card_system: {summary['card_system']}", flush=True)
@@ -1089,7 +1099,7 @@ def output_report(frames, record, bet_mode, total_round):
 
 def run_single_spin_debug():
     profile = PROFILE_BY_MODE[BET_MODE]
-    table_id = 8 if BET_MODE == MODE_FEATUREBUY else 0
+    table_id = BF_TABLE_ID if BET_MODE == MODE_FEATUREBUY else 0
     result = play_cluster_spin(table_id, profile, 0, BET_MULTI)
     print("Single spin result:")
     print(f"raw_cluster_pay={result[0]}, scatter_pay={result[1]}, scatter_count={result[2]}")
@@ -1100,10 +1110,7 @@ def run_batch_combinations():
     total_jobs = len(BATCH_COMBINATIONS)
     for index, combo in enumerate(BATCH_COMBINATIONS, start=1):
         print(
-            f"\n=== Batch {index}/{total_jobs}: "
-            f"config={combo['config_file']}, bet_mode={combo['bet_mode']}, "
-            f"rounds={combo['total_rounds']}, card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, "
-            f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
+            f"\n=== Batch {index}/{total_jobs}: " f"config={combo['config_file']}, bet_mode={combo['bet_mode']}, " f"rounds={combo['total_rounds']}, card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, " f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
             flush=True,
         )
         env = os.environ.copy()

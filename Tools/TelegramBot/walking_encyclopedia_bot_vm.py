@@ -1495,15 +1495,15 @@ def build_stress_test_items(game: dict) -> list[dict]:
             (
                 "medium",
                 "中押注",
-                f"{format_stress_number(medium_start)} ≤ x < {format_stress_number(large_start)}",
+                f"{format_stress_number(medium_start)} ≤ x ≤ {format_stress_number(large_start)}",
             ),
-            ("large", "大押注", f"{format_stress_number(large_start)} ≤ x"),
+            ("large", "大押注", f"{format_stress_number(large_start)} < x"),
         ]
         for size_key, size_label, range_text in ranges:
             if mode in {"NB", "EX1", "EX2"}:
                 if size_key == "small" and multiplier >= Decimal("2"):
                     continue
-                if size_key == "medium" and multiplier >= Decimal("100"):
+                if size_key == "medium" and multiplier > Decimal("100"):
                     continue
             for hand_key, hand_label in (("new", "新手"), ("old", "老手")):
                 if mode in {"NB", "EX1", "EX2"} and size_key == "large" and hand_key == "new":
@@ -1683,7 +1683,7 @@ def update_stress_progress_from_report(parsed_report: dict) -> str | None:
     medium_start, large_start = get_stress_bet_boundaries(mode, multiplier)
     if bet_value < medium_start:
         size = "small"
-    elif bet_value < large_start:
+    elif bet_value <= large_start:
         size = "medium"
     else:
         size = "large"

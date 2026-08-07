@@ -5,7 +5,7 @@ pushd "%~dp0" || goto failed
 
 set "SCRIPT_DIR=%CD%"
 set "SCRIPT_PATH=%SCRIPT_DIR%\xlsx_to_config.py"
-set "DEFAULT_XLSX=%SCRIPT_DIR%\H027192A.xlsx"
+set "DEFAULT_XLSX=%SCRIPT_DIR%\H0271.xlsx"
 set "VENV_PYTHON=%SCRIPT_DIR%\..\..\..\..\.venv\Scripts\python.exe"
 set "CONVERT_ALL=0"
 set "INTERACTIVE=1"
@@ -15,7 +15,7 @@ if "%~1"=="" (
     for /f "delims=" %%F in ('dir /b /a-d "%SCRIPT_DIR%\H0271*.xlsx" 2^>nul') do echo   %%F
     echo   ALL  ^(convert every xlsx listed above^)
     echo.
-    set /p "XLSX_INPUT=[H027] Enter xlsx path or file name (blank = H027192A.xlsx, ALL = convert all): "
+    set /p "XLSX_INPUT=[H027] Enter xlsx path or file name (blank = H0271.xlsx, ALL = convert all complete models): "
 ) else (
     set "INTERACTIVE=0"
     set "XLSX_INPUT=%~1"
