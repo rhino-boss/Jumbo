@@ -146,6 +146,48 @@ CARD_DETAIL_RANGES = {
     ("oldhand", "buy_feature", "weight_fg"): ("Detail", 163, 226),
 }
 
+CARD_WEIGHT_TOTAL = 1_000_000_000
+
+
+def scale_integer_weights(weights, target_total):
+    """Scale integer weights with largest remainder and an exact target sum."""
+    source_total = sum(weights)
+    if source_total <= 0:
+        return [0] * len(weights)
+    raw = [weight * target_total / source_total for weight in weights]
+    scaled = [int(value) for value in raw]
+    remainder = int(target_total - sum(scaled))
+    order = sorted(
+        range(len(weights)),
+        key=lambda index: (raw[index] - scaled[index], -index),
+        reverse=True,
+    )
+    for index in order[:remainder]:
+        scaled[index] += 1
+    return scaled
+
+
+def bg_excel_weights(weights, threshold):
+    """Encode final BG weights into Detail's conditional + FG-odds layout."""
+    non_fg = scale_integer_weights(weights[:-1], threshold)
+    base_fg = int(weights[-1] * threshold / sum(weights[:-1]))
+    # Pick the nearest integer odds weight whose inverse normalization is
+    # exactly the original config distribution (important for round trips).
+    for distance in range(0, 101):
+        deltas = (0,) if distance == 0 else (-distance, distance)
+        for delta in deltas:
+            candidate = base_fg + delta
+            if candidate < 0:
+                continue
+            encoded = non_fg + [candidate]
+            if scale_integer_weights(encoded, CARD_WEIGHT_TOTAL) == weights:
+                return encoded
+    # Some finely tuned distributions cannot be represented by an integer odds
+    # vector that reverses to the exact same one-billion integers.  Keep the
+    # nearest odds representation; XLSX -> config normalization becomes the
+    # canonical final distribution (the probability error is below 1e-9).
+    return non_fg + [base_fg]
+
 
 def parse_card_system(ws):
     profiles = {
@@ -193,6 +235,16 @@ def parse_card_system(ws):
                 continue
             profiles[player][mode][segment].append(card)
         row += 1
+    # Detail's BG formula stores non-FG probabilities conditionally and the
+    # Free Game row as odds. Convert that Excel representation back to the
+    # config convention (one final distribution summing to 1,000,000,000).
+    for player in ("newbie", "oldhand"):
+        cards = profiles[player]["normal_bet"]["weight_bg"]
+        normalized = scale_integer_weights(
+            [int(card["weight"]) for card in cards], CARD_WEIGHT_TOTAL
+        )
+        for card, weight in zip(cards, normalized):
+            card["weight"] = weight
     return {"enabled": True, "retry_limit": 5000, **profiles}
 
 
@@ -574,6 +626,24 @@ def build_variant_updates(source_path, config):
             detail = workbook[detail_name]
             rtp = 0.0
             final_rates = []
+            is_bg_cards = segment == "weight_bg"
+            non_fg_weight = (
+                sum(weights[:expected - 1])
+                if is_bg_cards and detail_cards[-1].get("type") == "free_game"
+                else total_weight
+            )
+            threshold = float(detail["B2"].value or 0)
+            simulation_rounds = float(detail["B13"].value or 0)
+            coin_in = float(detail["B3"].value or 0)
+            counts = [
+                float(detail.cell(first_row + index, 2).value or 0)
+                for index in range(expected)
+            ]
+            natural_count_total = sum(counts[:-1] if is_bg_cards else counts)
+            if is_bg_cards:
+                excel_weights = bg_excel_weights(weights[:expected], int(threshold))
+            else:
+                excel_weights = scale_integer_weights(weights[:expected], int(threshold))
             for index, (card, weight) in enumerate(zip(detail_cards, weights[:expected])):
                 row = first_row + index
                 expected_label = card_label(card)
@@ -582,22 +652,37 @@ def build_variant_updates(source_path, config):
                     raise ValueError(
                         f"{detail_name}!G{row} is {actual_label!r}; expected {expected_label!r}"
                     )
-                natural_rate = float(detail.cell(row, 4).value or 0)
-                average_multiplier = float(detail.cell(row, 5).value or 0)
+                # D/E are spill-formula caches and can remain stale after B/C is
+                # replaced from a newer simulation report. Derive both metrics
+                # directly from Count, Pay, rounds and coin-in instead.
+                count = counts[index]
+                if is_bg_cards and card.get("type") == "free_game":
+                    if simulation_rounds <= 0:
+                        raise ValueError(f"Invalid simulation rounds: {detail_name}!B13")
+                    natural_rate = count / simulation_rounds
+                else:
+                    natural_rate = count / natural_count_total if natural_count_total > 0 else 0.0
+                pay = float(detail.cell(row, 3).value or 0)
+                average_multiplier = pay / count / coin_in if count > 0 and coin_in > 0 else 0.0
                 final_rate = weight / total_weight
                 if weight > 0 and natural_rate <= 0:
                     raise ValueError(
                         f"Positive card weight has zero natural rate: {detail_name}!G{row}"
                     )
-                fix_num = final_rate / natural_rate if natural_rate > 0 else 0.0
+                # BG J15:J78 is normalized separately while J79 is a direct FG
+                # input.  Feed conditional/odds rates so L15:L79 resolves back
+                # to the config's final probabilities after Excel recalculates.
+                excel_weight = excel_weights[index]
+                excel_rate = excel_weight / threshold if threshold > 0 else final_rate
+                fix_num = excel_rate / natural_rate if natural_rate > 0 else 0.0
                 rtp_value = final_rate * average_multiplier
                 final_rates.append(final_rate)
                 rtp += rtp_value
                 for column, value, key_suffix in (
                     ("H", fix_num, "Fix Num"),
-                    ("I", final_rate, "Fix Rate"),
-                    ("J", final_rate, "Final Rate"),
-                    ("K", weight, "Weight"),
+                    ("I", excel_rate, "Fix Rate"),
+                    ("J", excel_rate, "Final Rate"),
+                    ("K", excel_weight, "Weight"),
                     ("L", final_rate, "Hit Rate"),
                     ("M", rtp_value, "Simulator RTP"),
                 ):
@@ -622,7 +707,7 @@ def build_variant_updates(source_path, config):
                     updates,
                     "Multiplier_Weight",
                     f"{get_column_letter(header_columns[header])}{multiplier_row}",
-                    weight,
+                    excel_weights[index] if index < expected else weight,
                     header,
                 )
             profile_metrics[profile_key] = {
@@ -1108,7 +1193,7 @@ def run_export(argv):
         if args.output is not None
         else derive_output_path(source_path)
         if args.auto_output
-        else DEFAULT_OUTPUT
+        else derive_output_path(source_path)
     )
     generated = process_source(source_path, output_path, args.check, base_path)
     if args.sync_default and source_path.name.casefold() == DEFAULT_SOURCE.name.casefold() and output_path != DEFAULT_OUTPUT:

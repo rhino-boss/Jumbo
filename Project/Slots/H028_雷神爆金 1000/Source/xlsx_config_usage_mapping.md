@@ -10,7 +10,7 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 | --- | --- | --- |
 | `H0281.xlsx` | 賠率、六張 Symbol 表、輪帶、Symbol Weight、MegaWay、MY、Post Scatter、Drop1～5、Parameter | 所有 RTP 版本共用的基礎模型 |
 | `H0281<RTP><版型>.xlsx` | `Overview!B3` 版本、`Detail`／`Detail_Newbie` 與 `Multiplier_Weight` 卡片權重 | 例如 `H028192A.xlsx`、`H028192B.xlsx`、`H028194A.xlsx` |
-| `config_<RTP><版型>.js` | Simulator 與 index 的執行參數 | 例如 `config_92A.js`、`config_92B.js`、`config_94A.js` |
+| `config_<RTP><版型>.js` | Simulator 與 index 的執行參數 | 例如 `config_92A.js`、`config_94A.js` |
 
 檔名不是寫死的白名單：`model_sync.py` 依 `H0281<RTP><版型>.xlsx` 與 `config_<RTP><版型>.js` 自動配對。因此工具已支援 H028 共用模型、H028192A、H028192B；目前正式目錄實際存在 92A、94A，尚未建立正式 92B 工作簿。
 
@@ -113,17 +113,23 @@ FG 模型週期直接由 BG 卡片權重計算：`sum(weight_bg) ÷ Free Game ca
 update.bat
 ```
 
-可選：
+操作只有兩層選單：
 
-1. `config`：全部 RTP 工作簿 → 對應 `config_*.js`
-2. `xlsx`：config → 原地更新 `H0281.xlsx`，並將所有已存在的 `config_<RTP><版型>.js` 回填至對應 RTP 工作簿
-3. `check`：只核對，不寫檔
+1. 第一層選方向：輸入 `1` 為 XLSX → config，輸入 `2` 為 config → XLSX。
+2. 第二層選檔案：輸入 `1` 選 92A，輸入 `2` 選 94A；直接按 Enter 會轉換全部。
+
+| 方向 | 選項 1 | 選項 2 | 直接 Enter |
+| --- | --- | --- | --- |
+| XLSX → config | `H028192A.xlsx` → `config_92A.js` | `H028194A.xlsx` → `config_94A.js` | 兩組都轉換 |
+| config → XLSX | `config_92A.js` → `H028192A.xlsx` | `config_94A.js` → `H028194A.xlsx` | 兩組都轉換 |
+
+執行時只顯示目前的來源檔、目標檔與完成訊息；config → XLSX 會直接更新原工作簿，不會建立另一份 XLSX。若工作簿正在 Excel 中開啟，請先關閉再執行。
 
 也可以直接執行：
 
 ```powershell
-# XLSX → config，並核對所有 RTP 版本
-.\.venv\Scripts\python.exe .\Source\model_sync.py export --all --sync-default --check
+# XLSX → config，並核對所有 RTP 版本；檔名自動帶 Overview!B3 版本號
+.\.venv\Scripts\python.exe .\Source\model_sync.py export --all --check
 
 # config → XLSX，只檢查映射差異
 .\.venv\Scripts\python.exe .\Source\model_sync.py import `
@@ -137,8 +143,13 @@ update.bat
 # 依最新無卡片報表重新校正所有卡片倍率權重
 .\.venv\Scripts\python.exe .\Source\tune_multiplier_weights.py `
   --normal-report <Normal-Bet-無卡片報表.xlsx> `
-  --bf-report <Buy-Feature-無卡片報表.xlsx>
+  --version 2.0.0.37 `
+  --config-suffix 20037
 ```
+
+config 檔名固定包含版本尾碼；例如 `H028192A.xlsx` 的 `Overview!B3=2.0.0.37`
+會輸出 `config_92A.js`，94A 則輸出 `config_94A.js`；版本資訊保留在 config 的 `excel_version` 欄位，不放在檔名中。
+BF Detail 公式直接引用 Normal Bet 的 FG Session 分布，因此不再需要另一份 BF 報表。
 
 ## 9. 操作限制與驗證
 

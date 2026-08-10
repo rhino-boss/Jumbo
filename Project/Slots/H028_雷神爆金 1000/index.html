@@ -2238,6 +2238,36 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-08-10：恢復固定 config 檔名</h4>
+          <ul>
+            <li>config 恢復為 config_92A.js／config_94A.js，index 與 Simulator 同步改回固定檔名。</li>
+            <li>瀏覽器若記住舊的 _20037 檔名，index 會自動轉換成固定檔名。</li>
+            <li>update.bat 與 model_sync.py 後續轉換不再替檔名加入版本尾碼。</li>
+            <li>版本仍保留在 excel_version；config 內容、XLSX 數值與數學模型不變。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-10：簡化 update.bat 雙向轉換操作</h4>
+          <ul>
+            <li>第一層只選 XLSX → config 或 config → XLSX；第二層只選 92A、94A，直接按 Enter 轉換全部。</li>
+            <li>畫面只顯示來源檔、目標檔與完成訊息；config → XLSX 直接更新原工作簿。</li>
+            <li>本次未修改 config、XLSX、模型參數或版本號。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
+          <h4>2026-08-10：重建 92A、改用 109 報表並產生版本化 config</h4>
+          <ul>
+            <li>重新建立 H028192A.xlsx；92A／94A 的平均倍率統一使用 10 億場 H0281_20036_2608061341_betmode0_109.xlsx。</li>
+            <li>BG 使用 BG Count／Pay，FG 與 BF 使用同一報表的 FG Session Count／Pay，與 Detail 陣列公式一致。</li>
+            <li>新增 config_92A_20037.js、config_94A_20037.js；Simulator 與 index 已改載入帶版本號 config。</li>
+            <li>Excel 完整重算：92A Total 91.999976%、94A Total 93.999976%、BF 92.499987%、Oldhand 週期 300.000050。</li>
+            <li>XLSX ↔ config 全版本雙向檢查通過。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-10：修正 FG 遊戲週期的模型／實測口徑</h4>
           <ul>
             <li>數值來源是目前 H028192A／H028194A 的公式快取與 config，不是較早截圖中 FG Period 30001 的狀態。</li>
@@ -3164,7 +3194,9 @@
     // the file offline (no query string) still reopens the chosen variant.
     var want=new URLSearchParams(location.search).get('config');
     if(!want){try{want=localStorage.getItem('slotDemoConfig')}catch(_){}}
-    if(!want||!/^config_[A-Za-z0-9]+\.js$/.test(want))want='config_92A.js';
+    var legacy=String(want||'').match(/^config_(92A|94A)_\d+\.js$/i);
+    if(legacy)want='config_'+legacy[1].toUpperCase()+'.js';
+    if(!want||!/^config_[A-Za-z0-9_]+\.js$/.test(want))want='config_92A.js';
     try{localStorage.setItem('slotDemoConfig',want)}catch(_){}
     window.CONFIG_FILE=want;
     window.CONFIG_LABEL=want.replace(/^config_/,'').replace(/\.js$/,'');

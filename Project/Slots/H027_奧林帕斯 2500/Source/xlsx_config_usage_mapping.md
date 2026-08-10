@@ -24,6 +24,7 @@
 | `BG_Symbol`, `FG_Symbol` 的 `L4:Q303` | `strips[].symbols` |
 | `BG_Symbol`, `FG_Symbol` 的 `S4:X303` | Symbol ID 公式快取（寫回時保留公式） |
 | `BG_Symbol`, `FG_Symbol` 的 `Z4:AE303` | `strips[].weights` |
+| `BG_Symbol`, `FG_Symbol` 的 `AH4:AM15` | `strips[].drop_weights`（C1～TE × R1～R6） |
 
 ## 限制
 

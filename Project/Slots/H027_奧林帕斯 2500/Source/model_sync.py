@@ -180,7 +180,23 @@ def read_strip(sheet):
                                           f"{sheet.title}!{sheet.cell(row, 26 + reel).coordinate}"))
         symbols.append(symbol_row)
         weights.append(weight_row)
-    return {"symbols": symbols, "weights": weights, "reel_lengths": [STRIP_LENGTH] * REEL_COUNT}
+    drop_weights = []
+    for row in range(4, 16):
+        drop_weights.append([
+            require_int(sheet.cell(row, 34 + reel).value,
+                        f"{sheet.title}!{sheet.cell(row, 34 + reel).coordinate}")
+            for reel in range(REEL_COUNT)
+        ])
+    for reel in range(REEL_COUNT):
+        total = sum(row[reel] for row in drop_weights)
+        if total <= 0:
+            raise ValueError(f"{sheet.title} drop weights R{reel + 1} must sum to a positive value")
+    return {
+        "symbols": symbols,
+        "weights": weights,
+        "drop_weights": drop_weights,
+        "reel_lengths": [STRIP_LENGTH] * REEL_COUNT,
+    }
 
 
 def build_config(source_path):
@@ -341,6 +357,20 @@ def build_updates(config):
                 add_update(updates, sheet_name, f"{column_name(19 + reel)}{row}", symbol_id, "Symbol ID cache")
                 add_update(updates, sheet_name, f"{column_name(26 + reel)}{row}",
                            require_int(strip["weights"][row_index][reel], f"{sheet_name}.weights"), "strips.weights")
+        drop_weights = strip.get("drop_weights")
+        if not isinstance(drop_weights, list) or len(drop_weights) != len(config["symbol_ids"]):
+            raise ValueError(f"{sheet_name}.drop_weights must have one row per symbol ID")
+        for symbol_index, weight_row in enumerate(drop_weights):
+            if len(weight_row) != REEL_COUNT:
+                raise ValueError(f"{sheet_name}.drop_weights row {symbol_index} must have {REEL_COUNT} reels")
+            for reel, value in enumerate(weight_row):
+                add_update(
+                    updates,
+                    sheet_name,
+                    f"{column_name(34 + reel)}{4 + symbol_index}",
+                    require_int(value, f"{sheet_name}.drop_weights"),
+                    "strips.drop_weights",
+                )
     return updates
 
 

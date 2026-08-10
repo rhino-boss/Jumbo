@@ -201,10 +201,26 @@ ORIGINAL_REEL_LENGTHS = np.asarray([item["reel_lengths"] for item in CFG["strips
 MAX_STRIP_ROWS = max(len(item["symbols"]) for item in CFG["strips"])
 STRIPS = np.zeros((len(CFG["strips"]), MAX_STRIP_ROWS, REEL_NUM), dtype=np.int64)
 STRIP_WEIGHTS = np.zeros_like(STRIPS)
+DROP_WEIGHT_CUM = np.zeros((len(CFG["strips"]), REEL_NUM, len(SYMBOL_IDS)), dtype=np.int64)
 for table_index, item in enumerate(CFG["strips"]):
     row_count = len(item["symbols"])
     STRIPS[table_index, :row_count] = np.asarray(item["symbols"], dtype=np.int64)
     STRIP_WEIGHTS[table_index, :row_count] = np.asarray(item["weights"], dtype=np.int64)
+    raw_drop_weights = item.get("drop_weights")
+    if raw_drop_weights is None:
+        raw_drop_weights = np.zeros((len(SYMBOL_IDS), REEL_NUM), dtype=np.int64)
+        for symbol_index, symbol_id in enumerate(SYMBOL_IDS):
+            raw_drop_weights[symbol_index] = np.sum(
+                STRIPS[table_index, :row_count] == symbol_id,
+                axis=0,
+            )
+    raw_drop_weights = np.asarray(raw_drop_weights, dtype=np.int64)
+    if raw_drop_weights.shape != (len(SYMBOL_IDS), REEL_NUM):
+        raise ValueError(
+            f"{CFG['strip_names'][table_index]} drop_weights shape must be "
+            f"({len(SYMBOL_IDS)}, {REEL_NUM}), got {raw_drop_weights.shape}"
+        )
+    DROP_WEIGHT_CUM[table_index] = np.cumsum(raw_drop_weights.T, axis=1)
 
 REEL_LENGTHS = ORIGINAL_REEL_LENGTHS.copy()
 STRIP_NAMES = list(CFG["strip_names"])
@@ -376,6 +392,8 @@ RA_RETRY_LIMIT_EXCEEDED = 21
 RA_RETRY_FAIL_BG_RANGE = 22
 RA_RETRY_FAIL_BG_FREEGAME = 23
 RA_RETRY_FAIL_FG = 24
+RA_C2_SPINS_BG = 25
+RA_C2_SPINS_FG = 26
 
 
 @njit(nogil=True)
@@ -563,15 +581,12 @@ def cascade_board(board, multiplier_values, table_id, profile_index, starts, dro
             multiplier_values[output_row, reel] = kept_multiplier_values[index]
             output_row -= 1
 
-        length = REEL_LENGTHS[table_id, reel]
         while output_row >= 0:
             drop_counts[reel] += 1
-            strip_index = (starts[reel] - drop_counts[reel]) % length
-            symbol = STRIPS[table_id, strip_index, reel]
+            symbol = SYMBOL_IDS[pick_cumulative(DROP_WEIGHT_CUM[table_id, reel])]
             while symbol == C1 and has_scatter == 1:
                 drop_counts[reel] += 1
-                strip_index = (starts[reel] - drop_counts[reel]) % length
-                symbol = STRIPS[table_id, strip_index, reel]
+                symbol = SYMBOL_IDS[pick_cumulative(DROP_WEIGHT_CUM[table_id, reel])]
             symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id, reel)
             if symbol == C1:
                 has_scatter = 1
@@ -707,6 +722,7 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
         record[R_ALL, RA_HITS_FG] += 1 if fg_spin_pay > 0 else 0
         record[R_ALL, RA_FG_CASCADES] += fg_cascades
         record[R_ALL, RA_C2_COUNT_FG] += fg_c2_count
+        record[R_ALL, RA_C2_SPINS_FG] += 1 if fg_c2_count > 0 else 0
         if cumulative_multiplier > record[R_ALL, RA_MAX_C2_MULTIPLIER]:
             record[R_ALL, RA_MAX_C2_MULTIPLIER] = cumulative_multiplier
 
@@ -789,6 +805,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi):
         record[R_ALL, RA_HITS_BG] += 1 if bg_pay > 0 else 0
         record[R_ALL, RA_BG_CASCADES] += bg_cascades
         record[R_ALL, RA_C2_COUNT_BG] += bg_c2_count
+        record[R_ALL, RA_C2_SPINS_BG] += 1 if bg_c2_count > 0 else 0
         if bg_c2 > record[R_ALL, RA_MAX_C2_MULTIPLIER]:
             record[R_ALL, RA_MAX_C2_MULTIPLIER] = bg_c2
 
@@ -963,6 +980,10 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "max_multiplier": int(values[R_ALL, RA_MAX_C2_MULTIPLIER]),
         "avg_bg_cascades": values[R_ALL, RA_BG_CASCADES] / total_round,
         "avg_fg_cascades": values[R_ALL, RA_FG_CASCADES] / fg_spins if fg_spins else 0,
+        "multiplier_ball_rate_bg": values[R_ALL, RA_C2_SPINS_BG] / total_round,
+        "multiplier_ball_rate_fg": values[R_ALL, RA_C2_SPINS_FG] / fg_spins if fg_spins else 0,
+        "avg_multiplier_balls_bg": values[R_ALL, RA_C2_COUNT_BG] / total_round,
+        "avg_multiplier_balls_fg": values[R_ALL, RA_C2_COUNT_FG] / fg_spins if fg_spins else 0,
         "card_system": "on" if card_system_active else "off",
         "pending_math_items": " | ".join(PENDING_MATH_ITEMS) if PENDING_MATH_ITEMS else "none",
         "card_system_profile": "off" if not card_system_active else ("newbie" if CARD_SYSTEM_IS_NEWBIE and bet_mode == MODE_NORMALBET else ("oldhand" if bet_mode == MODE_NORMALBET else format_bet_mode_label(bet_mode))),

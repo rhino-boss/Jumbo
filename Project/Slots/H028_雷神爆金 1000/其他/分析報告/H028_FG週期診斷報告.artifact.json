@@ -21,6 +21,11 @@
           "metric_definitions": ["Model cycle = total BG card weight / Free Game card weight", "Observed cycle = paid BG rounds / observed FG sessions"],
           "sql": "WITH cycle_validation(case_label, model_cycle, observed_cycle, observed_sessions, model_trigger_rate, observed_trigger_rate) AS (VALUES ('92A Oldhand',300.00003,298.1248,33543,0.003333333,0.0033543),('92A Newbie',279.501057,279.9474,35721,0.003577804,0.0035721),('94A Oldhand',300.00003,300.7790,33247,0.003333333,0.0033247),('94A Newbie',279.501057,281.0094,35586,0.003577804,0.0035586)) SELECT * FROM cycle_validation"
         }
+      },
+      {
+        "id": "h028_model_source_report",
+        "label": "H028 Normal Bet 10 億場平均倍率來源報表",
+        "path": "Project/Slots/H028_雷神爆金 1000/Record/H0281_20036_2608061341_betmode0_109.xlsx"
       }
     ],
     "charts": [
@@ -122,9 +127,16 @@
       {
         "id": "technical_summary",
         "type": "markdown",
-        "body": "## 技術摘要\n\n本報告數值來自目前 `Source/H028192A.xlsx`／`H028194A.xlsx` 的公式快取與 config 權重，不是較早截圖中 BG 69.3267%、FG 0.2000%、FG Period 30001 的工作簿狀態。版本 2.0.0.37 的倍率校正確實曾改過 Detail 卡片 Fix Num 與推導權重；本次後續修正則只把模型週期與實測週期分開顯示。現在 Oldhand 模型週期為 **300.00003**，Newbie 為 **279.50106**。",
+        "body": "## 技術摘要\n\n92A／94A 的 `Detail` 與 `Detail_Newbie` 已統一使用 Normal Bet 10 億場報表 `H0281_20036_2608061341_betmode0_109.xlsx` 計算 Count、Pay、自然率與 Avg. Multi.；BF 依工作簿公式沿用同一份報表的 FG Session 分布。先前 69.3267%、FG Period 30001 是同步程式誤用舊公式快取造成，現已修正。Oldhand 模型週期約 **300.00005**，Newbie 約 **279.50114**。",
         "layout": "full",
         "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "model_source_trace",
+        "type": "markdown",
+        "body": "## 平均倍率使用的正式來源報表\n\n來源是 `Record/H0281_20036_2608061341_betmode0_109.xlsx` 的 `Multiplier Line` 工作表，總場數為 1,000,000,000、Card System Off。BG 使用 `BG_Count / BG_Pay`；FG 使用 `FG_Session_Count / FG_Pay`。由於 `Detail!B163:C226` 直接引用 `B86:C149`，Buy Feature 也必須使用這份 Normal Bet 報表的 FG Session 分布，不能另套另一份 BF 報表。92A／94A 的 BG 與 FG Count、Pay 已逐格核對完全一致。",
+        "layout": "full",
+        "sourceId": "h028_model_source_report"
       },
       {
         "id": "finding_intro",
@@ -155,7 +167,7 @@
       {
         "id": "method",
         "type": "markdown",
-        "body": "## 計算方法與實際儲存格鏈\n\nOldhand：`1,000,000,000 ÷ 3,333,333 = 300.00003`。Newbie：`1,000,000,000 ÷ 3,577,804 = 279.50106`。Oldhand 的控制鏈是 `Detail!H79 (Fix Num) → I79/J79/K79/L79 → F7=L79 → G7=1/F7`，對外卡片欄為 `Multiplier_Weight!D67=Detail!K79`。因此截圖的 G7=30001 只是結果；反推當時 L79 約為 0.0000333322、K79 約為 33,332。現在正式檔 K79=3,333,333、L79=0.003333333。Simulator 另輸出 model／observed 四個欄位，原 `fg_trigger_rate` 繼續代表實測率以維持相容性。",
+        "body": "## 計算方法與實際儲存格鏈\n\nConfig 的 Oldhand 週期為 `1,000,000,000 ÷ 3,333,333 = 300.00003`；Newbie 為 `1,000,000,000 ÷ 3,577,804 = 279.50106`。Oldhand 的控制鏈是 `Detail!D79 → H79 (Fix Num) → I79/J79/K79/L79 → F7=L79 → G7=1/F7`。XLSX 依既有公式使用條件權重加 FG odds，因此 Excel 重算後 K79 為 `3,344,481`、L79 為 `0.0033333327`，與 config 的最終觸發率等價。先前 G7=30001 是 D79 舊快取讓 H79 少 100 倍，不是另一套遊戲週期。",
         "layout": "full",
         "sourceId": "h028_cycle_evidence"
       },
@@ -188,7 +200,7 @@
       {
         "id": "further_questions",
         "type": "markdown",
-        "body": "## 待確認需求\n\n截圖中 69.3267%／0.2000%／30001 的工作簿狀態目前不在允許工作區，也不在現有 Git 中含 Detail 分頁的版本歷史，因此只能由畫面反推，無法逐格還原該份舊檔。另 Newbie 目前模型週期是 279.50106；若企劃希望 Newbie 也固定 300，需另行調整 Newbie Free Game 卡片權重並重新平衡 BG 72%／FG 21% RTP。",
+        "body": "## 待確認需求\n\nNewbie 目前模型週期約 279.50114；若企劃希望 Newbie 也固定 300，需另行調整 Newbie Free Game 卡片權重並重新平衡 BG 72%／FG 21% RTP。",
         "layout": "full"
       }
     ]
@@ -219,6 +231,11 @@
         "tables_used": ["cycle_validation"],
         "sql": "WITH cycle_validation(case_label, model_cycle, observed_cycle, observed_sessions, model_trigger_rate, observed_trigger_rate) AS (VALUES ('92A Oldhand',300.00003,298.1248,33543,0.003333333,0.0033543),('92A Newbie',279.501057,279.9474,35721,0.003577804,0.0035721),('94A Oldhand',300.00003,300.7790,33247,0.003333333,0.0033247),('94A Newbie',279.501057,281.0094,35586,0.003577804,0.0035586)) SELECT * FROM cycle_validation"
       }
+    },
+    {
+      "id": "h028_model_source_report",
+      "label": "H028 Normal Bet 10 億場平均倍率來源報表",
+      "path": "Project/Slots/H028_雷神爆金 1000/Record/H0281_20036_2608061341_betmode0_109.xlsx"
     }
   ]
 }
