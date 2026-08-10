@@ -31,7 +31,10 @@ CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
@@ -2502,11 +2505,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         if bet_mode == MODE_NORMALBET:
             bg_cards = CARD_PROFILE_LISTS[CARD_PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BG]
             total_card_weight = sum(max(0, int(card.get("weight", 0))) for card in bg_cards)
-            fg_card_weight = sum(
-                max(0, int(card.get("weight", 0)))
-                for card in bg_cards
-                if card.get("type") == "free_game"
-            )
+            fg_card_weight = sum(max(0, int(card.get("weight", 0))) for card in bg_cards if card.get("type") == "free_game")
             fg_trigger_rate_model = fg_card_weight / total_card_weight if total_card_weight else 0.0
         elif bet_mode == MODE_FEATUREBUY:
             fg_trigger_rate_model = 1.0
