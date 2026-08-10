@@ -1553,6 +1553,10 @@
       text-transform: uppercase;
     }
 
+    #settings-wrap .demogame-version-control {
+      display: none !important;
+    }
+
     #rng-wrap .rng-list {
       padding: 8px 12px;
     }
@@ -2942,6 +2946,10 @@
           <input id="cardSystemInput" type="checkbox">
           <span data-i18n="cardSystem">Card System</span>
         </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
@@ -3185,21 +3193,28 @@
 | 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
 
+  <script src="./Versions/version_manifest.js"></script>
   <script>
-  // The config file is chosen by ?config=config_XXA.js so the picker below can
-  // switch RTP variants offline. document.write keeps the load synchronous, so
-  // `data` is defined before the main script runs (same as a static tag).
+  // The manifest maps a version + config code to one trusted local JS file.
+  // document.write keeps offline loading synchronous, so `data` exists before
+  // the simulator starts even when index.html is opened by double-clicking.
   (function(){
-    // ?config= wins; otherwise fall back to the last pick, so double-clicking
-    // the file offline (no query string) still reopens the chosen variant.
-    var want=new URLSearchParams(location.search).get('config');
-    if(!want){try{want=localStorage.getItem('slotDemoConfig')}catch(_){}}
-    var legacy=String(want||'').match(/^config_(92A|94A)_\d+\.js$/i);
-    if(legacy)want='config_'+legacy[1].toUpperCase()+'.js';
-    if(!want||!/^config_[A-Za-z0-9_]+\.js$/.test(want))want='config_92A.js';
-    try{localStorage.setItem('slotDemoConfig',want)}catch(_){}
+    var manifest=window.H028_VERSION_MANIFEST||{current:'2.0',versions:[{version:'2.0',configs:{'92A':'Versions/2.0/config_92A.js'}}]};
+    var query=new URLSearchParams(location.search),version=query.get('version');
+    if(!version){try{version=localStorage.getItem('slotDemoVersion')}catch(_){}}
+    var entry=manifest.versions.find(function(item){return item.version===version})||manifest.versions.find(function(item){return item.version===manifest.current})||manifest.versions[0];
+    var requested=query.get('config');
+    if(!requested){try{requested=localStorage.getItem('slotDemoConfig')}catch(_){}}
+    var match=String(requested||'').match(/(?:config_)?(92A|94A)(?:_\d+)?(?:\.js)?$/i),code=match?match[1].toUpperCase():'';
+    var available=Object.keys(entry.configs||{});
+    if(!entry.configs?.[code])code=available[0]||'92A';
+    var want=entry.configs?.[code]||'config_92A.js';
+    try{localStorage.setItem('slotDemoVersion',entry.version);localStorage.setItem('slotDemoConfig',code)}catch(_){}
+    window.H028_VERSION_ENTRY=entry;
+    window.CONFIG_VERSION=entry.version;
+    window.CONFIG_CODE=code;
     window.CONFIG_FILE=want;
-    window.CONFIG_LABEL=want.replace(/^config_/,'').replace(/\.js$/,'');
+    window.CONFIG_LABEL=code;
     document.write('<scr'+'ipt src="./'+want+'"><\/scr'+'ipt>');
   })();
   </script>
@@ -3220,6 +3235,9 @@
   function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','batch-simulation','set-rng-panel','rng-wrap','log-wrap','live-log-wrap','change-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);updateControls()}
   function renderLog(){if(!state.debug)return;$('liveLogBody').innerHTML=state.logs.map(x=>`<div class="live-log-line ${x.type}">[${x.time}] ${esc(x.text)}</div>`).join('');$('liveLogBody').scrollTop=$('liveLogBody').scrollHeight}
   function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+  function renderVersionControls(){let manifest=window.H028_VERSION_MANIFEST||{versions:[]},entry=window.H028_VERSION_ENTRY||manifest.versions[0],versionSelect=$('versionSelect'),configSelect=$('configSelect');versionSelect.innerHTML='';for(const item of manifest.versions){let option=document.createElement('option');option.value=item.version;option.textContent=String(item.version).split('.').slice(0,2).join('.');versionSelect.appendChild(option)}versionSelect.value=entry?.version||'';configSelect.innerHTML='';for(const code of Object.keys(entry?.configs||{})){let option=document.createElement('option');option.value=code;option.textContent=code;configSelect.appendChild(option)}configSelect.value=window.CONFIG_CODE||configSelect.options[0]?.value||'';renderVersionChangeLog(entry)}
+  function renderVersionChangeLog(entry){let root=$('changeLogBody');root.innerHTML='';let article=document.createElement('article'),title=document.createElement('h4');article.className='change-log-entry';title.textContent=`${entry?.date||''} · ${entry?.version||''}`;article.appendChild(title);let changes=Array.isArray(entry?.changes)?entry.changes:[];if(changes.length){let list=document.createElement('ul');for(const change of changes){let item=document.createElement('li');item.textContent=change;list.appendChild(item)}article.appendChild(list)}else{let note=document.createElement('p');note.textContent=state.language==='zh'?'此版本沒有可顯示的數學調整紀錄。':'No mathematical tuning was recorded for this version.';article.appendChild(note)}root.appendChild(article)}
+  function openVersion(version,code){let q=new URL(location.href);q.searchParams.set('version',version);q.searchParams.set('config',code);try{localStorage.setItem('slotDemoVersion',version);localStorage.setItem('slotDemoConfig',code)}catch(_){}location.href=q.href}
   const UI_TEXT={en:{simulationStats:'Simulation Stats',naturalSimulation:'Simulation',startSimulation:'Start',totalRounds:'Total Rounds',hitRate:'Hit Rate',observedFgTrigger:'FG Trigger (Observed)',modelFgCycle:'FG Cycle (Model)',maxMultiplier:'Max Multiplier',retryLimitExceeded:'Retry Limit Exceeded',playerProfile:'Player',reelRng:'Reel RNG',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',changeLog:'Change Log',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',naturalSimulation:'模擬',startSimulation:'開始模擬',totalRounds:'總局數',hitRate:'命中率',observedFgTrigger:'FG 觸發（實測）',modelFgCycle:'FG 週期（模型）',maxMultiplier:'最大倍數',retryLimitExceeded:'Retry Limit 超限',playerProfile:'玩家',reelRng:'滾輪 RNG',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',changeLog:'修改紀錄',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
   const tr=key=>UI_TEXT[state.language]?.[key]||UI_TEXT.en[key]||key;
   function localizeMessage(text){if(state.language!=='zh')return text;const exact={['Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.']:'Ready — 按下 Spin','Reels spinning...':'滾輪轉動中...','Session reset.':'遊戲已重置。','Auto started.':'自動遊戲已開啟。','Auto stopped.':'自動遊戲已關閉。','Set RNG reset.':'指定 RNG 已重置。','Insufficient credit.':'餘額不足。'};if(exact[text])return exact[text];return text.replace(/^Round complete · Win /,'本局完成 · 得分 ').replace(/^Free Game started: (\d+) spins$/,'免費遊戲開始：$1 場').replace(/^Free Game ready · (\d+) spins left · press Spin$/,'免費遊戲待命 · 剩餘 $1 場 · 請按 Spin').replace(/^Free Game complete · final /,'免費遊戲結束 · 最終 ').replace(/^FG retrigger \+(\d+)$/,'免費遊戲加局 +$1').replace(/^History /,'歷史畫面 ').replace(/Cascade (\d+) · evaluating/,'Cascade $1 · 判定').replace(/Cascade (\d+) · score /,'Cascade $1 · 得分 ')}
@@ -3315,10 +3333,13 @@
   function helpRule(parent,rule){let row=document.createElement('div'),cell=document.createElement('div');row.className='help-rule';cell.className=state.language==='zh'?'help-rule-zh':'help-rule-en';cell.textContent=state.language==='zh'?rule.zh:rule.en;row.appendChild(cell);parent.appendChild(row)}
   function renderHelp(md){gameHelpMarkdown=md;let root=$('helpContent'),sections=parseHelpData(md);root.innerHTML='';for(const section of sections){let card=document.createElement('section');card.className='help-section';helpTitle(card,'help-section-title',section.titleZh,section.titleEn);if(section.key==='PAYTABLE'){let note=document.createElement('div');note.className='help-rule';note.textContent=state.language==='zh'?`以下派彩金額依目前押注 ${BETS[state.betIndex]} 顯示。`:`Payouts below are shown for the current bet of ${BETS[state.betIndex]}.`;card.appendChild(note)}section.rules.forEach(rule=>helpRule(card,rule));for(const group of section.groups){let payouts=group.payouts.filter(x=>x.lang===state.language);if(!group.rules.length&&!payouts.length)continue;helpTitle(card,'help-group-title',group.titleZh||(state.language==='zh'?group.key:'PAYTABLE'),group.titleEn);group.rules.forEach(rule=>helpRule(card,rule));if(payouts.length){let table=document.createElement('div');table.className='help-payout-table';for(let rowIndex=0;rowIndex<payouts.length;rowIndex++){let payout=payouts[rowIndex],row=document.createElement('div');row.className='help-payout-row';for(let cellIndex=0;cellIndex<payout.cells.length;cellIndex++){let value=payout.cells[cellIndex],cell=document.createElement('div');cell.className='help-payout-cell';let clean=value.replace(/[{}]/g,'');cell.textContent=rowIndex>0&&cellIndex>0&&Number.isFinite(Number(clean))?compactNumber(Number(clean)*BETS[state.betIndex]):clean;row.appendChild(cell)}table.appendChild(row)}card.appendChild(table)}}root.appendChild(card)}if(!sections.length)root.textContent=state.language==='zh'?'無法載入遊戲規則。':'Unable to load game rules.'}
   async function openHelp(){let md=$('embeddedGameHelpMarkdown').textContent.trim();try{let r=await fetch('./game_help_draft.md',{cache:'no-store'});if(r.ok)md=await r.text()}catch(_){log('Offline Help fallback used.')}renderHelp(md);$('helpDialog').showModal()}
-  el.spin.onclick=()=>{if(state.awaitingFgSpin&&state.fgSpinResolve){let go=state.fgSpinResolve;state.fgSpinResolve=null;go();return}round('normal')};el.auto.onclick=()=>{state.auto=!state.auto;updateControls();message(state.auto?'Auto started.':'Auto stopped.','mode');if(state.auto&&!state.busy)round('normal')};el.buy.onclick=()=>round('buy');el.force.onchange=()=>{if(el.force.checked){el.force.checked=false;round('force')}};el.betMinus.onclick=()=>{state.betIndex=Math.max(0,state.betIndex-1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betPlus.onclick=()=>{state.betIndex=Math.min(BETS.length-1,state.betIndex+1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betBtn.onclick=()=>el.betMenu.classList.toggle('hidden');el.speed.oninput=()=>{state.speed=+el.speed.value;set('speedValue',`x${state.speed}`)};el.debug.onchange=()=>setDebug(el.debug.checked);$('cardSystemInput').checked=INDEX_CARD_SYSTEM_ENABLED;$('cardSystemInput').onchange=e=>{INDEX_CARD_SYSTEM_ENABLED=e.target.checked;try{localStorage.setItem('slotDemoCardSystem',INDEX_CARD_SYSTEM_ENABLED?'on':'off')}catch(_){}renderStats();updateControls();message('Card System | '+(INDEX_CARD_SYSTEM_ENABLED?'On ('+state.cardProfile+')':'Off'),'mode')};el.profile.onchange=()=>{state.cardProfile=el.profile.value==='newbie'?'newbie':'oldhand';try{localStorage.setItem('slotDemoCardProfile',state.cardProfile)}catch(_){}el.card.value='';el.reel.value='';initCards();renderStats();updateControls();message(`Player Profile | ${state.cardProfile==='newbie'?'Newbie':'Oldhand'}`,'mode')};el.card.onchange=updateControls;el.reel.oninput=updateControls;el.batchStart.onclick=runBatchSimulation;$('setRngResetBtn').onclick=()=>{el.card.value='';el.reel.value='';updateControls();message('Set RNG reset.')};$('previousStepBtn').onclick=()=>showHistory(state.historyIndex-1);$('nextStepBtn').onclick=()=>showHistory(state.historyIndex+1);$('clearLogBtn').onclick=()=>{state.logs=[];renderLog()};$('resetBtn').onclick=reset;$('helpBtn').onclick=openHelp;$('closeHelpBtn').onclick=()=>$('helpDialog').close();$('helpDialog').onclick=e=>{if(e.target===$('helpDialog'))$('helpDialog').close()};addEventListener('keydown',e=>{if(e.key==='Escape'&&$('helpDialog').open)$('helpDialog').close()});$('configSelect').onchange=()=>{let q=new URL(location.href);try{localStorage.setItem('slotDemoConfig',$('configSelect').value)}catch(_){}q.searchParams.set('config',$('configSelect').value);location.href=q.href};$('languageSelect').onchange=()=>{state.language=$('languageSelect').value;applyLanguage()};
-  set('gameId',B.game_id);set('gameName',B.display_name);$('configSelect').value=window.CONFIG_FILE||'config_92A.js';el.profile.value=state.cardProfile;initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.');applyLanguage();
+  el.spin.onclick=()=>{if(state.awaitingFgSpin&&state.fgSpinResolve){let go=state.fgSpinResolve;state.fgSpinResolve=null;go();return}round('normal')};el.auto.onclick=()=>{state.auto=!state.auto;updateControls();message(state.auto?'Auto started.':'Auto stopped.','mode');if(state.auto&&!state.busy)round('normal')};el.buy.onclick=()=>round('buy');el.force.onchange=()=>{if(el.force.checked){el.force.checked=false;round('force')}};el.betMinus.onclick=()=>{state.betIndex=Math.max(0,state.betIndex-1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betPlus.onclick=()=>{state.betIndex=Math.min(BETS.length-1,state.betIndex+1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betBtn.onclick=()=>el.betMenu.classList.toggle('hidden');el.speed.oninput=()=>{state.speed=+el.speed.value;set('speedValue',`x${state.speed}`)};el.debug.onchange=()=>setDebug(el.debug.checked);$('cardSystemInput').checked=INDEX_CARD_SYSTEM_ENABLED;$('cardSystemInput').onchange=e=>{INDEX_CARD_SYSTEM_ENABLED=e.target.checked;try{localStorage.setItem('slotDemoCardSystem',INDEX_CARD_SYSTEM_ENABLED?'on':'off')}catch(_){}renderStats();updateControls();message('Card System | '+(INDEX_CARD_SYSTEM_ENABLED?'On ('+state.cardProfile+')':'Off'),'mode')};el.profile.onchange=()=>{state.cardProfile=el.profile.value==='newbie'?'newbie':'oldhand';try{localStorage.setItem('slotDemoCardProfile',state.cardProfile)}catch(_){}el.card.value='';el.reel.value='';initCards();renderStats();updateControls();message(`Player Profile | ${state.cardProfile==='newbie'?'Newbie':'Oldhand'}`,'mode')};el.card.onchange=updateControls;el.reel.oninput=updateControls;el.batchStart.onclick=runBatchSimulation;$('setRngResetBtn').onclick=()=>{el.card.value='';el.reel.value='';updateControls();message('Set RNG reset.')};$('previousStepBtn').onclick=()=>showHistory(state.historyIndex-1);$('nextStepBtn').onclick=()=>showHistory(state.historyIndex+1);$('clearLogBtn').onclick=()=>{state.logs=[];renderLog()};$('resetBtn').onclick=reset;$('helpBtn').onclick=openHelp;$('closeHelpBtn').onclick=()=>$('helpDialog').close();$('helpDialog').onclick=e=>{if(e.target===$('helpDialog'))$('helpDialog').close()};addEventListener('keydown',e=>{if(e.key==='Escape'&&$('helpDialog').open)$('helpDialog').close()});$('versionSelect').onchange=()=>{let version=$('versionSelect').value,entry=(window.H028_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version),code=entry?.configs?.[window.CONFIG_CODE]?window.CONFIG_CODE:Object.keys(entry?.configs||{})[0];openVersion(version,code)};$('configSelect').onchange=()=>openVersion(window.CONFIG_VERSION,$('configSelect').value);$('languageSelect').onchange=()=>{state.language=$('languageSelect').value;applyLanguage();renderVersionChangeLog(window.H028_VERSION_ENTRY)};
+  set('gameId',B.game_id);set('gameName',B.display_name);renderVersionControls();el.profile.value=state.cardProfile;initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.');applyLanguage();
 })();
   </script>
   <script src="../demogame_common.js?v=1"></script>
+  <script>
+  document.querySelectorAll('.demogame-version-control').forEach(node=>node.remove());
+  </script>
 </body>
 </html>

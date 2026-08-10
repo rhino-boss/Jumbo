@@ -107,6 +107,23 @@ FG 模型週期直接由 BG 卡片權重計算：`sum(weight_bg) ÷ Free Game ca
 
 ## 8. 使用方式
 
+### 數學版本管理
+
+`index.html` 的 Version 選單由 `Versions/version_manifest.js` 提供；歷史 config 保存在 `Versions/<版本>/`，目前正式檔名仍固定為 `config_92A.js`／`config_94A.js`。
+
+數學參數修改完成、執行 `update.bat` 前，先執行：
+
+```bat
+new_version.bat
+```
+
+| 變更類型 | 升版規則 | 範例 |
+| --- | --- | --- |
+| `H0281.xlsx` 共用數學參數 | 第一碼 +1，第二碼歸零 | `2.0 → 3.0` |
+| 只改倍率權重 | 第二碼 +1 | `2.0 → 2.1` |
+
+工具會先比對 config 與 XLSX：選錯變更類型、沒有實際數學差異，或漏填數學調整內容時會拒絕升版。成功後會封存舊 config、更新 XLSX／目前 config，並把數學調整寫入 Version Change Log。介面、工具與錯誤修正仍寫入 `修改紀錄.md`，不加入數學 Change Log。
+
 ### 互動工具
 
 ```bat

@@ -1,0 +1,20 @@
+{
+  "current": "2.0",
+  "version_rule": {
+    "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，第二碼歸零。",
+    "multiplier_weights": "只調整倍率權重：第二碼 +1。"
+  },
+  "versions": [
+    {
+      "version": "2.0",
+      "date": "2026-08-10",
+      "configs": {
+        "92A": "Versions/2.0/config_92A.js",
+        "94A": "Versions/2.0/config_94A.js"
+      },
+      "changes": [
+        "目前 H028 數學基準版本；保留現行 H0281 共用參數與倍率權重。"
+      ]
+    }
+  ]
+}
