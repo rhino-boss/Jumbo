@@ -9,18 +9,20 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 | 檔案 | 資料所有權 | 用途 |
 | --- | --- | --- |
 | `H0281.xlsx` | 賠率、六張 Symbol 表、輪帶、Symbol Weight、MegaWay、MY、Post Scatter、Drop1～5、Parameter | 所有 RTP 版本共用的基礎模型 |
-| `H028192A.xlsx` | `Overview!B3` 版本與 `Multiplier_Weight` 卡片權重 | 92A RTP 版本 |
-| `H028194A.xlsx` | `Overview!B3` 版本與 `Multiplier_Weight` 卡片權重 | 94A RTP 版本 |
-| `config_92A.js`／`config_94A.js` | Simulator 與 index 的執行參數 | 由共用模型加上對應 RTP 工作簿匯出 |
+| `H0281<RTP><版型>.xlsx` | `Overview!B3` 版本、`Detail`／`Detail_Newbie` 與 `Multiplier_Weight` 卡片權重 | 例如 `H028192A.xlsx`、`H028192B.xlsx`、`H028194A.xlsx` |
+| `config_<RTP><版型>.js` | Simulator 與 index 的執行參數 | 例如 `config_92A.js`、`config_92B.js`、`config_94A.js` |
+
+檔名不是寫死的白名單：`model_sync.py` 依 `H0281<RTP><版型>.xlsx` 與 `config_<RTP><版型>.js` 自動配對。因此工具已支援 H028 共用模型、H028192A、H028192B；目前正式目錄實際存在 92A、94A，尚未建立正式 92B 工作簿。
 
 ## 2. 轉換方向
 
 | 指令 | 方向 | 寫入內容 | 不寫入內容 |
 | --- | --- | --- | --- |
 | `model_sync.py export` | XLSX → config | 共用模型全部映射欄位、版本、卡片權重 | 固定 metadata 由工具提供 |
-| `model_sync.py import` | config → `H0281.xlsx` | 共用模型映射欄位 | RTP 版本的 `Overview!B3`、`Multiplier_Weight`、固定 metadata |
+| `model_sync.py import`（共用模型） | config → `H0281.xlsx` | 共用模型映射欄位 | RTP 版本卡片資料、固定 metadata |
+| `model_sync.py import`（RTP 工作簿） | config → `H0281<RTP><版型>.xlsx` | 版本、Detail 卡片輸入／快取、Multiplier Weight 公式快取 | 共用 Symbol 模型、固定 metadata |
 
-`Multiplier_Weight` 是由 `Detail!K`／`Detail_Newbie!K` 公式推導的結果。config → XLSX 不會把卡片權重寫回 RTP 工作簿；需要調整卡片時，應修改 RTP 工作簿內的 `Fix Num`，再重新 export。
+`Multiplier_Weight` 由 `Detail!K`／`Detail_Newbie!K` 公式推導。config → RTP XLSX 會回填 `Fix Num`、自然分布快取、Weight／RTP 快取，並保留原公式；不會把公式改成固定值。
 
 ## 3. 參數組與工作表
 
@@ -87,6 +89,10 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 
 倍率區間採 `(min, max]`。Normal Bet 先抽 `weight_bg`；若抽到 `free_game`，觸發 FG 後再抽同 Profile 的 `weight_fg`，並以完整 FG Session 得分比對區間。
 
+FG 模型週期直接由 BG 卡片權重計算：`sum(weight_bg) ÷ Free Game card weight`。Simulator 的 `fg_cycle_model`／`fg_trigger_rate_model` 是設定值；`fg_cycle_observed`／`fg_trigger_rate_observed` 是有限模擬樣本值，兩者不可混用。卡片關閉時沒有可由卡片權重推導的模型週期，因此模型欄位為 0／介面顯示 `--`。
+
+目前卡片限制：自然發生率低於 0.1% 或區間上限超過 20,000x 時權重為 0。Oldhand Normal Bet 的 BG／FG 目標分別為 72%／20%（92A）或 72%／22%（94A）；Newbie 為 72%／21%；Buy Feature 僅計 FG，目標 92.5%。
+
 ## 7. 目前模型重點
 
 | 項目 | 目前設定 |
@@ -110,7 +116,7 @@ update.bat
 可選：
 
 1. `config`：全部 RTP 工作簿 → 對應 `config_*.js`
-2. `xlsx`：`config_92A.js` → 原地更新 `H0281.xlsx`，再重新 export 全部 config
+2. `xlsx`：config → 原地更新 `H0281.xlsx`，並將所有已存在的 `config_<RTP><版型>.js` 回填至對應 RTP 工作簿
 3. `check`：只核對，不寫檔
 
 也可以直接執行：
@@ -122,8 +128,16 @@ update.bat
 # config → XLSX，只檢查映射差異
 .\.venv\Scripts\python.exe .\Source\model_sync.py import `
   --config .\config_92A.js `
-  --source .\Source\H0281.xlsx `
+  --source .\Source\H028192A.xlsx `
   --check
+
+# config → 所有已存在的 RTP 工作簿
+.\.venv\Scripts\python.exe .\Source\model_sync.py import --all-variants
+
+# 依最新無卡片報表重新校正所有卡片倍率權重
+.\.venv\Scripts\python.exe .\Source\tune_multiplier_weights.py `
+  --normal-report <Normal-Bet-無卡片報表.xlsx> `
+  --bf-report <Buy-Feature-無卡片報表.xlsx>
 ```
 
 ## 9. 操作限制與驗證
@@ -132,4 +146,6 @@ update.bat
 - `import --in-place` 必須明確加入 `--overwrite-formulas`，工具使用暫存檔進行原子置換。
 - export 的 `--check` 會逐 key 比對生成結果與既有 config。
 - import 寫出後會立即執行 config → XLSX → config round-trip；任何共用映射 key 不一致即失敗。
-- round-trip 驗證不代表 config 的 `card_system` 已回填 RTP 工作簿；卡片權重仍以 RTP 工作簿的公式結果為準。
+- RTP 工作簿回填時保留 Detail／Multiplier Weight 公式，只更新輸入與公式快取；另會移除失效的 `calcChain.xml` 關聯並要求 Excel 完整重算。
+- `--all-variants` 只處理同時存在 config 與工作簿的版本；例如正式建立 `H028192B.xlsx` 與 `config_92B.js` 後會自動納入。
+- round-trip 驗證會逐一確認共用模型與卡片資料；公式保留與快取值也需通過檢查。

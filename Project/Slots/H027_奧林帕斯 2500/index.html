@@ -2828,6 +2828,7 @@
     const fgTriggered = baseSpin.scatterCount >= 4;
     let totalWin = toMoney(baseSpin.finalPay);
     let maxMultiplier = baseSpin.multiplier.total;
+    const fgCascades = [];
 
     if (fgTriggered) {
       const makeSchedule = (kind) => {
@@ -2848,6 +2849,7 @@
       let carry = 0;
       while (queue.length) {
         const freeSpin = playSpin(queue.shift(), "FG", carry);
+        fgCascades.push(freeSpin.steps.length);
         carry += freeSpin.multiplier.total;
         maxMultiplier = Math.max(maxMultiplier, carry);
         totalWin += toMoney(freeSpin.finalPay);
@@ -2862,7 +2864,10 @@
     return {
       multiplier: totalWin / betMoney(),
       fgTriggered,
-      maxMultiplier
+      maxMultiplier,
+      retryLimitExceeded: 0,
+      bgCascade: baseSpin.steps.length,
+      fgCascades
     };
   };
 

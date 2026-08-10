@@ -3473,6 +3473,23 @@
     throw new Error(`${section} retry limit exceeded`);
   }
 
+  window.demogameSimulateRound = () => {
+    const base = cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
+    const fgTriggered = base.scatter >= Number(cfg.scatter_trigger || 3);
+    const feature = fgTriggered
+      ? (cardSystemActive() ? cardFeature("free_game") : freeSession("E"))
+      : null;
+    const totalWin = base.pay + Number(feature?.pay || 0);
+    return {
+      multiplier: totalWin / (BASE_BET * BET_LEVELS[state.betIndex]),
+      fgTriggered,
+      maxMultiplier: Math.max(base.maxMultiplier, Number(feature?.maxMultiplier || 1)),
+      retryLimitExceeded: 0,
+      bgCascade: base.combo,
+      fgCascades: feature?.spins?.map((spin) => spin.combo) || []
+    };
+  };
+
   function renderMultiplier(freeGame, index = 0, animate = false) {
     const values = freeGame ? [2,4,6,10,20] : [1,2,3,5,10];
     $("multiplierWindow").classList.remove("roll-one");
@@ -3622,7 +3639,7 @@
         await animateSnapshots(base.snapshots, false); renderRngSource(base); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${format(base.pay)}` : "No Win";
         if (base.scatter >= Number(cfg.scatter_trigger || 3) || mode !== 0) {
-          activateFeature(cardFeature(mode === 0 ? "free_game" : "buy_feature"), mode);
+          activateFeature(cardSystemActive() ? cardFeature(mode === 0 ? "free_game" : "buy_feature") : freeSession("E"), mode);
         }
       }
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; }

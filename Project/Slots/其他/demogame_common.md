@@ -17,7 +17,11 @@ Reel RNG 與 Spin Result 的內容列共用相同的 12px 字級、左右欄、�
 
 H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有符號向下移動，新符號再由盤面上方掉入補牌。
 
-所有 Demo Game 都會顯示 `Card System` 開關與 Simulation，統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；H027 透過純數學 adapter 執行完整 Cascade／FG；其餘遊戲由共用模組在 Card System 開啟時依目前卡片數學權重模擬 N 場並累計結果。若關閉 Card System 且遊戲沒有獨立自然數學 adapter，Simulation 會明確停止而不會暗中沿用卡片權重。以上批次路徑都不觸發畫面 Spin，也不更動盤面、餘額或主 Stats。
+H015 Card System 的 Normal Bet 採兩階段 retry：BG `free_game` 卡先固定並重抽至觸發，之後在同一 BG 上獨立重抽整包 FG，直到符合 `weight_fg` 或達到設定的 retry limit；不可把 BG 與 FG 綁成同一次重抽。
+
+所有 Demo Game 都會顯示 `Card System` 開關與 Simulation，統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；其餘遊戲各自提供 `window.demogameSimulateRound`，直接重用該頁 Demo Game 的 BG、Cascade、FG、Retrigger、倍率與 Card System JavaScript 數學函式。共用模組不再用卡片區間權重近似結果，也不呼叫 Python。以上批次路徑都不播放動畫、不觸發畫面 Spin，且不更動盤面、餘額或主 Stats。
+
+Simulation 預設為 10,000 場。共用執行器採約 40ms 的自適應時間切片；H026、H028 每 250 場才更新一次畫面，以降低 DOM 更新成本並保持頁面可操作。
 
 若目前數學設定沒有可用的 `card_system` 模型，共用欄位會保留但固定顯示 Off 並停用，避免只顯示已開啟卻沒有實際卡片數學分支。原遊戲已有 Card System 控制時則保留原生判定。
 

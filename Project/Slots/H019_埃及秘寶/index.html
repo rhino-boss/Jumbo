@@ -2583,6 +2583,45 @@
     return schedule;
   }
 
+  window.demogameSimulateRound = () => {
+    const previousMode = state.selectedMode;
+    state.selectedMode = MODE_NORMAL;
+    try {
+      const base = playSpin(chooseBaseTable(), "BG", 0);
+      const fgTriggered = base.scatterCount >= 4;
+      const freeSpins = [];
+      let totalWin = base.finalPay;
+      let maxMultiplier = base.c2.total;
+      if (fgTriggered) {
+        const queue = buildFreeSchedule("initial");
+        let totalSpins = queue.length;
+        let carry = 0;
+        while (queue.length) {
+          const freeSpin = playSpin(queue.shift(), "FG", carry);
+          carry += freeSpin.c2.total;
+          maxMultiplier = Math.max(maxMultiplier, carry);
+          totalWin += freeSpin.finalPay;
+          freeSpins.push(freeSpin);
+          if (freeSpin.scatterCount >= 3 && totalSpins < Box.max_free_spins) {
+            const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - totalSpins);
+            queue.push(...extra);
+            totalSpins += extra.length;
+          }
+        }
+      }
+      return {
+        multiplier: toMoney(totalWin) / betMoney(),
+        fgTriggered,
+        maxMultiplier,
+        retryLimitExceeded: 0,
+        bgCascade: base.steps.length,
+        fgCascades: freeSpins.map((spin) => spin.steps.length)
+      };
+    } finally {
+      state.selectedMode = previousMode;
+    }
+  };
+
   function symbolCell(symbol, value = 0) {
     const code = Box.symbol_codes[symbol] || "?";
     return { symbol, code, glyph: code, image: SYMBOL_IMAGE_FILES[code] || "", value };

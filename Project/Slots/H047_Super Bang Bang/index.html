@@ -2600,6 +2600,33 @@ function runRound(isBuy=false, forceFg=false) {
   return { bet, coinIn, spins, totalWin, isBuy };
 }
 
+window.demogameSimulateRound = () => {
+  const bet = getBet();
+  const spins = [];
+  const base = runSpin('BG', randStripIdx());
+  spins.push(base);
+  let fgRemain = base.scatterCount >= SCATTER_MIN ? FG_INIT : 0;
+  const fgTriggered = fgRemain > 0;
+  let fgPlayed = 0;
+  while (fgRemain > 0 && fgPlayed < FREE_SPIN_CAP) {
+    const freeSpin = runSpin('FG', randStripIdx());
+    fgRemain -= 1;
+    fgPlayed += 1;
+    if (freeSpin.scatterCount >= SCATTER_MIN) fgRemain += FG_RETRIG;
+    spins.push(freeSpin);
+  }
+  const totalWin = spins.reduce((sum, spin) => sum + spin.totalRaw, 0);
+  const maxMultiplier = Math.max(1, ...spins.flatMap((spin) => spin.steps.map((step) => Number(step.mult) || 1)));
+  return {
+    multiplier: totalWin / bet,
+    fgTriggered,
+    maxMultiplier,
+    retryLimitExceeded: 0,
+    bgCascade: base.cascadeCount,
+    fgCascades: spins.slice(1).map((spin) => spin.cascadeCount)
+  };
+};
+
 // ─── RENDERING ───────────────────────────────────────────────────────────────
 const boardEl = document.getElementById('board');
 const msgEl   = document.getElementById('msgBar');

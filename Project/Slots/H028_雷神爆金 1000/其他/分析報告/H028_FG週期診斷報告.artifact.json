@@ -1,0 +1,224 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "H028 FG 遊戲週期計算修正報告",
+    "description": "區分倍率卡片設定的模型週期與有限模擬樣本的實測週期。",
+    "generatedAt": "2026-08-10T00:00:00+08:00",
+    "sources": [
+      {
+        "id": "h028_cycle_evidence",
+        "label": "H028 卡片權重與 1,000 萬場模擬",
+        "path": "Project/Slots/H028_雷神爆金 1000/Simulator.py",
+        "query": {
+          "engine": "SQLite",
+          "language": "sql",
+          "description": "將四組已完成的 1,000 萬場 Simulator 結果整理成圖表資料列。",
+          "executed_at": "2026-08-10T00:00:00+08:00",
+          "tables_used": ["cycle_validation"],
+          "filters": ["Card System enabled", "Normal Bet", "10,000,000 paid BG rounds per config/profile"],
+          "metric_definitions": ["Model cycle = total BG card weight / Free Game card weight", "Observed cycle = paid BG rounds / observed FG sessions"],
+          "sql": "WITH cycle_validation(case_label, model_cycle, observed_cycle, observed_sessions, model_trigger_rate, observed_trigger_rate) AS (VALUES ('92A Oldhand',300.00003,298.1248,33543,0.003333333,0.0033543),('92A Newbie',279.501057,279.9474,35721,0.003577804,0.0035721),('94A Oldhand',300.00003,300.7790,33247,0.003333333,0.0033247),('94A Newbie',279.501057,281.0094,35586,0.003577804,0.0035586)) SELECT * FROM cycle_validation"
+        }
+      }
+    ],
+    "charts": [
+      {
+        "id": "cycle_comparison_chart",
+        "title": "模型週期與實測週期比較",
+        "subtitle": "四組各 10,000,000 場；週期單位為付費 BG 場／FG Session。",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "有限樣本的 FG 實測週期是否與卡片權重推導的模型週期一致？",
+        "rationale": "四個離散 Config/Profile 比較兩個同單位數值，使用群組長條圖。",
+        "comparisonContext": {
+          "baseline": "模型週期",
+          "denominator": "FG Session",
+          "grain": "Config/Profile",
+          "unit": "BG rounds per FG session"
+        },
+        "type": "bar",
+        "dataset": "cycle_validation",
+        "sourceId": "h028_cycle_evidence",
+        "encodings": {
+          "x": {"field": "case_label", "type": "nominal", "label": "Config / Profile"},
+          "y": {"fields": ["model_cycle", "observed_cycle"], "type": "quantitative", "format": "number", "label": "週期", "unit": "場／次"},
+          "tooltip": [
+            {"field": "model_trigger_rate", "type": "quantitative", "format": "percent", "label": "模型觸發率"},
+            {"field": "observed_trigger_rate", "type": "quantitative", "format": "percent", "label": "實測觸發率"},
+            {"field": "observed_sessions", "type": "quantitative", "format": "number", "label": "實測 FG 次數"}
+          ]
+        },
+        "xAxisTitle": "Config / Profile",
+        "yAxisTitle": "付費 BG 場／FG Session",
+        "valueFormat": "number",
+        "unit": "場／次",
+        "layout": "full",
+        "labels": {"values": "all"},
+        "legend": {"position": "bottom", "sort": "spec"},
+        "palette": {"kind": "categorical", "name": "model-vs-observed"},
+        "settings": {"groupMode": "grouped", "orientation": "vertical", "sort": "none", "showValues": true},
+        "surface": {"surface": "export", "showControls": false, "viewMode": "both"}
+      }
+    ],
+    "tables": [
+      {
+        "id": "cycle_validation",
+        "title": "模型週期與 1,000 萬場實測週期",
+        "subtitle": "每列為一個 config／玩家 Profile；週期單位為付費 BG 場／FG Session。",
+        "showDescription": true,
+        "dataset": "cycle_validation",
+        "defaultSort": {
+          "field": "config",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "sourceId": "h028_cycle_evidence",
+        "layout": "full",
+        "columns": [
+          {"field": "config", "label": "Config", "type": "text"},
+          {"field": "profile", "label": "Profile", "type": "text"},
+          {"field": "fg_card_weight", "label": "FG Card Weight", "format": "number"},
+          {"field": "model_trigger_rate", "label": "模型觸發率", "format": "percent"},
+          {"field": "model_cycle", "label": "模型週期", "format": "number"},
+          {"field": "observed_sessions", "label": "實測 FG 次數", "format": "number"},
+          {"field": "observed_trigger_rate", "label": "實測觸發率", "format": "percent"},
+          {"field": "observed_cycle", "label": "實測週期", "format": "number"},
+          {"field": "cycle_delta", "label": "實測－模型", "format": "number", "movement": true}
+        ]
+      },
+      {
+        "id": "rtp_robustness",
+        "title": "同批 1,000 萬場 RTP 健全性檢查",
+        "subtitle": "用相同驗證批次確認週期修正未改動 RTP 權重與遊戲結果。",
+        "showDescription": true,
+        "dataset": "cycle_validation",
+        "defaultSort": {
+          "field": "config",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "sourceId": "h028_cycle_evidence",
+        "layout": "full",
+        "columns": [
+          {"field": "config", "label": "Config", "type": "text"},
+          {"field": "profile", "label": "Profile", "type": "text"},
+          {"field": "target_rtp", "label": "目標 RTP", "format": "percent"},
+          {"field": "rtp_total", "label": "實測 Total RTP", "format": "percent"},
+          {"field": "rtp_bg", "label": "實測 BG RTP", "format": "percent"},
+          {"field": "rtp_fg", "label": "實測 FG RTP", "format": "percent"},
+          {"field": "retry_limit_exceeded", "label": "Retry 超限", "format": "number"}
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# H028 FG 遊戲週期計算修正報告",
+        "layout": "full"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "body": "## 技術摘要\n\n本報告數值來自目前 `Source/H028192A.xlsx`／`H028194A.xlsx` 的公式快取與 config 權重，不是較早截圖中 BG 69.3267%、FG 0.2000%、FG Period 30001 的工作簿狀態。版本 2.0.0.37 的倍率校正確實曾改過 Detail 卡片 Fix Num 與推導權重；本次後續修正則只把模型週期與實測週期分開顯示。現在 Oldhand 模型週期為 **300.00003**，Newbie 為 **279.50106**。",
+        "layout": "full",
+        "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "finding_intro",
+        "type": "markdown",
+        "body": "## 大樣本驗證支持原卡片公式\n\n四組各 1,000 萬場實測都落在各自模型週期附近。表格保留精確值，適合直接核對分子、分母與抽樣差異；因此不需要為了追逐單次樣本而重調 Free Game 卡片權重。",
+        "layout": "full",
+        "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "cycle_chart_block",
+        "type": "chart",
+        "chartId": "cycle_comparison_chart",
+        "layout": "full"
+      },
+      {
+        "id": "cycle_table_block",
+        "type": "table",
+        "tableId": "cycle_validation",
+        "layout": "full"
+      },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "body": "## 指標定義與適用範圍\n\n**模型週期**是卡片抽選前即可由權重確定的期望值：全部 BG 卡片權重除以 Free Game 卡片權重。**實測週期**是有限樣本的 BG 付費場數除以實際 FG Session 次數。兩者只有在樣本趨近無限時才會收斂到相同值。Buy Feature 每次購買直接進 FG，週期為 1；Card System 關閉時則沒有卡片權重模型週期。",
+        "layout": "full",
+        "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "method",
+        "type": "markdown",
+        "body": "## 計算方法與實際儲存格鏈\n\nOldhand：`1,000,000,000 ÷ 3,333,333 = 300.00003`。Newbie：`1,000,000,000 ÷ 3,577,804 = 279.50106`。Oldhand 的控制鏈是 `Detail!H79 (Fix Num) → I79/J79/K79/L79 → F7=L79 → G7=1/F7`，對外卡片欄為 `Multiplier_Weight!D67=Detail!K79`。因此截圖的 G7=30001 只是結果；反推當時 L79 約為 0.0000333322、K79 約為 33,332。現在正式檔 K79=3,333,333、L79=0.003333333。Simulator 另輸出 model／observed 四個欄位，原 `fg_trigger_rate` 繼續代表實測率以維持相容性。",
+        "layout": "full",
+        "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "robustness_intro",
+        "type": "markdown",
+        "body": "## 修正顯示口徑沒有改變 RTP 模型\n\n同批大樣本的 RTP 仍圍繞各模式目標波動。FG 的高倍尾端會讓 Total RTP 比週期需要更多樣本才能穩定，因此週期驗證應以觸發次數為主，不應以單次 Total RTP 偏差反推觸發權重。",
+        "layout": "full",
+        "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "rtp_table_block",
+        "type": "table",
+        "tableId": "rtp_robustness",
+        "layout": "full"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 限制、誤差與健全性檢查\n\n觀測週期是二項抽樣結果，不會每次剛好等於模型值；100 萬場的 315.36 或 302.21 不是設定失效。1,000 萬場已明顯收斂，但仍會有正常抽樣誤差。Retry Limit 超限極少，未形成足以解釋週期差異的系統性偏差。",
+        "layout": "full",
+        "sourceId": "h028_cycle_evidence"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## 建議後續使用方式\n\n- 要檢查設定，讀 `fg_cycle_model`。\n- 要檢查某次模擬，讀 `fg_cycle_observed`，並同時保留總場數與 FG 次數。\n- 不要用畫面四捨五入後的觸發百分比反推週期。\n- 只有在模型週期本身不符企劃目標時，才調整 Free Game 卡片權重。",
+        "layout": "full"
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## 待確認需求\n\n截圖中 69.3267%／0.2000%／30001 的工作簿狀態目前不在允許工作區，也不在現有 Git 中含 Detail 分頁的版本歷史，因此只能由畫面反推，無法逐格還原該份舊檔。另 Newbie 目前模型週期是 279.50106；若企劃希望 Newbie 也固定 300，需另行調整 Newbie Free Game 卡片權重並重新平衡 BG 72%／FG 21% RTP。",
+        "layout": "full"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T00:00:00+08:00",
+    "status": "ready",
+    "datasets": {
+      "cycle_validation": [
+        {"case_order": 1, "case_label": "92A Oldhand", "config": "92A", "profile": "Oldhand", "total_card_weight": 1000000000, "fg_card_weight": 3333333, "model_trigger_rate": 0.003333333, "model_cycle": 300.00003, "observed_sessions": 33543, "observed_trigger_rate": 0.0033543, "observed_cycle": 298.1248, "cycle_delta": -1.8752, "target_rtp": 0.92, "rtp_total": 0.9190, "rtp_bg": 0.7179, "rtp_fg": 0.2011, "retry_limit_exceeded": 29},
+        {"case_order": 2, "case_label": "92A Newbie", "config": "92A", "profile": "Newbie", "total_card_weight": 1000000000, "fg_card_weight": 3577804, "model_trigger_rate": 0.003577804, "model_cycle": 279.501057, "observed_sessions": 35721, "observed_trigger_rate": 0.0035721, "observed_cycle": 279.9474, "cycle_delta": 0.4463, "target_rtp": 0.93, "rtp_total": 0.9296, "rtp_bg": 0.7202, "rtp_fg": 0.2095, "retry_limit_exceeded": 1},
+        {"case_order": 3, "case_label": "94A Oldhand", "config": "94A", "profile": "Oldhand", "total_card_weight": 1000000000, "fg_card_weight": 3333333, "model_trigger_rate": 0.003333333, "model_cycle": 300.00003, "observed_sessions": 33247, "observed_trigger_rate": 0.0033247, "observed_cycle": 300.7790, "cycle_delta": 0.7790, "target_rtp": 0.94, "rtp_total": 0.9375, "rtp_bg": 0.7206, "rtp_fg": 0.2169, "retry_limit_exceeded": 21},
+        {"case_order": 4, "case_label": "94A Newbie", "config": "94A", "profile": "Newbie", "total_card_weight": 1000000000, "fg_card_weight": 3577804, "model_trigger_rate": 0.003577804, "model_cycle": 279.501057, "observed_sessions": 35586, "observed_trigger_rate": 0.0035586, "observed_cycle": 281.0094, "cycle_delta": 1.5083, "target_rtp": 0.93, "rtp_total": 0.9279, "rtp_bg": 0.7190, "rtp_fg": 0.2089, "retry_limit_exceeded": 0}
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "h028_cycle_evidence",
+      "label": "H028 卡片權重與 1,000 萬場模擬",
+      "path": "Project/Slots/H028_雷神爆金 1000/Simulator.py",
+      "query": {
+        "engine": "SQLite",
+        "language": "sql",
+        "description": "將四組已完成的 1,000 萬場 Simulator 結果整理成圖表資料列。",
+        "executed_at": "2026-08-10T00:00:00+08:00",
+        "tables_used": ["cycle_validation"],
+        "sql": "WITH cycle_validation(case_label, model_cycle, observed_cycle, observed_sessions, model_trigger_rate, observed_trigger_rate) AS (VALUES ('92A Oldhand',300.00003,298.1248,33543,0.003333333,0.0033543),('92A Newbie',279.501057,279.9474,35721,0.003577804,0.0035721),('94A Oldhand',300.00003,300.7790,33247,0.003333333,0.0033247),('94A Newbie',279.501057,281.0094,35586,0.003577804,0.0035586)) SELECT * FROM cycle_validation"
+      }
+    }
+  ]
+}

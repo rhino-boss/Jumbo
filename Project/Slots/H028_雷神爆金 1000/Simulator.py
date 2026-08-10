@@ -2496,6 +2496,21 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     hit_rate_bg = values[R_ALL, RA_HITS_BG] / bg_spins if bg_spins else 0.0
     hit_rate_fg = values[R_ALL, RA_HITS_FG_SPIN] / fg_spins if fg_spins else 0.0
     fg_trigger_rate = values[R_ALL, RA_FG_TRIGGER] / total_round if total_round else 0.0
+    fg_cycle_observed = total_round / values[R_ALL, RA_FG_TRIGGER] if values[R_ALL, RA_FG_TRIGGER] else 0.0
+    fg_trigger_rate_model = 0.0
+    if CARD_SYSTEM_ENABLED:
+        if bet_mode == MODE_NORMALBET:
+            bg_cards = CARD_PROFILE_LISTS[CARD_PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BG]
+            total_card_weight = sum(max(0, int(card.get("weight", 0))) for card in bg_cards)
+            fg_card_weight = sum(
+                max(0, int(card.get("weight", 0)))
+                for card in bg_cards
+                if card.get("type") == "free_game"
+            )
+            fg_trigger_rate_model = fg_card_weight / total_card_weight if total_card_weight else 0.0
+        elif bet_mode == MODE_FEATUREBUY:
+            fg_trigger_rate_model = 1.0
+    fg_cycle_model = 1.0 / fg_trigger_rate_model if fg_trigger_rate_model else 0.0
     retrigger_rate = values[R_ALL, RA_FG_RETRIGGER] / fg_sessions if fg_sessions else 0.0
     avg_fg_spins = fg_spins / fg_sessions if fg_sessions else 0.0
     trigger_fg_bg_pay = values[R_ALL, RA_TRIGGER_FG_PAY_BG]
@@ -2566,7 +2581,11 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("m1_2x1_plus_rate_bg", bg_big_m1_rate, "BG spins containing at least one M1 of size 2x1 or larger / BG spins"),
         ("m1_2x1_plus_rate_fg", fg_big_m1_rate, "FG spins containing at least one M1 of size 2x1 or larger / FG spins"),
         ("", "", ""),
-        ("fg_trigger_rate", fg_trigger_rate, ""),
+        ("fg_trigger_rate", fg_trigger_rate, "observed FG sessions / paid rounds; retained for compatibility"),
+        ("fg_trigger_rate_observed", fg_trigger_rate, "observed FG sessions / paid rounds"),
+        ("fg_cycle_observed", fg_cycle_observed, "paid rounds / observed FG sessions"),
+        ("fg_trigger_rate_model", fg_trigger_rate_model, "Free Game card weight / total BG card weight"),
+        ("fg_cycle_model", fg_cycle_model, "total BG card weight / Free Game card weight"),
         ("retrigger_per_fg", retrigger_rate, "events / FG session"),
         ("retrigger_rate", fg_retrigger_session_rate, "sessions with retrigger / FG sessions"),
         ("avg_fg_spins", avg_fg_spins, ""),
@@ -2709,6 +2728,10 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "m1_2x1_plus_rate_bg": bg_big_m1_rate,
         "m1_2x1_plus_rate_fg": fg_big_m1_rate,
         "fg_trigger_rate": fg_trigger_rate,
+        "fg_trigger_rate_observed": fg_trigger_rate,
+        "fg_cycle_observed": fg_cycle_observed,
+        "fg_trigger_rate_model": fg_trigger_rate_model,
+        "fg_cycle_model": fg_cycle_model,
         "fg_trigger_count": int(values[R_ALL, RA_FG_TRIGGER]),
         "trigger_fg_bg_pay": int(trigger_fg_bg_pay),
         "trigger_fg_bg_count": trigger_fg_bg_count,
@@ -2787,9 +2810,12 @@ def print_batch_summary(duration, summary, bet_mode):
     print(f"* hit_rate_bg: {summary['hit_rate_bg']:.4f}", flush=True)
     print(f"* hit_rate_fg: {summary['hit_rate_fg']:.4f}", flush=True)
     print(
-        f"* fg_trigger_rate: {summary['fg_trigger_rate']:.4f} " f"({summary['fg_trigger_count']} sessions)",
+        f"* fg_trigger_rate_observed: {summary['fg_trigger_rate_observed']:.6f} " f"({summary['fg_trigger_count']} sessions)",
         flush=True,
     )
+    print(f"* fg_cycle_observed: {summary['fg_cycle_observed']:.4f}", flush=True)
+    print(f"* fg_trigger_rate_model: {summary['fg_trigger_rate_model']:.9f}", flush=True)
+    print(f"* fg_cycle_model: {summary['fg_cycle_model']:.4f}", flush=True)
     print(f"* retrigger_per_fg: {summary['retrigger_rate']:.4f}", flush=True)
     print(f"* avg_fg_spins: {summary['avg_fg_spins']:.2f} spins", flush=True)
     print(f"* max_win: {summary['max_win_x']:.2f} x", flush=True)

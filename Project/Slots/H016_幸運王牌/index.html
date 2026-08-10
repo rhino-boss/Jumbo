@@ -3448,6 +3448,23 @@
     throw new Error(`${section} retry limit exceeded`);
   }
 
+  window.demogameSimulateRound = () => {
+    const base = cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
+    const fgTriggered = base.scatter >= 3;
+    const feature = fgTriggered
+      ? (cardSystemActive() ? cardFeature("free_game", false) : freeSession(false))
+      : null;
+    const totalWin = base.pay + Number(feature?.pay || 0);
+    return {
+      multiplier: totalWin / (BASE_BET * BET_LEVELS[state.betIndex]),
+      fgTriggered,
+      maxMultiplier: Math.max(base.maxMultiplier, Number(feature?.maxMultiplier || 1)),
+      retryLimitExceeded: 0,
+      bgCascade: base.combo,
+      fgCascades: feature?.spins?.map((spin) => spin.combo) || []
+    };
+  };
+
   function renderMultiplier(freeGame, index = 0) {
     const values = freeGame ? [2,4,6,10] : [1,2,3,5];
     $("multiplierWindow").classList.remove("roll-one");
@@ -3594,7 +3611,7 @@
         $("messageBar").textContent = base.pay > 0 ? `WIN ${format(base.pay)}` : "No Win";
         if (base.scatter >= 3 || mode !== 0) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
-          activateFeature(cardFeature(section, superMode), mode);
+          activateFeature(cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode), mode);
         }
       }
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; }

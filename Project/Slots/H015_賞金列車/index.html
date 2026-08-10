@@ -2530,6 +2530,121 @@
 
   function freeAward(scatter) { return Number(Box.free_spin_awards?.[scatter] || (scatter >= 3 ? 10 + (scatter - 3) * 2 : 0)); }
 
+  function simulateFeaturePackage(mode, scatter) {
+    const freeSpins = [];
+    let remaining = Math.min(freeAward(scatter), Box.max_spin_free_game);
+    let played = 0;
+    const guaranteedLightningSpin = remaining ? cumulativeChoice(Box.weight_cum_must_appear_1_fg || [1]) : -1;
+    while (remaining > 0 && played < Box.max_spin_free_game) {
+      const freeSpin = simulateScene("FG", mode, false, guaranteedLightningSpin === played + 1);
+      remaining -= 1;
+      played += 1;
+      freeSpins.push(freeSpin);
+      if (freeSpin.scatter >= 3 && played < Box.max_spin_free_game) {
+        remaining += Math.min(freeAward(freeSpin.scatter), Box.max_spin_free_game - played - remaining);
+      }
+    }
+    return freeSpins;
+  }
+
+  function h015WeightedCard(cards) {
+    const available = (cards || []).filter((card) => Number(card?.weight) > 0);
+    const total = available.reduce((sum, card) => sum + Number(card.weight), 0);
+    if (!total) return null;
+    let roll = Math.random() * total;
+    for (const card of available) {
+      roll -= Number(card.weight);
+      if (roll <= 0) return card;
+    }
+    return available.at(-1);
+  }
+
+  function h015CardSystemActive() {
+    return Box.card_system?.enabled === true && window.DEMOGAME_CARD_SYSTEM_ENABLED !== false;
+  }
+
+  function h015CardProfile() {
+    try { return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
+    catch (_) { return "oldhand"; }
+  }
+
+  function h015CardMatches(card, multiplier) {
+    if (!card) return true;
+    return multiplier > Number(card.min) && multiplier <= Number(card.max);
+  }
+
+  function buildH015Round(base, freeSpins = null) {
+    const feature = freeSpins || (base.scatter >= 3 ? simulateFeaturePackage(MODE_NORMAL, base.scatter) : []);
+    const totalWin = base.total + feature.reduce((sum, spin) => sum + spin.total, 0);
+    return { base, freeSpins: feature, totalWin };
+  }
+
+  function simulateH015AcceptedRound() {
+    if (!h015CardSystemActive()) return { ...buildH015Round(simulateScene("BG", MODE_NORMAL, false)), retries: 0, retryLimitExceeded: false };
+    const profile = Box.card_system[h015CardProfile()]?.normal_bet || Box.card_system.oldhand.normal_bet;
+    const bgCard = h015WeightedCard(profile.weight_bg);
+    const fgCard = bgCard?.type === "free_game" ? h015WeightedCard(profile.weight_fg) : null;
+    const retryLimit = Math.max(1, Number(Box.card_system.retry_limit) || 5000);
+    let lastBase = null;
+    if (bgCard?.type !== "free_game") {
+      for (let retry = 0; retry < retryLimit; retry += 1) {
+        const base = simulateScene("BG", MODE_NORMAL, false);
+        lastBase = base;
+        const bgMultiplier = base.total / coinIn(MODE_NORMAL);
+        if (base.scatter < 3 && h015CardMatches(bgCard, bgMultiplier)) {
+          return { ...buildH015Round(base, []), retries: retry, retryLimitExceeded: false };
+        }
+      }
+      return { ...buildH015Round(lastBase, []), retries: retryLimit, retryLimitExceeded: true };
+    }
+
+    let bgRetries = 0;
+    for (; bgRetries < retryLimit; bgRetries += 1) {
+      lastBase = simulateScene("BG", MODE_NORMAL, false);
+      if (lastBase.scatter >= 3) break;
+    }
+    if (lastBase?.scatter < 3) {
+      return { ...buildH015Round(lastBase, []), retries: bgRetries, retryLimitExceeded: true };
+    }
+
+    let lastFreeSpins = [];
+    for (let fgRetries = 0; fgRetries < retryLimit; fgRetries += 1) {
+      lastFreeSpins = simulateFeaturePackage(MODE_NORMAL, lastBase.scatter);
+      const fgMultiplier = lastFreeSpins.reduce((sum, spin) => sum + spin.total, 0) / coinIn(MODE_NORMAL);
+      if (h015CardMatches(fgCard, fgMultiplier)) {
+        return { ...buildH015Round(lastBase, lastFreeSpins), retries: bgRetries + fgRetries, retryLimitExceeded: false };
+      }
+    }
+    return {
+      ...buildH015Round(lastBase, lastFreeSpins),
+      retries: bgRetries + retryLimit,
+      retryLimitExceeded: true
+    };
+  }
+
+  window.demogameSimulateRound = () => {
+    const savedRng = el.reelRngInput.value;
+    el.reelRngInput.value = "";
+    try {
+      const round = simulateH015AcceptedRound();
+      const bgMultiplier = round.base.total / coinIn(MODE_NORMAL);
+      const fgMultiplier = round.freeSpins.reduce((sum, spin) => sum + spin.total, 0) / coinIn(MODE_NORMAL);
+      return {
+        multiplier: bgMultiplier + fgMultiplier,
+        bgMultiplier,
+        fgMultiplier,
+        fgTriggered: round.freeSpins.length > 0,
+        maxMultiplier: Math.max(round.base.maxMultiplier, ...round.freeSpins.map((spin) => spin.maxMultiplier), 1),
+        retryLimitExceeded: round.retryLimitExceeded ? 1 : 0,
+        bgCascade: round.base.steps.filter((step) => step.wins.length).length,
+        fgCascades: round.freeSpins.map((spin) => spin.steps.filter((step) => step.wins.length).length),
+        retries: round.retries
+      };
+    } finally {
+      el.reelRngInput.value = savedRng;
+    }
+  };
+
   function symbolMarkup(symbol, isGold) {
     if (symbol === 99) return "";
     const code = CODE[symbol] || `S${symbol}`;

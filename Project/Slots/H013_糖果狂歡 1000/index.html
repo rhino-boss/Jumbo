@@ -3045,21 +3045,56 @@
     state.cardProfileUsed = selection?.profile || "off";
     let candidate = null;
     let retries = 0;
-    while (true) {
+    let accepted = false;
+    const retryLimit = 250;
+    while (retries < retryLimit) {
       candidate = simulateRoundCandidate(forceFeature, forcedStops, parameters);
-      if (cardAccepts(selection, candidate)) break;
+      if (cardAccepts(selection, candidate)) { accepted = true; break; }
       retries += 1;
       if (retries % 25 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
     }
     state.cardRetries = retries;
+    state.cardRetryLimitExceeded = !accepted;
     if (selection) {
       appendLog(
-        `Card System ${state.cardProfileUsed} | accepted after ${retries} retries`,
-        "result"
+        accepted
+          ? `Card System ${state.cardProfileUsed} | accepted after ${retries} retries`
+          : `Card System ${state.cardProfileUsed} | retry limit exceeded; last result used`,
+        accepted ? "result" : "error"
       );
     }
     return candidate;
   }
+
+  window.demogameSimulateRound = () => {
+    const previousMode = state.selectedMode;
+    state.selectedMode = MODE_NORMAL;
+    try {
+      const selection = prepareCardSelection(MODE_NORMAL);
+      const parameters = cardParameters(selection);
+      let candidate = null;
+      let retries = 0;
+      let accepted = false;
+      const retryLimit = 250;
+      do {
+        candidate = simulateRoundCandidate(false, null, parameters);
+        if (cardAccepts(selection, candidate)) { accepted = true; break; }
+        retries += 1;
+      } while (retries < retryLimit);
+      const allSpins = [candidate.base, ...candidate.freeSpins];
+      return {
+        multiplier: toMoney(candidate.totalPay) / betMoney(),
+        fgTriggered: candidate.triggered,
+        maxMultiplier: Math.max(1, ...allSpins.map((spin) => Number(spin.effectiveMultiplier) || 1)),
+        retryLimitExceeded: accepted ? 0 : 1,
+        bgCascade: candidate.base.steps.filter((step) => step.wins?.length).length,
+        fgCascades: candidate.freeSpins.map((spin) => spin.steps.filter((step) => step.wins?.length).length),
+        retries
+      };
+    } finally {
+      state.selectedMode = previousMode;
+    }
+  };
 
   function startFreeGame(spins) {
     const queue = spins.slice();

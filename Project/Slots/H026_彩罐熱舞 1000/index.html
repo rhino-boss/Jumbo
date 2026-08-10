@@ -1980,7 +1980,7 @@
         <span class="zone-label" data-i18n="naturalSimulation">Simulation</span>
         <div id="batchSimulationNote" class="batch-simulation-note">Current Card Profile</div>
         <div class="batch-simulation-controls">
-          <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="1000"
+          <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="10000"
             inputmode="numeric" aria-label="Simulation rounds">
           <button id="batchSimulationStartBtn" type="button" data-i18n="startSimulation">Start</button>
         </div>
@@ -4066,7 +4066,7 @@
           stats.retryLimitExceeded += result.retry_limit_exceeded ? 1 : 0;
           stats.maxMultiplier = Math.max(stats.maxMultiplier, result.max_multiplier);
 
-          if (stats.rounds % 50 === 0 || stats.rounds === requestedRounds) {
+          if (stats.rounds % 250 === 0 || stats.rounds === requestedRounds) {
             renderBatchSimulationStats(stats);
             await sleep(0);
           }

@@ -242,7 +242,7 @@
       <span class="zone-label">Simulation</span>
       <div id="batchSimulationNote" class="batch-simulation-note">Independent math simulation · Current Bet</div>
       <div class="batch-simulation-controls">
-        <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="1000" inputmode="numeric" aria-label="Simulation rounds">
+        <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="10000" inputmode="numeric" aria-label="Simulation rounds">
         <button id="batchSimulationStartBtn" type="button">Start</button>
       </div>
       <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value" id="batchSimulationRoundCount">0</span></div>
@@ -288,7 +288,7 @@
     const bet = document.getElementById("betValue")?.textContent?.trim() || "--";
     const cardSystem = document.getElementById("cardSystemInput")?.checked ? "On" : "Off";
     if (document.querySelector(".demogame-fallback-simulation")) {
-      note.textContent = `Config ${config} · Version ${version} · Card System ${cardSystem} · Independent N-round simulation · Bet ${bet}`;
+      note.textContent = `Config ${config} · Version ${version} · Card System ${cardSystem} · Actual Demo Game logic · Bet ${bet}`;
     }
   }
 
@@ -301,44 +301,15 @@
     write("batchSimulationHitRate", pct(rounds ? stats.hits / rounds : 0));
     write("batchSimulationFgTrigger", `${pct(rounds ? stats.fgTriggers / rounds : 0)} (${stats.fgTriggers ? `1 / ${Math.round(rounds / stats.fgTriggers).toLocaleString("en-US")}` : "-- rounds"})`);
     write("batchSimulationMaxMultiplier", `x${Number(stats.maxMultiplier.toFixed(2))}`);
-    write("batchSimulationRetryLimitExceeded", "0 (0.00%)");
-  }
-
-  function weightedPick(entries) {
-    const available = (entries || []).filter((entry) => Number(entry?.weight) > 0);
-    const total = available.reduce((sum, entry) => sum + Number(entry.weight), 0);
-    if (!total) return null;
-    let roll = Math.random() * total;
-    for (const entry of available) {
-      roll -= Number(entry.weight);
-      if (roll <= 0) return entry;
-    }
-    return available[available.length - 1];
-  }
-
-  function multiplierFromEntry(entry) {
-    if (!entry) return 0;
-    const fixed = Number(entry.multiplier ?? entry.value ?? entry.win ?? entry.payout);
-    if (Number.isFinite(fixed)) return Math.max(0, fixed);
-    const min = Number(entry.min ?? 0);
-    const max = Number(entry.max ?? min);
-    if (!Number.isFinite(min) || !Number.isFinite(max)) return 0;
-    return Math.max(0, min + Math.random() * Math.max(0, max - min));
-  }
-
-  function getCardDistribution() {
-    const cs = getMathConfig()?.card_system;
-    if (!cs) return null;
-    const profileName = normalizeProfileName(document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent || "Oldhand");
-    const profile = cs.profiles
-      ? cs.profiles[profileName === "Newbie" ? "weight_1" : "weight_2"] || Object.values(cs.profiles)[0]
-      : cs[profileName.toLowerCase()] || cs.oldhand || cs.newbie;
-    if (!profile) return null;
-    const normal = profile.normal_bet || profile;
-    return {
-      bg: normal.weight_bg || normal.base_game || profile.weight_bg || profile.base_game || [],
-      fg: normal.weight_fg || normal.free_game || profile.weight_fg || profile.free_game || []
+    const retries = stats.retryLimitExceeded || 0;
+    write("batchSimulationRetryLimitExceeded", `${retries.toLocaleString("en-US")} (${pct(rounds ? retries / rounds : 0)})`);
+    const renderCascades = (rowIndex, counts) => {
+      const cells = document.querySelectorAll(`.demogame-fallback-simulation .batch-cascade-table tbody tr:nth-child(${rowIndex}) td`);
+      const total = (counts || []).reduce((sum, value) => sum + Number(value || 0), 0);
+      cells.forEach((cell, index) => { cell.textContent = pct(total ? Number(counts[index] || 0) / total : 0); });
     };
+    renderCascades(1, stats.bgCascades);
+    renderCascades(2, stats.fgCascades);
   }
 
   function setupFallbackSimulation() {
@@ -356,43 +327,45 @@
       const simulateRound = typeof window.demogameSimulateRound === "function"
         ? window.demogameSimulateRound
         : null;
-      const cardSystemEnabled = document.getElementById("cardSystemInput")?.checked === true;
-      const distribution = simulateRound || !cardSystemEnabled ? null : getCardDistribution();
-      if (!simulateRound && !distribution?.bg?.length) {
+      if (!simulateRound) {
         const note = document.getElementById("batchSimulationNote");
-        if (note) note.textContent = cardSystemEnabled
-          ? "No Card System distribution is available for this config."
-          : "Card System is Off and this game has no independent natural-math simulation adapter.";
+        if (note) note.textContent = "Simulation adapter unavailable: this page cannot run the actual Demo Game logic yet.";
         start.textContent = original;
         start.disabled = false;
         roundsInput.disabled = false;
         return;
       }
-      const stats = { rounds: 0, totalMultiplier: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0 };
+      const stats = {
+        rounds: 0,
+        totalMultiplier: 0,
+        hits: 0,
+        fgTriggers: 0,
+        maxMultiplier: 0,
+        retryLimitExceeded: 0,
+        bgCascades: Array(6).fill(0),
+        fgCascades: Array(6).fill(0)
+      };
       try {
-        const chunkSize = simulateRound ? 20 : 5000;
         while (stats.rounds < requested) {
-          const end = Math.min(requested, stats.rounds + chunkSize);
-          while (stats.rounds < end) {
-            let multiplier = 0;
-            if (simulateRound) {
-              const result = simulateRound() || {};
-              multiplier = Math.max(0, Number(result.multiplier) || 0);
-              if (result.fgTriggered) stats.fgTriggers += 1;
-              stats.maxMultiplier = Math.max(stats.maxMultiplier, Number(result.maxMultiplier) || multiplier);
-            } else {
-              const bg = weightedPick(distribution.bg);
-              const fgTriggered = /free[_ -]?game|fg/i.test(String(bg?.type || ""));
-              multiplier = multiplierFromEntry(bg);
-              if (fgTriggered) {
-                stats.fgTriggers += 1;
-                multiplier += multiplierFromEntry(weightedPick(distribution.fg));
-              }
+          const sliceStarted = performance.now();
+          let sliceRounds = 0;
+          while (stats.rounds < requested && sliceRounds < 2000 && performance.now() - sliceStarted < 40) {
+            const pending = simulateRound();
+            const result = pending && typeof pending.then === "function" ? await pending : (pending || {});
+            const multiplier = Math.max(0, Number(result.multiplier) || 0);
+            if (result.fgTriggered) stats.fgTriggers += 1;
+            stats.retryLimitExceeded += Number(result.retryLimitExceeded) || 0;
+            if (Number.isFinite(Number(result.bgCascade))) {
+              stats.bgCascades[Math.min(5, Math.max(0, Math.trunc(Number(result.bgCascade))))] += 1;
+            }
+            for (const cascade of result.fgCascades || []) {
+              stats.fgCascades[Math.min(5, Math.max(0, Math.trunc(Number(cascade))))] += 1;
             }
             stats.rounds += 1;
+            sliceRounds += 1;
             stats.totalMultiplier += multiplier;
             if (multiplier > 0) stats.hits += 1;
-            stats.maxMultiplier = Math.max(stats.maxMultiplier, multiplier);
+            stats.maxMultiplier = Math.max(stats.maxMultiplier, Number(result.maxMultiplier) || multiplier);
           }
           writeFallbackStats(stats);
           start.textContent = `${stats.rounds.toLocaleString("en-US")} / ${requested.toLocaleString("en-US")}`;
