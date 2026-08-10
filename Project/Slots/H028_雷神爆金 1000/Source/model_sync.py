@@ -1,14 +1,15 @@
 """H028 model <-> config sync (single entry point).
 
     model_sync.py export ...   xlsx  -> config_*.js
-    model_sync.py import ...   config_*.js -> xlsx
+    model_sync.py import ...   config_*.js -> H0281.xlsx or an RTP workbook
 
 The model is split in two: H0281.xlsx carries everything shared by every RTP
 variant (pay table, reel strips, symbol weights, Parameter), and each
 H0281<rtp><variant>.xlsx carries only that variant's version stamp and its
-Multiplier_Weight card table.  Multiplier_Weight itself is derived - its columns
-are formulas reading Detail!K / Detail_Newbie!K - so the import direction never
-writes it back; retune Fix Num in the workbook instead.
+Multiplier_Weight card table.  Multiplier_Weight itself is derived from
+Detail!K / Detail_Newbie!K.  Variant imports therefore preserve those formulas
+and backfill their Fix Num plus cached results instead of replacing formulas
+with constants.
 """
 import argparse
 import json
@@ -134,6 +135,15 @@ CARD_COLUMNS = {
     "Weight_NB_BG": ("oldhand", "normal_bet", "weight_bg"),
     "Weight_NB_FG": ("oldhand", "normal_bet", "weight_fg"),
     "Weight_BF": ("oldhand", "buy_feature", "weight_fg"),
+}
+
+# card profile -> (worksheet, first row, last row)
+CARD_DETAIL_RANGES = {
+    ("newbie", "normal_bet", "weight_bg"): ("Detail_Newbie", 15, 79),
+    ("newbie", "normal_bet", "weight_fg"): ("Detail_Newbie", 86, 149),
+    ("oldhand", "normal_bet", "weight_bg"): ("Detail", 15, 79),
+    ("oldhand", "normal_bet", "weight_fg"): ("Detail", 86, 149),
+    ("oldhand", "buy_feature", "weight_fg"): ("Detail", 163, 226),
 }
 
 
@@ -401,7 +411,7 @@ def discover_layout(source_path):
 
 
 
-def build_updates(source_path, config):
+def build_base_updates(source_path, config):
     layout = discover_layout(source_path)
     updates = {}
     start_row = layout["linkpoint_row"]
@@ -471,9 +481,199 @@ def build_updates(source_path, config):
     return updates
 
 
+def is_variant_workbook(path):
+    return re.fullmatch(
+        r"H0281\d{2}[A-Za-z0-9_-]+\.xlsx",
+        Path(path).name,
+        re.IGNORECASE,
+    ) is not None
+
+
+def config_cards(config, profile, mode, segment):
+    try:
+        cards = config["card_system"][profile][mode][segment]
+    except KeyError as error:
+        raise KeyError(
+            f"Config card table is missing: card_system.{profile}.{mode}.{segment}"
+        ) from error
+    if not isinstance(cards, list) or not cards:
+        raise ValueError(f"Card table is empty: {profile}.{mode}.{segment}")
+    return cards
+
+
+def card_label(card):
+    if card.get("type") == "free_game":
+        return "Free Game"
+    if card.get("type") != "range":
+        raise ValueError(f"Unsupported card type: {card.get('type')!r}")
+    def format_number(value):
+        number = float(value)
+        return str(int(number)) if number.is_integer() else format(number, ".15g")
+
+    return f"({format_number(card['min'])}, {format_number(card['max'])}]"
+
+
+def build_variant_updates(source_path, config):
+    """Backfill version/cards while preserving the variant workbook formulas."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        workbook = load_workbook(source_path, read_only=True, data_only=True)
+    try:
+        required = {"Overview", "Multiplier_Weight", "Detail", "Detail_Newbie"}
+        missing = required - set(workbook.sheetnames)
+        if missing:
+            raise KeyError(f"Variant workbook is missing worksheets: {sorted(missing)}")
+
+        updates = {}
+        add_update(
+            updates,
+            "Overview",
+            "B3",
+            str(require_key(config, "excel_version")),
+            "excel_version",
+        )
+
+        multiplier = workbook["Multiplier_Weight"]
+        header_row = next(
+            (row for row in range(1, multiplier.max_row + 1)
+             if str(multiplier.cell(row, 1).value or "").strip().lower() == "range"),
+            None,
+        )
+        if header_row is None:
+            raise ValueError("Multiplier_Weight: Range header not found")
+        header_columns = {
+            str(multiplier.cell(header_row, col).value or "").strip(): col
+            for col in range(2, multiplier.max_column + 1)
+        }
+
+        profile_metrics = {}
+        for header, profile_key in CARD_COLUMNS.items():
+            if header not in header_columns:
+                raise ValueError(f"Multiplier_Weight column is missing: {header}")
+            profile, mode, segment = profile_key
+            detail_name, first_row, last_row = CARD_DETAIL_RANGES[profile_key]
+            cards = config_cards(config, profile, mode, segment)
+            expected = last_row - first_row + 1
+            detail_cards = cards[:expected]
+            placeholder_cards = cards[expected:]
+            if len(detail_cards) != expected or any(
+                card.get("type") != "free_game" or int(card.get("weight", 0) or 0) != 0
+                for card in placeholder_cards
+            ):
+                raise ValueError(
+                    f"{profile}.{mode}.{segment} has {len(cards)} cards; expected "
+                    f"{expected} Detail cards plus optional zero-weight Free Game placeholder"
+                )
+            weights = [int(card.get("weight", 0) or 0) for card in cards]
+            if any(weight < 0 for weight in weights):
+                raise ValueError(f"Negative card weight in {profile}.{mode}.{segment}")
+            total_weight = sum(weights)
+            if total_weight <= 0:
+                raise ValueError(f"No positive card weight in {profile}.{mode}.{segment}")
+
+            detail = workbook[detail_name]
+            rtp = 0.0
+            final_rates = []
+            for index, (card, weight) in enumerate(zip(detail_cards, weights[:expected])):
+                row = first_row + index
+                expected_label = card_label(card)
+                actual_label = str(detail.cell(row, 7).value or "").strip()
+                if actual_label != expected_label:
+                    raise ValueError(
+                        f"{detail_name}!G{row} is {actual_label!r}; expected {expected_label!r}"
+                    )
+                natural_rate = float(detail.cell(row, 4).value or 0)
+                average_multiplier = float(detail.cell(row, 5).value or 0)
+                final_rate = weight / total_weight
+                if weight > 0 and natural_rate <= 0:
+                    raise ValueError(
+                        f"Positive card weight has zero natural rate: {detail_name}!G{row}"
+                    )
+                fix_num = final_rate / natural_rate if natural_rate > 0 else 0.0
+                rtp_value = final_rate * average_multiplier
+                final_rates.append(final_rate)
+                rtp += rtp_value
+                for column, value, key_suffix in (
+                    ("H", fix_num, "Fix Num"),
+                    ("I", final_rate, "Fix Rate"),
+                    ("J", final_rate, "Final Rate"),
+                    ("K", weight, "Weight"),
+                    ("L", final_rate, "Hit Rate"),
+                    ("M", rtp_value, "Simulator RTP"),
+                ):
+                    add_update(
+                        updates,
+                        detail_name,
+                        f"{column}{row}",
+                        value,
+                        f"{header} {key_suffix}",
+                    )
+
+            for index, (card, weight) in enumerate(zip(cards, weights)):
+                expected_label = card_label(card)
+                multiplier_row = header_row + 1 + index
+                multiplier_label = str(multiplier.cell(multiplier_row, 1).value or "").strip()
+                if multiplier_label != expected_label:
+                    raise ValueError(
+                        f"Multiplier_Weight!A{multiplier_row} is {multiplier_label!r}; "
+                        f"expected {expected_label!r}"
+                    )
+                add_update(
+                    updates,
+                    "Multiplier_Weight",
+                    f"{get_column_letter(header_columns[header])}{multiplier_row}",
+                    weight,
+                    header,
+                )
+            profile_metrics[profile_key] = {
+                "rtp": rtp,
+                "final_rates": final_rates,
+            }
+
+        old_bg = profile_metrics[("oldhand", "normal_bet", "weight_bg")]
+        old_fg = profile_metrics[("oldhand", "normal_bet", "weight_fg")]
+        newbie_bg = profile_metrics[("newbie", "normal_bet", "weight_bg")]
+        newbie_fg = profile_metrics[("newbie", "normal_bet", "weight_fg")]
+        buy_fg = profile_metrics[("oldhand", "buy_feature", "weight_fg")]
+        old_trigger = old_bg["final_rates"][-1]
+        newbie_trigger = newbie_bg["final_rates"][-1]
+
+        summary_updates = (
+            ("Detail", "C7", old_bg["rtp"], "Weight_NB_BG RTP"),
+            ("Detail", "D7", old_fg["rtp"] * old_trigger, "Weight_NB_FG RTP"),
+            ("Detail", "E7", old_bg["rtp"] + old_fg["rtp"] * old_trigger, "Weight_NB total RTP"),
+            ("Detail", "F7", old_trigger, "Weight_NB FG trigger"),
+            ("Detail", "G7", 1 / old_trigger, "Weight_NB FG period"),
+            ("Detail", "H7", old_fg["rtp"], "Weight_NB FG average"),
+            ("Detail", "C8", 0.0, "Weight_BF BG RTP"),
+            ("Detail", "D8", buy_fg["rtp"] / 75.0, "Weight_BF FG RTP"),
+            ("Detail", "E8", buy_fg["rtp"] / 75.0, "Weight_BF total RTP"),
+            ("Detail", "F8", 1.0, "Weight_BF trigger"),
+            ("Detail", "G8", 1.0, "Weight_BF period"),
+            ("Detail", "H8", buy_fg["rtp"], "Weight_BF average"),
+            ("Detail_Newbie", "C7", newbie_bg["rtp"], "Weight_NB_Newbie BG RTP"),
+            ("Detail_Newbie", "D7", newbie_fg["rtp"] * newbie_trigger, "Weight_NB_Newbie FG RTP"),
+            ("Detail_Newbie", "E7", newbie_bg["rtp"] + newbie_fg["rtp"] * newbie_trigger, "Weight_NB_Newbie total RTP"),
+            ("Detail_Newbie", "F7", newbie_trigger, "Weight_NB_Newbie FG trigger"),
+            ("Detail_Newbie", "G7", 1 / newbie_trigger, "Weight_NB_Newbie FG period"),
+            ("Detail_Newbie", "H7", newbie_fg["rtp"], "Weight_NB_Newbie FG average"),
+        )
+        for sheet_name, address, value, key in summary_updates:
+            add_update(updates, sheet_name, address, value, key)
+        return updates
+    finally:
+        workbook.close()
+
+
+def build_updates(source_path, config):
+    if is_variant_workbook(source_path):
+        return build_variant_updates(source_path, config)
+    return build_base_updates(source_path, config)
+
+
 def values_equal(left, right):
     if isinstance(left, (int, float)) and isinstance(right, (int, float)):
-        return float(left) == float(right)
+        return math.isclose(float(left), float(right), rel_tol=1e-12, abs_tol=1e-12)
     return left == right
 
 
@@ -607,7 +807,13 @@ def insert_missing_cells(sheet_xml, sheet_name, remaining, cell_updates):
     return patched
 
 
-def patch_sheet_xml(xml_bytes, sheet_name, cell_updates, overwrite_formulas=False):
+def patch_sheet_xml(
+    xml_bytes,
+    sheet_name,
+    cell_updates,
+    overwrite_formulas=False,
+    preserve_formula_cache=False,
+):
     text = xml_bytes.decode("utf-8")
     remaining = set(cell_updates)
 
@@ -616,7 +822,33 @@ def patch_sheet_xml(xml_bytes, sheet_name, cell_updates, overwrite_formulas=Fals
         if address not in cell_updates:
             return match.group(0)
         body = match.group("body") or ""
-        if re.search(r"<f(?:\s|>)", body) and not overwrite_formulas:
+        has_formula = re.search(r"<f(?:\s|>)", body) is not None
+        if has_formula and preserve_formula_cache:
+            value, _key = cell_updates[address]
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise TypeError(
+                    f"Formula cache must be numeric: {sheet_name}!{address}={value!r}"
+                )
+            attrs = match.group("attrs") or match.group("selfattrs") or ""
+            attrs = re.sub(r'\s+t="[^"]*"', "", attrs.rstrip())
+            value_xml = f"<v>{number_text(value)}</v>"
+            if re.search(r"<v(?:\s[^>]*)?>.*?</v>", body, re.DOTALL):
+                body = re.sub(
+                    r"<v(?:\s[^>]*)?>.*?</v>",
+                    value_xml,
+                    body,
+                    count=1,
+                    flags=re.DOTALL,
+                )
+            else:
+                formula_end = body.find("</f>")
+                if formula_end < 0:
+                    raise ValueError(f"Malformed formula cell {sheet_name}!{address}")
+                formula_end += len("</f>")
+                body = body[:formula_end] + value_xml + body[formula_end:]
+            remaining.discard(address)
+            return f"<c{attrs}>{body}</c>"
+        if has_formula and not overwrite_formulas:
             raise ValueError(f"Refusing to overwrite formula cell {sheet_name}!{address}")
         attrs = match.group("attrs") or match.group("selfattrs") or ""
         value, _key = cell_updates[address]
@@ -756,6 +988,7 @@ def write_patched_workbook(
     updates,
     force=False,
     overwrite_formulas=False,
+    preserve_formula_cache=False,
 ):
     source_path = source_path.resolve()
     output_path = output_path.resolve()
@@ -776,6 +1009,7 @@ def write_patched_workbook(
             symbol_formula_repairs = {
                 parts[sheet_name]: (sheet_name, 3 + reel_length)
                 for _scene, _group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS
+                if sheet_name in parts
             }
             with zipfile.ZipFile(temporary_path, "w") as output_zip:
                 for info in source_zip.infolist():
@@ -789,6 +1023,7 @@ def write_patched_workbook(
                             sheet_name,
                             cells,
                             overwrite_formulas=overwrite_formulas,
+                            preserve_formula_cache=preserve_formula_cache,
                         )
                     if info.filename in symbol_formula_repairs:
                         sheet_name, last_row = symbol_formula_repairs[info.filename]
@@ -802,10 +1037,19 @@ def write_patched_workbook(
 
 
 def verify_output(output_path, config, variant_path=None):
-    # output_path is the shared base; cards/version come from a variant workbook
-    generated = build_config(variant_path or DEFAULT_VARIANT, base_path=output_path)
-    changed_keys = [key for key, value in generated.items() if config.get(key) != value]
-    extra_keys = [key for key in config if key not in generated]
+    if is_variant_workbook(output_path):
+        generated = build_config(output_path, base_path=BASE_WORKBOOK)
+        ignored = set()
+    else:
+        # Shared workbook verification deliberately ignores the variant-owned
+        # version/card fields.
+        generated = build_config(variant_path or DEFAULT_VARIANT, base_path=output_path)
+        ignored = {"excel_version", "card_system"}
+    changed_keys = [
+        key for key, value in generated.items()
+        if key not in ignored and config.get(key) != value
+    ]
+    extra_keys = [key for key in config if key not in generated and key not in ignored]
     if changed_keys or extra_keys:
         raise ValueError(
             f"Round-trip verification failed. Changed keys: {changed_keys}; extra keys: {extra_keys}"
@@ -879,10 +1123,18 @@ def run_export(argv):
 
 def run_import(argv):
     parser = argparse.ArgumentParser(
-        description="Write H028 config_*.js data back into the mapped cells of an xlsx workbook"
+        description=(
+            "Write H028 config_*.js data back into H0281.xlsx or an "
+            "H0281<RTP><variant>.xlsx workbook"
+        )
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--source", type=Path, default=DEFAULT_BASE_XLSX)
+    parser.add_argument(
+        "--all-variants",
+        action="store_true",
+        help="Backfill every existing H0281<RTP><variant>.xlsx from its config_*.js",
+    )
     parser.add_argument("--output", type=Path, help="Output xlsx; defaults to *_from_config_*.xlsx")
     parser.add_argument("--in-place", action="store_true", help="Replace the source xlsx atomically")
     parser.add_argument(
@@ -894,6 +1146,34 @@ def run_import(argv):
     parser.add_argument("--check", action="store_true", help="Report differences without writing a file")
     args = parser.parse_args(argv)
 
+    if args.all_variants:
+        if args.output is not None:
+            parser.error("--all-variants cannot be combined with --output")
+        variants = sorted(
+            path for path in BASE_DIR.glob("H0281*.xlsx")
+            if not path.name.startswith("~$")
+            and path.resolve() != BASE_WORKBOOK.resolve()
+            and is_variant_workbook(path)
+        )
+        if not variants:
+            raise FileNotFoundError(f"No RTP variant workbooks found in {BASE_DIR}")
+        for variant in variants:
+            config_path = derive_output_path(variant)
+            if not config_path.exists():
+                raise FileNotFoundError(
+                    f"Config for {variant.name} was not found: {config_path}"
+                )
+            child_args = [
+                "--config", str(config_path),
+                "--source", str(variant),
+                "--in-place",
+            ]
+            if args.check:
+                child_args.append("--check")
+            run_import(child_args)
+        print(f"Processed {len(variants)} RTP variant workbook(s).")
+        return
+
     source_path = args.source.resolve()
     config_path = args.config.resolve()
     if not source_path.exists():
@@ -902,7 +1182,8 @@ def run_import(argv):
         raise FileNotFoundError(config_path)
     if args.in_place and args.output is not None:
         parser.error("--in-place and --output cannot be used together")
-    if args.in_place and not args.overwrite_formulas:
+    variant_target = is_variant_workbook(source_path)
+    if args.in_place and not variant_target and not args.overwrite_formulas:
         parser.error("--in-place requires --overwrite-formulas because mapped ranges contain formulas")
 
     config = load_js_config(config_path)
@@ -925,8 +1206,14 @@ def run_import(argv):
         if args.output is not None
         else default_output_path(source_path, config_path)
     )
-    overwrite_formulas = args.overwrite_formulas or output_path != source_path
-    if overwrite_formulas:
+    overwrite_formulas = (args.overwrite_formulas or output_path != source_path) and not variant_target
+    preserve_formula_cache = variant_target
+    if preserve_formula_cache:
+        print(
+            "Variant card formulas are preserved; Fix Num and cached formula "
+            "results are updated."
+        )
+    elif overwrite_formulas:
         print(
             "Mapped formula cells may be replaced by fixed config values; "
             "Symbol ID U:AA formulas are restored and Excel will rebuild the calculation chain."
@@ -937,6 +1224,7 @@ def run_import(argv):
         updates,
         force=args.force or args.in_place,
         overwrite_formulas=overwrite_formulas,
+        preserve_formula_cache=preserve_formula_cache,
     )
     verify_output(output_path, config)
     print(f"Xlsx written and round-trip verified: {output_path}")

@@ -2269,7 +2269,9 @@
     const INITIAL_BALANCE_MONEY = 10000;
     const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
     const FEATURE_TRIGGER_SCATTER_MIN = 3;
-    const CARD_SYSTEM_ENABLED = Box.card_system?.enabled ?? true;
+    let CARD_SYSTEM_ENABLED = (Box.card_system?.enabled ?? true) && (() => {
+      try { return localStorage.getItem("slotDemoCardSystem") !== "off"; } catch (_) { return true; }
+    })();
     const SCORE_WINDOW_SIZE = Box.window_size;
     const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
     const SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - SCORE_WINDOW_SIZE;
@@ -2858,7 +2860,7 @@
     function updateSetRngAvailability(debugInputLocked) {
       const hasCardRange = cardRangeSelectEl.value !== "";
       const hasReelRng = reelRngInputEl.value.trim() !== "";
-      cardRangeSelectEl.disabled = !state.debugEnabled || debugInputLocked || hasReelRng;
+      cardRangeSelectEl.disabled = !CARD_SYSTEM_ENABLED || !state.debugEnabled || debugInputLocked || hasReelRng;
       reelRngInputEl.disabled = !state.debugEnabled || debugInputLocked || hasCardRange;
       setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasReelRng);
     }
@@ -3716,17 +3718,17 @@
       const hasForcedReels = Array.isArray(forcedReels) && forcedReels.some((value) => value !== null && value !== undefined);
       const forcedTableRng = debugOverrides?.table_rng ?? null;
       const forcedCardRange = debugOverrides?.card_range || null;
-      const hasForcedCard = Boolean(forcedCardRange);
+      const hasForcedCard = CARD_SYSTEM_ENABLED && Boolean(forcedCardRange);
       const bgCardSystemInfo = hasForcedCard
         ? forcedCardRange
-        : betMode === Box.mode_featurebuy || hasForcedReels
+        : !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy || hasForcedReels
           ? null
           : pickCardSystemEntry("weight_bg", betMode);
       const runSpinCardSystemInfo = hasForcedCard ? null : bgCardSystemInfo;
-      const fgCardSystemInfo = betMode === Box.mode_featurebuy || hasForcedCard
+      const fgCardSystemInfo = !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy || hasForcedCard
         ? null
         : pickCardSystemEntry("weight_fg", betMode);
-      const bfCardSystemInfo = betMode === Box.mode_featurebuy && !hasForcedReels
+      const bfCardSystemInfo = CARD_SYSTEM_ENABLED && betMode === Box.mode_featurebuy && !hasForcedReels
         ? pickCardSystemEntry("weight_bf", betMode)
         : null;
       const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
@@ -4253,7 +4255,7 @@
       const cardSystemInfo = spin.rng_info.card_system;
       const cardSystemText = cardSystemInfo
         ? `${cardSystemInfo.label} | ${formatRngDetail(cardSystemInfo.rng_value, cardSystemInfo.rng_total, cardSystemInfo.forced)}`
-        : "false";
+        : "Off";
       const rows = [
         { left: "Mode", right: spin.scene_name },
         { left: "Card System", right: cardSystemText },
@@ -4539,6 +4541,18 @@
       resetSetRng(false);
       updateBatchSimulationContext();
       writeMessage(`Player Profile | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`);
+    });
+
+    document.addEventListener("demogame:card-system-change", (event) => {
+      CARD_SYSTEM_ENABLED = Boolean(Box.card_system?.enabled) && Boolean(event.detail?.enabled);
+      if (!CARD_SYSTEM_ENABLED) cardRangeSelectEl.value = "";
+      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED || state.batchSimulationRunning;
+      updateBatchSimulationContext();
+      updateSpinButtonState();
+      updateDebugControls();
+      writeMessage(CARD_SYSTEM_ENABLED
+        ? `Card System On | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`
+        : "Card System Off");
     });
 
     languageSelectEl.addEventListener("change", () => {

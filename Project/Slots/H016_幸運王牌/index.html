@@ -3383,7 +3383,7 @@
       }
       snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplier: multipliers[Math.min(combo,3)], message: "Drop"});
     }
-    return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
+    return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, tableName, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
   }
 
   function freeQueue() {
@@ -3417,6 +3417,11 @@
   }
 
   function cardProfile() { return "weight_2"; }
+  function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
+  function naturalBaseSpin() {
+    const weights = cfg.base_table_weights || {high: 1, low: 0};
+    return spin(pick(["bg_high", "bg_low"], [Number(weights.high || 0), Number(weights.low || 0)]));
+  }
   function pickCard(section, profile = cardProfile()) {
     const cards = cfg.card_system?.profiles?.[profile]?.[section];
     if (!cards?.length) return null;
@@ -3486,9 +3491,17 @@
   }
 
   function renderWinDetails(snapshot) {
-    $("lineList").innerHTML = snapshot.details?.length ? snapshot.details.map(win => `<div>${win.symbol} · ${win.length} reels · ${win.ways} ways · ${format(win.pay)}</div>`).join("") : "<div>No Win</div>";
-    $("spinResultList").innerHTML = `<div>Run ${snapshot.combo + 1} · ×${snapshot.multiplier} · ${snapshot.message}</div>`;
+    $("lineList").innerHTML = snapshot.details?.length
+      ? snapshot.details.map(win => `<div class="line-row"><span>${win.symbol} · ${win.length} reels · ${win.ways} ways</span><span>${format(win.pay)}</span></div>`).join("")
+      : '<div class="line-row"><span>No Win</span><span>0.00</span></div>';
+    $("spinResultList").innerHTML = `<div class="spin-result-row">Run ${snapshot.combo + 1} · ×${snapshot.multiplier} · ${snapshot.message}</div>`;
     $("carryMultiValue").textContent = snapshot.combo;
+  }
+
+  function renderRngSource(result) {
+    $("rngList").innerHTML = `
+      <div class="rng-row"><span>Card System</span><span>${cardSystemActive() ? "On" : "Off"}</span></div>
+      <div class="rng-row"><span>Source</span><span>${result.tableName} · weighted draw</span></div>`;
   }
 
   async function animateSnapshots(snapshots, freeGame = false) {
@@ -3575,9 +3588,9 @@
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
         let base;
-        if (mode === 0) base = $("forceFgInput").checked ? cardSpin({type:"free_game"}) : cardSpin(pickCard("base_game"));
+        if (mode === 0) base = $("forceFgInput").checked ? cardSpin({type:"free_game"}) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
         else base = buyEntry();
-        await animateSnapshots(base.snapshots, false); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
+        await animateSnapshots(base.snapshots, false); renderRngSource(base); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${format(base.pay)}` : "No Win";
         if (base.scatter >= 3 || mode !== 0) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";

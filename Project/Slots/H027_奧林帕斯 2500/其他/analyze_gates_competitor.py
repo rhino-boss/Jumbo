@@ -65,6 +65,13 @@ CODE_TO_ID = {
     "TE": 12,
 }
 
+# Gates of Olympus 1000 complete multiplier-ball value pool. The supplied
+# responses do not happen to contain 1000x, but it remains a valid competitor
+# value and therefore must remain in Multiple Level with zero observed weight.
+COMPETITOR_MULTIPLIER_LEVELS = [
+    2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 50, 100, 250, 500, 1000
+]
+
 
 def number(value, default=0.0):
     if value is None or value == "":
@@ -515,7 +522,14 @@ def reel_symbol_probabilities(spins, screen_mode):
     counts = [Counter() for _ in range(6)]
     totals = [0] * 6
     for spin in spins:
-        screens = spin.screens[:1] if screen_mode == "initial" else spin.screens[1:]
+        if screen_mode == "initial":
+            screens = spin.screens[:1]
+        elif screen_mode == "drop":
+            screens = spin.screens[1:]
+        elif screen_mode == "all":
+            screens = spin.screens
+        else:
+            raise ValueError(f"Unsupported screen mode: {screen_mode}")
         for screen in screens:
             if len(screen) != 30:
                 continue
@@ -637,8 +651,7 @@ def build_reel_strip(
     scatter_scale=1.0,
 ):
     initial_target = scale_symbol_probability(initial_target, "C1", scatter_scale)
-    drop_target = scale_symbol_probability(drop_target, "C1", scatter_scale)
-    sequence_target = drop_target if drop_target and sum(drop_target.values()) > 0 else initial_target
+    sequence_target = initial_target
     counts = largest_remainder_counts(sequence_target, length, force_positive=("C1", "C2"))
     if force_scatter and counts.get("C1", 0) == 0:
         donor = max(
@@ -648,7 +661,13 @@ def build_reel_strip(
         counts[donor] -= 1
         counts["C1"] += 1
     sequence = build_clustered_sequence(counts, seed, high_fraction)
-    weights, error = optimize_start_weights(sequence, initial_target)
+    weights = [1] * length
+    achieved = Counter(sequence)
+    error = max(
+        abs(achieved.get(code, 0) / length - initial_target.get(code, 0.0))
+        for code in CODE_TO_ID
+        if code != "C3"
+    )
     return sequence, weights, error
 
 
@@ -682,8 +701,10 @@ def write_strip_sheet(
     high_fraction=0.70,
     scatter_scale=1.0,
 ):
-    initial = reel_symbol_probabilities(spins, "initial")
-    drop = reel_symbol_probabilities(spins, "drop")
+    # One table and uniform Symbol Weight cannot represent different initial
+    # and drop distributions. Use every observed screen so the Symbol column
+    # matches the competitor's overall BG/FG symbol distribution.
+    overall = reel_symbol_probabilities(spins, "all")
     errors = []
     descriptions = {
         "C1": "Scatter",
@@ -704,8 +725,8 @@ def write_strip_sheet(
         worksheet.column_dimensions[worksheet.cell(3, column).column_letter].width = 11
     for reel in range(6):
         sequence, weights, error = build_reel_strip(
-            initial[reel],
-            drop[reel],
+            overall[reel],
+            overall[reel],
             seed_base + reel,
             force_scatter=force_scatter_first_four and reel < 4,
             high_fraction=high_fraction,
@@ -721,10 +742,10 @@ def write_strip_sheet(
             id_cell = worksheet.cell(row, 19 + reel)
             id_cell.value = f'=IF({symbol_cell.coordinate}="","",VLOOKUP({symbol_cell.coordinate},$A$4:$I$15,9,FALSE))'
             id_cell.number_format = "0"
-            worksheet.cell(row, 26 + reel).value = weights[offset] if offset < 300 else None
+            worksheet.cell(row, 26 + reel).value = 1 if offset < 300 else None
     return {
-        "initial_max_abs_error": max(errors),
-        "initial_max_abs_error_pp": max(errors) * 100,
+        "overall_max_abs_error": max(errors),
+        "overall_max_abs_error_pp": max(errors) * 100,
         "spin_samples": len(spins),
     }
 
@@ -766,15 +787,23 @@ def apply_h028_overview_layout(worksheet, template_path: Path):
                 source_cell = template.cell(row, column)
                 copy_cell_style(source_cell, target_cell)
 
-    for key, dimension in template.column_dimensions.items():
-        worksheet.column_dimensions[key].width = dimension.width
-        worksheet.column_dimensions[key].hidden = dimension.hidden
-    for key, dimension in template.row_dimensions.items():
-        worksheet.row_dimensions[key].height = dimension.height
-        worksheet.row_dimensions[key].hidden = dimension.hidden
+    for column in range(1, max_column + 1):
+        key = worksheet.cell(1, column).column_letter
+        source_dimension = template.column_dimensions[key]
+        worksheet.column_dimensions[key].width = source_dimension.width
+        worksheet.column_dimensions[key].hidden = source_dimension.hidden
+    for row in range(1, max_row + 1):
+        source_dimension = template.row_dimensions[row]
+        worksheet.row_dimensions[row].height = (
+            source_dimension.height or template.sheet_format.defaultRowHeight
+        )
+        worksheet.row_dimensions[row].hidden = source_dimension.hidden
     worksheet.freeze_panes = template.freeze_panes
     worksheet.sheet_view.showGridLines = template.sheet_view.showGridLines
     worksheet.sheet_properties.tabColor = copy(template.sheet_properties.tabColor)
+    worksheet.sheet_format.defaultRowHeight = template.sheet_format.defaultRowHeight
+    worksheet.sheet_format.defaultColWidth = template.sheet_format.defaultColWidth
+    worksheet.sheet_format.baseColWidth = template.sheet_format.baseColWidth
     worksheet.page_margins = copy(template.page_margins)
     worksheet.page_setup = copy(template.page_setup)
     worksheet.print_options = copy(template.print_options)
@@ -798,7 +827,7 @@ def apply_h028_overview_layout(worksheet, template_path: Path):
         "A21": 4, "B21": 15,
         "A22": 5, "B22": 15,
         "A23": 6, "B23": 15,
-        "A26": "Retrigger: 3 or more C1 adds 5 free spins.",
+        "A26": "Retrigger", "B26": 5,
         "A27": "The maximum of free spins is 50.",
         "A30": "Pay Table：", "B30": '="All wins show for "&A7&" credit bet."',
     }
@@ -870,7 +899,9 @@ def update_h0271_model(model_path: Path, analysis, overview_template: Path):
     observed_values = sorted(
         set(multiplier_value_counts(bg_spins)) | set(multiplier_value_counts(fg_spins))
     )
-    levels = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 25, 30, 50, 100, 250, 500, 1000, 2500]
+    levels = COMPETITOR_MULTIPLIER_LEVELS + [2500] * (
+        25 - len(COMPETITOR_MULTIPLIER_LEVELS)
+    )
     for index, value in enumerate(levels):
         parameter.cell(28 + index, 2).value = index + 1
         parameter.cell(28 + index, 3).value = value
@@ -1152,11 +1183,11 @@ def render_comparison(analysis, model_update):
 {markdown_table(
     ['工作表／欄位', '填入方式'],
     [
-        ['Parameter / Base Game Table', '只使用 BG_Symbol；輪帶符號數量對齊競品掉落分布，起始位置權重對齊初始盤面分布'],
+        ['Parameter / Base Game Table', '只使用 BG_Symbol；Symbol 對齊競品所有 BG 盤面分布，六輪 Symbol Weight 全部固定為 1'],
         ['Parameter / Free Game Table', f"只使用 FG_Symbol；競品 FG Spin 樣本數為 {model_update['fg_phase_samples'][0]}，初始 15 Spins、Retrigger +5"],
-        ['Parameter / Multiplier Level', f"競品觀察倍率為 {model_update['observed_multiplier_values']}；未觀察級距權重為 0，保留 2500× 上限"],
+        ['Parameter / Multiplier Level', f"只保留競品完整值池 {model_update['multiplier_levels'][:16]}；1000× 本批樣本未抽到、權重為 0，剩餘欄位填 2500"],
         ['Parameter / C2、C3', '競品只有一種倍數球，映射至 C2；C3 使用率設 0%，C3 權重表暫與 C2 相同'],
-        ['BG／FG 輪帶', '只保留 BG_Symbol、FG_Symbol；輪帶符號組成對齊掉落分布，起始位置權重校正初始盤面分布'],
+        ['BG／FG 輪帶', '只保留 BG_Symbol、FG_Symbol；只調整 Symbol，Symbol ID 依對照表產生，Symbol Weight 全部固定為 1'],
     ],
 )}
 
@@ -1204,15 +1235,16 @@ def main():
     if buy_analysis is not None:
         paytable_sources.append(args.buy_input.resolve())
     analysis["paytable"] = infer_paytable(paytable_sources)
+    dry_run_observed_values = sorted(
+        set(row["value"] for row in analysis["multiplier_ball"]["bg"]["value_distribution"])
+        | set(row["value"] for row in analysis["multiplier_ball"]["fg"]["value_distribution"])
+    )
     model_update = {
         "model": "H0271.xlsx",
         "observed_rtp_bg": analysis["basic"]["rtp_bg"],
         "observed_rtp_fg": analysis["basic"]["rtp_fg"],
-        "multiplier_levels": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 25, 30, 50, 100, 250, 500, 1000, 2500],
-        "observed_multiplier_values": sorted(
-            set(row["value"] for row in analysis["multiplier_ball"]["bg"]["value_distribution"])
-            | set(row["value"] for row in analysis["multiplier_ball"]["fg"]["value_distribution"])
-        ),
+        "multiplier_levels": COMPETITOR_MULTIPLIER_LEVELS + [2500] * (25 - len(COMPETITOR_MULTIPLIER_LEVELS)),
+        "observed_multiplier_values": dry_run_observed_values,
         "use_c3_probability": 0.0,
         "fg_phase_samples": [],
         "buy_feature_trigger_samples": len(buy_analysis["_sessions"]) if buy_analysis else 0,

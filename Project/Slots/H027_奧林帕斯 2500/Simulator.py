@@ -209,10 +209,10 @@ for table_index, item in enumerate(CFG["strips"]):
 REEL_LENGTHS = ORIGINAL_REEL_LENGTHS.copy()
 STRIP_NAMES = list(CFG["strip_names"])
 TABLE_BY_NAME = {name: index for index, name in enumerate(STRIP_NAMES)}
-BF_TABLE_ID = TABLE_BY_NAME["BF_Symbol"]
 
 PROFILE_NAMES = ["normal", "featurebuy"]
 PROFILE_BY_MODE = {MODE_NORMALBET: 0, MODE_EXTRABET: 0, MODE_FEATUREBUY: 1}
+FEATUREBUY_PROFILE_INDEX = 1
 PARAMETER = CFG["parameter"]
 
 PROFILE_COUNT = len(PROFILE_NAMES)
@@ -264,6 +264,8 @@ for profile_index, profile_name in enumerate(PROFILE_NAMES):
             C2_WEIGHT_CUM[profile_index, table_id] = C2_WEIGHT_CUM[profile_index, fallback_table_id]
             C3_WEIGHT_CUM[profile_index, table_id] = C3_WEIGHT_CUM[profile_index, fallback_table_id]
             USE_C3_WEIGHT[profile_index, table_id] = USE_C3_WEIGHT[profile_index, fallback_table_id]
+
+FEATUREBUY_TABLE_ID = BASE_REEL_TABLE_IDS[FEATUREBUY_PROFILE_INDEX, 0]
 
 CARD_SYSTEM = CFG.get("card_system", {})
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM.get("enabled", False))
@@ -466,9 +468,9 @@ def generate_board(table_id, profile_index):
             if pick < running:
                 start = row
                 break
-        # Buy Feature guarantees a scatter on reels 2-5 (index 1-4), matching the
-        # BF_Symbol strip layout; reels 1 and 6 (index 0 and 5) stay unforced.
-        if table_id == BF_TABLE_ID and 1 <= reel <= 4:
+        # Buy Feature uses the configured BG strip and guarantees a scatter on
+        # reels 2-5 (index 1-4); reels 1 and 6 stay unforced.
+        if profile_index == FEATUREBUY_PROFILE_INDEX and table_id == FEATUREBUY_TABLE_ID and 1 <= reel <= 4:
             candidate_count = 0
             for candidate in range(length):
                 for visible_row in range(WINDOW_SIZE):
@@ -1090,7 +1092,7 @@ def output_report(frames, record, bet_mode, total_round):
 
 def run_single_spin_debug():
     profile = PROFILE_BY_MODE[BET_MODE]
-    table_id = BF_TABLE_ID if BET_MODE == MODE_FEATUREBUY else 0
+    table_id = FEATUREBUY_TABLE_ID if BET_MODE == MODE_FEATUREBUY else BASE_REEL_TABLE_IDS[profile, 0]
     result = play_cluster_spin(table_id, profile, 0, BET_MULTI)
     print("Single spin result:")
     print(f"raw_cluster_pay={result[0]}, scatter_pay={result[1]}, scatter_count={result[2]}")

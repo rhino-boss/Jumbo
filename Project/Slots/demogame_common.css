@@ -425,6 +425,60 @@ body.slot-simulator .diagnostic-header {
   text-transform: uppercase;
 }
 
+body.slot-simulator #rng-wrap .rng-list,
+body.slot-simulator #log-wrap #log-body,
+body.slot-simulator #log-wrap .result-list {
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 8px 12px;
+}
+
+body.slot-simulator #log-wrap #log-body {
+  max-height: 260px;
+  padding-block: 6px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+body.slot-simulator #rng-wrap .rng-row,
+body.slot-simulator #rng-wrap .rng-item,
+body.slot-simulator #log-wrap .line-row,
+body.slot-simulator #log-wrap .result-item,
+body.slot-simulator #log-wrap #lineList > div:not(.line-row),
+body.slot-simulator #log-wrap #spinResultList > div:not(.spin-result-row) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+  margin: 0 0 3px;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--sim-text);
+  background: var(--sim-surface);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+body.slot-simulator #rng-wrap .rng-row:last-child,
+body.slot-simulator #rng-wrap .rng-item:last-child,
+body.slot-simulator #log-wrap .line-row:last-child,
+body.slot-simulator #log-wrap .result-item:last-child,
+body.slot-simulator #log-wrap #lineList > div:not(.line-row):last-child,
+body.slot-simulator #log-wrap #spinResultList > div:not(.spin-result-row):last-child {
+  margin-bottom: 0;
+}
+
+body.slot-simulator #rng-wrap .rng-list:empty::before {
+  display: block;
+  color: var(--sim-sub);
+  content: "Awaiting Spin";
+  font-size: 12px;
+  line-height: 20px;
+}
+
 body.slot-simulator #settings-wrap > .setting-body {
   display: flex;
   align-items: center;

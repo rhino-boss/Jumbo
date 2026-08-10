@@ -783,25 +783,25 @@
       4,
       5,
       6,
-      7,
       8,
-      9,
       10,
-      11,
       12,
-      13,
-      14,
       15,
-      16,
-      18,
       20,
       25,
-      30,
       50,
       100,
       250,
       500,
       1000,
+      2500,
+      2500,
+      2500,
+      2500,
+      2500,
+      2500,
+      2500,
+      2500,
       2500
     ],
     "observed_multiplier_values": [
@@ -828,13 +828,13 @@
     "buy_feature_trigger_samples": 0,
     "strip_fit": {
       "BG_Symbol": {
-        "initial_max_abs_error": 2.9978798586488553e-06,
-        "initial_max_abs_error_pp": 0.00029978798586488553,
+        "overall_max_abs_error": 0.004381822797664382,
+        "overall_max_abs_error_pp": 0.4381822797664382,
         "spin_samples": 7075
       },
       "FG_Symbol": {
-        "initial_max_abs_error": 2.7523809523755105e-06,
-        "initial_max_abs_error_pp": 0.00027523809523755105,
+        "overall_max_abs_error": 0.0018721461187214405,
+        "overall_max_abs_error_pp": 0.18721461187214405,
         "spin_samples": 315
       }
     },

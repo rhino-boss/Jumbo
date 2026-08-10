@@ -65,6 +65,19 @@
     return "Oldhand";
   }
 
+  function syncNativeCardControl(enabled) {
+    const select = document.getElementById("cardRangeSelect");
+    if (!select || ![...select.options].some((option) => option.value === "off")) return;
+    let savedProfile = "oldhand";
+    try { savedProfile = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
+    const combinedProfile = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent;
+    const profile = combinedProfile ? normalizeProfileName(combinedProfile).toLowerCase() : savedProfile;
+    const next = enabled && [...select.options].some((option) => option.value === profile) ? profile : "off";
+    if (select.value === next) return;
+    select.value = next;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   function ensureCombinedConfigAndVersion() {
     const body = document.querySelector("#settings-wrap > .setting-body");
     if (!body || document.getElementById("demogameConfigSelect")) return;
@@ -112,8 +125,8 @@
     versionLabel.appendChild(versionSelect);
 
     const anchor = configSelect?.closest("label") || profileSelect?.closest("label") || body.firstChild;
-    body.insertBefore(combinedLabel, anchor);
-    combinedLabel.insertAdjacentElement("afterend", versionLabel);
+    body.insertBefore(versionLabel, anchor);
+    versionLabel.insertAdjacentElement("afterend", combinedLabel);
 
     combined.addEventListener("change", () => {
       const [configValue, profileValue] = JSON.parse(combined.value);
@@ -129,6 +142,7 @@
           rangeSelect.dispatchEvent(new Event("change", { bubbles: true }));
         }
       }
+      syncNativeCardControl(document.getElementById("cardSystemInput")?.checked);
       if (configSelect && configSelect.value !== configValue) {
         configSelect.value = configValue;
         configSelect.dispatchEvent(new Event("change", { bubbles: true }));
@@ -149,6 +163,7 @@
     if (!settingsBody) return;
 
     let input = document.getElementById("cardSystemInput");
+    const nativeInput = Boolean(input);
     let label = input?.closest("label");
     if (!input) {
       label = document.createElement("label");
@@ -164,13 +179,23 @@
       input.checked = saved !== "off";
     }
 
+    if (!nativeInput) {
+      const supported = getMathConfig()?.card_system?.enabled === true;
+      input.disabled = !supported;
+      if (!supported) input.checked = false;
+      label.classList.toggle("is-unavailable", !supported);
+      label.title = supported ? "" : "This math config has no Card System model.";
+    }
+
     const text = label.querySelector("span") || label.appendChild(document.createElement("span"));
     text.removeAttribute("data-i18n");
     text.textContent = "Card System";
 
     window.DEMOGAME_CARD_SYSTEM_ENABLED = input.checked;
+    syncNativeCardControl(input.checked);
     input.addEventListener("change", () => {
       window.DEMOGAME_CARD_SYSTEM_ENABLED = input.checked;
+      syncNativeCardControl(input.checked);
       try { localStorage.setItem("slotDemoCardSystem", input.checked ? "on" : "off"); } catch (_) {}
       document.dispatchEvent(new CustomEvent("demogame:card-system-change", {
         detail: { enabled: input.checked }
@@ -181,6 +206,7 @@
 
   ensureCardSystemToggle();
   ensureCombinedConfigAndVersion();
+  syncNativeCardControl(document.getElementById("cardSystemInput")?.checked);
   normalizeStatsTitle();
 
   function normalizeSettings() {
@@ -330,10 +356,16 @@
       const simulateRound = typeof window.demogameSimulateRound === "function"
         ? window.demogameSimulateRound
         : null;
-      const distribution = simulateRound ? null : getCardDistribution();
+      const cardSystemEnabled = document.getElementById("cardSystemInput")?.checked === true;
+      const distribution = simulateRound || !cardSystemEnabled ? null : getCardDistribution();
       if (!simulateRound && !distribution?.bg?.length) {
         const note = document.getElementById("batchSimulationNote");
-        if (note) note.textContent = "No Card System distribution is available for this config.";
+        if (note) note.textContent = cardSystemEnabled
+          ? "No Card System distribution is available for this config."
+          : "Card System is Off and this game has no independent natural-math simulation adapter.";
+        start.textContent = original;
+        start.disabled = false;
+        roundsInput.disabled = false;
         return;
       }
       const stats = { rounds: 0, totalMultiplier: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0 };

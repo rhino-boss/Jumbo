@@ -32,7 +32,7 @@ if not defined MODE (
     echo  H028 model / config sync
     echo ------------------------------------------------------------
     echo   Base workbook : H0281.xlsx      ^(pay table, reels, Parameter^)
-    echo   RTP variants  : H0281*A.xlsx    ^(version + Multiplier_Weight^)
+    echo   RTP variants  : H0281*.xlsx     ^(version + Multiplier_Weight^)
     echo ------------------------------------------------------------
     echo   [1] config  : xlsx  -^> config_*.js   ^(every RTP variant^)
     echo   [2] xlsx    : config_*.js -^> H0281.xlsx
@@ -65,10 +65,12 @@ rem ==========================================================================
 :do_xlsx
 echo.
 echo [H028] config -^> xlsx  (writes %BASE_XLSX%)
-echo        Note: Multiplier_Weight is derived from Detail and is never written
-echo              back; retune Fix Num in the workbook instead.
+echo        Shared fields go to H0281.xlsx; version/card weights go to every
+echo        matching H0281^<RTP^>^<variant^>.xlsx while formulas are preserved.
 if not exist "%BASE_XLSX%" (echo [ERROR] Base workbook missing: "%BASE_XLSX%" & goto failed)
 "%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" import --source "%BASE_XLSX%" --in-place --overwrite-formulas --force
+if errorlevel 1 goto failed
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" import --all-variants
 if errorlevel 1 goto failed
 echo.
 echo [H028] re-exporting configs so both directions agree

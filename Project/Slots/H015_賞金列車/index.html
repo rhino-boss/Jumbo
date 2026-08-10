@@ -2567,24 +2567,63 @@
       const cell = document.createElement("div"); const active = Box.score_area[row][reel];
       const code = CODE[board[row][reel]] || `S${board[row][reel]}`;
       const symbolClass = `symbol-${code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
-      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${options.refill?.[row]?.[reel] ? " symbol-refill" : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
-      if (options.refill?.[row]?.[reel]) {
-        cell.style.setProperty("--refill-duration", `${Math.max(420, 700 / Number(el.speedRange.value || 1))}ms`);
+      const motion = options.dropMotion?.[`${row}-${reel}`];
+      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${motion ? (motion.type === "new" ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
+      if (motion) {
+        const dropDuration = Math.max(220, 620 / Number(el.speedRange.value || 1));
+        cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 105}%`);
+        cell.style.setProperty("--drop-duration", `${dropDuration}ms`);
+        cell.style.setProperty("--drop-delay", `${reel * 18}ms`);
+        if (motion.type === "new") cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
       if (!active) cell.style.visibility = "hidden";
       cell.innerHTML = symbolMarkup(board[row][reel], gold[row]?.[reel]); el.board.appendChild(cell);
     }
   }
 
-  function renderRng(stops = []) { el.rngList.innerHTML = stops.map((stop, i) => `<span class="rng-chip">R${i + 1}: ${stop}</span>`).join(""); }
-  function renderWins(step) {
-    el.lineList.innerHTML = step.wins.length ? step.wins.map((win) => `<div>${CODE[win.symbol]} · ${win.length} reels · ${win.ways} ways · ${format(win.unit * win.ways)}</div>`).join("") : `<div>${text("noWin")}</div>`;
-    el.spinResultList.innerHTML = `<div>${text("cascade")} ${step.combo} · +${step.lightning} · x${step.multiplier} · ${format(step.win)}</div>`;
+  function renderRng(stops = []) {
+    el.rngList.innerHTML = stops.map((stop, i) => `<div class="rng-row"><span>R${i + 1}</span><span>stop ${stop}</span></div>`).join("");
+  }
+  function renderWins(step, updateResult = true) {
+    el.lineList.innerHTML = step.wins.length
+      ? step.wins.map((win) => `<div class="line-row"><span>${CODE[win.symbol]} · ${win.length} reels · ${win.ways} ways</span><span>${format(win.unit * win.ways)}</span></div>`).join("")
+      : `<div class="line-row"><span>${text("noWin")}</span><span>0.00</span></div>`;
+    if (updateResult) el.spinResultList.innerHTML = `<div class="spin-result-row">${text("cascade")} ${step.combo} · +${step.lightning} · x${step.multiplier} · ${format(step.win)}</div>`;
+  }
+
+  function boardText(board) {
+    return board.map((symbols, row) => {
+      const values = symbols.map((symbol, reel) => Box.score_area[row][reel]
+        ? String(CODE[symbol] || `S${symbol}`).padStart(3, " ")
+        : " --");
+      return `${String(row + 1).padStart(2, "0")} ${values.join(" ")}`;
+    }).join("\n");
+  }
+
+  function renderSpinHistory(spin) {
+    const stages = [];
+    if (spin.steps[0]) stages.push({ label: "Initial", board: spin.steps[0].board, meta: spin.scene });
+    spin.steps.forEach((step, index) => {
+      if (!step.wins.length) return;
+      stages.push({
+        label: `${text("cascade")} ${step.combo}`,
+        board: spin.steps[index + 1]?.board || spin.board,
+        meta: `${spin.scene} | Pay ${format(step.win)} | Mult x${step.multiplier}`
+      });
+    });
+    stages.push({ label: "Final", board: spin.board, meta: `${spin.scene} | Total ${format(spin.total)}` });
+    el.spinResultList.innerHTML = stages.map((stage) => `
+      <div class="spin-result-row">
+        <div class="spin-result-head"><strong>${stage.label}</strong><span>${stage.meta}</span></div>
+        <pre class="spin-result-board">${boardText(stage.board)}</pre>
+      </div>`).join("");
+    const logBody = document.getElementById("log-body");
+    if (logBody) logBody.scrollTop = 0;
   }
   function showSnapshot(index, syncMultiplier = true) {
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1)); const step = state.snapshots[state.snapshotIndex];
-    renderBoard(step.board, step.gold, step.hit); renderRng(step.stops); renderWins(step);
+    renderBoard(step.board, step.gold, step.hit); renderRng(step.stops); renderWins(step, false);
     el.carryMultiValue.textContent = step.combo;
     if (syncMultiplier) renderMultiplierTrack(multiplierIndex(step.multiplier));
     el.previousStepBtn.disabled = state.snapshotIndex <= 0; el.nextStepBtn.disabled = state.snapshotIndex >= state.snapshots.length - 1;
@@ -2647,12 +2686,18 @@
         renderBoard(step.board, step.gold, [], { cleared: step.hit });
         await new Promise((resolve) => setTimeout(resolve, Math.max(70, 120 / Number(el.speedRange.value || 1))));
         const next = spin.steps[i + 1];
-        const refillDuration = Math.max(420, 700 / Number(el.speedRange.value || 1));
-        renderBoard(next?.board || spin.board, next?.gold || spin.gold, [], { refill: step.hit });
-        await new Promise((resolve) => setTimeout(resolve, refillDuration + 100));
+        const cleared = [];
+        for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+          if (step.hit[row]?.[reel]) cleared.push([row, reel]);
+        }
+        const rowCounts = Array.from({ length: REELS }, (_, reel) => Box.score_area.reduce((count, row) => count + Number(Boolean(row[reel])), 0));
+        const dropMotion = window.slotBuildDropMotion?.(rowCounts, REELS, cleared) || {};
+        const dropDuration = Math.max(220, 620 / Number(el.speedRange.value || 1));
+        renderBoard(next?.board || spin.board, next?.gold || spin.gold, [], { dropMotion });
+        await new Promise((resolve) => setTimeout(resolve, dropDuration + REELS * 18 + 80));
       }
     }
-    renderBoard(spin.board, spin.gold); renderRng(spin.stops);
+    renderBoard(spin.board, spin.gold); renderRng(spin.stops); renderSpinHistory(spin);
   }
 
   async function playFreeSpin() {

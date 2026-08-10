@@ -11,7 +11,15 @@ Debug 面板以 10px 間距排列，不讓相鄰外框黏在一起。若頁面�
 
 共用區塊標題統一使用與 `LOG` 相同的 12px 字級、字重與字距，英文以大寫顯示。Simulation 不顯示 Config／Version／Card System／Bet 的說明行，並固定與前一個區塊保留 10px 間距。
 
-所有 Demo Game 都會顯示 `Card System` 開關與 Simulation，統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；H027 透過純數學 adapter 執行完整 Cascade／FG；其餘遊戲由共用模組直接依目前 Card System 數學權重模擬 N 場並累計結果。以上批次路徑都不觸發畫面 Spin，也不更動盤面、餘額或主 Stats。
+Settings 的數學模型欄位順序統一為 `Version → Config → Language`。
+
+Reel RNG 與 Spin Result 的內容列共用相同的 12px 字級、左右欄、間距與底色；空白 RNG 區顯示等待狀態。使用逐格加權抽取、沒有 reel stop 的模型會顯示實際數學表來源與 `weighted draw`，不產生虛構 stop 值。
+
+H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有符號向下移動，新符號再由盤面上方掉入補牌。
+
+所有 Demo Game 都會顯示 `Card System` 開關與 Simulation，統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；H027 透過純數學 adapter 執行完整 Cascade／FG；其餘遊戲由共用模組在 Card System 開啟時依目前卡片數學權重模擬 N 場並累計結果。若關閉 Card System 且遊戲沒有獨立自然數學 adapter，Simulation 會明確停止而不會暗中沿用卡片權重。以上批次路徑都不觸發畫面 Spin，也不更動盤面、餘額或主 Stats。
+
+若目前數學設定沒有可用的 `card_system` 模型，共用欄位會保留但固定顯示 Off 並停用，避免只顯示已開啟卻沒有實際卡片數學分支。原遊戲已有 Card System 控制時則保留原生判定。
 
 每款遊戲只需自行維護：
 
