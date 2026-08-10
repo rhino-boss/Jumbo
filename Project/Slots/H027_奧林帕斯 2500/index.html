@@ -1829,6 +1829,7 @@
       #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
     }
   </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=1">
 </head>
 
 <body>
@@ -2818,6 +2819,53 @@
     return candidates[0];
   }
 
+  // Pure-math adapter for demogame_common's N-round simulator. It intentionally
+  // does not touch state, balance, stats, playback, or the visible board.
+  window.demogameSimulateRound = () => {
+    const profile = Box.parameter.normal;
+    const baseIndex = pickWeighted(profile.base_reel_weights);
+    const baseSpin = playSpin(tableIndex(profile.base_reel_names[baseIndex]), "BG", 0);
+    const fgTriggered = baseSpin.scatterCount >= 4;
+    let totalWin = toMoney(baseSpin.finalPay);
+    let maxMultiplier = baseSpin.multiplier.total;
+
+    if (fgTriggered) {
+      const makeSchedule = (kind) => {
+        const schedule = [];
+        profile.free_table[kind].forEach((count, index) => {
+          const tableId = tableIndex(profile.free_table.names[index]);
+          for (let repeat = 0; repeat < count; repeat += 1) schedule.push(tableId);
+        });
+        for (let index = schedule.length - 1; index > 0; index -= 1) {
+          const selected = randomIndex(index + 1);
+          [schedule[index], schedule[selected]] = [schedule[selected], schedule[index]];
+        }
+        return schedule;
+      };
+
+      const queue = makeSchedule("initial");
+      let totalSpins = queue.length;
+      let carry = 0;
+      while (queue.length) {
+        const freeSpin = playSpin(queue.shift(), "FG", carry);
+        carry += freeSpin.multiplier.total;
+        maxMultiplier = Math.max(maxMultiplier, carry);
+        totalWin += toMoney(freeSpin.finalPay);
+        if (freeSpin.scatterCount >= 3 && totalSpins < Box.max_free_spins) {
+          const extra = makeSchedule("retrigger").slice(0, Box.max_free_spins - totalSpins);
+          queue.push(...extra);
+          totalSpins += extra.length;
+        }
+      }
+    }
+
+    return {
+      multiplier: totalWin / betMoney(),
+      fgTriggered,
+      maxMultiplier
+    };
+  };
+
   async function doSpin() {
     if (state.busy) return;
     state.busy = true;
@@ -3132,7 +3180,7 @@
 })();
 
   </script>
-  <script src="../help_ui_standardizer.js?v=20260728-h026-ui-v3"></script>
+  <script src="../demogame_common.js?v=1"></script>
 </body>
 
 </html>

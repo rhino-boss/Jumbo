@@ -12,6 +12,10 @@ The workbook follows the H026-style layout:
 
 H045 has no Super Feature, so there is no ``super`` table and no
 ``super_buy_price``.
+
+Note: the card sheets are formula driven.  Excel must have recalculated and
+saved the workbook (Source/recalc.ps1) before running this, otherwise the
+cached values this reader relies on are missing.
 """
 
 from __future__ import annotations
@@ -73,6 +77,11 @@ CARD_SECTION_TITLES = {
 
 PARAM_COL = 2  # Parameter/Multiplier_Weight blocks start in column B
 
+# Column layout of Multiplier_Weight_Newbie / _Oldhand
+CARD_COL = {"lower": 2, "upper": 3, "table": 17, "weight": 22}
+# Section blocks start below the sheet's summary table (rows 2-8).
+CARD_SECTION_FIRST_ROW = 10
+
 
 def _number(value: Any, default: float = 0.0) -> float:
     try:
@@ -88,9 +97,9 @@ def _parse_multiplier(value: Any) -> int:
     return int(float(text))
 
 
-def _find_block(sheet, title: str, column: int = PARAM_COL) -> int:
-    """Return the row holding ``title`` in ``column``."""
-    for row in range(1, sheet.max_row + 1):
+def _find_block(sheet, title: str, column: int = PARAM_COL, start_row: int = 1) -> int:
+    """Return the row holding ``title`` in ``column``, searching from ``start_row``."""
+    for row in range(start_row, sheet.max_row + 1):
         if str(sheet.cell(row, column).value or "").strip() == title:
             return row
     raise KeyError(f"{sheet.title}: block {title!r} not found")
@@ -103,7 +112,7 @@ def _read_keyed_rows(sheet, title: str, width: int) -> dict[str, list[Any]]:
     row = header + 1
     while True:
         key = str(sheet.cell(row, PARAM_COL).value or "").strip()
-        if not key or key.startswith("※"):
+        if not key or key.startswith("*"):
             break
         rows[key] = [sheet.cell(row, PARAM_COL + 1 + i).value for i in range(width)]
         row += 1
@@ -225,16 +234,19 @@ def _read_card_sheet(workbook, sheet_name: str) -> dict[str, list[dict[str, Any]
     sheet = workbook[sheet_name]
     sections: dict[str, list[dict[str, Any]]] = {}
     for title, key in CARD_SECTION_TITLES.items():
-        header = _find_block(sheet, title) + 1
+        # Skip the summary table at the top, whose row labels reuse these names.
+        header = _find_block(sheet, title, start_row=CARD_SECTION_FIRST_ROW) + 1
         cards: list[dict[str, Any]] = []
         row = header + 1
-        while True:
-            lower = sheet.cell(row, PARAM_COL).value
-            if lower in (None, "") or str(lower).strip() == "Total":
-                break
-            table_code = str(sheet.cell(row, PARAM_COL + 3).value or "").strip()
-            weight = max(0.0, _number(sheet.cell(row, PARAM_COL + 8).value))
-            if weight:
+        # Rows run until the section's Total marker; blank Lower cells are the
+        # unused spare ranges and simply carry no weight.
+        while str(sheet.cell(row, CARD_COL["lower"]).value or "").strip() != "Total":
+            if row > header + 400:
+                raise ValueError(f"{sheet_name}: no Total row found for {title!r}")
+            lower = sheet.cell(row, CARD_COL["lower"]).value
+            table_code = str(sheet.cell(row, CARD_COL["table"]).value or "").strip()
+            weight = max(0.0, _number(sheet.cell(row, CARD_COL["weight"]).value))
+            if weight and lower not in (None, ""):
                 if str(lower).strip() == "FG Trigger":
                     cards.append({"type": "free_game", "table": table_code, "weight": weight})
                 else:
@@ -242,7 +254,7 @@ def _read_card_sheet(workbook, sheet_name: str) -> dict[str, list[dict[str, Any]
                         {
                             "type": "range",
                             "min": _number(lower, -1.0),
-                            "max": _number(sheet.cell(row, PARAM_COL + 1).value),
+                            "max": _number(sheet.cell(row, CARD_COL["upper"]).value),
                             "table": table_code,
                             "weight": weight,
                         }
@@ -299,7 +311,7 @@ def load_game_config(xlsx_path: str | Path) -> dict[str, Any]:
         },
         "free_spins": int(_number(settings.get("Free Spins"), 10)),
         "retrigger_spins": int(_number(settings.get("Retrigger Spins"), 5)),
-        "retrigger_high": int(_number(settings.get("Retrigger 高表場數"), 1)),
+        "retrigger_high": int(_number(settings.get("Retrigger High Spins"), 1)),
         "free_spin_cap": int(_number(settings.get("Free Spin Cap"), 50)),
         "scatter_trigger": int(_number(settings.get("Scatter Trigger Count"), 3)),
         "buy_price": _number(settings.get("Buy Feature Price (x Bet)"), 40.5),

@@ -27,10 +27,10 @@ RUN_ALL_COMBINATIONS = True
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = False
-RUN_SINGLE_SPIN_DEBUG = False
 
+RUN_SINGLE_SPIN_DEBUG = False
 BATCH_COMBINATIONS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": True},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -924,12 +924,6 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     fg_spins = values[R_ALL, RA_FG_SPINS]
     variance = values[R_ALL, RA_X_SQUARE] / total_round - (values[R_ALL, RA_X_SUM] / total_round) ** 2
     card_system_active = CARD_SYSTEM_ENABLED and bet_mode != MODE_EXTRABET
-    rtp_target_key = {
-        MODE_NORMALBET: "normal",
-        MODE_EXTRABET: "extrabet",
-        MODE_FEATUREBUY: "featurebuy",
-    }.get(bet_mode)
-    rtp_target = CFG.get("rtp_targets", {}).get(rtp_target_key) if rtp_target_key else None
 
     summary = {
         "game_id": GAME_ID,
@@ -950,7 +944,6 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "games_per_second": total_round / duration if duration else 0,
         "coin_in": coin_in,
         "rtp_total": pay_total / coin_in_sum if coin_in_sum else 0,
-        "rtp_target": rtp_target,
         "rtp_bg_cluster": pay_bg_cluster / coin_in_sum if coin_in_sum else 0,
         "rtp_bg_scatter": pay_bg_scatter / coin_in_sum if coin_in_sum else 0,
         "rtp_bg": (pay_bg_cluster + pay_bg_scatter) / coin_in_sum if coin_in_sum else 0,
@@ -1043,10 +1036,6 @@ def show_console(summary):
     print(f"* bet_mode: {summary['bet_mode']}", flush=True)
     print(f"* duration: {format_elapsed_time(summary['duration_seconds'])}", flush=True)
     print(f"* rtp_total: {summary['rtp_total'] * 100:.4f}%", flush=True)
-    rtp_target = summary.get("rtp_target")
-    if rtp_target:
-        print(f"* rtp_target: {rtp_target * 100:.4f}%", flush=True)
-        print(f"* rtp_delta: {(summary['rtp_total'] - rtp_target) * 100:+.4f} percentage points", flush=True)
     print(f"* rtp_bg: {summary['rtp_bg'] * 100:.4f}%", flush=True)
     print(f"* rtp_fg: {summary['rtp_fg'] * 100:.4f}%", flush=True)
     print(f"* hit_rate_bg: {summary['hit_rate_bg'] * 100:.4f}%", flush=True)

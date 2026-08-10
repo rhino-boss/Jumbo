@@ -21,17 +21,17 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 CONFIG_FILE = "config_92A.js"
-TOTAL_ROUNDS = 10**7
+TOTAL_ROUNDS = 10**6
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
 ENABLE_M1_MULTIPLIER = True
 FG_INITIAL_MULTIPLIER = 2
 CARD_SYSTEM_ENABLED = True
-CARD_SYSTEM_IS_NEWBIE = False  # True for newbie, False for oldhand
+CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},

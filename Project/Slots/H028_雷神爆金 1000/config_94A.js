@@ -1344,97 +1344,97 @@ const data = {
             "type": "range",
             "min": 20.0,
             "max": 25.0,
-            "weight": 48651493
+            "weight": 40859190
           },
           {
             "type": "range",
             "min": 25.0,
             "max": 30.0,
-            "weight": 196248411
+            "weight": 169019509
           },
           {
             "type": "range",
             "min": 30.0,
             "max": 35.0,
-            "weight": 70309811
+            "weight": 62084630
           },
           {
             "type": "range",
             "min": 35.0,
             "max": 40.0,
-            "weight": 117817675
+            "weight": 106685541
           },
           {
             "type": "range",
             "min": 40.0,
             "max": 45.0,
-            "weight": 97491956
+            "weight": 90530418
           },
           {
             "type": "range",
             "min": 45.0,
             "max": 50.0,
-            "weight": 79452159
+            "weight": 75646393
           },
           {
             "type": "range",
             "min": 50.0,
             "max": 60.0,
-            "weight": 71395657
+            "weight": 70580031
           },
           {
             "type": "range",
             "min": 60.0,
             "max": 70.0,
-            "weight": 88425719
+            "weight": 91915468
           },
           {
             "type": "range",
             "min": 70.0,
             "max": 80.0,
-            "weight": 38329816
+            "weight": 41894010
           },
           {
             "type": "range",
             "min": 80.0,
             "max": 90.0,
-            "weight": 66456603
+            "weight": 76377320
           },
           {
             "type": "range",
             "min": 90.0,
             "max": 100.0,
-            "weight": 23048348
+            "weight": 27851605
           },
           {
             "type": "range",
             "min": 100.0,
             "max": 120.0,
-            "weight": 46567777
+            "weight": 60648753
           },
           {
             "type": "range",
             "min": 120.0,
             "max": 140.0,
-            "weight": 13994936
+            "weight": 20154336
           },
           {
             "type": "range",
             "min": 140.0,
             "max": 160.0,
-            "weight": 18417222
+            "weight": 29319036
           },
           {
             "type": "range",
             "min": 160.0,
             "max": 180.0,
-            "weight": 7907288
+            "weight": 13919042
           },
           {
             "type": "range",
             "min": 180.0,
             "max": 200.0,
-            "weight": 7429886
+            "weight": 14459474
           },
           {
             "type": "range",

@@ -1,0 +1,683 @@
+/*
+ * Shared demo-game shell
+ *
+ * Game-owned areas: #feature-bar, #strip-bar, #grid-panel and #board.
+ * Shared areas: player values, play controls, bet modes, statistics,
+ * diagnostics/settings and Help. A game may change bet-mode contents, but
+ * should keep the #bet-mode-panel > .zone-label + .zone-body contract.
+ */
+
+:root {
+  --sim-bg: #040e1a;
+  --sim-panel: #071528;
+  --sim-surface: #0c2240;
+  --sim-surface-2: #103052;
+  --sim-border: #1d4668;
+  --sim-text: #b0d4f0;
+  --sim-sub: #5a88aa;
+  --sim-accent: #00ddc0;
+  --sim-blue: #33bbff;
+  --sim-green: #33ff99;
+  --sim-red: #ff5f8a;
+  --sim-mauve: #b06aff;
+}
+
+body.slot-simulator {
+  min-height: 100vh;
+  margin: 0;
+  padding: 12px;
+  color: var(--sim-text);
+  background: var(--sim-bg);
+  font: 14px/1.45 "Segoe UI", system-ui, sans-serif;
+}
+
+body.slot-simulator .phone {
+  width: 100%;
+  max-width: 920px;
+  min-height: auto;
+  margin-inline: auto;
+  padding: 0;
+}
+
+body.slot-simulator #app-shell {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 1.08fr);
+  gap: 12px;
+  margin-top: 10px;
+  align-items: start;
+}
+
+body.slot-simulator #right-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body.slot-simulator #credit-bar,
+body.slot-simulator #feature-bar,
+body.slot-simulator #strip-bar,
+body.slot-simulator #grid-panel,
+body.slot-simulator #simulation-stats,
+body.slot-simulator #play-panel,
+body.slot-simulator #bet-mode-panel {
+  border: 1px solid var(--sim-border);
+  border-radius: 10px;
+  background: var(--sim-panel);
+}
+
+body.slot-simulator #credit-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+body.slot-simulator .credit-cell {
+  min-width: 0;
+  padding: 12px 10px;
+  border-right: 1px solid var(--sim-surface);
+  text-align: center;
+}
+
+body.slot-simulator .credit-cell:last-child { border-right: 0; }
+
+body.slot-simulator .credit-cell .i-label {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--sim-sub);
+  font-size: 11px;
+}
+
+body.slot-simulator .credit-cell .i-value {
+  display: block;
+  min-width: 0;
+  color: var(--sim-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+body.slot-simulator .credit-cell .i-value.hi { color: var(--sim-accent); }
+
+body.slot-simulator .control-zone {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--sim-border);
+  border-radius: 10px;
+  background: var(--sim-panel);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .13);
+}
+
+body.slot-simulator .zone-label,
+body.slot-simulator .diagnostic-header,
+body.slot-simulator .panel-title,
+body.slot-simulator .diag-title,
+body.slot-simulator #simulation-stats h3 {
+  color: var(--sim-sub);
+  font-size: 12px !important;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+body.slot-simulator .zone-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+}
+
+body.slot-simulator .action-zone .play-main-controls {
+  display: grid;
+  grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+  gap: 6px;
+}
+
+body.slot-simulator #play-panel button,
+body.slot-simulator #bet-mode-panel button,
+body.slot-simulator #controls button,
+body.slot-simulator #settings-wrap button {
+  width: auto;
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--sim-surface);
+  box-shadow: none;
+  font: 700 12px/1 "Segoe UI", system-ui, sans-serif;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+body.slot-simulator button:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+body.slot-simulator #play-panel #spinBtn {
+  min-width: 72px;
+  background: #0077cc;
+}
+
+body.slot-simulator #play-panel #autoBtn {
+  min-width: 56px;
+  background: #007755;
+}
+
+body.slot-simulator .bet-stepper {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(88px, 1fr) 32px;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.slot-simulator #play-panel #betMinusBtn,
+body.slot-simulator #play-panel #betPlusBtn {
+  width: 32px;
+  min-width: 32px;
+  padding-inline: 0;
+  color: var(--sim-blue);
+  font-size: 17px;
+}
+
+body.slot-simulator #play-panel #betBtn {
+  min-width: 88px;
+  color: var(--sim-text);
+}
+
+body.slot-simulator .bet-stepper .bet-menu {
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 8px);
+  width: 218px;
+  max-height: 218px;
+  padding: 8px;
+  border: 1px solid var(--sim-surface-2);
+  border-radius: 8px;
+  background: #06172d;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow-y: auto;
+  z-index: 20;
+}
+
+body.slot-simulator .speed-control {
+  width: 116px;
+  height: 34px;
+  display: grid;
+  grid-template-columns: auto 48px auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--sim-sub);
+  background: var(--sim-surface);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+body.slot-simulator .speed-control input {
+  width: 48px;
+  margin: 0;
+  accent-color: var(--sim-mauve);
+}
+
+body.slot-simulator .speed-control #speedValue {
+  min-width: 20px;
+  color: var(--sim-mauve);
+  font-weight: 800;
+}
+
+body.slot-simulator .play-debug-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding-top: 9px;
+  border-top: 1px solid var(--sim-surface-2);
+}
+
+body.slot-simulator .debug-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--sim-surface-2);
+}
+
+body.slot-simulator .debug-hidden,
+body.slot-simulator .hidden { display: none !important; }
+
+/* Bet-mode contents are intentionally game-owned; their interaction style is shared. */
+body.slot-simulator #bet-mode-panel .zone-body { flex-wrap: wrap; }
+
+body.slot-simulator #bet-mode-panel .mode-btn,
+body.slot-simulator #bet-mode-panel #normalBetBtn,
+body.slot-simulator #bet-mode-panel #extraBetBtn {
+  min-width: 80px;
+  color: var(--sim-blue);
+}
+
+body.slot-simulator #bet-mode-panel .mode-btn.active,
+body.slot-simulator #bet-mode-panel .mode-btn.is-active,
+body.slot-simulator #bet-mode-panel #normalBetBtn.active,
+body.slot-simulator #bet-mode-panel #normalBetBtn.is-active,
+body.slot-simulator #bet-mode-panel #extraBetBtn.active,
+body.slot-simulator #bet-mode-panel #extraBetBtn.is-active {
+  color: #041710;
+  background: var(--sim-green);
+  box-shadow: 0 0 12px rgba(51, 255, 153, .24);
+}
+
+body.slot-simulator #bet-mode-panel #buyFeatureBtn,
+body.slot-simulator #bet-mode-panel #buySuperFeatureBtn,
+body.slot-simulator #bet-mode-panel #buyBtn {
+  color: var(--sim-accent);
+  border: 1px solid rgba(0, 221, 192, .55);
+  background: rgba(0, 119, 102, .2);
+}
+
+body.slot-simulator #simulation-stats { padding: 10px 14px; }
+
+body.slot-simulator #simulation-stats h3 {
+  margin: 0 0 7px;
+  color: var(--sim-sub);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+body.slot-simulator .simulation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--sim-surface);
+}
+
+body.slot-simulator .simulation-row:last-child { border-bottom: 0; }
+body.slot-simulator .simulation-row .s-label { color: var(--sim-sub); font-size: 12px; }
+body.slot-simulator .simulation-row .s-value { color: var(--sim-text); font-size: 14px; font-weight: 700; }
+body.slot-simulator .simulation-row .s-value.hi { color: var(--sim-accent); }
+
+body.slot-simulator .diagnostic-region,
+body.slot-simulator #controls {
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sim-panel);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .13);
+  overflow: hidden;
+}
+
+/* #controls is a layout container, not another visual panel. Keeping its
+   children separated avoids adjacent panel borders appearing as one frame. */
+body.slot-simulator #controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.slot-simulator #controls > .control-zone,
+body.slot-simulator #batch-simulation {
+  width: 100%;
+  margin: 0;
+}
+
+body.slot-simulator #batch-simulation {
+  margin-top: 10px;
+}
+
+body.slot-simulator #batch-simulation,
+body.slot-simulator #set-rng-panel,
+body.slot-simulator #play-panel,
+body.slot-simulator #bet-mode-panel,
+body.slot-simulator #settings-wrap,
+body.slot-simulator #rng-wrap,
+body.slot-simulator #log-wrap,
+body.slot-simulator #live-log-wrap,
+body.slot-simulator #change-log-wrap {
+  border: 1px solid var(--sim-border) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .13) !important;
+}
+
+body.slot-simulator #batch-simulation {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--sim-panel);
+}
+
+body.slot-simulator .batch-simulation-note {
+  display: none !important;
+}
+
+body.slot-simulator .batch-simulation-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+body.slot-simulator #batchSimulationRounds {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--sim-text);
+  background: var(--sim-surface);
+  font: 700 12px/1 "Segoe UI", system-ui, sans-serif;
+}
+
+body.slot-simulator #batchSimulationStartBtn {
+  min-width: 56px;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  color: #031b18;
+  background: var(--sim-accent);
+  font: 800 12px/1 "Segoe UI", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+body.slot-simulator .batch-cascade-table,
+body.slot-simulator #batch-simulation table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--sim-text);
+  background: var(--sim-surface);
+  font-size: 11px;
+  text-align: center;
+}
+
+body.slot-simulator .batch-cascade-table th,
+body.slot-simulator .batch-cascade-table td,
+body.slot-simulator #batch-simulation table th,
+body.slot-simulator #batch-simulation table td {
+  padding: 5px;
+  border: 1px solid var(--sim-panel);
+}
+
+body.slot-simulator .diagnostic-header {
+  min-height: 36px;
+  margin: 0;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--sim-surface);
+  color: var(--sim-sub);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  line-height: 28px;
+  text-transform: uppercase;
+}
+
+body.slot-simulator #settings-wrap > .setting-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 50px;
+  padding: 8px 12px;
+}
+
+body.slot-simulator .setting-toggle-group,
+body.slot-simulator .setting-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+body.slot-simulator .setting-control-group { justify-content: flex-end; }
+body.slot-simulator .setting-toggle-group { margin-right: auto; }
+
+body.slot-simulator .setting-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 34px;
+  margin: 0;
+  color: var(--sim-text);
+  font: 700 11px/1 "Segoe UI", system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+body.slot-simulator .setting-toggle input[type="checkbox"] {
+  box-sizing: border-box;
+  width: 13px;
+  min-width: 13px;
+  height: 13px;
+  min-height: 13px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--sim-accent);
+}
+
+body.slot-simulator .setting-toggle span {
+  font: inherit;
+  font-weight: 700;
+}
+
+body.slot-simulator .config-control {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  margin: 0;
+  color: var(--sim-sub);
+  font: 400 12px/1 "Segoe UI", system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+body.slot-simulator .config-control select {
+  box-sizing: border-box;
+  width: 92px;
+  min-width: 92px;
+  height: 30px;
+  min-height: 30px;
+  margin: 0;
+  padding: 5px 22px 5px 7px;
+  border: 1px solid var(--sim-surface-2);
+  border-radius: 6px;
+  color: var(--sim-text);
+  background: var(--sim-surface);
+  font: 700 12px/1 "Segoe UI", system-ui, sans-serif;
+}
+
+body.slot-simulator .config-control #configSelect {
+  width: 150px;
+  min-width: 150px;
+}
+
+body.slot-simulator .config-control #cardProfileSelect {
+  width: 96px;
+  min-width: 96px;
+}
+
+body.slot-simulator .demogame-source-control { display: none !important; }
+
+body.slot-simulator .config-control #demogameConfigSelect {
+  width: 142px;
+  min-width: 142px;
+}
+
+body.slot-simulator .config-control #versionSelect {
+  width: 104px;
+  min-width: 104px;
+}
+
+body.slot-simulator #settings-wrap #helpBtn,
+body.slot-simulator #settings-wrap #resetBtn {
+  box-sizing: border-box;
+  width: 56px;
+  min-width: 56px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+}
+
+body.slot-simulator #settings-wrap #helpBtn {
+  color: var(--sim-accent);
+  border: 1px solid rgba(0, 221, 192, .45);
+  background: rgba(0, 119, 102, .28);
+}
+
+/* One Help UI/UX across every simulator, regardless of its Markdown renderer. */
+body.slot-simulator #helpDialog {
+  box-sizing: border-box;
+  width: min(960px, calc(100vw - 32px));
+  height: min(780px, calc(100vh - 32px));
+  max-width: 960px;
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 1px solid var(--sim-border);
+  border-radius: 10px;
+  color: #dceeff;
+  background: #06111f;
+  overflow: hidden;
+}
+
+body.slot-simulator #helpDialog::backdrop { background: rgba(0, 7, 16, .78); }
+
+body.slot-simulator #helpDialog .help-dialog-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  background: #06111f;
+}
+
+body.slot-simulator #helpDialog .help-dialog-header,
+body.slot-simulator #helpDialog .help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--sim-border);
+  background: #091c33;
+}
+
+body.slot-simulator #helpDialog .help-dialog-header h2,
+body.slot-simulator #helpDialog .help-head h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+body.slot-simulator #helpContent {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  color: #dceeff;
+  background: #06111f;
+  font: 13px/1.55 "Segoe UI", Arial, sans-serif;
+}
+
+body.slot-simulator #helpContent .help-section,
+body.slot-simulator #helpContent .help-card,
+body.slot-simulator #helpContent .help-standard-card {
+  margin: 0 0 14px;
+  padding: 14px;
+  border: 1px solid var(--sim-border);
+  border-radius: 8px;
+  background: #071a2d;
+}
+
+body.slot-simulator #helpContent .help-section-title,
+body.slot-simulator #helpContent .help-group-title,
+body.slot-simulator #helpContent .help-card > h3 {
+  margin: 0 0 10px;
+  color: var(--sim-accent);
+  font-size: 16px;
+  line-height: 1.35;
+  text-align: left;
+  text-transform: none;
+}
+
+body.slot-simulator #helpContent .help-rule {
+  margin: 6px 0;
+  padding: 10px;
+  border-radius: 6px;
+  color: #dceeff;
+  background: rgba(31, 91, 151, .28);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+body.slot-simulator #helpContent .help-paytable-wrap {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(31, 91, 151, .28);
+  overflow-x: auto;
+}
+
+body.slot-simulator #helpContent .help-paytable,
+body.slot-simulator #helpContent table.paytable {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  color: #dceeff;
+  background: transparent;
+  font: 12px/1.45 Consolas, "Segoe UI", monospace;
+}
+
+body.slot-simulator #helpContent .help-paytable th,
+body.slot-simulator #helpContent .help-paytable td,
+body.slot-simulator #helpContent table.paytable th,
+body.slot-simulator #helpContent table.paytable td {
+  padding: 7px 6px;
+  border: 0;
+  border-bottom: 1px solid var(--sim-border);
+  color: inherit;
+  background: transparent;
+  text-align: right;
+  white-space: nowrap;
+}
+
+body.slot-simulator #helpContent .help-paytable th:first-child,
+body.slot-simulator #helpContent .help-paytable td:first-child,
+body.slot-simulator #helpContent table.paytable th:first-child,
+body.slot-simulator #helpContent table.paytable td:first-child { text-align: left; }
+
+body.slot-simulator #helpContent .help-paytable th,
+body.slot-simulator #helpContent table.paytable th { color: #77c7ff; font-weight: 800; }
+
+@media (max-width: 760px) {
+  body.slot-simulator #app-shell { grid-template-columns: 1fr; }
+  body.slot-simulator .action-zone .play-main-controls { display: flex; flex-wrap: wrap; }
+  body.slot-simulator .speed-control { flex: 1 1 180px; width: auto; grid-template-columns: auto minmax(90px, 1fr) auto; }
+  body.slot-simulator .speed-control input { width: 100%; }
+  body.slot-simulator .bet-stepper { width: 100%; }
+  body.slot-simulator #settings-wrap > .setting-body,
+  body.slot-simulator .setting-toggle-group,
+  body.slot-simulator .setting-control-group { flex-wrap: wrap; }
+  body.slot-simulator .setting-control-group { justify-content: flex-start; }
+}
+
+@media (max-width: 640px) {
+  body.slot-simulator { padding: 8px; }
+  body.slot-simulator #helpDialog { width: calc(100vw - 16px); height: calc(100vh - 16px); }
+  body.slot-simulator #helpContent { padding: 10px; }
+}
