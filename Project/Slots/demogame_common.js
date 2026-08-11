@@ -65,6 +65,21 @@
     return "Oldhand";
   }
 
+  function hasUsableCardEntries(value) {
+    if (Array.isArray(value)) {
+      return value.some((entry) => entry && typeof entry === "object" && Number(entry.weight) > 0
+        && (entry.type != null || entry.min != null || entry.max != null));
+    }
+    if (!value || typeof value !== "object") return false;
+    return Object.values(value).some(hasUsableCardEntries);
+  }
+
+  function cardSystemSupported() {
+    if (window.DEMOGAME_CARD_SYSTEM_SUPPORTED === false) return false;
+    const cardSystem = getMathConfig()?.card_system;
+    return cardSystem?.enabled === true && hasUsableCardEntries(cardSystem);
+  }
+
   function syncNativeCardControl(enabled) {
     const select = document.getElementById("cardRangeSelect");
     if (!select || ![...select.options].some((option) => option.value === "off")) return;
@@ -180,11 +195,12 @@
     }
 
     if (!nativeInput) {
-      const supported = getMathConfig()?.card_system?.enabled === true;
+      const supported = cardSystemSupported();
       input.disabled = !supported;
       if (!supported) input.checked = false;
       label.classList.toggle("is-unavailable", !supported);
-      label.title = supported ? "" : "This math config has no Card System model.";
+      label.hidden = !supported;
+      label.title = "";
     }
 
     const text = label.querySelector("span") || label.appendChild(document.createElement("span"));

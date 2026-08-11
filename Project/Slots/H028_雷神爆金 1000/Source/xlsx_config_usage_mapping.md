@@ -70,6 +70,7 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 | XLSX 位置 | config key | 用途 |
 | --- | --- | --- |
 | `H0281.xlsx` Overview 的 M1 起始 `C:F` 11 列 | `linkpoint` | 3～6 輪 Ways 賠率 |
+| `H0281.xlsx` `Overview!A21:B25`、`A27` | `free_game_spins` | FG 觸發 SC 數、初始場數、每多一顆增加場數、總場數上限；index 與 Simulator 共用 |
 | `Parameter!C5:C6` | `ReelWeight` | BG Table 1／2 選擇權重 |
 | `Parameter!C11:C13` | `FreeReelWeight` | FG 初始 Table 1／2／3 權重 |
 | `Parameter!C18:C20` | `FreeTriggerReel` | FG Retrigger Table 1／2／3 權重 |

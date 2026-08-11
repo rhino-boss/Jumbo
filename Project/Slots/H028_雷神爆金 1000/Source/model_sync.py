@@ -226,7 +226,10 @@ def parse_card_system(ws):
         label = str(ws.cell(row, 1).value).strip()
         range_pair = parse_card_range(label)
         for col, (player, mode, segment) in profile_columns.items():
-            weight = int(ws.cell(row, col).value or 0)
+            # Formula caches may contain values such as 196248172.99999997.
+            # Truncating them changes a card weight by one and breaks a clean
+            # config -> XLSX -> config round trip, so use Excel-style rounding.
+            weight = int(round(float(ws.cell(row, col).value or 0)))
             if label.lower() == "free game":
                 card = {"type": "free_game", "weight": weight}
             elif range_pair is not None:
@@ -248,6 +251,37 @@ def parse_card_system(ws):
     return {"enabled": True, "retry_limit": 5000, **profiles}
 
 
+def extract_free_game_spins(ws):
+    """Read the canonical Scatter-to-Free-Spins table from H0281 Overview."""
+    pairs = []
+    for row in range(21, 26):
+        scatter = ws.cell(row, 1).value
+        spins = ws.cell(row, 2).value
+        if scatter is None or spins is None:
+            raise ValueError(f"Overview!A{row}:B{row} Free Game spin rule is incomplete")
+        pairs.append((int(scatter), int(spins)))
+    trigger_scatter, base_spins = pairs[0]
+    increments = []
+    for index in range(1, len(pairs)):
+        previous_scatter, previous_spins = pairs[index - 1]
+        scatter, spins = pairs[index]
+        if scatter != previous_scatter + 1:
+            raise ValueError("Overview Free Game Scatter counts must be consecutive")
+        increments.append(spins - previous_spins)
+    if not increments or len(set(increments)) != 1:
+        raise ValueError("Overview Free Game spin increments must be constant")
+    maximum_text = str(ws["A27"].value or "")
+    maximum_match = re.search(r"(\d+)", maximum_text)
+    if maximum_match is None:
+        raise ValueError("Overview!A27 must contain the maximum Free Game spins")
+    return {
+        "trigger_scatter": trigger_scatter,
+        "base_spins": base_spins,
+        "spins_per_extra_scatter": increments[0],
+        "max_spins": int(maximum_match.group(1)),
+    }
+
+
 def build_config(source_path, base_path=None):
     """source_path = the RTP variant workbook (version + Multiplier_Weight).
     base_path    = H0281.xlsx, holding everything shared across variants."""
@@ -265,6 +299,7 @@ def build_config(source_path, base_path=None):
         raise ValueError("Overview!B3 (Version) is empty")
     output["excel_version"] = str(excel_version).strip()
     output["linkpoint"] = extract_linkpoint(base["Overview"])
+    output["free_game_spins"] = extract_free_game_spins(base["Overview"])
     output["card_system"] = parse_card_system(workbook["Multiplier_Weight"])
 
     for scene, group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS:
@@ -466,6 +501,33 @@ def discover_layout(source_path):
 def build_base_updates(source_path, config):
     layout = discover_layout(source_path)
     updates = {}
+    free_game_spins = require_key(config, "free_game_spins")
+    try:
+        trigger_scatter = int(free_game_spins["trigger_scatter"])
+        base_spins = int(free_game_spins["base_spins"])
+        spins_per_extra = int(free_game_spins["spins_per_extra_scatter"])
+        max_spins = int(free_game_spins["max_spins"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("free_game_spins must contain four integer settings") from error
+    if trigger_scatter < 1 or base_spins < 1 or spins_per_extra < 0 or max_spins < base_spins:
+        raise ValueError("free_game_spins contains an invalid value")
+    for offset in range(5):
+        row = 21 + offset
+        add_update(updates, "Overview", f"A{row}", trigger_scatter + offset, "free_game_spins")
+        add_update(
+            updates,
+            "Overview",
+            f"B{row}",
+            base_spins + offset * spins_per_extra,
+            "free_game_spins",
+        )
+    add_update(
+        updates,
+        "Overview",
+        "A27",
+        f"The maximum of free spins is {max_spins}.",
+        "free_game_spins",
+    )
     start_row = layout["linkpoint_row"]
     add_row_major_range(
         updates,
@@ -643,7 +705,10 @@ def build_variant_updates(source_path, config):
             if is_bg_cards:
                 excel_weights = bg_excel_weights(weights[:expected], int(threshold))
             else:
-                excel_weights = scale_integer_weights(weights[:expected], int(threshold))
+                # FG/BF card weights are already the actual runtime RNG table.
+                # Their total can intentionally be a few units below Threshold;
+                # rescaling here silently changes the tuned config by ±1.
+                excel_weights = weights[:expected]
             for index, (card, weight) in enumerate(zip(detail_cards, weights[:expected])):
                 row = first_row + index
                 expected_label = card_label(card)

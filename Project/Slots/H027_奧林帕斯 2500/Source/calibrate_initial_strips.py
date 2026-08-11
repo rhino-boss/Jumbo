@@ -131,6 +131,10 @@ def main() -> None:
     args = parser.parse_args()
 
     config = model_sync.load_js_config(args.config)
+    if "BG_Symbol (2)" in config["parameter"]["normal"]["base_reel_names"]:
+        raise RuntimeError(
+            "BG two-table mode is active; use calibrate_bg_two_tables.py so the complementary marginals remain intact."
+        )
     original_config = copy.deepcopy(config)
     code_to_id = dict(zip(config["symbol_codes"], config["symbol_ids"]))
     score_ids = [symbol_id for code, symbol_id in code_to_id.items() if code not in SPECIAL_CODES]

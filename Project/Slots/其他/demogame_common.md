@@ -19,11 +19,11 @@ H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有
 
 H015 Card System 的 Normal Bet 採兩階段 retry：BG `free_game` 卡先固定並重抽至觸發，之後在同一 BG 上獨立重抽整包 FG，直到符合 `weight_fg` 或達到設定的 retry limit；不可把 BG 與 FG 綁成同一次重抽。
 
-所有 Demo Game 都會顯示 `Card System` 開關與 Simulation，統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；其餘遊戲各自提供 `window.demogameSimulateRound`，直接重用該頁 Demo Game 的 BG、Cascade、FG、Retrigger、倍率與 Card System JavaScript 數學函式。共用模組不再用卡片區間權重近似結果，也不呼叫 Python。以上批次路徑都不播放動畫、不觸發畫面 Spin，且不更動盤面、餘額或主 Stats。
+所有 Demo Game 都會顯示 Simulation；只有遊戲邏輯已實作卡片模型時才顯示 `Card System` 開關。統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；其餘遊戲各自提供 `window.demogameSimulateRound`，直接重用該頁 Demo Game 的 BG、Cascade、FG、Retrigger、倍率與 Card System JavaScript 數學函式。共用模組不再用卡片區間權重近似結果，也不呼叫 Python。以上批次路徑都不播放動畫、不觸發畫面 Spin，且不更動盤面、餘額或主 Stats。
 
 Simulation 預設為 10,000 場。共用執行器採約 40ms 的自適應時間切片；H026、H028 每 250 場才更新一次畫面，以降低 DOM 更新成本並保持頁面可操作。
 
-若目前數學設定沒有可用的 `card_system` 模型，共用欄位會保留但固定顯示 Off 並停用，避免只顯示已開啟卻沒有實際卡片數學分支。原遊戲已有 Card System 控制時則保留原生判定。
+共用模組會檢查目前數學設定是否有權重大於 0 的有效 `card_system` 資料；沒有時會隱藏整個 `Card System` 欄位。遊戲若尚未實作卡片數學分支，頁面需設定 `window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false`，即使載入的共用設定物件含卡片資料也不會誤顯示；原遊戲已有 Card System 控制時則保留原生判定。
 
 每款遊戲只需自行維護：
 

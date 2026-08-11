@@ -21,13 +21,15 @@
 | `Parameter!B18:H23` | `use_c3.weights_by_reel` |
 | `Parameter!J9:AI14` | C2 倍數權重 |
 | `Parameter!J19:AI24` | C3 倍數權重 |
-| `BG_Symbol`, `FG_Symbol` 的 `L4:Q303` | `strips[].symbols` |
-| `BG_Symbol`, `FG_Symbol` 的 `S4:X303` | Symbol ID 公式快取（寫回時保留公式） |
-| `BG_Symbol`, `FG_Symbol` 的 `Z4:AE303` | `strips[].weights` |
-| `BG_Symbol`, `FG_Symbol` 的 `AH4:AM15` | `strips[].drop_weights`（C1～TE × R1～R6） |
+| `BG_Symbol`, `BG_Symbol (2)`, `FG_Symbol` 的 `L4:Q303` | `strips[].symbols` |
+| `BG_Symbol`, `BG_Symbol (2)`, `FG_Symbol` 的 `S4:X303` | Symbol ID 公式快取（寫回時保留公式） |
+| `BG_Symbol`, `BG_Symbol (2)`, `FG_Symbol` 的 `Z4:AE303` | `strips[].weights` |
+| `BG_Symbol`, `BG_Symbol (2)`, `FG_Symbol` 的 `AH4:AM15` | `strips[].drop_weights`（C1～TE × R1～R6） |
 
 ## 限制
 
-- config 只允許 `BG_Symbol` 與 `FG_Symbol`。
-- 歷史遺留的 `BG_Symbol (2)/(3)`、`FG_Symbol (2)/(3)` 分頁不參與轉換。
+- Normal Bet BG 使用 `BG_Symbol` 與 `BG_Symbol (2)`，Parameter 默認權重為 1:1；同一 Spin 的初始盤面與所有掉落固定使用同一張 Table。
+- Feature Buy 維持只使用 `BG_Symbol`；FG 只使用 `FG_Symbol`。
+- `BG_Symbol (3)`、`FG_Symbol (2)/(3)` 為歷史分頁，不參與轉換。
+- BG 兩表合併後的初始符號 counts 與掉落 weights 由 `calibrate_bg_two_tables.py` 保持為競品 R1～R6 目標分布。
 - config → xlsx 採原子取代，並設定 Excel 重新計算。Symbol ID 公式不會被改成固定值。

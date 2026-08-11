@@ -49,7 +49,23 @@ def calibrate(config_path, input_path):
             [int(per_reel[reel].get(code, 0)) for reel in range(6)]
             for code in symbol_codes
         ]
-        strip_by_name[strip_name]["drop_weights"] = matrix
+        if strip_name == "BG_Symbol" and "BG_Symbol (2)" in strip_by_name:
+            first = strip_by_name["BG_Symbol"].get("drop_weights", matrix)
+            second = strip_by_name["BG_Symbol (2)"].get("drop_weights", matrix)
+            rebased_first, rebased_second = [], []
+            for symbol_index, target_row in enumerate(matrix):
+                first_row, second_row = [], []
+                for reel, target in enumerate(target_row):
+                    delta = int(round((first[symbol_index][reel] - second[symbol_index][reel]) / 2))
+                    delta = max(-target, min(target, delta))
+                    first_row.append(target + delta)
+                    second_row.append(target - delta)
+                rebased_first.append(first_row)
+                rebased_second.append(second_row)
+            strip_by_name["BG_Symbol"]["drop_weights"] = rebased_first
+            strip_by_name["BG_Symbol (2)"]["drop_weights"] = rebased_second
+        else:
+            strip_by_name[strip_name]["drop_weights"] = matrix
         totals = [sum(row[reel] for row in matrix) for reel in range(6)]
         if totals != [WEIGHT_TOTAL] * 6:
             raise ValueError(f"{strip_name} invalid drop-weight totals: {totals}")

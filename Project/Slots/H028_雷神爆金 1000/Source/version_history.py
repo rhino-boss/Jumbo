@@ -37,6 +37,18 @@ def next_version(current: str, change_type: str) -> str:
     return f"{major}.{minor + 1}"
 
 
+def short_version(value: str) -> str:
+    """Version used by the manifest, selector, and Versions folder."""
+    major, minor = parse_version(value)
+    return f"{major}.{minor}"
+
+
+def full_version(value: str) -> str:
+    """Four-part version stored in XLSX and generated config metadata."""
+    major, minor = parse_version(value)
+    return f"{major}.{minor}.0.0"
+
+
 def load_manifest() -> dict:
     return json.loads(MANIFEST_JSON.read_text(encoding="utf-8"))
 
@@ -85,7 +97,7 @@ def config_differences(workbook_path: Path, config_path: Path) -> tuple[bool, bo
 
 def update_workbook_version(workbook_path: Path, version: str) -> None:
     updates: dict = {}
-    model_sync.add_update(updates, "Overview", "B3", version, "excel_version")
+    model_sync.add_update(updates, "Overview", "B3", full_version(version), "excel_version")
     model_sync.write_patched_workbook(
         workbook_path,
         workbook_path,
@@ -123,7 +135,7 @@ def run(change_type: str, config_code: str, message: str) -> str:
             raise ValueError("沒有偵測到倍率權重變更，不需建立新版本。")
 
     current_versions = {
-        code: str(model_sync.load_js_config(TARGETS[code][1])["excel_version"])
+        code: short_version(str(model_sync.load_js_config(TARGETS[code][1])["excel_version"]))
         for code in selected
     }
     base_version = max(current_versions.values(), key=version_key)

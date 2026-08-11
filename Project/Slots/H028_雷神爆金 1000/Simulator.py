@@ -31,11 +31,12 @@ CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -194,6 +195,11 @@ def load_js_config(path):
 
 
 data = load_js_config(CONFIG_PATH)
+FREE_GAME_SPINS = data.get("free_game_spins", {})
+FG_TRIGGER_SCATTER = max(1, int(FREE_GAME_SPINS.get("trigger_scatter", 4)))
+FG_BASE_SPINS = max(1, int(FREE_GAME_SPINS.get("base_spins", 10)))
+FG_SPINS_PER_EXTRA_SCATTER = max(0, int(FREE_GAME_SPINS.get("spins_per_extra_scatter", 2)))
+FG_MAX_SPINS = max(FG_BASE_SPINS, int(FREE_GAME_SPINS.get("max_spins", 50)))
 GAME_ID = str(data.get("game_id", "101016"))
 PARSHEET_ID = str(data.get("parsheet_id", "H0281"))
 GAME_NAME = str(data.get("display_name", "Thunder Boost 1000"))
@@ -1562,11 +1568,11 @@ def freegame(trigger_c1_count, verbose=False, enable_m1_multiplier=True):
     - retrigger_count: retrigger 次數
     """
     # 計算初始場次: 4→10, 5→12, 每多1加2
-    initial_spins = 10 + (trigger_c1_count - 4) * 2
+    initial_spins = FG_BASE_SPINS + max(0, trigger_c1_count - FG_TRIGGER_SCATTER) * FG_SPINS_PER_EXTRA_SCATTER
     remaining_spins = initial_spins
     initial_remaining = initial_spins  # 追蹤初始場次剩餘
     total_rounds = initial_spins  # 追蹤總場次 (用於最大場次限制)
-    max_rounds = 50  # 後端 maxRound 設定
+    max_rounds = FG_MAX_SPINS
 
     # 初始化
     total_win = 0.0
@@ -1618,8 +1624,8 @@ def freegame(trigger_c1_count, verbose=False, enable_m1_multiplier=True):
             print(f"  Spin {total_spins_done}: win={win:.0f}, C1={c1_final}, mult={multiplier}, param={param_set}")
 
         # 檢查 retrigger
-        if c1_final >= 4:
-            retrigger_spins = 10 + (c1_final - 4) * 2
+        if c1_final >= FG_TRIGGER_SCATTER:
+            retrigger_spins = FG_BASE_SPINS + (c1_final - FG_TRIGGER_SCATTER) * FG_SPINS_PER_EXTRA_SCATTER
             # 後端 maxRound 限制：不超過 50 場
             available_rounds = max_rounds - total_rounds
             if available_rounds > 0:
@@ -1633,7 +1639,7 @@ def freegame(trigger_c1_count, verbose=False, enable_m1_multiplier=True):
     return total_win, multiplier, total_spins_done, retrigger_count, cascade_score_stats
 
 
-def run_freegame_simulations(n_sims, trigger_c1_count=4, enable_m1_multiplier=True):
+def run_freegame_simulations(n_sims, trigger_c1_count=FG_TRIGGER_SCATTER, enable_m1_multiplier=True):
     """執行多次 FreeGame 模擬，返回統計數據
 
     參數:
@@ -1660,7 +1666,7 @@ def run_freegame_simulations(n_sims, trigger_c1_count=4, enable_m1_multiplier=Tr
     return results, final_multipliers, total_spins_list, retrigger_counts, cascade_score_stats, total_spins_total
 
 
-def simulate_freegame(n_simulations, trigger_c1_count=4, enable_m1_multiplier=True):
+def simulate_freegame(n_simulations, trigger_c1_count=FG_TRIGGER_SCATTER, enable_m1_multiplier=True):
     """
     執行 FreeGame 模擬並輸出統計
 
@@ -1671,7 +1677,7 @@ def simulate_freegame(n_simulations, trigger_c1_count=4, enable_m1_multiplier=Tr
     """
     print(f"開始 FreeGame 模擬...")
     print(f"觸發 C1 數量: {trigger_c1_count}")
-    print(f"初始場次: {10 + (trigger_c1_count - 4) * 2}")
+    print(f"初始場次: {FG_BASE_SPINS + max(0, trigger_c1_count - FG_TRIGGER_SCATTER) * FG_SPINS_PER_EXTRA_SCATTER}")
     print(f"模擬次數: {n_simulations:,}")
     print(f"M1 倍數特色: {'開啟' if enable_m1_multiplier else '關閉'}")
 
@@ -2082,11 +2088,11 @@ def is_card_match(card_profile_index, card_index, score, card_coin_in, triggered
 
 @njit(nogil=True)
 def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
-    initial_spins = 10 + max(0, trigger_c1_count - 4) * 2
+    initial_spins = FG_BASE_SPINS + max(0, trigger_c1_count - FG_TRIGGER_SCATTER) * FG_SPINS_PER_EXTRA_SCATTER
     remaining_spins = initial_spins
     initial_remaining = initial_spins
     total_scheduled_spins = initial_spins
-    max_rounds = 50
+    max_rounds = FG_MAX_SPINS
 
     total_win = 0.0
     multiplier = FG_INITIAL_MULTIPLIER
@@ -2127,8 +2133,8 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
         if win > 0:
             hit_spins += 1
 
-        if c1_final >= 4:
-            requested_spins = 10 + (c1_final - 4) * 2
+        if c1_final >= FG_TRIGGER_SCATTER:
+            requested_spins = FG_BASE_SPINS + (c1_final - FG_TRIGGER_SCATTER) * FG_SPINS_PER_EXTRA_SCATTER
             available_spins = max_rounds - total_scheduled_spins
             if available_spins > 0:
                 add_spins = min(requested_spins, available_spins)
@@ -2176,7 +2182,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         bg_cascade_pay = np.zeros(5, dtype=np.float64)
         fg_cascade_pay = np.zeros(5, dtype=np.float64)
         fg_cascade_dist = np.zeros(6, dtype=np.int64)
-        scatter_count = 4 if bet_mode == MODE_FEATUREBUY else 0
+        scatter_count = FG_TRIGGER_SCATTER if bet_mode == MODE_FEATUREBUY else 0
         fg_spins = 0
         fg_hit_spins = 0
         fg_retriggers = 0
@@ -2204,7 +2210,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                     param_set,
                     enable_m1_multiplier,
                 )
-                triggered_free_game = scatter_count >= 4
+                triggered_free_game = scatter_count >= FG_TRIGGER_SCATTER
                 if not CARD_SYSTEM_ENABLED or bg_card_index < 0:
                     break
                 if CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME:
@@ -2231,7 +2237,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                     retry_limit_exceeded += 1
                     break
 
-            if scatter_count >= 4:
+            if scatter_count >= FG_TRIGGER_SCATTER:
                 fg_triggered = 1
                 needs_fg_card = CARD_SYSTEM_ENABLED and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
                 fg_card_index = pick_card(fg_card_profile) if needs_fg_card else -1
@@ -2270,7 +2276,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
             if bf_win != 0.0:
                 raise RuntimeError("BF_Symbol produced an unexpected payout")
             bg_win = 0.0
-            scatter_count = 4
+            scatter_count = FG_TRIGGER_SCATTER
             fg_triggered = 1
             package_card_index = pick_card(CARD_PROFILE_BUY_FEATURE) if CARD_SYSTEM_ENABLED else -1
             fg_retry_count = 0
@@ -2285,7 +2291,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                     fg_cascade_dist,
                     fg_m1_spins,
                     fg_big_m1_spins,
-                ) = run_freegame_session_stats(4, enable_m1_multiplier)
+                ) = run_freegame_session_stats(FG_TRIGGER_SCATTER, enable_m1_multiplier)
                 if not CARD_SYSTEM_ENABLED or is_card_match(
                     CARD_PROFILE_BUY_FEATURE,
                     package_card_index,

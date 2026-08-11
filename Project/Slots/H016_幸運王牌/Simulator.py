@@ -1,7 +1,8 @@
 """H016 幸運王牌 simulator.
 
 The runner, environment settings, batch workflow and Excel report layout follow
-H015.  The game engine follows 101003 and reads the H016-derived H016 configs:
+H015.  The game engine follows 101003 and reads H0161.xlsx directly (legacy JS
+configs remain supported):
 5x4 Ways, cascades, golden-symbol retention, WW/W2 conversion and fixed combo
 multipliers.
 """
@@ -26,13 +27,14 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from openpyxl import load_workbook
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 
 # ===== User Settings (H015-compatible runner) =====
 
-CONFIG_FILE = "config_92.js"
+CONFIG_FILE = "Source/H0161.xlsx"
 TOTAL_ROUNDS = 100_000
 BET_MULTI = 1
 BET_MODE = 0  # 0=Normal Bet, 2=Buy Feature, 3=Buy Super Feature
@@ -81,11 +83,149 @@ CONFIG_FILE = os.environ.get("H016_CONFIG_FILE", CONFIG_FILE)
 
 
 def _load_config(path: Path) -> dict[str, Any]:
+    if path.suffix.lower() in {".xlsx", ".xlsm"}:
+        return _load_xlsx_config(path)
     raw = path.read_text(encoding="utf-8-sig")
     start, end = raw.find("{"), raw.rfind("}")
     if start < 0 or end <= start:
         raise ValueError(f"Config does not contain a JSON object: {path}")
     return json.loads(raw[start : end + 1])
+
+
+def _xlsx_number(value: Any, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{label} must be numeric, got {value!r}")
+    return float(value)
+
+
+def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[str, Any]:
+    reels: list[list[int]] = [[] for _ in range(5)]
+    weights: list[list[float]] = [[] for _ in range(5)]
+    for row_number, row_values in enumerate(ws.iter_rows(min_row=4, max_row=403, max_col=27, values_only=True), start=4):
+        for reel in range(5):
+            symbol_name = row_values[10 + reel]
+            if symbol_name in (None, ""):
+                continue
+            if symbol_name not in name_to_id:
+                raise ValueError(f"{ws.title} R{reel + 1} row {row_number}: unknown symbol {symbol_name!r}")
+            reels[reel].append(name_to_id[str(symbol_name)])
+            weights[reel].append(_xlsx_number(row_values[22 + reel], f"{ws.title} R{reel + 1} weight row {row_number}"))
+    if any(not reel for reel in reels):
+        raise ValueError(f"{ws.title}: five non-empty reels are required")
+    if any(sum(reel_weights) <= 0 for reel_weights in weights):
+        raise ValueError(f"{ws.title}: each reel must have positive total weight")
+
+    random_values = [int(_xlsx_number(ws.cell(row, 29).value, f"{ws.title} Random Wild value")) for row in range(4, 8)]
+    random_weights = [_xlsx_number(ws.cell(row, 30).value, f"{ws.title} Random Wild weight") for row in range(4, 8)]
+    if random_values != [0, 2, 3, 4] or len(random_values) != len(random_weights):
+        raise ValueError(f"{ws.title}: Random Wild must define 0/2/3/4 and matching weights")
+
+    fill_symbols: list[list[int]] = [[] for _ in range(5)]
+    fill_weights: list[list[float]] = [[] for _ in range(5)]
+    for row in range(4, 13):
+        symbol_name = ws.cell(row, 32).value
+        if symbol_name in (None, ""):
+            continue
+        if str(symbol_name) not in name_to_id:
+            raise ValueError(f"{ws.title} AF{row}: unknown fill symbol {symbol_name!r}")
+        symbol_id = name_to_id[str(symbol_name)]
+        for reel in range(5):
+            fill_symbols[reel].append(symbol_id)
+            fill_weights[reel].append(_xlsx_number(ws.cell(row, 33 + reel).value, f"{ws.title} fill R{reel + 1}"))
+    if any(not symbols for symbols in fill_symbols):
+        fill_symbols = [reel[:] for reel in reels]
+        fill_weights = [[1.0] * len(reel) for reel in reels]
+
+    gold_overlay = [
+        _xlsx_number(ws.cell(4, 40 + reel).value or 0, f"{ws.title} gold overlay R{reel + 1}")
+        for reel in range(5)
+    ]
+    scatter_suppression = _xlsx_number(ws["AU3"].value or 0, f"{ws.title} scatter suppression")
+    return {
+        "reels": reels,
+        "weights": weights,
+        "fill_symbols": fill_symbols,
+        "fill_weights": fill_weights,
+        "random_wild": {"values": random_values, "weights": random_weights},
+        "gold_overlay": gold_overlay,
+        "scatter_suppression": scatter_suppression,
+        "multipliers": multipliers,
+    }
+
+
+def _load_xlsx_config(path: Path) -> dict[str, Any]:
+    workbook = load_workbook(path, read_only=True, data_only=False)
+    required_sheets = {"Overview", "Parameter", "BG_Symbol", "FG_Symbol"}
+    missing = required_sheets.difference(workbook.sheetnames)
+    if missing:
+        raise ValueError(f"{path.name}: missing sheets {sorted(missing)}")
+    overview = workbook["Overview"]
+    parameter = workbook["Parameter"]
+
+    base_bet = _xlsx_number(overview["A7"].value, "Overview!A7 Base Bet")
+    symbol_names: dict[str, str] = {}
+    name_to_id: dict[str, int] = {}
+    for row in range(29, 48):
+        name = overview.cell(row, 1).value
+        symbol_id = overview.cell(row, 8).value
+        if name in (None, "") or symbol_id in (None, ""):
+            continue
+        numeric_id = int(_xlsx_number(symbol_id, f"Overview!H{row}"))
+        symbol_names[str(numeric_id)] = str(name)
+        name_to_id[str(name)] = numeric_id
+    expected_ids = set(range(19))
+    if set(map(int, symbol_names)) != expected_ids:
+        raise ValueError(f"{path.name}: Overview symbol ids must be 0..18")
+
+    pays: dict[str, list[float]] = {}
+    for row in range(32, 40):
+        symbol_id = int(_xlsx_number(overview.cell(row, 8).value, f"Overview!H{row}"))
+        pays[str(symbol_id)] = [
+            _xlsx_number(overview.cell(row, col).value, f"Overview pay row {row}") / base_bet
+            for col in (5, 6, 7)
+        ]
+
+    bg_multipliers = [1, 2, 3, 5]
+    fg_multipliers = [2, 4, 6, 10]
+    bg_table = _xlsx_table(workbook["BG_Symbol"], name_to_id, bg_multipliers)
+    fg_table = _xlsx_table(workbook["FG_Symbol"], name_to_id, fg_multipliers)
+    # Parameter selects BG_Symbol/FG_Symbol at weight 1.  Aliases keep the
+    # existing engine paths usable without touching the zero-weight sheets.
+    tables = {
+        "bg_high": bg_table,
+        "bg_low": bg_table,
+        "buy": bg_table,
+        "fg_high_a": fg_table,
+        "fg_high_k": fg_table,
+        "fg_high_q": fg_table,
+        "fg_high_j": fg_table,
+        "fg_low": fg_table,
+        "super": fg_table,
+    }
+
+    return {
+        "game_id": "H016",
+        "parsheet_id": str(overview["B2"].value or path.stem),
+        "name_zh": "幸運王牌",
+        "rtp_label": None,
+        "reel_num": 5,
+        "window_size": 4,
+        "max_ways": 1024,
+        "symbol_names": symbol_names,
+        "pays": pays,
+        "tables": tables,
+        "free_game_mix": {
+            "choices": [{"high": int(_xlsx_number(overview["B21"].value, "Overview!B21")), "low": 0, "weight": 1}],
+            "high_variant_weights": [1, 0, 0, 0],
+        },
+        "free_spins": int(_xlsx_number(overview["B21"].value, "Overview!B21")),
+        "retrigger_spins": int(_xlsx_number(overview["C21"].value, "Overview!C21")),
+        "free_spin_cap": 50,
+        "buy_price": _xlsx_number(overview["B12"].value, "Overview!B12"),
+        "super_buy_price": 250.0,
+        "card_system": {"enabled": False, "profiles": {}},
+        "source_xlsx": path.name,
+    }
 
 
 def _is_h016_config(path: Path) -> bool:
@@ -152,6 +292,7 @@ SHOW_CONSOLE_DETAIL = _env_bool("H016_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
 RUN_SINGLE_SPIN_DEBUG = _env_bool("H016_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 THREADS = max(1, int(os.environ.get("H016_THREADS", THREADS)))
 CFG = _load_config(BASE_DIR / CONFIG_FILE)
+CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CFG.get("card_system", {}).get("enabled"))
 GAME_ID = str(CFG.get("game_id", "H016"))
 PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
 GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
@@ -179,13 +320,23 @@ def weighted_pick(rng: random.Random, values: list[Any], weights: list[float]) -
 @dataclass
 class Reel:
     symbols: list[int]
-    cumulative: list[float]
-    total: float
+    stop_cumulative: list[float]
+    stop_total: float
+    fill_symbols: list[int]
+    fill_cumulative: list[float]
+    fill_total: float
 
-    def pick(self, rng: random.Random) -> int:
-        position = rng.random() * self.total
-        index = bisect.bisect_left(self.cumulative, position)
-        return self.symbols[min(index, len(self.symbols) - 1)]
+    @staticmethod
+    def _index(rng: random.Random, cumulative: list[float], total: float) -> int:
+        position = rng.random() * total
+        return min(bisect.bisect_left(cumulative, position), len(cumulative) - 1)
+
+    def window(self, rng: random.Random, size: int) -> list[int]:
+        stop = self._index(rng, self.stop_cumulative, self.stop_total)
+        return [self.symbols[(stop + offset) % len(self.symbols)] for offset in range(size)]
+
+    def pick_fill(self, rng: random.Random) -> int:
+        return self.fill_symbols[self._index(rng, self.fill_cumulative, self.fill_total)]
 
 
 @dataclass
@@ -193,6 +344,8 @@ class Table:
     reels: list[Reel]
     random_wild_values: list[int]
     random_wild_weights: list[float]
+    gold_overlay: list[float]
+    scatter_suppression: float
     multipliers: list[int]
 
 
@@ -204,6 +357,7 @@ class SpinResult:
     max_multiplier: int = 1
     golden_converted: int = 0
     w2_events: int = 0
+    m1_present: bool = False
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     initial_symbols: Counter = field(default_factory=Counter)
@@ -224,6 +378,11 @@ class RoundResult:
     max_multiplier: int = 1
     golden_converted: int = 0
     w2_events: int = 0
+    bg_w2_events: int = 0
+    fg_w2_events: int = 0
+    bg_m1_spins: int = 0
+    fg_m1_spins: int = 0
+    combo_fg: Counter = field(default_factory=Counter)
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     bg_initial_symbols: Counter = field(default_factory=Counter)
@@ -247,23 +406,58 @@ class LuckyAce:
     @staticmethod
     def _prepare(raw: dict[str, Any]) -> Table:
         reels = []
-        for symbols, weights in zip(raw["reels"], raw["weights"]):
-            cumulative, running = [], 0.0
+        fill_symbols = raw.get("fill_symbols") or raw["reels"]
+        fill_weights = raw.get("fill_weights") or [[1.0] * len(reel) for reel in raw["reels"]]
+        for symbols, weights, refill_symbols, refill_weights in zip(raw["reels"], raw["weights"], fill_symbols, fill_weights):
+            stop_cumulative, running = [], 0.0
             for weight in weights:
                 running += max(0.0, float(weight))
-                cumulative.append(running)
-            reels.append(Reel(list(map(int, symbols)), cumulative, running))
+                stop_cumulative.append(running)
+            fill_cumulative, fill_running = [], 0.0
+            for weight in refill_weights:
+                fill_running += max(0.0, float(weight))
+                fill_cumulative.append(fill_running)
+            reels.append(
+                Reel(
+                    list(map(int, symbols)),
+                    stop_cumulative,
+                    running,
+                    list(map(int, refill_symbols)),
+                    fill_cumulative,
+                    fill_running,
+                )
+            )
         random_wild = raw["random_wild"]
         return Table(
             reels,
             list(map(int, random_wild["values"])),
             list(map(float, random_wild["weights"])),
+            list(map(float, raw.get("gold_overlay") or [0.0] * 5)),
+            float(raw.get("scatter_suppression", 0.0)),
             list(map(int, raw.get("multipliers") or [])),
         )
 
+    def overlay_gold(self, table: Table, reel: int, symbol: int) -> int:
+        if symbol not in SCORE_SYMBOLS or not (0.0 < table.gold_overlay[reel]):
+            return symbol
+        return symbol + 8 if self.rng.random() < table.gold_overlay[reel] else symbol
+
+    def suppress_second_scatter(self, table: Table, board: list[list[int]]) -> None:
+        scatter_positions = [(reel, row) for reel, symbols in enumerate(board) for row, symbol in enumerate(symbols) if symbol == C1]
+        candidates = [(reel, row) for reel, row in scatter_positions if reel > 0]
+        if len(scatter_positions) != 2 or not candidates or self.rng.random() >= table.scatter_suppression:
+            return
+        reel, row = self.rng.choice(candidates)
+        replacement = C1
+        while replacement == C1:
+            replacement = table.reels[reel].pick_fill(self.rng)
+        board[reel][row] = replacement
+
     def board(self, table_name: str) -> list[list[int]]:
         table = self.tables[table_name]
-        return [[table.reels[reel].pick(self.rng) for _ in range(4)] for reel in range(5)]
+        board = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
+        self.suppress_second_scatter(table, board)
+        return [[self.overlay_gold(table, reel, symbol) for symbol in symbols] for reel, symbols in enumerate(board)]
 
     def evaluate(self, board: list[list[int]]) -> tuple[float, set[tuple[int, int]], list[tuple[int, int, float]]]:
         total, hits, details = 0.0, set(), []
@@ -308,6 +502,7 @@ class LuckyAce:
         board = self.board(table_name)
         result = SpinResult(initial_board=[reel[:] for reel in board])
         result.initial_symbols.update((reel, symbol) for reel, symbols in enumerate(board) for symbol in symbols)
+        result.m1_present = any(canonical(symbol) == 3 for symbols in board for symbol in symbols)
         pending_gold: list[tuple[int, int]] = []
         bg_w2_used = False
         while True:
@@ -337,8 +532,12 @@ class LuckyAce:
                     board[reel][row] = -1
             for reel in range(5):
                 remaining = [symbol for symbol in board[reel] if symbol != -1]
-                dropped = [table.reels[reel].pick(self.rng) for _ in range(4 - len(remaining))]
+                dropped = [
+                    self.overlay_gold(table, reel, table.reels[reel].pick_fill(self.rng))
+                    for _ in range(4 - len(remaining))
+                ]
                 result.drop_symbols.update((reel, symbol) for symbol in dropped)
+                result.m1_present |= any(canonical(symbol) == 3 for symbol in dropped)
                 board[reel] = remaining + dropped
         result.scatter_count = sum(symbol == C1 for reel in board for symbol in reel)
         result.final_board = [reel[:] for reel in board]
@@ -369,7 +568,10 @@ class LuckyAce:
         raise RuntimeError(f"BG card range retry limit exceeded: ({card['min']}, {card['max']}]")
 
     def free_queue(self) -> list[str]:
-        choices = self.config["free_game_mix"]["choices"]
+        mix = self.config["free_game_mix"]
+        choices = mix.get("choices") or mix.get("groups", {}).get("E")
+        if not choices:
+            raise ValueError("free_game_mix must provide choices or group E")
         choice = weighted_pick(self.rng, choices, [float(item["weight"]) for item in choices])
         queue = ["high"] * int(choice["high"]) + ["low"] * int(choice["low"])
         self.rng.shuffle(queue)
@@ -394,6 +596,9 @@ class LuckyAce:
             result.max_multiplier = max(result.max_multiplier, spin.max_multiplier)
             result.golden_converted += spin.golden_converted
             result.w2_events += spin.w2_events
+            result.fg_w2_events += spin.w2_events
+            result.fg_m1_spins += int(spin.m1_present)
+            result.combo_fg[min(spin.cascades, 5)] += 1
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
             result.fg_initial_symbols.update(spin.initial_symbols)
@@ -426,6 +631,11 @@ class LuckyAce:
         target.max_multiplier = max(target.max_multiplier, source.max_multiplier)
         target.golden_converted += source.golden_converted
         target.w2_events += source.w2_events
+        target.bg_w2_events += source.bg_w2_events
+        target.fg_w2_events += source.fg_w2_events
+        target.bg_m1_spins += source.bg_m1_spins
+        target.fg_m1_spins += source.fg_m1_spins
+        target.combo_fg.update(source.combo_fg)
         target.symbol_hits.update(source.symbol_hits)
         target.symbol_pay.update(source.symbol_pay)
         target.bg_initial_symbols.update(source.bg_initial_symbols)
@@ -447,6 +657,8 @@ class LuckyAce:
         result.max_multiplier = spin.max_multiplier
         result.golden_converted = spin.golden_converted
         result.w2_events = spin.w2_events
+        result.bg_w2_events = spin.w2_events
+        result.bg_m1_spins = int(spin.m1_present)
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
         result.bg_initial_symbols.update(spin.initial_symbols)
@@ -457,8 +669,9 @@ class LuckyAce:
         return result
 
 
-def wager_for_mode(mode: int) -> float:
-    factor = 1.0 if mode == MODE_NORMALBET else float(CFG["buy_price"] if mode == MODE_FEATUREBUY else CFG["super_buy_price"])
+def wager_for_mode(mode: int, config: dict[str, Any] | None = None) -> float:
+    active = config or CFG
+    factor = 1.0 if mode == MODE_NORMALBET else float(active["buy_price"] if mode == MODE_FEATUREBUY else active["super_buy_price"])
     return BASE_BET * BET_MULTI * factor
 
 
@@ -476,6 +689,10 @@ def _empty_stats() -> dict[str, Any]:
         "cascades_fg": 0,
         "golden_converted": 0,
         "w2_events": 0,
+        "bg_w2_events": 0,
+        "fg_w2_events": 0,
+        "bg_m1_spins": 0,
+        "fg_m1_spins": 0,
         "max_multiplier": 1,
         "win_x_sum": 0.0,
         "win_x_square": 0.0,
@@ -491,10 +708,11 @@ def _empty_stats() -> dict[str, Any]:
     }
 
 
-def _simulate_chunk(rounds: int, bet_mode: int, seed: int) -> dict[str, Any]:
-    game = LuckyAce(CFG, seed, CARD_SYSTEM_ENABLED, CARD_SYSTEM_IS_NEWBIE)
+def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any] | None = None) -> dict[str, Any]:
+    active = config or CFG
+    game = LuckyAce(active, seed, CARD_SYSTEM_ENABLED, CARD_SYSTEM_IS_NEWBIE)
     stats = _empty_stats()
-    wager = wager_for_mode(bet_mode)
+    wager = wager_for_mode(bet_mode, active)
     for _ in range(rounds):
         result = game.round(bet_mode)
         ratio = result.pay / wager if wager else 0.0
@@ -510,11 +728,15 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int) -> dict[str, Any]:
         stats["cascades_fg"] += result.cascades_fg
         stats["golden_converted"] += result.golden_converted
         stats["w2_events"] += result.w2_events
+        stats["bg_w2_events"] += result.bg_w2_events
+        stats["fg_w2_events"] += result.fg_w2_events
+        stats["bg_m1_spins"] += result.bg_m1_spins
+        stats["fg_m1_spins"] += result.fg_m1_spins
         stats["max_multiplier"] = max(stats["max_multiplier"], result.max_multiplier)
         stats["win_x_sum"] += ratio
         stats["win_x_square"] += ratio * ratio
         stats["combo_bg"][min(result.cascades_bg, 5)] += 1
-        stats["combo_fg"][min(result.cascades_fg, 5)] += 1
+        stats["combo_fg"].update(result.combo_fg)
         label = "0" if ratio == 0 else "(0,1)" if ratio < 1 else "[1,10)" if ratio < 10 else "[10,100)" if ratio < 100 else "100+"
         stats["buckets"][label] += 1
         stats["symbol_hits"].update(result.symbol_hits)
@@ -540,7 +762,13 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
             target[key] += value
 
 
-def run_simulation(total_rounds: int = TOTAL_ROUNDS, bet_mode: int = BET_MODE, bet_multi: int = BET_MULTI, threads: int = THREADS) -> dict[str, Any]:
+def run_simulation(
+    total_rounds: int = TOTAL_ROUNDS,
+    bet_mode: int = BET_MODE,
+    bet_multi: int = BET_MULTI,
+    threads: int = THREADS,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     global BET_MULTI
     if bet_mode not in SUPPORTED_BET_MODES:
         raise ValueError(f"Unsupported bet mode: {bet_mode}")
@@ -550,11 +778,12 @@ def run_simulation(total_rounds: int = TOTAL_ROUNDS, bet_mode: int = BET_MODE, b
     chunks = [base + (1 if i < extra else 0) for i in range(threads)]
     started = time.perf_counter()
     merged = _empty_stats()
+    active = config or CFG
     if threads == 1:
-        _merge_stats(merged, _simulate_chunk(chunks[0], bet_mode, 46046))
+        _merge_stats(merged, _simulate_chunk(chunks[0], bet_mode, 46046, active))
     else:
         with ThreadPoolExecutor(max_workers=threads) as pool:
-            futures = [pool.submit(_simulate_chunk, count, bet_mode, 46046 + i * 100003) for i, count in enumerate(chunks) if count]
+            futures = [pool.submit(_simulate_chunk, count, bet_mode, 46046 + i * 100003, active) for i, count in enumerate(chunks) if count]
             for future in futures:
                 _merge_stats(merged, future.result())
     return {"stats": merged, "duration": time.perf_counter() - started, "bet_mode": bet_mode, "bet_multi": bet_multi}
@@ -602,6 +831,10 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("avg_cascades_fg", s["cascades_fg"] / max(1, s["fg_spins"])),
         ("golden_converted", s["golden_converted"]),
         ("w2_events", s["w2_events"]),
+        ("w2_bg_event_rate", s["bg_w2_events"] / rounds),
+        ("w2_fg_event_rate", s["fg_w2_events"] / max(1, s["fg_spins"])),
+        ("m1_bg_spin_rate", s["bg_m1_spins"] / rounds),
+        ("m1_fg_spin_rate", s["fg_m1_spins"] / max(1, s["fg_spins"])),
         ("max_win_multiplier", s["max_multiplier"]),
         ("rounds_per_second", rounds / max(result["duration"], 1e-9)),
     ]
