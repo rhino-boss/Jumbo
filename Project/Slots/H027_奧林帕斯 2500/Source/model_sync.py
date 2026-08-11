@@ -3,9 +3,9 @@
     model_sync.py export [--check]       H0271.xlsx -> config_92A.js
     model_sync.py import [--check]       config_92A.js -> H0271.xlsx
 
-BG uses two selectable tables (BG_Symbol and BG_Symbol (2)); FG uses
-FG_Symbol. Historical "(3)" worksheets and FG_Symbol (2)/(3) remain outside
-the active config model.
+BG uses two selectable tables (BG_Symbol and BG_Symbol (2)); FG uses two
+scheduled tables (FG_Symbol and FG_Symbol (2)). Historical "(3)" worksheets
+remain outside the active config model.
 """
 import argparse
 import json
@@ -25,10 +25,10 @@ from openpyxl.utils.cell import column_index_from_string
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_XLSX = BASE_DIR / "H0271.xlsx"
 DEFAULT_CONFIG = BASE_DIR.parent / "config_92A.js"
-SYMBOL_SHEETS = ("BG_Symbol", "BG_Symbol (2)", "FG_Symbol")
+SYMBOL_SHEETS = ("BG_Symbol", "BG_Symbol (2)", "FG_Symbol", "FG_Symbol (2)")
 NORMAL_BG_SHEETS = ("BG_Symbol", "BG_Symbol (2)")
 FEATUREBUY_BG_SHEETS = ("BG_Symbol",)
-FG_SHEETS = ("FG_Symbol",)
+FG_SHEETS = ("FG_Symbol", "FG_Symbol (2)")
 REEL_COUNT = 6
 STRIP_LENGTH = 300
 LEVEL_COUNT = 25
@@ -139,9 +139,9 @@ def read_parameter(sheet):
             raise ValueError(f"Parameter multiplier headers on row {row_number} do not match C28:C52")
 
     super_weights = {"Super Ball": read_weights(sheet, 4)}
-    c2_rows = {"BG_Symbol": 9, "BG_Symbol (2)": 10, "FG_Symbol": 12}
-    c3_rows = {"BG_Symbol": 19, "BG_Symbol (2)": 20, "FG_Symbol": 22}
-    use_c3_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21}
+    c2_rows = {"BG_Symbol": 9, "BG_Symbol (2)": 10, "FG_Symbol": 12, "FG_Symbol (2)": 13}
+    c3_rows = {"BG_Symbol": 19, "BG_Symbol (2)": 20, "FG_Symbol": 22, "FG_Symbol (2)": 23}
+    use_c3_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
     c2_weights = {name: read_weights(sheet, row) for name, row in c2_rows.items()}
     c3_weights = {name: read_weights(sheet, row) for name, row in c3_rows.items()}
     use_c3_by_reel = {
@@ -160,13 +160,34 @@ def read_parameter(sheet):
             base_weights.append(weight)
     if not base_names:
         raise ValueError("Parameter!B4:C5 must contain at least one active BG table")
-    initial = require_int(sheet["C11"].value, "Parameter!C11")
-    retrigger = require_int(sheet["D11"].value, "Parameter!D11")
+    free_names, initial_counts, retrigger_counts = [], [], []
+    for row in (11, 12):
+        name = sheet.cell(row, 2).value
+        initial = require_int(sheet.cell(row, 3).value, f"Parameter!C{row}")
+        retrigger = require_int(sheet.cell(row, 4).value, f"Parameter!D{row}")
+        if name is None:
+            if initial or retrigger:
+                raise ValueError(f"Parameter!B{row} must name an FG table when counts are non-zero")
+            continue
+        name = str(name)
+        if name not in FG_SHEETS:
+            raise ValueError(f"Parameter!B{row} must be one of {FG_SHEETS}, got {name!r}")
+        if initial <= 0 or retrigger <= 0:
+            raise ValueError(f"Parameter!C{row}:D{row} must both be positive")
+        free_names.append(name)
+        initial_counts.append(initial)
+        retrigger_counts.append(retrigger)
+    if free_names != list(FG_SHEETS):
+        raise ValueError(f"Parameter!B11:B12 must be exactly {list(FG_SHEETS)}")
+    if sum(initial_counts) != 15 or sum(retrigger_counts) != 5:
+        raise ValueError(
+            "Parameter FG table counts must preserve 15 initial spins and +5 retrigger spins"
+        )
     profile = {
         "base_reel_names": base_names,
         "base_reel_weights": base_weights,
         "base_reel_weights_cum": cumulative(base_weights),
-        "free_table": {"names": list(FG_SHEETS), "initial": [initial], "retrigger": [retrigger]},
+        "free_table": {"names": free_names, "initial": initial_counts, "retrigger": retrigger_counts},
         "use_c3": {
             "table_names": list(SYMBOL_SHEETS),
             "weights": [use_c3_by_reel[name][0] for name in SYMBOL_SHEETS],
@@ -327,13 +348,14 @@ def build_updates(config):
     for index, row in enumerate((4, 5)):
         add_update(updates, "Parameter", f"B{row}", normal["base_reel_names"][index], "normal.base_reel_names")
         add_update(updates, "Parameter", f"C{row}", normal["base_reel_weights"][index], "normal.base_reel_weights")
-    add_update(updates, "Parameter", "B11", "FG_Symbol", "normal.free_table.names")
-    add_update(updates, "Parameter", "C11", normal["free_table"]["initial"][0], "normal.free_table.initial")
-    add_update(updates, "Parameter", "D11", normal["free_table"]["retrigger"][0], "normal.free_table.retrigger")
+    for index, row in enumerate((11, 12)):
+        add_update(updates, "Parameter", f"B{row}", normal["free_table"]["names"][index], "normal.free_table.names")
+        add_update(updates, "Parameter", f"C{row}", normal["free_table"]["initial"][index], "normal.free_table.initial")
+        add_update(updates, "Parameter", f"D{row}", normal["free_table"]["retrigger"][index], "normal.free_table.retrigger")
     for row in (6,):
         add_update(updates, "Parameter", f"B{row}", None, "unused table")
         add_update(updates, "Parameter", f"C{row}", 0, "unused table")
-    for row in (12, 13):
+    for row in (13,):
         add_update(updates, "Parameter", f"B{row}", None, "unused table")
         add_update(updates, "Parameter", f"C{row}", 0, "unused table")
         add_update(updates, "Parameter", f"D{row}", 0, "unused table")
@@ -345,27 +367,27 @@ def build_updates(config):
         add_update(updates, "Parameter", f"B{28 + index}", index + 1, "multiplier level index")
         add_update(updates, "Parameter", f"C{28 + index}", value, "multiplier_levels")
 
-    table_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21}
+    table_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
     for name, row in table_rows.items():
         add_update(updates, "Parameter", f"B{row}", name, "normal.use_c3.table_names")
         for reel, value in enumerate(normal["use_c3"]["weights_by_reel"][name], start=3):
             add_update(updates, "Parameter", f"{column_name(reel)}{row}", value, "normal.use_c3.weights_by_reel")
-    for row in (20, 22, 23):
+    for row in (20, 23):
         add_update(updates, "Parameter", f"B{row}", None, "unused table")
         for col in range(3, 9):
             add_update(updates, "Parameter", f"{column_name(col)}{row}", 0, "unused table")
 
     multiplier_rows = (("super_multiplier", "Super Ball", 4),
                        ("c2", "BG_Symbol", 9), ("c2", "BG_Symbol (2)", 10),
-                       ("c2", "FG_Symbol", 12),
+                       ("c2", "FG_Symbol", 12), ("c2", "FG_Symbol (2)", 13),
                        ("c3", "BG_Symbol", 19), ("c3", "BG_Symbol (2)", 20),
-                       ("c3", "FG_Symbol", 22))
+                       ("c3", "FG_Symbol", 22), ("c3", "FG_Symbol (2)", 23))
     for table_key, name, row in multiplier_rows:
         table = config["parameter"][table_key] if table_key == "super_multiplier" else normal[table_key]
         add_update(updates, "Parameter", f"J{row}", name, f"{table_key}.table_names")
         for index, value in enumerate(table["weights"][name]):
             add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, f"{table_key}.weights")
-    for row in (11, 13, 14, 21, 23, 24):
+    for row in (11, 14, 21, 24):
         add_update(updates, "Parameter", f"J{row}", None, "unused table")
         for col in range(11, 36):
             add_update(updates, "Parameter", f"{column_name(col)}{row}", 0, "unused table")

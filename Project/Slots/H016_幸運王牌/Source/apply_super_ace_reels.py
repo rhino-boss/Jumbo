@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
+import bisect
 import json
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -15,165 +16,147 @@ DEFAULT_SOURCE = Path(
     "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資源/JILI/"
     "JILI - Super Ace/遊戲資料/StripTable_SuperAce_還原.xlsx"
 )
-EDITABLE_SHEETS = {"BG_Symbol", "FG_Symbol"}
-SYMBOL_ORDER = ["C1", "M1", "M2", "M3", "M4", "A", "K", "Q", "J"]
+TARGETS = {"BG_Symbol": "BG_Strip", "FG_Symbol": "FG_Strip"}
+EDITABLE_COLUMNS = {*range(11, 16), *range(23, 28)}  # K:O and W:AA only
+REEL_LENGTH = 200
+GOLD_RATES = {
+    "BG_Symbol": [0.0, 0.15024, 0.11346, 0.07600, 0.0],
+    "FG_Symbol": [0.0, 0.21057, 0.18177, 0.15244, 0.0],
+}
+GOLD_SYMBOLS = {
+    "M1": "G1", "M2": "G2", "M3": "G3", "M4": "G4",
+    "A": "GA", "K": "GK", "Q": "GQ", "J": "GJ",
+}
 
 
-def cell_value(value: Any) -> Any:
+def stable_value(value: Any) -> Any:
     if hasattr(value, "text"):
-        return {"array_formula": value.text, "ref": value.ref}
+        return (value.text, value.ref)
     return value
 
 
-def sheet_fingerprint(worksheet) -> str:
-    payload_object = {
-        "populated_cells": [
-            (cell.coordinate, cell_value(cell.value), cell.number_format)
-            for row in worksheet.iter_rows()
-            for cell in row
-            if cell.value is not None
-        ],
-        "merged": sorted(str(item) for item in worksheet.merged_cells.ranges),
-    }
-    payload = json.dumps(payload_object, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
-
-
-def read_strip(source, sheet_name: str) -> tuple[list[list[str]], list[list[float]]]:
-    worksheet = source[sheet_name]
-    reels: list[list[str]] = [[] for _ in range(5)]
-    stop_weights: list[list[float]] = [[] for _ in range(5)]
-    for row in worksheet.iter_rows(min_row=3, max_col=12, values_only=True):
-        for reel in range(5):
-            symbol = row[1 + reel]
-            weight = row[7 + reel]
-            if symbol not in (None, ""):
-                reels[reel].append(str(symbol))
-                stop_weights[reel].append(float(weight))
-    if any(not reel for reel in reels):
-        raise ValueError(f"{sheet_name}: all five reels must be non-empty")
-    if any(len(reels[i]) != len(stop_weights[i]) for i in range(5)):
-        raise ValueError(f"{sheet_name}: symbol/stop-weight lengths differ")
-    return reels, stop_weights
-
-
-def read_fill_weights(source, scene: str) -> dict[str, list[float]]:
-    worksheet = source["FillWeight"]
-    result: dict[str, list[float]] = {}
-    for row in worksheet.iter_rows(min_row=3, values_only=True):
-        if row[0] != scene:
-            continue
-        result[str(row[1])] = [float(row[index]) for index in (4, 6, 8, 10, 12)]
-    missing = set(SYMBOL_ORDER).difference(result)
-    if missing:
-        raise ValueError(f"FillWeight {scene}: missing {sorted(missing)}")
+def protected_values(workbook) -> dict[str, dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for worksheet in workbook.worksheets:
+        cells: dict[str, Any] = {}
+        for row in worksheet.iter_rows():
+            for cell in row:
+                if worksheet.title in TARGETS and cell.column in EDITABLE_COLUMNS:
+                    continue
+                if cell.value is not None:
+                    cells[cell.coordinate] = stable_value(cell.value)
+        result[worksheet.title] = cells
     return result
 
 
-def read_gold_overlay(source, scene: str) -> tuple[list[float], list[float]]:
-    worksheet = source["GoldOverlay"]
-    total = [0.0] * 5
-    big = [0.0] * 5
-    for row in worksheet.iter_rows(min_row=3, max_row=12, values_only=True):
-        if row[0] != scene:
-            continue
-        reel = int(str(row[1])[1:]) - 1
-        total[reel] = float(row[2]) / 100.0
-        big[reel] = float(row[4]) / 100.0
-    return total, big
+def read_reels(worksheet) -> tuple[list[list[str]], list[list[float]]]:
+    reels: list[list[str]] = [[] for _ in range(5)]
+    weights: list[list[float]] = [[] for _ in range(5)]
+    for row in worksheet.iter_rows(min_row=3, max_col=12, values_only=True):
+        for reel in range(5):
+            symbol = row[1 + reel]
+            stop_weight = row[7 + reel]
+            if symbol in (None, ""):
+                continue
+            weight = float(stop_weight)
+            if weight <= 0:
+                raise ValueError(f"{worksheet.title} R{reel + 1}: stop weight must be positive")
+            reels[reel].append(str(symbol))
+            weights[reel].append(weight)
+    if any(not reel for reel in reels):
+        raise ValueError(f"{worksheet.title}: all five reels must be non-empty")
+    return reels, weights
 
 
-def write_sheet(
-    worksheet,
-    reels: list[list[str]],
-    stop_weights: list[list[float]],
-    fill_weights: dict[str, list[float]],
-    gold_total: list[float],
-    gold_big: list[float],
-    scene: str,
-) -> None:
-    # Existing reel-strip area: K:O; aligned stop weights: W:AA.
+def resample_to_200(symbols: list[str], weights: list[float]) -> list[str]:
+    cumulative: list[float] = []
+    running = 0.0
+    for weight in weights:
+        running += weight
+        cumulative.append(running)
+    return [
+        symbols[min(bisect.bisect_left(cumulative, running * (index + 0.5) / REEL_LENGTH), len(symbols) - 1)]
+        for index in range(REEL_LENGTH)
+    ]
+
+
+def proportional_gold_counts(symbols: list[str], total_gold: int) -> dict[str, int]:
+    counts = Counter(symbol for symbol in symbols if symbol in GOLD_SYMBOLS)
+    eligible = sum(counts.values())
+    if total_gold > eligible:
+        raise ValueError(f"gold target {total_gold} exceeds {eligible} eligible symbols")
+    exact = {symbol: total_gold * count / eligible for symbol, count in counts.items()}
+    allocated = {symbol: int(value) for symbol, value in exact.items()}
+    remainder = total_gold - sum(allocated.values())
+    order = sorted(counts, key=lambda symbol: (exact[symbol] - allocated[symbol], counts[symbol], symbol), reverse=True)
+    for symbol in order[:remainder]:
+        allocated[symbol] += 1
+    return allocated
+
+
+def evenly_spaced(items: list[int], count: int) -> list[int]:
+    if count <= 0:
+        return []
+    return [items[min(int((index + 0.5) * len(items) / count), len(items) - 1)] for index in range(count)]
+
+
+def apply_gold(symbols: list[str], rate: float) -> tuple[list[str], int]:
+    result = list(symbols)
+    target = round(REEL_LENGTH * rate)
+    by_symbol: dict[str, list[int]] = {
+        symbol: [index for index, value in enumerate(result) if value == symbol]
+        for symbol in GOLD_SYMBOLS
+    }
+    for symbol, count in proportional_gold_counts(result, target).items():
+        for index in evenly_spaced(by_symbol[symbol], count):
+            result[index] = GOLD_SYMBOLS[symbol]
+    return result, target
+
+
+def write_reels(worksheet, reels: list[list[str]]) -> None:
     for row in range(4, 404):
-        for column in (*range(11, 16), *range(23, 28)):
+        for column in EDITABLE_COLUMNS:
             worksheet.cell(row, column).value = None
-    for reel in range(5):
-        for offset, (symbol, weight) in enumerate(zip(reels[reel], stop_weights[reel]), start=4):
-            worksheet.cell(offset, 11 + reel).value = symbol
-            worksheet.cell(offset, 23 + reel).value = weight
-
-    # Big Joker output: source Joker + 2/3/4 copies = observed totals 3/4/5.
-    random_values = [0, 2, 3, 4]
-    random_weights = [37_731, 1_401, 235, 18] if scene == "BG" else [1, 0, 0, 0]
-    for row in range(4, 8):
-        worksheet.cell(row, 29).value = random_values[row - 4]
-        worksheet.cell(row, 30).value = random_weights[row - 4]
-
-    # Additional evidence stays inside the only user-authorized worksheet.
-    worksheet["AF2"] = "Cascade Fill Symbol Weight (%)"
-    worksheet["AF3"] = "Symbol"
-    for reel in range(5):
-        worksheet.cell(3, 33 + reel).value = f"R{reel + 1}"
-    for offset, symbol in enumerate(SYMBOL_ORDER, start=4):
-        worksheet.cell(offset, 32).value = symbol
-        for reel, weight in enumerate(fill_weights[symbol]):
-            worksheet.cell(offset, 33 + reel).value = weight
-
-    worksheet["AM2"] = "Golden Card Overlay Probability"
-    worksheet["AM3"] = "Type"
-    for reel in range(5):
-        worksheet.cell(3, 40 + reel).value = f"R{reel + 1}"
-    worksheet["AM4"] = "All Gold"
-    worksheet["AM5"] = "Big Gold"
-    for reel in range(5):
-        worksheet.cell(4, 40 + reel).value = gold_total[reel]
-        worksheet.cell(5, 40 + reel).value = gold_big[reel]
-
-    worksheet["AT2"] = "Two-Scatter Suppression"
-    worksheet["AT3"] = "Probability"
-    worksheet["AU3"] = 0.371 if scene == "BG" else 0.0
-    worksheet["AT5"] = "Source"
-    worksheet["AU5"] = "StripTable_SuperAce_還原.xlsx"
-    worksheet.column_dimensions["AF"].width = 28
-    worksheet.column_dimensions["AM"].width = 32
-    worksheet.column_dimensions["AT"].width = 28
-    worksheet.column_dimensions["AU"].width = 34
+    for reel, symbols in enumerate(reels):
+        for row, symbol in enumerate(symbols, start=4):
+            worksheet.cell(row, 11 + reel).value = symbol
+            worksheet.cell(row, 23 + reel).value = 1
 
 
 def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
-    target = load_workbook(target_path)
+    target = load_workbook(target_path, data_only=False)
     source = load_workbook(source_path, read_only=True, data_only=True)
-    protected_before = {
-        name: sheet_fingerprint(target[name]) for name in target.sheetnames if name not in EDITABLE_SHEETS
-    }
-    results: dict[str, Any] = {}
-    for scene, target_sheet, source_sheet in (
-        ("BG", "BG_Symbol", "BG_Strip"),
-        ("FG", "FG_Symbol", "FG_Strip"),
-    ):
-        reels, stop_weights = read_strip(source, source_sheet)
-        fill_weights = read_fill_weights(source, scene)
-        gold_total, gold_big = read_gold_overlay(source, scene)
-        write_sheet(target[target_sheet], reels, stop_weights, fill_weights, gold_total, gold_big, scene)
-        results[scene] = {
+    before = protected_values(target)
+    result: dict[str, Any] = {}
+    for target_name, source_name in TARGETS.items():
+        source_reels, source_weights = read_reels(source[source_name])
+        reels: list[list[str]] = []
+        gold_counts: list[int] = []
+        for reel in range(5):
+            expanded = resample_to_200(source_reels[reel], source_weights[reel])
+            expanded, gold_count = apply_gold(expanded, GOLD_RATES[target_name][reel])
+            reels.append(expanded)
+            gold_counts.append(gold_count)
+        write_reels(target[target_name], reels)
+        result[target_name] = {
             "reel_lengths": [len(reel) for reel in reels],
-            "stop_weight_sums": [sum(weights) for weights in stop_weights],
-            "gold_total": gold_total,
-            "gold_big": gold_big,
+            "integer_weight_sums": [REEL_LENGTH] * 5,
+            "gold_counts": gold_counts,
+            "gold_rates": [count / REEL_LENGTH for count in gold_counts],
+            "r1_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[0]),
+            "r5_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[4]),
+            "all_weights_are_positive_integers": True,
         }
-    target.calculation.fullCalcOnLoad = True
-    target.calculation.forceFullCalc = True
-    target.calculation.calcMode = "auto"
+    source.close()
     target.save(target_path)
 
     checked = load_workbook(target_path, data_only=False)
-    protected_after = {
-        name: sheet_fingerprint(checked[name]) for name in checked.sheetnames if name not in EDITABLE_SHEETS
-    }
-    if protected_before != protected_after:
-        changed = sorted(name for name in protected_before if protected_before[name] != protected_after.get(name))
-        raise RuntimeError(f"Unauthorized worksheet changes detected: {changed}")
-    results["protected_sheets_unchanged"] = True
-    return results
+    checked_protected = protected_values(checked)
+    if checked_protected != before:
+        changed = sorted(name for name in before if checked_protected[name] != before[name])
+        raise RuntimeError(f"Values outside K:O/W:AA changed: {changed}")
+    result["protected_values_unchanged"] = True
+    return result
 
 
 def main() -> None:

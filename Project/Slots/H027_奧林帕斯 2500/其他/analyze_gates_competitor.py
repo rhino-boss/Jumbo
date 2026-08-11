@@ -21,6 +21,7 @@ DEFAULT_MODEL = PROJECT_DIR / "Source" / "H0271.xlsx"
 DEFAULT_REPORT = REFERENCE_DIR / "分析報告_gates of olympus 1000.md"
 DEFAULT_COMPARISON = PROJECT_DIR / "其他" / "競品參考數值比較.md"
 DEFAULT_METRICS = REFERENCE_DIR / "analysis_gates_of_olympus_1000_metrics.json"
+DEFAULT_STACK_METRICS = REFERENCE_DIR / "stack_distribution_metrics.json"
 DEFAULT_OVERVIEW_TEMPLATE = PROJECT_DIR.parent / "H028_雷神爆金 1000" / "Source" / "H0281.xlsx"
 
 SYMBOL_NAMES = {
@@ -305,6 +306,47 @@ def symbol_distribution(spins, screen_mode):
     return {"screen_count": screens, "cell_count": cells, "symbols": result}
 
 
+def initial_stack_distribution(spins):
+    """Cell-weighted vertical Stack 1-5 distribution on initial screens."""
+    reel_counts = [Counter() for _ in range(6)]
+    symbol_counts = {code: Counter() for code in CODE_TO_ID if code != "C3"}
+    screens = 0
+    for spin in spins:
+        if not spin.screens or len(spin.screens[0]) != 30:
+            continue
+        screen = spin.screens[0]
+        screens += 1
+        for reel in range(6):
+            column = [screen[row * 6 + reel] for row in range(5)]
+            start = 0
+            while start < 5:
+                end = start + 1
+                while end < 5 and column[end] == column[start]:
+                    end += 1
+                length = end - start
+                cells = length
+                reel_counts[reel][length] += cells
+                code = SYMBOL_ID_TO_CODE.get(column[start])
+                if code is not None:
+                    symbol_counts[code][length] += cells
+                start = end
+    by_reel = []
+    for reel, counts in enumerate(reel_counts):
+        total = sum(counts.values())
+        by_reel.append({
+            "reel": reel + 1,
+            **{f"stack_{length}": counts[length] / total if total else 0.0 for length in range(1, 6)},
+        })
+    by_symbol = []
+    for code, counts in symbol_counts.items():
+        total = sum(counts.values())
+        by_symbol.append({
+            "symbol": code,
+            **{f"stack_{length}": counts[length] / total if total else 0.0 for length in range(1, 6)},
+        })
+    return {"screen_count": screens, "cell_count": screens * 30, "by_reel": by_reel, "by_symbol": by_symbol}
+
+
 def infer_paytable(paths):
     features = [(symbol_id, bucket) for symbol_id in range(3, 12) for bucket in range(3)]
     equations = []
@@ -496,6 +538,10 @@ def analyze(path: Path):
             "fg_initial": symbol_distribution(fg_spins, "initial"),
             "bg_drop": symbol_distribution(bg_spins, "drop"),
             "fg_drop": symbol_distribution(fg_spins, "drop"),
+        },
+        "initial_stack_distribution": {
+            "bg": initial_stack_distribution(bg_spins),
+            "fg": initial_stack_distribution(fg_spins),
         },
         "multiplier_ball": {
             "bg": multiplier_ball_metrics(bg_spins),
@@ -1009,6 +1055,57 @@ def symbol_table(bg, fg):
     return markdown_table(["ID", "符號", "BG 數量", "BG 占比", "FG 數量", "FG 占比"], rows)
 
 
+def stack_comparison_reel_table(stack_metrics, scene):
+    competitor = stack_metrics["competitor"][scene]["by_reel"]
+    h027 = stack_metrics["h027"][scene]["by_reel"]
+    rows = []
+    for length in range(1, 6):
+        for model, values in (("競品", competitor), ("H027", h027)):
+            rows.append([
+                f"Stack {length}",
+                model,
+                *[pct(values[f"R{reel}"][f"stack_{length}"]) for reel in range(1, 7)],
+            ])
+    return markdown_table(["堆疊長度", "模型", "R1", "R2", "R3", "R4", "R5", "R6"], rows)
+
+
+def stack_comparison_symbol_table(stack_metrics):
+    rows = []
+    for code in ("M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE"):
+        cb = stack_metrics["competitor"]["BG"]["by_symbol"][code]
+        hb = stack_metrics["h027"]["BG"]["by_symbol"][code]
+        cf = stack_metrics["competitor"]["FG"]["by_symbol"][code]
+        hf = stack_metrics["h027"]["FG"]["by_symbol"][code]
+        rows.append([
+            code,
+            pct(1 - cb["stack_1"]), pct(1 - hb["stack_1"]),
+            pct(cb["stack_3"] + cb["stack_4"] + cb["stack_5"]),
+            pct(hb["stack_3"] + hb["stack_4"] + hb["stack_5"]),
+            pct(1 - cf["stack_1"]), pct(1 - hf["stack_1"]),
+            pct(cf["stack_3"] + cf["stack_4"] + cf["stack_5"]),
+            pct(hf["stack_3"] + hf["stack_4"] + hf["stack_5"]),
+        ])
+    return markdown_table(
+        [
+            "符號",
+            "競品 BG 2+", "H027 BG 2+", "競品 BG 3+", "H027 BG 3+",
+            "競品 FG 2+", "H027 FG 2+", "競品 FG 3+", "H027 FG 3+",
+        ],
+        rows,
+    )
+
+
+def max_stack_reel_difference(stack_metrics, scene):
+    return max(
+        abs(
+            stack_metrics["h027"][scene]["by_reel"][f"R{reel}"][f"stack_{length}"]
+            - stack_metrics["competitor"][scene]["by_reel"][f"R{reel}"][f"stack_{length}"]
+        )
+        for reel in range(1, 7)
+        for length in range(1, 6)
+    )
+
+
 def combo_table(bg, fg):
     rows = []
     for b, f in zip(bg, fg):
@@ -1035,10 +1132,11 @@ def paytable_table(paytable):
     return markdown_table(["ID", "符號", "8–9 個", "10–11 個", "12+ 個"], rows)
 
 
-def render_report(analysis, source_path, paytable_source_paths):
+def render_report(analysis, source_path, paytable_source_paths, stack_metrics):
     basic = analysis["basic"]
     quality = analysis["quality"]
     symbols = analysis["symbol_distribution"]
+    stacks = analysis["initial_stack_distribution"]
     balls = analysis["multiplier_ball"]
     accumulated = analysis["fg_end_accumulated_multiplier"]
     paytable = analysis["paytable"]
@@ -1054,6 +1152,7 @@ def render_report(analysis, source_path, paytable_source_paths):
 - [符號分布](#符號分布)
   - [初始轉輪](#初始轉輪)
   - [掉落](#掉落)
+  - [初始盤面堆疊分布](#初始盤面堆疊分布)
 - [賠率](#賠率)
 - [其他指標](#其他指標)
   - [消除分布](#消除分布)
@@ -1099,6 +1198,28 @@ RTP 使用實際金額加權，而不是把不同 Bet 的局倍率直接平均�
 掉落只統計每個 Spin 的第 2 個以後盤面快照，不包含初始盤面。BG 共 {symbols['bg_drop']['screen_count']:,} 個掉落後盤面／{symbols['bg_drop']['cell_count']:,} 格；FG 共 {symbols['fg_drop']['screen_count']:,} 個掉落後盤面／{symbols['fg_drop']['cell_count']:,} 格。
 
 {symbol_table(symbols['bg_drop'], symbols['fg_drop'])}
+
+### 初始盤面堆疊分布
+
+堆疊定義為同一初始盤面、同一 Reel 內由上到下連續相同符號的最大 run；採 cell-weighted 口徑。例如 `A A A K J` 記為 3 個 Stack 3 cells 與 2 個 Stack 1 cells。競品 BG 使用 {stacks['bg']['screen_count']:,} 個初始盤面，競品 FG 使用 {stacks['fg']['screen_count']:,} 個初始盤面；H027 依 `config_92A.js` 的輪帶與起始權重枚舉初始盤面。以下各表均將競品與 H027 並列比較。
+
+#### BG R1-R6
+
+{stack_comparison_reel_table(stack_metrics, 'BG')}
+
+H027 BG 各 Reel／堆疊長度相對競品的最大絕對差為 {max_stack_reel_difference(stack_metrics, 'BG') * 100:.4f} pp。
+
+#### FG R1-R6
+
+{stack_comparison_reel_table(stack_metrics, 'FG')}
+
+H027 FG 各 Reel／堆疊長度相對競品的最大絕對差為 {max_stack_reel_difference(stack_metrics, 'FG') * 100:.4f} pp。
+
+#### 各符號堆疊率
+
+`Stack 2+` 表示該符號的 cells 位於長度至少 2 的連續 run；`Stack 3+` 同理。C1／C2 在競品樣本中沒有形成 2+ 堆疊，因此表中只列一般符號。
+
+{stack_comparison_symbol_table(stack_metrics)}
 
 ## 賠率
 
@@ -1225,11 +1346,13 @@ def main():
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--comparison", type=Path, default=DEFAULT_COMPARISON)
     parser.add_argument("--metrics", type=Path, default=DEFAULT_METRICS)
+    parser.add_argument("--stack-metrics", type=Path, default=DEFAULT_STACK_METRICS)
     parser.add_argument("--overview-template", type=Path, default=DEFAULT_OVERVIEW_TEMPLATE)
     parser.add_argument("--no-model-update", action="store_true")
     args = parser.parse_args()
 
     analysis = analyze(args.input.resolve())
+    stack_metrics = json.loads(args.stack_metrics.read_text(encoding="utf-8"))
     buy_analysis = analyze(args.buy_input.resolve()) if args.buy_input.exists() else None
     paytable_sources = [args.input.resolve()]
     if buy_analysis is not None:
@@ -1246,7 +1369,7 @@ def main():
         "multiplier_levels": COMPETITOR_MULTIPLIER_LEVELS + [2500] * (25 - len(COMPETITOR_MULTIPLIER_LEVELS)),
         "observed_multiplier_values": dry_run_observed_values,
         "use_c3_probability": 0.0,
-        "fg_phase_samples": [],
+        "fg_phase_samples": [analysis["basic"]["fg_spins"]],
         "buy_feature_trigger_samples": len(buy_analysis["_sessions"]) if buy_analysis else 0,
         "strip_fit": {},
         "scope": "dry run",
@@ -1260,7 +1383,7 @@ def main():
         encoding="utf-8",
     )
     args.report.write_text(
-        render_report(analysis, args.input.resolve(), paytable_sources),
+        render_report(analysis, args.input.resolve(), paytable_sources, stack_metrics),
         encoding="utf-8",
     )
     args.comparison.write_text(render_comparison(analysis, model_update), encoding="utf-8")

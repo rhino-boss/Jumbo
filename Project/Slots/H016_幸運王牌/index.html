@@ -2185,7 +2185,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92.js">H016192</option>
+            <option value="config_92.js">H0161</option>
             <option value="config_94.js">H016194</option>
           </select>
         </label>
@@ -3216,12 +3216,13 @@
     AG:"G5_Symbol.png", KG:"G6_Symbol.png", QG:"G7_Symbol.png", JG:"G8_Symbol.png"
   };
   const BASE_BET = 100;
+  const START_BALANCE = 10000 * BASE_BET;
   const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
   const MAX_RETRY = 20000;
   const DROP_SPEED_MULTIPLIER = 9;
   const tables = {};
   const state = {
-    balance: 10000, betIndex: 0, busy: false, auto: false, language: "zh",
+    balance: START_BALANCE, betIndex: 0, busy: false, auto: false, language: "zh",
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
     maxMultiplier: 1, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
     fg: {spins: [], index: 0, total: 0, mode: 0}
@@ -3263,7 +3264,7 @@
     return values.at(-1);
   }
 
-  function draw(tableName, reel) {
+  function drawIndex(tableName, reel) {
     const table = tables[tableName], cumulative = table.cumulative[reel];
     const target = Math.random() * cumulative.at(-1);
     let low = 0, high = cumulative.length - 1;
@@ -3272,14 +3273,24 @@
       if (target < cumulative[middle]) high = middle;
       else low = middle + 1;
     }
-    return Number(table.reels[reel][low]);
+    return low;
+  }
+
+  function draw(tableName, reel) {
+    const table = tables[tableName];
+    return Number(table.reels[reel][drawIndex(tableName, reel)]);
   }
 
   const cloneBoard = board => board.map(reel => reel.slice());
   const canonical = symbol => symbol >= 11 && symbol <= 18 ? symbol - 8 : symbol;
-  const makeBoard = table => Array.from({length: 5}, (_, reel) => Array.from({length: 4}, () => draw(table, reel)));
+  const makeBoard = tableName => Array.from({length: 5}, (_, reel) => {
+    const symbols = tables[tableName].reels[reel];
+    const stop = drawIndex(tableName, reel);
+    return Array.from({length: 4}, (_, row) => Number(symbols[(stop + row) % symbols.length]));
+  });
   const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
   const format = value => Number(value).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const money = credits => format(Number(credits) / BASE_BET);
 
   function evaluate(board) {
     let rawPay = 0;
@@ -3349,7 +3360,7 @@
       const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
       const cascadePay = win.rawPay * multiplier * BASE_BET * BET_LEVELS[state.betIndex];
       pay += cascadePay;
-      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, message: `WIN ${format(cascadePay)}`, details: win.details});
+      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, message: `WIN ${money(cascadePay)}`, details: win.details});
       const transitionBoard = cloneBoard(board), cleared = [], converted = [];
       combo++;
       for (const key of win.hits) {
@@ -3560,7 +3571,7 @@
 
   function updateStats() {
     const bet = BET_LEVELS[state.betIndex];
-    $("balanceValue").textContent = format(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = format(state.lastWin || 0);
+    $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
     $("roundCountValue").textContent = state.rounds.toLocaleString();
     $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
     $("hitRateValue").textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
@@ -3591,7 +3602,7 @@
     const item = state.fg.spins[state.fg.index]; if (!item) return;
     await animateSnapshots(item.snapshots, true); state.fg.index++;
     state.lastWin = item.pay; state.totalWin += item.pay; state.balance += item.pay; state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
-    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${format(item.pay)}` : "No Win"}`;
+    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
     if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = {spins:[],index:0,total:0,mode:0}; }
   }
 
@@ -3608,7 +3619,7 @@
         if (mode === 0) base = $("forceFgInput").checked ? cardSpin({type:"free_game"}) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
         else base = buyEntry();
         await animateSnapshots(base.snapshots, false); renderRngSource(base); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
-        $("messageBar").textContent = base.pay > 0 ? `WIN ${format(base.pay)}` : "No Win";
+        $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
         if (base.scatter >= 3 || mode !== 0) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
           activateFeature(cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode), mode);
@@ -3698,7 +3709,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:10000, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,mode:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,mode:0}});
     $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_low")); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
   }
   function buildBetMenu() {

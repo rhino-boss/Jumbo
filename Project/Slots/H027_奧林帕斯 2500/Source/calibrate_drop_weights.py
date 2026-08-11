@@ -64,6 +64,21 @@ def calibrate(config_path, input_path):
                 rebased_second.append(second_row)
             strip_by_name["BG_Symbol"]["drop_weights"] = rebased_first
             strip_by_name["BG_Symbol (2)"]["drop_weights"] = rebased_second
+        elif strip_name == "FG_Symbol" and "FG_Symbol (2)" in strip_by_name:
+            first = strip_by_name["FG_Symbol"].get("drop_weights", matrix)
+            second = strip_by_name["FG_Symbol (2)"].get("drop_weights", matrix)
+            rebased_first, rebased_second = [], []
+            for symbol_index, target_row in enumerate(matrix):
+                first_row, second_row = [], []
+                for reel, target in enumerate(target_row):
+                    delta = int(round((first[symbol_index][reel] - second[symbol_index][reel]) / 15))
+                    delta = max(-(target // 7), min(target // 8, delta))
+                    first_row.append(target + 7 * delta)
+                    second_row.append(target - 8 * delta)
+                rebased_first.append(first_row)
+                rebased_second.append(second_row)
+            strip_by_name["FG_Symbol"]["drop_weights"] = rebased_first
+            strip_by_name["FG_Symbol (2)"]["drop_weights"] = rebased_second
         else:
             strip_by_name[strip_name]["drop_weights"] = matrix
         totals = [sum(row[reel] for row in matrix) for reel in range(6)]

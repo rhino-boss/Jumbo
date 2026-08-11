@@ -65,6 +65,41 @@
     return "Oldhand";
   }
 
+  function parseFourPartVersion(value) {
+    const match = String(value || "").trim().match(/^(\d+)\.(\d+)(?:\.(\d+))?(?:\.(\d+))?$/);
+    if (!match) return null;
+    return [Number(match[1]), Number(match[2]), Number(match[3] || 0), Number(match[4] || 0)];
+  }
+
+  function compareVersionParts(left, right) {
+    for (let index = 0; index < 4; index += 1) {
+      if (left[index] !== right[index]) return left[index] - right[index];
+    }
+    return 0;
+  }
+
+  function filterVersionOptions() {
+    const select = document.getElementById("versionSelect");
+    if (!select) return;
+
+    const versionOptions = [...select.options]
+      .map((option) => ({ option, parts: parseFourPartVersion(option.value || option.textContent) }))
+      .filter((entry) => entry.parts);
+    const latestByModel = new Map();
+
+    for (const entry of versionOptions) {
+      entry.option.textContent = entry.parts.join(".");
+      const modelKey = `${entry.parts[0]}.${entry.parts[1]}`;
+      const current = latestByModel.get(modelKey);
+      if (!current || compareVersionParts(entry.parts, current.parts) > 0) latestByModel.set(modelKey, entry);
+    }
+
+    for (const entry of versionOptions) {
+      const modelKey = `${entry.parts[0]}.${entry.parts[1]}`;
+      if (latestByModel.get(modelKey) !== entry) entry.option.remove();
+    }
+  }
+
   function hasUsableCardEntries(value) {
     if (Array.isArray(value)) {
       return value.some((entry) => entry && typeof entry === "object" && Number(entry.weight) > 0
@@ -222,6 +257,7 @@
 
   ensureCardSystemToggle();
   ensureCombinedConfigAndVersion();
+  filterVersionOptions();
   syncNativeCardControl(document.getElementById("cardSystemInput")?.checked);
   normalizeStatsTitle();
 
@@ -300,7 +336,7 @@
     const config = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent?.trim()
       || document.getElementById("configSelect")?.selectedOptions?.[0]?.textContent?.trim()
       || "Current";
-    const version = document.getElementById("versionSelect")?.value || "Current";
+    const version = document.getElementById("versionSelect")?.selectedOptions?.[0]?.textContent?.trim() || "Current";
     const bet = document.getElementById("betValue")?.textContent?.trim() || "--";
     const cardSystem = document.getElementById("cardSystemInput")?.checked ? "On" : "Off";
     if (document.querySelector(".demogame-fallback-simulation")) {

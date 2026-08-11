@@ -44,7 +44,7 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": False, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -120,35 +120,10 @@ def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[
     if random_values != [0, 2, 3, 4] or len(random_values) != len(random_weights):
         raise ValueError(f"{ws.title}: Random Wild must define 0/2/3/4 and matching weights")
 
-    fill_symbols: list[list[int]] = [[] for _ in range(5)]
-    fill_weights: list[list[float]] = [[] for _ in range(5)]
-    for row in range(4, 13):
-        symbol_name = ws.cell(row, 32).value
-        if symbol_name in (None, ""):
-            continue
-        if str(symbol_name) not in name_to_id:
-            raise ValueError(f"{ws.title} AF{row}: unknown fill symbol {symbol_name!r}")
-        symbol_id = name_to_id[str(symbol_name)]
-        for reel in range(5):
-            fill_symbols[reel].append(symbol_id)
-            fill_weights[reel].append(_xlsx_number(ws.cell(row, 33 + reel).value, f"{ws.title} fill R{reel + 1}"))
-    if any(not symbols for symbols in fill_symbols):
-        fill_symbols = [reel[:] for reel in reels]
-        fill_weights = [[1.0] * len(reel) for reel in reels]
-
-    gold_overlay = [
-        _xlsx_number(ws.cell(4, 40 + reel).value or 0, f"{ws.title} gold overlay R{reel + 1}")
-        for reel in range(5)
-    ]
-    scatter_suppression = _xlsx_number(ws["AU3"].value or 0, f"{ws.title} scatter suppression")
     return {
         "reels": reels,
         "weights": weights,
-        "fill_symbols": fill_symbols,
-        "fill_weights": fill_weights,
         "random_wild": {"values": random_values, "weights": random_weights},
-        "gold_overlay": gold_overlay,
-        "scatter_suppression": scatter_suppression,
         "multipliers": multipliers,
     }
 
@@ -180,10 +155,7 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
     pays: dict[str, list[float]] = {}
     for row in range(32, 40):
         symbol_id = int(_xlsx_number(overview.cell(row, 8).value, f"Overview!H{row}"))
-        pays[str(symbol_id)] = [
-            _xlsx_number(overview.cell(row, col).value, f"Overview pay row {row}") / base_bet
-            for col in (5, 6, 7)
-        ]
+        pays[str(symbol_id)] = [_xlsx_number(overview.cell(row, col).value, f"Overview pay row {row}") / base_bet for col in (5, 6, 7)]
 
     bg_multipliers = [1, 2, 3, 5]
     fg_multipliers = [2, 4, 6, 10]
@@ -322,9 +294,6 @@ class Reel:
     symbols: list[int]
     stop_cumulative: list[float]
     stop_total: float
-    fill_symbols: list[int]
-    fill_cumulative: list[float]
-    fill_total: float
 
     @staticmethod
     def _index(rng: random.Random, cumulative: list[float], total: float) -> int:
@@ -335,8 +304,8 @@ class Reel:
         stop = self._index(rng, self.stop_cumulative, self.stop_total)
         return [self.symbols[(stop + offset) % len(self.symbols)] for offset in range(size)]
 
-    def pick_fill(self, rng: random.Random) -> int:
-        return self.fill_symbols[self._index(rng, self.fill_cumulative, self.fill_total)]
+    def pick(self, rng: random.Random) -> int:
+        return self.symbols[self._index(rng, self.stop_cumulative, self.stop_total)]
 
 
 @dataclass
@@ -344,8 +313,6 @@ class Table:
     reels: list[Reel]
     random_wild_values: list[int]
     random_wild_weights: list[float]
-    gold_overlay: list[float]
-    scatter_suppression: float
     multipliers: list[int]
 
 
@@ -413,58 +380,23 @@ class LuckyAce:
     @staticmethod
     def _prepare(raw: dict[str, Any]) -> Table:
         reels = []
-        fill_symbols = raw.get("fill_symbols") or raw["reels"]
-        fill_weights = raw.get("fill_weights") or [[1.0] * len(reel) for reel in raw["reels"]]
-        for symbols, weights, refill_symbols, refill_weights in zip(raw["reels"], raw["weights"], fill_symbols, fill_weights):
+        for symbols, weights in zip(raw["reels"], raw["weights"]):
             stop_cumulative, running = [], 0.0
             for weight in weights:
                 running += max(0.0, float(weight))
                 stop_cumulative.append(running)
-            fill_cumulative, fill_running = [], 0.0
-            for weight in refill_weights:
-                fill_running += max(0.0, float(weight))
-                fill_cumulative.append(fill_running)
-            reels.append(
-                Reel(
-                    list(map(int, symbols)),
-                    stop_cumulative,
-                    running,
-                    list(map(int, refill_symbols)),
-                    fill_cumulative,
-                    fill_running,
-                )
-            )
+            reels.append(Reel(list(map(int, symbols)), stop_cumulative, running))
         random_wild = raw["random_wild"]
         return Table(
             reels,
             list(map(int, random_wild["values"])),
             list(map(float, random_wild["weights"])),
-            list(map(float, raw.get("gold_overlay") or [0.0] * 5)),
-            float(raw.get("scatter_suppression", 0.0)),
             list(map(int, raw.get("multipliers") or [])),
         )
 
-    def overlay_gold(self, table: Table, reel: int, symbol: int) -> int:
-        if symbol not in SCORE_SYMBOLS or not (0.0 < table.gold_overlay[reel]):
-            return symbol
-        return symbol + 8 if self.rng.random() < table.gold_overlay[reel] else symbol
-
-    def suppress_second_scatter(self, table: Table, board: list[list[int]]) -> None:
-        scatter_positions = [(reel, row) for reel, symbols in enumerate(board) for row, symbol in enumerate(symbols) if symbol == C1]
-        candidates = [(reel, row) for reel, row in scatter_positions if reel > 0]
-        if len(scatter_positions) != 2 or not candidates or self.rng.random() >= table.scatter_suppression:
-            return
-        reel, row = self.rng.choice(candidates)
-        replacement = C1
-        while replacement == C1:
-            replacement = table.reels[reel].pick_fill(self.rng)
-        board[reel][row] = replacement
-
     def board(self, table_name: str) -> list[list[int]]:
         table = self.tables[table_name]
-        board = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
-        self.suppress_second_scatter(table, board)
-        return [[self.overlay_gold(table, reel, symbol) for symbol in symbols] for reel, symbols in enumerate(board)]
+        return [table.reels[reel].window(self.rng, 4) for reel in range(5)]
 
     def evaluate(self, board: list[list[int]]) -> tuple[float, set[tuple[int, int]], list[tuple[int, int, float]]]:
         total, hits, details = 0.0, set(), []
@@ -540,10 +472,7 @@ class LuckyAce:
                     board[reel][row] = -1
             for reel in range(5):
                 remaining = [symbol for symbol in board[reel] if symbol != -1]
-                dropped = [
-                    self.overlay_gold(table, reel, table.reels[reel].pick_fill(self.rng))
-                    for _ in range(4 - len(remaining))
-                ]
+                dropped = [table.reels[reel].pick(self.rng) for _ in range(4 - len(remaining))]
                 result.drop_symbols.update((reel, symbol) for symbol in dropped)
                 result.m1_present |= any(canonical(symbol) == 3 for symbol in dropped)
                 board[reel] = remaining + dropped
@@ -782,8 +711,15 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
 
 def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
     counter_fields = {
-        "combo_bg", "combo_fg", "buckets", "symbol_hits", "symbol_pay",
-        "bg_initial_symbols", "bg_drop_symbols", "fg_initial_symbols", "fg_drop_symbols",
+        "combo_bg",
+        "combo_fg",
+        "buckets",
+        "symbol_hits",
+        "symbol_pay",
+        "bg_initial_symbols",
+        "bg_drop_symbols",
+        "fg_initial_symbols",
+        "fg_drop_symbols",
     }
     for key, value in source.items():
         if key in counter_fields:

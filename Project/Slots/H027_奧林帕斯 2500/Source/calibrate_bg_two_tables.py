@@ -31,7 +31,7 @@ DEFAULT_CONFIG = ROOT / "config_92A.js"
 DEFAULT_INPUT = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"
 BG_NAMES = ("BG_Symbol", "BG_Symbol (2)")
-FG_NAME = "FG_Symbol"
+FG_NAMES = ("FG_Symbol", "FG_Symbol (2)")
 SPECIAL_CODES = {"C1", "C2", "C3"}
 TARGET_BG = np.asarray(
     [62.5247524752, 18.2673267327, 11.0891089109, 4.9009900990,
@@ -203,7 +203,7 @@ def build_candidate(
     strips = copy.deepcopy(result["strips"])
     by_name = dict(zip(names, strips))
     base = copy.deepcopy(by_name[BG_NAMES[0]])
-    fg = copy.deepcopy(by_name[FG_NAME])
+    fg = [copy.deepcopy(by_name[name]) for name in FG_NAMES]
 
     symbol_ids = list(result["symbol_ids"])
     code_by_id = dict(zip(result["symbol_ids"], result["symbol_codes"]))
@@ -252,8 +252,8 @@ def build_candidate(
     first["drop_weights"] = first_drop.tolist()
     second["drop_weights"] = second_drop.tolist()
 
-    result["strip_names"] = [BG_NAMES[0], BG_NAMES[1], FG_NAME]
-    result["strips"] = [first, second, fg]
+    result["strip_names"] = [*BG_NAMES, *FG_NAMES]
+    result["strips"] = [first, second, *fg]
     for profile_name in ("normal", "featurebuy"):
         profile = result["parameter"][profile_name]
         ensure_table_parameter(profile["c2"], BG_NAMES[0], BG_NAMES[1])
@@ -378,6 +378,9 @@ def main() -> None:
             )
         assert best is not None
         _, initial_strength, drop_strength, candidate, _, _, group_ids = best
+        if args.write:
+            from calibrate_stack_arrangement import calibrate as calibrate_stacks
+            candidate, _ = calibrate_stacks(candidate, args.input.resolve())
         verified = evaluate(candidate, args.verify_rounds, temp_path)
         verified_distribution = conditional_distribution(verified["cascade"])
         codes = dict(zip(original["symbol_ids"], original["symbol_codes"]))
