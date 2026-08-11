@@ -358,6 +358,7 @@ class SpinResult:
     golden_converted: int = 0
     w2_events: int = 0
     m1_present: bool = False
+    initial_gold_count: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     initial_symbols: Counter = field(default_factory=Counter)
@@ -382,6 +383,12 @@ class RoundResult:
     fg_w2_events: int = 0
     bg_m1_spins: int = 0
     fg_m1_spins: int = 0
+    bg_hit_spins: int = 0
+    fg_hit_spins: int = 0
+    bg_gold_spins: int = 0
+    fg_gold_spins: int = 0
+    bg_gold_symbols: int = 0
+    fg_gold_symbols: int = 0
     combo_fg: Counter = field(default_factory=Counter)
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
@@ -503,6 +510,7 @@ class LuckyAce:
         result = SpinResult(initial_board=[reel[:] for reel in board])
         result.initial_symbols.update((reel, symbol) for reel, symbols in enumerate(board) for symbol in symbols)
         result.m1_present = any(canonical(symbol) == 3 for symbols in board for symbol in symbols)
+        result.initial_gold_count = sum(GOLD_MIN <= symbol <= GOLD_MAX for symbols in board for symbol in symbols)
         pending_gold: list[tuple[int, int]] = []
         bg_w2_used = False
         while True:
@@ -598,6 +606,9 @@ class LuckyAce:
             result.w2_events += spin.w2_events
             result.fg_w2_events += spin.w2_events
             result.fg_m1_spins += int(spin.m1_present)
+            result.fg_hit_spins += int(spin.pay > 0)
+            result.fg_gold_spins += int(spin.initial_gold_count > 0)
+            result.fg_gold_symbols += spin.initial_gold_count
             result.combo_fg[min(spin.cascades, 5)] += 1
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
@@ -635,6 +646,12 @@ class LuckyAce:
         target.fg_w2_events += source.fg_w2_events
         target.bg_m1_spins += source.bg_m1_spins
         target.fg_m1_spins += source.fg_m1_spins
+        target.bg_hit_spins += source.bg_hit_spins
+        target.fg_hit_spins += source.fg_hit_spins
+        target.bg_gold_spins += source.bg_gold_spins
+        target.fg_gold_spins += source.fg_gold_spins
+        target.bg_gold_symbols += source.bg_gold_symbols
+        target.fg_gold_symbols += source.fg_gold_symbols
         target.combo_fg.update(source.combo_fg)
         target.symbol_hits.update(source.symbol_hits)
         target.symbol_pay.update(source.symbol_pay)
@@ -659,6 +676,9 @@ class LuckyAce:
         result.w2_events = spin.w2_events
         result.bg_w2_events = spin.w2_events
         result.bg_m1_spins = int(spin.m1_present)
+        result.bg_hit_spins = int(spin.pay > 0)
+        result.bg_gold_spins = int(spin.initial_gold_count > 0)
+        result.bg_gold_symbols = spin.initial_gold_count
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
         result.bg_initial_symbols.update(spin.initial_symbols)
@@ -693,6 +713,12 @@ def _empty_stats() -> dict[str, Any]:
         "fg_w2_events": 0,
         "bg_m1_spins": 0,
         "fg_m1_spins": 0,
+        "bg_hit_spins": 0,
+        "fg_hit_spins": 0,
+        "bg_gold_spins": 0,
+        "fg_gold_spins": 0,
+        "bg_gold_symbols": 0,
+        "fg_gold_symbols": 0,
         "max_multiplier": 1,
         "win_x_sum": 0.0,
         "win_x_square": 0.0,
@@ -732,6 +758,12 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         stats["fg_w2_events"] += result.fg_w2_events
         stats["bg_m1_spins"] += result.bg_m1_spins
         stats["fg_m1_spins"] += result.fg_m1_spins
+        stats["bg_hit_spins"] += result.bg_hit_spins
+        stats["fg_hit_spins"] += result.fg_hit_spins
+        stats["bg_gold_spins"] += result.bg_gold_spins
+        stats["fg_gold_spins"] += result.fg_gold_spins
+        stats["bg_gold_symbols"] += result.bg_gold_symbols
+        stats["fg_gold_symbols"] += result.fg_gold_symbols
         stats["max_multiplier"] = max(stats["max_multiplier"], result.max_multiplier)
         stats["win_x_sum"] += ratio
         stats["win_x_square"] += ratio * ratio
@@ -823,6 +855,8 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("volatility_std", math.sqrt(variance)),
         ("standard_error", math.sqrt(variance) / math.sqrt(rounds)),
         ("hit_rate", s["hit_rounds"] / rounds),
+        ("bg_hit_rate", s["bg_hit_spins"] / rounds),
+        ("fg_hit_rate", s["fg_hit_spins"] / max(1, s["fg_spins"])),
         ("fg_trigger_rate", s["fg_triggers"] / rounds),
         ("fg_trigger_cycle", rounds / s["fg_triggers"] if s["fg_triggers"] else math.inf),
         ("avg_fg_spins", s["fg_spins"] / s["fg_triggers"] if s["fg_triggers"] else 0),
@@ -835,6 +869,10 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("w2_fg_event_rate", s["fg_w2_events"] / max(1, s["fg_spins"])),
         ("m1_bg_spin_rate", s["bg_m1_spins"] / rounds),
         ("m1_fg_spin_rate", s["fg_m1_spins"] / max(1, s["fg_spins"])),
+        ("bg_gold_spin_rate", s["bg_gold_spins"] / rounds),
+        ("fg_gold_spin_rate", s["fg_gold_spins"] / max(1, s["fg_spins"])),
+        ("avg_bg_gold_symbols", s["bg_gold_symbols"] / rounds),
+        ("avg_fg_gold_symbols", s["fg_gold_symbols"] / max(1, s["fg_spins"])),
         ("max_win_multiplier", s["max_multiplier"]),
         ("rounds_per_second", rounds / max(result["duration"], 1e-9)),
     ]

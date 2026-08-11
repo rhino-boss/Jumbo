@@ -27,19 +27,13 @@ def cell_value(value: Any) -> Any:
 
 def sheet_fingerprint(worksheet) -> str:
     payload_object = {
-        "cells": [
-            [(cell.coordinate, cell_value(cell.value), cell.number_format) for cell in row]
+        "populated_cells": [
+            (cell.coordinate, cell_value(cell.value), cell.number_format)
             for row in worksheet.iter_rows()
+            for cell in row
+            if cell.value is not None
         ],
         "merged": sorted(str(item) for item in worksheet.merged_cells.ranges),
-        "row_dimensions": {
-            str(index): (dimension.height, dimension.hidden, dimension.outlineLevel)
-            for index, dimension in worksheet.row_dimensions.items()
-        },
-        "column_dimensions": {
-            str(index): (dimension.width, dimension.hidden, dimension.outlineLevel)
-            for index, dimension in worksheet.column_dimensions.items()
-        },
     }
     payload = json.dumps(payload_object, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
