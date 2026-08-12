@@ -1,0 +1,627 @@
+{
+ "ext_name": {
+  "message": "Protection de navigation par WithSecure"
+ },
+ "ext_name_alpha": {
+  "message": "Protection de navigation par WithSecure (alpha)"
+ },
+ "ext_name_beta": {
+  "message": "Protection de navigation par WithSecure (bêta)"
+ },
+ "ext_name_short": {
+  "message": "Navigation sécuritaire"
+ },
+ "ext_description": {
+  "message": "Extension pour la protection de la navigation cryptée avec les produits de sécurité par WithSecure."
+ },
+ "search_rating_safe": {
+  "message": "Ce site Web est sécuritaire, profitez de votre navigation!"
+ },
+ "search_rating_safe_p1": {
+  "message": "Ce site Web est sécuritaire"
+ },
+ "search_rating_safe_p2": {
+  "message": "Profitez de votre navigation"
+ },
+ "search_rating_harmful_p1": {
+  "message": "Ce site Web est coté comme non sécuritaire"
+ },
+ "search_rating_harmful": {
+  "message": "Ce site Web est coté comme non sécuritaire, vous ne devriez pas y naviguer."
+ },
+ "search_rating_harmful_p2": {
+  "message": "Vous ne devriez pas naviguer ici"
+ },
+ "search_rating_unknown": {
+  "message": "Ce site n'a pas encore été analysé"
+ },
+ "search_rating_suspicious_p1": {
+  "message": "Ce site est suspect"
+ },
+ "search_rating_suspicious": {
+  "message": "Ce site est suspect."
+ },
+ "search_rating_suspicious_p2": {
+  "message": "Soyez prudent pendant votre navigation"
+ },
+ "search_rating_shopping_suspicious": {
+  "message": "Ce site Web pourrait être suspect"
+ },
+ "search_rating_shopping_warn": {
+  "message": "Ce site Web n'est pas dans les meilleures cotes"
+ },
+ "search_rating_restricted": {
+  "message": "Ce site affiche du contenu restreint"
+ },
+ "search_rating_allowed": {
+  "message": "Ce site est autorisé par un administrateur"
+ },
+ "search_rating_denied": {
+  "message": "Ce site est rejeté par un administrateur"
+ },
+ "search_rating_banking": {
+  "message": "Ce site est bloqué temporairement"
+ },
+ "search_rating_isbank": {
+  "message": "C'est un site bancaire en ligne fiable."
+ },
+ "search_rating_category_status": {
+  "message": "Ce site Web est restreint par les Règles de la famille"
+ },
+ "search_rating_category_adult": {
+  "message": "Adulte"
+ },
+ "search_rating_category_alcohol_and_tobacco": {
+  "message": "Alcool et tabac"
+ },
+ "search_rating_category_anonymizers": {
+  "message": "Banaliseurs"
+ },
+ "search_rating_category_artificial_intelligence": {
+  "message": "Intelligence artificielle"
+ },
+ "search_rating_category_dating": {
+  "message": "Rencontres"
+ },
+ "search_rating_category_disturbing": {
+  "message": "Troublant"
+ },
+ "search_rating_category_drugs": {
+  "message": "Drogues"
+ },
+ "search_rating_category_gambling": {
+  "message": "Jeux d'argent"
+ },
+ "search_rating_category_hate": {
+  "message": "Haine"
+ },
+ "search_rating_category_illegal": {
+  "message": "Illégal"
+ },
+ "search_rating_category_shopping_and_auctions": {
+  "message": "Magasinage et encans"
+ },
+ "search_rating_category_social_networks": {
+  "message": "Réseaux sociaux"
+ },
+ "search_rating_category_streaming_media": {
+  "message": "Vidéo continue"
+ },
+ "search_rating_category_unknown": {
+  "message": "Inconnu"
+ },
+ "search_rating_category_illegal_downloads": {
+  "message": "Téléchargements illégaux"
+ },
+ "search_rating_category_weapons": {
+  "message": "Armes"
+ },
+ "search_rating_category_violence": {
+  "message": "Violence"
+ },
+ "search_rating_loading": {
+  "message": "En cours de chargement..."
+ },
+ "error_ca_text_p1": {
+  "message": "Ne peut pas se connecter à l'application"
+ },
+ "error_ca_text_p2": {
+  "message": "Vérifiez votre configuration"
+ },
+ "popup_status_ok": {
+  "message": "Votre navigateur est protégé"
+ },
+ "popup_status_init": {
+  "message": "Initialisation..."
+ },
+ "ext_onboarding_description": {
+  "message": "Accepter les autorisations?"
+ },
+ "ext_onboarding_description_consent_warn_descr": {
+  "message": "L'entreprise qui gère cet appareil, ou l'administrateur de votre entreprise a choisi de protéger cet ordinateur avec des produits de sécurité de WithSecure. La configuration applique la protection des utilisateurs de l'ordinateur contre les sites Web malicieux. Afin de fournir la fonctionnalité de base de la protection de navigation par WithSecure, c'est-à-dire empêcher les sites Web malicieux de causer des dommages, nous avons besoin de votre consentement pour collecter et traiter les données. Sinon, vous ne pourrez pas utiliser l'extension. <br>En autorisant la protection de navigation par WithSecure, vous acceptez que les adresses de sites Web que vous visitez soit transférées dans les produits de sécurité de WithSecure afin de vérifier leur cote et leur catégorie. Les adresses (URLs) sont banalisées et gérées par notre infonuagique de sécurité WithSecure conformément à notre <a id='open-privacy-policy' href='#'>$PRIVACY_POLICY$</a>.",
+  "placeholders": {
+   "EXTENSION_NAME": {
+    "content": "$1"
+   },
+   "PRIVACY_POLICY": {
+    "content": "$2"
+   }
+  }
+ },
+ "ext_onboarding_description_consent_warn_title": {
+  "message": "Un consentement est requis pour protéger votre navigation"
+ },
+ "ext_onboarding_privacy_policy_link": {
+  "message": "Politique de confidentialité"
+ },
+ "ext_onboarding_acccept": {
+  "message": "Accepter"
+ },
+ "ext_onboarding_allow": {
+  "message": "Autoriser"
+ },
+ "ext_onboarding_decline": {
+  "message": "Refuser et supprimer l'extension"
+ },
+ "ext_onboarding_complete_message": {
+  "message": "L'installation de l'extension est terminée, la page va maintenant se fermer."
+ },
+ "ext_onboarding_fail_message": {
+  "message": "L'installation de l'extension a été annulée, l'extension sera désinstallée maintenant."
+ },
+ "ext_open_consent": {
+  "message": "Ouvrir"
+ },
+ "ext_show_consent_msg": {
+  "message": "Veuillez visiter la page de consentement."
+ },
+ "page_blocked": {
+  "message": "Site Web refusé"
+ },
+ "page_not_available": {
+  "message": "La cote d'évaluation n'est pas disponible"
+ },
+ "page_wrong_rating_1": {
+  "message": "Pensez-vous que ce site Web a une cote inexacte?"
+ },
+ "page_wrong_rating_2": {
+  "message": "Aidez-nous en nous envoyant un rapport."
+ },
+ "page_report": {
+  "message": "Rapport"
+ },
+ "page_report_ext": {
+  "message": "Signalez cette page"
+ },
+ "page_next": {
+  "message": "Suivant"
+ },
+ "page_cancel": {
+  "message": "Annuler"
+ },
+ "page_back": {
+  "message": "Retour"
+ },
+ "page_safe": {
+  "message": "Sécuritaire"
+ },
+ "page_unsafe": {
+  "message": "Non sécuritaire"
+ },
+ "page_harmful": {
+  "message": "Malveillant"
+ },
+ "page_banking": {
+  "message": "Activité bancaire"
+ },
+ "page_suspicious": {
+  "message": "Suspect"
+ },
+ "page_wrong_cat_1": {
+  "message": "Autre catégorie"
+ },
+ "page_wrong_cat_2": {
+  "message": "Autre catégorie"
+ },
+ "page_prohibited": {
+  "message": "Site Web interdit"
+ },
+ "page_suggest_rating": {
+  "message": "Suggérer une nouvelle cote"
+ },
+ "page_suggest_category": {
+  "message": "Choisir une catégorie"
+ },
+ "page_success_p1": {
+  "message": "Nous vous remercions! Nous analyserons le rapport et ajusterons bientôt la cote pour ce site Web."
+ },
+ "page_suspicious_p1": {
+  "message": "Décrivez la raison pour laquelle cette page semble suspecte"
+ },
+ "page_report_harmful": {
+  "message": "Signalez-la comme malveillante."
+ },
+ "page_report_safe": {
+  "message": "Signalez-la comme sécuritaire."
+ },
+ "page_report_banking": {
+  "message": "Signalez-la comme un domaine bancaire."
+ },
+ "page_report_suspicious": {
+  "message": "Signalez-la comme suspecte."
+ },
+ "popup_error_header": {
+  "message": "Application de sécurité introuvable"
+ },
+ "popup_error_description": {
+  "message": "Votre application a été désinstallée ou votre version n'est pas compatible. Installez la version la plus récente de l'application et réessayez."
+ },
+ "banking_blocked_description": {
+  "message": "Pour protéger vos transactions, '$PRODUCT_NAME$' a bloqué ce site Web pendant votre session de protection bancaire.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "banking_blocked_status": {
+  "message": "Bloqué par la protection bancaire"
+ },
+ "blockpage_blocked": {
+  "message": "Site Web refusé"
+ },
+ "blockpage_banking_title": {
+  "message": "Protection bancaire"
+ },
+ "blockpage_banking_heading": {
+  "message": "La protection bancaire est activée"
+ },
+ "blockpage_banking_description": {
+  "message": "Pour protéger vos transactions, $PRODUCT_NAME$ a bloqué ce site Web pendant la session bancaire.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_banking_detail": {
+  "message": "Autorisez le site Web si vous avez besoin d'y accéder pour terminer votre transaction. Terminez la session de protection bancaire lorsque votre transaction est complète."
+ },
+ "blockpage_banking_allow": {
+  "message": "Autoriser le site Web"
+ },
+ "blockpage_denied_title": {
+  "message": "Site Web bloqué"
+ },
+ "blockpage_denied_heading": {
+  "message": "Site Web bloqué"
+ },
+ "blockpage_denied_description": {
+  "message": "Le gestionnaire du compte $PRODUCT_NAME$ a bloqué l'accès à ce site Web. Son autorisation est requise pour continuer.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_denied_allow": {
+  "message": "Autoriser le site Web sur cet ordinateur"
+ },
+ "blockpage_harmful_title": {
+  "message": "Site Web malveillant bloqué"
+ },
+ "blockpage_harmful_heading": {
+  "message": "Vous ne devriez pas naviguer ici"
+ },
+ "blockpage_harmful_description": {
+  "message": "$PRODUCT_NAME$ a répertorié ce site Web comme malveillant. Nous recommandons de ne pas y entrer.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_harmful_allow": {
+  "message": "Autoriser le site Web sur cet ordinateur"
+ },
+ "blockpage_harmful_report_note": {
+  "message": "Vous ne pensez pas que c'est malveillant?"
+ },
+ "blockpage_harmful_report": {
+  "message": "Signalez un faux positif ici"
+ },
+ "blockpage_illegal_title": {
+  "message": "Site Web interdit bloqué"
+ },
+ "blockpage_illegal_heading": {
+  "message": "Site Web interdit"
+ },
+ "blockpage_illegal_description": {
+  "message": "$PRODUCT_NAME$ a signalé que ce site Web contient du contenu interdit. Nous recommandons vivement de ne pas y accéder.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_illegal_allow": {
+  "message": "Accéder malgré tout"
+ },
+ "blockpage_illegal_report_note": {
+  "message": "Vous ne pensez pas que c'est malveillant?"
+ },
+ "blockpage_illegal_report": {
+  "message": "Signalez un faux positif ici"
+ },
+ "blockpage_parental_title": {
+  "message": "Site Web bloqué"
+ },
+ "blockpage_parental_heading": {
+  "message": "Site Web bloqué"
+ },
+ "blockpage_parental_description": {
+  "message": "$PRODUCT_NAME$ a bloqué ce contenu, car il est dans une catégorie restreinte : ",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_parental_allow": {
+  "message": "Autoriser le site Web sur cet ordinateur"
+ },
+ "blockpage_parental_report": {
+  "message": "Signalez un site Web faux positif"
+ },
+ "blockpage_suspicious_title": {
+  "message": "Site Web suspect bloqué"
+ },
+ "blockpage_suspicious_heading": {
+  "message": "Vous ne devriez pas naviguer ici"
+ },
+ "blockpage_suspicious_description": {
+  "message": "$PRODUCT_NAME$ a répertorié ce site Web comme suspect. Nous recommandons de ne pas y entrer.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_suspicious_allow": {
+  "message": "Accéder malgré tout"
+ },
+ "blockpage_suspicious_report_note": {
+  "message": "Vous ne pensez pas que c'est malveillant?"
+ },
+ "blockpage_suspicious_report": {
+  "message": "Signalez un faux positif ici"
+ },
+ "blockpage_newly_registered_title": {
+  "message": "Le site Web récemment enregistré est bloqué"
+ },
+ "blockpage_newly_registered_heading": {
+  "message": "Site récemment enregistré et non vérifié bloqué"
+ },
+ "blockpage_newly_registered_description": {
+  "message": "$PRODUCT_NAME$ a bloqué ce site web en raison de son inscription récente. Nous vous recommandons de l'éviter jusqu'à ce que sa légitimité soit vérifiée.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_newly_registered_domain_registered_at": {
+  "message": "Le domaine du site Web a été enregistré le : "
+ },
+ "blockpage_newly_registered_allow": {
+  "message": "Continuer malgré tout"
+ },
+ "blockpage_newly_registered_report_note": {
+  "message": "Vous ne pensez pas que c'est malveillant?"
+ },
+ "blockpage_newly_registered_report": {
+  "message": "Signalez un faux positif ici"
+ },
+ "blockpage_child_title": {
+  "message": "Site Web refusé"
+ },
+ "blockpage_child_heading": {
+  "message": "Site Web refusé"
+ },
+ "blockpage_child_description": {
+  "message": "Tu as seulement accès à ces sites Web :"
+ },
+ "blockpage_child_empty_list_description": {
+  "message": "Aucun site Web autorisé pour le moment."
+ },
+ "blockpage_child_allow": {
+  "message": "Autoriser l'accès à ce site Web"
+ },
+ "blockpage_child_note": {
+  "message": "Vous pouvez également modifier"
+ },
+ "blockpage_child_note_link": {
+  "message": "sites Web autorisés et rejetés"
+ },
+ "blockpage_trusted_shopping_title": {
+  "message": "Vous ne devriez pas naviguer ici"
+ },
+ "blockpage_trusted_shopping_description": {
+  "message": "Ce site Web présente plusieurs signaux d'alarme. C'est probablement un site d'arnaque!"
+ },
+ "category_abortion": {
+  "message": "Avortement"
+ },
+ "category_adserving": {
+  "message": "Adserving"
+ },
+ "category_adult": {
+  "message": "Adulte"
+ },
+ "category_alcohol_and_tobacco": {
+  "message": "Alcool et tabac"
+ },
+ "category_artificial_intelligence": {
+  "message": "Intelligence artificielle"
+ },
+ "category_anonymizers": {
+  "message": "Banaliseurs"
+ },
+ "category_auctions": {
+  "message": "Encans"
+ },
+ "category_banking": {
+  "message": "Activité bancaire"
+ },
+ "category_blogs": {
+  "message": "Blogues"
+ },
+ "category_chat": {
+  "message": "Clavardage"
+ },
+ "category_dating": {
+  "message": "Rencontres"
+ },
+ "category_disturbing": {
+  "message": "Troublant"
+ },
+ "category_drugs": {
+  "message": "Drogues"
+ },
+ "category_entertainment": {
+  "message": "Divertissement"
+ },
+ "category_file_sharing": {
+  "message": "Partage de fichiers"
+ },
+ "category_forums": {
+  "message": "Forums"
+ },
+ "category_gambling": {
+  "message": "Jeux d'argent"
+ },
+ "category_games": {
+  "message": "Jeux"
+ },
+ "category_hacking": {
+  "message": "Piratage"
+ },
+ "category_hate": {
+  "message": "Haine"
+ },
+ "category_illegal": {
+  "message": "Illégal"
+ },
+ "category_job_search": {
+  "message": "Recherche d'emploi"
+ },
+ "category_payment_services": {
+  "message": "Services de paiement"
+ },
+ "category_scam": {
+  "message": "Arnaque"
+ },
+ "category_search_engines": {
+  "message": "Moteurs de recherche"
+ },
+ "category_shopping": {
+  "message": "Magasinage"
+ },
+ "category_shopping_and_auctions": {
+  "message": "Magasinage et encans"
+ },
+ "category_social_networks": {
+  "message": "Réseaux sociaux"
+ },
+ "category_software_downloads": {
+  "message": "Téléchargements de logiciel"
+ },
+ "category_spam": {
+  "message": "Courrier indésirable"
+ },
+ "category_streaming_media": {
+  "message": "Vidéo continue"
+ },
+ "category_travel": {
+  "message": "Voyage"
+ },
+ "category_unknown": {
+  "message": "Inconnu"
+ },
+ "category_violence": {
+  "message": "Violence"
+ },
+ "category_illegal_downloads": {
+  "message": "Téléchargements illégaux"
+ },
+ "category_weapons": {
+  "message": "Armes"
+ },
+ "category_webmail": {
+  "message": "Courrier Web"
+ },
+ "banking_blocked_description_ws": {
+  "message": "Pour protéger vos transactions, $PRODUCT_NAME$ a bloqué ce site Web pendant votre section de contrôle de la connexion.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "banking_blocked_status_ws": {
+  "message": "Bloqué par le contrôle de la connexion"
+ },
+ "blockpage_blocked_ws": {
+  "message": "Site Web refusé"
+ },
+ "blockpage_banking_title_ws": {
+  "message": "Contrôle de la connexion"
+ },
+ "blockpage_banking_heading_ws": {
+  "message": "Le contrôle de la connexion est actif"
+ },
+ "blockpage_banking_description_ws": {
+  "message": "Pour protéger vos transactions, $PRODUCT_NAME$ a bloqué ce site Web pendant le contrôle de la connexion.",
+  "placeholders": {
+   "PRODUCT_NAME": {
+    "content": "$1"
+   }
+  }
+ },
+ "blockpage_banking_detail_ws": {
+  "message": "Autorisez le site Web si vous avez besoin d'y accéder pour terminer votre transaction. Terminez le contrôle de la connexion lorsque votre transaction est complète."
+ },
+ "search_rating_category_status_ws": {
+  "message": "Ce site Web est restreint par Web Content Control"
+ },
+ "page_wrong_category_ws": {
+  "message": "Autre catégorie"
+ },
+ "close_btn": {
+  "message": "Fermer"
+ },
+ "trusted_shopping_suspicious_p1": {
+  "message": "Vous avez ouvert un site Web de magasinage qui pourrait être suspect."
+ },
+ "trusted_shopping_suspicious_p2": {
+  "message": "La prudence est de rigueur lorsque vous magasinez sur ce site."
+ },
+ "trusted_shopping_warning_p1": {
+  "message": "Vous avez ouvert un site de magasinage qui n'est pas dans les meilleures cotes."
+ },
+ "trusted_shopping_safe_p1": {
+  "message": "Vous avez ouvert un site de magasinage sécuritaire."
+ },
+ "trusted_shopping_safe_p2": {
+  "message": "Ce site Web de magasinage est très bien coté et fiable, profitez de votre session de magasinage!"
+ },
+ "trusted_shopping_unknown_p1": {
+  "message": "Ce site Web n'a pas encore été analysé."
+ },
+ "trusted_shopping_unknown_p2": {
+  "message": "La prudence est de rigueur lorsque vous magasinez sur ce site."
+ },
+ "trusted_shopping_review": {
+  "message": "Sur la base de nombreuses revues et de notes de sécurité"
+ }
+}

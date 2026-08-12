@@ -66,20 +66,26 @@ def cyclic_run_gaps(sequence: list[int]) -> list[tuple[int, int, int]]:
     return [tuple(run) for run in runs]
 
 
-def validate_sequence(sequence: list[int], min_separate_gap: int = 5) -> None:
+def validate_sequence(
+    sequence: list[int], min_separate_gap: int = 4,
+    symbol_min_gaps: dict[int, int] | None = None,
+) -> None:
+    symbol_min_gaps = symbol_min_gaps or {}
     violations = [
         (symbol, run_length, gap)
         for symbol, run_length, gap in cyclic_run_gaps(sequence)
-        if run_length > 3 or gap < min_separate_gap
+        if run_length > 3 or gap < symbol_min_gaps.get(symbol, min_separate_gap)
     ]
     if violations:
         raise ValueError(f"Invalid cyclic run arrangement: {violations[:5]}")
 
 
 def arrange_runs(
-    runs_by_symbol: dict[int, list[int]], seed: int, min_separate_gap: int = 5,
+    runs_by_symbol: dict[int, list[int]], seed: int, min_separate_gap: int = 4,
+    symbol_min_gaps: dict[int, int] | None = None,
 ) -> list[int]:
-    """Arrange max-three runs with a five-cell cyclic gap between equal runs."""
+    """Keep equal runs five positions apart (at least four cells between them)."""
+    symbol_min_gaps = symbol_min_gaps or {}
     source_chunks = [
         (symbol, length)
         for symbol, lengths in runs_by_symbol.items()
@@ -95,15 +101,16 @@ def arrange_runs(
         for index, (symbol, _) in enumerate(chunks):
             positions[symbol].append(index)
         score = 0
-        for indexes in positions.values():
+        for symbol, indexes in positions.items():
+            required_gap = symbol_min_gaps.get(symbol, min_separate_gap)
             for offset, left in enumerate(indexes):
                 right = indexes[(offset + 1) % len(indexes)]
                 if right > left:
                     gap = prefix[right] - prefix[left + 1]
                 else:
                     gap = total_length - (prefix[left + 1] - prefix[right])
-                if gap < min_separate_gap:
-                    score += 10_000 if gap == 0 else (min_separate_gap - gap) ** 2
+                if gap < required_gap:
+                    score += 10_000 if gap == 0 else (required_gap - gap) ** 2
         return score
 
     best = None
@@ -127,7 +134,7 @@ def arrange_runs(
         for iteration in range(25_000):
             if score == 0:
                 sequence = [symbol for symbol, length in chunks for _ in range(length)]
-                validate_sequence(sequence, min_separate_gap)
+                validate_sequence(sequence, min_separate_gap, symbol_min_gaps)
                 return sequence
             if best is None or score < best[0]:
                 best = (score, list(chunks))
@@ -234,7 +241,15 @@ def search_reel(
             runs_by_table[table_index][symbol_id] = runs
 
     sequences = [
-        arrange_runs(runs, seed + table_index * 100_003)
+        arrange_runs(
+            runs,
+            seed + table_index * 100_003,
+            symbol_min_gaps={
+                symbol_id: 5
+                for symbol_id, code in code_by_id.items()
+                if code == "C1"
+            },
+        )
         for table_index, runs in enumerate(runs_by_table)
     ]
     aggregate = np.zeros(5, dtype=np.float64)

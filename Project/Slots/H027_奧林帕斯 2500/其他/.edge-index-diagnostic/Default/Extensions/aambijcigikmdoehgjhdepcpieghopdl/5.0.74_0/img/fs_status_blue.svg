@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 56.3 (81716) - https://sketch.com -->
+    <title>icons/status/ic_ok_filled_small</title>
+    <desc>Created with Sketch.</desc>
+    <g id="icons/status/ic_ok_filled_small" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M23,12 C23,18.0754737 18.0748947,23 12,23 C5.92510526,23 1,18.0754737 1,12 C1,5.92452632 5.92510526,1 12,1 C18.0748947,1 23,5.92452632 23,12 Z" id="circle" fill="#00BAFF"></path>
+        <path d="M6.70263234,11.4192054 C6.30965236,11.0311524 5.67649998,11.0351464 5.28844692,11.4281264 C4.90039386,11.8211064 4.90438792,12.4542588 5.29736791,12.8423119 L9.21573525,16.7115533 C9.60555552,17.0964862 10.2325301,17.0961 10.6218758,16.7106871 L18.7035085,8.71068708 C19.0960101,8.32215015 19.0992241,7.68899333 18.7106871,7.29649174 C18.3221502,6.90399015 17.6889934,6.90077615 17.2964918,7.28931308 L9.91750121,14.5937684 L6.70263234,11.4192054 Z" id="Stroke-5" fill="#FFFFFF"></path>
+    </g>
+</svg>

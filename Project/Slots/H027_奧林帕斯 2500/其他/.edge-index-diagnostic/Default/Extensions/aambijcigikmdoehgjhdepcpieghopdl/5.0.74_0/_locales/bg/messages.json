@@ -1,0 +1,532 @@
+{
+   "banking_blocked_description": {
+      "message": "За да защити транзакциите ви, $PRODUCT_NAME$ блокира този уеб сайт по време на сесията за Безопасно банкиране.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "За да защити транзакциите ви, $PRODUCT_NAME$ блокира този уеб сайт по време на сесията ви за Контролиране на връзката.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Блокиран от Безопасно банкиране"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Блокирано от Контролиране на връзката"
+   },
+   "blockpage_banking_allow": {
+      "message": "Разреши уеб сайта"
+   },
+   "blockpage_banking_description": {
+      "message": "За да защити транзакциите ви, $PRODUCT_NAME$ блокира този уеб сайт по време на сесията на банкиране.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "За да защити транзакциите ви, $PRODUCT_NAME$ блокира този уеб сайт по време на сесията на Контролиране на връзката.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Разрешете уеб сайта, ако трябва да получите достъп до него, за да завършите транзакцията си. Прекратете сесията си по Безопасно банкиране, когато транзакцията ви завърши."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Разрешете уеб сайта, ако трябва да получите достъп до него, за да завършите транзакцията си. Прекратете сесията си по Контролиране на връзката, когато транзакцията ви завърши."
+   },
+   "blockpage_banking_heading": {
+      "message": "Безопасното сърфиране е активно"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Активно е Контролиране на връзката"
+   },
+   "blockpage_banking_title": {
+      "message": "Безопасно банкиране"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Контролиране на връзката"
+   },
+   "blockpage_blocked": {
+      "message": "Уеб сайтът е отказан"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Уеб сайтът е отказан"
+   },
+   "blockpage_child_allow": {
+      "message": "Позволи този уеб сайт"
+   },
+   "blockpage_child_description": {
+      "message": "Имате право на достъп само до тези уеб сайтове:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Все още няма разрешени уеб сайтове"
+   },
+   "blockpage_child_heading": {
+      "message": "Уеб сайтът е отказан"
+   },
+   "blockpage_child_note": {
+      "message": "Можете също да направите промени в "
+   },
+   "blockpage_child_note_link": {
+      "message": "позволени и отказани уеб сайтове"
+   },
+   "blockpage_child_title": {
+      "message": "Уеб сайтът е отказан"
+   },
+   "blockpage_denied_allow": {
+      "message": "Разрешаване на уеб сайта на този компютър"
+   },
+   "blockpage_denied_description": {
+      "message": "Мениджърът на акаунти на $PRODUCT_NAME$ е блокирал достъпа до този уеб сайт. За да продължите, ви е нужно неговото разрешение.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Уеб сайтът е блокиран"
+   },
+   "blockpage_denied_title": {
+      "message": "Уеб сайтът е блокиран"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Разрешаване на уеб сайта на този компютър"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ е посочил този уеб сайт като вреден. Препоръчваме да не влизате в този уеб сайт.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Не бива да сърфирате тук"
+   },
+   "blockpage_harmful_report": {
+      "message": "Отчитане на грешен положителен резултат тук"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Не мислите, че това е опасно?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Зловредният уеб сайт е блокиран"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Влизане въпреки това"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ е докладвал, че този уеб сайт съдържа забранено съдържание. Настоятелно препоръчваме да не влизате в този уеб сайт.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Забранен уеб сайт"
+   },
+   "blockpage_illegal_report": {
+      "message": "Отчитане на грешен положителен резултат тук"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Не мислите, че това е опасно?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Забраненият уеб сайт е блокиран"
+   },
+   "blockpage_parental_allow": {
+      "message": "Разрешаване на уеб сайта на този компютър"
+   },
+   "blockpage_parental_description": {
+      "message": "$PRODUCT_NAME$ е блокирал това съдържание, защото е в ограничена категория: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Уеб сайтът е блокиран"
+   },
+   "blockpage_parental_report": {
+      "message": "Докладвайте фалшиво положителен уебсайт"
+   },
+   "blockpage_parental_title": {
+      "message": "Уеб сайтът е блокиран"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Влизане въпреки това"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ е посочил този уеб сайт като подозрителен. Препоръчваме да не влизате в този уеб сайт.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Не бива да сърфирате тук"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Отчитане на грешен положителен резултат тук"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Не мислите, че това е опасно?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Подозрителният уеб сайт е блокиран"
+   },
+   "category_abortion": {
+      "message": "Аборт"
+   },
+   "category_adserving": {
+      "message": "Рекламен сървър"
+   },
+   "category_adult": {
+      "message": "Възрастен"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Алкохол и тютюнопушене"
+   },
+   "category_anonymizers": {
+      "message": "Анонимни проксита"
+   },
+   "category_auctions": {
+      "message": "Търгове"
+   },
+   "category_banking": {
+      "message": "Банкиране"
+   },
+   "category_blogs": {
+      "message": "Блогове"
+   },
+   "category_chat": {
+      "message": "Чат"
+   },
+   "category_dating": {
+      "message": "Срещи"
+   },
+   "category_disturbing": {
+      "message": "Обезпокоително"
+   },
+   "category_drugs": {
+      "message": "Наркотици"
+   },
+   "category_entertainment": {
+      "message": "Забавление"
+   },
+   "category_file_sharing": {
+      "message": "Споделяне на файлове"
+   },
+   "category_forums": {
+      "message": "Форуми"
+   },
+   "category_gambling": {
+      "message": "Хазарт"
+   },
+   "category_games": {
+      "message": "Игри"
+   },
+   "category_hacking": {
+      "message": "Хакване"
+   },
+   "category_hate": {
+      "message": "Омраза"
+   },
+   "category_illegal": {
+      "message": "Незаконни"
+   },
+   "category_illegal_downloads": {
+      "message": "Нелегални изтегляния"
+   },
+   "category_job_search": {
+      "message": "Търсене на работа"
+   },
+   "category_payment_services": {
+      "message": "Услуги за плащане"
+   },
+   "category_scam": {
+      "message": "Измами"
+   },
+   "category_search_engines": {
+      "message": "Търсачки"
+   },
+   "category_shopping": {
+      "message": "Пазаруване"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Пазаруване и търгове"
+   },
+   "category_social_networks": {
+      "message": "Социални мрежи"
+   },
+   "category_software_downloads": {
+      "message": "Изтегляне на софтуер"
+   },
+   "category_spam": {
+      "message": "Спам"
+   },
+   "category_streaming_media": {
+      "message": "Поточно предаване на мултимедия"
+   },
+   "category_travel": {
+      "message": "Пътуване"
+   },
+   "category_unknown": {
+      "message": "Неизвестно"
+   },
+   "category_violence": {
+      "message": "Насилие"
+   },
+   "category_weapons": {
+      "message": "Оръжия"
+   },
+   "category_webmail": {
+      "message": "Уеб поща"
+   },
+   "error_ca_text_p1": {
+      "message": "Не може да се осъществи връзка с приложението"
+   },
+   "error_ca_text_p2": {
+      "message": "Проверете конфигурацията си"
+   },
+   "ext_description": {
+      "message": "Разширение за защита на криптирано сърфиране с продукти за сигурност от WithSecure."
+   },
+   "ext_name": {
+      "message": "Безопасно сърфиране от WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Безопасно сърфиране от WithSecure (alpha)"
+   },
+   "ext_name_beta": {
+      "message": "Безопасно сърфиране от WithSecure (beta)"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Приемане"
+   },
+   "ext_onboarding_allow": {
+      "message": "Разреши"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Настройката на разширението е завършена, страницата ще бъде затворена сега."
+   },
+   "ext_onboarding_decline": {
+      "message": "Отказ"
+   },
+   "ext_onboarding_description": {
+      "message": "Приемане на разрешения?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "За да не позволи злонамерени уеб сайтове да ви причинят щети, $EXTENSION_NAME$ сканира адресита на уеб сайтовете, които посещавате, за да провери дали са известни като вредни. Адресите (URL) включват неидентифицирана компонента и се обработват от нашия автоматизиран Security Cloud в съответствие с нашата \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Необходимо е съгласие за защита на вашето сърфиране"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Настройката на разширението беше отменена, разширението ще бъде деинсталирано сега."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Правила за поверителност"
+   },
+   "ext_open_consent": {
+      "message": "Отвори"
+   },
+   "ext_show_consent_msg": {
+      "message": "Моля, посетете страницата за съгласие."
+   },
+   "page_back": {
+      "message": "Назад"
+   },
+   "page_banking": {
+      "message": "Банкиране"
+   },
+   "page_blocked": {
+      "message": "Уеб сайтът е отказан"
+   },
+   "page_cancel": {
+      "message": "Отказ"
+   },
+   "page_harmful": {
+      "message": "Вреден\r\n"
+   },
+   "page_next": {
+      "message": "Напред"
+   },
+   "page_not_available": {
+      "message": "Не е налична информация за оценка"
+   },
+   "page_prohibited": {
+      "message": "Забранен уеб сайт"
+   },
+   "page_report": {
+      "message": "Отчет"
+   },
+   "page_report_banking": {
+      "message": "Докладвайте го като банково."
+   },
+   "page_report_harmful": {
+      "message": "Докладвайте го като вредно."
+   },
+   "page_report_safe": {
+      "message": "Докладвайте го като безопасно."
+   },
+   "page_report_suspicious": {
+      "message": "Докладвайте го като подозрително."
+   },
+   "page_safe": {
+      "message": "Безопасен"
+   },
+   "page_success_p1": {
+      "message": "Благодарим ви! Ще анализираме доклада и ще коригираме оценката за този уебсайт скоро."
+   },
+   "page_suggest_category": {
+      "message": "Изберете категория"
+   },
+   "page_suggest_rating": {
+      "message": "Предложете нова оценка"
+   },
+   "page_suspicious": {
+      "message": "Подозрителен"
+   },
+   "page_suspicious_p1": {
+      "message": "Опишете защо тази страница изглежда подозрителна"
+   },
+   "page_unsafe": {
+      "message": "Не е безопасен"
+   },
+   "page_wrong_cat_1": {
+      "message": "Не е подходящ за деца"
+   },
+   "page_wrong_cat_2": {
+      "message": "Променете категорията на Семейни правила"
+   },
+   "page_wrong_category_ws": {
+      "message": "Промяна на категорията на уеб съдържанието"
+   },
+   "page_wrong_rating_1": {
+      "message": "Смятате ли, че този уебсайт има грешна оценка?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Помогнете ни като изпратите доклад."
+   },
+   "popup_error_description": {
+      "message": "Приложението ви е деинсталирано и нямате съвместима версия. Инсталирайте най-новата версия на приложението и опитайте отново."
+   },
+   "popup_error_header": {
+      "message": "Не е намерено приложение за сигурност"
+   },
+   "popup_status_init": {
+      "message": "Иницииране..."
+   },
+   "popup_status_ok": {
+      "message": "Браузърът ви е защитен"
+   },
+   "search_rating_allowed": {
+      "message": "Този сайт е разрешен от администратор"
+   },
+   "search_rating_banking": {
+      "message": "Този сайт временно е блокиран"
+   },
+   "search_rating_category_adult": {
+      "message": "Възрастен"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Алкохол и тютюнопушене"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Анонимни проксита"
+   },
+   "search_rating_category_dating": {
+      "message": "Срещи"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Обезпокоително"
+   },
+   "search_rating_category_drugs": {
+      "message": "Наркотици"
+   },
+   "search_rating_category_gambling": {
+      "message": "Хазарт"
+   },
+   "search_rating_category_hate": {
+      "message": "Омраза"
+   },
+   "search_rating_category_illegal": {
+      "message": "Незаконни"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Нелегални изтегляния"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Пазаруване и търгове"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Социални мрежи"
+   },
+   "search_rating_category_status": {
+      "message": "Този уебсайт е ограничен от Семейни правила"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Този уебсайт е ограничен от Контролиране на уеб съдържание"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Поточно предаване на мултимедия"
+   },
+   "search_rating_category_unknown": {
+      "message": "Неизвестно"
+   },
+   "search_rating_category_violence": {
+      "message": "Насилие"
+   },
+   "search_rating_category_weapons": {
+      "message": "Оръжия"
+   },
+   "search_rating_denied": {
+      "message": "Този сайт е отказан от администратор"
+   },
+   "search_rating_harmful": {
+      "message": "Този уеб сайт е класифициран като небезопасен, не бива да го посещавате."
+   },
+   "search_rating_isbank": {
+      "message": "Това е надежден уебсайт за онлайн банкиране."
+   },
+   "search_rating_loading": {
+      "message": "Зареждане..."
+   },
+   "search_rating_restricted": {
+      "message": "Този сайт съдържа ограничено съдържание"
+   },
+   "search_rating_safe": {
+      "message": "Този уеб сайт е безопасен, приятно сърфиране!"
+   },
+   "search_rating_suspicious": {
+      "message": "Този сайт е подозрителен"
+   },
+   "search_rating_unknown": {
+      "message": "Този сайт още не е анализиран"
+   }
+}

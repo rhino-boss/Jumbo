@@ -1,0 +1,102 @@
+html, body {
+	width: 320px;
+	margin: 0;
+	padding: 0;
+	display: table;
+	empty-cells: show;
+	border-collapse: collapse;
+}
+
+.truncate {
+	width: 250px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.header-panel {
+	height: 104px;
+	background-color: var(--main-color, #0028A0);
+	width: 100%;
+	display: table-row;
+}
+
+.error-header-panel {
+	height: 104px;
+	background-color: #363636;
+	width: 100%;
+	display: table-row;
+}
+
+.error-header-panel div {
+	font-size: 16px;
+}
+
+.info-panel {
+	height: 80px;
+	width: 100%;
+	display: table-row;
+}
+
+.info-panel img {
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+.content-panel {
+	display: table-row;
+	position: relative;
+}
+
+.content-panel iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.content-panel textrea {
+	resize: none;
+	width: 300px;
+}
+
+.content-panel p {
+	margin-left: 8px;
+	margin-right: 8px;
+}
+
+.content-panel h1 {
+	margin-left: 8px;
+	margin-right: 8px;
+	font-size: 16px;
+}
+
+.content-panel button {
+	margin-top: 24px;
+}
+
+.footer-panel {
+	height: 48px;
+	display: table-row;
+}
+
+.product-logo {
+	max-height: 32px;
+}
+
+.extension-name {
+	color: #fff;
+}
+
+#categories {
+	margin-left: 54px;
+	margin-top: 4px;
+}
+
+.v-absolute-center {
+	margin: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}

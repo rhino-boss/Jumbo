@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 56.3 (81716) - https://sketch.com -->
+    <title>icons/status/ic_loggedout_filled_small</title>
+    <desc>Created with Sketch.</desc>
+    <g id="icons/status/ic_loggedout_filled_small" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M23,12 C23,18.0754737 18.0748947,23 12,23 C5.92510526,23 1,18.0754737 1,12 C1,5.92452632 5.92510526,1 12,1 C18.0748947,1 23,5.92452632 23,12 Z" id="circle" fill="#FB3636"></path>
+        <rect id="Rectangle" fill="#FFFFFF" x="6" y="11" width="12" height="2" rx="1"></rect>
+    </g>
+</svg>

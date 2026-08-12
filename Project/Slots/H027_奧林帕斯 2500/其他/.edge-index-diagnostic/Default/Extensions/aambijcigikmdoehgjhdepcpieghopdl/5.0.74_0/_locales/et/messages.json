@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "Teie tehingute kaitsmiseks blokeeris $PRODUCT_NAME$ selle veebisaidi teie panganduskaitse seansi ajaks.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "Teie tehingute kaitsmiseks blokeeris $PRODUCT_NAME$ selle veebisaidi teie ühenduse kontrollimise seansi ajaks.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Panganduskaitse poolt blokeeritud"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Ühenduse kontrollimisega blokeeritud"
+   },
+   "blockpage_banking_allow": {
+      "message": "Luba veebisait"
+   },
+   "blockpage_banking_description": {
+      "message": "Teie tehingute kaitsmiseks blokeeris $PRODUCT_NAME$ selle veebisaidi pangandusseansi ajaks.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "Teie tehingute kaitsmiseks blokeeris $PRODUCT_NAME$ selle veebisaidi ühenduse kontrollimise seansi ajaks.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Kui teil on tehingu lõpetamiseks vaja sellele veebisaidile juurde pääseda, lubage see veebisait. Kui tehing on lõpetatud, lõpetage ka panganduskaitse seanss."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Kui teil on tehingu lõpetamiseks vaja sellele veebisaidile juurde pääseda, lubage see veebisait. Kui tehing on lõpetatud, lõpetage ka ühenduse kontrollimise seanss."
+   },
+   "blockpage_banking_heading": {
+      "message": "Panganduskaitse on aktiivne"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Ühenduse kontrollimine on aktiivne"
+   },
+   "blockpage_banking_title": {
+      "message": "Panganduskaitse"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Ühenduse kontrollimine"
+   },
+   "blockpage_blocked": {
+      "message": "Veebisait on keelatud"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Veebisait on keelatud"
+   },
+   "blockpage_child_allow": {
+      "message": "Luba see veebisait"
+   },
+   "blockpage_child_description": {
+      "message": "Pääsete juurde ainult nendele veebisaitidele:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Lubatud veebisaite veel pole."
+   },
+   "blockpage_child_heading": {
+      "message": "Veebisait on keelatud"
+   },
+   "blockpage_child_note": {
+      "message": "Saate muuta ka järgmist:"
+   },
+   "blockpage_child_note_link": {
+      "message": "lubatud ja keelatud veebisaidid"
+   },
+   "blockpage_child_title": {
+      "message": "Veebisait on keelatud"
+   },
+   "blockpage_denied_allow": {
+      "message": "Luba veebisait selles arvutis"
+   },
+   "blockpage_denied_description": {
+      "message": "Toote '$PRODUCT_NAME$' kontohaldur on sellele veebisaidile juurdepääsu blokeerinud. Jätkamiseks vajate tema luba.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Veebisait blokeeriti"
+   },
+   "blockpage_denied_title": {
+      "message": "Veebisait blokeeriti"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Luba veebisait selles arvutis"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ on hinnanud selle veebisaidi kahjulikuks. Soovitame sellele saidile mitte minna.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Te ei peaks siin surfama"
+   },
+   "blockpage_harmful_report": {
+      "message": "Siin saate teatada valepositiivsest"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Kas te ei arva, et see on kahjulik?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Kahjulik veebisait blokeeriti"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Külasta sellegipoolest"
+   },
+   "blockpage_illegal_description": {
+      "message": "'$PRODUCT_NAME$' on märkinud selle veebisaidi keelatud sisu sisaldavaks. Soovitame tungivalt teil seda veebisaiti mitte külastada.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Keelatud veebisaidid"
+   },
+   "blockpage_illegal_report": {
+      "message": "Siin saate teatada valepositiivsest"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Kas te ei arva, et see on kahjulik?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Keelatud veebisait on blokeeritud"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Jätka siiski"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ on selle veebisaidi hiljutise registreerimise tõttu blokeerinud. Soovitame seda vältida, kuni selle usaldusväärsus on kontrollitud.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Veebisaidi domeen registreeriti: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Hiljuti registreeritud, kinnitamata sait blokeeritud"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Siin saate teatada valepositiivsest"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Kas te ei arva, et see on kahjulik?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Hiljuti registreeritud veebisait on blokeeritud"
+   },
+   "blockpage_parental_allow": {
+      "message": "Luba veebisait selles arvutis"
+   },
+   "blockpage_parental_description": {
+      "message": "'$PRODUCT_NAME$' on selle sisu blokeerinud, kuna see on kategoorias piiratud: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Veebisait blokeeriti"
+   },
+   "blockpage_parental_report": {
+      "message": "Valepositiivsest teatamise veebisait"
+   },
+   "blockpage_parental_title": {
+      "message": "Veebisait blokeeriti"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Külasta sellegipoolest"
+   },
+   "blockpage_suspicious_description": {
+      "message": "'$PRODUCT_NAME$' on hinnanud selle veebisaidi kahtlaseks. Soovitame sellele saidile mitte minna.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Te ei peaks siin surfama"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Siin saate teatada valepositiivsest"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Kas te ei arva, et see on kahjulik?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Kahtlane veebisait on blokeeritud"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Sellel ostlemissaidil on mitu punast lippu. See võib olla petusait!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Te ei peaks siin surfama"
+   },
+   "category_abortion": {
+      "message": "Abort"
+   },
+   "category_adserving": {
+      "message": "Reklaami edastamine"
+   },
+   "category_adult": {
+      "message": "Täiskasvanu"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alkohol ja tubakas"
+   },
+   "category_anonymizers": {
+      "message": "Anonümiseerijad"
+   },
+   "category_artificial_intelligence": {
+      "message": "Tehisintellekt"
+   },
+   "category_auctions": {
+      "message": "Oksjonid"
+   },
+   "category_banking": {
+      "message": "Pangandus"
+   },
+   "category_blogs": {
+      "message": "Blogid"
+   },
+   "category_chat": {
+      "message": "Vestlus"
+   },
+   "category_dating": {
+      "message": "Kohtamine"
+   },
+   "category_disturbing": {
+      "message": "Häiriv"
+   },
+   "category_drugs": {
+      "message": "Uimastid"
+   },
+   "category_entertainment": {
+      "message": "Meelelahutus"
+   },
+   "category_file_sharing": {
+      "message": "Failide ühiskasutus"
+   },
+   "category_forums": {
+      "message": "Foorumid"
+   },
+   "category_gambling": {
+      "message": "Hasartmängud"
+   },
+   "category_games": {
+      "message": "Mängud"
+   },
+   "category_hacking": {
+      "message": "Häkkimine"
+   },
+   "category_hate": {
+      "message": "Viha"
+   },
+   "category_illegal": {
+      "message": "Ebaseaduslik"
+   },
+   "category_illegal_downloads": {
+      "message": "Lubamatud allalaadimised"
+   },
+   "category_job_search": {
+      "message": "Tööotsing"
+   },
+   "category_payment_services": {
+      "message": "Makseteenused"
+   },
+   "category_scam": {
+      "message": "Pettus"
+   },
+   "category_search_engines": {
+      "message": "Otsimootorid"
+   },
+   "category_shopping": {
+      "message": "Ostlemine"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Ostmine ja oksjonid"
+   },
+   "category_social_networks": {
+      "message": "Suhtlusvõrgustikud"
+   },
+   "category_software_downloads": {
+      "message": "Tarkvara allalaadimised"
+   },
+   "category_spam": {
+      "message": "Rämpspost"
+   },
+   "category_streaming_media": {
+      "message": "Meediumite voogesitus"
+   },
+   "category_travel": {
+      "message": "Reisimine"
+   },
+   "category_unknown": {
+      "message": "Tundmatu"
+   },
+   "category_violence": {
+      "message": "Vägivald"
+   },
+   "category_weapons": {
+      "message": "Relvad"
+   },
+   "category_webmail": {
+      "message": "Veebipõhine meil"
+   },
+   "close_btn": {
+      "message": "Sule"
+   },
+   "error_ca_text_p1": {
+      "message": "Rakendusega ei saa ühendust luua"
+   },
+   "error_ca_text_p2": {
+      "message": "Kontrollige konfiguratsiooni"
+   },
+   "ext_description": {
+      "message": "Laiend krüptitud sirvimise kaitsmiseks WithSecure’i turbetoodetega."
+   },
+   "ext_name": {
+      "message": "WithSecure’i sirvimiskaitse"
+   },
+   "ext_name_alpha": {
+      "message": "WithSecure’i sirvimiskaitse (alfa)"
+   },
+   "ext_name_beta": {
+      "message": "WithSecure’i sirvimiskaitse (beeta)"
+   },
+   "ext_name_short": {
+      "message": "Turvaline sirvimine"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Nõustu"
+   },
+   "ext_onboarding_allow": {
+      "message": "Luba"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Laiendi seadistamine on lõpule viidud, leht suletakse nüüd."
+   },
+   "ext_onboarding_decline": {
+      "message": "Keeldu ja eemalda laiend"
+   },
+   "ext_onboarding_description": {
+      "message": "Kas nõustuda õigustega?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Seda arvutit haldav ettevõte või teie ettevõtte administraator on valinud selle arvuti kaitsmiseks WithSecure’i turbetooted. Konfiguratsioon jõustab selle arvuti kasutajate kaitse kahjulike veebisaitide eest. Võimaldamaks WithSecure’i sirvimiskaitse põhifunktsiooni, milleks on takistada ründesihilistel saitidel teid kahjustada, vajame teie nõusolekut andmete kogumiseks ja töötlemiseks. Muidu ei saa te seda laiendit kasutada. \u003Cbr>Kui lubate WithSecure’i sirvimiskaitse, nõustute, et teie külastatavate veebisaitide aadressid edastatakse saidi hinnangu ja kategooria kontrollimiseks WithSecure’i turbetoodetele. Aadressid (URL-id) muudetakse anonüümseks ja neid töötleb automaatne WithSecure Security Cloud meie \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a> kohaselt.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Nõusolek on vajalik teie sirvimise kaitsmiseks"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Laiendi seadistamine tühistati, laiend desinstallitakse nüüd."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Privaatsuspoliitika"
+   },
+   "ext_open_consent": {
+      "message": "Ava"
+   },
+   "ext_show_consent_msg": {
+      "message": "Palun külastage nõusolekulehte."
+   },
+   "page_back": {
+      "message": "Tagasi"
+   },
+   "page_banking": {
+      "message": "Pangandus"
+   },
+   "page_blocked": {
+      "message": "Veebisait on keelatud"
+   },
+   "page_cancel": {
+      "message": "Tühista"
+   },
+   "page_harmful": {
+      "message": "Kahjulik"
+   },
+   "page_next": {
+      "message": "Edasi"
+   },
+   "page_not_available": {
+      "message": "Hindamisteave pole saadaval"
+   },
+   "page_prohibited": {
+      "message": "Keelatud veebisaidid"
+   },
+   "page_report": {
+      "message": "Aruanne"
+   },
+   "page_report_banking": {
+      "message": "Teatage sellest kui pangateenusest."
+   },
+   "page_report_ext": {
+      "message": "Teavita sellest lehest"
+   },
+   "page_report_harmful": {
+      "message": "Teatage sellest kui kahjulikust üksusest."
+   },
+   "page_report_safe": {
+      "message": "Teatage sellest kui ohutust üksusest."
+   },
+   "page_report_suspicious": {
+      "message": "Teatage sellest kui kahtlasest üksusest."
+   },
+   "page_safe": {
+      "message": "Turvaline"
+   },
+   "page_success_p1": {
+      "message": "Aitäh! Analüüsime tagasisidet ja kohandame peagi selle veebisaidi reitingut."
+   },
+   "page_suggest_category": {
+      "message": "Vali kategooria"
+   },
+   "page_suggest_rating": {
+      "message": "Soovita uut hinnangut"
+   },
+   "page_suspicious": {
+      "message": "Kahtlane"
+   },
+   "page_suspicious_p1": {
+      "message": "Kirjeldage, miks see leht tundub kahtlane"
+   },
+   "page_unsafe": {
+      "message": "Ebaturvaline"
+   },
+   "page_wrong_cat_1": {
+      "message": "Muu kategooria"
+   },
+   "page_wrong_cat_2": {
+      "message": "Muu kategooria"
+   },
+   "page_wrong_category_ws": {
+      "message": "Muu kategooria"
+   },
+   "page_wrong_rating_1": {
+      "message": "Kas arvate, et sellel veebisaidil on vale hinnang?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Aidake meid ja saatke meile tagasiside."
+   },
+   "popup_error_description": {
+      "message": "Teie rakendus on desinstallitud või teil pole ühilduvat versiooni. Installige rakenduse uusim versioon ja proovige uuesti."
+   },
+   "popup_error_header": {
+      "message": "Turberakendust ei leitud"
+   },
+   "popup_status_init": {
+      "message": "Lähtestamine..."
+   },
+   "popup_status_ok": {
+      "message": "Teie brauser on kaitstud"
+   },
+   "search_rating_allowed": {
+      "message": "Administraator on saidi lubanud"
+   },
+   "search_rating_banking": {
+      "message": "See sait on ajutiselt blokeeritud"
+   },
+   "search_rating_category_adult": {
+      "message": "Täiskasvanu"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alkohol ja tubakas"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Anonümiseerijad"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Tehisintellekt"
+   },
+   "search_rating_category_dating": {
+      "message": "Kohtamine"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Häiriv"
+   },
+   "search_rating_category_drugs": {
+      "message": "Uimastid"
+   },
+   "search_rating_category_gambling": {
+      "message": "Hasartmängud"
+   },
+   "search_rating_category_hate": {
+      "message": "Viha"
+   },
+   "search_rating_category_illegal": {
+      "message": "Ebaseaduslik"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Lubamatud allalaadimised"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Ostmine ja oksjonid"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Suhtlusvõrgustikud"
+   },
+   "search_rating_category_status": {
+      "message": "Seda veebisaiti piiravad perereeglid"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Web Content Control on selle veebisaidi piiranud"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Meediumite voogesitus"
+   },
+   "search_rating_category_unknown": {
+      "message": "Tundmatu"
+   },
+   "search_rating_category_violence": {
+      "message": "Vägivald"
+   },
+   "search_rating_category_weapons": {
+      "message": "Relvad"
+   },
+   "search_rating_denied": {
+      "message": "Administraator on saidi keelanud"
+   },
+   "search_rating_harmful": {
+      "message": "See veebisait on hinnatud ebaturvaliseks, siin ei ole soovitatav sisu sirvida."
+   },
+   "search_rating_harmful_p1": {
+      "message": "See veebisait on hinnatud ebaturvaliseks"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Te ei peaks siin sisu sirvima"
+   },
+   "search_rating_isbank": {
+      "message": "See on usaldusväärne internetipanga veebisait."
+   },
+   "search_rating_loading": {
+      "message": "Laadimine..."
+   },
+   "search_rating_restricted": {
+      "message": "See sait sisaldab piiratud sisu"
+   },
+   "search_rating_safe": {
+      "message": "See veebisait on turvaline, saate julgelt lehitsemist nautida!"
+   },
+   "search_rating_safe_p1": {
+      "message": "See veebisait on turvaline"
+   },
+   "search_rating_safe_p2": {
+      "message": "Nautige surfamist"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "See veebisait võib olla kahtlane"
+   },
+   "search_rating_shopping_warn": {
+      "message": "See veebisait pole parima hinnanguga"
+   },
+   "search_rating_suspicious": {
+      "message": "See sait on kahtlane."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "See sait on kahtlane"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Olge sisu sirvimisel ettevaatlik"
+   },
+   "search_rating_unknown": {
+      "message": "Seda saiti pole veel analüüsitud"
+   },
+   "trusted_shopping_review": {
+      "message": "Mitmete arvustuste ja turbeskooride põhjal"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Avasite turvalise ostlemissaidi."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "See ostlemissait on kõrge hinnanguga ja usaldusväärne. Nautige ostlemist!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Avasite ostlemissaidi, mis võib olla kahtlane."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Sellel saidil oste tehes soovitame olla ettevaatlik."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Seda veebisaiti pole veel analüüsitud."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Sellel saidil oste tehes soovitame olla ettevaatlik."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Avasite ostlemissaidi, mis pole parima hinnanguga."
+   }
+}

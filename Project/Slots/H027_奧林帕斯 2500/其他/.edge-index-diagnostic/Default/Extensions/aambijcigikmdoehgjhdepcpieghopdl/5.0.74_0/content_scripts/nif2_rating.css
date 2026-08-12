@@ -1,0 +1,85 @@
+.fs-bubble-info {
+    position: relative !important;
+    display: inline !important;
+    padding: 0 3px 0 0 !important;
+}
+
+.fs-bubble-info img {
+    border: 0 none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.fs-bubble-info.fs-google img {
+    vertical-align: -4px !important;
+}
+
+table .fs-bubble-info.fs-google img {
+    vertical-align: 0px !important;
+}
+
+.fs-bubble-info.fs-bing img {
+    vertical-align: -1px !important;
+}
+
+.fs-bubble-info.fs-yahoo img {
+    vertical-align: 0px !important;
+}
+
+.fs-bubble-info.fs-yahoo-jp img {
+    vertical-align: -5px !important;
+}
+
+
+.fs-rating-summary-rating-icon {
+    height: 16px !important;
+}
+
+@-webkit-keyframes spinner {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+.fs-spin {
+    -webkit-transform-origin: center center;
+    -webkit-animation: spinner 1s infinite linear;
+}
+
+.fs-ols-balloon::after {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 10px;
+    right: 100%;
+    margin-top: 150px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: #CECECE transparent transparent transparent;
+}
+
+.fs-ols-balloon {
+    position: absolute;
+    height: 150px;
+    width: 406px;
+    z-index: 999999;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    border: 1px solid #CECECE;
+    display: none;
+}
+
+.fs-ols-frame {
+    height: 150px;
+    width: 406px;
+    z-index: 999999;
+    border: 0;
+    border-radius: 5px;
+    border: 0;
+    background: white;
+}

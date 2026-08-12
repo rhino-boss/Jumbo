@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="../common_styles.js"></script>
+    <script src="../constants.js"></script>
+    <script src="../content_scripts/nif2_schema_monitoring.js"></script>
+    <script src="common.js"></script>
+    <script src="new_rating.js"></script>
+    <link rel="stylesheet" href="../ols.css">
+  </head>
+  <body>
+        <p data-locale="page_suggest_rating"></p>
+        <span class="hds-radio-item">
+            <input type="radio" id="safe" name="safe-status" value="safe"><label for="safe" data-locale="page_safe"></label>
+        </span>
+        <span class="hds-radio-item">
+            <input type="radio" id="banking" name="safe-status" value="banking"><label for="banking" data-locale="page_banking"></label>
+        </span>
+        <span class="hds-radio-item">
+            <input type="radio" id="suspicious" name="safe-status" value="suspicious"><label for="suspicious" data-locale="page_suspicious"></label>
+        </span>
+        <span class="hds-radio-item">
+            <input type="radio" id="harmful" name="safe-status" value="harmful"><label for="harmful" data-locale="page_harmful"></label>
+        </span>
+        <span class="hds-radio-item">
+            <input type="radio" id="wrong-cat" name="safe-status" value="category"><label for="wrong-cat" id="category-selector-label"></label>
+        </span>
+        <div class="h-right" >
+            <button class="hds-button" id="btn-new-rating-next" disabled><span data-locale="page_next"></span></button>
+            <button class="hds-button-secondary" id="btn-cancel-new-rating"><span data-locale="page_cancel"></span></button>
+        </div>
+  </body>
+</html>

@@ -68,11 +68,71 @@ def parse_env_bool(name, default):
     return raw_value.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.environ.get("H026_CONFIG_FILE", CONFIG_FILE)
+
+
+def _is_h026_base_dir(path):
+    """Return True only when path contains the requested H026 config."""
+    config_path = os.path.join(path, CONFIG_FILE)
+    if not os.path.isfile(config_path):
+        return False
+    try:
+        with open(config_path, "r", encoding="utf-8") as fh:
+            header = fh.read(1024)
+    except OSError:
+        return False
+    return re.search(r'"game_id"\s*:\s*"H026', header) is not None
+
+
+def _resolve_base_dir():
+    """Locate H026 safely even when an Interactive kernel has stale __file__."""
+    override = os.environ.get("H026_BASE_DIR")
+    if override:
+        override = os.path.abspath(os.path.expanduser(override))
+        if _is_h026_base_dir(override):
+            return override
+        raise FileNotFoundError(f"H026_BASE_DIR does not contain a valid {CONFIG_FILE}: {override}")
+
+    folder_name = "H026_彩罐熱舞 1000"
+    anchors = [os.getcwd()]
+    file_value = globals().get("__file__")
+    if file_value:
+        anchors.insert(0, os.path.dirname(os.path.abspath(file_value)))
+
+    candidates = []
+    for anchor in anchors:
+        current = os.path.abspath(anchor)
+        while True:
+            candidates.extend(
+                [
+                    current,
+                    os.path.join(current, folder_name),
+                    os.path.join(current, "Project", "Slots", folder_name),
+                ]
+            )
+            # A stale H013 __file__ can still locate its H026 sibling here.
+            candidates.append(os.path.join(os.path.dirname(current), folder_name))
+            parent = os.path.dirname(current)
+            if parent == current:
+                break
+            current = parent
+
+    checked = set()
+    for candidate in candidates:
+        normalized = os.path.normcase(os.path.abspath(candidate))
+        if normalized in checked:
+            continue
+        checked.add(normalized)
+        if _is_h026_base_dir(candidate):
+            return os.path.abspath(candidate)
+
+    raise FileNotFoundError(f"Cannot locate the H026 directory containing {CONFIG_FILE}. " "Set H026_BASE_DIR to the H026 project folder when running interactively.")
+
+
+BASE_DIR = _resolve_base_dir()
 OUTPUT_DIR = os.path.join(BASE_DIR, "Record")
 
 BET_MULTI = 1
-CONFIG_FILE = os.environ.get("H026_CONFIG_FILE", CONFIG_FILE)
 CONFIG_PATH = os.path.join(BASE_DIR, CONFIG_FILE)
 TOTAL_ROUNDS = int(os.environ.get("H026_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
 BET_MODE = int(os.environ.get("H026_BET_MODE", str(BET_MODE)))
@@ -2522,7 +2582,7 @@ def run_all_combinations():
             flush=True,
         )
         result = subprocess.run(
-            [sys.executable, os.path.abspath(__file__)],
+            [sys.executable, os.path.join(BASE_DIR, "Simulator.py")],
             check=True,
             env=combo_env,
             capture_output=True,

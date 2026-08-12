@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "'$PRODUCT_NAME$' on suojannut tapahtumasi ja estänyt tämän sivuston pankkisuojausistuntosi aikana.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "$PRODUCT_NAME$ on suojannut tapahtumasi ja estänyt tämän sivuston yhteyksien hallinnan istuntosi aikana.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Pankkisuojauksen estämä"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Yhteyksien hallinnan estämä"
+   },
+   "blockpage_banking_allow": {
+      "message": "Salli sivusto"
+   },
+   "blockpage_banking_description": {
+      "message": "$PRODUCT_NAME$ on suojannut tapahtumasi ja estänyt tämän sivuston pankki-istunnon aikana.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "$PRODUCT_NAME$ on suojannut tapahtumasi ja estänyt tämän sivuston yhteyksien hallinnan istunnon aikana.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Salli verkkosivusto, jos tarvitset sitä asioinnin viimeistelyyn. Lopeta pankkitoimintojen suojaus, kun olet valmis."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Salli verkkosivusto, jos tarvitset sitä asioinnin viimeistelyyn. Lopeta yhteyksien hallinnan istunto, kun olet valmis."
+   },
+   "blockpage_banking_heading": {
+      "message": "Pankkitoimintojen suojaus on aktiivinen"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Yhteyksien hallinta on aktiivinen"
+   },
+   "blockpage_banking_title": {
+      "message": "Pankkitoimintojen suojaus"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Yhteyksien hallinta"
+   },
+   "blockpage_blocked": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_child_allow": {
+      "message": "Salli tämä sivusto"
+   },
+   "blockpage_child_description": {
+      "message": "Voit siirtyä vain näille sivustoille:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Ei sallittuja sivustoja vielä."
+   },
+   "blockpage_child_heading": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_child_note": {
+      "message": "Voit tehdä muutoksia myös seuraavaan:"
+   },
+   "blockpage_child_note_link": {
+      "message": "sallitut ja estetyt sivustot"
+   },
+   "blockpage_child_title": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_denied_allow": {
+      "message": "Salli sivusto tässä tietokoneessa"
+   },
+   "blockpage_denied_description": {
+      "message": "Tuotteen $PRODUCT_NAME$ tilivastaava on estänyt tämän sivuston käytön. Tarvitset hänen lupansa jatkamiseen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_denied_title": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Salli sivusto tässä tietokoneessa"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ on merkinnyt tämän sivuston haitalliseksi. Tälle sivustolle ei kannata siirtyä.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Tällä sivustolla ei kannata käydä"
+   },
+   "blockpage_harmful_report": {
+      "message": "Ilmoita virheellisestä tunnistuksesta tässä"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Eikö tämä ole mielestäsi haitallinen?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Haitallinen sivusto estetty"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Käytä silti"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ on ilmoittanut, että tällä sivustolla on kiellettyä sisältöä. Tälle sivustolle ei kannata siirtyä missään tapauksessa.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Kielletty sivusto"
+   },
+   "blockpage_illegal_report": {
+      "message": "Ilmoita virheellisestä tunnistuksesta tässä"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Eikö tämä ole mielestäsi haitallinen?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Kielletty sivusto estetty"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Jatka silti"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ on estänyt tämän sivuston, koska se on rekisteröity vasta äskettäin. Suosittelemme välttämään sivustoa, kunnes se on vahvistettu kelvolliseksi.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Sivuston toimialuerekisteröinti on tehty "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Äskettäin rekisteröity vahvistamaton sivusto estetty"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Ilmoita virheellisestä tunnistuksesta tässä"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Eikö tämä ole mielestäsi haitallinen?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Äskettäin rekisteröity sivusto on estetty"
+   },
+   "blockpage_parental_allow": {
+      "message": "Salli sivusto tässä tietokoneessa"
+   },
+   "blockpage_parental_description": {
+      "message": "$PRODUCT_NAME$ on estänyt tämän sisällön, koska se on rajoitettu seuraavassa luokassa: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_parental_report": {
+      "message": "Ilmoita sivuston väärästä hälytyksestä"
+   },
+   "blockpage_parental_title": {
+      "message": "Sivusto estetty"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Käytä silti"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ on merkinnyt tämän sivuston epäilyttäväksi. Tälle sivustolle ei kannata siirtyä.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Tällä sivustolla ei kannata käydä"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Ilmoita virheellisestä tunnistuksesta tässä"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Eikö tämä ole mielestäsi haitallinen?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Epäilyttävä sivusto estetty"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Tähän ostossivustoon liittyy useita vaaran merkkejä. Tämä voi olla huijaussivusto!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Tällä sivustolla ei kannata käydä"
+   },
+   "category_abortion": {
+      "message": "Abortti"
+   },
+   "category_adserving": {
+      "message": "Mainokset"
+   },
+   "category_adult": {
+      "message": "Aikuisviihde"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alkoholi ja tupakka"
+   },
+   "category_anonymizers": {
+      "message": "Anonymisoijat"
+   },
+   "category_artificial_intelligence": {
+      "message": "Tekoäly"
+   },
+   "category_auctions": {
+      "message": "Huutokaupat"
+   },
+   "category_banking": {
+      "message": "Pankit"
+   },
+   "category_blogs": {
+      "message": "Blogit"
+   },
+   "category_chat": {
+      "message": "Chat"
+   },
+   "category_dating": {
+      "message": "Treffipalvelu"
+   },
+   "category_disturbing": {
+      "message": "Häiritsevä sisältö"
+   },
+   "category_drugs": {
+      "message": "Huumeet"
+   },
+   "category_entertainment": {
+      "message": "Viihde"
+   },
+   "category_file_sharing": {
+      "message": "Tiedostonjako"
+   },
+   "category_forums": {
+      "message": "Foorumit"
+   },
+   "category_gambling": {
+      "message": "Uhkapelit"
+   },
+   "category_games": {
+      "message": "Pelit"
+   },
+   "category_hacking": {
+      "message": "Hakkerointi"
+   },
+   "category_hate": {
+      "message": "Vihaan yllyttäminen"
+   },
+   "category_illegal": {
+      "message": "Laittomuudet"
+   },
+   "category_illegal_downloads": {
+      "message": "Laittomat lataukset"
+   },
+   "category_job_search": {
+      "message": "Työnhaku"
+   },
+   "category_payment_services": {
+      "message": "Maksupalvelut"
+   },
+   "category_scam": {
+      "message": "Huijaukset"
+   },
+   "category_search_engines": {
+      "message": "Hakukoneet"
+   },
+   "category_shopping": {
+      "message": "Shoppailu"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Ostokset ja huutokaupat"
+   },
+   "category_social_networks": {
+      "message": "Yhteisöpalvelut"
+   },
+   "category_software_downloads": {
+      "message": "Ohjelmistolataukset"
+   },
+   "category_spam": {
+      "message": "Roskaposti"
+   },
+   "category_streaming_media": {
+      "message": "Suoratoistomedia"
+   },
+   "category_travel": {
+      "message": "Matkailu"
+   },
+   "category_unknown": {
+      "message": "Tuntematon"
+   },
+   "category_violence": {
+      "message": "Väkivalta"
+   },
+   "category_weapons": {
+      "message": "Aseet"
+   },
+   "category_webmail": {
+      "message": "Web-sähköposti"
+   },
+   "close_btn": {
+      "message": "Sulje"
+   },
+   "error_ca_text_p1": {
+      "message": "Yhteyttä sovellukseen ei voi muodostaa"
+   },
+   "error_ca_text_p2": {
+      "message": "Tarkista määritykset"
+   },
+   "ext_description": {
+      "message": "Laajennus, jolla suojataan salattu selaus WithSecuren tietoturvatuotteilla."
+   },
+   "ext_name": {
+      "message": "WithSecuren selauksen suojaus"
+   },
+   "ext_name_alpha": {
+      "message": "WithSecuren selauksen suojaus (alfa)"
+   },
+   "ext_name_beta": {
+      "message": "WithSecuren selauksen suojaus (beeta)"
+   },
+   "ext_name_short": {
+      "message": "Suojattu selaus"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Hyväksy"
+   },
+   "ext_onboarding_allow": {
+      "message": "Salli"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Laajennuksen asennus on valmis. Sivu suljetaan nyt."
+   },
+   "ext_onboarding_decline": {
+      "message": "Hylkää ja poista laajennus"
+   },
+   "ext_onboarding_description": {
+      "message": "Hyväksytäänkö oikeudet?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Tätä laitetta hallinnoiva yritys tai yrityksesi järjestelmänvalvoja on valinnut tämän tietokoneen suojattavaksi WithSecuren tietoturvatuotteilla. Suojauskokoonpano määrittää tietokoneen käyttäjät suojattavaksi haitallisilta verkkosivustoilta. WithSecuren selauksen suojaus, joka estää vahingollisia sivustoja aiheuttamasta haittaa itsellesi, tarvitsee perustoimintojaan varten suostumuksesi tietojen keräämiseen ja käsittelyyn. Muutoin et voi käyttää laajennusta. \u003Cbr>Sallimalla WithSecuren selauksen suojauksen käytön suostut siihen, että käyttämiesi verkkosivustojen osoitteet välitetään WithSecuren tietoturvatuotteisiin sivustojen luokituksen ja luokan tarkastamista varten. Osoitteet (URL-osoitteet) muutetaan ei-tunnistettavaan muotoon ja käsitellään automaattisesti WithSecure Security Cloud -pilvipalvelussamme, kuten \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a> määrittää.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Lupa tarvitaan internet-käyttösi suojaamiseen"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Laajennuksen asennus peruutettiin. Laajennuksen asennus poistetaan nyt."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Yksityisyyskäytäntö"
+   },
+   "ext_open_consent": {
+      "message": "Avaa"
+   },
+   "ext_show_consent_msg": {
+      "message": "Käy suostumussivulla."
+   },
+   "page_back": {
+      "message": "Takaisin"
+   },
+   "page_banking": {
+      "message": "Pankit"
+   },
+   "page_blocked": {
+      "message": "Sivusto estetty"
+   },
+   "page_cancel": {
+      "message": "Peruuta"
+   },
+   "page_harmful": {
+      "message": "Haitallinen"
+   },
+   "page_next": {
+      "message": "Seuraava"
+   },
+   "page_not_available": {
+      "message": "Luokitustietoja ei ole saatavilla"
+   },
+   "page_prohibited": {
+      "message": "Kielletty sivusto"
+   },
+   "page_report": {
+      "message": "Ilmoita"
+   },
+   "page_report_banking": {
+      "message": "Ilmoita se pankkisovellukseksi."
+   },
+   "page_report_ext": {
+      "message": "Tee ilmoitus tästä sivusta"
+   },
+   "page_report_harmful": {
+      "message": "Ilmoita se haitalliseksi."
+   },
+   "page_report_safe": {
+      "message": "Ilmoita se turvalliseksi."
+   },
+   "page_report_suspicious": {
+      "message": "Ilmoita se epäilyttäväksi."
+   },
+   "page_safe": {
+      "message": "Turvallinen"
+   },
+   "page_success_p1": {
+      "message": "Kiitos! Analysoimme raportin ja säädämme tämän sivuston luokitusta pian."
+   },
+   "page_suggest_category": {
+      "message": "Valitse luokka"
+   },
+   "page_suggest_rating": {
+      "message": "Ehdota uutta luokitusta"
+   },
+   "page_suspicious": {
+      "message": "Epäilyttävä"
+   },
+   "page_suspicious_p1": {
+      "message": "Kuvaile, miksi tämä sivu vaikuttaa epäilyttävältä"
+   },
+   "page_unsafe": {
+      "message": "Ei turvallinen"
+   },
+   "page_wrong_cat_1": {
+      "message": "Muu luokka"
+   },
+   "page_wrong_cat_2": {
+      "message": "Muu luokka"
+   },
+   "page_wrong_category_ws": {
+      "message": "Muu luokka"
+   },
+   "page_wrong_rating_1": {
+      "message": "Uskotko, että tällä sivustolla on väärä luokitus?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Auta meitä lähettämällä raportti."
+   },
+   "popup_error_description": {
+      "message": "Sovelluksesi asennus on poistettu tai sinulla ei ole yhteensopivaa versiota. Asenna sovelluksen uusin versio ja yritä uudelleen."
+   },
+   "popup_error_header": {
+      "message": "Tietoturvasovellusta ei löytynyt"
+   },
+   "popup_status_init": {
+      "message": "Alustetaan..."
+   },
+   "popup_status_ok": {
+      "message": "Selaimesi on suojattu"
+   },
+   "search_rating_allowed": {
+      "message": "Pääkäyttäjä on sallinut tämän sivuston"
+   },
+   "search_rating_banking": {
+      "message": "Tämä sivusto on tilapäisesti estetty"
+   },
+   "search_rating_category_adult": {
+      "message": "Aikuisviihde"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alkoholi ja tupakka"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Anonymisoijat"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Tekoäly"
+   },
+   "search_rating_category_dating": {
+      "message": "Treffipalvelu"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Häiritsevä sisältö"
+   },
+   "search_rating_category_drugs": {
+      "message": "Huumeet"
+   },
+   "search_rating_category_gambling": {
+      "message": "Uhkapelit"
+   },
+   "search_rating_category_hate": {
+      "message": "Vihaan yllyttäminen"
+   },
+   "search_rating_category_illegal": {
+      "message": "Laittomuudet"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Laittomat lataukset"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Ostokset ja huutokaupat"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Yhteisöpalvelut"
+   },
+   "search_rating_category_status": {
+      "message": "Tämä sivusto on rajoitettu perhesääntöjen perusteella"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Tämä sivusto on verkkosisällön hallinnan rajoittama"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Suoratoistomedia"
+   },
+   "search_rating_category_unknown": {
+      "message": "Tuntematon"
+   },
+   "search_rating_category_violence": {
+      "message": "Väkivalta"
+   },
+   "search_rating_category_weapons": {
+      "message": "Aseet"
+   },
+   "search_rating_denied": {
+      "message": "Pääkäyttäjä on kieltänyt tämän sivuston"
+   },
+   "search_rating_harmful": {
+      "message": "Tämä verkkosivusto on luokiteltu turvattomaksi, sitä ei tulisi käyttää."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Tämä sivusto on arvioitu ei-turvalliseksi"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Sinun ei tulisi käyttää tätä sivustoa"
+   },
+   "search_rating_isbank": {
+      "message": "Tämä on luotettava verkkopankkisivusto."
+   },
+   "search_rating_loading": {
+      "message": "Ladataan..."
+   },
+   "search_rating_restricted": {
+      "message": "Tämä sivusto sisältää rajoitettua sisältöä"
+   },
+   "search_rating_safe": {
+      "message": "Tämä verkkosivusto on turvallinen, nauti sen käytöstä!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Tämä sivusto on turvallinen"
+   },
+   "search_rating_safe_p2": {
+      "message": "Mukavaa selailua"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Tämä verkkosivusto saattaa olla epäilyttävä"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Tämä verkkosivusto ei ole saanut huippuarvioita"
+   },
+   "search_rating_suspicious": {
+      "message": "Tämä sivusto on epäilyttävä"
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Tämä sivusto on epäilyttävä"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Olet varovainen, kun käytät sivustoa"
+   },
+   "search_rating_unknown": {
+      "message": "Tätä sivustoa ei ole analysoitu vielä"
+   },
+   "trusted_shopping_review": {
+      "message": "Perustuu useisiin arvosteluihin ja turvallisuuspisteisiin"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Olet avannut turvallisen ostossivuston."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Tämä ostossivusto on saanut huippuarviot ja siihen luotetaan. Nauti ostosten tekemisestä!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Olet arvannut ostossivuston, joka voi olla epäilyttävä."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Toimi varovasti, kun teet ostoksia tällä sivustolla."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Tätä verkkosivustoa ei ole analysoitu vielä."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Toimi varovasti, kun teet ostoksia tällä sivustolla."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Olet avannut ostossivuston, joka ei ole saanut huippuarviota."
+   }
+}

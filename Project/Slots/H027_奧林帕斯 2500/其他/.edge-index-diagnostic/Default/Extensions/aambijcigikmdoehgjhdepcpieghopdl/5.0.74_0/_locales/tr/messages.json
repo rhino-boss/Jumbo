@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "$PRODUCT_NAME$, işlemlerinizi korumak için Bankacılık Koruması oturumu sırasında bu web sitesini engelledi.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "$PRODUCT_NAME$, işlemlerinizi korumak için Bağlantı Kontrolü oturumunuz sırasında bu web sitesini engelledi.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Bankacılık Koruması ile Engellendi"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Bağlantı Kontrolü tarafından engellenmiş"
+   },
+   "blockpage_banking_allow": {
+      "message": "Web sitesine izin ver"
+   },
+   "blockpage_banking_description": {
+      "message": "$PRODUCT_NAME$, işlemlerinizi korumak için bankacılık oturumu sırasında bu web sitesini engelledi.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "$PRODUCT_NAME$, işlemlerinizi korumak için Bağlantı Kontrolü oturumu sırasında bu web sitesini engelledi.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "İşleminizi tamamlamak için bu web sitesine erişmeniz gerekiyorsa izin verin. İşleminiz tamamlandığında Bankacılık Koruması oturumunu sonlandırın."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "İşleminizi tamamlamak için bu web sitesine erişmeniz gerekiyorsa izin verin. İşleminiz tamamlandığında Bağlantı Kontrolü oturumunu sonlandırın."
+   },
+   "blockpage_banking_heading": {
+      "message": "Bankacılık koruması etkin"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Bağlantı Kontrolü aktif"
+   },
+   "blockpage_banking_title": {
+      "message": "Bankacılık Koruması"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Bağlantı Kontrolü"
+   },
+   "blockpage_blocked": {
+      "message": "Web sitesi reddedildi"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Web sitesi reddedildi"
+   },
+   "blockpage_child_allow": {
+      "message": "Bu web sitesine izin ver"
+   },
+   "blockpage_child_description": {
+      "message": "Yalnızca bu web sitelerine erişebilirsiniz:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Henüz izin verilen web sitesi yok."
+   },
+   "blockpage_child_heading": {
+      "message": "Web sitesi reddedildi"
+   },
+   "blockpage_child_note": {
+      "message": "Ayrıca şurada değişiklik yapabilirsiniz:"
+   },
+   "blockpage_child_note_link": {
+      "message": "izin verilen ve engellenen web siteleri"
+   },
+   "blockpage_child_title": {
+      "message": "Web sitesi reddedildi"
+   },
+   "blockpage_denied_allow": {
+      "message": "Web sitesine bu bilgisayarda izin ver"
+   },
+   "blockpage_denied_description": {
+      "message": "$PRODUCT_NAME$ hesabı yöneticisi bu web sitesine erişimi engelledi. Devam etmek için izin almanız gerekiyor.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Web sitesi engellendi"
+   },
+   "blockpage_denied_title": {
+      "message": "Web sitesi engellendi"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Web sitesine bu bilgisayarda izin ver"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ bu web sitesinin zararlı olduğunu bildirdi. Bu web sitesine girmemenizi öneririz.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Burada gezinmeniz önerilmez"
+   },
+   "blockpage_harmful_report": {
+      "message": "Hatalı pozitif sonucu buradan bildirin"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Bunun zararlı olmadığını mı düşünüyorsunuz?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Zararlı web sitesi engellendi"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Yine de erişim sağla"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ bu web sitesinin yasak içerik barındırdığını bildirdi. Bu web sitesine girmemenizi kesinlikle öneririz.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Yasaklanan web sitesi"
+   },
+   "blockpage_illegal_report": {
+      "message": "Hatalı pozitif sonucu buradan bildirin"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Bunun zararlı olmadığını mı düşünüyorsunuz?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Yasaklanan web sitesi engellendi"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Yine de devam et"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$, yakın zamanda kaydedilmesi nedeniyle bu web sitesini engelledi. Meşruiyeti doğrulanana kadar bu siteden uzak durmanızı öneririz.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Web sitesinin alan adı şu adreste kayıtlıdır: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Son zamanlarda kayıtlı, doğrulanmamış site engellendi"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Hatalı pozitif sonucu buradan bildirin"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Bunun zararlı olmadığını mı düşünüyorsunuz?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Son zamanlarda kayıtlı web sitesi engellendi"
+   },
+   "blockpage_parental_allow": {
+      "message": "Web sitesine bu bilgisayarda izin ver"
+   },
+   "blockpage_parental_description": {
+      "message": "Şu kategoride kısıtlanmış olduğundan $PRODUCT_NAME$ bu içeriği engelledi:",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Web sitesi engellendi"
+   },
+   "blockpage_parental_report": {
+      "message": "Hatalı pozitif web sitesini buradan bildirin"
+   },
+   "blockpage_parental_title": {
+      "message": "Web sitesi engellendi"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Yine de erişim sağla"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ bu web sitesinin şüpheli olduğunu bildirdi. Bu web sitesine girmemenizi öneririz.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Burada gezinmeniz önerilmez"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Hatalı pozitif sonucu buradan bildirin"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Bunun zararlı olmadığını mı düşünüyorsunuz?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Şüpheli web sitesi engellendi"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Bu alışveriş web sitesinde birçok uyarı işareti var. Büyük olasılıkla bu bir dolandırıcılık sitesi!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Burada gezinmeniz önerilmez"
+   },
+   "category_abortion": {
+      "message": "Kürtaj"
+   },
+   "category_adserving": {
+      "message": "Reklam sunumu"
+   },
+   "category_adult": {
+      "message": "Yetişkin"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alkol ve tütün ürünleri"
+   },
+   "category_anonymizers": {
+      "message": "Anonimleştiriciler"
+   },
+   "category_artificial_intelligence": {
+      "message": "Yapay zeka"
+   },
+   "category_auctions": {
+      "message": "Müzayedeler"
+   },
+   "category_banking": {
+      "message": "Bankacılık"
+   },
+   "category_blogs": {
+      "message": "Bloglar"
+   },
+   "category_chat": {
+      "message": "Sohbet"
+   },
+   "category_dating": {
+      "message": "Randevu Servisi"
+   },
+   "category_disturbing": {
+      "message": "Rahatsız Edici"
+   },
+   "category_drugs": {
+      "message": "Uyuşturucu"
+   },
+   "category_entertainment": {
+      "message": "Eğlence"
+   },
+   "category_file_sharing": {
+      "message": "Dosya paylaşımı"
+   },
+   "category_forums": {
+      "message": "Forumlar"
+   },
+   "category_gambling": {
+      "message": "Kumar"
+   },
+   "category_games": {
+      "message": "Oyun"
+   },
+   "category_hacking": {
+      "message": "Bilgisayar Korsanlığı"
+   },
+   "category_hate": {
+      "message": "Nefret"
+   },
+   "category_illegal": {
+      "message": "Yasa dışı"
+   },
+   "category_illegal_downloads": {
+      "message": "Yasa dışı karşıdan yüklemeler"
+   },
+   "category_job_search": {
+      "message": "İş bulma"
+   },
+   "category_payment_services": {
+      "message": "Ödeme hizmetleri"
+   },
+   "category_scam": {
+      "message": "Dolandırıcılık"
+   },
+   "category_search_engines": {
+      "message": "Arama motorları"
+   },
+   "category_shopping": {
+      "message": "Alışveriş"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Alışveriş ve açık artırma"
+   },
+   "category_social_networks": {
+      "message": "Sosyal ağlar"
+   },
+   "category_software_downloads": {
+      "message": "Yazılım indirme"
+   },
+   "category_spam": {
+      "message": "İstenmeyen Posta"
+   },
+   "category_streaming_media": {
+      "message": "Medya akışı"
+   },
+   "category_travel": {
+      "message": "Seyahat"
+   },
+   "category_unknown": {
+      "message": "Bilinmiyor"
+   },
+   "category_violence": {
+      "message": "Şiddet"
+   },
+   "category_weapons": {
+      "message": "Silah"
+   },
+   "category_webmail": {
+      "message": "Web postası"
+   },
+   "close_btn": {
+      "message": "Kapat"
+   },
+   "error_ca_text_p1": {
+      "message": "Uygulamaya bağlanılamıyor"
+   },
+   "error_ca_text_p2": {
+      "message": "Yapılandırmanızı kontrol edin"
+   },
+   "ext_description": {
+      "message": "WithSecure'ün güvenlik ürünleriyle şifrelenmiş gezinmeyi korumaya yönelik uzantı."
+   },
+   "ext_name": {
+      "message": "WithSecure ile Gezinme Koruması"
+   },
+   "ext_name_alpha": {
+      "message": "WithSecure ile Gezinme Koruması (alpha)"
+   },
+   "ext_name_beta": {
+      "message": "WithSecure ile Gezinme Koruması (beta)"
+   },
+   "ext_name_short": {
+      "message": "Güvenli Gezinme"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Kabul Et"
+   },
+   "ext_onboarding_allow": {
+      "message": "İzin ver"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Eklenti kurulumu tamamlandı, sayfa şimdi kapatılacak."
+   },
+   "ext_onboarding_decline": {
+      "message": "Reddet ve uzantıyı kaldır"
+   },
+   "ext_onboarding_description": {
+      "message": "İzinleri kabul ediyor musunuz?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Bu aygıtı yöneten şirket veya şirket yöneticiniz, bu bilgisayarı WithSecure güvenlik ürünleriyle korumayı seçmiştir. Yapılandırma, bilgisayarın kullanıcılarının zararlı web sitelerinden korunmasını zorunlu kılmaktadır. WithSecure'ün Gezinme Korumasının temel işlevselliğini sağlamak (zararlı web sitelerinin size zarar vermesini önlemek) amacıyla, verileri toplamak ve işlemek için izninize ihtiyacımız var. Aksi takdirde uzantıyı kullanamazsınız. \u003Cbr>WithSecure'ün sunduğu Gezinme Korumasına izin vererek, ziyaret ettiğiniz web sitelerinin adreslerinin, derecelendirmesinin ve kategorisinin kontrol edilmesi amacıyla WithSecure güvenlik ürünlerine aktarılmasını kabul etmiş olursunuz. \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a> metnimiz uyarınca adresler (URL'ler) tanımlanamaz duruma getirilir ve otomatik WithSecure Security Cloud tarafından işlenir.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Tarayıcınızı korumak için gereken onay"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Eklenti kurulumu iptal edildi, eklenti şimdi kaldırılacak."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Gizlilik İlkesi"
+   },
+   "ext_open_consent": {
+      "message": "Aç"
+   },
+   "ext_show_consent_msg": {
+      "message": "Lütfen izin sayfasını ziyaret edin."
+   },
+   "page_back": {
+      "message": "Geri"
+   },
+   "page_banking": {
+      "message": "Bankacılık"
+   },
+   "page_blocked": {
+      "message": "Web sitesi reddedildi"
+   },
+   "page_cancel": {
+      "message": "İptal"
+   },
+   "page_harmful": {
+      "message": "Zararlı"
+   },
+   "page_next": {
+      "message": "İleri"
+   },
+   "page_not_available": {
+      "message": "Derecelendirme bilgisi kullanılamıyor"
+   },
+   "page_prohibited": {
+      "message": "Yasaklanan web sitesi"
+   },
+   "page_report": {
+      "message": "Raporla"
+   },
+   "page_report_banking": {
+      "message": "Bankacılık olarak bildir."
+   },
+   "page_report_ext": {
+      "message": "Bu sayfayı bildir"
+   },
+   "page_report_harmful": {
+      "message": "Zararlı olarak bildir."
+   },
+   "page_report_safe": {
+      "message": "Güvenli olarak bildir."
+   },
+   "page_report_suspicious": {
+      "message": "Şüpheli olarak bildir."
+   },
+   "page_safe": {
+      "message": "Güvenli"
+   },
+   "page_success_p1": {
+      "message": "Teşekkürler! Raporu analiz edeceğiz ve bu web sitesi için derecelendirmeyi kısa süre içinde ayarlayacağız."
+   },
+   "page_suggest_category": {
+      "message": "Kategori seç"
+   },
+   "page_suggest_rating": {
+      "message": "Yeni bir derecelendirme öner"
+   },
+   "page_suspicious": {
+      "message": "Şüpheli"
+   },
+   "page_suspicious_p1": {
+      "message": "Bu sayfanın neden şüpheli göründüğünü açıklayın"
+   },
+   "page_unsafe": {
+      "message": "Güvenli değil"
+   },
+   "page_wrong_cat_1": {
+      "message": "Diğer kategori"
+   },
+   "page_wrong_cat_2": {
+      "message": "Diğer kategori"
+   },
+   "page_wrong_category_ws": {
+      "message": "Diğer kategori"
+   },
+   "page_wrong_rating_1": {
+      "message": "Bu web sitesinin yanlış derecelendirmesi olduğunu mu düşünüyorsunuz?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Rapor göndererek bize yardım edin"
+   },
+   "popup_error_description": {
+      "message": "Uygulamanız kaldırıldı veya uyumlu bir sürümünüz yok. Uygulamanın son sürümünü yükleyin ve tekrar deneyin."
+   },
+   "popup_error_header": {
+      "message": "Güvenlik uygulaması bulunmadı"
+   },
+   "popup_status_init": {
+      "message": "Başlatılıyor..."
+   },
+   "popup_status_ok": {
+      "message": "Tarayıcınız korunmuyor"
+   },
+   "search_rating_allowed": {
+      "message": "Bu siteye yönetici tarafından izin verildi"
+   },
+   "search_rating_banking": {
+      "message": "Bu site geçici olarak engellendi"
+   },
+   "search_rating_category_adult": {
+      "message": "Yetişkin"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alkol ve tütün ürünleri"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Anonimleştiriciler"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Yapay zeka"
+   },
+   "search_rating_category_dating": {
+      "message": "Randevu Servisi"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Rahatsız Edici"
+   },
+   "search_rating_category_drugs": {
+      "message": "Uyuşturucu"
+   },
+   "search_rating_category_gambling": {
+      "message": "Kumar"
+   },
+   "search_rating_category_hate": {
+      "message": "Nefret"
+   },
+   "search_rating_category_illegal": {
+      "message": "Yasa dışı"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Yasa dışı karşıdan yüklemeler"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Alışveriş ve Açık Artırma"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Sosyal ağlar"
+   },
+   "search_rating_category_status": {
+      "message": "Bu web sitesi Aile Kuralları ile kısıtlanmıştır"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Bu web sitesi Web İçeriği Denetimi tarafından kısıtlanmıştır"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Medya akışı"
+   },
+   "search_rating_category_unknown": {
+      "message": "Bilinmiyor"
+   },
+   "search_rating_category_violence": {
+      "message": "Şiddet"
+   },
+   "search_rating_category_weapons": {
+      "message": "Silah"
+   },
+   "search_rating_denied": {
+      "message": "Bu site yönetici tarafından engellendi"
+   },
+   "search_rating_harmful": {
+      "message": "Bu internet sitesi güvensiz olarak sınıflandırıldı, buraya gitmemelisiniz."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Bu web sitesi güvensiz olarak sınıflandırıldı"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Buraya göz atmanız önerilmez"
+   },
+   "search_rating_isbank": {
+      "message": "Bu güvenilir bir çevrimiçi bankacılık web sitesidir."
+   },
+   "search_rating_loading": {
+      "message": "Yükleniyor..."
+   },
+   "search_rating_restricted": {
+      "message": "Bu site kısıtlı içerik barındırıyor"
+   },
+   "search_rating_safe": {
+      "message": "Bu internet sitesi güvenli, gezerken iyi eğlenceler!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Bu web sitesi güvenli"
+   },
+   "search_rating_safe_p2": {
+      "message": "Keyifli gezinmeler"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Bu web sitesi şüpheli olabilir"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Bu web sitesi çok güvenilir olarak sınıflandırılmadı"
+   },
+   "search_rating_suspicious": {
+      "message": "Bu site şüpheli."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Bu site şüpheli"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Lütfen göz atarken dikkatli olun"
+   },
+   "search_rating_unknown": {
+      "message": "Bu site henüz analiz edilmedi"
+   },
+   "trusted_shopping_review": {
+      "message": "Birden fazla yoruma ve güvenlik puanına dayanarak"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Güvenilir bir alışveriş web sitesini açtınız."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Bu alışveriş sitesi son derece güvenilir olarak sınıflandırıldı, keyifli alışverişler!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Şüpheli olabilecek bir alışveriş web sitesini açtınız."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Bu siteden alışveriş yaparken dikkatli olmanız tavsiye edilir."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Bu web sitesi henüz analiz edilmedi."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Bu siteden alışveriş yaparken dikkatli olmanız tavsiye edilir."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Çok güvenilir olarak sınıflandırılmayan bir alışveriş web sitesini açtınız."
+   }
+}

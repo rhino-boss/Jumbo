@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title data-locale="blockpage_illegal_title"></title>
+    <script src="../common_styles.js"></script>
+    <script src="../constants.js"></script>
+    <script src="../content_scripts/nif2_schema_monitoring.js"></script>
+    <script src="common.js"></script>
+    <script src="popup_rating.js"></script>
+    <link rel="stylesheet" href="../ols.css">
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header class="header-panel">
+      
+      <div class="v-h-center">
+        <img id="logo" alt="Logo" class="product-logo">
+        <div data-locale="ext_name" class="extension-name" id="extension-name" style="font-size: 16px;"></div>
+      </div>
+    </header>
+    <div class="info-panel" id="info-panel">
+      <div class="v-center b-gray-border">
+        <div style="height: 32px; font-size: 14px; position: relative;" id="fs-strip"><span style="height:32px"><img class="v-absolute-center" id="fs-strip-img" style="margin-left: 8px;"/></span><span style="color: black; margin-left: 36px; vertical-align:middle; font-size:14px" class="v-absolute-center" id="fs-hostname"></span></div>
+        <div style="height: 72px; position: relative">
+          <div class="flex v-absolute-center">
+            <img alt="Status icon" id="status-icon" class="status-logo"/>
+              <div style="width: 260px; position: relative;">
+                <div class="v-absolute-center">
+                  <div id="status-text-p1" style="font-size: 16px"></div>
+                  <div id="status-text-p2"></div>
+                  <div id="categories"></div>
+            </div>
+        </div>
+          </div>
+      </div>
+     </div>
+    </div>
+<div id="trusted-shopping-rating" class="b-gray-border"></div>
+    <div class="content-panel" id="content-panel">
+        <iframe id="content-iframe" src="wrong_rating.html" frameBorder="0" scrolling="no"></iframe>
+    </div>
+    <div class="footer-panel" id="footer-panel">
+        <br>
+        <div class="bg-pic bg-by-fsecure"/>
+    </div>
+  </body>
+</html>

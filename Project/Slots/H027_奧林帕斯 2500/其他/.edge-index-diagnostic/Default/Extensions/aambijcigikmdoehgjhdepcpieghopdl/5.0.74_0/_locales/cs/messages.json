@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "Aplikace $PRODUCT_NAME$ v zájmu ochrany transakcí na dobu relace Ochrany bankovnictví zablokovala tento web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "Aplikace $PRODUCT_NAME$ v zájmu ochrany vašich transakcí po dobu relace Řízení připojení zablokovala tento web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Blokováno Ochranou bankovnictví"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Zablokováno Řízením připojení"
+   },
+   "blockpage_banking_allow": {
+      "message": "Povolit web"
+   },
+   "blockpage_banking_description": {
+      "message": "Aplikace $PRODUCT_NAME$ v zájmu ochrany transakcí zablokoval na dobu relace bankovnictví tento web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "Aplikace $PRODUCT_NAME$ v zájmu ochrany transakcí na dobu relace Řízení připojení zablokovala tento web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Pokud k němu potřebujete přístup pro dokončení transakce, povolte ho. Po dokončení transakce ukončete relaci ochrany bankovnictví."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Pokud k němu potřebujete přístup pro dokončení transakce, povolte ho. Po dokončení transakce ukončete relaci Řízení připojení."
+   },
+   "blockpage_banking_heading": {
+      "message": "Ochrana bankovnictví je aktivní."
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Řízení připojení je aktivní"
+   },
+   "blockpage_banking_title": {
+      "message": "Ochrana bankovnictví"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Řízení připojení"
+   },
+   "blockpage_blocked": {
+      "message": "Zakázána webová stránka"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Zakázána webová stránka"
+   },
+   "blockpage_child_allow": {
+      "message": "Povolit tento web"
+   },
+   "blockpage_child_description": {
+      "message": "Máte přístup pouze k těmto webům:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Dosud nejsou povoleny žádné weby."
+   },
+   "blockpage_child_heading": {
+      "message": "Zakázána webová stránka"
+   },
+   "blockpage_child_note": {
+      "message": "Můžete také změnit"
+   },
+   "blockpage_child_note_link": {
+      "message": "povolené a zakázané weby"
+   },
+   "blockpage_child_title": {
+      "message": "Zakázána webová stránka"
+   },
+   "blockpage_denied_allow": {
+      "message": "Povolit web v tomto počítači"
+   },
+   "blockpage_denied_description": {
+      "message": "Správce účtů aplikace $PRODUCT_NAME$ zablokoval přístup k tomuto webu. Abyste mohli pokračovat, potřebujete jeho povolení.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Zablokován web"
+   },
+   "blockpage_denied_title": {
+      "message": "Zablokován web"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Povolit web v tomto počítači"
+   },
+   "blockpage_harmful_description": {
+      "message": "Aplikace $PRODUCT_NAME$ uvádí tento web jako nebezpečný. Doporučujeme, abyste ho nenavštěvovali.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Tady byste neměli surfovat."
+   },
+   "blockpage_harmful_report": {
+      "message": "Tady oznamte falešně pozitivní výsledek."
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Nemyslíte, že je to nebezpečné?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Zablokován nebezpečný web"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Přesto navštívit"
+   },
+   "blockpage_illegal_description": {
+      "message": "Aplikace $PRODUCT_NAME$ hlásí, že tento web zahrnuje zakázaný obsah. Důrazně doporučujeme, abyste ho nenavštěvovali.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Zakázaný web"
+   },
+   "blockpage_illegal_report": {
+      "message": "Tady oznamte falešně pozitivní výsledek."
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Nemyslíte, že je to nebezpečné?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Zakázaný web zablokován"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Přesto pokračovat"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ zablokoval tuto webovou stránku z důvodu její nedávné registrace. Doporučujeme se jí vyhnout, dokud nebude ověřena její legitimita.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Doména webových stránek byla registrována dne: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Nedávno registrovaný, neověřený web zablokovaný"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Tady oznamte falešně pozitivní výsledek."
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Nemyslíte, že je to nebezpečné?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Nedávno registrovaný web je blokován"
+   },
+   "blockpage_parental_allow": {
+      "message": "Povolit web v tomto počítači"
+   },
+   "blockpage_parental_description": {
+      "message": "Aplikace $PRODUCT_NAME$ zablokovala tento obsah, protože je zakázán kategorií: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Zablokován web"
+   },
+   "blockpage_parental_report": {
+      "message": "Oznamte falešně pozitivní web."
+   },
+   "blockpage_parental_title": {
+      "message": "Zablokován web"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Přesto navštívit"
+   },
+   "blockpage_suspicious_description": {
+      "message": "Aplikace $PRODUCT_NAME$ uvádí tento web jako podezřelý. Doporučujeme, abyste ho nenavštěvovali.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Tady byste neměli surfovat."
+   },
+   "blockpage_suspicious_report": {
+      "message": "Tady oznamte falešně pozitivní výsledek."
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Nemyslíte, že je to nebezpečné?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Podezřelý web zablokován"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Tento nákupní web vykazuje několik varovných signálů. Je možné, že se jedná o podvodný web."
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Tady byste neměli surfovat."
+   },
+   "category_abortion": {
+      "message": "Potraty"
+   },
+   "category_adserving": {
+      "message": "Obsluha reklam"
+   },
+   "category_adult": {
+      "message": "Pro dospělé"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alkohol a tabák"
+   },
+   "category_anonymizers": {
+      "message": "Weby zajišťující anonymitu"
+   },
+   "category_artificial_intelligence": {
+      "message": "Umělá inteligence"
+   },
+   "category_auctions": {
+      "message": "Aukce"
+   },
+   "category_banking": {
+      "message": "Bankovnictví"
+   },
+   "category_blogs": {
+      "message": "Blogy"
+   },
+   "category_chat": {
+      "message": "Konverzace"
+   },
+   "category_dating": {
+      "message": "Seznamování"
+   },
+   "category_disturbing": {
+      "message": "Rušivé"
+   },
+   "category_drugs": {
+      "message": "Drogy"
+   },
+   "category_entertainment": {
+      "message": "Zábava"
+   },
+   "category_file_sharing": {
+      "message": "Sdílení souborů"
+   },
+   "category_forums": {
+      "message": "Fóra"
+   },
+   "category_gambling": {
+      "message": "Hazardní hry"
+   },
+   "category_games": {
+      "message": "Hry"
+   },
+   "category_hacking": {
+      "message": "Hackování počítačů"
+   },
+   "category_hate": {
+      "message": "Nenávist"
+   },
+   "category_illegal": {
+      "message": "Nelegální"
+   },
+   "category_illegal_downloads": {
+      "message": "Nezákonně stažené položky"
+   },
+   "category_job_search": {
+      "message": "Hledání práce"
+   },
+   "category_payment_services": {
+      "message": "Platební služby"
+   },
+   "category_scam": {
+      "message": "Podvod"
+   },
+   "category_search_engines": {
+      "message": "Vyhledávací portály"
+   },
+   "category_shopping": {
+      "message": "Nakupování"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Nakupování a aukce"
+   },
+   "category_social_networks": {
+      "message": "Sociální sítě"
+   },
+   "category_software_downloads": {
+      "message": "Stahování softwaru"
+   },
+   "category_spam": {
+      "message": "Nevyžádaná počta"
+   },
+   "category_streaming_media": {
+      "message": "Streamování médií"
+   },
+   "category_travel": {
+      "message": "Cestování"
+   },
+   "category_unknown": {
+      "message": "Neznámá"
+   },
+   "category_violence": {
+      "message": "Násilí"
+   },
+   "category_weapons": {
+      "message": "Zbraně"
+   },
+   "category_webmail": {
+      "message": "Webová pošta"
+   },
+   "close_btn": {
+      "message": "Zavřít"
+   },
+   "error_ca_text_p1": {
+      "message": "K aplikaci se nelze připojit."
+   },
+   "error_ca_text_p2": {
+      "message": "Zkontrolujte konfiguraci."
+   },
+   "ext_description": {
+      "message": "Rozšíření pro ochranu šifrovaného procházení internetu pomocí produktů zabezpečení od společnosti WithSecure."
+   },
+   "ext_name": {
+      "message": "Ochrana procházení internetu od společnosti WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Ochrana procházení internetu od společnosti WithSecure (alpha)"
+   },
+   "ext_name_beta": {
+      "message": "Ochrana procházení Internetu od společnosti WithSecure (beta)"
+   },
+   "ext_name_short": {
+      "message": "Bezpečné procházení"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Souhlasím"
+   },
+   "ext_onboarding_allow": {
+      "message": "Povolit"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Nastavení rozšíření bylo dokončeno. Stránka se nyní zavře."
+   },
+   "ext_onboarding_decline": {
+      "message": "Zamítnout a odstranit rozšíření"
+   },
+   "ext_onboarding_description": {
+      "message": "Přijmout oprávnění?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Správce společnosti, která toto zařízení spravuje, nebo správce vaší společnosti zvolil ochranu tohoto počítače pomocí produktů zabezpečení od společnosti WithSecure. Konfigurace vynutí ochranu uživatelů počítače před škodlivými weby. Aby bylo možné poskytovat základní funkce Ochrany procházení od společnosti WithSecure – bránit škodlivým webům, aby vám způsobily újmu, potřebujeme váš souhlas se shromažďováním a zpracováním údajů. V opačném případě nebudete moct rozšíření používat. \u003Cbr>Povolením Ochrany procházení od společnosti WithSecure souhlasíte, že adresy webů, které navštívíte, budou předány do produktů zabezpečení WithSecure za účelem kontroly jejich hodnocení a kategorie. Adresy (URL) budou nastaveny jako neidentifikovatelné a budou zpracovány naším automatizovaným bezpečnostním cloudem WithSecure v souladu s našimi zásadami (\u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>).",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Je třeba vás souhlas s ochranu procházení"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Nastavení rozšíření bylo zrušeno. Rozšíření nyní bude odinstalováno."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Zásady ochrany osobních údajů"
+   },
+   "ext_open_consent": {
+      "message": "Otevřít"
+   },
+   "ext_show_consent_msg": {
+      "message": "Navštivte stránku souhlasu."
+   },
+   "page_back": {
+      "message": "Zpět"
+   },
+   "page_banking": {
+      "message": "Bankovnictví"
+   },
+   "page_blocked": {
+      "message": "Zakázána webová stránka"
+   },
+   "page_cancel": {
+      "message": "Storno"
+   },
+   "page_harmful": {
+      "message": "Škodlivé"
+   },
+   "page_next": {
+      "message": "Další"
+   },
+   "page_not_available": {
+      "message": "Informace o hodnocení nejsou k dispozici"
+   },
+   "page_prohibited": {
+      "message": "Zakázaný web"
+   },
+   "page_report": {
+      "message": "Hlášení"
+   },
+   "page_report_banking": {
+      "message": "Nahlásit jako bankovní."
+   },
+   "page_report_ext": {
+      "message": "Nahlásit tuto stránku"
+   },
+   "page_report_harmful": {
+      "message": "Nahlásit jako škodlivý."
+   },
+   "page_report_safe": {
+      "message": "Nahlásit jako bezpečný."
+   },
+   "page_report_suspicious": {
+      "message": "Nahlásit jako podezřelý."
+   },
+   "page_safe": {
+      "message": "Bezpečné"
+   },
+   "page_success_p1": {
+      "message": "Děkujeme. Hlášení analyzujeme a brzy upravíme hodnocení tohoto webu."
+   },
+   "page_suggest_category": {
+      "message": "Zvolte kategorii"
+   },
+   "page_suggest_rating": {
+      "message": "Navrhnout nové hodnocení"
+   },
+   "page_suspicious": {
+      "message": "Podezřelé"
+   },
+   "page_suspicious_p1": {
+      "message": "Popište, proč se tato stránka zdá být podezřelá"
+   },
+   "page_unsafe": {
+      "message": "Nebezpečné"
+   },
+   "page_wrong_cat_1": {
+      "message": "Jiná kategorie"
+   },
+   "page_wrong_cat_2": {
+      "message": "Jiná kategorie"
+   },
+   "page_wrong_category_ws": {
+      "message": "Jiná kategorie"
+   },
+   "page_wrong_rating_1": {
+      "message": "Myslíte si, že má tento web nesprávné hodnocení?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Pomozte nám tím, že to nahlásíte."
+   },
+   "popup_error_description": {
+      "message": "Vaše aplikace byla odinstalována nebo nemáte kompatibilní verzi. Nainstalujte si nejnovější verzi aplikace a zkuste to znovu."
+   },
+   "popup_error_header": {
+      "message": "Bezpečnostní aplikace nebyla nalezena"
+   },
+   "popup_status_init": {
+      "message": "Probíhá inicializace…"
+   },
+   "popup_status_ok": {
+      "message": "Váš prohlížeč je chráněn."
+   },
+   "search_rating_allowed": {
+      "message": "Tento web je povolen správcem"
+   },
+   "search_rating_banking": {
+      "message": "Tento web je dočasně zablokovaný."
+   },
+   "search_rating_category_adult": {
+      "message": "Pro dospělé"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alkohol a tabák"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Weby zajišťující anonymitu"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Umělá inteligence"
+   },
+   "search_rating_category_dating": {
+      "message": "Seznamování"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Rušivé"
+   },
+   "search_rating_category_drugs": {
+      "message": "Drogy"
+   },
+   "search_rating_category_gambling": {
+      "message": "Hazardní hry"
+   },
+   "search_rating_category_hate": {
+      "message": "Nenávist"
+   },
+   "search_rating_category_illegal": {
+      "message": "Nelegální"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Nezákonně stažené položky"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Nakupování a aukce"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Sociální sítě"
+   },
+   "search_rating_category_status": {
+      "message": "Tento web je omezen rodinnými pravidly"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Tato webová stránka je omezena službou řízení obsahu na webu"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Streamování médií"
+   },
+   "search_rating_category_unknown": {
+      "message": "Neznámá"
+   },
+   "search_rating_category_violence": {
+      "message": "Násilí"
+   },
+   "search_rating_category_weapons": {
+      "message": "Zbraně"
+   },
+   "search_rating_denied": {
+      "message": "Tento web je zakázán správcem"
+   },
+   "search_rating_harmful": {
+      "message": "Tento web je hodnocený jako nebezpečný, takže byste ho neměli navštěvovat."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Tento web je hodnocen jako nebezpečný."
+   },
+   "search_rating_harmful_p2": {
+      "message": "Tento web byste neměli procházet."
+   },
+   "search_rating_isbank": {
+      "message": "Toto je důvěryhodný web online bankovnictví."
+   },
+   "search_rating_loading": {
+      "message": "Načítání…"
+   },
+   "search_rating_restricted": {
+      "message": "Tento web zahrnuje zakázaný obsah"
+   },
+   "search_rating_safe": {
+      "message": "Tento web je bezpečný. Ať se vám příjemně používá!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Tato webová stránka je bezpečná."
+   },
+   "search_rating_safe_p2": {
+      "message": "Užijte si surfování"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Tento web může být podezřelý."
+   },
+   "search_rating_shopping_warn": {
+      "message": "Tento web není hodnocen jako nejlepší."
+   },
+   "search_rating_suspicious": {
+      "message": "Tento web je podezřelý."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Tento web je podezřelý"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Při procházení buďte opatrní."
+   },
+   "search_rating_unknown": {
+      "message": "Tento web dosud nebyl analyzován"
+   },
+   "trusted_shopping_review": {
+      "message": "Na základě několika recenzí a hodnocení zabezpečení"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Otevřeli jste bezpečný nákupní web."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Tento nákupní web má vysoké hodnocení a je důvěryhodný. Užijte si nakupování!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Otevřeli jste nákupní web, který může být podezřelý."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Při nakupování na tomto webu buďte obezřetní."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Tento web dosud nebyl analyzován."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Při nakupování na tomto webu buďte obezřetní."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Otevřeli jste nákupní web, který není hodnocen jako nejlepší."
+   }
+}

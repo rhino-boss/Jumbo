@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "A tranzakciók védelme érdekében a(z) $PRODUCT_NAME$ letiltotta ezt a webhelyet a Bankhasználat védelme idejére.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "A tranzakciók védelme érdekében a(z) $PRODUCT_NAME$ letiltotta ezt a webhelyet a Kapcsolatvezérlés idejére.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Bankhasználat védelme által tiltva"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Blokkolva a Kapcsolatvezérlés által"
+   },
+   "blockpage_banking_allow": {
+      "message": "Webhely engedélyezése"
+   },
+   "blockpage_banking_description": {
+      "message": "A tranzakciók védelme érdekében a(z) $PRODUCT_NAME$ letiltotta ezt a webhelyet a banki munkamenet idejére.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "A tranzakciók védelme érdekében a(z) $PRODUCT_NAME$ letiltotta ezt a webhelyet a Kapcsolatvezérlés idejére.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Ha a tranzakció befejezéséhez szükség van rá, engedélyezze a webhelyet. Amikor befejeződik a tranzakció, állítsa le a védett bankhasználati munkamenetet."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Ha a tranzakció befejezéséhez szükség van rá, engedélyezze a webhelyet. Amikor befejeződik a tranzakció, állítsa le a Kapcsolatvezérlés munkamenetét."
+   },
+   "blockpage_banking_heading": {
+      "message": "A bankhasználat védelme aktív"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "A Kapcsolatvezérlés aktív"
+   },
+   "blockpage_banking_title": {
+      "message": "Bankhasználat védelme"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Kapcsolatvezérlés"
+   },
+   "blockpage_blocked": {
+      "message": "A webhely elutasítva"
+   },
+   "blockpage_blocked_ws": {
+      "message": "A webhely elutasítva"
+   },
+   "blockpage_child_allow": {
+      "message": "A webhely engedélyezése"
+   },
+   "blockpage_child_description": {
+      "message": "Csak a következő webhelyekhez férhet hozzá:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Még nincsenek engedélyezett webhelyek."
+   },
+   "blockpage_child_heading": {
+      "message": "A webhely elutasítva"
+   },
+   "blockpage_child_note": {
+      "message": "A következőt is módosíthatja:"
+   },
+   "blockpage_child_note_link": {
+      "message": "engedélyezett és tiltott webhelyek"
+   },
+   "blockpage_child_title": {
+      "message": "A webhely elutasítva"
+   },
+   "blockpage_denied_allow": {
+      "message": "A webhely engedélyezése ezen a számítógépen"
+   },
+   "blockpage_denied_description": {
+      "message": "A(z) $PRODUCT_NAME$ fiókkezelője letiltotta a hozzáférést ehhez a webhelyhez. A folytatáshoz a fiókkezelő engedélyére van szükség.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Webhely blokkolva"
+   },
+   "blockpage_denied_title": {
+      "message": "Webhely blokkolva"
+   },
+   "blockpage_harmful_allow": {
+      "message": "A webhely engedélyezése ezen a számítógépen"
+   },
+   "blockpage_harmful_description": {
+      "message": "A(z) $PRODUCT_NAME$ károsként jelölte meg ezt a webhelyet. Azt javasoljuk, hogy ne nyissa meg ezt a webhelyet.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Itt nem ajánlatos böngésznie"
+   },
+   "blockpage_harmful_report": {
+      "message": "Téves azonosítás bejelentése"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Úgy gondolja, hogy ez a webhely nem káros?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Káros webhely blokkolva"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Feltétlen hozzáférés"
+   },
+   "blockpage_illegal_description": {
+      "message": "Ezt a webhelyet a(z) $PRODUCT_NAME$ tiltott tartalmúként jelentette. Kifejezetten azt javasoljuk, hogy ne látogasson erre a webhelyre.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Tiltott webhely"
+   },
+   "blockpage_illegal_report": {
+      "message": "Téves azonosítás bejelentése"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Úgy gondolja, hogy ez a webhely nem káros?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Tiltott webhely blokkolva"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Folytatás mindenképp"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "A $PRODUCT_NAME$ blokkolta ezt a webhelyet a legutóbbi regisztrációja miatt. Javasoljuk, hogy kerülje a webhelyet, amíg a hitelességét nem ellenőrizték.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "A weboldal domainjét ekkor regisztrálták: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Nemrég regisztrált, ellenőrizetlen webhely blokkolva"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Téves azonosítás bejelentése"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Úgy gondolja, hogy ez a webhely nem káros?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "A nemrég regisztrált webhely blokkolva van"
+   },
+   "blockpage_parental_allow": {
+      "message": "A webhely engedélyezése ezen a számítógépen"
+   },
+   "blockpage_parental_description": {
+      "message": "A(z) $PRODUCT_NAME$ letiltotta ezt a tartalmat, mert a tartalom korlátozva van a következő kategóriában: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Webhely blokkolva"
+   },
+   "blockpage_parental_report": {
+      "message": "Tévesen riasztott webhely bejelentése"
+   },
+   "blockpage_parental_title": {
+      "message": "Webhely blokkolva"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Feltétlen hozzáférés"
+   },
+   "blockpage_suspicious_description": {
+      "message": "A(z) $PRODUCT_NAME$ gyanúsként jelölte meg ezt a webhelyet. Nem javasoljuk a megnyitását.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Itt nem ajánlatos böngésznie"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Téves azonosítás bejelentése"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Úgy gondolja, hogy ez a webhely nem káros?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Gyanús webhely blokkolva"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Ez a vásárlást lehetővé tevő webhely számos, óvatosságra intő jelet tartalmaz. Esélyes, hogy a webhely csalás céljából készült."
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Itt nem ajánlatos böngésznie"
+   },
+   "category_abortion": {
+      "message": "Abortusz"
+   },
+   "category_adserving": {
+      "message": "Hirdetésszolgáltatás"
+   },
+   "category_adult": {
+      "message": "Felnőtt"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alkohol és dohány"
+   },
+   "category_anonymizers": {
+      "message": "Névtelenséget adó webhelyek"
+   },
+   "category_artificial_intelligence": {
+      "message": "Mesterséges intelligencia"
+   },
+   "category_auctions": {
+      "message": "Aukciók"
+   },
+   "category_banking": {
+      "message": "Banki tevékenységek"
+   },
+   "category_blogs": {
+      "message": "Blogok"
+   },
+   "category_chat": {
+      "message": "Csevegés"
+   },
+   "category_dating": {
+      "message": "Társkeresés"
+   },
+   "category_disturbing": {
+      "message": "Felzaklató"
+   },
+   "category_drugs": {
+      "message": "Kábítószerek"
+   },
+   "category_entertainment": {
+      "message": "Szórakoztatás"
+   },
+   "category_file_sharing": {
+      "message": "Fájlmegosztás"
+   },
+   "category_forums": {
+      "message": "Fórumok"
+   },
+   "category_gambling": {
+      "message": "Szerencsejáték"
+   },
+   "category_games": {
+      "message": "Játékok"
+   },
+   "category_hacking": {
+      "message": "Hackelés"
+   },
+   "category_hate": {
+      "message": "Gyűlölet"
+   },
+   "category_illegal": {
+      "message": "Törvénytelen"
+   },
+   "category_illegal_downloads": {
+      "message": "Illegális letöltések"
+   },
+   "category_job_search": {
+      "message": "Álláskeresés"
+   },
+   "category_payment_services": {
+      "message": "Fizetési szolgáltatások"
+   },
+   "category_scam": {
+      "message": "Csalás"
+   },
+   "category_search_engines": {
+      "message": "Keresőmotorok"
+   },
+   "category_shopping": {
+      "message": "Vásárlás"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Vásárlás és aukciók"
+   },
+   "category_social_networks": {
+      "message": "Közösségi hálózatok"
+   },
+   "category_software_downloads": {
+      "message": "Szoftverletöltések"
+   },
+   "category_spam": {
+      "message": "Levélszemét"
+   },
+   "category_streaming_media": {
+      "message": "Online médiatartalom"
+   },
+   "category_travel": {
+      "message": "Utazás"
+   },
+   "category_unknown": {
+      "message": "Ismeretlen"
+   },
+   "category_violence": {
+      "message": "Erőszak"
+   },
+   "category_weapons": {
+      "message": "Fegyverek"
+   },
+   "category_webmail": {
+      "message": "Webes e-mail"
+   },
+   "close_btn": {
+      "message": "Bezárás"
+   },
+   "error_ca_text_p1": {
+      "message": "Nem sikerült csatlakozni az alkalmazáshoz"
+   },
+   "error_ca_text_p2": {
+      "message": "Ellenőrizze a konfigurációt"
+   },
+   "ext_description": {
+      "message": "Bővítmény a WithSecure-tól származó biztonsági termékekkel való titkosított böngészés védelmére."
+   },
+   "ext_name": {
+      "message": "Böngészővédelem a WithSecure-tól"
+   },
+   "ext_name_alpha": {
+      "message": "Böngészővédelem a WithSecure-tól (alfa)"
+   },
+   "ext_name_beta": {
+      "message": "Böngészővédelem a WithSecure-tól (béta)"
+   },
+   "ext_name_short": {
+      "message": "Biztonságos böngészés"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Elfogadom"
+   },
+   "ext_onboarding_allow": {
+      "message": "Engedélyezés"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "A bővítmény telepítése befejeződött. A lap most bezárul."
+   },
+   "ext_onboarding_decline": {
+      "message": "Elutasítás és a bővítmény eltávolítása"
+   },
+   "ext_onboarding_description": {
+      "message": "Elfogadja az engedélyeket?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Az eszközt kezelő vállalat vagy a vállalati rendszergazda úgy döntött, hogy a WithSecure biztonsági termékeivel gondoskodik ennek a számítógépnek a védelméről. A konfiguráció kikényszeríti a számítógép felhasználóinak káros webhelyek elleni védelmét. A Böngészővédelem a WithSecure-tól alapvető funkciójának biztosítása érdekében – azaz annak megakadályozásához, hogy a kártékony webhelyek kárt tegyenek az Ön rendszerében – szükségünk van a beleegyezésére az adatok gyűjtésére és feldolgozására vonatkozóan. Ellenkező esetben nem fogja tudni használni a bővítményt. \u003Cbr>Azzal, hogy engedélyezi a Böngészővédelem a WithSecure-tól terméket, beleegyezik, hogy az Ön által felkeresett webhelyek címét átadjuk a WithSecure biztonsági termékeinek abból a célból, hogy ellenőrizzék az adott webhely besorolását és kategóriáját. A címeket (URL-eket) a rendszer felismerhetetlenné teszi, az automatizált WithSecure Security Cloud termékünk pedig az \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a> tartalmának megfelelően kezeli őket.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "A böngésző védelméhez hozzájárulás szükséges"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "A bővítmény telepítése meg lett szakítva. A bővítményt most eltávolítjuk."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Adatvédelmi irányelvek"
+   },
+   "ext_open_consent": {
+      "message": "Megnyitás"
+   },
+   "ext_show_consent_msg": {
+      "message": "Látogasson el a beleegyezési lapra."
+   },
+   "page_back": {
+      "message": "Vissza"
+   },
+   "page_banking": {
+      "message": "Banki tevékenységek"
+   },
+   "page_blocked": {
+      "message": "A webhely elutasítva"
+   },
+   "page_cancel": {
+      "message": "Mégse"
+   },
+   "page_harmful": {
+      "message": "Káros"
+   },
+   "page_next": {
+      "message": "Tovább"
+   },
+   "page_not_available": {
+      "message": "A minősítésre vonatkozó információk nem elérhetők"
+   },
+   "page_prohibited": {
+      "message": "Tiltott webhely"
+   },
+   "page_report": {
+      "message": "Jelentés"
+   },
+   "page_report_banking": {
+      "message": "Bankinak jelentés."
+   },
+   "page_report_ext": {
+      "message": "Az oldal bejelentése"
+   },
+   "page_report_harmful": {
+      "message": "Károsnak jelentés."
+   },
+   "page_report_safe": {
+      "message": "Biztonságosnak jelentés."
+   },
+   "page_report_suspicious": {
+      "message": "Gyanúsnak jelentés."
+   },
+   "page_safe": {
+      "message": "Biztonságos"
+   },
+   "page_success_p1": {
+      "message": "Köszönjük! Kielemezzük a jelentést, és hamarosan módosítjuk a weboldal minősítését."
+   },
+   "page_suggest_category": {
+      "message": "Kategória kiválasztása"
+   },
+   "page_suggest_rating": {
+      "message": "Új minősítés ajánlása"
+   },
+   "page_suspicious": {
+      "message": "Gyanús"
+   },
+   "page_suspicious_p1": {
+      "message": "Írja le, miért tűnik ez az oldal gyanúsnak"
+   },
+   "page_unsafe": {
+      "message": "Nem biztonságos"
+   },
+   "page_wrong_cat_1": {
+      "message": "Egyéb kategória"
+   },
+   "page_wrong_cat_2": {
+      "message": "Egyéb kategória"
+   },
+   "page_wrong_category_ws": {
+      "message": "Egyéb kategória"
+   },
+   "page_wrong_rating_1": {
+      "message": "Ön szerint ennek a weboldalnak helytelen a minősítése?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Segítsen egy jelentés küldésével."
+   },
+   "popup_error_description": {
+      "message": "Az alkalmazása le lett törölve vagy nem a kompatibilis verzióval rendelkezik. Telepítse az alkalmazás legújabb verzióját és próbálja újra!"
+   },
+   "popup_error_header": {
+      "message": "A biztonsági alkalmazás nem található"
+   },
+   "popup_status_init": {
+      "message": "Inicializálás…"
+   },
+   "popup_status_ok": {
+      "message": "A böngésző védett"
+   },
+   "search_rating_allowed": {
+      "message": "Ezt a webhelyet engedélyezte egy rendszergazda"
+   },
+   "search_rating_banking": {
+      "message": "A webhely átmenetileg le van tiltva"
+   },
+   "search_rating_category_adult": {
+      "message": "Felnőtt"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alkohol és dohány"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Névtelenséget adó webhelyek"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Mesterséges intelligencia"
+   },
+   "search_rating_category_dating": {
+      "message": "Társkeresés"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Felzaklató"
+   },
+   "search_rating_category_drugs": {
+      "message": "Kábítószerek"
+   },
+   "search_rating_category_gambling": {
+      "message": "Szerencsejáték"
+   },
+   "search_rating_category_hate": {
+      "message": "Gyűlölet"
+   },
+   "search_rating_category_illegal": {
+      "message": "Törvénytelen"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Illegális letöltések"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Vásárlás és aukciók"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Közösségi hálózatok"
+   },
+   "search_rating_category_status": {
+      "message": "Ezt a webhelyet a Családi szabályok korlátozza"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Ezt a webhelyet a Webtartalom-vezérlő korlátozza"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Online médiatartalom"
+   },
+   "search_rating_category_unknown": {
+      "message": "Ismeretlen"
+   },
+   "search_rating_category_violence": {
+      "message": "Erőszak"
+   },
+   "search_rating_category_weapons": {
+      "message": "Fegyverek"
+   },
+   "search_rating_denied": {
+      "message": "Ezt a webhelyet letiltotta egy rendszergazda"
+   },
+   "search_rating_harmful": {
+      "message": "Ez a webhely nem biztonságos, itt nem ajánlatos böngésznie."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Ez a webhely nem biztonságosként van besorolva"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Itt nem ajánlatos böngésznie"
+   },
+   "search_rating_isbank": {
+      "message": "Ez egy megbízható online banki weboldal."
+   },
+   "search_rating_loading": {
+      "message": "Betöltés…"
+   },
+   "search_rating_restricted": {
+      "message": "Ezen a webhelyen korlátozott tartalom található"
+   },
+   "search_rating_safe": {
+      "message": "Ez a webhely biztonságos, jó böngészést kívánunk!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Ez a webhely biztonságos"
+   },
+   "search_rating_safe_p2": {
+      "message": "Jó böngészést kívánunk!"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Ez a webhely gyanús lehet"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Ez a webhely nem tartozik a legjobb értékelést kapott webhelyek közé"
+   },
+   "search_rating_suspicious": {
+      "message": "Ez a webhely gyanús."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Ez a hely gyanús"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Legyen körültekintő, miközben böngészik"
+   },
+   "search_rating_unknown": {
+      "message": "Ezt a webhelyet még nem elemeztük"
+   },
+   "trusted_shopping_review": {
+      "message": "Számos vélemény és biztonsági pontszám alapján"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Olyan, vásárlást lehetővé tevő webhelyet nyitott meg, amely biztonságos."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Ez a vásárlást lehetővé tevő webhely jó értékeléseket kapott és biztonságos, jó vásárlást kívánunk!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Olyan, vásárlást lehetővé tevő webhelyet nyitott meg, amely gyanús lehet."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "A webhelyen való vásárlás során legyen körültekintő."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Ezt a webhelyet még nem elemeztük."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "A webhelyen való vásárlás során legyen körültekintő."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Olyan, vásárlást lehetővé tevő webhelyet nyitott meg, amely nem tartozik a legjobb értékelést kapott webhelyek közé."
+   }
+}

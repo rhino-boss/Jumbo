@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.2 (67145) - http://www.bohemiancoding.com/sketch -->
+    <title>icons/status/ ic_loading_circular</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M1,24 L5,24 C5,34.493761 13.506239,43 24,43 C34.4923172,43 43,34.4929048 43,24 C43,13.508539 34.491461,5 24,5 L24,1 C36.7006,1 47,11.2994 47,24 C47,36.7029 36.7006,47 24,47 C11.2971,47 1,36.7029 1,24 Z" id="path-1"></path>
+    </defs>
+    <g id="icons/status/-ic_loading_circular" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle-37" fill-rule="nonzero" x="0" y="0" width="48" height="48"></rect>
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="progress" fill="#00BAFF" xlink:href="#path-1"></use>
+    </g>
+</svg>

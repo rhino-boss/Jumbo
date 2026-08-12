@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "To protect your transactions, $PRODUCT_NAME$ has blocked this website during your Banking Protection session.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "To protect your transactions, $PRODUCT_NAME$ has blocked this website during your Connection Control session.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Blocked by Banking Protection"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Blocked by Connection Control"
+   },
+   "blockpage_banking_allow": {
+      "message": "Allow website"
+   },
+   "blockpage_banking_description": {
+      "message": "To protect your transactions, $PRODUCT_NAME$ has blocked this website during the banking session.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "To protect your transactions, $PRODUCT_NAME$ has blocked this website during the Connection Control session.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Allow the website if you need to access it to complete your transaction. End the Banking Protection session when your transaction is complete."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Allow the website if you need to access it to complete your transaction. End the Connection Control session when your transaction is complete."
+   },
+   "blockpage_banking_heading": {
+      "message": "Banking protection is active"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Connection Control is active"
+   },
+   "blockpage_banking_title": {
+      "message": "Banking Protection"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Connection Control"
+   },
+   "blockpage_blocked": {
+      "message": "Website denied"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Website denied"
+   },
+   "blockpage_child_allow": {
+      "message": "Allow this website"
+   },
+   "blockpage_child_description": {
+      "message": "You can only access these websites:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "No allowed websites yet."
+   },
+   "blockpage_child_heading": {
+      "message": "Website denied"
+   },
+   "blockpage_child_note": {
+      "message": "You can also make changes to the"
+   },
+   "blockpage_child_note_link": {
+      "message": "allowed and denied websites"
+   },
+   "blockpage_child_title": {
+      "message": "Website denied"
+   },
+   "blockpage_denied_allow": {
+      "message": "Allow website on this computer"
+   },
+   "blockpage_denied_description": {
+      "message": "$PRODUCT_NAME$ account manager has blocked access to this website. You need their permission in order to continue.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Website blocked"
+   },
+   "blockpage_denied_title": {
+      "message": "Website blocked"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Allow website on this computer"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ has listed this website as harmful. We recommend you do not enter this website.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "You shouldn't surf here"
+   },
+   "blockpage_harmful_report": {
+      "message": "Report a false positive here"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Don't think this is harmful?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Harmful website blocked"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Access anyway"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ has reported this website to contain prohibited content. We strongly recommend you do not enter this website.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Prohibited website"
+   },
+   "blockpage_illegal_report": {
+      "message": "Report a false positive here"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Don't think this is harmful?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Prohibited website blocked"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Proceed anyway"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ has blocked this website due to its recent registration. We recommend avoiding it until its legitimacy has been verified.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "The website's domain was registered on: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Recently registered, unverified site blocked"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Report a false positive here"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Don't think this is harmful?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Recently registered website is blocked"
+   },
+   "blockpage_parental_allow": {
+      "message": "Allow website on this computer"
+   },
+   "blockpage_parental_description": {
+      "message": "$PRODUCT_NAME$ has blocked this content because it is restricted in category: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Website blocked"
+   },
+   "blockpage_parental_report": {
+      "message": "Report a false positive website"
+   },
+   "blockpage_parental_title": {
+      "message": "Website blocked"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Access anyway"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ has listed this website as suspicious. We recommend you do not enter this website.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "You shouldn't surf here"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Report a false positive here"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Don't think this is harmful?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Suspicious website blocked"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "This shopping website has several red flags. Chances are this is a scam site!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "You shouldn’t surf here"
+   },
+   "category_abortion": {
+      "message": "Abortion"
+   },
+   "category_adserving": {
+      "message": "Adserving"
+   },
+   "category_adult": {
+      "message": "Adult"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alcohol and tobacco"
+   },
+   "category_anonymizers": {
+      "message": "Anonymizers"
+   },
+   "category_artificial_intelligence": {
+      "message": "Artificial Intelligence"
+   },
+   "category_auctions": {
+      "message": "Auctions"
+   },
+   "category_banking": {
+      "message": "Banking"
+   },
+   "category_blogs": {
+      "message": "Blogs"
+   },
+   "category_chat": {
+      "message": "Chat"
+   },
+   "category_dating": {
+      "message": "Dating"
+   },
+   "category_disturbing": {
+      "message": "Disturbing"
+   },
+   "category_drugs": {
+      "message": "Drugs"
+   },
+   "category_entertainment": {
+      "message": "Entertainment"
+   },
+   "category_file_sharing": {
+      "message": "File sharing"
+   },
+   "category_forums": {
+      "message": "Forums"
+   },
+   "category_gambling": {
+      "message": "Gambling"
+   },
+   "category_games": {
+      "message": "Games"
+   },
+   "category_hacking": {
+      "message": "Hacking"
+   },
+   "category_hate": {
+      "message": "Hate"
+   },
+   "category_illegal": {
+      "message": "Illegal"
+   },
+   "category_illegal_downloads": {
+      "message": "Illegal downloads"
+   },
+   "category_job_search": {
+      "message": "Job search"
+   },
+   "category_payment_services": {
+      "message": "Payment services"
+   },
+   "category_scam": {
+      "message": "Scam"
+   },
+   "category_search_engines": {
+      "message": "Search engines"
+   },
+   "category_shopping": {
+      "message": "Shopping"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Shopping and auctions"
+   },
+   "category_social_networks": {
+      "message": "Social networks"
+   },
+   "category_software_downloads": {
+      "message": "Software downloads"
+   },
+   "category_spam": {
+      "message": "Spam"
+   },
+   "category_streaming_media": {
+      "message": "Streaming media"
+   },
+   "category_travel": {
+      "message": "Travel"
+   },
+   "category_unknown": {
+      "message": "Unknown"
+   },
+   "category_violence": {
+      "message": "Violence"
+   },
+   "category_weapons": {
+      "message": "Weapons"
+   },
+   "category_webmail": {
+      "message": "Webmail"
+   },
+   "close_btn": {
+      "message": "Close"
+   },
+   "error_ca_text_p1": {
+      "message": "Can't connect to application"
+   },
+   "error_ca_text_p2": {
+      "message": "Check your configuration"
+   },
+   "ext_description": {
+      "message": "Extension for protecting encrypted browsing with security products by WithSecure."
+   },
+   "ext_name": {
+      "message": "Browsing Protection by WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Browsing Protection by WithSecure (alpha)"
+   },
+   "ext_name_beta": {
+      "message": "Browsing Protection by WithSecure (beta)"
+   },
+   "ext_name_short": {
+      "message": "Secure Browsing"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Accept"
+   },
+   "ext_onboarding_allow": {
+      "message": "Allow"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Extension setup is complete, the page will be closed now."
+   },
+   "ext_onboarding_decline": {
+      "message": "Decline and remove extension"
+   },
+   "ext_onboarding_description": {
+      "message": "Accept permissions?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "The company managing this device, or your company administrator has selected to protect this computer with security products by WithSecure. The configuration enforces protecting users of the computer from harmful web sites. To provide the core functionality of the Browsing Protection by WithSecure - prevent malicious websites from causing you harm, we need your consent to collect and process the data. You will not be able to use the extension otherwise. \u003Cbr>By you allowing Browsing Protection by WithSecure, you accept that the addresses of websites you visit are transferred to the WithSecure security products to check its rating and category. The addresses (URLs) are made non-identifiable and handled by our automated WithSecure Security Cloud in accordance with our \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Consent needed to protect your browsing"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Extension setup was canceled, the extension will be uninstalled now."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Privacy Policy"
+   },
+   "ext_open_consent": {
+      "message": "Open"
+   },
+   "ext_show_consent_msg": {
+      "message": "Please, visit consent page."
+   },
+   "page_back": {
+      "message": "Back"
+   },
+   "page_banking": {
+      "message": "Banking"
+   },
+   "page_blocked": {
+      "message": "Website denied"
+   },
+   "page_cancel": {
+      "message": "Cancel"
+   },
+   "page_harmful": {
+      "message": "Harmful"
+   },
+   "page_next": {
+      "message": "Next"
+   },
+   "page_not_available": {
+      "message": "Rating information is not available"
+   },
+   "page_prohibited": {
+      "message": "Prohibited website"
+   },
+   "page_report": {
+      "message": "Report"
+   },
+   "page_report_banking": {
+      "message": "Report it as banking."
+   },
+   "page_report_ext": {
+      "message": "Report this page"
+   },
+   "page_report_harmful": {
+      "message": "Report it as harmful."
+   },
+   "page_report_safe": {
+      "message": "Report it as safe."
+   },
+   "page_report_suspicious": {
+      "message": "Report it as suspicious."
+   },
+   "page_safe": {
+      "message": "Safe"
+   },
+   "page_success_p1": {
+      "message": "Thank you! We will analyze the report and adjust the rating for this website soon."
+   },
+   "page_suggest_category": {
+      "message": "Choose category"
+   },
+   "page_suggest_rating": {
+      "message": "Suggest a new rating"
+   },
+   "page_suspicious": {
+      "message": "Suspicious"
+   },
+   "page_suspicious_p1": {
+      "message": "Describe why this page appears suspicious"
+   },
+   "page_unsafe": {
+      "message": "Unsafe"
+   },
+   "page_wrong_cat_1": {
+      "message": "Other category"
+   },
+   "page_wrong_cat_2": {
+      "message": "Other category"
+   },
+   "page_wrong_category_ws": {
+      "message": "Other category"
+   },
+   "page_wrong_rating_1": {
+      "message": "Do you think this website has the wrong rating?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Help us by sending us a report."
+   },
+   "popup_error_description": {
+      "message": "Your application has been uninstalled or you do not have a compatible version. Install the latest version of the application and try again."
+   },
+   "popup_error_header": {
+      "message": "Security application not found"
+   },
+   "popup_status_init": {
+      "message": "Initializing..."
+   },
+   "popup_status_ok": {
+      "message": "Your browser is protected"
+   },
+   "search_rating_allowed": {
+      "message": "This site is allowed by an administrator"
+   },
+   "search_rating_banking": {
+      "message": "This site is temporarily blocked"
+   },
+   "search_rating_category_adult": {
+      "message": "Adult"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alcohol and tobacco"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Anonymizers"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Artificial intelligence"
+   },
+   "search_rating_category_dating": {
+      "message": "Dating"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Disturbing"
+   },
+   "search_rating_category_drugs": {
+      "message": "Drugs"
+   },
+   "search_rating_category_gambling": {
+      "message": "Gambling"
+   },
+   "search_rating_category_hate": {
+      "message": "Hate"
+   },
+   "search_rating_category_illegal": {
+      "message": "Illegal"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Illegal downloads"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Shopping and Auctions"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Social networks"
+   },
+   "search_rating_category_status": {
+      "message": "This website is restricted by Family Rules"
+   },
+   "search_rating_category_status_ws": {
+      "message": "This website is restricted by Web Content Control"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Streaming media"
+   },
+   "search_rating_category_unknown": {
+      "message": "Unknown"
+   },
+   "search_rating_category_violence": {
+      "message": "Violence"
+   },
+   "search_rating_category_weapons": {
+      "message": "Weapons"
+   },
+   "search_rating_denied": {
+      "message": "This site is denied by an administrator"
+   },
+   "search_rating_harmful": {
+      "message": "This website is rated unsafe, you shouldn't browse here."
+   },
+   "search_rating_harmful_p1": {
+      "message": "This website is rated unsafe"
+   },
+   "search_rating_harmful_p2": {
+      "message": "You shouldn't browse here"
+   },
+   "search_rating_isbank": {
+      "message": "This is a trusted online banking website."
+   },
+   "search_rating_loading": {
+      "message": "Loading..."
+   },
+   "search_rating_restricted": {
+      "message": "This site contains restricted content"
+   },
+   "search_rating_safe": {
+      "message": "This website is safe, enjoy your surfing!"
+   },
+   "search_rating_safe_p1": {
+      "message": "This website is safe"
+   },
+   "search_rating_safe_p2": {
+      "message": "Enjoy your surfing"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "This website may be suspicious"
+   },
+   "search_rating_shopping_warn": {
+      "message": "This website is not top rated"
+   },
+   "search_rating_suspicious": {
+      "message": "This site is suspicious."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "This site is suspicious"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Please take care while browsing"
+   },
+   "search_rating_unknown": {
+      "message": "This site has not been analyzed yet"
+   },
+   "trusted_shopping_review": {
+      "message": "Based on multiple reviews and security scores"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "You have opened a safe shopping website."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "This shopping website is highly rated and trusted, enjoy your shopping session!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "You have opened a shopping website which may be suspicious."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Caution is advised while shopping on this site."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "This website has not been analyzed yet."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Caution is advised while shopping on this site."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "You have opened a shopping website which is not top rated."
+   }
+}

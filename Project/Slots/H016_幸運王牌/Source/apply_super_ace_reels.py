@@ -27,6 +27,9 @@ GOLD_SYMBOLS = {
     "M1": "G1", "M2": "G2", "M3": "G3", "M4": "G4",
     "A": "GA", "K": "GK", "Q": "GQ", "J": "GJ",
 }
+BASE_SYMBOLS = {gold: symbol for symbol, gold in GOLD_SYMBOLS.items()}
+MIN_SC_GAP = 4
+MAX_SYMBOL_STACK = 4
 
 
 def stable_value(value: Any) -> Any:
@@ -113,6 +116,90 @@ def apply_gold(symbols: list[str], rate: float) -> tuple[list[str], int]:
     return result, target
 
 
+def base_symbol(symbol: str) -> str:
+    return BASE_SYMBOLS.get(symbol, symbol)
+
+
+def cyclic_runs(symbols: list[str]) -> list[list[int]]:
+    """Return canonical-symbol runs, treating the reel as a closed loop."""
+    size = len(symbols)
+    canonical = [base_symbol(symbol) for symbol in symbols]
+    if len(set(canonical)) == 1:
+        return [list(range(size))]
+    start = next(index for index in range(size) if canonical[index] != canonical[index - 1])
+    runs: list[list[int]] = []
+    current: list[int] = []
+    current_symbol: str | None = None
+    for offset in range(size):
+        index = (start + offset) % size
+        if canonical[index] != current_symbol:
+            if current:
+                runs.append(current)
+            current = [index]
+            current_symbol = canonical[index]
+        else:
+            current.append(index)
+    if current:
+        runs.append(current)
+    return runs
+
+
+def reel_constraint_state(symbols: list[str]) -> tuple[tuple[int, int, int], list[int]]:
+    """Return a sortable penalty and positions that directly violate constraints."""
+    size = len(symbols)
+    scatter_positions = [index for index, symbol in enumerate(symbols) if symbol == "C1"]
+    sc_penalty = 0
+    violating: set[int] = set()
+    if scatter_positions:
+        for offset, left in enumerate(scatter_positions):
+            right = scatter_positions[(offset + 1) % len(scatter_positions)]
+            gap = (right - left - 1) % size
+            if gap < MIN_SC_GAP:
+                sc_penalty += MIN_SC_GAP - gap
+                violating.add(right)
+
+    stack_penalty = 0
+    for run in cyclic_runs(symbols):
+        if len(run) > MAX_SYMBOL_STACK:
+            stack_penalty += len(run) - MAX_SYMBOL_STACK
+            violating.update(run[MAX_SYMBOL_STACK:])
+
+    return (sc_penalty + stack_penalty, sc_penalty, stack_penalty), sorted(violating)
+
+
+def repair_reel_constraints(symbols: list[str]) -> tuple[list[str], list[tuple[int, int]]]:
+    """Repair constraints with deterministic, minimum-penalty swaps within one reel."""
+    result = list(symbols)
+    swaps: list[tuple[int, int]] = []
+    for _ in range(len(result) * 2):
+        penalty, violating = reel_constraint_state(result)
+        if penalty[0] == 0:
+            return result, swaps
+
+        best: tuple[tuple[int, int, int], int, int, int] | None = None
+        for left in violating:
+            for right in range(len(result)):
+                if left == right or result[left] == result[right]:
+                    continue
+                result[left], result[right] = result[right], result[left]
+                candidate_penalty, _ = reel_constraint_state(result)
+                result[left], result[right] = result[right], result[left]
+                if candidate_penalty >= penalty:
+                    continue
+                distance = min((right - left) % len(result), (left - right) % len(result))
+                candidate = (candidate_penalty, distance, left, right)
+                if best is None or candidate < best:
+                    best = candidate
+
+        if best is None:
+            raise RuntimeError(f"Unable to repair reel constraints; remaining penalty={penalty}")
+        _, _, left, right = best
+        result[left], result[right] = result[right], result[left]
+        swaps.append((left, right))
+
+    raise RuntimeError("Reel constraint repair exceeded iteration limit")
+
+
 def write_reels(worksheet, reels: list[list[str]]) -> None:
     for row in range(4, 404):
         for column in EDITABLE_COLUMNS:
@@ -132,17 +219,21 @@ def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
         source_reels, source_weights = read_reels(source[source_name])
         reels: list[list[str]] = []
         gold_counts: list[int] = []
+        reel_swaps: list[int] = []
         for reel in range(5):
             expanded = resample_to_200(source_reels[reel], source_weights[reel])
             expanded, gold_count = apply_gold(expanded, GOLD_RATES[target_name][reel])
+            expanded, swaps = repair_reel_constraints(expanded)
             reels.append(expanded)
             gold_counts.append(gold_count)
+            reel_swaps.append(len(swaps))
         write_reels(target[target_name], reels)
         result[target_name] = {
             "reel_lengths": [len(reel) for reel in reels],
             "integer_weight_sums": [REEL_LENGTH] * 5,
             "gold_counts": gold_counts,
             "gold_rates": [count / REEL_LENGTH for count in gold_counts],
+            "constraint_repair_swaps": reel_swaps,
             "r1_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[0]),
             "r5_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[4]),
             "all_weights_are_positive_integers": True,

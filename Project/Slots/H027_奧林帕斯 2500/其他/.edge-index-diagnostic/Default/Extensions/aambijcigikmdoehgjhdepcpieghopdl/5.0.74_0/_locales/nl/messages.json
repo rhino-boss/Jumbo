@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "$PRODUCT_NAME$ heeft deze website tijdens de bankiersessie geblokkeerd om uw transacties te beschermen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "$PRODUCT_NAME$ heeft deze website tijdens uw sessie voor Verbindingsbeheer geblokkeerd om uw transacties te beschermen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Geblokkeerd door Bankierbeveiliging"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Geblokkeerd door Verbindingsbeheer"
+   },
+   "blockpage_banking_allow": {
+      "message": "Website toestaan"
+   },
+   "blockpage_banking_description": {
+      "message": "$PRODUCT_NAME$ heeft deze website tijdens de bankiersessie geblokkeerd om uw transacties te beschermen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "$PRODUCT_NAME$ heeft deze website tijdens de sessie voor Verbindingsbeheer geblokkeerd om uw transacties te beschermen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Geef de website toestemming als u hiervoor toegang moet hebben om uw transactie te voltooien. Beëindig de sessie voor Bankierbeveiliging wanneer uw transactie is voltooid."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Geef de website toestemming als u hiervoor toegang moet hebben om uw transactie te voltooien. Beëindig de sessie voor Verbindingsbeheer wanneer uw transactie is voltooid."
+   },
+   "blockpage_banking_heading": {
+      "message": "Bankierbeveiliging is actief"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Verbindingsbeheer is actief"
+   },
+   "blockpage_banking_title": {
+      "message": "Bankierbeveiliging"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Verbindingsbeheer"
+   },
+   "blockpage_blocked": {
+      "message": "Website is geweigerd"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Website is geweigerd"
+   },
+   "blockpage_child_allow": {
+      "message": "Deze website toestaan"
+   },
+   "blockpage_child_description": {
+      "message": "U hebt alleen toegang tot deze websites:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Nog geen toegestane websites."
+   },
+   "blockpage_child_heading": {
+      "message": "Website is geweigerd"
+   },
+   "blockpage_child_note": {
+      "message": "U kunt ook wijzigingen aanbrengen in de"
+   },
+   "blockpage_child_note_link": {
+      "message": "toegestane en geweigerde websites"
+   },
+   "blockpage_child_title": {
+      "message": "Website is geweigerd"
+   },
+   "blockpage_denied_allow": {
+      "message": "Website op deze computer toestaan"
+   },
+   "blockpage_denied_description": {
+      "message": "$PRODUCT_NAME$-accountmanager heeft de toegang tot deze website geblokkeerd. U hebt zijn of haar toestemming nodig om door te gaan.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Website geblokkeerd"
+   },
+   "blockpage_denied_title": {
+      "message": "Website geblokkeerd"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Website op deze computer toestaan"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ heeft deze website als schadelijk aangemerkt. We raden u aan deze website niet te bezoeken.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "U kunt beter niet naar deze website gaan"
+   },
+   "blockpage_harmful_report": {
+      "message": "U kunt een 'foutpositief' hier melden"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Is het niet schadelijk?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Schadelijke website geblokkeerd"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Toch naar de website gaan"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ heeft gemeld dat deze website verboden inhoud bevat. We raden u sterk aan deze website niet te bezoeken.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Verboden website"
+   },
+   "blockpage_illegal_report": {
+      "message": "U kunt een 'foutpositief' hier melden"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Is het niet schadelijk?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Verboden website geblokkeerd"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Toch doorgaan"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ heeft deze website geblokkeerd vanwege de recente registratie. We raden aan de website te vermijden totdat de legitimiteit ervan is geverifieerd.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Het domein van de website is geregistreerd op: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Onlangs geregistreerde, niet-geverifieerde site geblokkeerd"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "U kunt een 'foutpositief' hier melden"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Is het niet schadelijk?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Onlangs geregistreerde website is geblokkeerd"
+   },
+   "blockpage_parental_allow": {
+      "message": "Website op deze computer toestaan"
+   },
+   "blockpage_parental_description": {
+      "message": "$PRODUCT_NAME$ heeft deze inhoud geblokkeerd omdat deze beperkt is in de categorie:",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Website geblokkeerd"
+   },
+   "blockpage_parental_report": {
+      "message": "Een 'foutpositieve' website melden"
+   },
+   "blockpage_parental_title": {
+      "message": "Website geblokkeerd"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Toch naar de website gaan"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ heeft deze website als verdacht aangemerkt. We raden u aan deze website niet te bezoeken.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "U kunt beter niet naar deze website gaan"
+   },
+   "blockpage_suspicious_report": {
+      "message": "U kunt een 'foutpositief' hier melden"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Is het niet schadelijk?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Verdachte website geblokkeerd"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Deze winkelwebsite is beoordeeld met meerdere rode vlaggen. De kans is groot dat dit een oplichtingssite is!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "U kunt beter niet naar deze website gaan"
+   },
+   "category_abortion": {
+      "message": "Abortus"
+   },
+   "category_adserving": {
+      "message": "Advertentieweergave"
+   },
+   "category_adult": {
+      "message": "Volwassen"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alcohol en tabak"
+   },
+   "category_anonymizers": {
+      "message": "Anoniem surfen"
+   },
+   "category_artificial_intelligence": {
+      "message": "Kunstmatige intelligentie"
+   },
+   "category_auctions": {
+      "message": "Veilingen"
+   },
+   "category_banking": {
+      "message": "Bankieren"
+   },
+   "category_blogs": {
+      "message": "Blogs"
+   },
+   "category_chat": {
+      "message": "Chatten"
+   },
+   "category_dating": {
+      "message": "Daten"
+   },
+   "category_disturbing": {
+      "message": "Verontrustend"
+   },
+   "category_drugs": {
+      "message": "Drugs"
+   },
+   "category_entertainment": {
+      "message": "Entertainment"
+   },
+   "category_file_sharing": {
+      "message": "Bestanden delen"
+   },
+   "category_forums": {
+      "message": "Forums"
+   },
+   "category_gambling": {
+      "message": "Gokken"
+   },
+   "category_games": {
+      "message": "Games"
+   },
+   "category_hacking": {
+      "message": "Hacken"
+   },
+   "category_hate": {
+      "message": "Haat"
+   },
+   "category_illegal": {
+      "message": "Illegaal"
+   },
+   "category_illegal_downloads": {
+      "message": "Illegale downloads"
+   },
+   "category_job_search": {
+      "message": "Werk zoeken"
+   },
+   "category_payment_services": {
+      "message": "Betaaldiensten"
+   },
+   "category_scam": {
+      "message": "Oplichting"
+   },
+   "category_search_engines": {
+      "message": "Zoekmachines"
+   },
+   "category_shopping": {
+      "message": "Winkelen"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Winkelen en veilingen"
+   },
+   "category_social_networks": {
+      "message": "Sociale netwerken"
+   },
+   "category_software_downloads": {
+      "message": "Software downloads"
+   },
+   "category_spam": {
+      "message": "Spam"
+   },
+   "category_streaming_media": {
+      "message": "Streaming media"
+   },
+   "category_travel": {
+      "message": "Reizen"
+   },
+   "category_unknown": {
+      "message": "Onbekend"
+   },
+   "category_violence": {
+      "message": "Geweld"
+   },
+   "category_weapons": {
+      "message": "Wapens"
+   },
+   "category_webmail": {
+      "message": "Webmail"
+   },
+   "close_btn": {
+      "message": "Sluiten"
+   },
+   "error_ca_text_p1": {
+      "message": "Kan niet verbinden met toepassing"
+   },
+   "error_ca_text_p2": {
+      "message": "Controleer uw configuratie"
+   },
+   "ext_description": {
+      "message": "Extensie voor het beveiligen van versleuteld browsen met beveiligingsproducten van WithSecure."
+   },
+   "ext_name": {
+      "message": "Browserbeveiliging door WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Browserbeveiliging door WithSecure (alfa)"
+   },
+   "ext_name_beta": {
+      "message": "Browserbeveiliging door WithSecure (bèta) "
+   },
+   "ext_name_short": {
+      "message": "Veilig browsen"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Accepteren"
+   },
+   "ext_onboarding_allow": {
+      "message": "Toestaan"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "De installatie van de extensie is voltooid. De pagina wordt nu gesloten."
+   },
+   "ext_onboarding_decline": {
+      "message": "Weigeren en extensie verwijderen"
+   },
+   "ext_onboarding_description": {
+      "message": "Machtigingen accepteren?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Het bedrijf dat dit apparaat beheert, of uw bedrijfsbeheerder, heeft ervoor gekozen om deze computer te beschermen met beveiligingsproducten van WithSecure. De configuratie handhaaft beveiliging om gebruikers van de computer te beschermen tegen schadelijke websites. Voor de kernfunctionaliteit van Browserbeveiliging door WithSecure (voorkomen dat schadelijke websites u schade aanbrengen) hebben we uw toestemming nodig om de gegevens te verzamelen en verwerken. Anders kunt u de extensie niet gebruiken. \u003Cbr>Als u Browserbeveiliging door WithSecure toestaat, gaat u ermee akkoord dat de adressen van websites die u bezoekt worden doorgestuurd naar de WithSecure-beveiligingsproducten om de classificatie en categorie te controleren. De adressen (URL's) worden niet-identificeerbaar gemaakt en door onze geautomatiseerde WithSecure Security Cloud afgehandeld in overeenstemming met ons \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "We hebben toestemming nodig om uw browsen te beschermen"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "De installatie van de extensie is geannuleerd. De extensie wordt nu verwijderd."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Privacybeleid"
+   },
+   "ext_open_consent": {
+      "message": "Openen"
+   },
+   "ext_show_consent_msg": {
+      "message": "Ga naar de toestemmingspagina."
+   },
+   "page_back": {
+      "message": "Vorige"
+   },
+   "page_banking": {
+      "message": "Bankieren"
+   },
+   "page_blocked": {
+      "message": "Website is geweigerd"
+   },
+   "page_cancel": {
+      "message": "Annuleren"
+   },
+   "page_harmful": {
+      "message": "Schadelijk"
+   },
+   "page_next": {
+      "message": "Volgende"
+   },
+   "page_not_available": {
+      "message": "Beoordelingsinformatie is niet beschikbaar"
+   },
+   "page_prohibited": {
+      "message": "Verboden website"
+   },
+   "page_report": {
+      "message": "Rapporteren"
+   },
+   "page_report_banking": {
+      "message": "Melden als bankieren."
+   },
+   "page_report_ext": {
+      "message": "Deze pagina rapporteren"
+   },
+   "page_report_harmful": {
+      "message": "Melden als schadelijk."
+   },
+   "page_report_safe": {
+      "message": "Melden als veilig."
+   },
+   "page_report_suspicious": {
+      "message": "Melden als verdacht."
+   },
+   "page_safe": {
+      "message": "Veilig"
+   },
+   "page_success_p1": {
+      "message": "Bedankt! We gaan het rapport analyseren en passen de beoordeling voor deze website binnenkort aan."
+   },
+   "page_suggest_category": {
+      "message": "Categorie kiezen"
+   },
+   "page_suggest_rating": {
+      "message": "Nieuwe beoordeling voorstellen"
+   },
+   "page_suspicious": {
+      "message": "Verdacht"
+   },
+   "page_suspicious_p1": {
+      "message": "Beschrijf waarom deze pagina verdacht lijkt"
+   },
+   "page_unsafe": {
+      "message": "Niet veilig"
+   },
+   "page_wrong_cat_1": {
+      "message": "Overige categorie"
+   },
+   "page_wrong_cat_2": {
+      "message": "Overige categorie"
+   },
+   "page_wrong_category_ws": {
+      "message": "Overige categorie"
+   },
+   "page_wrong_rating_1": {
+      "message": "Denkt u dat deze website een onjuiste beoordeling heeft?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Help ons door een rapport te verzenden."
+   },
+   "popup_error_description": {
+      "message": "Uw applicatie is verwijderd of u hebt geen compatibele versie. Installeer de nieuwste versie van de applicatie en probeer het opnieuw."
+   },
+   "popup_error_header": {
+      "message": "Beveiligingsapplicatie niet gevonden"
+   },
+   "popup_status_init": {
+      "message": "Initialiseren..."
+   },
+   "popup_status_ok": {
+      "message": "Uw browser is beschermd"
+   },
+   "search_rating_allowed": {
+      "message": "Deze site is toegestaan door een beheerder"
+   },
+   "search_rating_banking": {
+      "message": "Deze site is tijdelijk geblokkeerd"
+   },
+   "search_rating_category_adult": {
+      "message": "Volwassen"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alcohol en tabak"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Anoniem surfen"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Kunstmatige intelligentie"
+   },
+   "search_rating_category_dating": {
+      "message": "Daten"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Verontrustend"
+   },
+   "search_rating_category_drugs": {
+      "message": "Drugs"
+   },
+   "search_rating_category_gambling": {
+      "message": "Gokken"
+   },
+   "search_rating_category_hate": {
+      "message": "Haat"
+   },
+   "search_rating_category_illegal": {
+      "message": "Illegaal"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Illegale downloads"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Winkelen en veilingen"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Sociale netwerken"
+   },
+   "search_rating_category_status": {
+      "message": "Deze website wordt beperkt door Gezinsregels"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Deze website wordt beperkt door webinhoudscontrole"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Streaming media"
+   },
+   "search_rating_category_unknown": {
+      "message": "Onbekend"
+   },
+   "search_rating_category_violence": {
+      "message": "Geweld"
+   },
+   "search_rating_category_weapons": {
+      "message": "Wapens"
+   },
+   "search_rating_denied": {
+      "message": "Deze site is geweigerd door een beheerder"
+   },
+   "search_rating_harmful": {
+      "message": "Deze website is als onveilig beoordeeld, u kunt hier beter niet browsen."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Deze website is als onveilig beoordeeld"
+   },
+   "search_rating_harmful_p2": {
+      "message": "U kunt beter niet op deze website browsen"
+   },
+   "search_rating_isbank": {
+      "message": "Dit is een vertrouwde website voor online bankieren."
+   },
+   "search_rating_loading": {
+      "message": "Laden..."
+   },
+   "search_rating_restricted": {
+      "message": "Deze site bevat inhoud met beperkte toegang"
+   },
+   "search_rating_safe": {
+      "message": "Deze website is veilig, veel plezier!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Deze website is veilig"
+   },
+   "search_rating_safe_p2": {
+      "message": "Veel plezier"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Deze website is mogelijk verdacht"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Deze website heeft geen topbeoordeling"
+   },
+   "search_rating_suspicious": {
+      "message": "Deze site is verdacht."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Deze site is verdacht"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Wees voorzichtig tijdens het browsen"
+   },
+   "search_rating_unknown": {
+      "message": "Deze site is nog niet geanalyseerd"
+   },
+   "trusted_shopping_review": {
+      "message": "Gebaseerd op meerdere beoordelingen en beveiligingsscores"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "U hebt een veilige winkelwebsite geopend."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Deze winkelwebsite wordt erg goed beoordeeld en vertrouwd, geniet van uw winkelsessie!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "U hebt een winkelwebsite geopend die mogelijk verdacht is."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Voorzichtigheid is geboden bij het winkelen op deze site."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Deze website is nog niet geanalyseerd."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Voorzichtigheid is geboden bij het winkelen op deze site."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "U hebt een winkelwebsite geopend die geen topbeoordeling heeft."
+   }
+}

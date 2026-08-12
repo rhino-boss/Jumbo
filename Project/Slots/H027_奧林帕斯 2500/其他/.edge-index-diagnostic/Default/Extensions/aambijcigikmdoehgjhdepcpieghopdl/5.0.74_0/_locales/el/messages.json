@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "Για την προστασία των συναλλαγών σας, το $PRODUCT_NAME$ έχει αποκλείσει αυτήν την τοποθεσία web κατά τη διάρκεια της περιόδου λειτουργίας της Προστασίας τραπεζικών συναλλαγών.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "Για την προστασία των συναλλαγών σας, το $PRODUCT_NAME$ έχει αποκλείσει αυτήν την τοποθεσία web κατά τη διάρκεια της περιόδου λειτουργίας του Ελέγχου σύνδεσης.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Αποκλείστηκε από την Προστασία τραπεζικών συναλλαγών"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Αποκλείστηκε από τον Έλεγχο σύνδεσης"
+   },
+   "blockpage_banking_allow": {
+      "message": "Να επιτρέπεται η τοποθεσία Web"
+   },
+   "blockpage_banking_description": {
+      "message": "Για την προστασία των συναλλαγών σας, το $PRODUCT_NAME$ έχει αποκλείσει αυτήν την τοποθεσία web κατά τη διάρκεια της περιόδου λειτουργίας τραπεζικών συναλλαγών.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "Για την προστασία των συναλλαγών σας, το $PRODUCT_NAME$ έχει αποκλείσει αυτήν την τοποθεσία web κατά τη διάρκεια της περιόδου λειτουργίας του Ελέγχου σύνδεσης.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Ορίστε την τοποθεσία web ως επιτρεπόμενη εάν χρειάζεστε πρόσβαση σε αυτή για να ολοκληρώσετε τη συναλλαγή σας. Διακόψτε την Προστασία τραπεζικών συναλλαγών όταν ολοκληρωθεί η συναλλαγή σας."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Ορίστε την τοποθεσία web ως επιτρεπόμενη εάν χρειάζεστε πρόσβαση σε αυτήν για να ολοκληρώσετε τη συναλλαγή σας. Τερματίστε την περίοδο λειτουργίας του Ελέγχου σύνδεσης όταν ολοκληρωθεί η συναλλαγή σας."
+   },
+   "blockpage_banking_heading": {
+      "message": "Η Προστασία τραπεζικών συναλλαγών είναι ενεργή"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Ο Έλεγχος σύνδεσης είναι ενεργός"
+   },
+   "blockpage_banking_title": {
+      "message": "Προστασία τραπεζικών συναλλαγών"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Έλεγχος σύνδεσης"
+   },
+   "blockpage_blocked": {
+      "message": "Η τοποθεσία web δεν επιτρέπεται"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Η τοποθεσία web δεν επιτρέπεται"
+   },
+   "blockpage_child_allow": {
+      "message": "Να επιτραπεί αυτή η τοποθεσία web"
+   },
+   "blockpage_child_description": {
+      "message": "Μπορείτε να αποκτήσετε πρόσβαση μόνο σε αυτές τις τοποθεσίες web:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Δεν υπάρχουν ακόμη επιτρεπόμενες τοποθεσίες web."
+   },
+   "blockpage_child_heading": {
+      "message": "Η τοποθεσία web δεν επιτρέπεται"
+   },
+   "blockpage_child_note": {
+      "message": "Μπορείτε επίσης να κάνετε αλλαγές εδώ:"
+   },
+   "blockpage_child_note_link": {
+      "message": "επιτρεπόμενες και μη επιτρεπόμενες τοποθεσίες web"
+   },
+   "blockpage_child_title": {
+      "message": "Η τοποθεσία web δεν επιτρέπεται"
+   },
+   "blockpage_denied_allow": {
+      "message": "Να επιτρέπεται η τοποθεσία web σε αυτόν τον υπολογιστή"
+   },
+   "blockpage_denied_description": {
+      "message": "Η πρόσβαση σε αυτήν την τοποθεσία web έχει αποκλειστεί από τον υπεύθυνο λογαριασμού του $PRODUCT_NAME$. Για να συνεχίσετε, πρέπει να σας παραχωρήσει άδεια.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Η τοποθεσία web αποκλείστηκε"
+   },
+   "blockpage_denied_title": {
+      "message": "Η τοποθεσία web αποκλείστηκε"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Να επιτρέπεται η τοποθεσία web σε αυτόν τον υπολογιστή"
+   },
+   "blockpage_harmful_description": {
+      "message": "Το $PRODUCT_NAME$ έχει αναφέρει αυτήν την τοποθεσία web ως επιβλαβή. Συνιστούμε να μην την επισκεφτείτε.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Δεν θα πρέπει να περιηγείστε εδώ"
+   },
+   "blockpage_harmful_report": {
+      "message": "Αναφέρετε ένα ψευδές θετικό αποτέλεσμα εδώ"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Δεν πιστεύετε ότι υπάρχει κίνδυνος;"
+   },
+   "blockpage_harmful_title": {
+      "message": "Η επιβλαβής τοποθεσία web αποκλείστηκε"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Να επιτραπεί η πρόσβαση"
+   },
+   "blockpage_illegal_description": {
+      "message": "Το $PRODUCT_NAME$ έχει αναφέρει ότι αυτή η τοποθεσία web περιλαμβάνει απαγορευμένο περιεχόμενο. Συνιστούμε να μην την επισκεφτείτε.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Απαγορευμένη τοποθεσία web"
+   },
+   "blockpage_illegal_report": {
+      "message": "Αναφέρετε ένα ψευδές θετικό αποτέλεσμα εδώ"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Δεν πιστεύετε ότι υπάρχει κίνδυνος;"
+   },
+   "blockpage_illegal_title": {
+      "message": "Η απαγορευμένη τοποθεσία web αποκλείστηκε"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Συνέχεια οπωσδήποτε"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "Το $PRODUCT_NAME$ έχει αποκλείσει αυτόν τον ιστότοπο λόγω της πρόσφατης εγγραφής του. Συνιστούμε να τον αποφύγετε μέχρι να επαληθευτεί η νομιμότητά του.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Το domain του ιστότοπου καταχωρήθηκε στις: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Πρόσφατα εγγεγραμμένος, μη επαληθευμένος ιστότοπος αποκλεισμένος"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Αναφέρετε ένα ψευδές θετικό αποτέλεσμα εδώ"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Δεν πιστεύετε ότι υπάρχει κίνδυνος;"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Ο πρόσφατα καταχωρημένος ιστότοπος έχει αποκλειστεί."
+   },
+   "blockpage_parental_allow": {
+      "message": "Να επιτρέπεται η τοποθεσία web σε αυτόν τον υπολογιστή"
+   },
+   "blockpage_parental_description": {
+      "message": "Το $PRODUCT_NAME$ έχει αποκλείσει αυτό το περιεχόμενο επειδή δεν επιτρέπεται στην κατηγορία:",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Η τοποθεσία web αποκλείστηκε"
+   },
+   "blockpage_parental_report": {
+      "message": "Αναφέρετε μια ψευδή θετική τοποθεσία web"
+   },
+   "blockpage_parental_title": {
+      "message": "Η τοποθεσία web αποκλείστηκε"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Να επιτραπεί η πρόσβαση"
+   },
+   "blockpage_suspicious_description": {
+      "message": "Το $PRODUCT_NAME$ έχει αναφέρει αυτήν την τοποθεσία web ως ύποπτη. Συνιστούμε να μην την επισκεφτείτε.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Δεν θα πρέπει να περιηγείστε εδώ"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Αναφέρετε ένα ψευδές θετικό αποτέλεσμα εδώ"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Δεν πιστεύετε ότι υπάρχει κίνδυνος;"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Ο ύποπτος ιστότοπος αποκλείστηκε"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Αυτή η τοποθεσία web αγορών έχει αρκετές προειδοποιήσεις. Μάλλον πρόκειται για απάτη!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Δεν πρέπει να κάνετε περιήγηση εδώ"
+   },
+   "category_abortion": {
+      "message": "Άμβλωση"
+   },
+   "category_adserving": {
+      "message": "Προβολή διαφημίσεων"
+   },
+   "category_adult": {
+      "message": "Ενήλικας"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Αλκοόλ και καπνός"
+   },
+   "category_anonymizers": {
+      "message": "Απόκρυψη ταυτότητας"
+   },
+   "category_artificial_intelligence": {
+      "message": "Τεχνητή νοημοσύνη"
+   },
+   "category_auctions": {
+      "message": "Δημοπρασίες"
+   },
+   "category_banking": {
+      "message": "Τραπεζικές υπηρεσίες"
+   },
+   "category_blogs": {
+      "message": "Ιστολόγια"
+   },
+   "category_chat": {
+      "message": "Συνομιλία"
+   },
+   "category_dating": {
+      "message": "Γνωριμίες"
+   },
+   "category_disturbing": {
+      "message": "Ενοχλητικό"
+   },
+   "category_drugs": {
+      "message": "Ναρκωτικά"
+   },
+   "category_entertainment": {
+      "message": "Ψυχαγωγία"
+   },
+   "category_file_sharing": {
+      "message": "Κοινή χρήση αρχείων"
+   },
+   "category_forums": {
+      "message": "Φόρουμ"
+   },
+   "category_gambling": {
+      "message": "Τυχερά παιχνίδια"
+   },
+   "category_games": {
+      "message": "Παιχνίδια"
+   },
+   "category_hacking": {
+      "message": "Χάκινγκ"
+   },
+   "category_hate": {
+      "message": "Μίσος"
+   },
+   "category_illegal": {
+      "message": "Παράνομο"
+   },
+   "category_illegal_downloads": {
+      "message": "Μη έγκυρα στοιχεία λήψης"
+   },
+   "category_job_search": {
+      "message": "Αναζήτηση εργασίας"
+   },
+   "category_payment_services": {
+      "message": "Υπηρεσίες πληρωμών"
+   },
+   "category_scam": {
+      "message": "Απάτη"
+   },
+   "category_search_engines": {
+      "message": "Μηχανές αναζήτησης"
+   },
+   "category_shopping": {
+      "message": "Αγορές"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Αγορές και δημοπρασίες"
+   },
+   "category_social_networks": {
+      "message": "Κοινωνικά δίκτυα"
+   },
+   "category_software_downloads": {
+      "message": "Λήψεις λογισμικού"
+   },
+   "category_spam": {
+      "message": "Ανεπιθύμητη αλληλογραφία"
+   },
+   "category_streaming_media": {
+      "message": "Μέσα μετάδοσης ροής"
+   },
+   "category_travel": {
+      "message": "Ταξίδια"
+   },
+   "category_unknown": {
+      "message": "Άγνωστο"
+   },
+   "category_violence": {
+      "message": "Βία"
+   },
+   "category_weapons": {
+      "message": "Όπλα"
+   },
+   "category_webmail": {
+      "message": "Αλληλογραφία μέσω web"
+   },
+   "close_btn": {
+      "message": "Κλείσιμο"
+   },
+   "error_ca_text_p1": {
+      "message": "Δεν είναι δυνατή η σύνδεση με την εφαρμογή"
+   },
+   "error_ca_text_p2": {
+      "message": "Ελέγξτε τη διαμόρφωσή σας"
+   },
+   "ext_description": {
+      "message": "Επέκταση για την προστασία της κρυπτογραφημένης περιήγησης με τα προϊόντα ασφάλειας της WithSecure."
+   },
+   "ext_name": {
+      "message": "Προστασία περιήγησης από την WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Προστασία περιήγησης από την WithSecure (alpha)"
+   },
+   "ext_name_beta": {
+      "message": "Προστασία περιήγησης από την WithSecure (beta)"
+   },
+   "ext_name_short": {
+      "message": "Ασφαλής περιήγηση"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Αποδοχή"
+   },
+   "ext_onboarding_allow": {
+      "message": "Επιτρέπεται"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Η ρύθμιση της επέκτασης ολοκληρώθηκε. Στη συνέχεια, η σελίδα θα κλείσει."
+   },
+   "ext_onboarding_decline": {
+      "message": "Απόρριψη και αφαίρεση επέκτασης"
+   },
+   "ext_onboarding_description": {
+      "message": "Αποδοχή δικαιωμάτων;"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Η εταιρεία που διαχειρίζεται αυτή τη συσκευή ή ο διαχειριστής της εταιρείας σας έχει επιλέξει να προστατέψει αυτόν τον υπολογιστή με προϊόντα ασφάλειας της WithSecure. Η διαμόρφωση επιβάλει την προστασία των χρηστών του υπολογιστή από επιβλαβείς τοποθεσίες web. Για την παροχή της βασικής λειτουργικότητας της Προστασίας περιήγησης από τη WithSecure, δηλαδή για την αποτροπή πρόκλησης ζημιάς από κακόβουλες τοποθεσίες web, χρειαζόμαστε τη συναίνεσή σας για τη συλλογή και επεξεργασία των δεδομένων. Διαφορετικά, δεν θα μπορείτε να χρησιμοποιήσετε την επέκταση. \u003Cbr>Με την παροχή της άδειάς σας στην Προστασία περιήγησης από τη WithSecure, αποδέχεστε ότι οι διευθύνσεις των τοποθεσιών web που επισκέπτεστε θα μεταβιβάζονται στα προϊόντα ασφάλειας της WithSecure για τον έλεγχο της αξιολόγησης και της κατηγορίας τους. Οι διευθύνσεις (URL) ανωνυμοποιούνται και ο χειρισμός τους γίνεται από το αυτοματοποιημένο WithSecure Security Cloud σύμφωνα με την \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Απαιτείται συναίνεση για την προστασία της περιήγησής σας"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Η ρύθμιση της επέκτασης ακυρώθηκε. Στη συνέχεια, θα καταργηθεί η εγκατάσταση της επέκτασης."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Πολιτική απορρήτου"
+   },
+   "ext_open_consent": {
+      "message": "Άνοιγμα"
+   },
+   "ext_show_consent_msg": {
+      "message": "Επισκεφτείτε τη σελίδα συναίνεσης."
+   },
+   "page_back": {
+      "message": "Πίσω"
+   },
+   "page_banking": {
+      "message": "Τραπεζικές υπηρεσίες"
+   },
+   "page_blocked": {
+      "message": "Η τοποθεσία web δεν επιτρέπεται"
+   },
+   "page_cancel": {
+      "message": "Άκυρο"
+   },
+   "page_harmful": {
+      "message": "Επιβλαβής"
+   },
+   "page_next": {
+      "message": "Επόμενο"
+   },
+   "page_not_available": {
+      "message": "Δεν υπάρχουν διαθέσιμες πληροφορίες αξιολόγησης"
+   },
+   "page_prohibited": {
+      "message": "Απαγορευμένη τοποθεσία web"
+   },
+   "page_report": {
+      "message": "Αναφορά"
+   },
+   "page_report_banking": {
+      "message": "Αναφέρετε τη σελίδα ως σελίδα τραπεζικών συναλλαγών."
+   },
+   "page_report_ext": {
+      "message": "Αναφορά αυτής της σελίδας"
+   },
+   "page_report_harmful": {
+      "message": "Αναφέρετε τη σελίδα ως επιβλαβή."
+   },
+   "page_report_safe": {
+      "message": "Αναφέρετε τη σελίδα ως ασφαλή."
+   },
+   "page_report_suspicious": {
+      "message": "Αναφέρετε τη σελίδα ως ύποπτη."
+   },
+   "page_safe": {
+      "message": "Ασφαλής"
+   },
+   "page_success_p1": {
+      "message": "Σας ευχαριστούμε! Θα αναλύσουμε την αναφορά και θα προσαρμόσουμε την αξιολόγηση αυτής της τοποθεσίας web σύντομα."
+   },
+   "page_suggest_category": {
+      "message": "Επιλογή κατηγορίας"
+   },
+   "page_suggest_rating": {
+      "message": "Προτείνετε μια νέα αξιολόγηση"
+   },
+   "page_suspicious": {
+      "message": "Ύποπτο"
+   },
+   "page_suspicious_p1": {
+      "message": "Περιγράψετε γιατί αυτή η σελίδα φαίνεται ύποπτη"
+   },
+   "page_unsafe": {
+      "message": "Μη ασφαλής"
+   },
+   "page_wrong_cat_1": {
+      "message": "Άλλη κατηγορία"
+   },
+   "page_wrong_cat_2": {
+      "message": "Άλλη κατηγορία"
+   },
+   "page_wrong_category_ws": {
+      "message": "Άλλη κατηγορία"
+   },
+   "page_wrong_rating_1": {
+      "message": "Πιστεύετε ότι αυτή η τοποθεσία web έχει εσφαλμένη αξιολόγηση;"
+   },
+   "page_wrong_rating_2": {
+      "message": "Βοηθήστε μας στέλνοντας μια αναφορά."
+   },
+   "popup_error_description": {
+      "message": "Η εφαρμογή σας απεγκαταστάθηκε με επιτυχία ή δεν έχετε συμβατή έκδοση. Εγκαταστήστε την τελευταία έκδοση της εφαρμογής και δοκιμάστε ξανά."
+   },
+   "popup_error_header": {
+      "message": "Δεν βρέθηκε εφαρμογή ασφάλειας"
+   },
+   "popup_status_init": {
+      "message": "Προετοιμασία..."
+   },
+   "popup_status_ok": {
+      "message": "Το πρόγραμμα περιήγησης προστατεύεται"
+   },
+   "search_rating_allowed": {
+      "message": "Η πρόσβαση στην τοποθεσία επιτρέπεται από διαχειριστή"
+   },
+   "search_rating_banking": {
+      "message": "Αυτή η τοποθεσία έχει αποκλειστεί προσωρινά"
+   },
+   "search_rating_category_adult": {
+      "message": "Ενήλικας"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Αλκοόλ και καπνός"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Απόκρυψη ταυτότητας"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Τεχνητή νοημοσύνη"
+   },
+   "search_rating_category_dating": {
+      "message": "Γνωριμίες"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Ενοχλητικό"
+   },
+   "search_rating_category_drugs": {
+      "message": "Ναρκωτικά"
+   },
+   "search_rating_category_gambling": {
+      "message": "Τυχερά παιχνίδια"
+   },
+   "search_rating_category_hate": {
+      "message": "Μίσος"
+   },
+   "search_rating_category_illegal": {
+      "message": "Παράνομο"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Μη έγκυρα στοιχεία λήψης"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Αγορές και δημοπρασίες"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Κοινωνικά δίκτυα"
+   },
+   "search_rating_category_status": {
+      "message": "Αυτή η τοποθεσία web περιορίζεται από Οικογενειακούς κανόνες"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Αυτή η τοποθεσία web απαγορεύεται από τον Έλεγχο περιεχομένου web"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Μέσα μετάδοσης ροής"
+   },
+   "search_rating_category_unknown": {
+      "message": "Άγνωστο"
+   },
+   "search_rating_category_violence": {
+      "message": "Βία"
+   },
+   "search_rating_category_weapons": {
+      "message": "Όπλα"
+   },
+   "search_rating_denied": {
+      "message": "Η πρόσβαση στην τοποθεσία δεν επιτρέπεται από διαχειριστή"
+   },
+   "search_rating_harmful": {
+      "message": "Αυτή η τοποθεσία web έχει αξιολογηθεί ως μη ασφαλής. Μην περιηγηθείτε εδώ."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Αυτή η τοποθεσία web έχει αξιολογηθεί ως μη ασφαλής"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Δεν πρέπει να κάνετε περιήγηση εδώ"
+   },
+   "search_rating_isbank": {
+      "message": "Αυτή είναι μια αξιόπιστη τοποθεσία web ηλεκτρονικών τραπεζικών συναλλαγών."
+   },
+   "search_rating_loading": {
+      "message": "Φόρτωση..."
+   },
+   "search_rating_restricted": {
+      "message": "Η τοποθεσία αυτή περιέχει απαγορευμένο περιεχόμενο"
+   },
+   "search_rating_safe": {
+      "message": "Αυτή η τοποθεσία web είναι ασφαλής. Απολαύστε την περιήγηση!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Αυτή η τοποθεσία είναι ασφαλής"
+   },
+   "search_rating_safe_p2": {
+      "message": "Απολαύστε την περιήγησή σας"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Αυτή η τοποθεσία web μπορεί να είναι ύποπτη"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Αυτή η τοποθεσία web δεν έχει κορυφαίες αξιολογήσεις"
+   },
+   "search_rating_suspicious": {
+      "message": "Αυτή η τοποθεσία web είναι ύποπτη."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Αυτή η τοποθεσία είναι ύποπτη"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Να είστε προσεκτικοί κατά την περιήγησή σας"
+   },
+   "search_rating_unknown": {
+      "message": "Αυτή η τοποθεσία δεν έχει αναλυθεί ακόμα"
+   },
+   "trusted_shopping_review": {
+      "message": "Βάσει πολλών αξιολογήσεων και βαθμολογιών ασφαλείας"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Έχετε ανοίξει μια ασφαλή τοποθεσία web αγορών."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Αυτή η τοποθεσία web αγορών έχει καλές αξιολογήσεις και είναι αξιόπιστη, μπορείτε να απολαύσετε τις αγορές σας!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Έχετε ανοίξει μια τοποθεσία web αγορών που μπορεί να είναι ύποπτη."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Συνιστάται προσοχή κατά τις αγορές σε αυτήν την τοποθεσία web."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Αυτή η τοποθεσία web δεν έχει αναλυθεί ακόμα."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Συνιστάται προσοχή κατά τις αγορές σε αυτήν την τοποθεσία web."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Έχετε ανοίξει μια τοποθεσία web αγορών που δεν έχει κορυφαίες αξιολογήσεις."
+   }
+}

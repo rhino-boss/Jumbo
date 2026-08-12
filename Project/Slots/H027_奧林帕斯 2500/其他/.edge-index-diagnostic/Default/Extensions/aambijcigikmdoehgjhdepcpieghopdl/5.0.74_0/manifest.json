@@ -1,0 +1,31 @@
+{
+   "action": {
+      "default_icon": "img/128_icon_lightmode.png",
+      "default_popup": "menu/popup_default.html"
+   },
+   "background": {
+      "service_worker": "bg_loader.js"
+   },
+   "content_scripts": [ {
+      "css": [ "content_scripts/content.css" ],
+      "js": [ "constants.js", "common_styles.js", "content_scripts/nif2_schema_monitoring.js", "content_scripts/nif2_breakpoint.js", "content_scripts/nif2_util.js", "content_scripts/nif2_ad_remover.js", "content_scripts/nif2_balloon.js", "content_scripts/nif2_rating_resources.js", "content_scripts/nif2_main.js", "content_scripts/nif2_pattern_match.js", "content_scripts/nif2_elements.js", "trusted_shopping/popup.js", "trusted_shopping/trusted_shopping_main.js" ],
+      "matches": [ "\u003Call_urls>" ]
+   } ],
+   "default_locale": "en",
+   "description": "__MSG_ext_description__",
+   "homepage_url": "https://www.withsecure.com/",
+   "host_permissions": [ "http://*/*", "https://*/*" ],
+   "icons": {
+      "128": "img/store_icon.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvuARbZ70sjjgbWP44nAWU87GwOqF3OgD7ST+7TpJU4OeY2wMGboSMF68teoeIwz7zhcwUC02ihIK1Ck2ycMvS8JgSmdeeaLR5I6B2T/9ztptz8WkWOLM6fLQ2qxi7Yjy5tYg0R9Jc0uPXrqAfk6JNI8pLz/9RX8CeZWeEoGJ62jpAmZBID8Xv1ly3teAMIkKhtnIAjN2/3ECsfIyTu3896V/sZBYgA7xLhYimyQdwlEnBKsW+YRPA4/ubEfos2tIfIwYmcOYWfAMJysxQEOnHGqvUmW/RIjYeJ8bAEt7CLsHZhl2UmSllE1gW2vnKzmiV5U24IjjosskqZo3NF/xwQIDAQAB",
+   "manifest_version": 3,
+   "name": "__MSG_ext_name__",
+   "permissions": [ "tabs", "nativeMessaging", "webNavigation", "declarativeNetRequest", "storage", "webRequest" ],
+   "update_url": "https://edge.microsoft.com/extensionwebstorebase/v1/crx",
+   "version": "5.0.74",
+   "web_accessible_resources": [ {
+      "matches": [ "\u003Call_urls>" ],
+      "resources": [ "img/*", "*.css" ]
+   } ]
+}

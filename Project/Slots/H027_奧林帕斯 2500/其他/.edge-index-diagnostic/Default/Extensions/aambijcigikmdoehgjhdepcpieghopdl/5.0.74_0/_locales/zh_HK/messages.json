@@ -1,0 +1,264 @@
+{
+	"ext_name": { "message": "Browsing Protection by WithSecure " },
+	"ext_name_alpha": { "message": "Browsing Protection by WithSecure (alpha) " },
+	"ext_name_beta": { "message": "Browsing Protection by WithSecure (beta) " },
+	"ext_description": { "message": "透過 WithSecure 安全產品保護加密瀏覽的延伸。" },
+	"search_rating_safe": { "message": "本網站安全，請盡情瀏覽！" },
+	"search_rating_harmful": { "message": "本網站評定為不安全，您不應在此瀏覽。" },
+	"search_rating_unknown": { "message": "尚未分析此網站" },
+	"search_rating_suspicious": { "message": "此網站為可疑網站" },
+	"search_rating_restricted": { "message": "此網站包含受限內容" },
+	"search_rating_allowed": { "message": "此網站已由管理員允許" },
+	"search_rating_denied": { "message": "此網站已由管理員拒絕" },
+	"search_rating_banking": { "message": "此網站暫時被封鎖" },
+	"search_rating_isbank": { "message": "這是信任的線上銀行網站。" },
+	"search_rating_category_status": { "message": "此網站受家庭規則限制" },
+	"search_rating_category_adult": { "message": "成人" },
+	"search_rating_category_alcohol_and_tobacco": { "message": "酒精和煙草" },
+	"search_rating_category_anonymizers": { "message": "匿名工具" },
+	"search_rating_category_dating": { "message": "約會" },
+	"search_rating_category_disturbing": { "message": "干擾性" },
+	"search_rating_category_drugs": { "message": "毒品" },
+	"search_rating_category_gambling": { "message": "賭博" },
+	"search_rating_category_hate": { "message": "仇恨" },
+	"search_rating_category_illegal": { "message": "非法" },
+	"search_rating_category_shopping_and_auctions": { "message": "購物和拍賣" },
+	"search_rating_category_social_networks": { "message": "社交網絡" },
+	"search_rating_category_streaming_media": { "message": "串流媒體" },
+	"search_rating_category_unknown": { "message": "未知" },
+	"search_rating_category_illegal_downloads": { "message": "非法下載" },
+	"search_rating_category_weapons": { "message": "武器" },
+	"search_rating_category_violence": { "message": "暴力" },
+	"search_rating_loading": { "message": "載入中..." },
+	"error_ca_text_p1": { "message": "無法連線至應用程式" },
+	"error_ca_text_p2": { "message": "檢查您的設定" },
+	"popup_status_ok": { "message": "您的瀏覽器處於受保護狀態" },
+	"popup_status_init": { "message": "初始化中..." },
+	"ext_onboarding_description": {
+		"message": "接受權限？"
+	},
+	"ext_onboarding_description_consent_warn_descr": {
+		"message": "為了防止惡意網站對您造成傷害，$EXTENSION_NAME$ 會掃描您造訪的網址，以檢查它們是否已知是有害的。位址 (URL) 不會識別個人身份，並由我們的自動化 Security Cloud 根據我們的 <a id='open-privacy-policy' href='#'>$PRIVACY_POLICY$</a> 進行處理。",
+		"placeholders": {
+			"EXTENSION_NAME": {
+				"content": "$1 "
+			},
+			"PRIVACY_POLICY": {
+				"content": "$2 "
+			}
+		}
+	},
+	"ext_onboarding_description_consent_warn_title": {
+		"message": "保護您的瀏覽需經過同意"
+	},
+	"ext_onboarding_privacy_policy_link": {
+		"message": "私隱權政策 "
+	},
+	"ext_onboarding_acccept": {
+		"message": "接受"
+	},
+	"ext_onboarding_allow": {
+		"message": "允許"
+	},
+	"ext_onboarding_decline": {
+		"message": "拒絕"
+	},
+	"ext_onboarding_complete_message": {
+		"message": "延伸安裝完成。現在將關閉頁面。"
+	},
+	"ext_onboarding_fail_message": {
+		"message": "延伸安裝取消。現在將解除安裝延伸。"
+	},
+	"ext_open_consent": {
+		"message": "打開"
+	},
+	"ext_show_consent_msg": {
+		"message": "請瀏覽同意頁面。"
+	},
+	"page_blocked": { "message": "已拒絕網站" },
+	"page_not_available": { "message": "評級資訊不可用 " },
+	"page_wrong_rating_1": { "message": "您是否認為此網站評級有誤？ " },
+	"page_wrong_rating_2": { "message": "向我們傳送報告以幫助我們。" },
+	"page_report": { "message": "報告" },
+	"page_next": { "message": "下一步" },
+	"page_cancel": { "message": "取消" },
+	"page_back": { "message": "上一步" },
+	"page_safe": { "message": "安全" },
+	"page_unsafe": { "message": "不安全" },
+	"page_harmful": { "message": "有害" },
+	"page_banking": { "message": "銀行" },
+	"page_suspicious": { "message": "可疑" },
+	"page_wrong_cat_1": { "message": "不適合兒童" },
+	"page_wrong_cat_2": { "message": "變更家庭規則類別" },
+	"page_prohibited": { "message": "禁止的網站" },
+	"page_suggest_rating": { "message": "建議新評級" },
+	"page_suggest_category": { "message": "選擇類別" },
+	"page_success_p1": { "message": "謝謝！我們將很快分析報告並調整此網站的評級。" },
+	"page_suspicious_p1": { "message": "描述此頁面為何看起來可疑" },
+	"page_report_harmful": { "message": "將其報告為有害。" },
+	"page_report_safe": { "message": "將其報告為安全。" },
+	"page_report_banking": { "message": "將其報告為銀行。" },
+	"page_report_suspicious": { "message": "將其報告為可疑。" },
+	"popup_error_header": { "message": "找不到安全應用程式" },
+	"popup_error_description": { "message": "您的應用程式已解除安裝，或您沒有相容的版本。安裝最新版本的應用程式，然後重試。" },
+	"banking_blocked_description": {
+		"message": "為保護您的交易，$PRODUCT_NAME$ 已在您的銀行保護工作階段期間封鎖此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"banking_blocked_status": { "message": "被銀行保護封鎖" },
+	"blockpage_blocked": { "message": "已拒絕網站" },
+	"blockpage_banking_title": { "message": "銀行保護 " },
+	"blockpage_banking_heading": { "message": "銀行保護已啟用 " },
+	"blockpage_banking_description": {
+		"message": "為保護您的交易，$PRODUCT_NAME$ 已在銀行工作階段期間封鎖此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_banking_detail": { "message": "如果您需要存取網站以完成交易，請允許存取該網站。完成交易後，結束銀行保護工作階段。" },
+	"blockpage_banking_allow": { "message": "允許網站" },
+
+	"blockpage_denied_title": { "message": "網站已封鎖 " },
+	"blockpage_denied_heading": { "message": "網站已封鎖 " },
+	"blockpage_denied_description": {
+		"message": "$PRODUCT_NAME$ 帳戶管理器已封鎖對此網站的存取。若要繼續，則需存取權限。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_denied_allow": { "message": "允許此電腦上的網站" },
+
+	"blockpage_harmful_title": { "message": "已封鎖有害網站 " },
+	"blockpage_harmful_heading": { "message": "您不應在此瀏覽" },
+	"blockpage_harmful_description": {
+		"message": "$PRODUCT_NAME$ 已將此網站列為有害。建議您不要進入此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_harmful_allow": { "message": "允許此電腦上的網站" },
+	"blockpage_harmful_report_note": { "message": "不認為其有害？" },
+	"blockpage_harmful_report": { "message": "在此報告誤判" },
+
+	"blockpage_illegal_title": { "message": "已封鎖禁止的網站" },
+	"blockpage_illegal_heading": { "message": "禁止的網站" },
+	"blockpage_illegal_description": {
+		"message": "$PRODUCT_NAME$ 已舉報此網站包含禁止內容。強烈建議您不要進入此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_illegal_allow": { "message": "仍然存取" },
+	"blockpage_illegal_report_note": { "message": "不認為其有害？" },
+	"blockpage_illegal_report": { "message": "在此報告誤判" },
+
+	"blockpage_parental_title": { "message": "網站已封鎖 " },
+	"blockpage_parental_heading": { "message": "網站已封鎖 " },
+	"blockpage_parental_description": {
+		"message": "$PRODUCT_NAME$ 已封鎖此內容，因為其類別受限：",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_parental_allow": { "message": "允許此電腦上的網站" },
+	"blockpage_parental_report": { "message": "報告誤報網站" },
+
+	"blockpage_suspicious_title": { "message": "已封鎖可疑網站" },
+	"blockpage_suspicious_heading": { "message": "您不應在此瀏覽" },
+	"blockpage_suspicious_description": {
+		"message": "$PRODUCT_NAME$ 已將此網站列為可疑。建議您不要進入此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_suspicious_allow": { "message": "仍然存取" },
+	"blockpage_suspicious_report_note": { "message": "不認為其有害？" },
+	"blockpage_suspicious_report": { "message": "在此報告誤判" },
+
+	"blockpage_child_title": { "message": "已拒絕網站" },
+	"blockpage_child_heading": { "message": "已拒絕網站" },
+	"blockpage_child_description": { "message": "您僅可存取這些網站：" },
+	"blockpage_child_empty_list_description": { "message": "還沒有允許的網站。" },
+	"blockpage_child_allow": { "message": "允許此網站" },
+	"blockpage_child_note": { "message": "您亦可變更" },
+	"blockpage_child_note_link": { "message": "允許和拒絕的網站" },
+
+	"category_abortion": { "message": "墮胎" },
+	"category_adserving": { "message": "廣告推送" },
+	"category_adult": { "message": "成人" },
+	"category_alcohol_and_tobacco": { "message": "酒精和煙草" },
+	"category_anonymizers": { "message": "匿名工具" },
+	"category_auctions": { "message": "拍賣" },
+	"category_banking": { "message": "銀行" },
+	"category_blogs": { "message": "網誌" },
+	"category_chat": { "message": "聊天" },
+	"category_dating": { "message": "約會" },
+	"category_disturbing": { "message": "干擾性" },
+	"category_drugs": { "message": "毒品" },
+	"category_entertainment": { "message": "娛樂" },
+	"category_file_sharing": { "message": "檔案共用" },
+	"category_forums": { "message": "論壇" },
+	"category_gambling": { "message": "賭博" },
+	"category_games": { "message": "遊戲" },
+	"category_hacking": { "message": "黑客攻擊" },
+	"category_hate": { "message": "仇恨" },
+	"category_illegal": { "message": "非法" },
+	"category_job_search": { "message": "求職" },
+	"category_payment_services": { "message": "付款服務" },
+	"category_scam": { "message": "詐騙" },
+	"category_search_engines": { "message": "搜尋引擎" },
+	"category_shopping": { "message": "購物" },
+	"category_shopping_and_auctions": { "message": "購物和拍賣" },
+	"category_social_networks": { "message": "社交網絡" },
+	"category_software_downloads": { "message": "軟件下載" },
+	"category_spam": { "message": "垃圾郵件" },
+	"category_streaming_media": { "message": "串流媒體" },
+	"category_travel": { "message": "旅行" },
+	"category_unknown": { "message": "未知" },
+	"category_violence": { "message": "暴力" },
+	"category_illegal_downloads": { "message": "非法下載" },
+	"category_weapons": { "message": "武器" },
+	"category_webmail": { "message": "Webmail" },
+
+	"banking_blocked_description_ws": {
+		"message": "為保護您的交易，$PRODUCT_NAME$ 已在您的連線控制工作階段期間封鎖此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"banking_blocked_status_ws": { "message": "已被連線控制封鎖" },
+	"blockpage_blocked_ws": { "message": "已拒絕網站" },
+	"blockpage_banking_title_ws": { "message": "連線控制" },
+	"blockpage_banking_heading_ws": { "message": "連線控制已啟用" },
+	"blockpage_banking_description_ws": {
+		"message": "為保護您的交易，$PRODUCT_NAME$ 已在連線控制工作階段期間封鎖此網站。",
+		"placeholders": {
+			"PRODUCT_NAME": {
+				"content": "$1 "
+			}
+		}
+	},
+	"blockpage_banking_detail_ws": { "message": "如果您需要存取網站以完成交易，請允許該網站。完成交易後，結束連線控制工作階段。" },
+
+	"search_rating_category_status_ws": { "message": "此網站受 Web 內容控制的限制" },
+
+	"page_wrong_category_ws": { "message": "變更 Web 內容控制類別" }
+}

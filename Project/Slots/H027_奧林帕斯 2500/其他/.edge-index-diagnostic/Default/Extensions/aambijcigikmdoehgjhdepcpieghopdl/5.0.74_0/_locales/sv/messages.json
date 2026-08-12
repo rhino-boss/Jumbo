@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "$PRODUCT_NAME$ har blockerat den här webbplatsen under din bankskyddssession för att skydda dina transaktioner.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "$PRODUCT_NAME$ har blockerat den här webbplatsen under din session med Anslutningskontroll för att skydda dina transaktioner.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Blockerades av bankskydd"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Blockerat av Anslutningskontroll"
+   },
+   "blockpage_banking_allow": {
+      "message": "Tillåt webbplatsen"
+   },
+   "blockpage_banking_description": {
+      "message": "$PRODUCT_NAME$ har blockerat den här webbplatsen under banksessionen för att skydda dina transaktioner.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "$PRODUCT_NAME$ har blockerat den här webbplatsen under sessionen med Anslutningskontroll för att skydda dina transaktioner.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Tillåt webbplatsen om du behöver komma åt den under transaktionen. Avsluta bankskyddssessionen när transaktionen är klar."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Tillåt webbplatsen om du behöver komma åt den under transaktionen. Avsluta sessionen med Anslutningskontroll när transaktionen är klar."
+   },
+   "blockpage_banking_heading": {
+      "message": "Bankskydd är aktiverat"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Anslutningskontroll är aktivt"
+   },
+   "blockpage_banking_title": {
+      "message": "Bankskydd"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Anslutningskontroll"
+   },
+   "blockpage_blocked": {
+      "message": "Nekad webbplats"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Nekad webbplats"
+   },
+   "blockpage_child_allow": {
+      "message": "Tillåt den här webbplatsen"
+   },
+   "blockpage_child_description": {
+      "message": "Du kan enbart komma åt dessa webbplatser:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Inga tillåtna webbplatser än."
+   },
+   "blockpage_child_heading": {
+      "message": "Nekad webbplats"
+   },
+   "blockpage_child_note": {
+      "message": "Du kan även utföra ändringar av"
+   },
+   "blockpage_child_note_link": {
+      "message": "tillåtna och nekade webbplatser"
+   },
+   "blockpage_child_title": {
+      "message": "Nekad webbplats"
+   },
+   "blockpage_denied_allow": {
+      "message": "Tillåt webbplats på den här datorn"
+   },
+   "blockpage_denied_description": {
+      "message": "Kontoansvarig för $PRODUCT_NAME$ har blockerat åtkomsten till den här webbplatsen. Du behöver tillåtelse från dem för att fortsätta.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Webbplatsen har blockerats"
+   },
+   "blockpage_denied_title": {
+      "message": "Webbplatsen har blockerats"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Tillåt webbplats på den här datorn"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ har markerat den här webbplatsen som skadlig. Vi rekommenderar att du inte går in på den här webbplatsen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Du borde inte surfa här"
+   },
+   "blockpage_harmful_report": {
+      "message": "Rapportera en falsk varning här"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Tror du inte att den är skadlig?"
+   },
+   "blockpage_harmful_title": {
+      "message": "En skadlig webbplats blockerades"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Besök i alla fall"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ har rapporterat att den här webbplatsen innehåller förbjudet innehåll. Vi rekommenderar starkt att du inte går in på den här webbplatsen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Förbjuden webbplats"
+   },
+   "blockpage_illegal_report": {
+      "message": "Rapportera en falsk varning här"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Tror du inte att den är skadlig?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Den förbjudna webbplatsen har blockerats"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Fortsätt ändå"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ har blockerat den här webbplatsen på grund av hur nyligen den har registrerats. Vi rekommenderar att du undviker den tills den har verifierats.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Webbplatsens domän registrerades den: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "En nyligen registrerad, overifierad webbplats har blockerats"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Rapportera en falsk varning här"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Tror du inte att den är skadlig?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "En nyligen registrerad webbplats har blockerats"
+   },
+   "blockpage_parental_allow": {
+      "message": "Tillåt webbplats på den här datorn"
+   },
+   "blockpage_parental_description": {
+      "message": "$PRODUCT_NAME$ har blockerat det här innehållet eftersom det är begränsat i kategorin: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Webbplatsen har blockerats"
+   },
+   "blockpage_parental_report": {
+      "message": "Rapportera en falsk varning för webbsida"
+   },
+   "blockpage_parental_title": {
+      "message": "Webbplatsen har blockerats"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Besök i alla fall"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ har markerat den här webbplatsen som misstänkt. Vi rekommenderar att du inte går in på den här webbplatsen.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Du borde inte surfa här"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Rapportera en falsk varning här"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Tror du inte att den är skadlig?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Den misstänkta webbplatsen har blockerats"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Det finns flera varningsflaggor för den här shoppingwebbplatsen. Den är troligen en bedrägeriwebbplats!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Du bör inte surfa här"
+   },
+   "category_abortion": {
+      "message": "Abort"
+   },
+   "category_adserving": {
+      "message": "Annonsservning"
+   },
+   "category_adult": {
+      "message": "Vuxen"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alkohol och tobak"
+   },
+   "category_anonymizers": {
+      "message": "Anonymiseringswebbplatser"
+   },
+   "category_artificial_intelligence": {
+      "message": "Artificiell intelligens"
+   },
+   "category_auctions": {
+      "message": "Auktioner"
+   },
+   "category_banking": {
+      "message": "Bankärenden"
+   },
+   "category_blogs": {
+      "message": "Bloggar"
+   },
+   "category_chat": {
+      "message": "Chatt"
+   },
+   "category_dating": {
+      "message": "Dejting"
+   },
+   "category_disturbing": {
+      "message": "Störande"
+   },
+   "category_drugs": {
+      "message": "Droger"
+   },
+   "category_entertainment": {
+      "message": "Underhållning"
+   },
+   "category_file_sharing": {
+      "message": "Fildelning"
+   },
+   "category_forums": {
+      "message": "Forum"
+   },
+   "category_gambling": {
+      "message": "Hasardspel"
+   },
+   "category_games": {
+      "message": "Spel"
+   },
+   "category_hacking": {
+      "message": "Hackning"
+   },
+   "category_hate": {
+      "message": "Hat"
+   },
+   "category_illegal": {
+      "message": "Illegal"
+   },
+   "category_illegal_downloads": {
+      "message": "Olagliga hämtningar"
+   },
+   "category_job_search": {
+      "message": "Jobbsökning"
+   },
+   "category_payment_services": {
+      "message": "Betalningstjänster"
+   },
+   "category_scam": {
+      "message": "Bedrägeri"
+   },
+   "category_search_engines": {
+      "message": "Sökmotorer"
+   },
+   "category_shopping": {
+      "message": "Shopping"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Shopping och auktioner"
+   },
+   "category_social_networks": {
+      "message": "Sociala nätverk"
+   },
+   "category_software_downloads": {
+      "message": "Nedladdningar av programvara"
+   },
+   "category_spam": {
+      "message": "Skräppost"
+   },
+   "category_streaming_media": {
+      "message": "Streamingmedia"
+   },
+   "category_travel": {
+      "message": "Resor"
+   },
+   "category_unknown": {
+      "message": "Okänd"
+   },
+   "category_violence": {
+      "message": "Våld"
+   },
+   "category_weapons": {
+      "message": "Vapen"
+   },
+   "category_webmail": {
+      "message": "Webbmail"
+   },
+   "close_btn": {
+      "message": "Stäng"
+   },
+   "error_ca_text_p1": {
+      "message": "Det går inte att ansluta till applikationen"
+   },
+   "error_ca_text_p2": {
+      "message": "Kontrollera din konfiguration"
+   },
+   "ext_description": {
+      "message": "Tillägg för skydd av krypterad surfning med säkerhetsprodukter från WithSecure."
+   },
+   "ext_name": {
+      "message": "Surfskydd av WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Surfskydd av WithSecure (alpha)"
+   },
+   "ext_name_beta": {
+      "message": "Surfskydd av WithSecure (beta)"
+   },
+   "ext_name_short": {
+      "message": "Säker surfning"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Godkänn"
+   },
+   "ext_onboarding_allow": {
+      "message": "Tillåt"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Tilläggskonfigurationen är slutförd. Sidan kommer att stängas."
+   },
+   "ext_onboarding_decline": {
+      "message": "Avböj och ta bort tillägg"
+   },
+   "ext_onboarding_description": {
+      "message": "Godkänn tillstånd?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Företaget som hanterar den här enheten, eller din företagsadministratör, har valt att skydda den här datorn med säkerhetsprodukter från WithSecure. Konfigurationen skyddar användarna av datorn från skadliga webbplatser. För att tillhandahålla WithSecure-surfskyddets grundläggande funktionalitet – förhindra att skadliga webbplatser skadar dig – behöver vi ditt samtycke för att samla in och behandla data. Annars kommer du inte att kunna använda tillägget. \u003Cbr>Genom att du tillåter surfskyddet från WithSecure, godkänner du att adresserna till de webbplatser du besöker överförs till WithSecures säkerhetsprodukter för att kontrollera deras betyg och kategori. Adresserna (URL:erna) görs icke-identifierbara och hanteras av vårt automatiska WithSecure Security Cloud i enlighet med vår \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Medgivande krävs för att skydda din surfning"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Tilläggskonfigurationen avbröts. Tillägget kommer att avinstalleras."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Sekretesspolicy"
+   },
+   "ext_open_consent": {
+      "message": "Öppna"
+   },
+   "ext_show_consent_msg": {
+      "message": "Besök samtyckessidan."
+   },
+   "page_back": {
+      "message": "Tillbaka"
+   },
+   "page_banking": {
+      "message": "Bankärenden"
+   },
+   "page_blocked": {
+      "message": "Nekad webbplats"
+   },
+   "page_cancel": {
+      "message": "Avbryt"
+   },
+   "page_harmful": {
+      "message": "Skadlig"
+   },
+   "page_next": {
+      "message": "Nästa"
+   },
+   "page_not_available": {
+      "message": "Ingen tillgänglig klassificeringsinformation"
+   },
+   "page_prohibited": {
+      "message": "Förbjuden webbplats"
+   },
+   "page_report": {
+      "message": "Rapportera"
+   },
+   "page_report_banking": {
+      "message": "Rapportera som banksida."
+   },
+   "page_report_ext": {
+      "message": "Rapportera den här sidan"
+   },
+   "page_report_harmful": {
+      "message": "Rapportera som skadlig."
+   },
+   "page_report_safe": {
+      "message": "Rapportera som säker."
+   },
+   "page_report_suspicious": {
+      "message": "Rapportera som misstänkt."
+   },
+   "page_safe": {
+      "message": "Säker"
+   },
+   "page_success_p1": {
+      "message": "Tack! Vi analyserar rapporten och justerar klassificeringen för webbplatsen inom kort."
+   },
+   "page_suggest_category": {
+      "message": "Välj kategori"
+   },
+   "page_suggest_rating": {
+      "message": "Föreslå en ny klassificering"
+   },
+   "page_suspicious": {
+      "message": "Misstänkt"
+   },
+   "page_suspicious_p1": {
+      "message": "Förklara varför webbplatsen verkar misstänkt"
+   },
+   "page_unsafe": {
+      "message": "Inte säker"
+   },
+   "page_wrong_cat_1": {
+      "message": "Annan kategori"
+   },
+   "page_wrong_cat_2": {
+      "message": "Annan kategori"
+   },
+   "page_wrong_category_ws": {
+      "message": "Annan kategori"
+   },
+   "page_wrong_rating_1": {
+      "message": "Tror du att webbplatsen har fel klassificering?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Hjälp oss genom att skicka en rapport."
+   },
+   "popup_error_description": {
+      "message": "Antingen så har din applikation avinstallerats eller så har du inte en kompatibel version. Installera den senaste versionen av applikationen och försök igen."
+   },
+   "popup_error_header": {
+      "message": "Säkerhetsapplikationen hittades inte"
+   },
+   "popup_status_init": {
+      "message": "Initierar ..."
+   },
+   "popup_status_ok": {
+      "message": "Din webbläsare är skyddad"
+   },
+   "search_rating_allowed": {
+      "message": "En administratör har tillåtit den här sidan"
+   },
+   "search_rating_banking": {
+      "message": "Den här webbplatsen är tillfälligt blockerad"
+   },
+   "search_rating_category_adult": {
+      "message": "Vuxen"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alkohol och tobak"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Anonymiseringswebbplatser"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Artificiell intelligens"
+   },
+   "search_rating_category_dating": {
+      "message": "Dejting"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Störande"
+   },
+   "search_rating_category_drugs": {
+      "message": "Droger"
+   },
+   "search_rating_category_gambling": {
+      "message": "Hasardspel"
+   },
+   "search_rating_category_hate": {
+      "message": "Hat"
+   },
+   "search_rating_category_illegal": {
+      "message": "Illegal"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Olagliga hämtningar"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Shopping och auktioner"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Sociala nätverk"
+   },
+   "search_rating_category_status": {
+      "message": "Den här webbplatsen begränsas av Familjeregler"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Den här webbsidan begränsas av Webbinnehållskontroll"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Streamingmedia"
+   },
+   "search_rating_category_unknown": {
+      "message": "Okänd"
+   },
+   "search_rating_category_violence": {
+      "message": "Våld"
+   },
+   "search_rating_category_weapons": {
+      "message": "Vapen"
+   },
+   "search_rating_denied": {
+      "message": "En administratör har blockerat den här sidan"
+   },
+   "search_rating_harmful": {
+      "message": "Webbplatsen klassificeras som osäker, du bör inte surfa här."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Den här webbplatsen rankas som osäker"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Du bör inte surfa här"
+   },
+   "search_rating_isbank": {
+      "message": "Det här är en betrodd bankwebbplats."
+   },
+   "search_rating_loading": {
+      "message": "Läser in ..."
+   },
+   "search_rating_restricted": {
+      "message": "Den här sidan innehåller begränsat innehåll"
+   },
+   "search_rating_safe": {
+      "message": "Webbplatsen är säker, trevlig surfning!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Den här webbplatsen är säker"
+   },
+   "search_rating_safe_p2": {
+      "message": "Glad surfning"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Den här webbplatsen kan vara misstänkt"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Den här webbplatsen rankas inte bland de mest pålitliga"
+   },
+   "search_rating_suspicious": {
+      "message": "Den här webbplatsen är misstänkt."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Den här webbplatsen är misstänkt"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Var försiktig när du surfar"
+   },
+   "search_rating_unknown": {
+      "message": "Denna plats har inte analyserats än"
+   },
+   "trusted_shopping_review": {
+      "message": "Baserat på flera granskningar och säkerhetsbetyg"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Du har öppnat en säker shoppingwebbsida."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Den här shoppingwebbplatsen rankas högt och är pålitlig. Glatt shoppande!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Du har öppnat en shoppingwebbsida som kan vara misstänkt."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Vi uppmuntrar dig att vara försiktig när du shoppar på den här webbplatsen."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Denna webbplats har inte analyserats än."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Vi uppmuntrar dig att vara försiktig när du shoppar på den här webbplatsen."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Du har öppnat en shoppingwebbsida som inte rankas bland de mest pålitliga."
+   }
+}

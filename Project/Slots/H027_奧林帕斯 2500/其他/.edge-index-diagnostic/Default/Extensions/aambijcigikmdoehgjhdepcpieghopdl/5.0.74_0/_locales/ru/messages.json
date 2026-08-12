@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "Чтобы защитить ваши транзакции, решение $PRODUCT_NAME$ заблокировало этот веб-сайт в ходе сеанса Защиты банковских операций.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "Чтобы защитить ваши транзакции, решение $PRODUCT_NAME$ заблокировало этот веб-сайт в ходе вашего сеанса Контроля подключения.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Заблокировано Защитой банковских операций"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Блокируется Контролем подключения"
+   },
+   "blockpage_banking_allow": {
+      "message": "Разрешить веб-сайт"
+   },
+   "blockpage_banking_description": {
+      "message": "Чтобы защитить ваши транзакции, решение $PRODUCT_NAME$ заблокировало этот веб-сайт в ходе сеанса банковских операций.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "Чтобы защитить ваши транзакции, $PRODUCT_NAME$ блокирует этот веб-сайт в сеансе Контроля подключения.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Разрешите веб-сайт, если доступ к нему требуется для осуществления транзакции. Завершите сеанс защиты банковских операций после завершения транзакции."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Сделайте веб-сайт разрешенным, если вам нужен к нему доступ для совершения транзакции. Завершите сеанс Контроля подключения, когда окончите транзакцию."
+   },
+   "blockpage_banking_heading": {
+      "message": "Защита банковских операций активна"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Контроль подключения активен"
+   },
+   "blockpage_banking_title": {
+      "message": "Защита банковских операций"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Контроль подключения"
+   },
+   "blockpage_blocked": {
+      "message": "Веб-сайт запрещен"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Веб-сайт запрещен"
+   },
+   "blockpage_child_allow": {
+      "message": "Разрешить этот веб-сайт"
+   },
+   "blockpage_child_description": {
+      "message": "Для посещения разрешены только эти веб-сайты:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Пока нет разрешенных веб-сайтов."
+   },
+   "blockpage_child_heading": {
+      "message": "Веб-сайт запрещен"
+   },
+   "blockpage_child_note": {
+      "message": "Также можно вносить изменения в"
+   },
+   "blockpage_child_note_link": {
+      "message": "разрешенные и запрещенные сайты"
+   },
+   "blockpage_child_title": {
+      "message": "Веб-сайт запрещен"
+   },
+   "blockpage_denied_allow": {
+      "message": "Разрешить веб-сайт на этом компьютере"
+   },
+   "blockpage_denied_description": {
+      "message": "Менеджер учетной записи $PRODUCT_NAME$ заблокировал доступ к этому веб-сайту. Получите у него разрешение, чтобы продолжить.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Веб-сайт заблокирован"
+   },
+   "blockpage_denied_title": {
+      "message": "Веб-сайт заблокирован"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Разрешить веб-сайт на этом компьютере"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ классифицирует этот веб-сайт как вредоносный. Заходить на него не рекомендуется.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Не следует заходить на этот сайт"
+   },
+   "blockpage_harmful_report": {
+      "message": "Сообщить о ложноположительном результате здесь"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Не считаете этот ресурс вредоносным?"
+   },
+   "blockpage_harmful_title": {
+      "message": "Заблокирован вредоносный веб-сайт"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Получить доступ"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ сообщает, что этот веб-сайт содержит запрещенный контент. Настоятельно рекомендуем не заходить на этот сайт.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Запрещенный веб-сайт"
+   },
+   "blockpage_illegal_report": {
+      "message": "Сообщить о ложноположительном результате здесь"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Не считаете этот ресурс вредоносным?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Заблокирован запрещенный веб-сайт"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Все равно продолжать"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ заблокировал этот сайт из-за его недавней регистрации. Рекомендуем избегать его, пока его легитимность не будет подтверждена.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Домен сайта зарегистрирован на: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Недавно зарегистрированный, непроверенный сайт заблокирован"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Сообщить о ложноположительном результате здесь"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Не считаете этот ресурс вредоносным?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Недавно зарегистрированный сайт заблокирован"
+   },
+   "blockpage_parental_allow": {
+      "message": "Разрешить веб-сайт на этом компьютере"
+   },
+   "blockpage_parental_description": {
+      "message": "Решение $PRODUCT_NAME$ заблокировало этот контент как запрещенный в следующей категории: ",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Веб-сайт заблокирован"
+   },
+   "blockpage_parental_report": {
+      "message": "Сообщить о ложноположительном веб-сайте"
+   },
+   "blockpage_parental_title": {
+      "message": "Веб-сайт заблокирован"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Получить доступ"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ классифицирует этот веб-сайт как подозрительный. Заходить на него не рекомендуется.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Не следует заходить на этот сайт"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Сообщить о ложноположительном результате здесь"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Не считаете этот ресурс вредоносным?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Заблокирован подозрительный веб-сайт"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "У этого веб-сайта для шопинга несколько предупреждений безопасности. Возможно, это мошеннический сайт!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Не следует заходить на этот сайт"
+   },
+   "category_abortion": {
+      "message": "Аборт"
+   },
+   "category_adserving": {
+      "message": "Доставка рекламы"
+   },
+   "category_adult": {
+      "message": "Взрослый"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Алкоголь и табак"
+   },
+   "category_anonymizers": {
+      "message": "Анонимайзеры"
+   },
+   "category_artificial_intelligence": {
+      "message": "Искусственный интеллект"
+   },
+   "category_auctions": {
+      "message": "Аукционы"
+   },
+   "category_banking": {
+      "message": "Банковские услуги"
+   },
+   "category_blogs": {
+      "message": "Блоги"
+   },
+   "category_chat": {
+      "message": "Разговор"
+   },
+   "category_dating": {
+      "message": "Знакомства"
+   },
+   "category_disturbing": {
+      "message": "Беспокоящее содержимое"
+   },
+   "category_drugs": {
+      "message": "Наркотики"
+   },
+   "category_entertainment": {
+      "message": "Развлечения"
+   },
+   "category_file_sharing": {
+      "message": "Обмен файлами"
+   },
+   "category_forums": {
+      "message": "Форумы"
+   },
+   "category_gambling": {
+      "message": "Азартные игры"
+   },
+   "category_games": {
+      "message": "Игры"
+   },
+   "category_hacking": {
+      "message": "Взлом программ"
+   },
+   "category_hate": {
+      "message": "Ненависть"
+   },
+   "category_illegal": {
+      "message": "Незаконные материалы"
+   },
+   "category_illegal_downloads": {
+      "message": "Нелегальные загрузки"
+   },
+   "category_job_search": {
+      "message": "Поиск работы"
+   },
+   "category_payment_services": {
+      "message": "Платежные системы"
+   },
+   "category_scam": {
+      "message": "Мошенничество"
+   },
+   "category_search_engines": {
+      "message": "Поисковые системы"
+   },
+   "category_shopping": {
+      "message": "Покупки"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Магазины и аукционы"
+   },
+   "category_social_networks": {
+      "message": "Социальные сети"
+   },
+   "category_software_downloads": {
+      "message": "Загрузки ПО"
+   },
+   "category_spam": {
+      "message": "Нежелательные сообщения"
+   },
+   "category_streaming_media": {
+      "message": "Потоковая передача мультимедиа"
+   },
+   "category_travel": {
+      "message": "Путешествия"
+   },
+   "category_unknown": {
+      "message": "Неизвестно"
+   },
+   "category_violence": {
+      "message": "Насилие"
+   },
+   "category_weapons": {
+      "message": "Оружие"
+   },
+   "category_webmail": {
+      "message": "Веб-почта"
+   },
+   "close_btn": {
+      "message": "Закрыть"
+   },
+   "error_ca_text_p1": {
+      "message": "Невозможно подключиться к приложению."
+   },
+   "error_ca_text_p2": {
+      "message": "Проверьте свою конфигурацию."
+   },
+   "ext_description": {
+      "message": "Расширение для защищенного просмотра с шифрованием на основе решений безопасности WithSecure."
+   },
+   "ext_name": {
+      "message": "Защита при просмотре от WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Защита при просмотре от WithSecure (альфа-версия)"
+   },
+   "ext_name_beta": {
+      "message": "Защита при просмотре от WithSecure (бета-версия)"
+   },
+   "ext_name_short": {
+      "message": "Безопасный просмотр"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Принимаю"
+   },
+   "ext_onboarding_allow": {
+      "message": "Разрешить"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Настройка расширения завершена. Страница будет закрыта."
+   },
+   "ext_onboarding_decline": {
+      "message": "Отклонить и удалить расширение"
+   },
+   "ext_onboarding_description": {
+      "message": "Принять разрешения?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Компания, управляющая этим устройством, или администратор вашей компании выбрали защиту этого компьютера с помощью продуктов для обеспечения безопасности от WithSecure. Конфигурация принудительно применяет защиту пользователей компьютера от вредоносных веб-сайтов. Чтобы предоставить базовую функциональность Защиты при просмотре от WithSecure — предотвращать вред, который могут нанести вам вредоносные веб-сайты — нам необходимо ваше согласие на сбор и обработку данных. В противном случае вы не сможете использовать расширение. \u003Cbr>Разрешая Защиту при просмотре от WithSecure, вы соглашаетесь с тем, что адреса посещаемых вами веб-сайтов будут передаваться в продукты для обеспечения безопасности WithSecure для проверки их рейтинга и категории. Адреса (URL-адреса) делаются нераспознаваемыми и обрабатываются нашим автоматизированным облаком безопасности WithSecure в соответствии с нашей \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a>.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Для защиты вашей работы в Интернете требуется согласие"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Настройка расширения отменена. Расширение будет удалено."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Политика конфиденциальности"
+   },
+   "ext_open_consent": {
+      "message": "Открыть"
+   },
+   "ext_show_consent_msg": {
+      "message": "Пожалуйста, зайдите на страницу предоставления согласия."
+   },
+   "page_back": {
+      "message": "Назад"
+   },
+   "page_banking": {
+      "message": "Банковские услуги"
+   },
+   "page_blocked": {
+      "message": "Веб-сайт запрещен"
+   },
+   "page_cancel": {
+      "message": "Отмена"
+   },
+   "page_harmful": {
+      "message": "Вредоносный"
+   },
+   "page_next": {
+      "message": "Далее"
+   },
+   "page_not_available": {
+      "message": "Информация о рейтинге недоступна"
+   },
+   "page_prohibited": {
+      "message": "Запрещенный веб-сайт"
+   },
+   "page_report": {
+      "message": "Сообщить"
+   },
+   "page_report_banking": {
+      "message": "Сообщить как «Банковские услуги»."
+   },
+   "page_report_ext": {
+      "message": "Сообщить о проблеме с этой страницей"
+   },
+   "page_report_harmful": {
+      "message": "Сообщить как «Вредоносный»."
+   },
+   "page_report_safe": {
+      "message": "Сообщить как «Безопасный»."
+   },
+   "page_report_suspicious": {
+      "message": "Сообщить как «Подозрительный»."
+   },
+   "page_safe": {
+      "message": "Безопасный"
+   },
+   "page_success_p1": {
+      "message": "Благодарим вас! В ближайшее время мы проведем анализ сообщения и скорректируем рейтинг этого сайта."
+   },
+   "page_suggest_category": {
+      "message": "Выбрать категорию"
+   },
+   "page_suggest_rating": {
+      "message": "Предложить новый рейтинг"
+   },
+   "page_suspicious": {
+      "message": "Подозрительный"
+   },
+   "page_suspicious_p1": {
+      "message": "Опишите, почему данная страница является подозрительной"
+   },
+   "page_unsafe": {
+      "message": "Небезопасный"
+   },
+   "page_wrong_cat_1": {
+      "message": "Другая категория"
+   },
+   "page_wrong_cat_2": {
+      "message": "Другая категория"
+   },
+   "page_wrong_category_ws": {
+      "message": "Другая категория"
+   },
+   "page_wrong_rating_1": {
+      "message": "Вы думаете, что этот веб-сайт имеет неправильный рейтинг?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Помогите нам, отправив отчет."
+   },
+   "popup_error_description": {
+      "message": "Ваше приложение было удалено, или версия несовместима. Установите последнюю версию приложения и повторите попытку."
+   },
+   "popup_error_header": {
+      "message": "Приложение безопасности не найдено"
+   },
+   "popup_status_init": {
+      "message": "Идет инициализация..."
+   },
+   "popup_status_ok": {
+      "message": "Ваш браузер защищен."
+   },
+   "search_rating_allowed": {
+      "message": "Этот сайт разрешен администратором"
+   },
+   "search_rating_banking": {
+      "message": "Этот сайт временно заблокирован"
+   },
+   "search_rating_category_adult": {
+      "message": "Взрослый"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Алкоголь и табак"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Анонимайзеры"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Искусственный интеллект"
+   },
+   "search_rating_category_dating": {
+      "message": "Знакомства"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Беспокоящее содержимое"
+   },
+   "search_rating_category_drugs": {
+      "message": "Наркотики"
+   },
+   "search_rating_category_gambling": {
+      "message": "Азартные игры"
+   },
+   "search_rating_category_hate": {
+      "message": "Ненависть"
+   },
+   "search_rating_category_illegal": {
+      "message": "Незаконные материалы"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Нелегальные загрузки"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Магазины и аукционы"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Социальные сети"
+   },
+   "search_rating_category_status": {
+      "message": "Этот веб-сайт ограничен Родительским контролем"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Этот веб-сайт блокируется «Контролем веб-контента»"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Потоковая передача мультимедиа"
+   },
+   "search_rating_category_unknown": {
+      "message": "Неизвестно"
+   },
+   "search_rating_category_violence": {
+      "message": "Насилие"
+   },
+   "search_rating_category_weapons": {
+      "message": "Оружие"
+   },
+   "search_rating_denied": {
+      "message": "Этот сайт запрещен администратором"
+   },
+   "search_rating_harmful": {
+      "message": "Веб-сайт небезопасен, на него не следует переходить."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Этот веб-сайт помечен как небезопасный"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Не следует просматривать этот сайт"
+   },
+   "search_rating_isbank": {
+      "message": "Это надежный веб-сайт банковских интернет-услуг."
+   },
+   "search_rating_loading": {
+      "message": "Идет загрузка…"
+   },
+   "search_rating_restricted": {
+      "message": "Этот сайт содержит запрещенный контент"
+   },
+   "search_rating_safe": {
+      "message": "Веб-сайт безопасный, наслаждайтесь просмотром!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Этот веб-сайт безопасный"
+   },
+   "search_rating_safe_p2": {
+      "message": "Приятного просмотра"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Этот веб-сайт может быть подозрительным"
+   },
+   "search_rating_shopping_warn": {
+      "message": "У этого веб-сайта низкая оценка"
+   },
+   "search_rating_suspicious": {
+      "message": "Этот сайт подозрительный."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Этот сайт подозрительный"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Просматривайте его с осторожностью"
+   },
+   "search_rating_unknown": {
+      "message": "Этот сайт еще не проанализирован"
+   },
+   "trusted_shopping_review": {
+      "message": "На основании неоднократных проверок и оценок безопасности"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Вы открыли безопасный веб-сайт для шопинга."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "У этого веб-сайта для шопинга высокие оценки и уровень надежности, приятных покупок!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Вы открыли подозрительный веб-сайт для шопинга."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Совершайте покупки с осторожностью на этом сайте."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Этот веб-сайт еще не проанализирован."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Совершайте покупки с осторожностью на этом сайте."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Вы открыли веб-сайт для шопинга с низкой оценкой."
+   }
+}

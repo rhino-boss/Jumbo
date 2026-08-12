@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="../common_styles.js"></script>
+    <script src="../constants.js"></script>
+    <script src="../content_scripts/nif2_schema_monitoring.js"></script>
+    <script src="common.js"></script>
+    <script src="confirmation.js"></script>
+    <link rel="stylesheet" href="../ols.css">
+  </head>
+  <body>
+
+        <p id="confirmation-text"></p>
+        <img id="old-status-icon" class="status-logo"/>
+        <img class="status-logo" src="../img/ic_arrow_back.svg"/>
+        <img id="new-status-icon" class="status-logo"/>
+        <div id="note-suspisous" style="display: none">
+            <p><label for="susp-info" data-locale="page_suspicious_p1"></label></p>
+            <textarea id="susp-info" name="susp-info" rows="5" maxlength="4096"></textarea>
+        </div>
+        <br><br>
+        <div class="h-right" >
+            <button class="hds-button-secondary" id="btn-back"><span data-locale="page_back"></span></button>
+            <button class="hds-button" id="btn-report"><span data-locale="page_report"></span></button>
+        </div>
+  </body>
+</html>

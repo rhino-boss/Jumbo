@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="811px" height="128px" viewBox="0 0 811 128" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 51.3 (57544) - http://www.bohemiancoding.com/sketch -->
+    <title>ic_safe_browser_bubble</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M315,389 L1102,389 C1104.20914,389 1106,390.790861 1106,393 L1106,485 C1106,487.209139 1104.20914,489 1102,489 L357.376148,489 L344.646408,501.702174 L331.916668,489 L315,489 C312.790861,489 311,487.209139 311,485 L311,393 C311,390.790861 312.790861,389 315,389 Z" id="path-1"></path>
+        <filter x="-1.7%" y="-9.3%" width="103.4%" height="124.0%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="3" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="4" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1"></feComposite>
+            <feColorMatrix values="0 0 0 0 0.235294118   0 0 0 0 0.235294118   0 0 0 0 0.235294118  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="SAFE_browsing_protection_bubble_01" transform="translate(-303.000000, -384.000000)" fill-rule="nonzero">
+            <g id="ic_safe_browser_bubble">
+                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                <path stroke="#BFBFBF" stroke-width="1" d="M344.646408,500.995832 L357.169358,488.5 L1102,488.5 C1103.933,488.5 1105.5,486.932997 1105.5,485 L1105.5,393 C1105.5,391.067003 1103.933,389.5 1102,389.5 L315,389.5 C313.067003,389.5 311.5,391.067003 311.5,393 L311.5,485 C311.5,486.932997 313.067003,488.5 315,488.5 L332.123457,488.5 L344.646408,500.995832 Z" stroke-linejoin="square" fill="#FFFFFF" fill-rule="evenodd"></path>
+            </g>
+        </g>
+    </g>
+</svg>

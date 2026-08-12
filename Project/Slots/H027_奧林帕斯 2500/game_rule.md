@@ -1,6 +1,6 @@
 # 奧林帕斯 2500 (Olympus 2500) 遊戲規則說明
 
-> 文件版本：v0.3（玩法確認版）  
+> 文件版本：v0.4（玩法確認版）
 > 對標競品：Pragmatic Play - Gates of Olympus 1000  
 > 撰寫依據：玩法以 `文件/260630_Olympus 2500.pptx` 為主；現階段數學值以 `Source/H027192A.xlsx` 為主  
 > 編號：H027  
@@ -211,6 +211,7 @@
 - **FG 判定點**：每次 Spin 所有 Cascade 結束後，統計最終盤面 C1。
 - **打擊 OP Jackpot**：C1 Scatter 除處理自身賠付與 FG／Retrigger 外，也會打擊 OP Jackpot 符號。
 - **同轉輪最多一個**：Scatter 在相同轉輪最多只會出現一個。
+- **輪帶間距**：同一張輪帶的同一 Reel 中，任兩個 C1／SC 的輪帶位置索引距離至少為 6；輪帶視為首尾相接，尾端至起點的循環距離也必須符合此限制。
 
 ### 9.4 Free Game 相關
 

@@ -1,0 +1,627 @@
+{
+   "banking_blocked_description": {
+      "message": "Pentru a vă proteja tranzacțiile, $PRODUCT_NAME$ a blocat acest site Web în timpul sesiunii dvs. de Protecție operațiuni bancare.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_description_ws": {
+      "message": "Pentru a vă proteja tranzacțiile, $PRODUCT_NAME$ a blocat acest site Web în timpul sesiunii dvs. de Control conexiune.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "banking_blocked_status": {
+      "message": "Blocat de Protecție operațiuni bancare"
+   },
+   "banking_blocked_status_ws": {
+      "message": "Blocat de Control conexiune"
+   },
+   "blockpage_banking_allow": {
+      "message": "Permitere site Web"
+   },
+   "blockpage_banking_description": {
+      "message": "Pentru a vă proteja tranzacțiile, $PRODUCT_NAME$ a blocat acest site Web în timpul sesiunii de operațiuni bancare.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_description_ws": {
+      "message": "Pentru a vă proteja tranzacțiile, $PRODUCT_NAME$ a blocat acest site Web în timpul sesiunii de Control conexiune.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_banking_detail": {
+      "message": "Permiteți site-ul Web dacă este necesar să îl accesați pentru a finaliza tranzacția. Terminați sesiunea de protecție a operațiunilor bancare atunci când tranzacția s-a finalizat."
+   },
+   "blockpage_banking_detail_ws": {
+      "message": "Permiteți site-ul Web, dacă este necesar să îl accesați pentru a vă finaliza tranzacția. Terminați sesiunea de Control conexiune atunci când tranzacția dvs. s-a finalizat."
+   },
+   "blockpage_banking_heading": {
+      "message": "Protecția operațiunilor bancare este activă"
+   },
+   "blockpage_banking_heading_ws": {
+      "message": "Opțiunea Control conexiune este activă"
+   },
+   "blockpage_banking_title": {
+      "message": "Protecție operațiuni bancare"
+   },
+   "blockpage_banking_title_ws": {
+      "message": "Control conexiune"
+   },
+   "blockpage_blocked": {
+      "message": "Site Web refuzat"
+   },
+   "blockpage_blocked_ws": {
+      "message": "Site Web refuzat"
+   },
+   "blockpage_child_allow": {
+      "message": "Se permite acest site Web"
+   },
+   "blockpage_child_description": {
+      "message": "Puteți accesa numai aceste site-uri Web:"
+   },
+   "blockpage_child_empty_list_description": {
+      "message": "Încă nu există site-uri Web permise."
+   },
+   "blockpage_child_heading": {
+      "message": "Site Web refuzat"
+   },
+   "blockpage_child_note": {
+      "message": "De asemenea, puteți face modificări la"
+   },
+   "blockpage_child_note_link": {
+      "message": "site-uri Web permise și refuzate"
+   },
+   "blockpage_child_title": {
+      "message": "Site Web refuzat"
+   },
+   "blockpage_denied_allow": {
+      "message": "Permitere site Web pe acest computer"
+   },
+   "blockpage_denied_description": {
+      "message": "Managerul de conturi $PRODUCT_NAME$ a blocat accesul la acest site Web. Pentru a continua, aveți nevoie de permisiunea acestuia.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_denied_heading": {
+      "message": "Site Web blocat"
+   },
+   "blockpage_denied_title": {
+      "message": "Site Web blocat"
+   },
+   "blockpage_harmful_allow": {
+      "message": "Permitere site Web pe acest computer"
+   },
+   "blockpage_harmful_description": {
+      "message": "$PRODUCT_NAME$ a evaluat acest site Web ca fiind dăunător. Vă recomandăm să nu intrați pe acest site Web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_harmful_heading": {
+      "message": "Nu ar trebui să navigați aici"
+   },
+   "blockpage_harmful_report": {
+      "message": "Raportați o valoare fals pozitivă aici"
+   },
+   "blockpage_harmful_report_note": {
+      "message": "Nu credeți că este ceva dăunător?"
+   },
+   "blockpage_harmful_title": {
+      "message": "S-a blocat un site Web dăunător"
+   },
+   "blockpage_illegal_allow": {
+      "message": "Accesare oricum"
+   },
+   "blockpage_illegal_description": {
+      "message": "$PRODUCT_NAME$ a raportat că acest site Web are conținut interzis. Vă recomandăm insistent să nu intrați pe acest site Web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_illegal_heading": {
+      "message": "Site Web interzis"
+   },
+   "blockpage_illegal_report": {
+      "message": "Raportați o valoare fals pozitivă aici"
+   },
+   "blockpage_illegal_report_note": {
+      "message": "Nu credeți că este ceva dăunător?"
+   },
+   "blockpage_illegal_title": {
+      "message": "Site-ul Web interzis a fost blocat"
+   },
+   "blockpage_newly_registered_allow": {
+      "message": "Continuare oricum"
+   },
+   "blockpage_newly_registered_description": {
+      "message": "$PRODUCT_NAME$ a blocat acest site web din cauza înregistrării sale recente. Vă recomandăm să îl evitați până când legitimitatea sa nu a fost verificată.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_newly_registered_domain_registered_at": {
+      "message": "Domeniul site-ului web a fost înregistrat pe: "
+   },
+   "blockpage_newly_registered_heading": {
+      "message": "Site recent înregistrat, neverificat, blocat"
+   },
+   "blockpage_newly_registered_report": {
+      "message": "Raportați o valoare fals pozitivă aici"
+   },
+   "blockpage_newly_registered_report_note": {
+      "message": "Nu credeți că este ceva dăunător?"
+   },
+   "blockpage_newly_registered_title": {
+      "message": "Site-ul web înregistrat recent este blocat"
+   },
+   "blockpage_parental_allow": {
+      "message": "Permitere site Web pe acest computer"
+   },
+   "blockpage_parental_description": {
+      "message": "$PRODUCT_NAME$ a blocat acest conținut, deoarece este restricționat în categoria:",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_parental_heading": {
+      "message": "Site Web blocat"
+   },
+   "blockpage_parental_report": {
+      "message": "Raportați o valoare fals pozitivă pentru un site Web"
+   },
+   "blockpage_parental_title": {
+      "message": "Site Web blocat"
+   },
+   "blockpage_suspicious_allow": {
+      "message": "Accesare oricum"
+   },
+   "blockpage_suspicious_description": {
+      "message": "$PRODUCT_NAME$ a evaluat acest site Web ca fiind suspect. Vă recomandăm să nu intrați pe acest site Web.",
+      "placeholders": {
+         "PRODUCT_NAME": {
+            "content": "$1"
+         }
+      }
+   },
+   "blockpage_suspicious_heading": {
+      "message": "Nu ar trebui să navigați aici"
+   },
+   "blockpage_suspicious_report": {
+      "message": "Raportați o valoare fals pozitivă aici"
+   },
+   "blockpage_suspicious_report_note": {
+      "message": "Nu credeți că este ceva dăunător?"
+   },
+   "blockpage_suspicious_title": {
+      "message": "Site-ul Web suspect a fost blocat"
+   },
+   "blockpage_trusted_shopping_description": {
+      "message": "Acest site Web de cumpărături are mai multe semnalizatoare roșii. Este posibil să fie un site de înșelătorie!"
+   },
+   "blockpage_trusted_shopping_title": {
+      "message": "Nu ar trebui să navigați aici"
+   },
+   "category_abortion": {
+      "message": "Dezbatere despre avorturi"
+   },
+   "category_adserving": {
+      "message": "Distribuție de publicitate"
+   },
+   "category_adult": {
+      "message": "Adulți"
+   },
+   "category_alcohol_and_tobacco": {
+      "message": "Alcool și tutun"
+   },
+   "category_anonymizers": {
+      "message": "Ascunderi ale identității"
+   },
+   "category_artificial_intelligence": {
+      "message": "Inteligență artificială"
+   },
+   "category_auctions": {
+      "message": "Licitații"
+   },
+   "category_banking": {
+      "message": "Operațiuni bancare"
+   },
+   "category_blogs": {
+      "message": "Bloguri"
+   },
+   "category_chat": {
+      "message": "Chat"
+   },
+   "category_dating": {
+      "message": "Matrimoniale"
+   },
+   "category_disturbing": {
+      "message": "Deranjant"
+   },
+   "category_drugs": {
+      "message": "Droguri"
+   },
+   "category_entertainment": {
+      "message": "Divertisment"
+   },
+   "category_file_sharing": {
+      "message": "Partajare fișiere"
+   },
+   "category_forums": {
+      "message": "Forumuri"
+   },
+   "category_gambling": {
+      "message": "Jocuri de noroc"
+   },
+   "category_games": {
+      "message": "Jocuri"
+   },
+   "category_hacking": {
+      "message": "Hacking"
+   },
+   "category_hate": {
+      "message": "Ură"
+   },
+   "category_illegal": {
+      "message": "Ilegal"
+   },
+   "category_illegal_downloads": {
+      "message": "Descărcări ilegale"
+   },
+   "category_job_search": {
+      "message": "Căutare locuri de muncă"
+   },
+   "category_payment_services": {
+      "message": "Servicii de plăți"
+   },
+   "category_scam": {
+      "message": "Înșelătorie"
+   },
+   "category_search_engines": {
+      "message": "Motoare de căutare"
+   },
+   "category_shopping": {
+      "message": "Cumpărături"
+   },
+   "category_shopping_and_auctions": {
+      "message": "Cumpărături și licitații"
+   },
+   "category_social_networks": {
+      "message": "Rețele sociale"
+   },
+   "category_software_downloads": {
+      "message": "Descărcări de software"
+   },
+   "category_spam": {
+      "message": "Spam"
+   },
+   "category_streaming_media": {
+      "message": "Media în flux"
+   },
+   "category_travel": {
+      "message": "Călătorii"
+   },
+   "category_unknown": {
+      "message": "Necunoscută"
+   },
+   "category_violence": {
+      "message": "Violență"
+   },
+   "category_weapons": {
+      "message": "Arme"
+   },
+   "category_webmail": {
+      "message": "Mail prin Web"
+   },
+   "close_btn": {
+      "message": "Închidere"
+   },
+   "error_ca_text_p1": {
+      "message": "Nu se poate conecta la aplicație"
+   },
+   "error_ca_text_p2": {
+      "message": "Verificați-vă configurarea"
+   },
+   "ext_description": {
+      "message": "Extensie pentru protejarea navigării criptate cu produse de securitate de la WithSecure."
+   },
+   "ext_name": {
+      "message": "Protecție la navigare de la WithSecure"
+   },
+   "ext_name_alpha": {
+      "message": "Protecție la navigare de la WithSecure (alfa)"
+   },
+   "ext_name_beta": {
+      "message": "Protecție la navigare de la WithSecure (beta)"
+   },
+   "ext_name_short": {
+      "message": "Navigare securizată"
+   },
+   "ext_onboarding_acccept": {
+      "message": "Acceptare"
+   },
+   "ext_onboarding_allow": {
+      "message": "Permitere"
+   },
+   "ext_onboarding_complete_message": {
+      "message": "Instalarea extensiei este finalizată, iar acum pagina va fi închisă."
+   },
+   "ext_onboarding_decline": {
+      "message": "Refuzați și eliminați extensia"
+   },
+   "ext_onboarding_description": {
+      "message": "Acceptați permisiunile?"
+   },
+   "ext_onboarding_description_consent_warn_descr": {
+      "message": "Compania care administrează acest dispozitiv sau administratorul companiei a selectat să protejeze acest computer cu produse de securitate de la WithSecure. Configurarea impune protejarea utilizatorilor computerului de site-urile Web dăunătoare. Pentru a furniza funcția de bază a Protecției la navigare de la WithSecure - evitarea ca site-urile Web rău intenționate să vă provoace daune, avem nevoie de consimțământul dvs. pentru a colecta și prelucra datele. Altfel, nu veți putea folosi extensia. \u003Cbr>Prin permiterea Protecției la navigare de la WithSecure, acceptați ca adresele site-urilor Web pe care le vizitați să fie transferate produselor de securitate WithSecure pentru a le verifica evaluarea și categoria. Adresele (URL) sunt făcute neidentificabile și sunt gestionate de către sistemul nostru automat WithSecure Security Cloud, în conformitate cu \u003Ca id='open-privacy-policy' href='#'>$PRIVACY_POLICY$\u003C/a> de la noi.",
+      "placeholders": {
+         "EXTENSION_NAME": {
+            "content": "$1"
+         },
+         "PRIVACY_POLICY": {
+            "content": "$2"
+         }
+      }
+   },
+   "ext_onboarding_description_consent_warn_title": {
+      "message": "Pentru a vă proteja navigarea este necesar consimțământul"
+   },
+   "ext_onboarding_fail_message": {
+      "message": "Instalarea extensiei a fost anulată, iar acum extensia va fi dezinstalată."
+   },
+   "ext_onboarding_privacy_policy_link": {
+      "message": "Politica de confidențialitate"
+   },
+   "ext_open_consent": {
+      "message": "Deschidere"
+   },
+   "ext_show_consent_msg": {
+      "message": "Vizitați pagina de consimțământ."
+   },
+   "page_back": {
+      "message": "Înapoi"
+   },
+   "page_banking": {
+      "message": "Operațiuni bancare"
+   },
+   "page_blocked": {
+      "message": "Site Web refuzat"
+   },
+   "page_cancel": {
+      "message": "Revocați"
+   },
+   "page_harmful": {
+      "message": "Dăunător"
+   },
+   "page_next": {
+      "message": "Următorul"
+   },
+   "page_not_available": {
+      "message": "Informațiile de evaluare nu sunt disponibile"
+   },
+   "page_prohibited": {
+      "message": "Site Web interzis"
+   },
+   "page_report": {
+      "message": "Raportare"
+   },
+   "page_report_banking": {
+      "message": "Raportați-l ca fiind pentru operațiuni bancare."
+   },
+   "page_report_ext": {
+      "message": "Reportați această pagină"
+   },
+   "page_report_harmful": {
+      "message": "Raportați-l ca fiind dăunător."
+   },
+   "page_report_safe": {
+      "message": "Raportați-l ca fiind sigur."
+   },
+   "page_report_suspicious": {
+      "message": "Raportați-l ca fiind suspect."
+   },
+   "page_safe": {
+      "message": "Sigur"
+   },
+   "page_success_p1": {
+      "message": "Mulțumim! Vom analiza raportul și vom ajusta evaluarea pentru acest site Web în curând."
+   },
+   "page_suggest_category": {
+      "message": "Alegeți categoria"
+   },
+   "page_suggest_rating": {
+      "message": "Sugerați o nouă evaluare"
+   },
+   "page_suspicious": {
+      "message": "Suspect"
+   },
+   "page_suspicious_p1": {
+      "message": "Descrieți de ce această pagină pare suspectă"
+   },
+   "page_unsafe": {
+      "message": "Nesigur"
+   },
+   "page_wrong_cat_1": {
+      "message": "Altă categorie"
+   },
+   "page_wrong_cat_2": {
+      "message": "Altă categorie"
+   },
+   "page_wrong_category_ws": {
+      "message": "Altă categorie"
+   },
+   "page_wrong_rating_1": {
+      "message": "Credeți că acest site Web are o evaluare greșită?"
+   },
+   "page_wrong_rating_2": {
+      "message": "Ajutați-ne prin trimiterea unui raport."
+   },
+   "popup_error_description": {
+      "message": "Aplicația dvs. a fost dezinstalată sau nu aveți o versiune compatibilă. Instalați cea mai recentă versiune a aplicației și încercați din nou."
+   },
+   "popup_error_header": {
+      "message": "Aplicația de securitate nu a fost găsită"
+   },
+   "popup_status_init": {
+      "message": "Se inițializează..."
+   },
+   "popup_status_ok": {
+      "message": "Browserul dvs. este protejat"
+   },
+   "search_rating_allowed": {
+      "message": "Accesul la acest site este permis de un administrator"
+   },
+   "search_rating_banking": {
+      "message": "Acest site este temporar blocat"
+   },
+   "search_rating_category_adult": {
+      "message": "Adulți"
+   },
+   "search_rating_category_alcohol_and_tobacco": {
+      "message": "Alcool și tutun"
+   },
+   "search_rating_category_anonymizers": {
+      "message": "Ascunderi ale identității"
+   },
+   "search_rating_category_artificial_intelligence": {
+      "message": "Inteligență artificială"
+   },
+   "search_rating_category_dating": {
+      "message": "Matrimoniale"
+   },
+   "search_rating_category_disturbing": {
+      "message": "Deranjant"
+   },
+   "search_rating_category_drugs": {
+      "message": "Droguri"
+   },
+   "search_rating_category_gambling": {
+      "message": "Jocuri de noroc"
+   },
+   "search_rating_category_hate": {
+      "message": "Ură"
+   },
+   "search_rating_category_illegal": {
+      "message": "Ilegal"
+   },
+   "search_rating_category_illegal_downloads": {
+      "message": "Descărcări ilegale"
+   },
+   "search_rating_category_shopping_and_auctions": {
+      "message": "Cumpărături și Licitații"
+   },
+   "search_rating_category_social_networks": {
+      "message": "Rețele sociale"
+   },
+   "search_rating_category_status": {
+      "message": "Acest site Web este restricționat de Reguli de familie"
+   },
+   "search_rating_category_status_ws": {
+      "message": "Acest site Web este restricționat de Controlul conținutului Web"
+   },
+   "search_rating_category_streaming_media": {
+      "message": "Media în flux"
+   },
+   "search_rating_category_unknown": {
+      "message": "Necunoscută"
+   },
+   "search_rating_category_violence": {
+      "message": "Violență"
+   },
+   "search_rating_category_weapons": {
+      "message": "Arme"
+   },
+   "search_rating_denied": {
+      "message": "Accesul la acest site este respins de un administrator"
+   },
+   "search_rating_harmful": {
+      "message": "Acest site Web este evaluat ca fiind nesigur, nu ar trebui să navigați aici."
+   },
+   "search_rating_harmful_p1": {
+      "message": "Acest site Web este evaluat ca fiind nesigur"
+   },
+   "search_rating_harmful_p2": {
+      "message": "Nu ar trebui să navigați aici"
+   },
+   "search_rating_isbank": {
+      "message": "Acesta este un site Web de încredere pentru operațiuni bancare online."
+   },
+   "search_rating_loading": {
+      "message": "Se încarcă..."
+   },
+   "search_rating_restricted": {
+      "message": "Acest site conține material restricționat"
+   },
+   "search_rating_safe": {
+      "message": "Acest site Web este sigur, bucurați-vă de navigare!"
+   },
+   "search_rating_safe_p1": {
+      "message": "Acest site Web este sigur"
+   },
+   "search_rating_safe_p2": {
+      "message": "Bucurați-vă de navigare"
+   },
+   "search_rating_shopping_suspicious": {
+      "message": "Acest site Web poate fi suspect"
+   },
+   "search_rating_shopping_warn": {
+      "message": "Acest site Web nu este evaluat în top"
+   },
+   "search_rating_suspicious": {
+      "message": "Acest site este suspect."
+   },
+   "search_rating_suspicious_p1": {
+      "message": "Acest site este suspect"
+   },
+   "search_rating_suspicious_p2": {
+      "message": "Vă rugăm să aveți grijă în timpul navigării"
+   },
+   "search_rating_unknown": {
+      "message": "Acest site nu a fost analizat încă"
+   },
+   "trusted_shopping_review": {
+      "message": "Pe baza mai multor recenzii și scoruri de securitate"
+   },
+   "trusted_shopping_safe_p1": {
+      "message": "Ați deschis un site Web de cumpărături care este sigur."
+   },
+   "trusted_shopping_safe_p2": {
+      "message": "Acest site Web de cumpărături este foarte apreciat și de încredere, bucurați-vă de sesiunea de cumpărături!"
+   },
+   "trusted_shopping_suspicious_p1": {
+      "message": "Ați deschis un site Web de cumpărături care poate fi suspect."
+   },
+   "trusted_shopping_suspicious_p2": {
+      "message": "Se recomandă prudență în timpul cumpărăturilor pe acest site."
+   },
+   "trusted_shopping_unknown_p1": {
+      "message": "Acest site Web nu a fost încă analizat."
+   },
+   "trusted_shopping_unknown_p2": {
+      "message": "Se recomandă prudență în timpul cumpărăturilor pe acest site."
+   },
+   "trusted_shopping_warning_p1": {
+      "message": "Ați deschis un site Web de cumpărături care nu este evaluat în top."
+   }
+}

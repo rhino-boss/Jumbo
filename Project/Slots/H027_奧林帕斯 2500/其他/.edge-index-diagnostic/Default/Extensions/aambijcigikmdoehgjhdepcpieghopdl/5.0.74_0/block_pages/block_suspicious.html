@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="fs-automation-id" content="block.suspicious">
+    <title data-locale="blockpage_suspicious_title"></title>
+    <link rel="shortcut icon" type="image/x-icon" href="../img/icon_warning.ico"/>
+    <script type="text/javascript" src="../constants.js"></script>
+    <script type="text/javascript" src="../common_styles.js"></script>
+    <script type="text/javascript" src="block.js"></script>
+  </head>
+  <body>
+    <header class="header" style="visibility: hidden">
+      <img id="logo" class="logo" alt="Product logo" />
+    </header>
+    <div class="wrapper" style="visibility: hidden">
+      <img alt="harmful website icon" class="blocked" src="../img/icon_warning.svg" height="44">
+      <h1 data-locale="blockpage_suspicious_heading"></h1>
+      <h3 id="url"></h3>
+      <p data-locale="blockpage_suspicious_description"></p>
+      <p id="allow_button" class="allow_website"><a id="website-allow"><img class="shield_icon" alt="admin shield" src="../img/admin_shield.svg"><span data-locale="blockpage_suspicious_allow"></span></a></p>
+      <p class="fp_after_allow_website"><span data-locale="blockpage_suspicious_report_note"></span><br><a id="report-link" class="link" target="new_tab"><span data-locale="blockpage_suspicious_report"></span></a></p>
+      <div class="bg-pic bg-harmful"><img alt="Illustration about a shark in a sea as harmful website" src="../img/illustration_harmful.svg"/></div>
+      <div class="bg-pic bg-by-fsecure"><img alt="by WithSecure" src="../img/by_withsecure.svg"/></div>
+    </div>
+  </body>
+</html>
