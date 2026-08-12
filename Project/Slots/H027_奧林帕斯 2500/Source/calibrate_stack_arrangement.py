@@ -245,7 +245,7 @@ def search_reel(
             runs,
             seed + table_index * 100_003,
             symbol_min_gaps={
-                symbol_id: 5
+                symbol_id: 6
                 for symbol_id, code in code_by_id.items()
                 if code == "C1"
             },

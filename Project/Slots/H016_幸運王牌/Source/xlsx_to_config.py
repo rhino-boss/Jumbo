@@ -52,6 +52,12 @@ def frontend_config(source: Path) -> dict[str, Any]:
                 raise ValueError("H0161.xlsx contains a non-integer reel weight")
             normalized.append([int(weight) for weight in reel])
         table["weights"] = normalized
+        normalized_drop = []
+        for reel in table["drop_weights"]:
+            if any(float(weight) != int(weight) for weight in reel):
+                raise ValueError("H0161.xlsx contains a non-integer Symbol Drop Weight")
+            normalized_drop.append([int(weight) for weight in reel])
+        table["drop_weights"] = normalized_drop
         random_weights = table["random_wild"]["weights"]
         if any(float(weight) != int(weight) for weight in random_weights):
             raise ValueError("H0161.xlsx contains a non-integer Random Wild weight")
@@ -70,9 +76,13 @@ def validate(config: dict[str, Any]) -> dict[str, Any]:
 
     for table in tables.values():
         if [len(reel) for reel in table["reels"]] != [200] * 5:
-            raise ValueError("Every frontend reel must contain 200 stops")
-        if any(any(type(weight) is not int or weight != 1 for weight in reel) for reel in table["weights"]):
-            raise ValueError("Every frontend stop weight must be integer 1")
+            raise ValueError("Every frontend reel must contain exactly 200 stops")
+        if any(any(type(weight) is not int or weight <= 0 for weight in reel) for reel in table["weights"]):
+            raise ValueError("Every frontend initial stop weight must be a positive integer")
+        if any(any(type(weight) is not int or weight < 0 for weight in reel) for reel in table["drop_weights"]):
+            raise ValueError("Every frontend Symbol Drop Weight must be a non-negative integer")
+        if any(sum(reel) <= 0 for reel in table["drop_weights"]):
+            raise ValueError("Every frontend Symbol Drop Weight reel must have a positive total")
     result = {
         "bg_lengths": [len(reel) for reel in bg["reels"]],
         "fg_lengths": [len(reel) for reel in fg["reels"]],
@@ -80,11 +90,9 @@ def validate(config: dict[str, Any]) -> dict[str, Any]:
         "fg_gold_counts": gold_counts(fg),
         "bg_random_wild": bg["random_wild"],
         "fg_random_wild": fg["random_wild"],
+        "bg_drop_weight_sums": [sum(reel) for reel in bg["drop_weights"]],
+        "fg_drop_weight_sums": [sum(reel) for reel in fg["drop_weights"]],
     }
-    if result["bg_gold_counts"] != [0, 30, 23, 15, 0]:
-        raise ValueError(f"Unexpected BG gold counts: {result['bg_gold_counts']}")
-    if result["fg_gold_counts"] != [0, 42, 36, 30, 0]:
-        raise ValueError(f"Unexpected FG gold counts: {result['fg_gold_counts']}")
     return result
 
 

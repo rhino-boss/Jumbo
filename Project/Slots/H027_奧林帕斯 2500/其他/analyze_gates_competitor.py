@@ -277,6 +277,45 @@ def combo_distribution(spins):
     return rows
 
 
+def symbol_hit_rate_by_bucket(spins):
+    bucket_labels = ("8-9", "10-11", "12+")
+    hits = {SYMBOL_NAMES[symbol_id]: Counter() for symbol_id in range(3, 12)}
+    for spin in spins:
+        for row in spin.rows:
+            value = row.get("tmb")
+            if value in (None, ""):
+                continue
+            symbol_counts = Counter()
+            for item in str(value).split("~"):
+                parts = item.split(",")
+                if len(parts) >= 2:
+                    symbol_counts[integer(parts[1])] += 1
+            for symbol_id, count in symbol_counts.items():
+                if symbol_id not in SYMBOL_NAMES or symbol_id < 3 or symbol_id > 11:
+                    continue
+                bucket = "8-9" if count < 10 else "10-11" if count < 12 else "12+"
+                hits[SYMBOL_NAMES[symbol_id]][bucket] += 1
+    spin_count = len(spins)
+    return {
+        "spin_count": spin_count,
+        "definition": "winning cascade events divided by scene spins; repeated wins in later cascades count as additional hits",
+        "symbols": [
+            {
+                "symbol_id": symbol_id,
+                "symbol": SYMBOL_NAMES[symbol_id],
+                "buckets": {
+                    label: {
+                        "hits": hits[SYMBOL_NAMES[symbol_id]][label],
+                        "hit_rate": hits[SYMBOL_NAMES[symbol_id]][label] / spin_count if spin_count else 0.0,
+                    }
+                    for label in bucket_labels
+                },
+            }
+            for symbol_id in range(3, 12)
+        ],
+    }
+
+
 def symbol_distribution(spins, screen_mode):
     counts = Counter()
     cells = 0
@@ -550,6 +589,10 @@ def analyze(path: Path):
         "combo": {
             "bg": combo_distribution(bg_spins),
             "fg": combo_distribution(fg_spins),
+        },
+        "symbol_hit_rate_by_bucket": {
+            "bg": symbol_hit_rate_by_bucket(bg_spins),
+            "fg": symbol_hit_rate_by_bucket(fg_spins),
         },
         "fg_end_accumulated_multiplier": {
             "definition": "maximum cumulative apv observed in FG; use 1x when the session has no applied multiplier",

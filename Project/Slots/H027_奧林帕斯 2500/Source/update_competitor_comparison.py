@@ -11,7 +11,7 @@ from openpyxl import load_workbook
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RECORD = ROOT / "Record" / "H0271_0001_2608111732_betmode0_106.xlsx"
+DEFAULT_RECORD = ROOT / "Record" / "H0271_0001_2608121204_betmode0_106.xlsx"
 DEFAULT_COMPETITOR = ROOT / "其他" / "參考資料" / "analysis_gates_of_olympus_1000_metrics.json"
 DEFAULT_REPORT = ROOT / "其他" / "競品參考數值比較.md"
 
@@ -44,8 +44,11 @@ def read_record(path: Path) -> dict:
     base = dict(workbook["Base Info"].iter_rows(min_row=2, values_only=True))
     cascades = list(workbook["Cascade"].iter_rows(min_row=2, values_only=True))
     multipliers = list(workbook["C2-C3 Multiplier"].iter_rows(min_row=2, values_only=True))
+    symbol_hit_sheet = workbook["Symbol Hit Rate"]
+    symbol_hit_headers = [cell.value for cell in next(symbol_hit_sheet.iter_rows(min_row=1, max_row=1))]
+    symbol_hits = [dict(zip(symbol_hit_headers, row)) for row in symbol_hit_sheet.iter_rows(min_row=2, values_only=True)]
     workbook.close()
-    return {"base": base, "cascades": cascades, "multipliers": multipliers}
+    return {"base": base, "cascades": cascades, "multipliers": multipliers, "symbol_hits": symbol_hits}
 
 
 def competitor_combo_counts(rows: list[dict]) -> dict[str, int]:
@@ -119,6 +122,47 @@ H027 數值為本次 {int(h['total_rounds']):,} 局模擬樣本，不是理論�
         "目前仍未校正正式 RTP，以上為輪帶排列調整後的副作用紀錄。"
     )
 
+    symbol_order = ["M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE"]
+    competitor_symbol_hits = competitor["symbol_hit_rate_by_bucket"]
+    h027_symbol_hits = {row["Symbol"]: row for row in record["symbol_hits"]}
+
+    def symbol_hit_table(scene: str) -> str:
+        competitor_rows = {
+            row["symbol"]: row["buckets"]
+            for row in competitor_symbol_hits[scene.lower()]["symbols"]
+        }
+        scene_prefix = scene.upper()
+        rows = []
+        for symbol in symbol_order:
+            c_buckets = competitor_rows[symbol]
+            h_row = h027_symbol_hits[symbol]
+            row = [symbol]
+            for label, column_label in [("8-9", "8_9"), ("10-11", "10_11"), ("12+", "12_Plus")]:
+                competitor_rate = float(c_buckets[label]["hit_rate"])
+                h027_rate = float(h_row[f"{scene_prefix}_{column_label}_Hit_Rate"])
+                row.extend([pct(competitor_rate), pct(h027_rate), pp(h027_rate - competitor_rate)])
+            rows.append(row)
+        return table(
+            ["Symbol", "競品 8～9", "H027 8～9", "差異", "競品 10～11", "H027 10～11", "差異", "競品 12+", "H027 12+", "差異"],
+            rows,
+        )
+
+    symbol_hit = f"""## 得分符號 Hit Rate
+
+Hit Rate 口徑為「得獎 Cascade 次數 ÷ 該 Scene 全部 Spin」。同一 Spin 的同一符號若在後續 Cascade 再次以 8 顆以上得獎，會再計 1 Hit；因此這是得獎事件頻率，不是「至少中過一次」的 Spin 占比。只列 Any-8 的一般得分符號；C1 依 Scatter 顆數賠付，C2／C3 不直接形成得分，因此不列入。
+
+### BG
+
+競品分母為 {int(competitor_symbol_hits['bg']['spin_count']):,} 個 BG Spin；H027 分母為 {int(h['total_rounds']):,} 個 BG Spin。
+
+{symbol_hit_table('BG')}
+
+### FG
+
+競品分母為 {int(competitor_symbol_hits['fg']['spin_count']):,} 個 FG Spin；H027 分母為 {fg_spins:,} 個 FG Spin。競品 FG 僅 {int(competitor_symbol_hits['fg']['spin_count']):,} Spin，單一符號與高顆數區間的抽樣波動較大。
+
+{symbol_hit_table('FG')}"""
+
     cbg = competitor_combo_counts(competitor["combo"]["bg"])
     cfg = competitor_combo_counts(competitor["combo"]["fg"])
     hbg, hfg = simulator_combo_counts(record["cascades"])
@@ -186,8 +230,15 @@ H027 BG 倍數球出現率差異為 {pp(h['multiplier_ball_rate_bg'] - cballs['b
 倍率分布仍與競品權重一致；後續若要控制得分，應調整賠率或 FG 累積倍數機制，而不是改動已對齊的倍率權重。"""
 
     text = args.report.read_text(encoding="utf-8")
+    toc_entry = "- [得分符號 Hit Rate](#得分符號-hit-rate)\n"
+    if toc_entry not in text:
+        text = text.replace("- [消除率](#消除率)\n", toc_entry + "- [消除率](#消除率)\n")
     text = replace_between(text, "### 比較基準", "### 核心指標比較", basis)
     text = replace_between(text, "### 核心指標比較", "## 符號分布", core)
+    if "## 得分符號 Hit Rate" in text:
+        text = replace_between(text, "## 得分符號 Hit Rate", "## 消除率", symbol_hit)
+    else:
+        text = text.replace("## 消除率", symbol_hit.rstrip() + "\n\n## 消除率")
     text = replace_between(text, "## 消除率", "## 倍數球出現率", combo)
     text = replace_between(text, "## 倍數球出現率", "## 倍數球上的倍率分布", balls)
     text = replace_between(text, "## 倍數球上的倍率分布", None, multiplier)

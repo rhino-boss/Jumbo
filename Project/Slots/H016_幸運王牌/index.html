@@ -3256,6 +3256,9 @@
     tables[name] = {...raw, cumulative: raw.weights.map(weights => {
       let sum = 0;
       return weights.map(weight => sum += Math.max(0, Number(weight)));
+    }), dropCumulative: raw.drop_weights.map(weights => {
+      let sum = 0;
+      return weights.map(weight => sum += Math.max(0, Number(weight)));
     })};
   }
 
@@ -3284,7 +3287,15 @@
 
   function draw(tableName, reel) {
     const table = tables[tableName];
-    return Number(table.reels[reel][drawIndex(tableName, reel)]);
+    const cumulative = table.dropCumulative[reel];
+    const target = Math.random() * cumulative.at(-1);
+    let low = 0, high = cumulative.length - 1;
+    while (low < high) {
+      const middle = (low + high) >> 1;
+      if (target < cumulative[middle]) high = middle;
+      else low = middle + 1;
+    }
+    return Number(table.drop_values[reel][low]);
   }
 
   const cloneBoard = board => board.map(reel => reel.slice());

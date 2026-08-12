@@ -11,6 +11,7 @@ from openpyxl import load_workbook
 H016_DIR = Path(__file__).resolve().parent.parent
 OUTPUT = H016_DIR / "其他" / "競品參考數值比較.md"
 RECORD_DIR = H016_DIR / "Record"
+MODEL_XLSX = H016_DIR / "Source" / "H0161.xlsx"
 COMPETITOR_DIR = Path(
     "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資源/JILI/"
     "JILI - Super Ace/遊戲資料"
@@ -136,6 +137,24 @@ def competitor_ratios(competitor: dict[str, Any], scene: str, stage: str) -> dic
     }
 
 
+def model_drop_ratios(sheet_name: str) -> dict[str, list[float]]:
+    workbook = load_workbook(MODEL_XLSX, read_only=True, data_only=True)
+    worksheet = workbook[sheet_name]
+    values = {
+        str(worksheet.cell(row, 32).value): [float(worksheet.cell(row, 33 + reel).value or 0) for reel in range(5)]
+        for row in range(4, 23)
+        if worksheet.cell(row, 32).value not in (None, "")
+    }
+    result = {symbol: [0.0] * 5 for symbol in SYMBOLS}
+    for symbol in SYMBOLS:
+        gold = {"M1": "G1", "M2": "G2", "M3": "G3", "M4": "G4", "A": "GA", "K": "GK", "Q": "GQ", "J": "GJ"}.get(symbol)
+        for reel in range(5):
+            total = sum(row[reel] for row in values.values())
+            result[symbol][reel] = (values[symbol][reel] + (values[gold][reel] if gold else 0)) / total
+    workbook.close()
+    return result
+
+
 def distribution_section(title: str, competitor_rows: dict[str, list[float]], h016_rows: dict[str, list[float]]) -> str:
     lines = [f"### {title}", "", "| Symbol | 模型 | R1 | R2 | R3 | R4 | R5 |", "|---|---|---:|---:|---:|---:|---:|"]
     for symbol in SYMBOLS:
@@ -159,6 +178,8 @@ def main() -> None:
     h016 = record_data(record)
     hs = h016["summary"]
     competitor = raw_competitor()
+    bg_model_drop = model_drop_ratios("BG_Symbol")
+    fg_model_drop = model_drop_ratios("FG_Symbol")
     core = [
         ("RTP", "Total RTP", competitor["rtp_total"], float(hs["rtp_total"])),
         ("RTP", "BG RTP", competitor["rtp_bg"], float(hs["rtp_bg"])),
@@ -243,16 +264,16 @@ H016 與 Super Ace 參考賠率相同；表內數字為相對投注額倍數。
 
 1. 依 `BG_Strip`／`FG_Strip` 原排列與 stopW 累積機率，等距重採樣成每輪 200 格後填入模型 `K:O`。
 2. 每一格停輪權重固定為整數 `1`，填入 `W:AA`。
-3. 一般符號依競品逐輪金框率轉為 `G1～GJ`；R1、R5 與 C1 不放金框。
-4. 初始盤面依整數停輪權重選 1 個位置，再從輪帶連續取 4 格；Cascade 補牌依同一輪帶抽取，未新增獨立欄位。
+3. 消除後補牌讀取 `AF:AK Symbol Drop Weight`；每輪總權重 1,000,000，以保留競品四位小數分布。
+4. 初始盤面依輪帶連續取 4 格；Cascade 在被消除的原位置依 Symbol Drop Weight 獨立補牌，不做重力掉落。
 
 {distribution_section('BG 初始 R1-R5', competitor_ratios(competitor, 'BG', 'initial'), h016['ratios']['BG_initial'])}
 
-{distribution_section('BG 掉落 R1-R5', competitor_ratios(competitor, 'BG', 'drop'), h016['ratios']['BG_drop'])}
+{distribution_section('BG 掉落 R1-R5', competitor_ratios(competitor, 'BG', 'drop'), bg_model_drop)}
 
 {distribution_section('FG 初始 R1-R5', competitor_ratios(competitor, 'FG', 'initial'), h016['ratios']['FG_initial'])}
 
-{distribution_section('FG 掉落 R1-R5', competitor_ratios(competitor, 'FG', 'drop'), h016['ratios']['FG_drop'])}
+{distribution_section('FG 掉落 R1-R5', competitor_ratios(competitor, 'FG', 'drop'), fg_model_drop)}
 
 ## 消除率
 

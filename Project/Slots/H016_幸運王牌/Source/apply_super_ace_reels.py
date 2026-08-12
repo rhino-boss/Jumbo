@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import bisect
 import json
+import random
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,7 @@ DEFAULT_SOURCE = Path(
     "JILI - Super Ace/遊戲資料/StripTable_SuperAce_還原.xlsx"
 )
 TARGETS = {"BG_Symbol": "BG_Strip", "FG_Symbol": "FG_Strip"}
-EDITABLE_COLUMNS = {*range(11, 16), *range(23, 28)}  # K:O and W:AA only
+EDITABLE_COLUMNS = {*range(11, 16), *range(23, 28), *range(32, 38)}  # K:O, W:AA, AF:AK
 REEL_LENGTH = 200
 GOLD_RATES = {
     "BG_Symbol": [0.0, 0.15024, 0.11346, 0.07600, 0.0],
@@ -30,6 +31,33 @@ GOLD_SYMBOLS = {
 BASE_SYMBOLS = {gold: symbol for symbol, gold in GOLD_SYMBOLS.items()}
 MIN_SC_GAP = 4
 MAX_SYMBOL_STACK = 4
+SCORE_SYMBOLS = ("M1", "M2", "M3", "M4", "A", "K", "Q", "J")
+SCORE_BITS = {symbol: 1 << index for index, symbol in enumerate(SCORE_SYMBOLS)}
+INITIAL_HIT_TARGETS = {"BG_Symbol": 0.237699, "FG_Symbol": 0.405628}
+CALIBRATION_SEEDS = {"BG_Symbol": 16016, "FG_Symbol": 16017}
+CALIBRATION_TRIALS = 50_000
+DROP_WEIGHT_TOTAL = 1_000_000
+DROP_GOLD_RATES = {
+    "BG_Symbol": [0.0, 0.153181, 0.111969, 0.079140, 0.0],
+    "FG_Symbol": [0.0, 0.158077, 0.127544, 0.098582, 0.0],
+}
+EXACT_DROP_PERCENTAGES = {
+    "BG_Symbol": [
+        [1.9997, 4.9120, 9.8476, 9.8374, 9.4918, 14.5730, 14.7668, 17.1100, 17.4617],
+        [1.9703, 10.0272, 4.8583, 7.1978, 12.5699, 17.3589, 16.7137, 14.6561, 14.6478],
+        [2.1121, 5.1527, 10.0534, 7.9044, 7.5098, 15.5995, 15.2210, 18.2615, 18.1856],
+        [2.0405, 9.9382, 4.9609, 7.1703, 12.1557, 16.9259, 17.2746, 14.6920, 14.8419],
+        [1.9876, 4.9449, 10.2715, 8.0899, 7.6415, 15.3921, 16.3011, 17.3070, 18.0645],
+    ],
+    "FG_Symbol": [
+        [0.7756, 4.9351, 9.9334, 10.0655, 9.8070, 15.0063, 15.0580, 17.3331, 17.0861],
+        [0.8222, 9.6449, 4.7741, 7.4340, 12.4845, 17.6316, 17.4934, 14.6815, 15.0339],
+        [1.0372, 5.1792, 9.9383, 7.4373, 7.5358, 16.5026, 15.1963, 18.9379, 18.2355],
+        [0.8936, 9.9149, 5.0922, 7.3901, 12.3404, 17.6312, 16.9078, 15.1206, 14.7092],
+        [1.0577, 4.8353, 10.5470, 7.9480, 7.9480, 15.3521, 14.3850, 19.0692, 18.8577],
+    ],
+}
+DROP_SYMBOLS = ("WW", "W2", "C1", *SCORE_SYMBOLS, "G1", "G2", "G3", "G4", "GA", "GK", "GQ", "GJ")
 
 
 def stable_value(value: Any) -> Any:
@@ -200,43 +228,209 @@ def repair_reel_constraints(symbols: list[str]) -> tuple[list[str], list[tuple[i
     raise RuntimeError("Reel constraint repair exceeded iteration limit")
 
 
-def write_reels(worksheet, reels: list[list[str]]) -> None:
+def repair_reel_pairs(symbols: list[str], weights: list[float]) -> tuple[list[str], list[float], list[tuple[int, int]]]:
+    repaired, swaps = repair_reel_constraints(symbols)
+    repaired_weights = list(weights)
+    for left, right in swaps:
+        repaired_weights[left], repaired_weights[right] = repaired_weights[right], repaired_weights[left]
+    return repaired, repaired_weights, swaps
+
+
+def read_fill_weights(workbook) -> dict[str, list[dict[str, float]]]:
+    """Read the competitor's R1補..R5補 canonical-symbol percentages."""
+    result = {"BG_Symbol": [dict() for _ in range(5)], "FG_Symbol": [dict() for _ in range(5)]}
+    worksheet = workbook["FillWeight"]
+    sheet_names = {"BG": "BG_Symbol", "FG": "FG_Symbol"}
+    for row in worksheet.iter_rows(min_row=3, max_col=13, values_only=True):
+        scene, symbol = row[0], row[1]
+        if scene not in sheet_names or symbol not in (*SCORE_SYMBOLS, "C1"):
+            continue
+        for reel, column in enumerate((4, 6, 8, 10, 12)):
+            result[sheet_names[scene]][reel][str(symbol)] = float(row[column])
+    for sheet_name, reels in result.items():
+        if any(set(reel) != {*SCORE_SYMBOLS, "C1"} for reel in reels):
+            raise ValueError(f"FillWeight is incomplete for {sheet_name}")
+    return result
+
+
+def exact_drop_weights(sheet_name: str) -> list[dict[str, float]]:
+    symbols = ("C1", *SCORE_SYMBOLS)
+    return [dict(zip(symbols, percentages)) for percentages in EXACT_DROP_PERCENTAGES[sheet_name]]
+
+
+def largest_remainder(values: dict[str, float], total: int) -> dict[str, int]:
+    normalized = sum(values.values())
+    exact = {key: total * value / normalized for key, value in values.items()}
+    allocated = {key: int(value) for key, value in exact.items()}
+    for key in sorted(values, key=lambda item: (exact[item] - allocated[item], item), reverse=True)[: total - sum(allocated.values())]:
+        allocated[key] += 1
+    return allocated
+
+
+def spread_total(count: int, total: int) -> list[int]:
+    if count <= 0:
+        if total:
+            raise ValueError("Cannot allocate weight to an empty stop group")
+        return []
+    if total < count:
+        raise ValueError(f"Positive integer allocation needs at least {count}, got {total}")
+    base, remainder = divmod(total, count)
+    result = [base] * count
+    for index in evenly_spaced(list(range(count)), remainder):
+        result[index] += 1
+    return result
+
+
+def drop_weights(symbols: list[str], percentages: dict[str, float], gold_rate: float) -> list[int]:
+    canonical_totals = largest_remainder(percentages, DROP_WEIGHT_TOTAL)
+    positions: dict[str, list[int]] = {symbol: [] for symbol in (*SCORE_SYMBOLS, "C1")}
+    for index, symbol in enumerate(symbols):
+        positions[base_symbol(symbol)].append(index)
+
+    weights = [0] * len(symbols)
+    eligible_totals = {symbol: canonical_totals[symbol] for symbol in SCORE_SYMBOLS}
+    gold_total = round(DROP_WEIGHT_TOTAL * gold_rate)
+    gold_by_symbol = largest_remainder(eligible_totals, gold_total) if gold_total else {symbol: 0 for symbol in SCORE_SYMBOLS}
+    for symbol, indexes in positions.items():
+        gold_indexes = [index for index in indexes if symbols[index] in BASE_SYMBOLS]
+        plain_indexes = [index for index in indexes if index not in set(gold_indexes)]
+        symbol_total = canonical_totals[symbol]
+        symbol_gold = gold_by_symbol.get(symbol, 0)
+        if not gold_indexes:
+            symbol_gold = 0
+        for index, weight in zip(gold_indexes, spread_total(len(gold_indexes), symbol_gold)):
+            weights[index] = weight
+        for index, weight in zip(plain_indexes, spread_total(len(plain_indexes), symbol_total - symbol_gold)):
+            weights[index] = weight
+    if any(type(weight) is not int or weight <= 0 for weight in weights):
+        raise ValueError("Every drop stop weight must be a positive integer")
+    return weights
+
+
+def symbol_drop_weights(percentages: dict[str, float], gold_rate: float) -> dict[str, int]:
+    """Split canonical FillWeight into plain/gold rows in AF:AK."""
+    totals = largest_remainder(percentages, DROP_WEIGHT_TOTAL)
+    eligible = {symbol: totals[symbol] for symbol in SCORE_SYMBOLS}
+    gold_total = round(DROP_WEIGHT_TOTAL * gold_rate)
+    gold_by_symbol = largest_remainder(eligible, gold_total) if gold_total else {symbol: 0 for symbol in SCORE_SYMBOLS}
+    result = {symbol: 0 for symbol in DROP_SYMBOLS}
+    result["C1"] = totals["C1"]
+    for symbol in SCORE_SYMBOLS:
+        result[symbol] = totals[symbol] - gold_by_symbol[symbol]
+        result[GOLD_SYMBOLS[symbol]] = gold_by_symbol[symbol]
+    if sum(result.values()) != DROP_WEIGHT_TOTAL or any(type(weight) is not int or weight < 0 for weight in result.values()):
+        raise ValueError("Invalid Symbol Drop Weight allocation")
+    return result
+
+
+def window_mask(symbols: list[str], stop: int) -> int:
+    mask = 0
+    for offset in range(4):
+        symbol = base_symbol(symbols[(stop + offset) % len(symbols)])
+        mask |= SCORE_BITS.get(symbol, 0)
+    return mask
+
+
+def initial_hit_rate(reels: list[list[str]]) -> float:
+    histograms = [Counter(window_mask(reels[reel], stop) for stop in range(REEL_LENGTH)) for reel in range(3)]
+    pair_intersections = Counter()
+    for mask1, count1 in histograms[0].items():
+        for mask2, count2 in histograms[1].items():
+            pair_intersections[mask1 & mask2] += count1 * count2
+    wins = sum(
+        pair_count * count3
+        for pair_mask, pair_count in pair_intersections.items()
+        for mask3, count3 in histograms[2].items()
+        if pair_mask & mask3
+    )
+    return wins / REEL_LENGTH**3
+
+
+def calibrate_initial_hit(reels: list[list[str]], target: float, seed: int) -> tuple[float, int]:
+    """Reorder within R1-R3 only; counts, gold totals and reel constraints stay unchanged."""
+    rng = random.Random(seed)
+    current = initial_hit_rate(reels)
+    error = abs(current - target)
+    accepted = 0
+    for _ in range(CALIBRATION_TRIALS):
+        reel = rng.randrange(3)
+        left, right = rng.sample(range(REEL_LENGTH), 2)
+        if reels[reel][left] == reels[reel][right]:
+            continue
+        reels[reel][left], reels[reel][right] = reels[reel][right], reels[reel][left]
+        if reel_constraint_state(reels[reel])[0][0]:
+            reels[reel][left], reels[reel][right] = reels[reel][right], reels[reel][left]
+            continue
+        candidate = initial_hit_rate(reels)
+        candidate_error = abs(candidate - target)
+        if candidate_error < error:
+            current, error = candidate, candidate_error
+            accepted += 1
+            if error <= 1 / REEL_LENGTH**3:
+                break
+        else:
+            reels[reel][left], reels[reel][right] = reels[reel][right], reels[reel][left]
+    return current, accepted
+
+
+def write_reels(worksheet, reels: list[list[str]], weights: list[list[int]]) -> None:
     for row in range(4, 404):
         for column in EDITABLE_COLUMNS:
             worksheet.cell(row, column).value = None
     for reel, symbols in enumerate(reels):
-        for row, symbol in enumerate(symbols, start=4):
+        for row, (symbol, weight) in enumerate(zip(symbols, weights[reel]), start=4):
             worksheet.cell(row, 11 + reel).value = symbol
-            worksheet.cell(row, 23 + reel).value = 1
+            worksheet.cell(row, 23 + reel).value = weight
+
+
+def write_drop_table(worksheet, tables: list[dict[str, int]]) -> None:
+    for row, symbol in enumerate(DROP_SYMBOLS, start=4):
+        worksheet.cell(row, 32).value = symbol
+        for reel in range(5):
+            worksheet.cell(row, 33 + reel).value = tables[reel][symbol]
 
 
 def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
     target = load_workbook(target_path, data_only=False)
     source = load_workbook(source_path, read_only=True, data_only=True)
+    fill_weights = read_fill_weights(source)
     before = protected_values(target)
     result: dict[str, Any] = {}
     for target_name, source_name in TARGETS.items():
         source_reels, source_weights = read_reels(source[source_name])
         reels: list[list[str]] = []
-        gold_counts: list[int] = []
+        weights: list[list[int]] = []
         reel_swaps: list[int] = []
         for reel in range(5):
+            # Expand the competitor's weighted source strip to exactly 200
+            # physical stops.  Every expanded stop then has integer weight 1.
             expanded = resample_to_200(source_reels[reel], source_weights[reel])
-            expanded, gold_count = apply_gold(expanded, GOLD_RATES[target_name][reel])
-            expanded, swaps = repair_reel_constraints(expanded)
-            reels.append(expanded)
-            gold_counts.append(gold_count)
+            repaired, swaps = repair_reel_constraints(expanded)
+            reels.append(repaired)
+            weights.append([1] * REEL_LENGTH)
             reel_swaps.append(len(swaps))
-        write_reels(target[target_name], reels)
+        drop_tables = [
+            symbol_drop_weights(exact_drop_weights(target_name)[reel], DROP_GOLD_RATES[target_name][reel])
+            for reel in range(5)
+        ]
+        write_reels(target[target_name], reels, weights)
+        write_drop_table(target[target_name], drop_tables)
         result[target_name] = {
             "reel_lengths": [len(reel) for reel in reels],
-            "integer_weight_sums": [REEL_LENGTH] * 5,
-            "gold_counts": gold_counts,
-            "gold_rates": [count / REEL_LENGTH for count in gold_counts],
+            "integer_weight_sums": [sum(reel) for reel in weights],
+            "source_weight_sums": [sum(reel) for reel in source_weights],
             "constraint_repair_swaps": reel_swaps,
             "r1_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[0]),
             "r5_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[4]),
             "all_weights_are_positive_integers": True,
+            "drop_weight_sums": [sum(table.values()) for table in drop_tables],
+            "drop_canonical_percentages": [{
+                symbol: (table[symbol] + (table[GOLD_SYMBOLS[symbol]] if symbol in GOLD_SYMBOLS else 0)) / DROP_WEIGHT_TOTAL
+                for symbol in ("C1", *SCORE_SYMBOLS)
+            } for table in drop_tables],
+            "drop_gold_rates": [
+                sum(table[symbol] for symbol in BASE_SYMBOLS) / DROP_WEIGHT_TOTAL for table in drop_tables
+            ],
         }
     source.close()
     target.save(target_path)

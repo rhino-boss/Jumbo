@@ -115,6 +115,24 @@ def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[
     if any(sum(reel_weights) <= 0 for reel_weights in weights):
         raise ValueError(f"{ws.title}: each reel must have positive total weight")
 
+    drop_values: list[list[int]] = [[] for _ in range(5)]
+    drop_weights: list[list[float]] = [[] for _ in range(5)]
+    for row_number in range(4, 23):
+        symbol_name = ws.cell(row_number, 32).value
+        if symbol_name in (None, ""):
+            continue
+        if symbol_name not in name_to_id:
+            raise ValueError(f"{ws.title} AF{row_number}: unknown drop symbol {symbol_name!r}")
+        symbol_id = name_to_id[str(symbol_name)]
+        for reel in range(5):
+            weight = _xlsx_number(ws.cell(row_number, 33 + reel).value, f"{ws.title} drop R{reel + 1} row {row_number}")
+            if weight < 0:
+                raise ValueError(f"{ws.title}: drop weights cannot be negative")
+            drop_values[reel].append(symbol_id)
+            drop_weights[reel].append(weight)
+    if any(not values or sum(reel_weights) <= 0 for values, reel_weights in zip(drop_values, drop_weights)):
+        raise ValueError(f"{ws.title}: Symbol Drop Weight must define five positive-total reels")
+
     random_values = [int(_xlsx_number(ws.cell(row, 29).value, f"{ws.title} Random Wild value")) for row in range(4, 8)]
     random_weights = [_xlsx_number(ws.cell(row, 30).value, f"{ws.title} Random Wild weight") for row in range(4, 8)]
     if random_values != [0, 2, 3, 4] or len(random_values) != len(random_weights):
@@ -123,6 +141,8 @@ def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[
     return {
         "reels": reels,
         "weights": weights,
+        "drop_values": drop_values,
+        "drop_weights": drop_weights,
         "random_wild": {"values": random_values, "weights": random_weights},
         "multipliers": multipliers,
     }
@@ -311,6 +331,8 @@ class Reel:
 @dataclass
 class Table:
     reels: list[Reel]
+    drop_values: list[list[int]]
+    drop_weights: list[list[float]]
     random_wild_values: list[int]
     random_wild_weights: list[float]
     multipliers: list[int]
@@ -324,6 +346,7 @@ class SpinResult:
     max_multiplier: int = 1
     golden_converted: int = 0
     w2_events: int = 0
+    w2_counts: Counter = field(default_factory=Counter)
     m1_present: bool = False
     initial_gold_count: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
@@ -348,6 +371,8 @@ class RoundResult:
     w2_events: int = 0
     bg_w2_events: int = 0
     fg_w2_events: int = 0
+    bg_w2_counts: Counter = field(default_factory=Counter)
+    fg_w2_counts: Counter = field(default_factory=Counter)
     bg_m1_spins: int = 0
     fg_m1_spins: int = 0
     bg_hit_spins: int = 0
@@ -389,6 +414,8 @@ class LuckyAce:
         random_wild = raw["random_wild"]
         return Table(
             reels,
+            [list(map(int, values)) for values in raw["drop_values"]],
+            [list(map(float, weights)) for weights in raw["drop_weights"]],
             list(map(int, random_wild["values"])),
             list(map(float, random_wild["weights"])),
             list(map(int, raw.get("multipliers") or [])),
@@ -450,6 +477,7 @@ class LuckyAce:
                 made = self.add_w2(board, table, pending_gold)
                 if made:
                     result.w2_events += 1
+                    result.w2_counts[made] += 1
                     bg_w2_used = True
             pending_gold = []
             raw_pay, hit_positions, details = self.evaluate(board)
@@ -471,11 +499,13 @@ class LuckyAce:
                 else:
                     board[reel][row] = -1
             for reel in range(5):
-                remaining = [symbol for symbol in board[reel] if symbol != -1]
-                dropped = [table.reels[reel].pick(self.rng) for _ in range(4 - len(remaining))]
-                result.drop_symbols.update((reel, symbol) for symbol in dropped)
-                result.m1_present |= any(canonical(symbol) == 3 for symbol in dropped)
-                board[reel] = remaining + dropped
+                for row in range(4):
+                    if board[reel][row] != -1:
+                        continue
+                    symbol = int(weighted_pick(self.rng, table.drop_values[reel], table.drop_weights[reel]))
+                    board[reel][row] = symbol
+                    result.drop_symbols[(reel, symbol)] += 1
+                    result.m1_present |= canonical(symbol) == 3
         result.scatter_count = sum(symbol == C1 for reel in board for symbol in reel)
         result.final_board = [reel[:] for reel in board]
         return result
@@ -534,6 +564,7 @@ class LuckyAce:
             result.golden_converted += spin.golden_converted
             result.w2_events += spin.w2_events
             result.fg_w2_events += spin.w2_events
+            result.fg_w2_counts.update(spin.w2_counts)
             result.fg_m1_spins += int(spin.m1_present)
             result.fg_hit_spins += int(spin.pay > 0)
             result.fg_gold_spins += int(spin.initial_gold_count > 0)
@@ -573,6 +604,8 @@ class LuckyAce:
         target.w2_events += source.w2_events
         target.bg_w2_events += source.bg_w2_events
         target.fg_w2_events += source.fg_w2_events
+        target.bg_w2_counts.update(source.bg_w2_counts)
+        target.fg_w2_counts.update(source.fg_w2_counts)
         target.bg_m1_spins += source.bg_m1_spins
         target.fg_m1_spins += source.fg_m1_spins
         target.bg_hit_spins += source.bg_hit_spins
@@ -604,6 +637,7 @@ class LuckyAce:
         result.golden_converted = spin.golden_converted
         result.w2_events = spin.w2_events
         result.bg_w2_events = spin.w2_events
+        result.bg_w2_counts.update(spin.w2_counts)
         result.bg_m1_spins = int(spin.m1_present)
         result.bg_hit_spins = int(spin.pay > 0)
         result.bg_gold_spins = int(spin.initial_gold_count > 0)
@@ -640,6 +674,8 @@ def _empty_stats() -> dict[str, Any]:
         "w2_events": 0,
         "bg_w2_events": 0,
         "fg_w2_events": 0,
+        "bg_w2_counts": Counter(),
+        "fg_w2_counts": Counter(),
         "bg_m1_spins": 0,
         "fg_m1_spins": 0,
         "bg_hit_spins": 0,
@@ -685,6 +721,8 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         stats["w2_events"] += result.w2_events
         stats["bg_w2_events"] += result.bg_w2_events
         stats["fg_w2_events"] += result.fg_w2_events
+        stats["bg_w2_counts"].update(result.bg_w2_counts)
+        stats["fg_w2_counts"].update(result.fg_w2_counts)
         stats["bg_m1_spins"] += result.bg_m1_spins
         stats["fg_m1_spins"] += result.fg_m1_spins
         stats["bg_hit_spins"] += result.bg_hit_spins
@@ -720,6 +758,8 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
         "bg_drop_symbols",
         "fg_initial_symbols",
         "fg_drop_symbols",
+        "bg_w2_counts",
+        "fg_w2_counts",
     }
     for key, value in source.items():
         if key in counter_fields:

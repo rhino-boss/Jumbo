@@ -876,6 +876,344 @@
         }
       ]
     },
+    "symbol_hit_rate_by_bucket": {
+      "bg": {
+        "spin_count": 7075,
+        "definition": "winning cascade events divided by scene spins; repeated wins in later cascades count as additional hits",
+        "symbols": [
+          {
+            "symbol_id": 3,
+            "symbol": "M1",
+            "buckets": {
+              "8-9": {
+                "hits": 17,
+                "hit_rate": 0.002402826855123675
+              },
+              "10-11": {
+                "hits": 0,
+                "hit_rate": 0.0
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 4,
+            "symbol": "M2",
+            "buckets": {
+              "8-9": {
+                "hits": 94,
+                "hit_rate": 0.013286219081272085
+              },
+              "10-11": {
+                "hits": 10,
+                "hit_rate": 0.0014134275618374558
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 5,
+            "symbol": "M3",
+            "buckets": {
+              "8-9": {
+                "hits": 111,
+                "hit_rate": 0.015689045936395758
+              },
+              "10-11": {
+                "hits": 7,
+                "hit_rate": 0.000989399293286219
+              },
+              "12+": {
+                "hits": 1,
+                "hit_rate": 0.0001413427561837456
+              }
+            }
+          },
+          {
+            "symbol_id": 6,
+            "symbol": "M4",
+            "buckets": {
+              "8-9": {
+                "hits": 144,
+                "hit_rate": 0.020353356890459365
+              },
+              "10-11": {
+                "hits": 8,
+                "hit_rate": 0.0011307420494699647
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 7,
+            "symbol": "A",
+            "buckets": {
+              "8-9": {
+                "hits": 194,
+                "hit_rate": 0.027420494699646643
+              },
+              "10-11": {
+                "hits": 22,
+                "hit_rate": 0.003109540636042403
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 8,
+            "symbol": "K",
+            "buckets": {
+              "8-9": {
+                "hits": 373,
+                "hit_rate": 0.0527208480565371
+              },
+              "10-11": {
+                "hits": 47,
+                "hit_rate": 0.006643109540636042
+              },
+              "12+": {
+                "hits": 7,
+                "hit_rate": 0.000989399293286219
+              }
+            }
+          },
+          {
+            "symbol_id": 9,
+            "symbol": "Q",
+            "buckets": {
+              "8-9": {
+                "hits": 609,
+                "hit_rate": 0.08607773851590106
+              },
+              "10-11": {
+                "hits": 74,
+                "hit_rate": 0.010459363957597173
+              },
+              "12+": {
+                "hits": 8,
+                "hit_rate": 0.0011307420494699647
+              }
+            }
+          },
+          {
+            "symbol_id": 10,
+            "symbol": "J",
+            "buckets": {
+              "8-9": {
+                "hits": 624,
+                "hit_rate": 0.08819787985865725
+              },
+              "10-11": {
+                "hits": 114,
+                "hit_rate": 0.016113074204946995
+              },
+              "12+": {
+                "hits": 10,
+                "hit_rate": 0.0014134275618374558
+              }
+            }
+          },
+          {
+            "symbol_id": 11,
+            "symbol": "TE",
+            "buckets": {
+              "8-9": {
+                "hits": 1013,
+                "hit_rate": 0.14318021201413428
+              },
+              "10-11": {
+                "hits": 195,
+                "hit_rate": 0.02756183745583039
+              },
+              "12+": {
+                "hits": 15,
+                "hit_rate": 0.0021201413427561835
+              }
+            }
+          }
+        ]
+      },
+      "fg": {
+        "spin_count": 315,
+        "definition": "winning cascade events divided by scene spins; repeated wins in later cascades count as additional hits",
+        "symbols": [
+          {
+            "symbol_id": 3,
+            "symbol": "M1",
+            "buckets": {
+              "8-9": {
+                "hits": 2,
+                "hit_rate": 0.006349206349206349
+              },
+              "10-11": {
+                "hits": 0,
+                "hit_rate": 0.0
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 4,
+            "symbol": "M2",
+            "buckets": {
+              "8-9": {
+                "hits": 11,
+                "hit_rate": 0.03492063492063492
+              },
+              "10-11": {
+                "hits": 0,
+                "hit_rate": 0.0
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 5,
+            "symbol": "M3",
+            "buckets": {
+              "8-9": {
+                "hits": 14,
+                "hit_rate": 0.044444444444444446
+              },
+              "10-11": {
+                "hits": 1,
+                "hit_rate": 0.0031746031746031746
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 6,
+            "symbol": "M4",
+            "buckets": {
+              "8-9": {
+                "hits": 10,
+                "hit_rate": 0.031746031746031744
+              },
+              "10-11": {
+                "hits": 0,
+                "hit_rate": 0.0
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 7,
+            "symbol": "A",
+            "buckets": {
+              "8-9": {
+                "hits": 15,
+                "hit_rate": 0.047619047619047616
+              },
+              "10-11": {
+                "hits": 1,
+                "hit_rate": 0.0031746031746031746
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 8,
+            "symbol": "K",
+            "buckets": {
+              "8-9": {
+                "hits": 27,
+                "hit_rate": 0.08571428571428572
+              },
+              "10-11": {
+                "hits": 5,
+                "hit_rate": 0.015873015873015872
+              },
+              "12+": {
+                "hits": 0,
+                "hit_rate": 0.0
+              }
+            }
+          },
+          {
+            "symbol_id": 9,
+            "symbol": "Q",
+            "buckets": {
+              "8-9": {
+                "hits": 52,
+                "hit_rate": 0.16507936507936508
+              },
+              "10-11": {
+                "hits": 5,
+                "hit_rate": 0.015873015873015872
+              },
+              "12+": {
+                "hits": 1,
+                "hit_rate": 0.0031746031746031746
+              }
+            }
+          },
+          {
+            "symbol_id": 10,
+            "symbol": "J",
+            "buckets": {
+              "8-9": {
+                "hits": 54,
+                "hit_rate": 0.17142857142857143
+              },
+              "10-11": {
+                "hits": 12,
+                "hit_rate": 0.0380952380952381
+              },
+              "12+": {
+                "hits": 1,
+                "hit_rate": 0.0031746031746031746
+              }
+            }
+          },
+          {
+            "symbol_id": 11,
+            "symbol": "TE",
+            "buckets": {
+              "8-9": {
+                "hits": 72,
+                "hit_rate": 0.22857142857142856
+              },
+              "10-11": {
+                "hits": 16,
+                "hit_rate": 0.050793650793650794
+              },
+              "12+": {
+                "hits": 1,
+                "hit_rate": 0.0031746031746031746
+              }
+            }
+          }
+        ]
+      }
+    },
     "fg_end_accumulated_multiplier": {
       "definition": "maximum cumulative apv observed in FG; use 1x when the session has no applied multiplier",
       "average": 21.1,
@@ -904,163 +1242,6 @@
         14.0,
         13.0
       ]
-    },
-    "paytable": {
-      "cluster_counts": [
-        "8–9",
-        "10–11",
-        "12+"
-      ],
-      "symbols": [
-        {
-          "symbol_id": 3,
-          "symbol": "M1",
-          "payouts": [
-            10.0,
-            25.0,
-            null
-          ],
-          "observations": [
-            37,
-            1,
-            0
-          ]
-        },
-        {
-          "symbol_id": 4,
-          "symbol": "M2",
-          "payouts": [
-            2.5,
-            10.0,
-            25.0
-          ],
-          "observations": [
-            224,
-            18,
-            1
-          ]
-        },
-        {
-          "symbol_id": 5,
-          "symbol": "M3",
-          "payouts": [
-            2.0,
-            5.0,
-            15.0
-          ],
-          "observations": [
-            235,
-            31,
-            2
-          ]
-        },
-        {
-          "symbol_id": 6,
-          "symbol": "M4",
-          "payouts": [
-            1.5,
-            2.0,
-            null
-          ],
-          "observations": [
-            301,
-            28,
-            0
-          ]
-        },
-        {
-          "symbol_id": 7,
-          "symbol": "A",
-          "payouts": [
-            1.0,
-            1.5,
-            10.0
-          ],
-          "observations": [
-            357,
-            42,
-            1
-          ]
-        },
-        {
-          "symbol_id": 8,
-          "symbol": "K",
-          "payouts": [
-            0.8,
-            1.2,
-            8.0
-          ],
-          "observations": [
-            704,
-            104,
-            11
-          ]
-        },
-        {
-          "symbol_id": 9,
-          "symbol": "Q",
-          "payouts": [
-            0.5,
-            1.0,
-            5.0
-          ],
-          "observations": [
-            1109,
-            163,
-            16
-          ]
-        },
-        {
-          "symbol_id": 10,
-          "symbol": "J",
-          "payouts": [
-            0.4,
-            0.9,
-            4.0
-          ],
-          "observations": [
-            1209,
-            225,
-            23
-          ]
-        },
-        {
-          "symbol_id": 11,
-          "symbol": "TE",
-          "payouts": [
-            0.25,
-            0.75,
-            2.0
-          ],
-          "observations": [
-            1770,
-            367,
-            30
-          ]
-        }
-      ],
-      "scatter": [
-        {
-          "count": 4,
-          "payout": 3.0,
-          "observations": 274
-        },
-        {
-          "count": 5,
-          "payout": null,
-          "observations": 0
-        },
-        {
-          "count": 6,
-          "payout": null,
-          "observations": 0
-        }
-      ],
-      "equation_count": 6445,
-      "matrix_rank": 25,
-      "parameter_count": 27,
-      "rmse": 8.868866900034115e-15,
-      "max_abs_error": 6.572520305780927e-14
     }
   },
   "model_update": {

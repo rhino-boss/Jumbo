@@ -363,9 +363,15 @@ R_C2_VALUE_BG = 13
 R_C2_VALUE_FG = 14
 R_SCATTER_BG = 15
 R_SCATTER_FG = 16
+R_SYMBOL_BUCKET_BG_8_9 = 17
+R_SYMBOL_BUCKET_BG_10_11 = 18
+R_SYMBOL_BUCKET_BG_12_PLUS = 19
+R_SYMBOL_BUCKET_FG_8_9 = 20
+R_SYMBOL_BUCKET_FG_10_11 = 21
+R_SYMBOL_BUCKET_FG_12_PLUS = 22
 
 RECORD_COLS = max(128, len(THRESHOLD_RECORD), SYMBOL_COUNT, MULTIPLIER_LEVEL_COUNT)
-RECORD_SIZE = (17, RECORD_COLS)
+RECORD_SIZE = (23, RECORD_COLS)
 
 RA_TOTAL_ROUNDS = 0
 RA_COIN_IN_SUM = 1
@@ -533,6 +539,7 @@ def pay_index_for_count(count):
 def evaluate_clusters(board, bet_multi):
     winning = np.zeros(SYMBOL_COUNT, dtype=np.int64)
     symbol_hits = np.zeros(SYMBOL_COUNT, dtype=np.int64)
+    symbol_bucket_hits = np.zeros((3, SYMBOL_COUNT), dtype=np.int64)
     symbol_raw_pay = np.zeros(SYMBOL_COUNT, dtype=np.int64)
     raw_pay = 0
     any_win = 0
@@ -548,10 +555,11 @@ def evaluate_clusters(board, bet_multi):
             pay = PAY_TABLE[symbol, pay_index] * bet_multi
             winning[symbol] = 1
             symbol_hits[symbol] += 1
+            symbol_bucket_hits[pay_index - 3, symbol] += 1
             symbol_raw_pay[symbol] += pay
             raw_pay += pay
             any_win = 1
-    return raw_pay, winning, symbol_hits, symbol_raw_pay, any_win
+    return raw_pay, winning, symbol_hits, symbol_bucket_hits, symbol_raw_pay, any_win
 
 
 @njit(nogil=True)
@@ -610,13 +618,15 @@ def play_cluster_spin(table_id, profile_index, scene, bet_multi):
     board, multiplier_values, starts, drop_counts = generate_board(table_id, profile_index)
     total_raw_pay = 0
     total_hits = np.zeros(SYMBOL_COUNT, dtype=np.int64)
+    total_bucket_hits = np.zeros((3, SYMBOL_COUNT), dtype=np.int64)
     total_raw_symbol_pay = np.zeros(SYMBOL_COUNT, dtype=np.int64)
     cascades = 0
 
     for _ in range(100):
-        raw_pay, winning, hits, raw_symbol_pay, any_win = evaluate_clusters(board, bet_multi)
+        raw_pay, winning, hits, bucket_hits, raw_symbol_pay, any_win = evaluate_clusters(board, bet_multi)
         total_raw_pay += raw_pay
         total_hits += hits
+        total_bucket_hits += bucket_hits
         total_raw_symbol_pay += raw_symbol_pay
         if any_win == 0:
             break
@@ -650,6 +660,7 @@ def play_cluster_spin(table_id, profile_index, scene, bet_multi):
         cascades,
         total_hits,
         total_raw_symbol_pay,
+        total_bucket_hits,
         multiplier_value_hits,
     )
 
@@ -713,7 +724,7 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
 
     while spin_index < scheduled and spin_index < MAX_FREE_SPINS:
         fg_table_id = free_tables[spin_index]
-        raw_fg, fg_scatter_pay, fg_scatter_count, fg_c2, fg_c2_count, fg_cascades, fg_hits, fg_raw_symbol_pay, fg_c2_hits = play_cluster_spin(fg_table_id, profile_index, 1, bet_multi)
+        raw_fg, fg_scatter_pay, fg_scatter_count, fg_c2, fg_c2_count, fg_cascades, fg_hits, fg_raw_symbol_pay, fg_bucket_hits, fg_c2_hits = play_cluster_spin(fg_table_id, profile_index, 1, bet_multi)
         cumulative_multiplier += fg_c2
         effective_multiplier = cumulative_multiplier if cumulative_multiplier > 0 else 1
         fg_spin_pay = raw_fg * effective_multiplier + fg_scatter_pay
@@ -731,6 +742,8 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
         for symbol in range(SYMBOL_COUNT):
             record[R_SYMBOL_HIT_FG, symbol] += fg_hits[symbol]
             record[R_SYMBOL_PAY_FG, symbol] += fg_raw_symbol_pay[symbol] * effective_multiplier
+            for bucket in range(3):
+                record[R_SYMBOL_BUCKET_FG_8_9 + bucket, symbol] += fg_bucket_hits[bucket, symbol]
         record[R_SYMBOL_PAY_FG, C1] += fg_scatter_pay
         for index in range(fg_c2_hits.shape[0]):
             record[R_C2_VALUE_FG, index] += fg_c2_hits[index]
@@ -792,7 +805,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi):
                 package_card_index = -1
         record_before_attempt = record.copy()
         table_id = choose_base_table(profile_index)
-        raw_bg, scatter_pay, scatter_count, bg_c2, bg_c2_count, bg_cascades, bg_hits, bg_raw_symbol_pay, bg_c2_hits = play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi)
+        raw_bg, scatter_pay, scatter_count, bg_c2, bg_c2_count, bg_cascades, bg_hits, bg_raw_symbol_pay, bg_bucket_hits, bg_c2_hits = play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi)
         bg_multiplier = bg_c2 if bg_c2 > 0 else 1
         bg_cluster_pay = raw_bg * bg_multiplier
         bg_pay = bg_cluster_pay + scatter_pay
@@ -814,6 +827,8 @@ def simulator_chunk(total_round, bet_mode, bet_multi):
         for symbol in range(SYMBOL_COUNT):
             record[R_SYMBOL_HIT_BG, symbol] += bg_hits[symbol]
             record[R_SYMBOL_PAY_BG, symbol] += bg_raw_symbol_pay[symbol] * bg_multiplier
+            for bucket in range(3):
+                record[R_SYMBOL_BUCKET_BG_8_9 + bucket, symbol] += bg_bucket_hits[bucket, symbol]
         record[R_SYMBOL_PAY_BG, C1] += scatter_pay
         for index in range(bg_c2_hits.shape[0]):
             record[R_C2_VALUE_BG, index] += bg_c2_hits[index]
@@ -1018,6 +1033,23 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
             "FG_Pay": values[R_SYMBOL_PAY_FG, visible_symbol_ids],
         }
     )
+    symbol_bucket_frame = pd.DataFrame(
+        {
+            "Symbol": [ID_TO_CODE[index] for index in visible_symbol_ids],
+            "BG_8_9_Hit": values[R_SYMBOL_BUCKET_BG_8_9, visible_symbol_ids],
+            "BG_8_9_Hit_Rate": values[R_SYMBOL_BUCKET_BG_8_9, visible_symbol_ids] / total_round,
+            "BG_10_11_Hit": values[R_SYMBOL_BUCKET_BG_10_11, visible_symbol_ids],
+            "BG_10_11_Hit_Rate": values[R_SYMBOL_BUCKET_BG_10_11, visible_symbol_ids] / total_round,
+            "BG_12_Plus_Hit": values[R_SYMBOL_BUCKET_BG_12_PLUS, visible_symbol_ids],
+            "BG_12_Plus_Hit_Rate": values[R_SYMBOL_BUCKET_BG_12_PLUS, visible_symbol_ids] / total_round,
+            "FG_8_9_Hit": values[R_SYMBOL_BUCKET_FG_8_9, visible_symbol_ids],
+            "FG_8_9_Hit_Rate": values[R_SYMBOL_BUCKET_FG_8_9, visible_symbol_ids] / fg_spins if fg_spins else 0,
+            "FG_10_11_Hit": values[R_SYMBOL_BUCKET_FG_10_11, visible_symbol_ids],
+            "FG_10_11_Hit_Rate": values[R_SYMBOL_BUCKET_FG_10_11, visible_symbol_ids] / fg_spins if fg_spins else 0,
+            "FG_12_Plus_Hit": values[R_SYMBOL_BUCKET_FG_12_PLUS, visible_symbol_ids],
+            "FG_12_Plus_Hit_Rate": values[R_SYMBOL_BUCKET_FG_12_PLUS, visible_symbol_ids] / fg_spins if fg_spins else 0,
+        }
+    )
     cascade_frame = pd.DataFrame(
         {
             "Cascade_Count": np.arange(20),
@@ -1041,7 +1073,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
             "FG_Count": values[R_SCATTER_FG, :8],
         }
     )
-    return summary, base_frame, multiplier_frame, symbol_frame, cascade_frame, c2_frame, scatter_frame
+    return summary, base_frame, multiplier_frame, symbol_frame, cascade_frame, c2_frame, scatter_frame, symbol_bucket_frame
 
 
 def format_elapsed_time(seconds):
@@ -1090,7 +1122,7 @@ def format_version_tag(version):
 
 
 def output_report(frames, record, bet_mode, total_round):
-    _, base_frame, multiplier_frame, symbol_frame, cascade_frame, c2_frame, scatter_frame = frames
+    _, base_frame, multiplier_frame, symbol_frame, cascade_frame, c2_frame, scatter_frame, symbol_bucket_frame = frames
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
     profile_suffix = ""
@@ -1107,6 +1139,7 @@ def output_report(frames, record, bet_mode, total_round):
         cascade_frame.to_excel(writer, sheet_name="Cascade", index=False)
         c2_frame.to_excel(writer, sheet_name="C2-C3 Multiplier", index=False)
         scatter_frame.to_excel(writer, sheet_name="Scatter Dist", index=False)
+        symbol_bucket_frame.to_excel(writer, sheet_name="Symbol Hit Rate", index=False)
         pd.DataFrame(record).to_excel(writer, sheet_name="Record Data", index=False)
     return path
 

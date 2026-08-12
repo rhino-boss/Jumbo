@@ -125,13 +125,19 @@ def build_candidate(
     by_name = dict(zip(result["strip_names"], result["strips"]))
     bg = [copy.deepcopy(by_name[name]) for name in BG_NAMES]
     base = copy.deepcopy(by_name[FG_NAMES[0]])
+    second_base = copy.deepcopy(by_name[FG_NAMES[1]])
 
     symbol_ids = list(result["symbol_ids"])
     code_by_id = dict(zip(result["symbol_ids"], result["symbol_codes"]))
     id_to_index = {symbol_id: index for index, symbol_id in enumerate(symbol_ids)}
     score_ids = [symbol_id for symbol_id in symbol_ids if code_by_id[symbol_id] not in SPECIAL_CODES]
     score_indices = [id_to_index[symbol_id] for symbol_id in score_ids]
-    drop = np.asarray(base["drop_weights"], dtype=np.int64)
+    first_existing_drop = np.asarray(base["drop_weights"], dtype=np.int64)
+    second_existing_drop = np.asarray(second_base["drop_weights"], dtype=np.int64)
+    drop_numerator = INITIAL_COUNTS[0] * first_existing_drop + INITIAL_COUNTS[1] * second_existing_drop
+    if np.any(drop_numerator % sum(INITIAL_COUNTS)):
+        raise RuntimeError("Existing FG drop-weight tables do not have an integral 8:7 aggregate")
+    drop = drop_numerator // sum(INITIAL_COUNTS)
     group_indices = select_partition(competitor_initial, drop, score_indices)
 
     first_matrix = np.asarray(base["symbols"], dtype=np.int64).copy()
