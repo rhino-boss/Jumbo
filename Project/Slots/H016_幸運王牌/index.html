@@ -3235,6 +3235,12 @@
     #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
     #board .symbol-code{display:none!important}
     #board .cell.gold .h015-symbol-img{width:94%;height:94%;max-width:94%;max-height:94%}
+    #board .cell:not(.hit):not(.convert):not(.wild-mark){
+      border:2px solid #122a43!important;
+      border-radius:8px!important;
+      background:#07111f!important;
+      box-shadow:inset 0 0 0 1px rgba(3,9,18,.92),0 1px 2px rgba(0,0,0,.72)!important;
+    }
     #board .symbol-drop,#board .symbol-settle{
       animation:h016-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
       will-change:transform;
@@ -3377,22 +3383,15 @@
         }
       }
       snapshots.push({type:"eliminate", board: transitionBoard, hits: [], cleared, converted, combo, multiplier: multipliers[Math.min(combo,3)], message: "Eliminate + WW"});
-      const drop = [];
+      const refill = [];
       for (let reel = 0; reel < 5; reel++) {
-        const survivors = board[reel].map((symbol, oldRow) => ({symbol, oldRow})).filter(item => item.symbol !== -1);
-        const nextReel = survivors.map(item => item.symbol);
-        survivors.forEach((item, finalRow) => {
-          const rows = item.oldRow - finalRow;
-          if (rows > 0) drop.push({key:`${reel},${finalRow}`, rows, isNew:false, delay:reel * 24});
-        });
-        while (nextReel.length < 4) {
-          const finalRow = nextReel.length;
-          nextReel.push(draw(tableName, reel));
-          drop.push({key:`${reel},${finalRow}`, rows:4 - finalRow, isNew:true, delay:reel * 24 + (3 - finalRow) * 18});
+        for (let row = 0; row < 4; row++) {
+          if (board[reel][row] !== -1) continue;
+          board[reel][row] = draw(tableName, reel);
+          refill.push(`${reel},${row}`);
         }
-        board[reel] = nextReel;
       }
-      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], drop, combo, multiplier: multipliers[Math.min(combo,3)], message: "Drop"});
+      snapshots.push({type:"cascade", board: cloneBoard(board), hits: [], refill, combo, multiplier: multipliers[Math.min(combo,3)], message: "Refill in place"});
     }
     return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, tableName, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
   }
@@ -3546,8 +3545,8 @@
         renderBoard(snapshot.board, [], {cleared:snapshot.cleared || [], converted:snapshot.converted || []});
         await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
       } else if (snapshot.type === "cascade") {
-        const duration = Math.max(28, 520 / Number($("speedRange").value || 1) / DROP_SPEED_MULTIPLIER);
-        renderBoard(snapshot.board, [], {drop:snapshot.drop || []}); await wait(duration + 30);
+        renderBoard(snapshot.board);
+        await wait(Math.max(60, 180 / Number($("speedRange").value || 1)));
       } else if (snapshot.type === "wild-mark") {
         renderBoard(snapshot.board, [], {marked:snapshot.marked || []});
         await wait(Math.max(160, 360 / Number($("speedRange").value || 1)));
@@ -3562,7 +3561,7 @@
   function showSnapshot(index) {
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
-    const snapshot = state.snapshots[state.snapshotIndex]; renderBoard(snapshot.board, snapshot.hits, {cleared:snapshot.cleared || [], drop:snapshot.drop || [], converted:snapshot.converted || [], marked:snapshot.marked || []}); renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo); if (snapshot.type === "win") renderWinDetails(snapshot); updateDebugButtons();
+    const snapshot = state.snapshots[state.snapshotIndex]; renderBoard(snapshot.board, snapshot.hits, {cleared:snapshot.cleared || [], converted:snapshot.converted || [], marked:snapshot.marked || []}); renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo); if (snapshot.type === "win") renderWinDetails(snapshot); updateDebugButtons();
   }
   function updateDebugButtons() {
     $("previousStepBtn").disabled = state.snapshotIndex <= 0;
