@@ -31,12 +31,13 @@ CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
     # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False}, # 自然機率
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -2028,7 +2029,8 @@ SCENE_FG_SPINS = 2
 
 CASCADE_LABELS = ["Cascade 1", "Cascade 2", "Cascade 3", "Cascade 4", "Cascade 5+"]
 CASCADE_DIST_LABELS = ["0", "1", "2", "3", "4", "5+"]
-FG_MULTIPLIER_LABELS = [str(value) for value in range(1, 15)] + ["15+"]
+FG_MULTIPLIER_UPPER_BOUNDS = np.array([10] + list(range(15, 101, 5)), dtype=np.int64)
+FG_MULTIPLIER_LABELS = ["<=10x"] + [f"{lower}x < M <= {upper}x" for lower, upper in zip(FG_MULTIPLIER_UPPER_BOUNDS[:-1], FG_MULTIPLIER_UPPER_BOUNDS[1:])] + [">100x"]
 
 
 @njit(nogil=True)
@@ -2396,7 +2398,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         scatter_index = min(max(int(scatter_count), 0), 7)
         record_data[R_SCATTER_COUNT, scatter_index] += 1
         if fg_triggered:
-            multiplier_index = min(max(int(fg_final_multiplier) - 1, 0), 14)
+            multiplier_index = int(np.searchsorted(FG_MULTIPLIER_UPPER_BOUNDS, int(fg_final_multiplier)))
             record_data[R_FG_FINAL_MULTIPLIER, multiplier_index] += 1
         record_data[R_SCENE, SCENE_BG_SPINS] += int(bet_mode == MODE_NORMALBET)
         record_data[R_SCENE, SCENE_FG_SESSIONS] += fg_triggered
@@ -2670,12 +2672,13 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
             "Rate": record_data[R_SCATTER_COUNT, :8] / scatter_total if scatter_total else np.zeros(8),
         }
     )
-    multiplier_total = values[R_FG_FINAL_MULTIPLIER, :15].sum()
+    fg_multiplier_bucket_count = len(FG_MULTIPLIER_LABELS)
+    multiplier_total = values[R_FG_FINAL_MULTIPLIER, :fg_multiplier_bucket_count].sum()
     df_fg_multiplier = pd.DataFrame(
         {
             "FG_Final_Multiplier": FG_MULTIPLIER_LABELS,
-            "Count": record_data[R_FG_FINAL_MULTIPLIER, :15],
-            "Rate": record_data[R_FG_FINAL_MULTIPLIER, :15] / multiplier_total if multiplier_total else np.zeros(15),
+            "Count": record_data[R_FG_FINAL_MULTIPLIER, :fg_multiplier_bucket_count],
+            "Rate": (record_data[R_FG_FINAL_MULTIPLIER, :fg_multiplier_bucket_count] / multiplier_total if multiplier_total else np.zeros(fg_multiplier_bucket_count)),
         }
     )
     df_multiplier_line = pd.DataFrame(

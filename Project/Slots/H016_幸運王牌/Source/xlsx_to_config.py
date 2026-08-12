@@ -77,8 +77,10 @@ def validate(config: dict[str, Any]) -> dict[str, Any]:
     for table in tables.values():
         if [len(reel) for reel in table["reels"]] != [200] * 5:
             raise ValueError("Every frontend reel must contain exactly 200 stops")
-        if any(any(type(weight) is not int or weight <= 0 for weight in reel) for reel in table["weights"]):
-            raise ValueError("Every frontend initial stop weight must be a positive integer")
+        if any(any(type(weight) is not int or weight < 0 for weight in reel) for reel in table["weights"]):
+            raise ValueError("Every frontend initial stop weight must be a non-negative integer")
+        if any(sum(reel) <= 0 for reel in table["weights"]):
+            raise ValueError("Every frontend initial stop-weight reel must have a positive total")
         if any(any(type(weight) is not int or weight < 0 for weight in reel) for reel in table["drop_weights"]):
             raise ValueError("Every frontend Symbol Drop Weight must be a non-negative integer")
         if any(sum(reel) <= 0 for reel in table["drop_weights"]):

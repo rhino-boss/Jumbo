@@ -2335,9 +2335,9 @@
 6. 若沒有中獎，停止 Cascade，進入最終 `C1` 統計。
 7. 若有中獎，先以本次 Cascade 對應倍數計算並累加得分。
 8. 參與中獎的一般符號、`WW1`、`WW2` 會被消除。
-9. 參與中獎的金框符號不留空格；該位置保留並轉成 `WW1`，再依 Random Wild 權重判定是否啟動 WW2 複製模式。
+9. 參與中獎的金框符號不留空格；若 Random Wild 抽中 2／3／4，先將選中的來源金框位置轉成 `WW2`，其餘中獎金框轉成 `WW1`。若抽中 0，所有中獎金框只轉成 `WW1`。
 10. 其餘空格先由同輪上方既有符號依序落下，再以本局選定表的同輪 Symbol Weight 逐格加權抽取新符號補滿。
-11. 補位完成後，若本次有啟動 WW2 複製模式，先完成金框位置的 Wild 轉換，再將額外 `WW2` 放入合格位置。
+11. 補位完成後，若本次有啟動 WW2 複製模式，先顯示來源金框位置已轉成 `WW2`，再標記 R2～R5 的隨機合格位置，最後將這些位置轉成額外 `WW2`。
 12. 進入下一次 Ways 判定；每完成一次有效中獎 Cascade，下一次 Cascade 的倍數依序提升為 `×2`、`×3`、`×5`，到 `×5` 後不再上升。
 13. 重複判獎、消除、金框轉換、掉落與補位，直到盤面沒有新的中獎。
 14. 所有 Cascade 結束後統計最終盤面 `C1` 總數；若 `C1 >= 3`，觸發 10 場 Free Game。
@@ -2349,6 +2349,16 @@
 * Base Game 高表 / 低表、Free Game 高表 / 低表、Buy Feature 進場表與 Super Free Game 各自使用獨立設定。
 * 同一局 Cascade 的補牌沿用該局已選定的盤面表，不在每一格補牌時重新選高表 / 低表。
 * Random Wild 的 `0 / 2 / 3 / 4` 亦依該模式專屬權重抽取；抽到 0 代表本次金框只轉成 `WW1`，不複製 `WW2`。
+
+### 5.2 多表用途
+
+* **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`；此表不得觸發 FG。
+* **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`，且此表不得觸發 FG。
+* **BG_Symbol (3)**：FG 觸發表。FG 觸發率 100%，進場 Spin 得分小於 10x，目前為 0x。
+* **FG_Symbol**：FG 競品表。沿用 101003 的 2／3／4 顆條件分布，Random Wild 非 0 的抽中率設定為 `FG_Symbol (2)` 的 1/2。
+* **FG_Symbol (2)**：FG 大鬼能見度表。Random Wild 使用 101003 的 `0／2／3／4 = 13128／2000／500／200`；得分集中於 `M4`、`A`、`Q`、`J`。
+* **FG_Symbol (3)**：目前不使用，Table Selection Weight 為 0。
+* 六張表的 `K:O` 都各自保存 5 輪 × 200 格物理輪帶；同 Scene 三張表的排列內容相同。實際選表依 `Parameter` 的 Table Selection Weight 每個 Spin 獨立抽取。
 
 ---
 
@@ -2383,8 +2393,8 @@
 2. 消除所有中獎的非金框符號。
 3. 同輪符號下落並依權重補滿空格。
 4. 所有中獎金框位置顯示轉換。
-5. 金框位置形成 `WW1` 或觸發來源 `WW2`。
-6. 若啟動複製模式，最後選取 R2～R5 的合格位置並放置額外 `WW2`。
+5. 若啟動複製模式，先將選中的來源金框位置轉成 `WW2`；其餘中獎金框形成 `WW1`。
+6. 再標記 R2～R5 的隨機合格位置，最後將被標記位置轉成額外 `WW2`。
 7. 以完成後的新盤面進行下一次 Cascade 判獎。
 
 ### 6.4 Win Multiplier
@@ -2413,9 +2423,9 @@
 
 * 每次進入 FG，依 H016 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
 * 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
-* FG 的盤面生成、Ways、Cascade、金框轉 Wild、WW2 複製與 Scatter 保留規則同 BG。
+* FG 的盤面生成、Ways、Cascade、金框轉 Wild 與 Scatter 保留規則同 BG；WW2 判定頻率依下一點採 101003 的 FG 規則。
 * FG 的 Win Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`。
-* 依 101003 邏輯，FG 每次 Cascade 只要有金框轉換，都可再次進行 Random Wild 判定；不受 BG「成功啟動一次後鎖定」限制。
+* FG 不設單次成功鎖定；每次 Cascade 有新的中獎金框轉 Wild，都重新進行 Random Wild 判定，同一個 FG Spin 可成功啟動多次 WW2 複製模式。
 * FG 場次使用觸發時的 Bet，不可中途變更。
 
 ### 7.3 Retrigger（加局）
@@ -2464,7 +2474,7 @@
 * **9.1.3 金框位置不補牌**：轉 Wild 的位置不是空格，不參與該次重力補位。
 * **9.1.4 Wild 不保留金框屬性**：轉換完成後不會再次以金框身分觸發特色。
 * **9.1.5 Wild 可被後續中獎消除**：`WW1` / `WW2` 參與後續 Ways 時，會像其他非金框中獎符號一樣消除。
-* **9.1.6 WW2 不覆蓋特殊符號**：額外複製不覆蓋 `C1`、`WW1`、`WW2`；若合格位置不足，只能使用實際可選位置。
+* **9.1.6 WW2 不覆蓋特殊符號**：額外複製不覆蓋 `C1`、`WW1`、`WW2`；若合格位置少於本次抽中的 2／3／4 顆，該次不啟動 WW2 複製模式。
 
 ### 9.2 倍數機制相關
 
@@ -2486,7 +2496,7 @@
 * **9.4.2 FG 總場數上限 50**：達上限後不再增加剩餘場次。
 * **9.4.3 最後一場仍可加局**：只要尚未達 50 場上限。
 * **9.4.4 FG 每場倍率重置**：每一場從 `×2` 重新開始。
-* **9.4.5 FG 可多次判定 WW2**：同一 FG Spin 的不同 Cascade 均可依金框轉換再次判定。
+* **9.4.5 FG 的 WW2 重複判定**：同一 FG Spin 中，每次 Cascade 有新的中獎金框轉 Wild，都重新依 Random Wild 權重判定；因此同一 Spin 可成功啟動多次 WW2 複製模式。抽到 0 時該次僅轉 `WW1`。
 
 ### 9.5 Buy Feature 相關
 
@@ -3344,9 +3354,9 @@
     for (let reel = 1; reel < 5; reel++) for (let row = 0; row < 4; row++) {
       if (![WW, W2, C1].includes(board[reel][row])) candidates.push([reel, row]);
     }
+    if (candidates.length < count) return null;
     const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
-    if (!targets.length) return null;
-    return {source, targets, positions: [source, ...targets], count: targets.length};
+    return {source, targets, count};
   }
 
   function applyW2(board, positions) {
@@ -3357,18 +3367,21 @@
     const table = tables[tableName];
     const multipliers = table.multipliers?.length ? table.multipliers : (freeGame ? [2,4,6,10] : [1,2,3,5]);
     const board = makeBoard(tableName), snapshots = [];
-    let pay = 0, combo = 0, pendingGold = [], bgW2Used = false, golden = 0, w2Events = 0;
+    let pay = 0, combo = 0, pendingGold = [], w2Used = false, golden = 0, w2Events = 0;
     snapshots.push({type:"initial", board: cloneBoard(board), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin"});
     while (true) {
-      if (pendingGold.length && (freeGame || !bgW2Used)) {
+      if (pendingGold.length && (freeGame || !w2Used)) {
         const selection = selectW2Targets(board, tableName, pendingGold);
         if (selection) {
-          const marked = selection.positions.map(([reel, row]) => `${reel},${row}`);
+          const sourceMarked = [`${selection.source[0]},${selection.source[1]}`];
+          const targetMarked = selection.targets.map(([reel, row]) => `${reel},${row}`);
           w2Events++;
-          bgW2Used = true;
-          snapshots.push({type:"wild-mark", board:cloneBoard(board), hits:[], marked, combo, multiplier:multipliers[Math.min(combo,3)], message:`Mark W2 area × ${selection.count}`});
-          applyW2(board, selection.positions);
-          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:marked, combo, multiplier:multipliers[Math.min(combo,3)], message:`Big Ghost W2 × ${selection.count}`});
+          w2Used = true;
+          applyW2(board, [selection.source]);
+          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:sourceMarked, combo, multiplier:multipliers[Math.min(combo,3)], message:"Source Golden → W2"});
+          snapshots.push({type:"wild-mark", board:cloneBoard(board), hits:[], marked:targetMarked, combo, multiplier:multipliers[Math.min(combo,3)], message:`Mark random W2 area × ${selection.count}`});
+          applyW2(board, selection.targets);
+          snapshots.push({type:"convert", board:cloneBoard(board), hits:[], converted:targetMarked, combo, multiplier:multipliers[Math.min(combo,3)], message:`Random W2 × ${selection.count}`});
         }
       }
       pendingGold = [];
@@ -3408,6 +3421,10 @@
   }
 
   function freeQueue() {
+    const selection = cfg.table_selection?.free;
+    if (selection?.length) {
+      return Array.from({length:Number(cfg.free_spins)}, () => pick(selection.map(item => item.table), selection.map(item => item.weight)));
+    }
     const choices = cfg.free_game_mix.choices;
     const choice = pick(choices, choices.map(item => item.weight)), queue = [];
     for (let i = 0; i < choice.high; i++) queue.push("high");
@@ -3425,13 +3442,18 @@
     while (remaining > 0 && played < Number(cfg.free_spin_cap)) {
       remaining--; played++;
       const surface = queue.shift() || "low";
-      const table = superMode ? "super" : surface === "high" ? highTable() : "fg_low";
+      const table = superMode ? "super" : tables[surface] ? surface : surface === "high" ? highTable() : "fg_low";
       const result = spin(table, true);
       pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
       if (result.scatter >= 3 && played + remaining < Number(cfg.free_spin_cap)) {
         const add = Math.min(Number(cfg.retrigger_spins), Number(cfg.free_spin_cap) - played - remaining);
         remaining += add; retriggers += add > 0 ? 1 : 0;
-        queue.push("high", ...Array(Math.max(0, add - 1)).fill("low"));
+        const selection = cfg.table_selection?.retrigger;
+        if (selection?.length) {
+          for (let index = 0; index < add; index++) queue.push(pick(selection.map(item => item.table), selection.map(item => item.weight)));
+        } else {
+          queue.push("high", ...Array(Math.max(0, add - 1)).fill("low"));
+        }
       }
     }
     return {pay, played, retriggers, spins, snapshots, maxMultiplier: Math.max(1, ...spins.map(item => item.maxMultiplier))};
@@ -3440,6 +3462,8 @@
   function cardProfile() { return "weight_2"; }
   function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
   function naturalBaseSpin() {
+    const selection = cfg.table_selection?.base;
+    if (selection?.length) return spin(pick(selection.map(item => item.table), selection.map(item => item.weight)));
     const weights = cfg.base_table_weights || {high: 1, low: 0};
     return spin(pick(["bg_high", "bg_low"], [Number(weights.high || 0), Number(weights.low || 0)]));
   }
@@ -3471,7 +3495,7 @@
 
   window.demogameSimulateRound = () => {
     const base = cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
-    const fgTriggered = base.scatter >= 3;
+    const fgTriggered = base.tableName === "bg_3" && base.scatter >= 3;
     const feature = fgTriggered
       ? (cardSystemActive() ? cardFeature("free_game", false) : freeSession(false))
       : null;
@@ -3630,7 +3654,7 @@
         else base = buyEntry();
         await animateSnapshots(base.snapshots, false); renderRngSource(base); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
-        if (base.scatter >= 3 || mode !== 0) {
+        if ((base.tableName === "bg_3" && base.scatter >= 3) || mode !== 0 || $("forceFgInput").checked) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
           activateFeature(cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode), mode);
         }

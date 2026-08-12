@@ -19,11 +19,13 @@ from pathlib import Path
 
 import numpy as np
 
+ROOT = Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0, str(ROOT / "Source"))
 import model_sync
 from analyze_stack_distribution import DEFAULT_INPUT, SCENE_TABLES, analyze
 
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / "config_92A.js"
 SPECIAL_CODES = {"C1", "C2", "C3"}
 

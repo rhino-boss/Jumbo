@@ -9,11 +9,11 @@ import importlib.util
 import sys
 from pathlib import Path
 
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_DIR / "Source"))
 from model_sync import DEFAULT_CONFIG, load_js_config, write_js_config
 
 
-SOURCE_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = SOURCE_DIR.parent
 DEFAULT_INPUT = PROJECT_DIR / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 ANALYZER_PATH = PROJECT_DIR / "其他" / "analyze_gates_competitor.py"
 WEIGHT_TOTAL = 1_000_000

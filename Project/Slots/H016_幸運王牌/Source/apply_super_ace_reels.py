@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 import bisect
 import json
+import math
 import random
+import statistics
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -13,16 +15,40 @@ from openpyxl import load_workbook
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_TARGET = HERE / "H0161.xlsx"
+STOP_WEIGHT_PROFILE = HERE / "initial_stop_weights.json"
 DEFAULT_SOURCE = Path(
     "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資源/JILI/"
     "JILI - Super Ace/遊戲資料/StripTable_SuperAce_還原.xlsx"
 )
 TARGETS = {"BG_Symbol": "BG_Strip", "FG_Symbol": "FG_Strip"}
-EDITABLE_COLUMNS = {*range(11, 16), *range(23, 28), *range(32, 38)}  # K:O, W:AA, AF:AK
+VARIANT_REEL_TARGETS = {
+    "BG_Symbol": ("BG_Symbol (2)", "BG_Symbol (3)"),
+    "FG_Symbol": ("FG_Symbol (2)", "FG_Symbol (3)"),
+}
+COMPETITOR_JSONS = (
+    "SuperAce_BG_Combined_NoJP.jsonl",
+    "SuperAce_BG_3.jsonl",
+    "Super_Ace_BG_4.jsonl",
+)
+COMPETITOR_SYMBOL_MAP = {
+    "Bonus": "C1", "Symbol1": "M1", "Symbol2": "M2", "Symbol3": "M3",
+    "Symbol4": "M4", "Symbol5": "A", "Symbol6": "K", "Symbol7": "Q", "Symbol8": "J",
+}
+EDITABLE_COLUMNS = {*range(11, 16), *range(23, 28), 30, *range(32, 38)}  # K:O, W:AA, AD, AF:AK
 REEL_LENGTH = 200
 GOLD_RATES = {
-    "BG_Symbol": [0.0, 0.15024, 0.11346, 0.07600, 0.0],
-    "FG_Symbol": [0.0, 0.21057, 0.18177, 0.15244, 0.0],
+    "BG_Symbol": [0.0, 0.15023788015657935, 0.11346281240590184, 0.07600421559771153, 0.0],
+    "FG_Symbol": [0.0, 0.21209989447766445, 0.18279985930355258, 0.15239183960604993, 0.0],
+}
+RANDOM_WILD_WEIGHTS = {
+    "BG_Symbol": [34600, 1401, 235, 18],
+    # Preserve 101003's conditional 2/3/4 distribution while halving its
+    # non-zero draw probability: 2700 / 31656 = (2700 / 15828) / 2.
+    "FG_Symbol": [28956, 2000, 500, 200],
+}
+FG_VARIANT_RANDOM_WILD_WEIGHTS = {
+    "FG_Symbol (2)": [13128, 2000, 500, 200],
+    "FG_Symbol (3)": [1, 0, 0, 0],
 }
 GOLD_SYMBOLS = {
     "M1": "G1", "M2": "G2", "M3": "G3", "M4": "G4",
@@ -34,6 +60,8 @@ MAX_SYMBOL_STACK = 4
 SCORE_SYMBOLS = ("M1", "M2", "M3", "M4", "A", "K", "Q", "J")
 SCORE_BITS = {symbol: 1 << index for index, symbol in enumerate(SCORE_SYMBOLS)}
 INITIAL_HIT_TARGETS = {"BG_Symbol": 0.237699, "FG_Symbol": 0.405628}
+INITIAL_SCATTER_FACTORS = {"BG_Symbol": -0.245, "FG_Symbol": 0.0}
+STOP_WEIGHT_BASE = 100
 CALIBRATION_SEEDS = {"BG_Symbol": 16016, "FG_Symbol": 16017}
 CALIBRATION_TRIALS = 50_000
 DROP_WEIGHT_TOTAL = 1_000_000
@@ -72,7 +100,15 @@ def protected_values(workbook) -> dict[str, dict[str, Any]]:
         cells: dict[str, Any] = {}
         for row in worksheet.iter_rows():
             for cell in row:
-                if worksheet.title in TARGETS and cell.column in EDITABLE_COLUMNS:
+                variant_reel = worksheet.title in {
+                    name for names in VARIANT_REEL_TARGETS.values() for name in names
+                } and cell.column in range(11, 16)
+                variant_random_wild = (
+                    worksheet.title in FG_VARIANT_RANDOM_WILD_WEIGHTS
+                    and cell.column == 30
+                    and cell.row in range(4, 8)
+                )
+                if (worksheet.title in TARGETS and cell.column in EDITABLE_COLUMNS) or variant_reel or variant_random_wild:
                     continue
                 if cell.value is not None:
                     cells[cell.coordinate] = stable_value(cell.value)
@@ -131,14 +167,20 @@ def evenly_spaced(items: list[int], count: int) -> list[int]:
     return [items[min(int((index + 0.5) * len(items) / count), len(items) - 1)] for index in range(count)]
 
 
-def apply_gold(symbols: list[str], rate: float) -> tuple[list[str], int]:
+def apply_gold(symbols: list[str], rate: float, gold_profile: dict[str, int]) -> tuple[list[str], int]:
     result = list(symbols)
     target = round(REEL_LENGTH * rate)
     by_symbol: dict[str, list[int]] = {
         symbol: [index for index, value in enumerate(result) if value == symbol]
         for symbol in GOLD_SYMBOLS
     }
-    for symbol, count in proportional_gold_counts(result, target).items():
+    allocation = (
+        largest_remainder({symbol: gold_profile[symbol] for symbol in SCORE_SYMBOLS}, target)
+        if target else {symbol: 0 for symbol in SCORE_SYMBOLS}
+    )
+    for symbol, count in allocation.items():
+        if count > len(by_symbol[symbol]):
+            raise ValueError(f"{symbol}: gold target {count} exceeds {len(by_symbol[symbol])} stops")
         for index in evenly_spaced(by_symbol[symbol], count):
             result[index] = GOLD_SYMBOLS[symbol]
     return result, target
@@ -253,6 +295,45 @@ def read_fill_weights(workbook) -> dict[str, list[dict[str, float]]]:
     return result
 
 
+def read_competitor_gold_profiles(source_path: Path) -> dict[str, dict[str, list[dict[str, int]]]]:
+    """Read joint gold counts by scene/stage/reel/symbol from competitor JSONL."""
+    result = {
+        sheet: {stage: [Counter() for _ in range(5)] for stage in ("initial", "drop")}
+        for sheet in TARGETS
+    }
+    paths = [source_path.parent / name for name in COMPETITOR_JSONS]
+    missing = [path for path in paths if not path.exists()]
+    if missing:
+        raise FileNotFoundError(f"Missing competitor JSONL: {missing}")
+    for path in paths:
+        with path.open(encoding="utf-8") as handle:
+            for line in handle:
+                obj = json.loads(line)
+                for plate_index, plate in enumerate(obj["plate"]["plate"]):
+                    sheet = "BG_Symbol" if plate_index == 0 else "FG_Symbol"
+                    for reel, column in enumerate(plate["column"]):
+                        for raw_symbol, gold in zip(column["row"], column["isGold"]):
+                            symbol = COMPETITOR_SYMBOL_MAP[raw_symbol]
+                            if symbol in SCORE_SYMBOLS and gold in (1, 2):
+                                result[sheet]["initial"][reel][symbol] += 1
+                    for combo in plate.get("combo", []):
+                        for change in combo.get("change", []):
+                            if "symbol" not in change:
+                                continue
+                            symbol = COMPETITOR_SYMBOL_MAP[change["symbol"]]
+                            reel = int(change.get("column", 0))
+                            if symbol in SCORE_SYMBOLS and change.get("isGold") in (1, 2):
+                                result[sheet]["drop"][reel][symbol] += 1
+    for sheet in TARGETS:
+        for stage in ("initial", "drop"):
+            for reel in range(5):
+                if sum(result[sheet][stage][reel].values()) == 0 and reel not in (0, 4):
+                    raise ValueError(f"Missing {sheet} {stage} R{reel + 1} gold observations")
+                for symbol in SCORE_SYMBOLS:
+                    result[sheet][stage][reel].setdefault(symbol, 0)
+    return result
+
+
 def exact_drop_weights(sheet_name: str) -> list[dict[str, float]]:
     symbols = ("C1", *SCORE_SYMBOLS)
     return [dict(zip(symbols, percentages)) for percentages in EXACT_DROP_PERCENTAGES[sheet_name]]
@@ -307,12 +388,16 @@ def drop_weights(symbols: list[str], percentages: dict[str, float], gold_rate: f
     return weights
 
 
-def symbol_drop_weights(percentages: dict[str, float], gold_rate: float) -> dict[str, int]:
+def symbol_drop_weights(
+    percentages: dict[str, float], gold_rate: float, gold_profile: dict[str, int]
+) -> dict[str, int]:
     """Split canonical FillWeight into plain/gold rows in AF:AK."""
     totals = largest_remainder(percentages, DROP_WEIGHT_TOTAL)
-    eligible = {symbol: totals[symbol] for symbol in SCORE_SYMBOLS}
     gold_total = round(DROP_WEIGHT_TOTAL * gold_rate)
-    gold_by_symbol = largest_remainder(eligible, gold_total) if gold_total else {symbol: 0 for symbol in SCORE_SYMBOLS}
+    gold_by_symbol = (
+        largest_remainder({symbol: gold_profile[symbol] for symbol in SCORE_SYMBOLS}, gold_total)
+        if gold_total else {symbol: 0 for symbol in SCORE_SYMBOLS}
+    )
     result = {symbol: 0 for symbol in DROP_SYMBOLS}
     result["C1"] = totals["C1"]
     for symbol in SCORE_SYMBOLS:
@@ -344,6 +429,89 @@ def initial_hit_rate(reels: list[list[str]]) -> float:
         if pair_mask & mask3
     )
     return wins / REEL_LENGTH**3
+
+
+def weighted_initial_hit_rate(reels: list[list[str]], weights: list[list[int]]) -> float:
+    histograms: list[Counter] = []
+    for reel, reel_weights in zip(reels[:3], weights[:3]):
+        histogram = Counter()
+        for stop, weight in enumerate(reel_weights):
+            histogram[window_mask(reel, stop)] += weight
+        histograms.append(histogram)
+    wins = sum(
+        weight1 * weight2 * weight3
+        for mask1, weight1 in histograms[0].items()
+        for mask2, weight2 in histograms[1].items()
+        for mask3, weight3 in histograms[2].items()
+        if mask1 & mask2 & mask3
+    )
+    return wins / math.prod(sum(reel_weights) for reel_weights in weights[:3])
+
+
+def initial_stop_propensity(reels: list[list[str]]) -> list[list[float]]:
+    """Score each R1-R3 stop by its uniform chance of completing a 3-reel win."""
+    masks = [[window_mask(reel, stop) for stop in range(REEL_LENGTH)] for reel in reels[:3]]
+    histograms = [Counter(values) for values in masks]
+    scores: list[list[float]] = []
+    for reel in range(3):
+        others = [index for index in range(3) if index != reel]
+        denominator = REEL_LENGTH**2
+        by_mask = {}
+        for current_mask in histograms[reel]:
+            wins = sum(
+                count1 * count2
+                for mask1, count1 in histograms[others[0]].items()
+                for mask2, count2 in histograms[others[1]].items()
+                if current_mask & mask1 & mask2
+            )
+            by_mask[current_mask] = wins / denominator
+        values = [by_mask[mask] for mask in masks[reel]]
+        mean = statistics.fmean(values)
+        deviation = statistics.pstdev(values) or 1.0
+        scores.append([(value - mean) / deviation for value in values])
+    return scores
+
+
+def window_scatter_count(symbols: list[str], stop: int) -> int:
+    return sum(symbols[(stop + offset) % REEL_LENGTH] == "C1" for offset in range(4))
+
+
+def calibrated_stop_weights(
+    reels: list[list[str]], target_hit: float, scatter_factor: float
+) -> tuple[list[list[int]], float, float]:
+    """Create positive integer W:AA weights without changing any physical stop."""
+    propensities = initial_stop_propensity(reels)
+
+    def build(hit_factor: float) -> list[list[int]]:
+        result: list[list[int]] = []
+        for reel, symbols in enumerate(reels):
+            result.append([
+                max(
+                    1,
+                    round(STOP_WEIGHT_BASE * math.exp(
+                        (hit_factor * propensities[reel][stop] if reel < 3 else 0.0)
+                        + scatter_factor * window_scatter_count(symbols, stop)
+                    )),
+                )
+                for stop in range(REEL_LENGTH)
+            ])
+        return result
+
+    low, high = -4.0, 4.0
+    best: tuple[float, float, list[list[int]], float] | None = None
+    for _ in range(32):
+        hit_factor = (low + high) / 2
+        weights = build(hit_factor)
+        rate = weighted_initial_hit_rate(reels, weights)
+        candidate = (abs(rate - target_hit), hit_factor, weights, rate)
+        if best is None or candidate[0] < best[0]:
+            best = candidate
+        if rate < target_hit:
+            low = hit_factor
+        else:
+            high = hit_factor
+    assert best is not None
+    return best[2], best[3], best[1]
 
 
 def calibrate_initial_hit(reels: list[list[str]], target: float, seed: int) -> tuple[float, int]:
@@ -390,10 +558,44 @@ def write_drop_table(worksheet, tables: list[dict[str, int]]) -> None:
             worksheet.cell(row, 33 + reel).value = tables[reel][symbol]
 
 
+def write_random_wild_weights(worksheet, weights: list[int]) -> None:
+    if len(weights) != 4 or any(type(weight) is not int or weight < 0 for weight in weights):
+        raise ValueError("Random Wild weights must be four non-negative integers")
+    for row, weight in enumerate(weights, start=4):
+        worksheet.cell(row, 30).value = weight
+
+
+def copy_physical_reels(source, target) -> None:
+    """Copy only K:O physical reels; each variant keeps its own W:AA/AF:AK."""
+    for row in range(4, 404):
+        for column in range(11, 16):
+            target.cell(row, column).value = source.cell(row, column).value
+
+
+def read_stop_weight_profile(path: Path = STOP_WEIGHT_PROFILE) -> dict[str, list[list[int]]]:
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    result: dict[str, list[list[int]]] = {}
+    for sheet_name in TARGETS:
+        reels = raw.get(sheet_name)
+        if reels is None:
+            continue
+        if len(reels) != 5 or any(len(reel) != REEL_LENGTH for reel in reels):
+            raise ValueError(f"{path.name} {sheet_name}: expected 5 reels × {REEL_LENGTH} weights")
+        normalized = [[int(weight) for weight in reel] for reel in reels]
+        if any(any(type(weight) is not int or weight <= 0 for weight in reel) for reel in normalized):
+            raise ValueError(f"{path.name} {sheet_name}: every stop weight must be a positive integer")
+        result[sheet_name] = normalized
+    return result
+
+
 def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
     target = load_workbook(target_path, data_only=False)
     source = load_workbook(source_path, read_only=True, data_only=True)
     fill_weights = read_fill_weights(source)
+    gold_profiles = read_competitor_gold_profiles(source_path)
+    stop_weight_profile = read_stop_weight_profile()
     before = protected_values(target)
     result: dict[str, Any] = {}
     for target_name, source_name in TARGETS.items():
@@ -403,21 +605,41 @@ def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
         reel_swaps: list[int] = []
         for reel in range(5):
             # Expand the competitor's weighted source strip to exactly 200
-            # physical stops.  Every expanded stop then has integer weight 1.
+            # physical stops.  W:AA is calibrated separately after all five
+            # physical strips are finalized; no strip symbol is changed here.
             expanded = resample_to_200(source_reels[reel], source_weights[reel])
-            repaired, swaps = repair_reel_constraints(expanded)
+            with_gold, _ = apply_gold(
+                expanded, GOLD_RATES[target_name][reel], gold_profiles[target_name]["initial"][reel]
+            )
+            repaired, swaps = repair_reel_constraints(with_gold)
             reels.append(repaired)
-            weights.append([1] * REEL_LENGTH)
             reel_swaps.append(len(swaps))
+        if target_name in stop_weight_profile:
+            weights = stop_weight_profile[target_name]
+            calibrated_hit = weighted_initial_hit_rate(reels, weights)
+            hit_factor = None
+        else:
+            weights, calibrated_hit, hit_factor = calibrated_stop_weights(
+                reels, INITIAL_HIT_TARGETS[target_name], INITIAL_SCATTER_FACTORS[target_name]
+            )
         drop_tables = [
-            symbol_drop_weights(exact_drop_weights(target_name)[reel], DROP_GOLD_RATES[target_name][reel])
+            symbol_drop_weights(
+                exact_drop_weights(target_name)[reel],
+                DROP_GOLD_RATES[target_name][reel],
+                gold_profiles[target_name]["drop"][reel],
+            )
             for reel in range(5)
         ]
         write_reels(target[target_name], reels, weights)
         write_drop_table(target[target_name], drop_tables)
+        write_random_wild_weights(target[target_name], RANDOM_WILD_WEIGHTS[target_name])
         result[target_name] = {
             "reel_lengths": [len(reel) for reel in reels],
             "integer_weight_sums": [sum(reel) for reel in weights],
+            "weighted_initial_hit_rate": calibrated_hit,
+            "initial_hit_factor": hit_factor,
+            "stop_weight_profile": STOP_WEIGHT_PROFILE.name if target_name in stop_weight_profile else None,
+            "initial_scatter_factor": INITIAL_SCATTER_FACTORS[target_name],
             "source_weight_sums": [sum(reel) for reel in source_weights],
             "constraint_repair_swaps": reel_swaps,
             "r1_has_gold": any(symbol in GOLD_SYMBOLS.values() for symbol in reels[0]),
@@ -431,7 +653,18 @@ def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
             "drop_gold_rates": [
                 sum(table[symbol] for symbol in BASE_SYMBOLS) / DROP_WEIGHT_TOTAL for table in drop_tables
             ],
+            "initial_gold_rates": [
+                sum(symbol in BASE_SYMBOLS for symbol in reel) / REEL_LENGTH for reel in reels
+            ],
+            "random_wild_weights": RANDOM_WILD_WEIGHTS[target_name],
         }
+    for source_name, variant_names in VARIANT_REEL_TARGETS.items():
+        for variant_name in variant_names:
+            copy_physical_reels(target[source_name], target[variant_name])
+            result[variant_name] = {"reel_lengths": [REEL_LENGTH] * 5, "reel_source": source_name}
+    for sheet_name, weights in FG_VARIANT_RANDOM_WILD_WEIGHTS.items():
+        write_random_wild_weights(target[sheet_name], weights)
+        result[sheet_name]["random_wild_weights"] = weights
     source.close()
     target.save(target_path)
 
@@ -439,7 +672,7 @@ def update_workbook(target_path: Path, source_path: Path) -> dict[str, Any]:
     checked_protected = protected_values(checked)
     if checked_protected != before:
         changed = sorted(name for name in before if checked_protected[name] != before[name])
-        raise RuntimeError(f"Values outside K:O/W:AA changed: {changed}")
+        raise RuntimeError(f"Values outside K:O/W:AA/AD/AF:AK changed: {changed}")
     result["protected_values_unchanged"] = True
     return result
 

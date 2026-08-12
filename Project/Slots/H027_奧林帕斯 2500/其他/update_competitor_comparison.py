@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import re
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -11,9 +14,20 @@ from openpyxl import load_workbook
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RECORD = ROOT / "Record" / "H0271_0001_2608121204_betmode0_106.xlsx"
+DEFAULT_RECORD = ROOT / "Record" / "H0271_0001_2608121346_betmode0_2000000.xlsx"
 DEFAULT_COMPETITOR = ROOT / "其他" / "參考資料" / "analysis_gates_of_olympus_1000_metrics.json"
+DEFAULT_RESPONSES = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
+DEFAULT_STACK_METRICS = ROOT / "其他" / "參考資料" / "stack_distribution_metrics.json"
+DEFAULT_CONFIG = ROOT / "config_92A.js"
 DEFAULT_REPORT = ROOT / "其他" / "競品參考數值比較.md"
+ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"
+STACK_ANALYZER_PATH = ROOT / "其他" / "analyze_stack_distribution.py"
+SCENE_TABLES = {
+    "BG": (("BG_Symbol", 1), ("BG_Symbol (2)", 1)),
+    "FG": (("FG_Symbol", 8), ("FG_Symbol (2)", 7)),
+}
+SYMBOL_ORDER = ("C1", "C2", "M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE")
+SYMBOL_LABELS = {"C1": "Scatter / C1", "C2": "Multiplier / C2"}
 
 
 def pct(value: float) -> str:
@@ -37,6 +51,193 @@ def replace_between(text: str, start: str, end: str | None, replacement: str) ->
     left = text.index(start)
     right = text.index(end, left) if end else len(text)
     return text[:left] + replacement.rstrip() + "\n\n" + text[right:]
+
+
+def load_module(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_config(path: Path) -> dict:
+    match = re.fullmatch(
+        r"\s*const\s+data\s*=\s*(\{.*\})\s*;?\s*",
+        path.read_text(encoding="utf-8-sig"),
+        re.DOTALL,
+    )
+    if not match:
+        raise ValueError(f"Unsupported config format: {path}")
+    return json.loads(match.group(1))
+
+
+def competitor_reel_distributions(response_path: Path) -> dict:
+    analyzer = load_module("h027_competitor_report", ANALYZER_PATH)
+    analysis = analyzer.analyze(response_path)
+    sessions = analysis["_sessions"]
+    scene_spins = {
+        "BG": [session.bg for session in sessions],
+        "FG": [spin for session in sessions for spin in session.fg_spins],
+    }
+    result = {}
+    for scene, spins in scene_spins.items():
+        result[scene] = {}
+        for mode in ("initial", "drop"):
+            counts = [[0] * 13 for _ in range(6)]
+            screen_count = 0
+            for spin in spins:
+                screens = spin.screens[:1] if mode == "initial" else spin.screens[1:]
+                for screen in screens:
+                    if len(screen) != 30:
+                        continue
+                    screen_count += 1
+                    for reel in range(6):
+                        for row in range(5):
+                            counts[reel][int(screen[row * 6 + reel])] += 1
+            denominator = screen_count * 5
+            by_code = {}
+            for symbol_id, code in analyzer.SYMBOL_ID_TO_CODE.items():
+                if code in SYMBOL_ORDER:
+                    by_code[code] = [counts[reel][symbol_id] / denominator for reel in range(6)]
+            result[scene][mode] = {"screen_count": screen_count, "by_code": by_code}
+    return result
+
+
+def h027_reel_distributions(config: dict) -> dict:
+    by_name = dict(zip(config["strip_names"], config["strips"]))
+    code_by_id = dict(zip(config["symbol_ids"], config["symbol_codes"]))
+    result = {}
+    for scene, tables in SCENE_TABLES.items():
+        result[scene] = {}
+        initial = {code: [0.0] * 6 for code in SYMBOL_ORDER}
+        initial_den = [0.0] * 6
+        drops = {code: [0.0] * 6 for code in SYMBOL_ORDER}
+        drop_den = [0.0] * 6
+        for table_name, table_weight in tables:
+            strip = by_name[table_name]
+            for reel in range(6):
+                length = int(strip["reel_lengths"][reel])
+                initial_den[reel] += table_weight * length
+                for row in range(length):
+                    code = code_by_id[int(strip["symbols"][row][reel])]
+                    if code in initial:
+                        initial[code][reel] += table_weight
+                for symbol_index, symbol_id in enumerate(config["symbol_ids"]):
+                    weight = table_weight * int(strip["drop_weights"][symbol_index][reel])
+                    drop_den[reel] += weight
+                    code = code_by_id[int(symbol_id)]
+                    if code in drops:
+                        drops[code][reel] += weight
+        for reel in range(6):
+            for code in SYMBOL_ORDER:
+                initial[code][reel] /= initial_den[reel]
+                drops[code][reel] /= drop_den[reel]
+        result[scene]["initial"] = {"by_code": initial}
+        result[scene]["drop"] = {"by_code": drops}
+    return result
+
+
+def render_symbol_distribution(competitor: dict, h027: dict) -> str:
+    parts = [
+        "## 符號分布",
+        "",
+        "競品依 Response 盤面拆成 R1～R6；每輪每個盤面有 5 格。H027 BG 初始分布為兩張 300 格 Table 以 1:1 合併；FG 依初始排程 8:7 加權。掉落使用各 Table 的 Symbol Weight，並沿用相同場景權重。輪帶中的 `Multiplier / C2` 是倍數球候選；進盤後才依 `weight_use_super_multiplier` 決定保留為 C2 或轉成 C3，因此符號分布表合併列為同一種倍數球。",
+    ]
+    labels = {
+        ("BG", "initial"): "BG 初始 R1-R6",
+        ("BG", "drop"): "BG 掉落 R1-R6",
+        ("FG", "initial"): "FG 初始 R1-R6",
+        ("FG", "drop"): "FG 掉落 R1-R6",
+    }
+    for scene, mode in labels:
+        rows = []
+        for code in SYMBOL_ORDER:
+            label = SYMBOL_LABELS.get(code, code)
+            rows.append([label, "競品", *[pct(value) for value in competitor[scene][mode]["by_code"][code]]])
+            rows.append([label, "H027", *[pct(value) for value in h027[scene][mode]["by_code"][code]]])
+        parts.extend([
+            "",
+            f"### {labels[(scene, mode)]}",
+            "",
+            table(["Symbol", "模型", "R1", "R2", "R3", "R4", "R5", "R6"], rows),
+        ])
+    return "\n".join(parts)
+
+
+def render_stack_distribution(metrics: dict) -> str:
+    parts = [
+        "## 初始盤面堆疊分布",
+        "",
+        "堆疊定義為同一初始盤面、同一 Reel 內由上到下連續相同符號的最大 run，採 cell-weighted 口徑。例如 `A A A K J` 記為 3 個 Stack 3 cells 與 2 個 Stack 1 cells。競品使用實際初始盤面；H027 對每張 300 格輪帶枚舉所有 stop，BG 兩表按 1:1、FG 兩表按 8:7 加權。掉落不是由連續輪帶 stop 產生，因此本指標只比較初始盤面。",
+    ]
+    for scene in ("BG", "FG"):
+        rows = []
+        for length in range(1, 6):
+            for model, key in (("競品", "competitor"), ("H027", "h027")):
+                values = metrics[key][scene]["by_reel"]
+                rows.append([str(length), model, *[pct(values[f"R{reel}"][f"stack_{length}"]) for reel in range(1, 7)]])
+        maximum = max(
+            abs(metrics["h027"][scene]["by_reel"][f"R{reel}"][f"stack_{length}"]
+                - metrics["competitor"][scene]["by_reel"][f"R{reel}"][f"stack_{length}"])
+            for reel in range(1, 7) for length in range(1, 6)
+        )
+        parts.extend([
+            "",
+            f"### {scene} Stack 1-5／R1-R6",
+            "",
+            table(["Stack", "模型", "R1", "R2", "R3", "R4", "R5", "R6"], rows),
+            "",
+            f"{scene} 各 Reel 的最大絕對差異為 {maximum * 100:.4f} pp；Stack 4／5 均與競品同為 0。",
+        ])
+    symbol_rows = []
+    max_symbol_2 = {"BG": 0.0, "FG": 0.0}
+    for code in ("M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE"):
+        row = [code]
+        for scene in ("BG", "FG"):
+            comp = metrics["competitor"][scene]["by_symbol"][code]
+            game = metrics["h027"][scene]["by_symbol"][code]
+            comp_2, game_2 = 1 - comp["stack_1"], 1 - game["stack_1"]
+            comp_3 = sum(comp[f"stack_{length}"] for length in range(3, 6))
+            game_3 = sum(game[f"stack_{length}"] for length in range(3, 6))
+            max_symbol_2[scene] = max(max_symbol_2[scene], abs(game_2 - comp_2))
+            row.extend([pct(comp_2), pct(game_2), pct(comp_3), pct(game_3)])
+        symbol_rows.append(row)
+    parts.extend([
+        "",
+        "### 各符號 Stack 2+／3+",
+        "",
+        table([
+            "Symbol", "競品 BG 2+", "H027 BG 2+", "競品 BG 3+", "H027 BG 3+",
+            "競品 FG 2+", "H027 FG 2+", "競品 FG 3+", "H027 FG 3+",
+        ], symbol_rows),
+        "",
+        f"BG 各一般符號的 Stack 2+ 最大差異為 {max_symbol_2['BG'] * 100:.2f} pp；FG 最大差異為 {max_symbol_2['FG'] * 100:.2f} pp。C1／C2 不列入各符號表。",
+    ])
+    return "\n".join(parts)
+
+
+def validate_distribution_inputs(competitor_reels: dict, h027_reels: dict, stack_metrics: dict) -> None:
+    for source_name, source in (("competitor", competitor_reels), ("H027", h027_reels)):
+        for scene in ("BG", "FG"):
+            for mode in ("initial", "drop"):
+                for reel in range(6):
+                    total = sum(source[scene][mode]["by_code"][code][reel] for code in SYMBOL_ORDER)
+                    if abs(total - 1.0) > 1e-9:
+                        raise ValueError(
+                            f"{source_name} {scene} {mode} R{reel + 1} symbol rates sum to {total}"
+                        )
+    for source_name in ("competitor", "h027"):
+        for scene in ("BG", "FG"):
+            for reel in range(1, 7):
+                total = sum(
+                    stack_metrics[source_name][scene]["by_reel"][f"R{reel}"][f"stack_{length}"]
+                    for length in range(1, 6)
+                )
+                if abs(total - 1.0) > 1e-9:
+                    raise ValueError(f"{source_name} {scene} R{reel} stack rates sum to {total}")
 
 
 def read_record(path: Path) -> dict:
@@ -69,7 +270,7 @@ def simulator_combo_counts(rows: list[tuple]) -> tuple[dict[str, int], dict[str,
 def value_counts(rows: list[tuple]) -> tuple[dict[int, int], dict[int, int]]:
     bg, fg = defaultdict(int), defaultdict(int)
     for value, bg_count, fg_count in rows:
-        if int(value) <= 1000:
+        if int(value) <= 2500:
             bg[int(value)] += int(bg_count)
             fg[int(value)] += int(fg_count)
     return dict(bg), dict(fg)
@@ -79,12 +280,27 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--record", type=Path, default=DEFAULT_RECORD)
     parser.add_argument("--competitor", type=Path, default=DEFAULT_COMPETITOR)
+    parser.add_argument("--responses", type=Path, default=DEFAULT_RESPONSES)
+    parser.add_argument("--stack-metrics", type=Path, default=DEFAULT_STACK_METRICS)
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
 
     record = read_record(args.record.resolve())
     h = record["base"]
     competitor = json.loads(args.competitor.read_text(encoding="utf-8"))["analysis"]
+    config = load_config(args.config.resolve())
+    competitor_reels = competitor_reel_distributions(args.responses.resolve())
+    h027_reels = h027_reel_distributions(config)
+    stack_analyzer = load_module("h027_stack_report", STACK_ANALYZER_PATH)
+    stack_metrics = stack_analyzer.analyze(args.config.resolve(), args.responses.resolve())
+    validate_distribution_inputs(competitor_reels, h027_reels, stack_metrics)
+    args.stack_metrics.write_text(
+        json.dumps(stack_metrics, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    symbol_distribution = render_symbol_distribution(competitor_reels, h027_reels)
+    stack_distribution = render_stack_distribution(stack_metrics)
     c = competitor["basic"]
     fg_spins = round(float(h["avg_fg_spins"]) * int(h["fg_trigger_count"]))
     h_cycle = 1 / float(h["fg_trigger_rate"])
@@ -117,9 +333,11 @@ H027 數值為本次 {int(h['total_rounds']):,} 局模擬樣本，不是理論�
     core = "### 核心指標比較\n\n" + table(
         ["類別", "指標", "競品樣本", "H027 現在版本", "差異"], core_rows
     ) + (
-        "\n\nH027 的 BG RTP、BG Hit Rate 與 FG 週期已接近競品方向；"
-        "主要差距集中在 FG Hit Rate、FG RTP 與 FG 平均得分。"
-        "目前仍未校正正式 RTP，以上為輪帶排列調整後的副作用紀錄。"
+        f"\n\nH027 的 BG Hit Rate 與競品相差 {pp(h['hit_rate_bg'] - c['hit_rate_bg'])}，"
+        f"FG Hit Rate 相差 {pp(h['hit_rate_fg'] - c['hit_rate_fg'])}；"
+        f"FG 平均觸發週期則比競品慢 {h_cycle - c['fg_cycle']:.2f} 局。"
+        f"目前 Total RTP 高出 {pp(h['rtp_total'] - c['rtp_total'])}，"
+        "主要數學差距仍是 BG／FG RTP 與 FG 平均得分；正式 RTP 尚未校正。"
     )
 
     symbol_order = ["M1", "M2", "M3", "M4", "A", "K", "Q", "J", "TE"]
@@ -190,7 +408,7 @@ H027 BG Combo 1 與競品的差異為 {pp(hbg.get('1', 0) / h_bg_den - cbg.get('
     h_fg_balls = round(float(h["avg_multiplier_balls_fg"]) * fg_spins)
     balls = f"""## 倍數球出現率
 
-採 Spin-level 口徑：該次 BG／FG Spin 的初始盤面或任一次掉落中，至少出現 1 顆倍數球，該 Spin 計數 1 次。同一顆球跨 Cascade 留盤不重複計數。H027 目前 C3 自然出現率為 0，因此下表 H027 來源全為 C2。
+採 Spin-level 口徑：該次 BG／FG Spin 的初始盤面或任一次掉落中，至少出現 1 顆倍數球，該 Spin 計數 1 次。同一顆球跨 Cascade 留盤不重複計數。H027 輪帶先產生倍數球候選，再依初始盤面球數對應的 `weight_use_super_multiplier` 決定為一般 C2 或 C3 / Super；同一 Spin 的掉落球沿用該次初始球數欄位。
 
 {table(
     ['Scene', '競品 Spin 數', '競品有球 Spin', '競品出現率', 'H027 Spin 數', 'H027 有球 Spin', 'H027 出現率', '差異'],
@@ -216,6 +434,10 @@ H027 BG 倍數球出現率差異為 {pp(h['multiplier_ball_rate_bg'] - cballs['b
     values = sorted(set(c_bg_values) | set(c_fg_values) | set(h_bg_values) | set(h_fg_values))
     c_bg_total, c_fg_total = sum(c_bg_values.values()), sum(c_fg_values.values())
     h_bg_total, h_fg_total = sum(h_bg_values.values()), sum(h_fg_values.values())
+    c_bg_high = sum(count for value, count in c_bg_values.items() if value >= 10) / c_bg_total
+    c_fg_high = sum(count for value, count in c_fg_values.items() if value >= 10) / c_fg_total
+    h_bg_high = sum(count for value, count in h_bg_values.items() if value >= 10) / h_bg_total
+    h_fg_high = sum(count for value, count in h_fg_values.items() if value >= 10) / h_fg_total
     value_rows = []
     for value in values:
         cb, hb = c_bg_values.get(value, 0) / c_bg_total, h_bg_values.get(value, 0) / h_bg_total
@@ -223,11 +445,13 @@ H027 BG 倍數球出現率差異為 {pp(h['multiplier_ball_rate_bg'] - cballs['b
         value_rows.append([f"{value}×", pct(cb), pct(hb), pp(hb - cb), pct(cf), pct(hf), pp(hf - cf)])
     multiplier = f"""## 倍數球上的倍率分布
 
-口徑為各倍率球數 ÷ 該 Scene 全部倍數球數。H027 倍率權重依競品觀測球數寫入；表內差異為模擬抽樣波動。競品倍率池包含 1000×，但本批競品與 H027 樣本都沒有抽到；2500× 不是競品倍率球池成員，因此不列入。
+口徑為各倍率球數 ÷ 該 Scene 全部倍數球數，採 Spin 結束時的最終顯示倍率。H027 的 C2 一般倍率池只含 2～8×；所有 10× 以上初始倍率均由 `weight_super_multiplier` 產生，且 C3 每次得獎消除後會升一級。Super 初始權重已反向補償升級效果，因此比較的是升級後分布，而不是直接把競品最終分布原樣抄入初始權重。
 
 {table(['倍率', '競品 BG', 'H027 BG', 'BG 差異', '競品 FG', 'H027 FG', 'FG 差異'], value_rows)}
 
-倍率分布仍與競品權重一致；後續若要控制得分，應調整賠率或 FG 累積倍數機制，而不是改動已對齊的倍率權重。"""
+10× 以上大倍數球占全部倍數球：競品 BG {pct(c_bg_high)}、H027 BG {pct(h_bg_high)}（{pp(h_bg_high - c_bg_high)}）；競品 FG {pct(c_fg_high)}、H027 FG {pct(h_fg_high)}（{pp(h_fg_high - c_fg_high)}）。
+
+BG 樣本用來校正 Super pool 的主要形狀；競品 FG 的 10× 以上球數很少，FG 高倍細項僅作觀察，不宜逐格追樣本雜訊。2500× 不是競品直接抽取倍率，但 H027 的 C3 可由較低倍率逐級升至 2500×，因此仍列入最終顯示分布。"""
 
     text = args.report.read_text(encoding="utf-8")
     toc_entry = "- [得分符號 Hit Rate](#得分符號-hit-rate)\n"
@@ -235,6 +459,8 @@ H027 BG 倍數球出現率差異為 {pp(h['multiplier_ball_rate_bg'] - cballs['b
         text = text.replace("- [消除率](#消除率)\n", toc_entry + "- [消除率](#消除率)\n")
     text = replace_between(text, "### 比較基準", "### 核心指標比較", basis)
     text = replace_between(text, "### 核心指標比較", "## 符號分布", core)
+    text = replace_between(text, "## 符號分布", "## 初始盤面堆疊分布", symbol_distribution)
+    text = replace_between(text, "## 初始盤面堆疊分布", "## 得分符號 Hit Rate", stack_distribution)
     if "## 得分符號 Hit Rate" in text:
         text = replace_between(text, "## 得分符號 Hit Rate", "## 消除率", symbol_hit)
     else:
@@ -243,6 +469,15 @@ H027 BG 倍數球出現率差異為 {pp(h['multiplier_ball_rate_bg'] - cballs['b
     text = replace_between(text, "## 倍數球出現率", "## 倍數球上的倍率分布", balls)
     text = replace_between(text, "## 倍數球上的倍率分布", None, multiplier)
     args.report.write_text(text.rstrip() + "\n", encoding="utf-8")
+    written = args.report.read_text(encoding="utf-8")
+    required_headings = (
+        "## Overview", "## 符號分布", "## 初始盤面堆疊分布",
+        "## 得分符號 Hit Rate", "## 消除率", "## 倍數球出現率",
+        "## 倍數球上的倍率分布",
+    )
+    for heading in required_headings:
+        if written.count(heading) != 1:
+            raise ValueError(f"Report heading must appear exactly once: {heading}")
     print(f"Updated: {args.report.resolve()}")
 
 

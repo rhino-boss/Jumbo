@@ -23,10 +23,11 @@ from pathlib import Path
 
 import numpy as np
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "Source"))
 import model_sync
 
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / "config_92A.js"
 DEFAULT_INPUT = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"
@@ -258,12 +259,13 @@ def build_candidate(
         profile = result["parameter"][profile_name]
         ensure_table_parameter(profile["c2"], BG_NAMES[0], BG_NAMES[1])
         ensure_table_parameter(profile["c3"], BG_NAMES[0], BG_NAMES[1])
-        use_c3 = profile["use_c3"]
-        if BG_NAMES[1] not in use_c3["table_names"]:
-            insert_at = use_c3["table_names"].index(BG_NAMES[0]) + 1
-            use_c3["table_names"].insert(insert_at, BG_NAMES[1])
-            use_c3["weights"].insert(insert_at, use_c3["weights"][insert_at - 1])
-        use_c3["weights_by_reel"][BG_NAMES[1]] = list(use_c3["weights_by_reel"][BG_NAMES[0]])
+        use_super = profile["use_super_multiplier"]
+        if BG_NAMES[1] not in use_super["table_names"]:
+            insert_at = use_super["table_names"].index(BG_NAMES[0]) + 1
+            use_super["table_names"].insert(insert_at, BG_NAMES[1])
+        use_super["weights_by_initial_ball_count"][BG_NAMES[1]] = list(
+            use_super["weights_by_initial_ball_count"][BG_NAMES[0]]
+        )
         if profile_name == "normal":
             profile["base_reel_names"] = list(BG_NAMES)
             profile["base_reel_weights"] = [1, 1]

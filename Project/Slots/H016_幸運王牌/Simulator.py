@@ -98,18 +98,20 @@ def _xlsx_number(value: Any, label: str) -> float:
     return float(value)
 
 
-def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[str, Any]:
+def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int], reel_source=None, drop_label_source=None) -> dict[str, Any]:
+    reel_source = reel_source or ws
+    drop_label_source = drop_label_source or ws
     reels: list[list[int]] = [[] for _ in range(5)]
     weights: list[list[float]] = [[] for _ in range(5)]
-    for row_number, row_values in enumerate(ws.iter_rows(min_row=4, max_row=403, max_col=27, values_only=True), start=4):
+    for row_number in range(4, 404):
         for reel in range(5):
-            symbol_name = row_values[10 + reel]
+            symbol_name = reel_source.cell(row_number, 11 + reel).value
             if symbol_name in (None, ""):
                 continue
             if symbol_name not in name_to_id:
                 raise ValueError(f"{ws.title} R{reel + 1} row {row_number}: unknown symbol {symbol_name!r}")
             reels[reel].append(name_to_id[str(symbol_name)])
-            weights[reel].append(_xlsx_number(row_values[22 + reel], f"{ws.title} R{reel + 1} weight row {row_number}"))
+            weights[reel].append(_xlsx_number(ws.cell(row_number, 23 + reel).value, f"{ws.title} R{reel + 1} weight row {row_number}"))
     if any(not reel for reel in reels):
         raise ValueError(f"{ws.title}: five non-empty reels are required")
     if any(sum(reel_weights) <= 0 for reel_weights in weights):
@@ -118,7 +120,10 @@ def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[
     drop_values: list[list[int]] = [[] for _ in range(5)]
     drop_weights: list[list[float]] = [[] for _ in range(5)]
     for row_number in range(4, 23):
-        symbol_name = ws.cell(row_number, 32).value
+        # Variant AF labels are linked Excel array formulas.  Use the matching
+        # scene's canonical label cells while keeping every variant's own
+        # AF:AK numeric Symbol Drop Weight values.
+        symbol_name = drop_label_source.cell(row_number, 32).value
         if symbol_name in (None, ""):
             continue
         if symbol_name not in name_to_id:
@@ -149,7 +154,9 @@ def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int]) -> dict[
 
 
 def _load_xlsx_config(path: Path) -> dict[str, Any]:
-    workbook = load_workbook(path, read_only=True, data_only=False)
+    # Normal mode is materially faster for repeatedly reading the six 200-stop
+    # physical reel tables by coordinate.
+    workbook = load_workbook(path, read_only=False, data_only=False)
     required_sheets = {"Overview", "Parameter", "BG_Symbol", "FG_Symbol"}
     missing = required_sheets.difference(workbook.sheetnames)
     if missing:
@@ -179,21 +186,33 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
 
     bg_multipliers = [1, 2, 3, 5]
     fg_multipliers = [2, 4, 6, 10]
-    bg_table = _xlsx_table(workbook["BG_Symbol"], name_to_id, bg_multipliers)
-    fg_table = _xlsx_table(workbook["FG_Symbol"], name_to_id, fg_multipliers)
-    # Parameter selects BG_Symbol/FG_Symbol at weight 1.  Aliases keep the
-    # existing engine paths usable without touching the zero-weight sheets.
+    bg_names = ["BG_Symbol", "BG_Symbol (2)", "BG_Symbol (3)"]
+    fg_names = ["FG_Symbol", "FG_Symbol (2)", "FG_Symbol (3)"]
+    missing_variants = set(bg_names + fg_names).difference(workbook.sheetnames)
+    if missing_variants:
+        raise ValueError(f"{path.name}: missing sheets {sorted(missing_variants)}")
+    bg_tables = [
+        _xlsx_table(workbook[name], name_to_id, bg_multipliers, drop_label_source=workbook["BG_Symbol"])
+        for name in bg_names
+    ]
+    fg_tables = [
+        _xlsx_table(workbook[name], name_to_id, fg_multipliers, drop_label_source=workbook["FG_Symbol"])
+        for name in fg_names
+    ]
     tables = {
-        "bg_high": bg_table,
-        "bg_low": bg_table,
-        "buy": bg_table,
-        "fg_high_a": fg_table,
-        "fg_high_k": fg_table,
-        "fg_high_q": fg_table,
-        "fg_high_j": fg_table,
-        "fg_low": fg_table,
-        "super": fg_table,
+        "bg_1": bg_tables[0], "bg_2": bg_tables[1], "bg_3": bg_tables[2],
+        "fg_1": fg_tables[0], "fg_2": fg_tables[1], "fg_3": fg_tables[2],
+        "bg_high": bg_tables[0], "bg_low": bg_tables[1], "buy": bg_tables[2],
+        "fg_high_a": fg_tables[0], "fg_high_k": fg_tables[1],
+        "fg_high_q": fg_tables[2], "fg_high_j": fg_tables[0],
+        "fg_low": fg_tables[0], "super": fg_tables[1],
     }
+
+    def table_selection(rows: range, prefix: str) -> list[dict[str, Any]]:
+        result = [{"table": f"{prefix}_{index}", "weight": _xlsx_number(parameter.cell(row, 3).value, f"Parameter!C{row}")} for index, row in enumerate(rows, start=1)]
+        if sum(float(item["weight"]) for item in result) <= 0:
+            raise ValueError(f"Parameter {prefix} table selection must have positive total weight")
+        return result
 
     return {
         "game_id": "H016",
@@ -206,6 +225,11 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
         "symbol_names": symbol_names,
         "pays": pays,
         "tables": tables,
+        "table_selection": {
+            "base": table_selection(range(4, 7), "bg"),
+            "free": table_selection(range(11, 14), "fg"),
+            "retrigger": table_selection(range(18, 21), "fg"),
+        },
         "free_game_mix": {
             "choices": [{"high": int(_xlsx_number(overview["B21"].value, "Overview!B21")), "low": 0, "weight": 1}],
             "high_variant_weights": [1, 0, 0, 0],
@@ -351,6 +375,8 @@ class SpinResult:
     initial_gold_count: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
+    symbol_length_hits: Counter = field(default_factory=Counter)
+    symbol_length_pay: Counter = field(default_factory=Counter)
     initial_symbols: Counter = field(default_factory=Counter)
     drop_symbols: Counter = field(default_factory=Counter)
     initial_board: list[list[int]] = field(default_factory=list)
@@ -384,6 +410,10 @@ class RoundResult:
     combo_fg: Counter = field(default_factory=Counter)
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
+    bg_symbol_length_hits: Counter = field(default_factory=Counter)
+    bg_symbol_length_pay: Counter = field(default_factory=Counter)
+    fg_symbol_length_hits: Counter = field(default_factory=Counter)
+    fg_symbol_length_pay: Counter = field(default_factory=Counter)
     bg_initial_symbols: Counter = field(default_factory=Counter)
     bg_drop_symbols: Counter = field(default_factory=Counter)
     fg_initial_symbols: Counter = field(default_factory=Counter)
@@ -425,7 +455,7 @@ class LuckyAce:
         table = self.tables[table_name]
         return [table.reels[reel].window(self.rng, 4) for reel in range(5)]
 
-    def evaluate(self, board: list[list[int]]) -> tuple[float, set[tuple[int, int]], list[tuple[int, int, float]]]:
+    def evaluate(self, board: list[list[int]]) -> tuple[float, set[tuple[int, int]], list[tuple[int, int, int, float]]]:
         total, hits, details = 0.0, set(), []
         for target in SCORE_SYMBOLS:
             counts, positions = [], []
@@ -445,7 +475,7 @@ class LuckyAce:
             total += raw_pay
             for group in positions:
                 hits.update(group)
-            details.append((target, ways, raw_pay))
+            details.append((target, length, ways, raw_pay))
         return total, hits, details
 
     def add_w2(self, board: list[list[int]], table: Table, gold: list[tuple[int, int]]) -> int:
@@ -455,12 +485,14 @@ class LuckyAce:
         if count <= 0:
             return 0
         source = self.rng.choice(gold)
-        board[source[0]][source[1]] = W2
         candidates = [(reel, row) for reel in range(1, 5) for row, symbol in enumerate(board[reel]) if symbol not in (WW, W2, C1)]
+        if len(candidates) < count:
+            return 0
+        board[source[0]][source[1]] = W2
         self.rng.shuffle(candidates)
         for reel, row in candidates[:count]:
             board[reel][row] = W2
-        return min(count, len(candidates))
+        return count
 
     def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
         table = self.tables[table_name]
@@ -471,14 +503,16 @@ class LuckyAce:
         result.m1_present = any(canonical(symbol) == 3 for symbols in board for symbol in symbols)
         result.initial_gold_count = sum(GOLD_MIN <= symbol <= GOLD_MAX for symbols in board for symbol in symbols)
         pending_gold: list[tuple[int, int]] = []
-        bg_w2_used = False
+        w2_used = False
         while True:
-            if pending_gold and (free_game or not bg_w2_used):
+            # 101003 behavior: BG locks after the first successful Random Wild
+            # event; FG evaluates every cascade that converted new gold symbols.
+            if pending_gold and (free_game or not w2_used):
                 made = self.add_w2(board, table, pending_gold)
                 if made:
                     result.w2_events += 1
                     result.w2_counts[made] += 1
-                    bg_w2_used = True
+                    w2_used = True
             pending_gold = []
             raw_pay, hit_positions, details = self.evaluate(board)
             if raw_pay <= 0:
@@ -487,9 +521,11 @@ class LuckyAce:
             result.pay += raw_pay * multiplier * BASE_BET * BET_MULTI
             result.max_multiplier = max(result.max_multiplier, multiplier)
             result.cascades += 1
-            for symbol, ways, symbol_raw_pay in details:
+            for symbol, length, ways, symbol_raw_pay in details:
                 result.symbol_hits[symbol] += ways
                 result.symbol_pay[symbol] += symbol_raw_pay * multiplier * BASE_BET * BET_MULTI
+                result.symbol_length_hits[(symbol, length)] += 1
+                result.symbol_length_pay[(symbol, length)] += symbol_raw_pay * multiplier * BASE_BET * BET_MULTI
             for reel, row in hit_positions:
                 symbol = board[reel][row]
                 if GOLD_MIN <= symbol <= GOLD_MAX:
@@ -535,6 +571,11 @@ class LuckyAce:
         raise RuntimeError(f"BG card range retry limit exceeded: ({card['min']}, {card['max']}]")
 
     def free_queue(self) -> list[str]:
+        selections = self.config.get("table_selection", {}).get("free")
+        if selections:
+            values = [str(item["table"]) for item in selections]
+            weights = [float(item["weight"]) for item in selections]
+            return [str(weighted_pick(self.rng, values, weights)) for _ in range(int(self.config["free_spins"]))]
         mix = self.config["free_game_mix"]
         choices = mix.get("choices") or mix.get("groups", {}).get("E")
         if not choices:
@@ -555,7 +596,7 @@ class LuckyAce:
             remaining -= 1
             played += 1
             surface = queue.pop(0) if queue else "low"
-            table_name = "super" if super_mode else self.high_table() if surface == "high" else "fg_low"
+            table_name = "super" if super_mode else surface if surface in self.tables else self.high_table() if surface == "high" else "fg_low"
             spin = self.spin(table_name, free_game=True)
             result.pay_fg += spin.pay
             result.fg_spins += 1
@@ -572,13 +613,21 @@ class LuckyAce:
             result.combo_fg[min(spin.cascades, 5)] += 1
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
+            result.fg_symbol_length_hits.update(spin.symbol_length_hits)
+            result.fg_symbol_length_pay.update(spin.symbol_length_pay)
             result.fg_initial_symbols.update(spin.initial_symbols)
             result.fg_drop_symbols.update(spin.drop_symbols)
             if spin.scatter_count >= 3 and played + remaining < int(self.config["free_spin_cap"]):
                 add = min(int(self.config["retrigger_spins"]), int(self.config["free_spin_cap"]) - played - remaining)
                 remaining += add
                 result.retriggers += int(add > 0)
-                queue.extend(["high"] + ["low"] * max(0, add - 1))
+                selections = self.config.get("table_selection", {}).get("retrigger")
+                if selections:
+                    values = [str(item["table"]) for item in selections]
+                    weights = [float(item["weight"]) for item in selections]
+                    queue.extend(str(weighted_pick(self.rng, values, weights)) for _ in range(add))
+                else:
+                    queue.extend(["high"] + ["low"] * max(0, add - 1))
         return result
 
     def card_feature(self, section: str, super_mode: bool = False) -> RoundResult:
@@ -617,6 +666,10 @@ class LuckyAce:
         target.combo_fg.update(source.combo_fg)
         target.symbol_hits.update(source.symbol_hits)
         target.symbol_pay.update(source.symbol_pay)
+        target.bg_symbol_length_hits.update(source.bg_symbol_length_hits)
+        target.bg_symbol_length_pay.update(source.bg_symbol_length_pay)
+        target.fg_symbol_length_hits.update(source.fg_symbol_length_hits)
+        target.fg_symbol_length_pay.update(source.fg_symbol_length_pay)
         target.bg_initial_symbols.update(source.bg_initial_symbols)
         target.bg_drop_symbols.update(source.bg_drop_symbols)
         target.fg_initial_symbols.update(source.fg_initial_symbols)
@@ -629,8 +682,15 @@ class LuckyAce:
         result = RoundResult()
         if self.card_enabled:
             spin = self.card_spin(self.pick_card("base_game"))
+            table_name = "card"
+            selections = None
         else:
-            spin = self.spin("bg_high")
+            selections = self.config.get("table_selection", {}).get("base")
+            if selections:
+                table_name = str(weighted_pick(self.rng, [str(item["table"]) for item in selections], [float(item["weight"]) for item in selections]))
+            else:
+                table_name = "bg_high"
+            spin = self.spin(table_name)
         result.pay_bg = spin.pay
         result.cascades_bg = spin.cascades
         result.max_multiplier = spin.max_multiplier
@@ -644,9 +704,11 @@ class LuckyAce:
         result.bg_gold_symbols = spin.initial_gold_count
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
+        result.bg_symbol_length_hits.update(spin.symbol_length_hits)
+        result.bg_symbol_length_pay.update(spin.symbol_length_pay)
         result.bg_initial_symbols.update(spin.initial_symbols)
         result.bg_drop_symbols.update(spin.drop_symbols)
-        if spin.scatter_count >= 3:
+        if spin.scatter_count >= 3 and (not selections or table_name == "bg_3"):
             feature = self.card_feature("free_game") if self.card_enabled else self.free_session()
             self.merge(result, feature)
         return result
@@ -692,6 +754,10 @@ def _empty_stats() -> dict[str, Any]:
         "buckets": Counter(),
         "symbol_hits": Counter(),
         "symbol_pay": Counter(),
+        "bg_symbol_length_hits": Counter(),
+        "bg_symbol_length_pay": Counter(),
+        "fg_symbol_length_hits": Counter(),
+        "fg_symbol_length_pay": Counter(),
         "bg_initial_symbols": Counter(),
         "bg_drop_symbols": Counter(),
         "fg_initial_symbols": Counter(),
@@ -740,6 +806,10 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         stats["buckets"][label] += 1
         stats["symbol_hits"].update(result.symbol_hits)
         stats["symbol_pay"].update(result.symbol_pay)
+        stats["bg_symbol_length_hits"].update(result.bg_symbol_length_hits)
+        stats["bg_symbol_length_pay"].update(result.bg_symbol_length_pay)
+        stats["fg_symbol_length_hits"].update(result.fg_symbol_length_hits)
+        stats["fg_symbol_length_pay"].update(result.fg_symbol_length_pay)
         stats["bg_initial_symbols"].update(result.bg_initial_symbols)
         stats["bg_drop_symbols"].update(result.bg_drop_symbols)
         stats["fg_initial_symbols"].update(result.fg_initial_symbols)
@@ -754,6 +824,10 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
         "buckets",
         "symbol_hits",
         "symbol_pay",
+        "bg_symbol_length_hits",
+        "bg_symbol_length_pay",
+        "fg_symbol_length_hits",
+        "fg_symbol_length_pay",
         "bg_initial_symbols",
         "bg_drop_symbols",
         "fg_initial_symbols",
@@ -843,6 +917,12 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("w2_events", s["w2_events"]),
         ("w2_bg_event_rate", s["bg_w2_events"] / rounds),
         ("w2_fg_event_rate", s["fg_w2_events"] / max(1, s["fg_spins"])),
+        ("w2_bg_count_2", s["bg_w2_counts"][2]),
+        ("w2_bg_count_3", s["bg_w2_counts"][3]),
+        ("w2_bg_count_4", s["bg_w2_counts"][4]),
+        ("w2_fg_count_2", s["fg_w2_counts"][2]),
+        ("w2_fg_count_3", s["fg_w2_counts"][3]),
+        ("w2_fg_count_4", s["fg_w2_counts"][4]),
         ("m1_bg_spin_rate", s["bg_m1_spins"] / rounds),
         ("m1_fg_spin_rate", s["fg_m1_spins"] / max(1, s["fg_spins"])),
         ("bg_gold_spin_rate", s["bg_gold_spins"] / rounds),
@@ -911,6 +991,18 @@ def output_report(result: dict[str, Any]) -> Path:
     base_df = pd.DataFrame(summary_rows(result), columns=["field", "value"])
     symbols = SCORE_SYMBOLS
     hits_df = pd.DataFrame({"symbol": [SYMBOL_STR[symbol] for symbol in symbols], "hits": [s["symbol_hits"][symbol] for symbol in symbols], "pay": [s["symbol_pay"][symbol] for symbol in symbols]})
+    symbol_length_df = pd.DataFrame([
+        {
+            "scene": scene,
+            "symbol": SYMBOL_STR[symbol],
+            "length": length,
+            "hits": s[f"{scene.lower()}_symbol_length_hits"][(symbol, length)],
+            "pay": s[f"{scene.lower()}_symbol_length_pay"][(symbol, length)],
+        }
+        for scene in ("BG", "FG")
+        for symbol in symbols
+        for length in (3, 4, 5)
+    ])
     combo_df = pd.DataFrame({"combo": ["0", "1", "2", "3", "4", "5+"], "BG": [s["combo_bg"][i] for i in range(6)], "FG": [s["combo_fg"][i] for i in range(6)]})
     bucket_df = pd.DataFrame({"bucket": ["0", "(0,1)", "[1,10)", "[10,100)", "100+"], "count": [s["buckets"][key] for key in ["0", "(0,1)", "[1,10)", "[10,100)", "100+"]]})
     record_df = pd.DataFrame({"field": list(s.keys()), "value": [dict(v) if isinstance(v, Counter) else v for v in s.values()]})
@@ -923,6 +1015,7 @@ def output_report(result: dict[str, Any]) -> Path:
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
         base_df.to_excel(writer, sheet_name="Base Info", index=False)
         hits_df.to_excel(writer, sheet_name="Hits", index=False)
+        symbol_length_df.to_excel(writer, sheet_name="Symbol Length", index=False)
         combo_df.to_excel(writer, sheet_name="Eliminate", index=False)
         bucket_df.to_excel(writer, sheet_name="Multiplier Line", index=False)
         record_df.to_excel(writer, sheet_name="Record Data", index=False)

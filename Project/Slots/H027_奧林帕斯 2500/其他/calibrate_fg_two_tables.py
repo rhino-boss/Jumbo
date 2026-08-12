@@ -19,6 +19,8 @@ from pathlib import Path
 
 import numpy as np
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "Source"))
 import model_sync
 from calibrate_bg_two_tables import (
     SPECIAL_CODES,
@@ -29,7 +31,6 @@ from calibrate_bg_two_tables import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / "config_92A.js"
 DEFAULT_INPUT = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"
@@ -182,12 +183,13 @@ def build_candidate(
         profile = result["parameter"][profile_name]
         ensure_table_parameter(profile["c2"], FG_NAMES[0], FG_NAMES[1])
         ensure_table_parameter(profile["c3"], FG_NAMES[0], FG_NAMES[1])
-        use_c3 = profile["use_c3"]
-        if FG_NAMES[1] not in use_c3["table_names"]:
-            insert_at = use_c3["table_names"].index(FG_NAMES[0]) + 1
-            use_c3["table_names"].insert(insert_at, FG_NAMES[1])
-            use_c3["weights"].insert(insert_at, use_c3["weights"][insert_at - 1])
-        use_c3["weights_by_reel"][FG_NAMES[1]] = list(use_c3["weights_by_reel"][FG_NAMES[0]])
+        use_super = profile["use_super_multiplier"]
+        if FG_NAMES[1] not in use_super["table_names"]:
+            insert_at = use_super["table_names"].index(FG_NAMES[0]) + 1
+            use_super["table_names"].insert(insert_at, FG_NAMES[1])
+        use_super["weights_by_initial_ball_count"][FG_NAMES[1]] = list(
+            use_super["weights_by_initial_ball_count"][FG_NAMES[0]]
+        )
         profile["free_table"] = {
             "names": list(FG_NAMES),
             "initial": list(INITIAL_COUNTS),

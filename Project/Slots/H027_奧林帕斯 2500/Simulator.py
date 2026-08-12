@@ -238,14 +238,17 @@ MAX_FREE_TABLES = max(len(PARAMETER[name]["free_table"]["names"]) for name in PR
 MULTIPLIER_LEVELS = np.asarray(CFG["multiplier_levels"], dtype=np.int64)
 MULTIPLIER_LEVEL_COUNT = len(MULTIPLIER_LEVELS)
 CFG_MULTIPLIER_MAX = int(CFG.get("multiplier_max_value", 2500))
-INITIAL_MULTIPLIER_COUNT = max(len(PARAMETER[name]["c2"]["multipliers"]) for name in PROFILE_NAMES)
+INITIAL_MULTIPLIER_COUNT = max(
+    len(PARAMETER["super_multiplier"]["multipliers"]),
+    max(len(PARAMETER[name]["c2"]["multipliers"]) for name in PROFILE_NAMES),
+)
 BASE_REEL_WEIGHT_CUM = np.zeros((PROFILE_COUNT, MAX_BASE_TABLES), dtype=np.int64)
 BASE_REEL_TABLE_IDS = np.full((PROFILE_COUNT, MAX_BASE_TABLES), -1, dtype=np.int64)
 FREE_INITIAL_COUNTS = np.zeros((PROFILE_COUNT, MAX_FREE_TABLES), dtype=np.int64)
 FREE_RETRIGGER_COUNTS = np.zeros((PROFILE_COUNT, MAX_FREE_TABLES), dtype=np.int64)
 FREE_TABLE_IDS = np.full((PROFILE_COUNT, MAX_FREE_TABLES), -1, dtype=np.int64)
-USE_C3_WEIGHT = np.zeros((PROFILE_COUNT, TABLE_COUNT, REEL_NUM), dtype=np.int64)
-USE_C3_DENOMINATOR = np.full(PROFILE_COUNT, 10000, dtype=np.int64)
+USE_SUPER_WEIGHT = np.zeros((PROFILE_COUNT, TABLE_COUNT, 6), dtype=np.int64)
+USE_SUPER_DENOMINATOR = np.full(PROFILE_COUNT, 10000, dtype=np.int64)
 C2_MULTIPLIERS = np.zeros((PROFILE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
 C3_MULTIPLIERS = np.zeros((PROFILE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
 C2_WEIGHT_CUM = np.zeros((PROFILE_COUNT, TABLE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
@@ -262,24 +265,26 @@ for profile_index, profile_name in enumerate(PROFILE_NAMES):
     FREE_RETRIGGER_COUNTS[profile_index, : len(free_table["retrigger"])] = np.asarray(free_table["retrigger"], dtype=np.int64)
     for index, name in enumerate(free_table["names"]):
         FREE_TABLE_IDS[profile_index, index] = TABLE_BY_NAME[name]
-    USE_C3_DENOMINATOR[profile_index] = int(profile["use_c3"].get("denominator", 10000))
-    for name, weight in zip(profile["use_c3"]["table_names"], profile["use_c3"]["weights"]):
-        reel_weights = profile["use_c3"].get("weights_by_reel", {}).get(name, [weight] * REEL_NUM)
-        USE_C3_WEIGHT[profile_index, TABLE_BY_NAME[name], : len(reel_weights)] = np.asarray(reel_weights, dtype=np.int64)
-    for target, block in ((C2_MULTIPLIERS, profile["c2"]), (C3_MULTIPLIERS, profile["c3"])):
-        target[profile_index, : len(block["multipliers"])] = np.asarray(block["multipliers"], dtype=np.int64)
+    use_super = profile["use_super_multiplier"]
+    USE_SUPER_DENOMINATOR[profile_index] = int(use_super.get("denominator", 10000))
+    for name in use_super["table_names"]:
+        weights = use_super["weights_by_initial_ball_count"][name]
+        USE_SUPER_WEIGHT[profile_index, TABLE_BY_NAME[name], : len(weights)] = np.asarray(weights, dtype=np.int64)
+    C2_MULTIPLIERS[profile_index, : len(profile["c2"]["multipliers"])] = np.asarray(profile["c2"]["multipliers"], dtype=np.int64)
+    super_block = PARAMETER["super_multiplier"]
+    C3_MULTIPLIERS[profile_index, : len(super_block["multipliers"])] = np.asarray(super_block["multipliers"], dtype=np.int64)
+    super_cumulative = np.asarray(super_block["weights_cum"][super_block["table_names"][0]], dtype=np.int64)
     for table_name in profile["c2"]["table_names"]:
         table_id = TABLE_BY_NAME[table_name]
         c2_values = profile["c2"]["weights_cum"][table_name]
-        c3_values = profile["c3"]["weights_cum"][table_name]
         C2_WEIGHT_CUM[profile_index, table_id, : len(c2_values)] = np.asarray(c2_values, dtype=np.int64)
-        C3_WEIGHT_CUM[profile_index, table_id, : len(c3_values)] = np.asarray(c3_values, dtype=np.int64)
+        C3_WEIGHT_CUM[profile_index, table_id, : len(super_cumulative)] = super_cumulative
     fallback_table_id = BASE_REEL_TABLE_IDS[0, 0]
     for table_id in range(TABLE_COUNT):
         if C2_WEIGHT_CUM[profile_index, table_id].sum() == 0:
             C2_WEIGHT_CUM[profile_index, table_id] = C2_WEIGHT_CUM[profile_index, fallback_table_id]
             C3_WEIGHT_CUM[profile_index, table_id] = C3_WEIGHT_CUM[profile_index, fallback_table_id]
-            USE_C3_WEIGHT[profile_index, table_id] = USE_C3_WEIGHT[profile_index, fallback_table_id]
+            USE_SUPER_WEIGHT[profile_index, table_id] = USE_SUPER_WEIGHT[profile_index, fallback_table_id]
 
 FEATUREBUY_TABLE_ID = BASE_REEL_TABLE_IDS[FEATUREBUY_PROFILE_INDEX, 0]
 
@@ -454,11 +459,12 @@ def draw_initial_multiplier(profile_index, table_id, use_c3):
 
 
 @njit(nogil=True)
-def prepare_multiplier_symbol(symbol, profile_index, table_id, reel):
+def prepare_multiplier_symbol(symbol, profile_index, table_id, initial_ball_count):
     if symbol != C2:
         return symbol, 0
-    denominator = USE_C3_DENOMINATOR[profile_index]
-    use_c3 = 1 if denominator > 0 and np.random.randint(0, denominator) < USE_C3_WEIGHT[profile_index, table_id, reel] else 0
+    bucket = min(6, max(1, initial_ball_count)) - 1
+    denominator = USE_SUPER_DENOMINATOR[profile_index]
+    use_c3 = 1 if denominator > 0 and np.random.randint(0, denominator) < USE_SUPER_WEIGHT[profile_index, table_id, bucket] else 0
     final_symbol = C3 if use_c3 == 1 else C2
     return final_symbol, draw_initial_multiplier(profile_index, table_id, use_c3)
 
@@ -517,11 +523,18 @@ def generate_board(table_id, profile_index):
                         current_candidate += 1
         starts[reel] = start
         for visible_row in range(WINDOW_SIZE):
-            symbol = STRIPS[table_id, (start + visible_row) % length, reel]
-            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id, reel)
-            board[visible_row, reel] = symbol
-            multiplier_values[visible_row, reel] = value
-    return board, multiplier_values, starts, drop_counts
+            board[visible_row, reel] = STRIPS[table_id, (start + visible_row) % length, reel]
+    initial_ball_count = 0
+    for row in range(WINDOW_SIZE):
+        for reel in range(REEL_NUM):
+            if board[row, reel] == C2:
+                initial_ball_count += 1
+    for row in range(WINDOW_SIZE):
+        for reel in range(REEL_NUM):
+            symbol, value = prepare_multiplier_symbol(board[row, reel], profile_index, table_id, initial_ball_count)
+            board[row, reel] = symbol
+            multiplier_values[row, reel] = value
+    return board, multiplier_values, starts, drop_counts, initial_ball_count
 
 
 @njit(nogil=True)
@@ -563,7 +576,7 @@ def evaluate_clusters(board, bet_multi):
 
 
 @njit(nogil=True)
-def cascade_board(board, multiplier_values, table_id, profile_index, starts, drop_counts, winning, any_win):
+def cascade_board(board, multiplier_values, table_id, profile_index, starts, drop_counts, winning, any_win, initial_ball_count):
     if any_win == 0:
         return
     for reel in range(REEL_NUM):
@@ -595,7 +608,7 @@ def cascade_board(board, multiplier_values, table_id, profile_index, starts, dro
             while symbol == C1 and has_scatter == 1:
                 drop_counts[reel] += 1
                 symbol = SYMBOL_IDS[pick_cumulative(DROP_WEIGHT_CUM[table_id, reel])]
-            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id, reel)
+            symbol, value = prepare_multiplier_symbol(symbol, profile_index, table_id, initial_ball_count)
             if symbol == C1:
                 has_scatter = 1
             board[output_row, reel] = symbol
@@ -615,7 +628,7 @@ def count_scatter(board):
 
 @njit(nogil=True)
 def play_cluster_spin(table_id, profile_index, scene, bet_multi):
-    board, multiplier_values, starts, drop_counts = generate_board(table_id, profile_index)
+    board, multiplier_values, starts, drop_counts, initial_ball_count = generate_board(table_id, profile_index)
     total_raw_pay = 0
     total_hits = np.zeros(SYMBOL_COUNT, dtype=np.int64)
     total_bucket_hits = np.zeros((3, SYMBOL_COUNT), dtype=np.int64)
@@ -631,7 +644,7 @@ def play_cluster_spin(table_id, profile_index, scene, bet_multi):
         if any_win == 0:
             break
         cascades += 1
-        cascade_board(board, multiplier_values, table_id, profile_index, starts, drop_counts, winning, any_win)
+        cascade_board(board, multiplier_values, table_id, profile_index, starts, drop_counts, winning, any_win, initial_ball_count)
 
     multiplier_total = 0
     multiplier_count = 0
@@ -1058,12 +1071,13 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         }
     )
     multiplier_values = MULTIPLIER_LEVELS
-    valid = multiplier_values > 0
+    _, unique_indices = np.unique(multiplier_values, return_index=True)
+    valid_indices = np.sort(unique_indices[multiplier_values[unique_indices] > 0])
     c2_frame = pd.DataFrame(
         {
-            "Multiplier": multiplier_values[valid],
-            "BG_Count": values[R_C2_VALUE_BG, :MULTIPLIER_LEVEL_COUNT][valid],
-            "FG_Count": values[R_C2_VALUE_FG, :MULTIPLIER_LEVEL_COUNT][valid],
+            "Multiplier": multiplier_values[valid_indices],
+            "BG_Count": values[R_C2_VALUE_BG, :MULTIPLIER_LEVEL_COUNT][valid_indices],
+            "FG_Count": values[R_C2_VALUE_FG, :MULTIPLIER_LEVEL_COUNT][valid_indices],
         }
     )
     scatter_frame = pd.DataFrame(

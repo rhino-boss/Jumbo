@@ -83,6 +83,15 @@ def require_int(value, label):
     return number
 
 
+def validate_super_probability_curve(weights, label, denominator=10000):
+    if len(weights) != 6:
+        raise ValueError(f"{label} must contain exactly six weights for initial ball counts 1-6")
+    if any(value < 0 or value > denominator for value in weights):
+        raise ValueError(f"{label} weights must be within 0-{denominator}: {weights}")
+    if any(left >= right for left, right in zip(weights, weights[1:])):
+        raise ValueError(f"{label} must strictly increase as initial ball count increases: {weights}")
+
+
 def load_js_config(path):
     text = path.read_text(encoding="utf-8-sig")
     match = re.fullmatch(r"\s*const\s+data\s*=\s*(\{.*\})\s*;?\s*", text, re.DOTALL)
@@ -141,14 +150,16 @@ def read_parameter(sheet):
     super_weights = {"Super Ball": read_weights(sheet, 4)}
     c2_rows = {"BG_Symbol": 9, "BG_Symbol (2)": 10, "FG_Symbol": 12, "FG_Symbol (2)": 13}
     c3_rows = {"BG_Symbol": 19, "BG_Symbol (2)": 20, "FG_Symbol": 22, "FG_Symbol (2)": 23}
-    use_c3_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
+    use_super_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
     c2_weights = {name: read_weights(sheet, row) for name, row in c2_rows.items()}
     c3_weights = {name: read_weights(sheet, row) for name, row in c3_rows.items()}
-    use_c3_by_reel = {
+    use_super_by_initial_count = {
         name: [require_int(sheet.cell(row, col).value, f"Parameter!{sheet.cell(row, col).coordinate}")
                for col in range(3, 9)]
-        for name, row in use_c3_rows.items()
+        for name, row in use_super_rows.items()
     }
+    for name, weights in use_super_by_initial_count.items():
+        validate_super_probability_curve(weights, f"Parameter use Super row {name}")
     base_names, base_weights = [], []
     for row in (4, 5):
         name = sheet.cell(row, 2).value
@@ -188,10 +199,10 @@ def read_parameter(sheet):
         "base_reel_weights": base_weights,
         "base_reel_weights_cum": cumulative(base_weights),
         "free_table": {"names": free_names, "initial": initial_counts, "retrigger": retrigger_counts},
-        "use_c3": {
+        "use_super_multiplier": {
             "table_names": list(SYMBOL_SHEETS),
-            "weights": [use_c3_by_reel[name][0] for name in SYMBOL_SHEETS],
-            "weights_by_reel": use_c3_by_reel,
+            "initial_ball_counts": [1, 2, 3, 4, 5, 6],
+            "weights_by_initial_ball_count": use_super_by_initial_count,
             "denominator": 10000,
         },
         "c2": make_multiplier_table(levels, list(SYMBOL_SHEETS), c2_weights),
@@ -325,6 +336,14 @@ def validate_config(config):
             raise ValueError(
                 f"parameter.{profile_name} must use base tables {expected_bg} and FG tables {list(FG_SHEETS)}"
             )
+        use_super = profile["use_super_multiplier"]
+        denominator = int(use_super.get("denominator", 10000))
+        for name in SYMBOL_SHEETS:
+            validate_super_probability_curve(
+                use_super["weights_by_initial_ball_count"][name],
+                f"parameter.{profile_name}.use_super_multiplier.{name}",
+                denominator,
+            )
 
 
 def build_updates(config):
@@ -369,9 +388,9 @@ def build_updates(config):
 
     table_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
     for name, row in table_rows.items():
-        add_update(updates, "Parameter", f"B{row}", name, "normal.use_c3.table_names")
-        for reel, value in enumerate(normal["use_c3"]["weights_by_reel"][name], start=3):
-            add_update(updates, "Parameter", f"{column_name(reel)}{row}", value, "normal.use_c3.weights_by_reel")
+        add_update(updates, "Parameter", f"B{row}", name, "normal.use_super_multiplier.table_names")
+        for column, value in enumerate(normal["use_super_multiplier"]["weights_by_initial_ball_count"][name], start=3):
+            add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.use_super_multiplier.weights_by_initial_ball_count")
     for row in (20, 23):
         add_update(updates, "Parameter", f"B{row}", None, "unused table")
         for col in range(3, 9):

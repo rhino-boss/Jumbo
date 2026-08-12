@@ -2084,7 +2084,7 @@
 
   <script>
     const H027_CONFIG_FILES = ["config_92A.js"];
-    const H027_CONFIG_VERSION = "20260812-h0271-fg-hit-v5";
+    const H027_CONFIG_VERSION = "20260812-h0271-super-ball-v7";
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H027_ACTIVE_CONFIG = H027_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H027_CONFIG_FILES[0];
     document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}"><\/script>`);
@@ -2245,16 +2245,17 @@
     return index >= 0 ? Number(block.weights[index] || 0) : 0;
   }
 
-  function maybeUseC3(symbol, tableName, reel) {
+  function maybeUseC3(symbol, tableName, initialBallCount) {
     if (symbol !== C2) return symbol;
-    const useC3 = currentProfile().use_c3;
-    const byReel = useC3.weights_by_reel?.[tableName];
-    const weight = Array.isArray(byReel) ? Number(byReel[reel] || 0) : tableWeight(useC3, tableName);
-    return Math.random() * Number(useC3.denominator || 10000) < weight ? C3 : C2;
+    const useSuper = currentProfile().use_super_multiplier;
+    const weights = useSuper.weights_by_initial_ball_count?.[tableName] || [];
+    const bucket = Math.min(6, Math.max(1, Number(initialBallCount) || 0)) - 1;
+    const weight = Number(weights[bucket] || 0);
+    return Math.random() * Number(useSuper.denominator || 10000) < weight ? C3 : C2;
   }
 
   function drawMultiplierValue(symbol, tableName) {
-    const block = symbol === C3 ? currentProfile().c3 : currentProfile().c2;
+    const block = symbol === C3 ? Box.parameter.super_multiplier : currentProfile().c2;
     const weightKey = block.weights[tableName] ? tableName : block.table_names[0];
     const weights = block.weights[weightKey] || [];
     return block.multipliers[pickWeighted(weights)] || 0;
@@ -2337,11 +2338,16 @@
       const start = forcedStops ? forcedStops[reel] % length : pickWeighted(weights);
       starts.push(start);
       for (let row = 0; row < Box.window_size; row += 1) {
-        const symbol = strip.symbols[(start + row) % length][reel];
-        board[row][reel] = maybeUseC3(symbol, tableName, reel);
+        board[row][reel] = strip.symbols[(start + row) % length][reel];
       }
     }
-    return { tableId, board, starts, drops };
+    const initialBallCount = board.flat().filter((symbol) => symbol === C2).length;
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        board[row][reel] = maybeUseC3(board[row][reel], tableName, initialBallCount);
+      }
+    }
+    return { tableId, board, starts, drops, initialBallCount };
   }
 
   function evaluateClusters(board) {
@@ -2405,7 +2411,7 @@
             ? Box.symbol_ids[pickWeighted(dropWeights)]
             : strip.symbols[(spin.starts[reel] - spin.drops[reel] + strip.reel_lengths[reel]) % strip.reel_lengths[reel]][reel];
         }
-        symbol = maybeUseC3(symbol, tableName, reel);
+        symbol = maybeUseC3(symbol, tableName, spin.initialBallCount);
         if (symbol === C1) hasScatter = true;
         spin.board[outputRow][reel] = symbol;
         spin.multiplierValues[outputRow][reel] = symbol === C2 || symbol === C3 ? drawMultiplierValue(symbol, tableName) : 0;
