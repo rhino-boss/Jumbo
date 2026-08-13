@@ -29,8 +29,25 @@ from typing import Any
 import pandas as pd
 from openpyxl import load_workbook
 
+try:
+    import fast_simulator
+except ImportError:
+    import importlib.util
+
+    _fast_path = Path(__file__).resolve().with_name("fast_simulator.py")
+    # Keep one canonical module name. Numba persists this name inside its disk
+    # cache; a Notebook-only alias makes the next batch child unable to unpickle
+    # the compiled function environment.
+    _fast_spec = importlib.util.spec_from_file_location("fast_simulator", _fast_path)
+    if _fast_spec is None or _fast_spec.loader is None:
+        fast_simulator = None
+    else:
+        fast_simulator = importlib.util.module_from_spec(_fast_spec)
+        sys.modules[_fast_spec.name] = fast_simulator
+        _fast_spec.loader.exec_module(fast_simulator)
+
 if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(line_buffering=True)
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
 
 # ===== User Settings (H015-compatible runner) =====
 
@@ -48,6 +65,7 @@ BATCH_RUNS = [
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
+FAST_SIMULATION = True
 SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
@@ -191,21 +209,24 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
     missing_variants = set(bg_names + fg_names).difference(workbook.sheetnames)
     if missing_variants:
         raise ValueError(f"{path.name}: missing sheets {sorted(missing_variants)}")
-    bg_tables = [
-        _xlsx_table(workbook[name], name_to_id, bg_multipliers, drop_label_source=workbook["BG_Symbol"])
-        for name in bg_names
-    ]
-    fg_tables = [
-        _xlsx_table(workbook[name], name_to_id, fg_multipliers, drop_label_source=workbook["FG_Symbol"])
-        for name in fg_names
-    ]
+    bg_tables = [_xlsx_table(workbook[name], name_to_id, bg_multipliers, drop_label_source=workbook["BG_Symbol"]) for name in bg_names]
+    fg_tables = [_xlsx_table(workbook[name], name_to_id, fg_multipliers, drop_label_source=workbook["FG_Symbol"]) for name in fg_names]
     tables = {
-        "bg_1": bg_tables[0], "bg_2": bg_tables[1], "bg_3": bg_tables[2],
-        "fg_1": fg_tables[0], "fg_2": fg_tables[1], "fg_3": fg_tables[2],
-        "bg_high": bg_tables[0], "bg_low": bg_tables[1], "buy": bg_tables[2],
-        "fg_high_a": fg_tables[0], "fg_high_k": fg_tables[1],
-        "fg_high_q": fg_tables[2], "fg_high_j": fg_tables[0],
-        "fg_low": fg_tables[0], "super": fg_tables[1],
+        "bg_1": bg_tables[0],
+        "bg_2": bg_tables[1],
+        "bg_3": bg_tables[2],
+        "fg_1": fg_tables[0],
+        "fg_2": fg_tables[1],
+        "fg_3": fg_tables[2],
+        "bg_high": bg_tables[0],
+        "bg_low": bg_tables[1],
+        "buy": bg_tables[2],
+        "fg_high_a": fg_tables[0],
+        "fg_high_k": fg_tables[1],
+        "fg_high_q": fg_tables[2],
+        "fg_high_j": fg_tables[0],
+        "fg_low": fg_tables[0],
+        "super": fg_tables[1],
     }
 
     def table_selection(rows: range, prefix: str) -> list[dict[str, Any]]:
@@ -304,6 +325,7 @@ CARD_SYSTEM_ENABLED = _env_bool("H016_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
 CARD_SYSTEM_IS_NEWBIE = _env_bool("H016_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
 RUN_ALL_COMBINATIONS = _env_bool("H016_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
 OUTPUT_REPORT = _env_bool("H016_OUTPUT_REPORT", OUTPUT_REPORT)
+FAST_SIMULATION = _env_bool("H016_FAST_SIMULATION", FAST_SIMULATION)
 SHOW_CONSOLE_SUMMARY = _env_bool("H016_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
 SHOW_CONSOLE_DETAIL = _env_bool("H016_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
 RUN_SINGLE_SPIN_DEBUG = _env_bool("H016_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
@@ -862,9 +884,22 @@ def run_simulation(
     threads = max(1, min(int(threads), int(total_rounds)))
     base, extra = divmod(int(total_rounds), threads)
     chunks = [base + (1 if i < extra else 0) for i in range(threads)]
+    active = config or CFG
+    if FAST_SIMULATION and not CARD_SYSTEM_ENABLED and fast_simulator is not None:
+        packed = fast_simulator.prepare_config(active)
+        fast_simulator.warm(packed, int(bet_mode), int(bet_multi))
+        started = time.perf_counter()
+        packed_result = fast_simulator.run_prepared(
+            packed, int(total_rounds), int(bet_mode), int(bet_multi), threads
+        )
+        return {
+            "stats": fast_simulator.to_stats(packed_result),
+            "duration": time.perf_counter() - started,
+            "bet_mode": bet_mode,
+            "bet_multi": bet_multi,
+        }
     started = time.perf_counter()
     merged = _empty_stats()
-    active = config or CFG
     if threads == 1:
         _merge_stats(merged, _simulate_chunk(chunks[0], bet_mode, 46046, active))
     else:
@@ -995,18 +1030,20 @@ def output_report(result: dict[str, Any]) -> Path:
     base_df = pd.DataFrame(summary_rows(result), columns=["field", "value"])
     symbols = SCORE_SYMBOLS
     hits_df = pd.DataFrame({"symbol": [SYMBOL_STR[symbol] for symbol in symbols], "hits": [s["symbol_hits"][symbol] for symbol in symbols], "pay": [s["symbol_pay"][symbol] for symbol in symbols]})
-    symbol_length_df = pd.DataFrame([
-        {
-            "scene": scene,
-            "symbol": SYMBOL_STR[symbol],
-            "length": length,
-            "hits": s[f"{scene.lower()}_symbol_length_hits"][(symbol, length)],
-            "pay": s[f"{scene.lower()}_symbol_length_pay"][(symbol, length)],
-        }
-        for scene in ("BG", "FG")
-        for symbol in symbols
-        for length in (3, 4, 5)
-    ])
+    symbol_length_df = pd.DataFrame(
+        [
+            {
+                "scene": scene,
+                "symbol": SYMBOL_STR[symbol],
+                "length": length,
+                "hits": s[f"{scene.lower()}_symbol_length_hits"][(symbol, length)],
+                "pay": s[f"{scene.lower()}_symbol_length_pay"][(symbol, length)],
+            }
+            for scene in ("BG", "FG")
+            for symbol in symbols
+            for length in (3, 4, 5)
+        ]
+    )
     combo_df = pd.DataFrame({"combo": ["0", "1", "2", "3", "4", "5+"], "BG": [s["combo_bg"][i] for i in range(6)], "FG": [s["combo_fg"][i] for i in range(6)]})
     bucket_df = pd.DataFrame({"bucket": ["0", "(0,1)", "[1,10)", "[10,100)", "100+"], "count": [s["buckets"][key] for key in ["0", "(0,1)", "[1,10)", "[10,100)", "100+"]]})
     record_df = pd.DataFrame({"field": list(s.keys()), "value": [dict(v) if isinstance(v, Counter) else v for v in s.values()]})
@@ -1051,6 +1088,8 @@ def run_all_combinations() -> None:
     for index, combo in enumerate(BATCH_RUNS, 1):
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
+        env["PYTHONUTF8"] = "1"
+        env["PYTHONIOENCODING"] = "utf-8"
         env.update(
             {
                 "H016_CONFIG_FILE": str(combo.get("config_file", CONFIG_FILE)),
@@ -1065,7 +1104,7 @@ def run_all_combinations() -> None:
         print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {combo} ===", flush=True)
         result = subprocess.run(
             [sys.executable, str(SIMULATOR_PATH)],
-            check=True,
+            check=False,
             env=env,
             capture_output=True,
             text=True,
@@ -1076,6 +1115,13 @@ def run_all_combinations() -> None:
             print(result.stdout.rstrip(), flush=True)
         if result.stderr:
             print(result.stderr.rstrip(), file=sys.stderr, flush=True)
+        if result.returncode:
+            raise subprocess.CalledProcessError(
+                result.returncode,
+                result.args,
+                output=result.stdout,
+                stderr=result.stderr,
+            )
 
 
 def parse_args() -> argparse.Namespace:
