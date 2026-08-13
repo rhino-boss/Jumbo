@@ -217,6 +217,7 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
     return {
         "game_id": "H016",
         "parsheet_id": str(overview["B2"].value or path.stem),
+        "excel_version": str(overview["B3"].value or "1.0.0.0"),
         "name_zh": "幸運王牌",
         "rtp_label": None,
         "reel_num": 5,
@@ -559,7 +560,10 @@ class LuckyAce:
     def card_spin(self, card: dict[str, Any]) -> SpinResult:
         if card.get("type") == "free_game":
             for _ in range(CARD_RETRY_LIMIT):
-                spin = self.spin("bg_low")
+                # BG1/BG2 are hard-blocked from triggering FG in the current
+                # table-role model.  BG3 (alias `buy`) is the dedicated
+                # trigger table and is therefore the only valid card route.
+                spin = self.spin("buy")
                 if spin.scatter_count >= 3:
                     return spin
             raise RuntimeError("FG trigger card retry limit exceeded")
@@ -708,7 +712,7 @@ class LuckyAce:
         result.bg_symbol_length_pay.update(spin.symbol_length_pay)
         result.bg_initial_symbols.update(spin.initial_symbols)
         result.bg_drop_symbols.update(spin.drop_symbols)
-        if spin.scatter_count >= 3 and (not selections or table_name == "bg_3"):
+        if spin.scatter_count >= 3:
             feature = self.card_feature("free_game") if self.card_enabled else self.free_session()
             self.merge(result, feature)
         return result

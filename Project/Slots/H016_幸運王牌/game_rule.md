@@ -148,9 +148,9 @@
 
 ### 5.2 多表用途
 
-* **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`；即使最終盤面意外累積 3 顆以上 `C1`，此表亦不得觸發 FG。
-* **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`，且此表不得觸發 FG。
-* **BG_Symbol (3)**：FG 觸發表。使用固定停輪權重保證 R1～R3 各有 `C1`，FG 觸發率為 100%；進場 Spin 得分必須小於 10x，目前設定為 0x。
+* **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`。
+* **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`。
+* **BG_Symbol (3)**：FG 進場表。進場 Spin 得分必須小於 10x，目前設定為 0x。
 * **FG_Symbol**：FG 競品表。沿用 101003 的 2／3／4 顆條件分布，Random Wild 非 0 的抽中率設定為 `FG_Symbol (2)` 的 1/2。
 * **FG_Symbol (2)**：FG 大鬼能見度表。Random Wild 使用 101003 的 `0／2／3／4 = 13128／2000／500／200`；得分集中於 `M4`、`A`、`Q`、`J`。
 * **FG_Symbol (3)**：目前不使用，Table Selection Weight 為 0。

@@ -511,6 +511,10 @@ body.slot-simulator .setting-toggle {
   white-space: nowrap;
 }
 
+body.slot-simulator .setting-toggle[hidden] {
+  display: none !important;
+}
+
 body.slot-simulator .setting-toggle input[type="checkbox"] {
   box-sizing: border-box;
   width: 13px;

@@ -170,7 +170,11 @@
     const versionSelect = document.createElement("select");
     versionSelect.id = "versionSelect";
     const mathConfig = getMathConfig();
-    const version = mathConfig?.excel_version || mathConfig?.game_version || mathConfig?.version || "Current";
+    const version = window.DEMOGAME_VERSION_OVERRIDE
+      || mathConfig?.excel_version
+      || mathConfig?.game_version
+      || mathConfig?.version
+      || "Current";
     versionSelect.appendChild(new Option(String(version), String(version), true, true));
     versionLabel.appendChild(versionSelect);
 
@@ -229,14 +233,12 @@
       input.checked = saved !== "off";
     }
 
-    if (!nativeInput) {
-      const supported = cardSystemSupported();
-      input.disabled = !supported;
-      if (!supported) input.checked = false;
-      label.classList.toggle("is-unavailable", !supported);
-      label.hidden = !supported;
-      label.title = "";
-    }
+    const supported = cardSystemSupported();
+    input.disabled = !supported;
+    if (!supported) input.checked = false;
+    label.classList.toggle("is-unavailable", !supported);
+    label.hidden = !supported;
+    label.title = "";
 
     const text = label.querySelector("span") || label.appendChild(document.createElement("span"));
     text.removeAttribute("data-i18n");

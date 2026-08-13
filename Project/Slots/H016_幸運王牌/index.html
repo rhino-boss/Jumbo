@@ -2352,9 +2352,9 @@
 
 ### 5.2 多表用途
 
-* **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`；此表不得觸發 FG。
-* **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`，且此表不得觸發 FG。
-* **BG_Symbol (3)**：FG 觸發表。FG 觸發率 100%，進場 Spin 得分小於 10x，目前為 0x。
+* **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`。
+* **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`。
+* **BG_Symbol (3)**：FG 進場表。進場 Spin 得分小於 10x，目前為 0x。
 * **FG_Symbol**：FG 競品表。沿用 101003 的 2／3／4 顆條件分布，Random Wild 非 0 的抽中率設定為 `FG_Symbol (2)` 的 1/2。
 * **FG_Symbol (2)**：FG 大鬼能見度表。Random Wild 使用 101003 的 `0／2／3／4 = 13128／2000／500／200`；得分集中於 `M4`、`A`、`Q`、`J`。
 * **FG_Symbol (3)**：目前不使用，Table Selection Weight 為 0。
@@ -2651,7 +2651,7 @@
 
   const state = {
     language: initialLanguage, balance: 10000, betIndex: 0, busy: false, auto: false, debug: false,
-    fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 },
+    fg: { remaining: 0, total: 0, played: 0, win: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 },
     rounds: 0, normalRounds: 0, totalBet: 0, totalWin: 0,
     hitRounds: 0, naturalFg: 0, maxMultiplier: 1, lastWin: 0, lastSpin: null, snapshots: [], snapshotIndex: -1,
     log: [], helpMarkdown: ""
@@ -2935,6 +2935,7 @@
 
   async function animateSpin(spin) {
     state.snapshots = spin.steps; state.snapshotIndex = -1;
+    const fgWinBase = spin.scene === "FG" ? Number(state.fg.win || 0) : 0;
     const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
     renderMultiplierTrack(startIndex);
     el.carryMultiValue.textContent = "0";
@@ -2946,6 +2947,10 @@
     for (let i = 0; i < spin.steps.length; i++) {
       const step = spin.steps[i];
       showSnapshot(i, false);
+      if (spin.scene === "FG" && step.wins.length) {
+        state.lastWin = fgWinBase + step.total;
+        el.winValue.textContent = format(state.lastWin);
+      }
       await rollMultiplierTo(step.multiplier);
       await delay();
       if (step.wins.length) {
@@ -2962,8 +2967,9 @@
 
   async function playFreeSpin() {
     const forceFirstLightning = state.fg.guaranteedLightningSpin === state.fg.played + 1;
+    const fgWinBase = Number(state.fg.win || 0);
     const spin = simulateScene("FG", state.fg.mode, false, forceFirstLightning); await animateSpin(spin);
-    state.fg.remaining--; state.fg.played++; state.lastWin = spin.total; state.totalWin += spin.total;
+    state.fg.remaining--; state.fg.played++; state.fg.win = fgWinBase + spin.total; state.lastWin = state.fg.win; state.totalWin += spin.total;
     if (spin.scatter >= 3 && state.fg.played < Box.max_spin_free_game) {
       const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game - state.fg.played - state.fg.remaining);
       state.fg.remaining += award; state.fg.total += award; addLog(`${text("retrigger")} +${award}`);
@@ -2988,9 +2994,11 @@
         remaining: award,
         total: award,
         played: 0,
+        win: 0,
         mode,
         guaranteedLightningSpin: cumulativeChoice(Box.weight_cum_must_appear_1_fg || [1])
       };
+      state.lastWin = 0;
       if (mode === MODE_NORMAL) state.naturalFg++;
       addLog(`${text("triggered")} · ${spin.scatter} C1 · ${award} FG`);
     }
@@ -3168,7 +3176,7 @@
 
   function reset() {
     state.balance = 10000; state.busy = false; state.auto = false;
-    state.fg = { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 };
+    state.fg = { remaining: 0, total: 0, played: 0, win: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 };
     state.rounds = state.normalRounds = state.totalBet = state.totalWin = state.hitRounds = state.naturalFg = state.lastWin = 0;
     state.maxMultiplier = 1; state.snapshots = []; state.snapshotIndex = -1; state.log = [];
     el.liveLogBody.innerHTML = el.lineList.innerHTML = el.spinResultList.innerHTML = el.rngList.innerHTML = "";
@@ -3180,29 +3188,34 @@
     el.betMenu.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => { state.betIndex = Number(button.dataset.index); el.betMenu.classList.add("hidden"); updateStats(); }));
   }
 
-  el.spinBtn.addEventListener("click", () => play(MODE_NORMAL)); el.buyFeatureBtn.addEventListener("click", () => play(MODE_BUY)); el.autoBtn.addEventListener("click", autoLoop);
-  el.betMinusBtn.addEventListener("click", () => { state.betIndex = Math.max(0, state.betIndex - 1); updateStats(); });
-  el.betPlusBtn.addEventListener("click", () => { state.betIndex = Math.min(BET_LEVELS.length - 1, state.betIndex + 1); updateStats(); });
-  el.betBtn.addEventListener("click", () => el.betMenu.classList.toggle("hidden")); el.speedRange.addEventListener("input", () => { el.speedValue.textContent = `x${el.speedRange.value}`; });
-  el.debugModeInput.addEventListener("change", () => setDebug(el.debugModeInput.checked));
-  el.languageSelect.addEventListener("change", () => { state.language = el.languageSelect.value === "zh" ? "zh" : "en"; applyLanguage(true); });
-  el.helpBtn.addEventListener("click", () => { el.helpDialog.showModal(); loadHelp(); }); el.closeHelpBtn.addEventListener("click", () => el.helpDialog.close());
-  el.helpDialog.addEventListener("click", (event) => { if (event.target === el.helpDialog) el.helpDialog.close(); });
-  el.helpSourceFrame.addEventListener("load", () => { if (el.helpDialog.open && !state.helpMarkdown) loadHelp(); });
-  el.resetBtn.addEventListener("click", reset); el.clearLogBtn.addEventListener("click", () => { state.log = []; el.liveLogBody.innerHTML = ""; });
-  el.setRngResetBtn.addEventListener("click", () => { el.reelRngInput.value = ""; el.forceFgInput.checked = false; });
-  el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
+  // The H016 runtime below owns all controls. Keep this legacy implementation
+  // available for reference without letting one click execute two independent spins.
+  const ENABLE_LEGACY_RUNTIME_CONTROLS = false;
+  if (ENABLE_LEGACY_RUNTIME_CONTROLS) {
+    el.spinBtn.addEventListener("click", () => play(MODE_NORMAL)); el.buyFeatureBtn.addEventListener("click", () => play(MODE_BUY)); el.autoBtn.addEventListener("click", autoLoop);
+    el.betMinusBtn.addEventListener("click", () => { state.betIndex = Math.max(0, state.betIndex - 1); updateStats(); });
+    el.betPlusBtn.addEventListener("click", () => { state.betIndex = Math.min(BET_LEVELS.length - 1); updateStats(); });
+    el.betBtn.addEventListener("click", () => el.betMenu.classList.toggle("hidden")); el.speedRange.addEventListener("input", () => { el.speedValue.textContent = `x${el.speedRange.value}`; });
+    el.debugModeInput.addEventListener("change", () => setDebug(el.debugModeInput.checked));
+    el.languageSelect.addEventListener("change", () => { state.language = el.languageSelect.value === "zh" ? "zh" : "en"; applyLanguage(true); });
+    el.helpBtn.addEventListener("click", () => { el.helpDialog.showModal(); loadHelp(); }); el.closeHelpBtn.addEventListener("click", () => el.helpDialog.close());
+    el.helpDialog.addEventListener("click", (event) => { if (event.target === el.helpDialog) el.helpDialog.close(); });
+    el.helpSourceFrame.addEventListener("load", () => { if (el.helpDialog.open && !state.helpMarkdown) loadHelp(); });
+    el.resetBtn.addEventListener("click", reset); el.clearLogBtn.addEventListener("click", () => { state.log = []; el.liveLogBody.innerHTML = ""; });
+    el.setRngResetBtn.addEventListener("click", () => { el.reelRngInput.value = ""; el.forceFgInput.checked = false; });
+    el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
 
-  document.title = `${Box.english_name || "Lucky Ace"} — Demo Game`;
-  el.gameId.textContent = Box.game_id;
-  el.configSelect.value = H016_ACTIVE_CONFIG;
-  el.configSelect.disabled = false;
-  el.configSelect.addEventListener("change", () => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("config", el.configSelect.value);
-    window.location.href = url.href;
-  });
-  buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
+    document.title = `${Box.english_name || "Lucky Ace"} — Demo Game`;
+    el.gameId.textContent = Box.game_id;
+    el.configSelect.value = H016_ACTIVE_CONFIG;
+    el.configSelect.disabled = false;
+    el.configSelect.addEventListener("change", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("config", el.configSelect.value);
+      window.location.href = url.href;
+    });
+    buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
+  }
 })();
   </script>
   <script>
@@ -3234,8 +3247,8 @@
   const state = {
     balance: START_BALANCE, betIndex: 0, busy: false, auto: false, language: "zh",
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
-    maxMultiplier: 1, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
-    fg: {spins: [], index: 0, total: 0, mode: 0}
+    maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
+    fg: {spins: [], index: 0, total: 0, win: 0, mode: 0}
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -3262,11 +3275,30 @@
     }
   </style>`);
 
+  function normalizeRuntimeTable(raw) {
+    if (Array.isArray(raw.drop_values) && Array.isArray(raw.drop_weights)) return raw;
+    const dropValues = [], dropWeights = [];
+    for (let reel = 0; reel < 5; reel++) {
+      const totals = new Map();
+      const symbols = raw.reels?.[reel] || [];
+      const weights = raw.weights?.[reel] || [];
+      for (let index = 0; index < symbols.length; index++) {
+        const symbol = Number(symbols[index]);
+        const weight = Math.max(0, Number(weights[index]) || 0);
+        totals.set(symbol, (totals.get(symbol) || 0) + weight);
+      }
+      dropValues.push([...totals.keys()]);
+      dropWeights.push([...totals.values()]);
+    }
+    return {...raw, drop_values: dropValues, drop_weights: dropWeights};
+  }
+
   for (const [name, raw] of Object.entries(cfg.tables)) {
-    tables[name] = {...raw, cumulative: raw.weights.map(weights => {
+    const normalized = normalizeRuntimeTable(raw);
+    tables[name] = {...normalized, cumulative: normalized.weights.map(weights => {
       let sum = 0;
       return weights.map(weight => sum += Math.max(0, Number(weight)));
-    }), dropCumulative: raw.drop_weights.map(weights => {
+    }), dropCumulative: normalized.drop_weights.map(weights => {
       let sum = 0;
       return weights.map(weight => sum += Math.max(0, Number(weight)));
     })};
@@ -3390,7 +3422,7 @@
       const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
       const cascadePay = win.rawPay * multiplier * BASE_BET * BET_LEVELS[state.betIndex];
       pay += cascadePay;
-      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, message: `WIN ${money(cascadePay)}`, details: win.details});
+      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, cascadePay, totalPay:pay, message: `WIN ${money(cascadePay)}`, details: win.details});
       const transitionBoard = cloneBoard(board), cleared = [], converted = [];
       combo++;
       for (const key of win.hits) {
@@ -3479,7 +3511,7 @@
   function cardSpin(card) {
     if (!card) return spin("bg_high");
     if (card.type === "free_game") {
-      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("bg_low"); if (result.scatter >= 3) return result; }
+      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("buy"); if (result.scatter >= 3) return result; }
     } else {
       const table = card.table === "A" ? "bg_low" : "bg_high";
       for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin(table); if (result.scatter < 3 && cardMatches(card, result.pay)) return result; }
@@ -3495,7 +3527,7 @@
 
   window.demogameSimulateRound = () => {
     const base = cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
-    const fgTriggered = base.tableName === "bg_3" && base.scatter >= 3;
+    const fgTriggered = base.scatter >= 3;
     const feature = fgTriggered
       ? (cardSystemActive() ? cardFeature("free_game", false) : freeSession(false))
       : null;
@@ -3566,7 +3598,7 @@
       <div class="rng-row"><span>Source</span><span>${result.tableName} · weighted draw</span></div>`;
   }
 
-  async function animateSnapshots(snapshots, freeGame = false) {
+  async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
     state.snapshots = snapshots; state.snapshotIndex = -1;
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
     if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board); await wait(delay()); }
@@ -3574,6 +3606,10 @@
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
       $("messageBar").textContent = snapshot.message || "Cascade";
       if (snapshot.type === "win") {
+        if (freeGame) {
+          state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
+          $("winValue").textContent = money(state.lastWin);
+        }
         renderWinDetails(snapshot);
         renderBoard(snapshot.board, snapshot.hits); await wait(delay());
       } else if (snapshot.type === "eliminate") {
@@ -3623,7 +3659,7 @@
   }
 
   function activateFeature(feature, mode) {
-    state.fg = {spins:feature.spins, index:0, total:feature.spins.length, mode}; state.fgTriggers++;
+    state.fg = {spins:feature.spins, index:0, total:feature.spins.length, win:0, mode}; state.lastWin = 0; state.fgTriggers++;
     $("featureStatus").textContent = mode === 3 ? "Super Feature" : "Free Game Triggered"; updateStats();
   }
 
@@ -3634,18 +3670,20 @@
 
   async function playFeatureSpin() {
     const item = state.fg.spins[state.fg.index]; if (!item) return;
-    await animateSnapshots(item.snapshots, true); state.fg.index++;
-    state.lastWin = item.pay; state.totalWin += item.pay; state.balance += item.pay; state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
+    const fgWinBase = Number(state.fg.win || 0);
+    await animateSnapshots(item.snapshots, true, fgWinBase); state.fg.index++;
+    state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay; state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
-    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = {spins:[],index:0,total:0,mode:0}; }
+    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = {spins:[],index:0,total:0,win:0,mode:0}; }
   }
 
   async function play(mode = 0) {
-    if (state.busy) return; setBusy(true); state.lastWin = 0;
+    if (state.busy) return; setBusy(true);
     try {
       if (state.fg.index < state.fg.spins.length) {
         await playFeatureSpin();
       } else {
+        state.lastWin = 0;
         state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
@@ -3654,7 +3692,7 @@
         else base = buyEntry();
         await animateSnapshots(base.snapshots, false); renderRngSource(base); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
-        if ((base.tableName === "bg_3" && base.scatter >= 3) || mode !== 0 || $("forceFgInput").checked) {
+        if (base.scatter >= 3 || mode !== 0 || $("forceFgInput").checked) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
           activateFeature(cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode), mode);
         }
@@ -3743,7 +3781,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,mode:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
     $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_low")); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
   }
   function buildBetMenu() {
@@ -3762,6 +3800,10 @@
   $("configSelect").value=window.H016_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
   document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
 })();
+  </script>
+  <script>
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+  window.DEMOGAME_VERSION_OVERRIDE = "1.0.0.2";
   </script>
   <script src="../demogame_common.js?v=1"></script>
 </body>

@@ -4,9 +4,12 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
+
+from openpyxl import load_workbook
 
 
 HERE = Path(__file__).resolve().parent
@@ -34,17 +37,96 @@ def load_simulator_module():
     return module
 
 
-def frontend_config(source: Path) -> dict[str, Any]:
+def _parse_range(label: str) -> tuple[float, float] | None:
+    match = re.fullmatch(r"\(\s*(-?[0-9.]+)\s*,\s*([0-9.]+)\s*\]", label)
+    return (float(match.group(1)), float(match.group(2))) if match else None
+
+
+def load_card_system(variant: Path) -> dict[str, Any]:
+    workbook = load_workbook(variant, read_only=True, data_only=True)
+    try:
+        sheet = workbook["Multiplier_Weight"]
+        headers = {str(sheet.cell(2, column).value or "").strip(): column for column in range(2, sheet.max_column + 1)}
+        required = {
+            "Weight_NB_BG_Newbie", "Weight_NB_FG_Newbie", "Weight_NB_BG",
+            "Weight_NB_FG", "Weight_BF", "Weight_SF",
+        }
+        missing = required - set(headers)
+        if missing:
+            raise ValueError(f"{variant.name}: missing Multiplier_Weight columns {sorted(missing)}")
+
+        ranges = []
+        free_game_row = None
+        for row in range(3, sheet.max_row + 1):
+            label = str(sheet.cell(row, 1).value or "").strip()
+            parsed = _parse_range(label)
+            if parsed is not None:
+                ranges.append((row, parsed))
+            elif label.lower() == "free game":
+                free_game_row = row
+        if len(ranges) != 64 or free_game_row is None:
+            raise ValueError(f"{variant.name}: expected 64 ranges plus Free Game")
+
+        def range_cards(header: str, table: str) -> list[dict[str, Any]]:
+            column = headers[header]
+            return [
+                {
+                    "type": "range", "min": minimum, "max": maximum, "table": table,
+                    "weight": int(sheet.cell(row, column).value or 0),
+                }
+                for row, (minimum, maximum) in ranges
+            ]
+
+        def base_cards(header: str) -> list[dict[str, Any]]:
+            cards = range_cards(header, "B")
+            cards.append({
+                "type": "free_game", "table": "A",
+                "weight": int(sheet.cell(free_game_row, headers[header]).value or 0),
+            })
+            return cards
+
+        buy = range_cards("Weight_BF", "E")
+        super_cards = range_cards("Weight_SF", "G")
+        profiles = {
+            "weight_1": {
+                "base_game": base_cards("Weight_NB_BG_Newbie"),
+                "free_game": range_cards("Weight_NB_FG_Newbie", "E"),
+                "buy_feature": [dict(card) for card in buy],
+                "super_feature": [dict(card) for card in super_cards],
+            },
+            "weight_2": {
+                "base_game": base_cards("Weight_NB_BG"),
+                "free_game": range_cards("Weight_NB_FG", "E"),
+                "buy_feature": buy,
+                "super_feature": super_cards,
+            },
+        }
+        for profile in profiles.values():
+            for section, cards in profile.items():
+                if sum(card["weight"] for card in cards) != 1_000_000_000:
+                    raise ValueError(f"{variant.name}: {section} weights do not sum to 1,000,000,000")
+        return {"enabled": True, "retry_limit": 200_000, "default_profile": "weight_2", "profiles": profiles}
+    finally:
+        workbook.close()
+
+
+def frontend_config(source: Path, variant: Path | None = None) -> dict[str, Any]:
     simulator = load_simulator_module()
     config = simulator._load_xlsx_config(source)
+    config["excel_version"] = str(config.get("excel_version") or config.get("version") or "1.0.0.0")
+    config.pop("version", None)
     config["name_en"] = "Lucky Ace"
-    config["rtp_label"] = 92
+    rtp_label = int(variant.stem[-2:]) if variant is not None and variant.stem[-2:].isdigit() else 92
+    config["parsheet_id"] = f"H0161{rtp_label}"
+    config["rtp_label"] = rtp_label
     config["reel_num"] = 5
     config["window_size"] = 4
     config["max_ways"] = 1024
     config["symbol_names"] = FRONTEND_NAMES
     config["base_table_weights"] = {"high": 1, "low": 0}
-    config["card_system"] = {"enabled": False, "profiles": {}}
+    config["card_system"] = load_card_system(variant) if variant is not None else {"enabled": False, "profiles": {}}
+    if variant is not None:
+        config["source_xlsx"] = variant.name
     for table in config["tables"].values():
         normalized = []
         for reel in table["weights"]:
@@ -99,20 +181,27 @@ def validate(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Synchronize H0161.xlsx to the index frontend config")
+    parser = argparse.ArgumentParser(description="Convert H0161.xlsx to the index frontend JS config or pure JSON")
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--variant", type=Path, help="H016192/H016194 multiplier workbook")
     args = parser.parse_args()
     source = args.source.resolve()
     output = args.output.resolve()
-    config = frontend_config(source)
+    variant = args.variant.resolve() if args.variant else HERE / f"H0161{output.stem[-2:]}.xlsx"
+    if not variant.is_file():
+        variant = None
+    config = frontend_config(source, variant)
     result = validate(config)
-    payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
-    output.write_text(
-        "// Generated from Source/H0161.xlsx by Source/xlsx_to_config.py.\n"
-        f"window.H016_CONFIG={payload};\n",
-        encoding="utf-8",
-    )
+    if output.suffix.lower() == ".json":
+        output.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    else:
+        payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
+        output.write_text(
+            "// Generated from Source/H0161.xlsx by Source/xlsx_to_config.py.\n"
+            f"window.H016_CONFIG={payload};\n",
+            encoding="utf-8",
+        )
     result.update({"source": str(source), "output": str(output)})
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
