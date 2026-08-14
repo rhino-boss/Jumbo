@@ -15,7 +15,7 @@ from openpyxl import load_workbook
 H016_DIR = Path(__file__).resolve().parents[2]
 OUTPUT = H016_DIR / "其他" / "競品參考數值比較.md"
 RECORD_DIR = H016_DIR / "Record"
-MODEL_CONFIG = H016_DIR / "config_92.js"
+MODEL_CONFIG = H016_DIR / "config.js"
 SIMULATOR = H016_DIR / "Simulator.py"
 SOURCE_APPLIER = H016_DIR / "其他" / "工具" / "apply_super_ace_claude.py"
 SOURCE_REELS = H016_DIR / "其他" / "參考資料" / "Super Ace_claude.txt"
@@ -268,6 +268,7 @@ def load_simulator_module():
     environment = {
         "H016_BASE_DIR": str(H016_DIR),
         "H016_CONFIG_FILE": MODEL_CONFIG.name,
+        "H016_CONFIG_RTP_FILE": MODEL_CONFIG.name,
         "H016_RUN_ALL_COMBINATIONS": "false",
         "H016_CARD_SYSTEM_ENABLED": "false",
         "H016_OUTPUT_REPORT": "false",
@@ -318,7 +319,7 @@ def observed_ratios(config: dict[str, Any], counter: Counter) -> tuple[dict[str,
 
 
 def simulation_data(config: dict[str, Any]) -> dict[str, Any]:
-    """Run config_92.js in memory and expose the same shape as record_data()."""
+    """Run config.js in memory and expose the same shape as record_data()."""
     simulator = load_simulator_module()
     threads = max(1, int(os.environ.get("H016_REPORT_THREADS", simulator.THREADS)))
     result = simulator.run_simulation(
@@ -364,10 +365,10 @@ def simulation_data(config: dict[str, Any]) -> dict[str, Any]:
 def h016_data(config: dict[str, Any]) -> tuple[dict[str, Any], str, str | None]:
     # This report is the config-only calibration view.  A historical Record may
     # have been produced from Source/H0161.xlsx or from an older config, so it is
-    # not a trustworthy cache for the current config_92.js.
+    # not a trustworthy cache for the current config.js.
     return (
         simulation_data(config),
-        "`config_92.js` + `Simulator.py`（記憶體 100,000 場；未產生 Record xlsx）",
+        "`config.js` + `Simulator.py`（記憶體 100,000 場；未產生 Record xlsx）",
         None,
     )
 
@@ -1039,9 +1040,9 @@ def main() -> None:
 | 樣本 | {competitor['rounds']:,} 個 BG Round、{competitor['fg_spins']:,} 個 FG Spin | {int(hs['total_rounds']):,} 個 BG Round、{h016['fg_spins']:,} 個 FG Spin |
 | Card System | 競品實際遊玩資料 | 關閉 |
 | Bet Mode | 一般投注 | Normal Bet，Bet Multi 1 |
-| 數值設定 | 實機 JSONL 盤面與消除紀錄 | `config_92.js`；本報告不讀取 `Source/H0161.xlsx` |
+| 數值設定 | 實機 JSONL 盤面與消除紀錄 | `config.js`；本報告不讀取 `Source/H0161.xlsx` |
 
-H016 的輪帶排列、停輪權重、補牌權重、Random Wild 與 Table Selection 全部直接讀取 `config_92.js`。本產生器固定以同一份 config 在記憶體中模擬 100,000 場，不讀取歷史 Record，也不建立或修改任何 xlsx。
+H016 的輪帶排列、停輪權重、補牌權重、Random Wild 與 Table Selection 全部直接讀取 `config.js`。本產生器固定以同一份 config 在記憶體中模擬 100,000 場，不讀取歷史 Record，也不建立或修改任何 xlsx。
 
 ### Super Ace_claude 套用驗證
 
@@ -1055,7 +1056,7 @@ H016 的輪帶排列、停輪權重、補牌權重、Random Wild 與 Table Selec
 
 ### Config-only 約束驗證
 
-權重整數檢查涵蓋 `config_92.js` 內所有名稱含 `weight` 的設定。Stop max/min 只比較正權重；`0` 代表停用 stop，因此明確排除。RTP 以本次 10 萬場實測和 Super Ace 各 Scene RTP 的 2 倍上限比較。
+權重整數檢查涵蓋 `config.js` 內所有名稱含 `weight` 的設定。Stop max/min 只比較正權重；`0` 代表停用 stop，因此明確排除。RTP 以本次 10 萬場實測和 Super Ace 各 Scene RTP 的 2 倍上限比較。
 
 {constraint_table}
 
@@ -1063,11 +1064,11 @@ H016 的輪帶排列、停輪權重、補牌權重、Random Wild 與 Table Selec
 
 {chr(10).join(core_lines)}
 
-以上差異直接取自 `config_92.js` 的本次 10 萬場結果；調整 config 後必須重新執行本產生器，才可把新結果與 Super Ace JSONL 使用相同口徑比較。
+以上差異直接取自 `config.js` 的本次 10 萬場結果；調整 config 後必須重新執行本產生器，才可把新結果與 Super Ace JSONL 使用相同口徑比較。
 
 ## 賠率
 
-表內數字為相對投注額倍數；比較結果由 `config_92.js` 與 Super Ace 參考 pay table 動態計算，不預設一定相同。
+表內數字為相對投注額倍數；比較結果由 `config.js` 與 Super Ace 參考 pay table 動態計算，不預設一定相同。
 
 {chr(10).join(pay_lines)}
 
@@ -1085,7 +1086,7 @@ RTP 分母為該次模擬或競品樣本的總投注額；Hit Rate 分母為該 
 
 ### 套用方法
 
-1. 初始輪帶直接讀取 `config_92.js` 中本次所選 `tables.*.reels`，停輪權重讀取同表的 `weights`。
+1. 初始輪帶直接讀取 `config.js` 中本次所選 `tables.*.reels`，停輪權重讀取同表的 `weights`。
 2. 消除後補牌直接讀取本次所選 table 的 `drop_values`／`drop_weights`。
 3. `table_selection.base/free/retrigger` 控制每次 BG、FG 與 Retrigger 實際選用哪張 config table。
 4. 初始盤面依輪帶連續取 4 格；Cascade 在被消除的原位置依 Symbol Drop Weight 獨立補牌，不做重力掉落。
@@ -1098,7 +1099,7 @@ RTP 分母為該次模擬或競品樣本的總投注額；Hit Rate 分母為該 
 
 {distribution_section('FG 掉落 R1-R5', competitor_ratios(competitor, 'FG', 'drop'), h016['ratios']['FG_drop'])}
 
-以上 H016 初始與掉落符號分布皆為 `config_92.js` 最新 10 萬場模擬實測；掉落分母為各輪實際補牌顆數。
+以上 H016 初始與掉落符號分布皆為 `config.js` 最新 10 萬場模擬實測；掉落分母為各輪實際補牌顆數。
 
 ## 消除率
 
@@ -1110,7 +1111,7 @@ RTP 分母為該次模擬或競品樣本的總投注額；Hit Rate 分母為該 
 
 ## 金框比例
 
-競品金框是盤面生成後的獨立疊加層；H016 設定值直接由 `config_92.js` 的金框 symbol ID（11～18）、停輪權重、補牌權重及 Table Selection 計算。BG 設定欄是 `table_selection.base` 混合；FG 設定欄是 `table_selection.free` 混合。初始設定值已依每個 stop 的 4 格可見視窗計算，不用單一 bg1／fg1 代表多表；10 萬場欄位是同一份 config 的實測。
+競品金框是盤面生成後的獨立疊加層；H016 設定值直接由 `config.js` 的金框 symbol ID（11～18）、停輪權重、補牌權重及 Table Selection 計算。BG 設定欄是 `table_selection.base` 混合；FG 設定欄是 `table_selection.free` 混合。初始設定值已依每個 stop 的 4 格可見視窗計算，不用單一 bg1／fg1 代表多表；10 萬場欄位是同一份 config 的實測。
 
 ### BG
 

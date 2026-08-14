@@ -2182,12 +2182,13 @@
           <input id="debugModeInput" type="checkbox">
           Debug Mode
         </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
         <label class="config-control" for="configSelect">
           Config
-          <select id="configSelect">
-            <option value="config_92.js">H016192 · v1.13</option>
-            <option value="config_94.js">H016194 · v1.13</option>
-          </select>
+          <select id="configSelect"></select>
         </label>
         <label class="config-control" for="languageSelect">
           <span data-i18n="language">Language</span>
@@ -2568,13 +2569,78 @@
 4. 若後續正式 H016 數值檔與本草稿不同，以正式 H016 PARsheet 為準並升版更新。
   </script>
 
+  <script src="./Versions/version_manifest.js"></script>
   <script>
-    const H016_CONFIG_FILES = ["config_92.js", "config_94.js"];
-    const H016_CURRENT_VERSION = "1.13";
-    const configFromQuery = new URLSearchParams(window.location.search).get("config");
-    const H016_ACTIVE_CONFIG = H016_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H016_CONFIG_FILES[0];
+    const H016_VERSION_MANIFEST = window.H016_VERSION_MANIFEST || {
+      current: "2.0.0.0",
+      versions: [{
+        version: "2.0.0.0",
+        math_key: "2.0",
+        configs: {
+          base: "Versions/2.0/config.js",
+          92: "Versions/2.0/config_92A.js",
+          94: "Versions/2.0/config_94A.js"
+        }
+      }]
+    };
+    const H016_QUERY = new URLSearchParams(window.location.search);
+    let requestedVersion = H016_QUERY.get("version");
+    if (!requestedVersion) {
+      try { requestedVersion = localStorage.getItem("h016MathVersion"); } catch (_) {}
+    }
+    const H016_VERSION_ENTRY = H016_VERSION_MANIFEST.versions.find(item => item.version === requestedVersion || item.math_key === requestedVersion)
+      || H016_VERSION_MANIFEST.versions.find(item => item.version === H016_VERSION_MANIFEST.current)
+      || H016_VERSION_MANIFEST.versions[0];
+    if (!H016_VERSION_ENTRY) throw new Error("H016 version manifest has no usable version.");
+    const H016_CURRENT_VERSION = H016_VERSION_ENTRY.version;
+    const H016_AVAILABLE_CONFIGS = Object.keys(H016_VERSION_ENTRY.configs || {}).filter(code => code !== "base");
+    const configFromQuery = H016_QUERY.get("config") || (() => {
+      try { return localStorage.getItem("h016ConfigCode"); } catch (_) { return ""; }
+    })();
+    const configMatch = String(configFromQuery || "").match(/(?:config_)?(92|94)(?:A)?(?:\.js)?$/i);
+    const H016_ACTIVE_CONFIG = configMatch && H016_AVAILABLE_CONFIGS.includes(configMatch[1])
+      ? configMatch[1]
+      : H016_AVAILABLE_CONFIGS[0];
+    const H016_BASE_CONFIG_FILE = H016_VERSION_ENTRY.configs.base;
+    const H016_RTP_CONFIG_FILE = H016_VERSION_ENTRY.configs[H016_ACTIVE_CONFIG];
+    if (!H016_BASE_CONFIG_FILE || !H016_RTP_CONFIG_FILE) throw new Error("H016 version entry is missing a compatible Config pair.");
+    try {
+      localStorage.setItem("h016MathVersion", H016_CURRENT_VERSION);
+      localStorage.setItem("h016ConfigCode", H016_ACTIVE_CONFIG);
+    } catch (_) {}
+    window.H016_VERSION_ENTRY = H016_VERSION_ENTRY;
     window.H016_ACTIVE_CONFIG = H016_ACTIVE_CONFIG;
-    document.write(`<script src="./${H016_ACTIVE_CONFIG}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
+    window.H016_ACTIVE_CONFIG_PATH = H016_RTP_CONFIG_FILE;
+    document.write(`<script src="./${H016_BASE_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
+    document.write('<script>window.H016_BASE_CONFIG=window.H016_CONFIG;<\/script>');
+    document.write(`<script src="./${H016_RTP_CONFIG_FILE}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
+    document.write(`<script>
+      (() => {
+        const base = window.H016_BASE_CONFIG;
+        const rtp = window.H016_CONFIG;
+        if (!base || !rtp) throw new Error("H016 base/RTP config was not loaded.");
+        const major = value => String(value || "").split(".", 1)[0];
+        if (base.game_id !== rtp.game_id || major(base.excel_version) !== major(rtp.excel_version)) {
+          throw new Error("H016 base/RTP config version mismatch.");
+        }
+        const immutable = [
+          "reel_num", "window_size", "pays", "tables", "table_selection",
+          "free_game_mix", "free_spins", "retrigger_spins", "free_spin_cap",
+          "buy_price", "super_buy_price"
+        ];
+        for (const key of immutable) {
+          if (key in base && key in rtp && JSON.stringify(base[key]) !== JSON.stringify(rtp[key])) {
+            throw new Error("H016 RTP config must not override base field: " + key);
+          }
+        }
+        const merged = JSON.parse(JSON.stringify(base));
+        merged.card_system = JSON.parse(JSON.stringify(rtp.card_system || {enabled:false,profiles:{}}));
+        for (const key of ["parsheet_id", "excel_version", "rtp_label", "runtime_version", "source_multiplier_xlsx"]) {
+          if (key in rtp) merged[key] = JSON.parse(JSON.stringify(rtp[key]));
+        }
+        window.H016_CONFIG = merged;
+      })();
+    <\/script>`);
   </script>
   <script>
 (() => {
@@ -3518,9 +3584,14 @@
     return ratio - Number(card.max);
   }
   function cardSpin(card) {
-    if (!card) return spin("bg_high");
+    if (!card) return naturalBaseSpin();
     if (card.type === "free_game") {
-      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("buy"); if (result.scatter >= 3) return result; }
+      let last = null;
+      for (let retry = 0; retry < MAX_RETRY; retry++) {
+        last = naturalBaseSpin();
+        if (last.scatter >= 3) return last;
+      }
+      if (last) return last;
     } else {
       const table = card.table === "A" ? "bg_low" : "bg_high";
       let nearest = null, nearestDistance = Infinity;
@@ -3816,6 +3887,38 @@
     $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
     $("betMenu").querySelectorAll("button").forEach(button => button.onclick = () => {state.betIndex=Number(button.dataset.index);$("betMenu").classList.add("hidden");updateStats();});
   }
+  function openVersion(version, configCode) {
+    const url = new URL(location.href);
+    url.searchParams.set("version", version);
+    url.searchParams.set("config", configCode);
+    try {
+      localStorage.setItem("h016MathVersion", version);
+      localStorage.setItem("h016ConfigCode", configCode);
+    } catch (_) {}
+    location.href = url.href;
+  }
+  function renderVersionControls() {
+    const manifest = window.H016_VERSION_MANIFEST || {versions:[]};
+    const entry = window.H016_VERSION_ENTRY;
+    const versionSelect = $("versionSelect");
+    const configSelect = $("configSelect");
+    versionSelect.innerHTML = "";
+    for (const item of manifest.versions || []) {
+      const option = document.createElement("option");
+      option.value = item.version;
+      option.textContent = item.math_key || String(item.version).split(".").slice(0, 2).join(".");
+      versionSelect.appendChild(option);
+    }
+    versionSelect.value = entry?.version || "";
+    configSelect.innerHTML = "";
+    for (const code of Object.keys(entry?.configs || {}).filter(code => code !== "base")) {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = `H0161${code}A · v${entry.version}`;
+      configSelect.appendChild(option);
+    }
+    configSelect.value = window.H016_ACTIVE_CONFIG;
+  }
 
   $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2); $("buySuperFeatureBtn").onclick = () => play(3);
   $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=state.auto?"Stop":"Auto";if(state.auto&&!state.busy)play(0);};
@@ -3825,15 +3928,16 @@
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
-  $("configSelect").value=window.H016_ACTIVE_CONFIG; $("configSelect").onchange=()=>{const url=new URL(location.href);url.searchParams.set("config",$("configSelect").value);location.href=url.href;};
-  document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
+  $("versionSelect").onchange=()=>{const version=$("versionSelect").value;const entry=(window.H016_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version);const current=window.H016_ACTIVE_CONFIG;const code=entry?.configs?.[current]?current:Object.keys(entry?.configs||{}).find(key=>key!=="base");openVersion(version,code);};
+  $("configSelect").onchange=()=>openVersion(window.H016_VERSION_ENTRY.version,$("configSelect").value);
+  document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
 })();
   </script>
   <script>
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = true;
-  window.DEMOGAME_VERSION_OVERRIDE = window.H016_CONFIG?.runtime_version || H016_CURRENT_VERSION;
+  window.DEMOGAME_VERSION_OVERRIDE = window.H016_CONFIG?.excel_version || H016_CURRENT_VERSION;
   </script>
-  <script src="../demogame_common.js?v=1"></script>
+  <script src="../demogame_common.js?v=2"></script>
 </body>
 
 </html>

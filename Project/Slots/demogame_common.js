@@ -164,22 +164,28 @@
     }
     combinedLabel.appendChild(combined);
 
-    const versionLabel = document.createElement("label");
-    versionLabel.className = "config-control demogame-version-control";
-    versionLabel.append("Version ");
-    const versionSelect = document.createElement("select");
-    versionSelect.id = "versionSelect";
-    const mathConfig = getMathConfig();
-    const version = window.DEMOGAME_VERSION_OVERRIDE
-      || mathConfig?.excel_version
-      || mathConfig?.game_version
-      || mathConfig?.version
-      || "Current";
-    versionSelect.appendChild(new Option(String(version), String(version), true, true));
-    versionLabel.appendChild(versionSelect);
+    let versionSelect = document.getElementById("versionSelect");
+    let versionLabel = versionSelect?.closest("label");
+    if (versionSelect && versionLabel) {
+      versionLabel.classList.add("config-control", "demogame-version-control");
+    } else {
+      versionLabel = document.createElement("label");
+      versionLabel.className = "config-control demogame-version-control";
+      versionLabel.append("Version ");
+      versionSelect = document.createElement("select");
+      versionSelect.id = "versionSelect";
+      const mathConfig = getMathConfig();
+      const version = window.DEMOGAME_VERSION_OVERRIDE
+        || mathConfig?.excel_version
+        || mathConfig?.game_version
+        || mathConfig?.version
+        || "Current";
+      versionSelect.appendChild(new Option(String(version), String(version), true, true));
+      versionLabel.appendChild(versionSelect);
+    }
 
     const anchor = configSelect?.closest("label") || profileSelect?.closest("label") || body.firstChild;
-    body.insertBefore(versionLabel, anchor);
+    if (versionLabel !== anchor) body.insertBefore(versionLabel, anchor);
     versionLabel.insertAdjacentElement("afterend", combinedLabel);
 
     combined.addEventListener("change", () => {

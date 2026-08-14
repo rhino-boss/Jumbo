@@ -1,8 +1,8 @@
 """H016 幸運王牌 simulator.
 
 The runner, environment settings, batch workflow and Excel report layout follow
-H015.  The game engine follows 101003 and reads H0161.xlsx directly (legacy JS
-configs remain supported):
+the shared slot development specification.  Runtime math is loaded from Config;
+direct H0161.xlsx loading remains available only as a legacy compatibility path:
 5x4 Ways, cascades, golden-symbol retention, WW/W2 conversion and fixed combo
 multipliers.
 """
@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import copy
 import json
 import math
 import os
@@ -30,7 +31,7 @@ from openpyxl import load_workbook
 
 try:
     import fast_simulator
-    if getattr(fast_simulator, "FAST_SIMULATOR_API_VERSION", 1) < 2:
+    if getattr(fast_simulator, "FAST_SIMULATOR_API_VERSION", 1) < 5:
         # `%run` / Notebook cells keep imported modules in sys.modules.  Reload
         # an older card-off-only core after Simulator.py has been updated.
         import importlib
@@ -55,9 +56,10 @@ except ImportError:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
 
-# ===== User Settings (H015-compatible runner) =====
+# ===== User Settings (slot_development_specification.md) =====
 
-CONFIG_FILE = "Source/H0161.xlsx"
+CONFIG_FILE = "config.js"
+CONFIG_RTP_FILE = "config_92A.js"
 TOTAL_ROUNDS = 100_000
 BET_MULTI = 1
 BET_MODE = 0  # 0=Normal Bet, 2=Buy Feature, 3=Buy Super Feature
@@ -66,8 +68,8 @@ CARD_SYSTEM_IS_NEWBIE = False
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # 老手卡片
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # 老手卡片
     # SCR
     # SCR
     # SCR
@@ -81,7 +83,8 @@ SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 DEBUG_ROUNDS = 1
-CARD_RETRY_LIMIT = 20_000
+CARD_RETRY_LIMIT = 10_000
+RNG_SEED = 46_046
 
 BASE_BET = 100.0
 MODE_NORMALBET = 0
@@ -175,10 +178,11 @@ def _env_bool(name: str, default: bool) -> bool:
 
 
 CONFIG_FILE = os.environ.get("H016_CONFIG_FILE", CONFIG_FILE)
+CONFIG_RTP_FILE = os.environ.get("H016_CONFIG_RTP_FILE", CONFIG_RTP_FILE)
 # A no-argument batch run will immediately use its first combo.  Select that
-# config before base-dir discovery so startup does not parse H0161.xlsx twice
-# only to replace it with config_92.js a few lines later.  Explicit positional
-# runs keep the historical xlsx default.
+# Config before base-dir discovery so startup immediately loads the same
+# natural/RTP pair that the selected batch will use. Explicit positional runs
+# use the CONFIG_FILE / CONFIG_RTP_FILE defaults above.
 _explicit_cli_run = len(sys.argv) > 1 and str(sys.argv[1]).lstrip("+-").isdigit()
 if (
     "H016_CONFIG_FILE" not in os.environ
@@ -188,6 +192,7 @@ if (
     and os.environ.get("H016_BATCH_CHILD") != "1"
 ):
     CONFIG_FILE = str(BATCH_RUNS[0].get("config_file", CONFIG_FILE))
+    CONFIG_RTP_FILE = str(BATCH_RUNS[0].get("config_rtp_file", CONFIG_RTP_FILE))
 
 
 def _load_config(path: Path) -> dict[str, Any]:
@@ -198,6 +203,71 @@ def _load_config(path: Path) -> dict[str, Any]:
     if start < 0 or end <= start:
         raise ValueError(f"Config does not contain a JSON object: {path}")
     return json.loads(raw[start : end + 1])
+
+
+def _version_major(value: Any) -> str:
+    return str(value or "").strip().split(".", 1)[0]
+
+
+def validate_config_pair(
+    natural: dict[str, Any],
+    rtp: dict[str, Any],
+    natural_name: str,
+    rtp_name: str,
+) -> None:
+    """Validate the natural-probability and RTP/Card configs before a batch."""
+    natural_game_id = str(natural.get("game_id", ""))
+    rtp_game_id = str(rtp.get("game_id", ""))
+    if natural_game_id != rtp_game_id:
+        raise ValueError(
+            f"Config game_id mismatch: {natural_name}={natural_game_id!r}, "
+            f"{rtp_name}={rtp_game_id!r}"
+        )
+    if natural_game_id != "H016":
+        raise ValueError(f"Unsupported game_id {natural_game_id!r}; expected 'H016'")
+
+    natural_version = str(natural.get("excel_version", ""))
+    rtp_version = str(rtp.get("excel_version", ""))
+    if _version_major(natural_version) != _version_major(rtp_version):
+        raise ValueError(
+            f"Config version mismatch: {natural_name}={natural_version!r}, "
+            f"{rtp_name}={rtp_version!r}"
+        )
+
+    # RTP/Card config is not allowed to silently replace the natural board.
+    natural_symbol_ids = set(map(str, natural.get("symbol_names", {})))
+    rtp_symbol_ids = set(map(str, rtp.get("symbol_names", {})))
+    if natural_symbol_ids and rtp_symbol_ids and natural_symbol_ids != rtp_symbol_ids:
+        raise ValueError(
+            f"Incompatible symbol IDs between {natural_name} and {rtp_name}"
+        )
+
+    immutable_keys = (
+        "reel_num", "window_size", "pays", "tables",
+        "table_selection", "free_game_mix", "free_spins",
+        "retrigger_spins", "free_spin_cap", "buy_price", "super_buy_price",
+    )
+    for key in immutable_keys:
+        if key in natural and key in rtp and natural[key] != rtp[key]:
+            raise ValueError(
+                f"Incompatible Config field {key!r}: {rtp_name} must not "
+                f"change the natural-probability data from {natural_name}"
+            )
+
+
+def compose_runtime_config(
+    natural: dict[str, Any], rtp: dict[str, Any]
+) -> dict[str, Any]:
+    """Use natural game data plus only RTP/Card metadata from the RTP config."""
+    merged = copy.deepcopy(natural)
+    merged["card_system"] = copy.deepcopy(rtp.get("card_system") or {"enabled": False, "profiles": {}})
+    for key in (
+        "parsheet_id", "excel_version", "rtp_label", "runtime_version",
+        "source_multiplier_xlsx",
+    ):
+        if key in rtp:
+            merged[key] = copy.deepcopy(rtp[key])
+    return merged
 
 
 def _xlsx_number(value: Any, label: str) -> float:
@@ -444,12 +514,21 @@ SHOW_CONSOLE_SUMMARY = _env_bool("H016_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMA
 SHOW_CONSOLE_DETAIL = _env_bool("H016_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
 RUN_SINGLE_SPIN_DEBUG = _env_bool("H016_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 THREADS = max(1, int(os.environ.get("H016_THREADS", THREADS)))
-CFG = _load_runtime_config(BASE_DIR / CONFIG_FILE)
+RNG_SEED = int(os.environ.get("H016_RNG_SEED", RNG_SEED))
+CFG_NATURAL = _load_runtime_config(BASE_DIR / CONFIG_FILE)
+CFG_RTP = (
+    CFG_NATURAL
+    if Path(CONFIG_RTP_FILE) == Path(CONFIG_FILE)
+    else _load_config(BASE_DIR / CONFIG_RTP_FILE)
+)
+validate_config_pair(CFG_NATURAL, CFG_RTP, CONFIG_FILE, CONFIG_RTP_FILE)
+CFG = compose_runtime_config(CFG_NATURAL, CFG_RTP)
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CFG.get("card_system", {}).get("enabled"))
 CARD_RETRY_LIMIT = max(1, int(CFG.get("card_system", {}).get("retry_limit", CARD_RETRY_LIMIT)))
 GAME_ID = str(CFG.get("game_id", "H016"))
 PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
 GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
+MATH_VERSION = str(CFG_RTP.get("excel_version", CFG.get("excel_version", "")))
 SYMBOL_STR = {int(k): v for k, v in CFG["symbol_names"].items()}
 
 
@@ -469,6 +548,20 @@ def weighted_pick(rng: random.Random, values: list[Any], weights: list[float]) -
         if target < 0:
             return value
     return values[-1]
+
+
+def weighted_pick_index(rng: random.Random, weights: list[float]) -> int:
+    if not weights:
+        raise ValueError("No weights available for weighted selection")
+    total = sum(max(0.0, float(weight)) for weight in weights)
+    if total <= 0:
+        return 0
+    target = rng.random() * total
+    for index, weight in enumerate(weights):
+        target -= max(0.0, float(weight))
+        if target < 0:
+            return index
+    return len(weights) - 1
 
 
 @dataclass
@@ -545,6 +638,7 @@ class RoundResult:
     fg_gold_spins: int = 0
     bg_gold_symbols: int = 0
     fg_gold_symbols: int = 0
+    special_symbol_cnt: int = 0
     combo_fg: Counter = field(default_factory=Counter)
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
@@ -569,6 +663,12 @@ class LuckyAce:
         self.card_enabled = card_enabled and bool(config.get("card_system", {}).get("enabled"))
         self.profile = "weight_1" if newbie else "weight_2"
         self.tables = {name: self._prepare(raw) for name, raw in config["tables"].items()}
+        self.retry_total = 0
+        self.retry_limit_exceeded = 0
+        self.retry_limit_bg_range = 0
+        self.retry_limit_bg_freegame = 0
+        self.retry_limit_fg = 0
+        self.card_draws: Counter = Counter()
 
     @staticmethod
     def _prepare(raw: dict[str, Any]) -> Table:
@@ -687,29 +787,52 @@ class LuckyAce:
     def pick_card(self, section: str, profile: str | None = None) -> dict[str, Any]:
         profile = profile or self.profile
         cards = self.config["card_system"]["profiles"][profile][section]
-        return dict(weighted_pick(self.rng, cards, [float(card["weight"]) for card in cards]))
+        card_index = weighted_pick_index(
+            self.rng, [float(card["weight"]) for card in cards]
+        )
+        self.card_draws[(profile, section, card_index)] += 1
+        return dict(cards[card_index])
 
     @staticmethod
     def card_matches(card: dict[str, Any], pay: float) -> bool:
         ratio = pay / (BASE_BET * BET_MULTI)
         return float(card["min"]) < ratio <= float(card["max"])
 
+    def natural_base_spin(self) -> SpinResult:
+        """Draw one complete Normal Bet BG from the natural table selection."""
+        selections = self.config.get("table_selection", {}).get("base")
+        if selections:
+            table_name = str(weighted_pick(
+                self.rng,
+                [str(item["table"]) for item in selections],
+                [float(item["weight"]) for item in selections],
+            ))
+        else:
+            table_name = "bg_high"
+        return self.spin(table_name)
+
     def card_spin(self, card: dict[str, Any]) -> SpinResult:
         if card.get("type") == "free_game":
             for _ in range(CARD_RETRY_LIMIT):
-                # BG1/BG2 are hard-blocked from triggering FG in the current
-                # table-role model.  BG3 (alias `buy`) is the dedicated
-                # trigger table and is therefore the only valid card route.
-                spin = self.spin("buy")
+                # A Normal Bet FG card must keep rerolling the complete natural
+                # BG selection.  BF_Symbol is reserved for paid Buy entry and
+                # would otherwise discard the triggering round's BG award.
+                spin = self.natural_base_spin()
                 if spin.scatter_count >= 3:
                     return spin
-            raise RuntimeError("FG trigger card retry limit exceeded")
+                self.retry_total += 1
+            self.retry_limit_exceeded += 1
+            self.retry_limit_bg_freegame += 1
+            return spin
         table_name = "bg_low" if card.get("table") == "A" else "bg_high"
         for _ in range(CARD_RETRY_LIMIT):
             spin = self.spin(table_name)
             if spin.scatter_count < 3 and self.card_matches(card, spin.pay):
                 return spin
-        raise RuntimeError(f"BG card range retry limit exceeded: ({card['min']}, {card['max']}]")
+            self.retry_total += 1
+        self.retry_limit_exceeded += 1
+        self.retry_limit_bg_range += 1
+        return spin
 
     def free_queue(self) -> list[str]:
         selections = self.config.get("table_selection", {}).get("free")
@@ -751,6 +874,7 @@ class LuckyAce:
             result.fg_hit_spins += int(spin.pay > 0)
             result.fg_gold_spins += int(spin.initial_gold_count > 0)
             result.fg_gold_symbols += spin.initial_gold_count
+            result.special_symbol_cnt += int(spin.scatter_count > 0)
             result.combo_fg[min(spin.cascades, 5)] += 1
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
@@ -778,7 +902,10 @@ class LuckyAce:
             result = self.free_session(super_mode)
             if self.card_matches(card, result.pay_fg):
                 return result
-        raise RuntimeError(f"{section} card range retry limit exceeded: ({card['min']}, {card['max']}]")
+            self.retry_total += 1
+        self.retry_limit_exceeded += 1
+        self.retry_limit_fg += 1
+        return result
 
     @staticmethod
     def merge(target: RoundResult, source: RoundResult) -> None:
@@ -804,6 +931,7 @@ class LuckyAce:
         target.fg_gold_spins += source.fg_gold_spins
         target.bg_gold_symbols += source.bg_gold_symbols
         target.fg_gold_symbols += source.fg_gold_symbols
+        target.special_symbol_cnt += source.special_symbol_cnt
         target.combo_fg.update(source.combo_fg)
         target.symbol_hits.update(source.symbol_hits)
         target.symbol_pay.update(source.symbol_pay)
@@ -822,19 +950,15 @@ class LuckyAce:
             entry = self.board("buy")
             if sum(symbol == C1 for reel in entry for symbol in reel) < 3:
                 raise RuntimeError("BF_Symbol weights must guarantee at least 3 C1")
-            return self.card_feature("super_feature" if super_mode else "buy_feature", super_mode) if self.card_enabled else self.free_session(super_mode)
+            result = self.card_feature("super_feature" if super_mode else "buy_feature", super_mode) if self.card_enabled else self.free_session(super_mode)
+            # The paid entry board is the round's Base/entry Spin and contains SC.
+            result.special_symbol_cnt += 1
+            return result
         result = RoundResult()
         if self.card_enabled:
             spin = self.card_spin(self.pick_card("base_game"))
-            table_name = "card"
-            selections = None
         else:
-            selections = self.config.get("table_selection", {}).get("base")
-            if selections:
-                table_name = str(weighted_pick(self.rng, [str(item["table"]) for item in selections], [float(item["weight"]) for item in selections]))
-            else:
-                table_name = "bg_high"
-            spin = self.spin(table_name)
+            spin = self.natural_base_spin()
         result.pay_bg = spin.pay
         result.cascades_bg = spin.cascades
         result.max_multiplier = spin.max_multiplier
@@ -846,6 +970,7 @@ class LuckyAce:
         result.bg_hit_spins = int(spin.pay > 0)
         result.bg_gold_spins = int(spin.initial_gold_count > 0)
         result.bg_gold_symbols = spin.initial_gold_count
+        result.special_symbol_cnt = int(spin.scatter_count > 0)
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
         result.bg_symbol_length_hits.update(spin.symbol_length_hits)
@@ -890,6 +1015,7 @@ def _empty_stats() -> dict[str, Any]:
         "fg_gold_spins": 0,
         "bg_gold_symbols": 0,
         "fg_gold_symbols": 0,
+        "special_symbol_cnt": 0,
         "max_multiplier": 1,
         "win_x_sum": 0.0,
         "win_x_square": 0.0,
@@ -898,6 +1024,7 @@ def _empty_stats() -> dict[str, Any]:
         "retry_limit_bg_range": 0,
         "retry_limit_bg_freegame": 0,
         "retry_limit_fg": 0,
+        "card_draws": Counter(),
         "combo_bg": Counter(),
         "combo_fg": Counter(),
         "buckets": Counter(),
@@ -961,6 +1088,7 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         stats["fg_gold_spins"] += result.fg_gold_spins
         stats["bg_gold_symbols"] += result.bg_gold_symbols
         stats["fg_gold_symbols"] += result.fg_gold_symbols
+        stats["special_symbol_cnt"] += result.special_symbol_cnt
         stats["max_multiplier"] = max(stats["max_multiplier"], result.max_multiplier)
         stats["win_x_sum"] += ratio
         stats["win_x_square"] += ratio * ratio
@@ -1002,6 +1130,12 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         stats["bg_drop_symbols"].update(result.bg_drop_symbols)
         stats["fg_initial_symbols"].update(result.fg_initial_symbols)
         stats["fg_drop_symbols"].update(result.fg_drop_symbols)
+    stats["retry_total"] = game.retry_total
+    stats["retry_limit_exceeded"] = game.retry_limit_exceeded
+    stats["retry_limit_bg_range"] = game.retry_limit_bg_range
+    stats["retry_limit_bg_freegame"] = game.retry_limit_bg_freegame
+    stats["retry_limit_fg"] = game.retry_limit_fg
+    stats["card_draws"].update(game.card_draws)
     return stats
 
 
@@ -1037,6 +1171,7 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
         "interval_fg_combo",
         "interval_fg_w2",
         "interval_fg_gold_symbols",
+        "card_draws",
     }
     for key, value in source.items():
         if key in counter_fields:
@@ -1047,12 +1182,44 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
             target[key] += value
 
 
+def _simulation_result(
+    stats: dict[str, Any],
+    duration: float,
+    bet_mode: int,
+    bet_multi: int,
+    active: dict[str, Any],
+    seed: int,
+) -> dict[str, Any]:
+    return {
+        "stats": stats,
+        "duration": float(duration),
+        "bet_mode": int(bet_mode),
+        "bet_multi": int(bet_multi),
+        "seed": int(seed),
+        "config_file": CONFIG_FILE,
+        "config_rtp_file": CONFIG_RTP_FILE,
+        "math_version": MATH_VERSION,
+        "base_math_version": str(CFG_NATURAL.get("excel_version", "")),
+        "base_parsheet_id": str(CFG_NATURAL.get("parsheet_id", "")),
+        "base_source_xlsx": str(CFG_NATURAL.get("source_xlsx", "")),
+        "game_id": str(active.get("game_id", GAME_ID)),
+        "parsheet_id": str(active.get("parsheet_id", PARSHEET_ID)),
+        "source_multiplier_xlsx": str(active.get("source_multiplier_xlsx", "")),
+        "game_name": str(active.get("name_zh", GAME_NAME)),
+        "card_system_enabled": bool(CARD_SYSTEM_ENABLED),
+        "card_system_is_newbie": bool(CARD_SYSTEM_IS_NEWBIE),
+        "card_retry_limit": int(CARD_RETRY_LIMIT),
+        "card_system_config": active.get("card_system") or {},
+    }
+
+
 def run_simulation(
     total_rounds: int = TOTAL_ROUNDS,
     bet_mode: int = BET_MODE,
     bet_multi: int = BET_MULTI,
     threads: int = THREADS,
     config: dict[str, Any] | None = None,
+    seed: int = RNG_SEED,
 ) -> dict[str, Any]:
     global BET_MULTI
     if bet_mode not in SUPPORTED_BET_MODES:
@@ -1076,38 +1243,41 @@ def run_simulation(
         if fast_card_capable:
             fast_simulator.warm(
                 packed, int(bet_mode), int(bet_multi),
+                seed=int(seed),
                 card_enabled=bool(CARD_SYSTEM_ENABLED),
                 card_newbie=bool(CARD_SYSTEM_IS_NEWBIE),
             )
         else:
-            fast_simulator.warm(packed, int(bet_mode), int(bet_multi))
+            fast_simulator.warm(packed, int(bet_mode), int(bet_multi), int(seed))
         started = time.perf_counter()
         if fast_card_capable:
             packed_result = fast_simulator.run_prepared(
                 packed, int(total_rounds), int(bet_mode), int(bet_multi), threads,
+                seed=int(seed),
                 card_enabled=bool(CARD_SYSTEM_ENABLED),
                 card_newbie=bool(CARD_SYSTEM_IS_NEWBIE),
             )
         else:
             packed_result = fast_simulator.run_prepared(
                 packed, int(total_rounds), int(bet_mode), int(bet_multi), threads,
+                seed=int(seed),
             )
-        return {
-            "stats": fast_simulator.to_stats(packed_result),
-            "duration": time.perf_counter() - started,
-            "bet_mode": bet_mode,
-            "bet_multi": bet_multi,
-        }
+        return _simulation_result(
+            fast_simulator.to_stats(packed_result), time.perf_counter() - started,
+            bet_mode, bet_multi, active, seed,
+        )
     started = time.perf_counter()
     merged = _empty_stats()
     if threads == 1:
-        _merge_stats(merged, _simulate_chunk(chunks[0], bet_mode, 46046, active))
+        _merge_stats(merged, _simulate_chunk(chunks[0], bet_mode, int(seed), active))
     else:
         with ThreadPoolExecutor(max_workers=threads) as pool:
-            futures = [pool.submit(_simulate_chunk, count, bet_mode, 46046 + i * 100003, active) for i, count in enumerate(chunks) if count]
+            futures = [pool.submit(_simulate_chunk, count, bet_mode, int(seed) + i * 100003, active) for i, count in enumerate(chunks) if count]
             for future in futures:
                 _merge_stats(merged, future.result())
-    return {"stats": merged, "duration": time.perf_counter() - started, "bet_mode": bet_mode, "bet_multi": bet_multi}
+    return _simulation_result(
+        merged, time.perf_counter() - started, bet_mode, bet_multi, active, seed,
+    )
 
 
 simulate = run_simulation
@@ -1117,53 +1287,112 @@ def mode_name(mode: int) -> str:
     return {0: "Normal Bet", 2: "Buy Feature", 3: "Buy Super Feature"}.get(mode, f"Mode {mode}")
 
 
-def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
+def calculated_metrics(result: dict[str, Any]) -> dict[str, Any]:
     s = result["stats"]
     rounds, coin_in = max(1, s["rounds"]), max(1.0, s["coin_in"])
     pay_total = s["pay_bg"] + s["pay_fg"]
     mean = s["win_x_sum"] / rounds
     variance = max(0.0, s["win_x_square"] / rounds - mean * mean)
-    profile = "off" if not CARD_SYSTEM_ENABLED else "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"
-    if result["bet_mode"] == MODE_SUPERBUY and CARD_SYSTEM_ENABLED:
-        profile += " / super weight_1"
+    fg_triggers = s["fg_triggers"]
+    fg_spins = s["fg_spins"]
+    retriggers = s["retriggers"]
+    total_spins = int(s["rounds"]) + int(fg_spins)
+    special_symbol_cnt = int(s.get("special_symbol_cnt", 0))
+    return {
+        "rounds": s["rounds"],
+        "coin_in_per_round": s["coin_in"] / rounds,
+        "rtp_total": pay_total / coin_in,
+        "rtp_bg": s["pay_bg"] / coin_in,
+        "rtp_fg": s["pay_fg"] / coin_in,
+        "hit_rate_bg": s["bg_hit_spins"] / rounds,
+        "hit_rate_fg": s["fg_hit_spins"] / max(1, fg_spins),
+        "fg_trigger_rate": fg_triggers / rounds,
+        "fg_trigger_cycle": rounds / fg_triggers if fg_triggers else math.inf,
+        "retrigger_trigger_rate": retriggers / max(1, fg_spins),
+        "retrigger_trigger_cycle": fg_spins / retriggers if retriggers else math.inf,
+        "avg_fg_spins": fg_spins / fg_triggers if fg_triggers else 0.0,
+        "special_symbol_cnt": special_symbol_cnt,
+        "special_symbol_rate": special_symbol_cnt / total_spins if total_spins else 0.0,
+        "volatility_std": math.sqrt(variance),
+        "standard_error": math.sqrt(variance) / math.sqrt(rounds),
+    }
+
+
+def common_summary_sections(result: dict[str, Any]) -> list[list[tuple[str, Any]]]:
+    """Return the fixed Console sections required by specification section 3.3."""
+    s = result["stats"]
+    metrics = calculated_metrics(result)
+    sections: list[list[tuple[str, Any]]] = [
+        [
+            ("game_name", result["game_name"]),
+            ("game_id", result["game_id"]),
+        ],
+        [
+            ("config_file", result["config_file"]),
+            ("config_rtp_file", result["config_rtp_file"]),
+            ("math_version", result["math_version"]),
+            ("card_system", "on" if result["card_system_enabled"] else "off"),
+        ],
+        [
+            ("bet_mode", mode_name(result["bet_mode"])),
+            ("bet_multi", result["bet_multi"]),
+            ("coin_in", metrics["coin_in_per_round"]),
+            ("total_rounds", s["rounds"]),
+            ("duration", result["duration"]),
+        ],
+    ]
+    if result["card_system_enabled"]:
+        sections.append(
+            [
+                ("card_system_profile", "newbie" if result["card_system_is_newbie"] else "oldhand"),
+                ("card_retry_limit", result["card_retry_limit"]),
+                ("retry_total", s.get("retry_total", 0)),
+                ("avg_retry", s.get("retry_total", 0) / max(1, s["rounds"])),
+                ("retry_limit_exceeded", s.get("retry_limit_exceeded", 0)),
+                ("retry_limit_bg_range", s.get("retry_limit_bg_range", 0)),
+                ("retry_limit_bg_freegame", s.get("retry_limit_bg_freegame", 0)),
+                ("retry_limit_fg", s.get("retry_limit_fg", 0)),
+            ]
+        )
+    sections.extend(
+        [
+            [
+                ("rtp_total", metrics["rtp_total"]),
+                ("rtp_bg", metrics["rtp_bg"]),
+                ("rtp_fg", metrics["rtp_fg"]),
+                ("hit_rate_bg", metrics["hit_rate_bg"]),
+                ("hit_rate_fg", metrics["hit_rate_fg"]),
+                ("fg_trigger_rate", (metrics["fg_trigger_rate"], metrics["fg_trigger_cycle"])),
+                ("retrigger_trigger_rate", (metrics["retrigger_trigger_rate"], metrics["retrigger_trigger_cycle"])),
+                ("avg_fg_spins", metrics["avg_fg_spins"]),
+                ("special_symbol_cnt", metrics["special_symbol_cnt"]),
+                ("special_symbol_rate", metrics["special_symbol_rate"]),
+            ],
+            [
+                ("volatility_std", metrics["volatility_std"]),
+                ("standard_error", metrics["standard_error"]),
+            ],
+        ]
+    )
+    return sections
+
+
+def common_summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
+    """Flatten the fixed Console sections without changing their order."""
+    return [row for section in common_summary_sections(result) for row in section]
+
+
+def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
+    s = result["stats"]
+    rounds = max(1, s["rounds"])
+    fg_spins = max(1, s["fg_spins"])
     return [
-        ("parsheet_id", PARSHEET_ID),
-        ("game_id", GAME_ID),
-        ("game_name", GAME_NAME),
-        ("config_file", CONFIG_FILE),
-        ("runtime_version", CFG.get("runtime_version", "")),
-        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off"),
-        ("card_system_profile", profile),
-        ("card_retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0),
-        ("retry_total", s.get("retry_total", 0)),
-        ("avg_retry", s.get("retry_total", 0) / rounds),
-        ("retry_limit_exceeded", s.get("retry_limit_exceeded", 0)),
-        ("retry_limit_bg_range", s.get("retry_limit_bg_range", 0)),
-        ("retry_limit_bg_freegame", s.get("retry_limit_bg_freegame", 0)),
-        ("retry_limit_fg", s.get("retry_limit_fg", 0)),
-        ("bet_mode", mode_name(result["bet_mode"])),
-        ("bet_multi", result["bet_multi"]),
-        ("coin_in", wager_for_mode(result["bet_mode"])),
-        ("total_rounds", s["rounds"]),
-        ("duration_sec", round(result["duration"], 3)),
-        ("rtp_total", pay_total / coin_in),
-        ("rtp_bg", s["pay_bg"] / coin_in),
-        ("rtp_fg", s["pay_fg"] / coin_in),
-        ("volatility_std", math.sqrt(variance)),
-        ("standard_error", math.sqrt(variance) / math.sqrt(rounds)),
-        ("hit_rate", s["hit_rounds"] / rounds),
-        ("bg_hit_rate", s["bg_hit_spins"] / rounds),
-        ("fg_hit_rate", s["fg_hit_spins"] / max(1, s["fg_spins"])),
-        ("fg_trigger_rate", s["fg_triggers"] / rounds),
-        ("fg_trigger_cycle", rounds / s["fg_triggers"] if s["fg_triggers"] else math.inf),
-        ("avg_fg_spins", s["fg_spins"] / s["fg_triggers"] if s["fg_triggers"] else 0),
-        ("retriggers", s["retriggers"]),
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
-        ("avg_cascades_fg", s["cascades_fg"] / max(1, s["fg_spins"])),
+        ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
         ("golden_converted", s["golden_converted"]),
         ("w2_events", s["w2_events"]),
         ("w2_bg_event_rate", s["bg_w2_events"] / rounds),
-        ("w2_fg_event_rate", s["fg_w2_events"] / max(1, s["fg_spins"])),
+        ("w2_fg_event_rate", s["fg_w2_events"] / fg_spins),
         ("w2_bg_count_2", s["bg_w2_counts"][2]),
         ("w2_bg_count_3", s["bg_w2_counts"][3]),
         ("w2_bg_count_4", s["bg_w2_counts"][4]),
@@ -1171,14 +1400,92 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("w2_fg_count_3", s["fg_w2_counts"][3]),
         ("w2_fg_count_4", s["fg_w2_counts"][4]),
         ("m1_bg_spin_rate", s["bg_m1_spins"] / rounds),
-        ("m1_fg_spin_rate", s["fg_m1_spins"] / max(1, s["fg_spins"])),
-        ("bg_gold_spin_rate", s["bg_gold_spins"] / rounds),
-        ("fg_gold_spin_rate", s["fg_gold_spins"] / max(1, s["fg_spins"])),
-        ("avg_bg_gold_symbols", s["bg_gold_symbols"] / rounds),
-        ("avg_fg_gold_symbols", s["fg_gold_symbols"] / max(1, s["fg_spins"])),
-        ("max_win_multiplier", s["max_multiplier"]),
-        ("rounds_per_second", rounds / max(result["duration"], 1e-9)),
     ]
+
+
+def _display_value(key: str, value: Any) -> str:
+    if key == "duration":
+        return f"{float(value):06.3f} sec"
+    if key == "total_rounds":
+        return f"{int(value):,}"
+    if key == "coin_in":
+        return f"{float(value):.1f}"
+    if key in {"fg_trigger_rate", "retrigger_trigger_rate"}:
+        rate, cycle = value
+        unit = "spins" if key == "fg_trigger_rate" else "free spins"
+        cycle_text = "N/A" if not math.isfinite(float(cycle)) else f"{float(cycle):.2f} {unit}"
+        return f"{float(rate):.4%} (cycle {cycle_text})"
+    if key.startswith("rtp_") or key in {"hit_rate_bg", "hit_rate_fg", "special_symbol_rate"}:
+        return f"{float(value):.4%}"
+    if key.endswith("_rate"):
+        return f"{float(value):.6%}"
+    if key == "avg_fg_spins":
+        return f"{float(value):.2f} spins"
+    if isinstance(value, float):
+        return f"{value:.6f}"
+    return str(value)
+
+
+def overview_rows(result: dict[str, Any]) -> list[tuple[str, str]]:
+    return [
+        (key, _display_value(key, value))
+        for key, value in common_summary_rows(result) + game_info_rows(result)
+    ]
+
+
+def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
+    """Backward-compatible numeric rows used by existing analysis scripts."""
+    metrics = calculated_metrics(result)
+    rows = [
+        ("parsheet_id", result["parsheet_id"]),
+        ("game_id", result["game_id"]),
+        ("game_name", result["game_name"]),
+        ("config_file", result["config_file"]),
+        ("config_rtp_file", result["config_rtp_file"]),
+        ("math_version", result["math_version"]),
+        ("card_system", "on" if result["card_system_enabled"] else "off"),
+        ("card_system_profile", "newbie" if result["card_system_is_newbie"] else "oldhand"),
+        ("card_retry_limit", result["card_retry_limit"] if result["card_system_enabled"] else 0),
+        ("retry_total", result["stats"].get("retry_total", 0)),
+        ("avg_retry", result["stats"].get("retry_total", 0) / max(1, result["stats"]["rounds"])),
+        ("retry_limit_exceeded", result["stats"].get("retry_limit_exceeded", 0)),
+        ("retry_limit_bg_range", result["stats"].get("retry_limit_bg_range", 0)),
+        ("retry_limit_bg_freegame", result["stats"].get("retry_limit_bg_freegame", 0)),
+        ("retry_limit_fg", result["stats"].get("retry_limit_fg", 0)),
+        ("bet_mode", mode_name(result["bet_mode"])),
+        ("bet_multi", result["bet_multi"]),
+        ("coin_in", metrics["coin_in_per_round"]),
+        ("total_rounds", result["stats"]["rounds"]),
+        ("duration_sec", round(result["duration"], 3)),
+        ("rtp_total", metrics["rtp_total"]),
+        ("rtp_bg", metrics["rtp_bg"]),
+        ("rtp_fg", metrics["rtp_fg"]),
+        ("hit_rate", result["stats"]["hit_rounds"] / max(1, result["stats"]["rounds"])),
+        ("bg_hit_rate", metrics["hit_rate_bg"]),
+        ("fg_hit_rate", metrics["hit_rate_fg"]),
+        ("fg_trigger_rate", metrics["fg_trigger_rate"]),
+        ("fg_trigger_cycle", metrics["fg_trigger_cycle"]),
+        ("retrigger_trigger_rate", metrics["retrigger_trigger_rate"]),
+        ("retrigger_trigger_cycle", metrics["retrigger_trigger_cycle"]),
+        ("avg_fg_spins", metrics["avg_fg_spins"]),
+        ("special_symbol_cnt", metrics["special_symbol_cnt"]),
+        ("special_symbol_rate", metrics["special_symbol_rate"]),
+        ("volatility_std", metrics["volatility_std"]),
+        ("standard_error", metrics["standard_error"]),
+    ]
+    rows.extend(game_info_rows(result))
+    rows.extend(
+        [
+            ("m1_fg_spin_rate", result["stats"]["fg_m1_spins"] / max(1, result["stats"]["fg_spins"])),
+            ("bg_gold_spin_rate", result["stats"]["bg_gold_spins"] / max(1, result["stats"]["rounds"])),
+            ("fg_gold_spin_rate", result["stats"]["fg_gold_spins"] / max(1, result["stats"]["fg_spins"])),
+            ("avg_bg_gold_symbols", result["stats"]["bg_gold_symbols"] / max(1, result["stats"]["rounds"])),
+            ("avg_fg_gold_symbols", result["stats"]["fg_gold_symbols"] / max(1, result["stats"]["fg_spins"])),
+            ("max_win_multiplier", result["stats"]["max_multiplier"]),
+            ("rounds_per_second", result["stats"]["rounds"] / max(result["duration"], 1e-9)),
+        ]
+    )
+    return rows
 
 
 def symbol_ratio_df(counter: Counter) -> pd.DataFrame:
@@ -1213,19 +1520,22 @@ def print_symbol_ratio_tables(result: dict[str, Any]) -> None:
 
 def print_console(result: dict[str, Any]) -> None:
     if SHOW_CONSOLE_SUMMARY:
-        print("\n=== H016 幸運王牌 Simulation ===")
-        for key, value in summary_rows(result):
-            if key.startswith("rtp_") or key.endswith("_rate"):
-                print(f"{key:22s}: {float(value) * 100:.6f}%")
-            else:
-                print(f"{key:22s}: {value}")
+        print()
+        for section_index, section in enumerate(common_summary_sections(result)):
+            if section_index:
+                print()
+            for key, value in section:
+                print(f"{key:24s}: {_display_value(key, value)}")
+        print("\n<< By Game Info >>\n")
+        for key, value in game_info_rows(result):
+            print(f"{key:24s}: {_display_value(key, value)}")
     if SHOW_CONSOLE_DETAIL:
         print_symbol_ratio_tables(result)
         print("\nPay buckets:", dict(result["stats"]["buckets"]))
 
 
 def format_rounds_tag(total_rounds: int) -> str:
-    """Match H028 report names: 10**7 -> 107, 10**6 -> 106."""
+    """Format exact powers of ten as 10N, for example 10**7 -> 107."""
     total_rounds = int(total_rounds)
     value = total_rounds
     exponent = 0
@@ -1237,17 +1547,174 @@ def format_rounds_tag(total_rounds: int) -> str:
     return str(total_rounds)
 
 
-def output_report(result: dict[str, Any]) -> Path:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def format_version_tag(version: Any) -> str:
+    """Convert a four-part math version to the fixed eight-digit report tag."""
+    parts = str(version or "").strip().split(".")
+    if len(parts) != 4 or any(not part.isdigit() for part in parts):
+        raise ValueError(
+            f"math_version must contain four numeric parts, got {version!r}"
+        )
+    values = [int(part) for part in parts]
+    if any(value < 0 or value > 99 for value in values):
+        raise ValueError(
+            f"math_version parts must be between 0 and 99, got {version!r}"
+        )
+    return "".join(f"{value:02d}" for value in values)
+
+
+def format_base_version_tag(version: Any) -> str:
+    """Convert the one-part base math version to the fixed two-digit tag."""
+    raw = str(version or "").strip()
+    if not raw.isdigit():
+        raise ValueError(
+            f"base_math_version must contain one numeric part, got {version!r}"
+        )
+    value = int(raw)
+    if value < 0 or value > 99:
+        raise ValueError(
+            f"base_math_version must be between 0 and 99, got {version!r}"
+        )
+    return f"{value:02d}"
+
+
+def format_rtp_tag(rtp_ratio: Any) -> str:
+    """Convert an RTP ratio to its percentage tag: 0.9201 -> 9201."""
+    value = float(rtp_ratio)
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"rtp_total must be a non-negative finite value, got {rtp_ratio!r}")
+    return f"{value * 100:.2f}".replace(".", "")
+
+
+def report_game_id(result: dict[str, Any]) -> str:
+    """Resolve the full RTP/Variant game id used by the report filename."""
+    candidates = (
+        Path(str(result.get("source_multiplier_xlsx") or "")).stem,
+        str(result.get("parsheet_id") or ""),
+        str(result.get("game_id") or ""),
+    )
+    for candidate in candidates:
+        if re.fullmatch(r"H\d{3}1\d{2}[A-Z]", candidate, flags=re.IGNORECASE):
+            return candidate.upper()
+    parsheet_id = str(result.get("parsheet_id") or "")
+    if re.fullmatch(r"H\d{3}1\d{2}", parsheet_id, flags=re.IGNORECASE):
+        return f"{parsheet_id.upper()}A"
+    base_game_id = str(result.get("game_id") or "").upper()
+    config_match = re.search(
+        r"config_(\d{2})([A-Z]?)", Path(str(result.get("config_rtp_file") or "")).stem,
+        flags=re.IGNORECASE,
+    )
+    if re.fullmatch(r"H\d{3}", base_game_id) and config_match:
+        variant = (config_match.group(2) or "A").upper()
+        return f"{base_game_id}1{config_match.group(1)}{variant}"
+    raise ValueError("Unable to resolve the full RTP/Variant game id for report output")
+
+
+def report_base_game_id(result: dict[str, Any]) -> str:
+    """Resolve the complete base-game id used when Card System is off."""
+    candidates = (
+        Path(str(result.get("base_source_xlsx") or "")).stem,
+        str(result.get("base_parsheet_id") or ""),
+    )
+    for candidate in candidates:
+        if re.fullmatch(r"H\d{3}1", candidate, flags=re.IGNORECASE):
+            return candidate.upper()
+    base_game_id = str(result.get("game_id") or "").upper()
+    if re.fullmatch(r"H\d{3}", base_game_id):
+        return f"{base_game_id}1"
+    raise ValueError("Unable to resolve the complete base game id for report output")
+
+
+def report_filename(
+    result: dict[str, Any],
+    rtp_total: Any,
+    timestamp: str | None = None,
+) -> str:
+    """Build the exact report filename required by the slot specification."""
+    timestamp = timestamp or datetime.now().strftime("%y%m%d%H%M")
+    card_enabled = bool(result["card_system_enabled"])
+    if card_enabled:
+        game_id = report_game_id(result)
+        version_tag = format_version_tag(result["math_version"])
+    else:
+        game_id = report_base_game_id(result)
+        version_tag = format_base_version_tag(result["base_math_version"])
+    parts = [
+        game_id,
+        version_tag,
+        timestamp,
+        f"betmode{result['bet_mode']}",
+        format_rounds_tag(result["stats"]["rounds"]),
+    ]
+    if card_enabled:
+        parts.append(format_rtp_tag(rtp_total))
+        if int(result["bet_mode"]) == MODE_NORMALBET:
+            parts.append("newbie" if result["card_system_is_newbie"] else "oldhand")
+        parts.append("card")
+    return "_".join(parts) + ".xlsx"
+
+
+def card_selection_df(result: dict[str, Any]) -> pd.DataFrame:
+    card_system = result.get("card_system_config") or {}
+    profiles = card_system.get("profiles") or {}
+    draws: Counter = result["stats"].get("card_draws", Counter())
+    profile_names = ("weight_1", "weight_2")
+    profile_labels = ("newbie", "oldhand")
+    section_names = ("base_game", "free_game", "buy_feature", "super_feature")
+    rows: list[dict[str, Any]] = []
+    for profile_index, (profile_name, profile_label) in enumerate(zip(profile_names, profile_labels)):
+        profile = profiles.get(profile_name) or {}
+        for section_index, section_name in enumerate(section_names):
+            cards = list(profile.get(section_name) or [])
+            total_weight = sum(max(0.0, float(card.get("weight", 0.0))) for card in cards)
+            total_draws = sum(draws[(profile_index, section_index, index)] for index in range(len(cards)))
+            for card_index, card in enumerate(cards):
+                draw_count = draws[(profile_index, section_index, card_index)]
+                weight = max(0.0, float(card.get("weight", 0.0)))
+                rows.append(
+                    {
+                        "Profile": profile_label,
+                        "Config_Profile": profile_name,
+                        "Section": section_name,
+                        "Card_Index": card_index,
+                        "Type": str(card.get("type", "range")),
+                        "Min": card.get("min"),
+                        "Max": card.get("max"),
+                        "Table": card.get("table"),
+                        "Weight": weight,
+                        "Expected_Rate": weight / total_weight if total_weight else 0.0,
+                        "Draw_Count": int(draw_count),
+                        "Actual_Rate": draw_count / total_draws if total_draws else 0.0,
+                    }
+                )
+    return pd.DataFrame(rows)
+
+
+def feature_summary_df(result: dict[str, Any]) -> pd.DataFrame:
+    s = result["stats"]
+    rounds = max(1, s["rounds"])
+    fg_spins = max(1, s["fg_spins"])
+    return pd.DataFrame(
+        [
+            {
+                "Bet_Mode": mode_name(result["bet_mode"]),
+                "FG_Triggers": s["fg_triggers"],
+                "FG_Trigger_Rate": s["fg_triggers"] / rounds,
+                "FG_Spins": s["fg_spins"],
+                "Avg_FG_Spins": s["fg_spins"] / s["fg_triggers"] if s["fg_triggers"] else 0.0,
+                "Retriggers": s["retriggers"],
+                "Retrigger_Rate": s["retriggers"] / fg_spins,
+            }
+        ]
+    )
+
+
+def output_report(result: dict[str, Any], output_dir: Path | None = None) -> Path:
+    report_dir = Path(output_dir) if output_dir is not None else OUTPUT_DIR
+    report_dir.mkdir(parents=True, exist_ok=True)
     s = result["stats"]
     summary = dict(summary_rows(result))
-    timestamp = datetime.now().strftime("%y%m%d%H%M")
-    rounds_tag = format_rounds_tag(s["rounds"])
-    rtp_tag = f"{float(summary['rtp_total']):.4f}".split(".", 1)[1]
-    parts = [PARSHEET_ID, timestamp, f"betmode{result['bet_mode']}", rounds_tag, rtp_tag]
-    if CARD_SYSTEM_ENABLED:
-        parts.extend(["newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand", "card"])
-    path = OUTPUT_DIR / ("_".join(re.sub(r"[^0-9A-Za-z_]+", "", part) for part in parts) + ".xlsx")
+    path = report_dir / report_filename(result, summary["rtp_total"])
+    overview_df = pd.DataFrame(overview_rows(result), columns=["field", "value"])
     base_df = pd.DataFrame(summary_rows(result), columns=["field", "value"])
     symbols = SCORE_SYMBOLS
     hits_df = pd.DataFrame({"symbol": [SYMBOL_STR[symbol] for symbol in symbols], "hits": [s["symbol_hits"][symbol] for symbol in symbols], "pay": [s["symbol_pay"][symbol] for symbol in symbols]})
@@ -1273,36 +1740,47 @@ def output_report(result: dict[str, Any]) -> Path:
 
     bg_interval_count = s["multiplier_bg_count"]
     fg_interval_spins = s["interval_fg_spins"]
+    zero_counts = [0 for _ in MULTIPLIER_THRESHOLDS]
+    zero_pay = [0.0 for _ in MULTIPLIER_THRESHOLDS]
+    fg_counts = [s["multiplier_fg_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))]
+    fg_pay = [s["multiplier_fg_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))]
+    natural_fg_counts = fg_counts if result["bet_mode"] == MODE_NORMALBET else zero_counts
+    natural_fg_pay = fg_pay if result["bet_mode"] == MODE_NORMALBET else zero_pay
+    buy_fg_counts = fg_counts if result["bet_mode"] == MODE_FEATUREBUY else zero_counts
+    buy_fg_pay = fg_pay if result["bet_mode"] == MODE_FEATUREBUY else zero_pay
+    super_fg_counts = fg_counts if result["bet_mode"] == MODE_SUPERBUY else zero_counts
+    super_fg_pay = fg_pay if result["bet_mode"] == MODE_SUPERBUY else zero_pay
     multiplier_df = pd.DataFrame(
         {
             "Interval": interval_labels,
             "base_game_cnt": [s["multiplier_bg_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
             "base_game_pay": [s["multiplier_bg_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
-            "BG_Hit_Rate": interval_rate(s["interval_bg_hits"], bg_interval_count, lambda i: i),
+            "free_game_cnt": natural_fg_counts,
+            "free_game_pay": natural_fg_pay,
+            "free_game_cnt_BF": buy_fg_counts,
+            "free_game_pay_BF": buy_fg_pay,
+            "free_game_cnt_SF": super_fg_counts,
+            "free_game_pay_SF": super_fg_pay,
+            "FG_Hit_Rate": interval_rate(s["interval_fg_hits"], fg_interval_spins, lambda i: i),
+            "FG_Spin_Count": [s["interval_fg_spins"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
             "BG_Combo_1_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 1)),
             "BG_Combo_2_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 2)),
             "BG_Combo_3_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 3)),
             "BG_Combo_4_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 4)),
-            "BG_Combo_5Plus_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 5)),
-            "BG_Big_Ghost_2_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 2)),
-            "BG_Big_Ghost_3_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 3)),
-            "BG_Big_Ghost_4_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 4)),
-            "BG_Avg_Gold_Frames": interval_rate(s["interval_bg_gold_symbols"], bg_interval_count, lambda i: i),
-            "FG_Session_Count": [s["multiplier_fg_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
-            "free_game_pay": [s["multiplier_fg_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
-            "FG_Spin_Count": [s["interval_fg_spins"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
-            "FG_Hit_Rate": interval_rate(s["interval_fg_hits"], fg_interval_spins, lambda i: i),
+            "BG_Combo_5+_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 5)),
             "FG_Combo_1_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 1)),
             "FG_Combo_2_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 2)),
             "FG_Combo_3_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 3)),
             "FG_Combo_4_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 4)),
-            "FG_Combo_5Plus_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 5)),
+            "FG_Combo_5+_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 5)),
+            "BG_Big_Ghost_2_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 2)),
+            "BG_Big_Ghost_3_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 3)),
+            "BG_Big_Ghost_4_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 4)),
             "FG_Big_Ghost_2_Rate": interval_rate(s["interval_fg_w2"], fg_interval_spins, lambda i: (i, 2)),
             "FG_Big_Ghost_3_Rate": interval_rate(s["interval_fg_w2"], fg_interval_spins, lambda i: (i, 3)),
             "FG_Big_Ghost_4_Rate": interval_rate(s["interval_fg_w2"], fg_interval_spins, lambda i: (i, 4)),
+            "BG_Avg_Gold_Frames": interval_rate(s["interval_bg_gold_symbols"], bg_interval_count, lambda i: i),
             "FG_Avg_Gold_Frames": interval_rate(s["interval_fg_gold_symbols"], fg_interval_spins, lambda i: i),
-            "overall_cnt": [s["multiplier_overall_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
-            "overall_pay": [s["multiplier_overall_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
         }
     )
     record_df = pd.DataFrame({"field": list(s.keys()), "value": [dict(v) if isinstance(v, Counter) else v for v in s.values()]})
@@ -1312,13 +1790,20 @@ def output_report(result: dict[str, Any]) -> Path:
         ("FG Initial Symbol", symbol_ratio_df(s["fg_initial_symbols"])),
         ("FG Drop Symbol", symbol_ratio_df(s["fg_drop_symbols"])),
     ]
+    feature_df = feature_summary_df(result)
+    card_df = card_selection_df(result) if result["card_system_enabled"] else pd.DataFrame()
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        overview_df.to_excel(writer, sheet_name="Overview", index=False)
+        # Legacy numeric alias retained for existing H016 analysis scripts.
         base_df.to_excel(writer, sheet_name="Base Info", index=False)
+        feature_df.to_excel(writer, sheet_name="Feature", index=False)
         hits_df.to_excel(writer, sheet_name="Hits", index=False)
         symbol_length_df.to_excel(writer, sheet_name="Symbol Length", index=False)
         combo_df.to_excel(writer, sheet_name="Eliminate", index=False)
         multiplier_df.to_excel(writer, sheet_name="Multiplier Line", index=False)
         record_df.to_excel(writer, sheet_name="Record Data", index=False)
+        if not card_df.empty:
+            card_df.to_excel(writer, sheet_name="Card Selection", index=False)
         for sheet_name, frame in ratio_sheets:
             frame.to_excel(writer, sheet_name=sheet_name, index=False)
             worksheet = writer.sheets[sheet_name]
@@ -1337,7 +1822,7 @@ def output_report(result: dict[str, Any]) -> Path:
             worksheet.column_dimensions[column_letter].width = max(14, min(28, len(str(column_name)) + 3))
             if column_name.endswith("_Rate"):
                 number_format = "0.0000%"
-            elif column_name.endswith("_Count") or column_name.endswith("_cnt") or column_name.endswith("_pay"):
+            elif column_name.endswith("_Count") or "_cnt" in column_name or "_pay" in column_name:
                 number_format = "#,##0"
             elif column_name.endswith("_Frames"):
                 number_format = "0.0000"
@@ -1345,6 +1830,20 @@ def output_report(result: dict[str, Any]) -> Path:
                 continue
             for row in range(2, len(multiplier_df) + 2):
                 worksheet.cell(row=row, column=column_index).number_format = number_format
+        for sheet_name in ("Overview", "Base Info"):
+            worksheet = writer.sheets[sheet_name]
+            worksheet.freeze_panes = "A2"
+            worksheet.column_dimensions["A"].width = 28
+            worksheet.column_dimensions["B"].width = 44
+        feature_sheet = writer.sheets["Feature"]
+        for column in ("C", "G"):
+            feature_sheet[f"{column}2"].number_format = "0.0000%"
+        if "Card Selection" in writer.sheets:
+            card_sheet = writer.sheets["Card Selection"]
+            card_sheet.freeze_panes = "A2"
+            for column in ("J", "L"):
+                for row in range(2, len(card_df) + 2):
+                    card_sheet[f"{column}{row}"].number_format = "0.0000%"
     return path
 
 
@@ -1353,27 +1852,69 @@ def format_board(board: list[list[int]]) -> str:
 
 
 def run_single_spin_debug() -> None:
-    game = LuckyAce(CFG, 46046, False, CARD_SYSTEM_IS_NEWBIE)
+    game = LuckyAce(CFG, RNG_SEED, False, CARD_SYSTEM_IS_NEWBIE)
     spin = game.spin("bg_high")
     print("\nInitial board:\n" + format_board(spin.initial_board))
     print("\nFinal board:\n" + format_board(spin.final_board))
     print(f"pay={spin.pay}, cascades={spin.cascades}, scatter={spin.scatter_count}, max=x{spin.max_multiplier}")
 
 
+BATCH_REQUIRED_FIELDS = (
+    "config_file",
+    "config_rtp_file",
+    "bet_mode",
+    "total_rounds",
+    "card_system_enabled",
+    "card_system_is_newbie",
+)
+
+
+def validate_batch_run(combo: dict[str, Any]) -> dict[str, Any]:
+    missing = [field for field in BATCH_REQUIRED_FIELDS if field not in combo]
+    if missing:
+        raise ValueError(f"BATCH_RUNS entry missing required fields: {', '.join(missing)}")
+    normalized = {field: combo[field] for field in BATCH_REQUIRED_FIELDS}
+    for field in ("config_file", "config_rtp_file"):
+        if not isinstance(normalized[field], str) or not normalized[field].strip():
+            raise TypeError(f"{field} must be a non-empty string")
+    if isinstance(normalized["bet_mode"], bool) or not isinstance(normalized["bet_mode"], int):
+        raise TypeError("bet_mode must be an integer")
+    if normalized["bet_mode"] not in SUPPORTED_BET_MODES:
+        raise ValueError(f"Unsupported bet_mode: {normalized['bet_mode']}")
+    if isinstance(normalized["total_rounds"], bool) or not isinstance(normalized["total_rounds"], int):
+        raise TypeError("total_rounds must be a positive integer")
+    if normalized["total_rounds"] <= 0:
+        raise ValueError("total_rounds must be a positive integer")
+    for field in ("card_system_enabled", "card_system_is_newbie"):
+        if not isinstance(normalized[field], bool):
+            raise TypeError(f"{field} must be Boolean")
+    return normalized
+
+
 def run_all_combinations() -> None:
-    global CONFIG_FILE, CFG, CARD_SYSTEM_ENABLED, CARD_SYSTEM_IS_NEWBIE
+    global CONFIG_FILE, CONFIG_RTP_FILE, CFG_NATURAL, CFG_RTP, CFG
+    global CARD_SYSTEM_ENABLED, CARD_SYSTEM_IS_NEWBIE
     global CARD_RETRY_LIMIT, BET_MODE, TOTAL_ROUNDS
-    global GAME_ID, PARSHEET_ID, GAME_NAME, SYMBOL_STR
+    global GAME_ID, PARSHEET_ID, GAME_NAME, MATH_VERSION, SYMBOL_STR
 
     for index, combo in enumerate(BATCH_RUNS, 1):
-        print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {combo} ===", flush=True)
-        CONFIG_FILE = str(combo.get("config_file", CONFIG_FILE))
-        CFG = _load_config(BASE_DIR / CONFIG_FILE)
-        BET_MODE = int(combo.get("bet_mode", 0))
-        TOTAL_ROUNDS = int(combo.get("total_rounds", TOTAL_ROUNDS))
-        CARD_SYSTEM_IS_NEWBIE = bool(combo.get("card_system_is_newbie", False))
+        batch = validate_batch_run(combo)
+        print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {batch} ===", flush=True)
+        CONFIG_FILE = batch["config_file"]
+        CONFIG_RTP_FILE = batch["config_rtp_file"]
+        CFG_NATURAL = _load_config(BASE_DIR / CONFIG_FILE)
+        CFG_RTP = (
+            CFG_NATURAL
+            if Path(CONFIG_RTP_FILE) == Path(CONFIG_FILE)
+            else _load_config(BASE_DIR / CONFIG_RTP_FILE)
+        )
+        validate_config_pair(CFG_NATURAL, CFG_RTP, CONFIG_FILE, CONFIG_RTP_FILE)
+        CFG = compose_runtime_config(CFG_NATURAL, CFG_RTP)
+        BET_MODE = batch["bet_mode"]
+        TOTAL_ROUNDS = batch["total_rounds"]
+        CARD_SYSTEM_IS_NEWBIE = batch["card_system_is_newbie"]
         CARD_SYSTEM_ENABLED = bool(
-            combo.get("card_system_enabled", True)
+            batch["card_system_enabled"]
             and CFG.get("card_system", {}).get("enabled")
         )
         CARD_RETRY_LIMIT = max(
@@ -1382,10 +1923,11 @@ def run_all_combinations() -> None:
         GAME_ID = str(CFG.get("game_id", "H016"))
         PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
         GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
+        MATH_VERSION = str(CFG_RTP.get("excel_version", CFG.get("excel_version", "")))
         SYMBOL_STR = {int(key): value for key, value in CFG["symbol_names"].items()}
 
         result = run_simulation(
-            TOTAL_ROUNDS, BET_MODE, BET_MULTI, THREADS, config=CFG,
+            TOTAL_ROUNDS, BET_MODE, BET_MULTI, THREADS, config=CFG, seed=RNG_SEED,
         )
         print_console(result)
         if OUTPUT_REPORT:
@@ -1393,11 +1935,12 @@ def run_all_combinations() -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="H016 幸運王牌 simulator (H015 runner structure)")
+    parser = argparse.ArgumentParser(description="H016 幸運王牌 simulator")
     parser.add_argument("rounds", nargs="?", type=int)
     parser.add_argument("bet_mode", nargs="?", type=int, choices=SUPPORTED_BET_MODES)
     parser.add_argument("--bet-multi", type=int, default=BET_MULTI)
     parser.add_argument("--threads", type=int, default=THREADS)
+    parser.add_argument("--seed", type=int, default=RNG_SEED)
     parser.add_argument("--no-report", action="store_true")
     parser.add_argument("--debug-spin", action="store_true")
     # Notebook kernels append their own command-line flags. H015-style IDE and
@@ -1414,7 +1957,13 @@ def main() -> None:
     if RUN_SINGLE_SPIN_DEBUG or args.debug_spin:
         run_single_spin_debug()
         return
-    result = run_simulation(args.rounds or TOTAL_ROUNDS, BET_MODE if args.bet_mode is None else args.bet_mode, args.bet_multi, args.threads)
+    result = run_simulation(
+        args.rounds or TOTAL_ROUNDS,
+        BET_MODE if args.bet_mode is None else args.bet_mode,
+        args.bet_multi,
+        args.threads,
+        seed=args.seed,
+    )
     print_console(result)
     if OUTPUT_REPORT and not args.no_report:
         print(f"\nReport: {output_report(result)}")

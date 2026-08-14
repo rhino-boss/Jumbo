@@ -16,7 +16,7 @@ HERE = Path(__file__).resolve().parent
 PROJECT_DIR = HERE.parents[1]
 SOURCE_DIR = PROJECT_DIR / "Source"
 DEFAULT_SOURCE = SOURCE_DIR / "H0161.xlsx"
-DEFAULT_OUTPUT = PROJECT_DIR / "config_92.js"
+DEFAULT_OUTPUT = PROJECT_DIR / "config.js"
 FRONTEND_NAMES = {
     "0": "WW1", "1": "WW2", "2": "C1",
     "3": "M1", "4": "M2", "5": "M3", "6": "M4",
@@ -111,23 +111,69 @@ def load_card_system(variant: Path) -> dict[str, Any]:
         workbook.close()
 
 
+def workbook_identity(path: Path) -> tuple[str, str]:
+    workbook = load_workbook(path, read_only=True, data_only=False)
+    try:
+        sheet = workbook["Overview"]
+        return str(sheet["B2"].value or "").strip(), str(sheet["B3"].value or "").strip()
+    finally:
+        workbook.close()
+
+
+def version_major(value: Any) -> str:
+    return str(value or "").strip().split(".", 1)[0]
+
+
+def variant_rtp_label(variant: Path) -> int:
+    match = re.fullmatch(r"H0161(\d{2})[A-Za-z]?", variant.stem)
+    if match is None:
+        raise ValueError(f"Cannot determine RTP from variant workbook {variant.name!r}")
+    return int(match.group(1))
+
+
 def frontend_config(source: Path, variant: Path | None = None) -> dict[str, Any]:
     simulator = load_simulator_module()
     config = simulator._load_xlsx_config(source)
-    config["excel_version"] = str(config.get("excel_version") or config.get("version") or "1.0.0.0")
+    source_model, source_version = workbook_identity(source)
+    if source_model != "H0161":
+        raise ValueError(f"{source.name}: Overview!B2 must be H0161, got {source_model!r}")
+    base_version = version_major(source_version)
+    if not re.fullmatch(r"\d+", base_version):
+        raise ValueError(f"{source.name}: invalid base version {source_version!r}")
+    config["excel_version"] = base_version
     config.pop("version", None)
     config["name_en"] = "Lucky Ace"
-    rtp_label = int(variant.stem[-2:]) if variant is not None and variant.stem[-2:].isdigit() else 92
-    config["parsheet_id"] = f"H0161{rtp_label}"
-    config["rtp_label"] = rtp_label
+    config["parsheet_id"] = "H0161"
+    config.pop("rtp_label", None)
     config["reel_num"] = 5
     config["window_size"] = 4
     config["max_ways"] = 1024
     config["symbol_names"] = FRONTEND_NAMES
     config["base_table_weights"] = {"high": 1, "low": 0}
-    config["card_system"] = load_card_system(variant) if variant is not None else {"enabled": False, "profiles": {}}
+    config["source_xlsx"] = source.name
+    config.pop("source_multiplier_xlsx", None)
+    config.pop("runtime_version", None)
+    config["card_system"] = {"enabled": False, "profiles": {}}
     if variant is not None:
-        config["source_xlsx"] = variant.name
+        variant_model, variant_version = workbook_identity(variant)
+        expected_model = variant.stem[:-1] if variant.stem[-1:].isalpha() else variant.stem
+        if variant_model != expected_model:
+            raise ValueError(
+                f"{variant.name}: Overview!B2 must be {expected_model}, got {variant_model!r}"
+            )
+        if not re.fullmatch(r"\d+\.\d+\.\d+\.\d+", variant_version):
+            raise ValueError(f"{variant.name}: invalid RTP/Variant version {variant_version!r}")
+        if version_major(variant_version) != base_version:
+            raise ValueError(
+                f"Version mismatch: {source.name}={source_version!r}, "
+                f"{variant.name}={variant_version!r}"
+            )
+        rtp_label = variant_rtp_label(variant)
+        config["excel_version"] = variant_version
+        config["parsheet_id"] = f"H0161{rtp_label}"
+        config["rtp_label"] = rtp_label
+        config["source_multiplier_xlsx"] = variant.name
+        config["card_system"] = load_card_system(variant)
     for table in config["tables"].values():
         normalized = []
         for reel in table["weights"]:
@@ -185,13 +231,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Convert H0161.xlsx to the index frontend JS config or pure JSON")
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--variant", type=Path, help="H016192/H016194 multiplier workbook")
+    parser.add_argument("--variant", type=Path, help="H016192A/H016194A multiplier workbook")
     args = parser.parse_args()
     source = args.source.resolve()
     output = args.output.resolve()
-    variant = args.variant.resolve() if args.variant else SOURCE_DIR / f"H0161{output.stem[-2:]}.xlsx"
-    if not variant.is_file():
-        variant = None
+    variant = args.variant.resolve() if args.variant else None
+    if variant is None and output.stem != "config":
+        match = re.fullmatch(r"config_(\d{2})([A-Za-z]?)", output.stem)
+        if match is not None:
+            variant_suffix = match.group(1) + (match.group(2).upper() or "A")
+            candidate = SOURCE_DIR / f"H0161{variant_suffix}.xlsx"
+            if candidate.is_file():
+                variant = candidate
     config = frontend_config(source, variant)
     result = validate(config)
     if output.suffix.lower() == ".json":
@@ -199,7 +250,7 @@ def main() -> None:
     else:
         payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
         output.write_text(
-            "// Generated from Source/H0161.xlsx by 其他/工具/xlsx_to_config.py.\n"
+            f"// Generated from Source/{source.name} by 其他/工具/xlsx_to_config.py.\n"
             f"window.H016_CONFIG={payload};\n",
             encoding="utf-8",
         )

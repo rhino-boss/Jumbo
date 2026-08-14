@@ -15,8 +15,8 @@ def load_js(path: Path) -> dict:
 
 
 def main() -> None:
-    source = load_js(ROOT / "config_92.js")
-    target_path = ROOT / "config_94.js"
+    source = load_js(ROOT / "config.js")
+    target_path = ROOT / "config_94A.js"
     target = load_js(target_path)
     target["excel_version"] = "2.0.0.0"
 

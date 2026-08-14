@@ -8,7 +8,7 @@
 
 - [1. 數學文件 Math Document](#1-數學文件-math-document)
 - [2. 卡片系統 Card System](#2-卡片系統-card-system)
-- [3. 模擬程式 simulator](#3-模擬程式-simulator)
+- [3. 模擬程式 Simulator](#3-模擬程式-simulator)
 - [4. Demogame](#4-demogame)
 - [5. Config](#5-config)
 
@@ -100,6 +100,24 @@ RTP／Variant 數學文件的四碼版本格式為：
 - `config_<RTP><Variant>.js` 的 `excel_version` 必須與對應 RTP／Variant XLSX 的 4 碼版本完全一致。
 - 92／94 或 A／B 中所有受影響的模型都要更新，不得只改其中一份。
 - 已封存版本不得覆寫；需要修正時建立新版本。
+
+#### 1.3.1 XLSX 異動與版本同步
+
+只要 XLSX 的正式內容有更新，就必須在同一次修改中更新對應版本；不得先改內容、之後才補版本。
+
+| 異動內容 | 必須更新的版本 |
+|---|---|
+| 基礎數學 XLSX，例如 `H0161.xlsx` | 遞增該檔案的 1 碼版本；所有引用此次基礎異動的 RTP／Variant XLSX 同步更新第 1 碼，並將第 2～4 碼歸零。 |
+| RTP／Variant 的遊戲參數需要更新第 1 碼 | 先遞增基礎數學 XLSX 的 1 碼版本，再同步更新所有受影響 RTP／Variant XLSX 的第 1 碼，並將第 2～4 碼歸零。 |
+| Card System 區間或權重 | 更新實際異動之 RTP／Variant XLSX 的第 2 碼。 |
+| SCR | 更新實際異動之 RTP／Variant XLSX 的第 3 碼。 |
+| 只影響文件、說明或排版 | 更新實際異動之 RTP／Variant XLSX 的第 4 碼。 |
+
+- 修改哪一份 XLSX，就更新哪一份 XLSX 的版本；未受影響的 XLSX 不得為了統一數字而無條件升版。
+- 同一項異動同時影響 92／94 或 A／B 時，每一份受影響的 XLSX 都要依相同規則更新。
+- 同一次異動涉及多個版本段位時，依順位最高的段位遞增，後續段位依第 1.3 節規則歸零。
+- XLSX 版本更新後，必須重新產生其對應 Config，並同步更新 Config 的 `excel_version`。
+- Simulator 與 Demogame 必須載入更新後的 Config；新產生的報表必須使用更新後的版本，不得沿用舊版號。
 
 ### 1.4 RTP 與 Bet Mode
 
@@ -214,7 +232,7 @@ card_system
 
 ---
 
-## 3. 模擬程式 simulator
+## 3. 模擬程式 Simulator
 
 `Simulator.py` 是數學模型的主要驗證工具。數學邏輯、批次設定、Console 輸出與 Excel 報表必須使用相同的統計口徑。
 
@@ -256,13 +274,61 @@ card_system
 
 - 報表固定輸出至該遊戲的 `Record/`，格式為 `.xlsx`。
 - 報表與 Console 必須來自同一份統計結果，不得重新計算成不同口徑。
-- 檔名至少能辨識 Game ID、自然機率 Config、倍率權重 Config、版本、Bet Mode、Profile、Card On／Off 與產生時間。
+- 報表檔名固定沿用 H026 的命名順序，不得由個別遊戲任意調換欄位。
+
+報表檔名格式：
+
+```text
+Card System Off：
+<base_game_id>_<base_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>.xlsx
+
+Card System On（Newbie／Oldhand）：
+<rtp_game_id>_<rtp_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>_<rtp_tag>_<profile>_card.xlsx
+
+Card System On（不分 Profile 的 Buy／Super Feature）：
+<rtp_game_id>_<rtp_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>_<rtp_tag>_card.xlsx
+```
+
+各段規則：
+
+| 段落 | 規則 | 範例 |
+|---|---|---|
+| `base_game_id` | Card System Off 時，使用基礎 Config／基礎 XLSX 的完整 Game ID。 | `H0161` |
+| `base_version_tag` | Card System Off 時，使用基礎數學的 1 碼版本並補滿 2 位數。 | `2` → `02` |
+| `rtp_game_id` | Card System On 時，使用 RTP／Variant Config 內的完整 Game ID。 | `H016192A` |
+| `rtp_version_tag` | Card System On 時，四段版本各補滿 2 位數，再移除分隔點後依序串接。 | `2.1.3.13` → `02010313` |
+| `timestamp` | 報表產生時間，格式為 `YYMMDDHHmm`。 | `2608141530` |
+| `bet_mode` | 使用整數 Bet Mode。 | `0` |
+| `rounds_tag` | `10^N` 場寫成 `10N`；非 10 的整次方則使用完整場次。 | `10^8` → `108` |
+| `rtp_tag` | Card System On 時，取實際 RTP 小數點後 4 位，不含小數點與 `%`。 | `92.01%` → `9201` |
+| `profile` | 分 Profile 時使用 `newbie` 或 `oldhand`；不分 Profile 時省略。 | `oldhand` |
+| `card` | Card System On 時固定加在檔名最後。 | `card` |
+
+範例：
+
+```text
+Card System Off：
+H0161_02_2608141342_betmode0_105.xlsx
+
+Card System On（Oldhand）：
+H016192A_02000000_2608141341_betmode0_105_9129_oldhand_card.xlsx
+
+Card System On（Feature Buy，不分 Profile）：
+H026192A_02010313_2608141530_betmode2_108_9245_card.xlsx
+```
+
+- Card System Off 的檔名只能使用 `config_file` 所對應的基礎 `game_id` 與 1 碼版本，不得使用 `config_rtp_file` 的 RTP／Variant Game ID 或四段版本。
+- Card System On 的檔名使用 `config_rtp_file` 所對應的 RTP／Variant `game_id` 與四段版本。
+- `base_version_tag` 固定為 2 位數；例如基礎版本 `2` 輸出為 `02`。
+- `rtp_version_tag` 每一段都必須補滿 2 位數，不是只移除 `.`；`2.1.3.13` 必須轉成 `02010313`，不得輸出成 `21313`。
+- 四段中的單段若超過 2 位數，視為版本格式錯誤，停止輸出報表並提示修正版本。
+- 檔名不得包含空白、冒號、百分比符號或版本分隔點。
 
 `Overview` 工作頁：
 
-- 內容、欄位順序、欄位名稱、數值與格式必須和第 3.3 節的 Console 輸出一致。
+- 內容、欄位順序、欄位名稱、數值與格式必須和第 3.3 節的 Console 輸出一致，不得重新排序。
 - 不寫入 Batch 標題，例如 `=== Batch 1/1: {...} ===`。
-- 不寫入 `<< By Game Info >>` 標題；Game Info 欄位直接接在共用欄位之後。
+- 不寫入 `<< By Game Info >>` 標題；Game Info 欄位依 Console 的既定順序直接接在 `standard_error` 之後。
 - Card System 開啟時才顯示 `card_system_profile` 至 `retry_limit_fg`；關閉時整段不顯示，與 Console 規則一致。
 - `Overview` 與 Console 必須使用同一份已計算結果，不得分別計算或套用不同格式。
 
@@ -358,7 +424,23 @@ BATCH_RUNS = [
 
 ### 3.3 執行結束後印出的內容
 
-#### 3.3.1 共用格式
+#### 3.3.1 固定順序與共用格式
+
+Console 輸出順序是固定規範，不得依 dict、DataFrame 或統計完成時間任意排序。每個 Batch 必須依下列順序輸出：
+
+1. Batch 標題：`=== Batch n/total: {...} ===`。
+2. 遊戲資訊：`game_name`、`game_id`。
+3. Config 與版本：`config_file`、`config_rtp_file`、`math_version`、`card_system`。
+4. 執行設定：`bet_mode`、`bet_multi`、`coin_in`、`total_rounds`、`duration`。
+5. Card System 資訊：從 `card_system_profile` 到 `retry_limit_fg`；只在 Card System 開啟時整段顯示。
+6. 共用統計：從 `rtp_total` 到 `SCR`。
+7. 波動資訊：`volatility_std`、`standard_error`。
+8. 遊戲專屬資訊：`<< By Game Info >>` 及該遊戲規定的 By Game 欄位。
+
+- 欄位必須依下方範例逐項排列，不得交換前後順序。
+- 空白行只用於區塊分隔，不影響欄位順序；不得在同一區塊中插入其他欄位。
+- 新增共用欄位時必須先更新本規範並指定位置，不得由個別遊戲自行插入。
+- Card System 關閉時只省略第 5 項，`rtp_total` 必須直接接在 `duration` 之後。
 
 ```text
 === Batch 1/1: {'config_file': 'config.js', 'config_rtp_file': 'config_92A.js', 'bet_mode': 0, 'total_rounds': 1000000, 'card_system_enabled': True, 'card_system_is_newbie': False} ===
@@ -368,7 +450,7 @@ game_id                : H016
 
 config_file            : config.js
 config_rtp_file        : config_92A.js
-math_version           : 1.13
+math_version           : 2.1.3.13
 card_system            : on
 
 bet_mode               : Normal Bet
@@ -394,20 +476,30 @@ hit_rate_fg            : 00.0000%
 fg_trigger_rate        : 00.0000% (cycle 00.00 spins)
 retrigger_trigger_rate : 00.0000% (cycle 00.00 free spins)
 avg_fg_spins           : 10.03 spins
+special_symbol_cnt     : xxx
+SCR                    : xxx
 
 volatility_std         : 00.00
 standard_error         : 00.00
 ```
 
-- `math_version` 顯示 RTP／Variant 模型的完整 4 碼版本號，例如 `1.13`；必須依數學文件原格式輸出，不得自行省略或改寫。
+- `math_version` 顯示 RTP／Variant 模型的完整四段版本號，例如 `2.1.3.13`；Console 依數學文件原格式輸出，不得自行省略或改寫。只有報表檔名依第 3.1.4 節轉為 `02010313`。
 - `duration` 顯示正式模擬耗時，不包含 Numba Warm-up。
 - Card System 關閉時，從 `card_system_profile` 到 `retry_limit_fg` 的整個區塊不顯示。
 - 百分比欄位固定顯示 `%`；Cycle 必須同時顯示平均間隔與正確單位。
+- `special_symbol_cnt` 統計出現特殊符號 `SC` 的 Spin 次數，Base Spin 與每一次 Free Spin 都要納入。
+- 單次 Base Spin／Free Spin 只要盤面出現至少一個 `SC` 就加 `1`；同一 Spin 出現多個 `SC` 仍只加 `1`。
+- Cascade 過程若同屬同一次 Spin，不得因不同盤面重複累加；該 Spin 最終最多計數 `1`。
+- `total_spin = Base Spin 總數 + Free Spin 總數`。
+- `special_symbol_rate = special_symbol_cnt / total_spin`，只作為 SCR 的中間計算值。
+- `SCR = special_symbol_rate × 10,000,000,000`。
+- Console 與 `Overview` 不輸出 `special_symbol_rate`，只輸出換算後的 `SCR`。
+- `total_spin = 0` 時，`SCR` 輸出 `0`，不得除以零。
 - 不適用的 Feature 欄位可不顯示，但不得以錯誤的 `0` 冒充已驗證結果。
 
 #### 3.3.2 Game Info
 
-共用欄位後以 `<< By Game Info >>` 顯示遊戲專屬統計。欄位依玩法增減，不適用的欄位不得沿用其他遊戲。
+`<< By Game Info >>` 固定放在 `standard_error` 之後，用來顯示遊戲專屬統計。欄位依玩法增減，不適用的欄位不得沿用其他遊戲。
 
 H016 範例：
 
@@ -429,6 +521,9 @@ w2_fg_count_4          : 3
 m1_bg_spin_rate        : 79.9233
 ```
 
+- H016 的 By Game 欄位必須依上方順序輸出，不得依字母排序或統計產生順序重排。
+- H016 若新增其他 By Game 欄位，新增欄位接在既有欄位之後，並同步更新本規範。
+
 ### 3.4 驗證清單
 
 - [ ] `BATCH_RUNS` 每筆均包含六個必要欄位。
@@ -436,8 +531,14 @@ m1_bg_spin_rate        : 79.9233
 - [ ] 固定 RNG／種子可重現相同結果。
 - [ ] Worker 合併後的總場次等於 `total_rounds`。
 - [ ] Console 與 Excel 報表的共用欄位及數值一致。
+- [ ] `special_symbol_cnt` 同時統計 Base Spin 與 Free Spin，且同一 Spin 即使出現多個 `SC` 也只累加一次。
+- [ ] `SCR` 等於 `(special_symbol_cnt / total_spin) × 10,000,000,000`，且 Console 與 `Overview` 的數值一致。
 - [ ] `Overview` 與 Console 的內容及順序一致，且未包含 Batch 與 `<< By Game Info >>` 標題。
 - [ ] `Multiplier Line` 包含所有共用欄位，並依遊戲功能正確顯示或移除 BF／SF 與 By Game 欄位。
+- [ ] 報表檔名依 H026 規則排列，時間、Bet Mode、場次及 Card System 後綴均正確。
+- [ ] Card System Off 使用基礎 `game_id` 與 2 位數基礎版本，例如 `H0161_02`。
+- [ ] Card System On 使用 RTP／Variant `game_id` 與補零後的四段版本，例如 `H016192A_02000000`。
+- [ ] 四段版本已逐段補滿 2 位數，例如 `2.1.3.13` 正確輸出為 `02010313`。
 - [ ] RTP 與 Feature Trigger 接近目標，偏差有統計解釋。
 - [ ] Card System 設定占比與實際占比一致。
 - [ ] Retry Limit Exceeded 為零，或已有明確原因與核准處理方式。

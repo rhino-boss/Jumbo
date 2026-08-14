@@ -14,10 +14,11 @@ from openpyxl import load_workbook
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 SOURCE_DIR = PROJECT_DIR / "Source"
 VERSIONS_DIR = PROJECT_DIR / "Versions"
-VERSION = "1.13"
+VERSION = "2.0.0.0"
+MATH_KEY = "2.0"
 CONFIGS = {
-    "92": (PROJECT_DIR / "config_92.js", SOURCE_DIR / "H016192A.xlsx"),
-    "94": (PROJECT_DIR / "config_94.js", SOURCE_DIR / "H016194A.xlsx"),
+    "92": (PROJECT_DIR / "config_92A.js", SOURCE_DIR / "H016192A.xlsx"),
+    "94": (PROJECT_DIR / "config_94A.js", SOURCE_DIR / "H016194A.xlsx"),
 }
 CONFIG_PATTERN = re.compile(r"window\.H016_CONFIG\s*=\s*(\{.*\})\s*;", re.DOTALL)
 
@@ -140,6 +141,7 @@ def update_manifest(config_paths: dict[str, str]) -> None:
     manifest["current"] = VERSION
     entry = {
         "version": VERSION,
+        "math_key": MATH_KEY,
         "date": date.today().isoformat(),
         "configs": config_paths,
         "changes": [
@@ -182,6 +184,11 @@ def main() -> None:
         else None
     )
     version_configs: dict[str, str] = {}
+    base_config = PROJECT_DIR / "config.js"
+    if base_config.is_file():
+        archived_base = VERSIONS_DIR / MATH_KEY / base_config.name
+        atomic_write(archived_base, base_config.read_text(encoding="utf-8"))
+        version_configs["base"] = archived_base.relative_to(PROJECT_DIR).as_posix()
     for label, (config_path, workbook_path) in CONFIGS.items():
         if not workbook_path.is_file():
             raise FileNotFoundError(workbook_path)
@@ -192,7 +199,7 @@ def main() -> None:
         config["card_system"] = card_system(workbook_path, override)
         rendered = config_text(header, config)
         atomic_write(config_path, rendered)
-        archived = VERSIONS_DIR / VERSION / config_path.name
+        archived = VERSIONS_DIR / MATH_KEY / config_path.name
         atomic_write(archived, rendered)
         version_configs[label] = archived.relative_to(PROJECT_DIR).as_posix()
 

@@ -20,7 +20,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_92A.js"
+CONFIG_FILE = "config.js"
+CONFIG_RTP_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**6
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
@@ -31,13 +32,13 @@ CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False},
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False}, # 自然機率
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False}, # 自然機率
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -125,6 +126,8 @@ def parse_env_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("H028_CONFIG_FILE", CONFIG_FILE)
+CONFIG_RTP_FILE = os.environ.get("H028_CONFIG_RTP_FILE", CONFIG_RTP_FILE)
+PROJECT_DIR_NAME = "H028_雷神爆金 1000"
 
 
 def resolve_base_dir():
@@ -138,20 +141,23 @@ def resolve_base_dir():
     file_value = globals().get("__file__")
     if file_value:
         file_parent = Path(file_value).resolve().parent
-        candidates.append(file_parent)
+        if file_parent.name == PROJECT_DIR_NAME:
+            candidates.append(file_parent)
     else:
         file_parent = None
 
-    candidates.append(cwd)
+    if cwd.name == PROJECT_DIR_NAME:
+        candidates.append(cwd)
     anchors = [cwd, *cwd.parents]
     if file_parent is not None:
         anchors.extend([file_parent, *file_parent.parents])
     for anchor in anchors:
         candidates.extend(
             [
-                anchor / "H028_雷神爆金 1000",
-                anchor / "Slots" / "H028_雷神爆金 1000",
-                anchor / "Project_AI" / "Slots" / "H028_雷神爆金 1000",
+                anchor / PROJECT_DIR_NAME,
+                anchor / "Slots" / PROJECT_DIR_NAME,
+                anchor / "Project" / "Slots" / PROJECT_DIR_NAME,
+                anchor / "Project_AI" / "Slots" / PROJECT_DIR_NAME,
             ]
         )
 
@@ -163,16 +169,19 @@ def resolve_base_dir():
         if candidate_key in seen:
             continue
         seen.add(candidate_key)
-        checked.append(str(candidate / CONFIG_FILE))
-        if (candidate / CONFIG_FILE).is_file():
+        if not base_dir_override and candidate.name != PROJECT_DIR_NAME:
+            continue
+        checked.append(f"{candidate / CONFIG_FILE} + {candidate / CONFIG_RTP_FILE}")
+        if (candidate / CONFIG_FILE).is_file() and (candidate / CONFIG_RTP_FILE).is_file():
             return candidate
-    raise FileNotFoundError(f"Cannot locate {CONFIG_FILE}. Checked: " + " | ".join(checked))
+    raise FileNotFoundError(f"Cannot locate config pair {CONFIG_FILE} + {CONFIG_RTP_FILE}. Checked: " + " | ".join(checked))
 
 
 BASE_DIR = resolve_base_dir()
 SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 OUTPUT_DIR = BASE_DIR / "Record"
 CONFIG_PATH = BASE_DIR / CONFIG_FILE
+CONFIG_RTP_PATH = BASE_DIR / CONFIG_RTP_FILE
 TOTAL_ROUNDS = int(os.environ.get("H028_TOTAL_ROUNDS", str(TOTAL_ROUNDS)))
 BET_MODE = int(os.environ.get("H028_BET_MODE", str(BET_MODE)))
 BET_MULTI = int(os.environ.get("H028_BET_MULTI", str(BET_MULTI)))
@@ -188,14 +197,56 @@ CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H028_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM
 
 
 def load_js_config(path):
-    content = path.read_text(encoding="utf-8").strip()
-    match = re.match(r"^(?:const|let|var)\s+\w+\s*=\s*(.*?);?\s*$", content, re.DOTALL)
-    if match:
-        content = match.group(1)
-    return json.loads(content)
+    path = Path(path).resolve()
+    last_error = None
+    content = ""
+    for attempt in range(3):
+        content = path.read_text(encoding="utf-8-sig").strip()
+        match = re.match(
+            r"^(?:(?:const|let|var)\s+\w+|window\.[A-Za-z_$][\w$]*)\s*=\s*(.*?);?\s*$",
+            content,
+            re.DOTALL,
+        )
+        if match:
+            content = match.group(1).strip()
+        try:
+            if not content:
+                raise ValueError("config content is empty")
+            return json.loads(content)
+        except (json.JSONDecodeError, ValueError) as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(0.05)
+
+    preview = content[:80].replace("\r", "\\r").replace("\n", "\\n")
+    raise ValueError(f"Unable to parse config: {path} (content starts with {preview!r})") from last_error
 
 
-data = load_js_config(CONFIG_PATH)
+def validate_config_pair(natural, rtp, natural_name, rtp_name):
+    natural_game_id = str(natural.get("game_id", ""))
+    rtp_game_id = str(rtp.get("game_id", ""))
+    if natural_game_id != rtp_game_id:
+        raise ValueError(f"Config game_id mismatch: {natural_name}={natural_game_id!r}, " f"{rtp_name}={rtp_game_id!r}")
+    natural_version = str(natural.get("excel_version", "")).strip()
+    rtp_version = str(rtp.get("excel_version", "")).strip()
+    if not re.fullmatch(r"\d+", natural_version):
+        raise ValueError(f"{natural_name} excel_version must be one numeric part: {natural_version!r}")
+    if not re.fullmatch(r"\d+\.\d+\.\d+\.\d+", rtp_version):
+        raise ValueError(f"{rtp_name} excel_version must contain four numeric parts: {rtp_version!r}")
+    if natural_version != rtp_version.split(".", 1)[0]:
+        raise ValueError(f"Config version mismatch: {natural_name}={natural_version}, {rtp_name}={rtp_version}")
+    if "card_system" not in rtp:
+        raise KeyError(f"{rtp_name} is missing card_system")
+
+
+NATURAL_DATA = load_js_config(CONFIG_PATH)
+RTP_DATA = load_js_config(CONFIG_RTP_PATH)
+validate_config_pair(NATURAL_DATA, RTP_DATA, CONFIG_FILE, CONFIG_RTP_FILE)
+# The base Config is authoritative for natural probability and game rules.
+# The RTP Config contributes only its four-part version and Card System.
+data = dict(NATURAL_DATA)
+data["excel_version"] = RTP_DATA["excel_version"]
+data["card_system"] = RTP_DATA["card_system"]
 FREE_GAME_SPINS = data.get("free_game_spins", {})
 FG_TRIGGER_SCATTER = max(1, int(FREE_GAME_SPINS.get("trigger_scatter", 4)))
 FG_BASE_SPINS = max(1, int(FREE_GAME_SPINS.get("base_spins", 10)))
@@ -205,7 +256,7 @@ GAME_ID = str(data.get("game_id", "101016"))
 PARSHEET_ID = str(data.get("parsheet_id", "H0281"))
 GAME_NAME = str(data.get("display_name", "Thunder Boost 1000"))
 GAME_NAME_ZH = str(data.get("game_name_zh", "雷神爆金1000"))
-CONFIG_VERSION = str(data.get("excel_version", "1.0.0.1"))
+CONFIG_VERSION = str(RTP_DATA["excel_version"])
 DEFAULT_COIN_IN = int(data.get("default_coin_in", 100))
 MODE_NORMALBET = int(data.get("mode_normalbet", 0))
 MODE_EXTRABET = int(data.get("mode_extrabet", 1))
@@ -218,7 +269,7 @@ SUPPORTED_BET_MODES = tuple(int(value) for value in data.get("supported_bet_mode
 # match the selected interval.  The denominator always uses Normal Bet coin-in.
 CARD_SYSTEM = data.get("card_system", {})
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM.get("enabled", False))
-CARD_RETRY_LIMIT = max(1, int(CARD_SYSTEM.get("retry_limit", 5000)))
+CARD_RETRY_LIMIT = max(1, int(CARD_SYSTEM.get("retry_limit", 10000)))
 CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
 CARD_PROFILE_NEWBIE_BG = 0
@@ -2423,6 +2474,7 @@ def merge_record_data(chunks):
     merged = np.zeros(RECORD_SIZE, dtype=np.int64)
     global_max = max(int(chunk[R_ALL, RA_MAX_SINGLE_WIN]) for chunk in chunks)
     global_max_multiplier = max(int(chunk[R_ALL, RA_MAX_FG_MULTIPLIER]) for chunk in chunks)
+    global_trigger_fg_bg_max = max(int(chunk[R_ALL, RA_TRIGGER_FG_BG_MAX_PAY]) for chunk in chunks)
     bg_interval_max = np.max(np.stack([chunk[R_BG_INTERVAL_MULT_MAX] for chunk in chunks]), axis=0)
     fg_interval_max = np.max(np.stack([chunk[R_FG_INTERVAL_FINAL_MULT_MAX] for chunk in chunks]), axis=0)
     for chunk in chunks:
@@ -2430,6 +2482,7 @@ def merge_record_data(chunks):
     merged[R_ALL, RA_MAX_SINGLE_WIN] = global_max
     merged[R_ALL, RA_MAX_WIN_HITS] = sum(int(chunk[R_ALL, RA_MAX_WIN_HITS]) for chunk in chunks if int(chunk[R_ALL, RA_MAX_SINGLE_WIN]) == global_max)
     merged[R_ALL, RA_MAX_FG_MULTIPLIER] = global_max_multiplier
+    merged[R_ALL, RA_TRIGGER_FG_BG_MAX_PAY] = global_trigger_fg_bg_max
     merged[R_BG_INTERVAL_MULT_MAX] = bg_interval_max
     merged[R_FG_INTERVAL_FINAL_MULT_MAX] = fg_interval_max
     return merged
@@ -2509,7 +2562,9 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         elif bet_mode == MODE_FEATUREBUY:
             fg_trigger_rate_model = 1.0
     fg_cycle_model = 1.0 / fg_trigger_rate_model if fg_trigger_rate_model else 0.0
-    retrigger_rate = values[R_ALL, RA_FG_RETRIGGER] / fg_sessions if fg_sessions else 0.0
+    retrigger_events = values[R_ALL, RA_FG_RETRIGGER]
+    retrigger_rate = retrigger_events / fg_spins if fg_spins else 0.0
+    retrigger_cycle = fg_spins / retrigger_events if retrigger_events else 0.0
     avg_fg_spins = fg_spins / fg_sessions if fg_sessions else 0.0
     trigger_fg_bg_pay = values[R_ALL, RA_TRIGGER_FG_PAY_BG]
     trigger_fg_bg_count = int(values[R_ALL, RA_FG_TRIGGER])
@@ -2517,6 +2572,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     x_sum = values[R_ALL, RA_X_SUM] / 1_000_000
     x_square = values[R_ALL, RA_X_SQUARE] / 1_000_000
     volatility_std = math.sqrt(max(0.0, x_square / total_round - (x_sum / total_round) ** 2))
+    standard_error = volatility_std / math.sqrt(total_round) if total_round else 0.0
     max_win_x = values[R_ALL, RA_MAX_SINGLE_WIN] / coin_in if coin_in else 0.0
     retry_total = int(values[R_ALL, RA_RETRY_TOTAL])
     card_profile = "off"
@@ -2550,66 +2606,69 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     multiplier_line_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
 
     base_rows = [
+        ("game_name", GAME_NAME_ZH or GAME_NAME, ""),
         ("game_id", GAME_ID, ""),
-        ("parsheet_id", PARSHEET_ID, ""),
-        ("game_name", GAME_NAME, ""),
-        ("game_name_zh", GAME_NAME_ZH, ""),
-        ("version", CONFIG_VERSION, ""),
-        ("config", CONFIG_FILE, ""),
+        ("", "", ""),
+        ("config_file", CONFIG_FILE, "natural-probability model"),
+        ("config_rtp_file", CONFIG_RTP_FILE, "card/RTP model"),
+        ("math_version", CONFIG_VERSION, ""),
+        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
+        ("", "", ""),
         ("bet_mode", format_bet_mode_label(bet_mode), ""),
         ("bet_multi", bet_multi, ""),
         ("coin_in", coin_in, ""),
-        ("multiplier_line_basis", "normal_bet", "all intervals use Normal Bet coin-in"),
-        ("multiplier_line_coin_in", multiplier_line_coin_in, "interval divisor"),
-        ("multiplier_line_bg_basis", "BG spin", "BG rates use paid BG spins in each BG-pay interval"),
-        ("multiplier_line_fg_basis", "FG session", "FG sessions are grouped by total session pay; spin rates use spins in those sessions"),
         ("total_rounds", int(total_round), ""),
-        ("threads", int(threads), ""),
         ("duration_sec", round(duration, 6), ""),
-        ("", "", ""),
-        ("rtp_total", rtp_total, ""),
-        ("rtp_bg", rtp_bg, ""),
-        ("rtp_fg", rtp_fg, ""),
-        ("", "", ""),
-        ("hit_rate_total", hit_rate_total, ""),
-        ("hit_rate_bg", hit_rate_bg, ""),
-        ("hit_rate_fg", hit_rate_fg, ""),
-        ("m1_appear_rate_bg", bg_m1_rate, "BG spins containing at least one M1 / BG spins"),
-        ("m1_appear_rate_fg", fg_m1_rate, "FG spins containing at least one M1 / FG spins"),
-        ("m1_2x1_plus_rate_bg", bg_big_m1_rate, "BG spins containing at least one M1 of size 2x1 or larger / BG spins"),
-        ("m1_2x1_plus_rate_fg", fg_big_m1_rate, "FG spins containing at least one M1 of size 2x1 or larger / FG spins"),
-        ("", "", ""),
-        ("fg_trigger_rate", fg_trigger_rate, "observed FG sessions / paid rounds; retained for compatibility"),
-        ("fg_trigger_rate_observed", fg_trigger_rate, "observed FG sessions / paid rounds"),
-        ("fg_cycle_observed", fg_cycle_observed, "paid rounds / observed FG sessions"),
-        ("fg_trigger_rate_model", fg_trigger_rate_model, "Free Game card weight / total BG card weight"),
-        ("fg_cycle_model", fg_cycle_model, "total BG card weight / Free Game card weight"),
-        ("retrigger_per_fg", retrigger_rate, "events / FG session"),
-        ("retrigger_rate", fg_retrigger_session_rate, "sessions with retrigger / FG sessions"),
-        ("avg_fg_spins", avg_fg_spins, ""),
-        ("cascade_rate_basis", "exact", "Cascade 1/2/3/4 are exact counts; Cascade 5+ is capped into one group"),
-        ("avg_final_multiplier_bg", avg_bg_final_multiplier, "average final accumulated multiplier per BG spin"),
-        ("max_final_multiplier_bg", max_bg_final_multiplier, "maximum final accumulated multiplier among BG spins"),
-        ("avg_final_multiplier_fg", avg_fg_final_multiplier, "average final accumulated multiplier per FG session"),
-        ("max_final_multiplier_fg", max_fg_final_multiplier, "maximum final accumulated multiplier among FG sessions"),
-        ("trigger_fg_bg_pay", int(trigger_fg_bg_pay), ""),
-        ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
-        ("trigger_fg_bg_max_pay", trigger_fg_bg_max_pay, ""),
-        ("", "", ""),
-        ("volatility_std", volatility_std, ""),
-        ("max_win_x", max_win_x, ""),
-        ("max_win_hits", int(values[R_ALL, RA_MAX_WIN_HITS]), ""),
-        ("", "", ""),
-        ("card_system", "on" if CARD_SYSTEM_ENABLED else "off", ""),
-        ("card_system_profile", card_profile, ""),
-        ("retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0, ""),
-        ("retry_total", retry_total, ""),
-        ("avg_retry", retry_total / total_round if total_round else 0.0, ""),
-        ("retry_limit_exceeded", int(values[R_ALL, RA_RETRY_LIMIT_EXCEEDED]), ""),
-        ("retry_fail_bg_range", int(values[R_ALL, RA_RETRY_FAIL_BG_RANGE]), ""),
-        ("retry_fail_bg_freegame", int(values[R_ALL, RA_RETRY_FAIL_BG_FREEGAME]), ""),
-        ("retry_fail_fg", int(values[R_ALL, RA_RETRY_FAIL_FG]), ""),
     ]
+    if CARD_SYSTEM_ENABLED:
+        base_rows.extend(
+            [
+                ("", "", ""),
+                ("profile", card_profile, ""),
+                ("card_retry_limit", CARD_RETRY_LIMIT, ""),
+                ("retry_total", retry_total, ""),
+                ("avg_retry", retry_total / total_round if total_round else 0.0, ""),
+                ("retry_limit_exceeded", int(values[R_ALL, RA_RETRY_LIMIT_EXCEEDED]), ""),
+                ("retry_limit_bg_range", int(values[R_ALL, RA_RETRY_FAIL_BG_RANGE]), ""),
+                ("retry_limit_bg_freegame", int(values[R_ALL, RA_RETRY_FAIL_BG_FREEGAME]), ""),
+                ("retry_limit_fg", int(values[R_ALL, RA_RETRY_FAIL_FG]), ""),
+            ]
+        )
+    base_rows.extend(
+        [
+            ("", "", ""),
+            ("rtp_total", rtp_total, ""),
+            ("rtp_bg", rtp_bg, ""),
+            ("rtp_fg", rtp_fg, ""),
+            ("hit_rate_bg", hit_rate_bg, "BG winning spins / paid BG spins"),
+            ("hit_rate_fg", hit_rate_fg, "FG winning spins / FG spins"),
+            ("fg_trigger_rate", fg_trigger_rate, f"cycle {fg_cycle_observed:.4f} paid spins"),
+            ("retrigger_trigger_rate", retrigger_rate, f"cycle {retrigger_cycle:.4f} FG spins"),
+            ("avg_fg_spins", avg_fg_spins, ""),
+            ("", "", ""),
+            ("volatility_std", volatility_std, ""),
+            ("standard_error", standard_error, ""),
+            ("", "", ""),
+            ("m1_appear_rate_bg", bg_m1_rate, "BG spins containing M1 / BG spins"),
+            ("m1_appear_rate_fg", fg_m1_rate, "FG spins containing M1 / FG spins"),
+            ("m1_2x1_plus_rate_bg", bg_big_m1_rate, "BG spins containing 2x1+ M1 / BG spins"),
+            ("m1_2x1_plus_rate_fg", fg_big_m1_rate, "FG spins containing 2x1+ M1 / FG spins"),
+            ("avg_final_multiplier_bg", avg_bg_final_multiplier, "per BG spin"),
+            ("max_final_multiplier_bg", max_bg_final_multiplier, ""),
+            ("avg_final_multiplier_fg", avg_fg_final_multiplier, "per FG session"),
+            ("max_final_multiplier_fg", max_fg_final_multiplier, ""),
+            ("trigger_fg_bg_pay", int(trigger_fg_bg_pay), ""),
+            ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
+            ("trigger_fg_bg_max_pay", trigger_fg_bg_max_pay, ""),
+            ("max_win_x", max_win_x, ""),
+            ("max_win_hits", int(values[R_ALL, RA_MAX_WIN_HITS]), ""),
+            ("fg_trigger_rate_model", fg_trigger_rate_model, f"cycle {fg_cycle_model:.4f} by card weight"),
+            ("retrigger_session_rate", fg_retrigger_session_rate, "FG sessions with retrigger / FG sessions"),
+            ("multiplier_line_basis", "normal_bet", "all intervals use Normal Bet coin-in"),
+            ("multiplier_line_coin_in", multiplier_line_coin_in, "interval divisor"),
+            ("cascade_rate_basis", "exact", "1/2/3/4 exact; 5+ grouped"),
+        ]
+    )
     df_base = pd.DataFrame(base_rows, columns=["Index", "Value", "Value2"])
 
     scene_rows = [
@@ -2681,32 +2740,38 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
             "Rate": (record_data[R_FG_FINAL_MULTIPLIER, :fg_multiplier_bucket_count] / multiplier_total if multiplier_total else np.zeros(fg_multiplier_bucket_count)),
         }
     )
+    fg_count_output = record_data[R_MULTIPLIER_COUNT_FG, : len(THRESHOLD_RECORD)] if bet_mode == MODE_NORMALBET else np.zeros(len(THRESHOLD_RECORD), dtype=np.int64)
+    fg_pay_output = record_data[R_MULTIPLIER_PAY_FG, : len(THRESHOLD_RECORD)] if bet_mode == MODE_NORMALBET else np.zeros(len(THRESHOLD_RECORD), dtype=np.int64)
+    bf_count_output = record_data[R_MULTIPLIER_COUNT_FG, : len(THRESHOLD_RECORD)] if bet_mode == MODE_FEATUREBUY else np.zeros(len(THRESHOLD_RECORD), dtype=np.int64)
+    bf_pay_output = record_data[R_MULTIPLIER_PAY_FG, : len(THRESHOLD_RECORD)] if bet_mode == MODE_FEATUREBUY else np.zeros(len(THRESHOLD_RECORD), dtype=np.int64)
     df_multiplier_line = pd.DataFrame(
         {
             "Interval": format_threshold_labels(THRESHOLD_RECORD),
-            "BG_Count": record_data[R_MULTIPLIER_COUNT_BG, : len(THRESHOLD_RECORD)],
-            "BG_Pay": record_data[R_MULTIPLIER_PAY_BG, : len(THRESHOLD_RECORD)],
+            "base_game_cnt": record_data[R_MULTIPLIER_COUNT_BG, : len(THRESHOLD_RECORD)],
+            "base_game_pay": record_data[R_MULTIPLIER_PAY_BG, : len(THRESHOLD_RECORD)],
+            "free_game_cnt": fg_count_output,
+            "free_game_pay": fg_pay_output,
+            "free_game_cnt_BF": bf_count_output,
+            "free_game_pay_BF": bf_pay_output,
+            "FG_Hit_Rate": divide(values[R_FG_INTERVAL_HIT_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Spin_Count": record_data[R_FG_INTERVAL_SPINS, : len(THRESHOLD_RECORD)],
+            "BG_Combo_1_Rate": divide(values[R_BG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Combo_2_Rate": divide(values[R_BG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Combo_3_Rate": divide(values[R_BG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Combo_4_Rate": divide(values[R_BG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "BG_Combo_5Plus_Rate": divide(values[R_BG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], bg_interval_count),
+            "FG_Combo_1_Rate": divide(values[R_FG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_2_Rate": divide(values[R_FG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_3_Rate": divide(values[R_FG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_4_Rate": divide(values[R_FG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_5Plus_Rate": divide(values[R_FG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], fg_interval_spins),
             "BG_Hit_Rate": divide(values[R_BG_INTERVAL_HITS, : len(THRESHOLD_RECORD)], bg_interval_count),
             "BG_M1_Appear_Rate": divide(values[R_BG_INTERVAL_M1, : len(THRESHOLD_RECORD)], bg_interval_count),
             "BG_M1_2x1Plus_Rate": divide(values[R_BG_INTERVAL_BIG_M1, : len(THRESHOLD_RECORD)], bg_interval_count),
-            "BG_Cascade_1_Rate": divide(values[R_BG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], bg_interval_count),
-            "BG_Cascade_2_Rate": divide(values[R_BG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], bg_interval_count),
-            "BG_Cascade_3_Rate": divide(values[R_BG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], bg_interval_count),
-            "BG_Cascade_4_Rate": divide(values[R_BG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], bg_interval_count),
-            "BG_Cascade_5Plus_Rate": divide(values[R_BG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], bg_interval_count),
             "BG_Final_Avg_Multiplier": divide(values[R_BG_INTERVAL_MULT_SUM, : len(THRESHOLD_RECORD)], bg_interval_count),
             "BG_Final_Max_Multiplier": record_data[R_BG_INTERVAL_MULT_MAX, : len(THRESHOLD_RECORD)],
-            "FG_Session_Count": record_data[R_MULTIPLIER_COUNT_FG, : len(THRESHOLD_RECORD)],
-            "FG_Pay": record_data[R_MULTIPLIER_PAY_FG, : len(THRESHOLD_RECORD)],
-            "FG_Spin_Count": record_data[R_FG_INTERVAL_SPINS, : len(THRESHOLD_RECORD)],
-            "FG_Hit_Rate": divide(values[R_FG_INTERVAL_HIT_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
             "FG_M1_Appear_Rate": divide(values[R_FG_INTERVAL_M1_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
             "FG_M1_2x1Plus_Rate": divide(values[R_FG_INTERVAL_BIG_M1_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
-            "FG_Cascade_1_Rate": divide(values[R_FG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], fg_interval_spins),
-            "FG_Cascade_2_Rate": divide(values[R_FG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], fg_interval_spins),
-            "FG_Cascade_3_Rate": divide(values[R_FG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], fg_interval_spins),
-            "FG_Cascade_4_Rate": divide(values[R_FG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], fg_interval_spins),
-            "FG_Cascade_5Plus_Rate": divide(values[R_FG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], fg_interval_spins),
             "FG_Retrigger_Rate": divide(values[R_FG_INTERVAL_RETRIGGER_SESSIONS, : len(THRESHOLD_RECORD)], fg_interval_count),
             "FG_Final_Avg_Multiplier": divide(values[R_FG_INTERVAL_FINAL_MULT_SUM, : len(THRESHOLD_RECORD)], fg_interval_count),
             "FG_Final_Max_Multiplier": record_data[R_FG_INTERVAL_FINAL_MULT_MAX, : len(THRESHOLD_RECORD)],
@@ -2743,6 +2808,7 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "avg_final_multiplier_fg": avg_fg_final_multiplier,
         "max_final_multiplier_fg": max_fg_final_multiplier,
         "volatility_std": volatility_std,
+        "standard_error": standard_error,
         "max_win_x": max_win_x,
         "card_system": "on" if CARD_SYSTEM_ENABLED else "off",
         "card_system_profile": card_profile,
@@ -2757,10 +2823,17 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
 
 
 def print_console_result(df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier):
-    if SHOW_CONSOLE_SUMMARY:
-        print("\n=== Fixed Result ===")
-        for row in df_base.itertuples(index=False):
-            print(f"{row.Index:<24} : {row.Value}")
+    print("\n=== Result ===")
+    by_game_started = False
+    for row in df_base.itertuples(index=False):
+        if row.Index == "m1_appear_rate_bg" and not by_game_started:
+            print("<< By Game Info >>")
+            by_game_started = True
+        if not row.Index:
+            print()
+            continue
+        note = f" ({row.Value2})" if row.Value2 else ""
+        print(f"{row.Index:<28} : {row.Value}{note}")
     if SHOW_CONSOLE_DETAIL:
         print("\n=== By Game Result: Scene Summary ===")
         print(df_scene.to_string(index=False))
@@ -2786,46 +2859,73 @@ def format_rounds_tag(total_round):
     return str(total_round)
 
 
-def format_version_tag(version):
-    return re.sub(r"[^0-9A-Za-z]+", "", str(version or ""))
+def format_base_version_tag(version):
+    version_text = str(version or "").strip()
+    if not re.fullmatch(r"\d+", version_text):
+        raise ValueError(f"Base version must be one numeric part, got {version_text!r}")
+    value = int(version_text)
+    if value > 99:
+        raise ValueError(f"Base version part exceeds two digits: {version_text!r}")
+    return f"{value:02d}"
 
 
-def format_elapsed_time(seconds):
-    total_seconds = max(0, int(round(float(seconds))))
-    hours, remainder = divmod(total_seconds, 3600)
-    minutes, secs = divmod(remainder, 60)
-    return f"{hours}h {minutes}m {secs}s"
+def format_rtp_version_tag(version):
+    parts = str(version or "").strip().split(".")
+    if len(parts) != 4 or any(not re.fullmatch(r"\d+", part) for part in parts):
+        raise ValueError(f"RTP version must contain four numeric parts, got {version!r}")
+    values = [int(part) for part in parts]
+    if any(value > 99 for value in values):
+        raise ValueError(f"Each RTP version part must fit two digits, got {version!r}")
+    return "".join(f"{value:02d}" for value in values)
 
 
-def print_batch_summary(duration, summary, bet_mode):
-    print(f"* game_id: {GAME_ID}", flush=True)
-    print(f"* parsheet_id: {PARSHEET_ID}", flush=True)
-    print(f"* version: {CONFIG_VERSION}", flush=True)
-    print(f"* bet_mode: {format_bet_mode_label(bet_mode)}", flush=True)
-    print(f"* duration: {format_elapsed_time(duration)}", flush=True)
-    print(f"* rtp_total: {summary['rtp_total'] * 100:.2f}%", flush=True)
-    print(f"* rtp_bg: {summary['rtp_bg'] * 100:.2f}%", flush=True)
-    print(f"* rtp_fg: {summary['rtp_fg'] * 100:.2f}%", flush=True)
-    print(f"* hit_rate_bg: {summary['hit_rate_bg']:.4f}", flush=True)
-    print(f"* hit_rate_fg: {summary['hit_rate_fg']:.4f}", flush=True)
-    print(
-        f"* fg_trigger_rate_observed: {summary['fg_trigger_rate_observed']:.6f} " f"({summary['fg_trigger_count']} sessions)",
-        flush=True,
-    )
-    print(f"* fg_cycle_observed: {summary['fg_cycle_observed']:.4f}", flush=True)
-    print(f"* fg_trigger_rate_model: {summary['fg_trigger_rate_model']:.9f}", flush=True)
-    print(f"* fg_cycle_model: {summary['fg_cycle_model']:.4f}", flush=True)
-    print(f"* retrigger_per_fg: {summary['retrigger_rate']:.4f}", flush=True)
-    print(f"* avg_fg_spins: {summary['avg_fg_spins']:.2f} spins", flush=True)
-    print(f"* max_win: {summary['max_win_x']:.2f} x", flush=True)
-    profile_text = f" ({summary['card_system_profile']})" if summary["card_system"] == "on" else ""
-    print(f"* card_system: {summary['card_system']}{profile_text}", flush=True)
-    print(f"* retry_total: {summary['retry_total']}", flush=True)
-    print(f"* avg_retry: {summary['avg_retry']:.4f}", flush=True)
-    print(f"* retry_limit_exceeded: {summary['retry_limit_exceeded']}", flush=True)
-    print(f"* retry_fail_bg_range: {summary['retry_fail_bg_range']}", flush=True)
-    print(f"* retry_fail_bg_freegame: {summary['retry_fail_bg_freegame']}", flush=True)
-    print(f"* retry_fail_fg: {summary['retry_fail_fg']}", flush=True)
+def format_rtp_tag(rtp_ratio):
+    value = float(rtp_ratio)
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"rtp_total must be a non-negative finite value, got {rtp_ratio!r}")
+    return f"{value * 100:.2f}".replace(".", "")
+
+
+def report_base_game_id():
+    candidate = str(NATURAL_DATA.get("parsheet_id", PARSHEET_ID) or "").upper()
+    if re.fullmatch(r"H\d{3}1", candidate):
+        return candidate
+    raise ValueError(f"Unable to resolve base report game id from {candidate!r}")
+
+
+def report_rtp_game_id():
+    source_stem = Path(str(RTP_DATA.get("source_xlsx", "") or "")).stem.upper()
+    if re.fullmatch(r"H\d{3}1\d{2}[A-Z]", source_stem):
+        return source_stem
+    match = re.fullmatch(r"config_(\d{2})([A-Z]?)", Path(CONFIG_RTP_FILE).stem, re.IGNORECASE)
+    if match:
+        return f"{report_base_game_id()}{match.group(1)}{(match.group(2) or 'A').upper()}"
+    raise ValueError(f"Unable to resolve RTP report game id from {CONFIG_RTP_FILE!r}")
+
+
+def report_filename(rtp_total, bet_mode, total_round, timestamp=None):
+    timestamp = timestamp or datetime.now().strftime("%y%m%d%H%M")
+    if CARD_SYSTEM_ENABLED:
+        parts = [
+            report_rtp_game_id(),
+            format_rtp_version_tag(CONFIG_VERSION),
+            timestamp,
+            f"betmode{int(bet_mode)}",
+            format_rounds_tag(total_round),
+            format_rtp_tag(rtp_total),
+        ]
+        if int(bet_mode) == MODE_NORMALBET:
+            parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
+        parts.append("card")
+    else:
+        parts = [
+            report_base_game_id(),
+            format_base_version_tag(NATURAL_DATA.get("excel_version")),
+            timestamp,
+            f"betmode{int(bet_mode)}",
+            format_rounds_tag(total_round),
+        ]
+    return "_".join(parts) + ".xlsx"
 
 
 def output_report(
@@ -2839,16 +2939,14 @@ def output_report(
     df_record,
     bet_mode,
     total_round,
+    rtp_total,
 ):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    profile_suffix = ""
-    if CARD_SYSTEM_ENABLED and bet_mode == MODE_NORMALBET:
-        profile_suffix = "_newbie" if CARD_SYSTEM_IS_NEWBIE else "_oldhand"
-    card_suffix = "_card" if CARD_SYSTEM_ENABLED else ""
-    filename = f"{PARSHEET_ID}_{format_version_tag(CONFIG_VERSION)}_{timestamp}_" f"betmode{bet_mode}_{format_rounds_tag(total_round)}{profile_suffix}{card_suffix}.xlsx"
+    filename = report_filename(rtp_total, bet_mode, total_round, timestamp)
     path = OUTPUT_DIR / filename
     with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        df_base.to_excel(writer, sheet_name="Overview", index=False)
         df_base.to_excel(writer, sheet_name="Base Info", index=False)
         df_scene.to_excel(writer, sheet_name="Scene Summary", index=False)
         df_cascade.to_excel(writer, sheet_name="Cascade", index=False)
@@ -2858,18 +2956,19 @@ def output_report(
         df_multiplier_line.to_excel(writer, sheet_name="Multiplier Line", index=False)
         df_record.to_excel(writer, sheet_name="Record Data", index=False)
 
-        base_sheet = writer.sheets["Base Info"]
-        base_sheet.freeze_panes = "A2"
-        base_sheet.auto_filter.ref = base_sheet.dimensions
-        base_sheet.column_dimensions["A"].width = 34
-        base_sheet.column_dimensions["B"].width = 22
-        base_sheet.column_dimensions["C"].width = 42
-        for row_index in range(2, len(df_base) + 2):
-            metric_name = str(base_sheet.cell(row=row_index, column=1).value or "")
-            if metric_name.startswith("rtp_") or "rate" in metric_name:
-                base_sheet.cell(row=row_index, column=2).number_format = "0.0000%"
-            elif "multiplier" in metric_name or metric_name in ("avg_fg_spins", "avg_retry"):
-                base_sheet.cell(row=row_index, column=2).number_format = "0.0000"
+        for sheet_name in ("Overview", "Base Info"):
+            base_sheet = writer.sheets[sheet_name]
+            base_sheet.freeze_panes = "A2"
+            base_sheet.auto_filter.ref = base_sheet.dimensions
+            base_sheet.column_dimensions["A"].width = 34
+            base_sheet.column_dimensions["B"].width = 22
+            base_sheet.column_dimensions["C"].width = 48
+            for row_index in range(2, len(df_base) + 2):
+                metric_name = str(base_sheet.cell(row=row_index, column=1).value or "")
+                if metric_name.startswith("rtp_") or "rate" in metric_name:
+                    base_sheet.cell(row=row_index, column=2).number_format = "0.0000%"
+                elif "multiplier" in metric_name or metric_name in ("avg_fg_spins", "avg_retry"):
+                    base_sheet.cell(row=row_index, column=2).number_format = "0.0000"
 
         multiplier_sheet = writer.sheets["Multiplier Line"]
         multiplier_sheet.freeze_panes = "B2"
@@ -2880,7 +2979,7 @@ def output_report(
             multiplier_sheet.column_dimensions[column_letter].width = max(14, min(28, len(str(column_name)) + 3))
             if column_name.endswith("_Rate"):
                 number_format = "0.0000%"
-            elif column_name.endswith("_Count") or column_name.endswith("_Pay"):
+            elif column_name.endswith(("_Count", "_Pay", "_cnt", "_pay")):
                 number_format = "#,##0"
             elif "Multiplier" in column_name:
                 number_format = "0.0000"
@@ -2901,22 +3000,44 @@ def run_single_spin_debug():
 def run_all_combinations():
     total_jobs = len(BATCH_RUNS)
     for index, combo in enumerate(BATCH_RUNS, start=1):
+        required = (
+            "config_file",
+            "config_rtp_file",
+            "bet_mode",
+            "total_rounds",
+            "card_system_enabled",
+            "card_system_is_newbie",
+        )
+        missing = [field for field in required if field not in combo]
+        if missing:
+            raise ValueError(f"BATCH_RUNS entry missing required fields: {', '.join(missing)}")
+        if not isinstance(combo["config_file"], str) or not combo["config_file"].strip():
+            raise TypeError("config_file must be a non-empty string")
+        if not isinstance(combo["config_rtp_file"], str) or not combo["config_rtp_file"].strip():
+            raise TypeError("config_rtp_file must be a non-empty string")
+        if isinstance(combo["bet_mode"], bool) or not isinstance(combo["bet_mode"], int):
+            raise TypeError("bet_mode must be an integer")
+        if isinstance(combo["total_rounds"], bool) or int(combo["total_rounds"]) <= 0:
+            raise ValueError("total_rounds must be a positive integer")
+        if not isinstance(combo["card_system_enabled"], bool):
+            raise TypeError("card_system_enabled must be Boolean")
+        if not isinstance(combo["card_system_is_newbie"], bool):
+            raise TypeError("card_system_is_newbie must be Boolean")
         combo_env = os.environ.copy()
         combo_env["PYTHONUNBUFFERED"] = "1"
         combo_env["H028_CONFIG_FILE"] = combo["config_file"]
+        combo_env["H028_CONFIG_RTP_FILE"] = combo["config_rtp_file"]
         combo_env["H028_BET_MODE"] = str(combo["bet_mode"])
         combo_env["H028_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         combo_env["H028_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", CARD_SYSTEM_ENABLED) else "false"
         combo_env["H028_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", CARD_SYSTEM_IS_NEWBIE) else "false"
         combo_env["H028_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H028_BATCH_CHILD"] = "1"
-        print(
-            f"\n=== Batch {index}/{total_jobs}: config={combo['config_file']}, " f"bet_mode={combo['bet_mode']}, total_rounds={combo['total_rounds']}, " f"card={combo.get('card_system_enabled', CARD_SYSTEM_ENABLED)}, " f"newbie={combo.get('card_system_is_newbie', CARD_SYSTEM_IS_NEWBIE)} ===",
-            flush=True,
-        )
+        normalized = {field: combo[field] for field in required}
+        print(f"\n=== Batch {index}/{total_jobs}: {normalized} ===", flush=True)
         result = subprocess.run(
             [sys.executable, str(SIMULATOR_PATH)],
-            check=True,
+            check=False,
             env=combo_env,
             capture_output=True,
             text=True,
@@ -2927,6 +3048,8 @@ def run_all_combinations():
             print(result.stdout.rstrip(), flush=True)
         if result.stderr:
             print(result.stderr.rstrip(), file=sys.stderr, flush=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Batch {index}/{total_jobs} failed with exit code {result.returncode}; " "child stdout/stderr are shown above.")
 
 
 def main():
@@ -2949,8 +3072,6 @@ def main():
     )
     df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier, df_multiplier_line, df_record, summary = frames
     print_console_result(df_base, df_scene, df_cascade, df_cascade_dist, df_scatter, df_fg_multiplier)
-    print_batch_summary(duration, summary, BET_MODE)
-
     if OUTPUT_REPORT:
         report_path = output_report(
             df_base,
@@ -2963,6 +3084,7 @@ def main():
             df_record,
             BET_MODE,
             TOTAL_ROUNDS,
+            summary["rtp_total"],
         )
         print(f"\nReport: {report_path}")
 

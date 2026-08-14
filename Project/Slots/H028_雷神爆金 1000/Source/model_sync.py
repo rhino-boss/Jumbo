@@ -38,6 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent
 BASE_WORKBOOK = BASE_DIR / "H0281.xlsx"
 DEFAULT_SOURCE = BASE_DIR / "H028192A.xlsx"
 DEFAULT_OUTPUT = BASE_DIR.parent / "config_92A.js"
+BASE_OUTPUT = BASE_DIR.parent / "config.js"
 
 METADATA = {
     "game_id": "101016",
@@ -248,7 +249,7 @@ def parse_card_system(ws):
         )
         for card, weight in zip(cards, normalized):
             card["weight"] = weight
-    return {"enabled": True, "retry_limit": 5000, **profiles}
+    return {"enabled": True, "retry_limit": 10000, **profiles}
 
 
 def extract_free_game_spins(ws):
@@ -283,60 +284,95 @@ def extract_free_game_spins(ws):
 
 
 def build_config(source_path, base_path=None):
-    """source_path = the RTP variant workbook (version + Multiplier_Weight).
-    base_path    = H0281.xlsx, holding everything shared across variants."""
-    base_path = Path(base_path) if base_path is not None else BASE_WORKBOOK
-    if not base_path.exists():
-        raise FileNotFoundError(f"Base workbook not found: {base_path}")
-
+    """Build the RTP/Card config owned by one RTP variant workbook."""
     workbook = load_workbook(source_path, read_only=True, data_only=True)
-    base = load_workbook(base_path, read_only=True, data_only=True)
-    output = dict(METADATA)
+    output = {
+        "game_id": METADATA["game_id"],
+        "parsheet_id": METADATA["parsheet_id"],
+    }
 
     excel_version = workbook["Overview"]["B3"].value
     if excel_version is None or not str(excel_version).strip():
-        workbook.close(); base.close()
+        workbook.close()
         raise ValueError("Overview!B3 (Version) is empty")
     output["excel_version"] = str(excel_version).strip()
-    output["linkpoint"] = extract_linkpoint(base["Overview"])
-    output["free_game_spins"] = extract_free_game_spins(base["Overview"])
+    if not re.fullmatch(r"\d+\.\d+\.\d+\.\d+", output["excel_version"]):
+        workbook.close()
+        raise ValueError(
+            f"{Path(source_path).name} Overview!B3 must be a four-part version, got {output['excel_version']!r}"
+        )
     output["card_system"] = parse_card_system(workbook["Multiplier_Weight"])
-
-    for scene, group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS:
-        sheet = base[sheet_name]
-        last_row = 3 + reel_length
-        output[f"{scene}Symbol{group_index}"] = extract_symbol_ids(sheet, f"M4:S{last_row}")
-        output[f"{scene}SymbolWeight{group_index}"] = extract_transposed(sheet, f"AC4:AI{last_row}")
-        for field, range_text in SYMBOL_SHEET_RANGES.items():
-            if field == "PostC1":
-                key = f"{scene}{group_index}PostC1"
-            else:
-                key = f"{scene}{field}{group_index}"
-            output[key] = extract_transposed(sheet, range_text)
-        for drop_index, first_row in enumerate(DROP_START_ROWS, start=1):
-            key = f"{scene}{group_index}Drop{drop_index}"
-            output[key] = extract_transposed(sheet, f"AL{first_row}:AR{first_row + 25}")
-
-    parameter = base["Parameter"]
-    for key, range_text in PARAMETER_RANGES.items():
-        output[key] = extract_transposed(parameter, range_text)
-
     workbook.close()
-    base.close()
+    return output
+
+
+def build_base_config(base_path=None):
+    """Build the natural-probability config owned by H0281.xlsx.
+
+    This is the sole export path for natural probabilities and shared gameplay
+    parameters; RTP workbooks are deliberately not consulted.
+    """
+    base_path = Path(base_path) if base_path is not None else BASE_WORKBOOK
+    output = dict(METADATA)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        workbook = load_workbook(base_path, read_only=True, data_only=True)
+    try:
+        version = workbook["Overview"]["B3"].value
+        output["linkpoint"] = extract_linkpoint(workbook["Overview"])
+        output["free_game_spins"] = extract_free_game_spins(workbook["Overview"])
+        for scene, group_index, sheet_name, reel_length in SYMBOL_SHEET_GROUPS:
+            sheet = workbook[sheet_name]
+            last_row = 3 + reel_length
+            output[f"{scene}Symbol{group_index}"] = extract_symbol_ids(sheet, f"M4:S{last_row}")
+            output[f"{scene}SymbolWeight{group_index}"] = extract_transposed(sheet, f"AC4:AI{last_row}")
+            for field, range_text in SYMBOL_SHEET_RANGES.items():
+                key = f"{scene}{group_index}PostC1" if field == "PostC1" else f"{scene}{field}{group_index}"
+                output[key] = extract_transposed(sheet, range_text)
+            for drop_index, first_row in enumerate(DROP_START_ROWS, start=1):
+                output[f"{scene}{group_index}Drop{drop_index}"] = extract_transposed(
+                    sheet, f"AL{first_row}:AR{first_row + 25}"
+                )
+        parameter = workbook["Parameter"]
+        for key, range_text in PARAMETER_RANGES.items():
+            output[key] = extract_transposed(parameter, range_text)
+    finally:
+        workbook.close()
+    version_text = str(version or "").strip()
+    if not re.fullmatch(r"\d+", version_text):
+        raise ValueError(
+            f"{base_path.name} Overview!B3 must be a one-part numeric version, got {version_text!r}"
+        )
+    output["excel_version"] = version_text
     return output
 
 
 def load_js_config(path):
     text = path.read_text(encoding="utf-8").strip()
-    if not text.startswith("const data = "):
+    match = re.match(
+        r"^(?:(?:const|let|var)\s+\w+|window\.[A-Za-z_$][\w$]*)\s*=\s*(.*?)\s*;?\s*$",
+        text,
+        re.DOTALL,
+    )
+    if match is None:
         raise ValueError(f"Unsupported config header: {path}")
-    return json.loads(text[len("const data = ") :].rstrip(";"))
+    return json.loads(match.group(1))
 
 
 def write_js_config(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "const data = " + json.dumps(data, ensure_ascii=False, indent=2) + ";\n",
+        encoding="utf-8",
+    )
+
+
+def write_base_js_config(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "window.H028_BASE_CONFIG = "
+        + json.dumps(data, ensure_ascii=False, indent=2)
+        + ";\n",
         encoding="utf-8",
     )
 
@@ -371,12 +407,24 @@ def process_source(source_path, output_path, check=False, base_path=None):
     return generated
 
 
+def process_base_source(source_path, output_path=BASE_OUTPUT, check=False):
+    generated = build_base_config(source_path)
+    if check:
+        compare_config(generated, output_path)
+        print(f"Config is current: {output_path}")
+    else:
+        write_base_js_config(output_path, generated)
+        compare_config(generated, output_path)
+        print(f"Config written: {output_path} <- {Path(source_path).name}")
+    return generated
+
+
 # ------------------------------------------------------------------------
 # config -> xlsx
 # ------------------------------------------------------------------------
 DEFAULT_BASE_XLSX = BASE_DIR / "H0281.xlsx"
 DEFAULT_VARIANT = BASE_DIR / "H028192A.xlsx"
-DEFAULT_CONFIG = BASE_DIR.parent / "config_92A.js"
+DEFAULT_CONFIG = BASE_OUTPUT
 
 CELL_PATTERN = re.compile(
     r'<c(?P<selfattrs>[^>]*?\br="(?P<selfref>[A-Z]{1,3}[1-9][0-9]*)"[^>]*?)\s*/>'
@@ -1191,10 +1239,8 @@ def verify_output(output_path, config, variant_path=None):
         generated = build_config(output_path, base_path=BASE_WORKBOOK)
         ignored = set()
     else:
-        # Shared workbook verification deliberately ignores the variant-owned
-        # version/card fields.
-        generated = build_config(variant_path or DEFAULT_VARIANT, base_path=output_path)
-        ignored = {"excel_version", "card_system"}
+        generated = build_base_config(output_path)
+        ignored = set()
     changed_keys = [
         key for key, value in generated.items()
         if key not in ignored and config.get(key) != value
@@ -1230,7 +1276,7 @@ def run_export(argv):
     base_path = args.base.resolve()
 
     if args.all:
-        # H0281.xlsx is the shared base, not an RTP variant -> never a config source.
+        process_base_source(base_path, BASE_OUTPUT, args.check)
         sources = sorted(
             path for path in BASE_DIR.glob("H0281*.xlsx")
             if not path.name.startswith("~$")
@@ -1249,10 +1295,14 @@ def run_export(argv):
                     write_js_config(DEFAULT_OUTPUT, generated)
                     compare_config(generated, DEFAULT_OUTPUT)
                     print(f"Default config written: {DEFAULT_OUTPUT} <- {source_path.name}")
-        print(f"Processed {len(sources)} xlsx file(s).")
+        print(f"Processed {len(sources) + 1} xlsx file(s).")
         return
 
     source_path = args.source.resolve()
+    if source_path == base_path:
+        output_path = args.output.resolve() if args.output is not None else BASE_OUTPUT
+        process_base_source(source_path, output_path, args.check)
+        return
     output_path = (
         args.output.resolve()
         if args.output is not None

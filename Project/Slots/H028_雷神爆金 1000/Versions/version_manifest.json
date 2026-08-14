@@ -1,12 +1,24 @@
 {
-  "current": "3.1",
+  "current": "3.2.0.0",
   "version_rule": {
-    "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，第二碼歸零。",
-    "multiplier_weights": "只調整倍率權重：第二碼 +1。"
+    "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，後三碼歸零。",
+    "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。"
   },
   "versions": [
     {
-      "version": "3.1",
+      "version": "3.2.0.0",
+      "date": "2026-08-14",
+      "base_config": "Versions/3.2.0.0/config.js",
+      "configs": {
+        "92A": "Versions/3.2.0.0/config_92A.js",
+        "94A": "Versions/3.2.0.0/config_94A.js"
+      },
+      "changes": [
+        "Card System Retry Limit 依規範統一調整為 10,000 次。"
+      ]
+    },
+    {
+      "version": "3.1.0.0",
       "date": "2026-08-11",
       "configs": {
         "92A": "Versions/3.1/config_92A.js",
@@ -17,7 +29,7 @@
       ]
     },
     {
-      "version": "3.0",
+      "version": "3.0.0.0",
       "date": "2026-08-11",
       "configs": {
         "92A": "Versions/3.0/config_92A.js",
@@ -30,7 +42,7 @@
       ]
     },
     {
-      "version": "2.0",
+      "version": "2.0.0.0",
       "date": "2026-08-10",
       "configs": {
         "92A": "Versions/2.0/config_92A.js",

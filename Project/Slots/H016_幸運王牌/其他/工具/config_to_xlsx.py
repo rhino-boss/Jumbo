@@ -15,7 +15,7 @@ from openpyxl import load_workbook
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parents[1]
 SOURCE_DIR = PROJECT / "Source"
-DEFAULT_CONFIG = PROJECT / "config_92.js"
+DEFAULT_CONFIG = PROJECT / "config.js"
 DEFAULT_XLSX = SOURCE_DIR / "H0161.xlsx"
 
 SHEET_TABLES = {
@@ -123,7 +123,7 @@ def load_converter():
 
 def assert_roundtrip(expected: dict[str, Any], xlsx_path: Path) -> None:
     converter = load_converter()
-    variant_name = str(expected.get("source_xlsx") or "")
+    variant_name = str(expected.get("source_multiplier_xlsx") or "")
     variant = DEFAULT_XLSX.parent / variant_name if variant_name else None
     actual = converter.frontend_config(xlsx_path, variant if variant and variant.is_file() else None)
     for table_name in expected["tables"]:
@@ -136,7 +136,7 @@ def assert_roundtrip(expected: dict[str, Any], xlsx_path: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Write H016 config_92.js tables back to H0161.xlsx")
+    parser = argparse.ArgumentParser(description="Write H016 config.js tables back to H0161.xlsx")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--xlsx", type=Path, default=DEFAULT_XLSX)
     args = parser.parse_args()

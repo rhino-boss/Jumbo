@@ -16,7 +16,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 PROJECT = HERE.parents[1]
 SOURCE = PROJECT / "其他" / "參考資料" / "Super Ace_claude.txt"
-CONFIG = PROJECT / "config_92.js"
+CONFIG = PROJECT / "config.js"
 WEIGHT_SCALE = Decimal("10000")
 
 SYMBOL_IDS = {
@@ -295,9 +295,9 @@ def simulate(config: dict[str, Any], rounds: int, threads: int) -> dict[str, Any
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Apply Super Ace_claude.txt BG/FG reels and integer stop weights to config_92.js"
+        description="Apply Super Ace_claude.txt BG/FG reels and integer stop weights to config.js"
     )
-    parser.add_argument("--write", action="store_true", help="Atomically update config_92.js")
+    parser.add_argument("--write", action="store_true", help="Atomically update config.js")
     parser.add_argument(
         "--bg-zero-weight",
         type=int,

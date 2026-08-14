@@ -1,6 +1,6 @@
 # 雷神爆金1000 (Thunder Boost 1000) 遊戲規則說明
 
-> 文件版本：v0.2（草稿）
+> 文件版本：v1.0
 > 對標競品：PG - Lucky Neko
 > 撰寫依據：`../iGaming 遊戲代號一覽.xlsx`（遊戲名稱、Game ID、PARsheet ID）及 `../其他遊戲/101016/101016 simulation.py`（遊戲邏輯）；本次以 101016 模擬程式的遊戲邏輯為主
 > 編號：H028
@@ -22,6 +22,8 @@
 | 最小 / 最大 Ways | 2,025 Ways / 32,400 Ways |
 | 押注模式 | **Normal Bet**：提供，一般押注；**Extra Bet**：不提供；**Buy Feature**：提供，75 × Bet |
 | Buy Feature | 有；價格為 75x Bet |
+| 共用數學版本 | `H0281.xlsx` / `config.js`：`3` |
+| RTP / Card 版本 | `H028192A.xlsx`、`H028194A.xlsx` / `config_92A.js`、`config_94A.js`：`3.2.0.0` |
 
 ---
 
@@ -68,7 +70,7 @@
 
 寫明：
 * R2-R5 的一般符號可為大符號，尺寸可覆蓋 1、2、3、4 格。
-* 大符號在 Ways 計算時，每一格視為 1 個獨立符號。
+* 大符號在 Ways 計算時不論覆蓋幾格，都只視為 1 個符號。
 * 本作的 **M1** 為倍數來源符號，主盤面採尺寸對應倍數規格；Extra Reel 上依一般倍數符號邏輯處理。
 * **Scatter** 亦可為 1x2、1x3、1x4 大符號；觸發 Free Game 時，每一格均視為 1 個 Scatter 計數。
 
@@ -127,7 +129,7 @@
 
 ### 6.2 M1 倍數機制
 
-* M1 為本作主要倍數來源。
+* 主盤面上的 M1 依符號尺寸決定本次提供的倍數。
 * **主盤面 M1** 的尺寸與倍數對應如下：
 
 | M1 尺寸 | 對應倍數 |
@@ -161,6 +163,8 @@
 | 4 SC | 10 |
 | 5 SC | 12 |
 | 6 SC | 14 |
+| 7 SC | 16 |
+| 8 SC 以上 | 每多 1 SC 再 +2；整段 FG 最多 50 場 |
 
 ### 7.2 FG 玩法
 
@@ -180,6 +184,8 @@
 | 4 SC | +10 |
 | 5 SC | +12 |
 | 6 SC | +14 |
+| 7 SC | +16 |
+| 8 SC 以上 | 每多 1 SC 再 +2；不得使整段 FG 超過 50 場 |
 
 ---
 
@@ -210,7 +216,7 @@
 * Scatter 不可被 Wild 替代。
 * 1x2、1x3、1x4 的 Scatter 以實際占用格數計入 Scatter 總數。
 * FG 期間 Scatter 仍可出現，並可作為 retrigger 來源。
-* 觸發與 retrigger 一律以 4 / 5 / 6 SC 對應 10 / 12 / 14 場處理。
+* 觸發與 retrigger 依 `10 + (SC 數 - 4) × 2` 計算，整段 FG 最多 50 場。
 
 ### 9.4 Free Game 相關
 
@@ -225,7 +231,7 @@
 ### 9.6 Way Game 計算相關
 
 * Ways 自 R1 起由左至右連續相鄰輪計算。
-* 大符號每格都算 1 個獨立計數單位。
+* 大符號無論覆蓋幾格，在單輪 Ways 數量中只計 1 個符號。
 * Extra Reel 僅對應 R2-R5 上方位置，不延伸新增第 7 輪。
 
 ### 9.7 Simulator 卡片系統（測試功能）
@@ -236,7 +242,59 @@
 * Free Game 卡會先重試至 BG 觸發 FG，再依同身分的 FG 卡篩選整場 FG 派彩。
 * Buy Feature 使用 `Weight_BF_FG` 篩選整場 FG 結果。
 * 卡片倍率分母均使用 Normal Bet coin-in；每個階段最多重試 `card_system.retry_limit` 次，超限時保留最後一次結果並記錄於報表。
-* 權重來源為 `Source/H028192A.xlsx` 的 `Multiplier_Weight`，由 `Source/xlsx_to_config.py` 寫入 config。
+* 權重來源為 RTP 工作簿的 `Multiplier_Weight`，由 `Source/model_sync.py` 寫入對應 RTP config。
+
+---
+
+## §10. 投注、派彩與 RTP 定義
+
+| 模式 | `bet_mode` | 每局成本 | 說明 |
+| --- | ---: | --- | --- |
+| Normal Bet | 0 | `100 × bet_multi` coin | BG 結束後若觸發 FG，FG 不另行扣款 |
+| Buy Feature | 2 | `100 × 75 × bet_multi` coin | 觸發盤面 BG 派彩設計為 0，成本全數計入 FG RTP 分母 |
+
+單次 Cascade 派彩：
+
+```text
+Cascade Pay = Σ(Paytable × Ways) × 當前累積倍數 × bet_multi
+```
+
+RTP 報表定義：
+
+```text
+RTP Total = (BG Pay + FG Pay) / Coin In
+RTP BG    = BG Pay / Coin In
+RTP FG    = FG Pay / Coin In
+```
+
+`trigger_fg_bg_pay` 及 `trigger_fg_bg_max_pay` 仍屬 BG Pay，不得重複納入 FG Pay。大符號只計 1 個 Ways 符號，但 Scatter 依實際占用格數計數。
+
+### 10.1 目標 RTP
+
+| Config / Profile | BG RTP | FG RTP | Total RTP | FG 目標週期 |
+| --- | ---: | ---: | ---: | ---: |
+| 92A Oldhand Normal Bet | 72% | 20% | 92% | 300 局/次 |
+| 94A Oldhand Normal Bet | 72% | 22% | 94% | 300 局/次 |
+| 92A / 94A Newbie Normal Bet | 72% | 21% | 93% | 依 Newbie BG 卡片權重 |
+| 92A / 94A Buy Feature | 0% | 92.5% | 92.5% | 1 |
+
+卡片倍率區間上限為 20,000x；這是 Card 可篩選區間上限，不等於額外對自然遊戲結果進行截斷。
+
+---
+
+## §11. 實作資料來源與版本
+
+| 資料 | 權威範圍 | 版本規則 |
+| --- | --- | --- |
+| `Source/H0281.xlsx` | 自然機率、輪帶、掉落、版型、賠率、FG 場數 | 單一整數，目前 `3` |
+| `config.js` | `H0281.xlsx` 的執行版 | `excel_version` 必須為單一整數 |
+| `Source/H028192A.xlsx` / `H028194A.xlsx` | 卡片區間、Fix Num、RTP 權重 | 四碼 `基礎.卡片.SCR.其他`，目前 `3.2.0.0` |
+| `config_92A.js` / `config_94A.js` | RTP / Card 執行資料 | 必須與 RTP XLSX 四碼版本一致 |
+| `game_help_draft.md` | 玩家可見規則文案 | 不得與本文件遊戲邏輯矛盾 |
+
+Simulator 與 index 同時載入 base config 與 RTP config；自然機率以 base config 為準，版本及 Card System 以 RTP config 為準。載入時必須檢查 `game_id` 與主版本相同。
+
+衝突優先順序：`game_rule.md` 已確認規則 → XLSX 數學資料 → config 執行檔 → Simulator / index 表演。若發現任一層不一致，必須停止對外驗證並先修正轉換或載入來源。
 
 ---
 
@@ -260,7 +318,7 @@
 * 遊戲名稱、Game ID、PARsheet ID：`../iGaming 遊戲代號一覽.xlsx`
 * 遊戲邏輯來源：`../其他遊戲/101016/101016 simulation.py`
 * 目前實作：`Simulator.py`
-* 數學資料：`Source/H028192A.xlsx`、`config_92A.js`
+* 數學資料：`Source/H0281.xlsx`、`Source/H028192A.xlsx`、`Source/H028194A.xlsx`、`config.js`、`config_92A.js`、`config_94A.js`
 * 架構參考：`../H026_彩罐熱舞 1000/Simulator.py`
 
 本文件為 H028《雷神爆金1000》規格說明。

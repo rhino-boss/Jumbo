@@ -8,9 +8,10 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 
 | 檔案 | 資料所有權 | 用途 |
 | --- | --- | --- |
-| `H0281.xlsx` | 賠率、六張 Symbol 表、輪帶、Symbol Weight、MegaWay、MY、Post Scatter、Drop1～5、Parameter | 所有 RTP 版本共用的基礎模型 |
+| `H0281.xlsx` | 賠率、六張 Symbol 表、輪帶、Symbol Weight、MegaWay、MY、Post Scatter、Drop1～5、Parameter | 所有 RTP 版本共用的基礎模型；版本為單一整數 |
 | `H0281<RTP><版型>.xlsx` | `Overview!B3` 版本、`Detail`／`Detail_Newbie` 與 `Multiplier_Weight` 卡片權重 | 例如 `H028192A.xlsx`、`H028192B.xlsx`、`H028194A.xlsx` |
-| `config_<RTP><版型>.js` | Simulator 與 index 的執行參數 | 例如 `config_92A.js`、`config_94A.js` |
+| `config.js` | 自然機率執行參數 | 對應 `H0281.xlsx`，以 `window.H028_BASE_CONFIG` 輸出 |
+| `config_<RTP><版型>.js` | Card / RTP 執行參數 | 例如 `config_92A.js`、`config_94A.js`；四碼版本 |
 
 檔名不是寫死的白名單：`model_sync.py` 依 `H0281<RTP><版型>.xlsx` 與 `config_<RTP><版型>.js` 自動配對。因此工具已支援 H028 共用模型、H028192A、H028192B；目前正式目錄實際存在 92A、94A，尚未建立正式 92B 工作簿。
 
@@ -18,7 +19,8 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 
 | 指令 | 方向 | 寫入內容 | 不寫入內容 |
 | --- | --- | --- | --- |
-| `model_sync.py export` | XLSX → config | 共用模型全部映射欄位、版本、卡片權重 | 固定 metadata 由工具提供 |
+| `model_sync.py export`（基礎） | `H0281.xlsx` → `config.js` | 共用模型全部映射欄位 | Card System |
+| `model_sync.py export`（RTP） | RTP XLSX → `config_92A.js` / `config_94A.js` | `game_id`、`parsheet_id`、四碼版本、Card System 權重 | 輪帶、掉落、賠率等共用模型 |
 | `model_sync.py import`（共用模型） | config → `H0281.xlsx` | 共用模型映射欄位 | RTP 版本卡片資料、固定 metadata |
 | `model_sync.py import`（RTP 工作簿） | config → `H0281<RTP><版型>.xlsx` | 版本、Detail 卡片輸入／快取、Multiplier Weight 公式快取 | 共用 Symbol 模型、固定 metadata |
 
@@ -79,6 +81,16 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 
 ## 6. RTP 版本與卡片權重
 
+### 版本與執行合併
+
+| 對象 | 版本形式 | 目前值 |
+| --- | --- | --- |
+| `H0281.xlsx` / `config.js` | 單一整數 | `3` |
+| `H028192A.xlsx` / `config_92A.js` | `基礎.卡片.SCR.其他` | `3.2.0.0` |
+| `H028194A.xlsx` / `config_94A.js` | `基礎.卡片.SCR.其他` | `3.2.0.0` |
+
+Simulator 的 `config_file` 讀取 base config，`config_rtp_file` 讀取 RTP config。index 依 `Versions/version_manifest.js` 同步載入兩者。執行時自然機率以 base config 為準，`excel_version` 與 `card_system` 以 RTP config 為準；兩者 `game_id` 及主版本必須相同。
+
 | RTP 工作簿位置／欄名 | config 位置 |
 | --- | --- |
 | `Overview!B3` | `excel_version` |
@@ -110,18 +122,12 @@ FG 模型週期直接由 BG 卡片權重計算：`sum(weight_bg) ÷ Free Game ca
 
 ### 數學版本管理
 
-`index.html` 的 Version 選單由 `Versions/version_manifest.js` 提供；歷史 config 保存在 `Versions/<版本>/`，目前正式檔名仍固定為 `config_92A.js`／`config_94A.js`。
-
-數學參數修改完成、執行 `update.bat` 前，先執行：
-
-```bat
-new_version.bat
-```
+`index.html` 的 Version 選單由 `Versions/version_manifest.js` 提供；歷史 config 保存在 `Versions/<完整四碼版本>/`。目前根目錄正式檔名固定為 `config.js`、`config_92A.js`、`config_94A.js`，不在檔名附加版本尾碼。
 
 | 變更類型 | 升版規則 | 範例 |
 | --- | --- | --- |
-| `H0281.xlsx` 共用數學參數 | 第一碼 +1，第二碼歸零 | `2.0 → 3.0` |
-| 只改倍率權重 | 第二碼 +1 | `2.0 → 2.1` |
+| `H0281.xlsx` 共用數學參數 | RTP 版本第一碼 +1，其餘歸零；base 整數版本同步 | `2.1.0.0 → 3.0.0.0`，base `2 → 3` |
+| 只改卡片／倍率權重 | 第二碼 +1，後兩碼歸零 | `3.1.0.0 → 3.2.0.0` |
 
 工具會先比對 config 與 XLSX：選錯變更類型、沒有實際數學差異，或漏填數學調整內容時會拒絕升版。成功後會封存舊 config、更新 XLSX／目前 config，並把數學調整寫入 Version Change Log。介面、工具與錯誤修正仍寫入 `修改紀錄.md`，不加入數學 Change Log。
 
@@ -134,19 +140,19 @@ update.bat
 操作只有兩層選單：
 
 1. 第一層選方向：輸入 `1` 為 XLSX → config，輸入 `2` 為 config → XLSX。
-2. 第二層選檔案：輸入 `1` 選 92A，輸入 `2` 選 94A；直接按 Enter 會轉換全部。
+2. 第二層選檔案：輸入 `1` 選 base，`2` 選 92A，`3` 選 94A；直接按 Enter 會轉換全部。
 
-| 方向 | 選項 1 | 選項 2 | 直接 Enter |
-| --- | --- | --- | --- |
-| XLSX → config | `H028192A.xlsx` → `config_92A.js` | `H028194A.xlsx` → `config_94A.js` | 兩組都轉換 |
-| config → XLSX | `config_92A.js` → `H028192A.xlsx` | `config_94A.js` → `H028194A.xlsx` | 兩組都轉換 |
+| 方向 | 選項 1 | 選項 2 | 選項 3 | 直接 Enter |
+| --- | --- | --- | --- | --- |
+| XLSX → config | `H0281.xlsx` → `config.js` | `H028192A.xlsx` → `config_92A.js` | `H028194A.xlsx` → `config_94A.js` | 三組都轉換 |
+| config → XLSX | `config.js` → `H0281.xlsx` | `config_92A.js` → `H028192A.xlsx` | `config_94A.js` → `H028194A.xlsx` | 三組都轉換 |
 
 執行時只顯示目前的來源檔、目標檔與完成訊息；config → XLSX 會直接更新原工作簿，不會建立另一份 XLSX。若工作簿正在 Excel 中開啟，請先關閉再執行。
 
 也可以直接執行：
 
 ```powershell
-# XLSX → config，並核對所有 RTP 版本；檔名自動帶 Overview!B3 版本號
+# XLSX → config，核對 base 及所有 RTP 版本
 .\.venv\Scripts\python.exe .\Source\model_sync.py export --all --check
 
 # config → XLSX，只檢查映射差異
@@ -158,15 +164,9 @@ update.bat
 # config → 所有已存在的 RTP 工作簿
 .\.venv\Scripts\python.exe .\Source\model_sync.py import --all-variants
 
-# 依最新無卡片報表重新校正所有卡片倍率權重
-.\.venv\Scripts\python.exe .\Source\tune_multiplier_weights.py `
-  --normal-report <Normal-Bet-無卡片報表.xlsx> `
-  --version 2.0.0.37 `
-  --config-suffix 20037
 ```
 
-config 檔名固定包含版本尾碼；例如 `H028192A.xlsx` 的 `Overview!B3=2.0.0.37`
-會輸出 `config_92A.js`，94A 則輸出 `config_94A.js`；版本資訊保留在 config 的 `excel_version` 欄位，不放在檔名中。
+config 檔名不附加版本尾碼；版本資訊保留在 config 的 `excel_version` 欄位。
 BF Detail 公式直接引用 Normal Bet 的 FG Session 分布，因此不再需要另一份 BF 報表。
 
 ## 9. 操作限制與驗證

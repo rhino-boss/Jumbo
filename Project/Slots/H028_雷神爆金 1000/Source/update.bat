@@ -31,50 +31,62 @@ goto failed
 
 :choose_xlsx
 echo.
-echo 1. H028192A.xlsx
-echo 2. H028194A.xlsx
+echo 1. H0281.xlsx
+echo 2. H028192A.xlsx
+echo 3. H028194A.xlsx
 echo Enter. 全部
 echo.
 set /p "TARGET=請選擇檔案: "
 
 if not defined TARGET (
+    call :xlsx_to_config "H0281.xlsx" "config.js" || goto failed
     call :xlsx_to_config "H028192A.xlsx" "config_92A.js" || goto failed
     call :xlsx_to_config "H028194A.xlsx" "config_94A.js" || goto failed
     goto succeeded
 )
 if "%TARGET%"=="1" (
-    call :xlsx_to_config "H028192A.xlsx" "config_92A.js" || goto failed
+    call :xlsx_to_config "H0281.xlsx" "config.js" || goto failed
     goto succeeded
 )
 if "%TARGET%"=="2" (
+    call :xlsx_to_config "H028192A.xlsx" "config_92A.js" || goto failed
+    goto succeeded
+)
+if "%TARGET%"=="3" (
     call :xlsx_to_config "H028194A.xlsx" "config_94A.js" || goto failed
     goto succeeded
 )
-echo [失敗] 請輸入 1、2，或直接按 Enter。
+echo [失敗] 請輸入 1、2、3，或直接按 Enter。
 goto failed
 
 :choose_config
 echo.
-echo 1. config_92A.js
-echo 2. config_94A.js
+echo 1. config.js
+echo 2. config_92A.js
+echo 3. config_94A.js
 echo Enter. 全部
 echo.
 set /p "TARGET=請選擇檔案: "
 
 if not defined TARGET (
+    call :config_to_xlsx "config.js" "H0281.xlsx" || goto failed
     call :config_to_xlsx "config_92A.js" "H028192A.xlsx" || goto failed
     call :config_to_xlsx "config_94A.js" "H028194A.xlsx" || goto failed
     goto succeeded
 )
 if "%TARGET%"=="1" (
-    call :config_to_xlsx "config_92A.js" "H028192A.xlsx" || goto failed
+    call :config_to_xlsx "config.js" "H0281.xlsx" || goto failed
     goto succeeded
 )
 if "%TARGET%"=="2" (
+    call :config_to_xlsx "config_92A.js" "H028192A.xlsx" || goto failed
+    goto succeeded
+)
+if "%TARGET%"=="3" (
     call :config_to_xlsx "config_94A.js" "H028194A.xlsx" || goto failed
     goto succeeded
 )
-echo [失敗] 請輸入 1、2，或直接按 Enter。
+echo [失敗] 請輸入 1、2、3，或直接按 Enter。
 goto failed
 
 :xlsx_to_config
@@ -105,7 +117,8 @@ echo [轉換] %~1  -^>  %~2
 "%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" import ^
     --config "%SCRIPT_DIR%\..\%~1" ^
     --source "%SCRIPT_DIR%\%~2" ^
-    --in-place >nul
+    --in-place ^
+    --overwrite-formulas >nul
 if errorlevel 1 exit /b 1
 echo [完成] %~2
 exit /b 0
