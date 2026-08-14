@@ -643,23 +643,36 @@ def configure_rarfile_tools():
 
 
 def extract_archive_with_external_tool(archive_path: Path, extract_dir: Path):
-    sevenzip = find_sevenzip_tool()
     unrar = shutil.which("unrar")
-    tar = shutil.which("tar") or shutil.which("bsdtar")
+    unar = shutil.which("unar")
+    sevenzip = find_sevenzip_tool()
+    bsdtar = shutil.which("bsdtar")
+    tar = shutil.which("tar")
 
+    commands = []
+    if unrar:
+        commands.append(("unrar", [unrar, "x", "-y", str(archive_path), f"{extract_dir}{os.sep}"]))
+    if unar:
+        commands.append(("unar", [unar, "-f", "-o", str(extract_dir), str(archive_path)]))
     if sevenzip:
-        command = [sevenzip, "x", "-y", f"-o{extract_dir}", str(archive_path)]
-    elif unrar:
-        command = [unrar, "x", "-y", str(archive_path), str(extract_dir)]
+        commands.append(("7-Zip", [sevenzip, "x", "-y", f"-o{extract_dir}", str(archive_path)]))
+    if bsdtar:
+        commands.append(("bsdtar", [bsdtar, "-xf", str(archive_path), "-C", str(extract_dir)]))
     elif tar:
-        command = [tar, "-xf", str(archive_path), "-C", str(extract_dir)]
-    else:
-        raise RuntimeError("找不到可用的 RAR 解壓工具，請安裝 p7zip 或 unrar。")
+        commands.append(("tar", [tar, "-xf", str(archive_path), "-C", str(extract_dir)]))
 
-    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if result.returncode != 0:
-        error_output = (result.stderr or result.stdout).strip()
-        raise RuntimeError(f"RAR 解壓失敗: {error_output}")
+    if not commands:
+        raise RuntimeError("找不到可用的 RAR 解壓工具，請安裝 unrar、unar、7-Zip 或 bsdtar。")
+
+    errors = []
+    for tool_name, command in commands:
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if result.returncode == 0:
+            return
+        error_output = (result.stderr or result.stdout).strip() or f"exit code {result.returncode}"
+        errors.append(f"{tool_name}: {error_output}")
+
+    raise RuntimeError("RAR 解壓失敗；" + "；".join(errors))
 
 
 def collect_validator_rows_from_rar_path(rar_path: Path, archive_label: str, depth: int) -> list[dict[str, str]]:

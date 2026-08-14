@@ -1,0 +1,134 @@
+{
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "H016 與 101003 RTP 差異診斷",
+    "description": "比較 JHS101003 執行結果、目前 H0161.xlsx 模擬結果，以及以差異來源重建後的診斷結果。",
+    "generatedAt": "2026-08-14T12:10:50+08:00",
+    "sources": [
+      {
+        "id": "jhs_result",
+        "label": "JHS101003 執行結果截圖",
+        "type": "user-provided",
+        "description": "16,830,000 spins；Base 156.2033%、FG 89.8767%、Total 246.0800%，不含 JP/bonus。"
+      },
+      {
+        "id": "h016_record",
+        "label": "H016 目前模擬報表",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/Record/H016192_2608131710_betmode0_109_3211.xlsx",
+        "description": "1,000,000,000 spins，card off，config_92.js。"
+      },
+      {
+        "id": "h016_xlsx",
+        "label": "H0161.xlsx",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/Source/H0161.xlsx",
+        "description": "目前數學模型來源；已逐表核對 config_92.js，六張 primary table 的輪帶、權重、掉落、大鬼與倍率完全一致。"
+      },
+      {
+        "id": "jhs_setting",
+        "label": "gameSetting_JHS101003.json",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/其他/參考資料/gameSetting_JHS101003.json",
+        "description": "101003 參數來源。"
+      },
+      {
+        "id": "jhs_handler",
+        "label": "BaseGameHandler_JHS101003.java",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/其他/參考資料/BaseGameHandler_JHS101003.java",
+        "description": "101003 Base Game 流程；消除補牌呼叫傳入 wheelData。"
+      },
+      {
+        "id": "reconciliation",
+        "label": "H016 10M 診斷重建",
+        "type": "analysis",
+        "description": "card off；BG 補牌改用實體輪帶符號比例；FG 初始輪帶改用 JHS JSON 金框標記並保留 FG dropWheelWeight；10,000,000 spins。"
+      }
+    ],
+    "charts": [
+      {
+        "id": "rtp_comparison",
+        "type": "bar",
+        "title": "BG、FG、Total RTP 比較",
+        "dataset": "rtp_comparison",
+        "x": "metric",
+        "y": "rtp",
+        "color": "scenario",
+        "encodings": {
+          "x": {"field": "metric", "type": "nominal"},
+          "y": {"field": "rtp", "type": "quantitative", "format": "percent"},
+          "color": {"field": "scenario", "type": "nominal"}
+        },
+        "grouped": true,
+        "format": {
+          "y": "percent"
+        },
+        "legend": {
+          "position": "bottom"
+        },
+        "palette": "categorical",
+        "labels": "all",
+        "tooltip": ["scenario", "metric", "rtp", "gap_pp", "sample_spins"],
+        "sourceId": "reconciliation"
+      }
+    ],
+    "tables": [
+      {
+        "id": "rtp_exact",
+        "title": "RTP 精確差異",
+        "dataset": "rtp_exact",
+        "columns": [
+          {"field": "metric", "label": "項目", "type": "text"},
+          {"field": "jhs", "label": "101003", "type": "percent"},
+          {"field": "current", "label": "目前 H016", "type": "percent"},
+          {"field": "current_gap_pp", "label": "目前差異 (pp)", "type": "number"},
+          {"field": "diagnostic", "label": "診斷重建", "type": "percent"},
+          {"field": "diagnostic_gap_pp", "label": "重建差異 (pp)", "type": "number"}
+        ],
+        "defaultSort": {"field": "metric", "direction": "asc"},
+        "sourceId": "reconciliation"
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "content": "# H016 與 101003 RTP 差異診斷"},
+      {"id": "executive_summary", "type": "markdown", "content": "## 結論\n\n目前差異不是卡片系統造成，也不是 BG 初始輪帶或停輪權重不同。H0161.xlsx 與 config_92.js 完全一致，BG 三張表也與 gameSetting_JHS101003.json 的輪帶、停輪權重、掉落權重和大鬼權重逐項一致；但兩套程式對參數的實際使用方式不同。\n\n最主要有兩個來源：第一，BG 消除後補牌的來源口徑不同；第二，H016 FG 初始輪帶的金框數量是 JHS JSON 的兩倍。兩項一起套入診斷重建後，Total RTP 從 332.1144% 降到 245.0876%，與 101003 的 246.0800% 只差 -0.9924 pp。"},
+      {"id": "overview", "type": "markdown", "content": "## RTP 差異總覽\n\n目前 H016 相對 101003：BG 高 41.6173 pp、FG 高 44.4172 pp、Total 高 86.0344 pp。診斷重建後，BG、FG、Total 的差距分別縮小到 -0.2800、-0.7124、-0.9924 pp。"},
+      {"id": "rtp_chart", "type": "chart", "chartId": "rtp_comparison"},
+      {"id": "rtp_table", "type": "table", "tableId": "rtp_exact"},
+      {"id": "drivers", "type": "markdown", "content": "## 問題來源\n\n### 1. BG：消除補牌來源口徑不同\n\nH016 目前在 BG cascade 使用 `dropWheelWeight` 做獨立位置補牌。101003 Handler 呼叫 `generateEliminateReplacement(...)` 時直接傳入 `wheelData`。在診斷中，只有把 BG 補牌改成實體輪帶的符號比例，BG RTP 就由約 198% 降到 155.9%，幾乎對上 101003 的 156.2033%。這是目前最強的實證來源。\n\n### 2. FG：H016 初始輪帶金框為 JHS 的兩倍\n\n兩邊 FG 的一般符號組成相同，但金框標記不同。H016 的 R2/R3/R4 金框數是 78/66/72；JHS JSON 是 39/33/36，剛好一半。把 FG 初始輪帶改用 JHS 金框標記，並保留 FG 的 dropWheelWeight 後，FG RTP 才能接近 101003。\n\n### 3. 兩項會互相影響\n\nBG 補牌口徑改變後，最終 C1 分布也會改變，FG 觸發率由目前約 0.839% 上升到診斷重建約 1.051%。因此不能只單獨把 FG 金框減半；BG 補牌與 FG 金框必須一起核對。"},
+      {"id": "next_steps", "type": "markdown", "content": "## 建議處理順序\n\n1. 先確認 101003 的 BG `ScreenGenerator.generateEliminateReplacement` 是否確實從實體 `wheelData` 取補牌，而不是使用 `dropWheelWeight`。\n2. 若要對齊 101003，先只調整 BG 補牌實作；FG 仍保留目前 dropWheelWeight。\n3. 將 FG 初始輪帶的金框標記對齊 JHS JSON 的 39/33/36。\n4. 再跑同 seed／同輪數交叉比較 FG 觸發率、FG 金框數與 W2 發生率，最後才處理剩餘不到 1 pp 的差異。"},
+      {"id": "open_questions", "type": "markdown", "content": "## 尚待確認\n\n- 專案內沒有共用 `ScreenGenerator.generateEliminateReplacement` 的完整實作，因此 BG 使用實體輪帶補牌是由 Handler 呼叫與結果重建共同推定，尚未做到 Java 原始碼逐行證明。\n- 使用者描述 101003 跑的是目前 H0161.xlsx，但執行結果呈現的是 JHS JSON 的半量 FG 金框；需要檢查 Java 的 Excel 匯入／JSON 產生流程是否把重複金框標記合併或減半。"},
+      {"id": "caveats", "type": "markdown", "content": "## 口徑與限制\n\n101003 截圖為 16,830,000 spins；目前 H016 報表為 1,000,000,000 spins；診斷重建為 10,000,000 spins。所有比較皆使用 card off、normal bet，並排除 Bonus/JP；因此不把 101003 的 BonusJP RTP 2.3075% 加入 Total。診斷重建是針對 RTP 結果的高可信重現，不代表兩套 RNG 已達到逐局一致。"}
+    ]
+  },
+  "snapshot": {
+    "datasets": {
+      "rtp_comparison": [
+        {"metric": "BG", "scenario": "101003", "rtp": 1.562033, "gap_pp": 0.0, "sample_spins": 16830000, "baseline_rtp": 1.562033, "relative_gap_pct": 0.0},
+        {"metric": "BG", "scenario": "目前 H016", "rtp": 1.97820555465, "gap_pp": 41.617255465, "sample_spins": 1000000000, "baseline_rtp": 1.562033, "relative_gap_pct": 26.64300656},
+        {"metric": "BG", "scenario": "診斷重建", "rtp": 1.55923323, "gap_pp": -0.279977, "sample_spins": 10000000, "baseline_rtp": 1.562033, "relative_gap_pct": -0.17923885},
+        {"metric": "FG", "scenario": "101003", "rtp": 0.898767, "gap_pp": 0.0, "sample_spins": 16830000, "baseline_rtp": 0.898767, "relative_gap_pct": 0.0},
+        {"metric": "FG", "scenario": "目前 H016", "rtp": 1.3429389272, "gap_pp": 44.41719272, "sample_spins": 1000000000, "baseline_rtp": 0.898767, "relative_gap_pct": 49.42014195},
+        {"metric": "FG", "scenario": "診斷重建", "rtp": 0.89164285, "gap_pp": -0.712415, "sample_spins": 10000000, "baseline_rtp": 0.898767, "relative_gap_pct": -0.79265816},
+        {"metric": "Total", "scenario": "101003", "rtp": 2.4608, "gap_pp": 0.0, "sample_spins": 16830000, "baseline_rtp": 2.4608, "relative_gap_pct": 0.0},
+        {"metric": "Total", "scenario": "目前 H016", "rtp": 3.32114448185, "gap_pp": 86.034448185, "sample_spins": 1000000000, "baseline_rtp": 2.4608, "relative_gap_pct": 34.96198317},
+        {"metric": "Total", "scenario": "診斷重建", "rtp": 2.45087608, "gap_pp": -0.992392, "sample_spins": 10000000, "baseline_rtp": 2.4608, "relative_gap_pct": -0.40328023}
+      ],
+      "rtp_exact": [
+        {"metric": "BG", "jhs": 1.562033, "current": 1.97820555465, "current_gap_pp": 41.617255465, "diagnostic": 1.55923323, "diagnostic_gap_pp": -0.279977},
+        {"metric": "FG", "jhs": 0.898767, "current": 1.3429389272, "current_gap_pp": 44.41719272, "diagnostic": 0.89164285, "diagnostic_gap_pp": -0.712415},
+        {"metric": "Total", "jhs": 2.4608, "current": 3.32114448185, "current_gap_pp": 86.034448185, "diagnostic": 2.45087608, "diagnostic_gap_pp": -0.992392}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "jhs_result", "label": "JHS101003 執行結果截圖", "type": "user-provided"},
+    {"id": "h016_record", "label": "H016 目前模擬報表", "type": "file", "path": "Project/Slots/H016_幸運王牌/Record/H016192_2608131710_betmode0_109_3211.xlsx"},
+    {"id": "h016_xlsx", "label": "H0161.xlsx", "type": "file", "path": "Project/Slots/H016_幸運王牌/Source/H0161.xlsx"},
+    {"id": "jhs_setting", "label": "gameSetting_JHS101003.json", "type": "file", "path": "Project/Slots/H016_幸運王牌/其他/參考資料/gameSetting_JHS101003.json"},
+    {"id": "jhs_handler", "label": "BaseGameHandler_JHS101003.java", "type": "file", "path": "Project/Slots/H016_幸運王牌/其他/參考資料/BaseGameHandler_JHS101003.java"},
+    {"id": "reconciliation", "label": "H016 10M 診斷重建", "type": "analysis"}
+  ]
+}

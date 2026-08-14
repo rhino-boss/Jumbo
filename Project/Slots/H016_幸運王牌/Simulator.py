@@ -16,7 +16,6 @@ import math
 import os
 import random
 import re
-import subprocess
 import sys
 import time
 from collections import Counter
@@ -31,6 +30,13 @@ from openpyxl import load_workbook
 
 try:
     import fast_simulator
+    if getattr(fast_simulator, "FAST_SIMULATOR_API_VERSION", 1) < 2:
+        # `%run` / Notebook cells keep imported modules in sys.modules.  Reload
+        # an older card-off-only core after Simulator.py has been updated.
+        import importlib
+
+        importlib.invalidate_caches()
+        fast_simulator = importlib.reload(fast_simulator)
 except ImportError:
     import importlib.util
 
@@ -60,8 +66,13 @@ CARD_SYSTEM_IS_NEWBIE = False
 
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**4, "card_system_enabled": False, "card_system_is_newbie": False},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False},
+    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # 老手卡片
+    # SCR
+    # SCR
+    # SCR
+    # SCR
+    # SCR
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -70,7 +81,7 @@ SHOW_CONSOLE_SUMMARY = True
 SHOW_CONSOLE_DETAIL = False
 RUN_SINGLE_SPIN_DEBUG = False
 DEBUG_ROUNDS = 1
-CARD_RETRY_LIMIT = 200_000
+CARD_RETRY_LIMIT = 20_000
 
 BASE_BET = 100.0
 MODE_NORMALBET = 0
@@ -83,6 +94,72 @@ C1 = 2
 SCORE_SYMBOLS = tuple(range(3, 11))
 GOLD_MIN = 11
 GOLD_MAX = 18
+MULTIPLIER_THRESHOLDS = (
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    15,
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    120,
+    140,
+    160,
+    180,
+    200,
+    250,
+    300,
+    350,
+    400,
+    450,
+    500,
+    550,
+    600,
+    650,
+    700,
+    750,
+    800,
+    850,
+    900,
+    950,
+    1000,
+    2000,
+    3000,
+    4000,
+    5000,
+    6000,
+    7000,
+    8000,
+    9000,
+    10000,
+    20000,
+    30000,
+    40000,
+    50000,
+    60000,
+    70000,
+    80000,
+    90000,
+    100000,
+    9999999,
+)
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -98,6 +175,19 @@ def _env_bool(name: str, default: bool) -> bool:
 
 
 CONFIG_FILE = os.environ.get("H016_CONFIG_FILE", CONFIG_FILE)
+# A no-argument batch run will immediately use its first combo.  Select that
+# config before base-dir discovery so startup does not parse H0161.xlsx twice
+# only to replace it with config_92.js a few lines later.  Explicit positional
+# runs keep the historical xlsx default.
+_explicit_cli_run = len(sys.argv) > 1 and str(sys.argv[1]).lstrip("+-").isdigit()
+if (
+    "H016_CONFIG_FILE" not in os.environ
+    and _env_bool("H016_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
+    and BATCH_RUNS
+    and not _explicit_cli_run
+    and os.environ.get("H016_BATCH_CHILD") != "1"
+):
+    CONFIG_FILE = str(BATCH_RUNS[0].get("config_file", CONFIG_FILE))
 
 
 def _load_config(path: Path) -> dict[str, Any]:
@@ -116,9 +206,10 @@ def _xlsx_number(value: Any, label: str) -> float:
     return float(value)
 
 
-def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int], reel_source=None, drop_label_source=None) -> dict[str, Any]:
+def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int], reel_source=None, drop_label_source=None, drop_weight_source=None) -> dict[str, Any]:
     reel_source = reel_source or ws
     drop_label_source = drop_label_source or ws
+    drop_weight_source = drop_weight_source or ws
     reels: list[list[int]] = [[] for _ in range(5)]
     weights: list[list[float]] = [[] for _ in range(5)]
     for row_number in range(4, 404):
@@ -148,7 +239,7 @@ def _xlsx_table(ws, name_to_id: dict[str, int], multipliers: list[int], reel_sou
             raise ValueError(f"{ws.title} AF{row_number}: unknown drop symbol {symbol_name!r}")
         symbol_id = name_to_id[str(symbol_name)]
         for reel in range(5):
-            weight = _xlsx_number(ws.cell(row_number, 33 + reel).value, f"{ws.title} drop R{reel + 1} row {row_number}")
+            weight = _xlsx_number(drop_weight_source.cell(row_number, 33 + reel).value, f"{ws.title} drop R{reel + 1} row {row_number}")
             if weight < 0:
                 raise ValueError(f"{ws.title}: drop weights cannot be negative")
             drop_values[reel].append(symbol_id)
@@ -175,7 +266,7 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
     # Normal mode is materially faster for repeatedly reading the six 200-stop
     # physical reel tables by coordinate.
     workbook = load_workbook(path, read_only=False, data_only=False)
-    required_sheets = {"Overview", "Parameter", "BG_Symbol", "FG_Symbol"}
+    required_sheets = {"Overview", "Parameter", "BG_Symbol", "FG_Symbol", "BF_Symbol"}
     missing = required_sheets.difference(workbook.sheetnames)
     if missing:
         raise ValueError(f"{path.name}: missing sheets {sorted(missing)}")
@@ -211,6 +302,16 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
         raise ValueError(f"{path.name}: missing sheets {sorted(missing_variants)}")
     bg_tables = [_xlsx_table(workbook[name], name_to_id, bg_multipliers, drop_label_source=workbook["BG_Symbol"]) for name in bg_names]
     fg_tables = [_xlsx_table(workbook[name], name_to_id, fg_multipliers, drop_label_source=workbook["FG_Symbol"]) for name in fg_names]
+    # BF is an entry-only board and never cascades, so its AF labels are unused.
+    # They are linked array formulas; use the canonical BG labels only to keep a
+    # structurally complete runtime table for the shared config schema.
+    bf_table = _xlsx_table(
+        workbook["BF_Symbol"],
+        name_to_id,
+        bg_multipliers,
+        drop_label_source=workbook["BG_Symbol"],
+        drop_weight_source=workbook["BG_Symbol"],
+    )
     tables = {
         "bg_1": bg_tables[0],
         "bg_2": bg_tables[1],
@@ -220,7 +321,7 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
         "fg_3": fg_tables[2],
         "bg_high": bg_tables[0],
         "bg_low": bg_tables[1],
-        "buy": bg_tables[2],
+        "buy": bf_table,
         "fg_high_a": fg_tables[0],
         "fg_high_k": fg_tables[1],
         "fg_high_q": fg_tables[2],
@@ -266,6 +367,9 @@ def _load_xlsx_config(path: Path) -> dict[str, Any]:
     }
 
 
+_CONFIG_DISCOVERY_CACHE: dict[Path, dict[str, Any]] = {}
+
+
 def _is_h016_config(path: Path) -> bool:
     if not path.is_file():
         return False
@@ -274,7 +378,17 @@ def _is_h016_config(path: Path) -> bool:
     except (OSError, ValueError, json.JSONDecodeError):
         return False
     required = {"tables", "symbol_names", "pays", "free_game_mix"}
-    return str(data.get("game_id")) == "H016" and required.issubset(data)
+    valid = str(data.get("game_id")) == "H016" and required.issubset(data)
+    if valid:
+        _CONFIG_DISCOVERY_CACHE[path.resolve()] = data
+    return valid
+
+
+def _load_runtime_config(path: Path) -> dict[str, Any]:
+    """Reuse the config parsed while locating the project directory."""
+    resolved = path.resolve()
+    cached = _CONFIG_DISCOVERY_CACHE.pop(resolved, None)
+    return cached if cached is not None else _load_config(resolved)
 
 
 def resolve_base_dir() -> Path:
@@ -330,8 +444,9 @@ SHOW_CONSOLE_SUMMARY = _env_bool("H016_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMA
 SHOW_CONSOLE_DETAIL = _env_bool("H016_SHOW_CONSOLE_DETAIL", SHOW_CONSOLE_DETAIL)
 RUN_SINGLE_SPIN_DEBUG = _env_bool("H016_RUN_SINGLE_SPIN_DEBUG", RUN_SINGLE_SPIN_DEBUG)
 THREADS = max(1, int(os.environ.get("H016_THREADS", THREADS)))
-CFG = _load_config(BASE_DIR / CONFIG_FILE)
+CFG = _load_runtime_config(BASE_DIR / CONFIG_FILE)
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CFG.get("card_system", {}).get("enabled"))
+CARD_RETRY_LIMIT = max(1, int(CFG.get("card_system", {}).get("retry_limit", CARD_RETRY_LIMIT)))
 GAME_ID = str(CFG.get("game_id", "H016"))
 PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
 GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
@@ -365,7 +480,7 @@ class Reel:
     @staticmethod
     def _index(rng: random.Random, cumulative: list[float], total: float) -> int:
         position = rng.random() * total
-        return min(bisect.bisect_left(cumulative, position), len(cumulative) - 1)
+        return min(bisect.bisect_right(cumulative, position), len(cumulative) - 1)
 
     def window(self, rng: random.Random, size: int) -> list[int]:
         stop = self._index(rng, self.stop_cumulative, self.stop_total)
@@ -704,6 +819,9 @@ class LuckyAce:
     def round(self, bet_mode: int) -> RoundResult:
         if bet_mode in (MODE_FEATUREBUY, MODE_SUPERBUY):
             super_mode = bet_mode == MODE_SUPERBUY
+            entry = self.board("buy")
+            if sum(symbol == C1 for reel in entry for symbol in reel) < 3:
+                raise RuntimeError("BF_Symbol weights must guarantee at least 3 C1")
             return self.card_feature("super_feature" if super_mode else "buy_feature", super_mode) if self.card_enabled else self.free_session(super_mode)
         result = RoundResult()
         if self.card_enabled:
@@ -775,9 +893,29 @@ def _empty_stats() -> dict[str, Any]:
         "max_multiplier": 1,
         "win_x_sum": 0.0,
         "win_x_square": 0.0,
+        "retry_total": 0,
+        "retry_limit_exceeded": 0,
+        "retry_limit_bg_range": 0,
+        "retry_limit_bg_freegame": 0,
+        "retry_limit_fg": 0,
         "combo_bg": Counter(),
         "combo_fg": Counter(),
         "buckets": Counter(),
+        "multiplier_bg_count": Counter(),
+        "multiplier_bg_pay": Counter(),
+        "multiplier_fg_count": Counter(),
+        "multiplier_fg_pay": Counter(),
+        "multiplier_overall_count": Counter(),
+        "multiplier_overall_pay": Counter(),
+        "interval_bg_hits": Counter(),
+        "interval_bg_combo": Counter(),
+        "interval_bg_w2": Counter(),
+        "interval_bg_gold_symbols": Counter(),
+        "interval_fg_spins": Counter(),
+        "interval_fg_hits": Counter(),
+        "interval_fg_combo": Counter(),
+        "interval_fg_w2": Counter(),
+        "interval_fg_gold_symbols": Counter(),
         "symbol_hits": Counter(),
         "symbol_pay": Counter(),
         "bg_symbol_length_hits": Counter(),
@@ -828,6 +966,30 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         stats["win_x_square"] += ratio * ratio
         stats["combo_bg"][min(result.cascades_bg, 5)] += 1
         stats["combo_fg"].update(result.combo_fg)
+        multiplier_coin_in = BASE_BET * BET_MULTI
+        bg_bucket = min(bisect.bisect_left(MULTIPLIER_THRESHOLDS, result.pay_bg / multiplier_coin_in), len(MULTIPLIER_THRESHOLDS) - 1)
+        overall_bucket = min(bisect.bisect_left(MULTIPLIER_THRESHOLDS, result.pay / multiplier_coin_in), len(MULTIPLIER_THRESHOLDS) - 1)
+        if bet_mode == MODE_NORMALBET:
+            stats["multiplier_bg_count"][bg_bucket] += 1
+            stats["multiplier_bg_pay"][bg_bucket] += result.pay_bg
+            stats["interval_bg_hits"][bg_bucket] += result.bg_hit_spins
+            stats["interval_bg_combo"][(bg_bucket, min(result.cascades_bg, 5))] += 1
+            for ghost_count in (2, 3, 4):
+                stats["interval_bg_w2"][(bg_bucket, ghost_count)] += result.bg_w2_counts[ghost_count]
+            stats["interval_bg_gold_symbols"][bg_bucket] += result.bg_gold_symbols
+        if result.fg_triggered:
+            fg_bucket = min(bisect.bisect_left(MULTIPLIER_THRESHOLDS, result.pay_fg / multiplier_coin_in), len(MULTIPLIER_THRESHOLDS) - 1)
+            stats["multiplier_fg_count"][fg_bucket] += 1
+            stats["multiplier_fg_pay"][fg_bucket] += result.pay_fg
+            stats["interval_fg_spins"][fg_bucket] += result.fg_spins
+            stats["interval_fg_hits"][fg_bucket] += result.fg_hit_spins
+            for combo_count in range(1, 6):
+                stats["interval_fg_combo"][(fg_bucket, combo_count)] += result.combo_fg[combo_count]
+            for ghost_count in (2, 3, 4):
+                stats["interval_fg_w2"][(fg_bucket, ghost_count)] += result.fg_w2_counts[ghost_count]
+            stats["interval_fg_gold_symbols"][fg_bucket] += result.fg_gold_symbols
+        stats["multiplier_overall_count"][overall_bucket] += 1
+        stats["multiplier_overall_pay"][overall_bucket] += result.pay
         label = "0" if ratio == 0 else "(0,1)" if ratio < 1 else "[1,10)" if ratio < 10 else "[10,100)" if ratio < 100 else "100+"
         stats["buckets"][label] += 1
         stats["symbol_hits"].update(result.symbol_hits)
@@ -860,6 +1022,21 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
         "fg_drop_symbols",
         "bg_w2_counts",
         "fg_w2_counts",
+        "multiplier_bg_count",
+        "multiplier_bg_pay",
+        "multiplier_fg_count",
+        "multiplier_fg_pay",
+        "multiplier_overall_count",
+        "multiplier_overall_pay",
+        "interval_bg_hits",
+        "interval_bg_combo",
+        "interval_bg_w2",
+        "interval_bg_gold_symbols",
+        "interval_fg_spins",
+        "interval_fg_hits",
+        "interval_fg_combo",
+        "interval_fg_w2",
+        "interval_fg_gold_symbols",
     }
     for key, value in source.items():
         if key in counter_fields:
@@ -885,13 +1062,36 @@ def run_simulation(
     base, extra = divmod(int(total_rounds), threads)
     chunks = [base + (1 if i < extra else 0) for i in range(threads)]
     active = config or CFG
-    if FAST_SIMULATION and not CARD_SYSTEM_ENABLED and fast_simulator is not None:
+    fast_api_version = (
+        getattr(fast_simulator, "FAST_SIMULATOR_API_VERSION", 1)
+        if fast_simulator is not None else 0
+    )
+    fast_card_capable = fast_api_version >= 2
+    if (
+        FAST_SIMULATION
+        and fast_simulator is not None
+        and (not CARD_SYSTEM_ENABLED or fast_card_capable)
+    ):
         packed = fast_simulator.prepare_config(active)
-        fast_simulator.warm(packed, int(bet_mode), int(bet_multi))
+        if fast_card_capable:
+            fast_simulator.warm(
+                packed, int(bet_mode), int(bet_multi),
+                card_enabled=bool(CARD_SYSTEM_ENABLED),
+                card_newbie=bool(CARD_SYSTEM_IS_NEWBIE),
+            )
+        else:
+            fast_simulator.warm(packed, int(bet_mode), int(bet_multi))
         started = time.perf_counter()
-        packed_result = fast_simulator.run_prepared(
-            packed, int(total_rounds), int(bet_mode), int(bet_multi), threads
-        )
+        if fast_card_capable:
+            packed_result = fast_simulator.run_prepared(
+                packed, int(total_rounds), int(bet_mode), int(bet_multi), threads,
+                card_enabled=bool(CARD_SYSTEM_ENABLED),
+                card_newbie=bool(CARD_SYSTEM_IS_NEWBIE),
+            )
+        else:
+            packed_result = fast_simulator.run_prepared(
+                packed, int(total_rounds), int(bet_mode), int(bet_multi), threads,
+            )
         return {
             "stats": fast_simulator.to_stats(packed_result),
             "duration": time.perf_counter() - started,
@@ -931,8 +1131,16 @@ def summary_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("game_id", GAME_ID),
         ("game_name", GAME_NAME),
         ("config_file", CONFIG_FILE),
+        ("runtime_version", CFG.get("runtime_version", "")),
         ("card_system", "on" if CARD_SYSTEM_ENABLED else "off"),
         ("card_system_profile", profile),
+        ("card_retry_limit", CARD_RETRY_LIMIT if CARD_SYSTEM_ENABLED else 0),
+        ("retry_total", s.get("retry_total", 0)),
+        ("avg_retry", s.get("retry_total", 0) / rounds),
+        ("retry_limit_exceeded", s.get("retry_limit_exceeded", 0)),
+        ("retry_limit_bg_range", s.get("retry_limit_bg_range", 0)),
+        ("retry_limit_bg_freegame", s.get("retry_limit_bg_freegame", 0)),
+        ("retry_limit_fg", s.get("retry_limit_fg", 0)),
         ("bet_mode", mode_name(result["bet_mode"])),
         ("bet_multi", result["bet_multi"]),
         ("coin_in", wager_for_mode(result["bet_mode"])),
@@ -1011,9 +1219,22 @@ def print_console(result: dict[str, Any]) -> None:
                 print(f"{key:22s}: {float(value) * 100:.6f}%")
             else:
                 print(f"{key:22s}: {value}")
-        print_symbol_ratio_tables(result)
     if SHOW_CONSOLE_DETAIL:
+        print_symbol_ratio_tables(result)
         print("\nPay buckets:", dict(result["stats"]["buckets"]))
+
+
+def format_rounds_tag(total_rounds: int) -> str:
+    """Match H028 report names: 10**7 -> 107, 10**6 -> 106."""
+    total_rounds = int(total_rounds)
+    value = total_rounds
+    exponent = 0
+    while value > 0 and value % 10 == 0:
+        value //= 10
+        exponent += 1
+    if value == 1 and exponent > 0:
+        return f"10{exponent}"
+    return str(total_rounds)
 
 
 def output_report(result: dict[str, Any]) -> Path:
@@ -1021,7 +1242,7 @@ def output_report(result: dict[str, Any]) -> Path:
     s = result["stats"]
     summary = dict(summary_rows(result))
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    rounds_tag = str(s["rounds"])
+    rounds_tag = format_rounds_tag(s["rounds"])
     rtp_tag = f"{float(summary['rtp_total']):.4f}".split(".", 1)[1]
     parts = [PARSHEET_ID, timestamp, f"betmode{result['bet_mode']}", rounds_tag, rtp_tag]
     if CARD_SYSTEM_ENABLED:
@@ -1045,7 +1266,45 @@ def output_report(result: dict[str, Any]) -> Path:
         ]
     )
     combo_df = pd.DataFrame({"combo": ["0", "1", "2", "3", "4", "5+"], "BG": [s["combo_bg"][i] for i in range(6)], "FG": [s["combo_fg"][i] for i in range(6)]})
-    bucket_df = pd.DataFrame({"bucket": ["0", "(0,1)", "[1,10)", "[10,100)", "100+"], "count": [s["buckets"][key] for key in ["0", "(0,1)", "[1,10)", "[10,100)", "100+"]]})
+    interval_labels = ["0" if index == 0 else f"{MULTIPLIER_THRESHOLDS[index - 1]:.1f} < X <= {threshold:.1f}" for index, threshold in enumerate(MULTIPLIER_THRESHOLDS)]
+
+    def interval_rate(counter: Counter, denominator: Counter, key_builder) -> list[float]:
+        return [counter[key_builder(index)] / denominator[index] if denominator[index] else 0.0 for index in range(len(MULTIPLIER_THRESHOLDS))]
+
+    bg_interval_count = s["multiplier_bg_count"]
+    fg_interval_spins = s["interval_fg_spins"]
+    multiplier_df = pd.DataFrame(
+        {
+            "Interval": interval_labels,
+            "base_game_cnt": [s["multiplier_bg_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+            "base_game_pay": [s["multiplier_bg_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+            "BG_Hit_Rate": interval_rate(s["interval_bg_hits"], bg_interval_count, lambda i: i),
+            "BG_Combo_1_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 1)),
+            "BG_Combo_2_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 2)),
+            "BG_Combo_3_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 3)),
+            "BG_Combo_4_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 4)),
+            "BG_Combo_5Plus_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 5)),
+            "BG_Big_Ghost_2_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 2)),
+            "BG_Big_Ghost_3_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 3)),
+            "BG_Big_Ghost_4_Rate": interval_rate(s["interval_bg_w2"], bg_interval_count, lambda i: (i, 4)),
+            "BG_Avg_Gold_Frames": interval_rate(s["interval_bg_gold_symbols"], bg_interval_count, lambda i: i),
+            "FG_Session_Count": [s["multiplier_fg_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+            "free_game_pay": [s["multiplier_fg_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+            "FG_Spin_Count": [s["interval_fg_spins"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+            "FG_Hit_Rate": interval_rate(s["interval_fg_hits"], fg_interval_spins, lambda i: i),
+            "FG_Combo_1_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 1)),
+            "FG_Combo_2_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 2)),
+            "FG_Combo_3_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 3)),
+            "FG_Combo_4_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 4)),
+            "FG_Combo_5Plus_Rate": interval_rate(s["interval_fg_combo"], fg_interval_spins, lambda i: (i, 5)),
+            "FG_Big_Ghost_2_Rate": interval_rate(s["interval_fg_w2"], fg_interval_spins, lambda i: (i, 2)),
+            "FG_Big_Ghost_3_Rate": interval_rate(s["interval_fg_w2"], fg_interval_spins, lambda i: (i, 3)),
+            "FG_Big_Ghost_4_Rate": interval_rate(s["interval_fg_w2"], fg_interval_spins, lambda i: (i, 4)),
+            "FG_Avg_Gold_Frames": interval_rate(s["interval_fg_gold_symbols"], fg_interval_spins, lambda i: i),
+            "overall_cnt": [s["multiplier_overall_count"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+            "overall_pay": [s["multiplier_overall_pay"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
+        }
+    )
     record_df = pd.DataFrame({"field": list(s.keys()), "value": [dict(v) if isinstance(v, Counter) else v for v in s.values()]})
     ratio_sheets = [
         ("BG Initial Symbol", symbol_ratio_df(s["bg_initial_symbols"])),
@@ -1058,7 +1317,7 @@ def output_report(result: dict[str, Any]) -> Path:
         hits_df.to_excel(writer, sheet_name="Hits", index=False)
         symbol_length_df.to_excel(writer, sheet_name="Symbol Length", index=False)
         combo_df.to_excel(writer, sheet_name="Eliminate", index=False)
-        bucket_df.to_excel(writer, sheet_name="Multiplier Line", index=False)
+        multiplier_df.to_excel(writer, sheet_name="Multiplier Line", index=False)
         record_df.to_excel(writer, sheet_name="Record Data", index=False)
         for sheet_name, frame in ratio_sheets:
             frame.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -1069,6 +1328,23 @@ def output_report(result: dict[str, Any]) -> Path:
                 worksheet.column_dimensions[column].width = 13
                 for row in range(2, len(frame) + 2):
                     worksheet[f"{column}{row}"].number_format = "0.0000%"
+        worksheet = writer.sheets["Multiplier Line"]
+        worksheet.freeze_panes = "B2"
+        worksheet.auto_filter.ref = worksheet.dimensions
+        worksheet.column_dimensions["A"].width = 22
+        for column_index, column_name in enumerate(multiplier_df.columns, start=1):
+            column_letter = worksheet.cell(row=1, column=column_index).column_letter
+            worksheet.column_dimensions[column_letter].width = max(14, min(28, len(str(column_name)) + 3))
+            if column_name.endswith("_Rate"):
+                number_format = "0.0000%"
+            elif column_name.endswith("_Count") or column_name.endswith("_cnt") or column_name.endswith("_pay"):
+                number_format = "#,##0"
+            elif column_name.endswith("_Frames"):
+                number_format = "0.0000"
+            else:
+                continue
+            for row in range(2, len(multiplier_df) + 2):
+                worksheet.cell(row=row, column=column_index).number_format = number_format
     return path
 
 
@@ -1085,43 +1361,35 @@ def run_single_spin_debug() -> None:
 
 
 def run_all_combinations() -> None:
+    global CONFIG_FILE, CFG, CARD_SYSTEM_ENABLED, CARD_SYSTEM_IS_NEWBIE
+    global CARD_RETRY_LIMIT, BET_MODE, TOTAL_ROUNDS
+    global GAME_ID, PARSHEET_ID, GAME_NAME, SYMBOL_STR
+
     for index, combo in enumerate(BATCH_RUNS, 1):
-        env = os.environ.copy()
-        env["PYTHONUNBUFFERED"] = "1"
-        env["PYTHONUTF8"] = "1"
-        env["PYTHONIOENCODING"] = "utf-8"
-        env.update(
-            {
-                "H016_CONFIG_FILE": str(combo.get("config_file", CONFIG_FILE)),
-                "H016_BET_MODE": str(combo.get("bet_mode", 0)),
-                "H016_TOTAL_ROUNDS": str(combo.get("total_rounds", TOTAL_ROUNDS)),
-                "H016_CARD_SYSTEM_IS_NEWBIE": str(bool(combo.get("card_system_is_newbie", False))).lower(),
-                "H016_CARD_SYSTEM_ENABLED": str(bool(combo.get("card_system_enabled", True))).lower(),
-                "H016_RUN_ALL_COMBINATIONS": "false",
-                "H016_BATCH_CHILD": "1",
-            }
-        )
         print(f"\n=== Batch {index}/{len(BATCH_RUNS)}: {combo} ===", flush=True)
-        result = subprocess.run(
-            [sys.executable, str(SIMULATOR_PATH)],
-            check=False,
-            env=env,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
+        CONFIG_FILE = str(combo.get("config_file", CONFIG_FILE))
+        CFG = _load_config(BASE_DIR / CONFIG_FILE)
+        BET_MODE = int(combo.get("bet_mode", 0))
+        TOTAL_ROUNDS = int(combo.get("total_rounds", TOTAL_ROUNDS))
+        CARD_SYSTEM_IS_NEWBIE = bool(combo.get("card_system_is_newbie", False))
+        CARD_SYSTEM_ENABLED = bool(
+            combo.get("card_system_enabled", True)
+            and CFG.get("card_system", {}).get("enabled")
         )
-        if result.stdout:
-            print(result.stdout.rstrip(), flush=True)
-        if result.stderr:
-            print(result.stderr.rstrip(), file=sys.stderr, flush=True)
-        if result.returncode:
-            raise subprocess.CalledProcessError(
-                result.returncode,
-                result.args,
-                output=result.stdout,
-                stderr=result.stderr,
-            )
+        CARD_RETRY_LIMIT = max(
+            1, int(CFG.get("card_system", {}).get("retry_limit", CARD_RETRY_LIMIT))
+        )
+        GAME_ID = str(CFG.get("game_id", "H016"))
+        PARSHEET_ID = str(CFG.get("parsheet_id", "H016192"))
+        GAME_NAME = str(CFG.get("name_zh", "幸運王牌"))
+        SYMBOL_STR = {int(key): value for key, value in CFG["symbol_names"].items()}
+
+        result = run_simulation(
+            TOTAL_ROUNDS, BET_MODE, BET_MULTI, THREADS, config=CFG,
+        )
+        print_console(result)
+        if OUTPUT_REPORT:
+            print(f"\nReport: {output_report(result)}")
 
 
 def parse_args() -> argparse.Namespace:

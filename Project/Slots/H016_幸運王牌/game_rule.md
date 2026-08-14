@@ -150,11 +150,13 @@
 
 * **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`。
 * **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`。
-* **BG_Symbol (3)**：FG 進場表。進場 Spin 得分必須小於 10x，目前設定為 0x。
-* **FG_Symbol**：FG 競品表。沿用 101003 的 2／3／4 顆條件分布，Random Wild 非 0 的抽中率設定為 `FG_Symbol (2)` 的 1/2。
-* **FG_Symbol (2)**：FG 大鬼能見度表。Random Wild 使用 101003 的 `0／2／3／4 = 13128／2000／500／200`；得分集中於 `M4`、`A`、`Q`、`J`。
+* **BG_Symbol (3)**：Base Game 第三組權重表。
+* **BF_Symbol**：Buy Feature 專用進場輪帶；由 R1～R3 有效停點權重保證至少 3 顆 `C1`。
+* **FG_Symbol**：FG 競品表；金框物理停點數為原設定的 2 倍。
+* **FG_Symbol (2)**：FG 大鬼能見度表；金框物理停點數為原設定的 2 倍。
 * **FG_Symbol (3)**：目前不使用，Table Selection Weight 為 0。
-* 六張表的 `K:O` 都各自保存 5 輪 × 200 格物理輪帶；同 Scene 三張表的排列內容相同，差異只在各自的 Symbol Weight、Symbol Drop Weight 與 Random Wild Weight。
+* Random Wild 的 0／2／3／4 數量與權重逐表直接使用目前 `H0161.xlsx` 內容，不由程式硬編碼覆蓋。
+* 七張表的 `K:O` 都各自保存 5 輪 × 200 格物理輪帶；同 Scene 三張表的差異由各自的 Symbol Weight、Symbol Drop Weight 與 Random Wild Weight 決定。
 * 實際 BG／FG／Retrigger 選表依 `Parameter` 的 Table Selection Weight 每個 Spin 獨立抽取。
 
 ---
@@ -198,7 +200,7 @@
 
 | 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次起 |
 | --- | ---: | ---: | ---: | ---: |
-| Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 |
+| Base Game | ×1 | ×2 | ×3 | ×5 |
 | Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 |
 
 * 每一次 Cascade 的得分使用該次表列倍數。
@@ -239,9 +241,9 @@
 ### 8.1 Buy Feature
 
 * 價格：`40.5 × Bet`。
-* 購買後先使用 Buy Feature 專用初始盤面權重，產生保證含 3 顆以上 `C1` 的進場 Spin。
-* 進場 Spin 的判獎、Cascade、倍率與金框規則同 BG。
-* 進場局所有 Cascade 結束後，以最終 `C1` 觸發 10 場 FG。
+* 購買後使用 `BF_Symbol` 專用物理輪帶與停點權重產生進場盤面，保證含 3 顆以上 `C1`。
+* 進場盤面只用於顯示觸發結果，不進行 Ways 判獎、不執行 Cascade，也不產生任何得分。
+* 顯示進場盤面後直接觸發 10 場 FG。
 * 進入 FG 後沿用 §7 的一般 FG 規則。
 
 ### 8.2 Buy Super Feature
@@ -298,7 +300,7 @@
 ### 9.5 Buy Feature 相關
 
 * **9.5.1 Buy 進場使用專用權重**：不可直接以一般 BG 權重代替。
-* **9.5.2 Buy 進場局仍完整結算**：進場盤面的 Ways / Cascade 得分正常計入。
+* **9.5.2 Buy 進場盤面不計分**：不進行 Ways／Cascade，該盤得分固定為 0。
 * **9.5.3 一般 Buy 與 Super Buy 使用不同 FG 權重**。
 * **9.5.4 Super Buy 金框必定啟動 WW2 模式**：額外數量仍依 2 / 3 / 4 權重決定。
 

@@ -2185,8 +2185,8 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config_92.js">H0161</option>
-            <option value="config_94.js">H016194</option>
+            <option value="config_92.js">H016192 · v1.13</option>
+            <option value="config_94.js">H016194 · v1.13</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2354,11 +2354,13 @@
 
 * **BG_Symbol**：競品表。R3、R5 的初始停輪與 Cascade 補牌不出現 `C1`。
 * **BG_Symbol (2)**：大鬼能見度表。R1、R4 的初始停輪與 Cascade 補牌不出現 `C1`；得分集中於 `M4`、`A`、`Q`、`J`。
-* **BG_Symbol (3)**：FG 進場表。進場 Spin 得分小於 10x，目前為 0x。
-* **FG_Symbol**：FG 競品表。沿用 101003 的 2／3／4 顆條件分布，Random Wild 非 0 的抽中率設定為 `FG_Symbol (2)` 的 1/2。
-* **FG_Symbol (2)**：FG 大鬼能見度表。Random Wild 使用 101003 的 `0／2／3／4 = 13128／2000／500／200`；得分集中於 `M4`、`A`、`Q`、`J`。
+* **BG_Symbol (3)**：Base Game 第三組權重表。
+* **BF_Symbol**：Buy Feature 專用進場輪帶；由 R1～R3 有效停點權重保證至少 3 顆 `C1`。
+* **FG_Symbol**：FG 競品表；金框物理停點數為原設定的 2 倍。
+* **FG_Symbol (2)**：FG 大鬼能見度表；金框物理停點數為原設定的 2 倍。
 * **FG_Symbol (3)**：目前不使用，Table Selection Weight 為 0。
-* 六張表的 `K:O` 都各自保存 5 輪 × 200 格物理輪帶；同 Scene 三張表的排列內容相同。實際選表依 `Parameter` 的 Table Selection Weight 每個 Spin 獨立抽取。
+* Random Wild 的 0／2／3／4 數量與權重逐表直接使用目前 `H0161.xlsx` 內容，不由程式硬編碼覆蓋。
+* 七張表的 `K:O` 都各自保存 5 輪 × 200 格物理輪帶；實際選表依 `Parameter` 的 Table Selection Weight 每個 Spin 獨立抽取。
 
 ---
 
@@ -2401,7 +2403,7 @@
 
 | 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次起 |
 | --- | ---: | ---: | ---: | ---: |
-| Base Game / Buy 進場局 | ×1 | ×2 | ×3 | ×5 |
+| Base Game | ×1 | ×2 | ×3 | ×5 |
 | Free Game / Super Free Game | ×2 | ×4 | ×6 | ×10 |
 
 * 每一次 Cascade 的得分使用該次表列倍數。
@@ -2442,9 +2444,9 @@
 ### 8.1 Buy Feature
 
 * 價格：`40.5 × Bet`。
-* 購買後先使用 Buy Feature 專用初始盤面權重，產生保證含 3 顆以上 `C1` 的進場 Spin。
-* 進場 Spin 的判獎、Cascade、倍率與金框規則同 BG。
-* 進場局所有 Cascade 結束後，以最終 `C1` 觸發 10 場 FG。
+* 購買後使用 `BF_Symbol` 專用物理輪帶與停點權重產生進場盤面，保證含 3 顆以上 `C1`。
+* 進場盤面只用於顯示觸發結果，不進行 Ways 判獎、不執行 Cascade，也不產生任何得分。
+* 顯示進場盤面後直接觸發 10 場 FG。
 * 進入 FG 後沿用 §7 的一般 FG 規則。
 
 ### 8.2 Buy Super Feature
@@ -2501,7 +2503,7 @@
 ### 9.5 Buy Feature 相關
 
 * **9.5.1 Buy 進場使用專用權重**：不可直接以一般 BG 權重代替。
-* **9.5.2 Buy 進場局仍完整結算**：進場盤面的 Ways / Cascade 得分正常計入。
+* **9.5.2 Buy 進場盤面不計分**：不進行 Ways／Cascade，該盤得分固定為 0。
 * **9.5.3 一般 Buy 與 Super Buy 使用不同 FG 權重**。
 * **9.5.4 Super Buy 金框必定啟動 WW2 模式**：額外數量仍依 2 / 3 / 4 權重決定。
 
@@ -2568,10 +2570,11 @@
 
   <script>
     const H016_CONFIG_FILES = ["config_92.js", "config_94.js"];
+    const H016_CURRENT_VERSION = "1.13";
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H016_ACTIVE_CONFIG = H016_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H016_CONFIG_FILES[0];
     window.H016_ACTIVE_CONFIG = H016_ACTIVE_CONFIG;
-    document.write(`<script src="./${H016_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./${H016_ACTIVE_CONFIG}?v=${encodeURIComponent(H016_CURRENT_VERSION)}"><\/script>`);
   </script>
   <script>
 (() => {
@@ -3241,7 +3244,7 @@
   const BASE_BET = 100;
   const START_BALANCE = 10000 * BASE_BET;
   const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
-  const MAX_RETRY = 20000;
+  const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 20000));
   const DROP_SPEED_MULTIPLIER = 9;
   const tables = {};
   const state = {
@@ -3508,21 +3511,41 @@
     const ratio = pay / (BASE_BET * BET_LEVELS[state.betIndex]);
     return Number(card.min) < ratio && ratio <= Number(card.max);
   }
+  function cardDistance(card, pay) {
+    const ratio = pay / (BASE_BET * BET_LEVELS[state.betIndex]);
+    if (cardMatches(card, pay)) return 0;
+    if (ratio <= Number(card.min)) return Number(card.min) - ratio;
+    return ratio - Number(card.max);
+  }
   function cardSpin(card) {
     if (!card) return spin("bg_high");
     if (card.type === "free_game") {
       for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("buy"); if (result.scatter >= 3) return result; }
     } else {
       const table = card.table === "A" ? "bg_low" : "bg_high";
-      for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin(table); if (result.scatter < 3 && cardMatches(card, result.pay)) return result; }
+      let nearest = null, nearestDistance = Infinity;
+      for (let retry = 0; retry < MAX_RETRY; retry++) {
+        const result = spin(table);
+        if (result.scatter >= 3) continue;
+        const distance = cardDistance(card, result.pay);
+        if (distance === 0) return result;
+        if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
+      }
+      if (nearest) return nearest;
     }
-    throw new Error("Card retry limit exceeded");
+    return naturalBaseSpin();
   }
   function cardFeature(section, superMode) {
     const card = pickCard(section, section === "super_feature" ? "weight_1" : cardProfile());
     if (!card) return freeSession(superMode);
-    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = freeSession(superMode); if (cardMatches(card, result.pay)) return result; }
-    throw new Error(`${section} retry limit exceeded`);
+    let nearest = null, nearestDistance = Infinity;
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      const result = freeSession(superMode);
+      const distance = cardDistance(card, result.pay);
+      if (distance === 0) return result;
+      if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
+    }
+    return nearest || freeSession(superMode);
   }
 
   window.demogameSimulateRound = () => {
@@ -3664,8 +3687,13 @@
   }
 
   function buyEntry() {
-    for (let retry = 0; retry < MAX_RETRY; retry++) { const result = spin("buy", false); if (result.scatter >= 3) return result; }
-    throw new Error("Buy entry retry limit exceeded");
+    const board = makeBoard("buy"), scatter = scatterCount(board);
+    if (scatter < 3) throw new Error("BF_Symbol weights must guarantee at least 3 C1");
+    return {
+      pay: 0, combo: 0, scatter, golden: 0, w2Events: 0,
+      board, tableName: "buy", maxMultiplier: 1,
+      snapshots: [{type:"initial", board:cloneBoard(board), hits:[], combo:0, multiplier:1, message:"BF Entry · No Win"}]
+    };
   }
 
   async function playFeatureSpin() {
@@ -3802,8 +3830,8 @@
 })();
   </script>
   <script>
-  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
-  window.DEMOGAME_VERSION_OVERRIDE = "1.0.0.2";
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = true;
+  window.DEMOGAME_VERSION_OVERRIDE = window.H016_CONFIG?.runtime_version || H016_CURRENT_VERSION;
   </script>
   <script src="../demogame_common.js?v=1"></script>
 </body>
