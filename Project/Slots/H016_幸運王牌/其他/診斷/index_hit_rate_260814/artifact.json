@@ -1,0 +1,468 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "H016 Index Hit Rate 偏低診斷",
+    "description": "定位 Index 批次 Hit Rate 約 14% 與 92 老手目標約 23% 的差異。",
+    "generatedAt": "2026-08-14T19:15:00+08:00",
+    "sources": [
+      {
+        "id": "index-observation",
+        "label": "Index 畫面與計分邏輯",
+        "path": "Project/Slots/H016_幸運王牌/index.html",
+        "query": {
+          "engine": "sqlite",
+          "sql": "SELECT 10000 AS rounds, 1398 AS hits, 1398.0 / 10000.0 AS observed_hit_rate;",
+          "description": "使用者重新整理後的 Index 批次模擬顯示 10,000 回合、Hit Rate 13.98%。",
+          "executed_at": "2026-08-14T19:15:00+08:00",
+          "metric_definitions": [
+            "批次 Index Hit Rate = totalWin > 0 的 paid round 數 / 批次 paid round 數。",
+            "本次畫面值 13.98% = 1,398 / 10,000。"
+          ],
+          "tables_used": [
+            "Project/Slots/H016_幸運王牌/index.html"
+          ]
+        }
+      },
+      {
+        "id": "config-theory",
+        "label": "92 老手卡片設定理論值",
+        "path": "Project/Slots/H016_幸運王牌/config_92A.js",
+        "query": {
+          "engine": "sqlite",
+          "sql": "SELECT 233951991.0 / 1008509010.0 AS theoretical_hit_rate, (233951991.0 + 8509010.0) / 1008509010.0 AS paying_or_fg_rate;",
+          "description": "加總 weight_2 base_game 的卡片權重，將派彩區間卡片與 Free Game 卡片分開計算。",
+          "executed_at": "2026-08-14T19:15:00+08:00",
+          "metric_definitions": [
+            "理論 BG Hit Rate = 派彩 BG 卡片權重 / base_game 總卡片權重。",
+            "派彩或 FG 機率 =（派彩 BG 卡片權重 + Free Game 卡片權重）/ base_game 總卡片權重。"
+          ],
+          "tables_used": [
+            "Project/Slots/H016_幸運王牌/config_92A.js.card_system.weight_2.base_game"
+          ]
+        }
+      },
+      {
+        "id": "simulator-control",
+        "label": "同設定 10,000 場完整 Simulator 控制模擬",
+        "path": "Project/Slots/H016_幸運王牌/Simulator.py",
+        "query": {
+          "engine": "sqlite",
+          "sql": "SELECT 10000 AS rounds, 2341 AS bg_hit_spins, 2341.0 / 10000.0 AS simulator_hit_rate;",
+          "description": "config.js + config_92A.js、Card System on、oldhand、Normal Bet、10,000 場，並關閉 FAST_SIMULATION。",
+          "query": "Simulator.py 10000 0 --threads 1; H016_CONFIG_FILE=config.js; H016_CONFIG_RTP_FILE=config_92A.js; H016_CARD_SYSTEM_ENABLED=true; H016_CARD_SYSTEM_IS_NEWBIE=false; H016_OUTPUT_REPORT=false; H016_FAST_SIMULATION=false",
+          "executed_at": "2026-08-14T19:15:00+08:00",
+          "filters": [
+            "Normal Bet",
+            "Oldhand card profile",
+            "Card System enabled",
+            "10,000 paid rounds",
+            "FAST_SIMULATION disabled"
+          ],
+          "metric_definitions": [
+            "Simulator BG Hit Rate = bg_hit_spins / rounds；與 Index 的 Base Game Hit Rate 口徑一致。"
+          ],
+          "tables_used": [
+            "Project/Slots/H016_幸運王牌/Simulator.py",
+            "Project/Slots/H016_幸運王牌/config.js",
+            "Project/Slots/H016_幸運王牌/config_92A.js"
+          ]
+        }
+      },
+      {
+        "id": "diagnostic-calculation",
+        "label": "Index 邊界判定重現與修正驗證",
+        "path": "Project/Slots/H016_幸運王牌/其他/診斷/index_hit_rate_260814/reproduce_index_bg.js",
+        "query": {
+          "engine": "sqlite",
+          "sql": "SELECT 1 AS display_order, 'Index 批次畫面' AS source, 10000 AS rounds, 1398 AS hits, 0.1398 AS hit_rate UNION ALL SELECT 2, 'Index 原邏輯重現', 100000, 13466, 0.13466 UNION ALL SELECT 3, '92 老手卡片理論', NULL, NULL, 233951991.0 / 1008509010.0 UNION ALL SELECT 4, '邊界修正重現', 100000, 23796, 0.23796 UNION ALL SELECT 5, 'Simulator 完整流程', 10000, 2341, 0.2341;",
+          "description": "忠實重現 Index 的 BG 卡片重骰流程，比較原本 distance===0 判定與改用 cardMatches 後的 100,000 場結果。",
+          "executed_at": "2026-08-14T19:15:00+08:00",
+          "metric_definitions": [
+            "Index 原邏輯重現 Hit Rate = 13,466 / 100,000 = 13.466%。",
+            "邊界修正重現 Hit Rate = 23,796 / 100,000 = 23.796%。",
+            "原邏輯在 (0,1] 卡片抽中的 12,929 回合中，錯誤接受 10,192 個 0 倍結果。"
+          ],
+          "tables_used": [
+            "index-observation",
+            "config-theory",
+            "simulator-control",
+            "Project/Slots/H016_幸運王牌/其他/診斷/index_hit_rate_260814/reproduce_index_bg.js"
+          ]
+        }
+      }
+    ],
+    "cards": [
+      {
+        "id": "observed-card",
+        "description": "Index 批次畫面目前 1,398 / 10,000 個 paid rounds 有派彩。",
+        "dataset": "headline",
+        "sourceId": "index-observation",
+        "metrics": [
+          {
+            "label": "Index 畫面 Hit Rate",
+            "field": "observed_hit_rate",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "expected-card",
+        "description": "92 老手派彩 BG 卡片在 base_game 總卡片權重中的占比。",
+        "dataset": "headline",
+        "sourceId": "config-theory",
+        "metrics": [
+          {
+            "label": "92 老手理論 BG Hit Rate",
+            "field": "theoretical_hit_rate",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "sim-card",
+        "description": "同一份 config、Card System 開啟、Normal Bet、關閉 fast path 的 10,000 場結果。",
+        "dataset": "headline",
+        "sourceId": "simulator-control",
+        "metrics": [
+          {
+            "label": "Simulator BG Hit Rate",
+            "field": "simulator_hit_rate",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "fixed-card",
+        "description": "只改為先用 cardMatches 驗證左開右閉區間後的 100,000 場重現結果。",
+        "dataset": "headline",
+        "sourceId": "diagnostic-calculation",
+        "metrics": [
+          {
+            "label": "邊界修正後 Hit Rate",
+            "field": "fixed_hit_rate",
+            "format": "percent"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "hit-rate-comparison-chart",
+        "title": "Index 邊界判定修正前後 Hit Rate",
+        "subtitle": "Index 畫面與原邏輯重現均約 14%；修正後回到約 23.8%。",
+        "intent": "comparison",
+        "question": "Index 畫面 Hit Rate 是否與目前 92 老手設定及 Simulator 一致？",
+        "rationale": "五個同口徑百分比的直接比較，長條圖可呈現實際畫面、原邏輯重現、理論、修正與 Simulator 的一致關係。",
+        "type": "bar",
+        "dataset": "comparison",
+        "sourceId": "diagnostic-calculation",
+        "encodings": {
+          "x": {
+            "field": "source",
+            "type": "nominal",
+            "label": "來源"
+          },
+          "y": {
+            "field": "hit_rate",
+            "type": "quantitative",
+            "format": "percent",
+            "label": "BG Hit Rate"
+          },
+          "tooltip": [
+            {
+              "field": "source",
+              "type": "text",
+              "label": "來源"
+            },
+            {
+              "field": "hit_rate",
+              "type": "quantitative",
+              "format": "percent",
+              "label": "BG Hit Rate"
+            },
+            {
+              "field": "rounds",
+              "type": "quantitative",
+              "format": "number",
+              "label": "樣本回合"
+            }
+          ]
+        },
+        "valueFormat": "percent",
+        "layout": "full",
+        "maxRows": 5
+      }
+    ],
+    "tables": [
+      {
+        "id": "comparison-table",
+        "title": "Index 邊界錯判的重現與修正對照",
+        "subtitle": "Normal Bet、92-Oldhand、Card System on；重現器沿用 Index 的完整 BG 抽卡與轉輪流程。",
+        "dataset": "comparison",
+        "sourceId": "diagnostic-calculation",
+        "defaultSort": {
+          "field": "order",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "order",
+            "label": "順序",
+            "format": "number"
+          },
+          {
+            "field": "source",
+            "label": "來源",
+            "type": "text"
+          },
+          {
+            "field": "rounds",
+            "label": "樣本回合",
+            "format": "number"
+          },
+          {
+            "field": "hits",
+            "label": "命中回合",
+            "type": "text"
+          },
+          {
+            "field": "hit_rate",
+            "label": "Hit Rate",
+            "format": "percent"
+          },
+          {
+            "field": "interpretation",
+            "label": "解讀",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "# H016 Index Hit Rate 偏低診斷"
+      },
+      {
+        "id": "technical-summary",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 技術結論\n\nIndex 的 **13.98% 不是抽樣誤差，也不是 config 權重太低**。根因是 Card System 的左開右閉區間判定不一致：`cardMatches()` 正確把 `(0,1]` 的 0 倍排除，但 `cardDistance()` 在結果剛好等於下界 0 時回傳距離 0；`cardSpin()` 隨後以 `distance === 0` 當成命中，因此錯誤接受 0 倍，不再重骰。\n\n忠實重現 Index 原邏輯跑 100,000 場得到 **13.466%**，與畫面 13.98% 一致；只把回傳條件改為 `cardMatches()` 後得到 **23.796%**，回到 92 老手理論值 23.1978% 與完整 Simulator 23.4100% 的區間。\n\n同一個 `distance === 0` 問題也存在 FG 的 `cardFeature()`，雖然不一定造成 0 倍 Hit，但會把剛好等於區間下界的結果分到錯誤倍率區間。"
+      },
+      {
+        "id": "headline-metrics",
+        "type": "metric-strip",
+        "layout": "full",
+        "cardIds": [
+          "observed-card",
+          "expected-card",
+          "sim-card",
+          "fixed-card"
+        ]
+      },
+      {
+        "id": "hit-rate-chart",
+        "type": "chart",
+        "layout": "full",
+        "chartId": "hit-rate-comparison-chart"
+      },
+      {
+        "id": "key-findings",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## `(0,1]` 的下界 0 被誤判為命中\n\n- 92 老手 `(0,1]` 卡片占總 base_game 權重約 **12.92%**，是最大的非零派彩區間。\n- 原邏輯重現中，這張卡抽中 12,929 次，但有 **10,192 次直接接受 0 倍**；這一項就少掉 10.192 個百分點的 Hit Rate。\n- Index 批次畫面為 13.98%，原邏輯重現為 13.466%，兩者落在相同區間。\n- 改用 `cardMatches()` 當唯一成功條件後，100,000 場所有 `(0,1]` 卡片都重骰到真正 `0 < pay <= 1`，整體 Hit Rate 回升至 23.796%。"
+      },
+      {
+        "id": "comparison",
+        "type": "table",
+        "layout": "full",
+        "tableId": "comparison-table"
+      },
+      {
+        "id": "scope-definitions",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 範圍、資料與指標定義\n\n- 範圍：Normal Bet、92-Oldhand、Card System 開啟。\n- Index 批次分子：`demogameSimulateRound()` 回傳的整回合 `multiplier > 0` 次數。\n- Index 批次分母：10,000 個 paid rounds。\n- 卡片區間採左開右閉：`min < pay <= max`；因此 `(0,1]` 絕對不能接受 0 倍。\n- Simulator 對照為完整流程、關閉 `FAST_SIMULATION` 的 10,000 場 BG Hit Rate。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 方法\n\n1. 確認 Index 批次畫面 13.98% 可還原為 1,398 / 10,000。\n2. 核對 Version 3.0 與根目錄 `config_92A.js` 雜湊相同，排除版本檔未同步。\n3. 關閉 `FAST_SIMULATION`，以同設定跑完整 Simulator 10,000 場，取得 BG Hit Rate 23.4100%。\n4. 將 Index 的 BG 抽卡、停輪、消除、補牌與區間判定忠實移入重現器，100,000 場得到 13.466%。\n5. 只將成功判定由 `distance === 0` 改為 `cardMatches()`，其餘流程不變，再跑 100,000 場得到 23.796%。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 限制與穩健性\n\nIndex 批次的 Hit Rate 包含該 paid round 內 FG 派彩，而 Simulator 主控台列的是 BG Hit Rate，兩者不是完全相同分子；但這不影響根因判定，因為原邏輯與修正邏輯使用同一重現器比較，且 10.192 個百分點的缺口可由 `(0,1]` 接受 0 倍直接解釋。重現器沒有修改正式 Index。"
+      },
+      {
+        "id": "next-steps",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 建議修正\n\n1. `cardSpin()`：只有 `cardMatches(card, result.pay)` 為真時才回傳；`cardDistance()` 只用來挑 retry 超限時的 nearest。\n2. `cardFeature()`：套用相同規則，避免 FG 結果剛好等於區間下界時被錯分。\n3. 修正後重新跑 Index 10,000 場，預期整回合 Hit Rate 約落在 23%～24%；再核對 RTP、FG Trigger 與各倍率區間分布。"
+      },
+      {
+        "id": "further-questions",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 後續需要回答的問題\n\n正式修正 Index 後，FG 各倍率區間是否也回到 Excel/Card System 設定的左開右閉分布？這需要在修正後用 NB FG、BF FG 與 SF 各跑一次區間分布驗證。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-14T19:15:00+08:00",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "observed_hit_rate": 0.1398,
+          "theoretical_hit_rate": 0.2319780871,
+          "simulator_hit_rate": 0.2341,
+          "fixed_hit_rate": 0.23796
+        }
+      ],
+      "comparison": [
+        {
+          "order": 1,
+          "source": "Index 批次畫面",
+          "rounds": 10000,
+          "hits": "1,398",
+          "hit_rate": 0.1398,
+          "interpretation": "使用者實測；與原邏輯重現一致"
+        },
+        {
+          "order": 2,
+          "source": "Index 原邏輯重現",
+          "rounds": 100000,
+          "hits": "13,466",
+          "hit_rate": 0.13466,
+          "interpretation": "重現 (0,1] 接受 0 倍的錯判"
+        },
+        {
+          "order": 3,
+          "source": "92 老手卡片理論",
+          "rounds": 0,
+          "hits": "權重占比",
+          "hit_rate": 0.2319780871,
+          "interpretation": "config 的長期 BG 命中目標"
+        },
+        {
+          "order": 4,
+          "source": "邊界修正重現",
+          "rounds": 100000,
+          "hits": "23,796",
+          "hit_rate": 0.23796,
+          "interpretation": "只改成功條件後回到目標區間"
+        },
+        {
+          "order": 5,
+          "source": "Simulator 完整流程",
+          "rounds": 10000,
+          "hits": "2,341",
+          "hit_rate": 0.2341,
+          "interpretation": "關閉 fast path，仍為約 23.4%"
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "index-observation",
+      "label": "Index 畫面與計分邏輯",
+      "path": "Project/Slots/H016_幸運王牌/index.html",
+      "query": {
+        "engine": "sqlite",
+        "sql": "SELECT 10000 AS rounds, 1398 AS hits, 1398.0 / 10000.0 AS observed_hit_rate;",
+        "description": "使用者重新整理後的 Index 批次模擬顯示 10,000 回合、Hit Rate 13.98%。",
+        "executed_at": "2026-08-14T19:15:00+08:00",
+        "metric_definitions": [
+          "批次 Index Hit Rate = totalWin > 0 的 paid round 數 / 批次 paid round 數。",
+          "本次畫面值 13.98% = 1,398 / 10,000。"
+        ],
+        "tables_used": [
+          "Project/Slots/H016_幸運王牌/index.html"
+        ]
+      }
+    },
+    {
+      "id": "config-theory",
+      "label": "92 老手卡片設定理論值",
+      "path": "Project/Slots/H016_幸運王牌/config_92A.js",
+      "query": {
+        "engine": "sqlite",
+        "sql": "SELECT 233951991.0 / 1008509010.0 AS theoretical_hit_rate, (233951991.0 + 8509010.0) / 1008509010.0 AS paying_or_fg_rate;",
+        "description": "加總 weight_2 base_game 的卡片權重，將派彩區間卡片與 Free Game 卡片分開計算。",
+        "executed_at": "2026-08-14T19:15:00+08:00",
+        "metric_definitions": [
+          "理論 BG Hit Rate = 派彩 BG 卡片權重 / base_game 總卡片權重。",
+          "派彩或 FG 機率 =（派彩 BG 卡片權重 + Free Game 卡片權重）/ base_game 總卡片權重。"
+        ],
+        "tables_used": [
+          "Project/Slots/H016_幸運王牌/config_92A.js.card_system.weight_2.base_game"
+        ]
+      }
+    },
+    {
+      "id": "simulator-control",
+      "label": "同設定 10,000 場完整 Simulator 控制模擬",
+      "path": "Project/Slots/H016_幸運王牌/Simulator.py",
+      "query": {
+        "engine": "sqlite",
+        "sql": "SELECT 10000 AS rounds, 2341 AS bg_hit_spins, 2341.0 / 10000.0 AS simulator_hit_rate;",
+        "description": "config.js + config_92A.js、Card System on、oldhand、Normal Bet、10,000 場，並關閉 FAST_SIMULATION。",
+        "query": "Simulator.py 10000 0 --threads 1; H016_CONFIG_FILE=config.js; H016_CONFIG_RTP_FILE=config_92A.js; H016_CARD_SYSTEM_ENABLED=true; H016_CARD_SYSTEM_IS_NEWBIE=false; H016_OUTPUT_REPORT=false; H016_FAST_SIMULATION=false",
+        "executed_at": "2026-08-14T19:15:00+08:00",
+        "filters": [
+          "Normal Bet",
+          "Oldhand card profile",
+          "Card System enabled",
+          "10,000 paid rounds",
+          "FAST_SIMULATION disabled"
+        ],
+        "metric_definitions": [
+          "Simulator BG Hit Rate = bg_hit_spins / rounds；與 Index 的 Base Game Hit Rate 口徑一致。"
+        ],
+        "tables_used": [
+          "Project/Slots/H016_幸運王牌/Simulator.py",
+          "Project/Slots/H016_幸運王牌/config.js",
+          "Project/Slots/H016_幸運王牌/config_92A.js"
+        ]
+      }
+    },
+    {
+      "id": "diagnostic-calculation",
+      "label": "Index 邊界判定重現與修正驗證",
+      "path": "Project/Slots/H016_幸運王牌/其他/診斷/index_hit_rate_260814/reproduce_index_bg.js",
+      "query": {
+        "engine": "sqlite",
+        "sql": "SELECT 1 AS display_order, 'Index 批次畫面' AS source, 10000 AS rounds, 1398 AS hits, 0.1398 AS hit_rate UNION ALL SELECT 2, 'Index 原邏輯重現', 100000, 13466, 0.13466 UNION ALL SELECT 3, '92 老手卡片理論', NULL, NULL, 233951991.0 / 1008509010.0 UNION ALL SELECT 4, '邊界修正重現', 100000, 23796, 0.23796 UNION ALL SELECT 5, 'Simulator 完整流程', 10000, 2341, 0.2341;",
+        "description": "忠實重現 Index 的 BG 卡片重骰流程，比較原本 distance===0 判定與改用 cardMatches 後的 100,000 場結果。",
+        "executed_at": "2026-08-14T19:15:00+08:00",
+        "metric_definitions": [
+          "Index 原邏輯重現 Hit Rate = 13,466 / 100,000 = 13.466%。",
+          "邊界修正重現 Hit Rate = 23,796 / 100,000 = 23.796%。",
+          "原邏輯在 (0,1] 卡片抽中的 12,929 回合中，錯誤接受 10,192 個 0 倍結果。"
+        ],
+        "tables_used": [
+          "index-observation",
+          "config-theory",
+          "simulator-control",
+          "Project/Slots/H016_幸運王牌/其他/診斷/index_hit_rate_260814/reproduce_index_bg.js"
+        ]
+      }
+    }
+  ],
+  "package_info": {
+    "root": ".",
+    "manifestPath": "artifact.json",
+    "snapshotPath": "artifact.json"
+  }
+}

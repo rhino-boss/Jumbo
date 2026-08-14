@@ -153,11 +153,15 @@ try {
                     Set-VerticalValues $detail $startRow 3 @($payload.source_report.fg_pay)
                 }
             }
+            if ($null -ne $payload.sf_source_report) {
+                Set-VerticalValues $detail 234 2 @($payload.sf_source_report.sf_count)
+                Set-VerticalValues $detail 234 3 @($payload.sf_source_report.sf_pay)
+            }
 
             Set-VerticalValues $detail 15 8 @($version.bg.fix)
             Set-VerticalValues $detail 86 8 @($version.fg.fix)
             Set-VerticalValues $detail 163 8 @($version.bf.fix)
-            # Preserve the approved SF weights while refreshing its natural-data formulas.
+            # SF Fix Num is calculated from the dedicated card-off SF report.
             Set-VerticalValues $detail 234 8 @($version.sf.fix)
             Set-VerticalValues $newbie 15 8 @($version.newbie.bg.fix)
             Set-VerticalValues $newbie 86 8 @($version.newbie.fg.fix)
@@ -216,6 +220,7 @@ try {
             Test-RuleRows $detail 15 @($version.bg.audit) "BG"
             Test-RuleRows $detail 86 @($version.fg.audit) "FG"
             Test-RuleRows $detail 163 @($version.bf.audit) "BF"
+            Test-RuleRows $detail 234 @($version.sf.audit) "SF"
             Test-RuleRows $newbie 15 @($version.newbie.bg.audit) "Newbie BG"
             Test-RuleRows $newbie 86 @($version.newbie.fg.audit) "Newbie FG"
 
