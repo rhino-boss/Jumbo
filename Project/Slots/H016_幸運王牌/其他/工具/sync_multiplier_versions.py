@@ -14,8 +14,9 @@ from openpyxl import load_workbook
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 SOURCE_DIR = PROJECT_DIR / "Source"
 VERSIONS_DIR = PROJECT_DIR / "Versions"
-VERSION = "2.0.0.0"
-MATH_KEY = "2.0"
+VERSION = "3.0.0.0"
+MATH_KEY = "3.0"
+BASE_VERSION = "3"
 CONFIGS = {
     "92": (PROJECT_DIR / "config_92A.js", SOURCE_DIR / "H016192A.xlsx"),
     "94": (PROJECT_DIR / "config_94A.js", SOURCE_DIR / "H016194A.xlsx"),
@@ -78,10 +79,16 @@ def card_system(
         detail = workbook["Detail"]
         newbie = workbook["Detail_Newbie"]
 
-        def base_cards(sheet, bg_weights) -> list[dict[str, Any]]:
+        def base_cards(sheet, bg_weights, entry_weight_override) -> list[dict[str, Any]]:
             cards = range_cards(sheet, 15, "B", bg_weights)
             free_weight = int(
-                bg_weights[64] if bg_weights is not None else sheet.cell(79, 11).value or 0
+                entry_weight_override
+                if entry_weight_override is not None
+                else (
+                    bg_weights[64]
+                    if bg_weights is not None and len(bg_weights) > 64
+                    else sheet.cell(79, 11).value or 0
+                )
             )
             if free_weight > 0:
                 cards.append({"type": "free_game", "table": "A", "weight": free_weight})
@@ -93,17 +100,23 @@ def card_system(
         newbie_fg_weights = override["newbie"]["fg"]["weights"] if override is not None else None
         bf_weights = override["bf"]["weights"] if override is not None else None
         sf_weights = override["sf"]["weights"] if override is not None else None
+        entry_weight_override = None
+        if override is not None:
+            trigger_rate = float(override["metrics"]["trigger_rate"])
+            entry_weight_override = round(
+                trigger_rate / (1.0 - trigger_rate) * 1_000_000_000
+            )
         buy = range_cards(detail, 163, "E", bf_weights)
         super_cards = range_cards(detail, 234, "G", sf_weights)
         profiles = {
             "weight_1": {
-                "base_game": base_cards(newbie, newbie_bg_weights),
+                "base_game": base_cards(newbie, newbie_bg_weights, entry_weight_override),
                 "free_game": range_cards(newbie, 86, "E", newbie_fg_weights),
                 "buy_feature": deepcopy(buy),
                 "super_feature": deepcopy(super_cards),
             },
             "weight_2": {
-                "base_game": base_cards(detail, old_bg_weights),
+                "base_game": base_cards(detail, old_bg_weights, entry_weight_override),
                 "free_game": range_cards(detail, 86, "E", old_fg_weights),
                 "buy_feature": buy,
                 "super_feature": super_cards,
@@ -112,11 +125,15 @@ def card_system(
 
         for profile_name, profile in profiles.items():
             for section in ("free_game", "buy_feature", "super_feature"):
-                total = sum(card["weight"] for card in profile[section])
-                if total != 1_000_000_000:
+                cards = profile[section]
+                total = sum(card["weight"] for card in cards)
+                delta = 1_000_000_000 - total
+                if abs(delta) > 1:
                     raise ValueError(
                         f"{workbook_path.name}: {profile_name}.{section} sums to {total:,}, expected 1,000,000,000"
                     )
+                if delta:
+                    cards[-1]["weight"] += delta
             base_range_total = sum(
                 card["weight"] for card in profile["base_game"] if card["type"] == "range"
             )
@@ -127,7 +144,7 @@ def card_system(
                 )
         return {
             "enabled": True,
-            "retry_limit": 20_000,
+            "retry_limit": 10_000,
             "default_profile": "weight_2",
             "profiles": profiles,
         }
@@ -145,17 +162,11 @@ def update_manifest(config_paths: dict[str, str]) -> None:
         "date": date.today().isoformat(),
         "configs": config_paths,
         "changes": [
-            "BF 改為獨立套用與 FG 相同的線型規則，RTP 目標恢復為 92.5%。",
-            "BF 不含 (-1, 0] 零倍結果，第一個有權重結果為 (5, 6]；自然機率門檻、每區間 0.2% RTP 占比與 (50, 60] 加倍規則均與 FG 相同。",
-            "BG 與 NB BG 完整保留 v1.10，不重新計算。",
-            "FG 的 (-1, 0] 零倍結果與 (0, 1]～(4, 5] 全部不給權重；第一個有權重結果為 (5, 6]。",
-            "FG 中 H016 自然機率低於 0.1% 的區間不給權重；達標區間至少占該 FG 總 RTP 的 0.2%。",
-            "滿足上述高優先條件後，以最接近 Super Ace 各倍率相對 Hit Rate 的方式配置線型；只有 (50, 60] 額外提高 2 倍。",
-            "Normal RTP 拆分校準：BG 固定 70%；H016192 FG 22%、H016194 FG 24%；兩份新手 BG 70%、FG 23%。",
-            "新手倍率上限：BG 30x、FG 120x，超過上限的倍率區間權重歸零。",
-            "SF 完全沿用 v1.12，不做調整。",
-            "index 配牌超過 20,000 次仍未命中時使用最接近結果，避免極低機率倍率卡造成遊戲中斷。",
-            "未修改輪帶、停輪權重、補牌權重、金框、Random Wild 或 Game Rule。",
+            "H0161 基底版號改為單碼 3；RTP/Variant 版號同步為 3.0.0.0。",
+            "新增 SF_Symbol、SF_Symbol (2)、SF_Symbol (3) 與 SF 初始／Retrigger 選表參數。",
+            "Super Feature 依 JHS101003 使用獨立 SF 表，並套用 Super Buy 金框位置排除規則。",
+            "Console 與 Overview 依 slot_development_specification.md §3.3 固定順序輸出。",
+            "Card Retry Limit 正式統一為 10,000。",
         ],
     }
     versions = [item for item in manifest.get("versions", []) if item.get("version") != VERSION]
@@ -177,7 +188,29 @@ def update_manifest(config_paths: dict[str, str]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--payload", type=Path, help="Validated multiplier-rule payload override")
+    parser.add_argument(
+        "--versions-only", action="store_true",
+        help="Only synchronize Overview version cells before config generation",
+    )
     args = parser.parse_args()
+    workbook_versions = {
+        SOURCE_DIR / "H0161.xlsx": BASE_VERSION,
+        SOURCE_DIR / "H016192A.xlsx": VERSION,
+        SOURCE_DIR / "H016194A.xlsx": VERSION,
+    }
+    for workbook_path, version in workbook_versions.items():
+        workbook = load_workbook(workbook_path, read_only=True, data_only=False)
+        try:
+            if str(workbook["Overview"]["B3"].value or "").strip() != version:
+                raise ValueError(
+                    f"{workbook_path.name}: Overview!B3 must be {version}; "
+                    "update it with Excel so formula caches are preserved"
+                )
+        finally:
+            workbook.close()
+    if args.versions_only:
+        print(json.dumps({path.name: version for path, version in workbook_versions.items()}, ensure_ascii=False, indent=2))
+        return
     payload = (
         json.loads(args.payload.read_text(encoding="utf-8"))
         if args.payload is not None
@@ -185,14 +218,22 @@ def main() -> None:
     )
     version_configs: dict[str, str] = {}
     base_config = PROJECT_DIR / "config.js"
-    if base_config.is_file():
-        archived_base = VERSIONS_DIR / MATH_KEY / base_config.name
-        atomic_write(archived_base, base_config.read_text(encoding="utf-8"))
-        version_configs["base"] = archived_base.relative_to(PROJECT_DIR).as_posix()
+    if not base_config.is_file():
+        raise FileNotFoundError(base_config)
+    _, base_runtime = load_config(base_config)
+    archived_base = VERSIONS_DIR / MATH_KEY / base_config.name
+    atomic_write(archived_base, base_config.read_text(encoding="utf-8"))
+    version_configs["base"] = archived_base.relative_to(PROJECT_DIR).as_posix()
     for label, (config_path, workbook_path) in CONFIGS.items():
         if not workbook_path.is_file():
             raise FileNotFoundError(workbook_path)
-        header, config = load_config(config_path)
+        header, previous_config = load_config(config_path)
+        # Runtime variants must use exactly the same game math as config.js.
+        # Only version/provenance fields and Card System multiplier weights may differ.
+        config = deepcopy(base_runtime)
+        for key in ("parsheet_id", "excel_version", "rtp_label"):
+            if key in previous_config:
+                config[key] = previous_config[key]
         config["runtime_version"] = VERSION
         config["source_multiplier_xlsx"] = workbook_path.name
         override = payload["versions"][label] if payload is not None else None

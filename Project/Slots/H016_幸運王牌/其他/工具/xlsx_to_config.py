@@ -29,6 +29,11 @@ FRONTEND_NAMES = {
 def load_simulator_module():
     os.environ.setdefault("H016_BASE_DIR", str(PROJECT_DIR))
     os.environ.setdefault("H016_RUN_ALL_COMBINATIONS", "false")
+    # Config generation must parse the source workbook independently of any
+    # previously generated RTP variant. During a major-version transition the
+    # old variant is intentionally incompatible until it is regenerated.
+    os.environ["H016_CONFIG_FILE"] = "config.js"
+    os.environ["H016_CONFIG_RTP_FILE"] = "config.js"
     spec = importlib.util.spec_from_file_location("h016_simulator_for_config", PROJECT_DIR / "Simulator.py")
     if spec is None or spec.loader is None:
         raise RuntimeError("Cannot load Simulator.py")
@@ -46,67 +51,94 @@ def _parse_range(label: str) -> tuple[float, float] | None:
 def load_card_system(variant: Path) -> dict[str, Any]:
     workbook = load_workbook(variant, read_only=True, data_only=True)
     try:
-        sheet = workbook["Multiplier_Weight"]
-        headers = {str(sheet.cell(2, column).value or "").strip(): column for column in range(2, sheet.max_column + 1)}
-        required = {
-            "Weight_NB_BG_Newbie", "Weight_NB_FG_Newbie", "Weight_NB_BG",
-            "Weight_NB_FG", "Weight_BF", "Weight_SF",
-        }
-        missing = required - set(headers)
-        if missing:
-            raise ValueError(f"{variant.name}: missing Multiplier_Weight columns {sorted(missing)}")
+        detail = workbook["Detail"]
+        newbie = workbook["Detail_Newbie"]
+        threshold = int(detail["B2"].value or 0)
+        if threshold != 1_000_000_000:
+            raise ValueError(f"{variant.name}: Detail!B2 must be 1,000,000,000")
+        ranges = [
+            (float(detail.cell(row, 15).value), float(detail.cell(row, 16).value))
+            for row in range(15, 79)
+        ]
 
-        ranges = []
-        free_game_row = None
-        for row in range(3, sheet.max_row + 1):
-            label = str(sheet.cell(row, 1).value or "").strip()
-            parsed = _parse_range(label)
-            if parsed is not None:
-                ranges.append((row, parsed))
-            elif label.lower() == "free game":
-                free_game_row = row
-        if len(ranges) != 64 or free_game_row is None:
-            raise ValueError(f"{variant.name}: expected 64 ranges plus Free Game")
+        def normalized_weights(sheet, start_row: int) -> list[int]:
+            raw = [
+                float(sheet.cell(row, 2).value or 0)
+                * float(sheet.cell(row, 8).value or 0)
+                for row in range(start_row, start_row + 64)
+            ]
+            total = sum(raw)
+            if total <= 0:
+                raise ValueError(
+                    f"{variant.name}: {sheet.title} row {start_row} has no weighted mass"
+                )
+            exact = [value * threshold / total for value in raw]
+            weights = [int(value) for value in exact]
+            remainder = threshold - sum(weights)
+            order = sorted(
+                range(64), key=lambda index: exact[index] - weights[index], reverse=True
+            )
+            for index in order[:remainder]:
+                weights[index] += 1
+            return weights
 
-        def range_cards(header: str, table: str) -> list[dict[str, Any]]:
-            column = headers[header]
+        def range_cards(weights: list[int], table: str) -> list[dict[str, Any]]:
             return [
                 {
-                    "type": "range", "min": minimum, "max": maximum, "table": table,
-                    "weight": int(sheet.cell(row, column).value or 0),
+                    "type": "range", "min": minimum, "max": maximum,
+                    "table": table, "weight": int(weight),
                 }
-                for row, (minimum, maximum) in ranges
+                for (minimum, maximum), weight in zip(ranges, weights)
             ]
 
-        def base_cards(header: str) -> list[dict[str, Any]]:
-            cards = range_cards(header, "B")
+        def base_cards(sheet) -> list[dict[str, Any]]:
+            cards = range_cards(normalized_weights(sheet, 15), "B")
+            rounds = float(sheet["B13"].value or 0)
+            count = float(sheet["B79"].value or 0)
+            fix = float(sheet["H79"].value or 0)
+            if rounds <= 0:
+                raise ValueError(f"{variant.name}: {sheet.title}!B13 must be positive")
+            entry_weight = int(count / rounds * fix * threshold)
             cards.append({
-                "type": "free_game", "table": "A",
-                "weight": int(sheet.cell(free_game_row, headers[header]).value or 0),
+                "type": "free_game", "table": "A", "weight": entry_weight,
             })
             return cards
 
-        buy = range_cards("Weight_BF", "E")
-        super_cards = range_cards("Weight_SF", "G")
+        buy = range_cards(normalized_weights(detail, 163), "E")
+        super_cards = range_cards(normalized_weights(detail, 234), "G")
         profiles = {
             "weight_1": {
-                "base_game": base_cards("Weight_NB_BG_Newbie"),
-                "free_game": range_cards("Weight_NB_FG_Newbie", "E"),
+                "base_game": base_cards(newbie),
+                "free_game": range_cards(normalized_weights(newbie, 86), "E"),
                 "buy_feature": [dict(card) for card in buy],
                 "super_feature": [dict(card) for card in super_cards],
             },
             "weight_2": {
-                "base_game": base_cards("Weight_NB_BG"),
-                "free_game": range_cards("Weight_NB_FG", "E"),
+                "base_game": base_cards(detail),
+                "free_game": range_cards(normalized_weights(detail, 86), "E"),
                 "buy_feature": buy,
                 "super_feature": super_cards,
             },
         }
         for profile in profiles.values():
-            for section, cards in profile.items():
-                if sum(card["weight"] for card in cards) != 1_000_000_000:
-                    raise ValueError(f"{variant.name}: {section} weights do not sum to 1,000,000,000")
-        return {"enabled": True, "retry_limit": 200_000, "default_profile": "weight_2", "profiles": profiles}
+            base_range_total = sum(
+                card["weight"] for card in profile["base_game"]
+                if card["type"] == "range"
+            )
+            if base_range_total != 1_000_000_000:
+                raise ValueError(
+                    f"{variant.name}: base_game range weights sum to "
+                    f"{base_range_total:,}, expected 1,000,000,000"
+                )
+            for section in ("free_game", "buy_feature", "super_feature"):
+                cards = profile[section]
+                total = sum(card["weight"] for card in cards)
+                if total != 1_000_000_000:
+                    raise ValueError(
+                        f"{variant.name}: {section} weights sum to {total:,}, "
+                        "expected 1,000,000,000"
+                    )
+        return {"enabled": True, "retry_limit": 10_000, "default_profile": "weight_2", "profiles": profiles}
     finally:
         workbook.close()
 

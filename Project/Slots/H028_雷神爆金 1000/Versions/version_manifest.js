@@ -1,12 +1,12 @@
 window.H028_VERSION_MANIFEST = {
-  "current": "3.2.0.0",
+  "current": "3.2.0.1",
   "version_rule": {
     "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，後三碼歸零。",
     "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。"
   },
   "versions": [
     {
-      "version": "3.2.0.0",
+      "version": "3.2.0.1",
       "date": "2026-08-14",
       "base_config": "Versions/3.2.0.0/config.js",
       "configs": {
@@ -14,6 +14,7 @@ window.H028_VERSION_MANIFEST = {
         "94A": "Versions/3.2.0.0/config_94A.js"
       },
       "changes": [
+        "修正共用 Setting 區塊的 Version 控制項被遊戲端 CSS／清除程式隱藏的問題。",
         "Card System Retry Limit 依規範統一調整為 10,000 次。"
       ]
     },

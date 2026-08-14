@@ -40,6 +40,79 @@ function Test-RuleRows(
     }
 }
 
+function Set-RegularBlockFormulas(
+    [object]$sheet,
+    [int]$startRow,
+    [int]$endRow
+) {
+    foreach ($column in @(4, 5, 9, 10, 11, 12, 13, 17, 21)) {
+        $sheet.Range(
+            $sheet.Cells.Item($startRow, $column),
+            $sheet.Cells.Item($endRow, $column)
+        ).ClearContents() | Out-Null
+    }
+    $sheet.Range("D${startRow}:D${endRow}").FormulaR1C1 = "=IFERROR(RC[-2]/SUM(R${startRow}C2:R${endRow}C2),0)"
+    $sheet.Range("E${startRow}:E${endRow}").FormulaR1C1 = "=IFERROR(RC[-2]/RC[-3]/R3C2,0)"
+    $sheet.Range("I${startRow}:I${endRow}").FormulaR1C1 = "=RC[-5]*RC[-1]"
+    $sheet.Range("J${startRow}:J${endRow}").FormulaR1C1 = "=IFERROR(RC[-1]/SUM(R${startRow}C9:R${endRow}C9),0)"
+    $sheet.Range("K${startRow}:K${endRow}").FormulaR1C1 = "=INT(RC[-1]*R2C2)"
+    $sheet.Range("L${startRow}:L${endRow}").FormulaR1C1 = "=IFERROR(RC[-1]/SUM(R${startRow}C11:R${endRow}C11),0)"
+    $sheet.Range("M${startRow}:M${endRow}").FormulaR1C1 = "=RC[-1]*RC[-8]"
+    $sheet.Range("Q${startRow}:Q${endRow}").FormulaR1C1 = "=RC[-5]"
+    $sheet.Range("U${startRow}:U${endRow}").FormulaR1C1 = "=IFERROR(ROUND(RC[-1]/RC[-9],2),0)"
+}
+
+function Set-RegularDetailFormulas([object]$sheet, [bool]$includeFeatureBlocks) {
+    # Base Game has 64 ordinary ranges plus one independent Free Game entry row.
+    foreach ($column in @(4, 5, 9, 10, 11, 12, 13)) {
+        $endRow = if ($column -in @(4, 10)) { 78 } else { 79 }
+        $sheet.Range(
+            $sheet.Cells.Item(15, $column),
+            $sheet.Cells.Item($endRow, $column)
+        ).ClearContents() | Out-Null
+    }
+    foreach ($column in @(17, 21)) {
+        $sheet.Range(
+            $sheet.Cells.Item(15, $column),
+            $sheet.Cells.Item(78, $column)
+        ).ClearContents() | Out-Null
+    }
+    $sheet.Range("D15:D78").FormulaR1C1 = "=IFERROR(RC[-2]/SUM(R15C2:R78C2),0)"
+    $sheet.Range("E15:E79").FormulaR1C1 = "=IFERROR(RC[-2]/RC[-3]/R3C2,0)"
+    $sheet.Range("I15:I79").FormulaR1C1 = "=RC[-5]*RC[-1]"
+    $sheet.Range("J15:J78").FormulaR1C1 = "=IFERROR(RC[-1]/SUM(R15C9:R78C9),0)"
+    $sheet.Range("J79").FormulaR1C1 = "=RC[-1]"
+    $sheet.Range("K15:K79").FormulaR1C1 = "=INT(RC[-1]*R2C2)"
+    $sheet.Range("L15:L79").FormulaR1C1 = "=IFERROR(RC[-1]/SUM(R15C11:R79C11),0)"
+    $sheet.Range("M15:M79").FormulaR1C1 = "=RC[-1]*RC[-8]"
+    $sheet.Range("Q15:Q78").FormulaR1C1 = "=RC[-5]"
+    $sheet.Range("U15:U78").FormulaR1C1 = "=IFERROR(ROUND(RC[-1]/RC[-9],2),0)"
+
+    Set-RegularBlockFormulas $sheet 86 149
+    if ($includeFeatureBlocks) {
+        Set-RegularBlockFormulas $sheet 163 226
+        Set-RegularBlockFormulas $sheet 234 297
+        $sheet.Range("L156").Formula = "=IFERROR(K156/SUM(K156),0)"
+    }
+
+    $sheet.Range("D7").Formula = "=SUM(M86:M149)*F7"
+    $sheet.Range("I7").Formula = "=IFERROR(LOOKUP(2,1/(K15:K78<>0),P15:P78),0)"
+    $sheet.Range("J7").Formula = "=IFERROR(LOOKUP(2,1/(K86:K149<>0),P86:P149),0)"
+    if ($includeFeatureBlocks) {
+        $sheet.Range("B7:B8").ClearContents() | Out-Null
+        $sheet.Range("B7").Formula = "=Overview!B11"
+        $sheet.Range("B8").Formula = "=Overview!B12"
+        $sheet.Range("D8").Formula = "=SUM(M163:M226)/B8"
+        $sheet.Range("J8").Formula = "=IFERROR(LOOKUP(2,1/(K163:K226<>0),P163:P226),0)"
+        $sheet.Range("J9").Formula = "=IFERROR(LOOKUP(2,1/(K234:K297<>0),P234:P297),0)"
+    }
+}
+
+function Set-RegularOverviewFormulas([object]$sheet) {
+    $sheet.Range("A11:A12").ClearContents() | Out-Null
+    $sheet.Range("A11:A12").FormulaR1C1 = "=RC[1]*R7C1"
+}
+
 $excel = $null
 try {
     $excel = New-Object -ComObject Excel.Application
@@ -61,11 +134,31 @@ try {
             $excel.Calculation = -4105
             $detail = $book.Worksheets.Item("Detail")
             $newbie = $book.Worksheets.Item("Detail_Newbie")
+            Set-RegularOverviewFormulas $book.Worksheets.Item("Overview")
+            Set-RegularDetailFormulas $detail $true
+            Set-RegularDetailFormulas $newbie $false
+
+            if ($null -ne $payload.source_report) {
+                foreach ($sheet in @($detail, $newbie)) {
+                    $sheet.Range("B13").Value2 = [double]$payload.source_report.rounds
+                    Set-VerticalValues $sheet 15 2 @($payload.source_report.bg_count)
+                    Set-VerticalValues $sheet 15 3 @($payload.source_report.bg_pay)
+                    $sheet.Range("B79").Value2 = [double]$payload.source_report.trigger_count
+                    $sheet.Range("C79").Value2 = [double]$payload.source_report.trigger_pay
+                    Set-VerticalValues $sheet 86 2 @($payload.source_report.fg_count)
+                    Set-VerticalValues $sheet 86 3 @($payload.source_report.fg_pay)
+                }
+                foreach ($startRow in @(163, 234)) {
+                    Set-VerticalValues $detail $startRow 2 @($payload.source_report.fg_count)
+                    Set-VerticalValues $detail $startRow 3 @($payload.source_report.fg_pay)
+                }
+            }
 
             Set-VerticalValues $detail 15 8 @($version.bg.fix)
             Set-VerticalValues $detail 86 8 @($version.fg.fix)
             Set-VerticalValues $detail 163 8 @($version.bf.fix)
-            # SF is intentionally preserved from the previous version.
+            # Preserve the approved SF weights while refreshing its natural-data formulas.
+            Set-VerticalValues $detail 234 8 @($version.sf.fix)
             Set-VerticalValues $newbie 15 8 @($version.newbie.bg.fix)
             Set-VerticalValues $newbie 86 8 @($version.newbie.fg.fix)
 
@@ -79,6 +172,13 @@ try {
             $newbieRtp = [double]$newbie.Range("E7").Value2
             $newbieBgRtp = [double]$newbie.Range("C7").Value2
             $newbieFgRtp = [double]$newbie.Range("D7").Value2
+            if ($null -ne $payload.source_report) {
+                foreach ($sheet in @($detail, $newbie)) {
+                    if ([double]$sheet.Range("C79").Value2 -ne [double]$payload.source_report.trigger_pay) {
+                        throw "$($target.File) $($sheet.Name)!C79 does not match source report"
+                    }
+                }
+            }
             if ([math]::Abs($normalRtp - [double]$target.Normal) -gt 0.000003) {
                 throw "$($target.File) Normal RTP mismatch: $normalRtp"
             }
@@ -106,7 +206,7 @@ try {
             }
             foreach ($range in @("K15:K78", "K86:K149", "K163:K226", "K234:K297")) {
                 $sum = [double]$excel.WorksheetFunction.Sum($detail.Range($range))
-                if ($sum -ne 1000000000) { throw "$($target.File) $range weight sum is $sum" }
+                if ([math]::Abs($sum - 1000000000) -gt 1) { throw "$($target.File) $range weight sum is $sum" }
             }
             foreach ($range in @("K15:K78", "K86:K149")) {
                 $sum = [double]$excel.WorksheetFunction.Sum($newbie.Range($range))

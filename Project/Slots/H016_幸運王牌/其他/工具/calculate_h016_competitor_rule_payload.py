@@ -9,6 +9,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from openpyxl import load_workbook
+
 
 WEIGHT_TOTAL = 1_000_000_000
 MIN_NATURAL_RATE = 0.001
@@ -24,6 +26,7 @@ HIT_MATCH_RANGES = {
 
 BG_HIT_RATE_BOOSTS = {"(10, 15]": 2.0, "(50, 60]": 2.0}
 FG_HIT_RATE_BOOSTS = {"(50, 60]": 2.0}
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 
 def parse_upper(label: str) -> float:
@@ -53,6 +56,260 @@ def fix_numbers(weights: list[int], counts: list[int]) -> list[float]:
         else:
             result.append((weight / WEIGHT_TOTAL) / (count / denominator))
     return result
+
+
+def preserve_paying_hit_rate_shape(
+    *,
+    name: str,
+    labels: list[str],
+    baseline_weights: list[int],
+    natural_counts: list[int],
+    means: list[float],
+    probability_denominator: int,
+    target_scene_rtp: float,
+) -> dict[str, Any]:
+    """Scale every paying bucket equally and let the zero bucket absorb mass.
+
+    This keeps the already-approved relative Hit Rate relationship intact while
+    correcting only the scene RTP that changed when the trigger-spin BG average
+    was replaced with the actual H016 value.
+    """
+    if len(baseline_weights) != 64 or sum(baseline_weights) != WEIGHT_TOTAL:
+        raise ValueError(f"{name}: invalid 64-range baseline")
+    if len(natural_counts) != 64 or len(means) != 64 or len(labels) != 64:
+        raise ValueError(f"{name}: expected 64 natural buckets")
+    if probability_denominator <= WEIGHT_TOTAL:
+        raise ValueError(f"{name}: BG probability denominator must include FG entry weight")
+
+    paying = [
+        index for index in range(1, 64)
+        if baseline_weights[index] > 0 and means[index] > 0
+    ]
+    current_rtp = sum(
+        baseline_weights[index] / probability_denominator * means[index]
+        for index in paying
+    )
+    if current_rtp <= 0 or target_scene_rtp <= 0:
+        raise ValueError(f"{name}: invalid current/target paying RTP")
+    scale = target_scene_rtp / current_rtp
+    weights = [0] * 64
+    exact = {
+        index: baseline_weights[index] * scale
+        for index in paying
+    }
+    for index in paying:
+        weights[index] = round(exact[index])
+    if sum(weights) > WEIGHT_TOTAL:
+        raise ValueError(f"{name}: scaled paying weights exceed 1,000,000,000")
+    weights[0] = WEIGHT_TOTAL - sum(weights)
+
+    scene_rtp_after = sum(
+        weight / probability_denominator * mean
+        for weight, mean in zip(weights, means)
+    )
+    audits = []
+    natural_total = sum(natural_counts)
+    for index in range(64):
+        after_rtp = weights[index] / probability_denominator * means[index]
+        audits.append({
+            "index": index,
+            "range": labels[index],
+            "rule": (
+                "Zero-result bucket absorbs RTP correction"
+                if index == 0
+                else "Preserve approved relative Hit Rate shape"
+            ),
+            "natural_rate": natural_counts[index] / natural_total,
+            "before_weight": baseline_weights[index],
+            "after_weight": weights[index],
+            "target_scene_rtp": after_rtp,
+            "target_rtp": after_rtp,
+            "after_hit_rate": weights[index] / probability_denominator,
+            "after_rtp": after_rtp,
+            "shape_scale": (
+                weights[index] / baseline_weights[index]
+                if baseline_weights[index] > 0 else None
+            ),
+        })
+    return {
+        "weights": weights,
+        "fix": fix_numbers(weights, natural_counts),
+        "audit": audits,
+        "zero_bucket_before": baseline_weights[0],
+        "zero_bucket_after": weights[0],
+        "unrequested_mass_factor": scale,
+        "calibration": "approved paying Hit Rate shape scaled uniformly; zero bucket absorbs mass",
+        "target_scene_rtp": target_scene_rtp,
+        "scene_rtp_before": current_rtp,
+        "scene_rtp_after": scene_rtp_after,
+    }
+
+
+def workbook_scene(sheet, start_row: int, counts: list[int], means: list[float]) -> dict[str, Any]:
+    weights = [int(sheet.cell(row, 11).value or 0) for row in range(start_row, start_row + 64)]
+    delta = WEIGHT_TOTAL - sum(weights)
+    if abs(delta) > 1:
+        raise ValueError(f"{sheet.title}!K{start_row}:K{start_row + 63} does not sum to 1,000,000,000")
+    if delta:
+        last_active = max(index for index, weight in enumerate(weights) if weight > 0)
+        weights[last_active] += delta
+    labels = [str(sheet.cell(row, 1).value or "").strip() for row in range(start_row, start_row + 64)]
+    scene_rtp = sum(weight / WEIGHT_TOTAL * mean for weight, mean in zip(weights, means))
+    return {
+        "weights": weights,
+        "fix": fix_numbers(weights, counts),
+        "audit": [],
+        "zero_bucket_before": weights[0],
+        "zero_bucket_after": weights[0],
+        "unrequested_mass_factor": 1.0,
+        "calibration": "preserved from current workbook",
+        "target_scene_rtp": scene_rtp,
+        "scene_rtp_before": scene_rtp,
+        "scene_rtp_after": scene_rtp,
+        "labels": labels,
+    }
+
+
+def load_h016_report(path: Path) -> dict[str, Any]:
+    workbook = load_workbook(path, read_only=True, data_only=True, keep_links=False)
+    try:
+        fields = {
+            str(row[0]): row[1]
+            for row in workbook["Base Info"].iter_rows(min_row=2, values_only=True)
+            if row[0] is not None
+        }
+        rows = list(
+            workbook["Multiplier Line"].iter_rows(
+                min_row=2, max_row=65, values_only=True
+            )
+        )
+        if len(rows) != 64:
+            raise ValueError(f"{path.name}: expected 64 multiplier buckets")
+        result = {
+            "path": str(path.resolve()),
+            "rounds": int(fields["total_rounds"]),
+            "coin_in": float(fields["coin_in"]),
+            "trigger_count": int(fields["bg_trigger_fg_cnt"]),
+            "trigger_pay": float(fields["bg_trigger_fg_pay"]),
+            "bg_count": [int(row[1] or 0) for row in rows],
+            "bg_pay": [float(row[2] or 0) for row in rows],
+            "fg_count": [int(row[3] or 0) for row in rows],
+            "fg_pay": [float(row[4] or 0) for row in rows],
+        }
+    finally:
+        workbook.close()
+    if sum(result["bg_count"]) != result["rounds"]:
+        raise ValueError(f"{path.name}: BG bucket count does not equal total rounds")
+    if sum(result["fg_count"]) != result["trigger_count"]:
+        raise ValueError(f"{path.name}: FG bucket count does not equal trigger count")
+    return result
+
+
+def build_report_correction_version(
+    key: str,
+    workbook_path: Path,
+    report: dict[str, Any],
+    shared_sf: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    workbook = load_workbook(
+        workbook_path, read_only=True, data_only=True, keep_links=False
+    )
+    try:
+        detail = workbook["Detail"]
+        newbie_sheet = workbook["Detail_Newbie"]
+        labels = [str(detail.cell(row, 1).value or "").strip() for row in range(15, 79)]
+        bg_means = [
+            pay / count / report["coin_in"] if count else 0.0
+            for count, pay in zip(report["bg_count"], report["bg_pay"])
+        ]
+        fg_means = [
+            pay / count / report["coin_in"] if count else 0.0
+            for count, pay in zip(report["fg_count"], report["fg_pay"])
+        ]
+        for sheet in (detail, newbie_sheet):
+            existing_bg_count = [int(sheet.cell(row, 2).value or 0) for row in range(15, 79)]
+            existing_bg_pay = [float(sheet.cell(row, 3).value or 0) for row in range(15, 79)]
+            existing_fg_count = [int(sheet.cell(row, 2).value or 0) for row in range(86, 150)]
+            existing_fg_pay = [float(sheet.cell(row, 3).value or 0) for row in range(86, 150)]
+            if existing_bg_count != report["bg_count"] or existing_fg_count != report["fg_count"]:
+                raise ValueError(f"{workbook_path.name}/{sheet.title}: natural counts differ from report")
+            if any(abs(a - b) > 1e-6 for a, b in zip(existing_bg_pay, report["bg_pay"])):
+                raise ValueError(f"{workbook_path.name}/{sheet.title}: BG pay differs from report")
+            if any(abs(a - b) > 1e-6 for a, b in zip(existing_fg_pay, report["fg_pay"])):
+                raise ValueError(f"{workbook_path.name}/{sheet.title}: FG pay differs from report")
+
+        entry_weight = int(detail["K79"].value or 0)
+        if entry_weight != int(newbie_sheet["K79"].value or 0):
+            raise ValueError(f"{workbook_path.name}: oldhand/newbie FG entry weights differ")
+        denominator = WEIGHT_TOTAL + entry_weight
+        trigger_rate = entry_weight / denominator
+        trigger_average = (
+            report["trigger_pay"] / report["trigger_count"] / report["coin_in"]
+        )
+        trigger_bg_rtp = trigger_rate * trigger_average
+        regular_bg_target = 0.70 - trigger_bg_rtp
+        if regular_bg_target <= 0:
+            raise ValueError(f"{workbook_path.name}: trigger BG RTP exceeds the 70% BG target")
+
+        old_bg = preserve_paying_hit_rate_shape(
+            name=f"{key} oldhand BG",
+            labels=labels,
+            baseline_weights=[int(detail.cell(row, 11).value or 0) for row in range(15, 79)],
+            natural_counts=report["bg_count"],
+            means=bg_means,
+            probability_denominator=denominator,
+            target_scene_rtp=regular_bg_target,
+        )
+        newbie_bg = preserve_paying_hit_rate_shape(
+            name=f"{key} newbie BG",
+            labels=labels,
+            baseline_weights=[int(newbie_sheet.cell(row, 11).value or 0) for row in range(15, 79)],
+            natural_counts=report["bg_count"],
+            means=bg_means,
+            probability_denominator=denominator,
+            target_scene_rtp=regular_bg_target,
+        )
+        fg = workbook_scene(detail, 86, report["fg_count"], fg_means)
+        newbie_fg = workbook_scene(newbie_sheet, 86, report["fg_count"], fg_means)
+        bf = workbook_scene(detail, 163, report["fg_count"], fg_means)
+        sf = (
+            deepcopy(shared_sf)
+            if shared_sf is not None
+            else workbook_scene(detail, 234, report["fg_count"], fg_means)
+        )
+    finally:
+        workbook.close()
+
+    fg_rtp = trigger_rate * fg["scene_rtp_after"]
+    newbie_fg_rtp = trigger_rate * newbie_fg["scene_rtp_after"]
+    expected_fg = 0.22 if key == "92" else 0.24
+    if abs(fg_rtp - expected_fg) > 0.000003:
+        raise ValueError(f"{workbook_path.name}: preserved FG RTP is {fg_rtp}, expected {expected_fg}")
+    if abs(newbie_fg_rtp - 0.23) > 0.000003:
+        raise ValueError(f"{workbook_path.name}: preserved newbie FG RTP is {newbie_fg_rtp}, expected 0.23")
+    return {
+        "bg": old_bg,
+        "fg": fg,
+        "newbie": {"bg": newbie_bg, "fg": newbie_fg},
+        "bf": bf,
+        "sf": sf,
+        "metrics": {
+            "target_rtp": float(key) / 100.0,
+            "trigger_rate": trigger_rate,
+            "trigger_bg_average": trigger_average,
+            "trigger_bg_rtp": trigger_bg_rtp,
+            "normal_rtp": 0.70 + fg_rtp,
+            "bg_rtp": 0.70,
+            "fg_rtp": fg_rtp,
+            "newbie_rtp": 0.70 + newbie_fg_rtp,
+            "newbie_bg_rtp": 0.70,
+            "newbie_fg_rtp": newbie_fg_rtp,
+            "bf_rtp": bf["scene_rtp_after"] / 40.5,
+            "sf_rtp": sf["scene_rtp_after"] / 250.0,
+            "buy_price": 40.5,
+            "super_price": 250.0,
+        },
+    }
 
 
 def scale_integer_weights(weights: list[int], target: int) -> list[int]:
@@ -521,8 +778,22 @@ def build_version(
         *,
         fg_maximum: float | None = None,
     ) -> dict[str, Any]:
-        trigger_bg_rtp = trigger_rate * float(competitor["trigger_bg_average"])
-        bg = deepcopy(preserved_bg)
+        if "trigger_bg_average" not in h016:
+            raise ValueError(
+                "Baseline is missing h016.trigger_bg_average; do not substitute "
+                "the Super Ace trigger-spin average"
+            )
+        trigger_bg_average = float(h016["trigger_bg_average"])
+        trigger_bg_rtp = trigger_rate * trigger_bg_average
+        bg = preserve_paying_hit_rate_shape(
+            name=f"{name} BG",
+            labels=labels,
+            baseline_weights=[int(value) for value in preserved_bg["weights"]],
+            natural_counts=h016["bg_count"],
+            means=h016["bg_mean"],
+            probability_denominator=WEIGHT_TOTAL + entry_weight,
+            target_scene_rtp=target_bg_rtp - trigger_bg_rtp,
+        )
         fg_target = target_fg_rtp / trigger_rate
         fg = relative_hit_rate_scene(
             name=f"{name} FG",
@@ -617,16 +888,53 @@ def build_version(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", required=True, type=Path)
+    parser.add_argument("--baseline", type=Path)
     parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--previous-payload", required=True, type=Path)
+    parser.add_argument("--previous-payload", type=Path)
+    parser.add_argument(
+        "--report",
+        type=Path,
+        help="Correct current 92A/94A workbooks from one H016 card-off 10^9 report",
+    )
     args = parser.parse_args()
-    source = json.loads(args.baseline.read_text(encoding="utf-8"))
-    previous = json.loads(args.previous_payload.read_text(encoding="utf-8"))
-    versions = {
-        key: build_version(key, source, previous["versions"][key])
-        for key in ("92", "94")
-    }
+    source_report = None
+    if args.report is not None:
+        if args.baseline is not None or args.previous_payload is not None:
+            parser.error("--report cannot be combined with --baseline/--previous-payload")
+        report = load_h016_report(args.report)
+        source_report = {
+            "path": report["path"],
+            "rounds": report["rounds"],
+            "coin_in": report["coin_in"],
+            "trigger_count": report["trigger_count"],
+            "trigger_pay": report["trigger_pay"],
+            "trigger_average": (
+                report["trigger_pay"] / report["trigger_count"] / report["coin_in"]
+            ),
+            "bg_count": report["bg_count"],
+            "bg_pay": report["bg_pay"],
+            "fg_count": report["fg_count"],
+            "fg_pay": report["fg_pay"],
+        }
+        version_94 = build_report_correction_version(
+            "94", PROJECT_DIR / "Source" / "H016194A.xlsx", report
+        )
+        version_92 = build_report_correction_version(
+            "92",
+            PROJECT_DIR / "Source" / "H016192A.xlsx",
+            report,
+            shared_sf=version_94["sf"],
+        )
+        versions = {"92": version_92, "94": version_94}
+    else:
+        if args.baseline is None or args.previous_payload is None:
+            parser.error("--baseline and --previous-payload are required without --report")
+        source = json.loads(args.baseline.read_text(encoding="utf-8"))
+        previous = json.loads(args.previous_payload.read_text(encoding="utf-8"))
+        versions = {
+            key: build_version(key, source, previous["versions"][key])
+            for key in ("92", "94")
+        }
     payload = {
         "rules": {
             "line_shape": "FG locks RTP and per-bucket floor first, then preserves the closest possible Super Ace relative Hit Rate shape after boosts",
@@ -634,7 +942,10 @@ def main() -> None:
             "hit_rate_boosts": {"bg": BG_HIT_RATE_BOOSTS, "fg": FG_HIT_RATE_BOOSTS},
             "minimum_weighted_fg_range": "(5, 6]; the (-1, 0] zero-result bucket is also disabled",
             "minimum_eligible_fg_bucket_rtp_share": 0.002,
-            "bg_rule": "BG and NB BG are preserved exactly from the previous payload",
+            "bg_rule": (
+                "Approved paying-bucket Hit Rate shape is preserved proportionally; "
+                "zero bucket absorbs the correction required by actual H016 trigger-spin BG pay"
+            ),
             "bf_rule": "BF independently uses the same zero-free FG line-shape method at 92.5% RTP",
             "sf_rule": "SF weights are preserved from the previous payload",
             "targets": {
@@ -652,6 +963,8 @@ def main() -> None:
         },
         "versions": versions,
     }
+    if source_report is not None:
+        payload["source_report"] = source_report
     args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
         "output": str(args.output.resolve()),

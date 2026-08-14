@@ -2572,22 +2572,19 @@
   <script src="./Versions/version_manifest.js"></script>
   <script>
     const H016_VERSION_MANIFEST = window.H016_VERSION_MANIFEST || {
-      current: "2.0.0.0",
+      current: "3.0.0.0",
       versions: [{
-        version: "2.0.0.0",
-        math_key: "2.0",
+        version: "3.0.0.0",
+        math_key: "3.0",
         configs: {
-          base: "Versions/2.0/config.js",
-          92: "Versions/2.0/config_92A.js",
-          94: "Versions/2.0/config_94A.js"
+          base: "Versions/3.0/config.js",
+          92: "Versions/3.0/config_92A.js",
+          94: "Versions/3.0/config_94A.js"
         }
       }]
     };
     const H016_QUERY = new URLSearchParams(window.location.search);
-    let requestedVersion = H016_QUERY.get("version");
-    if (!requestedVersion) {
-      try { requestedVersion = localStorage.getItem("h016MathVersion"); } catch (_) {}
-    }
+    const requestedVersion = H016_QUERY.get("version") || H016_VERSION_MANIFEST.current;
     const H016_VERSION_ENTRY = H016_VERSION_MANIFEST.versions.find(item => item.version === requestedVersion || item.math_key === requestedVersion)
       || H016_VERSION_MANIFEST.versions.find(item => item.version === H016_VERSION_MANIFEST.current)
       || H016_VERSION_MANIFEST.versions[0];
@@ -3310,7 +3307,7 @@
   const BASE_BET = 100;
   const START_BALANCE = 10000 * BASE_BET;
   const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
-  const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 20000));
+  const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 10000));
   const DROP_SPEED_MULTIPLIER = 9;
   const tables = {};
   const state = {
@@ -3445,15 +3442,19 @@
     return {rawPay, hits, details};
   }
 
-  function selectW2Targets(board, tableName, gold) {
+  function selectW2Targets(board, tableName, gold, superMode = false) {
     if (!gold.length) return null;
     const randomWild = tables[tableName].random_wild;
     const count = Number(pick(randomWild.values, randomWild.weights)) || 0;
     if (count <= 0) return null;
     const source = gold[Math.floor(Math.random() * gold.length)];
-    const candidates = [];
+    let candidates = [];
     for (let reel = 1; reel < 5; reel++) for (let row = 0; row < 4; row++) {
       if (![WW, W2, C1].includes(board[reel][row])) candidates.push([reel, row]);
+    }
+    if (superMode) {
+      const nonGold = candidates.filter(([reel, row]) => !(board[reel][row] >= 11 && board[reel][row] <= 18));
+      if (nonGold.length >= 4) candidates = nonGold;
     }
     if (candidates.length < count) return null;
     const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
@@ -3464,7 +3465,7 @@
     positions.forEach(([reel, row]) => board[reel][row] = W2);
   }
 
-  function spin(tableName, freeGame = false) {
+  function spin(tableName, freeGame = false, superMode = false) {
     const table = tables[tableName];
     const multipliers = table.multipliers?.length ? table.multipliers : (freeGame ? [2,4,6,10] : [1,2,3,5]);
     const board = makeBoard(tableName), snapshots = [];
@@ -3472,7 +3473,7 @@
     snapshots.push({type:"initial", board: cloneBoard(board), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin"});
     while (true) {
       if (pendingGold.length && (freeGame || !w2Used)) {
-        const selection = selectW2Targets(board, tableName, pendingGold);
+        const selection = selectW2Targets(board, tableName, pendingGold, superMode);
         if (selection) {
           const sourceMarked = [`${selection.source[0]},${selection.source[1]}`];
           const targetMarked = selection.targets.map(([reel, row]) => `${reel},${row}`);
@@ -3521,8 +3522,8 @@
     return {pay, combo, scatter: scatterCount(board), golden, w2Events, board, snapshots, tableName, maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]};
   }
 
-  function freeQueue() {
-    const selection = cfg.table_selection?.free;
+  function freeQueue(superMode = false) {
+    const selection = cfg.table_selection?.[superMode ? "super_free" : "free"];
     if (selection?.length) {
       return Array.from({length:Number(cfg.free_spins)}, () => pick(selection.map(item => item.table), selection.map(item => item.weight)));
     }
@@ -3539,17 +3540,17 @@
 
   function freeSession(superMode = false) {
     let remaining = Number(cfg.free_spins), played = 0, pay = 0, retriggers = 0;
-    const queue = freeQueue(), spins = [], snapshots = [];
+    const queue = freeQueue(superMode), spins = [], snapshots = [];
     while (remaining > 0 && played < Number(cfg.free_spin_cap)) {
       remaining--; played++;
       const surface = queue.shift() || "low";
-      const table = superMode ? "super" : tables[surface] ? surface : surface === "high" ? highTable() : "fg_low";
-      const result = spin(table, true);
+      const table = tables[surface] ? surface : surface === "high" ? highTable() : "fg_low";
+      const result = spin(table, true, superMode);
       pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
       if (result.scatter >= 3 && played + remaining < Number(cfg.free_spin_cap)) {
         const add = Math.min(Number(cfg.retrigger_spins), Number(cfg.free_spin_cap) - played - remaining);
         remaining += add; retriggers += add > 0 ? 1 : 0;
-        const selection = cfg.table_selection?.retrigger;
+        const selection = cfg.table_selection?.[superMode ? "super_retrigger" : "retrigger"];
         if (selection?.length) {
           for (let index = 0; index < add; index++) queue.push(pick(selection.map(item => item.table), selection.map(item => item.weight)));
         } else {

@@ -1,4 +1,4 @@
-# Slot Game 模型開發注意事項
+# Slot 開發注意事項
 
 本文件整理 Slot Game 數學模型從設計、實作、驗證到交付時必須注意的事項。重點是確保數學文件、Card System、模擬程式、Demogame 與 Config 使用同一套規則與參數，避免各端各自解讀或寫死例外。
 
@@ -328,7 +328,7 @@ H026192A_02010313_2608141530_betmode2_108_9245_card.xlsx
 
 - 內容、欄位順序、欄位名稱、數值與格式必須和第 3.3 節的 Console 輸出一致，不得重新排序。
 - 不寫入 Batch 標題，例如 `=== Batch 1/1: {...} ===`。
-- 不寫入 `<< By Game Info >>` 標題；Game Info 欄位依 Console 的既定順序直接接在 `standard_error` 之後。
+- 不寫入 `<< By Game Info >>` 標題；Game Info 欄位依 Console 的既定順序接在共用輸出的最後一個欄位之後。Card System On 時接在 `retry_limit_fg` 後，Off 時接在 `standard_error` 後。
 - Card System 開啟時才顯示 `card_system_profile` 至 `retry_limit_fg`；關閉時整段不顯示，與 Console 規則一致。
 - `Overview` 與 Console 必須使用同一份已計算結果，不得分別計算或套用不同格式。
 
@@ -432,60 +432,69 @@ Console 輸出順序是固定規範，不得依 dict、DataFrame 或統計完成
 2. 遊戲資訊：`game_name`、`game_id`。
 3. Config 與版本：`config_file`、`config_rtp_file`、`math_version`、`card_system`。
 4. 執行設定：`bet_mode`、`bet_multi`、`coin_in`、`total_rounds`、`duration`。
-5. Card System 資訊：從 `card_system_profile` 到 `retry_limit_fg`；只在 Card System 開啟時整段顯示。
-6. 共用統計：從 `rtp_total` 到 `SCR`。
+5. RTP 與 Feature 統計：從 `rtp_total` 到 `avg_fg_spins`。
+6. FG／特殊符號統計：`bg_trigger_fg_cnt`、`bg_trigger_fg_pay`、`special_symbol_cnt`、`SCR`。
 7. 波動資訊：`volatility_std`、`standard_error`。
-8. 遊戲專屬資訊：`<< By Game Info >>` 及該遊戲規定的 By Game 欄位。
+8. Card System 資訊：從 `card_system_profile` 到 `retry_limit_fg`；只在 Card System 開啟時整段顯示。
+9. 遊戲專屬資訊：`<< By Game Info >>` 及該遊戲規定的 By Game 欄位。
 
 - 欄位必須依下方範例逐項排列，不得交換前後順序。
 - 空白行只用於區塊分隔，不影響欄位順序；不得在同一區塊中插入其他欄位。
 - 新增共用欄位時必須先更新本規範並指定位置，不得由個別遊戲自行插入。
-- Card System 關閉時只省略第 5 項，`rtp_total` 必須直接接在 `duration` 之後。
+- Card System 關閉時只省略第 8 項；其他欄位順序不得改變。
 
 ```text
 === Batch 1/1: {'config_file': 'config.js', 'config_rtp_file': 'config_92A.js', 'bet_mode': 0, 'total_rounds': 1000000, 'card_system_enabled': True, 'card_system_is_newbie': False} ===
 
-game_name              : 幸運王牌
-game_id                : H016
+game_name               : 幸運王牌
+game_id                 : H016
+config_file             : config.js
+config_rtp_file         : config_92A.js
+math_version            : 0.0.0.0
+card_system             : on
 
-config_file            : config.js
-config_rtp_file        : config_92A.js
-math_version           : 2.1.3.13
-card_system            : on
+bet_mode                : Normal Bet
+bet_multi               : 1
+coin_in                 : 100.0
+total_rounds            : 1,000,000
+duration                : 00.00 sec
 
-bet_mode               : Normal Bet
-bet_multi              : 1
-coin_in                : 100.0
-total_rounds           : 1,000,000
-duration               : 00.000 sec
+rtp_total               : 00.0000%
+rtp_bg                  : 00.0000%
+rtp_fg                  : 00.0000%
+hit_rate_bg             : 00.0000%
+hit_rate_fg             : 00.0000%
+fg_trigger_rate         : 00.0000% (cycle 00.00 spins)
+retrigger_trigger_rate  : 00.0000% (cycle 00.00 free spins)
+avg_fg_spins            : 10.03 spins
 
-card_system_profile    : oldhand
-card_retry_limit       : 20000
-retry_total            : 8808086
-avg_retry              : 8.808086
-retry_limit_exceeded   : 0
-retry_limit_bg_range   : 0
-retry_limit_bg_freegame: 0
-retry_limit_fg         : 0
+bg_trigger_fg_cnt       : 1,000,000
+bg_trigger_fg_pay       : 1,000,000
+special_symbol_cnt      : 1,000,000
+SCR                     : 1,000,000
 
-rtp_total              : 00.0000%
-rtp_bg                 : 00.0000%
-rtp_fg                 : 00.0000%
-hit_rate_bg            : 00.0000%
-hit_rate_fg            : 00.0000%
-fg_trigger_rate        : 00.0000% (cycle 00.00 spins)
-retrigger_trigger_rate : 00.0000% (cycle 00.00 free spins)
-avg_fg_spins           : 10.03 spins
-special_symbol_cnt     : xxx
-SCR                    : xxx
+volatility_std          : 00.00
+standard_error          : 00.00
 
-volatility_std         : 00.00
-standard_error         : 00.00
+card_system_profile     : oldhand
+card_retry_limit        : 10000
+retry_total             : 1,000,000
+avg_retry               : 00.00
+
+retry_limit_exceeded    : 0
+retry_limit_bg_range    : 0
+retry_limit_bg_freegame : 0
+retry_limit_fg          : 0
 ```
 
 - `math_version` 顯示 RTP／Variant 模型的完整四段版本號，例如 `2.1.3.13`；Console 依數學文件原格式輸出，不得自行省略或改寫。只有報表檔名依第 3.1.4 節轉為 `02010313`。
-- `duration` 顯示正式模擬耗時，不包含 Numba Warm-up。
+- `duration` 顯示正式模擬耗時，不包含 Numba Warm-up，固定顯示到小數點後 2 位並加上 `sec`。
+- `bg_trigger_fg_cnt` 為 BG 成功觸發 FG 的累計次數。
+- `bg_trigger_fg_pay` 為 BG 成功觸發 FG 之 Spin 的 BG 累計得分。
 - Card System 關閉時，從 `card_system_profile` 到 `retry_limit_fg` 的整個區塊不顯示。
+- `card_retry_limit` 正式設定為 `10000`。
+- `avg_retry` 固定顯示到小數點後 2 位。
+- 次數及累計值使用千分位逗號，例如 `1,000,000`。
 - 百分比欄位固定顯示 `%`；Cycle 必須同時顯示平均間隔與正確單位。
 - `special_symbol_cnt` 統計出現特殊符號 `SC` 的 Spin 次數，Base Spin 與每一次 Free Spin 都要納入。
 - 單次 Base Spin／Free Spin 只要盤面出現至少一個 `SC` 就加 `1`；同一 Spin 出現多個 `SC` 仍只加 `1`。
@@ -499,7 +508,7 @@ standard_error         : 00.00
 
 #### 3.3.2 Game Info
 
-`<< By Game Info >>` 固定放在 `standard_error` 之後，用來顯示遊戲專屬統計。欄位依玩法增減，不適用的欄位不得沿用其他遊戲。
+`<< By Game Info >>` 固定放在共用輸出的最後：Card System On 時接在 `retry_limit_fg` 之後，Off 時接在 `standard_error` 之後。此區用來顯示遊戲專屬統計；欄位依玩法增減，不適用的欄位不得沿用其他遊戲。
 
 H016 範例：
 
@@ -531,8 +540,10 @@ m1_bg_spin_rate        : 79.9233
 - [ ] 固定 RNG／種子可重現相同結果。
 - [ ] Worker 合併後的總場次等於 `total_rounds`。
 - [ ] Console 與 Excel 報表的共用欄位及數值一致。
+- [ ] `bg_trigger_fg_cnt` 與 `bg_trigger_fg_pay` 位於 `avg_fg_spins` 後，且次數與 BG 得分口徑正確。
 - [ ] `special_symbol_cnt` 同時統計 Base Spin 與 Free Spin，且同一 Spin 即使出現多個 `SC` 也只累加一次。
 - [ ] `SCR` 等於 `(special_symbol_cnt / total_spin) × 10,000,000,000`，且 Console 與 `Overview` 的數值一致。
+- [ ] Card System 區塊位於 `standard_error` 後；Card System Off 時整段移除且其他欄位不重排。
 - [ ] `Overview` 與 Console 的內容及順序一致，且未包含 Batch 與 `<< By Game Info >>` 標題。
 - [ ] `Multiplier Line` 包含所有共用欄位，並依遊戲功能正確顯示或移除 BF／SF 與 By Game 欄位。
 - [ ] 報表檔名依 H026 規則排列，時間、Bet Mode、場次及 Card System 後綴均正確。
@@ -559,7 +570,85 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 - 不得為演出方便另寫一套簡化數學邏輯。
 - Config 無法載入或欄位不完整時要顯示明確錯誤，不得靜默使用舊值。
 
-### 4.2 必要行為
+### 4.2 共用區域與 By Game 區域
+
+圖示中的遊戲顯示區域屬於 By Game 設計；除此之外的 Demogame 區域均為所有遊戲共用。
+
+#### 4.2.1 By Game 區域
+
+下列區域依各遊戲盤面、Feature 與美術需求自行設計：
+
+- Game Title：遊戲 ID、遊戲名稱及遊戲專屬標題樣式。
+- Feature Status：Base Game／Free Game、Cascade／Combo、FG Left、Multiplier 與其他遊戲狀態。
+- Reel／Board：盤面尺寸、Reel、Symbol、框體、特殊符號及遊戲專屬資訊。
+- Board Animation：Spin、中獎、消除、補牌、掉落、轉換、Multiplier 與 Feature 動畫。
+- Board Message：盤面下方的局數、FG 進度、得分、No Win 與遊戲流程訊息。
+
+對應元素通常為 `#feature-bar`、`#strip-bar`、`#grid-panel`／`#board` 及盤面 Message Bar。實際 ID 可以依遊戲調整，但範圍與責任不得擴張到共用區域。
+
+By Game 區域必須：
+
+- 從 Config 取得名稱、盤面、Symbol、倍率與 Feature 資料，不得寫死其他遊戲的內容。
+- 只維護遊戲專屬 HTML、CSS、Render、動畫與狀態轉換。
+- 將共用操作需要的狀態與結果透過固定介面交給共用模組，不得複製整套共用控制邏輯。
+
+#### 4.2.2 共用區域
+
+除第 4.2.1 節外，其餘區域與行為均由所有遊戲共用，包括：
+
+- Player：Credit、Bet、Win。
+- Stats／Simulation。
+- Play：Spin、Auto、Bet Stepper、Speed。
+- Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。
+- Debug Mode、Set RNG、Reel RNG、Spin Result、Log 與 History 控制。
+- Setting：Version、Config／Profile、Language、Help、Reset。
+- 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。
+
+共用資源固定放在 `Project/Slots/`：
+
+```text
+Project/Slots/
+├─ demogame_common.css
+├─ demogame_common.js
+└─ H0xx_遊戲名稱/
+   └─ index.html
+```
+
+每款遊戲的 `index.html` 必須使用相對路徑載入：
+
+```html
+<link rel="stylesheet" href="../demogame_common.css?v=1">
+<script src="../demogame_common.js?v=1"></script>
+```
+
+- `demogame_common.css` 維護所有共用區域的版面、色彩、間距、元件狀態與響應式規則。
+- `demogame_common.js` 維護共用初始化、操作控制、Setting、Config／Profile、Version、Language、Help、Debug 與共用狀態同步。
+- 共用功能或樣式有異動時，修改 `demogame_common.css`／`demogame_common.js`，不得在每款遊戲的 `index.html` 複製一份再各自修改。
+- By Game 樣式與程式保留在該遊戲的 `index.html` 或遊戲專屬資源，不得放入共用檔案影響其他遊戲。
+- 遊戲專屬 CSS 不得覆寫共用區域，除非本規範明確提供可覆寫的 CSS Variable 或 Hook。
+
+### 4.3 補牌方式
+
+每款有消除機制的遊戲，必須在 Game Rule、Config 對應說明與 Demogame 中指定唯一補牌方式。Simulator 與 Demogame 必須使用相同邏輯。
+
+1. **消除後原地補牌**
+   - 中獎符號消除後，只在原本的空格位置抽取並顯示新符號。
+   - 盤面上未消除的符號維持原座標，不播放向下移動動畫。
+   - 新符號在空格原位播放 Refill 動畫。
+2. **消除後掉落補牌**
+   - 中獎符號消除後，同一 Reel／Column 上方未消除的符號依重力向下補位。
+   - 剩餘空格由新符號從盤面上方掉入。
+   - 動畫必須區分既有符號的 Settle 與新符號的 Drop／Refill。
+3. **特殊補牌（By Game）**
+   - 不符合前兩類的 Random、Parallel、跨欄移動、整盤替換或其他特殊補牌皆歸此類。
+   - 必須在該遊戲的 `game_rule.md` 與 Config mapping 中明確定義抽取來源、移動方向、補牌順序、保留位置及動畫。
+   - 不得把單一遊戲的特殊補牌邏輯寫成所有遊戲共用的預設行為。
+
+- 補牌資料必須來自 Config 定義的 Reel／Drop Table／Weight，不得只為動畫另外抽一組結果。
+- 補牌後重新判獎的次數、盤面與得分必須可由 Debug 結果重現，並與 Simulator 對帳。
+- Symbol 轉 Wild、鎖定位置或不補牌的位置，必須先依遊戲規則處理，再執行選定的補牌方式。
+
+### 4.4 必要行為
 
 - 支援 Normal Spin，以及遊戲實際存在的 Extra Bet、Buy Feature、Super Feature。
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。
@@ -568,7 +657,7 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 - Config、Version、Profile、Card System 與 Language 只顯示實際支援的內容。
 - Help 與 `game_help_draft.md` 一致，不在 HTML 另維護一份規則。
 
-### 4.3 Debug 與重現
+### 4.5 Debug 與重現
 
 Debug Mode 至少可查看：
 
@@ -580,15 +669,20 @@ Debug Mode 至少可查看：
 
 指定 Card Range 與 Reel RNG 必須互斥。指定值要檢查數量與範圍，且只作用於規格定義的下一個 Spin；不得因指定 RNG 或 Force FG 進入無限重跑。
 
-### 4.4 與 Simulator 對帳
+### 4.6 與 Simulator 對帳
 
 至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。
 
 逐項確認盤面、RNG、各段得分、Total Win、Coin In、倍率、Feature 狀態與 Retry 計數一致。
 
-### 4.5 交付檢查
+### 4.7 交付檢查
 
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
+- [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
+- [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
+- [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
+- [ ] 補牌方式已選定為原地、掉落或特殊補牌，並與 Game Rule、Config、Simulator 一致。
+- [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。
 - [ ] Config 切換後所有資料與顯示同步更新。
 - [ ] 所有支援的 Bet Mode 均可完成完整流程。
 - [ ] Card System Off／On 及 Newbie／Oldhand 行為正確。

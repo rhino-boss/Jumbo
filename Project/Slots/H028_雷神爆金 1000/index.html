@@ -1553,10 +1553,6 @@
       text-transform: uppercase;
     }
 
-    #settings-wrap .demogame-version-control {
-      display: none !important;
-    }
-
     #rng-wrap .rng-list {
       padding: 8px 12px;
     }
@@ -3198,7 +3194,7 @@
   // Each manifest entry maps one base config and one RTP/card config.
   // Synchronous loading keeps double-click/offline use available.
   (function(){
-    var manifest=window.H028_VERSION_MANIFEST||{current:'3.2.0.0',versions:[{version:'3.2.0.0',base_config:'config.js',configs:{'92A':'config_92A.js'}}]};
+    var manifest=window.H028_VERSION_MANIFEST||{current:'3.2.0.1',versions:[{version:'3.2.0.1',base_config:'config.js',configs:{'92A':'config_92A.js'}}]};
     var query=new URLSearchParams(location.search),version=query.get('version');
     if(!version){try{version=localStorage.getItem('slotDemoVersion')}catch(_){}}
     var entry=manifest.versions.find(function(item){return item.version===version})||manifest.versions.find(function(item){return item.version===manifest.current})||manifest.versions[0];
@@ -3345,9 +3341,6 @@
   set('gameId',B.game_id);set('gameName',B.display_name);renderVersionControls();el.profile.value=state.cardProfile;initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.');applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=1"></script>
-  <script>
-  document.querySelectorAll('.demogame-version-control').forEach(node=>node.remove());
-  </script>
+  <script src="../demogame_common.js?v=2"></script>
 </body>
 </html>

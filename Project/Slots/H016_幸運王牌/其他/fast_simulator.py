@@ -14,7 +14,7 @@ import numpy as np
 from numba import njit
 
 
-FAST_SIMULATOR_API_VERSION = 5
+FAST_SIMULATOR_API_VERSION = 6
 
 
 # Scalar result slots. Counts are kept in float64 alongside pay aggregates so
@@ -50,7 +50,9 @@ S_RETRY_LIMIT_BG_RANGE = 27
 S_RETRY_LIMIT_BG_FREEGAME = 28
 S_RETRY_LIMIT_FG = 29
 S_SPECIAL_SYMBOL_CNT = 30
-SCALAR_COUNT = 31
+S_BG_TRIGGER_FG_CNT = 31
+S_BG_TRIGGER_FG_PAY = 32
+SCALAR_COUNT = 33
 
 CARD_PROFILE_NEWBIE = 0
 CARD_PROFILE_OLDHAND = 1
@@ -158,7 +160,8 @@ def prepare_config(config: dict[str, Any]) -> tuple[Any, ...]:
     base_ids, base_cum, base_len, base_total = selection("base", "bg_high")
     free_ids, free_cum, free_len, free_total = selection("free", "fg_low")
     retrigger_ids, retrigger_cum, retrigger_len, retrigger_total = selection("retrigger", "fg_low")
-    super_id = name_to_id.get("super", name_to_id.get("fg_2", int(free_ids[0])))
+    super_free_ids, super_free_cum, super_free_len, super_free_total = selection("super_free", "super")
+    super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total = selection("super_retrigger", "super")
     buy_id = name_to_id["buy"]
 
     # Cards are packed into fixed numeric arrays so the full rejection loop can
@@ -212,7 +215,7 @@ def prepare_config(config: dict[str, Any]) -> tuple[Any, ...]:
                 card_counts[profile_index, section_index] = 1
                 running = 1.0
             card_totals[profile_index, section_index] = running
-    retry_limit = max(1, int(card_system.get("retry_limit", 20_000)))
+    retry_limit = max(1, int(card_system.get("retry_limit", 10_000)))
     return (
         reel_symbols, reel_cumulative, reel_lengths, reel_totals,
         drop_values, drop_cumulative, drop_lengths, drop_totals,
@@ -221,7 +224,9 @@ def prepare_config(config: dict[str, Any]) -> tuple[Any, ...]:
         base_ids, base_cum, base_len, base_total,
         free_ids, free_cum, free_len, free_total,
         retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-        int(super_id), int(buy_id), int(config["free_spins"]), int(config["retrigger_spins"]),
+        super_free_ids, super_free_cum, super_free_len, super_free_total,
+        super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+        int(buy_id), int(config["free_spins"]), int(config["retrigger_spins"]),
         int(config["free_spin_cap"]), float(config["buy_price"]), float(config["super_buy_price"]),
         card_types, card_min, card_max, card_table_ids, card_cumulative, card_counts,
         card_totals, int(retry_limit),
@@ -262,7 +267,7 @@ def _entry_scatter_count(table_id, reel_symbols, reel_cumulative, reel_lengths, 
 
 @njit(nogil=True, cache=True)
 def _spin(
-    table_id, free_game, scene, bet_multi,
+    table_id, free_game, super_mode, scene, bet_multi,
     reel_symbols, reel_cumulative, reel_lengths, reel_totals,
     drop_values, drop_cumulative, drop_lengths, drop_totals,
     rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
@@ -303,13 +308,25 @@ def _spin(
             made = int(rw_values[table_id, rw_index])
             if made > 0:
                 candidate_count = 0
-                for reel in range(1, 5):
-                    for row in range(4):
-                        symbol = int(board[reel, row])
-                        if symbol != 0 and symbol != 1 and symbol != 2:
-                            candidate_reel[candidate_count] = reel
-                            candidate_row[candidate_count] = row
-                            candidate_count += 1
+                if super_mode:
+                    for reel in range(1, 5):
+                        for row in range(4):
+                            symbol = int(board[reel, row])
+                            if symbol != 0 and symbol != 1 and symbol != 2 and not (11 <= symbol <= 18):
+                                candidate_reel[candidate_count] = reel
+                                candidate_row[candidate_count] = row
+                                candidate_count += 1
+                # JHS101003 Super Buy falls back to the complete candidate list
+                # only when fewer than four non-golden cells are available.
+                if not super_mode or candidate_count < 4:
+                    candidate_count = 0
+                    for reel in range(1, 5):
+                        for row in range(4):
+                            symbol = int(board[reel, row])
+                            if symbol != 0 and symbol != 1 and symbol != 2:
+                                candidate_reel[candidate_count] = reel
+                                candidate_row[candidate_count] = row
+                                candidate_count += 1
                 if candidate_count >= made:
                     source_index = np.random.randint(0, pending_count)
                     board[pending_reel[source_index], pending_row[source_index]] = 1
@@ -419,14 +436,19 @@ def _free_session(
     rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
     free_ids, free_cum, free_len, free_total,
     retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-    super_id, free_spins, retrigger_spins, free_spin_cap,
+    super_free_ids, super_free_cum, super_free_len, super_free_total,
+    super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+    free_spins, retrigger_spins, free_spin_cap,
     scalars, combo_fg, symbol_hits, symbol_pay, length_hits, length_pay,
     initial_symbols, dropped_symbols, w2_counts,
 ):
     queue = np.empty(free_spin_cap, dtype=np.int16)
     queue_size = min(free_spins, free_spin_cap)
     for index in range(queue_size):
-        queue[index] = free_ids[_pick_index(free_cum, free_len, free_total)]
+        if super_mode:
+            queue[index] = super_free_ids[_pick_index(super_free_cum, super_free_len, super_free_total)]
+        else:
+            queue[index] = free_ids[_pick_index(free_cum, free_len, free_total)]
     queue_head = 0
     remaining = queue_size
     played = 0
@@ -435,10 +457,10 @@ def _free_session(
     while remaining > 0 and played < free_spin_cap:
         remaining -= 1
         played += 1
-        table_id = super_id if super_mode else int(queue[queue_head])
+        table_id = int(queue[queue_head])
         queue_head += 1
         spin = _spin(
-            table_id, True, 1, bet_multi,
+            table_id, True, super_mode, 1, bet_multi,
             reel_symbols, reel_cumulative, reel_lengths, reel_totals,
             drop_values, drop_cumulative, drop_lengths, drop_totals,
             rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
@@ -464,7 +486,10 @@ def _free_session(
             if add > 0:
                 scalars[S_RETRIGGERS] += 1
                 for _ in range(add):
-                    queue[queue_size] = retrigger_ids[_pick_index(retrigger_cum, retrigger_len, retrigger_total)]
+                    if super_mode:
+                        queue[queue_size] = super_retrigger_ids[_pick_index(super_retrigger_cum, super_retrigger_len, super_retrigger_total)]
+                    else:
+                        queue[queue_size] = retrigger_ids[_pick_index(retrigger_cum, retrigger_len, retrigger_total)]
                     queue_size += 1
                 remaining += add
     return session_pay, session_max
@@ -534,7 +559,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
         base_ids, base_cum, base_len, base_total,
         free_ids, free_cum, free_len, free_total,
         retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-        super_id, buy_id, free_spins, retrigger_spins, free_spin_cap, buy_price, super_buy_price,
+        super_free_ids, super_free_cum, super_free_len, super_free_total,
+        super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+        buy_id, free_spins, retrigger_spins, free_spin_cap, buy_price, super_buy_price,
         card_types, card_min, card_max, card_table_ids, card_cumulative, card_counts,
         card_totals, retry_limit,
     ) = packed
@@ -602,7 +629,7 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                         else int(card_table_ids[active_profile, CARD_SECTION_BASE, card_index])
                     )
                     spin = _spin(
-                        table_id, False, 0, bet_multi,
+                        table_id, False, False, 0, bet_multi,
                         reel_symbols, reel_cumulative, reel_lengths, reel_totals,
                         drop_values, drop_cumulative, drop_lengths, drop_totals,
                         rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
@@ -647,7 +674,7 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
             else:
                 table_id = int(base_ids[_pick_index(base_cum, base_len, base_total)])
                 spin = _spin(
-                    table_id, False, 0, bet_multi,
+                    table_id, False, False, 0, bet_multi,
                     reel_symbols, reel_cumulative, reel_lengths, reel_totals,
                     drop_values, drop_cumulative, drop_lengths, drop_totals,
                     rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
@@ -669,6 +696,8 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
             if scatter >= 3:
                 has_fg = 1
                 scalars[S_FG_TRIGGERS] += 1
+                scalars[S_BG_TRIGGER_FG_CNT] += 1
+                scalars[S_BG_TRIGGER_FG_PAY] += pay_bg
                 if card_enabled:
                     card_index = _pick_card(
                         active_profile, CARD_SECTION_FREE,
@@ -689,7 +718,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                             rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
                             free_ids, free_cum, free_len, free_total,
                             retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-                            super_id, free_spins, retrigger_spins, free_spin_cap,
+                            super_free_ids, super_free_cum, super_free_len, super_free_total,
+                            super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+                            free_spins, retrigger_spins, free_spin_cap,
                             scratch_scalars, scratch_combo_fg, scratch_symbol_hits,
                             scratch_symbol_pay, scratch_length_hits, scratch_length_pay,
                             scratch_initial_symbols, scratch_dropped_symbols, scratch_w2,
@@ -729,7 +760,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                         rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
                         free_ids, free_cum, free_len, free_total,
                         retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-                        super_id, free_spins, retrigger_spins, free_spin_cap,
+                        super_free_ids, super_free_cum, super_free_len, super_free_total,
+                        super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+                        free_spins, retrigger_spins, free_spin_cap,
                         scalars, combo_fg, symbol_hits, symbol_pay, length_hits, length_pay,
                         initial_symbols, dropped_symbols, w2_counts,
                     )
@@ -762,7 +795,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                         rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
                         free_ids, free_cum, free_len, free_total,
                         retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-                        super_id, free_spins, retrigger_spins, free_spin_cap,
+                        super_free_ids, super_free_cum, super_free_len, super_free_total,
+                        super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+                        free_spins, retrigger_spins, free_spin_cap,
                         scratch_scalars, scratch_combo_fg, scratch_symbol_hits,
                         scratch_symbol_pay, scratch_length_hits, scratch_length_pay,
                         scratch_initial_symbols, scratch_dropped_symbols, scratch_w2,
@@ -802,7 +837,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                     rw_values, rw_cumulative, rw_lengths, rw_totals, multipliers, pays,
                     free_ids, free_cum, free_len, free_total,
                     retrigger_ids, retrigger_cum, retrigger_len, retrigger_total,
-                    super_id, free_spins, retrigger_spins, free_spin_cap,
+                    super_free_ids, super_free_cum, super_free_len, super_free_total,
+                    super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
+                    free_spins, retrigger_spins, free_spin_cap,
                     scalars, combo_fg, symbol_hits, symbol_pay, length_hits, length_pay,
                     initial_symbols, dropped_symbols, w2_counts,
                 )
@@ -938,6 +975,8 @@ def to_stats(result) -> dict[str, Any]:
         "retry_limit_bg_freegame": integer(S_RETRY_LIMIT_BG_FREEGAME),
         "retry_limit_fg": integer(S_RETRY_LIMIT_FG),
         "special_symbol_cnt": integer(S_SPECIAL_SYMBOL_CNT),
+        "bg_trigger_fg_cnt": integer(S_BG_TRIGGER_FG_CNT),
+        "bg_trigger_fg_pay": float(s[S_BG_TRIGGER_FG_PAY]),
         "combo_bg": Counter({index: int(value) for index, value in enumerate(combo_bg) if value}),
         "combo_fg": Counter({index: int(value) for index, value in enumerate(combo_fg) if value}),
         "buckets": Counter({label: int(value) for label, value in zip(("0", "(0,1)", "[1,10)", "[10,100)", "100+"), buckets) if value}),
