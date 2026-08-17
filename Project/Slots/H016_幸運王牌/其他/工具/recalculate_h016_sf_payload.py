@@ -26,6 +26,7 @@ MAX_ABOVE_500_HIT_RATE = 0.07
 MAX_BELOW_100_HIT_RATE = 0.50
 PER_RANGE_RTP_SHARE_CAP = 0.15
 REFERENCE_PSEUDOCOUNT = 0.25
+HEAD_DECAY_RATIO = 0.97
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 
@@ -164,117 +165,87 @@ def fix_numbers(weights: list[int], counts: list[int]) -> list[float]:
     return result
 
 
-def capped_group_distribution(
+def geometric_group_distribution(
     indices: list[int],
     mass: float,
     means: list[float],
-    references: list[float],
-    lam: float,
+    ratio: float,
     scene_cap: float,
 ) -> list[float]:
     if not indices:
         raise ValueError("Empty SF optimization group")
-    caps = {index: scene_cap / means[index] for index in indices}
-    if sum(caps.values()) + 1e-15 < mass:
-        raise ValueError("Per-range RTP cap makes SF group mass infeasible")
-    scores = {
-        index: math.log(references[index]) + lam * means[index]
-        for index in indices
-    }
-
-    def probability(index: int, log_scale: float) -> float:
-        value_log = log_scale + scores[index]
-        cap = caps[index]
-        if value_log >= math.log(cap):
-            return cap
-        if value_log <= -745.0:
-            return 0.0
-        return math.exp(value_log)
-
-    lower, upper = -10_000.0, 10_000.0
-    for _ in range(240):
-        middle = (lower + upper) / 2.0
-        observed = sum(probability(index, middle) for index in indices)
-        if observed < mass:
-            lower = middle
-        else:
-            upper = middle
+    if not 0.0 < ratio <= 1.0:
+        raise ValueError(f"Invalid SF geometric decay ratio: {ratio}")
+    if indices != list(range(indices[0], indices[-1] + 1)):
+        raise ValueError("Weighted SF ranges must be contiguous for a monotonic Hit Rate line")
+    factors = [ratio ** rank for rank in range(len(indices))]
+    factor_total = sum(factors)
     result = [0.0] * len(means)
-    scale = (lower + upper) / 2.0
-    for index in indices:
-        result[index] = probability(index, scale)
-    correction = mass - sum(result)
-    if abs(correction) > 1e-12:
-        candidates = [index for index in indices if result[index] + correction <= caps[index] + 1e-15]
-        if not candidates:
-            raise ValueError("Unable to normalize capped SF group")
-        result[candidates[0]] += correction
+    for index, factor in zip(indices, factors):
+        result[index] = mass * factor / factor_total
+        if result[index] * means[index] > scene_cap + 1e-12:
+            raise ValueError(f"SF range {index} exceeds the per-range RTP cap")
     return result
 
 
-def solve_probabilities(
-    eligible: list[int], means: list[float], references: list[float], target_scene_rtp: float
-) -> list[float]:
+def solve_probabilities(eligible: list[int], means: list[float], target_scene_rtp: float) -> tuple[list[float], float]:
     scene_cap = target_scene_rtp * PER_RANGE_RTP_SHARE_CAP
     non_profit = [index for index in eligible if index < PROFIT_START_INDEX]
-    below_100 = [index for index in non_profit if index <= BELOW_100_END_INDEX]
-    from_100_to_250 = [index for index in non_profit if index > BELOW_100_END_INDEX]
     profit_to_500 = [
         index for index in eligible if PROFIT_START_INDEX <= index < ABOVE_500_START_INDEX
     ]
     above_500 = [index for index in eligible if index >= ABOVE_500_START_INDEX]
     profit_to_500_mass = TARGET_PROFIT_HIT_RATE - TARGET_ABOVE_500_HIT_RATE
+    expected = list(range(MIN_SF_WEIGHTED_INDEX, above_500[-1] + 1))
+    if eligible != expected:
+        raise ValueError(
+            "Naturally eligible SF ranges must be contiguous from (50,60] through the last weighted range"
+        )
 
-    def for_lambda(lam: float, cap_below_100: bool) -> list[float]:
-        groups: list[tuple[list[int], float]] = [
-            (profit_to_500, profit_to_500_mass),
-            (above_500, TARGET_ABOVE_500_HIT_RATE),
-        ]
-        if cap_below_100:
-            groups.extend([
-                (below_100, MAX_BELOW_100_HIT_RATE),
-                (
-                    from_100_to_250,
-                    1.0 - TARGET_PROFIT_HIT_RATE - MAX_BELOW_100_HIT_RATE,
-                ),
-            ])
-        else:
-            groups.append((non_profit, 1.0 - TARGET_PROFIT_HIT_RATE))
+    head = geometric_group_distribution(
+        non_profit, 1.0 - TARGET_PROFIT_HIT_RATE, means, HEAD_DECAY_RATIO, scene_cap
+    )
+    middle = geometric_group_distribution(
+        profit_to_500, profit_to_500_mass, means, HEAD_DECAY_RATIO, scene_cap
+    )
+
+    def for_tail_ratio(ratio: float) -> list[float]:
+        tail = geometric_group_distribution(
+            above_500, TARGET_ABOVE_500_HIT_RATE, means, ratio, scene_cap
+        )
         result = [0.0] * len(means)
-        for indices, mass in groups:
-            group = capped_group_distribution(
-                indices, mass, means, references, lam, scene_cap
-            )
+        for group in (head, middle, tail):
             result = [left + right for left, right in zip(result, group)]
         return result
 
-    def solve_lambda(cap_below_100: bool) -> list[float]:
-        lower, upper = -1.0, 1.0
-        lower_value = sum(p * mean for p, mean in zip(for_lambda(lower, cap_below_100), means))
-        upper_value = sum(p * mean for p, mean in zip(for_lambda(upper, cap_below_100), means))
-        if not lower_value <= target_scene_rtp <= upper_value:
-            raise ValueError(
-                f"SF target scene RTP {target_scene_rtp} is infeasible: {lower_value}..{upper_value}"
-            )
-        for _ in range(220):
-            middle = (lower + upper) / 2.0
-            probabilities = for_lambda(middle, cap_below_100)
-            observed = sum(p * mean for p, mean in zip(probabilities, means))
-            if observed < target_scene_rtp:
-                lower = middle
-            else:
-                upper = middle
-        return for_lambda((lower + upper) / 2.0, cap_below_100)
-
-    probabilities = solve_lambda(False)
-    below_100_hit = sum(probabilities[index] for index in below_100)
-    if below_100_hit > MAX_BELOW_100_HIT_RATE + 1e-12:
-        probabilities = solve_lambda(True)
+    lower, upper = 0.01, 1.0
+    lower_value = sum(p * mean for p, mean in zip(for_tail_ratio(lower), means))
+    upper_value = sum(p * mean for p, mean in zip(for_tail_ratio(upper), means))
+    if not lower_value <= target_scene_rtp <= upper_value:
+        raise ValueError(
+            f"Monotonic SF target scene RTP {target_scene_rtp} is infeasible: "
+            f"{lower_value}..{upper_value}"
+        )
+    for _ in range(220):
+        ratio = (lower + upper) / 2.0
+        probabilities = for_tail_ratio(ratio)
+        observed = sum(p * mean for p, mean in zip(probabilities, means))
+        if observed < target_scene_rtp:
+            lower = ratio
+        else:
+            upper = ratio
+    tail_ratio = (lower + upper) / 2.0
+    probabilities = for_tail_ratio(tail_ratio)
 
     observed = sum(p * mean for p, mean in zip(probabilities, means))
     if abs(observed - target_scene_rtp) > 1e-8:
         raise ValueError(f"Floating SF target mismatch: {observed} vs {target_scene_rtp}")
-    return probabilities
+    if any(
+        probabilities[index] < probabilities[index + 1] - 1e-15
+        for index in range(MIN_SF_WEIGHTED_INDEX, eligible[-1])
+    ):
+        raise ValueError("Floating SF Hit Rate is not monotonically decreasing")
+    return probabilities, tail_ratio
 
 
 def integerize_group(
@@ -365,7 +336,7 @@ def recalibrate_sf(
         references[index] = competitor["counts"][index] + REFERENCE_PSEUDOCOUNT
 
     target_scene_rtp = TARGET_SF_RTP * SUPER_PRICE
-    probabilities = solve_probabilities(eligible, means, references, target_scene_rtp)
+    probabilities, tail_decay_ratio = solve_probabilities(eligible, means, target_scene_rtp)
     weights = integerize_probabilities(probabilities, means, target_scene_rtp)
     after = sum(weight / WEIGHT_TOTAL * mean for weight, mean in zip(weights, means))
     profit_hit = sum(weights[PROFIT_START_INDEX:]) / WEIGHT_TOTAL
@@ -394,6 +365,13 @@ def recalibrate_sf(
         raise ValueError(f"SF Hit Rate above 500x is outside 5%-7%: {above_500_hit}")
     if below_100_hit > MAX_BELOW_100_HIT_RATE + 1e-12:
         raise ValueError(f"SF Hit Rate at or below 100x exceeds 50%: {below_100_hit}")
+    monotonic_violations = [
+        index
+        for index in range(MIN_SF_WEIGHTED_INDEX, 63)
+        if weights[index] < weights[index + 1]
+    ]
+    if monotonic_violations:
+        raise ValueError(f"SF Hit Rate increases at range indices {monotonic_violations}")
 
     audits = []
     competitor_eligible_total = sum(competitor["counts"][index] for index in eligible)
@@ -443,8 +421,8 @@ def recalibrate_sf(
         "zero_bucket_after": weights[0],
         "calibration": (
             "Super Ace feature_buy_2 smoothed Hit Rate; minimum (50,60]; H016 natural >=0.1%; "
-            "30% profit hit; 6% Hit Rate above 500x; at most 50% Hit Rate at/below 100x; "
-            "15% per-range RTP cap"
+            "strictly non-increasing Hit Rate by multiplier; 30% profit hit; "
+            "6% Hit Rate above 500x; at most 50% Hit Rate at/below 100x; 15% per-range RTP cap"
         ),
         "minimum_weighted_index": MIN_SF_WEIGHTED_INDEX,
         "minimum_weighted_range": labels[MIN_SF_WEIGHTED_INDEX],
@@ -456,6 +434,10 @@ def recalibrate_sf(
         "profit_hit_rate": profit_hit,
         "above_500_hit_rate": above_500_hit,
         "below_100_hit_rate": below_100_hit,
+        "head_decay_ratio": HEAD_DECAY_RATIO,
+        "tail_decay_ratio": tail_decay_ratio,
+        "monotonic_hit_rate": True,
+        "monotonic_violations": monotonic_violations,
         "max_range_rtp_share": max(range_shares),
         "max_range_rtp_index": max(range(64), key=range_shares.__getitem__),
     }
@@ -485,7 +467,7 @@ def main() -> None:
         "minimum weighted range (50,60]; H016 natural probability must be at least 0.1%; "
         "profit hit rate 30%; intervals above 500x contain 6% Hit Rate (allowed 5-7%); "
         "intervals at or below 100x contain at most 50% Hit Rate; each interval may contribute "
-        "at most 15% of total SF RTP"
+        "at most 15% of total SF RTP; Hit Rate is non-increasing as the multiplier rises"
     )
     payload["rules"].setdefault("targets", {})["sf_92"] = TARGET_SF_RTP
     payload["sf_source_report"] = {
@@ -511,6 +493,9 @@ def main() -> None:
         "profit_hit_rate": sf["profit_hit_rate"],
         "above_500_hit_rate": sf["above_500_hit_rate"],
         "below_100_hit_rate": sf["below_100_hit_rate"],
+        "monotonic_hit_rate": sf["monotonic_hit_rate"],
+        "head_decay_ratio": sf["head_decay_ratio"],
+        "tail_decay_ratio": sf["tail_decay_ratio"],
         "max_range_rtp_share": sf["max_range_rtp_share"],
         "max_range": labels[sf["max_range_rtp_index"]],
         "first_weighted_range": labels[next(i for i, value in enumerate(sf["weights"]) if value)],

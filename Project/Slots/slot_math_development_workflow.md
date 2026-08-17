@@ -6,16 +6,26 @@
 
 適用範圍：`Project/Slots/H0xx_遊戲名稱/` 下的新遊戲數學模型、既有模型改版，以及 RTP、Card System、Feature 或 Bet Mode 參數調整。
 
-## 1. 文件分工
+## 目錄
 
-| 文件 | 回答的問題 | 使用時機 |
-|---|---|---|
-| 本文件 `slot_math_development_workflow.md` | 先做什麼、後做什麼、如何推進、每階段要交付什麼 | 排程、開案、追蹤進度、交付驗收 |
-| [`slot_development_specification.md`](./slot_development_specification.md) | 檔案怎麼命名、欄位怎麼定義、版本怎麼升、程式與報表怎麼實作 | 製作 XLSX、Config、Simulator、Demogame 與 Record 時 |
-| 各遊戲 `game_rule.md` | 這款遊戲實際怎麼玩、如何判獎、Feature 如何運作 | 建模、實作與單局對帳時 |
-| `Source/xlsx_config_usage_mapping.md` | XLSX 資料如何映射到 Config 與程式 | 轉檔、維護與查錯時 |
+- [1. 過往專案整理後的標準做法](#1-過往專案整理後的標準做法)
+- [2. 整體流程](#2-整體流程)
+- [3. 製作順序與階段關卡](#3-製作順序與階段關卡)
+- [4. 各階段操作方式](#4-各階段操作方式)
+  - [4.1 開案與數學目標確認](#41-開案與數學目標確認)
+  - [4.2 建立基礎數學模型](#42-建立基礎數學模型)
+  - [4.3 建立 RTP／Variant 與 Card System](#43-建立-rtpvariant-與-card-system)
+  - [4.4 轉檔與 Config 驗證](#44-轉檔與-config-驗證)
+  - [4.5 Simulator 開發與 Debug](#45-simulator-開發與-debug)
+  - [4.6 模擬順序](#46-模擬順序)
+  - [4.7 調參循環](#47-調參循環)
+  - [4.8 對帳與交付](#48-對帳與交付)
+- [5. 新專案建議目錄](#5-新專案建議目錄)
+- [6. 異動時的重跑範圍](#6-異動時的重跑範圍)
+- [7. 禁止事項](#7-禁止事項)
+- [8. 數學完成條件](#8-數學完成條件)
 
-## 2. 過往專案整理後的標準做法
+## 1. 過往專案整理後的標準做法
 
 過往專案可看到數種演進中的做法：
 
@@ -33,7 +43,7 @@
 5. 每次調參都依「Source → 版本 → Config → Simulator → Record → 對帳」完整重跑。
 6. 舊專案若與目前命名、版本或報表格式不同，不直接複製舊格式；依現行規格建立。
 
-## 3. 整體流程
+## 2. 整體流程
 
 ```text
 確認 Game Rule 與數學目標
@@ -63,7 +73,7 @@ Simulator／Demogame 對帳
 凍結版本、整理 Record、完成交付
 ```
 
-## 4. 製作順序與階段關卡
+## 3. 製作順序與階段關卡
 
 不得因為某個程式可以先寫就跳過前置規則。上一階段的完成條件成立後，才進入下一階段。
 
@@ -80,7 +90,7 @@ Simulator／Demogame 對帳
 | 9 | Card System 驗證 | 分 RTP、Variant、Profile、Bet Mode 跑 Card System On | `Record/*card.xlsx` | 權重占比合理、Retry Limit Exceeded 通過 |
 | 10 | 調參與正式模擬 | 依差距修改 Source，重新轉檔、模擬、比較與升版 | 正式大場次 Record | 所有支援組合符合目標與統計誤差要求 |
 | 11 | 極值與單局對帳 | 驗證 Max Win、封頂、理論可達路徑及代表性單局 | 極值紀錄、對帳案例 | Config、Simulator、Demogame 結果一致 |
-| 12 | 版本凍結與交付 | 清理暫存、保存版本、報表、來源與變更說明 | 完整專案目錄 | 本文件第 9 節全部通過 |
+| 12 | 版本凍結與交付 | 清理暫存、保存版本、報表、來源與變更說明 | 完整專案目錄 | 本文件第 8 節全部通過 |
 
 各階段的實作要求請查閱：
 
@@ -90,9 +100,9 @@ Simulator／Demogame 對帳
 - Demogame 與單局對帳：[規格第 4 節](./slot_development_specification.md#4-demogame)
 - Config、轉檔與版本歷史：[規格第 5 節](./slot_development_specification.md#5-config)
 
-## 5. 各階段操作方式
+## 4. 各階段操作方式
 
-### 5.1 開案與數學目標確認
+### 4.1 開案與數學目標確認
 
 1. 建立 `H0xx_遊戲名稱/` 專案資料夾。
 2. 讀取並確認 `game_rule.md`。
@@ -100,7 +110,7 @@ Simulator／Demogame 對帳
 4. 為每個組合定義 RTP、Hit Rate、Feature Frequency、Max Win 與其他遊戲專屬指標。
 5. 將未決定的判獎順序、倍率分母、Feature 上限與例外退回確認；未確認前不製作正式模型。
 
-### 5.2 建立基礎數學模型
+### 4.2 建立基礎數學模型
 
 1. 先完成 Base Game，再依狀態順序完成 Feature。
 2. 建立 Symbol、Paytable、Reel Strip／Weight、Table 與 Bet Mode。
@@ -108,7 +118,7 @@ Simulator／Demogame 對帳
 4. 計算 RTP Breakdown 與理論 Max Win，不只計算 Total RTP。
 5. 建立基礎數學 XLSX，版本依規格使用 1 碼。
 
-### 5.3 建立 RTP／Variant 與 Card System
+### 4.3 建立 RTP／Variant 與 Card System
 
 1. 只建立產品實際需要的 92／94、A／B 組合。
 2. A／B 表示數學 Variant，不表示 Newbie／Oldhand。
@@ -116,7 +126,7 @@ Simulator／Demogame 對帳
 4. 確認每張正權重卡片的區間可達，並定義 Retry 行為。
 5. 建立 RTP／Variant XLSX，版本依規格使用四段格式。
 
-### 5.4 轉檔與 Config 驗證
+### 4.4 轉檔與 Config 驗證
 
 1. 在 `xlsx_config_usage_mapping.md` 記錄每項 Config 資料的來源。
 2. 使用 `xlsx_to_config.py`、`model_sync.py` 或專案的更新腳本產生 Config。
@@ -124,7 +134,7 @@ Simulator／Demogame 對帳
 4. 比較轉檔前後資料，確認 Config 可由 Source 重建且沒有非預期差異。
 5. 轉檔錯誤時修正 Source、Mapping 或轉檔工具，不直接修改 Config 大型陣列。
 
-### 5.5 Simulator 開發與 Debug
+### 4.5 Simulator 開發與 Debug
 
 1. 先完成自然機率核心，再加入 Card System 篩選與 Retry。
 2. 讓 Simulator 直接讀取正式 Config，不另寫一份參數。
@@ -132,7 +142,7 @@ Simulator／Demogame 對帳
 4. 建立強制／指定案例，驗證無獎、一般獎、Wild、Scatter、Feature、Retrigger、倍率與封頂。
 5. 小場次確認正確後，再加入 Numba、多執行緒、BATCH_RUNS 與 Excel 報表。
 
-### 5.6 模擬順序
+### 4.6 模擬順序
 
 模擬必須依下列順序執行：
 
@@ -155,7 +165,7 @@ Simulator／Demogame 對帳
 
 不存在的 Mode、Profile 或 Variant 不建立空批次，也不以全零結果冒充驗證完成。
 
-### 5.7 調參循環
+### 4.7 調參循環
 
 每一次調參都執行完整循環：
 
@@ -184,16 +194,16 @@ Simulator／Demogame 對帳
 3. 最後才調整 Card System 區間與權重。
 4. 不得只為讓 Total RTP 接近目標而忽略 RTP Breakdown、Hit Rate、Feature Frequency、分布或 Retry。
 
-### 5.8 對帳與交付
+### 4.8 對帳與交付
 
 1. 選定可重現的代表性 RNG／Seed。
 2. 逐項核對 Config、Simulator 與 Demogame 的盤面、判獎、Feature、倍率、Total Win、Coin In 與 Retry。
 3. 完成所有正式組合的最新 Record。
 4. 將正式 Config 與歷史版本關係寫入 `Versions/` 與 manifest。
 5. 清除暫存檔、舊測試輸出及不屬於正式交付的檔案。
-6. 依第 9 節完成最終驗收。
+6. 依第 8 節完成最終驗收。
 
-## 6. 新專案建議目錄
+## 5. 新專案建議目錄
 
 ```text
 Project/Slots/H0xx_遊戲名稱/
@@ -219,7 +229,7 @@ Project/Slots/H0xx_遊戲名稱/
 - A／B、92／94、Buy／Super Feature 只依產品實際需求增減。
 - 目錄中的檔名、版本及報表命名必須符合現行規格，不以舊遊戲的歷史命名為準。
 
-## 7. 異動時的重跑範圍
+## 6. 異動時的重跑範圍
 
 | 異動 | 必做流程 |
 |---|---|
@@ -230,7 +240,7 @@ Project/Slots/H0xx_遊戲名稱/
 | Simulator 數學邏輯 | 修正程式 → 固定 Seed 回歸 → 小場次 → 所有受影響正式批次 → Demogame 對帳 |
 | 報表或顯示邏輯 | 驗證統計來源未變 → 核對 Console 與 Excel → 依影響範圍重產報表 |
 
-## 8. 禁止事項
+## 7. 禁止事項
 
 - 未確認 Game Rule 就自行補猜核心數學規則。
 - 直接修改由 XLSX 產生的 Config 參數來避開轉檔。
@@ -243,7 +253,7 @@ Project/Slots/H0xx_遊戲名稱/
 - 直接複製舊專案的不相容命名、版本、報表欄位或遊戲專屬統計。
 - 用全零欄位表示不存在或尚未驗證的功能。
 
-## 9. 數學完成條件
+## 8. 數學完成條件
 
 以下條件全部成立，數學開發才算完成：
 

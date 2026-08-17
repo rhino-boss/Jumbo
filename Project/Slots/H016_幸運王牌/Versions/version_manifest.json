@@ -35,7 +35,7 @@
         "Super Feature 依 JHS101003 使用獨立 SF 表，並套用 Super Buy 金框位置排除規則。",
         "Console 與 Overview 依 slot_development_specification.md §3.3 固定順序輸出。",
         "Card Retry Limit 正式統一為 10,000。",
-        "92A Super Feature 依 Super Ace SF 線型重配：RTP 92.5%、最低 50x、贏錢率 30%、500x 以上 Hit Rate 6%、100x 以下 Hit Rate 不超過 50%，且單區間 RTP 不超過 15%。"
+        "92A Super Feature 依 Super Ace SF 線型重配：RTP 92.5%、最低 50x、Hit Rate 隨倍率單調不增、贏錢率 30%、500x 以上 Hit Rate 6%、100x 以下 Hit Rate 不超過 50%，且單區間 RTP 不超過 15%。"
       ]
     }
   ]

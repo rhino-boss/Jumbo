@@ -1348,9 +1348,10 @@ def calculated_metrics(result: dict[str, Any]) -> dict[str, Any]:
     fg_triggers = s["fg_triggers"]
     fg_spins = s["fg_spins"]
     retriggers = s["retriggers"]
-    total_spins = int(s["rounds"]) + int(fg_spins)
     special_symbol_cnt = int(s.get("special_symbol_cnt", 0))
-    special_symbol_rate = special_symbol_cnt / total_spins if total_spins else 0.0
+    # SCR is normalized by paid rounds only.  FG Spins contribute to the
+    # special-symbol numerator, but are not added to the denominator.
+    special_symbol_rate = special_symbol_cnt / rounds
     return {
         "rounds": s["rounds"],
         "coin_in_per_round": s["coin_in"] / rounds,

@@ -271,6 +271,13 @@ try {
                 if ($maxRangeRtp / $sfSceneRtp -gt 0.15000001) {
                     throw "$($target.File) SF single-range RTP share exceeds 15%"
                 }
+                for ($row = 253; $row -lt 297; $row++) {
+                    $currentHitWeight = [double]$detail.Cells.Item($row, 11).Value2
+                    $nextHitWeight = [double]$detail.Cells.Item($row + 1, 11).Value2
+                    if ($currentHitWeight -lt $nextHitWeight) {
+                        throw "$($target.File) SF Hit Rate rises from row $row to $($row + 1)"
+                    }
+                }
             }
 
             $formulaErrors = 0
