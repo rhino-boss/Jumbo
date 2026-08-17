@@ -1244,7 +1244,7 @@ RTP 使用實際金額加權，而不是把不同 Bet 的局倍率直接平均�
 
 ### 初始盤面堆疊分布
 
-堆疊定義為同一初始盤面、同一 Reel 內由上到下連續相同符號的最大 run；採 cell-weighted 口徑。例如 `A A A K J` 記為 3 個 Stack 3 cells 與 2 個 Stack 1 cells。競品 BG 使用 {stacks['bg']['screen_count']:,} 個初始盤面，競品 FG 使用 {stacks['fg']['screen_count']:,} 個初始盤面；H027 依 `config_92A.js` 的輪帶與起始權重枚舉初始盤面。以下各表均將競品與 H027 並列比較。
+堆疊定義為同一初始盤面、同一 Reel 內由上到下連續相同符號的最大 run；採 cell-weighted 口徑。例如 `A A A K J` 記為 3 個 Stack 3 cells 與 2 個 Stack 1 cells。競品 BG 使用 {stacks['bg']['screen_count']:,} 個初始盤面，競品 FG 使用 {stacks['fg']['screen_count']:,} 個初始盤面；H027 依 `config.js` 的輪帶與起始權重枚舉初始盤面。以下各表均將競品與 H027 並列比較。
 
 #### BG R1-R6
 

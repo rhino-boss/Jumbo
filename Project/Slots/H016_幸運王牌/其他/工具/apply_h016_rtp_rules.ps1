@@ -1,6 +1,8 @@
 param(
     [Parameter(Mandatory = $true)]
-    [string]$PayloadPath
+    [string]$PayloadPath,
+    [ValidateSet("All", "92", "94")]
+    [string]$TargetVersion = "All"
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,6 +14,9 @@ $targets = @(
     @{ File = "H016192A.xlsx"; Key = "92"; Normal = 0.92; BG = 0.70; FG = 0.22 },
     @{ File = "H016194A.xlsx"; Key = "94"; Normal = 0.94; BG = 0.70; FG = 0.24 }
 )
+if ($TargetVersion -ne "All") {
+    $targets = @($targets | Where-Object { $_.Key -eq $TargetVersion })
+}
 
 function Set-VerticalValues([object]$sheet, [int]$row, [int]$column, [object[]]$values) {
     $matrix = New-Object 'object[,]' $values.Count, 1
@@ -224,6 +229,50 @@ try {
             Test-RuleRows $newbie 15 @($version.newbie.bg.audit) "Newbie BG"
             Test-RuleRows $newbie 86 @($version.newbie.fg.audit) "Newbie FG"
 
+            if ($null -ne $version.sf.profit_hit_rate) {
+                $sfWeightTotal = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K297"))
+                $belowMinimumWeight = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K252"))
+                $minimumWeight = [double]$detail.Range("K253").Value2
+                $profitWeight = [double]$excel.WorksheetFunction.Sum($detail.Range("K264:K297"))
+                $above500Weight = [double]$excel.WorksheetFunction.Sum($detail.Range("K269:K297"))
+                $below100Weight = [double]$excel.WorksheetFunction.Sum($detail.Range("K253:K257"))
+                $sfSceneRtp = [double]$excel.WorksheetFunction.Sum($detail.Range("M234:M297"))
+                $maxRangeRtp = 0.0
+                for ($row = 234; $row -le 297; $row++) {
+                    $weight = [double]$detail.Cells.Item($row, 11).Value2
+                    $naturalRate = [double]$detail.Cells.Item($row, 4).Value2
+                    $rowRtp = [double]$detail.Cells.Item($row, 13).Value2
+                    if ($weight -gt 0 -and $naturalRate -lt 0.001) {
+                        throw "$($target.File) SF row $row has weight with natural probability below 0.1%"
+                    }
+                    if ($rowRtp -gt $maxRangeRtp) { $maxRangeRtp = $rowRtp }
+                }
+                if ($sfWeightTotal -ne 1000000000) { throw "$($target.File) SF weight total is $sfWeightTotal" }
+                if ($belowMinimumWeight -ne 0 -or $minimumWeight -le 0) {
+                    throw "$($target.File) SF minimum weighted range is not (50,60]"
+                }
+                if ([math]::Abs($profitWeight / $sfWeightTotal - [double]$version.sf.profit_hit_rate) -gt 0.000000001) {
+                    throw "$($target.File) SF profit hit rate is $($profitWeight / $sfWeightTotal)"
+                }
+                $above500HitRate = $above500Weight / $sfWeightTotal
+                if ($above500HitRate -lt 0.049999999 -or $above500HitRate -gt 0.070000001) {
+                    throw "$($target.File) SF Hit Rate above 500x is $above500HitRate (must be 5%-7%)"
+                }
+                if ([math]::Abs($above500HitRate - [double]$version.sf.above_500_hit_rate) -gt 0.000000001) {
+                    throw "$($target.File) SF Hit Rate above 500x does not match payload"
+                }
+                $below100HitRate = $below100Weight / $sfWeightTotal
+                if ($below100HitRate -gt 0.500000001) {
+                    throw "$($target.File) SF Hit Rate at or below 100x exceeds 50%"
+                }
+                if ([math]::Abs($below100HitRate - [double]$version.sf.below_100_hit_rate) -gt 0.000000001) {
+                    throw "$($target.File) SF Hit Rate at or below 100x does not match payload"
+                }
+                if ($maxRangeRtp / $sfSceneRtp -gt 0.15000001) {
+                    throw "$($target.File) SF single-range RTP share exceeds 15%"
+                }
+            }
+
             $formulaErrors = 0
             foreach ($sheetName in @("Overview", "Multiplier_Weight", "Detail", "Detail_Newbie")) {
                 try {
@@ -269,4 +318,4 @@ finally {
     [GC]::WaitForPendingFinalizers()
 }
 
-Write-Output "Applied H016 competitor-relative per-range RTP rules to 92/94 workbooks."
+Write-Output "Applied H016 competitor-relative per-range RTP rules to target version $TargetVersion."

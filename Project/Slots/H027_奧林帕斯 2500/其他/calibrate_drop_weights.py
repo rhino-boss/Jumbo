@@ -2,7 +2,7 @@
 
 The competitor's BG/FG drop screens are measured per reel.  Each reel is
 quantized to an integer weight total of 1,000,000 using largest remainder.
-Only config_92A.js is changed; model_sync.py import writes it back to H0271.xlsx.
+Only config.js is changed; model_sync.py import writes it back to H0271.xlsx.
 """
 import argparse
 import importlib.util

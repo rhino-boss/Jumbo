@@ -26,7 +26,7 @@ import model_sync
 from analyze_stack_distribution import DEFAULT_INPUT, SCENE_TABLES, analyze
 
 
-DEFAULT_CONFIG = ROOT / "config_92A.js"
+DEFAULT_CONFIG = ROOT / "config.js"
 SPECIAL_CODES = {"C1", "C2", "C3"}
 
 

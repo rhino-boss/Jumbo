@@ -167,6 +167,7 @@ def update_manifest(config_paths: dict[str, str]) -> None:
             "Super Feature 依 JHS101003 使用獨立 SF 表，並套用 Super Buy 金框位置排除規則。",
             "Console 與 Overview 依 slot_development_specification.md §3.3 固定順序輸出。",
             "Card Retry Limit 正式統一為 10,000。",
+            "92A Super Feature 依 Super Ace SF 線型重配：RTP 92.5%、最低 50x、贏錢率 30%、500x 以上 Hit Rate 6%、100x 以下 Hit Rate 不超過 50%，且單區間 RTP 不超過 15%。",
         ],
     }
     versions = [item for item in manifest.get("versions", []) if item.get("version") != VERSION]
@@ -188,6 +189,10 @@ def update_manifest(config_paths: dict[str, str]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--payload", type=Path, help="Validated multiplier-rule payload override")
+    parser.add_argument(
+        "--target-label", choices=("all", "92", "94"), default="all",
+        help="Synchronize both RTP configs or only one selected RTP label",
+    )
     parser.add_argument(
         "--versions-only", action="store_true",
         help="Only synchronize Overview version cells before config generation",
@@ -216,15 +221,25 @@ def main() -> None:
         if args.payload is not None
         else None
     )
-    version_configs: dict[str, str] = {}
+    version_configs: dict[str, str] = {
+        "base": (Path("Versions") / MATH_KEY / "config.js").as_posix(),
+        "92": (Path("Versions") / MATH_KEY / "config_92A.js").as_posix(),
+        "94": (Path("Versions") / MATH_KEY / "config_94A.js").as_posix(),
+    }
     base_config = PROJECT_DIR / "config.js"
     if not base_config.is_file():
         raise FileNotFoundError(base_config)
     _, base_runtime = load_config(base_config)
-    archived_base = VERSIONS_DIR / MATH_KEY / base_config.name
-    atomic_write(archived_base, base_config.read_text(encoding="utf-8"))
-    version_configs["base"] = archived_base.relative_to(PROJECT_DIR).as_posix()
-    for label, (config_path, workbook_path) in CONFIGS.items():
+    if args.target_label == "all":
+        archived_base = VERSIONS_DIR / MATH_KEY / base_config.name
+        atomic_write(archived_base, base_config.read_text(encoding="utf-8"))
+        version_configs["base"] = archived_base.relative_to(PROJECT_DIR).as_posix()
+    selected_configs = (
+        CONFIGS.items()
+        if args.target_label == "all"
+        else ((args.target_label, CONFIGS[args.target_label]),)
+    )
+    for label, (config_path, workbook_path) in selected_configs:
         if not workbook_path.is_file():
             raise FileNotFoundError(workbook_path)
         header, previous_config = load_config(config_path)
@@ -243,6 +258,10 @@ def main() -> None:
         archived = VERSIONS_DIR / MATH_KEY / config_path.name
         atomic_write(archived, rendered)
         version_configs[label] = archived.relative_to(PROJECT_DIR).as_posix()
+
+    for relative in version_configs.values():
+        if not (PROJECT_DIR / relative).is_file():
+            raise FileNotFoundError(PROJECT_DIR / relative)
 
     update_manifest(version_configs)
     print(json.dumps({"version": VERSION, "configs": version_configs}, ensure_ascii=False, indent=2))

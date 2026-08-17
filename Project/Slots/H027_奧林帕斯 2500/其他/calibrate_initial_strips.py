@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / "Source"))
 import model_sync
 
 
-DEFAULT_CONFIG = ROOT / "config_92A.js"
+DEFAULT_CONFIG = ROOT / "config.js"
 SPECIAL_CODES = {"C1", "C2", "C3"}
 
 

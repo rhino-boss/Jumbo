@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT / "Source"))
 import model_sync
 
 
-DEFAULT_CONFIG = ROOT / "config_92A.js"
+DEFAULT_CONFIG = ROOT / "config.js"
 DEFAULT_INPUT = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"
 BG_NAMES = ("BG_Symbol", "BG_Symbol (2)")

@@ -1,7 +1,7 @@
 """H027 model <-> config sync, following the H028 single-tool workflow.
 
-    model_sync.py export [--check]       H0271.xlsx -> config_92A.js
-    model_sync.py import [--check]       config_92A.js -> H0271.xlsx
+    model_sync.py export [--check]       H0271.xlsx -> config.js
+    model_sync.py import [--check]       config.js -> H0271.xlsx
 
 BG uses two selectable tables (BG_Symbol and BG_Symbol (2)); FG uses two
 scheduled tables (FG_Symbol and FG_Symbol (2)). Historical "(3)" worksheets
@@ -24,7 +24,7 @@ from openpyxl.utils.cell import column_index_from_string
 
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_XLSX = BASE_DIR / "H0271.xlsx"
-DEFAULT_CONFIG = BASE_DIR.parent / "config_92A.js"
+DEFAULT_CONFIG = BASE_DIR.parent / "config.js"
 SYMBOL_SHEETS = ("BG_Symbol", "BG_Symbol (2)", "FG_Symbol", "FG_Symbol (2)")
 NORMAL_BG_SHEETS = ("BG_Symbol", "BG_Symbol (2)")
 FEATUREBUY_BG_SHEETS = ("BG_Symbol",)
@@ -48,6 +48,13 @@ FIXED_METADATA = {
     "has_wild": False,
     "has_jackpot": True,
     "max_free_spins": 50,
+    "fg_trigger_count": 4,
+    "fg_retrigger_count": 3,
+    "cascade_limit": 100,
+    "denom": 0.002,
+    "bet_options": [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500],
+    "initial_balance": 10000,
+    "drop_mode": "cascade_drop",
     "reference_presentation": "參考資料/260630_Olympus 2500.pptx",
     "rule_document": "game_rule.md",
     "model_status": "rules_confirmed_math_draft",
@@ -292,7 +299,7 @@ def build_config(source_path):
             "parameter": parameter,
             "card_system": {
                 "enabled": False,
-                "retry_limit": 0,
+                "retry_limit": 10000,
                 "newbie": {"normal_bet": {"weight_bg": [], "weight_fg": []}},
                 "oldhand": {
                     "normal_bet": {"weight_bg": [], "weight_fg": []},
@@ -352,7 +359,10 @@ def build_updates(config):
     levels = config["multiplier_levels"]
     normal = config["parameter"]["normal"]
     add_update(updates, "Overview", "B2", config["model"], "model")
-    add_update(updates, "Overview", "B3", config["excel_version"], "excel_version")
+    version_value = config["excel_version"]
+    if re.fullmatch(r"\d+", str(version_value)):
+        version_value = int(version_value)
+    add_update(updates, "Overview", "B3", version_value, "excel_version")
     add_update(updates, "Overview", "A7", config["default_coin_in"], "default_coin_in")
     for address, key in (("B11", "normalbet"), ("B12", "extrabet"), ("B13", "featurebuy")):
         add_update(updates, "Overview", address, config[key], key)
@@ -371,14 +381,6 @@ def build_updates(config):
         add_update(updates, "Parameter", f"B{row}", normal["free_table"]["names"][index], "normal.free_table.names")
         add_update(updates, "Parameter", f"C{row}", normal["free_table"]["initial"][index], "normal.free_table.initial")
         add_update(updates, "Parameter", f"D{row}", normal["free_table"]["retrigger"][index], "normal.free_table.retrigger")
-    for row in (6,):
-        add_update(updates, "Parameter", f"B{row}", None, "unused table")
-        add_update(updates, "Parameter", f"C{row}", 0, "unused table")
-    for row in (13,):
-        add_update(updates, "Parameter", f"B{row}", None, "unused table")
-        add_update(updates, "Parameter", f"C{row}", 0, "unused table")
-        add_update(updates, "Parameter", f"D{row}", 0, "unused table")
-
     for index, value in enumerate(levels):
         col = column_name(11 + index)
         for row in (3, 8, 18):
@@ -391,11 +393,6 @@ def build_updates(config):
         add_update(updates, "Parameter", f"B{row}", name, "normal.use_super_multiplier.table_names")
         for column, value in enumerate(normal["use_super_multiplier"]["weights_by_initial_ball_count"][name], start=3):
             add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.use_super_multiplier.weights_by_initial_ball_count")
-    for row in (20, 23):
-        add_update(updates, "Parameter", f"B{row}", None, "unused table")
-        for col in range(3, 9):
-            add_update(updates, "Parameter", f"{column_name(col)}{row}", 0, "unused table")
-
     multiplier_rows = (("super_multiplier", "Super Ball", 4),
                        ("c2", "BG_Symbol", 9), ("c2", "BG_Symbol (2)", 10),
                        ("c2", "FG_Symbol", 12), ("c2", "FG_Symbol (2)", 13),
@@ -406,11 +403,6 @@ def build_updates(config):
         add_update(updates, "Parameter", f"J{row}", name, f"{table_key}.table_names")
         for index, value in enumerate(table["weights"][name]):
             add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, f"{table_key}.weights")
-    for row in (11, 14, 21, 24):
-        add_update(updates, "Parameter", f"J{row}", None, "unused table")
-        for col in range(11, 36):
-            add_update(updates, "Parameter", f"{column_name(col)}{row}", 0, "unused table")
-
     id_to_code = dict(zip(config["symbol_ids"], config["symbol_codes"]))
     for sheet_name, strip in zip(SYMBOL_SHEETS, config["strips"]):
         if len(strip["symbols"]) != STRIP_LENGTH or len(strip["weights"]) != STRIP_LENGTH:

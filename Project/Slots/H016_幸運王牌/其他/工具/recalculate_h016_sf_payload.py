@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -13,11 +14,18 @@ from openpyxl import load_workbook
 WEIGHT_TOTAL = 1_000_000_000
 TARGET_SF_RTP = 0.925
 SUPER_PRICE = 250.0
-MIN_SF_WEIGHTED_INDEX = 15  # (30, 35] is the first interval that guarantees > 30x.
-SF_MID_RTP_INDICES = (27, 28, 29, 30, 31)  # (160,180] ... (300,350]
-SF_HIGH_RTP_INDEX = 47  # (3000, 4000]
-SF_MID_RTP_SHARE = 0.50
-SF_HIGH_RTP_SHARE = 0.05
+MIN_NATURAL_RATE = 0.001
+MIN_SF_WEIGHTED_INDEX = 19  # (50, 60]
+PROFIT_START_INDEX = 30  # (250, 300]
+ABOVE_500_START_INDEX = 35  # (500, 550]
+BELOW_100_END_INDEX = 23  # (90, 100]
+TARGET_PROFIT_HIT_RATE = 0.30
+TARGET_ABOVE_500_HIT_RATE = 0.06
+MIN_ABOVE_500_HIT_RATE = 0.05
+MAX_ABOVE_500_HIT_RATE = 0.07
+MAX_BELOW_100_HIT_RATE = 0.50
+PER_RANGE_RTP_SHARE_CAP = 0.15
+REFERENCE_PSEUDOCOUNT = 0.25
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 
@@ -41,8 +49,6 @@ def load_sf_report(path: Path) -> dict[str, Any]:
         missing = required.difference(header)
         if missing:
             raise ValueError(f"{path.name}: missing Multiplier Line columns {sorted(missing)}")
-        count_column = header["free_game_cnt_SF"]
-        pay_column = header["free_game_pay_SF"]
         data = rows[1:]
         result = {
             "path": str(path.resolve()),
@@ -53,8 +59,8 @@ def load_sf_report(path: Path) -> dict[str, Any]:
             "bet_mode": str(fields["bet_mode"]),
             "card_system": str(fields["card_system"]),
             "intervals": [str(row[header["Interval"]]) for row in data],
-            "sf_count": [int(row[count_column] or 0) for row in data],
-            "sf_pay": [float(row[pay_column] or 0) for row in data],
+            "sf_count": [int(row[header["free_game_cnt_SF"]] or 0) for row in data],
+            "sf_pay": [float(row[header["free_game_pay_SF"]] or 0) for row in data],
         }
     finally:
         workbook.close()
@@ -65,16 +71,20 @@ def load_sf_report(path: Path) -> dict[str, Any]:
         raise ValueError(f"{path.name}: SF natural report must have Card System off")
     if sum(result["sf_count"]) != result["rounds"]:
         raise ValueError(f"{path.name}: SF bucket count does not equal total rounds")
+    base_bet = result["coin_in"] / SUPER_PRICE
     observed_rtp = sum(result["sf_pay"]) / result["rounds"] / result["coin_in"]
     if abs(observed_rtp - result["rtp_total"]) > 1e-10:
         raise ValueError(
             f"{path.name}: SF bucket pay RTP {observed_rtp} differs from Base Info {result['rtp_total']}"
         )
+    if not math.isclose(base_bet, 100.0, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError(f"Unexpected SF base bet: {base_bet}")
+    result["base_bet"] = base_bet
     return result
 
 
 def workbook_labels(path: Path) -> list[str]:
-    workbook = load_workbook(path, read_only=True, data_only=False, keep_links=False)
+    workbook = load_workbook(path, read_only=True, data_only=True, keep_links=False)
     try:
         labels = [str(workbook["Detail"].cell(row, 1).value or "").strip() for row in range(234, 298)]
     finally:
@@ -82,6 +92,63 @@ def workbook_labels(path: Path) -> list[str]:
     if len(labels) != 64 or any(not label for label in labels):
         raise ValueError(f"{path.name}: Detail SF range labels are incomplete")
     return labels
+
+
+def interval_bounds(report_labels: list[str]) -> list[tuple[float, float]]:
+    bounds = [(-1.0, 0.0)]
+    for label in report_labels[1:]:
+        match = re.fullmatch(r"\s*([-0-9.]+)\s*<\s*X\s*<=\s*([-0-9.]+)\s*", label)
+        if match is None:
+            raise ValueError(f"Cannot parse SF interval {label!r}")
+        bounds.append((float(match.group(1)), float(match.group(2))))
+    if len(bounds) != 64:
+        raise ValueError("Expected 64 SF interval bounds")
+    return bounds
+
+
+def load_competitor_sf(path: Path, bounds: list[tuple[float, float]]) -> dict[str, Any]:
+    counts = [0] * len(bounds)
+    pays = [0.0] * len(bounds)
+    samples = 0
+    bonus_samples = 0
+    bets: set[float] = set()
+    with path.open("r", encoding="utf-8") as source:
+        for line_number, line in enumerate(source, 1):
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            bet = float(item.get("bet", 0.0))
+            if bet <= 0:
+                raise ValueError(f"{path.name}:{line_number}: invalid bet {bet}")
+            multiplier = float(item.get("win", 0.0)) / bet
+            if multiplier < 0:
+                raise ValueError(f"{path.name}:{line_number}: negative multiplier {multiplier}")
+            bets.add(bet)
+            samples += 1
+            bonus_samples += int(bool(item.get("is_bonus")))
+            if multiplier == 0:
+                index = 0
+            else:
+                index = next(
+                    (index for index, (lower, upper) in enumerate(bounds) if lower < multiplier <= upper),
+                    None,
+                )
+                if index is None:
+                    raise ValueError(f"{path.name}:{line_number}: multiplier {multiplier} is out of range")
+            counts[index] += 1
+            pays[index] += multiplier
+    if samples <= 0:
+        raise ValueError(f"{path.name}: no competitor SF samples")
+    return {
+        "path": str(path.resolve()),
+        "samples": samples,
+        "bonus_samples": bonus_samples,
+        "bets": sorted(bets),
+        "counts": counts,
+        "pay_multipliers": pays,
+        "observed_rtp_vs_h016_price": sum(pays) / samples / SUPER_PRICE,
+        "observed_profit_hit_rate": sum(counts[PROFIT_START_INDEX:]) / samples,
+    }
 
 
 def fix_numbers(weights: list[int], counts: list[int]) -> list[float]:
@@ -97,188 +164,309 @@ def fix_numbers(weights: list[int], counts: list[int]) -> list[float]:
     return result
 
 
-def tilted_probabilities(raw: list[int], means: list[float], target_mean: float) -> list[float]:
-    active = [index for index, value in enumerate(raw) if value > 0]
-    if not active:
-        raise ValueError("No supported SF ranges remain")
-    low = min(means[index] for index in active)
-    high = max(means[index] for index in active)
-    if not low <= target_mean <= high:
-        raise ValueError(f"SF target mean {target_mean} is outside supported range {low}..{high}")
+def capped_group_distribution(
+    indices: list[int],
+    mass: float,
+    means: list[float],
+    references: list[float],
+    lam: float,
+    scene_cap: float,
+) -> list[float]:
+    if not indices:
+        raise ValueError("Empty SF optimization group")
+    caps = {index: scene_cap / means[index] for index in indices}
+    if sum(caps.values()) + 1e-15 < mass:
+        raise ValueError("Per-range RTP cap makes SF group mass infeasible")
+    scores = {
+        index: math.log(references[index]) + lam * means[index]
+        for index in indices
+    }
 
-    def probabilities(lam: float) -> list[float]:
-        logs = [math.log(raw[index]) + lam * means[index] for index in active]
-        pivot = max(logs)
-        values = [math.exp(value - pivot) for value in logs]
-        denominator = sum(values)
-        result = [0.0] * len(raw)
-        for index, value in zip(active, values):
-            result[index] = value / denominator
-        return result
+    def probability(index: int, log_scale: float) -> float:
+        value_log = log_scale + scores[index]
+        cap = caps[index]
+        if value_log >= math.log(cap):
+            return cap
+        if value_log <= -745.0:
+            return 0.0
+        return math.exp(value_log)
 
-    lower, upper = -1.0, 1.0
-    while sum(p * m for p, m in zip(probabilities(lower), means)) > target_mean:
-        lower *= 2
-    while sum(p * m for p, m in zip(probabilities(upper), means)) < target_mean:
-        upper *= 2
-    for _ in range(180):
-        middle = (lower + upper) / 2
-        observed = sum(p * m for p, m in zip(probabilities(middle), means))
-        if observed < target_mean:
+    lower, upper = -10_000.0, 10_000.0
+    for _ in range(240):
+        middle = (lower + upper) / 2.0
+        observed = sum(probability(index, middle) for index in indices)
+        if observed < mass:
             lower = middle
         else:
             upper = middle
-    return probabilities((lower + upper) / 2)
-
-
-def integerize_probabilities(probabilities: list[float]) -> list[int]:
-    exact = [value * WEIGHT_TOTAL for value in probabilities]
-    result = [math.floor(value) for value in exact]
-    remainder = WEIGHT_TOTAL - sum(result)
-    order = sorted(range(len(result)), key=lambda index: exact[index] - result[index], reverse=True)
-    for index in order[:remainder]:
-        result[index] += 1
+    result = [0.0] * len(means)
+    scale = (lower + upper) / 2.0
+    for index in indices:
+        result[index] = probability(index, scale)
+    correction = mass - sum(result)
+    if abs(correction) > 1e-12:
+        candidates = [index for index in indices if result[index] + correction <= caps[index] + 1e-15]
+        if not candidates:
+            raise ValueError("Unable to normalize capped SF group")
+        result[candidates[0]] += correction
     return result
 
 
+def solve_probabilities(
+    eligible: list[int], means: list[float], references: list[float], target_scene_rtp: float
+) -> list[float]:
+    scene_cap = target_scene_rtp * PER_RANGE_RTP_SHARE_CAP
+    non_profit = [index for index in eligible if index < PROFIT_START_INDEX]
+    below_100 = [index for index in non_profit if index <= BELOW_100_END_INDEX]
+    from_100_to_250 = [index for index in non_profit if index > BELOW_100_END_INDEX]
+    profit_to_500 = [
+        index for index in eligible if PROFIT_START_INDEX <= index < ABOVE_500_START_INDEX
+    ]
+    above_500 = [index for index in eligible if index >= ABOVE_500_START_INDEX]
+    profit_to_500_mass = TARGET_PROFIT_HIT_RATE - TARGET_ABOVE_500_HIT_RATE
+
+    def for_lambda(lam: float, cap_below_100: bool) -> list[float]:
+        groups: list[tuple[list[int], float]] = [
+            (profit_to_500, profit_to_500_mass),
+            (above_500, TARGET_ABOVE_500_HIT_RATE),
+        ]
+        if cap_below_100:
+            groups.extend([
+                (below_100, MAX_BELOW_100_HIT_RATE),
+                (
+                    from_100_to_250,
+                    1.0 - TARGET_PROFIT_HIT_RATE - MAX_BELOW_100_HIT_RATE,
+                ),
+            ])
+        else:
+            groups.append((non_profit, 1.0 - TARGET_PROFIT_HIT_RATE))
+        result = [0.0] * len(means)
+        for indices, mass in groups:
+            group = capped_group_distribution(
+                indices, mass, means, references, lam, scene_cap
+            )
+            result = [left + right for left, right in zip(result, group)]
+        return result
+
+    def solve_lambda(cap_below_100: bool) -> list[float]:
+        lower, upper = -1.0, 1.0
+        lower_value = sum(p * mean for p, mean in zip(for_lambda(lower, cap_below_100), means))
+        upper_value = sum(p * mean for p, mean in zip(for_lambda(upper, cap_below_100), means))
+        if not lower_value <= target_scene_rtp <= upper_value:
+            raise ValueError(
+                f"SF target scene RTP {target_scene_rtp} is infeasible: {lower_value}..{upper_value}"
+            )
+        for _ in range(220):
+            middle = (lower + upper) / 2.0
+            probabilities = for_lambda(middle, cap_below_100)
+            observed = sum(p * mean for p, mean in zip(probabilities, means))
+            if observed < target_scene_rtp:
+                lower = middle
+            else:
+                upper = middle
+        return for_lambda((lower + upper) / 2.0, cap_below_100)
+
+    probabilities = solve_lambda(False)
+    below_100_hit = sum(probabilities[index] for index in below_100)
+    if below_100_hit > MAX_BELOW_100_HIT_RATE + 1e-12:
+        probabilities = solve_lambda(True)
+
+    observed = sum(p * mean for p, mean in zip(probabilities, means))
+    if abs(observed - target_scene_rtp) > 1e-8:
+        raise ValueError(f"Floating SF target mismatch: {observed} vs {target_scene_rtp}")
+    return probabilities
+
+
+def integerize_group(
+    probabilities: list[float], indices: list[int], target_weight: int, means: list[float], scene_cap: float
+) -> dict[int, int]:
+    exact = {index: probabilities[index] * WEIGHT_TOTAL for index in indices}
+    caps = {index: math.floor(scene_cap / means[index] * WEIGHT_TOTAL + 1e-9) for index in indices}
+    result = {index: min(math.floor(exact[index]), caps[index]) for index in indices}
+    remainder = target_weight - sum(result.values())
+    order = sorted(indices, key=lambda index: exact[index] - result[index], reverse=True)
+    while remainder > 0:
+        changed = False
+        for index in order:
+            if result[index] < caps[index]:
+                result[index] += 1
+                remainder -= 1
+                changed = True
+                if remainder == 0:
+                    break
+        if not changed:
+            raise ValueError("Integer SF weights cannot satisfy per-range cap")
+    return result
+
+
+def integerize_probabilities(probabilities: list[float], means: list[float], target_scene_rtp: float) -> list[int]:
+    scene_cap = target_scene_rtp * PER_RANGE_RTP_SHARE_CAP
+    below_100 = [
+        index for index, value in enumerate(probabilities)
+        if value > 0 and index <= BELOW_100_END_INDEX
+    ]
+    from_100_to_250 = [
+        index for index, value in enumerate(probabilities)
+        if value > 0 and BELOW_100_END_INDEX < index < PROFIT_START_INDEX
+    ]
+    profit_to_500 = [
+        index for index, value in enumerate(probabilities)
+        if value > 0 and PROFIT_START_INDEX <= index < ABOVE_500_START_INDEX
+    ]
+    above_500 = [
+        index for index, value in enumerate(probabilities)
+        if value > 0 and index >= ABOVE_500_START_INDEX
+    ]
+    below_100_target = min(
+        500_000_000,
+        round(sum(probabilities[index] for index in below_100) * WEIGHT_TOTAL),
+    )
+    weights = [0] * len(probabilities)
+    groups = (
+        (below_100, below_100_target),
+        (from_100_to_250, 700_000_000 - below_100_target),
+        (profit_to_500, 240_000_000),
+        (above_500, 60_000_000),
+    )
+    for indices, target in groups:
+        for index, value in integerize_group(
+            probabilities, indices, target, means, scene_cap
+        ).items():
+            weights[index] = value
+    return weights
+
+
 def recalibrate_sf(
-    baseline: dict[str, Any], labels: list[str], counts: list[int], pays: list[float], base_bet: float
+    baseline: dict[str, Any],
+    labels: list[str],
+    report: dict[str, Any],
+    competitor: dict[str, Any],
 ) -> dict[str, Any]:
     baseline_weights = [int(value) for value in baseline["weights"]]
     if len(baseline_weights) != 64 or sum(baseline_weights) != WEIGHT_TOTAL:
         raise ValueError("Previous SF weights must contain 64 rows summing to 1,000,000,000")
+    counts = report["sf_count"]
+    pays = report["sf_pay"]
+    base_bet = report["base_bet"]
     means = [pay / count / base_bet if count else 0.0 for count, pay in zip(counts, pays)]
-    supported_paying = [
-        index for index in range(1, 64)
-        if baseline_weights[index] > 0 and counts[index] > 0 and means[index] > 0
+    natural_rates = [count / report["rounds"] for count in counts]
+    eligible = [
+        index
+        for index in range(MIN_SF_WEIGHTED_INDEX, 64)
+        if natural_rates[index] >= MIN_NATURAL_RATE and counts[index] > 0 and means[index] > 0
     ]
-    if not supported_paying:
-        raise ValueError("The SF report has no supported paying buckets from the approved line")
-    before = sum(baseline_weights[index] / WEIGHT_TOTAL * means[index] for index in supported_paying)
+    if MIN_SF_WEIGHTED_INDEX not in eligible:
+        raise ValueError("The required minimum SF range (50,60] is not naturally supported")
+    if not any(index >= PROFIT_START_INDEX for index in eligible):
+        raise ValueError("No naturally supported profitable SF ranges")
+
+    references = [0.0] * 64
+    for index in eligible:
+        references[index] = competitor["counts"][index] + REFERENCE_PSEUDOCOUNT
+
     target_scene_rtp = TARGET_SF_RTP * SUPER_PRICE
-
-    # SF is guaranteed above 30x, so every interval below (30, 35] is disabled.
-    # The two requested RTP groups are locked first; the remaining 45% keeps the
-    # closest possible approved Hit Rate shape through a minimum-KL tilt.
-    mid_indices = list(SF_MID_RTP_INDICES)
-    high_index = SF_HIGH_RTP_INDEX
-    remaining_indices = [
-        index for index in range(MIN_SF_WEIGHTED_INDEX, 64)
-        if index not in mid_indices
-        and index != high_index
-        and baseline_weights[index] > 0
-        and counts[index] > 0
-        and means[index] > 0
-    ]
-    if any(counts[index] <= 0 or means[index] <= 0 for index in (*mid_indices, high_index)):
-        raise ValueError("The SF source report does not support every requested RTP interval")
-    if not remaining_indices:
-        raise ValueError("No supported SF intervals remain for the residual 45% RTP share")
-
-    target_mid_rtp = target_scene_rtp * SF_MID_RTP_SHARE
-    target_high_rtp = target_scene_rtp * SF_HIGH_RTP_SHARE
-    target_remaining_rtp = target_scene_rtp - target_mid_rtp - target_high_rtp
-    mid_denominator = sum(baseline_weights[index] * means[index] for index in mid_indices)
-    if mid_denominator <= 0:
-        raise ValueError("Previous SF weights cannot establish the requested five-range shape")
-
-    probabilities = [0.0] * 64
-    for index in mid_indices:
-        probabilities[index] = baseline_weights[index] * target_mid_rtp / mid_denominator
-    probabilities[high_index] = target_high_rtp / means[high_index]
-    remaining_mass = 1.0 - sum(probabilities)
-    if remaining_mass <= 0:
-        raise ValueError("Requested SF RTP groups consume all available card probability")
-    remaining_mean = target_remaining_rtp / remaining_mass
-    remaining_raw = [
-        baseline_weights[index] if index in remaining_indices else 0
-        for index in range(64)
-    ]
-    remaining_shape = tilted_probabilities(remaining_raw, means, remaining_mean)
-    for index in remaining_indices:
-        probabilities[index] = remaining_mass * remaining_shape[index]
-
-    weights = integerize_probabilities(probabilities)
+    probabilities = solve_probabilities(eligible, means, references, target_scene_rtp)
+    weights = integerize_probabilities(probabilities, means, target_scene_rtp)
     after = sum(weight / WEIGHT_TOTAL * mean for weight, mean in zip(weights, means))
-    mid_after = sum(weights[index] / WEIGHT_TOTAL * means[index] for index in mid_indices)
-    high_after = weights[high_index] / WEIGHT_TOTAL * means[high_index]
-    remaining_after = after - mid_after - high_after
+    profit_hit = sum(weights[PROFIT_START_INDEX:]) / WEIGHT_TOTAL
+    above_500_hit = sum(weights[ABOVE_500_START_INDEX:]) / WEIGHT_TOTAL
+    below_100_hit = sum(weights[:BELOW_100_END_INDEX + 1]) / WEIGHT_TOTAL
+    range_shares = [
+        (weight / WEIGHT_TOTAL * mean / after) if after else 0.0
+        for weight, mean in zip(weights, means)
+    ]
+
+    if sum(weights) != WEIGHT_TOTAL:
+        raise ValueError(f"SF integer weight sum is {sum(weights)}")
     if abs(after - target_scene_rtp) > 0.00075:
         raise ValueError(f"SF integerized target mismatch: {after} vs {target_scene_rtp}")
-    if abs(mid_after / after - SF_MID_RTP_SHARE) > 0.0000001:
-        raise ValueError(f"SF five-range RTP share mismatch: {mid_after / after}")
-    if abs(high_after / after - SF_HIGH_RTP_SHARE) > 0.0000001:
-        raise ValueError(f"SF (3000,4000] RTP share mismatch: {high_after / after}")
-    if any(weights[index] for index in range(MIN_SF_WEIGHTED_INDEX)):
-        raise ValueError("SF guarantee failed: an interval below (30,35] still has weight")
+    if abs(profit_hit - TARGET_PROFIT_HIT_RATE) > 1e-12:
+        raise ValueError(f"SF profit hit rate mismatch: {profit_hit}")
+    if any(weights[:MIN_SF_WEIGHTED_INDEX]):
+        raise ValueError("SF has weight below the required (50,60] minimum range")
+    if weights[MIN_SF_WEIGHTED_INDEX] <= 0:
+        raise ValueError("SF minimum range (50,60] has no weight")
+    if any(weight and natural_rates[index] < MIN_NATURAL_RATE for index, weight in enumerate(weights)):
+        raise ValueError("SF has weight in a range with natural probability below 0.1%")
+    if max(range_shares) > PER_RANGE_RTP_SHARE_CAP + 1e-8:
+        raise ValueError(f"SF single-range RTP share exceeds 15%: {max(range_shares)}")
+    if not MIN_ABOVE_500_HIT_RATE <= above_500_hit <= MAX_ABOVE_500_HIT_RATE:
+        raise ValueError(f"SF Hit Rate above 500x is outside 5%-7%: {above_500_hit}")
+    if below_100_hit > MAX_BELOW_100_HIT_RATE + 1e-12:
+        raise ValueError(f"SF Hit Rate at or below 100x exceeds 50%: {below_100_hit}")
 
     audits = []
-    total = sum(counts)
+    competitor_eligible_total = sum(competitor["counts"][index] for index in eligible)
     for index, label in enumerate(labels):
         after_rtp = weights[index] / WEIGHT_TOTAL * means[index]
+        if index < MIN_SF_WEIGHTED_INDEX:
+            rule = "Below minimum (50,60]: disabled"
+        elif natural_rates[index] < MIN_NATURAL_RATE:
+            rule = "H016 natural probability below 0.1%: disabled"
+        elif index >= ABOVE_500_START_INDEX:
+            rule = "Competitor-smoothed reference within the 6% Hit Rate group above 500x"
+        elif index <= BELOW_100_END_INDEX:
+            rule = "Competitor-smoothed reference within the maximum 50% Hit Rate group at/below 100x"
+        elif index in eligible:
+            rule = "Competitor-smoothed SF Hit Rate under RTP/profit/concentration constraints"
+        else:
+            rule = "No naturally supported SF payout"
         audits.append({
             "index": index,
             "range": label,
-            "rule": (
-                "SF minimum 30x: disabled below (30,35]"
-                if index < MIN_SF_WEIGHTED_INDEX
-                else "Requested five-range group: 50% of total SF RTP"
-                if index in mid_indices
-                else "Requested (3000,4000] cap: 5% of total SF RTP"
-                if index == high_index
-                else "Residual 45%: minimum-KL adjustment from approved SF Hit Rate shape"
-                if index in remaining_indices
-                else "No approved/supported SF weight"
-            ),
-            "natural_rate": counts[index] / total,
+            "rule": rule,
+            "natural_rate": natural_rates[index],
             "natural_count": counts[index],
             "natural_mean": means[index],
+            "competitor_count": competitor["counts"][index],
+            "competitor_hit_rate_all": competitor["counts"][index] / competitor["samples"],
+            "competitor_hit_rate_eligible": (
+                competitor["counts"][index] / competitor_eligible_total
+                if competitor_eligible_total and index in eligible
+                else 0.0
+            ),
+            "reference_prior": references[index],
             "before_weight": baseline_weights[index],
             "after_weight": weights[index],
             "target_scene_rtp": after_rtp,
             "target_rtp": after_rtp,
             "after_hit_rate": weights[index] / WEIGHT_TOTAL,
             "after_rtp": after_rtp,
-            "after_rtp_share": after_rtp / after if after else 0.0,
-            "shape_scale": (
-                weights[index] / baseline_weights[index]
-                if baseline_weights[index] > 0 and index in supported_paying
-                else None
-            ),
+            "after_rtp_share": range_shares[index],
         })
+
     return {
         "weights": weights,
         "fix": fix_numbers(weights, counts),
         "audit": audits,
         "zero_bucket_before": baseline_weights[0],
         "zero_bucket_after": weights[0],
-        "unrequested_mass_factor": 1.0,
         "calibration": (
-            "SF >30x guarantee; five requested 160x-350x ranges take 50% of SF RTP; "
-            "(3000,4000] takes 5%; residual 45% uses minimum-KL Hit Rate shaping"
+            "Super Ace feature_buy_2 smoothed Hit Rate; minimum (50,60]; H016 natural >=0.1%; "
+            "30% profit hit; 6% Hit Rate above 500x; at most 50% Hit Rate at/below 100x; "
+            "15% per-range RTP cap"
         ),
         "minimum_weighted_index": MIN_SF_WEIGHTED_INDEX,
         "minimum_weighted_range": labels[MIN_SF_WEIGHTED_INDEX],
-        "group_rtp": {
-            "five_ranges_target_share": SF_MID_RTP_SHARE,
-            "five_ranges_scene_rtp": mid_after,
-            "five_ranges_actual_share": mid_after / after,
-            "3000_4000_target_share": SF_HIGH_RTP_SHARE,
-            "3000_4000_scene_rtp": high_after,
-            "3000_4000_actual_share": high_after / after,
-            "remaining_target_share": 1.0 - SF_MID_RTP_SHARE - SF_HIGH_RTP_SHARE,
-            "remaining_scene_rtp": remaining_after,
-            "remaining_actual_share": remaining_after / after,
-        },
         "target_scene_rtp": target_scene_rtp,
-        "scene_rtp_before": before,
+        "scene_rtp_before": sum(
+            baseline_weights[index] / WEIGHT_TOTAL * means[index] for index in range(64)
+        ),
         "scene_rtp_after": after,
+        "profit_hit_rate": profit_hit,
+        "above_500_hit_rate": above_500_hit,
+        "below_100_hit_rate": below_100_hit,
+        "max_range_rtp_share": max(range_shares),
+        "max_range_rtp_index": max(range(64), key=range_shares.__getitem__),
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Recalculate H016 SF multiplier weights from a card-off SF report")
+    parser = argparse.ArgumentParser(
+        description="Recalculate H016192 SF multiplier weights from H016 natural and Super Ace SF data"
+    )
     parser.add_argument("--report", required=True, type=Path)
+    parser.add_argument("--competitor", required=True, type=Path)
     parser.add_argument("--previous-payload", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
@@ -286,54 +474,47 @@ def main() -> None:
     report = load_sf_report(args.report.resolve())
     previous = json.loads(args.previous_payload.read_text(encoding="utf-8"))
     labels = workbook_labels(PROJECT_DIR / "Source" / "H016192A.xlsx")
-    base_bet = report["coin_in"] / SUPER_PRICE
-    if not math.isclose(base_bet, 100.0, rel_tol=0.0, abs_tol=1e-9):
-        raise ValueError(f"Unexpected SF base bet: {base_bet}")
+    competitor = load_competitor_sf(args.competitor.resolve(), interval_bounds(report["intervals"]))
 
     payload = deepcopy(previous)
-    for key in ("92", "94"):
-        sf = recalibrate_sf(
-            payload["versions"][key]["sf"], labels, report["sf_count"], report["sf_pay"], base_bet
-        )
-        payload["versions"][key]["sf"] = sf
-        payload["versions"][key]["metrics"]["sf_rtp"] = sf["scene_rtp_after"] / SUPER_PRICE
-    payload.setdefault("rules", {})["sf_rule"] = (
-        "SF uses the H016 card-off 10^8 report at 92.5% RTP: no weight below (30,35], "
-        "the five ranges (160,180] through (300,350] contribute 50% of SF RTP, "
-        "(3000,4000] contributes 5%, and the residual 45% uses minimum-KL Hit Rate shaping"
+    sf = recalibrate_sf(payload["versions"]["92"]["sf"], labels, report, competitor)
+    payload["versions"]["92"]["sf"] = sf
+    payload["versions"]["92"]["metrics"]["sf_rtp"] = sf["scene_rtp_after"] / SUPER_PRICE
+    payload.setdefault("rules", {})["sf_rule_92"] = (
+        "H016192 SF uses Super_Ace_feature_buy_2 as a smoothed reference at 92.5% RTP; "
+        "minimum weighted range (50,60]; H016 natural probability must be at least 0.1%; "
+        "profit hit rate 30%; intervals above 500x contain 6% Hit Rate (allowed 5-7%); "
+        "intervals at or below 100x contain at most 50% Hit Rate; each interval may contribute "
+        "at most 15% of total SF RTP"
     )
-    payload["rules"]["sf_minimum_weighted_range"] = "(30,35]"
-    payload["rules"]["sf_rtp_share_constraints"] = {
-        "(160,180]..(300,350]": SF_MID_RTP_SHARE,
-        "(3000,4000]": SF_HIGH_RTP_SHARE,
-    }
-    payload["rules"].setdefault("targets", {})["sf"] = TARGET_SF_RTP
+    payload["rules"].setdefault("targets", {})["sf_92"] = TARGET_SF_RTP
     payload["sf_source_report"] = {
         "path": report["path"],
         "rounds": report["rounds"],
         "coin_in": report["coin_in"],
-        "base_bet": base_bet,
+        "base_bet": report["base_bet"],
         "observed_rtp": report["rtp_total"],
         "sf_count": report["sf_count"],
         "sf_pay": report["sf_pay"],
     }
+    payload["sf_competitor_reference"] = competitor
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
         "output": str(args.output.resolve()),
         "source_rounds": report["rounds"],
         "source_rtp": report["rtp_total"],
+        "competitor_samples": competitor["samples"],
         "target_sf_rtp": TARGET_SF_RTP,
-        "versions": {
-            key: {
-                "scene_rtp_before": payload["versions"][key]["sf"]["scene_rtp_before"],
-                "scene_rtp_after": payload["versions"][key]["sf"]["scene_rtp_after"],
-                "sf_rtp_after": payload["versions"][key]["metrics"]["sf_rtp"],
-                "zero_weight_after": payload["versions"][key]["sf"]["zero_bucket_after"],
-                "weight_sum": sum(payload["versions"][key]["sf"]["weights"]),
-            }
-            for key in ("92", "94")
-        },
+        "scene_rtp_after": sf["scene_rtp_after"],
+        "sf_rtp_after": payload["versions"]["92"]["metrics"]["sf_rtp"],
+        "profit_hit_rate": sf["profit_hit_rate"],
+        "above_500_hit_rate": sf["above_500_hit_rate"],
+        "below_100_hit_rate": sf["below_100_hit_rate"],
+        "max_range_rtp_share": sf["max_range_rtp_share"],
+        "max_range": labels[sf["max_range_rtp_index"]],
+        "first_weighted_range": labels[next(i for i, value in enumerate(sf["weights"]) if value)],
+        "weight_sum": sum(sf["weights"]),
     }, ensure_ascii=False, indent=2))
 
 

@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CONFIG = ROOT / "config_92A.js"
+DEFAULT_CONFIG = ROOT / "config.js"
 DEFAULT_INPUT = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 DEFAULT_OUTPUT = ROOT / "其他" / "參考資料" / "stack_distribution_metrics.json"
 ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"

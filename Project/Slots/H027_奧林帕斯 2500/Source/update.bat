@@ -4,7 +4,7 @@ set PYTHONUTF8=1
 pushd "%~dp0" || goto failed
 set "SCRIPT_DIR=%CD%"
 set "MODEL_XLSX=%SCRIPT_DIR%\H0271.xlsx"
-set "CONFIG_JS=%SCRIPT_DIR%\..\config_92A.js"
+set "CONFIG_JS=%SCRIPT_DIR%\..\config.js"
 
 set "VENV_PYTHON=%SCRIPT_DIR%\..\..\..\..\.venv\Scripts\python.exe"
 if exist "%VENV_PYTHON%" (
@@ -26,8 +26,8 @@ if not defined MODE (
     echo ============================================================
     echo  H027 model / config sync
     echo ------------------------------------------------------------
-    echo   [1] config : H0271.xlsx -^> config_92A.js
-    echo   [2] xlsx   : config_92A.js -^> H0271.xlsx
+    echo   [1] config : H0271.xlsx -^> config.js
+    echo   [2] xlsx   : config.js -^> H0271.xlsx
     echo   [3] check  : verify both directions without writing
     echo ============================================================
     set /p "MODE=Select [1/2/3] (blank = 1): "
@@ -44,21 +44,21 @@ echo [ERROR] Unknown mode: %MODE%
 goto failed
 
 :do_config
-"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" export
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py"
 if errorlevel 1 goto failed
-"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" export --check
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --check
 if errorlevel 1 goto failed
 goto succeeded
 
 :do_xlsx
 "%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" import --in-place --force
 if errorlevel 1 goto failed
-"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" export --check
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --check
 if errorlevel 1 goto failed
 goto succeeded
 
 :do_check
-"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" export --check
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --check
 if errorlevel 1 goto failed
 "%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" import --check
 if errorlevel 1 goto failed

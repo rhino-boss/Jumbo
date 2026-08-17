@@ -18,7 +18,7 @@ DEFAULT_RECORD = ROOT / "Record" / "H0271_0001_2608121346_betmode0_2000000.xlsx"
 DEFAULT_COMPETITOR = ROOT / "其他" / "參考資料" / "analysis_gates_of_olympus_1000_metrics.json"
 DEFAULT_RESPONSES = ROOT / "其他" / "參考資料" / "game_responses-gates of olympus 1000.xlsx"
 DEFAULT_STACK_METRICS = ROOT / "其他" / "參考資料" / "stack_distribution_metrics.json"
-DEFAULT_CONFIG = ROOT / "config_92A.js"
+DEFAULT_CONFIG = ROOT / "config.js"
 DEFAULT_REPORT = ROOT / "其他" / "競品參考數值比較.md"
 ANALYZER_PATH = ROOT / "其他" / "analyze_gates_competitor.py"
 STACK_ANALYZER_PATH = ROOT / "其他" / "analyze_stack_distribution.py"
@@ -309,7 +309,7 @@ def main() -> None:
 
 | 項目 | Gates of Olympus 1000 | H027 現在版本 |
 |---|---|---|
-| 來源 | `game_responses-gates of olympus 1000.xlsx` | `{args.record.name}`（`config_92A.js` + `Simulator.py`） |
+| 來源 | `game_responses-gates of olympus 1000.xlsx` | `{args.record.name}`（`config.js` + `Simulator.py`） |
 | 版本 | 競品實際 Response 樣本 | `H0271` / `{h['version']}` |
 | 樣本 | {c['paid_spins']:,} 個付費 Spin、{c['fg_sessions']:,} 場 FG、{c['fg_spins']:,} 個 FG Spin | {int(h['total_rounds']):,} 個 Normal Bet Round、{int(h['fg_trigger_count']):,} 場 FG、{fg_spins:,} 個 FG Spin |
 | Card System | 競品實際遊玩資料 | 關閉 |

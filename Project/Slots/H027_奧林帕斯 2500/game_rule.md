@@ -260,5 +260,5 @@
 - 主要玩法依據：`文件/260630_Olympus 2500.pptx`。
 - 現階段數學依據：`Source/H027192A.xlsx`。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
-- 目前程式：`Simulator.py`、`config_92A.js`，僅代表現有 92A 底稿可執行範圍。
+- 目前程式：`Simulator.py`、`config.js`；`config.js` 由基礎數學檔 `Source/H0271.xlsx` 產生。Card System On 尚待建立對應的 RTP／Variant 數學檔與 Config。
 - 待確認事項：`問題清單_H027.md`。
