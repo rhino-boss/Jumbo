@@ -2572,14 +2572,14 @@
   <script src="./Versions/version_manifest.js"></script>
   <script>
     const H016_VERSION_MANIFEST = window.H016_VERSION_MANIFEST || {
-      current: "3.0.0.0",
+      current: "4.0.0.0",
       versions: [{
-        version: "3.0.0.0",
-        math_key: "3.0",
+        version: "4.0.0.0",
+        math_key: "4.0",
         configs: {
-          base: "Versions/3.0/config.js",
-          92: "Versions/3.0/config_92A.js",
-          94: "Versions/3.0/config_94A.js"
+          base: "config.js",
+          92: "config_92A.js",
+          94: "config_94A.js"
         }
       }]
     };
@@ -3563,6 +3563,17 @@
 
   function cardProfile() { return "weight_2"; }
   function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
+  function bgTriggerCap(profile = cardProfile()) {
+    const cards = cfg.card_system?.profiles?.[profile]?.base_game || [];
+    const maxima = cards
+      .filter(card => card.type === "range" && Number(card.weight) > 0 && Number.isFinite(Number(card.max)))
+      .map(card => Number(card.max));
+    return maxima.length ? Math.max(...maxima) : Infinity;
+  }
+  function bgTriggerWithinCap(result, profile = cardProfile()) {
+    const ratio = Number(result.pay) / (BASE_BET * BET_LEVELS[state.betIndex]);
+    return ratio <= bgTriggerCap(profile);
+  }
   function naturalBaseSpin() {
     const selection = cfg.table_selection?.base;
     if (selection?.length) return spin(pick(selection.map(item => item.table), selection.map(item => item.weight)));
@@ -3590,14 +3601,15 @@
       let last = null;
       for (let retry = 0; retry < MAX_RETRY; retry++) {
         last = naturalBaseSpin();
-        if (last.scatter >= 3) return last;
+        if (last.scatter >= 3 && bgTriggerWithinCap(last)) return last;
       }
       if (last) return last;
     } else {
-      const table = card.table === "A" ? "bg_low" : "bg_high";
       let nearest = null, nearestDistance = Infinity;
       for (let retry = 0; retry < MAX_RETRY; retry++) {
-        const result = spin(table);
+        // A card filters a completed natural BG result. Every retry redraws
+        // Table Selection; card.table is metadata and must not select a table.
+        const result = naturalBaseSpin();
         if (result.scatter >= 3) continue;
         const distance = cardDistance(card, result.pay);
         if (distance === 0) return result;

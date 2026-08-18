@@ -25,8 +25,11 @@ SHEET_TABLES = {
     "FG_Symbol": "fg_1",
     "FG_Symbol (2)": "fg_2",
     "FG_Symbol (3)": "fg_3",
+    "SF_Symbol": "sf_1",
+    "SF_Symbol (2)": "sf_2",
+    "SF_Symbol (3)": "sf_3",
 }
-MASTER_SHEETS = {"BG_Symbol", "FG_Symbol"}
+MASTER_SHEETS = {"BG_Symbol", "FG_Symbol", "SF_Symbol"}
 
 
 def load_config(path: Path) -> dict[str, Any]:
@@ -45,7 +48,17 @@ def integer(value: Any, label: str, *, allow_zero: bool = True) -> int:
     return value
 
 
-def validate_table(table: dict[str, Any], table_name: str) -> None:
+def selection_integer(value: Any, label: str) -> int:
+    if isinstance(value, (int, float)) and float(value).is_integer():
+        result = int(value)
+        if result >= 0:
+            return result
+    raise ValueError(f"{label} must be a non-negative whole number, got {value!r}")
+
+
+def validate_table(
+    table: dict[str, Any], table_name: str, *, max_stop_ratio: float = 10.0
+) -> None:
     for key in ("reels", "weights", "drop_values", "drop_weights"):
         if len(table[key]) != 5:
             raise ValueError(f"{table_name}.{key} must define five reels")
@@ -59,8 +72,12 @@ def validate_table(table: dict[str, Any], table_name: str) -> None:
         positive_weights = [weight for weight in weights if weight > 0]
         if not positive_weights:
             raise ValueError(f"{table_name} R{reel} must have at least one enabled stop")
-        if max(positive_weights) / min(positive_weights) > 10 + 1e-12:
-            raise ValueError(f"{table_name} R{reel} stop-weight ratio exceeds 10x")
+        ratio = max(positive_weights) / min(positive_weights)
+        if ratio > max_stop_ratio + 1e-12:
+            raise ValueError(
+                f"{table_name} R{reel} stop-weight ratio {ratio:.6f}x exceeds "
+                f"{max_stop_ratio:g}x"
+            )
     for reel, (values, weights) in enumerate(zip(table["drop_values"], table["drop_weights"]), start=1):
         if len(values) != 19 or len(weights) != 19:
             raise ValueError(f"{table_name} drop R{reel} must contain 19 symbols")
@@ -139,22 +156,35 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Write H016 config.js tables back to H0161.xlsx")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--xlsx", type=Path, default=DEFAULT_XLSX)
+    parser.add_argument(
+        "--max-stop-ratio",
+        type=float,
+        default=10.0,
+        help="Maximum positive stop-weight ratio; default remains 10x",
+    )
     args = parser.parse_args()
+    if args.max_stop_ratio < 1:
+        raise ValueError("--max-stop-ratio must be >= 1")
 
     config_path = args.config.resolve()
     xlsx_path = args.xlsx.resolve()
     config = load_config(config_path)
     for table_name in SHEET_TABLES.values():
-        validate_table(config["tables"][table_name], table_name)
+        validate_table(
+            config["tables"][table_name],
+            table_name,
+            max_stop_ratio=args.max_stop_ratio,
+        )
 
     workbook = load_workbook(xlsx_path, read_only=False, data_only=False, keep_links=True)
     missing = set(SHEET_TABLES).difference(workbook.sheetnames)
     if missing:
         raise ValueError(f"Workbook is missing sheets: {sorted(missing)}")
     overview = workbook["Overview"]
+    overview["B3"] = str(config.get("excel_version") or overview["B3"].value)
     id_to_name = {
         int(overview.cell(row, 8).value): str(overview.cell(row, 1).value)
-        for row in range(29, 48)
+        for row in range(30, 49)
         if overview.cell(row, 1).value not in (None, "")
         and overview.cell(row, 8).value not in (None, "")
     }
@@ -169,13 +199,21 @@ def main() -> None:
         )
 
     parameter = workbook["Parameter"]
-    selection_rows = {"base": (4, 5, 6), "free": (11, 12, 13), "retrigger": (18, 19, 20)}
+    selection_rows = {
+        "base": (4, 5, 6),
+        "free": (11, 12, 13),
+        "retrigger": (18, 19, 20),
+        "super_free": (25, 26, 27),
+        "super_retrigger": (32, 33, 34),
+    }
     for group, rows in selection_rows.items():
         selections = config["table_selection"][group]
         if len(selections) != 3:
             raise ValueError(f"table_selection.{group} must contain three rows")
         for row, item in zip(rows, selections):
-            parameter.cell(row, 3).value = integer(item["weight"], f"table_selection.{group}.{item['table']}")
+            parameter.cell(row, 3).value = selection_integer(
+                item["weight"], f"table_selection.{group}.{item['table']}"
+            )
 
     if workbook.calculation is not None:
         workbook.calculation.fullCalcOnLoad = True

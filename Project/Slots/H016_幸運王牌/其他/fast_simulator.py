@@ -14,7 +14,7 @@ import numpy as np
 from numba import njit
 
 
-FAST_SIMULATOR_API_VERSION = 6
+FAST_SIMULATOR_API_VERSION = 9
 
 
 # Scalar result slots. Counts are kept in float64 alongside pay aggregates so
@@ -184,14 +184,21 @@ def prepare_config(config: dict[str, Any]) -> tuple[Any, ...]:
     card_types = np.zeros((2, 4, max_cards), dtype=np.int8)
     card_min = np.full((2, 4, max_cards), -1.0, dtype=np.float64)
     card_max = np.zeros((2, 4, max_cards), dtype=np.float64)
-    card_table_ids = np.zeros((2, 4, max_cards), dtype=np.int16)
     card_cumulative = np.zeros((2, 4, max_cards), dtype=np.float64)
     card_counts = np.ones((2, 4), dtype=np.int16)
     card_totals = np.ones((2, 4), dtype=np.float64)
-    bg_high_id = name_to_id.get("bg_high", name_to_id.get("bg_1", int(base_ids[0])))
-    bg_low_id = name_to_id.get("bg_low", name_to_id.get("bg_2", int(base_ids[0])))
+    card_bg_caps = np.full(2, np.inf, dtype=np.float64)
     for profile_index, profile_name in enumerate(profile_names):
         profile = profiles.get(profile_name) or profiles.get(str(card_system.get("default_profile", "weight_2"))) or {}
+        enabled_bg_maxima = [
+            float(card["max"])
+            for card in profile.get("base_game") or []
+            if str(card.get("type")) == "range"
+            and float(card.get("weight", 0.0)) > 0.0
+            and "max" in card
+        ]
+        if enabled_bg_maxima:
+            card_bg_caps[profile_index] = max(enabled_bg_maxima)
         for section_index, section_name in enumerate(section_names):
             cards = list(profile.get(section_name) or [])
             if not cards:
@@ -205,9 +212,6 @@ def prepare_config(config: dict[str, Any]) -> tuple[Any, ...]:
                 )
                 card_min[profile_index, section_index, card_index] = float(card.get("min", -1.0))
                 card_max[profile_index, section_index, card_index] = float(card.get("max", 0.0))
-                card_table_ids[profile_index, section_index, card_index] = (
-                    int(bg_low_id) if str(card.get("table", "B")) == "A" else int(bg_high_id)
-                )
                 running += max(0.0, float(card.get("weight", 0.0)))
                 card_cumulative[profile_index, section_index, card_index] = running
             if running <= 0.0:
@@ -228,8 +232,8 @@ def prepare_config(config: dict[str, Any]) -> tuple[Any, ...]:
         super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
         int(buy_id), int(config["free_spins"]), int(config["retrigger_spins"]),
         int(config["free_spin_cap"]), float(config["buy_price"]), float(config["super_buy_price"]),
-        card_types, card_min, card_max, card_table_ids, card_cumulative, card_counts,
-        card_totals, int(retry_limit),
+        card_types, card_min, card_max, card_cumulative, card_counts,
+        card_totals, card_bg_caps, int(retry_limit),
     )
 
 
@@ -562,8 +566,8 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
         super_free_ids, super_free_cum, super_free_len, super_free_total,
         super_retrigger_ids, super_retrigger_cum, super_retrigger_len, super_retrigger_total,
         buy_id, free_spins, retrigger_spins, free_spin_cap, buy_price, super_buy_price,
-        card_types, card_min, card_max, card_table_ids, card_cumulative, card_counts,
-        card_totals, retry_limit,
+        card_types, card_min, card_max, card_cumulative, card_counts,
+        card_totals, card_bg_caps, retry_limit,
     ) = packed
     np.random.seed(seed)
     scalars = np.zeros(SCALAR_COUNT, dtype=np.float64)
@@ -573,7 +577,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
     buckets = np.zeros(5, dtype=np.int64)
     multiplier_counts = np.zeros((3, MULTIPLIER_THRESHOLDS.shape[0]), dtype=np.int64)
     multiplier_pays = np.zeros((3, MULTIPLIER_THRESHOLDS.shape[0]), dtype=np.float64)
-    interval_metrics = np.zeros((21, MULTIPLIER_THRESHOLDS.shape[0]), dtype=np.float64)
+    # Rows 21/22 store the raw trigger-spin BG count/pay by multiplier bucket.
+    # They are converted to cumulative <= upper-bound report columns later.
+    interval_metrics = np.zeros((23, MULTIPLIER_THRESHOLDS.shape[0]), dtype=np.float64)
     card_draws = np.zeros((2, 4, card_types.shape[2]), dtype=np.int64)
     symbol_hits = np.zeros(19, dtype=np.int64)
     symbol_pay = np.zeros(19, dtype=np.float64)
@@ -620,14 +626,12 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                         scratch_symbol_hits, scratch_symbol_pay, scratch_length_hits,
                         scratch_length_pay, scratch_initial_symbols, scratch_dropped_symbols,
                     )
-                    # A Normal Bet FG card retries the complete natural BG
-                    # table selection. BF_Symbol (`buy_id`) is only the paid
-                    # Buy entry board and must never replace this BG round.
-                    table_id = (
-                        int(base_ids[_pick_index(base_cum, base_len, base_total)])
-                        if card_type == CARD_TYPE_FREE_GAME
-                        else int(card_table_ids[active_profile, CARD_SECTION_BASE, card_index])
-                    )
+                    # Card System only filters a completed natural result.
+                    # Range and Free Game cards both redraw the complete BG
+                    # table selection; the card's table label never overrides
+                    # the mathematical table. BF_Symbol (`buy_id`) remains
+                    # reserved for the paid Buy entry board.
+                    table_id = int(base_ids[_pick_index(base_cum, base_len, base_total)])
                     spin = _spin(
                         table_id, False, False, 0, bet_multi,
                         reel_symbols, reel_cumulative, reel_lengths, reel_totals,
@@ -639,7 +643,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                     )
                     pay_bg, scatter, cascades, max_mult, golden, w2_events, m1, gold_count = spin
                     accepted = (
-                        scatter >= 3 if card_type == CARD_TYPE_FREE_GAME else
+                        scatter >= 3 and _card_matches(
+                            -1.0, card_bg_caps[active_profile], pay_bg, bet_multi,
+                        ) if card_type == CARD_TYPE_FREE_GAME else
                         scatter < 3 and _card_matches(
                             card_min[active_profile, CARD_SECTION_BASE, card_index],
                             card_max[active_profile, CARD_SECTION_BASE, card_index],
@@ -697,7 +703,10 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
                 has_fg = 1
                 scalars[S_FG_TRIGGERS] += 1
                 scalars[S_BG_TRIGGER_FG_CNT] += 1
-                scalars[S_BG_TRIGGER_FG_PAY] += pay_bg
+                # Card-off natural reports retain every natural trigger count,
+                # but only cap-eligible triggering-BG awards enter this pay sum.
+                if _card_matches(-1.0, card_bg_caps[active_profile], pay_bg, bet_multi):
+                    scalars[S_BG_TRIGGER_FG_PAY] += pay_bg
                 if card_enabled:
                     card_index = _pick_card(
                         active_profile, CARD_SECTION_FREE,
@@ -861,6 +870,9 @@ def _chunk(rounds, bet_mode, bet_multi, seed, packed, card_enabled, card_newbie)
             line_bucket = _multiplier_bucket(pay_bg / multiplier_coin_in)
             multiplier_counts[0, line_bucket] += 1
             multiplier_pays[0, line_bucket] += pay_bg
+            if has_fg == 1:
+                interval_metrics[21, line_bucket] += 1
+                interval_metrics[22, line_bucket] += pay_bg
             interval_metrics[0, line_bucket] += pay_bg > 0.0
             interval_metrics[1 + min(cascades, 5) - 1, line_bucket] += cascades > 0
             for ghost_count in range(2, 5):
@@ -986,6 +998,8 @@ def to_stats(result) -> dict[str, Any]:
         "multiplier_fg_pay": Counter({index: float(value) for index, value in enumerate(multiplier_pays[1]) if value}),
         "multiplier_overall_count": Counter({index: int(value) for index, value in enumerate(multiplier_counts[2]) if value}),
         "multiplier_overall_pay": Counter({index: float(value) for index, value in enumerate(multiplier_pays[2]) if value}),
+        "bg_trigger_fg_bucket_count": Counter({index: int(value) for index, value in enumerate(interval_metrics[21]) if value}),
+        "bg_trigger_fg_bucket_pay": Counter({index: float(value) for index, value in enumerate(interval_metrics[22]) if value}),
         "interval_bg_hits": Counter({index: int(value) for index, value in enumerate(interval_metrics[0]) if value}),
         "interval_bg_combo": Counter({(bucket, combo): int(interval_metrics[combo, bucket]) for bucket in range(MULTIPLIER_THRESHOLDS.shape[0]) for combo in range(1, 6) if interval_metrics[combo, bucket]}),
         "interval_bg_w2": Counter({(bucket, ghost): int(interval_metrics[4 + ghost, bucket]) for bucket in range(MULTIPLIER_THRESHOLDS.shape[0]) for ghost in range(2, 5) if interval_metrics[4 + ghost, bucket]}),

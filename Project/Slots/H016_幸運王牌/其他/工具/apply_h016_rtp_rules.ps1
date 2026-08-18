@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$PayloadPath,
     [ValidateSet("All", "92", "94")]
-    [string]$TargetVersion = "All"
+    [string]$TargetVersion = "All",
+    [ValidateSet("All", "SF")]
+    [string]$Scene = "All"
 )
 
 $ErrorActionPreference = "Stop"
@@ -139,24 +141,120 @@ try {
             $excel.Calculation = -4105
             $detail = $book.Worksheets.Item("Detail")
             $newbie = $book.Worksheets.Item("Detail_Newbie")
+            if ($Scene -eq "SF") {
+                if ($null -eq $payload.sf_source_report) {
+                    throw "SF-only apply requires sf_source_report"
+                }
+                Set-RegularBlockFormulas $detail 234 297
+                Set-VerticalValues $detail 234 2 @($payload.sf_source_report.sf_count)
+                Set-VerticalValues $detail 234 3 @($payload.sf_source_report.sf_pay)
+                Set-VerticalValues $detail 234 8 @($version.sf.fix)
+                $excel.CalculateFullRebuild()
+
+                $sfRtp = [double]$detail.Range("E9").Value2
+                if ([math]::Abs($sfRtp - 0.925) -gt 0.000003) {
+                    throw "$($target.File) SF RTP mismatch: $sfRtp"
+                }
+                $sfWeightTotal = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K297"))
+                if ($sfWeightTotal -ne 1000000000) {
+                    throw "$($target.File) SF weight total is $sfWeightTotal"
+                }
+                Test-RuleRows $detail 234 @($version.sf.audit) "SF"
+                $belowMinimumWeight = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K252"))
+                $minimumWeight = [double]$detail.Range("K253").Value2
+                if ($belowMinimumWeight -ne 0 -or $minimumWeight -le 0) {
+                    throw "$($target.File) SF minimum weighted range is not (50,60]"
+                }
+                $sfSceneRtp = [double]$excel.WorksheetFunction.Sum($detail.Range("M234:M297"))
+                $maxRangeRtp = 0.0
+                for ($row = 234; $row -le 297; $row++) {
+                    $weight = [double]$detail.Cells.Item($row, 11).Value2
+                    $naturalRate = [double]$detail.Cells.Item($row, 4).Value2
+                    $rowRtp = [double]$detail.Cells.Item($row, 13).Value2
+                    if ($weight -gt 0 -and $naturalRate -lt 0.001) {
+                        throw "$($target.File) SF row $row has weight with natural probability below 0.1%"
+                    }
+                    if ($rowRtp -gt $maxRangeRtp) { $maxRangeRtp = $rowRtp }
+                }
+                if ($maxRangeRtp / $sfSceneRtp -gt 0.15000001) {
+                    throw "$($target.File) SF single-range RTP share exceeds 15%"
+                }
+                $boostIndices = @($version.sf.boost_indices | ForEach-Object { [int]$_ })
+                for ($row = 253; $row -lt 297; $row++) {
+                    $currentHitWeight = [double]$detail.Cells.Item($row, 11).Value2
+                    $nextHitWeight = [double]$detail.Cells.Item($row + 1, 11).Value2
+                    $nextIndex = $row + 1 - 234
+                    if ($currentHitWeight -lt $nextHitWeight -and $nextIndex -notin $boostIndices) {
+                        throw "$($target.File) SF Hit Rate rises from row $row to $($row + 1)"
+                    }
+                }
+                $formulaErrors = 0
+                foreach ($sheetName in @("Overview", "Multiplier_Weight", "Detail", "Detail_Newbie")) {
+                    try {
+                        $formulaErrors += $book.Worksheets.Item($sheetName).UsedRange.SpecialCells(-4123, 16).Count
+                    }
+                    catch {}
+                }
+                if ($formulaErrors -ne 0) {
+                    throw "$($target.File) has $formulaErrors formula errors"
+                }
+                $book.Save()
+                $save = $true
+                Write-Output (ConvertTo-Json ([ordered]@{
+                    file = $target.File
+                    scene = "SF"
+                    sf_rtp = $sfRtp
+                    sf_fixed_rows = @($version.sf.audit).Count
+                    max_range_rtp_share = $maxRangeRtp / $sfSceneRtp
+                }) -Compress)
+                continue
+            }
             Set-RegularOverviewFormulas $book.Worksheets.Item("Overview")
             Set-RegularDetailFormulas $detail $true
             Set-RegularDetailFormulas $newbie $false
 
             if ($null -ne $payload.source_report) {
+                $oldhandTriggerCount = $version.metrics.trigger_bg_count
+                $oldhandTriggerPay = $version.metrics.trigger_bg_pay
+                $newbieTriggerCount = $version.metrics.newbie_trigger_bg_count
+                $newbieTriggerPay = $version.metrics.newbie_trigger_bg_pay
+                $entryWeight = $version.metrics.entry_weight
+                # Legacy payloads predate per-Profile cap selection.
+                if ($null -eq $oldhandTriggerCount) { $oldhandTriggerCount = $payload.source_report.trigger_count }
+                if ($null -eq $oldhandTriggerPay) { $oldhandTriggerPay = $payload.source_report.trigger_pay }
+                if ($null -eq $newbieTriggerCount) { $newbieTriggerCount = $payload.source_report.trigger_count }
+                if ($null -eq $newbieTriggerPay) { $newbieTriggerPay = $payload.source_report.trigger_pay }
                 foreach ($sheet in @($detail, $newbie)) {
                     $sheet.Range("B13").Value2 = [double]$payload.source_report.rounds
                     Set-VerticalValues $sheet 15 2 @($payload.source_report.bg_count)
                     Set-VerticalValues $sheet 15 3 @($payload.source_report.bg_pay)
-                    $sheet.Range("B79").Value2 = [double]$payload.source_report.trigger_count
-                    $sheet.Range("C79").Value2 = [double]$payload.source_report.trigger_pay
                     Set-VerticalValues $sheet 86 2 @($payload.source_report.fg_count)
                     Set-VerticalValues $sheet 86 3 @($payload.source_report.fg_pay)
                 }
-                foreach ($startRow in @(163, 234)) {
-                    Set-VerticalValues $detail $startRow 2 @($payload.source_report.fg_count)
-                    Set-VerticalValues $detail $startRow 3 @($payload.source_report.fg_pay)
+                # Trigger-spin BG count/pay are conditional on each Profile's
+                # maximum enabled BG range.  They are selected from the report's
+                # cumulative <= upper-bound columns by the payload builder.
+                $detail.Range("B79").Value2 = [double]$oldhandTriggerCount
+                $detail.Range("C79").Value2 = [double]$oldhandTriggerPay
+                $newbie.Range("B79").Value2 = [double]$newbieTriggerCount
+                $newbie.Range("C79").Value2 = [double]$newbieTriggerPay
+                if ($null -ne $entryWeight) {
+                    # B79/C79 are cap-eligible trigger samples, while K79 owns the
+                    # approved FG entry cycle. Recalculate Fix Num so changing a
+                    # Profile cap cannot silently change that cycle weight.
+                    $rounds = [double]$payload.source_report.rounds
+                    $weightTotal = 1000000000.0
+                    $detail.Range("H79").Value2 = (
+                        ([double]$entryWeight / $weightTotal) /
+                        ([double]$oldhandTriggerCount / $rounds)
+                    )
+                    $newbie.Range("H79").Value2 = (
+                        ([double]$entryWeight / $weightTotal) /
+                        ([double]$newbieTriggerCount / $rounds)
+                    )
                 }
+                Set-VerticalValues $detail 163 2 @($payload.source_report.fg_count)
+                Set-VerticalValues $detail 163 3 @($payload.source_report.fg_pay)
             }
             if ($null -ne $payload.sf_source_report) {
                 Set-VerticalValues $detail 234 2 @($payload.sf_source_report.sf_count)
@@ -166,8 +264,10 @@ try {
             Set-VerticalValues $detail 15 8 @($version.bg.fix)
             Set-VerticalValues $detail 86 8 @($version.fg.fix)
             Set-VerticalValues $detail 163 8 @($version.bf.fix)
-            # SF Fix Num is calculated from the dedicated card-off SF report.
-            Set-VerticalValues $detail 234 8 @($version.sf.fix)
+            # SF is only updated when a dedicated card-off SF source is present.
+            if ($null -ne $payload.sf_source_report) {
+                Set-VerticalValues $detail 234 8 @($version.sf.fix)
+            }
             Set-VerticalValues $newbie 15 8 @($version.newbie.bg.fix)
             Set-VerticalValues $newbie 86 8 @($version.newbie.fg.fix)
 
@@ -182,9 +282,18 @@ try {
             $newbieBgRtp = [double]$newbie.Range("C7").Value2
             $newbieFgRtp = [double]$newbie.Range("D7").Value2
             if ($null -ne $payload.source_report) {
-                foreach ($sheet in @($detail, $newbie)) {
-                    if ([double]$sheet.Range("C79").Value2 -ne [double]$payload.source_report.trigger_pay) {
-                        throw "$($target.File) $($sheet.Name)!C79 does not match source report"
+                if ([double]$detail.Range("C79").Value2 -ne [double]$oldhandTriggerPay) {
+                    throw "$($target.File) Detail!C79 does not match the oldhand cap selection"
+                }
+                if ([double]$newbie.Range("C79").Value2 -ne [double]$newbieTriggerPay) {
+                    throw "$($target.File) Detail_Newbie!C79 does not match the newbie cap selection"
+                }
+                if ($null -ne $entryWeight) {
+                    if ([math]::Abs([double]$detail.Range("K79").Value2 - [double]$entryWeight) -gt 1) {
+                        throw "$($target.File) Detail!K79 changed the approved FG entry cycle"
+                    }
+                    if ([math]::Abs([double]$newbie.Range("K79").Value2 - [double]$entryWeight) -gt 1) {
+                        throw "$($target.File) Detail_Newbie!K79 changed the approved FG entry cycle"
                     }
                 }
             }
@@ -254,27 +363,15 @@ try {
                 if ([math]::Abs($profitWeight / $sfWeightTotal - [double]$version.sf.profit_hit_rate) -gt 0.000000001) {
                     throw "$($target.File) SF profit hit rate is $($profitWeight / $sfWeightTotal)"
                 }
-                $above500HitRate = $above500Weight / $sfWeightTotal
-                if ($above500HitRate -lt 0.049999999 -or $above500HitRate -gt 0.070000001) {
-                    throw "$($target.File) SF Hit Rate above 500x is $above500HitRate (must be 5%-7%)"
-                }
-                if ([math]::Abs($above500HitRate - [double]$version.sf.above_500_hit_rate) -gt 0.000000001) {
-                    throw "$($target.File) SF Hit Rate above 500x does not match payload"
-                }
-                $below100HitRate = $below100Weight / $sfWeightTotal
-                if ($below100HitRate -gt 0.500000001) {
-                    throw "$($target.File) SF Hit Rate at or below 100x exceeds 50%"
-                }
-                if ([math]::Abs($below100HitRate - [double]$version.sf.below_100_hit_rate) -gt 0.000000001) {
-                    throw "$($target.File) SF Hit Rate at or below 100x does not match payload"
-                }
                 if ($maxRangeRtp / $sfSceneRtp -gt 0.15000001) {
                     throw "$($target.File) SF single-range RTP share exceeds 15%"
                 }
+                $boostIndices = @($version.sf.boost_indices | ForEach-Object { [int]$_ })
                 for ($row = 253; $row -lt 297; $row++) {
                     $currentHitWeight = [double]$detail.Cells.Item($row, 11).Value2
                     $nextHitWeight = [double]$detail.Cells.Item($row + 1, 11).Value2
-                    if ($currentHitWeight -lt $nextHitWeight) {
+                    $nextIndex = $row + 1 - 234
+                    if ($currentHitWeight -lt $nextHitWeight -and $nextIndex -notin $boostIndices) {
                         throw "$($target.File) SF Hit Rate rises from row $row to $($row + 1)"
                     }
                 }

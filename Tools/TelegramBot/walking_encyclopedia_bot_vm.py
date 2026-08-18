@@ -139,6 +139,14 @@ THOUSANDS_OUTPUT_FIELDS = {
     "TotalSpin",
 }
 
+AVERAGE_GROUP_FIELDS = (
+    "txt在的資料夾名稱",
+    "GameID",
+    "optionID",
+    "Coin in",
+    "TotalSpin",
+)
+
 MULTIPLIER_SECTION_FIELDS = {
     "BaseGame 倍數": "BaseGame最大倍數",
     "FreeGame 倍數": "FreeGame最大倍數",
@@ -756,15 +764,47 @@ def collect_validator_rows_from_archives(archive_paths: list[Path]) -> tuple[lis
     return rows, pool_headers
 
 
-def write_validator_xlsx(rows: list[dict[str, str]], pool_headers: list[str], output_path: Path):
-    if not rows:
-        raise NoValidatorReportError("檔案內找不到含 GameID 的 RTP Validator 報表。")
+def build_average_validator_rows(rows: list[dict[str, str]], output_columns: list[tuple[str, str]]) -> list[dict]:
+    """相同配置有重複時，建立每個配置一列的數值平均結果。"""
+    groups: dict[tuple[str, ...], list[dict[str, str]]] = {}
+    for row in rows:
+        group_key = tuple(row.get(field, "") for field in AVERAGE_GROUP_FIELDS)
+        groups.setdefault(group_key, []).append(row)
 
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "Summary"
+    if not any(len(group_rows) > 1 for group_rows in groups.values()):
+        return []
 
-    output_columns = [*VALIDATOR_OUTPUT_COLUMNS, *((header, header) for header in pool_headers)]
+    averaged_rows = []
+    for group_rows in groups.values():
+        averaged_row = dict(group_rows[0])
+        averaged_row["source_txt"] = ""
+
+        for source_name, _ in output_columns:
+            if source_name == "source_txt" or source_name in AVERAGE_GROUP_FIELDS:
+                continue
+
+            values = []
+            for row in group_rows:
+                value = row.get(source_name, "")
+                if value in ("", None):
+                    continue
+                try:
+                    values.append(Decimal(str(value)))
+                except (InvalidOperation, ValueError):
+                    continue
+
+            if values:
+                average = sum(values, Decimal("0")) / len(values)
+                averaged_row[source_name] = int(average) if average == average.to_integral_value() else float(average)
+            else:
+                averaged_row[source_name] = ""
+
+        averaged_rows.append(averaged_row)
+
+    return averaged_rows
+
+
+def write_validator_sheet(sheet, rows: list[dict], output_columns: list[tuple[str, str]]):
     headers = [display_name for _, display_name in output_columns]
 
     sheet.append(headers)
@@ -793,6 +833,23 @@ def write_validator_xlsx(rows: list[dict[str, str]], pool_headers: list[str], ou
         column_dimension = sheet.column_dimensions[column_cells[0].column_letter]
         column_dimension.width = min(max_length + 2, 32)
         column_dimension.hidden = source_name in HIDDEN_VALIDATOR_COLUMNS
+
+
+def write_validator_xlsx(rows: list[dict[str, str]], pool_headers: list[str], output_path: Path):
+    if not rows:
+        raise NoValidatorReportError("檔案內找不到含 GameID 的 RTP Validator 報表。")
+
+    workbook = Workbook()
+    output_columns = [*VALIDATOR_OUTPUT_COLUMNS, *((header, header) for header in pool_headers)]
+
+    summary_sheet = workbook.active
+    summary_sheet.title = "Summary"
+    write_validator_sheet(summary_sheet, rows, output_columns)
+
+    average_rows = build_average_validator_rows(rows, output_columns)
+    if average_rows:
+        average_sheet = workbook.create_sheet("Average")
+        write_validator_sheet(average_sheet, average_rows, output_columns)
 
     workbook.save(output_path)
 

@@ -67,9 +67,9 @@ ALL_TABLES_BY_SCENE = {
     ),
 }
 ALIAS_TO_PRIMARY = {
-    "bg_high": "bg_1", "bg_low": "bg_2", "buy": "bg_3",
+    "bg_high": "bg_1", "bg_low": "bg_2",
     "fg_high_a": "fg_1", "fg_high_k": "fg_2", "fg_high_q": "fg_3",
-    "fg_high_j": "fg_1", "fg_low": "fg_1", "super": "fg_2",
+    "fg_high_j": "fg_1", "fg_low": "fg_1",
 }
 SUPER_ACE_PAYS = {
     "M1": (0.50, 1.50, 2.50), "M2": (0.40, 1.20, 2.00),
@@ -776,6 +776,30 @@ def validation_status(ok: bool) -> str:
     return "PASS" if ok else "FAIL"
 
 
+def working_change_summary(config: dict[str, Any]) -> str:
+    version = str(config.get("excel_version", ""))
+    if version.split(".", 1)[0] != "4":
+        return "本報告使用目前根目錄 `config.js`；本次沒有附加 4.0 調整摘要。"
+    bg1 = model_random_wild_weights(config, "bg_1")
+    bg2 = model_random_wild_weights(config, "bg_2")
+    bg3 = model_random_wild_weights(config, "bg_3")
+    free_mix = "/".join(
+        str(int(selection_weight(config, "free", table)))
+        for table in PRIMARY_BY_SCENE["FG"]
+    )
+    return "\n".join([
+        "本報告比較的是專案根目錄尚未封版的 **H016 4.0 working config**；舊版已保留在 `Versions`，本次不新增 4.0 版本資料夾。",
+        "",
+        "- BG／FG 每輪仍為 200 格，各符號、各金框 ID 的格數與 SC 位置不變；只重排其他符號的先後順序，將 BG／FG 全部 270 個 2／3／4 堆疊格壓到不高於 Super Ace。",
+        "- 原本已不高於競品的堆疊格，調整後保留至少原值的 90%；各表各符號的停輪加權曝光變動不超過 1.0 個百分點。",
+        "- 含相鄰同符號堆疊的停輪 RNG 權重除以 1.2 後，再以整數補回各輪原權重總和；本次堆疊重排沒有再改停輪權重。",
+        f"- BG 大鬼 2／3／4 顆條件比例維持競品比例；`bg_1` 權重為 `{bg1}`、`bg_2` 為 `{bg2}`、`bg_3` 關閉（`{bg3}`）。目標事件率為約每 100 個 BG Round 一次。",
+        f"- FG 初始與 Retrigger 選表比例皆為 `fg_1／fg_2／fg_3 = {free_mix}`；第三張表的 R2～R4 初始與掉落金框比例調為第一張表約一半。",
+        "- BF 入場盤面、SF 數學與 92A／94A 卡片倍率權重未重算；92A／94A 只同步 4.0 自然盤面及版號，原有 Card System 權重完整保留。",
+        "- 本報告固定關閉 Card System，只驗證自然數學；卡片 RTP 不能由本報告推論，待自然數學封版後需另跑 Card On 驗證。",
+    ])
+
+
 def config_constraint_section(
     config: dict[str, Any], competitor: dict[str, Any], summary: dict[str, Any]
 ) -> str:
@@ -783,6 +807,10 @@ def config_constraint_section(
         "| 檢查 | 範圍 | 結果 | 詳細 |",
         "|---|---|---:|---|",
     ]
+    stop_ratio_limit = 12.0 if str(config.get("excel_version", "")).split(".", 1)[0] == "4" else 10.0
+    stop_ratio_label = (
+        "12x（4.0 堆疊抑制規格）" if stop_ratio_limit == 12.0 else "10x"
+    )
     for scene in ("BG", "FG"):
         for table_name in PRIMARY_BY_SCENE[scene]:
             lengths = [len(reel) for reel in config["tables"][table_name]["reels"]]
@@ -813,10 +841,10 @@ def config_constraint_section(
                 positive = [float(weight) for weight in weights if float(weight) > 0]
                 shape_ok = len(weights) == len(reel_values)
                 ratio = max(positive) / min(positive) if positive else math.inf
-                valid &= shape_ok and bool(positive) and ratio <= 10.0
+                valid &= shape_ok and bool(positive) and ratio <= stop_ratio_limit
                 ratios.append(f"R{reel + 1} {'無正權重' if not positive else f'{ratio:.2f}x'}")
             rows.append(
-                f"| 正 stop max/min ≤ 10x（排除 0） | `{table_name}` | "
+                f"| 正 stop max/min ≤ {stop_ratio_label}（排除 0） | `{table_name}` | "
                 f"{validation_status(valid)} | {'；'.join(ratios)} |"
             )
 
@@ -919,7 +947,9 @@ def source_application_section(config: dict[str, Any]) -> str:
         "",
         *rows,
         "",
-        "> 底層輪帶 exact match 的判定會先把金框 ID 合併回原符號；PASS 表示只覆蓋競品金框、不改動文字檔的底層符號排列與數量。",
+        "> 底層輪帶 exact match 的判定會先把金框 ID 合併回原符號；本次為校準堆疊率而重排符號順序，因此 sequence exact match 顯示 FAIL 是預期結果，但每輪符號與金框 ID 格數仍完全不變。",
+        "",
+        "> 4.0 的 stopW exact match 顯示 FAIL 也是預期結果：堆疊視窗權重已除以 1.2；後續堆疊重排只改輪帶順序，不再改權重。Alias 驗證只涵蓋一般 BG／FG aliases，獨立的 BF `buy` 與 SF `super` 不應等同一般表。",
         "",
         f"來源輪帶的 C1 格數為 BG R1～R5 = `{'/'.join(map(str, bg_c1))}`、FG R1～R5 = `{'/'.join(map(str, fg_c1))}`。",
         "",
@@ -996,6 +1026,7 @@ def main() -> None:
     config_tables = config_table_section(config)
     constraint_table = config_constraint_section(config, competitor, hs)
     source_application = source_application_section(config)
+    change_summary = working_change_summary(config)
 
     combo_sections = []
     for scene in ("BG", "FG"):
@@ -1012,6 +1043,7 @@ def main() -> None:
 
 ## 目錄
 
+- [本次 4.0 Working Config 改動說明](#本次-40-working-config-改動說明)
 - [Overview](#overview)
   - [Super Ace_claude 套用驗證](#super-ace_claude-套用驗證)
   - [Config-only 約束驗證](#config-only-約束驗證)
@@ -1030,17 +1062,21 @@ def main() -> None:
 - [金框比例](#金框比例)
 - [大鬼事件率](#大鬼事件率)
 
+## 本次 4.0 Working Config 改動說明
+
+{change_summary}
+
 ## Overview
 
 ### 比較基準
 
-| 項目 | Super Ace | H016 現在版本 |
+| 項目 | Super Ace | H016 4.0 Working Config |
 |---|---|---|
 | 來源 | JILI 實機非重複 JSONL | {h016_source} |
 | 樣本 | {competitor['rounds']:,} 個 BG Round、{competitor['fg_spins']:,} 個 FG Spin | {int(hs['total_rounds']):,} 個 BG Round、{h016['fg_spins']:,} 個 FG Spin |
 | Card System | 競品實際遊玩資料 | 關閉 |
 | Bet Mode | 一般投注 | Normal Bet，Bet Multi 1 |
-| 數值設定 | 實機 JSONL 盤面與消除紀錄 | `config.js`；本報告不讀取 `Source/H0161.xlsx` |
+| 數值設定 | 實機 JSONL 盤面與消除紀錄 | 根目錄 `config.js`；本報告不讀取 `Source/H0161.xlsx` |
 
 H016 的輪帶排列、停輪權重、補牌權重、Random Wild 與 Table Selection 全部直接讀取 `config.js`。本產生器固定以同一份 config 在記憶體中模擬 100,000 場，不讀取歷史 Record，也不建立或修改任何 xlsx。
 

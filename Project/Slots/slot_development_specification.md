@@ -191,7 +191,9 @@ card_system
 - `(15, 20]` 不包含 15x、包含 20x；需要包含 0x 時可用 `(-1, 0]`。
 - BG 已觸發 FG 時，即使 `pay_bg` 落入區間，也不得當作一般 BG `range` 結果。
 - `free_game` 卡未觸發 FG 時必須重跑 BG。
-- FG 卡 BG 倍率上限開啟時，除觸發 FG 外，BG 倍率也不得超過同一 BG Profile 內有效 `range` 卡的最大上限。
+- `free_game` 卡必須同時驗證 BG 倍率上限（BG Trigger Cap）：除觸發 FG 外，觸發該次 BG 的倍率不得超過同一 Profile／Mode 之 `base_game` 內所有正權重 `range` 卡的最大 `max`。
+- BG Trigger Cap 使用 Normal Bet 基準成本計算，判定式為 `pay_bg / card_system_coin_in <= cap`；等於上限時可接受，超過上限時整把 BG 重跑。
+- `weight = 0` 的 `range` 卡不得用來放大 cap；啟用 `free_game` 卡的 Profile／Mode 必須至少有一張正權重 `range` 卡可提供 cap。
 - 事件卡只定義接受條件，不得直接放置 Scatter 或直接呼叫 FG。
 
 ### 2.4 Retry 流程
@@ -210,7 +212,9 @@ card_system
 ```
 
 - 同一局 Retry 期間固定原本抽到的卡片，不得每次重抽。
+- `range` 卡每次 Retry 也必須依該 Bet Mode 的自然 Table Selection 重新抽表並產生完整結果，再判斷倍率區間；卡片內的 Table／代號欄位只可作報表分類，不得直接指定或覆蓋數學 Table。
 - BG 與 FG 為兩階段條件時，先完成 BG；觸發 FG 後再獨立抽 FG 卡，驗證整包 FG。
+- 抽中 `free_game` 卡時，同一張卡固定不變，持續依自然 BG 選表重骰，直到同一把同時滿足「觸發 FG」與 BG Trigger Cap；不得使用 Buy Feature 入口盤面替代。
 - Buy／Super Feature 必須先成功進入 Feature，再判定整包結果。
 - Retry 不得重複扣款、重複計入場次或污染統計。
 - 達上限時停止，保留最後結果並記錄 `Retry Limit Exceeded` 與失敗分類。
@@ -347,6 +351,10 @@ free_game_pay_BF
 free_game_cnt_SF
 free_game_pay_SF
 
+Interval_Upper
+bg_trigger_fg_cnt_lte_upper
+bg_trigger_fg_pay_lte_upper
+
 FG_Hit_Rate
 FG_Spin_Count
 
@@ -366,6 +374,8 @@ FG_Combo_5+_Rate
 - `free_game_cnt_BF`、`free_game_pay_BF` 只在遊戲有 Buy Feature 時顯示。
 - `free_game_cnt_SF`、`free_game_pay_SF` 只在遊戲有 Super Feature 時顯示。
 - 不支援 BF／SF 時不得保留空白欄位或以 `0` 代替未支援功能。
+- `Interval_Upper` 為該列倍率區間的數值上限；`bg_trigger_fg_cnt_lte_upper` 與 `bg_trigger_fg_pay_lte_upper` 分別累計所有「BG 成功觸發 FG，且該把 BG 倍數小於等於該列上限」的次數與 BG 得分。兩欄必須由未套 Profile cap 的原始觸發 BG 分桶累加，不得先過濾成單一 Profile。
+- Card System／倍率權重工具必須先從該 Profile 正權重 BG `range` 卡取得最大區間上限，再以相同 `Interval_Upper` 讀取累計 count/pay；不得在程式內寫死 30x、70x 或其他遊戲上限。找不到完全相同的區間上限時必須停止並提示補齊倍率區間，不得取較接近的列。
 - `cnt` 欄位使用整數；`pay` 欄位使用報表統一的得分精度；`Rate` 欄位使用一致的百分比格式。
 
 共用欄位之後可接遊戲專屬的 By Game 欄位。H016 的 `Multiplier Line` 必須包含：
@@ -490,7 +500,9 @@ retry_limit_fg          : 0
 - `math_version` 顯示 RTP／Variant 模型的完整四段版本號，例如 `2.1.3.13`；Console 依數學文件原格式輸出，不得自行省略或改寫。只有報表檔名依第 3.1.4 節轉為 `02010313`。
 - `duration` 顯示正式模擬耗時，不包含 Numba Warm-up，固定顯示到小數點後 2 位並加上 `sec`。
 - `bg_trigger_fg_cnt` 為 BG 成功觸發 FG 的累計次數。
-- `bg_trigger_fg_pay` 為 BG 成功觸發 FG 之 Spin 的 BG 累計得分。
+- `bg_trigger_fg_pay` 為 BG 成功觸發 FG 且符合目前 Profile BG Trigger Cap 之 Spin 的 BG 累計得分；超過 cap 的觸發 BG 得分不得計入。Card System 關閉的自然機率報表也必須載入指定 RTP Config／Profile 的 cap 套用此過濾。
+- `bg_trigger_fg_cnt` 保留所有自然成功觸發 FG 的次數；BG Trigger Cap 只過濾 `bg_trigger_fg_pay`，不得改寫自然 FG 觸發率。
+- `Multiplier Line` 的 `bg_trigger_fg_cnt_lte_upper`／`bg_trigger_fg_pay_lte_upper` 保留所有上限的累計結果；它們不受目前執行 Profile 影響，同一份 Card System Off 自然報表必須可供不同 Profile cap 共用。
 - Card System 關閉時，從 `card_system_profile` 到 `retry_limit_fg` 的整個區塊不顯示。
 - `card_retry_limit` 正式設定為 `10000`。
 - `avg_retry` 固定顯示到小數點後 2 位。
@@ -499,11 +511,10 @@ retry_limit_fg          : 0
 - `special_symbol_cnt` 統計出現特殊符號 `SC` 的 Spin 次數，Base Spin 與每一次 Free Spin 都要納入。
 - 單次 Base Spin／Free Spin 只要盤面出現至少一個 `SC` 就加 `1`；同一 Spin 出現多個 `SC` 仍只加 `1`。
 - Cascade 過程若同屬同一次 Spin，不得因不同盤面重複累加；該 Spin 最終最多計數 `1`。
-- `total_spin = Base Spin 總數 + Free Spin 總數`。
-- `special_symbol_rate = special_symbol_cnt / total_spin`，只作為 SCR 的中間計算值。
+- `special_symbol_rate = special_symbol_cnt / total_rounds`，只作為 SCR 的中間計算值；分母只使用付費場數，不加 Free Spin 數。
 - `SCR = special_symbol_rate × 10,000,000,000`。
 - Console 與 `Overview` 不輸出 `special_symbol_rate`，只輸出換算後的 `SCR`。
-- `total_spin = 0` 時，`SCR` 輸出 `0`，不得除以零。
+- `total_rounds = 0` 時，`SCR` 輸出 `0`，不得除以零。
 - 不適用的 Feature 欄位可不顯示，但不得以錯誤的 `0` 冒充已驗證結果。
 
 #### 3.3.2 Game Info
@@ -541,8 +552,12 @@ m1_bg_spin_rate        : 79.9233
 - [ ] Worker 合併後的總場次等於 `total_rounds`。
 - [ ] Console 與 Excel 報表的共用欄位及數值一致。
 - [ ] `bg_trigger_fg_cnt` 與 `bg_trigger_fg_pay` 位於 `avg_fg_spins` 後，且次數與 BG 得分口徑正確。
+- [ ] `free_game` 卡接受的觸發 BG 均未超過同 Profile 正權重 BG `range` 卡的最大上限；超過上限的結果已重跑。
+- [ ] Card System Off 的自然機率報表只將符合指定 Profile BG Trigger Cap 的觸發 BG 得分計入 `bg_trigger_fg_pay`，且 `bg_trigger_fg_cnt` 未被 cap 過濾。
+- [ ] `Multiplier Line` 每一列均有 `Interval_Upper` 與累計至該上限的 BG Trigger count/pay；累計值單調不減，最後一列 count 等於 `bg_trigger_fg_cnt`。
+- [ ] 倍率權重工具從 Profile 的最大正權重 BG range 自動選取完全相同上限的累計 count/pay，未寫死個別 Profile 或遊戲 cap。
 - [ ] `special_symbol_cnt` 同時統計 Base Spin 與 Free Spin，且同一 Spin 即使出現多個 `SC` 也只累加一次。
-- [ ] `SCR` 等於 `(special_symbol_cnt / total_spin) × 10,000,000,000`，且 Console 與 `Overview` 的數值一致。
+- [ ] `SCR` 等於 `(special_symbol_cnt / total_rounds) × 10,000,000,000`，且 Console 與 `Overview` 的數值一致。
 - [ ] Card System 區塊位於 `standard_error` 後；Card System Off 時整段移除且其他欄位不重排。
 - [ ] `Overview` 與 Console 的內容及順序一致，且未包含 Batch 與 `<< By Game Info >>` 標題。
 - [ ] `Multiplier Line` 包含所有共用欄位，並依遊戲功能正確顯示或移除 BF／SF 與 By Game 欄位。

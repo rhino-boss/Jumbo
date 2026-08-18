@@ -1,0 +1,220 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "SPS 與 H016 special_symbol_cnt 差異診斷",
+    "description": "核對 SPS 老手 92、H016 舊 Notebook kernel 報表與自然選表修正後新行程的 special_symbol_cnt/SCR。",
+    "generatedAt": "2026-08-17T18:50:00+08:00",
+    "sources": [
+      {
+        "id": "sps_output",
+        "label": "SPS 老手 92 輸出",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/Record/20260817143256780.txt",
+        "description": "39,410,000 paid rounds；BG/FG C1 次數與 BG WheelTable 次數來源。"
+      },
+      {
+        "id": "sps_setting",
+        "label": "JHS101003 參數",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/其他/參考資料/gameSetting_JHS101003.json",
+        "description": "BG tableHitProbability 為 450000/50000/500000/0。"
+      },
+      {
+        "id": "h016_simulator",
+        "label": "H016 Simulator",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/Simulator.py",
+        "description": "自然 BG 使用 table_selection.base；一般 range 卡則依 card.table 直接選 bg_low/bg_high。"
+      },
+      {
+        "id": "h016_fast",
+        "label": "H016 Fast Simulator",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/其他/fast_simulator.py",
+        "description": "special_symbol_cnt 在每個已接受 BG 與 FG spin 有 C1 時加一。"
+      },
+      {
+        "id": "h016_current",
+        "label": "SPS／H016 修正前後對帳",
+        "type": "analysis",
+        "path": "Project/Slots/H016_幸運王牌/其他/診斷/SPS_vs_H016_special_symbol_cnt_260817.artifact.json",
+        "query": {
+          "engine": "portable-values",
+          "language": "sql",
+          "sql": "SELECT * FROM (VALUES ('SPS',39410000,13647142,0.34628627251966504,3462862725.1966505,0.008478304998731286,0.918578),('H016 stale Notebook kernel',1000000,208645,0.208645,2086450000,0.008409,0.914915),('H016 fixed fresh process',1000000,346472,0.346472,3464720000,0.008448,0.920394)) AS r(system,paid_rounds,special_symbol_cnt,special_rate,scr,fg_trigger_rate,total_rtp)",
+          "description": "SPS 由 bgC1Count/fgC1Count 重建；舊 kernel 值讀自 18:45 Newbie Excel；修正後值為相同 Newbie/92/1M 條件的新 Python 行程。",
+          "filters": ["normal bet", "newbie for both H016 rows", "92", "card enabled"],
+          "metric_definitions": ["special_symbol_cnt = accepted BG spins with C1 + accepted FG spins with C1", "SCR = special_symbol_cnt / paid_rounds × 10^10"]
+        },
+        "description": "同條件對照舊 Notebook kernel 與修正後新行程。"
+      },
+      {
+        "id": "stale_report",
+        "label": "H016 舊 Notebook kernel 報表",
+        "type": "file",
+        "path": "Project/Slots/H016_幸運王牌/Record/H016192A_03000000_2608171845_betmode0_106_9149_newbie_card.xlsx",
+        "description": "1,000,000 rounds；special_symbol_cnt 208,645；SCR 2,086,450,000；在磁碟修正後由仍持有舊 fast_simulator 的 kernel 產生。"
+      }
+    ],
+    "charts": [
+      {
+        "id": "special_rate_comparison",
+        "type": "bar",
+        "title": "每 Paid Round 的 special symbol 出現率",
+        "dataset": "metric_reconciliation",
+        "x": "system",
+        "y": "special_rate",
+        "encodings": {
+          "x": {"field": "system", "type": "nominal"},
+          "y": {"field": "special_rate", "type": "quantitative", "format": "percent"}
+        },
+        "format": {"y": "percent"},
+        "labels": "all",
+        "tooltip": ["system", "special_symbol_cnt", "paid_rounds", "special_rate"],
+        "sourceId": "h016_current",
+        "source": {
+          "id": "h016_current",
+          "label": "SPS/H016 修正前後診斷值",
+          "type": "analysis",
+          "path": "Project/Slots/H016_幸運王牌/其他/診斷/SPS_vs_H016_special_symbol_cnt_260817.artifact.json",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT system, special_symbol_cnt, paid_rounds, special_rate FROM (VALUES ('SPS',13647142,39410000,0.34628627251966504),('H016 stale Notebook kernel',208645,1000000,0.208645),('H016 fixed fresh process',346472,1000000,0.346472)) AS r(system,special_symbol_cnt,paid_rounds,special_rate)",
+            "description": "比較 SPS 重建值、舊 Notebook kernel Excel 與修正後新行程。",
+            "filters": ["normal bet", "newbie for both H016 rows", "92", "card enabled"],
+            "metric_definitions": ["special_rate = special_symbol_cnt / paid_rounds"]
+          }
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "metric_reconciliation",
+        "title": "special_symbol_cnt 口徑對帳",
+        "dataset": "metric_reconciliation",
+        "columns": [
+          {"field": "system", "label": "系統", "type": "text"},
+          {"field": "paid_rounds", "label": "Paid Rounds", "type": "number"},
+          {"field": "special_symbol_cnt", "label": "special_symbol_cnt", "type": "number"},
+          {"field": "special_rate", "label": "每 Paid Round 比率", "type": "percent"},
+          {"field": "scr", "label": "SCR", "type": "number"},
+          {"field": "fg_trigger_rate", "label": "FG Trigger Rate", "type": "percent"},
+          {"field": "total_rtp", "label": "Total RTP", "type": "percent"}
+        ],
+        "sourceId": "h016_current",
+        "source": {
+          "id": "h016_current",
+          "label": "SPS/H016 修正前後診斷值",
+          "type": "analysis",
+          "path": "Project/Slots/H016_幸運王牌/其他/診斷/SPS_vs_H016_special_symbol_cnt_260817.artifact.json",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM (VALUES ('SPS',39410000,13647142,0.34628627251966504,3462862725.1966505,0.008478304998731286,0.918578),('H016 stale Notebook kernel',1000000,208645,0.208645,2086450000,0.008409,0.914915),('H016 fixed fresh process',1000000,346472,0.346472,3464720000,0.008448,0.920394)) AS r(system,paid_rounds,special_symbol_cnt,special_rate,scr,fg_trigger_rate,total_rtp)",
+            "description": "SPS、舊 Notebook kernel Excel 與修正後新 Python 行程對帳。",
+            "filters": ["normal bet", "newbie for both H016 rows", "92", "card enabled"],
+            "metric_definitions": ["special_symbol_cnt = accepted BG spins with C1 + accepted FG spins with C1", "special_rate = special_symbol_cnt / paid_rounds"]
+          }
+        }
+      },
+      {
+        "id": "sps_scene_breakdown",
+        "title": "SPS C1 出現場次重建",
+        "dataset": "sps_scene_breakdown",
+        "columns": [
+          {"field": "scene", "label": "Scene", "type": "text"},
+          {"field": "scene_spins", "label": "Scene Spins", "type": "number"},
+          {"field": "zero_c1", "label": "C1=0", "type": "number"},
+          {"field": "with_c1", "label": "C1>0", "type": "number"},
+          {"field": "scene_rate", "label": "Scene 內出現率", "type": "percent"},
+          {"field": "paid_round_contribution", "label": "對 Paid Round 貢獻", "type": "percent"}
+        ],
+        "sourceId": "sps_output",
+        "source": {
+          "id": "sps_output",
+          "label": "SPS 老手 92 C1 histogram",
+          "type": "file",
+          "path": "Project/Slots/H016_幸運王牌/Record/20260817143256780.txt",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM (VALUES ('BG',39410000,26566686,12843314,0.32588972342045164,0.32588972342045164),('FG',3354850,2551022,803828,0.23960177057096443,0.020396549099213398)) AS r(scene,scene_spins,zero_c1,with_c1,scene_rate,paid_round_contribution)",
+            "description": "由 SPS bgC1Count 與 fgC1Count 完整分布重建。",
+            "filters": ["C1 presence", "accepted spins"],
+            "metric_definitions": ["with_c1 = scene_spins - zero_c1", "scene_rate = with_c1 / scene_spins", "paid_round_contribution = with_c1 / TotalSpin"]
+          }
+        }
+      },
+      {
+        "id": "sps_table_mix",
+        "title": "SPS 已接受 BG 的 WheelTable 分布",
+        "dataset": "sps_table_mix",
+        "columns": [
+          {"field": "table", "label": "WheelTable", "type": "text"},
+          {"field": "observed_count", "label": "SPS Count", "type": "number"},
+          {"field": "observed_rate", "label": "SPS 實測", "type": "percent"},
+          {"field": "configured_rate", "label": "參數比例", "type": "percent"}
+        ],
+        "sourceId": "sps_output",
+        "source": {
+          "id": "sps_output_table_mix",
+          "label": "SPS BG WheelTable counts",
+          "type": "file",
+          "path": "Project/Slots/H016_幸運王牌/Record/20260817143256780.txt",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM (VALUES ('WheelTable[0] / bg_1',17586468,0.4462437959908653,0.45),('WheelTable[1] / bg_2',1913011,0.04854125856381629,0.05),('WheelTable[2] / bg_3',19910521,0.5052149454453184,0.5)) AS r(table_name,observed_count,observed_rate,configured_rate)",
+            "description": "SPS 已接受 BG 的三張 WheelTable 分布與 gameSetting 設定比例。",
+            "filters": ["BG", "accepted spins"],
+            "metric_definitions": ["observed_rate = WheelTable count / TotalSpin"]
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# SPS 與 H016 special_symbol_cnt 差異診斷"},
+      {"id": "executive_summary", "type": "markdown", "body": "## Executive Summary\n\n**目前數學已對上 SPS。** 修正後 Newbie／92／100 萬場的新 Python 行程得到 `special_symbol_cnt=346,472`、SCR 3,464,720,000；SPS 重建值為 3,462,862,725，相對差異只有 +0.054%。\n\n**截圖的 SCR 2,086,450,000 是舊 Notebook kernel 結果。** 該 Excel 在 18:45 產生，但 kernel 仍沿用修改前已載入的 `fast_simulator`；載入器原先只檢查相同路徑與 API 版本，沒有檢查來源檔是否變更。\n\n**載入器已修正。** fast simulator API 已升為 8，且載入器新增來源檔 mtime/size 簽章；重新執行載入區段後會淘汰舊模組。"},
+      {"id": "reconciliation_intro", "type": "markdown", "body": "## 新行程已恢復 SPS 的 SCR 水準\n\n舊 kernel 的 special rate 只有 20.8645%；修正後新行程為 34.6472%，與 SPS 34.6286% 只差 +0.0186 pp。FG Trigger Rate 也分別為 0.8448% 與約 0.8478%，顯示自然三表選擇已生效。"},
+      {"id": "special_rate_chart", "type": "chart", "chartId": "special_rate_comparison"},
+      {"id": "reconciliation_table", "type": "table", "tableId": "metric_reconciliation"},
+      {"id": "sps_breakdown_intro", "type": "markdown", "body": "## SPS 的 special_symbol_cnt 如何重建\n\nSPS 文字檔沒有直接列出 `special_symbol_cnt`。BG 的 `bgC1Count` 加總等於 TotalSpin，FG 的 `fgC1Count` 加總等於 FreeGameTTLRound；各自用總數扣掉 C1=0，即得到與 H016 相同的『一個已接受 spin 只要有任意 C1 就計 1』口徑。"},
+      {"id": "sps_breakdown_table", "type": "table", "tableId": "sps_scene_breakdown"},
+      {"id": "root_cause", "type": "markdown", "body": "## 根因：開卡片後，range 卡沒有走自然 BG 選表\n\nSPS 參數的 BG `tableHitProbability` 是 450000/50000/500000/0；輸出中的 WheelTable 0/1/2 實測為 44.6244%/4.8541%/50.5215%，證明 39,410,000 個已接受 BG 結果仍使用完整的三表混合。\n\nH016 的 `natural_base_spin()` 也會使用 `table_selection.base`。但 `card_spin()` 只有 free_game 卡走這條路；一般 range 卡會把 table B 直接映射為 `bg_high`，而老手 92 的 range 卡權重合計占 99.1563%，全部都是 table B。也就是說，H016 幾乎所有一般卡片結果都只從 `bg_1` 重骰，沒有走 45%/5%/50% 的三表混合。"},
+      {"id": "table_mix_table", "type": "table", "tableId": "sps_table_mix"},
+      {"id": "not_cap", "type": "markdown", "body": "## 截圖仍顯示舊數值的原因\n\n`H016192A_...1845...newbie_card.xlsx` 的 208,645 / 1,000,000 = 20.8645%，與修正前結果完全一致。磁碟程式雖已修改，但該 Notebook kernel 的 `sys.modules['fast_simulator']` 仍是舊物件；原載入器看到同路徑且 API≥7 就直接返回，沒有重新執行來源檔。\n\n全新 Python 行程使用同一組 config.js、config_92A.js、Newbie、1,000,000 rounds 後立即得到 346,472，排除 Config、Excel 公式與 Profile 差異。"},
+      {"id": "recommendation", "type": "markdown", "body": "## 現在怎麼重跑\n\n1. Restart Kernel。\n2. 從 Simulator 第一格開始 Run All，確保 `load_fast_simulator()` 被重新執行。\n3. 確認新報表的 `special_symbol_cnt` 約為總場次的 34.6%，SCR 約 3.46×10^9。\n4. 不要再使用 18:45 那份 `...9149_newbie_card.xlsx` 做 SCR 驗收。"},
+      {"id": "limitations", "type": "markdown", "body": "## 口徑與限制\n\nSPS 的 special_symbol_cnt 由完整 C1 histogram 重建；BG histogram 精確加總為 TotalSpin、FG histogram 精確加總為 FreeGameTTLRound。修正後 H016 驗證為 1,000,000 場固定 seed，新舊差異已足以辨識執行路徑，但最終正式驗收仍建議 100,000,000 場。舊 Excel 保留為診斷證據，未刪除或覆寫。"}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "datasets": {
+      "metric_reconciliation": [
+        {"system": "SPS", "paid_rounds": 39410000, "special_symbol_cnt": 13647142, "special_rate": 0.34628627251966504, "scr": 3462862725.1966505, "fg_trigger_rate": 0.008478304998731286, "total_rtp": 0.918578},
+        {"system": "H016 stale Notebook kernel", "paid_rounds": 1000000, "special_symbol_cnt": 208645, "special_rate": 0.208645, "scr": 2086450000, "fg_trigger_rate": 0.008409, "total_rtp": 0.914915},
+        {"system": "H016 fixed fresh process", "paid_rounds": 1000000, "special_symbol_cnt": 346472, "special_rate": 0.346472, "scr": 3464720000, "fg_trigger_rate": 0.008448, "total_rtp": 0.920394}
+      ],
+      "sps_scene_breakdown": [
+        {"scene": "BG", "scene_spins": 39410000, "zero_c1": 26566686, "with_c1": 12843314, "scene_rate": 0.32588972342045164, "paid_round_contribution": 0.32588972342045164},
+        {"scene": "FG", "scene_spins": 3354850, "zero_c1": 2551022, "with_c1": 803828, "scene_rate": 0.23960177057096443, "paid_round_contribution": 0.020396549099213398}
+      ],
+      "sps_table_mix": [
+        {"table": "WheelTable[0] / bg_1", "observed_count": 17586468, "observed_rate": 0.4462437959908653, "configured_rate": 0.45},
+        {"table": "WheelTable[1] / bg_2", "observed_count": 1913011, "observed_rate": 0.04854125856381629, "configured_rate": 0.05},
+        {"table": "WheelTable[2] / bg_3", "observed_count": 19910521, "observed_rate": 0.5052149454453184, "configured_rate": 0.5}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "sps_output", "label": "SPS 老手 92 輸出", "type": "file", "path": "Project/Slots/H016_幸運王牌/Record/20260817143256780.txt"},
+    {"id": "sps_setting", "label": "JHS101003 參數", "type": "file", "path": "Project/Slots/H016_幸運王牌/其他/參考資料/gameSetting_JHS101003.json"},
+    {"id": "h016_simulator", "label": "H016 Simulator", "type": "file", "path": "Project/Slots/H016_幸運王牌/Simulator.py"},
+    {"id": "h016_fast", "label": "H016 Fast Simulator", "type": "file", "path": "Project/Slots/H016_幸運王牌/其他/fast_simulator.py"},
+    {"id": "h016_current", "label": "SPS／H016 修正前後對帳", "type": "analysis", "path": "Project/Slots/H016_幸運王牌/其他/診斷/SPS_vs_H016_special_symbol_cnt_260817.artifact.json", "query": {"engine": "portable-values", "language": "sql", "sql": "SELECT * FROM (VALUES ('SPS',39410000,13647142,0.34628627251966504,3462862725.1966505,0.008478304998731286,0.918578),('H016 stale Notebook kernel',1000000,208645,0.208645,2086450000,0.008409,0.914915),('H016 fixed fresh process',1000000,346472,0.346472,3464720000,0.008448,0.920394)) AS r(system,paid_rounds,special_symbol_cnt,special_rate,scr,fg_trigger_rate,total_rtp)", "description": "SPS、舊 Notebook kernel Excel 與修正後新 Python 行程對帳。", "filters": ["normal bet", "newbie for both H016 rows", "92", "card enabled"], "metric_definitions": ["special_symbol_cnt = accepted BG spins with C1 + accepted FG spins with C1", "SCR = special_symbol_cnt / paid_rounds × 10^10"]}},
+    {"id": "stale_report", "label": "H016 舊 Notebook kernel 報表", "type": "file", "path": "Project/Slots/H016_幸運王牌/Record/H016192A_03000000_2608171845_betmode0_106_9149_newbie_card.xlsx"}
+  ]
+}

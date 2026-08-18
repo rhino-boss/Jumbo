@@ -43,6 +43,43 @@ def parse_lower(label: str) -> float:
     return float(match.group(1))
 
 
+def enabled_bg_cap(sheet, labels: list[str]) -> float:
+    """Return the highest enabled BG range upper bound for one Profile."""
+    enabled = [
+        parse_upper(label)
+        for offset, label in enumerate(labels)
+        if float(sheet.cell(row=15 + offset, column=11).value or 0) > 0
+    ]
+    if not enabled:
+        raise ValueError(f"{sheet.title}: no positive BG range weight")
+    return max(enabled)
+
+
+def trigger_stats_at_cap(report: dict[str, Any], cap: float) -> dict[str, Any]:
+    """Select cumulative trigger count/pay at the exact configured cap."""
+    matches = [
+        index
+        for index, upper in enumerate(report["interval_upper"])
+        if math.isclose(float(upper), float(cap), rel_tol=0.0, abs_tol=1e-9)
+    ]
+    if len(matches) != 1:
+        raise ValueError(
+            f"Report has no unique Multiplier Line upper bound for BG cap {cap:g}x"
+        )
+    index = matches[0]
+    count = int(report["trigger_count_lte"][index])
+    pay = float(report["trigger_pay_lte"][index])
+    if count <= 0:
+        raise ValueError(f"Report has no eligible FG-trigger BG samples at cap {cap:g}x")
+    return {
+        "cap": float(cap),
+        "bucket_index": index,
+        "count": count,
+        "pay": pay,
+        "average": pay / count / float(report["coin_in"]),
+    }
+
+
 def fix_numbers(weights: list[int], counts: list[int]) -> list[float]:
     denominator = sum(counts)
     if denominator <= 0:
@@ -178,11 +215,35 @@ def load_h016_report(path: Path) -> dict[str, Any]:
             for row in workbook["Base Info"].iter_rows(min_row=2, values_only=True)
             if row[0] is not None
         }
-        rows = list(
+        table = list(
             workbook["Multiplier Line"].iter_rows(
-                min_row=2, max_row=65, values_only=True
+                min_row=1, max_row=65, values_only=True
             )
         )
+        if len(table) != 65:
+            raise ValueError(f"{path.name}: expected header plus 64 multiplier buckets")
+        header = {
+            str(value): index
+            for index, value in enumerate(table[0])
+            if value is not None
+        }
+        required = {
+            "Interval",
+            "base_game_cnt",
+            "base_game_pay",
+            "free_game_cnt",
+            "free_game_pay",
+            "Interval_Upper",
+            "bg_trigger_fg_cnt_lte_upper",
+            "bg_trigger_fg_pay_lte_upper",
+        }
+        missing = required.difference(header)
+        if missing:
+            raise ValueError(
+                f"{path.name}: missing Multiplier Line columns {sorted(missing)}; "
+                "rerun the natural report with the current Simulator"
+            )
+        rows = table[1:]
         if len(rows) != 64:
             raise ValueError(f"{path.name}: expected 64 multiplier buckets")
         result = {
@@ -190,11 +251,14 @@ def load_h016_report(path: Path) -> dict[str, Any]:
             "rounds": int(fields["total_rounds"]),
             "coin_in": float(fields["coin_in"]),
             "trigger_count": int(fields["bg_trigger_fg_cnt"]),
-            "trigger_pay": float(fields["bg_trigger_fg_pay"]),
-            "bg_count": [int(row[1] or 0) for row in rows],
-            "bg_pay": [float(row[2] or 0) for row in rows],
-            "fg_count": [int(row[3] or 0) for row in rows],
-            "fg_pay": [float(row[4] or 0) for row in rows],
+            "trigger_pay_for_active_profile": float(fields["bg_trigger_fg_pay"]),
+            "interval_upper": [float(row[header["Interval_Upper"]]) for row in rows],
+            "trigger_count_lte": [int(row[header["bg_trigger_fg_cnt_lte_upper"]] or 0) for row in rows],
+            "trigger_pay_lte": [float(row[header["bg_trigger_fg_pay_lte_upper"]] or 0) for row in rows],
+            "bg_count": [int(row[header["base_game_cnt"]] or 0) for row in rows],
+            "bg_pay": [float(row[header["base_game_pay"]] or 0) for row in rows],
+            "fg_count": [int(row[header["free_game_cnt"]] or 0) for row in rows],
+            "fg_pay": [float(row[header["free_game_pay"]] or 0) for row in rows],
         }
     finally:
         workbook.close()
@@ -202,6 +266,19 @@ def load_h016_report(path: Path) -> dict[str, Any]:
         raise ValueError(f"{path.name}: BG bucket count does not equal total rounds")
     if sum(result["fg_count"]) != result["trigger_count"]:
         raise ValueError(f"{path.name}: FG bucket count does not equal trigger count")
+    if any(
+        current < previous
+        for previous, current in zip(result["trigger_count_lte"], result["trigger_count_lte"][1:])
+    ):
+        raise ValueError(f"{path.name}: cumulative trigger count is not monotonic")
+    if any(
+        current < previous
+        for previous, current in zip(result["trigger_pay_lte"], result["trigger_pay_lte"][1:])
+    ):
+        raise ValueError(f"{path.name}: cumulative trigger pay is not monotonic")
+    if result["trigger_count_lte"][-1] != result["trigger_count"]:
+        raise ValueError(f"{path.name}: final cumulative trigger count differs from Base Info")
+    result["trigger_pay"] = result["trigger_pay_lte"][-1]
     return result
 
 
@@ -209,7 +286,6 @@ def build_report_correction_version(
     key: str,
     workbook_path: Path,
     report: dict[str, Any],
-    shared_sf: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     workbook = load_workbook(
         workbook_path, read_only=True, data_only=True, keep_links=False
@@ -243,12 +319,17 @@ def build_report_correction_version(
             raise ValueError(f"{workbook_path.name}: oldhand/newbie FG entry weights differ")
         denominator = WEIGHT_TOTAL + entry_weight
         trigger_rate = entry_weight / denominator
-        trigger_average = (
-            report["trigger_pay"] / report["trigger_count"] / report["coin_in"]
+        oldhand_trigger = trigger_stats_at_cap(
+            report, enabled_bg_cap(detail, labels)
         )
-        trigger_bg_rtp = trigger_rate * trigger_average
-        regular_bg_target = 0.70 - trigger_bg_rtp
-        if regular_bg_target <= 0:
+        newbie_trigger = trigger_stats_at_cap(
+            report, enabled_bg_cap(newbie_sheet, labels)
+        )
+        oldhand_trigger_bg_rtp = trigger_rate * oldhand_trigger["average"]
+        newbie_trigger_bg_rtp = trigger_rate * newbie_trigger["average"]
+        oldhand_regular_bg_target = 0.70 - oldhand_trigger_bg_rtp
+        newbie_regular_bg_target = 0.70 - newbie_trigger_bg_rtp
+        if oldhand_regular_bg_target <= 0 or newbie_regular_bg_target <= 0:
             raise ValueError(f"{workbook_path.name}: trigger BG RTP exceeds the 70% BG target")
 
         old_bg = preserve_paying_hit_rate_shape(
@@ -258,7 +339,7 @@ def build_report_correction_version(
             natural_counts=report["bg_count"],
             means=bg_means,
             probability_denominator=denominator,
-            target_scene_rtp=regular_bg_target,
+            target_scene_rtp=oldhand_regular_bg_target,
         )
         newbie_bg = preserve_paying_hit_rate_shape(
             name=f"{key} newbie BG",
@@ -267,16 +348,21 @@ def build_report_correction_version(
             natural_counts=report["bg_count"],
             means=bg_means,
             probability_denominator=denominator,
-            target_scene_rtp=regular_bg_target,
+            target_scene_rtp=newbie_regular_bg_target,
         )
         fg = workbook_scene(detail, 86, report["fg_count"], fg_means)
         newbie_fg = workbook_scene(newbie_sheet, 86, report["fg_count"], fg_means)
         bf = workbook_scene(detail, 163, report["fg_count"], fg_means)
-        sf = (
-            deepcopy(shared_sf)
-            if shared_sf is not None
-            else workbook_scene(detail, 234, report["fg_count"], fg_means)
-        )
+        # SF owns a dedicated natural report and is outside this correction.
+        # Read its existing workbook population so report-mode BG/FG/BF updates
+        # cannot replace SF with ordinary FG samples.
+        sf_counts = [int(detail.cell(row, 2).value or 0) for row in range(234, 298)]
+        sf_pay = [float(detail.cell(row, 3).value or 0) for row in range(234, 298)]
+        sf_means = [
+            pay / count / report["coin_in"] if count else 0.0
+            for count, pay in zip(sf_counts, sf_pay)
+        ]
+        sf = workbook_scene(detail, 234, sf_counts, sf_means)
     finally:
         workbook.close()
 
@@ -295,9 +381,18 @@ def build_report_correction_version(
         "sf": sf,
         "metrics": {
             "target_rtp": float(key) / 100.0,
+            "entry_weight": entry_weight,
             "trigger_rate": trigger_rate,
-            "trigger_bg_average": trigger_average,
-            "trigger_bg_rtp": trigger_bg_rtp,
+            "trigger_bg_cap": oldhand_trigger["cap"],
+            "trigger_bg_count": oldhand_trigger["count"],
+            "trigger_bg_pay": oldhand_trigger["pay"],
+            "trigger_bg_average": oldhand_trigger["average"],
+            "trigger_bg_rtp": oldhand_trigger_bg_rtp,
+            "newbie_trigger_bg_cap": newbie_trigger["cap"],
+            "newbie_trigger_bg_count": newbie_trigger["count"],
+            "newbie_trigger_bg_pay": newbie_trigger["pay"],
+            "newbie_trigger_bg_average": newbie_trigger["average"],
+            "newbie_trigger_bg_rtp": newbie_trigger_bg_rtp,
             "normal_rtp": 0.70 + fg_rtp,
             "bg_rtp": 0.70,
             "fg_rtp": fg_rtp,
@@ -915,6 +1010,9 @@ def main() -> None:
             "bg_pay": report["bg_pay"],
             "fg_count": report["fg_count"],
             "fg_pay": report["fg_pay"],
+            "interval_upper": report["interval_upper"],
+            "trigger_count_lte": report["trigger_count_lte"],
+            "trigger_pay_lte": report["trigger_pay_lte"],
         }
         version_94 = build_report_correction_version(
             "94", PROJECT_DIR / "Source" / "H016194A.xlsx", report
@@ -923,7 +1021,6 @@ def main() -> None:
             "92",
             PROJECT_DIR / "Source" / "H016192A.xlsx",
             report,
-            shared_sf=version_94["sf"],
         )
         versions = {"92": version_92, "94": version_94}
     else:

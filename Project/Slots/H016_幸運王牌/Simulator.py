@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import bisect
 import copy
+import importlib.util
 import json
 import math
 import os
@@ -29,30 +30,9 @@ from typing import Any
 import pandas as pd
 from openpyxl import load_workbook
 
-try:
-    import fast_simulator
-
-    if getattr(fast_simulator, "FAST_SIMULATOR_API_VERSION", 1) < 6:
-        # `%run` / Notebook cells keep imported modules in sys.modules.  Reload
-        # an older card-off-only core after Simulator.py has been updated.
-        import importlib
-
-        importlib.invalidate_caches()
-        fast_simulator = importlib.reload(fast_simulator)
-except ImportError:
-    import importlib.util
-
-    _fast_path = Path(__file__).resolve().parent / "其他" / "fast_simulator.py"
-    # Keep one canonical module name. Numba persists this name inside its disk
-    # cache; a Notebook-only alias makes the next batch child unable to unpickle
-    # the compiled function environment.
-    _fast_spec = importlib.util.spec_from_file_location("fast_simulator", _fast_path)
-    if _fast_spec is None or _fast_spec.loader is None:
-        fast_simulator = None
-    else:
-        fast_simulator = importlib.util.module_from_spec(_fast_spec)
-        sys.modules[_fast_spec.name] = fast_simulator
-        _fast_spec.loader.exec_module(fast_simulator)
+# Loaded only after BASE_DIR has been validated as H016. Notebook sessions may
+# retain another game's ``fast_simulator`` and ``__file__`` in global state.
+fast_simulator = None
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
@@ -70,17 +50,18 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
-    ## 自然機率
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**4, "card_system_enabled": True, "card_system_is_newbie": False},  # Test
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": False},  # Test
+    # ## 自然機率
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False},  # 自然機率
     ## 卡片
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -514,6 +495,40 @@ def resolve_base_dir() -> Path:
 
 
 BASE_DIR = resolve_base_dir()
+
+
+def load_fast_simulator(base_dir: Path):
+    """Load H016's exact fast core, ignoring stale Notebook modules."""
+    module_name = "fast_simulator"
+    module_path = (base_dir / "其他" / "fast_simulator.py").resolve()
+    if not module_path.is_file():
+        return None
+    source_stat = module_path.stat()
+    source_signature = (source_stat.st_mtime_ns, source_stat.st_size)
+
+    existing = sys.modules.get(module_name)
+    existing_path = getattr(existing, "__file__", None)
+    try:
+        same_module = bool(existing_path) and Path(existing_path).resolve() == module_path
+    except OSError:
+        same_module = False
+    if same_module and getattr(existing, "FAST_SIMULATOR_API_VERSION", 1) >= 9 and getattr(existing, "__h016_source_signature__", None) == source_signature:
+        return existing
+
+    # Keep one canonical module name. Numba persists this name inside its disk
+    # cache; a Notebook-only alias makes the next batch child unable to unpickle
+    # the compiled function environment.
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    module.__h016_source_signature__ = source_signature
+    return module
+
+
+fast_simulator = load_fast_simulator(BASE_DIR)
 OUTPUT_DIR = BASE_DIR / "Record"
 SIMULATOR_PATH = BASE_DIR / "Simulator.py"
 TOTAL_ROUNDS = int(os.environ.get("H016_TOTAL_ROUNDS", TOTAL_ROUNDS))
@@ -674,6 +689,7 @@ class LuckyAce:
         self.rng = random.Random(seed)
         self.card_enabled = card_enabled and bool(config.get("card_system", {}).get("enabled"))
         self.profile = "weight_1" if newbie else "weight_2"
+        self.bg_trigger_cap = self.profile_bg_trigger_cap(self.profile)
         self.tables = {name: self._prepare(raw) for name, raw in config["tables"].items()}
         self.retry_total = 0
         self.retry_limit_exceeded = 0
@@ -681,6 +697,18 @@ class LuckyAce:
         self.retry_limit_bg_freegame = 0
         self.retry_limit_fg = 0
         self.card_draws: Counter = Counter()
+
+    def profile_bg_trigger_cap(self, profile: str | None = None) -> float:
+        """Maximum enabled BG range-card interval for the selected profile."""
+        profile = profile or self.profile
+        card_system = self.config.get("card_system") or {}
+        profiles = card_system.get("profiles") or {}
+        profile_config = profiles.get(profile) or profiles.get(str(card_system.get("default_profile", "weight_2"))) or {}
+        maxima = [float(card["max"]) for card in profile_config.get("base_game") or [] if str(card.get("type")) == "range" and float(card.get("weight", 0)) > 0 and "max" in card]
+        return max(maxima) if maxima else math.inf
+
+    def bg_trigger_within_cap(self, pay: float) -> bool:
+        return pay / (BASE_BET * BET_MULTI) <= self.bg_trigger_cap
 
     @staticmethod
     def _prepare(raw: dict[str, Any]) -> Table:
@@ -848,15 +876,17 @@ class LuckyAce:
                 # BG selection.  BF_Symbol is reserved for paid Buy entry and
                 # would otherwise discard the triggering round's BG award.
                 spin = self.natural_base_spin()
-                if spin.scatter_count >= 3:
+                if spin.scatter_count >= 3 and self.bg_trigger_within_cap(spin.pay):
                     return spin
                 self.retry_total += 1
             self.retry_limit_exceeded += 1
             self.retry_limit_bg_freegame += 1
             return spin
-        table_name = "bg_low" if card.get("table") == "A" else "bg_high"
         for _ in range(CARD_RETRY_LIMIT):
-            spin = self.spin(table_name)
+            # Card System only filters a completed natural result.  Every retry
+            # must redraw the complete BG table selection before checking the
+            # fixed card; card.table is report metadata, not a table override.
+            spin = self.natural_base_spin()
             if spin.scatter_count < 3 and self.card_matches(card, spin.pay):
                 return spin
             self.retry_total += 1
@@ -1013,7 +1043,10 @@ class LuckyAce:
         result.bg_drop_symbols.update(spin.drop_symbols)
         if spin.scatter_count >= 3:
             result.bg_trigger_fg_cnt = 1
-            result.bg_trigger_fg_pay = spin.pay
+            # Natural-probability reports use the same cap eligibility as the
+            # Card System.  Trigger count remains the natural trigger count;
+            # only eligible triggering-BG awards contribute to this pay field.
+            result.bg_trigger_fg_pay = spin.pay if self.bg_trigger_within_cap(spin.pay) else 0.0
             feature = self.card_feature("free_game") if self.card_enabled else self.free_session()
             self.merge(result, feature)
         return result
@@ -1054,6 +1087,8 @@ def _empty_stats() -> dict[str, Any]:
         "special_symbol_cnt": 0,
         "bg_trigger_fg_cnt": 0,
         "bg_trigger_fg_pay": 0.0,
+        "bg_trigger_fg_bucket_count": Counter(),
+        "bg_trigger_fg_bucket_pay": Counter(),
         "max_multiplier": 1,
         "win_x_sum": 0.0,
         "win_x_square": 0.0,
@@ -1140,6 +1175,12 @@ def _simulate_chunk(rounds: int, bet_mode: int, seed: int, config: dict[str, Any
         if bet_mode == MODE_NORMALBET:
             stats["multiplier_bg_count"][bg_bucket] += 1
             stats["multiplier_bg_pay"][bg_bucket] += result.pay_bg
+            if result.bg_trigger_fg_cnt:
+                # Keep the raw trigger-spin BG distribution independent of the
+                # active Profile cap.  The report converts these exact buckets
+                # to cumulative <= upper-bound values for any future cap.
+                stats["bg_trigger_fg_bucket_count"][bg_bucket] += result.bg_trigger_fg_cnt
+                stats["bg_trigger_fg_bucket_pay"][bg_bucket] += result.pay_bg
             stats["interval_bg_hits"][bg_bucket] += result.bg_hit_spins
             stats["interval_bg_combo"][(bg_bucket, min(result.cascades_bg, 5))] += 1
             for ghost_count in (2, 3, 4):
@@ -1202,6 +1243,8 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
         "multiplier_fg_pay",
         "multiplier_overall_count",
         "multiplier_overall_pay",
+        "bg_trigger_fg_bucket_count",
+        "bg_trigger_fg_bucket_pay",
         "interval_bg_hits",
         "interval_bg_combo",
         "interval_bg_w2",
@@ -1829,6 +1872,15 @@ def output_report(result: dict[str, Any], output_dir: Path | None = None) -> Pat
     buy_fg_pay = fg_pay if result["bet_mode"] == MODE_FEATUREBUY else zero_pay
     super_fg_counts = fg_counts if result["bet_mode"] == MODE_SUPERBUY else zero_counts
     super_fg_pay = fg_pay if result["bet_mode"] == MODE_SUPERBUY else zero_pay
+    trigger_count_lte: list[int] = []
+    trigger_pay_lte: list[float] = []
+    running_trigger_count = 0
+    running_trigger_pay = 0.0
+    for index in range(len(MULTIPLIER_THRESHOLDS)):
+        running_trigger_count += int(s["bg_trigger_fg_bucket_count"][index])
+        running_trigger_pay += float(s["bg_trigger_fg_bucket_pay"][index])
+        trigger_count_lte.append(running_trigger_count)
+        trigger_pay_lte.append(running_trigger_pay)
     multiplier_df = pd.DataFrame(
         {
             "Interval": interval_labels,
@@ -1840,6 +1892,9 @@ def output_report(result: dict[str, Any], output_dir: Path | None = None) -> Pat
             "free_game_pay_BF": buy_fg_pay,
             "free_game_cnt_SF": super_fg_counts,
             "free_game_pay_SF": super_fg_pay,
+            "Interval_Upper": list(MULTIPLIER_THRESHOLDS),
+            "bg_trigger_fg_cnt_lte_upper": trigger_count_lte,
+            "bg_trigger_fg_pay_lte_upper": trigger_pay_lte,
             "FG_Hit_Rate": interval_rate(s["interval_fg_hits"], fg_interval_spins, lambda i: i),
             "FG_Spin_Count": [s["interval_fg_spins"][i] for i in range(len(MULTIPLIER_THRESHOLDS))],
             "BG_Combo_1_Rate": interval_rate(s["interval_bg_combo"], bg_interval_count, lambda i: (i, 1)),
