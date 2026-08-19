@@ -1,8 +1,8 @@
 """Build the H016 v5.1 card multiplier payload.
 
-This recalculation intentionally leaves SF untouched.  Normal BG/FG are
-locked to 65%/27%, Buy Feature is locked to 92.5%, and the natural FG-entry
-cycle is 130 base-game rounds for every 92/94 and oldhand/newbie profile.
+This recalculation intentionally leaves SF untouched.  Normal BG is locked
+to 65%; FG is 27% for 92A and 29% for 94A.  Buy Feature is locked to 92.5%,
+and the natural FG-entry cycle is 130 base-game rounds for every profile.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ COMPETITOR_FILES = (
 )
 
 TARGET_BG_RTP = 0.65
-TARGET_FG_RTP = 0.27
+TARGET_FG_RTP_BY_VERSION = {"92": 0.27, "94": 0.29}
 TARGET_BF_RTP = 0.925
 TARGET_CYCLE = 130.0
 BUY_PRICE = 40.5
@@ -148,6 +148,7 @@ def profile_line(
     entry_weight: int,
     bg_cap: float,
     fg_cap: float | None,
+    target_fg_rtp: float,
 ) -> dict[str, Any]:
     denominator = core.WEIGHT_TOTAL + entry_weight
     trigger_rate = entry_weight / denominator
@@ -165,7 +166,7 @@ def profile_line(
         probability_denominator=denominator,
         target_scene_rtp=regular_bg_target,
     )
-    fg_session_target = TARGET_FG_RTP / trigger_rate
+    fg_session_target = target_fg_rtp / trigger_rate
     fg = core.relative_hit_rate_scene(
         name=f"{name} FG",
         labels=labels,
@@ -202,6 +203,7 @@ def build_version(
     competitor: dict[str, Any],
     entry_weight: int,
 ) -> dict[str, Any]:
+    target_fg_rtp = TARGET_FG_RTP_BY_VERSION[key]
     workbook = load_workbook(workbook_path, read_only=True, data_only=True, keep_links=False)
     try:
         detail = workbook["Detail"]
@@ -231,6 +233,7 @@ def build_version(
             entry_weight=entry_weight,
             bg_cap=oldhand_cap,
             fg_cap=None,
+            target_fg_rtp=target_fg_rtp,
         )
         newbie = profile_line(
             name=f"{key} newbie",
@@ -243,6 +246,7 @@ def build_version(
             entry_weight=entry_weight,
             bg_cap=detected_newbie_cap,
             fg_cap=NEWBIE_FG_CAP,
+            target_fg_rtp=target_fg_rtp,
         )
         bf = core.relative_hit_rate_scene(
             name=f"{key} BF",
@@ -277,7 +281,7 @@ def build_version(
             "sf": sf,
             "metrics": {
                 "version": VERSION,
-                "target_rtp": TARGET_BG_RTP + TARGET_FG_RTP,
+                "target_rtp": TARGET_BG_RTP + target_fg_rtp,
                 "entry_weight": entry_weight,
                 "trigger_rate": trigger_rate,
                 "fg_cycle": 1.0 / trigger_rate,
@@ -343,7 +347,14 @@ def main() -> None:
         "version": VERSION,
         "rules": {
             "sf": "untouched",
-            "normal_targets": {"bg": TARGET_BG_RTP, "fg": TARGET_FG_RTP, "total": 0.92},
+            "normal_targets": {
+                key: {
+                    "bg": TARGET_BG_RTP,
+                    "fg": TARGET_FG_RTP_BY_VERSION[key],
+                    "total": TARGET_BG_RTP + TARGET_FG_RTP_BY_VERSION[key],
+                }
+                for key in ("92", "94")
+            },
             "bf_target": TARGET_BF_RTP,
             "fg_cycle": TARGET_CYCLE,
             "fg_minimum_weighted_range": "(5, 6]",

@@ -2572,10 +2572,10 @@
   <script src="./Versions/version_manifest.js"></script>
   <script>
     const H016_VERSION_MANIFEST = window.H016_VERSION_MANIFEST || {
-      current: "6.1.0.0",
+      current: "6.3.0.1",
       versions: [{
-        version: "6.1.0.0",
-        math_key: "6.0",
+        version: "6.3.0.1",
+        math_key: "6.3",
         configs: {
           base: "config.js",
           92: "config_92A.js",
@@ -3592,7 +3592,7 @@
   function cardDistance(card, pay) {
     const ratio = pay / (BASE_BET * BET_LEVELS[state.betIndex]);
     if (cardMatches(card, pay)) return 0;
-    if (ratio <= Number(card.min)) return Number(card.min) - ratio;
+    if (ratio <= Number(card.min)) return Math.max(Number.EPSILON, Number(card.min) - ratio);
     return ratio - Number(card.max);
   }
   function cardSpin(card) {
@@ -3611,8 +3611,8 @@
         // Table Selection; card.table is metadata and must not select a table.
         const result = naturalBaseSpin();
         if (result.scatter >= 3) continue;
+        if (cardMatches(card, result.pay)) return result;
         const distance = cardDistance(card, result.pay);
-        if (distance === 0) return result;
         if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
       }
       if (nearest) return nearest;
@@ -3625,8 +3625,8 @@
     let nearest = null, nearestDistance = Infinity;
     for (let retry = 0; retry < MAX_RETRY; retry++) {
       const result = freeSession(superMode);
+      if (cardMatches(card, result.pay)) return result;
       const distance = cardDistance(card, result.pay);
-      if (distance === 0) return result;
       if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
     }
     return nearest || freeSession(superMode);

@@ -13,7 +13,7 @@ from openpyxl import load_workbook
 
 
 WEIGHT_TOTAL = 1_000_000_000
-MIN_NATURAL_RATE = 0.001
+MIN_NATURAL_RATE = 0.0007
 MIN_MISSING_RTP = 0.002
 MAX_RULE_UPPER = 2000.0
 FG_SPECIAL_MULTIPLIERS = {"(10, 15]": 1.0, "(50, 60]": 1.5}
@@ -494,8 +494,8 @@ def relative_hit_rate_scene(
         competitor_rate = competitor_counts[index] / competitor_denominator
         boost = hit_rate_boosts.get(label, 1.0)
         reason = None
-        if natural_rate < MIN_NATURAL_RATE:
-            reason = "H016 natural probability below 0.1%; weight disabled"
+        if natural_rate <= MIN_NATURAL_RATE:
+            reason = "H016 natural probability at or below 0.07%; weight disabled"
         elif minimum_supported_upper is not None and parse_upper(label) < minimum_supported_upper:
             reason = f"Minimum weighted range starts at {minimum_supported_upper:g}x; weight disabled"
         elif maximum_supported_upper is not None and parse_upper(label) > maximum_supported_upper:
@@ -703,7 +703,7 @@ def adjust_scene(
         natural_unsupported = (
             index > 0
             and minimum_supported_natural_rate is not None
-            and natural_rate < minimum_supported_natural_rate
+            and natural_rate <= minimum_supported_natural_rate
         )
         cap_unsupported = (
             index > 0
@@ -713,7 +713,7 @@ def adjust_scene(
         unsupported = natural_unsupported or cap_unsupported
         if natural_unsupported:
             target_rtp = 0.0
-            rule = "H016 natural probability below 0.1%; weight disabled"
+            rule = "H016 natural probability at or below 0.07%; weight disabled"
         elif cap_unsupported:
             target_rtp = 0.0
             rule = f"Multiplier upper limit {maximum_supported_upper:g}x; weight disabled"
@@ -730,7 +730,7 @@ def adjust_scene(
             rule = "Super Ace Hit Rate match"
         elif (
             parse_upper(label) <= MAX_RULE_UPPER
-            and natural_rate >= MIN_NATURAL_RATE
+            and natural_rate > MIN_NATURAL_RATE
             and mean > 0
             and baseline_weights[index] == 0
         ):

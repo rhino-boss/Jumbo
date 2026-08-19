@@ -1,4 +1,4 @@
-"""Synchronize only H016 SF physical reels and table-selection weights from FG."""
+"""Synchronize H016 SF physical reels, stop weights, and selections from FG."""
 from __future__ import annotations
 
 import copy
@@ -39,10 +39,16 @@ def main() -> None:
         after["tables"][f"sf_{index}"]["reels"] = copy.deepcopy(
             before["tables"][f"fg_{index}"]["reels"]
         )
+        after["tables"][f"sf_{index}"]["weights"] = copy.deepcopy(
+            before["tables"][f"fg_{index}"]["weights"]
+        )
     # Legacy Super alias follows SF_Symbol (sf_1), but all non-reel parameters
     # stay untouched as requested.
     after["tables"]["super"]["reels"] = copy.deepcopy(
         after["tables"]["sf_1"]["reels"]
+    )
+    after["tables"]["super"]["weights"] = copy.deepcopy(
+        after["tables"]["sf_1"]["weights"]
     )
 
     for source_group, target_group in (
@@ -65,8 +71,14 @@ def main() -> None:
         expected["tables"][f"sf_{index}"]["reels"] = copy.deepcopy(
             before["tables"][f"fg_{index}"]["reels"]
         )
+        expected["tables"][f"sf_{index}"]["weights"] = copy.deepcopy(
+            before["tables"][f"fg_{index}"]["weights"]
+        )
     expected["tables"]["super"]["reels"] = copy.deepcopy(
         expected["tables"]["sf_1"]["reels"]
+    )
+    expected["tables"]["super"]["weights"] = copy.deepcopy(
+        expected["tables"]["sf_1"]["weights"]
     )
     expected["table_selection"]["super_free"] = copy.deepcopy(
         after["table_selection"]["super_free"]
@@ -89,9 +101,9 @@ def main() -> None:
         },
         "super_free": selection_weights(after, "super_free"),
         "super_retrigger": selection_weights(after, "super_retrigger"),
-        "sf_stop_weights_unchanged": all(
+        "sf_stop_weights_match_fg": all(
             after["tables"][f"sf_{index}"]["weights"]
-            == before["tables"][f"sf_{index}"]["weights"]
+            == after["tables"][f"fg_{index}"]["weights"]
             for index in range(1, 4)
         ),
         "sf_drop_weights_unchanged": all(
