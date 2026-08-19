@@ -262,12 +262,28 @@ def solve_competitor_probabilities(
         base_values = [math.exp(value - pivot) for value in base_logs]
         base_total = sum(base_values)
         base_probabilities = [value / base_total for value in base_values]
+        boosted_total = sum(
+            base_probabilities[position] * BOOST_BY_LABEL[labels[index]]
+            for position, index in enumerate(eligible)
+            if index in boost_indices
+        )
+        non_boost_total = sum(
+            base_probabilities[position]
+            for position, index in enumerate(eligible)
+            if index not in boost_indices
+        )
+        if boosted_total >= 1.0 or non_boost_total <= 0.0:
+            raise ValueError("Requested SF boost factors leave no probability for other ranges")
+        non_boost_scale = (1.0 - boosted_total) / non_boost_total
         adjusted = [
-            value * BOOST_BY_LABEL.get(labels[index], 1.0)
-            for value, index in zip(base_values, eligible)
+            (
+                base_probabilities[position] * BOOST_BY_LABEL[labels[index]]
+                if index in boost_indices
+                else base_probabilities[position] * non_boost_scale
+            )
+            for position, index in enumerate(eligible)
         ]
-        adjusted_total = sum(adjusted)
-        return [value / adjusted_total for value in adjusted], base_probabilities
+        return adjusted, base_probabilities
 
     lower, upper = -1.0, 1.0
     while sum(
@@ -622,6 +638,10 @@ def main() -> None:
         payload["versions"][version]["metrics"]["sf_rtp"] = (
             sf["scene_rtp_after"] / SUPER_PRICE
         )
+    payload.setdefault("rules", {})["sf"] = (
+        "recalculated for v8 from the current H016 SF natural report and the "
+        "Super Ace SF multiplier-line reference"
+    )
     payload.setdefault("rules", {})["sf_rule"] = (
         "H016192A/H016194A SF use Super_Ace_feature_buy_2 as a smoothed Hit Rate reference; "
         "(350,400] and (450,500] receive x1.5 reference factors; all other eligible ranges "

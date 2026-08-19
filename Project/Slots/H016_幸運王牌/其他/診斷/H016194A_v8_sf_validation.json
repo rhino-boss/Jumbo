@@ -1,0 +1,531 @@
+{
+  "report": "C:\\Users\\rhinshen\\Mine\\個人工作區\\工作區\\Project\\Slots\\H016_幸運王牌\\Record\\H0161_08_2608191746_betmode3_106.xlsx",
+  "weights": "C:\\Users\\rhinshen\\Mine\\個人工作區\\工作區\\Project\\Slots\\H016_幸運王牌\\Source\\H016194A.xlsx",
+  "scene": "sf",
+  "profile": "oldhand",
+  "natural_denominator": 1000000.0,
+  "weight_total": 1000000000,
+  "expected_rtp": 0.9250000016306985,
+  "expected_pay": 23125.000040767463,
+  "expected_avg_retry": 46.30941158122922,
+  "retry_limit": 10000,
+  "retry_limit_probability": 2.5077298430447614e-75,
+  "violations": [],
+  "rows": [
+    {
+      "range": "(-1, 0]",
+      "natural_probability": 0.00215,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(0, 1]",
+      "natural_probability": 0.005207,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 55.3850585749952,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(1, 2]",
+      "natural_probability": 0.0039,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 154.85128205128206,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(2, 3]",
+      "natural_probability": 0.003048,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 255.252624671916,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(3, 4]",
+      "natural_probability": 0.002344,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 355.16211604095565,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(4, 5]",
+      "natural_probability": 0.00203,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 457.3694581280788,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(5, 6]",
+      "natural_probability": 0.001716,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 555.518648018648,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(6, 7]",
+      "natural_probability": 0.001483,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 655.7720836142953,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(7, 8]",
+      "natural_probability": 0.001319,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 756.7096285064442,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(8, 9]",
+      "natural_probability": 0.001306,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 856.6615620214395,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(9, 10]",
+      "natural_probability": 0.00123,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 955.3414634146342,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(10, 15]",
+      "natural_probability": 0.00528,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 1250.7310606060605,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(15, 20]",
+      "natural_probability": 0.004788,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 1757.1929824561403,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(20, 25]",
+      "natural_probability": 0.004631,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 2254.374865039948,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(25, 30]",
+      "natural_probability": 0.004763,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 2757.25803065295,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(30, 35]",
+      "natural_probability": 0.004503,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 3259.2182989118364,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(35, 40]",
+      "natural_probability": 0.004431,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 3752.6450011284132,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(40, 45]",
+      "natural_probability": 0.004461,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 4257.44676081596,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(45, 50]",
+      "natural_probability": 0.004293,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 4757.493594223154,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(50, 60]",
+      "natural_probability": 0.00871,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 5505.309988518944,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(60, 70]",
+      "natural_probability": 0.008585,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 6507.240535818288,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(70, 80]",
+      "natural_probability": 0.008673,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 7501.55655482532,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(80, 90]",
+      "natural_probability": 0.008684,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 8504.053431598342,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(90, 100]",
+      "natural_probability": 0.008567,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 9504.470643165636,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(100, 120]",
+      "natural_probability": 0.017207,
+      "weight": 195048324,
+      "card_probability": 0.195048324,
+      "average_pay": 11006.122508281513,
+      "rtp_contribution": 0.0858690299591594
+    },
+    {
+      "range": "(120, 140]",
+      "natural_probability": 0.017223,
+      "weight": 171265656,
+      "card_probability": 0.171265656,
+      "average_pay": 12994.371479997677,
+      "rtp_contribution": 0.08901958223317971
+    },
+    {
+      "range": "(140, 160]",
+      "natural_probability": 0.01688,
+      "weight": 138132683,
+      "card_probability": 0.138132683,
+      "average_pay": 15008.385071090048,
+      "rtp_contribution": 0.08292593989467258
+    },
+    {
+      "range": "(160, 180]",
+      "natural_probability": 0.016939,
+      "weight": 94596600,
+      "card_probability": 0.0945966,
+      "average_pay": 16999.33821358994,
+      "rtp_contribution": 0.06432318389022729
+    },
+    {
+      "range": "(180, 200]",
+      "natural_probability": 0.017025,
+      "weight": 58953757,
+      "card_probability": 0.058953757,
+      "average_pay": 19001.361527165933,
+      "rtp_contribution": 0.04480806600566757
+    },
+    {
+      "range": "(200, 250]",
+      "natural_probability": 0.042611,
+      "weight": 44477827,
+      "card_probability": 0.044477827,
+      "average_pay": 22508.080307901717,
+      "rtp_contribution": 0.04004442008147837
+    },
+    {
+      "range": "(250, 300]",
+      "natural_probability": 0.042272,
+      "weight": 42651740,
+      "card_probability": 0.04265174,
+      "average_pay": 27500.22071347464,
+      "rtp_contribution": 0.046917290552549396
+    },
+    {
+      "range": "(300, 350]",
+      "natural_probability": 0.041463,
+      "weight": 42651740,
+      "card_probability": 0.04265174,
+      "average_pay": 32499.73494440827,
+      "rtp_contribution": 0.05544680979671264
+    },
+    {
+      "range": "(350, 400]",
+      "natural_probability": 0.040618,
+      "weight": 66540055,
+      "card_probability": 0.066540055,
+      "average_pay": 37492.33246343985,
+      "rtp_contribution": 0.09978967456782294
+    },
+    {
+      "range": "(400, 450]",
+      "natural_probability": 0.03925,
+      "weight": 34900307,
+      "card_probability": 0.034900307,
+      "average_pay": 42494.5352866242,
+      "rtp_contribution": 0.059322893093020704
+    },
+    {
+      "range": "(450, 500]",
+      "natural_probability": 0.038309,
+      "weight": 40727689,
+      "card_probability": 0.040727689,
+      "average_pay": 47493.38510532773,
+      "rtp_contribution": 0.0773718327250808
+    },
+    {
+      "range": "(500, 550]",
+      "natural_probability": 0.0367,
+      "weight": 19427560,
+      "card_probability": 0.01942756,
+      "average_pay": 52476.846866485015,
+      "rtp_contribution": 0.040779883644377984
+    },
+    {
+      "range": "(550, 600]",
+      "natural_probability": 0.03566,
+      "weight": 14360635,
+      "card_probability": 0.014360635,
+      "average_pay": 57489.637689287716,
+      "rtp_contribution": 0.033023508125524174
+    },
+    {
+      "range": "(600, 650]",
+      "natural_probability": 0.033904,
+      "weight": 10591157,
+      "card_probability": 0.010591157,
+      "average_pay": 62471.63166588013,
+      "rtp_contribution": 0.026465874360780323
+    },
+    {
+      "range": "(650, 700]",
+      "natural_probability": 0.031993,
+      "weight": 7776830,
+      "card_probability": 0.00777683,
+      "average_pay": 67468.421842278,
+      "rtp_contribution": 0.020987617881427313
+    },
+    {
+      "range": "(700, 750]",
+      "natural_probability": 0.030822,
+      "weight": 5688553,
+      "card_probability": 0.005688553,
+      "average_pay": 72478.32652001816,
+      "rtp_contribution": 0.016491872070417156
+    },
+    {
+      "range": "(750, 800]",
+      "natural_probability": 0.0293,
+      "weight": 4152179,
+      "card_probability": 0.004152179,
+      "average_pay": 77480.59146757679,
+      "rtp_contribution": 0.01286853139197006
+    },
+    {
+      "range": "(800, 850]",
+      "natural_probability": 0.027298,
+      "weight": 3022560,
+      "card_probability": 0.00302256,
+      "average_pay": 82489.58348596966,
+      "rtp_contribution": 0.009973188618454098
+    },
+    {
+      "range": "(850, 900]",
+      "natural_probability": 0.025744,
+      "weight": 2197171,
+      "card_probability": 0.002197171,
+      "average_pay": 87489.03938781853,
+      "rtp_contribution": 0.007689135206430905
+    },
+    {
+      "range": "(900, 950]",
+      "natural_probability": 0.02406,
+      "weight": 1594288,
+      "card_probability": 0.001594288,
+      "average_pay": 92488.893599335,
+      "rtp_contribution": 0.005898157327947864
+    },
+    {
+      "range": "(950, 1000]",
+      "natural_probability": 0.022681,
+      "weight": 1155622,
+      "card_probability": 0.001155622,
+      "average_pay": 97480.20942639213,
+      "rtp_contribution": 0.004506010983109846
+    },
+    {
+      "range": "(1000, 2000]",
+      "natural_probability": 0.222863,
+      "weight": 86944,
+      "card_probability": 8.6944e-05,
+      "average_pay": 136968.8917855364,
+      "rtp_contribution": 0.000476344933096067
+    },
+    {
+      "range": "(2000, 3000]",
+      "natural_probability": 0.037574,
+      "weight": 123,
+      "card_probability": 1.23e-07,
+      "average_pay": 234611.29903656783,
+      "rtp_contribution": 1.1542875912599139e-06
+    },
+    {
+      "range": "(3000, 4000]",
+      "natural_probability": 0.004885,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 334023.8178096213,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(4000, 5000]",
+      "natural_probability": 0.00056,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 432200.9464285714,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(5000, 6000]",
+      "natural_probability": 5.3e-05,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 530570.3773584906,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(6000, 7000]",
+      "natural_probability": 4e-06,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 644050.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(7000, 8000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(8000, 9000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(9000, 10000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(10000, 20000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(20000, 30000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(30000, 40000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(40000, 50000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(50000, 60000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(60000, 70000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(70000, 80000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(80000, 90000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(90000, 100000]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    },
+    {
+      "range": "(100000, 1e+07]",
+      "natural_probability": 0.0,
+      "weight": 0,
+      "card_probability": 0.0,
+      "average_pay": 0.0,
+      "rtp_contribution": 0.0
+    }
+  ],
+  "expected_fg_spins_per_session": 10.105563345738041,
+  "expected_hit_spins_per_session": 4.058729535299225,
+  "expected_per_free_spin_hit_rate": 0.40163317931315223
+}
