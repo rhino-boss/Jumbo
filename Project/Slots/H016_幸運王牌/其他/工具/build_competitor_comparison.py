@@ -778,7 +778,45 @@ def validation_status(ok: bool) -> str:
 
 def working_change_summary(config: dict[str, Any]) -> str:
     version = str(config.get("excel_version", ""))
-    if version.split(".", 1)[0] != "4":
+    major = version.split(".", 1)[0]
+    if major == "6":
+        free_mix = "/".join(
+            str(int(selection_weight(config, "free", table)))
+            for table in PRIMARY_BY_SCENE["FG"]
+        )
+        return "\n".join([
+            "本報告比較的是專案根目錄的 **H016 v6 自然數學**；v6.0 已完整封存在 `Versions/6.0`，目前 Card System 版本為 **6.1.0.0**。",
+            "",
+            "- v6 自然數學只改 `fg_2`／`fg_3` 初始停輪權重；輪帶排列、掉落權重、Random Wild、金框、BG、BF、SF、賠率及 Cascade 倍數不變。",
+            f"- FG 初始與 Retrigger 選表比例維持 `fg_1／fg_2／fg_3 = {free_mix}`，本次選型未再改變 Table Selection。",
+            "- `fg_2`／`fg_3` 含相鄰同符號堆疊視窗的停輪相對權重，在 v5.1 基礎上提高 6 倍，再以整數最大餘數法補回各輪原權重總和。",
+            "- FG 綜合 2／3／4 堆疊事件率由 4.2103% 提升至 20.8561%；Super Ace 為 46.7281%，v6 達競品的 44.63%。",
+            "- 10 組候選沒有同時達成競品堆疊率 50% 與 Card-On FG Hit Rate 38% 下限；依『有提升就行』選用堆疊最高的合格組。",
+            "- v6.1 卡片使用 v6 Card-Off 1 億場 Normal 與 1 千萬場 BF 報表重算：92／94、新手／老手均為 BG 65%、FG 27%，BF 92.5%，FG 週期 130 場；SF 完整沿用 v6.0。",
+            "- Card-On 1,000,000 場確認：老手 RTP 91.8974%（BG 64.8150%、FG 27.0823%）、FG Hit Rate 38.4024%、週期 129.02 場；新手 RTP 91.9194%（BG 64.8972%、FG 27.0221%）、FG Hit Rate 39.0931%、週期 129.94 場；Retry Limit Exceeded 均為 0。",
+            "- BF Card-On 100,000 場確認 RTP 92.8334%、每 Free Spin Hit Rate 38.5948%、Retry Limit Exceeded = 0；理論 RTP 為 92.5000004%。",
+            "- 本報告固定關閉 Card System，以下實測表呈現自然數學；Card-On 數值只列於本段，避免與 Card-Off 指標混用。",
+            "- v6 正停輪 max/min 仍高於先前 10x 基準，約束表會如實標示 FAIL；若恢復 10x 為硬限制，v6 尚不能定板。",
+        ])
+    if major == "5":
+        free_mix = "/".join(
+            str(int(selection_weight(config, "free", table)))
+            for table in PRIMARY_BY_SCENE["FG"]
+        )
+        fg2 = model_random_wild_weights(config, "fg_2")
+        fg3 = model_random_wild_weights(config, "fg_3")
+        return "\n".join([
+            "本報告比較的是專案根目錄的 **H016 5.0 working config**；調整前的 v4 已完整封存在 `Versions/4.0`。",
+            "",
+            "- 本次只改 FG Table Selection、`fg_2`／`fg_3` 停輪權重及 `fg_3` Random Wild；輪帶、掉落權重、BG、SF、賠率與 Cascade 倍數不變。",
+            f"- FG 初始與 Retrigger 選表比例皆為 `fg_1／fg_2／fg_3 = {free_mix}`。",
+            "- `fg_2`／`fg_3` 含相鄰同符號堆疊視窗的停輪權重，分別相對 v4 除以 20／14，再用整數最大餘數法補回各輪原權重總和。",
+            f"- `fg_2` Random Wild 為 `{fg2}`；`fg_3` 由關閉改成同一組 `{fg3}`，維持相同的 2／3／4 顆條件分布。",
+            "- 92A／94A 卡片倍率區間與倍率權重未重算；只同步 v5 自然盤面及 5.0.0.0 版號。",
+            "- 本報告固定關閉 Card System，呈現自然數學；Card-On Hit Rate 另由 Simulator 大樣本驗證。",
+            "- 本輪為達成 Hit Rate／高倍自然機率目標，FG 正停輪 max/min 會超過 v4 的 12x 比較基準，約束表會如實標示 FAIL。",
+        ])
+    if major != "4":
         return "本報告使用目前根目錄 `config.js`；本次沒有附加 4.0 調整摘要。"
     bg1 = model_random_wild_weights(config, "bg_1")
     bg2 = model_random_wild_weights(config, "bg_2")
@@ -807,9 +845,11 @@ def config_constraint_section(
         "| 檢查 | 範圍 | 結果 | 詳細 |",
         "|---|---|---:|---|",
     ]
-    stop_ratio_limit = 12.0 if str(config.get("excel_version", "")).split(".", 1)[0] == "4" else 10.0
+    major = str(config.get("excel_version", "")).split(".", 1)[0]
+    stop_ratio_limit = 12.0 if major in {"4", "5"} else 10.0
     stop_ratio_label = (
-        "12x（4.0 堆疊抑制規格）" if stop_ratio_limit == 12.0 else "10x"
+        ("12x（4.0 堆疊抑制規格）" if major == "4" else "12x（沿用 4.0 比較基準）")
+        if stop_ratio_limit == 12.0 else "10x"
     )
     for scene in ("BG", "FG"):
         for table_name in PRIMARY_BY_SCENE[scene]:
@@ -942,6 +982,42 @@ def source_application_section(config: dict[str, Any]) -> str:
 
     bg_runs = [cyclic_max_run(reel) for reel in parsed["BG"]["reels"]]
     fg_runs = [cyclic_max_run(reel) for reel in parsed["FG"]["reels"]]
+    major = str(config.get("excel_version", "")).split(".", 1)[0]
+    if major == "6":
+        stop_note = (
+            "> 6.0 的 stopW exact match 顯示 FAIL 是預期結果：`fg_2`／`fg_3` 的堆疊可見停輪相對權重已在 v5.1 基礎上提高 6 倍；"
+            "Alias 驗證只涵蓋一般 BG／FG aliases，獨立的 BF `buy` 與 SF `super` 不應等同一般表。"
+        )
+        fg_role_note = (
+            "FG_Symbol 的 Random Wild 只允許 2 顆；FG_Symbol (2)／FG_Symbol (3) 均允許 2／3／4 顆，"
+            "且只有後兩表參與目前 0/6500/3500 選表。"
+        )
+        scope_note = (
+            "> 範圍限制：`Super Ace_claude.txt` 在本報告只作為來源輪帶／原始停輪權重追溯基準；v6 已依堆疊與 Card-On Hit Rate 目標調整停輪權重。"
+            "文字檔另述的「BG 恰有 2 個 SC 時，37.1% 抑制其中 1 個」動態層仍未加入，因此 FG Trigger Rate 不代表已還原該抑制層。"
+        )
+    elif major == "5":
+        stop_note = (
+            "> 5.0 的 stopW exact match 顯示 FAIL 是預期結果：`fg_2`／`fg_3` 已為 Card-On Hit Rate 與自然高倍尾端重新配置；"
+            "Alias 驗證只涵蓋一般 BG／FG aliases，獨立的 BF `buy` 與 SF `super` 不應等同一般表。"
+        )
+        fg_role_note = (
+            "FG_Symbol 的 Random Wild 只允許 2 顆；FG_Symbol (2)／FG_Symbol (3) 均允許 2／3／4 顆。"
+        )
+        scope_note = (
+            "> 範圍限制：本次依需求只套用文字檔的輪帶與停輪權重；文字檔另述的「BG 恰有 2 個 SC 時，37.1% 抑制其中 1 個」動態層未加入，"
+            "因其屬於額外玩法規則。故 FG Trigger Rate 是目前 H016 規則下的比較值，不代表已還原該抑制層。"
+        )
+    else:
+        stop_note = (
+            "> 4.0 的 stopW exact match 顯示 FAIL 也是預期結果：堆疊視窗權重已除以 1.2；後續堆疊重排只改輪帶順序，不再改權重。"
+            "Alias 驗證只涵蓋一般 BG／FG aliases，獨立的 BF `buy` 與 SF `super` 不應等同一般表。"
+        )
+        fg_role_note = "FG_Symbol 與 FG_Symbol (2) 的大鬼只允許 2 顆，FG_Symbol (3) 關閉。"
+        scope_note = (
+            "> 範圍限制：本次依需求只套用文字檔的輪帶與停輪權重；文字檔另述的「BG 恰有 2 個 SC 時，37.1% 抑制其中 1 個」動態層未加入，"
+            "因其屬於額外玩法規則。故 FG Trigger Rate 是目前 H016 規則下的比較值，不代表已還原該抑制層。"
+        )
     return "\n".join([
         f"來源：`{SOURCE_REELS.name}`；SHA-256 `{source_summary['source_sha256']}`；原始 stopW 為四位小數，統一乘以 10,000 無損轉成整數。",
         "",
@@ -949,15 +1025,15 @@ def source_application_section(config: dict[str, Any]) -> str:
         "",
         "> 底層輪帶 exact match 的判定會先把金框 ID 合併回原符號；本次為校準堆疊率而重排符號順序，因此 sequence exact match 顯示 FAIL 是預期結果，但每輪符號與金框 ID 格數仍完全不變。",
         "",
-        "> 4.0 的 stopW exact match 顯示 FAIL 也是預期結果：堆疊視窗權重已除以 1.2；後續堆疊重排只改輪帶順序，不再改權重。Alias 驗證只涵蓋一般 BG／FG aliases，獨立的 BF `buy` 與 SF `super` 不應等同一般表。",
+        stop_note,
         "",
         f"來源輪帶的 C1 格數為 BG R1～R5 = `{'/'.join(map(str, bg_c1))}`、FG R1～R5 = `{'/'.join(map(str, fg_c1))}`。",
         "",
-        "> 表別角色：BG_Symbol 與 BG_Symbol (2) 以停輪權重及 C1 掉落權重硬性阻止 FG；BG_Symbol (3) 專門提高 FG 觸發。FG_Symbol 與 FG_Symbol (2) 的大鬼只允許 2 顆，FG_Symbol (3) 關閉。各 alias 必須與其對應 primary table 完全一致。",
+        f"> 表別角色：BG_Symbol 與 BG_Symbol (2) 以停輪權重及 C1 掉落權重硬性阻止 FG；BG_Symbol (3) 專門提高 FG 觸發。{fg_role_note}各 alias 必須與其對應 primary table 完全一致。",
         "",
         f"> 輪帶連段警告：來源輪帶各輪最大循環連段為 BG `{'/'.join(map(str, bg_runs))}`、FG `{'/'.join(map(str, fg_runs))}`；最高分別為 {max(bg_runs)} 與 {max(fg_runs)}，不符合先前提出的實體輪帶最多 4 顆同符號連段限制。若拆段，就不再是文字檔的 exact source。",
         "",
-        "> 範圍限制：本次依需求只套用文字檔的輪帶與停輪權重；文字檔另述的「BG 恰有 2 個 SC 時，37.1% 抑制其中 1 個」動態層未加入，因其屬於額外玩法規則。故 FG Trigger Rate 是目前 H016 規則下的比較值，不代表已還原該抑制層。",
+        scope_note,
     ])
 
 
@@ -1039,11 +1115,14 @@ def main() -> None:
             lines.append(f"| {label} | {pct(comp)} | {pct(model)} | {pp(model - comp)} |")
         combo_sections.append("\n".join(lines))
 
+    version_major = str(config.get("excel_version", "")).split(".", 1)[0] or "Current"
+    version_title = f"{version_major}.0 Working Config"
+    version_anchor = f"本次-{version_major}0-working-config-改動說明"
     document = f"""# 競品參考數值比較
 
 ## 目錄
 
-- [本次 4.0 Working Config 改動說明](#本次-40-working-config-改動說明)
+- [本次 {version_title} 改動說明](#{version_anchor})
 - [Overview](#overview)
   - [Super Ace_claude 套用驗證](#super-ace_claude-套用驗證)
   - [Config-only 約束驗證](#config-only-約束驗證)
@@ -1062,7 +1141,7 @@ def main() -> None:
 - [金框比例](#金框比例)
 - [大鬼事件率](#大鬼事件率)
 
-## 本次 4.0 Working Config 改動說明
+## 本次 {version_title} 改動說明
 
 {change_summary}
 
@@ -1070,7 +1149,7 @@ def main() -> None:
 
 ### 比較基準
 
-| 項目 | Super Ace | H016 4.0 Working Config |
+| 項目 | Super Ace | H016 {version_title} |
 |---|---|---|
 | 來源 | JILI 實機非重複 JSONL | {h016_source} |
 | 樣本 | {competitor['rounds']:,} 個 BG Round、{competitor['fg_spins']:,} 個 FG Spin | {int(hs['total_rounds']):,} 個 BG Round、{h016['fg_spins']:,} 個 FG Spin |

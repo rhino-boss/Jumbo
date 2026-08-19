@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 WEIGHT_TOTAL = 1_000_000_000
 TARGET_SF_RTP = 0.925
 SUPER_PRICE = 250.0
-MIN_NATURAL_RATE = 0.001
+MIN_NATURAL_RATE = 0.0007
 MIN_SF_WEIGHTED_INDEX = 19  # (50, 60]
 PROFIT_START_INDEX = 30  # (250, 300]
 ABOVE_500_START_INDEX = 35  # (500, 550]
@@ -472,7 +472,7 @@ def recalibrate_sf(
     eligible = [
         index
         for index in range(MIN_SF_WEIGHTED_INDEX, 64)
-        if natural_rates[index] >= MIN_NATURAL_RATE and counts[index] > 0 and means[index] > 0
+        if natural_rates[index] > MIN_NATURAL_RATE and counts[index] > 0 and means[index] > 0
     ]
     if MIN_SF_WEIGHTED_INDEX not in eligible:
         raise ValueError("The required minimum SF range (50,60] is not naturally supported")
@@ -503,8 +503,8 @@ def recalibrate_sf(
         raise ValueError("SF has weight below the required (50,60] minimum range")
     if weights[MIN_SF_WEIGHTED_INDEX] <= 0:
         raise ValueError("SF minimum range (50,60] has no weight")
-    if any(weight and natural_rates[index] < MIN_NATURAL_RATE for index, weight in enumerate(weights)):
-        raise ValueError("SF has weight in a range with natural probability below 0.1%")
+    if any(weight and natural_rates[index] <= MIN_NATURAL_RATE for index, weight in enumerate(weights)):
+        raise ValueError("SF has weight in a range with natural probability at or below 0.07%")
     if max(range_shares) > PER_RANGE_RTP_SHARE_CAP + 1e-8:
         raise ValueError(f"SF single-range RTP share exceeds 15%: {max(range_shares)}")
     boost_indices = sorted(
@@ -526,8 +526,8 @@ def recalibrate_sf(
         after_rtp = weights[index] / WEIGHT_TOTAL * means[index]
         if index < MIN_SF_WEIGHTED_INDEX:
             rule = "Below minimum (50,60]: disabled"
-        elif natural_rates[index] < MIN_NATURAL_RATE:
-            rule = "H016 natural probability below 0.1%: disabled"
+        elif natural_rates[index] <= MIN_NATURAL_RATE:
+            rule = "H016 natural probability at or below 0.07%: disabled"
         elif label in BOOST_BY_LABEL:
             rule = f"Competitor-smoothed reference x{BOOST_BY_LABEL[label]:g}"
         elif index in eligible:
@@ -571,7 +571,7 @@ def recalibrate_sf(
         "calibration": (
             "Super Ace feature_buy_2 smoothed Hit Rate; (350,400] and (450,500] use x1.5 "
             "reference factors; all other ranges use a non-increasing shared power tilt; "
-            "minimum (50,60]; H016 natural >=0.1%; hard 92.5% RTP"
+            "minimum (50,60]; H016 natural >0.07%; hard 92.5% RTP"
         ),
         "minimum_weighted_index": MIN_SF_WEIGHTED_INDEX,
         "minimum_weighted_range": labels[MIN_SF_WEIGHTED_INDEX],
@@ -605,6 +605,7 @@ def main() -> None:
     parser.add_argument("--competitor", required=True, type=Path)
     parser.add_argument("--previous-payload", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--version", default="6.2.0.0")
     args = parser.parse_args()
 
     report = load_sf_report(args.report.resolve())
@@ -613,9 +614,11 @@ def main() -> None:
     competitor = load_competitor_sf(args.competitor.resolve(), interval_bounds(report["intervals"]))
 
     payload = deepcopy(previous)
+    payload["version"] = args.version
     sf = recalibrate_sf(payload["versions"]["92"]["sf"], labels, report, competitor)
     for version in ("92", "94"):
         payload["versions"][version]["sf"] = deepcopy(sf)
+        payload["versions"][version]["metrics"]["version"] = args.version
         payload["versions"][version]["metrics"]["sf_rtp"] = (
             sf["scene_rtp_after"] / SUPER_PRICE
         )
@@ -623,7 +626,7 @@ def main() -> None:
         "H016192A/H016194A SF use Super_Ace_feature_buy_2 as a smoothed Hit Rate reference; "
         "(350,400] and (450,500] receive x1.5 reference factors; all other eligible ranges "
         "use one smooth non-increasing power tilt; minimum weighted range (50,60]; H016 "
-        "natural probability must be at least 0.1%; SF RTP is hard-locked to 92.5%"
+        "natural probability must be greater than 0.07%; SF RTP is hard-locked to 92.5%"
     )
     payload["rules"].setdefault("targets", {})["sf"] = TARGET_SF_RTP
     payload["sf_source_report"] = {
@@ -644,6 +647,7 @@ def main() -> None:
         "source_rtp": report["rtp_total"],
         "competitor_samples": competitor["samples"],
         "target_sf_rtp": TARGET_SF_RTP,
+        "version": args.version,
         "scene_rtp_after": sf["scene_rtp_after"],
         "sf_rtp_after": payload["versions"]["92"]["metrics"]["sf_rtp"],
         "profit_hit_rate": sf["profit_hit_rate"],

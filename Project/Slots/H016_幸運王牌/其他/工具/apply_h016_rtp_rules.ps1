@@ -13,8 +13,8 @@ $projectDir = Split-Path -Parent (Split-Path -Parent $toolDir)
 $sourceDir = Join-Path $projectDir "Source"
 $payload = Get-Content -LiteralPath $PayloadPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $targets = @(
-    @{ File = "H016192A.xlsx"; Key = "92"; Normal = 0.92; BG = 0.70; FG = 0.22 },
-    @{ File = "H016194A.xlsx"; Key = "94"; Normal = 0.94; BG = 0.70; FG = 0.24 }
+    @{ File = "H016192A.xlsx"; Key = "92"; Normal = 0.92; BG = 0.65; FG = 0.27 },
+    @{ File = "H016194A.xlsx"; Key = "94"; Normal = 0.92; BG = 0.65; FG = 0.27 }
 )
 if ($TargetVersion -ne "All") {
     $targets = @($targets | Where-Object { $_.Key -eq $TargetVersion })
@@ -98,7 +98,6 @@ function Set-RegularDetailFormulas([object]$sheet, [bool]$includeFeatureBlocks) 
     Set-RegularBlockFormulas $sheet 86 149
     if ($includeFeatureBlocks) {
         Set-RegularBlockFormulas $sheet 163 226
-        Set-RegularBlockFormulas $sheet 234 297
         $sheet.Range("L156").Formula = "=IFERROR(K156/SUM(K156),0)"
     }
 
@@ -111,7 +110,6 @@ function Set-RegularDetailFormulas([object]$sheet, [bool]$includeFeatureBlocks) 
         $sheet.Range("B8").Formula = "=Overview!B12"
         $sheet.Range("D8").Formula = "=SUM(M163:M226)/B8"
         $sheet.Range("J8").Formula = "=IFERROR(LOOKUP(2,1/(K163:K226<>0),P163:P226),0)"
-        $sheet.Range("J9").Formula = "=IFERROR(LOOKUP(2,1/(K234:K297<>0),P234:P297),0)"
     }
 }
 
@@ -141,6 +139,9 @@ try {
             $excel.Calculation = -4105
             $detail = $book.Worksheets.Item("Detail")
             $newbie = $book.Worksheets.Item("Detail_Newbie")
+            if ($null -ne $payload.version) {
+                $book.Worksheets.Item("Overview").Range("B3").Value2 = [string]$payload.version
+            }
             if ($Scene -eq "SF") {
                 if ($null -eq $payload.sf_source_report) {
                     throw "SF-only apply requires sf_source_report"
@@ -171,8 +172,8 @@ try {
                     $weight = [double]$detail.Cells.Item($row, 11).Value2
                     $naturalRate = [double]$detail.Cells.Item($row, 4).Value2
                     $rowRtp = [double]$detail.Cells.Item($row, 13).Value2
-                    if ($weight -gt 0 -and $naturalRate -lt 0.001) {
-                        throw "$($target.File) SF row $row has weight with natural probability below 0.1%"
+                    if ($weight -gt 0 -and $naturalRate -le 0.0007) {
+                        throw "$($target.File) SF row $row has weight with natural probability at or below 0.07%"
                     }
                     if ($rowRtp -gt $maxRangeRtp) { $maxRangeRtp = $rowRtp }
                 }
@@ -253,8 +254,14 @@ try {
                         ([double]$newbieTriggerCount / $rounds)
                     )
                 }
-                Set-VerticalValues $detail 163 2 @($payload.source_report.fg_count)
-                Set-VerticalValues $detail 163 3 @($payload.source_report.fg_pay)
+                if ($null -ne $payload.bf_source_report) {
+                    Set-VerticalValues $detail 163 2 @($payload.bf_source_report.bf_count)
+                    Set-VerticalValues $detail 163 3 @($payload.bf_source_report.bf_pay)
+                }
+                else {
+                    Set-VerticalValues $detail 163 2 @($payload.source_report.fg_count)
+                    Set-VerticalValues $detail 163 3 @($payload.source_report.fg_pay)
+                }
             }
             if ($null -ne $payload.sf_source_report) {
                 Set-VerticalValues $detail 234 2 @($payload.sf_source_report.sf_count)
@@ -306,13 +313,13 @@ try {
             if ([math]::Abs($fgRtp - [double]$target.FG) -gt 0.000003) {
                 throw "$($target.File) FG RTP mismatch: $fgRtp"
             }
-            if ([math]::Abs($newbieRtp - 0.93) -gt 0.000003) {
+            if ([math]::Abs($newbieRtp - 0.92) -gt 0.000003) {
                 throw "$($target.File) Newbie RTP mismatch: $newbieRtp"
             }
-            if ([math]::Abs($newbieBgRtp - 0.70) -gt 0.000003) {
+            if ([math]::Abs($newbieBgRtp - 0.65) -gt 0.000003) {
                 throw "$($target.File) Newbie BG RTP mismatch: $newbieBgRtp"
             }
-            if ([math]::Abs($newbieFgRtp - 0.23) -gt 0.000003) {
+            if ([math]::Abs($newbieFgRtp - 0.27) -gt 0.000003) {
                 throw "$($target.File) Newbie FG RTP mismatch: $newbieFgRtp"
             }
             $expectedBfRtp = [double]$version.metrics.bf_rtp
@@ -351,8 +358,8 @@ try {
                     $weight = [double]$detail.Cells.Item($row, 11).Value2
                     $naturalRate = [double]$detail.Cells.Item($row, 4).Value2
                     $rowRtp = [double]$detail.Cells.Item($row, 13).Value2
-                    if ($weight -gt 0 -and $naturalRate -lt 0.001) {
-                        throw "$($target.File) SF row $row has weight with natural probability below 0.1%"
+                    if ($weight -gt 0 -and $naturalRate -le 0.0007) {
+                        throw "$($target.File) SF row $row has weight with natural probability at or below 0.07%"
                     }
                     if ($rowRtp -gt $maxRangeRtp) { $maxRangeRtp = $rowRtp }
                 }

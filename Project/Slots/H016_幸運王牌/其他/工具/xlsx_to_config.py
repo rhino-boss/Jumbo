@@ -204,6 +204,7 @@ def frontend_config(source: Path, variant: Path | None = None) -> dict[str, Any]
         config["excel_version"] = variant_version
         config["parsheet_id"] = f"H0161{rtp_label}"
         config["rtp_label"] = rtp_label
+        config["runtime_version"] = variant_version
         config["source_multiplier_xlsx"] = variant.name
         config["card_system"] = load_card_system(variant)
     for table in config["tables"].values():

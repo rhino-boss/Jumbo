@@ -1,0 +1,228 @@
+{
+  "version": "6.0.0.0",
+  "scope": "FG stop weights and free/retrigger table-selection weights only",
+  "search_rounds_per_candidate": 100000,
+  "confirm_rounds": 500000,
+  "competitor_fg_spins": 14215,
+  "competitor_stack_rate": 0.4672810411537109,
+  "baseline_stack_rate": 0.042103426460639894,
+  "baseline_vs_competitor": 0.09010300601258522,
+  "candidates": [
+    {
+      "candidate": 1,
+      "factor_fg2": 4.0,
+      "factor_fg3": 4.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        6500,
+        3500
+      ],
+      "stack_rate": 0.14938709706895992,
+      "stack_vs_competitor": 0.31969432506853923,
+      "card_hit_rate": 0.3920997920997921,
+      "card_rtp": 0.908191,
+      "fg_spins": 7215,
+      "fg_triggers": 716,
+      "retry_avg": 9.17844,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 2,
+      "factor_fg2": 6.0,
+      "factor_fg3": 6.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        6500,
+        3500
+      ],
+      "stack_rate": 0.20856098042453802,
+      "stack_vs_competitor": 0.4463287872959785,
+      "card_hit_rate": 0.382,
+      "card_rtp": 0.96281,
+      "fg_spins": 8000,
+      "fg_triggers": 797,
+      "retry_avg": 9.17641,
+      "retry_limit_exceeded": 0,
+      "confirmation": {
+        "card_hit_rate": 0.3849923037455105,
+        "card_rtp": 0.9250254,
+        "fg_spins": 38980,
+        "fg_triggers": 3879,
+        "retry_avg": 9.083616,
+        "retry_limit_exceeded": 0
+      }
+    },
+    {
+      "candidate": 3,
+      "factor_fg2": 8.0,
+      "factor_fg3": 8.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        6500,
+        3500
+      ],
+      "stack_rate": 0.260194115603797,
+      "stack_vs_competitor": 0.5568257487215426,
+      "card_hit_rate": 0.37142857142857144,
+      "card_rtp": 0.9235505,
+      "fg_spins": 7560,
+      "fg_triggers": 754,
+      "retry_avg": 9.02549,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 4,
+      "factor_fg2": 10.0,
+      "factor_fg3": 10.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        6500,
+        3500
+      ],
+      "stack_rate": 0.3057007781093119,
+      "stack_vs_competitor": 0.6542118151306558,
+      "card_hit_rate": 0.36364838070059485,
+      "card_rtp": 0.913025,
+      "fg_spins": 7565,
+      "fg_triggers": 752,
+      "retry_avg": 8.96587,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 5,
+      "factor_fg2": 12.0,
+      "factor_fg3": 12.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        6500,
+        3500
+      ],
+      "stack_rate": 0.3461486168335741,
+      "stack_vs_competitor": 0.7407717975866036,
+      "card_hit_rate": 0.36,
+      "card_rtp": 0.9189585,
+      "fg_spins": 8025,
+      "fg_triggers": 799,
+      "retry_avg": 9.14378,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 6,
+      "factor_fg2": 8.0,
+      "factor_fg3": 8.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        5000,
+        5000
+      ],
+      "stack_rate": 0.2646247072872549,
+      "stack_vs_competitor": 0.5663073910165495,
+      "card_hit_rate": 0.37182539682539684,
+      "card_rtp": 0.900786,
+      "fg_spins": 7560,
+      "fg_triggers": 749,
+      "retry_avg": 8.69419,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 7,
+      "factor_fg2": 8.0,
+      "factor_fg3": 8.0,
+      "selection_fg1_fg2_fg3": [
+        0,
+        8000,
+        2000
+      ],
+      "stack_rate": 0.2557635239203391,
+      "stack_vs_competitor": 0.5473441064265355,
+      "card_hit_rate": 0.3747910863509749,
+      "card_rtp": 0.901607,
+      "fg_spins": 7180,
+      "fg_triggers": 717,
+      "retry_avg": 9.03735,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 8,
+      "factor_fg2": 4.0,
+      "factor_fg3": 4.0,
+      "selection_fg1_fg2_fg3": [
+        2000,
+        5000,
+        3000
+      ],
+      "stack_rate": 0.20104347746066814,
+      "stack_vs_competitor": 0.43024103217261794,
+      "card_hit_rate": 0.38063266623628145,
+      "card_rtp": 0.9247935,
+      "fg_spins": 7745,
+      "fg_triggers": 768,
+      "retry_avg": 8.98561,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 9,
+      "factor_fg2": 2.0,
+      "factor_fg3": 2.0,
+      "selection_fg1_fg2_fg3": [
+        4000,
+        4000,
+        2000
+      ],
+      "stack_rate": 0.21062652097470685,
+      "stack_vs_competitor": 0.4507491261675686,
+      "card_hit_rate": 0.36459830176355323,
+      "card_rtp": 0.906393,
+      "fg_spins": 7655,
+      "fg_triggers": 761,
+      "retry_avg": 9.13069,
+      "retry_limit_exceeded": 0
+    },
+    {
+      "candidate": 10,
+      "factor_fg2": 1.0,
+      "factor_fg3": 1.0,
+      "selection_fg1_fg2_fg3": [
+        6000,
+        2500,
+        1500
+      ],
+      "stack_rate": 0.26033015256198017,
+      "stack_vs_competitor": 0.5571168732187987,
+      "card_hit_rate": 0.3615877080665813,
+      "card_rtp": 0.9399865,
+      "fg_spins": 7810,
+      "fg_triggers": 774,
+      "retry_avg": 8.96018,
+      "retry_limit_exceeded": 0
+    }
+  ],
+  "selected": {
+    "candidate": 2,
+    "factor_fg2": 6.0,
+    "factor_fg3": 6.0,
+    "selection_fg1_fg2_fg3": [
+      0,
+      6500,
+      3500
+    ],
+    "stack_rate": 0.20856098042453802,
+    "stack_vs_competitor": 0.4463287872959785,
+    "card_hit_rate": 0.382,
+    "card_rtp": 0.96281,
+    "fg_spins": 8000,
+    "fg_triggers": 797,
+    "retry_avg": 9.17641,
+    "retry_limit_exceeded": 0,
+    "confirmation": {
+      "card_hit_rate": 0.3849923037455105,
+      "card_rtp": 0.9250254,
+      "fg_spins": 38980,
+      "fg_triggers": 3879,
+      "retry_avg": 9.083616,
+      "retry_limit_exceeded": 0
+    }
+  },
+  "selection_reason": "best stack improvement among candidates within 38-45% Card-On FG Hit Rate",
+  "written": true
+}

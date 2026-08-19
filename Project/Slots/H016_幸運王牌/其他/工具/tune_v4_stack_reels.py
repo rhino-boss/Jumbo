@@ -354,7 +354,9 @@ def sync_aliases(config: dict[str, Any]) -> None:
         config["tables"][alias] = copy.deepcopy(config["tables"][primary])
 
 
-def sync_rtp_configs(base: dict[str, Any]) -> dict[str, Any]:
+def sync_rtp_configs(
+    base: dict[str, Any], restore_version3_cards: bool = False
+) -> dict[str, Any]:
     audit = {}
     for path in RTP_CONFIGS:
         header, previous = load_config(path)
@@ -362,7 +364,10 @@ def sync_rtp_configs(base: dict[str, Any]) -> dict[str, Any]:
         for key in RTP_METADATA_KEYS:
             if key in previous:
                 updated[key] = copy.deepcopy(previous[key])
-        updated["card_system"] = copy.deepcopy(previous["card_system"])
+        card_source = previous
+        if restore_version3_cards:
+            _, card_source = load_config(VERSION3_CONFIG.parent / path.name)
+        updated["card_system"] = copy.deepcopy(card_source["card_system"])
         atomic_write(path, render(header, updated))
         audit[path.name] = {"card_system_preserved": updated["card_system"] == previous["card_system"]}
     return audit
@@ -374,12 +379,41 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=20260818)
     parser.add_argument("--max-exposure-drift-pp", type=float, default=1.0)
     parser.add_argument("--stack-retention", type=float, default=0.90)
+    parser.add_argument(
+        "--fg-selection", type=int, nargs=3, metavar=("FG1", "FG2", "FG3"),
+        help="Only update free/retrigger table-selection weights.",
+    )
+    parser.add_argument(
+        "--restore-version3-cards", action="store_true",
+        help="Restore 92A/94A Card System payloads from Versions/3.0.",
+    )
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--validate-current", action="store_true")
     args = parser.parse_args()
     builder = load_module("h016_stack_builder", BUILDER)
     tuner = load_module("h016_style_tuner", STYLE_TUNER)
-    _, current = load_config(CONFIG)
+    header, current = load_config(CONFIG)
+    if args.fg_selection is not None:
+        weights = list(args.fg_selection)
+        if any(weight < 0 for weight in weights) or sum(weights) <= 0:
+            raise ValueError("FG selection weights must be non-negative with a positive total")
+        selection = [
+            {"table": table, "weight": weight}
+            for table, weight in zip(TABLES["FG"], weights)
+        ]
+        for group in ("free", "retrigger"):
+            current["table_selection"][group] = copy.deepcopy(selection)
+        rtp_audit = None
+        if args.write:
+            atomic_write(CONFIG, render(header, current))
+            rtp_audit = sync_rtp_configs(current, args.restore_version3_cards)
+        print(json.dumps({
+            "written": args.write,
+            "free": current["table_selection"]["free"],
+            "retrigger": current["table_selection"]["retrigger"],
+            "rtp_configs": rtp_audit,
+        }, ensure_ascii=False, indent=2))
+        return
     baseline = rebuild_pre_stack_config(current, tuner)
     config = copy.deepcopy(current if args.validate_current else baseline)
     competitor = builder.raw_competitor()
