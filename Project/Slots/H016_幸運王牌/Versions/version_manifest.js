@@ -1,5 +1,5 @@
 window.H016_VERSION_MANIFEST = {
-  "current": "6.4.0.1",
+  "current": "8.0.0.0",
   "version_rule": {
     "format": "遊戲參數.卡片權重.SCR.其他文件",
     "retention": "只有第 1、2 碼不同的數學版本分開保留；第 1、2 碼相同時只保留第 3、4 碼最新版本。"
@@ -135,6 +135,43 @@ window.H016_VERSION_MANIFEST = {
       "version": "6.4.0.1",
       "math_key": "6.4",
       "date": "2026-08-19",
+      "working": false,
+      "configs": {
+        "base": "Versions/6.4/config.js",
+        "92": "Versions/6.4/config_92A.js",
+        "94": "Versions/6.4/config_94A.js"
+      },
+      "changes": [
+        "將 H016 連消倍數英文統一為 Cascade Multiplier；同步 Game Rule、Index Help 與共用玩法規範。",
+        "自然輪帶、老手 BG／FG、BF 與 SF 數學完整沿用 v6.3；只修正新手 Normal Bet 倍率權重。",
+        "92A／94A 新手期統一為 BG 65%＋FG 28%＝Total 93%；FG 週期維持 130 場。",
+        "新手 BG Cap 維持 30x，新手 FG Cap 維持 120x；自然機率與競品相對 Hit Rate 規則不變。",
+        "v6.3 已封存至 Versions/6.3，根目錄 Config 與 Index 切換至 v6.4.0.0。",
+        "v6.4 已封存至 Versions/6.4，供 Index 切換與追溯。"
+      ]
+    },
+    {
+      "version": "7.0.0.0",
+      "math_key": "7.0",
+      "date": "2026-08-19",
+      "working": false,
+      "configs": {
+        "base": "Versions/7.0/config.js",
+        "92": "Versions/7.0/config_92A.js",
+        "94": "Versions/7.0/config_94A.js"
+      },
+      "changes": [
+        "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重由 1:0:0:0 改為與 SF_Symbol 相同的 0:1000:300:100。",
+        "SF 每次有金框消除時，啟用中的 sf_2 與 sf_3 都不會抽到 0 顆大鬼。",
+        "本版僅調整 SF_Symbol (3) 大鬼權重；輪帶、停輪權重、選表權重、掉落權重與倍率權重不變。",
+        "依版本規範將 H0161 升為 7，H016192A／H016194A 同步為 7.0.0.0。",
+        "v7 已封存至 Versions/7.0，供 Index 切換與追溯。"
+      ]
+    },
+    {
+      "version": "8.0.0.0",
+      "math_key": "8.0",
+      "date": "2026-08-19",
       "working": true,
       "configs": {
         "base": "config.js",
@@ -142,11 +179,10 @@ window.H016_VERSION_MANIFEST = {
         "94": "config_94A.js"
       },
       "changes": [
-        "將 H016 連消倍數英文統一為 Cascade Multiplier；同步 Game Rule、Index Help 與共用玩法規範。",
-        "自然輪帶、老手 BG／FG、BF 與 SF 數學完整沿用 v6.3；只修正新手 Normal Bet 倍率權重。",
-        "92A／94A 新手期統一為 BG 65%＋FG 28%＝Total 93%；FG 週期維持 130 場。",
-        "新手 BG Cap 維持 30x，新手 FG Cap 維持 120x；自然機率與競品相對 Hit Rate 規則不變。",
-        "v6.3 已封存至 Versions/6.3，根目錄 Config 與 Index 切換至 v6.4.0.0。"
+        "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重調整為 0:1000:0:0，每次事件只抽 2 個 WW。",
+        "SF 初始與 Retrigger 選表權重同步調整為 sf_1:sf_2:sf_3 = 0:5500:4500。",
+        "輪帶、停輪權重、掉落權重與卡片倍率權重不變。",
+        "依版本規範將 H0161 升為 8，H016192A／H016194A 同步為 8.0.0.0。"
       ]
     }
   ]

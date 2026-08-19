@@ -15,7 +15,7 @@ WEIGHT_TOTAL = 1_000_000_000
 TARGET_SF_RTP = 0.925
 SUPER_PRICE = 250.0
 MIN_NATURAL_RATE = 0.0007
-MIN_SF_WEIGHTED_INDEX = 19  # (50, 60]
+MIN_SF_WEIGHTED_INDEX = 24  # (100, 120]
 PROFIT_START_INDEX = 30  # (250, 300]
 ABOVE_500_START_INDEX = 35  # (500, 550]
 BELOW_100_END_INDEX = 23  # (90, 100]
@@ -347,7 +347,7 @@ def solve_probabilities(eligible: list[int], means: list[float], target_scene_rt
     expected = list(range(MIN_SF_WEIGHTED_INDEX, above_500[-1] + 1))
     if eligible != expected:
         raise ValueError(
-            "Naturally eligible SF ranges must be contiguous from (50,60] through the last weighted range"
+            "Naturally eligible SF ranges must be contiguous from (100,120] through the last weighted range"
         )
 
     head = geometric_group_distribution(
@@ -475,7 +475,7 @@ def recalibrate_sf(
         if natural_rates[index] > MIN_NATURAL_RATE and counts[index] > 0 and means[index] > 0
     ]
     if MIN_SF_WEIGHTED_INDEX not in eligible:
-        raise ValueError("The required minimum SF range (50,60] is not naturally supported")
+        raise ValueError("The required minimum SF range (100,120] is not naturally supported")
     if not any(index >= PROFIT_START_INDEX for index in eligible):
         raise ValueError("No naturally supported profitable SF ranges")
     target_scene_rtp = TARGET_SF_RTP * SUPER_PRICE
@@ -500,9 +500,9 @@ def recalibrate_sf(
     if abs(after - target_scene_rtp) > 0.00075:
         raise ValueError(f"SF integerized target mismatch: {after} vs {target_scene_rtp}")
     if any(weights[:MIN_SF_WEIGHTED_INDEX]):
-        raise ValueError("SF has weight below the required (50,60] minimum range")
+        raise ValueError("SF has weight below the required (100,120] minimum range")
     if weights[MIN_SF_WEIGHTED_INDEX] <= 0:
-        raise ValueError("SF minimum range (50,60] has no weight")
+        raise ValueError("SF minimum range (100,120] has no weight")
     if any(weight and natural_rates[index] <= MIN_NATURAL_RATE for index, weight in enumerate(weights)):
         raise ValueError("SF has weight in a range with natural probability at or below 0.07%")
     if max(range_shares) > PER_RANGE_RTP_SHARE_CAP + 1e-8:
@@ -525,7 +525,7 @@ def recalibrate_sf(
     for index, label in enumerate(labels):
         after_rtp = weights[index] / WEIGHT_TOTAL * means[index]
         if index < MIN_SF_WEIGHTED_INDEX:
-            rule = "Below minimum (50,60]: disabled"
+            rule = "Below minimum (100,120]: disabled"
         elif natural_rates[index] <= MIN_NATURAL_RATE:
             rule = "H016 natural probability at or below 0.07%: disabled"
         elif label in BOOST_BY_LABEL:
@@ -571,7 +571,7 @@ def recalibrate_sf(
         "calibration": (
             "Super Ace feature_buy_2 smoothed Hit Rate; (350,400] and (450,500] use x1.5 "
             "reference factors; all other ranges use a non-increasing shared power tilt; "
-            "minimum (50,60]; H016 natural >0.07%; hard 92.5% RTP"
+            "minimum (100,120]; H016 natural >0.07%; hard 92.5% RTP"
         ),
         "minimum_weighted_index": MIN_SF_WEIGHTED_INDEX,
         "minimum_weighted_range": labels[MIN_SF_WEIGHTED_INDEX],
@@ -625,7 +625,7 @@ def main() -> None:
     payload.setdefault("rules", {})["sf_rule"] = (
         "H016192A/H016194A SF use Super_Ace_feature_buy_2 as a smoothed Hit Rate reference; "
         "(350,400] and (450,500] receive x1.5 reference factors; all other eligible ranges "
-        "use one smooth non-increasing power tilt; minimum weighted range (50,60]; H016 "
+        "use one smooth non-increasing power tilt; minimum weighted range (100,120]; H016 "
         "natural probability must be greater than 0.07%; SF RTP is hard-locked to 92.5%"
     )
     payload["rules"].setdefault("targets", {})["sf"] = TARGET_SF_RTP

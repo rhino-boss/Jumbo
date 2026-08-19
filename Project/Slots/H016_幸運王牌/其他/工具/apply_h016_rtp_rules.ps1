@@ -161,10 +161,14 @@ try {
                     throw "$($target.File) SF weight total is $sfWeightTotal"
                 }
                 Test-RuleRows $detail 234 @($version.sf.audit) "SF"
-                $belowMinimumWeight = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K252"))
-                $minimumWeight = [double]$detail.Range("K253").Value2
+                $minimumIndex = [int]$version.sf.minimum_weighted_index
+                $minimumRow = 234 + $minimumIndex
+                $belowMinimumWeight = if ($minimumRow -gt 234) {
+                    [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K$($minimumRow - 1)"))
+                } else { 0.0 }
+                $minimumWeight = [double]$detail.Cells.Item($minimumRow, 11).Value2
                 if ($belowMinimumWeight -ne 0 -or $minimumWeight -le 0) {
-                    throw "$($target.File) SF minimum weighted range is not (50,60]"
+                    throw "$($target.File) SF minimum weighted range does not match payload index $minimumIndex"
                 }
                 $sfSceneRtp = [double]$excel.WorksheetFunction.Sum($detail.Range("M234:M297"))
                 $maxRangeRtp = 0.0
@@ -181,7 +185,7 @@ try {
                     throw "$($target.File) SF single-range RTP share exceeds 15%"
                 }
                 $boostIndices = @($version.sf.boost_indices | ForEach-Object { [int]$_ })
-                for ($row = 253; $row -lt 297; $row++) {
+                for ($row = $minimumRow; $row -lt 297; $row++) {
                     $currentHitWeight = [double]$detail.Cells.Item($row, 11).Value2
                     $nextHitWeight = [double]$detail.Cells.Item($row + 1, 11).Value2
                     $nextIndex = $row + 1 - 234
@@ -347,8 +351,12 @@ try {
 
             if ($null -ne $version.sf.profit_hit_rate) {
                 $sfWeightTotal = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K297"))
-                $belowMinimumWeight = [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K252"))
-                $minimumWeight = [double]$detail.Range("K253").Value2
+                $minimumIndex = [int]$version.sf.minimum_weighted_index
+                $minimumRow = 234 + $minimumIndex
+                $belowMinimumWeight = if ($minimumRow -gt 234) {
+                    [double]$excel.WorksheetFunction.Sum($detail.Range("K234:K$($minimumRow - 1)"))
+                } else { 0.0 }
+                $minimumWeight = [double]$detail.Cells.Item($minimumRow, 11).Value2
                 $profitWeight = [double]$excel.WorksheetFunction.Sum($detail.Range("K264:K297"))
                 $above500Weight = [double]$excel.WorksheetFunction.Sum($detail.Range("K269:K297"))
                 $below100Weight = [double]$excel.WorksheetFunction.Sum($detail.Range("K253:K257"))
@@ -365,7 +373,7 @@ try {
                 }
                 if ($sfWeightTotal -ne 1000000000) { throw "$($target.File) SF weight total is $sfWeightTotal" }
                 if ($belowMinimumWeight -ne 0 -or $minimumWeight -le 0) {
-                    throw "$($target.File) SF minimum weighted range is not (50,60]"
+                    throw "$($target.File) SF minimum weighted range does not match payload index $minimumIndex"
                 }
                 if ([math]::Abs($profitWeight / $sfWeightTotal - [double]$version.sf.profit_hit_rate) -gt 0.000000001) {
                     throw "$($target.File) SF profit hit rate is $($profitWeight / $sfWeightTotal)"
@@ -374,7 +382,7 @@ try {
                     throw "$($target.File) SF single-range RTP share exceeds 15%"
                 }
                 $boostIndices = @($version.sf.boost_indices | ForEach-Object { [int]$_ })
-                for ($row = 253; $row -lt 297; $row++) {
+                for ($row = $minimumRow; $row -lt 297; $row++) {
                     $currentHitWeight = [double]$detail.Cells.Item($row, 11).Value2
                     $nextHitWeight = [double]$detail.Cells.Item($row + 1, 11).Value2
                     $nextIndex = $row + 1 - 234
