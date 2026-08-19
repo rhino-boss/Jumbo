@@ -1,12 +1,12 @@
 {
-  "current": "3.2.0.1",
+  "current": "3.2.0.2",
   "version_rule": {
     "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，後三碼歸零。",
     "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。"
   },
   "versions": [
     {
-      "version": "3.2.0.1",
+      "version": "3.2.0.2",
       "date": "2026-08-14",
       "base_config": "Versions/3.2.0.0/config.js",
       "configs": {
@@ -14,6 +14,7 @@
         "94A": "Versions/3.2.0.0/config_94A.js"
       },
       "changes": [
+        "統一玩法分類為 2,025–32,400 Ways／Megaways／Cascade；同步 Game Rule 與 Index Help。",
         "修正共用 Setting 區塊的 Version 控制項被遊戲端 CSS／清除程式隱藏的問題。",
         "Card System Retry Limit 依規範統一調整為 10,000 次。"
       ]

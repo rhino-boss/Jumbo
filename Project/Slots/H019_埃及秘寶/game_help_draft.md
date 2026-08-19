@@ -11,6 +11,7 @@
 | parsheet_id | H0191 |
 | name_zh | 埃及秘寶 |
 | name_en | Egypt's Treasure |
+| game_type | Video Slot - Pay Anywhere / Cascade |
 
 ---
 

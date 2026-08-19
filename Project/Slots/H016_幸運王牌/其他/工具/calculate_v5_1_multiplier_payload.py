@@ -33,6 +33,8 @@ COMPETITOR_FILES = (
 
 TARGET_BG_RTP = 0.65
 TARGET_FG_RTP_BY_VERSION = {"92": 0.27, "94": 0.29}
+TARGET_NEWBIE_BG_RTP = TARGET_BG_RTP
+TARGET_NEWBIE_FG_RTP_BY_VERSION = dict(TARGET_FG_RTP_BY_VERSION)
 TARGET_BF_RTP = 0.925
 TARGET_CYCLE = 130.0
 BUY_PRICE = 40.5
@@ -148,13 +150,14 @@ def profile_line(
     entry_weight: int,
     bg_cap: float,
     fg_cap: float | None,
+    target_bg_rtp: float,
     target_fg_rtp: float,
 ) -> dict[str, Any]:
     denominator = core.WEIGHT_TOTAL + entry_weight
     trigger_rate = entry_weight / denominator
     trigger = core.trigger_stats_at_cap(report, bg_cap)
     trigger_bg_rtp = trigger_rate * trigger["average"]
-    regular_bg_target = TARGET_BG_RTP - trigger_bg_rtp
+    regular_bg_target = target_bg_rtp - trigger_bg_rtp
     if regular_bg_target <= 0:
         raise ValueError(f"{name}: cap-qualified trigger BG exceeds target")
     bg = core.preserve_paying_hit_rate_shape(
@@ -204,6 +207,7 @@ def build_version(
     entry_weight: int,
 ) -> dict[str, Any]:
     target_fg_rtp = TARGET_FG_RTP_BY_VERSION[key]
+    target_newbie_fg_rtp = TARGET_NEWBIE_FG_RTP_BY_VERSION[key]
     workbook = load_workbook(workbook_path, read_only=True, data_only=True, keep_links=False)
     try:
         detail = workbook["Detail"]
@@ -233,6 +237,7 @@ def build_version(
             entry_weight=entry_weight,
             bg_cap=oldhand_cap,
             fg_cap=None,
+            target_bg_rtp=TARGET_BG_RTP,
             target_fg_rtp=target_fg_rtp,
         )
         newbie = profile_line(
@@ -246,7 +251,8 @@ def build_version(
             entry_weight=entry_weight,
             bg_cap=detected_newbie_cap,
             fg_cap=NEWBIE_FG_CAP,
-            target_fg_rtp=target_fg_rtp,
+            target_bg_rtp=TARGET_NEWBIE_BG_RTP,
+            target_fg_rtp=target_newbie_fg_rtp,
         )
         bf = core.relative_hit_rate_scene(
             name=f"{key} BF",
@@ -282,6 +288,7 @@ def build_version(
             "metrics": {
                 "version": VERSION,
                 "target_rtp": TARGET_BG_RTP + target_fg_rtp,
+                "newbie_target_rtp": TARGET_NEWBIE_BG_RTP + target_newbie_fg_rtp,
                 "entry_weight": entry_weight,
                 "trigger_rate": trigger_rate,
                 "fg_cycle": 1.0 / trigger_rate,
@@ -352,6 +359,14 @@ def main() -> None:
                     "bg": TARGET_BG_RTP,
                     "fg": TARGET_FG_RTP_BY_VERSION[key],
                     "total": TARGET_BG_RTP + TARGET_FG_RTP_BY_VERSION[key],
+                }
+                for key in ("92", "94")
+            },
+            "newbie_targets": {
+                key: {
+                    "bg": TARGET_NEWBIE_BG_RTP,
+                    "fg": TARGET_NEWBIE_FG_RTP_BY_VERSION[key],
+                    "total": TARGET_NEWBIE_BG_RTP + TARGET_NEWBIE_FG_RTP_BY_VERSION[key],
                 }
                 for key in ("92", "94")
             },

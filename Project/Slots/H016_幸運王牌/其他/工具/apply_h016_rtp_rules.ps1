@@ -13,8 +13,8 @@ $projectDir = Split-Path -Parent (Split-Path -Parent $toolDir)
 $sourceDir = Join-Path $projectDir "Source"
 $payload = Get-Content -LiteralPath $PayloadPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $targets = @(
-    @{ File = "H016192A.xlsx"; Key = "92"; Normal = 0.92; BG = 0.65; FG = 0.27 },
-    @{ File = "H016194A.xlsx"; Key = "94"; Normal = 0.94; BG = 0.65; FG = 0.29 }
+    @{ File = "H016192A.xlsx"; Key = "92"; Normal = 0.92; BG = 0.65; FG = 0.27; NewbieNormal = 0.93; NewbieBG = 0.65; NewbieFG = 0.28 },
+    @{ File = "H016194A.xlsx"; Key = "94"; Normal = 0.94; BG = 0.65; FG = 0.29; NewbieNormal = 0.93; NewbieBG = 0.65; NewbieFG = 0.28 }
 )
 if ($TargetVersion -ne "All") {
     $targets = @($targets | Where-Object { $_.Key -eq $TargetVersion })
@@ -313,13 +313,13 @@ try {
             if ([math]::Abs($fgRtp - [double]$target.FG) -gt 0.000003) {
                 throw "$($target.File) FG RTP mismatch: $fgRtp"
             }
-            if ([math]::Abs($newbieRtp - [double]$target.Normal) -gt 0.000003) {
+            if ([math]::Abs($newbieRtp - [double]$target.NewbieNormal) -gt 0.000003) {
                 throw "$($target.File) Newbie RTP mismatch: $newbieRtp"
             }
-            if ([math]::Abs($newbieBgRtp - [double]$target.BG) -gt 0.000003) {
+            if ([math]::Abs($newbieBgRtp - [double]$target.NewbieBG) -gt 0.000003) {
                 throw "$($target.File) Newbie BG RTP mismatch: $newbieBgRtp"
             }
-            if ([math]::Abs($newbieFgRtp - [double]$target.FG) -gt 0.000003) {
+            if ([math]::Abs($newbieFgRtp - [double]$target.NewbieFG) -gt 0.000003) {
                 throw "$($target.File) Newbie FG RTP mismatch: $newbieFgRtp"
             }
             $expectedBfRtp = [double]$version.metrics.bf_rtp

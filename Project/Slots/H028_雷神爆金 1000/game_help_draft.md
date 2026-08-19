@@ -11,6 +11,7 @@
 | parsheet_id | H0281 |
 | name_zh | 雷神爆金1000 |
 | name_en | Thunder Boost 1000 |
+| game_type | Video Slot - 2,025–32,400 Ways / Megaways / Cascade |
 
 ---
 

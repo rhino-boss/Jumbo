@@ -1,6 +1,6 @@
 # 奧林帕斯 2500 (Olympus 2500) 遊戲規則說明
 
-> 文件版本：v0.4（玩法確認版）
+> 文件版本：v0.5（玩法確認版）
 > 對標競品：Pragmatic Play - Gates of Olympus 1000  
 > 撰寫依據：玩法以 `文件/260630_Olympus 2500.pptx` 為主；現階段數學值以 `Source/H027192A.xlsx` 為主  
 > 編號：H027  
@@ -17,7 +17,7 @@
 | PARsheet ID | H0271 |
 | 遊戲名稱 | 奧林帕斯 2500 |
 | 遊戲英文名 | Olympus 2500 |
-| 遊戲類型 | - |
+| 遊戲類型 | Video Slot - Pay Anywhere / Cascade |
 | 盤面規格 | 6 輪盤、每輪 5 列固定盤面，共 30 格 |
 | 中獎方式 | Pay Anywhere；同一個一般符號在整個盤面合計達 8 個以上即得獎 |
 | 最小 / 最大 Ways | - |
@@ -227,7 +227,7 @@
 - **自然觸發一致性**：Buy 進入 FG 後使用與自然觸發相同的 FG 規則。
 - **進場 C1**：目前 xlsx 以 BF 輪帶保證前四輪 C1，不代表最終畫面一定固定為恰好 4 顆。
 
-### 9.6 Count Anywhere / Cascade 相關
+### 9.6 Pay Anywhere / Cascade 相關
 
 - **多種符號同時中獎**：每種符號獨立判定並相加基本獎金，再套用 C2 規則。
 - **無 Wild 計數**：Any-8 只統計該一般符號本身，不加入任何替代符號。
@@ -245,7 +245,7 @@
 | --- | --- |
 | BG / Base Game | 主遊戲 |
 | FG / Free Game | 免費遊戲 |
-| Any-8 / Count Anywhere | 同符號在全盤面合計達 8 個以上得獎 |
+| Pay Anywhere / Any-8 | 同符號在全盤面合計達 8 個以上得獎 |
 | Cascade | 中獎符號消除、掉落補位並再次判定 |
 | WW | 舊 xlsx 底稿中的 Wild 代碼；H027 正式玩法不使用 |
 | C1 | Scatter 代碼 |

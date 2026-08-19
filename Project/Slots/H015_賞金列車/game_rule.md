@@ -1,6 +1,6 @@
 # 賞金列車 (Wild Train) 遊戲規則說明
 
-> 文件版本：v1.1
+> 文件版本：v1.3
 > 對標競品：PG - Wild Bounty Showdown
 > 撰寫依據：`Source/H015192.xlsx`、`Source/H015194.xlsx`、對應 config 與 `Simulator.py`；競品資料僅作玩法參考
 > 編號：H015
@@ -14,7 +14,7 @@
 | --- | --- |
 | 遊戲名稱（內部代號） | 賞金列車（H015） |
 | 遊戲英文名 | Wild Train |
-| 遊戲類型 | Video Slot - Ways / Cascade / Progressive Multiplier |
+| 遊戲類型 | Video Slot - 3,600 Ways / Cascade / Cascade Multiplier |
 | 盤面規格 | 6 輪盤、5 層顯示；有效記分區固定為 24 格，排列為每輪 `3 / 4 / 5 / 5 / 4 / 3` |
 | 中獎方式 | 由左至右連續 Ways 計獎 |
 | 最小 / 最大 Ways | 固定 3600 Ways |

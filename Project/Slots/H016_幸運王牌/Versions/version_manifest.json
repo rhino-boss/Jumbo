@@ -1,5 +1,5 @@
 {
-  "current": "6.3.0.1",
+  "current": "6.4.0.1",
   "version_rule": {
     "format": "遊戲參數.卡片權重.SCR.其他文件",
     "retention": "只有第 1、2 碼不同的數學版本分開保留；第 1、2 碼相同時只保留第 3、4 碼最新版本。"
@@ -116,6 +116,25 @@
       "version": "6.3.0.1",
       "math_key": "6.3",
       "date": "2026-08-19",
+      "working": false,
+      "configs": {
+        "base": "Versions/6.3/config.js",
+        "92": "Versions/6.3/config_92A.js",
+        "94": "Versions/6.3/config_94A.js"
+      },
+      "changes": [
+        "統一玩法分類為 1,024 Ways／Cascade，並將連消倍數英文統一為 Cascade Multiplier；同步 Game Rule 與 Index Help。",
+        "自然輪帶與 BG／FG／BF 卡片倍率權重完整沿用 v6.2；本版只重算 SF 卡片倍率權重。",
+        "SF 自然資料使用 H0161_06_2608190046_betmode3_108.xlsx（Card System Off、100,000,000 場）。",
+        "92A／94A SF 使用完全相同的整數權重，RTP 硬鎖 92.5%，權重總和 1,000,000,000。",
+        "SF 線型以 Super_Ace_feature_buy_2.jsonl 的競品 Hit Rate 為基準；(350,400] 與 (450,500] 的基準 Hit Rate 額外乘 1.5。",
+        "SF 最低有權重區間為 (50,60]，H016 自然機率小於等於 0.07% 的區間不配置權重，單一區間 RTP 占比不超過 15%。"
+      ]
+    },
+    {
+      "version": "6.4.0.1",
+      "math_key": "6.4",
+      "date": "2026-08-19",
       "working": true,
       "configs": {
         "base": "config.js",
@@ -123,11 +142,11 @@
         "94": "config_94A.js"
       },
       "changes": [
-        "自然輪帶與 BG／FG／BF 卡片倍率權重完整沿用 v6.2；本版只重算 SF 卡片倍率權重。",
-        "SF 自然資料使用 H0161_06_2608190046_betmode3_108.xlsx（Card System Off、100,000,000 場）。",
-        "92A／94A SF 使用完全相同的整數權重，RTP 硬鎖 92.5%，權重總和 1,000,000,000。",
-        "SF 線型以 Super_Ace_feature_buy_2.jsonl 的競品 Hit Rate 為基準；(350,400] 與 (450,500] 的基準 Hit Rate 額外乘 1.5。",
-        "SF 最低有權重區間為 (50,60]，H016 自然機率小於等於 0.07% 的區間不配置權重，單一區間 RTP 占比不超過 15%。"
+        "將 H016 連消倍數英文統一為 Cascade Multiplier；同步 Game Rule、Index Help 與共用玩法規範。",
+        "自然輪帶、老手 BG／FG、BF 與 SF 數學完整沿用 v6.3；只修正新手 Normal Bet 倍率權重。",
+        "92A／94A 新手期統一為 BG 65%＋FG 28%＝Total 93%；FG 週期維持 130 場。",
+        "新手 BG Cap 維持 30x，新手 FG Cap 維持 120x；自然機率與競品相對 Hit Rate 規則不變。",
+        "v6.3 已封存至 Versions/6.3，根目錄 Config 與 Index 切換至 v6.4.0.0。"
       ]
     }
   ]

@@ -1,13 +1,15 @@
 # Olympus 2500 Game Help
 
+遊戲類型：`Video Slot - Pay Anywhere / Cascade`
+
 ## WINS
 
-### Count Anywhere
+### Pay Anywhere
 
 | Item | 中文欄 | English |
 | --- | --- | --- |
 | 主要標題 | 中獎方式 | WINS |
-| 副標題 | 全盤計數 | COUNT ANYWHERE |
+| 副標題 | 全盤計數 | PAY ANYWHERE |
 | 規則說明 | 盤面為 6 輪 × 5 列，共 30 格。同一一般符號在整個盤面出現 8 個以上即可得獎，不要求相鄰。 | THE GAME USES A 6-REEL BY 5-ROW GRID WITH 30 POSITIONS. EIGHT OR MORE MATCHING REGULAR SYMBOLS ANYWHERE ON THE GRID AWARD A WIN; ADJACENCY IS NOT REQUIRED. |
 | 規則說明 | 同一盤面可有多種一般符號同時得獎；每種符號依其總數對應的賠率級距支付一次。 | MULTIPLE REGULAR SYMBOL TYPES MAY WIN ON THE SAME GRID. EACH SYMBOL TYPE PAYS ONCE ACCORDING TO ITS TOTAL COUNT. |
 | 規則說明 | 本遊戲沒有 Wild。Scatter 與 Multiplier 不屬於一般得分符號。 | THIS GAME HAS NO WILD. SCATTER AND MULTIPLIER SYMBOLS ARE NOT REGULAR PAYING SYMBOLS. |

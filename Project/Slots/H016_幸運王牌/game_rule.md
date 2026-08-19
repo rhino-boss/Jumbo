@@ -1,6 +1,6 @@
 # 幸運王牌 (Lucky Ace) 遊戲規則說明
 
-> 文件版本：v0.3（草稿）
+> 文件版本：v0.5（草稿）
 > 對標玩法：101003 Lucky Ace / Super Ace
 > 撰寫依據：玩法邏輯以 `其他/模擬程式_Lin/101003/simulation_clean.py` 與 `data.js` 為主；遊戲設定與數值沿用 `Source/H016192.xlsx`、`Source/H016194.xlsx`；Help 文案參考 `其他/H5企劃書_101003_Lucky Ace_幸運王牌.xlsx`
 > 編號：H016
@@ -32,7 +32,7 @@
 | Game ID | H016 |
 | PARsheet ID | H016192、H016194（沿用 H016 設定；正式 H016 PARsheet ID 待數值檔改名時確認） |
 | 遊戲英文名 | Lucky Ace |
-| 遊戲類型 | Video Slot - Ways / Cascade / Progressive Win Multiplier |
+| 遊戲類型 | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
 | 中獎方式 | 由最左輪開始，連續 3 輪以上相同符號或可替代 Wild 即成立 Ways 中獎 |
 | 最小 / 最大 Ways | 最大 1024 Ways（`4 × 4 × 4 × 4 × 4`） |
@@ -126,7 +126,7 @@
 1. 玩家選擇 Normal Bet 並開始 Spin。
 2. 系統先依 H016 的 Base Game 高表 / 低表權重選擇本局使用的盤面表。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪、每輪 4 列盤面。
-4. 本局 Win Multiplier 從 `×1` 開始。
+4. 本局 Cascade Multiplier 從 `×1` 開始。
 5. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
 6. 若沒有中獎，停止 Cascade，進入最終 `C1` 統計。
 7. 若有中獎，先以本次 Cascade 對應倍數計算並累加得分。
@@ -196,7 +196,7 @@
 6. 若啟動複製模式，最後選取 R2～R5 的合格位置並放置額外 `WW2`。
 7. 以完成後的新盤面進行下一次 Cascade 判獎。
 
-### 6.4 Win Multiplier
+### 6.4 Cascade Multiplier
 
 | 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次起 |
 | --- | ---: | ---: | ---: | ---: |
@@ -223,7 +223,7 @@
 * 每次進入 FG，依 H016 Free Game Surface 權重決定 10 場中高表與低表的場數組合，再隨機排列其出現順序。
 * 高表場會再依 `A / K / Q / J` 四套高表權重選擇本場使用表；低表場使用 Free Game Low 表。
 * FG 的盤面生成、Ways、Cascade、金框轉 Wild 與 Scatter 保留規則同 BG；WW2 判定頻率依下一點採 101003 的 FG 規則。
-* FG 的 Win Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`。
+* FG 的 Cascade Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`。
 * FG 不設單次成功鎖定；每次 Cascade 有新的中獎金框轉 Wild，都重新進行 Random Wild 判定，同一個 FG Spin 可成功啟動多次 WW2 複製模式。
 * FG 場次使用觸發時的 Bet，不可中途變更。
 
@@ -347,7 +347,7 @@
 | C1 / Scatter | FG / Retrigger 觸發符號 |
 | Symbol Weight | 各輪抽取符號時使用的相對權重 |
 | High / Low Table | 由卡片系統選定的高表 / 低表盤面權重組 |
-| Win Multiplier | 依同一 Spin 的 Cascade 次序提升的固定得分倍數 |
+| Cascade Multiplier | 依同一 Spin 的 Cascade 次序提升的固定得分倍數 |
 | Buy Feature | 40.5 × Bet 的一般購買特色 |
 | Buy Super Feature | 250 × Bet 的超級購買特色 |
 

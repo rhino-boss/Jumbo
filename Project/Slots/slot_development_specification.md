@@ -585,6 +585,40 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 - 不得為演出方便另寫一套簡化數學邏輯。
 - Config 無法載入或欄位不完整時要顯示明確錯誤，不得靜默使用舊值。
 
+#### 4.1.1 遊戲類型命名規則
+
+Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
+
+`Video Slot - <主要派彩類型> / <附加機制>`
+
+主要派彩類型只能依實際判獎邏輯選擇一種：
+
+| 類型 | 統一英文 | 判定規則 |
+| --- | --- | --- |
+| 群集派彩 | `Cluster Pay` | 相同符號必須在盤面上依規定方向相鄰連接，且連接數量達門檻才得獎。 |
+| 全盤計數 | `Pay Anywhere` | 相同符號在整個盤面的總數達門檻即得獎，不要求相鄰、連線或由最左輪開始。 |
+| 路數派彩 | `N Ways` | 相同符號由最左輪起，在連續相鄰輪出現即得獎；文件中的 `N` 必須換成實際固定 Ways 或最小～最大 Ways。 |
+| 線數派彩 | `N Lines` | 依固定 Payline 判獎；文件中的 `N` 必須換成實際線數。 |
+
+- `Cascade`、`Megaways`、Multiplier 與 Feature 屬附加機制，不得代替主要派彩類型。
+- 不要求相鄰的全盤計數玩法不得標示為 `Cluster Pay` 或 `Cluster Pays`。
+- 連消流程使用的得分倍數統一稱為 `Cascade Multiplier`，不得再使用 `Progressive Multiplier`、`Progressive Cascade Multiplier` 或 `Progressive Win Multiplier`。
+- 相同術語必須同步出現在 Game Rule、Index Help 與遊戲清單，不得各自使用不同名稱。
+
+目前正式遊戲類型如下：
+
+| 遊戲 | 統一遊戲類型 |
+| --- | --- |
+| H013 糖果狂歡 1000 | `Video Slot - Pay Anywhere / Cascade` |
+| H015 賞金列車 | `Video Slot - 3,600 Ways / Cascade / Cascade Multiplier` |
+| H016 幸運王牌 | `Video Slot - 1,024 Ways / Cascade / Cascade Multiplier` |
+| H019 埃及秘寶 | `Video Slot - Pay Anywhere / Cascade` |
+| H026 彩罐熱舞 1000 | `Video Slot - 20 Lines / Cascade` |
+| H027 奧林帕斯 2500 | `Video Slot - Pay Anywhere / Cascade` |
+| H028 雷神爆金 1000 | `Video Slot - 2,025–32,400 Ways / Megaways / Cascade` |
+
+目前正式遊戲沒有使用 `Cluster Pay`；日後只有實際採相鄰群集判獎的遊戲才能列入此類。
+
 ### 4.2 共用區域與 By Game 區域
 
 圖示中的遊戲顯示區域屬於 By Game 設計；除此之外的 Demogame 區域均為所有遊戲共用。

@@ -1,6 +1,6 @@
 # 糖果狂歡 1000 (Sugar Bonanza 1000) 遊戲規則說明
 
-> 文件版本：v1.1
+> 文件版本：v1.2
 > 編號：H013
 > 撰寫日期：2026-05-21
 
@@ -14,7 +14,7 @@
 | Game ID | `101001` |
 | PARsheet ID | `H0131` |
 | 遊戲英文名 | Sugar Bonanza 1000 |
-| 遊戲類型 | Video Slot - Cluster Pays / Cascade |
+| 遊戲類型 | Video Slot - Pay Anywhere / Cascade |
 | 盤面規格 | 6 輪盤、5 列固定盤面 |
 | 中獎方式 | 同一符號在整個盤面出現達門檻即可得分，無賠線 |
 | 最小 / 最大 Ways | 不適用，本作為全盤面計數型玩法 |

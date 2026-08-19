@@ -1,6 +1,6 @@
 # 埃及秘寶 (Egypt's Treasure) 遊戲規則說明
 
-> 文件版本：v0.1（草稿）  
+> 文件版本：v0.2（草稿）
 > 編號：H019  
 > 撰寫日期：2026-07-14  
 > **主要依據：`Source/H019192.xlsx`、`Source/H019194.xlsx`；數學值以 `Parameter` 工作表的實際權重表為準。**  
@@ -16,7 +16,7 @@
 | Game ID | 101006 |
 | PARsheet ID | H0191 |
 | 遊戲英文名 | Egypt's Treasure |
-| 遊戲類型 | Video Slot / Count Anywhere / Cascade |
+| 遊戲類型 | Video Slot - Pay Anywhere / Cascade |
 | 盤面規格 | 6 輪 × 5 列，共 30 格 |
 | 中獎方式 | 同一一般符號與 Wild 合計達 8 個以上即得獎 |
 | 數學版本 | H019192（92%）、H019194（94%） |
