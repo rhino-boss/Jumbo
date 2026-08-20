@@ -172,11 +172,11 @@
       "version": "8.0.0.0",
       "math_key": "8.0",
       "date": "2026-08-19",
-      "working": true,
+      "working": false,
       "configs": {
-        "base": "config.js",
-        "92": "config_92A.js",
-        "94": "config_94A.js"
+        "base": "Versions/8.0/config.js",
+        "92": "Versions/8.0/config_92A.js",
+        "94": "Versions/8.0/config_94A.js"
       },
       "changes": [
         "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重調整為 0:1000:0:0，每次事件只抽 2 個 WW。",
@@ -184,7 +184,9 @@
         "SF 卡片倍率權重依 v8 的 100 萬場自然報表與 Super Ace SF 倍率線型重算，92／94 共用同一組權重。",
         "SF 最小有權重區間改為 (100, 120]，自然機率需大於 0.07%，目標 RTP 固定 92.5%。",
         "(350, 400] 與 (450, 500] 依競品平滑參考機率額外乘 1.5 倍，其餘區間維持競品遞減線型。",
-        "依版本規範將 H0161 升為 8，H016192A／H016194A 同步為 8.0.0.0。"
+        "OP Jackpot SCR 依 v8 Card-On 報表補齊 NB 新手、NB 老手、BF、SF，並將六份來源報表收入 Versions/8.0/Record。",
+        "依版本規範將 H0161 升為 8，H016192A／H016194A 同步為 8.0.0.0。",
+        "v8 已封存至 Versions/8.0，含三份 Config、三份 Source Excel、倍率求解與驗證資料，供 Index 切換與追溯。"
       ]
     }
   ]
