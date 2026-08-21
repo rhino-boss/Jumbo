@@ -136,12 +136,15 @@
     const profileSelect = document.getElementById("cardProfileSelect");
     const rangeSelect = document.getElementById("cardRangeSelect");
     const configOptions = configSelect ? [...configSelect.options] : [new Option("Current", "")];
-    const profileOptions = profileSelect
-      ? [...profileSelect.options].map((option) => ({ value: option.value, name: normalizeProfileName(option.value || option.textContent) }))
-      : [
-          { value: "newbie", name: "Newbie" },
-          { value: "oldhand", name: "Oldhand" }
-        ];
+    const supportsCardSystem = cardSystemSupported();
+    const profileOptions = !supportsCardSystem
+      ? [{ value: "off", name: "Off" }]
+      : profileSelect
+        ? [...profileSelect.options].map((option) => ({ value: option.value, name: normalizeProfileName(option.value || option.textContent) }))
+        : [
+            { value: "newbie", name: "Newbie" },
+            { value: "oldhand", name: "Oldhand" }
+          ];
 
     configSelect?.closest("label")?.classList.add("demogame-source-control");
     profileSelect?.closest("label")?.classList.add("demogame-source-control");
@@ -156,7 +159,8 @@
         const option = document.createElement("option");
         option.value = JSON.stringify([configOption.value, profile.value]);
         option.textContent = `${normalizeConfigName(configOption)}-${profile.name}`;
-        if ((!configSelect || configOption.selected) && profile.name === normalizeProfileName(profileSelect?.value || "oldhand")) {
+        const selectedProfile = supportsCardSystem ? normalizeProfileName(profileSelect?.value || "oldhand") : "Off";
+        if ((!configSelect || configOption.selected) && profile.name === selectedProfile) {
           option.selected = true;
         }
         combined.appendChild(option);
@@ -190,7 +194,9 @@
 
     combined.addEventListener("change", () => {
       const [configValue, profileValue] = JSON.parse(combined.value);
-      try { localStorage.setItem("slotDemoCardProfile", normalizeProfileName(profileValue).toLowerCase()); } catch (_) {}
+      if (profileValue !== "off") {
+        try { localStorage.setItem("slotDemoCardProfile", normalizeProfileName(profileValue).toLowerCase()); } catch (_) {}
+      }
       if (profileSelect && profileSelect.value !== profileValue) {
         profileSelect.value = profileValue;
         profileSelect.dispatchEvent(new Event("change", { bubbles: true }));
@@ -1108,4 +1114,65 @@
   if (betValue) new MutationObserver(() => standardize()).observe(betValue, { childList: true, subtree: true, characterData: true });
   document.getElementById("helpBtn")?.addEventListener("click", () => setTimeout(standardize));
   standardize();
+})();
+
+// Shared control binding for games that opt in. Existing games keep their
+// current listeners until they migrate to this API.
+(() => {
+  "use strict";
+
+  window.slotBindCommonControls = (actions = {}) => {
+    const byId = (id) => document.getElementById(id);
+    const bind = (id, eventName, handler) => {
+      const element = byId(id);
+      if (element && typeof handler === "function") element.addEventListener(eventName, handler);
+      return element;
+    };
+
+    bind("spinBtn", "click", actions.spin);
+    bind("autoBtn", "click", actions.toggleAuto);
+    bind("normalBetBtn", "click", actions.normalMode);
+    bind("extraBetBtn", "click", actions.extraMode);
+    bind("buyFeatureBtn", "click", actions.buyFeatureMode);
+    bind("betMinusBtn", "click", actions.betMinus);
+    bind("betPlusBtn", "click", actions.betPlus);
+    bind("betBtn", "click", actions.toggleBetMenu);
+    bind("speedRange", "input", actions.speedChange);
+    bind("previousStepBtn", "click", actions.previousStep);
+    bind("nextStepBtn", "click", actions.nextStep);
+    bind("debugModeInput", "change", actions.debugChange);
+    bind("setRngResetBtn", "click", actions.resetRng);
+    bind("clearLogBtn", "click", actions.clearLog);
+    bind("resetBtn", "click", actions.reset);
+    bind("configSelect", "change", actions.configChange);
+    bind("languageSelect", "change", actions.languageChange);
+    bind("helpBtn", "click", actions.openHelp);
+    bind("closeHelpBtn", "click", actions.closeHelp);
+
+    const rngInput = byId("rngInput");
+    const cardRange = byId("cardRangeSelect");
+    rngInput?.addEventListener("input", () => {
+      if (rngInput.value.trim() && cardRange) cardRange.value = "";
+      actions.rngChanged?.();
+    });
+    cardRange?.addEventListener("change", () => {
+      if (cardRange.value && rngInput) rngInput.value = "";
+      actions.rngChanged?.();
+    });
+
+    document.addEventListener("click", (event) => actions.documentClick?.(event));
+    document.addEventListener("keydown", (event) => {
+      if (event.code !== "Space" || ["INPUT", "SELECT", "BUTTON"].includes(event.target?.tagName)) return;
+      event.preventDefault();
+      actions.spin?.(event);
+    });
+
+    const helpDialog = byId("helpDialog");
+    helpDialog?.addEventListener("click", (event) => {
+      if (event.target === helpDialog) actions.closeHelp?.(event);
+    });
+    byId("helpFrame")?.addEventListener("load", actions.helpFrameLoad);
+
+    return { rngInput, cardRange, helpDialog };
+  };
 })();

@@ -2,10 +2,11 @@
 
 > 文件版本：v0.5（玩法確認版）
 > 對標競品：Pragmatic Play - Gates of Olympus 1000  
-> 撰寫依據：玩法以 `文件/260630_Olympus 2500.pptx` 為主；現階段數學值以 `Source/H027192A.xlsx` 為主  
+> 撰寫依據：玩法以企劃提案與競品資料為主；現階段數學值以 `Source/H0271.xlsx` 為主
 > 編號：H027  
+> 基礎數學版本：`0`（競品模型初始版本）
 > 撰寫日期：2026-08-03  
-> 實作狀態：玩法已依 2026-07-14 企劃確認更新；現階段仍使用 92A 數學底稿
+> 實作狀態：Base／Card System Off 使用 H0271 v0；Card System On 尚待建立正式 RTP／Variant 數學檔
 
 ---
 
@@ -258,7 +259,7 @@
 ## 附錄 B. 文件來源 / 參考
 
 - 主要玩法依據：`文件/260630_Olympus 2500.pptx`。
-- 現階段數學依據：`Source/H027192A.xlsx`。
+- 92 RTP 家族數學依據：`Source/H027192A.xlsx`；94 RTP 家族數學依據：`Source/H027194A.xlsx`。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
 - 目前程式：`Simulator.py`、`config.js`；`config.js` 由基礎數學檔 `Source/H0271.xlsx` 產生。Card System On 尚待建立對應的 RTP／Variant 數學檔與 Config。
 - 待確認事項：`問題清單_H027.md`。

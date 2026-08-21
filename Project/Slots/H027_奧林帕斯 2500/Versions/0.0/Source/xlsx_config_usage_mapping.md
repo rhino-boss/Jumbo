@@ -1,15 +1,5 @@
 # H027 XLSX / Config 使用對照
 
-## RTP / Variant 檔案
-
-- `H027192A.xlsx` ↔ `../config_92A.js`：Game RTP 92 家族，版本 `0.0.0.0`。
-- `H027194A.xlsx` ↔ `../config_94A.js`：Game RTP 94 家族，版本 `0.0.0.0`。
-- 兩份 RTP XLSX 使用 H016 相同的 `Overview` / `Multiplier_Weight` / `Detail` / `Detail_Newbie` / `OP Jackpot` 工作表與 64 個倍率區間。
-- `rtp_variant_sync.py`：依最新 10^7 Card-Off `Multiplier Line` 初始建立／重新校正 92A 與 94A。
-- `rtp_xlsx_config.py export`：RTP XLSX → 對應 config。
-- `rtp_xlsx_config.py import`：config → RTP XLSX 權重。
-- `rtp_xlsx_config.py check`：雙向邏輯比對，不寫入檔案。
-
 H027 的初始模型主要依據競品遊戲資料建立，依 `slot_development_specification.md` 的版本規則，基礎數學初始版本使用 `0`。
 
 ## 正式入口

@@ -204,12 +204,6 @@ def merge_runtime_config(natural, rtp):
         natural_parameter["super_multiplier"] = deepcopy(rtp_parameter["super_multiplier"])
     merged["parameter"] = natural_parameter
     merged["card_system"] = deepcopy(rtp.get("card_system", {}))
-    for key in (
-        "model", "parsheet_id", "rtp_label", "runtime_version",
-        "config_type", "config_code", "source_multiplier_xlsx",
-    ):
-        if key in rtp:
-            merged[key] = deepcopy(rtp[key])
     return merged
 
 
@@ -360,25 +354,14 @@ CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
 CARD_PROFILE_NEWBIE_BG = 0
 CARD_PROFILE_NEWBIE_FG = 1
-CARD_PROFILE_NEWBIE_BUY_FEATURE = 2
-CARD_PROFILE_OLDHAND_BG = 3
-CARD_PROFILE_OLDHAND_FG = 4
-CARD_PROFILE_OLDHAND_BUY_FEATURE = 5
-
-if BASE_BET < SMALL_BET_LT:
-    ACTIVE_CARD_BET_TIER = "small_bet"
-elif BASE_BET <= MEDIUM_BET_LTE:
-    ACTIVE_CARD_BET_TIER = "medium_bet"
-else:
-    ACTIVE_CARD_BET_TIER = "big_bet"
+CARD_PROFILE_OLDHAND_BG = 2
+CARD_PROFILE_OLDHAND_FG = 3
+CARD_PROFILE_BUY_FEATURE = 4
 
 
-def get_card_profile_cards(player, mode, segment, bet_tier=None):
+def get_card_profile_cards(player, mode, segment):
     player_data = CARD_SYSTEM.get(player, {})
     mode_data = player_data.get(mode, {}) if isinstance(player_data, dict) else {}
-    if player == "oldhand" and isinstance(mode_data, dict):
-        tier = bet_tier or ACTIVE_CARD_BET_TIER
-        mode_data = mode_data.get(tier, {})
     return list(mode_data.get(segment, [])) if isinstance(mode_data, dict) else []
 
 
@@ -395,10 +378,9 @@ def get_bg_trigger_cap(player, mode, bet_tier):
 CARD_PROFILE_LISTS = [
     get_card_profile_cards("newbie", "normal_bet", "weight_bg"),
     get_card_profile_cards("newbie", "normal_bet", "weight_fg"),
-    get_card_profile_cards("newbie", "buy_feature", "weight_fg"),
-    get_card_profile_cards("oldhand", "normal_bet", "weight_bg", ACTIVE_CARD_BET_TIER),
-    get_card_profile_cards("oldhand", "normal_bet", "weight_fg", ACTIVE_CARD_BET_TIER),
-    get_card_profile_cards("oldhand", "buy_feature", "weight_fg", ACTIVE_CARD_BET_TIER),
+    get_card_profile_cards("oldhand", "normal_bet", "weight_bg"),
+    get_card_profile_cards("oldhand", "normal_bet", "weight_fg"),
+    get_card_profile_cards("oldhand", "buy_feature", "weight_fg"),
 ]
 MAX_CARDS = max(1, max((len(cards) for cards in CARD_PROFILE_LISTS), default=0))
 CARD_TYPES = np.full((len(CARD_PROFILE_LISTS), MAX_CARDS), -1, dtype=np.int64)
@@ -896,11 +878,7 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
         spin_index += 1
 
     record[R_ALL, RA_PAY_FG] += fg_session_pay
-    # Card System evaluates Buy Feature packages against the Normal Bet base
-    # cost, not the 100x purchase price. Keep BF Multiplier Line buckets on
-    # that same denominator so the XLSX range model and runtime can round-trip.
-    fg_bucket_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi if bet_mode == MODE_FEATUREBUY else coin_in
-    fg_bucket = get_bucket(fg_session_pay, fg_bucket_coin_in)
+    fg_bucket = get_bucket(fg_session_pay, coin_in)
     record[R_MULTI_CNT_FG, fg_bucket] += 1
     record[R_MULTI_PAY_FG, fg_bucket] += fg_session_pay
     return fg_session_pay
@@ -923,7 +901,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
     card_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
     bg_card_profile = CARD_PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BG
     fg_card_profile = CARD_PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_FG
-    package_card_profile = CARD_PROFILE_NEWBIE_BUY_FEATURE if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BUY_FEATURE
+    package_card_profile = CARD_PROFILE_BUY_FEATURE
     accepted_rounds = 0
     retry_count = 0
     retry_total = 0
@@ -1017,7 +995,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
             record[R_ALL, RA_MAX_WIN_HITS] = 1
         elif total_pay == record[R_ALL, RA_MAX_SINGLE_WIN]:
             record[R_ALL, RA_MAX_WIN_HITS] += 1
-        overall_bucket = get_bucket(total_pay, card_coin_in if bet_mode == MODE_FEATUREBUY else coin_in)
+        overall_bucket = get_bucket(total_pay, coin_in)
         record[R_MULTI_CNT_OA, overall_bucket] += 1
         record[R_MULTI_PAY_OA, overall_bucket] += total_pay
         accepted = 1
@@ -1289,7 +1267,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "avg_multiplier_balls_fg": values[R_ALL, RA_C2_COUNT_FG] / fg_spins if fg_spins else 0,
         "card_system": "on" if card_system_active else "off",
         "pending_math_items": " | ".join(PENDING_MATH_ITEMS) if PENDING_MATH_ITEMS else "none",
-        "card_system_profile": "off" if not card_system_active else ("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"),
+        "card_system_profile": "off" if not card_system_active else ("newbie" if CARD_SYSTEM_IS_NEWBIE and bet_mode == MODE_NORMALBET else ("oldhand" if bet_mode == MODE_NORMALBET else format_bet_mode_label(bet_mode))),
         "card_retry_limit": CARD_RETRY_LIMIT if card_system_active else 0,
         "retry_total": int(values[R_ALL, RA_RETRY_TOTAL]),
         "avg_retry": values[R_ALL, RA_RETRY_TOTAL] / total_round,
@@ -1315,16 +1293,14 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     trigger_cnt_lte = np.cumsum(values[R_BG_TRIGGER_FG_CNT, : len(THRESHOLD_RECORD)]).astype(np.int64)
     trigger_pay_lte = np.cumsum(values[R_BG_TRIGGER_FG_PAY, : len(THRESHOLD_RECORD)])
     is_feature_buy = bet_mode == MODE_FEATUREBUY
-    package_cnt = values[R_MULTI_CNT_OA, : len(THRESHOLD_RECORD)].astype(np.int64)
-    package_pay = values[R_MULTI_PAY_OA, : len(THRESHOLD_RECORD)]
     multiplier_frame = pd.DataFrame(
         {
             "base_game_cnt": base_cnt,
             "base_game_pay": values[R_MULTI_PAY_BG, : len(THRESHOLD_RECORD)],
             "free_game_cnt": np.zeros_like(free_cnt) if is_feature_buy else free_cnt,
             "free_game_pay": np.zeros_like(free_pay) if is_feature_buy else free_pay,
-            "free_game_cnt_BF": package_cnt if is_feature_buy else np.zeros_like(package_cnt),
-            "free_game_pay_BF": package_pay if is_feature_buy else np.zeros_like(package_pay),
+            "free_game_cnt_BF": free_cnt if is_feature_buy else np.zeros_like(free_cnt),
+            "free_game_pay_BF": free_pay if is_feature_buy else np.zeros_like(free_pay),
             "Interval_Upper": THRESHOLD_RECORD,
             "bg_trigger_fg_cnt_lte_upper": trigger_cnt_lte,
             "bg_trigger_fg_pay_lte_upper": trigger_pay_lte,
@@ -1459,9 +1435,8 @@ def output_report(frames, record, bet_mode, total_round):
         report_game_id = str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
         version_tag = format_rtp_version_tag(CONFIG_VERSION)
         parts = [report_game_id, version_tag, timestamp, f"betmode{bet_mode}", rounds_tag, format_rtp_tag(summary["rtp_total"])]
-        parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
-        if not CARD_SYSTEM_IS_NEWBIE:
-            parts.append(str(summary["bet_tier"]))
+        if bet_mode in (MODE_NORMALBET, MODE_EXTRABET):
+            parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
         parts.append("card")
     else:
         report_game_id = str(CFG_NATURAL.get("model") or CFG_NATURAL.get("parsheet_id") or GAME_ID)

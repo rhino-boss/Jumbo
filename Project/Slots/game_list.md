@@ -1,6 +1,8 @@
 # iGaming 遊戲代號一覽（Slot_Game-中辦）
 
-> 來源：iGaming 遊戲代號一覽.xlsx，工作表「Slot_Game-中辦」
+> 來源：iGaming 遊戲代號一覽（Google 試算表，Slot_Game-中辦）
+> 更新日期：2026-08-21
+> 收錄範圍：線上 / 線上-Landbase轉製遊戲；Omnichannel（11xxxx，現場彩金版）未列入。
 
 | Game ID | ParSheet ID | 遊戲英文名稱 | 遊戲中文名稱 | 遊戲類別 | 押注-NB | 押注-EX1 | 押注-EX2 | 押注-BF | 押注-SF |
 |---|---|---|---|---|---|---|---|---|---|
@@ -35,8 +37,27 @@
 | 101016 | H0281 | Thunder Boost 1000 | 雷神爆金1000 | 消消樂-Mega Way | 1 |  |  |  |  |
 | 101017 | H0291 | Dong Dong Kong | 咚咚金剛 |  |  |  |  |  |  |
 | 101018 | H0301 | Golden Gears | 金齒乾坤 |  |  |  |  |  |  |
+| 101019 | H0321 |  | （Mike 吸塵器） |  |  |  |  |  |  |
+| 101020 | H0331 |  | （超級寶石(大集合)） |  |  |  |  |  |  |
 | 101021 | H0341 | Champion Rabbit | 冠軍兔兔 | 消消樂 |  |  |  |  |  |
+| 102005 | H0351 | Fortune Cai Shen | 財神賜福 |  |  |  |  |  |  |
+| 102006 | H0361 | Lucky Peacock | 孔雀迎福 |  |  |  |  |  |  |
+| 102007 | H0371 | Spring Celebration | 春節盛典 |  |  |  |  |  |  |
+| 102008 | H0381 | Lantern Festival | 元宵佳節 |  |  |  |  |  |  |
 | 101022 | H0181 | Champion Dunk | 決勝灌籃 | 消消樂 | 1 | - | - | 50 | 250 |
 | 101023 | H0401 | Goal Rush | 黃金射門 | Line Game | 1 | - | - | 50 | - |
 | 101024 | H0411 | Super Gems 1000 | 超級寶石 1000 | Line Game | 1 | 1.5 | 8 | - | 250 |
 | 101025 | H0441 | Shake Rattle & Roll: Triple Terror | 奪寶魔怪 |  | 1 |  |  |  |  |
+| 101026 | H0471 |  | （Super Bang Bang） |  |  |  |  |  |  |
+| 101027 | H0271 | Olympus 2500 | 奧林匹斯2500 |  |  |  |  |  |  |
+| 109001 |  | Fortune Mahjong | 財神麻將 |  |  |  |  |  |  |
+| 109002 |  | Super Gems | 超級寶石 |  |  |  |  |  |  |
+| 109003 |  | Wild Train | 賞金列車 |  |  |  |  |  |  |
+
+## 尚未配發 Game ID（僅有 ParSheet ID）
+
+| ParSheet ID | 遊戲英文名稱 | 遊戲中文名稱 | 遊戲類別 | 押注-NB | 押注-EX1 | 押注-EX2 | 押注-BF | 押注-SF | 備註 |
+|---|---|---|---|---|---|---|---|---|---|
+| H0421 |  | 春節盛典 |  |  |  |  |  |  | 線上-Landbase轉製遊戲 |
+| H0431 |  | 孔雀迎福 |  |  |  |  |  |  | 線上-Landbase轉製遊戲 |
+| H0451 | Lucky Ace | 幸運王牌 | 消消樂-連消乘倍 | 1 | - | - | 40.5 | 250 | 線上 |

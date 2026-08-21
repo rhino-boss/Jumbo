@@ -79,7 +79,7 @@ Simulator／Demogame 對帳
 
 | 順序 | 階段 | 主要工作 | 產出 | 進入下一階段的條件 |
 |---:|---|---|---|---|
-| 1 | 開案與目標確認 | 確認 Game ID、盤面、判獎、Bet Mode、Feature、RTP、Hit Rate、Max Win、Profile 與 Variant | 已確認的 `game_rule.md`、數學目標表 | 核心規則與計算口徑無待確認項目 |
+| 1 | 開案與目標確認 | 確認 Game ID、盤面、判獎、Bet Mode、Feature、RTP 拆分、Link 資格、Hit Rate、Max Win、Profile、押注層級與 Variant | 已確認的 `game_rule.md`、數學目標表 | 核心規則與計算口徑無待確認項目 |
 | 2 | 基礎數學模型 | 建立 Symbol、Paytable、Reel／Weight、Table、Feature 流程與自然機率 | `Source/H0xx1.xlsx` | 自然機率流程可計算，理論上限已確認 |
 | 3 | RTP／Variant 模型 | 建立 92／94、A／B、Card System 區間與權重 | `Source/H0xx1<RTP><Variant>.xlsx` | 每個正式組合都有目標與資料；不建立空白 Variant |
 | 4 | Mapping 與轉檔 | 定義 XLSX 到 Config 的來源、型別、欄位與驗證 | `xlsx_config_usage_mapping.md`、轉檔工具 | Config 可重建，錯誤資料會被擋下 |
@@ -87,7 +87,7 @@ Simulator／Demogame 對帳
 | 6 | Simulator 實作 | 實作自然機率、Feature、Card System、批次、統計與報表 | `Simulator.py` | 固定 Seed 可重現，單執行緒 Debug 正確 |
 | 7 | 小場次驗證 | 強制或指定 RNG 測試判獎、Feature、Retry、Max Win 與例外 | Debug Trace、測試紀錄 | 代表性案例逐項符合 Game Rule |
 | 8 | 自然機率基準 | Card System Off 跑所有自然機率 Bet Mode | `Record/*card-off*.xlsx` 或規格化檔名 | RTP Breakdown、Hit Rate、Feature 與分布合理 |
-| 9 | Card System 驗證 | 分 RTP、Variant、Profile、Bet Mode 跑 Card System On | `Record/*card.xlsx` | 權重占比合理、Retry Limit Exceeded 通過 |
+| 9 | Card System 驗證 | 分 RTP、Variant、Profile、Oldhand 小／中／大 Bet、Bet Mode 跑 Card System On | `Record/*card.xlsx` | 權重占比、Link 資格與倍率上限正確，Retry Limit Exceeded 通過 |
 | 10 | 調參與正式模擬 | 依差距修改 Source，重新轉檔、模擬、比較與升版 | 正式大場次 Record | 所有支援組合符合目標與統計誤差要求 |
 | 11 | 極值與單局對帳 | 驗證 Max Win、封頂、理論可達路徑及代表性單局 | 極值紀錄、對帳案例 | Config、Simulator、Demogame 結果一致 |
 | 12 | 版本凍結與交付 | 清理暫存、保存版本、報表、來源與變更說明 | 完整專案目錄 | 本文件第 8 節全部通過 |
@@ -106,8 +106,8 @@ Simulator／Demogame 對帳
 
 1. 建立 `H0xx_遊戲名稱/` 專案資料夾。
 2. 讀取並確認 `game_rule.md`。
-3. 列出所有正式支援組合：RTP、Variant、Profile、Bet Mode、Card System Off／On。
-4. 為每個組合定義 RTP、Hit Rate、Feature Frequency、Max Win 與其他遊戲專屬指標。
+3. 列出所有正式支援組合：RTP、Variant、Profile、Oldhand 小／中／大 Bet、NB／EB 或 BF／SF 模式類別、Bet Mode、Card System Off／On。
+4. 為每個組合定義 Link／Bonus Game／Game RTP、Total RTP、Link 資格、Hit Rate、Feature Frequency、BG／FG Max Multiplier 與其他遊戲專屬指標。
 5. 將未決定的判獎順序、倍率分母、Feature 上限與例外退回確認；未確認前不製作正式模型。
 
 ### 4.2 建立基礎數學模型
@@ -122,7 +122,7 @@ Simulator／Demogame 對帳
 
 1. 只建立產品實際需要的 92／94、A／B 組合。
 2. A／B 表示數學 Variant，不表示 Newbie／Oldhand。
-3. 依 Profile 與 Bet Mode 建立 BG／FG 卡片區間及權重。
+3. 依 Profile、Oldhand 小／中／大 Bet 與 Bet Mode 建立 BG／FG 卡片區間及權重；NB／EB 以實際模式押注、BF／SF 以 Feature 基礎押注選擇層級。
 4. 確認每張正權重卡片的區間可達，並定義 Retry 行為。
 5. 建立 RTP／Variant XLSX，版本依規格使用四段格式。
 
@@ -148,20 +148,24 @@ Simulator／Demogame 對帳
 
 1. 小場次、Card System Off：驗證流程與報表。
 2. 中場次、Card System Off：確認自然機率 RTP 與分布。
-3. 小場次、Card System On：確認抽卡、Profile、Mode 與 Retry。
+3. 小場次、Card System On：確認抽卡、Profile、Oldhand 押注層級、Link 資格、倍率上限、Mode 與 Retry。
 4. 中場次、Card System On：調整區間、權重與目標 RTP。
 5. 所有正式組合的大場次模擬。
 6. Max Win、低機率 Feature 與 Retry 邊界的專項驗證。
 
 最低批次矩陣：
 
-| 類型 | RTP／Variant | Profile | Bet Mode | Card System |
-|---|---|---|---|---|
-| 自然機率基準 | 基礎 Config | 不適用 | 每個支援 Mode | Off |
-| Newbie | 每個正式 RTP／Variant | Newbie | Normal／Extra 等支援 Mode | On |
-| Oldhand | 每個正式 RTP／Variant | Oldhand | Normal／Extra 等支援 Mode | On |
-| Buy Feature | 每個支援組合 | 依遊戲定義 | Buy Feature | On；若需自然基準則另跑 Off |
-| Super Feature | 每個支援組合 | 依遊戲定義 | Super Feature | On；若需自然基準則另跑 Off |
+| 類型 | RTP／Variant | Profile | `bet_tier_amount` | Bet Mode | Card System |
+|---|---|---|---|---|---|
+| 自然機率基準 | 基礎 Config | 不適用 | 各門檻所需代表值 | 每個支援 Mode | Off |
+| Newbie | 每個正式 RTP／Variant | Newbie | 不分層級，但仍記錄判定金額 | 每個支援的 NB／EB／BF／SF | On |
+| Oldhand 小 Bet | 每個正式 `94x`／Variant | Oldhand | `< $2`，至少驗證 `$1.99` | 每個支援的 NB／EB／BF／SF | On |
+| Oldhand 中 Bet | 每個正式 `92x`／Variant | Oldhand | `$2～$100`，至少驗證 `$2`、`$100` | 每個支援的 NB／EB／BF／SF | On |
+| Oldhand 大 Bet | 每個正式 `92x`／Variant | Oldhand | `> $100`，至少驗證 `$100.01` | 每個支援的 NB／EB／BF／SF | On |
+
+- NB／EB 的 `bet_tier_amount` 使用實際模式押注金額；BF／SF 使用 Feature 購買價格除以 Feature Price 倍數後的基礎押注。
+- 若遊戲支援 EB 2x，至少驗證 base bet `$1` 會以 `$2` 判為中 Bet。
+- 若遊戲支援 BF 75x，至少驗證購買 `$75` 判為小 Bet、購買 `$150` 判為中 Bet。
 
 不存在的 Mode、Profile 或 Variant 不建立空批次，也不以全零結果冒充驗證完成。
 
@@ -258,7 +262,9 @@ Project/Slots/H0xx_遊戲名稱/
 以下條件全部成立，數學開發才算完成：
 
 - [ ] Game Rule 的核心流程、判獎、倍率、Feature 與例外均已確認。
-- [ ] 每個正式 RTP、Variant、Profile 與 Bet Mode 都有明確目標。
+- [ ] 每個正式 RTP、Variant、Profile、Oldhand 小／中／大 Bet 與 Bet Mode 都有明確目標。
+- [ ] 每個付費遊戲組合均驗證 Link／Bonus Game／Game RTP、Total RTP、Link 資格及 BG／FG Max Multiplier。
+- [ ] BF／SF 分開驗證 Newbie、Oldhand 小 Bet、Oldhand 中 Bet 與 Oldhand 大 Bet，Total RTP 均為 96.50%。
 - [ ] 基礎與 RTP／Variant XLSX 的命名及版本正確。
 - [ ] Config 可由 Source 完整重建，Mapping 可追溯。
 - [ ] Source、Config、Simulator、Demogame 與 Record 使用同一正式版本。

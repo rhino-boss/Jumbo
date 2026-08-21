@@ -1974,8 +1974,6 @@
           Config
           <select id="configSelect">
             <option value="config.js">Base</option>
-            <option value="config_92A.js">92A</option>
-            <option value="config_94A.js">94A</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -2007,8 +2005,8 @@
   </dialog>
 
   <script>
-    const H027_CONFIG_FILES = ["config.js", "config_92A.js", "config_94A.js"];
-    const H027_CONFIG_VERSION = "20260821-h0271-v0-rtp-a";
+    const H027_CONFIG_FILES = ["config.js"];
+    const H027_CONFIG_VERSION = "20260821-h0271-v0";
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H027_ACTIVE_CONFIG = H027_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H027_CONFIG_FILES[0];
     window.h027ConfigLoadFailed = () => {

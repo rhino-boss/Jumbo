@@ -6,9 +6,9 @@
 
 ## 目錄
 
-- [1. 數學文件 Math Document](#1-數學文件-math-document)
-- [2. 卡片系統 Card System](#2-卡片系統-card-system)
-- [3. 模擬程式 Simulator](#3-模擬程式-simulator)
+- [1. 數學文件](#1-數學文件-math-document)
+- [2. Card System](#2-卡片系統-card-system)
+- [3. 模擬程式](#3-模擬程式-simulator)
 - [4. Demogame](#4-demogame)
 - [5. Config](#5-config)
 
@@ -41,7 +41,8 @@
 - Symbol、Paytable、Wild／Scatter 規則與判獎順序。
 - BG、FG、Cascade、Multiplier、Retrigger、Jackpot 等流程。
 - Normal Bet、Extra Bet、Buy Feature、Super Feature 的成本與差異。
-- 各 RTP 家族、Variant 與 Player Profile 的目標 RTP。
+- 各 RTP 家族、Variant、Player Profile 與押注層級的 Link／Bonus Game／Game RTP 拆分及 Total RTP。
+- Oldhand 必須依小 Bet／中 Bet／大 Bet 分別定義倍率權重。
 - Feature Trigger Rate、Hit Rate、Max Win／Max Multiplier 與上限。
 - Card System 的區間、權重、倍率分母、Retry 與失敗處理。
 - 同局同時符合多項條件時的處理優先順序。
@@ -72,7 +73,7 @@ Max Multiplier = Round Total Win ÷ 該模式定義的基準成本
 
 | 文件 | 版本格式 | 範例 |
 |---|---|---|
-| `H<遊戲編號>1.xlsx` | 1 碼數字版本 | `H0161.xlsx`：`1` |
+| `H<遊戲編號>1.xlsx` | 1 碼數字版本 | 競品模型初始為 `0`；非競品模型初始為 `1` |
 | `H<遊戲編號>1<RTP><Variant>.xlsx` | 4 碼數字版本 | `H016192A.xlsx`：`1.0.0.0` |
 
 RTP／Variant 數學文件的四碼版本格式為：
@@ -91,6 +92,10 @@ RTP／Variant 數學文件的四碼版本格式為：
 | 第 4 碼：其他文件 | 不影響前三類的規則、Help、說明或排版。 |
 
 - `H<遊戲編號>1.xlsx` 的版本只能填 1 碼，不得填成四碼。
+- 以競品遊戲資料、競品 Response、競品輪帶或競品數學模型為主要初始來源的模型，基礎數學初始版本固定為 `0`。
+- 非競品衍生、由公司自行設計或沒有以競品模型作為主要初始來源的模型，基礎數學初始版本固定為 `1`。
+- 是否屬於競品模型必須記錄於數學文件、Config mapping 或其他可追溯文件，不得只依檔名或人員記憶判斷。
+- 初始版本確立後，後續正式異動依本節規則遞增；不得因為參考來源分類改變而把既有正式版本重設為 `0` 或 `1`。
 - 所有 `H<遊戲編號>1<RTP><Variant>.xlsx` 的第 1 碼，都必須與同一遊戲的 `H<遊戲編號>1.xlsx` 版本相同。
 - 基礎數學版本遞增時，所有受影響的 RTP／Variant 文件同步更新第 1 碼，並將第 2～4 碼歸零。
 - 第 2 碼遞增後，第 3～4 碼歸零；第 3 碼遞增後，第 4 碼歸零。
@@ -121,26 +126,145 @@ RTP／Variant 數學文件的四碼版本格式為：
 
 ### 1.4 RTP 與 Bet Mode
 
-下表為共用 target。實際專案若不同，必須在遊戲規格中註記，並同步修改 XLSX、Config、Simulator 與 Demogame。
+RTP 配置使用 `Link + Bonus Game + Game = Total RTP`。NB／EB 與 BF／SF 必須分開設定。
 
-| Config 家族 | Player Profile | Normal Bet | Extra Bet | Buy Feature | Super Feature |
-|---|---|---:|---:|---:|---:|
-| `92x` | Newbie | 93.00% | 93.00% | 92.50%（共用） | 92.50%（共用） |
-| `92x` | Oldhand | 92.00% | 92.00% | 92.50%（共用） | 92.50%（共用） |
-| `94x` | Newbie | 93.00% | 93.00% | 92.50%（共用） | 92.50%（共用） |
-| `94x` | Oldhand | 94.00% | 94.00% | 92.50%（共用） | 92.50%（共用） |
+#### 1.4.1 NB／EB RTP 配置
 
-- `x` 代表 A、B 等 Variant；Variant 不改變 Profile 定義。
+| Player Profile | 押注層級 | 押注層級判定金額 | Link RTP | Bonus Game RTP | Game RTP | Total RTP | Config 家族 |
+|---|---|---:|---:|---:|---:|---:|---|
+| Newbie | 不分層級 | 全部 | 0.00% | 2.00% | 93.00% | 95.00% | Newbie 共用 |
+| Oldhand | 小 Bet | `< $2` | 0.00% | 2.00% | 94.00% | 96.00% | `94x` |
+| Oldhand | 中 Bet | `>= $2` 且 `<= $100` | 2.00% | 2.00% | 92.00% | 96.00% | `92x` |
+| Oldhand | 大 Bet | `> $100` | 2.00% | 2.00% | 92.00% | 96.00% | `92x` |
+
+- `$2` 屬於中 Bet；`$100` 屬於中 Bet；只有大於 `$100` 才屬於大 Bet。
+- `92`／`94` 表示 Game RTP 配置家族，不等於加總 Link 與 Bonus Game 後的 Total RTP。
+- `x` 代表 A、B 等 Variant；Variant 不改變 Profile 或押注層級定義。
+- 每個遊戲的數學文件必須定義哪些派彩歸入 Link、Bonus Game、Game，三者不可重複計算。
 - 產品顯示值可以四捨五入，模型計算與驗證必須使用完整精度。
 - 各 Bet Mode 的 RTP 分母使用玩家在該模式的實際成本。
 - Scatter Pay、購買進場盤、FG、Retrigger、Jackpot 是否計入 Total Win，必須與遊戲規則及 XLSX 公式一致。
-- Card System Off／On、Newbie／Oldhand 及所有支援的 Bet Mode 必須分開驗證。
+- Card System Off／On、Newbie、Oldhand 小／中／大 Bet 及所有支援的 Bet Mode 必須分開驗證。
 
-### 1.5 開發前檢查
+#### 1.4.2 BF／SF RTP 配置
+
+| Player Profile | 押注層級 | 押注層級判定金額 | Link RTP | Bonus Game RTP | Game RTP | Total RTP |
+|---|---|---:|---:|---:|---:|---:|
+| Newbie | 不分層級 | 全部 | 0.00% | 4.00% | 92.50% | 96.50% |
+| Oldhand | 小 Bet | `< $2` | 0.00% | 4.00% | 92.50% | 96.50% |
+| Oldhand | 中 Bet | `>= $2` 且 `<= $100` | 2.00% | 2.00% | 92.50% | 96.50% |
+| Oldhand | 大 Bet | `> $100` | 2.00% | 2.00% | 92.50% | 96.50% |
+
+- BF／SF 的 92.50% 是 Game RTP 分項，不是 Total RTP；Total RTP 固定為 96.50%。
+- Newbie 與 Oldhand 小 Bet 使用相同 RTP 拆分，但仍是不同 Player Profile，必須保留各自權重及模擬結果。
+- Oldhand 中 Bet 與大 Bet 的 RTP 拆分相同，但倍率上限與倍率權重仍分開設定。
+
+#### 1.4.3 押注模式分類與層級判定
+
+押注模式分成兩大類，先計算 `bet_tier_amount`，再依 `< $2`、`>= $2 且 <= $100`、`> $100` 判斷 Oldhand 的小／中／大 Bet：
+
+| 模式類別 | Bet Mode | `bet_tier_amount` 判定基準 | 計算方式 |
+|---|---|---|---|
+| 一般押注類 | Normal Bet／Extra Bet（NB／EB） | 該模式實際押注金額 | `base_bet × mode_cost_multiplier` |
+| Feature Buy 類 | Buy Feature／Super Feature（BF／SF） | Feature 的基礎押注 | `feature_purchase_amount ÷ feature_price_multiplier` |
+
+- NB／EB 使用實際扣款的模式押注金額判斷，不使用未乘 Mode 倍數的原始 base bet。
+- BF／SF 使用購買價格反推的基礎押注判斷，不直接用 Feature 購買總價判斷。
+- H026 EB 為 2x：基礎押注 `$1` 時，實際押注為 `$2`，所以屬於中 Bet 並可拉 Link。
+- H026 BF 為 75x：購買 `$75` 時，基礎押注為 `$1`，所以屬於小 Bet 且不可拉 Link；購買 `$150` 時，基礎押注為 `$2`，所以屬於中 Bet 並可拉 Link。
+- `bet_tier_amount` 必須由 Config 的模式成本／Feature 價格倍率計算，不得在 Runtime 寫死 2x、75x 或其他個別遊戲數值。
+
+#### 1.4.4 玩家階段與倍率上限
+
+| Player Profile | 押注層級 | BG Max Multiplier | FG Max Multiplier |
+|---|---|---:|---:|
+| Newbie | 不分層級 | `30x` | `120x` |
+| Oldhand | 小 Bet | 依遊戲規格 | `20000x` |
+| Oldhand | 中 Bet | 依遊戲規格 | `20000x` |
+| Oldhand | 大 Bet | 依遊戲規格 | `2000x` |
+
+- 上表為所有遊戲的預設硬上限；個別遊戲若產品上限更低，使用較低值並在數學文件明記。
+- Max Multiplier 的分母依第 1.1 節定義；等於上限時可接受，超過上限時依遊戲的 Max Win 流程截斷或重跑，且 XLSX、Config、Simulator 與 Demogame 必須一致。
+- Oldhand 小／中／大 Bet 必須使用三套獨立倍率權重，不得在 Runtime 對另一套權重臨時縮放、截斷或 fallback。
+- 此分層適用於所有支援的 NB／EB／BF／SF；Oldhand 的每個模式都必須依第 1.4.3 節選擇小／中／大 Bet 權重。
+
+### 1.5 卡片倍率區間
+
+數學文件使用下列卡片倍率區間：
+
+```text
+(-1, 0]
+(0, 1]
+(1, 2]
+(2, 3]
+(3, 4]
+(4, 5]
+(5, 6]
+(6, 7]
+(7, 8]
+(8, 9]
+(9, 10]
+(10, 15]
+(15, 20]
+(20, 25]
+(25, 30]
+(30, 35]
+(35, 40]
+(40, 45]
+(45, 50]
+(50, 60]
+(60, 70]
+(70, 80]
+(80, 90]
+(90, 100]
+(100, 120]
+(120, 140]
+(140, 160]
+(160, 180]
+(180, 200]
+(200, 250]
+(250, 300]
+(300, 350]
+(350, 400]
+(400, 450]
+(450, 500]
+(500, 550]
+(550, 600]
+(600, 650]
+(650, 700]
+(700, 750]
+(750, 800]
+(800, 850]
+(850, 900]
+(900, 950]
+(950, 1000]
+(1000, 2000]
+(2000, 3000]
+(3000, 4000]
+(4000, 5000]
+(5000, 6000]
+(6000, 7000]
+(7000, 8000]
+(8000, 9000]
+(9000, 10000]
+(10000, 20000]
+(20000, 30000]
+(30000, 40000]
+(40000, 50000]
+(50000, 60000]
+(60000, 70000]
+(70000, 80000]
+(80000, 90000]
+(90000, 100000]
+(100000, 9999999]
+```
+
+### 1.6 開發前檢查
 
 - [ ] 遊戲規則沒有待確認的判獎順序或倍率口徑。
 - [ ] 每個支援的 Config、Bet Mode 與 Profile 都有明確目標。
 - [ ] 基礎數學 XLSX 為 1 碼版本，且所有 RTP／Variant XLSX 的第 1 碼均與其一致。
+- [ ] 新模型已記錄競品／非競品來源；競品初始版本為 `0`，非競品初始版本為 `1`。
 - [ ] XLSX 公式、命名、版本與工作頁用途可追溯。
 - [ ] 最大獎與理論上限已計算，且未超出產品限制。
 - [ ] 所有 Feature 的 Trigger、Retrigger、結束條件與上限已定義。
@@ -154,7 +278,7 @@ RTP／Variant 數學文件的四碼版本格式為：
 
 Card System 是結果篩選與分流機制，不是獨立玩法。遊戲先依原始輪帶、盤面、判獎與 Feature 流程產生結果，再依預先抽出的卡片條件決定接受或重跑。
 
-Card System 可控制倍率區間、要求觸發 Free Game、依 Newbie／Oldhand 改變結果分布，並依 Bet Mode 拆分 BG、FG、Buy Feature 與 Super Feature 的目標。
+Card System 可控制倍率區間、要求觸發 Free Game、依 Newbie／Oldhand 與 Oldhand 小／中／大 Bet 改變結果分布，並依 Bet Mode 拆分 BG、FG、Buy Feature 與 Super Feature 的目標。
 
 Card System 不得直接修改輪帶、Paytable、判獎公式、符號功能、FG 局數或演出流程。重跑會改變最終結果分布與 RTP，因此必須以實際流程模擬，不能只用權重推算。
 
@@ -165,19 +289,35 @@ card_system
 ├─ enabled
 ├─ retry_limit
 ├─ newbie
-│  ├─ normal_bet → weight_bg／weight_fg
-│  └─ extra_bet  → weight_bg／weight_fg
+│  ├─ normal_bet    → weight_bg／weight_fg
+│  ├─ extra_bet     → weight_bg／weight_fg
+│  ├─ buy_feature   → weight_fg
+│  └─ super_feature → weight_fg
 └─ oldhand
-   ├─ normal_bet    → weight_bg／weight_fg
-   ├─ extra_bet     → weight_bg／weight_fg
-   ├─ buy_feature   → weight_fg
-   └─ super_feature → weight_fg
+   ├─ normal_bet
+   │  ├─ small_bet  → weight_bg／weight_fg
+   │  ├─ medium_bet → weight_bg／weight_fg
+   │  └─ big_bet    → weight_bg／weight_fg
+   ├─ extra_bet
+   │  ├─ small_bet  → weight_bg／weight_fg
+   │  ├─ medium_bet → weight_bg／weight_fg
+   │  └─ big_bet    → weight_bg／weight_fg
+   ├─ buy_feature
+   │  ├─ small_bet  → weight_fg
+   │  ├─ medium_bet → weight_fg
+   │  └─ big_bet    → weight_fg
+   └─ super_feature
+      ├─ small_bet  → weight_fg
+      ├─ medium_bet → weight_fg
+      └─ big_bet    → weight_fg
 ```
 
 - `retry_limit` 正式預設為 `10000`。
 - `weight > 0` 才可抽中；`weight = 0` 只保留設定；權重不得小於 0。
 - 每個啟用的 Profile／Mode 至少要有一張正權重卡片。
 - 抽中率為該卡權重除以同組所有正權重總和。
+- Oldhand 依第 1.4.3 節算出的 `bet_tier_amount` 選擇 `small_bet`、`medium_bet` 或 `big_bet`；NB／EB 分別持有 BG／FG 權重，BF／SF 分別持有 Feature FG 權重。
+- 啟用 Oldhand 的 Profile／Mode 必須同時提供小／中／大 Bet 三套權重，不得缺少其中一套或互相 fallback。
 - Profile 缺少某個 Mode 時，必須明定不套用或指定唯一 fallback，程式不得自行猜測。
 
 ### 2.3 卡片判定
@@ -189,17 +329,33 @@ card_system
 ```
 
 - `(15, 20]` 不包含 15x、包含 20x；需要包含 0x 時可用 `(-1, 0]`。
+- Newbie BG 的最高可用區間為 `(25, 30]`，FG 的最高可用區間為 `(100, 120]`；超過各自上限的區間權重必須為 0。
+- Oldhand 小／中 Bet FG 的最高可用區間為 `(10000, 20000]`；Oldhand 大 Bet FG 的最高可用區間為 `(1000, 2000]`。
+- 任一區間超過目前 Profile／押注層級的 Max Multiplier 時，其權重必須為 0。
 - BG 已觸發 FG 時，即使 `pay_bg` 落入區間，也不得當作一般 BG `range` 結果。
 - `free_game` 卡未觸發 FG 時必須重跑 BG。
-- `free_game` 卡必須同時驗證 BG 倍率上限（BG Trigger Cap）：除觸發 FG 外，觸發該次 BG 的倍率不得超過同一 Profile／Mode 之 `base_game` 內所有正權重 `range` 卡的最大 `max`。
+- `free_game` 卡必須同時驗證 BG 倍率上限（BG Trigger Cap）：除觸發 FG 外，觸發該次 BG 的倍率不得超過同一 Profile／押注層級／Mode 之 `base_game` 內所有正權重 `range` 卡的最大 `max`。
 - BG Trigger Cap 使用 Normal Bet 基準成本計算，判定式為 `pay_bg / card_system_coin_in <= cap`；等於上限時可接受，超過上限時整把 BG 重跑。
 - `weight = 0` 的 `range` 卡不得用來放大 cap；啟用 `free_game` 卡的 Profile／Mode 必須至少有一張正權重 `range` 卡可提供 cap。
 - 事件卡只定義接受條件，不得直接放置 Scatter 或直接呼叫 FG。
 
+#### 2.3.1 Link 資格
+
+- Link 資格一律依第 1.4.3 節算出的 `bet_tier_amount` 判斷；NB／EB／BF／SF 都使用同一組 `< $2`、`$2～$100`、`> $100` 邊界。
+- Newbie 不得觸發或獲得 Link 彩金，Link RTP 必須為 0%。
+- Oldhand 小 Bet 不得觸發或獲得 Link 彩金，Link RTP 必須為 0%。
+- Oldhand 中 Bet 與大 Bet 可以觸發 Link 彩金，Link RTP 目標為 2%。
+- `link_enabled = false` 時不得只把 Link 派彩改成 0；結果中不得出現已觸發但不派彩的 Link 事件或演出。
+- Link 資格、觸發流程與 RTP 統計必須由 XLSX、Config、Simulator 與 Demogame 使用同一套設定。
+
 ### 2.4 Retry 流程
 
 ```text
-取得 Profile 與 Bet Mode
+取得 Profile、Bet Mode、base bet、Mode 倍數與 Feature Price 倍數
+        ↓
+NB／EB 以實際模式押注、BF／SF 以 Feature 基礎押注計算 bet_tier_amount
+        ↓
+Oldhand 依 `< $2`、`$2～$100`、`> $100` 選擇小／中／大 Bet 權重與 Link 資格
         ↓
 固定抽出目標卡片
         ↓
@@ -218,21 +374,21 @@ card_system
 - Buy／Super Feature 必須先成功進入 Feature，再判定整包結果。
 - Retry 不得重複扣款、重複計入場次或污染統計。
 - 達上限時停止，保留最後結果並記錄 `Retry Limit Exceeded` 與失敗分類。
-- 某張卡經常達到上限時，先檢查區間可達性、權重、倍率分母與 Profile，不得只提高上限。
+- 某張卡經常達到上限時，先檢查區間可達性、權重、倍率分母、Profile 與押注層級，不得只提高上限。
 
 ### 2.5 倍率分母
 
-| 模式 | RTP 實際成本 | Card System 判定成本 |
-|---|---|---|
-| Normal Bet | Normal Bet 實際成本 | Normal Bet 基準成本 |
-| Extra Bet | Extra Bet 加價後成本 | Normal Bet 基準成本 |
-| Buy／Super Feature | Feature 購買成本 | Normal Bet 基準成本 |
+| 模式 | RTP 實際成本 | Card System 倍率判定成本 | 押注層級判定金額 |
+|---|---|---|---|
+| Normal Bet | Normal Bet 實際成本 | Normal Bet 基準成本 | Normal Bet 實際押注金額 |
+| Extra Bet | Extra Bet 加價後成本 | Normal Bet 基準成本 | Extra Bet 實際押注金額 |
+| Buy／Super Feature | Feature 購買成本 | Normal Bet 基準成本 | Feature 購買價格除以 Feature Price 倍數後的基礎押注 |
 
-個別遊戲若採不同定義，必須在數學文件註明，並同步修改 XLSX、Config、Runtime、Simulator 與 Demogame。
+Card System 的倍率分母與押注層級判定金額是兩個不同概念，不得混用。個別遊戲若採不同定義，必須在數學文件註明，並同步修改 XLSX、Config、Runtime、Simulator 與 Demogame。
 
 ### 2.6 必要監控
 
-報表至少記錄 Config、Version、Profile、Bet Mode、開關、各卡抽取占比、Total／平均 Retry、Retry Limit Exceeded 比率與失敗分類。Card System 關閉時不得抽卡或 Retry；實際占比應在合理誤差內接近設定權重。
+報表至少記錄 Config、Version、Profile、Bet Mode 類別、base bet、實際模式押注、Feature Price 倍數、`bet_tier_amount`、押注層級、Link 資格、倍率上限、各卡抽取占比、Total／平均 Retry、Retry Limit Exceeded 比率與失敗分類。Card System 關閉時不得抽卡或 Retry；實際占比應在合理誤差內接近設定權重。
 
 ---
 
@@ -262,7 +418,7 @@ card_system
 3. 載入 `config_rtp_file` 的倍率權重參數。
 4. 驗證兩份 Config 的 `game_id`、版本與資料相容性。
 5. 將 Config 正規化為模擬核心使用的固定型別資料。
-6. 依 `bet_mode`、Card System 開關與 Profile 建立本批設定。
+6. 依 `bet_mode`、Card System 開關、Profile 與基礎押注額建立本批設定，並選出押注層級、Link 資格及倍率上限。
 7. 執行 Warm-up，再開始正式計時與多執行緒模擬。
 8. 合併 Worker 統計，計算 RTP、Hit Rate、Feature、Retry 與遊戲專屬指標。
 9. 依固定格式印出執行結果。
@@ -287,10 +443,7 @@ Card System Off：
 <base_game_id>_<base_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>.xlsx
 
 Card System On（Newbie／Oldhand）：
-<rtp_game_id>_<rtp_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>_<rtp_tag>_<profile>_card.xlsx
-
-Card System On（不分 Profile 的 Buy／Super Feature）：
-<rtp_game_id>_<rtp_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>_<rtp_tag>_card.xlsx
+<rtp_game_id>_<rtp_version_tag>_<timestamp>_betmode<bet_mode>_<rounds_tag>_<rtp_tag>_<profile>[_<bet_tier>]_card.xlsx
 ```
 
 各段規則：
@@ -305,7 +458,8 @@ Card System On（不分 Profile 的 Buy／Super Feature）：
 | `bet_mode` | 使用整數 Bet Mode。 | `0` |
 | `rounds_tag` | `10^N` 場寫成 `10N`；非 10 的整次方則使用完整場次。 | `10^8` → `108` |
 | `rtp_tag` | Card System On 時，取實際 RTP 小數點後 4 位，不含小數點與 `%`。 | `92.01%` → `9201` |
-| `profile` | 分 Profile 時使用 `newbie` 或 `oldhand`；不分 Profile 時省略。 | `oldhand` |
+| `profile` | Card System On 時使用 `newbie` 或 `oldhand`；NB／EB／BF／SF 均不得省略。 | `oldhand` |
+| `bet_tier` | Oldhand 使用 `small_bet`、`medium_bet` 或 `big_bet`；Newbie 省略。 | `medium_bet` |
 | `card` | Card System On 時固定加在檔名最後。 | `card` |
 
 範例：
@@ -314,11 +468,11 @@ Card System On（不分 Profile 的 Buy／Super Feature）：
 Card System Off：
 H0161_02_2608141342_betmode0_105.xlsx
 
-Card System On（Oldhand）：
-H016192A_02000000_2608141341_betmode0_105_9129_oldhand_card.xlsx
+Card System On（Oldhand 中 Bet）：
+H016192A_02000000_2608141341_betmode0_105_9600_oldhand_medium_bet_card.xlsx
 
-Card System On（Feature Buy，不分 Profile）：
-H026192A_02010313_2608141530_betmode2_108_9245_card.xlsx
+Card System On（Feature Buy，Oldhand 小 Bet）：
+H026194A_02010313_2608141530_betmode2_108_9650_oldhand_small_bet_card.xlsx
 ```
 
 - Card System Off 的檔名只能使用 `config_file` 所對應的基礎 `game_id` 與 1 碼版本，不得使用 `config_rtp_file` 的 RTP／Variant Game ID 或四段版本。
@@ -375,7 +529,7 @@ FG_Combo_5+_Rate
 - `free_game_cnt_SF`、`free_game_pay_SF` 只在遊戲有 Super Feature 時顯示。
 - 不支援 BF／SF 時不得保留空白欄位或以 `0` 代替未支援功能。
 - `Interval_Upper` 為該列倍率區間的數值上限；`bg_trigger_fg_cnt_lte_upper` 與 `bg_trigger_fg_pay_lte_upper` 分別累計所有「BG 成功觸發 FG，且該把 BG 倍數小於等於該列上限」的次數與 BG 得分。兩欄必須由未套 Profile cap 的原始觸發 BG 分桶累加，不得先過濾成單一 Profile。
-- Card System／倍率權重工具必須先從該 Profile 正權重 BG `range` 卡取得最大區間上限，再以相同 `Interval_Upper` 讀取累計 count/pay；不得在程式內寫死 30x、70x 或其他遊戲上限。找不到完全相同的區間上限時必須停止並提示補齊倍率區間，不得取較接近的列。
+- Card System／倍率權重工具必須先從該 Profile／押注層級的正權重 BG `range` 卡取得最大區間上限，再以相同 `Interval_Upper` 讀取累計 count/pay；不得在程式內寫死 30x、70x 或其他上限。找不到完全相同的區間上限時必須停止並提示補齊倍率區間，不得取較接近的列。
 - `cnt` 欄位使用整數；`pay` 欄位使用報表統一的得分精度；`Rate` 欄位使用一致的百分比格式。
 
 共用欄位之後可接遊戲專屬的 By Game 欄位。H016 的 `Multiplier Line` 必須包含：
@@ -411,6 +565,7 @@ FG_Avg_Gold_Frames
 | `total_rounds` | 是 | 本批正式模擬的付費 Round 數，必須為正整數。 |
 | `card_system_enabled` | 是 | 是否啟用 Card System，型別為 Boolean。 |
 | `card_system_is_newbie` | 是 | `true` 為 Newbie、`false` 為 Oldhand；Card System 關閉時不套用 Profile。 |
+| `base_bet` | 是 | 玩家選擇的基礎押注；Simulator 依 Bet Mode 與 Config 倍數計算實際押注及 `bet_tier_amount`，必須大於 0。 |
 
 範例：
 
@@ -419,10 +574,11 @@ BATCH_RUNS = [
     {
         "config_file": "config.js",
         "config_rtp_file": "config_92A.js",
-        "bet_mode": 0,
+        "bet_mode": 1,
         "total_rounds": 1_000_000,
         "card_system_enabled": True,
         "card_system_is_newbie": False,
+        "base_bet": 1,
     },
 ]
 ```
@@ -431,6 +587,9 @@ BATCH_RUNS = [
 - 每批重新載入兩份 Config，不得沿用上一批的全域狀態。
 - Config 的 `game_id` 不一致時立即停止，不得繼續模擬或輸出報表。
 - Card System Off 必須另跑自然機率基準；正式大場次前先以小場次檢查流程與報表。
+- NB／EB 必須用實際模式押注金額驗證 `$1.99`、`$2`、`$100`、`$100.01` 邊界；BF／SF 必須用反推後的 Feature 基礎押注驗證相同邊界。
+- 至少包含 H026 類型案例：EB 2x、base bet `$1` 應判為中 Bet；BF 75x、購買 `$75` 應判為小 Bet，購買 `$150` 應判為中 Bet。
+- Newbie 與 Oldhand 小／中／大 Bet 必須分批驗證 Link／Bonus Game／Game RTP 拆分及 Total RTP。
 
 ### 3.3 執行結束後印出的內容
 
@@ -441,7 +600,7 @@ Console 輸出順序是固定規範，不得依 dict、DataFrame 或統計完成
 1. Batch 標題：`=== Batch n/total: {...} ===`。
 2. 遊戲資訊：`game_name`、`game_id`。
 3. Config 與版本：`config_file`、`config_rtp_file`、`math_version`、`card_system`。
-4. 執行設定：`bet_mode`、`bet_multi`、`coin_in`、`total_rounds`、`duration`。
+4. 執行設定：`bet_mode`、`bet_multi`、`feature_price_multiplier`、`base_bet`、`bet_amount`、`bet_tier_amount`、`bet_tier`、`link_enabled`、`max_multiplier_bg`、`max_multiplier_fg`、`coin_in`、`total_rounds`、`duration`。
 5. RTP 與 Feature 統計：從 `rtp_total` 到 `avg_fg_spins`。
 6. FG／特殊符號統計：`bg_trigger_fg_cnt`、`bg_trigger_fg_pay`、`special_symbol_cnt`、`SCR`。
 7. 波動資訊：`volatility_std`、`standard_error`。
@@ -454,7 +613,7 @@ Console 輸出順序是固定規範，不得依 dict、DataFrame 或統計完成
 - Card System 關閉時只省略第 8 項；其他欄位順序不得改變。
 
 ```text
-=== Batch 1/1: {'config_file': 'config.js', 'config_rtp_file': 'config_92A.js', 'bet_mode': 0, 'total_rounds': 1000000, 'card_system_enabled': True, 'card_system_is_newbie': False} ===
+=== Batch 1/1: {'config_file': 'config.js', 'config_rtp_file': 'config_92A.js', 'bet_mode': 1, 'total_rounds': 1000000, 'card_system_enabled': True, 'card_system_is_newbie': False, 'base_bet': 1} ===
 
 game_name               : 幸運王牌
 game_id                 : H016
@@ -463,13 +622,24 @@ config_rtp_file         : config_92A.js
 math_version            : 0.0.0.0
 card_system             : on
 
-bet_mode                : Normal Bet
-bet_multi               : 1
+bet_mode                : Extra Bet
+bet_multi               : 2
+feature_price_multiplier: n/a
+base_bet                : 1.0
+bet_amount              : 2.0
+bet_tier_amount         : 2.0
+bet_tier                : medium_bet
+link_enabled            : true
+max_multiplier_bg       : by_game
+max_multiplier_fg       : 20000
 coin_in                 : 100.0
 total_rounds            : 1,000,000
 duration                : 00.00 sec
 
 rtp_total               : 00.0000%
+rtp_link                : 00.0000%
+rtp_bonus_game          : 00.0000%
+rtp_game                : 00.0000%
 rtp_bg                  : 00.0000%
 rtp_fg                  : 00.0000%
 hit_rate_bg             : 00.0000%
@@ -499,6 +669,8 @@ retry_limit_fg          : 0
 
 - `math_version` 顯示 RTP／Variant 模型的完整四段版本號，例如 `2.1.3.13`；Console 依數學文件原格式輸出，不得自行省略或改寫。只有報表檔名依第 3.1.4 節轉為 `02010313`。
 - `duration` 顯示正式模擬耗時，不包含 Numba Warm-up，固定顯示到小數點後 2 位並加上 `sec`。
+- `rtp_total = rtp_link + rtp_bonus_game + rtp_game`；三個分項的歸類必須依數學文件，且不得重複計算。
+- `rtp_bg`／`rtp_fg` 是依場景的交叉檢視，不取代 Link／Bonus Game／Game 的產品 RTP 拆分。
 - `bg_trigger_fg_cnt` 為 BG 成功觸發 FG 的累計次數。
 - `bg_trigger_fg_pay` 為 BG 成功觸發 FG 且符合目前 Profile BG Trigger Cap 之 Spin 的 BG 累計得分；超過 cap 的觸發 BG 得分不得計入。Card System 關閉的自然機率報表也必須載入指定 RTP Config／Profile 的 cap 套用此過濾。
 - `bg_trigger_fg_cnt` 保留所有自然成功觸發 FG 的次數；BG Trigger Cap 只過濾 `bg_trigger_fg_pay`，不得改寫自然 FG 觸發率。
@@ -546,7 +718,7 @@ m1_bg_spin_rate        : 79.9233
 
 ### 3.4 驗證清單
 
-- [ ] `BATCH_RUNS` 每筆均包含六個必要欄位。
+- [ ] `BATCH_RUNS` 每筆均包含七個必要欄位。
 - [ ] 自然機率與倍率權重分別從 `config_file`、`config_rtp_file` 載入。
 - [ ] 固定 RNG／種子可重現相同結果。
 - [ ] Worker 合併後的總場次等於 `total_rounds`。
@@ -564,8 +736,17 @@ m1_bg_spin_rate        : 79.9233
 - [ ] 報表檔名依 H026 規則排列，時間、Bet Mode、場次及 Card System 後綴均正確。
 - [ ] Card System Off 使用基礎 `game_id` 與 2 位數基礎版本，例如 `H0161_02`。
 - [ ] Card System On 使用 RTP／Variant `game_id` 與補零後的四段版本，例如 `H016192A_02000000`。
+- [ ] Oldhand 的 Card System On 報表檔名包含 `small_bet`、`medium_bet` 或 `big_bet`，且與 `bet_amount` 判定結果一致。
 - [ ] 四段版本已逐段補滿 2 位數，例如 `2.1.3.13` 正確輸出為 `02010313`。
 - [ ] RTP 與 Feature Trigger 接近目標，偏差有統計解釋。
+- [ ] Newbie 的 BG／FG Max Multiplier 分別不超過 30x／120x，且 Link RTP 為 0%。
+- [ ] Oldhand 小 Bet 的 FG Max Multiplier 不超過 20000x，且 Link RTP 為 0%。
+- [ ] Oldhand 中 Bet 的 FG Max Multiplier 不超過 20000x，且 Link RTP 為 2%。
+- [ ] Oldhand 大 Bet 的 FG Max Multiplier 不超過 2000x，且 Link RTP 為 2%。
+- [ ] 各批次皆滿足 `rtp_total = rtp_link + rtp_bonus_game + rtp_game`，並符合第 1.4 節目標。
+- [ ] BF／SF Newbie 為 `0% + 4% + 92.5% = 96.5%`。
+- [ ] BF／SF Oldhand 小 Bet 為 `0% + 4% + 92.5% = 96.5%`。
+- [ ] BF／SF Oldhand 中／大 Bet 為 `2% + 2% + 92.5% = 96.5%`。
 - [ ] Card System 設定占比與實際占比一致。
 - [ ] Retry Limit Exceeded 為零，或已有明確原因與核准處理方式。
 - [ ] 最大獎未超出限制，理論可達結果有相應測試。
@@ -703,14 +884,14 @@ Project/Slots/
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。
 - Auto、Speed、Reset 不得改變 RNG、得分或統計結果。
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
-- Config、Version、Profile、Card System 與 Language 只顯示實際支援的內容。
+- Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。
 - Help 與 `game_help_draft.md` 一致，不在 HTML 另維護一份規則。
 
 ### 4.5 Debug 與重現
 
 Debug Mode 至少可查看：
 
-- Config、Version、Profile、Bet Mode 與 Card System 狀態。
+- Config、Version、Profile、Bet Mode、Mode／Feature Price 倍數、base bet、實際模式押注、`bet_tier_amount`、押注層級、Link 資格、BG／FG Max Multiplier 與 Card System 狀態。
 - Card 抽獎值、卡片區間與 Retry 次數。
 - Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
@@ -720,7 +901,7 @@ Debug Mode 至少可查看：
 
 ### 4.6 與 Simulator 對帳
 
-至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。
+至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Newbie、Oldhand 小／中／大 Bet、Link 可用／不可用、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。
 
 逐項確認盤面、RNG、各段得分、Total Win、Coin In、倍率、Feature 狀態與 Retry 計數一致。
 
@@ -734,7 +915,7 @@ Debug Mode 至少可查看：
 - [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。
 - [ ] Config 切換後所有資料與顯示同步更新。
 - [ ] 所有支援的 Bet Mode 均可完成完整流程。
-- [ ] Card System Off／On 及 Newbie／Oldhand 行為正確。
+- [ ] Card System Off／On、Newbie、Oldhand 小／中／大 Bet 與 Link 資格行為正確。
 - [ ] Debug 資訊足以重現並與 Simulator 對帳。
 - [ ] Demo 統計口徑與模擬報表一致。
 - [ ] 不存在寫死的舊遊戲名稱、倍率、Table、輪帶或 Help。
@@ -783,8 +964,9 @@ Config 至少應提供遊戲實際需要的：
 - Table、Table Weight、Drop Mode 與各 Scene 資料。
 - Bet Mode ID、成本倍率、Bet Level／DENOM。
 - BG、FG、Cascade、Multiplier、Retrigger 與 Feature 參數。
-- Card System 開關、Retry Limit、Profile、卡片區間與權重。
-- Max Win／Max Multiplier 與其他產品限制。
+- Card System 開關、Retry Limit、Profile、NB／EB 與 BF／SF 的押注層級判定方式、Oldhand 小／中／大 Bet 門檻、卡片區間與各模式／層級權重。
+- Link 資格、Link／Bonus Game／Game RTP 目標與 Total RTP。
+- Newbie BG／FG、Oldhand 小／中／大 Bet 的 Max Win／Max Multiplier 與其他產品限制。
 
 同一概念在不同 Config 間必須保持一致，並記錄於 `Source/xlsx_config_usage_mapping.md`。
 
@@ -792,10 +974,14 @@ Config 至少應提供遊戲實際需要的：
 
 - `game_id` 與所在遊戲資料夾一致。
 - `config.js` 的 `excel_version` 與基礎 XLSX 完全一致，且只能是 1 碼。
+- 初次建立時，競品模型的基礎 XLSX／Config 版本為 `0`，非競品模型為 `1`；來源分類必須可追溯。
 - `config_<RTP><Variant>.js` 的 `excel_version` 與對應 RTP／Variant XLSX 完全一致，且必須是 4 碼。
 - RTP／Variant Config 的版本第 1 碼，必須與 `config.js` 及基礎 XLSX 的版本相同。
 - Config 檔名、類型、內部 RTP／Variant 與來源 XLSX 相符。
 - 所有 Weight 非負，啟用選項的總權重大於 0。
+- Newbie 與 Oldhand 小／中／大 Bet 的權重、Link 資格、RTP 拆分及倍率上限齊全且互相一致。
+- 押注層級邊界必須精確符合 `< $2`、`>= $2 且 <= $100`、`> $100`，不得因浮點誤差選錯層級。
+- NB／EB 必須以實際模式押注判斷；BF／SF 必須以購買價格除以 Feature Price 倍數後的基礎押注判斷。
 - Reel、Weight、Paytable、Symbol 與 Mode 陣列長度相容。
 - 所有 ID／索引在有效範圍，無重複或遺漏。
 - Min／Max、倍率、局數與 Max Win 限制合法。

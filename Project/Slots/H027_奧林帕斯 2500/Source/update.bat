@@ -28,7 +28,9 @@ if not defined MODE (
     echo ------------------------------------------------------------
     echo   [1] config : H0271.xlsx -^> config.js
     echo   [2] xlsx   : config.js -^> H0271.xlsx
-    echo   [3] check  : verify both directions without writing
+    echo   [3] check  : verify base model without writing
+    echo   [4] rtp    : H027192A/H027194A -^> config_92A/config_94A
+    echo   [5] all    : export and verify base + RTP variants
     echo ============================================================
     set /p "MODE=Select [1/2/3] (blank = 1): "
 )
@@ -36,10 +38,14 @@ if not defined MODE set "MODE=1"
 if "%MODE%"=="1" set "MODE=config"
 if "%MODE%"=="2" set "MODE=xlsx"
 if "%MODE%"=="3" set "MODE=check"
+if "%MODE%"=="4" set "MODE=rtp"
+if "%MODE%"=="5" set "MODE=all"
 
 if /I "%MODE%"=="config" goto do_config
 if /I "%MODE%"=="xlsx" goto do_xlsx
 if /I "%MODE%"=="check" goto do_check
+if /I "%MODE%"=="rtp" goto do_rtp
+if /I "%MODE%"=="all" goto do_all
 echo [ERROR] Unknown mode: %MODE%
 goto failed
 
@@ -61,6 +67,20 @@ goto succeeded
 "%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --check
 if errorlevel 1 goto failed
 "%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\model_sync.py" import --check
+if errorlevel 1 goto failed
+goto succeeded
+
+:do_rtp
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --variants
+if errorlevel 1 goto failed
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --variants --check
+if errorlevel 1 goto failed
+goto succeeded
+
+:do_all
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --all
+if errorlevel 1 goto failed
+"%PY_EXE%" %PY_ARGS% "%SCRIPT_DIR%\xlsx_to_config.py" --all --check
 if errorlevel 1 goto failed
 goto succeeded
 
