@@ -11,6 +11,8 @@
 - [3. 模擬程式](#3-模擬程式-simulator)
 - [4. Demogame](#4-demogame)
 - [5. Config](#5-config)
+- [6. Game Rule](#6-game-rule)
+- [7. Help](#7-help)
 
 **共通原則**
 
@@ -66,6 +68,25 @@ Max Multiplier = Round Total Win ÷ 該模式定義的基準成本
 - `92`／`94` 表示 RTP 家族。
 - `A`／`B` 表示同一 RTP 家族下的數學 Variant，不代表 Newbie／Oldhand。
 - 沒有 B 版時只建立 A 版，不得建立內容相同的空白 B 版。
+
+#### 1.2.1 數學模型工作表命名與規則
+
+數學模型 XLSX 的共用工作表使用下列名稱與用途：
+
+| 工作表名稱 | 用途與規則 |
+|---|---|
+| `Overview` | 遊戲的基礎設定。 |
+| `Gaem Description` | 說明遊戲模型參數的使用方法。工作表名稱固定使用此拼法，不得自行改為其他名稱。 |
+| `Parameter` | 遊戲參數。 |
+| `BG_Symbol` | Base Game 使用的第一張輪帶表。 |
+| `BG_Symbol (2)` | Base Game 使用的第二張輪帶表；只有一張 BG 輪帶表時不得建立。 |
+| `BG_Symbol (3)` | Base Game 使用的第三張輪帶表；只有一或兩張 BG 輪帶表時不得建立。 |
+| `BF_Symbol` | Buy Feature 入口使用的觸發輪帶，只能用來觸發 FG；該入口盤面不得產生任何 BG 得分。 |
+
+- BG 有多張輪帶表時，第一張固定命名為 `BG_Symbol`，第二張起依序在名稱後加上空格與括號編號，例如 `BG_Symbol (2)`、`BG_Symbol (3)`；不得使用 `BG_Symbol2`、`BG_Symbol_2` 或其他格式。
+- `BF_Symbol` 必須與一般 BG 輪帶分開定義。其符號配置與停輪結果必須確保 Buy Feature 入口可觸發 FG，且觸發盤面不成立任何 Line／Ways／Cluster／Pay Anywhere 或其他 BG 派彩。
+- 若遊戲沒有 Buy Feature，則不得建立空白或未使用的 `BF_Symbol` 工作表。
+- 新增其他用途的輪帶工作表時，必須在 `Gaem Description` 說明選表條件、使用模式與限制，並同步更新 XLSX 轉 Config mapping。
 
 ### 1.3 版本規則
 
@@ -266,6 +287,8 @@ RTP 配置使用 `Link + Bonus Game + Game = Total RTP`。NB／EB 與 BF／SF �
 - [ ] 基礎數學 XLSX 為 1 碼版本，且所有 RTP／Variant XLSX 的第 1 碼均與其一致。
 - [ ] 新模型已記錄競品／非競品來源；競品初始版本為 `0`，非競品初始版本為 `1`。
 - [ ] XLSX 公式、命名、版本與工作頁用途可追溯。
+- [ ] 共用工作表名稱符合第 1.2.1 節；多張 BG 輪帶依序使用 `BG_Symbol`、`BG_Symbol (2)`、`BG_Symbol (3)`。
+- [ ] `BF_Symbol` 只用於 Buy Feature 觸發 FG，且所有入口盤面均不產生 BG 得分。
 - [ ] 最大獎與理論上限已計算，且未超出產品限制。
 - [ ] 所有 Feature 的 Trigger、Retrigger、結束條件與上限已定義。
 - [ ] Card System 是否啟用、使用哪些卡片及如何 Retry 已定義。
@@ -1021,3 +1044,76 @@ Config 至少應提供遊戲實際需要的：
 4. Card System 的權重、區間、Retry 與失敗監控通過。
 5. Demogame 的代表性單局可與 Simulator 對帳。
 6. 文件、XLSX、Config、報表與 Demogame 均為同一正式版本。
+
+---
+
+## 6. Game Rule
+
+### 6.1 用途
+
+Game Rule 用於設定遊戲玩法規則，是數學模型、Config、Simulator、Demogame、Help 與測試案例共同遵循的規則來源。
+
+### 6.2 必要規則
+
+- 每款遊戲必須提供 `game_rule.md`，並明確定義遊戲基礎設定、得分方式、Symbol 功能、判獎順序、Bet Mode、BG／FG 流程、Feature、Retrigger、Multiplier、Max Win、Jackpot 與例外處理。
+- Game Rule 的基本格式固定參考 `Project/Slots/H026_彩罐熱舞 1000/game_rule.md`；新遊戲與既有文件改版都必須沿用相同章節骨架、標題層級、表格形式及規則表達方式。
+- 數學模型、Config、Simulator、Demogame 與 Help 不得自行補充或改寫 `game_rule.md` 未定義的玩法。
+- 規則變更時，必須同步檢查並更新數學文件、Config、Simulator、Demogame、`Help.xlsx`、`game_help_draft.md` 與測試案例。
+- Game Rule 與其他來源內容衝突時，必須先確認正式規則，不得由開發端自行選擇其中一種實作。
+
+Game Rule 必須依 H026 保留下列基本結構：
+
+| 順序 | 章節 | 格式要求 |
+|---:|---|---|
+| 1 | 文件標題與版本資訊 | 文件開頭列出遊戲中英文名稱、文件版本、編號及撰寫日期。 |
+| 2 | `§1. 遊戲基本資訊` | 使用「項目／說明」表格記錄遊戲名稱、ID、遊戲類型、盤面、得分方式及押注模式等基礎資料。 |
+| 3 | `§2. 盤面結構` | 包含盤面示意圖與 Reel／Row、得分方向及補牌流程的文字說明。 |
+| 4 | `§3. 符號類別` | 分開定義一般符號與特殊符號，說明出現位置、替代關係及功能。 |
+| 5 | `§4. 賠率表（Pay Table）` | 使用表格列出符號、得分數量及倍率口徑。 |
+| 6 | `§5. 核心遊戲流程（Base Game）` | 依實際執行順序編號描述 Spin、判獎、消除／補牌、結算與 Feature Trigger。 |
+| 7 | `§5A. Extra Bet` | 遊戲有 Extra Bet 時使用，說明價格、流程與 Normal Bet 的差異；沒有時可省略此加插章節。 |
+| 8 | `§6. 核心特色` | 依遊戲機制建立子章節，完整說明特色符號、轉換、Multiplier 或其他核心玩法。 |
+| 9 | `§7. 免費遊戲（Free Spins / Free Game, FG）` | 分別定義觸發、FG 玩法及 Retrigger。 |
+| 10 | `§8. Buy Feature（購買特色）` | 說明購買價格、入口 Spin、FG 觸發方式與得分計算。 |
+| 11 | `§9. 邊界 / 例外情境（Edge Cases）` | 依機制分類列出可直接驗證的邊界條件及例外處理。 |
+| 12 | `附錄 A. 詞彙對照` | 統一 BG、FG、Wild、Scatter、Feature 等術語。 |
+| 13 | `附錄 B. 已確認規格` | 彙整已確認且會影響實作或測試的關鍵規格。 |
+
+- 除 `§5A. Extra Bet` 外，上表章節不得刪除或任意改名；遊戲沒有對應功能時，保留章節並明確寫「不適用」或「不提供」。
+- 可依各遊戲機制在固定章節下新增子章節，但不得改變核心章節順序。
+- 規則必須以開發與測試可直接實作、驗證的方式描述，不得只使用宣傳文案或未定義的概念性敘述。
+
+### 6.3 交付檢查
+
+- [ ] `game_rule.md` 已涵蓋所有實際支援的玩法、模式與 Feature。
+- [ ] Game Rule 已依 `Project/Slots/H026_彩罐熱舞 1000/game_rule.md` 的基本格式建立，固定章節、順序與表格形式完整。
+- [ ] 判獎順序、倍率分母、觸發條件、結束條件與上限均可直接實作及測試。
+- [ ] Game Rule 與數學模型、Config、Simulator、Demogame 及 Help 的規則一致。
+
+---
+
+## 7. Help
+
+### 7.1 必要交付檔案
+
+每款遊戲必須同時提供下列兩份 Help 文件：
+
+- `Help.xlsx`
+- `game_help_draft.md`
+
+兩份文件的文字、規則、數值、表格內容、章節順序與語言版本必須完全一致；檔案格式造成的版面呈現差異不得改變或省略任何內容。任一份文件更新時，另一份必須在同一次修改中同步更新。
+
+### 7.2 內容規則
+
+- Help 必須依 `game_rule.md` 編寫，只整理玩家需要理解的玩法，不得新增、刪除或改變正式遊戲規則。
+- Help 內的遊戲名稱、遊戲類型、Bet Mode、Paytable、Symbol、Feature、倍率、局數、觸發條件、Max Win 與 Jackpot 說明，必須與 Game Rule、數學模型及 Config 一致。
+- OP Jackpot 的內容與格式必須參考 `H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx`，不得自行省略 OP Jackpot 的必要規則或改用未核准的格式。
+- OP Jackpot 參考檔位於 `Project/Slots/H026_彩罐熱舞 1000/其他/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx`；若檔案移動，必須同步更新本規範中的參考路徑。
+- `Help.xlsx` 與 `game_help_draft.md` 若有任何內容差異，該遊戲不得視為完成交付。
+
+### 7.3 交付檢查
+
+- [ ] `Help.xlsx` 與 `game_help_draft.md` 均存在。
+- [ ] 兩份 Help 的文字、規則、數值、表格、章節順序與語言版本完全一致。
+- [ ] Help 與 `game_rule.md`、數學模型及 Config 的內容一致。
+- [ ] OP Jackpot 已參考 `H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx` 編寫並完成核對。

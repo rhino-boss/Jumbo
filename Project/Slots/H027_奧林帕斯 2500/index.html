@@ -1928,7 +1928,9 @@
           <label class="debug-rng-field" for="cardRangeSelect">
             Card BG Range
             <select id="cardRangeSelect">
-              <option value="">Auto</option>
+              <option value="off">Off</option>
+              <option value="newbie">Newbie</option>
+              <option value="oldhand" selected>Oldhand</option>
             </select>
           </label>
           <label class="debug-rng-field" for="reelRngInput">
@@ -2588,7 +2590,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const multiplier = inFg ? state.pendingFg?.carry || 0 : spin?.effectiveMultiplier || 0;
     setText(el.multiplier, `x${multiplier || 1}`);
     el.fgPill.classList.toggle("hidden", !state.pendingFg);
-    if (state.pendingFg) setText(el.fgLeft, `${state.pendingFg.queue.length}/${state.pendingFg.total}`);
+    if (state.pendingFg) {
+      const remaining = state.pendingFg.preparedSpins?.length ?? state.pendingFg.queue.length;
+      setText(el.fgLeft, `${remaining}/${state.pendingFg.total}`);
+    }
     setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
   }
 
@@ -2611,7 +2616,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     el.rngList.innerHTML = "";
     const strip = Box.strips[spin.tableId];
     const betContext = currentBetContext();
-    const cardSystemOn = Boolean(Box.card_system?.enabled && window.DEMOGAME_CARD_SYSTEM_ENABLED);
+    const cardSystemOn = cardSystemActive();
     const rows = [
       [`Config`, `${H027_ACTIVE_CONFIG === "config.js" ? "Base" : H027_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "").toUpperCase()}-${cardSystemOn ? "Card" : "Off"}`],
       [`Version`, Box.excel_version],
@@ -2627,6 +2632,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       [`BG Max Multiplier`, betContext.maxMultiplierBg],
       [`FG Max Multiplier`, betContext.maxMultiplierFg],
       [`Card System`, cardSystemOn ? "on" : "off"],
+      [`Card Profile`, spin.cardInfo?.profile || "off"],
+      [`Card BG`, spin.cardInfo?.card || "n/a"],
+      [`Card FG`, spin.cardInfo?.fgCard || "n/a"],
+      [`Card Retry`, `${spin.cardInfo?.retries || 0}${spin.cardInfo?.retryLimitExceeded ? " (LIMIT)" : ""}`],
       [`Table`, `${spin.tableName} (#${spin.tableId})`],
       [`Drop Mode`, Box.drop_mode],
       [`C2 / C3`, `C2 ${spin.multiplier.c2Count} | C3 ${spin.multiplier.c3Count} | x${spin.multiplier.total}`]
@@ -2764,25 +2773,29 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.lastSpin = spin;
   }
 
-  function startFreeGame() {
-    const queue = buildFreeSchedule("initial");
-    state.pendingFg = { queue, total: queue.length, played: 0, carry: 0, win: 0 };
+  function startFreeGame(preparedSession = null) {
+    const queue = preparedSession ? [] : buildFreeSchedule("initial");
+    const preparedSpins = preparedSession?.spins ? preparedSession.spins.slice() : null;
+    const total = preparedSpins ? preparedSpins.length : queue.length;
+    state.pendingFg = { queue, preparedSpins, total, played: 0, carry: 0, win: 0 };
     state.fgTriggerCount += 1;
-    appendLog(tr(`Free Game triggered | ${queue.length} spins`, `觸發免費遊戲 | ${queue.length} 次`), "result");
+    appendLog(tr(`Free Game triggered | ${total} spins`, `觸發免費遊戲 | ${total} 次`), "result");
     updateFeatureBar();
   }
 
   async function playFreeSpin() {
     const fg = state.pendingFg;
-    if (!fg || !fg.queue.length) return finishFreeGame();
-    const tableId = fg.queue.shift();
-    const spin = playSpin(tableId, "FG", fg.carry);
+    const hasPrepared = Boolean(fg?.preparedSpins);
+    if (!fg || (hasPrepared ? !fg.preparedSpins.length : !fg.queue.length)) return finishFreeGame();
+    const spin = hasPrepared
+      ? fg.preparedSpins.shift()
+      : playSpin(fg.queue.shift(), "FG", fg.carry);
     fg.played += 1;
     fg.carry += spin.multiplier.total;
     fg.win += toMoney(spin.finalPay);
     state.maxMultiplier = Math.max(state.maxMultiplier, fg.carry);
 
-    if (spin.scatterCount >= FG_RETRIGGER_COUNT && fg.total < Box.max_free_spins) {
+    if (!hasPrepared && spin.scatterCount >= FG_RETRIGGER_COUNT && fg.total < Box.max_free_spins) {
       const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - fg.total);
       fg.queue.push(...extra);
       fg.total += extra.length;
@@ -2790,7 +2803,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     }
     await playback(spin);
     updateStats();
-    if (!fg.queue.length) finishFreeGame();
+    if (hasPrepared ? !fg.preparedSpins.length : !fg.queue.length) finishFreeGame();
   }
 
   function finishFreeGame() {
@@ -2843,55 +2856,138 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return candidates[0];
   }
 
-  // Pure-math adapter for demogame_common's N-round simulator. It intentionally
-  // does not touch state, balance, stats, playback, or the visible board.
-  window.demogameSimulateRound = () => {
-    const profile = Box.parameter.normal;
-    const baseIndex = pickWeighted(profile.base_reel_weights);
-    const baseSpin = playSpin(tableIndex(profile.base_reel_names[baseIndex]), "BG", 0);
-    const fgTriggered = baseSpin.scatterCount >= FG_TRIGGER_COUNT;
-    let totalWin = toMoney(baseSpin.finalPay);
-    let maxMultiplier = baseSpin.multiplier.total;
-    const fgCascades = [];
+  function cardSystemActive() {
+    return state.selectedMode !== MODE_EXTRA
+      && Boolean(Box.card_system?.enabled)
+      && window.DEMOGAME_CARD_SYSTEM_ENABLED !== false
+      && cardPlayerProfile() !== "off";
+  }
 
-    if (fgTriggered) {
-      const makeSchedule = (kind) => {
-        const schedule = [];
-        profile.free_table[kind].forEach((count, index) => {
-          const tableId = tableIndex(profile.free_table.names[index]);
-          for (let repeat = 0; repeat < count; repeat += 1) schedule.push(tableId);
-        });
-        for (let index = schedule.length - 1; index > 0; index -= 1) {
-          const selected = randomIndex(index + 1);
-          [schedule[index], schedule[selected]] = [schedule[selected], schedule[index]];
-        }
-        return schedule;
-      };
+  function cardPlayerProfile() {
+    const selected = el.cardRange?.value;
+    if (selected === "newbie" || selected === "oldhand" || selected === "off") return selected;
+    try { return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
+    catch (_) { return "oldhand"; }
+  }
 
-      const queue = makeSchedule("initial");
-      let totalSpins = queue.length;
-      let carry = 0;
-      while (queue.length) {
-        const freeSpin = playSpin(queue.shift(), "FG", carry);
-        fgCascades.push(freeSpin.steps.length);
-        carry += freeSpin.multiplier.total;
-        maxMultiplier = Math.max(maxMultiplier, carry);
-        totalWin += toMoney(freeSpin.finalPay);
-        if (freeSpin.scatterCount >= FG_RETRIGGER_COUNT && totalSpins < Box.max_free_spins) {
-          const extra = makeSchedule("retrigger").slice(0, Box.max_free_spins - totalSpins);
-          queue.push(...extra);
-          totalSpins += extra.length;
-        }
+  function cardModeData() {
+    const player = cardPlayerProfile();
+    if (player === "off") return null;
+    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : "normal_bet";
+    let data = Box.card_system?.[player]?.[modeKey];
+    if (player === "oldhand") data = data?.[currentBetContext().betTier];
+    return data || null;
+  }
+
+  function pickCard(cards) {
+    if (!Array.isArray(cards) || !cards.length) return null;
+    const index = pickWeighted(cards.map((card) => Number(card.weight) || 0));
+    return cards[index] || null;
+  }
+
+  function cardRatio(creditPay) {
+    return toMoney(creditPay) / betMoney();
+  }
+
+  function cardMatches(card, creditPay) {
+    if (!card || card.type === "free_game") return false;
+    const ratio = cardRatio(creditPay);
+    return Number(card.min) < ratio && ratio <= Number(card.max);
+  }
+
+  function cardLabel(card) {
+    return !card ? "Off" : card.type === "free_game" ? "Free Game" : `(${card.min}, ${card.max}]`;
+  }
+
+  function bgTriggerCap(cards) {
+    const maxima = (cards || [])
+      .filter((card) => card.type !== "free_game" && Number(card.weight) > 0)
+      .map((card) => Number(card.max))
+      .filter(Number.isFinite);
+    return maxima.length ? Math.max(...maxima) : Infinity;
+  }
+
+  function generateFreeSession() {
+    const queue = buildFreeSchedule("initial");
+    const spins = [];
+    let total = queue.length;
+    let carry = 0;
+    let winCredits = 0;
+    while (queue.length && spins.length < Box.max_free_spins) {
+      const spin = playSpin(queue.shift(), "FG", carry);
+      spins.push(spin);
+      carry += spin.multiplier.total;
+      winCredits += spin.finalPay;
+      if (spin.scatterCount >= FG_RETRIGGER_COUNT && total < Box.max_free_spins) {
+        const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - total);
+        queue.push(...extra);
+        total += extra.length;
       }
     }
+    return { spins, total: spins.length, carry, winCredits };
+  }
 
+  function naturalRound(forceFeature = false, forcedStops = null) {
+    const buy = state.selectedMode === MODE_BUY;
+    const base = buy || forceFeature ? forcedTriggerSpin(forcedStops) : regularSpin(forcedStops);
+    const triggered = buy || base.scatterCount >= FG_TRIGGER_COUNT;
+    return { base, session: triggered ? generateFreeSession() : null };
+  }
+
+  function cardRound(forceFeature = false, forcedStops = null) {
+    const modeData = cardModeData();
+    const limit = Number(Box.card_system?.retry_limit || 10000);
+    if (!modeData || forceFeature || forcedStops || state.selectedMode === MODE_EXTRA) {
+      const natural = naturalRound(forceFeature, forcedStops);
+      return { ...natural, card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+    }
+
+    const buy = state.selectedMode === MODE_BUY;
+    const bgCards = modeData.weight_bg || [];
+    const fgCards = modeData.weight_fg || [];
+    const selectedCard = pickCard(buy ? fgCards : bgCards);
+    const selectedFgCard = !buy && selectedCard?.type === "free_game" ? pickCard(fgCards) : null;
+    const triggerCap = bgTriggerCap(bgCards);
+    let last = null;
+    for (let retry = 0; retry < limit; retry += 1) {
+      const result = naturalRound(false, null);
+      last = result;
+      if (buy) {
+        const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
+        if (cardMatches(selectedCard, totalCredits)) {
+          return { ...result, card: selectedCard, fgCard: null, retries: retry, retryLimitExceeded: 0 };
+        }
+      } else if (selectedCard?.type === "free_game") {
+        if (result.session && cardRatio(result.base.finalPay) <= triggerCap
+          && cardMatches(selectedFgCard, result.session.winCredits)) {
+          return { ...result, card: selectedCard, fgCard: selectedFgCard, retries: retry, retryLimitExceeded: 0 };
+        }
+      } else if (!result.session && cardMatches(selectedCard, result.base.finalPay)) {
+        return { ...result, card: selectedCard, fgCard: null, retries: retry, retryLimitExceeded: 0 };
+      }
+    }
+    return { ...last, card: selectedCard, fgCard: selectedFgCard, retries: limit, retryLimitExceeded: 1 };
+  }
+
+  function generateRound(forceFeature = false, forcedStops = null) {
+    return cardSystemActive()
+      ? cardRound(forceFeature, forcedStops)
+      : { ...naturalRound(forceFeature, forcedStops), card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+  }
+
+  // Pure-math adapter for demogame_common's N-round simulator. It uses the
+  // same Card System result generator as visible play without touching stats.
+  window.demogameSimulateRound = () => {
+    const result = generateRound(false, null);
+    const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
     return {
-      multiplier: totalWin / betMoney(),
-      fgTriggered,
-      maxMultiplier,
-      retryLimitExceeded: 0,
-      bgCascade: baseSpin.steps.length,
-      fgCascades
+      multiplier: toMoney(totalCredits) / wagerMoney(),
+      fgTriggered: Boolean(result.session),
+      maxMultiplier: Math.max(result.base.multiplier.total, Number(result.session?.carry || 0)),
+      retryLimitExceeded: result.retryLimitExceeded,
+      retryCount: result.retries,
+      bgCascade: result.base.steps.length,
+      fgCascades: result.session?.spins?.map((spin) => spin.steps.length) || []
     };
   };
 
@@ -2914,10 +3010,21 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       updateStats();
 
       const forcedStops = parseForcedStops();
-      const forceFeature = el.forceFg.checked || state.selectedMode === MODE_BUY;
-      const spin = forceFeature ? forcedTriggerSpin(forcedStops) : regularSpin(forcedStops);
+      const forceFeature = el.forceFg.checked;
+      const result = generateRound(forceFeature, forcedStops);
+      const spin = result.base;
+      spin.cardInfo = {
+        profile: cardSystemActive() ? cardPlayerProfile() : "off",
+        card: cardLabel(result.card),
+        fgCard: cardLabel(result.fgCard),
+        retries: result.retries,
+        retryLimitExceeded: result.retryLimitExceeded
+      };
       el.forceFg.checked = false;
       await playback(spin);
+      if (cardSystemActive()) {
+        appendLog(`Card ${spin.cardInfo.card} | FG ${spin.cardInfo.fgCard} | Retry ${result.retries}${result.retryLimitExceeded ? " | LIMIT" : ""}`, result.retryLimitExceeded ? "error" : "result");
+      }
 
       state.lastWin = toMoney(spin.finalPay);
       state.balance += state.lastWin;
@@ -2925,7 +3032,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       state.maxMultiplier = Math.max(state.maxMultiplier, spin.multiplier.total);
       const triggered = spin.scatterCount >= FG_TRIGGER_COUNT || state.selectedMode === MODE_BUY;
       if (triggered) {
-        startFreeGame();
+        startFreeGame(result.session);
         writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
       } else if (state.lastWin > 0) {
         state.hitCount += 1;

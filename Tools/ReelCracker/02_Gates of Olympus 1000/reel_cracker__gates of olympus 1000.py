@@ -27,7 +27,7 @@ import time
 
 # %% 開啟遊戲畫面
 
-chrome_driver_path = "C:\\Users\\rhinshen\\Mine\\個人工作區\\3_Tools\\ReelCracker\\chromedriver-win64\\chromedriver.exe"
+chrome_driver_path = "C:\\Users\\rhinshen\\Mine\\個人工作區\\工作區\\Tools\\ReelCracker\\drivers\\151.0.7922.174\\chromedriver-win64\\chromedriver.exe"
 service = Service(chrome_driver_path)
 options = webdriver.ChromeOptions()
 options.add_argument("--start-maximized")
