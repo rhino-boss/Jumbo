@@ -6,7 +6,7 @@
 > 編號：H027  
 > 基礎數學版本：`0`（競品模型初始版本）
 > 撰寫日期：2026-08-03  
-> 實作狀態：依 Version 選擇 H027192A／H027194A v0.0.0.0 對應 Config；Card System Off 使用該 Config 的原始自然機率，On 則套用所選 Profile 的卡片權重。
+> 實作狀態：Base／Card System Off 使用 H0271 v0；Card System On 尚待建立正式 RTP／Variant 數學檔
 
 ---
 
@@ -261,5 +261,5 @@
 - 主要玩法依據：`文件/260630_Olympus 2500.pptx`。
 - 92 RTP 家族數學依據：`Source/H027192A.xlsx`；94 RTP 家族數學依據：`Source/H027194A.xlsx`。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
-- 目前程式：`Simulator.py`、`config.js`、`config_92A.js`、`config_94A.js`；各 Config 分別對應 `Source/H0271.xlsx`、`Source/H027192A.xlsx`、`Source/H027194A.xlsx`。
+- 目前程式：`Simulator.py`、`config.js`；`config.js` 由基礎數學檔 `Source/H0271.xlsx` 產生。Card System On 尚待建立對應的 RTP／Variant 數學檔與 Config。
 - 待確認事項：`問題清單_H027.md`。

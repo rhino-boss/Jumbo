@@ -368,12 +368,12 @@ const data = {
         "BG_Symbol (2)"
       ],
       "base_reel_weights": [
-        0,
+        1,
         1
       ],
       "base_reel_weights_cum": [
-        0,
-        1
+        1,
+        2
       ],
       "free_table": {
         "names": [
@@ -381,12 +381,12 @@ const data = {
           "FG_Symbol (2)"
         ],
         "initial": [
-          15,
-          0
+          8,
+          7
         ],
         "retrigger": [
-          5,
-          0
+          3,
+          2
         ]
       },
       "use_super_multiplier": {
@@ -406,36 +406,36 @@ const data = {
         ],
         "weights_by_initial_ball_count": {
           "BG_Symbol": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            1852,
+            2885,
+            3917,
+            4949,
+            5982,
+            7014
           ],
           "BG_Symbol (2)": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            1852,
+            2885,
+            3917,
+            4949,
+            5982,
+            7014
           ],
           "FG_Symbol": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            130,
+            260,
+            390,
+            520,
+            650,
+            780
           ],
           "FG_Symbol (2)": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            130,
+            260,
+            390,
+            520,
+            650,
+            780
           ]
         },
         "denominator": 10000
@@ -476,19 +476,19 @@ const data = {
         ],
         "weights": {
           "BG_Symbol": [
-            4631,
-            2486,
-            1166,
-            1017,
-            320,
-            143,
-            70,
-            52,
+            43,
             42,
-            21,
-            17,
-            28,
-            7,
+            33,
+            87,
+            85,
+            51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -503,21 +503,21 @@ const data = {
             0
           ],
           "BG_Symbol (2)": [
-            920,
-            896,
-            778,
-            2028,
-            2098,
-            1439,
-            849,
-            330,
-            189,
-            236,
-            24,
-            47,
-            118,
-            24,
-            24,
+            43,
+            42,
+            33,
+            87,
+            85,
+            51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -530,15 +530,15 @@ const data = {
             0
           ],
           "FG_Symbol": [
-            4543,
-            2218,
-            1338,
-            986,
-            458,
-            317,
-            35,
-            35,
-            70,
+            130,
+            66,
+            42,
+            25,
+            13,
+            8,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -557,19 +557,19 @@ const data = {
             0
           ],
           "FG_Symbol (2)": [
-            4631,
-            2486,
-            1166,
-            1017,
-            320,
-            143,
-            70,
-            52,
+            130,
+            66,
             42,
-            21,
-            17,
-            28,
-            7,
+            25,
+            13,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -586,112 +586,112 @@ const data = {
         },
         "weights_cum": {
           "BG_Symbol": [
-            4631,
-            7117,
-            8283,
-            9300,
-            9620,
-            9763,
-            9833,
-            9885,
-            9927,
-            9948,
-            9965,
-            9993,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            43,
+            85,
+            118,
+            205,
+            290,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341
           ],
           "BG_Symbol (2)": [
-            920,
-            1816,
-            2594,
-            4622,
-            6720,
-            8159,
-            9008,
-            9338,
-            9527,
-            9763,
-            9787,
-            9834,
-            9952,
-            9976,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            43,
+            85,
+            118,
+            205,
+            290,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341
           ],
           "FG_Symbol": [
-            4543,
-            6761,
-            8099,
-            9085,
-            9543,
-            9860,
-            9895,
-            9930,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            130,
+            196,
+            238,
+            263,
+            276,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284
           ],
           "FG_Symbol (2)": [
-            4631,
-            7117,
-            8283,
-            9300,
-            9620,
-            9763,
-            9833,
-            9885,
-            9927,
-            9948,
-            9965,
-            9993,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            130,
+            196,
+            238,
+            263,
+            276,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284
           ]
         }
       },
@@ -956,11 +956,9 @@ const data = {
         "BG_Symbol"
       ],
       "base_reel_weights": [
-        1,
-        0
+        1
       ],
       "base_reel_weights_cum": [
-        1,
         1
       ],
       "free_table": {
@@ -969,12 +967,12 @@ const data = {
           "FG_Symbol (2)"
         ],
         "initial": [
-          0,
-          15
+          8,
+          7
         ],
         "retrigger": [
-          0,
-          5
+          3,
+          2
         ]
       },
       "use_super_multiplier": {
@@ -994,36 +992,36 @@ const data = {
         ],
         "weights_by_initial_ball_count": {
           "BG_Symbol": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            1852,
+            2885,
+            3917,
+            4949,
+            5982,
+            7014
           ],
           "BG_Symbol (2)": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            1852,
+            2885,
+            3917,
+            4949,
+            5982,
+            7014
           ],
           "FG_Symbol": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            130,
+            260,
+            390,
+            520,
+            650,
+            780
           ],
           "FG_Symbol (2)": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
+            130,
+            260,
+            390,
+            520,
+            650,
+            780
           ]
         },
         "denominator": 10000
@@ -1064,19 +1062,19 @@ const data = {
         ],
         "weights": {
           "BG_Symbol": [
-            4631,
-            2486,
-            1166,
-            1017,
-            320,
-            143,
-            70,
-            52,
+            43,
             42,
-            21,
-            17,
-            28,
-            7,
+            33,
+            87,
+            85,
+            51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1091,21 +1089,21 @@ const data = {
             0
           ],
           "BG_Symbol (2)": [
-            920,
-            896,
-            778,
-            2028,
-            2098,
-            1439,
-            849,
-            330,
-            189,
-            236,
-            24,
-            47,
-            118,
-            24,
-            24,
+            43,
+            42,
+            33,
+            87,
+            85,
+            51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1118,15 +1116,15 @@ const data = {
             0
           ],
           "FG_Symbol": [
-            4543,
-            2218,
-            1338,
-            986,
-            458,
-            317,
-            35,
-            35,
-            70,
+            130,
+            66,
+            42,
+            25,
+            13,
+            8,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1145,19 +1143,19 @@ const data = {
             0
           ],
           "FG_Symbol (2)": [
-            4631,
-            2486,
-            1166,
-            1017,
-            320,
-            143,
-            70,
-            52,
+            130,
+            66,
             42,
-            21,
-            17,
-            28,
-            7,
+            25,
+            13,
+            8,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -1174,112 +1172,112 @@ const data = {
         },
         "weights_cum": {
           "BG_Symbol": [
-            4631,
-            7117,
-            8283,
-            9300,
-            9620,
-            9763,
-            9833,
-            9885,
-            9927,
-            9948,
-            9965,
-            9993,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            43,
+            85,
+            118,
+            205,
+            290,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341
           ],
           "BG_Symbol (2)": [
-            920,
-            1816,
-            2594,
-            4622,
-            6720,
-            8159,
-            9008,
-            9338,
-            9527,
-            9763,
-            9787,
-            9834,
-            9952,
-            9976,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            43,
+            85,
+            118,
+            205,
+            290,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341,
+            341
           ],
           "FG_Symbol": [
-            4543,
-            6761,
-            8099,
-            9085,
-            9543,
-            9860,
-            9895,
-            9930,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            130,
+            196,
+            238,
+            263,
+            276,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284
           ],
           "FG_Symbol (2)": [
-            4631,
-            7117,
-            8283,
-            9300,
-            9620,
-            9763,
-            9833,
-            9885,
-            9927,
-            9948,
-            9965,
-            9993,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000,
-            10000
+            130,
+            196,
+            238,
+            263,
+            276,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284,
+            284
           ]
         }
       },
@@ -1545,7 +1543,7 @@ const data = {
     "retry_limit": 10000,
     "weight_threshold": 1000000000,
     "card_multiplier_denominator": "normal_bet_base_cost",
-    "fg_entry_cycle_target": 433.2,
+    "fg_entry_cycle_target": 5000.0,
     "newbie": {
       "normal_bet": {
         "weight_bg": [
@@ -1553,91 +1551,91 @@ const data = {
             "type": "range",
             "min": -1,
             "max": 0,
-            "weight": 779549514
+            "weight": 694112196
           },
           {
             "type": "range",
             "min": 0,
             "max": 1,
-            "weight": 61456350
+            "weight": 154179940
           },
           {
             "type": "range",
             "min": 1,
             "max": 2,
-            "weight": 4785734
+            "weight": 52969308
           },
           {
             "type": "range",
             "min": 2,
             "max": 3,
-            "weight": 17018302
+            "weight": 25304058
           },
           {
             "type": "range",
             "min": 3,
             "max": 4,
-            "weight": 44835752
+            "weight": 16909959
           },
           {
             "type": "range",
             "min": 4,
             "max": 5,
-            "weight": 92354348
+            "weight": 10604147
           },
           {
             "type": "range",
             "min": 5,
             "max": 6,
-            "weight": 0
+            "weight": 6991786
           },
           {
             "type": "range",
             "min": 6,
             "max": 7,
-            "weight": 0
+            "weight": 4663978
           },
           {
             "type": "range",
             "min": 7,
             "max": 8,
-            "weight": 0
+            "weight": 3128355
           },
           {
             "type": "range",
             "min": 8,
             "max": 9,
-            "weight": 0
+            "weight": 2617719
           },
           {
             "type": "range",
             "min": 9,
             "max": 10,
-            "weight": 0
+            "weight": 3068713
           },
           {
             "type": "range",
             "min": 10,
             "max": 15,
-            "weight": 0
+            "weight": 10040517
           },
           {
             "type": "range",
             "min": 15,
             "max": 20,
-            "weight": 0
+            "weight": 6133908
           },
           {
             "type": "range",
             "min": 20,
             "max": 25,
-            "weight": 0
+            "weight": 4753847
           },
           {
             "type": "range",
             "min": 25,
             "max": 30,
-            "weight": 0
+            "weight": 4521569
           },
           {
             "type": "range",
@@ -1935,7 +1933,7 @@ const data = {
           },
           {
             "type": "free_game",
-            "weight": 2313744
+            "weight": 200040
           }
         ],
         "weight_fg": [
@@ -1943,157 +1941,157 @@ const data = {
             "type": "range",
             "min": -1,
             "max": 0,
-            "weight": 131953
+            "weight": 16217
           },
           {
             "type": "range",
             "min": 0,
             "max": 1,
-            "weight": 130524
+            "weight": 11228
           },
           {
             "type": "range",
             "min": 1,
             "max": 2,
-            "weight": 128053
+            "weight": 8790
           },
           {
             "type": "range",
             "min": 2,
             "max": 3,
-            "weight": 125370
+            "weight": 15407
           },
           {
             "type": "range",
             "min": 3,
             "max": 4,
-            "weight": 122958
+            "weight": 12971
           },
           {
             "type": "range",
             "min": 4,
             "max": 5,
-            "weight": 120341
+            "weight": 23747
           },
           {
             "type": "range",
             "min": 5,
             "max": 6,
-            "weight": 117706
+            "weight": 39494
           },
           {
             "type": "range",
             "min": 6,
             "max": 7,
-            "weight": 115336
+            "weight": 22658
           },
           {
             "type": "range",
             "min": 7,
             "max": 8,
-            "weight": 112909
+            "weight": 59644
           },
           {
             "type": "range",
             "min": 8,
             "max": 9,
-            "weight": 110181
+            "weight": 28907
           },
           {
             "type": "range",
             "min": 9,
             "max": 10,
-            "weight": 107668
+            "weight": 43878
           },
           {
             "type": "range",
             "min": 10,
             "max": 15,
-            "weight": 100177
+            "weight": 420522
           },
           {
             "type": "range",
             "min": 15,
             "max": 20,
-            "weight": 87586
+            "weight": 522819
           },
           {
             "type": "range",
             "min": 20,
             "max": 25,
-            "weight": 75734
+            "weight": 883893
           },
           {
             "type": "range",
             "min": 25,
             "max": 30,
-            "weight": 50062125
+            "weight": 1372118
           },
           {
             "type": "range",
             "min": 30,
             "max": 35,
-            "weight": 50158
+            "weight": 2089279
           },
           {
             "type": "range",
             "min": 35,
             "max": 40,
-            "weight": 50037873
+            "weight": 3091774
           },
           {
             "type": "range",
             "min": 40,
             "max": 45,
-            "weight": 150023890
+            "weight": 3597897
           },
           {
             "type": "range",
             "min": 45,
             "max": 50,
-            "weight": 11172
+            "weight": 4657727
           },
           {
             "type": "range",
             "min": 50,
             "max": 60,
-            "weight": 99994293
+            "weight": 17767174
           },
           {
             "type": "range",
             "min": 60,
             "max": 70,
-            "weight": 0
+            "weight": 31716923
           },
           {
             "type": "range",
             "min": 70,
             "max": 80,
-            "weight": 99943606
+            "weight": 53338083
           },
           {
             "type": "range",
             "min": 80,
             "max": 90,
-            "weight": 49918497
+            "weight": 85581112
           },
           {
             "type": "range",
             "min": 90,
             "max": 100,
-            "weight": 149886626
+            "weight": 143176099
           },
           {
             "type": "range",
             "min": 100,
             "max": 120,
-            "weight": 0
+            "weight": 651501639
           },
           {
             "type": "range",
             "min": 120,
             "max": 140,
-            "weight": 149803332
+            "weight": 0
           },
           {
             "type": "range",
@@ -2111,19 +2109,19 @@ const data = {
             "type": "range",
             "min": 180,
             "max": 200,
-            "weight": 49660552
+            "weight": 0
           },
           {
             "type": "range",
             "min": 200,
             "max": 250,
-            "weight": 49572969
+            "weight": 0
           },
           {
             "type": "range",
             "min": 250,
             "max": 300,
-            "weight": 99448411
+            "weight": 0
           },
           {
             "type": "range",
@@ -2349,169 +2347,169 @@ const data = {
             "type": "range",
             "min": 2,
             "max": 3,
-            "weight": 0
+            "weight": 28562
           },
           {
             "type": "range",
             "min": 3,
             "max": 4,
-            "weight": 1353866
+            "weight": 26090
           },
           {
             "type": "range",
             "min": 4,
             "max": 5,
-            "weight": 5477309
+            "weight": 39665
           },
           {
             "type": "range",
             "min": 5,
             "max": 6,
-            "weight": 13589153
+            "weight": 48205
           },
           {
             "type": "range",
             "min": 6,
             "max": 7,
-            "weight": 0
+            "weight": 66589
           },
           {
             "type": "range",
             "min": 7,
             "max": 8,
-            "weight": 9758724
+            "weight": 78123
           },
           {
             "type": "range",
             "min": 8,
             "max": 9,
-            "weight": 17882954
+            "weight": 96053
           },
           {
             "type": "range",
             "min": 9,
             "max": 10,
-            "weight": 0
+            "weight": 112205
           },
           {
             "type": "range",
             "min": 10,
             "max": 15,
-            "weight": 30290421
+            "weight": 863568
           },
           {
             "type": "range",
             "min": 15,
             "max": 20,
-            "weight": 62884052
+            "weight": 1449251
           },
           {
             "type": "range",
             "min": 20,
             "max": 25,
-            "weight": 27202609
+            "weight": 2212457
           },
           {
             "type": "range",
             "min": 25,
             "max": 30,
-            "weight": 35701597
+            "weight": 3128345
           },
           {
             "type": "range",
             "min": 30,
             "max": 35,
-            "weight": 72311767
+            "weight": 4352684
           },
           {
             "type": "range",
             "min": 35,
             "max": 40,
-            "weight": 40646835
+            "weight": 5846792
           },
           {
             "type": "range",
             "min": 40,
             "max": 45,
-            "weight": 37099247
+            "weight": 7641034
           },
           {
             "type": "range",
             "min": 45,
             "max": 50,
-            "weight": 41578189
+            "weight": 9857532
           },
           {
             "type": "range",
             "min": 50,
             "max": 60,
-            "weight": 106509673
+            "weight": 28397923
           },
           {
             "type": "range",
             "min": 60,
             "max": 70,
-            "weight": 43183949
+            "weight": 44726944
           },
           {
             "type": "range",
             "min": 70,
             "max": 80,
-            "weight": 40102977
+            "weight": 68800809
           },
           {
             "type": "range",
             "min": 80,
             "max": 90,
-            "weight": 33006228
+            "weight": 104364313
           },
           {
             "type": "range",
             "min": 90,
             "max": 100,
-            "weight": 33972724
+            "weight": 156240608
           },
           {
             "type": "range",
             "min": 100,
             "max": 120,
-            "weight": 47308726
+            "weight": 561622248
           },
           {
             "type": "range",
             "min": 120,
             "max": 140,
-            "weight": 69258675
+            "weight": 0
           },
           {
             "type": "range",
             "min": 140,
             "max": 160,
-            "weight": 34984764
+            "weight": 0
           },
           {
             "type": "range",
             "min": 160,
             "max": 180,
-            "weight": 32839617
+            "weight": 0
           },
           {
             "type": "range",
             "min": 180,
             "max": 200,
-            "weight": 34690160
+            "weight": 0
           },
           {
             "type": "range",
             "min": 200,
             "max": 250,
-            "weight": 57800055
+            "weight": 0
           },
           {
             "type": "range",
             "min": 250,
             "max": 300,
-            "weight": 70565729
+            "weight": 0
           },
           {
             "type": "range",
@@ -2722,91 +2720,91 @@ const data = {
               "type": "range",
               "min": -1,
               "max": 0,
-              "weight": 779549514
+              "weight": 694756380
             },
             {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 61456350
+              "weight": 154245787
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 4785734
+              "weight": 52938922
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 17018302
+              "weight": 25263348
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 44835752
+              "weight": 16866088
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 92354348
+              "weight": 10566118
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 0
+              "weight": 6959856
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 0
+              "weight": 4638337
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 0
+              "weight": 3107778
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 0
+              "weight": 2597791
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 0
+              "weight": 3041838
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 0
+              "weight": 9928837
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 0
+              "weight": 6034433
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 0
+              "weight": 4651797
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 0
+              "weight": 4402690
             },
             {
               "type": "range",
@@ -3104,7 +3102,7 @@ const data = {
             },
             {
               "type": "free_game",
-              "weight": 2313744
+              "weight": 200040
             }
           ],
           "weight_fg": [
@@ -3112,277 +3110,277 @@ const data = {
               "type": "range",
               "min": -1,
               "max": 0,
-              "weight": 131953
+              "weight": 2143577
             },
             {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 130524
+              "weight": 1416535
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 128053
+              "weight": 1051862
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 125370
+              "weight": 1732660
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 122958
+              "weight": 1369763
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 120341
+              "weight": 2372063
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 117706
+              "weight": 3678676
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 115336
+              "weight": 1983117
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 112909
+              "weight": 4898638
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 110181
+              "weight": 2265996
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 107668
+              "weight": 3191785
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 100177
+              "weight": 25620053
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 87586
+              "weight": 23274151
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 75734
+              "weight": 28800167
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 50062125
+              "weight": 33189112
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 50158
+              "weight": 36294419
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 50037873
+              "weight": 39544654
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 150023890
+              "weight": 33845601
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 11172
+              "weight": 31872625
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 99994293
+              "weight": 75891239
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 0
+              "weight": 73025955
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 99943606
+              "weight": 67078410
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 49918497
+              "weight": 57317958
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 149886626
+              "weight": 51861382
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 0
+              "weight": 94348715
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 149803332
+              "weight": 72874992
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 0
+              "weight": 58890411
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 0
+              "weight": 39862712
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 49660552
+              "weight": 32205840
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 49572969
+              "weight": 50357847
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 99448411
+              "weight": 24756557
             },
             {
               "type": "range",
               "min": 300,
               "max": 350,
-              "weight": 0
+              "weight": 11826471
             },
             {
               "type": "range",
               "min": 350,
               "max": 400,
-              "weight": 0
+              "weight": 5845440
             },
             {
               "type": "range",
               "min": 400,
               "max": 450,
-              "weight": 0
+              "weight": 2772494
             },
             {
               "type": "range",
               "min": 450,
               "max": 500,
-              "weight": 0
+              "weight": 1321158
             },
             {
               "type": "range",
               "min": 500,
               "max": 550,
-              "weight": 0
+              "weight": 650610
             },
             {
               "type": "range",
               "min": 550,
               "max": 600,
-              "weight": 0
+              "weight": 292176
             },
             {
               "type": "range",
               "min": 600,
               "max": 650,
-              "weight": 0
+              "weight": 133634
             },
             {
               "type": "range",
               "min": 650,
               "max": 700,
-              "weight": 0
+              "weight": 75655
             },
             {
               "type": "range",
               "min": 700,
               "max": 750,
-              "weight": 0
+              "weight": 32682
             },
             {
               "type": "range",
               "min": 750,
               "max": 800,
-              "weight": 0
+              "weight": 16487
             },
             {
               "type": "range",
               "min": 800,
               "max": 850,
-              "weight": 0
+              "weight": 8644
             },
             {
               "type": "range",
               "min": 850,
               "max": 900,
-              "weight": 0
+              "weight": 4043
             },
             {
               "type": "range",
               "min": 900,
               "max": 950,
-              "weight": 0
+              "weight": 1942
             },
             {
               "type": "range",
               "min": 950,
               "max": 1000,
-              "weight": 0
+              "weight": 989
             },
             {
               "type": "range",
               "min": 1000,
               "max": 2000,
-              "weight": 0
+              "weight": 103
             },
             {
               "type": "range",
@@ -3500,91 +3498,91 @@ const data = {
               "type": "range",
               "min": -1,
               "max": 0,
-              "weight": 779549514
+              "weight": 694756380
             },
             {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 61456350
+              "weight": 154245787
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 4785734
+              "weight": 52938922
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 17018302
+              "weight": 25263348
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 44835752
+              "weight": 16866088
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 92354348
+              "weight": 10566118
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 0
+              "weight": 6959856
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 0
+              "weight": 4638337
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 0
+              "weight": 3107778
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 0
+              "weight": 2597791
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 0
+              "weight": 3041838
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 0
+              "weight": 9928837
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 0
+              "weight": 6034433
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 0
+              "weight": 4651797
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 0
+              "weight": 4402690
             },
             {
               "type": "range",
@@ -3882,7 +3880,7 @@ const data = {
             },
             {
               "type": "free_game",
-              "weight": 2313744
+              "weight": 200040
             }
           ],
           "weight_fg": [
@@ -3890,277 +3888,277 @@ const data = {
               "type": "range",
               "min": -1,
               "max": 0,
-              "weight": 131953
+              "weight": 2143577
             },
             {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 130524
+              "weight": 1416535
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 128053
+              "weight": 1051862
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 125370
+              "weight": 1732660
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 122958
+              "weight": 1369763
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 120341
+              "weight": 2372063
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 117706
+              "weight": 3678676
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 115336
+              "weight": 1983117
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 112909
+              "weight": 4898638
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 110181
+              "weight": 2265996
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 107668
+              "weight": 3191785
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 100177
+              "weight": 25620053
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 87586
+              "weight": 23274151
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 75734
+              "weight": 28800167
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 50062125
+              "weight": 33189112
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 50158
+              "weight": 36294419
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 50037873
+              "weight": 39544654
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 150023890
+              "weight": 33845601
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 11172
+              "weight": 31872625
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 99994293
+              "weight": 75891239
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 0
+              "weight": 73025955
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 99943606
+              "weight": 67078410
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 49918497
+              "weight": 57317958
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 149886626
+              "weight": 51861382
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 0
+              "weight": 94348715
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 149803332
+              "weight": 72874992
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 0
+              "weight": 58890411
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 0
+              "weight": 39862712
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 49660552
+              "weight": 32205840
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 49572969
+              "weight": 50357847
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 99448411
+              "weight": 24756557
             },
             {
               "type": "range",
               "min": 300,
               "max": 350,
-              "weight": 0
+              "weight": 11826471
             },
             {
               "type": "range",
               "min": 350,
               "max": 400,
-              "weight": 0
+              "weight": 5845440
             },
             {
               "type": "range",
               "min": 400,
               "max": 450,
-              "weight": 0
+              "weight": 2772494
             },
             {
               "type": "range",
               "min": 450,
               "max": 500,
-              "weight": 0
+              "weight": 1321158
             },
             {
               "type": "range",
               "min": 500,
               "max": 550,
-              "weight": 0
+              "weight": 650610
             },
             {
               "type": "range",
               "min": 550,
               "max": 600,
-              "weight": 0
+              "weight": 292176
             },
             {
               "type": "range",
               "min": 600,
               "max": 650,
-              "weight": 0
+              "weight": 133634
             },
             {
               "type": "range",
               "min": 650,
               "max": 700,
-              "weight": 0
+              "weight": 75655
             },
             {
               "type": "range",
               "min": 700,
               "max": 750,
-              "weight": 0
+              "weight": 32682
             },
             {
               "type": "range",
               "min": 750,
               "max": 800,
-              "weight": 0
+              "weight": 16487
             },
             {
               "type": "range",
               "min": 800,
               "max": 850,
-              "weight": 0
+              "weight": 8644
             },
             {
               "type": "range",
               "min": 850,
               "max": 900,
-              "weight": 0
+              "weight": 4043
             },
             {
               "type": "range",
               "min": 900,
               "max": 950,
-              "weight": 0
+              "weight": 1942
             },
             {
               "type": "range",
               "min": 950,
               "max": 1000,
-              "weight": 0
+              "weight": 989
             },
             {
               "type": "range",
               "min": 1000,
               "max": 2000,
-              "weight": 0
+              "weight": 103
             },
             {
               "type": "range",
@@ -4278,91 +4276,91 @@ const data = {
               "type": "range",
               "min": -1,
               "max": 0,
-              "weight": 779549514
+              "weight": 694756380
             },
             {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 61456350
+              "weight": 154245787
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 4785734
+              "weight": 52938922
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 17018302
+              "weight": 25263348
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 44835752
+              "weight": 16866088
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 92354348
+              "weight": 10566118
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 0
+              "weight": 6959856
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 0
+              "weight": 4638337
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 0
+              "weight": 3107778
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 0
+              "weight": 2597791
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 0
+              "weight": 3041838
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 0
+              "weight": 9928837
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 0
+              "weight": 6034433
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 0
+              "weight": 4651797
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 0
+              "weight": 4402690
             },
             {
               "type": "range",
@@ -4660,7 +4658,7 @@ const data = {
             },
             {
               "type": "free_game",
-              "weight": 2313744
+              "weight": 200040
             }
           ],
           "weight_fg": [
@@ -4668,277 +4666,277 @@ const data = {
               "type": "range",
               "min": -1,
               "max": 0,
-              "weight": 131953
+              "weight": 2143577
             },
             {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 130524
+              "weight": 1416535
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 128053
+              "weight": 1051862
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 125370
+              "weight": 1732660
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 122958
+              "weight": 1369763
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 120341
+              "weight": 2372063
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 117706
+              "weight": 3678676
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 115336
+              "weight": 1983117
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 112909
+              "weight": 4898638
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 110181
+              "weight": 2265996
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 107668
+              "weight": 3191785
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 100177
+              "weight": 25620053
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 87586
+              "weight": 23274151
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 75734
+              "weight": 28800167
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 50062125
+              "weight": 33189112
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 50158
+              "weight": 36294419
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 50037873
+              "weight": 39544654
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 150023890
+              "weight": 33845601
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 11172
+              "weight": 31872625
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 99994293
+              "weight": 75891239
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 0
+              "weight": 73025955
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 99943606
+              "weight": 67078410
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 49918497
+              "weight": 57317958
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 149886626
+              "weight": 51861382
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 0
+              "weight": 94348715
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 149803332
+              "weight": 72874992
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 0
+              "weight": 58890411
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 0
+              "weight": 39862712
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 49660552
+              "weight": 32205840
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 49572969
+              "weight": 50357847
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 99448411
+              "weight": 24756557
             },
             {
               "type": "range",
               "min": 300,
               "max": 350,
-              "weight": 0
+              "weight": 11826471
             },
             {
               "type": "range",
               "min": 350,
               "max": 400,
-              "weight": 0
+              "weight": 5845440
             },
             {
               "type": "range",
               "min": 400,
               "max": 450,
-              "weight": 0
+              "weight": 2772494
             },
             {
               "type": "range",
               "min": 450,
               "max": 500,
-              "weight": 0
+              "weight": 1321158
             },
             {
               "type": "range",
               "min": 500,
               "max": 550,
-              "weight": 0
+              "weight": 650610
             },
             {
               "type": "range",
               "min": 550,
               "max": 600,
-              "weight": 0
+              "weight": 292176
             },
             {
               "type": "range",
               "min": 600,
               "max": 650,
-              "weight": 0
+              "weight": 133634
             },
             {
               "type": "range",
               "min": 650,
               "max": 700,
-              "weight": 0
+              "weight": 75655
             },
             {
               "type": "range",
               "min": 700,
               "max": 750,
-              "weight": 0
+              "weight": 32682
             },
             {
               "type": "range",
               "min": 750,
               "max": 800,
-              "weight": 0
+              "weight": 16487
             },
             {
               "type": "range",
               "min": 800,
               "max": 850,
-              "weight": 0
+              "weight": 8644
             },
             {
               "type": "range",
               "min": 850,
               "max": 900,
-              "weight": 0
+              "weight": 4043
             },
             {
               "type": "range",
               "min": 900,
               "max": 950,
-              "weight": 0
+              "weight": 1942
             },
             {
               "type": "range",
               "min": 950,
               "max": 1000,
-              "weight": 0
+              "weight": 989
             },
             {
               "type": "range",
               "min": 1000,
               "max": 2000,
-              "weight": 0
+              "weight": 103
             },
             {
               "type": "range",
@@ -5076,169 +5074,169 @@ const data = {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 0
+              "weight": 28562
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 1353866
+              "weight": 26090
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 5477309
+              "weight": 39665
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 13589153
+              "weight": 48205
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 0
+              "weight": 66589
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 9758724
+              "weight": 78123
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 17882954
+              "weight": 96053
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 0
+              "weight": 112205
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 30290421
+              "weight": 863568
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 62884052
+              "weight": 1449251
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 27202609
+              "weight": 2212457
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 35701597
+              "weight": 3128345
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 72311767
+              "weight": 4352684
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 40646835
+              "weight": 5846792
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 37099247
+              "weight": 7641034
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 41578189
+              "weight": 9857532
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 106509673
+              "weight": 28397923
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 43183949
+              "weight": 44726944
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 40102977
+              "weight": 68800809
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 33006228
+              "weight": 104364313
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 33972724
+              "weight": 156240608
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 47308726
+              "weight": 561622248
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 69258675
+              "weight": 0
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 34984764
+              "weight": 0
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 32839617
+              "weight": 0
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 34690160
+              "weight": 0
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 57800055
+              "weight": 0
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 70565729
+              "weight": 0
             },
             {
               "type": "range",
@@ -5464,169 +5462,169 @@ const data = {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 0
+              "weight": 28562
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 1353866
+              "weight": 26090
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 5477309
+              "weight": 39665
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 13589153
+              "weight": 48205
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 0
+              "weight": 66589
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 9758724
+              "weight": 78123
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 17882954
+              "weight": 96053
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 0
+              "weight": 112205
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 30290421
+              "weight": 863568
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 62884052
+              "weight": 1449251
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 27202609
+              "weight": 2212457
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 35701597
+              "weight": 3128345
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 72311767
+              "weight": 4352684
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 40646835
+              "weight": 5846792
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 37099247
+              "weight": 7641034
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 41578189
+              "weight": 9857532
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 106509673
+              "weight": 28397923
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 43183949
+              "weight": 44726944
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 40102977
+              "weight": 68800809
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 33006228
+              "weight": 104364313
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 33972724
+              "weight": 156240608
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 47308726
+              "weight": 561622248
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 69258675
+              "weight": 0
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 34984764
+              "weight": 0
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 32839617
+              "weight": 0
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 34690160
+              "weight": 0
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 57800055
+              "weight": 0
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 70565729
+              "weight": 0
             },
             {
               "type": "range",
@@ -5852,169 +5850,169 @@ const data = {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 0
+              "weight": 28562
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 1353866
+              "weight": 26090
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 5477309
+              "weight": 39665
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 13589153
+              "weight": 48205
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 0
+              "weight": 66589
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 9758724
+              "weight": 78123
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 17882954
+              "weight": 96053
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 0
+              "weight": 112205
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 30290421
+              "weight": 863568
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 62884052
+              "weight": 1449251
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 27202609
+              "weight": 2212457
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 35701597
+              "weight": 3128345
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 72311767
+              "weight": 4352684
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 40646835
+              "weight": 5846792
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 37099247
+              "weight": 7641034
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 41578189
+              "weight": 9857532
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 106509673
+              "weight": 28397923
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 43183949
+              "weight": 44726944
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 40102977
+              "weight": 68800809
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 33006228
+              "weight": 104364313
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 33972724
+              "weight": 156240608
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 47308726
+              "weight": 561622248
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 69258675
+              "weight": 0
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 34984764
+              "weight": 0
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 32839617
+              "weight": 0
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 34690160
+              "weight": 0
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 57800055
+              "weight": 0
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 70565729
+              "weight": 0
             },
             {
               "type": "range",
@@ -6239,2404 +6237,2404 @@ const data = {
     {
       "symbols": [
         [
-          12,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          12,
-          11,
-          12,
-          11,
-          10
-        ],
-        [
-          11,
-          12,
-          11,
-          11,
-          10,
-          11
-        ],
-        [
-          10,
-          11,
-          11,
-          10,
-          9,
-          9
-        ],
-        [
-          9,
-          10,
-          10,
-          9,
-          8,
-          8
-        ],
-        [
-          9,
-          9,
-          9,
-          7,
-          6,
-          6
-        ],
-        [
-          8,
-          8,
-          12,
-          8,
-          12,
-          6
-        ],
-        [
-          12,
-          8,
-          8,
-          12,
-          11,
-          12
-        ],
-        [
-          12,
-          12,
-          7,
-          11,
-          10,
-          12
-        ],
-        [
-          11,
-          11,
-          11,
-          11,
-          9,
-          10
-        ],
-        [
-          10,
-          11,
-          11,
-          10,
-          8,
-          11
-        ],
-        [
-          10,
-          10,
-          10,
-          9,
-          6,
-          9
-        ],
-        [
-          9,
-          10,
-          12,
-          7,
-          12,
-          9
-        ],
-        [
-          8,
-          9,
-          9,
-          7,
-          11,
-          8
-        ],
-        [
-          12,
-          12,
-          6,
-          12,
-          10,
-          12
-        ],
-        [
-          12,
-          6,
-          8,
-          11,
-          9,
-          10
-        ],
-        [
-          11,
-          11,
-          11,
-          10,
-          8,
-          10
-        ],
-        [
-          10,
-          8,
-          10,
-          9,
-          7,
-          11
-        ],
-        [
-          9,
-          10,
-          10,
-          8,
-          7,
-          9
-        ],
-        [
-          6,
-          9,
-          12,
-          7,
-          12,
-          8
-        ],
-        [
-          8,
-          12,
-          12,
-          12,
-          11,
-          12
-        ],
-        [
-          12,
-          6,
-          9,
-          11,
-          10,
-          7
-        ],
-        [
-          11,
-          11,
-          11,
-          10,
-          9,
-          10
-        ],
-        [
-          11,
-          11,
-          8,
-          9,
-          8,
-          10
-        ],
-        [
-          10,
-          10,
-          10,
-          6,
-          6,
-          11
-        ],
-        [
-          10,
-          9,
-          10,
-          6,
-          12,
-          11
-        ],
-        [
-          9,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          12,
-          9,
-          11,
-          11,
-          12
-        ],
-        [
-          12,
-          6,
-          11,
-          11,
-          10,
-          9
-        ],
-        [
-          11,
-          11,
-          6,
-          10,
-          9,
-          10
-        ],
-        [
-          8,
-          10,
-          6,
-          10,
-          8,
-          8
-        ],
-        [
-          10,
-          9,
-          10,
-          9,
-          5,
-          11
-        ],
-        [
-          10,
-          9,
-          12,
-          12,
-          12,
-          5
-        ],
-        [
-          9,
-          12,
-          9,
-          7,
-          11,
-          12
-        ],
-        [
-          12,
-          7,
-          11,
-          11,
-          11,
-          9
-        ],
-        [
-          11,
-          11,
-          7,
-          5,
-          10,
-          10
-        ],
-        [
-          6,
-          10,
-          8,
-          10,
-          9,
-          10
-        ],
-        [
-          6,
-          6,
-          10,
-          9,
-          9,
-          11
-        ],
-        [
-          10,
-          9,
-          10,
-          12,
-          12,
-          8
-        ],
-        [
-          10,
-          12,
-          12,
-          8,
-          12,
-          12
-        ],
-        [
-          12,
-          8,
-          11,
-          11,
-          11,
-          12
-        ],
-        [
-          11,
-          11,
-          9,
-          11,
-          10,
-          9
-        ],
-        [
-          9,
-          10,
-          7,
-          10,
-          8,
-          10
-        ],
-        [
-          9,
-          5,
-          8,
-          10,
-          9,
-          10
-        ],
-        [
-          7,
-          9,
-          8,
-          12,
-          5,
-          11
-        ],
-        [
-          10,
-          12,
-          12,
-          9,
-          12,
-          6
-        ],
-        [
-          12,
-          6,
-          11,
-          5,
-          11,
-          12
-        ],
-        [
-          11,
-          11,
-          11,
-          11,
-          10,
-          9
-        ],
-        [
-          11,
-          10,
-          10,
-          11,
-          10,
-          8
-        ],
-        [
-          8,
-          5,
-          10,
-          10,
-          9,
-          10
-        ],
-        [
-          8,
-          9,
-          9,
-          10,
-          8,
-          10
-        ],
-        [
-          10,
-          9,
-          12,
-          12,
-          12,
-          11
-        ],
-        [
-          12,
-          12,
-          6,
-          9,
-          11,
-          12
-        ],
-        [
-          5,
-          11,
-          11,
-          7,
-          6,
-          7
-        ],
-        [
-          11,
-          10,
-          7,
-          7,
-          6,
-          7
-        ],
-        [
-          6,
-          10,
-          10,
-          11,
-          10,
-          8
-        ],
-        [
-          6,
-          8,
-          9,
-          10,
-          10,
-          8
-        ],
-        [
-          10,
           7,
           9,
           10,
-          12,
-          11
-        ],
-        [
-          12,
-          7,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
           9,
-          11,
-          11,
-          9,
-          11,
-          10
-        ],
-        [
-          9,
-          12,
-          5,
-          6,
-          11,
-          9
-        ],
-        [
-          11,
-          12,
-          10,
-          11,
-          9,
-          5
-        ],
-        [
-          7,
-          10,
-          10,
-          8,
-          10,
-          6
-        ],
-        [
-          10,
-          6,
-          9,
-          10,
-          8,
-          11
-        ],
-        [
-          12,
-          9,
-          9,
-          12,
-          12,
-          12
-        ],
-        [
-          8,
-          11,
-          12,
-          9,
-          5,
-          10
-        ],
-        [
-          8,
-          11,
-          12,
-          5,
-          11,
-          9
-        ],
-        [
-          11,
-          12,
-          11,
-          11,
-          11,
-          5
-        ],
-        [
-          5,
-          10,
-          10,
-          11,
-          10,
-          5
-        ],
-        [
-          10,
-          10,
-          5,
-          10,
-          7,
-          11
-        ],
-        [
-          10,
-          5,
-          9,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          8,
-          7,
-          9,
-          9,
-          10
-        ],
-        [
-          7,
-          11,
-          12,
-          8,
-          8,
-          6
-        ],
-        [
-          7,
-          12,
-          12,
-          7,
-          11,
-          9
-        ],
-        [
-          11,
-          12,
-          11,
-          7,
-          10,
-          8
-        ],
-        [
-          6,
-          10,
-          10,
-          11,
-          10,
-          8
-        ],
-        [
-          10,
-          7,
-          9,
-          12,
-          12,
-          11
-        ],
-        [
-          12,
-          9,
-          6,
-          12,
-          12,
-          11
-        ],
-        [
-          9,
-          11,
-          8,
-          10,
-          9,
-          12
-        ],
-        [
-          5,
-          11,
-          8,
-          9,
-          11,
-          10
-        ],
-        [
-          11,
-          12,
-          12,
-          9,
-          5,
-          6
-        ],
-        [
-          8,
-          10,
-          12,
-          11,
-          5,
-          6
-        ],
-        [
-          10,
-          8,
-          11,
-          6,
-          7,
-          7
-        ],
-        [
-          12,
-          5,
-          11,
-          12,
-          7,
-          11
-        ],
-        [
-          7,
-          6,
-          10,
-          10,
-          12,
-          12
-        ],
-        [
-          5,
-          11,
-          9,
-          5,
-          12,
-          12
-        ],
-        [
-          11,
-          12,
-          7,
-          9,
-          11,
-          10
-        ],
-        [
-          9,
-          10,
-          12,
-          11,
-          6,
-          5
-        ],
-        [
-          6,
-          9,
-          12,
-          6,
-          8,
-          7
-        ],
-        [
-          12,
-          9,
-          11,
-          12,
-          10,
-          7
-        ],
-        [
-          10,
-          6,
-          10,
-          12,
-          9,
-          11
-        ],
-        [
-          5,
-          11,
-          9,
-          10,
-          12,
-          12
-        ],
-        [
-          11,
-          12,
-          5,
-          10,
-          11,
-          10
-        ],
-        [
-          7,
-          10,
-          6,
-          10,
-          6,
-          9
-        ],
-        [
-          9,
-          10,
-          12,
-          11,
-          6,
-          9
-        ],
-        [
-          9,
-          7,
-          11,
-          5,
-          8,
-          5
-        ],
-        [
-          12,
-          8,
-          10,
-          5,
-          8,
-          11
-        ],
-        [
-          12,
-          11,
-          9,
-          12,
-          12,
-          11
-        ],
-        [
-          11,
-          12,
-          5,
-          8,
-          11,
-          12
-        ],
-        [
-          11,
-          5,
-          6,
-          8,
-          10,
-          10
-        ],
-        [
-          11,
-          10,
-          12,
-          11,
-          10,
-          6
-        ],
-        [
-          8,
-          6,
-          11,
-          10,
-          9,
-          8
-        ],
-        [
-          6,
-          8,
-          10,
-          7,
-          9,
-          7
-        ],
-        [
-          12,
-          8,
-          10,
-          12,
-          12,
-          11
-        ],
-        [
-          10,
-          12,
-          9,
-          9,
-          12,
-          11
-        ],
-        [
-          10,
-          11,
-          9,
-          6,
-          11,
-          12
-        ],
-        [
-          11,
-          7,
-          12,
-          11,
-          5,
-          10
-        ],
-        [
-          5,
-          10,
-          12,
-          11,
           7,
           5
         ],
         [
-          5,
-          5,
           12,
-          11,
-          10,
-          6
-        ],
-        [
-          12,
-          6,
-          11,
-          12,
-          8,
-          8
-        ],
-        [
-          6,
-          6,
           10,
           10,
-          12,
-          11
-        ],
-        [
           7,
-          11,
-          7,
-          6,
-          11,
-          12
-        ],
-        [
-          11,
-          12,
-          5,
-          9,
-          11,
-          12
-        ],
-        [
-          11,
-          7,
-          6,
-          9,
-          6,
-          10
-        ],
-        [
-          8,
-          9,
-          12,
-          11,
-          5,
-          9
-        ],
-        [
-          12,
-          10,
-          11,
-          12,
-          7,
-          5
-        ],
-        [
-          6,
-          5,
-          8,
-          10,
-          12,
-          5
-        ],
-        [
-          7,
-          11,
-          7,
-          5,
-          12,
-          11
-        ],
-        [
-          10,
-          11,
-          9,
-          7,
-          10,
-          11
-        ],
-        [
-          11,
-          12,
-          10,
-          8,
-          8,
-          12
-        ],
-        [
-          8,
-          4,
-          10,
-          11,
-          8,
-          10
-        ],
-        [
-          12,
-          10,
-          12,
-          12,
           11,
           4
         ],
         [
-          12,
-          9,
-          11,
+          5,
           10,
-          9,
-          7
-        ],
-        [
-          9,
-          5,
-          8,
-          4,
-          9,
-          6
-        ],
-        [
-          4,
-          5,
-          5,
-          7,
-          12,
-          6
-        ],
-        [
-          11,
-          12,
-          7,
-          5,
-          6,
-          12
-        ],
-        [
-          6,
-          12,
-          6,
-          5,
-          7,
-          11
-        ],
-        [
-          6,
-          11,
-          12,
-          12,
-          5,
-          8
-        ],
-        [
-          12,
-          11,
-          12,
-          11,
-          11,
-          10
-        ],
-        [
-          5,
-          4,
-          9,
-          10,
-          10,
-          9
-        ],
-        [
-          5,
-          8,
-          11,
-          6,
-          12,
-          7
-        ],
-        [
-          11,
-          7,
-          7,
-          8,
-          6,
-          12
-        ],
-        [
-          7,
-          7,
-          7,
-          8,
-          6,
-          4
-        ],
-        [
-          10,
-          12,
-          8,
-          12,
-          7,
-          8
-        ],
-        [
-          12,
-          11,
-          5,
-          12,
-          5,
-          11
-        ],
-        [
-          8,
-          4,
-          12,
-          12,
-          9,
-          9
-        ],
-        [
-          8,
           8,
           11,
           11,
-          12,
-          10
-        ],
-        [
-          11,
-          9,
-          10,
-          10,
-          8,
-          12
-        ],
-        [
-          9,
-          9,
-          6,
-          9,
-          11,
-          6
-        ],
-        [
-          4,
-          12,
-          6,
-          6,
-          10,
-          8
-        ],
-        [
-          12,
-          11,
-          9,
-          6,
-          7,
-          8
-        ],
-        [
-          10,
-          11,
-          8,
-          12,
-          4,
-          7
-        ],
-        [
-          7,
-          11,
-          12,
-          11,
-          12,
-          11
-        ],
-        [
-          11,
-          6,
-          5,
-          10,
-          12,
-          4
-        ],
-        [
-          9,
-          10,
-          10,
-          7,
-          12,
-          12
-        ],
-        [
-          4,
-          12,
-          11,
-          4,
-          5,
-          12
-        ],
-        [
-          12,
-          12,
-          9,
-          5,
-          9,
-          5
-        ],
-        [
-          12,
-          5,
-          7,
-          12,
-          7,
-          9
-        ],
-        [
-          12,
-          8,
-          6,
-          11,
-          6,
-          9
-        ],
-        [
-          11,
-          6,
-          5,
-          10,
-          10,
-          10
-        ],
-        [
-          5,
-          4,
-          12,
-          10,
-          12,
-          11
-        ],
-        [
-          10,
-          4,
-          12,
-          4,
-          11,
-          6
-        ],
-        [
-          9,
-          12,
-          9,
-          9,
-          4,
-          4
-        ],
-        [
-          6,
-          7,
-          9,
-          9,
-          8,
-          7
-        ],
-        [
-          12,
-          11,
-          10,
-          12,
-          5,
-          5
-        ],
-        [
-          11,
-          10,
-          8,
-          11,
-          10,
-          10
-        ],
-        [
-          7,
-          9,
-          11,
-          11,
-          12,
-          9
-        ],
-        [
-          7,
-          5,
-          5,
-          8,
-          6,
-          12
-        ],
-        [
-          8,
-          12,
-          6,
-          8,
-          7,
-          12
-        ],
-        [
-          6,
-          6,
-          6,
-          7,
-          7,
-          4
-        ],
-        [
-          12,
-          7,
-          7,
-          12,
-          8,
-          4
-        ],
-        [
-          11,
-          11,
-          4,
-          4,
-          8,
-          7
-        ],
-        [
-          11,
-          10,
-          11,
-          11,
-          9,
-          6
-        ],
-        [
-          5,
-          8,
-          11,
-          5,
-          5,
-          5
-        ],
-        [
-          4,
-          12,
-          10,
-          10,
-          5,
-          11
-        ],
-        [
-          4,
-          6,
-          8,
-          7,
-          11,
-          11
-        ],
-        [
-          12,
-          9,
-          7,
-          12,
-          11,
-          10
-        ],
-        [
-          10,
-          5,
-          12,
-          6,
-          11,
-          8
-        ],
-        [
-          11,
-          7,
-          9,
-          11,
-          4,
-          8
-        ],
-        [
-          11,
-          8,
-          4,
-          9,
-          12,
-          9
-        ],
-        [
-          8,
-          10,
-          4,
-          9,
-          9,
-          9
-        ],
-        [
-          8,
-          4,
-          5,
-          8,
-          10,
-          6
-        ],
-        [
-          12,
-          12,
-          5,
-          12,
-          6,
-          7
-        ],
-        [
-          9,
-          11,
-          10,
-          12,
-          8,
-          5
-        ],
-        [
-          9,
-          9,
-          10,
-          5,
-          4,
-          5
-        ],
-        [
-          7,
-          7,
-          10,
-          6,
-          4,
-          10
-        ],
-        [
-          6,
-          7,
-          8,
-          7,
-          12,
-          4
-        ],
-        [
-          11,
-          10,
-          9,
-          10,
-          7,
-          8
-        ],
-        [
-          12,
-          10,
-          9,
-          11,
-          5,
-          8
-        ],
-        [
-          12,
-          11,
-          12,
-          12,
-          5,
-          12
-        ],
-        [
-          10,
-          12,
-          7,
-          4,
-          10,
           7
         ],
         [
           5,
-          12,
           7,
-          6,
-          10,
-          6
-        ],
-        [
-          5,
-          8,
-          8,
-          7,
-          12,
-          6
-        ],
-        [
-          6,
-          8,
-          6,
-          5,
-          12,
-          10
-        ],
-        [
-          4,
-          5,
-          11,
-          5,
-          6,
-          10
-        ],
-        [
-          9,
-          5,
-          12,
-          12,
-          9,
-          11
-        ],
-        [
-          10,
-          4,
-          5,
-          12,
-          11,
-          12
-        ],
-        [
-          12,
-          6,
-          4,
-          10,
-          11,
-          9
-        ],
-        [
-          7,
-          11,
-          8,
-          10,
-          4,
-          5
-        ],
-        [
-          7,
-          11,
-          8,
-          8,
-          7,
-          7
-        ],
-        [
-          11,
           9,
           11,
-          11,
-          7,
-          4
-        ],
-        [
-          8,
-          8,
-          6,
-          4,
-          9,
-          11
-        ],
-        [
-          4,
-          8,
-          9,
           12,
-          9,
-          8
-        ],
-        [
-          9,
-          6,
-          4,
-          6,
-          8,
-          12
-        ],
-        [
-          6,
-          6,
-          12,
-          9,
-          8,
-          6
-        ],
-        [
-          5,
-          4,
-          5,
-          8,
-          6,
-          10
-        ],
-        [
-          12,
-          9,
-          10,
-          7,
-          10,
-          9
-        ],
-        [
-          10,
-          12,
-          7,
-          4,
-          10,
-          5
-        ],
-        [
-          8,
-          10,
-          11,
-          12,
-          5,
-          5
-        ],
-        [
-          11,
-          5,
-          6,
-          12,
-          4,
-          4
-        ],
-        [
-          9,
-          7,
-          12,
-          11,
-          4,
-          11
-        ],
-        [
-          5,
-          7,
-          4,
-          6,
-          6,
-          7
-        ],
-        [
-          4,
-          4,
-          8,
-          5,
-          12,
-          8
-        ],
-        [
-          4,
-          12,
-          10,
-          5,
-          8,
-          12
-        ],
-        [
-          6,
-          6,
-          5,
-          8,
-          8,
-          6
-        ],
-        [
-          12,
-          6,
-          5,
-          10,
-          9,
-          9
-        ],
-        [
-          10,
-          5,
-          9,
-          9,
-          5,
-          11
-        ],
-        [
-          7,
-          5,
-          11,
-          7,
-          7,
-          11
-        ],
-        [
-          8,
-          10,
-          6,
-          11,
-          7,
-          11
-        ],
-        [
-          11,
-          11,
-          6,
-          12,
-          12,
-          10
-        ],
-        [
-          5,
-          9,
-          7,
-          4,
-          11,
-          10
-        ],
-        [
-          6,
-          4,
-          10,
-          8,
-          6,
-          10
-        ],
-        [
-          9,
-          4,
-          9,
-          6,
-          6,
-          4
-        ],
-        [
-          9,
-          8,
-          9,
-          6,
-          4,
-          4
-        ],
-        [
-          10,
-          7,
-          11,
-          10,
-          5,
-          7
-        ],
-        [
-          12,
-          11,
-          11,
-          9,
-          10,
-          6
-        ],
-        [
-          7,
-          12,
-          12,
-          4,
-          9,
-          8
-        ],
-        [
-          8,
-          10,
-          7,
-          11,
-          9,
-          5
-        ],
-        [
-          11,
-          9,
-          8,
-          7,
-          11,
-          12
-        ],
-        [
-          5,
-          9,
-          4,
-          12,
-          11,
-          9
-        ],
-        [
-          10,
-          6,
-          4,
-          12,
-          12,
-          7
-        ],
-        [
-          12,
-          6,
-          6,
-          10,
-          5,
-          7
-        ],
-        [
-          7,
-          11,
-          6,
-          4,
-          5,
-          6
-        ],
-        [
-          8,
-          10,
-          12,
-          4,
-          10,
-          5
-        ],
-        [
-          6,
-          5,
-          5,
-          9,
-          4,
-          8
-        ],
-        [
-          6,
-          7,
-          5,
-          7,
-          8,
-          9
-        ],
-        [
-          4,
-          8,
-          10,
-          7,
-          12,
-          4
-        ],
-        [
-          4,
-          12,
-          8,
-          11,
-          6,
           12
         ],
         [
           11,
-          4,
           7,
-          5,
-          7,
-          12
-        ],
-        [
-          11,
-          11,
-          12,
-          8,
-          10,
-          7
-        ],
-        [
-          5,
-          10,
-          11,
-          12,
-          4,
-          10
-        ],
-        [
-          9,
-          10,
-          9,
-          9,
-          9,
-          8
-        ],
-        [
-          8,
-          8,
-          9,
-          9,
-          12,
-          6
-        ],
-        [
-          12,
-          8,
-          8,
-          10,
-          11,
-          11
-        ],
-        [
-          10,
-          4,
-          8,
-          11,
-          7,
-          4
-        ],
-        [
-          7,
-          7,
-          4,
-          11,
-          6,
-          9
-        ],
-        [
-          11,
-          7,
-          4,
-          5,
-          8,
-          9
-        ],
-        [
-          11,
-          5,
-          10,
-          8,
-          5,
-          5
-        ],
-        [
-          8,
-          12,
-          7,
-          6,
-          4,
-          6
-        ],
-        [
-          5,
-          12,
-          12,
-          6,
-          4,
-          12
-        ],
-        [
-          4,
-          9,
-          11,
-          4,
-          12,
-          4
-        ],
-        [
-          6,
-          11,
-          5,
-          2,
-          11,
-          7
-        ],
-        [
-          12,
-          6,
-          6,
-          7,
-          6,
-          7
-        ],
-        [
-          9,
-          6,
-          10,
-          10,
-          8,
-          8
-        ],
-        [
-          7,
-          5,
-          2,
-          5,
-          10,
-          10
-        ],
-        [
-          10,
-          4,
-          7,
-          12,
-          9,
-          11
-        ],
-        [
-          8,
-          4,
-          7,
-          8,
-          9,
-          5
-        ],
-        [
-          2,
-          9,
-          4,
-          6,
-          7,
-          6
-        ],
-        [
-          4,
-          7,
-          12,
-          2,
-          11,
-          12
-        ],
-        [
-          12,
-          2,
-          9,
-          9,
-          8,
-          2
-        ],
-        [
-          7,
-          8,
-          2,
-          4,
-          8,
-          9
-        ],
-        [
-          7,
-          5,
-          10,
-          4,
-          5,
-          8
-        ],
-        [
-          9,
-          5,
-          8,
-          12,
-          12,
-          4
-        ],
-        [
-          10,
-          12,
-          5,
-          11,
-          2,
-          11
-        ],
-        [
-          6,
-          12,
-          6,
-          11,
-          10,
-          11
-        ],
-        [
-          1,
-          11,
-          11,
-          5,
-          7,
-          5
-        ],
-        [
-          5,
-          9,
-          11,
-          10,
-          6,
-          10
-        ],
-        [
-          12,
-          9,
-          4,
-          8,
-          9,
-          2
-        ],
-        [
-          12,
-          10,
           1,
           8,
+          10,
+          12
+        ],
+        [
+          9,
+          12,
+          12,
+          2,
+          5,
+          8
+        ],
+        [
+          12,
+          9,
+          12,
+          5,
+          5,
+          4
+        ],
+        [
+          12,
+          9,
+          8,
+          5,
+          5,
+          4
+        ],
+        [
+          12,
+          10,
+          8,
+          11,
+          6,
+          6
+        ],
+        [
+          10,
+          10,
+          9,
+          11,
+          12,
+          11
+        ],
+        [
+          9,
+          5,
+          9,
+          6,
+          11,
+          12
+        ],
+        [
+          9,
+          5,
+          10,
+          6,
+          11,
+          12
+        ],
+        [
+          9,
+          12,
+          12,
+          7,
+          10,
+          10
+        ],
+        [
+          12,
+          11,
+          4,
+          7,
+          9,
+          10
+        ],
+        [
+          5,
+          8,
+          4,
+          12,
           12,
           9
         ],
         [
+          5,
+          10,
+          8,
           4,
-          4,
-          5,
           7,
-          1,
-          4
-        ],
-        [
-          11,
-          6,
-          2,
-          7,
-          5,
-          7
-        ],
-        [
-          6,
-          2,
-          7,
-          2,
-          5,
-          12
+          9
         ],
         [
           1,
           1,
-          7,
-          6,
-          11,
-          10
-        ],
-        [
-          2,
-          8,
-          10,
-          12,
-          10,
-          5
-        ],
-        [
-          5,
-          10,
-          8,
-          10,
+          9,
           4,
-          6
-        ],
-        [
-          5,
-          7,
-          9,
-          9,
-          2,
-          6
-        ],
-        [
-          8,
-          11,
           6,
+          11
+        ],
+        [
+          11,
           5,
-          7,
+          9,
+          5,
+          6,
+          6
+        ],
+        [
+          12,
+          5,
+          11,
+          5,
+          8,
+          6
+        ],
+        [
+          6,
+          8,
+          4,
+          12,
+          11,
           8
         ],
         [
+          6,
+          12,
           10,
-          2,
+          12,
+          9,
+          7
+        ],
+        [
+          8,
+          11,
+          5,
+          11,
+          9,
+          12
+        ],
+        [
+          4,
+          11,
+          5,
+          6,
+          6,
+          9
+        ],
+        [
           12,
           11,
+          12,
           6,
+          6,
+          11
+        ],
+        [
+          12,
+          9,
+          12,
+          8,
+          5,
+          10
+        ],
+        [
+          10,
+          9,
+          6,
+          5,
+          7,
+          10
+        ],
+        [
+          8,
+          10,
+          10,
+          12,
+          10,
+          6
+        ],
+        [
+          11,
+          4,
+          8,
+          12,
+          12,
+          9
+        ],
+        [
+          9,
+          4,
+          9,
+          10,
+          12,
+          12
+        ],
+        [
+          9,
+          6,
+          12,
+          11,
+          9,
+          11
+        ],
+        [
+          12,
+          6,
+          11,
+          4,
+          9,
+          11
+        ],
+        [
+          12,
+          9,
+          6,
+          5,
+          5,
+          11
+        ],
+        [
+          11,
+          9,
+          10,
+          5,
+          10,
+          8
+        ],
+        [
+          11,
+          12,
+          10,
+          12,
+          6,
+          8
+        ],
+        [
+          7,
+          4,
+          8,
+          8,
+          6,
+          12
+        ],
+        [
+          7,
+          10,
+          5,
+          10,
+          7,
+          4
+        ],
+        [
+          9,
+          10,
+          1,
+          6,
+          7,
+          6
+        ],
+        [
+          12,
+          9,
+          12,
+          6,
+          1,
+          6
+        ],
+        [
+          11,
+          8,
+          12,
+          7,
+          12,
+          10
+        ],
+        [
+          8,
+          7,
+          6,
+          7,
+          8,
+          10
+        ],
+        [
+          10,
+          7,
+          6,
+          12,
+          8,
+          12
+        ],
+        [
+          10,
+          12,
+          6,
+          9,
+          6,
+          4
+        ],
+        [
+          1,
+          9,
+          8,
+          9,
+          6,
+          6
+        ],
+        [
+          12,
+          9,
+          9,
+          6,
+          12,
+          6
+        ],
+        [
+          11,
+          1,
+          12,
+          6,
+          10,
           1
         ],
         [
+          7,
+          11,
+          12,
+          11,
+          8,
+          9
+        ],
+        [
+          10,
+          12,
+          7,
+          4,
           9,
-          6,
-          2,
-          1,
+          8
+        ],
+        [
+          10,
+          10,
+          5,
+          4,
           9,
+          7
+        ],
+        [
+          12,
+          10,
+          9,
+          4,
+          12,
           12
         ],
         [
-          11,
           12,
-          4,
-          6,
+          9,
           10,
-          11
-        ],
-        [
-          2,
-          4,
           8,
-          12,
-          8,
+          5,
           4
         ],
         [
-          1,
+          5,
           9,
-          1,
+          8,
           12,
-          1,
+          10,
+          9
+        ],
+        [
+          5,
+          11,
+          8,
+          6,
+          10,
           9
         ],
         [
           4,
+          12,
           8,
           6,
-          7,
-          7,
-          2
-        ],
-        [
-          10,
           1,
-          10,
-          9,
-          4,
-          1
+          10
         ],
         [
-          10,
-          7,
-          9,
+          4,
+          12,
+          12,
+          11,
+          12,
+          10
+        ],
+        [
+          12,
+          12,
+          12,
+          5,
+          12,
+          10
+        ],
+        [
+          12,
           4,
           11,
+          5,
+          12,
+          11
+        ],
+        [
+          7,
+          10,
+          11,
+          7,
+          4,
+          9
+        ],
+        [
+          7,
+          10,
+          6,
+          8,
+          4,
+          9
+        ],
+        [
+          11,
+          8,
+          6,
+          12,
+          9,
+          8
+        ],
+        [
+          10,
+          5,
+          9,
+          4,
+          9,
+          12
+        ],
+        [
+          12,
+          11,
+          8,
+          4,
+          12,
+          11
+        ],
+        [
+          12,
+          7,
+          12,
+          4,
+          12,
           10
         ],
         [
           8,
-          11,
-          12,
-          4,
-          11,
-          7
-        ],
-        [
-          8,
-          11,
-          11,
-          5,
-          2,
-          8
-        ],
-        [
           7,
-          10,
+          12,
+          1,
+          6,
+          10
+        ],
+        [
+          9,
+          9,
           5,
-          10,
+          12,
           6,
           5
         ],
         [
           9,
-          5,
+          12,
           5,
           10,
-          6,
+          7,
           5
         ],
         [
-          6,
-          12,
           10,
-          8,
+          12,
+          9,
+          10,
+          7,
+          5
+        ],
+        [
+          10,
+          11,
+          10,
+          11,
+          9,
+          6
+        ],
+        [
+          11,
+          10,
+          10,
+          6,
           12,
           6
         ],
         [
-          6,
-          4,
-          2,
-          2,
-          7,
-          2
-        ],
-        [
-          2,
+          5,
           8,
+          11,
           6,
-          9,
-          1,
-          11
+          12,
+          12
         ],
         [
           5,
-          1,
-          1,
           9,
-          4,
-          9
-        ],
-        [
-          4,
-          7,
-          9,
-          1,
           8,
-          9
-        ],
-        [
-          12,
-          6,
-          12,
-          11,
-          2,
-          1
-        ],
-        [
-          11,
-          9,
-          12,
-          5,
-          5,
+          8,
+          10,
           10
         ],
         [
-          11,
-          10,
-          11,
-          8,
           12,
+          9,
+          6,
+          12,
+          11,
           10
         ],
         [
-          1,
-          10,
+          12,
           11,
-          8,
-          9,
-          4
+          12,
+          12,
+          11,
+          9
         ],
         [
-          7,
+          12,
+          11,
+          12,
+          11,
           5,
-          7,
-          2,
-          10,
-          4
-        ],
-        [
-          7,
-          5,
-          7,
-          7,
-          10,
-          8
+          9
         ],
         [
           9,
-          2,
-          8,
-          6,
+          12,
+          9,
           4,
+          12,
+          12
+        ],
+        [
+          9,
+          10,
+          9,
+          8,
+          12,
           8
         ],
         [
-          2,
-          7,
+          11,
+          10,
+          5,
           8,
-          1,
+          12,
+          7
+        ],
+        [
+          11,
+          5,
+          5,
+          10,
+          10,
+          7
+        ],
+        [
+          11,
+          5,
+          11,
+          10,
+          5,
+          7
+        ],
+        [
+          10,
+          9,
+          12,
+          4,
           5,
           12
         ],
         [
+          10,
+          9,
+          10,
+          4,
+          9,
+          5
+        ],
+        [
+          8,
+          12,
+          9,
+          4,
+          9,
+          8
+        ],
+        [
+          12,
+          12,
+          7,
+          12,
+          11,
+          8
+        ],
+        [
+          11,
+          4,
+          7,
+          10,
+          11,
+          10
+        ],
+        [
+          6,
+          4,
+          12,
+          11,
+          12,
+          10
+        ],
+        [
+          6,
+          10,
+          12,
+          11,
+          12,
+          9
+        ],
+        [
+          10,
+          10,
           8,
           4,
-          4,
           10,
-          2,
+          12
+        ],
+        [
+          9,
+          7,
+          8,
+          4,
+          8,
+          8
+        ],
+        [
+          9,
+          7,
+          5,
+          10,
+          6,
+          8
+        ],
+        [
+          12,
+          1,
+          6,
+          10,
+          6,
+          6
+        ],
+        [
+          12,
+          4,
+          9,
+          12,
+          12,
+          9
+        ],
+        [
+          4,
+          12,
+          10,
+          12,
+          12,
           7
+        ],
+        [
+          10,
+          8,
+          12,
+          11,
+          8,
+          10
+        ],
+        [
+          9,
+          11,
+          12,
+          8,
+          8,
+          10
+        ],
+        [
+          9,
+          6,
+          6,
+          8,
+          10,
+          5
+        ],
+        [
+          12,
+          6,
+          6,
+          10,
+          10,
+          12
+        ],
+        [
+          12,
+          10,
+          6,
+          12,
+          9,
+          12
+        ],
+        [
+          8,
+          10,
+          7,
+          12,
+          9,
+          9
+        ],
+        [
+          1,
+          12,
+          7,
+          7,
+          8,
+          10
+        ],
+        [
+          6,
+          9,
+          9,
+          7,
+          12,
+          10
+        ],
+        [
+          6,
+          5,
+          9,
+          7,
+          7,
+          4
+        ],
+        [
+          12,
+          11,
+          4,
+          11,
+          7,
+          8
+        ],
+        [
+          10,
+          11,
+          12,
+          12,
+          10,
+          8
+        ],
+        [
+          7,
+          12,
+          12,
+          12,
+          8,
+          12
         ],
         [
           5,
           12,
+          8,
           10,
+          12,
+          11
+        ],
+        [
           5,
-          1,
+          12,
+          8,
+          10,
+          12,
           7
         ],
         [
-          10,
-          6,
-          2,
           11,
-          6,
+          7,
+          7,
+          11,
+          5,
+          5
+        ],
+        [
+          9,
+          4,
+          7,
+          9,
+          5,
           1
         ],
         [
           6,
-          8,
-          1,
-          2,
+          4,
+          11,
           9,
-          5
+          8,
+          12
         ],
         [
-          9,
-          1,
           6,
-          4,
+          6,
+          9,
+          9,
+          10,
+          8
+        ],
+        [
+          8,
+          6,
+          12,
+          8,
           12,
           6
         ],
         [
           12,
+          10,
+          12,
+          12,
+          12,
+          6
+        ],
+        [
+          12,
+          10,
+          8,
+          12,
+          11,
+          11
+        ],
+        [
+          7,
+          11,
+          8,
+          11,
+          9,
+          12
+        ],
+        [
           2,
+          11,
+          9,
+          9,
+          7,
+          12
+        ],
+        [
+          9,
+          11,
+          9,
+          9,
+          7,
+          12
+        ],
+        [
+          8,
+          12,
+          11,
+          9,
+          12,
+          5
+        ],
+        [
+          12,
           5,
+          11,
+          12,
+          8,
+          4
+        ],
+        [
+          10,
+          5,
+          6,
+          12,
+          11,
+          4
+        ],
+        [
+          11,
+          7,
+          8,
+          10,
+          11,
+          9
+        ],
+        [
+          6,
+          7,
+          9,
+          10,
+          10,
+          9
+        ],
+        [
+          6,
+          12,
+          9,
+          5,
+          4,
+          12
+        ],
+        [
+          12,
+          11,
+          7,
+          5,
+          4,
+          10
+        ],
+        [
+          8,
+          11,
+          7,
+          6,
+          9,
+          6
+        ],
+        [
+          11,
+          11,
+          12,
+          6,
+          9,
+          6
+        ],
+        [
+          11,
+          7,
+          10,
+          11,
+          12,
+          9
+        ],
+        [
+          9,
+          9,
+          10,
+          11,
+          12,
+          9
+        ],
+        [
+          9,
+          9,
+          5,
+          12,
+          1,
+          2
+        ],
+        [
+          12,
+          10,
+          5,
+          9,
+          6,
+          8
+        ],
+        [
+          12,
+          12,
+          11,
+          9,
+          6,
+          12
+        ],
+        [
+          8,
+          8,
+          9,
+          9,
+          10,
+          11
+        ],
+        [
+          5,
+          8,
+          8,
+          8,
+          12,
+          10
+        ],
+        [
+          5,
+          7,
+          8,
+          1,
+          11,
+          10
+        ],
+        [
+          7,
+          10,
+          6,
+          12,
+          7,
+          10
+        ],
+        [
+          7,
+          6,
+          11,
+          10,
+          6,
+          1
+        ],
+        [
+          12,
+          6,
+          12,
+          5,
+          6,
+          5
+        ],
+        [
+          12,
+          12,
+          5,
+          9,
+          9,
+          5
+        ],
+        [
+          6,
+          11,
+          9,
+          4,
+          9,
+          5
+        ],
+        [
+          6,
+          11,
+          6,
+          8,
+          9,
+          6
+        ],
+        [
+          5,
+          1,
+          6,
+          12,
+          12,
+          12
+        ],
+        [
+          5,
+          9,
+          6,
+          11,
+          10,
+          4
+        ],
+        [
+          12,
+          12,
+          8,
+          11,
+          10,
+          4
+        ],
+        [
+          11,
+          7,
+          5,
+          6,
+          8,
+          9
+        ],
+        [
+          9,
+          10,
+          5,
+          9,
+          8,
+          9
+        ],
+        [
+          9,
+          11,
+          1,
+          7,
+          8,
+          7
+        ],
+        [
+          8,
+          5,
+          11,
+          12,
+          1,
+          11
+        ],
+        [
+          8,
+          12,
+          8,
+          11,
+          4,
+          11
+        ],
+        [
+          12,
+          12,
+          8,
+          11,
+          4,
+          11
+        ],
+        [
+          11,
+          9,
+          6,
+          10,
+          6,
+          12
+        ],
+        [
+          7,
+          9,
+          6,
+          1,
+          6,
+          9
+        ],
+        [
+          5,
+          7,
+          6,
+          4,
+          12,
+          10
+        ],
+        [
+          5,
+          5,
+          12,
+          12,
+          11,
+          7
+        ],
+        [
+          12,
+          8,
+          8,
+          12,
+          11,
+          4
+        ],
+        [
+          4,
+          11,
+          11,
+          8,
+          9,
+          11
+        ],
+        [
+          4,
+          6,
+          11,
+          8,
+          6,
+          11
+        ],
+        [
+          11,
+          6,
+          6,
+          4,
+          8,
+          9
+        ],
+        [
+          10,
+          5,
+          6,
+          9,
+          8,
+          9
+        ],
+        [
+          1,
+          5,
+          6,
+          12,
+          11,
+          12
+        ],
+        [
+          12,
+          1,
+          8,
+          12,
+          11,
+          4
+        ],
+        [
+          8,
+          9,
+          5,
+          8,
+          5,
+          11
+        ],
+        [
+          8,
+          9,
+          5,
+          6,
+          12,
+          5
+        ],
+        [
+          9,
+          6,
+          9,
+          6,
+          9,
+          5
+        ],
+        [
+          9,
+          6,
+          9,
+          5,
+          8,
+          9
+        ],
+        [
+          10,
+          11,
+          12,
+          5,
+          8,
+          7
+        ],
+        [
+          12,
+          12,
+          12,
+          9,
+          5,
+          12
+        ],
+        [
+          12,
+          9,
+          8,
+          9,
+          5,
+          12
+        ],
+        [
+          11,
+          9,
+          8,
+          12,
+          12,
+          10
+        ],
+        [
+          11,
+          8,
+          8,
+          10,
+          11,
+          5
+        ],
+        [
+          7,
+          8,
+          9,
+          10,
+          11,
+          8
+        ],
+        [
+          7,
+          10,
+          9,
+          8,
+          1,
+          9
+        ],
+        [
+          12,
+          11,
+          11,
+          7,
+          8,
+          12
+        ],
+        [
+          12,
+          11,
+          11,
+          12,
+          7,
+          7
+        ],
+        [
+          12,
+          12,
+          8,
+          5,
+          12,
+          7
+        ],
+        [
+          11,
+          9,
+          12,
+          5,
+          9,
+          7
+        ],
+        [
+          11,
+          9,
+          6,
+          11,
+          9,
+          11
+        ],
+        [
+          10,
+          10,
+          5,
+          11,
+          11,
+          6
+        ],
+        [
+          9,
+          10,
+          5,
+          12,
+          10,
+          6
+        ],
+        [
+          6,
+          11,
+          10,
+          12,
+          7,
+          12
+        ],
+        [
+          6,
+          11,
+          11,
           6,
           7,
           12
         ],
         [
+          12,
+          11,
+          4,
+          6,
           1,
+          7
+        ],
+        [
+          7,
+          6,
+          8,
+          11,
+          9,
+          11
+        ],
+        [
+          7,
+          6,
+          8,
+          11,
+          9,
+          8
+        ],
+        [
+          9,
+          5,
+          5,
+          12,
+          10,
+          8
+        ],
+        [
+          9,
+          5,
+          5,
+          9,
+          12,
+          9
+        ],
+        [
+          12,
+          12,
           11,
           9,
           12,
+          12
+        ],
+        [
           11,
-          2
+          12,
+          10,
+          9,
+          11,
+          11
+        ],
+        [
+          11,
+          6,
+          6,
+          4,
+          11,
+          11
+        ],
+        [
+          1,
+          7,
+          9,
+          11,
+          8,
+          11
+        ],
+        [
+          9,
+          7,
+          12,
+          11,
+          10,
+          9
+        ],
+        [
+          12,
+          8,
+          12,
+          12,
+          7,
+          4
+        ],
+        [
+          10,
+          12,
+          10,
+          12,
+          12,
+          10
+        ],
+        [
+          8,
+          10,
+          8,
+          10,
+          11,
+          10
+        ],
+        [
+          7,
+          4,
+          11,
+          5,
+          11,
+          10
+        ],
+        [
+          11,
+          1,
+          5,
+          5,
+          8,
+          9
+        ],
+        [
+          12,
+          6,
+          5,
+          7,
+          10,
+          9
+        ],
+        [
+          12,
+          6,
+          10,
+          12,
+          6,
+          8
+        ],
+        [
+          9,
+          12,
+          10,
+          8,
+          6,
+          8
+        ],
+        [
+          9,
+          11,
+          12,
+          8,
+          4,
+          4
+        ],
+        [
+          4,
+          5,
+          12,
+          5,
+          5,
+          4
+        ],
+        [
+          4,
+          5,
+          7,
+          5,
+          10,
+          12
+        ],
+        [
+          12,
+          10,
+          1,
+          7,
+          12,
+          11
+        ],
+        [
+          12,
+          10,
+          4,
+          11,
+          6,
+          9
+        ],
+        [
+          5,
+          12,
+          4,
+          11,
+          6,
+          7
+        ],
+        [
+          5,
+          12,
+          8,
+          4,
+          7,
+          10
+        ],
+        [
+          8,
+          11,
+          9,
+          6,
+          9,
+          10
+        ],
+        [
+          9,
+          11,
+          9,
+          12,
+          8,
+          11
+        ],
+        [
+          12,
+          11,
+          5,
+          5,
+          11,
+          6
+        ],
+        [
+          7,
+          4,
+          5,
+          5,
+          11,
+          6
+        ],
+        [
+          7,
+          4,
+          8,
+          10,
+          1,
+          12
+        ],
+        [
+          10,
+          12,
+          8,
+          8,
+          7,
+          12
+        ],
+        [
+          10,
+          5,
+          12,
+          12,
+          7,
+          5
+        ],
+        [
+          12,
+          10,
+          11,
+          9,
+          8,
+          4
+        ],
+        [
+          9,
+          10,
+          10,
+          6,
+          9,
+          8
+        ],
+        [
+          8,
+          11,
+          5,
+          6,
+          9,
+          9
+        ],
+        [
+          11,
+          12,
+          5,
+          8,
+          6,
+          11
+        ],
+        [
+          11,
+          5,
+          8,
+          4,
+          6,
+          6
+        ],
+        [
+          12,
+          9,
+          6,
+          12,
+          12,
+          5
+        ],
+        [
+          12,
+          6,
+          6,
+          12,
+          12,
+          5
+        ],
+        [
+          10,
+          6,
+          9,
+          7,
+          12,
+          5
+        ],
+        [
+          9,
+          7,
+          9,
+          7,
+          10,
+          10
+        ],
+        [
+          6,
+          11,
+          11,
+          7,
+          4,
+          10
+        ],
+        [
+          6,
+          10,
+          12,
+          6,
+          4,
+          9
+        ],
+        [
+          12,
+          10,
+          12,
+          6,
+          6,
+          8
+        ],
+        [
+          10,
+          12,
+          8,
+          11,
+          6,
+          12
+        ],
+        [
+          11,
+          1,
+          9,
+          8,
+          9,
+          1
+        ],
+        [
+          9,
+          11,
+          9,
+          5,
+          9,
+          10
+        ],
+        [
+          9,
+          11,
+          1,
+          12,
+          2,
+          6
+        ],
+        [
+          12,
+          7,
+          12,
+          12,
+          12,
+          6
+        ],
+        [
+          4,
+          7,
+          4,
+          6,
+          11,
+          5
+        ],
+        [
+          8,
+          6,
+          4,
+          6,
+          11,
+          9
+        ],
+        [
+          6,
+          6,
+          10,
+          5,
+          7,
+          4
+        ],
+        [
+          6,
+          8,
+          9,
+          5,
+          10,
+          4
+        ],
+        [
+          9,
+          8,
+          11,
+          8,
+          10,
+          10
+        ],
+        [
+          10,
+          11,
+          8,
+          11,
+          8,
+          10
+        ],
+        [
+          12,
+          11,
+          7,
+          12,
+          8,
+          11
         ],
         [
           4,
           9,
+          7,
+          12,
+          8,
+          12
+        ],
+        [
           4,
+          9,
+          6,
+          5,
+          9,
+          6
+        ],
+        [
+          11,
+          8,
+          9,
+          5,
+          10,
+          5
+        ],
+        [
+          11,
+          10,
+          8,
+          10,
+          10,
+          10
+        ],
+        [
+          12,
+          5,
+          11,
+          10,
+          12,
+          10
+        ],
+        [
+          8,
+          5,
+          11,
+          12,
+          11,
+          11
+        ],
+        [
+          10,
+          12,
+          10,
+          12,
+          4,
+          12
+        ],
+        [
           7,
           8,
+          10,
+          11,
+          4,
+          9
+        ],
+        [
+          9,
+          10,
+          8,
+          11,
+          7,
+          7
+        ],
+        [
+          12,
+          7,
+          8,
+          7,
+          7,
+          6
+        ],
+        [
+          4,
+          7,
+          4,
+          7,
+          12,
+          6
+        ],
+        [
+          11,
+          4,
+          12,
+          7,
+          10,
+          4
+        ],
+        [
+          11,
+          12,
+          12,
+          12,
+          5,
+          4
+        ],
+        [
+          11,
+          8,
+          6,
+          12,
+          5,
+          9
+        ],
+        [
+          9,
+          9,
+          10,
+          5,
+          5,
           11
+        ],
+        [
+          12,
+          9,
+          8,
+          5,
+          12,
+          6
+        ],
+        [
+          6,
+          10,
+          11,
+          10,
+          12,
+          6
+        ],
+        [
+          6,
+          10,
+          12,
+          10,
+          10,
+          10
+        ],
+        [
+          11,
+          12,
+          12,
+          12,
+          10,
+          10
+        ],
+        [
+          9,
+          12,
+          4,
+          6,
+          9,
+          10
+        ],
+        [
+          12,
+          11,
+          6,
+          6,
+          9,
+          11
+        ],
+        [
+          12,
+          7,
+          9,
+          1,
+          11,
+          7
+        ],
+        [
+          7,
+          7,
+          11,
+          10,
+          11,
+          7
+        ],
+        [
+          4,
+          8,
+          5,
+          10,
+          5,
+          7
+        ],
+        [
+          4,
+          12,
+          5,
+          12,
+          5,
+          9
+        ],
+        [
+          11,
+          12,
+          8,
+          12,
+          5,
+          8
+        ],
+        [
+          12,
+          12,
+          8,
+          8,
+          8,
+          11
+        ],
+        [
+          10,
+          10,
+          4,
+          8,
+          8,
+          12
+        ],
+        [
+          7,
+          10,
+          10,
+          10,
+          12,
+          12
+        ],
+        [
+          7,
+          8,
+          9,
+          10,
+          10,
+          7
+        ],
+        [
+          5,
+          4,
+          6,
+          12,
+          11,
+          10
+        ],
+        [
+          5,
+          4,
+          8,
+          12,
+          11,
+          11
+        ],
+        [
+          11,
+          11,
+          11,
+          8,
+          8,
+          11
+        ],
+        [
+          10,
+          11,
+          11,
+          5,
+          12,
+          9
+        ],
+        [
+          8,
+          10,
+          1,
+          5,
+          10,
+          9
+        ],
+        [
+          12,
+          9,
+          2,
+          11,
+          9,
+          12
+        ],
+        [
+          12,
+          9,
+          12,
+          11,
+          9,
+          12
+        ],
+        [
+          9,
+          5,
+          12,
+          12,
+          8,
+          12
+        ],
+        [
+          9,
+          8,
+          4,
+          12,
+          6,
+          10
+        ],
+        [
+          7,
+          8,
+          4,
+          10,
+          6,
+          10
+        ],
+        [
+          7,
+          11,
+          6,
+          10,
+          12,
+          10
+        ],
+        [
+          12,
+          12,
+          9,
+          11,
+          12,
+          5
+        ],
+        [
+          12,
+          9,
+          9,
+          11,
+          5,
+          12
+        ],
+        [
+          11,
+          9,
+          11,
+          5,
+          1,
+          11
+        ],
+        [
+          11,
+          4,
+          11,
+          5,
+          9,
+          8
+        ],
+        [
+          9,
+          2,
+          12,
+          1,
+          9,
+          10
+        ],
+        [
+          9,
+          12,
+          12,
+          12,
+          12,
+          10
+        ],
+        [
+          12,
+          10,
+          10,
+          10,
+          5,
+          7
+        ],
+        [
+          10,
+          9,
+          8,
+          4,
+          10,
+          1
+        ],
+        [
+          8,
+          9,
+          8,
+          11,
+          7,
+          12
+        ],
+        [
+          7,
+          7,
+          11,
+          6,
+          7,
+          12
+        ],
+        [
+          7,
+          12,
+          9,
+          12,
+          12,
+          4
+        ],
+        [
+          12,
+          12,
+          9,
+          10,
+          12,
+          10
+        ],
+        [
+          12,
+          11,
+          4,
+          10,
+          10,
+          10
+        ],
+        [
+          12,
+          1,
+          8,
+          4,
+          10,
+          9
+        ],
+        [
+          9,
+          7,
+          12,
+          11,
+          9,
+          12
+        ],
+        [
+          7,
+          7,
+          12,
+          11,
+          9,
+          8
+        ],
+        [
+          7,
+          10,
+          7,
+          7,
+          12,
+          8
+        ],
+        [
+          11,
+          10,
+          7,
+          12,
+          12,
+          10
+        ],
+        [
+          11,
+          9,
+          6,
+          12,
+          11,
+          10
+        ],
+        [
+          12,
+          9,
+          8,
+          5,
+          11,
+          10
+        ],
+        [
+          12,
+          1,
+          9,
+          5,
+          8,
+          7
+        ],
+        [
+          5,
+          7,
+          9,
+          4,
+          10,
+          7
+        ],
+        [
+          5,
+          12,
+          9,
+          11,
+          10,
+          7
+        ],
+        [
+          11,
+          11,
+          1,
+          10,
+          12,
+          12
+        ],
+        [
+          9,
+          11,
+          11,
+          12,
+          9,
+          8
         ]
       ],
       "weights": [
@@ -11043,20 +11041,20 @@ const data = {
       ],
       "drop_weights": [
         [
-          7101,
-          5000,
-          6199,
-          7800,
-          7799,
-          11900
+          16798,
+          35987,
+          18256,
+          14523,
+          26597,
+          13007
         ],
         [
-          16902,
-          14599,
-          20598,
-          19800,
-          16398,
-          27300
+          2566,
+          3733,
+          2158,
+          2391,
+          4083,
+          1983
         ],
         [
           0,
@@ -11067,76 +11065,76 @@ const data = {
           0
         ],
         [
-          33003,
-          45995,
-          43596,
-          51000,
-          70093,
-          80000
+          61842,
+          92712,
+          70538,
+          143437,
+          114721,
+          138600
         ],
         [
-          91209,
-          85291,
-          77692,
-          80200,
-          102490,
-          111900
+          132448,
+          162270,
+          211422,
+          216144,
+          119185,
+          115138
         ],
         [
-          78608,
-          81592,
-          86391,
-          100000,
-          110989,
-          104800
+          120664,
+          110050,
+          178651,
+          209319,
+          171927,
+          200061
         ],
         [
-          95810,
-          95490,
-          101590,
-          135200,
-          111489,
-          91800
+          27883,
+          39078,
+          9970,
+          20954,
+          29456,
+          30666
         ],
         [
-          99210,
-          101690,
-          96590,
-          94400,
-          119788,
-          99700
+          19094,
+          22765,
+          45578,
+          24188,
+          32520,
+          32215
         ],
         [
-          114111,
-          113989,
-          147285,
-          133200,
-          129487,
-          118000
+          277484,
+          242005,
+          270908,
+          79039,
+          206706,
+          213247
         ],
         [
-          134413,
-          147285,
-          139786,
-          142300,
-          110489,
-          141400
+          21121,
+          53345,
+          20531,
+          25741,
+          32854,
+          41675
         ],
         [
-          155216,
-          143386,
-          136087,
-          113000,
-          104690,
-          108500
+          35967,
+          57926,
+          21686,
+          31104,
+          28148,
+          25597
         ],
         [
-          174417,
-          165683,
-          144186,
-          123100,
-          116288,
-          104700
+          284133,
+          180129,
+          150302,
+          233160,
+          233803,
+          187811
         ]
       ],
       "reel_lengths": [
@@ -11152,1463 +11150,111 @@ const data = {
       "symbols": [
         [
           12,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          11,
+          1,
+          6,
+          9,
           10,
-          11,
-          11,
           10
         ],
         [
+          9,
+          9,
           11,
-          11,
-          11,
-          10,
-          10,
-          11
+          12,
+          12,
+          10
         ],
         [
-          10,
-          10,
+          7,
           9,
-          10,
-          10,
-          8
+          8,
+          12,
+          4,
+          12
         ],
         [
-          8,
-          8,
+          7,
           8,
           9,
-          8,
+          10,
+          4,
           9
         ],
         [
-          9,
-          9,
-          7,
-          7,
-          8,
-          7
-        ],
-        [
-          7,
-          12,
-          7,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          7,
-          12,
-          11,
-          11,
-          10
-        ],
-        [
-          11,
-          11,
-          12,
-          8,
-          9,
-          11
-        ],
-        [
-          11,
-          10,
-          10,
-          8,
-          9,
-          8
-        ],
-        [
-          10,
-          8,
-          11,
-          10,
-          10,
-          9
-        ],
-        [
-          8,
-          8,
-          9,
-          9,
-          8,
-          5
-        ],
-        [
-          8,
-          12,
-          8,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          9,
-          7,
-          11,
-          11,
-          10
-        ],
-        [
-          12,
-          11,
-          12,
-          7,
-          7,
-          11
-        ],
-        [
-          11,
-          10,
-          12,
-          8,
-          9,
-          8
-        ],
-        [
-          10,
-          10,
-          11,
-          10,
-          10,
-          9
-        ],
-        [
-          9,
-          8,
-          10,
-          9,
-          8,
-          6
-        ],
-        [
-          8,
-          12,
-          9,
-          12,
-          12,
-          12
-        ],
-        [
-          7,
-          9,
-          8,
-          11,
-          12,
-          10
-        ],
-        [
-          12,
-          11,
-          7,
-          11,
-          11,
-          11
-        ],
-        [
-          11,
-          7,
-          12,
-          7,
-          9,
-          8
-        ],
-        [
-          10,
-          10,
-          11,
-          10,
-          10,
-          9
-        ],
-        [
-          9,
-          10,
-          10,
-          9,
-          8,
-          9
-        ],
-        [
-          8,
-          12,
-          9,
-          12,
-          7,
-          12
-        ],
-        [
-          7,
-          8,
-          8,
-          8,
-          7,
-          10
-        ],
-        [
-          7,
-          8,
-          7,
-          11,
-          12,
-          10
-        ],
-        [
-          12,
-          11,
-          12,
-          11,
-          11,
-          11
-        ],
-        [
-          11,
-          9,
-          11,
-          10,
-          11,
-          8
-        ],
-        [
-          11,
-          10,
-          11,
-          10,
-          10,
-          9
-        ],
-        [
-          10,
-          10,
-          10,
-          12,
-          8,
-          9
-        ],
-        [
-          9,
-          12,
-          10,
-          12,
-          9,
-          12
-        ],
-        [
-          8,
-          8,
-          9,
-          9,
-          12,
-          10
-        ],
-        [
-          8,
-          11,
-          12,
-          9,
-          12,
-          10
-        ],
-        [
-          12,
-          9,
-          8,
-          11,
-          11,
-          11
-        ],
-        [
-          11,
-          6,
-          11,
-          10,
-          10,
-          8
-        ],
-        [
-          10,
-          6,
-          6,
-          7,
-          8,
-          9
-        ],
-        [
-          9,
-          12,
-          10,
-          12,
-          9,
-          9
-        ],
-        [
-          7,
-          12,
-          9,
-          12,
-          9,
-          12
-        ],
-        [
-          8,
-          11,
-          12,
-          9,
-          12,
-          10
-        ],
-        [
-          12,
-          11,
-          8,
-          11,
-          12,
-          11
-        ],
-        [
-          12,
-          11,
-          8,
-          11,
-          11,
-          11
-        ],
-        [
-          11,
-          10,
-          11,
-          10,
-          10,
-          8
-        ],
-        [
-          10,
-          9,
-          10,
-          7,
-          8,
-          9
-        ],
-        [
-          10,
-          12,
-          9,
-          7,
-          9,
-          12
-        ],
-        [
-          9,
-          8,
-          12,
-          12,
-          6,
-          10
-        ],
-        [
-          9,
-          7,
-          6,
-          9,
-          12,
-          5
-        ],
-        [
-          12,
-          11,
-          8,
-          11,
-          11,
-          11
-        ],
-        [
-          11,
-          11,
-          8,
-          10,
-          11,
-          8
-        ],
-        [
-          8,
-          10,
-          10,
-          8,
-          10,
-          7
-        ],
-        [
-          10,
-          12,
-          10,
-          7,
-          10,
-          12
-        ],
-        [
-          5,
-          9,
-          12,
-          12,
-          8,
-          12
-        ],
-        [
-          9,
-          8,
-          11,
-          9,
-          12,
-          12
-        ],
-        [
-          12,
-          7,
-          9,
-          11,
-          9,
-          10
-        ],
-        [
-          11,
-          7,
-          8,
-          10,
-          11,
-          11
-        ],
-        [
-          8,
-          11,
-          7,
-          8,
-          11,
-          11
-        ],
-        [
-          10,
-          12,
-          7,
-          8,
-          10,
-          11
-        ],
-        [
-          10,
-          10,
-          12,
-          12,
-          8,
-          8
-        ],
-        [
-          9,
-          9,
-          11,
-          12,
-          12,
-          8
-        ],
-        [
-          12,
-          9,
-          10,
-          11,
-          9,
-          12
-        ],
-        [
-          11,
-          8,
-          9,
-          10,
-          6,
-          10
-        ],
-        [
-          8,
-          11,
-          9,
-          10,
-          11,
-          10
-        ],
-        [
-          8,
-          12,
-          8,
-          9,
-          10,
-          11
-        ],
-        [
-          10,
-          12,
-          12,
-          6,
-          10,
-          6
-        ],
-        [
-          10,
-          12,
-          11,
-          12,
-          12,
-          8
-        ],
-        [
-          12,
-          10,
-          10,
-          11,
-          8,
-          12
-        ],
-        [
-          11,
-          9,
-          10,
-          7,
-          8,
-          12
-        ],
-        [
-          9,
-          11,
-          9,
-          10,
-          8,
-          10
-        ],
-        [
-          6,
-          8,
-          9,
-          9,
-          11,
-          10
-        ],
-        [
-          8,
-          6,
-          12,
-          8,
-          10,
-          11
-        ],
-        [
-          10,
-          12,
-          11,
-          8,
-          10,
-          8
-        ],
-        [
-          12,
-          12,
-          8,
-          12,
-          12,
-          9
-        ],
-        [
-          12,
-          10,
-          10,
-          11,
-          12,
-          12
-        ],
-        [
-          11,
-          11,
-          6,
-          11,
-          9,
-          5
-        ],
-        [
-          9,
-          8,
-          9,
-          10,
-          11,
-          10
-        ],
-        [
-          5,
-          9,
-          9,
-          9,
-          5,
-          11
-        ],
-        [
-          5,
-          9,
-          12,
-          6,
-          10,
-          8
-        ],
-        [
-          10,
-          12,
-          12,
-          12,
-          6,
-          9
-        ],
-        [
-          10,
-          12,
-          11,
-          7,
-          6,
-          12
-        ],
-        [
-          12,
-          11,
-          10,
-          11,
-          12,
-          6
-        ],
-        [
-          11,
-          11,
-          10,
-          11,
-          11,
-          6
-        ],
-        [
-          9,
-          10,
-          9,
-          11,
-          9,
-          10
-        ],
-        [
-          7,
-          5,
-          8,
-          10,
-          9,
-          11
-        ],
-        [
-          8,
-          8,
-          12,
-          12,
-          10,
-          11
-        ],
-        [
-          10,
-          12,
-          11,
-          9,
-          10,
-          12
-        ],
-        [
-          12,
-          9,
-          7,
-          5,
-          12,
-          8
-        ],
-        [
-          11,
-          9,
-          10,
-          7,
-          11,
-          8
-        ],
-        [
-          11,
           11,
-          9,
-          7,
-          5,
-          10
-        ],
-        [
-          6,
-          10,
-          8,
-          10,
-          5,
-          7
-        ],
-        [
-          9,
-          7,
-          12,
-          12,
-          7,
-          11
-        ],
-        [
-          10,
-          12,
-          11,
-          11,
-          10,
-          12
-        ],
-        [
-          12,
-          6,
-          6,
-          6,
-          12,
-          12
-        ],
-        [
-          7,
-          8,
-          10,
-          6,
-          11,
-          8
-        ],
-        [
-          11,
-          11,
-          9,
-          5,
-          8,
-          10
-        ],
-        [
-          8,
-          10,
-          7,
-          10,
-          9,
-          7
-        ],
-        [
-          8,
-          10,
-          12,
-          10,
-          7,
-          11
-        ],
-        [
-          6,
-          12,
-          11,
-          12,
-          7,
-          9
-        ],
-        [
-          12,
-          12,
-          6,
-          11,
-          12,
-          12
-        ],
-        [
-          10,
-          5,
-          10,
-          8,
-          12,
-          8
-        ],
-        [
-          11,
-          11,
-          9,
-          9,
-          12,
-          10
-        ],
-        [
-          9,
-          6,
-          8,
-          9,
-          11,
-          5
-        ],
-        [
-          7,
-          10,
-          12,
-          10,
-          11,
-          11
-        ],
-        [
-          6,
-          7,
-          12,
-          12,
-          10,
-          11
-        ],
-        [
-          6,
-          12,
-          11,
-          11,
-          8,
-          12
-        ],
-        [
-          12,
-          8,
-          11,
-          11,
-          9,
-          12
-        ],
-        [
-          12,
-          8,
-          10,
-          6,
-          12,
-          10
-        ],
-        [
-          11,
-          11,
-          9,
-          7,
-          6,
-          5
-        ],
-        [
-          11,
-          10,
-          5,
-          10,
-          11,
-          6
-        ],
-        [
-          11,
-          5,
-          5,
-          12,
-          10,
-          6
-        ],
-        [
-          10,
-          12,
-          12,
-          5,
-          5,
-          11
-        ],
-        [
-          5,
-          9,
-          11,
-          11,
-          8,
-          12
-        ],
-        [
-          12,
-          6,
-          11,
-          11,
-          12,
-          10
-        ],
-        [
-          9,
-          11,
-          10,
-          8,
-          12,
-          9
-        ],
-        [
-          7,
-          10,
-          8,
-          8,
-          11,
-          8
-        ],
-        [
-          11,
-          5,
-          7,
-          12,
-          11,
-          7
-        ],
-        [
-          8,
-          12,
-          12,
-          10,
-          10,
-          11
-        ],
-        [
-          5,
-          7,
-          12,
-          7,
           10,
-          11
-        ],
-        [
-          5,
-          6,
-          12,
-          11,
-          10,
-          12
-        ],
-        [
-          12,
-          11,
-          11,
           9,
-          12,
-          10
-        ],
-        [
-          12,
-          10,
           11,
-          6,
-          6,
-          5
-        ],
-        [
-          11,
-          5,
-          10,
-          12,
-          11,
-          7
-        ],
-        [
-          9,
-          5,
-          6,
-          10,
           7,
           7
         ],
         [
           10,
+          10,
           12,
-          9,
+          11,
+          7,
+          11
+        ],
+        [
+          12,
+          11,
+          12,
           5,
-          5,
+          11,
+          10
+        ],
+        [
+          12,
+          12,
+          10,
+          4,
+          11,
+          10
+        ],
+        [
+          7,
+          8,
+          10,
+          4,
+          1,
           8
         ],
         [
-          6,
-          12,
-          9,
+          7,
+          5,
           11,
-          9,
-          12
-        ],
-        [
-          6,
-          11,
-          12,
-          8,
-          12,
-          12
-        ],
-        [
-          12,
-          10,
-          11,
-          6,
-          8,
-          10
-        ],
-        [
-          11,
-          9,
-          11,
-          12,
-          11,
-          9
-        ],
-        [
           7,
           8,
-          10,
-          12,
+          12
+        ],
+        [
+          8,
+          9,
           6,
+          12,
+          8,
+          12
+        ],
+        [
+          11,
+          7,
+          8,
+          5,
+          10,
           11
         ],
         [
+          4,
           7,
-          7,
-          6,
-          10,
-          7,
-          6
-        ],
-        [
           8,
-          12,
-          7,
-          11,
-          5,
-          6
-        ],
-        [
-          10,
-          11,
-          12,
-          9,
-          12,
-          12
-        ],
-        [
-          12,
-          10,
-          5,
-          9,
-          9,
-          10
-        ],
-        [
-          11,
-          6,
-          11,
-          7,
-          11,
-          10
-        ],
-        [
-          9,
-          8,
-          10,
-          12,
-          11,
-          8
-        ],
-        [
-          9,
-          7,
-          10,
-          10,
-          8,
-          8
-        ],
-        [
-          8,
-          12,
-          8,
-          11,
-          8,
-          9
-        ],
-        [
-          10,
-          11,
-          12,
-          11,
-          12,
-          12
-        ],
-        [
-          10,
-          10,
-          5,
           5,
           12,
           11
         ],
         [
-          12,
-          10,
-          11,
-          5,
-          10,
-          10
-        ],
-        [
-          11,
-          9,
-          9,
-          12,
-          6,
-          10
-        ],
-        [
-          5,
-          8,
-          10,
-          10,
-          9,
-          10
-        ],
-        [
-          6,
-          12,
-          8,
-          8,
-          5,
-          5
-        ],
-        [
-          9,
-          11,
-          12,
-          7,
-          11,
-          5
-        ],
-        [
-          7,
-          11,
-          6,
-          7,
-          12,
-          12
-        ],
-        [
-          12,
-          10,
-          6,
-          6,
-          10,
-          7
-        ],
-        [
-          12,
-          10,
-          11,
-          12,
-          10,
-          11
-        ],
-        [
-          11,
-          9,
-          7,
-          10,
-          7,
-          11
-        ],
-        [
-          5,
-          9,
-          10,
-          11,
-          5,
-          9
-        ],
-        [
-          8,
-          12,
-          12,
-          4,
-          11,
-          10
-        ],
-        [
-          8,
-          11,
-          12,
-          9,
-          12,
-          10
-        ],
-        [
-          6,
-          5,
-          9,
-          6,
-          6,
-          12
-        ],
-        [
-          6,
-          4,
-          8,
-          6,
-          9,
-          6
-        ],
-        [
-          12,
-          4,
-          11,
-          12,
-          8,
-          7
-        ],
-        [
-          11,
-          7,
-          7,
-          12,
-          7,
-          7
-        ],
-        [
-          11,
-          7,
-          5,
-          10,
-          4,
-          9
-        ],
-        [
-          7,
-          12,
-          12,
-          8,
-          12,
-          9
-        ],
-        [
-          9,
-          12,
-          10,
-          5,
-          6,
-          12
-        ],
-        [
-          10,
-          11,
-          9,
-          11,
-          6,
-          5
-        ],
-        [
-          12,
-          6,
-          9,
-          7,
-          8,
-          8
-        ],
-        [
-          5,
-          5,
-          7,
-          7,
-          8,
-          4
-        ],
-        [
-          11,
-          5,
-          5,
-          12,
-          11,
-          6
-        ],
-        [
-          4,
-          8,
-          12,
-          10,
-          12,
-          11
-        ],
-        [
-          7,
-          12,
-          11,
-          9,
-          12,
-          12
-        ],
-        [
-          7,
-          12,
-          8,
-          5,
-          7,
-          5
-        ],
-        [
-          12,
-          6,
-          8,
           4,
           10,
-          8
-        ],
-        [
-          10,
-          6,
-          10,
-          4,
-          9,
-          7
-        ],
-        [
-          11,
-          11,
-          6,
-          12,
-          5,
-          9
-        ],
-        [
-          8,
-          10,
-          6,
-          10,
-          4,
-          6
-        ],
-        [
-          9,
-          9,
-          12,
-          11,
-          12,
-          12
-        ],
-        [
-          5,
-          12,
-          12,
-          8,
-          12,
-          12
-        ],
-        [
-          12,
-          8,
-          11,
-          9,
-          7,
-          11
-        ],
-        [
-          10,
-          4,
-          7,
-          9,
-          9,
-          10
-        ],
-        [
-          11,
-          4,
-          5,
-          12,
-          9,
-          5
-        ],
-        [
-          11,
-          11,
-          10,
-          12,
-          5,
-          4
-        ],
-        [
-          6,
-          10,
-          10,
-          10,
-          5,
-          8
-        ],
-        [
-          4,
-          12,
-          10,
-          11,
-          10,
-          8
-        ],
-        [
-          4,
-          7,
-          12,
-          8,
-          12,
-          12
-        ],
-        [
-          12,
-          5,
-          11,
-          5,
-          11,
-          7
-        ],
-        [
-          9,
-          6,
-          6,
-          6,
-          8,
-          11
-        ],
-        [
-          9,
-          9,
-          6,
-          6,
-          4,
-          6
-        ],
-        [
-          8,
-          9,
-          8,
-          12,
-          7,
-          5
-        ],
-        [
-          5,
-          12,
-          9,
-          10,
-          6,
-          10
-        ],
-        [
-          11,
-          11,
           12,
           10,
           12,
@@ -12616,939 +11262,2291 @@ const data = {
         ],
         [
           12,
-          11,
-          12,
           10,
-          10,
-          4
-        ],
-        [
-          10,
-          8,
-          5,
-          8,
-          11,
-          4
-        ],
-        [
-          7,
-          8,
-          4,
-          5,
-          9,
-          12
-        ],
-        [
-          7,
-          7,
-          7,
-          5,
-          7,
-          12
-        ],
-        [
-          6,
-          7,
-          11,
-          12,
-          7,
-          5
-        ],
-        [
-          5,
-          10,
-          8,
-          11,
-          12,
-          10
-        ],
-        [
-          5,
-          12,
-          9,
-          7,
-          12,
-          11
-        ],
-        [
-          12,
-          12,
-          12,
-          7,
-          11,
-          11
-        ],
-        [
-          12,
-          6,
-          4,
-          4,
-          5,
-          8
-        ],
-        [
-          12,
-          4,
           7,
           10,
-          10,
-          8
-        ],
-        [
-          8,
-          5,
-          5,
           12,
-          6,
-          7
-        ],
-        [
-          9,
-          10,
-          5,
-          12,
-          6,
-          6
-        ],
-        [
-          4,
-          9,
-          11,
-          8,
-          8,
           9
         ],
         [
+          12,
           10,
           7,
           6,
-          9,
-          8,
-          4
-        ],
-        [
-          10,
-          8,
-          10,
-          6,
-          4,
-          5
-        ],
-        [
-          12,
-          4,
-          8,
-          11,
           5,
           10
         ],
         [
-          6,
-          6,
-          9,
-          4,
-          10,
-          7
-        ],
-        [
           11,
           11,
-          7,
-          4,
-          9,
-          6
-        ],
-        [
-          8,
-          10,
-          4,
-          12,
-          11,
-          9
-        ],
-        [
-          7,
-          10,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          9,
-          10,
-          5,
-          7,
-          4,
-          12
-        ],
-        [
-          12,
-          5,
-          11,
-          9,
-          4,
-          10
-        ],
-        [
-          4,
-          12,
-          11,
-          9,
-          5,
-          5
-        ],
-        [
-          5,
-          4,
-          10,
-          10,
-          10,
-          5
-        ],
-        [
-          8,
-          8,
-          9,
-          11,
-          6,
-          4
-        ],
-        [
-          11,
-          8,
-          8,
-          12,
-          11,
-          8
-        ],
-        [
-          11,
-          11,
-          8,
-          5,
-          8,
-          6
-        ],
-        [
-          12,
-          5,
-          6,
-          6,
-          7,
-          9
-        ],
-        [
-          6,
-          9,
-          6,
-          8,
-          9,
-          11
-        ],
-        [
-          9,
-          6,
-          12,
-          7,
-          9,
-          7
-        ],
-        [
-          5,
-          12,
-          7,
-          10,
-          6,
-          7
-        ],
-        [
-          7,
-          7,
-          7,
-          10,
-          4,
-          8
-        ],
-        [
-          8,
-          11,
-          4,
-          12,
-          10,
-          12
-        ],
-        [
-          12,
-          11,
-          10,
-          4,
-          7,
-          12
-        ],
-        [
-          4,
-          9,
-          5,
-          4,
-          5,
-          9
-        ],
-        [
-          10,
-          6,
-          5,
-          11,
-          11,
-          6
-        ],
-        [
-          6,
-          12,
-          9,
-          6,
-          8,
-          11
-        ],
-        [
-          6,
-          7,
-          12,
-          5,
-          12,
-          4
-        ],
-        [
-          7,
-          5,
-          12,
-          12,
-          9,
-          10
-        ],
-        [
-          7,
-          4,
-          4,
-          8,
-          4,
-          10
-        ],
-        [
-          12,
-          8,
-          11,
-          9,
-          4,
-          8
-        ],
-        [
-          10,
-          10,
-          10,
-          11,
-          5,
-          6
-        ],
-        [
-          8,
-          12,
-          9,
-          11,
-          11,
-          7
-        ],
-        [
-          4,
-          9,
-          9,
-          6,
-          12,
-          4
-        ],
-        [
-          11,
-          9,
-          8,
-          12,
-          7,
-          11
-        ],
-        [
-          5,
-          4,
-          7,
-          12,
-          6,
-          9
-        ],
-        [
-          5,
-          7,
-          4,
-          7,
-          8,
-          9
-        ],
-        [
-          12,
-          6,
-          4,
-          8,
-          10,
-          5
-        ],
-        [
-          12,
-          5,
-          6,
-          8,
-          9,
-          6
-        ],
-        [
-          9,
-          12,
-          5,
-          5,
-          9,
-          7
-        ],
-        [
-          9,
-          11,
-          10,
-          9,
-          12,
-          11
-        ],
-        [
-          10,
-          11,
-          7,
-          4,
-          5,
-          11
-        ],
-        [
-          8,
-          10,
           1,
           6,
           5,
-          12
-        ],
-        [
-          8,
-          8,
-          11,
-          10,
-          7,
-          5
-        ],
-        [
-          8,
-          6,
-          11,
-          10,
-          6,
-          4
-        ],
-        [
-          11,
-          6,
-          11,
-          7,
-          6,
           10
         ],
         [
-          12,
-          7,
-          6,
-          5,
-          10,
-          8
-        ],
-        [
-          6,
-          4,
-          12,
-          12,
           11,
-          1
-        ],
-        [
-          4,
-          5,
           8,
-          12,
+          8,
           11,
-          12
+          9,
+          7
         ],
         [
           7,
           9,
           8,
+          11,
+          11,
+          8
+        ],
+        [
+          7,
+          4,
+          8,
+          8,
+          11,
+          8
+        ],
+        [
+          12,
+          4,
           12,
           8,
+          7,
+          11
+        ],
+        [
+          12,
+          11,
+          10,
+          9,
+          7,
+          12
+        ],
+        [
+          11,
+          10,
+          10,
+          4,
+          8,
+          12
+        ],
+        [
+          11,
+          7,
+          11,
+          6,
+          8,
+          12
+        ],
+        [
+          6,
+          7,
+          8,
+          6,
+          10,
+          4
+        ],
+        [
+          6,
+          4,
+          8,
+          11,
+          12,
+          4
+        ],
+        [
+          12,
+          4,
+          9,
+          11,
+          12,
+          11
+        ],
+        [
+          12,
+          11,
+          9,
+          12,
+          6,
+          8
+        ],
+        [
+          12,
+          12,
+          12,
+          12,
+          6,
+          10
+        ],
+        [
+          11,
+          12,
+          12,
+          10,
+          11,
+          10
+        ],
+        [
+          8,
+          7,
+          8,
+          10,
+          11,
+          12
+        ],
+        [
+          10,
+          7,
+          11,
+          7,
+          10,
+          7
+        ],
+        [
+          10,
+          11,
+          9,
+          8,
+          8,
+          8
+        ],
+        [
+          12,
+          10,
+          9,
+          8,
+          7,
+          11
+        ],
+        [
+          12,
+          5,
+          5,
+          12,
+          7,
+          11
+        ],
+        [
+          11,
+          5,
+          5,
+          12,
+          9,
+          10
+        ],
+        [
+          8,
+          8,
+          11,
+          11,
+          9,
+          10
+        ],
+        [
+          7,
+          11,
+          8,
+          7,
+          12,
+          12
+        ],
+        [
+          7,
+          12,
+          12,
+          10,
+          12,
+          12
+        ],
+        [
+          12,
+          12,
+          12,
+          8,
+          10,
+          7
+        ],
+        [
+          10,
+          6,
+          10,
+          5,
+          10,
+          9
+        ],
+        [
+          11,
+          6,
+          10,
+          5,
+          11,
+          10
+        ],
+        [
+          11,
+          10,
+          8,
+          11,
+          8,
+          11
+        ],
+        [
+          11,
+          10,
+          7,
+          11,
+          8,
+          6
+        ],
+        [
+          12,
+          1,
+          5,
+          11,
+          12,
+          6
+        ],
+        [
+          7,
+          8,
+          5,
+          10,
+          12,
+          7
+        ],
+        [
+          10,
+          11,
+          11,
+          10,
+          7,
+          8
+        ],
+        [
+          8,
+          11,
+          9,
+          12,
+          5,
+          8
+        ],
+        [
+          11,
+          10,
+          12,
+          12,
+          5,
+          10
+        ],
+        [
+          5,
+          10,
+          12,
+          11,
+          10,
+          10
+        ],
+        [
+          7,
+          7,
+          1,
+          11,
+          11,
+          7
+        ],
+        [
+          7,
+          8,
+          8,
+          8,
+          8,
+          9
+        ],
+        [
+          12,
+          8,
+          6,
+          6,
+          1,
+          9
+        ],
+        [
+          4,
+          9,
+          9,
+          6,
+          9,
+          5
+        ],
+        [
+          8,
+          9,
+          9,
+          4,
+          9,
+          11
+        ],
+        [
+          10,
+          10,
+          8,
+          11,
+          12,
+          10
+        ],
+        [
+          11,
+          11,
+          4,
+          7,
+          6,
+          10
+        ],
+        [
+          11,
+          11,
+          6,
+          7,
+          6,
+          7
+        ],
+        [
+          12,
+          1,
+          12,
+          10,
+          10,
+          12
+        ],
+        [
+          5,
+          9,
+          11,
+          10,
+          7,
+          11
+        ],
+        [
+          5,
+          9,
+          8,
+          6,
+          11,
+          11
+        ],
+        [
+          7,
+          12,
+          7,
+          5,
+          8,
+          9
+        ],
+        [
+          11,
+          11,
+          7,
+          5,
+          12,
+          9
+        ],
+        [
+          12,
+          4,
+          9,
+          7,
+          12,
+          8
+        ],
+        [
+          12,
+          10,
+          6,
+          11,
+          10,
+          12
+        ],
+        [
+          12,
+          10,
+          8,
+          12,
+          4,
+          12
+        ],
+        [
+          10,
+          9,
+          8,
+          12,
+          4,
+          11
+        ],
+        [
+          10,
+          9,
+          11,
+          5,
+          9,
+          10
+        ],
+        [
+          11,
+          11,
+          10,
+          5,
+          9,
+          6
+        ],
+        [
+          9,
+          1,
+          12,
+          11,
+          7,
           6
         ],
         [
           1,
-          10,
+          7,
+          12,
+          7,
+          8,
+          7
+        ],
+        [
+          12,
+          12,
+          8,
           4,
           11,
-          8,
-          6
-        ],
-        [
-          9,
-          12,
-          1,
-          9,
-          12,
-          10
-        ],
-        [
-          9,
-          12,
-          9,
-          8,
-          10,
-          9
-        ],
-        [
-          5,
-          4,
-          12,
-          1,
-          10,
-          1
-        ],
-        [
-          11,
-          8,
-          6,
-          4,
-          1,
-          4
-        ],
-        [
-          12,
-          7,
-          10,
-          6,
-          4,
-          5
-        ],
-        [
-          6,
-          5,
-          5,
-          5,
-          7,
-          5
-        ],
-        [
-          10,
-          5,
-          7,
-          7,
-          7,
           7
         ],
         [
           10,
-          1,
+          8,
+          11,
+          10,
+          11,
+          9
+        ],
+        [
+          11,
+          9,
+          6,
+          10,
+          12,
+          12
+        ],
+        [
+          8,
+          11,
+          6,
+          6,
+          12,
+          5
+        ],
+        [
+          8,
+          5,
+          6,
+          6,
+          10,
+          11
+        ],
+        [
+          9,
+          5,
+          8,
+          8,
+          5,
+          10
+        ],
+        [
           9,
           8,
+          8,
+          11,
+          5,
+          6
+        ],
+        [
+          11,
           9,
+          11,
+          11,
+          6,
+          6
+        ],
+        [
+          11,
+          7,
+          1,
+          12,
+          6,
+          4
+        ],
+        [
+          12,
+          10,
+          6,
+          12,
+          8,
+          4
+        ],
+        [
+          5,
+          10,
+          10,
+          8,
+          11,
+          10
+        ],
+        [
+          5,
+          12,
+          12,
+          8,
+          11,
+          10
+        ],
+        [
+          9,
+          8,
+          8,
+          8,
+          7,
+          12
+        ],
+        [
+          9,
+          5,
+          11,
+          11,
+          10,
           8
         ],
         [
-          4,
-          11,
-          9,
+          12,
           11,
           6,
+          7,
+          10,
           8
+        ],
+        [
+          10,
+          11,
+          10,
+          12,
+          12,
+          11
         ],
         [
           7,
+          12,
+          10,
+          10,
+          12,
+          7
+        ],
+        [
+          7,
+          12,
+          4,
+          10,
+          9,
+          9
+        ],
+        [
           11,
+          8,
+          8,
+          11,
+          9,
+          9
+        ],
+        [
+          11,
+          9,
+          8,
+          7,
+          9,
+          8
+        ],
+        [
+          12,
+          9,
+          11,
+          8,
+          8,
+          8
+        ],
+        [
+          10,
+          7,
+          10,
+          8,
+          10,
+          4
+        ],
+        [
           6,
+          6,
+          5,
+          8,
+          11,
+          11
+        ],
+        [
+          6,
+          6,
+          5,
+          10,
+          12,
+          11
+        ],
+        [
           1,
+          11,
+          8,
+          10,
+          1,
+          5
+        ],
+        [
+          12,
+          8,
+          11,
+          5,
+          7,
+          5
+        ],
+        [
+          5,
+          8,
+          9,
+          5,
+          8,
+          10
+        ],
+        [
+          5,
+          4,
+          9,
+          11,
+          10,
+          12
+        ],
+        [
+          8,
+          4,
+          9,
+          11,
+          11,
+          11
+        ],
+        [
+          8,
+          7,
+          8,
+          7,
+          11,
+          8
+        ],
+        [
+          10,
+          12,
+          5,
+          7,
+          12,
+          8
+        ],
+        [
+          11,
+          10,
+          5,
+          12,
+          6,
+          7
+        ],
+        [
+          11,
+          11,
+          10,
+          12,
+          9,
+          10
+        ],
+        [
+          9,
+          8,
+          12,
+          4,
+          9,
+          10
+        ],
+        [
+          9,
+          8,
+          11,
+          5,
+          5,
+          11
+        ],
+        [
+          12,
+          12,
+          8,
+          5,
+          5,
+          5
+        ],
+        [
+          12,
+          7,
+          9,
+          7,
+          7,
+          12
+        ],
+        [
+          10,
+          7,
+          9,
+          9,
+          7,
+          8
+        ],
+        [
+          10,
+          11,
+          9,
+          10,
+          10,
+          10
+        ],
+        [
+          11,
+          11,
+          8,
+          10,
+          8,
+          10
+        ],
+        [
+          11,
+          10,
+          11,
+          12,
+          8,
+          9
+        ],
+        [
+          8,
+          12,
+          10,
+          7,
+          12,
+          9
+        ],
+        [
+          9,
+          12,
+          12,
+          8,
+          12,
+          11
+        ],
+        [
+          10,
+          8,
+          6,
+          8,
           11,
           12
         ],
         [
           12,
-          6,
-          12,
-          6,
-          5,
-          4
-        ],
-        [
-          1,
-          6,
-          12,
-          6,
-          12,
-          4
-        ],
-        [
-          6,
+          7,
           8,
+          8,
+          11,
+          12
+        ],
+        [
+          11,
+          7,
           8,
           10,
+          10,
+          10
+        ],
+        [
+          8,
+          11,
+          8,
+          7,
           8,
           1
         ],
         [
+          5,
+          10,
+          11,
           11,
           7,
-          8,
-          10,
-          1,
-          9
-        ],
-        [
-          11,
-          9,
-          1,
-          9,
-          4,
-          10
-        ],
-        [
-          4,
-          4,
-          5,
-          4,
-          6,
-          10
-        ],
-        [
-          4,
-          4,
-          4,
-          5,
-          9,
           11
         ],
         [
           5,
-          1,
-          4,
           5,
+          6,
           11,
-          7
+          12,
+          8
+        ],
+        [
+          12,
+          5,
+          10,
+          12,
+          9,
+          8
         ],
         [
           10,
+          7,
           10,
-          7,
-          7,
+          12,
           11,
+          10
+        ],
+        [
+          11,
+          7,
+          1,
+          6,
+          10,
+          10
+        ],
+        [
+          9,
+          10,
+          4,
+          6,
+          10,
+          9
+        ],
+        [
+          9,
+          12,
+          8,
+          9,
+          4,
+          11
+        ],
+        [
+          9,
+          5,
+          12,
+          9,
+          4,
           6
         ],
         [
-          7,
+          8,
+          5,
+          12,
           10,
+          8,
+          6
+        ],
+        [
+          8,
+          11,
+          11,
+          10,
+          6,
+          5
+        ],
+        [
+          11,
+          11,
+          11,
+          4,
+          6,
+          5
+        ],
+        [
+          12,
+          12,
+          8,
+          8,
+          12,
+          11
+        ],
+        [
+          12,
+          10,
+          8,
+          12,
+          12,
+          10
+        ],
+        [
+          10,
+          10,
+          10,
+          11,
+          7,
+          10
+        ],
+        [
+          4,
+          4,
+          12,
           7,
           7,
+          8
+        ],
+        [
+          8,
+          11,
+          12,
+          5,
           11,
           8
         ],
         [
-          9,
+          11,
+          12,
+          5,
           5,
           10,
-          11,
-          8,
-          12
+          7
         ],
         [
-          6,
-          9,
-          10,
-          8,
           12,
+          12,
+          8,
+          9,
+          5,
+          7
+        ],
+        [
+          12,
+          6,
+          11,
+          9,
+          5,
+          7
+        ],
+        [
+          10,
+          6,
+          11,
+          9,
+          1,
           5
         ],
         [
-          1,
+          6,
+          11,
+          10,
           12,
-          5,
-          4,
-          1,
+          8,
           5
         ],
         [
-          5,
-          1,
-          5,
-          1,
-          7,
-          11
+          6,
+          10,
+          10,
+          10,
+          8,
+          10
         ],
         [
+          11,
+          7,
           8,
-          7,
-          1,
+          10,
           9,
-          7,
-          9
+          10
         ],
         [
           12,
           7,
-          11,
           6,
-          10,
+          11,
+          9,
           1
         ],
         [
-          10,
+          12,
           8,
-          6,
+          11,
+          11,
+          12,
+          4
+        ],
+        [
           10,
-          5,
+          9,
+          7,
+          7,
+          12,
+          4
+        ],
+        [
+          8,
+          9,
+          7,
+          12,
+          10,
+          11
+        ],
+        [
+          11,
+          11,
+          8,
+          8,
+          10,
           7
         ],
         [
-          4,
-          8,
-          7,
+          11,
+          11,
           12,
-          4,
+          8,
+          11,
+          7
+        ],
+        [
+          11,
+          10,
+          5,
+          11,
+          11,
+          7
+        ],
+        [
+          12,
+          10,
+          5,
+          6,
+          7,
           10
         ],
         [
-          4,
-          4,
-          7,
+          8,
+          12,
+          8,
+          6,
+          8,
+          10
+        ],
+        [
+          5,
+          12,
           11,
           12,
+          12,
+          11
+        ],
+        [
+          5,
+          12,
+          9,
+          12,
+          10,
+          11
+        ],
+        [
+          9,
+          1,
+          9,
+          11,
+          11,
+          11
+        ],
+        [
+          9,
+          10,
+          4,
+          7,
+          6,
+          7
+        ],
+        [
+          11,
+          10,
+          8,
+          10,
+          6,
+          9
+        ],
+        [
+          12,
+          7,
+          12,
+          8,
+          7,
+          9
+        ],
+        [
+          12,
+          8,
+          10,
+          4,
+          7,
+          10
+        ],
+        [
+          12,
+          8,
+          10,
+          4,
+          8,
           12
+        ],
+        [
+          7,
+          12,
+          11,
+          4,
+          9,
+          8
+        ],
+        [
+          7,
+          1,
+          8,
+          11,
+          9,
+          11
         ],
         [
           11,
           11,
+          8,
+          12,
+          10,
+          9
+        ],
+        [
+          10,
+          11,
           9,
+          10,
+          12,
+          9
+        ],
+        [
+          9,
+          7,
+          9,
+          10,
+          11,
+          7
+        ],
+        [
+          12,
+          10,
+          9,
+          6,
+          11,
+          10
+        ],
+        [
+          6,
+          10,
+          6,
+          6,
+          5,
+          12
+        ],
+        [
+          6,
+          12,
+          11,
+          11,
+          8,
+          12
+        ],
+        [
+          10,
+          11,
+          8,
+          12,
+          10,
+          9
+        ],
+        [
+          11,
+          11,
+          8,
+          12,
+          7,
+          1
+        ],
+        [
+          7,
           4,
+          10,
+          7,
+          12,
+          11
+        ],
+        [
+          7,
+          7,
+          12,
+          5,
+          11,
+          10
+        ],
+        [
+          12,
+          7,
+          12,
+          5,
+          9,
+          10
+        ],
+        [
+          9,
+          10,
+          11,
+          11,
+          9,
+          7
+        ],
+        [
+          9,
+          10,
+          9,
+          12,
+          10,
+          5
+        ],
+        [
+          11,
+          10,
+          8,
+          8,
+          10,
+          5
+        ],
+        [
+          5,
+          11,
+          7,
+          8,
+          10,
+          5
+        ],
+        [
+          5,
+          11,
+          7,
+          1,
+          8,
+          11
+        ],
+        [
+          12,
+          7,
+          11,
+          4,
+          8,
+          6
+        ],
+        [
+          12,
+          7,
+          10,
+          12,
+          6,
+          6
+        ],
+        [
+          11,
+          6,
+          8,
+          12,
+          6,
+          8
+        ],
+        [
+          11,
+          6,
+          6,
+          11,
+          12,
+          8
+        ],
+        [
+          7,
+          11,
+          6,
+          11,
+          1,
+          12
+        ],
+        [
+          7,
+          11,
+          6,
+          11,
+          7,
+          12
+        ],
+        [
+          9,
+          11,
+          8,
+          4,
+          7,
+          12
+        ],
+        [
+          8,
+          8,
+          9,
+          7,
+          11,
+          10
+        ],
+        [
+          12,
+          4,
+          9,
+          12,
+          10,
+          10
+        ],
+        [
+          10,
+          9,
+          12,
+          1,
+          10,
+          10
+        ],
+        [
+          10,
+          9,
+          12,
+          11,
+          10,
+          11
+        ],
+        [
+          4,
+          5,
+          8,
+          5,
+          4,
+          9
+        ],
+        [
+          4,
+          5,
+          11,
+          5,
+          8,
+          8
+        ],
+        [
+          7,
+          5,
+          10,
+          12,
+          12,
+          7
+        ],
+        [
+          7,
+          8,
+          10,
+          12,
+          12,
+          6
+        ],
+        [
+          10,
+          12,
+          12,
+          7,
           9,
           6
         ],
         [
           11,
+          12,
+          8,
+          10,
+          9,
+          11
+        ],
+        [
+          9,
+          11,
+          4,
+          11,
+          9,
+          5
+        ],
+        [
+          6,
+          7,
+          4,
+          11,
+          10,
+          7
+        ],
+        [
+          6,
+          7,
+          7,
+          4,
+          7,
+          10
+        ],
+        [
+          8,
+          9,
+          7,
+          12,
+          11,
+          10
+        ],
+        [
+          10,
+          9,
+          8,
+          12,
+          11,
+          8
+        ],
+        [
+          9,
+          11,
+          9,
+          9,
+          8,
+          4
+        ],
+        [
+          12,
+          11,
+          11,
+          10,
+          5,
+          9
+        ],
+        [
+          12,
+          6,
+          10,
+          8,
+          12,
+          11
+        ],
+        [
+          11,
+          6,
+          10,
+          11,
+          10,
+          10
+        ],
+        [
+          7,
+          10,
+          12,
+          5,
+          10,
+          10
+        ],
+        [
+          8,
+          10,
+          12,
+          9,
+          6,
+          7
+        ],
+        [
+          8,
+          11,
+          4,
+          12,
+          6,
+          7
+        ],
+        [
+          12,
+          11,
+          8,
+          10,
+          11,
+          7
+        ],
+        [
+          5,
+          12,
+          11,
+          10,
+          11,
+          8
+        ],
+        [
+          5,
+          7,
+          10,
+          11,
+          8,
+          11
+        ],
+        [
+          7,
+          10,
+          12,
+          11,
+          7,
+          11
+        ],
+        [
+          11,
+          10,
+          6,
+          5,
+          12,
+          10
+        ],
+        [
+          9,
+          11,
+          8,
+          1,
+          9,
+          10
+        ],
+        [
+          9,
+          11,
+          9,
+          10,
+          9,
+          12
+        ],
+        [
+          12,
+          9,
+          10,
+          10,
+          10,
+          4
+        ],
+        [
+          6,
+          9,
+          10,
+          8,
+          8,
+          4
+        ],
+        [
+          6,
+          12,
+          11,
+          8,
+          11,
+          8
+        ],
+        [
+          10,
+          10,
+          8,
+          4,
+          11,
+          11
+        ],
+        [
+          7,
+          7,
+          9,
+          12,
+          12,
+          5
+        ],
+        [
+          7,
+          7,
+          9,
+          10,
+          10,
+          7
+        ],
+        [
+          8,
+          5,
+          12,
+          11,
+          10,
+          9
+        ],
+        [
+          12,
+          5,
+          11,
+          5,
+          10,
+          9
+        ],
+        [
+          11,
+          11,
+          8,
+          5,
+          7,
+          8
+        ],
+        [
+          11,
+          11,
+          5,
+          4,
+          7,
+          12
+        ],
+        [
+          11,
+          4,
+          6,
+          8,
+          1,
+          10
+        ],
+        [
+          7,
+          10,
+          6,
+          11,
+          8,
+          10
+        ],
+        [
+          10,
+          10,
+          10,
+          12,
+          8,
+          11
+        ],
+        [
+          5,
+          10,
+          8,
+          10,
+          11,
+          9
+        ],
+        [
+          5,
+          9,
+          7,
+          10,
+          5,
+          12
+        ],
+        [
+          12,
+          12,
+          7,
+          9,
+          5,
+          12
+        ],
+        [
+          7,
+          12,
+          11,
+          9,
+          10,
+          7
+        ],
+        [
+          9,
+          11,
+          5,
+          9,
+          12,
+          10
+        ],
+        [
+          11,
+          11,
+          5,
+          12,
+          9,
+          10
+        ],
+        [
+          1,
+          10,
+          8,
+          12,
+          9,
+          6
+        ],
+        [
+          10,
+          10,
+          12,
+          8,
+          6,
+          6
+        ],
+        [
+          7,
+          9,
+          11,
+          8,
+          7,
+          7
+        ],
+        [
+          12,
+          9,
+          7,
+          10,
+          8,
+          11
+        ],
+        [
+          8,
+          11,
+          7,
+          10,
+          11,
+          12
+        ],
+        [
+          11,
+          12,
+          8,
+          5,
+          11,
+          8
+        ],
+        [
+          11,
+          6,
+          1,
+          7,
+          10,
+          8
+        ],
+        [
+          10,
+          6,
+          11,
+          4,
+          10,
+          9
+        ],
+        [
           9,
           1,
+          5,
+          12,
+          10,
+          11
+        ],
+        [
           8,
+          10,
+          5,
+          12,
+          12,
+          11
+        ],
+        [
+          7,
+          7,
+          8,
+          9,
+          12,
+          5
+        ],
+        [
+          7,
+          11,
+          10,
+          9,
           8,
           8
         ],
         [
+          10,
+          9,
+          4,
+          10,
+          7,
+          9
+        ],
+        [
+          9,
+          9,
+          4,
+          10,
+          10,
+          12
+        ],
+        [
+          11,
+          10,
           6,
+          7,
+          4,
+          10
+        ],
+        [
+          8,
+          7,
+          11,
+          11,
+          4,
+          10
+        ],
+        [
+          6,
+          7,
+          8,
+          11,
+          9,
+          10
+        ],
+        [
+          6,
+          11,
           10,
-          10,
+          11,
+          9,
+          6
+        ],
+        [
+          12,
+          9,
           5,
           8,
+          11,
+          6
+        ],
+        [
+          12,
+          9,
+          5,
+          8,
+          11,
+          7
+        ],
+        [
+          11,
+          10,
+          11,
+          7,
+          12,
+          11
+        ],
+        [
+          11,
+          10,
+          12,
+          12,
+          10,
+          12
+        ],
+        [
+          11,
+          12,
+          8,
+          11,
+          6,
           8
+        ],
+        [
+          10,
+          11,
+          8,
+          11,
+          6,
+          8
+        ],
+        [
+          12,
+          7,
+          9,
+          10,
+          8,
+          7
+        ],
+        [
+          12,
+          8,
+          6,
+          10,
+          5,
+          10
+        ],
+        [
+          7,
+          9,
+          12,
+          8,
+          12,
+          6
+        ],
+        [
+          7,
+          9,
+          12,
+          8,
+          11,
+          6
+        ],
+        [
+          11,
+          11,
+          8,
+          12,
+          7,
+          12
+        ],
+        [
+          9,
+          10,
+          11,
+          12,
+          10,
+          12
+        ],
+        [
+          9,
+          10,
+          9,
+          6,
+          10,
+          5
         ],
         [
           9,
           12,
+          9,
+          6,
+          9,
+          8
+        ],
+        [
           10,
+          9,
+          1,
+          11,
+          8,
+          11
+        ],
+        [
+          7,
+          11,
+          8,
+          11,
+          8,
+          10
+        ],
+        [
+          11,
+          8,
+          6,
+          8,
+          8,
+          10
+        ],
+        [
+          12,
+          10,
+          12,
+          1,
+          1,
+          12
+        ],
+        [
+          12,
+          10,
+          10,
+          7,
+          12,
+          12
+        ],
+        [
+          8,
+          12,
+          11,
+          10,
+          11,
+          7
+        ],
+        [
+          6,
+          12,
+          11,
+          11,
+          11,
+          8
+        ],
+        [
+          6,
+          11,
+          8,
+          11,
+          7,
+          10
+        ],
+        [
+          9,
+          11,
+          1,
+          12,
+          10,
+          10
+        ],
+        [
+          9,
+          1,
+          12,
           7,
           10,
           4
         ],
         [
-          5,
-          6,
-          12,
-          1,
-          1,
-          9
-        ],
-        [
           8,
-          1,
-          6,
-          9,
-          5,
-          1
-        ],
-        [
-          1,
-          5,
-          11,
-          6,
-          4,
-          7
-        ],
-        [
+          8,
           7,
-          4,
-          11,
-          11,
-          4,
-          7
-        ],
-        [
-          12,
+          5,
           8,
-          8,
-          4,
-          6,
           11
         ],
         [
-          12,
           10,
-          4,
-          8,
-          12,
-          5
-        ],
-        [
-          9,
-          7,
-          1,
-          12,
-          7,
-          4
-        ],
-        [
-          9,
-          7,
-          12,
-          9,
           10,
-          4
-        ],
-        [
-          5,
-          9,
-          9,
-          9,
-          1,
-          9
-        ],
-        [
-          1,
           6,
           5,
-          7,
-          9,
+          12,
           9
         ],
         [
           10,
-          5,
+          12,
           8,
-          5,
-          6,
+          11,
+          11,
           1
         ],
         [
-          6,
-          5,
-          4,
-          5,
-          5,
-          12
-        ],
-        [
-          8,
+          11,
           12,
+          11,
           6,
-          10,
-          5,
+          6,
           10
         ],
         [
-          8,
-          11,
           12,
-          10,
-          11,
-          6
-        ],
-        [
-          7,
-          1,
-          7,
-          1,
-          2,
-          11
-        ],
-        [
-          5,
-          8,
-          10,
-          7,
-          8,
-          5
-        ],
-        [
-          11,
+          9,
+          9,
           6,
+          10,
+          10
+        ],
+        [
+          12,
           5,
-          2,
+          10,
           4,
+          9,
           8
         ],
         [
-          12,
-          10,
-          9,
-          8,
-          6,
-          12
-        ],
-        [
-          4,
-          4,
-          8,
-          6,
-          9,
-          10
-        ],
-        [
-          6,
-          12,
           1,
-          12,
-          1,
+          6,
+          5,
+          9,
+          9,
           6
         ],
         [
+          4,
+          6,
+          5,
+          12,
           7,
+          6
+        ],
+        [
+          4,
           1,
+          8,
+          12,
+          8,
+          9
+        ],
+        [
           11,
-          1,
+          11,
+          11,
+          10,
+          8,
+          9
+        ],
+        [
+          12,
+          8,
+          10,
           7,
-          1
+          12,
+          7
+        ],
+        [
+          9,
+          8,
+          7,
+          6,
+          5,
+          10
+        ],
+        [
+          9,
+          10,
+          12,
+          6,
+          5,
+          10
         ],
         [
           10,
+          10,
+          8,
+          11,
+          10,
+          10
+        ],
+        [
+          10,
+          5,
+          8,
+          11,
+          11,
+          12
+        ],
+        [
+          11,
+          11,
           9,
-          4,
+          11,
+          11,
+          8
+        ],
+        [
+          7,
+          11,
+          9,
+          10,
+          8,
+          7
+        ],
+        [
+          7,
+          11,
+          11,
+          10,
+          7,
+          4
+        ],
+        [
+          8,
+          7,
           11,
           12,
-          11
+          12,
+          4
         ],
         [
-          1,
-          11,
+          8,
+          7,
+          8,
+          12,
+          12,
+          12
+        ],
+        [
+          10,
+          8,
+          5,
           6,
+          10,
+          10
+        ],
+        [
+          9,
+          12,
+          5,
+          6,
+          11,
+          10
+        ],
+        [
+          9,
+          11,
           4,
           10,
-          7
+          11,
+          10
+        ],
+        [
+          4,
+          10,
+          4,
+          10,
+          9,
+          4
+        ],
+        [
+          4,
+          10,
+          8,
+          11,
+          8,
+          4
+        ],
+        [
+          11,
+          6,
+          9,
+          8,
+          6,
+          6
+        ],
+        [
+          10,
+          6,
+          10,
+          4,
+          6,
+          6
         ]
       ],
       "weights": [
@@ -15955,20 +15953,20 @@ const data = {
       ],
       "drop_weights": [
         [
-          16400,
-          12501,
-          16700,
-          18098,
-          13701,
-          20700
+          16798,
+          35987,
+          18256,
+          14523,
+          26597,
+          13007
         ],
         [
-          3100,
-          1400,
-          2600,
-          4000,
-          3000,
-          4400
+          2566,
+          3733,
+          2158,
+          2391,
+          4083,
+          1983
         ],
         [
           0,
@@ -15979,76 +15977,76 @@ const data = {
           0
         ],
         [
-          42800,
-          46505,
-          42200,
-          43696,
-          60906,
-          68000
+          9782,
+          11458,
+          15084,
+          25709,
+          14179,
+          17130
         ],
         [
-          86200,
-          86709,
-          74600,
-          83792,
-          96110,
-          103900
+          20950,
+          20056,
+          45212,
+          38740,
+          14731,
+          14230
         ],
         [
-          73600,
-          83608,
-          83900,
-          95490,
-          109911,
-          99500
+          19086,
+          13602,
+          38205,
+          37517,
+          21249,
+          24727
         ],
         [
-          80700,
-          84609,
-          94400,
-          128287,
-          96210,
-          97000
+          225601,
+          194810,
+          80670,
+          169538,
+          207114,
+          207188
         ],
         [
-          103900,
-          108611,
-          114400,
-          108589,
-          131013,
-          123600
+          154484,
+          113485,
+          368770,
+          195702,
+          228664,
+          217653
         ],
         [
-          129400,
-          132513,
-          150100,
-          115788,
-          125013,
-          118900
+          43892,
+          29911,
+          57934,
+          14167,
+          25548,
+          26357
         ],
         [
-          129400,
-          138214,
-          138200,
-          136786,
-          113511,
-          128700
+          170889,
+          265931,
+          166113,
+          208263,
+          231014,
+          281567
         ],
         [
-          156300,
-          143414,
-          129700,
-          130987,
-          121212,
-          124200
+          291009,
+          288764,
+          175456,
+          251660,
+          197924,
+          172945
         ],
         [
-          178200,
-          161916,
-          153200,
-          134487,
-          129413,
-          111100
+          44943,
+          22263,
+          32142,
+          41790,
+          28897,
+          23213
         ]
       ],
       "reel_lengths": [
@@ -16064,2403 +16062,2403 @@ const data = {
       "symbols": [
         [
           12,
-          12,
-          12,
-          12,
-          11,
-          11
-        ],
-        [
-          12,
-          11,
-          12,
-          11,
-          12,
-          12
-        ],
-        [
-          11,
-          11,
-          10,
-          10,
-          10,
-          10
-        ],
-        [
-          10,
-          10,
-          10,
-          9,
-          10,
-          10
-        ],
-        [
-          9,
-          10,
-          11,
-          9,
-          9,
-          8
-        ],
-        [
-          9,
-          8,
-          9,
-          6,
-          6,
-          9
-        ],
-        [
-          8,
-          12,
-          8,
-          12,
-          11,
-          11
-        ],
-        [
-          12,
-          12,
-          8,
-          11,
-          12,
-          12
-        ],
-        [
-          11,
-          11,
-          12,
-          10,
-          12,
-          12
-        ],
-        [
-          10,
-          9,
-          10,
-          7,
-          10,
-          10
-        ],
-        [
-          5,
-          10,
-          11,
-          9,
-          9,
-          8
-        ],
-        [
-          9,
-          8,
-          9,
-          6,
-          8,
-          8
-        ],
-        [
-          8,
-          6,
-          9,
-          12,
-          11,
-          11
-        ],
-        [
-          8,
-          12,
-          8,
-          11,
-          6,
-          11
-        ],
-        [
-          12,
-          11,
-          12,
-          10,
-          12,
-          12
-        ],
-        [
-          11,
-          11,
-          10,
-          7,
-          10,
-          10
-        ],
-        [
-          10,
-          11,
-          11,
-          7,
-          9,
-          9
-        ],
-        [
-          9,
-          10,
-          11,
-          9,
-          8,
-          8
-        ],
-        [
-          7,
-          9,
-          9,
-          12,
-          8,
-          6
-        ],
-        [
-          8,
-          12,
-          9,
-          11,
-          11,
-          6
-        ],
-        [
-          12,
-          8,
-          12,
-          10,
-          12,
-          11
-        ],
-        [
-          12,
-          6,
-          12,
-          6,
-          10,
-          11
-        ],
-        [
-          11,
-          11,
-          10,
-          7,
-          9,
-          12
-        ],
-        [
-          10,
-          10,
-          11,
-          9,
-          6,
-          10
-        ],
-        [
-          9,
-          9,
-          8,
-          12,
-          6,
-          8
-        ],
-        [
-          8,
-          12,
-          8,
-          11,
-          11,
-          9
-        ],
-        [
-          5,
-          8,
-          9,
-          10,
-          12,
-          6
-        ],
-        [
-          12,
-          6,
-          12,
-          6,
-          10,
-          11
-        ],
-        [
-          12,
-          11,
-          10,
-          6,
-          9,
-          12
-        ],
-        [
-          11,
-          11,
-          11,
-          9,
-          8,
-          12
-        ],
-        [
-          11,
-          10,
-          7,
-          12,
-          8,
-          10
-        ],
-        [
-          10,
-          12,
-          6,
-          11,
-          11,
-          8
-        ],
-        [
-          9,
-          8,
-          9,
-          10,
-          12,
-          8
-        ],
-        [
-          8,
-          8,
-          12,
-          5,
-          12,
-          11
-        ],
-        [
-          8,
-          9,
-          12,
-          6,
-          10,
-          11
-        ],
-        [
-          12,
-          11,
-          12,
-          6,
-          9,
-          12
-        ],
-        [
-          11,
-          10,
-          10,
-          12,
-          6,
-          10
-        ],
-        [
-          10,
-          10,
-          10,
-          12,
-          6,
-          9
-        ],
-        [
-          9,
-          12,
-          11,
-          11,
-          11,
-          9
-        ],
-        [
-          7,
-          6,
-          9,
-          10,
-          12,
-          8
-        ],
-        [
-          6,
-          6,
-          6,
-          9,
-          10,
-          11
-        ],
-        [
-          12,
-          11,
-          12,
-          7,
-          9,
-          12
-        ],
-        [
-          12,
-          9,
-          7,
-          5,
-          9,
-          10
-        ],
-        [
-          11,
-          10,
-          10,
-          12,
-          8,
-          10
-        ],
-        [
-          10,
-          12,
-          11,
-          12,
-          11,
-          6
-        ],
-        [
-          9,
-          8,
-          9,
-          11,
-          11,
-          8
-        ],
-        [
-          8,
-          7,
-          8,
-          10,
-          12,
-          11
-        ],
-        [
-          7,
-          11,
-          12,
-          10,
-          10,
-          12
-        ],
-        [
-          12,
-          11,
-          6,
-          9,
-          9,
-          9
-        ],
-        [
-          11,
-          10,
-          10,
-          9,
-          9,
-          10
-        ],
-        [
-          11,
-          10,
-          11,
-          12,
-          6,
-          10
-        ],
-        [
-          10,
-          12,
-          9,
-          12,
-          11,
-          6
-        ],
-        [
-          9,
-          12,
-          8,
-          11,
-          12,
-          11
-        ],
-        [
-          9,
-          9,
-          8,
-          10,
-          10,
-          11
-        ],
-        [
-          12,
-          11,
-          12,
-          10,
-          7,
-          12
-        ],
-        [
-          6,
-          8,
-          12,
-          9,
-          8,
-          5
-        ],
-        [
-          11,
-          10,
-          10,
-          6,
-          5,
-          5
-        ],
-        [
-          10,
-          5,
-          10,
-          12,
-          11,
-          10
-        ],
-        [
-          10,
-          5,
-          11,
-          11,
-          11,
-          6
-        ],
-        [
-          8,
-          12,
-          9,
-          11,
-          12,
-          11
-        ],
-        [
-          12,
-          12,
-          5,
-          10,
-          12,
-          12
-        ],
-        [
-          12,
-          11,
-          5,
-          9,
-          10,
-          8
-        ],
-        [
-          11,
-          10,
-          12,
-          7,
-          10,
-          9
-        ],
-        [
-          5,
-          9,
-          10,
-          12,
-          8,
-          10
-        ],
-        [
-          10,
-          9,
-          11,
-          6,
-          8,
-          6
-        ],
-        [
-          8,
-          6,
-          9,
-          6,
-          11,
-          11
-        ],
-        [
-          8,
-          12,
-          9,
-          11,
-          11,
-          12
-        ],
-        [
-          12,
-          11,
-          7,
-          10,
-          12,
-          8
-        ],
-        [
-          11,
-          10,
-          7,
-          5,
-          10,
-          9
-        ],
-        [
-          6,
-          7,
-          12,
-          12,
-          7,
-          10
-        ],
-        [
-          10,
-          8,
-          11,
-          9,
-          6,
-          7
-        ],
-        [
-          9,
-          5,
-          11,
-          8,
-          6,
-          11
-        ],
-        [
-          7,
-          12,
-          10,
-          11,
-          11,
-          11
-        ],
-        [
-          12,
-          12,
-          9,
-          10,
-          12,
-          12
-        ],
-        [
-          11,
-          10,
-          9,
-          7,
-          10,
-          9
-        ],
-        [
-          5,
-          11,
-          9,
-          12,
-          7,
-          10
-        ],
-        [
-          10,
-          8,
-          12,
-          12,
-          9,
-          5
-        ],
-        [
-          10,
-          8,
-          11,
-          8,
-          5,
-          6
-        ],
-        [
-          6,
-          9,
-          10,
-          11,
-          11,
-          6
-        ],
-        [
-          12,
-          9,
-          10,
-          10,
-          12,
-          12
-        ],
-        [
-          11,
-          12,
-          6,
-          5,
-          10,
-          12
-        ],
-        [
-          11,
-          10,
-          6,
-          9,
-          7,
-          12
-        ],
-        [
-          9,
-          10,
-          12,
-          12,
-          7,
-          11
-        ],
-        [
-          10,
-          11,
-          11,
-          7,
-          9,
-          10
-        ],
-        [
-          5,
-          7,
-          5,
-          11,
-          11,
-          8
-        ],
-        [
-          12,
-          6,
-          10,
-          10,
-          12,
-          8
-        ],
-        [
-          7,
-          12,
-          8,
-          10,
-          10,
-          7
-        ],
-        [
-          7,
-          5,
-          7,
-          5,
-          5,
-          12
-        ],
-        [
-          11,
-          5,
-          12,
-          5,
-          6,
-          12
-        ],
-        [
-          10,
-          11,
-          11,
-          12,
-          8,
-          11
-        ],
-        [
-          9,
-          10,
-          11,
-          11,
-          11,
-          10
-        ],
-        [
-          12,
-          10,
-          10,
-          11,
-          11,
-          5
-        ],
-        [
-          5,
-          12,
-          6,
-          10,
-          11,
-          9
-        ],
-        [
-          6,
-          7,
-          6,
-          9,
-          12,
-          8
-        ],
-        [
-          6,
-          7,
-          12,
-          9,
-          10,
-          8
-        ],
-        [
-          11,
-          11,
-          5,
-          12,
-          9,
-          11
-        ],
-        [
-          10,
-          6,
-          5,
-          6,
-          9,
-          12
-        ],
-        [
-          12,
-          10,
-          10,
-          11,
-          5,
-          10
-        ],
-        [
-          8,
-          12,
-          11,
-          10,
-          11,
-          9
-        ],
-        [
-          9,
-          8,
-          8,
-          8,
-          11,
-          6
-        ],
-        [
-          5,
-          9,
-          12,
-          7,
-          12,
-          5
-        ],
-        [
-          5,
-          11,
-          7,
-          12,
-          10,
-          11
-        ],
-        [
-          11,
-          6,
-          9,
-          12,
-          6,
-          12
-        ],
-        [
-          12,
-          10,
-          10,
-          12,
-          8,
-          10
-        ],
-        [
-          10,
-          12,
-          11,
-          11,
-          7,
-          7
-        ],
-        [
-          7,
-          5,
-          8,
-          10,
-          11,
-          9
-        ],
-        [
-          8,
-          9,
-          12,
-          6,
-          12,
-          5
-        ],
-        [
-          6,
-          11,
-          7,
-          6,
-          10,
-          11
-        ],
-        [
-          11,
-          6,
-          5,
-          8,
-          6,
-          12
-        ],
-        [
-          11,
-          6,
-          10,
-          12,
-          8,
-          10
-        ],
-        [
-          12,
-          12,
-          11,
-          11,
-          5,
-          6
-        ],
-        [
-          10,
-          10,
-          6,
-          10,
-          5,
-          4
-        ],
-        [
-          8,
-          8,
-          12,
-          10,
-          12,
-          7
-        ],
-        [
-          7,
-          11,
-          12,
-          9,
-          11,
-          11
-        ],
-        [
-          9,
-          11,
-          8,
-          7,
-          10,
-          11
-        ],
-        [
-          11,
-          7,
-          10,
-          12,
-          8,
-          12
-        ],
-        [
-          12,
-          12,
-          11,
-          11,
-          8,
-          10
-        ],
-        [
-          10,
-          12,
-          9,
-          8,
-          7,
-          5
-        ],
-        [
-          4,
-          10,
-          7,
-          10,
-          12,
-          7
-        ],
-        [
-          8,
-          8,
-          12,
-          5,
-          11,
-          8
-        ],
-        [
-          6,
-          8,
-          8,
-          6,
-          11,
-          8
-        ],
-        [
-          11,
-          11,
-          10,
-          12,
-          10,
-          11
-        ],
-        [
-          12,
-          5,
-          11,
-          11,
-          10,
-          11
-        ],
-        [
-          10,
-          12,
-          9,
-          9,
-          6,
-          12
-        ],
-        [
-          10,
-          12,
-          7,
-          9,
-          12,
-          10
-        ],
-        [
-          4,
-          10,
-          12,
-          10,
-          9,
-          4
-        ],
-        [
-          5,
-          7,
-          12,
-          7,
-          11,
-          6
-        ],
-        [
-          5,
-          7,
-          10,
-          7,
-          5,
-          9
-        ],
-        [
-          12,
-          11,
-          11,
-          11,
-          10,
-          9
-        ],
-        [
-          11,
-          9,
-          6,
-          11,
-          7,
-          11
-        ],
-        [
-          11,
-          12,
-          5,
-          12,
-          12,
-          12
-        ],
-        [
-          10,
-          6,
-          9,
-          12,
-          12,
-          10
-        ],
-        [
-          7,
-          5,
-          12,
-          10,
-          11,
-          4
-        ],
-        [
-          9,
-          10,
-          10,
-          8,
-          4,
-          7
-        ],
-        [
-          12,
-          11,
-          11,
-          5,
-          10,
-          5
-        ],
-        [
-          6,
-          9,
-          6,
-          5,
-          9,
-          11
-        ],
-        [
-          11,
-          9,
-          7,
-          11,
-          6,
-          12
-        ],
-        [
-          11,
-          12,
-          5,
-          11,
-          12,
-          10
-        ],
-        [
-          11,
-          5,
-          12,
-          11,
-          11,
-          6
-        ],
-        [
-          7,
-          5,
-          10,
-          12,
-          5,
-          6
-        ],
-        [
-          12,
-          8,
-          10,
-          10,
-          10,
-          7
-        ],
-        [
-          4,
-          7,
-          11,
-          6,
-          8,
-          7
-        ],
-        [
-          8,
-          11,
-          11,
-          4,
-          7,
-          11
-        ],
-        [
-          9,
-          12,
-          11,
-          8,
-          12,
-          12
-        ],
-        [
-          11,
-          6,
-          12,
-          11,
-          11,
-          10
-        ],
-        [
-          10,
-          10,
-          12,
-          12,
-          6,
-          10
-        ],
-        [
-          12,
-          8,
-          8,
-          12,
-          6,
-          4
-        ],
-        [
-          7,
-          9,
-          10,
-          10,
-          10,
-          5
-        ],
-        [
-          4,
-          7,
-          6,
-          10,
-          10,
-          11
-        ],
-        [
-          9,
-          7,
-          5,
-          5,
-          12,
-          11
-        ],
-        [
-          11,
-          12,
-          7,
-          11,
-          11,
-          11
-        ],
-        [
-          10,
-          6,
-          7,
-          11,
-          4,
-          12
-        ],
-        [
-          12,
-          6,
-          12,
-          12,
-          4,
-          12
-        ],
-        [
-          8,
-          10,
-          8,
-          4,
-          9,
-          9
-        ],
-        [
-          5,
-          11,
-          9,
-          8,
-          10,
-          8
-        ],
-        [
-          5,
-          9,
-          4,
-          8,
-          12,
-          5
-        ],
-        [
-          11,
-          12,
-          10,
-          6,
-          11,
-          11
-        ],
-        [
-          6,
-          8,
-          11,
-          11,
-          7,
-          6
-        ],
-        [
-          12,
-          8,
-          12,
-          11,
-          8,
-          6
-        ],
-        [
-          7,
-          4,
-          5,
-          12,
-          9,
-          12
-        ],
-        [
-          7,
-          4,
-          5,
-          9,
-          5,
-          10
-        ],
-        [
-          4,
-          5,
-          8,
-          7,
-          12,
-          9
-        ],
-        [
-          11,
-          12,
-          9,
-          5,
-          12,
-          9
-        ],
-        [
-          9,
-          11,
-          6,
-          10,
-          12,
-          8
-        ],
-        [
-          12,
-          10,
-          6,
-          11,
-          11,
-          4
-        ],
-        [
-          12,
-          9,
-          12,
-          11,
-          10,
-          12
-        ],
-        [
-          6,
-          7,
-          10,
-          12,
-          5,
-          10
-        ],
-        [
-          8,
-          5,
-          11,
-          4,
-          9,
-          5
-        ],
-        [
-          8,
-          12,
-          9,
-          4,
-          9,
-          11
-        ],
-        [
-          10,
-          11,
-          7,
-          9,
-          6,
-          7
-        ],
-        [
-          11,
-          10,
-          4,
-          6,
-          7,
-          4
-        ],
-        [
-          12,
-          6,
-          4,
-          6,
-          11,
-          12
-        ],
-        [
-          12,
-          9,
-          12,
-          12,
-          8,
-          8
-        ],
-        [
-          12,
-          9,
-          8,
-          11,
-          10,
-          6
-        ],
-        [
-          4,
-          12,
-          6,
-          7,
-          10,
-          6
-        ],
-        [
-          4,
-          12,
-          7,
-          10,
-          4,
-          9
-        ],
-        [
-          5,
-          7,
-          9,
-          8,
-          12,
-          11
-        ],
-        [
-          6,
-          6,
-          9,
-          9,
-          7,
-          4
-        ],
-        [
-          6,
-          8,
-          12,
-          12,
-          6,
-          10
-        ],
-        [
-          12,
-          11,
-          5,
-          12,
-          8,
-          10
-        ],
-        [
-          11,
-          5,
-          11,
-          11,
-          8,
-          8
-        ],
-        [
-          11,
-          12,
-          11,
-          7,
-          4,
-          8
-        ],
-        [
-          9,
-          12,
-          8,
-          5,
-          5,
-          12
-        ],
-        [
-          10,
-          4,
-          10,
-          6,
-          11,
-          5
-        ],
-        [
-          7,
-          10,
-          12,
-          8,
-          10,
-          7
-        ],
-        [
-          12,
-          8,
-          6,
-          12,
-          7,
-          7
-        ],
-        [
-          5,
-          6,
-          6,
-          11,
-          9,
-          4
-        ],
-        [
-          5,
-          6,
-          5,
-          10,
-          6,
-          4
-        ],
-        [
-          9,
-          12,
-          7,
-          4,
-          4,
-          11
-        ],
-        [
-          9,
-          11,
-          8,
-          9,
-          4,
-          9
-        ],
-        [
-          8,
-          11,
-          8,
-          5,
-          5,
-          9
-        ],
-        [
-          8,
-          10,
-          12,
-          12,
-          12,
-          5
-        ],
-        [
-          12,
-          7,
-          12,
-          12,
-          11,
-          12
-        ],
-        [
-          10,
-          4,
-          4,
-          11,
-          10,
-          7
-        ],
-        [
-          10,
-          4,
-          4,
-          11,
-          7,
-          7
-        ],
-        [
-          7,
-          12,
-          10,
-          7,
-          7,
-          6
-        ],
-        [
-          11,
-          5,
-          11,
-          6,
-          6,
-          8
-        ],
-        [
-          4,
-          10,
-          11,
-          4,
-          8,
-          11
-        ],
-        [
-          4,
-          9,
-          5,
-          4,
-          11,
-          10
-        ],
-        [
-          12,
-          7,
-          9,
-          12,
-          12,
-          5
-        ],
-        [
-          6,
-          8,
-          12,
-          11,
-          9,
-          5
-        ],
-        [
-          6,
-          8,
-          7,
-          11,
-          5,
-          12
-        ],
-        [
-          9,
-          12,
-          10,
-          5,
-          6,
-          4
-        ],
-        [
-          8,
-          5,
-          10,
-          7,
-          8,
-          6
-        ],
-        [
-          10,
-          6,
-          4,
-          9,
-          10,
-          9
-        ],
-        [
-          12,
-          6,
-          4,
-          12,
-          10,
-          8
-        ],
-        [
-          7,
-          10,
-          6,
-          10,
-          4,
-          10
-        ],
-        [
-          5,
-          11,
-          12,
-          10,
-          5,
-          10
-        ],
-        [
-          11,
-          12,
-          9,
-          10,
-          12,
-          11
-        ],
-        [
-          9,
-          12,
-          5,
-          11,
-          11,
-          12
-        ],
-        [
-          9,
-          7,
-          7,
-          8,
-          9,
-          12
-        ],
-        [
-          12,
-          4,
-          7,
-          8,
-          9,
-          6
-        ],
-        [
-          7,
-          9,
-          8,
-          12,
-          7,
-          7
-        ],
-        [
-          4,
-          5,
-          12,
-          6,
-          8,
-          9
-        ],
-        [
-          10,
-          11,
-          6,
-          5,
-          6,
-          11
-        ],
-        [
-          6,
-          11,
-          5,
-          11,
-          5,
-          11
-        ],
-        [
-          8,
-          12,
-          9,
-          9,
-          5,
-          8
-        ],
-        [
-          12,
-          4,
-          11,
-          7,
-          12,
-          5
-        ],
-        [
-          12,
-          8,
-          11,
-          12,
-          11,
-          4
-        ],
-        [
-          5,
-          10,
-          8,
-          6,
-          4,
-          4
-        ],
-        [
-          11,
-          10,
-          10,
-          8,
-          6,
-          10
-        ],
-        [
-          7,
-          5,
-          5,
-          11,
-          9,
-          6
-        ],
-        [
-          6,
-          12,
+          1,
           6,
-          4,
-          7,
-          7
-        ],
-        [
-          6,
-          7,
-          4,
-          5,
-          7,
-          7
-        ],
-        [
-          8,
-          7,
-          12,
-          12,
-          12,
-          9
-        ],
-        [
-          4,
-          9,
-          9,
-          7,
-          4,
-          8
-        ],
-        [
-          5,
-          6,
-          9,
-          9,
-          10,
-          5
-        ],
-        [
-          12,
-          8,
-          8,
-          9,
-          10,
-          12
-        ],
-        [
-          10,
-          12,
-          7,
-          11,
-          8,
-          12
-        ],
-        [
-          10,
-          5,
-          7,
-          6,
-          11,
-          10
-        ],
-        [
-          11,
-          4,
-          10,
-          5,
-          9,
-          10
-        ],
-        [
           8,
-          4,
-          12,
-          12,
-          9,
-          9
-        ],
-        [
-          8,
-          9,
-          6,
-          8,
-          4,
-          11
-        ],
-        [
-          7,
-          9,
-          8,
-          4,
-          12,
-          8
-        ],
-        [
-          9,
-          12,
-          4,
-          11,
-          12,
-          6
-        ],
-        [
-          9,
-          12,
-          11,
-          11,
-          8,
-          4
-        ],
-        [
-          5,
-          12,
-          10,
-          7,
-          6,
-          5
-        ],
-        [
-          12,
-          10,
-          5,
-          7,
-          6,
-          5
-        ],
-        [
-          4,
-          10,
-          9,
-          10,
-          5,
-          11
-        ],
-        [
-          4,
           2,
-          8,
-          9,
-          11,
-          8
-        ],
-        [
-          11,
-          11,
-          4,
-          6,
-          11,
-          9
-        ],
-        [
-          6,
-          11,
-          11,
-          12,
-          8,
           6
         ],
         [
-          10,
           12,
+          11,
           6,
-          4,
-          2,
-          12
-        ],
-        [
-          10,
-          7,
-          6,
-          5,
-          4,
-          4
-        ],
-        [
-          10,
           8,
-          12,
           5,
-          10,
-          7
+          6
         ],
         [
           5,
-          8,
-          7,
-          10,
-          7,
-          2
-        ],
-        [
-          7,
+          11,
           6,
+          11,
           5,
-          10,
+          8
+        ],
+        [
           5,
+          11,
+          11,
+          11,
+          5,
+          8
+        ],
+        [
+          9,
+          9,
+          11,
+          7,
+          9,
           10
         ],
         [
-          7,
-          5,
-          10,
-          8,
-          5,
-          8
-        ],
-        [
-          11,
-          12,
           9,
-          7,
-          6,
-          6
-        ],
-        [
-          12,
           9,
           8,
-          11,
+          7,
           9,
-          9
+          10
         ],
         [
-          12,
-          7,
-          2,
-          6,
           4,
+          5,
+          8,
+          7,
+          7,
           12
         ],
         [
-          4,
-          2,
+          10,
+          5,
+          8,
+          5,
           7,
-          2,
-          4,
+          11
+        ],
+        [
+          10,
+          12,
+          5,
+          5,
+          11,
           11
         ],
         [
           6,
-          4,
+          12,
+          5,
           11,
-          4,
           11,
-          7
+          6
         ],
         [
-          5,
           6,
           4,
+          1,
+          11,
+          12,
+          6
+        ],
+        [
+          8,
           4,
-          11,
-          5
-        ],
-        [
-          2,
-          12,
-          12,
-          8,
-          8,
-          5
-        ],
-        [
-          11,
-          5,
           10,
-          8,
+          11,
           12,
-          2
+          8
         ],
         [
           8,
-          7,
-          10,
-          9,
-          12,
-          4
-        ],
-        [
-          9,
           2,
           10,
+          10,
           12,
-          7,
-          4
+          8
+        ],
+        [
+          4,
+          11,
+          9,
+          10,
+          6,
+          12
+        ],
+        [
+          4,
+          11,
+          9,
+          12,
+          6,
+          12
         ],
         [
           6,
+          10,
+          12,
+          12,
+          8,
+          9
+        ],
+        [
+          6,
+          10,
+          12,
+          6,
+          10,
+          9
+        ],
+        [
+          9,
+          9,
+          4,
+          6,
+          10,
+          6
+        ],
+        [
+          9,
+          9,
+          4,
+          8,
+          12,
+          6
+        ],
+        [
+          12,
+          12,
+          8,
+          8,
+          12,
+          5
+        ],
+        [
+          12,
+          12,
+          8,
+          12,
+          4,
+          5
+        ],
+        [
+          11,
+          12,
+          5,
+          12,
+          4,
+          5
+        ],
+        [
+          11,
+          7,
+          5,
+          5,
+          9,
+          12
+        ],
+        [
+          5,
+          7,
+          6,
+          5,
+          9,
+          12
+        ],
+        [
+          5,
+          6,
+          6,
+          11,
+          11,
+          9
+        ],
+        [
+          12,
+          6,
+          9,
+          11,
+          11,
+          9
+        ],
+        [
+          12,
+          11,
+          9,
+          12,
+          6,
+          7
+        ],
+        [
+          7,
+          8,
+          7,
+          12,
+          6,
+          10
+        ],
+        [
+          7,
+          8,
+          7,
+          6,
+          5,
+          10
+        ],
+        [
+          10,
+          10,
+          12,
+          6,
+          5,
+          10
+        ],
+        [
+          9,
+          10,
+          12,
+          5,
+          10,
+          9
+        ],
+        [
+          9,
+          4,
+          10,
+          5,
+          10,
+          9
+        ],
+        [
+          12,
+          4,
+          10,
+          11,
+          10,
+          12
+        ],
+        [
+          12,
+          9,
+          8,
+          11,
+          7,
+          12
+        ],
+        [
+          5,
+          9,
+          8,
+          2,
+          7,
+          10
+        ],
+        [
+          5,
+          12,
+          2,
+          4,
+          12,
+          10
+        ],
+        [
+          7,
+          12,
+          11,
+          4,
+          12,
+          8
+        ],
+        [
+          7,
+          11,
+          11,
+          4,
+          8,
+          8
+        ],
+        [
+          11,
           11,
           5,
           5,
+          8,
+          6
+        ],
+        [
+          11,
+          11,
+          5,
+          5,
+          9,
+          6
+        ],
+        [
+          9,
+          5,
+          6,
+          12,
+          9,
+          9
+        ],
+        [
+          8,
+          5,
+          6,
+          6,
+          9,
+          9
+        ],
+        [
+          8,
           2,
+          6,
+          6,
+          11,
+          12
+        ],
+        [
+          5,
+          10,
+          9,
+          8,
+          11,
+          12
+        ],
+        [
+          5,
+          10,
+          9,
+          8,
+          6,
+          11
+        ],
+        [
+          12,
+          10,
+          12,
+          8,
+          6,
+          11
+        ],
+        [
+          12,
+          12,
+          12,
+          1,
+          10,
+          9
+        ],
+        [
+          7,
+          12,
+          4,
+          12,
+          10,
+          9
+        ],
+        [
+          7,
+          12,
+          4,
+          12,
+          12,
+          10
+        ],
+        [
+          9,
+          9,
+          8,
+          11,
+          12,
+          10
+        ],
+        [
+          9,
+          9,
+          8,
+          11,
+          5,
+          7
+        ],
+        [
+          12,
+          4,
+          10,
+          6,
+          5,
           1
         ],
         [
           12,
-          9,
-          11,
-          5,
+          4,
           10,
-          7
-        ],
-        [
-          5,
-          12,
           6,
           2,
-          8,
-          9
-        ],
-        [
-          11,
-          4,
-          4,
-          1,
-          6,
-          2
-        ],
-        [
-          11,
-          8,
-          8,
-          7,
-          9,
-          11
-        ],
-        [
-          4,
-          6,
-          12,
-          7,
-          7,
-          6
-        ],
-        [
-          2,
-          10,
-          7,
-          9,
-          5,
-          12
-        ],
-        [
-          7,
-          5,
-          5,
-          12,
-          2,
-          8
-        ],
-        [
-          7,
-          12,
-          2,
-          11,
-          10,
-          10
-        ],
-        [
-          8,
-          4,
-          9,
-          10,
-          10,
-          9
-        ],
-        [
-          9,
-          8,
-          11,
-          10,
-          10,
-          9
-        ],
-        [
-          1,
-          11,
-          11,
-          6,
-          6,
           5
         ],
         [
           12,
-          9,
-          7,
-          8,
-          8,
-          2
-        ],
-        [
-          10,
-          1,
-          5,
-          12,
-          9,
-          4
-        ],
-        [
-          4,
-          5,
-          5,
-          12,
-          2,
-          7
-        ],
-        [
-          2,
-          6,
-          2,
           11,
-          1,
-          6
-        ],
-        [
           5,
-          12,
-          1,
-          2,
-          7,
-          1
-        ],
-        [
-          6,
-          10,
-          12,
-          9,
-          4,
-          12
-        ],
-        [
-          8,
-          10,
-          12,
-          1,
-          12,
-          8
-        ],
-        [
-          9,
-          10,
-          4,
-          6,
-          12,
-          10
-        ],
-        [
-          10,
-          2,
-          8,
-          4,
-          5,
-          10
-        ],
-        [
-          10,
-          7,
-          8,
-          5,
-          5,
-          10
-        ],
-        [
-          12,
-          12,
-          9,
-          11,
-          11,
-          11
-        ],
-        [
-          12,
-          8,
-          6,
-          10,
-          6,
-          12
-        ],
-        [
-          1,
-          6,
-          2,
-          7,
-          2,
-          12
-        ],
-        [
-          9,
-          5,
-          7,
-          7,
-          4,
-          7
-        ],
-        [
-          9,
-          5,
-          7,
-          9,
-          1,
-          6
-        ],
-        [
-          2,
-          9,
-          10,
-          9,
-          9,
-          4
-        ],
-        [
-          7,
-          4,
-          10,
-          8,
-          7,
-          8
-        ],
-        [
-          11,
-          11,
-          4,
-          8,
-          7,
-          5
-        ],
-        [
-          4,
-          1,
-          6,
-          2,
-          8,
-          2
-        ],
-        [
-          8,
-          2,
-          1,
-          4,
-          11,
-          1
-        ],
-        [
-          6,
-          7,
-          9,
-          6,
-          11,
-          11
-        ],
-        [
-          5,
-          12,
-          9,
-          1,
-          5,
-          4
-        ],
-        [
-          1,
-          4,
-          11,
-          10,
-          12,
-          6
-        ],
-        [
-          2,
-          9,
-          2,
           5,
           9,
           5
         ],
         [
-          4,
-          8,
-          4,
-          2,
-          2,
-          8
+          5,
+          11,
+          5,
+          5,
+          9,
+          5
+        ],
+        [
+          5,
+          7,
+          9,
+          12,
+          12,
+          10
         ],
         [
           11,
-          1,
-          1,
-          4,
-          8,
-          9
+          7,
+          9,
+          12,
+          12,
+          10
         ],
         [
-          7,
-          2,
+          11,
+          6,
+          12,
+          10,
+          6,
+          11
+        ],
+        [
+          11,
+          6,
+          12,
+          10,
+          6,
+          11
+        ],
+        [
+          12,
+          12,
           6,
           6,
           10,
           11
         ],
         [
-          8,
-          11,
           12,
-          1,
-          4,
-          1
+          12,
+          6,
+          6,
+          10,
+          9
         ],
         [
+          6,
+          10,
+          6,
+          4,
+          10,
+          9
+        ],
+        [
+          6,
+          10,
+          7,
+          4,
+          11,
+          10
+        ],
+        [
+          9,
+          9,
+          7,
+          4,
+          11,
+          10
+        ],
+        [
+          9,
+          9,
+          8,
+          12,
+          7,
+          8
+        ],
+        [
+          12,
+          11,
+          8,
+          12,
+          8,
+          8
+        ],
+        [
+          12,
+          11,
+          11,
+          10,
+          12,
+          6
+        ],
+        [
+          11,
+          4,
+          11,
+          10,
+          12,
+          6
+        ],
+        [
+          11,
+          4,
           5,
+          5,
+          9,
+          9
+        ],
+        [
+          9,
+          12,
+          5,
+          5,
+          9,
+          9
+        ],
+        [
+          9,
+          12,
+          9,
+          6,
+          10,
+          12
+        ],
+        [
+          9,
+          2,
+          9,
+          6,
+          10,
+          12
+        ],
+        [
+          12,
+          11,
+          12,
+          12,
+          10,
+          10
+        ],
+        [
+          12,
+          11,
+          12,
+          12,
+          5,
+          10
+        ],
+        [
+          12,
+          10,
+          10,
+          8,
+          5,
+          6
+        ],
+        [
+          11,
+          10,
+          10,
+          8,
+          6,
+          6
+        ],
+        [
+          11,
+          5,
+          8,
+          8,
+          6,
+          12
+        ],
+        [
+          11,
+          5,
+          8,
+          4,
+          1,
+          12
+        ],
+        [
+          1,
+          9,
+          4,
+          12,
+          11,
+          12
+        ],
+        [
+          12,
+          9,
+          4,
+          12,
+          11,
+          4
+        ],
+        [
+          12,
+          7,
+          6,
+          10,
+          12,
+          4
+        ],
+        [
+          9,
+          7,
+          6,
+          10,
+          12,
+          9
+        ],
+        [
+          9,
+          6,
           6,
           5,
-          12,
+          4,
+          9
+        ],
+        [
+          7,
+          6,
+          5,
           1,
+          10,
+          12
+        ],
+        [
+          7,
+          12,
+          5,
+          11,
+          7,
+          12
+        ],
+        [
+          12,
+          12,
+          9,
+          11,
+          7,
+          8
+        ],
+        [
+          12,
+          11,
+          9,
+          12,
+          8,
+          8
+        ],
+        [
+          11,
+          11,
+          9,
+          12,
+          9,
+          5
+        ],
+        [
+          11,
+          11,
+          12,
+          10,
+          9,
+          10
+        ],
+        [
+          10,
+          4,
+          12,
+          10,
+          9,
+          10
+        ],
+        [
+          10,
+          4,
+          8,
+          6,
+          6,
           2
         ],
         [
-          6,
+          12,
+          9,
           7,
+          6,
+          6,
+          11
+        ],
+        [
+          12,
+          9,
+          7,
+          12,
+          12,
+          11
+        ],
+        [
+          12,
+          10,
+          10,
+          12,
+          12,
+          6
+        ],
+        [
           8,
+          10,
+          10,
+          7,
+          11,
+          6
+        ],
+        [
+          8,
+          12,
+          11,
+          7,
+          11,
+          5
+        ],
+        [
+          11,
+          11,
+          11,
+          7,
+          5,
+          5
+        ],
+        [
+          11,
+          2,
+          5,
+          2,
+          10,
+          5
+        ],
+        [
+          10,
+          8,
+          5,
+          12,
+          10,
+          8
+        ],
+        [
+          9,
+          8,
+          6,
+          12,
+          2,
+          10
+        ],
+        [
+          9,
+          9,
+          6,
+          5,
+          6,
+          10
+        ],
+        [
+          12,
+          9,
+          6,
+          5,
+          6,
+          2
+        ],
+        [
+          12,
+          7,
+          9,
+          6,
+          12,
+          6
+        ],
+        [
+          11,
+          7,
+          9,
+          6,
+          12,
+          6
+        ],
+        [
+          11,
+          10,
+          12,
+          4,
+          9,
+          11
+        ],
+        [
+          11,
+          10,
+          8,
+          4,
+          9,
+          11
+        ],
+        [
+          6,
+          6,
+          8,
+          12,
+          11,
+          9
+        ],
+        [
+          6,
+          6,
+          4,
+          12,
+          11,
+          9
+        ],
+        [
+          7,
+          4,
+          4,
+          10,
+          8,
+          5
+        ],
+        [
+          12,
+          12,
+          2,
+          10,
+          8,
+          5
+        ],
+        [
+          12,
+          12,
+          5,
+          11,
+          7,
+          5
+        ],
+        [
+          12,
+          5,
+          9,
+          11,
+          7,
+          6
+        ],
+        [
+          5,
+          5,
+          9,
+          12,
+          10,
+          6
+        ],
+        [
+          5,
+          11,
+          12,
+          12,
+          10,
+          9
+        ],
+        [
+          10,
+          11,
+          12,
+          6,
+          12,
+          9
+        ],
+        [
+          10,
+          12,
+          6,
+          6,
+          12,
+          12
+        ],
+        [
+          9,
+          12,
+          6,
+          11,
+          5,
+          12
+        ],
+        [
+          12,
+          9,
+          6,
+          11,
+          5,
+          12
+        ],
+        [
+          12,
+          9,
+          10,
           11,
           6,
+          10
+        ],
+        [
+          12,
+          10,
+          10,
+          5,
+          6,
+          10
+        ],
+        [
+          11,
+          10,
+          8,
+          5,
+          9,
+          10
+        ],
+        [
+          11,
+          11,
+          8,
+          2,
+          9,
+          8
+        ],
+        [
+          9,
+          11,
+          11,
+          12,
+          10,
+          8
+        ],
+        [
+          9,
+          11,
+          11,
+          12,
+          10,
+          2
+        ],
+        [
+          9,
+          4,
+          9,
+          11,
+          12,
+          6
+        ],
+        [
+          12,
+          12,
+          9,
+          11,
+          12,
+          6
+        ],
+        [
+          12,
+          12,
+          7,
+          9,
+          11,
+          9
+        ],
+        [
+          12,
+          7,
+          7,
+          9,
+          11,
+          9
+        ],
+        [
+          11,
+          7,
+          5,
+          6,
+          6,
+          2
+        ],
+        [
+          11,
+          2,
+          5,
+          6,
+          6,
+          12
+        ],
+        [
+          11,
+          6,
+          12,
+          12,
+          8,
+          12
+        ],
+        [
+          7,
+          6,
+          12,
+          12,
+          8,
+          6
+        ],
+        [
+          7,
+          9,
+          6,
+          10,
+          8,
+          6
+        ],
+        [
+          9,
+          9,
+          6,
+          10,
+          9,
+          9
+        ],
+        [
+          9,
+          11,
+          6,
+          9,
+          9,
+          9
+        ],
+        [
+          12,
+          11,
+          8,
+          9,
+          12,
+          12
+        ],
+        [
+          12,
+          10,
+          8,
+          6,
+          12,
+          12
+        ],
+        [
+          12,
+          10,
+          10,
+          6,
+          7,
+          4
+        ],
+        [
+          7,
+          12,
+          4,
+          8,
+          4,
+          4
+        ],
+        [
+          7,
+          12,
+          4,
+          8,
+          4,
+          10
+        ],
+        [
+          10,
+          5,
+          9,
+          9,
+          5,
+          10
+        ],
+        [
+          5,
+          5,
+          9,
+          9,
+          5,
           7
+        ],
+        [
+          5,
+          4,
+          9,
+          6,
+          10,
+          5
+        ],
+        [
+          4,
+          4,
+          5,
+          6,
+          10,
+          5
+        ],
+        [
+          4,
+          11,
+          5,
+          5,
+          11,
+          11
+        ],
+        [
+          6,
+          9,
+          12,
+          5,
+          11,
+          11
+        ],
+        [
+          6,
+          9,
+          12,
+          12,
+          6,
+          12
+        ],
+        [
+          12,
+          10,
+          8,
+          12,
+          2,
+          12
+        ],
+        [
+          12,
+          10,
+          8,
+          10,
+          12,
+          12
+        ],
+        [
+          5,
+          10,
+          8,
+          10,
+          12,
+          6
+        ],
+        [
+          5,
+          1,
+          6,
+          8,
+          9,
+          6
+        ],
+        [
+          11,
+          12,
+          6,
+          8,
+          9,
+          9
+        ],
+        [
+          11,
+          12,
+          6,
+          11,
+          10,
+          9
+        ],
+        [
+          11,
+          12,
+          11,
+          11,
+          8,
+          7
+        ],
+        [
+          9,
+          11,
+          11,
+          12,
+          8,
+          7
+        ],
+        [
+          9,
+          7,
+          9,
+          12,
+          11,
+          7
+        ],
+        [
+          8,
+          7,
+          9,
+          8,
+          11,
+          12
+        ],
+        [
+          8,
+          6,
+          9,
+          8,
+          12,
+          12
+        ],
+        [
+          10,
+          6,
+          5,
+          11,
+          12,
+          6
+        ],
+        [
+          10,
+          9,
+          5,
+          11,
+          5,
+          5
+        ],
+        [
+          12,
+          9,
+          12,
+          6,
+          5,
+          11
+        ],
+        [
+          12,
+          4,
+          12,
+          6,
+          5,
+          11
+        ],
+        [
+          4,
+          4,
+          1,
+          7,
+          6,
+          11
+        ],
+        [
+          4,
+          2,
+          10,
+          7,
+          6,
+          8
+        ],
+        [
+          10,
+          10,
+          10,
+          12,
+          7,
+          8
+        ],
+        [
+          10,
+          10,
+          7,
+          12,
+          7,
+          10
+        ],
+        [
+          7,
+          12,
+          8,
+          9,
+          9,
+          10
+        ],
+        [
+          7,
+          12,
+          8,
+          9,
+          9,
+          4
+        ],
+        [
+          12,
+          11,
+          4,
+          8,
+          10,
+          4
+        ],
+        [
+          12,
+          11,
+          4,
+          8,
+          10,
+          9
+        ],
+        [
+          9,
+          11,
+          9,
+          6,
+          10,
+          9
+        ],
+        [
+          9,
+          5,
+          9,
+          6,
+          12,
+          12
+        ],
+        [
+          11,
+          5,
+          12,
+          10,
+          12,
+          12
+        ],
+        [
+          11,
+          9,
+          12,
+          10,
+          12,
+          4
+        ],
+        [
+          11,
+          9,
+          5,
+          12,
+          11,
+          4
+        ],
+        [
+          5,
+          12,
+          5,
+          12,
+          11,
+          7
+        ],
+        [
+          5,
+          12,
+          6,
+          6,
+          6,
+          7
+        ],
+        [
+          12,
+          12,
+          6,
+          8,
+          6,
+          7
+        ],
+        [
+          12,
+          8,
+          6,
+          8,
+          10,
+          8
+        ],
+        [
+          12,
+          8,
+          8,
+          4,
+          8,
+          8
+        ],
+        [
+          7,
+          10,
+          10,
+          4,
+          8,
+          12
+        ],
+        [
+          7,
+          10,
+          10,
+          4,
+          9,
+          12
+        ],
+        [
+          8,
+          4,
+          9,
+          6,
+          9,
+          12
+        ],
+        [
+          8,
+          4,
+          9,
+          12,
+          5,
+          10
+        ],
+        [
+          10,
+          11,
+          2,
+          12,
+          5,
+          10
+        ],
+        [
+          2,
+          7,
+          11,
+          10,
+          5,
+          8
+        ],
+        [
+          12,
+          7,
+          11,
+          10,
+          12,
+          8
+        ],
+        [
+          12,
+          6,
+          12,
+          5,
+          12,
+          12
+        ],
+        [
+          7,
+          6,
+          12,
+          5,
+          7,
+          12
+        ],
+        [
+          7,
+          12,
+          5,
+          12,
+          7,
+          9
+        ],
+        [
+          11,
+          12,
+          5,
+          12,
+          6,
+          9
+        ],
+        [
+          11,
+          9,
+          6,
+          6,
+          6,
+          10
+        ],
+        [
+          12,
+          9,
+          6,
+          6,
+          11,
+          10
+        ],
+        [
+          12,
+          2,
+          6,
+          4,
+          11,
+          10
+        ],
+        [
+          9,
+          11,
+          8,
+          4,
+          10,
+          12
+        ],
+        [
+          9,
+          11,
+          8,
+          4,
+          12,
+          12
+        ],
+        [
+          5,
+          10,
+          7,
+          12,
+          12,
+          12
+        ],
+        [
+          5,
+          10,
+          7,
+          12,
+          4,
+          5
+        ],
+        [
+          6,
+          4,
+          4,
+          11,
+          4,
+          5
+        ],
+        [
+          11,
+          4,
+          4,
+          11,
+          2,
+          5
+        ],
+        [
+          11,
+          12,
+          9,
+          11,
+          9,
+          7
+        ],
+        [
+          12,
+          12,
+          9,
+          6,
+          9,
+          7
+        ],
+        [
+          12,
+          9,
+          12,
+          6,
+          9,
+          11
+        ],
+        [
+          6,
+          9,
+          12,
+          10,
+          5,
+          11
+        ],
+        [
+          6,
+          11,
+          10,
+          10,
+          5,
+          9
+        ],
+        [
+          9,
+          11,
+          10,
+          7,
+          5,
+          9
+        ],
+        [
+          9,
+          5,
+          5,
+          7,
+          8,
+          8
+        ],
+        [
+          12,
+          5,
+          5,
+          12,
+          8,
+          8
+        ],
+        [
+          12,
+          10,
+          8,
+          12,
+          8,
+          12
+        ],
+        [
+          6,
+          10,
+          8,
+          6,
+          12,
+          12
+        ],
+        [
+          6,
+          12,
+          6,
+          6,
+          12,
+          9
+        ],
+        [
+          10,
+          12,
+          6,
+          10,
+          12,
+          9
+        ],
+        [
+          10,
+          7,
+          6,
+          10,
+          10,
+          10
+        ],
+        [
+          12,
+          7,
+          9,
+          5,
+          10,
+          10
+        ],
+        [
+          12,
+          6,
+          9,
+          5,
+          6,
+          10
+        ],
+        [
+          12,
+          6,
+          12,
+          12,
+          6,
+          12
+        ],
+        [
+          5,
+          4,
+          12,
+          12,
+          11,
+          12
+        ],
+        [
+          5,
+          4,
+          11,
+          4,
+          11,
+          8
+        ],
+        [
+          11,
+          11,
+          11,
+          4,
+          9,
+          8
+        ],
+        [
+          11,
+          11,
+          5,
+          4,
+          9,
+          10
+        ],
+        [
+          11,
+          11,
+          5,
+          2,
+          9,
+          10
+        ],
+        [
+          9,
+          9,
+          8,
+          5,
+          7,
+          11
+        ],
+        [
+          9,
+          9,
+          8,
+          5,
+          7,
+          11
+        ],
+        [
+          12,
+          2,
+          10,
+          12,
+          1,
+          11
+        ],
+        [
+          12,
+          10,
+          10,
+          12,
+          12,
+          9
+        ],
+        [
+          4,
+          10,
+          9,
+          11,
+          12,
+          9
+        ],
+        [
+          4,
+          12,
+          9,
+          11,
+          10,
+          7
+        ],
+        [
+          10,
+          12,
+          9,
+          11,
+          10,
+          7
+        ],
+        [
+          10,
+          11,
+          7,
+          8,
+          6,
+          7
+        ],
+        [
+          12,
+          11,
+          7,
+          8,
+          6,
+          12
+        ],
+        [
+          12,
+          11,
+          4,
+          4,
+          5,
+          12
+        ],
+        [
+          6,
+          9,
+          4,
+          4,
+          5,
+          11
+        ],
+        [
+          6,
+          4,
+          6,
+          7,
+          11,
+          11
+        ],
+        [
+          8,
+          4,
+          12,
+          7,
+          11,
+          10
+        ],
+        [
+          8,
+          12,
+          12,
+          12,
+          12,
+          10
+        ],
+        [
+          9,
+          12,
+          5,
+          12,
+          12,
+          12
+        ],
+        [
+          9,
+          12,
+          5,
+          10,
+          8,
+          12
+        ],
+        [
+          9,
+          10,
+          8,
+          10,
+          8,
+          9
+        ],
+        [
+          10,
+          10,
+          8,
+          6,
+          9,
+          9
+        ],
+        [
+          5,
+          7,
+          9,
+          6,
+          9,
+          6
+        ],
+        [
+          5,
+          7,
+          9,
+          12,
+          10,
+          6
+        ],
+        [
+          2,
+          6,
+          12,
+          12,
+          10,
+          10
+        ],
+        [
+          12,
+          6,
+          12,
+          11,
+          6,
+          10
+        ],
+        [
+          12,
+          5,
+          10,
+          11,
+          6,
+          5
+        ],
+        [
+          7,
+          5,
+          10,
+          5,
+          12,
+          5
+        ],
+        [
+          7,
+          11,
+          11,
+          5,
+          12,
+          6
+        ],
+        [
+          11,
+          11,
+          11,
+          12,
+          7,
+          6
+        ],
+        [
+          11,
+          9,
+          5,
+          12,
+          7,
+          9
+        ],
+        [
+          6,
+          9,
+          5,
+          10,
+          2,
+          9
+        ],
+        [
+          6,
+          12,
+          6,
+          11,
+          11,
+          12
+        ],
+        [
+          12,
+          12,
+          6,
+          11,
+          11,
+          12
+        ],
+        [
+          12,
+          2,
+          8,
+          5,
+          9,
+          1
+        ],
+        [
+          12,
+          8,
+          8,
+          5,
+          9,
+          4
+        ],
+        [
+          5,
+          8,
+          8,
+          12,
+          10,
+          4
+        ],
+        [
+          5,
+          11,
+          9,
+          12,
+          10,
+          6
+        ],
+        [
+          11,
+          10,
+          9,
+          11,
+          5,
+          6
+        ],
+        [
+          11,
+          10,
+          12,
+          11,
+          5,
+          9
+        ],
+        [
+          9,
+          4,
+          12,
+          5,
+          5,
+          9
+        ],
+        [
+          9,
+          4,
+          4,
+          5,
+          12,
+          12
+        ],
+        [
+          2,
+          9,
+          4,
+          12,
+          12,
+          12
+        ],
+        [
+          10,
+          9,
+          2,
+          12,
+          4,
+          7
+        ],
+        [
+          12,
+          12,
+          7,
+          11,
+          4,
+          7
+        ],
+        [
+          12,
+          11,
+          7,
+          11,
+          8,
+          7
+        ],
+        [
+          5,
+          7,
+          5,
+          10,
+          8,
+          11
+        ],
+        [
+          5,
+          7,
+          5,
+          10,
+          8,
+          11
+        ],
+        [
+          9,
+          6,
+          8,
+          12,
+          6,
+          10
+        ],
+        [
+          9,
+          6,
+          8,
+          12,
+          6,
+          10
+        ],
+        [
+          12,
+          10,
+          6,
+          7,
+          11,
+          7
+        ],
+        [
+          12,
+          10,
+          6,
+          7,
+          11,
+          7
+        ],
+        [
+          11,
+          12,
+          10,
+          7,
+          9,
+          7
+        ],
+        [
+          11,
+          12,
+          10,
+          11,
+          10,
+          2
+        ],
+        [
+          8,
+          4,
+          9,
+          11,
+          10,
+          6
+        ],
+        [
+          8,
+          4,
+          9,
+          12,
+          12,
+          6
+        ],
+        [
+          12,
+          5,
+          12,
+          12,
+          12,
+          12
+        ],
+        [
+          12,
+          5,
+          12,
+          8,
+          12,
+          12
+        ],
+        [
+          6,
+          9,
+          11,
+          8,
+          7,
+          5
+        ],
+        [
+          6,
+          9,
+          11,
+          11,
+          7,
+          5
+        ],
+        [
+          11,
+          11,
+          5,
+          11,
+          6,
+          4
+        ],
+        [
+          11,
+          11,
+          5,
+          12,
+          6,
+          4
+        ],
+        [
+          12,
+          11,
+          8,
+          12,
+          5,
+          11
+        ],
+        [
+          12,
+          2,
+          8,
+          2,
+          5,
+          11
+        ],
+        [
+          10,
+          10,
+          9,
+          6,
+          12,
+          7
+        ],
+        [
+          10,
+          10,
+          9,
+          6,
+          12,
+          9
+        ],
+        [
+          11,
+          12,
+          6,
+          11,
+          12,
+          9
+        ],
+        [
+          11,
+          12,
+          6,
+          11,
+          10,
+          10
+        ],
+        [
+          11,
+          9,
+          12,
+          1,
+          10,
+          10
+        ],
+        [
+          9,
+          9,
+          12,
+          12,
+          10,
+          4
+        ],
+        [
+          9,
+          11,
+          10,
+          12,
+          8,
+          4
+        ],
+        [
+          12,
+          11,
+          10,
+          5,
+          8,
+          7
+        ],
+        [
+          12,
+          11,
+          4,
+          5,
+          8,
+          7
+        ],
+        [
+          11,
+          4,
+          4,
+          9,
+          11,
+          7
+        ],
+        [
+          11,
+          4,
+          8,
+          9,
+          11,
+          12
+        ],
+        [
+          4,
+          7,
+          5,
+          12,
+          9,
+          12
+        ],
+        [
+          4,
+          6,
+          5,
+          12,
+          9,
+          8
+        ],
+        [
+          12,
+          6,
+          7,
+          10,
+          6,
+          8
+        ],
+        [
+          12,
+          12,
+          7,
+          10,
+          6,
+          11
+        ],
+        [
+          8,
+          12,
+          9,
+          11,
+          12,
+          11
+        ],
+        [
+          8,
+          10,
+          9,
+          11,
+          12,
+          11
+        ],
+        [
+          9,
+          10,
+          12,
+          12,
+          10,
+          9
+        ],
+        [
+          9,
+          10,
+          12,
+          12,
+          10,
+          9
         ]
       ],
       "weights": [
@@ -20867,20 +20865,20 @@ const data = {
       ],
       "drop_weights": [
         [
-          1500,
-          6101,
-          4600,
-          1500,
-          7600,
-          12198
+          4461,
+          2231,
+          4461,
+          9666,
+          11152,
+          15613
         ],
         [
-          30500,
-          29006,
-          25997,
-          29003,
-          7600,
-          33593
+          23792,
+          58736,
+          23048,
+          20074,
+          27509,
+          18587
         ],
         [
           0,
@@ -20891,76 +20889,76 @@ const data = {
           0
         ],
         [
-          55000,
-          51910,
-          45795,
-          47305,
-          65600,
-          91582
+          80987,
+          210299,
+          103385,
+          128760,
+          129207,
+          82473
         ],
         [
-          91600,
-          99220,
-          68693,
-          84008,
-          94700,
-          102280
+          164728,
+          142948,
+          247582,
+          258873,
+          137447,
+          116831
         ],
         [
-          71800,
-          87017,
-          73293,
-          93109,
-          113000,
-          100780
+          131779,
+          118212,
+          198605,
+          252096,
+          153943,
+          207552
         ],
         [
-          84000,
-          82417,
-          86991,
-          102310,
-          87000,
-          62587
+          3729,
+          8527,
+          2123,
+          1898,
+          23898,
+          16694
         ],
         [
-          103800,
-          65613,
-          125188,
-          82408,
-          137400,
-          123675
+          2123,
+          2583,
+          6339,
+          2588,
+          26091,
+          22890
         ],
         [
-          113000,
-          128226,
-          163384,
-          135914,
-          117600,
-          123675
+          269051,
+          247411,
+          280231,
+          44730,
+          208925,
+          287270
         ],
         [
-          128200,
-          177136,
-          151085,
-          166417,
-          113000,
-          111478
+          2768,
+          10836,
+          2386,
+          4509,
+          25214,
+          28143
         ],
         [
-          146600,
-          111522,
-          119088,
-          131313,
-          143500,
-          134373
+          4974,
+          11282,
+          2611,
+          4381,
+          21571,
+          10137
         ],
         [
-          174000,
-          161832,
-          135886,
-          126713,
-          113000,
-          103779
+          311608,
+          186935,
+          129229,
+          272425,
+          235043,
+          193810
         ]
       ],
       "reel_lengths": [
@@ -20975,2404 +20973,2404 @@ const data = {
     {
       "symbols": [
         [
-          12,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          11,
-          11,
-          11,
-          11,
-          11,
-          10
-        ],
-        [
-          10,
-          10,
-          10,
-          10,
-          11,
-          11
-        ],
-        [
-          9,
-          10,
-          9,
-          10,
-          10,
-          9
-        ],
-        [
-          9,
-          9,
-          9,
-          9,
-          9,
-          8
-        ],
-        [
-          8,
-          8,
-          8,
-          7,
-          8,
-          6
-        ],
-        [
-          12,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          11,
-          11,
-          11,
-          6,
-          10
-        ],
-        [
-          11,
-          6,
-          10,
-          8,
-          11,
-          11
-        ],
-        [
-          10,
-          10,
-          7,
-          10,
-          10,
-          9
-        ],
-        [
-          9,
-          9,
-          9,
-          9,
-          10,
-          8
-        ],
-        [
-          8,
-          9,
-          8,
-          9,
-          9,
-          6
-        ],
-        [
-          6,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          11,
-          11,
-          11,
-          8,
-          10
-        ],
-        [
-          11,
-          11,
-          10,
-          7,
-          11,
-          11
-        ],
-        [
-          10,
-          10,
-          10,
-          10,
-          11,
-          9
-        ],
-        [
-          9,
-          10,
-          9,
-          5,
-          11,
-          8
-        ],
-        [
-          8,
-          9,
-          6,
-          9,
-          10,
-          8
-        ],
-        [
-          8,
-          12,
-          12,
-          12,
-          12,
-          12
-        ],
-        [
-          12,
-          12,
-          12,
-          11,
-          9,
-          10
-        ],
-        [
-          12,
-          12,
-          11,
-          7,
-          8,
-          11
-        ],
-        [
-          11,
-          11,
-          11,
-          10,
-          6,
-          9
-        ],
-        [
-          10,
-          10,
-          11,
-          6,
-          6,
-          6
-        ],
-        [
-          9,
-          9,
-          10,
-          9,
-          11,
-          6
-        ],
-        [
-          6,
-          8,
-          10,
-          12,
-          11,
-          12
-        ],
-        [
-          8,
-          6,
-          12,
-          11,
-          12,
-          12
-        ],
-        [
-          12,
-          12,
-          12,
-          7,
-          10,
-          11
-        ],
-        [
-          11,
-          11,
-          9,
-          10,
-          10,
-          10
-        ],
-        [
-          10,
-          10,
-          11,
-          10,
-          9,
-          10
-        ],
-        [
-          9,
-          9,
-          6,
-          9,
-          8,
-          10
-        ],
-        [
-          7,
-          9,
-          10,
-          12,
-          11,
-          9
-        ],
-        [
-          6,
-          8,
-          10,
-          11,
-          12,
-          9
-        ],
-        [
-          6,
-          12,
-          10,
-          7,
-          7,
-          12
-        ],
-        [
-          12,
-          12,
-          12,
-          8,
-          10,
-          11
-        ],
-        [
-          11,
-          11,
-          11,
-          10,
-          9,
-          8
-        ],
-        [
-          10,
-          10,
-          9,
-          9,
-          8,
-          10
-        ],
-        [
-          9,
-          6,
-          8,
-          12,
-          11,
-          5
-        ],
-        [
-          7,
-          9,
-          8,
-          11,
-          12,
-          9
-        ],
-        [
-          5,
-          5,
-          10,
-          5,
-          12,
-          12
-        ],
-        [
-          12,
-          12,
-          12,
-          7,
-          10,
-          11
-        ],
-        [
-          11,
-          11,
-          12,
-          7,
-          10,
-          8
-        ],
-        [
-          11,
-          10,
-          11,
-          10,
-          9,
-          10
-        ],
-        [
-          11,
-          7,
-          9,
-          12,
-          11,
-          7
-        ],
-        [
-          10,
-          8,
-          7,
-          12,
-          8,
-          9
-        ],
-        [
-          9,
-          8,
-          10,
-          11,
-          12,
-          9
-        ],
-        [
-          12,
-          12,
-          6,
-          9,
-          5,
-          12
-        ],
-        [
-          8,
-          11,
-          12,
-          6,
-          10,
-          11
-        ],
-        [
-          8,
-          10,
-          11,
-          10,
-          9,
-          10
-        ],
-        [
-          11,
-          9,
-          11,
-          8,
-          11,
-          5
-        ],
-        [
-          10,
-          6,
-          9,
-          8,
-          8,
-          8
-        ],
-        [
-          9,
-          6,
-          9,
-          12,
-          12,
-          7
-        ],
-        [
-          12,
-          12,
-          10,
-          11,
-          5,
-          12
-        ],
-        [
-          5,
-          11,
-          10,
-          11,
-          5,
-          11
-        ],
-        [
-          5,
-          10,
-          12,
-          10,
-          10,
-          10
-        ],
-        [
-          11,
-          9,
-          11,
-          9,
-          11,
-          5
-        ],
-        [
-          10,
-          5,
-          7,
-          6,
-          9,
-          5
-        ],
-        [
-          10,
-          7,
-          9,
-          6,
-          12,
-          7
-        ],
-        [
-          12,
-          12,
-          8,
-          12,
-          12,
-          7
-        ],
-        [
-          7,
-          11,
-          10,
-          12,
-          7,
-          12
-        ],
-        [
-          6,
-          10,
-          12,
-          11,
-          10,
-          12
-        ],
-        [
-          11,
-          8,
-          11,
-          10,
-          11,
-          11
-        ],
-        [
-          11,
-          5,
-          6,
-          9,
-          9,
-          10
-        ],
-        [
-          10,
-          9,
-          9,
-          9,
-          9,
-          9
-        ],
-        [
-          12,
-          12,
-          9,
-          5,
-          12,
-          9
-        ],
-        [
-          9,
-          11,
-          10,
-          12,
-          8,
-          8
-        ],
-        [
-          8,
-          10,
-          12,
-          11,
-          10,
-          8
-        ],
-        [
-          6,
-          10,
-          11,
-          10,
-          11,
-          12
-        ],
-        [
-          11,
-          6,
-          11,
-          8,
-          6,
-          11
-        ],
-        [
-          10,
-          7,
-          5,
-          9,
-          6,
-          11
-        ],
-        [
-          12,
-          12,
-          9,
-          5,
-          12,
-          11
-        ],
-        [
-          7,
-          11,
-          10,
-          12,
-          12,
-          10
-        ],
-        [
-          9,
-          5,
-          12,
-          11,
-          10,
-          6
-        ],
-        [
-          6,
-          5,
-          12,
-          11,
-          11,
-          12
-        ],
-        [
-          11,
-          10,
-          11,
-          10,
-          8,
-          9
-        ],
-        [
-          10,
-          6,
-          11,
-          7,
-          7,
-          5
-        ],
-        [
-          12,
-          12,
-          9,
-          9,
-          7,
-          5
-        ],
-        [
-          5,
-          11,
-          10,
-          9,
-          12,
-          10
-        ],
-        [
-          8,
-          11,
-          7,
-          12,
-          12,
-          11
-        ],
-        [
-          7,
-          7,
-          12,
-          11,
-          11,
-          12
-        ],
-        [
-          11,
-          10,
-          8,
-          11,
-          9,
-          6
-        ],
-        [
-          10,
-          8,
-          11,
-          11,
-          10,
-          7
-        ],
-        [
-          12,
-          12,
-          9,
-          10,
-          10,
-          8
-        ],
-        [
-          9,
-          9,
-          9,
-          10,
-          5,
-          10
-        ],
-        [
-          9,
-          11,
-          10,
-          12,
-          5,
-          11
-        ],
-        [
-          7,
-          6,
-          12,
-          6,
-          12,
-          11
-        ],
-        [
-          7,
-          10,
-          6,
-          8,
-          12,
-          12
-        ],
-        [
-          11,
-          10,
-          11,
-          11,
-          11,
-          6
-        ],
-        [
-          11,
-          12,
-          11,
-          11,
-          9,
-          7
-        ],
-        [
-          12,
-          9,
-          5,
-          10,
-          6,
-          7
-        ],
-        [
-          10,
-          11,
-          10,
-          12,
-          8,
-          10
-        ],
-        [
-          8,
-          7,
-          10,
-          5,
-          10,
-          11
-        ],
-        [
-          5,
-          8,
-          12,
-          7,
-          10,
-          12
-        ],
-        [
-          5,
-          8,
-          7,
-          6,
-          12,
-          12
-        ],
-        [
-          11,
-          12,
-          11,
-          11,
-          11,
-          9
-        ],
-        [
-          12,
-          10,
-          9,
-          11,
-          6,
-          6
-        ],
-        [
-          10,
-          11,
-          8,
-          12,
-          7,
-          6
-        ],
-        [
-          10,
-          7,
-          5,
-          10,
-          9,
-          10
-        ],
-        [
-          6,
-          5,
-          12,
-          7,
-          8,
-          11
-        ],
-        [
-          9,
-          9,
-          10,
-          5,
-          12,
-          12
-        ],
-        [
-          9,
-          12,
-          10,
-          8,
-          12,
-          8
-        ],
-        [
-          12,
-          12,
-          6,
-          11,
-          11,
-          9
-        ],
-        [
-          11,
-          11,
-          6,
-          12,
-          7,
-          5
-        ],
-        [
-          11,
-          11,
-          11,
-          10,
-          9,
-          5
-        ],
-        [
-          10,
-          10,
-          12,
-          9,
-          5,
-          10
-        ],
-        [
-          8,
-          6,
-          7,
-          7,
-          8,
-          12
-        ],
-        [
-          6,
-          6,
-          5,
-          8,
-          8,
-          11
-        ],
-        [
-          12,
-          12,
-          9,
-          11,
-          12,
-          11
-        ],
-        [
-          7,
-          12,
-          8,
-          12,
-          12,
-          8
-        ],
-        [
-          11,
-          11,
-          11,
-          10,
-          11,
-          8
-        ],
-        [
-          10,
-          10,
-          12,
-          6,
-          11,
-          10
-        ],
-        [
-          10,
-          5,
-          7,
-          9,
-          6,
-          10
-        ],
-        [
-          5,
-          4,
-          6,
-          5,
-          6,
-          12
-        ],
-        [
-          12,
-          9,
-          5,
-          11,
-          10,
-          12
-        ],
-        [
-          6,
-          12,
-          10,
-          12,
-          12,
-          11
-        ],
-        [
-          11,
-          11,
-          8,
-          10,
-          9,
-          6
-        ],
-        [
-          8,
-          8,
-          12,
-          10,
-          7,
-          7
-        ],
-        [
-          10,
-          7,
-          7,
-          6,
-          5,
-          10
-        ],
-        [
-          9,
-          10,
-          9,
-          9,
-          11,
-          9
-        ],
-        [
-          12,
-          5,
-          11,
-          11,
-          11,
-          12
-        ],
-        [
-          7,
-          5,
-          6,
-          12,
-          12,
-          11
-        ],
-        [
-          11,
-          11,
-          10,
-          7,
-          8,
-          4
-        ],
-        [
-          5,
-          12,
-          12,
-          10,
-          8,
-          4
-        ],
-        [
-          10,
-          12,
-          12,
-          8,
-          9,
-          10
-        ],
-        [
-          4,
-          8,
-          5,
-          5,
-          10,
-          6
-        ],
-        [
-          12,
-          8,
-          9,
-          11,
-          7,
-          12
-        ],
-        [
-          8,
-          6,
-          8,
-          12,
-          12,
-          11
-        ],
-        [
-          11,
-          11,
-          11,
-          12,
-          6,
-          5
-        ],
-        [
-          6,
-          10,
-          7,
-          10,
-          5,
-          9
-        ],
-        [
-          10,
-          12,
-          12,
-          4,
-          5,
-          10
-        ],
-        [
-          10,
           4,
           10,
-          7,
-          10,
-          10
-        ],
-        [
-          12,
-          4,
-          10,
-          7,
-          9,
-          12
-        ],
-        [
-          12,
-          7,
-          9,
-          11,
-          12,
-          11
-        ],
-        [
-          11,
-          11,
-          5,
-          12,
-          7,
-          7
-        ],
-        [
-          11,
-          11,
-          6,
-          10,
-          6,
-          8
-        ],
-        [
-          7,
-          12,
-          12,
-          5,
-          8,
-          9
-        ],
-        [
-          7,
-          9,
-          12,
-          6,
-          10,
-          10
-        ],
-        [
-          5,
-          10,
-          11,
-          8,
-          9,
-          12
-        ],
-        [
-          12,
-          7,
-          7,
-          11,
-          12,
-          11
-        ],
-        [
-          4,
-          6,
-          7,
-          12,
-          11,
-          4
-        ],
-        [
-          11,
-          11,
-          8,
-          10,
-          7,
-          7
-        ],
-        [
-          11,
-          12,
-          6,
-          9,
-          5,
-          5
-        ],
-        [
-          9,
-          9,
-          12,
-          4,
-          6,
-          6
-        ],
-        [
-          6,
-          5,
-          11,
-          8,
-          4,
-          12
-        ],
-        [
-          12,
-          10,
-          5,
-          8,
-          4,
-          10
-        ],
-        [
-          12,
-          4,
-          5,
-          12,
-          12,
-          10
-        ],
-        [
-          8,
-          11,
           8,
           12,
-          12,
-          11
-        ],
-        [
-          11,
-          12,
-          8,
-          12,
-          10,
-          8
-        ],
-        [
-          11,
-          8,
-          12,
-          11,
-          5,
-          5
-        ],
-        [
-          9,
-          6,
-          9,
-          11,
-          11,
-          12
-        ],
-        [
-          4,
-          7,
-          10,
-          10,
-          7,
-          12
-        ],
-        [
-          4,
-          9,
-          7,
-          6,
-          9,
-          6
-        ],
-        [
-          12,
-          11,
-          11,
-          4,
-          12,
-          4
-        ],
-        [
-          5,
-          12,
-          6,
-          12,
-          8,
-          7
-        ],
-        [
-          11,
-          12,
-          6,
-          9,
-          6,
-          8
-        ],
-        [
-          11,
-          4,
-          9,
-          11,
-          11,
-          11
-        ],
-        [
-          6,
-          4,
-          12,
-          10,
-          11,
-          11
-        ],
-        [
-          10,
-          8,
-          4,
-          10,
-          7,
-          9
-        ],
-        [
-          10,
-          11,
-          10,
-          5,
-          12,
-          9
-        ],
-        [
-          12,
-          11,
-          5,
-          5,
-          9,
-          4
-        ],
-        [
-          12,
-          5,
-          8,
-          12,
-          9,
-          7
-        ],
-        [
-          8,
-          6,
-          7,
-          11,
-          10,
-          8
-        ],
-        [
-          11,
-          7,
-          7,
-          9,
-          6,
-          8
-        ],
-        [
-          6,
-          12,
-          11,
-          4,
-          5,
-          5
-        ],
-        [
-          9,
-          10,
-          9,
-          4,
-          12,
-          12
-        ],
-        [
-          5,
-          11,
-          12,
-          7,
-          8,
-          6
-        ],
-        [
-          12,
-          9,
-          4,
-          7,
-          8,
-          10
-        ],
-        [
-          7,
-          9,
-          10,
-          12,
-          4,
-          10
-        ],
-        [
-          8,
-          8,
-          5,
-          11,
-          6,
-          11
-        ],
-        [
-          4,
-          12,
-          6,
-          11,
-          5,
-          7
-        ],
-        [
-          11,
-          5,
-          6,
-          10,
           12,
           5
         ],
         [
-          5,
-          10,
-          8,
-          6,
-          10,
-          6
-        ],
-        [
-          12,
-          7,
-          8,
-          6,
-          10,
-          6
-        ],
-        [
-          9,
-          7,
-          11,
-          12,
-          7,
-          9
-        ],
-        [
-          7,
-          11,
-          12,
-          9,
-          7,
-          12
-        ],
-        [
-          6,
-          6,
-          9,
-          5,
           4,
-          4
-        ],
-        [
-          10,
-          4,
-          4,
-          11,
-          12,
-          7
-        ],
-        [
-          8,
-          8,
-          5,
           10,
           8,
-          5
-        ],
-        [
-          8,
-          9,
-          10,
-          8,
-          9,
-          8
-        ],
-        [
-          12,
-          9,
-          11,
-          8,
-          6,
-          9
-        ],
-        [
-          12,
-          5,
           12,
           12,
-          6,
-          10
-        ],
-        [
-          12,
-          5,
-          7,
-          6,
-          4,
-          4
-        ],
-        [
-          6,
-          10,
-          9,
-          7,
-          11,
-          4
-        ],
-        [
-          5,
-          10,
-          4,
-          11,
-          5,
-          12
-        ],
-        [
-          9,
-          6,
-          8,
-          4,
-          12,
-          12
-        ],
-        [
-          9,
-          6,
-          11,
-          9,
-          9,
-          11
-        ],
-        [
-          10,
-          12,
-          10,
-          12,
-          9,
-          10
-        ],
-        [
-          12,
-          11,
-          12,
-          5,
-          8,
-          10
-        ],
-        [
-          11,
-          11,
-          9,
-          10,
-          8,
-          6
-        ],
-        [
-          7,
-          11,
-          9,
-          10,
-          10,
-          9
-        ],
-        [
-          4,
-          8,
-          7,
-          10,
-          5,
-          7
-        ],
-        [
-          5,
-          7,
-          5,
-          4,
-          7,
-          11
-        ],
-        [
-          10,
-          7,
-          6,
-          12,
-          4,
-          11
-        ],
-        [
-          12,
-          12,
-          11,
-          8,
-          4,
-          8
-        ],
-        [
-          11,
-          4,
-          12,
-          6,
-          11,
-          5
-        ],
-        [
-          6,
-          10,
-          4,
-          11,
-          11,
-          4
-        ],
-        [
-          7,
-          5,
-          4,
-          9,
-          12,
-          6
-        ],
-        [
-          4,
-          9,
-          7,
-          5,
-          12,
-          9
-        ],
-        [
-          4,
-          8,
-          8,
-          5,
-          12,
-          12
-        ],
-        [
-          12,
-          6,
-          10,
-          12,
-          6,
-          7
-        ],
-        [
-          8,
-          12,
-          5,
-          7,
-          5,
-          8
-        ],
-        [
-          11,
-          4,
-          6,
-          6,
-          7,
-          5
-        ],
-        [
-          10,
-          10,
-          11,
-          9,
-          7,
-          5
-        ],
-        [
-          10,
-          9,
-          12,
-          9,
-          10,
-          6
-        ],
-        [
-          7,
-          7,
-          7,
-          11,
-          9,
-          6
-        ],
-        [
-          12,
-          7,
-          7,
-          12,
-          4,
-          4
-        ],
-        [
-          5,
-          11,
-          9,
-          4,
-          11,
-          11
-        ],
-        [
-          9,
-          11,
-          10,
-          7,
-          5,
-          11
-        ],
-        [
-          9,
-          12,
-          10,
-          7,
-          8,
-          10
-        ],
-        [
-          6,
-          5,
-          6,
-          8,
-          10,
-          8
-        ],
-        [
-          6,
-          4,
-          6,
-          5,
-          10,
-          8
-        ],
-        [
-          12,
-          4,
-          5,
-          12,
-          6,
-          7
-        ],
-        [
-          12,
-          8,
-          5,
-          6,
-          7,
-          7
-        ],
-        [
-          8,
-          6,
-          8,
-          6,
-          12,
-          9
-        ],
-        [
-          8,
-          12,
-          12,
-          4,
-          9,
-          9
-        ],
-        [
-          5,
-          12,
-          12,
-          11,
-          9,
-          12
-        ],
-        [
-          7,
-          5,
-          11,
-          10,
-          11,
-          10
-        ],
-        [
-          11,
-          10,
-          11,
-          10,
-          11,
-          5
-        ],
-        [
-          11,
-          10,
-          9,
-          12,
-          6,
-          4
-        ],
-        [
-          4,
-          6,
-          9,
-          12,
-          8,
-          4
-        ],
-        [
-          10,
-          9,
-          4,
-          8,
-          8,
-          7
-        ],
-        [
-          10,
-          8,
-          4,
-          8,
-          4,
-          7
-        ],
-        [
-          9,
-          7,
-          8,
-          11,
-          4,
-          12
-        ],
-        [
-          6,
-          11,
-          10,
-          11,
-          5,
-          9
-        ],
-        [
-          8,
-          5,
-          6,
-          9,
-          5,
-          8
-        ],
-        [
-          7,
-          5,
-          6,
-          12,
-          10,
           5
         ],
         [
           12,
-          4,
-          7,
-          12,
-          6,
-          10
-        ],
-        [
-          12,
-          8,
-          7,
-          5,
-          12,
-          10
-        ],
-        [
-          5,
-          9,
-          8,
-          7,
-          7,
-          11
-        ],
-        [
-          4,
-          6,
-          5,
-          4,
-          7,
-          12
-        ],
-        [
-          8,
-          11,
-          5,
-          6,
-          5,
-          6
-        ],
-        [
-          8,
-          10,
-          9,
-          9,
-          5,
-          4
-        ],
-        [
-          9,
-          4,
-          10,
           10,
           11,
-          9
-        ],
-        [
-          6,
-          8,
-          4,
-          5,
-          8,
+          7,
+          10,
           5
         ],
         [
-          6,
-          8,
-          11,
-          8,
-          4,
-          8
-        ],
-        [
-          4,
-          12,
-          11,
-          7,
-          10,
-          11
-        ],
-        [
-          11,
-          6,
-          12,
-          4,
-          6,
-          6
-        ],
-        [
-          7,
-          9,
-          12,
-          4,
-          9,
-          12
-        ],
-        [
-          7,
-          7,
-          8,
-          12,
-          12,
-          12
-        ],
-        [
-          5,
-          4,
-          8,
-          12,
-          8,
-          4
-        ],
-        [
-          5,
-          10,
-          6,
-          8,
-          11,
-          9
-        ],
-        [
-          12,
-          11,
-          10,
           2,
+          6,
+          11,
+          7,
+          4,
+          4
+        ],
+        [
+          11,
+          6,
+          12,
+          7,
+          7,
+          4
+        ],
+        [
+          11,
+          9,
+          12,
+          10,
+          7,
+          10
+        ],
+        [
+          9,
+          9,
+          9,
+          10,
+          12,
+          10
+        ],
+        [
+          9,
+          10,
+          9,
+          11,
+          12,
+          8
+        ],
+        [
+          8,
+          10,
+          8,
+          11,
+          11,
+          8
+        ],
+        [
+          8,
+          10,
+          8,
+          8,
+          11,
+          11
+        ],
+        [
+          4,
+          2,
+          7,
+          8,
           10,
           11
         ],
         [
           4,
-          5,
           7,
+          7,
+          5,
           6,
-          6,
-          8
+          11
         ],
         [
           11,
+          7,
+          12,
           5,
-          9,
           6,
+          9
+        ],
+        [
+          11,
+          11,
+          12,
           4,
+          12,
+          9
+        ],
+        [
+          12,
+          12,
+          4,
+          4,
+          12,
+          12
+        ],
+        [
+          12,
+          12,
+          4,
+          4,
+          10,
+          12
+        ],
+        [
+          12,
+          12,
+          8,
+          12,
+          10,
           10
         ],
         [
+          10,
           9,
-          6,
+          8,
+          12,
+          11,
+          10
+        ],
+        [
+          7,
           9,
           11,
-          7,
-          6
+          6,
+          11,
+          10
         ],
         [
+          7,
+          11,
+          11,
+          6,
+          12,
+          7
+        ],
+        [
+          11,
+          11,
+          12,
+          11,
+          12,
+          7
+        ],
+        [
+          11,
           10,
           12,
-          4,
-          10,
-          9,
-          5
+          11,
+          2,
+          8
         ],
         [
+          6,
+          10,
+          5,
+          10,
+          7,
+          8
+        ],
+        [
+          6,
           1,
-          7,
-          4,
+          5,
           10,
-          9,
-          7
-        ],
-        [
-          8,
           7,
-          2,
-          9,
-          12,
-          12
-        ],
-        [
-          6,
-          9,
-          5,
-          9,
-          8,
-          12
-        ],
-        [
-          6,
-          9,
-          8,
-          5,
-          2,
-          9
-        ],
-        [
-          5,
-          8,
-          8,
-          7,
-          10,
-          8
-        ],
-        [
-          2,
-          2,
-          10,
-          12,
-          5,
-          8
-        ],
-        [
-          11,
-          4,
-          11,
-          12,
-          4,
-          6
-        ],
-        [
-          7,
-          6,
-          6,
-          11,
-          12,
           10
         ],
         [
+          12,
+          7,
+          8,
+          8,
+          8,
+          11
+        ],
+        [
+          12,
+          7,
+          8,
+          8,
+          11,
+          11
+        ],
+        [
+          8,
+          5,
+          10,
+          9,
+          11,
+          6
+        ],
+        [
+          8,
+          5,
+          10,
+          9,
+          10,
+          6
+        ],
+        [
+          6,
+          10,
+          7,
+          12,
+          10,
+          9
+        ],
+        [
+          6,
+          10,
+          7,
+          7,
+          10,
+          9
+        ],
+        [
+          11,
+          2,
+          4,
+          7,
+          12,
+          12
+        ],
+        [
+          11,
+          11,
+          4,
+          11,
+          12,
+          12
+        ],
+        [
           7,
           11,
-          2,
-          2,
+          8,
           11,
-          7
+          8,
+          5
+        ],
+        [
+          7,
+          4,
+          8,
+          10,
+          8,
+          5
         ],
         [
           10,
-          10,
-          7,
           4,
-          7,
+          8,
+          10,
+          8,
           2
         ],
         [
-          9,
+          10,
+          12,
+          10,
+          6,
+          7,
+          10
+        ],
+        [
+          4,
+          12,
+          10,
+          6,
+          7,
+          10
+        ],
+        [
+          11,
+          7,
+          12,
+          1,
+          10,
+          8
+        ],
+        [
+          11,
+          7,
+          12,
+          11,
+          10,
+          8
+        ],
+        [
+          11,
+          8,
+          11,
+          11,
+          10,
+          4
+        ],
+        [
+          5,
+          8,
+          11,
+          12,
+          11,
+          4
+        ],
+        [
+          5,
+          10,
+          10,
+          12,
+          11,
+          11
+        ],
+        [
+          12,
+          10,
+          10,
+          10,
+          5,
+          11
+        ],
+        [
+          12,
+          10,
+          12,
+          10,
+          5,
+          11
+        ],
+        [
+          12,
+          11,
           12,
           5,
           5,
+          12
+        ],
+        [
+          10,
+          11,
+          11,
+          5,
+          1,
+          12
+        ],
+        [
+          7,
+          11,
+          11,
+          8,
+          4,
+          10
+        ],
+        [
+          7,
+          2,
+          10,
+          8,
+          4,
+          10
+        ],
+        [
+          8,
+          12,
+          10,
+          4,
+          8,
+          9
+        ],
+        [
+          8,
+          12,
+          12,
+          4,
+          8,
+          9
+        ],
+        [
+          10,
+          7,
+          12,
+          4,
+          8,
+          7
+        ],
+        [
+          10,
+          7,
+          4,
+          2,
+          7,
+          7
+        ],
+        [
+          11,
+          10,
+          4,
+          11,
+          7,
+          7
+        ],
+        [
+          11,
+          10,
+          8,
+          11,
+          12,
+          8
+        ],
+        [
+          8,
+          2,
+          8,
+          12,
+          12,
+          8
+        ],
+        [
+          7,
+          11,
+          8,
+          12,
+          12,
+          10
+        ],
+        [
+          7,
+          11,
+          1,
+          7,
+          11,
+          10
+        ],
+        [
+          12,
           6,
+          5,
+          7,
+          11,
+          5
+        ],
+        [
+          12,
+          6,
+          5,
+          10,
+          10,
+          5
+        ],
+        [
+          12,
+          12,
+          11,
+          10,
+          10,
+          5
+        ],
+        [
+          5,
+          12,
+          11,
+          6,
+          7,
+          11
+        ],
+        [
+          5,
+          11,
+          8,
+          6,
+          7,
+          11
+        ],
+        [
+          11,
+          11,
+          8,
+          8,
+          6,
+          11
+        ],
+        [
+          11,
+          11,
+          10,
+          8,
+          6,
+          6
+        ],
+        [
+          10,
+          7,
+          10,
+          11,
+          11,
+          6
+        ],
+        [
+          10,
+          7,
+          7,
+          11,
+          11,
+          12
+        ],
+        [
+          9,
+          10,
+          7,
+          12,
+          10,
+          12
+        ],
+        [
+          9,
+          10,
+          8,
+          12,
+          9,
+          8
+        ],
+        [
+          11,
+          11,
+          9,
+          10,
+          9,
+          8
+        ],
+        [
+          11,
+          11,
+          9,
+          10,
+          5,
+          9
+        ],
+        [
+          10,
+          9,
+          10,
+          11,
+          5,
+          9
+        ],
+        [
+          10,
+          9,
+          10,
+          11,
+          5,
+          10
+        ],
+        [
+          12,
+          8,
+          11,
+          11,
+          11,
+          10
+        ],
+        [
+          12,
+          8,
+          11,
+          5,
+          11,
+          11
+        ],
+        [
+          4,
+          12,
+          6,
+          5,
+          12,
+          7
+        ],
+        [
+          4,
+          12,
+          6,
+          7,
+          12,
+          7
+        ],
+        [
+          11,
+          11,
+          9,
+          7,
+          10,
+          7
+        ],
+        [
+          11,
+          11,
+          9,
+          12,
+          10,
+          10
+        ],
+        [
+          12,
+          10,
+          4,
+          12,
+          4,
+          10
+        ],
+        [
+          12,
+          10,
+          8,
+          4,
+          4,
+          4
+        ],
+        [
+          9,
+          6,
+          8,
+          8,
+          12,
+          4
+        ],
+        [
+          9,
+          6,
+          8,
+          8,
+          12,
+          8
+        ],
+        [
+          9,
+          7,
+          10,
+          10,
+          10,
+          8
+        ],
+        [
+          11,
+          7,
+          10,
+          10,
+          10,
+          12
+        ],
+        [
+          11,
+          4,
+          6,
+          6,
+          11,
+          12
+        ],
+        [
+          5,
+          4,
+          6,
+          6,
+          4,
+          5
+        ],
+        [
+          7,
+          9,
+          7,
+          11,
+          4,
+          5
+        ],
+        [
+          7,
+          9,
+          7,
+          11,
+          7,
+          9
+        ],
+        [
+          2,
+          8,
+          11,
+          9,
+          7,
+          9
+        ],
+        [
+          12,
+          8,
+          11,
+          9,
+          10,
+          10
+        ],
+        [
+          12,
+          6,
+          12,
+          12,
+          10,
+          10
+        ],
+        [
+          10,
+          6,
+          12,
+          12,
+          8,
+          2
+        ],
+        [
+          10,
+          11,
+          9,
+          10,
+          8,
+          11
+        ],
+        [
+          6,
+          11,
+          9,
+          10,
+          9,
+          11
+        ],
+        [
+          8,
+          12,
+          11,
+          11,
+          9,
+          11
+        ],
+        [
+          11,
+          12,
+          11,
+          11,
+          1,
+          8
+        ],
+        [
+          11,
+          7,
+          8,
+          8,
+          10,
+          8
+        ],
+        [
+          12,
+          7,
+          8,
+          8,
+          10,
+          6
+        ],
+        [
+          12,
+          5,
+          9,
+          8,
+          11,
+          6
+        ],
+        [
+          12,
+          5,
+          9,
+          7,
+          11,
+          12
+        ],
+        [
+          7,
+          11,
+          10,
+          7,
+          8,
+          12
+        ],
+        [
+          7,
+          11,
+          10,
+          7,
+          5,
+          10
+        ],
+        [
+          11,
+          10,
+          8,
+          12,
+          2,
+          10
+        ],
+        [
+          10,
+          10,
+          8,
+          12,
+          9,
+          7
+        ],
+        [
+          10,
+          12,
+          12,
+          10,
+          9,
+          9
+        ],
+        [
+          12,
+          12,
+          12,
+          10,
+          10,
+          9
+        ],
+        [
+          12,
+          12,
+          2,
+          11,
+          10,
+          8
+        ],
+        [
+          12,
+          5,
+          9,
+          11,
+          10,
+          8
+        ],
+        [
+          11,
+          5,
+          9,
+          6,
+          7,
+          10
+        ],
+        [
+          11,
+          2,
+          9,
+          2,
+          7,
+          10
+        ],
+        [
+          10,
+          10,
+          8,
+          5,
+          5,
+          11
+        ],
+        [
+          10,
+          10,
+          8,
+          5,
+          5,
+          11
+        ],
+        [
+          7,
+          11,
+          11,
+          4,
+          10,
+          11
+        ],
+        [
+          7,
+          5,
+          11,
+          8,
+          10,
+          5
+        ],
+        [
+          11,
+          5,
+          6,
+          8,
+          8,
+          5
+        ],
+        [
+          11,
+          4,
+          6,
+          11,
+          8,
+          12
+        ],
+        [
+          8,
+          4,
+          6,
+          11,
+          8,
+          12
+        ],
+        [
+          8,
+          10,
+          1,
+          10,
+          11,
           4
         ],
         [
           12,
-          12,
-          12,
-          5,
-          6,
-          5
+          10,
+          8,
+          10,
+          11,
+          10
         ],
         [
-          4,
-          9,
           12,
+          6,
           8,
-          1,
+          12,
+          7,
+          10
+        ],
+        [
+          11,
+          6,
+          8,
+          12,
+          7,
+          8
+        ],
+        [
+          10,
+          11,
+          11,
+          7,
+          10,
+          8
+        ],
+        [
+          10,
+          11,
+          11,
+          7,
+          10,
+          9
+        ],
+        [
+          9,
+          2,
+          6,
+          7,
+          12,
+          9
+        ],
+        [
+          9,
+          4,
+          6,
+          11,
+          12,
           11
         ],
         [
-          1,
+          11,
+          10,
+          6,
+          11,
+          11,
+          11
+        ],
+        [
+          11,
           7,
-          12,
+          8,
+          6,
+          11,
+          6
+        ],
+        [
+          11,
           7,
+          8,
+          6,
+          7,
+          6
+        ],
+        [
+          8,
+          11,
           5,
+          10,
+          7,
+          10
+        ],
+        [
+          8,
+          11,
+          5,
+          10,
+          10,
+          10
+        ],
+        [
+          6,
+          10,
+          6,
+          12,
+          10,
+          10
+        ],
+        [
+          6,
+          10,
+          6,
+          12,
+          10,
+          12
+        ],
+        [
+          12,
+          12,
+          10,
+          8,
+          6,
+          12
+        ],
+        [
+          12,
+          12,
+          10,
+          8,
+          6,
+          7
+        ],
+        [
+          10,
+          11,
+          8,
+          8,
+          11,
+          7
+        ],
+        [
+          10,
+          11,
+          8,
+          1,
+          11,
+          7
+        ],
+        [
+          4,
+          11,
+          6,
+          11,
+          10,
           1
         ],
         [
-          8,
-          8,
-          6,
-          7,
-          11,
-          9
-        ],
-        [
-          5,
-          11,
-          1,
-          11,
-          12,
-          6
-        ],
-        [
-          10,
-          11,
-          2,
-          2,
-          4,
-          2
-        ],
-        [
-          2,
-          2,
-          11,
-          4,
-          8,
-          7
-        ],
-        [
-          9,
-          5,
-          11,
-          4,
-          10,
-          7
-        ],
-        [
-          4,
-          1,
-          7,
-          10,
-          9,
-          4
-        ],
-        [
           11,
           10,
-          7,
-          8,
-          9,
-          5
-        ],
-        [
-          12,
-          4,
-          10,
-          8,
-          2,
-          11
-        ],
-        [
-          12,
           6,
-          9,
-          9,
-          7,
-          11
-        ],
-        [
-          6,
-          6,
-          4,
-          6,
-          1,
-          10
-        ],
-        [
-          6,
-          9,
-          5,
-          7,
-          5,
-          10
-        ],
-        [
-          1,
-          9,
-          5,
-          10,
-          10,
-          4
-        ],
-        [
           11,
-          1,
-          6,
-          12,
-          8,
-          1
-        ],
-        [
-          4,
-          12,
-          8,
-          2,
-          11,
-          6
-        ],
-        [
-          8,
-          12,
-          2,
-          1,
-          4,
+          10,
           8
         ],
         [
-          2,
-          2,
-          1,
-          6,
-          2,
-          5
-        ],
-        [
-          9,
-          4,
-          4,
           11,
-          6,
-          5
-        ],
-        [
-          9,
-          8,
-          9,
-          5,
-          7,
-          9
-        ],
-        [
           10,
-          5,
-          10,
-          9,
-          7,
-          9
-        ],
-        [
-          5,
-          10,
-          12,
-          10,
-          12,
-          2
-        ],
-        [
-          5,
-          7,
-          11,
-          8,
-          5,
-          12
-        ],
-        [
-          7,
-          7,
           6,
-          1,
-          9,
-          7
-        ],
-        [
-          7,
-          4,
-          8,
           11,
-          6,
-          10
-        ],
-        [
-          11,
-          6,
-          4,
-          11,
-          2,
+          10,
           8
         ],
         [
-          1,
-          6,
-          9,
-          9,
-          1,
-          11
-        ],
-        [
-          10,
-          2,
-          7,
-          9,
-          10,
-          11
-        ],
-        [
-          8,
-          10,
-          5,
-          7,
-          12,
-          1
-        ],
-        [
-          2,
-          10,
-          1,
-          2,
-          8,
-          4
-        ],
-        [
-          12,
-          1,
-          2,
-          4,
-          8,
-          12
-        ],
-        [
-          4,
-          8,
-          10,
-          6,
-          4,
-          2
-        ],
-        [
-          4,
-          8,
           11,
-          5,
-          11,
-          6
-        ],
-        [
           7,
-          5,
-          6,
-          5,
-          9,
-          6
-        ],
-        [
-          6,
-          11,
-          4,
-          12,
-          10,
-          7
-        ],
-        [
-          11,
-          11,
-          5,
-          12,
-          7,
-          4
-        ],
-        [
-          8,
-          4,
           7,
           10,
-          6,
-          1
-        ],
-        [
-          1,
           7,
-          2,
-          1,
-          5,
-          10
-        ],
-        [
-          5,
-          2,
-          8,
-          2,
-          1,
-          12
-        ],
-        [
-          10,
-          9,
-          12,
-          7,
-          4,
           5
         ],
         [
           9,
-          1,
+          7,
+          7,
+          10,
+          7,
+          5
+        ],
+        [
+          9,
           9,
           4,
+          5,
           12,
+          10
+        ],
+        [
+          9,
+          9,
+          4,
+          5,
+          12,
+          10
+        ],
+        [
+          6,
+          5,
+          8,
+          12,
+          8,
+          9
+        ],
+        [
+          6,
+          5,
+          8,
+          12,
+          8,
+          9
+        ],
+        [
+          11,
+          8,
+          8,
+          4,
+          6,
+          11
+        ],
+        [
+          11,
+          8,
+          6,
+          4,
+          6,
+          11
+        ],
+        [
+          1,
+          1,
+          6,
+          4,
+          12,
+          11
+        ],
+        [
+          9,
+          12,
+          10,
+          9,
+          12,
+          12
+        ],
+        [
+          9,
+          12,
+          10,
+          9,
+          7,
+          12
+        ],
+        [
+          9,
+          7,
+          5,
+          8,
+          7,
+          10
+        ],
+        [
+          11,
+          7,
+          5,
+          8,
+          6,
+          10
+        ],
+        [
+          11,
+          11,
+          8,
+          8,
+          6,
+          2
+        ],
+        [
+          11,
+          2,
+          8,
+          11,
+          5,
           8
         ],
         [
           12,
+          12,
+          9,
+          11,
           5,
-          1,
+          8
+        ],
+        [
+          12,
+          12,
+          9,
+          6,
+          5,
+          4
+        ],
+        [
+          12,
+          12,
+          7,
+          6,
+          10,
+          4
+        ],
+        [
+          8,
+          11,
+          10,
+          7,
+          10,
+          7
+        ],
+        [
+          8,
+          9,
+          10,
+          7,
+          8,
+          11
+        ],
+        [
+          6,
+          9,
+          4,
+          7,
+          8,
+          11
+        ],
+        [
+          6,
+          10,
+          8,
+          10,
+          7,
+          11
+        ],
+        [
+          11,
+          5,
+          8,
+          10,
+          7,
+          9
+        ],
+        [
+          11,
+          5,
+          12,
+          12,
+          11,
+          9
+        ],
+        [
+          11,
+          11,
+          12,
+          12,
+          11,
+          10
+        ],
+        [
+          2,
+          11,
+          5,
+          11,
+          8,
+          10
+        ],
+        [
+          6,
+          7,
+          5,
+          11,
+          8,
+          6
+        ],
+        [
+          6,
+          7,
+          6,
+          2,
+          12,
+          6
+        ],
+        [
+          10,
+          10,
+          6,
+          8,
+          12,
+          12
+        ],
+        [
+          7,
+          10,
+          6,
+          8,
+          11,
+          12
+        ],
+        [
+          7,
+          11,
+          9,
+          10,
+          11,
+          12
+        ],
+        [
+          11,
+          11,
+          9,
+          10,
+          10,
+          8
+        ],
+        [
+          11,
+          12,
+          10,
+          12,
+          10,
+          8
+        ],
+        [
+          12,
+          12,
+          10,
+          12,
+          10,
+          5
+        ],
+        [
+          12,
+          12,
+          8,
+          11,
+          8,
+          5
+        ],
+        [
+          4,
+          10,
+          8,
+          11,
+          8,
+          10
+        ],
+        [
+          4,
+          10,
+          8,
+          11,
+          11,
+          10
+        ],
+        [
+          9,
+          11,
+          5,
+          6,
+          11,
+          11
+        ],
+        [
+          9,
+          11,
+          5,
+          6,
+          10,
+          11
+        ],
+        [
+          11,
+          11,
+          12,
+          5,
+          12,
+          11
+        ],
+        [
+          11,
+          7,
+          12,
+          5,
+          12,
+          9
+        ],
+        [
+          12,
+          7,
+          11,
+          7,
+          8,
+          9
+        ],
+        [
+          12,
+          10,
+          11,
+          7,
+          8,
+          8
+        ],
+        [
+          5,
+          10,
+          10,
+          4,
+          11,
+          8
+        ],
+        [
+          5,
+          11,
+          10,
+          10,
+          11,
+          12
+        ],
+        [
+          11,
+          11,
+          5,
+          12,
+          7,
+          12
+        ],
+        [
+          10,
+          12,
+          5,
+          11,
+          7,
+          10
+        ],
+        [
+          10,
+          12,
+          9,
+          11,
+          4,
+          10
+        ],
+        [
+          4,
+          7,
+          9,
+          11,
+          4,
+          7
+        ],
+        [
+          7,
+          7,
+          10,
+          8,
+          10,
+          7
+        ],
+        [
+          7,
+          2,
+          10,
+          8,
+          10,
+          7
+        ],
+        [
+          6,
+          11,
+          8,
+          10,
+          10,
+          4
+        ],
+        [
+          6,
+          11,
+          8,
+          10,
+          6,
+          4
+        ],
+        [
+          11,
+          10,
+          4,
+          11,
+          6,
+          10
+        ],
+        [
+          11,
+          10,
+          4,
+          11,
+          9,
+          10
+        ],
+        [
+          10,
+          6,
+          10,
+          11,
+          9,
+          11
+        ],
+        [
+          10,
+          6,
+          10,
+          12,
+          8,
+          11
+        ],
+        [
+          9,
+          9,
+          2,
+          6,
+          8,
+          5
+        ],
+        [
+          12,
+          9,
+          8,
+          6,
+          10,
+          5
+        ],
+        [
+          12,
+          4,
+          8,
+          8,
+          6,
+          8
+        ],
+        [
+          7,
+          11,
+          8,
+          8,
+          6,
+          8
+        ],
+        [
+          7,
+          11,
+          10,
+          8,
+          11,
+          6
+        ],
+        [
+          10,
+          6,
+          10,
+          7,
+          11,
+          6
+        ],
+        [
+          10,
+          6,
+          4,
+          7,
+          5,
+          12
+        ],
+        [
+          11,
+          10,
+          4,
+          10,
+          5,
+          12
+        ],
+        [
+          11,
+          10,
+          8,
+          10,
+          5,
+          9
+        ],
+        [
+          11,
+          10,
+          8,
+          11,
+          9,
+          9
+        ],
+        [
+          5,
+          11,
+          10,
+          11,
+          9,
+          10
+        ],
+        [
+          5,
+          11,
+          10,
+          9,
+          9,
+          10
+        ],
+        [
+          12,
+          12,
+          12,
+          9,
+          12,
+          8
+        ],
+        [
+          12,
+          12,
+          12,
+          12,
+          12,
+          8
+        ],
+        [
+          11,
+          12,
+          11,
+          12,
+          11,
+          11
+        ],
+        [
+          11,
+          4,
+          11,
+          5,
+          11,
+          11
+        ],
+        [
+          11,
+          7,
+          4,
+          5,
+          8,
+          2
+        ],
+        [
+          9,
+          7,
+          4,
+          4,
+          8,
+          10
+        ],
+        [
+          9,
+          6,
+          8,
+          4,
+          2,
+          10
+        ],
+        [
+          12,
+          6,
+          8,
+          4,
+          9,
+          7
+        ],
+        [
+          12,
+          10,
+          9,
+          11,
+          9,
+          12
+        ],
+        [
+          12,
+          10,
+          7,
+          11,
+          9,
+          12
+        ],
+        [
+          11,
+          10,
+          12,
+          10,
+          12,
+          9
+        ],
+        [
+          11,
+          11,
+          12,
+          10,
+          12,
+          5
+        ],
+        [
+          9,
+          11,
+          8,
+          8,
+          10,
+          10
+        ],
+        [
+          9,
+          11,
+          8,
+          8,
+          10,
+          10
+        ],
+        [
+          10,
+          9,
+          8,
+          6,
+          11,
+          8
+        ],
+        [
+          10,
+          9,
+          5,
+          6,
+          11,
+          8
+        ],
+        [
+          11,
+          10,
+          5,
+          12,
+          2,
+          11
+        ],
+        [
+          11,
+          10,
+          4,
+          12,
+          7,
+          11
+        ],
+        [
+          7,
+          4,
+          4,
+          2,
+          7,
+          11
+        ],
+        [
+          7,
+          4,
+          6,
+          7,
+          6,
+          6
+        ],
+        [
+          9,
+          7,
+          6,
+          7,
+          6,
+          6
+        ],
+        [
+          9,
+          7,
+          8,
+          7,
+          11,
+          4
+        ],
+        [
+          11,
+          10,
+          8,
+          11,
+          11,
+          4
+        ],
+        [
+          11,
+          10,
+          11,
+          11,
+          10,
+          12
+        ],
+        [
+          7,
+          11,
+          11,
+          11,
+          12,
+          12
+        ],
+        [
+          7,
+          11,
+          9,
+          10,
+          12,
+          12
+        ],
+        [
+          10,
+          6,
+          9,
+          10,
+          12,
+          10
+        ],
+        [
+          10,
+          6,
+          5,
+          12,
+          7,
+          10
+        ],
+        [
+          8,
+          12,
+          5,
+          12,
+          11,
+          9
+        ],
+        [
+          8,
+          12,
+          8,
           8,
           11,
           9
         ],
         [
+          11,
+          9,
+          8,
+          8,
+          2,
+          8
+        ],
+        [
+          11,
+          9,
+          11,
+          8,
+          9,
+          8
+        ],
+        [
+          7,
+          2,
+          11,
+          1,
+          9,
+          7
+        ],
+        [
+          7,
+          10,
+          10,
+          11,
+          9,
+          7
+        ],
+        [
+          5,
+          5,
+          10,
+          11,
+          10,
+          7
+        ],
+        [
+          5,
+          5,
+          8,
+          10,
+          10,
+          11
+        ],
+        [
+          11,
+          9,
+          8,
+          10,
+          12,
+          11
+        ],
+        [
+          11,
+          9,
+          5,
+          5,
+          12,
+          10
+        ],
+        [
+          9,
+          11,
+          5,
+          5,
+          6,
+          10
+        ],
+        [
+          9,
+          11,
+          4,
+          6,
+          6,
+          12
+        ],
+        [
+          7,
+          5,
+          4,
+          6,
+          10,
+          12
+        ],
+        [
+          7,
+          5,
+          7,
+          4,
+          9,
+          5
+        ],
+        [
+          11,
+          7,
+          7,
+          4,
+          9,
+          5
+        ],
+        [
+          11,
+          7,
+          8,
+          4,
+          8,
+          5
+        ],
+        [
+          11,
+          11,
+          8,
+          12,
+          8,
+          8
+        ],
+        [
+          12,
+          11,
           2,
           12,
           10,
+          8
+        ],
+        [
+          12,
+          11,
+          11,
+          11,
+          10,
+          10
+        ],
+        [
+          10,
+          10,
+          9,
+          11,
+          12,
+          10
+        ],
+        [
+          10,
+          10,
+          9,
+          7,
+          12,
+          9
+        ],
+        [
           6,
-          2,
+          7,
+          5,
+          7,
+          7,
+          9
+        ],
+        [
+          6,
+          7,
+          5,
+          7,
+          7,
+          11
+        ],
+        [
+          7,
+          12,
+          10,
+          10,
+          10,
+          11
+        ],
+        [
+          7,
+          12,
+          10,
+          10,
+          11,
+          6
+        ],
+        [
+          12,
+          4,
+          9,
+          8,
+          11,
+          6
+        ],
+        [
+          12,
+          4,
+          9,
+          8,
+          12,
+          12
+        ],
+        [
+          11,
+          11,
+          8,
+          12,
+          12,
+          12
+        ],
+        [
+          11,
+          11,
+          8,
+          12,
+          6,
+          10
+        ],
+        [
+          9,
+          6,
+          7,
+          11,
+          6,
+          10
+        ],
+        [
+          9,
+          6,
+          11,
+          11,
+          9,
+          10
+        ],
+        [
+          6,
+          10,
+          11,
+          9,
+          9,
+          8
+        ],
+        [
+          6,
+          10,
+          6,
+          9,
+          9,
+          8
+        ],
+        [
+          10,
+          11,
+          6,
+          10,
+          10,
+          4
+        ],
+        [
+          10,
+          11,
+          6,
+          10,
+          10,
+          7
+        ],
+        [
+          9,
+          6,
+          12,
+          6,
+          8,
           2
+        ],
+        [
+          9,
+          6,
+          12,
+          6,
+          8,
+          9
+        ],
+        [
+          11,
+          2,
+          5,
+          11,
+          8,
+          9
+        ],
+        [
+          11,
+          7,
+          5,
+          11,
+          9,
+          10
+        ],
+        [
+          11,
+          7,
+          7,
+          8,
+          9,
+          10
+        ],
+        [
+          12,
+          9,
+          7,
+          8,
+          7,
+          5
+        ],
+        [
+          12,
+          9,
+          8,
+          12,
+          7,
+          11
+        ],
+        [
+          12,
+          10,
+          8,
+          12,
+          11,
+          11
+        ],
+        [
+          7,
+          10,
+          9,
+          5,
+          11,
+          11
+        ],
+        [
+          7,
+          11,
+          9,
+          5,
+          10,
+          8
+        ],
+        [
+          6,
+          11,
+          6,
+          7,
+          10,
+          12
+        ],
+        [
+          6,
+          11,
+          6,
+          7,
+          8,
+          12
+        ],
+        [
+          11,
+          9,
+          8,
+          4,
+          8,
+          1
+        ],
+        [
+          11,
+          9,
+          8,
+          4,
+          8,
+          10
+        ],
+        [
+          12,
+          12,
+          11,
+          10,
+          7,
+          9
+        ],
+        [
+          12,
+          12,
+          11,
+          11,
+          7,
+          9
+        ],
+        [
+          12,
+          12,
+          9,
+          11,
+          10,
+          11
+        ],
+        [
+          7,
+          4,
+          2,
+          2,
+          2,
+          11
+        ],
+        [
+          7,
+          4,
+          10,
+          12,
+          8,
+          8
+        ],
+        [
+          11,
+          11,
+          10,
+          12,
+          8,
+          6
+        ],
+        [
+          11,
+          11,
+          8,
+          8,
+          11,
+          6
+        ],
+        [
+          5,
+          10,
+          8,
+          8,
+          11,
+          7
+        ],
+        [
+          5,
+          10,
+          8,
+          6,
+          6,
+          7
+        ],
+        [
+          7,
+          5,
+          9,
+          6,
+          6,
+          7
+        ],
+        [
+          7,
+          5,
+          9,
+          10,
+          8,
+          10
+        ],
+        [
+          11,
+          11,
+          11,
+          10,
+          8,
+          10
+        ],
+        [
+          11,
+          11,
+          11,
+          11,
+          8,
+          12
+        ],
+        [
+          10,
+          9,
+          10,
+          11,
+          11,
+          12
+        ],
+        [
+          10,
+          9,
+          10,
+          11,
+          11,
+          12
         ]
       ],
       "weights": [
@@ -25779,20 +25777,20 @@ const data = {
       ],
       "drop_weights": [
         [
-          7101,
-          5000,
-          6199,
-          7800,
-          7799,
-          11900
+          4461,
+          2231,
+          4461,
+          9666,
+          11152,
+          15613
         ],
         [
-          16902,
-          14599,
-          20598,
-          19800,
-          16398,
-          27300
+          23792,
+          58736,
+          23048,
+          20074,
+          27509,
+          18587
         ],
         [
           0,
@@ -25803,76 +25801,76 @@ const data = {
           0
         ],
         [
-          33003,
-          45995,
-          43596,
-          51000,
-          70093,
-          80000
+          1442,
+          3419,
+          2930,
+          4200,
+          2097,
+          1338
         ],
         [
-          91209,
-          85291,
-          77692,
-          80200,
-          102490,
-          111900
+          2923,
+          2323,
+          7012,
+          8448,
+          2237,
+          1901
         ],
         [
-          78608,
-          81592,
-          86391,
-          100000,
-          110989,
-          104800
+          2344,
+          1917,
+          5630,
+          8226,
+          2503,
+          3372
         ],
         [
-          95810,
-          95490,
-          101590,
-          135200,
-          111489,
-          91800
+          261804,
+          237202,
+          148928,
+          133253,
+          233973,
+          203969
         ],
         [
-          99210,
-          101690,
-          96590,
-          94400,
-          119788,
-          99700
+          148928,
+          71928,
+          445224,
+          181853,
+          255366,
+          279735
         ],
         [
-          114111,
-          113989,
-          147285,
-          133200,
-          129487,
-          118000
+          4781,
+          4021,
+          7936,
+          1455,
+          3395,
+          4670
         ],
         [
-          134413,
-          147285,
-          139786,
-          142300,
-          110489,
-          141400
+          194393,
+          301476,
+          167746,
+          316674,
+          246809,
+          343833
         ],
         [
-          155216,
-          143386,
-          136087,
-          113000,
-          104690,
-          108500
+          349599,
+          313712,
+          183421,
+          307261,
+          211141,
+          123837
         ],
         [
-          174417,
-          165683,
-          144186,
-          123100,
-          116288,
-          104700
+          5533,
+          3035,
+          3664,
+          8890,
+          3818,
+          3145
         ]
       ],
       "reel_lengths": [

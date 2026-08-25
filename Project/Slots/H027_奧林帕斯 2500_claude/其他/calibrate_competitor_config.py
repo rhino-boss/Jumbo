@@ -1,3 +1,16 @@
+"""已被取代（2026-08-25）。
+
+這是「競品參數版」的校準工具，只鎖定相鄰堆疊、輪帶長度 300，
+三個場景的 Any-8 命中率都對不上競品。目前生效的是「競品聚集度模型版」：
+
+    其他/strip_model.py            輪帶數學模型
+    其他/fit_competitor_model.py   合成輪帶 + 卡片校準
+    其他/select_version.py         候選挑選與驗證
+    其他/score_competitor_match.py 逐指標評分
+
+**執行本檔的 --apply 會蓋掉目前的輪帶。** 保留僅為記錄上一版的做法。
+"""
+
 from __future__ import annotations
 
 import argparse

@@ -5,90 +5,1775 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Slot Demo Game</title>
-<style id="h027-by-game">
-    body.h027,
-    body.h027 * {
-      box-sizing: border-box;
-    }
-    body.h027 {
-      --cell-size: 62px;
+  <style>
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
       --gold: #ffd86a;
       --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
     }
-    body.h027 #feature-bar {
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .rng-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
       display: flex;
       align-items: center;
-      min-height: 38px;
-      padding: 8px 12px;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
     }
-    body.h027 #game-title {
-      color: #5a88aa;
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      --cell-size: 78px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 920px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
       font-size: 13px;
       font-weight: 700;
-      letter-spacing: .5px;
+      letter-spacing: 0.5px;
     }
-    body.h027 #gameName { color: #b0d4f0; }
-    body.slot-simulator.h027 #strip-bar {
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    #modeText {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
       height: 52px;
       margin-top: 10px;
       overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
     }
-    body.h027 .feature-strip {
-      min-width: max-content;
+
+    .feature-strip {
       height: 100%;
       display: flex;
       align-items: center;
       gap: 9px;
       padding: 8px 16px;
     }
-    body.h027 #modeText { color: #5a88aa; font-size: 12px; }
-    body.h027 #featureStatus { display: none; }
-    body.h027 .feature-pill {
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      min-width: 0;
       padding: 4px 12px;
+      border: 0;
       border-radius: 20px;
-      background: #0c2240;
+      background: var(--surface);
     }
-    body.h027 .feature-pill .k,
-    body.h027 .feature-pill .v { font-size: 13px; font-weight: 700; }
-    body.h027 .feature-pill .k { color: #5a88aa; }
-    body.h027 .feature-pill .v { color: #b0d4f0; }
-    body.h027 .feature-pill.hidden { display: none; }
-    body.slot-simulator.h027 #grid-panel {
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #multPill .v {
+      color: var(--blue);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
+    #rng-wrap,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      padding: 10px;
-      overflow: hidden;
     }
-    body.h027 .board-shell {
-      width: min(100%, 392px);
-      container-type: inline-size;
-    }
-    body.h027 .board-grid {
+
+    .board-shell {
       width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
       display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 1.020408cqw;
+      grid-template-columns: repeat(5, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
     }
+
     .cell {
-      position: relative;
-      width: 100%;
-      height: auto;
-      min-width: 0;
-      aspect-ratio: 1 / 1;
-      overflow: hidden;
-      border: 2px solid rgba(38, 92, 137, 0.28);
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      border: 2px solid transparent;
       border-radius: 8px;
       background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: var(--cell-size);
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.75);
+      background: #101827;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
+      transform: scale(1.03);
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .set-rng-controls {
+      display: grid;
+      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
+      align-items: end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .debug-rng-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .debug-rng-field input,
+    .debug-rng-field select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .debug-rng-field input::placeholder {
+      color: var(--sub);
+      opacity: 0.7;
+    }
+
+    #setRngResetBtn {
+      width: 82px;
+      min-width: 82px;
+      align-self: end;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3,
+    #rng-wrap h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row,
+    .rng-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .zone-body.set-rng-controls {
+      display: grid;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    #rng-wrap {
+      width: 100%;
+      margin-top: 10px;
+      padding: 0;
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #rng-wrap .diagnostic-header,
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    #rng-wrap .rng-list {
+      padding: 8px 12px;
+    }
+
+    .live-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      min-height: 0;
+      padding: 16px;
+      overflow-y: auto;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .help-section {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .help-section-title,
+    .help-group-title {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-group-title {
+      margin-top: 14px;
+      color: var(--blue);
+      font-size: 12px;
+    }
+
+    .help-rule,
+    .help-payout-item {
+      margin: 6px 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      line-height: 1.55;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .help-loading,
+    .help-load-error {
+      padding: 20px;
+      color: var(--sub);
+      text-align: center;
+    }
+
+    #helpFrame {
+      display: none;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(17vw, 70px);
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      .set-rng-controls {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
+      }
+
+      #grid-panel {
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      #controls {
+        grid-template-columns: 1fr;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .set-rng-controls {
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      }
+
+      #controls #setRngResetBtn {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+    }
+  </style>
+  <style id="h019-layout-adapter">
+    body.h027 { --cell-size: 62px; }
+    body.h027 .board-grid { grid-template-columns: repeat(6, var(--cell-size)); }
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      min-width: 0;
+      aspect-ratio: 1 / 1;
       border-color: rgba(38, 92, 137, 0.28);
     }
     .cell.peek-row { display: grid; }
     .cell .symbol-wrap {
-      position: absolute;
       inset: 0;
       overflow: hidden;
     }
@@ -127,11 +1812,6 @@
       border-color: var(--green);
       box-shadow: 0 0 14px rgba(51, 255, 153, 0.46);
     }
-    body.h027 .cell.reel-spin { animation: h027-reel-spin 180ms linear infinite; }
-    @keyframes h027-reel-spin {
-      from { transform: translateY(-10px); }
-      to { transform: translateY(10px); }
-    }
     .multiplier-badge {
       position: absolute;
       top: 5px;
@@ -145,26 +1825,15 @@
       font-size: 0.72rem;
       font-weight: 900;
     }
-    body.h027 .message-bar {
-      width: 100%;
-      min-height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 10px;
-      border-radius: 6px;
-      color: #5a88aa;
-      background: #0c2240;
-      font: 12px/1.4 Consolas, monospace;
-      text-align: center;
+    @media (max-width: 1040px) {
+      body.h027 { --cell-size: min(14vw, 62px); }
+      body.h027 .board-grid { grid-template-columns: repeat(6, minmax(0, var(--cell-size))); }
     }
-    body.h027 .message-bar.error { color: #ff5f8a; }
-    body.h027 .message-bar.win { color: #33ff99; }
   </style>
   <link rel="stylesheet" href="../demogame_common.css?v=1">
 </head>
 
-<body class="slot-simulator h027">
+<body class="h027">
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">H027</span> <span id="gameName">奧林帕斯 2500</span></span>
@@ -231,8 +1900,8 @@
           <span class="zone-label">Bet Mode</span>
           <div class="zone-body">
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
-            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet</button>
-            <button id="buyFeatureBtn" type="button">Buy Feature</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
           </div>
         </section>
 
@@ -259,12 +1928,14 @@
           <label class="debug-rng-field" for="cardRangeSelect">
             Card BG Range
             <select id="cardRangeSelect">
-              <option value="">Auto</option>
+              <option value="off">Off</option>
+              <option value="newbie">Newbie</option>
+              <option value="oldhand" selected>Oldhand</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="rngInput">
+          <label class="debug-rng-field" for="reelRngInput">
             Reel RNG
-              <input id="rngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5 6">
+              <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5 6">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -301,27 +1972,12 @@
           <input id="debugModeInput" type="checkbox">
           Debug Mode
         </label>
-        <label class="setting-toggle" for="cardSystemInput">
-          <input id="cardSystemInput" type="checkbox">
-          <span title="Off 使用目前 Config 的原始自然機率；On 套用所選 Profile 的卡片權重。">Card System</span>
-        </label>
-        <label class="config-control" for="versionSelect">
-          Version
-          <select id="versionSelect"></select>
-        </label>
-        <label class="config-control" for="demogameConfigSelect">
+        <label class="config-control" for="configSelect">
           Config
-          <select id="demogameConfigSelect"></select>
-        </label>
-        <label class="config-control demogame-source-control" for="configSelect">
-          Config
-          <select id="configSelect"></select>
-        </label>
-        <label class="config-control demogame-source-control" for="cardProfileSelect">
-          Profile
-          <select id="cardProfileSelect">
-            <option value="newbie">Newbie</option>
-            <option value="oldhand" selected>Oldhand</option>
+          <select id="configSelect">
+            <option value="config.js">Base</option>
+            <option value="config_92A.js">92A</option>
+            <option value="config_94A.js">94A</option>
           </select>
         </label>
         <label class="config-control" for="languageSelect">
@@ -352,35 +2008,11 @@
     </div>
   </dialog>
 
-  <script src="./Versions/version_manifest.js"></script>
   <script>
-    const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
-    const H027_QUERY = new URLSearchParams(window.location.search);
-    let H027_VERSION = H027_QUERY.get("version");
-    if (!H027_VERSION) try { H027_VERSION = localStorage.getItem("slotDemoVersion"); } catch (_) {}
-    const H027_VERSION_ENTRY = H027_MANIFEST.versions.find((item) => item.version === H027_VERSION)
-      || H027_MANIFEST.versions.find((item) => item.version === H027_MANIFEST.current)
-      || H027_MANIFEST.versions[0];
-    if (!H027_VERSION_ENTRY) throw new Error("Version manifest has no usable entries.");
-    const H027_CONFIG_MAP = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {}).map(([key, value]) => {
-      const code = key.endsWith("A") ? key.toUpperCase() : `${key}A`;
-      return [code, String(value).replace(/^\.\.\//, "")];
-    }));
-    let H027_CONFIG_CODE = H027_QUERY.get("config");
-    if (!H027_CONFIG_CODE) try { H027_CONFIG_CODE = localStorage.getItem("slotDemoConfig"); } catch (_) {}
-    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(92A?|94A?)(?:\.js)?$/i);
-    H027_CONFIG_CODE = H027_CODE_MATCH ? H027_CODE_MATCH[1].toUpperCase() : "";
-    if (H027_CONFIG_CODE === "92") H027_CONFIG_CODE = "92A";
-    if (H027_CONFIG_CODE === "94") H027_CONFIG_CODE = "94A";
-    if (!H027_CONFIG_MAP[H027_CONFIG_CODE]) H027_CONFIG_CODE = Object.keys(H027_CONFIG_MAP)[0];
-    const H027_ACTIVE_CONFIG = H027_CONFIG_MAP[H027_CONFIG_CODE];
-    const H027_CONFIG_VERSION = H027_VERSION_ENTRY.version;
-    window.H027_VERSION_ENTRY = H027_VERSION_ENTRY;
-    window.H027_CONFIG_CODE = H027_CONFIG_CODE;
-    try {
-      localStorage.setItem("slotDemoVersion", H027_VERSION_ENTRY.version);
-      localStorage.setItem("slotDemoConfig", H027_CONFIG_CODE);
-    } catch (_) {}
+    const H027_CONFIG_FILES = ["config.js", "config_92A.js", "config_94A.js"];
+    const H027_CONFIG_VERSION = "20260821-h0271-v0-rtp-a";
+    const configFromQuery = new URLSearchParams(window.location.search).get("config");
+    const H027_ACTIVE_CONFIG = H027_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H027_CONFIG_FILES[0];
     window.h027ConfigLoadFailed = () => {
       const message = document.getElementById("messageBar");
       if (message) {
@@ -451,8 +2083,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       maxMultiplier: "Max Multiplier", play: "Play", spin: "Spin", auto: "Auto", stop: "Stop", speed: "Speed",
       betMode: "Bet Mode", normalBet: "Normal Bet", debugMode: "Debug Mode", forceFg: "Force FG", setting: "Setting",
       language: "Language", help: "Help", reset: "Reset", reelRng: "Reel RNG", spinResult: "Spin Result",
-      payAnywhereWins: "Pay Anywhere Wins", clear: "Clear", close: "Close", loading: "Loading game rules...",
-      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No Pay Anywhere win", pay: "Pay"
+      clusterWins: "Cluster Wins", clear: "Clear", close: "Close", loading: "Loading game rules...",
+      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
@@ -461,8 +2093,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       maxMultiplier: "最高倍數", play: "遊戲", spin: "Spin", auto: "自動", stop: "停止", speed: "速度",
       betMode: "押注模式", normalBet: "一般押注", debugMode: "除錯模式", forceFg: "強制 FG", setting: "設定",
       language: "語言", help: "Help", reset: "重置", reelRng: "輪帶 RNG", spinResult: "Spin 結果",
-      payAnywhereWins: "Pay Anywhere 得獎", clear: "清除", close: "關閉", loading: "正在載入遊戲規則…",
-      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Pay Anywhere 得獎", pay: "得分"
+      clusterWins: "Cluster 得獎", clear: "清除", close: "關閉", loading: "正在載入遊戲規則…",
+      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Cluster 得獎", pay: "得分"
     }
   };
   function savedLanguage() {
@@ -519,16 +2151,12 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     betMenu: byId("betMenu"),
     speed: byId("speedRange"),
     speedValue: byId("speedValue"),
-    version: byId("versionSelect"),
-    combinedConfig: byId("demogameConfigSelect"),
     config: byId("configSelect"),
-    profile: byId("cardProfileSelect"),
-    cardSystem: byId("cardSystemInput"),
     debug: byId("debugModeInput"),
     forceFg: byId("forceFgInput"),
     previous: byId("previousStepBtn"),
     next: byId("nextStepBtn"),
-    rngInput: byId("rngInput"),
+    rngInput: byId("reelRngInput"),
     cardRange: byId("cardRangeSelect"),
     rngReset: byId("setRngResetBtn"),
     rngList: byId("rngList"),
@@ -560,28 +2188,16 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (node) node.textContent = value;
   }
 
-  function pickWeightedDetail(weights, forcedRng = null) {
+  function pickWeighted(weights) {
     const safe = weights.map((value) => Math.max(0, Number(value) || 0));
     const total = safe.reduce((sum, value) => sum + value, 0);
-    if (total <= 0) return { index: 0, rng: 0, total: 0 };
-    const rng = forcedRng == null ? Math.floor(Math.random() * total) : Number(forcedRng);
-    if (!Number.isInteger(rng) || rng < 0 || rng >= total) {
-      throw new Error(`Reel RNG ${forcedRng} 超出範圍 0-${total - 1}`);
-    }
-    let target = rng;
+    if (total <= 0) return 0;
+    let target = Math.random() * total;
     for (let index = 0; index < safe.length; index += 1) {
       target -= safe[index];
-      if (target < 0) return { index, rng, total };
+      if (target < 0) return index;
     }
-    return { index: safe.length - 1, rng, total };
-  }
-
-  function pickWeighted(weights) {
-    return pickWeightedDetail(weights).index;
-  }
-
-  function rngForStop(weights, stopIndex) {
-    return weights.slice(0, stopIndex).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+    return safe.length - 1;
   }
 
   function symbolCode(symbol) {
@@ -670,7 +2286,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const smallLimit = Number(Box.bet_tier_thresholds.small_bet_lt);
     const mediumLimit = Number(Box.bet_tier_thresholds.medium_bet_lte);
     const betTier = betTierAmount < smallLimit ? "small_bet" : betTierAmount <= mediumLimit ? "medium_bet" : "big_bet";
-    const limits = currentCardLimits(betTier);
     return {
       modeCost,
       featurePriceMultiplier,
@@ -679,84 +2294,9 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       betTierAmount,
       betTier,
       linkEnabled: Boolean(Box.link?.enabled) && betTier !== "small_bet",
-      maxMultiplierBg: limits.bg,
-      maxMultiplierFg: limits.fg
+      maxMultiplierBg: "by_game",
+      maxMultiplierFg: "by_game"
     };
-  }
-
-  function positiveRangeMax(cards) {
-    const maxima = (cards || [])
-      .filter((card) => card?.type === "range" && Number(card.weight) > 0)
-      .map((card) => Number(card.max))
-      .filter(Number.isFinite);
-    return maxima.length ? Math.max(...maxima) : null;
-  }
-
-  function selectedPlayerProfile() {
-    const value = el.profile?.value;
-    if (value === "newbie" || value === "oldhand") return value;
-    try { return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
-    catch (_) { return "oldhand"; }
-  }
-
-  function currentCardLimits(betTier) {
-    const naturalLimit = Number(Box.multiplier_max_value) || 2500;
-    if (!Box.card_system?.enabled) return { bg: naturalLimit, fg: naturalLimit };
-    const player = selectedPlayerProfile();
-    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : "normal_bet";
-    let mode = Box.card_system?.[player]?.[modeKey];
-    if (player === "oldhand") mode = mode?.[betTier];
-    return {
-      bg: state.selectedMode === MODE_BUY ? 0 : positiveRangeMax(mode?.weight_bg) ?? naturalLimit,
-      fg: positiveRangeMax(mode?.weight_fg) ?? naturalLimit
-    };
-  }
-
-  function manifestConfigCodes(entry) {
-    return Object.keys(entry?.configs || {}).map((key) => {
-      return key.toUpperCase().endsWith("A") ? key.toUpperCase() : `${key.toUpperCase()}A`;
-    });
-  }
-
-  function openVersion(version, configCode) {
-    const url = new URL(window.location.href);
-    url.searchParams.set("version", version);
-    url.searchParams.set("config", configCode);
-    try {
-      localStorage.setItem("slotDemoVersion", version);
-      localStorage.setItem("slotDemoConfig", configCode);
-    } catch (_) {}
-    window.location.href = url.href;
-  }
-
-  function renderVersionControls() {
-    el.version.innerHTML = "";
-    for (const entry of H027_MANIFEST.versions) {
-      const option = document.createElement("option");
-      option.value = entry.version;
-      option.textContent = entry.version;
-      el.version.appendChild(option);
-    }
-    el.version.value = H027_VERSION_ENTRY.version;
-    el.config.innerHTML = "";
-    for (const code of manifestConfigCodes(H027_VERSION_ENTRY)) {
-      const option = document.createElement("option");
-      option.value = code;
-      option.textContent = code;
-      el.config.appendChild(option);
-    }
-    el.config.value = H027_CONFIG_CODE;
-    el.combinedConfig.innerHTML = "";
-    for (const code of manifestConfigCodes(H027_VERSION_ENTRY)) {
-      const profiles = ["newbie", "oldhand"];
-      for (const profile of profiles) {
-        const option = document.createElement("option");
-        option.value = JSON.stringify([code, profile]);
-        option.textContent = `${code}-${profile === "newbie" ? "Newbie" : "Oldhand"}`;
-        if (code === H027_CONFIG_CODE && profile === selectedPlayerProfile()) option.selected = true;
-        el.combinedConfig.appendChild(option);
-      }
-    }
   }
 
   function tableIndex(name) {
@@ -773,8 +2313,13 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const raw = el.rngInput.value.trim();
     if (!raw) return null;
     const values = raw.split(/\s+/).map(Number);
-    if (values.length !== Box.reel_num || values.some((value) => !Number.isInteger(value) || value < 0)) {
-      throw new Error(`Reel RNG 需要 ${Box.reel_num} 個非負整數；實際上限依本局選中的 Table 驗證。`);
+    const reelLimits = Array.from({ length: Box.reel_num }, (_, reel) =>
+      Math.min(...Box.strips.map((strip) => Number(strip.reel_lengths[reel]) || 0))
+    );
+    if (values.length !== Box.reel_num || values.some((value, reel) =>
+      !Number.isInteger(value) || value < 0 || value >= reelLimits[reel]
+    )) {
+      throw new Error(`Reel RNG 需要 ${Box.reel_num} 個整數；各輪範圍為 ${reelLimits.map((limit) => `0-${limit - 1}`).join(", ")}`);
     }
     return values;
   }
@@ -784,16 +2329,13 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const tableName = Box.strip_names[tableId];
     const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
     const starts = [];
-    const rngs = [];
     const drops = Array(Box.reel_num).fill(0);
 
     for (let reel = 0; reel < Box.reel_num; reel += 1) {
       const length = strip.reel_lengths[reel];
       const weights = strip.weights.slice(0, length).map((row) => row[reel]);
-      const selected = pickWeightedDetail(weights, forcedStops?.[reel] ?? null);
-      const start = selected.index;
+      const start = forcedStops ? forcedStops[reel] : pickWeighted(weights);
       starts.push(start);
-      rngs.push({ value: selected.rng, total: selected.total });
       for (let row = 0; row < Box.window_size; row += 1) {
         board[row][reel] = strip.symbols[(start + row) % length][reel];
       }
@@ -804,10 +2346,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         board[row][reel] = maybeUseC3(board[row][reel], tableName, initialBallCount);
       }
     }
-    return { tableId, board, starts, rngs, drops, initialBallCount };
+    return { tableId, board, starts, drops, initialBallCount };
   }
 
-  function evaluatePayAnywhere(board) {
+  function evaluateClusters(board) {
     const flat = board.flat();
     const wins = [];
     const hitPositions = [];
@@ -919,7 +2461,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     let rawPay = 0;
 
     for (let index = 0; index < CASCADE_LIMIT; index += 1) {
-      const evaluated = evaluatePayAnywhere(spin.board);
+      const evaluated = evaluateClusters(spin.board);
       if (!evaluated.wins.length) break;
       const before = clone(spin.board);
       const beforeMultiplierValues = clone(spin.multiplierValues);
@@ -950,7 +2492,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       initialMultiplierValues,
       finalBoard: clone(spin.board),
       starts: spin.starts,
-      rngs: spin.rngs,
       steps,
       multiplier,
       scatterCount,
@@ -1021,9 +2562,9 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   function sampleBoard() {
-    const spin = generateBoard(chooseBaseTable());
-    initializeMultiplierValues(spin);
-    return boardCells(spin.board, spin.multiplierValues);
+    return Array.from({ length: Box.window_size }, () =>
+      Array.from({ length: Box.reel_num }, () => symbolCell(Box.symbol_ids[randomIndex(Box.symbol_ids.length)]))
+    );
   }
 
   async function animateReels(spin) {
@@ -1056,7 +2597,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
   }
 
-  function renderPayAnywhereWins(spin) {
+  function renderClusterWins(spin) {
     el.lineList.innerHTML = "";
     const allWins = spin.steps.flatMap((step) => step.wins.map((win) => ({ ...win, cascadeIndex: step.cascadeIndex })));
     if (!allWins.length) {
@@ -1076,11 +2617,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const strip = Box.strips[spin.tableId];
     const betContext = currentBetContext();
     const cardSystemOn = cardSystemActive();
-    const profileLabel = Box.card_system?.enabled ? (cardPlayerProfile() === "newbie" ? "Newbie" : "Oldhand") : "Off";
     const rows = [
-      [`Config`, `${H027_CONFIG_CODE}-${profileLabel}`],
+      [`Config`, `${H027_ACTIVE_CONFIG === "config.js" ? "Base" : H027_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "").toUpperCase()}-${cardSystemOn ? "Card" : "Off"}`],
       [`Version`, Box.excel_version],
-      [`Profile`, profileLabel],
+      [`Profile`, cardSystemOn ? "Card System On" : "Card System Off"],
       [`Bet Mode`, PROFILE_NAMES[state.selectedMode]],
       [`Mode Multiplier`, `x${betContext.modeCost}`],
       [`Feature Price Multiplier`, betContext.featurePriceMultiplier == null ? "n/a" : `x${betContext.featurePriceMultiplier}`],
@@ -1102,8 +2642,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     ];
     spin.starts.forEach((start, index) => {
       const length = strip.reel_lengths[index];
-      const rng = spin.rngs?.[index] || { value: "n/a", total: strip.weights.slice(0, length).reduce((sum, row) => sum + Number(row[index] || 0), 0) };
-      rows.push([`R${index + 1}`, `RNG ${rng.value}/${rng.total} | stop ${start} | length ${length}`]);
+      const total = strip.weights.slice(0, length).reduce((sum, row) => sum + Number(row[index] || 0), 0);
+      rows.push([`R${index + 1}`, `RNG ${start}/${total} | stop ${start} | length ${length}`]);
     });
     rows.forEach(([left, right]) => {
       const row = document.createElement("div");
@@ -1170,23 +2710,14 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   function updateControls() {
     const wagerLocked = state.busy || Boolean(state.pendingFg);
-    const cardEnabled = cardSystemActive();
-    const forcedCard = el.cardRange.value !== "";
-    const forcedReels = el.rngInput.value.trim() !== "";
     el.normal.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_NORMAL);
     el.buy.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_EXTRA);
     el.super.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_BUY);
     el.betMinus.disabled = wagerLocked;
     el.betPlus.disabled = wagerLocked;
     el.betButton.disabled = wagerLocked;
-    el.cardRange.disabled = wagerLocked || !cardEnabled || forcedReels;
-    el.rngInput.disabled = wagerLocked || (cardEnabled && forcedCard);
-    el.rngReset.disabled = wagerLocked || (!forcedCard && !forcedReels);
-    if (el.profile) el.profile.disabled = wagerLocked || !Boolean(Box.card_system?.enabled);
-    if (el.cardSystem) el.cardSystem.disabled = wagerLocked || !Boolean(Box.card_system?.enabled);
-    if (el.version) el.version.disabled = wagerLocked;
-    if (el.config) el.config.disabled = wagerLocked;
-    if (el.combinedConfig) el.combinedConfig.disabled = wagerLocked;
+    el.rngInput.disabled = state.busy;
+    el.rngReset.disabled = state.busy || !el.rngInput.value.trim();
     el.spin.disabled = state.busy;
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
     el.buy.classList.toggle("is-active", state.selectedMode === MODE_EXTRA);
@@ -1235,7 +2766,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     renderBoard(boardCells(spin.finalBoard, spin.multiplier.values));
     updateFeatureBar(spin);
     writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`), spin.finalPay > 0 ? "win" : "");
-    renderPayAnywhereWins(spin);
+    renderClusterWins(spin);
     renderRng(spin);
     renderResultStages(spin);
     captureSnapshots(spin);
@@ -1284,7 +2815,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
     state.selectedMode = MODE_NORMAL;
-    refreshCardRangeOptions();
     document.body.classList.remove("fg-mode");
     updateFeatureBar();
     writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
@@ -1296,10 +2826,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const strip = Box.strips[tableId];
     const triggerStops = Array.from({ length: Box.reel_num }, (_, reel) => {
       const length = strip.reel_lengths[reel];
-      const weights = strip.weights.slice(0, length).map((row) => row[reel]);
-      // The configured Buy Feature table guarantees C1 on the first N reels,
-      // where N is the Config FG trigger count.
-      if (reel < Math.min(Box.reel_num, FG_TRIGGER_COUNT)) {
+      // Buy Feature guarantees a scatter on reels 2-5 (index 1-4) of the configured BG strip.
+      if (reel >= 1 && reel <= 4) {
         const candidates = [];
         for (let start = 0; start < length; start += 1) {
           for (let row = 0; row < Box.window_size; row += 1) {
@@ -1309,10 +2837,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
             }
           }
         }
-        if (candidates.length) return rngForStop(weights, candidates[randomIndex(candidates.length)]);
+        if (candidates.length) return candidates[randomIndex(candidates.length)];
       }
       if (forcedStops) return forcedStops[reel];
-      return null;
+      return pickWeighted(strip.weights.slice(0, length).map((row) => row[reel]));
     });
     return playSpin(tableId, "BG", 0, triggerStops);
   }
@@ -1336,7 +2864,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   function cardPlayerProfile() {
-    return selectedPlayerProfile();
+    const selected = el.cardRange?.value;
+    if (selected === "newbie" || selected === "oldhand" || selected === "off") return selected;
+    try { return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
+    catch (_) { return "oldhand"; }
   }
 
   function cardModeData() {
@@ -1348,39 +2879,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return data || null;
   }
 
-  function pickCard(cards, forcedIndex = null) {
+  function pickCard(cards) {
     if (!Array.isArray(cards) || !cards.length) return null;
-    if (Number.isInteger(forcedIndex) && forcedIndex >= 0 && forcedIndex < cards.length
-      && Number(cards[forcedIndex]?.weight) > 0) return cards[forcedIndex];
     const index = pickWeighted(cards.map((card) => Number(card.weight) || 0));
     return cards[index] || null;
-  }
-
-  function selectedDebugCardIndex(cards) {
-    const raw = el.cardRange?.value;
-    if (raw == null || raw === "") return null;
-    const index = Number(raw);
-    return Number.isInteger(index) && Number(cards?.[index]?.weight) > 0 ? index : null;
-  }
-
-  function refreshCardRangeOptions() {
-    if (!el.cardRange) return;
-    const previous = el.cardRange.value;
-    const modeData = cardModeData();
-    const cards = state.selectedMode === MODE_BUY ? modeData?.weight_fg : modeData?.weight_bg;
-    el.cardRange.innerHTML = '<option value="">Auto</option>';
-    (cards || []).forEach((card, index) => {
-      if (Number(card?.weight) <= 0) return;
-      const option = document.createElement("option");
-      option.value = String(index);
-      option.textContent = card.type === "free_game"
-        ? `Card ${index}: Free Game`
-        : `Card ${index}: (${card.min}, ${card.max}]`;
-      el.cardRange.appendChild(option);
-    });
-    if ([...el.cardRange.options].some((option) => option.value === previous)) el.cardRange.value = previous;
-    const label = el.cardRange.closest("label");
-    if (label?.firstChild) label.firstChild.textContent = state.selectedMode === MODE_BUY ? "Card BF Range " : "Card BG Range ";
   }
 
   function cardRatio(creditPay) {
@@ -1443,8 +2945,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const buy = state.selectedMode === MODE_BUY;
     const bgCards = modeData.weight_bg || [];
     const fgCards = modeData.weight_fg || [];
-    const cardPool = buy ? fgCards : bgCards;
-    const selectedCard = pickCard(cardPool, selectedDebugCardIndex(cardPool));
+    const selectedCard = pickCard(buy ? fgCards : bgCards);
     const selectedFgCard = !buy && selectedCard?.type === "free_game" ? pickCard(fgCards) : null;
     const triggerCap = bgTriggerCap(bgCards);
     let last = null;
@@ -1551,9 +3052,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function selectMode(mode) {
     if (state.busy || state.pendingFg) return;
     state.selectedMode = mode;
-    el.cardRange.value = "";
-    el.rngInput.value = "";
-    refreshCardRangeOptions();
     updateControls();
     updateStats();
     updateFeatureBar();
@@ -1563,9 +3061,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function purchaseFeature(mode) {
     if (state.busy || state.pendingFg) return;
     state.selectedMode = mode;
-    el.cardRange.value = "";
-    el.rngInput.value = "";
-    refreshCardRangeOptions();
     updateControls();
     updateStats();
     updateFeatureBar();
@@ -1576,8 +3071,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function setBetIndex(index) {
     if (state.busy || state.pendingFg) return;
     state.betIndex = Math.max(0, Math.min(index, BET_OPTIONS.length - 1));
-    el.cardRange.value = "";
-    refreshCardRangeOptions();
     updateStats();
     renderBetMenu();
     if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
@@ -1611,9 +3104,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       lastSpin: null
     });
     document.body.classList.remove("fg-mode");
-    el.rngInput.value = "";
-    el.cardRange.value = "";
-    refreshCardRangeOptions();
     renderBoard(sampleBoard());
     updateFeatureBar();
     updateStats();
@@ -1737,7 +3227,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     setText(document.querySelector('label[for="languageSelect"] span'), t("language"));
     setText(el.help, t("help")); setText(el.reset, t("reset")); setText(byId("helpDialogTitle"), t("helpTitle")); setText(el.closeHelp, t("close"));
     setText(document.querySelector("#rng-wrap .diagnostic-header"), t("reelRng"));
-    setText(byId("log-header"), t("spinResult")); setText(document.querySelector("#log-body .log-subheader"), t("payAnywhereWins")); setText(el.clearLog, t("clear"));
+    setText(byId("log-header"), t("spinResult")); setText(document.querySelector("#log-body .log-subheader"), t("clusterWins")); setText(el.clearLog, t("clear"));
     const debugLabel = document.querySelector('label[for="debugModeInput"]');
     if (debugLabel?.lastChild) debugLabel.lastChild.textContent = ` ${t("debugMode")}`;
     const forceLabel = document.querySelector('label[for="forceFgInput"]');
@@ -1775,13 +3265,16 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       rngChanged: updateControls,
       resetRng: () => {
         el.rngInput.value = "";
-        el.cardRange.value = "";
         updateControls();
-        writeMessage(tr("Set RNG reset", "指定 RNG 已重置"));
+        writeMessage(tr("Reel RNG reset", "輪帶 RNG 已重置"));
       },
       clearLog: () => { el.liveLog.innerHTML = ""; },
       reset: resetSession,
-      configChange: () => openVersion(H027_VERSION_ENTRY.version, el.config.value),
+      configChange: () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("config", el.config.value);
+        window.location.href = url.href;
+      },
       languageChange: () => {
         state.language = el.language.value === "zh" ? "zh" : "en";
         applyLanguage(true);
@@ -1790,55 +3283,20 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       closeHelp: () => el.helpDialog.close(),
       helpFrameLoad: () => { if (el.helpDialog.open && !state.helpMarkdown) loadHelp(); }
     });
-    el.version.addEventListener("change", () => {
-      const entry = H027_MANIFEST.versions.find((item) => item.version === el.version.value);
-      const codes = manifestConfigCodes(entry);
-      openVersion(el.version.value, codes.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : codes[0]);
-    });
-    el.combinedConfig.addEventListener("change", () => {
-      const [code, profile] = JSON.parse(el.combinedConfig.value);
-      el.profile.value = profile;
-      try { localStorage.setItem("slotDemoCardProfile", profile); } catch (_) {}
-      if (code !== H027_CONFIG_CODE) {
-        openVersion(H027_VERSION_ENTRY.version, code);
-        return;
-      }
-      el.cardRange.value = "";
-      el.rngInput.value = "";
-      refreshCardRangeOptions();
-      updateControls();
-    });
-    el.profile.addEventListener("change", () => {
-      try { localStorage.setItem("slotDemoCardProfile", el.profile.value); } catch (_) {}
-      el.cardRange.value = "";
-      el.rngInput.value = "";
-      refreshCardRangeOptions();
-      updateControls();
-    });
-    document.addEventListener("demogame:card-system-change", () => {
-      el.cardRange.value = "";
-      el.rngInput.value = "";
-      refreshCardRangeOptions();
-      updateControls();
-    });
-    refreshCardRangeOptions();
-    updateControls();
   };
 
   byId("gameId").textContent = Box.game_id;
   byId("gameName").textContent = t("gameName");
-  try { el.profile.value = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
-  catch (_) { el.profile.value = "oldhand"; }
-  renderVersionControls();
+  el.config.value = H027_ACTIVE_CONFIG;
   el.normal.hidden = !SUPPORTED_BET_MODES.has(MODE_NORMAL);
   el.buy.hidden = !SUPPORTED_BET_MODES.has(MODE_EXTRA);
   el.super.hidden = !SUPPORTED_BET_MODES.has(MODE_BUY);
   const cardRangeLabel = el.cardRange.closest("label");
+  cardRangeLabel.firstChild.textContent = "Card BG Range ";
   cardRangeLabel.hidden = !Box.card_system?.enabled;
   el.cardRange.disabled = !Box.card_system?.enabled;
   document.title = `${Box.display_name} — Demo Game`;
   renderBetMenu();
-  refreshCardRangeOptions();
   renderBoard(sampleBoard());
   updateFeatureBar();
   updateStats();
@@ -1850,7 +3308,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(data.card_system?.enabled);</script>
-  <script src="../demogame_common.js?v=1"></script>
+  <script src="../demogame_common.js?v=2"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

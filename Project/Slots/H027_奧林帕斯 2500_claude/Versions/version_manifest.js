@@ -7,10 +7,10 @@ window.H027_VERSION_MANIFEST = {
       math_key: "0.0",
       date: "2026-08-21",
       competitor_initial_version: true,
-      base_config: "../config.js",
       configs: {
-        "92A": "../config_92A.js",
-        "94A": "../config_94A.js"
+        base: "../config.js",
+        92: "../config_92A.js",
+        94: "../config_94A.js"
       },
       workbooks: {
         base: "../Source/H0271.xlsx",
