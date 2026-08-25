@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import threading
 import time
@@ -10,11 +11,10 @@ from datetime import datetime
 from pathlib import Path
 
 import keyboard
-import pandas as pd
-import pyautogui
 import win32api
 import win32con
 import win32gui
+from openpyxl import Workbook
 from selenium.webdriver.chrome.service import Service
 from seleniumwire import webdriver
 from seleniumwire.utils import decode as decode_body
@@ -244,8 +244,8 @@ def select_target_chrome_window() -> int:
     """由滑鼠所在位置鎖定目標 Chrome，避免多個 Chrome 視窗時選錯。"""
     print("\n=== 選擇目標 Chrome ===")
     input("只移動滑鼠到遊戲 Chrome 視窗內，游標停住後直接按鍵盤 Enter...")
-    mouse = pyautogui.position()
-    pointed_hwnd = win32gui.WindowFromPoint((mouse.x, mouse.y))
+    mouse_x, mouse_y = win32api.GetCursorPos()
+    pointed_hwnd = win32gui.WindowFromPoint((mouse_x, mouse_y))
     root_hwnd = win32gui.GetAncestor(pointed_hwnd, win32con.GA_ROOT)
 
     if not root_hwnd or win32gui.GetClassName(root_hwnd) != "Chrome_WidgetWin_1":
@@ -270,8 +270,8 @@ def calibrate_click_points(
         label = input(f"第 {index} 步名稱 [{default_name}]: ").strip() or default_name
         while True:
             input(f"{index}/{point_count} 將滑鼠移到「{label}」後按 Enter...")
-            mouse = pyautogui.position()
-            client_x, client_y = win32gui.ScreenToClient(hwnd, (mouse.x, mouse.y))
+            mouse_x, mouse_y = win32api.GetCursorPos()
+            client_x, client_y = win32gui.ScreenToClient(hwnd, (mouse_x, mouse_y))
             _, _, client_right, client_bottom = win32gui.GetClientRect(hwnd)
             if 0 <= client_x < client_right and 0 <= client_y < client_bottom:
                 point = {"name": label, "x": client_x, "y": client_y}
@@ -412,15 +412,20 @@ def save_records(
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     record_list = list(records.values())
     excel_records = [make_excel_safe(record) for record in record_list]
-    dataframe = pd.DataFrame(excel_records)
 
-    for column in dataframe.columns:
-        try:
-            dataframe[column] = pd.to_numeric(dataframe[column])
-        except (TypeError, ValueError):
-            pass
+    columns: list[str] = []
+    for record in excel_records:
+        for column in record:
+            if column not in columns:
+                columns.append(column)
 
-    dataframe.to_excel(excel_path, sheet_name="game_data", index=False)
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "game_data"
+    worksheet.append(columns)
+    for record in excel_records:
+        worksheet.append([record.get(column, "") for column in columns])
+    workbook.save(excel_path)
     json_path.write_text(
         json.dumps(record_list, ensure_ascii=False, indent=2),
         encoding="utf-8",
@@ -496,6 +501,22 @@ def run_click_loop(
         time.sleep(0.5)
         collect_game_responses(browser, records, processed_requests)
         save_records(records, excel_path, json_path)
+
+
+def run_self_test() -> None:
+    """供打包後驗證必要資源，不啟動瀏覽器或操作滑鼠。"""
+    if not DRIVER_PATH.is_file():
+        raise FileNotFoundError(f"自我測試找不到 ChromeDriver：{DRIVER_PATH}")
+
+    driver_version = subprocess.run(
+        [str(DRIVER_PATH), "--version"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    print(f"ChromeDriver：{driver_version}")
+    print(f"設定與輸出目錄：{SCRIPT_DIR}")
+    print("SELF_TEST_OK")
 
 
 def main() -> None:
@@ -620,7 +641,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    if IS_FROZEN:
+    if "--self-test" in sys.argv:
+        run_self_test()
+    elif IS_FROZEN:
         try:
             main()
         except Exception:
