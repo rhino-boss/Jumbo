@@ -1,0 +1,21 @@
+{
+  "version": 3,
+  "coordinate_system": "chrome_client_area",
+  "click_points": [
+    {
+      "name": "點擊 1",
+      "x": 1339,
+      "y": 934
+    },
+    {
+      "name": "點擊 2",
+      "x": 957,
+      "y": 708
+    },
+    {
+      "name": "點擊 3",
+      "x": 1620,
+      "y": 879
+    }
+  ]
+}
