@@ -1,0 +1,7 @@
+config.js 9c96870c22146851ba36a37e74a50959d6266ab45d4e5fe70c4f6bbc7ee69c9c
+config_92A.js 97a50a2fc699f3081800c897a806536550e0c83bb4a94ab81ea575ae617f485f
+config_94A.js 352b6116d4b5655ade030ab49462af3fc699a9d9cd9c42fb4fa2fe3b5256ef91
+Simulator.py 5fdacf73a1b4f8ddfe6c2f8a1a18f165979ed5a50e02319efac28afd9639c48b
+
+Snapshot purpose: before competitor-metric alignment on 2026-08-25.
+Source workbooks intentionally excluded because this calibration does not modify XLSX files.
