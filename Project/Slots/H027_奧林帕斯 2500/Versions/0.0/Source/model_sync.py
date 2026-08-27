@@ -128,7 +128,7 @@ def validate_super_probability_curve(weights, label, denominator=10000):
         raise ValueError(f"{label} must contain exactly six weights for initial ball counts 1-6")
     if any(value < 0 or value > denominator for value in weights):
         raise ValueError(f"{label} weights must be within 0-{denominator}: {weights}")
-    if any(left >= right for left, right in zip(weights, weights[1:])):
+    if any(weights) and any(left >= right for left, right in zip(weights, weights[1:])):
         raise ValueError(f"{label} must strictly increase as initial ball count increases: {weights}")
 
 
@@ -174,57 +174,67 @@ def read_weights(sheet, row):
             for col in range(11, 36)]
 
 
-def make_multiplier_table(levels, names, weights):
+def make_multiplier_table(levels, names, c2_weights, c3_weights):
     return {
         "multipliers": levels,
         "table_names": names,
-        "weights": weights,
-        "weights_cum": {name: cumulative(weights[name]) for name in names},
+        "weights_c2": c2_weights,
+        "weights_c2_cum": {name: cumulative(c2_weights[name]) for name in names},
+        "weights_c3": c3_weights,
+        "weights_c3_cum": {name: cumulative(c3_weights[name]) for name in names},
     }
 
 
 def read_parameter(sheet):
     levels = [require_int(sheet.cell(row, 3).value, f"Parameter!C{row}")
-              for row in range(28, 53)]
-    header_sets = ([sheet.cell(8, col).value for col in range(11, 36)],)
-    for row_number, header in zip((8,), header_sets):
+              for row in range(18, 43)]
+    header_sets = (
+        [sheet.cell(3, col).value for col in range(11, 36)],
+        [sheet.cell(13, col).value for col in range(11, 36)],
+    )
+    for row_number, header in zip((3, 13), header_sets):
         parsed = [require_int(value, f"Parameter row {row_number}") for value in header]
         if parsed != levels:
-            raise ValueError(f"Parameter multiplier headers on row {row_number} do not match C28:C52")
+            raise ValueError(f"Parameter multiplier headers on row {row_number} do not match C18:C42")
 
     c2_rows = {
-        "BG_Symbol": 9, "BG_Symbol (2)": 10, "BG_Symbol (3)": 11,
-        "FG_Symbol": 12, "FG_Symbol (2)": 13, "BF_Symbol": 14,
+        "BG_Symbol": 4, "BG_Symbol (2)": 5, "BG_Symbol (3)": 6,
+        "FG_Symbol": 7, "FG_Symbol (2)": 8, "BF_Symbol": 9,
+    }
+    c3_rows = {
+        "BG_Symbol": 14, "BG_Symbol (2)": 15, "BG_Symbol (3)": 16,
+        "FG_Symbol": 17, "FG_Symbol (2)": 18, "BF_Symbol": 19,
     }
     use_super_rows = {
-        "BG_Symbol": 18, "BG_Symbol (2)": 19, "BG_Symbol (3)": 20,
-        "FG_Symbol": 21, "FG_Symbol (2)": 22, "BF_Symbol": 23,
+        "BG_Symbol": 24, "BG_Symbol (2)": 25, "BG_Symbol (3)": 26,
+        "FG_Symbol": 27, "FG_Symbol (2)": 28, "BF_Symbol": 29,
     }
-    multiplier_weights = {name: read_weights(sheet, row) for name, row in c2_rows.items()}
+    c2_multiplier_weights = {name: read_weights(sheet, row) for name, row in c2_rows.items()}
+    c3_multiplier_weights = {name: read_weights(sheet, row) for name, row in c3_rows.items()}
     use_super_by_initial_count = {
         name: [require_int(sheet.cell(row, col).value, f"Parameter!{sheet.cell(row, col).coordinate}")
-               for col in range(3, 9)]
+               for col in range(11, 17)]
         for name, row in use_super_rows.items()
     }
     for name, weights in use_super_by_initial_count.items():
         validate_super_probability_curve(weights, f"Parameter use Super row {name}")
-    drop_combo_labels = [str(sheet.cell(56, col).value) for col in range(3, 8)]
+    drop_combo_labels = [str(sheet.cell(33, col).value) for col in range(11, 16)]
     if drop_combo_labels != ["1", "2", "3", "4", "5+"]:
         raise ValueError(
-            "Parameter!C56:G56 must be Combo labels 1, 2, 3, 4, 5+; "
+            "Parameter!K33:O33 must be Combo labels 1, 2, 3, 4, 5+; "
             f"got {drop_combo_labels}"
         )
     drop_combo_rows = {
-        "BG_Symbol": 57, "BG_Symbol (2)": 58, "BG_Symbol (3)": 59,
-        "FG_Symbol": 60, "FG_Symbol (2)": 61, "BF_Symbol": 62,
+        "BG_Symbol": 34, "BG_Symbol (2)": 35, "BG_Symbol (3)": 36,
+        "FG_Symbol": 37, "FG_Symbol (2)": 38, "BF_Symbol": 39,
     }
     use_super_by_drop_combo = {}
     for name, row in drop_combo_rows.items():
-        if str(sheet.cell(row, 2).value) != name:
-            raise ValueError(f"Parameter!B{row} must be {name!r}")
+        if str(sheet.cell(row, 10).value) != name:
+            raise ValueError(f"Parameter!J{row} must be {name!r}")
         weights = [
             require_int(sheet.cell(row, col).value, f"Parameter!{sheet.cell(row, col).coordinate}")
-            for col in range(3, 8)
+            for col in range(11, 16)
         ]
         validate_drop_combo_curve(weights, f"Parameter drop Combo row {name}")
         use_super_by_drop_combo[name] = weights
@@ -275,7 +285,9 @@ def read_parameter(sheet):
             "weights_by_drop_combo": use_super_by_drop_combo,
             "denominator": 10000,
         },
-        "multiplier": make_multiplier_table(levels, list(SYMBOL_SHEETS), multiplier_weights),
+        "multiplier": make_multiplier_table(
+            levels, list(SYMBOL_SHEETS), c2_multiplier_weights, c3_multiplier_weights
+        ),
     }
     featurebuy = json.loads(json.dumps(profile))
     featurebuy["base_reel_names"] = list(FEATUREBUY_BG_SHEETS)
@@ -283,11 +295,13 @@ def read_parameter(sheet):
     featurebuy["base_reel_weights_cum"] = [1]
     featurebuy["free_table"]["initial"] = [5, 10]
     featurebuy["free_table"]["retrigger"] = [2, 3]
-    bf_weights = list(multiplier_weights["BF_Symbol"])
+    bf_c2_weights = list(c2_multiplier_weights["BF_Symbol"])
+    bf_c3_weights = list(c3_multiplier_weights["BF_Symbol"])
     featurebuy["multiplier"] = make_multiplier_table(
         levels,
         list(SYMBOL_SHEETS),
-        {name: list(bf_weights) for name in SYMBOL_SHEETS},
+        {name: list(bf_c2_weights) for name in SYMBOL_SHEETS},
+        {name: list(bf_c3_weights) for name in SYMBOL_SHEETS},
     )
     bf_initial = list(use_super_by_initial_count["BF_Symbol"])
     bf_drop = list(use_super_by_drop_combo["BF_Symbol"])
@@ -460,6 +474,27 @@ def validate_config(config):
                 f"parameter.{profile_name}.c2_to_c3.drop_combo_buckets must be "
                 "['1', '2', '3', '4', '5+']"
             )
+        multiplier = profile["multiplier"]
+        for kind in ("c2", "c3"):
+            weights = multiplier[f"weights_{kind}"]
+            cumulative_weights = multiplier[f"weights_{kind}_cum"]
+            for name in SYMBOL_SHEETS:
+                if len(weights[name]) != LEVEL_COUNT or sum(weights[name]) <= 0:
+                    raise ValueError(
+                        f"parameter.{profile_name}.multiplier.weights_{kind}.{name} "
+                        f"must contain {LEVEL_COUNT} values with a positive total"
+                    )
+                if cumulative(weights[name]) != cumulative_weights[name]:
+                    raise ValueError(
+                        f"parameter.{profile_name}.multiplier.weights_{kind}_cum.{name} is stale"
+                    )
+                if kind == "c3" and any(
+                    weight > 0 for level, weight in zip(levels, weights[name]) if level >= 100
+                ):
+                    raise ValueError(
+                        f"parameter.{profile_name}.multiplier.weights_c3.{name} "
+                        "must be zero at 100x and above"
+                    )
 
 
 def build_updates(config):
@@ -492,49 +527,60 @@ def build_updates(config):
         add_update(updates, "Parameter", f"D{row}", normal["free_table"]["retrigger"][index], "normal.free_table.retrigger")
     for index, value in enumerate(levels):
         col = column_name(11 + index)
-        add_update(updates, "Parameter", f"{col}8", value, "multiplier_levels")
-        add_update(updates, "Parameter", f"B{28 + index}", index + 1, "multiplier level index")
-        add_update(updates, "Parameter", f"C{28 + index}", value, "multiplier_levels")
+        add_update(updates, "Parameter", f"{col}3", value, "multiplier_levels")
+        add_update(updates, "Parameter", f"{col}13", value, "multiplier_levels")
+        add_update(updates, "Parameter", f"B{18 + index}", index + 1, "multiplier level index")
+        add_update(updates, "Parameter", f"C{18 + index}", value, "multiplier_levels")
 
     table_rows = {
-        "BG_Symbol": 18, "BG_Symbol (2)": 19, "BG_Symbol (3)": 20,
-        "FG_Symbol": 21, "FG_Symbol (2)": 22, "BF_Symbol": 23,
+        "BG_Symbol": 24, "BG_Symbol (2)": 25, "BG_Symbol (3)": 26,
+        "FG_Symbol": 27, "FG_Symbol (2)": 28, "BF_Symbol": 29,
     }
     for name, row in table_rows.items():
-        add_update(updates, "Parameter", f"B{row}", name, "normal.c2_to_c3.table_names")
-        for column, value in enumerate(normal["c2_to_c3"]["weights_by_initial_ball_count"][name], start=3):
+        add_update(updates, "Parameter", f"J{row}", name, "normal.c2_to_c3.table_names")
+        for column, value in enumerate(normal["c2_to_c3"]["weights_by_initial_ball_count"][name], start=11):
             add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.c2_to_c3.weights_by_initial_ball_count")
-    add_update(updates, "Parameter", "B16", "weight_C2_to_C3_by_initial_count", "initial conversion header")
-    add_update(updates, "Parameter", "B17", "Initial C2 Count", "initial conversion label")
-    add_update(updates, "Parameter", "B55", "weight_C2_to_C3_by_drop_combo", "drop parameter header")
-    add_update(updates, "Parameter", "B56", "Combo", "drop parameter label")
-    for column, label in enumerate(("1", "2", "3", "4", "5+"), start=3):
-        add_update(updates, "Parameter", f"{column_name(column)}56", label, "drop_combo_buckets")
+    add_update(updates, "Parameter", "J22", "weight_C2_to_C3_by_initial_count", "initial conversion header")
+    add_update(updates, "Parameter", "J23", "Initial C2 Count", "initial conversion label")
+    add_update(updates, "Parameter", "J32", "weight_C2_to_C3_by_drop_combo", "drop parameter header")
+    add_update(updates, "Parameter", "J33", "Combo", "drop parameter label")
+    for column, label in enumerate(("1", "2", "3", "4", "5+"), start=11):
+        add_update(updates, "Parameter", f"{column_name(column)}33", label, "drop_combo_buckets")
     drop_combo_rows = {
-        "BG_Symbol": 57, "BG_Symbol (2)": 58, "BG_Symbol (3)": 59,
-        "FG_Symbol": 60, "FG_Symbol (2)": 61, "BF_Symbol": 62,
+        "BG_Symbol": 34, "BG_Symbol (2)": 35, "BG_Symbol (3)": 36,
+        "FG_Symbol": 37, "FG_Symbol (2)": 38, "BF_Symbol": 39,
     }
     for name, row in drop_combo_rows.items():
-        add_update(updates, "Parameter", f"B{row}", name, "normal.c2_to_c3.table_names")
-        for column, value in enumerate(normal["c2_to_c3"]["weights_by_drop_combo"][name], start=3):
+        add_update(updates, "Parameter", f"J{row}", name, "normal.c2_to_c3.table_names")
+        for column, value in enumerate(normal["c2_to_c3"]["weights_by_drop_combo"][name], start=11):
             add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.c2_to_c3.weights_by_drop_combo")
     add_update(
         updates,
         "Parameter",
-        "B63",
+        "J40",
         "# How to use: Weight/10000; each dropped C2 rolls once by Combo; Combo 5+ uses the last column",
         "drop parameter note",
     )
-    add_update(updates, "Parameter", "J7", "weight_multiplier", "multiplier header")
-    add_update(updates, "Parameter", "J8", "Multiplier", "multiplier label")
-    multiplier_rows = (("BG_Symbol", 9), ("BG_Symbol (2)", 10),
-                       ("BG_Symbol (3)", 11), ("FG_Symbol", 12),
-                       ("FG_Symbol (2)", 13), ("BF_Symbol", 14))
+    add_update(updates, "Parameter", "J2", "weight_multiplier", "multiplier header")
+    add_update(updates, "Parameter", "J3", "C2 Multiplier", "multiplier label")
+    multiplier_rows = (("BG_Symbol", 4), ("BG_Symbol (2)", 5),
+                       ("BG_Symbol (3)", 6), ("FG_Symbol", 7),
+                       ("FG_Symbol (2)", 8), ("BF_Symbol", 9))
     for name, row in multiplier_rows:
         table = normal["multiplier"]
         add_update(updates, "Parameter", f"J{row}", name, "multiplier.table_names")
-        for index, value in enumerate(table["weights"][name]):
-            add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, "multiplier.weights")
+        for index, value in enumerate(table["weights_c2"][name]):
+            add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, "multiplier.weights_c2")
+    add_update(updates, "Parameter", "J12", "weight_multiplier_C3", "C3 multiplier header")
+    add_update(updates, "Parameter", "J13", "C3 Multiplier", "C3 multiplier label")
+    c3_multiplier_rows = (("BG_Symbol", 14), ("BG_Symbol (2)", 15),
+                          ("BG_Symbol (3)", 16), ("FG_Symbol", 17),
+                          ("FG_Symbol (2)", 18), ("BF_Symbol", 19))
+    for name, row in c3_multiplier_rows:
+        table = normal["multiplier"]
+        add_update(updates, "Parameter", f"J{row}", name, "multiplier.table_names")
+        for index, value in enumerate(table["weights_c3"][name]):
+            add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, "multiplier.weights_c3")
     id_to_code = dict(zip(config["symbol_ids"], config["symbol_codes"]))
     for sheet_name, strip in zip(SYMBOL_SHEETS, config["strips"]):
         row_count = len(strip["symbols"])
@@ -559,11 +605,13 @@ def build_updates(config):
                 )
                 if symbol_id not in id_to_code:
                     raise ValueError(f"Unknown symbol ID {symbol_id} in {sheet_name} row {row_index}")
-                add_update(updates, sheet_name, f"{column_name(12 + reel)}{row}", id_to_code[symbol_id], "strips.symbols")
-                add_update(updates, sheet_name, f"{column_name(19 + reel)}{row}", symbol_id, "Symbol ID cache")
-                add_update(updates, sheet_name, f"{column_name(26 + reel)}{row}",
-                           require_int(strip["weights"][row_index][reel], f"{sheet_name}.weights") if active else 0,
-                           "strips.weights")
+                if active:
+                    add_update(updates, sheet_name, f"{column_name(12 + reel)}{row}", id_to_code[symbol_id], "strips.symbols")
+                    add_update(updates, sheet_name, f"{column_name(19 + reel)}{row}", symbol_id, "Symbol ID cache")
+                if active:
+                    add_update(updates, sheet_name, f"{column_name(26 + reel)}{row}",
+                               require_int(strip["weights"][row_index][reel], f"{sheet_name}.weights"),
+                               "strips.weights")
     return updates
 
 
@@ -572,6 +620,13 @@ def column_name(index):
     while index:
         index, remainder = divmod(index - 1, 26)
         result = chr(65 + remainder) + result
+    return result
+
+
+def column_index(name):
+    result = 0
+    for character in name:
+        result = result * 26 + ord(character) - 64
     return result
 
 
@@ -659,6 +714,31 @@ def patch_sheet(xml_bytes, sheet_name, cell_updates):
         return replacement
 
     patched = CELL_PATTERN.sub(replace, text)
+    if remaining:
+        by_row = {}
+        for address in remaining:
+            row_number = int(re.search(r"\d+$", address).group())
+            by_row.setdefault(row_number, []).append(address)
+        for row_number, addresses in by_row.items():
+            row_pattern = re.compile(
+                rf'(<row\b[^>]*\br="{row_number}"[^>]*>)(.*?)(</row>)', re.DOTALL
+            )
+            row_match = row_pattern.search(patched)
+            if not row_match:
+                sample = ", ".join(sorted(addresses)[:10])
+                raise ValueError(f"Mapped row missing from {sheet_name}: {sample}")
+            additions = []
+            for address in sorted(addresses, key=lambda item: column_index(re.match(r"[A-Z]+", item).group())):
+                column = re.match(r"[A-Z]+", address).group()
+                donor = re.search(
+                    rf'<c\b(?P<attrs>[^>]*\br="{column}8"[^>]*)>', patched
+                )
+                style = re.search(r'\bs="([^"]+)"', donor.group("attrs")) if donor else None
+                attrs = f' r="{address}"' + (f' s="{style.group(1)}"' if style else "")
+                additions.append(render_cell(attrs, cell_updates[address][0]))
+            replacement = row_match.group(1) + row_match.group(2) + "".join(additions) + row_match.group(3)
+            patched = patched[:row_match.start()] + replacement + patched[row_match.end():]
+            remaining.difference_update(addresses)
     if remaining:
         sample = ", ".join(sorted(remaining)[:10])
         raise ValueError(f"Mapped cell(s) missing from {sheet_name}: {sample}")

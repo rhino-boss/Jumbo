@@ -305,7 +305,8 @@ USE_SUPER_WEIGHT = np.zeros((PROFILE_COUNT, TABLE_COUNT, 6), dtype=np.int64)
 DROP_SUPER_WEIGHT = np.zeros((PROFILE_COUNT, TABLE_COUNT, 5), dtype=np.int64)
 USE_SUPER_DENOMINATOR = np.full(PROFILE_COUNT, 10000, dtype=np.int64)
 BALL_MULTIPLIERS = np.zeros((PROFILE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
-BALL_WEIGHT_CUM = np.zeros((PROFILE_COUNT, TABLE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
+BALL_C2_WEIGHT_CUM = np.zeros((PROFILE_COUNT, TABLE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
+BALL_C3_WEIGHT_CUM = np.zeros((PROFILE_COUNT, TABLE_COUNT, INITIAL_MULTIPLIER_COUNT), dtype=np.int64)
 
 for profile_index, profile_name in enumerate(PROFILE_NAMES):
     profile = PARAMETER[profile_name]
@@ -329,12 +330,15 @@ for profile_index, profile_name in enumerate(PROFILE_NAMES):
     BALL_MULTIPLIERS[profile_index, : len(multiplier["multipliers"])] = np.asarray(multiplier["multipliers"], dtype=np.int64)
     for table_name in multiplier["table_names"]:
         table_id = TABLE_BY_NAME[table_name]
-        values = multiplier["weights_cum"][table_name]
-        BALL_WEIGHT_CUM[profile_index, table_id, : len(values)] = np.asarray(values, dtype=np.int64)
+        c2_values = multiplier["weights_c2_cum"][table_name]
+        c3_values = multiplier["weights_c3_cum"][table_name]
+        BALL_C2_WEIGHT_CUM[profile_index, table_id, : len(c2_values)] = np.asarray(c2_values, dtype=np.int64)
+        BALL_C3_WEIGHT_CUM[profile_index, table_id, : len(c3_values)] = np.asarray(c3_values, dtype=np.int64)
     fallback_table_id = BASE_REEL_TABLE_IDS[0, 0]
     for table_id in range(TABLE_COUNT):
-        if BALL_WEIGHT_CUM[profile_index, table_id].sum() == 0:
-            BALL_WEIGHT_CUM[profile_index, table_id] = BALL_WEIGHT_CUM[profile_index, fallback_table_id]
+        if BALL_C2_WEIGHT_CUM[profile_index, table_id].sum() == 0:
+            BALL_C2_WEIGHT_CUM[profile_index, table_id] = BALL_C2_WEIGHT_CUM[profile_index, fallback_table_id]
+            BALL_C3_WEIGHT_CUM[profile_index, table_id] = BALL_C3_WEIGHT_CUM[profile_index, fallback_table_id]
             USE_SUPER_WEIGHT[profile_index, table_id] = USE_SUPER_WEIGHT[profile_index, fallback_table_id]
             DROP_SUPER_WEIGHT[profile_index, table_id] = DROP_SUPER_WEIGHT[profile_index, fallback_table_id]
 
@@ -586,8 +590,8 @@ def choose_base_table(profile_index):
 
 
 @njit(nogil=True)
-def draw_initial_multiplier(profile_index, table_id):
-    cumulative = BALL_WEIGHT_CUM[profile_index, table_id]
+def draw_initial_multiplier(profile_index, table_id, symbol):
+    cumulative = BALL_C3_WEIGHT_CUM[profile_index, table_id] if symbol == C3 else BALL_C2_WEIGHT_CUM[profile_index, table_id]
     values = BALL_MULTIPLIERS[profile_index]
     valid_length = 0
     for index in range(cumulative.shape[0]):
@@ -606,7 +610,7 @@ def prepare_multiplier_symbol(symbol, profile_index, table_id, use_c3_weight):
     denominator = USE_SUPER_DENOMINATOR[profile_index]
     use_c3 = 1 if denominator > 0 and np.random.randint(0, denominator) < use_c3_weight else 0
     final_symbol = C3 if use_c3 == 1 else C2
-    return final_symbol, draw_initial_multiplier(profile_index, table_id)
+    return final_symbol, draw_initial_multiplier(profile_index, table_id, final_symbol)
 
 
 @njit(nogil=True)

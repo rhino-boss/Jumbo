@@ -1,0 +1,303 @@
+<title>競品分析索引</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:38px 22px 80px}
+header{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:18px 0 26px}
+.stat{background:var(--panel); padding:12px 15px; display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:11.5px; color:var(--ink-3); font-family:var(--font-mono); letter-spacing:.04em}
+.stat .v{font-family:var(--font-mono); font-size:19px; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .n2{font-size:11.5px; color:var(--ink-3)}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+h3{margin:32px 0 10px; font-size:17.5px; font-weight:600; letter-spacing:-.008em;
+  padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.panel>h3:first-child{margin-top:0}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600}
+p{margin:0 0 11px; max-width:82ch}
+p.cap{color:var(--ink-2); font-size:13.5px}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:82ch}
+li{margin:3px 0}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+blockquote{margin:12px 0 16px; padding:10px 14px; background:var(--panel-2);
+  border-left:2px solid var(--s1); border-radius:0 3px 3px 0; color:var(--ink-2); font-size:13.5px; max-width:86ch}
+blockquote code{background:var(--panel)}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.axisfix{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 18px}
+.pill{font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border:1px solid var(--rule);
+  border-radius:100px; color:var(--ink-2); background:var(--panel)}
+.warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
+.card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+.legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
+.lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
+.sw{width:22px; height:3px; border-radius:2px; flex:none}
+.plot{position:relative; width:100%}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
+  background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
+  white-space:nowrap; z-index:5; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tip b{font-weight:600; display:block; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">H5 · 市場資訊</div>
+  <h1>競品分析</h1>
+  <p class="meta">5 款遊戲的數據分析正本　|　格式固定，可直接並排比較</p>
+  <p class="meta">廠商：<code>JILI</code> Super Ace　<code>PG</code> Lucky Neko / Pinata Wins / Wild Bounty Showdown　<code>PP</code> Gates of Olympus 1000</p>
+</header>
+<div class="stats"><div class="stat"><span class="k">報告數</span><span class="v">5</span><span class="n2">款遊戲</span></div><div class="stat"><span class="k">最大樣本</span><span class="v">166,050</span><span class="n2">Super Ace 付費轉</span></div><div class="stat"><span class="k">最小樣本</span><span class="v">10,463</span><span class="n2">Wild Bounty 付費轉</span></div><div class="stat"><span class="k">有 BF 的</span><span class="v">2</span><span class="n2">Super Ace / Gates of Olympus</span></div><div class="stat"><span class="k">格式待更新</span><span class="v">1</span><span class="n2">Wild Bounty Showdown</span></div></div>
+<div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">報告清單</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">主要指標對照</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">讀這些數字前必須知道的事</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">輪帶還原驗證</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">已知的重複副本</button></div>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>廠商</th><th class="n">付費轉</th><th class="n">報告日期</th><th>格式版本</th><th>報告</th><th>md 正本位置</th></tr></thead><tbody><tr><td>Super Ace</td><td>JILI</td><td class="n">166,050</td><td class="n">2026-08-26</td><td>現行</td><td><a href="遊戲數據_Super_Ace.html">開啟</a></td><td><code>H5\JILI - Super Ace\</code></td></tr><tr><td>Lucky Neko</td><td>PG</td><td class="n">47,068</td><td class="n">2026-08-26</td><td>現行</td><td><a href="遊戲數據_Lucky_Neko.html">開啟</a></td><td><code>H5\PG - Lucky Neko\</code></td></tr><tr><td>Pinata Wins</td><td>PG</td><td class="n">22,688</td><td class="n">2026-08-26</td><td>現行</td><td><a href="遊戲數據_Pinata_Wins.html">開啟</a></td><td><code>H5\PG - Pinata Wins\</code></td></tr><tr><td>Gates of Olympus 1000</td><td>PP</td><td class="n">31,472</td><td class="n">2026-08-26</td><td>現行</td><td><a href="遊戲數據_Gates_of_Olympus_1000.html">開啟</a></td><td><code>H5\PP - Gates of Olympus 1000\</code></td></tr><tr><td>Wild Bounty Showdown</td><td>PG</td><td class="n">10,463</td><td class="n">2026-08-27</td><td>現行</td><td><a href="遊戲數據_Wild_Bounty_Showdown.html">開啟</a></td><td><code>H5\PG - Wild Bounty Showdown\</code></td></tr></tbody></table></div>
+<blockquote>五份都是現行格式，章節與指標定義一致，可直接並排比較。</blockquote></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">Super Ace</th><th class="n">Lucky Neko</th><th class="n">Pinata Wins</th><th class="n">Gates of Olympus 1000</th><th class="n">Wild Bounty Showdown</th></tr></thead><tbody><tr><td>廠商</td><td class="n">JILI</td><td class="n">PG</td><td class="n">PG</td><td class="n">PP</td><td class="n">PG</td></tr><tr><td>付費轉</td><td class="n"><strong>166,050</strong></td><td class="n">47,068</td><td class="n">22,688</td><td class="n">31,472</td><td class="n">10,463</td></tr><tr><td>底注</td><td class="n">3.0 / 0.5 / 0.6</td><td class="n">1.0</td><td class="n">1.0（＋5x Ante）</td><td class="n">0.2</td><td class="n">1.0</td></tr><tr><td><strong>總 RTP</strong></td><td class="n"><strong>94.158%</strong></td><td class="n"><strong>100.932%</strong></td><td class="n"><strong>92.542%</strong></td><td class="n"><strong>90.748%</strong></td><td class="n"><strong>86.636%</strong></td></tr><tr><td>官方 RTP</td><td class="n">96.50%</td><td class="n">96.72%</td><td class="n">⏳</td><td class="n">96.75%</td><td class="n">96.75%</td></tr><tr><td>差距</td><td class="n">−2.34pp</td><td class="n"><strong>+4.21pp</strong></td><td class="n">—</td><td class="n">−6.00pp</td><td class="n">−10.11pp</td></tr><tr><td>BG RTP</td><td class="n">65.128%</td><td class="n">75.561%</td><td class="n">70.949%</td><td class="n">68.536%</td><td class="n">71.069%</td></tr><tr><td>FG RTP</td><td class="n">29.030%</td><td class="n">25.371%</td><td class="n">21.593%</td><td class="n">22.212%</td><td class="n">15.567%</td></tr><tr><td><strong>BG Hit Rate</strong></td><td class="n">23.770%</td><td class="n">27.643%</td><td class="n">27.585%</td><td class="n"><strong>28.807%</strong></td><td class="n">28.434%</td></tr><tr><td>FG Hit Rate</td><td class="n">40.563%</td><td class="n">⏳</td><td class="n">⏳</td><td class="n">43.564%</td><td class="n">25.419%</td></tr><tr><td><strong>FG 週期</strong></td><td class="n"><strong>1/118.5</strong></td><td class="n">1/324.6</td><td class="n">1/319.5</td><td class="n">1/425.3</td><td class="n">1/298.9</td></tr><tr><td>FG 觸發次數</td><td class="n">1,401</td><td class="n">145</td><td class="n">71</td><td class="n">74</td><td class="n">35</td></tr><tr><td>FG 平均倍數</td><td class="n">35.53x</td><td class="n">82.35x</td><td class="n">70.84x</td><td class="n"><strong>94.47x</strong></td><td class="n">46.54x</td></tr><tr><td>Buy Feature</td><td class="n">✅ 40.5x</td><td class="n">❌</td><td class="n">❌</td><td class="n">✅ 100x</td><td class="n">❌</td></tr><tr><td>BF RTP</td><td class="n">84.790%</td><td class="n">—</td><td class="n">—</td><td class="n">85.413%</td><td class="n">—</td></tr></tbody></table></div>
+<h3>最大倍數（實測，倍數＝得分 ÷ 底注）</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">Super Ace</th><th class="n">Lucky Neko</th><th class="n">Pinata Wins</th><th class="n">Gates of Olympus 1000</th><th class="n">Wild Bounty Showdown</th></tr></thead><tbody><tr><td>BG（未觸發 FG 的回合）</td><td class="n">200.85x</td><td class="n">196.30x</td><td class="n"><strong>331.35x</strong></td><td class="n">225.00x</td><td class="n">89.40x</td></tr><tr><td>FG（一場全程）</td><td class="n">761.70x</td><td class="n"><strong>911.80x</strong></td><td class="n">273.45x</td><td class="n">422.45x</td><td class="n">420.40x</td></tr><tr><td>BF（一次購買全程）</td><td class="n">382.60x</td><td class="n">—</td><td class="n">—</td><td class="n"><strong>591.10x</strong></td><td class="n">—</td></tr><tr><td>規則上限</td><td class="n">⏳</td><td class="n">⏳</td><td class="n">⏳</td><td class="n"><strong>15,000x</strong></td><td class="n"><strong>5,000x</strong></td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><h3>RTP 都不能當設定值引用</h3>
+<p>沒有一款的樣本量足以讓 RTP 收斂。最極端的兩個方向：</p>
+<ul><li><strong>Lucky Neko 100.93%，高於官方 4.21pp</strong> —— 正向變異。只有 145 次 FG 觸發，</li></ul>
+<p>  而 FG 貢獻 25.4% 的 RTP，一場 911.80x 的大 FG 就能把總數推高好幾個百分點。</p>
+<ul><li><strong>Wild Bounty Showdown 86.64%，低於官方 10.11pp</strong> —— 但它的 **BG RTP 71.069%</li></ul>
+<p>  對上官方 71.03%，只差 0.04pp**。缺口全在 FG（15.567% vs 官方 25.72%），</p>
+<p>  因為只抓到 35 場 FG。</p>
+<p><strong>可以引用的是 BG Hit Rate 與連消分布</strong>（樣本都上萬，且都通過</p>
+<p>「combo 0 占比 ＋ Hit Rate = 100%」的校驗）。FG 相關指標一律附樣本數。</p>
+<h3>FG 週期差異是真的</h3>
+<p>Super Ace <strong>1/118.5</strong> 比其他四款（1/299 ~ 1/425）密集約 2.5~3.6 倍，</p>
+<p>這個差距遠大於樣本誤差（Super Ace 有 1,401 次觸發）。</p>
+<p>但它的 FG 平均倍數 35.53x 也是最低的——高頻低倍 vs 低頻高倍的設計取向差異。</p>
+<h3>大獎幾乎全部來自免費遊戲</h3>
+<p>五款裡 BG 單回合最高只到 89~331x，而 FG／BF 一場可以到 273~911x。</p>
+<p>差距最大的是 <strong>Wild Bounty Showdown：BG 只有 89.40x，FG 卻到 420.40x（4.7 倍）</strong>。</p>
+<p>唯一例外是 <strong>Pinata Wins：BG 最大 331.35x 反而高於 FG 最大 273.45x</strong> ——</p>
+<p>它的金框倍數在一般遊戲就會生效，而 FG 只抓到 71 場，尾段沒抽到。</p>
+<h3>各家的資料格式差很多</h3>
+<p>四種側錄格式、四種「一次付費 spin」的判定方式：</p>
+<div class="tbl-wrap"><table><thead><tr><th>來源</th><th>一次付費 spin</th><th>總得分口徑</th></tr></thead><tbody><tr><td>PP</td><td>相異 <code>rid</code></td><td><code>w</code> 欄整欄加總</td></tr><tr><td>PG · si_ 格式</td><td><code>si_tb</code> &gt; 0 的列</td><td>每回合<strong>最後一列</strong>的 <code>aw</code></td></tr><tr><td>PG · 已彙整</td><td>相異 <code>root_spin_id</code></td><td><code>total_win</code></td></tr><tr><td>JILI</td><td>一行 JSONL</td><td><code>win</code>（＝<code>sum(plate[i].win)</code>）</td></tr></tbody></table></div>
+<p>判定錯會讓整份 RTP 失真（實例：PG si_ 格式若把 <code>aw</code> 整欄加總，RTP 會算成 400.8%）。</p>
+<p>完整的踩坑紀錄在 <code>~/.claude/skills/game-data-report/references/data_sources.md</code>。</p></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><p>只有兩款做過（資料夾內有還原輪帶檔才做）：</p>
+<div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>檔案</th><th class="n">BG</th><th class="n">FG</th><th class="n">BF</th></tr></thead><tbody><tr><td>Gates of Olympus 1000</td><td><code>還原輪帶_Gates_of_Olympus_1000.xlsx</code></td><td class="n"><strong>100.00%</strong></td><td class="n"><strong>100.00%</strong></td><td class="n"><strong>100.00%</strong></td></tr><tr><td>Super Ace</td><td><code>輪帶還原_SuperAce.xlsx</code></td><td class="n">97.45%</td><td class="n"><strong>100.00%</strong></td><td class="n"><strong>100.00%</strong></td></tr></tbody></table></div>
+<p>兩者的假陽性檢定（盤面洗牌後重測）都是 <strong>0.000%</strong>，所以 100% 不是比對條件太鬆。</p>
+<p>Super Ace 的 BG_Strip 缺 2.55%（R2~R5 各缺 14~20 個視窗），原因是還原時的重複度</p>
+<p>沒解出來，不是抄錯；要補齊需要 min-cost flow 解每個 3-gram 的重複次數。</p>
+<p>詳見該報告 6。</p></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><div class="tbl-wrap"><table><thead><tr><th>路徑</th><th>狀態</th></tr></thead><tbody><tr><td><code>Project\Slots\C027_奧林帕斯 2500\其他\競品資料\遊戲數據_Gates_of_Olympus_1000.md</code> / <code>.html</code></td><td>✅ 2026-08-27 已同步為現行版本</td></tr></tbody></table></div>
+<blockquote>C027 專案自己留的參考副本。若本資料夾的 Gates of Olympus 報告再更新，記得一併同步。</blockquote></div>
+</div>
+
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+const CHARTS=[];
+function activate(k,focus){
+  tabs.forEach((t,i)=>{
+    const on=i===k;
+    t.setAttribute('aria-selected',on?'true':'false');
+    t.tabIndex=on?0:-1;
+    document.getElementById('panel-'+i).hidden=!on;
+  });
+  if(focus) tabs[k].focus();
+  const p=document.getElementById('panel-'+k);
+  CHARTS.forEach(c=>{ if(p.contains(c.host)) c.draw(true); });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{
+    let k=null;
+    if(e.key==='ArrowRight')k=(i+1)%tabs.length;
+    else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')k=0; else if(e.key==='End')k=tabs.length-1;
+    if(k!==null){e.preventDefault(); activate(k,true);}
+  });
+});
+
+const CH=null;
+if(CH){
+  const R=CH.rows, SV=CH.sv, NB=R.length;
+  const DEF={bg:{n:'BG',c:'var(--s1)',hr:'bgH',cnt:'bgC'},
+             fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
+             bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
+  const KEYS=CH.series||['bg','fg','bf'];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=v=>v.toLocaleString('en-US');
+  const cn=document.getElementById('clipnote');
+  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
+    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
+    : '無區間超出 1% 上限。';
+  function legend(id,ks){
+    const e=document.getElementById(id); if(!e)return;
+    e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
+  }
+  function chart(hostId,cfg){
+    const host=document.getElementById(hostId); if(!host)return;
+    let lastW=-1;
+    function draw(force){
+      const W=Math.max(340,host.clientWidth||900);
+      if(!force && W===lastW) return;
+      lastW=W; host.innerHTML='';
+      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const iw=W-m.l-m.r, ih=H-m.t-m.b;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
+      const g=el('g',{transform:`translate(${m.l},${m.t})`});
+      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const X=i=>i/(NB-1)*iw;
+      cfg.yticks.forEach(t=>{
+        const yy=Y(t);
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
+        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
+        tx.textContent=t+'%'; g.appendChild(tx);
+      });
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+      for(let i=0;i<NB;i+=step){
+        const xx=X(i);
+        g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
+          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        tx.textContent=R[i].lab; g.appendChild(tx);
+      }
+      g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
+      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
+      const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
+        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
+      ay.textContent=cfg.ylabel; g.appendChild(ay);
+      cfg.series.forEach(s=>{
+        let run=[];
+        const flush=()=>{
+          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          run=[];
+        };
+        s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
+        flush();
+      });
+      const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+      g.appendChild(cross);
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
+      const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
+      hit.addEventListener('mousemove',ev=>{
+        const bb=svg.getBoundingClientRect();
+        const sx=(ev.clientX-bb.left)*(W/bb.width)-m.l;
+        let i=Math.round(sx/iw*(NB-1)); if(i<0)i=0; if(i>NB-1)i=NB-1;
+        const px=X(i);
+        cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity',1);
+        let html=`<b>${R[i].lab}</b>`;
+        cfg.series.forEach((s,k)=>{
+          const p=s.pts[i];
+          if(p&&p.v!==null){
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
+          }else{
+            dots[k].setAttribute('opacity',0);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>—</span></div>`;
+          }
+        });
+        tip.innerHTML=html; tip.style.opacity=1;
+        const tw=tip.offsetWidth, sc=bb.width/W;
+        let lx=(px+m.l)*sc+14; if(lx+tw>bb.width) lx=(px+m.l)*sc-tw-14;
+        tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
+      });
+      hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.appendChild(g); host.appendChild(svg);
+    }
+    draw(true);
+    const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
+    window.addEventListener('resize',()=>draw());
+    CHARTS.push({host,draw});
+  }
+  const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
+  if(KEYS.includes('bg'))
+    chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
+      aria:'BG 倍率線型，縱軸固定 0 至 1%',
+      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      tipVal:p=>fmt(p.v,5)+'%'});
+  const fgk=KEYS.filter(k=>k!=='bg');
+  if(fgk.length){
+    legend('lg2',fgk);
+    chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
+      aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
+      tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
+  }
+  legend('lg3',KEYS);
+  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
+    aria:'各場景累積機率曲線',
+    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
+    tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
+     把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
+  document.querySelectorAll('.card').forEach(card=>{
+    const plot=card.querySelector('.plot');
+    if(!plot || plot.querySelector('svg')) return;
+    let n=card.previousElementSibling;
+    card.remove();
+    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
+      const prev=n.previousElementSibling;
+      const stop=(n.tagName==='H4');
+      n.remove(); n=prev;
+      if(stop) break;
+    }
+  });
+}
+</script>

@@ -22,13 +22,12 @@ H027 的初始模型主要依據競品遊戲資料建立，依 `slot_development
 | `Overview!B2:B3` | `model`, `excel_version` |
 | `Overview!A7`, `B11:B13`, `B17:G17` | 底注、Bet 倍數、視窗 |
 | `Overview!A30:I41` | `symbol_codes`, `symbol_ids`, `pay_table` |
-| `Parameter!C28:C52` | `multiplier_levels` |
-| `Parameter!K4:AI4` | `parameter.super_multiplier` |
+| `Parameter!C18:C42` | `multiplier_levels`；同時是 C2／C3 可出現的倍率與 C3 升級階層 |
 | `Parameter!B4:D13` | BG／FG 選表與 Free Spin 設定 |
-| `Parameter!B18:H23` | `use_super_multiplier.weights_by_initial_ball_count` |
-| `Parameter!B55:G63` | `use_super_multiplier.drop_combo_buckets`、`weights_by_drop_combo`；Combo 5 以上使用 `5+` |
-| `Parameter!J9:AI14` | C2 倍率權重 |
-| `Parameter!J19:AI24` | C3 倍率權重 |
+| `Parameter!J22:P30` | `c2_to_c3.weights_by_initial_ball_count`；先計算初始盤面 C2 總數，再讓每顆 C2 各自依該欄機率轉成 C3 |
+| `Parameter!J32:O40` | `c2_to_c3.drop_combo_buckets`、`weights_by_drop_combo`；每顆新掉落 C2 獨立判定，Combo 5 以上使用 `5+` |
+| `Parameter!J2:AI9` | `multiplier.weights_c2`；C2 的球上倍率權重，BG／FG／BF 各自使用競品對應分布 |
+| `Parameter!J12:AI19` | `multiplier.weights_c3`；預留 C3 倍率權重，複製 C2 但 100x 以上固定為 0 |
 | 六張正式 `*_Symbol` 工作頁 `L4:Q303` | `strips[].symbols`；實際輪帶長度由正 Weight 的最後一列決定 |
 | 六張正式 `*_Symbol` 工作頁 `Z4:AE303` | `strips[].weights`；競品還原輪帶有效位置皆為 1，其餘為 0 |
 | 六張正式 `*_Symbol` 工作頁 `AH4:AM15` | 保留版面相容但全部為 0，不是 Runtime 輸入 |
@@ -55,3 +54,5 @@ H027 的初始模型主要依據競品遊戲資料建立，依 `slot_development
 `cascade_drop` 表示中獎符號消除後，同輪上方保留符號向下補位；空格從初始可視窗頂端之前的位置沿同一條首尾相接輪帶依序補入。Simulator 與 Demogame 使用相同方向與索引規則。
 
 Base／Card System Off 且 `config_rtp_file` 尚無正權重 BG range 卡時，代表尚未指定 Profile cap；`bg_trigger_fg_pay` 暫以未設上限的自然觸發 BG 得分輸出。`Multiplier Line` 仍完整保留各 `Interval_Upper` 的累計 count/pay；未來載入正式 RTP／Variant Config 後，Simulator 必須從該 Profile 的最大正權重 BG range 取得完全相同的上限並套用，不得寫死。
+
+目前沒有 `super_multiplier`／Super Pool。C2 與 C3 使用同一組倍率階層，但分開保存倍率權重；C3 轉換權重目前全部為 0，因此不會自然出現。

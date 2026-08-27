@@ -1,0 +1,368 @@
+<title>Pinata Wins 遊戲數據</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:38px 22px 80px}
+header{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:18px 0 26px}
+.stat{background:var(--panel); padding:12px 15px; display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:11.5px; color:var(--ink-3); font-family:var(--font-mono); letter-spacing:.04em}
+.stat .v{font-family:var(--font-mono); font-size:19px; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .n2{font-size:11.5px; color:var(--ink-3)}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+h3{margin:32px 0 10px; font-size:17.5px; font-weight:600; letter-spacing:-.008em;
+  padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.panel>h3:first-child{margin-top:0}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600}
+p{margin:0 0 11px; max-width:82ch}
+p.cap{color:var(--ink-2); font-size:13.5px}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:82ch}
+li{margin:3px 0}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+blockquote{margin:12px 0 16px; padding:10px 14px; background:var(--panel-2);
+  border-left:2px solid var(--s1); border-radius:0 3px 3px 0; color:var(--ink-2); font-size:13.5px; max-width:86ch}
+blockquote code{background:var(--panel)}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.axisfix{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 18px}
+.pill{font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border:1px solid var(--rule);
+  border-radius:100px; color:var(--ink-2); background:var(--panel)}
+.warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
+.card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+.legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
+.lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
+.sw{width:22px; height:3px; border-radius:2px; flex:none}
+.plot{position:relative; width:100%}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
+  background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
+  white-space:nowrap; z-index:5; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tip b{font-weight:600; display:block; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">PG · 競品分析</div>
+  <h1>Pinata Wins</h1>
+  <p class="meta">`game_responses_pinata_wins.xlsx` 36,508 列 → 付費轉 22,688　|　BG 22,617 回合 / FG 71 回合　|　押注 1.0</p>
+  <p class="meta">場景代號：<code>BG</code> 一般遊戲　<code>FG</code> 免費遊戲（本作無 Buy Feature）</p>
+</header>
+<div class="stats"><div class="stat"><span class="k">總 RTP</span><span class="v">92.542%</span><span class="n2">餘額法 92.37%</span></div><div class="stat"><span class="k">BG RTP</span><span class="v">70.949%</span><span class="n2">22,617 回合</span></div><div class="stat"><span class="k">FG RTP</span><span class="v">21.593%</span><span class="n2">71 場</span></div><div class="stat"><span class="k">BG Hit Rate</span><span class="v">27.585%</span><span class="n2">每個 BG 回合</span></div><div class="stat"><span class="k">FG 週期</span><span class="v">1/319.5</span><span class="n2">71 次觸發</span></div><div class="stat"><span class="k">FG 平均倍數</span><span class="v">71x</span><span class="n2">最大 273x</span></div><div class="stat"><span class="k">金框使用率 BG</span><span class="v">7.20%</span><span class="n2">被消除／出現</span></div></div>
+<div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">1. 資料說明</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">2. 基本資料</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">3. 共同指標</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">4. 倍率線型</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">5. 特殊指標</button><button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1">6. 附錄</button></div>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><h3>1.1 檔案結構</h3>
+<p>只有一個檔，但<strong>版面很不尋常，讀取前必須先弄清楚</strong>：</p>
+<div class="tbl-wrap"><table><thead><tr><th>分頁</th><th>內容</th><th>用途</th></tr></thead><tbody><tr><td><code>spin_caculate</code></td><td>36,508 列 × 159 欄</td><td>✅ 原始側錄 ＋ 逐列計算欄</td></tr><tr><td><code>Summary</code></td><td>作者自行彙整的總表</td><td>📝 用於交叉驗證</td></tr><tr><td><code>倍率線型</code> / <code>輪帶</code> / <code>金框</code> / <code>倍數</code> / <code>金框位置</code> / <code>金框倍數</code> / <code>Lines</code></td><td>預先算好的分布表</td><td>📝 部分引用</td></tr></tbody></table></div>
+<blockquote>⚠️ <strong><code>spin_caculate</code> 的第 1、2 列不是資料，是作者塞在那裡的統計結果</strong><br>（Total cost / RTP / 金框出現率 …）。<strong>真正的欄名在第 3 列</strong>，資料從第 4 列開始。<br>直接用 <code>header=0</code> 讀會把統計數字當成欄名。</blockquote>
+<h3>1.2 統計方法</h3>
+<p><strong><code>si_tb</code> &gt; 0 標記一次新的付費 spin</strong>，消除列與免費轉列的 <code>si_tb</code> 都是 0。</p>
+<div class="tbl-wrap"><table><thead><tr><th>判定</th><th>依據</th></tr></thead><tbody><tr><td>付費轉數</td><td><code>si_tb</code> &gt; 0 的列數 ＝ <strong>22,688</strong></td></tr><tr><td>交叉驗證</td><td>餘額恰降 1.0 的列數 ＝ 22,537（差 151，為押注 &gt; 1 的回合與斷頭回合）</td></tr><tr><td>總押注</td><td><code>si_tb</code> 加總 ＝ <strong>23,292.00</strong>（Summary 宣告 Total cost ＝ 23292）</td></tr></tbody></table></div>
+<p><strong>得分口徑：每回合「最後一列」的 <code>aw</code></strong></p>
+<p><code>aw</code> 是<strong>回合內的累計值</strong>，會在多列重複出現，所以不能整欄加總。四種算法比較：</p>
+<div class="tbl-wrap"><table><thead><tr><th>口徑</th><th class="n">總得分</th><th class="n">RTP</th><th>判定</th></tr></thead><tbody><tr><td>整欄 <code>sum(aw)</code></td><td class="n">93,363.50</td><td class="n">400.839%</td><td>❌ 累計值重複相加</td></tr><tr><td>每回合末列 <code>tw</code></td><td class="n">15,728.45</td><td class="n">67.527%</td><td>❌ <code>tw</code> 會在回合內歸零</td></tr><tr><td>每回合 <code>max(tw)</code></td><td class="n">19,672.40</td><td class="n">84.460%</td><td>❌ 漏掉多段結算</td></tr><tr><td><strong>每回合末列 <code>aw</code></strong></td><td class="n"><strong>21,554.90</strong></td><td class="n"><strong>92.542%</strong></td><td>✅</td></tr><tr><td>餘額法 <code>bl(末) − blab(首)</code></td><td class="n">21,514.45</td><td class="n">92.368%</td><td>✅ 獨立驗證</td></tr></tbody></table></div>
+<blockquote>末列 <code>aw</code> 與餘額法差 40.45（0.188%），<br>且與 Summary 自宣告的 Total win 21558.30000000006 相差不到 0.02%。</blockquote>
+<p><strong>BG / FG 拆分</strong></p>
+<p><code>IS BG</code> 與 <code>IS FG</code> 是<strong>回合層級</strong>的旗標（同一回合每列都相同），不是逐列標記。</p>
+<p>所以本報告的拆分是「<strong>整個回合</strong>歸 BG 或 FG」：BG 22,617 回合、FG 71 回合。</p>
+<div class="tbl-wrap"><table><thead><tr><th>拆分方式</th><th class="n">BG RTP</th><th class="n">FG RTP</th><th class="n">合計</th></tr></thead><tbody><tr><td><strong>本報告（回合層級）</strong></td><td class="n"><strong>70.949%</strong></td><td class="n"><strong>21.593%</strong></td><td class="n">92.542%</td></tr><tr><td>Summary 自宣告（回合內拆分）</td><td class="n">65.693%</td><td class="n">26.864%</td><td class="n">92.557%</td></tr></tbody></table></div>
+<blockquote><strong>兩種拆法的總計一致，但 BG／FG 的分界不同（差約 5pp）。</strong><br>Summary 把「FG 回合裡觸發 Spin 本身的派彩」算進 BG，本報告整個回合算 FG。<br>這份側錄的逐列旗標是回合層級，<strong>無法在回合內把兩者分開</strong>，<br>所以本報告採回合層級口徑並在此明確標示。要用 Summary 的分界請直接引用該分頁。</blockquote>
+<p><strong>交叉驗證</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>檢查</th><th>結果</th></tr></thead><tbody><tr><td>BG combo 0 占比 ＋ BG Hit Rate</td><td><strong>99.956%</strong></td></tr><tr><td>BG Hit Rate vs Summary 宣告</td><td>27.585% vs 27.561%</td></tr><tr><td>總得分 vs Summary 宣告</td><td>21,554.90 vs 21558.30000000006</td></tr><tr><td>付費轉數 vs Summary 宣告</td><td>22,688 vs 22688</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><h3>2.1 一般遊戲 / 免費遊戲</h3>
+<p><strong>計次數</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>押注</th><th class="n">回合數</th><th>說明</th></tr></thead><tbody><tr><td>1</td><td class="n">22,537</td><td>一般押注</td></tr><tr><td>5</td><td class="n">151</td><td>Extra／Ante Bet（5x）</td></tr><tr><td><strong>合計</strong></td><td class="n"><strong>22,688</strong></td><td></td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">回合數</th></tr></thead><tbody><tr><td>BG（未觸發 FG）</td><td class="n">22,617</td></tr><tr><td>FG（觸發免費遊戲）</td><td class="n">71</td></tr></tbody></table></div>
+<p><strong>統計資料（依押注）</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>押注</th><th class="n">回合數</th><th class="n">押注額</th><th class="n">得分</th><th class="n">總 RTP</th><th class="n">BG Hit Rate</th><th class="n">FG 觸發</th><th class="n">FG 週期</th></tr></thead><tbody><tr><td>1</td><td class="n">22,537</td><td class="n">22,537.0</td><td class="n">21,237.40</td><td class="n"><strong>94.233%</strong></td><td class="n">27.575%</td><td class="n">71</td><td class="n">1/317.4</td></tr><tr><td>5</td><td class="n">151</td><td class="n">755.0</td><td class="n">317.50</td><td class="n"><strong>42.053%</strong></td><td class="n">29.139%</td><td class="n">0</td><td class="n">—</td></tr><tr><td><strong>合計</strong></td><td class="n"><strong>22,688</strong></td><td class="n"><strong>23,292.0</strong></td><td class="n"><strong>21,554.90</strong></td><td class="n"><strong>92.542%</strong></td><td class="n"><strong>27.585%</strong></td><td class="n"><strong>71</strong></td><td class="n"><strong>1/319.5</strong></td></tr></tbody></table></div>
+<blockquote><strong>本作有 Extra／Ante Bet：151 個回合的 <code>si_tb</code> = 5.0</strong>（其餘 22,537 個為 1.0）。<br>5x 模式樣本太少（151 回合），其 RTP 不可解讀，但必須分開列出以免混淆分母。</blockquote>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">BG RTP</th><th class="n">FG RTP</th><th class="n">總 RTP</th><th class="n">FG 平均倍數</th></tr></thead><tbody><tr><td>全體</td><td class="n"><strong>70.949%</strong></td><td class="n"><strong>21.593%</strong></td><td class="n"><strong>92.542%</strong></td><td class="n"><strong>70.84x</strong></td></tr></tbody></table></div>
+<blockquote>BG Hit Rate 的分母是 BG 回合數，該回合末列 <code>aw</code> &gt; 0 即計中獎。<br>FG 平均倍數以 71 次觸發為分母；中位數 42.90x、最大 273.45x。</blockquote>
+<blockquote>⚠️ <strong>FG 轉數與 FG Hit Rate 本報告無法提供。</strong> <code>FG count</code> 欄每個回合的最大值都是 1，<br>無法據以算出免費轉數。Summary 宣告 Total F-spin ＝ 1267、FG count ＝ 84（週期 1/270.1），<br>與本報告的 71 次觸發（週期 1/319.5）不同。<br>差異來源可能是 retrigger 的計算方式。要精確的 FG 逐轉指標，需回 <code>raw_full</code> 解封包重算。</blockquote>
+<h3>2.2 與官方值對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">本次計算</th><th>官方</th><th>差距</th></tr></thead><tbody><tr><td>總體 RTP</td><td class="n"><strong>92.542%</strong></td><td>⏳ 未查證</td><td>—</td></tr></tbody></table></div>
+<blockquote>官方 RTP 未查證。與檔案 Summary 自宣告的 92.557% 相差 0.015pp，屬捨入層級。<br><strong>22,688 轉、僅 71 次 FG 觸發</strong>——FG 貢獻 21.6% 的 RTP，<br>總 RTP 的信賴區間相當寬。BG Hit Rate 與連消分布樣本充足，可引用。</blockquote></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><h3>3.1 賠率</h3>
+<p>⏳ 本側錄未附賠率表；<code>Lines</code> 分頁只有連線數統計，不含各符號賠率。</p>
+<h3>3.2 符號消除率與連線分布</h3>
+<p>取自 <code>Lines</code> 分頁。</p>
+<div class="tbl-wrap"><table><thead><tr><th>1</th><th class="n">2</th><th class="n">6</th><th class="n">10</th><th class="n">14</th><th class="n">18</th><th class="n">20</th><th class="n">1</th><th class="n">7</th><th class="n">9</th><th class="n">15</th><th class="n">17</th><th class="n">ID</th><th class="n">Name</th><th class="n">Symbol</th><th class="n">5</th><th class="n">4</th><th class="n">3</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th></tr></thead><tbody><tr><td>2</td><td class="n">1</td><td class="n">5</td><td class="n">9</td><td class="n">13</td><td class="n">17</td><td class="n">0</td><td class="n">WILD</td><td class="n">WW</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">1</td><td class="n">2</td><td class="n">6</td><td class="n">10</td><td class="n">14</td><td class="n">18</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">1, 1, 1, 1, 1</td></tr><tr><td>3</td><td class="n">3</td><td class="n">7</td><td class="n">11</td><td class="n">15</td><td class="n">19</td><td class="n">1</td><td class="n">Scatter</td><td class="n">SC</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">2</td><td class="n">1</td><td class="n">5</td><td class="n">9</td><td class="n">13</td><td class="n">17</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0, 0, 0, 0, 0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">6</td><td class="n">11</td><td class="n">14</td><td class="n">17</td><td class="n">2</td><td class="n">骷髏頭</td><td class="n">M1</td><td class="n">50</td><td class="n">12.5</td><td class="n">2.5</td><td class="n">3</td><td class="n">3</td><td class="n">7</td><td class="n">11</td><td class="n">15</td><td class="n">19</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">2, 2, 2, 2, 2</td></tr><tr><td>5</td><td class="n">3</td><td class="n">6</td><td class="n">9</td><td class="n">14</td><td class="n">19</td><td class="n">3</td><td class="n">帽子</td><td class="n">M2</td><td class="n">20</td><td class="n">5</td><td class="n">1</td><td class="n">4</td><td class="n">1</td><td class="n">6</td><td class="n">11</td><td class="n">14</td><td class="n">17</td><td class="n">0</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n">0, 1, 2, 1, 0</td></tr><tr><td>6</td><td class="n">1</td><td class="n">5</td><td class="n">10</td><td class="n">13</td><td class="n">17</td><td class="n">4</td><td class="n">沙鈴</td><td class="n">M3</td><td class="n">10</td><td class="n">2.5</td><td class="n">0.75</td><td class="n">5</td><td class="n">3</td><td class="n">6</td><td class="n">9</td><td class="n">14</td><td class="n">19</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">2</td><td class="n">2, 1, 0, 1, 2</td></tr><tr><td>7</td><td class="n">3</td><td class="n">7</td><td class="n">10</td><td class="n">15</td><td class="n">19</td><td class="n">6</td><td class="n">1</td><td class="n">5</td><td class="n">10</td><td class="n">13</td><td class="n">17</td><td class="n">5</td><td class="n">捲餅</td><td class="n">M4</td><td class="n">7.5</td><td class="n">2</td><td class="n">0.5</td><td class="n">6</td><td class="n">1</td><td class="n">5</td><td class="n">10</td><td class="n">13</td><td class="n">17</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0, 0, 1, 0, 0</td></tr><tr><td>8</td><td class="n">2</td><td class="n">7</td><td class="n">11</td><td class="n">15</td><td class="n">18</td><td class="n">6</td><td class="n">辣椒</td><td class="n">M5</td><td class="n">5</td><td class="n">1</td><td class="n">0.25</td><td class="n">7</td><td class="n">3</td><td class="n">7</td><td class="n">10</td><td class="n">15</td><td class="n">19</td><td class="n">2</td><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">2</td><td class="n">2, 2, 1, 2, 2</td></tr><tr><td>9</td><td class="n">2</td><td class="n">5</td><td class="n">9</td><td class="n">13</td><td class="n">18</td><td class="n">7</td><td class="n">A</td><td class="n">A</td><td class="n">2.5</td><td class="n">0.5</td><td class="n">0.1</td><td class="n">8</td><td class="n">2</td><td class="n">7</td><td class="n">11</td><td class="n">15</td><td class="n">18</td><td class="n">1</td><td class="n">2</td><td class="n">2</td><td class="n">2</td><td class="n">1</td><td class="n">1, 2, 2, 2, 1</td></tr><tr><td>10</td><td class="n">1</td><td class="n">6</td><td class="n">10</td><td class="n">14</td><td class="n">17</td><td class="n">8</td><td class="n">K</td><td class="n">K</td><td class="n">2.5</td><td class="n">0.5</td><td class="n">0.1</td><td class="n">9</td><td class="n">2</td><td class="n">5</td><td class="n">9</td><td class="n">13</td><td class="n">18</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">1, 0, 0, 0, 1</td></tr><tr><td>11</td><td class="n">3</td><td class="n">6</td><td class="n">10</td><td class="n">14</td><td class="n">19</td><td class="n">9</td><td class="n">Q</td><td class="n">Q</td><td class="n">2.5</td><td class="n">0.5</td><td class="n">0.1</td><td class="n">10</td><td class="n">1</td><td class="n">6</td><td class="n">10</td><td class="n">14</td><td class="n">17</td><td class="n">0</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">0, 1, 1, 1, 0</td></tr><tr><td>12</td><td class="n">2</td><td class="n">6</td><td class="n">9</td><td class="n">14</td><td class="n">18</td><td class="n">18</td><td class="n">1</td><td class="n">5</td><td class="n">10</td><td class="n">15</td><td class="n">19</td><td class="n">10</td><td class="n">J</td><td class="n">J</td><td class="n">2.5</td><td class="n">0.5</td><td class="n">0.1</td><td class="n">11</td><td class="n">3</td><td class="n">6</td><td class="n">10</td><td class="n">14</td><td class="n">19</td><td class="n">2</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td class="n">2, 1, 1, 1, 2</td></tr><tr><td>13</td><td class="n">2</td><td class="n">6</td><td class="n">11</td><td class="n">14</td><td class="n">18</td><td class="n">12</td><td class="n">2</td><td class="n">6</td><td class="n">9</td><td class="n">14</td><td class="n">18</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">1</td><td class="n">1, 1, 0, 1, 1</td></tr><tr><td>14</td><td class="n">2</td><td class="n">5</td><td class="n">10</td><td class="n">13</td><td class="n">18</td><td class="n">13</td><td class="n">2</td><td class="n">6</td><td class="n">11</td><td class="n">14</td><td class="n">18</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">1</td><td class="n">1, 1, 2, 1, 1</td></tr><tr><td>15</td><td class="n">2</td><td class="n">7</td><td class="n">10</td><td class="n">15</td><td class="n">18</td><td class="n">14</td><td class="n">2</td><td class="n">5</td><td class="n">10</td><td class="n">13</td><td class="n">18</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">1, 0, 1, 0, 1</td></tr><tr><td>16</td><td class="n">1</td><td class="n">6</td><td class="n">9</td><td class="n">14</td><td class="n">17</td><td class="n">15</td><td class="n">2</td><td class="n">7</td><td class="n">10</td><td class="n">15</td><td class="n">18</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">1, 2, 1, 2, 1</td></tr><tr><td>17</td><td class="n">3</td><td class="n">6</td><td class="n">11</td><td class="n">14</td><td class="n">19</td><td class="n">7</td><td class="n">3</td><td class="n">7</td><td class="n">10</td><td class="n">15</td><td class="n">19</td><td class="n">16</td><td class="n">1</td><td class="n">6</td><td class="n">9</td><td class="n">14</td><td class="n">17</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0, 1, 0, 1, 0</td></tr><tr><td>18</td><td class="n">1</td><td class="n">5</td><td class="n">10</td><td class="n">15</td><td class="n">19</td><td class="n">17</td><td class="n">3</td><td class="n">6</td><td class="n">11</td><td class="n">14</td><td class="n">19</td><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td class="n">2</td><td class="n">2, 1, 2, 1, 2</td></tr><tr><td>19</td><td class="n">3</td><td class="n">7</td><td class="n">10</td><td class="n">13</td><td class="n">17</td><td class="n">18</td><td class="n">1</td><td class="n">5</td><td class="n">10</td><td class="n">15</td><td class="n">19</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">2</td><td class="n">2</td><td class="n">0, 0, 1, 2, 2</td></tr><tr><td>20</td><td class="n">1</td><td class="n">7</td><td class="n">9</td><td class="n">15</td><td class="n">17</td><td class="n">19</td><td class="n">3</td><td class="n">7</td><td class="n">10</td><td class="n">13</td><td class="n">17</td><td class="n">2</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">2, 2, 1, 0, 0</td></tr><tr><td>20</td><td class="n">1</td><td class="n">7</td><td class="n">9</td><td class="n">15</td><td class="n">17</td><td class="n">0</td><td class="n">2</td><td class="n">0</td><td class="n">2</td><td class="n">0</td><td class="n">0, 2, 0, 2, 0</td></tr><tr><td>19</td><td class="n">3</td><td class="n">7</td><td class="n">10</td><td class="n">13</td><td class="n">17</td></tr><tr><td>0</td><td class="n">4</td><td class="n">8</td><td class="n">12</td><td class="n">16</td></tr><tr><td>1</td><td class="n">5</td><td class="n">9</td><td class="n">13</td><td class="n">17</td></tr><tr><td>2</td><td class="n">6</td><td class="n">10</td><td class="n">14</td><td class="n">18</td></tr><tr><td>3</td><td class="n">7</td><td class="n">11</td><td class="n">15</td><td class="n">19</td></tr><tr><td>5</td><td class="n">5</td><td class="n">7</td><td class="n">7</td><td class="n">6</td><td class="n">5</td><td class="n">2</td><td class="n">8</td><td class="n">7</td><td class="n">5</td><td class="n">7</td><td class="n">5</td><td class="n">2</td><td class="n">4</td><td class="n">9</td><td class="n">3</td><td class="n">2</td><td class="n">3</td><td class="n">10</td><td class="n">6</td></tr><tr><td>5</td><td class="n">5</td><td class="n">7</td><td class="n">7</td><td class="n">6</td><td class="n">5</td><td class="n">2</td><td class="n">8</td><td class="n">7</td><td class="n">5</td><td class="n">7</td><td class="n">5</td><td class="n">2</td><td class="n">4</td><td class="n">9</td><td class="n">3</td><td class="n">2</td><td class="n">3</td><td class="n">10</td><td class="n">6</td></tr><tr><td>5</td><td class="n">6</td><td class="n">7</td><td class="n">2</td><td class="n">2</td></tr><tr><td>5</td><td class="n">5</td><td class="n">5</td><td class="n">4</td><td class="n">3</td></tr><tr><td>7</td><td class="n">2</td><td class="n">7</td><td class="n">9</td><td class="n">10</td></tr><tr><td>7</td><td class="n">8</td><td class="n">5</td><td class="n">3</td><td class="n">6</td></tr><tr><td>5</td><td class="n">6</td><td class="n">7</td><td class="n">2</td><td class="n">2</td></tr><tr><td>5</td><td class="n">5</td><td class="n">5</td><td class="n">4</td><td class="n">3</td></tr><tr><td>7</td><td class="n">2</td><td class="n">7</td><td class="n">9</td><td class="n">10</td></tr><tr><td>7</td><td class="n">8</td><td class="n">5</td><td class="n">3</td><td class="n">6</td></tr><tr><td>5</td><td class="n">5</td><td class="n">7</td><td class="n">7</td><td class="n">6</td><td class="n">5</td><td class="n">2</td><td class="n">8</td><td class="n">7</td><td class="n">5</td><td class="n">7</td><td class="n">5</td><td class="n">2</td><td class="n">4</td><td class="n">9</td><td class="n">3</td><td class="n">2</td><td class="n">3</td><td class="n">10</td><td class="n">6</td></tr></tbody></table></div>
+<h3>3.3 輪帶</h3>
+<div class="tbl-wrap"><table><thead><tr><th>消除前表</th><th class="n">消除後表</th><th class="n">總贏分</th><th class="n">初始盤面</th><th class="n">各輪掉落symbol</th></tr></thead><tbody><tr><td>si_st</td><td class="n">si_nst</td><td class="n">si_aw</td><td class="n">si_tw</td><td class="n">FG count</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">0.5</td><td class="n">0.5</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">0.3</td><td class="n">0.3</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">0.3</td><td class="n">0.3</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">2.25</td><td class="n">2.25</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">2.25</td><td class="n">2.25</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">5.25</td><td class="n">5.25</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">0.2</td><td class="n">0.2</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">0.6</td><td class="n">0.6</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>4</td><td class="n">1</td><td class="n">0.5</td><td class="n">0.5</td><td class="n">0</td></tr><tr><td>1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>1</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr><tr><td>…</td><td class="n">…</td><td class="n">…</td><td class="n">…</td><td class="n">…</td></tr></tbody></table></div>
+<blockquote>取自 <code>輪帶</code> 分頁（原始側錄整理，本報告未另做還原驗證——<br>資料夾內沒有 <code>還原輪帶_*.xlsx</code>）。</blockquote>
+<h3>3.4 Hit Rate</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">中獎數</th><th class="n">Hit Rate</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td>一個 BG 回合</td><td class="n">22,617</td><td class="n">6,239</td><td class="n"><strong>27.585%</strong></td></tr><tr><td>FG</td><td>一次免費轉</td><td class="n">—</td><td class="n">—</td><td class="n">⏳ 無法由本檔推得（見 2.1）</td></tr></tbody></table></div>
+<h3>3.5 門檻機率</h3>
+<h4>FG 結束後 10x 以下</h4>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">場次</th><th class="n">10x 以下場次</th><th class="n">機率</th></tr></thead><tbody><tr><td>NB-FG（自然觸發）</td><td class="n">71</td><td class="n">8</td><td class="n"><strong>11.268%</strong></td></tr></tbody></table></div>
+<blockquote>「一場 FG」＝該 FG 回合的總得分 ÷ 押注。<strong>本作無 BF，故無離場分布章節。</strong></blockquote>
+<h3>3.6 消除率</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">combo 0</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5+</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td>一個 BG 回合</td><td class="n">72.370%</td><td class="n">12.331%</td><td class="n">10.306%</td><td class="n">2.923%</td><td class="n">1.335%</td><td class="n">0.734%</td></tr></tbody></table></div>
+<blockquote><strong>校驗</strong>：combo 0（72.370%）＋ Hit Rate（27.585%）＝ <strong>99.956%</strong><br>消除次數取該回合 <code>BG消除次數</code> 的最大值。</blockquote>
+<h3>3.7 最大倍數</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">最大倍數</th></tr></thead><tbody><tr><td><strong>BG</strong></td><td>一個 BG 回合</td><td class="n">22,617</td><td class="n"><strong>331.35x</strong></td></tr><tr><td><strong>FG</strong></td><td>一個 FG 回合全程</td><td class="n">71</td><td class="n"><strong>273.45x</strong></td></tr><tr><td>規則上限</td><td>官方</td><td class="n">—</td><td class="n">⏳ 未查證</td></tr></tbody></table></div>
+<blockquote>BG 回合最大只有 331.35x，FG 最大 273.45x——差 1 倍，大獎完全來自免費遊戲。</blockquote>
+<p><strong>FG 全程得分門檻</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>門檻</th><th class="n">≥10x</th><th class="n">≥20x</th><th class="n">≥50x</th><th class="n">≥100x</th><th class="n">≥200x</th><th class="n">≥500x</th><th class="n">≥1000x</th></tr></thead><tbody><tr><td>佔 71 場</td><td class="n">88.73%</td><td class="n">74.65%</td><td class="n">45.07%</td><td class="n">28.17%</td><td class="n">8.45%</td><td class="n">0.00%</td><td class="n">0.00%</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><h3>4.1 摘要</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">NB-BG</th><th class="n">NB-FG</th></tr></thead><tbody><tr><td>統計單位</td><td class="n">每次付費下注</td><td class="n">每個 FG 回合全程</td></tr><tr><td>樣本</td><td class="n">22,688</td><td class="n"><strong>71</strong></td></tr><tr><td>非零區間</td><td class="n">31</td><td class="n">24</td></tr><tr><td>Range 合計</td><td class="n">100.00000%</td><td class="n">100.00000%</td></tr></tbody></table></div>
+<blockquote>區間沿用 H026 標準 64 區間 <code>(Lower, Upper]</code>，倍率＝得分 ÷ 押注。<br><strong>⚠️ FG 僅 71 場</strong>，遠少於 64 個區間，形狀不可解讀。<br><strong>本作無 BF</strong>，故只有兩條線。</blockquote>
+<div class="axisfix">
+  <span class="pill">X 軸：固定 64 區間（全部標出）</span>
+  <span class="pill">BG Y 軸：固定 0–1%</span>
+  <span class="pill">FG Y 軸：固定 0–16%</span>
+  <span class="pill">超出上限不繪製</span>
+</div>
+<h4>BG 倍率線型</h4>
+<p class="cap">縱軸固定 0–1%。超過 1% 的低倍區間不繪製，以放大尾段細節。折線斷開處代表該區間為零，非插值。</p>
+<p class="warn" id="clipnote"></p>
+<div class="card"><div class="plot" id="p1"></div></div>
+<h4>FG 倍率線型</h4>
+<p class="cap">縱軸固定 0–16%。</p>
+<div class="card"><div class="legend" id="lg2"></div><div class="plot" id="p2"></div></div>
+<h4>尾段厚度：P(倍率 &gt; 區間上限)</h4>
+<p class="cap">各場景在自身樣本內的累積機率，縱軸固定 0–100%。曲線越早墜地，尾段越薄。</p>
+<div class="card"><div class="legend" id="lg3"></div><div class="plot" id="p3"></div></div>
+<h3>4.2 倍率線型分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>Interval</th><th class="n">NB-BG 次數</th><th class="n">NB-BG Hit Rate</th><th class="n">NB-FG 場次</th><th class="n">NB-FG 占比</th></tr></thead><tbody><tr><td><code>(-1, 0]</code></td><td class="n">16,378</td><td class="n">72.18794%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(0, 1]</code></td><td class="n">3,628</td><td class="n">15.99083%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(1, 2]</code></td><td class="n">1,133</td><td class="n">4.99383%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(2, 3]</code></td><td class="n">483</td><td class="n">2.12888%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(3, 4]</code></td><td class="n">215</td><td class="n">0.94764%</td><td class="n">3</td><td class="n">4.225%</td></tr><tr><td><code>(4, 5]</code></td><td class="n">141</td><td class="n">0.62147%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(5, 6]</code></td><td class="n">121</td><td class="n">0.53332%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(6, 7]</code></td><td class="n">58</td><td class="n">0.25564%</td><td class="n">1</td><td class="n">1.408%</td></tr><tr><td><code>(7, 8]</code></td><td class="n">70</td><td class="n">0.30853%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(8, 9]</code></td><td class="n">62</td><td class="n">0.27327%</td><td class="n">1</td><td class="n">1.408%</td></tr><tr><td><code>(9, 10]</code></td><td class="n">51</td><td class="n">0.22479%</td><td class="n">1</td><td class="n">1.408%</td></tr><tr><td><code>(10, 15]</code></td><td class="n">114</td><td class="n">0.50247%</td><td class="n">5</td><td class="n">7.042%</td></tr><tr><td><code>(15, 20]</code></td><td class="n">58</td><td class="n">0.25564%</td><td class="n">5</td><td class="n">7.042%</td></tr><tr><td><code>(20, 25]</code></td><td class="n">43</td><td class="n">0.18953%</td><td class="n">6</td><td class="n">8.451%</td></tr><tr><td><code>(25, 30]</code></td><td class="n">26</td><td class="n">0.11460%</td><td class="n">5</td><td class="n">7.042%</td></tr><tr><td><code>(30, 35]</code></td><td class="n">14</td><td class="n">0.06171%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(35, 40]</code></td><td class="n">18</td><td class="n">0.07934%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(40, 45]</code></td><td class="n">12</td><td class="n">0.05289%</td><td class="n">4</td><td class="n">5.634%</td></tr><tr><td><code>(45, 50]</code></td><td class="n">5</td><td class="n">0.02204%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(50, 60]</code></td><td class="n">9</td><td class="n">0.03967%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(60, 70]</code></td><td class="n">9</td><td class="n">0.03967%</td><td class="n">5</td><td class="n">7.042%</td></tr><tr><td><code>(70, 80]</code></td><td class="n">7</td><td class="n">0.03085%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(80, 90]</code></td><td class="n">2</td><td class="n">0.00882%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(90, 100]</code></td><td class="n">3</td><td class="n">0.01322%</td><td class="n">1</td><td class="n">1.408%</td></tr><tr><td><code>(100, 120]</code></td><td class="n">5</td><td class="n">0.02204%</td><td class="n">4</td><td class="n">5.634%</td></tr><tr><td><code>(120, 140]</code></td><td class="n">7</td><td class="n">0.03085%</td><td class="n">6</td><td class="n">8.451%</td></tr><tr><td><code>(140, 160]</code></td><td class="n">4</td><td class="n">0.01763%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(160, 180]</code></td><td class="n">3</td><td class="n">0.01322%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(180, 200]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(200, 250]</code></td><td class="n">6</td><td class="n">0.02645%</td><td class="n">4</td><td class="n">5.634%</td></tr><tr><td><code>(250, 300]</code></td><td class="n">2</td><td class="n">0.00882%</td><td class="n">2</td><td class="n">2.817%</td></tr><tr><td><code>(300, 350]</code></td><td class="n">1</td><td class="n">0.00441%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(350, 400]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(400, 450]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(450, 500]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(500, 550]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(550, 600]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(600, 650]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(650, 700]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(700, 750]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(750, 800]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(800, 850]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(850, 900]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(900, 950]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(950, 1000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(1000, 2000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(2000, 3000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(3000, 4000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(4000, 5000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(5000, 6000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(6000, 7000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(7000, 8000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(8000, 9000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(9000, 10000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(10000, 20000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(20000, 30000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(30000, 40000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(40000, 50000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(50000, 60000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(60000, 70000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(70000, 80000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(80000, 90000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(90000, 100000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(100000, 9999999]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr></tbody></table></div>
+<h3>4.3 觀察</h3>
+<ul><li>BG：<code>(-1, 0]</code> 佔 72.19%、<code>(0, 1]</code> 佔 15.99%，最高到 <code>(300, 350]</code>。</li><li>NB-FG 中位數 42.90x、最大 273.45x，量級與 BG 完全不重疊。</li></ul></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><h3>5.1 金框</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">盤面數</th><th class="n">金框出現數</th><th class="n">平均每盤</th><th class="n">金框消除數</th><th class="n">使用率</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td class="n">34,570</td><td class="n">71,312</td><td class="n">2.063</td><td class="n">5,133</td><td class="n"><strong>7.20%</strong></td></tr><tr><td>FG（免費遊戲）</td><td class="n">1,938</td><td class="n">5,319</td><td class="n">2.745</td><td class="n">402</td><td class="n"><strong>7.56%</strong></td></tr></tbody></table></div>
+<blockquote>「金框出現數」＝<code>金框數量4*5</code> ＋ <code>金框數量3*5</code> 逐列加總；<br>「使用率」＝被消除的金框 ÷ 出現的金框（只有參與到中獎的金框才會被消除並生效倍數）。<br>檔案第 1、2 列自宣告的金框出現率為 BG 1.3470997884344147、使用率 0.2262429478138223，口徑與本報告不同（該處以「每回合」為分母）。</blockquote>
+<p><strong>每個盤面的金框個數分布</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">0 個</th><th class="n">1 個</th><th class="n">2 個</th><th class="n">3 個</th><th class="n">4 個</th><th class="n">5 個</th><th class="n">6 個</th><th class="n">7 個</th><th class="n">8 個</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td class="n">43.003%</td><td class="n">4.848%</td><td class="n">15.626%</td><td class="n">8.941%</td><td class="n">11.652%</td><td class="n">6.439%</td><td class="n">5.085%</td><td class="n">2.456%</td><td class="n">1.950%</td></tr><tr><td>FG（免費遊戲）</td><td class="n">47.936%</td><td class="n">1.754%</td><td class="n">6.811%</td><td class="n">5.005%</td><td class="n">9.546%</td><td class="n">6.347%</td><td class="n">7.018%</td><td class="n">5.160%</td><td class="n">10.423%</td></tr></tbody></table></div>
+<h3>5.2 結算時的累積倍數</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>有倍數的回合</th><th class="n">平均倍數</th><th class="n">中位數</th><th class="n">最大</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td>6,227／22,617（27.53%）</td><td class="n">1.642x</td><td class="n">1.0x</td><td class="n">80x</td></tr><tr><td>FG（免費遊戲）</td><td>71／71（100.00%）</td><td class="n">8.676x</td><td class="n">7.0x</td><td class="n">59x</td></tr></tbody></table></div>
+<p><strong>倍數值分布</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">1x</th><th class="n">2x</th><th class="n">3x</th><th class="n">4x</th><th class="n">5x</th><th class="n">6x</th><th class="n">7x</th><th class="n">8x</th><th class="n">9x</th><th class="n">10x</th><th class="n">11x</th><th class="n">12x</th><th class="n">13x</th><th class="n">14x</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td class="n">88.53%</td><td class="n">2.87%</td><td class="n">2.28%</td><td class="n">0.03%</td><td class="n">1.65%</td><td class="n">0.05%</td><td class="n">0.03%</td><td class="n">1.70%</td><td class="n">0.00%</td><td class="n">1.30%</td><td class="n">0.06%</td><td class="n">0.05%</td><td class="n">0.05%</td><td class="n">0.00%</td></tr><tr><td>FG（免費遊戲）</td><td class="n">14.08%</td><td class="n">8.45%</td><td class="n">2.82%</td><td class="n">7.04%</td><td class="n">8.45%</td><td class="n">8.45%</td><td class="n">4.23%</td><td class="n">4.23%</td><td class="n">4.23%</td><td class="n">4.23%</td><td class="n">4.23%</td><td class="n">7.04%</td><td class="n">4.23%</td><td class="n">2.82%</td></tr></tbody></table></div>
+<blockquote>取 <code>BG結算時倍數</code> / <code>FG結算時倍數</code> 每回合的最大值。<br>檔案自宣告 BG 金框平均倍數 1.6134841894335565、FG 平均倍數 5.399613899613899。</blockquote>
+<h3>5.3 金框位置分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>4</th><th class="n">12</th></tr></thead><tbody><tr><td>5</td><td class="n">12</td></tr><tr><td>6</td><td class="n">14</td></tr><tr><td>6</td><td class="n">4</td></tr><tr><td>7</td><td class="n">5</td></tr><tr><td>5</td><td class="n">8</td></tr><tr><td>12</td><td class="n"></td></tr><tr><td>12</td><td class="n"></td></tr><tr><td>14</td><td class="n">4</td></tr><tr><td>5</td><td class="n"></td></tr><tr><td>5</td><td class="n"></td></tr><tr><td>6</td><td class="n">12</td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>5</td><td class="n"></td></tr><tr><td>5</td><td class="n"></td></tr><tr><td>4</td><td class="n">12</td></tr><tr><td>6</td><td class="n">7</td></tr><tr><td>7</td><td class="n">6</td></tr><tr><td>7</td><td class="n">11</td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>14</td><td class="n"></td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>4</td><td class="n"></td></tr><tr><td>5</td><td class="n"></td></tr><tr><td>6</td><td class="n">4</td></tr><tr><td>6</td><td class="n">7</td></tr><tr><td>7</td><td class="n">6</td></tr><tr><td>7</td><td class="n"></td></tr><tr><td>6</td><td class="n">15</td></tr></tbody></table></div>
+<blockquote>取自 <code>金框位置</code> 分頁。</blockquote>
+<h3>5.4 金框倍數分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>1</th><th class="n">1</th></tr></thead><tbody><tr><td>1</td><td class="n">1</td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>10</td><td class="n">1</td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>15</td><td class="n">1</td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>2</td><td class="n"></td></tr><tr><td>2</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>3</td><td class="n">1</td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>1</td><td class="n">1</td></tr><tr><td>1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>-1</td><td class="n"></td></tr><tr><td>1</td><td class="n"></td></tr></tbody></table></div>
+<blockquote>取自 <code>金框倍數</code> 分頁。</blockquote>
+<h3>5.5 倍數出現分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>消除前表</th><th class="n">消除後表</th><th>位置倍數</th></tr></thead><tbody><tr><td>si_st</td><td class="n">si_nst</td><td>si_mf</td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">4</td><td></td></tr><tr><td>4</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">1</td><td></td></tr><tr><td>1</td><td class="n">4</td><td></td></tr></tbody></table></div>
+<blockquote>取自 <code>倍數</code> 分頁。</blockquote></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><h3>6.1 Summary 分頁自宣告值</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">值</th></tr></thead><tbody><tr><td>Total cost</td><td class="n">23292</td></tr><tr><td>Total win</td><td class="n">21558.30000000006</td></tr><tr><td>RTP</td><td class="n">0.9255667181865044</td></tr><tr><td>Total spin</td><td class="n">22688</td></tr><tr><td>Total F-spin</td><td class="n">1267</td></tr><tr><td>FG count</td><td class="n">84</td></tr><tr><td>FG freq.</td><td class="n">270.0952380952381</td></tr><tr><td>SC avg.</td><td class="n">0.5882404795486601</td></tr><tr><td>BG RTP</td><td class="n">0.656926908595531</td></tr><tr><td>FG RTP</td><td class="n">0.26863980959097333</td></tr><tr><td>BG hit count</td><td class="n">0.27560825105782794</td></tr><tr><td>FG hit count</td><td class="n">0.43646408839779005</td></tr></tbody></table></div>
+<blockquote>這些是檔案作者自行算出的值，本報告用來交叉驗證。總得分與 Hit Rate 相符，<br>BG／FG 拆分與 FG 轉數口徑不同（見 1.2）。</blockquote>
+<h3>6.2 資料使用建議</h3>
+<ol><li><strong><code>spin_caculate</code> 的欄名在第 3 列</strong>，前兩列是統計結果，讀檔時必須跳過。</li><li><code>sid</code> / <code>psid</code> 被存成 <code>2.03e+18</code>——<strong>19 位整數已被浮點精度破壞，不可用來分組</strong>。</li><li>一次付費 spin 的判定用 <strong><code>si_tb</code> &gt; 0</strong>，並用餘額扣款交叉驗證。</li><li><strong><code>aw</code> 是回合內累計值，不可整欄加總</strong>（會得到 400% 的 RTP）。</li></ol>
+<p>   正確口徑是<strong>每回合最後一列的 <code>aw</code></strong>，並用餘額法驗證。</p>
+<ol><li><code>IS BG</code> / <code>IS FG</code> 是回合層級旗標，無法在回合內拆分 BG／FG 得分。</li><li><code>FG count</code> 欄無法用來算免費轉數（每回合最大值都是 1）。</li><li>BG Hit Rate（27.585%）與連消分布樣本充足，<strong>可引用</strong>。</li><li><strong>FG 只有 71 場</strong>，所有 FG 相關指標都不可作為定論。</li><li>本作<strong>無 Buy Feature</strong>，報告中不含 BF 場景。</li><li>資料夾內沒有 <code>還原輪帶_*.xlsx</code>，故本報告不含輪帶還原驗證章節。</li></ol></div>
+</div>
+
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+const CHARTS=[];
+function activate(k,focus){
+  tabs.forEach((t,i)=>{
+    const on=i===k;
+    t.setAttribute('aria-selected',on?'true':'false');
+    t.tabIndex=on?0:-1;
+    document.getElementById('panel-'+i).hidden=!on;
+  });
+  if(focus) tabs[k].focus();
+  const p=document.getElementById('panel-'+k);
+  CHARTS.forEach(c=>{ if(p.contains(c.host)) c.draw(true); });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{
+    let k=null;
+    if(e.key==='ArrowRight')k=(i+1)%tabs.length;
+    else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')k=0; else if(e.key==='End')k=tabs.length-1;
+    if(k!==null){e.preventDefault(); activate(k,true);}
+  });
+});
+
+const CH={"anchor": "### 4.2", "rows": [{"i": 0, "lab": "(-1, 0]", "bgH": 72.1879407616361, "fgH": 0.0, "bgC": 16378, "fgC": 0}, {"i": 1, "lab": "(0, 1]", "bgH": 15.99083215796897, "fgH": 0.0, "bgC": 3628, "fgC": 0}, {"i": 2, "lab": "(1, 2]", "bgH": 4.993829337094499, "fgH": 0.0, "bgC": 1133, "fgC": 0}, {"i": 3, "lab": "(2, 3]", "bgH": 2.1288787023977433, "fgH": 0.0, "bgC": 483, "fgC": 0}, {"i": 4, "lab": "(3, 4]", "bgH": 0.9476375176304653, "fgH": 4.225352112676056, "bgC": 215, "fgC": 3}, {"i": 5, "lab": "(4, 5]", "bgH": 0.6214739069111425, "fgH": 0.0, "bgC": 141, "fgC": 0}, {"i": 6, "lab": "(5, 6]", "bgH": 0.5333215796897038, "fgH": 0.0, "bgC": 121, "fgC": 0}, {"i": 7, "lab": "(6, 7]", "bgH": 0.25564174894217206, "fgH": 1.4084507042253522, "bgC": 58, "fgC": 1}, {"i": 8, "lab": "(7, 8]", "bgH": 0.3085331452750353, "fgH": 2.8169014084507045, "bgC": 70, "fgC": 2}, {"i": 9, "lab": "(8, 9]", "bgH": 0.2732722143864598, "fgH": 1.4084507042253522, "bgC": 62, "fgC": 1}, {"i": 10, "lab": "(9, 10]", "bgH": 0.22478843441466856, "fgH": 1.4084507042253522, "bgC": 51, "fgC": 1}, {"i": 11, "lab": "(10, 15]", "bgH": 0.5024682651622003, "fgH": 7.042253521126761, "bgC": 114, "fgC": 5}, {"i": 12, "lab": "(15, 20]", "bgH": 0.25564174894217206, "fgH": 7.042253521126761, "bgC": 58, "fgC": 5}, {"i": 13, "lab": "(20, 25]", "bgH": 0.1895275035260931, "fgH": 8.450704225352112, "bgC": 43, "fgC": 6}, {"i": 14, "lab": "(25, 30]", "bgH": 0.11459802538787023, "fgH": 7.042253521126761, "bgC": 26, "fgC": 5}, {"i": 15, "lab": "(30, 35]", "bgH": 0.06170662905500705, "fgH": 2.8169014084507045, "bgC": 14, "fgC": 2}, {"i": 16, "lab": "(35, 40]", "bgH": 0.07933709449929478, "fgH": 2.8169014084507045, "bgC": 18, "fgC": 2}, {"i": 17, "lab": "(40, 45]", "bgH": 0.05289139633286319, "fgH": 5.633802816901409, "bgC": 12, "fgC": 4}, {"i": 18, "lab": "(45, 50]", "bgH": 0.022038081805359662, "fgH": 2.8169014084507045, "bgC": 5, "fgC": 2}, {"i": 19, "lab": "(50, 60]", "bgH": 0.03966854724964739, "fgH": 2.8169014084507045, "bgC": 9, "fgC": 2}, {"i": 20, "lab": "(60, 70]", "bgH": 0.03966854724964739, "fgH": 7.042253521126761, "bgC": 9, "fgC": 5}, {"i": 21, "lab": "(70, 80]", "bgH": 0.030853314527503527, "fgH": 2.8169014084507045, "bgC": 7, "fgC": 2}, {"i": 22, "lab": "(80, 90]", "bgH": 0.008815232722143865, "fgH": 2.8169014084507045, "bgC": 2, "fgC": 2}, {"i": 23, "lab": "(90, 100]", "bgH": 0.013222849083215797, "fgH": 1.4084507042253522, "bgC": 3, "fgC": 1}, {"i": 24, "lab": "(100, 120]", "bgH": 0.022038081805359662, "fgH": 5.633802816901409, "bgC": 5, "fgC": 4}, {"i": 25, "lab": "(120, 140]", "bgH": 0.030853314527503527, "fgH": 8.450704225352112, "bgC": 7, "fgC": 6}, {"i": 26, "lab": "(140, 160]", "bgH": 0.01763046544428773, "fgH": 2.8169014084507045, "bgC": 4, "fgC": 2}, {"i": 27, "lab": "(160, 180]", "bgH": 0.013222849083215797, "fgH": 2.8169014084507045, "bgC": 3, "fgC": 2}, {"i": 28, "lab": "(180, 200]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 29, "lab": "(200, 250]", "bgH": 0.026445698166431594, "fgH": 5.633802816901409, "bgC": 6, "fgC": 4}, {"i": 30, "lab": "(250, 300]", "bgH": 0.008815232722143865, "fgH": 2.8169014084507045, "bgC": 2, "fgC": 2}, {"i": 31, "lab": "(300, 350]", "bgH": 0.004407616361071932, "fgH": 0.0, "bgC": 1, "fgC": 0}, {"i": 32, "lab": "(350, 400]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 33, "lab": "(400, 450]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 34, "lab": "(450, 500]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 35, "lab": "(500, 550]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 36, "lab": "(550, 600]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 37, "lab": "(600, 650]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 38, "lab": "(650, 700]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 39, "lab": "(700, 750]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 40, "lab": "(750, 800]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 41, "lab": "(800, 850]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 42, "lab": "(850, 900]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 43, "lab": "(900, 950]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 44, "lab": "(950, 1000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 45, "lab": "(1000, 2000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 46, "lab": "(2000, 3000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 47, "lab": "(3000, 4000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 48, "lab": "(4000, 5000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 49, "lab": "(5000, 6000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 50, "lab": "(6000, 7000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 51, "lab": "(7000, 8000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 52, "lab": "(8000, 9000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 53, "lab": "(9000, 10000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 54, "lab": "(10000, 20000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 55, "lab": "(20000, 30000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 56, "lab": "(30000, 40000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 57, "lab": "(40000, 50000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 58, "lab": "(50000, 60000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 59, "lab": "(60000, 70000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 60, "lab": "(70000, 80000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 61, "lab": "(80000, 90000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 62, "lab": "(90000, 100000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 63, "lab": "(100000, 9999999]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}], "sv": {"bg": [27.812059238363894, 11.821227080394921, 6.827397743300423, 4.6985190409026805, 3.750881523272214, 3.129407616361072, 2.5960860366713683, 2.3404442877291958, 2.031911142454161, 1.758638928067701, 1.5338504936530324, 1.031382228490832, 0.7757404795486601, 0.5862129760225671, 0.4716149506346967, 0.40990832157968965, 0.33057122708039494, 0.2776798307475317, 0.25564174894217206, 0.2159732016925247, 0.1763046544428773, 0.14545133991537376, 0.1366361071932299, 0.1234132581100141, 0.10137517630465444, 0.07052186177715092, 0.05289139633286319, 0.03966854724964739, 0.03966854724964739, 0.013222849083215797, 0.004407616361071932, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "fg": [100.0, 100.0, 100.0, 100.0, 95.77464788732394, 95.77464788732394, 95.77464788732394, 94.36619718309859, 91.54929577464789, 90.14084507042254, 88.73239436619718, 81.69014084507043, 74.64788732394366, 66.19718309859155, 59.154929577464785, 56.33802816901409, 53.52112676056338, 47.88732394366197, 45.07042253521127, 42.25352112676056, 35.2112676056338, 32.3943661971831, 29.577464788732392, 28.169014084507044, 22.535211267605636, 14.084507042253522, 11.267605633802818, 8.450704225352112, 8.450704225352112, 2.8169014084507045, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "clipped": [{"lab": "(-1, 0]", "v": 72.1879407616361}, {"lab": "(0, 1]", "v": 15.99083215796897}, {"lab": "(1, 2]", "v": 4.993829337094499}, {"lab": "(2, 3]", "v": 2.1288787023977433}], "series": ["bg", "fg"]};
+if(CH){
+  const R=CH.rows, SV=CH.sv, NB=R.length;
+  const DEF={bg:{n:'BG',c:'var(--s1)',hr:'bgH',cnt:'bgC'},
+             fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
+             bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
+  const KEYS=CH.series||['bg','fg','bf'];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=v=>v.toLocaleString('en-US');
+  const cn=document.getElementById('clipnote');
+  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
+    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
+    : '無區間超出 1% 上限。';
+  function legend(id,ks){
+    const e=document.getElementById(id); if(!e)return;
+    e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
+  }
+  function chart(hostId,cfg){
+    const host=document.getElementById(hostId); if(!host)return;
+    let lastW=-1;
+    function draw(force){
+      const W=Math.max(340,host.clientWidth||900);
+      if(!force && W===lastW) return;
+      lastW=W; host.innerHTML='';
+      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const iw=W-m.l-m.r, ih=H-m.t-m.b;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
+      const g=el('g',{transform:`translate(${m.l},${m.t})`});
+      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const X=i=>i/(NB-1)*iw;
+      cfg.yticks.forEach(t=>{
+        const yy=Y(t);
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
+        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
+        tx.textContent=t+'%'; g.appendChild(tx);
+      });
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+      for(let i=0;i<NB;i+=step){
+        const xx=X(i);
+        g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
+          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        tx.textContent=R[i].lab; g.appendChild(tx);
+      }
+      g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
+      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
+      const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
+        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
+      ay.textContent=cfg.ylabel; g.appendChild(ay);
+      cfg.series.forEach(s=>{
+        let run=[];
+        const flush=()=>{
+          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          run=[];
+        };
+        s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
+        flush();
+      });
+      const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+      g.appendChild(cross);
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
+      const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
+      hit.addEventListener('mousemove',ev=>{
+        const bb=svg.getBoundingClientRect();
+        const sx=(ev.clientX-bb.left)*(W/bb.width)-m.l;
+        let i=Math.round(sx/iw*(NB-1)); if(i<0)i=0; if(i>NB-1)i=NB-1;
+        const px=X(i);
+        cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity',1);
+        let html=`<b>${R[i].lab}</b>`;
+        cfg.series.forEach((s,k)=>{
+          const p=s.pts[i];
+          if(p&&p.v!==null){
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
+          }else{
+            dots[k].setAttribute('opacity',0);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>—</span></div>`;
+          }
+        });
+        tip.innerHTML=html; tip.style.opacity=1;
+        const tw=tip.offsetWidth, sc=bb.width/W;
+        let lx=(px+m.l)*sc+14; if(lx+tw>bb.width) lx=(px+m.l)*sc-tw-14;
+        tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
+      });
+      hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.appendChild(g); host.appendChild(svg);
+    }
+    draw(true);
+    const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
+    window.addEventListener('resize',()=>draw());
+    CHARTS.push({host,draw});
+  }
+  const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
+  if(KEYS.includes('bg'))
+    chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
+      aria:'BG 倍率線型，縱軸固定 0 至 1%',
+      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      tipVal:p=>fmt(p.v,5)+'%'});
+  const fgk=KEYS.filter(k=>k!=='bg');
+  if(fgk.length){
+    legend('lg2',fgk);
+    chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
+      aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
+      tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
+  }
+  legend('lg3',KEYS);
+  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
+    aria:'各場景累積機率曲線',
+    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
+    tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
+     把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
+  document.querySelectorAll('.card').forEach(card=>{
+    const plot=card.querySelector('.plot');
+    if(!plot || plot.querySelector('svg')) return;
+    let n=card.previousElementSibling;
+    card.remove();
+    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
+      const prev=n.previousElementSibling;
+      const stop=(n.tagName==='H4');
+      n.remove(); n=prev;
+      if(stop) break;
+    }
+  });
+}
+</script>

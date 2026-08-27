@@ -1,0 +1,376 @@
+<title>Lucky Neko 遊戲數據</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:38px 22px 80px}
+header{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:18px 0 26px}
+.stat{background:var(--panel); padding:12px 15px; display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:11.5px; color:var(--ink-3); font-family:var(--font-mono); letter-spacing:.04em}
+.stat .v{font-family:var(--font-mono); font-size:19px; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .n2{font-size:11.5px; color:var(--ink-3)}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+h3{margin:32px 0 10px; font-size:17.5px; font-weight:600; letter-spacing:-.008em;
+  padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.panel>h3:first-child{margin-top:0}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600}
+p{margin:0 0 11px; max-width:82ch}
+p.cap{color:var(--ink-2); font-size:13.5px}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:82ch}
+li{margin:3px 0}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+blockquote{margin:12px 0 16px; padding:10px 14px; background:var(--panel-2);
+  border-left:2px solid var(--s1); border-radius:0 3px 3px 0; color:var(--ink-2); font-size:13.5px; max-width:86ch}
+blockquote code{background:var(--panel)}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.axisfix{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 18px}
+.pill{font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border:1px solid var(--rule);
+  border-radius:100px; color:var(--ink-2); background:var(--panel)}
+.warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
+.card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+.legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
+.lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
+.sw{width:22px; height:3px; border-radius:2px; flex:none}
+.plot{position:relative; width:100%}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
+  background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
+  white-space:nowrap; z-index:5; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tip b{font-weight:600; display:block; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">PG · 競品分析</div>
+  <h1>Lucky Neko</h1>
+  <p class="meta">`spin_responses_lucky_neko_all.xlsx` 69,779 列 → 47,107 回合　|　付費轉 47,068　/　FG 1,519 轉（145 場）　|　底注 1.0</p>
+  <p class="meta">場景代號：<code>BG</code> 一般遊戲　<code>FG</code> 免費遊戲（本作無 Buy Feature）</p>
+</header>
+<div class="stats"><div class="stat"><span class="k">總 RTP</span><span class="v">100.932%</span><span class="n2">官方 96.72%</span></div><div class="stat"><span class="k">BG RTP</span><span class="v">75.561%</span><span class="n2">47,068 轉</span></div><div class="stat"><span class="k">FG RTP</span><span class="v">25.371%</span><span class="n2">145 場</span></div><div class="stat"><span class="k">BG Hit Rate</span><span class="v">27.643%</span><span class="n2">每次付費下注</span></div><div class="stat"><span class="k">FG 週期</span><span class="v">1/324.6</span><span class="n2">145 次觸發</span></div><div class="stat"><span class="k">FG 平均倍數</span><span class="v">82.4x</span><span class="n2">中位 50.6x</span></div></div>
+<div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">1. 資料說明</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">2. 基本資料</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">3. 共同指標</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">4. 倍率線型</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">5. 特殊指標</button><button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1">6. 附錄</button></div>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><h3>1.1 檔案用途</h3>
+<div class="tbl-wrap"><table><thead><tr><th>檔名</th><th>內容</th><th>是否納入統計</th></tr></thead><tbody><tr><td><code>spin_responses_lucky_neko_1.xlsx</code></td><td>5 個分頁，<strong>累積式</strong>（2,102 → 11,125 列）</td><td>❌ 被 <code>_all</code> 涵蓋</td></tr><tr><td><code>spin_responses_lucky_neko_2.xlsx</code></td><td>5 個分頁，<strong>累積式</strong>（11,691 → 58,657 列）</td><td>❌ 被 <code>_all</code> 涵蓋</td></tr><tr><td><code>spin_responses_lucky_neko_all.xlsx</code></td><td><code>spin_data</code> 69,779 列＝完整去重集</td><td>✅ <strong>原始資料</strong></td></tr><tr><td><code>analysis_lucky_neko.xlsx</code></td><td>舊版彙整（14 分頁）</td><td>❌ 被 <code>_final</code> 取代</td></tr><tr><td><code>analysis_lucky_neko_final.xlsx</code></td><td>新版彙整（16 分頁），含逐回合 <code>Rounds</code> 表</td><td>✅ <strong>本報告來源</strong></td></tr></tbody></table></div>
+<blockquote><strong><code>_1</code> 與 <code>_2</code> 的分頁是累積的</strong>：<code>spin_data_4</code> 已包含 <code>spin_data_0~3</code>。<br>兩檔各取最大分頁後 11,125 ＋ 58,657 ＝ 69,782 ≈ <code>_all</code> 的 69,779 列，<br>所以 <code>_all/spin_data</code> 就是完整集合。若把各分頁相加會膨脹到 209,332 列（約 3 倍）。</blockquote>
+<h3>1.2 統計方法</h3>
+<p><strong>一個 <code>root_spin_id</code> = 一次付費 spin。</strong> <code>Rounds</code> 表已按此彙整，47,107 個 id 全部相異。</p>
+<div class="tbl-wrap"><table><thead><tr><th>欄位</th><th>意義</th></tr></thead><tbody><tr><td><code>root_spin_id</code></td><td>該回合的根 spin id（原始資料以 <code>si_sid</code>／<code>si_psid</code> 串接）</td></tr><tr><td><code>total_bet</code> / <code>base_bet</code></td><td>該回合押注</td></tr><tr><td><code>total_win</code></td><td>該回合總得分（＝<code>base_game_win</code> ＋ <code>free_game_win</code>）</td></tr><tr><td><code>bg_cascade_count</code></td><td>一般遊戲的消除次數</td></tr><tr><td><code>free_spin_row_count</code></td><td>該回合的免費轉數</td></tr><tr><td><code>reel_silver_counts</code></td><td>每輪的銀貓格數，如 <code>[0, 3, 1, 2, 5, 1]</code></td></tr><tr><td><code>reel_symbol_counts</code></td><td>每輪的可見格數（本作各輪高度可變）</td></tr></tbody></table></div>
+<p><strong>交叉驗證</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>檢查</th><th>結果</th></tr></thead><tbody><tr><td><code>base_game_win</code> ＋ <code>free_game_win</code> == <code>total_win</code></td><td><strong>完全相符</strong>（殘差 0.0000）</td></tr><tr><td>BG combo 0 占比 ＋ Hit Rate</td><td><strong>100.036%</strong>（超出 0.036%，見下）</td></tr><tr><td>相異 <code>root_spin_id</code> == 回合數</td><td>47,107 / 47,107</td></tr></tbody></table></div>
+<blockquote>47,107 筆中有 <strong>39 筆 <code>total_bet</code> = 0</strong>（側錄開頭的斷頭回合），已排除，<br>實際付費回合 <strong>47,068</strong>。</blockquote></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><h3>2.1 一般遊戲 / 免費遊戲</h3>
+<p><strong>計次數</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">BG 轉數</th><th class="n">FG 轉數</th><th class="n">FG 觸發次數</th></tr></thead><tbody><tr><td>1.0</td><td class="n">47,068</td><td class="n">1,519</td><td class="n">145</td></tr></tbody></table></div>
+<p><strong>統計資料</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">BG RTP</th><th class="n">FG RTP</th><th class="n">總 RTP</th><th class="n">BG Hit Rate</th><th class="n">FG 週期</th><th class="n">FG 平均倍數</th></tr></thead><tbody><tr><td>1.0</td><td class="n"><strong>75.561%</strong></td><td class="n"><strong>25.371%</strong></td><td class="n"><strong>100.932%</strong></td><td class="n"><strong>27.643%</strong></td><td class="n"><strong>1/324.6</strong></td><td class="n"><strong>82.35x</strong></td></tr></tbody></table></div>
+<blockquote>BG Hit Rate 的分母是付費轉數，<strong><code>base_game_win</code> &gt; 0 即計中獎</strong>。<br>⚠️ <code>Rounds</code> 的 <code>has_line_win</code> 欄全為 <code>False</code>——本作是 Cluster Pay，該欄不適用，不可拿來算 Hit Rate。<br>FG 平均倍數以觸發次數為分母；中位數 50.60x、最大 911.80x。<br><strong>FG Hit Rate 無法計算</strong>：<code>Rounds</code> 只有整場 FG 的彙總，沒有逐次免費轉的得分。<br>若需要，得回原始 <code>spin_data</code> 逐列重算。</blockquote>
+<h3>2.2 與官方值對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">本次計算</th><th class="n">官方</th><th>差距</th></tr></thead><tbody><tr><td>總體 RTP</td><td class="n"><strong>100.932%</strong></td><td class="n">96.72%</td><td>+4.21pp</td></tr></tbody></table></div>
+<blockquote><strong>實測 RTP 高於官方 4.21pp，這是正向樣本變異，不是設定差異。</strong><br>只有 145 次 FG 觸發，而 FG 貢獻了 25.4% 的 RTP——<br>一兩場大 FG 就足以把總 RTP 推高數個百分點（實測最大單場 912x）。<br><strong>BG Hit Rate 與連消分布樣本充足可引用；RTP 與 FG 相關指標須註明樣本不足。</strong></blockquote></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><h3>3.1 賠率（依符號與連線數的 RTP 貢獻）</h3>
+<p><strong>BG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">3 連 RTP</th><th class="n">4 連 RTP</th><th class="n">5 連 RTP</th><th class="n">6 連 RTP</th><th class="n">3 連 Hit</th><th class="n">4 連 Hit</th><th class="n">5 連 Hit</th><th class="n">6 連 Hit</th></tr></thead><tbody><tr><td>M1</td><td class="n">1.6855%</td><td class="n">1.3162%</td><td class="n">0.7133%</td><td class="n">0.9256%</td><td class="n">0.2378%</td><td class="n">0.0828%</td><td class="n">0.0255%</td><td class="n">0.0191%</td></tr><tr><td>M2</td><td class="n">0.3217%</td><td class="n">0.6724%</td><td class="n">0.7602%</td><td class="n">1.3905%</td><td class="n">0.1444%</td><td class="n">0.2123%</td><td class="n">0.1847%</td><td class="n">0.1486%</td></tr><tr><td>M3</td><td class="n">0.7982%</td><td class="n">1.1978%</td><td class="n">1.6363%</td><td class="n">4.9186%</td><td class="n">0.6093%</td><td class="n">0.5010%</td><td class="n">0.5243%</td><td class="n">0.5541%</td></tr><tr><td>M4</td><td class="n">1.1997%</td><td class="n">1.2878%</td><td class="n">1.5074%</td><td class="n">4.2097%</td><td class="n">1.5348%</td><td class="n">0.9171%</td><td class="n">0.6156%</td><td class="n">0.6093%</td></tr><tr><td>M5</td><td class="n">0.5357%</td><td class="n">1.2488%</td><td class="n">1.8604%</td><td class="n">7.8305%</td><td class="n">0.8746%</td><td class="n">1.1484%</td><td class="n">0.9107%</td><td class="n">1.3565%</td></tr><tr><td>M6</td><td class="n">0.8652%</td><td class="n">1.5751%</td><td class="n">1.9001%</td><td class="n">6.1937%</td><td class="n">1.5390%</td><td class="n">1.3820%</td><td class="n">1.1484%</td><td class="n">1.2843%</td></tr><tr><td>M7</td><td class="n">0.4714%</td><td class="n">0.9541%</td><td class="n">1.2340%</td><td class="n">4.3765%</td><td class="n">1.1760%</td><td class="n">1.2419%</td><td class="n">0.8661%</td><td class="n">1.1867%</td></tr><tr><td>M8</td><td class="n">0.7329%</td><td class="n">1.5590%</td><td class="n">1.9636%</td><td class="n">6.1665%</td><td class="n">2.1207%</td><td class="n">2.3033%</td><td class="n">1.7704%</td><td class="n">1.9848%</td></tr><tr><td>M9</td><td class="n">0.1249%</td><td class="n">0.2942%</td><td class="n">0.5050%</td><td class="n">1.6084%</td><td class="n">1.2970%</td><td class="n">1.4732%</td><td class="n">1.1421%</td><td class="n">1.3501%</td></tr><tr><td>M10</td><td class="n">0.1844%</td><td class="n">0.3928%</td><td class="n">0.5861%</td><td class="n">2.9921%</td><td class="n">1.7450%</td><td class="n">1.8426%</td><td class="n">1.7216%</td><td class="n">2.2311%</td></tr><tr><td>M11</td><td class="n">0.1127%</td><td class="n">0.2956%</td><td class="n">0.5067%</td><td class="n">2.8119%</td><td class="n">1.2036%</td><td class="n">1.7535%</td><td class="n">1.7046%</td><td class="n">2.6875%</td></tr></tbody></table></div>
+<p><strong>FG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">3 連 RTP</th><th class="n">4 連 RTP</th><th class="n">5 連 RTP</th><th class="n">6 連 RTP</th><th class="n">3 連 Hit</th><th class="n">4 連 Hit</th><th class="n">5 連 Hit</th><th class="n">6 連 Hit</th></tr></thead><tbody><tr><td>M1</td><td class="n">4.3450%</td><td class="n">8.9533%</td><td class="n">6.5833%</td><td class="n">0.0000%</td><td class="n">0.1317%</td><td class="n">0.2633%</td><td class="n">0.1317%</td><td class="n">0.0000%</td></tr><tr><td>M2</td><td class="n">1.7117%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">6.5833%</td><td class="n">0.1317%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.1317%</td></tr><tr><td>M3</td><td class="n">0.2633%</td><td class="n">2.7650%</td><td class="n">2.7650%</td><td class="n">18.4661%</td><td class="n">0.1317%</td><td class="n">0.1975%</td><td class="n">0.1317%</td><td class="n">0.4608%</td></tr><tr><td>M4</td><td class="n">23.9631%</td><td class="n">15.7801%</td><td class="n">20.7373%</td><td class="n">29.6116%</td><td class="n">3.6866%</td><td class="n">1.4483%</td><td class="n">1.3825%</td><td class="n">1.0533%</td></tr><tr><td>M5</td><td class="n">3.8315%</td><td class="n">8.5583%</td><td class="n">19.2627%</td><td class="n">147.3799%</td><td class="n">0.7242%</td><td class="n">0.8558%</td><td class="n">1.1850%</td><td class="n">1.7775%</td></tr><tr><td>M6</td><td class="n">12.2844%</td><td class="n">39.6313%</td><td class="n">48.2423%</td><td class="n">96.8664%</td><td class="n">3.0283%</td><td class="n">5.4641%</td><td class="n">3.4233%</td><td class="n">3.4233%</td></tr><tr><td>M7</td><td class="n">3.1336%</td><td class="n">8.2949%</td><td class="n">9.6379%</td><td class="n">47.0836%</td><td class="n">1.1850%</td><td class="n">1.8433%</td><td class="n">1.1850%</td><td class="n">1.8433%</td></tr><tr><td>M8</td><td class="n">13.6970%</td><td class="n">16.4714%</td><td class="n">25.1218%</td><td class="n">43.6076%</td><td class="n">5.2008%</td><td class="n">3.7525%</td><td class="n">3.1600%</td><td class="n">2.7650%</td></tr><tr><td>M9</td><td class="n">0.5003%</td><td class="n">2.1725%</td><td class="n">2.5806%</td><td class="n">17.5774%</td><td class="n">0.6583%</td><td class="n">1.5800%</td><td class="n">0.9875%</td><td class="n">1.8433%</td></tr><tr><td>M10</td><td class="n">3.3838%</td><td class="n">7.3799%</td><td class="n">8.7717%</td><td class="n">28.0513%</td><td class="n">3.9500%</td><td class="n">4.8058%</td><td class="n">3.9500%</td><td class="n">3.4233%</td></tr><tr><td>M11</td><td class="n">0.5003%</td><td class="n">1.7248%</td><td class="n">1.8104%</td><td class="n">23.3114%</td><td class="n">0.6583%</td><td class="n">1.1850%</td><td class="n">0.6583%</td><td class="n">2.1066%</td></tr></tbody></table></div>
+<blockquote>本作為 Cluster Pay，「連線數」是同符號涵蓋的<strong>輪數</strong>。<br>空白列（WW／C1 等無派彩符號）已省略。</blockquote>
+<h3>3.2 符號分布</h3>
+<p><strong>初始盤面 — BG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>WW</td><td class="n">0.000%</td><td class="n">0.737%</td><td class="n">0.877%</td><td class="n">0.244%</td><td class="n">0.227%</td><td class="n">0.192%</td></tr><tr><td>C1</td><td class="n">3.099%</td><td class="n">0.879%</td><td class="n">1.090%</td><td class="n">1.115%</td><td class="n">1.204%</td><td class="n">1.275%</td></tr><tr><td>M1</td><td class="n">1.026%</td><td class="n">0.654%</td><td class="n">0.552%</td><td class="n">0.988%</td><td class="n">1.160%</td><td class="n">1.021%</td></tr><tr><td>M2</td><td class="n">2.981%</td><td class="n">8.012%</td><td class="n">7.239%</td><td class="n">7.396%</td><td class="n">9.866%</td><td class="n">7.613%</td></tr><tr><td>M3</td><td class="n">5.390%</td><td class="n">6.823%</td><td class="n">6.955%</td><td class="n">7.310%</td><td class="n">5.300%</td><td class="n">4.090%</td></tr><tr><td>M4</td><td class="n">4.642%</td><td class="n">5.218%</td><td class="n">10.902%</td><td class="n">13.462%</td><td class="n">6.685%</td><td class="n">11.088%</td></tr><tr><td>M5</td><td class="n">4.720%</td><td class="n">14.157%</td><td class="n">8.725%</td><td class="n">7.786%</td><td class="n">13.527%</td><td class="n">8.197%</td></tr><tr><td>M6</td><td class="n">11.706%</td><td class="n">4.150%</td><td class="n">10.583%</td><td class="n">11.783%</td><td class="n">7.292%</td><td class="n">12.970%</td></tr><tr><td>M7</td><td class="n">5.470%</td><td class="n">13.889%</td><td class="n">8.007%</td><td class="n">7.016%</td><td class="n">13.710%</td><td class="n">8.308%</td></tr><tr><td>M8</td><td class="n">20.044%</td><td class="n">3.968%</td><td class="n">9.765%</td><td class="n">10.731%</td><td class="n">5.950%</td><td class="n">13.559%</td></tr><tr><td>M9</td><td class="n">5.400%</td><td class="n">23.087%</td><td class="n">12.281%</td><td class="n">7.478%</td><td class="n">15.984%</td><td class="n">7.463%</td></tr><tr><td>M10</td><td class="n">18.574%</td><td class="n">3.036%</td><td class="n">12.683%</td><td class="n">16.040%</td><td class="n">7.151%</td><td class="n">16.218%</td></tr><tr><td>M11</td><td class="n">16.947%</td><td class="n">15.388%</td><td class="n">10.342%</td><td class="n">8.652%</td><td class="n">11.944%</td><td class="n">8.006%</td></tr></tbody></table></div>
+<p><strong>初始盤面 — FG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>WW</td><td class="n">0.000%</td><td class="n">0.144%</td><td class="n">0.213%</td><td class="n">0.204%</td><td class="n">0.164%</td><td class="n">0.079%</td></tr><tr><td>C1</td><td class="n">1.540%</td><td class="n">0.431%</td><td class="n">0.795%</td><td class="n">0.456%</td><td class="n">0.329%</td><td class="n">0.818%</td></tr><tr><td>M1</td><td class="n">1.606%</td><td class="n">2.588%</td><td class="n">2.285%</td><td class="n">2.170%</td><td class="n">1.956%</td><td class="n">2.018%</td></tr><tr><td>M2</td><td class="n">1.620%</td><td class="n">2.764%</td><td class="n">3.662%</td><td class="n">3.821%</td><td class="n">2.680%</td><td class="n">2.005%</td></tr><tr><td>M3</td><td class="n">1.804%</td><td class="n">2.476%</td><td class="n">4.499%</td><td class="n">2.988%</td><td class="n">2.663%</td><td class="n">2.466%</td></tr><tr><td>M4</td><td class="n">10.428%</td><td class="n">2.876%</td><td class="n">11.425%</td><td class="n">6.400%</td><td class="n">9.798%</td><td class="n">11.171%</td></tr><tr><td>M5</td><td class="n">1.646%</td><td class="n">16.201%</td><td class="n">5.180%</td><td class="n">14.515%</td><td class="n">10.932%</td><td class="n">11.461%</td></tr><tr><td>M6</td><td class="n">25.227%</td><td class="n">5.145%</td><td class="n">15.427%</td><td class="n">7.234%</td><td class="n">10.735%</td><td class="n">13.453%</td></tr><tr><td>M7</td><td class="n">2.001%</td><td class="n">18.485%</td><td class="n">8.047%</td><td class="n">16.622%</td><td class="n">12.806%</td><td class="n">10.578%</td></tr><tr><td>M8</td><td class="n">23.595%</td><td class="n">5.097%</td><td class="n">16.804%</td><td class="n">7.470%</td><td class="n">11.360%</td><td class="n">13.044%</td></tr><tr><td>M9</td><td class="n">1.593%</td><td class="n">17.846%</td><td class="n">4.655%</td><td class="n">13.917%</td><td class="n">11.179%</td><td class="n">10.406%</td></tr><tr><td>M10</td><td class="n">27.795%</td><td class="n">7.126%</td><td class="n">18.365%</td><td class="n">8.523%</td><td class="n">14.088%</td><td class="n">13.005%</td></tr><tr><td>M11</td><td class="n">1.145%</td><td class="n">18.821%</td><td class="n">8.643%</td><td class="n">15.679%</td><td class="n">11.310%</td><td class="n">9.496%</td></tr></tbody></table></div>
+<p><strong>消除掉落 — BG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>WW</td><td class="n">0.000%</td><td class="n">3.382%</td><td class="n">4.218%</td><td class="n">3.644%</td><td class="n">3.013%</td><td class="n">0.000%</td></tr><tr><td>C1</td><td class="n">2.373%</td><td class="n">2.647%</td><td class="n">2.659%</td><td class="n">3.327%</td><td class="n">3.053%</td><td class="n">4.033%</td></tr><tr><td>M1</td><td class="n">0.759%</td><td class="n">0.802%</td><td class="n">0.735%</td><td class="n">1.054%</td><td class="n">0.522%</td><td class="n">0.613%</td></tr><tr><td>M2</td><td class="n">1.188%</td><td class="n">1.375%</td><td class="n">1.078%</td><td class="n">1.069%</td><td class="n">0.924%</td><td class="n">1.378%</td></tr><tr><td>M3</td><td class="n">3.231%</td><td class="n">5.528%</td><td class="n">3.129%</td><td class="n">4.818%</td><td class="n">0.442%</td><td class="n">1.531%</td></tr><tr><td>M4</td><td class="n">9.520%</td><td class="n">14.077%</td><td class="n">10.150%</td><td class="n">12.421%</td><td class="n">11.370%</td><td class="n">11.077%</td></tr><tr><td>M5</td><td class="n">14.780%</td><td class="n">3.605%</td><td class="n">13.251%</td><td class="n">3.523%</td><td class="n">4.660%</td><td class="n">3.829%</td></tr><tr><td>M6</td><td class="n">3.368%</td><td class="n">13.559%</td><td class="n">3.090%</td><td class="n">13.972%</td><td class="n">13.741%</td><td class="n">15.977%</td></tr><tr><td>M7</td><td class="n">17.249%</td><td class="n">7.385%</td><td class="n">17.265%</td><td class="n">7.287%</td><td class="n">5.866%</td><td class="n">5.768%</td></tr><tr><td>M8</td><td class="n">5.736%</td><td class="n">11.606%</td><td class="n">6.136%</td><td class="n">11.382%</td><td class="n">16.593%</td><td class="n">13.936%</td></tr><tr><td>M9</td><td class="n">17.749%</td><td class="n">9.363%</td><td class="n">16.364%</td><td class="n">10.434%</td><td class="n">8.839%</td><td class="n">8.423%</td></tr><tr><td>M10</td><td class="n">10.341%</td><td class="n">14.584%</td><td class="n">9.945%</td><td class="n">14.920%</td><td class="n">18.240%</td><td class="n">19.296%</td></tr><tr><td>M11</td><td class="n">13.704%</td><td class="n">12.088%</td><td class="n">11.980%</td><td class="n">12.150%</td><td class="n">12.736%</td><td class="n">14.140%</td></tr></tbody></table></div>
+<p><strong>消除掉落 — FG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>WW</td><td class="n">0.000%</td><td class="n">0.088%</td><td class="n">0.650%</td><td class="n">1.087%</td><td class="n">1.714%</td><td class="n">0.000%</td></tr><tr><td>C1</td><td class="n">2.184%</td><td class="n">1.928%</td><td class="n">1.877%</td><td class="n">2.446%</td><td class="n">4.571%</td><td class="n">1.587%</td></tr><tr><td>M1</td><td class="n">0.560%</td><td class="n">0.613%</td><td class="n">0.505%</td><td class="n">4.348%</td><td class="n">1.714%</td><td class="n">0.000%</td></tr><tr><td>M2</td><td class="n">1.120%</td><td class="n">1.841%</td><td class="n">1.877%</td><td class="n">1.902%</td><td class="n">1.714%</td><td class="n">0.000%</td></tr><tr><td>M3</td><td class="n">5.095%</td><td class="n">3.769%</td><td class="n">6.354%</td><td class="n">2.717%</td><td class="n">2.286%</td><td class="n">1.587%</td></tr><tr><td>M4</td><td class="n">3.304%</td><td class="n">14.812%</td><td class="n">2.960%</td><td class="n">3.533%</td><td class="n">14.286%</td><td class="n">3.175%</td></tr><tr><td>M5</td><td class="n">14.726%</td><td class="n">3.243%</td><td class="n">12.419%</td><td class="n">20.380%</td><td class="n">1.143%</td><td class="n">15.873%</td></tr><tr><td>M6</td><td class="n">9.575%</td><td class="n">16.039%</td><td class="n">7.653%</td><td class="n">1.902%</td><td class="n">25.143%</td><td class="n">4.762%</td></tr><tr><td>M7</td><td class="n">16.013%</td><td class="n">6.573%</td><td class="n">18.700%</td><td class="n">20.109%</td><td class="n">2.857%</td><td class="n">25.397%</td></tr><tr><td>M8</td><td class="n">4.535%</td><td class="n">11.131%</td><td class="n">3.899%</td><td class="n">4.891%</td><td class="n">17.714%</td><td class="n">1.587%</td></tr><tr><td>M9</td><td class="n">18.085%</td><td class="n">12.007%</td><td class="n">15.379%</td><td class="n">16.033%</td><td class="n">2.857%</td><td class="n">20.635%</td></tr><tr><td>M10</td><td class="n">9.854%</td><td class="n">13.234%</td><td class="n">11.480%</td><td class="n">4.348%</td><td class="n">20.571%</td><td class="n">4.762%</td></tr><tr><td>M11</td><td class="n">14.950%</td><td class="n">14.724%</td><td class="n">16.245%</td><td class="n">16.304%</td><td class="n">3.429%</td><td class="n">20.635%</td></tr></tbody></table></div>
+<h3>3.3 符號堆疊（大符號尺寸）</h3>
+<p><strong>BG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">1x1</th><th class="n">2x1</th><th class="n">3x1</th><th class="n">4x1</th><th class="n">總出現數</th><th class="n">2x1 以上占比</th></tr></thead><tbody><tr><td>WW</td><td class="n">4,013</td><td class="n">13</td><td class="n">0</td><td class="n">0</td><td class="n">4,026</td><td class="n">0.32%</td></tr><tr><td>C1</td><td class="n">14,726</td><td class="n">1,592</td><td class="n">26</td><td class="n">3</td><td class="n">16,347</td><td class="n">9.92%</td></tr><tr><td>M1</td><td class="n">6,078</td><td class="n">1,864</td><td class="n">317</td><td class="n">38</td><td class="n">8,297</td><td class="n">26.74%</td></tr><tr><td>M2</td><td class="n">18,122</td><td class="n">19,653</td><td class="n">7,393</td><td class="n">789</td><td class="n">45,957</td><td class="n">60.57%</td></tr><tr><td>M3</td><td class="n">16,674</td><td class="n">15,302</td><td class="n">6,745</td><td class="n">391</td><td class="n">39,112</td><td class="n">57.37%</td></tr><tr><td>M4</td><td class="n">36,310</td><td class="n">20,503</td><td class="n">6,691</td><td class="n">1,058</td><td class="n">64,562</td><td class="n">43.76%</td></tr><tr><td>M5</td><td class="n">40,134</td><td class="n">19,406</td><td class="n">8,595</td><td class="n">1,012</td><td class="n">69,147</td><td class="n">41.96%</td></tr><tr><td>M6</td><td class="n">46,789</td><td class="n">19,666</td><td class="n">9,384</td><td class="n">988</td><td class="n">76,827</td><td class="n">39.10%</td></tr><tr><td>M7</td><td class="n">42,505</td><td class="n">18,477</td><td class="n">8,284</td><td class="n">948</td><td class="n">70,214</td><td class="n">39.46%</td></tr><tr><td>M8</td><td class="n">51,198</td><td class="n">21,924</td><td class="n">9,721</td><td class="n">1,762</td><td class="n">84,605</td><td class="n">39.49%</td></tr><tr><td>M9</td><td class="n">42,646</td><td class="n">24,403</td><td class="n">11,807</td><td class="n">1,655</td><td class="n">80,511</td><td class="n">47.03%</td></tr><tr><td>M10</td><td class="n">54,550</td><td class="n">26,185</td><td class="n">12,666</td><td class="n">1,534</td><td class="n">94,935</td><td class="n">42.54%</td></tr><tr><td>M11</td><td class="n">41,952</td><td class="n">27,646</td><td class="n">12,076</td><td class="n">1,774</td><td class="n">83,448</td><td class="n">49.73%</td></tr></tbody></table></div>
+<p><strong>FG</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">1x1</th><th class="n">2x1</th><th class="n">3x1</th><th class="n">4x1</th><th class="n">總出現數</th><th class="n">2x1 以上占比</th></tr></thead><tbody><tr><td>WW</td><td class="n">53</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">53</td><td class="n">0.00%</td></tr><tr><td>C1</td><td class="n">311</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">311</td><td class="n">0.00%</td></tr><tr><td>M1</td><td class="n">400</td><td class="n">173</td><td class="n">35</td><td class="n">1</td><td class="n">609</td><td class="n">34.32%</td></tr><tr><td>M2</td><td class="n">248</td><td class="n">310</td><td class="n">80</td><td class="n">1</td><td class="n">639</td><td class="n">61.19%</td></tr><tr><td>M3</td><td class="n">279</td><td class="n">293</td><td class="n">86</td><td class="n">5</td><td class="n">663</td><td class="n">57.92%</td></tr><tr><td>M4</td><td class="n">1,802</td><td class="n">588</td><td class="n">171</td><td class="n">29</td><td class="n">2,590</td><td class="n">30.42%</td></tr><tr><td>M5</td><td class="n">1,822</td><td class="n">704</td><td class="n">187</td><td class="n">40</td><td class="n">2,753</td><td class="n">33.82%</td></tr><tr><td>M6</td><td class="n">3,064</td><td class="n">790</td><td class="n">212</td><td class="n">37</td><td class="n">4,103</td><td class="n">25.32%</td></tr><tr><td>M7</td><td class="n">2,100</td><td class="n">724</td><td class="n">260</td><td class="n">44</td><td class="n">3,128</td><td class="n">32.86%</td></tr><tr><td>M8</td><td class="n">2,890</td><td class="n">864</td><td class="n">227</td><td class="n">29</td><td class="n">4,010</td><td class="n">27.93%</td></tr><tr><td>M9</td><td class="n">1,793</td><td class="n">671</td><td class="n">219</td><td class="n">32</td><td class="n">2,715</td><td class="n">33.96%</td></tr><tr><td>M10</td><td class="n">3,349</td><td class="n">901</td><td class="n">291</td><td class="n">43</td><td class="n">4,584</td><td class="n">26.94%</td></tr><tr><td>M11</td><td class="n">1,808</td><td class="n">800</td><td class="n">228</td><td class="n">43</td><td class="n">2,879</td><td class="n">37.20%</td></tr></tbody></table></div>
+<blockquote>本作的「堆疊」以<strong>大符號尺寸</strong>呈現（<code>2x1</code>＝縱向占 2 格），<br>這是遊戲原生的資料形式，不是事後由盤面推算的最長連續段。</blockquote>
+<h3>3.4 各輪高度分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>可見格數</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>2</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td></tr><tr><td>3</td><td class="n">0.000%</td><td class="n">56.318%</td><td class="n">56.116%</td><td class="n">27.798%</td><td class="n">19.805%</td><td class="n">0.000%</td></tr><tr><td>4</td><td class="n">0.000%</td><td class="n">35.914%</td><td class="n">34.760%</td><td class="n">50.400%</td><td class="n">53.727%</td><td class="n">0.000%</td></tr><tr><td>5</td><td class="n">100.000%</td><td class="n">6.399%</td><td class="n">6.603%</td><td class="n">19.207%</td><td class="n">23.987%</td><td class="n">100.000%</td></tr><tr><td>6</td><td class="n">0.000%</td><td class="n">1.369%</td><td class="n">2.521%</td><td class="n">2.595%</td><td class="n">2.480%</td><td class="n">0.000%</td></tr></tbody></table></div>
+<blockquote>R1 與 R6 固定 5 格；R2~R5 高度浮動（3~6 格），這是本作的核心變異來源。</blockquote>
+<h3>3.5 Hit Rate</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">中獎數</th><th class="n">Hit Rate</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td>一次付費下注</td><td class="n">47,068</td><td class="n">13,011</td><td class="n"><strong>27.643%</strong></td></tr><tr><td>FG</td><td>一次免費轉</td><td class="n">—</td><td class="n">—</td><td class="n">⏳ 需回原始逐列資料</td></tr></tbody></table></div>
+<h3>3.6 門檻機率</h3>
+<h4>FG 結束後 10x 以下</h4>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">場次</th><th class="n">10x 以下場次</th><th class="n">機率</th></tr></thead><tbody><tr><td>NB-FG（自然觸發）</td><td class="n">145</td><td class="n">13</td><td class="n"><strong>8.966%</strong></td></tr></tbody></table></div>
+<blockquote>「一場 FG」＝該回合 <code>free_game_win</code> ÷ 底注。<strong>本作無 BF，故無離場分布章節。</strong></blockquote>
+<h3>3.7 消除率</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">combo 0</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5+</th></tr></thead><tbody><tr><td>BG（一般遊戲）</td><td>每次付費下注</td><td class="n">72.393%</td><td class="n">19.270%</td><td class="n">4.683%</td><td class="n">1.974%</td><td class="n">0.863%</td><td class="n">0.818%</td></tr></tbody></table></div>
+<blockquote><strong>校驗</strong>：combo 0（72.393%）＋ Hit Rate（27.643%）＝ <strong>100.036%</strong><br>超出的 17 筆（0.036%）是「有得分但 <code>bg_cascade_count</code> = 0」的回合，<br>推測為 Scatter 單獨派彩不觸發消除。比例極小，不影響結論。<br>⚠️ 原始 <code>ComboRate</code> 分頁的「Combo 1」等於本報告的 <strong>combo 0</strong>（該分頁把初始落盤也算一次），<br>兩者相差一個位移，比較時要注意。</blockquote>
+<h3>3.8 最大倍數</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">最大倍數</th></tr></thead><tbody><tr><td><strong>BG</strong></td><td>一次付費下注（未觸發 FG）</td><td class="n">46,923</td><td class="n"><strong>196.30x</strong></td></tr><tr><td><strong>FG</strong></td><td>一場免費遊戲全程</td><td class="n">145</td><td class="n"><strong>911.80x</strong></td></tr><tr><td>全體</td><td>一次付費下注（含 FG）</td><td class="n">47,068</td><td class="n"><strong>920.10x</strong></td></tr><tr><td>規則上限</td><td>官方</td><td class="n">—</td><td class="n">⏳ 未查證</td></tr></tbody></table></div>
+<blockquote>BG 未觸發 FG 的回合最大只有 196.30x；大獎全部來自免費遊戲。</blockquote>
+<p><strong>FG 全程得分門檻</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>門檻</th><th class="n">≥10x</th><th class="n">≥20x</th><th class="n">≥50x</th><th class="n">≥100x</th><th class="n">≥200x</th><th class="n">≥500x</th><th class="n">≥1000x</th></tr></thead><tbody><tr><td>佔 145 場</td><td class="n">91.03%</td><td class="n">82.07%</td><td class="n">51.03%</td><td class="n">26.21%</td><td class="n">5.52%</td><td class="n">1.38%</td><td class="n">0.00%</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><h3>4.1 摘要</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">NB-BG</th><th class="n">NB-FG</th></tr></thead><tbody><tr><td>統計單位</td><td class="n">每次付費下注</td><td class="n">每次觸發全程</td></tr><tr><td>樣本</td><td class="n">47,068</td><td class="n"><strong>145</strong></td></tr><tr><td>非零區間</td><td class="n">35</td><td class="n">33</td></tr><tr><td>Range 合計</td><td class="n">100.00000%</td><td class="n">100.00000%</td></tr></tbody></table></div>
+<blockquote>區間沿用 H026 標準 64 區間 <code>(Lower, Upper]</code>，倍率＝得分 ÷ 底注。<br>BG 線型以「一次下注的總得分」計（含該回合 FG）。<br><strong>⚠️ FG 僅 145 場</strong>，遠少於 64 個區間，形狀不可解讀。<br><strong>本作無 BF</strong>，故只有兩條線。</blockquote>
+<div class="axisfix">
+  <span class="pill">X 軸：固定 64 區間（全部標出）</span>
+  <span class="pill">BG Y 軸：固定 0–1%</span>
+  <span class="pill">FG Y 軸：固定 0–16%</span>
+  <span class="pill">超出上限不繪製</span>
+</div>
+<h4>BG 倍率線型</h4>
+<p class="cap">縱軸固定 0–1%。超過 1% 的低倍區間不繪製，以放大尾段細節。折線斷開處代表該區間為零，非插值。</p>
+<p class="warn" id="clipnote"></p>
+<div class="card"><div class="plot" id="p1"></div></div>
+<h4>FG 倍率線型</h4>
+<p class="cap">縱軸固定 0–16%。</p>
+<div class="card"><div class="legend" id="lg2"></div><div class="plot" id="p2"></div></div>
+<h4>尾段厚度：P(倍率 &gt; 區間上限)</h4>
+<p class="cap">各場景在自身樣本內的累積機率，縱軸固定 0–100%。曲線越早墜地，尾段越薄。</p>
+<div class="card"><div class="legend" id="lg3"></div><div class="plot" id="p3"></div></div>
+<h3>4.2 倍率線型分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>Interval</th><th class="n">NB-BG 次數</th><th class="n">NB-BG Hit Rate</th><th class="n">NB-FG 場次</th><th class="n">NB-FG 占比</th></tr></thead><tbody><tr><td><code>(-1, 0]</code></td><td class="n">34,006</td><td class="n">72.24866%</td><td class="n">3</td><td class="n">2.069%</td></tr><tr><td><code>(0, 1]</code></td><td class="n">7,234</td><td class="n">15.36925%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(1, 2]</code></td><td class="n">2,130</td><td class="n">4.52537%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(2, 3]</code></td><td class="n">973</td><td class="n">2.06722%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(3, 4]</code></td><td class="n">608</td><td class="n">1.29175%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(4, 5]</code></td><td class="n">393</td><td class="n">0.83496%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(5, 6]</code></td><td class="n">304</td><td class="n">0.64587%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(6, 7]</code></td><td class="n">164</td><td class="n">0.34843%</td><td class="n">3</td><td class="n">2.069%</td></tr><tr><td><code>(7, 8]</code></td><td class="n">182</td><td class="n">0.38667%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(8, 9]</code></td><td class="n">151</td><td class="n">0.32081%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(9, 10]</code></td><td class="n">99</td><td class="n">0.21033%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(10, 15]</code></td><td class="n">307</td><td class="n">0.65225%</td><td class="n">9</td><td class="n">6.207%</td></tr><tr><td><code>(15, 20]</code></td><td class="n">132</td><td class="n">0.28045%</td><td class="n">4</td><td class="n">2.759%</td></tr><tr><td><code>(20, 25]</code></td><td class="n">78</td><td class="n">0.16572%</td><td class="n">3</td><td class="n">2.069%</td></tr><tr><td><code>(25, 30]</code></td><td class="n">71</td><td class="n">0.15085%</td><td class="n">13</td><td class="n">8.966%</td></tr><tr><td><code>(30, 35]</code></td><td class="n">35</td><td class="n">0.07436%</td><td class="n">5</td><td class="n">3.448%</td></tr><tr><td><code>(35, 40]</code></td><td class="n">30</td><td class="n">0.06374%</td><td class="n">9</td><td class="n">6.207%</td></tr><tr><td><code>(40, 45]</code></td><td class="n">23</td><td class="n">0.04887%</td><td class="n">8</td><td class="n">5.517%</td></tr><tr><td><code>(45, 50]</code></td><td class="n">19</td><td class="n">0.04037%</td><td class="n">7</td><td class="n">4.828%</td></tr><tr><td><code>(50, 60]</code></td><td class="n">28</td><td class="n">0.05949%</td><td class="n">7</td><td class="n">4.828%</td></tr><tr><td><code>(60, 70]</code></td><td class="n">24</td><td class="n">0.05099%</td><td class="n">10</td><td class="n">6.897%</td></tr><tr><td><code>(70, 80]</code></td><td class="n">11</td><td class="n">0.02337%</td><td class="n">5</td><td class="n">3.448%</td></tr><tr><td><code>(80, 90]</code></td><td class="n">10</td><td class="n">0.02125%</td><td class="n">10</td><td class="n">6.897%</td></tr><tr><td><code>(90, 100]</code></td><td class="n">10</td><td class="n">0.02125%</td><td class="n">4</td><td class="n">2.759%</td></tr><tr><td><code>(100, 120]</code></td><td class="n">15</td><td class="n">0.03187%</td><td class="n">10</td><td class="n">6.897%</td></tr><tr><td><code>(120, 140]</code></td><td class="n">4</td><td class="n">0.00850%</td><td class="n">4</td><td class="n">2.759%</td></tr><tr><td><code>(140, 160]</code></td><td class="n">7</td><td class="n">0.01487%</td><td class="n">7</td><td class="n">4.828%</td></tr><tr><td><code>(160, 180]</code></td><td class="n">3</td><td class="n">0.00637%</td><td class="n">4</td><td class="n">2.759%</td></tr><tr><td><code>(180, 200]</code></td><td class="n">6</td><td class="n">0.01275%</td><td class="n">5</td><td class="n">3.448%</td></tr><tr><td><code>(200, 250]</code></td><td class="n">5</td><td class="n">0.01062%</td><td class="n">2</td><td class="n">1.379%</td></tr><tr><td><code>(250, 300]</code></td><td class="n">2</td><td class="n">0.00425%</td><td class="n">2</td><td class="n">1.379%</td></tr><tr><td><code>(300, 350]</code></td><td class="n">1</td><td class="n">0.00212%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(350, 400]</code></td><td class="n">1</td><td class="n">0.00212%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(400, 450]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(450, 500]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(500, 550]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(550, 600]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(600, 650]</code></td><td class="n">1</td><td class="n">0.00212%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(650, 700]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(700, 750]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(750, 800]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(800, 850]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(850, 900]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(900, 950]</code></td><td class="n">1</td><td class="n">0.00212%</td><td class="n">1</td><td class="n">0.690%</td></tr><tr><td><code>(950, 1000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(1000, 2000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(2000, 3000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(3000, 4000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(4000, 5000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(5000, 6000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(6000, 7000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(7000, 8000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(8000, 9000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(9000, 10000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(10000, 20000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(20000, 30000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(30000, 40000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(40000, 50000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(50000, 60000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(60000, 70000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(70000, 80000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(80000, 90000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(90000, 100000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr><tr><td><code>(100000, 9999999]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.000%</td></tr></tbody></table></div>
+<h3>4.3 觀察</h3>
+<ul><li>BG：<code>(-1, 0]</code> 佔 72.25%、<code>(0, 1]</code> 佔 15.37%，最高到 <code>(900, 950]</code>。</li><li>NB-FG 中位數 50.60x、最大 911.80x。</li></ul></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><h3>5.1 銀貓（Silver）</h3>
+<p><strong>初始盤面 — BG</strong>　每輪的銀貓格數分布</p>
+<div class="tbl-wrap"><table><thead><tr><th>銀貓數</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>0</td><td class="n">100.000%</td><td class="n">25.749%</td><td class="n">29.050%</td><td class="n">37.366%</td><td class="n">32.640%</td><td class="n">32.386%</td></tr><tr><td>1</td><td class="n">0.000%</td><td class="n">54.599%</td><td class="n">55.166%</td><td class="n">53.716%</td><td class="n">52.812%</td><td class="n">47.158%</td></tr><tr><td>2</td><td class="n">0.000%</td><td class="n">19.652%</td><td class="n">15.784%</td><td class="n">8.918%</td><td class="n">14.486%</td><td class="n">19.848%</td></tr><tr><td>3</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.061%</td><td class="n">0.609%</td></tr></tbody></table></div>
+<p><strong>初始盤面 — FG</strong>　每輪的銀貓格數分布</p>
+<div class="tbl-wrap"><table><thead><tr><th>銀貓數</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>0</td><td class="n">100.000%</td><td class="n">53.983%</td><td class="n">63.134%</td><td class="n">55.036%</td><td class="n">54.312%</td><td class="n">72.548%</td></tr><tr><td>1</td><td class="n">0.000%</td><td class="n">41.277%</td><td class="n">33.970%</td><td class="n">40.421%</td><td class="n">41.211%</td><td class="n">25.411%</td></tr><tr><td>2</td><td class="n">0.000%</td><td class="n">4.740%</td><td class="n">2.897%</td><td class="n">4.543%</td><td class="n">4.411%</td><td class="n">2.041%</td></tr><tr><td>3</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.066%</td><td class="n">0.000%</td></tr></tbody></table></div>
+<p><strong>消除掉落 — BG</strong>　每輪的銀貓格數分布</p>
+<div class="tbl-wrap"><table><thead><tr><th>銀貓數</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>0</td><td class="n">100.000%</td><td class="n">91.143%</td><td class="n">89.787%</td><td class="n">91.004%</td><td class="n">95.706%</td><td class="n">97.835%</td></tr><tr><td>1</td><td class="n">0.000%</td><td class="n">6.752%</td><td class="n">8.763%</td><td class="n">6.325%</td><td class="n">3.361%</td><td class="n">1.673%</td></tr><tr><td>2</td><td class="n">0.000%</td><td class="n">2.095%</td><td class="n">1.360%</td><td class="n">2.636%</td><td class="n">0.889%</td><td class="n">0.467%</td></tr><tr><td>3</td><td class="n">0.000%</td><td class="n">0.010%</td><td class="n">0.089%</td><td class="n">0.030%</td><td class="n">0.030%</td><td class="n">0.010%</td></tr><tr><td>4</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.005%</td><td class="n">0.015%</td><td class="n">0.010%</td></tr><tr><td>5</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.005%</td></tr></tbody></table></div>
+<p><strong>消除掉落 — FG</strong>　每輪的銀貓格數分布</p>
+<div class="tbl-wrap"><table><thead><tr><th>銀貓數</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th><th class="n">R4</th><th class="n">R5</th><th class="n">R6</th></tr></thead><tbody><tr><td>0</td><td class="n">100.000%</td><td class="n">94.641%</td><td class="n">92.518%</td><td class="n">95.551%</td><td class="n">97.877%</td><td class="n">99.191%</td></tr><tr><td>1</td><td class="n">0.000%</td><td class="n">2.528%</td><td class="n">6.370%</td><td class="n">3.943%</td><td class="n">1.719%</td><td class="n">0.809%</td></tr><tr><td>2</td><td class="n">0.000%</td><td class="n">2.831%</td><td class="n">1.112%</td><td class="n">0.506%</td><td class="n">0.404%</td><td class="n">0.000%</td></tr></tbody></table></div>
+<p><strong>每個盤面的銀貓總數分布（自行由 <code>reel_silver_counts</code> 統計）</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>銀貓總數</th><th class="n">0</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">6</th><th class="n">7</th><th class="n">8</th></tr></thead><tbody><tr><td>占比</td><td class="n">0.327%</td><td class="n">0.017%</td><td class="n">1.708%</td><td class="n">0.799%</td><td class="n">3.699%</td><td class="n">3.542%</td><td class="n">6.372%</td><td class="n">7.523%</td><td class="n">76.013%</td></tr></tbody></table></div>
+<blockquote>樣本 47,068 個回合的初始盤面。R1 永遠 0 個銀貓（該輪不放銀貓）。<br>平均每盤 7.373 個。</blockquote>
+<h3>5.2 Extra Reel（R6）</h3>
+<p><strong>初始盤面</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">BG</th><th class="n">FG</th></tr></thead><tbody><tr><td>WW</td><td class="n">0.192%</td><td class="n">0.079%</td></tr><tr><td>C1</td><td class="n">1.275%</td><td class="n">0.818%</td></tr><tr><td>M1</td><td class="n">1.021%</td><td class="n">2.018%</td></tr><tr><td>M2</td><td class="n">7.613%</td><td class="n">2.005%</td></tr><tr><td>M3</td><td class="n">4.090%</td><td class="n">2.466%</td></tr><tr><td>M4</td><td class="n">11.088%</td><td class="n">11.171%</td></tr><tr><td>M5</td><td class="n">8.197%</td><td class="n">11.461%</td></tr><tr><td>M6</td><td class="n">12.970%</td><td class="n">13.453%</td></tr><tr><td>A</td><td class="n">8.308%</td><td class="n">10.578%</td></tr><tr><td>K</td><td class="n">13.559%</td><td class="n">13.044%</td></tr><tr><td>Q</td><td class="n">7.463%</td><td class="n">10.406%</td></tr><tr><td>J</td><td class="n">16.218%</td><td class="n">13.005%</td></tr><tr><td>TE</td><td class="n">8.006%</td><td class="n">9.496%</td></tr></tbody></table></div>
+<p><strong>消除掉落</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">BG</th><th class="n">FG</th></tr></thead><tbody><tr><td>WW</td><td class="n">0.000%</td><td class="n">0.000%</td></tr><tr><td>C1</td><td class="n">4.033%</td><td class="n">1.587%</td></tr><tr><td>M1</td><td class="n">0.613%</td><td class="n">0.000%</td></tr><tr><td>M2</td><td class="n">1.378%</td><td class="n">0.000%</td></tr><tr><td>M3</td><td class="n">1.531%</td><td class="n">1.587%</td></tr><tr><td>M4</td><td class="n">11.077%</td><td class="n">3.175%</td></tr><tr><td>M5</td><td class="n">3.829%</td><td class="n">15.873%</td></tr><tr><td>M6</td><td class="n">15.977%</td><td class="n">4.762%</td></tr><tr><td>A</td><td class="n">5.768%</td><td class="n">25.397%</td></tr><tr><td>K</td><td class="n">13.936%</td><td class="n">1.587%</td></tr><tr><td>Q</td><td class="n">8.423%</td><td class="n">20.635%</td></tr><tr><td>J</td><td class="n">19.296%</td><td class="n">4.762%</td></tr><tr><td>TE</td><td class="n">14.140%</td><td class="n">20.635%</td></tr></tbody></table></div>
+<p><strong>R6 整輪同符號的出現率</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">命中次數</th><th class="n">出現率</th></tr></thead><tbody><tr><td>M1</td><td class="n">31</td><td class="n">0.0444%</td></tr><tr><td>M2</td><td class="n">131</td><td class="n">0.1877%</td></tr><tr><td>M3</td><td class="n">823</td><td class="n">1.1794%</td></tr><tr><td>M4</td><td class="n">439</td><td class="n">0.6291%</td></tr><tr><td>M5</td><td class="n">714</td><td class="n">1.0232%</td></tr><tr><td>M6</td><td class="n">267</td><td class="n">0.3826%</td></tr><tr><td>M7</td><td class="n">283</td><td class="n">0.4056%</td></tr><tr><td>M8</td><td class="n">268</td><td class="n">0.3841%</td></tr><tr><td>M9</td><td class="n">270</td><td class="n">0.3869%</td></tr><tr><td>M10</td><td class="n">377</td><td class="n">0.5403%</td></tr><tr><td>M11</td><td class="n">276</td><td class="n">0.3955%</td></tr><tr><td>2508</td><td class="n">1</td><td class="n">0.0000%</td></tr><tr><td>2508</td><td class="n">2</td><td class="n">800.0000%</td></tr><tr><td>2508</td><td class="n">3</td><td class="n">9600.0000%</td></tr><tr><td>2508</td><td class="n">4</td><td class="n">67700.0000%</td></tr><tr><td>2508</td><td class="n">5</td><td class="n">36200.0000%</td></tr><tr><td>2508</td><td class="n">6</td><td class="n">58100.0000%</td></tr><tr><td>2508</td><td class="n">7</td><td class="n">21400.0000%</td></tr><tr><td>2508</td><td class="n">8</td><td class="n">23100.0000%</td></tr><tr><td>2508</td><td class="n">9</td><td class="n">23100.0000%</td></tr><tr><td>2508</td><td class="n">10</td><td class="n">21700.0000%</td></tr><tr><td>2508</td><td class="n">11</td><td class="n">33600.0000%</td></tr><tr><td>2508</td><td class="n">12</td><td class="n">20900.0000%</td></tr></tbody></table></div>
+<blockquote>分母為 69,779 個原始盤面（含消除後的盤面），不是回合數。</blockquote>
+<h3>5.3 M1 符號專項指標</h3>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">BG</th><th class="n">FG</th></tr></thead><tbody><tr><td>總盤面數</td><td class="n">47,107</td><td class="n">1,519</td></tr><tr><td>出現 M1 的盤面</td><td class="n">7,898</td><td class="n">536</td></tr><tr><td>M1 出現率</td><td class="n">16.766%</td><td class="n">35.286%</td></tr><tr><td>M1 使用率（有出現時參與中獎的比例）</td><td class="n">37.972%</td><td class="n">32.090%</td></tr></tbody></table></div>
+<blockquote>M1（<code>symbol_id</code> = 2）是本作最高分符號。<br>「使用率」＝該盤面出現 M1 且 M1 有參與中獎的比例。</blockquote>
+<h3>5.4 免費遊戲局數分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>免費轉數</th><th class="n">次數</th><th class="n">占比</th></tr></thead><tbody><tr><td>9</td><td class="n">1</td><td class="n">0.69%</td></tr><tr><td>10</td><td class="n">121</td><td class="n">83.45%</td></tr><tr><td>12</td><td class="n">20</td><td class="n">13.79%</td></tr><tr><td>20</td><td class="n">3</td><td class="n">2.07%</td></tr></tbody></table></div>
+<blockquote>平均 10.48 轉／場。超過基礎局數的部分來自 retrigger。</blockquote></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><h3>6.1 符號代號對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>symbol_id</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr></thead><tbody><tr><td>符號</td><td>WW</td><td>C1</td><td>M1</td><td>M2</td><td>M3</td><td>M4</td><td>M5</td><td>M6</td><td>M7</td><td>M8</td><td>M9</td><td>M10</td><td>M11</td></tr></tbody></table></div>
+<blockquote>取自 <code>SymbolSize</code> 分頁的 <code>Symbol</code> 欄。WW ＝ Wild，C1 ＝ Scatter。</blockquote>
+<h3>6.2 資料使用建議</h3>
+<ol><li><code>_1</code> / <code>_2</code> 的分頁是<strong>累積式</strong>，只能取最大分頁，或直接用 <code>_all/spin_data</code>。</li><li>一次付費 spin ＝ 一個 <code>root_spin_id</code>；<code>Rounds</code> 表已彙整好，47,107 個 id 全相異。</li><li>排除 <code>total_bet</code> = 0 的 39 筆斷頭回合後，付費回合為 47,068。</li><li><code>ComboRate</code> 分頁的 Combo N 等於本報告的 combo N−1，比較時要位移。</li><li><strong>總 RTP 100.93% 高於官方 96.72%</strong>，是 145 次 FG 的正向變異，不可當設定值引用。</li><li>BG Hit Rate（27.643%）、連消分布、銀貓與 Extra Reel 統計樣本充足，<strong>可引用</strong>。</li><li>FG Hit Rate 與 FG 逐轉指標需回原始 <code>spin_data</code> 逐列重算，本報告未提供。</li><li>本作<strong>無 Buy Feature</strong>，報告中不含 BF 場景。</li></ol></div>
+</div>
+
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+const CHARTS=[];
+function activate(k,focus){
+  tabs.forEach((t,i)=>{
+    const on=i===k;
+    t.setAttribute('aria-selected',on?'true':'false');
+    t.tabIndex=on?0:-1;
+    document.getElementById('panel-'+i).hidden=!on;
+  });
+  if(focus) tabs[k].focus();
+  const p=document.getElementById('panel-'+k);
+  CHARTS.forEach(c=>{ if(p.contains(c.host)) c.draw(true); });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{
+    let k=null;
+    if(e.key==='ArrowRight')k=(i+1)%tabs.length;
+    else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')k=0; else if(e.key==='End')k=tabs.length-1;
+    if(k!==null){e.preventDefault(); activate(k,true);}
+  });
+});
+
+const CH={"anchor": "### 4.2", "rows": [{"i": 0, "lab": "(-1, 0]", "bgH": 72.24866151100535, "fgH": 2.0689655172413794, "bgC": 34006, "fgC": 3}, {"i": 1, "lab": "(0, 1]", "bgH": 15.369252995665844, "fgH": 0.6896551724137931, "bgC": 7234, "fgC": 1}, {"i": 2, "lab": "(1, 2]", "bgH": 4.525367553327101, "fgH": 0.6896551724137931, "bgC": 2130, "fgC": 1}, {"i": 3, "lab": "(2, 3]", "bgH": 2.0672218917311125, "fgH": 0.6896551724137931, "bgC": 973, "fgC": 1}, {"i": 4, "lab": "(3, 4]", "bgH": 1.291748109118722, "fgH": 0.6896551724137931, "bgC": 608, "fgC": 1}, {"i": 5, "lab": "(4, 5]", "bgH": 0.834962182374437, "fgH": 0.6896551724137931, "bgC": 393, "fgC": 1}, {"i": 6, "lab": "(5, 6]", "bgH": 0.645874054559361, "fgH": 0.6896551724137931, "bgC": 304, "fgC": 1}, {"i": 7, "lab": "(6, 7]", "bgH": 0.34843205574912894, "fgH": 2.0689655172413794, "bgC": 164, "fgC": 3}, {"i": 8, "lab": "(7, 8]", "bgH": 0.3866745984533016, "fgH": 0.0, "bgC": 182, "fgC": 0}, {"i": 9, "lab": "(8, 9]", "bgH": 0.3208124415738931, "fgH": 0.6896551724137931, "bgC": 151, "fgC": 1}, {"i": 10, "lab": "(9, 10]", "bgH": 0.21033398487294977, "fgH": 0.0, "bgC": 99, "fgC": 0}, {"i": 11, "lab": "(10, 15]", "bgH": 0.6522478116767231, "fgH": 6.206896551724138, "bgC": 307, "fgC": 9}, {"i": 12, "lab": "(15, 20]", "bgH": 0.280445313163933, "fgH": 2.7586206896551726, "bgC": 132, "fgC": 4}, {"i": 13, "lab": "(20, 25]", "bgH": 0.165717685051415, "fgH": 2.0689655172413794, "bgC": 78, "fgC": 3}, {"i": 14, "lab": "(25, 30]", "bgH": 0.15084558511090337, "fgH": 8.96551724137931, "bgC": 71, "fgC": 13}, {"i": 15, "lab": "(30, 35]", "bgH": 0.074360499702558, "fgH": 3.4482758620689653, "bgC": 35, "fgC": 5}, {"i": 16, "lab": "(35, 40]", "bgH": 0.06373757117362114, "fgH": 6.206896551724138, "bgC": 30, "fgC": 9}, {"i": 17, "lab": "(40, 45]", "bgH": 0.04886547123310954, "fgH": 5.517241379310345, "bgC": 23, "fgC": 8}, {"i": 18, "lab": "(45, 50]", "bgH": 0.04036712840996006, "fgH": 4.827586206896552, "bgC": 19, "fgC": 7}, {"i": 19, "lab": "(50, 60]", "bgH": 0.0594883997620464, "fgH": 4.827586206896552, "bgC": 28, "fgC": 7}, {"i": 20, "lab": "(60, 70]", "bgH": 0.05099005693889691, "fgH": 6.896551724137931, "bgC": 24, "fgC": 10}, {"i": 21, "lab": "(70, 80]", "bgH": 0.023370442763661084, "fgH": 3.4482758620689653, "bgC": 11, "fgC": 5}, {"i": 22, "lab": "(80, 90]", "bgH": 0.021245857057873716, "fgH": 6.896551724137931, "bgC": 10, "fgC": 10}, {"i": 23, "lab": "(90, 100]", "bgH": 0.021245857057873716, "fgH": 2.7586206896551726, "bgC": 10, "fgC": 4}, {"i": 24, "lab": "(100, 120]", "bgH": 0.03186878558681057, "fgH": 6.896551724137931, "bgC": 15, "fgC": 10}, {"i": 25, "lab": "(120, 140]", "bgH": 0.008498342823149485, "fgH": 2.7586206896551726, "bgC": 4, "fgC": 4}, {"i": 26, "lab": "(140, 160]", "bgH": 0.0148720999405116, "fgH": 4.827586206896552, "bgC": 7, "fgC": 7}, {"i": 27, "lab": "(160, 180]", "bgH": 0.006373757117362114, "fgH": 2.7586206896551726, "bgC": 3, "fgC": 4}, {"i": 28, "lab": "(180, 200]", "bgH": 0.012747514234724228, "fgH": 3.4482758620689653, "bgC": 6, "fgC": 5}, {"i": 29, "lab": "(200, 250]", "bgH": 0.010622928528936858, "fgH": 1.3793103448275863, "bgC": 5, "fgC": 2}, {"i": 30, "lab": "(250, 300]", "bgH": 0.0042491714115747425, "fgH": 1.3793103448275863, "bgC": 2, "fgC": 2}, {"i": 31, "lab": "(300, 350]", "bgH": 0.0021245857057873713, "fgH": 0.6896551724137931, "bgC": 1, "fgC": 1}, {"i": 32, "lab": "(350, 400]", "bgH": 0.0021245857057873713, "fgH": 0.6896551724137931, "bgC": 1, "fgC": 1}, {"i": 33, "lab": "(400, 450]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 34, "lab": "(450, 500]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 35, "lab": "(500, 550]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 36, "lab": "(550, 600]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 37, "lab": "(600, 650]", "bgH": 0.0021245857057873713, "fgH": 0.6896551724137931, "bgC": 1, "fgC": 1}, {"i": 38, "lab": "(650, 700]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 39, "lab": "(700, 750]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 40, "lab": "(750, 800]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 41, "lab": "(800, 850]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 42, "lab": "(850, 900]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 43, "lab": "(900, 950]", "bgH": 0.0021245857057873713, "fgH": 0.6896551724137931, "bgC": 1, "fgC": 1}, {"i": 44, "lab": "(950, 1000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 45, "lab": "(1000, 2000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 46, "lab": "(2000, 3000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 47, "lab": "(3000, 4000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 48, "lab": "(4000, 5000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 49, "lab": "(5000, 6000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 50, "lab": "(6000, 7000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 51, "lab": "(7000, 8000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 52, "lab": "(8000, 9000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 53, "lab": "(9000, 10000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 54, "lab": "(10000, 20000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 55, "lab": "(20000, 30000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 56, "lab": "(30000, 40000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 57, "lab": "(40000, 50000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 58, "lab": "(50000, 60000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 59, "lab": "(60000, 70000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 60, "lab": "(70000, 80000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 61, "lab": "(80000, 90000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 62, "lab": "(90000, 100000]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}, {"i": 63, "lab": "(100000, 9999999]", "bgH": 0.0, "fgH": 0.0, "bgC": 0, "fgC": 0}], "sv": {"bg": [27.751338488994648, 12.382085493328802, 7.856717940001699, 5.789496048270587, 4.497747939151865, 3.6627857567774287, 3.0169117022180676, 2.6684796464689384, 2.281805048015637, 1.960992606441744, 1.750658621568794, 1.098410809892071, 0.817965496728138, 0.6522478116767231, 0.5014022265658197, 0.42704172686326164, 0.36330415568964053, 0.314438684456531, 0.2740715560465709, 0.2145831562845245, 0.1635930993456276, 0.1402226565819665, 0.1189767995240928, 0.09773094246621908, 0.06586215687940851, 0.05736381405625903, 0.04249171411574743, 0.03611795699838531, 0.023370442763661084, 0.012747514234724228, 0.008498342823149485, 0.006373757117362114, 0.0042491714115747425, 0.0042491714115747425, 0.0042491714115747425, 0.0042491714115747425, 0.0042491714115747425, 0.0021245857057873713, 0.0021245857057873713, 0.0021245857057873713, 0.0021245857057873713, 0.0021245857057873713, 0.0021245857057873713, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "fg": [97.93103448275862, 97.24137931034483, 96.55172413793103, 95.86206896551724, 95.17241379310344, 94.48275862068965, 93.79310344827586, 91.72413793103448, 91.72413793103448, 91.0344827586207, 91.0344827586207, 84.82758620689656, 82.06896551724138, 80.0, 71.03448275862068, 67.58620689655173, 61.37931034482759, 55.86206896551724, 51.03448275862069, 46.206896551724135, 39.310344827586206, 35.86206896551724, 28.965517241379313, 26.20689655172414, 19.310344827586206, 16.551724137931036, 11.724137931034482, 8.96551724137931, 5.517241379310345, 4.137931034482759, 2.7586206896551726, 2.0689655172413794, 1.3793103448275863, 1.3793103448275863, 1.3793103448275863, 1.3793103448275863, 1.3793103448275863, 0.6896551724137931, 0.6896551724137931, 0.6896551724137931, 0.6896551724137931, 0.6896551724137931, 0.6896551724137931, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "clipped": [{"lab": "(-1, 0]", "v": 72.24866151100535}, {"lab": "(0, 1]", "v": 15.369252995665844}, {"lab": "(1, 2]", "v": 4.525367553327101}, {"lab": "(2, 3]", "v": 2.0672218917311125}, {"lab": "(3, 4]", "v": 1.291748109118722}], "series": ["bg", "fg"]};
+if(CH){
+  const R=CH.rows, SV=CH.sv, NB=R.length;
+  const DEF={bg:{n:'BG',c:'var(--s1)',hr:'bgH',cnt:'bgC'},
+             fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
+             bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
+  const KEYS=CH.series||['bg','fg','bf'];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=v=>v.toLocaleString('en-US');
+  const cn=document.getElementById('clipnote');
+  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
+    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
+    : '無區間超出 1% 上限。';
+  function legend(id,ks){
+    const e=document.getElementById(id); if(!e)return;
+    e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
+  }
+  function chart(hostId,cfg){
+    const host=document.getElementById(hostId); if(!host)return;
+    let lastW=-1;
+    function draw(force){
+      const W=Math.max(340,host.clientWidth||900);
+      if(!force && W===lastW) return;
+      lastW=W; host.innerHTML='';
+      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const iw=W-m.l-m.r, ih=H-m.t-m.b;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
+      const g=el('g',{transform:`translate(${m.l},${m.t})`});
+      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const X=i=>i/(NB-1)*iw;
+      cfg.yticks.forEach(t=>{
+        const yy=Y(t);
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
+        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
+        tx.textContent=t+'%'; g.appendChild(tx);
+      });
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+      for(let i=0;i<NB;i+=step){
+        const xx=X(i);
+        g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
+          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        tx.textContent=R[i].lab; g.appendChild(tx);
+      }
+      g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
+      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
+      const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
+        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
+      ay.textContent=cfg.ylabel; g.appendChild(ay);
+      cfg.series.forEach(s=>{
+        let run=[];
+        const flush=()=>{
+          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          run=[];
+        };
+        s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
+        flush();
+      });
+      const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+      g.appendChild(cross);
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
+      const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
+      hit.addEventListener('mousemove',ev=>{
+        const bb=svg.getBoundingClientRect();
+        const sx=(ev.clientX-bb.left)*(W/bb.width)-m.l;
+        let i=Math.round(sx/iw*(NB-1)); if(i<0)i=0; if(i>NB-1)i=NB-1;
+        const px=X(i);
+        cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity',1);
+        let html=`<b>${R[i].lab}</b>`;
+        cfg.series.forEach((s,k)=>{
+          const p=s.pts[i];
+          if(p&&p.v!==null){
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
+          }else{
+            dots[k].setAttribute('opacity',0);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>—</span></div>`;
+          }
+        });
+        tip.innerHTML=html; tip.style.opacity=1;
+        const tw=tip.offsetWidth, sc=bb.width/W;
+        let lx=(px+m.l)*sc+14; if(lx+tw>bb.width) lx=(px+m.l)*sc-tw-14;
+        tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
+      });
+      hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.appendChild(g); host.appendChild(svg);
+    }
+    draw(true);
+    const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
+    window.addEventListener('resize',()=>draw());
+    CHARTS.push({host,draw});
+  }
+  const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
+  if(KEYS.includes('bg'))
+    chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
+      aria:'BG 倍率線型，縱軸固定 0 至 1%',
+      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      tipVal:p=>fmt(p.v,5)+'%'});
+  const fgk=KEYS.filter(k=>k!=='bg');
+  if(fgk.length){
+    legend('lg2',fgk);
+    chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
+      aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
+      tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
+  }
+  legend('lg3',KEYS);
+  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
+    aria:'各場景累積機率曲線',
+    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
+    tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
+     把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
+  document.querySelectorAll('.card').forEach(card=>{
+    const plot=card.querySelector('.plot');
+    if(!plot || plot.querySelector('svg')) return;
+    let n=card.previousElementSibling;
+    card.remove();
+    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
+      const prev=n.previousElementSibling;
+      const stop=(n.tagName==='H4');
+      n.remove(); n=prev;
+      if(stop) break;
+    }
+  });
+}
+</script>

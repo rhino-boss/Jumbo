@@ -692,8 +692,9 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   function drawMultiplierValue(symbol, tableName) {
     const block = currentProfile().multiplier;
-    const weightKey = block.weights[tableName] ? tableName : block.table_names[0];
-    const weights = block.weights[weightKey] || [];
+    const source = symbol === C3 ? block.weights_c3 : block.weights_c2;
+    const weightKey = source[tableName] ? tableName : block.table_names[0];
+    const weights = source[weightKey] || [];
     return block.multipliers[pickWeighted(weights)] || 0;
   }
 
