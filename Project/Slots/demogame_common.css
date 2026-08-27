@@ -130,6 +130,52 @@ body.slot-simulator .zone-body {
   min-height: 34px;
 }
 
+body.slot-simulator .set-rng-controls {
+  display: grid;
+  grid-template-columns: minmax(112px, .8fr) minmax(150px, 1.35fr) 82px;
+  align-items: end;
+  gap: 10px;
+  width: 100%;
+}
+
+body.slot-simulator .debug-rng-field {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  color: var(--sim-sub);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+
+body.slot-simulator .debug-rng-field input,
+body.slot-simulator .debug-rng-field select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--sim-surface-2);
+  border-radius: 5px;
+  color: var(--sim-text);
+  background: var(--sim-surface);
+  font: 600 11px/1 "Segoe UI", system-ui, sans-serif;
+  text-transform: none;
+}
+
+body.slot-simulator .debug-rng-field input::placeholder {
+  color: var(--sim-sub);
+  opacity: .7;
+}
+
+body.slot-simulator #setRngResetBtn {
+  width: 82px;
+  min-width: 82px;
+  align-self: end;
+}
+
 body.slot-simulator .action-zone .play-main-controls {
   display: grid;
   grid-template-columns: auto auto minmax(160px, 1fr) 116px;
@@ -353,6 +399,32 @@ body.slot-simulator #change-log-wrap {
   box-shadow: 0 4px 14px rgba(0, 0, 0, .13) !important;
 }
 
+body.slot-simulator #changeLogBody {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+body.slot-simulator .change-log-entry {
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--sim-text);
+  background: var(--sim-surface);
+}
+
+body.slot-simulator .change-log-entry h4 {
+  margin: 0 0 7px;
+  color: var(--sim-accent);
+  font-size: 13px;
+}
+
+body.slot-simulator .change-log-entry ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+body.slot-simulator .change-log-entry li + li { margin-top: 4px; }
+
 body.slot-simulator #batch-simulation {
   display: flex;
   gap: 10px;
@@ -438,6 +510,91 @@ body.slot-simulator #log-wrap #log-body {
   padding-block: 6px;
   overflow-y: auto;
   scrollbar-gutter: stable;
+}
+
+body.slot-simulator #log-header,
+body.slot-simulator .live-log-header {
+  display: flex;
+  align-items: center;
+}
+
+body.slot-simulator .live-log-header {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body.slot-simulator #clearLogBtn {
+  min-height: 26px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--sim-sub);
+  background: var(--sim-surface);
+  font: 700 11px/1 "Segoe UI", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+body.slot-simulator #liveLogBody {
+  box-sizing: border-box;
+  height: 170px;
+  padding: 7px 12px;
+  overflow-y: auto;
+  color: var(--sim-green);
+  background: #070714;
+  font: 12px/1.45 Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+body.slot-simulator .live-log-line.cascade { color: #d28cff; }
+body.slot-simulator .live-log-line.mode { color: var(--sim-blue); }
+body.slot-simulator .live-log-line.result { color: var(--sim-accent); }
+body.slot-simulator .live-log-line.error { color: #ff6f91; }
+
+body.slot-simulator #log-wrap .log-subheader {
+  margin: 2px 4px 6px;
+  color: var(--sim-sub);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+body.slot-simulator #log-wrap #lineList {
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--sim-surface);
+}
+
+body.slot-simulator #log-wrap .spin-result-row {
+  display: block;
+  margin: 0;
+  padding: 5px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--sim-surface);
+  border-radius: 0;
+  color: var(--sim-text);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+body.slot-simulator #log-wrap .spin-result-row:last-child { border-bottom: 0; }
+
+body.slot-simulator #log-wrap .spin-result-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+  color: var(--sim-accent);
+}
+
+body.slot-simulator #log-wrap .spin-result-board {
+  margin: 0;
+  color: var(--sim-text);
+  font: 11px/1.4 Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 body.slot-simulator #rng-wrap .rng-row,
@@ -728,6 +885,7 @@ body.slot-simulator #helpContent table.paytable th { color: #77c7ff; font-weight
   body.slot-simulator .speed-control { flex: 1 1 180px; width: auto; grid-template-columns: auto minmax(90px, 1fr) auto; }
   body.slot-simulator .speed-control input { width: 100%; }
   body.slot-simulator .bet-stepper { width: 100%; }
+  body.slot-simulator .set-rng-controls { grid-template-columns: minmax(120px, .8fr) minmax(0, 1.4fr) 82px; }
   body.slot-simulator #settings-wrap > .setting-body,
   body.slot-simulator .setting-toggle-group,
   body.slot-simulator .setting-control-group { flex-wrap: wrap; }

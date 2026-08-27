@@ -1,0 +1,35 @@
+{
+  "rounds": 300000,
+  "model": "C0271",
+  "excel_version": "0",
+  "bg_hit_rate": 0.22420333333333334,
+  "bg_ball_rate": 0.027756666666666666,
+  "bg_avg_cascades": 0.29944333333333334,
+  "fg_spins": 7505,
+  "fg_hit_rate": 0.4175882744836775,
+  "fg_ball_rate": 0.49526982011992005,
+  "bg_table_share": [
+    {
+      "name": "BG_Symbol",
+      "measured": 0.0452,
+      "configured": 0.045258
+    },
+    {
+      "name": "BG_Symbol (2)",
+      "measured": 0.9548,
+      "configured": 0.954742
+    }
+  ],
+  "fg_table_share": [
+    {
+      "name": "FG_Symbol",
+      "measured": 0.8261159227181879,
+      "configured": 0.827808
+    },
+    {
+      "name": "FG_Symbol (2)",
+      "measured": 0.17388407728181213,
+      "configured": 0.172192
+    }
+  ]
+}

@@ -49,7 +49,8 @@
 | 101024 | H0411 | Super Gems 1000 | 超級寶石 1000 | Line Game | 1 | 1.5 | 8 | - | 250 |
 | 101025 | H0441 | Shake Rattle & Roll: Triple Terror | 奪寶魔怪 |  | 1 |  |  |  |  |
 | 101026 | H0471 |  | （Super Bang Bang） |  |  |  |  |  |  |
-| 101027 | H0271 | Olympus 2500 | 奧林匹斯2500 |  |  |  |  |  |  |
+| 101027 | H0271 | Olympus 2500 | 奧林匹斯2500 | 消消樂-Pay Anywhere | 1 | 2 | - | 100 | - |
+| 101027 | C0271 | Olympus 2500 | 奧林帕斯 2500（C027 強化數學版） | 消消樂-Pay Anywhere／Cascade Multiplier | 1 | 2 | - | 100 | - |
 | 109001 |  | Fortune Mahjong | 財神麻將 |  |  |  |  |  |  |
 | 109002 |  | Super Gems | 超級寶石 |  |  |  |  |  |  |
 | 109003 |  | Wild Train | 賞金列車 |  |  |  |  |  |  |

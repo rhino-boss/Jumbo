@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import tempfile
 from pathlib import Path
 
 from selenium import webdriver
@@ -19,6 +21,13 @@ def main() -> None:
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--remote-debugging-pipe")
+    temp_root = ROOT.parents[2] / ".tmp"
+    temp_root.mkdir(parents=True, exist_ok=True)
+    profile_dir = Path(tempfile.mkdtemp(prefix="h027-edge-", dir=temp_root))
+    options.add_argument(f"--user-data-dir={profile_dir}")
     options.add_argument("--allow-file-access-from-files")
     options.set_capability("ms:loggingPrefs", {"browser": "ALL"})
 
@@ -78,6 +87,10 @@ def main() -> None:
 
         driver.find_element(By.ID, "cardSystemInput").click()
         driver.find_element(By.ID, "debugModeInput").click()
+        change_log = driver.find_element(By.ID, "change-log-wrap")
+        assert change_log.is_displayed()
+        assert "2026-08-25" in change_log.text
+        assert "自然模型與卡片倍率線型對標競品" in change_log.text
         card = Select(driver.find_element(By.ID, "cardRangeSelect"))
         assert len(card.options) > 1
 
@@ -112,6 +125,9 @@ def main() -> None:
             raise AssertionError("Browser console contains severe errors")
     finally:
         driver.quit()
+        resolved_profile = profile_dir.resolve()
+        if resolved_profile.parent == temp_root.resolve() and resolved_profile.name.startswith("h027-edge-"):
+            shutil.rmtree(resolved_profile, ignore_errors=True)
 
 
 if __name__ == "__main__":

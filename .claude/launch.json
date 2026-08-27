@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "slots-static",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-m", "http.server", "8027", "--directory", "Project/Slots"],
+      "port": 8027,
+      "url": "http://localhost:8027"
+    }
+  ]
+}

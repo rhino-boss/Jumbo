@@ -9,7 +9,7 @@
 - [共通原則](#共通原則)
 - [數學文件](#數學文件)
   - [數學模型](#數學模型)
-  - [PAR Sheet](#par-sheet)
+  - [PARsheet](#par-sheet)
   - [Game Rule](#game-rule)
 - [程式相關](#程式相關)
   - [模擬程式](#模擬程式)
@@ -47,7 +47,7 @@
 
 ### 數學模型
 
-數學模型是包含公式、計算過程、輪帶、權重、參數與驗證依據的完整文件，也是產出 PAR Sheet 與 Config 的數學來源。
+數學模型是包含公式、計算過程、輪帶、權重、參數與驗證依據的完整文件，也是產出 PARsheet 與 Config 的數學來源。
 
 #### 1.1 必要內容
 
@@ -309,14 +309,14 @@ RTP 配置使用 `Link + Bonus Game + Game = Total RTP`。NB／EB 與 BF／SF �
 
 ---
 
-### PAR Sheet
+### PARsheet
 
-PAR Sheet 是提供企劃、程式、測試、美術、營運或其他職能查閱的精簡規格文件，不是完整數學模型的副本。
+PARsheet 是提供企劃、程式、測試、美術、營運或其他職能查閱的精簡規格文件，不是完整數學模型的副本。
 
-- PAR Sheet 必須移除數學模型中的計算公式、中間推導、內部權重計算與不需要對外提供的工作資料。
+- PARsheet 必須移除數學模型中的計算公式、中間推導、內部權重計算與不需要對外提供的工作資料。
 - 只保留其他職能完成工作所需的必要資訊，例如遊戲基礎設定、盤面、得分方式、Paytable、Symbol、Bet Mode、Feature 條件、局數、倍率、Max Win、Jackpot 與產品限制。
 - 所有輸出數值與規則必須和完整數學模型、Game Rule 及 Config 一致，不得為了簡化而改變定義或精度口徑。
-- 完整数學模型更新時，必須同步確認 PAR Sheet 是否需要更新；PAR Sheet 不得保留已失效的規格。
+- 完整数學模型更新時，必須同步確認 PARsheet 是否需要更新；PARsheet 不得保留已失效的規格。
 
 ### Game Rule
 
@@ -785,6 +785,7 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 | H019 埃及秘寶 | `Video Slot - Pay Anywhere / Cascade` |
 | H026 彩罐熱舞 1000 | `Video Slot - 20 Lines / Cascade` |
 | H027 奧林帕斯 2500 | `Video Slot - Pay Anywhere / Cascade` |
+| C027 奧林帕斯 2500 | `Video Slot - Pay Anywhere / Cascade / Cascade Multiplier` |
 | H028 雷神爆金 1000 | `Video Slot - 2,025–32,400 Ways / Megaways / Cascade` |
 
 目前正式遊戲沒有使用 `Cluster Pay`；日後只有實際採相鄰群集判獎的遊戲才能列入此類。
@@ -896,7 +897,16 @@ Debug Mode 至少可查看：
 
 #### 4.7 交付檢查
 
+每次修改 Demogame 的 `index.html`、共用 `demogame_common.css`／`demogame_common.js`，或任何會改變操作、顯示、動畫、Debug、Config／Version／Profile 選擇方式的程式時，必須在同一次修改中同步更新 Demogame 的「修改紀錄」。
+
+- 修改紀錄統一放在 `#change-log-wrap`，並於 Debug Mode 開啟時顯示。
+- 每筆紀錄至少包含日期、修改目的、實際變更內容與驗證結果。
+- 若變更會影響數學、XLSX、Config、RTP、Hit Rate 或 Feature 行為，必須明確列出受影響檔案與數值；若未影響，也必須註明「未修改 XLSX／Config 數學參數」。
+- 修改紀錄必須描述目前實際完成的內容，不得只寫「調整」、「修正」或尚未執行的計畫。
+- 純介面或程式修正不需要因此提升數學版本，但仍必須留下修改紀錄。
+
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
+- [ ] 本次 Demogame 修改已同步更新 `#change-log-wrap`，內容包含日期、變更與驗證結果。
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
@@ -1009,7 +1019,7 @@ Config 至少應提供遊戲實際需要的：
 3. Simulator 已完成所有支援組合的統計驗證。
 4. Card System 的權重、區間、Retry 與失敗監控通過。
 5. Demogame 的代表性單局可與 Simulator 對帳。
-6. 數學模型、PAR Sheet、Game Rule、Config、報表、Demogame、Help、Game Description 與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。
+6. 數學模型、PARsheet、Game Rule、Config、報表、Demogame、Help、Game Description 與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。
 
 ---
 

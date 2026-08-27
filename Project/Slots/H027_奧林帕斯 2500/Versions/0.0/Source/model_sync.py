@@ -3,9 +3,11 @@
     model_sync.py export [--check]       H0271.xlsx -> config.js
     model_sync.py import [--check]       config.js -> H0271.xlsx
 
-BG uses two selectable tables (BG_Symbol and BG_Symbol (2)); FG uses two
-scheduled tables (FG_Symbol and FG_Symbol (2)). Historical "(3)" worksheets
-remain outside the active config model.
+BG uses reconstructed competitor Reel Sets 0-2; FG uses Reel Sets 3-4.
+BF_Symbol is the Buy Feature entry alias because the supplied reconstruction
+does not contain the competitor's entry-only Reel Set 6. Cascade replacement
+continues backward on the selected circular strip; symbol drop-weight tables
+are deliberately not part of the runtime model.
 """
 import argparse
 import json
@@ -25,13 +27,21 @@ from openpyxl.utils.cell import column_index_from_string
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_XLSX = BASE_DIR / "H0271.xlsx"
 DEFAULT_CONFIG = BASE_DIR.parent / "config.js"
-SYMBOL_SHEETS = ("BG_Symbol", "BG_Symbol (2)", "FG_Symbol", "FG_Symbol (2)")
-NORMAL_BG_SHEETS = ("BG_Symbol", "BG_Symbol (2)")
-FEATUREBUY_BG_SHEETS = ("BG_Symbol",)
+SYMBOL_SHEETS = (
+    "BG_Symbol", "BG_Symbol (2)", "BG_Symbol (3)",
+    "FG_Symbol", "FG_Symbol (2)", "BF_Symbol",
+)
+NORMAL_BG_SHEETS = ("BG_Symbol", "BG_Symbol (2)", "BG_Symbol (3)")
+FEATUREBUY_BG_SHEETS = ("BF_Symbol",)
 FG_SHEETS = ("FG_Symbol", "FG_Symbol (2)")
 REEL_COUNT = 6
-STRIP_LENGTH = 300
+MAX_STRIP_LENGTH = 300
 LEVEL_COUNT = 25
+SOURCE_REEL_SETS = {
+    "BG_Symbol": 0, "BG_Symbol (2)": 1, "BG_Symbol (3)": 2,
+    "FG_Symbol": 3, "FG_Symbol (2)": 4, "BF_Symbol": 0,
+}
+REEL_SOURCE_WORKBOOK = r"C:\Users\rhinshen\Mine\個人工作區\市場資訊\H5\遊戲資源\PP - Gates of Olympus 1000\還原輪帶_Gates_of_Olympus_1000.xlsx"
 
 FIXED_METADATA = {
     "game_id": "101027",
@@ -59,6 +69,17 @@ FIXED_METADATA = {
     "bet_options": [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500],
     "initial_balance": 10000,
     "drop_mode": "cascade_drop",
+    "cascade_symbol_source": "reel_strip",
+    "reel_source_workbook": REEL_SOURCE_WORKBOOK,
+    "reel_set_usage": {
+        "BG": {"sets": [0, 1, 2], "weights": [9698, 19298, 2344]},
+        "FG": {"sets": [3, 4], "spin_counts": [6, 9]},
+        "BF_FG": {"sets": [3, 4], "spin_counts": [5, 10]},
+        "BF_ENTRY": {
+            "source": "direct_generator",
+            "rule": "exactly four C1 on R2-R5; remaining 26 cells uniformly use nine regular symbols",
+        },
+    },
     "bet_tier_thresholds": {"small_bet_lt": 2, "medium_bet_lte": 100},
     "link": {"enabled": False},
     "rtp_accounting": {
@@ -111,6 +132,13 @@ def validate_super_probability_curve(weights, label, denominator=10000):
         raise ValueError(f"{label} must strictly increase as initial ball count increases: {weights}")
 
 
+def validate_drop_combo_curve(weights, label, denominator=10000):
+    if len(weights) != 5:
+        raise ValueError(f"{label} must contain exactly five weights for Combo 1, 2, 3, 4 and 5+")
+    if any(value < 0 or value > denominator for value in weights):
+        raise ValueError(f"{label} weights must be within 0-{denominator}: {weights}")
+
+
 def load_js_config(path):
     text = path.read_text(encoding="utf-8-sig")
     match = re.fullmatch(r"\s*const\s+data\s*=\s*(\{.*\})\s*;?\s*", text, re.DOTALL)
@@ -158,20 +186,21 @@ def make_multiplier_table(levels, names, weights):
 def read_parameter(sheet):
     levels = [require_int(sheet.cell(row, 3).value, f"Parameter!C{row}")
               for row in range(28, 53)]
-    header_sets = ([sheet.cell(3, col).value for col in range(11, 36)],
-                   [sheet.cell(8, col).value for col in range(11, 36)],
-                   [sheet.cell(18, col).value for col in range(11, 36)])
-    for row_number, header in zip((3, 8, 18), header_sets):
+    header_sets = ([sheet.cell(8, col).value for col in range(11, 36)],)
+    for row_number, header in zip((8,), header_sets):
         parsed = [require_int(value, f"Parameter row {row_number}") for value in header]
         if parsed != levels:
             raise ValueError(f"Parameter multiplier headers on row {row_number} do not match C28:C52")
 
-    super_weights = {"Super Ball": read_weights(sheet, 4)}
-    c2_rows = {"BG_Symbol": 9, "BG_Symbol (2)": 10, "FG_Symbol": 12, "FG_Symbol (2)": 13}
-    c3_rows = {"BG_Symbol": 19, "BG_Symbol (2)": 20, "FG_Symbol": 22, "FG_Symbol (2)": 23}
-    use_super_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
-    c2_weights = {name: read_weights(sheet, row) for name, row in c2_rows.items()}
-    c3_weights = {name: read_weights(sheet, row) for name, row in c3_rows.items()}
+    c2_rows = {
+        "BG_Symbol": 9, "BG_Symbol (2)": 10, "BG_Symbol (3)": 11,
+        "FG_Symbol": 12, "FG_Symbol (2)": 13, "BF_Symbol": 14,
+    }
+    use_super_rows = {
+        "BG_Symbol": 18, "BG_Symbol (2)": 19, "BG_Symbol (3)": 20,
+        "FG_Symbol": 21, "FG_Symbol (2)": 22, "BF_Symbol": 23,
+    }
+    multiplier_weights = {name: read_weights(sheet, row) for name, row in c2_rows.items()}
     use_super_by_initial_count = {
         name: [require_int(sheet.cell(row, col).value, f"Parameter!{sheet.cell(row, col).coordinate}")
                for col in range(3, 9)]
@@ -179,17 +208,37 @@ def read_parameter(sheet):
     }
     for name, weights in use_super_by_initial_count.items():
         validate_super_probability_curve(weights, f"Parameter use Super row {name}")
+    drop_combo_labels = [str(sheet.cell(56, col).value) for col in range(3, 8)]
+    if drop_combo_labels != ["1", "2", "3", "4", "5+"]:
+        raise ValueError(
+            "Parameter!C56:G56 must be Combo labels 1, 2, 3, 4, 5+; "
+            f"got {drop_combo_labels}"
+        )
+    drop_combo_rows = {
+        "BG_Symbol": 57, "BG_Symbol (2)": 58, "BG_Symbol (3)": 59,
+        "FG_Symbol": 60, "FG_Symbol (2)": 61, "BF_Symbol": 62,
+    }
+    use_super_by_drop_combo = {}
+    for name, row in drop_combo_rows.items():
+        if str(sheet.cell(row, 2).value) != name:
+            raise ValueError(f"Parameter!B{row} must be {name!r}")
+        weights = [
+            require_int(sheet.cell(row, col).value, f"Parameter!{sheet.cell(row, col).coordinate}")
+            for col in range(3, 8)
+        ]
+        validate_drop_combo_curve(weights, f"Parameter drop Combo row {name}")
+        use_super_by_drop_combo[name] = weights
     base_names, base_weights = [], []
-    for row in (4, 5):
+    for row in (4, 5, 6):
         name = sheet.cell(row, 2).value
         weight = require_int(sheet.cell(row, 3).value, f"Parameter!C{row}")
-        if name is not None and weight > 0:
+        if name is not None:
             if str(name) not in NORMAL_BG_SHEETS:
                 raise ValueError(f"Parameter!B{row} must be one of {NORMAL_BG_SHEETS}, got {name!r}")
             base_names.append(str(name))
             base_weights.append(weight)
     if not base_names:
-        raise ValueError("Parameter!B4:C5 must contain at least one active BG table")
+        raise ValueError("Parameter!B4:C6 must contain at least one active BG table")
     free_names, initial_counts, retrigger_counts = [], [], []
     for row in (11, 12):
         name = sheet.cell(row, 2).value
@@ -202,8 +251,8 @@ def read_parameter(sheet):
         name = str(name)
         if name not in FG_SHEETS:
             raise ValueError(f"Parameter!B{row} must be one of {FG_SHEETS}, got {name!r}")
-        if initial <= 0 or retrigger <= 0:
-            raise ValueError(f"Parameter!C{row}:D{row} must both be positive")
+        if initial < 0 or retrigger < 0 or ((initial == 0) != (retrigger == 0)):
+            raise ValueError(f"Parameter!C{row}:D{row} must both be zero or both be positive")
         free_names.append(name)
         initial_counts.append(initial)
         retrigger_counts.append(retrigger)
@@ -218,22 +267,38 @@ def read_parameter(sheet):
         "base_reel_weights": base_weights,
         "base_reel_weights_cum": cumulative(base_weights),
         "free_table": {"names": free_names, "initial": initial_counts, "retrigger": retrigger_counts},
-        "use_super_multiplier": {
+        "c2_to_c3": {
             "table_names": list(SYMBOL_SHEETS),
             "initial_ball_counts": [1, 2, 3, 4, 5, 6],
             "weights_by_initial_ball_count": use_super_by_initial_count,
+            "drop_combo_buckets": ["1", "2", "3", "4", "5+"],
+            "weights_by_drop_combo": use_super_by_drop_combo,
             "denominator": 10000,
         },
-        "c2": make_multiplier_table(levels, list(SYMBOL_SHEETS), c2_weights),
-        "c3": make_multiplier_table(levels, list(SYMBOL_SHEETS), c3_weights),
+        "multiplier": make_multiplier_table(levels, list(SYMBOL_SHEETS), multiplier_weights),
     }
     featurebuy = json.loads(json.dumps(profile))
     featurebuy["base_reel_names"] = list(FEATUREBUY_BG_SHEETS)
     featurebuy["base_reel_weights"] = [1]
     featurebuy["base_reel_weights_cum"] = [1]
+    featurebuy["free_table"]["initial"] = [5, 10]
+    featurebuy["free_table"]["retrigger"] = [2, 3]
+    bf_weights = list(multiplier_weights["BF_Symbol"])
+    featurebuy["multiplier"] = make_multiplier_table(
+        levels,
+        list(SYMBOL_SHEETS),
+        {name: list(bf_weights) for name in SYMBOL_SHEETS},
+    )
+    bf_initial = list(use_super_by_initial_count["BF_Symbol"])
+    bf_drop = list(use_super_by_drop_combo["BF_Symbol"])
+    featurebuy["c2_to_c3"]["weights_by_initial_ball_count"] = {
+        name: list(bf_initial) for name in SYMBOL_SHEETS
+    }
+    featurebuy["c2_to_c3"]["weights_by_drop_combo"] = {
+        name: list(bf_drop) for name in SYMBOL_SHEETS
+    }
     return levels, {
         "multiplier_levels": levels,
-        "super_multiplier": make_multiplier_table(levels, ["Super Ball"], super_weights),
         "normal": profile,
         "featurebuy": featurebuy,
     }
@@ -241,34 +306,43 @@ def read_parameter(sheet):
 
 def read_strip(sheet):
     mapping = symbol_map(sheet)
+    reel_lengths = []
+    for reel in range(REEL_COUNT):
+        positive_rows = [
+            index for index in range(MAX_STRIP_LENGTH)
+            if require_int(
+                sheet.cell(4 + index, 26 + reel).value or 0,
+                f"{sheet.title}!{sheet.cell(4 + index, 26 + reel).coordinate}",
+            ) > 0
+        ]
+        if not positive_rows:
+            raise ValueError(f"{sheet.title} R{reel + 1} has no active reel positions")
+        reel_lengths.append(max(positive_rows) + 1)
+    row_count = max(reel_lengths)
     symbols, weights = [], []
-    for row in range(4, 4 + STRIP_LENGTH):
+    for index in range(row_count):
+        row = 4 + index
         symbol_row, weight_row = [], []
         for reel in range(REEL_COUNT):
             code = sheet.cell(row, 12 + reel).value
-            if str(code) not in mapping:
+            weight = require_int(sheet.cell(row, 26 + reel).value or 0,
+                                 f"{sheet.title}!{sheet.cell(row, 26 + reel).coordinate}")
+            if index < reel_lengths[reel] and str(code) not in mapping:
                 raise ValueError(f"Unknown symbol {code!r} in {sheet.title}!{sheet.cell(row, 12 + reel).coordinate}")
-            symbol_row.append(mapping[str(code)])
-            weight_row.append(require_int(sheet.cell(row, 26 + reel).value,
-                                          f"{sheet.title}!{sheet.cell(row, 26 + reel).coordinate}"))
+            if index < reel_lengths[reel] and weight <= 0:
+                raise ValueError(f"{sheet.title} active weight must be positive at R{reel + 1} line {index}")
+            if index >= reel_lengths[reel] and weight != 0:
+                raise ValueError(f"{sheet.title} inactive weight must be zero at R{reel + 1} line {index}")
+            symbol_row.append(mapping.get(str(code), next(iter(mapping.values()))))
+            weight_row.append(weight)
         symbols.append(symbol_row)
         weights.append(weight_row)
-    drop_weights = []
-    for row in range(4, 16):
-        drop_weights.append([
-            require_int(sheet.cell(row, 34 + reel).value,
-                        f"{sheet.title}!{sheet.cell(row, 34 + reel).coordinate}")
-            for reel in range(REEL_COUNT)
-        ])
-    for reel in range(REEL_COUNT):
-        total = sum(row[reel] for row in drop_weights)
-        if total <= 0:
-            raise ValueError(f"{sheet.title} drop weights R{reel + 1} must sum to a positive value")
     return {
         "symbols": symbols,
         "weights": weights,
-        "drop_weights": drop_weights,
-        "reel_lengths": [STRIP_LENGTH] * REEL_COUNT,
+        "reel_lengths": reel_lengths,
+        "cascade_source": "reel_strip",
+        "source_reel_set": SOURCE_REEL_SETS[sheet.title],
     }
 
 
@@ -294,6 +368,19 @@ def build_config(source_path):
         if len(set(windows)) != 1:
             raise ValueError(f"H027 config supports one window_size, got {windows}")
         levels, parameter = read_parameter(workbook["Parameter"])
+        strips = [read_strip(workbook[name]) for name in SYMBOL_SHEETS]
+        linked_stop_settings = (
+            (350, [79365, 329365, 735615, 844990, 313740, 63740]),
+            (350, [78125, 1240, 703125, 500000, 218750, 110615]),
+            (350, [0, 484375, 250000, 328125, 15625, 671875]),
+            (2350, [78125, 781250, 812500, 859375, 328125, 734375]),
+            (2350, [0, 484375, 234375, 343750, 343750, 250000]),
+            (0, [0, 0, 0, 0, 0, 0]),
+        )
+        for strip, (weight, offsets) in zip(strips, linked_stop_settings):
+            strip["linked_stop_denominator"] = 10000
+            strip["linked_stop_weight"] = weight
+            strip["linked_stop_offsets"] = offsets
         config = dict(FIXED_METADATA)
         config.update({
             "multiplier_max_value": max(levels),
@@ -319,7 +406,7 @@ def build_config(source_path):
                 "reason": "RTP/Variant source workbook is not available",
             },
             "strip_names": list(SYMBOL_SHEETS),
-            "strips": [read_strip(workbook[name]) for name in SYMBOL_SHEETS],
+            "strips": strips,
         })
         return config
     finally:
@@ -355,13 +442,23 @@ def validate_config(config):
             raise ValueError(
                 f"parameter.{profile_name} must use base tables {expected_bg} and FG tables {list(FG_SHEETS)}"
             )
-        use_super = profile["use_super_multiplier"]
+        use_super = profile["c2_to_c3"]
         denominator = int(use_super.get("denominator", 10000))
         for name in SYMBOL_SHEETS:
             validate_super_probability_curve(
                 use_super["weights_by_initial_ball_count"][name],
-                f"parameter.{profile_name}.use_super_multiplier.{name}",
+                f"parameter.{profile_name}.c2_to_c3.{name}",
                 denominator,
+            )
+            validate_drop_combo_curve(
+                use_super["weights_by_drop_combo"][name],
+                f"parameter.{profile_name}.c2_to_c3.drop.{name}",
+                denominator,
+            )
+        if use_super.get("drop_combo_buckets") != ["1", "2", "3", "4", "5+"]:
+            raise ValueError(
+                f"parameter.{profile_name}.c2_to_c3.drop_combo_buckets must be "
+                "['1', '2', '3', '4', '5+']"
             )
 
 
@@ -386,7 +483,7 @@ def build_updates(config):
         for offset, col in enumerate("CDEFGH"):
             add_update(updates, "Overview", f"{col}{row}", config["pay_table"][index][offset], "pay_table")
 
-    for index, row in enumerate((4, 5)):
+    for index, row in enumerate((4, 5, 6)):
         add_update(updates, "Parameter", f"B{row}", normal["base_reel_names"][index], "normal.base_reel_names")
         add_update(updates, "Parameter", f"C{row}", normal["base_reel_weights"][index], "normal.base_reel_weights")
     for index, row in enumerate((11, 12)):
@@ -395,56 +492,78 @@ def build_updates(config):
         add_update(updates, "Parameter", f"D{row}", normal["free_table"]["retrigger"][index], "normal.free_table.retrigger")
     for index, value in enumerate(levels):
         col = column_name(11 + index)
-        for row in (3, 8, 18):
-            add_update(updates, "Parameter", f"{col}{row}", value, "multiplier_levels")
+        add_update(updates, "Parameter", f"{col}8", value, "multiplier_levels")
         add_update(updates, "Parameter", f"B{28 + index}", index + 1, "multiplier level index")
         add_update(updates, "Parameter", f"C{28 + index}", value, "multiplier_levels")
 
-    table_rows = {"BG_Symbol": 18, "BG_Symbol (2)": 19, "FG_Symbol": 21, "FG_Symbol (2)": 22}
+    table_rows = {
+        "BG_Symbol": 18, "BG_Symbol (2)": 19, "BG_Symbol (3)": 20,
+        "FG_Symbol": 21, "FG_Symbol (2)": 22, "BF_Symbol": 23,
+    }
     for name, row in table_rows.items():
-        add_update(updates, "Parameter", f"B{row}", name, "normal.use_super_multiplier.table_names")
-        for column, value in enumerate(normal["use_super_multiplier"]["weights_by_initial_ball_count"][name], start=3):
-            add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.use_super_multiplier.weights_by_initial_ball_count")
-    multiplier_rows = (("super_multiplier", "Super Ball", 4),
-                       ("c2", "BG_Symbol", 9), ("c2", "BG_Symbol (2)", 10),
-                       ("c2", "FG_Symbol", 12), ("c2", "FG_Symbol (2)", 13),
-                       ("c3", "BG_Symbol", 19), ("c3", "BG_Symbol (2)", 20),
-                       ("c3", "FG_Symbol", 22), ("c3", "FG_Symbol (2)", 23))
-    for table_key, name, row in multiplier_rows:
-        table = config["parameter"][table_key] if table_key == "super_multiplier" else normal[table_key]
-        add_update(updates, "Parameter", f"J{row}", name, f"{table_key}.table_names")
+        add_update(updates, "Parameter", f"B{row}", name, "normal.c2_to_c3.table_names")
+        for column, value in enumerate(normal["c2_to_c3"]["weights_by_initial_ball_count"][name], start=3):
+            add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.c2_to_c3.weights_by_initial_ball_count")
+    add_update(updates, "Parameter", "B16", "weight_C2_to_C3_by_initial_count", "initial conversion header")
+    add_update(updates, "Parameter", "B17", "Initial C2 Count", "initial conversion label")
+    add_update(updates, "Parameter", "B55", "weight_C2_to_C3_by_drop_combo", "drop parameter header")
+    add_update(updates, "Parameter", "B56", "Combo", "drop parameter label")
+    for column, label in enumerate(("1", "2", "3", "4", "5+"), start=3):
+        add_update(updates, "Parameter", f"{column_name(column)}56", label, "drop_combo_buckets")
+    drop_combo_rows = {
+        "BG_Symbol": 57, "BG_Symbol (2)": 58, "BG_Symbol (3)": 59,
+        "FG_Symbol": 60, "FG_Symbol (2)": 61, "BF_Symbol": 62,
+    }
+    for name, row in drop_combo_rows.items():
+        add_update(updates, "Parameter", f"B{row}", name, "normal.c2_to_c3.table_names")
+        for column, value in enumerate(normal["c2_to_c3"]["weights_by_drop_combo"][name], start=3):
+            add_update(updates, "Parameter", f"{column_name(column)}{row}", value, "normal.c2_to_c3.weights_by_drop_combo")
+    add_update(
+        updates,
+        "Parameter",
+        "B63",
+        "# How to use: Weight/10000; each dropped C2 rolls once by Combo; Combo 5+ uses the last column",
+        "drop parameter note",
+    )
+    add_update(updates, "Parameter", "J7", "weight_multiplier", "multiplier header")
+    add_update(updates, "Parameter", "J8", "Multiplier", "multiplier label")
+    multiplier_rows = (("BG_Symbol", 9), ("BG_Symbol (2)", 10),
+                       ("BG_Symbol (3)", 11), ("FG_Symbol", 12),
+                       ("FG_Symbol (2)", 13), ("BF_Symbol", 14))
+    for name, row in multiplier_rows:
+        table = normal["multiplier"]
+        add_update(updates, "Parameter", f"J{row}", name, "multiplier.table_names")
         for index, value in enumerate(table["weights"][name]):
-            add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, f"{table_key}.weights")
+            add_update(updates, "Parameter", f"{column_name(11 + index)}{row}", value, "multiplier.weights")
     id_to_code = dict(zip(config["symbol_ids"], config["symbol_codes"]))
     for sheet_name, strip in zip(SYMBOL_SHEETS, config["strips"]):
-        if len(strip["symbols"]) != STRIP_LENGTH or len(strip["weights"]) != STRIP_LENGTH:
-            raise ValueError(f"{sheet_name} must have exactly {STRIP_LENGTH} rows")
-        for row_index in range(STRIP_LENGTH):
-            if len(strip["symbols"][row_index]) != REEL_COUNT or len(strip["weights"][row_index]) != REEL_COUNT:
+        row_count = len(strip["symbols"])
+        if row_count < 1 or row_count > MAX_STRIP_LENGTH or len(strip["weights"]) != row_count:
+            raise ValueError(f"{sheet_name} must have 1-{MAX_STRIP_LENGTH} rows")
+        reel_lengths = strip.get("reel_lengths")
+        if not isinstance(reel_lengths, list) or len(reel_lengths) != REEL_COUNT:
+            raise ValueError(f"{sheet_name}.reel_lengths must contain {REEL_COUNT} values")
+        for reel, length in enumerate(reel_lengths):
+            if require_int(length, f"{sheet_name}.reel_lengths") < 1 or length > row_count:
+                raise ValueError(f"{sheet_name} invalid R{reel + 1} length {length}")
+        first_symbols = strip["symbols"][0]
+        for row_index in range(MAX_STRIP_LENGTH):
+            if row_index < row_count and (len(strip["symbols"][row_index]) != REEL_COUNT or len(strip["weights"][row_index]) != REEL_COUNT):
                 raise ValueError(f"{sheet_name} row {row_index} must have {REEL_COUNT} reels")
             row = 4 + row_index
             for reel in range(REEL_COUNT):
-                symbol_id = require_int(strip["symbols"][row_index][reel], f"{sheet_name}.symbols")
+                active = row_index < reel_lengths[reel]
+                symbol_id = require_int(
+                    strip["symbols"][row_index][reel] if row_index < row_count else first_symbols[reel],
+                    f"{sheet_name}.symbols",
+                )
                 if symbol_id not in id_to_code:
                     raise ValueError(f"Unknown symbol ID {symbol_id} in {sheet_name} row {row_index}")
                 add_update(updates, sheet_name, f"{column_name(12 + reel)}{row}", id_to_code[symbol_id], "strips.symbols")
                 add_update(updates, sheet_name, f"{column_name(19 + reel)}{row}", symbol_id, "Symbol ID cache")
                 add_update(updates, sheet_name, f"{column_name(26 + reel)}{row}",
-                           require_int(strip["weights"][row_index][reel], f"{sheet_name}.weights"), "strips.weights")
-        drop_weights = strip.get("drop_weights")
-        if not isinstance(drop_weights, list) or len(drop_weights) != len(config["symbol_ids"]):
-            raise ValueError(f"{sheet_name}.drop_weights must have one row per symbol ID")
-        for symbol_index, weight_row in enumerate(drop_weights):
-            if len(weight_row) != REEL_COUNT:
-                raise ValueError(f"{sheet_name}.drop_weights row {symbol_index} must have {REEL_COUNT} reels")
-            for reel, value in enumerate(weight_row):
-                add_update(
-                    updates,
-                    sheet_name,
-                    f"{column_name(34 + reel)}{4 + symbol_index}",
-                    require_int(value, f"{sheet_name}.drop_weights"),
-                    "strips.drop_weights",
-                )
+                           require_int(strip["weights"][row_index][reel], f"{sheet_name}.weights") if active else 0,
+                           "strips.weights")
     return updates
 
 
@@ -521,7 +640,9 @@ def patch_sheet(xml_bytes, sheet_name, cell_updates):
         attrs = match.group("attrs") or match.group("selfattrs") or ""
         body = match.group("body") or ""
         value, _key = cell_updates[address]
-        if re.search(r"<f(?:\s|>)", body):
+        if _key == "strips linked runtime":
+            replacement = render_cell(attrs, value)
+        elif re.search(r"<f(?:\s|>)", body):
             if not isinstance(value, (int, float)) or isinstance(value, bool):
                 raise TypeError(f"Formula cache must be numeric: {sheet_name}!{address}={value!r}")
             attrs = re.sub(r'\s+t="[^"]*"', "", attrs.rstrip())
