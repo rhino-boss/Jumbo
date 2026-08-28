@@ -128,8 +128,19 @@ def validate_super_probability_curve(weights, label, denominator=10000):
         raise ValueError(f"{label} must contain exactly six weights for initial ball counts 1-6")
     if any(value < 0 or value > denominator for value in weights):
         raise ValueError(f"{label} weights must be within 0-{denominator}: {weights}")
-    if any(weights) and any(left >= right for left, right in zip(weights, weights[1:])):
-        raise ValueError(f"{label} must strictly increase as initial ball count increases: {weights}")
+    if any(left < right for left, right in zip(weights, weights[1:])):
+        raise ValueError(f"{label} per-C2 weights must not increase as initial ball count increases: {weights}")
+    visibility = [1.0 - (1.0 - value / denominator) ** count for count, value in enumerate(weights, start=1)]
+    if any(left > right + 1e-12 for left, right in zip(visibility, visibility[1:])):
+        raise ValueError(
+            f"{label} probability of at least one C3 must not decrease as initial ball count increases: "
+            f"weights={weights}, visibility={visibility}"
+        )
+    if visibility[0] >= visibility[-1]:
+        raise ValueError(
+            f"{label} probability of at least one C3 must be higher at six C2 than at one C2: "
+            f"weights={weights}, visibility={visibility}"
+        )
 
 
 def validate_drop_combo_curve(weights, label, denominator=10000):
@@ -137,6 +148,8 @@ def validate_drop_combo_curve(weights, label, denominator=10000):
         raise ValueError(f"{label} must contain exactly five weights for Combo 1, 2, 3, 4 and 5+")
     if any(value < 0 or value > denominator for value in weights):
         raise ValueError(f"{label} weights must be within 0-{denominator}: {weights}")
+    if any(left < right for left, right in zip(weights, weights[1:])):
+        raise ValueError(f"{label} per-C2 weights must not increase as Combo increases: {weights}")
 
 
 def load_js_config(path):
@@ -474,6 +487,17 @@ def validate_config(config):
                 f"parameter.{profile_name}.c2_to_c3.drop_combo_buckets must be "
                 "['1', '2', '3', '4', '5+']"
             )
+        if profile_name == "normal":
+            initial_bg = use_super["weights_by_initial_ball_count"]["BG_Symbol"]
+            initial_bg_2 = use_super["weights_by_initial_ball_count"]["BG_Symbol (2)"]
+            drop_bg = use_super["weights_by_drop_combo"]["BG_Symbol"]
+            drop_bg_2 = use_super["weights_by_drop_combo"]["BG_Symbol (2)"]
+            if any(bg_2 * 5 != bg for bg, bg_2 in zip(initial_bg, initial_bg_2)):
+                raise ValueError("normal BG_Symbol (2) initial C3 weights must equal BG_Symbol / 5")
+            if any(bg_2 * 5 != bg for bg, bg_2 in zip(drop_bg, drop_bg_2)):
+                raise ValueError("normal BG_Symbol (2) drop C3 weights must equal BG_Symbol / 5")
+            if any(drop * 2 != initial for initial, drop in zip(initial_bg[:5], drop_bg)):
+                raise ValueError("normal BG_Symbol initial C3 weights 1-5 must equal drop Combo weights x2")
         multiplier = profile["multiplier"]
         for kind in ("c2", "c3"):
             weights = multiplier[f"weights_{kind}"]
@@ -847,11 +871,181 @@ def run_import(argv):
     print(f"Xlsx written and round-trip verified: {output}")
 
 
+def run_set_c3_rate(argv):
+    parser = argparse.ArgumentParser(
+        description="Set the independent per-C2 conversion rate used by initial and drop C3 rolls"
+    )
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--weight", type=int, help="Fixed probability weight over the configured denominator")
+    parser.add_argument("--initial-weights", help="Six comma-separated per-C2 weights for initial C2 counts 1-6")
+    parser.add_argument("--drop-weights", help="Five comma-separated per-C2 weights for drop Combo 1,2,3,4,5+")
+    parser.add_argument(
+        "--profile",
+        choices=("normal", "featurebuy", "all"),
+        default="all",
+        help="Limit the update to one parameter profile (default: all)",
+    )
+    parser.add_argument(
+        "--table",
+        action="append",
+        choices=SYMBOL_SHEETS,
+        help="Limit the update to one or more reel tables (default: every table)",
+    )
+    parser.add_argument(
+        "--table-index",
+        action="append",
+        type=int,
+        choices=range(len(SYMBOL_SHEETS)),
+        help="Limit the update by zero-based SYMBOL_SHEETS index; useful for table names containing spaces",
+    )
+    args = parser.parse_args(argv)
+    config_path = args.config.resolve()
+    config = load_js_config(config_path)
+    profile_names = ("normal", "featurebuy") if args.profile == "all" else (args.profile,)
+    selected_tables = list(args.table or [])
+    selected_tables.extend(SYMBOL_SHEETS[index] for index in (args.table_index or []))
+    table_names = tuple(dict.fromkeys(selected_tables)) if selected_tables else SYMBOL_SHEETS
+    if args.weight is None and args.initial_weights is None and args.drop_weights is None:
+        parser.error("provide --weight, --initial-weights, or --drop-weights")
+    if args.weight is not None and (args.initial_weights is not None or args.drop_weights is not None):
+        parser.error("--weight cannot be combined with --initial-weights or --drop-weights")
+
+    def parse_curve(raw, expected, option):
+        if raw is None:
+            return None
+        try:
+            values = [int(value.strip()) for value in raw.split(",")]
+        except ValueError as error:
+            parser.error(f"{option} must contain integers: {error}")
+        if len(values) != expected:
+            parser.error(f"{option} must contain exactly {expected} values")
+        return values
+
+    initial_weights = parse_curve(args.initial_weights, 6, "--initial-weights")
+    drop_weights = parse_curve(args.drop_weights, 5, "--drop-weights")
+    for profile_name in profile_names:
+        conversion = config["parameter"][profile_name]["c2_to_c3"]
+        denominator = int(conversion.get("denominator", 10000))
+        if args.weight is not None and (args.weight < 0 or args.weight > denominator):
+            parser.error(f"--weight must be within 0-{denominator}")
+        for table_name in table_names:
+            if args.weight is not None:
+                conversion["weights_by_initial_ball_count"][table_name] = [args.weight] * 6
+                conversion["weights_by_drop_combo"][table_name] = [args.weight] * 5
+            else:
+                if initial_weights is not None:
+                    conversion["weights_by_initial_ball_count"][table_name] = list(initial_weights)
+                if drop_weights is not None:
+                    conversion["weights_by_drop_combo"][table_name] = list(drop_weights)
+    validate_config(config)
+    write_js_config(config_path, config)
+    compare_config(config, config_path)
+    print(
+        f"C2-to-C3 rate updated over denominator {config['parameter']['normal']['c2_to_c3']['denominator']} "
+        f"for {', '.join(profile_names)} / {', '.join(table_names)}: {config_path}"
+    )
+
+
+def rebalance_multiplier_weights(weights, levels, targets):
+    total = sum(weights)
+    if total <= 0:
+        raise ValueError("multiplier weight total must be positive")
+    target_indices = {}
+    duplicate_target_indices = set()
+    for multiplier, probability in targets.items():
+        matches = [index for index, value in enumerate(levels) if value == multiplier]
+        if not matches:
+            raise ValueError(f"multiplier {multiplier} is not present in multiplier_levels")
+        target_indices[matches[0]] = int(round(probability * total))
+        duplicate_target_indices.update(matches[1:])
+    reserved = sum(target_indices.values())
+    if reserved > total:
+        raise ValueError(f"target multiplier weights {reserved} exceed total {total}")
+    excluded = set(target_indices) | duplicate_target_indices
+    candidates = [index for index, value in enumerate(weights) if index not in excluded and value > 0]
+    if not candidates and reserved != total:
+        raise ValueError("no non-target multiplier weights are available for rebalancing")
+    remaining = total - reserved
+    source_total = sum(weights[index] for index in candidates)
+    result = [0] * len(weights)
+    if source_total > 0:
+        exact = [(index, weights[index] * remaining / source_total) for index in candidates]
+        for index, value in exact:
+            result[index] = int(value)
+        remainder = remaining - sum(result)
+        order = sorted(exact, key=lambda item: (-(item[1] - int(item[1])), item[0]))
+        for index, _ in order[:remainder]:
+            result[index] += 1
+    for index, value in target_indices.items():
+        result[index] = value
+    if sum(result) != total:
+        raise ValueError(f"rebalanced multiplier weights must sum to {total}, got {sum(result)}")
+    return result
+
+
+def run_set_multiplier_rates(argv):
+    parser = argparse.ArgumentParser(
+        description="Set exact multiplier probabilities while preserving the other positive weights proportionally"
+    )
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--kind", choices=("c2", "c3"), required=True)
+    parser.add_argument("--profile", choices=("normal", "featurebuy", "all"), default="all")
+    parser.add_argument("--table-index", action="append", type=int, choices=range(len(SYMBOL_SHEETS)))
+    parser.add_argument(
+        "--target",
+        action="append",
+        required=True,
+        help="Multiplier probability as MULTIPLIER=PERCENT, for example 500=0.2",
+    )
+    args = parser.parse_args(argv)
+    targets = {}
+    for item in args.target:
+        try:
+            multiplier_text, percent_text = item.split("=", 1)
+            multiplier = int(multiplier_text)
+            probability = float(percent_text) / 100.0
+        except (ValueError, TypeError) as error:
+            parser.error(f"invalid --target {item!r}: {error}")
+        if probability < 0 or probability > 1:
+            parser.error(f"target probability must be within 0%-100%: {item}")
+        targets[multiplier] = probability
+    config_path = args.config.resolve()
+    config = load_js_config(config_path)
+    profile_names = ("normal", "featurebuy") if args.profile == "all" else (args.profile,)
+    table_names = tuple(SYMBOL_SHEETS[index] for index in args.table_index) if args.table_index else SYMBOL_SHEETS
+    for profile_name in profile_names:
+        multiplier = config["parameter"][profile_name]["multiplier"]
+        levels = multiplier["multipliers"]
+        raw_key = f"weights_{args.kind}"
+        cumulative_key = f"weights_{args.kind}_cum"
+        for table_name in table_names:
+            updated = rebalance_multiplier_weights(multiplier[raw_key][table_name], levels, targets)
+            multiplier[raw_key][table_name] = updated
+            multiplier[cumulative_key][table_name] = cumulative(updated)
+    validate_config(config)
+    write_js_config(config_path, config)
+    compare_config(config, config_path)
+    formatted_targets = ", ".join(f"{value}x={probability * 100:g}%" for value, probability in targets.items())
+    print(
+        f"{args.kind.upper()} multiplier rates updated for {', '.join(profile_names)} / "
+        f"{', '.join(table_names)} ({formatted_targets}): {config_path}"
+    )
+
+
 def main():
-    parser = argparse.ArgumentParser(prog="model_sync.py", usage="model_sync.py {export,import} [options]")
-    parser.add_argument("command", choices=("export", "import"))
+    parser = argparse.ArgumentParser(
+        prog="model_sync.py",
+        usage="model_sync.py {export,import,set-c3-rate,set-multiplier-rates} [options]",
+    )
+    parser.add_argument("command", choices=("export", "import", "set-c3-rate", "set-multiplier-rates"))
     args, rest = parser.parse_known_args()
-    (run_export if args.command == "export" else run_import)(rest)
+    commands = {
+        "export": run_export,
+        "import": run_import,
+        "set-c3-rate": run_set_c3_rate,
+        "set-multiplier-rates": run_set_multiplier_rates,
+    }
+    commands[args.command](rest)
 
 
 if __name__ == "__main__":

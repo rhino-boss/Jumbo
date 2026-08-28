@@ -1,0 +1,961 @@
+<title>老手救援 C 版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F8F9;
+    --surface:     #FFFFFF;
+    --surface-alt: #EFF3F4;
+    --ink:         #141B20;
+    --ink-mid:     #47555F;
+    --ink-soft:    #6D7C87;
+    --line:        #DCE3E7;
+    --line-soft:   #E8EDEF;
+    --accent:      #0C7480;
+    --accent-deep: #08525B;
+    --accent-soft: #E0EFF0;
+    --warn:        #9A6208;
+    --warn-soft:   #FBF0DC;
+    --danger:      #A63B3B;
+    --danger-soft: #F8E7E7;
+    --ok:          #3A7350;
+    --ok-soft:     #E3F0E7;
+
+    --serif: "Noto Serif TC", "Songti TC", Georgia, serif;
+    --sans:  "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --mono:  "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0E1418;
+      --surface:     #151D22;
+      --surface-alt: #1B252B;
+      --ink:         #E3E9EC;
+      --ink-mid:     #A3B0B9;
+      --ink-soft:    #7D8B95;
+      --line:        #27333A;
+      --line-soft:   #1F2A31;
+      --accent:      #4CBDC9;
+      --accent-deep: #7FD6DF;
+      --accent-soft: #113038;
+      --warn:        #D6A253;
+      --warn-soft:   #33280F;
+      --danger:      #D68282;
+      --danger-soft: #351D1D;
+      --ok:          #74B48C;
+      --ok-soft:     #16301F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0E1418;
+    --surface:     #151D22;
+    --surface-alt: #1B252B;
+    --ink:         #E3E9EC;
+    --ink-mid:     #A3B0B9;
+    --ink-soft:    #7D8B95;
+    --line:        #27333A;
+    --line-soft:   #1F2A31;
+    --accent:      #4CBDC9;
+    --accent-deep: #7FD6DF;
+    --accent-soft: #113038;
+    --warn:        #D6A253;
+    --warn-soft:   #33280F;
+    --danger:      #D68282;
+    --danger-soft: #351D1D;
+    --ok:          #74B48C;
+    --ok-soft:     #16301F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 2.5rem) 6rem;
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+    padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2rem, 4vw, 2.75rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.1rem;
+  }
+  .eyebrow b { color: var(--accent); font-weight: 500; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    line-height: 1.2;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--ink-mid);
+    font-size: 1.02rem;
+  }
+
+  /* the thesis: the RTP equation */
+  .equation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .55rem 1rem;
+    padding: 1.4rem 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+  }
+  .eq-term { display: flex; flex-direction: column; gap: .15rem; }
+  .eq-num {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3.6vw, 2rem);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .eq-num.is-accent { color: var(--accent); }
+  .eq-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .eq-op {
+    font-family: var(--serif);
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: var(--ink-soft);
+    line-height: 1;
+    position: relative;
+    top: -.15rem;
+  }
+
+  /* ---------- side nav ---------- */
+
+  nav.toc {
+    position: sticky;
+    top: 2rem;
+    font-size: .86rem;
+    line-height: 1.5;
+    border-left: 1px solid var(--line);
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+  nav.toc .toc-head {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: .3rem;
+  }
+  nav.toc a {
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    width: fit-content;
+  }
+  nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  nav.toc a.sub { padding-left: .85rem; font-size: .8rem; color: var(--ink-soft); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- body ---------- */
+
+  main { min-width: 0; max-width: 74ch; }
+
+  section { padding-top: clamp(3rem, 6vw, 4.25rem); scroll-margin-top: 1.5rem; }
+  section > * + * { margin-top: 1.15rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.45rem, 3.2vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    text-wrap: balance;
+    display: flex;
+    align-items: baseline;
+    gap: .7rem;
+  }
+  h2 .sec {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: .04em;
+    position: relative;
+    top: -.2rem;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.06rem;
+    font-weight: 700;
+    margin: 0;
+    padding-top: .6rem;
+    letter-spacing: .01em;
+    text-wrap: balance;
+  }
+  h3 .sec {
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-right: .5rem;
+  }
+
+  p { margin: 0; max-width: 68ch; }
+
+  ul, ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: .4rem; max-width: 68ch; }
+  li::marker { color: var(--ink-soft); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--surface-alt);
+    padding: .1em .38em;
+    border-radius: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  strong { font-weight: 700; }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: .9rem;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .formula .c { color: var(--ink-soft); }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: .62rem .85rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  td.key { font-weight: 500; white-space: nowrap; }
+
+  /* ---------- callouts ---------- */
+
+  .note {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    padding: .95rem 1.15rem;
+    font-size: .92rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .note.warn   { border-left-color: var(--warn);   background: var(--warn-soft); }
+  .note .tag {
+    font-family: var(--mono);
+    font-size: .67rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .note.warn .tag { color: var(--warn); }
+  .note p, .note ul { max-width: none; font-size: .92rem; }
+
+  /* ---------- gate flow ---------- */
+
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .gate {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0 1rem;
+  }
+  .gate-rail { display: flex; flex-direction: column; align-items: center; }
+  .gate-dot {
+    width: 2.2rem; height: 2.2rem;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    flex: none;
+  }
+  .gate-line { flex: 1; width: 1px; background: var(--line); min-height: .9rem; }
+  .gate:last-child .gate-line { background: transparent; }
+  .gate-body { padding-bottom: 1.5rem; display: flex; flex-direction: column; gap: .55rem; }
+  .gate-title { font-weight: 700; font-size: .98rem; padding-top: .28rem; }
+  .gate-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  .branch {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    border-left: 2px solid var(--line);
+    padding-left: .85rem;
+  }
+  .branch-row { display: flex; gap: .6rem; align-items: baseline; font-size: .9rem; }
+  .pill {
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .12rem .45rem;
+    border-radius: 2px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: none;
+  }
+  .pill.ok     { background: var(--ok-soft);     color: var(--ok);     }
+  .pill.stop   { background: var(--danger-soft); color: var(--danger); }
+  .pill.check  { background: var(--warn-soft);   color: var(--warn);   }
+
+  /* ---------- timeline ---------- */
+
+  .timeline { display: flex; flex-direction: column; }
+  .phase {
+    display: grid;
+    grid-template-columns: 5.5rem 1.6rem minmax(0, 1fr);
+    gap: 0 .9rem;
+  }
+  .phase-spins {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--ink-soft);
+    text-align: right;
+    padding-top: .55rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-rail { display: flex; flex-direction: column; align-items: center; }
+  .phase-mark {
+    width: .7rem; height: .7rem;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: .95rem;
+    flex: none;
+  }
+  .phase.is-newbie .phase-mark { background: var(--surface); border: 2px solid var(--accent); }
+  .phase-line { flex: 1; width: 1px; background: var(--line); }
+  .phase:last-child .phase-line { background: transparent; }
+  .phase-body { padding: .5rem 0 1.5rem; display: flex; flex-direction: column; gap: .4rem; }
+  .phase-name { font-weight: 700; font-size: 1rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .phase-rtp {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-soft);
+    letter-spacing: .04em;
+    font-weight: 400;
+  }
+  .phase-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  /* ---------- step list ---------- */
+
+  ol.steps { list-style: none; padding: 0; counter-reset: s; gap: .65rem; }
+  ol.steps li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: .75rem;
+    font-size: .93rem;
+  }
+  ol.steps li::before {
+    content: counter(s);
+    font-family: var(--mono);
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    height: 1.4rem;
+    display: grid;
+    place-items: center;
+    margin-top: .12rem;
+  }
+
+  /* ---------- pending block ---------- */
+
+  .pending {
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    padding: 1.3rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+  }
+  .pending-head {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 4.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: .74rem;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    nav.toc {
+      position: static;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 1.4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+      gap: .45rem 1rem;
+      margin-top: 2rem;
+    }
+    nav.toc .toc-head { grid-column: 1 / -1; margin-bottom: 0; }
+    nav.toc a.sub { display: none; }
+    main { max-width: none; }
+    .phase { grid-template-columns: 4.2rem 1.4rem minmax(0, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>iGaming 機制說明書</span>
+      <span>§3.3</span>
+      <span><b>老手救援 C 版</b></span>
+      <span>雙池修訂</span>
+      <span>2026-08-27</span>
+    </div>
+
+    <h1>老手救援 C 版</h1>
+
+    <p class="standfirst">
+      老手期玩家長時間處於低 RTP 狀態時，由系統贈送一場免費遊戲，把玩家拉回可以繼續玩下去的狀態。
+      本版改用<strong>共同池與個人池雙帳目</strong>控制發放額度，讓救援支出成為結構上不可能超支的固定預算，
+      而不是事後煞車。
+    </p>
+
+    <div class="equation">
+      <div class="eq-term">
+        <span class="eq-num">96.00%</span>
+        <span class="eq-label">基礎配置</span>
+      </div>
+      <span class="eq-op">+</span>
+      <div class="eq-term">
+        <span class="eq-num is-accent">1.00%</span>
+        <span class="eq-label">救援提撥</span>
+      </div>
+      <span class="eq-op">=</span>
+      <div class="eq-term">
+        <span class="eq-num">97.00%</span>
+        <span class="eq-label">老手期總 RTP</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-head">目錄</div>
+    <a href="#mechanism">§1 機制說明</a>
+    <a class="sub" href="#cycle">1.1 判定週期</a>
+    <a class="sub" href="#condition">1.2 判斷條件</a>
+    <a class="sub" href="#pool">1.3 資金池</a>
+    <a class="sub" href="#gates">1.4 判定流程</a>
+    <a class="sub" href="#reward">1.5 獎項說明</a>
+    <a class="sub" href="#ledger">1.6 成本記帳</a>
+    <a href="#journey">§2 遊戲歷程</a>
+    <a class="sub" href="#phases">2.1 階段推進</a>
+    <a class="sub" href="#spin">2.2 單轉流程</a>
+    <a href="#arbitrage">§3 套利檢查</a>
+    <a href="#open">§4 待確認事項</a>
+  </nav>
+
+  <main>
+
+    <!-- ============ §1 ============ -->
+    <section id="mechanism">
+      <h2><span class="sec">§1</span>機制說明</h2>
+      <p>
+        老手救援在玩家完成新手期（第 200 轉）後啟動。系統定期檢查玩家近期的實際回收狀況，
+        符合條件且額度足夠時，贈送一場指定倍率的免費遊戲。
+        救援結果由 Card System 重骰產生，演出與自然觸發的免費遊戲完全相同，玩家無法從畫面辨識。
+      </p>
+
+      <h3 id="cycle"><span class="sec">1.1</span>判定週期</h3>
+      <p>
+        第 200 轉之後，每 <strong>50 轉</strong>為一個固定週期。每個週期的<strong>前 40 轉隨機安排 1 次判定</strong>，
+        <strong>後 10 轉固定不判定</strong>。
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>週期</th><th>隨機判定區</th><th>不判定區</th><th class="num">判定次數</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">第 1 個週期</td><td>201 – 240</td><td>241 – 250</td><td class="num">1</td></tr>
+            <tr><td class="key">第 2 個週期</td><td>251 – 290</td><td>291 – 300</td><td class="num">1</td></tr>
+            <tr><td class="key">第 3 個週期</td><td>301 – 340</td><td>341 – 350</td><td class="num">1</td></tr>
+            <tr><td class="key">後續</td><td>每 50 轉依此類推</td><td>每週期最後 10 轉</td><td class="num">各 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>不判定區是<strong>固定的</strong>，不會因為玩家是否取得救援而移動，不是觸發後才開始計算的個人冷卻。</li>
+        <li>玩家取得救援後<strong>不另外啟動個人冷卻</strong>；下一個 50 轉週期照常重新安排一次判定。</li>
+      </ul>
+
+      <h3 id="condition"><span class="sec">1.2</span>判斷條件</h3>
+      <p>
+        判定使用三個回顧窗口。所有窗口都是<strong>判定回合之前 N 轉的 RTP</strong>，判定回合本身不納入統計。
+      </p>
+      <div class="formula">區間 RTP <span class="c">=</span> 區間內實際最終得分合計 <span class="c">÷</span> 區間內 Total Bet 合計</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>窗口</th><th>統計範圍</th><th>用途</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">短期</td><td>判定回合前 50 轉</td><td>所有階段的共同前置條件</td></tr>
+            <tr><td class="key">中期</td><td>判定回合前 200 轉</td><td>各階段主要 RTP 條件</td></tr>
+            <tr><td class="key">長期</td><td>判定回合前 500 轉</td><td>僅老手 D 使用</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>各階段門檻如下，<strong>短期 RTP 是所有階段都必須滿足的共同條件</strong>：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>階段</th><th>轉數</th><th class="num">短期</th><th class="num">中期</th><th class="num">長期</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">老手 A</td><td>201 – 300</td><td class="num">&lt; 40%</td><td class="num">&lt; 60%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手 B</td><td>301 – 400</td><td class="num">&lt; 40%</td><td class="num">&lt; 50%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手 C</td><td>401 – 500</td><td class="num">&lt; 40%</td><td class="num">&lt; 40%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手 D</td><td>501 起</td><td class="num">&lt; 40%</td><td class="num">&lt; 50%</td><td class="num">&lt; 100%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>老手 D 的長期規則<strong>只在判定前已有完整 500 轉資料時執行</strong>；資料不足時該次判定不救援。</li>
+        <li>各窗口 RTP 必須納入<strong>新手體驗 D 介入後的實際最終結果</strong>，包含第 50、150 轉可能被改寫的得分。</li>
+        <li>命中條件只代表<strong>具備救援資格</strong>，實際是否放行由 §1.4 的兩道池檢查決定。</li>
+        <li>未進 FG 轉數<strong>不再</strong>作為救援條件。</li>
+      </ul>
+
+      <h3 id="pool"><span class="sec">1.3</span>資金池</h3>
+      <p>
+        玩家每一次 Spin 後，<strong>投注額的 1% 提撥為救援預算</strong>。
+        這筆提撥同時記入兩本帳：共同池記全平台總額，個人池記該玩家自己的額度。
+        兩者是同一筆錢的兩種檢視角度，不是各自獨立的兩筆提撥。
+      </p>
+      <div class="formula">提撥額 <span class="c">=</span> 該轉 Total Bet <span class="c">×</span> 1%
+
+共同池餘額 <span class="c">=</span> Σ 全平台提撥 <span class="c">−</span> Σ 全平台已發救援成本
+個人池餘額 <span class="c">=</span> Σ 該玩家提撥 <span class="c">−</span> Σ 該玩家已領救援成本</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>池</th><th>守什麼</th><th>沒錢時</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">共同池</td>
+              <td>平台總救援支出不超過總投注的 1%，也就是老手期總 RTP 不超過 97%</td>
+              <td><strong>硬性上限，一律不救援</strong></td>
+            </tr>
+            <tr>
+              <td class="key">個人池</td>
+              <td>單一玩家不長期超領，領走的救援對應到自己貢獻的提撥</td>
+              <td>改用<strong>嚴格標準</strong>複判；通過仍可救援（透支），但不得連續發生</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <span class="tag">設計意圖</span>
+        <p>
+          共同池讓 RTP 精準度來自<strong>結構</strong>而非事後煞車：救援支出的分母與分子都綁在同一筆提撥上，
+          長期 RTP 必然收斂到「基礎配置 + 提撥率」。個人池則處理公平性——
+          真正持續在輸的玩家仍留有透支通道，但透支是例外而非常態。
+        </p>
+      </div>
+
+      <h3 id="gates"><span class="sec">1.4</span>判定流程</h3>
+      <p>玩家走到隨機判定回合時，依下列順序處理。任一關卡不通過即結束，該轉維持自然結果。</p>
+
+      <div class="flow">
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">1</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">資格判定</div>
+            <p>依 §1.2 的階段門檻檢查短期／中期／長期 RTP。</p>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">通過</span><span>進入共同池檢查</span></div>
+              <div class="branch-row"><span class="pill stop">不通過</span><span>不救援，維持自然結果</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">2</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">共同池檢查</div>
+            <p>檢查共同池餘額是否足以支應本次救援的增量成本。</p>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">有餘額</span><span>進入個人池檢查</span></div>
+              <div class="branch-row"><span class="pill stop">餘額不足</span><span>不救援。此關為硬性上限，不論個人池狀態一律擋下</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">3</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">個人池檢查</div>
+            <p>檢查個人池餘額，並據此決定獎項等級。</p>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">餘額充足</span><span>依 §1.5 發放 30× 或 15×</span></div>
+              <div class="branch-row"><span class="pill check">餘額不足</span><span>進入嚴格標準複判</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">4</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">嚴格標準複判（個人池透支路徑）</div>
+            <p>個人池已見底時，用更嚴格的門檻確認玩家是否真的持續在輸，而不只是短期波動。</p>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">通過</span><span>由共同池支應，發放 15×，個人池記為透支</span></div>
+              <div class="branch-row"><span class="pill stop">不通過</span><span>不救援</span></div>
+              <div class="branch-row"><span class="pill stop">連續限制</span><span>上一次救援已走透支路徑時，本次直接不救援</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">5</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">發放與記帳</div>
+            <p>該轉視為進入 FG，結算後依 §1.6 從兩本帳扣除增量成本。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note warn">
+        <span class="tag">待確認</span>
+        <p>
+          「嚴格標準」的具體門檻與「不得連續發生」的定義尚未定案，
+          建議值與其他未定項一併列於 <a href="#open">§4</a>。
+        </p>
+      </div>
+
+      <h3 id="reward"><span class="sec">1.5</span>獎項說明</h3>
+      <p>
+        救援獎項沿用 C 版的兩級免費遊戲。等級由<strong>個人池餘額</strong>決定，形成明確的降級路徑，
+        避免額度不足時只能全有全無。
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>個人池餘額</th><th>額外條件</th><th class="num">獎項</th><th>支應來源</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">≥ 30 × 該轉 Bet</td><td>—</td><td class="num">30× FG</td><td>個人池</td></tr>
+            <tr><td class="key">≥ 15× 且 &lt; 30 × 該轉 Bet</td><td>—</td><td class="num">15× FG</td><td>個人池</td></tr>
+            <tr><td class="key">&lt; 15 × 該轉 Bet</td><td>通過嚴格標準，且上次未走透支路徑</td><td class="num">15× FG</td><td>共同池（透支）</td></tr>
+            <tr><td class="key">&lt; 15 × 該轉 Bet</td><td>未通過嚴格標準</td><td class="num">不救援</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>救援後該轉最終得分取<strong>「原始自然得分」與「預定救援倍率」兩者較高值</strong>，避免救援反而降低玩家原本的得分。</li>
+        <li>通過救援時，該轉<strong>視為進入 FG</strong>，後續窗口統計比照自然 FG。</li>
+        <li>救援結果一律由 <strong>Card System 重骰產生</strong>，不得直接塞分數或直接放置 Scatter。</li>
+        <li>救援觸發時，<strong>不得同時觸發其他獎勵遊戲</strong>，例如 Jackpot Game。</li>
+        <li>Extra Bet 模式下，倍率基準依 Card System 既有的倍率分母規則計算。</li>
+      </ul>
+
+      <h3 id="ledger"><span class="sec">1.6</span>成本記帳</h3>
+      <p>
+        由於結算取自然得分與救援倍率的較高值，<strong>實際支出只有兩者的差額</strong>。
+        兩本帳都必須以增量記帳，扣整筆倍率會系統性高估支出，讓總 RTP 停在 96.x% 而達不到 97%。
+      </p>
+      <div class="formula">救援增量成本 <span class="c">=</span> 救援後最終得分 <span class="c">−</span> 該轉自然得分
+
+<span class="c">// 自然得分已高於救援倍率時，增量為 0，兩本帳都不扣款</span></div>
+      <ul>
+        <li>成本以<strong>實際最終得分</strong>計算，不使用卡片目標倍數。Scatter Pay 會讓實際倍數超出目標區間，用目標倍數記帳會低估支出。</li>
+        <li>提撥與扣款必須依<strong>實際投注事件時間順序</strong>更新共同池。</li>
+        <li>模擬器依轉數推進所有玩家時，同一轉內須用固定亂數種子打散玩家順序，避免共同池結果偏向較小的玩家編號。</li>
+      </ul>
+    </section>
+
+    <!-- ============ §2 ============ -->
+    <section id="journey">
+      <h2><span class="sec">§2</span>遊戲歷程</h2>
+      <p>
+        玩家的完整歷程分為新手期與老手期。兩段各自有獨立的 RTP 配置與獨立的補償機制，
+        但都收斂到<strong>同一個 97% 的總 RTP 目標</strong>。
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>時期</th><th class="num">基礎配置</th><th class="num">機制預算</th><th class="num">總 RTP</th><th>補償機制</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">新手期</td><td class="num">95.00%</td><td class="num">2.00%</td><td class="num">97.00%</td><td>新手體驗 D</td></tr>
+            <tr><td class="key">老手期</td><td class="num">96.00%</td><td class="num">1.00%</td><td class="num">97.00%</td><td>老手救援 C</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="phases"><span class="sec">2.1</span>階段推進</h3>
+
+      <div class="timeline">
+        <div class="phase is-newbie">
+          <div class="phase-spins">1 – 200</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">新手期<span class="phase-rtp">Newbie · BG 30× / FG 120× · Link 0%</span></div>
+            <p>
+              認識玩法的階段。倍率上限壓低，不參與 Link 彩金。
+              第 50 轉與第 150 轉各有一次<strong>新手體驗 D</strong> 判定：
+              以判定回合前的累積 RTP 決定是否把該轉得分改寫為指定倍率。
+              老手救援尚未啟動。
+            </p>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-spins">201 – 300</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">老手 A<span class="phase-rtp">中期門檻 &lt; 60%</span></div>
+            <p>
+              救援機制啟動，倍率上限與 Link 資格改依小／中／大 Bet 分層。
+              門檻最寬鬆——這階段玩家剛脫離新手保護，流失風險最高。
+              第 201 轉起，每 50 轉一個判定週期。
+            </p>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-spins">301 – 400</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">老手 B<span class="phase-rtp">中期門檻 &lt; 50%</span></div>
+            <p>門檻收緊。玩家已建立遊戲習慣，對短期波動的耐受度提高。</p>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-spins">401 – 500</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">老手 C<span class="phase-rtp">中期門檻 &lt; 40%</span></div>
+            <p>門檻最嚴，中期與短期門檻齊平。只有真正持續在輸的玩家才符合資格。</p>
+          </div>
+        </div>
+
+        <div class="phase">
+          <div class="phase-spins">501 起</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">老手 D<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100%</span></div>
+            <p>
+              長期玩家。中期門檻回放到 50%，但<strong>額外加上長期窗口檢查</strong>：
+              前 500 轉 RTP 必須低於 100%，確保長線上真正吃虧的玩家才被救援。
+              長期資料未滿 500 轉時不執行。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h3 id="spin"><span class="sec">2.2</span>單轉流程</h3>
+      <p>每一次 Spin 內部的執行順序。救援判定發生在結果產生之後、結算之前。</p>
+      <ol class="steps">
+        <li>玩家選擇 Bet Mode（NB／EB／BF／SF），計算 <code>bet_tier_amount</code>，判定小／中／大 Bet。</li>
+        <li>依 Profile 與押注層級決定 Link 資格、BG／FG 倍率上限，以及要使用哪一組卡片權重。</li>
+        <li>抽出目標卡片。同一局 Retry 期間<strong>固定不重抽</strong>。</li>
+        <li>依原始輪帶產生盤面，判獎、Cascade、FG／Retrigger、Jackpot／Link 依序執行。</li>
+        <li>比對卡片條件。不符合則 Retry 重跑，上限 10,000 次。</li>
+        <li>
+          若這一轉是判定回合：新手期執行<strong>新手體驗 D</strong>；老手期執行<strong>老手救援 C</strong>
+          （資格判定 → 共同池 → 個人池 → 嚴格標準 → 發放）。
+        </li>
+        <li>結算得分，提撥 1% 進入兩本帳，並扣除本次救援的增量成本。</li>
+      </ol>
+    </section>
+
+    <!-- ============ §3 ============ -->
+    <section id="arbitrage">
+      <h2><span class="sec">§3</span>套利檢查</h2>
+      <p>
+        本節用於記錄各種套利手法的防護規則與對應的模擬驗證結果。
+        目前尚未取得模擬資料，待資料產出後補齊。
+      </p>
+      <div class="pending">
+        <div class="pending-head">待補內容</div>
+        <ul>
+          <li>各套利手法的辨識條件與防護規則</li>
+          <li>對抗性玩家策略的模擬設定與實際 RTP 結果</li>
+          <li>一般玩家與套利玩家的 RTP 差距上限</li>
+          <li>被共同池、個人池與嚴格標準分別擋下的次數統計</li>
+        </ul>
+      </div>
+      <div class="note warn">
+        <span class="tag">前置需求</span>
+        <p>
+          目前的模擬器將每轉 Bet 固定為 1，且不區分 Bet Mode、不支援跨遊戲 session。
+          與押注、模式切換、跨遊戲相關的套利面<strong>都還無法驗證</strong>。
+          本節開始撰寫前，模擬器需先支援可變押注與四種 Bet Mode。
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ §4 ============ -->
+    <section id="open">
+      <h2><span class="sec">§4</span>待確認事項</h2>
+      <p>下列項目尚未定案，表中數值為建議值，不是已核准的規格。</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>項目</th><th>建議值</th><th>說明</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">嚴格標準的門檻</td>
+              <td>短期 RTP &lt; 30%</td>
+              <td>沿用 C 版既有的低獎項門檻，與 §1.2 的 40% 共同條件形成明確落差。也可改為中期門檻再降一級。</td>
+            </tr>
+            <tr>
+              <td class="key">「不得連續發生」的定義</td>
+              <td>個人池回正前不得再次透支</td>
+              <td>另一種寫法是「透支後間隔 N 個判定週期」。前者與帳目直接綁定，較不需額外狀態。</td>
+            </tr>
+            <tr>
+              <td class="key">共同池的範圍</td>
+              <td>每款遊戲各自一池</td>
+              <td>若共同池跨遊戲共用，單款遊戲的總 RTP 就無法精準控制在 97%，也會產生跨遊戲搬運的套利空間。</td>
+            </tr>
+            <tr>
+              <td class="key">BF／SF 是否提撥與參與</td>
+              <td>不提撥、不計入窗口</td>
+              <td>BF／SF 的 RTP 配置為 96.5%，與 NB／EB 不同。若計入救援窗口，玩家可用購買特色製造救援資格。</td>
+            </tr>
+            <tr>
+              <td class="key">新玩家的個人池初始值</td>
+              <td>0，僅靠自身提撥累積</td>
+              <td>剛進入老手期的玩家個人池較薄，會較早走到透支路徑。需模擬確認老手 A 的透支比例是否過高。</td>
+            </tr>
+            <tr>
+              <td class="key">共同池的時間範圍</td>
+              <td>滾動窗口</td>
+              <td>若使用開服至今的累積值，分母會隨時間變大而讓餘額判斷失去敏感度；滾動窗口可讓額度回填。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>iGaming 機制說明書 · §3.3 老手救援 C 版</span>
+    <span>雙池修訂</span>
+    <span>2026-08-27</span>
+    <span>§3 套利檢查待補</span>
+  </footer>
+
+</div>

@@ -1,4 +1,5 @@
 import json
+import hashlib
 import math
 import os
 import re
@@ -12,6 +13,22 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+# Numba captures module-level config arrays in compiled code.  Put cached
+# kernels in a config-content-specific directory so changing config.js cannot
+# silently reuse a kernel compiled with older math parameters.
+_cache_base_dir = Path(os.environ.get("H027_BASE_DIR", Path(__file__).resolve().parent))
+_cache_digest = hashlib.sha256()
+for _cache_name in (
+    os.environ.get("H027_CONFIG_FILE", "config.js"),
+    os.environ.get("H027_CONFIG_RTP_FILE", "config.js"),
+):
+    _cache_path = _cache_base_dir / _cache_name
+    _cache_digest.update(str(_cache_path.resolve()).encode("utf-8"))
+    if _cache_path.is_file():
+        _cache_digest.update(_cache_path.read_bytes())
+os.environ.setdefault("NUMBA_CACHE_DIR", str(Path(os.environ.get("TEMP", ".")) / "h027_numba" / _cache_digest.hexdigest()[:16]))
+
 from numba import njit
 
 # ===== User settings =====
@@ -203,8 +220,13 @@ def merge_runtime_config(natural, rtp):
     merged["parameter"] = natural_parameter
     merged["card_system"] = deepcopy(rtp.get("card_system", {}))
     for key in (
-        "model", "parsheet_id", "rtp_label", "runtime_version",
-        "config_type", "config_code", "source_multiplier_xlsx",
+        "model",
+        "parsheet_id",
+        "rtp_label",
+        "runtime_version",
+        "config_type",
+        "config_code",
+        "source_multiplier_xlsx",
     ):
         if key in rtp:
             merged[key] = deepcopy(rtp[key])
@@ -293,9 +315,7 @@ MAX_FREE_TABLES = max(len(PARAMETER[name]["free_table"]["names"]) for name in PR
 MULTIPLIER_LEVELS = np.asarray(CFG["multiplier_levels"], dtype=np.int64)
 MULTIPLIER_LEVEL_COUNT = len(MULTIPLIER_LEVELS)
 CFG_MULTIPLIER_MAX = int(CFG.get("multiplier_max_value", 2500))
-INITIAL_MULTIPLIER_COUNT = max(
-    len(PARAMETER[name]["multiplier"]["multipliers"]) for name in PROFILE_NAMES
-)
+INITIAL_MULTIPLIER_COUNT = max(len(PARAMETER[name]["multiplier"]["multipliers"]) for name in PROFILE_NAMES)
 BASE_REEL_WEIGHT_CUM = np.zeros((PROFILE_COUNT, MAX_BASE_TABLES), dtype=np.int64)
 BASE_REEL_TABLE_IDS = np.full((PROFILE_COUNT, MAX_BASE_TABLES), -1, dtype=np.int64)
 FREE_INITIAL_COUNTS = np.zeros((PROFILE_COUNT, MAX_FREE_TABLES), dtype=np.int64)
@@ -501,9 +521,21 @@ R_SYMBOL_BUCKET_PAY_BG_12_PLUS = 31
 R_SYMBOL_BUCKET_PAY_FG_8_9 = 32
 R_SYMBOL_BUCKET_PAY_FG_10_11 = 33
 R_SYMBOL_BUCKET_PAY_FG_12_PLUS = 34
+R_BG_INTERVAL_CASCADE_1 = 35
+R_BG_INTERVAL_CASCADE_2 = 36
+R_BG_INTERVAL_CASCADE_3 = 37
+R_BG_INTERVAL_CASCADE_4 = 38
+R_BG_INTERVAL_CASCADE_5P = 39
+R_FG_INTERVAL_SPINS = 40
+R_FG_INTERVAL_HIT_SPINS = 41
+R_FG_INTERVAL_CASCADE_1 = 42
+R_FG_INTERVAL_CASCADE_2 = 43
+R_FG_INTERVAL_CASCADE_3 = 44
+R_FG_INTERVAL_CASCADE_4 = 45
+R_FG_INTERVAL_CASCADE_5P = 46
 
 RECORD_COLS = max(128, len(THRESHOLD_RECORD), SYMBOL_COUNT, MULTIPLIER_LEVEL_COUNT)
-RECORD_SIZE = (35, RECORD_COLS)
+RECORD_SIZE = (47, RECORD_COLS)
 
 RA_TOTAL_ROUNDS = 0
 RA_COIN_IN_SUM = 1
@@ -538,7 +570,7 @@ RA_FG_SESSION_MULTIPLIER_SUM = 29
 RA_FG_SESSION_COUNT = 30
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def pick_cumulative(cumulative):
     total = cumulative[-1]
     if total <= 0:
@@ -550,7 +582,7 @@ def pick_cumulative(cumulative):
     return cumulative.shape[0] - 1
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def pick_cumulative_unit(cumulative, unit_pick, unit_total):
     total = cumulative[-1]
     if total <= 0 or unit_total <= 0:
@@ -564,7 +596,7 @@ def pick_cumulative_unit(cumulative, unit_pick, unit_total):
     return cumulative.shape[0] - 1
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def pick_card(card_profile_index):
     card_count = CARD_COUNTS[card_profile_index]
     if card_count <= 0:
@@ -572,7 +604,7 @@ def pick_card(card_profile_index):
     return pick_cumulative(CARD_WEIGHT_CUM[card_profile_index, :card_count])
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def is_card_match(card_profile_index, card_index, score, card_coin_in, triggered_free_game):
     if card_index < 0:
         return True
@@ -582,14 +614,14 @@ def is_card_match(card_profile_index, card_index, score, card_coin_in, triggered
     return multiplier > CARD_MIN[card_profile_index, card_index] and multiplier <= CARD_MAX[card_profile_index, card_index]
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def choose_base_table(profile_index):
     cumulative = BASE_REEL_WEIGHT_CUM[profile_index]
     selected = pick_cumulative(cumulative)
     return BASE_REEL_TABLE_IDS[profile_index, selected]
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def draw_initial_multiplier(profile_index, table_id, symbol):
     cumulative = BALL_C3_WEIGHT_CUM[profile_index, table_id] if symbol == C3 else BALL_C2_WEIGHT_CUM[profile_index, table_id]
     values = BALL_MULTIPLIERS[profile_index]
@@ -603,7 +635,7 @@ def draw_initial_multiplier(profile_index, table_id, symbol):
     return values[selected]
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def prepare_multiplier_symbol(symbol, profile_index, table_id, use_c3_weight):
     if symbol != C2:
         return symbol, 0
@@ -613,19 +645,19 @@ def prepare_multiplier_symbol(symbol, profile_index, table_id, use_c3_weight):
     return final_symbol, draw_initial_multiplier(profile_index, table_id, final_symbol)
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def prepare_initial_multiplier_symbol(symbol, profile_index, table_id, initial_ball_count):
     bucket = min(6, max(1, initial_ball_count)) - 1
     return prepare_multiplier_symbol(symbol, profile_index, table_id, USE_SUPER_WEIGHT[profile_index, table_id, bucket])
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def prepare_drop_multiplier_symbol(symbol, profile_index, table_id, combo_count):
     bucket = min(5, max(1, combo_count)) - 1
     return prepare_multiplier_symbol(symbol, profile_index, table_id, DROP_SUPER_WEIGHT[profile_index, table_id, bucket])
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def upgrade_c3_value(value):
     for index in range(MULTIPLIER_LEVELS.shape[0]):
         if MULTIPLIER_LEVELS[index] == value:
@@ -635,7 +667,7 @@ def upgrade_c3_value(value):
     return min(value, int(CFG_MULTIPLIER_MAX))
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def generate_board(table_id, profile_index):
     board = np.empty((WINDOW_SIZE, REEL_NUM), dtype=np.int64)
     multiplier_values = np.zeros((WINDOW_SIZE, REEL_NUM), dtype=np.int64)
@@ -688,7 +720,7 @@ def generate_board(table_id, profile_index):
     return board, multiplier_values, starts, drop_counts, initial_ball_count
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def pay_index_for_count(count):
     if count >= 12:
         return 5
@@ -699,7 +731,7 @@ def pay_index_for_count(count):
     return -1
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def evaluate_clusters(board, bet_multi):
     winning = np.zeros(SYMBOL_COUNT, dtype=np.int64)
     symbol_hits = np.zeros(SYMBOL_COUNT, dtype=np.int64)
@@ -728,7 +760,7 @@ def evaluate_clusters(board, bet_multi):
     return raw_pay, winning, symbol_hits, symbol_bucket_hits, symbol_bucket_pay, symbol_raw_pay, any_win
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def cascade_board(board, multiplier_values, table_id, profile_index, starts, drop_counts, winning, any_win, combo_count):
     if any_win == 0:
         return
@@ -768,7 +800,7 @@ def cascade_board(board, multiplier_values, table_id, profile_index, starts, dro
             output_row -= 1
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def count_scatter(board):
     count = 0
     for row in range(WINDOW_SIZE):
@@ -778,7 +810,7 @@ def count_scatter(board):
     return count
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def play_cluster_spin(table_id, profile_index, scene, bet_multi):
     board, multiplier_values, starts, drop_counts, initial_ball_count = generate_board(table_id, profile_index)
     total_raw_pay = 0
@@ -833,7 +865,7 @@ def play_cluster_spin(table_id, profile_index, scene, bet_multi):
     )
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi):
     result = play_cluster_spin(table_id, profile_index, 0, bet_multi)
     if bet_mode != MODE_EXTRABET or result[2] >= FG_TRIGGER_COUNT:
@@ -851,7 +883,7 @@ def play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi):
     return result
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def shuffle_segment(values, start, end):
     for index in range(end - 1, start, -1):
         selected = np.random.randint(start, index + 1)
@@ -860,7 +892,7 @@ def shuffle_segment(values, start, end):
         values[selected] = temp
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def append_free_tables(target, current_length, counts, table_ids):
     start = current_length
     for table_index in range(counts.shape[0]):
@@ -873,7 +905,7 @@ def append_free_tables(target, current_length, counts, table_ids):
     return current_length
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def get_bucket(win, coin_in):
     multiplier = win / coin_in
     for index in range(THRESHOLD_RECORD.shape[0]):
@@ -882,13 +914,15 @@ def get_bucket(win, coin_in):
     return THRESHOLD_RECORD.shape[0] - 1
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
     free_tables = np.full(MAX_FREE_SPINS, -1, dtype=np.int64)
     scheduled = append_free_tables(free_tables, 0, FREE_INITIAL_COUNTS[profile_index], FREE_TABLE_IDS[profile_index])
     spin_index = 0
     cumulative_multiplier = 0
     fg_session_pay = 0
+    fg_hit_spins = 0
+    fg_cascade_dist = np.zeros(6, dtype=np.int64)
 
     while spin_index < scheduled and spin_index < MAX_FREE_SPINS:
         fg_table_id = free_tables[spin_index]
@@ -900,6 +934,9 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
         effective_multiplier = cumulative_multiplier if cumulative_multiplier > 0 else 1
         fg_spin_pay = raw_fg * effective_multiplier + fg_scatter_pay
         fg_session_pay += fg_spin_pay
+        if fg_spin_pay > 0:
+            fg_hit_spins += 1
+        fg_cascade_dist[min(fg_cascades, 5)] += 1
         record[R_ALL, RA_FG_SPINS] += 1
         record[R_ALL, RA_HITS_FG] += 1 if fg_spin_pay > 0 else 0
         record[R_ALL, RA_FG_CASCADES] += fg_cascades
@@ -942,10 +979,14 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
     fg_bucket = get_bucket(fg_session_pay, fg_bucket_coin_in)
     record[R_MULTI_CNT_FG, fg_bucket] += 1
     record[R_MULTI_PAY_FG, fg_bucket] += fg_session_pay
+    record[R_FG_INTERVAL_SPINS, fg_bucket] += spin_index
+    record[R_FG_INTERVAL_HIT_SPINS, fg_bucket] += fg_hit_spins
+    for cascade_index in range(1, 6):
+        record[R_FG_INTERVAL_CASCADE_1 + cascade_index - 1, fg_bucket] += fg_cascade_dist[cascade_index]
     return fg_session_pay
 
 
-@njit(nogil=True)
+@njit(nogil=True, cache=True)
 def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
     np.random.seed(random_seed)
     record = np.zeros(RECORD_SIZE, dtype=np.float64)
@@ -987,7 +1028,10 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
             else:
                 bg_card_index = -1
                 package_card_index = -1
-        record_before_attempt = record.copy()
+        # Card-Off never rejects an attempted round, so copying the full
+        # statistics matrix here only burns memory bandwidth.  Keep the
+        # snapshot exclusively for Card System retry rollback.
+        record_before_attempt = record.copy() if card_system_active else record
         table_id = choose_base_table(profile_index)
         raw_bg, scatter_pay, scatter_count, bg_c2, bg_c2_count, bg_cascades, bg_hits, bg_raw_symbol_pay, bg_bucket_hits, bg_bucket_pay, bg_c2_hits = play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi)
         bg_multiplier = bg_c2 if bg_c2 > 0 else 1
@@ -1027,22 +1071,25 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
         bg_bucket = get_bucket(bg_pay, coin_in)
         record[R_MULTI_CNT_BG, bg_bucket] += 1
         record[R_MULTI_PAY_BG, bg_bucket] += bg_pay
+        if bg_cascades > 0:
+            record[R_BG_INTERVAL_CASCADE_1 + min(bg_cascades, 5) - 1, bg_bucket] += 1
         if scatter_count >= FG_TRIGGER_COUNT:
             record[R_BG_TRIGGER_FG_CNT, bg_bucket] += 1
             record[R_BG_TRIGGER_FG_PAY, bg_bucket] += bg_pay
 
-        record_after_bg = record.copy()
         fg_session_pay = 0
         if scatter_count >= FG_TRIGGER_COUNT:
-            if card_system_active and (bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET) and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME and fg_card_index < 0:
+            needs_fg_match = card_system_active and (bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET) and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
+            if needs_fg_match and fg_card_index < 0:
                 fg_card_index = pick_card(fg_card_profile)
+            record_after_bg = record.copy() if needs_fg_match else record
             fg_retry_count = 0
             while True:
-                record = record_after_bg.copy()
+                if needs_fg_match and fg_retry_count > 0:
+                    record = record_after_bg.copy()
                 record[R_ALL, RA_FG_TRIGGER] += 1
                 fg_session_pay = run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in)
                 total_pay = bg_pay + fg_session_pay
-                needs_fg_match = card_system_active and (bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET) and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
                 if not needs_fg_match or is_card_match(fg_card_profile, fg_card_index, fg_session_pay, card_coin_in, 1):
                     break
                 retry_total += 1
@@ -1347,17 +1394,20 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
 
     overview_rows = build_overview_rows(summary, card_system_active)
     base_frame = pd.DataFrame(overview_rows, columns=["Index", "Value"])
-    bg_combo = combo_rates(values[R_CASCADE_BG, :20])
-    fg_combo = combo_rates(values[R_CASCADE_FG, :20])
-    fg_interval_rate = np.divide(
-        values[R_MULTI_CNT_FG, : len(THRESHOLD_RECORD)],
-        fg_sessions,
-        out=np.zeros(len(THRESHOLD_RECORD), dtype=np.float64),
-        where=fg_sessions > 0,
-    )
     base_cnt = values[R_MULTI_CNT_BG, : len(THRESHOLD_RECORD)].astype(np.int64)
     free_cnt = values[R_MULTI_CNT_FG, : len(THRESHOLD_RECORD)].astype(np.int64)
     free_pay = values[R_MULTI_PAY_FG, : len(THRESHOLD_RECORD)]
+    fg_interval_spins = values[R_FG_INTERVAL_SPINS, : len(THRESHOLD_RECORD)]
+
+    def divide(numerator, denominator):
+        numerator = np.asarray(numerator, dtype=np.float64)
+        denominator = np.asarray(denominator, dtype=np.float64)
+        return np.divide(
+            numerator,
+            denominator,
+            out=np.zeros_like(numerator, dtype=np.float64),
+            where=denominator > 0,
+        )
     trigger_cnt_lte = np.cumsum(values[R_BG_TRIGGER_FG_CNT, : len(THRESHOLD_RECORD)]).astype(np.int64)
     trigger_pay_lte = np.cumsum(values[R_BG_TRIGGER_FG_PAY, : len(THRESHOLD_RECORD)])
     is_feature_buy = bet_mode == MODE_FEATUREBUY
@@ -1374,18 +1424,18 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
             "Interval_Upper": THRESHOLD_RECORD,
             "bg_trigger_fg_cnt_lte_upper": trigger_cnt_lte,
             "bg_trigger_fg_pay_lte_upper": trigger_pay_lte,
-            "FG_Hit_Rate": fg_interval_rate,
-            "FG_Spin_Count": np.full(len(THRESHOLD_RECORD), fg_spins),
-            "BG_Combo_1_Rate": np.full(len(THRESHOLD_RECORD), bg_combo[0]),
-            "BG_Combo_2_Rate": np.full(len(THRESHOLD_RECORD), bg_combo[1]),
-            "BG_Combo_3_Rate": np.full(len(THRESHOLD_RECORD), bg_combo[2]),
-            "BG_Combo_4_Rate": np.full(len(THRESHOLD_RECORD), bg_combo[3]),
-            "BG_Combo_5+_Rate": np.full(len(THRESHOLD_RECORD), bg_combo[4]),
-            "FG_Combo_1_Rate": np.full(len(THRESHOLD_RECORD), fg_combo[0]),
-            "FG_Combo_2_Rate": np.full(len(THRESHOLD_RECORD), fg_combo[1]),
-            "FG_Combo_3_Rate": np.full(len(THRESHOLD_RECORD), fg_combo[2]),
-            "FG_Combo_4_Rate": np.full(len(THRESHOLD_RECORD), fg_combo[3]),
-            "FG_Combo_5+_Rate": np.full(len(THRESHOLD_RECORD), fg_combo[4]),
+            "FG_Hit_Rate": divide(values[R_FG_INTERVAL_HIT_SPINS, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Spin_Count": fg_interval_spins.astype(np.int64),
+            "BG_Combo_1_Rate": divide(values[R_BG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], base_cnt),
+            "BG_Combo_2_Rate": divide(values[R_BG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], base_cnt),
+            "BG_Combo_3_Rate": divide(values[R_BG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], base_cnt),
+            "BG_Combo_4_Rate": divide(values[R_BG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], base_cnt),
+            "BG_Combo_5+_Rate": divide(values[R_BG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], base_cnt),
+            "FG_Combo_1_Rate": divide(values[R_FG_INTERVAL_CASCADE_1, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_2_Rate": divide(values[R_FG_INTERVAL_CASCADE_2, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_3_Rate": divide(values[R_FG_INTERVAL_CASCADE_3, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_4_Rate": divide(values[R_FG_INTERVAL_CASCADE_4, : len(THRESHOLD_RECORD)], fg_interval_spins),
+            "FG_Combo_5+_Rate": divide(values[R_FG_INTERVAL_CASCADE_5P, : len(THRESHOLD_RECORD)], fg_interval_spins),
         }
     )
     visible_symbol_ids = [int(value) for value in SYMBOL_IDS]

@@ -485,6 +485,8 @@ H026194A_02010313_2608141530_betmode2_108_9650_oldhand_small_bet_card.xlsx
 - 共用欄位依下列順序輸出：
 
 ```text
+Interval
+
 base_game_cnt
 base_game_pay
 free_game_cnt
@@ -517,6 +519,8 @@ FG_Combo_5+_Rate
 - `free_game_cnt_BF`、`free_game_pay_BF` 只在遊戲有 Buy Feature 時顯示。
 - `free_game_cnt_SF`、`free_game_pay_SF` 只在遊戲有 Super Feature 時顯示。
 - 不支援 BF／SF 時不得保留空白欄位或以 `0` 代替未支援功能。
+- `Interval` 必須位於工作頁最前面，作為人員閱讀用的倍率區間文字；上限為 `0` 的第一列固定顯示 `0`，其餘列使用 `<前一列上限，固定一位小數> < X <= <本列上限，固定一位小數>`，例如 `0.0 < X <= 1.0`、`10.0 < X <= 15.0`。
+- `Interval` 必須由同列及前一列的 `Interval_Upper` 自動產生，不得另維護一套區間；`X` 的倍率分母必須與本報表及 Card System 的倍率判定口徑一致。
 - `Interval_Upper` 為該列倍率區間的數值上限；`bg_trigger_fg_cnt_lte_upper` 與 `bg_trigger_fg_pay_lte_upper` 分別累計所有「BG 成功觸發 FG，且該把 BG 倍數小於等於該列上限」的次數與 BG 得分。兩欄必須由未套 Profile cap 的原始觸發 BG 分桶累加，不得先過濾成單一 Profile。
 - Card System／倍率權重工具必須先從該 Profile／押注層級的正權重 BG `range` 卡取得最大區間上限，再以相同 `Interval_Upper` 讀取累計 count/pay；不得在程式內寫死 30x、70x 或其他上限。找不到完全相同的區間上限時必須停止並提示補齊倍率區間，不得取較接近的列。
 - `cnt` 欄位使用整數；`pay` 欄位使用報表統一的得分精度；`Rate` 欄位使用一致的百分比格式。
@@ -715,7 +719,7 @@ m1_bg_spin_rate        : 79.9233
 - [ ] `bg_trigger_fg_cnt` 與 `bg_trigger_fg_pay` 位於 `avg_fg_spins` 後，且次數與 BG 得分口徑正確。
 - [ ] `free_game` 卡接受的觸發 BG 均未超過同 Profile 正權重 BG `range` 卡的最大上限；超過上限的結果已重跑。
 - [ ] Card System Off 的自然機率報表只將符合指定 Profile BG Trigger Cap 的觸發 BG 得分計入 `bg_trigger_fg_pay`，且 `bg_trigger_fg_cnt` 未被 cap 過濾。
-- [ ] `Multiplier Line` 每一列均有 `Interval_Upper` 與累計至該上限的 BG Trigger count/pay；累計值單調不減，最後一列 count 等於 `bg_trigger_fg_cnt`。
+- [ ] `Multiplier Line` 的第一欄為由 `Interval_Upper` 自動產生的 `Interval`；每一列均有 `Interval_Upper` 與累計至該上限的 BG Trigger count/pay；累計值單調不減，最後一列 count 等於 `bg_trigger_fg_cnt`。
 - [ ] 倍率權重工具從 Profile 的最大正權重 BG range 自動選取完全相同上限的累計 count/pay，未寫死個別 Profile 或遊戲 cap。
 - [ ] `special_symbol_cnt` 同時統計 Base Spin 與 Free Spin，且同一 Spin 即使出現多個 `SC` 也只累加一次。
 - [ ] `SCR` 等於 `(special_symbol_cnt / total_rounds) × 10,000,000,000`，且 Console 與 `Overview` 的數值一致。

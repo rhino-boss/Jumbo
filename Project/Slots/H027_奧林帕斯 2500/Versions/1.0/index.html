@@ -123,6 +123,28 @@
       border-color: rgba(255, 216, 106, 0.96);
       background: rgba(87, 63, 23, 0.38);
     }
+    .cell.h027-c3 {
+      border-color: rgba(218, 132, 255, 0.98);
+      background: linear-gradient(145deg, rgba(92, 32, 119, 0.58), rgba(43, 18, 72, 0.72));
+    }
+    body.h027.fg-mode .cell { background: #060d1a; }
+    body.h027.fg-mode .cell.symbol-a { background: #0b2118; }
+    body.h027.fg-mode .cell.symbol-k { background: #0a172a; }
+    body.h027.fg-mode .cell.symbol-q { background: #211d0c; }
+    body.h027.fg-mode .cell.symbol-j { background: #211222; }
+    body.h027.fg-mode .cell.symbol-te { background: #101d24; }
+    body.h027.fg-mode .cell.symbol-m1 { background: #281019; }
+    body.h027.fg-mode .cell.symbol-m2 { background: #2b1c0d; }
+    body.h027.fg-mode .cell.symbol-m3 { background: #0c2530; }
+    body.h027.fg-mode .cell.symbol-m4 { background: #21152f; }
+    body.h027.fg-mode .cell.symbol-ww { background: #0c2a23; }
+    body.h027.fg-mode .cell.h019-scatter {
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.96), rgba(9, 67, 96, 0.98));
+    }
+    body.h027.fg-mode .cell.h019-c2 { background: #332611; }
+    body.h027.fg-mode .cell.h027-c3 {
+      background: linear-gradient(145deg, #5c2077, #2b1248);
+    }
     body.h027 .cell.hit {
       border-color: var(--green);
       box-shadow: 0 0 14px rgba(51, 255, 153, 0.46);
@@ -297,6 +319,41 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>2026-08-28：FG C3 5x 調整為 50%</h4>
+          <ul>
+            <li>FG_Symbol 與 FG_Symbol (2) 的 C3 5x 權重由 62.51% 調整為 50%；移出的 12.51 個百分點依其他既有正權重倍率比例分配。</li>
+            <li>C3 2x／3x／4x 與 100x 以上維持 0；H027 基礎數學、92A／94A Config 與版本清單同步升為 v2。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
+          <h4>2026-08-28：調整 C2 高倍尾端與 C3 最低倍率</h4>
+          <ul>
+            <li>C3 的 2x、3x、4x 直接抽取權重改為 0，其餘既有正權重按比例重分配。</li>
+            <li>C2 BG 的 500x／1000x／2500x 各設為 0.2%；C2 FG 的 100x／250x／500x／1000x／2500x 各設為 0.1%；BF C2 維持原設定。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
+          <h4>2026-08-28：精簡輪帶 RNG 顯示</h4>
+          <ul>
+            <li>輪帶 RNG 區只保留 Table、C2／C3 與 R1～R6 的 RNG／stop／length。</li>
+            <li>移除重複的 Config、Version、Profile、Bet、Card 資訊及 Drop Mode。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
+          <h4>2026-08-28：C3 高可見度、低群聚曲線</h4>
+          <ul>
+            <li>初始每顆 C2→C3 主曲線改為 40%／26%／19%／15%／13%／11%；球數越多，單顆轉換率越低，但至少出現一顆 C3 的整體機率由 40.00% 上升至 50.30%。</li>
+            <li>BG_Symbol (2) 使用主曲線的 1/5；掉落主曲線使用初始第 1～5 欄的 1/2，並依 Combo 1～5+ 遞減。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
+          <h4>2026-08-28：統一 FG 倍數累積條件</h4>
+          <ul>
+            <li>FG Spin 必須有一般符號得分，該 Spin 最終盤面的 C2／C3 才加入 FG 累積倍數。</li>
+            <li>只有 Scatter 得分或完全沒有得分時，該 Spin 的 C2／C3 不累積；Index 顯示、實際派彩、Simulator、Game Rule 與 Help 已統一。</li>
+          </ul>
+        </article>
         <article class="change-log-entry">
           <h4>2026-08-26：改用 Gates of Olympus 1000 還原輪帶</h4>
           <ul>
@@ -1088,7 +1145,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     board.forEach((row, rowIndex) => row.forEach((cell, reelIndex) => {
       const node = document.createElement("div");
       const dropMotion = options.dropMotion?.[`${rowIndex}-${reelIndex}`];
-      const special = cell.code === "C1" ? "h019-scatter" : cell.code === "C2" || cell.code === "C3" ? "h019-c2" : "";
+      const special = cell.code === "C1" ? "h019-scatter" : cell.code === "C2" ? "h019-c2" : cell.code === "C3" ? "h027-c3" : "";
       const symbolClass = `symbol-${cell.code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
       node.className = `cell ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${clearedSet.has(`${rowIndex}-${reelIndex}`) ? "symbol-cleared" : ""} ${dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : ""} ${options.spinning ? "reel-spin" : ""}`;
       if (dropMotion) {
@@ -1171,30 +1228,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function renderRng(spin) {
     el.rngList.innerHTML = "";
     const strip = Box.strips[spin.tableId];
-    const betContext = currentBetContext();
-    const cardSystemOn = cardSystemActive();
-    const profileLabel = Box.card_system?.enabled ? (cardPlayerProfile() === "newbie" ? "Newbie" : "Oldhand") : "Off";
     const rows = [
-      [`Config`, `${H027_CONFIG_CODE}-${profileLabel}`],
-      [`Version`, Box.excel_version],
-      [`Profile`, profileLabel],
-      [`Bet Mode`, PROFILE_NAMES[state.selectedMode]],
-      [`Mode Multiplier`, `x${betContext.modeCost}`],
-      [`Feature Price Multiplier`, betContext.featurePriceMultiplier == null ? "n/a" : `x${betContext.featurePriceMultiplier}`],
-      [`Base Bet`, money(betContext.baseBet)],
-      [`Bet Amount`, money(betContext.betAmount)],
-      [`Bet Tier Amount`, money(betContext.betTierAmount)],
-      [`Bet Tier`, betContext.betTier],
-      [`Link Enabled`, String(betContext.linkEnabled)],
-      [`BG Max Multiplier`, betContext.maxMultiplierBg],
-      [`FG Max Multiplier`, betContext.maxMultiplierFg],
-      [`Card System`, cardSystemOn ? "on" : "off"],
-      [`Card Profile`, spin.cardInfo?.profile || "off"],
-      [`Card BG`, spin.cardInfo?.card || "n/a"],
-      [`Card FG`, spin.cardInfo?.fgCard || "n/a"],
-      [`Card Retry`, `${spin.cardInfo?.retries || 0}${spin.cardInfo?.retryLimitExceeded ? " (LIMIT)" : ""}`],
       [`Table`, `${spin.tableName} (#${spin.tableId})`],
-      [`Drop Mode`, Box.drop_mode],
       [`C2 / C3`, `C2 ${spin.multiplier.c2Count} | C3 ${spin.multiplier.c3Count} | x${spin.multiplier.total}`]
     ];
     spin.starts.forEach((start, index) => {
@@ -1357,7 +1392,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       ? fg.preparedSpins.shift()
       : playSpin(fg.queue.shift(), "FG", fg.carry);
     fg.played += 1;
-    fg.carry += spin.multiplier.total;
+    if (spin.rawPay > 0) fg.carry += spin.multiplier.total;
     fg.win += toMoney(spin.finalPay);
     state.maxMultiplier = Math.max(state.maxMultiplier, fg.carry);
 

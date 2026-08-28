@@ -1,6 +1,7 @@
 window.H027_VERSION_MANIFEST = {
   current: "1.0.0.0",
   base_version: "1",
+  next_version: "2.0.0.0",
   versions: [
     {
       version: "0.0.0.0",
@@ -27,7 +28,7 @@ window.H027_VERSION_MANIFEST = {
     {
       version: "1.0.0.0",
       math_key: "1.0",
-      date: "2026-08-26",
+      date: "2026-08-28",
       competitor_initial_version: false,
       base_config: "Versions/1.0/config.js",
       configs: {
@@ -45,7 +46,11 @@ window.H027_VERSION_MANIFEST = {
         "Restore cross-reel weighted-percentile dependence for BG and FG Hit Rate.",
         "Accumulate FG multipliers only on spins with a scoring cascade.",
         "Generate Buy Feature entry with exactly four C1 on R2-R5.",
-        "Keep competitor 63/64-stop cyclic reels, move C1 outside the first/last five RNG rows, and blank inactive XLSX rows."
+        "Keep competitor 63/64-stop cyclic reels, move C1 outside the first/last five RNG rows, and blank inactive XLSX rows.",
+        "Set the FG C3 5x multiplier probability to 50% for FG_Symbol and FG_Symbol (2).",
+        "Redistribute the removed 12.51 percentage points proportionally across the other active sub-100x C3 multipliers.",
+        "Keep C3 2x, 3x, 4x and 100x-or-higher probabilities at zero.",
+        "Optimize Simulator Card-Off statistics snapshots without changing fixed-seed results."
       ]
     }
   ]
