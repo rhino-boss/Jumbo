@@ -204,8 +204,20 @@
 
   main { min-width: 0; max-width: 74ch; }
 
-  section { padding-top: clamp(3rem, 6vw, 4.25rem); scroll-margin-top: 1.5rem; }
-  section > * + * { margin-top: 1.15rem; }
+  section { padding-top: clamp(1.5rem, 3vw, 2.1rem); scroll-margin-top: 1.5rem; }
+  section > * + * { margin-top: .6rem; }
+
+  /* tables & formula blocks: fixed breathing room against surrounding text */
+  section > .table-wrap,
+  section > .table-wrap + *,
+  section > .formula,
+  section > .formula + * { margin-top: .85rem; }
+  .gate-body .table-wrap { margin: .3rem 0; }
+
+  /* headings: clear separation from their body text, more above than below */
+  section > h2 + * { margin-top: .85rem; }
+  section > * + h3 { margin-top: 1.05rem; }
+  section > h3 + * { margin-top: .65rem; }
 
   h2 {
     font-family: var(--serif);
@@ -233,7 +245,7 @@
     font-size: 1.06rem;
     font-weight: 700;
     margin: 0;
-    padding-top: .6rem;
+    padding-top: .3rem;
     letter-spacing: .01em;
     text-wrap: balance;
   }
@@ -360,7 +372,7 @@
   }
   .gate-line { flex: 1; width: 1px; background: var(--line); min-height: .9rem; }
   .gate:last-child .gate-line { background: transparent; }
-  .gate-body { padding-bottom: 1.5rem; display: flex; flex-direction: column; gap: .55rem; }
+  .gate-body { padding-bottom: .75rem; display: flex; flex-direction: column; gap: .3rem; }
   .gate-title { font-weight: 700; font-size: .98rem; padding-top: .28rem; }
   .gate-body p { font-size: .92rem; color: var(--ink-mid); }
 
@@ -415,7 +427,7 @@
   .phase.is-newbie .phase-mark { background: var(--surface); border: 2px solid var(--accent); }
   .phase-line { flex: 1; width: 1px; background: var(--line); }
   .phase:last-child .phase-line { background: transparent; }
-  .phase-body { padding: .5rem 0 1.5rem; display: flex; flex-direction: column; gap: .4rem; }
+  .phase-body { padding: .25rem 0 .75rem; display: flex; flex-direction: column; gap: .2rem; }
   .phase-name { font-weight: 700; font-size: 1rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
   .phase-rtp {
     font-family: var(--mono);
@@ -514,7 +526,7 @@
       <span>§3.3</span>
       <span><b>老手救援 C 版</b></span>
       <span>雙池修訂</span>
-      <span>2026-08-27</span>
+      <span>2026-08-28</span>
     </div>
 
     <h1>老手救援 C 版</h1>
@@ -548,7 +560,7 @@
     <a href="#mechanism">§1 機制說明</a>
     <a class="sub" href="#cycle">1.1 判定週期</a>
     <a class="sub" href="#condition">1.2 判斷條件</a>
-    <a class="sub" href="#pool">1.3 資金池</a>
+    <a class="sub" href="#pool">1.3 救援池</a>
     <a class="sub" href="#gates">1.4 判定流程</a>
     <a class="sub" href="#reward">1.5 獎項說明</a>
     <a class="sub" href="#ledger">1.6 成本記帳</a>
@@ -572,27 +584,22 @@
 
       <h3 id="cycle"><span class="sec">1.1</span>判定週期</h3>
       <p>
-        第 200 轉之後，每 <strong>50 轉</strong>為一個固定週期。每個週期的<strong>前 40 轉隨機安排 1 次判定</strong>，
-        <strong>後 10 轉固定不判定</strong>。
+        判定頻率固定為<strong>每 50 轉判定 1 次</strong>。進入老手期後，每滿 50 轉在該轉進行判定，
+        判定回合<strong>固定、不隨機</strong>。轉數從老手期第 1 轉起算。
       </p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>週期</th><th>隨機判定區</th><th>不判定區</th><th class="num">判定次數</th></tr>
+            <tr><th>週期</th><th>週期範圍</th><th class="num">判定回合</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">第 1 個週期</td><td>201 – 240</td><td>241 – 250</td><td class="num">1</td></tr>
-            <tr><td class="key">第 2 個週期</td><td>251 – 290</td><td>291 – 300</td><td class="num">1</td></tr>
-            <tr><td class="key">第 3 個週期</td><td>301 – 340</td><td>341 – 350</td><td class="num">1</td></tr>
-            <tr><td class="key">後續</td><td>每 50 轉依此類推</td><td>每週期最後 10 轉</td><td class="num">各 1</td></tr>
+            <tr><td class="key">第 1 個週期</td><td>1 – 50</td><td class="num">第 50 轉</td></tr>
+            <tr><td class="key">第 2 個週期</td><td>51 – 100</td><td class="num">第 100 轉</td></tr>
+            <tr><td class="key">第 3 個週期</td><td>101 – 150</td><td class="num">第 150 轉</td></tr>
+            <tr><td class="key">後續</td><td>每 50 轉依此類推</td><td class="num">每滿 50 轉</td></tr>
           </tbody>
         </table>
       </div>
-      <ul>
-        <li>不判定區是<strong>固定的</strong>，不會因為玩家是否取得救援而移動，不是觸發後才開始計算的個人冷卻。</li>
-        <li>玩家取得救援後<strong>不另外啟動個人冷卻</strong>；下一個 50 轉週期照常重新安排一次判定。</li>
-      </ul>
-
       <h3 id="condition"><span class="sec">1.2</span>判斷條件</h3>
       <p>
         判定使用三個回顧窗口。所有窗口都是<strong>判定回合之前 N 轉的 RTP</strong>，判定回合本身不納入統計。
@@ -606,7 +613,7 @@
           <tbody>
             <tr><td class="key">短期</td><td>判定回合前 50 轉</td><td>所有階段的共同前置條件</td></tr>
             <tr><td class="key">中期</td><td>判定回合前 200 轉</td><td>各階段主要 RTP 條件</td></tr>
-            <tr><td class="key">長期</td><td>判定回合前 500 轉</td><td>僅老手 D 使用</td></tr>
+            <tr><td class="key">長期</td><td>判定回合前 500 轉</td><td>僅老手第 4 階段使用</td></tr>
           </tbody>
         </table>
       </div>
@@ -614,26 +621,28 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>階段</th><th>轉數</th><th class="num">短期</th><th class="num">中期</th><th class="num">長期</th></tr>
+            <tr><th>階段</th><th>老手期轉數</th><th class="num">短期</th><th class="num">中期</th><th class="num">長期</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">老手 A</td><td>201 – 300</td><td class="num">&lt; 40%</td><td class="num">&lt; 60%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手 B</td><td>301 – 400</td><td class="num">&lt; 40%</td><td class="num">&lt; 50%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手 C</td><td>401 – 500</td><td class="num">&lt; 40%</td><td class="num">&lt; 40%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手 D</td><td>501 起</td><td class="num">&lt; 40%</td><td class="num">&lt; 50%</td><td class="num">&lt; 100%</td></tr>
+            <tr><td class="key">老手第 1 階段</td><td>1 – 100</td><td class="num">&lt; 40%</td><td class="num">&lt; 60%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 2 階段</td><td>101 – 200</td><td class="num">&lt; 40%</td><td class="num">&lt; 50%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 3 階段</td><td>201 – 300</td><td class="num">&lt; 40%</td><td class="num">&lt; 40%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 4 階段</td><td>301 起</td><td class="num">&lt; 40%</td><td class="num">&lt; 50%</td><td class="num">&lt; 100%</td></tr>
           </tbody>
         </table>
       </div>
       <ul>
-        <li>老手 D 的長期規則<strong>只在判定前已有完整 500 轉資料時執行</strong>；資料不足時該次判定不救援。</li>
+        <li>階段轉數<strong>從老手期第 1 轉起算</strong>（完成新手期 200 轉後的下一轉）。</li>
+        <li>老手第 4 階段的長期規則<strong>只在判定前已有完整 500 轉資料時執行</strong>；資料不足時該次判定不救援。</li>
         <li>各窗口 RTP 必須納入<strong>新手體驗 D 介入後的實際最終結果</strong>，包含第 50、150 轉可能被改寫的得分。</li>
         <li>命中條件只代表<strong>具備救援資格</strong>，實際是否放行由 §1.4 的兩道池檢查決定。</li>
         <li>未進 FG 轉數<strong>不再</strong>作為救援條件。</li>
       </ul>
 
-      <h3 id="pool"><span class="sec">1.3</span>資金池</h3>
+      <h3 id="pool"><span class="sec">1.3</span>救援池</h3>
       <p>
-        玩家每一次 Spin 後，<strong>投注額的 1% 提撥為救援預算</strong>。
+        <strong>預設的救援配置 RTP 為 1%</strong>：玩家每一次 Spin 後，
+        投注額的 1% 提撥進救援池，作為救援預算的唯一來源。
         這筆提撥同時記入兩本帳：共同池記全平台總額，個人池記該玩家自己的額度。
         兩者是同一筆錢的兩種檢視角度，不是各自獨立的兩筆提撥。
       </p>
@@ -670,7 +679,7 @@
       </div>
 
       <h3 id="gates"><span class="sec">1.4</span>判定流程</h3>
-      <p>玩家走到隨機判定回合時，依下列順序處理。任一關卡不通過即結束，該轉維持自然結果。</p>
+      <p>玩家走到判定回合時，依下列順序處理。任一關卡不通過即結束，該轉維持自然結果。</p>
 
       <div class="flow">
         <div class="gate">
@@ -703,7 +712,7 @@
             <div class="gate-title">個人池檢查</div>
             <p>檢查個人池餘額，並據此決定獎項等級。</p>
             <div class="branch">
-              <div class="branch-row"><span class="pill ok">餘額充足</span><span>依 §1.5 發放 30× 或 15×</span></div>
+              <div class="branch-row"><span class="pill ok">餘額充足</span><span>依 §1.5 發放 50× 或 20×</span></div>
               <div class="branch-row"><span class="pill check">餘額不足</span><span>進入嚴格標準複判</span></div>
             </div>
           </div>
@@ -713,9 +722,24 @@
           <div class="gate-rail"><div class="gate-dot">4</div><div class="gate-line"></div></div>
           <div class="gate-body">
             <div class="gate-title">嚴格標準複判（個人池透支路徑）</div>
-            <p>個人池已見底時，用更嚴格的門檻確認玩家是否真的持續在輸，而不只是短期波動。</p>
+            <p>
+              個人池已見底時改用嚴格標準複判：<strong>§1.2 的所有門檻一律減 10 個百分點</strong>，
+              觸發難度更高，確認玩家不只是短期波動、而是真的持續在輸。
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>窗口</th><th class="num">一般標準</th><th class="num">嚴格標準</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="key">短期</td><td class="num">&lt; 40%</td><td class="num">&lt; 30%</td></tr>
+                  <tr><td class="key">中期（第 1～4 階段）</td><td class="num">&lt; 60% / 50% / 40% / 50%</td><td class="num">&lt; 50% / 40% / 30% / 40%</td></tr>
+                  <tr><td class="key">長期（第 4 階段）</td><td class="num">&lt; 100%</td><td class="num">&lt; 90%</td></tr>
+                </tbody>
+              </table>
+            </div>
             <div class="branch">
-              <div class="branch-row"><span class="pill ok">通過</span><span>由共同池支應，發放 15×，個人池記為透支</span></div>
+              <div class="branch-row"><span class="pill ok">通過</span><span>由共同池支應，發放 20×，個人池記為透支</span></div>
               <div class="branch-row"><span class="pill stop">不通過</span><span>不救援</span></div>
               <div class="branch-row"><span class="pill stop">連續限制</span><span>上一次救援已走透支路徑時，本次直接不救援</span></div>
             </div>
@@ -734,15 +758,14 @@
       <div class="note warn">
         <span class="tag">待確認</span>
         <p>
-          「嚴格標準」的具體門檻與「不得連續發生」的定義尚未定案，
-          建議值與其他未定項一併列於 <a href="#open">§4</a>。
+          透支「不得連續發生」的具體定義尚未定案，建議值列於 <a href="#open">§4</a>。
         </p>
       </div>
 
       <h3 id="reward"><span class="sec">1.5</span>獎項說明</h3>
       <p>
-        救援獎項沿用 C 版的兩級免費遊戲。等級由<strong>個人池餘額</strong>決定，形成明確的降級路徑，
-        避免額度不足時只能全有全無。
+        救援獎項只有兩級免費遊戲：<strong>20× 與 50×</strong>。等級由<strong>個人池餘額</strong>決定，
+        形成明確的降級路徑，避免額度不足時只能全有全無。
       </p>
       <div class="table-wrap">
         <table>
@@ -750,10 +773,10 @@
             <tr><th>個人池餘額</th><th>額外條件</th><th class="num">獎項</th><th>支應來源</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">≥ 30 × 該轉 Bet</td><td>—</td><td class="num">30× FG</td><td>個人池</td></tr>
-            <tr><td class="key">≥ 15× 且 &lt; 30 × 該轉 Bet</td><td>—</td><td class="num">15× FG</td><td>個人池</td></tr>
-            <tr><td class="key">&lt; 15 × 該轉 Bet</td><td>通過嚴格標準，且上次未走透支路徑</td><td class="num">15× FG</td><td>共同池（透支）</td></tr>
-            <tr><td class="key">&lt; 15 × 該轉 Bet</td><td>未通過嚴格標準</td><td class="num">不救援</td><td>—</td></tr>
+            <tr><td class="key">≥ 50 × 該轉 Bet</td><td>—</td><td class="num">50× FG</td><td>個人池</td></tr>
+            <tr><td class="key">≥ 20× 且 &lt; 50 × 該轉 Bet</td><td>—</td><td class="num">20× FG</td><td>個人池</td></tr>
+            <tr><td class="key">&lt; 20 × 該轉 Bet</td><td>通過嚴格標準，且上次未走透支路徑</td><td class="num">20× FG</td><td>共同池（透支）</td></tr>
+            <tr><td class="key">&lt; 20 × 該轉 Bet</td><td>未通過嚴格標準</td><td class="num">不救援</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
@@ -818,41 +841,41 @@
         </div>
 
         <div class="phase">
-          <div class="phase-spins">201 – 300</div>
+          <div class="phase-spins">老手 1 – 100</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手 A<span class="phase-rtp">中期門檻 &lt; 60%</span></div>
+            <div class="phase-name">老手第 1 階段<span class="phase-rtp">中期門檻 &lt; 60%</span></div>
             <p>
               救援機制啟動，倍率上限與 Link 資格改依小／中／大 Bet 分層。
               門檻最寬鬆——這階段玩家剛脫離新手保護，流失風險最高。
-              第 201 轉起，每 50 轉一個判定週期。
+              進入老手期後，每滿 50 轉判定 1 次。
             </p>
           </div>
         </div>
 
         <div class="phase">
-          <div class="phase-spins">301 – 400</div>
+          <div class="phase-spins">老手 101 – 200</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手 B<span class="phase-rtp">中期門檻 &lt; 50%</span></div>
+            <div class="phase-name">老手第 2 階段<span class="phase-rtp">中期門檻 &lt; 50%</span></div>
             <p>門檻收緊。玩家已建立遊戲習慣，對短期波動的耐受度提高。</p>
           </div>
         </div>
 
         <div class="phase">
-          <div class="phase-spins">401 – 500</div>
+          <div class="phase-spins">老手 201 – 300</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手 C<span class="phase-rtp">中期門檻 &lt; 40%</span></div>
+            <div class="phase-name">老手第 3 階段<span class="phase-rtp">中期門檻 &lt; 40%</span></div>
             <p>門檻最嚴，中期與短期門檻齊平。只有真正持續在輸的玩家才符合資格。</p>
           </div>
         </div>
 
         <div class="phase">
-          <div class="phase-spins">501 起</div>
+          <div class="phase-spins">老手 301 起</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手 D<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100%</span></div>
+            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100%</span></div>
             <p>
               長期玩家。中期門檻回放到 50%，但<strong>額外加上長期窗口檢查</strong>：
               前 500 轉 RTP 必須低於 100%，確保長線上真正吃虧的玩家才被救援。
@@ -915,11 +938,6 @@
           </thead>
           <tbody>
             <tr>
-              <td class="key">嚴格標準的門檻</td>
-              <td>短期 RTP &lt; 30%</td>
-              <td>沿用 C 版既有的低獎項門檻，與 §1.2 的 40% 共同條件形成明確落差。也可改為中期門檻再降一級。</td>
-            </tr>
-            <tr>
               <td class="key">「不得連續發生」的定義</td>
               <td>個人池回正前不得再次透支</td>
               <td>另一種寫法是「透支後間隔 N 個判定週期」。前者與帳目直接綁定，較不需額外狀態。</td>
@@ -935,9 +953,14 @@
               <td>BF／SF 的 RTP 配置為 96.5%，與 NB／EB 不同。若計入救援窗口，玩家可用購買特色製造救援資格。</td>
             </tr>
             <tr>
-              <td class="key">新玩家的個人池初始值</td>
-              <td>0，僅靠自身提撥累積</td>
-              <td>剛進入老手期的玩家個人池較薄，會較早走到透支路徑。需模擬確認老手 A 的透支比例是否過高。</td>
+              <td class="key">個人池初始額度</td>
+              <td>先模擬透支比例再定案</td>
+              <td>1% 提撥約需 2,000 轉攢滿 20×、5,000 轉攢滿 50×，前期救援幾乎都走透支路徑、50× 幾乎發不出。候選方案：進老手期贈送初始額度（例如 50 × Bet），或維持 0。</td>
+            </tr>
+            <tr>
+              <td class="key">異常加押檢查</td>
+              <td>救援金額以 min(當下押注, 歷史押注中位數) 計價</td>
+              <td>需定義：往前檢查的轉數、使用平均或中位數作基準、超過基準多少視為異常。改計價而非取消救援，可讓拉高押注零收益，也不誤傷正常變押的玩家。</td>
             </tr>
             <tr>
               <td class="key">共同池的時間範圍</td>
@@ -954,7 +977,7 @@
   <footer>
     <span>iGaming 機制說明書 · §3.3 老手救援 C 版</span>
     <span>雙池修訂</span>
-    <span>2026-08-27</span>
+    <span>2026-08-28</span>
     <span>§3 套利檢查待補</span>
   </footer>
 
