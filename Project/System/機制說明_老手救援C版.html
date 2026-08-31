@@ -428,6 +428,31 @@
   .phase-line { flex: 1; width: 1px; background: var(--line); }
   .phase:last-child .phase-line { background: transparent; }
   .phase-body { padding: .25rem 0 .75rem; display: flex; flex-direction: column; gap: .2rem; }
+  .phase-detail {
+    margin-top: .35rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    max-width: 68ch;
+  }
+  .phase-detail summary {
+    cursor: pointer;
+    padding: .4rem .8rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    font-weight: 500;
+    user-select: none;
+  }
+  .phase-detail summary:hover { color: var(--accent); }
+  .phase-detail summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .phase-detail[open] summary { border-bottom: 1px solid var(--line-soft); }
+  .phase-detail ul {
+    padding: .55rem 1rem .65rem 2rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    gap: .3rem;
+    font-variant-numeric: tabular-nums;
+  }
   .phase-name { font-weight: 700; font-size: 1rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
   .phase-rtp {
     font-family: var(--mono);
@@ -837,6 +862,14 @@
               認識玩法的階段。倍率上限壓低（BG 30×／FG 120×），不參與 Link 彩金。
               第 50 轉有第一次<strong>新手體驗 D</strong> 判定，依判定回合前的累積 RTP 決定。
             </p>
+            <details class="phase-detail">
+              <summary>體驗試算（第 50 轉判定）</summary>
+              <ul>
+              <li>RTP &lt; 50%：給 15×，RTP +30% → Max RTP 80%</li>
+              <li>RTP &lt; 70%：給 10×，RTP +20% → Max RTP 90%</li>
+              <li>RTP 增量 ??%（看報表）</li>
+              </ul>
+            </details>
           </div>
         </div>
 
@@ -850,7 +883,7 @@
               完成 200 轉後進入老手期。
             </p>
             <details class="phase-detail">
-              <summary>救援試算（第 150 轉判定）</summary>
+              <summary>體驗試算（第 150 轉判定）</summary>
               <ul>
               <li>RTP &lt; 65%：救 30×，RTP +20% → Max RTP 85%</li>
               <li>RTP &lt; 85%：救 15×，RTP +10% → Max RTP 95%</li>
@@ -861,7 +894,7 @@
         </div>
 
         <div class="phase">
-          <div class="phase-spins">老手 1 – 100</div>
+          <div class="phase-spins">201 – 300</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
             <div class="phase-name">老手第 1 階段<span class="phase-rtp">中期門檻 &lt; 60% · 救 20× / 50×</span></div>
@@ -884,25 +917,45 @@
         </div>
 
         <div class="phase">
-          <div class="phase-spins">老手 101 – 200</div>
+          <div class="phase-spins">301 – 400</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
             <div class="phase-name">老手第 2 階段<span class="phase-rtp">中期門檻 &lt; 50% · 救 20× / 50×</span></div>
             <p>門檻收緊。玩家已建立遊戲習慣，對短期波動的耐受度提高。</p>
+            <details class="phase-detail">
+              <summary>救援試算（每 50 轉判定）</summary>
+              <ul>
+              <li>短期 RTP &lt; 40%：救 20×，短期 +40% → Max 短期 RTP 80%</li>
+              <li>短期 RTP &lt; 40%：救 50×，短期 +100% → Max 短期 RTP 140%</li>
+              <li>中期 RTP &lt; 50%：救 20×，中期 +10% → Max 中期 RTP 60%</li>
+              <li>中期 RTP &lt; 50%：救 50×，中期 +25% → Max 中期 RTP 75%</li>
+              <li>RTP 增量 ??%（看報表）</li>
+              </ul>
+            </details>
           </div>
         </div>
 
         <div class="phase">
-          <div class="phase-spins">老手 201 – 300</div>
+          <div class="phase-spins">401 – 500</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
             <div class="phase-name">老手第 3 階段<span class="phase-rtp">中期門檻 &lt; 40% · 救 20× / 50×</span></div>
             <p>門檻最嚴，中期與短期門檻齊平。只有真正持續在輸的玩家才符合資格。</p>
+            <details class="phase-detail">
+              <summary>救援試算（每 50 轉判定）</summary>
+              <ul>
+              <li>短期 RTP &lt; 40%：救 20×，短期 +40% → Max 短期 RTP 80%</li>
+              <li>短期 RTP &lt; 40%：救 50×，短期 +100% → Max 短期 RTP 140%</li>
+              <li>中期 RTP &lt; 40%：救 20×，中期 +10% → Max 中期 RTP 50%</li>
+              <li>中期 RTP &lt; 40%：救 50×，中期 +25% → Max 中期 RTP 65%</li>
+              <li>RTP 增量 ??%（看報表）</li>
+              </ul>
+            </details>
           </div>
         </div>
 
         <div class="phase">
-          <div class="phase-spins">老手 301 起</div>
+          <div class="phase-spins">501 起</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
             <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100% · 救 20× / 50×</span></div>
