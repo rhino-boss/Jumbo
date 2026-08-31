@@ -11,7 +11,7 @@ import pandas as pd
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-OUTPUT_PATH = SCRIPT_DIR / "Data" / "彩罐熱舞_基礎遊戲_1000人_1000轉.parquet"
+OUTPUT_PATH = SCRIPT_DIR / "rowdata" / "彩罐熱舞_基礎遊戲_1000人_1000轉.parquet"
 CSV_OUTPUT_PATH = OUTPUT_PATH.with_suffix(".csv.gz")
 METADATA_PATH = OUTPUT_PATH.with_suffix(".metadata.json")
 

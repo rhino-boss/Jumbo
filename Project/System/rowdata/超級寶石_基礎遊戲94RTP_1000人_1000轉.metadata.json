@@ -1,0 +1,18 @@
+{
+  "description": "超級寶石：由既有固定 Row Data 等比例校正的 94% 模擬資料",
+  "game": "超級寶石",
+  "profile": "94% 基礎遊戲 + 2% 彩金",
+  "method": "所有自然得分倍率等比例乘上 target_rtp / source_actual_rtp",
+  "scope_note": "供機制模擬使用，不代表正式遊戲 94% 權重設定",
+  "players": 1000,
+  "spins_per_player": 1000,
+  "rows": 1000000,
+  "source_file": "超級寶石_基礎遊戲_1000人_1000轉.csv.gz",
+  "source_sha256": "4468d96737cb7913d49c20a53741bd6653a64e07a17bfc0f8c52f112fe8b5885",
+  "source_actual_rtp_percent": 92.00002000000005,
+  "target_rtp_percent": 94.0,
+  "scale_factor": 1.021738908317628,
+  "actual_rtp_percent": 93.99999999999999,
+  "csv_gz_file": "超級寶石_基礎遊戲94RTP_1000人_1000轉.csv.gz",
+  "csv_gz_sha256": "84b6030ea0415ff280c22b6b80f94d27188beadf0c755ca7e2e569b264c2d415"
+}

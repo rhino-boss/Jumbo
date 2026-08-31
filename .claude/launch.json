@@ -7,6 +7,13 @@
       "runtimeArgs": ["-m", "http.server", "8027", "--directory", "Project/Slots"],
       "port": 8027,
       "url": "http://localhost:8027"
+    },
+    {
+      "name": "omniplay",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-m", "http.server", "8031", "--directory", "C:/Users/rhinshen/Mine/AI 工作區/Jumbo_Output"],
+      "port": 8031,
+      "url": "http://localhost:8031"
     }
   ]
 }

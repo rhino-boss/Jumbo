@@ -1,0 +1,18 @@
+{
+  "description": "彩罐熱舞：由既有固定 Row Data 等比例校正的 94% 模擬資料",
+  "game": "彩罐熱舞",
+  "profile": "94% 基礎遊戲 + 2% 彩金",
+  "method": "所有自然得分倍率等比例乘上 target_rtp / source_actual_rtp",
+  "scope_note": "供機制模擬使用，不代表正式遊戲 94% 權重設定",
+  "players": 1000,
+  "spins_per_player": 1000,
+  "rows": 1000000,
+  "source_file": "彩罐熱舞_基礎遊戲_1000人_1000轉.csv.gz",
+  "source_sha256": "0e039928d49a4cc5edd24a915a32de7f70dc45c5c32af34a0be84cbc3adec12f",
+  "source_actual_rtp_percent": 91.99997677026501,
+  "target_rtp_percent": 94.0,
+  "scale_factor": 1.0217393884210348,
+  "actual_rtp_percent": 93.99999999999996,
+  "csv_gz_file": "彩罐熱舞_基礎遊戲94RTP_1000人_1000轉.csv.gz",
+  "csv_gz_sha256": "61740bb1dfe67fad479a8ae706e54c62b426f2f52be37a6ccf283e5ccd3681f5"
+}
