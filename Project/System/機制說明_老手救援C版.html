@@ -835,8 +835,9 @@
             <div class="phase-name">新手第 1 階段<span class="phase-rtp">Newbie · BG 30× / FG 120× · Link 0%</span></div>
             <p>
               認識玩法的階段。倍率上限壓低，不參與 Link 彩金。
-              <strong>第 50 轉</strong>有第一次<strong>新手體驗 D</strong> 判定：
-              以判定回合前的累積 RTP 決定是否把該轉得分改寫為指定倍率。
+              <strong>第 50 轉</strong>有第一次<strong>新手體驗 D</strong> 判定，依判定回合前的累積 RTP 決定：
+              <code>&lt; 50%</code> 救 <strong>15×</strong>、<code>50%～70%</code> 救 <strong>10×</strong>、
+              <code>70%～100%</code> 改寫為 0、<code>≥ 100%</code> 不處理。
               老手救援尚未啟動。
             </p>
           </div>
@@ -849,7 +850,9 @@
             <div class="phase-name">新手第 2 階段<span class="phase-rtp">第 150 轉第二次判定</span></div>
             <p>
               <strong>第 150 轉</strong>有第二次<strong>新手體驗 D</strong> 判定，
-              統計範圍包含第 50 轉可能被改寫的結果。完成 200 轉後進入老手期。
+              統計範圍包含第 50 轉可能被改寫的結果：
+              <code>&lt; 65%</code> 救 <strong>30×</strong>、<code>65%～85%</code> 救 <strong>15×</strong>、
+              <code>≥ 85%</code> 不處理。完成 200 轉後進入老手期。
             </p>
           </div>
         </div>
@@ -858,7 +861,7 @@
           <div class="phase-spins">老手 1 – 100</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 1 階段<span class="phase-rtp">中期門檻 &lt; 60%</span></div>
+            <div class="phase-name">老手第 1 階段<span class="phase-rtp">中期門檻 &lt; 60% · 救 20× / 50×</span></div>
             <p>
               救援機制啟動，倍率上限與 Link 資格改依小／中／大 Bet 分層。
               門檻最寬鬆——這階段玩家剛脫離新手保護，流失風險最高。
@@ -871,7 +874,7 @@
           <div class="phase-spins">老手 101 – 200</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 2 階段<span class="phase-rtp">中期門檻 &lt; 50%</span></div>
+            <div class="phase-name">老手第 2 階段<span class="phase-rtp">中期門檻 &lt; 50% · 救 20× / 50×</span></div>
             <p>門檻收緊。玩家已建立遊戲習慣，對短期波動的耐受度提高。</p>
           </div>
         </div>
@@ -880,7 +883,7 @@
           <div class="phase-spins">老手 201 – 300</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 3 階段<span class="phase-rtp">中期門檻 &lt; 40%</span></div>
+            <div class="phase-name">老手第 3 階段<span class="phase-rtp">中期門檻 &lt; 40% · 救 20× / 50×</span></div>
             <p>門檻最嚴，中期與短期門檻齊平。只有真正持續在輸的玩家才符合資格。</p>
           </div>
         </div>
@@ -889,7 +892,7 @@
           <div class="phase-spins">老手 301 起</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100%</span></div>
+            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100% · 救 20× / 50×</span></div>
             <p>
               長期玩家。中期門檻回放到 50%，但<strong>額外加上長期窗口檢查</strong>：
               前 500 轉 RTP 必須低於 100%，確保長線上真正吃虧的玩家才被救援。
