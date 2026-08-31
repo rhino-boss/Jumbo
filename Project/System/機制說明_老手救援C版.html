@@ -443,23 +443,25 @@
   ol.steps { list-style: none; padding: 0; counter-reset: s; gap: .65rem; }
   ol.steps li {
     counter-increment: s;
-    display: grid;
-    grid-template-columns: 1.75rem minmax(0, 1fr);
-    gap: .75rem;
+    position: relative;
+    padding-left: 2.5rem;
     font-size: .93rem;
   }
   ol.steps li::before {
     content: counter(s);
+    position: absolute;
+    left: 0;
+    top: .12rem;
+    width: 1.75rem;
+    height: 1.4rem;
     font-family: var(--mono);
     font-size: .74rem;
     font-weight: 600;
     color: var(--accent);
     background: var(--accent-soft);
     border-radius: 2px;
-    height: 1.4rem;
     display: grid;
     place-items: center;
-    margin-top: .12rem;
   }
 
   /* ---------- pending block ---------- */
