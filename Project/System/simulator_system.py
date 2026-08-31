@@ -45,7 +45,7 @@ SIMULATION_SEED = 20260721
 # 是否啟用共同池硬上限：
 #   True  = 共同池餘額不足時取消救援
 #   False = 不執行共同池限制，也不記錄／顯示共同池收支
-ENABLE_COMMON_POOL = False
+ENABLE_COMMON_POOL = True
 
 # 老手 C 判定資料窗口（判定回合本身不納入）：
 WINDOW_SHORT = 50
@@ -55,20 +55,20 @@ WINDOW_LONG = 500
 # 老手 C 一般救援資格門檻：
 SHORT_RTP_THRESHOLD = 0.50
 STAGE_MID_RTP = {
-    "A": 0.60,
-    "B": 0.60,
-    "C": 0.60,
-    "D": 0.60,
+    "A": 0.50,
+    "B": 0.50,
+    "C": 0.55,
+    "D": 0.55,
 }
 LONG_RTP_THRESHOLD = 1.00
 
 # 個人池不足時使用的固定嚴格門檻（不隨一般門檻調整）：
-STRICT_SHORT_RTP_THRESHOLD = 0.70
+STRICT_SHORT_RTP_THRESHOLD = 0.40
 STRICT_STAGE_MID_RTP = {
-    "A": 0.70,
-    "B": 0.70,
-    "C": 0.70,
-    "D": 0.70,
+    "A": 0.50,
+    "B": 0.50,
+    "C": 0.55,
+    "D": 0.55,
 }
 STRICT_LONG_RTP_THRESHOLD = 1.00
 
@@ -134,7 +134,7 @@ if RTP_PROFILE_MODE not in RTP_PROFILE_CONFIGS:
 ACTIVE_RTP_PROFILE = RTP_PROFILE_CONFIGS[RTP_PROFILE_MODE]
 BASE_GAME_DATA = {game: SCRIPT_DIR / "rowdata" / filename for game, filename in ACTIVE_RTP_PROFILE["base_files"].items()}
 DEFAULT_BASE_GAME = "超級寶石"
-SYSTEM_VERSION = "b08c.3"
+SYSTEM_VERSION = "b08c.4"
 RTP_PROFILE = str(ACTIVE_RTP_PROFILE["label"])
 BASE_RTP_PARAMETER_SOURCE = str(ACTIVE_RTP_PROFILE["base_source"])
 JACKPOT_PARAMETER_SOURCE = str(ACTIVE_RTP_PROFILE["jackpot_source"])
@@ -198,6 +198,8 @@ SUMMARY_FIELD_INFO = {
     "experience_long_not_matched_count": ("長期體驗未符合次數", "第 4 階段短期與中期符合，但長期 RTP 未低於 100% 的次數。"),
     "cancelled_checkpoint_count": ("觸發體驗但取消救援次數", "體驗條件符合，但後續因個人條件或 Pool 上限而取消救援的次數。"),
     "rescue_trigger_count": ("老手 C 觸發次數", "老手 C 救援的觸發總次數。"),
+    "rescue_50x_trigger_count": ("老手 C 50× 觸發次數", "老手 C 成功發出 50× 救援的次數。"),
+    "rescue_20x_trigger_count": ("老手 C 20× 觸發次數", "老手 C 成功發出 20× 救援的次數。"),
     "rescue_trigger_rate_per_checkpoint_%": ("判定點救援觸發率", "老手 C 觸發次數占實際判定次數的比例。"),
     "players_with_rescue": ("使用老手救援玩家數", "至少觸發一次老手 C 的玩家數。"),
     "players_with_any_mechanism": ("使用任一機制玩家數", "至少觸發一次新手 D 或老手 C 的玩家數。"),
@@ -2198,6 +2200,8 @@ def run_simulation(args: argparse.Namespace, adapter: GameAdapter) -> dict[str, 
         "personal_pool_negative_player_count": personal_pool_negative_player_count,
         "personal_pool_total_balance_x": personal_pool_total_balance,
         "rescue_trigger_count": total_triggers,
+        "rescue_50x_trigger_count": reward_counts["50×"],
+        "rescue_20x_trigger_count": reward_counts["20×"],
         "rescue_trigger_rate_per_checkpoint_%": total_triggers / total_checks * 100.0 if total_checks else 0.0,
         "players_with_rescue": len(oldhand_players),
         "players_with_any_mechanism": len(any_mechanism_players),
@@ -2492,6 +2496,8 @@ def print_summary(result: dict[str, Any]) -> None:
         "  ├─ 成功發出救援次數",
         f"{summary['rescue_trigger_count']:,} 次（占總判定 {rescue_success_rate:.2f}%）",
     )
+    row("  │   ├─ 50× 救援觸發", f"{summary['rescue_50x_trigger_count']:,} 次")
+    row("  │   └─ 20× 救援觸發", f"{summary['rescue_20x_trigger_count']:,} 次")
     row(
         "  ├─ 個人池不夠還是有觸發",
         f"{summary['overdraft_trigger_count']:,} 次（占所有玩家 {overdraft_all_player_rate:.2f}%）",
