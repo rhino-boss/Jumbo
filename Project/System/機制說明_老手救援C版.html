@@ -661,9 +661,9 @@
       <ul>
         <li>階段轉數<strong>從老手期第 1 轉起算</strong>（完成新手期 200 轉後的下一轉）。</li>
         <li>老手第 4 階段的長期規則<strong>只在判定前已有完整 500 轉資料時執行</strong>；資料不足時該次判定不救援。</li>
-        <li>老手第 4 階段另須<strong>未曾體驗過 50×</strong>：玩家曾有單局最終得分 ≥ 50 × 該局 Bet 時，不給救援。</li>
+        <li>老手第 4 階段另須<strong>當日未曾體驗過 50×</strong>：玩家當日曾有單局最終得分 ≥ 50 × 該局 Bet 時，不給救援。</li>
         <li>各窗口 RTP 必須納入<strong>新手體驗 D 介入後的實際最終結果</strong>，包含第 50、150 轉可能被改寫的得分。</li>
-        <li>命中條件只代表<strong>具備救援資格</strong>，實際是否放行由 §1.4 的兩道池檢查決定。</li>
+        <li>命中條件只代表<strong>具備救援資格</strong>，實際是否放行由 <a href="#pool">§1.3 救援池</a>的餘額與 §1.4 的判定流程決定。</li>
         <li>未進 FG 轉數<strong>不再</strong>作為救援條件。</li>
       </ul>
 
@@ -952,12 +952,12 @@
           <div class="phase-spins">501 起</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100% 且 未曾體驗 50× · 救 20×</span></div>
+            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 50% 且 長期 &lt; 100% 且 當日未曾體驗 50× · 救 20×</span></div>
             <p>
               長期玩家。中期門檻回放到 50%，但<strong>額外加上長期窗口檢查</strong>：
               前 500 轉 RTP 必須低於 100%，確保長線上真正吃虧的玩家才被救援。
               長期資料未滿 500 轉時不執行。
-              另須<strong>未曾體驗過 50×</strong>（曾有單局最終得分 ≥ 50 × 該局 Bet 者不救）。
+              另須<strong>當日未曾體驗過 50×</strong>（當日曾有單局最終得分 ≥ 50 × 該局 Bet 者不救）。
             </p>
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
@@ -1045,9 +1045,9 @@
               <td>1% 提撥約需 2,000 轉攢滿 20×，前期救援幾乎都走透支路徑。候選方案：進老手期贈送初始額度（例如 20 × Bet），或維持 0。</td>
             </tr>
             <tr>
-              <td class="key">「曾體驗 50×」的定義</td>
-              <td>第 1 轉起，任一局最終得分 ≥ 50 × 該局 Bet</td>
-              <td>需確認：是否含 BF／SF 局、是否含救援產生的結果、以單局整包（含 FG）或單次事件計。</td>
+              <td class="key">「當日體驗 50×」的定義</td>
+              <td>當日任一局最終得分 ≥ 50 × 該局 Bet</td>
+              <td>需確認：「當日」的日切基準（平台時區日曆日或 session）、是否含 BF／SF 局、是否含救援產生的結果、以單局整包（含 FG）或單次事件計。</td>
             </tr>
             <tr>
               <td class="key">異常加押檢查</td>
