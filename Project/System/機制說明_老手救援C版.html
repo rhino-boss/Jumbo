@@ -651,10 +651,10 @@
             <tr><th>階段</th><th>老手期轉數</th><th class="num">短期</th><th class="num">中期</th><th class="num">長期</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">老手第 1 階段</td><td>1 – 100</td><td class="num">&lt; 40%</td><td class="num">&lt; 55%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手第 2 階段</td><td>101 – 200</td><td class="num">&lt; 40%</td><td class="num">&lt; 55%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手第 3 階段</td><td>201 – 300</td><td class="num">&lt; 40%</td><td class="num">&lt; 55%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手第 4 階段</td><td>301 起</td><td class="num">&lt; 40%</td><td class="num">&lt; 55%</td><td class="num">&lt; 100%</td></tr>
+            <tr><td class="key">老手第 1 階段</td><td>1 – 100</td><td class="num">&lt; 50%</td><td class="num">&lt; 60%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 2 階段</td><td>101 – 200</td><td class="num">&lt; 50%</td><td class="num">&lt; 60%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 3 階段</td><td>201 – 300</td><td class="num">&lt; 50%</td><td class="num">&lt; 60%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 4 階段</td><td>301 起</td><td class="num">&lt; 50%</td><td class="num">&lt; 60%</td><td class="num">&lt; 100%</td></tr>
           </tbody>
         </table>
       </div>
@@ -750,7 +750,7 @@
           <div class="gate-body">
             <div class="gate-title">嚴格標準複判（個人池透支路徑）</div>
             <p>
-              個人池已見底時改用嚴格標準複判：<strong>§1.2 的所有門檻一律減 10 個百分點</strong>，
+              個人池已見底時改用嚴格標準複判：<strong>一組獨立的固定門檻，不隨一般門檻連動</strong>，
               觸發難度更高，確認玩家不只是短期波動、而是真的持續在輸。
             </p>
             <div class="table-wrap">
@@ -759,9 +759,9 @@
                   <tr><th>窗口</th><th class="num">一般標準</th><th class="num">嚴格標準</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td class="key">短期</td><td class="num">&lt; 40%</td><td class="num">&lt; 30%</td></tr>
-                  <tr><td class="key">中期（第 1～4 階段）</td><td class="num">&lt; 55%</td><td class="num">&lt; 45%</td></tr>
-                  <tr><td class="key">長期（第 4 階段）</td><td class="num">&lt; 100%</td><td class="num">&lt; 90%</td></tr>
+                  <tr><td class="key">短期</td><td class="num">&lt; 50%</td><td class="num">&lt; 40%</td></tr>
+                  <tr><td class="key">中期（第 1～4 階段）</td><td class="num">&lt; 60%</td><td class="num">&lt; 50%</td></tr>
+                  <tr><td class="key">長期（第 4 階段）</td><td class="num">&lt; 100%</td><td class="num">&lt; 100%</td></tr>
                 </tbody>
               </table>
             </div>
@@ -892,7 +892,7 @@
           <div class="phase-spins">201 – 300</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 1 階段<span class="phase-rtp">中期門檻 &lt; 55% · 救 50× / 20×</span></div>
+            <div class="phase-name">老手第 1 階段<span class="phase-rtp">中期門檻 &lt; 60% · 救 50× / 20×</span></div>
             <p>
               救援機制啟動，倍率上限與 Link 資格改依小／中／大 Bet 分層。
               這階段玩家剛脫離新手保護，流失風險最高。
@@ -901,9 +901,9 @@
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 40%、中期 RTP &lt; 55%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 80%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 65%</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 60%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 85%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 70%</li>
               <li>RTP 增量 ??%（看報表）</li>
               </ul>
             </details>
@@ -914,14 +914,14 @@
           <div class="phase-spins">301 – 400</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 2 階段<span class="phase-rtp">中期門檻 &lt; 55% · 救 50× / 20×</span></div>
+            <div class="phase-name">老手第 2 階段<span class="phase-rtp">中期門檻 &lt; 60% · 救 50× / 20×</span></div>
             <p>門檻與第 1 階段相同。玩家已建立遊戲習慣，對短期波動的耐受度提高。</p>
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 40%、中期 RTP &lt; 55%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 80%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 65%</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 60%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 85%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 70%</li>
               <li>RTP 增量 ??%（看報表）</li>
               </ul>
             </details>
@@ -932,14 +932,14 @@
           <div class="phase-spins">401 – 500</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 3 階段<span class="phase-rtp">中期門檻 &lt; 55% · 救 50× / 20×</span></div>
+            <div class="phase-name">老手第 3 階段<span class="phase-rtp">中期門檻 &lt; 60% · 救 50× / 20×</span></div>
             <p>門檻與前兩階段相同。只有真正持續在輸的玩家才符合資格。</p>
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 40%、中期 RTP &lt; 55%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 80%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 65%</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 60%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 85%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 70%</li>
               <li>RTP 增量 ??%（看報表）</li>
               </ul>
             </details>
@@ -950,7 +950,7 @@
           <div class="phase-spins">501 起</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 55% 且 長期 &lt; 100% · 救 50× / 20×</span></div>
+            <div class="phase-name">老手第 4 階段<span class="phase-rtp">中期 &lt; 60% 且 長期 &lt; 100% · 救 50× / 20×</span></div>
             <p>
               長期玩家。中期門檻與前三階段相同，<strong>額外加上長期窗口檢查</strong>：
               前 500 轉 RTP 必須低於 100%，確保長線上真正吃虧的玩家才被救援。
@@ -959,9 +959,9 @@
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 40%、中期 RTP &lt; 55%、長期 RTP &lt; 100%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25%、長期 +10% → Max RTP 中期 80%、長期 110%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10%、長期 +4% → Max RTP 中期 65%、長期 104%</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 60%、長期 RTP &lt; 100%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25%、長期 +10% → Max RTP 中期 85%、長期 110%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10%、長期 +4% → Max RTP 中期 70%、長期 104%</li>
               <li>RTP 增量 ??%（看報表）</li>
               </ul>
             </details>
@@ -1034,7 +1034,7 @@
             <tr>
               <td class="key">個人池初始額度</td>
               <td>先模擬透支比例再定案</td>
-              <td>1% 提撥約需 2,000 轉攢滿 20×、5,000 轉攢滿 50×，前期救援幾乎都走透支路徑。候選方案：進老手期贈送初始額度（例如 50 × Bet），或維持 0。</td>
+              <td>1% 提撥約需 2,000 轉攢滿 20×、5,000 轉攢滿 50×，前期救援幾乎都走透支路徑。候選方案：進老手期贈送初始額度（例如 50 × Bet），或維持 0（目前模擬以 0 起算）。</td>
             </tr>
             <tr>
               <td class="key">「當日體驗 50×」的定義</td>
