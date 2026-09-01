@@ -42,6 +42,11 @@ RTP_PROFILE_MODE = "94+0+2"
 # 自訂模擬 Seed，只需修改這一行；相同 Seed 會得到相同的隨機結果：
 SIMULATION_SEED = 20260721
 
+# 是否在模擬結束後產生 Excel 報表：
+#   False = 只顯示 Console 結果，不建立報表
+#   True  = 產生 Excel 報表；執行時仍可加 --no-report 暫時關閉
+GENERATE_EXCEL_REPORT = False
+
 # 是否啟用共同池硬上限：
 #   True  = 共同池餘額不足時取消救援
 #   False = 不執行共同池限制，也不記錄／顯示共同池收支
@@ -55,20 +60,20 @@ WINDOW_LONG = 500
 # 老手 C 一般救援資格門檻：
 SHORT_RTP_THRESHOLD = 0.50
 STAGE_MID_RTP = {
-    "A": 0.50,
-    "B": 0.50,
-    "C": 0.55,
-    "D": 0.55,
+    "A": 0.55,
+    "B": 0.55,
+    "C": 0.50,
+    "D": 0.50,
 }
 LONG_RTP_THRESHOLD = 1.00
 
 # 個人池不足時使用的固定嚴格門檻（不隨一般門檻調整）：
 STRICT_SHORT_RTP_THRESHOLD = 0.40
 STRICT_STAGE_MID_RTP = {
-    "A": 0.50,
-    "B": 0.50,
-    "C": 0.55,
-    "D": 0.55,
+    "A": 0.55,
+    "B": 0.55,
+    "C": 0.50,
+    "D": 0.50,
 }
 STRICT_LONG_RTP_THRESHOLD = 1.00
 
@@ -134,7 +139,7 @@ if RTP_PROFILE_MODE not in RTP_PROFILE_CONFIGS:
 ACTIVE_RTP_PROFILE = RTP_PROFILE_CONFIGS[RTP_PROFILE_MODE]
 BASE_GAME_DATA = {game: SCRIPT_DIR / "rowdata" / filename for game, filename in ACTIVE_RTP_PROFILE["base_files"].items()}
 DEFAULT_BASE_GAME = "超級寶石"
-SYSTEM_VERSION = "b08c.4"
+SYSTEM_VERSION = "b08c.5"
 RTP_PROFILE = str(ACTIVE_RTP_PROFILE["label"])
 BASE_RTP_PARAMETER_SOURCE = str(ACTIVE_RTP_PROFILE["base_source"])
 JACKPOT_PARAMETER_SOURCE = str(ACTIVE_RTP_PROFILE["jackpot_source"])
@@ -2598,7 +2603,7 @@ def main(argv: list[str] | None = None) -> int:
         adapter = GAME_ADAPTERS[args.game](args)
         result = run_simulation(args, adapter)
         print_summary(result)
-        if not args.no_report:
+        if GENERATE_EXCEL_REPORT and not args.no_report:
             report_path = Path(args.report) if args.report else _default_report_path(args)
             output = write_report(result, report_path.resolve())
             print("\n[輸出檔案]")

@@ -651,10 +651,10 @@
             <tr><th>階段</th><th>老手期轉數</th><th class="num">短期</th><th class="num">中期</th><th class="num">長期</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">老手第 1 階段</td><td>1 – 100</td><td class="num">&lt; 50%</td><td class="num">&lt; 50%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手第 2 階段</td><td>101 – 200</td><td class="num">&lt; 50%</td><td class="num">&lt; 50%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手第 3 階段</td><td>201 – 300</td><td class="num">&lt; 50%</td><td class="num">&lt; 55%</td><td class="num">—</td></tr>
-            <tr><td class="key">老手第 4 階段</td><td>301 起</td><td class="num">&lt; 50%</td><td class="num">&lt; 55%</td><td class="num">&lt; 100%</td></tr>
+            <tr><td class="key">老手第 1 階段</td><td>1 – 100</td><td class="num">&lt; 50%</td><td class="num">&lt; 55%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 2 階段</td><td>101 – 200</td><td class="num">&lt; 50%</td><td class="num">&lt; 55%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 3 階段</td><td>201 – 300</td><td class="num">&lt; 50%</td><td class="num">&lt; 50%</td><td class="num">—</td></tr>
+            <tr><td class="key">老手第 4 階段</td><td>301 起</td><td class="num">&lt; 50%</td><td class="num">&lt; 50%</td><td class="num">&lt; 100%</td></tr>
           </tbody>
         </table>
       </div>
@@ -760,7 +760,7 @@
                 </thead>
                 <tbody>
                   <tr><td class="key">短期</td><td class="num">&lt; 50%</td><td class="num">&lt; 40%</td></tr>
-                  <tr><td class="key">中期（第 1～4 階段）</td><td class="num">&lt; 50% / 50% / 55% / 55%</td><td class="num">&lt; 50% / 50% / 55% / 55%</td></tr>
+                  <tr><td class="key">中期（第 1～4 階段）</td><td class="num">&lt; 55% / 55% / 50% / 50%</td><td class="num">&lt; 55% / 55% / 50% / 50%</td></tr>
                   <tr><td class="key">長期（第 4 階段）</td><td class="num">&lt; 100%</td><td class="num">&lt; 100%</td></tr>
                 </tbody>
               </table>
@@ -862,7 +862,6 @@
               <ul>
               <li>RTP &lt; 50%：給 15×，RTP +30% → Max RTP 80%</li>
               <li>RTP &lt; 70%：給 10×，RTP +20% → Max RTP 90%</li>
-              <li>RTP 增量 ??%（看報表）</li>
               </ul>
             </details>
           </div>
@@ -882,7 +881,6 @@
               <ul>
               <li>RTP &lt; 65%：救 30×，RTP +20% → Max RTP 85%</li>
               <li>RTP &lt; 85%：救 15×，RTP +10% → Max RTP 95%</li>
-              <li>RTP 增量 ??%（看報表）</li>
               </ul>
             </details>
           </div>
@@ -901,10 +899,9 @@
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 50%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 75%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 60%</li>
-              <li>RTP 增量 ??%（看報表）</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 55%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 80%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 65%</li>
               </ul>
             </details>
           </div>
@@ -919,10 +916,9 @@
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 50%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 75%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 60%</li>
-              <li>RTP 增量 ??%（看報表）</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 55%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 80%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 65%</li>
               </ul>
             </details>
           </div>
@@ -933,14 +929,13 @@
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
             <div class="phase-name">老手第 3 階段</div>
-            <p>中期門檻放寬至 55%。只有真正持續在輸的玩家才符合資格。</p>
+            <p>中期門檻收緊至 50%。只有真正持續在輸的玩家才符合資格。</p>
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 55%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 80%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 65%</li>
-              <li>RTP 增量 ??%（看報表）</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 50%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25% → Max RTP 中期 75%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10% → Max RTP 中期 60%</li>
               </ul>
             </details>
           </div>
@@ -959,10 +954,9 @@
             <details class="phase-detail">
               <summary>救援試算（每 50 轉判定）</summary>
               <ul>
-              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 55%、長期 RTP &lt; 100%</li>
-              <li>救援倍數：50×（當日未體驗過 50×），中期 +25%、長期 +10% → Max RTP 中期 80%、長期 110%</li>
-              <li>救援倍數：20×（當日已體驗過 50×），中期 +10%、長期 +4% → Max RTP 中期 65%、長期 104%</li>
-              <li>RTP 增量 ??%（看報表）</li>
+              <li>條件：短期 RTP &lt; 50%、中期 RTP &lt; 50%、長期 RTP &lt; 100%</li>
+              <li>救援倍數：50×（當日未體驗過 50×），中期 +25%、長期 +10% → Max RTP 中期 75%、長期 110%</li>
+              <li>救援倍數：20×（當日已體驗過 50×），中期 +10%、長期 +4% → Max RTP 中期 60%、長期 104%</li>
               </ul>
             </details>
           </div>
