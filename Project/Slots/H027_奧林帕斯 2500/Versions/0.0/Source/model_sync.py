@@ -396,18 +396,9 @@ def build_config(source_path):
             raise ValueError(f"H027 config supports one window_size, got {windows}")
         levels, parameter = read_parameter(workbook["Parameter"])
         strips = [read_strip(workbook[name]) for name in SYMBOL_SHEETS]
-        linked_stop_settings = (
-            (350, [79365, 329365, 735615, 844990, 313740, 63740]),
-            (350, [78125, 1240, 703125, 500000, 218750, 110615]),
-            (350, [0, 484375, 250000, 328125, 15625, 671875]),
-            (2350, [78125, 781250, 812500, 859375, 328125, 734375]),
-            (2350, [0, 484375, 234375, 343750, 343750, 250000]),
-            (0, [0, 0, 0, 0, 0, 0]),
-        )
-        for strip, (weight, offsets) in zip(strips, linked_stop_settings):
-            strip["linked_stop_denominator"] = 10000
-            strip["linked_stop_weight"] = weight
-            strip["linked_stop_offsets"] = offsets
+        # 2026-08-31 移除「共用加權百分位」（linked stop）：SPS 的 gameSetting 沒有
+        # 對應欄位、screenGenerator 也是六輪各自抽停點，這個機制只存在於本地模型，
+        # 是兩邊 Hit Rate／FG RTP 對不上的唯一機制性差異。
         config = dict(FIXED_METADATA)
         config.update({
             "multiplier_max_value": max(levels),

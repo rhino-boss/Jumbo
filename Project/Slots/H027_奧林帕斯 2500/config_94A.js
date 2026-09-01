@@ -7674,17 +7674,7 @@ const data = {
         63
       ],
       "cascade_source": "reel_strip",
-      "source_reel_set": 0,
-      "linked_stop_denominator": 10000,
-      "linked_stop_weight": 350,
-      "linked_stop_offsets": [
-        79365,
-        329365,
-        735615,
-        844990,
-        313740,
-        63740
-      ]
+      "source_reel_set": 0
     },
     {
       "symbols": [
@@ -8724,17 +8714,7 @@ const data = {
         63
       ],
       "cascade_source": "reel_strip",
-      "source_reel_set": 1,
-      "linked_stop_denominator": 10000,
-      "linked_stop_weight": 350,
-      "linked_stop_offsets": [
-        78125,
-        1240,
-        703125,
-        500000,
-        218750,
-        110615
-      ]
+      "source_reel_set": 1
     },
     {
       "symbols": [
@@ -9758,17 +9738,7 @@ const data = {
         63
       ],
       "cascade_source": "reel_strip",
-      "source_reel_set": 2,
-      "linked_stop_denominator": 10000,
-      "linked_stop_weight": 350,
-      "linked_stop_offsets": [
-        0,
-        484375,
-        250000,
-        328125,
-        15625,
-        671875
-      ]
+      "source_reel_set": 2
     },
     {
       "symbols": [
@@ -10808,17 +10778,7 @@ const data = {
         64
       ],
       "cascade_source": "reel_strip",
-      "source_reel_set": 3,
-      "linked_stop_denominator": 10000,
-      "linked_stop_weight": 2350,
-      "linked_stop_offsets": [
-        78125,
-        781250,
-        812500,
-        859375,
-        328125,
-        734375
-      ]
+      "source_reel_set": 3
     },
     {
       "symbols": [
@@ -11842,17 +11802,7 @@ const data = {
         63
       ],
       "cascade_source": "reel_strip",
-      "source_reel_set": 4,
-      "linked_stop_denominator": 10000,
-      "linked_stop_weight": 2350,
-      "linked_stop_offsets": [
-        0,
-        484375,
-        234375,
-        343750,
-        343750,
-        250000
-      ]
+      "source_reel_set": 4
     },
     {
       "symbols": [
@@ -12876,17 +12826,7 @@ const data = {
         63
       ],
       "cascade_source": "reel_strip",
-      "source_reel_set": 0,
-      "linked_stop_denominator": 10000,
-      "linked_stop_weight": 0,
-      "linked_stop_offsets": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ]
+      "source_reel_set": 0
     }
   ],
   "runtime_version": "0.0.0.0",

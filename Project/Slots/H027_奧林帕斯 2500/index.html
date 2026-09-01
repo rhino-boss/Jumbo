@@ -931,18 +931,12 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const starts = [];
     const rngs = [];
     const drops = Array(Box.reel_num).fill(0);
-    const linkedDenominator = Number(strip.linked_stop_denominator || 10000);
-    const linkedWeight = Number(strip.linked_stop_weight || 0);
-    const useLinkedStop = !forcedStops && linkedDenominator > 0 && Math.floor(Math.random() * linkedDenominator) < linkedWeight;
-    const linkedPercentile = useLinkedStop ? Math.random() : null;
 
+    // 每輪各自依自己的 Symbol Weight CDF 抽停點（與 SPS 的 screenGenerator 一致）。
     for (let reel = 0; reel < Box.reel_num; reel += 1) {
       const length = strip.reel_lengths[reel];
       const weights = strip.weights.slice(0, length).map((row) => row[reel]);
-      const linkedOffsets = strip.linked_stop_offsets || Array(Box.reel_num).fill(0);
-      const reelPercentile = useLinkedStop ? (linkedPercentile + Number(linkedOffsets[reel] || 0) / 1000000) % 1 : null;
-      const sharedRng = useLinkedStop ? Math.min(Math.max(0, Math.floor(reelPercentile * weights.reduce((sum, value) => sum + Number(value || 0), 0))), Math.max(0, weights.reduce((sum, value) => sum + Number(value || 0), 0) - 1)) : null;
-      const selected = pickWeightedDetail(weights, forcedStops?.[reel] ?? sharedRng);
+      const selected = pickWeightedDetail(weights, forcedStops?.[reel] ?? null);
       const start = selected.index;
       starts.push(start);
       rngs.push({ value: selected.rng, total: selected.total });

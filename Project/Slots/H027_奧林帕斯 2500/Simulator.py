@@ -287,17 +287,10 @@ ORIGINAL_REEL_LENGTHS = np.asarray([item["reel_lengths"] for item in CFG["strips
 MAX_STRIP_ROWS = max(len(item["symbols"]) for item in CFG["strips"])
 STRIPS = np.zeros((len(CFG["strips"]), MAX_STRIP_ROWS, REEL_NUM), dtype=np.int64)
 STRIP_WEIGHTS = np.zeros_like(STRIPS)
-LINKED_STOP_WEIGHTS = np.zeros(len(CFG["strips"]), dtype=np.int64)
-LINKED_STOP_DENOMINATORS = np.full(len(CFG["strips"]), 10000, dtype=np.int64)
-LINKED_STOP_OFFSETS = np.zeros((len(CFG["strips"]), REEL_NUM), dtype=np.int64)
 for table_index, item in enumerate(CFG["strips"]):
     row_count = len(item["symbols"])
     STRIPS[table_index, :row_count] = np.asarray(item["symbols"], dtype=np.int64)
     STRIP_WEIGHTS[table_index, :row_count] = np.asarray(item["weights"], dtype=np.int64)
-    LINKED_STOP_WEIGHTS[table_index] = int(item.get("linked_stop_weight", 0))
-    LINKED_STOP_DENOMINATORS[table_index] = int(item.get("linked_stop_denominator", 10000))
-    offsets = item.get("linked_stop_offsets", [0] * REEL_NUM)
-    LINKED_STOP_OFFSETS[table_index, : len(offsets)] = np.asarray(offsets, dtype=np.int64)
 
 REEL_LENGTHS = ORIGINAL_REEL_LENGTHS.copy()
 STRIP_NAMES = list(CFG["strip_names"])
@@ -673,20 +666,13 @@ def generate_board(table_id, profile_index):
     multiplier_values = np.zeros((WINDOW_SIZE, REEL_NUM), dtype=np.int64)
     starts = np.zeros(REEL_NUM, dtype=np.int64)
     drop_counts = np.zeros(REEL_NUM, dtype=np.int64)
-    linked_stop = -1
-    linked_total = LINKED_STOP_DENOMINATORS[table_id]
-    if linked_total > 0 and np.random.randint(0, linked_total) < LINKED_STOP_WEIGHTS[table_id]:
-        # One shared weighted percentile preserves every reel's marginal stop
-        # distribution while reproducing the cross-reel dependence visible in
-        # competitor response screens.
-        linked_stop = np.random.randint(0, 1000000)
+    # 每輪各自依自己的 Symbol Weight CDF 抽停點（與 SPS 的 screenGenerator 一致）。
     for reel in range(REEL_NUM):
         length = REEL_LENGTHS[table_id, reel]
         total = 0
         for row in range(length):
             total += STRIP_WEIGHTS[table_id, row, reel]
-        linked_unit = (linked_stop + LINKED_STOP_OFFSETS[table_id, reel]) % 1000000
-        pick = (linked_unit * total // 1000000) if linked_stop >= 0 and total > 0 else (np.random.randint(0, total) if total > 0 else 0)
+        pick = np.random.randint(0, total) if total > 0 else 0
         running = 0
         start = 0
         for row in range(length):
