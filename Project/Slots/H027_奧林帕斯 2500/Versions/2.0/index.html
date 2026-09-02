@@ -320,14 +320,6 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
-          <h4>2026-09-01：v3 FG Hit Rate 調整至 44%</h4>
-          <ul>
-            <li>僅調整 FG_Symbol 與 FG_Symbol (2) 的 Stop Weight，保留原輪帶順序與輪長。</li>
-            <li>所有有效權重均在 1～10 內，本版實際為 1～5。</li>
-            <li>Card-Off 1 億局 FG Hit Rate 為 43.9809%，目標差 -0.0191 pp。</li>
-          </ul>
-        </article>
-        <article class="change-log-entry">
           <h4>2026-09-01：v2 FG 倍數收集與作用條件統一</h4>
           <ul>
             <li>只有「一般符號得分＋最終盤面有 C2／C3」時，才收集當次球倍率並啟用累積倍數。</li>
@@ -493,7 +485,7 @@
     </div>
   </dialog>
 
-  <script src="./Versions/version_manifest.js?v=20260901-version-switch-fix"></script>
+  <script src="./Versions/version_manifest.js"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_QUERY = new URLSearchParams(window.location.search);
@@ -504,13 +496,12 @@
       || H027_MANIFEST.versions[0];
     if (!H027_VERSION_ENTRY) throw new Error("Version manifest has no usable entries.");
     const H027_CONFIG_MAP = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {}).map(([key, value]) => {
-      const rawCode = String(key).toUpperCase();
-      const code = rawCode === "BASE" || rawCode.endsWith("A") ? rawCode : `${rawCode}A`;
+      const code = key.endsWith("A") ? key.toUpperCase() : `${key}A`;
       return [code, String(value).replace(/^\.\.\//, "")];
     }));
     let H027_CONFIG_CODE = H027_QUERY.get("config");
     if (!H027_CONFIG_CODE) try { H027_CONFIG_CODE = localStorage.getItem("slotDemoConfig"); } catch (_) {}
-    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(BASE|92A?|94A?)(?:\.js)?$/i);
+    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(92A?|94A?)(?:\.js)?$/i);
     H027_CONFIG_CODE = H027_CODE_MATCH ? H027_CODE_MATCH[1].toUpperCase() : "";
     if (H027_CONFIG_CODE === "92") H027_CONFIG_CODE = "92A";
     if (H027_CONFIG_CODE === "94") H027_CONFIG_CODE = "94A";
@@ -876,8 +867,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   function manifestConfigCodes(entry) {
     return Object.keys(entry?.configs || {}).map((key) => {
-      const code = key.toUpperCase();
-      return code === "BASE" || code.endsWith("A") ? code : `${code}A`;
+      return key.toUpperCase().endsWith("A") ? key.toUpperCase() : `${key.toUpperCase()}A`;
     });
   }
 

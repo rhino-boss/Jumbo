@@ -1,0 +1,854 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "H027 v3 與 Gates of Olympus 1000 數值比較",
+    "description": "H027 v3 Card-Off 100M 與 Gates of Olympus 1000 實機樣本的數學指標、消除與倍數球比較。",
+    "generatedAt": "2026-09-01T17:38:37+08:00",
+    "sources": [
+      {
+        "id": "h027_report",
+        "label": "H027 v3 Card-Off 100M",
+        "type": "file",
+        "path": "Record/H0271_03_2609011722_betmode0_108.xlsx",
+        "description": "H027 v3 Normal Bet 100,000,000-round simulation report."
+      },
+      {
+        "id": "h027_math",
+        "label": "H0271 v3 mathematics",
+        "type": "file",
+        "path": "Source/H0271.xlsx",
+        "description": "Version 3 source workbook with FG stop weights."
+      },
+      {
+        "id": "competitor",
+        "label": "Gates of Olympus 1000 field report",
+        "type": "file",
+        "path": "遊戲數據_Gates_of_Olympus_1000.html",
+        "description": "Competitor sample: 31,472 BG spins and 1,212 FG spins."
+      }
+    ],
+    "charts": [
+      {
+        "id": "core_rates",
+        "type": "bar",
+        "title": "RTP 與 Hit Rate",
+        "dataset": "core",
+        "x": "metric",
+        "y": "value",
+        "color": "model",
+        "encodings": {
+          "x": {
+            "field": "metric",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "format": "percent"
+          },
+          "color": {
+            "field": "model",
+            "type": "nominal"
+          }
+        },
+        "grouped": true,
+        "format": {
+          "y": "percent"
+        },
+        "labels": "all",
+        "legend": {
+          "position": "bottom"
+        },
+        "source": {
+          "id": "comparison_transform",
+          "label": "H027 v3 and competitor comparison",
+          "type": "analysis",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM reviewed_comparison_snapshot",
+            "description": "Reviewed values joined from the H027 v3 report and competitor field report."
+          }
+        }
+      },
+      {
+        "id": "bg_combo",
+        "type": "bar",
+        "title": "BG 消除分布",
+        "dataset": "bg_combo",
+        "x": "combo",
+        "y": "rate",
+        "color": "model",
+        "encodings": {
+          "x": {
+            "field": "combo",
+            "type": "nominal",
+            "sort": {
+              "field": "order",
+              "order": "ascending"
+            }
+          },
+          "y": {
+            "field": "rate",
+            "type": "quantitative",
+            "format": "percent"
+          },
+          "color": {
+            "field": "model",
+            "type": "nominal"
+          }
+        },
+        "grouped": true,
+        "format": {
+          "y": "percent"
+        },
+        "legend": {
+          "position": "bottom"
+        },
+        "source": {
+          "id": "comparison_transform",
+          "label": "H027 v3 and competitor comparison",
+          "type": "analysis",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM reviewed_comparison_snapshot",
+            "description": "Reviewed values joined from the H027 v3 report and competitor field report."
+          }
+        }
+      },
+      {
+        "id": "ball_fg",
+        "type": "bar",
+        "title": "FG 球上倍率分布",
+        "dataset": "ball_fg",
+        "x": "multiplier",
+        "y": "rate",
+        "color": "model",
+        "encodings": {
+          "x": {
+            "field": "multiplier",
+            "type": "nominal",
+            "sort": {
+              "field": "order",
+              "order": "ascending"
+            }
+          },
+          "y": {
+            "field": "rate",
+            "type": "quantitative",
+            "format": "percent"
+          },
+          "color": {
+            "field": "model",
+            "type": "nominal"
+          }
+        },
+        "grouped": true,
+        "format": {
+          "y": "percent"
+        },
+        "legend": {
+          "position": "bottom"
+        },
+        "source": {
+          "id": "comparison_transform",
+          "label": "H027 v3 and competitor comparison",
+          "type": "analysis",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM reviewed_comparison_snapshot",
+            "description": "Reviewed values joined from the H027 v3 report and competitor field report."
+          }
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "core_table",
+        "title": "核心指標精確值",
+        "dataset": "core_table",
+        "columns": [
+          {
+            "field": "metric",
+            "label": "指標",
+            "type": "text"
+          },
+          {
+            "field": "competitor",
+            "label": "競品",
+            "type": "percent"
+          },
+          {
+            "field": "h027",
+            "label": "H027 v3",
+            "type": "percent"
+          },
+          {
+            "field": "delta_pp",
+            "label": "差異 (pp)",
+            "type": "number",
+            "semantic": "movement",
+            "movement": true
+          }
+        ],
+        "source": {
+          "id": "comparison_transform",
+          "label": "H027 v3 and competitor comparison",
+          "type": "analysis",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM reviewed_comparison_snapshot",
+            "description": "Reviewed values joined from the H027 v3 report and competitor field report."
+          }
+        }
+      },
+      {
+        "id": "award_table",
+        "title": "獎項占比",
+        "dataset": "award",
+        "columns": [
+          {
+            "field": "scene",
+            "label": "Scene",
+            "type": "text"
+          },
+          {
+            "field": "bucket",
+            "label": "獎項",
+            "type": "text"
+          },
+          {
+            "field": "model",
+            "label": "版本",
+            "type": "text"
+          },
+          {
+            "field": "hit_share",
+            "label": "出現占比",
+            "type": "percent"
+          },
+          {
+            "field": "pay_share",
+            "label": "得分占比",
+            "type": "percent"
+          }
+        ],
+        "source": {
+          "id": "comparison_transform",
+          "label": "H027 v3 and competitor comparison",
+          "type": "analysis",
+          "query": {
+            "engine": "portable-values",
+            "language": "sql",
+            "sql": "SELECT * FROM reviewed_comparison_snapshot",
+            "description": "Reviewed values joined from the H027 v3 report and competitor field report."
+          }
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# H027 v3 與 Gates of Olympus 1000 數值比較"
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "body": "## Executive Summary\n\n- **FG Hit Rate 已對齊：** H027 43.9809%，競品 43.5640%，差 +0.4169 pp。\n- **BG Hit Rate 接近：** H027 28.4290%，競品 28.8070%。\n- **RTP 仍過高：** H027 總 RTP 200.8532%，競品樣本 90.7480%；下一步應調倍數尾端，不建議再動 FG 一般符號 Hit Rate。"
+      },
+      {
+        "id": "definitions",
+        "type": "markdown",
+        "body": "## 口徑\n\nH027 是 v3 Card-Off Normal Bet 1 億局；FG Hit Rate 分母為所有 Free Spins。競品是實機樣本，FG 僅 1,212 Free Spins，因此 FG 尾端差異只適合當方向性參考。"
+      },
+      {
+        "id": "core_intro",
+        "type": "markdown",
+        "body": "## Hit Rate 對齊，RTP 尚未收斂\n\nFG Hit Rate 與競品只差 0.4169 pp，但 FG RTP 高 42.2367 pp。這表示「得分多少次」已接近，「每次得分多大」仍明顯過高。"
+      },
+      {
+        "id": "core_chart",
+        "type": "chart",
+        "chartId": "core_rates"
+      },
+      {
+        "id": "core_table_block",
+        "type": "table",
+        "tableId": "core_table"
+      },
+      {
+        "id": "combo_intro",
+        "type": "markdown",
+        "body": "## BG 消除分布仍接近\n\nv3 沒有調整 BG 輪帶；Combo 0 與 Combo 1～5+ 形狀仍可與競品直接比較。"
+      },
+      {
+        "id": "combo_chart",
+        "type": "chart",
+        "chartId": "bg_combo"
+      },
+      {
+        "id": "award_intro",
+        "type": "markdown",
+        "body": "## 獎項占比顯示 FG 尾端仍需調整\n\n8–9、10–11、12+ 分組可用來判斷 Hit Rate 提升後的得分結構是否仍過度集中。"
+      },
+      {
+        "id": "award_table_block",
+        "type": "table",
+        "tableId": "award_table"
+      },
+      {
+        "id": "ball_intro",
+        "type": "markdown",
+        "body": "## FG 倍數球的中高倍尾端偏重\n\nH027 在多個中高倍區間高於競品樣本，並保留競品樣本未出現的 500x+。這是 FG RTP 過高的重要調整點。"
+      },
+      {
+        "id": "ball_chart",
+        "type": "chart",
+        "chartId": "ball_fg"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## 建議的下一步\n\n1. 保留 v3 FG Stop Weight 與目前 Hit Rate。\n2. 優先下調 FG 球倍率尾端與累積派彩。\n3. 每次調整後固定重跑 1 億局，並同時監控 FG Hit Rate、FG RTP、有球率、平均 FG 倍數與 500x+ 球值占比。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## 待確認問題\n\n競品 FG 樣本目前只有 1,212 Free Spins。若要將倍數球尾端當成硬目標，需先增加競品 FG 樣本，否則 100x+ 差異會有很大的取樣誤差。"
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "body": "## 限制與假設\n\n競品 RTP 是有限實機樣本，不是理論值；H027 為 Card-Off 自然機率。FG 掉落符號的條件分布未在 Simulator 報表中逐顆記錄，完整輪帶與堆疊表請以 Markdown 版為準。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "datasets": {
+      "core": [
+        {
+          "metric": "Total RTP",
+          "model": "競品",
+          "value": 0.90748,
+          "sample": "31,472 BG / 1,212 FG"
+        },
+        {
+          "metric": "Total RTP",
+          "model": "H027 v3",
+          "value": 2.0085319999999998,
+          "sample": "100,000,000 rounds"
+        },
+        {
+          "metric": "BG RTP",
+          "model": "競品",
+          "value": 0.68536,
+          "sample": "31,472 BG / 1,212 FG"
+        },
+        {
+          "metric": "BG RTP",
+          "model": "H027 v3",
+          "value": 1.3640450000000002,
+          "sample": "100,000,000 rounds"
+        },
+        {
+          "metric": "FG RTP",
+          "model": "競品",
+          "value": 0.22212,
+          "sample": "31,472 BG / 1,212 FG"
+        },
+        {
+          "metric": "FG RTP",
+          "model": "H027 v3",
+          "value": 0.644487,
+          "sample": "100,000,000 rounds"
+        },
+        {
+          "metric": "BG Hit Rate",
+          "model": "競品",
+          "value": 0.28807,
+          "sample": "31,472 BG / 1,212 FG"
+        },
+        {
+          "metric": "BG Hit Rate",
+          "model": "H027 v3",
+          "value": 0.28429,
+          "sample": "100,000,000 rounds"
+        },
+        {
+          "metric": "FG Hit Rate",
+          "model": "競品",
+          "value": 0.43564,
+          "sample": "31,472 BG / 1,212 FG"
+        },
+        {
+          "metric": "FG Hit Rate",
+          "model": "H027 v3",
+          "value": 0.439809,
+          "sample": "100,000,000 rounds"
+        }
+      ],
+      "core_table": [
+        {
+          "metric": "Total RTP",
+          "competitor": 0.90748,
+          "h027": 2.0085319999999998,
+          "delta_pp": 110.10519999999997
+        },
+        {
+          "metric": "BG RTP",
+          "competitor": 0.68536,
+          "h027": 1.3640450000000002,
+          "delta_pp": 67.86850000000003
+        },
+        {
+          "metric": "FG RTP",
+          "competitor": 0.22212,
+          "h027": 0.644487,
+          "delta_pp": 42.236700000000006
+        },
+        {
+          "metric": "BG Hit Rate",
+          "competitor": 0.28807,
+          "h027": 0.28429,
+          "delta_pp": -0.37800000000000056
+        },
+        {
+          "metric": "FG Hit Rate",
+          "competitor": 0.43564,
+          "h027": 0.439809,
+          "delta_pp": 0.41689999999999783
+        }
+      ],
+      "bg_combo": [
+        {
+          "model": "競品",
+          "combo": "0",
+          "order": 0,
+          "rate": 0.71197
+        },
+        {
+          "model": "競品",
+          "combo": "1",
+          "order": 1,
+          "rate": 0.17838
+        },
+        {
+          "model": "競品",
+          "combo": "2",
+          "order": 2,
+          "rate": 0.05643
+        },
+        {
+          "model": "競品",
+          "combo": "3",
+          "order": 3,
+          "rate": 0.0278
+        },
+        {
+          "model": "競品",
+          "combo": "4",
+          "order": 4,
+          "rate": 0.01443
+        },
+        {
+          "model": "競品",
+          "combo": "5+",
+          "order": 5,
+          "rate": 0.01099
+        },
+        {
+          "model": "H027 v3",
+          "combo": "0",
+          "order": 0,
+          "rate": 0.71717564
+        },
+        {
+          "model": "H027 v3",
+          "combo": "1",
+          "order": 1,
+          "rate": 0.17340802
+        },
+        {
+          "model": "H027 v3",
+          "combo": "2",
+          "order": 2,
+          "rate": 0.05631694
+        },
+        {
+          "model": "H027 v3",
+          "combo": "3",
+          "order": 3,
+          "rate": 0.02937819
+        },
+        {
+          "model": "H027 v3",
+          "combo": "4",
+          "order": 4,
+          "rate": 0.01420587
+        },
+        {
+          "model": "H027 v3",
+          "combo": "5+",
+          "order": 5,
+          "rate": 0.00951534
+        }
+      ],
+      "award": [
+        {
+          "scene": "BG",
+          "bucket": "8–9",
+          "model": "競品",
+          "hit_share": 0.8652,
+          "pay_share": 0.744
+        },
+        {
+          "scene": "BG",
+          "bucket": "8–9",
+          "model": "H027 v3",
+          "hit_share": 0.8669309394610275,
+          "pay_share": 0.7184036018210398
+        },
+        {
+          "scene": "BG",
+          "bucket": "10–11",
+          "model": "競品",
+          "hit_share": 0.1257,
+          "pay_share": 0.1995
+        },
+        {
+          "scene": "BG",
+          "bucket": "10–11",
+          "model": "H027 v3",
+          "hit_share": 0.12267801559191502,
+          "pay_share": 0.21262691658891422
+        },
+        {
+          "scene": "BG",
+          "bucket": "12+",
+          "model": "競品",
+          "hit_share": 0.0091,
+          "pay_share": 0.0565
+        },
+        {
+          "scene": "BG",
+          "bucket": "12+",
+          "model": "H027 v3",
+          "hit_share": 0.010391044947057526,
+          "pay_share": 0.06896948159004598
+        },
+        {
+          "scene": "FG",
+          "bucket": "8–9",
+          "model": "競品",
+          "hit_share": 0.8241,
+          "pay_share": 0.7127
+        },
+        {
+          "scene": "FG",
+          "bucket": "8–9",
+          "model": "H027 v3",
+          "hit_share": 0.821552319379283,
+          "pay_share": 0.6993783913780298
+        },
+        {
+          "scene": "FG",
+          "bucket": "10–11",
+          "model": "競品",
+          "hit_share": 0.1599,
+          "pay_share": 0.2075
+        },
+        {
+          "scene": "FG",
+          "bucket": "10–11",
+          "model": "H027 v3",
+          "hit_share": 0.16077710039804508,
+          "pay_share": 0.2235257710877689
+        },
+        {
+          "scene": "FG",
+          "bucket": "12+",
+          "model": "競品",
+          "hit_share": 0.0161,
+          "pay_share": 0.0798
+        },
+        {
+          "scene": "FG",
+          "bucket": "12+",
+          "model": "H027 v3",
+          "hit_share": 0.017670580222671952,
+          "pay_share": 0.07709583753420125
+        }
+      ],
+      "ball_fg": [
+        {
+          "multiplier": "2x",
+          "order": 2,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.4361
+        },
+        {
+          "multiplier": "2x",
+          "order": 2,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.3007653399286291
+        },
+        {
+          "multiplier": "3x",
+          "order": 3,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.2387
+        },
+        {
+          "multiplier": "3x",
+          "order": 3,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.16454689719802845
+        },
+        {
+          "multiplier": "4x",
+          "order": 4,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.14
+        },
+        {
+          "multiplier": "4x",
+          "order": 4,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.09689033452569872
+        },
+        {
+          "multiplier": "5x",
+          "order": 5,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.1157
+        },
+        {
+          "multiplier": "5x",
+          "order": 5,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.174287371297449
+        },
+        {
+          "multiplier": "6x",
+          "order": 6,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0291
+        },
+        {
+          "multiplier": "6x",
+          "order": 6,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.09410265995167524
+        },
+        {
+          "multiplier": "8x",
+          "order": 8,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0186
+        },
+        {
+          "multiplier": "8x",
+          "order": 8,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.06549729046011117
+        },
+        {
+          "multiplier": "10x",
+          "order": 10,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0129
+        },
+        {
+          "multiplier": "10x",
+          "order": 10,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.04752156303569164
+        },
+        {
+          "multiplier": "12x",
+          "order": 12,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0032
+        },
+        {
+          "multiplier": "12x",
+          "order": 12,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.022268622772864607
+        },
+        {
+          "multiplier": "15x",
+          "order": 15,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0024
+        },
+        {
+          "multiplier": "15x",
+          "order": 15,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.013336094567193217
+        },
+        {
+          "multiplier": "20x",
+          "order": 20,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0016
+        },
+        {
+          "multiplier": "20x",
+          "order": 20,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.007995386966184544
+        },
+        {
+          "multiplier": "25x",
+          "order": 25,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0008
+        },
+        {
+          "multiplier": "25x",
+          "order": 25,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.00436176786731258
+        },
+        {
+          "multiplier": "50x",
+          "order": 50,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0008
+        },
+        {
+          "multiplier": "50x",
+          "order": 50,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.003203284601672225
+        },
+        {
+          "multiplier": "100x",
+          "order": 100,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0
+        },
+        {
+          "multiplier": "100x",
+          "order": 100,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.0017161131770227977
+        },
+        {
+          "multiplier": "250x",
+          "order": 250,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0
+        },
+        {
+          "multiplier": "250x",
+          "order": 250,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.0011314092409820935
+        },
+        {
+          "multiplier": "500x",
+          "order": 500,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0
+        },
+        {
+          "multiplier": "500x",
+          "order": 500,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.0009024674886087228
+        },
+        {
+          "multiplier": "1000x",
+          "order": 1000,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0
+        },
+        {
+          "multiplier": "1000x",
+          "order": 1000,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.0007547478102101372
+        },
+        {
+          "multiplier": "2500x",
+          "order": 2500,
+          "scene": "FG",
+          "model": "競品",
+          "rate": 0.0
+        },
+        {
+          "multiplier": "2500x",
+          "order": 2500,
+          "scene": "FG",
+          "model": "H027 v3",
+          "rate": 0.0007186491106657883
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "h027_report",
+      "label": "H027 v3 Card-Off 100M",
+      "type": "file",
+      "path": "Record/H0271_03_2609011722_betmode0_108.xlsx",
+      "description": "H027 v3 Normal Bet 100,000,000-round simulation report."
+    },
+    {
+      "id": "h027_math",
+      "label": "H0271 v3 mathematics",
+      "type": "file",
+      "path": "Source/H0271.xlsx",
+      "description": "Version 3 source workbook with FG stop weights."
+    },
+    {
+      "id": "competitor",
+      "label": "Gates of Olympus 1000 field report",
+      "type": "file",
+      "path": "遊戲數據_Gates_of_Olympus_1000.html",
+      "description": "Competitor sample: 31,472 BG spins and 1,212 FG spins."
+    }
+  ]
+}

@@ -32,14 +32,18 @@ goto failed
 :choose_xlsx
 echo.
 echo 1. H0281.xlsx
-echo 2. H028192A.xlsx
-echo 3. H028194A.xlsx
+echo 2. H028188B.xlsx
+echo 3. H028190B.xlsx
+echo 4. H028192A.xlsx
+echo 5. H028194A.xlsx
 echo Enter. 全部
 echo.
 set /p "TARGET=請選擇檔案: "
 
 if not defined TARGET (
     call :xlsx_to_config "H0281.xlsx" "config.js" || goto failed
+    call :xlsx_to_config "H028188B.xlsx" "config_88B.js" || goto failed
+    call :xlsx_to_config "H028190B.xlsx" "config_90B.js" || goto failed
     call :xlsx_to_config "H028192A.xlsx" "config_92A.js" || goto failed
     call :xlsx_to_config "H028194A.xlsx" "config_94A.js" || goto failed
     goto succeeded
@@ -49,27 +53,39 @@ if "%TARGET%"=="1" (
     goto succeeded
 )
 if "%TARGET%"=="2" (
-    call :xlsx_to_config "H028192A.xlsx" "config_92A.js" || goto failed
+    call :xlsx_to_config "H028188B.xlsx" "config_88B.js" || goto failed
     goto succeeded
 )
 if "%TARGET%"=="3" (
+    call :xlsx_to_config "H028190B.xlsx" "config_90B.js" || goto failed
+    goto succeeded
+)
+if "%TARGET%"=="4" (
+    call :xlsx_to_config "H028192A.xlsx" "config_92A.js" || goto failed
+    goto succeeded
+)
+if "%TARGET%"=="5" (
     call :xlsx_to_config "H028194A.xlsx" "config_94A.js" || goto failed
     goto succeeded
 )
-echo [失敗] 請輸入 1、2、3，或直接按 Enter。
+echo [失敗] 請輸入 1～5，或直接按 Enter。
 goto failed
 
 :choose_config
 echo.
 echo 1. config.js
-echo 2. config_92A.js
-echo 3. config_94A.js
+echo 2. config_88B.js
+echo 3. config_90B.js
+echo 4. config_92A.js
+echo 5. config_94A.js
 echo Enter. 全部
 echo.
 set /p "TARGET=請選擇檔案: "
 
 if not defined TARGET (
     call :config_to_xlsx "config.js" "H0281.xlsx" || goto failed
+    call :config_to_xlsx "config_88B.js" "H028188B.xlsx" || goto failed
+    call :config_to_xlsx "config_90B.js" "H028190B.xlsx" || goto failed
     call :config_to_xlsx "config_92A.js" "H028192A.xlsx" || goto failed
     call :config_to_xlsx "config_94A.js" "H028194A.xlsx" || goto failed
     goto succeeded
@@ -79,14 +95,22 @@ if "%TARGET%"=="1" (
     goto succeeded
 )
 if "%TARGET%"=="2" (
-    call :config_to_xlsx "config_92A.js" "H028192A.xlsx" || goto failed
+    call :config_to_xlsx "config_88B.js" "H028188B.xlsx" || goto failed
     goto succeeded
 )
 if "%TARGET%"=="3" (
+    call :config_to_xlsx "config_90B.js" "H028190B.xlsx" || goto failed
+    goto succeeded
+)
+if "%TARGET%"=="4" (
+    call :config_to_xlsx "config_92A.js" "H028192A.xlsx" || goto failed
+    goto succeeded
+)
+if "%TARGET%"=="5" (
     call :config_to_xlsx "config_94A.js" "H028194A.xlsx" || goto failed
     goto succeeded
 )
-echo [失敗] 請輸入 1、2、3，或直接按 Enter。
+echo [失敗] 請輸入 1～5，或直接按 Enter。
 goto failed
 
 :xlsx_to_config

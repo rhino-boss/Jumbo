@@ -1,22 +1,19 @@
 window.H027_VERSION_MANIFEST = {
-  current: "1.0.0.0",
-  base_version: "1",
-  next_version: "2.0.0.0",
+  current: "3.0.0.0",
+  base_version: "3",
+  next_version: "4.0.0.0",
   versions: [
     {
       version: "0.0.0.0",
       math_key: "0.0",
       date: "2026-08-21",
       competitor_initial_version: true,
-      base_config: "Versions/0.0/final_before_v1_260826_142508/config.js",
+      base_config: "Versions/0.0/config.js",
       configs: {
-        "92A": "Versions/0.0/final_before_v1_260826_142508/config_92A.js",
-        "94A": "Versions/0.0/final_before_v1_260826_142508/config_94A.js"
+        "BASE": "Versions/0.0/config.js"
       },
       workbooks: {
-        base: "Versions/0.0/final_before_v1_260826_142508/Source/H0271.xlsx",
-        92: "Versions/0.0/final_before_v1_260826_142508/Source/H027192A.xlsx",
-        94: "Versions/0.0/final_before_v1_260826_142508/Source/H027194A.xlsx"
+        base: "Versions/0.0/Source/H0271.xlsx"
       },
       frozen_base: "Versions/0.0",
       changes: [
@@ -51,6 +48,51 @@ window.H027_VERSION_MANIFEST = {
         "Redistribute the removed 12.51 percentage points proportionally across the other active sub-100x C3 multipliers.",
         "Keep C3 2x, 3x, 4x and 100x-or-higher probabilities at zero.",
         "Optimize Simulator Card-Off statistics snapshots without changing fixed-seed results."
+      ]
+    },
+    {
+      version: "2.0.0.0",
+      math_key: "2.0",
+      date: "2026-09-01",
+      competitor_initial_version: false,
+      base_config: "Versions/2.0/config.js",
+      configs: {
+        "92A": "Versions/2.0/config_92A.js",
+        "94A": "Versions/2.0/config_94A.js"
+      },
+      workbooks: {
+        base: "Versions/2.0/Source/H0271.xlsx",
+        92: "Versions/2.0/Source/H027192A.xlsx",
+        94: "Versions/2.0/Source/H027194A.xlsx"
+      },
+      frozen_base: "Versions/2.0",
+      changes: [
+        "Collect FG C2/C3 values only when the spin has a regular-symbol win and a final multiplier ball.",
+        "Apply the accumulated FG multiplier only on a scoring spin whose final grid contains C2/C3.",
+        "Pay a regular-symbol win at 1x when the final grid has no C2/C3, while retaining the accumulated pool.",
+        "Apply the effective multiplier once after all cascades; Scatter pay remains unmultiplied."
+      ]
+    },
+    {
+      version: "3.0.0.0",
+      math_key: "3.0",
+      date: "2026-09-01",
+      competitor_initial_version: false,
+      base_config: "Versions/3.0/config.js",
+      configs: {
+        "92A": "Versions/3.0/config_92A.js",
+        "94A": "Versions/3.0/config_94A.js"
+      },
+      workbooks: {
+        base: "Versions/3.0/Source/H0271.xlsx",
+        92: "Versions/3.0/Source/H027192A.xlsx",
+        94: "Versions/3.0/Source/H027194A.xlsx"
+      },
+      frozen_base: "Versions/3.0",
+      changes: [
+        "Keep the v2 FG reel symbols, ordering, and 63/64-stop lengths.",
+        "Tune only FG_Symbol and FG_Symbol (2) integer stop weights within 1-10; actual v3 weights use 1-5.",
+        "Reach 43.9809% FG Hit Rate in a 100,000,000-round Card-Off validation report."
       ]
     }
   ]

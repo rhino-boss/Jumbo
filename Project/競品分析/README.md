@@ -24,6 +24,20 @@
 
 ---
 
+## 專題比較
+
+跨遊戲的單一議題比較，不套用標準報告格式。
+
+| 題目 | 對象 | 報告 |
+|---|---|---|
+| 免費遊戲得分分布（NB-FG／BF） | Lucky Neko（PG）vs 雷神爆金 1000（H028，自家） | [開啟](FG%E5%BE%97%E5%88%86%E6%AF%94%E8%BC%83_LuckyNeko_vs_%E9%9B%B7%E7%A5%9E%E7%88%86%E9%87%911000.html) |
+
+> ⚠️ 自家遊戲要取**成品模型**（`H028192A.xlsx` 的 `Multiplier_Weight`），
+> 不要用 `Record\` 的自然機率模擬檔 —— 後者 Card System 關閉、RTP 371.7%，
+> 倍數分布與成品完全不同。詳見該報告 §3.2。
+
+---
+
 ## 主要指標對照
 
 | 指標 | Super Ace | Lucky Neko | Pinata Wins | Gates of Olympus 1000 | Wild Bounty Showdown |

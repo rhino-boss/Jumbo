@@ -51,7 +51,7 @@ SHOW_CONSOLE_DETAIL = False
 
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
-    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
+    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -1400,7 +1400,6 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
             out=np.zeros_like(numerator, dtype=np.float64),
             where=denominator > 0,
         )
-
     trigger_cnt_lte = np.cumsum(values[R_BG_TRIGGER_FG_CNT, : len(THRESHOLD_RECORD)]).astype(np.int64)
     trigger_pay_lte = np.cumsum(values[R_BG_TRIGGER_FG_PAY, : len(THRESHOLD_RECORD)])
     is_feature_buy = bet_mode == MODE_FEATUREBUY

@@ -9,18 +9,18 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 | 檔案 | 資料所有權 | 用途 |
 | --- | --- | --- |
 | `H0281.xlsx` | 賠率、六張 Symbol 表、輪帶、Symbol Weight、MegaWay、MY、Post Scatter、Drop1～5、Parameter | 所有 RTP 版本共用的基礎模型；版本為單一整數 |
-| `H0281<RTP><版型>.xlsx` | `Overview!B3` 版本、`Detail`／`Detail_Newbie` 與 `Multiplier_Weight` 卡片權重 | 例如 `H028192A.xlsx`、`H028192B.xlsx`、`H028194A.xlsx` |
+| `H0281<RTP><版型>.xlsx` | `Overview!B3` 版本、`Detail`／`Detail_Newbie` 與 `Multiplier_Weight` 卡片權重 | 例如 `H028188B.xlsx`、`H028190B.xlsx`、`H028192A.xlsx`、`H028194A.xlsx` |
 | `config.js` | 自然機率執行參數 | 對應 `H0281.xlsx`，以 `window.H028_BASE_CONFIG` 輸出 |
-| `config_<RTP><版型>.js` | Card / RTP 執行參數 | 例如 `config_92A.js`、`config_94A.js`；四碼版本 |
+| `config_<RTP><版型>.js` | Card / RTP 執行參數 | 例如 `config_88B.js`、`config_90B.js`、`config_92A.js`、`config_94A.js`；四碼版本 |
 
-檔名不是寫死的白名單：`model_sync.py` 依 `H0281<RTP><版型>.xlsx` 與 `config_<RTP><版型>.js` 自動配對。因此工具已支援 H028 共用模型、H028192A、H028192B；目前正式目錄實際存在 92A、94A，尚未建立正式 92B 工作簿。
+檔名不是寫死的白名單：`model_sync.py` 依 `H0281<RTP><版型>.xlsx` 與 `config_<RTP><版型>.js` 自動配對。目前正式目錄包含 88B、90B、92A、94A 四個 RTP 版本。
 
 ## 2. 轉換方向
 
 | 指令 | 方向 | 寫入內容 | 不寫入內容 |
 | --- | --- | --- | --- |
 | `model_sync.py export`（基礎） | `H0281.xlsx` → `config.js` | 共用模型全部映射欄位 | Card System |
-| `model_sync.py export`（RTP） | RTP XLSX → `config_92A.js` / `config_94A.js` | `game_id`、`parsheet_id`、四碼版本、Card System 權重 | 輪帶、掉落、賠率等共用模型 |
+| `model_sync.py export`（RTP） | RTP XLSX → `config_88B.js` / `config_90B.js` / `config_92A.js` / `config_94A.js` | `game_id`、`parsheet_id`、四碼版本、Card System 權重 | 輪帶、掉落、賠率等共用模型 |
 | `model_sync.py import`（共用模型） | config → `H0281.xlsx` | 共用模型映射欄位 | RTP 版本卡片資料、固定 metadata |
 | `model_sync.py import`（RTP 工作簿） | config → `H0281<RTP><版型>.xlsx` | 版本、Detail 卡片輸入／快取、Multiplier Weight 公式快取 | 共用 Symbol 模型、固定 metadata |
 
@@ -86,6 +86,8 @@ H028 數學模型拆成「共用模型」與「RTP 版本」兩類工作簿。
 | 對象 | 版本形式 | 目前值 |
 | --- | --- | --- |
 | `H0281.xlsx` / `config.js` | 單一整數 | `3` |
+| `H028188B.xlsx` / `config_88B.js` | `基礎.卡片.SCR.其他` | `3.2.0.0` |
+| `H028190B.xlsx` / `config_90B.js` | `基礎.卡片.SCR.其他` | `3.2.0.0` |
 | `H028192A.xlsx` / `config_92A.js` | `基礎.卡片.SCR.其他` | `3.2.0.0` |
 | `H028194A.xlsx` / `config_94A.js` | `基礎.卡片.SCR.其他` | `3.2.0.0` |
 
@@ -140,12 +142,12 @@ update.bat
 操作只有兩層選單：
 
 1. 第一層選方向：輸入 `1` 為 XLSX → config，輸入 `2` 為 config → XLSX。
-2. 第二層選檔案：輸入 `1` 選 base，`2` 選 92A，`3` 選 94A；直接按 Enter 會轉換全部。
+2. 第二層選檔案：輸入 `1` 選 base，`2` 選 88B，`3` 選 90B，`4` 選 92A，`5` 選 94A；直接按 Enter 會轉換全部。
 
-| 方向 | 選項 1 | 選項 2 | 選項 3 | 直接 Enter |
-| --- | --- | --- | --- | --- |
-| XLSX → config | `H0281.xlsx` → `config.js` | `H028192A.xlsx` → `config_92A.js` | `H028194A.xlsx` → `config_94A.js` | 三組都轉換 |
-| config → XLSX | `config.js` → `H0281.xlsx` | `config_92A.js` → `H028192A.xlsx` | `config_94A.js` → `H028194A.xlsx` | 三組都轉換 |
+| 方向 | 選項 1 | 選項 2 | 選項 3 | 選項 4 | 選項 5 | 直接 Enter |
+| --- | --- | --- | --- | --- | --- | --- |
+| XLSX → config | `H0281.xlsx` → `config.js` | `H028188B.xlsx` → `config_88B.js` | `H028190B.xlsx` → `config_90B.js` | `H028192A.xlsx` → `config_92A.js` | `H028194A.xlsx` → `config_94A.js` | 五組都轉換 |
+| config → XLSX | `config.js` → `H0281.xlsx` | `config_88B.js` → `H028188B.xlsx` | `config_90B.js` → `H028190B.xlsx` | `config_92A.js` → `H028192A.xlsx` | `config_94A.js` → `H028194A.xlsx` | 五組都轉換 |
 
 執行時只顯示目前的來源檔、目標檔與完成訊息；config → XLSX 會直接更新原工作簿，不會建立另一份 XLSX。若工作簿正在 Excel 中開啟，請先關閉再執行。
 
@@ -176,5 +178,5 @@ BF Detail 公式直接引用 Normal Bet 的 FG Session 分布，因此不再需�
 - export 的 `--check` 會逐 key 比對生成結果與既有 config。
 - import 寫出後會立即執行 config → XLSX → config round-trip；任何共用映射 key 不一致即失敗。
 - RTP 工作簿回填時保留 Detail／Multiplier Weight 公式，只更新輸入與公式快取；另會移除失效的 `calcChain.xml` 關聯並要求 Excel 完整重算。
-- `--all-variants` 只處理同時存在 config 與工作簿的版本；例如正式建立 `H028192B.xlsx` 與 `config_92B.js` 後會自動納入。
+- `--all-variants` 只處理同時存在 config 與工作簿的版本；目前會納入 88B、90B、92A、94A。
 - round-trip 驗證會逐一確認共用模型與卡片資料；公式保留與快取值也需通過檢查。

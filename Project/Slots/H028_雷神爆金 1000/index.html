@@ -2949,6 +2949,8 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
+            <option value="config_88B.js">88B</option>
+            <option value="config_90B.js">90B</option>
             <option value="config_92A.js">92A</option>
             <option value="config_94A.js">94A</option>
           </select>
@@ -3201,7 +3203,7 @@
     var entry=manifest.versions.find(function(item){return item.version===version})||manifest.versions.find(function(item){return item.version===manifest.current})||manifest.versions[0];
     var requested=query.get('config');
     if(!requested){try{requested=localStorage.getItem('slotDemoConfig')}catch(_){}}
-    var match=String(requested||'').match(/(?:config_)?(92A|94A)(?:_\d+)?(?:\.js)?$/i),code=match?match[1].toUpperCase():'';
+    var match=String(requested||'').match(/(?:config_)?(88B|90B|92A|94A)(?:_\d+)?(?:\.js)?$/i),code=match?match[1].toUpperCase():'';
     var available=Object.keys(entry.configs||{});
     if(!entry.configs?.[code])code=available[0]||'92A';
     var want=entry.configs?.[code]||'config_92A.js';

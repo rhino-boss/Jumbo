@@ -51,7 +51,7 @@ SHOW_CONSOLE_DETAIL = False
 
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
-    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
+    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
 ]
 
 THRESHOLD_RECORD = np.array(

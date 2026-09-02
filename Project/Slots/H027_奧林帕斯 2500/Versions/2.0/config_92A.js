@@ -1,8 +1,8 @@
 const data = {
   "game_id": "101027",
-  "parsheet_id": "H027194",
+  "parsheet_id": "H027192",
   "config_type": "rtp_variant",
-  "config_code": "94A",
+  "config_code": "92A",
   "is_competitor_model": true,
   "initial_version_rule": "competitor_model_starts_at_0",
   "display_name": "Olympus 2500",
@@ -71,8 +71,8 @@ const data = {
     "C3 multiplier pool and appearance weights"
   ],
   "multiplier_max_value": 2500,
-  "model": "H027194",
-  "excel_version": "3.0.0.0",
+  "model": "H027192",
+  "excel_version": "2.0.0.0",
   "default_coin_in": 100,
   "reel_num": 6,
   "window_size": 5,
@@ -1973,73 +1973,73 @@ const data = {
             "type": "range",
             "min": 0,
             "max": 1,
-            "weight": 167141441
+            "weight": 167632741
           },
           {
             "type": "range",
             "min": 1,
             "max": 2,
-            "weight": 49839521
+            "weight": 50252122
           },
           {
             "type": "range",
             "min": 2,
             "max": 3,
-            "weight": 18145306
+            "weight": 18471247
           },
           {
             "type": "range",
             "min": 3,
             "max": 4,
-            "weight": 11059569
+            "weight": 11310837
           },
           {
             "type": "range",
             "min": 4,
             "max": 5,
-            "weight": 5388271
+            "weight": 5557761
           },
           {
             "type": "range",
             "min": 5,
             "max": 6,
-            "weight": 2325470
+            "weight": 2414888
           },
           {
             "type": "range",
             "min": 6,
             "max": 7,
-            "weight": 2444250
+            "weight": 2454731
           },
           {
             "type": "range",
             "min": 7,
             "max": 8,
-            "weight": 2160259
+            "weight": 2086815
           },
           {
             "type": "range",
             "min": 8,
             "max": 9,
-            "weight": 1937114
+            "weight": 1788029
           },
           {
             "type": "range",
             "min": 9,
             "max": 10,
-            "weight": 3426299
+            "weight": 3176778
           },
           {
             "type": "range",
             "min": 10,
             "max": 15,
-            "weight": 8087337
+            "weight": 7651865
           },
           {
             "type": "range",
             "min": 15,
             "max": 20,
-            "weight": 14437270
+            "weight": 13594293
           },
           {
             "type": "range",
@@ -2799,7 +2799,7 @@ const data = {
             "type": "range",
             "min": 8,
             "max": 9,
-            "weight": 82640010
+            "weight": 82731693
           },
           {
             "type": "range",
@@ -2811,217 +2811,217 @@ const data = {
             "type": "range",
             "min": 10,
             "max": 15,
-            "weight": 39166084
+            "weight": 39256790
           },
           {
             "type": "range",
             "min": 15,
             "max": 20,
-            "weight": 66829347
+            "weight": 66918889
           },
           {
             "type": "range",
             "min": 20,
             "max": 25,
-            "weight": 35215592
+            "weight": 35303964
           },
           {
             "type": "range",
             "min": 25,
             "max": 30,
-            "weight": 39180109
+            "weight": 39267300
           },
           {
             "type": "range",
             "min": 30,
             "max": 35,
-            "weight": 74753030
+            "weight": 74839044
           },
           {
             "type": "range",
             "min": 35,
             "max": 40,
-            "weight": 43139322
+            "weight": 43224155
           },
           {
             "type": "range",
             "min": 40,
             "max": 45,
-            "weight": 39194222
+            "weight": 39277876
           },
           {
             "type": "range",
             "min": 45,
             "max": 50,
-            "weight": 43148730
+            "weight": 43231205
           },
           {
             "type": "range",
             "min": 50,
             "max": 60,
-            "weight": 106392652
+            "weight": 106473352
           },
           {
             "type": "range",
             "min": 60,
             "max": 70,
-            "weight": 43165233
+            "weight": 43243572
           },
           {
             "type": "range",
             "min": 70,
             "max": 80,
-            "weight": 39224852
+            "weight": 39300830
           },
           {
             "type": "range",
             "min": 80,
             "max": 90,
-            "weight": 35274475
+            "weight": 35348091
           },
           {
             "type": "range",
             "min": 90,
             "max": 100,
-            "weight": 31334063
+            "weight": 31405325
           },
           {
             "type": "range",
             "min": 100,
             "max": 120,
-            "weight": 43207567
+            "weight": 43275297
           },
           {
             "type": "range",
             "min": 120,
             "max": 140,
-            "weight": 62985397
+            "weight": 63048411
           },
           {
             "type": "range",
             "min": 140,
             "max": 160,
-            "weight": 27436018
+            "weight": 27494309
           },
           {
             "type": "range",
             "min": 160,
             "max": 180,
-            "weight": 23505019
+            "weight": 23558599
           },
           {
             "type": "range",
             "min": 180,
             "max": 200,
-            "weight": 23523917
+            "weight": 23572760
           },
           {
             "type": "range",
             "min": 200,
             "max": 250,
-            "weight": 43314870
+            "weight": 43355708
           },
           {
             "type": "range",
             "min": 250,
             "max": 300,
-            "weight": 11743534
+            "weight": 11772573
           },
           {
             "type": "range",
             "min": 300,
             "max": 350,
-            "weight": 3881165
+            "weight": 3898367
           },
           {
             "type": "range",
             "min": 350,
             "max": 400,
-            "weight": 7888147
+            "weight": 7893525
           },
           {
             "type": "range",
             "min": 400,
             "max": 450,
-            "weight": 11885219
+            "weight": 11878750
           },
           {
             "type": "range",
             "min": 450,
             "max": 500,
-            "weight": 7982442
+            "weight": 7964188
           },
           {
             "type": "range",
             "min": 500,
             "max": 550,
-            "weight": 120020
+            "weight": 89942
           },
           {
             "type": "range",
             "min": 550,
             "max": 600,
-            "weight": 8076939
+            "weight": 8035003
           },
           {
             "type": "range",
             "min": 600,
             "max": 650,
-            "weight": 214573
+            "weight": 160799
           },
           {
             "type": "range",
             "min": 650,
             "max": 700,
-            "weight": 261592
+            "weight": 196034
           },
           {
             "type": "range",
             "min": 700,
             "max": 750,
-            "weight": 308790
+            "weight": 231404
           },
           {
             "type": "range",
             "min": 750,
             "max": 800,
-            "weight": 356230
+            "weight": 266955
           },
           {
             "type": "range",
             "min": 800,
             "max": 850,
-            "weight": 403378
+            "weight": 302287
           },
           {
             "type": "range",
             "min": 850,
             "max": 900,
-            "weight": 450666
+            "weight": 337724
           },
           {
             "type": "range",
             "min": 900,
             "max": 950,
-            "weight": 497440
+            "weight": 372776
           },
           {
             "type": "range",
             "min": 950,
             "max": 1000,
-            "weight": 544310
+            "weight": 407900
           },
           {
             "type": "range",
             "min": 1000,
             "max": 2000,
-            "weight": 845257
+            "weight": 633427
           },
           {
             "type": "range",
             "min": 2000,
             "max": 3000,
-            "weight": 1909789
+            "weight": 1431176
           },
           {
             "type": "range",
@@ -3142,73 +3142,73 @@ const data = {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 167141441
+              "weight": 167632741
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 49839521
+              "weight": 50252122
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 18145306
+              "weight": 18471247
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 11059569
+              "weight": 11310837
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 5388271
+              "weight": 5557761
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 2325470
+              "weight": 2414888
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 2444250
+              "weight": 2454731
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 2160259
+              "weight": 2086815
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 1937114
+              "weight": 1788029
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 3426299
+              "weight": 3176778
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 8087337
+              "weight": 7651865
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 14437270
+              "weight": 13594293
             },
             {
               "type": "range",
@@ -3920,73 +3920,73 @@ const data = {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 167141441
+              "weight": 167632741
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 49839521
+              "weight": 50252122
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 18145306
+              "weight": 18471247
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 11059569
+              "weight": 11310837
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 5388271
+              "weight": 5557761
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 2325470
+              "weight": 2414888
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 2444250
+              "weight": 2454731
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 2160259
+              "weight": 2086815
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 1937114
+              "weight": 1788029
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 3426299
+              "weight": 3176778
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 8087337
+              "weight": 7651865
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 14437270
+              "weight": 13594293
             },
             {
               "type": "range",
@@ -4698,73 +4698,73 @@ const data = {
               "type": "range",
               "min": 0,
               "max": 1,
-              "weight": 167141441
+              "weight": 167632741
             },
             {
               "type": "range",
               "min": 1,
               "max": 2,
-              "weight": 49839521
+              "weight": 50252122
             },
             {
               "type": "range",
               "min": 2,
               "max": 3,
-              "weight": 18145306
+              "weight": 18471247
             },
             {
               "type": "range",
               "min": 3,
               "max": 4,
-              "weight": 11059569
+              "weight": 11310837
             },
             {
               "type": "range",
               "min": 4,
               "max": 5,
-              "weight": 5388271
+              "weight": 5557761
             },
             {
               "type": "range",
               "min": 5,
               "max": 6,
-              "weight": 2325470
+              "weight": 2414888
             },
             {
               "type": "range",
               "min": 6,
               "max": 7,
-              "weight": 2444250
+              "weight": 2454731
             },
             {
               "type": "range",
               "min": 7,
               "max": 8,
-              "weight": 2160259
+              "weight": 2086815
             },
             {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 1937114
+              "weight": 1788029
             },
             {
               "type": "range",
               "min": 9,
               "max": 10,
-              "weight": 3426299
+              "weight": 3176778
             },
             {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 8087337
+              "weight": 7651865
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 14437270
+              "weight": 13594293
             },
             {
               "type": "range",
@@ -5526,7 +5526,7 @@ const data = {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 82640010
+              "weight": 82731693
             },
             {
               "type": "range",
@@ -5538,217 +5538,217 @@ const data = {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 39166084
+              "weight": 39256790
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 66829347
+              "weight": 66918889
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 35215592
+              "weight": 35303964
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 39180109
+              "weight": 39267300
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 74753030
+              "weight": 74839044
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 43139322
+              "weight": 43224155
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 39194222
+              "weight": 39277876
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 43148730
+              "weight": 43231205
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 106392652
+              "weight": 106473352
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 43165233
+              "weight": 43243572
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 39224852
+              "weight": 39300830
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 35274475
+              "weight": 35348091
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 31334063
+              "weight": 31405325
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 43207567
+              "weight": 43275297
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 62985397
+              "weight": 63048411
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 27436018
+              "weight": 27494309
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 23505019
+              "weight": 23558599
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 23523917
+              "weight": 23572760
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 43314870
+              "weight": 43355708
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 11743534
+              "weight": 11772573
             },
             {
               "type": "range",
               "min": 300,
               "max": 350,
-              "weight": 3881165
+              "weight": 3898367
             },
             {
               "type": "range",
               "min": 350,
               "max": 400,
-              "weight": 7888147
+              "weight": 7893525
             },
             {
               "type": "range",
               "min": 400,
               "max": 450,
-              "weight": 11885219
+              "weight": 11878750
             },
             {
               "type": "range",
               "min": 450,
               "max": 500,
-              "weight": 7982442
+              "weight": 7964188
             },
             {
               "type": "range",
               "min": 500,
               "max": 550,
-              "weight": 120020
+              "weight": 89942
             },
             {
               "type": "range",
               "min": 550,
               "max": 600,
-              "weight": 8076939
+              "weight": 8035003
             },
             {
               "type": "range",
               "min": 600,
               "max": 650,
-              "weight": 214573
+              "weight": 160799
             },
             {
               "type": "range",
               "min": 650,
               "max": 700,
-              "weight": 261592
+              "weight": 196034
             },
             {
               "type": "range",
               "min": 700,
               "max": 750,
-              "weight": 308790
+              "weight": 231404
             },
             {
               "type": "range",
               "min": 750,
               "max": 800,
-              "weight": 356230
+              "weight": 266955
             },
             {
               "type": "range",
               "min": 800,
               "max": 850,
-              "weight": 403378
+              "weight": 302287
             },
             {
               "type": "range",
               "min": 850,
               "max": 900,
-              "weight": 450666
+              "weight": 337724
             },
             {
               "type": "range",
               "min": 900,
               "max": 950,
-              "weight": 497440
+              "weight": 372776
             },
             {
               "type": "range",
               "min": 950,
               "max": 1000,
-              "weight": 544310
+              "weight": 407900
             },
             {
               "type": "range",
               "min": 1000,
               "max": 2000,
-              "weight": 845257
+              "weight": 633427
             },
             {
               "type": "range",
               "min": 2000,
               "max": 3000,
-              "weight": 1909789
+              "weight": 1431176
             },
             {
               "type": "range",
@@ -5914,7 +5914,7 @@ const data = {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 82640010
+              "weight": 82731693
             },
             {
               "type": "range",
@@ -5926,217 +5926,217 @@ const data = {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 39166084
+              "weight": 39256790
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 66829347
+              "weight": 66918889
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 35215592
+              "weight": 35303964
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 39180109
+              "weight": 39267300
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 74753030
+              "weight": 74839044
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 43139322
+              "weight": 43224155
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 39194222
+              "weight": 39277876
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 43148730
+              "weight": 43231205
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 106392652
+              "weight": 106473352
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 43165233
+              "weight": 43243572
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 39224852
+              "weight": 39300830
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 35274475
+              "weight": 35348091
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 31334063
+              "weight": 31405325
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 43207567
+              "weight": 43275297
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 62985397
+              "weight": 63048411
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 27436018
+              "weight": 27494309
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 23505019
+              "weight": 23558599
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 23523917
+              "weight": 23572760
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 43314870
+              "weight": 43355708
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 11743534
+              "weight": 11772573
             },
             {
               "type": "range",
               "min": 300,
               "max": 350,
-              "weight": 3881165
+              "weight": 3898367
             },
             {
               "type": "range",
               "min": 350,
               "max": 400,
-              "weight": 7888147
+              "weight": 7893525
             },
             {
               "type": "range",
               "min": 400,
               "max": 450,
-              "weight": 11885219
+              "weight": 11878750
             },
             {
               "type": "range",
               "min": 450,
               "max": 500,
-              "weight": 7982442
+              "weight": 7964188
             },
             {
               "type": "range",
               "min": 500,
               "max": 550,
-              "weight": 120020
+              "weight": 89942
             },
             {
               "type": "range",
               "min": 550,
               "max": 600,
-              "weight": 8076939
+              "weight": 8035003
             },
             {
               "type": "range",
               "min": 600,
               "max": 650,
-              "weight": 214573
+              "weight": 160799
             },
             {
               "type": "range",
               "min": 650,
               "max": 700,
-              "weight": 261592
+              "weight": 196034
             },
             {
               "type": "range",
               "min": 700,
               "max": 750,
-              "weight": 308790
+              "weight": 231404
             },
             {
               "type": "range",
               "min": 750,
               "max": 800,
-              "weight": 356230
+              "weight": 266955
             },
             {
               "type": "range",
               "min": 800,
               "max": 850,
-              "weight": 403378
+              "weight": 302287
             },
             {
               "type": "range",
               "min": 850,
               "max": 900,
-              "weight": 450666
+              "weight": 337724
             },
             {
               "type": "range",
               "min": 900,
               "max": 950,
-              "weight": 497440
+              "weight": 372776
             },
             {
               "type": "range",
               "min": 950,
               "max": 1000,
-              "weight": 544310
+              "weight": 407900
             },
             {
               "type": "range",
               "min": 1000,
               "max": 2000,
-              "weight": 845257
+              "weight": 633427
             },
             {
               "type": "range",
               "min": 2000,
               "max": 3000,
-              "weight": 1909789
+              "weight": 1431176
             },
             {
               "type": "range",
@@ -6302,7 +6302,7 @@ const data = {
               "type": "range",
               "min": 8,
               "max": 9,
-              "weight": 82640010
+              "weight": 82731693
             },
             {
               "type": "range",
@@ -6314,217 +6314,217 @@ const data = {
               "type": "range",
               "min": 10,
               "max": 15,
-              "weight": 39166084
+              "weight": 39256790
             },
             {
               "type": "range",
               "min": 15,
               "max": 20,
-              "weight": 66829347
+              "weight": 66918889
             },
             {
               "type": "range",
               "min": 20,
               "max": 25,
-              "weight": 35215592
+              "weight": 35303964
             },
             {
               "type": "range",
               "min": 25,
               "max": 30,
-              "weight": 39180109
+              "weight": 39267300
             },
             {
               "type": "range",
               "min": 30,
               "max": 35,
-              "weight": 74753030
+              "weight": 74839044
             },
             {
               "type": "range",
               "min": 35,
               "max": 40,
-              "weight": 43139322
+              "weight": 43224155
             },
             {
               "type": "range",
               "min": 40,
               "max": 45,
-              "weight": 39194222
+              "weight": 39277876
             },
             {
               "type": "range",
               "min": 45,
               "max": 50,
-              "weight": 43148730
+              "weight": 43231205
             },
             {
               "type": "range",
               "min": 50,
               "max": 60,
-              "weight": 106392652
+              "weight": 106473352
             },
             {
               "type": "range",
               "min": 60,
               "max": 70,
-              "weight": 43165233
+              "weight": 43243572
             },
             {
               "type": "range",
               "min": 70,
               "max": 80,
-              "weight": 39224852
+              "weight": 39300830
             },
             {
               "type": "range",
               "min": 80,
               "max": 90,
-              "weight": 35274475
+              "weight": 35348091
             },
             {
               "type": "range",
               "min": 90,
               "max": 100,
-              "weight": 31334063
+              "weight": 31405325
             },
             {
               "type": "range",
               "min": 100,
               "max": 120,
-              "weight": 43207567
+              "weight": 43275297
             },
             {
               "type": "range",
               "min": 120,
               "max": 140,
-              "weight": 62985397
+              "weight": 63048411
             },
             {
               "type": "range",
               "min": 140,
               "max": 160,
-              "weight": 27436018
+              "weight": 27494309
             },
             {
               "type": "range",
               "min": 160,
               "max": 180,
-              "weight": 23505019
+              "weight": 23558599
             },
             {
               "type": "range",
               "min": 180,
               "max": 200,
-              "weight": 23523917
+              "weight": 23572760
             },
             {
               "type": "range",
               "min": 200,
               "max": 250,
-              "weight": 43314870
+              "weight": 43355708
             },
             {
               "type": "range",
               "min": 250,
               "max": 300,
-              "weight": 11743534
+              "weight": 11772573
             },
             {
               "type": "range",
               "min": 300,
               "max": 350,
-              "weight": 3881165
+              "weight": 3898367
             },
             {
               "type": "range",
               "min": 350,
               "max": 400,
-              "weight": 7888147
+              "weight": 7893525
             },
             {
               "type": "range",
               "min": 400,
               "max": 450,
-              "weight": 11885219
+              "weight": 11878750
             },
             {
               "type": "range",
               "min": 450,
               "max": 500,
-              "weight": 7982442
+              "weight": 7964188
             },
             {
               "type": "range",
               "min": 500,
               "max": 550,
-              "weight": 120020
+              "weight": 89942
             },
             {
               "type": "range",
               "min": 550,
               "max": 600,
-              "weight": 8076939
+              "weight": 8035003
             },
             {
               "type": "range",
               "min": 600,
               "max": 650,
-              "weight": 214573
+              "weight": 160799
             },
             {
               "type": "range",
               "min": 650,
               "max": 700,
-              "weight": 261592
+              "weight": 196034
             },
             {
               "type": "range",
               "min": 700,
               "max": 750,
-              "weight": 308790
+              "weight": 231404
             },
             {
               "type": "range",
               "min": 750,
               "max": 800,
-              "weight": 356230
+              "weight": 266955
             },
             {
               "type": "range",
               "min": 800,
               "max": 850,
-              "weight": 403378
+              "weight": 302287
             },
             {
               "type": "range",
               "min": 850,
               "max": 900,
-              "weight": 450666
+              "weight": 337724
             },
             {
               "type": "range",
               "min": 900,
               "max": 950,
-              "weight": 497440
+              "weight": 372776
             },
             {
               "type": "range",
               "min": 950,
               "max": 1000,
-              "weight": 544310
+              "weight": 407900
             },
             {
               "type": "range",
               "min": 1000,
               "max": 2000,
-              "weight": 845257
+              "weight": 633427
             },
             {
               "type": "range",
               "min": 2000,
               "max": 3000,
-              "weight": 1909789
+              "weight": 1431176
             },
             {
               "type": "range",
@@ -6633,9 +6633,9 @@ const data = {
       }
     },
     "calibration": {
-      "rtp_family": 94,
+      "rtp_family": 92,
       "newbie_bg_mean": 0.9300000143841866,
-      "oldhand_bg_mean": 0.9400000039464846,
+      "oldhand_bg_mean": 0.9199999946663859,
       "fg_package_mean": 100.00000019476835,
       "fg_entry_probability": 0.0001999999920016,
       "buy_package_mean": 96.49999999554723,
@@ -10257,516 +10257,516 @@ const data = {
       ],
       "weights": [
         [
-          3,
-          3,
-          3,
-          3,
-          2,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          1,
-          2
-        ],
-        [
-          2,
-          3,
-          2,
-          3,
-          2,
-          2
-        ],
-        [
-          1,
-          4,
-          1,
-          3,
-          3,
-          3
-        ],
-        [
-          1,
-          3,
-          1,
-          3,
-          3,
-          3
-        ],
-        [
-          1,
-          3,
-          1,
-          3,
-          3,
-          3
-        ],
-        [
-          2,
-          3,
-          2,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          1,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          1,
-          4,
-          3,
-          4,
-          4
-        ],
-        [
-          3,
-          2,
-          5,
-          3,
-          4,
-          5
-        ],
-        [
-          2,
-          3,
-          5,
-          3,
-          3,
-          5
-        ],
-        [
-          2,
-          3,
-          4,
-          3,
-          3,
-          4
-        ],
-        [
-          3,
-          4,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          5,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          4,
-          4,
-          2,
-          3,
-          3,
-          3
-        ],
-        [
-          4,
-          3,
-          2,
-          3,
-          4,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          2,
-          1,
-          3,
-          3,
-          3,
-          2
-        ],
-        [
           1,
           1,
-          3,
-          3,
-          2,
-          1
-        ],
-        [
-          2,
           1,
-          3,
-          3,
+          1,
           1,
           1
         ],
         [
-          3,
-          2,
-          3,
-          3,
-          2,
-          1
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          3,
-          2
-        ],
-        [
-          4,
-          3,
-          4,
-          3,
-          3,
-          3
-        ],
-        [
-          5,
-          4,
-          4,
-          3,
-          4,
-          3
-        ],
-        [
-          5,
-          5,
-          3,
-          2,
-          5,
-          4
-        ],
-        [
-          4,
-          5,
-          3,
           1,
-          4,
-          5
-        ],
-        [
-          3,
-          5,
-          2,
-          2,
-          3,
-          5
-        ],
-        [
-          3,
-          5,
           1,
-          3,
-          3,
-          4
-        ],
-        [
-          2,
-          4,
           1,
-          3,
-          2,
-          3
-        ],
-        [
           1,
-          3,
           1,
-          4,
-          1,
-          3
-        ],
-        [
-          1,
-          3,
-          2,
-          5,
-          2,
-          2
-        ],
-        [
-          1,
-          3,
-          3,
-          4,
-          3,
-          1
-        ],
-        [
-          2,
-          3,
-          3,
-          3,
-          3,
-          2
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          2,
-          5,
-          3
-        ],
-        [
-          4,
-          2,
-          2,
-          1,
-          5,
-          4
-        ],
-        [
-          5,
-          1,
-          2,
-          2,
-          5,
-          4
-        ],
-        [
-          4,
-          1,
-          3,
-          3,
-          5,
-          3
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          5,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          4,
-          4,
-          2
-        ],
-        [
-          2,
-          3,
-          4,
-          4,
-          4,
           1
         ],
         [
           1,
-          3,
-          4,
-          3,
-          4,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          2,
-          3,
-          3,
-          3,
-          4,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          3,
-          2,
-          3,
-          2,
-          3,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          3,
-          2,
-          3,
           1,
-          3,
-          2
-        ],
-        [
-          4,
-          2,
-          2,
-          2,
-          3,
-          3
-        ],
-        [
-          4,
-          2,
-          2,
-          3,
-          2,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
           1,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          4,
           1,
-          3
-        ],
-        [
-          2,
-          3,
-          4,
-          5,
-          2,
-          3
+          1,
+          1,
+          1
         ],
         [
           1,
-          4,
-          4,
-          5,
-          3,
-          3
-        ],
-        [
-          2,
-          5,
-          3,
-          4,
-          3,
-          3
-        ],
-        [
-          3,
-          4,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          2,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
           1,
-          4
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
           1,
-          4
+          1,
+          1,
+          1
         ],
         [
-          2,
-          3,
-          3,
-          3,
-          2,
-          3
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          2,
-          3,
-          3,
-          3,
-          3,
-          3
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          3,
-          3,
-          4,
-          3,
-          3,
-          3
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          3,
-          2,
-          5,
-          3,
-          3,
-          3
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          3,
-          2,
-          4,
-          3,
-          3,
-          3
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ]
       ],
       "reel_lengths": [
@@ -11290,507 +11290,507 @@ const data = {
       "weights": [
         [
           1,
-          2,
-          3,
-          3,
+          1,
+          1,
+          1,
           1,
           1
         ],
         [
-          2,
-          3,
-          4,
-          3,
-          2,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          3,
-          3,
-          5,
-          4,
-          3,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          3,
-          4,
-          4,
-          4,
-          3,
-          2
-        ],
-        [
-          4,
-          5,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          5,
-          4,
-          3,
-          3,
-          5,
-          3
-        ],
-        [
-          4,
-          3,
-          2,
-          2,
-          5,
-          4
-        ],
-        [
-          3,
-          3,
           1,
           1,
-          5,
-          5
-        ],
-        [
-          3,
-          2,
-          1,
-          2,
-          5,
-          5
-        ],
-        [
-          2,
-          1,
-          2,
-          3,
-          5,
-          4
-        ],
-        [
           1,
           1,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          2,
           1,
-          3,
-          4,
-          4,
-          3
-        ],
-        [
-          3,
-          2,
-          4,
-          5,
-          4,
-          2
-        ],
-        [
-          3,
-          3,
-          5,
-          5,
-          4,
           1
         ],
         [
-          4,
-          3,
-          5,
-          4,
-          3,
-          2
-        ],
-        [
-          4,
-          4,
-          4,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          5,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          5,
-          3,
-          3,
-          2,
-          4
-        ],
-        [
-          2,
-          5,
-          2,
-          3,
           1,
-          4
-        ],
-        [
           1,
-          5,
-          2,
-          3,
           1,
-          3
-        ],
-        [
-          2,
-          4,
-          3,
-          3,
-          2,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          3,
-          2
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          3,
+          1,
+          1,
           1
         ],
         [
-          3,
-          3,
-          3,
-          3,
-          3,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          3,
-          3,
-          3,
-          3,
-          3,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          3,
-          3,
-          3,
-          3,
-          2,
+          1,
+          1,
+          1,
+          1,
+          1,
           1
         ],
         [
-          2,
-          3,
-          3,
-          3,
           1,
-          2
-        ],
-        [
-          2,
-          2,
-          4,
-          3,
           1,
-          3
-        ],
-        [
-          3,
           1,
-          4,
-          3,
-          2,
-          3
-        ],
-        [
-          3,
           1,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
-          2,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
           1,
-          3,
-          3,
-          3
-        ],
-        [
-          2,
-          3,
-          1,
-          3,
-          2,
-          3
-        ],
-        [
-          1,
-          3,
-          1,
-          3,
-          2,
-          3
-        ],
-        [
-          1,
-          2,
-          2,
-          3,
-          3,
-          3
-        ],
-        [
-          2,
-          2,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          3,
-          4
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          3,
-          4
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
-          2,
-          3,
-          3,
-          3
-        ],
-        [
-          2,
-          3,
-          2,
-          3,
-          4,
-          3
-        ],
-        [
-          2,
-          4,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          3,
-          5,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          4,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          4,
-          3,
-          4,
-          3,
-          3,
-          3
-        ],
-        [
-          4,
-          3,
-          4,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          2,
-          3,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          1,
-          3,
-          2,
-          2,
-          3,
-          3
-        ],
-        [
-          2,
-          3,
-          2,
-          1,
-          3,
-          3
-        ],
-        [
-          3,
-          2,
-          3,
-          2,
-          2,
-          4
-        ],
-        [
-          3,
-          2,
-          3,
-          3,
-          1,
-          5
-        ],
-        [
-          4,
-          3,
-          4,
-          3,
-          2,
-          5
-        ],
-        [
-          5,
-          3,
-          4,
-          4,
-          3,
-          4
-        ],
-        [
-          5,
-          4,
-          3,
-          5,
-          3,
-          3
-        ],
-        [
-          4,
-          4,
-          3,
-          4,
-          4,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          5,
-          3
-        ],
-        [
-          3,
-          3,
-          3,
-          3,
-          4,
-          3
-        ],
-        [
-          2,
-          2,
-          3,
-          2,
-          3,
-          3
+          1
         ],
         [
           1,
           1,
-          3,
           1,
-          3,
-          3
+          1,
+          1,
+          1
         ],
         [
           1,
           1,
-          3,
-          2,
-          2,
-          2
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ]
       ],
       "reel_lengths": [
@@ -12830,9 +12830,9 @@ const data = {
     }
   ],
   "runtime_version": "0.0.0.0",
-  "rtp_label": 94,
+  "rtp_label": 92,
   "source_xlsx": "H0271.xlsx",
-  "source_multiplier_xlsx": "H027194A.xlsx",
+  "source_multiplier_xlsx": "H027192A.xlsx",
   "cascade_symbol_source": "reel_strip",
   "reel_source_workbook": "C:\\Users\\rhinshen\\Mine\\個人工作區\\市場資訊\\H5\\遊戲資源\\PP - Gates of Olympus 1000\\還原輪帶_Gates_of_Olympus_1000.xlsx",
   "reel_set_usage": {
