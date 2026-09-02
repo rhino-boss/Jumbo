@@ -493,7 +493,7 @@
     </div>
   </dialog>
 
-  <script src="./Versions/version_manifest.js?v=20260902-v3004"></script>
+  <script src="./Versions/version_manifest.js?v=20260902-v3007"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_VISIBLE_VERSION_ENTRIES = Array.from(
@@ -1080,8 +1080,9 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const initialMultiplierValues = clone(spin.multiplierValues);
     const steps = [];
     let rawPay = 0;
+    const isBuyFeatureEntry = scene === "BG" && state.selectedMode === MODE_BUY;
 
-    for (let index = 0; index < CASCADE_LIMIT; index += 1) {
+    for (let index = 0; !isBuyFeatureEntry && index < CASCADE_LIMIT; index += 1) {
       const evaluated = evaluatePayAnywhere(spin.board);
       if (!evaluated.wins.length) break;
       const before = clone(spin.board);
@@ -1102,7 +1103,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
     const multiplier = summarizeMultiplierValues(spin);
     const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
-    const isBuyFeatureEntry = scene === "BG" && state.selectedMode === MODE_BUY;
     const scatterWin = isBuyFeatureEntry ? 0 : scatterPay(scatterCount);
     // FG：累積倍數只在「這一把最終盤面本身有 C2／C3」時才作用。
     // 有得分但盤面沒有球的那一把，不論池子累積到多少都以 1x 結算。
