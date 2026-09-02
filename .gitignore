@@ -1,0 +1,9 @@
+# Local agent and temporary working directories
+/.agents/
+/.codex/
+/.codex_tmp/
+/.codex-preview/
+/.selenium-cache/
+/.tmp/
+/.tmp-h027-chrome-profile/
+/.tmp-h027-edge-profile/

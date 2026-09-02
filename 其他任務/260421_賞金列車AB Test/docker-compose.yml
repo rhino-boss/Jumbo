@@ -1,0 +1,19 @@
+services:
+  ab-test-viz:
+    image: sharonliu716/igaming-dashboard:v1
+    container_name: dashboard_service
+    ports:
+      - "8050:8050"
+    volumes:
+      # 將主機的 output 資料夾映射到容器內腳本預期的位置
+      - "./output:/app/output"
+    # 環境變數可以幫助解決 core 模組引入問題
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1 
+    command: >
+      python compare_ab_visualization_v1.py 
+      --games 101010 
+      --start_date 2026-03-20 
+      --end_date 2026-04-20
+      --min_round 15

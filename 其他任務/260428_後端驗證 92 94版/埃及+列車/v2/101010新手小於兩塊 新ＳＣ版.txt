@@ -1,0 +1,476 @@
+version = H015192-2.0.0.1/H015194-2.0.0.1 GameID = 101010, JP optionID = 28, Coin in = 100, currency denom = 0.002000, betMultiplier = 1,feature bet = 0, denom Multiplier = 0 
+TotalSpin = 10000000, TotalBet = 1000000000
+=======================Total RTP=======================================
+BaseGameRtp = 0.706016
+ScatterRtp = 0.000000
+FreeGameRtp = 0.223986
+TotalRtp (excluding JP/bonus) = 0.930002
+BonusJP Rtp = 0.031458
+LinkJP Rtp = 0.000000
+TotalRtp (including JP/bonus) = 0.961460
+=======================BaseGame info=======================================
+BaseGameTTLWin = 706016345
+BG SymbolHit[3][2] = 354428
+BG SymbolHit[3][3] = 116028
+BG SymbolHit[3][4] = 36736
+BG SymbolHit[3][5] = 7731
+BG SymbolHit[4][2] = 434137
+BG SymbolHit[4][3] = 163209
+BG SymbolHit[4][4] = 49228
+BG SymbolHit[4][5] = 30008
+BG SymbolHit[5][2] = 217508
+BG SymbolHit[5][3] = 130846
+BG SymbolHit[5][4] = 82481
+BG SymbolHit[5][5] = 19257
+BG SymbolHit[6][2] = 513201
+BG SymbolHit[6][3] = 293439
+BG SymbolHit[6][4] = 112935
+BG SymbolHit[6][5] = 94186
+BG SymbolHit[7][2] = 237499
+BG SymbolHit[7][3] = 192515
+BG SymbolHit[7][4] = 156937
+BG SymbolHit[7][5] = 82628
+BG SymbolHit[8][2] = 247706
+BG SymbolHit[8][3] = 271443
+BG SymbolHit[8][4] = 194120
+BG SymbolHit[8][5] = 134967
+BG SymbolHit[9][2] = 456398
+BG SymbolHit[9][3] = 300659
+BG SymbolHit[9][4] = 122477
+BG SymbolHit[9][5] = 129375
+BG SymbolHit[10][2] = 272612
+BG SymbolHit[10][3] = 209803
+BG SymbolHit[10][4] = 193932
+BG SymbolHit[10][5] = 98516
+BG WheelTable[0] Count = 7943064
+BG WheelTable[1] Count = 2056936
+BG FeatureHit[0] = 43486
+BG FeatureHit[1] = 24044
+=======================FreeGame info=======================================
+FreeGameTTLRound = 445960
+FreeGameTTLWin = 223986160
+FG SymbolHit[3][2] = 342
+FG SymbolHit[3][3] = 619
+FG SymbolHit[3][4] = 959
+FG SymbolHit[3][5] = 21
+FG SymbolHit[4][2] = 18504
+FG SymbolHit[4][3] = 4568
+FG SymbolHit[4][4] = 171
+FG SymbolHit[4][5] = 139
+FG SymbolHit[5][2] = 2222
+FG SymbolHit[5][3] = 3387
+FG SymbolHit[5][4] = 9316
+FG SymbolHit[5][5] = 663
+FG SymbolHit[6][2] = 75104
+FG SymbolHit[6][3] = 18192
+FG SymbolHit[6][4] = 492
+FG SymbolHit[6][5] = 808
+FG SymbolHit[7][2] = 4165
+FG SymbolHit[7][3] = 4977
+FG SymbolHit[7][4] = 29541
+FG SymbolHit[7][5] = 4820
+FG SymbolHit[8][2] = 4822
+FG SymbolHit[8][3] = 4417
+FG SymbolHit[8][4] = 14269
+FG SymbolHit[8][5] = 1486
+FG SymbolHit[9][2] = 37448
+FG SymbolHit[9][3] = 6146
+FG SymbolHit[9][4] = 129
+FG SymbolHit[9][5] = 288
+FG SymbolHit[10][2] = 17431
+FG SymbolHit[10][3] = 3320
+FG SymbolHit[10][4] = 180
+FG SymbolHit[10][5] = 364
+FG Wheel Table [0] Count = 267676
+FG Wheel Table [1] Count = 178284
+FG FeatureHit[0] = 371
+FG FeatureHit[1] = 1042
+=======================JP info=======================================
+LinkJP RTP = 0.000000
+BonusJP RTP = 0.031458
+JPTotalRound = 25086, avgPeriod = 398.628723
+pool[1] hit = 0, ttlWin = 0, avg = 0.000000
+pool[2] hit = 0, ttlWin = 0, avg = 0.000000
+pool[3] hit = 1593, ttlWin = 1593000, avg = 1000, rtp = 0.007965
+pool[4] hit = 23493, ttlWin = 4698600, avg = 200, rtp = 0.023493
+=======================BaseGame 倍數=======================================
+BaseGame 00 = 7102633
+BaseGame 0x = 1879054, Pay = 83548660, 1C1 = 279560, 2C1 = 46952, 3C1 = 4926, 4C1 = 282, 5C1 = 8
+BaseGame 1x = 322413, Pay = 49727105, 1C1 = 48388, 2C1 = 8637, 3C1 = 1060, 4C1 = 47, 5C1 = null
+BaseGame 2x = 146808, Pay = 37012595, 1C1 = 22673, 2C1 = 4039, 3C1 = 497, 4C1 = 18, 5C1 = 1
+BaseGame 3x = 82947, Pay = 29439025, 1C1 = 13008, 2C1 = 2523, 3C1 = 281, 4C1 = 14, 5C1 = 1
+BaseGame 4x = 66154, Pay = 29843650, 1C1 = 10549, 2C1 = 1988, 3C1 = 180, 4C1 = 6, 5C1 = null
+BaseGame 5x = 52777, Pay = 29371930, 1C1 = 8461, 2C1 = 1500, 3C1 = 115, 4C1 = 3, 5C1 = null
+BaseGame 6x = 25566, Pay = 16639370, 1C1 = 4160, 2C1 = 915, 3C1 = 126, 4C1 = 8, 5C1 = 1
+BaseGame 7x = 22407, Pay = 16937940, 1C1 = 3623, 2C1 = 715, 3C1 = 70, 4C1 = 4, 5C1 = null
+BaseGame 8x = 19437, Pay = 16569650, 1C1 = 3221, 2C1 = 678, 3C1 = 61, 4C1 = null, 5C1 = null
+BaseGame 9x = 16961, Pay = 16169430, 1C1 = 2718, 2C1 = 600, 3C1 = 38, 4C1 = 3, 5C1 = null
+BaseGame 10x = 123785, Pay = 152298780, 1C1 = 20288, 2C1 = 3649, 3C1 = 140, 4C1 = 4, 5C1 = null
+BaseGame 15x = 102652, Pay = 178580320, 1C1 = 16934, 2C1 = 2898, 3C1 = 63, 4C1 = 2, 5C1 = null
+BaseGame 20x = 9691, Pay = 21736695, 1C1 = 1727, 2C1 = 360, 3C1 = 42, 4C1 = 1, 5C1 = null
+BaseGame 25x = 7852, Pay = 21382680, 1C1 = 1400, 2C1 = 334, 3C1 = 25, 4C1 = 1, 5C1 = null
+BaseGame 30x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 35x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 40x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 45x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 50x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 60x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 70x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 80x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 90x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 100x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 120x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 140x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 160x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 180x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 200x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 250x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 300x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 350x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 400x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 450x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 500x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 550x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 600x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 650x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 700x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 750x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 800x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 850x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 900x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 950x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 1000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 2000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 3000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 4000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 5000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 6000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 7000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 8000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 9000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 10000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 20000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 30000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 40000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 50000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 60000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 70000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 80000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 90000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 100000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 9999999x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+=======================BaseGame 進 FreeGame 倍數=======================================
+BaseGame 0x = 8881, Pay = 402525, 1C1 = 279560, 2C1 = 46952, 3C1 = 4926, 4C1 = 282, 5C1 = 8
+BaseGame 1x = 2717, Pay = 411540, 1C1 = 48388, 2C1 = 8637, 3C1 = 1060, 4C1 = 47, 5C1 = null
+BaseGame 2x = 1455, Pay = 368715, 1C1 = 22673, 2C1 = 4039, 3C1 = 497, 4C1 = 18, 5C1 = 1
+BaseGame 3x = 1038, Pay = 364395, 1C1 = 13008, 2C1 = 2523, 3C1 = 281, 4C1 = 14, 5C1 = 1
+BaseGame 4x = 777, Pay = 351410, 1C1 = 10549, 2C1 = 1988, 3C1 = 180, 4C1 = 6, 5C1 = null
+BaseGame 5x = 519, Pay = 287755, 1C1 = 8461, 2C1 = 1500, 3C1 = 115, 4C1 = 3, 5C1 = null
+BaseGame 6x = 535, Pay = 349005, 1C1 = 4160, 2C1 = 915, 3C1 = 126, 4C1 = 8, 5C1 = 1
+BaseGame 7x = 341, Pay = 256380, 1C1 = 3623, 2C1 = 715, 3C1 = 70, 4C1 = 4, 5C1 = null
+BaseGame 8x = 353, Pay = 301280, 1C1 = 3221, 2C1 = 678, 3C1 = 61, 4C1 = null, 5C1 = null
+BaseGame 9x = 258, Pay = 245350, 1C1 = 2718, 2C1 = 600, 3C1 = 38, 4C1 = 3, 5C1 = null
+BaseGame 10x = 913, Pay = 1132085, 1C1 = 20288, 2C1 = 3649, 3C1 = 140, 4C1 = 4, 5C1 = null
+BaseGame 15x = 501, Pay = 878270, 1C1 = 16934, 2C1 = 2898, 3C1 = 63, 4C1 = 2, 5C1 = null
+BaseGame 20x = 328, Pay = 734265, 1C1 = 1727, 2C1 = 360, 3C1 = 42, 4C1 = 1, 5C1 = null
+BaseGame 25x = 247, Pay = 675540, 1C1 = 1400, 2C1 = 334, 3C1 = 25, 4C1 = 1, 5C1 = null
+BaseGame 30x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 35x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 40x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 45x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 50x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 60x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 70x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 80x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 90x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 100x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 120x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 140x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 160x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 180x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 200x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 250x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 300x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 350x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 400x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 450x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 500x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 550x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 600x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 650x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 700x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 750x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 800x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 850x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 900x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 950x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 1000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 2000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 3000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 4000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 5000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 6000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 7000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 8000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 9000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 10000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 20000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 30000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 40000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 50000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 60000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 70000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 80000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 90000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 100000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+BaseGame 9999999x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+=======================Base Game RNG INFO=======================================
+Base Game RNG[10x] = [979989569, 11, 4, 141, 64, 64, 17, 73, 171, 3982, 152, 198, 152, 183, 3353, 66, 4, 84, 123, 39, 25, 174, 1088, 90, 22, 20, 77, 44, 8579]
+Base Game RNG[20x] = [992060003, 63, 1, 160, 103, 28, 157, 67, 64, 2971, 136, 57, 182, 127, 74, 79, 2, 192, 200, 141, 55, 9297, 5, 122, 20, 180, 152, 56, 43, 93, 6085]
+Base Game RNG[30x] = [995149393, 37, 2, 154, 129, 21, 129, 44, 98, 449, 37, 55, 171, 31, 106, 2687, 39, 94, 172, 132, 200, 259, 287, 19, 3371, 115, 108, 280, 225, 258, 5, 5, 3258, 156, 146, 163, 533, 58, 2423]
+=======================Base Game C1 RNG INFO=======================================
+Base Game C1[3] = [999664664, 530840003, 97, 1, 82, 151, 186, 126, 113, 106, 6500, 36, 6569857306, 6, 50, 2, 39, 4, 158, 71, 40, 40, 1875, 936, 23, 5, 125, 53, 77, 123, 184, 118, 871, 191, 53, 188, 9, 7458, 83, 8, 33, 143, 198, 67, 142, 8, 5285, 64, 103, 128, 143, 9096, 0, 43, 0, 54, 70, 12, 137, 59, 30, 8971, 2, 0, 96, 76, 112, 3422, 94642975, 6463562, 97, 6, 83, 188, 4, 137, 101, 57, 1157, 386, 61, 0, 37, 7, 0, 66, 102, 79, 1833, 106, 54, 0, 148, 143, 88, 150, 23, 144, 8167, 0, 1, 855, 6, 1, 152, 65, 98, 79, 130, 108, 4034, 948, 8541693954, 79, 3, 163, 123, 107, 7, 161, 174, 9311, 5, 1, 85, 127, 92, 8099, 51, 18, 72, 75, 135, 98, 164, 9967, 0, 66, 8, 195, 151, 21, 165, 184, 138, 2123, 409, 1, 1, 0, 3]
+Base Game C1[4] = [998937667, 349722180, 84, 8, 115, 148, 71, 54, 65, 193, 5875, 917, 6310637291, 2, 87, 3, 107, 105, 7, 7, 149, 138, 9590, 3, 1, 501, 25, 4, 168, 68, 68, 189, 171, 104, 9772, 3, 1, 9, 22, 61, 9975, 2, 110, 36, 4, 122, 5430, 6794634819, 56, 5, 168, 177, 10, 99, 72, 71, 2043, 2, 2, 719, 57, 2, 99, 34, 66, 83, 65, 46, 6307, 162, 32, 104, 2083, 81, 3, 89, 121, 7, 163, 186, 72, 6134, 116, 52, 163, 36, 4013, 6437312526, 37, 6, 17, 176, 144, 153, 26, 115, 9128, 4, 1, 92, 75, 2, 19, 152, 68, 22, 155, 159, 1056, 344, 56, 5, 54, 118, 48, 11, 36, 126, 3170, 101, 89, 202, 184, 2688, 31, 75, 127, 6592, 20, 5, 18, 66, 148, 158, 192, 26, 2886, 6, 3540021587, 32, 2, 33, 67, 124, 124, 50, 92, 3075, 536, 9160168873, 48, 3, 185, 89, 33, 126, 116, 45, 4274, 850, 7, 0, 112, 101, 81, 77, 12, 147, 4465, 56, 119, 14, 6696, 13, 132, 0, 689, 220, 329, 584, 8224, 221, 264, 1354, 4557207217]
+Base Game C1[5] = [997124682, 129764527, 99, 2, 188, 75, 69, 55, 61, 3, 3482, 25, 46, 48, 14, 6912, 1376789064, 9, 44, 3, 188, 163, 86, 184, 133, 106, 6608, 356, 9572723333, 33, 8, 169, 80, 187, 148, 107, 28, 9278, 0, 1, 655, 54, 7, 151, 58, 33, 131, 82, 69, 2520, 69, 56, 0, 183, 126, 153, 47, 51, 76, 9179, 5, 1, 267, 27, 2, 20, 85, 164, 152, 7, 71, 8732, 4, 3, 851, 55, 1, 151, 67, 44, 146, 75, 104, 3768, 226, 347400706, 1, 5, 137, 62, 2, 25, 189, 194, 8423, 0, 1, 52, 92, 30, 171, 192, 178, 91, 7217, 0, 7, 58, 167, 50, 69, 152, 12, 6773, 4, 2, 919, 48, 7, 80, 48, 154, 91, 3, 105, 7509, 168, 120, 88, 110, 844, 2588390993, 52, 4, 117, 178, 79, 126, 180, 161, 9629, 0, 1, 491, 6290949286, 80, 6, 154, 110, 199, 67, 39, 194, 2644, 303, 98, 0, 140, 7, 61, 57, 50, 116, 2069, 204, 3, 8, 107, 94, 164, 28, 14, 107, 9405, 1, 2, 467, 71, 0, 172, 37, 51, 19, 102, 3, 8691, 5, 0, 212]
+BGC1hit[1] hit = 1525362, FGC1hit[1] = 70582
+BGC1hit[2] hit = 260363, FGC1hit[2] = 6884
+BGC1hit[3] hit = 30511, FGC1hit[3] = 354
+BGC1hit[4] hit = 2065, FGC1hit[4] = 17
+BGC1hit[5] hit = 75, FGC1hit[5] = 0
+BG reelC1hit[1] hit = 465337, FG reelC1hit[1] = 64537
+BG reelC1hit[2] hit = 581253, FG reelC1hit[2] = 87335
+BG reelC1hit[3] hit = 353161, FG reelC1hit[3] = 95661
+BG reelWWhit[3] hit = 480822, FG reelWWhit[3] = 19467
+BG reelC1hit[4] hit = 504143, FG reelC1hit[4] = 88650
+BG reelWWhit[4] hit = 476344, FG reelWWhit[4] = 23125
+BG reelC1hit[5] hit = 128934, FG reelC1hit[5] = 71701
+BG reelC1hit[6] hit = 113428, FG reelC1hit[6] = 50170
+=======================整場FreeGame 倍數=======================================
+FreeGame 00 = 0
+FreeGame 0x = 0, Pay = null
+FreeGame 1x = 0, Pay = null, 1C1 = 27130, 2C1 = 2667, 3C1 = 264, 4C1 = 11, 5C1 = null
+FreeGame 2x = 0, Pay = null, 1C1 = 6015, 2C1 = 613, 3C1 = 72, 4C1 = 2, 5C1 = null
+FreeGame 3x = 0, Pay = null, 1C1 = 30376, 2C1 = 3114, 3C1 = 283, 4C1 = 13, 5C1 = null
+FreeGame 4x = 0, Pay = null, 1C1 = 8927, 2C1 = 909, 3C1 = 82, 4C1 = 3, 5C1 = null
+FreeGame 5x = 0, Pay = null, 1C1 = 5453, 2C1 = 558, 3C1 = 57, 4C1 = 6, 5C1 = null
+FreeGame 6x = 0, Pay = null, 1C1 = 7577, 2C1 = 752, 3C1 = 66, 4C1 = 3, 5C1 = null
+FreeGame 7x = 0, Pay = null, 1C1 = 15341, 2C1 = 1469, 3C1 = 126, 4C1 = 9, 5C1 = null
+FreeGame 8x = 0, Pay = null, 1C1 = 4149, 2C1 = 448, 3C1 = 35, 4C1 = 3, 5C1 = null
+FreeGame 9x = 0, Pay = null, 1C1 = 7627, 2C1 = 784, 3C1 = 53, 4C1 = 4, 5C1 = null
+FreeGame 10x = 4612, Pay = 5788000, 1C1 = 26198, 2C1 = 2528, 3C1 = 163, 4C1 = 9, 5C1 = null
+FreeGame 15x = 3196, Pay = 5622800, 1C1 = 22015, 2C1 = 2119, 3C1 = 143, 4C1 = 8, 5C1 = null
+FreeGame 20x = 2560, Pay = 5790960, 1C1 = 13707, 2C1 = 1313, 3C1 = 91, 4C1 = 4, 5C1 = null
+FreeGame 25x = 2089, Pay = 5756120, 1C1 = 11556, 2C1 = 1145, 3C1 = 71, 4C1 = 4, 5C1 = null
+FreeGame 30x = 2074, Pay = 6745520, 1C1 = 9987, 2C1 = 975, 3C1 = 68, 4C1 = 3, 5C1 = null
+FreeGame 35x = 1884, Pay = 7073160, 1C1 = 8965, 2C1 = 947, 3C1 = 58, 4C1 = 4, 5C1 = null
+FreeGame 40x = 1713, Pay = 7291480, 1C1 = 6867, 2C1 = 702, 3C1 = 33, 4C1 = 1, 5C1 = null
+FreeGame 45x = 1413, Pay = 6722120, 1C1 = 7563, 2C1 = 738, 3C1 = 36, 4C1 = null, 5C1 = null
+FreeGame 50x = 6419, Pay = 35355800, 1C1 = 18482, 2C1 = 1844, 3C1 = 84, 4C1 = 9, 5C1 = null
+FreeGame 60x = 5152, Pay = 33524120, 1C1 = 13589, 2C1 = 1336, 3C1 = 88, 4C1 = 3, 5C1 = null
+FreeGame 70x = 4597, Pay = 34497800, 1C1 = 11083, 2C1 = 1134, 3C1 = 67, 4C1 = 1, 5C1 = null
+FreeGame 80x = 4112, Pay = 34945680, 1C1 = 8791, 2C1 = 872, 3C1 = 56, 4C1 = 2, 5C1 = null
+FreeGame 90x = 3665, Pay = 34872600, 1C1 = 6904, 2C1 = 722, 3C1 = 52, 4C1 = 1, 5C1 = null
+FreeGame 100x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 120x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 140x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 160x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 180x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 200x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 250x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 300x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 350x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 400x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 450x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 500x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 550x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 600x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 650x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 700x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 750x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 800x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 850x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 900x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 950x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 1000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 2000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 3000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 4000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 5000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 6000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 7000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 8000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 9000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 10000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 20000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 30000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 40000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 50000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 60000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 70000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 80000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 90000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 100000x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+FreeGame 9999999x = 0, Pay = null, 1C1 = null, 2C1 = null, 3C1 = null, 4C1 = null, 5C1 = null
+=======================FreeGame 單round 倍數=======================================
+FreeOneRound 0x = 16070, Pay = 1030040
+FreeOneRound 1x = 16185, Pay = 2964000
+FreeOneRound 2x = 3566, Pay = 883080
+FreeOneRound 3x = 18368, Pay = 6927320
+FreeOneRound 4x = 5338, Pay = 2534560
+FreeOneRound 5x = 3271, Pay = 1856960
+FreeOneRound 6x = 4509, Pay = 2917440
+FreeOneRound 7x = 9345, Pay = 7347720
+FreeOneRound 8x = 2457, Pay = 2121880
+FreeOneRound 9x = 4603, Pay = 4438720
+FreeOneRound 10x = 11494, Pay = 14316560
+FreeOneRound 15x = 10247, Pay = 17893360
+FreeOneRound 20x = 5841, Pay = 13389680
+FreeOneRound 25x = 4817, Pay = 13187040
+FreeOneRound 30x = 3969, Pay = 12884840
+FreeOneRound 35x = 3708, Pay = 13942240
+FreeOneRound 40x = 2491, Pay = 10603480
+FreeOneRound 45x = 3319, Pay = 15930320
+FreeOneRound 50x = 4990, Pay = 27321480
+FreeOneRound 60x = 3037, Pay = 19735120
+FreeOneRound 70x = 2265, Pay = 16895160
+FreeOneRound 80x = 1155, Pay = 9760720
+FreeOneRound 90x = 539, Pay = 5104440
+FreeOneRound 100x = 0, Pay = null
+FreeOneRound 120x = 0, Pay = null
+FreeOneRound 140x = 0, Pay = null
+FreeOneRound 160x = 0, Pay = null
+FreeOneRound 180x = 0, Pay = null
+FreeOneRound 200x = 0, Pay = null
+FreeOneRound 250x = 0, Pay = null
+FreeOneRound 300x = 0, Pay = null
+FreeOneRound 350x = 0, Pay = null
+FreeOneRound 400x = 0, Pay = null
+FreeOneRound 450x = 0, Pay = null
+FreeOneRound 500x = 0, Pay = null
+FreeOneRound 550x = 0, Pay = null
+FreeOneRound 600x = 0, Pay = null
+FreeOneRound 650x = 0, Pay = null
+FreeOneRound 700x = 0, Pay = null
+FreeOneRound 750x = 0, Pay = null
+FreeOneRound 800x = 0, Pay = null
+FreeOneRound 850x = 0, Pay = null
+FreeOneRound 900x = 0, Pay = null
+FreeOneRound 950x = 0, Pay = null
+FreeOneRound 1000x = 0, Pay = null
+FreeOneRound 2000x = 0, Pay = null
+FreeOneRound 3000x = 0, Pay = null
+FreeOneRound 4000x = 0, Pay = null
+FreeOneRound 5000x = 0, Pay = null
+FreeOneRound 6000x = 0, Pay = null
+FreeOneRound 7000x = 0, Pay = null
+FreeOneRound 8000x = 0, Pay = null
+FreeOneRound 9000x = 0, Pay = null
+FreeOneRound 10000x = 0, Pay = null
+FreeOneRound 20000x = 0, Pay = null
+FreeOneRound 30000x = 0, Pay = null
+FreeOneRound 40000x = 0, Pay = null
+FreeOneRound 50000x = 0, Pay = null
+FreeOneRound 60000x = 0, Pay = null
+FreeOneRound 70000x = 0, Pay = null
+FreeOneRound 80000x = 0, Pay = null
+FreeOneRound 90000x = 0, Pay = null
+FreeOneRound 100000x = 0, Pay = null
+FreeOneRound 9999999x = 0, Pay = null
+=======================整場freeGame 初始10X球倍數=======================================
+=======================整場freeGame 初始無10X球倍數=======================================
+=======================FreeGame RNG INFO=======================================
+Free Game RNG[10x] = [999176870, 21155003, 97, 0, 81, 44, 108, 127, 204, 104, 4654, 417, 9432536784, 0, 32, 1, 64, 116, 115, 115, 51, 13, 9764, 1, 1, 806, 75, 6, 171, 132, 74, 114, 29, 188, 3904, 50, 117, 77, 135, 8380, 5, 5, 159, 35, 3, 86, 177, 159, 8888, 0, 2, 51, 112, 142, 110, 109, 66, 5441, 9, 3, 130, 170, 131, 2, 57, 52, 8726, 3, 3, 750, 41, 4, 45, 8, 151, 1, 100, 119, 303, 727, 73, 5, 56, 180, 60, 187, 143, 125, 3359, 5, 3968263085, 11, 3, 28, 60, 5, 87, 9, 38, 2882, 535, 22, 2, 84, 173, 93, 131, 122, 31, 5980, 167, 46, 4, 163, 15, 173, 82, 123, 184, 6831, 902, 59, 2, 132, 103, 137, 118, 17, 133, 7809, 59, 40, 74, 172, 2969]
+Free Game RNG[20x] = [998218988, 181913279, 83, 0, 65, 68, 68, 61, 150, 68, 4291, 125, 164885151, 7, 48, 1, 111, 69, 119, 79, 140, 123, 8376, 0, 1, 841, 0, 7, 1, 181, 67, 7, 89, 10, 6751, 959, 45, 5, 103, 2, 80, 100, 131, 80, 3669, 127, 193, 91, 3513, 61, 4, 58, 51, 14, 169, 95, 99, 9646, 5, 1, 138, 97, 136, 70, 35, 6, 923, 58, 4, 25, 33, 137, 151, 85, 70, 2903, 641, 26, 7, 61, 19, 193, 3, 24, 172, 8364, 0, 1, 272, 21, 6, 35, 30, 172, 49, 7, 78, 9910, 3, 2, 1, 521, 92, 6, 35, 75, 103, 163, 104, 176, 4393, 145, 119, 157, 3912, 189, 84, 159, 56, 74, 6742, 81, 4, 148, 136, 192, 96, 45, 5, 1208, 603, 5935769231, 13, 4, 125, 185, 80, 143, 149, 108, 6524, 573]
+Free Game RNG[30x] = [998937667, 349722180, 84, 8, 115, 148, 71, 54, 65, 193, 5875, 917, 6310637291, 2, 87, 3, 107, 105, 7, 7, 149, 138, 9590, 3, 1, 501, 25, 4, 168, 68, 68, 189, 171, 104, 9772, 3, 1, 9, 22, 61, 9975, 2, 110, 36, 4, 122, 5430, 6794634819, 56, 5, 168, 177, 10, 99, 72, 71, 2043, 2, 2, 719, 57, 2, 99, 34, 66, 83, 65, 46, 6307, 162, 32, 104, 2083, 81, 3, 89, 121, 7, 163, 186, 72, 6134, 116, 52, 163, 36, 4013, 6437312526, 37, 6, 17, 176, 144, 153, 26, 115, 9128, 4, 1, 92, 75, 2, 19, 152, 68, 22, 155, 159, 1056, 344, 56, 5, 54, 118, 48, 11, 36, 126, 3170, 101, 89, 202, 184, 2688, 31, 75, 127, 6592, 20, 5, 18, 66, 148, 158, 192, 26, 2886, 6, 3540021587, 32, 2, 33, 67, 124, 124, 50, 92, 3075, 536, 9160168873, 48, 3, 185, 89, 33, 126, 116, 45, 4274, 850, 7, 0, 112, 101, 81, 77, 12, 147, 4465, 56, 119, 14, 6696, 13, 132, 0, 689, 220, 329, 584, 8224, 221, 264, 1354, 4557207217]
+Free Game RNG[40x] = [995891892, 404746259, 84, 2, 105, 39, 194, 59, 68, 115, 9849, 84, 6334893014, 0, 9, 0, 92, 151, 115, 107, 187, 181, 974, 4, 0, 136, 21, 174, 128, 5767, 116, 6, 88, 105, 58, 56, 161, 145, 86, 4911, 15, 0, 165, 178, 134, 42, 172, 171, 9247, 5, 1, 241, 13, 3, 100, 8, 179, 103, 193, 119, 2316, 785, 89, 2, 97, 116, 50, 92, 113, 95, 6961, 904, 29, 0, 191, 88, 35, 136, 5, 186, 1898, 678, 17, 3, 70, 96, 95, 193, 117, 94, 9321, 1, 2, 306, 6, 4, 118, 178, 122, 47, 24, 88, 8368, 1, 3, 53, 87, 7, 46, 74, 188, 33, 37, 64, 6494, 378, 3, 3, 4, 151, 117, 129, 110, 115, 3484, 63, 114, 79, 52, 161, 21, 3453, 58, 6, 101, 102, 150, 123, 178, 140, 3051, 287, 6880732848]
+Free Game RNG[50x] = [999664664, 530840003, 97, 1, 82, 151, 186, 126, 113, 106, 6500, 36, 6569857306, 6, 50, 2, 39, 4, 158, 71, 40, 40, 1875, 936, 23, 5, 125, 53, 77, 123, 184, 118, 871, 191, 53, 188, 9, 7458, 83, 8, 33, 143, 198, 67, 142, 8, 5285, 64, 103, 128, 143, 9096, 0, 43, 0, 54, 70, 12, 137, 59, 30, 8971, 2, 0, 96, 76, 112, 3422, 94642975, 6463562, 97, 6, 83, 188, 4, 137, 101, 57, 1157, 386, 61, 0, 37, 7, 0, 66, 102, 79, 1833, 106, 54, 0, 148, 143, 88, 150, 23, 144, 8167, 0, 1, 855, 6, 1, 152, 65, 98, 79, 130, 108, 4034, 948, 8541693954, 79, 3, 163, 123, 107, 7, 161, 174, 9311, 5, 1, 85, 127, 92, 8099, 51, 18, 72, 75, 135, 98, 164, 9967, 0, 66, 8, 195, 151, 21, 165, 184, 138, 2123, 409, 1, 1, 0, 3]
+Free Game RNG[60x] = [997897753, 653000893, 96, 3, 62, 38, 50, 45, 190, 6, 8590, 163, 76, 19, 20, 78, 3491, 111, 58, 175, 8022, 6892423771, 13, 75, 0, 72, 33, 188, 188, 152, 18, 1107, 12, 6523202383, 28, 5, 3, 137, 126, 16, 116, 46, 4172, 840, 32, 1, 63, 195, 122, 147, 62, 159, 2709, 3, 128, 50, 5540, 9096628080, 67, 0, 153, 161, 99, 88, 65, 61, 6560, 144, 109, 97, 127, 5498, 23, 1, 27, 198, 209, 20, 7511, 9044669919, 15, 1, 171, 100, 162, 113, 42, 52, 4790, 860, 71, 4, 115, 53, 21, 78, 51, 137, 8867, 3, 4, 547, 27, 5, 112, 62, 5, 64, 103, 9, 1374, 992, 94, 5, 146, 44, 133, 145, 74, 22, 1933, 949, 76, 0, 93, 154, 71, 97, 104, 186, 3975, 190, 22, 2690, 3, 115, 178, 48, 68, 88, 4790, 12, 7, 133, 36, 45, 169, 98, 188, 7756, 3, 0, 967]
+Free Game RNG[70x] = [997832438, 721692390, 92, 3, 79, 47, 175, 126, 72, 17, 8907, 144, 190, 183, 152, 39, 57, 4307, 8104676043, 11, 97, 0, 112, 101, 47, 28, 160, 33, 7846, 99, 62, 41, 8655, 1, 91, 115, 114, 80, 75, 136, 98, 8, 135, 130, 145, 41, 131, 131, 5454, 685, 7, 1, 14, 161, 150, 116, 146, 168, 2567, 447, 7873436329, 15, 3, 148, 176, 43, 59, 171, 114, 5029, 255, 13, 8, 90, 104, 93, 62, 77, 0, 1810, 190, 71, 5, 7, 139, 39, 122, 80, 43, 8416, 1, 0, 6, 71, 41, 4718, 26, 6, 124, 63, 12, 156, 132, 19, 9827, 2, 1, 88, 97, 5, 99, 90, 94, 84, 104, 87, 772, 76, 185, 100, 31, 225, 217, 8733, 0, 67, 3, 97, 90, 175, 39, 112, 131, 9997, 1, 3, 1, 964, 9, 7, 7, 76, 133, 26, 36, 189, 751, 121, 5, 189, 9233, 1, 134, 1, 176, 72, 3762]
+Free Game RNG[80x] = [996169012, 883575694, 97, 1, 62, 151, 12, 87, 129, 7, 3615, 976, 920291184, 2, 20, 6, 151, 107, 136, 163, 94, 195, 178, 714, 74, 8, 59, 123, 119, 23, 159, 199, 8278, 4, 2, 20, 85, 3, 40, 152, 155, 126, 12, 189, 6837, 1, 0, 624, 43, 8, 17, 50, 25, 141, 9, 35, 7151, 27, 21, 2298, 90, 176, 130, 71, 61, 1990, 107, 70, 107, 93, 186, 106, 67, 79, 9275, 7, 6, 167, 74, 135, 25, 36, 4, 2944, 4, 7, 7, 11, 147, 136, 46, 92, 128, 8763, 4, 0, 964, 3, 5, 182, 79, 1, 1, 68, 46, 9361, 1, 1, 21, 49, 213, 197, 181, 210, 197, 21, 1061, 35, 5, 75, 160, 72, 75, 155, 14, 4476, 30, 1, 4, 29, 158, 88, 186, 140, 6, 5510, 199, 32, 2, 148, 82, 128, 73, 51, 187, 8994, 4, 1, 104]
+Free Game RNG[90x] = [998863265, 978219345, 98, 7, 116, 67, 13, 132, 68, 112, 727, 131, 0, 190, 142, 5083, 9828830698, 1, 66, 1, 120, 34, 77, 137, 128, 81, 8332, 1, 1, 171, 96, 159, 5138, 58, 3, 20, 148, 174, 124, 134, 175, 8025, 2, 2, 715, 2, 3, 133, 1, 81, 22, 72, 59, 717, 100, 52, 7, 116, 72, 152, 16, 139, 102, 5474, 8, 37, 3, 160, 48, 94, 30, 113, 148, 2957, 255, 63, 3, 1, 182, 170, 110, 197, 20, 2018, 409, 34, 8, 51, 25, 84, 59, 195, 15, 512, 393, 60, 3, 132, 73, 110, 195, 106, 114, 8647, 2, 2, 122, 105, 141, 6321, 177, 166, 37, 31, 136, 92, 39, 107, 115, 21, 8, 6, 47, 125, 190, 9, 180, 1239, 946, 55, 7, 65, 17, 73, 188, 188, 149, 8938, 5, 0, 849]
+Free Game RNG[100x] = [999010931, 917049037, 91, 0, 80, 76, 26, 38, 68, 71, 4886, 643, 1954947627, 11, 26, 6, 190, 176, 162, 194, 129, 42, 8634, 3, 0, 735, 52, 8, 105, 173, 38, 11, 124, 32, 6356, 487, 10, 8, 131, 12, 191, 26, 8, 150, 5083, 517, 96, 0, 89, 143, 26, 6, 93, 179, 5999, 504, 15, 1, 160, 88, 165, 188, 148, 104, 1194, 494, 34, 3, 115, 122, 117, 156, 99, 110, 7390, 841, 51, 2, 157, 100, 31, 46, 170, 32, 5311, 103, 43, 115, 139, 9717, 1, 41, 100, 116, 140, 125, 24, 14, 225, 53, 5089, 262, 62, 187, 6230, 56, 7, 65, 45, 115, 99, 4, 76, 8066, 4, 3, 797, 27, 6, 139, 123, 46, 144, 61, 153, 6497, 1, 1, 117, 114, 101, 156, 139, 73, 38, 9518, 47, 83, 75, 66, 7412, 1394604961, 8, 7, 89, 192, 127, 59, 150, 81, 9644, 1, 1, 226]
+=======================FreeGame C1 RNG INFO=======================================
+Free Game C1[3] = [998274244, 928761159, 87, 1, 84, 65, 184, 38, 61, 10, 5918, 849, 1219269689, 1, 17, 0, 175, 50, 8, 1, 76, 167, 4901, 10, 89, 127, 113, 140, 135, 199, 46, 40, 4165, 123, 55, 233, 80, 95, 6275, 341, 155, 257, 271, 504, 5195, 85, 4, 163, 4, 5, 188, 82, 157, 2507, 5, 1, 824, 9267595168, 81, 1, 101, 54, 192, 114, 94, 155, 1206, 425, 46, 4, 79, 109, 97, 42, 4, 42, 454, 116, 7029994302, 73, 3, 90, 2, 146, 95, 63, 106, 9483, 2, 2, 57, 143, 118, 2, 215, 26, 151, 1495, 2082085888, 23, 4, 135, 183, 176, 54, 166, 112, 6715, 42, 152, 97, 6947, 172, 158, 41, 160, 193, 9877, 3, 14, 7, 27, 168, 49, 18, 126, 128, 8165, 0, 0, 759, 71, 3, 179, 7, 70, 102, 93, 153, 6599, 416, 25, 4, 131, 9, 104, 136, 162, 100, 948, 867, 3, 0, 85, 187, 190, 34, 69, 73, 4261, 957, 94, 7, 195, 127, 129, 176, 63, 21, 6354, 315, 1307242264, 42, 0, 83, 124, 3, 179, 94, 168, 9497, 5, 1, 549, 0, 5, 66, 155, 96, 100, 185, 116, 1021, 90, 77, 89, 136, 1, 84, 15, 99, 64, 127, 2116, 56, 2, 140, 104, 164, 175, 138, 139, 1808, 672, 96, 5, 27, 85, 178, 43, 88, 55, 5685, 32, 3, 4, 116, 2, 33, 14, 106, 87, 308, 40, 92, 5, 97, 116, 191, 38, 181, 89, 6236, 749, 79, 8, 142, 106, 137, 11, 81, 163, 5787, 960, 61, 6, 80, 86, 107, 47, 6, 26, 4147, 313, 5570120089, 24, 4, 71, 65, 2, 168, 60, 114, 6319, 466, 8195264494]
+Free Game C1[4] = [999450297, 488616456, 92, 5, 69, 143, 99, 126, 179, 167, 3434, 317, 6564752849, 1, 8, 5, 120, 3, 80, 115, 90, 137, 3453, 314, 68, 8, 132, 23, 124, 35, 0, 1, 287, 4, 3, 815, 20, 1, 172, 16, 103, 39, 152, 146, 9330, 3, 1, 750, 5, 5, 72, 99, 35, 185, 68, 85, 3152, 7, 170, 139, 4405, 2612156040, 91, 6, 127, 145, 80, 177, 89, 86, 7546, 200, 77, 8, 172, 119, 90, 3, 124, 186, 5524, 101, 1, 2, 2494, 189, 26, 147, 134, 0, 185, 41, 4645, 2756611065, 56, 7, 33, 70, 108, 72, 177, 194, 5395, 968, 27, 5, 141, 97, 125, 119, 91, 79, 6900, 662, 33, 1, 194, 1, 180, 110, 147, 186, 2194, 178, 95, 24, 102, 546, 59, 1, 80, 14, 136, 14, 56, 5, 4383, 876, 9658295550, 38, 2, 5, 133, 77, 29, 188, 149, 2458, 147, 36, 5, 26, 181, 119, 171, 97, 153, 5130, 105, 61, 4, 1, 183, 128, 65, 32, 153, 628, 407, 80, 0, 153, 55, 199, 69, 180, 66, 8399, 2, 2, 947, 23, 8, 37, 176, 69, 162, 172, 170, 6861, 607, 66, 4, 100, 164, 154, 155, 19, 41, 6985, 778, 89, 2, 42, 46, 148, 56, 18, 12, 5053, 272, 9092348431, 57, 8, 47, 154, 19, 38, 78, 110, 6179, 166, 55, 176, 68, 7466, 36, 5, 95, 47, 75, 33, 102, 94, 9398, 0, 0, 21, 52, 5, 175, 143, 126, 34, 55, 64, 4428, 362, 72, 3, 73, 9, 178, 101, 186, 21, 5829, 835, 81, 7, 89, 120, 138, 187, 130, 28, 2880, 139, 145, 6, 33, 80, 8748, 2, 3302497841]
+=======================整場TopUpGame 倍數=======================================
+=======================by Game Data=======================================
+BG_eliminateSymbolHit[10][2] = 184350
+BG_eliminateSymbolHit[10][3] = 207044
+BG_eliminateSymbolHit[10][4] = 203268
+BG_eliminateSymbolHit[10][5] = 109022
+BG_eliminateSymbolHit[3][2] = 177961
+BG_eliminateSymbolHit[3][3] = 173291
+BG_eliminateSymbolHit[3][4] = 60442
+BG_eliminateSymbolHit[3][5] = 9340
+BG_eliminateSymbolHit[4][2] = 160018
+BG_eliminateSymbolHit[4][3] = 153271
+BG_eliminateSymbolHit[4][4] = 61666
+BG_eliminateSymbolHit[4][5] = 31892
+BG_eliminateSymbolHit[5][2] = 166212
+BG_eliminateSymbolHit[5][3] = 203592
+BG_eliminateSymbolHit[5][4] = 154423
+BG_eliminateSymbolHit[5][5] = 38821
+BG_eliminateSymbolHit[6][2] = 134852
+BG_eliminateSymbolHit[6][3] = 150588
+BG_eliminateSymbolHit[6][4] = 69649
+BG_eliminateSymbolHit[6][5] = 54661
+BG_eliminateSymbolHit[7][2] = 127496
+BG_eliminateSymbolHit[7][3] = 168802
+BG_eliminateSymbolHit[7][4] = 160327
+BG_eliminateSymbolHit[7][5] = 88066
+BG_eliminateSymbolHit[8][2] = 106440
+BG_eliminateSymbolHit[8][3] = 170274
+BG_eliminateSymbolHit[8][4] = 142084
+BG_eliminateSymbolHit[8][5] = 95958
+BG_eliminateSymbolHit[9][2] = 143008
+BG_eliminateSymbolHit[9][3] = 163347
+BG_eliminateSymbolHit[9][4] = 79985
+BG_eliminateSymbolHit[9][5] = 88000
+FG's Base Pay:  = 6758515
+FG_eliminateSymbolHit [10][2] = 3655
+FG_eliminateSymbolHit [10][3] = 2219
+FG_eliminateSymbolHit [10][4] = 211
+FG_eliminateSymbolHit [10][5] = 433
+FG_eliminateSymbolHit [3][2] = 3209
+FG_eliminateSymbolHit [3][3] = 3997
+FG_eliminateSymbolHit [3][4] = 3339
+FG_eliminateSymbolHit [3][5] = 68
+FG_eliminateSymbolHit [4][2] = 12556
+FG_eliminateSymbolHit [4][3] = 5228
+FG_eliminateSymbolHit [4][4] = 456
+FG_eliminateSymbolHit [4][5] = 273
+FG_eliminateSymbolHit [5][2] = 3771
+FG_eliminateSymbolHit [5][3] = 5694
+FG_eliminateSymbolHit [5][4] = 11222
+FG_eliminateSymbolHit [5][5] = 610
+FG_eliminateSymbolHit [6][2] = 10821
+FG_eliminateSymbolHit [6][3] = 4901
+FG_eliminateSymbolHit [6][4] = 325
+FG_eliminateSymbolHit [6][5] = 465
+FG_eliminateSymbolHit [7][2] = 4602
+FG_eliminateSymbolHit [7][3] = 5712
+FG_eliminateSymbolHit [7][4] = 28716
+FG_eliminateSymbolHit [7][5] = 3777
+FG_eliminateSymbolHit [8][2] = 6427
+FG_eliminateSymbolHit [8][3] = 6974
+FG_eliminateSymbolHit [8][4] = 18123
+FG_eliminateSymbolHit [8][5] = 1642
+FG_eliminateSymbolHit [9][2] = 14261
+FG_eliminateSymbolHit [9][3] = 7893
+FG_eliminateSymbolHit [9][4] = 201
+FG_eliminateSymbolHit [9][5] = 420
+Freegame Count:  = 43486
+bgC1Count = 0 = 8181186
+bgC1Count = 1 = 1522559
+bgC1Count = 2 = 252769
+bgC1Count = 3 = 39990
+bgC1Count = 4 = 3319
+bgC1Count = 5 = 172
+bgC1Count = 6 = 5
+bgMaxOddSpin = 1
+fgC1Count = 0 = 368123
+fgC1Count = 1 = 70582
+fgC1Count = 2 = 6884
+fgC1Count = 3 = 354
+fgC1Count = 4 = 17
+=======================RNG INFO=======================================
