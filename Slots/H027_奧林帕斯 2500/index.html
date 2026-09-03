@@ -320,6 +320,27 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-09-02：依還原後 10 億局報表重算 NB 倍率權重</h4>
+          <ul>
+            <li>自然來源改為 H0271_03_2609021651_betmode0_109.xlsx；確認使用 BG Reel Set 0／1／2、Card System Off。</li>
+            <li>92A 理論 NB RTP 為 92.0000%（BG 72%／FG 20%）；94A 為 94.0000%（BG 74%／FG 20%）。</li>
+            <li>FG 週期 300、50～80x 占 FG RTP 40%、200x 以上絕對 RTP 2%、單區間機率上限 15%；自然率低於 0.1%、FG 20x 以下及 20,000x 以上皆為零權重。</li>
+            <li>上述硬條件下 FG Hit Rate 最高可行值為 42.4163%，無法同時達到競品 43.5640%；目前採可行上限。</li>
+            <li>Card-On 100 萬局：92A 92.3406%、FG 週期 299.76；94A 93.9712%、FG 週期 296.30；Retry 超限皆為 0。</li>
+            <li>已同步 H027192A.xlsx、H027194A.xlsx、config_92A.js、config_94A.js 與競品比較；EB／BF 權重未修改，版本維持 3.0.0.7。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
+          <h4>2026-09-02：BG_Symbol 輪帶還原為 v2</h4>
+          <ul>
+            <li>撤銷誤將 FG Reel Set 3 套入 BG_Symbol 的設定；BG_Symbol 已還原為 v2 Reel Set 0，BG 表選擇恢復為 Set 0／1／2。</li>
+            <li>Card-Off 1,000 萬局 BG RTP 由 542.2847% 降回 133.9440%，BG 倍數球率由約 17.98% 降回 3.4221%。</li>
+            <li>依還原後自然報表重算 H027192A／H027194A 的 NB-BG 權重；自然發生率低於 0.1% 的區間全部歸零，BG Cap 由 120x 降為 20x。</li>
+            <li>完整 BG 理論 RTP 為 72.0000%／74.0000%；Card-On 100 萬局總 RTP 為 92.1027%／94.2089%，Retry Limit 超限皆為 0。</li>
+            <li>已同步 H0271.xlsx、H027192A.xlsx、H027194A.xlsx、config.js、config_92A.js、config_94A.js；依使用者要求仍維持 v3.0.0.7，不增加版本號。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
           <h4>2026-09-01：v3 FG Hit Rate 調整至 44%</h4>
           <ul>
             <li>僅調整 FG_Symbol 與 FG_Symbol (2) 的 Stop Weight，保留原輪帶順序與輪長。</li>
@@ -395,7 +416,7 @@
           <h4>2026-08-25：盤面顯示與設定流程依開發規範調整</h4>
           <ul>
             <li>Version 只列出該版本可用的 92A／94A Config，移除 Base-Off 選項。</li>
-            <li>Card System Off 沿用目前 Config 的原始自然機率；On 才套用所選 Newbie／Oldhand 卡片權重。</li>
+            <li>Card System Off 沿用目前 Config 的原始自然機率；On 依目前的 NB／EB／BF 模式套用對應卡片權重。</li>
             <li>盤面改為固定 6×5 比例；符號格與間距隨可用寬度一起等比例縮放，避免縮放視窗時擠壓或變形。</li>
             <li>自動檢查涵蓋 Config 選單、Card System、Spin、盤面比例與瀏覽器 Console。</li>
             <li>本次沒有修改 XLSX、Config 數學參數或 RTP。</li>
@@ -457,13 +478,6 @@
         <label class="config-control demogame-source-control" for="configSelect">
           Config
           <select id="configSelect"></select>
-        </label>
-        <label class="config-control demogame-source-control" for="cardProfileSelect">
-          Profile
-          <select id="cardProfileSelect">
-            <option value="newbie">Newbie</option>
-            <option value="oldhand" selected>Oldhand</option>
-          </select>
         </label>
         <label class="config-control" for="languageSelect">
           <span>Language</span>
@@ -669,7 +683,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     version: byId("versionSelect"),
     combinedConfig: byId("demogameConfigSelect"),
     config: byId("configSelect"),
-    profile: byId("cardProfileSelect"),
     cardSystem: byId("cardSystemInput"),
     debug: byId("debugModeInput"),
     forceFg: byId("forceFgInput"),
@@ -859,20 +872,11 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return maxima.length ? Math.max(...maxima) : null;
   }
 
-  function selectedPlayerProfile() {
-    const value = el.profile?.value;
-    if (value === "newbie" || value === "oldhand") return value;
-    try { return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
-    catch (_) { return "oldhand"; }
-  }
-
   function currentCardLimits(betTier) {
     const naturalLimit = Number(Box.multiplier_max_value) || 2500;
     if (!Box.card_system?.enabled) return { bg: naturalLimit, fg: naturalLimit };
-    const player = selectedPlayerProfile();
-    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : "normal_bet";
-    let mode = Box.card_system?.[player]?.[modeKey];
-    if (player === "oldhand") mode = mode?.[betTier];
+    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet";
+    const mode = Box.card_system?.[modeKey];
     return {
       bg: state.selectedMode === MODE_BUY ? 0 : positiveRangeMax(mode?.weight_bg) ?? naturalLimit,
       fg: positiveRangeMax(mode?.weight_fg) ?? naturalLimit
@@ -916,14 +920,11 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     el.config.value = H027_CONFIG_CODE;
     el.combinedConfig.innerHTML = "";
     for (const code of manifestConfigCodes(H027_VERSION_ENTRY)) {
-      const profiles = ["newbie", "oldhand"];
-      for (const profile of profiles) {
-        const option = document.createElement("option");
-        option.value = JSON.stringify([code, profile]);
-        option.textContent = `${code}-${profile === "newbie" ? "Newbie" : "Oldhand"}`;
-        if (code === H027_CONFIG_CODE && profile === selectedPlayerProfile()) option.selected = true;
-        el.combinedConfig.appendChild(option);
-      }
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = code;
+      if (code === H027_CONFIG_CODE) option.selected = true;
+      el.combinedConfig.appendChild(option);
     }
   }
 
@@ -1329,7 +1330,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     el.cardRange.disabled = wagerLocked || !cardEnabled || forcedReels;
     el.rngInput.disabled = wagerLocked || (cardEnabled && forcedCard);
     el.rngReset.disabled = wagerLocked || (!forcedCard && !forcedReels);
-    if (el.profile) el.profile.disabled = wagerLocked || !Boolean(Box.card_system?.enabled);
     if (el.cardSystem) el.cardSystem.disabled = wagerLocked || !Boolean(Box.card_system?.enabled);
     if (el.version) el.version.disabled = wagerLocked;
     if (el.config) el.config.disabled = wagerLocked;
@@ -1455,23 +1455,15 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   function cardSystemActive() {
-    return state.selectedMode !== MODE_EXTRA
-      && Boolean(Box.card_system?.enabled)
-      && window.DEMOGAME_CARD_SYSTEM_ENABLED !== false
-      && cardPlayerProfile() !== "off";
-  }
-
-  function cardPlayerProfile() {
-    return selectedPlayerProfile();
+    const mode = cardModeData();
+    return Boolean(Box.card_system?.enabled)
+      && mode?.enabled !== false
+      && window.DEMOGAME_CARD_SYSTEM_ENABLED !== false;
   }
 
   function cardModeData() {
-    const player = cardPlayerProfile();
-    if (player === "off") return null;
-    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : "normal_bet";
-    let data = Box.card_system?.[player]?.[modeKey];
-    if (player === "oldhand") data = data?.[currentBetContext().betTier];
-    return data || null;
+    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet";
+    return Box.card_system?.[modeKey] || null;
   }
 
   function pickCard(cards, forcedIndex = null) {
@@ -1510,7 +1502,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   function cardRatio(creditPay) {
-    return toMoney(creditPay) / betMoney();
+    const denominator = state.selectedMode === MODE_BUY ? betMoney() : wagerMoney();
+    return toMoney(creditPay) / denominator;
   }
 
   function cardMatches(card, creditPay) {
@@ -1561,7 +1554,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function cardRound(forceFeature = false, forcedStops = null) {
     const modeData = cardModeData();
     const limit = Number(Box.card_system?.retry_limit || 10000);
-    if (!modeData || forceFeature || forcedStops || state.selectedMode === MODE_EXTRA) {
+    if (!modeData || forceFeature || forcedStops) {
       const natural = naturalRound(forceFeature, forcedStops);
       return { ...natural, card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
     }
@@ -1639,7 +1632,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       const result = generateRound(forceFeature, forcedStops);
       const spin = result.base;
       spin.cardInfo = {
-        profile: cardSystemActive() ? cardPlayerProfile() : "off",
+        profile: cardSystemActive() ? (state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet") : "off",
         card: cardLabel(result.card),
         fgCard: cardLabel(result.fgCard),
         retries: result.retries,
@@ -1922,20 +1915,11 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       openVersion(el.version.value, codes.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : codes[0]);
     });
     el.combinedConfig.addEventListener("change", () => {
-      const [code, profile] = JSON.parse(el.combinedConfig.value);
-      el.profile.value = profile;
-      try { localStorage.setItem("slotDemoCardProfile", profile); } catch (_) {}
+      const code = el.combinedConfig.value;
       if (code !== H027_CONFIG_CODE) {
         openVersion(H027_VERSION_ENTRY.version, code);
         return;
       }
-      el.cardRange.value = "";
-      el.rngInput.value = "";
-      refreshCardRangeOptions();
-      updateControls();
-    });
-    el.profile.addEventListener("change", () => {
-      try { localStorage.setItem("slotDemoCardProfile", el.profile.value); } catch (_) {}
       el.cardRange.value = "";
       el.rngInput.value = "";
       refreshCardRangeOptions();
@@ -1953,8 +1937,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   byId("gameId").textContent = Box.game_id;
   byId("gameName").textContent = t("gameName");
-  try { el.profile.value = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; }
-  catch (_) { el.profile.value = "oldhand"; }
   renderVersionControls();
   el.normal.hidden = !SUPPORTED_BET_MODES.has(MODE_NORMAL);
   el.buy.hidden = !SUPPORTED_BET_MODES.has(MODE_EXTRA);

@@ -90,6 +90,12 @@ window.H027_VERSION_MANIFEST = {
       },
       frozen_base: "Versions/3.0.0.7",
       changes: [
+        "Recalculate NB-BG and NB-FG weights from the restored 1,000,000,000-round Card-Off report H0271_03_2609021651_betmode0_109.xlsx.",
+        "Keep NB theoretical RTP at 92.0000%/94.0000%, FG cycle 300, 50-80x FG RTP share 40%, over-200x absolute RTP 2%, and per-interval probability at or below 15%.",
+        "Maximize weighted FG Hit Rate to the feasible 42.4163%; reaching competitor 43.5640% is infeasible while all four multiplier constraints remain fixed.",
+        "Restore BG_Symbol from the mistakenly assigned FG Reel Set 3 to the v2 Reel Set 0; BG uses Reel Sets 0/1/2 again.",
+        "Recalibrate 92A and 94A NB-BG range weights from the restored 10,000,000-round natural report, with all sub-0.1% intervals disabled and BG Cap set to 20x.",
+        "Keep theoretical full BG RTP at 72.0000% and 74.0000% without incrementing the candidate version.",
         "Build the BF entry reel from three FG_Symbol-equivalent symbol pools with distinct regular-symbol phase layouts.",
         "Expand valid BF stops to 15/15/15/15/162/162 and distinct positive windows to 15/15/15/15/67/70 by reel.",
         "Guarantee exactly one C1 on R1-R4 and none on R5-R6 for every positive-weight BF entry.",

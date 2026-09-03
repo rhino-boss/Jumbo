@@ -51,7 +51,7 @@ SHOW_CONSOLE_DETAIL = False
 
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
-    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
+    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -364,12 +364,11 @@ if CARD_SYSTEM_ENABLED and CARD_RETRY_LIMIT != 10000:
     raise ValueError(f"Enabled card_system.retry_limit must be 10000, got {CARD_RETRY_LIMIT}")
 CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
-CARD_PROFILE_NEWBIE_BG = 0
-CARD_PROFILE_NEWBIE_FG = 1
-CARD_PROFILE_NEWBIE_BUY_FEATURE = 2
-CARD_PROFILE_OLDHAND_BG = 3
-CARD_PROFILE_OLDHAND_FG = 4
-CARD_PROFILE_OLDHAND_BUY_FEATURE = 5
+CARD_PROFILE_NB_BG = 0
+CARD_PROFILE_NB_FG = 1
+CARD_PROFILE_EB_BG = 2
+CARD_PROFILE_EB_FG = 3
+CARD_PROFILE_BUY_FEATURE = 4
 
 if BASE_BET < SMALL_BET_LT:
     ACTIVE_CARD_BET_TIER = "small_bet"
@@ -379,33 +378,33 @@ else:
     ACTIVE_CARD_BET_TIER = "big_bet"
 
 
-def get_card_profile_cards(player, mode, segment, bet_tier=None):
-    player_data = CARD_SYSTEM.get(player, {})
-    mode_data = player_data.get(mode, {}) if isinstance(player_data, dict) else {}
-    if player == "oldhand" and isinstance(mode_data, dict):
-        tier = bet_tier or ACTIVE_CARD_BET_TIER
-        mode_data = mode_data.get(tier, {})
+def get_card_profile_cards(mode, segment):
+    mode_data = CARD_SYSTEM.get(mode, {})
     return list(mode_data.get(segment, [])) if isinstance(mode_data, dict) else []
 
 
-def get_bg_trigger_cap(player, mode, bet_tier):
-    player_data = CFG_RTP.get("card_system", {}).get(player, {})
-    mode_data = player_data.get(mode, {}) if isinstance(player_data, dict) else {}
-    if player == "oldhand" and isinstance(mode_data, dict) and bet_tier in mode_data:
-        mode_data = mode_data[bet_tier]
+def get_bg_trigger_cap(mode):
+    mode_data = CFG_RTP.get("card_system", {}).get(mode, {})
     cards = mode_data.get("weight_bg", []) if isinstance(mode_data, dict) else []
     caps = [float(card["max"]) for card in cards if card.get("type", "range") == "range" and float(card.get("weight", 0)) > 0]
     return max(caps) if caps else None
 
 
 CARD_PROFILE_LISTS = [
-    get_card_profile_cards("newbie", "normal_bet", "weight_bg"),
-    get_card_profile_cards("newbie", "normal_bet", "weight_fg"),
-    get_card_profile_cards("newbie", "buy_feature", "weight_fg"),
-    get_card_profile_cards("oldhand", "normal_bet", "weight_bg", ACTIVE_CARD_BET_TIER),
-    get_card_profile_cards("oldhand", "normal_bet", "weight_fg", ACTIVE_CARD_BET_TIER),
-    get_card_profile_cards("oldhand", "buy_feature", "weight_fg", ACTIVE_CARD_BET_TIER),
+    get_card_profile_cards("normal_bet", "weight_bg"),
+    get_card_profile_cards("normal_bet", "weight_fg"),
+    get_card_profile_cards("extra_bet", "weight_bg"),
+    get_card_profile_cards("extra_bet", "weight_fg"),
+    get_card_profile_cards("buy_feature", "weight_fg"),
 ]
+CARD_MODE_ENABLED = np.array(
+    [
+        1 if CARD_SYSTEM.get("normal_bet", {}).get("enabled", True) else 0,
+        1 if CARD_SYSTEM.get("extra_bet", {}).get("enabled", True) else 0,
+        1 if CARD_SYSTEM.get("buy_feature", {}).get("enabled", True) else 0,
+    ],
+    dtype=np.int64,
+)
 MAX_CARDS = max(1, max((len(cards) for cards in CARD_PROFILE_LISTS), default=0))
 CARD_TYPES = np.full((len(CARD_PROFILE_LISTS), MAX_CARDS), -1, dtype=np.int64)
 CARD_MIN = np.zeros((len(CARD_PROFILE_LISTS), MAX_CARDS), dtype=np.float64)
@@ -426,7 +425,7 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
             CARD_BG_TRIGGER_CAP[card_profile_index] = max(CARD_BG_TRIGGER_CAP[card_profile_index], CARD_MAX[card_profile_index, card_index])
     CARD_COUNTS[card_profile_index] = len(cards)
 if CARD_SYSTEM_ENABLED:
-    for profile_index in (CARD_PROFILE_NEWBIE_BG, CARD_PROFILE_OLDHAND_BG):
+    for profile_index in (CARD_PROFILE_NB_BG, CARD_PROFILE_EB_BG):
         has_free_game = any(CARD_TYPES[profile_index, index] == CARD_TYPE_FREE_GAME and CARD_WEIGHT_CUM[profile_index, index] > (CARD_WEIGHT_CUM[profile_index, index - 1] if index else 0) for index in range(CARD_COUNTS[profile_index]))
         if has_free_game and CARD_BG_TRIGGER_CAP[profile_index] < 0:
             raise ValueError("Enabled free_game card requires a positive-weight BG range card for BG Trigger Cap")
@@ -1005,7 +1004,7 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
 def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
     np.random.seed(random_seed)
     record = np.zeros(RECORD_SIZE, dtype=np.float64)
-    card_system_active = CARD_SYSTEM_ENABLED and bet_mode != MODE_EXTRABET
+    card_system_active = CARD_SYSTEM_ENABLED and CARD_MODE_ENABLED[bet_mode] == 1
     profile_index = 0
     if bet_mode == MODE_FEATUREBUY:
         profile_index = 1
@@ -1015,10 +1014,10 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
         coin_in = DEFAULT_COIN_IN * EXTRABET * bet_multi
     elif bet_mode == MODE_FEATUREBUY:
         coin_in = DEFAULT_COIN_IN * FEATUREBUY * bet_multi
-    card_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
-    bg_card_profile = CARD_PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BG
-    fg_card_profile = CARD_PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_FG
-    package_card_profile = CARD_PROFILE_NEWBIE_BUY_FEATURE if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BUY_FEATURE
+    card_coin_in = coin_in if bet_mode != MODE_FEATUREBUY else DEFAULT_COIN_IN * NORMALBET * bet_multi
+    bg_card_profile = CARD_PROFILE_NB_BG if bet_mode == MODE_NORMALBET else CARD_PROFILE_EB_BG
+    fg_card_profile = CARD_PROFILE_NB_FG if bet_mode == MODE_NORMALBET else CARD_PROFILE_EB_FG
+    package_card_profile = CARD_PROFILE_BUY_FEATURE
     accepted_rounds = 0
     retry_count = 0
     retry_total = 0
@@ -1314,16 +1313,15 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     fg_sessions = values[R_ALL, RA_FG_TRIGGER]
     fg_spins = values[R_ALL, RA_FG_SPINS]
     variance = values[R_ALL, RA_X_SQUARE] / total_round - (values[R_ALL, RA_X_SUM] / total_round) ** 2
-    card_system_active = CARD_SYSTEM_ENABLED and bet_mode != MODE_EXTRABET
+    mode_key = "normal_bet" if bet_mode == MODE_NORMALBET else "extra_bet" if bet_mode == MODE_EXTRABET else "buy_feature"
+    card_system_active = CARD_SYSTEM_ENABLED and bool(CARD_MODE_ENABLED[bet_mode])
     volatility_std = math.sqrt(max(0.0, variance))
     standard_error = volatility_std / math.sqrt(total_round) if total_round else 0.0
     retrigger_count = values[R_ALL, RA_RETRIGGER]
     special_symbol_cnt = values[R_ALL, RA_SPECIAL_SYMBOL_SPINS]
     scr = special_symbol_cnt / total_round * 10_000_000_000 if total_round else 0.0
     bet_context = build_bet_context(bet_mode, bet_multi)
-    player = "newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"
-    mode_key = "normal_bet" if bet_mode == MODE_NORMALBET else "extra_bet" if bet_mode == MODE_EXTRABET else "buy_feature"
-    bg_trigger_cap = get_bg_trigger_cap(player, mode_key, bet_context["bet_tier"])
+    bg_trigger_cap = get_bg_trigger_cap(mode_key)
     bg_trigger_fg_pay = values[R_ALL, RA_BG_TRIGGER_FG_PAY]
     if bg_trigger_cap is not None:
         matching = np.flatnonzero(np.isclose(THRESHOLD_RECORD, bg_trigger_cap, rtol=0.0, atol=1e-12))
@@ -1397,7 +1395,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "avg_fg_end_multiplier": values[R_ALL, RA_FG_SESSION_MULTIPLIER_SUM] / values[R_ALL, RA_FG_SESSION_COUNT] if values[R_ALL, RA_FG_SESSION_COUNT] else 0,
         "card_system": "on" if card_system_active else "off",
         "pending_math_items": " | ".join(PENDING_MATH_ITEMS) if PENDING_MATH_ITEMS else "none",
-        "card_system_profile": "off" if not card_system_active else ("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand"),
+        "card_system_profile": "off" if not card_system_active else mode_key,
         "card_retry_limit": CARD_RETRY_LIMIT if card_system_active else 0,
         "retry_total": int(values[R_ALL, RA_RETRY_TOTAL]),
         "avg_retry": values[R_ALL, RA_RETRY_TOTAL] / total_round,
@@ -1580,15 +1578,13 @@ def output_report(frames, record, bet_mode, total_round):
     summary, base_frame, multiplier_frame, symbol_frame, cascade_frame, c2_frame, scatter_frame, symbol_bucket_frame, ball_cascade_frame = frames
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%y%m%d%H%M")
-    card_system_active = CARD_SYSTEM_ENABLED and bet_mode != MODE_EXTRABET
+    card_system_active = summary["card_system"] == "on"
     rounds_tag = format_rounds_tag(total_round)
     if card_system_active:
         report_game_id = str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
         version_tag = format_rtp_version_tag(CONFIG_VERSION)
         parts = [report_game_id, version_tag, timestamp, f"betmode{bet_mode}", rounds_tag, format_rtp_tag(summary["rtp_total"])]
-        parts.append("newbie" if CARD_SYSTEM_IS_NEWBIE else "oldhand")
-        if not CARD_SYSTEM_IS_NEWBIE:
-            parts.append(str(summary["bet_tier"]))
+        parts.append(str(summary["card_system_profile"]))
         parts.append("card")
     else:
         report_game_id = str(CFG_NATURAL.get("model") or CFG_NATURAL.get("parsheet_id") or GAME_ID)

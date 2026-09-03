@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H027 v4 倍率線型 vs Gates of Olympus</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f7f7f5;--card:#fff;--bd:#e8e8e4;--tx:#1a1a1a;--tx2:#5f5e5a;--tx3:#898781;--grid:#e1e0d9;--v4:#2a78d6;--comp:#eb6834}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141413;--card:#1a1a19;--bd:#2c2c2a;--tx:#f0efec;--tx2:#c3c2b7;--tx3:#898781;--grid:#2c2c2a;--v4:#3987e5;--comp:#d95926}}
+:root[data-theme=dark]{--bg:#141413;--card:#1a1a19;--bd:#2c2c2a;--tx:#f0efec;--tx2:#c3c2b7;--tx3:#898781;--grid:#2c2c2a;--v4:#3987e5;--comp:#d95926}
+body{background:var(--bg);color:var(--tx);font:400 15px/1.65 "Helvetica Neue","PingFang TC","Microsoft JhengHei",sans-serif;margin:0}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 24px 64px}
+h1{font-size:22px;font-weight:500;margin:0 0 4px}
+h2{font-size:17px;font-weight:500;margin:32px 0 6px}
+.sub{color:var(--tx2);font-size:13px;margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px 20px;margin:0 0 20px}
+.lg{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--tx2);margin:0 0 10px}
+.lg span{display:flex;align-items:center;gap:5px}
+.sw{width:10px;height:10px;border-radius:2px}
+.ch{position:relative;width:100%;height:300px}
+.note{font-size:13px;color:var(--tx2);margin:6px 0 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0 0}
+th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--tx2);font-weight:500}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 24px}
+.kpi div{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px 14px}
+.kpi .k{font-size:12px;color:var(--tx2)}
+.kpi .v{font-size:20px;font-weight:500;margin-top:2px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>H027 v4 倍率線型 vs Gates of Olympus</h1>
+<p class="sub">
+H027 v4 = <code>Source/H027192A_v4_competitor_cycle.xlsx</code>（92A、Normal Bet、BG＋FG 合計每轉口徑）
+競品 = Clash of Slots《Gates of Olympus Xmas 1000》16,148,820 轉（main＋bonus_1）
+</p>
+
+<div class="kpi">
+  <div><div class="k">v4 每轉命中</div><div class="v">31.474%</div></div>
+  <div><div class="k">競品每轉命中</div><div class="v">28.415%</div></div>
+  <div><div class="k">FG 週期（兩邊相同）</div><div class="v">1/450.83</div></div>
+  <div><div class="k">v4 BG 倍率上限</div><div class="v">20x</div></div>
+  <div><div class="k">競品 BG 倍率上限</div><div class="v">~1000x</div></div>
+</div>
+
+<h2>每轉機率（對數刻度）</h2>
+<div class="card">
+  <div class="lg">
+    <span><i class="sw" style="background:var(--v4)"></i>H027 v4</span>
+    <span><i class="sw" style="background:var(--comp)"></i>競品 Xmas 1000</span>
+    <span style="color:var(--tx3)">v4 的 20x 以上全部來自 FG</span>
+  </div>
+  <div class="ch"><canvas id="c1"></canvas></div>
+  <p class="note">v4 的 BG 只到 20x（自然發生率 &lt;0.1% 不配權重的結果），所以 20x 以上完全由 FG 承擔，機率恰等於 FG 觸發率 0.22181%。競品在 20x～1000x 之間 BG 仍會出獎，合計 0.5477%。</p>
+</div>
+
+<h2>RTP 貢獻（百分點）</h2>
+<div class="card">
+  <div class="lg">
+    <span><i class="sw" style="background:var(--v4)"></i>H027 v4</span>
+    <span><i class="sw" style="background:var(--comp)"></i>競品 Xmas 1000</span>
+  </div>
+  <div class="ch"><canvas id="c2"></canvas></div>
+  <p class="note">兩邊 RTP 總量接近（v4 92.00%、競品量測 90.78%），但重心完全不同：v4 有 <b>24.21 pp 壓在 10–20x 這一個帶</b>，競品的最大單帶只有 11.24 pp（100–200x），分布平坦得多。</p>
+</div>
+
+<h2>逐帶數值</h2>
+<div class="card">
+<table>
+<thead><tr><th>倍率帶</th><th>v4 機率</th><th>競品機率</th><th>v4 RTP</th><th>競品 RTP</th></tr></thead>
+<tbody id="tb"></tbody>
+</table>
+<p class="note">機率為每轉百分比；RTP 為百分點。v4 另有 0.902 pp 來自 FG 觸發轉的 BG 得分，未列入上表帶別。</p>
+</div>
+
+<h2>結論</h2>
+<div class="card">
+<p style="margin:0 0 10px">三項已對齊：<b>FG 週期</b>（兩邊皆 1/450.83）、<b>RTP 總量</b>（92.00% vs 90.78%）、<b>0–5x 的低倍段機率</b>（逐帶差 &lt;0.35 pp）。</p>
+<p style="margin:0 0 10px">兩項結構性落差，都是「自然發生率 &lt;0.1% 不配權重」這條規範造成的：</p>
+<ol style="margin:0;padding-left:22px;color:var(--tx2)">
+<li>BG 倍率天花板被切在 20x（<code>(20,25]</code> 自然率只有 0.09325%），所以 BG RTP 72% 必須全部塞進 13 個桶，<code>(5,10]</code> 與 <code>(10,20]</code> 被大幅超配。</li>
+<li>每轉 x20+ 機率 0.22181% vs 競品 0.63542% —— v4 的 x20+ 只剩 FG 觸發本身。</li>
+</ol>
+<p class="note">要貼近競品只有兩條路：把 0.1% 門檻放寬（例如 0.02%，可讓 BG 配到 100x 左右），或降低 BG RTP 目標。</p>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const L=['0–1','1–2','2–3','3–4','4–5','5–10','10–20','20–30','30–40','40–50','50–100','100–200','200–300','300–400','400–500','500–1k','1k–2k','2k–3k','3k–5k','5k–10k','10k–20k'];
+const P4=[16.6335,5.8178,2.6559,1.6969,0.9711,1.7652,1.7118,0.04926,0.03278,0.02370,0.06044,0.03624,0.01068,0.00415,0.00190,0.00218,0.00036,0.00007,0.00004,0.00001,0.00001];
+const PC=[15.5874,5.9016,2.5543,1.37985,0.69688,1.00262,0.65685,0.18610,0.10430,0.06820,0.15276,0.08194,0.02258,0.00843,0.00352,0.00525,0,0,0,0,0];
+const R4=[8.312,8.683,6.807,5.945,4.417,12.724,24.211,1.217,1.140,1.062,4.276,5.031,2.587,1.424,0.846,1.425,0.490,0.162,0.161,0.052,0.127];
+const RC=[7.250,7.968,6.086,4.717,3.088,6.655,8.628,4.526,3.584,3.031,10.639,11.238,5.446,2.892,1.565,3.464,0,0,0,0,0];
+const cs=getComputedStyle(document.documentElement);
+const g=cs.getPropertyValue('--grid').trim(),m=cs.getPropertyValue('--tx3').trim();
+const v4=cs.getPropertyValue('--v4').trim(),cp=cs.getPropertyValue('--comp').trim();
+const tb=document.getElementById('tb');
+L.forEach((l,i)=>{tb.insertAdjacentHTML('beforeend',
+ `<tr><td>${l}</td><td>${P4[i]?P4[i].toFixed(5):'—'}</td><td>${PC[i]?PC[i].toFixed(5):'—'}</td><td>${R4[i]?R4[i].toFixed(3):'—'}</td><td>${RC[i]?RC[i].toFixed(3):'—'}</td></tr>`);});
+const mk=(id,a,b,log,f)=>new Chart(document.getElementById(id),{type:'bar',
+ data:{labels:L,datasets:[
+  {label:'H027 v4',data:a,backgroundColor:v4,borderRadius:{topLeft:3,topRight:3},maxBarThickness:16},
+  {label:'競品',data:b,backgroundColor:cp,borderRadius:{topLeft:3,topRight:3},maxBarThickness:16}]},
+ options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+'：'+f(c.parsed.y)}}},
+  scales:{x:{grid:{display:false},border:{color:g},ticks:{color:m,font:{size:11},autoSkip:false,maxRotation:60,minRotation:60}},
+   y:log?{type:'logarithmic',min:0.000005,max:30,grid:{color:g},border:{display:false},ticks:{color:m,font:{size:11},callback:v=>[0.00001,0.001,0.1,10].includes(v)?v+'%':''}}
+       :{beginAtZero:true,grid:{color:g},border:{display:false},ticks:{color:m,font:{size:11}}}}}});
+const ch1=mk('c1',P4,PC,true,v=>v.toFixed(5)+'%');
+const ch2=mk('c2',R4,RC,false,v=>v.toFixed(3)+' pp');
+requestAnimationFrame(()=>{ch1.resize();ch2.resize();});
+</script>
+</body>
+</html>

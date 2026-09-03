@@ -2,18 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "slots-static",
+      "name": "h5-gamedb",
       "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "8027", "--directory", "Project/Slots"],
-      "port": 8027,
-      "url": "http://localhost:8027"
+      "runtimeArgs": ["-m", "http.server", "8763", "--directory", "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資料庫"],
+      "port": 8763
     },
     {
-      "name": "omniplay",
+      "name": "slots-static",
       "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "8031", "--directory", "C:/Users/rhinshen/Mine/AI 工作區/Jumbo_Output"],
-      "port": 8031,
-      "url": "http://localhost:8031"
+      "runtimeArgs": ["-m", "http.server", "8028", "--directory", "Slots"],
+      "port": 8028,
+      "url": "http://localhost:8028"
     }
   ]
 }

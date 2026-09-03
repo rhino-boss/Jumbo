@@ -789,6 +789,13 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 | H019 埃及秘寶 | `Video Slot - Pay Anywhere / Cascade` |
 | H026 彩罐熱舞 1000 | `Video Slot - 20 Lines / Cascade` |
 | H027 奧林帕斯 2500 | `Video Slot - Pay Anywhere / Cascade` |
+
+##### H027 v3 倍率線型校準規範（2026-09-02）
+
+- 92A Normal Bet：BG RTP 72.0000%、FG RTP 20.0000%；94A Normal Bet：BG RTP 74.0000%、FG RTP 20.0000%；Buy Feature RTP 92.5000%。
+- 自然發生率低於 0.1% 的區間不得配置權重；FG 20x 以下不得配置；區間上限超過 20,000x 不得配置；單一 FG 區間機率不得超過 15%；Normal Bet FG 週期為 300。
+- Normal Bet FG 使用競品 Buy Feature FG 線型，依競品比例平滑分配，避免連續區間封頂、中間斷層及孤立權重；200x 以上 FG RTP Contribution 合計為 2%；完成後 FG Hit Rate 應在其餘限制內盡量接近 44%。
+- Extra Bet 尚未正式校準時，保留 `Detail_EB` 頁籤結構但清空數值；Overview 的 EB 區塊與 `Multiplier_Weight` 的 `Weight_EB_BG`／`Weight_EB_FG` 留白；Config 必須標示 pending 並停用 EB Card System，不得沿用或顯示舊 EB RTP、週期、權重或競品數值。
 | C027 奧林帕斯 2500 | `Video Slot - Pay Anywhere / Cascade / Cascade Multiplier` |
 | H028 雷神爆金 1000 | `Video Slot - 2,025–32,400 Ways / Megaways / Cascade` |
 
