@@ -53,11 +53,6 @@ RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
     # Test
     # {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
-    # 92A／94A Card-On：三個押注區 × 兩個 Player Profile 都要驗（H027_CARD_SYSTEM_IS_NEWBIE）。
-    #   Oldhand  92A NB 72.0000/20.0000  EB 42.0000/50.0000  ｜ 94A NB 72.0000/22.0000  EB 39.0000/55.0000
-    #   Newbie   兩版共用 NB 75.8268/17.1732  EB 50.0670/42.9330（規範 §1.4.1 Game RTP 93%）
-    #   Buy Feature 一律 92.5000%（規範 §1.4.2），兩個 Profile 共用同一組權重。
-    # 92／94 的差異在 FG，不在 BG；兩版的 Weight_NB_BG 逐格相同。
     # 自然機率
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # SCR
@@ -455,16 +450,12 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
     CARD_COUNTS[card_profile_index] = len(cards)
 if os.environ.get("H027_DEBUG_CARDS") == "1":
     # 診斷用：印出真正餵給模擬迴圈的卡片陣列，確認 Player Profile 分流生效。
-    print(f"[cards] config_rtp_file={CONFIG_RTP_FILE}  is_newbie={CARD_SYSTEM_IS_NEWBIE}"
-          f"  active_profile={ACTIVE_CARD_PROFILE}  enabled={CARD_SYSTEM_ENABLED}")
+    print(f"[cards] config_rtp_file={CONFIG_RTP_FILE}  is_newbie={CARD_SYSTEM_IS_NEWBIE}" f"  active_profile={ACTIVE_CARD_PROFILE}  enabled={CARD_SYSTEM_ENABLED}")
     for _i, _name in enumerate(("NB_BG", "NB_FG", "EB_BG", "EB_FG", "BF_FG")):
         _n = int(CARD_COUNTS[_i])
-        _w = [int(CARD_WEIGHT_CUM[_i, _j] - (CARD_WEIGHT_CUM[_i, _j - 1] if _j else 0))
-              for _j in range(_n)]
+        _w = [int(CARD_WEIGHT_CUM[_i, _j] - (CARD_WEIGHT_CUM[_i, _j - 1] if _j else 0)) for _j in range(_n)]
         _nz = [_j for _j in range(_n) if _w[_j] > 0]
-        print(f"[cards]   {_name}: 張數 {_n:>3}  非零 {len(_nz):>3}"
-              f"  最高 max {max((CARD_MAX[_i, _j] for _j in _nz), default=0):>9.1f}"
-              f"  總權重 {sum(_w):,}")
+        print(f"[cards]   {_name}: 張數 {_n:>3}  非零 {len(_nz):>3}" f"  最高 max {max((CARD_MAX[_i, _j] for _j in _nz), default=0):>9.1f}" f"  總權重 {sum(_w):,}")
 
 if CARD_SYSTEM_ENABLED:
     for profile_index in (CARD_PROFILE_NB_BG, CARD_PROFILE_EB_BG):
@@ -830,7 +821,7 @@ def count_scatter(board):
 
 
 @njit(nogil=True, cache=True)
-def play_featurebuy_entry(table_id, profile_index):
+def play_featurebuy_entry(table_id, profile_index, bet_multi):
     board, multiplier_values, _starts, _drop_counts, _initial_ball_count = generate_board(table_id, profile_index)
     scatter_count = count_scatter(board)
     multiplier_total = 0
@@ -841,11 +832,16 @@ def play_featurebuy_entry(table_id, profile_index):
             if board[row, reel] == C2 or board[row, reel] == C3:
                 multiplier_total += multiplier_values[row, reel]
                 multiplier_count += 1
-    # BF entry is a trigger-only screen: do not evaluate Pay Anywhere, do not
-    # build winning-symbol steps, and do not cascade.
+    # BF entry does not evaluate Pay Anywhere, does not build winning-symbol
+    # steps and does not cascade -- but it DOES pay Scatter for the entry C1
+    # (2026-09-04 rule change).  The entry board always shows exactly four C1,
+    # so this adds a fixed 3 x Bet to every purchase.
+    entry_scatter_pay = 0.0
+    if scatter_count >= FG_TRIGGER_COUNT:
+        entry_scatter_pay = PAY_TABLE[C1, scatter_count - FG_TRIGGER_COUNT] * bet_multi
     return (
         0.0,
-        0.0,
+        entry_scatter_pay,
         scatter_count,
         multiplier_total,
         multiplier_count,
@@ -916,7 +912,7 @@ def play_cluster_spin(table_id, profile_index, scene, bet_multi):
 @njit(nogil=True, cache=True)
 def play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi):
     if bet_mode == MODE_FEATUREBUY:
-        return play_featurebuy_entry(table_id, profile_index)
+        return play_featurebuy_entry(table_id, profile_index, bet_multi)
     result = play_cluster_spin(table_id, profile_index, 0, bet_multi)
     if bet_mode != MODE_EXTRABET or result[2] >= FG_TRIGGER_COUNT:
         return result
@@ -1180,7 +1176,11 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
                 elif triggered_free_game == 1 or not is_card_match(bg_card_profile, bg_card_index, bg_pay, card_coin_in, 0):
                     accepted = 0
                     fail_reason = 1
-            elif not is_card_match(package_card_profile, package_card_index, total_pay, card_coin_in, triggered_free_game):
+            # Buy Feature：卡片管的是免費遊戲的結果，比對 fg_session_pay。
+            # 入場盤的 Scatter 給獎是定值（4 顆 C1 = 3 x Bet），不受卡片區間約束；
+            # 若把它併進 total_pay 比對，實際 FG RTP 會比權重目標低 3 pp。
+            # 報表分桶（get_bucket(fg_session_pay, ...)）也是用 fg_session_pay，兩邊一致。
+            elif not is_card_match(package_card_profile, package_card_index, fg_session_pay, card_coin_in, triggered_free_game):
                 accepted = 0
                 fail_reason = 3
 

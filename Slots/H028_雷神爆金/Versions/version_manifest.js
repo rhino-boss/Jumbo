@@ -1,0 +1,43 @@
+window.H028_VERSION_MANIFEST = {
+  "current": "3.3.0.0",
+  "version_rule": {
+    "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，後三碼歸零。",
+    "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。"
+  },
+  "versions": [
+    {
+      "version": "3.3.0.0",
+      "date": "2026-09-04",
+      "base_config": "Versions/3.3.0.0/config.js",
+      "configs": {
+        "88B": "Versions/3.3.0.0/config_88B.js",
+        "90B": "Versions/3.3.0.0/config_90B.js",
+        "92A": "Versions/3.3.0.0/config_92A.js",
+        "94A": "Versions/3.3.0.0/config_94A.js"
+      },
+      "changes": [
+        "Oldhand Normal Bet FG 與 Buy Feature FG 的 (9000, 10000] 區間依強制配置例外給權重，該區間 RTP 精確占各版本總 RTP 的 0.1%（NB 權重 88B/90B 34,498、92A 28,853、94A 29,480；BF 7,252～7,253）。",
+        "20x～200x 主體區間維持原形狀等比微升（約 +0.05%），200x 以上尾端區間等比縮減（約 −5%），各押注區 FG RTP、FG 週期、Hit Rate 與 4 位小數 RTP 全部不變。",
+        "Weight_BF 欄總和由 999,999,992（88B/90B 既有誤差）校正為精確 1,000,000,000；Newbie 權重完全未變動。",
+        "已知限制：(9000, 10000] 自然發生率僅 0.00016%，Card Retry Limit 10,000 下抽中該卡約 98.4% 會超限放行一般 FG，實際觸發率遠低於設定權重。"
+      ]
+    },
+    {
+      "version": "3.2.0.1",
+      "date": "2026-08-14",
+      "base_config": "Versions/3.2.0.0/config.js",
+      "configs": {
+        "88B": "Versions/3.2.0.0/config_88B.js",
+        "90B": "Versions/3.2.0.0/config_90B.js",
+        "92A": "Versions/3.2.0.0/config_92A.js",
+        "94A": "Versions/3.2.0.0/config_94A.js"
+      },
+      "changes": [
+        "新增 88B／90B Oldhand Normal Bet：RTP 分別為 72:16 與 72:18，並以 FG 週期為主要調整方式。",
+        "新增 config_88B.js／config_90B.js，index 與 XLSX/config 雙向工具同步支援。",
+        "修正共用 Setting 區塊的 Version 控制項被遊戲端 CSS／清除程式隱藏的問題。",
+        "Card System Retry Limit 依規範統一調整為 10,000 次。"
+      ]
+    }
+  ]
+};

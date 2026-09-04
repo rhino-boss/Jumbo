@@ -336,7 +336,10 @@
             <li>倍率上限因此為 20,000x（最高合格區間 (10000, 20000]，平均倍率 14,117x），高於競品實際最大倍數 15,000x。<code>(9000, 10000]</code> 因自然發生率 0.0409% 低於門檻而不合格，非整數化捨去。</li>
             <li>其餘規範：自然發生率低於 0.05% 不配權重；FG 20x 以下不配權重；單一 FG 區間機率上限 15%；RTP 校準精度至小數 4 位。</li>
             <li>EB Card System 由 pending_calibration 改為啟用並填入權重；EB FG 保底 44.94x（基礎投注口徑，為 NB 22.49x 的兩倍）。</li>
-            <li>Buy Feature RTP 依規範 §H027 v3 訂為 92.5000%，贏錢率（&gt;100x）校準為 30.0000%。</li>
+            <li><b>Buy Feature 入場盤改為支付 Scatter</b>（規則變更）：入場固定 4 顆 C1，依 §4 支付 3 × Bet，佔購買成本（100 × Bet）的 3.00 pp。入場盤仍不進行 Pay Anywhere 判定、不執行 Cascade。已同步改 <code>game_rule.md</code> §8／§9.5、<code>Simulator.py</code> 的 <code>play_featurebuy_entry()</code>、<code>index.html</code> 的 <code>playSpin()</code> 與 Help。</li>
+            <li>Buy Feature RTP 依規範 §H027 v3 維持總計 92.5000%，因此免費遊戲部分下調至 <b>89.5000%</b>（入場 3.0000% ＋ FG 89.5000%）；贏錢率（&gt;100x）維持 30.0000%。</li>
+            <li>Buy Feature 的卡片比對由 <code>total_pay</code> 改為 <code>fg_session_pay</code>：入場 Scatter 是定值、不受區間約束，若併入比對會讓實際 FG RTP 比權重目標低 3 pp（實測驗證）。報表分桶本來就是用 <code>fg_session_pay</code>，兩邊現在一致。</li>
+            <li>Card-On 驗證（config_92A、bet_mode 2、100 萬局）：總 RTP 92.6195%（入場 3.0000% ＋ FG 89.6195%），與目標差 +0.1195 pp ＝ 1.04σ，在噪音內；Retry 超限 0。</li>
             <li>Overview 的 <code>Hit%</code>／<code>Pulls/Hit</code> 兩欄更正為 <b>FG 觸發機率與週期</b>（先前誤填 BG Hit Rate 28.19%／3.55）：NB 0.22181%／450.83、EB 1.10907%／90.17、BF 100%／1.00。這兩欄在原表是跨 Base／Free 兩列合併的，描述的是整個押注區的 FG 觸發。</li>
             <li>已同步 H027192A.xlsx、H027194A.xlsx、config_92A.js、config_94A.js、Simulator.py 與 其他/數值報告.html；依既有指示版本維持 3.0.0.7。</li>
           </ul>
@@ -1126,14 +1129,17 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
     const multiplier = summarizeMultiplierValues(spin);
     const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
-    const scatterWin = isBuyFeatureEntry ? 0 : scatterPay(scatterCount);
+    // BF 進場盤不判獎、不連消（上方 cascade 迴圈已被 isBuyFeatureEntry 跳過），
+    // 但 Scatter 照付（2026-09-04 規則變更）。
+    const scatterWin = scatterPay(scatterCount);
     // FG：累積倍數只在「這一把最終盤面本身有 C2／C3」時才作用。
     // 有得分但盤面沒有球的那一把，不論池子累積到多少都以 1x 結算。
     const hasScoringMultiplierBall = rawPay > 0 && multiplier.count > 0;
     const effectiveMultiplier = scene === "FG"
       ? (hasScoringMultiplierBall ? carriedMultiplier + multiplier.total : 0)
       : multiplier.total;
-    const finalPay = isBuyFeatureEntry ? 0 : rawPay * (effectiveMultiplier || 1) + scatterWin;
+    // 進場盤 rawPay 恆為 0，所以這一行對進場盤就等於 scatterWin。
+    const finalPay = rawPay * (effectiveMultiplier || 1) + scatterWin;
     return {
       scene,
       tableId,

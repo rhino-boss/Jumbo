@@ -99,7 +99,7 @@ window.H027_VERSION_MANIFEST = {
         "Build the BF entry reel from three FG_Symbol-equivalent symbol pools with distinct regular-symbol phase layouts.",
         "Expand valid BF stops to 15/15/15/15/162/162 and distinct positive windows to 15/15/15/15/67/70 by reel.",
         "Guarantee exactly one C1 on R1-R4 and none on R5-R6 for every positive-weight BF entry.",
-        "Keep BF entry scoring and cascade disabled so entry pay remains zero.",
+        "Keep BF entry regular-symbol scoring and cascade disabled (superseded later in this version: the entry now pays Scatter).",
         "Fill the competitor column for all 64 multiplier intervals in NB-BG, NB-FG, and BF-FG.",
         "Repair the 94A Overview layout using the validated 92A cell geometry and merged ranges.",
         "Remove the duplicate right-side Bet Type block from both card workbooks.",
@@ -118,7 +118,9 @@ window.H027_VERSION_MANIFEST = {
         "Reach a 20,000x multiplier ceiling from the top eligible interval (10000, 20000], above the competitor actual max of 15,000x; (9000, 10000] stays unweighted because its natural occurrence 0.0409% is below the floor.",
         "Lower the natural-occurrence floor from 0.1% to 0.05% while keeping the FG 20x floor and the 15% per-interval cap.",
         "Enable the Extra Bet Card System and fill its weights, replacing the pending_calibration placeholder.",
-        "Set the Buy Feature RTP to 92.5000% per the H027 v3 calibration spec and calibrate its win rate above 100x to 30.0000%."
+        "Pay Scatter on the Buy Feature entry board: the entry always shows four C1 and now pays 3 x Bet per the paytable, a fixed 3.00 pp of the 100 x Bet purchase cost. The entry board still skips Pay Anywhere evaluation and cascades.",
+        "Keep the Buy Feature total at 92.5000% per the spec by lowering the free-game portion to 89.5000% (entry 3.0000% + FG 89.5000%); the win rate above 100x stays 30.0000%.",
+        "Match the Buy Feature card against fg_session_pay instead of total_pay: the entry Scatter is deterministic and outside the interval constraint, and including it made the measured FG RTP fall 3 pp short of the weight target."
       ]
     }
   ]

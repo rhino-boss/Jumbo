@@ -42,7 +42,7 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 | H019 埃及秘寶 | `Video Slot - Pay Anywhere / Cascade` |
 | H026 彩罐熱舞 1000 | `Video Slot - 20 Lines / Cascade` |
 | H027 奧林帕斯 2500 | `Video Slot - Pay Anywhere / Cascade` |
-| H028 雷神爆金 1000 | `Video Slot - 2,025–32,400 Ways / Megaways / Cascade` |
+| H028 雷神爆金 | `Video Slot - 2,025–32,400 Ways / Megaways / Cascade` |
 
 目前正式遊戲沒有使用 `Cluster Pay`；日後只有實際採相鄰群集判獎的遊戲才能列入此類。
 

@@ -2,17 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "h5-gamedb",
+      "name": "workspace-static",
       "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "8763", "--directory", "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資料庫"],
-      "port": 8763
-    },
-    {
-      "name": "slots-static",
-      "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "8028", "--directory", "Slots"],
-      "port": 8028,
-      "url": "http://localhost:8028"
+      "runtimeArgs": ["-m", "http.server", "8028"],
+      "port": 8028
     }
   ]
 }
