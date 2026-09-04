@@ -104,13 +104,19 @@ window.H027_VERSION_MANIFEST = {
         "Repair the 94A Overview layout using the validated 92A cell geometry and merged ranges.",
         "Remove the duplicate right-side Bet Type block from both card workbooks.",
         "Recalibrate 92A and 94A multiplier weights for all three bet modes from the Card-Off natural reports for bet modes 0, 1 and 2.",
-        "Set 92A to NB 72.0000/20.0000, EB 42.0000/50.0000 and BF 92.0000; set 94A to NB 74.0000/20.0000, EB 44.0000/50.0000 and BF 92.0000.",
+        "Put the 92A/94A RTP difference in FG, not BG: the Weight_NB_BG column is identical cell by cell between the two workbooks.",
+        "Set 92A Oldhand to NB 72.0000/20.0000 and EB 42.0000/50.0000; set 94A Oldhand to NB 72.0000/22.0000 and EB 39.0000/55.0000.",
+        "Add the Newbie player profile (spec 1.4.1 shared 93.00% game RTP): NB 75.8268/17.1732 and EB 50.0670/42.9330, shared by both workbooks, written to the Weight_*_Newbie columns and to card_system.newbie.",
+        "Cap Newbie multipliers at BG 30x and FG 120x per spec 1.4.4; the FG cap leaves only 12 configurable intervals and holds Newbie FG RTP to at most 17.1732%, so Newbie BG cannot reuse the Oldhand 72%.",
+        "Align the Extra Bet FG x50+ probability with the competitor Slot Stats value 0.27682%; Normal Bet cannot match it because BG tops out at 30x, so its ceiling stays at the trigger rate 0.22181%.",
+        "Correct the Overview Hit% and Pulls/Hit columns to the FG trigger probability and cycle; they had been filled with the BG hit rate.",
         "Retarget the NB FG cycle to the competitor 1/450.83 and the EB FG cycle to five times that, 1/90.17.",
         "Lock BG Hit Rate to the competitor main 28.193143%, making the per-spin total 28.414956% match the competitor Slot Stats hit rate.",
-        "Intersect the configurable intervals with the competitor support: no weight above the competitor actual max multiplier 15,000x, so the top usable interval becomes (9000, 10000].",
+        "Give every interval below 20,000x that meets the other conditions a non-zero weight: integerization now reserves one unit per eligible interval and a unit-transfer pass restores the exact RTP target.",
+        "Reach a 20,000x multiplier ceiling from the top eligible interval (10000, 20000], above the competitor actual max of 15,000x; (9000, 10000] stays unweighted because its natural occurrence 0.0409% is below the floor.",
         "Lower the natural-occurrence floor from 0.1% to 0.05% while keeping the FG 20x floor and the 15% per-interval cap.",
         "Enable the Extra Bet Card System and fill its weights, replacing the pending_calibration placeholder.",
-        "Calibrate the Buy Feature win rate above 100x to 30.0000%."
+        "Set the Buy Feature RTP to 92.5000% per the H027 v3 calibration spec and calibrate its win rate above 100x to 30.0000%."
       ]
     }
   ]

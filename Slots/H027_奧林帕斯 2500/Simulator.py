@@ -51,15 +51,22 @@ SHOW_CONSOLE_DETAIL = False
 
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
-    {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
-    # 92A／94A Card-On：三個押注區都要驗。92A 目標 NB 92.0000%、94A 目標 NB 94.0000%，
-    # 兩者 Extra Bet 總 RTP 與 Normal Bet 相同，Buy Feature 皆為 92.0000%。
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # Test
+    # {"config_file": "config.js", "config_rtp_file": "config.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": True, "base_bet": 1.0},
+    # 92A／94A Card-On：三個押注區 × 兩個 Player Profile 都要驗（H027_CARD_SYSTEM_IS_NEWBIE）。
+    #   Oldhand  92A NB 72.0000/20.0000  EB 42.0000/50.0000  ｜ 94A NB 72.0000/22.0000  EB 39.0000/55.0000
+    #   Newbie   兩版共用 NB 75.8268/17.1732  EB 50.0670/42.9330（規範 §1.4.1 Game RTP 93%）
+    #   Buy Feature 一律 92.5000%（規範 §1.4.2），兩個 Profile 共用同一組權重。
+    # 92／94 的差異在 FG，不在 BG；兩版的 Weight_NB_BG 逐格相同。
+    # 自然機率
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
+    # SCR
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -386,13 +393,27 @@ else:
     ACTIVE_CARD_BET_TIER = "big_bet"
 
 
+def card_root(card_system):
+    """Player Profile 分流。Oldhand 的權重直接放在 card_system 底層；
+    Newbie 放在 card_system["newbie"]。舊 Config 沒有 newbie 區塊時退回 Oldhand。"""
+    if CARD_SYSTEM_IS_NEWBIE:
+        newbie = card_system.get("newbie")
+        if isinstance(newbie, dict) and newbie:
+            return newbie
+    return card_system
+
+
+CARD_ROOT = card_root(CARD_SYSTEM)
+ACTIVE_CARD_PROFILE = "newbie" if CARD_ROOT is not CARD_SYSTEM else "oldhand"
+
+
 def get_card_profile_cards(mode, segment):
-    mode_data = CARD_SYSTEM.get(mode, {})
+    mode_data = CARD_ROOT.get(mode, {})
     return list(mode_data.get(segment, [])) if isinstance(mode_data, dict) else []
 
 
 def get_bg_trigger_cap(mode):
-    mode_data = CFG_RTP.get("card_system", {}).get(mode, {})
+    mode_data = card_root(CFG_RTP.get("card_system", {})).get(mode, {})
     cards = mode_data.get("weight_bg", []) if isinstance(mode_data, dict) else []
     caps = [float(card["max"]) for card in cards if card.get("type", "range") == "range" and float(card.get("weight", 0)) > 0]
     return max(caps) if caps else None
@@ -407,9 +428,9 @@ CARD_PROFILE_LISTS = [
 ]
 CARD_MODE_ENABLED = np.array(
     [
-        1 if CARD_SYSTEM.get("normal_bet", {}).get("enabled", True) else 0,
-        1 if CARD_SYSTEM.get("extra_bet", {}).get("enabled", True) else 0,
-        1 if CARD_SYSTEM.get("buy_feature", {}).get("enabled", True) else 0,
+        1 if CARD_ROOT.get("normal_bet", {}).get("enabled", True) else 0,
+        1 if CARD_ROOT.get("extra_bet", {}).get("enabled", True) else 0,
+        1 if CARD_ROOT.get("buy_feature", {}).get("enabled", True) else 0,
     ],
     dtype=np.int64,
 )
@@ -432,6 +453,19 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
         if CARD_TYPES[card_profile_index, card_index] == CARD_TYPE_RANGE and weight > 0:
             CARD_BG_TRIGGER_CAP[card_profile_index] = max(CARD_BG_TRIGGER_CAP[card_profile_index], CARD_MAX[card_profile_index, card_index])
     CARD_COUNTS[card_profile_index] = len(cards)
+if os.environ.get("H027_DEBUG_CARDS") == "1":
+    # 診斷用：印出真正餵給模擬迴圈的卡片陣列，確認 Player Profile 分流生效。
+    print(f"[cards] config_rtp_file={CONFIG_RTP_FILE}  is_newbie={CARD_SYSTEM_IS_NEWBIE}"
+          f"  active_profile={ACTIVE_CARD_PROFILE}  enabled={CARD_SYSTEM_ENABLED}")
+    for _i, _name in enumerate(("NB_BG", "NB_FG", "EB_BG", "EB_FG", "BF_FG")):
+        _n = int(CARD_COUNTS[_i])
+        _w = [int(CARD_WEIGHT_CUM[_i, _j] - (CARD_WEIGHT_CUM[_i, _j - 1] if _j else 0))
+              for _j in range(_n)]
+        _nz = [_j for _j in range(_n) if _w[_j] > 0]
+        print(f"[cards]   {_name}: 張數 {_n:>3}  非零 {len(_nz):>3}"
+              f"  最高 max {max((CARD_MAX[_i, _j] for _j in _nz), default=0):>9.1f}"
+              f"  總權重 {sum(_w):,}")
+
 if CARD_SYSTEM_ENABLED:
     for profile_index in (CARD_PROFILE_NB_BG, CARD_PROFILE_EB_BG):
         has_free_game = any(CARD_TYPES[profile_index, index] == CARD_TYPE_FREE_GAME and CARD_WEIGHT_CUM[profile_index, index] > (CARD_WEIGHT_CUM[profile_index, index - 1] if index else 0) for index in range(CARD_COUNTS[profile_index]))
@@ -1284,6 +1318,7 @@ def build_overview_rows(summary, card_system_active):
             [
                 ("", ""),
                 ("card_system_profile", summary["card_system_profile"]),
+                ("player_profile", summary["player_profile"]),
                 ("card_retry_limit", int(summary["card_retry_limit"])),
                 ("retry_total", f"{int(summary['retry_total']):,}"),
                 ("avg_retry", f"{float(summary['avg_retry']):.2f}"),
@@ -1404,6 +1439,9 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "card_system": "on" if card_system_active else "off",
         "pending_math_items": " | ".join(PENDING_MATH_ITEMS) if PENDING_MATH_ITEMS else "none",
         "card_system_profile": "off" if not card_system_active else mode_key,
+        # Player Profile（規範 §1.4）：newbie 用 card_system.newbie 的權重，
+        # oldhand 用 card_system 底層的權重。
+        "player_profile": "off" if not card_system_active else ACTIVE_CARD_PROFILE,
         "card_retry_limit": CARD_RETRY_LIMIT if card_system_active else 0,
         "retry_total": int(values[R_ALL, RA_RETRY_TOTAL]),
         "avg_retry": values[R_ALL, RA_RETRY_TOTAL] / total_round,

@@ -85,25 +85,32 @@ FG 74 場／BF 253 次。有 FG Hit Rate，FG 樣本少</div>
 <thead><tr><th>規範</th><th>92A</th><th>94A</th><th>結果</th></tr></thead>
 <tbody>
 <tr><td>RTP 校準精度到小數 4 位</td>
-<td>NB 92.0000%　EB 92.0000%　BF 92.0000%</td>
-<td>NB 94.0000%　EB 94.0000%　BF 92.0000%</td>
+<td>NB 92.0000%　EB 92.0000%　BF 92.5000%</td>
+<td>NB 94.0000%　EB 94.0000%　BF 92.5000%</td>
 <td class="gp">通過</td></tr>
 <tr><td>自然發生率 &lt; 0.05% 不配權重</td><td>0 例外</td><td>0 例外</td><td class="gp">通過</td></tr>
-<tr><td><b>區間與競品取交集</b>（上限 ≤ 競品最大倍數 15,000x）</td>
-<td>頂端可用區間 (9000, 10000]</td><td>頂端可用區間 (9000, 10000]</td><td class="gp">通過</td></tr>
-<tr><td>區間上限 &gt; 20,000x 不配權重</td><td>已被交集條件涵蓋</td><td>已被交集條件涵蓋</td><td class="gp">通過</td></tr>
+<tr><td>區間上限 &gt; 20,000x 不配權重</td>
+<td>頂端可配區間 (10000, 20000]</td><td>頂端可配區間 (10000, 20000]</td><td class="gp">通過</td></tr>
+<tr><td><b>20,000x 以下、其餘條件符合的區間一律要有機率</b></td>
+<td>NB-FG 41／EB-FG 39／BF 38 個全部非零<br>
+<span style="font-size:11px;color:var(--tx3)">最小權重 NB-FG 13,648／EB-FG 28／BF 9,323</span></td>
+<td>同左（BF 權重兩版共用；NB／EB 的 FG 兩版不同但區間集合相同）</td>
+<td class="gp">通過</td></tr>
 <tr><td>FG 20x 以下區間不配權重</td>
 <td>NB／EB／BF 下限皆 20x</td><td>NB／EB／BF 下限皆 20x</td><td class="gp">通過</td></tr>
 <tr><td>FG 任一區間 ≤ FG 總 Hit Rate 的 15%</td>
-<td>max 12.33%（EB 15.00%）</td>
-<td>max 12.33%（EB 15.00%）</td>
+<td>max 12.42%（EB 15.00%）</td>
+<td>max 11.20%（EB 15.00%）</td>
 <td class="gp">通過</td></tr>
 <tr><td>權重總和 = 1,000,000,000</td><td>9 欄全數符合</td><td>9 欄全數符合</td><td class="gp">通過</td></tr>
 </tbody></table></div>
-<p class="note"><b>「區間與競品取交集」</b>是本次新增的條件。競品 Slot Stats 的
-ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品根本開不出來，
-因此不配權重。本區間表中最高符合者為 <code>(9000, 10000]</code>，
-比原本的 20,000x 上限更緊，實際整數化後最高有權重的區間是 NB-FG 的 9,000x。</p>
+<p class="note"><b>「合格區間一律要有機率」</b>是本次新增的條件。原本用最大餘數法整數化，
+尾端機率極小的區間會被捨成 0；現在改成每個合格區間<b>保底 1 個權重單位</b>，
+再用「兩區間之間搬移整數單位」的微調把 RTP 精確拉回目標，所以既不會有零權重，
+RTP 也仍然命中到小數 4 位以上。</p>
+<p class="note"><code>(9000, 10000]</code> 沒有權重不是被捨掉，是它的<b>自然發生率低於 0.05%</b>
+（0.0409%），本來就不合格。合格區間中最高的是 <code>(10000, 20000]</code>，
+平均倍率 14,117x，所以<b>倍率上限是 20,000x，高於競品的 15,000x</b>。</p>
 <p class="note">EB 的區間以 Extra Bet 投注額計價，FG 下限 20x 換算成基礎投注是
 <b>44.94x</b>（NB 為 22.49x），所以 EB 的 FG 保底自動是 NB 的兩倍。</p>
 </div>
@@ -115,7 +122,7 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 <tr><td>92A NB — RTP 配置</td><td>BG 72.0000%／FG 20.0000%</td>
 <td>72.0000%／20.0000%</td><td class="gp">達成</td></tr>
 <tr><td>94A NB — RTP 配置</td><td>BG 74.0000%／FG 20.0000%</td>
-<td>74.0000%／20.0000%</td><td class="gp">達成</td></tr>
+<td>72.0000%／22.0000%</td><td class="gp">達成</td></tr>
 <tr><td>NB — FG 週期同競品</td><td>1/450.83</td>
 <td>1/450.83（兩版相同）</td><td class="gp">達成</td></tr>
 <tr><td>NB／EB — BG Hit Rate 同競品</td><td>28.193144%</td>
@@ -131,7 +138,7 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 <td>90.1660x ＝ NB 90.1660x</td><td class="gn">部分達成</td></tr>
 <tr class="sep"><td>BF — 贏錢率 30%</td><td>30.0000%</td>
 <td>30.0000%（兩版相同）</td><td class="gp">達成</td></tr>
-<tr><td>BF — RTP</td><td>92.0000%</td><td>92.0000%</td><td class="gp">達成</td></tr>
+<tr><td>BF — RTP（規範 §H027 v3）</td><td>92.5000%</td><td>92.5000%</td><td class="gp">達成</td></tr>
 </tbody></table></div>
 <p class="note">94A 與 92A <b>只有 BG 權重不同</b>。FG RTP 與 FG 週期兩版都一樣，
 所以 FG 平均倍數必然相同（90.1660x），NB-FG／EB-FG／BF 三組權重欄在兩份試算表中完全一致，
@@ -152,35 +159,43 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 <div class="card">
 <h3>1. RTP 配比</h3>
 <div class="tw"><table>
-<thead><tr><th>來源</th><th>BG RTP</th><th>FG RTP</th><th>總 RTP</th><th>配比 BG:FG</th></tr></thead>
+<thead><tr><th>Profile</th><th>押注區</th><th>BG RTP</th><th>FG RTP</th><th>總 RTP</th></tr></thead>
 <tbody>
-<tr class='us'><td>92A Normal Bet</td><td>72.0000%</td><td>20.0000%</td><td>92.0000%</td><td>78.26 : 21.74</td></tr>
-<tr class='us'><td>92A Extra Bet</td><td>42.0000%</td><td>50.0000%</td><td>92.0000%</td><td>45.65 : 54.35</td></tr>
-<tr class='us'><td>92A Buy Feature</td><td>—</td><td>92.0000%</td><td>92.0000%</td><td>0 : 100</td></tr>
-<tr class='us'><td>94A Normal Bet</td><td>74.0000%</td><td>20.0000%</td><td>94.0000%</td><td>78.72 : 21.28</td></tr>
-<tr class='us'><td>94A Extra Bet</td><td>44.0000%</td><td>50.0000%</td><td>94.0000%</td><td>46.81 : 53.19</td></tr>
-<tr class='us'><td>94A Buy Feature</td><td>—</td><td>92.0000%</td><td>92.0000%</td><td>0 : 100</td></tr>
-<tr class='sep'><td>GOOX（大樣本量測）</td><td>70.8924%</td><td>19.8867%</td><td>90.7791%</td><td>78.09 : 21.91</td></tr>
-<tr class=''><td>GOO（實測 31,472 轉）</td><td>68.536%</td><td>22.212%</td><td>90.748%</td><td>75.52 : 24.48</td></tr>
-<tr class=''><td>GOO Buy Feature（253 次）</td><td>—</td><td>85.413%</td><td>85.413%</td><td>0 : 100</td></tr>
+<tr class='us'><td>92A_Oldhand</td><td>Normal Bet</td><td>72.0000%</td><td>20.0000%</td><td>92.0000%</td></tr><tr class='us'><td>92A_Oldhand</td><td>Extra Bet</td><td>42.0000%</td><td>50.0000%</td><td>92.0000%</td></tr><tr class='us'><td>92A_Oldhand</td><td>Buy Feature</td><td>—</td><td>92.5000%</td><td>92.5000%</td></tr><tr class='us'><td>92A_Newbie</td><td>Normal Bet</td><td>75.8268%</td><td>17.1732%</td><td>93.0000%</td></tr><tr class='us'><td>92A_Newbie</td><td>Extra Bet</td><td>50.0670%</td><td>42.9330%</td><td>93.0000%</td></tr><tr class='us'><td>92A_Newbie</td><td>Buy Feature</td><td>—</td><td>92.5000%</td><td>92.5000%</td></tr><tr class='us'><td>94A_Oldhand</td><td>Normal Bet</td><td>72.0000%</td><td>22.0000%</td><td>94.0000%</td></tr><tr class='us'><td>94A_Oldhand</td><td>Extra Bet</td><td>39.0000%</td><td>55.0000%</td><td>94.0000%</td></tr><tr class='us'><td>94A_Oldhand</td><td>Buy Feature</td><td>—</td><td>92.5000%</td><td>92.5000%</td></tr><tr class='us'><td>94A_Newbie</td><td>Normal Bet</td><td>75.8268%</td><td>17.1732%</td><td>93.0000%</td></tr><tr class='us'><td>94A_Newbie</td><td>Extra Bet</td><td>50.0670%</td><td>42.9330%</td><td>93.0000%</td></tr><tr class='us'><td>94A_Newbie</td><td>Buy Feature</td><td>—</td><td>92.5000%</td><td>92.5000%</td></tr>
+<tr class='sep'><td>GOOX（大樣本量測）</td><td>—</td><td>70.8924%</td><td>19.8867%</td><td>90.7791%</td></tr>
+<tr class=''><td>GOO（實測 31,472 轉）</td><td>—</td><td>68.536%</td><td>22.212%</td><td>90.748%</td></tr>
+<tr class=''><td>GOO Buy Feature（253 次）</td><td>—</td><td>—</td><td>85.413%</td><td>85.413%</td></tr>
 </tbody></table></div>
-<p class="note">兩個競品的量測總 RTP 都在 90.7～90.8%（官方標示 95.99%，尾段大獎沒抽到）。
-本版 92A／94A 訂在 92%／94%。配比上本版 NB 更偏 BG，這是指定的 72:20／74:20。</p>
+<p class="note"><b>Newbie 是「Newbie 共用」</b>（規範 §1.4.1）：92A 與 94A 兩份試算表的
+<code>Weight_*_Newbie</code> 四欄填相同數值，Game RTP 都是 93.00%。
+Buy Feature 兩個 Profile 也共用同一組權重（規範 §1.4.2 兩者 Game RTP 都是 92.50%）。</p>
+<p class="note"><b>Newbie 的 BG:FG 為什麼跟 Oldhand 差這麼多。</b>
+規範 §1.4.4 把 Newbie 的 FG 倍率上限訂在 <b>120x</b>，可配區間從 41 個掉到 12 個
+（頂到 <code>(100,120]</code>），FG 平均倍數最高只能到 77.42x，
+換算 FG RTP 上限 <b>17.1732%</b>。若要沿用 Oldhand 的 BG 72%，FG 得吃 21%，
+需要平均倍數 94.67x——超過上限，不可行。所以 FG 取可達上限、BG 收尾到 75.8268%。</p>
+<p class="note"><b>92A 與 94A 的差異全部落在 FG</b>：NB 的 BG 兩版都是 72.0000%，
+FG 是 20.0000% 對 22.0000%。<code>Weight_NB_BG</code> 欄在兩份試算表中<b>逐格完全相同</b>，
+差異只在 <code>Weight_NB_FG</code> 與 <code>Weight_EB_*</code>。</p>
+<p class="note">EB 的 BG 之所以兩版不同（42% 對 39%），是因為 EB 的 FG 平均倍數跟著 NB 走
+（90.1660x 對 99.1826x），FG RTP 因此變成 50% 對 55%，BG 只能收尾。</p>
+<p class="note">兩個競品的量測總 RTP 都在 90.7～90.8%（官方標示 95.99%，尾段大獎沒抽到）。</p>
 </div>
 
 <div class="card">
 <h3>2. Hit Rate（BG／FG 分開）</h3>
 <div class="tw"><table>
-<thead><tr><th>來源</th><th>BG（每次付費轉）</th><th>FG 觸發</th><th>每轉合計</th>
-<th>與 GOOX 差</th><th>FG（每次免費轉）</th><th>與 GOO 差</th></tr></thead>
+<thead><tr><th>Profile</th><th>押注區</th><th>BG（每次付費轉）</th><th>FG 觸發</th>
+<th>每轉合計</th><th>與 GOOX 差</th><th>FG（每次免費轉）</th></tr></thead>
 <tbody>
-<tr class='us'><td>92A／94A Normal Bet</td><td>28.193143%</td><td>0.221813%</td><td><b>28.41496%</b></td><td><span class='gp'>-0.00000pp</span></td><td>43.9564%</td><td><span class='gp'>+0.39pp</span></td></tr>
-<tr class='us'><td>92A／94A Extra Bet</td><td>28.193143%</td><td>1.109066%</td><td>29.30221%</td><td><span class='gp'>+0.89pp</span></td><td>43.9564%</td><td><span class='gp'>+0.39pp</span></td></tr>
-<tr class='us'><td>92A／94A Buy Feature</td><td>—</td><td>100%</td><td>100%</td><td>—</td><td>44.0710%</td><td><span class='gn'>+2.88pp</span> <span style='font-size:11px;color:var(--tx3)'>vs GOO BF</span></td></tr>
-<tr class='sep'><td>GOOX（大樣本量測）</td><td>28.193144%</td><td>0.221812%</td><td><b>28.41496%</b></td><td>基準</td><td>未公開</td><td>—</td></tr>
-<tr class=''><td>GOO（實測）</td><td>28.807%</td><td>0.23513%</td><td>28.807%</td><td><span class='gp'>+0.39pp</span></td><td><b>43.564%</b></td><td>基準</td></tr>
-<tr class=''><td>GOO Buy Feature</td><td>—</td><td>100%</td><td>100%</td><td>—</td><td>41.191%</td><td><span class='gn'>-2.37pp</span></td></tr>
+<tr class='us'><td>92A_Oldhand</td><td>Normal Bet</td><td>28.193143%</td><td>0.221813%</td><td>28.41496%</td><td><span class='gp'>-0.00000pp</span></td><td>43.9564%</td></tr><tr class='us'><td>92A_Oldhand</td><td>Extra Bet</td><td>28.193143%</td><td>1.109066%</td><td>29.30221%</td><td><span class='gn'>+0.88725pp</span></td><td>43.9564%</td></tr><tr class='us'><td>92A_Oldhand</td><td>Buy Feature</td><td>—</td><td>100.000000%</td><td>100.00000%</td><td><span class='gn'>+71.58504pp</span></td><td>44.0710%</td></tr><tr class='us'><td>92A_Newbie</td><td>Normal Bet</td><td>28.193143%</td><td>0.221813%</td><td>28.41496%</td><td><span class='gp'>-0.00000pp</span></td><td>43.9564%</td></tr><tr class='us'><td>92A_Newbie</td><td>Extra Bet</td><td>28.193143%</td><td>1.109066%</td><td>29.30221%</td><td><span class='gn'>+0.88725pp</span></td><td>43.9564%</td></tr><tr class='us'><td>92A_Newbie</td><td>Buy Feature</td><td>—</td><td>100.000000%</td><td>100.00000%</td><td><span class='gn'>+71.58504pp</span></td><td>44.0710%</td></tr><tr class='us'><td>94A_Oldhand</td><td>Normal Bet</td><td>28.193143%</td><td>0.221813%</td><td>28.41496%</td><td><span class='gp'>-0.00000pp</span></td><td>43.9564%</td></tr><tr class='us'><td>94A_Oldhand</td><td>Extra Bet</td><td>28.193143%</td><td>1.109066%</td><td>29.30221%</td><td><span class='gn'>+0.88725pp</span></td><td>43.9564%</td></tr><tr class='us'><td>94A_Oldhand</td><td>Buy Feature</td><td>—</td><td>100.000000%</td><td>100.00000%</td><td><span class='gn'>+71.58504pp</span></td><td>44.0710%</td></tr><tr class='us'><td>94A_Newbie</td><td>Normal Bet</td><td>28.193143%</td><td>0.221813%</td><td>28.41496%</td><td><span class='gp'>-0.00000pp</span></td><td>43.9564%</td></tr><tr class='us'><td>94A_Newbie</td><td>Extra Bet</td><td>28.193143%</td><td>1.109066%</td><td>29.30221%</td><td><span class='gn'>+0.88725pp</span></td><td>43.9564%</td></tr><tr class='us'><td>94A_Newbie</td><td>Buy Feature</td><td>—</td><td>100.000000%</td><td>100.00000%</td><td><span class='gn'>+71.58504pp</span></td><td>44.0710%</td></tr>
+<tr class='sep'><td>GOOX（大樣本量測）</td><td>—</td><td>28.193144%</td><td>0.221812%</td><td><b>28.41496%</b></td><td>基準</td><td>未公開</td></tr>
+<tr class=''><td>GOO（實測）</td><td>—</td><td>28.807%</td><td>0.23513%</td><td>28.807%</td><td><span class='gp'>+0.39pp</span></td><td><b>43.564%</b></td></tr>
+<tr class=''><td>GOO Buy Feature</td><td>—</td><td>—</td><td>100%</td><td>100%</td><td>—</td><td>41.191%</td></tr>
 </tbody></table></div>
+<p class="note">BG Hit Rate 四組（兩版 × 兩 Profile）都鎖在 GOOX 的 28.193144%，
+所以每轉合計都是 28.41496%。FG Hit Rate 欄列的是自然值——
+Card-On 實跑會比它低約 1 pp（見第五節）。</p>
 <p class="note"><b>每轉合計完全對上了。</b>把 BG 命中鎖在競品 main 的 28.193144%
 之後，加上 FG 觸發 0.221813%，每轉合計是 28.41496%——
 競品 Slot Stats 頁的 HIT RATE 正好是 28.41496%（1 in 3.52）。
@@ -189,9 +204,9 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 自然輪帶的 BG 命中率是 28.42%（NB）／29.07%（EB），本來偏高，卡片把它壓回競品值。</p>
 <p class="note">FG Hit Rate 只有 GOO 有實測（1,212 次免費轉，43.564%）。
 表中列的是<b>自然值</b> 43.9564%，但 Card-On 實跑量到的是
-<b>42.8806%</b>——卡片以整場總分做重抽，會輕微偏好某些場，
-連帶把場內每轉的命中率往下拉約 1.08 pp。
-所以與 GOO 的真實差距是 -0.68 pp（不是用自然值算出的
+<b>42.8632%</b>——卡片以整場總分做重抽，會輕微偏好某些場，
+連帶把場內每轉的命中率往下拉約 1.09 pp。
+所以與 GOO 的真實差距是 -0.70 pp（不是用自然值算出的
 +0.39 pp）。這一項無法用倍率權重直接調——
 它是重抽的副作用，要改得動輪帶或卡片區間結構。</p>
 </div>
@@ -201,9 +216,9 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 <div class="tw"><table>
 <thead><tr><th>來源</th><th>FG 觸發率</th><th>FG 週期</th><th>與 GOOX 差</th><th>備註</th></tr></thead>
 <tbody>
-<tr class='us'><td>92A／94A Normal Bet</td><td>0.22181310%</td><td>1/450.83</td><td><span class='gp'>-0.00 轉</span></td><td>直接鎖定 GOOX 的值</td></tr>
-<tr class='us'><td>92A／94A Extra Bet</td><td>1.10906550%</td><td>1/90.17</td><td><span class='gp'>-0.00 轉</span></td><td>GOOX 的 5 倍（規格要求）</td></tr>
-<tr class='us'><td>92A／94A Buy Feature</td><td>100.00000000%</td><td>1/1.00</td><td>—</td><td>購買直接進場</td></tr>
+<tr class='us'><td>四組 Normal Bet（兩版 × 兩 Profile）</td><td>0.22181310%</td><td>1/450.83</td><td><span class='gp'>-0.00 轉</span></td><td>直接鎖定 GOOX 的值</td></tr>
+<tr class='us'><td>四組 Extra Bet</td><td>1.10906550%</td><td>1/90.17</td><td><span class='gp'>-0.00 轉</span></td><td>GOOX 的 5 倍（規格要求）</td></tr>
+<tr class='us'><td>Buy Feature（共用）</td><td>100.00000000%</td><td>1/1.00</td><td>—</td><td>購買直接進場</td></tr>
 <tr class='sep'><td>GOOX（大樣本量測）</td><td>0.22181187%</td><td>1/450.83</td><td>基準</td><td>16,148,820 轉</td></tr>
 <tr class=''><td>GOO（實測）</td><td>0.23513%</td><td>1/425.3</td><td><span class='gp'>-25.5 轉</span></td><td>僅 74 場，誤差大</td></tr>
 </tbody></table></div>
@@ -214,16 +229,43 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 <div class="tw"><table>
 <thead><tr><th>來源</th><th>每場得分 ÷ 該區投注</th><th>基礎投注口徑</th><th>與 GOOX 差</th><th>FG 結束平均累積倍數</th></tr></thead>
 <tbody>
-<tr class='us'><td>92A／94A Normal Bet</td><td>90.1660x</td><td>90.1660x</td><td><span class='gp'>+0.51x</span></td><td>43.55x</td></tr>
-<tr class='us'><td>92A／94A Extra Bet</td><td>45.0830x</td><td>90.1660x</td><td><span class='gp'>+0.51x</span></td><td>43.56x</td></tr>
-<tr class='us'><td>92A／94A Buy Feature</td><td>0.9200x</td><td>92.0000x</td><td><span class='gp'>+2.34x</span></td><td>32.37x</td></tr>
+<tr class='us'><td>92A_Oldhand Normal Bet</td><td>90.1660x</td><td>90.1660x</td><td><span class='gp'>+0.51x</span></td><td>43.55x</td></tr><tr class='us'><td>92A_Oldhand Extra Bet</td><td>45.0830x</td><td>90.1660x</td><td><span class='gp'>+0.51x</span></td><td>43.56x</td></tr><tr class='us'><td>92A_Oldhand Buy Feature</td><td>0.9250x</td><td>92.5000x</td><td><span class='gp'>+2.84x</span></td><td>32.37x</td></tr><tr class='us'><td>92A_Newbie Normal Bet</td><td>77.4219x</td><td>77.4219x</td><td><span class='gn'>-12.23x</span></td><td>43.55x</td></tr><tr class='us'><td>92A_Newbie Extra Bet</td><td>38.7109x</td><td>77.4219x</td><td><span class='gn'>-12.23x</span></td><td>43.56x</td></tr><tr class='us'><td>92A_Newbie Buy Feature</td><td>0.9250x</td><td>92.5000x</td><td><span class='gp'>+2.84x</span></td><td>32.37x</td></tr><tr class='us'><td>94A_Oldhand Normal Bet</td><td>99.1826x</td><td>99.1826x</td><td><span class='gn'>+9.53x</span></td><td>43.55x</td></tr><tr class='us'><td>94A_Oldhand Extra Bet</td><td>49.5913x</td><td>99.1826x</td><td><span class='gn'>+9.53x</span></td><td>43.56x</td></tr><tr class='us'><td>94A_Oldhand Buy Feature</td><td>0.9250x</td><td>92.5000x</td><td><span class='gp'>+2.84x</span></td><td>32.37x</td></tr><tr class='us'><td>94A_Newbie Normal Bet</td><td>77.4219x</td><td>77.4219x</td><td><span class='gn'>-12.23x</span></td><td>43.55x</td></tr><tr class='us'><td>94A_Newbie Extra Bet</td><td>38.7109x</td><td>77.4219x</td><td><span class='gn'>-12.23x</span></td><td>43.56x</td></tr><tr class='us'><td>94A_Newbie Buy Feature</td><td>0.9250x</td><td>92.5000x</td><td><span class='gp'>+2.84x</span></td><td>32.37x</td></tr>
 <tr class='sep'><td>GOOX（大樣本量測）</td><td>89.6556x</td><td>89.6556x</td><td>基準</td><td>未公開</td></tr>
 <tr class=''><td>GOO（實測 74 場）</td><td>94.47x</td><td>94.47x</td><td><span class='gp'>+4.81x</span></td><td>中位 64.62x／最大 422.45x</td></tr>
 <tr class=''><td>GOO Buy Feature（253 次）</td><td>85.41x</td><td>85.41x</td><td><span class='gp'>-4.25x</span></td><td>中位 51.80x／最大 591.10x</td></tr>
 </tbody></table></div>
-<p class="note">兩個競品是 89.66x 與 94.47x，本版 90.17x 落在中間。
-這不是巧合——FG 平均倍數與週期在數學上綁死（<code>FG RTP = 平均倍數 × 觸發率</code>），
-週期鎖 GOOX、FG RTP 訂 20% 後，平均倍數唯一確定為 20% ÷ 0.00221812 = 90.1660x。</p>
+<p class="note">FG 平均倍數與週期在數學上綁死（<code>FG RTP = 平均倍數 × 觸發率</code>），
+週期鎖 GOOX、FG RTP 訂 20%／22% 後，平均倍數就唯一確定：
+92A 為 20% ÷ 0.00221812 = 90.1660x，94A 為 99.1826x。</p>
+
+<div class="flag">
+<h3 style="margin-top:0">GOOX 的 89.66x 是<b>下限</b>，不是實際值</h3>
+<p class="note" style="margin-top:0">GOOX 統計 CSV 的
+<code>Multiplier Distribution</code> 與 <code>Contribution to RTP</code> 兩張表，
+<b>從 x1000 以上的分帶全部記成 0</b>。但同一份檔案的累積序列
+<code>Probability of a Certain Multiplier</code> 證明它們不是 0：</p>
+<div class="eq">main　　P(>=500) 0.0047186% − P(500~1000) 0.0027928% ⇒ P(>=1000) = 0.0019258%
+bonus_1 P(>=500) 0.0028547% − P(500~1000) 0.0024646% ⇒ P(>=1000) = 0.0003901%
+合計 0.0023160%　←　與 Slot Stats 頁公布的 X1000+ 0.00232% 一致</div>
+<p class="note">所以 bonus 有 0.00039% 的場次落在 1000x 以上，而這段的 RTP 貢獻在 CSV 裡是 0。
+把它補回去，競品的 FG 平均倍數會從 89.66x 往上移：</p>
+<div class="tw"><table style="min-width:auto">
+<thead><tr><th>假設 &gt;=1000x 這段平均</th><th>補回 RTP</th><th>競品真實 FG 平均倍數</th></tr></thead>
+<tbody>
+<tr><td>1,500x</td><td>+0.585 pp</td><td>約 92.29x</td></tr>
+<tr><td>3,000x</td><td>+1.170 pp</td><td>約 94.93x</td></tr>
+<tr><td>5,000x</td><td>+1.951 pp</td><td>約 98.45x</td></tr>
+<tr><td>10,000x</td><td>+3.901 pp</td><td>約 107.24x</td></tr>
+</tbody></table></div>
+<p class="note">GOO 實測是 94.47x（74 場）——落在「這段平均約 3,000x」那一列，
+兩個獨立來源互相印證。<b>所以本版的 90.17x／99.18x 應該是低於競品，
+不是像表面數字看起來的高於競品。</b>同理，GOOX 的總 RTP 90.78%
+與 bonus RTP 19.89 pp 也都是低估值——官方標示 95.99%，缺口正是這條尾巴。</p>
+<p class="note">受影響的地方：第四節的 GOOX 欄、第六節線型圖的 GOOX bonus 曲線（1k 以上缺一段）。
+<b>不受影響</b>：FG 週期（取自 Probability of Bonus）、BG Hit Rate（取自 main m0.01+）、
+x10+～x1000+（取自 Slot Stats 頁，本來就是正確值）——這三項是本次校準真正用到的目標值，
+所以權重不需要重算。</p>
+</div>
 </div>
 
 <h2>四、競品 Slot Stats 指標對照（含贏錢率）</h2>
@@ -233,12 +275,7 @@ ACTUAL MAX MULTIPLIER 是 x15,000，代表上限超過 15,000x 的區間競品�
 <th>贏錢率</th><th>x10+</th><th>x20+</th><th>x50+</th><th>x100+</th><th>x1000+</th>
 <th>最大倍數</th><th>波動</th></tr></thead>
 <tbody>
-<tr class='us'><td>92A Normal Bet</td><td>92.0000%</td><td>28.41496%</td><td>0.22181%</td><td><b>13.0479%</b></td><td>1.96845%</td><td>0.84510%</td><td>0.11620%</td><td>0.05574%</td><td>0.00050%</td><td>9,000x</td><td>8.38</td></tr>
-<tr class='us'><td>92A Extra Bet</td><td>92.0000%</td><td>29.30221%</td><td>1.10907%</td><td><b>4.8673%</b></td><td>1.35186%</td><td>0.46349%</td><td>0.04876%</td><td>0.00536%</td><td>0.00000%</td><td>3,500x</td><td>5.95</td></tr>
-<tr class='us'><td>92A Buy Feature</td><td>92.0000%</td><td>100.00000%</td><td>100.00000%</td><td><b>30.0000%</b></td><td>0.16197%</td><td>0.02851%</td><td>0.00151%</td><td>0.00000%</td><td>0.00000%</td><td>60x</td><td>1.18</td></tr>
-<tr class='us'><td>94A Normal Bet</td><td>94.0000%</td><td>28.41496%</td><td>0.22181%</td><td><b>13.1522%</b></td><td>2.06079%</td><td>0.89395%</td><td>0.11620%</td><td>0.05574%</td><td>0.00050%</td><td>9,000x</td><td>8.41</td></tr>
-<tr class='us'><td>94A Extra Bet</td><td>94.0000%</td><td>29.30221%</td><td>1.10907%</td><td><b>5.0185%</b></td><td>1.38989%</td><td>0.46349%</td><td>0.04876%</td><td>0.00536%</td><td>0.00000%</td><td>3,500x</td><td>5.98</td></tr>
-<tr class='us'><td>94A Buy Feature</td><td>92.0000%</td><td>100.00000%</td><td>100.00000%</td><td><b>30.0000%</b></td><td>0.16197%</td><td>0.02851%</td><td>0.00151%</td><td>0.00000%</td><td>0.00000%</td><td>60x</td><td>1.18</td></tr>
+<tr class='us'><td>92A_Oldhand Normal Bet</td><td>92.0000%</td><td>28.41496%</td><td>0.22181%</td><td><b>13.0479%</b></td><td>1.96845%</td><td>0.84510%</td><td>0.11571%</td><td>0.05531%</td><td>0.00049%</td><td>20,000x</td><td>9.31</td></tr><tr class='us'><td>92A_Oldhand Extra Bet</td><td>92.0000%</td><td>29.30221%</td><td>1.10907%</td><td><b>8.8833%</b></td><td>1.96831%</td><td>1.35186%</td><td>0.27682%</td><td>0.04977%</td><td>0.00002%</td><td>20,000x</td><td>6.00</td></tr><tr class='us'><td>92A_Oldhand Buy Feature</td><td>92.5000%</td><td>100.00000%</td><td>100.00000%</td><td><b>30.0000%</b></td><td>0.16786%</td><td>0.03057%</td><td>0.00251%</td><td>0.00093%</td><td>0.00000%</td><td>200x</td><td>1.26</td></tr><tr class='us'><td>92A_Newbie Normal Bet</td><td>93.0000%</td><td>28.41496%</td><td>0.22181%</td><td><b>13.2451%</b></td><td>2.14514%</td><td>0.93934%</td><td>0.19963%</td><td>0.03327%</td><td>0.00000%</td><td>120x</td><td>4.67</td></tr><tr class='us'><td>92A_Newbie Extra Bet</td><td>93.0000%</td><td>29.30221%</td><td>1.10907%</td><td><b>9.4562%</b></td><td>2.36251%</td><td>1.51384%</td><td>0.17431%</td><td>0.00424%</td><td>0.00000%</td><td>120x</td><td>4.77</td></tr><tr class='us'><td>92A_Newbie Buy Feature</td><td>92.5000%</td><td>100.00000%</td><td>100.00000%</td><td><b>30.0000%</b></td><td>0.16786%</td><td>0.03057%</td><td>0.00251%</td><td>0.00093%</td><td>0.00000%</td><td>200x</td><td>1.26</td></tr><tr class='us'><td>94A_Oldhand Normal Bet</td><td>94.0000%</td><td>28.41496%</td><td>0.22181%</td><td><b>13.0479%</b></td><td>1.96845%</td><td>0.84510%</td><td>0.12284%</td><td>0.06178%</td><td>0.00069%</td><td>20,000x</td><td>10.89</td></tr><tr class='us'><td>94A_Oldhand Extra Bet</td><td>94.0000%</td><td>29.30221%</td><td>1.10907%</td><td><b>8.6441%</b></td><td>1.82511%</td><td>1.29796%</td><td>0.27682%</td><td>0.08111%</td><td>0.00028%</td><td>20,000x</td><td>8.24</td></tr><tr class='us'><td>94A_Oldhand Buy Feature</td><td>92.5000%</td><td>100.00000%</td><td>100.00000%</td><td><b>30.0000%</b></td><td>0.16786%</td><td>0.03057%</td><td>0.00251%</td><td>0.00093%</td><td>0.00000%</td><td>200x</td><td>1.26</td></tr><tr class='us'><td>94A_Newbie Normal Bet</td><td>93.0000%</td><td>28.41496%</td><td>0.22181%</td><td><b>13.2451%</b></td><td>2.14514%</td><td>0.93934%</td><td>0.19963%</td><td>0.03327%</td><td>0.00000%</td><td>120x</td><td>4.67</td></tr><tr class='us'><td>94A_Newbie Extra Bet</td><td>93.0000%</td><td>29.30221%</td><td>1.10907%</td><td><b>9.4562%</b></td><td>2.36251%</td><td>1.51384%</td><td>0.17431%</td><td>0.00424%</td><td>0.00000%</td><td>120x</td><td>4.77</td></tr><tr class='us'><td>94A_Newbie Buy Feature</td><td>92.5000%</td><td>100.00000%</td><td>100.00000%</td><td><b>30.0000%</b></td><td>0.16786%</td><td>0.03057%</td><td>0.00251%</td><td>0.00093%</td><td>0.00000%</td><td>200x</td><td>1.26</td></tr>
 <tr class="sep"><td>GOOX（Slot Stats 頁）</td>
 <td>90.7791%<br><span style="font-size:11px;color:var(--tx3)">官方 95.99%</span></td>
 <td>28.41496%</td><td>0.22181%</td>
@@ -261,16 +298,34 @@ NB／EB 取區間下限 ≥ 1 的機率合計；BF 因為成本是 100 倍投注
 （這也是你指定 30% 的那一項）。競品的對應值取 GOOX 的 m1+（main 12.6057% ＋ bonus 0.2218%）。</p>
 
 <p class="note"><b>對得上的</b>：Hit Rate（28.41496% vs 28.41496%，完全一致）、
-Prob. of Bonus（鎖定值）、贏錢率（NB 13.05% vs 12.83%，差 +0.22pp）。</p>
+Prob. of Bonus（鎖定值）、贏錢率（NB 13.05% vs 12.83%，差 +0.22pp）、
+<b>Extra Bet 的 x50+（0.2768% vs 0.27682%，已對齊）</b>。</p>
 
-<p class="note"><b>對不上的</b>：中高倍段。x10+／x20+ 本版偏<b>高</b>
+<div class="flag">
+<h3 style="margin-top:0">x50+：EB 對得上，NB 數學上做不到</h3>
+<p class="note" style="margin-top:0">本版的 BG 最高只到 30x（<code>(30,35]</code> 自然發生率低於 0.05% 不合格），
+所以 <b>50x 以上的獎只能由 FG 供給</b>：</p>
+<div class="eq">每轉 x50+ 機率 ＝ FG 觸發率 x P(該場 FG >= 50x)
+
+EB　需要 P = 0.0027682 / 0.01109066 = 24.9598%　<= 100%　可行
+　　用一個群組加權旋鈕把 E >= 100（玩家 50x）的區間整組拉到這個比例
+　　結果：每轉 x50+ = 0.276820%，與競品 0.27682% 一致
+
+NB　需要 P = 0.0027682 / 0.00221813 = 124.7988%　> 100%　不可能
+　　NB 的 x50+ 上限 ＝ 觸發率本身 ＝ 0.22181%
+　　比競品的 0.27682% 少 0.05501 pp，這是硬上限</div>
+<p class="note">目前 NB 的 x50+ 是 92A 0.1157%／94A 0.1228%，
+仍低於它自己的上限 0.22181%。要逼近上限就得把 FG 的
+<code>(20,25]</code>～<code>(45,50]</code> 六個區間壓到只剩保底權重——
+等於拿掉 FG 全部的小獎段，而且<b>即使拿掉也還是差 0.05501 pp</b>。
+這個取捨還沒做，維持現狀待確認。</p>
+</div>
+
+<p class="note"><b>其餘對不上的</b>：x10+／x20+ 本版偏<b>高</b>
 （1.9684% vs 1.2923%、0.8451% vs 0.6354%），
-x50+／x100+／x1000+ 則偏<b>低</b>
-（0.1162% vs 0.2768%、0.0557% vs 0.1241%、
-0.00050% vs 0.00232%）。
-同一個原因：BG 的倍率天花板被「自然發生率 &lt; 0.05% 不配權重」切在 30x，
-20x 以上只剩 FG 觸發在供給，於是 72%／74% 的 BG RTP 被迫堆在 10–20x，
-而 50x 以上的量只能靠每 450 轉才來一次的 FG。</p>
+x100+／x1000+ 則偏<b>低</b>
+（0.0553% vs 0.1241%、0.00049% vs 0.00232%）。
+同一個 30x 天花板造成：BG RTP 被迫堆在 10–20x，而高倍段只能靠每 450 轉才來一次的 FG。</p>
 
 <p class="note"><b>波動不可直接比。</b>Clash of Slots 的 VOLATILITY 316.94 是他們自訂的指數，
 不是每轉報酬的標準差。本版欄位是用區間中點算出的每轉得分倍率標準差（近似值），
@@ -280,41 +335,97 @@ x50+／x100+／x1000+ 則偏<b>低</b>
 <h2>五、Card-On 模擬驗證</h2>
 <div class="card">
 <p class="note" style="margin-top:0">用 <code>config_94A.js</code> 實跑 bet_mode 0、
-5,000,000 局（312 秒），把解析值與實測值對照。
+5,000,000 局（287 秒），把解析值與實測值對照。
 這一步驗證的是整條鏈：試算表權重 → Config 換算 → Simulator 抽卡重抽。</p>
 <div class="tw"><table>
 <thead><tr><th>指標</th><th>解析目標</th><th>Card-On 實跑</th><th>差</th><th>判定</th></tr></thead>
 <tbody>
-<tr class="us"><td>總 RTP</td><td>94.0000%</td><td>93.9921%</td>
-<td><span class='gp'>-0.0079pp</span></td><td class="gp">符合</td></tr>
-<tr class="us"><td>BG RTP</td><td>74.0000%</td><td>74.0413%</td>
-<td><span class='gp'>+0.0413pp</span></td><td class="gp">符合</td></tr>
-<tr class="us"><td>FG RTP</td><td>20.0000%</td><td>19.9508%</td>
-<td><span class='gp'>-0.0492pp</span></td><td class="gp">符合</td></tr>
-<tr class="us"><td>BG Hit Rate</td><td>28.193143%</td><td>28.1989%</td>
-<td><span class='gp'>+0.0058pp</span></td><td class="gp">符合</td></tr>
+<tr class="us"><td>總 RTP</td><td>94.0000%</td><td>94.3122%</td>
+<td><span class='gn'>+0.3122pp</span></td><td class="gn">尾端噪音</td></tr>
+<tr class="us"><td>BG RTP</td><td>72.0000%</td><td>74.1539%</td>
+<td><span class='gn'>+2.1539pp</span></td><td class="gp">噪音內（0.3σ）</td></tr>
+<tr class="us"><td>FG RTP</td><td>22.0000%</td><td>20.1583%</td>
+<td><span class='gn'>-1.8417pp</span></td><td class="gn">尾端噪音</td></tr>
+<tr class="us"><td>BG Hit Rate</td><td>28.193143%</td><td>28.1981%</td>
+<td><span class='gp'>+0.0050pp</span></td><td class="gp">符合</td></tr>
 <tr class="us"><td>FG 觸發率／週期</td><td>0.22181%　1/450.83</td>
-<td>0.2230%　1/448.43</td>
-<td><span class='gp'>-2.40 轉</span></td><td class="gp">噪音內</td></tr>
+<td>0.2206%　1/453.35</td>
+<td><span class='gp'>+2.52 轉</span></td><td class="gp">噪音內</td></tr>
 <tr><td>FG Hit Rate（每次免費轉）</td><td>自然 43.9564%</td>
-<td>42.8806%</td><td><span class='gn'>-1.0758pp</span></td>
+<td>42.8632%</td><td><span class='gn'>-1.0932pp</span></td>
 <td class="gn">卡片副作用</td></tr>
-<tr><td>平均重抽次數</td><td>—</td><td>26.36 次／局</td><td>—</td><td>—</td></tr>
-<tr><td>重抽超限局數</td><td>0</td><td>18 局
-（0.00036%）</td><td>—</td><td class="gn">已知小偏差</td></tr>
-<tr><td>實測最大得分</td><td>上限 9,000x</td><td>3,902.25x</td>
+<tr><td>平均重抽次數</td><td>—</td><td>26.42 次／局</td><td>—</td><td>—</td></tr>
+<tr><td>重抽超限局數</td><td>0</td><td>16 局
+（0.00032%）</td><td>—</td><td class="gn">已知小偏差</td></tr>
+<tr><td>實測最大得分</td><td>上限 20,000x</td><td>19,887.35x</td>
 <td>—</td><td>樣本未達尾端</td></tr>
 </tbody></table></div>
-<p class="note"><b>四個 RTP 相關指標全部落在 0.05 pp 以內</b>，
-BG Hit Rate 差 +0.0058 pp，確認 Config 的權重正規化換算正確、
-卡片重抽確實把分布收到目標區間。</p>
+<p class="note"><b>BG Hit Rate 與 FG 週期都對上了</b>
+（+0.0050 pp、+2.52 轉），
+確認 Config 的權重正規化換算正確、卡片重抽確實把分布收到目標區間。</p>
+
+<p class="note"><b>總 RTP 高出 +0.3122 pp，這幾乎全部是單一大獎造成的。</b>
+本次跑出 <code>max_win_x = 19,887.35</code>——正是新開放的
+<code>(10000, 20000]</code> 區間。一次這種等級的獎在 5,000,000 局裡就佔
+0.3977 pp 的總 RTP。扣掉它之後是
+<b>93.9145%</b>，落在目標 94.0000% 的下方。
+換句話說 500 萬局的樣本量根本不足以收斂這條尾巴：
+該區間每轉出現機率是 0.000008768%，
+要讓它的估計穩定下來需要百億等級的轉數。</p>
+
+<p class="note">這也是「20,000x 以下合格區間全部要有機率」這個規範的直接代價：
+倍率上限拉到 20,000x（超過競品 15,000x），波動從上一版的 11.06 升到
+<b>12.62</b>，但相對地任何有限樣本的 RTP 量測都會被尾端主導。
+上一版（尾端權重為 0、上限 9,000x）同樣 500 萬局跑出 93.9921%、最大獎僅 3,902x，
+看起來「準」只是因為尾巴被砍掉了。</p>
+
 <p class="note"><b>兩個要記錄的偏差。</b>
-一是 FG Hit Rate：實測 42.8806% 低於自然值 43.9564%，
+一是 FG Hit Rate：實測 42.8632% 低於自然值 43.9564%，
 因為重抽是以整場總分為條件、會偏好某些場。
-二是 <code>retry_limit_exceeded</code>：5,000,000 局中有 18 局
-在 10,000 次重抽內湊不出目標區間而放棄，佔 0.00036%，
-對 RTP 的影響小於 0.01 pp，但數字不為零就代表某些區間的目標機率已接近自然可達的極限。</p>
-<p class="note">92A 與 EB／BF 的 Card-On 批次已寫進 <code>Simulator.py</code> 的
+二是 <code>retry_limit_exceeded</code>：5,000,000 局中有 16 局
+在 10,000 次重抽內湊不出目標區間而放棄，佔 0.00032%。
+所有合格區間的自然發生率都 ≥ 0.05%，期望重抽次數最多約 1,900 次，
+超過 10,000 次的機率最高只有 0.55%（<code>(8000, 9000]</code> 那一格），所以這個數字不會再惡化。</p>
+<h3 style="margin-top:22px">Buy Feature（bet_mode 2、2,000,000 局）</h3>
+<div class="tw"><table>
+<thead><tr><th>指標</th><th>解析目標</th><th>Card-On 實跑</th><th>差</th><th>判定</th></tr></thead>
+<tbody>
+<tr class="us"><td>BF RTP</td><td>92.5000%</td><td>92.0106%</td>
+<td><span class="gn">-0.4894pp</span></td>
+<td class="gn">系統性偏低</td></tr>
+<tr><td>FG Hit Rate（每次免費轉）</td><td>自然 44.0710%</td>
+<td>43.2059%</td><td><span class='gp'>-0.8651pp</span></td>
+<td>卡片副作用</td></tr>
+<tr><td>波動（volatility_std）</td><td>近似 1.26</td><td>1.27</td>
+<td>—</td><td class="gp">相符</td></tr>
+<tr><td>平均重抽次數</td><td>—</td><td>27.89 次／局</td><td>—</td><td>—</td></tr>
+<tr><td>重抽超限局數</td><td>0</td><td>0</td><td>—</td><td class="gp">符合</td></tr>
+<tr><td>實測最大得分</td><td>上限 200x</td><td>180.81x</td>
+<td>—</td><td class="gp">尾端有開出</td></tr>
+</tbody></table></div>
+
+<div class="flag">
+<h3 style="margin-top:0">BF 有一個尚未解釋的系統性差距，要追</h3>
+<p class="note" style="margin-top:0">BF 實跑 <b>92.0106%</b>，比解析目標 92.5000% 低
+<b>0.4894 pp</b>。這<b>不是抽樣噪音</b>：
+BF 的 <code>volatility_std</code> 只有 1.27，
+2,000,000 局的標準誤是 0.0898 pp，
+所以這個差距相當於 <b>5.4σ</b>。
+相對誤差 0.53%。</p>
+<p class="note">NB 那一組沒有這個問題（BG Hit Rate 差 +0.0050 pp、
+週期差 +2.52 轉，RTP 的偏差可用單一大獎解釋），
+所以問題應該出在 BF 這條路徑特有的地方，可能的方向：
+<code>play_featurebuy_entry()</code> 的進場盤面與後續 FG 的銜接、
+BF 的 <code>card_multiplier_denominator</code> 用的是 <code>normal_bet_base_cost</code>
+（區間刻度是基礎投注而非購買成本）、
+或是自然報表 <code>free_game_pay_BF</code> 欄與模擬器 BF 計分口徑的細微差異。</p>
+<p class="note"><b>下一步</b>：跑一次帶「各區間實際落點次數」輸出的診斷，
+把達成分布與目標權重逐格比對，就能判斷是「區間機率沒打準」還是
+「區間內的條件平均倍率與自然報表不同」。在釐清之前，
+BF 的 92.5000% 只在試算表與 Config 層面成立，實跑值請以 92.0106% 為準。</p>
+</div>
+
+<p class="note">92A 與 EB 的 Card-On 批次已寫進 <code>Simulator.py</code> 的
 <code>BATCH_RUNS</code>（92A／94A × 三個押注區、各 100 萬局），尚未逐一實跑。</p>
 </div>
 
@@ -327,34 +438,79 @@ BG Hit Rate 差 +0.0058 pp，確認 Config 的權重正規化換算正確、
 </div>
 
 <div class="card">
-<h3>BG 每轉機率（對數刻度）</h3>
-<div class="ch"><canvas id="c1"></canvas></div>
-<p class="note">GOOX main 是純 BG；<b>GOO 的線含同一回合的 FG 得分</b>（其資料定義如此），
-所以另外畫了一條「92A NB 每轉合計（BG＋FG）」跟它對照，才是同尺規。
-命中率已對齊 GOOX，所以總量相同，差別只在形狀：本版偏重 5–20x，
-20x 以上的 BG 沒有供給（<code>(30,35]</code> 自然率低於 0.05%）。
-92A 與 94A 的差異只是 74% 比 72% 多出的 2 pp，形狀幾乎重疊。</p>
+<h3>BG 倍率線型</h3>
+<p class="note" style="margin-top:0">縱軸固定 0–16%（與 FG 圖同一把尺，兩張圖可直接對照高度）。
+超過 16% 的區間不繪製，另列於下表。折線斷開處代表該區間為零，非插值。
+橫軸是<b>原始 64 區間</b>，不是聚合帶。</p>
+<div class="ch" style="height:400px"><canvas id="c1"></canvas></div>
+<div id="t1box">
+<h3 style="margin:16px 0 6px">有序列超出 16% 上限的區間</h3>
+<div class="tw"><table id="t1" style="min-width:auto"></table></div>
+<p class="note">只有<b>超過 16% 的那個數值</b>不繪製；同一列中未超過的仍然畫在圖上
+（例如 <code>(0, 1]</code> 的 92A NB 是 15.145%，圖上看得到，超標的是 92A EB 與 GOO）。</p></div>
+<div class="tw"><table style="min-width:auto;margin-top:14px">
+<thead><tr><th>圖例</th><th>是什麼</th><th>合計</th><th>最高有值</th></tr></thead>
+<tbody>
+<tr><td><b>92A NB</b></td><td>Normal Bet 的 Base Game 得分，不含免費遊戲</td>
+<td>27.9713%</td><td>20–30x</td></tr>
+<tr><td><b>92A EB</b></td><td>Extra Bet 的 Base Game 得分。整體右移是因為 EB 每轉成本兩倍，
+同一區間序號的實際賠付也是兩倍</td>
+<td>27.0841%</td><td>40–50x</td></tr>
+<tr><td><b>GOO 每轉總得分（含 FG）</b></td>
+<td>競品 Gates of Olympus 1000 實測。該欄定義是「一次下注的總得分」，
+<b>含該回合的免費遊戲</b>，所以它天生會比純 BG 的線高一截，不是同一個口徑</td>
+<td>28.8066%</td><td>400–450x</td></tr>
+</tbody></table></div>
+<p class="note">94A 沒有畫，因為 <b>94A 的 BG 與 92A 逐格完全相同</b>——兩版差異全在 FG。</p>
+<p class="note"><b>GOOX 沒有畫在這張圖上。</b>它只公布 16 個粗帶
+（m0-1、m1-2、…、m500-1000），沒有 64 區間的解析度；硬畫上去會需要插值或造假斷點。
+GOOX 的對照在第三、四節的表格裡（那裡的比較是用聚合帶做的）。</p>
+<p class="note">命中率已對齊 GOOX，所以總量幾乎相同，差別只在形狀：
+本版偏重 5–20x，20x 以上的 BG 沒有供給（<code>(30,35]</code> 自然發生率低於 0.05% 不合格）；
+競品則一路鋪到 1000x。</p>
 </div>
 
 <div class="card">
-<h3>FG 每場占比（合計 100%，對數刻度）</h3>
-<div class="ch"><canvas id="c2"></canvas></div>
-<p class="note">單位是「每一場免費遊戲」，各線合計 100%。
-92A 與 94A 的 FG 權重完全相同，所以只有一條 NB-FG 與一條 EB-FG。
-本版三條線的下限都被 20x 規範切掉；兩個競品在 5–20x 都還有量
-（GOO 的 <code>(9,10]</code>～<code>(15,20]</code> 合計 25.7%）。
-頂端則因「與競品取交集」切在 15,000x，整數化後最高有權重的是 9,000x。
-GOO 的 FG 只有 74 場、BF 253 次，形狀雜訊大，看趨勢不看單帶。</p>
+<h3>FG 倍率線型</h3>
+<p class="note" style="margin-top:0">同樣的畫法與同一把尺：縱軸固定 0–16%、零值斷開、橫軸為原始 64 區間。
+FG 的最高單一區間是 EB 的 15.000%（15% 上限所在），沒有任何區間超過 16%，
+所以整條分布都畫得出來，不需要另列表格。</p>
+<div class="ch" style="height:400px"><canvas id="c2"></canvas></div>
+<div id="t2box">
+<h3 style="margin:16px 0 6px">超出 16% 上限、圖上不顯示的區間</h3>
+<div class="tw"><table id="t2" style="min-width:auto"></table></div></div>
+<div class="tw"><table style="min-width:auto;margin-top:14px">
+<thead><tr><th>圖例</th><th>是什麼</th><th>平均倍數</th></tr></thead>
+<tbody>
+<tr><td><b>92A NB</b></td><td>Normal Bet 的免費遊戲</td><td>90.17x</td></tr>
+<tr><td><b>92A EB</b></td><td>Extra Bet 的免費遊戲</td><td>90.17x</td></tr>
+<tr><td><b>92A BF</b></td><td>Buy Feature（兩版共用同一組權重）</td><td>92.50x</td></tr>
+<tr><td><b>GOO NB-FG</b></td><td>競品 Gates of Olympus 1000 實測，74 場</td>
+<td>94.47x</td></tr>
+<tr><td><b>GOO BF-FG</b></td><td>同上的購買免費遊戲，253 次</td>
+<td>85.41x</td></tr>
+</tbody></table></div>
+<p class="note">單位是「每一場免費遊戲」，各線合計 100%（所以這裡比的是<b>形狀</b>，不是量）。
+本版只畫 92A：94A 的 FG 平均倍數是 99.18x（92A 為 90.17x），
+形狀同樣往右偏一點，兩版的實際差異看第三節的 RTP 配比表即可。</p>
+<p class="note">本版四條線的下限都被 20x 規範切掉，20x 以下完全沒有機率；
+兩個競品在 5–20x 都還有量（GOO 的 <code>(9,10]</code>～<code>(15,20]</code> 合計 25.7%）。
+頂端可到 20,000x。GOO 的 FG 只有 74 場、BF 253 次，
+形狀雜訊大，看趨勢不看單帶。</p>
 </div>
 
 <h2>七、逐帶數值</h2>
 <div class="card"><div class="tw"><table id="tb">
 <thead><tr><th>倍率帶</th>
-<th>92A NB BG</th><th>94A NB BG</th><th>GOOX main</th><th>GOO 每轉</th>
-<th>NB FG</th><th>EB FG</th><th>BF</th><th>GOOX bonus</th><th>GOO FG</th></tr></thead>
+<th>92A NB BG</th><th>GOOX main</th><th>GOO 每轉</th>
+<th>92A NB FG</th><th>92A EB FG</th><th>92A BF</th>
+<th>GOOX bonus</th><th>GOO FG</th></tr></thead>
 <tbody></tbody>
 </table></div>
-<p class="note">BG 四欄為每轉機率（%），FG 五欄為每場占比（%）。NB FG／EB FG／BF 兩版相同。</p>
+<p class="note">前三欄為每轉機率（%），後五欄為每場占比（%）。
+全表統一列 92A：94A 的 BG 與 92A 逐格完全相同，FG 則整體往右偏
+（平均倍數 99.18x 對 90.17x）。
+GOOX bonus 的 1,000x 以上分帶在原始資料是 0（見第三節說明），實際不為零。</p>
 </div>
 
 <h2>八、各押注區使用的輪帶</h2>
@@ -492,7 +648,7 @@ Config <code>config_92A.js</code>／<code>config_94A.js</code>。
 週期 1/425.3／FG 平均 94.47x</td>
 <td>五大指標的第二組對照（交叉驗證 GOOX）</td><td>同 md §2.1</td></tr>
 <tr><td>GOO BF RTP 85.413%／平均 85.41x／最大 591.10x</td>
-<td>BF 目標 92% 的合理性檢查</td><td>同 md §2.2</td></tr>
+<td>BF 目標 92.5% 的合理性檢查</td><td>同 md §2.2</td></tr>
 <tr><td>GOO 64 區間線型（NB-BG／NB-FG／BF-FG）</td><td>線型圖的 GOO 曲線與贏錢率</td><td>同 md §4.2</td></tr>
 </tbody></table></div>
 
@@ -514,12 +670,12 @@ Overview 的 bg_trigger_fg_cnt／pay（觸發列）、hit_rate_fg、avg_fg_end_m
 <h2>十一、還沒對齊的部分</h2>
 <div class="card">
 <ol>
-<li><b>50x 以上偏薄，10–20x 偏厚</b>：x50+ 0.1162% vs GOOX 0.2768%、
-x100+ 0.0557% vs 0.1241%、x1000+ 0.00050% vs 0.00232%；
+<li><b>50x 以上偏薄，10–20x 偏厚</b>：x50+ 0.1157% vs GOOX 0.2768%、
+x100+ 0.0553% vs 0.1241%、x1000+ 0.00049% vs 0.00232%；
 反之 x10+ 1.9684% vs 1.2923%。
 根因是 BG 倍率天花板被 0.05% 門檻切在 30x，20x 以上只剩 FG 觸發供給。
 要補齊只能放寬門檻或提高 BG 的自然高倍發生率（動輪帶，不在本次範圍）。</li>
-<li><b>最大倍數 9,000x vs 競品 15,000x</b>：
+<li><b>最大倍數 20,000x vs 競品 15,000x</b>：
 「與競品取交集」把上限壓到 15,000x，整數化後最高有權重的區間是 (8000, 9000]。
 這與先前「最大倍數要超過競品」的方向相反——兩個要求互斥，本次依最新指示採交集。</li>
 <li><b>FG 20x 以下完全空白</b>：兩個競品在 5–20x 都還有量（GOO 的 FG 有 25.7% 落在 9–20x）。
@@ -531,7 +687,7 @@ x100+ 0.0557% vs 0.1241%、x1000+ 0.00050% vs 0.00232%；
 <li><b>EB 沒有專屬輪帶</b>（第八節）：5 倍週期是用重抽觸發機會模擬的。</li>
 <li><b>與規範 §H027 v3 校準規範的四處差異</b>（依你指示採本次參數）：
 門檻 0.05%（規範 0.1%）、NB FG 週期 450.83（規範 300）、
-EB 已啟用並填權重（規範要求留白標 pending）、BF RTP 92%（規範 92.5%）。</li>
+EB 已啟用並填權重（規範要求留白標 pending）。BF RTP 已改為規範的 92.5%。</li>
 <li><b>Card-On 模擬驗證</b>：本報告數值是解析值。已用 <code>config_94A.js</code> 實跑確認可載入，
 但需要更大樣本才能收斂 FG RTP；<code>Simulator.py</code> 的 <code>BATCH_RUNS</code>
 已加入 92A／94A × 三押注區的 100 萬局 Card-On 批次。
@@ -544,7 +700,11 @@ EB 已啟用並填權重（規範要求留白標 pending）、BF RTP 92%（規�
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const L=["0–1", "1–2", "2–3", "3–4", "4–5", "5–10", "10–20", "20–30", "30–40", "40–50", "50–100", "100–200", "200–300", "300–400", "400–500", "500–1k", "1k–2k", "2k–3k", "3k–4k", "4k–5k", "5k–10k", "10k–20k"];
-const D={"n92_bg": [15.1452805, 5.1718503, 2.3007498, 1.4370261, 0.8019001, 1.3678892000000002, 1.1233448, 0.6232896, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "n94_bg": [15.040988899999999, 5.1532227, 2.3006389, 1.4414579, 0.8071745, 1.3888694999999998, 1.1668447999999998, 0.6721332, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "e92_bg": [19.309869199999998, 0.0, 4.0159951, 0.0, 1.2183466, 0.8402482, 0.840371, 0.35056539999999997, 0.26589209999999996, 0.2427904, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "e94_bg": [19.1595543, 0.0, 4.0150902, 0.0, 1.2263724, 0.8545412, 0.8725739000000001, 0.3781205, 0.2970022, 0.2808233, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "n92_tot": [15.1452805, 5.1718503, 2.3007498, 1.4370261, 0.8019001, 1.3678892000000002, 1.1233448, 0.6724711728766941, 0.0327449586318568, 0.023689904398553778, 0.06045696892398466, 0.036285593904576, 0.010702993145975203, 0.0041583330745513835, 0.001908192001419604, 0.0021890209169753566, 0.00036304837743717145, 6.683206530177672e-05, 2.7051216644855046e-05, 1.5308652929041993e-05, 2.3322094802919063e-05, 0.0], "nb_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.1725285, 14.7624097, 10.6801196, 27.255815300000002, 16.3586343, 4.825230400000001, 1.8747013000000001, 0.8602702, 0.9868763, 0.1636731, 0.030129899999999998, 0.0121955, 0.006901600000000001, 0.0105143, 0.0], "eb_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 15.0, 59.2999934, 21.303376099999998, 3.3615047, 0.5522632, 0.26528630000000003, 0.2008827, 0.014947400000000003, 0.0014556999999999999, 0.0, 0.0001957, 7.86e-05, 1.62e-05], "bf_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.9883333, 14.2863252, 9.8133008, 22.9120407, 20.664168900000004, 5.4007515, 1.9696696, 0.8642356, 0.9392093, 0.1334556, 0.0183021, 0.0058668999999999995, 0.0028326999999999996, 0.0015078000000000001, 0.0], "gx_bg": [15.587442302286, 5.9016386336587, 2.55426093052, 1.3795311360211, 0.69595177852004, 0.99149659232068, 0.62866512847378, 0.16158456159645, 0.083764634196183, 0.051372174561361, 0.099078446598575, 0.039953383590875, 0.0090842550725068, 0.0032014723057165, 0.0013994830582049, 0.0027927737134973, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "gx_fg": [0.0, 0.0, 0.0, 0.14237855946398745, 0.4187604690117246, 5.013958682300366, 12.705192629815652, 11.052484645449503, 9.257398101619348, 7.587939698492487, 24.201563372417432, 18.93076493579024, 6.0859854829704725, 2.3590173087660316, 0.9575656058068327, 1.1111111111111311, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_tot": [17.20259, 5.34126, 2.08439, 1.31228, 0.67679, 0.9405100000000002, 0.64184, 0.15887, 0.10803, 0.06036999999999999, 0.13981, 0.09849999999999999, 0.0286, 0.00953, 0.00318, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 2.703, 22.973, 4.054, 5.405, 9.459999999999999, 21.621000000000002, 17.566999999999997, 12.161999999999999, 2.703, 1.351, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_bf": [0.0, 0.0, 0.0, 0.791, 1.186, 6.324, 10.672, 7.51, 11.858, 8.301, 25.691999999999997, 18.183, 5.534, 1.186, 1.9769999999999999, 0.791, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]};
+const IV=["(-1, 0]", "(0, 1]", "(1, 2]", "(2, 3]", "(3, 4]", "(4, 5]", "(5, 6]", "(6, 7]", "(7, 8]", "(8, 9]", "(9, 10]", "(10, 15]", "(15, 20]", "(20, 25]", "(25, 30]", "(30, 35]", "(35, 40]", "(40, 45]", "(45, 50]", "(50, 60]", "(60, 70]", "(70, 80]", "(80, 90]", "(90, 100]", "(100, 120]", "(120, 140]", "(140, 160]", "(160, 180]", "(180, 200]", "(200, 250]", "(250, 300]", "(300, 350]", "(350, 400]", "(400, 450]", "(450, 500]", "(500, 550]", "(550, 600]", "(600, 650]", "(650, 700]", "(700, 750]", "(750, 800]", "(800, 850]", "(850, 900]", "(900, 950]", "(950, 1000]", "(1000, 2000]", "(2000, 3000]", "(3000, 4000]", "(4000, 5000]", "(5000, 6000]", "(6000, 7000]", "(7000, 8000]", "(8000, 9000]", "(9000, 10000]", "(10000, 20000]", "(20000, 30000]", "(30000, 40000]", "(40000, 50000]", "(50000, 60000]", "(60000, 70000]", "(70000, 80000]", "(80000, 90000]", "(90000, 100000]", "(100000, 9999999]"];
+// 22 帶（逐帶數值表用）
+const D={"n92_bg": [15.1452799, 5.1718501, 2.3007498, 1.4370261, 0.8019001, 1.3678896999999999, 1.1233449, 0.6232898, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "e92_bg": [19.3098684, 0.0, 4.015995, 0.0, 1.2183467, 0.8402483999999999, 0.8403714, 0.3505655, 0.26589209999999996, 0.24279050000000002, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "nb_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.3120233, 14.819589400000002, 10.7023741, 27.2287728, 16.2654266, 4.7786012, 1.8520309000000001, 0.8483288, 0.9706674999999999, 0.1601449, 0.029359800000000002, 0.0118546, 0.0066967, 0.0101765, 0.0039529], "eb_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.9999995, 60.040246, 20.4719945, 3.3937189, 0.5747529, 0.2812125, 0.21870389999999998, 0.0172013, 0.0017878, 0.0, 0.0002515, 0.00010460000000000001, 2.6600000000000003e-05], "bf_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 22.8309335, 14.256810600000001, 9.827827, 23.084443999999998, 20.588370700000002, 5.424191499999999, 1.9879577, 0.8754081, 0.9561969000000003, 0.1372863, 0.0189817, 0.0061148999999999995, 0.0029631, 0.0015817000000000001, 0.0009323000000000001], "gx_bg": [15.587442302286, 5.9016386336587, 2.55426093052, 1.3795311360211, 0.69595177852004, 0.99149659232068, 0.62866512847378, 0.16158456159645, 0.083764634196183, 0.051372174561361, 0.099078446598575, 0.039953383590875, 0.0090842550725068, 0.0032014723057165, 0.0013994830582049, 0.0027927737134973, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "gx_fg": [0.0, 0.0, 0.0, 0.14237855946398745, 0.4187604690117246, 5.013958682300366, 12.705192629815652, 11.052484645449503, 9.257398101619348, 7.587939698492487, 24.201563372417432, 18.93076493579024, 6.0859854829704725, 2.3590173087660316, 0.9575656058068327, 1.1111111111111311, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_tot": [17.20259, 5.34126, 2.08439, 1.31228, 0.67679, 0.9405100000000002, 0.64184, 0.15887, 0.10803, 0.06036999999999999, 0.13981, 0.09849999999999999, 0.0286, 0.00953, 0.00318, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 2.703, 22.973, 4.054, 5.405, 9.459999999999999, 21.621000000000002, 17.566999999999997, 12.161999999999999, 2.703, 1.351, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_bf": [0.0, 0.0, 0.0, 0.791, 1.186, 6.324, 10.672, 7.51, 11.858, 8.301, 25.691999999999997, 18.183, 5.534, 1.186, 1.9769999999999999, 0.791, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]};
+// 64 原始區間（折線圖用）
+const F={"n92_bg": [71.80685650000001, 15.1452799, 5.1718501, 2.3007498, 1.4370261, 0.8019001, 0.45377480000000003, 0.2909109, 0.24017249999999998, 0.1502771, 0.2327544, 0.7339778, 0.3893671, 0.310282, 0.3130078, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "e92_bg": [71.80685650000001, 19.3098684, 4.015995, 1.2183467, 0.5019357999999999, 0.3383126, 0.3070239, 0.1855854, 0.15354109999999999, 0.1034209, 0.0908001, 0.3505655, 0.26589209999999996, 0.24279050000000002, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "nb_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.4168319, 9.8951914, 8.0736577, 6.745931700000001, 5.7590835, 4.9432906, 8.1373503, 6.341483500000001, 5.0997274, 4.1778811, 3.4723305000000004, 5.3678341, 3.9464964, 2.9255295, 2.2629999, 1.7625667, 2.9918305999999997, 1.7867706, 1.1226385, 0.7293924, 0.49860089999999996, 0.3497279, 0.2503123, 0.1828202, 0.13811089999999998, 0.1050332, 0.08010250000000001, 0.06335740000000001, 0.0503159, 0.039695799999999996, 0.0331172, 0.0278021, 0.1601449, 0.029359800000000002, 0.0118546, 0.0066967, 0.0041872, 0.0027075000000000003, 0.001917, 0.0013648, 0.0, 0.0039529, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "eb_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.9999995, 14.9999995, 14.9999995, 13.4406622, 9.5744209, 7.025163900000001, 8.4086277, 5.1003523, 3.2739461999999997, 2.1835706999999998, 1.5054976, 1.8237279, 0.9942909, 0.5757001, 0.3514606, 0.2232923, 0.2812125, 0.11527810000000001, 0.053207000000000004, 0.026740999999999997, 0.0148277, 0.0086501, 0.0055525, 0.0035104000000000003, 0.0023989, 0.001674, 0.0011866, 0.0008909, 0.0006906, 0.0005182, 0.00042490000000000003, 0.0003543, 0.0017878, 0.0002515, 7.42e-05, 3.0400000000000004e-05, 1.46e-05, 7.9e-06, 0.0, 0.0, 0.0, 4.1000000000000006e-06, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "bf_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.934026600000001, 9.896906900000001, 7.8623073, 6.3945033, 5.3270528, 4.5007742, 7.1736756, 5.4630671, 4.2663606, 3.4098509999999997, 2.7714897, 7.078932, 5.0109357, 3.660654, 2.7430346, 2.0948143999999997, 3.4420491999999996, 1.9821423, 1.2114939, 0.7764638, 0.5182703000000001, 0.3571378, 0.2531374, 0.1831771, 0.1358483, 0.1021011, 0.0779121, 0.0608117, 0.0480658, 0.03861, 0.0310557, 0.0254777, 0.1372863, 0.0189817, 0.0061148999999999995, 0.0029631, 0.0015817000000000001, 0.0, 0.0, 0.0, 0.0, 0.0009323000000000001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_bg": [71.19344, 17.20259, 5.34126, 2.08439, 1.31228, 0.67679, 0.30503, 0.25419, 0.15887, 0.07626, 0.14616, 0.46708, 0.17476, 0.07308, 0.08579, 0.05084, 0.05719, 0.02224, 0.03813, 0.0286, 0.03177, 0.02542, 0.03813, 0.01589, 0.0286, 0.02542, 0.02224, 0.00635, 0.01589, 0.01589, 0.01271, 0.00953, 0.0, 0.00318, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_fg": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.703, 9.459, 13.514, 0.0, 4.054, 4.054, 1.351, 2.703, 6.757, 2.703, 5.405, 5.405, 6.757, 1.351, 6.757, 5.405, 2.703, 1.351, 1.351, 5.405, 6.757, 2.703, 0.0, 1.351, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "go_bf": [0.0, 0.0, 0.0, 0.0, 0.791, 1.186, 1.976, 0.395, 1.581, 2.372, 0.0, 3.953, 6.719, 3.557, 3.953, 7.51, 4.348, 3.953, 4.348, 10.672, 4.348, 3.953, 3.557, 3.162, 4.348, 6.324, 2.767, 2.372, 2.372, 4.348, 1.186, 0.395, 0.791, 1.186, 0.791, 0.0, 0.791, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]};
 const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
 const GR=g('--grid'),MU=g('--tx3'),TX=g('--tx2');
 const A1=g('--a1'),A2=g('--a2'),A3=g('--a3'),A4=g('--a4'),A5=g('--a5'),
@@ -553,45 +713,67 @@ const z=v=>v>0?v:null, f=(v,d)=>v>0?v.toFixed(d):'—';
 
 const tb=document.querySelector('#tb tbody');
 L.forEach((l,i)=>{tb.insertAdjacentHTML('beforeend',`<tr><td>${l}</td>`
- +`<td>${f(D.n92_bg[i],5)}</td><td>${f(D.n94_bg[i],5)}</td>`
- +`<td>${f(D.gx_bg[i],5)}</td><td>${f(D.go_tot[i],5)}</td>`
- +`<td>${f(D.nb_fg[i],3)}</td><td>${f(D.eb_fg[i],3)}</td><td>${f(D.bf_fg[i],3)}</td>`
+ +`<td>${f(D.n92_bg[i],5)}</td><td>${f(D.gx_bg[i],5)}</td><td>${f(D.go_tot[i],5)}</td>`
+ +`<td>${f(D.nb_fg[i],3)}</td>`
+ +`<td>${f(D.eb_fg[i],3)}</td><td>${f(D.bf_fg[i],3)}</td>`
  +`<td>${f(D.gx_fg[i],3)}</td><td>${f(D.go_fg[i],3)}</td></tr>`);});
 
-const mk=(id,sets)=>new Chart(document.getElementById(id),{type:'bar',
- data:{labels:L,datasets:sets.map(s=>({label:s[0],data:s[1].map(z),backgroundColor:s[2],
-   borderRadius:{topLeft:2,topRight:2},maxBarThickness:9}))},
- options:{responsive:true,maintainAspectRatio:false,animation:false,
-  interaction:{mode:'index',intersect:false},
-  plugins:{
-   legend:{display:true,position:'top',align:'start',
-     labels:{color:TX,boxWidth:11,boxHeight:11,padding:10,
-       font:{size:11.5,family:'"Helvetica Neue","PingFang TC",sans-serif'},
-       usePointStyle:true,pointStyle:'rect'}},
-   tooltip:{callbacks:{label:c=>c.dataset.label+'：'+c.parsed.y.toFixed(5)+'%'}}},
-  scales:{
-   x:{grid:{display:false},border:{color:GR},
-     ticks:{color:MU,font:{size:10},autoSkip:false,maxRotation:65,minRotation:65}},
-   y:{type:'logarithmic',min:1e-6,grid:{color:GR},border:{display:false},
-     ticks:{color:MU,font:{size:10},
-       callback:v=>[1e-5,1e-4,1e-3,1e-2,1e-1,1,10,100].includes(v)?v+'%':''}}}}});
+// 折線圖：縱軸固定 0~cap%，超過上限的區間不繪製（另外用表格列出），
+// 值為 0 的區間畫成斷點（spanGaps:false），不做插值。
+const mk=(id,sets,cap,tblId)=>{
+ const clip=a=>a.map(v=>(v>0&&v<=cap)?v:null);
+ const ch=new Chart(document.getElementById(id),{type:'line',
+  data:{labels:IV,datasets:sets.map(s=>({label:s[0],data:clip(s[1]),
+    borderColor:s[2],backgroundColor:s[2],borderWidth:1.6,
+    pointRadius:1.2,pointHoverRadius:4,tension:0,spanGaps:false}))},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+   interaction:{mode:'index',intersect:false},
+   plugins:{
+    legend:{display:true,position:'top',align:'start',
+      labels:{color:TX,boxWidth:11,boxHeight:11,padding:10,
+        font:{size:11.5,family:'"Helvetica Neue","PingFang TC",sans-serif'},
+        usePointStyle:true,pointStyle:'rect'}},
+    // 空值（斷點／超出上限）不能直接 toFixed，否則 index 模式滑過去會拋錯
+    tooltip:{filter:c=>c.parsed.y!==null&&c.parsed.y!==undefined,
+      callbacks:{label:c=>c.dataset.label+'：'+c.parsed.y.toFixed(5)+'%'}}},
+   scales:{
+    x:{title:{display:true,text:'倍率區間（× 底注）',color:MU,font:{size:11}},
+      grid:{display:false},border:{color:GR},
+      ticks:{color:MU,font:{size:8},autoSkip:false,maxRotation:90,minRotation:90}},
+    y:{min:0,max:cap,title:{display:true,text:`Hit Rate（固定 0–${cap}%）`,
+        color:MU,font:{size:11}},
+      grid:{color:GR},border:{display:false},
+      ticks:{color:MU,font:{size:10},callback:v=>v+'%'}}}}});
+ // 超出上限的區間 → 表格；沒有的話整塊隱藏
+ const over=[];
+ IV.forEach((lab,i)=>{
+   const row=sets.map(s=>s[1][i]);
+   if(row.some(v=>v>cap)) over.push([lab,row]);
+ });
+ const t=document.getElementById(tblId);
+ const box=document.getElementById(tblId+'box');
+ if(over.length===0){ if(box) box.hidden=true; }
+ else if(t){
+   t.innerHTML='<thead><tr><th>區間</th>'
+     +sets.map(s=>`<th>${s[0]}</th>`).join('')+'</tr></thead><tbody>'
+     +over.map(([lab,row])=>`<tr><td>${lab}</td>`
+        +row.map(v=>`<td>${v>0?v.toFixed(3)+'%':'—'}</td>`).join('')+'</tr>').join('')
+     +'</tbody>';
+ }
+ return ch;
+};
 
 const ch=[
  mk('c1',[
-   ['92A NB · BG',D.n92_bg,A1],
-   ['94A NB · BG',D.n94_bg,A2],
-   ['92A EB · BG',D.e92_bg,A3],
-   ['94A EB · BG',D.e94_bg,A5],
-   ['GOOX main（純 BG）',D.gx_bg,X1],
-   ['92A NB · 每轉合計',D.n92_tot,A4],
-   ['GOO 每轉總得分（含 FG）',D.go_tot,G1]]),
+   ['92A NB',F.n92_bg,A1],
+   ['92A EB',F.e92_bg,A3],
+   ['GOO 每轉總得分（含 FG）',F.go_bg,G1]],16,'t1'),
  mk('c2',[
-   ['H027 NB · FG（兩版相同）',D.nb_fg,A1],
-   ['H027 EB · FG（兩版相同）',D.eb_fg,A3],
-   ['H027 BF（兩版相同）',D.bf_fg,A5],
-   ['GOOX bonus',D.gx_fg,X1],
-   ['GOO NB-FG（74 場）',D.go_fg,G1],
-   ['GOO BF-FG（253 次）',D.go_bf,G2]])];
+   ['92A NB',F.nb_fg,A1],
+   ['92A EB',F.eb_fg,A3],
+   ['92A BF',F.bf_fg,A5],
+   ['GOO NB-FG（74 場）',F.go_fg,G1],
+   ['GOO BF-FG（253 次）',F.go_bf,G2]],16,'t2')];
 requestAnimationFrame(()=>ch.forEach(c=>c.resize()));
 </script>
 </body>
