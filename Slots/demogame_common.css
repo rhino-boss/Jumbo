@@ -400,9 +400,14 @@ body.slot-simulator #change-log-wrap {
 }
 
 body.slot-simulator #changeLogBody {
+  box-sizing: border-box;
+  height: 170px;
   display: grid;
+  align-content: start;
   gap: 8px;
   padding: 10px 12px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 body.slot-simulator .change-log-entry {

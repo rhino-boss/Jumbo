@@ -183,7 +183,7 @@
     body.h027 .message-bar.error { color: #ff5f8a; }
     body.h027 .message-bar.win { color: #33ff99; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=2">
+  <link rel="stylesheet" href="../demogame_common.css?v=3">
 </head>
 
 <body class="slot-simulator h027">
@@ -326,7 +326,8 @@
             <li><b>92／94 版的 RTP 差異放在 FG，不在 BG</b>：兩版的 <code>Weight_NB_BG</code> 逐格完全相同，差異只在 <code>Weight_NB_FG</code> 與 <code>Weight_EB_*</code>。</li>
             <li>92A Oldhand 理論 RTP：NB 72.0000%／20.0000%＝92.0000%；EB 42.0000%／50.0000%＝92.0000%；BF 92.5000%。</li>
             <li>94A Oldhand 理論 RTP：NB 72.0000%／22.0000%＝94.0000%；EB 39.0000%／55.0000%＝94.0000%；BF 92.5000%。</li>
-            <li><b>Newbie Profile（規範 §1.4.1 共用 93%）</b>：NB 75.8268%／17.1732%＝93.0000%；EB 50.0670%／42.9330%＝93.0000%；BF 與 Oldhand 共用 92.5000%。倍率上限依規範 §1.4.4 為 BG 30x、FG 120x，FG 上限把可配區間壓到 12 個，FG RTP 上限只有 17.1732%，因此 BG 無法沿用 Oldhand 的 72%。</li>
+            <li><b>Newbie Profile（規範 §1.4.1 共用 93%）</b>：NB 72.0000%／21.0000%＝93.0000%；EB 40.5000%／52.5000%＝93.0000%；BF 與 Oldhand 共用 92.5000%。BG 沿用 Oldhand 的 72%（<code>Weight_NB_BG_Newbie</code> 與 <code>Weight_NB_BG</code> 逐格相同），差額全部由 FG 吸收。</li>
+            <li>Newbie 倍率範圍：BG 上限 30x、FG 30x～120x（規範 §1.4.4 ＋ 指定的 FG 保底），可配區間 10 個；「單一 FG 區間不得超過 FG 總 Hit Rate 15%」這條對 Newbie 不適用，最高單區間占 49.71%，FG 平均倍數 94.6743x。</li>
             <li>Newbie 權重寫入 xlsx 的 <code>Weight_*_Newbie</code> 四欄與 config 的 <code>card_system.newbie</code>；Simulator 依 <code>card_system_is_newbie</code> 分流，Overview 新增 <code>player_profile</code> 欄位。</li>
             <li>EB FG 的 x50+（玩家倍率）對齊競品 Slot Stats 的 0.27682%；NB 無法對齊（BG 最高只到 30x，需要 124.80% 的 FG 場次 ≥50x），維持現狀並記錄硬上限 0.22181%。</li>
             <li>NB FG 週期改為對標競品 1/450.83（Gates of Olympus Xmas 1000 Probability of Bonus 0.22181310%）；EB 為其 5 倍 1/90.17。</li>
