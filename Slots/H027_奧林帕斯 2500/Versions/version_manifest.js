@@ -102,7 +102,15 @@ window.H027_VERSION_MANIFEST = {
         "Keep BF entry scoring and cascade disabled so entry pay remains zero.",
         "Fill the competitor column for all 64 multiplier intervals in NB-BG, NB-FG, and BF-FG.",
         "Repair the 94A Overview layout using the validated 92A cell geometry and merged ranges.",
-        "Remove the duplicate right-side Bet Type block from both card workbooks."
+        "Remove the duplicate right-side Bet Type block from both card workbooks.",
+        "Recalibrate 92A and 94A multiplier weights for all three bet modes from the Card-Off natural reports for bet modes 0, 1 and 2.",
+        "Set 92A to NB 72.0000/20.0000, EB 42.0000/50.0000 and BF 92.0000; set 94A to NB 74.0000/20.0000, EB 44.0000/50.0000 and BF 92.0000.",
+        "Retarget the NB FG cycle to the competitor 1/450.83 and the EB FG cycle to five times that, 1/90.17.",
+        "Lock BG Hit Rate to the competitor main 28.193143%, making the per-spin total 28.414956% match the competitor Slot Stats hit rate.",
+        "Intersect the configurable intervals with the competitor support: no weight above the competitor actual max multiplier 15,000x, so the top usable interval becomes (9000, 10000].",
+        "Lower the natural-occurrence floor from 0.1% to 0.05% while keeping the FG 20x floor and the 15% per-interval cap.",
+        "Enable the Extra Bet Card System and fill its weights, replacing the pending_calibration placeholder.",
+        "Calibrate the Buy Feature win rate above 100x to 30.0000%."
       ]
     }
   ]

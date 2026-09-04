@@ -320,6 +320,21 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-09-03：92A／94A 倍率權重全押注區重校，區間與競品取交集</h4>
+          <ul>
+            <li>自然來源：NB H0271_03_2609021651_betmode0_109.xlsx、EB H0271_03_2609031614_betmode1_109.xlsx、BF H0271_03_2609031544_betmode2_108.xlsx，皆 Card System Off。</li>
+            <li>92A 理論 RTP：NB 72.0000%／20.0000%＝92.0000%；EB 42.0000%／50.0000%＝92.0000%；BF 92.0000%。</li>
+            <li>94A 理論 RTP：NB 74.0000%／20.0000%＝94.0000%；EB 44.0000%／50.0000%＝94.0000%；BF 92.0000%。</li>
+            <li>NB FG 週期改為對標競品 1/450.83（Gates of Olympus Xmas 1000 Probability of Bonus 0.22181310%）；EB 為其 5 倍 1/90.17。</li>
+            <li>BG Hit Rate 鎖定競品 main m0.01+ 的 28.193143%；加上 FG 觸發 0.221813% 後每轉合計 28.414956%，與競品 Slot Stats 的 HIT RATE 28.41496% 一致。</li>
+            <li>區間與競品取交集：競品實際最大倍數 15,000x，故上限超過 15,000x 的區間不配權重，可用區間頂端由 (10000, 20000] 降為 (9000, 10000]。</li>
+            <li>其餘規範：自然發生率低於 0.05% 不配權重；FG 20x 以下不配權重；單一 FG 區間機率上限 15%；RTP 校準精度至小數 4 位。</li>
+            <li>EB Card System 由 pending_calibration 改為啟用並填入權重；EB FG 保底 44.94x（基礎投注口徑，為 NB 22.49x 的兩倍）。</li>
+            <li>BF 贏錢率（&gt;100x）校準為 30.0000%。</li>
+            <li>已同步 H027192A.xlsx、H027194A.xlsx、config_92A.js、config_94A.js、Simulator BATCH_RUNS 與 其他/數值報告.html；依既有指示版本維持 3.0.0.7。</li>
+          </ul>
+        </article>
+        <article class="change-log-entry">
           <h4>2026-09-02：依還原後 10 億局報表重算 NB 倍率權重</h4>
           <ul>
             <li>自然來源改為 H0271_03_2609021651_betmode0_109.xlsx；確認使用 BG Reel Set 0／1／2、Card System Off。</li>
@@ -507,7 +522,7 @@
     </div>
   </dialog>
 
-  <script src="./Versions/version_manifest.js?v=20260902-v3007"></script>
+  <script src="./Versions/version_manifest.js?v=20260903-v3007"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_VISIBLE_VERSION_ENTRIES = Array.from(
