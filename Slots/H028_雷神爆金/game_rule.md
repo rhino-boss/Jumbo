@@ -1,6 +1,6 @@
-# 雷神爆金 (Thunder Boost) 遊戲規則說明
+# 雷神爆金1000 (Thunder Boost 1000) 遊戲規則說明
 
-> 文件版本：v1.1
+> 文件版本：v1.2（2026-09-07：更名 1000、符號名改雷神主題、M1 賠付矛盾修正、SC 觸發含 Extra Reel、版本 3.3.0.0、新增 §8A OP Jackpot）
 > 對標競品：PG - Lucky Neko
 > 撰寫依據：`../iGaming 遊戲代號一覽.xlsx`（遊戲名稱、Game ID、PARsheet ID）及 `../其他遊戲/101016/101016 simulation.py`（遊戲邏輯）；本次以 101016 模擬程式的遊戲邏輯為主
 > 編號：H028
@@ -12,10 +12,10 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱 | 雷神爆金 |
+| 遊戲名稱 | 雷神爆金1000 |
 | Game ID | 101016 |
 | PARsheet ID | H0281 |
-| 遊戲英文名 | Thunder Boost |
+| 遊戲英文名 | Thunder Boost 1000 |
 | 遊戲類型 | Video Slot - 2,025–32,400 Ways / Megaways / Cascade |
 | 盤面規格 | 6 輪盤、主盤面最高 5 列，另有位於 R2-R5 上方的 Extra Reel |
 | 中獎方式 | Way Game，自左至右連續相鄰輪判定 |
@@ -23,7 +23,7 @@
 | 押注模式 | **Normal Bet**：提供，一般押注；**Extra Bet**：不提供；**Buy Feature**：提供，75 × Bet |
 | Buy Feature | 有；價格為 75x Bet |
 | 共用數學版本 | `H0281.xlsx` / `config.js`：`3` |
-| RTP / Card 版本 | `H028192A.xlsx`、`H028194A.xlsx` / `config_92A.js`、`config_94A.js`：`3.2.0.0` |
+| RTP / Card 版本 | `H028188B.xlsx`、`H028190B.xlsx`、`H028192A.xlsx`、`H028194A.xlsx` / `config_88B.js`、`config_90B.js`、`config_92A.js`、`config_94A.js`：`3.3.0.0` |
 
 ---
 
@@ -65,8 +65,10 @@
 
 | 類別 | 符號 |
 | --- | --- |
-| 高分符號（H） | 招財貓、日式鼓、燈籠、扇子、握壽司、壽司 |
-| 低分符號（L） | A、K、Q、J、10 |
+| 高分符號（H） | 雷神（M1，兼倍數符號）、頭盔（M2）、盾牌（M3）、豎琴（M4）、聖杯（M5）、戒指（M6） |
+| 低分符號（L） | A（M7）、K（M8）、Q（M9）、J（M10）、10（M11） |
+
+> 符號名稱依 2026-09-04 正式美術素材（`toz_sym_M1~M11`）命名；中文名為依圖面暫定，若產品另有正式譯名需同步更新。
 
 寫明：
 * R2-R5 的一般符號可為大符號，尺寸可覆蓋 1、2、3、4 格。
@@ -79,7 +81,7 @@
 | 符號 | 出現位置 | 行為 |
 | --- | --- | --- |
 | **Wild** | 僅出現在 R2、R3、R4、R5 | 替代除 Scatter 外的所有符號。 |
-| **Scatter** | 不配置於初始輪帶；盤面停定後可由 Post Scatter 於任意輪產生，Cascade Drop 亦依掉落權重補入，且可為 1x1、1x2、1x3、1x4 | 4 個以上觸發 Free Game；FG 內可再次作為 retrigger 來源。 |
+| **Scatter** | 不配置於初始輪帶；盤面停定後可由 Post Scatter 於任意輪（含 Extra Reel）產生，Cascade Drop 亦依掉落權重補入，且可為 1x1、1x2、1x3、1x4 | 4 個以上觸發 Free Game（主盤面與 Extra Reel 皆計入）；FG 內可再次作為 retrigger 來源。 |
 | **M1** | 主盤面與 Extra Reel | 主盤面用於累積倍數；Extra Reel 上的 M1 出現即計入當局倍數。 |
 
 ---
@@ -90,17 +92,17 @@
 
 | 符號 | 6 連 | 5 連 | 4 連 | 3 連 |
 | --- | --- | --- | --- | --- |
-| 招財貓 | 4 | 2.5 | 2 | 1.5 |
-| 日式鼓 | 2.5 | 1.5 | 1.25 | 1 |
-| 燈籠 | 2 | 1.5 | 1.25 | 0.5 |
-| 扇子 | 1.5 | 1 | 0.75 | 0.4 |
-| 握壽司 | 0.75 | 0.6 | 0.5 | 0.3 |
-| 壽司 | 0.75 | 0.6 | 0.5 | 0.3 |
+| 雷神（M1） | 4 | 2.5 | 2 | 1.5 |
+| 頭盔（M2） | 2.5 | 1.5 | 1.25 | 1 |
+| 盾牌（M3） | 2 | 1.5 | 1.25 | 0.5 |
+| 豎琴（M4） | 1.5 | 1 | 0.75 | 0.4 |
+| 聖杯（M5） | 0.75 | 0.6 | 0.5 | 0.3 |
+| 戒指（M6） | 0.75 | 0.6 | 0.5 | 0.3 |
 | A、K | 0.5 | 0.4 | 0.3 | 0.2 |
 | Q、J、10 | 0.2 | 0.15 | 0.1 | 0.05 |
 
 補充說明：
-* Wild、Scatter、M1 不提供一般連線賠付。
+* Wild、Scatter 不提供一般連線賠付；**M1 同時具備連線賠付（表列賠率）與倍數累積功能**（與 config `linkpoint` 及 Simulator/index 判獎實作一致）。
 * 單一符號中獎計算公式為：`賠率 x Ways x Bet`，再乘上當局累積總倍數。
 
 ---
@@ -154,7 +156,7 @@
 
 ### 7.1 觸發
 
-* 主盤面任意位置出現 4 個以上 Scatter 即觸發 Free Game。
+* 盤面任意位置（主盤面與 Extra Reel 皆計入）出現 4 個以上 Scatter 即觸發 Free Game。
 * 4 個 Scatter 觸發 10 場 Free Game。
 * 每多 1 個 Scatter，額外 +2 場。
 
@@ -197,6 +199,21 @@
 
 ---
 
+## §8A. OP Jackpot（平台彩金）
+
+> 本章依 Help 現行文案與 RTP 工作簿 `OP Jackpot` 頁（2026-09-03 新增）整理；標註【待確認】的項目沿用公司 OP Jackpot 範本，H028 尚未正式定案，定案後需同步更新本章、Help 與模型。
+
+* OP Jackpot 為平台層彩金特色，由系統依 SCR 權重隨機觸發，不改變 BG／FG 的判獎與派彩公式。
+* 觸發表現：特色轉輪出現彩金符號後進入選幣畫面【待確認：觸發符號代號（Help 範本為 [C1]，本作符號表無此代號）】。
+* 選幣玩法：畫面出現 12 個幣，翻出 3 個相同等級即獲得該彩金【待確認：幣數與同符數依範本】。
+* 彩金等級：
+  * **GRAND**／**MAJOR**：連線累進彩金；單場投注選項 ≥ 2.00 才解鎖。
+  * **MINOR**／**MINI**：紅利彩金，金額依投注選項變動。
+* 投注越高，觸發 OP Jackpot 的機率越高。
+* SCR 權重資料：RTP 工作簿 `OP Jackpot` 頁（Threshold 10,000,000,000；`NB_Newbie`／`NB`／`BF` 各一組權重），依 SCR 版本規則管理（四碼版本第 3 碼）。
+
+---
+
 ## §9. 邊界 / 例外情境（Edge Cases）
 
 ### 9.1 金框 / Wild 相關
@@ -214,6 +231,7 @@
 ### 9.3 Scatter 相關
 
 * Scatter 不可被 Wild 替代。
+* Scatter 可出現於主盤面與 Extra Reel，兩者均計入觸發數。
 * 1x2、1x3、1x4 的 Scatter 以實際占用格數計入 Scatter 總數。
 * FG 期間 Scatter 仍可出現，並可作為 retrigger 來源。
 * 觸發與 retrigger 依 `10 + (SC 數 - 4) × 2` 計算，整段 FG 最多 50 場。
@@ -288,9 +306,9 @@ RTP FG    = FG Pay / Coin In
 | --- | --- | --- |
 | `Source/H0281.xlsx` | 自然機率、輪帶、掉落、版型、賠率、FG 場數 | 單一整數，目前 `3` |
 | `config.js` | `H0281.xlsx` 的執行版 | `excel_version` 必須為單一整數 |
-| `Source/H028192A.xlsx` / `H028194A.xlsx` | 卡片區間、Fix Num、RTP 權重 | 四碼 `基礎.卡片.SCR.其他`，目前 `3.2.0.0` |
-| `config_92A.js` / `config_94A.js` | RTP / Card 執行資料 | 必須與 RTP XLSX 四碼版本一致 |
-| `game_help_draft.md` | 玩家可見規則文案 | 不得與本文件遊戲邏輯矛盾 |
+| `Source/H028188B.xlsx` / `H028190B.xlsx` / `H028192A.xlsx` / `H028194A.xlsx` | 卡片區間、Fix Num、RTP 權重、OP Jackpot SCR 權重 | 四碼 `基礎.卡片.SCR.其他`，目前 `3.3.0.0` |
+| `config_88B.js` / `config_90B.js` / `config_92A.js` / `config_94A.js` | RTP / Card 執行資料 | 必須與 RTP XLSX 四碼版本一致 |
+| `game_help_draft.md` | 玩家可見規則文案（Help.xlsx 前置確認稿） | 不得與本文件遊戲邏輯矛盾 |
 
 Simulator 與 index 同時載入 base config 與 RTP config；自然機率以 base config 為準，版本及 Card System 以 RTP config 為準。載入時必須檢查 `game_id` 與主版本相同。
 

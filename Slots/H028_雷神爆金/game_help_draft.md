@@ -1,6 +1,6 @@
 # Game Help Draft
 
-這份 md 是 `Thunder_Boost_Help.xlsx` 的前置確認稿。
+這份 md 是 `文件/Thunder Boost 1000_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 
 ## Game Meta
@@ -9,8 +9,8 @@
 | --- | --- |
 | game_id | 101016 |
 | parsheet_id | H0281 |
-| name_zh | 雷神爆金 |
-| name_en | Thunder Boost |
+| name_zh | 雷神爆金1000 |
+| name_en | Thunder Boost 1000 |
 | game_type | Video Slot - 2,025–32,400 Ways / Megaways / Cascade |
 
 ---
@@ -35,14 +35,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 散佈符號 | SCATTER SYMBOL |
-| 規則說明 | [SCATTER] 不會配置於初始輪帶；主盤面停定後，系統可依 [Post Scatter] 機制使其出現在任意轉輪位置，後續消除掉落亦可依掉落權重補入 [SCATTER]。 | [SCATTER] IS NOT PLACED ON THE INITIAL REEL STRIPS. AFTER THE MAIN REELS STOP, IT MAY BE ADDED TO ANY REEL BY THE [POST SCATTER] FEATURE, AND MAY ALSO APPEAR IN SUBSEQUENT CASCADE DROPS ACCORDING TO THE DROP WEIGHTS. |
-
-### MULTIPLIER SYMBOL
-
-| Item | 繁中 | 英文 |
-| --- | --- | --- |
-| 副標題 | 倍數符號 | MULTIPLIER SYMBOL |
-| 規則說明 | [M1] 為倍數符號，可出現在主盤面與額外轉輪位置。 | [M1] IS THE MULTIPLIER SYMBOL AND MAY APPEAR ON THE MAIN REELS AND THE EXTRA REELS. |
+| 規則說明 | [SCATTER] 亦可為 1x2、1x3、1x4 大符號；觸發免費遊戲時，其覆蓋的每一格均視為 {1} 個 [SCATTER] 計數。 | [SCATTER] MAY ALSO APPEAR AS A 1X2, 1X3, OR 1X4 LARGE SYMBOL. EACH POSITION IT COVERS COUNTS AS {1} [SCATTER] WHEN TRIGGERING THE FREE GAME FEATURE. |
 
 ### 賠率表
 
@@ -54,33 +47,33 @@
 
 | 符號 | {6} 連 | {5} 連 | {4} 連 | {3} 連 |
 | --- | ---: | ---: | ---: | ---: |
-| [M1] | {4} | {2.5} | {2} | {1.5} |
-| [M2] | {2.5} | {1.5} | {1.25} | {1} |
-| [M3] | {2} | {1.5} | {1.25} | {0.5} |
-| [M4] | {1.5} | {1} | {0.75} | {0.4} |
-| [M5] | {0.75} | {0.6} | {0.5} | {0.3} |
-| [M6] | {0.75} | {0.6} | {0.5} | {0.3} |
-| [A] | {0.5} | {0.4} | {0.3} | {0.2} |
-| [K] | {0.5} | {0.4} | {0.3} | {0.2} |
-| [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
-| [J] | {0.2} | {0.15} | {0.1} | {0.05} |
-| [10] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [M1] | {400} | {250} | {200} | {150} |
+| [M2] | {250} | {150} | {125} | {100} |
+| [M3] | {200} | {150} | {125} | {50} |
+| [M4] | {150} | {100} | {75} | {40} |
+| [M5] | {75} | {60} | {50} | {30} |
+| [M6] | {75} | {60} | {50} | {30} |
+| [A] | {50} | {40} | {30} | {20} |
+| [K] | {50} | {40} | {30} | {20} |
+| [Q] | {20} | {15} | {10} | {5} |
+| [J] | {20} | {15} | {10} | {5} |
+| [10] | {20} | {15} | {10} | {5} |
 
 英文：
 
 | SYMBOL | {6} OF A KIND | {5} OF A KIND | {4} OF A KIND | {3} OF A KIND |
 | --- | ---: | ---: | ---: | ---: |
-| [M1] | {4} | {2.5} | {2} | {1.5} |
-| [M2] | {2.5} | {1.5} | {1.25} | {1} |
-| [M3] | {2} | {1.5} | {1.25} | {0.5} |
-| [M4] | {1.5} | {1} | {0.75} | {0.4} |
-| [M5] | {0.75} | {0.6} | {0.5} | {0.3} |
-| [M6] | {0.75} | {0.6} | {0.5} | {0.3} |
-| [A] | {0.5} | {0.4} | {0.3} | {0.2} |
-| [K] | {0.5} | {0.4} | {0.3} | {0.2} |
-| [Q] | {0.2} | {0.15} | {0.1} | {0.05} |
-| [J] | {0.2} | {0.15} | {0.1} | {0.05} |
-| [10] | {0.2} | {0.15} | {0.1} | {0.05} |
+| [M1] | {400} | {250} | {200} | {150} |
+| [M2] | {250} | {150} | {125} | {100} |
+| [M3] | {200} | {150} | {125} | {50} |
+| [M4] | {150} | {100} | {75} | {40} |
+| [M5] | {75} | {60} | {50} | {30} |
+| [M6] | {75} | {60} | {50} | {30} |
+| [A] | {50} | {40} | {30} | {20} |
+| [K] | {50} | {40} | {30} | {20} |
+| [Q] | {20} | {15} | {10} | {5} |
+| [J] | {20} | {15} | {10} | {5} |
+| [10] | {20} | {15} | {10} | {5} |
 
 ---
 
@@ -121,6 +114,7 @@
 | 規則說明 | 第 {2}、{3}、{4}、{5} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, {4}, AND {5} MAY APPEAR WITH A GOLD FRAME. |
 | 規則說明 | 金框符號只有在實際參與中獎並被移除時，才會在原位置轉為 [WW]。 | A GOLD FRAMED SYMBOL ONLY CHANGES INTO [WW] ON THE SAME POSITION AFTER IT ACTUALLY PARTICIPATES IN A WIN AND IS REMOVED. |
 | 規則說明 | 轉化後的 [WW] 可參與下一次掉落後的中獎判定。 | THE TRANSFORMED [WW] CAN PARTICIPATE IN THE NEXT WIN EVALUATION AFTER THE CASCADE. |
+| 規則說明 | 轉化後的 [WW] 僅保留 {1} 個消除回合，之後依盤面結果正常更新。 | THE TRANSFORMED [WW] REMAINS FOR {1} CASCADE ONLY, AFTER WHICH THE REELS UPDATE NORMALLY. |
 
 ---
 
@@ -131,7 +125,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | 主盤面出現 {4} 個或以上 [SCATTER] 可觸發免費遊戲。 | {4} OR MORE [SCATTER] APPEARING ON THE MAIN REELS WILL TRIGGER THE FREE GAME FEATURE. |
+| 規則說明 | 盤面任意位置（含額外轉輪）出現 {4} 個或以上 [SCATTER] 可觸發免費遊戲。 | {4} OR MORE [SCATTER] APPEARING ANYWHERE ON THE REELS (INCLUDING THE EXTRA REELS) WILL TRIGGER THE FREE GAME FEATURE. |
 | 規則說明 | {4} 個 [SCATTER] 可獲得 {10} 場免費遊戲；每多出現 {1} 個 [SCATTER]，額外獲得 {2} 場免費遊戲。 | {4} [SCATTER] AWARD {10} FREE SPINS. EACH ADDITIONAL [SCATTER] AWARDS {2} MORE FREE SPINS. |
 | 規則說明 | 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
 | 規則說明 | 進入免費遊戲時，累積倍數由 X{2} 開始。 | THE ACCUMULATED MULTIPLIER STARTS AT X{2} WHEN THE FREE GAME FEATURE BEGINS. |
@@ -157,15 +151,15 @@
 | Item | 簡中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | ▪ 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | ▪ OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
-| 規則說明 | ▪ 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR],OR [MINI]. |
-| 規則說明 | ▪ 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号即可获得该 OP JACKPOT 并结算总奖金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
-| 規則說明 | ▪  [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
-| 規則說明 | ▪  [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
-| 規則說明 | ▪  [MINOR] 为红利彩金，依照投注选项改变。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | ▪  [MINI] 为红利彩金，依照投注选项改变。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | ▪ 玩家投注越高触发 OP JACKPOT 特色的机会越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
+| 規則說明 | 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
+| 規則說明 | 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号即可获得该 OP JACKPOT 并结算总奖金。 | IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
+| 規則說明 | [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
+| 規則說明 | [MINOR] 为红利彩金，依照投注选项改变。 | [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | [MINI] 为红利彩金，依照投注选项改变。 | [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | 玩家投注越高触发 OP JACKPOT 特色的机会越高。 | THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
 
 ---
 
@@ -193,7 +187,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | 選擇您想要進行的投注後，主盤面與額外轉輪會同步開始旋轉。 | AFTER THE PLAYER SELECTS A BET, THE MAIN REELS AND THE EXTRA REELS SPIN TOGETHER. |
-| 規則說明 | 中獎組合依 WAY GAME 規則判定，中獎金額會依該局累積的總倍數進行結算。 | WINNING COMBINATIONS ARE EVALUATED BY THE WAY GAME RULE, AND WINS ARE PAID WITH THE TOTAL MULTIPLIER ACCUMULATED IN THAT ROUND. |
+| 規則說明 | 選擇您想要玩的投注選項。 | SELECT BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | 所有中獎金額均乘以投注選項，除非是累積獎。 | ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
 | 規則說明 | 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
 | 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |

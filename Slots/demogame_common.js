@@ -269,7 +269,51 @@
     });
   }
 
+  function getImageToggleAdapter() {
+    const adapter = window.DEMOGAME_IMAGE_TOGGLE;
+    if (!adapter || adapter.supported === false || typeof adapter.setEnabled !== "function") return null;
+    return adapter;
+  }
+
+  function ensureImageToggle() {
+    const adapter = getImageToggleAdapter();
+    const settingsBody = document.querySelector("#settings-wrap > .setting-body");
+    if (!adapter || !settingsBody) return;
+
+    let input = document.getElementById("symbolImageInput");
+    let label = input?.closest("label");
+    if (!input) {
+      label = document.createElement("label");
+      label.className = "setting-toggle";
+      label.htmlFor = "symbolImageInput";
+      label.innerHTML = '<input id="symbolImageInput" type="checkbox"><span>Image</span>';
+      input = label.querySelector("input");
+      const cardLabel = document.getElementById("cardSystemInput")?.closest("label");
+      if (cardLabel?.parentElement === settingsBody) cardLabel.insertAdjacentElement("afterend", label);
+      else settingsBody.insertBefore(label, settingsBody.querySelector(".config-control"));
+    }
+
+    let saved = null;
+    try { saved = localStorage.getItem("slotDemoSymbolImages"); } catch (_) {}
+    input.checked = saved == null ? adapter.defaultEnabled !== false : saved !== "off";
+
+    const apply = (initial = false) => {
+      adapter.setEnabled(input.checked, { initial });
+      window.DEMOGAME_SYMBOL_IMAGES_ENABLED = input.checked;
+      document.dispatchEvent(new CustomEvent("demogame:image-change", {
+        detail: { enabled: input.checked, initial }
+      }));
+    };
+
+    input.addEventListener("change", () => {
+      try { localStorage.setItem("slotDemoSymbolImages", input.checked ? "on" : "off"); } catch (_) {}
+      apply(false);
+    });
+    apply(true);
+  }
+
   ensureCardSystemToggle();
+  ensureImageToggle();
   ensureCombinedConfigAndVersion();
   filterVersionOptions();
   syncNativeCardControl(document.getElementById("cardSystemInput")?.checked);

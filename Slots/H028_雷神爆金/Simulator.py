@@ -33,17 +33,17 @@ CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
     # Nature
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False}, # 自然機率
     # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},  # SCR
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -2078,6 +2078,7 @@ RA_RETRY_FAIL_BG_FREEGAME = 22
 RA_RETRY_FAIL_FG = 23
 RA_TRIGGER_FG_PAY_BG = 24
 RA_TRIGGER_FG_BG_MAX_PAY = 25
+RA_SC_SPINS = 26
 
 SCENE_BG_SPINS = 0
 SCENE_FG_SESSIONS = 1
@@ -2160,6 +2161,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
     retrigger_count = 0
     m1_spin_count = 0
     big_m1_spin_count = 0
+    sc_spin_count = 0
     cascade_pay = np.zeros(5, dtype=np.float64)
     cascade_dist = np.zeros(6, dtype=np.int64)
 
@@ -2183,6 +2185,8 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
             m1_spin_count += 1
             if multiplier - previous_multiplier > 2 * spin_m1_count:
                 big_m1_spin_count += 1
+        if c1_final >= 1:
+            sc_spin_count += 1
         total_win += win
         total_spins += 1
         remaining_spins -= 1
@@ -2210,6 +2214,7 @@ def run_freegame_session_stats(trigger_c1_count, enable_m1_multiplier=True):
         cascade_dist,
         m1_spin_count,
         big_m1_spin_count,
+        sc_spin_count,
     )
 
 
@@ -2247,6 +2252,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         fg_final_multiplier = 1
         fg_m1_spins = 0
         fg_big_m1_spins = 0
+        fg_sc_spins = 0
         fg_triggered = 0
         bg_final_multiplier = 1
         bg_m1_count = 0
@@ -2311,6 +2317,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                         fg_cascade_dist,
                         fg_m1_spins,
                         fg_big_m1_spins,
+                        fg_sc_spins,
                     ) = run_freegame_session_stats(scatter_count, enable_m1_multiplier)
                     if not needs_fg_card or is_card_match(
                         fg_card_profile,
@@ -2349,6 +2356,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
                     fg_cascade_dist,
                     fg_m1_spins,
                     fg_big_m1_spins,
+                    fg_sc_spins,
                 ) = run_freegame_session_stats(FG_TRIGGER_SCATTER, enable_m1_multiplier)
                 if not CARD_SYSTEM_ENABLED or is_card_match(
                     CARD_PROFILE_BUY_FEATURE,
@@ -2392,6 +2400,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, enable_m1_multiplier):
         record_data[R_ALL, RA_FG_TRIGGER] += fg_triggered
         record_data[R_ALL, RA_FG_RETRIGGER] += fg_retriggers
         record_data[R_ALL, RA_FG_SPINS] += fg_spins
+        record_data[R_ALL, RA_SC_SPINS] += int(scatter_count >= 1) + fg_sc_spins
         record_data[R_ALL, RA_X_SUM] += x_scaled
         record_data[R_ALL, RA_X_SQUARE] += int(round(win_multiplier * win_multiplier * 1_000_000))
         record_data[R_ALL, RA_FG_SESSIONS] += fg_triggered
@@ -2574,6 +2583,8 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     trigger_fg_bg_pay = values[R_ALL, RA_TRIGGER_FG_PAY_BG]
     trigger_fg_bg_count = int(values[R_ALL, RA_FG_TRIGGER])
     trigger_fg_bg_max_pay = int(values[R_ALL, RA_TRIGGER_FG_BG_MAX_PAY])
+    special_symbol_cnt = int(values[R_ALL, RA_SC_SPINS])
+    scr = int(round(special_symbol_cnt / total_round * 10_000_000_000)) if total_round else 0
     x_sum = values[R_ALL, RA_X_SUM] / 1_000_000
     x_square = values[R_ALL, RA_X_SQUARE] / 1_000_000
     volatility_std = math.sqrt(max(0.0, x_square / total_round - (x_sum / total_round) ** 2))
@@ -2610,6 +2621,32 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     max_fg_final_multiplier = int(values[R_FG_INTERVAL_FINAL_MULT_MAX, : len(THRESHOLD_RECORD)].max())
     multiplier_line_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
 
+    # 押注層級與 Feature 價格資訊（規範 §3.3.1 執行設定區塊）
+    base_bet_amount = float(bet_multi) * (DEFAULT_COIN_IN * NORMALBET) / 100.0
+    if bet_mode == MODE_FEATUREBUY:
+        feature_price_multiplier = int(FEATUREBUY)
+        bet_amount = base_bet_amount * FEATUREBUY
+        bet_tier_amount = base_bet_amount
+    else:
+        feature_price_multiplier = "n/a"
+        bet_amount = base_bet_amount
+        bet_tier_amount = bet_amount
+
+    def profile_cap(profile_index):
+        caps = [float(card.get("max", 0.0)) for card in CARD_PROFILE_LISTS[profile_index] if card.get("type") != "free_game" and int(card.get("weight", 0)) > 0]
+        return int(max(caps)) if caps else "n/a"
+
+    if CARD_SYSTEM_ENABLED:
+        if bet_mode == MODE_FEATUREBUY:
+            max_multiplier_bg = "n/a"
+            max_multiplier_fg = profile_cap(CARD_PROFILE_BUY_FEATURE)
+        else:
+            max_multiplier_bg = profile_cap(CARD_PROFILE_NEWBIE_BG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_BG)
+            max_multiplier_fg = profile_cap(CARD_PROFILE_NEWBIE_FG if CARD_SYSTEM_IS_NEWBIE else CARD_PROFILE_OLDHAND_FG)
+    else:
+        max_multiplier_bg = "n/a"
+        max_multiplier_fg = "n/a"
+
     base_rows = [
         ("game_name", GAME_NAME_ZH or GAME_NAME, ""),
         ("game_id", GAME_ID, ""),
@@ -2621,15 +2658,41 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         ("", "", ""),
         ("bet_mode", format_bet_mode_label(bet_mode), ""),
         ("bet_multi", bet_multi, ""),
+        ("feature_price_multiplier", feature_price_multiplier, ""),
+        ("base_bet", base_bet_amount, ""),
+        ("bet_amount", bet_amount, "actual cost per round"),
+        ("bet_tier_amount", bet_tier_amount, "NB: bet amount; BF: price / feature multiplier"),
+        ("bet_tier", "n/a", "H028 card weights have no bet tiers"),
+        ("link_enabled", "n/a", "Link/OP Jackpot not simulated"),
+        ("max_multiplier_bg", max_multiplier_bg, "card range cap"),
+        ("max_multiplier_fg", max_multiplier_fg, "card range cap"),
         ("coin_in", coin_in, ""),
         ("total_rounds", int(total_round), ""),
-        ("duration_sec", round(duration, 6), ""),
+        ("duration", f"{duration:.2f} sec", ""),
+        ("", "", ""),
+        ("rtp_total", rtp_total, ""),
+        ("rtp_game", rtp_total, "no Link/Bonus Game; equals rtp_total"),
+        ("rtp_bg", rtp_bg, ""),
+        ("rtp_fg", rtp_fg, ""),
+        ("hit_rate_bg", hit_rate_bg, "BG winning spins / paid BG spins"),
+        ("hit_rate_fg", hit_rate_fg, "FG winning spins / FG spins"),
+        ("fg_trigger_rate", fg_trigger_rate, f"cycle {fg_cycle_observed:.4f} paid spins"),
+        ("retrigger_trigger_rate", retrigger_rate, f"cycle {retrigger_cycle:.4f} FG spins"),
+        ("avg_fg_spins", avg_fg_spins, ""),
+        ("", "", ""),
+        ("bg_trigger_fg_cnt", trigger_fg_bg_count, ""),
+        ("bg_trigger_fg_pay", int(trigger_fg_bg_pay), ""),
+        ("special_symbol_cnt", special_symbol_cnt, "spins containing >=1 SC (BG + FG spins; BF entry screen counted)"),
+        ("SCR", scr, "special_symbol_cnt / total_rounds x 1e10"),
+        ("", "", ""),
+        ("volatility_std", volatility_std, ""),
+        ("standard_error", standard_error, ""),
     ]
     if CARD_SYSTEM_ENABLED:
         base_rows.extend(
             [
                 ("", "", ""),
-                ("profile", card_profile, ""),
+                ("card_system_profile", card_profile, ""),
                 ("card_retry_limit", CARD_RETRY_LIMIT, ""),
                 ("retry_total", retry_total, ""),
                 ("avg_retry", retry_total / total_round if total_round else 0.0, ""),
@@ -2642,18 +2705,6 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
     base_rows.extend(
         [
             ("", "", ""),
-            ("rtp_total", rtp_total, ""),
-            ("rtp_bg", rtp_bg, ""),
-            ("rtp_fg", rtp_fg, ""),
-            ("hit_rate_bg", hit_rate_bg, "BG winning spins / paid BG spins"),
-            ("hit_rate_fg", hit_rate_fg, "FG winning spins / FG spins"),
-            ("fg_trigger_rate", fg_trigger_rate, f"cycle {fg_cycle_observed:.4f} paid spins"),
-            ("retrigger_trigger_rate", retrigger_rate, f"cycle {retrigger_cycle:.4f} FG spins"),
-            ("avg_fg_spins", avg_fg_spins, ""),
-            ("", "", ""),
-            ("volatility_std", volatility_std, ""),
-            ("standard_error", standard_error, ""),
-            ("", "", ""),
             ("m1_appear_rate_bg", bg_m1_rate, "BG spins containing M1 / BG spins"),
             ("m1_appear_rate_fg", fg_m1_rate, "FG spins containing M1 / FG spins"),
             ("m1_2x1_plus_rate_bg", bg_big_m1_rate, "BG spins containing 2x1+ M1 / BG spins"),
@@ -2662,8 +2713,6 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
             ("max_final_multiplier_bg", max_bg_final_multiplier, ""),
             ("avg_final_multiplier_fg", avg_fg_final_multiplier, "per FG session"),
             ("max_final_multiplier_fg", max_fg_final_multiplier, ""),
-            ("trigger_fg_bg_pay", int(trigger_fg_bg_pay), ""),
-            ("trigger_fg_bg_count", trigger_fg_bg_count, ""),
             ("trigger_fg_bg_max_pay", trigger_fg_bg_max_pay, ""),
             ("max_win_x", max_win_x, ""),
             ("max_win_hits", int(values[R_ALL, RA_MAX_WIN_HITS]), ""),
@@ -2804,7 +2853,11 @@ def build_result_frames(record_data, total_round, duration, coin_in, bet_mode, b
         "fg_trigger_count": int(values[R_ALL, RA_FG_TRIGGER]),
         "trigger_fg_bg_pay": int(trigger_fg_bg_pay),
         "trigger_fg_bg_count": trigger_fg_bg_count,
+        "bg_trigger_fg_cnt": trigger_fg_bg_count,
+        "bg_trigger_fg_pay": int(trigger_fg_bg_pay),
         "trigger_fg_bg_max_pay": trigger_fg_bg_max_pay,
+        "special_symbol_cnt": special_symbol_cnt,
+        "SCR": scr,
         "retrigger_rate": retrigger_rate,
         "retrigger_session_rate": fg_retrigger_session_rate,
         "avg_fg_spins": avg_fg_spins,

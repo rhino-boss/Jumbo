@@ -58,10 +58,10 @@ BATCH_RUNS = [
     # SCR
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 
 THRESHOLD_RECORD = np.array(
