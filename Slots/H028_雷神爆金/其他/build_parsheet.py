@@ -10,7 +10,7 @@ from openpyxl.utils import get_column_letter
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 BASE = r"C:\Users\rhinshen\Mine\個人工作區\工作區\Slots\H028_雷神爆金"
-OUT = os.path.join(BASE, "PARsheet")
+OUT = os.path.join(BASE, "文件", "PARsheet")  # 送驗文件規範 §1.1：PARsheet 放 文件/ 底下
 os.makedirs(OUT, exist_ok=True)
 
 TAGS = ['88B', '90B', '92A', '94A']
