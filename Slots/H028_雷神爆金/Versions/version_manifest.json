@@ -1,10 +1,27 @@
 {
-  "current": "3.3.0.0",
+  "current": "3.3.1.0",
   "version_rule": {
     "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，後三碼歸零。",
-    "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。"
+    "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。",
+    "scr": "只調整 SCR：第三碼 +1，第四碼歸零。"
   },
   "versions": [
+    {
+      "version": "3.3.1.0",
+      "date": "2026-09-08",
+      "base_config": "Versions/3.3.1.0/config.js",
+      "configs": {
+        "88B": "Versions/3.3.1.0/config_88B.js",
+        "90B": "Versions/3.3.1.0/config_90B.js",
+        "92A": "Versions/3.3.1.0/config_92A.js",
+        "94A": "Versions/3.3.1.0/config_94A.js"
+      },
+      "changes": [
+        "OP Jackpot 頁 SCR 更新為 3.3.0.0 權重、規範口徑（≥1 SC 的 Spin 數 ÷ 付費場數 × 10^10）的 10 億場實測值：NB 依版本 88B 3,618,838,430／90B 3,621,199,650／92A 3,641,035,800／94A 3,641,760,160；NB_Newbie 四版統一採 92A 新手值 3,647,149,360。",
+        "BF SCR 維持 51,240,310,600 未動（待 betmode2 大場次重測後另行更新）。",
+        "版本依 SCR 規則第三碼 +1：3.3.0.0 → 3.3.1.0；倍率權重與其他數學參數無變更。"
+      ]
+    },
     {
       "version": "3.3.0.0",
       "date": "2026-09-04",
