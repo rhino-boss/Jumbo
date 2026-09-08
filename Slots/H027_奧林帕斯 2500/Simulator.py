@@ -58,10 +58,17 @@ BATCH_RUNS = [
     # SCR
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 1, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # 2026-09-08 規範 2.5 分母修正後的 Card-On 驗證。
+    # base_bet 必須讓 bet_tier_amount 落在該 config 對應的層級（規範 §1.4.3）：
+    #   94A          小 Bet  < $2      NB base 1.0 → $1.00   ／ EB base 0.5 → $1.00
+    #   92A          中 Bet  $2~$100   NB base 2.0 → $2.00   ／ EB base 1.0 → $2.00
+    #   92A_Bet100   大 Bet  > $100    NB base 200 → $200    ／ EB base 100 → $200
+    # retry_limit 實驗：同一組（大 Bet NB），只有 retry_limit 由 10,000 提高到 2,000,000
+    {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 200.0},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -1024,10 +1031,11 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
     record[R_ALL, RA_PAY_FG] += fg_session_pay
     record[R_ALL, RA_FG_SESSION_MULTIPLIER_SUM] += cumulative_multiplier
     record[R_ALL, RA_FG_SESSION_COUNT] += 1
-    # Card System evaluates Buy Feature packages against the Normal Bet base
-    # cost, not the 100x purchase price. Keep BF Multiplier Line buckets on
-    # that same denominator so the XLSX range model and runtime can round-trip.
-    fg_bucket_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi if bet_mode == MODE_FEATUREBUY else coin_in
+    # 數學模型規範 2.5：所有 Bet Mode 的 Card System 倍率判定成本一律是
+    # "Normal Bet 基準成本"，不是該模式的實際扣款（EB 的 2x、BF 的 100x 都不算）。
+    # 模擬程式規範 L146 又要求 Multiplier Line 的 X 分母與卡片判定口徑一致，
+    # 所以報表分桶也用同一個分母。
+    fg_bucket_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
     fg_bucket = get_bucket(fg_session_pay, fg_bucket_coin_in)
     record[R_MULTI_CNT_FG, fg_bucket] += 1
     record[R_MULTI_PAY_FG, fg_bucket] += fg_session_pay
@@ -1052,7 +1060,9 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
         coin_in = DEFAULT_COIN_IN * EXTRABET * bet_multi
     elif bet_mode == MODE_FEATUREBUY:
         coin_in = DEFAULT_COIN_IN * FEATUREBUY * bet_multi
-    card_coin_in = coin_in if bet_mode != MODE_FEATUREBUY else DEFAULT_COIN_IN * NORMALBET * bet_multi
+    # 數學模型規範 2.5：卡片倍率判定成本 = Normal Bet 基準成本（三個模式都一樣）。
+    # EB 的 RTP 分母仍是加價後成本（2x），但那只影響 RTP 統計，不影響卡片區間。
+    card_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
     bg_card_profile = CARD_PROFILE_NB_BG if bet_mode == MODE_NORMALBET else CARD_PROFILE_EB_BG
     fg_card_profile = CARD_PROFILE_NB_FG if bet_mode == MODE_NORMALBET else CARD_PROFILE_EB_FG
     package_card_profile = CARD_PROFILE_BUY_FEATURE
@@ -1120,7 +1130,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
         for index in range(bg_c2_hits.shape[0]):
             record[R_C2_VALUE_BG, index] += bg_c2_hits[index]
 
-        bg_bucket = get_bucket(bg_pay, coin_in)
+        bg_bucket = get_bucket(bg_pay, card_coin_in)
         record[R_MULTI_CNT_BG, bg_bucket] += 1
         record[R_MULTI_PAY_BG, bg_bucket] += bg_pay
         if bg_cascades > 0:
@@ -1152,7 +1162,8 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
                     break
 
         record[R_ALL, RA_PAY_TOTAL] += total_pay
-        multiplier_x = total_pay / coin_in
+        # 模擬程式規範 L146：X 的倍率分母必須與 Card System 的倍率判定口徑一致。
+        multiplier_x = total_pay / card_coin_in
         record[R_ALL, RA_X_SUM] += multiplier_x
         record[R_ALL, RA_X_SQUARE] += multiplier_x * multiplier_x
         if total_pay > record[R_ALL, RA_MAX_SINGLE_WIN]:
@@ -1160,7 +1171,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
             record[R_ALL, RA_MAX_WIN_HITS] = 1
         elif total_pay == record[R_ALL, RA_MAX_SINGLE_WIN]:
             record[R_ALL, RA_MAX_WIN_HITS] += 1
-        overall_bucket = get_bucket(total_pay, card_coin_in if bet_mode == MODE_FEATUREBUY else coin_in)
+        overall_bucket = get_bucket(total_pay, card_coin_in)
         record[R_MULTI_CNT_OA, overall_bucket] += 1
         record[R_MULTI_PAY_OA, overall_bucket] += total_pay
         accepted = 1
@@ -1295,7 +1306,7 @@ def build_overview_rows(summary, card_system_active):
         ("", ""),
         ("rtp_total", f"{float(summary['rtp_total']) * 100:.4f}%"),
         ("rtp_link", f"{float(summary['rtp_link']) * 100:.4f}%"),
-        ("rtp_bonus_game", f"{float(summary['rtp_bonus_game']) * 100:.4f}%"),
+        ("rtp_bonus", f"{float(summary['rtp_bonus']) * 100:.4f}%"),
         ("rtp_game", f"{float(summary['rtp_game']) * 100:.4f}%"),
         ("rtp_bg", f"{float(summary['rtp_bg']) * 100:.4f}%"),
         ("rtp_fg", f"{float(summary['rtp_fg']) * 100:.4f}%"),
@@ -1364,6 +1375,9 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     special_symbol_cnt = values[R_ALL, RA_SPECIAL_SYMBOL_SPINS]
     scr = special_symbol_cnt / total_round * 10_000_000_000 if total_round else 0.0
     bet_context = build_bet_context(bet_mode, bet_multi)
+    # 數學模型規範 1.1：Max Multiplier = Round Total Win ÷ 該模式定義的基準成本，
+    # 依 2.5 三個模式的基準成本都是 Normal Bet 基準成本。RTP 分母另用實際成本。
+    card_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
     bg_trigger_cap = get_bg_trigger_cap(mode_key)
     bg_trigger_fg_pay = values[R_ALL, RA_BG_TRIGGER_FG_PAY]
     if bg_trigger_cap is not None:
@@ -1405,7 +1419,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "coin_in": coin_in,
         "rtp_total": pay_total / coin_in_sum if coin_in_sum else 0,
         "rtp_link": 0.0,
-        "rtp_bonus_game": pay_fg / coin_in_sum if coin_in_sum else 0,
+        "rtp_bonus": pay_fg / coin_in_sum if coin_in_sum else 0,
         "rtp_game": (pay_bg_cluster + pay_bg_scatter) / coin_in_sum if coin_in_sum else 0,
         "rtp_bg_cluster": pay_bg_cluster / coin_in_sum if coin_in_sum else 0,
         "rtp_bg_scatter": pay_bg_scatter / coin_in_sum if coin_in_sum else 0,
@@ -1427,7 +1441,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "volatility_std": volatility_std,
         "standard_error": standard_error,
         "stddev_x": volatility_std,
-        "max_win_x": values[R_ALL, RA_MAX_SINGLE_WIN] / coin_in if coin_in else 0,
+        "max_win_x": values[R_ALL, RA_MAX_SINGLE_WIN] / card_coin_in if card_coin_in else 0,
         "max_multiplier": int(values[R_ALL, RA_MAX_C2_MULTIPLIER]),
         "avg_bg_cascades": values[R_ALL, RA_BG_CASCADES] / total_round,
         "avg_fg_cascades": values[R_ALL, RA_FG_CASCADES] / fg_spins if fg_spins else 0,

@@ -1,5 +1,5 @@
 window.H027_VERSION_MANIFEST = {
-  current: "3.0.0.7",
+  current: "3.1.0.0",
   base_version: "3",
   next_version: "4.0.0.0",
   versions: [
@@ -121,6 +121,36 @@ window.H027_VERSION_MANIFEST = {
         "Pay Scatter on the Buy Feature entry board: the entry always shows four C1 and now pays 3 x Bet per the paytable, a fixed 3.00 pp of the 100 x Bet purchase cost. The entry board still skips Pay Anywhere evaluation and cascades.",
         "Keep the Buy Feature total at 92.5000% per the spec by lowering the free-game portion to 89.5000% (entry 3.0000% + FG 89.5000%); the win rate above 100x stays 30.0000%.",
         "Match the Buy Feature card against fg_session_pay instead of total_pay: the entry Scatter is deterministic and outside the interval constraint, and including it made the measured FG RTP fall 3 pp short of the weight target."
+      ]
+    },
+    {
+      version: "3.1.0.0",
+      math_key: "3.1",
+      date: "2026-09-08",
+      competitor_initial_version: false,
+      base_config: "Versions/3.1.0.0/config.js",
+      configs: {
+        "92A": "Versions/3.1.0.0/config_92A.js",
+        "94A": "Versions/3.1.0.0/config_94A.js",
+        "92A_Bet100": "Versions/3.1.0.0/config_92A_Bet100.js"
+      },
+      workbooks: {
+        base: "Versions/3.1.0.0/Source/H0271.xlsx",
+        92: "Versions/3.1.0.0/Source/H027192A.xlsx",
+        94: "Versions/3.1.0.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/3.1.0.0/Source/H027192A_Bet100.xlsx"
+      },
+      frozen_base: "Versions/3.1.0.0",
+      changes: [
+        "Fix the Extra Bet card denominator to comply with math-model spec 2.5: the Card System multiplier is judged against the Normal Bet base cost for every bet mode, not against the mode's actual charge. Extra Bet had been dividing by its own 2x charge, so a card interval of 10-15x paid only 10-15x the base bet against a 2x stake - half the intended value.",
+        "Apply the same denominator to the Multiplier Line buckets, the X statistic and max_win_x, as required by simulator spec L146 (the report's X denominator must match the card judging denominator). RTP keeps the mode's actual cost as its denominator per spec 1.4.1.",
+        "Re-run the Extra Bet Card-Off natural report at 1,000,000,000 rounds on the corrected denominator; the bucket-scale diagnostic (interval mean divided by bucket midpoint) moves from 1.99 to 1.00, matching Normal Bet 0.995 and Buy Feature 0.981.",
+        "Re-solve every Extra Bet weight column on the corrected scale: the Extra Bet FG interval mean rises from 45.162 to 90.1660, equal to Normal Bet, and the x50+ share still lands exactly on the competitor Slot Stats value 0.276820%.",
+        "Split the Oldhand weights by bet tier as required by spec 1.1 and 1.4.4: small bet under $2 uses the 94x family, medium bet $2-$100 and big bet over $100 use the 92x family, and each tier carries its own independent weight set with no runtime scaling or fallback.",
+        "Add H027192A_Bet100.xlsx and config_92A_Bet100.js for the big-bet tier, whose FG Max Multiplier is 2000x per spec 1.4.4 rather than 20000x. The 2000x ceiling leaves 33 usable FG intervals instead of 41 and raises the minimum weight from 13,647 to 307,424, so the line shape stays non-degenerate. The _Bet100 filename suffix follows H026 practice; spec 1.2 does not codify it.",
+        "Tag each config with bet_tier_scope (small_bet / medium_bet / big_bet) so the tier a config serves is traceable from the file itself.",
+        "Bump to 3.1.0.0 per spec 1.3.1: a Card System interval or weight change increments the second digit and zeroes the third and fourth. Config excel_version is synced to match.",
+        "Link and Bonus Game RTP are out of scope for this revision by request; the JP module carries them. Only Game RTP is modelled here."
       ]
     }
   ]
