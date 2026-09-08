@@ -7,3 +7,8 @@
 /.tmp/
 /.tmp-h027-chrome-profile/
 /.tmp-h027-edge-profile/
+
+# Local analysis outputs that exceed GitHub's 100 MB file limit
+/其他任務/260421_賞金列車AB Test/output/101010_20260320_20260420/101010_20260320_20260420_min15_ab_test.duckdb
+/其他任務/260707_5G遊戲競品分析/spin_responses_pinata 1000.xlsx
+/其他任務/260707_5G遊戲競品分析/spin_responses_pinata 1000 - 備份.xlsx
