@@ -1,6 +1,6 @@
 # Game Help Draft
 
-這份 md 是 `文件/Thunder Boost 1000_Help.xlsx` 的前置確認稿。
+這份 md 是 `文件/101016_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 
 ## Game Meta

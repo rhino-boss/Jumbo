@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Generate H028 PARsheet workbooks (one per RTP variant), modeled on H021 PARsheet.
+"""Generate H028 PARsheet workbooks, modeled on H021 PARsheet (filenames end with R).
+Outputs: 文件/PARsheet/H0281R.xlsx (base natural model) + H0281<RTP><Variant>R.xlsx per variant.
 Content: Overview (model/version, RTP breakdown per profile, paytable per 100 credits,
 FG spins, M1 mapping, caps, SCR) + Parameter (table-selection weights) + 6 symbol sheets
-(values-only copies from H0281.xlsx). Card internals (Multiplier_Weight/Detail) excluded."""
+(values-only copies from H0281.xlsx — no formulas anywhere).
+Card internals (Multiplier_Weight/Detail) excluded; base file has no variant RTP/SCR/cap data."""
 import sys, io, json, re, os
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -27,6 +29,12 @@ box = Border(left=thin, right=thin, top=thin, bottom=thin)
 def cfg_version(tag):
     txt = open(rf"{BASE}\config_{tag}.js", encoding='utf-8').read()
     return re.search(r'"excel_version":\s*"([^"]+)"', txt).group(1)
+
+
+def base_version():
+    txt = open(rf"{BASE}\config.js", encoding='utf-8').read()
+    m = re.search(r'"excel_version":\s*"?(\d+)"?', txt)
+    return m.group(1) if m else '3'
 
 
 def cfg_arrays(tag):
@@ -109,44 +117,54 @@ def put(ws, r, c, v, font=None, fill=None, border=True):
     return cell
 
 
-def build_overview(ws, tag, caps, scr):
-    fg = FG_TARGET[tag]
-    total = round(0.72 + fg, 4)
+def build_overview(ws, tag, caps=None, scr=None):
+    """tag=None 產 base 自然模型版（無 Hold/RTP 拆分/FG 週期/SCR/卡片上限）。"""
+    is_variant = tag is not None
     ws.column_dimensions['A'].width = 26
     for col in 'BCDEFG':
         ws.column_dimensions[col].width = 15
     r = 1
-    put(ws, r, 1, 'Model:', bold, border=False); put(ws, r, 2, f'H0281{tag}', border=False); r += 1
-    put(ws, r, 1, 'Version:', bold, border=False); put(ws, r, 2, cfg_version(tag), border=False); r += 1
-    put(ws, r, 1, 'Hold:', bold, border=False); put(ws, r, 2, round(1 - total, 6), border=False); r += 2
+    put(ws, r, 1, 'Model:', bold, border=False); put(ws, r, 2, f'H0281{tag}' if is_variant else 'H0281', border=False); r += 1
+    put(ws, r, 1, 'Version:', bold, border=False); put(ws, r, 2, cfg_version(tag) if is_variant else base_version(), border=False); r += 1
+    if is_variant:
+        fg = FG_TARGET[tag]
+        total = round(0.72 + fg, 4)
+        put(ws, r, 1, 'Hold:', bold, border=False); put(ws, r, 2, round(1 - total, 6), border=False); r += 1
+    r += 1
 
     put(ws, r, 1, 'Base Bet', bold, hdr_fill); put(ws, r, 2, 'Min Ways', bold, hdr_fill); put(ws, r, 3, 'Max Ways', bold, hdr_fill); r += 1
     put(ws, r, 1, 100); put(ws, r, 2, 2025); put(ws, r, 3, 32400); r += 2
 
-    hdr = ['Bet Type', 'Coin in', 'Price(x)', 'Profile', 'Base Game Pay Back', 'Free Game Pay Back', 'Total RTP']
-    for i, h in enumerate(hdr, 1): put(ws, r, i, h, bold, hdr_fill)
-    r += 1
-    rows = [
-        ('Normal Bet', 100, 1, 'Oldhand', 0.72, fg, total),
-        ('Normal Bet', 100, 1, 'Newbie', 0.72, 0.21, 0.93),
-        ('Buy Feature', 7500, 75, 'Oldhand / Newbie', 0.0, 0.925, 0.925),
-    ]
-    for row_vals in rows:
-        for i, v in enumerate(row_vals, 1): put(ws, r, i, v)
+    if is_variant:
+        hdr = ['Bet Type', 'Coin in', 'Price(x)', 'Profile', 'Base Game Pay Back', 'Free Game Pay Back', 'Total RTP']
+        for i, h in enumerate(hdr, 1): put(ws, r, i, h, bold, hdr_fill)
         r += 1
-    r += 1
+        rows = [
+            ('Normal Bet', 100, 1, 'Oldhand', 0.72, fg, total),
+            ('Normal Bet', 100, 1, 'Newbie', 0.72, 0.21, 0.93),
+            ('Buy Feature', 7500, 75, 'Oldhand / Newbie', 0.0, 0.925, 0.925),
+        ]
+        for row_vals in rows:
+            for i, v in enumerate(row_vals, 1): put(ws, r, i, v)
+            r += 1
+        r += 1
 
-    hdr = ['Profile', 'Free Game Hits', 'Pulls/Hit (FG Cycle)']
-    for i, h in enumerate(hdr, 1): put(ws, r, i, h, bold, hdr_fill)
-    r += 1
-    put(ws, r, 1, 'Oldhand Normal Bet'); put(ws, r, 2, round(1 / caps['cycle_o'], 10)); put(ws, r, 3, round(caps['cycle_o'], 5)); r += 1
-    put(ws, r, 1, 'Newbie Normal Bet'); put(ws, r, 2, round(1 / caps['cycle_n'], 10)); put(ws, r, 3, round(caps['cycle_n'], 5)); r += 1
-    put(ws, r, 1, 'Buy Feature'); put(ws, r, 2, 1); put(ws, r, 3, 1); r += 2
+        hdr = ['Profile', 'Free Game Hits', 'Pulls/Hit (FG Cycle)']
+        for i, h in enumerate(hdr, 1): put(ws, r, i, h, bold, hdr_fill)
+        r += 1
+        put(ws, r, 1, 'Oldhand Normal Bet'); put(ws, r, 2, round(1 / caps['cycle_o'], 10)); put(ws, r, 3, round(caps['cycle_o'], 5)); r += 1
+        put(ws, r, 1, 'Newbie Normal Bet'); put(ws, r, 2, round(1 / caps['cycle_n'], 10)); put(ws, r, 3, round(caps['cycle_n'], 5)); r += 1
+        put(ws, r, 1, 'Buy Feature'); put(ws, r, 2, 1); put(ws, r, 3, 1); r += 2
 
-    put(ws, r, 1, 'Scatter symbol appear rate (SCR, x1e10)', bold, hdr_fill)
-    put(ws, r, 2, 'NB Oldhand', bold, hdr_fill); put(ws, r, 3, 'NB Newbie', bold, hdr_fill); put(ws, r, 4, 'Buy Feature', bold, hdr_fill); r += 1
-    put(ws, r, 1, '')
-    put(ws, r, 2, scr.get('NB')); put(ws, r, 3, scr.get('NB_Newbie')); put(ws, r, 4, scr.get('BF')); r += 2
+        put(ws, r, 1, 'Scatter symbol appear rate (SCR, x1e10)', bold, hdr_fill)
+        put(ws, r, 2, 'NB Oldhand', bold, hdr_fill); put(ws, r, 3, 'NB Newbie', bold, hdr_fill); put(ws, r, 4, 'Buy Feature', bold, hdr_fill); r += 1
+        put(ws, r, 1, '')
+        put(ws, r, 2, scr.get('NB')); put(ws, r, 3, scr.get('NB_Newbie')); put(ws, r, 4, scr.get('BF')); r += 2
+    else:
+        put(ws, r, 1, 'Bet Type', bold, hdr_fill); put(ws, r, 2, 'Coin in', bold, hdr_fill); put(ws, r, 3, 'Price(x)', bold, hdr_fill); r += 1
+        put(ws, r, 1, 'Normal Bet'); put(ws, r, 2, 100); put(ws, r, 3, 1); r += 1
+        put(ws, r, 1, 'Buy Feature'); put(ws, r, 2, 7500); put(ws, r, 3, 75); r += 1
+        put(ws, r, 1, 'RTP / Hold / FG cycle / SCR: see the RTP variant PARsheets (H0281<RTP><Variant>R).', border=False); r += 2
 
     put(ws, r, 1, 'Reel #', bold, hdr_fill)
     for i in range(6): put(ws, r, 2 + i, i + 1, bold, hdr_fill)
@@ -178,11 +196,14 @@ def build_overview(ws, tag, caps, scr):
     put(ws, r, 1, 'Each M1 on the Extra Reels awards a fixed x2. Multipliers in a round are added together. Free Game starts at x2 and is carried over across free spins.', border=False); r += 2
 
     put(ws, r, 1, 'Feature / Limits', title_font, border=False); r += 1
-    limits = [
-        ('Buy Feature price', '75x total bet (direct Free Game entry)'),
-        ('Card multiplier cap - Oldhand BG / FG', f"{caps['cap_o_bg']}x / {caps['cap_o_fg']:,}x"),
-        ('Card multiplier cap - Newbie BG / FG', f"{caps['cap_n_bg']}x / {caps['cap_n_fg']}x"),
-        ('Card multiplier cap - Buy Feature FG', f"{caps['cap_bf']:,}x"),
+    limits = [('Buy Feature price', '75x total bet (direct Free Game entry)')]
+    if is_variant:
+        limits += [
+            ('Card multiplier cap - Oldhand BG / FG', f"{caps['cap_o_bg']}x / {caps['cap_o_fg']:,}x"),
+            ('Card multiplier cap - Newbie BG / FG', f"{caps['cap_n_bg']}x / {caps['cap_n_fg']}x"),
+            ('Card multiplier cap - Buy Feature FG', f"{caps['cap_bf']:,}x"),
+        ]
+    limits += [
         ('Golden frame', 'General symbols on R2-R5 may be gold-framed; turns into WW after participating in a win (kept for 1 cascade).'),
         ('Jackpot', 'OP Jackpot (platform feature): GRAND / MAJOR (linked progressive, unlocked at bet 2.00+), MINOR / MINI (bonus).'),
     ]
@@ -219,17 +240,30 @@ def copy_symbol_sheet(dst_ws, src_ws):
                 dst_ws.cell(row=cell.row, column=cell.column, value=cell.value)
 
 
-for tag in TAGS:
-    caps = cfg_arrays(tag)
-    scr = read_scr(tag)
+def build_workbook(tag):
     wb = openpyxl.Workbook()
     ov = wb.active
     ov.title = 'Overview'
-    build_overview(ov, tag, caps, scr)
+    if tag is None:
+        build_overview(ov, None)
+    else:
+        build_overview(ov, tag, cfg_arrays(tag), read_scr(tag))
     build_parameter(wb.create_sheet('Parameter'))
     for name in SYMBOL_SHEETS:
         copy_symbol_sheet(wb.create_sheet(name), base_wb[name])
-    out = os.path.join(OUT, f'H0281{tag}.xlsx')
+    return wb
+
+
+# 清掉舊命名（無 R 尾碼）的輸出
+for old in os.listdir(OUT):
+    if re.fullmatch(r'H0281(\d{2}[AB])?\.xlsx', old):
+        os.remove(os.path.join(OUT, old))
+        print('removed old', old)
+
+targets = [(None, 'H0281R.xlsx')] + [(t, f'H0281{t}R.xlsx') for t in TAGS]
+for tag, fname in targets:
+    wb = build_workbook(tag)
+    out = os.path.join(OUT, fname)
     wb.save(out)
     print('written', out)
 print('done')
