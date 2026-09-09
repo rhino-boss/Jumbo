@@ -2239,6 +2239,15 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>2026-09-08：大 Bet 獨立數學模型（Bet100）</h4>
+          <ul>
+            <li>新增 <code>H028192A_Bet100.xlsx</code>／<code>H028188B_Bet100.xlsx</code> 與 <code>config_92A_Bet100.js</code>／<code>config_88B_Bet100.js</code>（大 Bet，bet_tier_amount &gt; $100）。FG 上限依規範為 <b>2000x</b> 而非 10000x；<code>Weight_BF</code> 依 H027 實務同步封頂。<code>_Bet100</code> 後綴沿用 H026／H027 實務。</li>
+            <li>FG RTP、觸發週期、平均倍數與原模型一致（主體 20~200x 形狀不變、200~2000x 尾端等比配平）；SCR 沿用原模型值。</li>
+            <li>原 92A／88B 移除 <code>Weight_NB_FG_Big</code> 欄與 config <code>weight_fg_big</code>；模擬一律以 <code>config_rtp_file</code> 指定 Bet100，不做程式內自動切換。</li>
+          </ul>
+        </article>
+
+        <article class="change-log-entry">
           <h4>2026-08-10：恢復固定 config 檔名</h4>
           <ul>
             <li>config 恢復為 config_92A.js／config_94A.js，index 與 Simulator 同步改回固定檔名。</li>

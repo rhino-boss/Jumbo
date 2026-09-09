@@ -3176,12 +3176,13 @@ def report_base_game_id():
 
 
 def report_rtp_game_id():
-    source_stem = Path(str(RTP_DATA.get("source_xlsx", "") or "")).stem.upper()
-    if re.fullmatch(r"H\d{3}1\d{2}[A-Z]", source_stem):
-        return source_stem
-    match = re.fullmatch(r"config_(\d{2})([A-Z]?)", Path(CONFIG_RTP_FILE).stem, re.IGNORECASE)
+    source_stem = Path(str(RTP_DATA.get("source_xlsx", "") or "")).stem
+    if re.fullmatch(r"H\d{3}1\d{2}[A-Z](_Bet100)?", source_stem, re.IGNORECASE):
+        return source_stem[: len(source_stem) - 7].upper() + "_Bet100" if source_stem.lower().endswith("_bet100") else source_stem.upper()
+    match = re.fullmatch(r"config_(\d{2})([A-Z]?)(_Bet100)?", Path(CONFIG_RTP_FILE).stem, re.IGNORECASE)
     if match:
-        return f"{report_base_game_id()}{match.group(1)}{(match.group(2) or 'A').upper()}"
+        suffix = "_Bet100" if match.group(3) else ""
+        return f"{report_base_game_id()}{match.group(1)}{(match.group(2) or 'A').upper()}{suffix}"
     raise ValueError(f"Unable to resolve RTP report game id from {CONFIG_RTP_FILE!r}")
 
 

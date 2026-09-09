@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H028 倍率線型總覽（3.5.0.0）</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#f7f7f5;--card:#fff;--bd:#e8e8e4;--tx:#1a1a1a;--tx2:#5f5e5a;--tx3:#8b8981}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#141413;--card:#1b1b1a;--bd:#2e2e2b;--tx:#f0efec;--tx2:#c0bfb5;--tx3:#8b8981}}
+body{background:var(--bg);color:var(--tx);margin:0;font:400 15px/1.65 "Helvetica Neue","PingFang TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:36px 24px 72px}
+h1{font-size:23px;font-weight:600;margin:0 0 6px} h2{font-size:18px;font-weight:600;margin:40px 0 8px}
+h3{font-size:14.5px;font-weight:600;margin:0 0 8px}
+.sub{color:var(--tx2);font-size:13px;margin:0 0 4px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px 20px;margin:0 0 18px}
+.tw{overflow-x:auto} table{border-collapse:collapse;width:100%;font-size:13px;min-width:420px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--bd);padding:7px 9px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left} th{color:var(--tx2);font-weight:600;font-size:12px}
+.ch{position:relative;width:100%;height:430px}
+.note{font-size:12.5px;color:var(--tx2);margin:10px 0 0;line-height:1.7}
+.hint{font-size:12px;color:var(--tx3);margin:0 0 4px}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.88em;background:color-mix(in srgb,var(--tx) 7%,transparent);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>H028 雷神爆金 — 倍率線型總覽</h1>
+<p class="sub">資料來源：<code>文件/PARsheet/</code> 六份 R 檔（H028188BR／H028190BR／H028192AR／H028194AR／H028192A_Bet100R／H028188B_Bet100R）之 <code>Multiplier_Weight</code>　版本 3.5.0.0（2026-09-09）</p>
+<p class="sub">一模一樣（或僅個位整數差）的線只畫一條，圖例標明涵蓋哪些版本；Normal Bet 的 BG、FG 與 Buy Feature 分開三張圖。</p>
+
+<h2>一、Normal Bet BG 倍率線型</h2>
+<div class="card">
+<p class="hint">↓ 點圖例可開關任一條線。單位＝該區間每次付費轉的機率（含 Free Game 卡在分母）。縱軸固定 0–6%，超過上限的區間列於下表。</p>
+<div class="ch"><canvas id="c_bg"></canvas></div>
+<h3 style="margin:16px 0 6px">超出 6% 上限、圖上不顯示的區間</h3>
+<div class="tw"><table style="min-width:auto"><thead><tr><th>倍率帶</th><th>序列</th><th>占比</th></tr></thead><tbody><tr><td>-1~0</td><td>BG 新手（88B、90B、92A、94A、92A 大Bet、88B 大Bet 共用）</td><td>73.0739%</td></tr><tr><td>0~1</td><td>BG 新手（88B、90B、92A、94A、92A 大Bet、88B 大Bet 共用）</td><td>14.6547%</td></tr><tr><td>-1~0</td><td>BG 老手（88B、88B 大Bet）</td><td>72.3097%</td></tr><tr><td>0~1</td><td>BG 老手（88B、88B 大Bet）</td><td>15.3992%</td></tr><tr><td>-1~0</td><td>BG 老手（90B）</td><td>72.3080%</td></tr><tr><td>0~1</td><td>BG 老手（90B）</td><td>15.3985%</td></tr><tr><td>-1~0</td><td>BG 老手（92A、94A、92A 大Bet）</td><td>72.2913%</td></tr><tr><td>0~1</td><td>BG 老手（92A、94A、92A 大Bet）</td><td>15.3913%</td></tr></tbody></table></div>
+<h3 style="margin:16px 0 6px">線條與版本對應</h3>
+<ul class="note" style="margin:8px 0 0 0;padding-left:20px"><li><b>BG 新手（88B、90B、92A、94A、92A 大Bet、88B 大Bet 共用）</b>：88B、90B、92A、94A、92A 大Bet、88B 大Bet 逐格完全相同，合併為一條。</li><li><b>BG 老手（88B、88B 大Bet）</b>：88B、88B 大Bet 逐格完全相同，合併為一條。</li><li><b>BG 老手（90B）</b>：僅此一檔。</li><li><b>BG 老手（92A、94A、92A 大Bet）</b>：92A、94A、92A 大Bet 逐格完全相同，合併為一條。</li></ul>
+<p class="note">
+<b>單位</b>：每次付費轉落在該區間的機率；倍率＝得分 ÷ Normal Bet Coin In，區間左開右閉。<br>
+<b>新手 BG</b>：上限 30x，3.5.0.0 起六檔逐格統一（QA 要求）。<br>
+<b>老手 BG</b>：92A 與 94A 逐格相同；88B／90B 為拉長 FG 週期的版本（Free Game 卡權重較低），主體形狀與 92A 幾乎重合。大 Bet 檔（Bet100）的 BG 卡組與原模型完全相同，故併入同一條。</p>
+</div>
+
+<h2>二、Normal Bet FG 倍率線型</h2>
+<div class="card">
+<p class="hint">↓ 點圖例可開關任一條線。單位＝每場 FG Session 落在該區間的占比（各線合計 100%，比形狀不比量）。縱軸固定 0–16%，超過上限的區間列於下表。</p>
+<div class="ch"><canvas id="c_fg"></canvas></div>
+<h3 style="margin:16px 0 6px">超出 16% 上限、圖上不顯示的區間</h3>
+<div class="tw"><table style="min-width:auto"><thead><tr><th>倍率帶</th><th>序列</th><th>占比</th></tr></thead><tbody><tr><td>25~30</td><td>FG 老手（92A）</td><td>19.4996%</td></tr><tr><td>25~30</td><td>FG 老手（94A）</td><td>16.7907%</td></tr><tr><td>25~30</td><td>FG 老手（92A 大Bet）</td><td>19.4684%</td></tr></tbody></table></div>
+<h3 style="margin:16px 0 6px">線條與版本對應</h3>
+<ul class="note" style="margin:8px 0 0 0;padding-left:20px"><li><b>FG 新手（88B、90B、92A、94A、92A 大Bet、88B 大Bet 共用）</b>：88B、90B、92A、94A、92A 大Bet、88B 大Bet 逐格完全相同，合併為一條。</li><li><b>FG 老手（88B）</b>：僅此一檔。</li><li><b>FG 老手（90B）</b>：僅此一檔。</li><li><b>FG 老手（92A）</b>：僅此一檔。</li><li><b>FG 老手（94A）</b>：僅此一檔。</li><li><b>FG 老手（92A 大Bet）</b>：僅此一檔。</li><li><b>FG 老手（88B 大Bet）</b>：僅此一檔。</li></ul>
+<p class="note">
+<b>新手 FG</b>：範圍 30~100x，六檔逐格統一。<br>
+<b>老手 FG</b>：四版依各自 FG RTP（16%／18%／20%／22%）校準，上限 10,000x（(9000,10000] 為強制配置例外格、(3000,9000] 為 0）。<br>
+<b>大 Bet FG（>$100，Bet100 模型）</b>：上限 2,000x——(2000,3000] 與 (9000,10000] 歸零、200~2,000x 尾端等比加厚（92A ×1.189、88B ×1.051），20~200x 主體與原模型形狀相同，FG RTP／週期／平均倍數不變。</p>
+</div>
+
+<h2>三、Buy Feature 倍率線型（FG）</h2>
+<div class="card">
+<p class="hint">↓ 點圖例可開關任一條線。縱軸固定 0–16%，超過上限的區間列於下表。</p>
+<div class="ch"><canvas id="c_bf"></canvas></div>
+<h3 style="margin:16px 0 6px">超出 16% 上限、圖上不顯示的區間</h3>
+<p class="note">沒有序列超過上限，全部畫在圖上。</p>
+<h3 style="margin:16px 0 6px">線條與版本對應</h3>
+<ul class="note" style="margin:8px 0 0 0;padding-left:20px"><li><b>BF（88B、90B、92A、94A）</b>：88B、90B、92A、94A 僅個位數整數差（≤5／10⁹，視為同一條），合併為一條。</li><li><b>BF（92A 大Bet、88B 大Bet）</b>：92A 大Bet、88B 大Bet 僅個位數整數差（≤5／10⁹，視為同一條），合併為一條。</li></ul>
+<p class="note">
+<b>單位</b>：每場 BF Session 落在該區間的占比（合計 100%）；BF 成本 75 倍投注、RTP 全部來自 FG（92.5%）。<br>
+<b>原模型 BF</b>：四版共用同一組設計（僅最大餘數整數化的個位差），上限 10,000x（(9000,10000] 為強制例外格）。<br>
+<b>大 Bet BF（Bet100 模型）</b>：購買價 > $100（購 $11,250＝150 檔）時使用，上限 2,000x——(2000,3000] 與 (9000,10000] 歸零、200~2,000x 尾端 ×1.194 等比加厚，20~200x 主體形狀不變，BF RTP 92.5% 與平均倍數不變。92A_Bet100 與 88B_Bet100 僅個位整數差，畫一條。</p>
+</div>
+
+<p class="sub" style="margin-top:28px">H028 雷神爆金 3.5.0.0 · 2026-09-09 · 六份數學模型（PARsheet R 檔）倍率線型總覽</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const LB = ["-1~0", "0~1", "1~2", "2~3", "3~4", "4~5", "5~6", "6~7", "7~8", "8~9", "9~10", "10~15", "15~20", "20~25", "25~30", "30~35", "35~40", "40~45", "45~50", "50~60", "60~70", "70~80", "80~90", "90~100", "100~120", "120~140", "140~160", "160~180", "180~200", "200~250", "250~300", "300~350", "350~400", "400~450", "450~500", "500~550", "550~600", "600~650", "650~700", "700~750", "750~800", "800~850", "850~900", "900~950", "950~1k", "1k~2k", "2k~3k", "3k~4k", "4k~5k", "5k~6k", "6k~7k", "7k~8k", "8k~9k", "9k~10k", "10k~20k", "20k~30k", "30k~40k", "40k~50k", "50k~60k", "60k~70k", "70k~80k", "80k~90k", "90k~100k", "100k~10000k"];
+function mk(id, datasets, yTitle, yMax) {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  Chart.defaults.color = dark ? '#c0bfb5' : '#5f5e5a';
+  Chart.defaults.borderColor = dark ? '#2e2e2b' : '#e4e3dc';
+  new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels: LB, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      scales: {
+        y: { min: 0, max: yMax, title: { display: true, text: yTitle }, ticks: { callback: v => v + '%' } },
+        x: { ticks: { maxRotation: 60, autoSkip: true, maxTicksLimit: 32, font: { size: 10 } } }
+      },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 18, font: { size: 11 } } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + (c.parsed.y == null ? '—' : c.parsed.y.toFixed(5) + '%') } }
+      },
+      elements: { line: { tension: 0 } }
+    }
+  });
+}
+mk('c_bg', [{"label": "BG 新手（88B、90B、92A、94A、92A 大Bet、88B 大Bet 共用）", "data": [73.07386, 14.65473, 4.293931, 1.966992, 1.206554, 0.783399, 0.604463, 0.325376, 0.364832, 0.295141, 0.191366, 1.0124, 0.433971, 0.242193, 0.19301, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#1b5fb0", "backgroundColor": "#1b5fb0", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "BG 老手（88B、88B 大Bet）", "data": [72.30973, 15.399199, 4.525669, 2.079131, 1.278912, 0.832723, 0.644364, 0.347803, 0.391084, 0.317286, 0.206294, 0.628036, 0.27306, 0.154561, 0.124925, 0.05991, 0.041552, 0.025475, 0.0214, 0.04592, 0.026298, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#eb6834", "backgroundColor": "#eb6834", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "BG 老手（90B）", "data": [72.308035, 15.398481, 4.525202, 2.078798, 1.278641, 0.832502, 0.644158, 0.347673, 0.390917, 0.317134, 0.206184, 0.627609, 0.2728, 0.154372, 0.124739, 0.059805, 0.041468, 0.025417, 0.021345, 0.045785, 0.026207, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#12897a", "backgroundColor": "#12897a", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "BG 老手（92A、94A、92A 大Bet）", "data": [72.291252, 15.391299, 4.520469, 2.075477, 1.275909, 0.830272, 0.642079, 0.346369, 0.389239, 0.315598, 0.205077, 0.623314, 0.270194, 0.152482, 0.122878, 0.058754, 0.040628, 0.024835, 0.0208, 0.044441, 0.025301, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#6b4bc4", "backgroundColor": "#6b4bc4", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}], '每轉機率（%）', 6.0);
+mk('c_fg', [{"label": "FG 新手（88B、90B、92A、94A、92A 大Bet、88B 大Bet 共用）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 7.682772, 13.832188, 12.298114, 10.763514, 10.767358, 15.389316, 7.698325, 15.403975, 6.164439, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#1b5fb0", "backgroundColor": "#1b5fb0", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "FG 老手（88B）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 5.680795, 15.010193, 7.998094, 13.224611, 10.795706, 8.677883, 7.636026, 9.188432, 3.865902, 6.499321, 2.183123, 4.197642, 1.174703, 1.430864, 0.56459, 0.483473, 0.17317, 0.146705, 0.127874, 0.113561, 0.102202, 0.092825, 0.084912, 0.078021, 0.071961, 0.066497, 0.061535, 0.056985, 0.052752, 0.048791, 0.045048, 0.041508, 0.020845, null, null, null, null, null, null, null, 0.00345, null, null, null, null, null, null, null, null, null, null], "borderColor": "#eb6834", "backgroundColor": "#eb6834", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "FG 老手（90B）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 4.426134, 15.00953, 6.634726, 11.322949, 9.541939, 7.917658, 7.309765, 9.383872, 4.215109, 7.57138, 2.719454, 5.787427, 1.862787, 2.621367, 1.202212, 1.20474, 0.155227, 0.129976, 0.112347, 0.09923, 0.089062, 0.080877, 0.074148, 0.068445, 0.063567, 0.059289, 0.055511, 0.052141, 0.049088, 0.046307, 0.043747, 0.041384, 0.028704, 0.016449, null, null, null, null, null, null, 0.00345, null, null, null, null, null, null, null, null, null, null], "borderColor": "#12897a", "backgroundColor": "#12897a", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "FG 老手（92A）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 4.830295, 19.499632, 6.991652, 11.725143, 9.710004, 7.91955, 7.124894, 8.83839, 3.837228, 6.663556, 2.314709, 4.687712, 1.41325, 1.86572, 0.803576, 0.757452, 0.134044, 0.109508, 0.092589, 0.080181, 0.070719, 0.06324, 0.057214, 0.052215, 0.048038, 0.044464, 0.04139, 0.03872, 0.036369, 0.03429, 0.032432, 0.030769, 0.022834, 0.025334, null, null, null, null, null, null, 0.002885, null, null, null, null, null, null, null, null, null, null], "borderColor": "#6b4bc4", "backgroundColor": "#6b4bc4", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "FG 老手（94A）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 4.05626, 16.790651, 6.171775, 10.612726, 9.011782, 7.535292, 7.037748, 9.177653, 4.188754, 7.646941, 2.792321, 6.092741, 2.030201, 2.961429, 1.409757, 1.46848, 0.133805, 0.109313, 0.092424, 0.080038, 0.070593, 0.063127, 0.057111, 0.052122, 0.047953, 0.044385, 0.041316, 0.038651, 0.036304, 0.034229, 0.032374, 0.030714, 0.022794, 0.025289, null, null, null, null, null, null, 0.002948, null, null, null, null, null, null, null, null, null, null], "borderColor": "#a8620f", "backgroundColor": "#a8620f", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "FG 老手（92A 大Bet）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 4.822561, 19.468411, 6.980458, 11.70637, 9.694457, 7.90687, 7.113486, 8.824239, 3.831084, 6.652887, 2.311003, 4.680206, 1.410987, 1.862732, 0.802289, 0.75624, 0.159349, 0.130181, 0.110067, 0.095318, 0.084069, 0.075178, 0.068014, 0.062072, 0.057107, 0.052858, 0.049203, 0.046029, 0.043235, 0.040763, 0.038554, 0.036578, 0.027145, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#4a95e8", "backgroundColor": "#4a95e8", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "FG 老手（88B 大Bet）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 5.6769, 14.9999, 7.992609, 13.215542, 10.788303, 8.671932, 7.630789, 9.182131, 3.863251, 6.494865, 2.181625, 4.194764, 1.173898, 1.429883, 0.564203, 0.483141, 0.182055, 0.154232, 0.134435, 0.119387, 0.107445, 0.097588, 0.089269, 0.082024, 0.075653, 0.069909, 0.064693, 0.059909, 0.055459, 0.051294, 0.047359, 0.043638, 0.021914, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#c2427e", "backgroundColor": "#c2427e", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}], '每場占比（%）', 16.0);
+mk('c_bf', [{"label": "BF（88B、90B、92A、94A）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 3.362411, 14.249535, 5.361125, 9.437796, 8.204579, 7.022252, 6.792809, 9.283063, 4.440119, 8.494792, 3.250566, 7.606146, 2.78381, 4.458849, 2.331344, 2.666916, 0.033455, 0.027331, 0.023108, 0.020012, 0.01765, 0.015783, 0.014279, 0.013032, 0.011989, 0.011097, 0.01033, 0.009664, 0.009077, 0.008558, 0.008094, 0.007679, 0.005699, 0.006323, null, null, null, null, null, null, 0.000725, null, null, null, null, null, null, null, null, null, null], "borderColor": "#1b5fb0", "backgroundColor": "#1b5fb0", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}, {"label": "BF（92A 大Bet、88B 大Bet）", "data": [null, null, null, null, null, null, null, null, null, null, null, null, null, 3.361033, 14.2437, 5.35893, 9.433931, 8.201218, 7.019376, 6.790027, 9.279261, 4.438301, 8.491313, 3.249235, 7.603031, 2.78267, 4.457022, 2.33039, 2.665823, 0.039947, 0.032635, 0.027592, 0.023895, 0.021075, 0.018846, 0.01705, 0.015561, 0.014316, 0.013251, 0.012335, 0.011539, 0.010838, 0.010219, 0.009665, 0.00917, 0.006805, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "borderColor": "#eb6834", "backgroundColor": "#eb6834", "borderDash": [], "pointRadius": 1.5, "borderWidth": 1.6, "spanGaps": false, "fill": false}], '每場占比（%）', 16.0);
+</script>
+</body>
+</html>
