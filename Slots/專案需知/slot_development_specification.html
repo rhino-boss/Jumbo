@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slot 開發規範</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}
+header.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}
+.toc{position:sticky; top:52px; width:236px; flex:none;
+  max-height:calc(100vh - 76px); overflow-y:auto;
+  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}
+.toc[hidden]{display:none}
+.toc a{display:block; color:var(--ink-3); text-decoration:none;
+  padding:3px 11px; border-left:2px solid var(--rule)}
+.toc a:hover{color:var(--s1); border-left-color:var(--s1)}
+.toc a.toc-3{padding-left:25px}
+main{flex:1; min-width:0}
+.panel[hidden]{display:none}
+.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
+h2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;
+  padding-bottom:7px; border-bottom:1px solid var(--rule)}
+h3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}
+p{margin:0 0 11px; max-width:86ch}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}
+li{margin:3px 0}
+li.check{list-style:none; margin-left:-20px}
+.cb{color:var(--s1); margin-right:4px}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+pre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;
+  padding:13px 16px; overflow-x:auto; margin:0 0 16px;
+  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}
+pre code{background:none; border:none; padding:0; font-size:inherit}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
+@media (max-width:900px){ .toc{display:none!important} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <div class="eyebrow">Slots · 開發規範</div>
+  <h1 class="site">Slot 開發規範</h1>
+  <p class="meta">由 <code>Slots/專案需知/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-09-09</p>
+</header>
+<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-overview" data-tab="overview" aria-controls="panel-overview" aria-selected="true" tabindex="0">總覽</button><button class="tab" role="tab" id="tab-flow" data-tab="flow" aria-controls="panel-flow" aria-selected="false" tabindex="-1">開發流程</button><button class="tab" role="tab" id="tab-math" data-tab="math" aria-controls="panel-math" aria-selected="false" tabindex="-1">數學模型規範</button><button class="tab" role="tab" id="tab-docs" data-tab="docs" aria-controls="panel-docs" aria-selected="false" tabindex="-1">數學文件規範</button><button class="tab" role="tab" id="tab-submission" data-tab="submission" aria-controls="panel-submission" aria-selected="false" tabindex="-1">送驗文件規範</button><button class="tab" role="tab" id="tab-sim" data-tab="sim" aria-controls="panel-sim" aria-selected="false" tabindex="-1">模擬程式規範</button><button class="tab" role="tab" id="tab-demo" data-tab="demo" aria-controls="panel-demo" aria-selected="false" tabindex="-1">Demogame規範</button><button class="tab" role="tab" id="tab-script" data-tab="script" aria-controls="panel-script" aria-selected="false" tabindex="-1">腳本規範</button></div>
+<div class="body-row">
+  <nav class="toc" id="toc-overview"><a class="toc-2" href="#文件清單" data-tab="overview">文件清單</a><a class="toc-2" href="#開新專案必讀流程" data-tab="overview">開新專案必讀流程</a><a class="toc-2" href="#維護規則html-同步" data-tab="overview">維護規則：HTML 同步</a><a class="toc-2" href="#共通原則" data-tab="overview">共通原則</a><a class="toc-2" href="#完成條件" data-tab="overview">完成條件</a></nav><nav class="toc" id="toc-flow" hidden><a class="toc-2" href="#1-過往專案整理後的標準做法" data-tab="flow">1. 過往專案整理後的標準做法</a><a class="toc-2" href="#2-必要產出文件" data-tab="flow">2. 必要產出文件</a><a class="toc-2" href="#3-整體流程" data-tab="flow">3. 整體流程</a><a class="toc-2" href="#4-製作順序與階段關卡" data-tab="flow">4. 製作順序與階段關卡</a><a class="toc-2" href="#5-各階段操作方式" data-tab="flow">5. 各階段操作方式</a><a class="toc-3" href="#51-開案與數學目標確認" data-tab="flow">5.1 開案與數學目標確認</a><a class="toc-3" href="#52-建立基礎數學模型" data-tab="flow">5.2 建立基礎數學模型</a><a class="toc-3" href="#53-建立-rtpvariant-與-card-system" data-tab="flow">5.3 建立 RTP／Variant 與 Card System</a><a class="toc-3" href="#54-轉檔與-config-驗證" data-tab="flow">5.4 轉檔與 Config 驗證</a><a class="toc-3" href="#55-simulator-開發與-debug" data-tab="flow">5.5 Simulator 開發與 Debug</a><a class="toc-3" href="#56-模擬順序" data-tab="flow">5.6 模擬順序</a><a class="toc-3" href="#57-調參循環" data-tab="flow">5.7 調參循環</a><a class="toc-3" href="#58-對帳與交付" data-tab="flow">5.8 對帳與交付</a><a class="toc-2" href="#6-新專案建議目錄" data-tab="flow">6. 新專案建議目錄</a><a class="toc-2" href="#7-異動時的重跑範圍" data-tab="flow">7. 異動時的重跑範圍</a><a class="toc-2" href="#8-禁止事項" data-tab="flow">8. 禁止事項</a><a class="toc-2" href="#9-數學完成條件" data-tab="flow">9. 數學完成條件</a></nav><nav class="toc" id="toc-math" hidden><a class="toc-2" href="#數學模型" data-tab="math">數學模型</a><a class="toc-3" href="#11-必要內容" data-tab="math">1.1 必要內容</a><a class="toc-3" href="#12-模型命名" data-tab="math">1.2 模型命名</a><a class="toc-3" href="#13-版本規則" data-tab="math">1.3 版本規則</a><a class="toc-3" href="#14-rtp-與-bet-mode" data-tab="math">1.4 RTP 與 Bet Mode</a><a class="toc-3" href="#15-卡片倍率區間" data-tab="math">1.5 卡片倍率區間</a><a class="toc-3" href="#16-開發前檢查" data-tab="math">1.6 開發前檢查</a><a class="toc-2" href="#card-system" data-tab="math">Card System</a><a class="toc-3" href="#21-定位與限制" data-tab="math">2.1 定位與限制</a><a class="toc-3" href="#22-設定結構" data-tab="math">2.2 設定結構</a><a class="toc-3" href="#23-卡片判定" data-tab="math">2.3 卡片判定</a><a class="toc-3" href="#24-retry-流程" data-tab="math">2.4 Retry 流程</a><a class="toc-3" href="#25-倍率分母" data-tab="math">2.5 倍率分母</a><a class="toc-3" href="#26-必要監控" data-tab="math">2.6 必要監控</a><a class="toc-2" href="#parsheet" data-tab="math">PARsheet</a><a class="toc-2" href="#遊戲別附註" data-tab="math">遊戲別附註</a><a class="toc-3" href="#h027-v3-倍率線型校準規範2026-09-02" data-tab="math">H027 v3 倍率線型校準規範（2026-09-02）</a></nav><nav class="toc" id="toc-docs" hidden><a class="toc-2" href="#game-rule" data-tab="docs">Game Rule</a><a class="toc-3" href="#用途" data-tab="docs">用途</a><a class="toc-3" href="#必要規則" data-tab="docs">必要規則</a><a class="toc-3" href="#交付檢查" data-tab="docs">交付檢查</a><a class="toc-2" href="#help" data-tab="docs">Help</a><a class="toc-3" href="#必要交付檔案" data-tab="docs">必要交付檔案</a><a class="toc-3" href="#內容規則" data-tab="docs">內容規則</a><a class="toc-3" href="#交付檢查-2" data-tab="docs">交付檢查</a><a class="toc-2" href="#game-description" data-tab="docs">Game Description</a><a class="toc-2" href="#game-list" data-tab="docs">Game List</a></nav><nav class="toc" id="toc-submission" hidden><a class="toc-2" href="#1-通用規則" data-tab="submission">1. 通用規則</a><a class="toc-3" href="#11-存放位置與資料夾格式" data-tab="submission">1.1 存放位置與資料夾格式</a><a class="toc-3" href="#12-必要檔案與命名" data-tab="submission">1.2 必要檔案與命名</a><a class="toc-3" href="#13-禁止出現的內容" data-tab="submission">1.3 禁止出現的內容</a><a class="toc-3" href="#14-用詞一致性" data-tab="submission">1.4 用詞一致性</a><a class="toc-2" href="#2-game-descriptiondocx" data-tab="submission">2. Game Description（DOCX）</a><a class="toc-3" href="#21-格式來源複製已核准模板" data-tab="submission">2.1 格式來源：複製已核准模板</a><a class="toc-3" href="#22-內容來源help-英文欄逐字填寫" data-tab="submission">2.2 內容來源：Help 英文欄逐字填寫</a><a class="toc-3" href="#23-結構" data-tab="submission">2.3 結構</a><a class="toc-3" href="#24-交付前驗證" data-tab="submission">2.4 交付前驗證</a><a class="toc-2" href="#3-math-document-description" data-tab="submission">3. Math Document Description</a><a class="toc-3" href="#31-定位與範本" data-tab="submission">3.1 定位與範本</a><a class="toc-3" href="#32-內容要求" data-tab="submission">3.2 內容要求</a><a class="toc-2" href="#4-數學模型送驗版送驗包-parsheet-資料夾" data-tab="submission">4. 數學模型送驗版（送驗包 `PARsheet/` 資料夾）</a><a class="toc-3" href="#41-overview-必要欄位" data-tab="submission">4.1 Overview 必要欄位</a><a class="toc-3" href="#42-跨文件賠率一致性" data-tab="submission">4.2 跨文件賠率一致性</a><a class="toc-2" href="#5-送驗前檢查清單" data-tab="submission">5. 送驗前檢查清單</a></nav><nav class="toc" id="toc-sim" hidden><a class="toc-2" href="#模擬程式" data-tab="sim">模擬程式</a><a class="toc-3" href="#31-程式架構" data-tab="sim">3.1 程式架構</a><a class="toc-3" href="#32-必要功能" data-tab="sim">3.2 必要功能</a><a class="toc-3" href="#33-執行結束後印出的內容" data-tab="sim">3.3 執行結束後印出的內容</a><a class="toc-3" href="#34-驗證清單" data-tab="sim">3.4 驗證清單</a><a class="toc-2" href="#config" data-tab="sim">Config</a><a class="toc-3" href="#51-定位與轉檔" data-tab="sim">5.1 定位與轉檔</a><a class="toc-3" href="#52-最低資料" data-tab="sim">5.2 最低資料</a><a class="toc-3" href="#53-資料驗證" data-tab="sim">5.3 資料驗證</a><a class="toc-3" href="#54-版本與歷史檔" data-tab="sim">5.4 版本與歷史檔</a><a class="toc-3" href="#55-最終交付檢查" data-tab="sim">5.5 最終交付檢查</a></nav><nav class="toc" id="toc-demo" hidden><a class="toc-2" href="#41-用途與載入" data-tab="demo">4.1 用途與載入</a><a class="toc-3" href="#411-遊戲類型命名規則" data-tab="demo">4.1.1 遊戲類型命名規則</a><a class="toc-2" href="#42-共用區域與-by-game-區域" data-tab="demo">4.2 共用區域與 By Game 區域</a><a class="toc-3" href="#421-by-game-區域" data-tab="demo">4.2.1 By Game 區域</a><a class="toc-3" href="#422-共用區域" data-tab="demo">4.2.2 共用區域</a><a class="toc-2" href="#43-補牌方式" data-tab="demo">4.3 補牌方式</a><a class="toc-2" href="#44-必要行為" data-tab="demo">4.4 必要行為</a><a class="toc-2" href="#45-debug-與重現" data-tab="demo">4.5 Debug 與重現</a><a class="toc-2" href="#46-與-simulator-對帳" data-tab="demo">4.6 與 Simulator 對帳</a><a class="toc-2" href="#47-交付檢查" data-tab="demo">4.7 交付檢查</a></nav><nav class="toc" id="toc-script" hidden><a class="toc-2" href="#1-用途與定位" data-tab="script">1. 用途與定位</a><a class="toc-2" href="#2-腳本清單結構" data-tab="script">2. 腳本清單結構</a><a class="toc-2" href="#3-格式欄位" data-tab="script">3. 格式欄位</a><a class="toc-2" href="#4-挑選規則" data-tab="script">4. 挑選規則</a><a class="toc-3" href="#41-新手體驗" data-tab="script">4.1 新手體驗</a><a class="toc-3" href="#42-buy-feature" data-tab="script">4.2 Buy Feature</a><a class="toc-3" href="#43-free-spin-系統" data-tab="script">4.3 Free Spin 系統</a><a class="toc-3" href="#44-版型與共用" data-tab="script">4.4 版型與共用</a><a class="toc-2" href="#5-製作前必須與使用者確認" data-tab="script">5. 製作前必須與使用者確認</a><a class="toc-2" href="#6-交付檢查" data-tab="script">6. 交付檢查</a><a class="toc-2" href="#7-範例h028-雷神爆金1000101016" data-tab="script">7. 範例：H028 雷神爆金1000（101016）</a></nav>
+  <main><section class="panel" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview"><h1 id="slot-專案需知總覽">Slot 專案需知總覽</h1>
+<p>本資料夾（<code>Slots/專案需知/</code>）整理 Slot Game 從設計、實作、驗證到交付時必須遵循的專案需知。重點是確保數學文件、Card System、模擬程式、Demogame 與 Config 使用同一套規則與參數，避免各端各自解讀或寫死例外。</p>
+<p>適用範圍：<code>Project/Slots/H0xx_遊戲名稱/</code> 下的新遊戲模型、既有模型改版，以及 RTP、Card System 或 Feature 參數調整。</p>
+<h2 id="文件清單">文件清單</h2>
+<div class="tbl-wrap"><table><thead><tr><th>文件</th><th>內容</th></tr></thead><tbody><tr><td><a href="#" class="tab-link" data-tab="flow">開發流程.md</a></td><td>數學開發流程、必要產出文件、製作順序、階段關卡、各階段操作方式、重跑範圍、禁止事項與數學完成條件。</td></tr><tr><td><a href="#" class="tab-link" data-tab="math">數學模型規範.md</a></td><td>數學模型必要內容、命名、版本規則、RTP 與 Bet Mode、卡片倍率區間、開發前檢查；Card System；PARsheet。</td></tr><tr><td><a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a></td><td>Game Rule、Help、Game Description、Game List 的內容與交付規範。</td></tr><tr><td><a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a></td><td>送驗交付物（Game Description DOCX、Math Document Description、數學模型送驗版）的命名、格式來源、內容規則、禁止內容與交付前檢查。</td></tr><tr><td><a href="#" class="tab-link" data-tab="sim">模擬程式規範.md</a></td><td>Simulator 程式架構、<code>BATCH_RUNS</code>、Console 輸出、報表格式、驗證清單；Config 的轉檔、資料、驗證與版本規範。</td></tr><tr><td><a href="#" class="tab-link" data-tab="demo">Demogame規範.md</a></td><td>Demogame 用途與載入、共用／By Game 區域、補牌方式、Debug 與對帳、交付檢查。</td></tr><tr><td><a href="#" class="tab-link" data-tab="script">腳本規範.md</a></td><td>表演腳本（新手體驗、Buy Feature、Free Spin 系統）的清單結構、挑選規則、權重整合與交付檢查。</td></tr></tbody></table></div>
+<h2 id="開新專案必讀流程">開新專案必讀流程</h2>
+<p>開啟新的遊戲專案（或接手既有模型改版）前，必須依下列順序讀完相關規範：</p>
+<ol><li>本 README：共通原則與完成條件。</li><li><a href="#" class="tab-link" data-tab="flow">開發流程.md</a>：整體流程、製作順序與階段關卡。</li><li><a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>：建立數學模型與 Card System 前必讀。</li><li><a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a>：撰寫 Game Rule、Help 等文件前必讀。</li><li><a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a>：製作 Game Description DOCX、Math Document Description 與數學模型送驗版前必讀。</li><li><a href="#" class="tab-link" data-tab="sim">模擬程式規範.md</a>：撰寫 Simulator 與產生 Config 前必讀。</li><li><a href="#" class="tab-link" data-tab="demo">Demogame規範.md</a>：製作 Demogame 前必讀。</li><li><a href="#" class="tab-link" data-tab="script">腳本規範.md</a>：製作表演腳本前必讀。</li></ol>
+<p>只執行部分工作時，至少要讀完本 README 與該工作對應的文件。</p>
+<h2 id="維護規則html-同步">維護規則：HTML 同步</h2>
+<p>本資料夾另提供彙整版 <code>slot_development_specification.html</code>（全部規範合併、頁籤式），由 <code>_build_html.py</code> 從 md 自動產生。</p>
+<ul><li><strong>任何一份 <code>.md</code> 更新後，必須在同一次修改中重跑產生器同步 HTML</strong>：</li></ul>
+<pre><code>  py _build_html.py</code></pre>
+<ul><li>不得直接手改 <code>slot_development_specification.html</code>；內容修正一律改 md 再重建。</li></ul>
+<h2 id="共通原則">共通原則</h2>
+<pre><code>數學文件／XLSX
+      ↓ AI 轉檔與驗證
+    Config
+     ├─→ 模擬程式 → Record 報表
+     └─→ Demogame  → 操作與逐局對帳</code></pre>
+<ul><li>數學文件與 <code>Source/*.xlsx</code> 是規格來源，Config 是程式執行時的共同參數來源。</li><li>Excel 與 Config 之間的轉換（含 <code>game_help_draft.md</code> → <code>{GameID}_Help.xlsx</code>、數學模型 → PARsheet）一律由 AI 執行；專案內不建立、不維護轉檔工具。</li><li>模擬程式與 Demogame 必須讀取同一份 Config，不得各自維護另一套輪帶、權重、Paytable 或 Feature 參數。</li><li><code>game_rule.md</code> 必須說明玩法、判獎順序、倍率口徑、Feature 流程與例外；程式不可補猜未定義的規則。</li><li>Game Rule 是遊戲規則的正式說明來源；數學模型、程式與 Help 必須與其一致。</li><li>Help 必須依 Game Rule 編寫，並同時維護 <code>{GameID}_Help.xlsx</code> 與對應的 Markdown 文件；兩者內容不得不一致。</li><li>同一項資料若在多個檔案出現，修改時必須同步更新並完成對帳。</li><li>未支援的 RTP、Variant、Bet Mode、Profile 或 Feature，不得出現在 Config、Simulator 批次或 Demogame 選單。</li><li>會影響結果分布、RTP、觸發率、最大獎或 Retry 的修改，都必須更新版本並重新模擬。</li></ul>
+<h2 id="完成條件">完成條件</h2>
+<p>模型只有在下列條件全部成立後才可視為完成：</p>
+<ol><li>數學規則與計算口徑明確，無未決定的核心邏輯。</li><li>Config 可由數學來源重建，版本與參數可追溯。</li><li>Simulator 已完成所有支援組合的統計驗證。</li><li>Card System 的權重、區間、Retry 與失敗監控通過。</li><li>Demogame 的代表性單局可與 Simulator 對帳。</li><li><a href="#" class="tab-link" data-tab="flow">開發流程.md</a> 第 2 節的必要產出文件（<code>game_rule.md</code>、<code>game_help_draft.md</code>／<code>{GameID}_Help.xlsx</code>、<code>game_description.md</code>、數學模型／PARsheet、<code>config.js</code>、<code>Simulator.py</code>、<code>index.html</code>、<code>數值報告.html</code>、<code>{GameID}_Game Description.docx</code>、<code>{GameID}_Math Document Description.md</code>＋<code>_EN.md</code>）全部齊備，與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。</li></ol></section><section class="panel" role="tabpanel" id="panel-flow" aria-labelledby="tab-flow" hidden><h1 id="slot-數學開發流程">Slot 數學開發流程</h1>
+<p>本文件定義新 Slot 專案的<strong>數學開發流程、製作順序、操作方式、階段產物與完成條件</strong>。</p>
+<p>實作欄位、命名、版本、Card System、Simulator、Demogame、Config 與報表格式等細節，統一依照本資料夾的各規範文件（總覽見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>）。本文件不重複定義實作規格；內容有差異時，以各規範文件為準。</p>
+<p>適用範圍：<code>Project/Slots/H0xx_遊戲名稱/</code> 下的新遊戲數學模型、既有模型改版，以及 RTP、Card System、Feature 或 Bet Mode 參數調整。</p>
+<h2 id="1-過往專案整理後的標準做法">1. 過往專案整理後的標準做法</h2>
+<p>過往專案可看到數種演進中的做法：</p>
+<ul><li>H013、H015、H019 使用 RTP Config、Simulator 與 Record 的基本流程。</li><li>H016、H028 已拆分基礎 <code>config.js</code> 與 RTP／Variant Config，並保留 <code>Versions/</code>，較符合目前標準。</li><li>H026 同時存在 92／94 與 A／B Variant，適合作為多模型組合的參考。</li><li>早期專案（H013～H027）曾使用 <code>xlsx_to_config.py</code>、<code>model_sync.py</code> 等轉檔腳本同步 Source 與程式資料；此做法已淘汰，Excel 與 Config 之間的轉換一律由 AI 執行，專案內不建立、不維護轉檔工具。</li></ul>
+<p>新專案採用以下統一原則：</p>
+<ol><li><code>game_rule.md</code> 定義玩法，數學 XLSX／<code>Source/</code> 定義正式參數。</li><li>Config 必須由 Source 轉出（轉換由 AI 執行，不建立轉檔工具），不直接手改轉出的參數。</li><li>Simulator 與 Demogame 使用同一份 Config。</li><li>先驗證 Card System Off 的自然機率，再驗證 Card System On。</li><li>每次調參都依「Source → 版本 → Config → Simulator → Record → 對帳」完整重跑。</li><li>舊專案若與目前命名、版本或報表格式不同，不直接複製舊格式；依現行規格建立。</li></ol>
+<h2 id="2-必要產出文件">2. 必要產出文件</h2>
+<p>每個專案必須產出下列文件；任一項缺漏，專案不得視為完成交付：</p>
+<div class="tbl-wrap"><table><thead><tr><th>產出</th><th>說明</th><th>依據規範</th></tr></thead><tbody><tr><td><code>game_rule.md</code></td><td>遊戲規則正式來源</td><td><a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a></td></tr><tr><td><code>game_help_draft.md</code> → <code>{GameID}_Help.xlsx</code></td><td>Help 先以 Markdown 草稿撰寫，再轉出 xlsx（置於 <code>文件/</code>）；兩者內容必須完全一致</td><td><a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a></td></tr><tr><td><code>game_description.md</code></td><td>模型參數使用方式說明</td><td><a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a></td></tr><tr><td><code>Source/H0xx1*.xlsx</code> → <code>文件/PARsheet/*.xlsx</code></td><td>完整數學模型為正式參數來源，另轉出對外提供的 PARsheet</td><td><a href="#" class="tab-link" data-tab="math">數學模型規範.md</a></td></tr><tr><td><code>config.js</code>、<code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code></td><td>Simulator 與 Demogame 共用的執行參數，由 Source 轉出</td><td><a href="#" class="tab-link" data-tab="sim">模擬程式規範.md</a></td></tr><tr><td><code>Simulator.py</code></td><td>模擬程式</td><td><a href="#" class="tab-link" data-tab="sim">模擬程式規範.md</a></td></tr><tr><td><code>index.html</code></td><td>Demogame</td><td><a href="#" class="tab-link" data-tab="demo">Demogame規範.md</a></td></tr><tr><td><code>數值報告.html</code></td><td>數值分析報告，依報告 skill 的完整格式產出</td><td>模擬程式規範／報告格式</td></tr><tr><td><code>{GameID}_Game Description.docx</code></td><td>Game Description。以既有遊戲文件為模板修改，內容依 Help（<code>{GameID}_Help.xlsx</code>／<code>game_help_draft.md</code>）填寫；完整版（內容同 Help，不刪減）置於 <code>文件/</code>，送驗版（移除送驗禁止項目）置於 <code>文件/{GameID}/</code></td><td><a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a></td></tr><tr><td><code>{GameID}_Math Document Description.md</code>＋<code>_EN.md</code></td><td>Math Document Description，針對數學文件（<code>Source/*.xlsx</code>）的說明：各工作表用途與程式讀取範圍、Parameter 參數、遊戲邏輯、卡片系統；置於 <code>文件/</code> 外層，送驗時複製進送驗批次；範本參考 <code>H026_彩罐熱舞 1000/文件/</code></td><td><a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a></td></tr></tbody></table></div>
+<ul><li>上表「→」的轉換（<code>game_help_draft.md</code> → <code>{GameID}_Help.xlsx</code>、數學模型 → PARsheet、XLSX → Config）一律由 AI 執行，專案內不建立、不維護任何 Excel↔Config 或 Excel↔文件的轉檔工具。</li><li>轉換結果必須可由來源重建；轉換錯誤時修正來源後重新轉出，不直接修補轉出結果。</li></ul>
+<h2 id="3-整體流程">3. 整體流程</h2>
+<pre><code>確認 Game Rule 與數學目標
+        ↓
+建立基礎數學模型
+        ↓
+建立 RTP／Variant／Card System 模型
+        ↓
+建立 Source 與 Mapping 說明
+        ↓
+由 AI 轉出並驗證 Config
+        ↓
+實作 Simulator
+        ↓
+小場次 Debug 與單局驗證
+        ↓
+Card System Off 自然機率驗證
+        ↓
+產出自然機率大場次報表（NB 10⁹ 局、BF 10⁸ 局）
+        ↓
+依報表調整卡片權重至目標遊戲調性
+        ↓
+Card System On／各 Mode／各 Profile 驗證
+        ↓
+調參循環與大場次正式模擬
+        ↓
+Max Win、Retry、分布與代表性單局驗證
+        ↓
+Simulator／Demogame 對帳
+        ↓
+完成必要產出文件（Help、Game Description、
+Math Document Description、PARsheet、數值報告）
+        ↓
+凍結版本、整理 Record、完成交付</code></pre>
+<h2 id="4-製作順序與階段關卡">4. 製作順序與階段關卡</h2>
+<p>不得因為某個程式可以先寫就跳過前置規則。上一階段的完成條件成立後，才進入下一階段。</p>
+<div class="tbl-wrap"><table><thead><tr><th class="n">順序</th><th>階段</th><th>主要工作</th><th>產出</th><th>進入下一階段的條件</th></tr></thead><tbody><tr><td class="n">1</td><td>開案與目標確認</td><td>確認 Game ID、盤面、判獎、Bet Mode、Feature、RTP 拆分、Link 資格、Hit Rate、Max Win、Profile、押注層級與 Variant；<strong>與使用者確認數學模型組合</strong>（預設 92A／92B／94A／94B 四版本，各含 Newbie／Oldhand 與對應押注區）</td><td>已確認的 <code>game_rule.md</code>、數學目標表</td><td>核心規則、計算口徑與模型組合無待確認項目</td></tr><tr><td class="n">2</td><td>基礎數學模型</td><td>建立 Symbol、Paytable、Reel／Weight、Table、Feature 流程與自然機率</td><td><code>Source/H0xx1.xlsx</code></td><td>自然機率流程可計算，理論上限已確認</td></tr><tr><td class="n">3</td><td>RTP／Variant 模型</td><td>建立 92／94、A／B、Card System 區間與權重</td><td><code>Source/H0xx1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code></td><td>每個正式組合都有目標與資料；不建立空白 Variant</td></tr><tr><td class="n">4</td><td>Mapping 與轉檔</td><td>定義 XLSX 到 Config 的來源、型別、欄位與驗證</td><td><code>xlsx_config_usage_mapping.md</code></td><td>Config 可重建，錯誤資料會被擋下</td></tr><tr><td class="n">5</td><td>Config 產生</td><td>由 AI 依 Source 轉出基礎與 RTP／Variant Config，核對版本與資料</td><td><code>config.js</code>、<code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code></td><td>Source、Config、版本逐項一致</td></tr><tr><td class="n">6</td><td>Simulator 實作</td><td>實作自然機率、Feature、Card System、批次、統計與報表</td><td><code>Simulator.py</code></td><td>固定 Seed 可重現，單執行緒 Debug 正確</td></tr><tr><td class="n">7</td><td>小場次驗證</td><td>強制或指定 RNG 測試判獎、Feature、Retry、Max Win 與例外</td><td>Debug Trace、測試紀錄</td><td>代表性案例逐項符合 Game Rule</td></tr><tr><td class="n">8</td><td>自然機率基準</td><td>Card System Off 跑所有自然機率 Bet Mode，最終以大場次產出正式報表（NB 10⁹ 局、BF 10⁸ 局）</td><td><code>Record/*card-off*.xlsx</code> 或規格化檔名</td><td>RTP Breakdown、Hit Rate、Feature 與分布合理，大場次報表已產出</td></tr><tr><td class="n">9</td><td>卡片權重調性校準</td><td>依自然機率大場次報表分配各得分區間的卡片權重，使分布、RTP 拆分與 FG 週期符合目標遊戲調性</td><td>更新後的 <code>Multiplier_Weight</code>（RTP／Variant XLSX）與 Config</td><td>卡片權重已依報表校準完成，目標調性明確可驗證</td></tr><tr><td class="n">10</td><td>Card System 驗證</td><td>以校準後的數學調性，分 RTP、Variant、Profile、Oldhand 小／中／大 Bet、Bet Mode 跑 Card System On</td><td><code>Record/*card.xlsx</code></td><td>權重占比、Link 資格與倍率上限正確，Retry Limit Exceeded 通過</td></tr><tr><td class="n">11</td><td>調參與正式模擬</td><td>依差距修改 Source，重新轉檔、模擬、比較與升版</td><td>正式大場次 Record</td><td>所有支援組合符合目標與統計誤差要求</td></tr><tr><td class="n">12</td><td>極值與單局對帳</td><td>驗證 Max Win、封頂、理論可達路徑及代表性單局</td><td>極值紀錄、對帳案例</td><td>Config、Simulator、Demogame 結果一致</td></tr><tr><td class="n">13</td><td>版本凍結與交付</td><td>清理暫存、保存版本、報表、來源與變更說明，確認第 2 節必要產出文件齊備</td><td>完整專案目錄</td><td>本文件第 9 節全部通過</td></tr></tbody></table></div>
+<p>各階段的實作要求請查閱：</p>
+<ul><li>數學文件、模型命名、版本與 RTP：<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a></li><li>Card System：<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a></li><li>Simulator、BATCH_RUNS、Console 與 Record：<a href="#" class="tab-link" data-tab="sim">模擬程式規範.md</a></li><li>Demogame 與單局對帳：<a href="#" class="tab-link" data-tab="demo">Demogame規範.md</a></li><li>Config、轉檔與版本歷史：<a href="#" class="tab-link" data-tab="sim">模擬程式規範.md</a></li><li>Game Rule、Help、Game Description、Game List：<a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a></li><li>送驗文件（Game Description DOCX、Math Document Description、數學模型送驗版）：<a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a></li></ul>
+<h2 id="5-各階段操作方式">5. 各階段操作方式</h2>
+<h3 id="51-開案與數學目標確認">5.1 開案與數學目標確認</h3>
+<ol><li>建立 <code>H0xx_遊戲名稱/</code> 專案資料夾。</li><li>讀取並確認 <code>game_rule.md</code>。</li><li><strong>與使用者確認本專案的數學模型組合</strong>——每款遊戲的數學模型都不一樣，不得逕自沿用他款設定。未特別說明時，預設組合為：<ul><li>A／B 兩個 Variant × 92／94 兩個 RTP，乘開共 <strong>4 個版本</strong>（92A、92B、94A、94B）。</li><li>每個版本都有 Newbie／Oldhand 兩種 Profile。</li><li>各版本依其支援內容有對應的押注區（Oldhand 小／中／大 Bet 層級）。</li></ul></li><li>列出所有正式支援組合：RTP、Variant、Profile、Oldhand 小／中／大 Bet、NB／EB 或 BF／SF 模式類別、Bet Mode、Card System Off／On。</li><li>為每個組合定義 Link／Bonus Game／Game RTP、Total RTP、Link 資格、Hit Rate、Feature Frequency、BG／FG Max Multiplier 與其他遊戲專屬指標。</li><li>將未決定的判獎順序、倍率分母、Feature 上限與例外退回確認；未確認前不製作正式模型。</li></ol>
+<h3 id="52-建立基礎數學模型">5.2 建立基礎數學模型</h3>
+<ol><li>先完成 Base Game，再依狀態順序完成 Feature。</li><li>建立 Symbol、Paytable、Reel Strip／Weight、Table 與 Bet Mode。</li><li>建立 BG、FG、Cascade、Multiplier、Retrigger、Jackpot 等流程。</li><li>計算 RTP Breakdown 與理論 Max Win，不只計算 Total RTP。</li><li>建立基礎數學 XLSX，版本依規格使用 1 碼。</li></ol>
+<h3 id="53-建立-rtpvariant-與-card-system">5.3 建立 RTP／Variant 與 Card System</h3>
+<ol><li>只建立 5.1 與使用者確認過的 92／94、A／B 組合（未特別說明時為 92A、92B、94A、94B 四版本，各含 Newbie／Oldhand 與對應押注區）。</li><li>A／B 表示數學 Variant，不表示 Newbie／Oldhand。</li><li>依 Profile、Oldhand 小／中／大 Bet 與 Bet Mode 建立 BG／FG 卡片區間及權重；NB／EB 以實際模式押注、BF／SF 以 Feature 基礎押注選擇層級。</li><li>確認每張正權重卡片的區間可達，並定義 Retry 行為。</li><li>建立 RTP／Variant XLSX，版本依規格使用四段格式。</li></ol>
+<h3 id="54-轉檔與-config-驗證">5.4 轉檔與 Config 驗證</h3>
+<ol><li>在 <code>xlsx_config_usage_mapping.md</code> 記錄每項 Config 資料的來源。</li><li>由 AI 依 Source 與 Mapping 轉出 Config；專案內不建立、不維護 Excel↔Config 轉檔工具。</li><li>執行欄位、型別、陣列長度、ID、Weight、Min／Max、版本與模式驗證。</li><li>比較轉檔前後資料，確認 Config 可由 Source 重建且沒有非預期差異。</li><li>轉檔錯誤時修正 Source 或 Mapping 後重新轉出，不直接修改 Config 大型陣列。</li></ol>
+<h3 id="55-simulator-開發與-debug">5.5 Simulator 開發與 Debug</h3>
+<ol><li>先完成自然機率核心，再加入 Card System 篩選與 Retry。</li><li>讓 Simulator 直接讀取正式 Config，不另寫一份參數。</li><li>建立固定 Seed、單執行緒與逐局 Trace 模式。</li><li>建立強制／指定案例，驗證無獎、一般獎、Wild、Scatter、Feature、Retrigger、倍率與封頂。</li><li>小場次確認正確後，再加入 Numba、多執行緒、BATCH_RUNS 與 Excel 報表。</li></ol>
+<h3 id="56-模擬順序">5.6 模擬順序</h3>
+<p>模擬必須依下列順序執行：</p>
+<ol><li>小場次、Card System Off：驗證流程與報表。</li><li>中場次、Card System Off：確認自然機率 RTP 與分布。</li><li>大場次、Card System Off：以 NB 10⁹ 局（BF 為 10⁸ 局）產出自然機率正式報表。</li><li>卡片權重調性校準：依上一步報表分配各得分區間的卡片權重，使分布、RTP 拆分與 FG 週期符合目標遊戲調性；完成後才進入 Card System On。</li><li>小場次、Card System On：確認抽卡、Profile、Oldhand 押注層級、Link 資格、倍率上限、Mode 與 Retry。</li><li>中場次、Card System On：調整區間、權重與目標 RTP。</li><li>所有正式組合的大場次模擬。</li><li>Max Win、低機率 Feature 與 Retry 邊界的專項驗證。</li></ol>
+<p>最低批次矩陣：</p>
+<div class="tbl-wrap"><table><thead><tr><th>類型</th><th>RTP／Variant</th><th>Profile</th><th><code>bet_tier_amount</code></th><th>Bet Mode</th><th>Card System</th></tr></thead><tbody><tr><td>自然機率基準</td><td>基礎 Config</td><td>不適用</td><td>各門檻所需代表值</td><td>每個支援 Mode</td><td>Off</td></tr><tr><td>Newbie</td><td>每個正式 RTP／Variant</td><td>Newbie</td><td>不分層級，但仍記錄判定金額</td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr><tr><td>Oldhand 小 Bet</td><td>每個正式 <code>94x</code>／Variant</td><td>Oldhand</td><td><code>&lt; $2</code>，至少驗證 <code>$1.99</code></td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr><tr><td>Oldhand 中 Bet</td><td>每個正式 <code>92x</code>／Variant</td><td>Oldhand</td><td><code>$2～$100</code>，至少驗證 <code>$2</code>、<code>$100</code></td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr><tr><td>Oldhand 大 Bet</td><td>每個正式 <code>92x</code>／Variant</td><td>Oldhand</td><td><code>&gt; $100</code>，至少驗證 <code>$100.01</code></td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr></tbody></table></div>
+<ul><li>NB／EB 的 <code>bet_tier_amount</code> 使用實際模式押注金額；BF／SF 使用 Feature 購買價格除以 Feature Price 倍數後的基礎押注。</li><li>若遊戲支援 EB 2x，至少驗證 base bet <code>$1</code> 會以 <code>$2</code> 判為中 Bet。</li><li>若遊戲支援 BF 75x，至少驗證購買 <code>$75</code> 判為小 Bet、購買 <code>$150</code> 判為中 Bet。</li></ul>
+<p>不存在的 Mode、Profile 或 Variant 不建立空批次，也不以全零結果冒充驗證完成。</p>
+<h3 id="57-調參循環">5.7 調參循環</h3>
+<p>每一次調參都執行完整循環：</p>
+<pre><code>確認差距與原因
+    ↓
+修改對應 Source XLSX
+    ↓
+依異動內容更新版本
+    ↓
+重新產生 Config
+    ↓
+執行轉檔與資料驗證
+    ↓
+先跑小場次確認流程
+    ↓
+再跑中／大場次確認統計
+    ↓
+保存新 Record 並與前版比較</code></pre>
+<p>調參時依序判斷：</p>
+<ol><li>先確認程式與統計口徑是否錯誤。</li><li>再檢查自然機率的 Paytable、Reel、Table、Feature。</li><li>最後才調整 Card System 區間與權重。</li><li>不得只為讓 Total RTP 接近目標而忽略 RTP Breakdown、Hit Rate、Feature Frequency、分布或 Retry。</li></ol>
+<h3 id="58-對帳與交付">5.8 對帳與交付</h3>
+<ol><li>選定可重現的代表性 RNG／Seed。</li><li>逐項核對 Config、Simulator 與 Demogame 的盤面、判獎、Feature、倍率、Total Win、Coin In 與 Retry。</li><li>完成所有正式組合的最新 Record。</li><li>將正式 Config 與歷史版本關係寫入 <code>Versions/</code> 與 manifest。</li><li>確認第 2 節必要產出文件全部齊備且為同一正式版本。</li><li>清除暫存檔、舊測試輸出及不屬於正式交付的檔案。</li><li>依第 9 節完成最終驗收。</li></ol>
+<h2 id="6-新專案建議目錄">6. 新專案建議目錄</h2>
+<pre><code>Project/Slots/H0xx_遊戲名稱/
+├─ game_rule.md
+├─ game_help_draft.md
+├─ game_description.md
+├─ Simulator.py
+├─ index.html
+├─ config.js
+├─ config_92A.js
+├─ config_94A.js
+├─ Source/
+│  ├─ H0xx1.xlsx
+│  ├─ H0xx192A.xlsx
+│  ├─ H0xx194A.xlsx
+│  └─ xlsx_config_usage_mapping.md
+├─ 文件/
+│  ├─ &lt;GameID&gt;_Help.xlsx
+│  ├─ &lt;GameID&gt;_Game Description.docx           ← 完整版（內容同 Help，不刪減）
+│  ├─ &lt;GameID&gt;_Math Document Description.md
+│  ├─ &lt;GameID&gt;_Math Document Description_EN.md
+│  ├─ PARsheet/                 ← 專案的正式 PARsheet
+│  │  └─ H0xx19x.xlsx
+│  └─ &lt;GameID&gt;/                 ← 送驗文件包
+│     ├─ &lt;GameID&gt;_Game Description.docx        ← 送驗版（移除送驗禁止項目）
+│     ├─ PARsheet/             ← 數學模型送驗版（移除送驗禁止項目）
+│     │  └─ H0xx19x.xlsx
+│     └─ Simulator/
+│        ├─ Simulator.py
+│        └─ config_9x.js
+├─ 其他/
+│  └─ 數值報告.html
+├─ Record/
+└─ Versions/
+   ├─ version_manifest.js
+   └─ version_manifest.json</code></pre>
+<ul><li>A／B、92／94、Buy／Super Feature 只依產品實際需求增減。</li><li>目錄中的檔名、版本及報表命名必須符合現行規格，不以舊遊戲的歷史命名為準。</li><li><code>Source/</code> 內不放任何轉檔腳本；Excel↔Config 轉換由 AI 執行。</li></ul>
+<h2 id="7-異動時的重跑範圍">7. 異動時的重跑範圍</h2>
+<div class="tbl-wrap"><table><thead><tr><th>異動</th><th>必做流程</th></tr></thead><tbody><tr><td>Paytable、Reel、Table、Feature、Bet Mode、判獎</td><td>更新基礎 XLSX與版本 → 同步受影響 RTP／Variant → 轉 Config → 全部受影響批次重跑 → Demogame 對帳</td></tr><tr><td>Card System 區間或權重</td><td>更新受影響 RTP／Variant XLSX 第 2 碼 → 轉 Config → Card System On 批次重跑 → 檢查占比與 Retry</td></tr><tr><td>SCR</td><td>更新受影響 RTP／Variant XLSX 第 3 碼 → 轉 Config → 重跑 SCR 相關批次</td></tr><tr><td>文件、說明或排版</td><td>依規格更新第 4 碼；若不影響執行結果，不沿用舊版號產生新正式報表</td></tr><tr><td>Simulator 數學邏輯</td><td>修正程式 → 固定 Seed 回歸 → 小場次 → 所有受影響正式批次 → Demogame 對帳</td></tr><tr><td>報表或顯示邏輯</td><td>驗證統計來源未變 → 核對 Console 與 Excel → 依影響範圍重產報表</td></tr></tbody></table></div>
+<h2 id="8-禁止事項">8. 禁止事項</h2>
+<ul><li>未確認 Game Rule 就自行補猜核心數學規則。</li><li>直接修改由 XLSX 產生的 Config 參數來避開轉檔。</li><li>建立或保留 Excel↔Config、Config↔Excel 的轉檔工具；轉換一律由 AI 執行。</li><li>Simulator、Demogame 與 Config 各維護一套參數。</li><li>只跑 Card System On，不保留自然機率基準。</li><li>只驗證 Total RTP，不驗證 RTP Breakdown、分布、Feature 與 Retry。</li><li>Card System Retry 時重抽目標卡、重複扣款或污染場次統計。</li><li>未升版就覆寫正式 XLSX、Config 或 Record。</li><li>建立產品未使用的空白 B Variant、Mode 或 Profile。</li><li>直接複製舊專案的不相容命名、版本、報表欄位或遊戲專屬統計。</li><li>用全零欄位表示不存在或尚未驗證的功能。</li></ul>
+<h2 id="9-數學完成條件">9. 數學完成條件</h2>
+<p>以下條件全部成立，數學開發才算完成：</p>
+<ul><li class="check"><span class="cb">☐</span> Game Rule 的核心流程、判獎、倍率、Feature 與例外均已確認。</li><li class="check"><span class="cb">☐</span> 每個正式 RTP、Variant、Profile、Oldhand 小／中／大 Bet 與 Bet Mode 都有明確目標。</li><li class="check"><span class="cb">☐</span> 每個付費遊戲組合均驗證 Link／Bonus Game／Game RTP、Total RTP、Link 資格及 BG／FG Max Multiplier。</li><li class="check"><span class="cb">☐</span> BF／SF 分開驗證 Newbie、Oldhand 小 Bet、Oldhand 中 Bet 與 Oldhand 大 Bet，Total RTP 均為 96.50%。</li><li class="check"><span class="cb">☐</span> 基礎與 RTP／Variant XLSX 的命名及版本正確。</li><li class="check"><span class="cb">☐</span> Config 可由 Source 完整重建，Mapping 可追溯。</li><li class="check"><span class="cb">☐</span> Source、Config、Simulator、Demogame 與 Record 使用同一正式版本。</li><li class="check"><span class="cb">☐</span> 固定 Seed 可重現相同結果。</li><li class="check"><span class="cb">☐</span> Card System Off 的自然機率基準已完成，且大場次正式報表為 NB 10⁹ 局（BF 10⁸ 局）。</li><li class="check"><span class="cb">☐</span> 卡片權重已依自然機率大場次報表校準至目標遊戲調性。</li><li class="check"><span class="cb">☐</span> Card System On 的所有正式組合已完成。</li><li class="check"><span class="cb">☐</span> RTP、RTP Breakdown、Hit Rate、Feature Frequency 與分布符合目標。</li><li class="check"><span class="cb">☐</span> Card 權重占比合理，Retry Limit Exceeded 為零或已有核准處理方式。</li><li class="check"><span class="cb">☐</span> Max Win、封頂及理論可達路徑已驗證。</li><li class="check"><span class="cb">☐</span> Console 與 Record 報表內容及統計口徑一致。</li><li class="check"><span class="cb">☐</span> 代表性單局已完成 Config、Simulator、Demogame 三方對帳。</li><li class="check"><span class="cb">☐</span> 最新正式 Record 已保存，歷史版本未被覆寫。</li><li class="check"><span class="cb">☐</span> 第 2 節必要產出文件全部齊備：<code>game_rule.md</code>、<code>game_help_draft.md</code>／<code>{GameID}_Help.xlsx</code>、<code>game_description.md</code>、數學模型／PARsheet、<code>config.js</code>、<code>Simulator.py</code>、<code>index.html</code>、<code>數值報告.html</code>、<code>{GameID}_Game Description.docx</code>、<code>{GameID}_Math Document Description.md</code>＋<code>_EN.md</code>。</li><li class="check"><span class="cb">☐</span> 暫存檔、快取與測試輸出未列入正式交付。</li></ul>
+<p>完成上述清單後，再依 <a href="#" class="tab-link" data-tab="overview" data-anchor="完成條件">_README.md</a> 的「完成條件」進行最終確認。</p></section><section class="panel" role="tabpanel" id="panel-math" aria-labelledby="tab-math" hidden><h1 id="數學模型規範">數學模型規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>。</p>
+<p>內容涵蓋：數學模型（第 1 章）、Card System（第 2 章）、PARsheet。</p>
+<h2 id="數學模型">數學模型</h2>
+<p>數學模型是包含公式、計算過程、輪帶、權重、參數與驗證依據的完整文件，也是產出 PARsheet 與 Config 的數學來源。</p>
+<h3 id="11-必要內容">1.1 必要內容</h3>
+<p>模型開始實作前，數學文件至少要定義：</p>
+<ul><li>Game ID、遊戲名稱、盤面尺寸與 Lines／Ways／Cluster 等得分方式。</li><li>Symbol、Paytable、Wild／Scatter 規則與判獎順序。</li><li>BG、FG、Cascade、Multiplier、Retrigger、Jackpot 等流程。</li><li>Normal Bet、Extra Bet、Buy Feature、Super Feature 的成本與差異。</li><li>各 RTP 家族、Variant、Player Profile 與押注層級的 Link／Bonus Game／Game RTP 拆分及 Total RTP。</li><li>Oldhand 必須依小 Bet／中 Bet／大 Bet 分別定義倍率權重。</li><li>Feature Trigger Rate、Hit Rate、Max Win／Max Multiplier 與上限。</li><li>Card System 的區間、權重、倍率分母、Retry 與失敗處理。</li><li>同局同時符合多項條件時的處理優先順序。</li></ul>
+<p>計算口徑必須明確區分：</p>
+<pre><code>RTP = Total Win ÷ 實際 Total Bet
+卡片判定倍率 = 指定結果得分 ÷ card_system_coin_in
+Max Multiplier = Round Total Win ÷ 該模式定義的基準成本</code></pre>
+<h3 id="12-模型命名">1.2 模型命名</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>格式</th><th>範例</th></tr></thead><tbody><tr><td>遊戲 ID</td><td><code>H&lt;三位數字&gt;</code></td><td><code>H028</code></td></tr><tr><td>基礎數學 XLSX</td><td><code>H&lt;遊戲編號&gt;1.xlsx</code></td><td><code>H0161.xlsx</code></td></tr><tr><td>RTP／Variant 數學 XLSX</td><td><code>H&lt;遊戲編號&gt;1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code></td><td><code>H016192A.xlsx</code></td></tr></tbody></table></div>
+<ul><li><code>92</code>／<code>94</code> 表示 RTP 家族。</li><li><code>A</code>／<code>B</code> 表示同一 RTP 家族下的數學 Variant，不代表 Newbie／Oldhand。</li><li>沒有 B 版時只建立 A 版，不得建立內容相同的空白 B 版。</li></ul>
+<h4 id="121-數學模型工作表命名與規則">1.2.1 數學模型工作表命名與規則</h4>
+<p>數學模型 XLSX 的共用工作表使用下列名稱與用途：</p>
+<div class="tbl-wrap"><table><thead><tr><th>工作表名稱</th><th>用途與規則</th></tr></thead><tbody><tr><td><code>Overview</code></td><td>遊戲的基礎設定。</td></tr><tr><td><code>Gaem Description</code></td><td>說明遊戲模型參數的使用方法。工作表名稱固定使用此拼法，不得自行改為其他名稱。</td></tr><tr><td><code>Parameter</code></td><td>遊戲參數。</td></tr><tr><td><code>BG_Symbol</code></td><td>Base Game 使用的第一張輪帶表。</td></tr><tr><td><code>BG_Symbol (2)</code></td><td>Base Game 使用的第二張輪帶表；只有一張 BG 輪帶表時不得建立。</td></tr><tr><td><code>BG_Symbol (3)</code></td><td>Base Game 使用的第三張輪帶表；只有一或兩張 BG 輪帶表時不得建立。</td></tr><tr><td><code>BF_Symbol</code></td><td>Buy Feature 入口使用的觸發輪帶，只能用來觸發 FG；該入口盤面不得產生任何 BG 得分。</td></tr></tbody></table></div>
+<ul><li>BG 有多張輪帶表時，第一張固定命名為 <code>BG_Symbol</code>，第二張起依序在名稱後加上空格與括號編號，例如 <code>BG_Symbol (2)</code>、<code>BG_Symbol (3)</code>；不得使用 <code>BG_Symbol2</code>、<code>BG_Symbol_2</code> 或其他格式。</li><li><code>BF_Symbol</code> 必須與一般 BG 輪帶分開定義。其符號配置與停輪結果必須確保 Buy Feature 入口可觸發 FG，且觸發盤面不成立任何 Line／Ways／Cluster／Pay Anywhere 或其他 BG 派彩。</li><li>若遊戲沒有 Buy Feature，則不得建立空白或未使用的 <code>BF_Symbol</code> 工作表。</li><li>新增其他用途的輪帶工作表時，必須在 <code>Gaem Description</code> 說明選表條件、使用模式與限制，並同步更新 XLSX 轉 Config mapping。</li></ul>
+<h3 id="13-版本規則">1.3 版本規則</h3>
+<p>基礎數學文件與 RTP／Variant 數學文件使用不同的版本格式：</p>
+<div class="tbl-wrap"><table><thead><tr><th>文件</th><th>版本格式</th><th>範例</th></tr></thead><tbody><tr><td><code>H&lt;遊戲編號&gt;1.xlsx</code></td><td>1 碼數字版本</td><td>競品模型初始為 <code>0</code>；非競品模型初始為 <code>1</code></td></tr><tr><td><code>H&lt;遊戲編號&gt;1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code></td><td>4 碼數字版本</td><td><code>H016192A.xlsx</code>：<code>1.0.0.0</code></td></tr></tbody></table></div>
+<p>RTP／Variant 數學文件的四碼版本格式為：</p>
+<pre><code>遊戲參數.卡片權重.SCR.其他文件</code></pre>
+<p>例如：<code>H016192A.xlsx</code> 的版本為 <code>1.0.0.0</code> 時，第 1 碼 <code>1</code> 必須與 <code>H0161.xlsx</code> 的版本 <code>1</code> 相同。</p>
+<div class="tbl-wrap"><table><thead><tr><th>段位</th><th>變更時機</th></tr></thead><tbody><tr><td>第 1 碼：基礎數學版本</td><td>必須對應 <code>H&lt;遊戲編號&gt;1.xlsx</code> 的 1 碼版本；基礎輪帶、Paytable、Feature、Bet Mode、判獎等內容變更時更新。</td></tr><tr><td>第 2 碼：卡片權重</td><td>Newbie／Oldhand、BG／FG／Buy／Super Feature 的卡片區間或權重。</td></tr><tr><td>第 3 碼：SCR</td><td>SCR 設定、內容或結果。</td></tr><tr><td>第 4 碼：其他文件</td><td>不影響前三類的規則、Help、說明或排版。</td></tr></tbody></table></div>
+<ul><li><code>H&lt;遊戲編號&gt;1.xlsx</code> 的版本只能填 1 碼，不得填成四碼。</li><li>以競品遊戲資料、競品 Response、競品輪帶或競品數學模型為主要初始來源的模型，基礎數學初始版本固定為 <code>0</code>。</li><li>非競品衍生、由公司自行設計或沒有以競品模型作為主要初始來源的模型，基礎數學初始版本固定為 <code>1</code>。</li><li>是否屬於競品模型必須記錄於數學文件、Config mapping 或其他可追溯文件，不得只依檔名或人員記憶判斷。</li><li>初始版本確立後，後續正式異動依本節規則遞增；不得因為參考來源分類改變而把既有正式版本重設為 <code>0</code> 或 <code>1</code>。</li><li>所有 <code>H&lt;遊戲編號&gt;1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code> 的第 1 碼，都必須與同一遊戲的 <code>H&lt;遊戲編號&gt;1.xlsx</code> 版本相同。</li><li>基礎數學版本遞增時，所有受影響的 RTP／Variant 文件同步更新第 1 碼，並將第 2～4 碼歸零。</li><li>第 2 碼遞增後，第 3～4 碼歸零；第 3 碼遞增後，第 4 碼歸零。</li><li>同一次修改涉及多種類型時，只遞增順位最高的一碼，並將後續碼歸零。</li><li>依實際異動內容判斷版本，不得只依檔名判斷。</li><li><code>config.js</code> 的 <code>excel_version</code> 必須與基礎數學 XLSX 的 1 碼版本完全一致。</li><li><code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code> 的 <code>excel_version</code> 必須與對應 RTP／Variant XLSX 的 4 碼版本完全一致。</li><li>92／94 或 A／B 中所有受影響的模型都要更新，不得只改其中一份。</li><li>已封存版本不得覆寫；需要修正時建立新版本。</li></ul>
+<h4 id="131-xlsx-異動與版本同步">1.3.1 XLSX 異動與版本同步</h4>
+<p>只要 XLSX 的正式內容有更新，就必須在同一次修改中更新對應版本；不得先改內容、之後才補版本。</p>
+<div class="tbl-wrap"><table><thead><tr><th>異動內容</th><th>必須更新的版本</th></tr></thead><tbody><tr><td>基礎數學 XLSX，例如 <code>H0161.xlsx</code></td><td>遞增該檔案的 1 碼版本；所有引用此次基礎異動的 RTP／Variant XLSX 同步更新第 1 碼，並將第 2～4 碼歸零。</td></tr><tr><td>RTP／Variant 的遊戲參數需要更新第 1 碼</td><td>先遞增基礎數學 XLSX 的 1 碼版本，再同步更新所有受影響 RTP／Variant XLSX 的第 1 碼，並將第 2～4 碼歸零。</td></tr><tr><td>Card System 區間或權重</td><td>更新實際異動之 RTP／Variant XLSX 的第 2 碼。</td></tr><tr><td>SCR</td><td>更新實際異動之 RTP／Variant XLSX 的第 3 碼。</td></tr><tr><td>只影響文件、說明或排版</td><td>更新實際異動之 RTP／Variant XLSX 的第 4 碼。</td></tr></tbody></table></div>
+<ul><li>修改哪一份 XLSX，就更新哪一份 XLSX 的版本；未受影響的 XLSX 不得為了統一數字而無條件升版。</li><li>同一項異動同時影響 92／94 或 A／B 時，每一份受影響的 XLSX 都要依相同規則更新。</li><li>同一次異動涉及多個版本段位時，依順位最高的段位遞增，後續段位依第 1.3 節規則歸零。</li><li>XLSX 版本更新後，必須重新產生其對應 Config，並同步更新 Config 的 <code>excel_version</code>。</li><li>Simulator 與 Demogame 必須載入更新後的 Config；新產生的報表必須使用更新後的版本，不得沿用舊版號。</li></ul>
+<h3 id="14-rtp-與-bet-mode">1.4 RTP 與 Bet Mode</h3>
+<p>RTP 配置使用 <code>Link + Bonus Game + Game = Total RTP</code>。NB／EB 與 BF／SF 必須分開設定。</p>
+<h4 id="141-nbeb-rtp-配置">1.4.1 NB／EB RTP 配置</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Player Profile</th><th>押注層級</th><th class="n">押注層級判定金額</th><th class="n">Link RTP</th><th class="n">Bonus Game RTP</th><th class="n">Game RTP</th><th class="n">Total RTP</th><th>Config 家族</th></tr></thead><tbody><tr><td>Newbie</td><td>不分層級</td><td class="n">全部</td><td class="n">0.00%</td><td class="n">2.00%</td><td class="n">93.00%</td><td class="n">95.00%</td><td>Newbie 共用</td></tr><tr><td>Oldhand</td><td>小 Bet</td><td class="n"><code>&lt; $2</code></td><td class="n">0.00%</td><td class="n">2.00%</td><td class="n">94.00%</td><td class="n">96.00%</td><td><code>94x</code></td></tr><tr><td>Oldhand</td><td>中 Bet</td><td class="n"><code>&gt;= $2</code> 且 <code>&lt;= $100</code></td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">96.00%</td><td><code>92x</code></td></tr><tr><td>Oldhand</td><td>大 Bet</td><td class="n"><code>&gt; $100</code></td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">96.00%</td><td><code>92x</code></td></tr></tbody></table></div>
+<ul><li><code>$2</code> 屬於中 Bet；<code>$100</code> 屬於中 Bet；只有大於 <code>$100</code> 才屬於大 Bet。</li><li><code>92</code>／<code>94</code> 表示 Game RTP 配置家族，不等於加總 Link 與 Bonus Game 後的 Total RTP。</li><li><code>x</code> 代表 A、B 等 Variant；Variant 不改變 Profile 或押注層級定義。</li><li>每個遊戲的數學文件必須定義哪些派彩歸入 Link、Bonus Game、Game，三者不可重複計算。</li><li>產品顯示值可以四捨五入，模型計算與驗證必須使用完整精度。</li><li>各 Bet Mode 的 RTP 分母使用玩家在該模式的實際成本。</li><li>Scatter Pay、購買進場盤、FG、Retrigger、Jackpot 是否計入 Total Win，必須與遊戲規則及 XLSX 公式一致。</li><li>Card System Off／On、Newbie、Oldhand 小／中／大 Bet 及所有支援的 Bet Mode 必須分開驗證。</li></ul>
+<h4 id="142-bfsf-rtp-配置">1.4.2 BF／SF RTP 配置</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Player Profile</th><th>押注層級</th><th class="n">押注層級判定金額</th><th class="n">Link RTP</th><th class="n">Bonus Game RTP</th><th class="n">Game RTP</th><th class="n">Total RTP</th></tr></thead><tbody><tr><td>Newbie</td><td>不分層級</td><td class="n">全部</td><td class="n">0.00%</td><td class="n">4.00%</td><td class="n">92.50%</td><td class="n">96.50%</td></tr><tr><td>Oldhand</td><td>小 Bet</td><td class="n"><code>&lt; $2</code></td><td class="n">0.00%</td><td class="n">4.00%</td><td class="n">92.50%</td><td class="n">96.50%</td></tr><tr><td>Oldhand</td><td>中 Bet</td><td class="n"><code>&gt;= $2</code> 且 <code>&lt;= $100</code></td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.50%</td><td class="n">96.50%</td></tr><tr><td>Oldhand</td><td>大 Bet</td><td class="n"><code>&gt; $100</code></td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.50%</td><td class="n">96.50%</td></tr></tbody></table></div>
+<ul><li>BF／SF 的 92.50% 是 Game RTP 分項，不是 Total RTP；Total RTP 固定為 96.50%。</li><li>Newbie 與 Oldhand 小 Bet 使用相同 RTP 拆分，但仍是不同 Player Profile，必須保留各自權重及模擬結果。</li><li>Oldhand 中 Bet 與大 Bet 的 RTP 拆分相同，但倍率上限與倍率權重仍分開設定。</li></ul>
+<h4 id="143-押注模式分類與層級判定">1.4.3 押注模式分類與層級判定</h4>
+<p>押注模式分成兩大類，先計算 <code>bet_tier_amount</code>，再依 <code>&lt; $2</code>、<code>&gt;= $2 且 &lt;= $100</code>、<code>&gt; $100</code> 判斷 Oldhand 的小／中／大 Bet：</p>
+<div class="tbl-wrap"><table><thead><tr><th>模式類別</th><th>Bet Mode</th><th><code>bet_tier_amount</code> 判定基準</th><th>計算方式</th></tr></thead><tbody><tr><td>一般押注類</td><td>Normal Bet／Extra Bet（NB／EB）</td><td>該模式實際押注金額</td><td><code>base_bet × mode_cost_multiplier</code></td></tr><tr><td>Feature Buy 類</td><td>Buy Feature／Super Feature（BF／SF）</td><td>Feature 的基礎押注</td><td><code>feature_purchase_amount ÷ feature_price_multiplier</code></td></tr></tbody></table></div>
+<ul><li>NB／EB 使用實際扣款的模式押注金額判斷，不使用未乘 Mode 倍數的原始 base bet。</li><li>BF／SF 使用購買價格反推的基礎押注判斷，不直接用 Feature 購買總價判斷。</li><li>H026 EB 為 2x：基礎押注 <code>$1</code> 時，實際押注為 <code>$2</code>，所以屬於中 Bet 並可拉 Link。</li><li>H026 BF 為 75x：購買 <code>$75</code> 時，基礎押注為 <code>$1</code>，所以屬於小 Bet 且不可拉 Link；購買 <code>$150</code> 時，基礎押注為 <code>$2</code>，所以屬於中 Bet 並可拉 Link。</li><li><code>bet_tier_amount</code> 必須由 Config 的模式成本／Feature 價格倍率計算，不得在 Runtime 寫死 2x、75x 或其他個別遊戲數值。</li></ul>
+<h4 id="144-玩家階段與倍率上限">1.4.4 玩家階段與倍率上限</h4>
+<div class="tbl-wrap"><table><thead><tr><th>Player Profile</th><th>押注層級</th><th class="n">BG Max Multiplier</th><th class="n">FG Max Multiplier</th></tr></thead><tbody><tr><td>Newbie</td><td>不分層級</td><td class="n"><code>30x</code></td><td class="n"><code>120x</code></td></tr><tr><td>Oldhand</td><td>小 Bet</td><td class="n">依遊戲規格</td><td class="n"><code>20000x</code></td></tr><tr><td>Oldhand</td><td>中 Bet</td><td class="n">依遊戲規格</td><td class="n"><code>20000x</code></td></tr><tr><td>Oldhand</td><td>大 Bet</td><td class="n">依遊戲規格</td><td class="n"><code>2000x</code></td></tr></tbody></table></div>
+<ul><li>上表為所有遊戲的預設硬上限；個別遊戲若產品上限更低，使用較低值並在數學文件明記。</li><li>Max Multiplier 的分母依第 1.1 節定義；等於上限時可接受，超過上限時依遊戲的 Max Win 流程截斷或重跑，且 XLSX、Config、Simulator 與 Demogame 必須一致。</li><li>Oldhand 小／中／大 Bet 必須使用三套獨立倍率權重，不得在 Runtime 對另一套權重臨時縮放、截斷或 fallback。</li><li>此分層適用於所有支援的 NB／EB／BF／SF；Oldhand 的每個模式都必須依第 1.4.3 節選擇小／中／大 Bet 權重。</li></ul>
+<h3 id="15-卡片倍率區間">1.5 卡片倍率區間</h3>
+<p>數學文件使用下列卡片倍率區間：</p>
+<pre><code>(-1, 0]
+(0, 1]
+(1, 2]
+(2, 3]
+(3, 4]
+(4, 5]
+(5, 6]
+(6, 7]
+(7, 8]
+(8, 9]
+(9, 10]
+(10, 15]
+(15, 20]
+(20, 25]
+(25, 30]
+(30, 35]
+(35, 40]
+(40, 45]
+(45, 50]
+(50, 60]
+(60, 70]
+(70, 80]
+(80, 90]
+(90, 100]
+(100, 120]
+(120, 140]
+(140, 160]
+(160, 180]
+(180, 200]
+(200, 250]
+(250, 300]
+(300, 350]
+(350, 400]
+(400, 450]
+(450, 500]
+(500, 550]
+(550, 600]
+(600, 650]
+(650, 700]
+(700, 750]
+(750, 800]
+(800, 850]
+(850, 900]
+(900, 950]
+(950, 1000]
+(1000, 2000]
+(2000, 3000]
+(3000, 4000]
+(4000, 5000]
+(5000, 6000]
+(6000, 7000]
+(7000, 8000]
+(8000, 9000]
+(9000, 10000]
+(10000, 20000]
+(20000, 30000]
+(30000, 40000]
+(40000, 50000]
+(50000, 60000]
+(60000, 70000]
+(70000, 80000]
+(80000, 90000]
+(90000, 100000]
+(100000, 9999999]</code></pre>
+<h3 id="16-開發前檢查">1.6 開發前檢查</h3>
+<ul><li class="check"><span class="cb">☐</span> 遊戲規則沒有待確認的判獎順序或倍率口徑。</li><li class="check"><span class="cb">☐</span> 每個支援的 Config、Bet Mode 與 Profile 都有明確目標。</li><li class="check"><span class="cb">☐</span> 基礎數學 XLSX 為 1 碼版本，且所有 RTP／Variant XLSX 的第 1 碼均與其一致。</li><li class="check"><span class="cb">☐</span> 新模型已記錄競品／非競品來源；競品初始版本為 <code>0</code>，非競品初始版本為 <code>1</code>。</li><li class="check"><span class="cb">☐</span> XLSX 公式、命名、版本與工作頁用途可追溯。</li><li class="check"><span class="cb">☐</span> 共用工作表名稱符合第 1.2.1 節；多張 BG 輪帶依序使用 <code>BG_Symbol</code>、<code>BG_Symbol (2)</code>、<code>BG_Symbol (3)</code>。</li><li class="check"><span class="cb">☐</span> <code>BF_Symbol</code> 只用於 Buy Feature 觸發 FG，且所有入口盤面均不產生 BG 得分。</li><li class="check"><span class="cb">☐</span> 最大獎與理論上限已計算，且未超出產品限制。</li><li class="check"><span class="cb">☐</span> 所有 Feature 的 Trigger、Retrigger、結束條件與上限已定義。</li><li class="check"><span class="cb">☐</span> Card System 是否啟用、使用哪些卡片及如何 Retry 已定義。</li></ul>
+<hr>
+<h2 id="card-system">Card System</h2>
+<h3 id="21-定位與限制">2.1 定位與限制</h3>
+<p>Card System 是結果篩選與分流機制，不是獨立玩法。遊戲先依原始輪帶、盤面、判獎與 Feature 流程產生結果，再依預先抽出的卡片條件決定接受或重跑。</p>
+<p>Card System 可控制倍率區間、要求觸發 Free Game、依 Newbie／Oldhand 與 Oldhand 小／中／大 Bet 改變結果分布，並依 Bet Mode 拆分 BG、FG、Buy Feature 與 Super Feature 的目標。</p>
+<p>Card System 不得直接修改輪帶、Paytable、判獎公式、符號功能、FG 局數或演出流程。重跑會改變最終結果分布與 RTP，因此必須以實際流程模擬，不能只用權重推算。</p>
+<h3 id="22-設定結構">2.2 設定結構</h3>
+<pre><code>card_system
+├─ enabled
+├─ retry_limit
+├─ newbie
+│  ├─ normal_bet    → weight_bg／weight_fg
+│  ├─ extra_bet     → weight_bg／weight_fg
+│  ├─ buy_feature   → weight_fg
+│  └─ super_feature → weight_fg
+└─ oldhand
+   ├─ normal_bet
+   │  ├─ small_bet  → weight_bg／weight_fg
+   │  ├─ medium_bet → weight_bg／weight_fg
+   │  └─ big_bet    → weight_bg／weight_fg
+   ├─ extra_bet
+   │  ├─ small_bet  → weight_bg／weight_fg
+   │  ├─ medium_bet → weight_bg／weight_fg
+   │  └─ big_bet    → weight_bg／weight_fg
+   ├─ buy_feature
+   │  ├─ small_bet  → weight_fg
+   │  ├─ medium_bet → weight_fg
+   │  └─ big_bet    → weight_fg
+   └─ super_feature
+      ├─ small_bet  → weight_fg
+      ├─ medium_bet → weight_fg
+      └─ big_bet    → weight_fg</code></pre>
+<ul><li><code>retry_limit</code> 正式預設為 <code>10000</code>。</li><li><code>weight &gt; 0</code> 才可抽中；<code>weight = 0</code> 只保留設定；權重不得小於 0。</li><li>每個啟用的 Profile／Mode 至少要有一張正權重卡片。</li><li>抽中率為該卡權重除以同組所有正權重總和。</li><li>Oldhand 依第 1.4.3 節算出的 <code>bet_tier_amount</code> 選擇 <code>small_bet</code>、<code>medium_bet</code> 或 <code>big_bet</code>；NB／EB 分別持有 BG／FG 權重，BF／SF 分別持有 Feature FG 權重。</li><li>啟用 Oldhand 的 Profile／Mode 必須同時提供小／中／大 Bet 三套權重，不得缺少其中一套或互相 fallback。</li><li>Profile 缺少某個 Mode 時，必須明定不套用或指定唯一 fallback，程式不得自行猜測。</li></ul>
+<h3 id="23-卡片判定">2.3 卡片判定</h3>
+<p><code>range</code> 卡使用 <code>(min, max]</code>：</p>
+<pre><code>結果倍率 &gt; min 且 結果倍率 &lt;= max</code></pre>
+<ul><li><code>(15, 20]</code> 不包含 15x、包含 20x；需要包含 0x 時可用 <code>(-1, 0]</code>。</li><li>Newbie BG 的最高可用區間為 <code>(25, 30]</code>，FG 的最高可用區間為 <code>(100, 120]</code>；超過各自上限的區間權重必須為 0。</li><li>Oldhand 小／中 Bet FG 的最高可用區間為 <code>(10000, 20000]</code>；Oldhand 大 Bet FG 的最高可用區間為 <code>(1000, 2000]</code>。</li><li>任一區間超過目前 Profile／押注層級的 Max Multiplier 時，其權重必須為 0。</li><li>BG 已觸發 FG 時，即使 <code>pay_bg</code> 落入區間，也不得當作一般 BG <code>range</code> 結果。</li><li><code>free_game</code> 卡未觸發 FG 時必須重跑 BG。</li><li><code>free_game</code> 卡必須同時驗證 BG 倍率上限（BG Trigger Cap）：除觸發 FG 外，觸發該次 BG 的倍率不得超過同一 Profile／押注層級／Mode 之 <code>base_game</code> 內所有正權重 <code>range</code> 卡的最大 <code>max</code>。</li><li>BG Trigger Cap 使用 Normal Bet 基準成本計算，判定式為 <code>pay_bg / card_system_coin_in &lt;= cap</code>；等於上限時可接受，超過上限時整把 BG 重跑。</li><li><code>weight = 0</code> 的 <code>range</code> 卡不得用來放大 cap；啟用 <code>free_game</code> 卡的 Profile／Mode 必須至少有一張正權重 <code>range</code> 卡可提供 cap。</li><li>事件卡只定義接受條件，不得直接放置 Scatter 或直接呼叫 FG。</li></ul>
+<h4 id="231-link-資格">2.3.1 Link 資格</h4>
+<ul><li>Link 資格一律依第 1.4.3 節算出的 <code>bet_tier_amount</code> 判斷；NB／EB／BF／SF 都使用同一組 <code>&lt; $2</code>、<code>$2～$100</code>、<code>&gt; $100</code> 邊界。</li><li>Newbie 不得觸發或獲得 Link 彩金，Link RTP 必須為 0%。</li><li>Oldhand 小 Bet 不得觸發或獲得 Link 彩金，Link RTP 必須為 0%。</li><li>Oldhand 中 Bet 與大 Bet 可以觸發 Link 彩金，Link RTP 目標為 2%。</li><li><code>link_enabled = false</code> 時不得只把 Link 派彩改成 0；結果中不得出現已觸發但不派彩的 Link 事件或演出。</li><li>Link 資格、觸發流程與 RTP 統計必須由 XLSX、Config、Simulator 與 Demogame 使用同一套設定。</li></ul>
+<h3 id="24-retry-流程">2.4 Retry 流程</h3>
+<pre><code>取得 Profile、Bet Mode、base bet、Mode 倍數與 Feature Price 倍數
+        ↓
+NB／EB 以實際模式押注、BF／SF 以 Feature 基礎押注計算 bet_tier_amount
+        ↓
+Oldhand 依 `&lt; $2`、`$2～$100`、`&gt; $100` 選擇小／中／大 Bet 權重與 Link 資格
+        ↓
+固定抽出目標卡片
+        ↓
+依原始規則產生結果
+        ↓
+符合 → 接受並記錄
+不符 → retry + 1 → 重跑
+                    ↓
+             達上限後保留最後結果並記錄失敗</code></pre>
+<ul><li>同一局 Retry 期間固定原本抽到的卡片，不得每次重抽。</li><li><code>range</code> 卡每次 Retry 也必須依該 Bet Mode 的自然 Table Selection 重新抽表並產生完整結果，再判斷倍率區間；卡片內的 Table／代號欄位只可作報表分類，不得直接指定或覆蓋數學 Table。</li><li>BG 與 FG 為兩階段條件時，先完成 BG；觸發 FG 後再獨立抽 FG 卡，驗證整包 FG。</li><li>抽中 <code>free_game</code> 卡時，同一張卡固定不變，持續依自然 BG 選表重骰，直到同一把同時滿足「觸發 FG」與 BG Trigger Cap；不得使用 Buy Feature 入口盤面替代。</li><li>Buy／Super Feature 必須先成功進入 Feature，再判定整包結果。</li><li>Retry 不得重複扣款、重複計入場次或污染統計。</li><li>達上限時停止，保留最後結果並記錄 <code>Retry Limit Exceeded</code> 與失敗分類。</li><li>某張卡經常達到上限時，先檢查區間可達性、權重、倍率分母、Profile 與押注層級，不得只提高上限。</li></ul>
+<h3 id="25-倍率分母">2.5 倍率分母</h3>
+<div class="tbl-wrap"><table><thead><tr><th>模式</th><th>RTP 實際成本</th><th>Card System 倍率判定成本</th><th>押注層級判定金額</th></tr></thead><tbody><tr><td>Normal Bet</td><td>Normal Bet 實際成本</td><td>Normal Bet 基準成本</td><td>Normal Bet 實際押注金額</td></tr><tr><td>Extra Bet</td><td>Extra Bet 加價後成本</td><td>Normal Bet 基準成本</td><td>Extra Bet 實際押注金額</td></tr><tr><td>Buy／Super Feature</td><td>Feature 購買成本</td><td>Normal Bet 基準成本</td><td>Feature 購買價格除以 Feature Price 倍數後的基礎押注</td></tr></tbody></table></div>
+<p>Card System 的倍率分母與押注層級判定金額是兩個不同概念，不得混用。個別遊戲若採不同定義，必須在數學文件註明，並同步修改 XLSX、Config、Runtime、Simulator 與 Demogame。</p>
+<h3 id="26-必要監控">2.6 必要監控</h3>
+<p>報表至少記錄 Config、Version、Profile、Bet Mode 類別、base bet、實際模式押注、Feature Price 倍數、<code>bet_tier_amount</code>、押注層級、Link 資格、倍率上限、各卡抽取占比、Total／平均 Retry、Retry Limit Exceeded 比率與失敗分類。Card System 關閉時不得抽卡或 Retry；實際占比應在合理誤差內接近設定權重。</p>
+<hr>
+<h2 id="parsheet">PARsheet</h2>
+<p>PARsheet 是提供企劃、程式、測試、美術、營運或其他職能查閱的精簡規格文件，不是完整數學模型的副本。</p>
+<ul><li>PARsheet 必須移除數學模型中的計算公式、中間推導、內部權重計算與不需要對外提供的工作資料。</li><li>只保留其他職能完成工作所需的必要資訊，例如遊戲基礎設定、盤面、得分方式、Paytable、Symbol、Bet Mode、Feature 條件、局數、倍率、Max Win、Jackpot 與產品限制。</li><li>所有輸出數值與規則必須和完整數學模型、Game Rule 及 Config 一致，不得為了簡化而改變定義或精度口徑。</li><li>完整數學模型更新時，必須同步確認 PARsheet 是否需要更新；PARsheet 不得保留已失效的規格。</li></ul>
+<hr>
+<h2 id="遊戲別附註">遊戲別附註</h2>
+<h3 id="h027-v3-倍率線型校準規範2026-09-02">H027 v3 倍率線型校準規範（2026-09-02）</h3>
+<ul><li>92A Normal Bet：BG RTP 72.0000%、FG RTP 20.0000%；94A Normal Bet：BG RTP 74.0000%、FG RTP 20.0000%；Buy Feature RTP 92.5000%。</li><li>自然發生率低於 0.1% 的區間不得配置權重；FG 20x 以下不得配置；區間上限超過 20,000x 不得配置；單一 FG 區間機率不得超過 15%；Normal Bet FG 週期為 300。</li><li>Normal Bet FG 使用競品 Buy Feature FG 線型，依競品比例平滑分配，避免連續區間封頂、中間斷層及孤立權重；200x 以上 FG RTP Contribution 合計為 2%；完成後 FG Hit Rate 應在其餘限制內盡量接近 44%。</li><li>Extra Bet 尚未正式校準時，保留 <code>Detail_EB</code> 頁籤結構但清空數值；Overview 的 EB 區塊與 <code>Multiplier_Weight</code> 的 <code>Weight_EB_BG</code>／<code>Weight_EB_FG</code> 留白；Config 必須標示 pending 並停用 EB Card System，不得沿用或顯示舊 EB RTP、週期、權重或競品數值。</li></ul></section><section class="panel" role="tabpanel" id="panel-docs" aria-labelledby="tab-docs" hidden><h1 id="數學文件規範">數學文件規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>。</p>
+<p>內容涵蓋：Game Rule、Help、Game Description、Game List。PARsheet 規範見<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>；送驗版文件（Game Description DOCX、Math Document Description、數學模型送驗版）的命名、格式與禁止內容見<a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a>。</p>
+<h2 id="game-rule">Game Rule</h2>
+<p>Game Rule 是遊戲規則說明文件。</p>
+<h3 id="用途">用途</h3>
+<p>Game Rule 用於設定遊戲玩法規則，是數學模型、Config、Simulator、Demogame、Help 與測試案例共同遵循的規則來源。</p>
+<h3 id="必要規則">必要規則</h3>
+<ul><li>每款遊戲必須提供 <code>game_rule.md</code>，並明確定義遊戲基礎設定、得分方式、Symbol 功能、判獎順序、Bet Mode、BG／FG 流程、Feature、Retrigger、Multiplier、Max Win、Jackpot 與例外處理。</li><li>Game Rule 必須沿用本節定義的固定章節骨架、標題層級、表格形式及規則表達方式。</li><li>數學模型、Config、Simulator、Demogame 與 Help 不得自行補充或改寫 <code>game_rule.md</code> 未定義的玩法。</li><li>規則變更時，必須同步檢查並更新數學文件、Config、Simulator、Demogame、<code>{GameID}_Help.xlsx</code>、<code>game_help_draft.md</code> 與測試案例。</li><li>Game Rule 與其他來源內容衝突時，必須先確認正式規則，不得由開發端自行選擇其中一種實作。</li></ul>
+<p>Game Rule 必須保留下列基本結構：</p>
+<div class="tbl-wrap"><table><thead><tr><th class="n">順序</th><th>章節</th><th>格式要求</th></tr></thead><tbody><tr><td class="n">1</td><td><code>§1. 遊戲基本資訊</code></td><td>使用「項目／說明」表格記錄本節規定的基礎資料。</td></tr><tr><td class="n">2</td><td><code>§2. 盤面結構</code></td><td>包含盤面示意圖與 Reel／Row、得分方向及補牌流程的文字說明。</td></tr><tr><td class="n">3</td><td><code>§3. 符號類別</code></td><td>分開定義一般符號與特殊符號，說明出現位置、替代關係及功能。</td></tr><tr><td class="n">4</td><td><code>§4. 賠率表（Pay Table）</code></td><td>使用表格列出符號、得分數量及倍率口徑。</td></tr><tr><td class="n">5</td><td><code>§5. 核心特色</code></td><td>依遊戲機制建立子章節，完整說明特色符號、轉換、Multiplier 或其他核心玩法。</td></tr><tr><td class="n">6</td><td><code>§6. 免費遊戲（Free Spins / Free Game, FG）</code></td><td>分別定義觸發、FG 玩法及 Retrigger。</td></tr><tr><td class="n">7</td><td><code>§7. 核心遊戲流程（Base Game）</code></td><td>依實際執行順序編號描述 Spin、判獎、消除／補牌、結算與 Feature Trigger。</td></tr><tr><td class="n">8</td><td><code>§8. 押注模式</code></td><td>依遊戲實際支援內容分別說明 Extra Bet 與 Buy Feature。</td></tr><tr><td class="n">9</td><td><code>§9. 邊界 / 例外情境（Edge Cases）</code></td><td>依機制分類列出可直接驗證的邊界條件及例外處理。</td></tr></tbody></table></div>
+<p><code>§1. 遊戲基本資訊</code> 必須包含下列欄位：</p>
+<ul><li><code>Game ID</code></li><li><code>PARsheet ID</code></li><li><code>遊戲中文名稱</code></li><li><code>遊戲英文名</code></li><li><code>遊戲類型</code>：依實際遊戲機制列出完整類型，例如 <code>2,025–32,400 Ways / Megaways / Cascade</code>。</li><li><code>盤面規格</code></li><li><code>中獎方式</code>：使用 <code>Line Game</code>、<code>Way Game</code>、<code>Pay Anywhere</code> 或 <code>Cluster Pay</code>；只能選擇符合實際判獎邏輯的類型。</li><li><code>押注模式</code></li></ul>
+<p><code>§8. 押注模式</code> 依遊戲實際支援內容包含：</p>
+<ul><li><code>Extra Bet</code>：遊戲有 Extra Bet 時，說明價格、流程與 Normal Bet 的差異；沒有時可省略此子章節。</li><li><code>Buy Feature（購買特色）</code>：遊戲有 Buy Feature 時，說明購買價格、入口 Spin、FG 觸發方式與得分計算；沒有時可省略此子章節。</li></ul>
+<ul><li>§1～§9 的章節名稱與順序不得任意更動；遊戲沒有 FG 時，仍須保留 §6 並明確寫「不適用」或「不提供」。</li><li>可依各遊戲機制在固定章節下新增子章節，但不得改變核心章節順序。</li><li>規則必須以開發與測試可直接實作、驗證的方式描述，不得只使用宣傳文案或未定義的概念性敘述。</li></ul>
+<p>遊戲類型的統一命名規則見<a href="#" class="tab-link" data-tab="demo">Demogame規範.md</a>第 4.1.1 節；Game Rule、Demogame 與 Help 必須使用相同術語。</p>
+<h3 id="交付檢查">交付檢查</h3>
+<ul><li class="check"><span class="cb">☐</span> <code>game_rule.md</code> 已涵蓋所有實際支援的玩法、模式與 Feature。</li><li class="check"><span class="cb">☐</span> Game Rule 已依本節規定的 §1～§9 基本格式建立，固定章節、順序與表格形式完整。</li><li class="check"><span class="cb">☐</span> §1 已包含 Game ID、PARsheet ID、中英文名稱、遊戲類型、盤面規格、中獎方式與押注模式。</li><li class="check"><span class="cb">☐</span> §8 已依實際支援內容完整說明 Extra Bet 與 Buy Feature。</li><li class="check"><span class="cb">☐</span> 判獎順序、倍率分母、觸發條件、結束條件與上限均可直接實作及測試。</li><li class="check"><span class="cb">☐</span> Game Rule 與數學模型、Config、Simulator、Demogame 及 Help 的規則一致。</li></ul>
+<hr>
+<h2 id="help">Help</h2>
+<h3 id="必要交付檔案">必要交付檔案</h3>
+<p>每款遊戲必須同時提供下列兩份 Help 文件：</p>
+<ul><li><code>{GameID}_Help.xlsx</code>（例：<code>101014_Help.xlsx</code>）</li><li><code>game_help_draft.md</code></li></ul>
+<p>其中 <code>game_help_draft.md</code> 為必要的 Markdown 版本，不得只交付 XLSX。</p>
+<p>兩份文件的文字、規則、數值、表格內容、章節順序與語言版本必須完全一致；檔案格式造成的版面呈現差異不得改變或省略任何內容。任一份文件更新時，另一份必須在同一次修改中同步更新。</p>
+<h3 id="內容規則">內容規則</h3>
+<ul><li>Help 必須依 <code>game_rule.md</code> 編寫，只整理玩家需要理解的玩法，不得新增、刪除或改變正式遊戲規則。</li><li>Help 內的遊戲名稱、遊戲類型、Bet Mode、Paytable、Symbol、Feature、倍率、局數、觸發條件、Max Win 與 Jackpot 說明，必須與 Game Rule、數學模型及 Config 一致。</li><li>OP Jackpot 的內容與格式必須參考 <code>H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx</code>，不得自行省略 OP Jackpot 的必要規則或改用未核准的格式。</li><li>OP Jackpot 參考檔位於 <code>Project/Slots/H026_彩罐熱舞 1000/其他/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx</code>；若檔案移動，必須同步更新本規範中的參考路徑。</li><li><code>{GameID}_Help.xlsx</code> 與 <code>game_help_draft.md</code> 若有任何內容差異，該遊戲不得視為完成交付。</li></ul>
+<h3 id="交付檢查-2">交付檢查</h3>
+<ul><li class="check"><span class="cb">☐</span> <code>{GameID}_Help.xlsx</code> 與 <code>game_help_draft.md</code> 均存在。</li><li class="check"><span class="cb">☐</span> 兩份 Help 的文字、規則、數值、表格、章節順序與語言版本完全一致。</li><li class="check"><span class="cb">☐</span> Help 與 <code>game_rule.md</code>、數學模型及 Config 的內容一致。</li><li class="check"><span class="cb">☐</span> OP Jackpot 已參考 <code>H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx</code> 編寫並完成核對。</li></ul>
+<hr>
+<h2 id="game-description">Game Description</h2>
+<p>Game Description 用於說明遊戲模型參數的使用方式，以及各項參數如何對應實際遊戲功能。</p>
+<ul><li>每款遊戲必須提供 <code>game_description.md</code>，不得只保留 DOCX、XLSX、簡報或口頭說明。</li><li>內容至少包含參數名稱、用途、使用模式、選表條件、限制與對應的數學模型／Config 欄位。</li><li>內容必須與數學模型中的 <code>Gaem Description</code> 工作表、Game Rule 及 Config mapping 一致。</li><li>參數或選表邏輯更新時，必須同步更新 <code>game_description.md</code>。</li></ul>
+<hr>
+<h2 id="game-list">Game List</h2>
+<p>Game List 用於彙整所有遊戲提供給企劃、開發、測試及其他職能查閱的共用資訊。</p>
+<ul><li>必須提供 Markdown 版本 <code>Project/Slots/game_list.md</code>，不得只保留 XLSX 或其他格式。</li><li>每款正式遊戲至少記錄 Game ID、中英文名稱、遊戲類型、盤面／得分方式、支援的 Bet Mode、RTP／版本來源與必要 Feature 資訊。</li><li>Game List 只放跨遊戲比較與識別所需資訊，不重複完整數學公式或整份 Game Rule。</li><li>遊戲新增、改名、玩法分類、Bet Mode、版本或重要 Feature 異動時，必須同步更新 <code>game_list.md</code>。</li></ul></section><section class="panel" role="tabpanel" id="panel-submission" aria-labelledby="tab-submission" hidden><h1 id="送驗文件規範">送驗文件規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>。</p>
+<p>內容涵蓋送驗（BMM 等實驗室）交付物的命名、格式來源、內容規則、禁止內容與交付前檢查：<strong>Game Description（DOCX）</strong>、<strong>Math Document Description</strong>、<strong>數學模型送驗版</strong>（送驗包 <code>PARsheet/</code> 資料夾的內容物）。</p>
+<ul><li>Game Rule、Help、<code>game_description.md</code>、Game List 的內容規範見<a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a>；PARsheet 的內容本體規範見<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>。本文件只規範送驗交付面的要求。</li><li>製作與檢查的操作流程由對應 skill 執行（製作 Game Description：<code>game-description-generator</code>；檢查送驗文件：<code>math-doc-checker</code>）；規範內容以本文件為準，skill 與本文件不一致時，先修正其一使兩者一致。</li></ul>
+<h2 id="1-通用規則">1. 通用規則</h2>
+<h3 id="11-存放位置與資料夾格式">1.1 存放位置與資料夾格式</h3>
+<p>Help 與送驗文件都放在遊戲專案的 <code>文件/</code> 資料夾。外層放<strong>完整版</strong>文件（內容不做任何刪減），送驗專屬的刪減版整理成<strong>以 Game ID 命名的送驗文件包</strong>：</p>
+<pre><code>文件/
+├─ {GameID}_Help.xlsx
+├─ {GameID}_Game Description.docx             ← 完整版：內容同 Help，不移除任何項目
+├─ {GameID}_Math Document Description.md      ← 外層維護（中文）
+├─ {GameID}_Math Document Description_EN.md   ← 外層維護（英文）
+├─ PARsheet/                                  ← 專案的正式 PARsheet（數學模型規範定義的精簡規格文件）
+│  └─ H0xx19x.xlsx                             ← 各 RTP 版本
+└─ {GameID}/                                  ← 送驗文件包
+   ├─ {GameID}_Game Description.docx           ← 送驗版：移除 1.3 禁止項目
+   ├─ PARsheet/                                ← 注意：資料夾名雖為 PARsheet，
+   │  └─ H0xx19x.xlsx                          ←   放的是「數學模型送驗版」——由 Source
+   │                                                數學模型移除 1.3 禁止項目後產出
+   └─ Simulator/
+      ├─ Simulator.py
+      └─ config_9x.js                          ← 各 RTP 版本的 Config</code></pre>
+<ul><li><strong>Game Description 有兩份</strong>：外層的完整版內容與 Help 完全相同、不刪任何項目；送驗包內的送驗版另外移除 1.3 禁止項目。兩份除刪減處外必須一致。</li><li><strong>Math Document Description 放外層</strong>（md＋<code>_EN.md</code>），送驗時連同送驗包內容一起複製進送驗批次資料夾（<code>送驗\送驗資料\{批次}\{GameID}\</code>）。</li><li>送驗包內的 <code>PARsheet/</code> 是送驗批次的既定資料夾名稱，內容物是<strong>數學模型送驗版</strong>，不是<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>定義的 PARsheet 精簡文件；兩者不可混淆。</li><li>數學模型送驗版由 <code>Source/*.xlsx</code> 產出：移除 1.3 禁止出現的項目（Extra Bet／Buy Feature／Super Feature 與 &gt;$2 門檻相關的工作表、欄位與敘述）後另存，數學內容其餘部分與正式數學模型一致。</li></ul>
+<p>範例：<code>H026_彩罐熱舞 1000/文件/</code>，送驗批次對應 <code>260805_BMM送驗_101014_101025/101014/</code>。</p>
+<h3 id="12-必要檔案與命名">1.2 必要檔案與命名</h3>
+<div class="tbl-wrap"><table><thead><tr><th>文件</th><th>檔名</th><th>位置</th></tr></thead><tbody><tr><td>Game Description（完整版）</td><td><code>{GameID}_Game Description.docx</code>；內容同 Help，不移除任何項目</td><td><code>文件/</code></td></tr><tr><td>Game Description（送驗版）</td><td><code>{GameID}_Game Description.docx</code>（無其他前後綴）；移除 1.3 禁止項目</td><td><code>文件/{GameID}/</code></td></tr><tr><td>Math Document Description</td><td><code>{GameID}_Math Document Description.md</code> 與 <code>{GameID}_Math Document Description_EN.md</code>；送驗時複製進送驗批次</td><td><code>文件/</code></td></tr><tr><td>PARsheet（精簡規格文件）</td><td>各 RTP 版本一個 <code>.xlsx</code>，檔名包含 ParSheet ID</td><td><code>文件/PARsheet/</code></td></tr><tr><td>數學模型送驗版</td><td>由 <code>Source/*.xlsx</code> 移除 1.3 禁止項目後產出，每個送驗 RTP 版本一個，檔名包含 ParSheet ID（例：<code>H026192.xlsx</code>）</td><td><code>文件/{GameID}/PARsheet/</code>（送驗批次既定資料夾名）</td></tr><tr><td>Simulator</td><td><code>Simulator.py</code> 與各 RTP 版本的 <code>config_*.js</code></td><td><code>文件/{GameID}/Simulator/</code></td></tr></tbody></table></div>
+<ul><li>Game ID 以 <code>iGaming 遊戲代號一覽.xlsx</code> 為準，查得英文名稱、中文名稱、ParSheet ID 與 Extra Bet／Buy Feature／Super Feature 支援情況。</li><li>ParSheet ID 前 4 碼（例如 <code>H026</code>）對應 <code>Slots/</code> 下的 <code>H0xx_遊戲名稱</code> 專案資料夾。</li><li>文件內出現的遊戲英文名稱必須與代號一覽一致；檔名前綴必須與 Game ID 一致。</li><li>代號一覽查不到該 Game ID 時，先確認來源，不得逕行送驗。</li></ul>
+<h3 id="13-禁止出現的內容">1.3 禁止出現的內容</h3>
+<p>送驗版三份文件內，下列內容一律不得出現（不分大小寫搜尋，含表格儲存格）：</p>
+<div class="tbl-wrap"><table><thead><tr><th>檢查項目</th><th>關鍵字</th></tr></thead><tbody><tr><td>Extra Bet 敘述</td><td><code>extra bet</code></td></tr><tr><td>Buy Feature 敘述</td><td><code>buy feature</code></td></tr><tr><td>Super Feature 敘述</td><td><code>super feature</code></td></tr><tr><td>&gt;$2 拉彩金門檻</td><td><code>&gt;$2</code>、<code>&gt; $2</code>、<code>bet $2</code>、<code>$2 or more</code>、<code>more than $2</code></td></tr></tbody></table></div>
+<p>找到即為錯誤，必須移除後才可送驗。</p>
+<h3 id="14-用詞一致性">1.4 用詞一致性</h3>
+<p>用詞不一致不會讓數值出錯，但送驗時容易被挑，屬警告等級（明顯錯字升為錯誤）：</p>
+<ul><li><strong>單一文件內部</strong>：同一概念不得混用大小寫／連字號／空格變體（<code>GOLD-FRAME</code> vs <code>GOLD-FRAMED</code>、<code>Free Game</code> vs <code>FreeGame</code>）、單複數（<code>Free Spin</code> vs <code>Free Spins</code> 同語境混用）或同義換名（同一機制一下 <code>Free Game</code>、一下 <code>Free Spin</code>；一下 <code>Wild</code>、一下 <code>Joker</code>）。</li><li><strong>跨三份文件</strong>：功能名稱、符號名稱、RTP 分類名（Base Game／Free Game／Bonus／Link）在 Game Description、Math Document Description、PARsheet 之間必須同名。</li><li><strong>中英對照</strong>：同一中文概念只對應一組英文譯名（「免費遊戲」不得一處對 <code>Free Game</code>、另一處對 <code>Free Spin</code>）。</li></ul>
+<h2 id="2-game-descriptiondocx">2. Game Description（DOCX）</h2>
+<p>Game Description 產出<strong>兩份</strong>：</p>
+<ul><li><strong>完整版</strong>（<code>文件/</code>）：內容與 Help 完全相同，不移除任何項目。</li><li><strong>送驗版</strong>（<code>文件/{GameID}/</code>）：在完整版基礎上移除 1.3 禁止項目（Extra Bet／Buy Feature／Super Feature 與 &gt;$2 門檻相關章節與敘述）。</li></ul>
+<p>以下 2.1～2.3 的規則兩份皆適用；1.3 禁止內容檢查只適用送驗版，兩份除刪減處外必須完全一致。</p>
+<h3 id="21-格式來源複製已核准模板">2.1 格式來源：複製已核准模板</h3>
+<p>格式（字型、字級、邊界、標題與表格樣式）一律<strong>複製既有已核准的 Game Description 文件</strong>，不重新自建格式——公司對格式的核准是一次性的，自行重建有偏離已核准樣式的風險。</p>
+<p>已知兩種版型，依模板實際版面選擇：</p>
+<div class="tbl-wrap"><table><thead><tr><th>版型</th><th>特徵</th><th>用途</th></tr></thead><tbody><tr><td>A：純段落</td><td>每行規則為一般未條列段落</td><td>一般範例（<code>H000_範例</code>）</td></tr><tr><td>B：■ 條列＋框線賠率表</td><td>每行規則前有 ■（Word 編號清單），賠率表在框線表格內</td><td>BMM 送驗版常用</td></tr></tbody></table></div>
+<ul><li>選模板時避免內嵌整頁背景圖或遊戲 Logo 的文件，否則舊遊戲的美術會帶進新文件。</li><li>版型判斷以模板實際內容為準，不假設所有模板結構相同。</li></ul>
+<h3 id="22-內容來源help-英文欄逐字填寫">2.2 內容來源：Help 英文欄逐字填寫</h3>
+<ul><li>內容以該遊戲的 <code>{GameID}_Help.xlsx</code> 或 <code>game_help_draft.md</code> 的<strong>英文欄逐字填寫</strong>，不得改寫、摘要或自創文字——Help 是已核准的規則措辭唯一來源，改寫會製造兩份互相矛盾的文件。</li><li><strong>一律使用英文欄</strong>：簡中欄曾出現英文欄沒有的錯字（例如符號誤標 <code>[M4]</code>，英文欄正確為 <code>[M5]</code>）。</li><li>去除行首手動 bullet 字元（<code>▪</code>／<code>•</code>）；版型 B 的 ■ 來自模板的清單樣式，不是文字本身。</li><li>佔位符（<code>[WW]</code>、<code>[C1]</code>、<code>{12}</code>、<code>X2</code> 等）原樣保留；<code>{n}</code> 花括號要嘛全篇保留、要嘛全篇展開為實際數字，不得混用。</li><li>保持 Help 的章節順序，不重排、不遺漏；純圖片佔位列（<code>[走線圖 ...]</code>、<code>[跳階示意圖]</code>）跳過。</li><li>Help 的章節外層標籤對應輸出的 Heading 2；注意慣例差異（Help 寫 <code>GAME RULE</code>，文件慣例為 <code>GAME RULES</code>），依既有文件慣例為準，不盲抄。</li></ul>
+<h3 id="23-結構">2.3 結構</h3>
+<ul><li>Title 樣式段落「GAME DESCRIPTION」＋置中一般樣式段落放遊戲英文名。</li><li>每個 feature／規則章節一個 Heading 2（PAYTABLE、CASCADING FEATURE、MULTIPLIER FEATURE、FREE GAME FEATURE、OP JACKPOT、GAME RULES 等，依遊戲實際內容）。</li><li>副標籤（<code>WILD SYMBOL</code>、<code>SCATTER SYMBOL</code> 等）使用一般段落樣式，不自創粗體或 Heading 3 樣式。</li><li>賠率表為 3 欄表格，每個 payout tier 一列。</li></ul>
+<h3 id="24-交付前驗證">2.4 交付前驗證</h3>
+<ul><li>重新解析輸出文件（逐段樣式＋文字、逐表格列），確認：Help 的每個章節都已進入文件、賠率表列數與 Help 的 payout tier 數一致、無殘留 placeholder（<code>__TABLE__</code>、<code>None</code>、空 run）。</li><li>送驗版執行 1.3 禁止內容檢查；兩份皆執行 1.4 用詞一致性檢查，並確認兩份除刪減處外完全一致。</li><li>完成後完整版存入 <code>文件/</code>，送驗版存入 <code>文件/{GameID}/</code>。</li></ul>
+<h2 id="3-math-document-description">3. Math Document Description</h2>
+<h3 id="31-定位與範本">3.1 定位與範本</h3>
+<p>針對數學文件（<code>Source/*.xlsx</code>）的說明文件：說明各工作表用途與程式讀取範圍、Parameter 參數、遊戲邏輯與卡片系統。</p>
+<ul><li>交付為 Markdown 雙語兩檔：<code>{GameID}_Math Document Description.md</code>（中文）與 <code>{GameID}_Math Document Description_EN.md</code>（英文），置於 <code>文件/</code> 外層；送驗時複製進送驗批次資料夾。範本參考 <code>H026_彩罐熱舞 1000/文件/101014_Math Document Description.md</code>。</li><li>過往他人專案曾以 DOCX 交付；新專案一律採 md＋<code>_EN.md</code> 格式。</li></ul>
+<h3 id="32-內容要求">3.2 內容要求</h3>
+<ul><li>開頭為基本資訊表：Game ID、Math files、Version、對應程式（Simulator／Config）、盤面、線數／得分方式、Coin In、押注模式。</li><li>四大章：①工作表說明（每張工作表標明程式是否讀取）②Parameter 工作表的遊戲參數說明 ③遊戲邏輯（spin 流程、判獎、Cascade、FG）④卡片系統說明。</li><li>公式／變數名稱：必須定義 <code>Ptheory</code>、<code>Pscatter</code>、<code>Phit</code>；<code>Phit</code> 公式必須使用 <code>Pscatter</code>（不得寫成 <code>Prespin</code>、<code>Presipn</code> 或其他變體）。</li><li>建議附上 Total RTP、Window Size、Denom 等欄位的實際數值。</li><li>禁止內容同 1.3。</li></ul>
+<h2 id="4-數學模型送驗版送驗包-parsheet-資料夾">4. 數學模型送驗版（送驗包 <code>PARsheet/</code> 資料夾）</h2>
+<p>送驗包 <code>文件/{GameID}/PARsheet/</code> 內的 <code>.xlsx</code> 是<strong>數學模型送驗版</strong>：以 <code>Source/*.xlsx</code> 為基礎，移除 1.3 禁止出現的項目（Extra Bet／Buy Feature／Super Feature 與 &gt;$2 門檻相關的工作表、欄位與敘述）後另存。數學模型本體的規範見<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>；送驗交付面另要求：</p>
+<h3 id="41-overview-必要欄位">4.1 Overview 必要欄位</h3>
+<p>以下欄位必須存在且有值：</p>
+<div class="tbl-wrap"><table><thead><tr><th>欄位</th><th>對應欄位標題</th></tr></thead><tbody><tr><td>BG RTP</td><td><code>Base Game Pay Back</code></td></tr><tr><td>FG RTP</td><td><code>Free Game Pay Back</code></td></tr><tr><td>Bonus RTP</td><td><code>Bonus Pay Back</code></td></tr><tr><td>Progressive／Link RTP</td><td><code>Link Pay Back</code></td></tr><tr><td>免費遊戲週期</td><td><code>Free Game Hits</code></td></tr><tr><td>Scatter 出現機率</td><td><code>Scatter symbol appear rate</code></td></tr></tbody></table></div>
+<p>&gt; 以程式讀取檢查時，含公式的儲存格可能讀為空值；此時以人工開檔確認，不得直接判為缺漏。</p>
+<h3 id="42-跨文件賠率一致性">4.2 跨文件賠率一致性</h3>
+<ul><li>Game Description 的符號佔位符與數學模型送驗版的符號代號<strong>按順序對應</strong>（<code>[M1]</code>↔<code>W1</code>、<code>[M2]</code>↔<code>W2</code>，以此類推）。</li><li>逐符號比對 3 連、4 連、5 連的賠率值，任何不一致即為錯誤。</li><li>同一遊戲的多份數學模型送驗版（不同 RTP 版本）之間，非 RTP 差異欄位（如 Link Pay Back 設計）必須一致或有明確理由。</li></ul>
+<h2 id="5-送驗前檢查清單">5. 送驗前檢查清單</h2>
+<ul><li class="check"><span class="cb">☐</span> <code>文件/</code> 外層已有：<code>{GameID}_Help.xlsx</code>、<code>{GameID}_Game Description.docx</code>（完整版）、<code>{GameID}_Math Document Description.md</code>＋<code>_EN.md</code>、<code>PARsheet/</code>（精簡規格文件）。</li><li class="check"><span class="cb">☐</span> <code>文件/{GameID}/</code> 送驗包已依 1.1 的格式建立：<code>{GameID}_Game Description.docx</code>（送驗版）、<code>PARsheet/*.xlsx</code>（數學模型送驗版）、<code>Simulator/</code>（<code>Simulator.py</code>＋各 RTP <code>config_*.js</code>）均存在，檔名前綴與 Game ID 一致。</li><li class="check"><span class="cb">☐</span> Game Description 完整版與送驗版除刪減處外完全一致；完整版內容與 Help 完全相同。</li><li class="check"><span class="cb">☐</span> 數學模型送驗版已自 <code>Source/*.xlsx</code> 移除 1.3 禁止項目，其餘數學內容與正式數學模型一致。</li><li class="check"><span class="cb">☐</span> Game ID、中英文名稱與 <code>iGaming 遊戲代號一覽</code> 一致。</li><li class="check"><span class="cb">☐</span> 三份文件皆無 1.3 的禁止內容。</li><li class="check"><span class="cb">☐</span> Game Description 的格式來自已核准模板，內容與 Help 英文欄逐字一致、章節順序一致、無殘留 placeholder。</li><li class="check"><span class="cb">☐</span> Math Document Description 已含四大章與基本資訊表；<code>Phit</code> 公式使用 <code>Pscatter</code>，無變數錯字。</li><li class="check"><span class="cb">☐</span> 數學模型送驗版的 Overview 必要欄位齊全；檔名含 ParSheet ID。</li><li class="check"><span class="cb">☐</span> Game Description ↔ 數學模型送驗版賠率逐符號一致；多份 RTP 版本間一致。</li><li class="check"><span class="cb">☐</span> 文件內部、跨文件、中英對照的用詞一致。</li><li class="check"><span class="cb">☐</span> 送驗文件版本與數學模型、Config、Simulator 的正式版本相同。</li></ul></section><section class="panel" role="tabpanel" id="panel-sim" aria-labelledby="tab-sim" hidden><h1 id="模擬程式規範">模擬程式規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>。</p>
+<p>內容涵蓋：模擬程式（第 3 章）、Config（第 5 章）。</p>
+<h2 id="模擬程式">模擬程式</h2>
+<p><code>Simulator.py</code> 是數學模型的主要驗證工具。數學邏輯、批次設定、Console 輸出與 Excel 報表必須使用相同的統計口徑。</p>
+<h3 id="31-程式架構">3.1 程式架構</h3>
+<h4 id="311-加速numba多執行緒">3.1.1 加速：Numba、多執行緒</h4>
+<ul><li>高頻數學核心使用 Numba 編譯；適用的核心函式使用 <code>@njit(nogil=True)</code>。</li><li>使用多執行緒平行執行模擬，例如 <code>ThreadPoolExecutor</code>；每個 Worker 必須持有獨立的 RNG 狀態。</li><li>正式計時前先執行 Warm-up，Numba 首次編譯時間不得計入 <code>duration</code>。</li><li>Numba Core 只處理數值及固定型別 Array／Tuple；Config 解析、字串、DataFrame 與 Excel 留在 Python 層。</li><li>預先配置統計陣列與暫存 Buffer，模擬迴圈內不得反覆建立大型物件。</li><li>場次平均分配給各 Worker，餘數由前幾個 Worker 各多執行一場；合併後必須等於 <code>total_rounds</code>。</li><li>Worker 回傳相同 shape／dtype；Count 與 Pay 欄位相加，Max 欄位取最大值。</li><li>固定 RNG、逐局 Trace 與 Debug 重現模式使用單執行緒。</li></ul>
+<h4 id="312-程式邏輯">3.1.2 程式邏輯</h4>
+<p>程式依下列順序執行：</p>
+<ol><li>讀取 <code>BATCH_RUNS</code> 的本批參數。</li><li>載入 <code>config_file</code> 的自然機率參數。</li><li>載入 <code>config_rtp_file</code> 的倍率權重參數。</li><li>驗證兩份 Config 的 <code>game_id</code>、版本與資料相容性。</li><li>將 Config 正規化為模擬核心使用的固定型別資料。</li><li>依 <code>bet_mode</code>、Card System 開關、Profile 與基礎押注額建立本批設定，並選出押注層級、Link 資格及倍率上限。</li><li>執行 Warm-up，再開始正式計時與多執行緒模擬。</li><li>合併 Worker 統計，計算 RTP、Hit Rate、Feature、Retry 與遊戲專屬指標。</li><li>依固定格式印出執行結果。</li><li>需要輸出時，將相同結果寫入 <code>Record/*.xlsx</code>。</li></ol>
+<p>數學核心與報表／顯示邏輯必須分離。Card System 關閉時，不得執行抽卡或 Retry；<code>config_rtp_file</code> 不得改變 <code>config_file</code> 所定義的原始盤面與自然機率邏輯。</p>
+<h4 id="313-執行結束後印出的內容">3.1.3 執行結束後印出的內容</h4>
+<p>每個 Batch 結束後必須依第 3.3 節的順序與格式輸出，不得只印 RTP。欄位名稱固定使用英文，數值格式由共用格式化函式處理。</p>
+<h4 id="314-輸出報表">3.1.4 輸出報表</h4>
+<ul><li>報表固定輸出至該遊戲的 <code>Record/</code>，格式為 <code>.xlsx</code>。</li><li>報表與 Console 必須來自同一份統計結果，不得重新計算成不同口徑。</li><li>報表檔名固定沿用 H026 的命名順序，不得由個別遊戲任意調換欄位。</li></ul>
+<p>報表檔名格式：</p>
+<pre><code>Card System Off：
+&lt;base_game_id&gt;_&lt;base_version_tag&gt;_&lt;timestamp&gt;_betmode&lt;bet_mode&gt;_&lt;rounds_tag&gt;.xlsx
+
+Card System On（Newbie／Oldhand）：
+&lt;rtp_game_id&gt;_&lt;rtp_version_tag&gt;_&lt;timestamp&gt;_betmode&lt;bet_mode&gt;_&lt;rounds_tag&gt;_&lt;rtp_tag&gt;_&lt;profile&gt;[_&lt;bet_tier&gt;]_card.xlsx</code></pre>
+<p>各段規則：</p>
+<div class="tbl-wrap"><table><thead><tr><th>段落</th><th>規則</th><th>範例</th></tr></thead><tbody><tr><td><code>base_game_id</code></td><td>Card System Off 時，使用基礎 Config／基礎 XLSX 的完整 Game ID。</td><td><code>H0161</code></td></tr><tr><td><code>base_version_tag</code></td><td>Card System Off 時，使用基礎數學的 1 碼版本並補滿 2 位數。</td><td><code>2</code> → <code>02</code></td></tr><tr><td><code>rtp_game_id</code></td><td>Card System On 時，使用 RTP／Variant Config 內的完整 Game ID。</td><td><code>H016192A</code></td></tr><tr><td><code>rtp_version_tag</code></td><td>Card System On 時，四段版本各補滿 2 位數，再移除分隔點後依序串接。</td><td><code>2.1.3.13</code> → <code>02010313</code></td></tr><tr><td><code>timestamp</code></td><td>報表產生時間，格式為 <code>YYMMDDHHmm</code>。</td><td><code>2608141530</code></td></tr><tr><td><code>bet_mode</code></td><td>使用整數 Bet Mode。</td><td><code>0</code></td></tr><tr><td><code>rounds_tag</code></td><td><code>10^N</code> 場寫成 <code>10N</code>；非 10 的整次方則使用完整場次。</td><td><code>10^8</code> → <code>108</code></td></tr><tr><td><code>rtp_tag</code></td><td>Card System On 時，取實際 RTP 小數點後 4 位，不含小數點與 <code>%</code>。</td><td><code>92.01%</code> → <code>9201</code></td></tr><tr><td><code>profile</code></td><td>Card System On 時使用 <code>newbie</code> 或 <code>oldhand</code>；NB／EB／BF／SF 均不得省略。</td><td><code>oldhand</code></td></tr><tr><td><code>bet_tier</code></td><td>Oldhand 使用 <code>small_bet</code>、<code>medium_bet</code> 或 <code>big_bet</code>；Newbie 省略。</td><td><code>medium_bet</code></td></tr><tr><td><code>card</code></td><td>Card System On 時固定加在檔名最後。</td><td><code>card</code></td></tr></tbody></table></div>
+<p>範例：</p>
+<pre><code>Card System Off：
+H0161_02_2608141342_betmode0_105.xlsx
+
+Card System On（Oldhand 中 Bet）：
+H016192A_02000000_2608141341_betmode0_105_9600_oldhand_medium_bet_card.xlsx
+
+Card System On（Feature Buy，Oldhand 小 Bet）：
+H026194A_02010313_2608141530_betmode2_108_9650_oldhand_small_bet_card.xlsx</code></pre>
+<ul><li>Card System Off 的檔名只能使用 <code>config_file</code> 所對應的基礎 <code>game_id</code> 與 1 碼版本，不得使用 <code>config_rtp_file</code> 的 RTP／Variant Game ID 或四段版本。</li><li>Card System On 的檔名使用 <code>config_rtp_file</code> 所對應的 RTP／Variant <code>game_id</code> 與四段版本。</li><li><code>base_version_tag</code> 固定為 2 位數；例如基礎版本 <code>2</code> 輸出為 <code>02</code>。</li><li><code>rtp_version_tag</code> 每一段都必須補滿 2 位數，不是只移除 <code>.</code>；<code>2.1.3.13</code> 必須轉成 <code>02010313</code>，不得輸出成 <code>21313</code>。</li><li>四段中的單段若超過 2 位數，視為版本格式錯誤，停止輸出報表並提示修正版本。</li><li>檔名不得包含空白、冒號、百分比符號或版本分隔點。</li></ul>
+<p><code>Overview</code> 工作頁：</p>
+<ul><li>內容、欄位順序、欄位名稱、數值與格式必須和第 3.3 節的 Console 輸出一致，不得重新排序。</li><li>不寫入 Batch 標題，例如 <code>=== Batch 1/1: {...} ===</code>。</li><li>不寫入 <code>&lt;&lt; By Game Info &gt;&gt;</code> 標題；Game Info 欄位依 Console 的既定順序接在共用輸出的最後一個欄位之後。Card System On 時接在 <code>retry_limit_fg</code> 後，Off 時接在 <code>standard_error</code> 後。</li><li>Card System 開啟時才顯示 <code>card_system_profile</code> 至 <code>retry_limit_fg</code>；關閉時整段不顯示，與 Console 規則一致。</li><li><code>Overview</code> 與 Console 必須使用同一份已計算結果，不得分別計算或套用不同格式。</li></ul>
+<p><code>Multiplier Line</code> 工作頁：</p>
+<ul><li>每一列對應報表定義的一個倍率區間，欄位名稱必須維持下列英文格式。</li><li>共用欄位依下列順序輸出：</li></ul>
+<pre><code>Interval
+
+base_game_cnt
+base_game_pay
+free_game_cnt
+free_game_pay
+free_game_cnt_BF
+free_game_pay_BF
+free_game_cnt_SF
+free_game_pay_SF
+
+Interval_Upper
+bg_trigger_fg_cnt_lte_upper
+bg_trigger_fg_pay_lte_upper
+
+FG_Hit_Rate
+FG_Spin_Count
+
+BG_Combo_1_Rate
+BG_Combo_2_Rate
+BG_Combo_3_Rate
+BG_Combo_4_Rate
+BG_Combo_5+_Rate
+
+FG_Combo_1_Rate
+FG_Combo_2_Rate
+FG_Combo_3_Rate
+FG_Combo_4_Rate
+FG_Combo_5+_Rate</code></pre>
+<ul><li><code>free_game_cnt_BF</code>、<code>free_game_pay_BF</code> 只在遊戲有 Buy Feature 時顯示。</li><li><code>free_game_cnt_SF</code>、<code>free_game_pay_SF</code> 只在遊戲有 Super Feature 時顯示。</li><li>不支援 BF／SF 時不得保留空白欄位或以 <code>0</code> 代替未支援功能。</li><li><code>Interval</code> 必須位於工作頁最前面，作為人員閱讀用的倍率區間文字；上限為 <code>0</code> 的第一列固定顯示 <code>0</code>，其餘列使用 <code>&lt;前一列上限，固定一位小數&gt; &lt; X &lt;= &lt;本列上限，固定一位小數&gt;</code>，例如 <code>0.0 &lt; X &lt;= 1.0</code>、<code>10.0 &lt; X &lt;= 15.0</code>。</li><li><code>Interval</code> 必須由同列及前一列的 <code>Interval_Upper</code> 自動產生，不得另維護一套區間；<code>X</code> 的倍率分母必須與本報表及 Card System 的倍率判定口徑一致。</li><li><code>Interval_Upper</code> 為該列倍率區間的數值上限；<code>bg_trigger_fg_cnt_lte_upper</code> 與 <code>bg_trigger_fg_pay_lte_upper</code> 分別累計所有「BG 成功觸發 FG，且該把 BG 倍數小於等於該列上限」的次數與 BG 得分。兩欄必須由未套 Profile cap 的原始觸發 BG 分桶累加，不得先過濾成單一 Profile。</li><li>Card System／倍率權重工具必須先從該 Profile／押注層級的正權重 BG <code>range</code> 卡取得最大區間上限，再以相同 <code>Interval_Upper</code> 讀取累計 count/pay；不得在程式內寫死 30x、70x 或其他上限。找不到完全相同的區間上限時必須停止並提示補齊倍率區間，不得取較接近的列。</li><li><code>cnt</code> 欄位使用整數；<code>pay</code> 欄位使用報表統一的得分精度；<code>Rate</code> 欄位使用一致的百分比格式。</li></ul>
+<p>共用欄位之後可接遊戲專屬的 By Game 欄位。H016 的 <code>Multiplier Line</code> 必須包含：</p>
+<pre><code>BG_Big_Ghost_2_Rate
+BG_Big_Ghost_3_Rate
+BG_Big_Ghost_4_Rate
+
+FG_Big_Ghost_2_Rate
+FG_Big_Ghost_3_Rate
+FG_Big_Ghost_4_Rate
+
+BG_Avg_Gold_Frames
+FG_Avg_Gold_Frames</code></pre>
+<ul><li><code>--- 以下是 By Game 資訊 ---</code> 只用於規格分組說明，不是 Excel 的實際欄位。</li><li>其他遊戲依自身玩法定義 By Game 欄位，不得沿用 H016 不適用的欄位。</li><li>報表另需保留 Feature、Symbol、Pay Range、卡片抽取占比等驗證所需工作頁。</li></ul>
+<h3 id="32-必要功能">3.2 必要功能</h3>
+<h4 id="321-batch_runs">3.2.1 <code>BATCH_RUNS</code></h4>
+<p><code>BATCH_RUNS</code> 用於定義要依序執行的模擬組合。每一筆至少包含：</p>
+<div class="tbl-wrap"><table><thead><tr><th>欄位</th><th class="n">必要</th><th>說明</th></tr></thead><tbody><tr><td><code>config_file</code></td><td class="n">是</td><td>自然機率參數檔；提供輪帶、Table、盤面與原始遊戲機率。</td></tr><tr><td><code>config_rtp_file</code></td><td class="n">是</td><td>倍率權重參數檔；提供 RTP／Variant 與 Card System 使用的倍率權重。</td></tr><tr><td><code>bet_mode</code></td><td class="n">是</td><td>押注模式，例如 <code>0</code> 為 Normal Bet；其他值依遊戲規格定義。</td></tr><tr><td><code>total_rounds</code></td><td class="n">是</td><td>本批正式模擬的付費 Round 數，必須為正整數。</td></tr><tr><td><code>card_system_enabled</code></td><td class="n">是</td><td>是否啟用 Card System，型別為 Boolean。</td></tr><tr><td><code>card_system_is_newbie</code></td><td class="n">是</td><td><code>true</code> 為 Newbie、<code>false</code> 為 Oldhand；Card System 關閉時不套用 Profile。</td></tr><tr><td><code>base_bet</code></td><td class="n">是</td><td>玩家選擇的基礎押注；Simulator 依 Bet Mode 與 Config 倍數計算實際押注及 <code>bet_tier_amount</code>，必須大於 0。</td></tr></tbody></table></div>
+<p>範例：</p>
+<pre><code>BATCH_RUNS = [
+    {
+        "config_file": "config.js",
+        "config_rtp_file": "config_92A.js",
+        "bet_mode": 1,
+        "total_rounds": 1_000_000,
+        "card_system_enabled": True,
+        "card_system_is_newbie": False,
+        "base_bet": 1,
+    },
+]</code></pre>
+<ul><li>每批開始時印出 <code>=== Batch n/total: {...} ===</code>，內容為該批完整設定。</li><li>每批重新載入兩份 Config，不得沿用上一批的全域狀態。</li><li>Config 的 <code>game_id</code> 不一致時立即停止，不得繼續模擬或輸出報表。</li><li>Card System Off 必須另跑自然機率基準；正式大場次前先以小場次檢查流程與報表。</li><li>NB／EB 必須用實際模式押注金額驗證 <code>$1.99</code>、<code>$2</code>、<code>$100</code>、<code>$100.01</code> 邊界；BF／SF 必須用反推後的 Feature 基礎押注驗證相同邊界。</li><li>至少包含 H026 類型案例：EB 2x、base bet <code>$1</code> 應判為中 Bet；BF 75x、購買 <code>$75</code> 應判為小 Bet，購買 <code>$150</code> 應判為中 Bet。</li><li>Newbie 與 Oldhand 小／中／大 Bet 必須分批驗證 Link／Bonus Game／Game RTP 拆分及 Total RTP。</li></ul>
+<h4 id="322-標準批次區塊與場次">3.2.2 標準批次區塊與場次</h4>
+<p><code>BATCH_RUNS</code> 依下列四個區塊組織；當下用不到的區塊以註解保留，不刪除：</p>
+<div class="tbl-wrap"><table><thead><tr><th>區塊</th><th>用途</th><th>Card System</th><th>彩金</th><th class="n">NB／EB 場次</th><th class="n">BF／SF 場次</th></tr></thead><tbody><tr><td>1. 測試</td><td>流程與報表驗證</td><td>On</td><td>依需求</td><td class="n"><code>10^5</code></td><td class="n"><code>10^5</code></td></tr><tr><td>2. 自然機率</td><td>自然機率基準</td><td>Off</td><td>關</td><td class="n"><code>10^9</code></td><td class="n"><code>10^8</code></td></tr><tr><td>3. SCR</td><td>量測 SCR 供 OP Jackpot 頁使用</td><td>On</td><td>關</td><td class="n"><code>10^8</code></td><td class="n"><code>10^7</code></td></tr><tr><td>4. 正式模擬</td><td>確認正確性（含彩金與押注層級）</td><td>On</td><td>開（依搭配表）</td><td class="n"><code>10^8</code></td><td class="n"><code>10^7</code></td></tr></tbody></table></div>
+<ul><li><strong>SCR 區塊只跑必要組合</strong>：權重完全相同的組合只跑一筆代表——例如 Newbie 權重各 RTP／Variant 共用時只跑一筆、Buy Feature 權重各版共用時只跑一筆；Oldhand NB 各版權重不同則各跑一筆。</li><li><strong>自然機率區塊的組成依模型設計而定</strong>：BF／SF 的倍率權重若引用 NB FG 分布（如 H028 的 BF Detail 共用 NB FG 自然分布），自然機率只需 <code>bet_mode 0</code>，不另跑 BF／SF；<strong>此區塊要跑哪些 Bet Mode，製作前必須先與使用者確認</strong>，不得自行假設。</li><li>正式模擬區塊沿用相同精簡原則；押注層級邊界（<code>$2</code>、<code>$100</code>、<code>&gt;$100</code>）與 Feature 購買價層級必須各有代表批次。</li><li>各區塊內的組合仍須符合第 3.2.1 節的最低批次矩陣要求。</li></ul>
+<h3 id="33-執行結束後印出的內容">3.3 執行結束後印出的內容</h3>
+<h4 id="331-固定順序與共用格式">3.3.1 固定順序與共用格式</h4>
+<p>Console 輸出順序是固定規範，不得依 dict、DataFrame 或統計完成時間任意排序。每個 Batch 必須依下列順序輸出：</p>
+<ol><li>Batch 標題：<code>=== Batch n/total: {...} ===</code>。</li><li>遊戲資訊：<code>game_name</code>、<code>game_id</code>。</li><li>Config 與版本：<code>config_file</code>、<code>config_rtp_file</code>、<code>math_version</code>、<code>card_system</code>。</li><li>執行設定：<code>bet_mode</code>、<code>bet_multi</code>、<code>feature_price_multiplier</code>、<code>base_bet</code>、<code>bet_amount</code>、<code>bet_tier_amount</code>、<code>bet_tier</code>、<code>link_enabled</code>、<code>max_multiplier_bg</code>、<code>max_multiplier_fg</code>、<code>coin_in</code>、<code>total_rounds</code>、<code>duration</code>。</li><li>RTP 與 Feature 統計：從 <code>rtp_total</code> 到 <code>avg_fg_spins</code>。</li><li>FG／特殊符號統計：<code>bg_trigger_fg_cnt</code>、<code>bg_trigger_fg_pay</code>、<code>special_symbol_cnt</code>、<code>SCR</code>。</li><li>波動資訊：<code>volatility_std</code>、<code>standard_error</code>。</li><li>Card System 資訊：從 <code>card_system_profile</code> 到 <code>retry_limit_fg</code>；只在 Card System 開啟時整段顯示。</li><li>遊戲專屬資訊：<code>&lt;&lt; By Game Info &gt;&gt;</code> 及該遊戲規定的 By Game 欄位。</li></ol>
+<ul><li>欄位必須依下方範例逐項排列，不得交換前後順序。</li><li>空白行只用於區塊分隔，不影響欄位順序；不得在同一區塊中插入其他欄位。</li><li>新增共用欄位時必須先更新本規範並指定位置，不得由個別遊戲自行插入。</li><li>Card System 關閉時只省略第 8 項；其他欄位順序不得改變。</li></ul>
+<pre><code>=== Batch 1/1: {'config_file': 'config.js', 'config_rtp_file': 'config_92A.js', 'bet_mode': 1, 'total_rounds': 1000000, 'card_system_enabled': True, 'card_system_is_newbie': False, 'base_bet': 1} ===
+
+game_name               : 幸運王牌
+game_id                 : H016
+config_file             : config.js
+config_rtp_file         : config_92A.js
+math_version            : 0.0.0.0
+card_system             : on
+
+bet_mode                : Extra Bet
+bet_multi               : 2
+feature_price_multiplier: n/a
+base_bet                : 1.0
+bet_amount              : 2.0
+bet_tier_amount         : 2.0
+bet_tier                : medium_bet
+link_enabled            : true
+max_multiplier_bg       : by_game
+max_multiplier_fg       : 20000
+coin_in                 : 100.0
+total_rounds            : 1,000,000
+duration                : 00.00 sec
+
+rtp_total               : 00.0000%
+rtp_link                : 00.0000%
+rtp_bonus          : 00.0000%
+rtp_game                : 00.0000%
+rtp_bg                  : 00.0000%
+rtp_fg                  : 00.0000%
+hit_rate_bg             : 00.0000%
+hit_rate_fg             : 00.0000%
+fg_trigger_rate         : 00.0000% (cycle 00.00 spins)
+retrigger_trigger_rate  : 00.0000% (cycle 00.00 free spins)
+avg_fg_spins            : 10.03 spins
+
+bg_trigger_fg_cnt       : 1,000,000
+bg_trigger_fg_pay       : 1,000,000
+special_symbol_cnt      : 1,000,000
+SCR                     : 1,000,000
+
+volatility_std          : 00.00
+standard_error          : 00.00
+
+card_system_profile     : oldhand
+card_retry_limit        : 10000
+retry_total             : 1,000,000
+avg_retry               : 00.00
+
+retry_limit_exceeded    : 0
+retry_limit_bg_range    : 0
+retry_limit_bg_freegame : 0
+retry_limit_fg          : 0</code></pre>
+<ul><li><code>math_version</code> 顯示 RTP／Variant 模型的完整四段版本號，例如 <code>2.1.3.13</code>；Console 依數學文件原格式輸出，不得自行省略或改寫。只有報表檔名依第 3.1.4 節轉為 <code>02010313</code>。</li><li><code>duration</code> 顯示正式模擬耗時，不包含 Numba Warm-up，固定顯示到小數點後 2 位並加上 <code>sec</code>。</li><li><code>rtp_total = rtp_link + rtp_bonus + rtp_game</code>；三個分項的歸類必須依數學文件，且不得重複計算。</li><li><code>rtp_bg</code>／<code>rtp_fg</code> 是依場景的交叉檢視，不取代 Link／Bonus Game／Game 的產品 RTP 拆分。</li><li><code>bg_trigger_fg_cnt</code> 為 BG 成功觸發 FG 的累計次數。</li><li><code>bg_trigger_fg_pay</code> 為 BG 成功觸發 FG 且符合目前 Profile BG Trigger Cap 之 Spin 的 BG 累計得分；超過 cap 的觸發 BG 得分不得計入。Card System 關閉的自然機率報表也必須載入指定 RTP Config／Profile 的 cap 套用此過濾。</li><li><code>bg_trigger_fg_cnt</code> 保留所有自然成功觸發 FG 的次數；BG Trigger Cap 只過濾 <code>bg_trigger_fg_pay</code>，不得改寫自然 FG 觸發率。</li><li><code>Multiplier Line</code> 的 <code>bg_trigger_fg_cnt_lte_upper</code>／<code>bg_trigger_fg_pay_lte_upper</code> 保留所有上限的累計結果；它們不受目前執行 Profile 影響，同一份 Card System Off 自然報表必須可供不同 Profile cap 共用。</li><li>Card System 關閉時，從 <code>card_system_profile</code> 到 <code>retry_limit_fg</code> 的整個區塊不顯示。</li><li><code>card_retry_limit</code> 正式設定為 <code>10000</code>。</li><li><code>avg_retry</code> 固定顯示到小數點後 2 位。</li><li>次數及累計值使用千分位逗號，例如 <code>1,000,000</code>。</li><li>百分比欄位固定顯示 <code>%</code>；Cycle 必須同時顯示平均間隔與正確單位。</li><li><code>special_symbol_cnt</code> 統計出現特殊符號 <code>SC</code> 的 Spin 次數，Base Spin 與每一次 Free Spin 都要納入。</li><li>單次 Base Spin／Free Spin 只要盤面出現至少一個 <code>SC</code> 就加 <code>1</code>；同一 Spin 出現多個 <code>SC</code> 仍只加 <code>1</code>。</li><li>Cascade 過程若同屬同一次 Spin，不得因不同盤面重複累加；該 Spin 最終最多計數 <code>1</code>。</li><li><code>special_symbol_rate = special_symbol_cnt / total_rounds</code>，只作為 SCR 的中間計算值；分母只使用付費場數，不加 Free Spin 數。</li><li><code>SCR = special_symbol_rate × 10,000,000,000</code>。</li><li>Console 與 <code>Overview</code> 不輸出 <code>special_symbol_rate</code>，只輸出換算後的 <code>SCR</code>。</li><li><code>total_rounds = 0</code> 時，<code>SCR</code> 輸出 <code>0</code>，不得除以零。</li><li>不適用的 Feature 欄位可不顯示，但不得以錯誤的 <code>0</code> 冒充已驗證結果。</li></ul>
+<h4 id="332-game-info">3.3.2 Game Info</h4>
+<p><code>&lt;&lt; By Game Info &gt;&gt;</code> 固定放在共用輸出的最後：Card System On 時接在 <code>retry_limit_fg</code> 之後，Off 時接在 <code>standard_error</code> 之後。此區用來顯示遊戲專屬統計；欄位依玩法增減，不適用的欄位不得沿用其他遊戲。</p>
+<p>H016 範例：</p>
+<pre><code>&lt;&lt; By Game Info &gt;&gt;
+
+avg_cascades_bg        : 0.410662
+avg_cascades_fg        : 0.6329912625344514
+golden_converted       : 182505
+w2_events              : 4427
+w2_bg_event_rate       : 0.330700%
+w2_fg_event_rate       : 1.313552%
+w2_bg_count_2          : 2917
+w2_bg_count_3          : 373
+w2_bg_count_4          : 17
+w2_fg_count_2          : 1069
+w2_fg_count_3          : 48
+w2_fg_count_4          : 3
+m1_bg_spin_rate        : 79.9233</code></pre>
+<ul><li>H016 的 By Game 欄位必須依上方順序輸出，不得依字母排序或統計產生順序重排。</li><li>H016 若新增其他 By Game 欄位，新增欄位接在既有欄位之後，並同步更新本規範。</li></ul>
+<h3 id="34-驗證清單">3.4 驗證清單</h3>
+<ul><li class="check"><span class="cb">☐</span> <code>BATCH_RUNS</code> 每筆均包含七個必要欄位。</li><li class="check"><span class="cb">☐</span> 自然機率與倍率權重分別從 <code>config_file</code>、<code>config_rtp_file</code> 載入。</li><li class="check"><span class="cb">☐</span> 固定 RNG／種子可重現相同結果。</li><li class="check"><span class="cb">☐</span> Worker 合併後的總場次等於 <code>total_rounds</code>。</li><li class="check"><span class="cb">☐</span> Console 與 Excel 報表的共用欄位及數值一致。</li><li class="check"><span class="cb">☐</span> <code>bg_trigger_fg_cnt</code> 與 <code>bg_trigger_fg_pay</code> 位於 <code>avg_fg_spins</code> 後，且次數與 BG 得分口徑正確。</li><li class="check"><span class="cb">☐</span> <code>free_game</code> 卡接受的觸發 BG 均未超過同 Profile 正權重 BG <code>range</code> 卡的最大上限；超過上限的結果已重跑。</li><li class="check"><span class="cb">☐</span> Card System Off 的自然機率報表只將符合指定 Profile BG Trigger Cap 的觸發 BG 得分計入 <code>bg_trigger_fg_pay</code>，且 <code>bg_trigger_fg_cnt</code> 未被 cap 過濾。</li><li class="check"><span class="cb">☐</span> <code>Multiplier Line</code> 的第一欄為由 <code>Interval_Upper</code> 自動產生的 <code>Interval</code>；每一列均有 <code>Interval_Upper</code> 與累計至該上限的 BG Trigger count/pay；累計值單調不減，最後一列 count 等於 <code>bg_trigger_fg_cnt</code>。</li><li class="check"><span class="cb">☐</span> 倍率權重工具從 Profile 的最大正權重 BG range 自動選取完全相同上限的累計 count/pay，未寫死個別 Profile 或遊戲 cap。</li><li class="check"><span class="cb">☐</span> <code>special_symbol_cnt</code> 同時統計 Base Spin 與 Free Spin，且同一 Spin 即使出現多個 <code>SC</code> 也只累加一次。</li><li class="check"><span class="cb">☐</span> <code>SCR</code> 等於 <code>(special_symbol_cnt / total_rounds) × 10,000,000,000</code>，且 Console 與 <code>Overview</code> 的數值一致。</li><li class="check"><span class="cb">☐</span> Card System 區塊位於 <code>standard_error</code> 後；Card System Off 時整段移除且其他欄位不重排。</li><li class="check"><span class="cb">☐</span> <code>Overview</code> 與 Console 的內容及順序一致，且未包含 Batch 與 <code>&lt;&lt; By Game Info &gt;&gt;</code> 標題。</li><li class="check"><span class="cb">☐</span> <code>Multiplier Line</code> 包含所有共用欄位，並依遊戲功能正確顯示或移除 BF／SF 與 By Game 欄位。</li><li class="check"><span class="cb">☐</span> 報表檔名依 H026 規則排列，時間、Bet Mode、場次及 Card System 後綴均正確。</li><li class="check"><span class="cb">☐</span> Card System Off 使用基礎 <code>game_id</code> 與 2 位數基礎版本，例如 <code>H0161_02</code>。</li><li class="check"><span class="cb">☐</span> Card System On 使用 RTP／Variant <code>game_id</code> 與補零後的四段版本，例如 <code>H016192A_02000000</code>。</li><li class="check"><span class="cb">☐</span> Oldhand 的 Card System On 報表檔名包含 <code>small_bet</code>、<code>medium_bet</code> 或 <code>big_bet</code>，且與 <code>bet_amount</code> 判定結果一致。</li><li class="check"><span class="cb">☐</span> 四段版本已逐段補滿 2 位數，例如 <code>2.1.3.13</code> 正確輸出為 <code>02010313</code>。</li><li class="check"><span class="cb">☐</span> RTP 與 Feature Trigger 接近目標，偏差有統計解釋。</li><li class="check"><span class="cb">☐</span> Newbie 的 BG／FG Max Multiplier 分別不超過 30x／120x，且 Link RTP 為 0%。</li><li class="check"><span class="cb">☐</span> Oldhand 小 Bet 的 FG Max Multiplier 不超過 20000x，且 Link RTP 為 0%。</li><li class="check"><span class="cb">☐</span> Oldhand 中 Bet 的 FG Max Multiplier 不超過 20000x，且 Link RTP 為 2%。</li><li class="check"><span class="cb">☐</span> Oldhand 大 Bet 的 FG Max Multiplier 不超過 2000x，且 Link RTP 為 2%。</li><li class="check"><span class="cb">☐</span> 各批次皆滿足 <code>rtp_total = rtp_link + rtp_bonus + rtp_game</code>，並符合《<a href="#" class="tab-link" data-tab="math">數學模型規範</a>》第 1.4 節目標。</li><li class="check"><span class="cb">☐</span> BF／SF Newbie 為 <code>0% + 4% + 92.5% = 96.5%</code>。</li><li class="check"><span class="cb">☐</span> BF／SF Oldhand 小 Bet 為 <code>0% + 4% + 92.5% = 96.5%</code>。</li><li class="check"><span class="cb">☐</span> BF／SF Oldhand 中／大 Bet 為 <code>2% + 2% + 92.5% = 96.5%</code>。</li><li class="check"><span class="cb">☐</span> Card System 設定占比與實際占比一致。</li><li class="check"><span class="cb">☐</span> Retry Limit Exceeded 為零，或已有明確原因與核准處理方式。</li><li class="check"><span class="cb">☐</span> 最大獎未超出限制，理論可達結果有相應測試。</li><li class="check"><span class="cb">☐</span> 所有正式 Config／Mode／Profile 均有最新版本報表。</li></ul>
+<hr>
+<h2 id="config">Config</h2>
+<h3 id="51-定位與轉檔">5.1 定位與轉檔</h3>
+<p>Config 分為基礎 Config 與 RTP／Variant Config：</p>
+<div class="tbl-wrap"><table><thead><tr><th>Config</th><th>對應數學文件</th><th>版本格式</th></tr></thead><tbody><tr><td><code>config.js</code></td><td><code>H&lt;遊戲編號&gt;1.xlsx</code>，例如 <code>H0161.xlsx</code></td><td><code>excel_version</code> 為 1 碼</td></tr><tr><td><code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code></td><td><code>H&lt;遊戲編號&gt;1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code>，例如 <code>config_92A.js</code> 對應 <code>H016192A.xlsx</code></td><td><code>excel_version</code> 為 4 碼，且第 1 碼對應基礎版本</td></tr></tbody></table></div>
+<ul><li><code>Newbie</code>／<code>Oldhand</code> 是 Card System 的 Player Profile，不寫入 Config 檔名。</li><li>RTP／Variant 模型的 XLSX、Config、Simulator、Demogame 與報表必須使用相同 Config 代號。</li></ul>
+<p>兩種 Config 都是 Simulator 與 Demogame 的執行參數，不是人工獨立維護的第二份數學文件。正式參數必須由各自對應的 <code>Source/*.xlsx</code> 轉出；轉換一律由 AI 依 mapping 執行，專案內不建立、不維護 Excel↔Config 轉檔工具。</p>
+<pre><code>修改基礎或 RTP／Variant Source XLSX
+      ↓
+依文件類型更新 1 碼或 4 碼版本
+      ↓
+由 AI 依 Source 與 mapping 轉出 Config
+      ↓
+檢查欄位、型別、長度、權重與版本
+      ↓
+完成 XLSX → Config → 程式讀取對帳
+      ↓
+執行 Simulator 與 Demogame 驗證</code></pre>
+<p>禁止直接修改 Config 中由 XLSX 產生的大型陣列來規避轉檔；結果錯誤時應修正 XLSX 或 mapping 後重新轉出。</p>
+<h3 id="52-最低資料">5.2 最低資料</h3>
+<p>Config 至少應提供遊戲實際需要的：</p>
+<ul><li><code>game_id</code>、<code>game_name</code>、<code>excel_version</code> 與 Config 類型／代號。</li><li>Reel 數、盤面尺寸、Symbol ID／名稱／屬性。</li><li>Reel Strip／Weight／Length、Paytable、Payline／Ways／Cluster。</li><li>Table、Table Weight、Drop Mode 與各 Scene 資料。</li><li>Bet Mode ID、成本倍率、Bet Level／DENOM。</li><li>BG、FG、Cascade、Multiplier、Retrigger 與 Feature 參數。</li><li>Card System 開關、Retry Limit、Profile、NB／EB 與 BF／SF 的押注層級判定方式、Oldhand 小／中／大 Bet 門檻、卡片區間與各模式／層級權重。</li><li>Link 資格、Link／Bonus Game／Game RTP 目標與 Total RTP。</li><li>Newbie BG／FG、Oldhand 小／中／大 Bet 的 Max Win／Max Multiplier 與其他產品限制。</li></ul>
+<p>同一概念在不同 Config 間必須保持一致，並記錄於 <code>Source/xlsx_config_usage_mapping.md</code>。</p>
+<h3 id="53-資料驗證">5.3 資料驗證</h3>
+<ul><li><code>game_id</code> 與所在遊戲資料夾一致。</li><li><code>config.js</code> 的 <code>excel_version</code> 與基礎 XLSX 完全一致，且只能是 1 碼。</li><li>初次建立時，競品模型的基礎 XLSX／Config 版本為 <code>0</code>，非競品模型為 <code>1</code>；來源分類必須可追溯。</li><li><code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code> 的 <code>excel_version</code> 與對應 RTP／Variant XLSX 完全一致，且必須是 4 碼。</li><li>RTP／Variant Config 的版本第 1 碼，必須與 <code>config.js</code> 及基礎 XLSX 的版本相同。</li><li>Config 檔名、類型、內部 RTP／Variant 與來源 XLSX 相符。</li><li>所有 Weight 非負，啟用選項的總權重大於 0。</li><li>Newbie 與 Oldhand 小／中／大 Bet 的權重、Link 資格、RTP 拆分及倍率上限齊全且互相一致。</li><li>押注層級邊界必須精確符合 <code>&lt; $2</code>、<code>&gt;= $2 且 &lt;= $100</code>、<code>&gt; $100</code>，不得因浮點誤差選錯層級。</li><li>NB／EB 必須以實際模式押注判斷；BF／SF 必須以購買價格除以 Feature Price 倍數後的基礎押注判斷。</li><li>Reel、Weight、Paytable、Symbol 與 Mode 陣列長度相容。</li><li>所有 ID／索引在有效範圍，無重複或遺漏。</li><li>Min／Max、倍率、局數與 Max Win 限制合法。</li><li>未支援的 Mode／Profile／Feature 不存在或明確停用。</li><li>浮點精度足以還原來源數值，不因格式化造成 RTP 偏差。</li></ul>
+<h3 id="54-版本與歷史檔">5.4 版本與歷史檔</h3>
+<ul><li>正式 Config 放在遊戲資料夾根層，包括基礎 <code>config.js</code> 與實際支援的 <code>config_92A.js</code> 等 RTP／Variant Config。</li><li>歷史 Config 放在對應的 <code>Versions/</code> 版本目錄；基礎 Config 與 RTP／Variant Config 都必須保留來源及版本關係。</li><li><code>Versions/version_manifest.js</code> 記錄完整版本、可用 Config、路徑與變更說明。</li><li>Runtime、Simulator 與 Demogame 不得自行覆寫 Config 版本。</li><li>Index 載入 <code>config.js</code> 時顯示 1 碼基礎版本；載入 RTP／Variant Config 時顯示完整 4 碼版本。</li><li>RTP／Variant 版本若第 1、2 碼相同，Index 只顯示第 3、4 碼最新的版本。</li><li>Version 與 Config 選單只列出 manifest 中實際存在且相容的組合。</li></ul>
+<h3 id="55-最終交付檢查">5.5 最終交付檢查</h3>
+<ul><li class="check"><span class="cb">☐</span> <code>config.js</code> 對應基礎 XLSX；每個 <code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code> 對應相同 RTP／Variant 的 XLSX。</li><li class="check"><span class="cb">☐</span> 基礎 XLSX／Config 使用 1 碼版本，RTP／Variant XLSX／Config 使用 4 碼版本，且第 1 碼一致。</li><li class="check"><span class="cb">☐</span> XLSX、Config、Simulator、Demogame 與文件版本一致。</li><li class="check"><span class="cb">☐</span> Config 可由 Source 重新轉出，且不會產生非預期差異。</li><li class="check"><span class="cb">☐</span> 每個 Config 都有來源 XLSX 與 mapping 說明。</li><li class="check"><span class="cb">☐</span> Simulator 與 Demogame 沒有重複或覆寫 Config 參數。</li><li class="check"><span class="cb">☐</span> 所有可選 Config／Version／Profile／Mode 均真實存在且已驗證。</li><li class="check"><span class="cb">☐</span> 最新模擬報表已保存於 <code>Record/</code>，結果符合目標與限制。</li><li class="check"><span class="cb">☐</span> 代表性單局已完成 Config、Simulator、Demogame 三方對帳。</li><li class="check"><span class="cb">☐</span> <code>~$*.xlsx</code>、<code>__pycache__/</code>、臨時檔與測試輸出未列入正式交付。</li></ul></section><section class="panel" role="tabpanel" id="panel-demo" aria-labelledby="tab-demo" hidden><h1 id="demogame規範">Demogame規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>。</p>
+<h2 id="41-用途與載入">4.1 用途與載入</h2>
+<p>Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不只是視覺展示。它必須能用單局結果證明 Config、Simulator 與遊戲規則一致。</p>
+<ul><li>主入口固定為 <code>index.html</code>，使用相對路徑，雙擊即可離線執行。</li><li>Demogame 的模型顯示格式為 <code>&lt;Config&gt;-&lt;Profile&gt;</code>，例如 <code>92A-Oldhand</code>。</li><li>遊戲名稱、盤面、輪帶、權重、Paytable、Bet Mode 與 Feature 參數從 Config 取得。</li><li>不得為演出方便另寫一套簡化數學邏輯。</li><li>Config 無法載入或欄位不完整時要顯示明確錯誤，不得靜默使用舊值。</li></ul>
+<h3 id="411-遊戲類型命名規則">4.1.1 遊戲類型命名規則</h3>
+<p>Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：</p>
+<p><code>Video Slot - &lt;主要派彩類型&gt; / &lt;附加機制&gt;</code></p>
+<p>主要派彩類型只能依實際判獎邏輯選擇一種：</p>
+<div class="tbl-wrap"><table><thead><tr><th>類型</th><th>統一英文</th><th>判定規則</th></tr></thead><tbody><tr><td>群集派彩</td><td><code>Cluster Pay</code></td><td>相同符號必須在盤面上依規定方向相鄰連接，且連接數量達門檻才得獎。</td></tr><tr><td>全盤計數</td><td><code>Pay Anywhere</code></td><td>相同符號在整個盤面的總數達門檻即得獎，不要求相鄰、連線或由最左輪開始。</td></tr><tr><td>路數派彩</td><td><code>N Ways</code></td><td>相同符號由最左輪起，在連續相鄰輪出現即得獎；文件中的 <code>N</code> 必須換成實際固定 Ways 或最小～最大 Ways。</td></tr><tr><td>線數派彩</td><td><code>N Lines</code></td><td>依固定 Payline 判獎；文件中的 <code>N</code> 必須換成實際線數。</td></tr></tbody></table></div>
+<ul><li><code>Cascade</code>、<code>Megaways</code>、Multiplier 與 Feature 屬附加機制，不得代替主要派彩類型。</li><li>不要求相鄰的全盤計數玩法不得標示為 <code>Cluster Pay</code> 或 <code>Cluster Pays</code>。</li><li>連消流程使用的得分倍數統一稱為 <code>Cascade Multiplier</code>，不得再使用 <code>Progressive Multiplier</code>、<code>Progressive Cascade Multiplier</code> 或 <code>Progressive Win Multiplier</code>。</li><li>相同術語必須同步出現在 Game Rule、Index Help 與遊戲清單，不得各自使用不同名稱。</li></ul>
+<p>目前正式遊戲類型如下：</p>
+<div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>統一遊戲類型</th></tr></thead><tbody><tr><td>H013 糖果狂歡 1000</td><td><code>Video Slot - Pay Anywhere / Cascade</code></td></tr><tr><td>H015 賞金列車</td><td><code>Video Slot - 3,600 Ways / Cascade / Cascade Multiplier</code></td></tr><tr><td>H016 幸運王牌</td><td><code>Video Slot - 1,024 Ways / Cascade / Cascade Multiplier</code></td></tr><tr><td>H019 埃及秘寶</td><td><code>Video Slot - Pay Anywhere / Cascade</code></td></tr><tr><td>H026 彩罐熱舞 1000</td><td><code>Video Slot - 20 Lines / Cascade</code></td></tr><tr><td>H027 宙斯 2500</td><td><code>Video Slot - Pay Anywhere / Cascade</code></td></tr><tr><td>H028 雷神爆金</td><td><code>Video Slot - 2,025–32,400 Ways / Megaways / Cascade</code></td></tr></tbody></table></div>
+<p>目前正式遊戲沒有使用 <code>Cluster Pay</code>；日後只有實際採相鄰群集判獎的遊戲才能列入此類。</p>
+<h2 id="42-共用區域與-by-game-區域">4.2 共用區域與 By Game 區域</h2>
+<p>圖示中的遊戲顯示區域屬於 By Game 設計；除此之外的 Demogame 區域均為所有遊戲共用。</p>
+<h3 id="421-by-game-區域">4.2.1 By Game 區域</h3>
+<p>下列區域依各遊戲盤面、Feature 與美術需求自行設計：</p>
+<ul><li>Game Title：遊戲 ID、遊戲名稱及遊戲專屬標題樣式。</li><li>Feature Status：Base Game／Free Game、Cascade／Combo、FG Left、Multiplier 與其他遊戲狀態。</li><li>Reel／Board：盤面尺寸、Reel、Symbol、框體、特殊符號及遊戲專屬資訊。</li><li>Board Animation：Spin、中獎、消除、補牌、掉落、轉換、Multiplier 與 Feature 動畫。</li><li>Board Message：盤面下方的局數、FG 進度、得分、No Win 與遊戲流程訊息。</li></ul>
+<p>對應元素通常為 <code>#feature-bar</code>、<code>#strip-bar</code>、<code>#grid-panel</code>／<code>#board</code> 及盤面 Message Bar。實際 ID 可以依遊戲調整，但範圍與責任不得擴張到共用區域。</p>
+<p>By Game 區域必須：</p>
+<ul><li>從 Config 取得名稱、盤面、Symbol、倍率與 Feature 資料，不得寫死其他遊戲的內容。</li><li>只維護遊戲專屬 HTML、CSS、Render、動畫與狀態轉換。</li><li>將共用操作需要的狀態與結果透過固定介面交給共用模組，不得複製整套共用控制邏輯。</li></ul>
+<h3 id="422-共用區域">4.2.2 共用區域</h3>
+<p>除第 4.2.1 節外，其餘區域與行為均由所有遊戲共用，包括：</p>
+<ul><li>Player：Credit、Bet、Win。</li><li>Stats／Simulation。</li><li>Play：Spin、Auto、Bet Stepper、Speed。</li><li>Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。</li><li>Debug Mode、Set RNG、Reel RNG、Spin Result、Log 與 History 控制。</li><li>Setting：Version、Config／Profile、Language、Help、Reset。</li><li>共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。</li></ul>
+<p>共用資源固定放在 <code>Project/Slots/</code>：</p>
+<pre><code>Project/Slots/
+├─ demogame_common.css
+├─ demogame_common.js
+└─ H0xx_遊戲名稱/
+   └─ index.html</code></pre>
+<p>每款遊戲的 <code>index.html</code> 必須使用相對路徑載入：</p>
+<pre><code>&lt;link rel="stylesheet" href="../demogame_common.css?v=1"&gt;
+&lt;script src="../demogame_common.js?v=1"&gt;&lt;/script&gt;</code></pre>
+<ul><li><code>demogame_common.css</code> 維護所有共用區域的版面、色彩、間距、元件狀態與響應式規則。</li><li><code>demogame_common.js</code> 維護共用初始化、操作控制、Setting、Config／Profile、Version、Language、Help、Debug 與共用狀態同步。</li><li>共用功能或樣式有異動時，修改 <code>demogame_common.css</code>／<code>demogame_common.js</code>，不得在每款遊戲的 <code>index.html</code> 複製一份再各自修改。</li><li>By Game 樣式與程式保留在該遊戲的 <code>index.html</code> 或遊戲專屬資源，不得放入共用檔案影響其他遊戲。</li><li>遊戲專屬 CSS 不得覆寫共用區域，除非本規範明確提供可覆寫的 CSS Variable 或 Hook。</li></ul>
+<h2 id="43-補牌方式">4.3 補牌方式</h2>
+<p>每款有消除機制的遊戲，必須在 Game Rule、Config 對應說明與 Demogame 中指定唯一補牌方式。Simulator 與 Demogame 必須使用相同邏輯。</p>
+<ol><li><strong>消除後原地補牌</strong><ul><li>中獎符號消除後，只在原本的空格位置抽取並顯示新符號。</li><li>盤面上未消除的符號維持原座標，不播放向下移動動畫。</li><li>新符號在空格原位播放 Refill 動畫。</li></ul></li><li><strong>消除後掉落補牌</strong><ul><li>中獎符號消除後，同一 Reel／Column 上方未消除的符號依重力向下補位。</li><li>剩餘空格由新符號從盤面上方掉入。</li><li>動畫必須區分既有符號的 Settle 與新符號的 Drop／Refill。</li></ul></li><li><strong>特殊補牌（By Game）</strong><ul><li>不符合前兩類的 Random、Parallel、跨欄移動、整盤替換或其他特殊補牌皆歸此類。</li><li>必須在該遊戲的 <code>game_rule.md</code> 與 Config mapping 中明確定義抽取來源、移動方向、補牌順序、保留位置及動畫。</li><li>不得把單一遊戲的特殊補牌邏輯寫成所有遊戲共用的預設行為。</li></ul></li></ol>
+<ul><li>補牌資料必須來自 Config 定義的 Reel／Drop Table／Weight，不得只為動畫另外抽一組結果。</li><li>補牌後重新判獎的次數、盤面與得分必須可由 Debug 結果重現，並與 Simulator 對帳。</li><li>Symbol 轉 Wild、鎖定位置或不補牌的位置，必須先依遊戲規則處理，再執行選定的補牌方式。</li></ul>
+<h2 id="44-必要行為">4.4 必要行為</h2>
+<ul><li>支援 Normal Spin，以及遊戲實際存在的 Extra Bet、Buy Feature、Super Feature。</li><li>Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。</li><li>Auto、Speed、Reset 不得改變 RNG、得分或統計結果。</li><li>BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。</li><li>Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。</li><li>Help 與 <code>game_help_draft.md</code> 一致，不在 HTML 另維護一份規則。</li></ul>
+<h2 id="45-debug-與重現">4.5 Debug 與重現</h2>
+<p>Debug Mode 至少可查看：</p>
+<ul><li>Config、Version、Profile、Bet Mode、Mode／Feature Price 倍數、base bet、實際模式押注、<code>bet_tier_amount</code>、押注層級、Link 資格、BG／FG Max Multiplier 與 Card System 狀態。</li><li>Card 抽獎值、卡片區間與 Retry 次數。</li><li>Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。</li><li>初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。</li><li>FG 觸發、局數、Retrigger、整包 Win 及即時 Log。</li></ul>
+<p>指定 Card Range 與 Reel RNG 必須互斥。指定值要檢查數量與範圍，且只作用於規格定義的下一個 Spin；不得因指定 RNG 或 Force FG 進入無限重跑。</p>
+<h2 id="46-與-simulator-對帳">4.6 與 Simulator 對帳</h2>
+<p>至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Newbie、Oldhand 小／中／大 Bet、Link 可用／不可用、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。</p>
+<p>逐項確認盤面、RNG、各段得分、Total Win、Coin In、倍率、Feature 狀態與 Retry 計數一致。</p>
+<h2 id="47-交付檢查">4.7 交付檢查</h2>
+<p>每次修改 Demogame 的 <code>index.html</code>、共用 <code>demogame_common.css</code>／<code>demogame_common.js</code>，或任何會改變操作、顯示、動畫、Debug、Config／Version／Profile 選擇方式的程式時，必須在同一次修改中同步更新 Demogame 的「修改紀錄」。</p>
+<ul><li>修改紀錄統一放在 <code>#change-log-wrap</code>，並於 Debug Mode 開啟時顯示。</li><li>每筆紀錄至少包含日期、修改目的、實際變更內容與驗證結果。</li><li>若變更會影響數學、XLSX、Config、RTP、Hit Rate 或 Feature 行為，必須明確列出受影響檔案與數值；若未影響，也必須註明「未修改 XLSX／Config 數學參數」。</li><li>修改紀錄必須描述目前實際完成的內容，不得只寫「調整」、「修正」或尚未執行的計畫。</li><li>純介面或程式修正不需要因此提升數學版本，但仍必須留下修改紀錄。</li></ul>
+<ul><li class="check"><span class="cb">☐</span> 離線開啟無錯誤，Console 無未處理例外。</li><li class="check"><span class="cb">☐</span> 本次 Demogame 修改已同步更新 <code>#change-log-wrap</code>，內容包含日期、變更與驗證結果。</li><li class="check"><span class="cb">☐</span> <code>demogame_common.css</code> 與 <code>demogame_common.js</code> 由 <code>../</code> 相對路徑載入，且共用功能未複製進遊戲專屬程式。</li><li class="check"><span class="cb">☐</span> 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。</li><li class="check"><span class="cb">☐</span> By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。</li><li class="check"><span class="cb">☐</span> 補牌方式已選定為原地、掉落或特殊補牌，並與 Game Rule、Config、Simulator 一致。</li><li class="check"><span class="cb">☐</span> 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。</li><li class="check"><span class="cb">☐</span> Config 切換後所有資料與顯示同步更新。</li><li class="check"><span class="cb">☐</span> 所有支援的 Bet Mode 均可完成完整流程。</li><li class="check"><span class="cb">☐</span> Card System Off／On、Newbie、Oldhand 小／中／大 Bet 與 Link 資格行為正確。</li><li class="check"><span class="cb">☐</span> Debug 資訊足以重現並與 Simulator 對帳。</li><li class="check"><span class="cb">☐</span> Demo 統計口徑與模擬報表一致。</li><li class="check"><span class="cb">☐</span> 不存在寫死的舊遊戲名稱、倍率、Table、輪帶或 Help。</li></ul></section><section class="panel" role="tabpanel" id="panel-script" aria-labelledby="tab-script" hidden><h1 id="腳本規範">腳本規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 <a href="#" class="tab-link" data-tab="overview">_README.md</a>。</p>
+<p>內容涵蓋：表演腳本（預錄結果腳本）的用途、清單結構、格式欄位、挑選規則、權重整合與交付檢查。</p>
+<h2 id="1-用途與定位">1. 用途與定位</h2>
+<p>表演腳本是<strong>預先錄製的 RNG 序列與固定結果</strong>，供前端在特定情境直接重放，用於新手體驗、Buy Feature 展示與 Free Spin 系統等。</p>
+<ul><li>腳本只影響「被挑中的那幾局」的表演結果，<strong>不改變真實遊戲的數學模型、Config 與派彩公式</strong>。</li><li>每支腳本的 RNG 序列必須能在該遊戲的正式輪帶／掉落設定下重放出相同結果；輪帶或掉落權重改版時，必須驗證既有腳本仍可重放，否則重錄。</li><li>腳本表以遊戲為單位維護（每款一張，依 RTP 版型分組），欄位格式見第 3 節。</li></ul>
+<h2 id="2-腳本清單結構">2. 腳本清單結構</h2>
+<p>依遊戲實際支援的押注模式建立；遊戲不支援的模式不得出現對應腳本。</p>
+<div class="tbl-wrap"><table><thead><tr><th>類別</th><th>腳本</th><th>支數</th><th>說明</th></tr></thead><tbody><tr><td>新手體驗</td><td><code>NB Free Game A／B</code></td><td>2</td><td>觸發 FG 的完整表演，固定總倍率</td></tr><tr><td>新手體驗</td><td><code>NB Jackpot Game A／B</code></td><td>2</td><td>OP Jackpot 小遊戲體驗，固定總倍率</td></tr><tr><td>新手體驗</td><td>其他押注模式（EB 等）之 Free Game／Jackpot Game A／B</td><td>依支援</td><td>遊戲支援該模式才建立</td></tr><tr><td>Buy Feature</td><td><code>BF A1～A3</code>、<code>BF B1～B3</code></td><td>每版型 3</td><td>高／中／低 RTP 三檔＋抽選權重（見 4.2）</td></tr><tr><td>Free Spin 系統</td><td><code>0-1x 腳本</code>＋<code>9x 腳本 ×10</code></td><td>11</td><td>新手 NB 免費遊戲系統（見 4.3）</td></tr></tbody></table></div>
+<h2 id="3-格式欄位">3. 格式欄位</h2>
+<p>每支腳本一列，欄位固定：</p>
+<div class="tbl-wrap"><table><thead><tr><th>欄位</th><th>內容</th></tr></thead><tbody><tr><td>腳本名稱</td><td>類別＋模式＋編號（例：<code>Buy Feature A2</code>）</td></tr><tr><td>RNG</td><td>預錄的 RNG 序列（逗號分隔）</td></tr><tr><td>Multi</td><td>該腳本的總得分倍率（以該模式單注為底）</td></tr><tr><td>RTP</td><td><code>Multi ÷ 押注 × 100%</code></td></tr><tr><td>抽選權重</td><td>同組腳本間的抽選權重</td></tr><tr><td>押注</td><td>該模式的成本倍數（NB＝1、BF＝購買價倍數）</td></tr></tbody></table></div>
+<h2 id="4-挑選規則">4. 挑選規則</h2>
+<h3 id="41-新手體驗">4.1 新手體驗</h3>
+<ul><li>每支權重＝1、押注＝1；同名 A／B 兩支等權重擇一。</li><li>總倍率為體驗設計值，製作前與使用者確認（參考值：Free Game 12x、Jackpot Game 10x）。</li></ul>
+<h3 id="42-buy-feature">4.2 Buy Feature</h3>
+<ul><li>每個版型三支：高／中／低 RTP 各一，另配抽選權重；押注＝Buy Feature 價格倍數。</li><li><strong>加權整合必須等於 96.00%</strong>：<code>Σ(RTP × 權重) ÷ Σ(權重) = 96.00%</code>。</li><li>三檔 RTP 先定，權重由上式解出並整數化；解出後驗算到小數 2 位精確。</li><li>參考例（前作 92 版）：105.67%×800＋88.80%×200＋81.53%×435 → 加權 96.00%。</li></ul>
+<h3 id="43-free-spin-系統">4.3 Free Spin 系統</h3>
+<ul><li>適用新手 NB 的免費遊戲段（一段 10 把）。</li><li>挑法：10 把中<strong>挑一把跑 <code>0-1x</code> 腳本、挑一把跑 <code>9x</code> 腳本</strong>，其餘各把不中獎。</li><li><code>9x</code> 腳本固定 <strong>10 支</strong>，<strong>抽選權重鎖死全部＝1</strong>（等權重擇一），不得調整。</li><li>整段合計約 10x（參考值：0-1x＝44%＋9x＝955.56% → 999.56%）。</li></ul>
+<h3 id="44-版型與共用">4.4 版型與共用</h3>
+<ul><li>腳本表依 RTP 版型分組（例：92 版一張）；同一支 RNG 序列若在多個 RTP 版可重放出相同結果，可跨版共用並註記。</li><li>大額投注使用獨立模型（<code>_Bet100</code>）的遊戲：腳本倍率不得超過該模型的倍率上限（例：FG 上限 2,000x）。</li></ul>
+<h2 id="5-製作前必須與使用者確認">5. 製作前必須與使用者確認</h2>
+<ol><li>新手體驗涵蓋哪些押注模式（NB 以外是否含 EB／BF 體驗）。</li><li>各體驗腳本的目標倍率（Free Game／Jackpot Game）。</li><li>腳本表做哪些 RTP 版型、是否跨版共用。</li><li>Buy Feature 三檔 RTP 的目標值（權重由 96% 約束解出）。</li></ol>
+<h2 id="6-交付檢查">6. 交付檢查</h2>
+<ul><li class="check"><span class="cb">☐</span> 腳本清單依第 2 節結構建立，未支援的模式沒有腳本。</li><li class="check"><span class="cb">☐</span> 每支 RNG 序列已在正式 Config 下重放驗證，結果與表列 Multi 一致。</li><li class="check"><span class="cb">☐</span> Buy Feature 各版型加權整合＝96.00%（小數 2 位精確）。</li><li class="check"><span class="cb">☐</span> Free Spin 系統：<code>9x</code> 腳本 10 支、權重全部＝1；0-1x 與 9x 各佔一把、其餘不中獎。</li><li class="check"><span class="cb">☐</span> 腳本倍率未超出該模式（含 <code>_Bet100</code> 模型）的倍率上限。</li><li class="check"><span class="cb">☐</span> 輪帶／掉落改版後已重新驗證重放（或重錄）。</li></ul>
+<h2 id="7-範例h028-雷神爆金1000101016">7. 範例：H028 雷神爆金1000（101016）</h2>
+<p>支援 NB＋BF（無 Extra Bet），FG 觸發＝4 SC＝10 把：</p>
+<div class="tbl-wrap"><table><thead><tr><th>類別</th><th>腳本</th><th>支數</th></tr></thead><tbody><tr><td>新手體驗</td><td>NB Free Game A／B、NB Jackpot Game A／B</td><td>4</td></tr><tr><td>Buy Feature</td><td>BF A1～A3＋權重、BF B1～B3＋權重（押注 75；加權＝96.00%）</td><td>6</td></tr><tr><td>Free Spin 系統</td><td>0-1x ×1＋9x ×10（權重全鎖 1）</td><td>11</td></tr><tr><td>合計</td><td></td><td><strong>21</strong></td></tr></tbody></table></div>
+<p>無 Extra Bet，故不建立 EB 系列腳本；FG 觸發 10 把與 Free Spin 系統的「10 把挑法」一致。</p></section></main>
+</div>
+</div>
+<script>
+var TAB_IDS = ['overview', 'flow', 'math', 'docs', 'submission', 'sim', 'demo', 'script'];
+function activate(tabId, anchor) {
+  document.querySelectorAll('.tab').forEach(function(b) {
+    var on = b.dataset.tab === tabId;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;
+  });
+  document.querySelectorAll('.panel').forEach(function(p) {
+    p.hidden = (p.id !== 'panel-' + tabId);
+  });
+  document.querySelectorAll('.toc').forEach(function(t) {
+    t.hidden = (t.id !== 'toc-' + tabId);
+  });
+  if (anchor) {
+    var el = document.getElementById(anchor);
+    if (el) el.scrollIntoView();
+  } else {
+    window.scrollTo(0, 0);
+  }
+}
+document.querySelectorAll('.tab').forEach(function(b) {
+  b.addEventListener('click', function() { activate(b.dataset.tab); });
+});
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a');
+  if (!a) return;
+  if (a.classList.contains('tab-link')) {
+    e.preventDefault();
+    activate(a.dataset.tab, a.dataset.anchor || null);
+  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    var panel = el.closest('.panel');
+    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);
+  }
+});
+</script>
+</body>
+</html>

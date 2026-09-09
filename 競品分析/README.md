@@ -134,6 +134,6 @@ Super Ace 的 BG_Strip 缺 2.55%（R2~R5 各缺 14~20 個視窗），原因是�
 
 | 路徑 | 狀態 |
 |---|---|
-| `Project\Slots\C027_奧林帕斯 2500\其他\競品資料\遊戲數據_Gates_of_Olympus_1000.md` / `.html` | ✅ 2026-08-27 已同步為現行版本 |
+| `Project\Slots\C027_宙斯 2500\其他\競品資料\遊戲數據_Gates_of_Olympus_1000.md` / `.html` | ✅ 2026-08-27 已同步為現行版本 |
 
 > C027 專案自己留的參考副本。若本資料夾的 Gates of Olympus 報告再更新，記得一併同步。

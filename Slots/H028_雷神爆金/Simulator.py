@@ -57,19 +57,17 @@ BATCH_RUNS = [
     # ===== 4. 正式模擬（Card On＋彩金 Option 28，確認正確性）：NB/EB 10**8、BF/SF 10**7 =====
     # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<$2)→C、老手中/大 Bet(>=$2)→B；
     # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 一律以「模式倍數」查檔（NB=bet option、BF 固定 75 檔）。
-    # # --- Newbie NB + A（代表跑 92A）---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
-    # # --- 老手小 Bet（$1）+ C：94A / 90B ---
-    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # # --- 老手中 Bet（$2 下邊界、$100 上邊界）+ B：92A / 88B ---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    # # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
-    # {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    # {"config_file": "config.js", "config_rtp_file": "config_88B_Bet100.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # --- Newbie NB + A（代表跑 92A）---
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
+    # --- 老手小 Bet（$1）+ C：94A / 90B ---
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # --- 老手中 Bet（$100）+ B：92A / 88B ---
+    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
+    {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    {"config_file": "config.js", "config_rtp_file": "config_88B_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
     # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A）、$150 中（B）；JP 一律查 75 檔 ---
     {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
     {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
