@@ -1,0 +1,734 @@
+<title>老手救援 C-2 版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F8F9;
+    --surface:     #FFFFFF;
+    --surface-alt: #EFF3F4;
+    --ink:         #141B20;
+    --ink-mid:     #47555F;
+    --ink-soft:    #6D7C87;
+    --line:        #DCE3E7;
+    --line-soft:   #E8EDEF;
+    --accent:      #0C7480;
+    --accent-deep: #08525B;
+    --accent-soft: #E0EFF0;
+    --warn:        #9A6208;
+    --warn-soft:   #FBF0DC;
+    --danger:      #A63B3B;
+    --danger-soft: #F8E7E7;
+    --ok:          #3A7350;
+    --ok-soft:     #E3F0E7;
+
+    --serif: "Noto Serif TC", "Songti TC", Georgia, serif;
+    --sans:  "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --mono:  "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0E1418;
+      --surface:     #151D22;
+      --surface-alt: #1B252B;
+      --ink:         #E3E9EC;
+      --ink-mid:     #A3B0B9;
+      --ink-soft:    #7D8B95;
+      --line:        #27333A;
+      --line-soft:   #1F2A31;
+      --accent:      #4CBDC9;
+      --accent-deep: #7FD6DF;
+      --accent-soft: #113038;
+      --warn:        #D6A253;
+      --warn-soft:   #33280F;
+      --danger:      #D68282;
+      --danger-soft: #351D1D;
+      --ok:          #74B48C;
+      --ok-soft:     #16301F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0E1418;
+    --surface:     #151D22;
+    --surface-alt: #1B252B;
+    --ink:         #E3E9EC;
+    --ink-mid:     #A3B0B9;
+    --ink-soft:    #7D8B95;
+    --line:        #27333A;
+    --line-soft:   #1F2A31;
+    --accent:      #4CBDC9;
+    --accent-deep: #7FD6DF;
+    --accent-soft: #113038;
+    --warn:        #D6A253;
+    --warn-soft:   #33280F;
+    --danger:      #D68282;
+    --danger-soft: #351D1D;
+    --ok:          #74B48C;
+    --ok-soft:     #16301F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 2.5rem) 6rem;
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+    padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2rem, 4vw, 2.75rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.1rem;
+  }
+  .eyebrow b { color: var(--accent); font-weight: 500; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    line-height: 1.2;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--ink-mid);
+    font-size: 1.02rem;
+  }
+
+  /* the thesis: the RTP equation */
+  .equation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .55rem 1rem;
+    padding: 1.4rem 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+  }
+  .eq-term { display: flex; flex-direction: column; gap: .15rem; }
+  .eq-num {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3.6vw, 2rem);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .eq-num.is-accent { color: var(--accent); }
+  .eq-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .eq-op {
+    font-family: var(--serif);
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: var(--ink-soft);
+    line-height: 1;
+    position: relative;
+    top: -.15rem;
+  }
+
+  /* ---------- side nav ---------- */
+
+  nav.toc {
+    position: sticky;
+    top: 2rem;
+    font-size: .86rem;
+    line-height: 1.5;
+    border-left: 1px solid var(--line);
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+  nav.toc .toc-head {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: .3rem;
+  }
+  nav.toc a {
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    width: fit-content;
+  }
+  nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  nav.toc a.sub { padding-left: .85rem; font-size: .8rem; color: var(--ink-soft); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- body ---------- */
+
+  main { min-width: 0; max-width: 74ch; }
+
+  section { padding-top: clamp(1.5rem, 3vw, 2.1rem); scroll-margin-top: 1.5rem; }
+  section > * + * { margin-top: .6rem; }
+
+  /* tables & formula blocks: fixed breathing room against surrounding text */
+  section > .table-wrap,
+  section > .table-wrap + *,
+  section > .formula,
+  section > .formula + * { margin-top: .85rem; }
+  .gate-body .table-wrap { margin: .3rem 0; }
+
+  /* headings: clear separation from their body text, more above than below */
+  section > h2 + * { margin-top: .85rem; }
+  section > * + h3 { margin-top: 1.05rem; }
+  section > h3 + * { margin-top: .65rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.45rem, 3.2vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    text-wrap: balance;
+    display: flex;
+    align-items: baseline;
+    gap: .7rem;
+  }
+  h2 .sec {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: .04em;
+    position: relative;
+    top: -.2rem;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.06rem;
+    font-weight: 700;
+    margin: 0;
+    padding-top: .3rem;
+    letter-spacing: .01em;
+    text-wrap: balance;
+  }
+  h3 .sec {
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-right: .5rem;
+  }
+
+  p { margin: 0; max-width: 68ch; }
+
+  ul, ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: .4rem; max-width: 68ch; }
+  li::marker { color: var(--ink-soft); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--surface-alt);
+    padding: .1em .38em;
+    border-radius: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  strong { font-weight: 700; }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: .9rem;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .formula .c { color: var(--ink-soft); }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: .62rem .85rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  td.key { font-weight: 500; white-space: nowrap; }
+
+  /* ---------- callouts ---------- */
+
+  .note {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    padding: .95rem 1.15rem;
+    font-size: .92rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .note.warn   { border-left-color: var(--warn);   background: var(--warn-soft); }
+  .note .tag {
+    font-family: var(--mono);
+    font-size: .67rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .note.warn .tag { color: var(--warn); }
+  .note p, .note ul { max-width: none; font-size: .92rem; }
+
+  /* ---------- gate flow ---------- */
+
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .gate {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0 1rem;
+  }
+  .gate-rail { display: flex; flex-direction: column; align-items: center; }
+  .gate-dot {
+    width: 2.2rem; height: 2.2rem;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    flex: none;
+  }
+  .gate-line { flex: 1; width: 1px; background: var(--line); min-height: .9rem; }
+  .gate:last-child .gate-line { background: transparent; }
+  .gate-body { padding-bottom: .75rem; display: flex; flex-direction: column; gap: .3rem; }
+  .gate-title { font-weight: 700; font-size: .98rem; padding-top: .28rem; }
+  .gate-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  .branch {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    border-left: 2px solid var(--line);
+    padding-left: .85rem;
+  }
+  .branch-row { display: flex; gap: .6rem; align-items: baseline; font-size: .9rem; }
+  .pill {
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .12rem .45rem;
+    border-radius: 2px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: none;
+  }
+  .pill.ok     { background: var(--ok-soft);     color: var(--ok);     }
+  .pill.stop   { background: var(--danger-soft); color: var(--danger); }
+  .pill.check  { background: var(--warn-soft);   color: var(--warn);   }
+
+  /* ---------- timeline ---------- */
+
+  .timeline { display: flex; flex-direction: column; }
+  .phase {
+    display: grid;
+    grid-template-columns: 5.5rem 1.6rem minmax(0, 1fr);
+    gap: 0 .9rem;
+  }
+  .phase-spins {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--ink-soft);
+    text-align: right;
+    padding-top: .55rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-rail { display: flex; flex-direction: column; align-items: center; }
+  .phase-mark {
+    width: .7rem; height: .7rem;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: .95rem;
+    flex: none;
+  }
+  .phase.is-newbie .phase-mark { background: var(--surface); border: 2px solid var(--accent); }
+  .phase-line { flex: 1; width: 1px; background: var(--line); }
+  .phase:last-child .phase-line { background: transparent; }
+  .phase-body { padding: .25rem 0 .75rem; display: flex; flex-direction: column; gap: .2rem; }
+  .phase-detail {
+    margin-top: .35rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    max-width: 68ch;
+  }
+  .phase-detail summary {
+    cursor: pointer;
+    padding: .4rem .8rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    font-weight: 500;
+    user-select: none;
+  }
+  .phase-detail summary:hover { color: var(--accent); }
+  .phase-detail summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .phase-detail[open] summary { border-bottom: 1px solid var(--line-soft); }
+  .phase-detail ul {
+    padding: .55rem 1rem .65rem 2rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    gap: .3rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-name { font-weight: 700; font-size: 1rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .phase-rtp {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-soft);
+    letter-spacing: .04em;
+    font-weight: 400;
+  }
+  .phase-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  /* ---------- step list ---------- */
+
+  ol.steps { list-style: none; padding: 0; counter-reset: s; gap: .65rem; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: 2.5rem;
+    font-size: .93rem;
+  }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: .12rem;
+    width: 1.75rem;
+    height: 1.4rem;
+    font-family: var(--mono);
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    display: grid;
+    place-items: center;
+  }
+
+  /* ---------- pending block ---------- */
+
+  .pending {
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    padding: 1.3rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+  }
+  .pending-head {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 4.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: .74rem;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    nav.toc {
+      position: static;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 1.4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+      gap: .45rem 1rem;
+      margin-top: 2rem;
+    }
+    nav.toc .toc-head { grid-column: 1 / -1; margin-bottom: 0; }
+    nav.toc a.sub { display: none; }
+    main { max-width: none; }
+    .phase { grid-template-columns: 4.2rem 1.4rem minmax(0, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>iGaming 機制說明書</span>
+      <span><b>老手救援 C-2 版</b></span>
+      <span>草案 · 門檻待數據定案</span>
+      <span>2026-09-09</span>
+    </div>
+
+    <h1>老手救援 C-2 版</h1>
+
+    <p class="standfirst">
+      以<strong>天</strong>為單位的保底式救援。好的體驗約兩天就會淡忘，所以救援必須當天發生；
+      好體驗的定義是<strong>玩家當日體驗到的最大單局倍數</strong>——
+      玩得夠久卻沒碰到大倍數的玩家，由系統直接補上那一次體驗。
+    </p>
+
+    <div class="equation">
+      <div class="eq-term">
+        <span class="eq-num">500 轉</span>
+        <span class="eq-label">當日未見 50×</span>
+      </div>
+      <span class="eq-op">→</span>
+      <div class="eq-term">
+        <span class="eq-num is-accent">直接給 50×</span>
+        <span class="eq-label">保底救援（數字待定案）</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-head">目錄</div>
+    <a href="#premise">§0 前提假設</a>
+    <a href="#mechanism">§1 機制說明</a>
+    <a class="sub" href="#scope">1.1 適用範圍</a>
+    <a class="sub" href="#cycle">1.2 判定粒度</a>
+    <a class="sub" href="#pity">1.3 保底救援</a>
+    <a class="sub" href="#pool">1.4 RTP 與救援池</a>
+    <a href="#diff">§2 與 C 版的差異</a>
+    <a href="#open">§3 待定義事項</a>
+  </nav>
+
+  <main>
+
+    <!-- ============ §0 ============ -->
+    <section id="premise">
+      <h2><span class="sec">§0</span>前提假設</h2>
+      <ul>
+        <li><strong>機制以天為單位設計</strong>：玩家今天玩到好體驗，過兩天基本上就忘了，所以判斷與發放都以當日為準。</li>
+        <li><strong>好體驗 = 當日最大單局倍數</strong>：就自然機率而言，把數越多越容易玩到大倍數；玩得夠久卻沒碰到，玩家會覺得很雖。</li>
+        <li><strong>9/1 實際上線數據</strong>：當日 1,000 轉以上的玩家，隔日留存都在 70% 以上——他們不需要救援，明天基本上也會回來。</li>
+        <li><strong>SPS 限制</strong>：最小監測單位為 40 轉，40 轉才可救一次。</li>
+      </ul>
+    </section>
+
+    <!-- ============ §1 ============ -->
+    <section id="mechanism">
+      <h2><span class="sec">§1</span>機制說明</h2>
+      <p>
+        C-2 不再以 RTP 窗口判斷痛苦，而是直接補「缺席的大倍數體驗」：
+        玩家當日玩到指定轉數仍未出現指定倍數以上的單局得分時，由系統直接給出該倍數。
+      </p>
+
+      <h3 id="scope"><span class="sec">1.1</span>適用範圍</h3>
+      <p>救援行為設計在<strong>當日 40～1,000 轉</strong>之間。</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>當日轉數</th><th>處理</th><th>理由</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">&lt; 40 轉</td><td>不判定</td><td>低於 SPS 最小監測單位</td></tr>
+            <tr><td class="key">40 – 1,000 轉</td><td>依 §1.3 判定與發放</td><td>救援的目標族群</td></tr>
+            <tr><td class="key">&gt; 1,000 轉</td><td>當日不再判定</td><td>隔日留存已在 70% 以上，救援是浪費預算</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="cycle"><span class="sec">1.2</span>判定粒度</h3>
+      <p>
+        每滿 <strong>40 轉</strong>檢查一次（對齊 SPS 最小監測單位），
+        判定回合固定、不隨機。轉數從當日第 1 轉起算，跨日歸零重計。
+      </p>
+
+      <h3 id="pity"><span class="sec">1.3</span>保底救援</h3>
+      <p>
+        判定時檢查<strong>當日最大單局倍數</strong>：當日累積轉數達到門檻、
+        且期間未出現達標倍數的單局得分時，直接給出該倍數的救援。
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>當日轉數達到</th><th>未出現過</th><th class="num">保底發放</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">500 轉（示意）</td><td>單局最終得分 ≥ 50 × 該局 Bet</td><td class="num">50×</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <span class="tag">待數據定案</span>
+        <p>
+          「幾轉沒玩過幾倍以上」的門檻組合仍在研究實際玩家數據，上表數字為示意。
+          定案方式：以自然機率跑出「N 轉內至少一次 ≥ M× 的機率表」，用分位數反推保底線；
+          可能是單一門檻，也可能是多段（例如不同轉數對應不同倍數）。
+        </p>
+      </div>
+      <ul>
+        <li>救援結果由 Card System 重骰產生，演出與自然大獎完全相同。</li>
+        <li>發出保底後，該次得分即成為「當日最大倍數」，同一條保底線當日不會重複觸發。</li>
+      </ul>
+
+      <h3 id="pool"><span class="sec">1.4</span>RTP 與救援池</h3>
+      <p>
+        RTP 控制沿用 <a href="機制說明_老手救援C版.html">C 版</a>的雙池架構：
+        每轉提撥投注額 1% 進救援池（共同池＋個人池雙帳目），
+        老手期總 RTP = 96%（基礎）+ 1%（救援）= 97%，
+        成本以「救援後最終得分 − 自然得分」的增量記帳。
+        短週期與長週期的演算法分開設計。
+      </p>
+    </section>
+
+    <!-- ============ §2 ============ -->
+    <section id="diff">
+      <h2><span class="sec">§2</span>與 C 版的差異</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>面向</th><th>C 版</th><th>C-2 版</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">設計單位</td><td>跨日累積轉數（老手四階段）</td><td>天；跨日歸零</td></tr>
+            <tr><td class="key">觸發訊號</td><td>短／中／長期 RTP 窗口</td><td>當日最大單局倍數（保底）</td></tr>
+            <tr><td class="key">判定週期</td><td>每滿 50 轉</td><td>每滿 40 轉（SPS 最小單位）</td></tr>
+            <tr><td class="key">適用範圍</td><td>老手期第 1 轉起</td><td>當日 40 – 1,000 轉</td></tr>
+            <tr><td class="key">獎項</td><td>50× / 20×（依當日 50× 體驗）</td><td>直接補足缺席的倍數（待定案）</td></tr>
+            <tr><td class="key">RTP 控制</td><td>雙池、1% 提撥</td><td>沿用</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ §3 ============ -->
+    <section id="open">
+      <h2><span class="sec">§3</span>待定義事項</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>項目</th><th>說明</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">保底線（N 轉 / M 倍）</td>
+              <td>研究實際玩家數據中；輔以自然模擬的「N 轉內 ≥ M× 機率表」反推，兩款遊戲分開驗證是否通用。</td>
+            </tr>
+            <tr>
+              <td class="key">是否疊加 RTP 門檻</td>
+              <td>保底之外是否仍保留 C 版的 RTP 窗口資格判定，或完全以最大倍數取代。</td>
+            </tr>
+            <tr>
+              <td class="key">多段保底線</td>
+              <td>是否設多組（轉數, 倍數）組合，例如更長轉數對應更高倍數。</td>
+            </tr>
+            <tr>
+              <td class="key">「當日」的日切基準</td>
+              <td>平台時區日曆日或 session；與 SPS 的日切需一致。</td>
+            </tr>
+            <tr>
+              <td class="key">池規則細節</td>
+              <td>個人池跨日累積（帳不歸零）與透支路徑是否照 C 版沿用。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>iGaming 機制說明書 · 老手救援 C-2 版</span>
+    <span>草案</span>
+    <span>2026-09-09</span>
+    <span>保底線待數據定案</span>
+  </footer>
+
+</div>
