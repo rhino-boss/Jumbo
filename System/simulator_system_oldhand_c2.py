@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.5"
+SYSTEM_VERSION = "c2-0.6"
 
 
 def _locate_script_dir() -> Path:
@@ -144,9 +144,10 @@ def simulate(game: str) -> None:
         rescued_player |= hit
         award_totals[reward] += n_trigger
 
-        # 當下原來 RTP%（自然、不含機制）與機制到此為止的增量
-        base_rtp = cum_nat.sum() / cum_bet.sum()
-        uplift = (cum_adj.sum() - cum_nat.sum()) / cum_bet.sum()
+        # 當下原來 RTP% 與機制增量（含本觸發點發放，統計至第 c 轉）
+        bet_to_cp = cum_bet.sum() + bet[:, spin_idx].sum()
+        base_rtp = (cum_nat.sum() + natural_this.sum()) / bet_to_cp
+        uplift = (cum_adj.sum() + final_this.sum() - cum_nat.sum() - natural_this.sum()) / bet_to_cp
         checkpoint_rows.append({
             "checkpoint": cp,
             "threshold": threshold,
