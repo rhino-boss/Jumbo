@@ -571,7 +571,7 @@
       <span class="eq-op">→</span>
       <div class="eq-term">
         <span class="eq-num is-accent">救 70×</span>
-        <span class="eq-label">未體驗過 ≥ 70× 時；已體驗過改給 30×</span>
+        <span class="eq-label">依判定落點救 50× / 70× / 100×</span>
       </div>
     </div>
   </header>
@@ -606,8 +606,7 @@
       <h2><span class="sec">§1</span>機制說明</h2>
       <p>
         C-2 以天為循環：每 40 轉檢查一次<strong>當日累積 RTP</strong>，
-        低於該區間門檻就救援；救援倍數依判定落點遞增，
-        但玩家當日已體驗過等值以上的大倍數時，改給 30×。
+        低於該區間門檻就救援，救援倍數依判定落點遞增。
       </p>
 
       <h3 id="scope"><span class="sec">1.1</span>適用範圍</h3>
@@ -647,20 +646,15 @@
           </tbody>
         </table>
       </div>
-      <p>
-        發放前再檢查<strong>當日最大單局倍數</strong>：
-        未超過預定救援倍數 → 照表給預定倍數；已超過（等值以上的大倍數體驗已發生）→ 改給 <strong>30×</strong>。
-      </p>
       <div class="note">
         <span class="tag">舉例</span>
         <p>
-          玩家當日第 120 轉判定，累積 RTP = 38%（&lt; 40%）：
-          尚未體驗過 ≥ 70× → 救 <strong>70×</strong>；已體驗過 ≥ 70× → 改給 <strong>30×</strong>。
+          玩家當日第 120 轉判定，累積 RTP = 38%（&lt; 40%）→ 救 <strong>70×</strong>。
         </p>
       </div>
       <ul>
         <li>救援結果由 Card System 重骰產生，演出與自然大獎完全相同。</li>
-        <li>救援得分計入當日最大單局倍數：拿過 70× 後，之後預定 ≤ 70× 的線只會給 30×。</li>
+        <li>救援得分計入當日累積 RTP，救過的玩家通常會脫離觸發區。</li>
       </ul>
 
       <h3 id="pool"><span class="sec">1.4</span>RTP 與救援池</h3>
@@ -686,7 +680,7 @@
             <tr><td class="key">觸發訊號</td><td>短／中／長期 RTP 窗口（跨日）</td><td>當日累積 RTP ＋ 當日最大單局倍數</td></tr>
             <tr><td class="key">判定週期</td><td>每滿 50 轉</td><td>每滿 40 轉（SPS 最小單位）</td></tr>
             <tr><td class="key">適用範圍</td><td>老手期第 1 轉起</td><td>當日 40 – 400 轉（401 起待定義）</td></tr>
-            <tr><td class="key">獎項</td><td>50× / 20×（依當日 50× 體驗）</td><td>50× / 70× / 100× 依落點遞增；已體驗過改 30×</td></tr>
+            <tr><td class="key">獎項</td><td>50× / 20×（依當日 50× 體驗）</td><td>50× / 70× / 100× 依判定落點遞增</td></tr>
             <tr><td class="key">RTP 控制</td><td>雙池、1% 提撥</td><td>沿用</td></tr>
           </tbody>
         </table>
@@ -705,10 +699,6 @@
             <tr>
               <td class="key">401 – 1,000 轉的行為</td>
               <td>救援表只定義到 400 轉；401 之後是延用 201–400 的規則、另設區間，還是當日不再救援。</td>
-            </tr>
-            <tr>
-              <td class="key">30× 的重複領取</td>
-              <td>已體驗過大倍數的玩家每次符合條件都給 30×，單日是否設次數上限；30× 得分是否也計入當日最大倍數。</td>
             </tr>
             <tr>
               <td class="key">「當日」的日切基準</td>
