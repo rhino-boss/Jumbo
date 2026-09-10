@@ -32,7 +32,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.2"
+SYSTEM_VERSION = "c2-0.3"
 
 
 def _locate_script_dir() -> Path:
@@ -63,8 +63,8 @@ ROWDATA_DIR = SCRIPT_DIR / "rowdata"
 
 # 使用的自然 Row Data（老手基礎，無機制）：
 ROWDATA_FILES = {
-    "超級寶石": "超級寶石_基礎遊戲94RTP_1000人_1000轉.csv.gz",
-    "彩罐熱舞": "彩罐熱舞_基礎遊戲94RTP_1000人_1000轉.csv.gz",
+    "超級寶石": "超級寶石_基礎遊戲94RTP_10000人_1000轉.csv.gz",
+    "彩罐熱舞": "彩罐熱舞_基礎遊戲94RTP_10000人_1000轉.csv.gz",
 }
 GAMES = ["超級寶石", "彩罐熱舞"]
 
@@ -188,14 +188,15 @@ def simulate(game: str) -> None:
     print(f"rtp_mechanism_uplift    : +{(mech_rtp_total - base_rtp_total) * 100:.4f}%")
     print(f"rtp_with_mechanism      : {mech_rtp_total * 100:.4f}%")
     print()
-    print("checkpoint  band門檻   預定   判定    觸發   觸發率     原RTP(+機制增量)      發放(預定/30x)")
+    print("checkpoint  band門檻   預定   判定    觸發   觸發率     原RTP(+機制增量)      發放(預定/30x)   30x比例")
     for row in checkpoint_rows:
         print(
             f"第 {row['checkpoint']:>3} 轉   <{row['threshold'] * 100:>2.0f}%     "
             f"{row['reward']:>4.0f}x  {row['judged']:>5,}  {row['triggered']:>5,}  "
             f"{row['trigger_rate'] * 100:>6.2f}%   "
             f"{row['base_rtp'] * 100:>7.4f}% (+{row['uplift'] * 100:.4f}%)   "
-            f"{row['award_planned']:>4} / {row['award_consolation']}"
+            f"{row['award_planned']:>4} / {row['award_consolation']}   "
+            f"{(row['award_consolation'] / row['triggered'] * 100) if row['triggered'] else 0.0:>6.2f}%"
         )
     print()
     rescued = int(rescued_player.sum())

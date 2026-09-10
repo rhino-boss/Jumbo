@@ -1,0 +1,19 @@
+{
+  "description": "超級寶石：無救援機制固定自然遊戲 Row Data",
+  "game": "超級寶石",
+  "players": 10000,
+  "spins_per_player": 1000,
+  "rows": 10000000,
+  "target_rtp_percent": 92.0,
+  "actual_rtp_percent": 92.00000762939453,
+  "candidate_rtp_percent": 92.00000600000001,
+  "candidate_index_zero_based": 87308,
+  "candidate_count": 100000,
+  "search_seed": 20260724,
+  "shuffle_seed": 2026072401,
+  "natural_fg_count": 0,
+  "parquet_file": "超級寶石_基礎遊戲_10000人_1000轉.parquet",
+  "parquet_sha256": "b13d451dfa2d4d2ddfe03ad01873392284ace3ba8a7177be73fca4e300ce548d",
+  "csv_gz_file": "超級寶石_基礎遊戲_10000人_1000轉.csv.gz",
+  "csv_gz_sha256": "61d6a1e6f309a5c2a0fa5a4d7f8ebb82902c61a64d4091f6ff20c509c7d3ee38"
+}

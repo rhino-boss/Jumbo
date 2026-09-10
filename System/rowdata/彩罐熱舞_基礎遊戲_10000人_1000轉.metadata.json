@@ -1,0 +1,23 @@
+{
+  "description": "彩罐熱舞：BG Free Game 事件後另抽 FG 卡片的固定自然遊戲 Row Data",
+  "game": "彩罐熱舞",
+  "players": 10000,
+  "spins_per_player": 1000,
+  "rows": 10000000,
+  "theoretical_rtp_percent": 91.99998553338646,
+  "actual_rtp_percent": 91.99997782707214,
+  "candidate_rtp_percent": 91.99998191208284,
+  "candidate_index_zero_based": 82483,
+  "candidate_count": 100000,
+  "search_seed": 20260727,
+  "shuffle_seed": 2026072701,
+  "natural_fg_count": 41820,
+  "natural_fg_rate_percent": 0.4182,
+  "bg_hit_rate_total": 0.9999999999999999,
+  "fg_weight_total": 999999979,
+  "fg_trigger_bg_avg_multiplier": 0.269426957,
+  "parquet_file": "彩罐熱舞_基礎遊戲_10000人_1000轉.parquet",
+  "parquet_sha256": "9f973dc248da71b492af799e3b8087aa0c6a59c12650e4ee5de7aa70d7deb301",
+  "csv_gz_file": "彩罐熱舞_基礎遊戲_10000人_1000轉.csv.gz",
+  "csv_gz_sha256": "4dca8ea557aacd2b7e1ab7e30dfccc15f075adf17bb3e25cf23990ff152da092"
+}

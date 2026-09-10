@@ -34,9 +34,9 @@ def sha256(path: Path) -> str:
 
 
 def build_game(game: str) -> None:
-    source_path = DATA_DIR / f"{game}_基礎遊戲_1000人_1000轉.csv.gz"
-    output_path = DATA_DIR / f"{game}_基礎遊戲94RTP_1000人_1000轉.csv.gz"
-    metadata_path = DATA_DIR / f"{game}_基礎遊戲94RTP_1000人_1000轉.metadata.json"
+    source_path = DATA_DIR / f"{game}_基礎遊戲_10000人_1000轉.csv.gz"
+    output_path = DATA_DIR / f"{game}_基礎遊戲94RTP_10000人_1000轉.csv.gz"
+    metadata_path = DATA_DIR / f"{game}_基礎遊戲94RTP_10000人_1000轉.metadata.json"
 
     frame = pd.read_csv(source_path)
     source_rtp = float(frame["Natural_Payout"].sum() / frame["Bet"].sum())
