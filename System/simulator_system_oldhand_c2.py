@@ -32,8 +32,33 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.1"
-SCRIPT_DIR = Path(__file__).resolve().parent
+SYSTEM_VERSION = "c2-0.2"
+
+
+def _locate_script_dir() -> Path:
+    """定位 System 資料夾；避免 Jupyter 沿用其他檔案的 __file__ 或舊工作目錄。"""
+
+    candidates: list[Path] = []
+    try:
+        file_path = Path(__file__).resolve()
+        if file_path.name == "simulator_system_oldhand_c2.py":
+            candidates.append(file_path.parent)
+    except NameError:
+        pass
+
+    current = Path.cwd().resolve()
+    for base in (current, *current.parents):
+        candidates.extend((base / "System", base))
+
+    for candidate in candidates:
+        rowdata = candidate / "rowdata"
+        if rowdata.is_dir() and any(rowdata.glob("*_1000人_1000轉.csv.gz")):
+            return candidate.resolve()
+
+    raise FileNotFoundError("找不到 System/rowdata/；請將工作目錄切到 工作區 或 System 底下")
+
+
+SCRIPT_DIR = _locate_script_dir()
 ROWDATA_DIR = SCRIPT_DIR / "rowdata"
 
 # 使用的自然 Row Data（老手基礎，無機制）：
