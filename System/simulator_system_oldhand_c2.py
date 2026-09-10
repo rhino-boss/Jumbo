@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.6"
+SYSTEM_VERSION = "c2-0.7"
 
 
 def _locate_script_dir() -> Path:
@@ -111,6 +111,7 @@ def simulate(game: str) -> None:
 
     adj = nat.copy()                       # 套用機制後的每轉最終得分
     rescued_player = np.zeros(n_players, dtype=bool)
+    total_bet_all = bet.sum()              # 全日總押注（增量貢獻的分母）
 
     cum_nat = np.zeros(n_players)          # 判定用：前 c-1 轉累積（自然）
     cum_adj = np.zeros(n_players)          # 判定用：前 c-1 轉累積（套機制）
@@ -144,10 +145,10 @@ def simulate(game: str) -> None:
         rescued_player |= hit
         award_totals[reward] += n_trigger
 
-        # 當下原來 RTP% 與機制增量（含本觸發點發放，統計至第 c 轉）
+        # 當下原來 RTP%（統計至第 c 轉）；增量 = 該觸發點發放 ÷ 全日總押注
         bet_to_cp = cum_bet.sum() + bet[:, spin_idx].sum()
         base_rtp = (cum_nat.sum() + natural_this.sum()) / bet_to_cp
-        uplift = (cum_adj.sum() + final_this.sum() - cum_nat.sum() - natural_this.sum()) / bet_to_cp
+        uplift = (final_this - natural_this).sum() / total_bet_all
         checkpoint_rows.append({
             "checkpoint": cp,
             "threshold": threshold,
@@ -182,7 +183,7 @@ def simulate(game: str) -> None:
     print(f"rtp_mechanism_uplift    : +{(mech_rtp_total - base_rtp_total) * 100:.4f}%")
     print(f"rtp_with_mechanism      : {mech_rtp_total * 100:.4f}%")
     print()
-    print("checkpoint  band門檻   預定   判定    觸發   觸發率     原RTP(+機制增量)")
+    print("checkpoint  band門檻   預定   判定    觸發   觸發率     原RTP(+全日增量貢獻)")
     for row in checkpoint_rows:
         print(
             f"第 {row['checkpoint']:>3} 轉   <{row['threshold'] * 100:>2.0f}%     "
