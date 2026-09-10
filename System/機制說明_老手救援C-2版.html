@@ -633,16 +633,23 @@
       </p>
 
       <h3 id="pity"><span class="sec">1.3</span>救援規則</h3>
-      <p>判定時依落點區間檢查當日累積 RTP，低於門檻即具備救援資格：</p>
+      <p>10 個觸發點各訂門檻；判定時檢查當日累積 RTP，低於該觸發點門檻即救援：</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>判定落點（當日轉數）</th><th class="num">當日累積 RTP</th><th class="num">預定救援</th></tr>
+            <tr><th>觸發點（當日轉數）</th><th class="num">當日累積 RTP 門檻</th><th class="num">救援倍數</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">41 – 100</td><td class="num">&lt; 40%</td><td class="num">50×</td></tr>
-            <tr><td class="key">101 – 200</td><td class="num">&lt; 40%</td><td class="num">70×</td></tr>
-            <tr><td class="key">201 – 400</td><td class="num">&lt; 60%</td><td class="num">100×</td></tr>
+            <tr><td class="key">第 40 轉</td><td class="num">&lt; 40%</td><td class="num">50×</td></tr>
+            <tr><td class="key">第 80 轉</td><td class="num">&lt; 35%</td><td class="num">50×</td></tr>
+            <tr><td class="key">第 120 轉</td><td class="num">&lt; 40%</td><td class="num">70×</td></tr>
+            <tr><td class="key">第 160 轉</td><td class="num">&lt; 45%</td><td class="num">70×</td></tr>
+            <tr><td class="key">第 200 轉</td><td class="num">&lt; 50%</td><td class="num">70×</td></tr>
+            <tr><td class="key">第 240 轉</td><td class="num">&lt; 55%</td><td class="num">100×</td></tr>
+            <tr><td class="key">第 280 轉</td><td class="num">&lt; 60%</td><td class="num">100×</td></tr>
+            <tr><td class="key">第 320 轉</td><td class="num">&lt; 65%</td><td class="num">100×</td></tr>
+            <tr><td class="key">第 360 轉</td><td class="num">&lt; 70%</td><td class="num">100×</td></tr>
+            <tr><td class="key">第 400 轉</td><td class="num">&lt; 70%</td><td class="num">100×</td></tr>
           </tbody>
         </table>
       </div>

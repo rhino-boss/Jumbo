@@ -14,9 +14,8 @@
 C-2 規則（機制說明_老手救援C-2版.html）：
 * 以天為循環；本模擬將 1000 轉視為同一日。
 * 每滿 40 轉判定一次「當日累積 RTP」；判定回合本身不納入統計（沿用 C 版口徑）。
-* 判定落點 41–100（含第 40 轉檢查點）：RTP < 40% → 救 50×
-  判定落點 101–200：RTP < 40% → 救 70×
-  判定落點 201–400：RTP < 60% → 救 100×
+* 10 個觸發點各訂 RTP 門檻（見 CHECKPOINT_RULES）；
+  獎項依落點：40–80 轉救 50×、120–200 轉救 70×、240–400 轉救 100×
 * 救援落在判定回合：該轉最終得分 = max(自然得分, 救援倍數 × Bet)，
   成本以增量記帳。
 * 尚未套用救援池／共同池上限（先量測機制的自然增量，供預算評估）。
@@ -31,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.4"
+SYSTEM_VERSION = "c2-0.5"
 
 
 def _locate_script_dir() -> Path:
@@ -69,21 +68,25 @@ GAMES = ["超級寶石", "彩罐熱舞"]
 
 # ---- C-2 參數 ----
 CHECKPOINT_INTERVAL = 40                      # SPS 最小監測單位
-CHECKPOINTS = list(range(40, 401, 40))        # 40, 80, ..., 400（10 個觸發點）
 
-# (落點下限, 落點上限, 當日累積 RTP 門檻, 預定救援倍數)
-BANDS = (
-    (40, 100, 0.40, 50.0),
-    (101, 200, 0.40, 70.0),
-    (201, 400, 0.60, 100.0),
-)
+# 觸發點 →（當日累積 RTP 門檻, 救援倍數）；10 個觸發點各訂門檻
+CHECKPOINT_RULES: dict[int, tuple[float, float]] = {
+    40:  (0.40, 50.0),
+    80:  (0.35, 50.0),
+    120: (0.40, 70.0),
+    160: (0.45, 70.0),
+    200: (0.50, 70.0),
+    240: (0.55, 100.0),
+    280: (0.60, 100.0),
+    320: (0.65, 100.0),
+    360: (0.70, 100.0),
+    400: (0.70, 100.0),
+}
+CHECKPOINTS = sorted(CHECKPOINT_RULES)
 
 
 def band_of(spin_no: int) -> tuple[float, float]:
-    for lo, hi, threshold, reward in BANDS:
-        if lo <= spin_no <= hi:
-            return threshold, reward
-    raise ValueError(f"第 {spin_no} 轉不在任何救援區間內")
+    return CHECKPOINT_RULES[spin_no]
 
 
 def load_rowdata(game: str) -> tuple[np.ndarray, np.ndarray]:
