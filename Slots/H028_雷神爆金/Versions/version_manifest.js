@@ -1,11 +1,40 @@
 window.H028_VERSION_MANIFEST = {
-  "current": "3.5.0.0",
+  "current": "3.5.0.2",
   "version_rule": {
     "main_model": "H0281.xlsx 共用數學參數有變更：第一碼 +1，後三碼歸零。",
     "multiplier_weights": "只調整卡片／倍率權重：第二碼 +1，後兩碼歸零。",
     "scr": "只調整 SCR：第三碼 +1，第四碼歸零。"
   },
   "versions": [
+    {
+      "version": "3.5.0.2",
+      "date": "2026-09-21",
+      "base_config": "Versions/3.5.0.2/config.js",
+      "configs": {
+        "88B": "Versions/3.5.0.2/config_88B.js",
+        "88B_Bet100": "Versions/3.5.0.2/config_88B_Bet100.js",
+        "90B": "Versions/3.5.0.2/config_90B.js",
+        "92A": "Versions/3.5.0.2/config_92A.js",
+        "92A_Bet100": "Versions/3.5.0.2/config_92A_Bet100.js",
+        "94A": "Versions/3.5.0.2/config_94A.js"
+      },
+      "sources": {
+        "base": "Versions/3.5.0.2/Source/H0281.xlsx",
+        "88B": "Versions/3.5.0.2/Source/H028188B.xlsx",
+        "88B_Bet100": "Versions/3.5.0.2/Source/H028188B_Bet100.xlsx",
+        "90B": "Versions/3.5.0.2/Source/H028190B.xlsx",
+        "92A": "Versions/3.5.0.2/Source/H028192A.xlsx",
+        "92A_Bet100": "Versions/3.5.0.2/Source/H028192A_Bet100.xlsx",
+        "94A": "Versions/3.5.0.2/Source/H028194A.xlsx"
+      },
+      "changes": [
+        "採用 wei 2026-09-18 改版（外部提供，版號沿用 3.5.0.2）：①天花板機制配套——新手 BG (25,30] 權重 1,937,035→2,344,760、Detail_Newbie Free Game 列平均倍率改用天花板後量測值 5.8091（原自然值 8.8145；派彩封頂於卡組上限，新手 30x 使觸發局 BG 平均下降，老手上限高不受影響）；②取消一般四本老手 NB FG／BF 的 (9000,10000] 強制例外，權重回填 (1000,2000]／(2000,3000]（FG 上限變 3000，Bet100 兩本維持 2000 不動）；③BF 欄四本整併為逐格相同。",
+        "修復 wei 版損傷：92A Detail!N163 壞公式（=K163:K226=#REF!）連同 spill 全清；四本 Detail!J7/J8 與 94A Detail_Newbie!J7 的 #REF! 快取回填正確上限（88B NB 2000、其餘 NB 3000、BF 3000、新手 100），公式保留。",
+        "修正 wei 版權重總和溢出（等比正規化、機率完全不變）：老手 NB FG 四本（+90,109～+227,455）、BF 四本（+22,738）、新手 BG 六本 range 部分（+407,725，odds 列同比例縮，觸發率 0.35764% 不變）全部歸位精確 1e9；共用欄依標準逐格統一（新手取 92A、BF 取 92A）。",
+        "六份 config 由新模型全欄重生（round-trip 0 差異）、PARsheet 七份重產（0 殘留公式、逐格 0 差異）。",
+        "已知未跟進：模擬器尚未實作天花板機制——新手 Card-On 實跑會比帳面高約 1.07pp（觸發局 BG 未封頂），待天花板規格確認後補實作。"
+      ]
+    },
     {
       "version": "3.5.0.0",
       "date": "2026-09-08",
@@ -18,7 +47,17 @@ window.H028_VERSION_MANIFEST = {
         "92A_Bet100": "Versions/3.5.0.0/config_92A_Bet100.js",
         "94A": "Versions/3.5.0.0/config_94A.js"
       },
+      "sources": {
+        "base": "Versions/3.5.0.0/Source/H0281.xlsx",
+        "88B": "Versions/3.5.0.0/Source/H028188B.xlsx",
+        "88B_Bet100": "Versions/3.5.0.0/Source/H028188B_Bet100.xlsx",
+        "90B": "Versions/3.5.0.0/Source/H028190B.xlsx",
+        "92A": "Versions/3.5.0.0/Source/H028192A.xlsx",
+        "92A_Bet100": "Versions/3.5.0.0/Source/H028192A_Bet100.xlsx",
+        "94A": "Versions/3.5.0.0/Source/H028194A.xlsx"
+      },
       "changes": [
+        "2026-09-21 補封存七本數學模型於 Versions/3.5.0.0/Source/（wei 3.5.0.2 改版前的基準）。",
         "大 Bet（bet_tier_amount > $100）依 H027 實務改為獨立數學模型：新增 H028192A_Bet100.xlsx／H028188B_Bet100.xlsx 與 config_92A_Bet100.js／config_88B_Bet100.js（同版本、同 SCR），Weight_NB_FG 與 Weight_BF 上限 2000x（(2000,3000]、(9000,10000] 歸零，尾端等比配平，NB FG RTP 20%／16%、BF 92.5% 與平均倍數不變）。",
         "原 92A／88B 模型移除 Weight_NB_FG_Big 欄與 config weight_fg_big（大 Bet 權重值原封搬入 Bet100 模型）；Simulator 移除自動切換，批次以 config_rtp_file 指定 Bet100。",
         "Newbie 卡片權重四版統一為 92A 值（QA 要求逐格一致）：修正 88B/90B/94A 建檔時整數化尾差（BG (-1,0]/(2,3]/(7,8]、FG (80,90]/(90,100] 各 ±1~2 單位／1e9）。",

@@ -46,11 +46,12 @@ Simulator 與 index 同時載入 base config 與 RTP config：自然機率以 ba
 | Newbie BG 卡 | 新手 BG 結果分布 | Normal Bet | `card_system_is_newbie = true` | BG 上限 30x | `Weight_NB_BG_Newbie` → `newbie.normal_bet.weight_bg` |
 | Newbie FG 卡 | 新手 FG Session 分布 | Normal Bet 觸發 FG 後 | 同上 | FG 30~100x | `Weight_NB_FG_Newbie` → `newbie.normal_bet.weight_fg` |
 | 老手 BG 卡 | 老手 BG 結果分布 | Normal Bet | 老手（非 newbie） | 含 `free_game` 卡（決定 FG 週期） | `Weight_NB_BG` → `oldhand.normal_bet.weight_bg` |
-| 老手 FG 卡 | 老手 FG Session 分布 | Normal Bet 觸發 FG 後 | 老手 | 上限 10,000x（9K 為強制例外格）；大 Bet 模型內上限 2,000x | `Weight_NB_FG` → `oldhand.normal_bet.weight_fg` |
-| BF FG 卡 | Buy Feature FG 分布 | Buy Feature | `bet_mode = 2`（四版共用同組） | 上限 10,000x；BF 只計 FG；大 Bet 模型內上限 2,000x | `Weight_BF` → `oldhand.buy_feature.weight_fg` |
+| 老手 FG 卡 | 老手 FG Session 分布 | Normal Bet 觸發 FG 後 | 老手 | 上限 3,000x（88B 為 2,000x）；大 Bet 模型內上限 2,000x | `Weight_NB_FG` → `oldhand.normal_bet.weight_fg` |
+| BF FG 卡 | Buy Feature FG 分布 | Buy Feature | `bet_mode = 2`（四版共用同組） | 上限 3,000x；BF 只計 FG；大 Bet 模型內上限 2,000x | `Weight_BF` → `oldhand.buy_feature.weight_fg` |
 | Retry Limit | 重骰次數上限 | 每張卡 | — | 規範固定 10,000 次；超限放行最後一次結果並記錄 | `card_system.retry_limit` |
 
 - 區間規則：`(min, max]`，分母一律用 Normal Bet coin-in；每欄總和精確 1,000,000,000。
+- **天花板機制**：BG 觸發 FG 的那把，BG 得分必須 ≤ 該 Profile BG 卡組最高有權重區間的上限（新手 30x、老手 70x），超過就整把重骰；Detail 的 Free Game 列平均倍率採重骰後的截斷平均（新手 5.8091），Simulator 已實作相同重骰。
 - 目標 RTP（BG：FG）：88B 72:16、90B 72:18、92A 72:20、94A 72:22；Newbie 四版共用 72:21；BF 92.5%（全 FG）。
 - FG 模型週期＝`sum(weight_bg) ÷ free_game 卡權重`：92A/94A 1/300、90B 1/366.67、88B 1/375；Newbie 1/279.5。
 - **大 Bet（`bet_tier_amount > $100`，規範 §1.4.3）使用獨立模型**（H027 實務）：`H028192A_Bet100.xlsx`／`H028188B_Bet100.xlsx`＋`config_92A_Bet100.js`／`config_88B_Bet100.js`。與 92A／88B 的差異只在老手 FG 卡與 BF 卡：上限 2,000x（`(2000,3000]`、`(9000,10000]` 權重 0，最高權重區間 `(1000,2000]`），主體 20~200x 形狀不變、200~2,000x 尾端等比配平——FG RTP（20%／16%）、BF RTP（92.5%）、觸發週期與平均倍數與原模型一致，只有得分分布尾端形狀不同（詳《其他/數值報告_3.5.0.0_Bet100.html》）。批次模擬以 `config_rtp_file` 直接指定 Bet100 config，程式不做自動切換；90B／94A 為小 Bet 檔，無對應 Bet100 模型。SCR 沿用原模型值。

@@ -173,7 +173,7 @@ Input of the card system. Layout:
 
 The rows are a sequence of win-multiple intervals (win ÷ Coin In, **open on the left, closed on the right**); the final `Free Game` row is a special card that ignores the amount and only requires "this round must trigger Free Game". Every column's weights are calibrated to a total of 1,000,000,000, so a weight can be read directly as "probability of that outcome × 10⁹". Full mechanics in [Chapter 4](#4-card-system).
 
-**The `_Bet100` models (standalone models for single bets above $100)**: `H028192A_Bet100.xlsx` / `H028188B_Bet100.xlsx` share the exact worksheet structure and columns of 92A / 88B; they differ only in the regular profile's Free Game card weights — the win cap drops from 10,000× to **2,000×**: the highest weighted interval is `(1000, 2000]`, with `(2000, 3000]` and `(9000, 10000]` at weight 0; the 20×–200× body keeps the original shape (uniform scale) and the 200×–2,000× tail is scaled up uniformly to rebalance, so the **FG pay back, trigger cycle and average multiple are identical to the original models**. Simulations with single bets above $100 run with the matching `config_92A_Bet100.js` / `config_88B_Bet100.js`; 90B / 94A serve small bets and have no `_Bet100` model.
+**The `_Bet100` models (standalone models for single bets above $100)**: `H028192A_Bet100.xlsx` / `H028188B_Bet100.xlsx` share the exact worksheet structure and columns of 92A / 88B; they differ only in the regular profile's Free Game card weights — the win cap drops from 3,000× (2,000× for 88B) to **2,000×**: the highest weighted interval is `(1000, 2000]`, with `(2000, 3000]` at weight 0; the 20×–200× body keeps the original shape (uniform scale) and the 200×–2,000× tail is scaled up uniformly to rebalance, so the **FG pay back, trigger cycle and average multiple are identical to the original models**. Simulations with single bets above $100 run with the matching `config_92A_Bet100.js` / `config_88B_Bet100.js`; 90B / 94A serve small bets and have no `_Bet100` model.
 
 **Differences across the files**: `Weight_NB_BG` and `Weight_NB_FG` are calibrated per version; **the two Newbie columns (B, C) are identical across all files**; a `_Bet100` model is cell-identical to its base model except for the regular profile's FG card column.
 
@@ -445,7 +445,7 @@ Two card types:
 
 Free Game card groups contain no `free_game`-type card, because by the time the FG decision runs, "FG triggered" is already a fact — only the amount interval is checked.
 
-**Design of the `_Bet100` FG card group**: the win cap drops from 10,000× to **2,000×** (`(2000, 3000]` and `(9000, 10000]` at weight 0; highest weighted interval `(1000, 2000]`). Rebalancing keeps the 20×–200× body shape unchanged and scales the 200×–2,000× tail up uniformly; the weight total stays at 10⁹ and the card-weighted average FG multiple matches the base model — so **FG pay back, trigger cycle and average multiple are unchanged**; only the tail shape of the win distribution differs. 90B / 94A serve small bets and have no `_Bet100` model.
+**Design of the `_Bet100` FG card group**: the win cap drops from 3,000× (2,000× for 88B) to **2,000×** (`(2000, 3000]` at weight 0; highest weighted interval `(1000, 2000]`). Rebalancing keeps the 20×–200× body shape unchanged and scales the 200×–2,000× tail up uniformly; the weight total stays at 10⁹ and the card-weighted average FG multiple matches the base model — so **FG pay back, trigger cycle and average multiple are unchanged**; only the tail shape of the win distribution differs. 90B / 94A serve small bets and have no `_Bet100` model.
 
 ### 4-3 Per-round decision flow
 
@@ -473,6 +473,7 @@ Key points:
 
 - The card system decides "**what this round should look like**", then uses redraws to realize it.
 - Decisions use fractional multiples (win ÷ Coin In) with open-left / closed-right intervals; the denominator is always the Normal Bet Coin In.
+- **Payout ceiling**: the Base Game win of the spin that triggers the Free Game must not exceed the upper bound of that profile's highest weighted Base Game card interval (30× for Newbie, 70× for the regular profile); a trigger spin above the bound is redrawn entirely (combined with the trigger-retry loop). Non-trigger rounds are bounded by their interval cards; the Free Game row's average multiple in `Detail` / `Detail_Newbie` therefore uses the truncated conditional mean after redraws (differing from the natural value in the same row is expected).
 - **A range card rejects the whole round as soon as the FG triggers** — the FG trigger rate is therefore fixed entirely by the `Free Game` card's weight, independent of the board's natural Scatter probability.
 - FG redraws operate on the **whole Free Game session**, not on single spins.
 
