@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.7"
+SYSTEM_VERSION = "c2-0.8"
 
 
 def _locate_script_dir() -> Path:
@@ -61,8 +61,8 @@ ROWDATA_DIR = SCRIPT_DIR / "rowdata"
 
 # 使用的自然 Row Data（老手基礎，無機制）：
 ROWDATA_FILES = {
-    "超級寶石": "超級寶石_基礎遊戲94RTP_10000人_1000轉.csv.gz",
-    "彩罐熱舞": "彩罐熱舞_基礎遊戲94RTP_10000人_1000轉.csv.gz",
+    "超級寶石": "超級寶石_基礎遊戲_10000人_1000轉.csv.gz",
+    "彩罐熱舞": "彩罐熱舞_基礎遊戲_10000人_1000轉.csv.gz",
 }
 GAMES = ["超級寶石", "彩罐熱舞"]
 
