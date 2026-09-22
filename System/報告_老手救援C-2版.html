@@ -593,6 +593,7 @@
     <a href="#rule">§3 機制介紹／數值設定</a>
     <a class="sub" href="#rule-flow">3.1 運作方式</a>
     <a class="sub" href="#rule-table">3.2 觸發點與模擬結果</a>
+    <a class="sub" href="#rule-pool">3.3 救援池運作</a>
     <a href="#risk">§4 風控機制</a>
     <a href="#arb">§5 套利檢查</a>
   </nav>
@@ -694,6 +695,21 @@
           成本集中在第 40 轉（觸發率 16.4%／16.2%）與 320–400 轉的 100× 段。
         </p>
       </div>
+      <h3 id="rule-pool"><span class="sec">3.3</span>救援池運作</h3>
+      <p>
+        救援預算來自<strong>每轉提撥投注額的 5%</strong>（基礎 92% + 提撥 5% = 總 RTP 97%）。
+        這筆提撥同時記入兩本帳——共同池記全平台總額、個人池記該玩家自己的額度，
+        是同一筆錢的兩種檢視角度：
+      </p>
+      <div class="formula">提撥額 <span class="c">=</span> 該轉 Total Bet <span class="c">×</span> 5%
+
+共同池餘額 <span class="c">=</span> Σ 全平台提撥 <span class="c">−</span> Σ 全平台已發救援成本
+個人池餘額 <span class="c">=</span> Σ 該玩家提撥 <span class="c">−</span> Σ 該玩家已領救援成本</div>
+      <ul>
+        <li><strong>發放前先過兩道池檢查</strong>：共同池餘額不足一律不救援（硬性上限，總 RTP 結構上不超過 97%）；個人池餘額不足時改用嚴格標準複判，通過仍可救援並記為透支。</li>
+        <li><strong>成本以增量記帳</strong>：救援成本 = 救援後最終得分 − 該轉自然得分；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，自然得分較高時增量為 0、不扣款。</li>
+        <li>個人池跨日累積（帳不歸零）；判定與觸發以天為循環，兩者分屬不同層。</li>
+      </ul>
     </section>
 
     <!-- ============ §4 ============ -->
