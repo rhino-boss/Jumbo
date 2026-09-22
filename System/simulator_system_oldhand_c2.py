@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-1.0"
+SYSTEM_VERSION = "c2-1.1"
 
 
 def _locate_script_dir() -> Path:
@@ -71,11 +71,11 @@ CHECKPOINT_INTERVAL = 40                      # SPS 最小監測單位
 
 # 觸發點 →（當日累積 RTP 門檻, 救援倍數）；10 個觸發點各訂門檻
 CHECKPOINT_RULES: dict[int, tuple[float, float]] = {
-    40:  (0.30, 20.0),
-    80:  (0.35, 40.0),
-    120: (0.40, 50.0),
-    160: (0.45, 70.0),
-    200: (0.50, 80.0),
+    40:  (0.30, 25.0),
+    80:  (0.35, 50.0),
+    120: (0.40, 70.0),
+    160: (0.45, 80.0),
+    200: (0.50, 90.0),
     240: (0.55, 100.0),
     280: (0.60, 100.0),
     320: (0.65, 100.0),
