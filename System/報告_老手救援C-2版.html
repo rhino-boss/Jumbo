@@ -843,46 +843,27 @@
     <!-- ============ §5 ============ -->
     <section id="arb">
       <h2><span class="sec">§5</span>套利檢查</h2>
-      <p>目標：不容許玩家透過特殊手段從救援機制套利。檢查矩陣如下，實測數據待補：</p>
+      <p>目標：不容許玩家透過特殊手段從救援機制套利。以 c2-1.0 規則、10,000 名玩家 × 1,000 轉實測（simulator_system_oldhand_c2_arb.py）：</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>套利手法</th><th>情境</th><th>防線／待定規則</th><th>狀態</th></tr>
+            <tr><th>套利手法</th><th>情境</th><th>模擬結果</th><th>狀態</th></tr>
           </thead>
           <tbody>
             <tr>
-              <td class="key">押注放大／判定點可預測</td>
-              <td>判定點固定在每滿 40 轉：第 1–39 轉壓低押注做低當日 RTP，第 40 轉改押 10 倍吃救援</td>
-              <td><strong>實測（c2-1.0）</strong>：無防線 EV ≈ <strong>+27.4／+27.9 bet／日</strong>，是可穩定套利的大洞；套用「計價基準 = min(當下押注, 當日押注中位數)」後 EV 轉負（−1.13／−0.41）。<strong>此防線為必要規則</strong>。</td>
-              <td>已模擬<br>防線必要</td>
-            </tr>
-            <tr>
               <td class="key">日切刷量</td>
-              <td>跨日歸零後每天用最小押注玩到第 40 轉領 20× 就停，天天重來</td>
-              <td><strong>實測（c2-1.0）</strong>：EV ≈ +0.04（超寶）／+0.38（彩罐）bet／日，20× 保底下誘因極低、接近打平；必要時再設當日最低投注門檻。</td>
+              <td>跨日歸零後，每天用最小押注玩到第 40 轉領 20× 就停，天天重來</td>
+              <td>EV <strong>+0.04</strong>（超級寶石）／<strong>+0.38</strong>（彩罐熱舞）bet／日；第 40 轉觸發率 16.4%／16.2%。20× 保底下誘因極低，接近打平。</td>
               <td>已模擬<br>低風險</td>
             </tr>
             <tr>
-              <td class="key">Bet Mode 切換</td>
-              <td>用 Buy Feature／Super Feature 快速把當日 RTP 做低製造資格</td>
-              <td>BF／SF 的投注與派彩不計入當日 RTP 統計、該轉不得為判定回合（沿 C 版建議）</td>
-              <td>待定案</td>
-            </tr>
-            <tr>
               <td class="key">拿了就走</td>
-              <td>領到救援立即停玩</td>
-              <td>非套利，屬機制效果觀察指標：救援後當日續玩轉數、隔日留存</td>
-              <td>觀察項</td>
+              <td>領到救援當轉立即停玩；當日未領到則玩到第 400 轉（最後觸發點）停</td>
+              <td>EV <strong>−4.85</strong>（超級寶石）／<strong>+1.69</strong>（彩罐熱舞）bet／日；被救比例 36.9%／43.2%，平均停在第 310／298 轉。<strong>彩罐熱舞為正期望，有套利空間</strong>，需下修門檻或倍數再驗。</td>
+              <td>已模擬<br>彩罐需處理</td>
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class="note warn">
-        <span class="tag">前置需求</span>
-        <p>
-          押注放大與日切刷量已以 simulator_system_oldhand_c2_arb.py 完成第 40 轉單點實測；
-          其餘觸發點的放大套利與 Bet Mode 切換仍待定案後補測。
-        </p>
       </div>
     </section>
 

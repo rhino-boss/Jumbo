@@ -7,6 +7,8 @@
 * 日切刷量：每天只玩到第 40 轉（第一個觸發點）就停，天天領第一點救援。
 * 押注放大：第 1–39 轉用 1 單位押注做低當日 RTP，第 40 轉（判定轉）改押 B 倍
   吃救援。分別計算「無防線」與「計價防線 = min(當下押注, 當日押注中位數)」兩種。
+* 拿了就走：正常遊玩，領到救援當轉立刻停玩；當日未領到則玩到第 400 轉
+  （最後一個觸發點）停。
 
 門檻與倍數直接沿用 simulator_system_oldhand_c2.CHECKPOINT_RULES。
 """
@@ -54,6 +56,32 @@ def analyse(game: str) -> None:
     print(f"日切刷量 EV/日           : {ev_farm:+.3f} bet（40 轉停手，天天重來）")
     print(f"押注放大 EV/日（無防線）  : {ev_ramp:+.3f} bet（第 40 轉押 {RAMP_BET:g} 倍）")
     print(f"押注放大 EV/日（計價防線）: {ev_ramp_def:+.3f} bet")
+
+    # ---- 策略三：拿了就走（領到救援即停；未領則玩到第 400 轉停） ----
+    n_players = nat.shape[0]
+    cum = np.zeros(n_players)
+    profit = np.zeros(n_players)
+    stop_spin = np.zeros(n_players)
+    alive = np.ones(n_players, dtype=bool)   # 尚未領到救援
+    prev = 0
+    for cp in sorted(CHECKPOINT_RULES):
+        th, rw = CHECKPOINT_RULES[cp]
+        cum += nat[:, prev:cp - 1].sum(axis=1)
+        rtp_now = cum / (cp - 1)
+        hit = alive & (rtp_now < th)
+        spin_pay = nat[:, cp - 1]
+        # 被救者：本日獲利 = 前 cp-1 轉自然 + max(自然, 救援) − cp 轉成本
+        profit[hit] = cum[hit] + np.maximum(spin_pay[hit], rw) - cp
+        stop_spin[hit] = cp
+        alive &= ~hit
+        cum += spin_pay
+        prev = cp
+    # 未被救者：玩到第 400 轉停
+    profit[alive] = nat[:, :400].sum(axis=1)[alive] - 400.0
+    stop_spin[alive] = 400
+    rescued_ratio = 1.0 - alive.mean()
+    print(f"拿了就走 EV/日           : {profit.mean():+.3f} bet"
+          f"（被救比例 {rescued_ratio * 100:.2f}%、平均停在第 {stop_spin.mean():.0f} 轉）")
     print()
 
 
