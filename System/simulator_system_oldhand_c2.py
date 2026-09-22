@@ -14,8 +14,8 @@
 C-2 規則（機制說明_老手救援C-2版.html）：
 * 以天為循環；本模擬將 1000 轉視為同一日。
 * 每滿 40 轉判定一次「當日累積 RTP」；判定回合本身不納入統計（沿用 C 版口徑）。
-* 10 個觸發點各訂 RTP 門檻（見 CHECKPOINT_RULES）；
-  獎項依落點：40–80 轉救 50×、120–200 轉救 70×、240–400 轉救 100×
+* 10 個觸發點各訂 RTP 門檻與救援倍數（見 CHECKPOINT_RULES），
+  倍數由 20× 隨落點遞增至 100×
 * 救援落在判定回合：該轉最終得分 = max(自然得分, 救援倍數 × Bet)，
   成本以增量記帳。
 * 尚未套用救援池／共同池上限（先量測機制的自然增量，供預算評估）。
@@ -30,7 +30,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-0.9"
+SYSTEM_VERSION = "c2-1.0"
 
 
 def _locate_script_dir() -> Path:
@@ -71,11 +71,11 @@ CHECKPOINT_INTERVAL = 40                      # SPS 最小監測單位
 
 # 觸發點 →（當日累積 RTP 門檻, 救援倍數）；10 個觸發點各訂門檻
 CHECKPOINT_RULES: dict[int, tuple[float, float]] = {
-    40:  (0.30, 50.0),
-    80:  (0.35, 50.0),
-    120: (0.40, 70.0),
+    40:  (0.30, 20.0),
+    80:  (0.35, 40.0),
+    120: (0.40, 50.0),
     160: (0.45, 70.0),
-    200: (0.50, 70.0),
+    200: (0.50, 80.0),
     240: (0.55, 100.0),
     280: (0.60, 100.0),
     320: (0.65, 100.0),
@@ -119,7 +119,7 @@ def simulate(game: str) -> None:
 
     checkpoint_rows = []
     total_triggers = 0
-    award_totals = {50.0: 0, 70.0: 0, 100.0: 0}
+    award_totals: dict[float, int] = {}
 
     prev = 0
     for cp in CHECKPOINTS:
@@ -143,7 +143,7 @@ def simulate(game: str) -> None:
         n_trigger = int(hit.sum())
         total_triggers += n_trigger
         rescued_player |= hit
-        award_totals[reward] += n_trigger
+        award_totals[reward] = award_totals.get(reward, 0) + n_trigger
 
         # 當下原來 RTP%（統計至第 c 轉）；增量 = 該觸發點發放 ÷ 全日總押注
         bet_to_cp = cum_bet.sum() + bet[:, spin_idx].sum()
@@ -195,8 +195,8 @@ def simulate(game: str) -> None:
     rescued = int(rescued_player.sum())
     print(f"rescued_player_ratio    : {rescued / n_players * 100:.2f}%  ({rescued:,} / {n_players:,})")
     print(f"trigger_rate_overall    : {total_triggers / total_judgments * 100:.2f}%  ({total_triggers:,} / {total_judgments:,})")
-    print(f"awards                  : 50x={award_totals[50.0]:,}  70x={award_totals[70.0]:,}  "
-          f"100x={award_totals[100.0]:,}")
+    awards_txt = "  ".join(f"{k:g}x={v:,}" for k, v in sorted(award_totals.items()))
+    print(f"awards                  : {awards_txt}")
     print()
 
 
