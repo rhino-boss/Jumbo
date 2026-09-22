@@ -36,8 +36,10 @@ from wcwidth import wcswidth
 # 切換 RTP 組合，只需修改這一行：
 #   "92+2+2" = 92% 基礎遊戲 + 2% JP1/JP2 + 2% JP3/JP4
 #   "94+0+2" = 94% 基礎遊戲 + 0% JP1/JP2 + 2% JP3/JP4
+#   "92+0+0" = 92% 基礎遊戲，彩金全部停用
 # RTP_PROFILE_MODE = "92+2+2"
-RTP_PROFILE_MODE = "94+0+2"
+# RTP_PROFILE_MODE = "94+0+2"
+RTP_PROFILE_MODE = "92+0+0"
 
 # 自訂模擬 Seed，只需修改這一行；相同 Seed 會得到相同的隨機結果：
 SIMULATION_SEED = 20260721
@@ -131,6 +133,21 @@ RTP_PROFILE_CONFIGS: dict[str, dict[str, Any]] = {
             "JP2": 0,
             "JP3": 1_600_000,
             "JP4": 12_000_000,
+        },
+    },
+    "92+0+0": {
+        "label": "92% 基礎遊戲，彩金全部停用",
+        "base_files": {
+            "超級寶石": "超級寶石_基礎遊戲_1000人_1000轉.csv.gz",
+            "彩罐熱舞": "彩罐熱舞_基礎遊戲_1000人_1000轉.csv.gz",
+        },
+        "base_source": ("原始 92% 固定 Row Data；超級寶石來自 Fixed Weight 倍率線型，" "彩罐熱舞來自 BG Hit Rate、FG觸發率與FG權重"),
+        "jackpot_source": "彩金全部停用（JP1～JP4 權重 0）",
+        "jackpot_weights": {
+            "JP1": 0,
+            "JP2": 0,
+            "JP3": 0,
+            "JP4": 0,
         },
     },
 }
