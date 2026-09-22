@@ -594,6 +594,7 @@
     <a class="sub" href="#rule-flow">3.1 運作方式</a>
     <a class="sub" href="#rule-table">3.2 觸發點與模擬結果</a>
     <a class="sub" href="#rule-pool">3.3 救援池運作</a>
+    <a class="sub" href="#rule-flowchart">3.4 當日流程圖</a>
     <a href="#risk">§4 風控機制</a>
     <a href="#arb">§5 套利檢查</a>
   </nav>
@@ -710,6 +711,107 @@
         <li><strong>成本以增量記帳</strong>：救援成本 = 救援後最終得分 − 該轉自然得分；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，自然得分較高時增量為 0、不扣款。</li>
         <li>個人池跨日累積（帳不歸零）；判定與觸發以天為循環，兩者分屬不同層。</li>
       </ul>
+
+      <h3 id="rule-flowchart"><span class="sec">3.4</span>當日流程圖</h3>
+      <p>一天內各轉數階段在做什麼：</p>
+      <div class="timeline">
+        <div class="phase">
+          <div class="phase-spins">1 – 39</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">累積期</div>
+            <p>不判定，只累積當日 RTP（低於 SPS 最小監測單位 40 轉）。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">40 – 80</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援區 · 50×</div>
+            <p>第 40、80 轉判定，門檻 &lt; 30%／&lt; 35%；命中救 50×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">120 – 200</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援區 · 70×</div>
+            <p>第 120、160、200 轉判定，門檻 &lt; 40%／45%／50%；命中救 70×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">240 – 400</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援區 · 100×</div>
+            <p>第 240～400 轉每 40 轉判定，門檻 &lt; 55% 逐步放寬到 &lt; 70%；命中救 100×。</p>
+          </div>
+        </div>
+        <div class="phase is-newbie">
+          <div class="phase-spins">401 – 1,000</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">待定義</div>
+            <p>救援表目前只定義到 400 轉；此區間的行為待定案。</p>
+          </div>
+        </div>
+        <div class="phase is-newbie">
+          <div class="phase-spins">&gt; 1,000</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">停止判定</div>
+            <p>隔日留存已在 70% 以上，不再投入救援預算。跨日後轉數與 RTP 歸零，隔天重新開始。</p>
+          </div>
+        </div>
+      </div>
+
+      <p>單次判定的流程（每滿 40 轉執行一次）：</p>
+      <div class="flow">
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">1</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">到達觸發點</div>
+            <p>當日每滿 40 轉，取出該觸發點的門檻與救援倍數。</p>
+          </div>
+        </div>
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">2</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">檢查當日累積 RTP</div>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">低於門檻</span><span>具備救援資格，進入池檢查</span></div>
+              <div class="branch-row"><span class="pill stop">未低於門檻</span><span>本點結束，等下一個觸發點</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">3</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">共同池檢查</div>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">餘額足</span><span>進入個人池檢查</span></div>
+              <div class="branch-row"><span class="pill stop">餘額不足</span><span>不救援（硬性上限）</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">4</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">個人池檢查</div>
+            <div class="branch">
+              <div class="branch-row"><span class="pill ok">餘額足</span><span>由個人池支應</span></div>
+              <div class="branch-row"><span class="pill check">餘額不足</span><span>嚴格標準複判，通過由共同池支應並記為透支；未通過不救援</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="gate">
+          <div class="gate-rail"><div class="gate-dot">5</div><div class="gate-line"></div></div>
+          <div class="gate-body">
+            <div class="gate-title">發放與記帳</div>
+            <p>Card System 重骰產生該倍數結果；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，增量記入兩本帳，並計入當日累積 RTP。</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ============ §4 ============ -->
