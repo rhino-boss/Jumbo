@@ -651,24 +651,24 @@
       <h3 id="rule-table"><span class="sec">3.2</span>觸發點與模擬結果</h3>
       <p>
         10 個觸發點各訂門檻。RTP 增量 = 救援倍數 ÷ 觸發點轉數（救援對當日 RTP 的即時拉抬），
-        總 RTP = 門檻 + 增量，即救援後當日 RTP 的上限；第 40 轉可達 155%，為已知的高風險點。
+        總 RTP = 門檻 + 增量，即救援後當日 RTP 的上限；第 40 轉可達 155%，為已知的高風險點。使用量 = 該觸發點實際發放 ÷ 全日總押注（c2-0.9 模擬），十點相加即機制總增量。
       </p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>觸發點</th><th class="num">救援倍數</th><th class="num">RTP 增量</th><th class="num">門檻</th><th class="num">總 RTP</th></tr>
+            <tr><th>觸發點</th><th class="num">救援倍數</th><th class="num">RTP 增量</th><th class="num">門檻</th><th class="num">總 RTP</th><th class="num">使用量（超級寶石）</th><th class="num">使用量（彩罐熱舞）</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">第 40 轉</td><td class="num">50×</td><td class="num">125%</td><td class="num">&lt; 30%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">155%</span></td></tr>
-            <tr><td class="key">第 80 轉</td><td class="num">50×</td><td class="num">63%</td><td class="num">&lt; 35%</td><td class="num">98%</td></tr>
-            <tr><td class="key">第 120 轉</td><td class="num">70×</td><td class="num">58%</td><td class="num">&lt; 40%</td><td class="num">98%</td></tr>
-            <tr><td class="key">第 160 轉</td><td class="num">70×</td><td class="num">44%</td><td class="num">&lt; 45%</td><td class="num">89%</td></tr>
-            <tr><td class="key">第 200 轉</td><td class="num">70×</td><td class="num">35%</td><td class="num">&lt; 50%</td><td class="num">85%</td></tr>
-            <tr><td class="key">第 240 轉</td><td class="num">100×</td><td class="num">42%</td><td class="num">&lt; 55%</td><td class="num">97%</td></tr>
-            <tr><td class="key">第 280 轉</td><td class="num">100×</td><td class="num">36%</td><td class="num">&lt; 60%</td><td class="num">96%</td></tr>
-            <tr><td class="key">第 320 轉</td><td class="num">100×</td><td class="num">31%</td><td class="num">&lt; 65%</td><td class="num">96%</td></tr>
-            <tr><td class="key">第 360 轉</td><td class="num">100×</td><td class="num">28%</td><td class="num">&lt; 70%</td><td class="num">98%</td></tr>
-            <tr><td class="key">第 400 轉</td><td class="num">100×</td><td class="num">25%</td><td class="num">&lt; 70%</td><td class="num">95%</td></tr>
+            <tr><td class="key">第 40 轉</td><td class="num">50×</td><td class="num">125%</td><td class="num">&lt; 30%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">155%</span></td><td class="num">+0.81%</td><td class="num">+0.79%</td></tr>
+            <tr><td class="key">第 80 轉</td><td class="num">50×</td><td class="num">63%</td><td class="num">&lt; 35%</td><td class="num">98%</td><td class="num">+0.15%</td><td class="num">+0.20%</td></tr>
+            <tr><td class="key">第 120 轉</td><td class="num">70×</td><td class="num">58%</td><td class="num">&lt; 40%</td><td class="num">98%</td><td class="num">+0.13%</td><td class="num">+0.19%</td></tr>
+            <tr><td class="key">第 160 轉</td><td class="num">70×</td><td class="num">44%</td><td class="num">&lt; 45%</td><td class="num">89%</td><td class="num">+0.09%</td><td class="num">+0.15%</td></tr>
+            <tr><td class="key">第 200 轉</td><td class="num">70×</td><td class="num">35%</td><td class="num">&lt; 50%</td><td class="num">85%</td><td class="num">+0.10%</td><td class="num">+0.16%</td></tr>
+            <tr><td class="key">第 240 轉</td><td class="num">100×</td><td class="num">42%</td><td class="num">&lt; 55%</td><td class="num">97%</td><td class="num">+0.21%</td><td class="num">+0.33%</td></tr>
+            <tr><td class="key">第 280 轉</td><td class="num">100×</td><td class="num">36%</td><td class="num">&lt; 60%</td><td class="num">96%</td><td class="num">+0.27%</td><td class="num">+0.40%</td></tr>
+            <tr><td class="key">第 320 轉</td><td class="num">100×</td><td class="num">31%</td><td class="num">&lt; 65%</td><td class="num">96%</td><td class="num">+0.36%</td><td class="num">+0.50%</td></tr>
+            <tr><td class="key">第 360 轉</td><td class="num">100×</td><td class="num">28%</td><td class="num">&lt; 70%</td><td class="num">98%</td><td class="num">+0.54%</td><td class="num">+0.63%</td></tr>
+            <tr><td class="key">第 400 轉</td><td class="num">100×</td><td class="num">25%</td><td class="num">&lt; 70%</td><td class="num">95%</td><td class="num">+0.19%</td><td class="num">+0.23%</td></tr>
           </tbody>
         </table>
       </div>
