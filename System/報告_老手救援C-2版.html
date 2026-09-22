@@ -702,6 +702,30 @@
           </tbody>
         </table>
       </div>
+      <p>
+        敏感度測試：全員當日固定只玩 N 轉時的整體 RTP（機制發放不變、押注分母縮小）。
+        超過 97% 目標標黃、超過 100% 標紅：
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th rowspan="2">當日轉數</th><th colspan="2" class="num">超級寶石</th><th colspan="2" class="num">彩罐熱舞</th></tr>
+            <tr><th class="num">機制增量</th><th class="num">總 RTP</th><th class="num">機制增量</th><th class="num">總 RTP</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">100 轉</td><td class="num">+5.51%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.82%</span></td><td class="num">+5.94%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.83%</span></td></tr>
+            <tr><td class="key">200 轉</td><td class="num">+4.98%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.13%</span></td><td class="num">+6.30%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.29%</span></td></tr>
+            <tr><td class="key">300 轉</td><td class="num">+5.12%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.18%</span></td><td class="num">+6.92%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">99.09%</span></td></tr>
+            <tr><td class="key">400 轉</td><td class="num">+6.68%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.80%</span></td><td class="num">+8.73%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.85%</span></td></tr>
+            <tr><td class="key">500 轉</td><td class="num">+5.35%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.45%</span></td><td class="num">+6.99%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">99.04%</span></td></tr>
+            <tr><td class="key">600 轉</td><td class="num">+4.46%</td><td class="num">96.49%</td><td class="num">+5.82%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.94%</span></td></tr>
+            <tr><td class="key">700 轉</td><td class="num">+3.82%</td><td class="num">95.83%</td><td class="num">+4.99%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.05%</span></td></tr>
+            <tr><td class="key">800 轉</td><td class="num">+3.34%</td><td class="num">95.33%</td><td class="num">+4.37%</td><td class="num">96.41%</td></tr>
+            <tr><td class="key">900 轉</td><td class="num">+2.97%</td><td class="num">94.96%</td><td class="num">+3.88%</td><td class="num">95.85%</td></tr>
+            <tr><td class="key">1,000 轉</td><td class="num">+2.67%</td><td class="num">94.67%</td><td class="num">+3.49%</td><td class="num">95.49%</td></tr>
+          </tbody>
+        </table>
+      </div>
       <div class="note warn">
         <span class="tag">預算檢核</span>
         <p>
@@ -709,6 +733,8 @@
           <strong>低於 5% 救援提撥上限</strong>，尚有約 +2.3／+1.5 個百分點的餘裕，
           可用於 401–1,000 轉的延伸或門檻再放寬。
           成本高峰在 240–400 轉的 100× 段（合計約 +1.7／+2.2）。
+          惟上表敏感度顯示：<strong>成本率高度依賴玩家日轉數</strong>——日轉數 700 轉以下時多數情境超過 5% 提撥
+          （400 轉最差，彩罐熱舞達 100.85%），共同池硬上限與實際日轉數分布的加權驗證是定案前的必要步驟。
         </p>
       </div>
       <h3 id="rule-pool"><span class="sec">3.3</span>救援池運作</h3>
