@@ -1,0 +1,764 @@
+<title>老手救援 C-2 報告</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F8F9;
+    --surface:     #FFFFFF;
+    --surface-alt: #EFF3F4;
+    --ink:         #141B20;
+    --ink-mid:     #47555F;
+    --ink-soft:    #6D7C87;
+    --line:        #DCE3E7;
+    --line-soft:   #E8EDEF;
+    --accent:      #0C7480;
+    --accent-deep: #08525B;
+    --accent-soft: #E0EFF0;
+    --warn:        #9A6208;
+    --warn-soft:   #FBF0DC;
+    --danger:      #A63B3B;
+    --danger-soft: #F8E7E7;
+    --ok:          #3A7350;
+    --ok-soft:     #E3F0E7;
+
+    --serif: "Noto Serif TC", "Songti TC", Georgia, serif;
+    --sans:  "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --mono:  "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0E1418;
+      --surface:     #151D22;
+      --surface-alt: #1B252B;
+      --ink:         #E3E9EC;
+      --ink-mid:     #A3B0B9;
+      --ink-soft:    #7D8B95;
+      --line:        #27333A;
+      --line-soft:   #1F2A31;
+      --accent:      #4CBDC9;
+      --accent-deep: #7FD6DF;
+      --accent-soft: #113038;
+      --warn:        #D6A253;
+      --warn-soft:   #33280F;
+      --danger:      #D68282;
+      --danger-soft: #351D1D;
+      --ok:          #74B48C;
+      --ok-soft:     #16301F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0E1418;
+    --surface:     #151D22;
+    --surface-alt: #1B252B;
+    --ink:         #E3E9EC;
+    --ink-mid:     #A3B0B9;
+    --ink-soft:    #7D8B95;
+    --line:        #27333A;
+    --line-soft:   #1F2A31;
+    --accent:      #4CBDC9;
+    --accent-deep: #7FD6DF;
+    --accent-soft: #113038;
+    --warn:        #D6A253;
+    --warn-soft:   #33280F;
+    --danger:      #D68282;
+    --danger-soft: #351D1D;
+    --ok:          #74B48C;
+    --ok-soft:     #16301F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 2.5rem) 6rem;
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+    padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2rem, 4vw, 2.75rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.1rem;
+  }
+  .eyebrow b { color: var(--accent); font-weight: 500; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    line-height: 1.2;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--ink-mid);
+    font-size: 1.02rem;
+  }
+
+  /* the thesis: the RTP equation */
+  .equation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .55rem 1rem;
+    padding: 1.4rem 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+  }
+  .eq-term { display: flex; flex-direction: column; gap: .15rem; }
+  .eq-num {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3.6vw, 2rem);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .eq-num.is-accent { color: var(--accent); }
+  .eq-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .eq-op {
+    font-family: var(--serif);
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: var(--ink-soft);
+    line-height: 1;
+    position: relative;
+    top: -.15rem;
+  }
+
+  /* ---------- side nav ---------- */
+
+  nav.toc {
+    position: sticky;
+    top: 2rem;
+    font-size: .86rem;
+    line-height: 1.5;
+    border-left: 1px solid var(--line);
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+  nav.toc .toc-head {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: .3rem;
+  }
+  nav.toc a {
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    width: fit-content;
+  }
+  nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  nav.toc a.sub { padding-left: .85rem; font-size: .8rem; color: var(--ink-soft); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- body ---------- */
+
+  main { min-width: 0; max-width: 74ch; }
+
+  section { padding-top: clamp(1.5rem, 3vw, 2.1rem); scroll-margin-top: 1.5rem; }
+  section > * + * { margin-top: .6rem; }
+
+  /* tables & formula blocks: fixed breathing room against surrounding text */
+  section > .table-wrap,
+  section > .table-wrap + *,
+  section > .formula,
+  section > .formula + * { margin-top: .85rem; }
+  .gate-body .table-wrap { margin: .3rem 0; }
+
+  /* headings: clear separation from their body text, more above than below */
+  section > h2 + * { margin-top: .85rem; }
+  section > * + h3 { margin-top: 1.05rem; }
+  section > h3 + * { margin-top: .65rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.45rem, 3.2vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    text-wrap: balance;
+    display: flex;
+    align-items: baseline;
+    gap: .7rem;
+  }
+  h2 .sec {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: .04em;
+    position: relative;
+    top: -.2rem;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.06rem;
+    font-weight: 700;
+    margin: 0;
+    padding-top: .3rem;
+    letter-spacing: .01em;
+    text-wrap: balance;
+  }
+  h3 .sec {
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-right: .5rem;
+  }
+
+  p { margin: 0; max-width: 68ch; }
+
+  ul, ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: .4rem; max-width: 68ch; }
+  li::marker { color: var(--ink-soft); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--surface-alt);
+    padding: .1em .38em;
+    border-radius: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  strong { font-weight: 700; }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: .9rem;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .formula .c { color: var(--ink-soft); }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: .62rem .85rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  td.key { font-weight: 500; white-space: nowrap; }
+
+  /* ---------- callouts ---------- */
+
+  .note {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    padding: .95rem 1.15rem;
+    font-size: .92rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .note.warn   { border-left-color: var(--warn);   background: var(--warn-soft); }
+  .note .tag {
+    font-family: var(--mono);
+    font-size: .67rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .note.warn .tag { color: var(--warn); }
+  .note p, .note ul { max-width: none; font-size: .92rem; }
+
+  /* ---------- gate flow ---------- */
+
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .gate {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0 1rem;
+  }
+  .gate-rail { display: flex; flex-direction: column; align-items: center; }
+  .gate-dot {
+    width: 2.2rem; height: 2.2rem;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    flex: none;
+  }
+  .gate-line { flex: 1; width: 1px; background: var(--line); min-height: .9rem; }
+  .gate:last-child .gate-line { background: transparent; }
+  .gate-body { padding-bottom: .75rem; display: flex; flex-direction: column; gap: .3rem; }
+  .gate-title { font-weight: 700; font-size: .98rem; padding-top: .28rem; }
+  .gate-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  .branch {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    border-left: 2px solid var(--line);
+    padding-left: .85rem;
+  }
+  .branch-row { display: flex; gap: .6rem; align-items: baseline; font-size: .9rem; }
+  .pill {
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .12rem .45rem;
+    border-radius: 2px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: none;
+  }
+  .pill.ok     { background: var(--ok-soft);     color: var(--ok);     }
+  .pill.stop   { background: var(--danger-soft); color: var(--danger); }
+  .pill.check  { background: var(--warn-soft);   color: var(--warn);   }
+
+  /* ---------- timeline ---------- */
+
+  .timeline { display: flex; flex-direction: column; }
+  .phase {
+    display: grid;
+    grid-template-columns: 5.5rem 1.6rem minmax(0, 1fr);
+    gap: 0 .9rem;
+  }
+  .phase-spins {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--ink-soft);
+    text-align: right;
+    padding-top: .55rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-rail { display: flex; flex-direction: column; align-items: center; }
+  .phase-mark {
+    width: .7rem; height: .7rem;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: .95rem;
+    flex: none;
+  }
+  .phase.is-newbie .phase-mark { background: var(--surface); border: 2px solid var(--accent); }
+  .phase-line { flex: 1; width: 1px; background: var(--line); }
+  .phase:last-child .phase-line { background: transparent; }
+  .phase-body { padding: .25rem 0 .75rem; display: flex; flex-direction: column; gap: .2rem; }
+  .phase-detail {
+    margin-top: .35rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    max-width: 68ch;
+  }
+  .phase-detail summary {
+    cursor: pointer;
+    padding: .4rem .8rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    font-weight: 500;
+    user-select: none;
+  }
+  .phase-detail summary:hover { color: var(--accent); }
+  .phase-detail summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .phase-detail[open] summary { border-bottom: 1px solid var(--line-soft); }
+  .phase-detail ul {
+    padding: .55rem 1rem .65rem 2rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    gap: .3rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-name { font-weight: 700; font-size: 1rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .phase-rtp {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-soft);
+    letter-spacing: .04em;
+    font-weight: 400;
+  }
+  .phase-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  /* ---------- step list ---------- */
+
+  ol.steps { list-style: none; padding: 0; counter-reset: s; gap: .65rem; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: 2.5rem;
+    font-size: .93rem;
+  }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: .12rem;
+    width: 1.75rem;
+    height: 1.4rem;
+    font-family: var(--mono);
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    display: grid;
+    place-items: center;
+  }
+
+  /* ---------- pending block ---------- */
+
+  .pending {
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    padding: 1.3rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+  }
+  .pending-head {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 4.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: .74rem;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    nav.toc {
+      position: static;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 1.4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+      gap: .45rem 1rem;
+      margin-top: 2rem;
+    }
+    nav.toc .toc-head { grid-column: 1 / -1; margin-bottom: 0; }
+    nav.toc a.sub { display: none; }
+    main { max-width: none; }
+    .phase { grid-template-columns: 4.2rem 1.4rem minmax(0, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>iGaming 機制報告</span>
+      <span><b>老手救援 C-2 版</b></span>
+      <span>模擬：10,000 人 × 1,000 轉</span>
+      <span>2026-09-22</span>
+    </div>
+
+    <h1>老手救援 C-2 報告</h1>
+
+    <p class="standfirst">
+      以天為單位的保底式救援：每 40 轉檢查當日累積 RTP，低於門檻就補上一次大倍數體驗。
+      本報告整理設計依據的數據觀察、機制數值、模擬結果與風控，套利檢查待數據補齊。
+    </p>
+
+    <div class="equation">
+      <div class="eq-term">
+        <span class="eq-num">96%</span>
+        <span class="eq-label">基礎配置</span>
+      </div>
+      <span class="eq-op">+</span>
+      <div class="eq-term">
+        <span class="eq-num is-accent">1%</span>
+        <span class="eq-label">救援提撥</span>
+      </div>
+      <span class="eq-op">=</span>
+      <div class="eq-term">
+        <span class="eq-num">97%</span>
+        <span class="eq-label">目標總 RTP</span>
+      </div>
+      <span class="eq-op">｜</span>
+      <div class="eq-term">
+        <span class="eq-num">+2.76% / +3.54%</span>
+        <span class="eq-label">目前門檻的模擬增量（超寶／彩罐）</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-head">目錄</div>
+    <a href="#data">§1 數據觀察</a>
+    <a href="#goal">§2 機制目標</a>
+    <a href="#rule">§3 機制介紹／數值設定</a>
+    <a class="sub" href="#rule-flow">3.1 運作方式</a>
+    <a class="sub" href="#rule-table">3.2 觸發點與模擬結果</a>
+    <a href="#risk">§4 風控機制</a>
+    <a href="#arb">§5 套利檢查</a>
+  </nav>
+
+  <main>
+
+    <!-- ============ §1 ============ -->
+    <section id="data">
+      <h2><span class="sec">§1</span>數據觀察</h2>
+      <p>設計依據來自 9/1 實際上線數據與自然機率模擬：</p>
+      <ul>
+        <li><strong>當日 1,000 轉以上的玩家，隔日留存都在 70% 以上</strong>——重度玩家不需要救援，明天基本上也會回來。</li>
+        <li><strong>當日 100 把內 RTP 低於 80%，隔日流失率明顯提高</strong>——短時間輸太快是流失主因之一。</li>
+        <li><strong>當日沒有體驗過 50× 以上大倍數的老手，隔日流失變高</strong>——留住人的是「有沒有一次夠大的體驗」。</li>
+        <li><strong>好體驗約兩天就會淡忘</strong>——救援必須當天發生才有留存效果。</li>
+        <li><strong>自然機率下前 40 轉變異極大</strong>：模擬顯示第 40 轉判定時，約 23%～27% 玩家的當日 RTP 低於 40%。</li>
+        <li><strong>SPS 限制</strong>：最小監測單位 40 轉，40 轉才可救一次。</li>
+      </ul>
+    </section>
+
+    <!-- ============ §2 ============ -->
+    <section id="goal">
+      <h2><span class="sec">§2</span>機制目標</h2>
+      <ul>
+        <li>針對<strong>當日 40～1,000 轉</strong>的目標族群，在流失發生前的當天，直接補上「缺席的大倍數體驗」。</li>
+        <li>好體驗定義為<strong>當日最大單局倍數</strong>：玩得夠久卻沒碰到大倍數的玩家，由系統給出該倍數，演出與自然大獎無法區分。</li>
+        <li><strong>RTP 精準可控</strong>：基礎 96% + 救援提撥 1% = 總 RTP 97%，救援支出由救援池結構把關。</li>
+        <li>判定節奏對齊 <strong>SPS 每 40 轉</strong>的監測限制，機制可直接落地。</li>
+      </ul>
+    </section>
+
+    <!-- ============ §3 ============ -->
+    <section id="rule">
+      <h2><span class="sec">§3</span>機制介紹／數值設定</h2>
+
+      <h3 id="rule-flow"><span class="sec">3.1</span>運作方式</h3>
+      <ul>
+        <li><strong>以天為循環</strong>：轉數與 RTP 跨日歸零重計。</li>
+        <li><strong>每滿 40 轉判定一次</strong>（固定、不隨機），檢查當日累積 RTP（當日第 1 轉起的 Total Win ÷ Total Bet）。</li>
+        <li>低於該觸發點門檻 → 由 Card System 重骰給出該落點的救援倍數；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，成本以增量記帳。</li>
+        <li>救援得分計入當日累積 RTP，被救過的玩家通常自然脫離觸發區。</li>
+        <li>當日 &lt; 40 轉不判定；<strong>401–1,000 轉待定義</strong>；&gt; 1,000 轉當日不再判定。</li>
+      </ul>
+
+      <h3 id="rule-table"><span class="sec">3.2</span>觸發點與模擬結果</h3>
+      <p>
+        10 個觸發點各訂門檻。模擬以 10,000 名老手 × 1,000 轉的固定自然 Row Data（基礎 RTP 94%）套用機制，
+        增量貢獻 = 該觸發點發放 ÷ 全日總押注，十點相加即機制總增量。
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th rowspan="2">觸發點</th><th rowspan="2" class="num">RTP 門檻</th><th rowspan="2" class="num">救援倍數</th>
+                <th colspan="2" class="num">超級寶石</th><th colspan="2" class="num">彩罐熱舞</th></tr>
+            <tr><th class="num">觸發率</th><th class="num">增量貢獻</th><th class="num">觸發率</th><th class="num">增量貢獻</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">第 40 轉</td><td class="num">&lt; 40%</td><td class="num">50×</td><td class="num">22.70%</td><td class="num">+1.12%</td><td class="num">26.60%</td><td class="num">+1.30%</td></tr>
+            <tr><td class="key">第 80 轉</td><td class="num">&lt; 35%</td><td class="num">50×</td><td class="num">1.69%</td><td class="num">+0.08%</td><td class="num">1.51%</td><td class="num">+0.07%</td></tr>
+            <tr><td class="key">第 120 轉</td><td class="num">&lt; 40%</td><td class="num">70×</td><td class="num">1.30%</td><td class="num">+0.09%</td><td class="num">1.70%</td><td class="num">+0.12%</td></tr>
+            <tr><td class="key">第 160 轉</td><td class="num">&lt; 45%</td><td class="num">70×</td><td class="num">1.01%</td><td class="num">+0.07%</td><td class="num">1.75%</td><td class="num">+0.12%</td></tr>
+            <tr><td class="key">第 200 轉</td><td class="num">&lt; 50%</td><td class="num">70×</td><td class="num">1.19%</td><td class="num">+0.08%</td><td class="num">1.82%</td><td class="num">+0.13%</td></tr>
+            <tr><td class="key">第 240 轉</td><td class="num">&lt; 55%</td><td class="num">100×</td><td class="num">1.89%</td><td class="num">+0.19%</td><td class="num">2.60%</td><td class="num">+0.26%</td></tr>
+            <tr><td class="key">第 280 轉</td><td class="num">&lt; 60%</td><td class="num">100×</td><td class="num">2.16%</td><td class="num">+0.21%</td><td class="num">3.29%</td><td class="num">+0.32%</td></tr>
+            <tr><td class="key">第 320 轉</td><td class="num">&lt; 65%</td><td class="num">100×</td><td class="num">3.20%</td><td class="num">+0.32%</td><td class="num">4.37%</td><td class="num">+0.43%</td></tr>
+            <tr><td class="key">第 360 轉</td><td class="num">&lt; 70%</td><td class="num">100×</td><td class="num">4.57%</td><td class="num">+0.45%</td><td class="num">5.74%</td><td class="num">+0.57%</td></tr>
+            <tr><td class="key">第 400 轉</td><td class="num">&lt; 70%</td><td class="num">100×</td><td class="num">1.47%</td><td class="num">+0.15%</td><td class="num">2.16%</td><td class="num">+0.22%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>總體指標</th><th class="num">超級寶石</th><th class="num">彩罐熱舞</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">RTP（沒有機制）</td><td class="num">94.0000%</td><td class="num">94.0000%</td></tr>
+            <tr><td class="key">機制增加 RTP</td><td class="num">+2.7562%</td><td class="num">+3.5427%</td></tr>
+            <tr><td class="key">RTP（有機制）</td><td class="num">96.7562%</td><td class="num">97.5427%</td></tr>
+            <tr><td class="key">用到救援的玩家比例</td><td class="num">38.18%</td><td class="num">46.03%</td></tr>
+            <tr><td class="key">觸發率（判定成功 ÷ 總判定）</td><td class="num">4.12%（4,118 / 100,000）</td><td class="num">5.15%（5,154 / 100,000）</td></tr>
+            <tr><td class="key">發放分布</td><td class="num">50×: 2,439｜70×: 350｜100×: 1,329</td><td class="num">50×: 2,811｜70×: 527｜100×: 1,816</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <span class="tag">預算缺口</span>
+        <p>
+          目前門檻下機制增量為 +2.76%／+3.54%，<strong>超過 1% 救援提撥兩倍以上</strong>，
+          彩罐熱舞總 RTP 已達 97.54%。成本集中在兩處：第 40 轉的高觸發率（22.7%／26.6%，貢獻約四成）
+          與 320–400 轉放寬到 65–70% 的 100× 段。需下修門檻或倍數，或由共同池上限硬性把關（超支時後到者不救）。
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ §4 ============ -->
+    <section id="risk">
+      <h2><span class="sec">§4</span>風控機制</h2>
+      <ul>
+        <li><strong>救援池雙帳</strong>：每轉提撥投注額 1%，同一筆錢記兩本帳——共同池守平台總支出（餘額不足一律不救，總 RTP 結構上不超過 97%）；個人池守單一玩家不長期超領，見底時走嚴格複判的透支路徑。</li>
+        <li><strong>增量記帳</strong>：成本 = 救援後最終得分 − 自然得分，以實際最終得分計算，不用卡片目標倍數，避免低估支出。</li>
+        <li><strong>高留存玩家不吃預算</strong>：當日超過 1,000 轉停止判定。</li>
+        <li><strong>自然收斂</strong>：救援得分計入當日 RTP，被救玩家自動脫離觸發區，同一人重複救援的機率快速下降（模擬中用到救援的玩家平均約 1.1 次）。</li>
+        <li><strong>演出不可辨識</strong>：救援由 Card System 重骰產生，玩家無法從畫面判斷是否為救援，機制不可被觀察學習。</li>
+        <li><strong>監控指標</strong>：各觸發點觸發率與增量貢獻、用到救援的玩家比例、共同池餘額、個人池透支比例。</li>
+      </ul>
+    </section>
+
+    <!-- ============ §5 ============ -->
+    <section id="arb">
+      <h2><span class="sec">§5</span>套利檢查</h2>
+      <p>目標：不容許玩家透過特殊手段從救援機制套利。檢查矩陣如下，實測數據待補：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>套利手法</th><th>情境</th><th>防線／待定規則</th><th>狀態</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="key">判定點可預測</td>
+              <td>判定點固定在每滿 40 轉，玩家可在判定轉前壓低押注做低當日 RTP、判定轉拉高押注吃大倍數救援</td>
+              <td>救援金額計價基準改用 min(當下押注, 當日押注中位數)，讓拉押注零收益</td>
+              <td>待定案</td>
+            </tr>
+            <tr>
+              <td class="key">日切刷量</td>
+              <td>跨日歸零後每天用最小押注刷前 40 轉觸發 50×，天天領</td>
+              <td>期望值試算：40 轉 × 最小押注成本 vs 50× 救援 × 觸發率；必要時設當日最低投注門檻或以個人池餘額把關</td>
+              <td>待模擬</td>
+            </tr>
+            <tr>
+              <td class="key">押注放大</td>
+              <td>小額把當日 RTP 做低，觸發點前換大額押注</td>
+              <td>同計價基準規則；另監控判定轉 vs 當日中位數押注的倍率分布</td>
+              <td>待模擬</td>
+            </tr>
+            <tr>
+              <td class="key">Bet Mode 切換</td>
+              <td>用 Buy Feature／Super Feature 快速把當日 RTP 做低製造資格</td>
+              <td>BF／SF 的投注與派彩不計入當日 RTP 統計、該轉不得為判定回合（沿 C 版建議）</td>
+              <td>待定案</td>
+            </tr>
+            <tr>
+              <td class="key">拿了就走</td>
+              <td>領到救援立即停玩</td>
+              <td>非套利，屬機制效果觀察指標：救援後當日續玩轉數、隔日留存</td>
+              <td>觀察項</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <span class="tag">前置需求</span>
+        <p>
+          目前模擬以固定押注（每轉 1 單位）進行，押注放大、日切刷量、Bet Mode 切換三類
+          需模擬器支援可變押注與多日 session 後才能出實測數據。
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>iGaming 機制報告 · 老手救援 C-2 版</span>
+    <span>模擬 c2-0.7 · rowdata 94% × 10,000 人</span>
+    <span>2026-09-22</span>
+    <span>套利實測待補</span>
+  </footer>
+
+</div>
