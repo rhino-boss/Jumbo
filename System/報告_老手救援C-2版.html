@@ -564,12 +564,12 @@
 
     <div class="equation">
       <div class="eq-term">
-        <span class="eq-num">96%</span>
+        <span class="eq-num">92%</span>
         <span class="eq-label">基礎配置</span>
       </div>
       <span class="eq-op">+</span>
       <div class="eq-term">
-        <span class="eq-num is-accent">1%</span>
+        <span class="eq-num is-accent">5%</span>
         <span class="eq-label">救援提撥</span>
       </div>
       <span class="eq-op">=</span>
@@ -627,7 +627,7 @@
         <li><strong>補上缺席的大倍數體驗</strong>：好體驗定義為當日最大單局倍數——玩得夠久卻沒碰到大倍數的玩家，在流失發生前的當天由系統給出該倍數，演出與自然大獎無法區分。</li>
         <li><strong>目標族群依成本收放</strong>：成本足夠時涵蓋當日 40～1,000 轉；成本不夠時收斂到 40～500 轉——500 轉後隔日留存已在 60% 以上，先保留存效益最高的區段。</li>
         <li><strong>預算只花在救了有效益的玩家</strong>：挑出救援後留存會改變的玩家，針對他短期體驗不好的情境出手；救了隔日也不會回來的不救，本來隔日就會回來的也不救。</li>
-        <li><strong>RTP 精準可控</strong>：基礎 96% + 救援提撥 1% = 總 RTP 97%，救援支出由救援池結構把關。</li>
+        <li><strong>RTP 精準可控</strong>：基礎 92% + 救援提撥 5% = 總 RTP 97%，救援支出由救援池結構把關。</li>
         <li><strong>可直接落地</strong>：判定節奏對齊 SPS 每 40 轉的監測限制。</li>
       </ul>
     </section>
@@ -687,11 +687,12 @@
         </table>
       </div>
       <div class="note warn">
-        <span class="tag">預算缺口</span>
+        <span class="tag">預算檢核</span>
         <p>
-          目前門檻下機制增量為 +2.76%／+3.54%，<strong>超過 1% 救援提撥兩倍以上</strong>，
-          彩罐熱舞總 RTP 已達 97.54%。成本集中在兩處：第 40 轉的高觸發率（22.7%／26.6%，貢獻約四成）
-          與 320–400 轉放寬到 65–70% 的 100× 段。需下修門檻或倍數，或由共同池上限硬性把關（超支時後到者不救）。
+          目前門檻下機制增量為 +2.76%／+3.54%，<strong>低於 5% 救援提撥上限</strong>，預算充足。
+          惟本輪模擬使用 94% 基礎 rowdata；基礎配置改為 92% 後，玩家當日 RTP 整體下移、
+          各觸發點觸發率會上升，實際增量將高於本表，需以 92% rowdata 重跑確認仍在 5% 內。
+          成本集中在第 40 轉的高觸發率（22.7%／26.6%，貢獻約四成）與 320–400 轉的 100× 段。
         </p>
       </div>
     </section>
@@ -700,7 +701,7 @@
     <section id="risk">
       <h2><span class="sec">§4</span>風控機制</h2>
       <ul>
-        <li><strong>救援池雙帳</strong>：每轉提撥投注額 1%，同一筆錢記兩本帳——共同池守平台總支出（餘額不足一律不救，總 RTP 結構上不超過 97%）；個人池守單一玩家不長期超領，見底時走嚴格複判的透支路徑。</li>
+        <li><strong>救援池雙帳</strong>：每轉提撥投注額 5%，同一筆錢記兩本帳——共同池守平台總支出（餘額不足一律不救，總 RTP 結構上不超過 97%）；個人池守單一玩家不長期超領，見底時走嚴格複判的透支路徑。</li>
         <li><strong>增量記帳</strong>：成本 = 救援後最終得分 − 自然得分，以實際最終得分計算，不用卡片目標倍數，避免低估支出。</li>
         <li><strong>高留存玩家不吃預算</strong>：當日超過 1,000 轉停止判定。</li>
         <li><strong>自然收斂</strong>：救援得分計入當日 RTP，被救玩家自動脫離觸發區，同一人重複救援的機率快速下降（模擬中用到救援的玩家平均約 1.1 次）。</li>
