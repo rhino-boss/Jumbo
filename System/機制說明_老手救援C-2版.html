@@ -793,7 +793,7 @@
       </ul>
 
       <h3 id="rule-flowchart"><span class="sec">3.4</span>當日流程圖</h3>
-      <p>一天內各轉數階段在做什麼：</p>
+      <p>一天內各轉數階段在做什麼（各救援點另須符合前 40 轉 RTP &lt; 50%）：</p>
       <div class="timeline">
         <div class="phase">
           <div class="phase-spins">1 – 39</div>
@@ -804,27 +804,83 @@
           </div>
         </div>
         <div class="phase">
-          <div class="phase-spins">40 – 80</div>
+          <div class="phase-spins">40</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">救援區 · 25×／50×</div>
-            <p>第 40、80 轉判定，門檻 &lt; 30%／&lt; 35%；命中救 25×／50×。</p>
+            <div class="phase-name">救援點 · 25×</div>
+            <p>第 40 轉判定，當日累積 RTP 門檻 &lt; 30%；命中救 25×。</p>
           </div>
         </div>
         <div class="phase">
-          <div class="phase-spins">120 – 200</div>
+          <div class="phase-spins">80</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">救援區 · 70×～90×</div>
-            <p>第 120、160、200 轉判定，門檻 &lt; 40%／45%／50%；命中救 70×／80×／90×。</p>
+            <div class="phase-name">救援點 · 50×</div>
+            <p>第 80 轉判定，當日累積 RTP 門檻 &lt; 35%；命中救 50×。</p>
           </div>
         </div>
         <div class="phase">
-          <div class="phase-spins">240 – 400</div>
+          <div class="phase-spins">120</div>
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
-            <div class="phase-name">救援區 · 100×</div>
-            <p>第 240～400 轉每 40 轉判定，門檻 &lt; 55% 逐步放寬到 &lt; 70%；命中救 100×。</p>
+            <div class="phase-name">救援點 · 70×</div>
+            <p>第 120 轉判定，當日累積 RTP 門檻 &lt; 40%；命中救 70×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">160</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 80×</div>
+            <p>第 160 轉判定，當日累積 RTP 門檻 &lt; 45%；命中救 80×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">200</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 90×</div>
+            <p>第 200 轉判定，當日累積 RTP 門檻 &lt; 50%；命中救 90×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">240</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 100×</div>
+            <p>第 240 轉判定，當日累積 RTP 門檻 &lt; 55%；命中救 100×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">280</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 100×</div>
+            <p>第 280 轉判定，當日累積 RTP 門檻 &lt; 60%；命中救 100×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">320</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 100×</div>
+            <p>第 320 轉判定，當日累積 RTP 門檻 &lt; 65%；命中救 100×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">360</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 100×</div>
+            <p>第 360 轉判定，當日累積 RTP 門檻 &lt; 70%；命中救 100×。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="phase-spins">400</div>
+          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
+          <div class="phase-body">
+            <div class="phase-name">救援點 · 100×</div>
+            <p>第 400 轉判定，當日累積 RTP 門檻 &lt; 70%；命中救 100×。</p>
           </div>
         </div>
         <div class="phase">
@@ -869,7 +925,7 @@
           <div class="gate-body">
             <div class="gate-title">共同池檢查</div>
             <div class="branch">
-              <div class="branch-row"><span class="pill ok">餘額足</span><span>進入個人池檢查</span></div>
+              <div class="branch-row"><span class="pill ok">餘額足</span><span>進入發放</span></div>
               <div class="branch-row"><span class="pill stop">餘額不足</span><span>不救援（硬性上限）</span></div>
             </div>
           </div>
@@ -877,18 +933,8 @@
         <div class="gate">
           <div class="gate-rail"><div class="gate-dot">4</div><div class="gate-line"></div></div>
           <div class="gate-body">
-            <div class="gate-title">個人池檢查</div>
-            <div class="branch">
-              <div class="branch-row"><span class="pill ok">餘額足</span><span>由個人池支應</span></div>
-              <div class="branch-row"><span class="pill check">餘額不足</span><span>嚴格標準複判，通過由共同池支應並記為透支；未通過不救援</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="gate">
-          <div class="gate-rail"><div class="gate-dot">5</div><div class="gate-line"></div></div>
-          <div class="gate-body">
             <div class="gate-title">發放與記帳</div>
-            <p>Card System 重骰產生該倍數結果；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，增量記入兩本帳，並計入當日累積 RTP。</p>
+            <p>Card System 重骰產生該倍數結果；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，增量自共同池扣款，並計入當日累積 RTP。</p>
           </div>
         </div>
       </div>
