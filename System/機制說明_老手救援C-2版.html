@@ -641,24 +641,46 @@
       <h3 id="rule-table"><span class="sec">3.2</span>觸發點與模擬結果</h3>
       <p>
         10 個觸發點各訂門檻。RTP 增量 = 救援倍數 ÷ 觸發點轉數（救援對當日 RTP 的即時拉抬），
-        總 RTP = 門檻 + 增量，即救援後當日 RTP 的上限，全表均低於 100%。各觸發點另有共同短期條件：前 40 轉 RTP &lt; 50%。使用量 = 該觸發點實際發放 ÷ 全日總押注（c2-1.3 模擬，10,000 人 × 800 轉）。
+        上限 RTP = 門檻 + 增量，即救援後當日 RTP 的上限，全表均低於 100%。各觸發點另有共同短期條件：前 40 轉 RTP &lt; 50%。
       </p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>觸發點</th><th class="num">救援倍數</th><th class="num">RTP 增量</th><th class="num">門檻</th><th class="num">總 RTP</th><th class="num">使用量（超級寶石）</th><th class="num">使用量（彩罐熱舞）</th></tr>
+            <tr><th>觸發點</th><th class="num">救援倍數</th><th class="num">RTP 增量</th><th class="num">門檻</th><th class="num">上限 RTP</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">第 40 轉</td><td class="num">25×</td><td class="num">63%</td><td class="num">&lt; 30%</td><td class="num">93%</td><td class="num">+0.50%</td><td class="num">+0.49%</td></tr>
-            <tr><td class="key">第 80 轉</td><td class="num">50×</td><td class="num">63%</td><td class="num">&lt; 35%</td><td class="num">98%</td><td class="num">+0.19%</td><td class="num">+0.25%</td></tr>
-            <tr><td class="key">第 120 轉</td><td class="num">70×</td><td class="num">58%</td><td class="num">&lt; 40%</td><td class="num">98%</td><td class="num">+0.19%</td><td class="num">+0.25%</td></tr>
-            <tr><td class="key">第 160 轉</td><td class="num">80×</td><td class="num">50%</td><td class="num">&lt; 45%</td><td class="num">95%</td><td class="num">+0.17%</td><td class="num">+0.26%</td></tr>
-            <tr><td class="key">第 200 轉</td><td class="num">90×</td><td class="num">45%</td><td class="num">&lt; 50%</td><td class="num">95%</td><td class="num">+0.18%</td><td class="num">+0.30%</td></tr>
-            <tr><td class="key">第 240 轉</td><td class="num">100×</td><td class="num">42%</td><td class="num">&lt; 55%</td><td class="num">97%</td><td class="num">+0.26%</td><td class="num">+0.43%</td></tr>
-            <tr><td class="key">第 280 轉</td><td class="num">100×</td><td class="num">36%</td><td class="num">&lt; 60%</td><td class="num">96%</td><td class="num">+0.31%</td><td class="num">+0.45%</td></tr>
-            <tr><td class="key">第 320 轉</td><td class="num">100×</td><td class="num">31%</td><td class="num">&lt; 65%</td><td class="num">96%</td><td class="num">+0.40%</td><td class="num">+0.57%</td></tr>
-            <tr><td class="key">第 360 轉</td><td class="num">100×</td><td class="num">28%</td><td class="num">&lt; 70%</td><td class="num">98%</td><td class="num">+0.53%</td><td class="num">+0.67%</td></tr>
-            <tr><td class="key">第 400 轉</td><td class="num">100×</td><td class="num">25%</td><td class="num">&lt; 70%</td><td class="num">95%</td><td class="num">+0.31%</td><td class="num">+0.39%</td></tr>
+            <tr><td class="key">第 40 轉</td><td class="num">25×</td><td class="num">63%</td><td class="num">&lt; 30%</td><td class="num">93%</td></tr>
+            <tr><td class="key">第 80 轉</td><td class="num">50×</td><td class="num">63%</td><td class="num">&lt; 35%</td><td class="num">98%</td></tr>
+            <tr><td class="key">第 120 轉</td><td class="num">70×</td><td class="num">58%</td><td class="num">&lt; 40%</td><td class="num">98%</td></tr>
+            <tr><td class="key">第 160 轉</td><td class="num">80×</td><td class="num">50%</td><td class="num">&lt; 45%</td><td class="num">95%</td></tr>
+            <tr><td class="key">第 200 轉</td><td class="num">90×</td><td class="num">45%</td><td class="num">&lt; 50%</td><td class="num">95%</td></tr>
+            <tr><td class="key">第 240 轉</td><td class="num">100×</td><td class="num">42%</td><td class="num">&lt; 55%</td><td class="num">97%</td></tr>
+            <tr><td class="key">第 280 轉</td><td class="num">100×</td><td class="num">36%</td><td class="num">&lt; 60%</td><td class="num">96%</td></tr>
+            <tr><td class="key">第 320 轉</td><td class="num">100×</td><td class="num">31%</td><td class="num">&lt; 65%</td><td class="num">96%</td></tr>
+            <tr><td class="key">第 360 轉</td><td class="num">100×</td><td class="num">28%</td><td class="num">&lt; 70%</td><td class="num">98%</td></tr>
+            <tr><td class="key">第 400 轉</td><td class="num">100×</td><td class="num">25%</td><td class="num">&lt; 70%</td><td class="num">95%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        使用量 = 該觸發點實際發放 ÷ 全日總押注（c2-1.3 模擬，10,000 人 × 800 轉）：
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>觸發點</th><th class="num">使用量（超級寶石）</th><th class="num">使用量（彩罐熱舞）</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">第 40 轉</td><td class="num">+0.50%</td><td class="num">+0.49%</td></tr>
+            <tr><td class="key">第 80 轉</td><td class="num">+0.19%</td><td class="num">+0.25%</td></tr>
+            <tr><td class="key">第 120 轉</td><td class="num">+0.19%</td><td class="num">+0.25%</td></tr>
+            <tr><td class="key">第 160 轉</td><td class="num">+0.17%</td><td class="num">+0.26%</td></tr>
+            <tr><td class="key">第 200 轉</td><td class="num">+0.18%</td><td class="num">+0.30%</td></tr>
+            <tr><td class="key">第 240 轉</td><td class="num">+0.26%</td><td class="num">+0.43%</td></tr>
+            <tr><td class="key">第 280 轉</td><td class="num">+0.31%</td><td class="num">+0.45%</td></tr>
+            <tr><td class="key">第 320 轉</td><td class="num">+0.40%</td><td class="num">+0.57%</td></tr>
+            <tr><td class="key">第 360 轉</td><td class="num">+0.53%</td><td class="num">+0.67%</td></tr>
+            <tr><td class="key">第 400 轉</td><td class="num">+0.31%</td><td class="num">+0.39%</td></tr>
           </tbody>
         </table>
       </div>
@@ -710,14 +732,14 @@
             <tr><th>發放分布</th><th class="num">超級寶石</th><th class="num">彩罐熱舞</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">10×（延伸）</td><td class="num">6,103</td><td class="num">8,315</td></tr>
-            <tr><td class="key">25×</td><td class="num">1,641</td><td class="num">1,616</td></tr>
-            <tr><td class="key">50×</td><td class="num">311</td><td class="num">414</td></tr>
-            <tr><td class="key">70×</td><td class="num">217</td><td class="num">288</td></tr>
-            <tr><td class="key">80×</td><td class="num">177</td><td class="num">260</td></tr>
-            <tr><td class="key">90×</td><td class="num">158</td><td class="num">271</td></tr>
-            <tr><td class="key">100×</td><td class="num">1,465</td><td class="num">2,020</td></tr>
-            <tr><td class="key"><strong>合計</strong></td><td class="num"><strong>10,072</strong></td><td class="num"><strong>13,184</strong></td></tr>
+            <tr><td class="key">10×（延伸）</td><td class="num">60.59%</td><td class="num">63.07%</td></tr>
+            <tr><td class="key">25×</td><td class="num">16.29%</td><td class="num">12.26%</td></tr>
+            <tr><td class="key">50×</td><td class="num">3.09%</td><td class="num">3.14%</td></tr>
+            <tr><td class="key">70×</td><td class="num">2.15%</td><td class="num">2.18%</td></tr>
+            <tr><td class="key">80×</td><td class="num">1.76%</td><td class="num">1.97%</td></tr>
+            <tr><td class="key">90×</td><td class="num">1.57%</td><td class="num">2.06%</td></tr>
+            <tr><td class="key">100×</td><td class="num">14.55%</td><td class="num">15.32%</td></tr>
+            <tr><td class="key"><strong>合計</strong></td><td class="num"><strong>100%（10,072 次）</strong></td><td class="num"><strong>100%（13,184 次）</strong></td></tr>
           </tbody>
         </table>
       </div>
