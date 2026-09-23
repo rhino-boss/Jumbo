@@ -68,7 +68,9 @@ def analyse(game: str) -> None:
         th, rw = CHECKPOINT_RULES[cp]
         cum += nat[:, prev:cp - 1].sum(axis=1)
         rtp_now = cum / (cp - 1)
-        hit = alive & (rtp_now < th)
+        short_start = max(0, cp - 41)
+        short_rtp = nat[:, short_start:cp - 1].sum(axis=1) / (cp - 1 - short_start)
+        hit = alive & (rtp_now < th) & (short_rtp < 0.50)
         spin_pay = nat[:, cp - 1]
         # 被救者：本日獲利 = 前 cp-1 轉自然 + max(自然, 救援) − cp 轉成本
         profit[hit] = cum[hit] + np.maximum(spin_pay[hit], rw) - cp

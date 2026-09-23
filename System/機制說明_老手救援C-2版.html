@@ -551,7 +551,7 @@
     <div class="eyebrow">
       <span>iGaming 機制報告</span>
       <span><b>老手救援 C-2 版</b></span>
-      <span>模擬：10,000 人 × 1,000 轉</span>
+      <span>模擬：10,000 人 × 800 轉</span>
       <span>2026-09-22</span>
     </div>
 
@@ -579,7 +579,7 @@
       </div>
       <span class="eq-op">｜</span>
       <div class="eq-term">
-        <span class="eq-num">+4.07% / +5.29%</span>
+        <span class="eq-num">+3.75% / +5.03%</span>
         <span class="eq-label">目前門檻的模擬增量（超寶／彩罐）</span>
       </div>
     </div>
@@ -642,7 +642,7 @@
       <h3 id="rule-flow"><span class="sec">3.1</span>運作方式</h3>
       <ul>
         <li><strong>以天為循環</strong>：轉數與 RTP 跨日歸零重計。</li>
-        <li><strong>每滿 40 轉判定一次</strong>（固定、不隨機），檢查當日累積 RTP（當日第 1 轉起的 Total Win ÷ Total Bet）。</li>
+        <li><strong>每滿 40 轉判定一次</strong>（固定、不隨機），須同時符合兩個條件：當日累積 RTP 低於該觸發點門檻，<strong>且前 40 轉 RTP &lt; 50%</strong>。</li>
         <li>低於該觸發點門檻 → 由 Card System 重骰給出該落點的救援倍數；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，成本以增量記帳。</li>
         <li>救援得分計入當日累積 RTP，被救過的玩家通常自然脫離觸發區。</li>
         <li>當日 &lt; 40 轉不判定；<strong>401–1,000 轉為延伸救援</strong>（見 3.2 末）；&gt; 1,000 轉當日不再判定。</li>
@@ -651,7 +651,7 @@
       <h3 id="rule-table"><span class="sec">3.2</span>觸發點與模擬結果</h3>
       <p>
         10 個觸發點各訂門檻。RTP 增量 = 救援倍數 ÷ 觸發點轉數（救援對當日 RTP 的即時拉抬），
-        總 RTP = 門檻 + 增量，即救援後當日 RTP 的上限，全表均低於 100%。使用量 = 該觸發點實際發放 ÷ 全日總押注（c2-1.1 模擬），十點相加即機制總增量。
+        總 RTP = 門檻 + 增量，即救援後當日 RTP 的上限，全表均低於 100%。各觸發點另有共同短期條件：前 40 轉 RTP &lt; 50%。使用量 = 該觸發點實際發放 ÷ 全日總押注（c2-1.3 模擬，10,000 人 × 800 轉）。
       </p>
       <div class="table-wrap">
         <table>
@@ -659,23 +659,23 @@
             <tr><th>觸發點</th><th class="num">救援倍數</th><th class="num">RTP 增量</th><th class="num">門檻</th><th class="num">總 RTP</th><th class="num">使用量（超級寶石）</th><th class="num">使用量（彩罐熱舞）</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">第 40 轉</td><td class="num">25×</td><td class="num">63%</td><td class="num">&lt; 30%</td><td class="num">93%</td><td class="num">+0.40%</td><td class="num">+0.39%</td></tr>
-            <tr><td class="key">第 80 轉</td><td class="num">50×</td><td class="num">63%</td><td class="num">&lt; 35%</td><td class="num">98%</td><td class="num">+0.16%</td><td class="num">+0.20%</td></tr>
-            <tr><td class="key">第 120 轉</td><td class="num">70×</td><td class="num">58%</td><td class="num">&lt; 40%</td><td class="num">98%</td><td class="num">+0.15%</td><td class="num">+0.20%</td></tr>
-            <tr><td class="key">第 160 轉</td><td class="num">80×</td><td class="num">50%</td><td class="num">&lt; 45%</td><td class="num">95%</td><td class="num">+0.14%</td><td class="num">+0.21%</td></tr>
-            <tr><td class="key">第 200 轉</td><td class="num">90×</td><td class="num">45%</td><td class="num">&lt; 50%</td><td class="num">95%</td><td class="num">+0.15%</td><td class="num">+0.26%</td></tr>
-            <tr><td class="key">第 240 轉</td><td class="num">100×</td><td class="num">42%</td><td class="num">&lt; 55%</td><td class="num">97%</td><td class="num">+0.23%</td><td class="num">+0.39%</td></tr>
-            <tr><td class="key">第 280 轉</td><td class="num">100×</td><td class="num">36%</td><td class="num">&lt; 60%</td><td class="num">96%</td><td class="num">+0.31%</td><td class="num">+0.42%</td></tr>
-            <tr><td class="key">第 320 轉</td><td class="num">100×</td><td class="num">31%</td><td class="num">&lt; 65%</td><td class="num">96%</td><td class="num">+0.38%</td><td class="num">+0.53%</td></tr>
-            <tr><td class="key">第 360 轉</td><td class="num">100×</td><td class="num">28%</td><td class="num">&lt; 70%</td><td class="num">98%</td><td class="num">+0.54%</td><td class="num">+0.64%</td></tr>
-            <tr><td class="key">第 400 轉</td><td class="num">100×</td><td class="num">25%</td><td class="num">&lt; 70%</td><td class="num">95%</td><td class="num">+0.21%</td><td class="num">+0.24%</td></tr>
+            <tr><td class="key">第 40 轉</td><td class="num">25×</td><td class="num">63%</td><td class="num">&lt; 30%</td><td class="num">93%</td><td class="num">+0.50%</td><td class="num">+0.49%</td></tr>
+            <tr><td class="key">第 80 轉</td><td class="num">50×</td><td class="num">63%</td><td class="num">&lt; 35%</td><td class="num">98%</td><td class="num">+0.19%</td><td class="num">+0.25%</td></tr>
+            <tr><td class="key">第 120 轉</td><td class="num">70×</td><td class="num">58%</td><td class="num">&lt; 40%</td><td class="num">98%</td><td class="num">+0.19%</td><td class="num">+0.25%</td></tr>
+            <tr><td class="key">第 160 轉</td><td class="num">80×</td><td class="num">50%</td><td class="num">&lt; 45%</td><td class="num">95%</td><td class="num">+0.17%</td><td class="num">+0.26%</td></tr>
+            <tr><td class="key">第 200 轉</td><td class="num">90×</td><td class="num">45%</td><td class="num">&lt; 50%</td><td class="num">95%</td><td class="num">+0.18%</td><td class="num">+0.30%</td></tr>
+            <tr><td class="key">第 240 轉</td><td class="num">100×</td><td class="num">42%</td><td class="num">&lt; 55%</td><td class="num">97%</td><td class="num">+0.26%</td><td class="num">+0.43%</td></tr>
+            <tr><td class="key">第 280 轉</td><td class="num">100×</td><td class="num">36%</td><td class="num">&lt; 60%</td><td class="num">96%</td><td class="num">+0.31%</td><td class="num">+0.45%</td></tr>
+            <tr><td class="key">第 320 轉</td><td class="num">100×</td><td class="num">31%</td><td class="num">&lt; 65%</td><td class="num">96%</td><td class="num">+0.40%</td><td class="num">+0.57%</td></tr>
+            <tr><td class="key">第 360 轉</td><td class="num">100×</td><td class="num">28%</td><td class="num">&lt; 70%</td><td class="num">98%</td><td class="num">+0.53%</td><td class="num">+0.67%</td></tr>
+            <tr><td class="key">第 400 轉</td><td class="num">100×</td><td class="num">25%</td><td class="num">&lt; 70%</td><td class="num">95%</td><td class="num">+0.31%</td><td class="num">+0.39%</td></tr>
           </tbody>
         </table>
       </div>
       <p>
-        <strong>延伸救援（當日 401–1,000 轉）</strong>：每滿 40 轉判定（共 15 點），
-        往前抓 200 轉 RTP &lt; 70% 且前 40 轉 RTP &lt; 50%（滾動窗口、判定回合不納入）
-        → 送 <strong>10× BG 盤面</strong>。模擬結果（c2-1.2）：
+        <strong>延伸救援（當日 401 轉起）</strong>：每滿 40 轉判定，
+        往前抓 200 轉 RTP &lt; 60% 且前 40 轉 RTP &lt; 50%（滾動窗口、判定回合不納入）
+        → 送 <strong>10× BG 盤面</strong>。模擬結果（c2-1.3，800 轉基準共 10 點）：
       </p>
       <div class="table-wrap">
         <table>
@@ -684,22 +684,17 @@
             <tr><th class="num">觸發率</th><th class="num">增量貢獻</th><th class="num">觸發率</th><th class="num">增量貢獻</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">第 440 轉</td><td class="num">8.88%</td><td class="num">+0.08%</td><td class="num">11.87%</td><td class="num">+0.11%</td></tr>
-            <tr><td class="key">第 480 轉</td><td class="num">8.77%</td><td class="num">+0.08%</td><td class="num">10.26%</td><td class="num">+0.10%</td></tr>
-            <tr><td class="key">第 520 轉</td><td class="num">9.41%</td><td class="num">+0.09%</td><td class="num">12.12%</td><td class="num">+0.11%</td></tr>
-            <tr><td class="key">第 560 轉</td><td class="num">9.56%</td><td class="num">+0.09%</td><td class="num">12.09%</td><td class="num">+0.11%</td></tr>
-            <tr><td class="key">第 600 轉</td><td class="num">10.20%</td><td class="num">+0.10%</td><td class="num">13.23%</td><td class="num">+0.13%</td></tr>
-            <tr><td class="key">第 640 轉</td><td class="num">10.31%</td><td class="num">+0.10%</td><td class="num">12.72%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key">第 680 轉</td><td class="num">9.87%</td><td class="num">+0.09%</td><td class="num">13.79%</td><td class="num">+0.13%</td></tr>
-            <tr><td class="key">第 720 轉</td><td class="num">10.53%</td><td class="num">+0.10%</td><td class="num">12.47%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key">第 760 轉</td><td class="num">9.57%</td><td class="num">+0.09%</td><td class="num">13.31%</td><td class="num">+0.13%</td></tr>
-            <tr><td class="key">第 800 轉</td><td class="num">10.39%</td><td class="num">+0.10%</td><td class="num">12.74%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key">第 840 轉</td><td class="num">10.53%</td><td class="num">+0.10%</td><td class="num">12.79%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key">第 880 轉</td><td class="num">9.95%</td><td class="num">+0.09%</td><td class="num">12.90%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key">第 920 轉</td><td class="num">10.20%</td><td class="num">+0.09%</td><td class="num">12.90%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key">第 960 轉</td><td class="num">10.44%</td><td class="num">+0.10%</td><td class="num">13.29%</td><td class="num">+0.13%</td></tr>
-            <tr><td class="key">第 1000 轉</td><td class="num">10.24%</td><td class="num">+0.10%</td><td class="num">13.26%</td><td class="num">+0.12%</td></tr>
-            <tr><td class="key"><strong>小計</strong></td><td class="num">—</td><td class="num"><strong>+1.39%</strong></td><td class="num">—</td><td class="num"><strong>+1.79%</strong></td></tr>
+            <tr><td class="key">第 440 轉</td><td class="num">5.35%</td><td class="num">+0.06%</td><td class="num">8.19%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 480 轉</td><td class="num">5.35%</td><td class="num">+0.06%</td><td class="num">6.47%</td><td class="num">+0.08%</td></tr>
+            <tr><td class="key">第 520 轉</td><td class="num">5.97%</td><td class="num">+0.07%</td><td class="num">8.11%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 560 轉</td><td class="num">6.08%</td><td class="num">+0.07%</td><td class="num">8.41%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 600 轉</td><td class="num">6.37%</td><td class="num">+0.07%</td><td class="num">8.56%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 640 轉</td><td class="num">6.47%</td><td class="num">+0.07%</td><td class="num">8.54%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 680 轉</td><td class="num">6.21%</td><td class="num">+0.07%</td><td class="num">9.11%</td><td class="num">+0.11%</td></tr>
+            <tr><td class="key">第 720 轉</td><td class="num">6.57%</td><td class="num">+0.08%</td><td class="num">8.75%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 760 轉</td><td class="num">5.99%</td><td class="num">+0.07%</td><td class="num">8.44%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key">第 800 轉</td><td class="num">6.67%</td><td class="num">+0.08%</td><td class="num">8.57%</td><td class="num">+0.10%</td></tr>
+            <tr><td class="key"><strong>小計</strong></td><td class="num">—</td><td class="num"><strong>+0.71%</strong></td><td class="num">—</td><td class="num"><strong>+0.98%</strong></td></tr>
           </tbody>
         </table>
       </div>
@@ -709,11 +704,13 @@
             <tr><th>總體指標</th><th class="num">超級寶石</th><th class="num">彩罐熱舞</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">RTP（沒有機制）</td><td class="num">92.0000%</td><td class="num">92.0000%</td></tr>
-            <tr><td class="key">機制增加 RTP</td><td class="num">+4.0684%</td><td class="num">+5.2865%</td></tr>
-            <tr><td class="key">RTP（有機制）</td><td class="num">96.0684%</td><td class="num">97.2864%</td></tr>
-            <tr><td class="key">用到救援的玩家比例</td><td class="num">83.57%</td><td class="num">90.28%</td></tr>
-            <tr><td class="key">觸發率（判定成功 ÷ 總判定）</td><td class="num">7.64%（19,103 / 250,000）</td><td class="num">9.64%（24,102 / 250,000）</td></tr>
+            <tr><td class="key">RTP（沒有機制）</td><td class="num">91.9905%</td><td class="num">92.0472%</td></tr>
+            <tr><td class="key">機制增加 RTP</td><td class="num">+3.7520%</td><td class="num">+5.0317%</td></tr>
+            <tr><td class="key">　├ 400 轉前（主救援）</td><td class="num">+3.0374%（81.0%）</td><td class="num">+4.0488%（80.5%）</td></tr>
+            <tr><td class="key">　└ 400 轉後（延伸救援）</td><td class="num">+0.7146%（19.0%）</td><td class="num">+0.9829%（19.5%）</td></tr>
+            <tr><td class="key">RTP（有機制）</td><td class="num">95.7425%</td><td class="num">97.0789%</td></tr>
+            <tr><td class="key">用到救援的玩家比例</td><td class="num">62.36%</td><td class="num">73.35%</td></tr>
+            <tr><td class="key">觸發率（判定成功 ÷ 總判定）</td><td class="num">5.04%（10,072 / 200,000）</td><td class="num">6.59%（13,184 / 200,000）</td></tr>
           </tbody>
         </table>
       </div>
@@ -723,14 +720,14 @@
             <tr><th>發放分布</th><th class="num">超級寶石</th><th class="num">彩罐熱舞</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">10×（延伸）</td><td class="num">14,885</td><td class="num">18,974</td></tr>
+            <tr><td class="key">10×（延伸）</td><td class="num">6,103</td><td class="num">8,315</td></tr>
             <tr><td class="key">25×</td><td class="num">1,641</td><td class="num">1,616</td></tr>
-            <tr><td class="key">50×</td><td class="num">317</td><td class="num">414</td></tr>
-            <tr><td class="key">70×</td><td class="num">216</td><td class="num">288</td></tr>
-            <tr><td class="key">80×</td><td class="num">179</td><td class="num">270</td></tr>
-            <tr><td class="key">90×</td><td class="num">173</td><td class="num">285</td></tr>
-            <tr><td class="key">100×</td><td class="num">1,692</td><td class="num">2,255</td></tr>
-            <tr><td class="key"><strong>合計</strong></td><td class="num"><strong>19,103</strong></td><td class="num"><strong>24,102</strong></td></tr>
+            <tr><td class="key">50×</td><td class="num">311</td><td class="num">414</td></tr>
+            <tr><td class="key">70×</td><td class="num">217</td><td class="num">288</td></tr>
+            <tr><td class="key">80×</td><td class="num">177</td><td class="num">260</td></tr>
+            <tr><td class="key">90×</td><td class="num">158</td><td class="num">271</td></tr>
+            <tr><td class="key">100×</td><td class="num">1,465</td><td class="num">2,020</td></tr>
+            <tr><td class="key"><strong>合計</strong></td><td class="num"><strong>10,072</strong></td><td class="num"><strong>13,184</strong></td></tr>
           </tbody>
         </table>
       </div>
@@ -745,26 +742,26 @@
             <tr><th class="num">機制增量</th><th class="num">總 RTP</th><th class="num">機制增量</th><th class="num">總 RTP</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">100 轉</td><td class="num">+5.51%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.82%</span></td><td class="num">+5.94%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.83%</span></td></tr>
-            <tr><td class="key">200 轉</td><td class="num">+4.98%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.13%</span></td><td class="num">+6.30%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.29%</span></td></tr>
-            <tr><td class="key">300 轉</td><td class="num">+5.12%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.18%</span></td><td class="num">+6.92%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">99.09%</span></td></tr>
-            <tr><td class="key">400 轉</td><td class="num">+6.68%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.80%</span></td><td class="num">+8.73%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.85%</span></td></tr>
-            <tr><td class="key">500 轉</td><td class="num">+5.68%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.79%</span></td><td class="num">+7.40%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">99.46%</span></td></tr>
-            <tr><td class="key">600 轉</td><td class="num">+5.19%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.22%</span></td><td class="num">+6.76%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.88%</span></td></tr>
-            <tr><td class="key">700 轉</td><td class="num">+4.72%</td><td class="num">96.73%</td><td class="num">+6.15%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.21%</span></td></tr>
-            <tr><td class="key">800 轉</td><td class="num">+4.49%</td><td class="num">96.48%</td><td class="num">+5.84%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.88%</span></td></tr>
-            <tr><td class="key">900 轉</td><td class="num">+4.20%</td><td class="num">96.19%</td><td class="num">+5.46%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.43%</span></td></tr>
-            <tr><td class="key">1,000 轉</td><td class="num">+4.07%</td><td class="num">96.07%</td><td class="num">+5.29%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.29%</span></td></tr>
+            <tr><td class="key">100 轉</td><td class="num">+5.49%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.79%</span></td><td class="num">+5.94%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.83%</span></td></tr>
+            <tr><td class="key">200 轉</td><td class="num">+4.90%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.05%</span></td><td class="num">+6.20%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.19%</span></td></tr>
+            <tr><td class="key">300 轉</td><td class="num">+4.80%</td><td class="num">96.86%</td><td class="num">+6.48%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.65%</span></td></tr>
+            <tr><td class="key">400 轉</td><td class="num">+6.07%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.19%</span></td><td class="num">+8.10%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.21%</span></td></tr>
+            <tr><td class="key">500 轉</td><td class="num">+5.06%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.17%</span></td><td class="num">+6.76%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.81%</span></td></tr>
+            <tr><td class="key">600 轉</td><td class="num">+4.51%</td><td class="num">96.54%</td><td class="num">+6.02%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">98.15%</span></td></tr>
+            <tr><td class="key">700 轉</td><td class="num">+4.03%</td><td class="num">96.04%</td><td class="num">+5.40%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.46%</span></td></tr>
+            <tr><td class="key">800 轉</td><td class="num">+3.75%</td><td class="num">95.74%</td><td class="num">+5.03%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.08%</span></td></tr>
+            <tr><td class="key">900 轉</td><td class="num">+3.47%</td><td class="num">95.46%</td><td class="num">+4.65%</td><td class="num">96.63%</td></tr>
+            <tr><td class="key">1,000 轉</td><td class="num">+3.30%</td><td class="num">95.30%</td><td class="num">+4.44%</td><td class="num">96.44%</td></tr>
           </tbody>
         </table>
       </div>
       <div class="note warn">
         <span class="tag">預算檢核</span>
         <p>
-          92% 基礎下模擬增量為 +4.07%／+5.29%（模擬 c2-1.2，10,000 人 × 1,000 轉），
-          其中主救援 +2.67%／+3.49%、延伸救援 +1.39%／+1.79%。
-          <strong>彩罐熱舞已略超 5% 提撥上限（總 RTP 97.29%）</strong>，
-          延伸救援觸發率偏高（每點 12～14%）是主因，需下修延伸門檻或由共同池上限把關。
+          92% 基礎下模擬增量為 +3.75%／+5.03%（模擬 c2-1.3，10,000 人 × 800 轉），
+          其中 400 轉前 +3.04%／+4.05%（約 81%）、400 轉後 +0.71%／+0.98%（約 19%）。
+          延伸門檻下修至 60% 後成本已明顯收斂；<strong>彩罐熱舞仍貼在 5% 上限邊緣（總 RTP 97.08%）</strong>，
+          需由共同池上限把關或再微調主救援段。
           惟上表敏感度顯示：<strong>成本率高度依賴玩家日轉數</strong>——日轉數 700 轉以下時多數情境超過 5% 提撥
           （400 轉最差，彩罐熱舞達 100.85%），共同池硬上限與實際日轉數分布的加權驗證是定案前的必要步驟。
         </p>
@@ -823,7 +820,7 @@
           <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
           <div class="phase-body">
             <div class="phase-name">延伸救援 · 10×</div>
-            <p>每滿 40 轉判定：往前 200 轉 RTP &lt; 70% 且前 40 轉 RTP &lt; 50% → 送 10× BG 盤面。</p>
+            <p>每滿 40 轉判定：往前 200 轉 RTP &lt; 60% 且前 40 轉 RTP &lt; 50% → 送 10× BG 盤面。</p>
           </div>
         </div>
         <div class="phase is-newbie">
@@ -848,10 +845,10 @@
         <div class="gate">
           <div class="gate-rail"><div class="gate-dot">2</div><div class="gate-line"></div></div>
           <div class="gate-body">
-            <div class="gate-title">檢查當日累積 RTP</div>
+            <div class="gate-title">檢查當日累積 RTP 與前 40 轉 RTP</div>
             <div class="branch">
-              <div class="branch-row"><span class="pill ok">低於門檻</span><span>具備救援資格，進入池檢查</span></div>
-              <div class="branch-row"><span class="pill stop">未低於門檻</span><span>本點結束，等下一個觸發點</span></div>
+              <div class="branch-row"><span class="pill ok">兩者皆低於門檻</span><span>具備救援資格，進入池檢查</span></div>
+              <div class="branch-row"><span class="pill stop">任一未低於</span><span>本點結束，等下一個觸發點</span></div>
             </div>
           </div>
         </div>
@@ -917,7 +914,7 @@
             <tr>
               <td class="key">拿了就走</td>
               <td>領到救援當轉立即停玩；當日未領到則玩到第 400 轉（最後觸發點）停</td>
-              <td>EV <strong>−3.09</strong>（超級寶石）／<strong>+3.89</strong>（彩罐熱舞）bet／日；被救比例 36.9%／43.2%，平均停在第 310／298 轉。<strong>彩罐熱舞為正期望且較上一組擴大</strong>，需下修門檻或倍數再驗。</td>
+              <td>EV <strong>−5.09</strong>（超級寶石）／<strong>+2.12</strong>（彩罐熱舞）bet／日；被救比例 35.0%／41.5%，平均停在第 312／300 轉。<strong>彩罐熱舞仍為正期望</strong>（短期條件已使其從 +3.89 收斂），需再調整或由共同池把關。</td>
               <td>已模擬<br>彩罐需處理</td>
             </tr>
           </tbody>
@@ -929,7 +926,7 @@
 
   <footer>
     <span>iGaming 機制報告 · 老手救援 C-2 版</span>
-    <span>模擬 c2-0.9 · rowdata 92% × 10,000 人</span>
+    <span>模擬 c2-1.3 · rowdata 92% × 10,000 人 × 800 轉</span>
     <span>2026-09-22</span>
     <span>套利實測待補</span>
   </footer>
