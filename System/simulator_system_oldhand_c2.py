@@ -18,6 +18,8 @@ C-2 規則（機制說明_老手救援C-2版.html）：
   倍數由 20× 隨落點遞增至 100×
 * 救援落在判定回合：該轉最終得分 = max(自然得分, 救援倍數 × Bet)，
   成本以增量記帳。
+* 延伸救援（當日 401–1,000 轉）：每滿 40 轉判定，
+  前 200 轉 RTP < 70% 且前 40 轉 RTP < 50% → 送 10× BG 盤面。
 * 尚未套用救援池／共同池上限（先量測機制的自然增量，供預算評估）。
 """
 
@@ -30,7 +32,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-1.1"
+SYSTEM_VERSION = "c2-1.2"
 
 
 def _locate_script_dir() -> Path:
@@ -83,6 +85,14 @@ CHECKPOINT_RULES: dict[int, tuple[float, float]] = {
     400: (0.70, 100.0),
 }
 CHECKPOINTS = sorted(CHECKPOINT_RULES)
+
+# ---- 延伸救援（當日 401–1,000 轉）----
+EXT_CHECKPOINTS = list(range(440, 1001, 40))  # 440, 480, ..., 1000（15 個觸發點）
+EXT_MID_WINDOW = 200                          # 往前抓 200 轉
+EXT_MID_THRESHOLD = 0.70
+EXT_SHORT_WINDOW = 40                         # 前 40 轉
+EXT_SHORT_THRESHOLD = 0.50
+EXT_REWARD = 10.0                             # 送 10× BG 盤面
 
 
 def band_of(spin_no: int) -> tuple[float, float]:
@@ -166,10 +176,36 @@ def simulate(game: str) -> None:
         cum_bet += bet[:, spin_idx]
         prev = cp
 
+    # ---- 延伸救援（401–1,000 轉）：滾動窗口判定 ----
+    ext_rows = []
+    for cp in EXT_CHECKPOINTS:
+        if cp > n_spins:
+            break
+        i = cp - 1
+        mid = adj[:, cp - 1 - EXT_MID_WINDOW:cp - 1]
+        short = adj[:, cp - 1 - EXT_SHORT_WINDOW:cp - 1]
+        mid_bet = bet[:, cp - 1 - EXT_MID_WINDOW:cp - 1].sum(axis=1)
+        short_bet = bet[:, cp - 1 - EXT_SHORT_WINDOW:cp - 1].sum(axis=1)
+        hit = (mid.sum(axis=1) / mid_bet < EXT_MID_THRESHOLD) & \
+              (short.sum(axis=1) / short_bet < EXT_SHORT_THRESHOLD)
+        natural_this = nat[:, i]
+        final_this = np.where(hit, np.maximum(natural_this, EXT_REWARD * bet[:, i]), natural_this)
+        adj[:, i] = final_this
+        n_trigger = int(hit.sum())
+        total_triggers += n_trigger
+        rescued_player |= hit
+        award_totals[EXT_REWARD] = award_totals.get(EXT_REWARD, 0) + n_trigger
+        ext_rows.append({
+            "checkpoint": cp,
+            "triggered": n_trigger,
+            "trigger_rate": n_trigger / n_players,
+            "uplift": (final_this - natural_this).sum() / total_bet_all,
+        })
+
     total_bet = bet.sum()
     base_rtp_total = nat.sum() / total_bet
     mech_rtp_total = adj.sum() / total_bet
-    total_judgments = len(CHECKPOINTS) * n_players
+    total_judgments = (len(CHECKPOINTS) + len(ext_rows)) * n_players
     duration = time.perf_counter() - started
 
     # ---- 輸出 ----
@@ -192,6 +228,18 @@ def simulate(game: str) -> None:
             f"{row['base_rtp'] * 100:>7.4f}% (+{row['uplift'] * 100:.4f}%)"
         )
     print()
+    if ext_rows:
+        print("延伸救援（401–1,000 轉）：前 200 轉 RTP <70% 且前 40 轉 RTP <50% → 送 10× BG 盤面")
+        print("checkpoint   判定    觸發   觸發率     全日增量貢獻")
+        for row in ext_rows:
+            print(
+                f"第 {row['checkpoint']:>4} 轉  {n_players:>5,}  {row['triggered']:>5,}  "
+                f"{row['trigger_rate'] * 100:>6.2f}%   +{row['uplift'] * 100:.4f}%"
+            )
+        ext_up = sum(r['uplift'] for r in ext_rows)
+        ext_trig = sum(r['triggered'] for r in ext_rows)
+        print(f"延伸救援小計            : 觸發 {ext_trig:,} 次、增量 +{ext_up * 100:.4f}%")
+        print()
     rescued = int(rescued_player.sum())
     print(f"rescued_player_ratio    : {rescued / n_players * 100:.2f}%  ({rescued:,} / {n_players:,})")
     print(f"trigger_rate_overall    : {total_triggers / total_judgments * 100:.2f}%  ({total_triggers:,} / {total_judgments:,})")
