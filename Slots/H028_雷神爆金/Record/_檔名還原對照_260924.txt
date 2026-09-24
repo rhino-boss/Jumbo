@@ -1,0 +1,55 @@
+# Record 檔名變更對照（2026-09-24 14:12）
+# 還原：把「新檔名」改回「原檔名」即可。
+
+## 本次（規範改為不含 _card 後綴）
+原: H028188B_03030000_2609071607_betmode0_109_8794_oldhand_card.xlsx
+新: H028188B_03030000_2609071607_betmode0_109_8794_oldhand.xlsx
+
+原: H028190B_03030000_2609071809_betmode0_109_8990_oldhand_card.xlsx
+新: H028190B_03030000_2609071809_betmode0_109_8990_oldhand.xlsx
+
+原: H028192A_03030000_2609070756_betmode0_109_9297_newbie_card.xlsx
+新: H028192A_03030000_2609070756_betmode0_109_9297_newbie.xlsx
+
+原: H028192A_03030000_2609071002_betmode0_109_9194_oldhand_card.xlsx
+新: H028192A_03030000_2609071002_betmode0_109_9194_oldhand.xlsx
+
+原: H028192A_03050003_2609241335_betmode0_108_9207_oldhand_small_bet_card.xlsx
+新: H028192A_03050003_2609241335_betmode0_108_9207_oldhand_small_bet.xlsx
+
+原: H028194A_03030000_2609071159_betmode0_109_9299_newbie_card.xlsx
+新: H028194A_03030000_2609071159_betmode0_109_9299_newbie.xlsx
+
+原: H028194A_03030000_2609071404_betmode0_109_9392_oldhand_card.xlsx
+新: H028194A_03030000_2609071404_betmode0_109_9392_oldhand.xlsx
+
+原: H028194A_03030000_2609072347_betmode2_108_9240_oldhand_small_bet_card.xlsx
+新: H028194A_03030000_2609072347_betmode2_108_9240_oldhand_small_bet.xlsx
+
+原: H028194A_03050003_2609241344_betmode0_108_9405_oldhand_small_bet_card.xlsx
+新: H028194A_03050003_2609241344_betmode0_108_9405_oldhand_small_bet.xlsx
+
+## 今日稍早（規範合規化改名，原檔名如下）
+原: H028192_03050003_2609241335_betmode0_108_9207_oldhand_small_bet_card.xlsx  （補變體字母）
+新: H028192A_03050003_2609241335_betmode0_108_9207_oldhand_small_bet_card.xlsx
+
+原: H028194_03050003_2609241344_betmode0_108_9405_oldhand_small_bet_card.xlsx  （補變體字母）
+新: H028194A_03050003_2609241344_betmode0_108_9405_oldhand_small_bet_card.xlsx
+
+原: H028194A_03030000_2609072347_betmode2_108_9240_card.xlsx  （補 profile/tier）
+新: H028194A_03030000_2609072347_betmode2_108_9240_oldhand_small_bet_card.xlsx
+
+（稍早三筆的「新」檔名若含 _card，已再經本次去 _card 改名，最終檔名見上方本次區塊。）
+## 補 bet_tier（bet_multi=1 → small_bet，Base Info 查證）
+
+原: H028188B_03030000_2609071607_betmode0_109_8794_oldhand.xlsx
+新: H028188B_03030000_2609071607_betmode0_109_8794_oldhand_small_bet.xlsx
+
+原: H028190B_03030000_2609071809_betmode0_109_8990_oldhand.xlsx
+新: H028190B_03030000_2609071809_betmode0_109_8990_oldhand_small_bet.xlsx
+
+原: H028192A_03030000_2609071002_betmode0_109_9194_oldhand.xlsx
+新: H028192A_03030000_2609071002_betmode0_109_9194_oldhand_small_bet.xlsx
+
+原: H028194A_03030000_2609071404_betmode0_109_9392_oldhand.xlsx
+新: H028194A_03030000_2609071404_betmode0_109_9392_oldhand_small_bet.xlsx

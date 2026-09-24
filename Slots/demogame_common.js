@@ -1220,3 +1220,259 @@
     return { rngInput, cardRange, helpDialog };
   };
 })();
+
+// Shared cascade/win FX layer (opt-in). A game activates it by calling
+// window.slotFx.* helpers with its own cell elements; pages that never call
+// slotFx are completely unaffected. First use injects the fx styles once.
+(() => {
+  "use strict";
+
+  let stylesInjected = false;
+
+  function injectStyles() {
+    if (stylesInjected) return;
+    stylesInjected = true;
+    const style = document.createElement("style");
+    style.id = "slot-fx-styles";
+    style.textContent = `
+      .slot-fx-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        pointer-events: none;
+        overflow: visible;
+      }
+      .cell.fx-dim { filter: brightness(0.32) saturate(0.55); }
+      .cell.fx-win {
+        border-color: #ffe27a !important;
+        animation: slot-fx-win-glow 460ms ease-in-out infinite alternate;
+        z-index: 5;
+      }
+      @keyframes slot-fx-win-glow {
+        from { box-shadow: 0 0 10px rgba(255, 214, 90, 0.55), inset 0 0 8px rgba(255, 232, 150, 0.35); transform: scale(1.02); filter: brightness(1.12); }
+        to   { box-shadow: 0 0 26px rgba(255, 214, 90, 0.95), inset 0 0 16px rgba(255, 240, 180, 0.6); transform: scale(1.08); filter: brightness(1.5); }
+      }
+      .cell.fx-pop > .symbol-wrap,
+      .cell.fx-pop > .icon,
+      .cell.fx-pop > .code,
+      .cell.fx-pop > .symbol-code { animation: slot-fx-pop 300ms ease-in forwards; }
+      @keyframes slot-fx-pop {
+        0%   { transform: scale(1); filter: brightness(1.6); }
+        55%  { transform: scale(1.28); filter: brightness(2.2); }
+        100% { transform: scale(0); filter: brightness(2.6); opacity: 0; }
+      }
+      .fx-coin {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, #fff6c8, #ffd85e 45%, #b97a12 90%);
+        box-shadow: 0 0 8px rgba(255, 214, 90, 0.9);
+        animation: slot-fx-coin var(--dur, 700ms) cubic-bezier(0.2, 0.6, 0.6, 1) forwards;
+      }
+      @keyframes slot-fx-coin {
+        0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+        100% { transform: translate(var(--dx), var(--dy)) scale(0.35) rotate(300deg); opacity: 0; }
+      }
+      .cell.fx-wild-pop { z-index: 6; animation: slot-fx-wild-pop 520ms cubic-bezier(0.2, 1.4, 0.4, 1); }
+      @keyframes slot-fx-wild-pop {
+        0%   { transform: scale(0.2); filter: brightness(3); }
+        60%  { transform: scale(1.28); }
+        100% { transform: scale(1); filter: brightness(1); }
+      }
+      .cell.fx-wild-stay { animation: slot-fx-wild-stay 1.4s ease-in-out infinite; border-color: #ffb054 !important; }
+      @keyframes slot-fx-wild-stay {
+        0%, 100% { box-shadow: 0 0 8px rgba(255, 150, 60, 0.5); }
+        50%      { box-shadow: 0 0 22px rgba(255, 170, 70, 0.95), 0 0 40px rgba(255, 120, 40, 0.35); }
+      }
+      .cell.fx-scatter { animation: slot-fx-scatter 900ms ease-in-out infinite alternate; z-index: 5; }
+      @keyframes slot-fx-scatter {
+        from { box-shadow: 0 0 8px rgba(115, 239, 255, 0.5); filter: brightness(1.05); transform: scale(1); }
+        to   { box-shadow: 0 0 26px rgba(255, 230, 130, 0.95); filter: brightness(1.4); transform: scale(1.07); }
+      }
+      .fx-multi-pop {
+        position: absolute;
+        left: 50%;
+        top: 42%;
+        z-index: 60;
+        transform: translate(-50%, -50%);
+        font: 900 64px "Franklin Gothic Medium", "Arial Black", sans-serif;
+        color: #ffd75e;
+        -webkit-text-stroke: 2px #7a3c00;
+        text-shadow: 0 0 22px rgba(255, 190, 60, 0.95), 0 4px 0 #5c2e00, 0 0 60px rgba(255, 150, 30, 0.5);
+        animation: slot-fx-multi-pop 950ms cubic-bezier(0.18, 1.3, 0.4, 1) forwards;
+        pointer-events: none;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .fx-multi-pop.jump {
+        color: #7dffc8;
+        -webkit-text-stroke: 2px #044d33;
+        text-shadow: 0 0 26px rgba(90, 255, 190, 0.95), 0 4px 0 #033524, 0 0 70px rgba(60, 255, 170, 0.5);
+      }
+      .fx-multi-pop .fx-jump-tag {
+        display: block;
+        font-size: 20px;
+        letter-spacing: 3px;
+        text-align: center;
+        -webkit-text-stroke: 1px #044d33;
+      }
+      @keyframes slot-fx-multi-pop {
+        0%   { transform: translate(-50%, -50%) scale(0.15); opacity: 0; }
+        18%  { transform: translate(-50%, -50%) scale(1.35); opacity: 1; }
+        32%  { transform: translate(-50%, -50%) scale(1); }
+        72%  { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        100% { transform: translate(-50%, -56%) scale(0.9); opacity: 0; }
+      }
+      .fx-win-float {
+        position: absolute;
+        left: 50%;
+        top: 62%;
+        z-index: 55;
+        transform: translateX(-50%);
+        font: 900 30px Consolas, "Courier New", monospace;
+        color: #fff2ba;
+        text-shadow: 0 0 14px rgba(255, 214, 90, 0.9), 0 2px 0 #5c2e00;
+        animation: slot-fx-win-float 1000ms ease-out forwards;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      @keyframes slot-fx-win-float {
+        0%   { transform: translate(-50%, 14px) scale(0.7); opacity: 0; }
+        20%  { transform: translate(-50%, 0) scale(1.08); opacity: 1; }
+        100% { transform: translate(-50%, -46px) scale(1); opacity: 0; }
+      }
+      .fx-total-win {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 46%;
+        z-index: 70;
+        padding: 14px 0;
+        text-align: center;
+        background: linear-gradient(90deg, transparent, rgba(255, 245, 210, 0.16) 18%, rgba(255, 250, 230, 0.34) 50%, rgba(255, 245, 210, 0.16) 82%, transparent);
+        animation: slot-fx-total-in 1600ms ease forwards;
+        pointer-events: none;
+      }
+      .fx-total-win .fx-total-label {
+        display: block;
+        font: 900 15px "Franklin Gothic Medium", sans-serif;
+        letter-spacing: 4px;
+        color: #ffe9b0;
+        text-shadow: 0 0 10px rgba(255, 200, 80, 0.8);
+      }
+      .fx-total-win .fx-total-value {
+        display: block;
+        font: 900 44px "Franklin Gothic Medium", "Arial Black", sans-serif;
+        color: #ffd75e;
+        -webkit-text-stroke: 1.5px #7a3c00;
+        text-shadow: 0 0 24px rgba(255, 200, 70, 0.95), 0 3px 0 #5c2e00;
+      }
+      @keyframes slot-fx-total-in {
+        0%   { transform: scaleX(0.1); opacity: 0; filter: brightness(3); }
+        14%  { transform: scaleX(1); opacity: 1; filter: brightness(1.8); }
+        26%  { filter: brightness(1); }
+        82%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      .cell.fx-reel-roll > .symbol-wrap,
+      .cell.fx-reel-roll > .icon,
+      .cell.fx-reel-roll > .code { animation: slot-fx-reel-roll 90ms linear infinite; filter: blur(1.2px) brightness(0.92); }
+      @keyframes slot-fx-reel-roll {
+        from { transform: translateY(-46%); }
+        to   { transform: translateY(46%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .fx-coin, .fx-multi-pop, .fx-win-float, .fx-total-win { animation-duration: 1ms !important; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const addClass = (elements, className) => {
+    (elements || []).forEach((element) => element?.classList.add(className));
+  };
+
+  window.slotFx = {
+    // container：board 的外框（例如 .board-shell）。回傳可放置粒子／浮字的 fx layer。
+    ensureLayer(container) {
+      injectStyles();
+      if (!container) return null;
+      let layer = container.querySelector(":scope > .slot-fx-layer");
+      if (!layer) {
+        if (getComputedStyle(container).position === "static") container.style.position = "relative";
+        layer = document.createElement("div");
+        layer.className = "slot-fx-layer";
+        container.appendChild(layer);
+      }
+      return layer;
+    },
+    mark(element, className) { injectStyles(); element?.classList.add(className); },
+    // 中獎強調：winCells 金光爆閃、dimCells 壓暗
+    winGlow(winCells, dimCells) { injectStyles(); addClass(winCells, "fx-win"); addClass(dimCells, "fx-dim"); },
+    // 滾動中的輪帶格
+    reelRoll(cells) { injectStyles(); addClass(cells, "fx-reel-roll"); },
+    // 消除縮爆
+    popCells(cells) { injectStyles(); addClass(cells, "fx-pop"); },
+    // 金框轉 Wild 彈出（在補牌後對新 Wild 格呼叫）
+    wildPop(cells) { injectStyles(); addClass(cells, "fx-wild-pop"); },
+    // 金幣粒子：items = [{el, count}]，以每格中心為原點噴散
+    spawnCoins(layer, items, maxTotal = 48) {
+      injectStyles();
+      if (!layer) return;
+      const layerRect = layer.getBoundingClientRect();
+      let spawned = 0;
+      for (const item of items || []) {
+        if (!item?.el || spawned >= maxTotal) continue;
+        const rect = item.el.getBoundingClientRect();
+        const cx = rect.left - layerRect.left + rect.width / 2;
+        const cy = rect.top - layerRect.top + rect.height / 2;
+        const count = Number(item.count) || 5;
+        for (let i = 0; i < count && spawned < maxTotal; i += 1) {
+          const coin = document.createElement("span");
+          coin.className = "fx-coin";
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 40 + Math.random() * 90;
+          coin.style.left = `${cx - 6}px`;
+          coin.style.top = `${cy - 6}px`;
+          coin.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
+          coin.style.setProperty("--dy", `${Math.sin(angle) * dist - 40}px`);
+          coin.style.setProperty("--dur", `${520 + Math.random() * 380}ms`);
+          layer.appendChild(coin);
+          setTimeout(() => coin.remove(), 1000);
+          spawned += 1;
+        }
+      }
+    },
+    // 盤面中央大字（倍數等）。options.jump = 綠金跳階配色、options.tag = 上方小標籤
+    multiPop(layer, text, options = {}) {
+      injectStyles();
+      if (!layer) return;
+      const node = document.createElement("div");
+      node.className = `fx-multi-pop${options.jump ? " jump" : ""}`;
+      node.innerHTML = `${options.tag ? `<span class="fx-jump-tag">${options.tag}</span>` : ""}${text}`;
+      layer.appendChild(node);
+      setTimeout(() => node.remove(), 1100);
+    },
+    // 每段贏分浮字
+    winFloat(layer, text) {
+      injectStyles();
+      if (!layer) return;
+      const node = document.createElement("div");
+      node.className = "fx-win-float";
+      node.textContent = text;
+      layer.appendChild(node);
+      setTimeout(() => node.remove(), 1100);
+    },
+    // 回合結束總贏分閃光橫幅
+    totalWin(layer, label, value) {
+      injectStyles();
+      if (!layer) return;
+      const node = document.createElement("div");
+      node.className = "fx-total-win";
+      node.innerHTML = `<span class="fx-total-label">${label}</span><span class="fx-total-value">${value}</span>`;
+      layer.appendChild(node);
+      setTimeout(() => node.remove(), 1700);
+    }
+  };
+})();

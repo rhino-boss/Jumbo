@@ -1,4 +1,4 @@
-# Math Document Description — 101016 Thunder Boost 1000
+# Math Document Description — 101016 Thunder Boost
 
 **Scope: Normal Bet**
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | Game ID | 101016 |
 | Math files | `H0281.xlsx` (shared natural-probability model); `H028188B.xlsx` (RTP 88%), `H028190B.xlsx` (RTP 90%), `H028192A.xlsx` (RTP 92%), `H028194A.xlsx` (RTP 94%); `H028192A_Bet100.xlsx`, `H028188B_Bet100.xlsx` (standalone models for single bets above $100) |
-| Version | Shared model `3`; RTP models `3.5.0.0` (Bet100 included) |
+| Version | Shared model `3`; RTP models `3.5.0.3` (92A / 94A / 92A_Bet100), `3.5.0.2` (88B / 90B / 88B_Bet100) |
 | Companion programs | `Simulator.py` + `config.js` (shared model) + `config_88B.js` / `config_90B.js` / `config_92A.js` / `config_94A.js` / `config_92A_Bet100.js` / `config_88B_Bet100.js` (per RTP version) |
 | Board | 6-reel Megaways; up to 5 rows per reel on the main board; 1 Extra Reel cell above each of reels 2–5 (effective window 5-6-6-6-6-5) |
 | Win evaluation | Way Game (2,025–32,400 ways), consecutive adjacent reels from the left; cascading removal and refill after each win |
@@ -26,7 +26,7 @@
   - [1-6 Performance Wheel](#1-6-performance-wheel)
   - [1-7 Overview (RTP version files)](#1-7-overview-rtp-version-files)
   - [1-8 Multiplier_Weight](#1-8-multiplier_weight)
-  - [1-9 Detail and Detail_Newbie](#1-9-detail-and-detail_newbie)
+  - [1-9 Detail](#1-9-detail)
   - [1-10 OP Jackpot](#1-10-op-jackpot)
 - [2. Game Parameters on the Parameter Worksheet](#2-game-parameters-on-the-parameter-worksheet)
   - [2-1 Table Selection Weight - Base Game](#2-1-table-selection-weight---base-game)
@@ -67,7 +67,7 @@ The math documents are split into two kinds of workbooks: the **shared natural-p
    A gold-framed symbol's Id (13–23) equals its base symbol Id + 11. Win evaluation always uses the base symbol's pays; the gold-frame identity only governs the "convert to Wild after winning" behavior. The Mystery symbol (Id 24; gold-framed 25) converts board-wide into the target symbol drawn for that spin once the board settles.
 
 4. **Not every field is consumed by the program.**
-   The tally/ratio/average columns on the left of each sheet, and the `Detail` / `Detail_Newbie` and Performance Wheel worksheets, are for design and verification; the program does not read them. Each section below states this explicitly.
+   The tally/ratio/average columns on the left of each sheet, and the `Detail` and Performance Wheel worksheets, are for design and verification; the program does not read them. Each section below states this explicitly.
 
 ### 1-2 Worksheet overview
 
@@ -87,7 +87,7 @@ The math documents are split into two kinds of workbooks: the **shared natural-p
 | --- | --- | --- | --- |
 | `Overview` | Version number, RTP breakdown per bet type | Version check, output file names | ✅ version |
 | `Multiplier_Weight` | Card weights for the card system | Accept/redraw of per-round results | ✅ |
-| `Detail`, `Detail_Newbie` | Derivation of the card weights (natural distribution + calibration factors) | — | ❌ design |
+| `Detail` | Derivation of the card weights (natural distribution + calibration factors) | — | ❌ design |
 | `OP Jackpot` | SCR (scatter-spin rate) records | Jackpot probability conversion | ✅ when jackpot simulation is on |
 
 ### 1-3 Overview (shared model)
@@ -144,7 +144,7 @@ Wheel reference for the presentation layer. Not read by the program; affects no 
 
 | Block | Content | Used |
 | --- | --- | --- |
-| Model / Version | Model code and the four-part version (currently `3.5.0.0`) | ✅ version check, output file names |
+| Model / Version | Model code and the four-part version (currently `3.5.0.3` for 92A / 94A / 92A_Bet100, `3.5.0.2` for the rest) | ✅ version check, output file names |
 | Coin in / Total RTP table | Total RTP per bet type | target values |
 | Pay Back breakdown | Normal Bet Base Game / Free Game pay back, Hit%, Pulls/Hit | target values |
 
@@ -159,6 +159,10 @@ Wheel reference for the presentation layer. Not read by the program; affects no 
 
 The total pay back including platform jackpots is `Game RTP + Bonus RTP + Link RTP`; the Bonus/Link parameters live in the platform OP Jackpot module, not in this model. This model only supplies the SCR used for the conversion (see [1-10](#1-10-op-jackpot)).
 
+> The 92 / 94 versions (including 92A_Bet100) carry the oldhand payout-ceiling calibration (3.5.0.3): the trigger-spin BG average on the `Detail` Free Game row uses the truncated mean `7.7609` (re-roll above the 70x cap), rebalanced through the oldhand BG `(60,70]` weight, so the theoretical Game RTP is exact to 6 decimal places (0.920000 / 0.940000).
+>
+> The submission math models (`H028192.xlsx` / `H028194.xlsx`) use the previous title's submission Overview layout — the RTP main row `Base Bet | Game RTP | Bonus RTP | Link RTP | Total RTP | Hit JP Symbol appear rate`, where the 92 version reads `0.920000 + 0.02 + 0.02 = 0.96` and the 94 version `0.940000 + 0.02 + 0 = 0.96`; `Hit JP Symbol appear rate` is expressed against a threshold of 10,000,000,000.
+
 ### 1-8 Multiplier_Weight
 
 Input of the card system. Layout:
@@ -166,20 +170,18 @@ Input of the card system. Layout:
 | Column | Header | Purpose |
 | --- | --- | --- |
 | A | `Range` | Win-multiple interval labels |
-| B | `Weight_NB_BG_Newbie` | Base Game card weights for the Newbie profile |
-| C | `Weight_NB_FG_Newbie` | Free Game card weights for the Newbie profile |
-| D | `Weight_NB_BG` | Base Game card weights for the regular (Oldhand) profile |
-| E | `Weight_NB_FG` | Free Game card weights for the regular profile |
+| B | `Weight_NB_BG` | Base Game card weights |
+| C | `Weight_NB_FG` | Free Game card weights |
 
 The rows are a sequence of win-multiple intervals (win ÷ Coin In, **open on the left, closed on the right**); the final `Free Game` row is a special card that ignores the amount and only requires "this round must trigger Free Game". Every column's weights are calibrated to a total of 1,000,000,000, so a weight can be read directly as "probability of that outcome × 10⁹". Full mechanics in [Chapter 4](#4-card-system).
 
-**The `_Bet100` models (standalone models for single bets above $100)**: `H028192A_Bet100.xlsx` / `H028188B_Bet100.xlsx` share the exact worksheet structure and columns of 92A / 88B; they differ only in the regular profile's Free Game card weights — the win cap drops from 3,000× (2,000× for 88B) to **2,000×**: the highest weighted interval is `(1000, 2000]`, with `(2000, 3000]` at weight 0; the 20×–200× body keeps the original shape (uniform scale) and the 200×–2,000× tail is scaled up uniformly to rebalance, so the **FG pay back, trigger cycle and average multiple are identical to the original models**. Simulations with single bets above $100 run with the matching `config_92A_Bet100.js` / `config_88B_Bet100.js`; 90B / 94A serve small bets and have no `_Bet100` model.
+**The `_Bet100` models (standalone models for single bets above $100)**: `H028192A_Bet100.xlsx` / `H028188B_Bet100.xlsx` share the exact worksheet structure and columns of 92A / 88B; they differ only in the Free Game card weights — the win cap drops from 3,000× (2,000× for 88B) to **2,000×**: the highest weighted interval is `(1000, 2000]`, with `(2000, 3000]` at weight 0; the 20×–200× body keeps the original shape (uniform scale) and the 200×–2,000× tail is scaled up uniformly to rebalance, so the **FG pay back, trigger cycle and average multiple are identical to the original models**. Simulations with single bets above $100 run with the matching `config_92A_Bet100.js` / `config_88B_Bet100.js`; 90B / 94A serve small bets and have no `_Bet100` model.
 
-**Differences across the files**: `Weight_NB_BG` and `Weight_NB_FG` are calibrated per version; **the two Newbie columns (B, C) are identical across all files**; a `_Bet100` model is cell-identical to its base model except for the regular profile's FG card column.
+**Differences across the files**: `Weight_NB_BG` and `Weight_NB_FG` are calibrated per version; a `_Bet100` model is cell-identical to its base model except for the FG card column.
 
-### 1-9 Detail and Detail_Newbie
+### 1-9 Detail
 
-Derivation worksheets for the `Multiplier_Weight` columns; not read by the program. `Detail` covers the regular profile, `Detail_Newbie` the Newbie profile, with the same layout:
+Derivation worksheet for the `Multiplier_Weight` columns; not read by the program. Layout:
 
 | Block | Content |
 | --- | --- |
@@ -190,13 +192,12 @@ The tuning loop is: run natural probability with the card system off → fill th
 
 ### 1-10 OP Jackpot
 
-Records the SCR (scatter-spin rate) per profile, letting the platform jackpot module convert "theoretical trigger probability per round" into "decision probability per scatter-bearing spin".
+Records the SCR (scatter-spin rate), letting the platform jackpot module convert "theoretical trigger probability per round" into "decision probability per scatter-bearing spin".
 
 | Field | Content |
 | --- | --- |
 | `Threshold` | 10,000,000,000 (denominator base of the SCR) |
-| `NB_Newbie` | SCR for the Newbie profile (unified across the four files at the 92% file's measured value, 3,647,149,360) |
-| `NB` | SCR for the regular profile (measured per version: 88B 3,618,838,430 / 90B 3,621,199,650 / 92A 3,641,035,800 / 94A 3,641,760,160) |
+| `NB` | SCR (measured per version: 88B 3,618,838,430 / 90B 3,621,199,650 / 92A 3,641,035,800 / 94A 3,641,760,160) |
 
 SCR definition: **number of spins containing at least one Scatter ÷ paid rounds × 10,000,000,000** (the Base Game spin and every Free Spin each count as one spin), measured over simulations of 10⁸ rounds or more.
 
@@ -387,7 +388,7 @@ After entering the Free Game, **the total number of spins, retriggers included, 
 3. Run one BG spin (flow in 3-3)
 4. If the final board reaches 4 Scatters:
        determine free spins by the award table (cap 50)
-       draw a Free Game card (that profile's FG column; simulations with a
+       draw a Free Game card (simulations with a
            single bet above $100 run on the _Bet100 model's config)
        run the Free Game:
            multiplier starts at x2
@@ -425,16 +426,14 @@ It makes the following two things directly specifiable instead of being approxim
 
 ### 4-2 Card structure
 
-Cards come from `Multiplier_Weight`, grouped by player profile and stage:
+Cards come from `Multiplier_Weight`, grouped by stage:
 
 | Card group | Column | Drawn when |
 | --- | --- | --- |
-| Newbie Base Game cards | `Weight_NB_BG_Newbie` | Newbie profile, at the start of every round |
-| Newbie Free Game cards | `Weight_NB_FG_Newbie` | Newbie profile, after an FG trigger |
-| Regular Base Game cards | `Weight_NB_BG` | Regular profile, at the start of every round |
-| Regular Free Game cards | `Weight_NB_FG` | Regular profile, after an FG trigger |
+| Base Game cards | `Weight_NB_BG` | At the start of every round |
+| Free Game cards | `Weight_NB_FG` | After an FG trigger |
 
-For single bets above $100 the simulation runs on the `_Bet100` model (`config_92A_Bet100.js` / `config_88B_Bet100.js`), whose regular-profile FG cards are that model's `Weight_NB_FG` (2,000× cap); the card-group structure is unchanged.
+For single bets above $100 the simulation runs on the `_Bet100` model (`config_92A_Bet100.js` / `config_88B_Bet100.js`), whose FG cards are that model's `Weight_NB_FG` (2,000× cap); the card-group structure is unchanged.
 
 Two card types:
 
@@ -450,11 +449,11 @@ Free Game card groups contain no `free_game`-type card, because by the time the 
 ### 4-3 Per-round decision flow
 
 ```
-At the start of every round: draw a Base Game card for the profile
+At the start of every round: draw a Base Game card
 
 If a free_game card is drawn:
     rerun BG spins until the final board reaches 4 Scatters
-    choose the FG card column by profile and single-bet amount, draw an FG card
+    choose the FG card column by single-bet amount, draw an FG card
     rerun the WHOLE Free Game session until its total win falls inside
     the card's interval
 
@@ -473,18 +472,18 @@ Key points:
 
 - The card system decides "**what this round should look like**", then uses redraws to realize it.
 - Decisions use fractional multiples (win ÷ Coin In) with open-left / closed-right intervals; the denominator is always the Normal Bet Coin In.
-- **Payout ceiling**: the Base Game win of the spin that triggers the Free Game must not exceed the upper bound of that profile's highest weighted Base Game card interval (30× for Newbie, 70× for the regular profile); a trigger spin above the bound is redrawn entirely (combined with the trigger-retry loop). Non-trigger rounds are bounded by their interval cards; the Free Game row's average multiple in `Detail` / `Detail_Newbie` therefore uses the truncated conditional mean after redraws (differing from the natural value in the same row is expected).
+- **Payout ceiling**: the Base Game win of the spin that triggers the Free Game must not exceed the upper bound of the highest weighted Base Game card interval (70× in this model); a trigger spin above the bound is redrawn entirely (combined with the trigger-retry loop). Non-trigger rounds are bounded by their interval cards; the Free Game row's average multiple in `Detail` therefore uses the truncated conditional mean after redraws (differing from the natural value in the same row is expected).
 - **A range card rejects the whole round as soon as the FG triggers** — the FG trigger rate is therefore fixed entirely by the `Free Game` card's weight, independent of the board's natural Scatter probability.
 - FG redraws operate on the **whole Free Game session**, not on single spins.
 
 ### 4-4 Relation to the Detail worksheets
 
-`Detail` (regular profile) and `Detail_Newbie` (Newbie profile) are the derivation source of the card weights: natural probabilities per win interval are measured with the card system off (`Simulate` side), multiplied by the manual calibration factor `Fix Num`, and normalized into the weights written to `Multiplier_Weight` (`Calculate` side). The worksheets therefore hold both the "natural" and the "target" distributions, showing how much each interval was amplified or compressed.
+`Detail` is the derivation source of the card weights: natural probabilities per win interval are measured with the card system off (`Simulate` side), multiplied by the manual calibration factor `Fix Num`, and normalized into the weights written to `Multiplier_Weight` (`Calculate` side). The worksheets therefore hold both the "natural" and the "target" distributions, showing how much each interval was amplified or compressed.
 
 ### 4-5 Notes
 
 1. **Card weights are the most direct lever on RTP.** Changing board weights changes the natural probability, but the final outcome is still fixed by the cards; changing the board without recalibrating the cards will not move total RTP as expected — it only raises redraw counts.
 2. **Redraw counts are a health indicator.** A card whose interval is very hard to reach naturally shows sharply higher redraw counts, possibly hitting the cap. Simulation reports output redraw statistics; review them together.
-3. **The BG/FG RTP split is set by the two card groups independently.** The four RTP version files differ only in the regular profile's card columns; the two Newbie columns are identical across all four.
+3. **The BG/FG RTP split is set by the two card groups independently.** The four RTP version files differ only in the card columns.
 4. **The FG trigger rate is locked by the `Free Game` card weight.** To change the FG cycle, adjust that card's weight, not the Scatter distribution on the reels.
 5. **A `_Bet100` model changes only the tail shape of the FG win distribution.** Pay back and cycle are unchanged, and its SCR carries the base model's value; verification compares paired simulations with single bets on both sides of $100 (base model vs `_Bet100` model).

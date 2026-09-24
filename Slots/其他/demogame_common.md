@@ -17,6 +17,18 @@ Reel RNG 與 Spin Result 的內容列共用相同的 12px 字級、左右欄、�
 
 H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有符號向下移動，新符號再由盤面上方掉入補牌。
 
+`demogame_common.js` 另提供 opt-in 的 `window.slotFx` 動畫模組（首次呼叫時注入樣式，不呼叫的頁面完全不受影響），介面皆以 cell DOM 元素為單位，任何盤面規格可用：
+
+- `ensureLayer(container)`：在盤面外框內建立/取得 `.slot-fx-layer`（粒子與浮字的容器）；頁面也可自行放 `<div class="slot-fx-layer">`。
+- `winGlow(winCells, dimCells)`：中獎格金光爆閃、未中獎格壓暗（`fx-win` / `fx-dim`）。
+- `popCells(cells)`：消除縮爆。`spawnCoins(layer, [{el, count}])`：以各格中心噴散金幣粒子。
+- `wildPop(cells)`：轉換符號彈跳登場。`mark(cell, "fx-wild-stay")` / `mark(cell, "fx-scatter")`：Wild 常駐光暈、Scatter 呼吸發光。
+- `multiPop(layer, "X8", { jump, tag })`：盤面中央大字（跳階時 `jump: true` 為綠金配色、`tag` 顯示上標）。
+- `winFloat(layer, "+200")`：每段贏分浮字。`totalWin(layer, "總贏分", "3.85")`：回合結束閃光橫幅。
+- `reelRoll(cells)`：滾動中輪帶的模糊滾動效果。
+
+首個使用範例：`其他/遊戲發想/賞金列車 2/index_fx.html`（含逐輪停輪、中獎→消除→轉 Wild→倍數彈出→總贏分的完整編排）。
+
 H015 Card System 的 Normal Bet 採兩階段 retry：BG `free_game` 卡先固定並重抽至觸發，之後在同一 BG 上獨立重抽整包 FG，直到符合 `weight_fg` 或達到設定的 retry limit；不可把 BG 與 FG 綁成同一次重抽。
 
 所有 Demo Game 都會顯示 Simulation；只有遊戲邏輯已實作卡片模型時才顯示 `Card System` 開關。統計區標題統一為 `Stats`。H026、H028 沿用遊戲原生的獨立批次模擬器；其餘遊戲各自提供 `window.demogameSimulateRound`，直接重用該頁 Demo Game 的 BG、Cascade、FG、Retrigger、倍率與 Card System JavaScript 數學函式。共用模組不再用卡片區間權重近似結果，也不呼叫 Python。以上批次路徑都不播放動畫、不觸發畫面 Spin，且不更動盤面、餘額或主 Stats。

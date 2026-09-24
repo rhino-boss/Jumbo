@@ -1,4 +1,4 @@
-# Math Document Description — 101016 雷神爆金1000（Thunder Boost 1000）
+# Math Document Description — 101016 雷神爆金1000（Thunder Boost）
 
 **適用範圍：Normal Bet（一般下注）**
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | Game ID | 101016 |
 | Math files | `H0281.xlsx`（共用自然模型）；`H028188B.xlsx`（RTP 88%）、`H028190B.xlsx`（RTP 90%）、`H028192A.xlsx`（RTP 92%）、`H028194A.xlsx`（RTP 94%）；`H028192A_Bet100.xlsx`、`H028188B_Bet100.xlsx`（單注 > $100 的獨立模型） |
-| Version | 共用模型 `3`；RTP 模型 `3.5.0.0`（含 Bet100） |
+| Version | 共用模型 `3`；RTP 模型 `3.5.0.3`（92A／94A／92A_Bet100）、`3.5.0.2`（88B／90B／88B_Bet100） |
 | 對應程式 | `Simulator.py` + `config.js`（共用模型）+ `config_88B.js` / `config_90B.js` / `config_92A.js` / `config_94A.js` / `config_92A_Bet100.js` / `config_88B_Bet100.js`（各 RTP 版本） |
 | 盤面 | 6 輪 Megaways；主盤面每輪最高 5 列；第 2～5 輪上方各 1 格 Extra Reel（有效視窗 5-6-6-6-6-5） |
 | 得分方式 | Way Game（2,025–32,400 Ways），左起連續相鄰輪；中獎後 Cascade 消除補牌 |
@@ -26,7 +26,7 @@
   - [1-6 Performance Wheel](#1-6-performance-wheel)
   - [1-7 Overview（RTP 版本檔）](#1-7-overviewrtp-版本檔)
   - [1-8 Multiplier_Weight](#1-8-multiplier_weight)
-  - [1-9 Detail 與 Detail_Newbie](#1-9-detail-與-detail_newbie)
+  - [1-9 Detail](#1-9-detail)
   - [1-10 OP Jackpot](#1-10-op-jackpot)
 - [二、Parameter 工作表的遊戲參數說明](#二parameter-工作表的遊戲參數說明)
   - [2-1 Table Selection Weight - Base Game](#2-1-table-selection-weight---base-game)
@@ -67,7 +67,7 @@
    金框符號的代號（Id 13～23）等於「基底符號 Id + 11」；判獎一律使用基底符號的賠率，金框身分只決定「中獎後該格轉為 Wild」的行為。Mystery 符號（Id 24；金框版 25）在盤面停定後整盤轉換為當局抽出的目標符號。
 
 4. **並非所有欄位都會被程式使用。**
-   各工作表左側的張數統計、佔比、平均值等欄位，以及 `Detail`／`Detail_Newbie`、Performance Wheel 等工作表，屬於設計與檢核用途，程式不讀取。下方各節逐一標明。
+   各工作表左側的張數統計、佔比、平均值等欄位，以及 `Detail`、Performance Wheel 等工作表，屬於設計與檢核用途，程式不讀取。下方各節逐一標明。
 
 ### 1-2 各工作表用途一覽
 
@@ -87,7 +87,7 @@
 | --- | --- | --- | --- |
 | `Overview` | 版本號、各押注型態的 RTP 拆解 | 版本核對、輸出檔名 | ✅ 版本 |
 | `Multiplier_Weight` | 卡片系統的各組卡片權重 | 單局結果的接受／重抽 | ✅ |
-| `Detail`、`Detail_Newbie` | 卡片權重的推導過程（自然分布＋校準係數） | — | ❌ 設計用 |
+| `Detail` | 卡片權重的推導過程（自然分布＋校準係數） | — | ❌ 設計用 |
 | `OP Jackpot` | SCR（Scatter spin 率）紀錄 | 彩金模組的機率換算 | ✅ 彩金模擬時 |
 
 ### 1-3 Overview（共用模型）
@@ -144,7 +144,7 @@ Base Game 兩張、Free Game 三張，版面完全相同。每張表各自定義
 
 | 區塊 | 內容 | 程式使用 |
 | --- | --- | --- |
-| Model / Version | 模型代號與四碼版本（目前 `3.5.0.0`） | ✅ 版本核對、輸出檔名 |
+| Model / Version | 模型代號與四碼版本（目前 92A／94A／92A_Bet100 為 `3.5.0.3`，其餘 `3.5.0.2`） | ✅ 版本核對、輸出檔名 |
 | Coin in / Total RTP 表 | 各押注型態的總 RTP | 目標值 |
 | Pay Back 拆解表 | Normal Bet 的 Base Game／Free Game 派彩率、Hit%、Pulls/Hit | 目標值 |
 
@@ -159,6 +159,10 @@ Base Game 兩張、Free Game 三張，版面完全相同。每張表各自定義
 
 含平台彩金的總派彩率為 `Game RTP + Bonus RTP + Link RTP`；Bonus／Link 的參數由平台 OP Jackpot 模組提供，不在本模型內，本模型僅提供換算用的 SCR（見 [1-10](#1-10-op-jackpot)）。
 
+> 92／94 兩版（含 92A_Bet100）的卡組已含天花板配平（3.5.0.3）：`Detail` Free Game 列的觸發局 BG 平均倍率採 70 倍上限重骰後的截斷值 `7.7609`，並由 BG `(60,70]` 權重補回，理論 Game RTP 精確至小數 6 位（0.920000／0.940000）。
+>
+> 送驗版數學模型（`H028192.xlsx`／`H028194.xlsx`）的 Overview 採前作送驗格式的 RTP 主列：`Base Bet｜Game RTP｜Bonus RTP｜Link RTP｜Total RTP｜Hit JP Symbol appear rate`，其中 92 版 `0.920000 + 0.02 + 0.02 = 0.96`、94 版 `0.940000 + 0.02 + 0 = 0.96`，`Hit JP Symbol appear rate` 以 Threshold 10,000,000,000 為分母。
+
 ### 1-8 Multiplier_Weight
 
 卡片系統的輸入。版面為：
@@ -166,20 +170,18 @@ Base Game 兩張、Free Game 三張，版面完全相同。每張表各自定義
 | 欄 | 標題 | 用途 |
 | --- | --- | --- |
 | A | `Range` | 得分倍率區間標籤 |
-| B | `Weight_NB_BG_Newbie` | 新手（Newbie）Profile 的 Base Game 卡片權重 |
-| C | `Weight_NB_FG_Newbie` | 新手 Profile 的 Free Game 卡片權重 |
-| D | `Weight_NB_BG` | 一般（Oldhand）Profile 的 Base Game 卡片權重 |
-| E | `Weight_NB_FG` | 一般 Profile 的 Free Game 卡片權重 |
+| B | `Weight_NB_BG` | Base Game 卡片權重 |
+| C | `Weight_NB_FG` | Free Game 卡片權重 |
 
 列由一連串「得分倍率區間」構成（得分 ÷ Coin In，**左開右閉**），最後一列 `Free Game` 是一張特殊卡：它不看金額，只要求「這一局必須觸發 Free Game」。每一欄的權重總和都校準到 1,000,000,000，因此權重值可直接理解為「該結果出現的機率 × 10⁹」。詳細機制見[第四章](#四卡片系統說明)。
 
-**`_Bet100` 模型（單注金額 > $100 的獨立模型）**：`H028192A_Bet100.xlsx`／`H028188B_Bet100.xlsx` 的工作表結構、欄位與對應的 92A／88B 完全相同，差異只在一般 Profile 的 Free Game 卡片權重——得分上限由 3,000 倍（88B 2,000 倍）降為 **2,000 倍**：最高有權重的區間為 `(1000, 2000]`，`(2000, 3000]` 權重為 0；20～200 倍主體區間與原模型形狀相同（等比），200～2,000 倍尾端等比放大配平，**FG 派彩率、觸發週期與平均倍數與原模型完全一致**。單注金額 > $100 的模擬以對應的 `config_92A_Bet100.js`／`config_88B_Bet100.js` 執行；90B／94A 對應小額投注，無 `_Bet100` 模型。
+**`_Bet100` 模型（單注金額 > $100 的獨立模型）**：`H028192A_Bet100.xlsx`／`H028188B_Bet100.xlsx` 的工作表結構、欄位與對應的 92A／88B 完全相同，差異只在 Free Game 卡片權重——得分上限由 3,000 倍（88B 2,000 倍）降為 **2,000 倍**：最高有權重的區間為 `(1000, 2000]`，`(2000, 3000]` 權重為 0；20～200 倍主體區間與原模型形狀相同（等比），200～2,000 倍尾端等比放大配平，**FG 派彩率、觸發週期與平均倍數與原模型完全一致**。單注金額 > $100 的模擬以對應的 `config_92A_Bet100.js`／`config_88B_Bet100.js` 執行；90B／94A 對應小額投注，無 `_Bet100` 模型。
 
-**檔案間的差異**：`Weight_NB_BG` 與 `Weight_NB_FG` 依版本各自校準；**新手兩欄（B、C）在所有檔案中完全相同**；`_Bet100` 模型除一般 Profile 的 FG 卡外與原模型逐格相同。
+**檔案間的差異**：`Weight_NB_BG` 與 `Weight_NB_FG` 依版本各自校準；`_Bet100` 模型除 FG 卡欄外與原模型逐格相同。
 
-### 1-9 Detail 與 Detail_Newbie
+### 1-9 Detail
 
-`Multiplier_Weight` 各欄權重的推導工作表，程式不讀取。`Detail` 對應一般 Profile、`Detail_Newbie` 對應新手 Profile，版面相同：
+`Multiplier_Weight` 權重的推導工作表，程式不讀取，版面：
 
 | 區塊 | 內容 |
 | --- | --- |
@@ -190,13 +192,12 @@ Base Game 兩張、Free Game 三張，版面完全相同。每張表各自定義
 
 ### 1-10 OP Jackpot
 
-記錄各 Profile 的 SCR（Scatter spin 率），供平台彩金模組把「每局的理論觸發率」換算成「每個含 Scatter 的 spin 的判定機率」。
+記錄 SCR（Scatter spin 率），供平台彩金模組把「每局的理論觸發率」換算成「每個含 Scatter 的 spin 的判定機率」。
 
 | 欄位 | 內容 |
 | --- | --- |
 | `Threshold` | 10,000,000,000（SCR 的分母基數） |
-| `NB_Newbie` | 新手 Profile 的 SCR（四份檔案統一採 92% 檔實測值 3,647,149,360） |
-| `NB` | 一般 Profile 的 SCR（依版本實測：88B 3,618,838,430／90B 3,621,199,650／92A 3,641,035,800／94A 3,641,760,160） |
+| `NB` | SCR（依版本實測：88B 3,618,838,430／90B 3,621,199,650／92A 3,641,035,800／94A 3,641,760,160） |
 
 SCR 的口徑：**含至少 1 顆 Scatter 的 spin 數 ÷ 付費局數 × 10,000,000,000**（Base Game 與每一場 Free Spin 都各算一次 spin），由 10⁸ 場以上的大樣本模擬實測。
 
@@ -378,7 +379,7 @@ M1 同時保有 Pay Table 上的連線賠率，倍數功能與連線計分並存
 3. 執行一次 BG spin（流程見 3-3）
 4. 若最終盤面 Scatter 達 4 顆：
        依場次表決定免費場次（上限 50）
-       抽一張 Free Game 卡片（該 Profile 的 FG 卡欄；
+       抽一張 Free Game 卡片（
            單注金額 > $100 的模擬使用 _Bet100 模型的 config）
        進入 Free Game：
            累積倍數自 x2 起算
@@ -416,16 +417,14 @@ M1 同時保有 Pay Table 上的連線賠率，倍數功能與連線計分並存
 
 ### 4-2 卡片的結構
 
-卡片來自 `Multiplier_Weight`，依玩家 Profile 與階段分組：
+卡片來自 `Multiplier_Weight`，依階段分組：
 
 | 卡片組 | 欄位 | 何時抽 |
 | --- | --- | --- |
-| 新手 Base Game 卡 | `Weight_NB_BG_Newbie` | 新手 Profile 每一局開始 |
-| 新手 Free Game 卡 | `Weight_NB_FG_Newbie` | 新手 Profile 觸發 FG 後 |
-| 一般 Base Game 卡 | `Weight_NB_BG` | 一般 Profile 每一局開始 |
-| 一般 Free Game 卡 | `Weight_NB_FG` | 一般 Profile 觸發 FG 後 |
+| Base Game 卡 | `Weight_NB_BG` | 每一局開始 |
+| Free Game 卡 | `Weight_NB_FG` | 觸發 FG 後 |
 
-單注金額 > $100 時，改以 `_Bet100` 模型（`config_92A_Bet100.js`／`config_88B_Bet100.js`）執行，其一般 Profile 的 FG 卡即該模型的 `Weight_NB_FG`（上限 2,000 倍）；卡片組結構不變。
+單注金額 > $100 時，改以 `_Bet100` 模型（`config_92A_Bet100.js`／`config_88B_Bet100.js`）執行，其 FG 卡即該模型的 `Weight_NB_FG`（上限 2,000 倍）；卡片組結構不變。
 
 兩種卡片型別：
 
@@ -441,11 +440,11 @@ Free Game 卡組沒有 `free_game` 型別的卡片，因為進到 FG 判定時�
 ### 4-3 單局的判定流程
 
 ```
-每一局開始：依 Profile 抽一張 Base Game 卡
+每一局開始：抽一張 Base Game 卡
 
 若抽到 free_game 卡：
     重複執行 BG spin，直到最終盤面達 4 顆 Scatter
-    依 Profile 與單注金額選擇 FG 卡欄，抽一張 Free Game 卡
+    依單注金額選擇 FG 卡欄，抽一張 Free Game 卡
     重複執行「整段 Free Game」，直到 FG 總得分落在該卡的區間內
 
 若抽到 range 卡：
@@ -462,18 +461,18 @@ Free Game 卡組沒有 `free_game` 型別的卡片，因為進到 FG 判定時�
 
 - 卡片系統決定的是「**這一局要長成什麼樣**」，再用重抽把它湊出來。
 - 判定用的是含小數的倍率（得分 ÷ Coin In），區間為**左開右閉**；分母一律使用 Normal Bet 的 Coin In。
-- **天花板機制**：BG 觸發 Free Game 的那一把，BG 得分必須 ≤「該 Profile BG 卡組最高有權重區間」的上限（Newbie 30 倍、一般 Profile 70 倍），超過上限就整把重骰（與觸發重試合併判定）。非觸發局由區間卡本身限制；因此 `Detail`／`Detail_Newbie` 的 Free Game 列平均倍率採重骰後的截斷平均（與同列自然值不同屬正常）。
+- **天花板機制**：BG 觸發 Free Game 的那一把，BG 得分必須 ≤「BG 卡組最高有權重區間」的上限（本模型 70 倍），超過上限就整把重骰（與觸發重試合併判定）。非觸發局由區間卡本身限制；因此 `Detail` 的 Free Game 列平均倍率採重骰後的截斷平均（與同列自然值不同屬正常）。
 - **區間卡一旦觸發 FG 就整局作廢重抽**——因此 FG 觸發率完全由 `Free Game` 卡的權重決定，與盤面的自然 Scatter 機率無關。
 - FG 的重抽是以「整段 Free Game」為單位，不是單場。
 
 ### 4-4 與 Detail 工作表的關係
 
-`Detail`（一般 Profile）與 `Detail_Newbie`（新手 Profile）是卡片權重的推導來源：先在關閉卡片系統的狀態下取得各得分區間的自然機率（`Simulate` 側），再乘上人工調整係數 `Fix Num`，正規化後得到寫入 `Multiplier_Weight` 的權重（`Calculate` 側）。因此工作表同時記錄「自然機率」與「目標機率」兩份數據，可用來檢視每個區間被放大或壓縮了多少。
+`Detail` 是卡片權重的推導來源：先在關閉卡片系統的狀態下取得各得分區間的自然機率（`Simulate` 側），再乘上人工調整係數 `Fix Num`，正規化後得到寫入 `Multiplier_Weight` 的權重（`Calculate` 側）。因此工作表同時記錄「自然機率」與「目標機率」兩份數據，可用來檢視每個區間被放大或壓縮了多少。
 
 ### 4-5 注意事項
 
 1. **卡片權重是影響 RTP 最直接的參數。** 調整盤面權重會改變自然機率，但最終落點仍由卡片決定；若只調盤面而不同步更新卡片權重，總 RTP 不會依預期改變，只會讓重抽次數上升。
 2. **重抽次數是健康度指標。** 若某張卡片的區間在自然機率下極難達成，重抽次數會顯著上升，甚至觸及上限。模擬報表會輸出重抽統計，應一併檢視。
-3. **BG 與 FG 的 RTP 分配由兩組卡片各自決定。** 四份 RTP 版本檔的差異只在一般 Profile 的卡片欄位；新手兩欄四份完全相同。
+3. **BG 與 FG 的 RTP 分配由兩組卡片各自決定。** 四份 RTP 版本檔的差異只在卡片欄位。
 4. **FG 觸發率由 `Free Game` 卡的權重鎖定。** 要改變 FG 週期，應調整該卡權重，而非輪帶上的 Scatter 分布。
 5. **`_Bet100` 模型只改變 FG 得分分布的尾端形狀。** 派彩率與週期不變，SCR 沿用原模型值；驗證時以單注金額跨越 $100 的兩組模擬（原模型 vs `_Bet100` 模型）對照。

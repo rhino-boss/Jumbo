@@ -1,4 +1,4 @@
-# H028 雷神爆金1000（Thunder Boost 1000, 101016）Game Description
+# H028 雷神爆金1000（Thunder Boost, 101016）Game Description
 
 > 文件目的：說明遊戲模型參數的使用方式與各參數對應的實際遊戲功能（依《數學文件規範》Game Description 節）。
 > 版本：共用模型 `3`／RTP 模型 `3.5.0.0`（2026-09-08）

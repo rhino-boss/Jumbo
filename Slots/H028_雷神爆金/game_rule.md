@@ -1,4 +1,4 @@
-# 雷神爆金1000 (Thunder Boost 1000) 遊戲規則說明
+# 雷神爆金1000 (Thunder Boost) 遊戲規則說明
 
 > 文件版本：v1.2（2026-09-07：更名 1000、符號名改雷神主題、M1 賠付矛盾修正、SC 觸發含 Extra Reel、版本 3.3.0.0、新增 §8A OP Jackpot）
 > 對標競品：PG - Lucky Neko
@@ -15,7 +15,7 @@
 | 遊戲名稱 | 雷神爆金1000 |
 | Game ID | 101016 |
 | PARsheet ID | H0281 |
-| 遊戲英文名 | Thunder Boost 1000 |
+| 遊戲英文名 | Thunder Boost |
 | 遊戲類型 | Video Slot - 2,025–32,400 Ways / Megaways / Cascade |
 | 盤面規格 | 6 輪盤、主盤面最高 5 列，另有位於 R2-R5 上方的 Extra Reel |
 | 中獎方式 | Way Game，自左至右連續相鄰輪判定 |

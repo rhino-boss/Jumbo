@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "workspace-static",
-      "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "8028"],
-      "port": 8028
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8123"],
+      "port": 8123
     }
   ]
 }

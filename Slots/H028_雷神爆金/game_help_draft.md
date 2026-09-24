@@ -10,7 +10,7 @@
 | game_id | 101016 |
 | parsheet_id | H0281 |
 | name_zh | 雷神爆金1000 |
-| name_en | Thunder Boost 1000 |
+| name_en | Thunder Boost |
 | game_type | Video Slot - 2,025–32,400 Ways / Megaways / Cascade |
 
 ---
@@ -111,8 +111,8 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 金框符號特色 | GOLDEN FRAMED FEATURE |
-| 規則說明 | 第 {2}、{3}、{4}、{5} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, {4}, AND {5} MAY APPEAR WITH A GOLD FRAME. |
-| 規則說明 | 金框符號只有在實際參與中獎並被移除時，才會在原位置轉為 [WW]。 | A GOLD FRAMED SYMBOL ONLY CHANGES INTO [WW] ON THE SAME POSITION AFTER IT ACTUALLY PARTICIPATES IN A WIN AND IS REMOVED. |
+| 規則說明 | 第 {2}、{3}、{4}、{5} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, {4}, AND {5} MAY APPEAR WITH A GOLDEN FRAME. |
+| 規則說明 | 金框符號只有在實際參與中獎並被移除時，才會在原位置轉為 [WW]。 | A GOLDEN FRAMED SYMBOL ONLY CHANGES INTO [WW] ON THE SAME POSITION AFTER IT ACTUALLY PARTICIPATES IN A WIN AND IS REMOVED. |
 | 規則說明 | 轉化後的 [WW] 可參與下一次掉落後的中獎判定。 | THE TRANSFORMED [WW] CAN PARTICIPATE IN THE NEXT WIN EVALUATION AFTER THE CASCADE. |
 | 規則說明 | 轉化後的 [WW] 僅保留 {1} 個消除回合，之後依盤面結果正常更新。 | THE TRANSFORMED [WW] REMAINS FOR {1} CASCADE ONLY, AFTER WHICH THE REELS UPDATE NORMALLY. |
 

@@ -21,7 +21,8 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "config_92A.js"
+CONFIG_RTP_FILE = "AUTO"  # "AUTO"=依押注檔位自動選組（規範 3.2.3）；或手動指定 config_xxx.js（override）
+RTP_SERIES = "A"  # "A"=92/94 水位、"B"=88/90 水位；僅 CONFIG_RTP_FILE="AUTO" 時生效
 TOTAL_ROUNDS = 10**6
 BET_MODE = 0  # 0 for Normal Bet, 2 for Buy Feature; 101016 has no Extra Bet
 BET_MULTI = 1
@@ -30,7 +31,7 @@ FG_INITIAL_MULTIPLIER = 2
 CARD_SYSTEM_ENABLED = True
 CARD_SYSTEM_IS_NEWBIE = True  # True for newbie, False for oldhand
 
-# OP Jackpot：JACKPOT_FILE 選 "A"/"B"/"C"（JP0100A/B/C），空字串為關閉；
+# OP Jackpot：JACKPOT_FILE 選 "A"/"B"/"C"（JP0100A/B/C），空字串為關閉，"AUTO"=依 Profile／檔位自動（newbie→A、老手小→C、中大→B）；
 # JACKPOT_OPTION 選 Parameter_List 的 Option（28=SPS use、1=Lakiwin、2=Filbet）。
 # BATCH_RUNS 可用 "jackpot_file"/"jackpot_option" 逐批指定。
 JACKPOT_FILE = ""
@@ -39,7 +40,8 @@ JACKPOT_OPTION = 28
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # ===== 1. 測試（10**5，流程／報表驗證用）=====
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 5, "jackpot_file": "B", "jackpot_option": 28},
     #
     # ===== 2. 自然機率（Card Off）：NB 10**9 =====
     # H028 BF 的倍率權重引用 NB FG 分布（Detail 共用），自然機率只需 bet_mode 0；此區塊組成異動前先與使用者確認。
@@ -54,26 +56,26 @@ BATCH_RUNS = [
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": True},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**7, "card_system_enabled": True, "card_system_is_newbie": False},
     #
-    # ===== 4. 正式模擬（Card On＋彩金 Option 28，確認正確性）：NB/EB 10**8、BF/SF 10**7 =====
-    # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<$2)→C、老手中/大 Bet(>=$2)→B；
-    # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 一律以「模式倍數」查檔（NB=bet option、BF 固定 75 檔）。
-    # --- Newbie NB + A（代表跑 92A）---
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
-    # --- 老手小 Bet（$1）+ C：94A / 90B ---
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    # --- 老手中 Bet（$100）+ B：92A / 88B ---
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
-    # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
-    {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    {"config_file": "config.js", "config_rtp_file": "config_88B_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A）、$150 中（B）；JP 一律查 75 檔 ---
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
-    {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
-    # --- Buy Feature 大 Bet（購 $11,250 = 150 檔，tier > $100）：Bet100 模型（BF cap 2000x）---
-    {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # # ===== 4. 正式模擬（Card On＋彩金 Option 28，確認正確性）：NB/EB 10**8、BF/SF 10**7 =====
+    # # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<$2)→C、老手中/大 Bet(>=$2)→B；
+    # # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 檔位 = 模式基準價（NB $1、BF $75）× bet_multi。
+    # # --- Newbie NB + A（代表跑 92A）---
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
+    # # --- 老手小 Bet（$1）+ C：94A / 90B ---
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config.js", "config_rtp_file": "config_90B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # # --- 老手中 Bet（$100）+ B：92A / 88B ---
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config.js", "config_rtp_file": "config_88B.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 100, "jackpot_file": "B", "jackpot_option": 28},
+    # # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
+    # {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # {"config_file": "config.js", "config_rtp_file": "config_88B_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
+    # # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A、JP 75 檔）、$150 中（B、JP 150 檔）---
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
+    # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
+    # # --- Buy Feature 大 Bet（購 $11,250 = 150 檔，tier > $100）：Bet100 模型（BF cap 2000x）---
+    # {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
 ]
 
 THREADS = max(1, max(8, os.cpu_count() - 2 or 1))
@@ -162,7 +164,40 @@ def parse_env_bool(name, default):
 
 CONFIG_FILE = os.environ.get("H028_CONFIG_FILE", CONFIG_FILE)
 CONFIG_RTP_FILE = os.environ.get("H028_CONFIG_RTP_FILE", CONFIG_RTP_FILE)
+RTP_SERIES = os.environ.get("H028_RTP_SERIES", RTP_SERIES).strip().upper()
 PROJECT_DIR_NAME = "H028_雷神爆金"
+
+# 押注檔位自動選組（模擬程式規範 3.2.3）：
+# CONFIG_RTP_FILE="AUTO" 時依「水位系列＋押注」選 config；JACKPOT_FILE="AUTO" 時依 Profile／檔位選 JP 檔。
+BET_TIER_CONFIG_MAP = {
+    "A": {"small": "config_94A.js", "medium": "config_92A.js", "big": "config_92A_Bet100.js"},
+    "B": {"small": "config_90B.js", "medium": "config_88B.js", "big": "config_88B_Bet100.js"},
+}
+
+
+def bet_tier_name(bet_multi):
+    amount = float(bet_multi)  # NB: bet_multi x $1；BF: 購買價 ÷ 75 = bet_multi x $1
+    return "small" if amount < 2.0 else ("medium" if amount <= 100.0 else "big")
+
+
+def resolve_auto_selection():
+    """在載入 config 前解析 AUTO：讀取生效後的押注／Profile（env 優先）。"""
+    global CONFIG_RTP_FILE, JACKPOT_FILE
+    effective_multi = int(os.environ.get("H028_BET_MULTI", str(BET_MULTI)))
+    effective_newbie = parse_env_bool("H028_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
+    tier = bet_tier_name(effective_multi)
+    if str(CONFIG_RTP_FILE).strip().upper() == "AUTO":
+        if RTP_SERIES not in BET_TIER_CONFIG_MAP:
+            raise ValueError(f"RTP_SERIES must be one of {sorted(BET_TIER_CONFIG_MAP)}, got {RTP_SERIES!r}")
+        CONFIG_RTP_FILE = BET_TIER_CONFIG_MAP[RTP_SERIES][tier]
+        print(f"[auto-select] series {RTP_SERIES} + bet_multi {effective_multi} ({tier}) -> {CONFIG_RTP_FILE}")
+    if str(os.environ.get("H028_JACKPOT_FILE", JACKPOT_FILE)).strip().upper() == "AUTO":
+        JACKPOT_FILE = "A" if effective_newbie else ("C" if tier == "small" else "B")
+        os.environ["H028_JACKPOT_FILE"] = JACKPOT_FILE
+        print(f"[auto-select] jackpot -> {JACKPOT_FILE}")
+
+
+resolve_auto_selection()
 
 
 def resolve_base_dir():
@@ -338,8 +373,7 @@ CARD_PROFILE_LISTS = [
 
 
 def _bg_cap_x(profile_index):
-    caps = [float(c.get("max", 0.0)) for c in CARD_PROFILE_LISTS[profile_index]
-            if c.get("type") != "free_game" and int(c.get("weight", 0)) > 0]
+    caps = [float(c.get("max", 0.0)) for c in CARD_PROFILE_LISTS[profile_index] if c.get("type") != "free_game" and int(c.get("weight", 0)) > 0]
     return max(caps) if caps else 0.0
 
 
@@ -368,8 +402,8 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
 # 有機會觸發 OP JP；真實觸發率由各獎項固定 RTP 反推，再除以 SCR（SC-spin 率）放大成條件機率。
 # JP1/JP2：連機累進（派彩 = 池底 + 累積 increment，命中歸零；startup% = RTP% - Increment%）。
 # JP3/JP4：固定倍數（prize = x * 實際押注）。派彩不計入 rtp_game，另計 rtp_link / rtp_bonus。
-# 檔位查表：以「押注模式倍數」為 key —— NB 用 bet option（bet_multi）、BF 固定查 75 檔；
-# Bet Level（bet_multi）只作用於獎金／池的縮放，不改變查表檔位。
+# 檔位查表：JP 檔位 = 押注模式基準價（NB $1、BF $75）× BET_MULTI ——
+# 例：NB bet_multi 3 → 3 檔；BF bet_multi 1 → 75 檔、bet_multi 2（購 $150）→ 150 檔。
 JP_ENABLED = bool(JACKPOT_FILE)
 JP_P_COND = np.zeros(4, dtype=np.float64)
 JP_CUM = np.zeros(4, dtype=np.float64)
@@ -385,11 +419,12 @@ def load_jackpot_params():
     jp_path = BASE_DIR.parent / "OP Jackpot" / f"JP0100{JACKPOT_FILE}.xlsm"
     if not jp_path.exists():
         raise FileNotFoundError(f"Jackpot workbook not found: {jp_path}")
-    # 檔位 = 押注模式倍數：BF 固定 75 檔（不乘 Bet Level）、NB 用 bet option
-    bet_key = float(FEATUREBUY) if BET_MODE == MODE_FEATUREBUY else float(BET_MULTI)
+    # JP 檔位 = 押注模式基準價（NB $1、BF $75）× BET_MULTI 縮放
+    bet_key = float((FEATUREBUY if BET_MODE == MODE_FEATUREBUY else 1) * BET_MULTI)
     wb = _oxl.load_workbook(jp_path, read_only=True, data_only=True)
     ws = wb["Parameter_List"]
     row_hit = None
+    available = []
     for row in ws.iter_rows(values_only=True):
         if row[0] is None:
             continue
@@ -398,12 +433,19 @@ def load_jackpot_params():
             bet = float(row[4])
         except (TypeError, ValueError):
             continue
-        if opt == JACKPOT_OPTION and abs(bet - bet_key) < 1e-9:
-            row_hit = row
-            break
+        if opt == JACKPOT_OPTION:
+            available.append(bet)
+            if abs(bet - bet_key) < 1e-9:
+                row_hit = row
+                break
     wb.close()
     if row_hit is None:
-        raise ValueError(f"JP0100{JACKPOT_FILE} Parameter_List has no row for option {JACKPOT_OPTION} bet {bet_key:g}; " "add the bet tier to the jackpot workbook instead of interpolating.")
+        tiers = ", ".join(f"{b:g}" for b in sorted(set(available)))
+        raise ValueError(
+            f"JP0100{JACKPOT_FILE} Parameter_List has no row for option {JACKPOT_OPTION} bet {bet_key:g}. "
+            f"Available bet tiers: [{tiers}]. Use one of these as BET_MULTI, "
+            "or add the bet tier to the jackpot workbook instead of interpolating."
+        )
     denom = float(row_hit[2])
     rtp = [float(row_hit[5 + i] or 0.0) for i in range(4)]
     incr = [float(row_hit[9 + i] or 0.0) for i in range(4)]
@@ -3236,7 +3278,6 @@ def report_filename(rtp_total, bet_mode, total_round, timestamp=None):
         if not CARD_SYSTEM_IS_NEWBIE:
             tier_amount = float(BET_MULTI)  # NB: bet_multi x $1；BF: 購買價 ÷ 75 = bet_multi x $1
             parts.append("small_bet" if tier_amount < 2.0 else ("medium_bet" if tier_amount <= 100.0 else "big_bet"))
-        parts.append("card")
     else:
         parts = [
             report_base_game_id(),
@@ -3354,16 +3395,22 @@ def run_all_combinations():
         combo_env["H028_RUN_ALL_COMBINATIONS"] = "false"
         combo_env["H028_BATCH_CHILD"] = "1"
         jp_file = str(combo.get("jackpot_file", "") or "").strip().upper()
-        if jp_file not in ("", "A", "B", "C"):
-            raise ValueError("jackpot_file must be 'A', 'B', 'C' or omitted")
+        if jp_file not in ("", "A", "B", "C", "AUTO"):
+            raise ValueError("jackpot_file must be 'A', 'B', 'C', 'AUTO' or omitted")
         combo_env["H028_JACKPOT_FILE"] = jp_file
         combo_env["H028_JACKPOT_OPTION"] = str(int(combo.get("jackpot_option", JACKPOT_OPTION)))
         combo_bet_multi = int(combo.get("bet_multi", 1))
         if combo_bet_multi <= 0:
             raise ValueError("bet_multi must be a positive integer")
         combo_env["H028_BET_MULTI"] = str(combo_bet_multi)
+        combo_series = str(combo.get("rtp_series", RTP_SERIES) or "").strip().upper()
+        if combo_series not in BET_TIER_CONFIG_MAP:
+            raise ValueError(f"rtp_series must be one of {sorted(BET_TIER_CONFIG_MAP)}")
+        combo_env["H028_RTP_SERIES"] = combo_series
         normalized = {field: combo[field] for field in required}
         normalized["bet_multi"] = combo_bet_multi
+        if str(combo["config_rtp_file"]).strip().upper() == "AUTO":
+            normalized["rtp_series"] = combo_series
         if jp_file:
             normalized["jackpot_file"] = jp_file
             normalized["jackpot_option"] = int(combo.get("jackpot_option", JACKPOT_OPTION))

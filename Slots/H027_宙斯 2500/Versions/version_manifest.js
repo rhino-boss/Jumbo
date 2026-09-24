@@ -1,7 +1,7 @@
 window.H027_VERSION_MANIFEST = {
-  current: "4.0.0.0",
-  base_version: "4",
-  next_version: "5.0.0.0",
+  current: "5.0.0.0",
+  base_version: "5",
+  next_version: "6.0.0.0",
   versions: [
     {
       version: "0.0.0.0",
@@ -154,30 +154,62 @@ window.H027_VERSION_MANIFEST = {
       ]
     },
     {
-      version: "4.0.0.0",
+      version: "4.0.0.1",
       math_key: "4.0",
-      date: "2026-09-09",
+      date: "2026-09-24",
       competitor_initial_version: false,
-      base_config: "Versions/4.0.0.0/config.js",
       configs: {
-        "92A": "Versions/4.0.0.0/config_92A.js",
-        "94A": "Versions/4.0.0.0/config_94A.js",
-        "92A_Bet100": "Versions/4.0.0.0/config_92A_Bet100.js"
+        "92A": "Versions/4.0.0.1/config_92A.js",
+        "94A": "Versions/4.0.0.1/config_94A.js",
+        "92A_Bet100": "Versions/4.0.0.1/config_92A_Bet100.js"
       },
       workbooks: {
-        base: "Versions/4.0.0.0/Source/H0271.xlsx",
-        92: "Versions/4.0.0.0/Source/H027192A.xlsx",
-        94: "Versions/4.0.0.0/Source/H027194A.xlsx",
-        "92_Bet100": "Versions/4.0.0.0/Source/H027192A_Bet100.xlsx"
+        base: "Versions/4.0.0.1/Source/H0271.xlsx",
+        92: "Versions/4.0.0.1/Source/H027192A.xlsx",
+        94: "Versions/4.0.0.1/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/4.0.0.1/Source/H027192A_Bet100.xlsx"
       },
-      frozen_base: "Versions/4.0.0.0",
+      frozen_base: "Versions/4.0.0.1",
       changes: [
         "Make a regular-symbol win structurally impossible on the Buy Feature entry screen. The entry reel had been expanded to 15/15/15/15/162/162 positive stops, which let seven of the nine regular symbols reach eight or more cells board-wide (K and TE could reach 14), so an Any-8 win was possible. SPS confirmed it: its Buy Feature report shows BaseGameRtp 0.6936% because SPS evaluates the entry screen while our simulator merely skipped scoring.",
         "Re-select the BF_Symbol stop weights to 9/12/9/9/71/28 positive stops, chosen so that every regular symbol can occupy at most 7 of the 30 cells across every reachable stop combination. The board still carries exactly four C1 (one per R1-R4, none on R5-R6) and never a C2 or C3, and 17,391,024 distinct RNG combinations remain - far more variety than the 58-stop configuration that last satisfied the constraint.",
         "Verified two ways: an exhaustive per-reel maximum (M1 4, M2 6, M3 7, M4 6, A 7, K 7, Q 7, J 7, TE 7) and a 300,000-board Monte Carlo that found a largest same-symbol count of 7, zero Any-8 boards and zero boards with a C1 count other than four.",
         "Rename the game to Zeus 2500 / 宙斯 2500 per the updated Game List, and rename the project folder to H027_宙斯 2500 to match.",
         "Bump to 4.0.0.0 per spec 1.3: the BF entry reel is base-math reel data, so the first digit increments and the remaining three reset. H0271.xlsx moves to version 4, every RTP/Variant workbook to 4.0.0.0, config.js excel_version to 4 and each variant config to 4.0.0.0.",
-        "Card weights are unchanged from 3.1.0.0: the entry screen contributes no cascade, no multiplier ball and no regular-symbol pay, so the Buy Feature free-game distribution the cards constrain is unaffected. Card-On re-validation gives total RTP 92.4933% against the 92.5000% target (entry 3.0000% + FG 89.4933%) with zero Retry Limit Exceeded."
+        "Card weights are unchanged from 3.1.0.0: the entry screen contributes no cascade, no multiplier ball and no regular-symbol pay, so the Buy Feature free-game distribution the cards constrain is unaffected. Card-On re-validation gives total RTP 92.4933% against the 92.5000% target (entry 3.0000% + FG 89.4933%) with zero Retry Limit Exceeded.",
+        "Fix a live Demogame defect: every variant config carried its own copy of the reel strips, and that copy had never received the v3.0.0.7 correction that moved the Base Game off FG Reel Set 3. config_92A/94A/92A_Bet100 all still described BG_Symbol as source_reel_set 3 with a 64-stop strip, and reel_set_usage.BG.sets as [3,1,2]. Simulator.py read the strips from config.js so its results were always correct, but index.html reads the variant config directly - so the Demo had been running the Base Game on an FG reel since 3.0.0.7. The stale copies are now replaced with the Reel Set 0 data (63 stops).",
+        "This is exactly the drift that spec section 9's Config/Simulator/Demogame three-way reconciliation exists to catch; that reconciliation had never been run, which is why a duplicated field could disagree for three versions without anyone noticing.",
+        "Retire config.js. Each RTP/Variant config is now self-contained and the simulator loads exactly one config file, so the same data can no longer exist in two places and drift. The variant configs already carried a full superset of config.js (61 keys vs 55), so no values needed to move.",
+        "Replace the base-versus-variant config pair validation with a single-config check. The spec 1.3 rule that a variant's first version digit must equal the base math version is preserved by a new base_excel_version field on each config, so removing config.js does not remove the check.",
+        "Verified behaviour-preserving: a fixed-seed 300,000-round Normal Bet run on 92A returns byte-identical figures before and after (RTP 87.6700%, BG hit 28.0523%, FG cycle 485.44, max win 985.75x, and six more fields).",
+        "Card weights, reels, paytable and all math values are unchanged; this revision only removes duplicated configuration and repairs the Demo's reel selection, hence the fourth digit."
+      ]
+    },
+    {
+      version: "5.0.0.0",
+      math_key: "5.0",
+      date: "2026-09-24",
+      competitor_initial_version: false,
+      configs: {
+        "92A": "Versions/5.0.0.0/config_92A.js",
+        "94A": "Versions/5.0.0.0/config_94A.js",
+        "92A_Bet100": "Versions/5.0.0.0/config_92A_Bet100.js"
+      },
+      workbooks: {
+        base_a: "Versions/5.0.0.0/Source/H0271A.xlsx",
+        base_b: "Versions/5.0.0.0/Source/H0271B.xlsx",
+        92: "Versions/5.0.0.0/Source/H027192A.xlsx",
+        94: "Versions/5.0.0.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/5.0.0.0/Source/H027192A_Bet100.xlsx"
+      },
+      frozen_base: "Versions/5.0.0.0",
+      changes: [
+        "Split the base math workbook into an A and a B family: H0271.xlsx becomes H0271A.xlsx (unchanged content) and H0271B.xlsx. Reels are byte-identical between the two; the whole A/B difference is 84 cells on the Parameter sheet plus the model name.",
+        "B raises the multiplier-ball frequency to one spin in ten without touching a single reel symbol. The ball only ever comes from BG_Symbol (3) - the other two base tables carry no C2 at all - so re-weighting the three table-selection weights from 9698/19298/2344 to 162386/619916/217698 moves the rate from 3.4492% to 9.9282% while BG hit rate stays at 28.31% against A's 28.38%. Solving for both targets at once is possible because three weights give two degrees of freedom and there are exactly two constraints.",
+        "B re-shapes the C3 multiplier distribution so its mean is half of C2's, as requested: 0.5014 on base game and 0.4993 on free game. C3 now carries every value from 2x to 1000x (sixteen of them, up from nine) with 2500x deliberately left at zero. The shape is C2's own distribution minus 2500x, tilted by a single exponent (BG -0.2057, FG -0.1962) to hit the target mean, which weakens the high end exactly as intended.",
+        "Retire config.js in favour of self-contained variant configs, and fix the Demo defect where every variant config still described BG_Symbol as FG Reel Set 3 - a stale copy that had survived since 3.0.0.7 because only config.js received the correction and only the Demo reads the variant copy.",
+        "Version 5 because the Parameter sheet of the base math workbook changed, which spec 1.3 assigns to the first digit.",
+        "B's card weights are not yet calibrated: config_92B/94B/92B_Bet100 currently carry A's weights and are therefore not registered in this version's config list. B's natural-probability reports are still running, and the weights will follow in 5.1.0.0."
       ]
     }
   ]
