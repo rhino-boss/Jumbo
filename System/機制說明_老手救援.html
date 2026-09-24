@@ -3046,27 +3046,43 @@
     <!-- 階段一 §5 -->
     <section id="p1-arb">
       <h2><span class="sec">§5</span>套利檢查</h2>
-      <p>目標：不容許玩家透過特殊手段從救援機制套利。以現行規則、10,000 名玩家自然 Row Data 實測（simulator_system_oldhand_c2_arb.py）：</p>
+      <p>
+        目標：不容許玩家透過特殊手段從救援機制套利。以 c2-1.4 規則、彩罐熱舞 10,000 名玩家自然 Row Data 實測
+        （simulator_system_oldhand_c2_arb.py）。<strong>策略 RTP</strong> = 停手前總得分 ÷ 停手前總押注；
+        每天歸零重來，天天照同一策略玩的長期 RTP 就是這個值。超過 97% 標黃、超過 100% 標紅（可穩定套利）：
+      </p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>套利手法</th><th>情境</th><th>模擬結果</th><th>狀態</th></tr>
+            <tr><th>套利手法</th><th>情境</th><th class="num">平均停在</th><th class="num">RTP（無機制）</th><th class="num">RTP（有機制）</th><th class="num">EV／日（bet）</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td class="key">日切刷量</td>
-              <td>跨日歸零後，每天用最小押注玩到第 40 轉領 25× 就停，天天重來</td>
-              <td>EV <strong>−0.12</strong> bet／日；第 40 轉觸發率 10.8%。門檻下修至 &lt; 25% 後轉為負期望，無套利空間。</td>
-              <td>已模擬<br>安全</td>
-            </tr>
-            <tr>
-              <td class="key">拿了就走</td>
-              <td>領到救援當轉立即停玩；當日未領到則玩到第 400 轉（最後觸發點）停</td>
-              <td>EV <strong>−8.11</strong> bet／日；被救比例 28.3%，平均停在第 333 轉。負期望，無套利空間。</td>
-              <td>已模擬<br>安全</td>
-            </tr>
+            <tr><td class="key">固定轉數閃人</td><td>固定玩 40 轉就閃</td><td class="num">40 轉</td><td class="num">93.19%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">99.70%</span></td><td class="num">-0.12</td></tr>
+            <tr><td class="key"></td><td>固定玩 80 轉就閃</td><td class="num">80 轉</td><td class="num">92.33%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.24%</span></td><td class="num">-2.21</td></tr>
+            <tr><td class="key"></td><td>固定玩 120 轉就閃</td><td class="num">120 轉</td><td class="num">91.70%</td><td class="num">95.98%</td><td class="num">-4.83</td></tr>
+            <tr><td class="key"></td><td>固定玩 160 轉就閃</td><td class="num">160 轉</td><td class="num">91.65%</td><td class="num">95.66%</td><td class="num">-6.95</td></tr>
+            <tr><td class="key"></td><td>固定玩 200 轉就閃</td><td class="num">200 轉</td><td class="num">91.99%</td><td class="num">96.09%</td><td class="num">-7.82</td></tr>
+            <tr><td class="key"></td><td>固定玩 240 轉就閃</td><td class="num">240 轉</td><td class="num">92.23%</td><td class="num">96.62%</td><td class="num">-8.11</td></tr>
+            <tr><td class="key"></td><td>固定玩 280 轉就閃</td><td class="num">280 轉</td><td class="num">92.13%</td><td class="num">96.92%</td><td class="num">-8.61</td></tr>
+            <tr><td class="key"></td><td>固定玩 320 轉就閃</td><td class="num">320 轉</td><td class="num">92.13%</td><td class="num">96.65%</td><td class="num">-10.73</td></tr>
+            <tr><td class="key"></td><td>固定玩 360 轉就閃</td><td class="num">360 轉</td><td class="num">92.21%</td><td class="num">96.95%</td><td class="num">-10.98</td></tr>
+            <tr><td class="key"></td><td>固定玩 400 轉就閃</td><td class="num">400 轉</td><td class="num">92.12%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.19%</span></td><td class="num">-11.25</td></tr>
+            <tr><td class="key">拿到就閃人</td><td>拿到任何救援就閃（否則玩到 400）</td><td class="num">333 轉</td><td class="num">92.28%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.56%</span></td><td class="num">-8.11</td></tr>
+            <tr><td class="key"></td><td>只等 100× 救援才閃（否則玩到 400）</td><td class="num">391 轉</td><td class="num">92.11%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.29%</span></td><td class="num">-10.58</td></tr>
+            <tr><td class="key"></td><td>開出 ≥ 50× 單局就閃（自然或救援）</td><td class="num">232 轉</td><td class="num">92.27%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.51%</span></td><td class="num">+1.18</td></tr>
+            <tr><td class="key">贏了就閃人</td><td>當日 RTP &gt; 100% 就閃（否則玩到 400）</td><td class="num">96 轉</td><td class="num">91.83%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">103.80%</span></td><td class="num">+3.66</td></tr>
+            <tr><td class="key"></td><td>當日 RTP &gt; 100% 或拿到救援就閃</td><td class="num">70 轉</td><td class="num">92.32%</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">105.94%</span></td><td class="num">+4.15</td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="note warn">
+        <span class="tag">套利風險</span>
+        <p>
+          <strong>「贏了就閃」類策略可穩定套利（RTP 103.80%～105.94%）</strong>：贏的時候提早離場、
+          輸的時候留下來等救援——救援只補到輸家、贏家不吐回去，救援增量占策略押注約 12 個百分點。
+          「開出 ≥ 50× 就閃」同理（100.51%）。固定轉數與單純「拿到救援就閃」皆為負期望，無套利空間。
+          需再調整門檻／倍數或增加救援資格條件，對策待討論。
+        </p>
       </div>
     </section>
 

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-"""老手救援 C-2 套利檢查模擬。
+"""老手救援 C-2 套利檢查模擬（主救援 40–400 轉）。
 
-以 rowdata 的 10,000 名玩家 × 1,000 轉自然結果，把每一列視為一個「玩家日」，
-量測兩種套利策略的期望值（EV，以 bet 為單位）：
+以 rowdata 的 10,000 名玩家自然結果，把每一列視為一個「玩家日」。
+救援判定只看過去，與玩家何時停手無關，所以先算出整天（400 轉）
+套用機制後的每轉得分，再依各套利策略決定每人停在第幾轉。
 
-* 日切刷量：每天只玩到第 40 轉（第一個觸發點）就停，天天領第一點救援。
-* 押注放大：第 1–39 轉用 1 單位押注做低當日 RTP，第 40 轉（判定轉）改押 B 倍
-  吃救援。分別計算「無防線」與「計價防線 = min(當下押注, 當日押注中位數)」兩種。
-* 拿了就走：正常遊玩，領到救援當轉立刻停玩；當日未領到則玩到第 400 轉
-  （最後一個觸發點）停。
+策略 RTP = Σ 停手前總得分 ÷ Σ 停手前總押注。
+因為每天歸零重來，天天照同一策略玩的長期 RTP 就是這個值；
+> 100% 代表可穩定套利。
 
 門檻與倍數直接沿用 simulator_system_oldhand_c2.CHECKPOINT_RULES。
 """
@@ -21,75 +20,85 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from simulator_system_oldhand_c2 import CHECKPOINT_RULES, GAMES, load_rowdata  # noqa: E402
+from simulator_system_oldhand_c2 import (  # noqa: E402
+    CHECKPOINT_RULES, CHECKPOINTS, MAIN_SHORT_THRESHOLD, MAIN_SHORT_WINDOW,
+    SYSTEM_VERSION, load_rowdata,
+)
 
-RAMP_BET = 10.0  # 押注放大倍率 B
+GAME = "彩罐熱舞"
+DAY_SPINS = 400          # 主救援最後一個觸發點
+BIG_WIN = 50.0           # 「開出大獎就閃」的門檻倍數
 
 
-def analyse(game: str) -> None:
-    nat, bet = load_rowdata(game)
-    assert np.allclose(bet, 1.0), "套利模擬假設 rowdata 押注固定為 1"
-    threshold, reward = CHECKPOINT_RULES[40]
-
-    first39 = nat[:, :39]
-    mult40 = nat[:, 39]                       # 第 40 轉自然倍數（bet=1）
-    trigger = first39.sum(axis=1) / 39.0 < threshold
-    trig_rate = trigger.mean()
-
-    # ---- 策略一：日切刷量（固定押注 1，玩到第 40 轉就停） ----
-    natural_profit = first39.sum(axis=1) + mult40 - 40.0
-    inc = np.where(trigger, np.maximum(mult40, reward) - mult40, 0.0)
-    ev_farm = (natural_profit + inc).mean()
-
-    # ---- 策略二：押注放大（第 40 轉押 B 倍） ----
-    ramp_natural = first39.sum(axis=1) - 39.0 + RAMP_BET * (mult40 - 1.0)
-    pay40 = RAMP_BET * mult40
-    # 無防線：救援以當下押注計價 → reward × B
-    inc_no_def = np.where(trigger, np.maximum(pay40, reward * RAMP_BET) - pay40, 0.0)
-    ev_ramp = (ramp_natural + inc_no_def).mean()
-    # 計價防線：救援以 min(當下押注, 當日押注中位數=1) 計價 → reward × 1
-    inc_def = np.where(trigger, np.maximum(pay40, reward) - pay40, 0.0)
-    ev_ramp_def = (ramp_natural + inc_def).mean()
-
-    print(f"=== 套利檢查（{game}）第 40 轉觸發點：門檻 <{threshold * 100:.0f}%、救 {reward:g}× ===")
-    print(f"trigger_rate_cp40       : {trig_rate * 100:.2f}%")
-    print(f"日切刷量 EV/日           : {ev_farm:+.3f} bet（40 轉停手，天天重來）")
-    print(f"押注放大 EV/日（無防線）  : {ev_ramp:+.3f} bet（第 40 轉押 {RAMP_BET:g} 倍）")
-    print(f"押注放大 EV/日（計價防線）: {ev_ramp_def:+.3f} bet")
-
-    # ---- 策略三：拿了就走（領到救援即停；未領則玩到第 400 轉停） ----
-    n_players = nat.shape[0]
-    cum = np.zeros(n_players)
-    profit = np.zeros(n_players)
-    stop_spin = np.zeros(n_players)
-    alive = np.ones(n_players, dtype=bool)   # 尚未領到救援
+def apply_mechanism(nat: np.ndarray, bet: np.ndarray):
+    """回傳 (adj, reward_at)：adj 為套機制後每轉得分；reward_at[p, i] 為該轉救援倍數（0=未救）。"""
+    adj = nat.copy()
+    reward_at = np.zeros_like(nat)
+    n = nat.shape[0]
+    cum_adj = np.zeros(n)
+    cum_bet = np.zeros(n)
     prev = 0
-    for cp in sorted(CHECKPOINT_RULES):
+    for cp in CHECKPOINTS:
+        seg = slice(prev, cp - 1)
+        cum_adj += adj[:, seg].sum(axis=1)
+        cum_bet += bet[:, seg].sum(axis=1)
         th, rw = CHECKPOINT_RULES[cp]
-        cum += nat[:, prev:cp - 1].sum(axis=1)
-        rtp_now = cum / (cp - 1)
-        short_start = max(0, cp - 41)
-        short_rtp = nat[:, short_start:cp - 1].sum(axis=1) / (cp - 1 - short_start)
-        hit = alive & (rtp_now < th) & (short_rtp < 0.50)
-        spin_pay = nat[:, cp - 1]
-        # 被救者：本日獲利 = 前 cp-1 轉自然 + max(自然, 救援) − cp 轉成本
-        profit[hit] = cum[hit] + np.maximum(spin_pay[hit], rw) - cp
-        stop_spin[hit] = cp
-        alive &= ~hit
-        cum += spin_pay
+        i = cp - 1
+        ss = max(0, i - MAIN_SHORT_WINDOW)
+        short = adj[:, ss:i].sum(axis=1) / bet[:, ss:i].sum(axis=1)
+        hit = (cum_adj / cum_bet < th) & (short < MAIN_SHORT_THRESHOLD)
+        adj[:, i] = np.where(hit, np.maximum(nat[:, i], rw * bet[:, i]), nat[:, i])
+        reward_at[hit, i] = rw
+        cum_adj += adj[:, i]
+        cum_bet += bet[:, i]
         prev = cp
-    # 未被救者：玩到第 400 轉停
-    profit[alive] = nat[:, :400].sum(axis=1)[alive] - 400.0
-    stop_spin[alive] = 400
-    rescued_ratio = 1.0 - alive.mean()
-    print(f"拿了就走 EV/日           : {profit.mean():+.3f} bet"
-          f"（被救比例 {rescued_ratio * 100:.2f}%、平均停在第 {stop_spin.mean():.0f} 轉）")
-    print()
+    return adj, reward_at
+
+
+def first_true(mask: np.ndarray, default: int) -> np.ndarray:
+    """每列第一個 True 的轉數（1-based）；整列沒有則回 default。"""
+    has = mask.any(axis=1)
+    idx = mask.argmax(axis=1) + 1
+    return np.where(has, idx, default)
+
+
+def strategy_rtp(pay: np.ndarray, bet: np.ndarray, stop: np.ndarray):
+    cols = np.arange(pay.shape[1])[None, :]
+    keep = cols < stop[:, None]
+    tp = (pay * keep).sum()
+    tb = (bet * keep).sum()
+    return tp / tb, (tp - tb) / pay.shape[0]
 
 
 def main() -> None:
-    for game in GAMES:
-        analyse(game)
+    nat, bet = load_rowdata(GAME)
+    nat = nat[:, :DAY_SPINS]
+    bet = bet[:, :DAY_SPINS]
+    adj, reward_at = apply_mechanism(nat, bet)
+    n = nat.shape[0]
+
+    cum_rtp = np.cumsum(adj, axis=1) / np.cumsum(bet, axis=1)
+    mult = adj / bet
+    rescued = reward_at > 0
+
+    scenarios: list[tuple[str, np.ndarray]] = []
+    for cp in CHECKPOINTS:
+        scenarios.append((f"固定玩 {cp} 轉就閃", np.full(n, cp)))
+    scenarios += [
+        ("拿到任何救援就閃（否則玩到 400）", first_true(rescued, DAY_SPINS)),
+        ("只等 100× 救援才閃（否則玩到 400）", first_true(reward_at >= 100, DAY_SPINS)),
+        (f"開出 ≥{BIG_WIN:g}× 單局就閃（自然或救援）", first_true(mult >= BIG_WIN, DAY_SPINS)),
+        ("當日 RTP > 100% 就閃（贏就走）", first_true(cum_rtp > 1.0, DAY_SPINS)),
+        ("贏就走 ＋ 拿到救援就閃", first_true((cum_rtp > 1.0) | rescued, DAY_SPINS)),
+    ]
+
+    print(f"=== 套利檢查（{GAME}，{SYSTEM_VERSION}，{n:,} 人，主救援 40–400 轉）===")
+    print(f"{'策略':<30}{'平均停在':>8}{'RTP無機制':>11}{'RTP有機制':>11}{'EV/日(bet)':>12}")
+    for name, stop in scenarios:
+        rtp_mech, ev = strategy_rtp(adj, bet, stop)
+        rtp_base, _ = strategy_rtp(nat, bet, stop)
+        flag = "  ← 超過 100%" if rtp_mech > 1.0 else ""
+        print(f"{name:<30}{stop.mean():>7.0f}轉{rtp_base * 100:>10.2f}%{rtp_mech * 100:>10.2f}%{ev:>+12.2f}{flag}")
 
 
 if __name__ == "__main__":
