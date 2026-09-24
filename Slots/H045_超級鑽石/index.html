@@ -5,127 +5,2071 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Super Diamond — Demo Game</title>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
   <style>
-    /* ===== By Game only：Game Title / Feature Status / Board / Message ===== */
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
     .board-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 4px;
+      gap: 8px;
     }
 
     .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
       position: relative;
-      aspect-ratio: 1 / 1.05;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255, 255, 255, .16);
-      border-radius: 8px;
-      background: rgba(12, 18, 32, .72);
-      transition: border-color .12s ease, background .12s ease;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
     }
 
-    .cell.gold {
-      border-color: #ffc94a;
-      box-shadow: inset 0 0 0 1px rgba(255, 201, 74, .55), 0 0 10px rgba(255, 201, 74, .25);
-      background: rgba(58, 44, 10, .72);
+    #board .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
     }
 
     .cell.hit {
-      border-color: #46f0c2;
-      background: rgba(12, 60, 52, .78);
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
     }
 
     .cell.convert {
-      border-color: #7ad7ff;
-      background: rgba(12, 42, 66, .82);
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
     }
 
-    .cell.cleared {
-      opacity: .18;
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
     }
 
-    .cell.wild-ww {
-      border-color: #46f0c2;
-      background: rgba(10, 52, 46, .85);
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
     }
 
-    .cell.wild-w2 {
-      border-color: #ff7a7a;
-      background: rgba(62, 16, 16, .85);
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
     }
 
-    .cell.scatter {
-      border-color: #d7a6ff;
-      background: rgba(42, 20, 62, .85);
-    }
-
-    .cell .mult-badge {
+    .symbol-wrap {
       position: absolute;
-      top: 2px;
-      right: 3px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #0b1020;
-      background: linear-gradient(180deg, #ffe89a, #ffb347);
-      border-radius: 5px;
-      padding: 0 4px;
-      line-height: 15px;
+      inset: 3%;
     }
 
-    .multiplier-window {
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
       display: flex;
-      gap: 6px;
       justify-content: center;
     }
 
-    .multiplier-step {
-      min-width: 36px;
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
       text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .rng-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      /* Five reels fill the 420px game panel while keeping the board centered. */
+      --cell-size: 74px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 920px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    #modeText {
+      color: var(--sub);
       font-size: 12px;
-      padding: 2px 0;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .feature-strip {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
       border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, .14);
-      color: rgba(255, 255, 255, .55);
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
+    #rng-wrap,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-shell {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .multiplier-track {
+      width: min(100%, 380px);
+      height: 36px;
+      margin: 0 auto 8px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: linear-gradient(90deg, rgba(4, 14, 26, 0.92), rgba(12, 34, 64, 0.7), rgba(4, 14, 26, 0.92));
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+
+    .multiplier-window {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+      will-change: transform, opacity, filter;
+    }
+
+    .multiplier-window.roll-one {
+      animation: multiplierRollOne 180ms cubic-bezier(0.22, 0.72, 0.24, 1);
+    }
+
+    .multiplier-step {
+      min-width: 0;
+      color: var(--sub);
+      font: 800 clamp(0.68rem, 1.35vw, 0.92rem) / 1 Consolas, "Courier New", monospace;
+      text-align: center;
+      opacity: 0.22;
+      white-space: nowrap;
+    }
+
+    .multiplier-step.is-previous {
+      color: #876b35;
+      opacity: 0.42;
     }
 
     .multiplier-step.is-active {
-      border-color: #ffc94a;
-      color: #ffe89a;
+      color: var(--blue);
+      opacity: 1;
+      font-size: clamp(0.92rem, 1.8vw, 1.18rem);
+      text-shadow: 0 0 10px rgba(51, 187, 255, 0.58);
+    }
+
+    @keyframes multiplierRollOne {
+      from {
+        transform: translateX(20%);
+        opacity: 0.38;
+        filter: blur(2px);
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      display: grid;
+      place-items: center;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: var(--cell-size);
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    #board .cell.gold {
+      border-color: #ffe078;
+      background:
+        linear-gradient(180deg, rgba(255, 244, 173, 0.35), transparent 42%),
+        linear-gradient(180deg, #d9a923, #7d4b06);
+      box-shadow: none;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
+      transform: scale(1.03);
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+    }
+
+    .cell.wild-mark {
+      z-index: 3;
+      border-color: #ffe56b;
+      box-shadow: 0 0 10px rgba(255, 229, 107, 0.95), inset 0 0 18px rgba(255, 229, 107, 0.35);
+      animation: h045WildMark 180ms ease-in-out infinite alternate;
+    }
+
+    .cell.wild-mark::after {
+      content: "W2";
+      position: absolute;
+      inset: 5px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 8px;
+      color: #fff4a6;
+      background: rgba(80, 38, 0, 0.28);
+      font-weight: 900;
+      font-size: 18px;
+      text-shadow: 0 1px 5px #000;
+      pointer-events: none;
+    }
+
+    @keyframes h045WildMark {
+      from { transform: scale(0.96); filter: brightness(1); }
+      to { transform: scale(1.05); filter: brightness(1.35); }
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    /* H016 symbol artwork is scaled into every cell without cropping. */
+    .cell .symbol-wrap {
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      padding: 3px;
+    }
+
+    .h015-symbol-img {
+      position: relative;
+      inset: auto;
+      display: block;
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
+      object-fit: contain;
+      object-position: center;
+      transform: none;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .h015-symbol-svg {
+      display: block;
+      width: 90%;
+      height: 90%;
+      overflow: visible;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .cell.gold .h015-symbol-img {
+      width: 76%;
+      height: 76%;
+      max-width: 76%;
+      max-height: 76%;
+    }
+
+    .h015-frame-img {
+      position: absolute;
+      inset: 1%;
+      z-index: 2;
+      display: block;
+      width: 98%;
+      height: 98%;
+      object-fit: contain;
+      object-position: center;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.58));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .cell.symbol-a,
+    .cell.symbol-k,
+    .cell.symbol-q,
+    .cell.symbol-j {
+      border-color: rgba(38, 92, 137, 0.28);
+      background: #060d1a;
+    }
+
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.symbol-c1 {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.symbol-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .set-rng-controls {
+      display: grid;
+      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
+      align-items: end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .debug-rng-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: var(--sub);
+      font-size: 10px;
       font-weight: 700;
-      background: rgba(255, 201, 74, .12);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .debug-rng-field input,
+    .debug-rng-field select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .debug-rng-field input::placeholder {
+      color: var(--sub);
+      opacity: 0.7;
+    }
+
+    #setRngResetBtn {
+      width: 82px;
+      min-width: 82px;
+      align-self: end;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3,
+    #rng-wrap h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row,
+    .rng-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .zone-body.set-rng-controls {
+      display: grid;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    #rng-wrap {
+      width: 100%;
+      margin-top: 10px;
+      padding: 0;
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #rng-wrap .diagnostic-header,
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    #rng-wrap .rng-list {
+      padding: 8px 12px;
+    }
+
+    .live-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      background: #06111f;
+    }
+
+    .help-loading,
+    .help-load-error {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--sub);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 14px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 9px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .help-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-2);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-section-title .help-en {
+      color: var(--blue);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .help-group-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 9px 12px 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .help-group-title .help-en {
+      color: var(--sub);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .help-rule {
+      display: block;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(17, 50, 82, 0.85);
+      line-height: 1.55;
+    }
+
+    .help-rule-zh,
+    .help-rule-en {
+      min-width: 0;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .help-rule-en {
+      color: #a9cce8;
+      font-size: 11px;
+    }
+
+    .help-lang-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--sub);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      padding: 8px 12px 12px;
+    }
+
+    .help-payout-item {
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .help-rule code,
+    .help-payout-item code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #d9f5ff;
+      background: var(--surface);
+      font-family: Consolas, monospace;
+    }
+
+    .help-rule pre {
+      margin: 0;
+      overflow-x: auto;
+      color: #d9f5ff;
+      font: 11px/1.5 Consolas, monospace;
+      white-space: pre;
+    }
+
+    .game-rule-doc {
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .game-rule-doc h1,
+    .game-rule-doc h2,
+    .game-rule-doc h3 {
+      margin: 18px 0 8px;
+      color: var(--accent);
+      line-height: 1.35;
+    }
+
+    .game-rule-doc h1 { margin-top: 0; font-size: 19px; }
+    .game-rule-doc h2 { padding-bottom: 6px; border-bottom: 1px solid var(--surface-2); font-size: 16px; }
+    .game-rule-doc h3 { color: var(--blue); font-size: 13px; }
+    .game-rule-doc p { margin: 7px 0; }
+    .game-rule-doc .game-rule-note { padding: 8px 10px; border-left: 3px solid var(--blue); color: var(--sub); background: var(--surface); }
+    .game-rule-doc .game-rule-list-item { position: relative; margin: 5px 0; padding-left: 18px; }
+    .game-rule-doc .game-rule-list-item::before { content: "▪"; position: absolute; left: 3px; color: var(--accent); }
+    .game-rule-doc code { padding: 1px 4px; border-radius: 4px; color: #d9f5ff; background: var(--surface); font-family: Consolas, monospace; }
+    .game-rule-doc pre { overflow-x: auto; padding: 10px; border-radius: 6px; color: #d9f5ff; background: #030b15; font: 11px/1.5 Consolas, monospace; }
+    .game-rule-table-wrap { margin: 9px 0 14px; overflow-x: auto; }
+    .game-rule-doc table { width: 100%; border-collapse: collapse; background: var(--panel); }
+    .game-rule-doc th,
+    .game-rule-doc td { min-width: 92px; padding: 7px 9px; border: 1px solid var(--surface-2); text-align: left; vertical-align: top; }
+    .game-rule-doc th { color: var(--accent); background: var(--surface); }
+
+    #helpSourceFrame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(74px, calc((100vw - 60px) / 5));
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      .set-rng-controls {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
+      }
+
+      #grid-panel {
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      #controls {
+        grid-template-columns: 1fr;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .help-payout-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .set-rng-controls {
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      }
+
+      #controls #setRngResetBtn {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
     }
   </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond 超級鑽石</span></span>
+      <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond</span></span>
     </div>
+
     <div id="strip-bar" aria-label="Feature status">
       <div class="feature-strip" id="featureDisplay">
         <span id="modeText">Base Game</span>
         <span id="featureStatus"></span>
         <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
-            id="carryMultiValue">x1</span></span>
-        <span class="feature-pill" id="wildPill"><span class="k">Mult Wild</span><span class="v"
-            id="multWildValue">0</span></span>
+            id="carryMultiValue">0</span></span>
         <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
             id="fgLeftValue">0/0</span></span>
       </div>
     </div>
+
     <div id="app-shell">
       <section id="grid-panel">
         <div class="board-shell">
-          <div class="multiplier-track" aria-label="Cascade Multiplier">
+          <div class="multiplier-track" aria-label="Multiplier progression">
             <div class="multiplier-window" id="multiplierWindow"></div>
           </div>
           <div class="board-grid" id="board"></div>
         </div>
         <div class="message-bar" id="messageBar">Ready — press Spin</div>
       </section>
+
       <aside id="right-panel">
         <section id="credit-bar" aria-label="Player values">
           <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
@@ -133,6 +2077,7 @@
           <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
           <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
         </section>
+
         <section id="play-panel" class="control-zone action-zone">
           <span class="zone-label">Play</span>
           <div class="zone-body play-main-controls">
@@ -151,6 +2096,8 @@
             </label>
           </div>
           <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
             <span class="debug-divider" aria-hidden="true"></span>
             <label class="debug-check force" for="forceFgInput">
               <input id="forceFgInput" type="checkbox">
@@ -158,6 +2105,7 @@
             </label>
           </div>
         </section>
+
         <section id="bet-mode-panel" class="control-zone mode-zone">
           <span class="zone-label">Bet Mode</span>
           <div class="zone-body">
@@ -165,45 +2113,57 @@
             <button id="buyFeatureBtn" type="button">Buy Feature (250x)</button>
           </div>
         </section>
+
         <section id="simulation-stats">
           <h3 data-i18n="simulationStats">Simulation Stats</h3>
-          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span
-              class="s-value" id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
           </div>
           <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
               id="hitRateValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
               id="fgTriggerValue">0</span></div>
-          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span
-              class="s-value hi" id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
         </section>
       </aside>
     </div>
+
     <section id="controls" class="debug-off">
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect">
+              <option value="">Auto</option>
+            </select>
+          </label>
           <label class="debug-rng-field" for="reelRngInput">
             Reel RNG
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="0 0 0 0 0">
+            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
       </div>
+
     </section>
+
     <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
       <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
       <div class="rng-list" id="rngList"></div>
     </section>
+
     <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
       <div id="log-body">
-        <div class="log-subheader" data-i18n="lineWins">Ways Wins</div>
+        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
         <div class="line-list" id="lineList"></div>
         <div class="spin-result-list" id="spinResultList"></div>
       </div>
     </section>
+
     <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="live-log-header diagnostic-header">
         <span>Log</span>
@@ -211,37 +2171,37 @@
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
     </section>
+
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
-        <article class="change-log-entry">
-          <h4>2026-09-24：建立 H045 超級鑽石 Demogame（初版）</h4>
-          <ul>
-            <li>依 Demogame規範 4.2 建立 By Game 區域（<code>#feature-bar</code>、<code>#strip-bar</code>、
-              <code>#grid-panel</code>／<code>#board</code>、Message Bar）；其餘 UI 全部使用
-              <code>../demogame_common.css?v=4</code> 與 <code>../demogame_common.js?v=2</code>，未複製共用控制邏輯。</li>
-            <li>數學直接讀 <code>./config.js</code>（<code>window.H045_CONFIG</code>），未另寫簡化邏輯：
-              初始停輪用 <code>symbol_weight</code> 逐格加權、Cascade 補牌用 <code>drop_weight</code>、
-              金框四結果用 <code>golden_result_weight</code>、分裂顆數用 <code>split_count_weight</code>、
-              WILD 倍數用 <code>multiplier_wild_weight</code>。</li>
-            <li>補牌方式為 <strong>消除後掉落補牌</strong>（Demogame規範 4.3 第 2 類），與 game_rule §5.6、Simulator 同順序：
-              結算 → 消除 → 下落補滿 → 金框翻牌 → 放置分裂。</li>
-            <li>Cascade Multiplier 5 階（BG 1/2/3/5/10、FG 2/4/6/10/20）；帶倍 WILD 同盤不設上限，
-              同一連線倍數相乘；Max Win 20,000x 截斷。</li>
-            <li>本作無符號美術，依規範 4.2.3 固定顯示符號框＋代號（一般字重），不接 Image 開關。</li>
-            <li>尚無卡片數學分支，設定 <code>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false</code>，
-              Card System 欄位不顯示；Bet Mode 只列實際支援的 Normal Bet 與 Buy Feature 250x。</li>
-            <li>驗證：抽出本頁數學函式於 Node 跑 20 萬局，與
-              <code>Record/H0451_01_2609241824_betmode0_500000.xlsx</code>（Simulator card-off 50 萬局）對帳——
-              RTP 453.97% vs 446.01%、Hit Rate 37.43% vs 36.99%、FG 週期 1/113 vs 1/116、
-              FG 平均場數 10.13 vs 10.14、avg cascades BG 0.687 vs 0.689、
-              金框四結果 82.14/7.97/7.94/1.95% vs 設定值 82/8/8/2。
-              RTP 差距落在厚尾分布的抽樣誤差內（Simulator standard_error 0.08，1σ 約 ±8pp）。</li>
-            <li>未修改 XLSX／Config 數學參數。</li>
-          </ul>
-        </article>
+      <article class="change-log-entry">
+        <h4>2026-09-24：建立 H045 超級鑽石 Demogame（由 H016 幸運王牌 index.html 衍生）</h4>
+        <ul>
+          <li>以 H016 的 <code>index.html</code> 為底改寫，沿用其殼層、CSS、盤面 render、掉落動畫、
+            snapshot 單步（Previous／Next）、Help Markdown renderer、Bet Menu、版本／Config 選單與共用資源載入方式；
+            共用區域仍全部使用 <code>../demogame_common.css?v=4</code> 與 <code>../demogame_common.js?v=2</code>。</li>
+          <li>移除 H016 原檔中從未被賦值的 <code>H016_BOX_DATA</code> 死碼區塊（該 IIFE 開頭即 return，約 640 行）。</li>
+          <li>數學改為 H045：讀 <code>./config.js</code>（<code>window.H045_CONFIG</code>），
+            初始停輪用 <code>symbol_weight</code> 逐格加權、Cascade 補牌用 <code>drop_weight</code>、
+            金框四結果用 <code>golden_result_weight</code>、分裂顆數用 <code>split_count_weight</code>、
+            WILD 倍數用 <code>multiplier_wild_weight</code>。</li>
+          <li>玩法差異：金框翻牌由「單一來源 WW2 複製」改為 <strong>每顆中獎金框各自獨立抽四種結果</strong>
+            （小鬼／小鬼帶倍／大鬼／大鬼帶倍）；新增帶倍數 WILD，同盤不設上限、同一連線倍數相乘；
+            Cascade Multiplier 由 4 階改 5 階（BG 1/2/3/5/10、FG 2/4/6/10/20）；新增 Max Win 20,000x 截斷。</li>
+          <li>補牌方式由 H016 的「原地補牌」改為 <strong>消除後掉落補牌</strong>（Demogame規範 4.3 第 2 類），
+            順序與 game_rule §5.6、Simulator 一致：結算 → 消除 → 下落補滿 → 金框翻牌 → 放置分裂。</li>
+          <li>移除 Buy Super Feature；Bet Mode 只列實際支援的 Normal Bet 與 Buy Feature 250x。</li>
+          <li>本作無符號美術，依 Demogame規範 4.2.3 固定顯示符號框＋代號（一般字重），不接 Image 開關。</li>
+          <li>尚無卡片數學分支，<code>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false</code>，Card System 欄位不顯示。</li>
+          <li>驗證：抽出本頁數學函式於 Node 跑 20 萬局，與 Simulator card-off 50 萬局
+            （<code>Record/H0451_01_2609241824_betmode0_500000.xlsx</code>）對帳，RTP／Hit Rate／FG 週期／
+            金框四結果占比均一致（詳見交付說明）。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       </div>
     </section>
+
     <section id="settings-wrap" class="diagnostic-region">
       <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
       <div class="setting-body">
@@ -268,8 +2228,10 @@
         <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
       </div>
     </section>
+
     <div class="footer-note">Double-click to play offline. No server needed.</div>
   </main>
+
   <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
     <div class="help-dialog-shell">
       <div class="help-dialog-header">
@@ -282,611 +2244,1132 @@
       <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
+  <script id="embeddedH045GameRuleMarkdown" type="text/plain">
+# 超級鑽石 (Super Diamond) 遊戲規則說明
 
+## 目錄
+
+- [§1. 遊戲基本資訊](#1-遊戲基本資訊)
+- [§2. 盤面結構](#2-盤面結構)
+- [§3. 符號類別](#3-符號類別)
+- [§4. 賠率表（Pay Table）](#4-賠率表pay-table)
+- [§5. 核心特色](#5-核心特色)
+- [§6. 免費遊戲（Free Spins / Free Game, FG）](#6-免費遊戲free-spins--free-game-fg)
+- [§7. 核心遊戲流程（Base Game）](#7-核心遊戲流程base-game)
+- [§8. 押注模式](#8-押注模式)
+- [§9. 邊界 / 例外情境（Edge Cases）](#9-邊界--例外情境edge-cases)
+- [附錄 A. 詞彙對照](#附錄-a-詞彙對照)
+- [附錄 B. 文件來源 / 參考](#附錄-b-文件來源--參考)
+
+---
+
+## §1. 遊戲基本資訊
+
+| 項目 | 說明 |
+| --- | --- |
+| 遊戲名稱（內部代號） | 超級鑽石（H045） |
+| Game ID | 101015 |
+| PARsheet ID | H045192A（本階段僅建立 92% A 版；其他 RTP／Variant 未建立） |
+| 遊戲中文名稱 | 超級鑽石 |
+| 遊戲英文名 | Super Diamond |
+| 遊戲類型 | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier / Multiplier Wild / OP Jackpot |
+| 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
+| 中獎方式 | Way Game |
+| 最小 / 最大 Ways | 最大 1,024 Ways（`4 × 4 × 4 × 4 × 4`） |
+| 押注模式 | Normal Bet；Buy Feature `250 × Bet`；不提供 Extra Bet |
+| Max Win | `20,000 × Bet`（單一 Spin 含所有 Cascade 與 FG 場次的累計上限，見 §9.10） |
+| 彩金 | OP Jackpot 四階（Grand / Major 連機累進，Minor / Mini 紅利），見 §5.7 |
+
+補充說明：
+
+* 本作由幸運王牌（H016 / 101003）衍生，盤面、Ways 判獎、賠率表與 Cascade 補位邏輯沿用；金框機制、倍率階梯、帶倍數 WILD 與 OP Jackpot 為本作新增或改版內容。
+* 數學模型為本作專屬的 `Source/H0451*.xlsx`，**不沿用 H016 的模型**。
+* Coin / Credit 基準為 100；Help 顯示賠率以 100 Credit Bet 為基準。
+
+---
+
+## §2. 盤面結構
+
+```text
+   R1   R2   R3   R4   R5
+   ↓    ↓    ↓    ↓    ↓
+┌────┬────┬────┬────┬────┐
+│    │    │    │    │    │
+├────┼────┼────┼────┼────┤
+│    │    │    │    │    │
+├────┼────┼────┼────┼────┤
+│    │    │    │    │    │
+├────┼────┼────┼────┼────┤
+│    │    │    │    │    │
+└────┴────┴────┴────┴────┘
+```
+
+* 主盤面固定為 5 輪、每輪 4 個可見符號，共 20 格。
+* 本作沒有獨立 Extra Reel。
+* 相同一般符號須由 R1 起向右連續出現至少 3 輪才成立中獎。
+* 同一輪可有多顆相同符號，同輪命中數會相乘形成 Ways 數量。
+* 若同一符號同時成立不同連線長度，只支付該符號可成立的最高連線長度。
+* 補牌方式：中獎符號消除後，同輪剩餘符號往下落到底部空格，再依該輪 Symbol Weight 由上而下逐格加權補滿。
+
+---
+
+## §3. 符號類別
+
+### 3.1 一般符號
+
+| 類別 | 符號 |
+| --- | --- |
+| 高分符號 | `M1`、`M2`、`M3`、`M4` |
+| 低分符號 | `A`、`K`、`Q`、`J` |
+
+* 所有一般符號皆為 1×1；本作沒有 Block / Fat Symbol。
+* `G1`~`G4`、`GA`、`GK`、`GQ`、`GJ` 為 `M1`~`M4`、`A`、`K`、`Q`、`J` 的金框版本（Symbol ID 11~18）。
+* 金框版本判獎時視為對應的一般符號，賠率不變。
+* 金框符號只會出現在 R2、R3、R4。
+
+### 3.2 特殊符號
+
+| 符號 | 出現位置 | 行為 |
+| --- | --- | --- |
+| **`WW` / 小鬼（一般 Wild）** | 不由一般權重自然產生；由中獎金框翻出 | 替代除 `C1` 外的所有一般符號；可參與後續 Ways，命中後可被消除；身上可帶倍數（§5.3） |
+| **`W2` / 大鬼（分裂 Wild）** | 由金框翻牌的大鬼結果產生 | 替代除 `C1` 外的所有一般符號；在原金框位置生成，並額外分裂 2～4 顆 `W2` 到盤面其他位置；本體身上可帶倍數（§5.3、§5.4） |
+| **`C1` / Scatter** | R1～R5 均可出現；同一輪可超過 1 顆 | 不參與 Ways、不被一般中獎消除；用於觸發 FG（§6）與 OP Jackpot（§5.7） |
+
+* `WW` 與 `W2` **僅**由金框消除產生，盤面不會自然掉落 Wild。
+* **R1 永不出現 Wild**：金框不出現在 R1，大鬼分裂也不會落在 R1。
+* `WW`、`W2`、`C1` 沒有自身一般賠率。
+
+---
+
+## §4. 賠率表（Pay Table）
+
+**單位：Credit；來源以 100 Credit Bet 顯示。**
+
+| 符號 | 5 連 | 4 連 | 3 連 |
+| --- | ---: | ---: | ---: |
+| `M1` | 250 | 150 | 50 |
+| `M2` | 200 | 120 | 40 |
+| `M3` | 150 | 90 | 30 |
+| `M4` | 100 | 60 | 20 |
+| `A` | 50 | 30 | 10 |
+| `K` | 50 | 30 | 10 |
+| `Q` | 25 | 15 | 5 |
+| `J` | 25 | 15 | 5 |
+
+計算規則：
+
+* 單一符號該次 Cascade 的得分為：
+  `賠率 × 該符號 Ways 數量 × Bet 基準 × Cascade Multiplier × 該連線的 WILD 倍數乘積`
+* `WILD 倍數乘積` 定義見 §5.3：該連線用到的所有帶倍 WILD 倍數連乘，每顆只計一次；未使用到帶倍 WILD 的連線，該項為 `×1`。
+* 同一盤面若有多種符號同時中獎，各符號獨立計算後相加。
+* `C1` 不提供 Scatter Pay。
+
+---
+
+## §5. 核心特色
+
+### 5.1 Cascade 消除與補位
+
+* 一次盤面上所有成立的 Ways 同時結算。
+* 所有參與中獎的非金框符號同時消除，包含已在盤面上的 `WW` / `W2`。
+* 同一格即使同時參與多個 Ways，也只消除一次。
+* `C1` 不參與一般連線，因此不會因一般中獎被消除。
+* 同輪剩餘符號往下落到底部空格；空出的上方位置再依該輪權重逐格補牌。
+* Cascade 持續至新盤面沒有任何 3 輪以上 Ways 為止。
+
+### 5.2 金框翻牌的四種結果
+
+* 金框只存在於 R2、R3、R4 的一般符號。
+* 金框符號未參與本次中獎時保持原符號與金框，不會翻牌。
+* 金框符號參與中獎時，原位置不會變成待補空格，而是保留並翻成 Wild。
+* 翻牌結果依 `Golden_Result_Weight` 由四種中加權抽取：
+
+| # | 結果 | 內容 |
+| ---: | --- | --- |
+| 1 | 小鬼 | 原位置 1 顆 `WW`，**無倍數** |
+| 2 | 小鬼帶倍數 | 原位置 1 顆 `WW`，**本體帶倍數**（倍數依 §5.3 抽取） |
+| 3 | 大鬼 | 原位置 1 顆 `W2`，額外分裂 2～4 顆 `W2`，**全部無倍數** |
+| 4 | 大鬼帶倍數 | 原位置 1 顆 `W2`，額外分裂 2～4 顆 `W2`，**僅本體帶倍數** |
+
+* **同一次 Cascade 若有多顆金框同時中獎，每顆金框各自獨立抽一次四種結果**，互不排擠。
+* 抽到「帶倍數」的兩種結果時**一律給予倍數**，不受盤面上既有帶倍 WILD 數量的限制；多顆金框同時中獎時可同時產生多顆帶倍 WILD。
+
+### 5.3 帶倍數 WILD
+
+* 倍數池為 `×2`、`×3`、`×5`，依 `Multiplier_Wild_Weight` 加權抽取。
+* **盤面可同時存在多顆帶倍 WILD**，數量不設上限；每顆金框翻出的帶倍結果各自獨立抽取倍數。
+* 帶倍 WILD 參與中獎連線時，**該連線倍率 = Cascade Multiplier × 該連線用到的所有帶倍 WILD 倍數連乘**。
+  * 例：Cascade Multiplier 為 `×3`、該連線使用到一顆 `×5` 的 WILD → 該連線得分 `×15`。
+  * 例：Cascade Multiplier 為 `×3`、該連線同時使用到 `×2` 與 `×5` 兩顆 WILD → 該連線得分 `×30`（`3 × 2 × 5`）。
+* **同一連線的多顆帶倍 WILD 相乘**；同一顆 WILD 在單一連線中只計算一次，不因該連線的 Ways 數量重複相乘。
+* 未參與該次中獎連線的帶倍 WILD **不計入**該連線倍率。
+* 帶倍 WILD 參與中獎後與其他中獎符號一併消除，後續 Cascade 可再產生新的帶倍 WILD。
+* 乘積沒有獨立上限；單一 Spin 的總得分上限由 §9.10 的 Max Win（`20,000 × Bet`）約束。
+
+### 5.4 大鬼分裂
+
+* 大鬼（`W2`）在原金框位置翻出後，額外分裂 **2～4 顆 `W2`**，依 `Split_Count_Weight` 加權抽取顆數。
+* **分裂落點限制**：只取代 R2～R5 的合格一般符號；不落 R1、不覆蓋 `C1`、不覆蓋既有 `WW` 或 `W2`。
+* 合格位置少於本次抽中的顆數時，以實際可用位置數為準放置；一個合格位置都沒有時，本次只保留原位的 `W2` 本體。
+* **倍數固定在本體**：若本次為「大鬼帶倍數」，倍數一律蓋在原位翻出的 `W2` 本體上；**分裂出來的 `W2` 永不帶倍數**。
+
+### 5.5 Cascade Multiplier
+
+| 模式 | 第 1 次中獎 | 第 2 次中獎 | 第 3 次中獎 | 第 4 次中獎 | 第 5 次起 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Base Game | ×1 | ×2 | ×3 | ×5 | ×10 |
+| Free Game | ×2 | ×4 | ×6 | ×10 | ×20 |
+
+* 每一次 Cascade 的得分使用該次表列倍數。
+* 倍數只在同一 Spin 的 Cascade 期間推進；到達頂階後不再推進，停留至本次 Cascade 鏈結束。
+* 新 Spin 開始時，倍數回到該模式的第一階：BG 為 `×1`，FG 為 `×2`。
+* 上排倍數為固定階梯顯示，不做滾動抽取。
+* Cascade Multiplier 與 WILD 倍數為**相乘**關係（§5.3）。
+
+### 5.6 處理順序
+
+一次 Cascade 內的執行順序固定為：
+
+1. 結算本次所有成立的 Ways（套用 Cascade Multiplier 與該連線的 WILD 倍數）。
+2. 消除所有中獎的非金框符號（含中獎的 `WW` / `W2`）。
+3. 同輪符號下落並依權重補滿空格。
+4. 所有中獎金框位置逐一進行四種結果抽取（§5.2）。
+5. 每顆金框依抽中的結果，在原位置形成 `WW` 或 `W2`；抽中帶倍結果者依 §5.3 各自獨立抽取倍數並蓋上。
+6. 抽中大鬼的金框，接著依 §5.4 放置分裂出的 `W2`。
+7. 以完成後的新盤面進行下一次 Ways 判定。
+
+### 5.7 OP Jackpot（彩金）
+
+* 彩金階級：**GRAND**、**MAJOR**（連機累進，Linked Progressive）、**MINOR**、**MINI**（紅利彩金，依押注選項變動）。
+* **觸發**：盤面出現 `C1` 時依 `Jackpot_Trigger_Weight` 隨機觸發，與 §6 的「3 顆以上 `C1` 觸發 FG」為**獨立判定**，同一把可同時成立。
+* 同一把同時成立時，**先結算 OP Jackpot，再進入 Free Game**。
+* **投注解鎖**：單場投注達門檻以上才有資格中 GRAND / MAJOR；未達門檻時該階級不列入抽取，UI 需標示未解鎖。
+* **選幣流程**：進入彩金畫面後出現 12 個幣，內容為四種彩金符號；玩家每次翻開 1 個，**集滿 3 個相同彩金符號**即獲得該階彩金並結束。
+* 彩金派彩顯示於獨立的 Jackpot 欄位，**不計入一般 win 欄位**，也**不計入 §9.10 的 Max Win 上限**。
+* 四階面額、種子值、累積比例、觸發率與投注解鎖門檻由 `Parameter` 提供，不寫死於程式。
+
+---
+
+## §6. 免費遊戲（Free Spins / Free Game, FG）
+
+### 6.1 觸發
+
+* BG 所有 Cascade 結束後，最終盤面出現 **3 顆以上 `C1`**，觸發 **10 場** Free Game。
+* `C1` 數量不影響場數：3 顆、4 顆、5 顆以上一律 10 場。
+* `C1` 可位於任意輪、任意位置，同一輪可有多顆。
+* 觸發判定只看 Cascade 結束後仍在盤面上的 `C1` 總數。
+
+### 6.2 FG 玩法
+
+* FG 的盤面生成、Ways 判獎、Cascade、金框四種結果、帶倍數 WILD 與大鬼分裂規則**與 BG 完全相同**。
+* FG 進場盤面帶入 BG 最後一次 Cascade 結束後的盤面。
+* FG 的 Cascade Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`、`×20`（§5.5）。
+* FG 場次使用觸發時的 Bet，不可中途變更。
+* FG 結束後回到 BG，顯示 BG 最後盤面。
+
+### 6.3 Retrigger（加局）
+
+* FG 單場所有 Cascade 結束後，若最終盤面 `C1 >= 3`，固定增加 **5 場**。
+* FG 最後一場仍可 Retrigger。
+* 單次 FG 包含所有 Retrigger，**最多進行 50 場**。
+
+---
+
+## §7. 核心遊戲流程（Base Game）
+
+1. 玩家選擇 Normal Bet 並開始 Spin。
+2. 系統依 `Table Selection Weight` 抽取本局使用的 Base Game 盤面表。
+3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪 × 4 列盤面。
+4. 本局 Cascade Multiplier 從 `×1` 開始。
+5. 依 `Jackpot_Trigger_Weight` 判定本局是否觸發 OP Jackpot（§5.7）；觸發則先完成彩金結算再繼續。
+6. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
+7. 若沒有中獎，停止 Cascade，進入最終 `C1` 統計（第 12 步）。
+8. 若有中獎，依 §4 計算並累加本次 Cascade 得分（套用 Cascade Multiplier 與該連線的 WILD 倍數）。
+9. 依 §5.6 的順序完成消除、下落補牌、金框翻牌、倍數判定與大鬼分裂。
+10. Cascade Multiplier 依 §5.5 推進一階。
+11. 回到第 6 步，以新盤面重新判獎，直到盤面沒有新的中獎。
+12. 所有 Cascade 結束後統計最終盤面 `C1` 總數；若 `C1 >= 3`，觸發 10 場 Free Game（§6）。
+13. 本局累計得分達 `20,000 × Bet` 時依 §9.10 截斷並結束本局。
+
+---
+
+## §8. 押注模式
+
+### 8.1 Extra Bet
+
+* **不提供**。
+
+### 8.2 Buy Feature（購買特色）
+
+* 價格：`250 × Bet`。
+* 購買後使用 `BF_Symbol` 專用物理輪帶與停點權重產生進場盤面，保證含 3 顆以上 `C1`。
+* 進場盤面只用於顯示觸發結果，**不進行 Ways 判獎、不執行 Cascade，也不產生任何得分**。
+* 顯示進場盤面後直接觸發 10 場 FG，進入後沿用 §6 的一般 FG 規則。
+* 可購買條件：`250 × Bet <= 錶底金額` 才可點擊；費用高於餘額時按鈕壓灰。
+* 本作**只提供這一檔** Buy Feature，不提供 40.5× 的一般 Buy Feature，也不提供 Super Free Game 專用權重。
+
+### 8.3 批次購買操作
+
+* 最多可一次選擇 99 次，預設 1 次；達上下限時 ± 按鈕壓灰。
+* `總價 = 250 × Bet × 數量`，確認後依所選數量逐局執行。
+* 第一局後，玩家可逐次按 Spin 繼續，或使用 Auto Spin 自動完成剩餘次數。
+* 剩餘購買次數完成前不可調整 Bet 或取消剩餘次數。
+* 網路中斷或瀏覽器關閉時，剩餘未執行次數取消；已完成局數依平台帳務結果結算。
+* 全部購買局完成後，Bet 回復至購買前設定。
+
+---
+
+## §9. 邊界 / 例外情境（Edge Cases）
+
+### 9.1 金框 / Wild 相關
+
+* **9.1.1 金框只出現在 R2～R4**：R1、R5 不自然產生金框。
+* **9.1.2 金框未中獎不翻牌**：只有實際參與 Ways 的金框才翻成 Wild。
+* **9.1.3 金框位置不補牌**：翻成 Wild 的位置不是空格，不參與該次重力補位。
+* **9.1.4 Wild 不保留金框屬性**：翻牌完成後不會再次以金框身分觸發特色。
+* **9.1.5 Wild 可被後續中獎消除**：`WW` / `W2` 參與後續 Ways 時，與其他非金框中獎符號一樣消除。
+* **9.1.6 多顆金框各自獨立**：同一次 Cascade 有多顆金框中獎時，每顆各自抽一次四種結果，不互相排擠、不降級為單一來源。
+* **9.1.7 R1 永不落 Wild**：金框不出現在 R1，大鬼分裂的合格位置也排除 R1。
+
+### 9.2 帶倍數 WILD 相關
+
+* **9.2.1 盤面帶倍 WILD 數量不設上限**：抽中帶倍結果即給予倍數，不因盤面上已有帶倍 WILD 而降級。
+* **9.2.2 每顆倍數獨立抽取**：同一次 Cascade 產生多顆帶倍 WILD 時，各自依 `Multiplier_Wild_Weight` 獨立抽取倍數。
+* **9.2.3 倍數只算參與連線者**：未參與該次中獎連線的帶倍 WILD 不計入該連線倍率。
+* **9.2.4 同一連線多顆帶倍 WILD 相乘**：該連線倍率 = Cascade Multiplier × 所有參與的帶倍 WILD 倍數連乘。
+* **9.2.5 同一顆 WILD 單線只計一次**：不因該連線的 Ways 數量重複相乘。
+* **9.2.6 不同連線各自計算**：同一次 Cascade 中，不同得分符號的連線各自認列自己用到的帶倍 WILD，互不影響。
+* **9.2.7 乘積無獨立上限**：僅受 §9.10 的 Max Win 約束。
+* **9.2.8 大鬼倍數固定在本體**：分裂出的 `W2` 永不帶倍數。
+
+### 9.3 倍率階梯相關
+
+* **9.3.1 倍數依 Cascade 次序固定**：不是從權重隨機抽取。
+* **9.3.2 到頂不再推進**：BG 到 `×10`、FG 到 `×20` 後維持不變至本次 Cascade 鏈結束。
+* **9.3.3 每 Spin 重置**：BG 回 `×1`、FG 回 `×2`；FG 每一場各自重置。
+* **9.3.4 無中獎不推進**：沒有成立 Ways 的 Cascade 不推進倍數（Cascade 亦同時結束）。
+
+### 9.4 Scatter 相關
+
+* **9.4.1 `C1` 不被一般中獎消除**，也不參與 Ways。
+* **9.4.2 `C1` 不被 Wild 替代**。
+* **9.4.3 FG 觸發只看最終盤面**：以所有 Cascade 結束後仍在盤面上的 `C1` 總數判定。
+* **9.4.4 大鬼分裂不覆蓋 `C1`**。
+
+### 9.5 Free Game 相關
+
+* **9.5.1 場數與 `C1` 數量無關**：3 顆以上一律 10 場。
+* **9.5.2 Retrigger 固定 +5 場**，最後一場仍可 Retrigger。
+* **9.5.3 上限 50 場**：達 50 場後再次成立 Retrigger 不再加場。
+* **9.5.4 FG 內不再觸發 FG 以外的場數變化**：FG 期間 Bet 固定為觸發時的 Bet。
+
+### 9.6 Buy Feature 相關
+
+* **9.6.1 進場盤面不計分**：不判獎、不 Cascade、不推進倍數。
+* **9.6.2 進場盤面保證 `C1 >= 3`**，由 `BF_Symbol` 停點權重保證。
+* **9.6.3 餘額不足不可購買**：`250 × Bet > 餘額` 時按鈕壓灰。
+
+### 9.7 Ways 計算相關
+
+* **9.7.1 必須由 R1 起算**：R1 未命中該符號即不成立。
+* **9.7.2 同符號只取最高連線長度**。
+* **9.7.3 Ways 數為各輪命中數的乘積**（含可替代的 Wild）。
+
+### 9.8 Cascade 相關
+
+* **9.8.1 同格多 Ways 只消除一次**。
+* **9.8.2 補牌沿用本局已選定的盤面表**，不在每格補牌時重新選表。
+* **9.8.3 無中獎即結束**本次 Cascade 鏈。
+
+### 9.9 OP Jackpot 相關
+
+* **9.9.1 與 FG 獨立判定**：同一把可同時成立，先結算彩金再進 FG。
+* **9.9.2 未達投注門檻不列入 GRAND / MAJOR**。
+* **9.9.3 彩金不計入 win 欄位**，下一把 Spin 後消失。
+* **9.9.4 彩金不計入 Max Win 上限**（§9.10）。
+
+### 9.10 Max Win 相關
+
+* **9.10.1 上限為 `20,000 × Bet`**，統計範圍為單一 Spin 的所有 Cascade 得分；由 Buy Feature 或 Scatter 觸發的 FG，其全部場次得分併入觸發該次的 Spin 一併計算。
+* **9.10.2 達上限即截斷**：累計得分達上限時，本局（含未進行完的 FG 場次）立即結束，派彩以上限值計。
+* **9.10.3 上限為自然可及**：不以人工方式壓低分布，倍率結構須讓 `20,000 ×` 在自然機率下可被開出。
+* **9.10.4 彩金不納入**：OP Jackpot 派彩獨立計算。
+
+### 9.11 輪帶配置限制（數學前置條件）
+
+* **9.11.1 金框停點只存在於 R2～R4** 的物理輪帶。
+* **9.11.2 `WW` / `W2` 不得配置於任何物理輪帶**，只能由金框翻牌產生。
+* **9.11.3 `BF_Symbol` 必須保證進場盤面 `C1 >= 3`**。
+
+---
+
+## 附錄 A. 詞彙對照
+
+| 本文用語 | 程式 / 數學模型代號 | 前端 / 規格書用語 |
+| --- | --- | --- |
+| 小鬼（一般 Wild） | `WW` | 小鬼 / WW |
+| 大鬼（分裂 Wild） | `W2` | 大鬼 / W2 |
+| Scatter | `C1` | C1 |
+| 金框版本符號 | `G1`~`G4`、`GA`、`GK`、`GQ`、`GJ`（ID 11~18） | 金框符號（前端規格書寫作 `M1_G`~`M4_G` / `A_G` 等） |
+| Cascade Multiplier | `Cascade_Multiplier` | 連消倍率 / Win Multiplier |
+| 帶倍數 WILD 倍數 | `Multiplier_Wild` | WILD 倍數 |
+| 金框四結果權重 | `Golden_Result_Weight` | 金框翻牌權重 |
+| 大鬼分裂顆數權重 | `Split_Count_Weight` | 分裂顆數 |
+
+---
+
+## 附錄 B. 文件來源 / 參考
+
+| 來源 | 內容 |
+| --- | --- |
+| `JB 工作區/game_spec/101015_ Super Diamond/01_遊戲規格/Lucky Ace Deluxe_遊戲規格.md` v2.2.0 | 前端玩法規格（金框四結果、帶倍數 WILD、5 階倍率、OP Jackpot、Buy Feature） |
+| `Slots/H016_幸運王牌/game_rule.md` | 盤面、Ways 判獎、賠率表、Cascade 補位與 FG 基礎規則 |
+| `Slots/專案需知/數學文件規範.md` | 本文件的章節骨架與必要欄位 |
+| `Slots/其他/iGaming 遊戲代號一覽.xlsx` | Game ID 101015、ParSheet H0451、遊戲類別 |
+
+### 來源優先級
+
+1. 本 `game_rule.md`（玩法正式來源）
+2. `Source/H0451*.xlsx`（數值正式來源）
+3. 前端遊戲規格書（演出與 UI）
+
+### 與前端規格書的差異紀錄
+
+| 項目 | 規格書 | 本文件 | 原因 |
+| --- | --- | --- | --- |
+| 遊戲名稱 / 代號 | Lucky Ace Deluxe、101003、math 沿用 SVN H016 | 超級鑽石 / Super Diamond、101015、math 為本作專屬 H0451 | 依 `iGaming 遊戲代號一覽` 2026-09-23 版；規格書檔頭尚未更名 |
+| Buy Feature | 僅 250×（§9） | 僅 250×，明確排除 H016 的 40.5× 檔與 Super Free Game 權重 | 使用者 2026-09-23 決策 |
+| WILD 倍數池 | ×2 / ×3 / ×5，是否納入 ×10 待 math | ×2 / ×3 / ×5 | 使用者 2026-09-23 決策 |
+| 盤面帶倍 WILD 數量 | 單一盤面最多一顆（Andrew 2026-09-09 為擋相乘而設） | **不設上限，同一連線多顆相乘** | 使用者 2026-09-23 決策；規格書 §5.3 原註明「放寬為兩顆以上須重跑 math 並設乘積上限」，該上限改由 Max Win `20,000 ×` 承擔 |
+| Max Win | 未定，建議參考 6,000× | `20,000 × Bet`，且須為自然機率可及 | 使用者 2026-09-23 決策 |
+| RTP / Variant | 未定 | 本階段僅 92A | 使用者 2026-09-23 決策 |
+
+  </script>
   <script src="./Versions/version_manifest.js"></script>
   <script src="./config.js"></script>
   <script>
-    // 本作尚未建立 config_92A.js（卡片權重待 card-off 大場次校準），先關閉 Card System 欄位。
-    window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+    (() => {
+      const manifest = window.H045_VERSION_MANIFEST;
+      if (!manifest) throw new Error("H045 version manifest was not loaded.");
+      const query = new URLSearchParams(window.location.search);
+      const requested = query.get("version") || manifest.current;
+      const entry = (manifest.versions || []).find(item => item.version === requested || item.math_key === requested)
+        || (manifest.versions || []).find(item => item.version === manifest.current)
+        || (manifest.versions || [])[0];
+      if (!entry) throw new Error("H045 version manifest has no usable version.");
+      const cfg = window.H045_CONFIG;
+      if (!cfg) throw new Error("H045 config was not loaded.");
+      if (String(cfg.excel_version) !== String(entry.version)) {
+        throw new Error(`config.js 版本 ${cfg.excel_version} 與 manifest ${entry.version} 不一致`);
+      }
+      window.H045_VERSION_ENTRY = entry;
+      window.H045_ACTIVE_CONFIG = "base";
+      try { localStorage.setItem("h045MathVersion", entry.version); } catch (_) {}
+    })();
+  </script>
+    <script>
+(() => {
+  "use strict";
+
+  const cfg = window.H045_CONFIG;
+  if (!cfg) throw new Error("H045 config was not loaded.");
+  for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
+    "golden_ids", "max_win_multiplier", "free_spins", "bet_modes", "split_target_reels"]) {
+    if (!cfg[key]) throw new Error("H045 config is missing field: " + key);
+  }
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const WW = 0, W2 = 1, C1 = 2;
+  const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
+  const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
+  const GOLD_BASE = Object.fromEntries(Object.entries(cfg.golden_ids).map(([g, b]) => [Number(g), Number(b)]));
+  const GOLD_IDS = new Set(Object.keys(GOLD_BASE).map(Number));
+  const LADDER = { bg: cfg.cascade_multiplier.bg, fg: cfg.cascade_multiplier.fg };
+  const LADDER_LEN = Math.max(LADDER.bg.length, LADDER.fg.length);
+  const MAX_WIN = Number(cfg.max_win_multiplier);
+  const MAX_FS = Number(cfg.max_free_spins);
+  const SPLIT_REELS = cfg.split_target_reels.map(Number);
+  const BUY = cfg.bet_modes.buy_feature;
+  const BASE_BET = Number(cfg.base_bet) || 100;
+  const START_BALANCE = 10000 * BASE_BET;
+  const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
+  const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 10000));
+  const DROP_SPEED_MULTIPLIER = 9;
+  const tables = {};
+  const state = {
+    balance: START_BALANCE, betIndex: 0, busy: false, auto: false, language: "zh",
+    rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
+    maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
+    fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 }
+  };
+
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    #multiplierWindow{grid-template-columns:repeat(${LADDER_LEN},minmax(0,1fr))!important;transform:none!important}
+    #board .symbol-ww{background:radial-gradient(circle,#1f9f86,#06342b)!important}
+    #board .symbol-w2{background:radial-gradient(circle,#d43c4a,#5b0713)!important}
+    #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
+    #board .symbol-code{display:none!important}
+    #board .cell{position:relative}
+    #board .cell.gold{
+      border:2px solid #ffc94a!important;
+      background:radial-gradient(circle,#4a3a12,#1a1305)!important;
+      box-shadow:inset 0 0 0 1px rgba(255,201,74,.45),0 0 10px rgba(255,201,74,.22)!important;
+    }
+    #board .cell:not(.hit):not(.convert):not(.wild-mark):not(.gold){
+      border:2px solid #122a43!important;
+      border-radius:8px!important;
+      background:#07111f!important;
+      box-shadow:inset 0 0 0 1px rgba(3,9,18,.92),0 1px 2px rgba(0,0,0,.72)!important;
+    }
+    #board .mult-badge{
+      position:absolute;top:2px;right:3px;z-index:3;
+      font:700 11px/15px system-ui,sans-serif;color:#0b1020;
+      background:linear-gradient(180deg,#ffe89a,#ffb347);
+      border-radius:5px;padding:0 4px;
+      box-shadow:0 1px 3px rgba(0,0,0,.55);
+    }
+    #board .symbol-drop,#board .symbol-settle{
+      animation:h045-symbol-drop var(--drop-duration,58ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;
+      will-change:transform;
+    }
+    @keyframes h045-symbol-drop{
+      from{transform:translateY(var(--drop-start,-112%))}
+      82%{transform:translateY(3%)}
+      to{transform:translateY(0)}
+    }
+  </style>`);
+
+  // ===== Config → runtime tables（欄位對應見 Source/xlsx_config_usage_mapping.md）=====
+  for (const [name, raw] of Object.entries(cfg.tables)) {
+    const dropValues = [], dropWeights = [];
+    const dw = raw.drop_weight || {};
+    for (let reel = 0; reel < 5; reel++) {
+      const ids = Object.keys(dw).map(Number).filter(id => Number(dw[id][reel]) > 0).sort((a, b) => a - b);
+      dropValues.push(ids);
+      dropWeights.push(ids.map(id => Number(dw[id][reel])));
+    }
+    const weights = raw.symbol_weight;
+    const cumulative = weights.map(list => { let sum = 0; return list.map(w => sum += Math.max(0, Number(w) || 0)); });
+    const dropCumulative = dropWeights.map(list => { let sum = 0; return list.map(w => sum += Math.max(0, Number(w) || 0)); });
+    tables[name] = {
+      reels: raw.reels, weights, drop_values: dropValues, drop_weights: dropWeights,
+      cumulative, dropCumulative,
+      golden: raw.golden_result_weight || {},
+      split: raw.split_count_weight || {},
+      multWild: raw.multiplier_wild_weight || {}
+    };
+  }
+
+  function pick(values, weights) {
+    const total = weights.reduce((sum, weight) => sum + Math.max(0, Number(weight) || 0), 0);
+    if (total <= 0) return values[0];
+    let target = Math.random() * total;
+    for (let index = 0; index < values.length; index++) {
+      target -= Math.max(0, Number(weights[index]) || 0);
+      if (target < 0) return values[index];
+    }
+    return values.at(-1);
+  }
+  function pickMap(map) {
+    const keys = Object.keys(map);
+    return pick(keys, keys.map(k => map[k]));
+  }
+
+  function drawIndex(tableName, reel) {
+    const cumulative = tables[tableName].cumulative[reel];
+    const target = Math.random() * cumulative.at(-1);
+    let low = 0, high = cumulative.length - 1;
+    while (low < high) { const mid = (low + high) >> 1; if (target < cumulative[mid]) high = mid; else low = mid + 1; }
+    return low;
+  }
+  function draw(tableName, reel) {
+    const table = tables[tableName];
+    const cumulative = table.dropCumulative[reel];
+    const target = Math.random() * cumulative.at(-1);
+    let low = 0, high = cumulative.length - 1;
+    while (low < high) { const mid = (low + high) >> 1; if (target < cumulative[mid]) high = mid; else low = mid + 1; }
+    return Number(table.drop_values[reel][low]);
+  }
+
+  const cloneBoard = board => board.map(reel => reel.slice());
+  const canonical = symbol => GOLD_BASE[symbol] !== undefined ? GOLD_BASE[symbol] : symbol;
+  const zeroMults = () => Array.from({ length: 5 }, () => Array(4).fill(0));
+  const makeBoard = tableName => Array.from({ length: 5 }, (_, reel) => {
+    const symbols = tables[tableName].reels[reel];
+    const stop = drawIndex(tableName, reel);
+    return Array.from({ length: 4 }, (_, row) => Number(symbols[(stop + row) % symbols.length]));
+  });
+  const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
+  const format = value => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const money = credits => format(Number(credits) / BASE_BET);
+  const betUnit = () => BASE_BET * BET_LEVELS[state.betIndex];
+
+  // game_rule §4：賠率 × Ways × Bet × Cascade Multiplier × 該連線帶倍 WILD 乘積
+  function evaluate(board, mults) {
+    let rawPay = 0;
+    const hits = new Set(), details = [];
+    for (const target of SCORE) {
+      const counts = [], positions = [];
+      for (let reel = 0; reel < 5; reel++) {
+        const matched = [];
+        for (let row = 0; row < 4; row++) {
+          const symbol = board[reel][row];
+          if (symbol === WW || symbol === W2 || canonical(symbol) === target) matched.push([reel, row]);
+        }
+        if (!matched.length) break;
+        counts.push(matched.length); positions.push(matched);
+      }
+      if (counts.length < 3) continue;
+      const ways = counts.reduce((product, count) => product * count, 1);
+      const unit = Number(cfg.pays[String(target)][counts.length - 3]);
+      if (!(unit > 0)) continue;
+      // §5.3：該連線用到的所有帶倍 WILD 倍數連乘，每顆只計一次
+      let lineMult = 1;
+      for (const group of positions) {
+        for (const [reel, row] of group) {
+          const symbol = board[reel][row];
+          if ((symbol === WW || symbol === W2) && mults[reel][row]) lineMult *= mults[reel][row];
+        }
+      }
+      const pay = unit * ways * lineMult;
+      rawPay += pay;
+      positions.flat().forEach(([reel, row]) => hits.add(`${reel},${row}`));
+      details.push({ symbol: CODE[target], length: counts.length, ways, lineMult, pay });
+    }
+    return { rawPay, hits, details };
+  }
+
+  // game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果；大鬼倍數固定在本體
+  function flipGolden(board, mults, tableName, goldPositions) {
+    const table = tables[tableName];
+    if (!goldPositions.length || !Object.keys(table.golden).length) return null;
+    const flipped = [], splitKeys = [], bigSources = [];
+    const results = {};
+    for (const [reel, row] of goldPositions) {
+      const outcome = pickMap(table.golden);
+      results[outcome] = (results[outcome] || 0) + 1;
+      board[reel][row] = outcome.startsWith("W2") ? W2 : WW;
+      mults[reel][row] = outcome.endsWith("_M") ? Number(pickMap(table.multWild)) : 0;
+      flipped.push(`${reel},${row}`);
+      if (outcome.startsWith("W2")) bigSources.push([reel, row]);
+    }
+    for (const [sr, srow] of bigSources) {
+      const count = Number(pickMap(table.split));
+      const candidates = [];
+      for (const reel of SPLIT_REELS) {
+        for (let row = 0; row < 4; row++) {
+          const symbol = board[reel][row];
+          if (symbol !== WW && symbol !== W2 && symbol !== C1 && !(reel === sr && row === srow)) candidates.push([reel, row]);
+        }
+      }
+      const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
+      for (const [reel, row] of targets) { board[reel][row] = W2; mults[reel][row] = 0; splitKeys.push(`${reel},${row}`); }
+    }
+    return { flipped, splitKeys, results };
+  }
+
+  function spin(tableName, freeGame = false, budget = 0) {
+    const multipliers = freeGame ? LADDER.fg : LADDER.bg;
+    const board = makeBoard(tableName), mults = zeroMults(), snapshots = [];
+    const cap = MAX_WIN * betUnit();
+    let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
+    const goldenTally = {};
+    snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
+    while (true) {
+      const win = evaluate(board, mults);
+      if (!win.rawPay) break;
+      const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
+      const cascadePay = win.rawPay * multiplier * betUnit();
+      pay += cascadePay;
+      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), hits: [...win.hits], combo, multiplier, cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
+      combo++;
+
+      // 1) 消除（金框不消除，留待補牌後翻牌）
+      const transitionBoard = cloneBoard(board), cleared = [], goldPositions = [];
+      for (const key of win.hits) {
+        const [reel, row] = key.split(",").map(Number);
+        if (GOLD_IDS.has(board[reel][row])) { goldPositions.push([reel, row]); }
+        else { board[reel][row] = -1; mults[reel][row] = 0; transitionBoard[reel][row] = -1; cleared.push(key); }
+      }
+      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), hits: [], cleared, converted: [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Eliminate" });
+
+      // 2) 掉落補牌（game_rule §5.6 步驟 3；Demogame規範 4.3 第 2 類）
+      const motion = [];
+      for (let reel = 0; reel < 5; reel++) {
+        const kept = [];
+        for (let row = 0; row < 4; row++) if (board[reel][row] !== -1) kept.push([board[reel][row], mults[reel][row]]);
+        const need = 4 - kept.length;
+        const fresh = [];
+        for (let index = 0; index < need; index++) fresh.push([draw(tableName, reel), 0]);
+        const merged = fresh.concat(kept);
+        for (let row = 0; row < 4; row++) {
+          board[reel][row] = merged[row][0];
+          mults[reel][row] = merged[row][1];
+          if (row < need) motion.push({ key: `${reel},${row}`, isNew: true, rows: need - row, delay: (need - row) * 18 });
+        }
+      }
+      snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
+
+      // 3) 金框翻牌 + 分裂（game_rule §5.6 步驟 4~6）
+      if (goldPositions.length) {
+        const flip = flipGolden(board, mults, tableName, goldPositions);
+        if (flip) {
+          golden += goldPositions.length;
+          for (const [key, value] of Object.entries(flip.results)) {
+            goldenTally[key] = (goldenTally[key] || 0) + value;
+            if (key.endsWith("_M")) multWild += value;
+            if (key.startsWith("W2")) w2Events += value;
+          }
+          const label = Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ");
+          snapshots.push({ type: "convert", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], converted: flip.flipped, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Golden flip · ${label}` });
+          if (flip.splitKeys.length) {
+            snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], marked: flip.splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Big Ghost split × ${flip.splitKeys.length}` });
+          }
+        }
+      }
+
+      if (budget + pay >= cap) { capped = true; break; }
+    }
+    return {
+      pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, goldenTally, capped,
+      board, mults, snapshots, tableName,
+      maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]
+    };
+  }
+
+  function fgTable() {
+    const weights = cfg.table_weight.fg;
+    return pick(Object.keys(weights), Object.values(weights));
+  }
+  function initialFreeSpins(scatter) {
+    const table = cfg.free_spins;
+    const keys = Object.keys(table).map(Number).sort((a, b) => a - b);
+    const key = Math.min(scatter, keys.at(-1));
+    return Number((table[key] || table[keys[0]]).initial);
+  }
+
+  function freeSession(initialSpins, budget = 0) {
+    let remaining = Number(initialSpins), played = 0, pay = 0, retriggers = 0, capped = false;
+    const spins = [], snapshots = [];
+    const cap = MAX_WIN * betUnit();
+    while (remaining > 0 && played < MAX_FS) {
+      remaining--; played++;
+      const result = spin(fgTable(), true, budget + pay);
+      pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
+      if (result.capped || budget + pay >= cap) { capped = true; break; }
+      if (result.scatter >= 3 && played + remaining < MAX_FS) {
+        const add = Math.min(5, MAX_FS - played - remaining);
+        if (add > 0) { remaining += add; retriggers++; }
+      }
+    }
+    return { pay, played, retriggers, spins, snapshots, capped, maxMultiplier: Math.max(1, ...spins.map(item => item.maxMultiplier)) };
+  }
+
+  // ===== Card System（本作尚未建立 config_92A.js，實際為 Off）=====
+  function cardProfile() { return "oldhand"; }
+  function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
+  function naturalBaseSpin() {
+    const weights = cfg.table_weight.bg;
+    return spin(pick(Object.keys(weights), Object.values(weights)), false, 0);
+  }
+  function pickCard(section, profile = cardProfile()) {
+    const cards = cfg.card_system?.profiles?.[profile]?.[section];
+    if (!cards?.length) return null;
+    return pick(cards, cards.map(card => card.weight));
+  }
+  function cardMatches(card, pay) {
+    const ratio = pay / betUnit();
+    return Number(card.min) < ratio && ratio <= Number(card.max);
+  }
+  function cardDistance(card, pay) {
+    const ratio = pay / betUnit();
+    if (cardMatches(card, pay)) return 0;
+    if (ratio <= Number(card.min)) return Math.max(Number.EPSILON, Number(card.min) - ratio);
+    return ratio - Number(card.max);
+  }
+  function cardSpin(card) {
+    if (!card) return naturalBaseSpin();
+    if (card.type === "free_game") {
+      let last = null;
+      for (let retry = 0; retry < MAX_RETRY; retry++) {
+        last = naturalBaseSpin();
+        if (last.scatter >= 3) return last;
+      }
+      if (last) return last;
+    } else {
+      let nearest = null, nearestDistance = Infinity;
+      for (let retry = 0; retry < MAX_RETRY; retry++) {
+        const result = naturalBaseSpin();
+        if (result.scatter >= 3) continue;
+        if (cardMatches(card, result.pay)) return result;
+        const distance = cardDistance(card, result.pay);
+        if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
+      }
+      if (nearest) return nearest;
+    }
+    return naturalBaseSpin();
+  }
+  function cardFeature(section, initialSpins, budget) {
+    const card = pickCard(section);
+    if (!card) return freeSession(initialSpins, budget);
+    let nearest = null, nearestDistance = Infinity;
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      const result = freeSession(initialSpins, budget);
+      if (cardMatches(card, result.pay)) return result;
+      const distance = cardDistance(card, result.pay);
+      if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
+    }
+    return nearest || freeSession(initialSpins, budget);
+  }
+
+  window.demogameSimulateRound = () => {
+    const base = cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
+    const fgTriggered = base.scatter >= 3;
+    const feature = fgTriggered
+      ? (cardSystemActive() ? cardFeature("free_game", initialFreeSpins(base.scatter), base.pay)
+        : freeSession(initialFreeSpins(base.scatter), base.pay))
+      : null;
+    const totalWin = Math.min(base.pay + Number(feature?.pay || 0), MAX_WIN * betUnit());
+    return {
+      multiplier: totalWin / betUnit(),
+      fgTriggered,
+      maxMultiplier: Math.max(base.maxMultiplier, Number(feature?.maxMultiplier || 1)),
+      retryLimitExceeded: 0,
+      bgCascade: base.combo,
+      fgCascades: feature?.spins?.map(item => item.combo) || []
+    };
+  };
+
+  function renderMultiplier(freeGame, index = 0) {
+    const values = freeGame ? LADDER.fg : LADDER.bg;
+    $("multiplierWindow").classList.remove("roll-one");
+    $("multiplierWindow").innerHTML = values.map((value, step) =>
+      `<span class="multiplier-step ${step < index ? "is-previous" : ""} ${step === Math.min(index, values.length - 1) ? "is-active" : ""}">×${value}</span>`).join("");
+  }
+
+  // 本作無符號美術 → 依 Demogame規範 4.2.3 固定顯示符號框＋代號，不接 Image 開關。
+  function renderBoard(board, hitList = [], options = {}) {
+    const mults = options.mults || zeroMults();
+    const hits = new Set(hitList), cleared = new Set(options.cleared || []), converted = new Set(options.converted || []), marked = new Set(options.marked || []), root = $("board");
+    const drop = new Map((options.drop || []).map(item => [item.key, item]));
+    root.innerHTML = "";
+    for (let row = 3; row >= 0; row--) for (let reel = 0; reel < 5; reel++) {
+      const symbol = board[reel][row];
+      const code = CODE[symbol] || `S${symbol}`;
+      const cell = document.createElement("div");
+      const key = `${reel},${row}`;
+      const motion = drop.get(key), speed = Number($("speedRange").value || 1);
+      const isGold = GOLD_IDS.has(symbol);
+      cell.className = `cell symbol-${String(code).toLowerCase()}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
+      if (motion) {
+        cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
+        const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
+        cell.style.setProperty("--drop-duration", `${dropDuration}ms`);
+        cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
+        if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
+      }
+      cell.innerHTML = `<span class="slot-symbol-label">${code}</span>`;
+      if (mults[reel] && mults[reel][row]) {
+        cell.insertAdjacentHTML("beforeend", `<span class="mult-badge">×${mults[reel][row]}</span>`);
+      }
+      root.append(cell);
+    }
+  }
+
+  function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
+  async function animateReels(initialBoard) {
+    const frames = Math.max(2, Math.round(8 / Number($("speedRange").value || 1)));
+    for (let frame = 0; frame < frames; frame++) {
+      const rolling = cloneBoard(initialBoard);
+      for (let reel = 0; reel < 5; reel++) {
+        const offset = (frames - frame + reel) % 4;
+        for (let row = 0; row < 4; row++) rolling[reel][row] = initialBoard[reel][(row + offset) % 4];
+      }
+      renderBoard(rolling, [], { spinning: true });
+      await wait(55);
+    }
+  }
+
+  function renderWinDetails(snapshot) {
+    $("lineList").innerHTML = snapshot.details?.length
+      ? snapshot.details.map(win => `<div class="line-row"><span>${win.symbol} · ${win.length} reels · ${win.ways} ways${win.lineMult > 1 ? ` · wild ×${win.lineMult}` : ""}</span><span>${format(win.pay)}</span></div>`).join("")
+      : '<div class="line-row"><span>No Win</span><span>0.00</span></div>';
+    $("spinResultList").innerHTML = `<div class="spin-result-row">Run ${snapshot.combo + 1} · ×${snapshot.multiplier} · ${snapshot.message}</div>`;
+    $("carryMultiValue").textContent = snapshot.combo;
+  }
+
+  function renderRngSource(result) {
+    const tier = BET_LEVELS[state.betIndex] * (state.mode === 2 ? BUY.cost_multiplier : 1);
+    const tierName = tier < 2 ? "small_bet" : tier <= 100 ? "medium_bet" : "big_bet";
+    $("rngList").innerHTML = `
+      <div class="rng-row"><span>Card System</span><span>${cardSystemActive() ? "On" : "Off (config_92A.js 未建立)"}</span></div>
+      <div class="rng-row"><span>Source</span><span>${result.tableName} · weighted draw</span></div>
+      <div class="rng-row"><span>Bet Mode</span><span>${state.mode === 2 ? `Buy Feature ${BUY.cost_multiplier}x` : "Normal Bet"}</span></div>
+      <div class="rng-row"><span>bet_tier_amount</span><span>${format(BET_LEVELS[state.betIndex])} · ${tierName}</span></div>
+      <div class="rng-row"><span>Golden flips</span><span>${JSON.stringify(result.goldenTally || {})}</span></div>
+      <div class="rng-row"><span>Mult Wild</span><span>${result.multWild || 0}</span></div>
+      <div class="rng-row"><span>Max Win cap</span><span>${result.capped ? `capped at ${MAX_WIN}x` : `${MAX_WIN}x`}</span></div>`;
+  }
+
+  async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
+    state.snapshots = snapshots; state.snapshotIndex = -1;
+    renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
+    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults }); await wait(delay()); }
+    for (let index = 1; index < snapshots.length; index++) {
+      const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
+      $("messageBar").textContent = snapshot.message || "Cascade";
+      const common = { mults: snapshot.mults };
+      if (snapshot.type === "win") {
+        if (freeGame) {
+          state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
+          $("winValue").textContent = money(state.lastWin);
+        }
+        renderWinDetails(snapshot);
+        renderBoard(snapshot.board, snapshot.hits, common); await wait(delay());
+      } else if (snapshot.type === "eliminate") {
+        renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared || [], converted: snapshot.converted || [] });
+        await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
+      } else if (snapshot.type === "cascade") {
+        renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop || [] });
+        await wait(Math.max(60, 180 / Number($("speedRange").value || 1)));
+      } else if (snapshot.type === "wild-mark") {
+        renderBoard(snapshot.board, [], { ...common, marked: snapshot.marked || [] });
+        await wait(Math.max(160, 360 / Number($("speedRange").value || 1)));
+      } else {
+        renderBoard(snapshot.board, [], { ...common, converted: snapshot.converted || [] }); await wait(delay());
+      }
+    }
+    const finalSnapshot = snapshots.at(-1); if (finalSnapshot) renderBoard(finalSnapshot.board, [], { mults: finalSnapshot.mults });
+    updateDebugButtons();
+  }
+
+  function showSnapshot(index) {
+    if (!state.snapshots.length) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    const snapshot = state.snapshots[state.snapshotIndex];
+    renderBoard(snapshot.board, snapshot.hits, { mults: snapshot.mults, cleared: snapshot.cleared || [], converted: snapshot.converted || [], marked: snapshot.marked || [] });
+    renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo);
+    if (snapshot.type === "win") renderWinDetails(snapshot);
+    updateDebugButtons();
+  }
+  function updateDebugButtons() {
+    $("previousStepBtn").disabled = state.snapshotIndex <= 0;
+    $("nextStepBtn").disabled = state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  function updateStats() {
+    const bet = BET_LEVELS[state.betIndex];
+    $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
+    $("roundCountValue").textContent = state.rounds.toLocaleString();
+    $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
+    $("hitRateValue").textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
+    $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers / state.rounds * 100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)";
+    $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
+    const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
+    document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
+    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = remaining ? "Free Game" : "Base Game";
+    $("spinBtn").textContent = remaining ? "Next FG" : "Spin";
+  }
+  function setBusy(value) {
+    state.busy = value;
+    const inFeature = state.fg.index < state.fg.spins.length;
+    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature;
+    $("betMinusBtn").disabled = value || inFeature || state.betIndex === 0;
+    $("betPlusBtn").disabled = value || inFeature || state.betIndex === BET_LEVELS.length - 1;
+  }
+
+  function activateFeature(feature, mode) {
+    state.fg = { spins: feature.spins, index: 0, total: feature.spins.length, win: 0, mode };
+    state.lastWin = 0; state.fgTriggers++;
+    $("featureStatus").textContent = mode === 2 ? "Buy Feature" : "Free Game Triggered"; updateStats();
+  }
+
+  function buyEntry() {
+    const board = makeBoard(BUY.entry_table), scatter = scatterCount(board);
+    if (scatter < Number(BUY.min_scatter)) throw new Error("BF_Symbol weights must guarantee at least 3 C1");
+    return {
+      pay: 0, combo: 0, scatter, golden: 0, w2Events: 0, multWild: 0, goldenTally: {}, capped: false,
+      board, mults: zeroMults(), tableName: BUY.entry_table, maxMultiplier: 1,
+      snapshots: [{ type: "initial", board: cloneBoard(board), mults: zeroMults(), hits: [], combo: 0, multiplier: 1, message: "BF Entry · No Win" }]
+    };
+  }
+
+  async function playFeatureSpin() {
+    const item = state.fg.spins[state.fg.index]; if (!item) return;
+    const fgWinBase = Number(state.fg.win || 0);
+    await animateSnapshots(item.snapshots, true, fgWinBase); state.fg.index++;
+    state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
+    state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
+    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
+    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
+  }
+
+  async function play(mode = 0) {
+    if (state.busy) return; setBusy(true);
+    try {
+      if (state.fg.index < state.fg.spins.length) {
+        await playFeatureSpin();
+      } else {
+        state.lastWin = 0;
+        state.mode = mode;
+        const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : 1);
+        if (state.balance < cost) throw new Error("Insufficient balance");
+        state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
+        const base = mode === 0
+          ? ($("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
+          : buyEntry();
+        await animateSnapshots(base.snapshots, false); renderRngSource(base);
+        state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
+        state.hitRounds += base.pay > 0 ? 1 : 0;
+        state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
+        $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
+        if (base.scatter >= 3 || mode === 2) {
+          const spins = mode === 2 ? Number(BUY.free_spins) : initialFreeSpins(base.scatter);
+          const section = mode === 2 ? "buy_feature" : "free_game";
+          activateFeature(cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay), mode);
+        }
+      }
+    } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
+    updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(0), 180);
+  }
+
+  function gameRuleInline(text) {
+    return String(text)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  }
+
+  function renderGameRuleMarkdown(markdown) {
+    const lines = String(markdown || "").split(/\r?\n/), output = [];
+    let inCode = false, codeLines = [], sectionOpen = false;
+    const closeSection = () => { if (sectionOpen) output.push("</section>"); sectionOpen = false; };
+    for (let index = 0; index < lines.length; index++) {
+      const raw = lines[index], line = raw.trim();
+      if (line.startsWith("```")) {
+        if (inCode) {
+          if (sectionOpen) output.push(`<div class="help-rule"><pre>${gameRuleInline(codeLines.join("\n"))}</pre></div>`);
+          codeLines = [];
+        }
+        inCode = !inCode;
+        continue;
+      }
+      if (inCode) { codeLines.push(raw); continue; }
+      if (!line || line === "---") continue;
+      const sectionHeading = line.match(/^##\s+(.+)$/);
+      if (sectionHeading) {
+        closeSection();
+        output.push(`<section class="help-section"><h3 class="help-section-title">${gameRuleInline(sectionHeading[1])}</h3>`);
+        sectionOpen = true;
+        continue;
+      }
+      const groupHeading = line.match(/^###\s+(.+)$/);
+      if (groupHeading && sectionOpen) {
+        output.push(`<h4 class="help-group-title">${gameRuleInline(groupHeading[1])}</h4>`);
+        continue;
+      }
+      if (!sectionOpen) continue;
+      if (line.startsWith("|") && line.endsWith("|")) {
+        const tableLines = [];
+        while (index < lines.length && lines[index].trim().startsWith("|") && lines[index].trim().endsWith("|")) {
+          tableLines.push(lines[index].trim()); index++;
+        }
+        index--;
+        const rows = tableLines.map(item => item.slice(1, -1).split("|").map(cell => cell.trim()));
+        const hasSeparator = rows[1]?.every(cell => /^:?-{3,}:?$/.test(cell));
+        const header = hasSeparator ? rows[0] : [];
+        const dataRows = rows.filter((row, rowIndex) => !hasSeparator || rowIndex !== 0 && rowIndex !== 1);
+        if (header.length) output.push(`<h4 class="help-group-title">${header.map(gameRuleInline).join(" · ")}</h4>`);
+        if (dataRows.length) {
+          output.push('<div class="help-payout-grid">');
+          dataRows.forEach(row => output.push(`<div class="help-payout-item">${row.map(gameRuleInline).join(" · ")}</div>`));
+          output.push("</div>");
+        }
+        continue;
+      }
+      if (/^>\s*/.test(line)) { output.push(`<div class="help-rule help-rule-en">${gameRuleInline(line.replace(/^>\s*/, ""))}</div>`); continue; }
+      const listItem = line.match(/^([-*]|\d+\.)\s+(.+)$/);
+      if (listItem) {
+        const prefix = /^\d/.test(listItem[1]) ? `${listItem[1]} ` : "▪ ";
+        output.push(`<div class="help-rule">${prefix}${gameRuleInline(listItem[2])}</div>`);
+        continue;
+      }
+      output.push(`<div class="help-rule">${gameRuleInline(line)}</div>`);
+    }
+    if (codeLines.length && sectionOpen) output.push(`<div class="help-rule"><pre>${gameRuleInline(codeLines.join("\n"))}</pre></div>`);
+    closeSection();
+    return output.join("");
+  }
+
+  function helpHtml() {
+    const markdown = document.getElementById("embeddedH045GameRuleMarkdown")?.textContent?.trim() || "";
+    return renderGameRuleMarkdown(markdown);
+  }
+
+  function applyLanguage() {
+    $("gameId").textContent = cfg.online_game_id || cfg.game_id;
+    $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
+    $("buyFeatureBtn").textContent = (state.language === "zh" ? "購買特色 (" : "Buy Feature (") + BUY.cost_multiplier + "x)";
+  }
+  function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
+  function reset() {
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
+    $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_1"), [], {mults: zeroMults()}); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
+  }
+  function buildBetMenu() {
+    $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
+    $("betMenu").querySelectorAll("button").forEach(button => button.onclick = () => {state.betIndex=Number(button.dataset.index);$("betMenu").classList.add("hidden");updateStats();});
+  }
+  function openVersion(version, configCode) {
+    const url = new URL(location.href);
+    url.searchParams.set("version", version);
+    url.searchParams.set("config", configCode);
+    try {
+      localStorage.setItem("h045MathVersion", version);
+      localStorage.setItem("h045ConfigCode", configCode);
+    } catch (_) {}
+    location.href = url.href;
+  }
+  function renderVersionControls() {
+    const manifest = window.H045_VERSION_MANIFEST || {versions: []};
+    const entry = window.H045_VERSION_ENTRY;
+    const versionSelect = $("versionSelect");
+    const configSelect = $("configSelect");
+    versionSelect.innerHTML = "";
+    for (const item of manifest.versions || []) {
+      const option = document.createElement("option");
+      option.value = item.version;
+      option.textContent = item.math_key || String(item.version);
+      versionSelect.appendChild(option);
+    }
+    versionSelect.value = entry?.version || "";
+    // 只列實際存在的 Config；config_92A.js 尚未建立，故目前僅 base。
+    configSelect.innerHTML = "";
+    const option = document.createElement("option");
+    option.value = "base";
+    option.textContent = `H0451 · v${entry?.version || "1"}`;
+    configSelect.appendChild(option);
+    configSelect.value = "base";
+    configSelect.disabled = true;
+  }
+
+  $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2);
+  $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=state.auto?"Stop":"Auto";if(state.auto&&!state.busy)play(0);};
+  $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);updateStats();};
+  $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent=`x${$("speedRange").value}`;
+  $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
+  $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
+  $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
+  $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
+  
+  document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
+})();
   </script>
   <script>
-    "use strict";
-
-    // ===== Config =====
-    const CFG = window.H045_CONFIG;
-    if (!CFG) {
-      document.getElementById("messageBar").textContent = "config.js 載入失敗：找不到 window.H045_CONFIG";
-      throw new Error("H045_CONFIG missing");
-    }
-    for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
-      "golden_ids", "max_win_multiplier", "free_spins", "bet_modes"]) {
-      if (!CFG[key]) {
-        document.getElementById("messageBar").textContent = `config.js 欄位不完整：缺少 ${key}`;
-        throw new Error(`config field missing: ${key}`);
-      }
-    }
-
-    const REELS = CFG.reel_num;
-    const ROWS = CFG.window_size;
-    const NAME = CFG.symbol_names;
-    const GOLD_TO_BASE = Object.fromEntries(Object.entries(CFG.golden_ids).map(([g, b]) => [Number(g), Number(b)]));
-    const GOLD_IDS = new Set(Object.keys(GOLD_TO_BASE).map(Number));
-    const WW = 0, W2 = 1, C1 = 2;
-    const SCORE_SYMBOLS = Object.keys(CFG.pays).map(Number).filter((id) => !GOLD_IDS.has(id));
-    const LADDER = { bg: CFG.cascade_multiplier.bg, fg: CFG.cascade_multiplier.fg };
-    const MAX_WIN = CFG.max_win_multiplier;
-    const MAX_FS = CFG.max_free_spins;
-    const SPLIT_REELS = CFG.split_target_reels;
-    const BUY = CFG.bet_modes.buy_feature;
-    const MODE_NORMAL = 0, MODE_BUY = 2;
-    const BET_LEVELS = [1, 2, 5, 10, 20, 50, 100];
-
-    document.getElementById("buyFeatureBtn").textContent = `Buy Feature (${BUY.cost_multiplier}x)`;
-
-    // ===== 權重工具（與 Simulator 同口徑：逐格加權抽取）=====
-    function cumulative(weights) {
-      const out = [];
-      let running = 0;
-      for (const w of weights) { running += Math.max(0, Number(w) || 0); out.push(running); }
-      return { out, total: running };
-    }
-    function pickIndex(cum, total, forced) {
-      if (forced !== undefined && forced !== null) return forced;
-      const roll = Math.random() * total;
-      let lo = 0, hi = cum.length - 1;
-      while (lo < hi) { const mid = (lo + hi) >> 1; if (roll < cum[mid]) hi = mid; else lo = mid + 1; }
-      return lo;
-    }
-
-    const TABLES = {};
-    for (const [key, raw] of Object.entries(CFG.tables)) {
-      const reels = raw.reels.map((strip, i) => {
-        const c = cumulative(raw.symbol_weight[i]);
-        return { strip, cum: c.out, total: c.total };
-      });
-      const drop = [];
-      const dropRaw = raw.drop_weight;
-      for (let r = 0; r < REELS; r += 1) {
-        const ids = Object.keys(dropRaw).map(Number).filter((id) => Number(dropRaw[id][r]) > 0).sort((a, b) => a - b);
-        const c = cumulative(ids.map((id) => dropRaw[id][r]));
-        drop.push({ ids, cum: c.out, total: c.total });
-      }
-      const gKeys = Object.keys(raw.golden_result_weight);
-      const gc = cumulative(gKeys.map((k) => raw.golden_result_weight[k]));
-      const sKeys = Object.keys(raw.split_count_weight).map(Number).sort((a, b) => a - b);
-      const sc = cumulative(sKeys.map((k) => raw.split_count_weight[k]));
-      const mKeys = Object.keys(raw.multiplier_wild_weight).map(Number).sort((a, b) => a - b);
-      const mc = cumulative(mKeys.map((k) => raw.multiplier_wild_weight[k]));
-      TABLES[key] = {
-        reels, drop,
-        golden: { keys: gKeys, cum: gc.out, total: gc.total },
-        split: { keys: sKeys, cum: sc.out, total: sc.total },
-        mult: { keys: mKeys, cum: mc.out, total: mc.total },
-      };
-    }
-
-    function pickTable(group) {
-      const weights = CFG.table_weight[group];
-      const keys = Object.keys(weights);
-      const c = cumulative(keys.map((k) => weights[k]));
-      return keys[pickIndex(c.out, c.total)];
-    }
-
-    function canonical(symbol) {
-      return GOLD_TO_BASE[symbol] !== undefined ? GOLD_TO_BASE[symbol] : symbol;
-    }
-
-    // ===== 盤面 =====
-    function newBoard(tableKey, forcedStops) {
-      const table = TABLES[tableKey];
-      const symbols = [], mults = [], stops = [];
-      for (let r = 0; r < REELS; r += 1) {
-        const reel = table.reels[r];
-        const stop = forcedStops ? (forcedStops[r] % reel.strip.length + reel.strip.length) % reel.strip.length
-          : pickIndex(reel.cum, reel.total);
-        stops.push(stop);
-        const col = [], mcol = [];
-        for (let i = 0; i < ROWS; i += 1) {
-          col.push(reel.strip[(stop + i) % reel.strip.length]);
-          mcol.push(0);
-        }
-        symbols.push(col); mults.push(mcol);
-      }
-      return { symbols, mults, stops, tableKey };
-    }
-
-    // game_rule §4：賠率 x Ways x Bet x Cascade Multiplier x 該連線帶倍 WILD 乘積
-    function evaluate(symbols, mults) {
-      let raw = 0;
-      const hits = new Set();
-      const wins = [];
-      for (const target of SCORE_SYMBOLS) {
-        const counts = [], groups = [];
-        for (let r = 0; r < REELS; r += 1) {
-          const matched = [];
-          for (let row = 0; row < ROWS; row += 1) {
-            const s = symbols[r][row];
-            if (s === WW || s === W2 || canonical(s) === target) matched.push(row);
-          }
-          if (!matched.length) break;
-          counts.push(matched.length); groups.push(matched);
-        }
-        const length = counts.length;
-        if (length < 3) continue;
-        let ways = 1;
-        for (const c of counts) ways *= c;
-        const unit = Number(CFG.pays[target][length - 3] || 0);
-        if (unit <= 0) continue;
-        let lineMult = 1;
-        for (let r = 0; r < length; r += 1) {
-          for (const row of groups[r]) {
-            const s = symbols[r][row];
-            if ((s === WW || s === W2) && mults[r][row]) lineMult *= mults[r][row];
-          }
-        }
-        const pay = unit * ways * lineMult;
-        raw += pay;
-        wins.push({ symbol: target, length, ways, lineMult, pay });
-        for (let r = 0; r < length; r += 1) for (const row of groups[r]) hits.add(`${r},${row}`);
-      }
-      return { raw, hits, wins };
-    }
-
-    // game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果
-    function flipGolden(table, symbols, mults, goldPositions, tally) {
-      const bigSources = [];
-      for (const [r, row] of goldPositions) {
-        const outcome = table.golden.keys[pickIndex(table.golden.cum, table.golden.total)];
-        tally.golden[outcome] = (tally.golden[outcome] || 0) + 1;
-        symbols[r][row] = outcome.startsWith("W2") ? W2 : WW;
-        if (outcome.endsWith("_M")) {
-          const value = table.mult.keys[pickIndex(table.mult.cum, table.mult.total)];
-          mults[r][row] = value;
-          tally.multWild += 1;
-        } else {
-          mults[r][row] = 0;
-        }
-        if (outcome.startsWith("W2")) bigSources.push([r, row]);
-      }
-      for (const [sr, srow] of bigSources) {
-        const count = table.split.keys[pickIndex(table.split.cum, table.split.total)];
-        const spots = [];
-        for (const r of SPLIT_REELS) {
-          for (let row = 0; row < ROWS; row += 1) {
-            const s = symbols[r][row];
-            if (s !== WW && s !== W2 && s !== C1 && !(r === sr && row === srow)) spots.push([r, row]);
-          }
-        }
-        for (let i = spots.length - 1; i > 0; i -= 1) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [spots[i], spots[j]] = [spots[j], spots[i]];
-        }
-        for (const [r, row] of spots.slice(0, count)) { symbols[r][row] = W2; mults[r][row] = 0; }
-      }
-    }
-
-    /** 一次完整 Spin（含所有 Cascade）。回傳每段快照供演出與 Debug 重現。 */
-    function runSpin(tableKey, freeGame, bet, budget, forcedStops) {
-      const table = TABLES[tableKey];
-      const { symbols, mults, stops } = newBoard(tableKey, forcedStops);
-      const ladder = freeGame ? LADDER.fg : LADDER.bg;
-      const steps = [];
-      const tally = { golden: {}, multWild: 0 };
-      let pay = 0, cascades = 0, capped = false;
-      const cap = MAX_WIN * bet;
-
-      for (; ;) {
-        const evalResult = evaluate(symbols, mults);
-        if (evalResult.raw <= 0) break;
-        const multiplier = ladder[Math.min(cascades, ladder.length - 1)];
-        const gained = evalResult.raw * multiplier * bet;
-        pay += gained;
-        cascades += 1;
-        steps.push({
-          kind: "win",
-          board: symbols.map((c) => c.slice()),
-          mults: mults.map((c) => c.slice()),
-          hits: new Set(evalResult.hits),
-          wins: evalResult.wins,
-          multiplier, gained, cascade: cascades,
-        });
-
-        const goldPositions = [];
-        for (const key of evalResult.hits) {
-          const [r, row] = key.split(",").map(Number);
-          if (GOLD_IDS.has(symbols[r][row])) goldPositions.push([r, row]);
-          else { symbols[r][row] = -1; mults[r][row] = 0; }
-        }
-        // 掉落補牌（Demogame規範 4.3 第 2 類）：先重力下落、上方補新符號
-        for (let r = 0; r < REELS; r += 1) {
-          const kept = [];
-          for (let row = 0; row < ROWS; row += 1) {
-            if (symbols[r][row] !== -1) kept.push([symbols[r][row], mults[r][row]]);
-          }
-          const need = ROWS - kept.length;
-          const fresh = [];
-          for (let i = 0; i < need; i += 1) {
-            const d = table.drop[r];
-            fresh.push([d.ids[pickIndex(d.cum, d.total)], 0]);
-          }
-          const merged = fresh.concat(kept);
-          for (let row = 0; row < ROWS; row += 1) { symbols[r][row] = merged[row][0]; mults[r][row] = merged[row][1]; }
-        }
-        if (goldPositions.length) flipGolden(table, symbols, mults, goldPositions, tally);
-        steps.push({
-          kind: "refill",
-          board: symbols.map((c) => c.slice()),
-          mults: mults.map((c) => c.slice()),
-          hits: new Set(), wins: [], multiplier, gained: 0, cascade: cascades,
-        });
-
-        if (budget + pay >= cap) { capped = true; break; }
-      }
-
-      let scatter = 0;
-      for (let r = 0; r < REELS; r += 1) for (let row = 0; row < ROWS; row += 1) if (symbols[r][row] === C1) scatter += 1;
-      return { pay, cascades, scatter, steps, stops, tableKey, symbols, mults, tally, capped };
-    }
-
-    /** 一整個回合（BG + 觸發的 FG），與 Simulator 的 round() 同流程。 */
-    function runRound(mode, bet, options = {}) {
-      const cap = MAX_WIN * bet;
-      if (mode === MODE_BUY) {
-        const entry = newBoard(BUY.entry_table);
-        let sc = 0;
-        for (let r = 0; r < REELS; r += 1) for (let row = 0; row < ROWS; row += 1) if (entry.symbols[r][row] === C1) sc += 1;
-        const fg = runFreeSession(BUY.free_spins, bet, 0);
-        fg.entry = entry;
-        fg.entryScatter = sc;
-        fg.payBg = 0;
-        fg.payTotal = Math.min(fg.payFg, cap);
-        return fg;
-      }
-      let bg;
-      let guard = 0;
-      do {
-        bg = runSpin(pickTable("bg"), false, bet, 0, options.forcedStops);
-        guard += 1;
-      } while (options.forceFg && bg.scatter < 3 && guard < 2000);
-
-      const round = {
-        payBg: bg.pay, payFg: 0, bg, fgSpins: [], fgTriggered: false,
-        retriggers: 0, capped: bg.capped, entry: null,
-      };
-      if (bg.scatter >= 3) {
-        const initial = (CFG.free_spins[Math.min(bg.scatter, 5)] || CFG.free_spins[3]).initial;
-        const fg = runFreeSession(initial, bet, bg.pay);
-        round.payFg = fg.payFg;
-        round.fgSpins = fg.fgSpins;
-        round.fgTriggered = true;
-        round.retriggers = fg.retriggers;
-        round.capped = round.capped || fg.capped;
-      }
-      round.payTotal = Math.min(round.payBg + round.payFg, cap);
-      return round;
-    }
-
-    function runFreeSession(initialSpins, bet, budget) {
-      const cap = MAX_WIN * bet;
-      let remaining = initialSpins, played = 0, payFg = 0, retriggers = 0, capped = false;
-      const fgSpins = [];
-      while (remaining > 0 && played < MAX_FS) {
-        remaining -= 1; played += 1;
-        const spin = runSpin(pickTable("fg"), true, bet, budget + payFg);
-        payFg += spin.pay;
-        fgSpins.push(spin);
-        if (budget + payFg >= cap) { capped = true; break; }
-        if (spin.scatter >= 3 && played + remaining < MAX_FS) {
-          const add = Math.min(5, MAX_FS - played - remaining);
-          if (add > 0) { remaining += add; retriggers += 1; }
-        }
-      }
-      return { payFg, fgSpins, retriggers, capped, payBg: 0, fgTriggered: true, totalSpins: played };
-    }
-
-    // ===== 共用 Simulation 介面（不播動畫、不動盤面與餘額）=====
-    window.demogameSimulateRound = function (context = {}) {
-      const bet = Number(context.bet || activeBet());
-      const mode = context.betMode === MODE_BUY ? MODE_BUY : MODE_NORMAL;
-      const round = runRound(mode, bet);
-      const wager = mode === MODE_BUY ? bet * BUY.cost_multiplier : bet;
-      return {
-        bet: wager,
-        coinIn: wager,
-        win: round.payTotal,
-        totalWin: round.payTotal,
-        freeGameTriggered: !!round.fgTriggered,
-        freeSpins: round.fgSpins ? round.fgSpins.length : 0,
-        multiplier: wager > 0 ? round.payTotal / wager : 0,
-      };
-    };
-
-    // ===== UI =====
-    const el = {};
-    for (const id of ["board", "messageBar", "balanceValue", "betValue", "winValue", "spinBtn", "autoBtn",
-      "betBtn", "betMinusBtn", "betPlusBtn", "betMenu", "speedRange", "speedValue", "modeText",
-      "featureStatus", "carryMultiValue", "multWildValue", "fgLeftPill", "fgLeftValue",
-      "normalBetBtn", "buyFeatureBtn", "multiplierWindow", "rngList", "lineList", "spinResultList",
-      "liveLogBody", "clearLogBtn", "roundCountValue", "rtpValue", "hitRateValue", "fgTriggerValue",
-      "maxMultiplierValue", "reelRngInput", "setRngResetBtn", "forceFgInput", "resetBtn"]) {
-      el[id] = document.getElementById(id);
-    }
-
-    const state = {
-      balance: 10000, betIndex: 0, mode: MODE_NORMAL, busy: false, auto: false,
-      speed: 1, rounds: 0, coinIn: 0, win: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0,
-    };
-
-    function activeBet() { return BET_LEVELS[state.betIndex]; }
-    function wager() { return state.mode === MODE_BUY ? activeBet() * BUY.cost_multiplier : activeBet(); }
-    function fmt(value, digits = 2) {
-      return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
-    }
-    function delay(ms) { return new Promise((r) => setTimeout(r, Math.max(16, ms / state.speed))); }
-
-    function log(text) {
-      if (!el.liveLogBody) return;
-      const line = document.createElement("div");
-      line.textContent = text;
-      el.liveLogBody.prepend(line);
-      while (el.liveLogBody.childElementCount > 300) el.liveLogBody.lastElementChild.remove();
-    }
-
-    function renderLadder(cascadeIndex, freeGame) {
-      const ladder = freeGame ? LADDER.fg : LADDER.bg;
-      el.multiplierWindow.innerHTML = "";
-      ladder.forEach((value, index) => {
-        const step = document.createElement("div");
-        step.className = "multiplier-step" + (index === Math.min(cascadeIndex, ladder.length - 1) ? " is-active" : "");
-        step.textContent = `x${value}`;
-        el.multiplierWindow.appendChild(step);
-      });
-    }
-
-    function renderBoard(symbols, mults, hits, cleared) {
-      el.board.innerHTML = "";
-      for (let row = 0; row < ROWS; row += 1) {
-        for (let r = 0; r < REELS; r += 1) {
-          const symbol = symbols[r][row];
-          const cell = document.createElement("div");
-          const classes = ["cell"];
-          if (GOLD_IDS.has(symbol)) classes.push("gold", "keep-symbol-frame");
-          if (symbol === WW) classes.push("wild-ww");
-          if (symbol === W2) classes.push("wild-w2");
-          if (symbol === C1) classes.push("scatter");
-          if (hits && hits.has(`${r},${row}`)) classes.push("hit");
-          if (cleared && cleared.has(`${r},${row}`)) classes.push("cleared");
-          cell.className = classes.join(" ");
-          const label = document.createElement("span");
-          label.className = "slot-symbol-label";
-          label.textContent = NAME[String(symbol)] || `S${symbol}`;
-          cell.appendChild(label);
-          if (mults && mults[r][row]) {
-            const badge = document.createElement("span");
-            badge.className = "mult-badge";
-            badge.textContent = `x${mults[r][row]}`;
-            cell.appendChild(badge);
-          }
-          el.board.appendChild(cell);
-        }
-      }
-    }
-
-    function renderRng(spin) {
-      if (!el.rngList) return;
-      el.rngList.innerHTML = "";
-      const rows = [["table", spin.tableKey], ["draw", "weighted draw (per-stop symbol_weight)"]];
-      spin.stops.forEach((stop, index) => {
-        rows.push([`R${index + 1} stop`, `${stop} / ${TABLES[spin.tableKey].reels[index].strip.length}`]);
-      });
-      for (const [key, value] of rows) {
-        const line = document.createElement("div");
-        line.className = "rng-row";
-        line.innerHTML = `<span class="k">${key}</span><span class="v">${value}</span>`;
-        el.rngList.appendChild(line);
-      }
-    }
-
-    function renderWins(wins, multiplier, bet) {
-      if (!el.lineList) return;
-      el.lineList.innerHTML = "";
-      for (const win of wins) {
-        const line = document.createElement("div");
-        line.className = "line-row";
-        const detail = `${NAME[String(win.symbol)]} x${win.length}　ways ${win.ways}` +
-          (win.lineMult > 1 ? `　wild x${win.lineMult}` : "") + `　cascade x${multiplier}`;
-        line.innerHTML = `<span class="k">${detail}</span><span class="v">${fmt(win.pay * multiplier * bet)}</span>`;
-        el.lineList.appendChild(line);
-      }
-    }
-
-    function renderSpinResult(round, bet) {
-      if (!el.spinResultList) return;
-      const golden = {};
-      const collect = (spin) => {
-        for (const [k, v] of Object.entries(spin.tally.golden)) golden[k] = (golden[k] || 0) + v;
-      };
-      if (round.bg) collect(round.bg);
-      (round.fgSpins || []).forEach(collect);
-      const rows = [
-        ["bet mode", state.mode === MODE_BUY ? `Buy Feature (${BUY.cost_multiplier}x)` : "Normal Bet"],
-        ["base bet", fmt(bet)],
-        ["bet amount", fmt(wager())],
-        ["bet_tier_amount", fmt(state.mode === MODE_BUY ? wager() / BUY.cost_multiplier : wager())],
-        ["bet tier", (() => { const t = state.mode === MODE_BUY ? wager() / BUY.cost_multiplier : wager(); return t < 2 ? "small_bet" : t <= 100 ? "medium_bet" : "big_bet"; })()],
-        ["card system", "off (config_92A.js 尚未建立)"],
-        ["pay BG", fmt(round.payBg || 0)],
-        ["pay FG", fmt(round.payFg || 0)],
-        ["total win", fmt(round.payTotal || 0)],
-        ["win multiplier", `${fmt((round.payTotal || 0) / wager())} x`],
-        ["max win capped", round.capped ? `yes (${MAX_WIN}x)` : "no"],
-        ["golden flips", JSON.stringify(golden)],
-      ];
-      el.spinResultList.innerHTML = "";
-      for (const [key, value] of rows) {
-        const line = document.createElement("div");
-        line.className = "rng-row";
-        line.innerHTML = `<span class="k">${key}</span><span class="v">${value}</span>`;
-        el.spinResultList.appendChild(line);
-      }
-    }
-
-    function updatePlayer() {
-      el.balanceValue.textContent = fmt(state.balance, 0);
-      el.betValue.textContent = fmt(activeBet());
-      el.betBtn.textContent = `Bet ${fmt(activeBet())}`;
-    }
-
-    function updateStats() {
-      el.roundCountValue.textContent = state.rounds.toLocaleString();
-      el.rtpValue.textContent = state.coinIn > 0 ? `${(state.win / state.coinIn * 100).toFixed(2)}%` : "0.00%";
-      el.hitRateValue.textContent = state.rounds > 0 ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
-      el.fgTriggerValue.textContent = state.fgTriggers.toLocaleString();
-      el.maxMultiplierValue.textContent = `x${state.maxMultiplier.toFixed(2)}`;
-    }
-
-    function forcedStopsFromInput() {
-      const raw = (el.reelRngInput?.value || "").trim();
-      if (!raw) return null;
-      const parts = raw.split(/[\s,]+/).map(Number);
-      if (parts.length !== REELS || parts.some((n) => !Number.isFinite(n) || n < 0)) {
-        el.messageBar.textContent = `Reel RNG 需為 ${REELS} 個非負整數`;
-        return null;
-      }
-      return parts;
-    }
-
-    async function playSpin() {
-      if (state.busy) return;
-      const cost = wager();
-      if (state.balance < cost) { el.messageBar.textContent = "Credit 不足"; return; }
-      state.busy = true;
-      el.spinBtn.disabled = true;
-      state.balance -= cost;
-      el.winValue.textContent = "0";
-      updatePlayer();
-
-      const bet = activeBet();
-      const forcedStops = state.mode === MODE_NORMAL ? forcedStopsFromInput() : null;
-      const round = runRound(state.mode, bet, { forceFg: !!el.forceFgInput?.checked, forcedStops });
-
-      // --- BG 演出 ---
-      if (round.entry) {
-        el.modeText.textContent = "Buy Feature";
-        renderBoard(round.entry.symbols, round.entry.mults, null, null);
-        el.messageBar.textContent = `Buy Feature 進場盤（C1 x${round.entryScatter}，不判獎）`;
-        renderLadder(0, true);
-        await delay(700);
-      } else {
-        el.modeText.textContent = "Base Game";
-        renderRng(round.bg);
-        await playSteps(round.bg, bet, false);
-      }
-
-      // --- FG 演出 ---
-      if (round.fgSpins && round.fgSpins.length) {
-        el.fgLeftPill.classList.remove("hidden");
-        el.modeText.textContent = "Free Game";
-        for (let i = 0; i < round.fgSpins.length; i += 1) {
-          el.fgLeftValue.textContent = `${i + 1}/${round.fgSpins.length}`;
-          renderRng(round.fgSpins[i]);
-          await playSteps(round.fgSpins[i], bet, true);
-        }
-        el.fgLeftPill.classList.add("hidden");
-        el.modeText.textContent = "Base Game";
-      }
-
-      state.balance += round.payTotal;
-      state.rounds += 1;
-      state.coinIn += cost;
-      state.win += round.payTotal;
-      if (round.payTotal > 0) state.hits += 1;
-      if (round.fgTriggered) state.fgTriggers += 1;
-      state.maxMultiplier = Math.max(state.maxMultiplier, round.payTotal / cost);
-      el.winValue.textContent = fmt(round.payTotal);
-      el.messageBar.textContent = round.payTotal > 0
-        ? `Win ${fmt(round.payTotal)}（${fmt(round.payTotal / cost)}x）${round.capped ? " — Max Win 截斷" : ""}`
-        : "No win";
-      renderSpinResult(round, bet);
-      log(`[${state.rounds}] ${state.mode === MODE_BUY ? "BF" : "NB"} bet=${fmt(cost)} win=${fmt(round.payTotal)}` +
-        (round.fgTriggered ? ` FG x${round.fgSpins.length}` : ""));
-      updatePlayer();
-      updateStats();
-      state.busy = false;
-      el.spinBtn.disabled = false;
-      if (state.auto) setTimeout(playSpin, 260 / state.speed);
-    }
-
-    async function playSteps(spin, bet, freeGame) {
-      let multWild = 0;
-      renderLadder(0, freeGame);
-      renderBoard(spin.steps.length ? spin.steps[0].board : spin.symbols,
-        spin.steps.length ? spin.steps[0].mults : spin.mults, null, null);
-      await delay(320);
-      for (const step of spin.steps) {
-        if (step.kind === "win") {
-          renderLadder(step.cascade - 1, freeGame);
-          el.carryMultiValue.textContent = `x${step.multiplier}`;
-          renderBoard(step.board, step.mults, step.hits, null);
-          renderWins(step.wins, step.multiplier, bet);
-          el.messageBar.textContent = `Cascade ${step.cascade}　x${step.multiplier}　+${fmt(step.gained)}`;
-          await delay(420);
-          renderBoard(step.board, step.mults, null, step.hits);
-          await delay(200);
-        } else {
-          multWild = 0;
-          for (let r = 0; r < REELS; r += 1) for (let row = 0; row < ROWS; row += 1) if (step.mults[r][row]) multWild += 1;
-          el.multWildValue.textContent = String(multWild);
-          renderBoard(step.board, step.mults, null, null);
-          await delay(300);
-        }
-      }
-      if (!spin.steps.length) {
-        renderBoard(spin.symbols, spin.mults, null, null);
-        el.carryMultiValue.textContent = `x${(freeGame ? LADDER.fg : LADDER.bg)[0]}`;
-      }
-      el.featureStatus.textContent = spin.scatter >= 3 ? `C1 x${spin.scatter}` : "";
-    }
-
-    // ===== 事件 =====
-    el.spinBtn.addEventListener("click", playSpin);
-    el.autoBtn.addEventListener("click", () => {
-      state.auto = !state.auto;
-      el.autoBtn.classList.toggle("is-active", state.auto);
-      if (state.auto && !state.busy) playSpin();
-    });
-    el.betMinusBtn.addEventListener("click", () => { state.betIndex = Math.max(0, state.betIndex - 1); updatePlayer(); });
-    el.betPlusBtn.addEventListener("click", () => { state.betIndex = Math.min(BET_LEVELS.length - 1, state.betIndex + 1); updatePlayer(); });
-    el.speedRange.addEventListener("input", () => {
-      state.speed = Number(el.speedRange.value);
-      el.speedValue.textContent = `x${state.speed}`;
-    });
-    el.normalBetBtn.addEventListener("click", () => {
-      state.mode = MODE_NORMAL;
-      el.normalBetBtn.classList.add("is-active");
-      el.buyFeatureBtn.classList.remove("is-active");
-    });
-    el.buyFeatureBtn.addEventListener("click", () => {
-      state.mode = MODE_BUY;
-      el.buyFeatureBtn.classList.add("is-active");
-      el.normalBetBtn.classList.remove("is-active");
-    });
-    el.clearLogBtn?.addEventListener("click", () => { el.liveLogBody.innerHTML = ""; });
-    el.setRngResetBtn?.addEventListener("click", () => { el.reelRngInput.value = ""; });
-    el.resetBtn?.addEventListener("click", () => {
-      Object.assign(state, {
-        balance: 10000, rounds: 0, coinIn: 0, win: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0,
-      });
-      updatePlayer(); updateStats();
-      el.messageBar.textContent = "Ready — press Spin";
-    });
-
-    // ===== 啟動 =====
-    renderLadder(0, false);
-    renderBoard(newBoard("bg_1").symbols, null, null, null);
-    updatePlayer();
-    updateStats();
-    el.carryMultiValue.textContent = `x${LADDER.bg[0]}`;
+  // 本作尚未建立 config_92A.js（卡片權重待 card-off 大場次校準）
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+  window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script src="../demogame_common.js?v=2"></script>
 </body>

@@ -12,7 +12,9 @@
       "sources": {
         "base": "Versions/1/Source/H0451.xlsx"
       },
-      "configs": {},
+      "configs": {
+        "base": "config.js"
+      },
       "changes": [
         "由 H0161.xlsx 衍生建立 H045 超級鑽石基礎數學模型（非競品衍生，基礎版本自 1 起算）。",
         "移除 SF_Symbol 三張表：本作只有一檔 250x Buy Feature，購買後走一般 FG 權重。",
@@ -22,7 +24,8 @@
         "自然機率校準：金框物理停點保留約 55%、Golden_Result_Weight 82/8/8/2；Simulator card-off 50 萬局 RTP 446.01%、Hit 36.99%、FG 週期 1/116、最大 15,115x。",
         "尚未建立 H045192A.xlsx 與 config_92A.js：卡片權重需以 card-off 大場次報表（NB 1e9）校準；Simulator 已完成，可執行該場次。",
         "新增 Simulator.py（Console 欄位、報表命名與 Multiplier Line 版面依現行模擬程式規範；無 SF 欄位）。"
-      ]
+      ],
+      "math_key": "1"
     }
   ]
 }
