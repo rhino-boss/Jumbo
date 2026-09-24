@@ -1959,7 +1959,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body>
@@ -2090,6 +2090,24 @@
         <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
+        <ul>
+          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
+          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
+          <li>盤面各輪依有效高度垂直置中（3／4／5／5／4／3 對稱），取代頂端對齊；以 <code>top</code> 位移實作，不影響中獎、掉落與滾動動畫。</li>
+          <li>無美術時的 SVG 星形代號改為標準代號標籤 <code>slot-symbol-label</code>。</li>
+          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
+          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      </div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
@@ -2646,37 +2664,43 @@
     }
   };
 
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.gold, lastBoardRender.hit);
+    }
+  };
+
+  function symbolAsset(symbol) {
+    if (!useSymbolImages || symbol === 99) return "";
+    return SYMBOL_ASSET_BY_CODE[CODE[symbol] || `S${symbol}`] || "";
+  }
+
   function symbolMarkup(symbol, isGold) {
     if (symbol === 99) return "";
     const code = CODE[symbol] || `S${symbol}`;
-    const asset = SYMBOL_ASSET_BY_CODE[code];
+    const asset = symbolAsset(symbol);
     if (asset) {
       const frame = isGold
         ? `<img class="h015-frame-img" src="${GOLD_FRAME_ASSET}" alt="" aria-hidden="true" draggable="false">`
         : "";
       return `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${asset}" alt="${code}" draggable="false">${frame}</div>`;
     }
-    const accent = code === "WW" ? "#46f0c2" : "#ffd86a";
-    const glow = code === "WW" ? "#0d705d" : "#7d4b06";
-    return `<div class="symbol-wrap">
-      <svg class="h015-symbol-svg" viewBox="0 0 100 100" role="img" aria-label="${code}">
-        <defs>
-          <linearGradient id="symbol-${code}-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#ffffff"></stop>
-            <stop offset="0.42" stop-color="${accent}"></stop>
-            <stop offset="1" stop-color="${glow}"></stop>
-          </linearGradient>
-        </defs>
-        <path d="M50 5 61 24 83 17 77 39 96 50 77 61 83 83 61 76 50 95 39 76 17 83 23 61 4 50 23 39 17 17 39 24Z"
-          fill="rgba(4,14,26,.92)" stroke="${accent}" stroke-width="4"></path>
-        <text x="50" y="58" text-anchor="middle" fill="url(#symbol-${code}-fill)"
-          stroke="#031018" stroke-width="2" paint-order="stroke" font-family="Arial Black, sans-serif"
-          font-size="${code.length > 2 ? 27 : 34}" font-weight="900">${code}</text>
-      </svg>
-    </div>`;
+    return `<span class="slot-symbol-label">${code}</span>`;
   }
 
+  // 各輪有效高度的垂直置中位移（3/4/5/5/4/3 → 對稱盤面）
+  const COL_CENTER_OFFSET = Array.from({ length: REELS }, (_, reel) => {
+    const height = Box.score_area.reduce((count, row) => count + Number(Boolean(row[reel])), 0);
+    return (ROWS - height) / 2;
+  });
+
   function renderBoard(board, gold = [], hit = [], options = {}) {
+    lastBoardRender = { board, gold, hit };
     el.board.style.gridTemplateColumns = `repeat(${REELS}, var(--cell-size, 74px))`;
     el.board.innerHTML = "";
     for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
@@ -2684,7 +2708,7 @@
       const code = CODE[board[row][reel]] || `S${board[row][reel]}`;
       const symbolClass = `symbol-${code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
       const motion = options.dropMotion?.[`${row}-${reel}`];
-      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${motion ? (motion.type === "new" ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
+      cell.className = `cell ${symbolClass}${symbolAsset(board[row][reel]) ? " has-symbol-art" : ""}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${motion ? (motion.type === "new" ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
       if (motion) {
         const dropDuration = Math.max(220, 620 / Number(el.speedRange.value || 1));
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 105}%`);
@@ -2693,6 +2717,7 @@
         if (motion.type === "new") cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
       if (!active) cell.style.visibility = "hidden";
+      if (active && COL_CENTER_OFFSET[reel]) cell.style.top = `calc((var(--cell-size, 60px) + 4px) * ${COL_CENTER_OFFSET[reel]})`;
       cell.innerHTML = symbolMarkup(board[row][reel], gold[row]?.[reel]); el.board.appendChild(cell);
     }
   }

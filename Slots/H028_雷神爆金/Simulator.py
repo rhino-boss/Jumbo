@@ -58,7 +58,7 @@ BATCH_RUNS = [
     #
     # # ===== 4. 正式模擬（Card On＋彩金 Option 28，確認正確性）：NB/EB 10**8、BF/SF 10**7 =====
     # # 搭配：Newbie→A（四版權重共用，跑一筆代表）、老手小 Bet(<$2)→C、老手中/大 Bet(>=$2)→B；
-    # # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 檔位 = 模式基準價（NB $1、BF $75）× bet_multi。
+    # # 小 Bet 檔 = 94A/90B、中大檔 = 92A/88B。JP 檔位固定：NB 一律 $1 檔、BF 一律 $75 檔（bet_multi 只縮放）。
     # # --- Newbie NB + A（代表跑 92A）---
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": True, "jackpot_file": "A", "jackpot_option": 28},
     # # --- 老手小 Bet（$1）+ C：94A / 90B ---
@@ -70,7 +70,7 @@ BATCH_RUNS = [
     # # --- 老手大 Bet（$150，OP Bet Level 實際檔位）+ B：獨立 Bet100 模型（FG cap 2000x）---
     # {"config_file": "config.js", "config_rtp_file": "config_92A_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
     # {"config_file": "config.js", "config_rtp_file": "config_88B_Bet100.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 150, "jackpot_file": "B", "jackpot_option": 28},
-    # # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A、JP 75 檔）、$150 中（B、JP 150 檔）---
+    # # --- Buy Feature（四版權重共用，跑 94A）：購 $75 小（C／Newbie A）、$150 中（B）；JP 一律 75 檔 ---
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 1, "jackpot_file": "C", "jackpot_option": 28},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True, "bet_multi": 1, "jackpot_file": "A", "jackpot_option": 28},
     # {"config_file": "config.js", "config_rtp_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False, "bet_multi": 2, "jackpot_file": "B", "jackpot_option": 28},
@@ -402,8 +402,8 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
 # 有機會觸發 OP JP；真實觸發率由各獎項固定 RTP 反推，再除以 SCR（SC-spin 率）放大成條件機率。
 # JP1/JP2：連機累進（派彩 = 池底 + 累積 increment，命中歸零；startup% = RTP% - Increment%）。
 # JP3/JP4：固定倍數（prize = x * 實際押注）。派彩不計入 rtp_game，另計 rtp_link / rtp_bonus。
-# 檔位查表：JP 檔位 = 押注模式基準價（NB $1、BF $75）× BET_MULTI ——
-# 例：NB bet_multi 3 → 3 檔；BF bet_multi 1 → 75 檔、bet_multi 2（購 $150）→ 150 檔。
+# 檔位查表：JP 檔位固定由押注模式決定 —— NB 一律 $1 檔、BF 一律 $75 檔；
+# BET_MULTI 只縮放實際押注與獎金（bet_cr／JP3/JP4 prize），不改變查表檔位。
 JP_ENABLED = bool(JACKPOT_FILE)
 JP_P_COND = np.zeros(4, dtype=np.float64)
 JP_CUM = np.zeros(4, dtype=np.float64)
@@ -419,8 +419,9 @@ def load_jackpot_params():
     jp_path = BASE_DIR.parent / "OP Jackpot" / f"JP0100{JACKPOT_FILE}.xlsm"
     if not jp_path.exists():
         raise FileNotFoundError(f"Jackpot workbook not found: {jp_path}")
-    # JP 檔位 = 押注模式基準價（NB $1、BF $75）× BET_MULTI 縮放
-    bet_key = float((FEATUREBUY if BET_MODE == MODE_FEATUREBUY else 1) * BET_MULTI)
+    # JP 檔位固定由押注模式決定：NB 一律查 $1 檔、BF 一律查 $75 檔；
+    # BET_MULTI 只縮放實際押注與獎金（bet_cr），不改變查表檔位。
+    bet_key = float(FEATUREBUY) if BET_MODE == MODE_FEATUREBUY else 1.0
     wb = _oxl.load_workbook(jp_path, read_only=True, data_only=True)
     ws = wb["Parameter_List"]
     row_hit = None

@@ -2041,7 +2041,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body>
@@ -2173,6 +2173,23 @@
         <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
+        <ul>
+          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
+          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
+          <li>無美術時改顯示標準代號標籤 <code>slot-symbol-label</code>（原 h016-face）。</li>
+          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
+          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      </div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
@@ -3655,7 +3672,19 @@
     $("multiplierWindow").innerHTML = values.map((value, step) => `<span class="multiplier-step ${step < index ? "is-previous" : ""} ${step === Math.min(index,3) ? "is-active" : ""}">×${value}</span>`).join("");
   }
 
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.hitList, { marked: lastBoardRender.options.marked });
+    }
+  };
+
   function renderBoard(board, hitList = [], options = {}) {
+    lastBoardRender = { board, hitList, options };
     const hits = new Set(hitList), cleared = new Set(options.cleared || []), converted = new Set(options.converted || []), marked = new Set(options.marked || []), root = $("board");
     const drop = new Map((options.drop || []).map(item => [item.key, item]));
     root.innerHTML = "";
@@ -3671,8 +3700,15 @@
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
-      const asset = SYMBOL_ASSET[code];
-      cell.innerHTML = asset ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H016_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div>` : `<div class="symbol-wrap"><span class="h016-face">${DISPLAY[code] || code}</span><span class="symbol-code">${code}</span></div>`;
+      const asset = useSymbolImages ? SYMBOL_ASSET[code] : "";
+      if (asset) {
+        cell.classList.add("has-symbol-art");
+        cell.innerHTML = `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H016_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"></div><span class="slot-symbol-label">${code}</span>`;
+        const image = cell.querySelector("img");
+        image.addEventListener("error", () => { image.remove(); cell.classList.remove("has-symbol-art"); }, { once: true });
+      } else {
+        cell.innerHTML = `<span class="slot-symbol-label">${code}</span>`;
+      }
       root.append(cell);
     }
   }

@@ -34,7 +34,8 @@ window.H028_VERSION_MANIFEST = {
         "修復潛在壞公式（K 欄靜態化後 ANCHORARRAY 必 #REF!，先前僅補快取）：92A/94A Detail!J7/J8 改 =LOOKUP(2,1/(K86:K149<>0),P86:P149)／K163:K226 版（值 3000/3000）、94A Detail_Newbie!J7 同式（值 100）、92A Detail!N163:N226 壞公式殘骸清除。",
         "config_92A／94A／92A_Bet100：老手 normal_bet weight_bg/weight_fg 重生（每組整體縮放至精確 1e9）；新手與 BF 各組保留原值（維持與 88B/90B 系列 config 逐格一致）；excel_version → 3.5.0.3。",
         "PARsheet R 檔三份重產（0 殘留公式）；送驗包 文件/101016 更新：H028192/H028194 Overview 改前作送驗格式 RTP 主列（Base Bet｜Game RTP｜Bonus RTP｜Link RTP｜Total RTP｜Hit JP Symbol appear rate，Game RTP 顯示 6 位小數；92：0.920000+0.02+0.02=0.96、94：0.940000+0.02+0=0.96），Model 名改 H028192/H028194；Simulator config_92/config_94 重生並精簡。",
-        "88B／90B／88B_Bet100 未配平（僅做 92/94 兩版，Bet100 因老手 BG 共用欄連動一併配平）：88B/90B 老手 Card-On 實跑將低於帳面約 0.35pp，已知限制。"
+        "88B／90B／88B_Bet100 未配平（僅做 92/94 兩版，Bet100 因老手 BG 共用欄連動一併配平）：88B/90B 老手 Card-On 實跑將低於帳面約 0.35pp，已知限制。",
+        "2026-09-24 Demogame 介面：符號顯示規則統一（Demogame規範 4.2.3）——Image 開時有圖格不顯示符號代號與符號框，Image 關時顯示框＋代號，代號改一般字重；純 CSS 金框加 keep-symbol-frame 保留。未修改 XLSX／Config 數學參數。"
       ]
     },
     {

@@ -1888,7 +1888,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body>
@@ -2022,6 +2022,22 @@
         <button id="clearLogBtn" type="button">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
+        <ul>
+          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
+          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
+          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
+          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      </div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
@@ -2743,7 +2759,19 @@
     return board.map((row, rowIndex) => row.map((symbol, reelIndex) => symbolCell(symbol, values?.[rowIndex]?.[reelIndex] || 0)));
   }
 
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(lastBoardRender.board, { hitPositions: lastBoardRender.options.hitPositions });
+    }
+  };
+
   function renderBoard(board, options = {}) {
+    lastBoardRender = { board, options };
     const hitSet = new Set((options.hitPositions || []).map(([row, reel]) => `${row}-${reel}`));
     const clearedSet = new Set((options.clearedPositions || []).map(([row, reel]) => `${row}-${reel}`));
     el.board.innerHTML = "";
@@ -2763,9 +2791,10 @@
       const glyph = document.createElement("span");
       glyph.className = "h019-glyph";
       glyph.textContent = cell.glyph;
-      const imageSource = symbolImageSource(cell.code);
+      const imageSource = useSymbolImages ? symbolImageSource(cell.code) : "";
       if (imageSource) {
         glyph.hidden = true;
+        node.classList.add("has-symbol-art");
         const image = document.createElement("img");
         image.className = "h013-symbol-image";
         image.src = imageSource;
@@ -2774,6 +2803,7 @@
         image.addEventListener("error", () => {
           image.remove();
           glyph.hidden = false;
+          node.classList.remove("has-symbol-art");
         }, { once: true });
         wrap.appendChild(image);
       }

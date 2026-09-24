@@ -1883,7 +1883,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body>
@@ -2037,6 +2037,22 @@
         <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
+        <ul>
+          <li>本作無符號美術，不顯示 Image 開關，維持符號框＋代號。</li>
+          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
+          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
+          <li>驗證：代號字重 400，Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      </div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">

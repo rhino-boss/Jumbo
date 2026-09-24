@@ -1959,13 +1959,19 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../../../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../../../demogame_common.css?v=4">
+  <style id="wt2-fx">
+    /* ── WT2 頁面自有樣式（FX 動畫樣式已移至 demogame_common.js 的 slotFx 模組）── */
+    .board-shell { position: relative; }
+
+    /* 符號圖片開關／有圖無框無字／代號不粗體：統一由 demogame_common.css 的 Symbol display standard 處理 */
+  </style>
 </head>
 
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">WT2</span> <span id="gameName">Wild Train 2</span></span>
+      <span id="game-title"><span id="gameId"></span> <span id="gameName">Wild Train 2</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -1986,6 +1992,7 @@
             <div class="multiplier-window" id="multiplierWindow"></div>
           </div>
           <div class="board-grid" id="board"></div>
+          <div id="fxLayer" class="slot-fx-layer"></div>
         </div>
         <div class="message-bar" id="messageBar">Ready — press Spin</div>
       </section>
@@ -2090,6 +2097,52 @@
         <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div style="max-height:260px;overflow-y:auto;padding:8px 12px;font-size:12px;line-height:1.5">
+                <div style="margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--surface)">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px">2026-09-24 — 符號顯示規則統一＋盤面置中</div>
+          <ul style="margin:4px 0 0 18px;padding:0">
+            <li>目的：套用所有遊戲共用的符號顯示規則；盤面置中。</li>
+            <li>變更：移除本頁自有的 Symbol Img 開關，改接 demogame_common 的 Image 開關（window.DEMOGAME_IMAGE_TOGGLE）；Image 開＝只顯示符號圖、無代號、無符號框（has-symbol-art）；Image 關＝符號框＋代號（slot-symbol-label）；代號一般字重；盤面各輪依有效高度垂直置中（3/4/5/5/4/3 對稱）。</li>
+            <li>驗證：開圖 24 格 0 框 0 字、關圖全顯示代號且字重 400；spin／跳階動畫定位正常；Console 無例外。未修改 XLSX／Config 數學參數。</li>
+          </ul>
+        </div>
+<div style="margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--surface)">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px">2026-09-24 — 名稱統一</div>
+          <ul style="margin:4px 0 0 18px;padding:0">
+            <li>目的：遊戲名稱統一顯示 Wild Train 2。</li>
+            <li>變更：頁面標題、標題列與中文介面名稱改為 Wild Train 2，移除 WT2 FX 前綴。</li>
+            <li>驗證：瀏覽器確認標題列與分頁標題。未修改 XLSX／Config 數學參數。</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--surface)">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px">2026-09-24 — 動畫共用化與掉落加速</div>
+          <ul style="margin:4px 0 0 18px;padding:0">
+            <li>目的：動畫效果移入共用模組供其他遊戲使用；掉落速度加倍。</li>
+            <li>變更：FX 動畫（中獎爆閃、壓暗、金幣、Wild 彈出、中央大倍數、贏分浮字、總贏分橫幅、輪帶滾動）移至 demogame_common.js 的 window.slotFx（opt-in）；本頁改為呼叫共用；掉落／補牌動畫 620ms → 310ms。</li>
+            <li>驗證：slotFx 十函式載入正常；spin／FG／跳階流程完整，Console 無例外。未修改 XLSX／Config 數學參數。</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--surface)">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px">2026-09-24 — 倍數金框調整與圖片開關</div>
+          <ul style="margin:4px 0 0 18px;padding:0">
+            <li>目的：盤面同時間僅一顆金框帶倍數；新增符號顯示開關。</li>
+            <li>變更：金框分一般／倍數兩種，無倍數金框在場時隨機挑一顆賦予（gold 值 -1／>0）；Setting 新增 Symbol Img 開關（開＝純圖無框、關＝色框＋代號），選擇存 localStorage。</li>
+            <li>驗證：兩種模式下 spin／跳階／轉 Wild 正常。未修改 XLSX／Config 數學參數（金框倍數為 demo 假值）。</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--surface)">
+          <div style="color:var(--accent);font-weight:700;margin-bottom:4px">2026-09-24 — 初版建置（發想）</div>
+          <ul style="margin:4px 0 0 18px;padding:0">
+            <li>目的：賞金列車 2 發想 demo（複製 H015 index.html 微調）。</li>
+            <li>變更：移除炸彈抽選；金框附帶倍數標記；倍數金框中獎時乘數階級直接跳階（只升不降、取最高、先跳再計分）；沿用 H015 config_92／94 數學模型。</li>
+            <li>驗證：600 局批次模擬 RTP 86.7%、Hit 29.7%、跳階最高 x256；Console 無例外。未修改 XLSX／Config 數學參數。</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
@@ -2335,7 +2388,7 @@
       languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
     },
     zh: {
-      game: "賞金列車 2", base: "基礎遊戲", free: "免費遊戲", ready: "準備完成 — 請按 Spin",
+      game: "Wild Train 2", base: "基礎遊戲", free: "免費遊戲", ready: "準備完成 — 請按 Spin",
       cascade: "連消", mult: "倍數", fgLeft: "FG 剩餘", credit: "餘額", bet: "押注", win: "得分",
       stats: "模擬統計", rounds: "總局數", hit: "中獎率", maxMult: "最高倍數",
       play: "遊戲", spin: "Spin", nextFg: "下一次 FG", auto: "自動", stop: "停止", speed: "速度",
@@ -2357,7 +2410,8 @@
   })();
 
   const state = {
-    language: initialLanguage, balance: 10000, betIndex: 0, busy: false, auto: false, debug: false,
+    language: initialLanguage,
+    balance: 10000, betIndex: 0, busy: false, auto: false, debug: false,
     fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, guaranteedLightningSpin: -1 },
     rounds: 0, normalRounds: 0, totalBet: 0, totalWin: 0,
     hitRounds: 0, naturalFg: 0, maxMultiplier: 1, lastWin: 0, lastSpin: null, snapshots: [], snapshotIndex: -1,
@@ -2375,6 +2429,7 @@
   ].map((id) => [id, $(id)]));
 
   let displayedMultiplierIndex = 0;
+  let lastRenderArgs = null;
 
   function text(key) { return T[state.language][key] || T.en[key] || key; }
   function format(value, digits = 0) { return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: digits }); }
@@ -2676,38 +2731,43 @@
     }
   };
 
+  let useSymbolImages = true;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastRenderArgs) { renderBoard(lastRenderArgs.board, lastRenderArgs.gold, lastRenderArgs.hit); fxMarkBoard(lastRenderArgs.board); }
+    }
+  };
+
+  function symbolAsset(symbol) {
+    if (!useSymbolImages || symbol === 99) return "";
+    return SYMBOL_ASSET_BY_CODE[CODE[symbol] || `S${symbol}`] || "";
+  }
+
   function symbolMarkup(symbol, isGold) {
     if (symbol === 99) return "";
     const code = CODE[symbol] || `S${symbol}`;
-    const asset = SYMBOL_ASSET_BY_CODE[code];
+    const asset = symbolAsset(symbol);
     const badge = isGold > 0 ? `<span class="multi-badge">x${isGold}</span>` : "";
-    if (asset) {
-      const frame = isGold
-        ? `<img class="h015-frame-img" src="${GOLD_FRAME_ASSET}" alt="" aria-hidden="true" draggable="false">`
-        : "";
-      return `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${asset}" alt="${code}" draggable="false">${frame}${badge}</div>`;
+    if (!asset) {
+      return `<span class="slot-symbol-label">${code}</span><div class="symbol-wrap">${badge}</div>`;
     }
-    const accent = code === "WW" ? "#46f0c2" : "#ffd86a";
-    const glow = code === "WW" ? "#0d705d" : "#7d4b06";
-    return `<div class="symbol-wrap">
-      <svg class="h015-symbol-svg" viewBox="0 0 100 100" role="img" aria-label="${code}">
-        <defs>
-          <linearGradient id="symbol-${code}-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#ffffff"></stop>
-            <stop offset="0.42" stop-color="${accent}"></stop>
-            <stop offset="1" stop-color="${glow}"></stop>
-          </linearGradient>
-        </defs>
-        <path d="M50 5 61 24 83 17 77 39 96 50 77 61 83 83 61 76 50 95 39 76 17 83 23 61 4 50 23 39 17 17 39 24Z"
-          fill="rgba(4,14,26,.92)" stroke="${accent}" stroke-width="4"></path>
-        <text x="50" y="58" text-anchor="middle" fill="url(#symbol-${code}-fill)"
-          stroke="#031018" stroke-width="2" paint-order="stroke" font-family="Arial Black, sans-serif"
-          font-size="${code.length > 2 ? 27 : 34}" font-weight="900">${code}</text>
-      </svg>
-    </div>`;
+    const frame = isGold
+      ? `<img class="h015-frame-img" src="${GOLD_FRAME_ASSET}" alt="" aria-hidden="true" draggable="false">`
+      : "";
+    return `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${asset}" alt="${code}" draggable="false">${frame}${badge}</div>`;
   }
 
+  // 各輪有效高度的垂直置中位移（3/4/5/5/4/3 → 對稱盤面）
+  const COL_CENTER_OFFSET = Array.from({ length: REELS }, (_, reel) => {
+    const height = Box.score_area.reduce((count, row) => count + Number(Boolean(row[reel])), 0);
+    return (ROWS - height) / 2;
+  });
+
   function renderBoard(board, gold = [], hit = [], options = {}) {
+    lastRenderArgs = { board, gold, hit };
     el.board.style.gridTemplateColumns = `repeat(${REELS}, var(--cell-size, 74px))`;
     el.board.innerHTML = "";
     for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
@@ -2715,17 +2775,74 @@
       const code = CODE[board[row][reel]] || `S${board[row][reel]}`;
       const symbolClass = `symbol-${code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
       const motion = options.dropMotion?.[`${row}-${reel}`];
-      cell.className = `cell ${symbolClass}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${motion ? (motion.type === "new" ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
+      cell.className = `cell ${symbolClass}${symbolAsset(board[row][reel]) ? " has-symbol-art" : ""}${gold[row]?.[reel] ? " gold" : ""}${hit[row]?.[reel] ? " hit" : ""}${options.cleared?.[row]?.[reel] ? " symbol-cleared" : ""}${motion ? (motion.type === "new" ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${options.spinning ? " reel-spin" : ""}${active ? "" : " peek-row"}`;
       if (motion) {
-        const dropDuration = Math.max(220, 620 / Number(el.speedRange.value || 1));
+        const dropDuration = Math.max(110, 310 / Number(el.speedRange.value || 1));
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 105}%`);
         cell.style.setProperty("--drop-duration", `${dropDuration}ms`);
         cell.style.setProperty("--drop-delay", `${reel * 18}ms`);
         if (motion.type === "new") cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
       if (!active) cell.style.visibility = "hidden";
+      if (active && COL_CENTER_OFFSET[reel]) cell.style.top = `calc((var(--cell-size, 60px) + 4px) * ${COL_CENTER_OFFSET[reel]})`;
       cell.innerHTML = symbolMarkup(board[row][reel], gold[row]?.[reel]); el.board.appendChild(cell);
     }
+  }
+
+  /* ── WT2 FX adapters：實作在 demogame_common.js 的 window.slotFx ── */
+  const fxLayer = $("fxLayer");
+  const fxCell = (row, reel) => el.board.children[row * REELS + reel];
+  const fxSpeed = () => Number(el.speedRange.value || 1);
+  const fxWait = (ms) => new Promise((r) => setTimeout(r, Math.max(30, ms / fxSpeed())));
+
+  function fxEachActiveCell(callback) {
+    for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+      if (!Box.score_area[row][reel]) continue;
+      const cell = fxCell(row, reel);
+      if (cell) callback(cell, row, reel);
+    }
+  }
+
+  function fxMarkBoard(board, hit = null) {
+    const winCells = [], dimCells = [];
+    fxEachActiveCell((cell, row, reel) => {
+      if (board[row][reel] === WW) window.slotFx?.mark(cell, "fx-wild-stay");
+      if (board[row][reel] === C1) window.slotFx?.mark(cell, "fx-scatter");
+      if (hit) (hit[row][reel] ? winCells : dimCells).push(cell);
+    });
+    if (hit) window.slotFx?.winGlow(winCells, dimCells);
+  }
+
+  function fxPopCells(hit) {
+    const cells = [];
+    fxEachActiveCell((cell, row, reel) => { if (hit[row]?.[reel] === 1) cells.push(cell); });
+    window.slotFx?.popCells(cells);
+  }
+
+  function fxSpawnCoins(hit) {
+    const items = [];
+    fxEachActiveCell((cell, row, reel) => {
+      if (hit[row]?.[reel]) items.push({ el: cell, count: hit[row][reel] === 2 ? 8 : 5 });
+    });
+    window.slotFx?.spawnCoins(fxLayer, items);
+  }
+
+  function fxMultiPop(multiplier, jumped) {
+    window.slotFx?.multiPop(fxLayer, `X${multiplier}`, { jump: jumped, tag: jumped ? "GOLD JUMP" : "" });
+  }
+
+  function fxWinFloat(textValue) {
+    window.slotFx?.winFloat(fxLayer, textValue);
+  }
+
+  function fxTotalWin(amount) {
+    window.slotFx?.totalWin(fxLayer, state.language === "zh" ? "總贏分" : "TOTAL WIN", format(amount));
+  }
+
+  function fxMarkRolling(rollingReels) {
+    const cells = [];
+    fxEachActiveCell((cell, row, reel) => { if (rollingReels.has(reel)) cells.push(cell); });
+    window.slotFx?.reelRoll(cells);
   }
 
   function renderRng(stops = []) {
@@ -2794,14 +2911,21 @@
   async function animateReels(spin) {
     const initial = spin.steps[0];
     if (!initial) return;
-    const frames = Math.max(2, Math.round(8 / Number(el.speedRange.value || 1)));
-    for (let frame = 0; frame < frames; frame++) {
+    // FX：逐輪停輪（左到右），滾動中的輪帶帶模糊滾動效果
+    const speed = fxSpeed();
+    const baseFrames = Math.max(3, Math.round(9 / speed));
+    const perReelExtra = Math.max(1, Math.round(3 / speed));
+    const totalFrames = baseFrames + perReelExtra * (REELS - 1) + 1;
+    for (let frame = 0; frame < totalFrames; frame++) {
       const rollingBoard = clone(initial.board);
       const rollingGold = clone(initial.gold);
+      const rollingReels = new Set();
       for (let reel = 0; reel < REELS; reel++) {
+        if (frame >= baseFrames + perReelExtra * reel) continue; // 該輪已停，顯示最終符號
+        rollingReels.add(reel);
         const activeRows = [];
         for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) activeRows.push(row);
-        const offset = (frames - frame + reel) % activeRows.length;
+        const offset = (totalFrames - frame + reel) % activeRows.length;
         for (let position = 0; position < activeRows.length; position++) {
           const targetRow = activeRows[position];
           const sourceRow = activeRows[(position + offset) % activeRows.length];
@@ -2809,7 +2933,9 @@
           rollingGold[targetRow][reel] = initial.gold[sourceRow][reel];
         }
       }
-      renderBoard(rollingBoard, rollingGold, [], { spinning: true });
+      renderBoard(rollingBoard, rollingGold);
+      fxMarkRolling(rollingReels);
+      if (!rollingReels.size) break;
       await new Promise((resolve) => setTimeout(resolve, 55));
     }
   }
@@ -2822,29 +2948,55 @@
     await animateReels(spin);
     if (spin.steps[0]) {
       renderBoard(spin.steps[0].board, spin.steps[0].gold);
+      fxMarkBoard(spin.steps[0].board);
       await delay();
     }
     for (let i = 0; i < spin.steps.length; i++) {
       const step = spin.steps[i];
-      showSnapshot(i, false);
+      if (!step.wins.length) break;
+      state.snapshotIndex = i;
+      el.carryMultiValue.textContent = step.combo;
+      renderRng(step.stops); renderWins(step, false);
+
+      // 1) 中獎強調：中獎金光爆閃、其餘壓暗
+      renderBoard(step.board, step.gold, step.hit);
+      fxMarkBoard(step.board, step.hit);
       await rollMultiplierTo(step.multiplier);
-      await delay();
-      if (step.wins.length) {
-        renderBoard(step.board, step.gold, [], { cleared: step.hit });
-        await new Promise((resolve) => setTimeout(resolve, Math.max(70, 120 / Number(el.speedRange.value || 1))));
-        const next = spin.steps[i + 1];
-        const cleared = [];
-        for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
-          if (step.hit[row]?.[reel]) cleared.push([row, reel]);
-        }
-        const rowCounts = Array.from({ length: REELS }, (_, reel) => Box.score_area.reduce((count, row) => count + Number(Boolean(row[reel])), 0));
-        const dropMotion = window.slotBuildDropMotion?.(rowCounts, REELS, cleared) || {};
-        const dropDuration = Math.max(220, 620 / Number(el.speedRange.value || 1));
-        renderBoard(next?.board || spin.board, next?.gold || spin.gold, [], { dropMotion });
-        await new Promise((resolve) => setTimeout(resolve, dropDuration + REELS * 18 + 80));
+      if (step.multiplier > 1 || step.jumped) fxMultiPop(step.multiplier, step.jumped);
+      fxWinFloat(`+${format(step.win)}`);
+      await fxWait(720);
+
+      // 2) 消除：符號縮爆＋金幣粒子
+      fxSpawnCoins(step.hit);
+      fxPopCells(step.hit);
+      await fxWait(320);
+
+      // 3) 掉落補牌 → 金框轉 Wild 彈出
+      const next = spin.steps[i + 1];
+      const cleared = [];
+      for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+        if (step.hit[row]?.[reel]) cleared.push([row, reel]);
       }
+      const rowCounts = Array.from({ length: REELS }, (_, reel) => Box.score_area.reduce((count, row) => count + Number(Boolean(row[reel])), 0));
+      const dropMotion = window.slotBuildDropMotion?.(rowCounts, REELS, cleared) || {};
+      const dropDuration = Math.max(110, 310 / fxSpeed());
+      const nextBoard = next?.board || spin.board;
+      const nextGold = next?.gold || spin.gold;
+      renderBoard(nextBoard, nextGold, [], { dropMotion });
+      fxMarkBoard(nextBoard);
+      const wildPops = [];
+      for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+        if (step.hit[row]?.[reel] === 2) wildPops.push(fxCell(row, reel));
+      }
+      window.slotFx?.wildPop(wildPops);
+      await new Promise((resolve) => setTimeout(resolve, dropDuration + REELS * 18 + 80));
     }
-    renderBoard(spin.board, spin.gold); renderRng(spin.stops); renderSpinHistory(spin);
+    renderBoard(spin.board, spin.gold); fxMarkBoard(spin.board);
+    renderRng(spin.stops); renderSpinHistory(spin);
+    if (spin.total > 0) {
+      fxTotalWin(spin.total);
+      await fxWait(1200);
+    }
   }
 
   async function playFreeSpin() {
@@ -3081,7 +3233,7 @@
   el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
 
   document.title = "Wild Train 2 — Demo Game";
-  el.gameId.textContent = `WT2（模型沿用 ${Box.game_id}）`;
+  el.gameId.textContent = "";
   el.configSelect.value = H015_ACTIVE_CONFIG;
   el.configSelect.disabled = false;
   el.configSelect.addEventListener("change", () => {
@@ -3092,7 +3244,7 @@
   buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();
   </script>
-  <script src="../../../demogame_common.js?v=1"></script>
+  <script src="../../../demogame_common.js?v=2"></script>
 </body>
 
 </html>

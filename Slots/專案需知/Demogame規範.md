@@ -103,6 +103,23 @@ Project/Slots/
 - By Game 樣式與程式保留在該遊戲的 `index.html` 或遊戲專屬資源，不得放入共用檔案影響其他遊戲。
 - 遊戲專屬 CSS 不得覆寫共用區域，除非本規範明確提供可覆寫的 CSS Variable 或 Hook。
 
+### 4.2.3 符號顯示規則（所有遊戲）
+
+盤面符號一律依下列規則顯示，樣式由 `demogame_common.css` 的 Symbol display standard 統一套用：
+
+| 狀態 | 顯示 |
+| --- | --- |
+| Image 開啟，且該符號有美術 | 只顯示符號圖；**不顯示符號代號、不畫符號框**（無框線、無底色） |
+| Image 關閉，或該符號無美術 | 顯示**符號框＋符號代號** |
+
+- 符號代號（`M1`、`M2`、`A`、`C1`…）一律使用一般字重，**不得使用粗體**。
+- 有符號美術的遊戲必須接入共用 Image 開關：頁面在載入 `demogame_common.js` 前定義 `window.DEMOGAME_IMAGE_TOGGLE = { supported: true, defaultEnabled: true, setEnabled(enabled) { … } }`，`setEnabled` 內切換是否輸出符號圖並重繪目前盤面；不得自行另做圖片開關。共用模組會在 Setting 產生 `Image` 開關，選擇存於 `localStorage`（`slotDemoSymbolImages`）。
+- 有輸出符號圖的格子必須加上 `has-symbol-art`；圖片載入失敗時移除此 class 並改顯示代號。
+- 無美術時的代號可使用共用標籤 `<span class="slot-symbol-label">代號</span>`（置中、一般字重）。
+- 沒有任何符號美術的遊戲不接 Image 開關，固定顯示符號框＋代號。
+- 中獎、轉換等**狀態**框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）不受此規則影響。
+- Hook：框線本身屬規則狀態、且沒有對應美術時（例如純 CSS 的金框），在該格加 `keep-symbol-frame` 保留框線。金框若已有美術（例如 Frame 圖或金框版符號圖），不得再疊加 CSS 框。
+
 ## 4.3 補牌方式
 
 每款有消除機制的遊戲，必須在 Game Rule、Config 對應說明與 Demogame 中指定唯一補牌方式。Simulator 與 Demogame 必須使用相同邏輯。
@@ -166,6 +183,7 @@ Debug Mode 至少可查看：
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
+- [ ] 符號顯示符合 4.2.3：Image 開＝只顯示圖（無代號、無符號框），Image 關或無美術＝符號框＋代號；代號不粗體；有美術的遊戲已接共用 Image 開關。
 - [ ] 補牌方式已選定為原地、掉落或特殊補牌，並與 Game Rule、Config、Simulator 一致。
 - [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。
 - [ ] Config 切換後所有資料與顯示同步更新。

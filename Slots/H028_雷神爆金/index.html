@@ -2071,7 +2071,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body class="h028">
@@ -2238,7 +2238,7 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
-        <article class="change-log-entry">
+<article class="change-log-entry">
           <h4>2026-09-08：大 Bet 獨立數學模型（Bet100）</h4>
           <ul>
             <li>新增 <code>H028192A_Bet100.xlsx</code>／<code>H028188B_Bet100.xlsx</code> 與 <code>config_92A_Bet100.js</code>／<code>config_88B_Bet100.js</code>（大 Bet，bet_tier_amount &gt; $100）。FG 上限依規範為 <b>2000x</b> 而非 10000x；<code>Weight_BF</code> 依 H027 實務同步封頂。<code>_Bet100</code> 後綴沿用 H026／H027 實務。</li>
@@ -3202,7 +3202,7 @@
 | 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
 
-  <script src="./Versions/version_manifest.js"></script>
+  <script src="./Versions/version_manifest.js?v=20260924"></script>
   <script>
   // Each manifest entry maps one base config and one RTP/card config.
   // Synchronous loading keeps double-click/offline use available.
@@ -3280,7 +3280,7 @@
   function symbolImage(path,className){return`<img class="symbol-art-layer ${className}" src="${SYMBOL_IMAGE_ROOT}${path}" alt="" draggable="false">`}
   function symbolArt(id,height=1){if(!USE_SYMBOL_IMAGES)return'';let file=TOZ_SYMBOL_ART[base(id)];if(!file)return'';return`<span class="symbol-art">${symbolImage(file,'symbol-art-full')}</span>`}
   window.DEMOGAME_IMAGE_TOGGLE={supported:true,defaultEnabled:true,setEnabled(enabled,{initial=false}={}){let next=Boolean(enabled),changed=next!==USE_SYMBOL_IMAGES;USE_SYMBOL_IMAGES=next;if(changed){if(next){if(state.historyIndex>=state.historyFloor&&state.history[state.historyIndex])showHistory(state.historyIndex);else makeIdleBoard()}else{document.querySelectorAll('.symbol-art').forEach(node=>node.remove());document.querySelectorAll('.cell').forEach(cell=>{cell.classList.remove('has-symbol-art');cell.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')})}}if(!initial)message('Image | '+(next?'On':'Off'),'mode')}};
-  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,art=symbolArt(id,b?.h),m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),art?'has-symbol-art':'',isGold(id)?'gold':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap">${art}<span class="symbol-code"${art?' style="display:none"':''}>${displayCode(id)}</span></div>${m1}`;d.querySelectorAll('.symbol-art-layer').forEach(image=>image.addEventListener('error',()=>{d.classList.remove('has-symbol-art');d.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')},{once:true}));return d}
+  function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,art=symbolArt(id,b?.h),m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),art?'has-symbol-art':'',isGold(id)?'gold keep-symbol-frame':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap">${art}<span class="symbol-code"${art?' style="display:none"':''}>${displayCode(id)}</span></div>${m1}`;d.querySelectorAll('.symbol-art-layer').forEach(image=>image.addEventListener('error',()=>{d.classList.remove('has-symbol-art');d.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')},{once:true}));return d}
   function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
   async function animateReels(finalScreen){let frames=10+Math.max(0,6-state.speed),fg=finalScreen?.table?.scene==='FG';for(let frame=0;frame<frames;frame++){let sample={main:Array.from({length:6},(_,reel)=>Array.from({length:5},()=>{let id=pickInt(26);if(fg&&reel===0)id=unframed(id);return{id,h:1}})),extra:Array.from({length:4},()=>({id:unframed(pickInt(26)),h:1}))};renderBoard(sample,[],true);message('Reels spinning...');await sleep(105)}renderBoard(finalScreen)}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}

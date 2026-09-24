@@ -902,3 +902,44 @@ body.slot-simulator #helpContent table.paytable th { color: #77c7ff; font-weight
   body.slot-simulator #helpDialog { width: calc(100vw - 16px); height: calc(100vh - 16px); }
   body.slot-simulator #helpContent { padding: 10px; }
 }
+
+/* ── Symbol display standard（所有遊戲共用）────────────────────────────────
+   Image 開啟且該格有符號美術（cell.has-symbol-art）：只顯示圖片，不顯示符號代號、不畫符號框。
+   Image 關閉或無美術：顯示符號框＋符號代號。符號代號一律不使用粗體。
+   Hook：遊戲的框線本身是規則狀態（例如純 CSS 金框）時，在該格加 .keep-symbol-frame 保留框線。 */
+#board .cell.has-symbol-art:not(.keep-symbol-frame):not(.hit):not(.fx-win):not(.convert):not(.wild-mark) {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#board .cell.has-symbol-art .symbol-code,
+#board .cell.has-symbol-art .h019-glyph,
+#board .cell.has-symbol-art .h016-face,
+#board .cell.has-symbol-art .slot-symbol-label,
+#board .cell.has-symbol-art .sym-code-label {
+  display: none !important;
+}
+
+#board .cell .symbol-code,
+#board .cell .h019-glyph,
+#board .cell .h016-face,
+#board .cell .slot-symbol-label,
+#board .cell .sym-code-label {
+  font-weight: 400 !important;
+}
+
+/* 無美術時的標準代號標籤（置中、一般字重），供各遊戲文字模式使用 */
+#board .cell .slot-symbol-label {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: #e8f4ff;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}

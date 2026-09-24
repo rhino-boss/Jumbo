@@ -183,7 +183,7 @@
     body.h027 .message-bar.error { color: #ff5f8a; }
     body.h027 .message-bar.win { color: #33ff99; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=3">
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
 </head>
 
 <body class="slot-simulator h027">
@@ -319,7 +319,17 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
-        <article class="change-log-entry">
+              <article class="change-log-entry">
+        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
+        <ul>
+          <li>本作無符號美術，不顯示 Image 開關，維持符號框＋代號。</li>
+          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
+          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
+          <li>驗證：代號字重 400，Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+<article class="change-log-entry">
           <h4>2026-09-09：v4.0.0.0 — BF 入場盤改為結構上不可能中獎；遊戲更名為宙斯 2500</h4>
           <ul>
             <li><b>問題</b>：BF 入場輪帶先前擴充到 <code>15/15/15/15/162/162</code> 個有效停點，導致九個一般符號中有<b>七個</b>可在全盤達到 8 個以上（K 與 TE 最多可達 14），Any-8 中獎在結構上是可能的。我們的 Simulator 是靠「跳過判獎」才看起來得分為 0，但 <b>SPS 會判獎</b>，其 BF 報表的 <code>BaseGameRtp</code> 就是 <b>0.6936%</b>，證實入場盤真的會中獎。</li>
