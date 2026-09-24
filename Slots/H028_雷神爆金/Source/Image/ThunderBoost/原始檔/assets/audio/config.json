@@ -1,0 +1,1 @@
+{"importBase":"import","nativeBase":"native","name":"audio","deps":[],"uuids":["06558f1ce","7cInhu8ORJ6YNdiXa6Ph/U","88Tj60jutBYoGHscVbFSIL"],"paths":{"1":["AudioContainerPrefab",0],"2":["AudioManager",0]},"scenes":{},"packs":{"06558f1ce":["1","2"]},"versions":{"import":[],"native":[]},"redirect":[],"debug":false,"extensionMap":{},"types":["cc.Prefab"]}
