@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Diamond — Demo Game</title>
+  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <style>
+    /* ===== By Game only：Game Title / Feature Status / Board / Message ===== */
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+
+    .cell {
+      position: relative;
+      aspect-ratio: 1 / 1.05;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 8px;
+      background: rgba(12, 18, 32, .72);
+      transition: border-color .12s ease, background .12s ease;
+    }
+
+    .cell.gold {
+      border-color: #ffc94a;
+      box-shadow: inset 0 0 0 1px rgba(255, 201, 74, .55), 0 0 10px rgba(255, 201, 74, .25);
+      background: rgba(58, 44, 10, .72);
+    }
+
+    .cell.hit {
+      border-color: #46f0c2;
+      background: rgba(12, 60, 52, .78);
+    }
+
+    .cell.convert {
+      border-color: #7ad7ff;
+      background: rgba(12, 42, 66, .82);
+    }
+
+    .cell.cleared {
+      opacity: .18;
+    }
+
+    .cell.wild-ww {
+      border-color: #46f0c2;
+      background: rgba(10, 52, 46, .85);
+    }
+
+    .cell.wild-w2 {
+      border-color: #ff7a7a;
+      background: rgba(62, 16, 16, .85);
+    }
+
+    .cell.scatter {
+      border-color: #d7a6ff;
+      background: rgba(42, 20, 62, .85);
+    }
+
+    .cell .mult-badge {
+      position: absolute;
+      top: 2px;
+      right: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0b1020;
+      background: linear-gradient(180deg, #ffe89a, #ffb347);
+      border-radius: 5px;
+      padding: 0 4px;
+      line-height: 15px;
+    }
+
+    .multiplier-window {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .multiplier-step {
+      min-width: 36px;
+      text-align: center;
+      font-size: 12px;
+      padding: 2px 0;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      color: rgba(255, 255, 255, .55);
+    }
+
+    .multiplier-step.is-active {
+      border-color: #ffc94a;
+      color: #ffe89a;
+      font-weight: 700;
+      background: rgba(255, 201, 74, .12);
+    }
+  </style>
+</head>
+
+<body>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond 超級鑽石</span></span>
+    </div>
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
+            id="carryMultiValue">x1</span></span>
+        <span class="feature-pill" id="wildPill"><span class="k">Mult Wild</span><span class="v"
+            id="multWildValue">0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="multiplier-track" aria-label="Cascade Multiplier">
+            <div class="multiplier-window" id="multiplierWindow"></div>
+          </div>
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (250x)</button>
+          </div>
+        </section>
+        <section id="simulation-stats">
+          <h3 data-i18n="simulationStats">Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span
+              class="s-value" id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span
+              class="s-value hi" id="maxMultiplierValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="reelRngInput">
+            Reel RNG
+            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="0 0 0 0 0">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
+      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
+      <div class="rng-list" id="rngList"></div>
+    </section>
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader" data-i18n="lineWins">Ways Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>2026-09-24：建立 H045 超級鑽石 Demogame（初版）</h4>
+          <ul>
+            <li>依 Demogame規範 4.2 建立 By Game 區域（<code>#feature-bar</code>、<code>#strip-bar</code>、
+              <code>#grid-panel</code>／<code>#board</code>、Message Bar）；其餘 UI 全部使用
+              <code>../demogame_common.css?v=4</code> 與 <code>../demogame_common.js?v=2</code>，未複製共用控制邏輯。</li>
+            <li>數學直接讀 <code>./config.js</code>（<code>window.H045_CONFIG</code>），未另寫簡化邏輯：
+              初始停輪用 <code>symbol_weight</code> 逐格加權、Cascade 補牌用 <code>drop_weight</code>、
+              金框四結果用 <code>golden_result_weight</code>、分裂顆數用 <code>split_count_weight</code>、
+              WILD 倍數用 <code>multiplier_wild_weight</code>。</li>
+            <li>補牌方式為 <strong>消除後掉落補牌</strong>（Demogame規範 4.3 第 2 類），與 game_rule §5.6、Simulator 同順序：
+              結算 → 消除 → 下落補滿 → 金框翻牌 → 放置分裂。</li>
+            <li>Cascade Multiplier 5 階（BG 1/2/3/5/10、FG 2/4/6/10/20）；帶倍 WILD 同盤不設上限，
+              同一連線倍數相乘；Max Win 20,000x 截斷。</li>
+            <li>本作無符號美術，依規範 4.2.3 固定顯示符號框＋代號（一般字重），不接 Image 開關。</li>
+            <li>尚無卡片數學分支，設定 <code>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false</code>，
+              Card System 欄位不顯示；Bet Mode 只列實際支援的 Normal Bet 與 Buy Feature 250x。</li>
+            <li>驗證：抽出本頁數學函式於 Node 跑 20 萬局，與
+              <code>Record/H0451_01_2609241824_betmode0_500000.xlsx</code>（Simulator card-off 50 萬局）對帳——
+              RTP 453.97% vs 446.01%、Hit Rate 37.43% vs 36.99%、FG 週期 1/113 vs 1/116、
+              FG 平均場數 10.13 vs 10.14、avg cascades BG 0.687 vs 0.689、
+              金框四結果 82.14/7.97/7.94/1.95% vs 設定值 82/8/8/2。
+              RTP 差距落在厚尾分布的抽樣誤差內（Simulator standard_error 0.08，1σ 約 ±8pp）。</li>
+            <li>未修改 XLSX／Config 數學參數。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect"></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span data-i18n="language">Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
+      </div>
+    </section>
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+      </div>
+      <iframe id="helpSourceFrame" title="Game Rule source" src="./game_rule.md" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+  </dialog>
+
+  <script src="./Versions/version_manifest.js"></script>
+  <script src="./config.js"></script>
+  <script>
+    // 本作尚未建立 config_92A.js（卡片權重待 card-off 大場次校準），先關閉 Card System 欄位。
+    window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+  </script>
+  <script>
+    "use strict";
+
+    // ===== Config =====
+    const CFG = window.H045_CONFIG;
+    if (!CFG) {
+      document.getElementById("messageBar").textContent = "config.js 載入失敗：找不到 window.H045_CONFIG";
+      throw new Error("H045_CONFIG missing");
+    }
+    for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
+      "golden_ids", "max_win_multiplier", "free_spins", "bet_modes"]) {
+      if (!CFG[key]) {
+        document.getElementById("messageBar").textContent = `config.js 欄位不完整：缺少 ${key}`;
+        throw new Error(`config field missing: ${key}`);
+      }
+    }
+
+    const REELS = CFG.reel_num;
+    const ROWS = CFG.window_size;
+    const NAME = CFG.symbol_names;
+    const GOLD_TO_BASE = Object.fromEntries(Object.entries(CFG.golden_ids).map(([g, b]) => [Number(g), Number(b)]));
+    const GOLD_IDS = new Set(Object.keys(GOLD_TO_BASE).map(Number));
+    const WW = 0, W2 = 1, C1 = 2;
+    const SCORE_SYMBOLS = Object.keys(CFG.pays).map(Number).filter((id) => !GOLD_IDS.has(id));
+    const LADDER = { bg: CFG.cascade_multiplier.bg, fg: CFG.cascade_multiplier.fg };
+    const MAX_WIN = CFG.max_win_multiplier;
+    const MAX_FS = CFG.max_free_spins;
+    const SPLIT_REELS = CFG.split_target_reels;
+    const BUY = CFG.bet_modes.buy_feature;
+    const MODE_NORMAL = 0, MODE_BUY = 2;
+    const BET_LEVELS = [1, 2, 5, 10, 20, 50, 100];
+
+    document.getElementById("buyFeatureBtn").textContent = `Buy Feature (${BUY.cost_multiplier}x)`;
+
+    // ===== 權重工具（與 Simulator 同口徑：逐格加權抽取）=====
+    function cumulative(weights) {
+      const out = [];
+      let running = 0;
+      for (const w of weights) { running += Math.max(0, Number(w) || 0); out.push(running); }
+      return { out, total: running };
+    }
+    function pickIndex(cum, total, forced) {
+      if (forced !== undefined && forced !== null) return forced;
+      const roll = Math.random() * total;
+      let lo = 0, hi = cum.length - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (roll < cum[mid]) hi = mid; else lo = mid + 1; }
+      return lo;
+    }
+
+    const TABLES = {};
+    for (const [key, raw] of Object.entries(CFG.tables)) {
+      const reels = raw.reels.map((strip, i) => {
+        const c = cumulative(raw.symbol_weight[i]);
+        return { strip, cum: c.out, total: c.total };
+      });
+      const drop = [];
+      const dropRaw = raw.drop_weight;
+      for (let r = 0; r < REELS; r += 1) {
+        const ids = Object.keys(dropRaw).map(Number).filter((id) => Number(dropRaw[id][r]) > 0).sort((a, b) => a - b);
+        const c = cumulative(ids.map((id) => dropRaw[id][r]));
+        drop.push({ ids, cum: c.out, total: c.total });
+      }
+      const gKeys = Object.keys(raw.golden_result_weight);
+      const gc = cumulative(gKeys.map((k) => raw.golden_result_weight[k]));
+      const sKeys = Object.keys(raw.split_count_weight).map(Number).sort((a, b) => a - b);
+      const sc = cumulative(sKeys.map((k) => raw.split_count_weight[k]));
+      const mKeys = Object.keys(raw.multiplier_wild_weight).map(Number).sort((a, b) => a - b);
+      const mc = cumulative(mKeys.map((k) => raw.multiplier_wild_weight[k]));
+      TABLES[key] = {
+        reels, drop,
+        golden: { keys: gKeys, cum: gc.out, total: gc.total },
+        split: { keys: sKeys, cum: sc.out, total: sc.total },
+        mult: { keys: mKeys, cum: mc.out, total: mc.total },
+      };
+    }
+
+    function pickTable(group) {
+      const weights = CFG.table_weight[group];
+      const keys = Object.keys(weights);
+      const c = cumulative(keys.map((k) => weights[k]));
+      return keys[pickIndex(c.out, c.total)];
+    }
+
+    function canonical(symbol) {
+      return GOLD_TO_BASE[symbol] !== undefined ? GOLD_TO_BASE[symbol] : symbol;
+    }
+
+    // ===== 盤面 =====
+    function newBoard(tableKey, forcedStops) {
+      const table = TABLES[tableKey];
+      const symbols = [], mults = [], stops = [];
+      for (let r = 0; r < REELS; r += 1) {
+        const reel = table.reels[r];
+        const stop = forcedStops ? (forcedStops[r] % reel.strip.length + reel.strip.length) % reel.strip.length
+          : pickIndex(reel.cum, reel.total);
+        stops.push(stop);
+        const col = [], mcol = [];
+        for (let i = 0; i < ROWS; i += 1) {
+          col.push(reel.strip[(stop + i) % reel.strip.length]);
+          mcol.push(0);
+        }
+        symbols.push(col); mults.push(mcol);
+      }
+      return { symbols, mults, stops, tableKey };
+    }
+
+    // game_rule §4：賠率 x Ways x Bet x Cascade Multiplier x 該連線帶倍 WILD 乘積
+    function evaluate(symbols, mults) {
+      let raw = 0;
+      const hits = new Set();
+      const wins = [];
+      for (const target of SCORE_SYMBOLS) {
+        const counts = [], groups = [];
+        for (let r = 0; r < REELS; r += 1) {
+          const matched = [];
+          for (let row = 0; row < ROWS; row += 1) {
+            const s = symbols[r][row];
+            if (s === WW || s === W2 || canonical(s) === target) matched.push(row);
+          }
+          if (!matched.length) break;
+          counts.push(matched.length); groups.push(matched);
+        }
+        const length = counts.length;
+        if (length < 3) continue;
+        let ways = 1;
+        for (const c of counts) ways *= c;
+        const unit = Number(CFG.pays[target][length - 3] || 0);
+        if (unit <= 0) continue;
+        let lineMult = 1;
+        for (let r = 0; r < length; r += 1) {
+          for (const row of groups[r]) {
+            const s = symbols[r][row];
+            if ((s === WW || s === W2) && mults[r][row]) lineMult *= mults[r][row];
+          }
+        }
+        const pay = unit * ways * lineMult;
+        raw += pay;
+        wins.push({ symbol: target, length, ways, lineMult, pay });
+        for (let r = 0; r < length; r += 1) for (const row of groups[r]) hits.add(`${r},${row}`);
+      }
+      return { raw, hits, wins };
+    }
+
+    // game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果
+    function flipGolden(table, symbols, mults, goldPositions, tally) {
+      const bigSources = [];
+      for (const [r, row] of goldPositions) {
+        const outcome = table.golden.keys[pickIndex(table.golden.cum, table.golden.total)];
+        tally.golden[outcome] = (tally.golden[outcome] || 0) + 1;
+        symbols[r][row] = outcome.startsWith("W2") ? W2 : WW;
+        if (outcome.endsWith("_M")) {
+          const value = table.mult.keys[pickIndex(table.mult.cum, table.mult.total)];
+          mults[r][row] = value;
+          tally.multWild += 1;
+        } else {
+          mults[r][row] = 0;
+        }
+        if (outcome.startsWith("W2")) bigSources.push([r, row]);
+      }
+      for (const [sr, srow] of bigSources) {
+        const count = table.split.keys[pickIndex(table.split.cum, table.split.total)];
+        const spots = [];
+        for (const r of SPLIT_REELS) {
+          for (let row = 0; row < ROWS; row += 1) {
+            const s = symbols[r][row];
+            if (s !== WW && s !== W2 && s !== C1 && !(r === sr && row === srow)) spots.push([r, row]);
+          }
+        }
+        for (let i = spots.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [spots[i], spots[j]] = [spots[j], spots[i]];
+        }
+        for (const [r, row] of spots.slice(0, count)) { symbols[r][row] = W2; mults[r][row] = 0; }
+      }
+    }
+
+    /** 一次完整 Spin（含所有 Cascade）。回傳每段快照供演出與 Debug 重現。 */
+    function runSpin(tableKey, freeGame, bet, budget, forcedStops) {
+      const table = TABLES[tableKey];
+      const { symbols, mults, stops } = newBoard(tableKey, forcedStops);
+      const ladder = freeGame ? LADDER.fg : LADDER.bg;
+      const steps = [];
+      const tally = { golden: {}, multWild: 0 };
+      let pay = 0, cascades = 0, capped = false;
+      const cap = MAX_WIN * bet;
+
+      for (; ;) {
+        const evalResult = evaluate(symbols, mults);
+        if (evalResult.raw <= 0) break;
+        const multiplier = ladder[Math.min(cascades, ladder.length - 1)];
+        const gained = evalResult.raw * multiplier * bet;
+        pay += gained;
+        cascades += 1;
+        steps.push({
+          kind: "win",
+          board: symbols.map((c) => c.slice()),
+          mults: mults.map((c) => c.slice()),
+          hits: new Set(evalResult.hits),
+          wins: evalResult.wins,
+          multiplier, gained, cascade: cascades,
+        });
+
+        const goldPositions = [];
+        for (const key of evalResult.hits) {
+          const [r, row] = key.split(",").map(Number);
+          if (GOLD_IDS.has(symbols[r][row])) goldPositions.push([r, row]);
+          else { symbols[r][row] = -1; mults[r][row] = 0; }
+        }
+        // 掉落補牌（Demogame規範 4.3 第 2 類）：先重力下落、上方補新符號
+        for (let r = 0; r < REELS; r += 1) {
+          const kept = [];
+          for (let row = 0; row < ROWS; row += 1) {
+            if (symbols[r][row] !== -1) kept.push([symbols[r][row], mults[r][row]]);
+          }
+          const need = ROWS - kept.length;
+          const fresh = [];
+          for (let i = 0; i < need; i += 1) {
+            const d = table.drop[r];
+            fresh.push([d.ids[pickIndex(d.cum, d.total)], 0]);
+          }
+          const merged = fresh.concat(kept);
+          for (let row = 0; row < ROWS; row += 1) { symbols[r][row] = merged[row][0]; mults[r][row] = merged[row][1]; }
+        }
+        if (goldPositions.length) flipGolden(table, symbols, mults, goldPositions, tally);
+        steps.push({
+          kind: "refill",
+          board: symbols.map((c) => c.slice()),
+          mults: mults.map((c) => c.slice()),
+          hits: new Set(), wins: [], multiplier, gained: 0, cascade: cascades,
+        });
+
+        if (budget + pay >= cap) { capped = true; break; }
+      }
+
+      let scatter = 0;
+      for (let r = 0; r < REELS; r += 1) for (let row = 0; row < ROWS; row += 1) if (symbols[r][row] === C1) scatter += 1;
+      return { pay, cascades, scatter, steps, stops, tableKey, symbols, mults, tally, capped };
+    }
+
+    /** 一整個回合（BG + 觸發的 FG），與 Simulator 的 round() 同流程。 */
+    function runRound(mode, bet, options = {}) {
+      const cap = MAX_WIN * bet;
+      if (mode === MODE_BUY) {
+        const entry = newBoard(BUY.entry_table);
+        let sc = 0;
+        for (let r = 0; r < REELS; r += 1) for (let row = 0; row < ROWS; row += 1) if (entry.symbols[r][row] === C1) sc += 1;
+        const fg = runFreeSession(BUY.free_spins, bet, 0);
+        fg.entry = entry;
+        fg.entryScatter = sc;
+        fg.payBg = 0;
+        fg.payTotal = Math.min(fg.payFg, cap);
+        return fg;
+      }
+      let bg;
+      let guard = 0;
+      do {
+        bg = runSpin(pickTable("bg"), false, bet, 0, options.forcedStops);
+        guard += 1;
+      } while (options.forceFg && bg.scatter < 3 && guard < 2000);
+
+      const round = {
+        payBg: bg.pay, payFg: 0, bg, fgSpins: [], fgTriggered: false,
+        retriggers: 0, capped: bg.capped, entry: null,
+      };
+      if (bg.scatter >= 3) {
+        const initial = (CFG.free_spins[Math.min(bg.scatter, 5)] || CFG.free_spins[3]).initial;
+        const fg = runFreeSession(initial, bet, bg.pay);
+        round.payFg = fg.payFg;
+        round.fgSpins = fg.fgSpins;
+        round.fgTriggered = true;
+        round.retriggers = fg.retriggers;
+        round.capped = round.capped || fg.capped;
+      }
+      round.payTotal = Math.min(round.payBg + round.payFg, cap);
+      return round;
+    }
+
+    function runFreeSession(initialSpins, bet, budget) {
+      const cap = MAX_WIN * bet;
+      let remaining = initialSpins, played = 0, payFg = 0, retriggers = 0, capped = false;
+      const fgSpins = [];
+      while (remaining > 0 && played < MAX_FS) {
+        remaining -= 1; played += 1;
+        const spin = runSpin(pickTable("fg"), true, bet, budget + payFg);
+        payFg += spin.pay;
+        fgSpins.push(spin);
+        if (budget + payFg >= cap) { capped = true; break; }
+        if (spin.scatter >= 3 && played + remaining < MAX_FS) {
+          const add = Math.min(5, MAX_FS - played - remaining);
+          if (add > 0) { remaining += add; retriggers += 1; }
+        }
+      }
+      return { payFg, fgSpins, retriggers, capped, payBg: 0, fgTriggered: true, totalSpins: played };
+    }
+
+    // ===== 共用 Simulation 介面（不播動畫、不動盤面與餘額）=====
+    window.demogameSimulateRound = function (context = {}) {
+      const bet = Number(context.bet || activeBet());
+      const mode = context.betMode === MODE_BUY ? MODE_BUY : MODE_NORMAL;
+      const round = runRound(mode, bet);
+      const wager = mode === MODE_BUY ? bet * BUY.cost_multiplier : bet;
+      return {
+        bet: wager,
+        coinIn: wager,
+        win: round.payTotal,
+        totalWin: round.payTotal,
+        freeGameTriggered: !!round.fgTriggered,
+        freeSpins: round.fgSpins ? round.fgSpins.length : 0,
+        multiplier: wager > 0 ? round.payTotal / wager : 0,
+      };
+    };
+
+    // ===== UI =====
+    const el = {};
+    for (const id of ["board", "messageBar", "balanceValue", "betValue", "winValue", "spinBtn", "autoBtn",
+      "betBtn", "betMinusBtn", "betPlusBtn", "betMenu", "speedRange", "speedValue", "modeText",
+      "featureStatus", "carryMultiValue", "multWildValue", "fgLeftPill", "fgLeftValue",
+      "normalBetBtn", "buyFeatureBtn", "multiplierWindow", "rngList", "lineList", "spinResultList",
+      "liveLogBody", "clearLogBtn", "roundCountValue", "rtpValue", "hitRateValue", "fgTriggerValue",
+      "maxMultiplierValue", "reelRngInput", "setRngResetBtn", "forceFgInput", "resetBtn"]) {
+      el[id] = document.getElementById(id);
+    }
+
+    const state = {
+      balance: 10000, betIndex: 0, mode: MODE_NORMAL, busy: false, auto: false,
+      speed: 1, rounds: 0, coinIn: 0, win: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0,
+    };
+
+    function activeBet() { return BET_LEVELS[state.betIndex]; }
+    function wager() { return state.mode === MODE_BUY ? activeBet() * BUY.cost_multiplier : activeBet(); }
+    function fmt(value, digits = 2) {
+      return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+    function delay(ms) { return new Promise((r) => setTimeout(r, Math.max(16, ms / state.speed))); }
+
+    function log(text) {
+      if (!el.liveLogBody) return;
+      const line = document.createElement("div");
+      line.textContent = text;
+      el.liveLogBody.prepend(line);
+      while (el.liveLogBody.childElementCount > 300) el.liveLogBody.lastElementChild.remove();
+    }
+
+    function renderLadder(cascadeIndex, freeGame) {
+      const ladder = freeGame ? LADDER.fg : LADDER.bg;
+      el.multiplierWindow.innerHTML = "";
+      ladder.forEach((value, index) => {
+        const step = document.createElement("div");
+        step.className = "multiplier-step" + (index === Math.min(cascadeIndex, ladder.length - 1) ? " is-active" : "");
+        step.textContent = `x${value}`;
+        el.multiplierWindow.appendChild(step);
+      });
+    }
+
+    function renderBoard(symbols, mults, hits, cleared) {
+      el.board.innerHTML = "";
+      for (let row = 0; row < ROWS; row += 1) {
+        for (let r = 0; r < REELS; r += 1) {
+          const symbol = symbols[r][row];
+          const cell = document.createElement("div");
+          const classes = ["cell"];
+          if (GOLD_IDS.has(symbol)) classes.push("gold", "keep-symbol-frame");
+          if (symbol === WW) classes.push("wild-ww");
+          if (symbol === W2) classes.push("wild-w2");
+          if (symbol === C1) classes.push("scatter");
+          if (hits && hits.has(`${r},${row}`)) classes.push("hit");
+          if (cleared && cleared.has(`${r},${row}`)) classes.push("cleared");
+          cell.className = classes.join(" ");
+          const label = document.createElement("span");
+          label.className = "slot-symbol-label";
+          label.textContent = NAME[String(symbol)] || `S${symbol}`;
+          cell.appendChild(label);
+          if (mults && mults[r][row]) {
+            const badge = document.createElement("span");
+            badge.className = "mult-badge";
+            badge.textContent = `x${mults[r][row]}`;
+            cell.appendChild(badge);
+          }
+          el.board.appendChild(cell);
+        }
+      }
+    }
+
+    function renderRng(spin) {
+      if (!el.rngList) return;
+      el.rngList.innerHTML = "";
+      const rows = [["table", spin.tableKey], ["draw", "weighted draw (per-stop symbol_weight)"]];
+      spin.stops.forEach((stop, index) => {
+        rows.push([`R${index + 1} stop`, `${stop} / ${TABLES[spin.tableKey].reels[index].strip.length}`]);
+      });
+      for (const [key, value] of rows) {
+        const line = document.createElement("div");
+        line.className = "rng-row";
+        line.innerHTML = `<span class="k">${key}</span><span class="v">${value}</span>`;
+        el.rngList.appendChild(line);
+      }
+    }
+
+    function renderWins(wins, multiplier, bet) {
+      if (!el.lineList) return;
+      el.lineList.innerHTML = "";
+      for (const win of wins) {
+        const line = document.createElement("div");
+        line.className = "line-row";
+        const detail = `${NAME[String(win.symbol)]} x${win.length}　ways ${win.ways}` +
+          (win.lineMult > 1 ? `　wild x${win.lineMult}` : "") + `　cascade x${multiplier}`;
+        line.innerHTML = `<span class="k">${detail}</span><span class="v">${fmt(win.pay * multiplier * bet)}</span>`;
+        el.lineList.appendChild(line);
+      }
+    }
+
+    function renderSpinResult(round, bet) {
+      if (!el.spinResultList) return;
+      const golden = {};
+      const collect = (spin) => {
+        for (const [k, v] of Object.entries(spin.tally.golden)) golden[k] = (golden[k] || 0) + v;
+      };
+      if (round.bg) collect(round.bg);
+      (round.fgSpins || []).forEach(collect);
+      const rows = [
+        ["bet mode", state.mode === MODE_BUY ? `Buy Feature (${BUY.cost_multiplier}x)` : "Normal Bet"],
+        ["base bet", fmt(bet)],
+        ["bet amount", fmt(wager())],
+        ["bet_tier_amount", fmt(state.mode === MODE_BUY ? wager() / BUY.cost_multiplier : wager())],
+        ["bet tier", (() => { const t = state.mode === MODE_BUY ? wager() / BUY.cost_multiplier : wager(); return t < 2 ? "small_bet" : t <= 100 ? "medium_bet" : "big_bet"; })()],
+        ["card system", "off (config_92A.js 尚未建立)"],
+        ["pay BG", fmt(round.payBg || 0)],
+        ["pay FG", fmt(round.payFg || 0)],
+        ["total win", fmt(round.payTotal || 0)],
+        ["win multiplier", `${fmt((round.payTotal || 0) / wager())} x`],
+        ["max win capped", round.capped ? `yes (${MAX_WIN}x)` : "no"],
+        ["golden flips", JSON.stringify(golden)],
+      ];
+      el.spinResultList.innerHTML = "";
+      for (const [key, value] of rows) {
+        const line = document.createElement("div");
+        line.className = "rng-row";
+        line.innerHTML = `<span class="k">${key}</span><span class="v">${value}</span>`;
+        el.spinResultList.appendChild(line);
+      }
+    }
+
+    function updatePlayer() {
+      el.balanceValue.textContent = fmt(state.balance, 0);
+      el.betValue.textContent = fmt(activeBet());
+      el.betBtn.textContent = `Bet ${fmt(activeBet())}`;
+    }
+
+    function updateStats() {
+      el.roundCountValue.textContent = state.rounds.toLocaleString();
+      el.rtpValue.textContent = state.coinIn > 0 ? `${(state.win / state.coinIn * 100).toFixed(2)}%` : "0.00%";
+      el.hitRateValue.textContent = state.rounds > 0 ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
+      el.fgTriggerValue.textContent = state.fgTriggers.toLocaleString();
+      el.maxMultiplierValue.textContent = `x${state.maxMultiplier.toFixed(2)}`;
+    }
+
+    function forcedStopsFromInput() {
+      const raw = (el.reelRngInput?.value || "").trim();
+      if (!raw) return null;
+      const parts = raw.split(/[\s,]+/).map(Number);
+      if (parts.length !== REELS || parts.some((n) => !Number.isFinite(n) || n < 0)) {
+        el.messageBar.textContent = `Reel RNG 需為 ${REELS} 個非負整數`;
+        return null;
+      }
+      return parts;
+    }
+
+    async function playSpin() {
+      if (state.busy) return;
+      const cost = wager();
+      if (state.balance < cost) { el.messageBar.textContent = "Credit 不足"; return; }
+      state.busy = true;
+      el.spinBtn.disabled = true;
+      state.balance -= cost;
+      el.winValue.textContent = "0";
+      updatePlayer();
+
+      const bet = activeBet();
+      const forcedStops = state.mode === MODE_NORMAL ? forcedStopsFromInput() : null;
+      const round = runRound(state.mode, bet, { forceFg: !!el.forceFgInput?.checked, forcedStops });
+
+      // --- BG 演出 ---
+      if (round.entry) {
+        el.modeText.textContent = "Buy Feature";
+        renderBoard(round.entry.symbols, round.entry.mults, null, null);
+        el.messageBar.textContent = `Buy Feature 進場盤（C1 x${round.entryScatter}，不判獎）`;
+        renderLadder(0, true);
+        await delay(700);
+      } else {
+        el.modeText.textContent = "Base Game";
+        renderRng(round.bg);
+        await playSteps(round.bg, bet, false);
+      }
+
+      // --- FG 演出 ---
+      if (round.fgSpins && round.fgSpins.length) {
+        el.fgLeftPill.classList.remove("hidden");
+        el.modeText.textContent = "Free Game";
+        for (let i = 0; i < round.fgSpins.length; i += 1) {
+          el.fgLeftValue.textContent = `${i + 1}/${round.fgSpins.length}`;
+          renderRng(round.fgSpins[i]);
+          await playSteps(round.fgSpins[i], bet, true);
+        }
+        el.fgLeftPill.classList.add("hidden");
+        el.modeText.textContent = "Base Game";
+      }
+
+      state.balance += round.payTotal;
+      state.rounds += 1;
+      state.coinIn += cost;
+      state.win += round.payTotal;
+      if (round.payTotal > 0) state.hits += 1;
+      if (round.fgTriggered) state.fgTriggers += 1;
+      state.maxMultiplier = Math.max(state.maxMultiplier, round.payTotal / cost);
+      el.winValue.textContent = fmt(round.payTotal);
+      el.messageBar.textContent = round.payTotal > 0
+        ? `Win ${fmt(round.payTotal)}（${fmt(round.payTotal / cost)}x）${round.capped ? " — Max Win 截斷" : ""}`
+        : "No win";
+      renderSpinResult(round, bet);
+      log(`[${state.rounds}] ${state.mode === MODE_BUY ? "BF" : "NB"} bet=${fmt(cost)} win=${fmt(round.payTotal)}` +
+        (round.fgTriggered ? ` FG x${round.fgSpins.length}` : ""));
+      updatePlayer();
+      updateStats();
+      state.busy = false;
+      el.spinBtn.disabled = false;
+      if (state.auto) setTimeout(playSpin, 260 / state.speed);
+    }
+
+    async function playSteps(spin, bet, freeGame) {
+      let multWild = 0;
+      renderLadder(0, freeGame);
+      renderBoard(spin.steps.length ? spin.steps[0].board : spin.symbols,
+        spin.steps.length ? spin.steps[0].mults : spin.mults, null, null);
+      await delay(320);
+      for (const step of spin.steps) {
+        if (step.kind === "win") {
+          renderLadder(step.cascade - 1, freeGame);
+          el.carryMultiValue.textContent = `x${step.multiplier}`;
+          renderBoard(step.board, step.mults, step.hits, null);
+          renderWins(step.wins, step.multiplier, bet);
+          el.messageBar.textContent = `Cascade ${step.cascade}　x${step.multiplier}　+${fmt(step.gained)}`;
+          await delay(420);
+          renderBoard(step.board, step.mults, null, step.hits);
+          await delay(200);
+        } else {
+          multWild = 0;
+          for (let r = 0; r < REELS; r += 1) for (let row = 0; row < ROWS; row += 1) if (step.mults[r][row]) multWild += 1;
+          el.multWildValue.textContent = String(multWild);
+          renderBoard(step.board, step.mults, null, null);
+          await delay(300);
+        }
+      }
+      if (!spin.steps.length) {
+        renderBoard(spin.symbols, spin.mults, null, null);
+        el.carryMultiValue.textContent = `x${(freeGame ? LADDER.fg : LADDER.bg)[0]}`;
+      }
+      el.featureStatus.textContent = spin.scatter >= 3 ? `C1 x${spin.scatter}` : "";
+    }
+
+    // ===== 事件 =====
+    el.spinBtn.addEventListener("click", playSpin);
+    el.autoBtn.addEventListener("click", () => {
+      state.auto = !state.auto;
+      el.autoBtn.classList.toggle("is-active", state.auto);
+      if (state.auto && !state.busy) playSpin();
+    });
+    el.betMinusBtn.addEventListener("click", () => { state.betIndex = Math.max(0, state.betIndex - 1); updatePlayer(); });
+    el.betPlusBtn.addEventListener("click", () => { state.betIndex = Math.min(BET_LEVELS.length - 1, state.betIndex + 1); updatePlayer(); });
+    el.speedRange.addEventListener("input", () => {
+      state.speed = Number(el.speedRange.value);
+      el.speedValue.textContent = `x${state.speed}`;
+    });
+    el.normalBetBtn.addEventListener("click", () => {
+      state.mode = MODE_NORMAL;
+      el.normalBetBtn.classList.add("is-active");
+      el.buyFeatureBtn.classList.remove("is-active");
+    });
+    el.buyFeatureBtn.addEventListener("click", () => {
+      state.mode = MODE_BUY;
+      el.buyFeatureBtn.classList.add("is-active");
+      el.normalBetBtn.classList.remove("is-active");
+    });
+    el.clearLogBtn?.addEventListener("click", () => { el.liveLogBody.innerHTML = ""; });
+    el.setRngResetBtn?.addEventListener("click", () => { el.reelRngInput.value = ""; });
+    el.resetBtn?.addEventListener("click", () => {
+      Object.assign(state, {
+        balance: 10000, rounds: 0, coinIn: 0, win: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0,
+      });
+      updatePlayer(); updateStats();
+      el.messageBar.textContent = "Ready — press Spin";
+    });
+
+    // ===== 啟動 =====
+    renderLadder(0, false);
+    renderBoard(newBoard("bg_1").symbols, null, null, null);
+    updatePlayer();
+    updateStats();
+    el.carryMultiValue.textContent = `x${LADDER.bg[0]}`;
+  </script>
+  <script src="../demogame_common.js?v=2"></script>
+</body>
+
+</html>

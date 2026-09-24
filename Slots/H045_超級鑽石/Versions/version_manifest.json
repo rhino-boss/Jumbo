@@ -19,8 +19,9 @@
         "Random Wild Trigger Weight（0/2/3/4）改為 Golden_Result_Weight（WW/WW_M/W2/W2_M）＋ Split_Count_Weight（2~4）＋ Multiplier_Wild_Weight（x2/x3/x5）三張表。",
         "Cascade Multiplier 由 4 階改 5 階：BG 1/2/3/5/10、FG 2/4/6/10/20。",
         "新增 Max Win 20,000x 與 OP Jackpot 四階參數（觸發權重暫為 0，待 math / 商務）。",
-        "自然機率校準：金框物理停點保留約 55%、Golden_Result_Weight 82/8/8/2，card-off 4 萬局 RTP 319.07%、Hit 37.20%、FG 週期 1/128。",
-        "尚未建立 H045192A.xlsx 與 config_92A.js：卡片權重需以 card-off 大場次報表（NB 1e9）校準，待 Simulator 完成。"
+        "自然機率校準：金框物理停點保留約 55%、Golden_Result_Weight 82/8/8/2；Simulator card-off 50 萬局 RTP 446.01%、Hit 36.99%、FG 週期 1/116、最大 15,115x。",
+        "尚未建立 H045192A.xlsx 與 config_92A.js：卡片權重需以 card-off 大場次報表（NB 1e9）校準；Simulator 已完成，可執行該場次。",
+        "新增 Simulator.py（Console 欄位、報表命名與 Multiplier Line 版面依現行模擬程式規範；無 SF 欄位）。"
       ]
     }
   ]
