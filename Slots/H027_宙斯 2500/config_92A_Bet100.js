@@ -70,7 +70,7 @@ const data = {
   ],
   "multiplier_max_value": 2500,
   "model": "H027192",
-  "excel_version": "5.0.0.0",
+  "excel_version": "5.1.0.0",
   "default_coin_in": 100,
   "reel_num": 6,
   "window_size": 5,
@@ -1957,8 +1957,8 @@ const data = {
     "retry_limit": 10000,
     "weight_threshold": 1000000000,
     "card_multiplier_denominator": {
-      "normal_bet": "normal_bet_cost",
-      "extra_bet": "extra_bet_cost",
+      "normal_bet": "normal_bet_base_cost",
+      "extra_bet": "normal_bet_base_cost",
       "buy_feature": "normal_bet_base_cost"
     },
     "fg_entry_cycle_target": {

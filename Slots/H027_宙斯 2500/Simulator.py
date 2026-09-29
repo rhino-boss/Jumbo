@@ -2,6 +2,7 @@ import json
 import hashlib
 import math
 import os
+import tempfile
 import re
 import subprocess
 import sys
@@ -26,7 +27,16 @@ for _cache_name in (
     _cache_digest.update(str(_cache_path.resolve()).encode("utf-8"))
     if _cache_path.is_file():
         _cache_digest.update(_cache_path.read_bytes())
-os.environ.setdefault("NUMBA_CACHE_DIR", str(Path(os.environ.get("TEMP", ".")) / "h027_numba" / _cache_digest.hexdigest()[:16]))
+# Numba 會把模組層級的陣列（卡片權重、Profile 分流結果等）當成編譯期常數烤進核心，
+# 所以快取鍵也必須包含會改變這些陣列的執行參數；否則 Newbie 會沿用 Oldhand 編好的核心
+# （2026-09-29 實際發生：Newbie 驗證跑出 Oldhand 的 FG 分布）。
+for _env_key in ("H027_CONFIG_FILE", "H027_BET_MODE", "H027_BASE_BET",
+                 "H027_CARD_SYSTEM_ENABLED", "H027_CARD_SYSTEM_IS_NEWBIE"):
+    _cache_digest.update(f"{_env_key}={os.environ.get(_env_key, '')}".encode("utf-8"))
+# 一律覆寫、不用 setdefault：批次父程序會把自己的 NUMBA_CACHE_DIR 透過環境變數傳給子程序，
+# setdefault 會讓所有子程序共用父程序那一份快取，第一個子程序烤進去的卡片陣列就被後面所有批次沿用
+# （2026-09-29 實際發生：Newbie 跑成 Oldhand、BF Card-On 跑成 Card-Off）。
+os.environ["NUMBA_CACHE_DIR"] = str(Path(tempfile.gettempdir()) / "h027_numba" / _cache_digest.hexdigest()[:16])
 
 from numba import njit
 
@@ -1627,11 +1637,15 @@ def output_report(frames, record, bet_mode, total_round):
     if card_system_active:
         report_game_id = str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
         version_tag = format_rtp_version_tag(CONFIG_VERSION)
+        # 模擬程式規範 §3.1.4：<rtp_tag>_<profile>[_<bet_tier>]；profile 為 newbie／oldhand，
+        # Oldhand 再接 small_bet／medium_bet／big_bet，Newbie 省略；檔名不加 card 後綴。
         parts = [report_game_id, version_tag, timestamp, f"betmode{bet_mode}", rounds_tag, format_rtp_tag(summary["rtp_total"])]
-        parts.append(str(summary["card_system_profile"]))
-        parts.append("card")
+        parts.append(str(summary["player_profile"]))
+        if str(summary["player_profile"]) == "oldhand":
+            parts.append(str(summary["bet_tier"]))
     else:
-        report_game_id = str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
+        # Card-Off 是基礎數學的自然機率，檔名用基礎數學工作簿名（H0271A／H0271B），不用 variant model
+        report_game_id = Path(str(CFG_RTP.get("source_xlsx") or "")).stem or str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
         parts = [report_game_id, format_base_version_tag(BASE_CONFIG_VERSION), timestamp, f"betmode{bet_mode}", rounds_tag]
     filename = "_".join(parts) + ".xlsx"
     path = OUTPUT_DIR / filename

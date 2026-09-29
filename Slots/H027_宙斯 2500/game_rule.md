@@ -1,12 +1,12 @@
 # 宙斯 2500 (Zeus 2500) 遊戲規則說明
 
-> 文件版本：v4.0（BF 入場輪帶改為結構上不可能中獎；新增 §6.4 OP Jackpot）
+> 文件版本：v5.1（新增 B 版基礎數學 H0271B：倍數球每 10 轉一次、C3 平均倍數為 C2 一半；B 版卡片權重完成校準）
 > 對標競品：Pragmatic Play - Gates of Olympus 1000  
-> 撰寫依據：玩法以企劃提案與競品資料為主；現階段數學值以 `Source/H0271.xlsx` 為主
+> 撰寫依據：玩法以企劃提案與競品資料為主；現階段數學值以 `Source/H0271A.xlsx`（A 版）與 `Source/H0271B.xlsx`（B 版）為主
 > 編號：H027　Game ID：101027　ParSheet ID：H0271  
-> 基礎數學版本：`4`
-> 撰寫日期：2026-08-03（最後更新 2026-09-22）  
-> 實作狀態：依 Version 與**押注層級**選擇 Config —— 小 Bet `< $2` 用 H027194A、中 Bet `$2～$100` 用 H027192A、大 Bet `> $100` 用 H027192A_Bet100，三者皆為 v4.0.0.0。Card System Off 使用該 Config 的原始自然機率，On 則套用所選 Profile 的卡片權重。
+> 基礎數學版本：`5`
+> 撰寫日期：2026-08-03（最後更新 2026-09-29）  
+> 實作狀態：依 Version 與**押注層級**選擇 Config —— 小 Bet `< $2` 用 H027194A／H027194B、中 Bet `$2～$100` 用 H027192A／H027192B、大 Bet `> $100` 用 H027192A_Bet100／H027192B_Bet100（A／B 為兩套基礎數學，同一層級擇一），六者皆為 v5.1.0.0。Card System Off 使用該 Config 的原始自然機率，On 則套用所選 Profile 的卡片權重。
 
 ---
 
@@ -293,7 +293,8 @@
 ## 附錄 B. 文件來源 / 參考
 
 - 主要玩法依據：`文件/260630_Zeus 2500.pptx`。
-- 92 RTP 家族數學依據：`Source/H027192A.xlsx`；94 RTP 家族數學依據：`Source/H027194A.xlsx`。
+- 基礎數學：`Source/H0271A.xlsx`（A 版）、`Source/H0271B.xlsx`（B 版，倍數球每 10 轉一次、C3 平均倍數為 C2 一半；輪帶與 A 逐格相同）。
+- 倍率權重（卡片系統）：92 家族 `Source/H027192A.xlsx`／`H027192B.xlsx`、94 家族 `Source/H027194A.xlsx`／`H027194B.xlsx`、大 Bet `Source/H027192A_Bet100.xlsx`／`H027192B_Bet100.xlsx`。
 - 基本資訊依據：`../iGaming 遊戲代號一覽.xlsx`。
-- 目前程式：`Simulator.py`、`config.js`、`config_92A.js`、`config_94A.js`；各 Config 分別對應 `Source/H0271.xlsx`、`Source/H027192A.xlsx`、`Source/H027194A.xlsx`。
+- 目前程式：`Simulator.py`、`index.html`；Config 六份自給自足（`config_92A.js`、`config_94A.js`、`config_92A_Bet100.js`、`config_92B.js`、`config_94B.js`、`config_92B_Bet100.js`），各自以 `source_xlsx`／`source_multiplier_xlsx` 標明對應的基礎數學與倍率權重工作簿。
 - 待確認事項：`問題清單_H027.md`。

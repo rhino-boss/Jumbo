@@ -568,7 +568,7 @@
     </div>
   </dialog>
 
-  <script src="./Versions/version_manifest.js?v=20260924-v5000"></script>
+  <script src="./Versions/version_manifest.js?v=20260929-v5100"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_VISIBLE_VERSION_ENTRIES = Array.from(
@@ -585,12 +585,12 @@
     if (!H027_VERSION_ENTRY) throw new Error("Version manifest has no usable entries.");
     const H027_CONFIG_MAP = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {}).map(([key, value]) => {
       const rawCode = String(key).toUpperCase();
-      const code = rawCode === "BASE" || rawCode.endsWith("A") ? rawCode : `${rawCode}A`;
+      const code = /^(BASE|9[24][AB](_BET100)?)$/.test(rawCode) ? rawCode : `${rawCode}A`;
       return [code, String(value).replace(/^\.\.\//, "")];
     }));
     let H027_CONFIG_CODE = H027_QUERY.get("config");
     if (!H027_CONFIG_CODE) try { H027_CONFIG_CODE = localStorage.getItem("slotDemoConfig"); } catch (_) {}
-    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(BASE|92A?|94A?)(?:\.js)?$/i);
+    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(BASE|9[24][AB]?(?:_BET100)?)(?:\.js)?$/i);
     H027_CONFIG_CODE = H027_CODE_MATCH ? H027_CODE_MATCH[1].toUpperCase() : "";
     if (H027_CONFIG_CODE === "92") H027_CONFIG_CODE = "92A";
     if (H027_CONFIG_CODE === "94") H027_CONFIG_CODE = "94A";
@@ -947,7 +947,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function manifestConfigCodes(entry) {
     return Object.keys(entry?.configs || {}).map((key) => {
       const code = key.toUpperCase();
-      return code === "BASE" || code.endsWith("A") ? code : `${code}A`;
+      return /^(BASE|9[24][AB](_BET100)?)$/.test(code) ? code : `${code}A`;
     });
   }
 
