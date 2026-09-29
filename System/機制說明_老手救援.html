@@ -3074,6 +3074,37 @@
           </tbody>
         </table>
       </div>
+      <p>表中數值的算法（每一列都以 10,000 名玩家、每人一天為一筆計算）：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>欄位</th><th>算法</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">RTP（有機制）</td><td>Σ 所有玩家停手前的總得分（含救援）÷ Σ 停手前的總押注。每天歸零重來，天天照同一策略玩的長期 RTP 就是這個值。</td></tr>
+            <tr><td class="key">（無機制）</td><td>同一群玩家、同一套閃人條件，但遊戲沒有救援機制：停手點依自然結果決定，得分只算自然得分。代表「這個玩法本身」的 RTP。</td></tr>
+            <tr><td class="key">兩者差距</td><td>即救援機制對這個玩法的貢獻；有機制 &gt; 100% 而無機制 &lt; 100%，代表套利空間完全來自救援。</td></tr>
+            <tr><td class="key">平均停在</td><td>有機制時所有玩家停手轉數的平均。</td></tr>
+            <tr><td class="key">EV／日（bet）</td><td>（Σ 停手前總得分 − Σ 停手前總押注）÷ 玩家數，即每人每天平均淨贏幾個 bet（有機制）。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>各情境的停手點判定：</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>情境</th><th>有機制：停在</th><th>無機制：停在</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="key">固定玩 N 轉就閃</td><td>第 N 轉</td><td>第 N 轉（相同）</td></tr>
+            <tr><td class="key">拿到任何救援就閃</td><td>第一次被救的那一轉；沒被救則第 400 轉</td><td>沒有救援可拿 → 第 400 轉</td></tr>
+            <tr><td class="key">只等 100× 救援才閃</td><td>第一次拿到 100× 救援的那一轉；沒有則第 400 轉</td><td>沒有救援可拿 → 第 400 轉</td></tr>
+            <tr><td class="key">開出 ≥ 50× 單局就閃</td><td>第一次單局 ≥ 50×（自然或救援）的那一轉；沒有則第 400 轉</td><td>第一次自然單局 ≥ 50× 的那一轉；沒有則第 400 轉</td></tr>
+            <tr><td class="key">當日 RTP &gt; 100% 就閃</td><td>當日累積 RTP（含救援）第一次 &gt; 100% 的那一轉；沒有則第 400 轉</td><td>自然累積 RTP 第一次 &gt; 100% 的那一轉；沒有則第 400 轉</td></tr>
+            <tr><td class="key">當日 RTP &gt; 100% 或拿到救援就閃</td><td>上面兩個條件先發生的那一轉；都沒有則第 400 轉</td><td>沒有救援可拿，只剩 RTP &gt; 100% 條件（與上一列相同）</td></tr>
+          </tbody>
+        </table>
+      </div>
       <div class="note warn">
         <span class="tag">套利風險</span>
         <p>
