@@ -14,13 +14,16 @@
 
 | 遊戲 | 廠商 | 付費轉 | 報告日期 | 格式版本 | 報告 | md 正本位置 |
 |---|---|---|---|---|---|---|
-| Super Ace | JILI | 166,050 | 2026-08-26 | 現行 | [開啟](遊戲數據_Super_Ace.html) | `H5\JILI - Super Ace\` |
+| Super Ace | JILI | 166,050 | 2026-09-29 | 現行 | [開啟](遊戲數據_Super_Ace.html) | `H5\JILI - Super Ace\` |
 | Lucky Neko | PG | 47,068 | 2026-08-26 | 現行 | [開啟](遊戲數據_Lucky_Neko.html) | `H5\PG - Lucky Neko\` |
 | Pinata Wins | PG | 22,688 | 2026-08-26 | 現行 | [開啟](遊戲數據_Pinata_Wins.html) | `H5\PG - Pinata Wins\` |
 | Gates of Olympus 1000 | PP | 31,472 | 2026-08-26 | 現行 | [開啟](遊戲數據_Gates_of_Olympus_1000.html) | `H5\PP - Gates of Olympus 1000\` |
 | Wild Bounty Showdown | PG | 10,463 | 2026-08-27 | 現行 | [開啟](遊戲數據_Wild_Bounty_Showdown.html) | `H5\PG - Wild Bounty Showdown\` |
 
 > 五份都是現行格式，章節與指標定義一致，可直接並排比較。
+>
+> **2026-09-29 Super Ace 改版**：新增賠率表（由封包反推）與消除掉落分布，
+> 比例類型表格全部轉成直式（場景為欄、各欄加總 100%），FG 全程得分門檻併入門檻機率。
 
 ---
 
