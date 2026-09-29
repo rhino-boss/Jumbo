@@ -20,7 +20,7 @@ C-2 規則（機制說明_老手救援C-2版.html）：
 * 救援落在判定回合：該轉最終得分 = max(自然得分, 救援倍數 × Bet)，
   成本以增量記帳。
 * 延伸救援（當日 401 轉起）：每滿 40 轉判定，
-  前 200 轉 RTP < 60% 且前 40 轉 RTP < 50% → 送 10× BG 盤面。
+  前 100 轉 RTP < 75% 且前 40 轉 RTP < 50% → 送 10× BG 盤面。
 * 尚未套用救援池／共同池上限（先量測機制的自然增量，供預算評估）。
 """
 
@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-1.4"
+SYSTEM_VERSION = "c2-1.5"
 
 
 def _locate_script_dir() -> Path:
@@ -92,8 +92,8 @@ CHECKPOINTS = sorted(CHECKPOINT_RULES)
 
 # ---- 延伸救援（當日 401–1,000 轉）----
 EXT_CHECKPOINTS = list(range(440, 1001, 40))  # 440 起每 40 轉，跑到當日轉數為止
-EXT_MID_WINDOW = 200                          # 往前抓 200 轉
-EXT_MID_THRESHOLD = 0.60
+EXT_MID_WINDOW = 100                          # 往前抓 100 轉
+EXT_MID_THRESHOLD = 0.75
 EXT_SHORT_WINDOW = 40                         # 前 40 轉
 EXT_SHORT_THRESHOLD = 0.50
 EXT_REWARD = 10.0                             # 送 10× BG 盤面
@@ -239,7 +239,7 @@ def simulate(game: str) -> None:
     main_up = sum(r["uplift"] for r in checkpoint_rows)
     ext_up = sum(r["uplift"] for r in ext_rows)
     if ext_rows:
-        print(f"延伸救援（401 轉起）：前 200 轉 RTP <{EXT_MID_THRESHOLD * 100:.0f}% 且前 40 轉 RTP <{EXT_SHORT_THRESHOLD * 100:.0f}% → 送 {EXT_REWARD:g}× BG 盤面")
+        print(f"延伸救援（401 轉起）：前 {EXT_MID_WINDOW} 轉 RTP <{EXT_MID_THRESHOLD * 100:.0f}% 且前 40 轉 RTP <{EXT_SHORT_THRESHOLD * 100:.0f}% → 送 {EXT_REWARD:g}× BG 盤面")
         print("checkpoint   判定    觸發   觸發率     全日增量貢獻")
         for row in ext_rows:
             print(
