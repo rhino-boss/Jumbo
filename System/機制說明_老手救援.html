@@ -3340,7 +3340,13 @@
   const view = document.getElementById("view");
   const btns = document.querySelectorAll(".bar button");
   function show(v) {
-    view.srcdoc = document.getElementById(v).textContent;
+    // srcdoc 內的 #錨點會解析成外層網址、點了整頁重載進 iframe，改成就地捲動
+    var fix = '<script>document.addEventListener("click",function(e){' +
+      'var a=e.target.closest&&e.target.closest("a[href^=\'#\']");if(!a)return;' +
+      'var t=document.getElementById(decodeURIComponent(a.getAttribute("href").slice(1)));' +
+      'if(t){e.preventDefault();t.scrollIntoView({behavior:"smooth",block:"start"});}});<\/script>';
+    var html = document.getElementById(v).textContent;
+    view.srcdoc = html.indexOf("</body>") !== -1 ? html.replace("</body>", fix + "</body>") : html + fix;
     btns.forEach(b => b.classList.toggle("on", b.dataset.v === v));
   }
   btns.forEach(b => b.addEventListener("click", () => show(b.dataset.v)));
