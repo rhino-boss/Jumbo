@@ -3048,7 +3048,7 @@
       <p>
         目標：不容許玩家透過特殊手段從救援機制套利。以 c2-1.4 規則、彩罐熱舞 10,000 名玩家自然 Row Data 實測
         （simulator_system_oldhand_c2_arb.py）。<strong>策略 RTP</strong> = 停手前總得分 ÷ 停手前總押注；
-        每天歸零重來，天天照同一策略玩的長期 RTP 就是這個值。超過 97% 標黃、超過 100% 標紅（可穩定套利）：
+        每天歸零重來，天天照同一策略玩的長期 RTP 就是這個值。括號為同一策略在<strong>沒有機制</strong>時的 RTP（停手點依自然結果決定，無救援可拿）。超過 97% 標黃、超過 100% 標紅（可穩定套利）：
       </p>
       <div class="table-wrap">
         <table>
@@ -3066,11 +3066,11 @@
             <tr><td class="key"></td><td>固定玩 320 轉就閃</td><td class="num">320 轉</td><td class="num">96.65%（92.13%）</td><td class="num">-10.73</td></tr>
             <tr><td class="key"></td><td>固定玩 360 轉就閃</td><td class="num">360 轉</td><td class="num">96.95%（92.21%）</td><td class="num">-10.98</td></tr>
             <tr><td class="key"></td><td>固定玩 400 轉就閃</td><td class="num">400 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.19%</span>（92.12%）</td><td class="num">-11.25</td></tr>
-            <tr><td class="key">拿到就閃人</td><td>拿到任何救援就閃（否則玩到 400）</td><td class="num">333 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.56%</span>（92.28%）</td><td class="num">-8.11</td></tr>
-            <tr><td class="key"></td><td>只等 100× 救援才閃（否則玩到 400）</td><td class="num">391 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.29%</span>（92.11%）</td><td class="num">-10.58</td></tr>
-            <tr><td class="key"></td><td>開出 ≥ 50× 單局就閃（自然或救援）</td><td class="num">232 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.51%</span>（92.27%）</td><td class="num">+1.18</td></tr>
-            <tr><td class="key">贏了就閃人</td><td>當日 RTP &gt; 100% 就閃（否則玩到 400）</td><td class="num">96 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">103.80%</span>（91.83%）</td><td class="num">+3.66</td></tr>
-            <tr><td class="key"></td><td>當日 RTP &gt; 100% 或拿到救援就閃</td><td class="num">70 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">105.94%</span>（92.32%）</td><td class="num">+4.15</td></tr>
+            <tr><td class="key">拿到就閃人</td><td>拿到任何救援就閃（否則玩到 400）</td><td class="num">333 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.56%</span>（92.12%）</td><td class="num">-8.11</td></tr>
+            <tr><td class="key"></td><td>只等 100× 救援才閃（否則玩到 400）</td><td class="num">391 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.29%</span>（92.12%）</td><td class="num">-10.58</td></tr>
+            <tr><td class="key"></td><td>開出 ≥ 50× 單局就閃（自然或救援）</td><td class="num">232 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.51%</span>（92.25%）</td><td class="num">+1.18</td></tr>
+            <tr><td class="key">贏了就閃人</td><td>當日 RTP &gt; 100% 就閃（否則玩到 400）</td><td class="num">96 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">103.80%</span>（91.79%）</td><td class="num">+3.66</td></tr>
+            <tr><td class="key"></td><td>當日 RTP &gt; 100% 或拿到救援就閃</td><td class="num">70 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">105.94%</span>（91.79%）</td><td class="num">+4.15</td></tr>
           </tbody>
         </table>
       </div>

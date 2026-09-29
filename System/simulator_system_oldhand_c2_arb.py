@@ -77,26 +77,37 @@ def main() -> None:
     adj, reward_at = apply_mechanism(nat, bet)
     n = nat.shape[0]
 
-    cum_rtp = np.cumsum(adj, axis=1) / np.cumsum(bet, axis=1)
-    mult = adj / bet
-    rescued = reward_at > 0
+    def stops(pay, rewards):
+        """依某條得分路徑（有機制或自然）決定各策略的停手轉數。"""
+        cum_rtp = np.cumsum(pay, axis=1) / np.cumsum(bet, axis=1)
+        mult = pay / bet
+        rescued = rewards > 0
+        out = [np.full(n, cp) for cp in CHECKPOINTS]
+        out += [
+            first_true(rescued, DAY_SPINS),
+            first_true(rewards >= 100, DAY_SPINS),
+            first_true(mult >= BIG_WIN, DAY_SPINS),
+            first_true(cum_rtp > 1.0, DAY_SPINS),
+            first_true((cum_rtp > 1.0) | rescued, DAY_SPINS),
+        ]
+        return out
 
-    scenarios: list[tuple[str, np.ndarray]] = []
-    for cp in CHECKPOINTS:
-        scenarios.append((f"固定玩 {cp} 轉就閃", np.full(n, cp)))
-    scenarios += [
-        ("拿到任何救援就閃（否則玩到 400）", first_true(rescued, DAY_SPINS)),
-        ("只等 100× 救援才閃（否則玩到 400）", first_true(reward_at >= 100, DAY_SPINS)),
-        (f"開出 ≥{BIG_WIN:g}× 單局就閃（自然或救援）", first_true(mult >= BIG_WIN, DAY_SPINS)),
-        ("當日 RTP > 100% 就閃（贏就走）", first_true(cum_rtp > 1.0, DAY_SPINS)),
-        ("贏就走 ＋ 拿到救援就閃", first_true((cum_rtp > 1.0) | rescued, DAY_SPINS)),
+    names = [f"固定玩 {cp} 轉就閃" for cp in CHECKPOINTS] + [
+        "拿到任何救援就閃（否則玩到 400）",
+        "只等 100× 救援才閃（否則玩到 400）",
+        f"開出 ≥{BIG_WIN:g}× 單局就閃（自然或救援）",
+        "當日 RTP > 100% 就閃（贏就走）",
+        "贏就走 ＋ 拿到救援就閃",
     ]
+    # 無機制：玩家在沒有救援的世界照同一套規則停手（沒有救援可拿，只剩其他條件）
+    mech_stops = stops(adj, reward_at)
+    base_stops = stops(nat, np.zeros_like(nat))
 
     print(f"=== 套利檢查（{GAME}，{SYSTEM_VERSION}，{n:,} 人，主救援 40–400 轉）===")
     print(f"{'策略':<30}{'平均停在':>8}{'RTP無機制':>11}{'RTP有機制':>11}{'EV/日(bet)':>12}")
-    for name, stop in scenarios:
+    for name, stop, bstop in zip(names, mech_stops, base_stops):
         rtp_mech, ev = strategy_rtp(adj, bet, stop)
-        rtp_base, _ = strategy_rtp(nat, bet, stop)
+        rtp_base, _ = strategy_rtp(nat, bet, bstop)
         flag = "  ← 超過 100%" if rtp_mech > 1.0 else ""
         print(f"{name:<30}{stop.mean():>7.0f}轉{rtp_base * 100:>10.2f}%{rtp_mech * 100:>10.2f}%{ev:>+12.2f}{flag}")
 
