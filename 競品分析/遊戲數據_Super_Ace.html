@@ -78,7 +78,9 @@ th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); ve
 th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
   letter-spacing:.03em; white-space:nowrap}
 td.bar{background-repeat:no-repeat; background-position:left center;
-  background-size:var(--w,0) 72%; background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)))}
+  background-size:var(--w,0) 72%; background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)));
+  /* 限制在內容區：左右各留 padding 當欄間隔，相鄰欄的橫條才不會黏在一起 */
+  background-origin:content-box; background-clip:content-box}
 td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
   font-variant-numeric:tabular-nums; font-size:12px}
 tbody tr:last-child td{border-bottom:none}
