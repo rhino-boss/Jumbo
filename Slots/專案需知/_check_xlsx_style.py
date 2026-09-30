@@ -9,9 +9,12 @@
     py _check_xlsx_style.py <xlsx 路徑> [工作表名稱 ...]
 
 判定：
-    [ERROR] 空白格帶有底色或外框            —— 一定是殘留，必須清掉
+    [ERROR] 空白格帶有底色                  —— 幾乎必為殘留，必須清掉
+    [ERROR] 空白格有框線且同列完全沒有值      —— 孤立的殘留表格
     [WARN ] 同一列其他格有格式，本格有值卻全裸 —— 多半是漏套，需人工確認
     [WARN ] 有值格的字體與該表主要字體不同    —— 多半是新寫入沒複製樣式
+
+    空白格只有框線、且同列有值者視為正常（表格補格，避免表格缺角）。
 
 離開碼：有 ERROR 回傳 1，其餘回傳 0。
 """
@@ -56,12 +59,13 @@ def check_sheet(ws) -> tuple[list[str], list[str]]:
         if not cells:
             continue
         row_has_style = any(styled(c) for c in cells)
+        row_has_value = any(c.value is not None for c in row)
         for cell in row:
             value = cell.value is not None
-            if not value and styled(cell):
-                errors.append(f"{ws.title}!{cell.coordinate} 空白卻有"
-                              f"{'底色' if has_fill(cell) else ''}"
-                              f"{'外框' if has_border(cell) else ''}")
+            if not value and has_fill(cell):
+                errors.append(f"{ws.title}!{cell.coordinate} 空白卻有底色")
+            elif not value and has_border(cell) and not row_has_value:
+                errors.append(f"{ws.title}!{cell.coordinate} 空白且同列無值卻有外框")
             elif value and not styled(cell) and row_has_style:
                 warnings.append(f"{ws.title}!{cell.coordinate} 有值卻無底色無外框"
                                 f"（同列其他格有格式）")

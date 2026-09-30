@@ -134,7 +134,7 @@ Project/Slots/
    - 動畫必須區分既有符號的 Settle 與新符號的 Drop／Refill。
 3. **特殊補牌（By Game）**
    - 不符合前兩類的 Random、Parallel、跨欄移動、整盤替換或其他特殊補牌皆歸此類。
-   - 必須在該遊戲的 `game_rule.md` 與 Config mapping 中明確定義抽取來源、移動方向、補牌順序、保留位置及動畫。
+   - 必須在該遊戲的 `game_rule.md` 與數學模型的 `Game Description` 工作表中明確定義抽取來源、移動方向、補牌順序、保留位置及動畫。
    - 不得把單一遊戲的特殊補牌邏輯寫成所有遊戲共用的預設行為。
 
 - 補牌資料必須來自 Config 定義的 Reel／Drop Table／Weight，不得只為動畫另外抽一組結果。
