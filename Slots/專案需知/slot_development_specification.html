@@ -392,6 +392,7 @@ Max Multiplier = Round Total Win ÷ 該模式定義的基準成本</code></pre>
 <pre><code>  py _check_xlsx_style.py &lt;xlsx 路徑&gt; [工作表名稱 ...]</code></pre>
 <p><code>ERROR</code> 為「空白格帶有底色」與「空白格有框線且同列完全沒有值」，一律視為錯誤。 <code>WARN</code> 為「同列其他格有格式、本格有值卻全裸」與「字體與該表主要字體不同」，需人工確認。</p>
 <ul><li>表格不得缺角：資料列即使某欄沒有值，仍必須保留該格的框線，不可讓表格出現缺口。<ul></ul></li></ul>
+<ul><li>區塊之間固定空兩列。一個區塊包含標題、表頭、資料列與其補充說明列；補充說明屬於該區塊，<ul></ul></li></ul>
 <ul><li>補充資訊列（例如各輪帶長）以灰字、不加框線呈現，與資料列區隔；此類格子會被檢查器列為<ul></ul></li></ul>
 <ul><li class="check"><span class="cb">☐</span> 程式化修改後已執行 <code>_check_xlsx_style.py</code>，<code>ERROR</code> 為 0，<code>WARN</code> 已逐筆確認。</li></ul>
 <hr>
