@@ -1,0 +1,463 @@
+<meta charset="utf-8">
+<title>Money Coming 遊戲數據</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --bar:rgba(42,120,214,.16); --bar-hi:rgba(235,104,52,.20);
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --bar:rgba(57,135,229,.30); --bar-hi:rgba(217,89,38,.34);
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:38px 22px 80px}
+header{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:18px 0 26px}
+.stat{background:var(--panel); padding:12px 15px; display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:11.5px; color:var(--ink-3); font-family:var(--font-mono); letter-spacing:.04em}
+.stat .v{font-family:var(--font-mono); font-size:19px; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .n2{font-size:11.5px; color:var(--ink-3)}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+h3{margin:32px 0 10px; font-size:17.5px; font-weight:600; letter-spacing:-.008em;
+  padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.panel>h3:first-child{margin-top:0}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600}
+p{margin:0 0 11px; max-width:82ch}
+p.cap{color:var(--ink-2); font-size:13.5px}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:82ch}
+li{margin:3px 0}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+blockquote{margin:12px 0 16px; padding:10px 14px; background:var(--panel-2);
+  border-left:2px solid var(--s1); border-radius:0 3px 3px 0; color:var(--ink-2); font-size:13.5px; max-width:86ch}
+blockquote code{background:var(--panel)}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.bar{background-repeat:no-repeat; background-position:left center;
+  background-size:var(--w,0) 72%; background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)));
+  /* 限制在內容區：左右各留 padding 當欄間隔，相鄰欄的橫條才不會黏在一起 */
+  background-origin:content-box; background-clip:content-box}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.axisfix{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 18px}
+.pill{font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border:1px solid var(--rule);
+  border-radius:100px; color:var(--ink-2); background:var(--panel)}
+.warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
+.card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+.legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
+.lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
+.sw{width:22px; height:3px; border-radius:2px; flex:none}
+.plot{position:relative; width:100%}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
+  background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
+  white-space:nowrap; z-index:5; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tip b{font-weight:600; display:block; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">JILI · 競品分析</div>
+  <h1>Money Coming</h1>
+  <p class="meta">實機側錄 JSONL（JILI 入口，伺服器 RTP 0.92）| 付費轉 32,030（底注 1 / 5 / 10 各為獨立設定）| 幸運轉盤 286 次 | ALL WHEEL RESPIN 351 次</p>
+  <p class="meta">3 主轉輪 × 1 列 ＋ 1 特別轉輪；無免費遊戲、無 Buy Feature、無連消。線型與摘要數字取底注 10（完整機制版）</p>
+</header>
+<div class="stats"><div class="stat"><span class="k">總 RTP（底注 10）</span><span class="v">94.328%</span><span class="n2">12,117 把，CI ±8.6pp</span></div><div class="stat"><span class="k">Hit Rate（底注 10）</span><span class="v">12.610%</span><span class="n2">一次付費下注</span></div><div class="stat"><span class="k">幸運轉盤週期</span><span class="v">1/83.0</span><span class="n2">146 次，平均 17.81x</span></div><div class="stat"><span class="k">幸運轉盤 RTP</span><span class="v">21.457%</span><span class="n2">佔總 RTP 23%</span></div><div class="stat"><span class="k">RESPIN 週期</span><span class="v">1/95.4</span><span class="n2">127 次</span></div><div class="stat"><span class="k">最大倍數</span><span class="v">525x</span><span class="n2">底注 1 理論上限 525x；底注 10 為 101.1x</span></div></div>
+<div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">1. 資料說明</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">2. 基本資料</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">3. 共同指標</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">4. 倍率線型</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">5. 特殊指標</button><button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1">6. 附錄</button></div>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><h3>1.1 檔案用途</h3>
+<div class="tbl-wrap"><table><thead><tr><th>檔名</th><th>入口</th><th class="n">伺服器回傳 RTP</th><th class="n">行數</th><th class="n">底注</th><th>是否納入統計</th></tr></thead><tbody><tr><td><code>captured_moneycoming_jili/spins.jsonl</code></td><td>JILI（jili.us）</td><td class="n">0.92</td><td class="n">32,030</td><td class="n">1 / 5 / 10</td><td>✅ 主樣本</td></tr><tr><td><code>captured_moneycoming/spins.jsonl</code></td><td>Tada</td><td class="n">0.97</td><td class="n">6,093</td><td class="n">1 / 10</td><td>⚠️ 只作 6.3 對照，不併入主樣本</td></tr><tr><td><code>captured_garuda/spins.jsonl</code></td><td>Tada</td><td class="n">0.97</td><td class="n">202</td><td class="n">—</td><td>❌ 另一款遊戲（Fortune Garuda 500）</td></tr></tbody></table></div>
+<blockquote>兩個入口是<strong>同一套後端、同一個遊戲</strong>，只有伺服器回傳的 RTP 設定值不同（0.92 vs 0.97），<br>所以不能合併成一個樣本池。本報告以 JILI 入口為主，Tada 入口在 6.3 做逐項對照。<br>Tada 檔有 1 行 <code>bet</code> 為 null（收集時 request 未配對到），已排除。兩檔 <code>n</code> 序號皆無重複，不存在合併檔／分批檔並存的問題。<br>三個底注是<strong>三套獨立的轉輪＋特別轉輪設定</strong>（5.4），本報告所有指標一律依底注分列；<br>「合計」列只是三組樣本的加權平均，<strong>不代表任何一個真實設定</strong>，跨遊戲比較請取底注 10（完整機制版）。<br><br>⚠️ 兩個入口連的都是 <code>uat-</code> 測試環境的試玩模式，是否與正式營運環境一致未經驗證。</blockquote>
+<h3>1.2 資料欄位</h3>
+<p><strong>一行 JSONL = 一次付費 spin</strong>（<code>method</code> 全為 <code>ConvertSpinAck</code>，hook 已驗證每把只觸發一次）。</p>
+<div class="tbl-wrap"><table><thead><tr><th>層級</th><th>欄位</th><th>意義</th></tr></thead><tbody><tr><td>Round</td><td><code>bet</code></td><td>該次底注（1 / 5 / 10）</td></tr><tr><td>Round</td><td><code>win</code></td><td>該次下注的<strong>總得分</strong>（＝<code>plate.TotalWin</code>；未中獎時封包省略該欄，取 0）</td></tr><tr><td>Round</td><td><code>plate.WheelWin</code></td><td>幸運轉盤獎金（只在特別轉輪為 SCATTER 時出現，<strong>加法</strong>計入總得分）</td></tr><tr><td>Round</td><td><code>plate.AwardTypeFlag</code></td><td>獎項類型（0 / 1 / 2 / 3 / 4 / 5 / 9，對照見 6.1）</td></tr><tr><td>Round</td><td><code>plate.RTP</code></td><td>伺服器每局宣告的 RTP 設定值（JILI 入口全為 0.92）</td></tr><tr><td>Plate</td><td><code>PlateInfo[i].PlateSymbol</code></td><td>4 個位置的符號 ID：<code>[輪位0, 輪位1, 輪位2, 特別轉輪]</code></td></tr><tr><td>Plate</td><td><code>PlateInfo[i].Order</code></td><td>啟用的主轉輪：<code>[0,1,2]</code>＝三輪、<code>[0,1,-1]</code>＝只有兩輪（底注 1）</td></tr><tr><td>Plate</td><td><code>PlateInfo[i].PlateWin</code></td><td>該盤面得分；<code>PlateInfo</code> 有 2 盤時第 2 盤是 ALL WHEEL RESPIN 的重轉結果</td></tr></tbody></table></div>
+<p><strong>符號編碼</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>主轉輪 ID</th><th class="n">面額</th><th class="n">特別轉輪 ID</th><th>效果</th></tr></thead><tbody><tr><td>1</td><td class="n">空白（串接時跳過）</td><td class="n">1</td><td>無效果</td></tr><tr><td>2</td><td class="n"><code>0</code></td><td class="n">12</td><td>盤面得分 ×2</td></tr><tr><td>4</td><td class="n"><code>1</code></td><td class="n">13</td><td>盤面得分 ×5</td></tr><tr><td>5</td><td class="n"><code>5</code></td><td class="n">14</td><td>盤面得分 ×10（底注 10 才會出現）</td></tr><tr><td>6</td><td class="n"><code>10</code>（只出現在輪位 0）</td><td class="n">7</td><td>SCATTER：進幸運轉盤，必定獲獎（底注 5 以上才會出現）</td></tr><tr><td>—</td><td class="n"><code>00</code>（規則頁有、資料中從未出現）</td><td class="n">11</td><td>ALL WHEEL RESPIN：主轉輪免費重轉一次</td></tr></tbody></table></div>
+<p><strong>BG / FG 拆分</strong>：本作<strong>沒有免費遊戲</strong>，一次付費 spin 的全部得分都是 BG。</p>
+<p>本報告把「幸運轉盤獎金」與「盤面得分」拆開報（<code>WheelWin</code> vs <code>PlateWin</code> 合計），作為本作的 BG 內部結構。</p>
+<p><strong>交叉驗證（皆零誤差）</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>檢查</th><th>結果</th></tr></thead><tbody><tr><td><code>TotalWin</code> == <code>sum(PlateInfo[i].PlateWin)</code> + <code>WheelWin</code>，且 == 行 <code>win</code></td><td>32,030 / 32,030 完全相符</td></tr><tr><td>盤面得分 == 面額串接 × 特別轉輪倍率（3.1 公式）</td><td>32,381 / 32,381 盤完全相符</td></tr><tr><td><code>AwardTypeFlag</code> 與「中獎當下的特別轉輪符號」一一對應（6.1）</td><td>32,030 / 32,030 完全相符</td></tr><tr><td>Hit Rate ＋ 未中獎占比</td><td>100.000%（本作無連消，未中獎＝得分 0）</td></tr></tbody></table></div>
+<blockquote><strong>不適用的固定章節</strong>：符號堆疊（盤面只有 1 列）、消除率（無連消）、門檻機率與 FG 相關（無免費遊戲）、BF（無購買）。<br>這些章節整段不出現，不留空表格。</blockquote></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><h3>2.1 一般遊戲 / 免費遊戲</h3>
+<p><strong>計次數</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">BG 轉數</th><th>FG 轉數</th><th>FG 觸發次數</th></tr></thead><tbody><tr><td>1</td><td class="n">11,075</td><td>—</td><td>—</td></tr><tr><td>5</td><td class="n">8,838</td><td>—</td><td>—</td></tr><tr><td>10</td><td class="n">12,117</td><td>—</td><td>—</td></tr><tr><td><strong>合計</strong></td><td class="n"><strong>32,030</strong></td><td>—</td><td>—</td></tr></tbody></table></div>
+<blockquote>本作<strong>無免費遊戲</strong>，FG 欄位一律為「—」。BG 轉數＝付費轉數（一行一把）。</blockquote>
+<p><strong>統計資料</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">BG RTP</th><th>FG RTP</th><th class="n">總 RTP</th><th class="n">BG Hit Rate</th><th>FG Hit Rate</th><th>FG 週期</th><th>FG 平均倍數</th></tr></thead><tbody><tr><td>1</td><td class="n"><strong>104.813%</strong></td><td>—</td><td class="n"><strong>104.813%</strong></td><td class="n">13.797%</td><td>—</td><td>—</td><td>—</td></tr><tr><td>5</td><td class="n"><strong>94.019%</strong></td><td>—</td><td class="n"><strong>94.019%</strong></td><td class="n">13.216%</td><td>—</td><td>—</td><td>—</td></tr><tr><td>10</td><td class="n"><strong>94.328%</strong></td><td>—</td><td class="n"><strong>94.328%</strong></td><td class="n">12.610%</td><td>—</td><td>—</td><td>—</td></tr><tr><td><strong>合計</strong></td><td class="n"><strong>94.909%</strong></td><td>—</td><td class="n"><strong>94.909%</strong></td><td class="n">13.188%</td><td>—</td><td>—</td><td>—</td></tr></tbody></table></div>
+<blockquote>三個底注的 RTP 差異（104.8% / 94.0% / 94.3%）<strong>不是樣本變異</strong>，而是三套不同設定（5.4）；<br>但每個底注本身的 95% 信賴區間都有 ±10pp 左右（見 2.2），數字只能確認「與宣告的 92% 相容」。</blockquote>
+<p><strong>本作 BG 內部結構</strong>（盤面得分 vs 幸運轉盤，取代 FG 欄位）</p>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">盤面 RTP</th><th class="n">幸運轉盤 RTP</th><th class="n">總 RTP</th><th class="n">幸運轉盤週期</th><th class="n">轉盤平均倍數</th><th class="n">RESPIN 週期</th></tr></thead><tbody><tr><td>1</td><td class="n">104.813%</td><td class="n">—（鎖住）</td><td class="n"><strong>104.813%</strong></td><td class="n">—</td><td class="n">—</td><td class="n">1/71.9</td></tr><tr><td>5</td><td class="n">65.562%</td><td class="n">28.457%</td><td class="n"><strong>94.019%</strong></td><td class="n">1/63.1</td><td class="n">17.96x</td><td class="n">1/126.3</td></tr><tr><td>10</td><td class="n">72.870%</td><td class="n">21.457%</td><td class="n"><strong>94.328%</strong></td><td class="n">1/83.0</td><td class="n">17.81x</td><td class="n">1/95.4</td></tr><tr><td><strong>合計</strong></td><td class="n">73.045%</td><td class="n">21.864%</td><td class="n"><strong>94.909%</strong></td><td class="n">1/112.0</td><td class="n">13.49x</td><td class="n">1/91.3</td></tr></tbody></table></div>
+<blockquote>盤面 RTP ＝ <code>sum(PlateWin)</code> ÷ 總押注（含 RESPIN 第二盤）；幸運轉盤 RTP ＝ <code>sum(WheelWin)</code> ÷ 總押注。<br>幸運轉盤週期＝付費轉數 ÷ SCATTER 出現次數；轉盤平均倍數＝單次轉盤獎金 ÷ 底注，取平均。<br>底注 10 的幸運轉盤只出現在 1.20% 的把數，卻貢獻 21.5% 的 RTP（總 RTP 的 23%）。</blockquote>
+<h3>2.2 與官方值對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">付費轉</th><th class="n">實測 RTP</th><th>95% 信賴區間</th><th class="n">每把標準差</th><th class="n">伺服器宣告 RTP</th><th>差距</th></tr></thead><tbody><tr><td>1</td><td class="n">11,075</td><td class="n"><strong>104.813%</strong></td><td>91.7% ～ 117.9%</td><td class="n">7.05x</td><td class="n">92.00%</td><td>+12.81pp</td></tr><tr><td>5</td><td class="n">8,838</td><td class="n"><strong>94.019%</strong></td><td>84.0% ～ 104.1%</td><td class="n">4.81x</td><td class="n">92.00%</td><td>+2.02pp</td></tr><tr><td>10</td><td class="n">12,117</td><td class="n"><strong>94.328%</strong></td><td>85.7% ～ 102.9%</td><td class="n">4.83x</td><td class="n">92.00%</td><td>+2.33pp</td></tr></tbody></table></div>
+<blockquote>信賴區間＝平均每把倍數 ± 1.96 × 標準差 ÷ √把數。每把標準差 5～7 倍底注，<br>要把區間縮到 ±1pp 約需 90 萬把，現有樣本只能確認「與 92% 相容」，三個底注都是。<br>底注 1 實測 104.8% 高於 100%，是 525x（理論最高獎）在 1.1 萬把內就抽到一次所致——<br>那一把佔底注 1 總得分的 4.5%，拿掉後 RTP 為 100.072%。<br><br>公開評測（Clash of Slots）寫的官方 RTP 為 96%～97.5%，依營運商版本而異；<br>本次 JILI 入口伺服器每局回傳 <code>RTP: 0.92</code>，Tada 入口回傳 <code>0.97</code>，代表 RTP 是<strong>營運商層級的後台參數</strong>。</blockquote></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><h3>3.1 賠率</h3>
+<p>本作沒有賠付表，得分由公式決定。<strong>由側錄封包反推，32,381 盤全部符合，無例外。</strong></p>
+<p>```</p>
+<p>盤面得分 = 主轉輪面額由左至右串接成的數字（空白跳過、可含前導 0）× 特別轉輪倍率</p>
+<p>本局得分 = 盤面得分（RESPIN 時兩盤相加）＋ 幸運轉盤獎金</p>
+<p>倍數     = 本局得分 ÷ 底注</p>
+<p>```</p>
+<blockquote>串接出來的數字<strong>就是得分金額，不隨底注放大</strong>：<code>[5,5,0]</code> 在底注 1 是 550 元（550x），在底注 10 也是 550 元（55x）。<br>所以同一個盤面在低底注的「倍數」反而高，這是本作押注階梯的核心（5.4）。</blockquote>
+<p><strong>面額串接範例（底注 10 實測）</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>盤面 <code>[輪0, 輪1, 輪2, 特別]</code></th><th>串接</th><th>特別轉輪</th><th class="n">得分</th><th class="n">倍數</th></tr></thead><tbody><tr><td><code>[5, 5, 2, 1]</code></td><td>5、5、0 → 550</td><td>無</td><td class="n">550</td><td class="n">55.0x</td></tr><tr><td><code>[1, 5, 4, 1]</code></td><td>空、5、1 → 51</td><td>無</td><td class="n">51</td><td class="n">5.1x</td></tr><tr><td><code>[1, 4, 5, 1]</code></td><td>空、1、5 → 15</td><td>無</td><td class="n">15</td><td class="n">1.5x</td></tr><tr><td><code>[2, 4, 1, 1]</code></td><td>0、1、空 → 01 ＝ 1</td><td>無</td><td class="n">1</td><td class="n">0.1x</td></tr><tr><td><code>[4, 1, 4, 13]</code></td><td>1、空、1 → 11</td><td>5x</td><td class="n">55</td><td class="n">5.5x</td></tr><tr><td><code>[1, 5, 4, 14]</code></td><td>空、5、1 → 51</td><td>10x</td><td class="n">510</td><td class="n">51.0x</td></tr><tr><td><code>[1, 2, 5, 7]</code></td><td>空、0、5 → 05 ＝ 5</td><td>SCATTER（轉盤 100）</td><td class="n">5 ＋ 100 ＝ 105</td><td class="n">10.5x</td></tr><tr><td><code>[4, 2, 1, 11]</code> → <code>[5, 2, 5, 1]</code></td><td>10 → 重轉 505</td><td>RESPIN</td><td class="n">10 ＋ 505 ＝ 515</td><td class="n">51.5x</td></tr></tbody></table></div>
+<p><strong>理論最高</strong>：串接最大值 <code>10</code>＋<code>5</code>＋<code>5</code> ＝ 1055，×10 ＝ 10,550 元。底注 10 → <strong>1,055x</strong>（與遊戲規則頁一致）；</p>
+<p>底注 5 沒有 10x，最高 1055 × 5 ＝ 5,275 元 → 1,055x；底注 1 只有兩輪且最高 5x，<code>10</code>＋<code>5</code> ＝ 105 × 5 ＝ 525 元 → <strong>525x（實測已出現）</strong>。</p>
+<h3>3.2 符號分布</h3>
+<h4>3.2.1 初始轉輪（付費轉的第一盤）</h4>
+<p><strong>底注 1</strong>　樣本盤面：11,075（啟用 2 個主轉輪）</p>
+<div class="tbl-wrap"><table><thead><tr><th>面額</th><th class="n">輪位 0</th><th class="n">輪位 1</th></tr></thead><tbody><tr><td>空白</td><td class="n">92.28%</td><td class="n">50.39%</td></tr><tr><td>0</td><td class="n">0.00%</td><td class="n">43.30%</td></tr><tr><td>1</td><td class="n">5.33%</td><td class="n">4.31%</td></tr><tr><td>5</td><td class="n">1.81%</td><td class="n">2.00%</td></tr><tr><td>10</td><td class="n">0.59%</td><td class="n">0.00%</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<p><strong>底注 5</strong>　樣本盤面：8,838（啟用 3 個主轉輪）</p>
+<div class="tbl-wrap"><table><thead><tr><th>面額</th><th class="n">輪位 0</th><th class="n">輪位 1</th><th class="n">輪位 2</th></tr></thead><tbody><tr><td>空白</td><td class="n">95.98%</td><td class="n">49.08%</td><td class="n">49.91%</td></tr><tr><td>0</td><td class="n">0.00%</td><td class="n">46.87%</td><td class="n">44.76%</td></tr><tr><td>1</td><td class="n">1.52%</td><td class="n">1.24%</td><td class="n">1.29%</td></tr><tr><td>5</td><td class="n">2.38%</td><td class="n">2.81%</td><td class="n">4.04%</td></tr><tr><td>10</td><td class="n">0.12%</td><td class="n">0.00%</td><td class="n">0.00%</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<p><strong>底注 10</strong>　樣本盤面：12,117（啟用 3 個主轉輪）</p>
+<div class="tbl-wrap"><table><thead><tr><th>面額</th><th class="n">輪位 0</th><th class="n">輪位 1</th><th class="n">輪位 2</th></tr></thead><tbody><tr><td>空白</td><td class="n">92.23%</td><td class="n">48.49%</td><td class="n">49.14%</td></tr><tr><td>0</td><td class="n">0.00%</td><td class="n">45.94%</td><td class="n">45.89%</td></tr><tr><td>1</td><td class="n">4.92%</td><td class="n">3.60%</td><td class="n">2.45%</td></tr><tr><td>5</td><td class="n">1.91%</td><td class="n">1.97%</td><td class="n">2.53%</td></tr><tr><td>10</td><td class="n">0.94%</td><td class="n">0.00%</td><td class="n">0.00%</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<blockquote>面額 <code>00</code> 在三個底注共 32,030 盤中都沒出現，判定為高底注（公開評測：底注 50 以上）才解鎖，試玩版無法驗證。<br>面額 <code>10</code> 只出現在輪位 0；輪位 0 沒有 <code>0</code>（否則會產生無意義的前導 0）。</blockquote>
+<p><strong>特別轉輪（輪位 3）</strong>　列＝符號，欄＝底注</p>
+<div class="tbl-wrap"><table><thead><tr><th>特別轉輪</th><th class="n">底注 1</th><th class="n">底注 5</th><th class="n">底注 10</th></tr></thead><tbody><tr><td>無效果</td><td class="n">86.49%</td><td class="n">78.29%</td><td class="n">82.22%</td></tr><tr><td>2x</td><td class="n">4.32%</td><td class="n">1.95%</td><td class="n">5.14%</td></tr><tr><td>5x</td><td class="n">7.80%</td><td class="n">17.39%</td><td class="n">5.36%</td></tr><tr><td>10x</td><td class="n">0.00%（鎖住）</td><td class="n">0.00%（鎖住）</td><td class="n">5.03%</td></tr><tr><td>SCATTER</td><td class="n">0.00%（鎖住）</td><td class="n">1.58%</td><td class="n">1.20%</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">1.39%</td><td class="n">0.79%</td><td class="n">1.05%</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<blockquote>「鎖住」＝該底注 8,838～11,075 把內一次都沒出現；若機率與底注 10 相同應出現數百次，不是巧合。<br><strong>特別轉輪的分布與主轉輪結果不獨立</strong>（主轉輪中獎時倍率／SCATTER 出現率高 2～15 倍），詳見 5.1。</blockquote>
+<h4>3.2.2 重轉盤面（ALL WHEEL RESPIN 的第二盤）</h4>
+<p>對應標準格式的「消除掉落」章節：重轉盤面是否與初始轉輪同一套權重。</p>
+<p><strong>底注 1</strong>　重轉盤面 154 盤（括號內為 3.2.1 的初始轉輪值）</p>
+<div class="tbl-wrap"><table><thead><tr><th>面額</th><th>輪位 0</th><th>輪位 1</th></tr></thead><tbody><tr><td>空白</td><td>2.6%（92.3%）</td><td>14.9%（50.4%）</td></tr><tr><td>0</td><td>0.0%（0.0%）</td><td>22.1%（43.3%）</td></tr><tr><td>1</td><td>66.2%（5.3%）</td><td>22.1%（4.3%）</td></tr><tr><td>5</td><td>17.5%（1.8%）</td><td>40.9%（2.0%）</td></tr><tr><td>10</td><td>13.6%（0.6%）</td><td>0.0%（0.0%）</td></tr></tbody></table></div>
+<p><strong>底注 5</strong>　重轉盤面 70 盤（括號內為 3.2.1 的初始轉輪值）</p>
+<div class="tbl-wrap"><table><thead><tr><th>面額</th><th>輪位 0</th><th>輪位 1</th><th>輪位 2</th></tr></thead><tbody><tr><td>空白</td><td>12.9%（96.0%）</td><td>18.6%（49.1%）</td><td>12.9%（49.9%）</td></tr><tr><td>0</td><td>0.0%（0.0%）</td><td>11.4%（46.9%）</td><td>31.4%（44.8%）</td></tr><tr><td>1</td><td>55.7%（1.5%）</td><td>30.0%（1.2%）</td><td>15.7%（1.3%）</td></tr><tr><td>5</td><td>22.9%（2.4%）</td><td>40.0%（2.8%）</td><td>40.0%（4.0%）</td></tr><tr><td>10</td><td>8.6%（0.1%）</td><td>0.0%（0.0%）</td><td>0.0%（0.0%）</td></tr></tbody></table></div>
+<p><strong>底注 10</strong>　重轉盤面 127 盤（括號內為 3.2.1 的初始轉輪值）</p>
+<div class="tbl-wrap"><table><thead><tr><th>面額</th><th>輪位 0</th><th>輪位 1</th><th>輪位 2</th></tr></thead><tbody><tr><td>空白</td><td>0.8%（92.2%）</td><td>7.1%（48.5%）</td><td>10.2%（49.1%）</td></tr><tr><td>0</td><td>0.0%（0.0%）</td><td>31.5%（45.9%）</td><td>48.0%（45.9%）</td></tr><tr><td>1</td><td>66.1%（4.9%）</td><td>30.7%（3.6%）</td><td>15.7%（2.5%）</td></tr><tr><td>5</td><td>16.5%（1.9%）</td><td>30.7%（2.0%）</td><td>26.0%（2.5%）</td></tr><tr><td>10</td><td>16.5%（0.9%）</td><td>0.0%（0.0%）</td><td>0.0%（0.0%）</td></tr></tbody></table></div>
+<blockquote>重轉盤的特別轉輪 <strong>351 / 351 盤全是「無效果」</strong>：重轉不會再帶倍率、不會進轉盤、也不會再觸發 RESPIN（無連鎖）。<br>重轉盤的空白比例遠低於初始轉輪（底注 10 輪位 0：0.8% vs 92.2%），輪位 0 幾乎必有面額，<strong>重轉盤不是同一套權重</strong>，<br>而是一張「必中」的權重表（351 / 351 盤全部有得分，見 5.3）。樣本只有數十到一百多盤，面額之間的細部差異不可解讀。</blockquote>
+<h3>3.3 獎項 RTP / Hit Rate 占比</h3>
+<p>依獎項類型（＝封包 <code>AwardTypeFlag</code>，等同「中獎當下的特別轉輪符號」）拆分。</p>
+<p><strong>RTP 占比</strong>（該類得分 ÷ 該底注總得分）</p>
+<div class="tbl-wrap"><table><thead><tr><th>獎項類型</th><th class="n">底注 1</th><th class="n">底注 5</th><th class="n">底注 10</th></tr></thead><tbody><tr><td>一般中獎</td><td class="n">30.11%</td><td class="n">14.69%</td><td class="n">22.62%</td></tr><tr><td>2x 中獎</td><td class="n">13.77%</td><td class="n">3.06%</td><td class="n">6.57%</td></tr><tr><td>5x 中獎</td><td class="n">23.39%</td><td class="n">29.41%</td><td class="n">14.08%</td></tr><tr><td>10x 中獎</td><td class="n">—（鎖住）</td><td class="n">—（鎖住）</td><td class="n">7.19%</td></tr><tr><td>SCATTER（幸運轉盤）</td><td class="n">—（鎖住）</td><td class="n">33.94%</td><td class="n">26.15%</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">32.74%</td><td class="n">18.90%</td><td class="n">23.39%</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<p><strong>中獎次數占比</strong>（該類次數 ÷ 中獎把數）</p>
+<div class="tbl-wrap"><table><thead><tr><th>獎項類型</th><th class="n">底注 1</th><th class="n">底注 5</th><th class="n">底注 10</th></tr></thead><tbody><tr><td>一般中獎</td><td class="n">69.04%</td><td class="n">43.92%</td><td class="n">56.22%</td></tr><tr><td>2x 中獎</td><td class="n">7.26%</td><td class="n">1.46%</td><td class="n">8.90%</td></tr><tr><td>5x 中獎</td><td class="n">13.61%</td><td class="n">36.64%</td><td class="n">9.36%</td></tr><tr><td>10x 中獎</td><td class="n">—（鎖住）</td><td class="n">—（鎖住）</td><td class="n">7.66%</td></tr><tr><td>SCATTER（幸運轉盤）</td><td class="n">—（鎖住）</td><td class="n">11.99%</td><td class="n">9.55%</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">10.08%</td><td class="n">5.99%</td><td class="n">8.31%</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<p><strong>每轉出現率</strong>（該類次數 ÷ 付費轉數）與<strong>平均倍數</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>獎項類型</th><th class="n">底注 1 出現率</th><th class="n">底注 5 出現率</th><th class="n">底注 10 出現率</th><th class="n">底注 1 平均倍數</th><th class="n">底注 5 平均倍數</th><th class="n">底注 10 平均倍數</th></tr></thead><tbody><tr><td>一般中獎</td><td class="n">9.53%</td><td class="n">5.80%</td><td class="n">7.09%</td><td class="n">3.31x</td><td class="n">2.38x</td><td class="n">3.01x</td></tr><tr><td>2x 中獎</td><td class="n">1.00%</td><td class="n">0.19%</td><td class="n">1.12%</td><td class="n">14.40x</td><td class="n">14.94x</td><td class="n">5.52x</td></tr><tr><td>5x 中獎</td><td class="n">1.88%</td><td class="n">4.84%</td><td class="n">1.18%</td><td class="n">13.05x</td><td class="n">5.71x</td><td class="n">11.26x</td></tr><tr><td>10x 中獎</td><td class="n">—</td><td class="n">—</td><td class="n">0.97%</td><td class="n">—</td><td class="n">—</td><td class="n">7.03x</td></tr><tr><td>SCATTER（幸運轉盤）</td><td class="n">—</td><td class="n">1.58%</td><td class="n">1.20%</td><td class="n">—</td><td class="n">20.15x</td><td class="n">20.47x</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">1.39%</td><td class="n">0.79%</td><td class="n">1.05%</td><td class="n">24.68x</td><td class="n">22.44x</td><td class="n">21.05x</td></tr></tbody></table></div>
+<blockquote><code>AwardTypeFlag</code> 只在「有得分」時出現：<code>[1,1,1,13]</code> 這種特別轉輪是 5x 但主轉輪沒中的把數計 0（未中獎）。<br>底注 10 的 SCATTER 與 RESPIN 各只佔約 1% 的把數，合計貢獻約一半的 RTP；底注 5 則由 5x 中獎（29.4%）撐起最大一塊。</blockquote>
+<h3>3.4 Hit Rate</h3>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">中獎數</th><th class="n">Hit Rate</th></tr></thead><tbody><tr><td>底注 1</td><td>BG</td><td>一次付費下注</td><td class="n">11,075</td><td class="n">1,528</td><td class="n"><strong>13.797%</strong></td></tr><tr><td>底注 1</td><td>RESPIN 重轉盤</td><td>一次重轉盤面</td><td class="n">154</td><td class="n">154</td><td class="n"><strong>100.000%</strong></td></tr><tr><td>底注 5</td><td>BG</td><td>一次付費下注</td><td class="n">8,838</td><td class="n">1,168</td><td class="n"><strong>13.216%</strong></td></tr><tr><td>底注 5</td><td>RESPIN 重轉盤</td><td>一次重轉盤面</td><td class="n">70</td><td class="n">70</td><td class="n"><strong>100.000%</strong></td></tr><tr><td>底注 10</td><td>BG</td><td>一次付費下注</td><td class="n">12,117</td><td class="n">1,528</td><td class="n"><strong>12.610%</strong></td></tr><tr><td>底注 10</td><td>RESPIN 重轉盤</td><td>一次重轉盤面</td><td class="n">127</td><td class="n">127</td><td class="n"><strong>100.000%</strong></td></tr><tr><td><strong>合計</strong></td><td>BG</td><td>一次付費下注</td><td class="n">32,030</td><td class="n">4,224</td><td class="n"><strong>13.188%</strong></td></tr><tr><td><strong>合計</strong></td><td>RESPIN 重轉盤</td><td>一次重轉盤面</td><td class="n">351</td><td class="n">351</td><td class="n"><strong>100.000%</strong></td></tr></tbody></table></div>
+<blockquote>BG 一個樣本＝一次下注的整個回合（含 RESPIN 第二盤與幸運轉盤）。<br>重轉盤面樣本＝ALL WHEEL RESPIN 觸發次數，只算第二盤本身有沒有得分，<strong>兩者統計單位不同、不可直接比大小</strong>。<br>本作沒有 FG／BF。</blockquote>
+<h3>3.5 最大倍數</h3>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">最大倍數</th></tr></thead><tbody><tr><td>底注 1</td><td>BG</td><td>一次付費下注（整個回合）</td><td class="n">11,075</td><td class="n"><strong>525.0x</strong></td></tr><tr><td>底注 1</td><td>BG</td><td>單一盤面（含重轉盤）</td><td class="n">11,229</td><td class="n">525.0x</td></tr><tr><td>底注 1</td><td>BG</td><td>單次幸運轉盤獎金</td><td class="n">0</td><td class="n">—</td></tr><tr><td>底注 5</td><td>BG</td><td>一次付費下注（整個回合）</td><td class="n">8,838</td><td class="n"><strong>100.0x</strong></td></tr><tr><td>底注 5</td><td>BG</td><td>單一盤面（含重轉盤）</td><td class="n">8,908</td><td class="n">100.0x</td></tr><tr><td>底注 5</td><td>BG</td><td>單次幸運轉盤獎金</td><td class="n">140</td><td class="n">50.0x</td></tr><tr><td>底注 10</td><td>BG</td><td>一次付費下注（整個回合）</td><td class="n">12,117</td><td class="n"><strong>101.1x</strong></td></tr><tr><td>底注 10</td><td>BG</td><td>單一盤面（含重轉盤）</td><td class="n">12,244</td><td class="n">55.5x</td></tr><tr><td>底注 10</td><td>BG</td><td>單次幸運轉盤獎金</td><td class="n">146</td><td class="n">100.0x</td></tr><tr><td>底注 1</td><td>規則上限</td><td>兩輪 <code>10</code>＋<code>5</code> × 5x</td><td class="n">—</td><td class="n"><strong>525x</strong></td></tr><tr><td>底注 5 / 10</td><td>規則上限</td><td><code>10</code>＋<code>5</code>＋<code>5</code> × 10x（底注 5 無 10x，同值 1,055x 由 5,275 元 ÷ 5 得出）</td><td class="n">—</td><td class="n"><strong>1,055x</strong></td></tr><tr><td>底注 50 以上</td><td>規則上限</td><td>公開評測：加強版 SCATTER 可達 10,000x（試玩版無法驗證）</td><td class="n">—</td><td class="n">⏳</td></tr></tbody></table></div>
+<blockquote>底注 1 的 525x 就是它的理論上限，1.1 萬把內抽到一次（機率無法由單一樣本估計）。<br>底注 10 抽到的最高只有 101.1x（1,055x 的 10%），要驗證上限需要遠超過現有 1.2 萬把的樣本。</blockquote>
+<p><strong>一次付費下注得分門檻</strong>（倍數＝本局得分 ÷ 底注）</p>
+<div class="tbl-wrap"><table><thead><tr><th>門檻</th><th class="n">底注 1</th><th class="n">底注 5</th><th class="n">底注 10</th></tr></thead><tbody><tr><td><strong>≥10x</strong></td><td class="n">3.205%</td><td class="n">2.976%</td><td class="n">3.210%</td></tr><tr><td><strong>≥20x</strong></td><td class="n">1.661%</td><td class="n">1.799%</td><td class="n">1.370%</td></tr><tr><td><strong>≥50x</strong></td><td class="n">0.569%</td><td class="n">0.532%</td><td class="n">0.545%</td></tr><tr><td><strong>≥100x</strong></td><td class="n">0.036%</td><td class="n">0.011%</td><td class="n">0.017%</td></tr><tr><td><strong>≥200x</strong></td><td class="n">0.009%</td><td class="n">0.000%</td><td class="n">0.000%</td></tr><tr><td><strong>≥500x</strong></td><td class="n">0.009%</td><td class="n">0.000%</td><td class="n">0.000%</td></tr><tr><td><strong>≥1000x</strong></td><td class="n">0.000%</td><td class="n">0.000%</td><td class="n">0.000%</td></tr></tbody></table></div>
+<blockquote>分母＝各底注付費轉數。本作沒有 FG，這張表對應標準格式的「FG 全程得分門檻」，但單位是一次下注。</blockquote></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><h3>4.1 摘要</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">NB-BG 底注 1</th><th class="n">NB-BG 底注 5</th><th class="n">NB-BG 底注 10</th><th class="n">NB-BG 合計</th></tr></thead><tbody><tr><td>統計單位</td><td class="n">每次付費下注</td><td class="n">每次付費下注</td><td class="n">每次付費下注</td><td class="n">每次付費下注</td></tr><tr><td>樣本</td><td class="n">11,075</td><td class="n">8,838</td><td class="n">12,117</td><td class="n">32,030</td></tr><tr><td>非零區間</td><td class="n">14</td><td class="n">14</td><td class="n">15</td><td class="n">18</td></tr><tr><td>Range 合計</td><td class="n">100.00000%</td><td class="n">100.00000%</td><td class="n">100.00000%</td><td class="n">100.00000%</td></tr></tbody></table></div>
+<blockquote>區間沿用 H026 標準 64 區間 <code>(Lower, Upper]</code>，倍率＝本局得分 ÷ 底注（含 RESPIN 第二盤與幸運轉盤）。<br>本作無 FG，Free Game Entry 列不存在，Range 合計即 100%；<strong>FG／BF 線型無資料，圖 2 不繪製</strong>。<br><strong>圖上的 BG 線型取底注 10（完整機制版）</strong>，三個底注的完整數值在 4.2 表格。<br>倍率是離散的（得分只能是面額串接 × 倍率），所以線型呈梳狀：底注 10 的得分集中在 1.0x / 1.1x / 1.5x / 5.0x / 5.5x…，<br>落在 <code>(0,1]</code>、<code>(1,2]</code>、<code>(5,6]</code> 的區間會遠高於 1% 上限，圖上不畫、改列在圖上方。</blockquote>
+<div class="axisfix">
+  <span class="pill">X 軸：固定 64 區間（全部標出）</span>
+  <span class="pill">BG Y 軸：固定 0–1%</span>
+  <span class="pill">FG Y 軸：固定 0–16%</span>
+  <span class="pill">超出上限不繪製</span>
+</div>
+<h4>BG 倍率線型</h4>
+<p class="cap">縱軸固定 0–1%。超過 1% 的低倍區間不繪製，以放大尾段細節。折線斷開處代表該區間為零，非插值。</p>
+<p class="warn" id="clipnote"></p>
+<div class="card"><div class="plot" id="p1"></div></div>
+<h4>FG 倍率線型</h4>
+<p class="cap">縱軸固定 0–16%。</p>
+<div class="card"><div class="legend" id="lg2"></div><div class="plot" id="p2"></div></div>
+<h4>尾段厚度：P(倍率 &gt; 區間上限)</h4>
+<p class="cap">各場景在自身樣本內的累積機率，縱軸固定 0–100%。曲線越早墜地，尾段越薄。</p>
+<div class="card"><div class="legend" id="lg3"></div><div class="plot" id="p3"></div></div>
+<h3>4.2 倍率線型分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>Interval</th><th class="n">底注 1 次數</th><th class="n">底注 1 Hit Rate</th><th class="n">底注 5 次數</th><th class="n">底注 5 Hit Rate</th><th class="n">底注 10 次數</th><th class="n">底注 10 Hit Rate</th><th class="n">合計 次數</th><th class="n">合計 Hit Rate</th></tr></thead><tbody><tr><td><code>(-1, 0]</code></td><td class="n">9,547</td><td class="n">86.20316%</td><td class="n">7,670</td><td class="n">86.78434%</td><td class="n">10,589</td><td class="n">87.38962%</td><td class="n">27,806</td><td class="n">86.81236%</td></tr><tr><td><code>(0, 1]</code></td><td class="n">689</td><td class="n">6.22122%</td><td class="n">584</td><td class="n">6.60783%</td><td class="n">295</td><td class="n">2.43460%</td><td class="n">1,568</td><td class="n">4.89541%</td></tr><tr><td><code>(1, 2]</code></td><td class="n">12</td><td class="n">0.10835%</td><td class="n">16</td><td class="n">0.18104%</td><td class="n">452</td><td class="n">3.73030%</td><td class="n">480</td><td class="n">1.49860%</td></tr><tr><td><code>(2, 3]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">40</td><td class="n">0.45259%</td><td class="n">4</td><td class="n">0.03301%</td><td class="n">44</td><td class="n">0.13737%</td></tr><tr><td><code>(3, 4]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(4, 5]</code></td><td class="n">470</td><td class="n">4.24379%</td><td class="n">256</td><td class="n">2.89658%</td><td class="n">170</td><td class="n">1.40299%</td><td class="n">896</td><td class="n">2.79738%</td></tr><tr><td><code>(5, 6]</code></td><td class="n">2</td><td class="n">0.01806%</td><td class="n">9</td><td class="n">0.10183%</td><td class="n">217</td><td class="n">1.79087%</td><td class="n">228</td><td class="n">0.71183%</td></tr><tr><td><code>(6, 7]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">1</td><td class="n">0.00825%</td><td class="n">1</td><td class="n">0.00312%</td></tr><tr><td><code>(7, 8]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(8, 9]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(9, 10]</code></td><td class="n">98</td><td class="n">0.88488%</td><td class="n">40</td><td class="n">0.45259%</td><td class="n">59</td><td class="n">0.48692%</td><td class="n">197</td><td class="n">0.61505%</td></tr><tr><td><code>(10, 15]</code></td><td class="n">66</td><td class="n">0.59594%</td><td class="n">55</td><td class="n">0.62231%</td><td class="n">125</td><td class="n">1.03161%</td><td class="n">246</td><td class="n">0.76803%</td></tr><tr><td><code>(15, 20]</code></td><td class="n">73</td><td class="n">0.65914%</td><td class="n">30</td><td class="n">0.33944%</td><td class="n">69</td><td class="n">0.56945%</td><td class="n">172</td><td class="n">0.53700%</td></tr><tr><td><code>(20, 25]</code></td><td class="n">33</td><td class="n">0.29797%</td><td class="n">52</td><td class="n">0.58837%</td><td class="n">51</td><td class="n">0.42090%</td><td class="n">136</td><td class="n">0.42460%</td></tr><tr><td><code>(25, 30]</code></td><td class="n">22</td><td class="n">0.19865%</td><td class="n">22</td><td class="n">0.24893%</td><td class="n">19</td><td class="n">0.15680%</td><td class="n">63</td><td class="n">0.19669%</td></tr><tr><td><code>(30, 35]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">17</td><td class="n">0.19235%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">17</td><td class="n">0.05308%</td></tr><tr><td><code>(35, 40]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(40, 45]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(45, 50]</code></td><td class="n">42</td><td class="n">0.37923%</td><td class="n">46</td><td class="n">0.52048%</td><td class="n">11</td><td class="n">0.09078%</td><td class="n">99</td><td class="n">0.30909%</td></tr><tr><td><code>(50, 60]</code></td><td class="n">17</td><td class="n">0.15350%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">53</td><td class="n">0.43740%</td><td class="n">70</td><td class="n">0.21855%</td></tr><tr><td><code>(60, 70]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(70, 80]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(80, 90]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(90, 100]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">1</td><td class="n">0.01131%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">1</td><td class="n">0.00312%</td></tr><tr><td><code>(100, 120]</code></td><td class="n">3</td><td class="n">0.02709%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">2</td><td class="n">0.01651%</td><td class="n">5</td><td class="n">0.01561%</td></tr><tr><td><code>(120, 140]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(140, 160]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(160, 180]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(180, 200]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(200, 250]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(250, 300]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(300, 350]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(350, 400]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(400, 450]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(450, 500]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(500, 550]</code></td><td class="n">1</td><td class="n">0.00903%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">1</td><td class="n">0.00312%</td></tr><tr><td><code>(550, 600]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(600, 650]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(650, 700]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(700, 750]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(750, 800]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(800, 850]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(850, 900]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(900, 950]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(950, 1000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(1000, 2000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(2000, 3000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(3000, 4000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(4000, 5000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(5000, 6000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(6000, 7000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(7000, 8000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(8000, 9000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(9000, 10000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(10000, 20000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(20000, 30000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(30000, 40000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(40000, 50000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(50000, 60000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(60000, 70000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(70000, 80000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(80000, 90000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(90000, 100000]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr><tr><td><code>(100000, 9999999]</code></td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td><td class="n">0</td><td class="n">0.00000%</td></tr></tbody></table></div>
+<h3>4.3 觀察</h3>
+<ul><li>底注 1：<code>(-1, 0]</code> 86.20%、<code>(0, 1]</code> 6.22%、<code>(4, 5]</code> 4.24%、<code>(9, 10]</code> 0.88%；最高到 <code>(500, 550]</code>。</li><li>底注 5：<code>(-1, 0]</code> 86.78%、<code>(0, 1]</code> 6.61%、<code>(4, 5]</code> 2.90%、<code>(10, 15]</code> 0.62%；最高到 <code>(90, 100]</code>。</li><li>底注 10：<code>(-1, 0]</code> 87.39%、<code>(1, 2]</code> 3.73%、<code>(0, 1]</code> 2.43%、<code>(5, 6]</code> 1.79%；最高到 <code>(100, 120]</code>。</li><li>三條線都在 <code>(-1, 0]</code> 佔 86～88%，其餘集中在 10x 以下；50x 以上的區間主要靠幸運轉盤 50x／100x 與 5x／10x 倍率乘上 <code>5xx</code> 串接。</li><li>底注 1 因兩輪串接最多兩位數，<code>(10, 15]</code> 以上幾乎全靠 5x 倍率；底注 5 沒有 10x，把 5x 的出現率拉到 17%（5.4）補足。</li></ul></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><h3>5.1 特別轉輪與主轉輪結果的關聯</h3>
+<p>公開評測寫「只有主轉輪中獎時特別轉輪的加成才會啟用」。實測的做法不是「不啟用」，而是<strong>特別轉輪依主轉輪有無中獎抽不同的權重表</strong>：</p>
+<p><strong>底注 1</strong>　主轉輪未中 9,591 把 / 主轉輪中獎 1,484 把</p>
+<div class="tbl-wrap"><table><thead><tr><th>特別轉輪</th><th class="n">主轉輪未中時</th><th class="n">主轉輪中獎時</th><th class="n">中獎時／未中時</th></tr></thead><tbody><tr><td>無效果</td><td class="n">88.87%</td><td class="n">71.09%</td><td class="n">0.8x</td></tr><tr><td>2x</td><td class="n">3.83%</td><td class="n">7.48%</td><td class="n">2.0x</td></tr><tr><td>5x</td><td class="n">6.84%</td><td class="n">14.02%</td><td class="n">2.0x</td></tr><tr><td>10x</td><td class="n">—（鎖住）</td><td class="n">—（鎖住）</td><td class="n">—</td></tr><tr><td>SCATTER</td><td class="n">—（鎖住）</td><td class="n">—（鎖住）</td><td class="n">—</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">0.46%</td><td class="n">7.41%</td><td class="n">16.2x</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n"></td></tr></tbody></table></div>
+<p><strong>底注 5</strong>　主轉輪未中 7,782 把 / 主轉輪中獎 1,056 把</p>
+<div class="tbl-wrap"><table><thead><tr><th>特別轉輪</th><th class="n">主轉輪未中時</th><th class="n">主轉輪中獎時</th><th class="n">中獎時／未中時</th></tr></thead><tbody><tr><td>無效果</td><td class="n">82.32%</td><td class="n">48.58%</td><td class="n">0.6x</td></tr><tr><td>2x</td><td class="n">1.99%</td><td class="n">1.61%</td><td class="n">0.8x</td></tr><tr><td>5x</td><td class="n">14.25%</td><td class="n">40.53%</td><td class="n">2.8x</td></tr><tr><td>10x</td><td class="n">—（鎖住）</td><td class="n">—（鎖住）</td><td class="n">—</td></tr><tr><td>SCATTER</td><td class="n">1.02%</td><td class="n">5.78%</td><td class="n">5.7x</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">0.42%</td><td class="n">3.50%</td><td class="n">8.3x</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n"></td></tr></tbody></table></div>
+<p><strong>底注 10</strong>　主轉輪未中 10,702 把 / 主轉輪中獎 1,415 把</p>
+<div class="tbl-wrap"><table><thead><tr><th>特別轉輪</th><th class="n">主轉輪未中時</th><th class="n">主轉輪中獎時</th><th class="n">中獎時／未中時</th></tr></thead><tbody><tr><td>無效果</td><td class="n">85.07%</td><td class="n">60.71%</td><td class="n">0.7x</td></tr><tr><td>2x</td><td class="n">4.55%</td><td class="n">9.61%</td><td class="n">2.1x</td></tr><tr><td>5x</td><td class="n">4.73%</td><td class="n">10.11%</td><td class="n">2.1x</td></tr><tr><td>10x</td><td class="n">4.60%</td><td class="n">8.27%</td><td class="n">1.8x</td></tr><tr><td>SCATTER</td><td class="n">0.47%</td><td class="n">6.78%</td><td class="n">14.5x</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">0.59%</td><td class="n">4.52%</td><td class="n">7.7x</td></tr><tr><td><strong>合計</strong></td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n"></td></tr></tbody></table></div>
+<blockquote>「主轉輪中獎」＝面額串接 &gt; 0。主轉輪沒中時仍會抽到 SCATTER（底注 10：0.47%），此時只派轉盤獎金；<br>沒中時抽到 2x／5x／10x 只是視覺上的近失（near-miss），得分為 0。<br>這代表特別轉輪不是獨立轉輪，而是<strong>依盤面結果分兩張權重表</strong>；反推輪帶時不能把 4 輪當成獨立抽樣。</blockquote>
+<h3>5.2 幸運轉盤（SCATTER）</h3>
+<p>底注 1 鎖住。SCATTER 出現即必定獲獎（286 / 286 次都有 <code>WheelWin</code>），獎金<strong>加在盤面得分上</strong>，與主轉輪是否中獎無關。</p>
+<div class="tbl-wrap"><table><thead><tr><th>轉盤獎金（倍底注）</th><th class="n">底注 5 次數</th><th class="n">底注 5 占比</th><th class="n">底注 10 次數</th><th class="n">底注 10 占比</th></tr></thead><tbody><tr><td><strong>5x</strong></td><td class="n">48</td><td class="n">34.3%</td><td class="n">37</td><td class="n">25.3%</td></tr><tr><td><strong>10x</strong></td><td class="n">33</td><td class="n">23.6%</td><td class="n">36</td><td class="n">24.7%</td></tr><tr><td><strong>15x</strong></td><td class="n">9</td><td class="n">6.4%</td><td class="n">25</td><td class="n">17.1%</td></tr><tr><td><strong>20x</strong></td><td class="n">17</td><td class="n">12.1%</td><td class="n">24</td><td class="n">16.4%</td></tr><tr><td><strong>30x</strong></td><td class="n">9</td><td class="n">6.4%</td><td class="n">5</td><td class="n">3.4%</td></tr><tr><td><strong>50x</strong></td><td class="n">24</td><td class="n">17.1%</td><td class="n">17</td><td class="n">11.6%</td></tr><tr><td><strong>100x</strong></td><td class="n">0</td><td class="n">0.0%</td><td class="n">2</td><td class="n">1.4%</td></tr><tr><td><strong>合計</strong></td><td class="n">140</td><td class="n">100.0%</td><td class="n">146</td><td class="n">100.0%</td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">付費轉</th><th class="n">觸發次數</th><th class="n">週期</th><th class="n">觸發率</th><th class="n">平均獎金</th><th class="n">≥50x 占比</th><th class="n">RTP 貢獻</th><th class="n">觸發時主轉輪同時中獎</th></tr></thead><tbody><tr><td>底注 5</td><td class="n">8,838</td><td class="n">140</td><td class="n">1/63.1</td><td class="n">1.58%</td><td class="n">17.96x</td><td class="n">17.1%</td><td class="n">28.46%</td><td class="n">43.6%</td></tr><tr><td>底注 10</td><td class="n">12,117</td><td class="n">146</td><td class="n">1/83.0</td><td class="n">1.20%</td><td class="n">17.81x</td><td class="n">13.0%</td><td class="n">21.46%</td><td class="n">65.8%</td></tr></tbody></table></div>
+<blockquote>100x 在底注 10 只出現 2 次、底注 5 一次都沒有，這一級的頻率估計不準；30x 出現率明顯低於相鄰兩級，兩個底注一致，看起來是刻意的權重設計而非雜訊。<br>「觸發時主轉輪同時中獎」明顯高於一般 Hit Rate（65.8% vs 12.6%），呼應 5.1：SCATTER 主要從「主轉輪中獎」那張權重表抽出。</blockquote>
+<h3>5.3 ALL WHEEL RESPIN</h3>
+<div class="tbl-wrap"><table><thead><tr><th>底注</th><th class="n">觸發次數</th><th class="n">週期</th><th class="n">觸發率</th><th class="n">第一盤有得分</th><th class="n">第一盤平均倍數</th><th class="n">重轉盤 Hit Rate</th><th class="n">重轉盤平均倍數</th><th class="n">回合平均倍數</th><th class="n">回合最大倍數</th></tr></thead><tbody><tr><td>底注 1</td><td class="n">154</td><td class="n">1/71.9</td><td class="n">1.39%</td><td class="n">71.4%</td><td class="n">5.66x</td><td class="n">100.0%</td><td class="n">19.02x</td><td class="n">24.68x</td><td class="n">110.0x</td></tr><tr><td>底注 5</td><td class="n">70</td><td class="n">1/126.3</td><td class="n">0.79%</td><td class="n">52.9%</td><td class="n">2.80x</td><td class="n">100.0%</td><td class="n">19.63x</td><td class="n">22.44x</td><td class="n">50.0x</td></tr><tr><td>底注 10</td><td class="n">127</td><td class="n">1/95.4</td><td class="n">1.05%</td><td class="n">50.4%</td><td class="n">3.07x</td><td class="n">100.0%</td><td class="n">17.99x</td><td class="n">21.05x</td><td class="n">55.1x</td></tr></tbody></table></div>
+<blockquote>第一盤（出現 RESPIN 符號的那盤）的得分<strong>照付</strong>，再免費重轉主轉輪一次；兩盤得分相加。<br>重轉盤的特別轉輪一律「無效果」（3.2.2），所以重轉盤不可能再乘倍率、進轉盤或連鎖重轉。<br><strong>重轉盤必中</strong>：351 次重轉全部有得分（Tada 入口 64 次亦同），最低得分 底注 1 為 5 元（5x） / 底注 5 為 50 元（10x） / 底注 10 為 50 元（5x）；一般把數的主轉輪中獎率只有 11.7%（底注 10）。<br>所以 RESPIN 實際上是一個「保底獎」：重轉盤用另一張必中的主轉輪權重（3.2.2），平均 17.99x（底注 10），價值在保證命中而不是大獎。</blockquote>
+<h3>5.4 押注解鎖階梯</h3>
+<p>規則頁第 3 條：「提高押注可解鎖更多遊戲機制」。實測每個底注是一套獨立設定：</p>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>底注 1</th><th>底注 5</th><th>底注 10</th></tr></thead><tbody><tr><td>啟用主轉輪</td><td>2 輪（<code>Order=[0,1,-1]</code>）</td><td>3 輪</td><td>3 輪</td></tr><tr><td>SCATTER（幸運轉盤）</td><td>❌ 鎖住</td><td>✅</td><td>✅</td></tr><tr><td>10x 倍率</td><td>❌ 鎖住</td><td>❌ 鎖住</td><td>✅</td></tr><tr><td>2x / 5x 倍率</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>ALL WHEEL RESPIN</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>面額 <code>00</code></td><td>❌</td><td>❌</td><td>❌（公開評測：底注 50 以上）</td></tr><tr><td>理論最高倍數</td><td>525x</td><td>1,055x</td><td>1,055x</td></tr><tr><td>實測 RTP</td><td>104.8%</td><td>94.0%</td><td>94.3%</td></tr></tbody></table></div>
+<p><strong>機率差異（兩比例 z 檢定，|z| &gt; 2.58 為 99% 顯著）</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">底注 1</th><th class="n">底注 5</th><th class="n">底注 10</th><th class="n">z（1 vs 10）</th><th class="n">z（5 vs 10）</th></tr></thead><tbody><tr><td>Hit Rate</td><td class="n">13.80%</td><td class="n">13.22%</td><td class="n">12.61%</td><td class="n">+2.7</td><td class="n">+1.3</td></tr><tr><td>2x</td><td class="n">4.32%</td><td class="n">1.95%</td><td class="n">5.14%</td><td class="n">-3.0</td><td class="n">-12.0</td></tr><tr><td>5x</td><td class="n">7.80%</td><td class="n">17.39%</td><td class="n">5.36%</td><td class="n">+7.5</td><td class="n">+28.1</td></tr><tr><td>10x</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">5.03%</td><td class="n">-23.9</td><td class="n">-21.4</td></tr><tr><td>SCATTER</td><td class="n">0.00%</td><td class="n">1.58%</td><td class="n">1.20%</td><td class="n">-11.6</td><td class="n">+2.3</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">1.39%</td><td class="n">0.79%</td><td class="n">1.05%</td><td class="n">+2.4</td><td class="n">-1.9</td></tr><tr><td>輪位 0 面額 <code>10</code></td><td class="n">0.59%</td><td class="n">0.12%</td><td class="n">0.94%</td><td class="n">-3.1</td><td class="n">-7.6</td></tr><tr><td>輪位 0 面額 <code>1</code></td><td class="n">5.33%</td><td class="n">1.52%</td><td class="n">4.92%</td><td class="n">+1.4</td><td class="n">-13.3</td></tr><tr><td>輪位 0 面額 <code>5</code></td><td class="n">1.81%</td><td class="n">2.38%</td><td class="n">1.91%</td><td class="n">-0.6</td><td class="n">+2.3</td></tr><tr><td>輪位 1 面額 <code>0</code></td><td class="n">43.30%</td><td class="n">46.87%</td><td class="n">45.94%</td><td class="n">-4.1</td><td class="n">+1.3</td></tr><tr><td>輪位 1 面額 <code>1</code></td><td class="n">4.31%</td><td class="n">1.24%</td><td class="n">3.60%</td><td class="n">+2.8</td><td class="n">-10.6</td></tr><tr><td>輪位 1 面額 <code>5</code></td><td class="n">2.00%</td><td class="n">2.81%</td><td class="n">1.97%</td><td class="n">+0.2</td><td class="n">+4.0</td></tr></tbody></table></div>
+<blockquote><strong>底注 1</strong>：拿掉第三輪、SCATTER、10x，改用更多 5x 與略高的 Hit Rate 補償。輪位 1 在兩輪設定下是個位數，<br>面額 <code>0</code> 會把前一位放大 10 倍，所以刻意減少輪位 1 的 <code>0</code> 與輪位 0 的 <code>10</code>。<br><strong>底注 5</strong>：沒有 10x，改把 5x 拉到底注 10 的 3 倍以上，2x 降到四成；主轉輪的 <code>1</code> 大減、<code>5</code> 增加，輪位 0 的 <code>10</code> 幾乎消失。<br>三個底注的 RTP 都落在 92% 的信賴區間內：<strong>往上解鎖機制的同時重新分配機率，RTP 不變</strong>。</blockquote>
+<h3>5.5 盤面基礎值分布</h3>
+<p>「基礎值」＝主轉輪面額串接出來的數字（乘倍率前）。這張表相當於本作的賠付表命中分布。</p>
+<div class="tbl-wrap"><table><thead><tr><th>基礎值</th><th>底注 1 出現率</th><th>底注 1 RTP 占比</th><th class="n">底注 5 出現率</th><th class="n">底注 5 RTP 占比</th><th class="n">底注 10 出現率</th><th class="n">底注 10 RTP 占比</th></tr></thead><tbody><tr><td>0（未中）</td><td>86.60%</td><td>0.00%</td><td class="n">88.05%</td><td class="n">0.00%</td><td class="n">88.32%</td><td class="n">0.00%</td></tr><tr><td><strong>1</strong></td><td>8.13%</td><td>14.06%</td><td class="n">2.01%</td><td class="n">2.02%</td><td class="n">0.52%</td><td class="n">0.50%</td></tr><tr><td><strong>5</strong></td><td>3.36%</td><td>18.74%</td><td class="n">7.63%</td><td class="n">18.81%</td><td class="n">1.20%</td><td class="n">2.13%</td></tr><tr><td><strong>10</strong></td><td>1.21%</td><td>22.23%</td><td class="n">0.36%</td><td class="n">2.02%</td><td class="n">2.27%</td><td class="n">5.79%</td></tr><tr><td><strong>11</strong></td><td>0.29%</td><td>4.83%</td><td class="n">0.34%</td><td class="n">1.75%</td><td class="n">2.27%</td><td class="n">4.92%</td></tr><tr><td><strong>15</strong></td><td>0.29%</td><td>4.14%</td><td class="n">0.45%</td><td class="n">1.88%</td><td class="n">2.07%</td><td class="n">4.51%</td></tr><tr><td><strong>50</strong></td><td>0.07%</td><td>3.45%</td><td class="n">0.53%</td><td class="n">14.56%</td><td class="n">0.81%</td><td class="n">7.66%</td></tr><tr><td><strong>51</strong></td><td>0.01%</td><td>0.44%</td><td class="n">0.15%</td><td class="n">1.60%</td><td class="n">1.02%</td><td class="n">5.89%</td></tr><tr><td><strong>55</strong></td><td>0.04%</td><td>2.37%</td><td class="n">0.16%</td><td class="n">2.12%</td><td class="n">0.46%</td><td class="n">4.14%</td></tr><tr><td><strong>100</strong></td><td>—</td><td>—</td><td class="n">0.08%</td><td class="n">2.65%</td><td class="n">0.35%</td><td class="n">6.30%</td></tr><tr><td><strong>101</strong></td><td>—</td><td>—</td><td class="n">0.03%</td><td class="n">0.73%</td><td class="n">0.05%</td><td class="n">0.88%</td></tr><tr><td><strong>105</strong></td><td>0.01%</td><td>4.52%</td><td class="n">0.06%</td><td class="n">1.26%</td><td class="n">0.16%</td><td class="n">2.02%</td></tr><tr><td><strong>110</strong></td><td>—</td><td>—</td><td class="n">0.03%</td><td class="n">0.79%</td><td class="n">0.30%</td><td class="n">5.77%</td></tr><tr><td><strong>111</strong></td><td>—</td><td>—</td><td class="n">0.05%</td><td class="n">1.07%</td><td class="n">0.04%</td><td class="n">1.65%</td></tr><tr><td><strong>115</strong></td><td>—</td><td>—</td><td class="n">0.03%</td><td class="n">0.83%</td><td class="n">0.01%</td><td class="n">0.10%</td></tr><tr><td><strong>150</strong></td><td>—</td><td>—</td><td class="n">—</td><td class="n">—</td><td class="n">0.04%</td><td class="n">0.92%</td></tr><tr><td><strong>151</strong></td><td>—</td><td>—</td><td class="n">0.01%</td><td class="n">0.36%</td><td class="n">0.03%</td><td class="n">0.53%</td></tr><tr><td><strong>155</strong></td><td>—</td><td>—</td><td class="n">0.02%</td><td class="n">0.75%</td><td class="n">0.02%</td><td class="n">0.41%</td></tr><tr><td><strong>501</strong></td><td>—</td><td>—</td><td class="n">—</td><td class="n">—</td><td class="n">0.01%</td><td class="n">0.44%</td></tr><tr><td><strong>505</strong></td><td>—</td><td>—</td><td class="n">—</td><td class="n">—</td><td class="n">0.02%</td><td class="n">1.33%</td></tr><tr><td><strong>510</strong></td><td>—</td><td>—</td><td class="n">—</td><td class="n">—</td><td class="n">0.01%</td><td class="n">0.45%</td></tr><tr><td><strong>515</strong></td><td>—</td><td>—</td><td class="n">—</td><td class="n">—</td><td class="n">0.01%</td><td class="n">0.45%</td></tr><tr><td><strong>550</strong></td><td>—</td><td>—</td><td class="n">—</td><td class="n">—</td><td class="n">0.01%</td><td class="n">0.48%</td></tr><tr><td><strong>合計</strong></td><td>100.00%</td><td>74.77%</td><td class="n">100.00%</td><td class="n">53.19%</td><td class="n">100.00%</td><td class="n">57.27%</td></tr></tbody></table></div>
+<blockquote>RTP 占比＝該基礎值第一盤的盤面得分（已乘倍率）÷ 該底注總得分，所以合計不到 100%：<br>缺的部分是幸運轉盤獎金與 RESPIN 第二盤（底注 10 約 42.7%）。<br>底注 10 最常見的中獎基礎值是 10 / 11 / 15（各約 2%），<code>5xx</code> 三位數合計不到 0.1%；底注 1 則以 <code>1</code>（8.13%）為主。</blockquote></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><h3>6.1 AwardTypeFlag 對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>Flag</th><th>意義</th><th>判定條件（實測 100% 對應）</th><th class="n">JILI 入口次數</th></tr></thead><tbody><tr><td>0</td><td>未中獎</td><td>得分 0（特別轉輪可能是任何符號）</td><td class="n">27,806</td></tr><tr><td>1</td><td>一般中獎</td><td>中獎當下特別轉輪＝無效果</td><td class="n">2,427</td></tr><tr><td>2</td><td>2x 中獎</td><td>中獎當下特別轉輪＝2x</td><td class="n">264</td></tr><tr><td>3</td><td>5x 中獎</td><td>中獎當下特別轉輪＝5x</td><td class="n">779</td></tr><tr><td>4</td><td>10x 中獎</td><td>中獎當下特別轉輪＝10x</td><td class="n">117</td></tr><tr><td>5</td><td>SCATTER（幸運轉盤）</td><td>中獎當下特別轉輪＝SCATTER</td><td class="n">286</td></tr><tr><td>9</td><td>ALL WHEEL RESPIN</td><td>中獎當下特別轉輪＝ALL WHEEL RESPIN</td><td class="n">351</td></tr></tbody></table></div>
+<blockquote>交接文件列為「待辦：1～5 的分級規則尚未對應」，本次以 32,030 把驗證：Flag ＝ 中獎當下的特別轉輪符號，無得分時一律 0。</blockquote>
+<h3>6.2 與規則文件對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>規則頁／公開評測</th><th>實測</th><th>判定</th></tr></thead><tbody><tr><td>得分規則</td><td>數字由左至右組合排列即為得分，空白不影響</td><td>32,381 盤 100% 符合串接公式</td><td>✅</td></tr><tr><td>最大倍率</td><td>規則頁 1,055x</td><td>理論串接最大 1055 × 10x ＝ 1,055x；實測最高 525x（底注 1）</td><td>✅ 公式吻合，樣本未抽到上限</td></tr><tr><td>最大倍率（公開評測）</td><td>Clash of Slots：10,000x（底注 50 加強版 SCATTER）</td><td>試玩版只開底注 1 / 5 / 10，無法驗證</td><td>📝</td></tr><tr><td>10x 倍率解鎖</td><td>底注 10 以上</td><td>底注 5 共 8,838 把 0 次、底注 10 出現 5.03%</td><td>✅</td></tr><tr><td>幸運轉盤解鎖</td><td>底注 5 以上</td><td>底注 1 共 11,075 把 0 次、底注 5 出現 1.58%</td><td>✅</td></tr><tr><td>RESPIN 全底注可用</td><td>所有底注</td><td>三個底注都有（0.78%～1.39%）</td><td>✅</td></tr><tr><td>特別轉輪只在主轉輪中獎時啟用</td><td>公開評測</td><td>未中獎時仍會抽到倍率符號（得分 0）與 SCATTER（照派轉盤獎金）；權重表依中獎與否不同</td><td>⚠️ 說法不精確，見 5.1</td></tr><tr><td>面額 <code>00</code></td><td>規則頁列為符號之一</td><td>32,030 把從未出現</td><td>📝 應為高底注解鎖</td></tr><tr><td>官方 RTP</td><td>公開評測 96%～97.5%；伺服器回傳 0.92（JILI）／0.97（Tada）</td><td>底注 10 實測 94.3%（CI ±8.6pp）</td><td>⚠️ 樣本無法分辨 92 與 97</td></tr></tbody></table></div>
+<h3>6.3 Tada 入口（伺服器 RTP 0.97）對照</h3>
+<p>同一套後端，只有伺服器回傳的 RTP 設定值不同。z 為兩比例檢定，|z| &gt; 2.58 為 99% 顯著。</p>
+<p><strong>底注 10</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">JILI（0.92）</th><th class="n">Tada（0.97）</th><th class="n">z</th></tr></thead><tbody><tr><td>付費轉</td><td class="n">12,117</td><td class="n">3,302</td><td class="n"></td></tr><tr><td>實測 RTP</td><td class="n">94.3%（±8.6pp）</td><td class="n">96.2%（±17.2pp）</td><td class="n">不顯著</td></tr><tr><td>Hit Rate</td><td class="n">12.61%</td><td class="n">12.27%</td><td class="n">+0.53</td></tr><tr><td>2x</td><td class="n">5.14%</td><td class="n">4.82%</td><td class="n">+0.76</td></tr><tr><td>5x</td><td class="n">5.36%</td><td class="n">4.88%</td><td class="n">+1.10</td></tr><tr><td>10x</td><td class="n">5.03%</td><td class="n">5.03%</td><td class="n">-0.00</td></tr><tr><td>SCATTER</td><td class="n">1.20%</td><td class="n">1.18%</td><td class="n">+0.11</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">1.05%</td><td class="n">0.73%</td><td class="n">+1.66</td></tr><tr><td>最大倍數</td><td class="n">101.1x</td><td class="n">55.5x</td><td class="n"></td></tr></tbody></table></div>
+<p><strong>底注 1</strong></p>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">JILI（0.92）</th><th class="n">Tada（0.97）</th><th class="n">z</th></tr></thead><tbody><tr><td>付費轉</td><td class="n">11,075</td><td class="n">2,790</td><td class="n"></td></tr><tr><td>實測 RTP</td><td class="n">104.8%（±13.1pp）</td><td class="n">101.4%（±19.6pp）</td><td class="n">不顯著</td></tr><tr><td>Hit Rate</td><td class="n">13.80%</td><td class="n">12.90%</td><td class="n">+1.23</td></tr><tr><td>2x</td><td class="n">4.32%</td><td class="n">4.55%</td><td class="n">-0.55</td></tr><tr><td>5x</td><td class="n">7.80%</td><td class="n">8.42%</td><td class="n">-1.09</td></tr><tr><td>10x</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">+0.00</td></tr><tr><td>SCATTER</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">+0.00</td></tr><tr><td>ALL WHEEL RESPIN</td><td class="n">1.39%</td><td class="n">1.43%</td><td class="n">-0.17</td></tr><tr><td>最大倍數</td><td class="n">525.0x</td><td class="n">100.0x</td><td class="n"></td></tr></tbody></table></div>
+<blockquote>所有機率在統計上都看不出差異。5pp 的 RTP 差距若真的存在，要分辨需要兩邊各約 7.5 萬把；<br>現有資料只能說「兩個入口的 RTP 設定值不同，但行為上量不出差別」。Tada 入口的幸運轉盤 39 次（底注 10）沒抽到 100x。</blockquote>
+<h3>6.4 資料使用建議</h3>
+<ul><li><strong>樣本池</strong>：只用 JILI 入口的 32,030 行；Tada 入口的 6,092 行是另一個 RTP 設定，不可併入。</li><li><strong>一律依底注引用</strong>：三個底注是三套設定，「合計」欄只是加權平均。跨遊戲比較請取<strong>底注 10</strong>（完整機制版，12,117 把）。</li><li><strong>可引用的數字</strong>：Hit Rate、特別轉輪各符號出現率、主轉輪面額分布、幸運轉盤獎金階梯（5x～50x）、RESPIN 行為——樣本都在數千到上萬。</li><li><strong>不可當設定值引用</strong>：各底注的 RTP（信賴區間 ±10pp）、100x 轉盤（2 次）、525x／1,055x 出現機率（各 ≤1 次）、重轉盤面額分布（127 盤）。</li><li><strong>資料來源限制</strong>：<code>uat-</code> 測試環境試玩模式；底注 50 / 100 未開放，<code>00</code> 面額與 10,000x 加強版 SCATTER 都沒有資料。</li><li>原始逆向筆記與收集工具見同資料夾 <code>HANDOFF.md</code>、<code>MONEYCOMING.md</code>、<code>REPORT_MoneyComing.md</code>。</li></ul></div>
+</div>
+
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+const CHARTS=[];
+function activate(k,focus){
+  tabs.forEach((t,i)=>{
+    const on=i===k;
+    t.setAttribute('aria-selected',on?'true':'false');
+    t.tabIndex=on?0:-1;
+    document.getElementById('panel-'+i).hidden=!on;
+  });
+  if(focus) tabs[k].focus();
+  const p=document.getElementById('panel-'+k);
+  CHARTS.forEach(c=>{ if(p.contains(c.host)) c.draw(true); });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{
+    let k=null;
+    if(e.key==='ArrowRight')k=(i+1)%tabs.length;
+    else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')k=0; else if(e.key==='End')k=tabs.length-1;
+    if(k!==null){e.preventDefault(); activate(k,true);}
+  });
+});
+
+const CH={"anchor": "### 4.2", "rows": [{"i": 0, "lab": "(-1, 0]", "bgH": 87.389618, "fgH": 0, "bfH": 0, "bgC": 10589, "fgC": 0, "bfC": 0}, {"i": 1, "lab": "(0, 1]", "bgH": 2.434596, "fgH": 0, "bfH": 0, "bgC": 295, "fgC": 0, "bfC": 0}, {"i": 2, "lab": "(1, 2]", "bgH": 3.730296, "fgH": 0, "bfH": 0, "bgC": 452, "fgC": 0, "bfC": 0}, {"i": 3, "lab": "(2, 3]", "bgH": 0.033011, "fgH": 0, "bfH": 0, "bgC": 4, "fgC": 0, "bfC": 0}, {"i": 4, "lab": "(3, 4]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 5, "lab": "(4, 5]", "bgH": 1.402988, "fgH": 0, "bfH": 0, "bgC": 170, "fgC": 0, "bfC": 0}, {"i": 6, "lab": "(5, 6]", "bgH": 1.790872, "fgH": 0, "bfH": 0, "bgC": 217, "fgC": 0, "bfC": 0}, {"i": 7, "lab": "(6, 7]", "bgH": 0.008253, "fgH": 0, "bfH": 0, "bgC": 1, "fgC": 0, "bfC": 0}, {"i": 8, "lab": "(7, 8]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 9, "lab": "(8, 9]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 10, "lab": "(9, 10]", "bgH": 0.486919, "fgH": 0, "bfH": 0, "bgC": 59, "fgC": 0, "bfC": 0}, {"i": 11, "lab": "(10, 15]", "bgH": 1.031608, "fgH": 0, "bfH": 0, "bgC": 125, "fgC": 0, "bfC": 0}, {"i": 12, "lab": "(15, 20]", "bgH": 0.569448, "fgH": 0, "bfH": 0, "bgC": 69, "fgC": 0, "bfC": 0}, {"i": 13, "lab": "(20, 25]", "bgH": 0.420896, "fgH": 0, "bfH": 0, "bgC": 51, "fgC": 0, "bfC": 0}, {"i": 14, "lab": "(25, 30]", "bgH": 0.156804, "fgH": 0, "bfH": 0, "bgC": 19, "fgC": 0, "bfC": 0}, {"i": 15, "lab": "(30, 35]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 16, "lab": "(35, 40]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 17, "lab": "(40, 45]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 18, "lab": "(45, 50]", "bgH": 0.090782, "fgH": 0, "bfH": 0, "bgC": 11, "fgC": 0, "bfC": 0}, {"i": 19, "lab": "(50, 60]", "bgH": 0.437402, "fgH": 0, "bfH": 0, "bgC": 53, "fgC": 0, "bfC": 0}, {"i": 20, "lab": "(60, 70]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 21, "lab": "(70, 80]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 22, "lab": "(80, 90]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 23, "lab": "(90, 100]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 24, "lab": "(100, 120]", "bgH": 0.016506, "fgH": 0, "bfH": 0, "bgC": 2, "fgC": 0, "bfC": 0}, {"i": 25, "lab": "(120, 140]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 26, "lab": "(140, 160]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 27, "lab": "(160, 180]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 28, "lab": "(180, 200]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 29, "lab": "(200, 250]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 30, "lab": "(250, 300]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 31, "lab": "(300, 350]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 32, "lab": "(350, 400]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 33, "lab": "(400, 450]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 34, "lab": "(450, 500]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 35, "lab": "(500, 550]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 36, "lab": "(550, 600]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 37, "lab": "(600, 650]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 38, "lab": "(650, 700]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 39, "lab": "(700, 750]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 40, "lab": "(750, 800]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 41, "lab": "(800, 850]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 42, "lab": "(850, 900]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 43, "lab": "(900, 950]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 44, "lab": "(950, 1000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 45, "lab": "(1000, 2000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 46, "lab": "(2000, 3000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 47, "lab": "(3000, 4000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 48, "lab": "(4000, 5000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 49, "lab": "(5000, 6000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 50, "lab": "(6000, 7000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 51, "lab": "(7000, 8000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 52, "lab": "(8000, 9000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 53, "lab": "(9000, 10000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 54, "lab": "(10000, 20000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 55, "lab": "(20000, 30000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 56, "lab": "(30000, 40000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 57, "lab": "(40000, 50000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 58, "lab": "(50000, 60000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 59, "lab": "(60000, 70000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 60, "lab": "(70000, 80000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 61, "lab": "(80000, 90000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 62, "lab": "(90000, 100000]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 63, "lab": "(100000, 9999999]", "bgH": 0.0, "fgH": 0, "bfH": 0, "bgC": 0, "fgC": 0, "bfC": 0}], "sv": {"bg": [12.610382, 10.175786, 6.44549, 6.412478, 6.412478, 5.009491, 3.218618, 3.210366, 3.210366, 3.210366, 2.723446, 1.691838, 1.12239, 0.701494, 0.544689, 0.544689, 0.544689, 0.544689, 0.453908, 0.016506, 0.016506, 0.016506, 0.016506, 0.016506, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "clipped": [{"lab": "(-1, 0]", "v": 87.389618}, {"lab": "(0, 1]", "v": 2.434596}, {"lab": "(1, 2]", "v": 3.730296}, {"lab": "(4, 5]", "v": 1.402988}, {"lab": "(5, 6]", "v": 1.790872}, {"lab": "(10, 15]", "v": 1.031608}], "series": ["bg"]};
+if(CH){
+  const R=CH.rows, SV=CH.sv, NB=R.length;
+  const DEF={bg:{n:'BG',c:'var(--s1)',hr:'bgH',cnt:'bgC'},
+             fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
+             bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
+  const KEYS=CH.series||['bg','fg','bf'];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=v=>v.toLocaleString('en-US');
+  const cn=document.getElementById('clipnote');
+  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
+    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
+    : '無區間超出 1% 上限。';
+  function legend(id,ks){
+    const e=document.getElementById(id); if(!e)return;
+    e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
+  }
+  function chart(hostId,cfg){
+    const host=document.getElementById(hostId); if(!host)return;
+    let lastW=-1;
+    function draw(force){
+      const W=Math.max(340,host.clientWidth||900);
+      if(!force && W===lastW) return;
+      lastW=W; host.innerHTML='';
+      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const iw=W-m.l-m.r, ih=H-m.t-m.b;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
+      const g=el('g',{transform:`translate(${m.l},${m.t})`});
+      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const X=i=>i/(NB-1)*iw;
+      cfg.yticks.forEach(t=>{
+        const yy=Y(t);
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
+        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
+        tx.textContent=t+'%'; g.appendChild(tx);
+      });
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+      for(let i=0;i<NB;i+=step){
+        const xx=X(i);
+        g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
+          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        tx.textContent=R[i].lab; g.appendChild(tx);
+      }
+      g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
+      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
+      const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
+        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
+      ay.textContent=cfg.ylabel; g.appendChild(ay);
+      cfg.series.forEach(s=>{
+        let run=[];
+        const flush=()=>{
+          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          run=[];
+        };
+        s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
+        flush();
+      });
+      const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+      g.appendChild(cross);
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
+      const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
+      hit.addEventListener('mousemove',ev=>{
+        const bb=svg.getBoundingClientRect();
+        const sx=(ev.clientX-bb.left)*(W/bb.width)-m.l;
+        let i=Math.round(sx/iw*(NB-1)); if(i<0)i=0; if(i>NB-1)i=NB-1;
+        const px=X(i);
+        cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity',1);
+        let html=`<b>${R[i].lab}</b>`;
+        cfg.series.forEach((s,k)=>{
+          const p=s.pts[i];
+          if(p&&p.v!==null){
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
+          }else{
+            dots[k].setAttribute('opacity',0);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>—</span></div>`;
+          }
+        });
+        tip.innerHTML=html; tip.style.opacity=1;
+        const tw=tip.offsetWidth, sc=bb.width/W;
+        let lx=(px+m.l)*sc+14; if(lx+tw>bb.width) lx=(px+m.l)*sc-tw-14;
+        tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
+      });
+      hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.appendChild(g); host.appendChild(svg);
+    }
+    draw(true);
+    const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
+    window.addEventListener('resize',()=>draw());
+    CHARTS.push({host,draw});
+  }
+  const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
+  if(KEYS.includes('bg'))
+    chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
+      aria:'BG 倍率線型，縱軸固定 0 至 1%',
+      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      tipVal:p=>fmt(p.v,5)+'%'});
+  const fgk=KEYS.filter(k=>k!=='bg');
+  if(fgk.length){
+    legend('lg2',fgk);
+    chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
+      aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
+      tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
+  }
+  legend('lg3',KEYS);
+  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
+    aria:'各場景累積機率曲線',
+    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
+    tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
+     把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
+  document.querySelectorAll('.card').forEach(card=>{
+    const plot=card.querySelector('.plot');
+    if(!plot || plot.querySelector('svg')) return;
+    let n=card.previousElementSibling;
+    card.remove();
+    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
+      const prev=n.previousElementSibling;
+      const stop=(n.tagName==='H4');
+      n.remove(); n=prev;
+      if(stop) break;
+    }
+  });
+}
+
+/* ---------- 百分比資料橫條（Excel 格式化條件風格） ----------
+   規則：
+     - 只處理「該欄全部資料格都是百分比」的欄位
+     - 同一張表共用一個刻度（跨欄可比），刻度取表內最大值
+     - 「合計 / 總計 / 小計」列不畫、也不納入取最大值
+     - 一張表至少要有 3 個可畫的格子才啟用                         */
+(function () {
+  function pct(el) {
+    var t = el.textContent.replace(/[*`,\s]/g, '');
+    if (!/^-?\d+(\.\d+)?%$/.test(t)) return null;
+    var v = parseFloat(t);
+    return isFinite(v) ? v : null;
+  }
+  function isTotal(tr) {
+    var c = tr.children[0];
+    return !!c && /合計|總計|小計|Total/i.test(c.textContent);
+  }
+  document.querySelectorAll('table').forEach(function (tb) {
+    var rows = Array.prototype.slice.call(tb.querySelectorAll('tbody tr'));
+    if (rows.length < 2) return;
+    var ncol = rows[0].children.length, cells = [], max = 0;
+    for (var c = 1; c < ncol; c++) {
+      var col = [], nPct = 0, nOther = 0;
+      rows.forEach(function (tr) {
+        var td = tr.children[c];
+        if (!td) { return; }
+        var txt = td.textContent.trim();
+        if (txt === '' || txt === '—') return;         // 空格不計入判定
+        var v = pct(td);
+        if (v === null) { nOther++; return; }          // 非百分比的列跳過，不否決整欄
+        nPct++;
+        if (!isTotal(tr)) col.push([td, v]);
+      });
+      // 該欄要以百分比為主（至少 2 格，且占非空格的六成以上）才畫
+      if (nPct < 2 || nPct < (nPct + nOther) * 0.6) continue;
+      col.forEach(function (p) { if (p[1] > max) max = p[1]; });
+      cells = cells.concat(col);
+    }
+    if (cells.length < 3 || max <= 0) return;
+    cells.forEach(function (p) {
+      var w = Math.max(0, Math.min(100, p[1] / max * 100));
+      if (w < 0.4) return;
+      p[0].classList.add('bar');
+      p[0].style.setProperty('--w', w.toFixed(2) + '%');
+      if (p[1] >= max * 0.999) p[0].style.setProperty('--bc', 'var(--bar-hi)');
+    });
+  });
+})();
+</script>
