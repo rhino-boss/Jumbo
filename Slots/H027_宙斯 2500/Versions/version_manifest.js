@@ -1,5 +1,5 @@
 window.H027_VERSION_MANIFEST = {
-  current: "5.0.0.0",
+  current: "5.1.1.0",
   base_version: "5",
   next_version: "6.0.0.0",
   versions: [
@@ -210,6 +210,43 @@ window.H027_VERSION_MANIFEST = {
         "Retire config.js in favour of self-contained variant configs, and fix the Demo defect where every variant config still described BG_Symbol as FG Reel Set 3 - a stale copy that had survived since 3.0.0.7 because only config.js received the correction and only the Demo reads the variant copy.",
         "Version 5 because the Parameter sheet of the base math workbook changed, which spec 1.3 assigns to the first digit.",
         "B's card weights are not yet calibrated: config_92B/94B/92B_Bet100 currently carry A's weights and are therefore not registered in this version's config list. B's natural-probability reports are still running, and the weights will follow in 5.1.0.0."
+      ]
+    },
+    {
+      version: "5.1.1.0",
+      math_key: "5.1",
+      date: "2026-09-30",
+      competitor_initial_version: false,
+      configs: {
+        "92A": "Versions/5.1.1.0/config_92A.js",
+        "94A": "Versions/5.1.1.0/config_94A.js",
+        "92A_Bet100": "Versions/5.1.1.0/config_92A_Bet100.js",
+        "92B": "Versions/5.1.1.0/config_92B.js",
+        "94B": "Versions/5.1.1.0/config_94B.js",
+        "92B_Bet100": "Versions/5.1.1.0/config_92B_Bet100.js"
+      },
+      workbooks: {
+        base_a: "Versions/5.1.1.0/Source/H0271A.xlsx",
+        base_b: "Versions/5.1.1.0/Source/H0271B.xlsx",
+        92: "Versions/5.1.1.0/Source/H027192A.xlsx",
+        94: "Versions/5.1.1.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/5.1.1.0/Source/H027192A_Bet100.xlsx",
+        "92B": "Versions/5.1.1.0/Source/H027192B.xlsx",
+        "94B": "Versions/5.1.1.0/Source/H027194B.xlsx",
+        "92B_Bet100": "Versions/5.1.1.0/Source/H027192B_Bet100.xlsx"
+      },
+      frozen_base: "Versions/5.1.0.0",
+      changes: [
+        "Calibrate the B family card weights from the B natural-probability reports (NB/EB 1,000,000,000 rounds, BF 100,000,000) with the same minimum-distortion projection used for A. Targets are identical to A: Oldhand 92/94, Newbie 93, Buy Feature 92.5, BG hit 28.193143%, FG cycle 1/450.83 (EB 1/90.17), FG mean 90.1660x/99.1826x, BF win rate 30%.",
+        "B's BG card covers 22 intervals up to 80x (A: 15 up to 30x) because the ten-spin multiplier ball widens the natural BG distribution. Newbie columns are identical across the three B workbooks; the BF column is shared by 92B/94B with Bet100 carrying its own 2000x-capped set.",
+        "Exclude the FG-trigger spin from the BG interval means used by the solver. The natural report counts the trigger spin (four Scatters paying 3x) inside the (2,3] bucket, but a range card rejects trigger spins on retry, so the realised bucket mean was slightly lower than the natural one. Every 100,000,000-round validation had BG RTP at 71.92-71.97% for a 72% target; after the fix BG lands at 71.93-72.05% with deviations in both directions.",
+        "Re-solve the A family (BG, FG and BF columns) from the v5 natural reports H0271A_05_*. The previous EB solve relied on a 9/8 report that no longer exists; the original weights evaluated against the new reports differ by at most 0.01 pp, so this is a reproducibility change, not a retune.",
+        "Fix a simulator defect where every batch child shared the parent's NUMBA_CACHE_DIR (set with setdefault and inherited through the environment). Numba freezes module-level arrays such as the card weights into the compiled kernel, so the first child's cards were reused by every later child: Newbie validation ran with Oldhand weights and a Buy Feature Card-On run reported the Card-Off 232%. The cache directory is now always overridden per process and keyed by bet mode, base bet, card enabled and profile.",
+        "Bring report file names in line with simulator spec 3.1.4: Card-Off reports use the base workbook name (H0271A/H0271B), Card-On reports use oldhand/newbie followed by the bet tier for Oldhand, and the card suffix is gone. The spec gains a row for games with several base-math families.",
+        "Add a Range_Avg_Multi sheet to all six weight workbooks: same layout as Multiplier_Weight, Avg_Multi_* headers, natural per-interval mean multiplier in Normal Bet base-cost units (BG excluding trigger spins), formatted 0.0000.",
+        "Set card_multiplier_denominator to normal_bet_base_cost for all three bet modes per spec 2.5 (informational field). Fix the Demo config-code parser so 92B/94B/_Bet100 codes are no longer suffixed with A.",
+        "Fill the OP Jackpot sheet of all six weight workbooks with SCR measured from the Card-On reports, one representative per group (NB, EB, BF; within-group spread under 0.6%): A 5,110,370,100 / 5,347,849,900 / 30,085,360,000 and B 4,437,685,400 / 4,688,244,300 / 30,190,367,000, each row citing its source report. SCR content increments the third digit per spec 1.3, so 5.1.0.0 becomes 5.1.1.0 and the 5.1.0.0 snapshot is replaced (one snapshot per major version).",
+        "Validation (spec 3.2.2 rounds, identical weight sets run once, no Newbie BF): 20 Card-On runs, all within 2 sigma of target with Retry Limit Exceeded at most 486 per 100,000,000 rounds. Bump to 5.1.0.0 per spec 1.3.1 (card weight change)."
       ]
     }
   ]
