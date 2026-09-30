@@ -8,6 +8,7 @@
   --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
   --rule:#e3e6ea; --grid:#edf0f3;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --bar:rgba(42,120,214,.16); --bar-hi:rgba(235,104,52,.20);
   --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
 }
@@ -17,6 +18,7 @@
     --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
     --rule:#33353a; --grid:#2a2c30;
     --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --bar:rgba(57,135,229,.30); --bar-hi:rgba(217,89,38,.34);
   }
 }
 :root[data-theme="dark"]{
@@ -75,6 +77,8 @@ table{border-collapse:collapse; width:100%; font-size:13px}
 th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
 th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
   letter-spacing:.03em; white-space:nowrap}
+td.bar{background-repeat:no-repeat; background-position:left center;
+  background-size:var(--w,0) 72%; background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)))}
 td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
   font-variant-numeric:tabular-nums; font-size:12px}
 tbody tr:last-child td{border-bottom:none}
@@ -409,4 +413,53 @@ if(CH){
     }
   });
 }
+
+/* ---------- 百分比資料橫條（Excel 格式化條件風格） ----------
+   規則：
+     - 只處理「該欄全部資料格都是百分比」的欄位
+     - 同一張表共用一個刻度（跨欄可比），刻度取表內最大值
+     - 「合計 / 總計 / 小計」列不畫、也不納入取最大值
+     - 一張表至少要有 3 個可畫的格子才啟用                         */
+(function () {
+  function pct(el) {
+    var t = el.textContent.replace(/[*`,\s]/g, '');
+    if (!/^-?\d+(\.\d+)?%$/.test(t)) return null;
+    var v = parseFloat(t);
+    return isFinite(v) ? v : null;
+  }
+  function isTotal(tr) {
+    var c = tr.children[0];
+    return !!c && /合計|總計|小計|Total/i.test(c.textContent);
+  }
+  document.querySelectorAll('table').forEach(function (tb) {
+    var rows = Array.prototype.slice.call(tb.querySelectorAll('tbody tr'));
+    if (rows.length < 2) return;
+    var ncol = rows[0].children.length, cells = [], max = 0;
+    for (var c = 1; c < ncol; c++) {
+      var col = [], nPct = 0, nOther = 0;
+      rows.forEach(function (tr) {
+        var td = tr.children[c];
+        if (!td) { return; }
+        var txt = td.textContent.trim();
+        if (txt === '' || txt === '—') return;         // 空格不計入判定
+        var v = pct(td);
+        if (v === null) { nOther++; return; }          // 非百分比的列跳過，不否決整欄
+        nPct++;
+        if (!isTotal(tr)) col.push([td, v]);
+      });
+      // 該欄要以百分比為主（至少 2 格，且占非空格的六成以上）才畫
+      if (nPct < 2 || nPct < (nPct + nOther) * 0.6) continue;
+      col.forEach(function (p) { if (p[1] > max) max = p[1]; });
+      cells = cells.concat(col);
+    }
+    if (cells.length < 3 || max <= 0) return;
+    cells.forEach(function (p) {
+      var w = Math.max(0, Math.min(100, p[1] / max * 100));
+      if (w < 0.4) return;
+      p[0].classList.add('bar');
+      p[0].style.setProperty('--w', w.toFixed(2) + '%');
+      if (p[1] >= max * 0.999) p[0].style.setProperty('--bc', 'var(--bar-hi)');
+    });
+  });
+})();
 </script>
