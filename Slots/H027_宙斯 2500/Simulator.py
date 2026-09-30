@@ -1125,13 +1125,16 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
             record[R_C2_VALUE_BG, index] += bg_c2_hits[index]
 
         bg_bucket = get_bucket(bg_pay, card_coin_in)
-        record[R_MULTI_CNT_BG, bg_bucket] += 1
-        record[R_MULTI_PAY_BG, bg_bucket] += bg_pay
-        if bg_cascades > 0:
-            record[R_BG_INTERVAL_CASCADE_1 + min(bg_cascades, 5) - 1, bg_bucket] += 1
         if scatter_count >= FG_TRIGGER_COUNT:
+            # 模擬程式規範 §3.1.4：觸發 FG 的局屬 FG 卡口徑，只進 bg_trigger_fg_*_lte_upper 累計欄，
+            # 不混入 base_game_cnt／base_game_pay 與 BG_* 區間統計（倍數卡的推導來源）。
             record[R_BG_TRIGGER_FG_CNT, bg_bucket] += 1
             record[R_BG_TRIGGER_FG_PAY, bg_bucket] += bg_pay
+        else:
+            record[R_MULTI_CNT_BG, bg_bucket] += 1
+            record[R_MULTI_PAY_BG, bg_bucket] += bg_pay
+            if bg_cascades > 0:
+                record[R_BG_INTERVAL_CASCADE_1 + min(bg_cascades, 5) - 1, bg_bucket] += 1
 
         fg_session_pay = 0
         if scatter_count >= FG_TRIGGER_COUNT:
@@ -1481,8 +1484,15 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     is_feature_buy = bet_mode == MODE_FEATUREBUY
     package_cnt = values[R_MULTI_CNT_OA, : len(THRESHOLD_RECORD)].astype(np.int64)
     package_pay = values[R_MULTI_PAY_OA, : len(THRESHOLD_RECORD)]
+    # 模擬程式規範 §3.1.4：第一欄 Interval 由 Interval_Upper 自動產生；上限 0 的第一列顯示 0，
+    # 其餘為「<前一列上限> < X <= <本列上限>」，固定一位小數。
+    interval_labels = [
+        "0" if index == 0 else f"{THRESHOLD_RECORD[index - 1]:.1f} < X <= {upper:.1f}"
+        for index, upper in enumerate(THRESHOLD_RECORD)
+    ]
     multiplier_frame = pd.DataFrame(
         {
+            "Interval": interval_labels,
             "base_game_cnt": base_cnt,
             "base_game_pay": values[R_MULTI_PAY_BG, : len(THRESHOLD_RECORD)],
             "free_game_cnt": np.zeros_like(free_cnt) if is_feature_buy else free_cnt,

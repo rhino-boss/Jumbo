@@ -1,5 +1,5 @@
 window.H027_VERSION_MANIFEST = {
-  current: "5.1.1.1",
+  current: "5.1.1.2",
   base_version: "5",
   next_version: "6.0.0.0",
   versions: [
@@ -213,27 +213,27 @@ window.H027_VERSION_MANIFEST = {
       ]
     },
     {
-      version: "5.1.1.1",
+      version: "5.1.1.2",
       math_key: "5.1",
       date: "2026-09-30",
       competitor_initial_version: false,
       configs: {
-        "92A": "Versions/5.1.1.1/config_92A.js",
-        "94A": "Versions/5.1.1.1/config_94A.js",
-        "92A_Bet100": "Versions/5.1.1.1/config_92A_Bet100.js",
-        "92B": "Versions/5.1.1.1/config_92B.js",
-        "94B": "Versions/5.1.1.1/config_94B.js",
-        "92B_Bet100": "Versions/5.1.1.1/config_92B_Bet100.js"
+        "92A": "Versions/5.1.1.2/config_92A.js",
+        "94A": "Versions/5.1.1.2/config_94A.js",
+        "92A_Bet100": "Versions/5.1.1.2/config_92A_Bet100.js",
+        "92B": "Versions/5.1.1.2/config_92B.js",
+        "94B": "Versions/5.1.1.2/config_94B.js",
+        "92B_Bet100": "Versions/5.1.1.2/config_92B_Bet100.js"
       },
       workbooks: {
-        base_a: "Versions/5.1.1.1/Source/H0271A.xlsx",
-        base_b: "Versions/5.1.1.1/Source/H0271B.xlsx",
-        92: "Versions/5.1.1.1/Source/H027192A.xlsx",
-        94: "Versions/5.1.1.1/Source/H027194A.xlsx",
-        "92_Bet100": "Versions/5.1.1.1/Source/H027192A_Bet100.xlsx",
-        "92B": "Versions/5.1.1.1/Source/H027192B.xlsx",
-        "94B": "Versions/5.1.1.1/Source/H027194B.xlsx",
-        "92B_Bet100": "Versions/5.1.1.1/Source/H027192B_Bet100.xlsx"
+        base_a: "Versions/5.1.1.2/Source/H0271A.xlsx",
+        base_b: "Versions/5.1.1.2/Source/H0271B.xlsx",
+        92: "Versions/5.1.1.2/Source/H027192A.xlsx",
+        94: "Versions/5.1.1.2/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/5.1.1.2/Source/H027192A_Bet100.xlsx",
+        "92B": "Versions/5.1.1.2/Source/H027192B.xlsx",
+        "94B": "Versions/5.1.1.2/Source/H027194B.xlsx",
+        "92B_Bet100": "Versions/5.1.1.2/Source/H027192B_Bet100.xlsx"
       },
       frozen_base: "Versions/5.1.0.0",
       changes: [
@@ -247,6 +247,7 @@ window.H027_VERSION_MANIFEST = {
         "Set card_multiplier_denominator to normal_bet_base_cost for all three bet modes per spec 2.5 (informational field). Fix the Demo config-code parser so 92B/94B/_Bet100 codes are no longer suffixed with A.",
         "Fill the OP Jackpot sheet of all six weight workbooks with SCR measured from the Card-On reports, one representative per group (NB, EB, BF; within-group spread under 0.6%): A 5,110,370,100 / 5,347,849,900 / 30,085,360,000 and B 4,437,685,400 / 4,688,244,300 / 30,190,367,000, each row citing its source report. SCR content increments the third digit per spec 1.3, so 5.1.0.0 becomes 5.1.1.0 and the 5.1.0.0 snapshot is replaced (one snapshot per major version).",
         "Rename the Range_Avg_Multi sheet to Avg_Multi and add a Nature_Prob sheet to all six weight workbooks: same layout as Multiplier_Weight, Nature_Prob_* headers, the natural probability of each interval (BG per non-trigger spin with the Free Game row holding the trigger probability; FG/BF per free-game session), formatted 0.0000%. Document-only change, so the fourth digit increments to 5.1.1.1 and the 5.1.1.0 snapshot is replaced.",
+        "Update game_rule.md 6.1 to describe the C3 multiplier distribution and BG table-selection weights of both base-math families (A and B); the previous text described A only.",
         "Validation (spec 3.2.2 rounds, identical weight sets run once, no Newbie BF): 20 Card-On runs, all within 2 sigma of target with Retry Limit Exceeded at most 486 per 100,000,000 rounds. Bump to 5.1.0.0 per spec 1.3.1 (card weight change)."
       ]
     }
