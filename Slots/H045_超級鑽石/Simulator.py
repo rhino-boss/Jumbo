@@ -69,11 +69,10 @@ WW = 0
 W2 = 1
 C1 = 2
 SCORE_SYMBOLS = tuple(range(3, 11))
-GOLD_MIN = 11
-GOLD_MAX = 18
 EMPTY = -1
 
-GOLDEN_RESULTS = ("WW", "WW_M", "W2", "W2_M")
+# 金框不是符號，而是套在一般符號上的旗標（v2：依 Gold Count Weight 逐輪決定顆數）
+GOLD_RESULTS = ("WW", "WW_M", "W2", "W2_M")
 
 MULTIPLIER_THRESHOLDS = (
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50,
@@ -139,14 +138,6 @@ def validate_config_pair(natural: dict[str, Any], rtp: dict[str, Any] | None,
 
 # ===== 遊戲核心 =====
 
-def canonical(symbol: int) -> int:
-    """金框符號回傳其基礎符號，其餘原樣回傳。"""
-    return GOLD_TO_BASE.get(symbol, symbol)
-
-
-GOLD_TO_BASE: dict[int, int] = {}
-
-
 @dataclass
 class Reel:
     symbols: list[int]
@@ -169,15 +160,14 @@ class Table:
     drop_values: list[list[int]]
     drop_cumulative: list[list[float]]
     drop_total: list[float]
-    golden_results: list[str]
-    golden_cumulative: list[float]
-    golden_total: float
+    gold_results: list[str]
+    gold_cumulative: list[float]
+    gold_total: float
     split_values: list[int]
     split_cumulative: list[float]
     split_total: float
-    mult_values: list[int]
-    mult_cumulative: list[float]
-    mult_total: float
+    # 倍數表依結果分開：WW_M 與 W2_M 各一張
+    mult: dict[str, tuple[list[int], list[float], float]]
 
 
 def _cumulative(weights: list[float]) -> tuple[list[float], float]:
@@ -210,22 +200,23 @@ def prepare_table(raw: dict[str, Any]) -> Table:
         drop_cumulative.append(cumulative)
         drop_total.append(total)
 
-    grw = raw["golden_result_weight"]
-    g_values = [k for k in GOLDEN_RESULTS if k in grw]
+    grw = raw["gold_result_weight"]
+    g_values = [k for k in GOLD_RESULTS if k in grw]
     g_cumulative, g_total = _cumulative([float(grw[k]) for k in g_values])
 
     scw = {int(k): float(v) for k, v in raw["split_count_weight"].items()}
     s_values = sorted(scw)
     s_cumulative, s_total = _cumulative([scw[k] for k in s_values])
 
-    mww = {int(k): float(v) for k, v in raw["multiplier_wild_weight"].items()}
-    m_values = sorted(mww)
-    m_cumulative, m_total = _cumulative([mww[k] for k in m_values])
+    mult: dict[str, tuple[list[int], list[float], float]] = {}
+    for key, table in raw["multiplier_wild_weight"].items():
+        values = sorted(int(k) for k in table)
+        cumulative, total = _cumulative([float(table[str(v)]) for v in values])
+        mult[key] = (values, cumulative, total)
 
     return Table(reels, drop_values, drop_cumulative, drop_total,
                  g_values, g_cumulative, g_total,
-                 s_values, s_cumulative, s_total,
-                 m_values, m_cumulative, m_total)
+                 s_values, s_cumulative, s_total, mult)
 
 
 @dataclass
@@ -308,9 +299,26 @@ class SuperDiamond:
         self.ladder_bg = list(map(int, config["cascade_multiplier"]["bg"]))
         self.ladder_fg = list(map(int, config["cascade_multiplier"]["fg"]))
         self.pays = {int(k): v for k, v in config["pays"].items()}
-        self.max_win = float(config["max_win_multiplier"])
         self.max_fs = int(config["max_free_spins"])
         self.split_reels = list(map(int, config["split_target_reels"]))
+        self.gold_reels = list(map(int, config["gold_reels"]))
+        # 金框顆數分布：{scene: [(values, cumulative, total) per reel]}
+        self.gold_count = {
+            scene: [_cumulative([float(w) for w in per_reel])
+                    for per_reel in config["gold_count_weight"][scene]]
+            for scene in ("bg", "fg")
+        }
+        # Cascade 補牌用的每格金框機率＝該輪期望顆數 ÷ 4 格
+        self.gold_rate = {}
+        for scene in ("bg", "fg"):
+            rates = []
+            for per_reel in config["gold_count_weight"][scene]:
+                total = sum(per_reel)
+                expected = sum(k * w for k, w in enumerate(per_reel)) / total if total else 0.0
+                rates.append(expected / 4.0)
+            self.gold_rate[scene] = rates
+        # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限（game_rule §9.10）
+        self.max_win = self._card_multiplier_cap()
         self.fs_table = {int(k): v for k, v in config["free_spins"].items()}
         self.retry_total = 0
         self.retry_limit_exceeded = 0
@@ -319,13 +327,44 @@ class SuperDiamond:
         self.retry_limit_fg = 0
         self.card_draws: Counter = Counter()
 
+    def _card_multiplier_cap(self) -> float:
+        """取該 Profile 的 BG range 卡最大上限當 Max Win；Card System Off 回傳無限大。"""
+        if not self.card_enabled:
+            return math.inf
+        cards = ((self.rtp_config.get("card_system") or {}).get("profiles") or {}) \
+            .get(self.profile, {}).get("base_game") or []
+        caps = [float(c["max"]) for c in cards
+                if str(c.get("type")) == "range" and float(c.get("weight", 0)) > 0 and "max" in c]
+        return max(caps) if caps else math.inf
+
     # --- 盤面 ---
 
-    def board(self, table_name: str) -> tuple[list[list[int]], list[list[int]]]:
+    def draw_gold(self, scene: str, symbols: list[list[int]]) -> list[list[bool]]:
+        """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
+
+        金框只出現在 gold_reels（R2~R4），且不套在 Scatter 上（比照競品）。
+        """
+        gold = [[False] * 4 for _ in range(5)]
+        for reel in self.gold_reels:
+            cumulative, total = self.gold_count[scene][reel]
+            if total <= 0:
+                continue
+            count = min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
+            if count <= 0:
+                continue
+            spots = [row for row in range(4) if symbols[reel][row] != C1]
+            if not spots:
+                continue
+            self.rng.shuffle(spots)
+            for row in spots[:count]:
+                gold[reel][row] = True
+        return gold
+
+    def board(self, table_name: str, scene: str = "bg"):
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
         mults = [[0] * 4 for _ in range(5)]
-        return symbols, mults
+        return symbols, mults, self.draw_gold(scene, symbols)
 
     def evaluate(self, symbols: list[list[int]], mults: list[list[int]]):
         """回傳 (raw_pay, hit_positions, details, max_line_mult)。
@@ -340,10 +379,11 @@ class SuperDiamond:
             counts: list[int] = []
             positions: list[list[tuple[int, int]]] = []
             for reel in range(5):
+                # 金框是旗標不是符號，判獎一律用底層符號（game_rule §3.1）
                 matched = [
                     (reel, row)
                     for row, symbol in enumerate(symbols[reel])
-                    if symbol in (WW, W2) or canonical(symbol) == target
+                    if symbol in (WW, W2) or symbol == target
                 ]
                 if not matched:
                     break
@@ -376,17 +416,19 @@ class SuperDiamond:
         """game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果。"""
         big_sources: list[tuple[int, int]] = []
         for reel, row in gold_positions:
-            outcome = _pick(self.rng, table.golden_results, table.golden_cumulative, table.golden_total)
+            outcome = _pick(self.rng, table.gold_results, table.gold_cumulative, table.gold_total)
             result.golden_results[outcome] += 1
             result.golden_converted += 1
             symbols[reel][row] = W2 if outcome.startswith("W2") else WW
+            mults[reel][row] = 0
             if outcome.endswith("_M"):
-                value = int(_pick(self.rng, table.mult_values, table.mult_cumulative, table.mult_total))
-                mults[reel][row] = value
-                result.mult_wild_created += 1
+                # WW_M 與 W2_M 各有自己的倍數表；x1 代表無倍數
+                values, cumulative, total = table.mult[outcome]
+                value = int(_pick(self.rng, values, cumulative, total))
+                if value > 1:
+                    mults[reel][row] = value
+                    result.mult_wild_created += 1
                 result.mult_wild_values[value] += 1
-            else:
-                mults[reel][row] = 0
             if outcome.startswith("W2"):
                 big_sources.append((reel, row))
 
@@ -410,13 +452,13 @@ class SuperDiamond:
 
     def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
         table = self.tables[table_name]
+        scene = "fg" if free_game else "bg"
         ladder = self.ladder_fg if free_game else self.ladder_bg
-        symbols, mults = self.board(table_name)
+        symbols, mults, gold = self.board(table_name, scene)
         result = SpinResult(initial_board=[reel[:] for reel in symbols])
         result.initial_symbols.update(
             (reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
-        result.initial_gold_count = sum(
-            GOLD_MIN <= symbol <= GOLD_MAX for column in symbols for symbol in column)
+        result.initial_gold_count = sum(sum(column) for column in gold)
 
         cap = self.max_win * self.bet
         while True:
@@ -436,27 +478,34 @@ class SuperDiamond:
 
             gold_positions: list[tuple[int, int]] = []
             for reel, row in hits:
-                symbol = symbols[reel][row]
-                if GOLD_MIN <= symbol <= GOLD_MAX:
-                    gold_positions.append((reel, row))
+                if gold[reel][row]:
+                    gold_positions.append((reel, row))   # 金框不消除，補牌後翻牌
+                    gold[reel][row] = False
                 else:
                     symbols[reel][row] = EMPTY
                     mults[reel][row] = 0
 
             # 先重力補牌，再翻金框（game_rule §5.6 步驟 3~6）
             for reel in range(5):
-                column = [(symbols[reel][row], mults[reel][row]) for row in range(4)
-                          if symbols[reel][row] != EMPTY]
+                column = [(symbols[reel][row], mults[reel][row], gold[reel][row])
+                          for row in range(4) if symbols[reel][row] != EMPTY]
                 need = 4 - len(column)
                 fresh = []
                 for _ in range(need):
                     symbol = int(_pick(self.rng, table.drop_values[reel],
                                        table.drop_cumulative[reel], table.drop_total[reel]))
-                    fresh.append((symbol, 0))
+                    fresh.append((symbol, 0, False))
                     result.drop_symbols[(reel, symbol)] += 1
                 merged = fresh + column
                 for row in range(4):
-                    symbols[reel][row], mults[reel][row] = merged[row]
+                    symbols[reel][row], mults[reel][row], gold[reel][row] = merged[row]
+                # 只有新補進來的格子（最上面 need 格）重抽金框，既有符號的金框狀態不變。
+                # 每格機率由該輪顆數分布的期望值換算（E[顆數] / 4 格），維持金框密度一致。
+                if reel in self.gold_reels and need:
+                    rate = self.gold_rate[scene][reel]
+                    for row in range(need):
+                        if symbols[reel][row] != C1 and self.rng.random() < rate:
+                            gold[reel][row] = True
 
             if gold_positions:
                 self.flip_golden(table, symbols, mults, gold_positions, result)
@@ -590,7 +639,7 @@ class SuperDiamond:
 
     def round(self, bet_mode: int) -> RoundResult:
         if bet_mode == MODE_FEATUREBUY:
-            entry_symbols, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"])
+            entry_symbols, _, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
             if scatter < 3:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤至少 3 顆 C1")
@@ -922,7 +971,7 @@ def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
         ("avg_gold_frames_fg", s["fg_gold_symbols"] / fg_spins),
         ("golden_converted", s["golden_converted"]),
     ]
-    for key in GOLDEN_RESULTS:
+    for key in GOLD_RESULTS:
         count = s["bg_golden_results"][key] + s["fg_golden_results"][key]
         rows.append((f"golden_result_{key}_share", count / golden_total))
     rows.extend([
@@ -1035,11 +1084,11 @@ def multiplier_line_frame(result: dict[str, Any]) -> pd.DataFrame:
         # --- By Game ---
         bg_gold = s["bucket_bg_golden"][index]
         bg_gold_total = max(1, sum(bg_gold.values()))
-        for key in GOLDEN_RESULTS:
+        for key in GOLD_RESULTS:
             row[f"BG_Golden_{key}_Rate"] = bg_gold[key] / bg_gold_total
         fg_gold = s["bucket_fg_golden"][index]
         fg_gold_total = max(1, sum(fg_gold.values()))
-        for key in GOLDEN_RESULTS:
+        for key in GOLD_RESULTS:
             row[f"FG_Golden_{key}_Rate"] = fg_gold[key] / fg_gold_total
         bg_cnt = max(1, s["bucket_bg_cnt"][index])
         row["BG_Avg_Gold_Frames"] = s["bucket_bg_gold_frames"][index] / bg_cnt
@@ -1085,7 +1134,7 @@ def feature_frame(result: dict[str, Any]) -> pd.DataFrame:
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
         ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
     ]
-    for key in GOLDEN_RESULTS:
+    for key in GOLD_RESULTS:
         rows.append((f"golden_{key}_bg", s["bg_golden_results"][key]))
         rows.append((f"golden_{key}_fg", s["fg_golden_results"][key]))
     for value in sorted(s["mult_wild_values"]):
@@ -1197,12 +1246,11 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
 
 
 def load_batch_configs(combo: dict[str, Any]) -> None:
-    global CFG, CFG_RTP, GOLD_TO_BASE
+    global CFG, CFG_RTP
     CFG = load_js_config(BASE_DIR / combo["config_file"])
     rtp_path = BASE_DIR / combo["config_rtp_file"]
     CFG_RTP = load_js_config(rtp_path) if rtp_path.exists() else {}
     validate_config_pair(CFG, CFG_RTP or None, combo["config_file"], combo["config_rtp_file"])
-    GOLD_TO_BASE = {int(k): int(v) for k, v in CFG["golden_ids"].items()}
     if not CFG_RTP and combo["card_system_enabled"]:
         print(f"[warn] 找不到 {combo['config_rtp_file']}，本批改以 Card System Off 執行。")
 

@@ -2674,7 +2674,7 @@
   const cfg = window.H045_CONFIG;
   if (!cfg) throw new Error("H045 config was not loaded.");
   for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
-    "golden_ids", "max_win_multiplier", "free_spins", "bet_modes", "split_target_reels"]) {
+    "gold_count_weight", "gold_reels", "free_spins", "bet_modes", "split_target_reels"]) {
     if (!cfg[key]) throw new Error("H045 config is missing field: " + key);
   }
   const $ = id => document.getElementById(id);
@@ -2682,13 +2682,23 @@
   const WW = 0, W2 = 1, C1 = 2;
   const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
-  const GOLD_BASE = Object.fromEntries(Object.entries(cfg.golden_ids).map(([g, b]) => [Number(g), Number(b)]));
-  const GOLD_IDS = new Set(Object.keys(GOLD_BASE).map(Number));
   const LADDER = { bg: cfg.cascade_multiplier.bg, fg: cfg.cascade_multiplier.fg };
   const LADDER_LEN = Math.max(LADDER.bg.length, LADDER.fg.length);
-  const MAX_WIN = Number(cfg.max_win_multiplier);
+  // Max Win 由卡片系統的倍率上限決定；Card System Off 不截斷（game_rule §9.10）
+  const MAX_WIN = Infinity;
   const MAX_FS = Number(cfg.max_free_spins);
   const SPLIT_REELS = cfg.split_target_reels.map(Number);
+  const GOLD_REELS = cfg.gold_reels.map(Number);
+  // 金框顆數分布（每輪 0~4 顆）與 Cascade 補牌用的每格機率（期望顆數 ÷ 4）
+  const GOLD_COUNT = cfg.gold_count_weight;
+  const GOLD_RATE = {};
+  for (const scene of ["bg", "fg"]) {
+    GOLD_RATE[scene] = GOLD_COUNT[scene].map(list => {
+      const total = list.reduce((a, b) => a + b, 0);
+      if (!total) return 0;
+      return list.reduce((sum, w, k) => sum + k * w, 0) / total / 4;
+    });
+  }
   const BUY = cfg.bet_modes.buy_feature;
   const BASE_BET = Number(cfg.base_bet) || 100;
   const START_BALANCE = 10000 * BASE_BET;
@@ -2739,7 +2749,7 @@
     }
   </style>`);
 
-  // ===== Config → runtime tables（欄位對應見 Source/xlsx_config_usage_mapping.md）=====
+  // ===== Config → runtime tables（欄位對應見數學模型的 Game Description 工作表）=====
   for (const [name, raw] of Object.entries(cfg.tables)) {
     const dropValues = [], dropWeights = [];
     const dw = raw.drop_weight || {};
@@ -2754,9 +2764,9 @@
     tables[name] = {
       reels: raw.reels, weights, drop_values: dropValues, drop_weights: dropWeights,
       cumulative, dropCumulative,
-      golden: raw.golden_result_weight || {},
+      gold: raw.gold_result_weight || {},
       split: raw.split_count_weight || {},
-      multWild: raw.multiplier_wild_weight || {}
+      multWild: raw.multiplier_wild_weight || {}   // { WW_M: {...}, W2_M: {...} }
     };
   }
 
@@ -2792,13 +2802,31 @@
   }
 
   const cloneBoard = board => board.map(reel => reel.slice());
-  const canonical = symbol => GOLD_BASE[symbol] !== undefined ? GOLD_BASE[symbol] : symbol;
   const zeroMults = () => Array.from({ length: 5 }, () => Array(4).fill(0));
+  const zeroGold = () => Array.from({ length: 5 }, () => Array(4).fill(false));
   const makeBoard = tableName => Array.from({ length: 5 }, (_, reel) => {
     const symbols = tables[tableName].reels[reel];
     const stop = drawIndex(tableName, reel);
     return Array.from({ length: 4 }, (_, row) => Number(symbols[(stop + row) % symbols.length]));
   });
+
+  /** 依 Gold Count Weight 逐輪抽金框顆數，再隨機挑格子。金框只在 R2~R4，且不套在 Scatter 上。 */
+  function drawGold(scene, board) {
+    const gold = zeroGold();
+    for (const reel of GOLD_REELS) {
+      const list = GOLD_COUNT[scene][reel];
+      const count = Number(pick(list.map((_, k) => k), list));
+      if (!count) continue;
+      const spots = [];
+      for (let row = 0; row < 4; row++) if (board[reel][row] !== C1) spots.push(row);
+      for (let i = spots.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [spots[i], spots[j]] = [spots[j], spots[i]];
+      }
+      for (const row of spots.slice(0, count)) gold[reel][row] = true;
+    }
+    return gold;
+  }
   const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
   const format = value => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const money = credits => format(Number(credits) / BASE_BET);
@@ -2814,7 +2842,8 @@
         const matched = [];
         for (let row = 0; row < 4; row++) {
           const symbol = board[reel][row];
-          if (symbol === WW || symbol === W2 || canonical(symbol) === target) matched.push([reel, row]);
+          // 金框是旗標不是符號，判獎一律用底層符號（game_rule §3.1）
+          if (symbol === WW || symbol === W2 || symbol === target) matched.push([reel, row]);
         }
         if (!matched.length) break;
         counts.push(matched.length); positions.push(matched);
@@ -2842,14 +2871,19 @@
   // game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果；大鬼倍數固定在本體
   function flipGolden(board, mults, tableName, goldPositions) {
     const table = tables[tableName];
-    if (!goldPositions.length || !Object.keys(table.golden).length) return null;
+    if (!goldPositions.length || !Object.keys(table.gold).length) return null;
     const flipped = [], splitKeys = [], bigSources = [];
     const results = {};
     for (const [reel, row] of goldPositions) {
-      const outcome = pickMap(table.golden);
+      const outcome = pickMap(table.gold);
       results[outcome] = (results[outcome] || 0) + 1;
       board[reel][row] = outcome.startsWith("W2") ? W2 : WW;
-      mults[reel][row] = outcome.endsWith("_M") ? Number(pickMap(table.multWild)) : 0;
+      mults[reel][row] = 0;
+      if (outcome.endsWith("_M")) {
+        // WW_M 與 W2_M 各有自己的倍數表；x1 代表無倍數
+        const value = Number(pickMap(table.multWild[outcome] || {}));
+        if (value > 1) mults[reel][row] = value;
+      }
       flipped.push(`${reel},${row}`);
       if (outcome.startsWith("W2")) bigSources.push([reel, row]);
     }
@@ -2869,46 +2903,56 @@
   }
 
   function spin(tableName, freeGame = false, budget = 0) {
+    const scene = freeGame ? "fg" : "bg";
     const multipliers = freeGame ? LADDER.fg : LADDER.bg;
     const board = makeBoard(tableName), mults = zeroMults(), snapshots = [];
+    const gold = drawGold(scene, board);
     const cap = MAX_WIN * betUnit();
     let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
     const goldenTally = {};
-    snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
+    snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
     while (true) {
       const win = evaluate(board, mults);
       if (!win.rawPay) break;
       const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
       const cascadePay = win.rawPay * multiplier * betUnit();
       pay += cascadePay;
-      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), hits: [...win.hits], combo, multiplier, cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
+      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [...win.hits], combo, multiplier, cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
       combo++;
 
       // 1) 消除（金框不消除，留待補牌後翻牌）
       const transitionBoard = cloneBoard(board), cleared = [], goldPositions = [];
       for (const key of win.hits) {
         const [reel, row] = key.split(",").map(Number);
-        if (GOLD_IDS.has(board[reel][row])) { goldPositions.push([reel, row]); }
+        if (gold[reel][row]) { goldPositions.push([reel, row]); gold[reel][row] = false; }
         else { board[reel][row] = -1; mults[reel][row] = 0; transitionBoard[reel][row] = -1; cleared.push(key); }
       }
-      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), hits: [], cleared, converted: [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Eliminate" });
+      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], cleared, converted: [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Eliminate" });
 
       // 2) 掉落補牌（game_rule §5.6 步驟 3；Demogame規範 4.3 第 2 類）
       const motion = [];
       for (let reel = 0; reel < 5; reel++) {
         const kept = [];
-        for (let row = 0; row < 4; row++) if (board[reel][row] !== -1) kept.push([board[reel][row], mults[reel][row]]);
+        for (let row = 0; row < 4; row++) if (board[reel][row] !== -1) kept.push([board[reel][row], mults[reel][row], gold[reel][row]]);
         const need = 4 - kept.length;
         const fresh = [];
-        for (let index = 0; index < need; index++) fresh.push([draw(tableName, reel), 0]);
+        for (let index = 0; index < need; index++) fresh.push([draw(tableName, reel), 0, false]);
         const merged = fresh.concat(kept);
         for (let row = 0; row < 4; row++) {
           board[reel][row] = merged[row][0];
           mults[reel][row] = merged[row][1];
+          gold[reel][row] = merged[row][2];
           if (row < need) motion.push({ key: `${reel},${row}`, isNew: true, rows: need - row, delay: (need - row) * 18 });
         }
+        // 只有新補進來的格子重抽金框；每格機率＝該輪期望顆數 ÷ 4（與 Simulator 同口徑）
+        if (GOLD_REELS.includes(reel) && need) {
+          const rate = GOLD_RATE[scene][reel];
+          for (let row = 0; row < need; row++) {
+            if (board[reel][row] !== C1 && Math.random() < rate) gold[reel][row] = true;
+          }
+        }
       }
-      snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
+      snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
 
       // 3) 金框翻牌 + 分裂（game_rule §5.6 步驟 4~6）
       if (goldPositions.length) {
@@ -2921,9 +2965,9 @@
             if (key.startsWith("W2")) w2Events += value;
           }
           const label = Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ");
-          snapshots.push({ type: "convert", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], converted: flip.flipped, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Golden flip · ${label}` });
+          snapshots.push({ type: "convert", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], converted: flip.flipped, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Golden flip · ${label}` });
           if (flip.splitKeys.length) {
-            snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), hits: [], marked: flip.splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Big Ghost split × ${flip.splitKeys.length}` });
+            snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: flip.splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${flip.splitKeys.length}` });
           }
         }
       }
@@ -2932,7 +2976,7 @@
     }
     return {
       pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, goldenTally, capped,
-      board, mults, snapshots, tableName,
+      board, mults, gold, snapshots, tableName,
       maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]
     };
   }
@@ -3050,6 +3094,7 @@
   // 本作無符號美術 → 依 Demogame規範 4.2.3 固定顯示符號框＋代號，不接 Image 開關。
   function renderBoard(board, hitList = [], options = {}) {
     const mults = options.mults || zeroMults();
+    const gold = options.gold || zeroGold();
     const hits = new Set(hitList), cleared = new Set(options.cleared || []), converted = new Set(options.converted || []), marked = new Set(options.marked || []), root = $("board");
     const drop = new Map((options.drop || []).map(item => [item.key, item]));
     root.innerHTML = "";
@@ -3059,7 +3104,7 @@
       const cell = document.createElement("div");
       const key = `${reel},${row}`;
       const motion = drop.get(key), speed = Number($("speedRange").value || 1);
-      const isGold = GOLD_IDS.has(symbol);
+      const isGold = !!(gold[reel] && gold[reel][row]);
       cell.className = `cell symbol-${String(code).toLowerCase()}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
@@ -3114,11 +3159,11 @@
   async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
     state.snapshots = snapshots; state.snapshotIndex = -1;
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
-    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults }); await wait(delay()); }
+    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
       $("messageBar").textContent = snapshot.message || "Cascade";
-      const common = { mults: snapshot.mults };
+      const common = { mults: snapshot.mults, gold: snapshot.gold };
       if (snapshot.type === "win") {
         if (freeGame) {
           state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
@@ -3139,7 +3184,7 @@
         renderBoard(snapshot.board, [], { ...common, converted: snapshot.converted || [] }); await wait(delay());
       }
     }
-    const finalSnapshot = snapshots.at(-1); if (finalSnapshot) renderBoard(finalSnapshot.board, [], { mults: finalSnapshot.mults });
+    const finalSnapshot = snapshots.at(-1); if (finalSnapshot) renderBoard(finalSnapshot.board, [], { mults: finalSnapshot.mults, gold: finalSnapshot.gold });
     updateDebugButtons();
   }
 
@@ -3147,7 +3192,7 @@
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
     const snapshot = state.snapshots[state.snapshotIndex];
-    renderBoard(snapshot.board, snapshot.hits, { mults: snapshot.mults, cleared: snapshot.cleared || [], converted: snapshot.converted || [], marked: snapshot.marked || [] });
+    renderBoard(snapshot.board, snapshot.hits, { mults: snapshot.mults, gold: snapshot.gold, cleared: snapshot.cleared || [], converted: snapshot.converted || [], marked: snapshot.marked || [] });
     renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo);
     if (snapshot.type === "win") renderWinDetails(snapshot);
     updateDebugButtons();
@@ -3189,8 +3234,8 @@
     if (scatter < Number(BUY.min_scatter)) throw new Error("BF_Symbol weights must guarantee at least 3 C1");
     return {
       pay: 0, combo: 0, scatter, golden: 0, w2Events: 0, multWild: 0, goldenTally: {}, capped: false,
-      board, mults: zeroMults(), tableName: BUY.entry_table, maxMultiplier: 1,
-      snapshots: [{ type: "initial", board: cloneBoard(board), mults: zeroMults(), hits: [], combo: 0, multiplier: 1, message: "BF Entry · No Win" }]
+      board, mults: zeroMults(), gold: zeroGold(), tableName: BUY.entry_table, maxMultiplier: 1,
+      snapshots: [{ type: "initial", board: cloneBoard(board), mults: zeroMults(), gold: zeroGold(), hits: [], combo: 0, multiplier: 1, message: "BF Entry · No Win" }]
     };
   }
 
@@ -3314,7 +3359,7 @@
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
     Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
-    $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_1"), [], {mults: zeroMults()}); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
+    $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
   }
   function buildBetMenu() {
     $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
