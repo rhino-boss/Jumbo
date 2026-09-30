@@ -70,7 +70,7 @@ const data = {
   ],
   "multiplier_max_value": 2500,
   "model": "H027194",
-  "excel_version": "5.1.1.0",
+  "excel_version": "5.1.1.1",
   "default_coin_in": 100,
   "reel_num": 6,
   "window_size": 5,

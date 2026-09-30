@@ -1,8 +1,8 @@
 const data = {
   "game_id": "101027",
-  "parsheet_id": "H027192",
+  "parsheet_id": "H027194",
   "config_type": "rtp_variant",
-  "config_code": "92A",
+  "config_code": "94A",
   "is_competitor_model": true,
   "initial_version_rule": "competitor_model_starts_at_0",
   "display_name": "Zeus 2500",
@@ -69,8 +69,8 @@ const data = {
     "C3 multiplier pool and appearance weights"
   ],
   "multiplier_max_value": 2500,
-  "model": "H027192",
-  "excel_version": "5.1.1.0",
+  "model": "H027194",
+  "excel_version": "5.1.1.1",
   "default_coin_in": 100,
   "reel_num": 6,
   "window_size": 5,
@@ -1970,8 +1970,8 @@ const data = {
       }
     },
     "rtp_target": {
-      "normal_bet": 0.92,
-      "extra_bet": 0.92,
+      "normal_bet": 0.94,
+      "extra_bet": 0.94,
       "buy_feature": 0.925,
       "newbie": {
         "normal_bet": 0.93,
@@ -2454,241 +2454,241 @@ const data = {
           "type": "range",
           "min": 20.0,
           "max": 25.0,
-          "weight": 124378902
+          "weight": 112190334
         },
         {
           "type": "range",
           "min": 25.0,
           "max": 30.0,
-          "weight": 98957902
+          "weight": 91092046
         },
         {
           "type": "range",
           "min": 30.0,
           "max": 35.0,
-          "weight": 80359589
+          "weight": 75229589
         },
         {
           "type": "range",
           "min": 35.0,
           "max": 40.0,
-          "weight": 67795565
+          "weight": 64391134
         },
         {
           "type": "range",
           "min": 40.0,
           "max": 45.0,
-          "weight": 57630695
+          "weight": 55432709
         },
         {
           "type": "range",
           "min": 45.0,
           "max": 50.0,
-          "weight": 49451708
+          "weight": 48104118
         },
         {
           "type": "range",
           "min": 50.0,
           "max": 60.0,
-          "weight": 80986598
+          "weight": 79943940
         },
         {
           "type": "range",
           "min": 60.0,
           "max": 70.0,
-          "weight": 63829188
+          "weight": 64080463
         },
         {
           "type": "range",
           "min": 70.0,
           "max": 80.0,
-          "weight": 51040693
+          "weight": 51989524
         },
         {
           "type": "range",
           "min": 80.0,
           "max": 90.0,
-          "weight": 41584078
+          "weight": 42896583
         },
         {
           "type": "range",
           "min": 90.0,
           "max": 100.0,
-          "weight": 34501211
+          "weight": 35991702
         },
         {
           "type": "range",
           "min": 100.0,
           "max": 120.0,
-          "weight": 53748893
+          "weight": 56894888
         },
         {
           "type": "range",
           "min": 120.0,
           "max": 140.0,
-          "weight": 39321915
+          "weight": 42334293
         },
         {
           "type": "range",
           "min": 140.0,
           "max": 160.0,
-          "weight": 29539075
+          "weight": 32266655
         },
         {
           "type": "range",
           "min": 160.0,
           "max": 180.0,
-          "weight": 22558524
+          "weight": 24955895
         },
         {
           "type": "range",
           "min": 180.0,
           "max": 200.0,
-          "weight": 17585924
+          "weight": 19674664
         },
         {
           "type": "range",
           "min": 200.0,
           "max": 250.0,
-          "weight": 29832601
+          "weight": 33931494
         },
         {
           "type": "range",
           "min": 250.0,
           "max": 300.0,
-          "weight": 17862560
+          "weight": 20736527
         },
         {
           "type": "range",
           "min": 300.0,
           "max": 350.0,
-          "weight": 11255472
+          "weight": 13290069
         },
         {
           "type": "range",
           "min": 350.0,
           "max": 400.0,
-          "weight": 7350863
+          "weight": 8806779
         },
         {
           "type": "range",
           "min": 400.0,
           "max": 450.0,
-          "weight": 5018319
+          "weight": 6088925
         },
         {
           "type": "range",
           "min": 450.0,
           "max": 500.0,
-          "weight": 3496281
+          "weight": 4290347
         },
         {
           "type": "range",
           "min": 500.0,
           "max": 550.0,
-          "weight": 2507580
+          "weight": 3108519
         },
         {
           "type": "range",
           "min": 550.0,
           "max": 600.0,
-          "weight": 1827074
+          "weight": 2285798
         },
         {
           "type": "range",
           "min": 600.0,
           "max": 650.0,
-          "weight": 1366784
+          "weight": 1724466
         },
         {
           "type": "range",
           "min": 650.0,
           "max": 700.0,
-          "weight": 1042205
+          "weight": 1325217
         },
         {
           "type": "range",
           "min": 700.0,
           "max": 750.0,
-          "weight": 805584
+          "weight": 1031785
         },
         {
           "type": "range",
           "min": 750.0,
           "max": 800.0,
-          "weight": 632210
+          "weight": 815211
         },
         {
           "type": "range",
           "min": 800.0,
           "max": 850.0,
-          "weight": 502301
+          "weight": 651800
         },
         {
           "type": "range",
           "min": 850.0,
           "max": 900.0,
-          "weight": 401978
+          "weight": 524736
         },
         {
           "type": "range",
           "min": 900.0,
           "max": 950.0,
-          "weight": 340785
+          "weight": 447379
         },
         {
           "type": "range",
           "min": 950.0,
           "max": 1000.0,
-          "weight": 268667
+          "weight": 354579
         },
         {
           "type": "range",
           "min": 1000.0,
           "max": 2000.0,
-          "weight": 1588582
+          "weight": 2167638
         },
         {
           "type": "range",
           "min": 2000.0,
           "max": 3000.0,
-          "weight": 301056
+          "weight": 435751
         },
         {
           "type": "range",
           "min": 3000.0,
           "max": 4000.0,
-          "weight": 120562
+          "weight": 180839
         },
         {
           "type": "range",
           "min": 4000.0,
           "max": 5000.0,
-          "weight": 65888
+          "weight": 101415
         },
         {
           "type": "range",
           "min": 5000.0,
           "max": 6000.0,
-          "weight": 42770
+          "weight": 67176
         },
         {
           "type": "range",
           "min": 6000.0,
           "max": 7000.0,
-          "weight": 26936
+          "weight": 43040
         },
         {
           "type": "range",
           "min": 7000.0,
           "max": 8000.0,
-          "weight": 19003
+          "weight": 30815
         },
         {
           "type": "range",
           "min": 8000.0,
           "max": 9000.0,
-          "weight": 14286
+          "weight": 23465
         },
         {
           "type": "range",
@@ -2700,7 +2700,7 @@ const data = {
           "type": "range",
           "min": 10000.0,
           "max": 20000.0,
-          "weight": 39193
+          "weight": 67693
         },
         {
           "type": "range",
@@ -2772,85 +2772,85 @@ const data = {
           "type": "range",
           "min": 0.0,
           "max": 1.0,
-          "weight": 144135324
+          "weight": 147027749
         },
         {
           "type": "range",
           "min": 1.0,
           "max": 2.0,
-          "weight": 50047116
+          "weight": 50619318
         },
         {
           "type": "range",
           "min": 2.0,
           "max": 3.0,
-          "weight": 21211099
+          "weight": 21263167
         },
         {
           "type": "range",
           "min": 3.0,
           "max": 4.0,
-          "weight": 14127775
+          "weight": 14045230
         },
         {
           "type": "range",
           "min": 4.0,
           "max": 5.0,
-          "weight": 7924806
+          "weight": 7808771
         },
         {
           "type": "range",
           "min": 5.0,
           "max": 6.0,
-          "weight": 4581533
+          "weight": 4476276
         },
         {
           "type": "range",
           "min": 6.0,
           "max": 7.0,
-          "weight": 2949353
+          "weight": 2858200
         },
         {
           "type": "range",
           "min": 7.0,
           "max": 8.0,
-          "weight": 2496334
+          "weight": 2396919
         },
         {
           "type": "range",
           "min": 8.0,
           "max": 9.0,
-          "weight": 1577860
+          "weight": 1501659
         },
         {
           "type": "range",
           "min": 9.0,
           "max": 10.0,
-          "weight": 2538685
+          "weight": 2391897
         },
         {
           "type": "range",
           "min": 10.0,
           "max": 15.0,
-          "weight": 8389062
+          "weight": 7742557
         },
         {
           "type": "range",
           "min": 15.0,
           "max": 20.0,
-          "weight": 4903482
+          "weight": 4327645
         },
         {
           "type": "range",
           "min": 20.0,
           "max": 25.0,
-          "weight": 4291238
+          "weight": 3616921
         },
         {
           "type": "range",
           "min": 25.0,
           "max": 30.0,
-          "weight": 4704602
+          "weight": 3801960
         },
         {
           "type": "range",
@@ -3235,241 +3235,241 @@ const data = {
           "type": "range",
           "min": 20.0,
           "max": 25.0,
-          "weight": 124703200
+          "weight": 107625262
         },
         {
           "type": "range",
           "min": 25.0,
           "max": 30.0,
-          "weight": 98832670
+          "weight": 89323048
         },
         {
           "type": "range",
           "min": 30.0,
           "max": 35.0,
-          "weight": 80865225
+          "weight": 75945262
         },
         {
           "type": "range",
           "min": 35.0,
           "max": 40.0,
-          "weight": 67570531
+          "weight": 65579271
         },
         {
           "type": "range",
           "min": 40.0,
           "max": 45.0,
-          "weight": 57361659
+          "weight": 57296401
         },
         {
           "type": "range",
           "min": 45.0,
           "max": 50.0,
-          "weight": 49456434
+          "weight": 50679008
         },
         {
           "type": "range",
           "min": 50.0,
           "max": 60.0,
-          "weight": 80933599
+          "weight": 85745093
         },
         {
           "type": "range",
           "min": 60.0,
           "max": 70.0,
-          "weight": 63513586
+          "weight": 69927820
         },
         {
           "type": "range",
           "min": 70.0,
           "max": 80.0,
-          "weight": 50847603
+          "weight": 57857159
         },
         {
           "type": "range",
           "min": 80.0,
           "max": 90.0,
-          "weight": 41633227
+          "weight": 48754790
         },
         {
           "type": "range",
           "min": 90.0,
           "max": 100.0,
-          "weight": 34684743
+          "weight": 41669365
         },
         {
           "type": "range",
           "min": 100.0,
           "max": 120.0,
-          "weight": 53654689
+          "weight": 47286133
         },
         {
           "type": "range",
           "min": 120.0,
           "max": 140.0,
-          "weight": 39422767
+          "weight": 36106948
         },
         {
           "type": "range",
           "min": 140.0,
           "max": 160.0,
-          "weight": 29603938
+          "weight": 28021449
         },
         {
           "type": "range",
           "min": 160.0,
           "max": 180.0,
-          "weight": 22670252
+          "weight": 22085611
         },
         {
           "type": "range",
           "min": 180.0,
           "max": 200.0,
-          "weight": 17624694
+          "weight": 17614795
         },
         {
           "type": "range",
           "min": 200.0,
           "max": 250.0,
-          "weight": 29811288
+          "weight": 30936057
         },
         {
           "type": "range",
           "min": 250.0,
           "max": 300.0,
-          "weight": 17817767
+          "weight": 19369829
         },
         {
           "type": "range",
           "min": 300.0,
           "max": 350.0,
-          "weight": 11196618
+          "weight": 12650936
         },
         {
           "type": "range",
           "min": 350.0,
           "max": 400.0,
-          "weight": 7348934
+          "weight": 8582581
         },
         {
           "type": "range",
           "min": 400.0,
           "max": 450.0,
-          "weight": 5011363
+          "weight": 6024012
         },
         {
           "type": "range",
           "min": 450.0,
           "max": 500.0,
-          "weight": 3490092
+          "weight": 4304370
         },
         {
           "type": "range",
           "min": 500.0,
           "max": 550.0,
-          "weight": 2516239
+          "weight": 3175674
         },
         {
           "type": "range",
           "min": 550.0,
           "max": 600.0,
-          "weight": 1831701
+          "weight": 2360825
         },
         {
           "type": "range",
           "min": 600.0,
           "max": 650.0,
-          "weight": 1382008
+          "weight": 1815648
         },
         {
           "type": "range",
           "min": 650.0,
           "max": 700.0,
-          "weight": 1044472
+          "weight": 1396752
         },
         {
           "type": "range",
           "min": 700.0,
           "max": 750.0,
-          "weight": 805894
+          "weight": 1095565
         },
         {
           "type": "range",
           "min": 750.0,
           "max": 800.0,
-          "weight": 631707
+          "weight": 872055
         },
         {
           "type": "range",
           "min": 800.0,
           "max": 850.0,
-          "weight": 503958
+          "weight": 705781
         },
         {
           "type": "range",
           "min": 850.0,
           "max": 900.0,
-          "weight": 400600
+          "weight": 568678
         },
         {
           "type": "range",
           "min": 900.0,
           "max": 950.0,
-          "weight": 333277
+          "weight": 479174
         },
         {
           "type": "range",
           "min": 950.0,
           "max": 1000.0,
-          "weight": 271136
+          "weight": 394599
         },
         {
           "type": "range",
           "min": 1000.0,
           "max": 2000.0,
-          "weight": 1599296
+          "weight": 2510702
         },
         {
           "type": "range",
           "min": 2000.0,
           "max": 3000.0,
-          "weight": 298519
+          "weight": 536264
         },
         {
           "type": "range",
           "min": 3000.0,
           "max": 4000.0,
-          "weight": 117893
+          "weight": 229597
         },
         {
           "type": "range",
           "min": 4000.0,
           "max": 5000.0,
-          "weight": 65928
+          "weight": 136150
         },
         {
           "type": "range",
           "min": 5000.0,
           "max": 6000.0,
-          "weight": 42248
+          "weight": 91347
         },
         {
           "type": "range",
           "min": 6000.0,
           "max": 7000.0,
-          "weight": 27470
+          "weight": 61751
         },
         {
           "type": "range",
           "min": 7000.0,
           "max": 8000.0,
-          "weight": 19505
+          "weight": 45344
         },
         {
           "type": "range",
           "min": 8000.0,
           "max": 9000.0,
-          "weight": 13984
+          "weight": 33454
         },
         {
           "type": "range",
@@ -3481,7 +3481,7 @@ const data = {
           "type": "range",
           "min": 10000.0,
           "max": 20000.0,
-          "weight": 39286
+          "weight": 105440
         },
         {
           "type": "range",
@@ -14141,9 +14141,9 @@ const data = {
     }
   ],
   "runtime_version": "0.0.0.0",
-  "rtp_label": 92,
+  "rtp_label": 94,
   "source_xlsx": "H0271A.xlsx",
-  "source_multiplier_xlsx": "H027192A.xlsx",
+  "source_multiplier_xlsx": "H027194A.xlsx",
   "cascade_symbol_source": "reel_strip",
   "reel_source_workbook": "C:\\Users\\rhinshen\\Mine\\個人工作區\\市場資訊\\H5\\遊戲資源\\PP - Gates of Olympus 1000\\還原輪帶_Gates_of_Olympus_1000.xlsx",
   "reel_set_usage": {
@@ -14185,6 +14185,6 @@ const data = {
       "rule": "positive stop counts [9, 12, 9, 9, 71, 28]; every RNG combination has exactly four C1 (one per R1-R4), zero C1 on R5-R6 and no C2/C3; stop sets are chosen so that every regular symbol can reach at most 7 cells board-wide, making an Any-8 win structurally impossible on the entry screen"
     }
   },
-  "bet_tier_scope": "medium_bet",
+  "bet_tier_scope": "small_bet",
   "base_excel_version": "5"
 };
