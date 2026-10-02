@@ -100,13 +100,13 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 <header class="page">
   <div class="eyebrow">Slots · Landbase</div>
   <h1 class="site">Landbase 轉製 開發規範</h1>
-  <p class="meta">由 <code>Slots/專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-02</p>
+  <p class="meta">由 <code>專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-02</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-math" data-tab="math" aria-controls="panel-math" aria-selected="true" tabindex="0">數學模型規範</button></div>
 <div class="body-row">
   <nav class="toc" id="toc-math"><a class="toc-2" href="#1-數學調性" data-tab="math">1. 數學調性</a><a class="toc-2" href="#2-rtp-配置" data-tab="math">2. RTP 配置</a><a class="toc-3" href="#21-配置口徑" data-tab="math">2.1 配置口徑</a><a class="toc-3" href="#22-nbeb-rtp-配置" data-tab="math">2.2 NB／EB RTP 配置</a><a class="toc-3" href="#23-bfsf-rtp-配置" data-tab="math">2.3 BF／SF RTP 配置</a><a class="toc-3" href="#24-與-omniplay-主流配置的差異" data-tab="math">2.4 與 Omniplay 主流配置的差異</a><a class="toc-2" href="#3-系統機制" data-tab="math">3. 系統機制</a><a class="toc-3" href="#31-link-彩金grandmajor" data-tab="math">3.1 Link 彩金（Grand／Major）</a><a class="toc-3" href="#32-新手體驗" data-tab="math">3.2 新手體驗</a><a class="toc-3" href="#33-老手救援" data-tab="math">3.3 老手救援</a><a class="toc-2" href="#4-系統限制" data-tab="math">4. 系統限制</a><a class="toc-2" href="#5-沿用-omniplay-的項目與調整" data-tab="math">5. 沿用 Omniplay 的項目與調整</a><a class="toc-3" href="#51-直接沿用" data-tab="math">5.1 直接沿用</a><a class="toc-3" href="#52-card-system-的層級調整" data-tab="math">5.2 Card System 的層級調整</a><a class="toc-3" href="#53-命名補充" data-tab="math">5.3 命名補充</a><a class="toc-2" href="#6-開發前檢查" data-tab="math">6. 開發前檢查</a><a class="toc-2" href="#7-待討論事項" data-tab="math">7. 待討論事項</a></nav>
   <main><section class="panel" role="tabpanel" id="panel-math" aria-labelledby="tab-math"><h1 id="landbase-轉製-數學模型規範">Landbase 轉製 數學模型規範</h1>
-<p>本文件屬於 <code>Slots/專案需知/Landbase/</code>，適用於 <strong>Landbase 轉製遊戲</strong>（實體機台數學轉製為線上版，Game List 備註「線上-Landbase轉製遊戲」者，如 102xxx／105xxx）。</p>
+<p>本文件屬於 <code>專案需知/Landbase/</code>，適用於 <strong>Landbase 轉製遊戲</strong>（實體機台數學轉製為線上版，Game List 備註「線上-Landbase轉製遊戲」者，如 102xxx／105xxx）。</p>
 <p>本文件採<strong>差異式</strong>撰寫：只列 Landbase 產線與 Omniplay 不同或新增的規則；<strong>凡本文件未覆寫的條款，一律沿用 Omniplay 的 <a href="../slot_development_specification.html#math">數學模型規範.md</a></strong>（命名、版本、工作表、卡片區間、PARsheet、程式化修改 XLSX 等）。兩者衝突時以本文件為準。</p>
 <p>RTP 配置與系統機制的正式來源為 Google 試算表 <a href="https://docs.google.com/spreadsheets/d/1Qk66cM8iZqyEhr23nsnxiDXOHj8CGNji--sedOHF0F8/edit?gid=386193409">RTP 設定</a>（<code>數值設定</code>、<code>彩金參數</code> 兩頁）。本文件引用的是 <strong>2026/05/14「全平台」版的「轉製遊戲」欄</strong>；試算表更新時必須同步修訂本文件並記錄日期。</p>
 <h2 id="1-數學調性">1. 數學調性</h2>

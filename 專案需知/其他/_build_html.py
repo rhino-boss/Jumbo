@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""將 Slots/專案需知/ 的 Markdown 文件彙整成單一 slot_development_specification.html。
+"""將 專案需知/ 的 Markdown 文件彙整成單一 slot_development_specification.html。
 
 本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
 
@@ -30,6 +30,7 @@ TABS = [
     ("demo", "Demogame規範", "Demogame規範.md"),
     ("script", "腳本規範", "腳本規範.md"),
     ("proposal", "提案報告規範", "提案報告規範.md"),
+    ("stress", "壓測說明書", "壓測說明書.md"),
 ]
 
 ROOT_OUTPUT_NAME = OUTPUT.name
@@ -41,7 +42,7 @@ PRODUCT_LINES = [
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
 ]
 TAB_ORDER_HINT = ["開發流程", "數學模型規範", "數學文件規範", "送驗文件規範",
-                  "模擬程式規範", "Demogame規範", "腳本規範"]
+                  "模擬程式規範", "Demogame規範", "腳本規範", "提案報告規範", "壓測說明書"]
 
 # 目前正在建置的站台：md 相對路徑（如 md 內所寫、已去掉 ./）→ ("tab", tab_id) 或 ("ext", href)
 LINKS: dict = {}
@@ -307,7 +308,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         )
 
     today = date.today().strftime("%Y-%m-%d")
-    src_label = f"Slots/專案需知/{base.relative_to(HERE)}/*.md".replace("/./", "/")
+    src_label = f"專案需知/{base.relative_to(HERE)}/*.md".replace("/./", "/")
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>

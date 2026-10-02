@@ -409,7 +409,7 @@
 | --- | --- |
 | `JB 工作區/game_spec/101015_ Super Diamond/01_遊戲規格/Lucky Ace Deluxe_遊戲規格.md` v2.2.0 | 前端玩法規格（金框四結果、帶倍數 WILD、5 階倍率、OP Jackpot、Buy Feature） |
 | `Slots/H016_幸運王牌/game_rule.md` | 盤面、Ways 判獎、賠率表、Cascade 補位與 FG 基礎規則 |
-| `Slots/專案需知/數學文件規範.md` | 本文件的章節骨架與必要欄位 |
+| `專案需知/數學文件規範.md` | 本文件的章節骨架與必要欄位 |
 | `Slots/其他/iGaming 遊戲代號一覽.xlsx` | Game ID 101015、ParSheet H0451、遊戲類別 |
 | `市場資訊/H5/遊戲資訊/JILI - Super Ace/輪帶還原_SuperAce.xlsx` | 物理輪帶、停輪權重、補牌權重、金框率（實機側錄 166,050 轉 BG／22,565 轉 FG 還原） |
 | 超級鑽石 AI Q&A（2026-10-02，程式端提問 + 使用者答覆） | §5.2 金框產生與 BG 大鬼上限、§5.4 分裂倍數歸屬與落點、§8.2 押注模式代號 |
