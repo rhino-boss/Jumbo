@@ -309,6 +309,15 @@ class SuperDiamond:
                     for per_reel in config["gold_count_weight"][scene]]
             for scene in ("bg", "fg")
         }
+        # Cascade 補牌用的每格金框機率＝該輪期望顆數 ÷ 4 格
+        self.gold_rate = {}
+        for scene in ("bg", "fg"):
+            rates = []
+            for per_reel in config["gold_count_weight"][scene]:
+                total = sum(per_reel)
+                expected = sum(k * w for k, w in enumerate(per_reel)) / total if total else 0.0
+                rates.append(expected / 4.0)
+            self.gold_rate[scene] = rates
         # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限（game_rule §9.10）
         self.max_win = self._card_multiplier_cap()
         self.fs_table = {int(k): v for k, v in config["free_spins"].items()}

@@ -1261,16 +1261,30 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   async function animateReels(spin) {
-    const frames = Math.max(2, Math.round(8 / state.speed));
-    for (let frame = 0; frame < frames; frame += 1) {
+    // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    const baseFrames = Math.max(3, Math.round(9 / state.speed));
+    const perReelExtra = Math.max(1, Math.round(3 / state.speed));
+    const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
+    for (let frame = 0; frame < totalFrames; frame += 1) {
+      const rollingReels = new Set();
       const rollingBoard = Array.from({ length: Box.window_size }, (_, row) =>
         Array.from({ length: Box.reel_num }, (_, reel) => {
-          const offset = (frames - frame + reel) % Box.window_size;
+          if (frame >= baseFrames + perReelExtra * reel) {
+            return symbolCell(spin.initialBoard[row][reel], spin.initialMultiplierValues[row][reel]);   // 該輪已停
+          }
+          rollingReels.add(reel);
+          const offset = (totalFrames - frame + reel) % Box.window_size;
           const sourceRow = (row + offset) % Box.window_size;
           return symbolCell(spin.initialBoard[sourceRow][reel], spin.initialMultiplierValues[sourceRow][reel]);
         })
       );
-      renderBoard(rollingBoard, { spinning: true });
+      renderBoard(rollingBoard, { spinning: false });
+      if (!rollingReels.size) break;
+      const cells = [];
+      Array.from(el.board.children).forEach((node, index) => {
+        if (rollingReels.has(index % Box.reel_num)) cells.push(node);
+      });
+      if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
       await sleep(55);
     }
   }
@@ -1431,9 +1445,14 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     writeMessage(tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`));
     await sleep(260);
 
+    // Win 即時刷新：FG 中以「觸發轉得分 + 本場 FG 已累積（不含本轉）」為基底，每次消除累加該段原始得分，最終改為套用倍數後的得分
+    const winBase = state.pendingFg ? state.lastWin + Math.max(0, state.pendingFg.win - toMoney(spin.finalPay)) : state.lastWin;
+    let liveRaw = 0;
     for (const step of spin.steps) {
       renderBoard(boardCells(step.before, step.beforeMultiplierValues), { hitPositions: step.hitPositions });
       setText(el.cascade, String(step.cascadeIndex));
+      liveRaw += Number(step.pay) || 0;
+      setText(el.win, money(winBase + toMoney(liveRaw)));
       writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
       await sleep(360);
       renderBoard(boardCells(step.before, step.beforeMultiplierValues), { clearedPositions: step.hitPositions });
@@ -1444,6 +1463,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     }
 
     renderBoard(boardCells(spin.finalBoard, spin.multiplier.values));
+    setText(el.win, money(winBase + toMoney(spin.finalPay)));
     updateFeatureBar(spin);
     writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`), spin.finalPay > 0 ? "win" : "");
     renderPayAnywhereWins(spin);
