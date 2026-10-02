@@ -2996,14 +2996,21 @@
   async function animateReels(spin) {
     const initial = spin.steps[0];
     if (!initial) return;
-    const frames = Math.max(2, Math.round(8 / Number(el.speedRange.value || 1)));
-    for (let frame = 0; frame < frames; frame++) {
+    // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    const speed = Number(el.speedRange.value || 1);
+    const baseFrames = Math.max(3, Math.round(9 / speed));
+    const perReelExtra = Math.max(1, Math.round(3 / speed));
+    const totalFrames = baseFrames + perReelExtra * (REELS - 1) + 1;
+    for (let frame = 0; frame < totalFrames; frame++) {
       const rollingBoard = clone(initial.board);
       const rollingGold = clone(initial.gold);
+      const rollingReels = new Set();
       for (let reel = 0; reel < REELS; reel++) {
+        if (frame >= baseFrames + perReelExtra * reel) continue; // 該輪已停，顯示最終符號
+        rollingReels.add(reel);
         const activeRows = [];
         for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) activeRows.push(row);
-        const offset = (frames - frame + reel) % activeRows.length;
+        const offset = (totalFrames - frame + reel) % activeRows.length;
         for (let position = 0; position < activeRows.length; position++) {
           const targetRow = activeRows[position];
           const sourceRow = activeRows[(position + offset) % activeRows.length];
@@ -3011,7 +3018,13 @@
           rollingGold[targetRow][reel] = initial.gold[sourceRow][reel];
         }
       }
-      renderBoard(rollingBoard, rollingGold, [], { spinning: true });
+      renderBoard(rollingBoard, rollingGold);
+      if (!rollingReels.size) break;
+      const cells = [];
+      Array.from(el.board.children).forEach((node, index) => {
+        if (rollingReels.has(index % REELS)) cells.push(node);
+      });
+      if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
       await new Promise((resolve) => setTimeout(resolve, 55));
     }
   }

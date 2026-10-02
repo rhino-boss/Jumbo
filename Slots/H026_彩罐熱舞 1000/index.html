@@ -4347,11 +4347,31 @@
       return board;
     }
 
-    async function animateReels() {
-      for (let i = 0; i < getReelSpinFrames(); i += 1) {
+    async function animateReels(finalBoard = null) {
+      // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+      const base = finalBoard || sampleBoard();
+      const rows = base.length;
+      const speed = state.speedMultiplier;
+      const baseFrames = Math.max(3, Math.round(9 / speed));
+      const perReelExtra = Math.max(1, Math.round(3 / speed));
+      const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
+      for (let frame = 0; frame < totalFrames; frame += 1) {
         if (state.debugSkipPlayback) break;
-        renderBoard(sampleBoard(), { reelSpin: true });
-        await sleep(getPlaybackDelay(65));
+        const rollingReels = new Set();
+        const rollingBoard = base.map((row, rowIndex) => row.map((cell, col) => {
+          if (frame >= baseFrames + perReelExtra * col) return cell;   // 該輪已停
+          rollingReels.add(col);
+          const offset = (totalFrames - frame + col) % rows;
+          return base[(rowIndex + offset) % rows][col];
+        }));
+        renderBoard(rollingBoard);
+        if (!rollingReels.size) break;
+        const cells = [];
+        Array.from(boardEl.children).forEach((node, index) => {
+          if (rollingReels.has(index % Box.reel_num)) cells.push(node);
+        });
+        if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
+        await sleep(getPlaybackDelay(55));
       }
     }
 
@@ -4484,7 +4504,7 @@
           const round = state.pendingRound;
           const spin = round.spins[state.pendingSpinIndex];
           writeMessage(`FG Spin ${spin.spin_index} rolling...`);
-          await animateReels();
+          await animateReels(spin.board_init);
           await playbackSpin(round, spin);
           state.pendingSpinIndex += 1;
           if (state.pendingSpinIndex >= round.spins.length) {
@@ -4497,8 +4517,8 @@
           }
         } else {
           writeMessage("Reels spinning...");
-          await animateReels();
-          const round = runRoundWithReplay(betMode, forceFgThisSpin, debugOverrides);
+          const round = runRoundWithReplay(betMode, forceFgThisSpin, debugOverrides);   // 先算好結果，滾輪才能逐輪停在最終符號
+          await animateReels(round.spins[0].board_init);
           syncDisplayForRoundStart(round);
           renderAll(round, round.spins[0]);
           await playbackSpin(round, round.spins[0]);

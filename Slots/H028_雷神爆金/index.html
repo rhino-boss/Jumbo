@@ -3283,7 +3283,20 @@
   window.DEMOGAME_IMAGE_TOGGLE={supported:true,defaultEnabled:true,setEnabled(enabled,{initial=false}={}){let next=Boolean(enabled),changed=next!==USE_SYMBOL_IMAGES;USE_SYMBOL_IMAGES=next;if(changed){if(next){if(state.historyIndex>=state.historyFloor&&state.history[state.historyIndex])showHistory(state.historyIndex);else makeIdleBoard()}else{document.querySelectorAll('.symbol-art').forEach(node=>node.remove());document.querySelectorAll('.cell').forEach(cell=>{cell.classList.remove('has-symbol-art');cell.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')})}}if(!initial)message('Image | '+(next?'On':'Off'),'mode')}};
   function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,art=symbolArt(id,b?.h),m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),art?'has-symbol-art':'',isGold(id)?'gold keep-symbol-frame':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap">${art}<span class="symbol-code"${art?' style="display:none"':''}>${displayCode(id)}</span></div>${m1}`;d.querySelectorAll('.symbol-art-layer').forEach(image=>image.addEventListener('error',()=>{d.classList.remove('has-symbol-art');d.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')},{once:true}));return d}
   function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
-  async function animateReels(finalScreen){let frames=10+Math.max(0,6-state.speed),fg=finalScreen?.table?.scene==='FG';for(let frame=0;frame<frames;frame++){let sample={main:Array.from({length:6},(_,reel)=>Array.from({length:5},()=>{let id=pickInt(26);if(fg&&reel===0)id=unframed(id);return{id,h:1}})),extra:Array.from({length:4},()=>({id:unframed(pickInt(26)),h:1}))};renderBoard(sample,[],true);message('Reels spinning...');await sleep(105)}renderBoard(finalScreen)}
+  async function animateReels(finalScreen){
+    // 逐輪停輪（左到右，Extra 輪最後），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    let fg=finalScreen?.table?.scene==='FG',spd=Math.max(1,Number(state.speed)||1),baseFrames=Math.max(3,Math.round(9/spd)),perReelExtra=Math.max(1,Math.round(3/spd)),totalFrames=baseFrames+perReelExtra*6+1;
+    for(let frame=0;frame<totalFrames;frame++){
+      let rolling=new Set();
+      let main=Array.from({length:6},(_,reel)=>{if(frame>=baseFrames+perReelExtra*reel)return finalScreen.main[reel];rolling.add(reel);return Array.from({length:5},()=>{let id=pickInt(26);if(fg&&reel===0)id=unframed(id);return{id,h:1}})});
+      let extraRolling=frame<baseFrames+perReelExtra*6;if(extraRolling)rolling.add(6);
+      let extra=extraRolling?Array.from({length:4},()=>({id:unframed(pickInt(26)),h:1})):finalScreen.extra;
+      renderBoard({main,extra},[],false);
+      if(!rolling.size)break;
+      let cells=Array.from(el.board.children).filter(node=>node.style.gridRow==='1'?rolling.has(6):rolling.has(Number(node.style.gridColumn)-1));
+      if(window.slotFx?.reelRoll)window.slotFx.reelRoll(cells);else cells.forEach(node=>node.classList.add(node.style.gridRow==='1'?'extra-reel-spin':'reel-spin'));
+      message('Reels spinning...');await sleep(55)}
+    renderBoard(finalScreen)}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}
   function postWeights(scene,suffix){let v=B[`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}PostC1`];return Array.isArray(v[0])?v[1]:v}
   function makeScreen(scene='BG',overrides=null,retrigger=false,forcedScatterCount=null,forcedSuffix=null){let chosen=forcedSuffix==null?chooseParams(scene,retrigger):{suffix:forcedSuffix,rng:{index:forcedSuffix-1,rng:0,total:0}},prefix=scene==='BG'?'BaseGame':'FreeGame',s=chosen.suffix,symbols=B[`${prefix}Symbol${s}`],weights=B[`${prefix}SymbolWeight${s}`],mega=B[`${prefix}MegaWay${s}`],my=B[`${prefix}MY${s}`];let main=[],rng=[],mystery=weighted(my).index;

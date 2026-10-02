@@ -2718,16 +2718,30 @@
   }
 
   async function animateReels(spin) {
-    const frames = Math.max(2, Math.round(8 / state.speed));
-    for (let frame = 0; frame < frames; frame += 1) {
+    // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    const baseFrames = Math.max(3, Math.round(9 / state.speed));
+    const perReelExtra = Math.max(1, Math.round(3 / state.speed));
+    const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
+    for (let frame = 0; frame < totalFrames; frame += 1) {
+      const rollingReels = new Set();
       const rollingBoard = Array.from({ length: Box.window_size }, (_, row) =>
         Array.from({ length: Box.reel_num }, (_, reel) => {
-          const offset = (frames - frame + reel) % Box.window_size;
+          if (frame >= baseFrames + perReelExtra * reel) {
+            return symbolCell(spin.initialBoard[row][reel], spin.initialC2Values[row][reel]);   // 該輪已停
+          }
+          rollingReels.add(reel);
+          const offset = (totalFrames - frame + reel) % Box.window_size;
           const sourceRow = (row + offset) % Box.window_size;
           return symbolCell(spin.initialBoard[sourceRow][reel], spin.initialC2Values[sourceRow][reel]);
         })
       );
-      renderBoard(rollingBoard, { spinning: true });
+      renderBoard(rollingBoard, { spinning: false });
+      if (!rollingReels.size) break;
+      const cells = [];
+      Array.from(el.board.children).forEach((node, index) => {
+        if (rollingReels.has(index % Box.reel_num)) cells.push(node);
+      });
+      if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
       await sleep(55);
     }
   }

@@ -2689,16 +2689,8 @@
   const MAX_FS = Number(cfg.max_free_spins);
   const SPLIT_REELS = cfg.split_target_reels.map(Number);
   const GOLD_REELS = cfg.gold_reels.map(Number);
-  // 金框顆數分布（每輪 0~4 顆）與 Cascade 補牌用的每格機率（期望顆數 ÷ 4）
+  // 金框顆數分布（每輪 0~4 顆；初始停輪與補牌後都依此重抽）
   const GOLD_COUNT = cfg.gold_count_weight;
-  const GOLD_RATE = {};
-  for (const scene of ["bg", "fg"]) {
-    GOLD_RATE[scene] = GOLD_COUNT[scene].map(list => {
-      const total = list.reduce((a, b) => a + b, 0);
-      if (!total) return 0;
-      return list.reduce((sum, w, k) => sum + k * w, 0) / total / 4;
-    });
-  }
   const BUY = cfg.bet_modes.buy_feature;
   const BASE_BET = Number(cfg.base_bet) || 100;
   const START_BALANCE = 10000 * BASE_BET;
@@ -2869,25 +2861,33 @@
   }
 
   // game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果；大鬼倍數固定在本體
-  function flipGolden(board, mults, tableName, goldPositions) {
+  // 依結果對應的倍數表抽一次；回傳 1 代表無倍數（game_rule §5.3）
+  function drawMultiplier(table, outcome) {
+    return Number(pickMap(table.multWild[outcome] || {})) || 1;
+  }
+
+  function flipGolden(board, mults, tableName, goldPositions, flipState) {
     const table = tables[tableName];
     if (!goldPositions.length || !Object.keys(table.gold).length) return null;
     const flipped = [], splitKeys = [], bigSources = [];
     const results = {};
     for (const [reel, row] of goldPositions) {
-      const outcome = pickMap(table.gold);
+      let outcome = pickMap(table.gold);
+      // game_rule §9.1.10：BG 一把 Spin 最多成立一次大鬼，之後改以對應的小鬼結果處理
+      if (outcome.startsWith("W2") && !flipState.freeGame && flipState.bigGhostUsed) {
+        outcome = outcome.endsWith("_M") ? "WW_M" : "WW";
+      }
       results[outcome] = (results[outcome] || 0) + 1;
       board[reel][row] = outcome.startsWith("W2") ? W2 : WW;
       mults[reel][row] = 0;
       if (outcome.endsWith("_M")) {
-        // WW_M 與 W2_M 各有自己的倍數表；x1 代表無倍數
-        const value = Number(pickMap(table.multWild[outcome] || {}));
+        const value = drawMultiplier(table, outcome);
         if (value > 1) mults[reel][row] = value;
       }
       flipped.push(`${reel},${row}`);
-      if (outcome.startsWith("W2")) bigSources.push([reel, row]);
+      if (outcome.startsWith("W2")) { flipState.bigGhostUsed = true; bigSources.push([[reel, row], outcome]); }
     }
-    for (const [sr, srow] of bigSources) {
+    for (const [[sr, srow], outcome] of bigSources) {
       const count = Number(pickMap(table.split));
       const candidates = [];
       for (const reel of SPLIT_REELS) {
@@ -2897,7 +2897,16 @@
         }
       }
       const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
-      for (const [reel, row] of targets) { board[reel][row] = W2; mults[reel][row] = 0; splitKeys.push(`${reel},${row}`); }
+      for (const [reel, row] of targets) {
+        board[reel][row] = W2;
+        // game_rule §5.4：大鬼帶倍數時，每顆分裂體各自獨立抽倍數
+        mults[reel][row] = 0;
+        if (outcome.endsWith("_M")) {
+          const value = drawMultiplier(table, outcome);
+          if (value > 1) mults[reel][row] = value;
+        }
+        splitKeys.push(`${reel},${row}`);
+      }
     }
     return { flipped, splitKeys, results };
   }
@@ -2907,6 +2916,7 @@
     const multipliers = freeGame ? LADDER.fg : LADDER.bg;
     const board = makeBoard(tableName), mults = zeroMults(), snapshots = [];
     const gold = drawGold(scene, board);
+    const flipState = { freeGame, bigGhostUsed: false };
     const cap = MAX_WIN * betUnit();
     let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
     const goldenTally = {};
@@ -2944,11 +2954,16 @@
           gold[reel][row] = merged[row][2];
           if (row < need) motion.push({ key: `${reel},${row}`, isNew: true, rows: need - row, delay: (need - row) * 18 });
         }
-        // 只有新補進來的格子重抽金框；每格機率＝該輪期望顆數 ÷ 4（與 Simulator 同口徑）
+        // game_rule §9.1.11：補牌後重抽該輪金框顆數 N，保留存活金框，不足才從新補格子補上
         if (GOLD_REELS.includes(reel) && need) {
-          const rate = GOLD_RATE[scene][reel];
-          for (let row = 0; row < need; row++) {
-            if (board[reel][row] !== C1 && Math.random() < rate) gold[reel][row] = true;
+          const list = GOLD_COUNT[scene][reel];
+          const target = Number(pick(list.map((_, k) => k), list));
+          const short = target - gold[reel].filter(Boolean).length;
+          if (short > 0) {
+            const spots = [];
+            for (let row = 0; row < need; row++) if (!gold[reel][row] && board[reel][row] !== C1) spots.push(row);
+            for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
+            for (const row of spots.slice(0, short)) gold[reel][row] = true;
           }
         }
       }
@@ -2956,7 +2971,7 @@
 
       // 3) 金框翻牌 + 分裂（game_rule §5.6 步驟 4~6）
       if (goldPositions.length) {
-        const flip = flipGolden(board, mults, tableName, goldPositions);
+        const flip = flipGolden(board, mults, tableName, goldPositions, flipState);
         if (flip) {
           golden += goldPositions.length;
           for (const [key, value] of Object.entries(flip.results)) {
@@ -3123,14 +3138,27 @@
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
   async function animateReels(initialBoard) {
-    const frames = Math.max(2, Math.round(8 / Number($("speedRange").value || 1)));
-    for (let frame = 0; frame < frames; frame++) {
+    // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    const speed = Number($("speedRange").value || 1);
+    const baseFrames = Math.max(3, Math.round(9 / speed));
+    const perReelExtra = Math.max(1, Math.round(3 / speed));
+    const totalFrames = baseFrames + perReelExtra * 4 + 1;
+    for (let frame = 0; frame < totalFrames; frame++) {
       const rolling = cloneBoard(initialBoard);
+      const rollingReels = new Set();
       for (let reel = 0; reel < 5; reel++) {
-        const offset = (frames - frame + reel) % 4;
+        if (frame >= baseFrames + perReelExtra * reel) continue; // 該輪已停，顯示最終符號
+        rollingReels.add(reel);
+        const offset = (totalFrames - frame + reel) % 4;
         for (let row = 0; row < 4; row++) rolling[reel][row] = initialBoard[reel][(row + offset) % 4];
       }
-      renderBoard(rolling, [], { spinning: true });
+      renderBoard(rolling, []);
+      if (!rollingReels.size) break;
+      const cells = [];
+      Array.from($("board").children).forEach((node, index) => {
+        if (rollingReels.has(index % 5)) cells.push(node);
+      });
+      if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
       await wait(55);
     }
   }
