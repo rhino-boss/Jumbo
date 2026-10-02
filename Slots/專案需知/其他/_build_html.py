@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """將 Slots/專案需知/ 的 Markdown 文件彙整成單一 slot_development_specification.html。
 
-用法（在本資料夾執行）：
+本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
+
+用法（在 其他/ 內執行）：
     py _build_html.py
 
 規則：任何一份 .md 更新後，必須重跑本腳本同步更新 HTML。
@@ -14,12 +16,12 @@ import re
 from datetime import date
 from pathlib import Path
 
-HERE = Path(__file__).parent
+HERE = Path(__file__).parent.parent  # 專案需知/（規範 .md 所在層）
 OUTPUT = HERE / "slot_development_specification.html"
 
 # (tab_id, 頁籤名稱, 檔名)
 TABS = [
-    ("overview", "總覽", "_README.md"),
+    ("overview", "總覽", "其他/_README.md"),
     ("flow", "開發流程", "開發流程.md"),
     ("math", "數學模型規範", "數學模型規範.md"),
     ("docs", "數學文件規範", "數學文件規範.md"),
@@ -27,9 +29,22 @@ TABS = [
     ("sim", "模擬程式規範", "模擬程式規範.md"),
     ("demo", "Demogame規範", "Demogame規範.md"),
     ("script", "腳本規範", "腳本規範.md"),
+    ("proposal", "提案報告規範", "提案報告規範.md"),
 ]
 
-MD_TO_TAB = {filename: tab_id for tab_id, _, filename in TABS}
+ROOT_OUTPUT_NAME = OUTPUT.name
+
+# 其他產線：資料夾內的 .md 各自彙整成該資料夾的 HTML。
+# (資料夾, 輸出檔名, 頁首名稱, 頁籤順序偏好)；資料夾內沒有 .md 時略過不產生。
+PRODUCT_LINES = [
+    ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
+    ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
+]
+TAB_ORDER_HINT = ["開發流程", "數學模型規範", "數學文件規範", "送驗文件規範",
+                  "模擬程式規範", "Demogame規範", "腳本規範"]
+
+# 目前正在建置的站台：md 相對路徑（如 md 內所寫、已去掉 ./）→ ("tab", tab_id) 或 ("ext", href)
+LINKS: dict = {}
 
 _used_ids = set()
 
@@ -59,17 +74,20 @@ def render_inline(text: str) -> str:
     # 粗體
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
 
-    # 連結：.md 連結轉成頁籤切換（保留錨點），其餘照常
+    # 連結：同站 .md 轉成頁籤切換（保留錨點）；他站 .md 轉成該站 HTML 的 #tab/anchor；其餘照常
     def link(m):
         label, href = m.group(1), m.group(2)
         base, _, anchor = href.partition("#")
         base = base.removeprefix("./")
-        if base in MD_TO_TAB:
+        target = LINKS.get(base)
+        if target and target[0] == "tab":
             extra = f' data-anchor="{anchor}"' if anchor else ""
             return (
-                f'<a href="#" class="tab-link" data-tab="{MD_TO_TAB[base]}"{extra}>'
+                f'<a href="#" class="tab-link" data-tab="{target[1]}"{extra}>'
                 f"{label}</a>"
             )
+        if target and target[0] == "ext":
+            href = target[1] + (f"/{anchor}" if anchor else "")
         return f'<a href="{href}">{label}</a>'
 
     text = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, text)
@@ -239,12 +257,35 @@ class Renderer:
         return "".join(parts)
 
 
-def build():
+def tab_id_for(stem: str) -> str:
+    """產線資料夾內的 md 以檔名做頁籤 id：沿用根目錄同名文件的 id，否則取 slug。"""
+    for tab_id, _, filename in TABS:
+        if Path(filename).stem == stem:
+            return tab_id
+    return re.sub(r"[^\w\-]", "-", stem.lower()) or "doc"
+
+
+def line_tabs(folder: Path):
+    """列出產線資料夾的 md，依 TAB_ORDER_HINT 排序，其餘依檔名。"""
+    mds = [p for p in folder.glob("*.md") if not p.name.startswith("_")]
+
+    def key(p):
+        stem = p.stem
+        return (TAB_ORDER_HINT.index(stem) if stem in TAB_ORDER_HINT else 99, stem)
+
+    return [(tab_id_for(p.stem), p.stem, p.name) for p in sorted(mds, key=key)]
+
+
+def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict):
+    """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。"""
+    global LINKS
+    LINKS = links
+    _used_ids.clear()
     panels = []
     tabs_html = []
     tocs = []
-    for idx, (tab_id, title, filename) in enumerate(TABS):
-        md = (HERE / filename).read_text(encoding="utf-8")
+    for idx, (tab_id, title, filename) in enumerate(tabs):
+        md = (base / filename).read_text(encoding="utf-8")
         r = Renderer(tab_id)
         body = r.render(md)
         toc_items = "".join(
@@ -266,12 +307,13 @@ def build():
         )
 
     today = date.today().strftime("%Y-%m-%d")
+    src_label = f"Slots/專案需知/{base.relative_to(HERE)}/*.md".replace("/./", "/")
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Slot 開發規範</title>
+<title>{site_title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -366,9 +408,9 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 <body>
 <div class="wrap">
 <header class="page">
-  <div class="eyebrow">Slots · 開發規範</div>
-  <h1 class="site">Slot 開發規範</h1>
-  <p class="meta">由 <code>Slots/專案需知/*.md</code> 產生（<code>_build_html.py</code>）　|　{today}</p>
+  <div class="eyebrow">{eyebrow}</div>
+  <h1 class="site">{site_title}</h1>
+  <p class="meta">由 <code>{src_label}</code> 產生（<code>_build_html.py</code>）　|　{today}</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件">{''.join(tabs_html)}</div>
 <div class="body-row">
@@ -377,7 +419,7 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 </div>
 </div>
 <script>
-var TAB_IDS = {[t[0] for t in TABS]!r};
+var TAB_IDS = {[t[0] for t in tabs]!r};
 function activate(tabId, anchor) {{
   document.querySelectorAll('.tab').forEach(function(b) {{
     var on = b.dataset.tab === tabId;
@@ -400,6 +442,12 @@ function activate(tabId, anchor) {{
 document.querySelectorAll('.tab').forEach(function(b) {{
   b.addEventListener('click', function() {{ activate(b.dataset.tab); }});
 }});
+(function() {{
+  var h = decodeURIComponent(location.hash.slice(1));
+  if (!h) return;
+  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
+  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
+}})();
 document.addEventListener('click', function(e) {{
   var a = e.target.closest('a');
   if (!a) return;
@@ -419,8 +467,30 @@ document.addEventListener('click', function(e) {{
 </body>
 </html>
 """
-    OUTPUT.write_text(page, encoding="utf-8")
-    print(f"OK: {OUTPUT.name} 已更新（{OUTPUT.stat().st_size:,} bytes）")
+    output.write_text(page, encoding="utf-8")
+    print(f"OK: {output.relative_to(HERE)} 已更新（{output.stat().st_size:,} bytes）")
+
+
+def build():
+    # 根目錄（Omniplay）：根 .md 互連為頁籤；連到產線資料夾的 .md 轉成該產線 HTML
+    links = {filename: ("tab", tab_id) for tab_id, _, filename in TABS}
+    links["_README.md"] = ("tab", "overview")  # 根 .md 內仍以 _README.md 連到總覽
+    for folder, out_name, _ in PRODUCT_LINES:
+        for tab_id, _, filename in line_tabs(HERE / folder):
+            links[f"{folder}/{filename}"] = ("ext", f"{folder}/{out_name}#{tab_id}")
+    build_site(HERE, TABS, OUTPUT, "Slot 開發規範", "Slots · 開發規範", links)
+
+    # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成根 HTML 的頁籤
+    for folder, out_name, site_title in PRODUCT_LINES:
+        tabs = line_tabs(HERE / folder)
+        if not tabs:
+            continue
+        links = {filename: ("tab", tab_id) for tab_id, _, filename in tabs}
+        for tab_id, _, filename in TABS:
+            links[f"../{filename}"] = ("ext", f"../{ROOT_OUTPUT_NAME}#{tab_id}")
+        links["../其他/_README.md"] = ("ext", f"../{ROOT_OUTPUT_NAME}#overview")
+        build_site(HERE / folder, tabs, HERE / folder / out_name, site_title,
+                   f"Slots · {folder}", links)
 
 
 if __name__ == "__main__":

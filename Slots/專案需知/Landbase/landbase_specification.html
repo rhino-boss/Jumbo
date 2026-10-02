@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Landbase 轉製 開發規範</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}
+header.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}
+.toc{position:sticky; top:52px; width:236px; flex:none;
+  max-height:calc(100vh - 76px); overflow-y:auto;
+  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}
+.toc[hidden]{display:none}
+.toc a{display:block; color:var(--ink-3); text-decoration:none;
+  padding:3px 11px; border-left:2px solid var(--rule)}
+.toc a:hover{color:var(--s1); border-left-color:var(--s1)}
+.toc a.toc-3{padding-left:25px}
+main{flex:1; min-width:0}
+.panel[hidden]{display:none}
+.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
+h2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;
+  padding-bottom:7px; border-bottom:1px solid var(--rule)}
+h3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}
+p{margin:0 0 11px; max-width:86ch}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}
+li{margin:3px 0}
+li.check{list-style:none; margin-left:-20px}
+.cb{color:var(--s1); margin-right:4px}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+pre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;
+  padding:13px 16px; overflow-x:auto; margin:0 0 16px;
+  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}
+pre code{background:none; border:none; padding:0; font-size:inherit}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
+@media (max-width:900px){ .toc{display:none!important} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <div class="eyebrow">Slots · Landbase</div>
+  <h1 class="site">Landbase 轉製 開發規範</h1>
+  <p class="meta">由 <code>Slots/專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-02</p>
+</header>
+<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-math" data-tab="math" aria-controls="panel-math" aria-selected="true" tabindex="0">數學模型規範</button></div>
+<div class="body-row">
+  <nav class="toc" id="toc-math"><a class="toc-2" href="#1-數學調性" data-tab="math">1. 數學調性</a><a class="toc-2" href="#2-rtp-配置" data-tab="math">2. RTP 配置</a><a class="toc-3" href="#21-配置口徑" data-tab="math">2.1 配置口徑</a><a class="toc-3" href="#22-nbeb-rtp-配置" data-tab="math">2.2 NB／EB RTP 配置</a><a class="toc-3" href="#23-bfsf-rtp-配置" data-tab="math">2.3 BF／SF RTP 配置</a><a class="toc-3" href="#24-與-omniplay-主流配置的差異" data-tab="math">2.4 與 Omniplay 主流配置的差異</a><a class="toc-2" href="#3-系統機制" data-tab="math">3. 系統機制</a><a class="toc-3" href="#31-link-彩金grandmajor" data-tab="math">3.1 Link 彩金（Grand／Major）</a><a class="toc-3" href="#32-新手體驗" data-tab="math">3.2 新手體驗</a><a class="toc-3" href="#33-老手救援" data-tab="math">3.3 老手救援</a><a class="toc-2" href="#4-系統限制" data-tab="math">4. 系統限制</a><a class="toc-2" href="#5-沿用-omniplay-的項目與調整" data-tab="math">5. 沿用 Omniplay 的項目與調整</a><a class="toc-3" href="#51-直接沿用" data-tab="math">5.1 直接沿用</a><a class="toc-3" href="#52-card-system-的層級調整" data-tab="math">5.2 Card System 的層級調整</a><a class="toc-3" href="#53-命名補充" data-tab="math">5.3 命名補充</a><a class="toc-2" href="#6-開發前檢查" data-tab="math">6. 開發前檢查</a><a class="toc-2" href="#7-待討論事項" data-tab="math">7. 待討論事項</a></nav>
+  <main><section class="panel" role="tabpanel" id="panel-math" aria-labelledby="tab-math"><h1 id="landbase-轉製-數學模型規範">Landbase 轉製 數學模型規範</h1>
+<p>本文件屬於 <code>Slots/專案需知/Landbase/</code>，適用於 <strong>Landbase 轉製遊戲</strong>（實體機台數學轉製為線上版，Game List 備註「線上-Landbase轉製遊戲」者，如 102xxx／105xxx）。</p>
+<p>本文件採<strong>差異式</strong>撰寫：只列 Landbase 產線與 Omniplay 不同或新增的規則；<strong>凡本文件未覆寫的條款，一律沿用 Omniplay 的 <a href="../slot_development_specification.html#math">數學模型規範.md</a></strong>（命名、版本、工作表、卡片區間、PARsheet、程式化修改 XLSX 等）。兩者衝突時以本文件為準。</p>
+<p>RTP 配置與系統機制的正式來源為 Google 試算表 <a href="https://docs.google.com/spreadsheets/d/1Qk66cM8iZqyEhr23nsnxiDXOHj8CGNji--sedOHF0F8/edit?gid=386193409">RTP 設定</a>（<code>數值設定</code>、<code>彩金參數</code> 兩頁）。本文件引用的是 <strong>2026/05/14「全平台」版的「轉製遊戲」欄</strong>；試算表更新時必須同步修訂本文件並記錄日期。</p>
+<h2 id="1-數學調性">1. 數學調性</h2>
+<ul><li>目前<strong>沒有明確方向，由負責人自由發揮</strong>（待討論，見第 7 節）。</li><li>自由發揮不代表免記錄。負責人決定調性後，必須在數學模型的 <code>Game Description</code> 工作表與 <code>game_rule.md</code> 寫明：<ul><li>以原機數學為底還是重新設計；若以原機為底，記錄原機 RTP（Game List 的「RTP 版本」欄，例：84%）與調整到線上目標 RTP 的方式（改輪帶、改 Paytable、Card System 或其他）。</li><li>波動度／最大倍數目標與 Hit Rate 目標。</li><li>是否啟用 Card System；啟用時依第 5.2 節。</li></ul></li><li>原機既有的 Bonus／Feature 玩法屬於 Game RTP 的一部分，不另拆 Bonus Game RTP（見第 2 節）。</li></ul>
+<h2 id="2-rtp-配置">2. RTP 配置</h2>
+<h3 id="21-配置口徑">2.1 配置口徑</h3>
+<pre><code>Total RTP = Link RTP + Game RTP + 新手體驗 RTP</code></pre>
+<ul><li>轉製遊戲<strong>不拆 Bonus Game RTP</strong>；試算表「轉製遊戲」欄的 Bonus／Game 為同一合併欄位，原機的 Bonus／Feature 派彩全部歸入 Game RTP。</li><li>老手救援 RTP 固定 <code>0.00%</code>（主流遊戲為 0.50%）：<strong>Landbase 轉製遊戲不啟用老手救援</strong>。</li><li>Inrc（Increment，彩池增量）是押注中滾入 Link 彩池的比例，<strong>不計入玩家 Total RTP</strong>；能否「滾 Inrc」與能否「拉 Link」是兩件事，見第 3 節。</li><li>其餘口徑（RTP ＝ Total Win ÷ 實際 Total Bet、產品顯示可四捨五入但計算用完整精度、各 Bet Mode 分母用該模式實際成本）沿用 Omniplay 第 1.4.1 節。</li></ul>
+<h3 id="22-nbeb-rtp-配置">2.2 NB／EB RTP 配置</h3>
+<div class="tbl-wrap"><table><thead><tr><th>Player Profile</th><th>押注層級</th><th class="n">判定金額</th><th class="n">Link RTP</th><th class="n">Game RTP</th><th class="n">新手體驗 RTP</th><th class="n">老手救援 RTP</th><th class="n">Total RTP</th><th>Inrc</th></tr></thead><tbody><tr><td>新手</td><td>低注</td><td class="n"><code>&lt; $2</code></td><td class="n">0.00%</td><td class="n">95.15%</td><td class="n">2.00%</td><td class="n">0.00%</td><td class="n">97.15%</td><td>不滾</td></tr><tr><td>新手</td><td>高注</td><td class="n"><code>&gt;= $2</code></td><td class="n">0.00%</td><td class="n">95.15%</td><td class="n">2.00%</td><td class="n">0.00%</td><td class="n">97.15%</td><td>滾 0.85%</td></tr><tr><td>老手</td><td>低注</td><td class="n"><code>&lt; $2</code></td><td class="n">0.00%</td><td class="n">96.50%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">96.50%</td><td>不滾</td></tr><tr><td>老手</td><td>高注</td><td class="n"><code>&gt;= $2</code></td><td class="n">2.00%</td><td class="n">94.50%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">96.50%</td><td>滾 0.85%</td></tr></tbody></table></div>
+<ul><li>押注層級只分 <strong><code>&lt; $2</code>／<code>&gt;= $2</code> 兩級</strong>，沒有 Omniplay 的小／中／大 Bet 三級與 <code>&gt; $100</code> 門檻。</li><li>新手不論層級 Link RTP 皆為 0%；新手 <code>&gt;= $2</code> 的 0.85% 只滾入彩池、不可中彩（第 4 節）。</li><li>老手 <code>&gt;= $2</code> 的 Game RTP 比 <code>&lt; $2</code> 低 2 個百分點，差額即 Link RTP，兩級 Total 相同。</li></ul>
+<h3 id="23-bfsf-rtp-配置">2.3 BF／SF RTP 配置</h3>
+<div class="tbl-wrap"><table><thead><tr><th>Player Profile</th><th>押注層級</th><th class="n">判定金額</th><th class="n">Link RTP</th><th class="n">Game RTP</th><th class="n">Total RTP</th></tr></thead><tbody><tr><td>新手</td><td>不分層級</td><td class="n">全部</td><td class="n">0.00%</td><td class="n">（試算表為 0%，見第 7 節）</td><td class="n">（待確認）</td></tr><tr><td>老手</td><td>低注</td><td class="n"><code>&lt; $2</code></td><td class="n">0.00%</td><td class="n">96.50%</td><td class="n">96.50%</td></tr><tr><td>老手</td><td>高注</td><td class="n"><code>&gt;= $2</code></td><td class="n">2.00%</td><td class="n">94.50%</td><td class="n">96.50%</td></tr></tbody></table></div>
+<ul><li>BF／SF 的押注層級依 Omniplay 第 1.4.3 節，以 <strong>Feature 購買價格 ÷ Feature Price 倍數反推的基礎押注</strong>判定，不用購買總價。</li><li>試算表新手列的 BF／SF Total RTP 為 0%。新手若可購買 BF，其 Game RTP 待確認；但不論結果如何，<strong>新手 BF 的 Link RTP 必為 0%</strong>（第 4 節）。</li><li>老手 BF／SF 的 Game RTP 與 NB 相同層級一致（96.50%／94.50%），不是 Omniplay 的 92.50% 固定值。</li></ul>
+<h3 id="24-與-omniplay-主流配置的差異">2.4 與 Omniplay 主流配置的差異</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>Omniplay 主流</th><th>Landbase 轉製</th></tr></thead><tbody><tr><td>RTP 拆分</td><td>Link + Bonus Game + Game</td><td>Link + Game（Bonus 併入 Game）</td></tr><tr><td>押注層級</td><td>小／中／大 Bet（<code>&lt; $2</code>、<code>$2～$100</code>、<code>&gt; $100</code>）</td><td>低／高注（<code>&lt; $2</code>、<code>&gt;= $2</code>）</td></tr><tr><td>新手 Total RTP（NB）</td><td>95.00%（Bonus 2% + Game 93%）＋新手體驗 2%</td><td>97.15%（Game 95.15% + 新手體驗 2%）</td></tr><tr><td>老手 Total RTP</td><td>96.50%（含老手救援 0.50%）</td><td>96.50%（老手救援 0%）</td></tr><tr><td>老手 BF／SF Game RTP</td><td>92.50% 固定</td><td>與 NB 同層級相同（96.50%／94.50%）</td></tr><tr><td>倍率權重套數（啟用 Card System 時）</td><td>老手小／中／大三套</td><td>老手低／高注兩套（第 5.2 節）</td></tr></tbody></table></div>
+<h2 id="3-系統機制">3. 系統機制</h2>
+<h3 id="31-link-彩金grandmajor">3.1 Link 彩金（Grand／Major）</h3>
+<p>Link 彩金為 Grand、Major 兩層累積彩池，參數依上線區域不同（試算表 <code>彩金參數</code> 頁，2026/05/14）：</p>
+<div class="tbl-wrap"><table><thead><tr><th>Area</th><th class="n">Grand 起始彩池</th><th class="n">Major 起始彩池</th><th class="n">Grand RTP</th><th class="n">Major RTP</th><th class="n">Grand Inrc</th><th class="n">Major Inrc</th><th>備註</th></tr></thead><tbody><tr><td>Online（小平台）</td><td class="n">$100,000</td><td class="n">$20,000</td><td class="n">1.00%</td><td class="n">1.00%</td><td class="n">0.35%</td><td class="n">0.50%</td><td></td></tr><tr><td>Online</td><td class="n">$500,000</td><td class="n">$100,000</td><td class="n">1.00%</td><td class="n">1.00%</td><td class="n">0.35%</td><td class="n">0.50%</td><td></td></tr><tr><td>Okada</td><td class="n">$1,000,000</td><td class="n">$100,000</td><td class="n">1.30%</td><td class="n">0.70%</td><td class="n">0.20%</td><td class="n">0.20%</td><td>MFB 群組</td></tr></tbody></table></div>
+<ul><li>第 2 節的 Link RTP 2.00% ＝ Grand 1.00% ＋ Major 1.00%（Okada 為 1.30% ＋ 0.70%）；Inrc 0.85% ＝ Grand 0.35% ＋ Major 0.50%（Okada 為 0.40%）。</li><li>Link RTP 與 Inrc 由系統層依 Area 設定，數學模型不得把彩金參數寫死在輪帶或 Paytable；模型只負責 Game RTP 與新手體驗，並在 <code>Game Description</code> 記錄採用的 Area 參數版本。</li><li>「可滾 Inrc」表示該局押注會依 Inrc 比例滾入彩池；「可拉 Link」表示該局有資格中 Grand／Major。資格對照見第 2.2 節與第 4 節。</li><li>數學模型必須定義哪些派彩歸入 Link、哪些歸入 Game，不得重複計算。</li></ul>
+<h3 id="32-新手體驗">3.2 新手體驗</h3>
+<ul><li>新手體驗 RTP 2.00% 只給新手 Profile，老手為 0%；體驗內容與腳本依 Omniplay 的 <a href="../slot_development_specification.html#script">腳本規範.md</a> 與 <code>System/機制說明書.md</code>。</li><li>新手體驗的派彩計入新手 Total RTP（97.15%），計算與驗證時必須與 Game RTP 分開統計。</li></ul>
+<h3 id="33-老手救援">3.3 老手救援</h3>
+<ul><li>Landbase 轉製遊戲<strong>不啟用</strong>老手救援，RTP 固定 0%；Config、Simulator 與 Demogame 不得出現老手救援的設定或演出。</li></ul>
+<h2 id="4-系統限制">4. 系統限制</h2>
+<div class="tbl-wrap"><table><thead><tr><th>限制</th><th>規則</th></tr></thead><tbody><tr><td>新手標籤</td><td>玩家仍帶有新手標籤時，<strong>任何 Bet Mode（含 BF／SF）都不得拉 Link 彩金</strong>；不得因為購買 Feature 而繞過新手限制。</td></tr><tr><td>新手期</td><td>新手期不得拉彩金，Link RTP 必為 0%；<code>&gt;= $2</code> 時只滾 Inrc、不中彩。</td></tr><tr><td>低注</td><td><code>bet_tier_amount &lt; $2</code> 不得拉 Link 彩金，新手、老手皆同；NB／EB 以實際押注、BF／SF 以反推基礎押注判定。</td></tr><tr><td>系統最大賠付</td><td><strong>單把派彩上限 <code>$10,000,000</code></strong>。數學模型必須驗算 <code>Max Multiplier × 該遊戲最大押注 ≤ $10,000,000</code>，超出者調低倍率上限或最大押注，並在數學文件明記。</td></tr></tbody></table></div>
+<ul><li>Link 資格一律由系統依 Profile 與 <code>bet_tier_amount</code> 判定；<code>link_enabled = false</code> 時不得只把派彩改成 0，結果中不得出現已觸發但不派彩的 Link 事件或演出（同 Omniplay 第 2.3.1 節）。</li><li>超過系統最大賠付時的處理方式（截斷或整把重骰）待確認（第 7 節）；確認前模型以「不可能超過」為設計目標，而非依賴截斷。</li><li>Omniplay 第 1.4.5 節的 <code>$5,000,000</code>／<code>$1,000,000</code> 重骰上限<strong>不適用</strong>於 Landbase，以本節 <code>$10,000,000</code> 為準。</li></ul>
+<h2 id="5-沿用-omniplay-的項目與調整">5. 沿用 Omniplay 的項目與調整</h2>
+<h3 id="51-直接沿用">5.1 直接沿用</h3>
+<p>下列章節沿用 Omniplay <a href="../slot_development_specification.html#math">數學模型規範.md</a>，不另訂：</p>
+<ul><li>1.1 必要內容、1.2 模型命名與工作表命名、1.3 版本規則（含 1.3.1）。</li><li>1.4.3 押注層級的 <code>bet_tier_amount</code> 計算方式（判定門檻改為本文件第 2.2 節的兩級）。</li><li>1.5 卡片倍率區間、1.5.1 區間工作表（欄位依第 5.2 節調整）。</li><li>1.7 程式化修改 XLSX 的格式規則。</li><li>第 2 章 Card System 的定位、卡片判定、Retry 流程、倍率分母與必要監控。</li><li>PARsheet。</li></ul>
+<h3 id="52-card-system-的層級調整">5.2 Card System 的層級調整</h3>
+<p>啟用 Card System 時，Oldhand 的押注層級只有兩套：</p>
+<pre><code>oldhand
+├─ normal_bet    → low_bet／high_bet → weight_bg／weight_fg
+├─ extra_bet     → low_bet／high_bet → weight_bg／weight_fg
+├─ buy_feature   → low_bet／high_bet → weight_fg
+└─ super_feature → low_bet／high_bet → weight_fg</code></pre>
+<ul><li><code>low_bet</code> 對應 <code>&lt; $2</code>，<code>high_bet</code> 對應 <code>&gt;= $2</code>；不得保留 <code>medium_bet</code>／<code>big_bet</code> 的空殼設定。</li><li>區間工作表（<code>Multiplier_Weight</code>、<code>Avg_Multi</code>、<code>Nature_Prob</code>）的 Oldhand 欄位依低／高注命名，例如 <code>NB_BG_Low</code>／<code>NB_BG_High</code>；Newbie 欄位不變。</li><li>倍率上限依第 4 節系統最大賠付反推，不直接套用 Omniplay 第 1.4.4 節的 <code>20000x</code>／<code>2000x</code> 預設；Newbie 的 <code>30x</code>／<code>120x</code> 上限沿用。</li><li>是否啟用 Card System 隨第 1 節數學調性決定；未啟用時不得建立空白權重欄或 Card System 設定。</li></ul>
+<h3 id="53-命名補充">5.3 命名補充</h3>
+<ul><li>Landbase 轉製遊戲的 ParSheet ID 仍為 <code>H&lt;三位數字&gt;1</code>；同一數學供多個 Game ID 使用時（如 <code>H0111</code> → 102001／102002），數學模型只建一份，Game ID 對應記錄於 <code>Game Description</code> 工作表與 Game List。</li></ul>
+<h2 id="6-開發前檢查">6. 開發前檢查</h2>
+<ul><li class="check"><span class="cb">☐</span> 已確認數學調性並記錄於 <code>Game Description</code>（原機為底或重新設計、目標 RTP、波動度、是否啟用 Card System）。</li><li class="check"><span class="cb">☐</span> RTP 配置採本文件第 2 節（Link + Game + 新手體驗），且與試算表「轉製遊戲」欄當前版本一致，已記錄引用日期。</li><li class="check"><span class="cb">☐</span> 押注層級只有 <code>&lt; $2</code>／<code>&gt;= $2</code> 兩級；Config、Simulator、Demogame 無小／中／大 Bet 殘留。</li><li class="check"><span class="cb">☐</span> 新手（含 BF／SF）與低注的 Link RTP 為 0%，且結果中無已觸發但不派彩的 Link 事件。</li><li class="check"><span class="cb">☐</span> 老手救援未啟用，Config 無相關設定。</li><li class="check"><span class="cb">☐</span> <code>Max Multiplier × 最大押注 ≤ $10,000,000</code> 已驗算並記錄。</li><li class="check"><span class="cb">☐</span> 採用的 Link 彩金 Area 參數版本已記錄；數學模型未寫死彩金參數。</li><li class="check"><span class="cb">☐</span> Omniplay 第 1.6 節其餘檢查項目全部通過。</li></ul>
+<h2 id="7-待討論事項">7. 待討論事項</h2>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>現況</th><th>需決定</th></tr></thead><tbody><tr><td>數學調性</td><td>無明確方向</td><td>以原機為底或重新設計；波動度／Hit Rate 目標；是否啟用 Card System</td></tr><tr><td>新手 BF／SF RTP</td><td>試算表為 0%</td><td>新手是否可購買 BF／SF；可購買時的 Game RTP</td></tr><tr><td>超過系統最大賠付的處理</td><td>只定上限 <code>$10,000,000</code></td><td>截斷或整把重骰；Simulator 與 Demogame 須一致</td></tr><tr><td>大注門檻</td><td>只有 <code>&gt;= $2</code> 一級</td><td>押注選項極大的遊戲是否需要額外上限層級</td></tr></tbody></table></div></section></main>
+</div>
+</div>
+<script>
+var TAB_IDS = ['math'];
+function activate(tabId, anchor) {
+  document.querySelectorAll('.tab').forEach(function(b) {
+    var on = b.dataset.tab === tabId;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;
+  });
+  document.querySelectorAll('.panel').forEach(function(p) {
+    p.hidden = (p.id !== 'panel-' + tabId);
+  });
+  document.querySelectorAll('.toc').forEach(function(t) {
+    t.hidden = (t.id !== 'toc-' + tabId);
+  });
+  if (anchor) {
+    var el = document.getElementById(anchor);
+    if (el) el.scrollIntoView();
+  } else {
+    window.scrollTo(0, 0);
+  }
+}
+document.querySelectorAll('.tab').forEach(function(b) {
+  b.addEventListener('click', function() { activate(b.dataset.tab); });
+});
+(function() {
+  var h = decodeURIComponent(location.hash.slice(1));
+  if (!h) return;
+  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
+  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
+})();
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a');
+  if (!a) return;
+  if (a.classList.contains('tab-link')) {
+    e.preventDefault();
+    activate(a.dataset.tab, a.dataset.anchor || null);
+  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    var panel = el.closest('.panel');
+    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);
+  }
+});
+</script>
+</body>
+</html>

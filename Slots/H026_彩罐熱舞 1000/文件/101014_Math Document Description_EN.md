@@ -122,7 +122,16 @@ All RTP and multiplier statistics are expressed as "total win of the round ÷ Co
 >
 > The Base Game / Free Game breakdown behind `Game RTP` is recorded on `Multiplier_Weight_Detail` (see [1-7](#1-7-multiplier_weight_detail)), together with the Free Game trigger rate and cycle.
 >
-> The `Hit JP Symbol appear rate` value is taken from the `SCR` field of the `OP Jackpot` worksheet, which is recorded together with `C1 cnt` and `Spin` from the same simulation run.
+> The `Hit JP Symbol appear rate` value is taken from the `SCR` field of the `OP Jackpot` worksheet, which is recorded together with `C1 cnt` and `Spin` from the same simulation run. The recorded `SCR` values are listed below (denominator Threshold = 10,000,000,000):
+>
+> | Status | Bet Type | SCR (92 version) | SCR (94 version) |
+> | --- | --- | --- | --- |
+> | Newbie | Normal Bet | 3,368,441,800 | 3,368,441,800 |
+> | Newbie | Extra Bet | 3,830,983,800 | 3,830,983,800 |
+> | Oldhand | Normal Bet | 3,370,654,300 | 3,371,218,200 |
+> | Oldhand | Extra Bet | 3,829,976,500 | 3,830,025,700 |
+>
+> Both versions share the same simulation record for Newbie, so those values are identical; the Oldhand values come from separate simulations per version and differ slightly.
 
 ### 1-4 Description
 

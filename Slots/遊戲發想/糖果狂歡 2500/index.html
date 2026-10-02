@@ -1888,7 +1888,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../../../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../../demogame_common.css?v=4">
 </head>
 
 <body>
@@ -2027,6 +2027,13 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-02：共用檔路徑修正</h4>
+        <ul>
+          <li>共用檔路徑由 <code>../../../</code> 改為 <code>../../</code>（遊戲發想資料夾已移到 Slots/遊戲發想/，原路徑載不到 demogame_common.css／.js，Debug、Bet Mode 與 Image 開關失效）。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
         <ul>
@@ -3579,7 +3586,7 @@
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
-  <script src="../../../demogame_common.js?v=1"></script>
+  <script src="../../demogame_common.js?v=1"></script>
   <script>
     (() => {
       "use strict";

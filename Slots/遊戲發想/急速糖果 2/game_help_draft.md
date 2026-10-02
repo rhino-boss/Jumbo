@@ -1,6 +1,6 @@
-# Turbo Candy 2 Game Help Draft（發想）
+# Candy Rush 2 Game Help Draft（發想）
 
-這份 md 是「急速糖果 2 / Turbo Candy 2」發想 demo 的 Help 稿，機制以 `game_rule_Turbo_Candy_2.md` 為準。
+這份 md 是「急速糖果 2 / Candy Rush 2」發想 demo 的 Help 稿，機制以 `game_rule.md` 為準。
 
 ## Game Meta
 
@@ -9,7 +9,7 @@
 | game_id | ⏳（發想） |
 | parsheet_id | ⏳（發想） |
 | name_zh | 急速糖果 2 |
-| name_en | Turbo Candy 2 |
+| name_en | Candy Rush 2 |
 | game_type | Video Slot - Cluster Pay / Cascade / Position Multiplier |
 
 ---
@@ -50,7 +50,8 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 群集派彩 | CLUSTER PAY |
-| 規則說明 | 盤面為 {7×7}；相同符號以上下左右相鄰連結達 {5} 個以上即中獎，每個群集各自計獎。 | THE GAME USES A {7×7} GRID. {5} OR MORE IDENTICAL SYMBOLS CONNECTED HORIZONTALLY OR VERTICALLY FORM A WINNING CLUSTER. EACH CLUSTER PAYS SEPARATELY. |
+| 規則說明 | 盤面為 {7×7}；相同符號以上下左右相鄰連結達 {5} 個以上即中獎，每個群集各自計獎；同一符號同時有多組群集時，每一組都會計獎。 | THE GAME USES A {7×7} GRID. {5} OR MORE IDENTICAL SYMBOLS CONNECTED HORIZONTALLY OR VERTICALLY FORM A WINNING CLUSTER. EACH CLUSTER PAYS SEPARATELY, INCLUDING MULTIPLE CLUSTERS OF THE SAME SYMBOL. |
+| 規則說明 | 群集中獎後，盤面上所有相同符號會一併消除；得分只以相連的群集數量計算，連帶消除的符號不另計獎。 | WHEN A CLUSTER WINS, ALL IDENTICAL SYMBOLS ON THE BOARD ARE REMOVED. ONLY THE CONNECTED CLUSTER PAYS; THE OTHER REMOVED SYMBOLS DO NOT PAY. |
 
 ---
 
@@ -69,7 +70,7 @@
 | --- | --- | --- |
 | 主要標題 | 位置倍數 | POSITION MULTIPLIER |
 | 規則說明 | 每格每發生一次消除，該位置倍數 +{1}（第 1 次為 x1、第 2 次為 x2，依此類推）。 | EACH TIME A POSITION IS PART OF A WIN, ITS MULTIPLIER INCREASES BY {1} (x1, x2, x3 AND SO ON). |
-| 規則說明 | 每個群集的得分 = 群集賠率 × 押注 × 全盤所有位置倍數的總和；總和為 {0} 時以 x{1} 計。 | EACH CLUSTER WIN = CLUSTER PAY × BET × THE SUM OF ALL POSITION MULTIPLIERS ON THE BOARD. A SUM OF {0} COUNTS AS x{1}. |
+| 規則說明 | 不論在盤面哪個位置消除，每個群集的得分 = 群集賠率 × 押注 × 全盤所有位置倍數的總和；總和為 {0} 時以 x{1} 計。 | WHEREVER A WIN OCCURS, EACH CLUSTER WIN = CLUSTER PAY × BET × THE SUM OF ALL POSITION MULTIPLIERS ON THE BOARD. A SUM OF {0} COUNTS AS x{1}. |
 | 規則說明 | 一般遊戲中，位置倍數於每次旋轉開始時歸零；免費遊戲期間整場保留。 | POSITION MULTIPLIERS RESET AT THE START OF EACH BASE GAME SPIN AND PERSIST FOR THE WHOLE FREE GAME SESSION. |
 
 ---
@@ -81,6 +82,16 @@
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
 | 規則說明 | {3、4、5、6、7} 個 [C1] 分別獲得 {10、12、15、20、30} 次免費旋轉。 | {3, 4, 5, 6 OR 7} [C1] AWARD {10, 12, 15, 20 OR 30} FREE SPINS RESPECTIVELY. |
 | 規則說明 | 免費遊戲中再次出現 {3} 個或以上 [C1]，依相同規則追加免費旋轉。 | {3} OR MORE [C1] DURING THE FREE GAME AWARD ADDITIONAL FREE SPINS BY THE SAME RULE. |
+
+---
+
+## EXTRA BET
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 額外押注 | EXTRA BET |
+| 規則說明 | 額外押注的費用為目前投注的 {10} 倍，派彩仍以原始投注計算。 | EXTRA BET COSTS {10} TIMES THE CURRENT BET. WINS ARE STILL CALCULATED ON THE ORIGINAL BET. |
+| 規則說明 | 該次旋轉開場時，盤面隨機 {1~3} 個位置出現 {20、50、100、250、500 或 1000} 的倍數底板，第一次消除即計入全盤倍數和。 | AT THE START OF THE SPIN, {1 TO 3} RANDOM POSITIONS RECEIVE A {20, 50, 100, 250, 500 OR 1000} MULTIPLIER PLATE THAT COUNTS TOWARD THE BOARD MULTIPLIER SUM FROM THE FIRST WIN. |
 
 ---
 

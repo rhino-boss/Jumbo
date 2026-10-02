@@ -122,7 +122,16 @@ Coin In = 下注倍數 × Base Bet
 >
 > `Game RTP` 的 Base Game 與 Free Game 拆解值記錄在 `Multiplier_Weight_Detail`（見 [1-7](#1-7-multiplier_weight_detail)），FG 的觸發率與週期亦同。
 >
-> `Hit JP Symbol appear rate` 的數值取自 `OP Jackpot` 工作表的 `SCR` 欄位，該欄與 `C1 cnt`／`Spin` 為同一次模擬的紀錄。
+> `Hit JP Symbol appear rate` 的數值取自 `OP Jackpot` 工作表的 `SCR` 欄位，該欄與 `C1 cnt`／`Spin` 為同一次模擬的紀錄。各組 `SCR` 數值如下（分母 Threshold = 10,000,000,000）：
+>
+> | Status | Bet Type | SCR（92 版） | SCR（94 版） |
+> | --- | --- | --- | --- |
+> | Newbie | Normal Bet | 3,368,441,800 | 3,368,441,800 |
+> | Newbie | Extra Bet | 3,830,983,800 | 3,830,983,800 |
+> | Oldhand | Normal Bet | 3,370,654,300 | 3,371,218,200 |
+> | Oldhand | Extra Bet | 3,829,976,500 | 3,830,025,700 |
+>
+> Newbie 兩版共用同一組模擬紀錄，數值相同；Oldhand 兩版各自模擬，數值略有差異。
 
 ### 1-4 Description
 

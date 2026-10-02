@@ -4,6 +4,17 @@
 
 適用範圍：`Project/Slots/H0xx_遊戲名稱/` 下的新遊戲模型、既有模型改版，以及 RTP、Card System 或 Feature 參數調整。
 
+## 產線結構
+
+| 位置 | 產線 | 內容 |
+|---|---|---|
+| `專案需知/`（根目錄各 .md） | **Omniplay** | 現行全部規範文件皆屬 Omniplay 產線 |
+| `專案需知/Landbase/` | Landbase | Landbase 轉製遊戲的規範；目前有 [數學模型規範.md](Landbase/數學模型規範.md)（差異式，未覆寫者沿用 Omniplay），彙整版為 `Landbase/landbase_specification.html` |
+| `專案需知/Reskin/` | Reskin | Reskin 產線的規範放這裡（尚未建立；建立後由 `_build_html.py` 自動產出 `Reskin/reskin_specification.html`） |
+| `專案需知/其他/` | — | 工具腳本（`_build_html.py`、`_check_xlsx_style.py`）與本總覽 |
+
+任何一份 .md（根目錄或產線資料夾）更新後，必須執行 `其他/_build_html.py`；腳本會同時重建根目錄的 `slot_development_specification.html` 與各產線資料夾的 HTML。產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用根目錄規範。
+
 ## 文件清單
 
 | 文件 | 內容 |
@@ -15,6 +26,8 @@
 | [模擬程式規範.md](模擬程式規範.md) | Simulator 程式架構、`BATCH_RUNS`、Console 輸出、報表格式、驗證清單；Config 的轉檔、資料、驗證與版本規範。 |
 | [Demogame規範.md](Demogame規範.md) | Demogame 用途與載入、共用／By Game 區域、補牌方式、Debug 與對帳、交付檢查。 |
 | [腳本規範.md](腳本規範.md) | 表演腳本（新手體驗、Buy Feature、Free Spin 系統）的清單結構、挑選規則、權重整合與交付檢查。 |
+| [Landbase/數學模型規範.md](Landbase/數學模型規範.md) | **Landbase 產線**：轉製遊戲的數學調性、RTP 配置（Link + Game + 新手體驗、低／高注兩級）、Link 彩金參數、系統限制（新手／低注不拉 Link、最大賠付 $10,000,000）；未覆寫者沿用 Omniplay 數學模型規範。 |
+| [提案報告規範.md](提案報告規範.md) | 遊戲提案說明簡報（.pptx）的命名、固定章節結構、頁面版式、色彩字型、內容規則與交付檢查。 |
 
 ## 開新專案必讀流程
 
@@ -28,12 +41,13 @@
 6. [模擬程式規範.md](模擬程式規範.md)：撰寫 Simulator 與產生 Config 前必讀。
 7. [Demogame規範.md](Demogame規範.md)：製作 Demogame 前必讀。
 8. [腳本規範.md](腳本規範.md)：製作表演腳本前必讀。
+9. [提案報告規範.md](提案報告規範.md)：製作提案報告（提案說明簡報）前必讀。
 
 只執行部分工作時，至少要讀完本 README 與該工作對應的文件。
 
 ## 維護規則：HTML 同步
 
-本資料夾另提供彙整版 `slot_development_specification.html`（全部規範合併、頁籤式），由 `_build_html.py` 從 md 自動產生。
+本資料夾另提供彙整版 `slot_development_specification.html`（根目錄全部規範合併、頁籤式），各產線資料夾另有自己的彙整版（如 `Landbase/landbase_specification.html`），皆由 `_build_html.py` 從 md 自動產生。
 
 - **任何一份 `.md` 更新後，必須在同一次修改中重跑產生器同步 HTML**：
 
@@ -41,7 +55,8 @@
   py _build_html.py
   ```
 
-- 不得直接手改 `slot_development_specification.html`；內容修正一律改 md 再重建。
+- 不得直接手改任何一份彙整版 HTML；內容修正一律改 md 再重建。
+- 產線資料夾內的 .md 連回根目錄規範時寫 `../檔名.md`，產生器會轉成根 HTML 的對應頁籤。
 
 ## 共通原則
 

@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candy Rush 2 — Demo Game</title>
+  <style id="tc2-by-game">
+    /* By Game 樣式（規範 4.2.1）：標題、Feature Status、盤面、動畫、盤面訊息。共用區樣式由 demogame_common.css 提供。 */
+    body.tc2,
+    body.tc2 * { box-sizing: border-box; }
+    body.tc2 { --cell-size: 52px; }
+
+    body.tc2 #feature-bar {
+      display: flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+    }
+    body.tc2 #game-title { color: #5a88aa; font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+    body.tc2 #gameName { color: #b0d4f0; }
+
+    body.slot-simulator.tc2 #strip-bar { height: 52px; margin-top: 10px; overflow: hidden; }
+    body.tc2 .feature-strip {
+      min-width: max-content;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+    body.tc2 #modeText { color: #5a88aa; font-size: 12px; }
+    body.tc2 .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #0c2240;
+    }
+    body.tc2 .feature-pill .k,
+    body.tc2 .feature-pill .v { font-size: 13px; font-weight: 700; }
+    body.tc2 .feature-pill .k { color: #5a88aa; }
+    body.tc2 .feature-pill .v { color: #b0d4f0; }
+    body.tc2 #cascadePill .v { color: #ff5f8a; }
+    body.tc2 #sumPill .v { color: #ffd75e; }
+    body.tc2 #fgLeftPill .v { color: #00ddc0; }
+    body.tc2 .feature-pill.hidden { display: none; }
+    body.tc2 #sumPill.pulse { animation: tc2-sum-pulse 320ms ease; }
+    @keyframes tc2-sum-pulse {
+      50% { transform: scale(1.1); filter: brightness(1.6); }
+    }
+
+    body.slot-simulator.tc2 #grid-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+    }
+    body.tc2 .board-shell { width: 100%; position: relative; }
+    body.tc2 .board-grid {
+      display: grid;
+      grid-template-columns: repeat(7, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    body.tc2 .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(38, 92, 137, 0.28);
+      border-radius: 8px;
+      background: #060d1a;
+      overflow: hidden;
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+    body.tc2 .cell.empty .sym-code-label { visibility: hidden; }
+    body.tc2 .sym-code-label {
+      font: 400 14px "Segoe UI", system-ui, sans-serif;
+      color: #e8f4ff;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    }
+    body.tc2 .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    body.tc2 .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    body.tc2 .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    body.tc2 .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    body.tc2 .cell.symbol-a  { border-color: rgba(120, 200, 140, 0.5); background: rgba(20, 62, 40, 0.3); }
+    body.tc2 .cell.symbol-k  { border-color: rgba(38, 92, 137, 0.45); background: #071527; }
+    body.tc2 .cell.symbol-q  { border-color: rgba(150, 150, 170, 0.35); background: #0b0f1e; }
+    body.tc2 .cell.symbol-c1 {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+
+    /* 同符號連帶消除（不計分） */
+    body.tc2 #board .cell.tc-chain {
+      border-color: #9fe8ff !important;
+      box-shadow: 0 0 14px rgba(120, 220, 255, 0.75);
+      filter: brightness(1.25);
+      z-index: 4;
+    }
+
+    /* 位置倍數層：固定在盤面格位上，符號掉落時不跟著移動 */
+    body.tc2 .mult-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+    body.tc2 .mult-slot {
+      position: relative;
+      width: var(--cell-size);
+      height: var(--cell-size);
+    }
+    body.tc2 .mult-badge {
+      position: absolute;
+      right: 5px;
+      bottom: 5px;
+      z-index: 3;
+      min-width: 22px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #021710;
+      background: linear-gradient(180deg, #ffd86a, #ff9a3a);
+      box-shadow: 0 0 8px rgba(255, 208, 90, 0.5);
+      font-size: 10px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    /* Extra Bet 倍數底板 */
+    body.tc2 .mult-badge.plate {
+      min-width: 30px;
+      color: #fff;
+      background: linear-gradient(180deg, #ff6fd9, #b23cff);
+      box-shadow: 0 0 12px rgba(255, 111, 217, 0.85);
+      font-size: 11px;
+    }
+
+    /* 倍數收集 token */
+    body.tc2 .tc-plus-token {
+      position: absolute;
+      z-index: 65;
+      padding: 1px 6px;
+      border-radius: 6px;
+      color: #021710;
+      background: linear-gradient(180deg, #ffd86a, #ff9a3a);
+      box-shadow: 0 0 10px rgba(255, 208, 90, 0.85);
+      font: 900 12px Consolas, monospace;
+      pointer-events: none;
+      transition: transform var(--fly, 520ms) cubic-bezier(0.3, 0.75, 0.45, 1), opacity var(--fly, 520ms) ease;
+    }
+
+    /* 掉落補牌：既有符號 Settle 與新符號 Drop 分開（規範 4.3） */
+    body.tc2 .cell.tc-settle,
+    body.tc2 .cell.tc-drop-new {
+      animation: tc2-drop var(--drop-dur, 320ms) cubic-bezier(0.3, 0.8, 0.4, 1.04) var(--drop-delay, 0ms) both;
+      will-change: transform;
+    }
+    body.tc2 .cell.tc-drop-new .sym-code-label {
+      animation: tc2-refill var(--drop-dur, 320ms) ease var(--drop-delay, 0ms) both;
+    }
+    @keyframes tc2-drop {
+      from { transform: translateY(var(--dy-start, -110%)); }
+      to { transform: translateY(0); }
+    }
+    @keyframes tc2-refill {
+      0% { filter: brightness(2.2); }
+      100% { filter: brightness(1); }
+    }
+
+    body.tc2 .message-bar {
+      width: 100%;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #5a88aa;
+      background: #0c2240;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    body.tc2 .message-bar.error { color: #ff8aa5; }
+
+    @media (max-width: 760px) {
+      body.tc2 { --cell-size: min(52px, calc((100vw - 72px) / 7)); }
+    }
+  </style>
+  <link rel="stylesheet" href="../../demogame_common.css?v=4">
+</head>
+
+<body class="tc2">
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId"></span> <span id="gameName">Candy Rush 2</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip">
+        <span id="modeText">Base Game</span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v" id="cascadeValue">0</span></span>
+        <span class="feature-pill" id="sumPill"><span class="k">全盤倍數和</span><span class="v" id="sumValue">0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v" id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="board-grid" id="board"></div>
+          <div class="board-grid mult-layer" id="multLayer" aria-hidden="true"></div>
+          <div id="fxLayer" class="slot-fx-layer"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="rngInput">
+            RNG Seed
+            <input id="rngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="0 ~ 4294967295（只作用下一個 Spin）">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
+      <h3 class="diagnostic-header">Reel RNG</h3>
+      <div class="rng-list" id="rngList"></div>
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader">Cluster Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+        <div class="change-log-entry">
+          <div class="cl-date">2026-10-02 — v0.3.1.0 Extra Bet 費用定為 10 倍＋共用檔路徑修正</div>
+          <ul>
+            <li>目的：Extra Bet 費用定案為 10 倍押注；資料夾搬移後共用檔載不到。</li>
+            <li>變更：config.js <code>extrabet</code> 1.25 → 10、版本 0.3.0.0 → 0.3.1.0（config 載入參數同步）；Help 的 EXTRA BET 說明改為押注 10 倍。底板個數與倍數權重不變。</li>
+            <li>共用檔路徑由 <code>../../../</code> 改為 <code>../../</code>（遊戲發想資料夾已移到 Slots/遊戲發想/，原路徑載不到 demogame_common.css／.js，Debug、Bet Mode 與 Image 開關失效）。</li>
+            <li>驗證：Extra Bet 按鈕顯示「Extra Bet (10x)」；Console 無例外。</li>
+            <li>數值影響（demo 假權重，各 5 萬局）：Normal Bet RTP 401.2%（BG 329.1%、FG 1/198）；Extra Bet RTP 723.3%（BG 717.8%、FG 1/206、最大全盤和 2,550）——底板期望約 69 倍押注／把，10 倍費用仍偏低，底板權重待調。</li>
+          </ul>
+        </div>
+        <div class="change-log-entry">
+          <div class="cl-date">2026-10-02 — v0.3.0.0 Debug 對齊規範＋Extra Bet</div>
+          <ul>
+            <li>目的：Debug 與共用區依 Demogame規範 4.2.2／4.5 對齊標準結構（以 H027 為範本）；新增 Extra Bet。</li>
+            <li>Debug：新增逐幀 Previous／Next（Initial → 每段 Cascade 中獎／掉落 → Final）；新增 Set RNG 面板（RNG Seed，只作用下一個 Spin，格式錯誤明確報錯）；每局使用可指定種子的 RNG 並在 Reel RNG 顯示 seed，輸入同一 seed 可完整重現該局；Reel RNG 補上 Config、Version、Card System、Scene、Bet Mode／價格、Base Bet／實際押注、Table、Drop Mode、Extra Bet 底板等資訊；Log 分類著色。</li>
+            <li>共用區：Play／Bet Mode／Stats／Set RNG／Reel RNG／Spin Result／Log／Setting 改用標準 ID 與 class，樣式交由 demogame_common.css（頁面只保留 By Game 樣式，以 body.tc2 限定）；控制改走 slotBindCommonControls（含 Bet 選單、Space 鍵 Spin）；Config 由共用模組組成 DRAFT-Off。</li>
+            <li>Extra Bet（⏳ 數值待確認）：費用 1.25 倍；該次 BG Spin 開場時隨機 1～3 個位置出現 20／50／100／250／500／1000 倍數底板（個數各 1/3、倍數權重 50/25/12/7/4/2），為該格起始位置倍數，第一次消除即生效、之後照常 +1；FG 不帶底板。底板以粉紫徽章標示。config.js 新增 extrabet、extra_bet_plates，版本 0.2.1.0 → 0.3.0.0。</li>
+            <li>驗證：Debug 開啟後 7 個 Debug 區塊全部顯示；逐幀 6 格（Initial／Cascade 1 win／drop／Cascade 2 win／drop／Final）Previous／Next 正常；同一 seed（3996161068）重跑盤面、底板（r1c2 x50、r6c3 x50）與得分 82.40 完全一致，輸入值用後自動清除，格式錯誤顯示「RNG Seed 需為 0 ~ 4294967295 的整數」；Extra Bet 實扣 1.25，第一次消除即乘底板（A×6 賠率 0.4 × 全盤和 100 = 40.00）；Console 無例外。</li>
+            <li>數值影響（demo 假權重，各 2 萬局）：Normal Bet RTP 379.4%（BG 312.6%、Hit 41.2%、FG 1/200）；Extra Bet RTP 5,761.9%（BG 5,701.7%、最大全盤和 2,055、最大贏分 28,915x 費用）——底板平均 2 塊、每塊期望約 92 倍，費用 1.25 倍遠低於其價值，需重新定價或降低底板權重。</li>
+          </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-10-02 — 位置倍數固定在格位</div>
+        <ul>
+        <li>目的：位置倍數屬於格位而非符號，消除補牌時不應跟著符號往下掉。</li>
+        <li>變更：倍數徽章從符號格內移到獨立的固定層 <code>#multLayer</code>（與盤面同格線、疊在符號上方）；符號掉落時倍數留在原格，補牌後原地更新數值；倍數收集動畫的起點改用固定層格位。</li>
+        <li>驗證：固定層 49 格與符號格位置誤差 0px；掉落動畫進行中（41 格移動）徽章位置不變；Console 無例外。</li>
+        <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-10-02 — v0.2.1.0 連帶消除的格子不加倍數</div>
+        <ul>
+        <li>目的：確認規則——連帶消除的同符號格子不累加位置倍數。</li>
+        <li>變更：runSpin 只對 Cluster 本身的格子 +1，連帶消除格（chainSet）不 +1；config.js 版本 0.2.0.0 → 0.2.1.0；game_rule.md §3.3／§5.4／§7／§9 同步並移除對應待確認項。</li>
+        <li>驗證：單段連消局核對消 14 格（連帶 8）後最終全盤和＝6＝Cluster 格數，連帶格未加倍數。</li>
+        <li>數值影響（demo 假權重，2 萬局）：總 RTP 892.5% → 371.2%（BG 703.2% → 302.4%、FG 189.3% → 68.8%）、Hit 41.4%、FG 1/196、最大全盤和 492 → 159、最大贏分 8,463x → 1,323x。權重仍需重新調整。</li>
+        </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-10-02 — v0.2.0.0 同符號連帶消除與多組計分</div>
+        <ul>
+        <li>目的：加入三條規則——不論在哪消除得分一律乘全盤倍數加總；N 連 Cluster 成立時盤面所有同符號一併消除、只以 N 連計分；同段同符號多組 Cluster 每組都計分。</li>
+        <li>變更：config.js 新增 <code>same_symbol_clear: true</code>、英文名改 Candy Rush 2、版本 0.1.0.0 → 0.2.0.0（config 載入加版本參數）；runSpin 加入連帶消除（chainSet，不計分、位置倍數同樣 +1）；動畫中連帶消除格以藍光標示、訊息列與 Spin Result 顯示連帶格數；game_rule.md（原 game_rule_Turbo_Candy_2.md 改名，供 Omniplay 讀取）新增 §5.4 與對應流程／邊界條件；Help 同步。</li>
+        <li>驗證：17 段實際連消逐段核對「消除格數＝盤面該符號總數、計分只算 Cluster」全數通過；以人工盤面測試兩組 A 五連各自計分、3 顆零散 A 連帶消除不計分，得分＝2×0.3×全盤和，正確。</li>
+        <li>數值影響（demo 假權重，2 萬局）：總 RTP 73.4% → 892.5%（BG 約 60% → 703.2%、FG 189.3%）、Hit 42.0% → 41.7%、FG 1/282 → 1/174、最大全盤和 82 → 492、最大贏分 194x → 8,463x。對照（BG 3 萬局）：連帶格不 +1 時 BG RTP 312.1%。權重需重新調整。</li>
+        </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-09-24 — 倍數收集目標調整＋代號不粗體</div>
+        <ul>
+        <li>目的：倍數收集改飛向上方 Feature Status 的「全盤倍數和」；套用共用符號顯示規則。</li>
+        <li>變更：刪除盤面上方的大型全盤倍數和橫幅，收集 token 改飛向 #sumPill 並於抵達後重新加總；符號代號改一般字重（本作無符號美術，不顯示 Image 開關，維持框＋代號）；共用 CSS v=4。</li>
+        <li>驗證：收集動畫凍結截圖確認飛行目標；代號字重 400；Console 無例外。</li>
+        <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-09-24 — 規範補齊</div>
+        <ul>
+        <li>目的：使發想 demo 符合 Demogame規範（4.1／4.3／4.4／4.5／4.7）。</li>
+        <li>變更：抽出 config.js（盤面、賠率、權重、FG、Bet Mode 全由 Config 取得，載入失敗顯示錯誤）；新增 Debug Mode、Force FG（僅作用下一個 Spin）、Reel RNG（weighted draw）、Spin Result 盤面快照、Log、修改紀錄；補牌動畫區分既有符號 Settle 與新符號 Drop／Refill；新增 Help（內容與 game_help_draft.md 一致）。</li>
+        <li>驗證：離線開啟無 Console 例外；Spin／Auto／Buy／FG／Retrigger 流程完整；Debug 快照可重現每段 Cascade 盤面與得分。</li>
+        <li>未修改 XLSX／Config 數學參數（發想假值維持不變）。</li>
+        </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-09-24 — 動畫（滾動／倍數收集／重新加總）</div>
+        <ul>
+        <li>目的：比照賞金列車 2 的輪帶滾動；實作位置倍數收集演出。</li>
+        <li>變更：Spin 起始逐欄模糊滾動、左到右停輪；每段消除補牌後，盤面所有位置倍數以 ×N token 飛向「全盤倍數和」pill，從 0 跳動重新加總；共用 slotFx 效果（中獎爆閃、壓暗、金幣、中央大字、總贏分橫幅）。</li>
+        <li>驗證：凍結截圖確認滾動與收集動畫；動畫僅演出，不影響 RNG 與得分。</li>
+        <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+        </div>
+        <div class="change-log-entry">
+        <div class="cl-date">2026-09-24 — 初版建置</div>
+        <ul>
+        <li>目的：急速糖果 2 發想 demo（規則基底 H022 糖果轟炸 1000）。</li>
+        <li>變更：7×7 Cluster Pay（相連 ≥5）、位置倍數每次消除 +1（線性）、計分乘全盤倍數和、FG 3~7 顆 C1 → 10/12/15/20/30 局且倍數整場保留、移除 Mega 符號。</li>
+        <li>驗證：批次模擬 4,000 局 RTP 100.6%、Hit 41.7%、FG 1/160（demo 假權重）。</li>
+        <li>未修改 XLSX／Config 數學參數（發想假值）。</li>
+        </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect"></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span>Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading game rules...</div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="./config.js?v=0.3.1.0"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+
+      // ── Config 載入檢查（規範 4.1：缺欄位需明確報錯，不得靜默用舊值）────────
+      const REQUIRED_FIELDS = [
+        "game_id", "display_name", "game_name_zh", "game_type", "excel_version", "config_code", "profile",
+        "board_size", "min_cluster", "refill_mode", "symbol_codes", "scatter_index", "pay_table",
+        "symbol_weights_init", "symbol_weights_drop", "scatter_chance_init", "scatter_chance_drop",
+        "extra_bet_plates", "position_multiplier", "same_symbol_clear", "fg_awards", "fg_cap",
+        "supported_bet_modes", "extrabet", "featurebuy", "bet_options", "initial_balance"
+      ];
+      const CFG = typeof data !== "undefined" ? data : null;
+      const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
+      if (!CFG || missing.length) {
+        const bar = $("messageBar");
+        bar.textContent = !CFG ? "Config load failed: ./config.js" : `Config missing fields: ${missing.join(", ")}`;
+        bar.classList.add("error");
+        throw new Error(bar.textContent);
+      }
+
+      // ── 由 Config 取得的遊戲參數 ───────────────────────────────────────────
+      const SIZE = CFG.board_size;
+      const MIN_CLUSTER = CFG.min_cluster;
+      const BET_LEVELS = CFG.bet_options;
+      const BUY_MULT = CFG.featurebuy;
+      const EXTRA_MULT = CFG.extrabet;
+      const FG_AWARD = Object.fromEntries(Object.entries(CFG.fg_awards).map(([k, v]) => [Number(k), v]));
+      const FG_MAXKEY = Math.max(...Object.keys(FG_AWARD).map(Number));
+      const FG_CAP = CFG.fg_cap;
+      const SYM_CODE = CFG.symbol_codes;
+      const SC = CFG.scatter_index;
+      const SYM_CLASS = SYM_CODE.map((c) => `symbol-${c.toLowerCase()}`);
+      const PAY = CFG.pay_table;
+      const W_INIT = CFG.symbol_weights_init;
+      const W_DROP = CFG.symbol_weights_drop;
+      const SC_CHANCE_INIT = CFG.scatter_chance_init;
+      const PLATES = CFG.extra_bet_plates;
+      const SC_CHANCE_DROP = CFG.scatter_chance_drop;
+      const MULT_STEP = CFG.position_multiplier.step;
+      const SAME_SYMBOL_CLEAR = CFG.same_symbol_clear === true;
+      const MODE_NORMAL = "normal", MODE_EXTRA = "extra", MODE_BUY = "buy";
+
+      const fgAward = (n) => FG_AWARD[Math.min(n, FG_MAXKEY)] || 0;
+
+      // ── 狀態 ──────────────────────────────────────────────────────────────
+      const st = {
+        balance: CFG.initial_balance, betIndex: 0, mode: MODE_NORMAL, busy: false, auto: false, autoTimer: null,
+        rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, normalRounds: 0, naturalFg: 0, maxSum: 0,
+        fg: { remaining: 0, total: 0, played: 0, mult: null, mode: MODE_NORMAL },
+        lastWin: 0, frames: [], frameIndex: -1, lastSpin: null,
+      };
+      const bet = () => BET_LEVELS[st.betIndex];
+      // 實際模式押注（規範 4.4：Bet 顯示與扣款使用實際模式成本；派彩以原始押注計算）
+      const modeCost = (mode = st.mode) => bet() * (mode === MODE_EXTRA ? EXTRA_MULT : mode === MODE_BUY ? BUY_MULT : 1);
+
+      // ── 可指定種子的 RNG：每個 Spin 一個 seed，同 seed 可完整重現該局（規範 4.5）─
+      let rngState = 0;
+      function rand() {
+        rngState = (rngState + 0x6D2B79F5) >>> 0;
+        let t = rngState;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+      const freshSeed = () => Math.floor(Math.random() * 4294967296) >>> 0;
+
+      const rngW = (w) => {
+        const total = w.reduce((a, b) => a + b, 0);
+        let r = rand() * total;
+        for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return i; }
+        return w.length - 1;
+      };
+      const clone2 = (g) => g.map((row) => row.slice());
+      const fmt = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const speed = () => Number($("speedRange").value || 1);
+      const wait = (ms) => new Promise((r) => setTimeout(r, Math.max(30, ms / speed())));
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const sumOf = (grid) => grid.reduce((a, row) => a + row.reduce((b, v) => b + v, 0), 0);
+      const sumPill = $("sumPill");
+      const sumValueEl = $("sumValue");
+      function setSum(v) { sumValueEl.textContent = v; }
+
+      // ── 盤面生成：逐格加權抽取（無 reel stop）；同一輪最多 1 顆 C1 ─────────
+      function randomBoard(scChance, forceScatters = 0) {
+        const board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+        const scCols = new Set();
+        for (let c = 0; c < SIZE; c++) {
+          const hasSc = rand() < scChance;
+          const scRow = hasSc ? Math.floor(rand() * SIZE) : -1;
+          if (hasSc) scCols.add(c);
+          for (let r = 0; r < SIZE; r++) board[r][c] = r === scRow ? SC : rngW(W_INIT);
+        }
+        while (scCols.size < forceScatters) {
+          const c = Math.floor(rand() * SIZE);
+          if (scCols.has(c)) continue;
+          board[Math.floor(rand() * SIZE)][c] = SC;
+          scCols.add(c);
+        }
+        return board;
+      }
+
+      // ── Cluster 判定（BFS 上下左右，≥ min_cluster）────────────────────────
+      function findClusters(board) {
+        const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+        const clusters = [];
+        const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+        for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+          if (visited[r][c] || board[r][c] === SC || board[r][c] < 0) continue;
+          const sym = board[r][c];
+          const queue = [[r, c]];
+          const cells = [];
+          visited[r][c] = true;
+          while (queue.length) {
+            const [cr, cc] = queue.pop();
+            cells.push([cr, cc]);
+            for (const [dr, dc] of dirs) {
+              const nr = cr + dr, nc = cc + dc;
+              if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && !visited[nr][nc] && board[nr][nc] === sym) {
+                visited[nr][nc] = true;
+                queue.push([nr, nc]);
+              }
+            }
+          }
+          if (cells.length >= MIN_CLUSTER) clusters.push({ sym, cells });
+        }
+        return clusters;
+      }
+
+      // ── 掉落補牌（規範 4.3 第 2 類）：C1 不消除、隨重力下移 ────────────────
+      function cascade(board, removeSet) {
+        for (const key of removeSet) board[Math.floor(key / SIZE)][key % SIZE] = -1;
+        for (let c = 0; c < SIZE; c++) {
+          const col = [];
+          for (let r = SIZE - 1; r >= 0; r--) if (board[r][c] !== -1) col.push(board[r][c]);
+          let hasSc = col.includes(SC);
+          for (let r = SIZE - 1; r >= 0; r--) {
+            if (col.length) board[r][c] = col.shift();
+            else {
+              let sym = rngW(W_DROP);
+              if (!hasSc && SC_CHANCE_DROP > 0 && rand() < SC_CHANCE_DROP) { sym = SC; hasSc = true; }
+              board[r][c] = sym;
+            }
+          }
+        }
+      }
+
+      // ── runSpin：一次 Spin 的完整計算 ───────────────────────────────────────
+      // multGrid：位置倍數（BG 每把歸零；FG 跨局保留）；opts.extraPlates／forceScatters／seed
+      function runSpin(multGrid, opts = {}) {
+        const seed = opts.seed ?? freshSeed();
+        rngState = seed >>> 0;
+        const scChance = SC_CHANCE_INIT;
+        const forceScatters = opts.forceScatters || 0;
+        const board = randomBoard(scChance, forceScatters);
+        // Extra Bet：開場隨機 1～3 個位置出現倍數底板（該格起始位置倍數，第一次消除即生效）
+        const plates = [];
+        if (opts.extraPlates) {
+          const count = PLATES.count_values[rngW(PLATES.count_weights)];
+          const used = new Set();
+          while (plates.length < count) {
+            const key = Math.floor(rand() * SIZE * SIZE);
+            if (used.has(key)) continue;
+            used.add(key);
+            const value = PLATES.values[rngW(PLATES.value_weights)];
+            multGrid[Math.floor(key / SIZE)][key % SIZE] += value;
+            plates.push({ key, value });
+          }
+        }
+        const initialBoard = clone2(board);
+        const initialMult = clone2(multGrid);
+        const steps = [];
+        let total = 0, cascadeCount = 0;
+
+        let clusters = findClusters(board);
+        while (clusters.length) {
+          const boardSum = sumOf(multGrid);
+          const effSum = boardSum > 0 ? boardSum : 1;
+
+          // 每個 Cluster 各自計分（同符號多組 Cluster 同段成立時，每組都算分）
+          const removeSet = new Set();
+          const wins = [];
+          let stepPay = 0;
+          for (const cl of clusters) {
+            const pay = PAY[cl.sym][Math.min(cl.cells.length - MIN_CLUSTER, PAY[cl.sym].length - 1)] * bet() * effSum;
+            stepPay += pay;
+            wins.push({ sym: cl.sym, size: cl.cells.length, pay });
+            for (const [r, c] of cl.cells) removeSet.add(r * SIZE + c);
+          }
+          total += stepPay;
+
+          // 同符號連帶消除：盤面上與中獎 Cluster 同符號的其餘格子一併消除，不計分
+          const chainSet = new Set();
+          if (SAME_SYMBOL_CLEAR) {
+            const winSyms = new Set(clusters.map((cl) => cl.sym));
+            for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+              const key = r * SIZE + c;
+              if (winSyms.has(board[r][c]) && !removeSet.has(key)) chainSet.add(key);
+            }
+            chainSet.forEach((key) => removeSet.add(key));
+          }
+
+          steps.push({
+            cascadeIdx: cascadeCount + 1,
+            boardBefore: clone2(board),
+            multBefore: clone2(multGrid),
+            removeSet, chainSet, wins, boardSum, effSum, pay: stepPay,
+            boardAfter: null, multAfter: null,
+          });
+
+          // 位置倍數只累加 Cluster 本身的格子；連帶消除的格子不 +1
+          for (const key of removeSet) if (!chainSet.has(key)) multGrid[Math.floor(key / SIZE)][key % SIZE] += MULT_STEP;
+          cascade(board, removeSet);
+          steps.at(-1).boardAfter = clone2(board);
+          steps.at(-1).multAfter = clone2(multGrid);
+          cascadeCount++;
+          clusters = findClusters(board);
+        }
+
+        let scatterCount = 0;
+        board.flat().forEach((s) => { if (s === SC) scatterCount++; });
+
+        return {
+          seed, scChance, forceScatters, plates, initialBoard, initialMult,
+          board: clone2(board), mult: clone2(multGrid), steps, total, cascadeCount, scatterCount, finalSum: sumOf(multGrid),
+        };
+      }
+
+      // ── Render ───────────────────────────────────────────────────────────
+      const boardEl = $("board");
+      const fxLayer = $("fxLayer");
+      const multLayerEl = $("multLayer");
+      let plateKeys = new Set();   // 本局 Extra Bet 底板位置（徽章樣式用）
+
+      function renderBoard(board, multGrid) {
+        boardEl.innerHTML = "";
+        for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+          const cell = document.createElement("div");
+          const sym = board[r][c];
+          cell.className = `cell ${sym >= 0 ? SYM_CLASS[sym] : "empty"}`;
+          const label = document.createElement("span");
+          label.className = "sym-code-label code";
+          label.textContent = sym >= 0 ? SYM_CODE[sym] : "";
+          cell.appendChild(label);
+          boardEl.appendChild(cell);
+        }
+        renderMultLayer(multGrid);
+      }
+
+      // 位置倍數畫在獨立的固定層：倍數屬於格位，不屬於符號，掉落補牌時留在原位
+      function renderMultLayer(multGrid) {
+        if (multLayerEl.children.length !== SIZE * SIZE) {
+          multLayerEl.innerHTML = "";
+          for (let i = 0; i < SIZE * SIZE; i++) {
+            const slot = document.createElement("div");
+            slot.className = "mult-slot";
+            multLayerEl.appendChild(slot);
+          }
+        }
+        for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+          const slot = multLayerEl.children[r * SIZE + c];
+          const m = multGrid[r][c];
+          const text = m > 0 ? `x${m}` : "";
+          const plate = plateKeys.has(r * SIZE + c);
+          if (slot.textContent === text && Boolean(slot.querySelector(".plate")) === plate) continue;
+          slot.innerHTML = m > 0 ? `<span class="mult-badge${plate ? " plate" : ""}">${text}</span>` : "";
+        }
+      }
+
+      const cellEl = (r, c) => boardEl.children[r * SIZE + c];
+
+      // 中獎 Cluster 金光、連帶消除的同符號藍光、其餘壓暗
+      function fxMark(board, removeSet = null, chainSet = null) {
+        const winCells = [], dimCells = [];
+        for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+          const cell = cellEl(r, c);
+          const key = r * SIZE + c;
+          if (board[r][c] === SC) window.slotFx?.mark(cell, "fx-scatter");
+          if (!removeSet) continue;
+          if (chainSet?.has(key)) cell.classList.add("tc-chain");
+          else (removeSet.has(key) ? winCells : dimCells).push(cell);
+        }
+        if (removeSet) window.slotFx?.winGlow(winCells, dimCells);
+      }
+
+      // ── 輪帶滾動：逐欄模糊滾動、左到右停輪 ─────────────────────────────────
+      async function animateReels(finalBoard, finalMult) {
+        const baseFrames = Math.max(3, Math.round(9 / speed()));
+        const perReel = Math.max(1, Math.round(3 / speed()));
+        const totalFrames = baseFrames + perReel * (SIZE - 1) + 1;
+        for (let frame = 0; frame < totalFrames; frame++) {
+          const rolling = new Set();
+          const board = clone2(finalBoard);
+          for (let c = 0; c < SIZE; c++) {
+            if (frame >= baseFrames + perReel * c) continue;
+            rolling.add(c);
+            const offset = (totalFrames - frame + c) % SIZE;
+            for (let r = 0; r < SIZE; r++) board[r][c] = finalBoard[(r + offset) % SIZE][c];
+          }
+          renderBoard(board, finalMult);
+          if (!rolling.size) break;
+          const cells = [];
+          for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+            if (rolling.has(c)) cells.push(cellEl(r, c));
+          }
+          window.slotFx?.reelRoll(cells);
+          await sleep(55);
+        }
+      }
+
+      // ── 掉落補牌動畫：既有符號 Settle、新符號 Drop／Refill 分開 ─────────────
+      function applyDropAnim(removeSet) {
+        const dur = Math.max(140, 320 / speed());
+        const removedByCol = Array.from({ length: SIZE }, () => new Set());
+        removeSet.forEach((key) => removedByCol[key % SIZE].add(Math.floor(key / SIZE)));
+        let maxTime = 0;
+        for (let c = 0; c < SIZE; c++) {
+          const removed = removedByCol[c];
+          if (!removed.size) continue;
+          const n = removed.size;
+          const shifts = Array(SIZE).fill(0);
+          let newRow = SIZE - 1;
+          for (let oldRow = SIZE - 1; oldRow >= 0; oldRow--) {
+            if (removed.has(oldRow)) continue;
+            shifts[newRow] = newRow - oldRow;
+            newRow--;
+          }
+          for (let r = newRow; r >= 0; r--) shifts[r] = -n;   // 負值標記新補牌
+          for (let r = 0; r < SIZE; r++) {
+            if (shifts[r] === 0) continue;
+            const isNew = shifts[r] < 0;
+            const dist = Math.abs(shifts[r]);
+            const cell = cellEl(r, c);
+            const d = dur + dist * 24;
+            cell.style.setProperty("--dy-start", `-${dist * 104}%`);
+            cell.style.setProperty("--drop-dur", `${Math.round(d)}ms`);
+            cell.style.setProperty("--drop-delay", `${Math.round(c * 14 / speed())}ms`);
+            cell.classList.add(isNew ? "tc-drop-new" : "tc-settle");
+            if (d > maxTime) maxTime = d;
+          }
+        }
+        return maxTime + Math.round(6 * 14 / speed()) + 60;
+      }
+
+      // ── 倍數收集：盤面上所有倍數飛向全盤倍數和 pill，從 0 重新加總 ──────────
+      async function collectMultipliers(multGrid, toSum) {
+        const sources = [];
+        for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+          if (multGrid[r][c] > 0) sources.push([r, c, multGrid[r][c]]);
+        }
+        if (!sources.length) { setSum(toSum); return; }
+        const layerRect = fxLayer.getBoundingClientRect();
+        const bRect = sumValueEl.getBoundingClientRect();
+        const tx = bRect.left - layerRect.left + bRect.width / 2;
+        const ty = bRect.top - layerRect.top + bRect.height / 2;
+        const flyMs = Math.max(200, 520 / speed());
+        const stagger = Math.min(Math.max(8, 26 / speed()), 400 / sources.length);
+        let i = 0;
+        for (const [r, c, v] of sources) {
+          const rect = multLayerEl.children[r * SIZE + c].getBoundingClientRect();
+          const sx = rect.left - layerRect.left + rect.width / 2;
+          const sy = rect.top - layerRect.top + rect.height / 2;
+          const tok = document.createElement("span");
+          tok.className = "tc-plus-token";
+          tok.textContent = `x${v}`;
+          tok.style.left = `${sx - 10}px`;
+          tok.style.top = `${sy - 9}px`;
+          tok.style.setProperty("--fly", `${flyMs}ms`);
+          fxLayer.appendChild(tok);
+          const delay = i * stagger;
+          i++;
+          setTimeout(() => {
+            tok.style.transform = `translate(${tx - sx}px, ${ty - sy}px) scale(0.5)`;
+            tok.style.opacity = "0.12";
+          }, delay);
+          setTimeout(() => tok.remove(), delay + flyMs + 80);
+        }
+        await sleep(flyMs + i * stagger + 60);
+        const ticks = 10;
+        const tick = Math.max(14, 40 / speed());
+        for (let s = 1; s <= ticks; s++) {
+          setSum(Math.round(toSum * s / ticks));
+          await sleep(tick);
+        }
+        setSum(toSum);
+        sumPill.classList.remove("pulse");
+        void sumPill.offsetWidth;
+        sumPill.classList.add("pulse");
+      }
+
+      // ── Debug：Reel RNG／Spin Result／Log／逐幀 ─────────────────────────────
+      const modeLabel = (mode) => mode === MODE_EXTRA ? "Extra Bet" : mode === MODE_BUY ? "Buy Feature" : "Normal Bet";
+
+      function boardText(board) {
+        return board.map((row, r) =>
+          `${String(r + 1).padStart(2, "0")} ${row.map((s) => String(s >= 0 ? SYM_CODE[s] : "--").padStart(3, " ")).join(" ")}`
+        ).join("\n");
+      }
+
+      function renderRng(spin, scene, mode) {
+        const scCols = [];
+        for (let c = 0; c < SIZE; c++) {
+          let at = "—";
+          for (let r = 0; r < SIZE; r++) if (spin.initialBoard[r][c] === SC) at = `C1 @ 列${r + 1}`;
+          scCols.push(`<div class="rng-row"><span>R${c + 1}</span><span>${at}</span></div>`);
+        }
+        const rows = [
+          ["Config", `${CFG.config_code}-${CFG.profile}`],
+          ["Version", CFG.excel_version],
+          ["Card System", "Off（本作未實作卡片模型）"],
+          ["Scene", scene],
+          ["Bet Mode", `${modeLabel(mode)}（價格 ${mode === MODE_EXTRA ? EXTRA_MULT : mode === MODE_BUY ? BUY_MULT : 1}x）`],
+          ["Base Bet／實際押注", `${fmt(bet())}／${fmt(modeCost(mode))}`],
+          ["抽取方式", "weighted draw（逐格加權，無 reel stop）"],
+          ["Table", `symbol_weights_init／symbol_weights_drop`],
+          ["Drop Mode", CFG.refill_mode],
+          ["C1 機率／輪", spin.scChance],
+          ["Extra Bet 底板", spin.plates.length ? spin.plates.map((p) => `r${Math.floor(p.key / SIZE) + 1}c${p.key % SIZE + 1} x${p.value}`).join("、") : "無"],
+          ["RNG Seed", `${spin.seed}（輸入此值於 Set RNG 可重現本局${scene === "FG" ? "；FG 需相同的起始倍數" : ""}）`],
+          ["Force FG", spin.forceScatters ? "是（本 Spin 強制 ≥3 C1）" : "否"],
+          ["起始全盤倍數和", sumOf(spin.initialMult)],
+        ];
+        $("rngList").innerHTML = rows.map(([k, v]) => `<div class="rng-row"><span>${k}</span><span>${v}</span></div>`).join("") + scCols.join("");
+      }
+
+      function renderSpinResult(spin) {
+        const winRows = spin.steps.flatMap((s) => s.wins.map((w) =>
+          `<div class="line-row"><span>C${s.cascadeIdx} ${SYM_CODE[w.sym]} × ${w.size}</span><span>x${s.effSum} → ${fmt(w.pay)}</span></div>`));
+        $("lineList").innerHTML = winRows.length ? winRows.join("") : `<div class="line-row"><span>No win</span><span>0.00</span></div>`;
+        const stages = [{ label: "Initial", board: spin.initialBoard, meta: `起始全盤和 ${sumOf(spin.initialMult)}` }];
+        spin.steps.forEach((s) => stages.push({
+          label: `Cascade ${s.cascadeIdx}`,
+          board: s.boardAfter,
+          meta: `全盤和 x${s.effSum} · +${fmt(s.pay)} · 消 ${s.removeSet.size} 格（連帶 ${s.chainSet.size}）`
+        }));
+        stages.push({ label: "Final", board: spin.board, meta: `Total ${fmt(spin.total)} · C1 × ${spin.scatterCount} · 全盤和 ${spin.finalSum}` });
+        $("spinResultList").innerHTML = stages.map((s) => `
+          <div class="spin-result-row">
+            <div class="spin-result-head"><strong>${s.label}</strong><span>${s.meta}</span></div>
+            <pre class="spin-result-board">${boardText(s.board)}</pre>
+          </div>`).join("");
+      }
+
+      function addLog(message, kind = "") {
+        const line = document.createElement("div");
+        line.className = `live-log-line ${kind}`.trim();
+        line.textContent = `${new Date().toLocaleTimeString()}  ${message}`;
+        $("liveLogBody").prepend(line);
+        while ($("liveLogBody").children.length > 120) $("liveLogBody").lastChild.remove();
+      }
+
+      // 逐幀：Initial → 每段 Cascade（中獎／掉落）→ Final，可用 Previous／Next 回看
+      function captureFrames(spin) {
+        const spinPlates = new Set(spin.plates.map((p) => p.key));
+        const frames = [{ label: "Initial", board: spin.initialBoard, mult: spin.initialMult, cascade: 0, info: `起始全盤和 ${sumOf(spin.initialMult)}${spin.plates.length ? `（Extra Bet 底板 ${spin.plates.map((p) => `x${p.value}`).join("、")}）` : ""}` }];
+        spin.steps.forEach((s) => {
+          frames.push({
+            label: `Cascade ${s.cascadeIdx} win`, board: s.boardBefore, mult: s.multBefore, cascade: s.cascadeIdx,
+            removeSet: s.removeSet, chainSet: s.chainSet,
+            info: `${s.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${s.chainSet.size ? ` · 連帶 ${s.chainSet.size} 格` : ""} · 全盤和 x${s.effSum} · +${fmt(s.pay)}`,
+          });
+          frames.push({ label: `Cascade ${s.cascadeIdx} drop`, board: s.boardAfter, mult: s.multAfter, cascade: s.cascadeIdx, info: `補牌後全盤和 ${sumOf(s.multAfter)}` });
+        });
+        frames.push({ label: "Final", board: spin.board, mult: spin.mult, cascade: spin.cascadeCount, info: `Total ${fmt(spin.total)} · C1 × ${spin.scatterCount}` });
+        frames.forEach((f) => { f.plates = spinPlates; });
+        st.frames = frames;
+        st.frameIndex = frames.length - 1;
+        updateStepButtons();
+      }
+
+      function showFrame(index) {
+        if (!st.frames.length || st.busy) return;
+        st.frameIndex = Math.max(0, Math.min(index, st.frames.length - 1));
+        const f = st.frames[st.frameIndex];
+        plateKeys = f.plates || new Set();
+        renderBoard(f.board, f.mult);
+        fxMark(f.board, f.removeSet || null, f.chainSet || null);
+        $("cascadeValue").textContent = f.cascade;
+        setSum(sumOf(f.mult));
+        $("messageBar").textContent = `${f.label} | Step ${st.frameIndex + 1}/${st.frames.length} | ${f.info}`;
+        updateStepButtons();
+      }
+
+      function updateStepButtons() {
+        const enabled = $("debugModeInput").checked && !st.busy && st.frames.length > 0;
+        $("previousStepBtn").disabled = !enabled || st.frameIndex <= 0;
+        $("nextStepBtn").disabled = !enabled || st.frameIndex >= st.frames.length - 1;
+      }
+
+      // ── UI 更新 ──────────────────────────────────────────────────────────
+      function updateStats() {
+        $("balanceValue").textContent = fmt(st.balance);
+        $("betValue").textContent = fmt(modeCost(st.fg.remaining ? st.fg.mode : st.mode === MODE_BUY ? MODE_NORMAL : st.mode));
+        $("betBtn").textContent = `Bet ${fmt(bet())}`;
+        $("winValue").textContent = fmt(st.lastWin);
+        $("roundCountValue").textContent = st.rounds;
+        $("rtpValue").textContent = st.totalBet ? `${(st.totalWin / st.totalBet * 100).toFixed(2)}%` : "0.00%";
+        $("hitRateValue").textContent = st.rounds ? `${(st.hitRounds / st.rounds * 100).toFixed(2)}%` : "0.00%";
+        $("fgTriggerValue").textContent = st.normalRounds ? `${(st.naturalFg / st.normalRounds * 100).toFixed(3)}% (${st.naturalFg})` : "0.000% (0)";
+        $("maxMultiplierValue").textContent = `x${st.maxSum}`;
+        $("fgLeftPill").classList.toggle("hidden", st.fg.remaining <= 0);
+        $("fgLeftValue").textContent = `${st.fg.remaining}/${st.fg.total}`;
+        $("modeText").textContent = st.fg.remaining ? "Free Game" : "Base Game";
+        $("spinBtn").textContent = st.fg.remaining ? "Next FG" : "Spin";
+        document.body.classList.toggle("fg-mode", st.fg.remaining > 0);
+      }
+
+      function updateControls() {
+        const inFg = st.fg.remaining > 0;
+        $("spinBtn").disabled = st.busy;
+        $("autoBtn").textContent = st.auto ? "Stop" : "Auto";
+        $("buyFeatureBtn").disabled = st.busy || inFg;
+        $("normalBetBtn").disabled = st.busy || inFg;
+        $("extraBetBtn").disabled = st.busy || inFg;
+        $("normalBetBtn").classList.toggle("is-active", st.mode === MODE_NORMAL);
+        $("extraBetBtn").classList.toggle("is-active", st.mode === MODE_EXTRA);
+        $("normalBetBtn").setAttribute("aria-pressed", String(st.mode === MODE_NORMAL));
+        $("extraBetBtn").setAttribute("aria-pressed", String(st.mode === MODE_EXTRA));
+        $("betMinusBtn").disabled = st.busy || inFg || st.betIndex === 0;
+        $("betPlusBtn").disabled = st.busy || inFg || st.betIndex === BET_LEVELS.length - 1;
+        $("betBtn").disabled = st.busy || inFg;
+        updateStepButtons();
+      }
+
+      function buildBetMenu() {
+        const menu = $("betMenu");
+        menu.innerHTML = "";
+        BET_LEVELS.forEach((value, index) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = `bet-option${index === st.betIndex ? " is-active" : ""}`;
+          option.textContent = fmt(value);
+          option.addEventListener("click", () => { setBetIndex(index); menu.classList.add("hidden"); });
+          menu.appendChild(option);
+        });
+      }
+
+      function setBetIndex(index) {
+        if (st.busy || st.fg.remaining) return;
+        st.betIndex = Math.max(0, Math.min(index, BET_LEVELS.length - 1));
+        buildBetMenu(); updateStats(); updateControls();
+      }
+
+      function selectMode(mode) {
+        if (st.busy || st.fg.remaining) return;
+        st.mode = mode;
+        addLog(`Bet Mode → ${modeLabel(mode)}（${fmt(modeCost(mode))}）`, "mode");
+        updateStats(); updateControls();
+      }
+
+      // ── 動畫播放 ──────────────────────────────────────────────────────────
+      async function playSpin(spin) {
+        plateKeys = new Set(spin.plates.map((p) => p.key));
+        renderBoard(spin.initialBoard, spin.initialMult);
+        fxMark(spin.initialBoard);
+        $("cascadeValue").textContent = "0";
+        setSum(sumOf(spin.initialMult));
+        await animateReels(spin.initialBoard, spin.initialMult);
+        await wait(200);
+
+        for (const step of spin.steps) {
+          $("cascadeValue").textContent = step.cascadeIdx;
+          renderBoard(step.boardBefore, step.multBefore);
+          fxMark(step.boardBefore, step.removeSet, step.chainSet);
+          if (step.effSum > 1) window.slotFx?.multiPop(fxLayer, `X${step.effSum}`, {});
+          window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
+          $("messageBar").textContent =
+            `Cascade ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | 連帶消除 ${step.chainSet.size} 格` : ""} | 全盤和 x${step.effSum} | +${fmt(step.pay)}`;
+          await wait(760);
+
+          const popCells = [], coinItems = [];
+          for (const key of step.removeSet) {
+            const cell = cellEl(Math.floor(key / SIZE), key % SIZE);
+            popCells.push(cell);
+            coinItems.push({ el: cell, count: 3 });
+          }
+          window.slotFx?.popCells(popCells);
+          window.slotFx?.spawnCoins(fxLayer, coinItems, 40);
+          await wait(300);
+
+          renderBoard(step.boardAfter, step.multAfter);
+          fxMark(step.boardAfter);
+          await sleep(applyDropAnim(step.removeSet));
+          await collectMultipliers(step.multAfter, sumOf(step.multAfter));
+          await wait(120);
+        }
+
+        renderBoard(spin.board, spin.mult);
+        fxMark(spin.board);
+        setSum(spin.finalSum);
+        if (spin.scatterCount >= 3) {
+          $("messageBar").textContent = `🎉 ${spin.scatterCount} Scatter → Free Game ${fgAward(spin.scatterCount)} 局!`;
+          await wait(700);
+        }
+      }
+
+      // ── Set RNG 與 Force FG：只作用於下一個 Spin（規範 4.5）────────────────
+      function consumeSeed() {
+        const raw = $("rngInput").value.trim();
+        if (!raw) return null;
+        const value = Number(raw);
+        if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value > 4294967295) {
+          throw new Error("RNG Seed 需為 0 ~ 4294967295 的整數");
+        }
+        $("rngInput").value = "";
+        return value;
+      }
+
+      function consumeForceFg() {
+        if (!$("forceFgInput").checked) return 0;
+        $("forceFgInput").checked = false;
+        return 3;
+      }
+
+      // ── 回合流程 ──────────────────────────────────────────────────────────
+      const zeroGrid = () => Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+
+      function finishSpin(spin, scene, mode) {
+        renderRng(spin, scene, mode);
+        renderSpinResult(spin);
+        captureFrames(spin);
+        st.lastSpin = spin;
+        if (spin.finalSum > st.maxSum) st.maxSum = spin.finalSum;
+      }
+
+      async function playPaid(isBuy) {
+        const mode = isBuy ? MODE_BUY : st.mode;
+        const cost = modeCost(mode);
+        if (st.balance < cost) throw new Error("餘額不足");
+        const seed = consumeSeed();
+        st.balance -= cost; st.totalBet += cost; st.rounds++;
+        if (!isBuy) st.normalRounds++;
+        updateStats();
+
+        if (isBuy) {
+          st.fg = { remaining: fgAward(3), total: fgAward(3), played: 0, mult: zeroGrid(), mode: MODE_NORMAL, pendingSeed: seed };
+          $("messageBar").textContent = "Buy Feature — 直接進入 Free Game";
+          addLog(`Buy Feature（${BUY_MULT}x）→ FG ${st.fg.total} 局`, "mode");
+          st.lastWin = 0;
+          return;
+        }
+
+        const forced = consumeForceFg();
+        const spin = runSpin(zeroGrid(), { extraPlates: mode === MODE_EXTRA, forceScatters: forced, seed: seed ?? undefined });
+        finishSpin(spin, "BG", mode);
+        st.busy = true;
+        await playSpin(spin);
+        const win = spin.total;
+        st.lastWin = win; st.totalWin += win; st.balance += win;
+        if (win > 0) st.hitRounds++;
+        addLog(`BG ${modeLabel(mode)} · seed ${spin.seed} · ${fmt(win)}${spin.cascadeCount ? ` · ${spin.cascadeCount} cascade` : ""}`, "result");
+        if (spin.scatterCount >= 3) {
+          const award = fgAward(spin.scatterCount);
+          st.fg = { remaining: award, total: award, played: 0, mult: zeroGrid(), mode };
+          st.naturalFg++;
+          addLog(`FG 觸發 · ${spin.scatterCount} C1 · ${award} 局`, "mode");
+        }
+        if (win > 0) { window.slotFx?.totalWin(fxLayer, "總贏分", fmt(win)); await wait(1100); }
+      }
+
+      async function playFreeSpin() {
+        const seed = st.fg.pendingSeed ?? consumeSeed();
+        st.fg.pendingSeed = null;
+        // FG：位置倍數跨局保留；Extra Bet 底板只作用於觸發前的 BG Spin
+        const spin = runSpin(st.fg.mult, { seed: seed ?? undefined });
+        finishSpin(spin, "FG", st.fg.mode);
+        await playSpin(spin);
+        st.fg.remaining--; st.fg.played++;
+        st.lastWin = spin.total; st.totalWin += spin.total; st.balance += spin.total;
+        if (spin.scatterCount >= 3 && st.fg.played + st.fg.remaining < FG_CAP) {
+          const add = Math.min(fgAward(spin.scatterCount), FG_CAP - st.fg.played - st.fg.remaining);
+          st.fg.remaining += add; st.fg.total += add;
+          addLog(`FG Retrigger +${add}`, "mode");
+        }
+        addLog(`FG ${st.fg.played}/${st.fg.total} · seed ${spin.seed} · ${fmt(spin.total)} · 全盤和 ${spin.finalSum}`, "result");
+        $("messageBar").textContent = `FG ${st.fg.played}/${st.fg.total} · ${fmt(spin.total)} · 全盤和 ${spin.finalSum}`;
+        if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, "本局贏分", fmt(spin.total)); await wait(900); }
+      }
+
+      async function play(isBuy = false) {
+        if (st.busy) return;
+        st.busy = true; updateControls();
+        try {
+          if (st.fg.remaining) await playFreeSpin();
+          else await playPaid(isBuy);
+        } catch (err) {
+          $("messageBar").textContent = err.message;
+          $("messageBar").classList.add("error");
+          setTimeout(() => $("messageBar").classList.remove("error"), 2500);
+          addLog(`Error · ${err.message}`, "error");
+          st.auto = false;
+        } finally {
+          st.busy = false; updateStats(); updateControls();
+          if (st.auto) st.autoTimer = setTimeout(() => play(false), 400 / speed());
+        }
+      }
+
+      // ── 批次模擬介面（共用 Simulation 用；不播動畫、不動主 Stats）──────────
+      window.demogameSimulateRound = () => {
+        const mode = st.mode === MODE_EXTRA ? MODE_EXTRA : MODE_NORMAL;
+        const cost = modeCost(mode);
+        const bg = runSpin(zeroGrid(), { extraPlates: mode === MODE_EXTRA });
+        let total = bg.total, fgSpins = 0, maxSum = bg.finalSum;
+        const fgCascades = [];
+        if (bg.scatterCount >= 3) {
+          const mult = zeroGrid();
+          let left = fgAward(bg.scatterCount), played = 0;
+          while (left > 0 && played < FG_CAP) {
+            const fg = runSpin(mult);
+            total += fg.total; left--; played++;
+            fgCascades.push(fg.cascadeCount);
+            if (fg.finalSum > maxSum) maxSum = fg.finalSum;
+            if (fg.scatterCount >= 3 && played + left < FG_CAP) left += fgAward(fg.scatterCount);
+          }
+          fgSpins = played;
+        }
+        return {
+          multiplier: total / cost,
+          bgMultiplier: bg.total / cost,
+          fgMultiplier: (total - bg.total) / cost,
+          fgTriggered: fgSpins > 0,
+          maxMultiplier: maxSum,
+          bgCascade: bg.cascadeCount,
+          fgCascades, retries: 0, retryLimitExceeded: 0,
+        };
+      };
+
+      // ── Help（內容以 game_help_draft.md 為準；離線 fallback 用內嵌副本）────
+      async function loadHelp() {
+        const target = $("helpContent");
+        target.innerHTML = `<div class="help-loading">Loading game rules...</div>`;
+        let markdown = "";
+        try {
+          const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+          if (response.ok) markdown = await response.text();
+        } catch (_) {}
+        if (!markdown) markdown = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
+        if (!markdown) {
+          target.innerHTML = `<div class="help-load-error">無法載入 game_help_draft.md。</div>`;
+          return;
+        }
+        const html = markdown.split(/\r?\n/).map((line) => {
+          const t = line.trim();
+          if (t.startsWith("# ")) return `<h2>${t.slice(2)}</h2>`;
+          if (t.startsWith("## ")) return `<h3>${t.slice(3)}</h3>`;
+          if (t.startsWith("### ")) return `<h4>${t.slice(4)}</h4>`;
+          if (t === "---" || t === "") return "";
+          if (t.startsWith("|")) {
+            const cells = t.slice(1, -1).split("|").map((x) => x.trim());
+            if (cells.every((x) => /^:?-{3,}:?$/.test(x))) return "";
+            return `<div class="help-rule">${cells.map((x) => `<span>${x}</span>`).join(" ｜ ")}</div>`;
+          }
+          return `<p>${t}</p>`;
+        }).join("");
+        target.innerHTML = html;
+      }
+
+      // ── Debug 顯示切換（與 H027 相同的區塊清單）──────────────────────────────
+      function toggleDebug(enabled) {
+        ["play-debug-controls", "set-rng-panel", "rng-wrap", "log-wrap", "live-log-wrap", "change-log-wrap", "batch-simulation"].forEach((id) => {
+          $(id)?.classList.toggle("debug-hidden", !enabled);
+        });
+        $("controls").classList.toggle("debug-off", !enabled);
+        updateStepButtons();
+      }
+
+      function resetSession() {
+        if (st.busy) return;
+        clearTimeout(st.autoTimer);
+        Object.assign(st, {
+          balance: CFG.initial_balance, auto: false, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0,
+          normalRounds: 0, naturalFg: 0, maxSum: 0, lastWin: 0, frames: [], frameIndex: -1, lastSpin: null,
+          fg: { remaining: 0, total: 0, played: 0, mult: null, mode: MODE_NORMAL },
+        });
+        $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = $("rngList").innerHTML = "";
+        rngState = freshSeed();
+        plateKeys = new Set();
+        renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
+        $("messageBar").textContent = "Reset. Press Spin to start";
+        $("cascadeValue").textContent = "0"; setSum(0);
+        updateStats(); updateControls();
+      }
+
+      // ── 共用控制介面（demogame_common.js 載入後呼叫）────────────────────────
+      window.tc2BindCommonControls = () => {
+        if (typeof window.slotBindCommonControls !== "function") throw new Error("demogame_common.js control API is unavailable");
+        window.slotBindCommonControls({
+          spin: () => play(false),
+          toggleAuto: () => {
+            st.auto = !st.auto;
+            if (!st.auto) clearTimeout(st.autoTimer);
+            updateControls();
+            if (st.auto && !st.busy) play(false);
+          },
+          normalMode: () => selectMode(MODE_NORMAL),
+          extraMode: () => selectMode(MODE_EXTRA),
+          buyFeatureMode: () => { st.auto = false; play(true); },
+          betMinus: () => setBetIndex(st.betIndex - 1),
+          betPlus: () => setBetIndex(st.betIndex + 1),
+          toggleBetMenu: (event) => { event.stopPropagation(); $("betMenu").classList.toggle("hidden"); },
+          documentClick: (event) => {
+            if (!$("betMenu").contains(event.target) && event.target !== $("betBtn")) $("betMenu").classList.add("hidden");
+          },
+          speedChange: () => { $("speedValue").textContent = `x${$("speedRange").value}`; },
+          previousStep: () => showFrame(st.frameIndex - 1),
+          nextStep: () => showFrame(st.frameIndex + 1),
+          debugChange: () => toggleDebug($("debugModeInput").checked),
+          rngChanged: updateControls,
+          resetRng: () => {
+            $("rngInput").value = "";
+            $("forceFgInput").checked = false;
+            $("messageBar").textContent = "Set RNG 已重置";
+          },
+          clearLog: () => { $("liveLogBody").innerHTML = ""; },
+          reset: resetSession,
+          openHelp: () => { $("helpDialog").showModal(); loadHelp(); },
+          closeHelp: () => $("helpDialog").close(),
+        });
+      };
+
+      // ── 初始化（名稱／Version／Config 由 Config 取得）──────────────────────
+      document.title = `${CFG.display_name} — Demo Game`;
+      $("gameId").textContent = `${CFG.game_id}（規則基底 ${CFG.base_game_source || "—"}）`;
+      $("gameName").textContent = CFG.game_name_zh;
+      $("versionSelect").innerHTML = `<option selected>${CFG.excel_version}</option>`;
+      $("configSelect").innerHTML = `<option value="config.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
+      $("extraBetBtn").textContent = `Extra Bet (${EXTRA_MULT}x)`;
+      $("buyFeatureBtn").textContent = `Buy Feature (${BUY_MULT}x)`;
+      rngState = freshSeed();
+      buildBetMenu();
+      toggleDebug(false);
+      renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
+      updateStats(); updateControls();
+    })();
+  </script>
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# Candy Rush 2 Game Help Draft（發想）
+
+內容以 game_help_draft.md 為準；此為離線 fallback 副本。
+
+## CLUSTER PAY
+
+盤面 7×7；相同符號上下左右相連 ≥5 個成立群集，各群集獨立計獎（同符號多組群集每組都計獎）。
+
+群集中獎後，盤面上所有相同符號一併消除；只以相連群集的數量計分，連帶消除的符號不另計獎。
+
+## CASCADING
+
+中獎群集消除後，上方符號向下補位、新符號自上方掉入，重新判定直到無新群集。
+
+## POSITION MULTIPLIER
+
+每格每次消除倍數 +1（x1、x2、x3…）。不論在哪裡消除，每個群集得分 = 群集賠率 × 押注 × 全盤位置倍數總和（0 視為 1）。BG 每局歸零；FG 整場保留。
+
+## FREE GAME
+
+3／4／5／6／7 顆 C1 → 10／12／15／20／30 局；FG 內同表追加。同一輪最多 1 顆 C1。
+
+## EXTRA BET
+
+押注 10 倍。該次旋轉開場時，盤面隨機 1～3 個位置出現 20／50／100／250／500／1000 的倍數底板，第一次消除即計入全盤倍數和。
+
+## BUY FEATURE
+
+100 倍押注（發想暫定），直接進入 10 局免費遊戲。
+
+## NOTE
+
+發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
+  </script>
+  <script src="../../demogame_common.js?v=2"></script>
+  <script>window.tc2BindCommonControls();</script>
+</body>
+
+</html>

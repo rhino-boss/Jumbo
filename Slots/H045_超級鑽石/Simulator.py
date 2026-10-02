@@ -231,6 +231,7 @@ class SpinResult:
     mult_wild_created: int = 0
     mult_wild_values: Counter = field(default_factory=Counter)
     max_line_multiplier: int = 1
+    big_ghost_used: bool = False
     initial_gold_count: int = 0
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
@@ -339,6 +340,31 @@ class SuperDiamond:
 
     # --- 盤面 ---
 
+    def gold_target(self, scene: str, reel: int) -> int:
+        """抽出該輪這次要有幾顆金框（0~4）。"""
+        cumulative, total = self.gold_count[scene][reel]
+        if total <= 0:
+            return 0
+        return min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
+
+    def topup_gold(self, scene: str, symbols: list[list[int]],
+                   gold: list[list[bool]], fresh_rows: dict[int, int]) -> None:
+        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。"""
+        for reel in self.gold_reels:
+            need = fresh_rows.get(reel, 0)
+            if not need:
+                continue
+            target = self.gold_target(scene, reel)
+            alive = sum(gold[reel])
+            short = target - alive
+            if short <= 0:
+                continue
+            spots = [row for row in range(need)
+                     if not gold[reel][row] and symbols[reel][row] != C1]
+            self.rng.shuffle(spots)
+            for row in spots[:short]:
+                gold[reel][row] = True
+
     def draw_gold(self, scene: str, symbols: list[list[int]]) -> list[list[bool]]:
         """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
 
@@ -411,28 +437,38 @@ class SuperDiamond:
             details.append((target, length, ways, raw * line_mult, line_mult))
         return total, hits, details, best_line_mult
 
+    def _draw_multiplier(self, table: Table, outcome: str, result: SpinResult) -> int:
+        """依結果對應的倍數表抽一次；回傳 1 代表無倍數（game_rule §5.3）。"""
+        values, cumulative, total = table.mult[outcome]
+        value = int(_pick(self.rng, values, cumulative, total))
+        if value > 1:
+            result.mult_wild_created += 1
+        result.mult_wild_values[value] += 1
+        return value
+
     def flip_golden(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
-                    gold_positions: list[tuple[int, int]], result: SpinResult) -> None:
+                    gold_positions: list[tuple[int, int]], result: SpinResult,
+                    free_game: bool) -> None:
         """game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果。"""
-        big_sources: list[tuple[int, int]] = []
+        big_sources: list[tuple[tuple[int, int], str]] = []
         for reel, row in gold_positions:
             outcome = _pick(self.rng, table.gold_results, table.gold_cumulative, table.gold_total)
+            # game_rule §9.1.10：BG 一把 Spin 最多成立一次大鬼，之後改以對應的小鬼結果處理
+            if outcome.startswith("W2") and not free_game and result.big_ghost_used:
+                outcome = "WW_M" if outcome.endswith("_M") else "WW"
             result.golden_results[outcome] += 1
             result.golden_converted += 1
             symbols[reel][row] = W2 if outcome.startswith("W2") else WW
             mults[reel][row] = 0
             if outcome.endswith("_M"):
-                # WW_M 與 W2_M 各有自己的倍數表；x1 代表無倍數
-                values, cumulative, total = table.mult[outcome]
-                value = int(_pick(self.rng, values, cumulative, total))
+                value = self._draw_multiplier(table, outcome, result)
                 if value > 1:
                     mults[reel][row] = value
-                    result.mult_wild_created += 1
-                result.mult_wild_values[value] += 1
             if outcome.startswith("W2"):
-                big_sources.append((reel, row))
+                result.big_ghost_used = True
+                big_sources.append(((reel, row), outcome))
 
-        for source in big_sources:
+        for source, outcome in big_sources:
             count = int(_pick(self.rng, table.split_values, table.split_cumulative, table.split_total))
             candidates = [
                 (reel, row)
@@ -447,7 +483,12 @@ class SuperDiamond:
             placed = candidates[:count]
             for reel, row in placed:
                 symbols[reel][row] = W2
+                # game_rule §5.4：大鬼帶倍數時，每顆分裂體各自獨立抽倍數
                 mults[reel][row] = 0
+                if outcome.endswith("_M"):
+                    value = self._draw_multiplier(table, outcome, result)
+                    if value > 1:
+                        mults[reel][row] = value
             result.split_counts[len(placed)] += 1
 
     def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
@@ -486,6 +527,7 @@ class SuperDiamond:
                     mults[reel][row] = 0
 
             # 先重力補牌，再翻金框（game_rule §5.6 步驟 3~6）
+            fresh_rows: dict[int, int] = {}
             for reel in range(5):
                 column = [(symbols[reel][row], mults[reel][row], gold[reel][row])
                           for row in range(4) if symbols[reel][row] != EMPTY]
@@ -499,16 +541,13 @@ class SuperDiamond:
                 merged = fresh + column
                 for row in range(4):
                     symbols[reel][row], mults[reel][row], gold[reel][row] = merged[row]
-                # 只有新補進來的格子（最上面 need 格）重抽金框，既有符號的金框狀態不變。
-                # 每格機率由該輪顆數分布的期望值換算（E[顆數] / 4 格），維持金框密度一致。
-                if reel in self.gold_reels and need:
-                    rate = self.gold_rate[scene][reel]
-                    for row in range(need):
-                        if symbols[reel][row] != C1 and self.rng.random() < rate:
-                            gold[reel][row] = True
+                fresh_rows[reel] = need
+
+            # 補牌後重抽金框顆數（game_rule §9.1.11）
+            self.topup_gold(scene, symbols, gold, fresh_rows)
 
             if gold_positions:
-                self.flip_golden(table, symbols, mults, gold_positions, result)
+                self.flip_golden(table, symbols, mults, gold_positions, result, free_game)
 
             if result.pay >= cap:
                 break
