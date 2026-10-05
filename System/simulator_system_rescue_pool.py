@@ -25,8 +25,8 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from simulator_system_oldhand_c2 import (  # noqa: E402
     CHECKPOINT_RULES, CHECKPOINTS, EXT_CHECKPOINTS, EXT_MID_THRESHOLD, EXT_MID_WINDOW,
-    EXT_REWARD, EXT_SHORT_THRESHOLD, EXT_SHORT_WINDOW, MAIN_SHORT_THRESHOLD,
-    MAIN_SHORT_WINDOW, SYSTEM_VERSION, load_rowdata,
+    EXT_SHORT_THRESHOLD, EXT_SHORT_WINDOW, MAIN_SHORT_THRESHOLD,
+    MAIN_SHORT_WINDOW, SYSTEM_VERSION, ext_rewards, load_rowdata,
 )
 
 GAME = "彩罐熱舞"
@@ -37,7 +37,8 @@ SPIN_SCENARIOS = [400, 800, 1000]
 SEED = 20261005
 
 
-def judge(cp: int, adj: np.ndarray, bet: np.ndarray, cum_adj: np.ndarray, cum_bet: np.ndarray):
+def judge(cp: int, adj: np.ndarray, bet: np.ndarray, cum_adj: np.ndarray, cum_bet: np.ndarray,
+          rng: np.random.Generator):
     """回傳 (是否觸發, 救援倍數)；只看第 cp 轉之前的狀態。"""
     i = cp - 1
     if cp in CHECKPOINT_RULES:
@@ -47,7 +48,8 @@ def judge(cp: int, adj: np.ndarray, bet: np.ndarray, cum_adj: np.ndarray, cum_be
         return (cum_adj / cum_bet < th) & (short < MAIN_SHORT_THRESHOLD), rw
     mid = adj[:, i - EXT_MID_WINDOW:i].sum(axis=1) / bet[:, i - EXT_MID_WINDOW:i].sum(axis=1)
     short = adj[:, i - EXT_SHORT_WINDOW:i].sum(axis=1) / bet[:, i - EXT_SHORT_WINDOW:i].sum(axis=1)
-    return (mid < EXT_MID_THRESHOLD) & (short < EXT_SHORT_THRESHOLD), EXT_REWARD
+    hit = (mid < EXT_MID_THRESHOLD) & (short < EXT_SHORT_THRESHOLD)
+    return hit, ext_rewards(hit, rng)
 
 
 def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.Generator) -> dict:
@@ -71,7 +73,7 @@ def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.G
             cum_adj += adj[:, seg].sum(axis=1)
             cum_bet += bet[:, seg].sum(axis=1)
 
-            hit, rw = judge(cp, adj, bet, cum_adj, cum_bet)
+            hit, rw = judge(cp, adj, bet, cum_adj, cum_bet, rng)
             i = cp - 1
             inc = np.where(hit, np.maximum(nat[:, i], rw * bet[:, i]) - nat[:, i], 0.0)
             tot["want"] += inc.sum()

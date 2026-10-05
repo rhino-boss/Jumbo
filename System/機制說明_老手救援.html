@@ -2756,7 +2756,12 @@
       <h3 id="p1-rule-flow"><span class="sec">3.1</span>運作方式</h3>
       <ul>
         <li><strong>以天為循環</strong>：轉數與 RTP 跨日歸零重計。</li>
-        <li><strong>每滿 40 轉判定一次</strong>（固定、不隨機），須同時符合兩個條件：當日累積 RTP 低於該觸發點門檻，<strong>且前 40 轉 RTP &lt; 50%</strong>。</li>
+        <li><strong>每滿 40 轉判定一次</strong>（固定、不隨機），須同時符合兩個條件：
+          <ul>
+            <li>條件 1：當日累積 RTP 低於該觸發點門檻</li>
+            <li>條件 2：前 40 轉 RTP &lt; 50%</li>
+          </ul>
+        </li>
         <li>低於該觸發點門檻 → 由 Card System 重骰給出該落點的救援倍數；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，成本以增量記帳。</li>
         <li>救援得分計入當日累積 RTP，被救過的玩家通常自然脫離觸發區。</li>
         <li>當日 &lt; 40 轉不判定；第 400 轉後主救援結束。</li>
@@ -3084,12 +3089,17 @@
     <!-- ════════════ 階段二 ════════════ -->
     <section id="p2">
       <h2><span class="sec">階段二</span>延伸救援 · 當日 401 – 1,000 轉</h2>
-      <p>401 轉後的低頻低額救援：滾動窗口判定，固定 10× BG 盤面，作為成本收放閥。</p>
+      <p>方向：<strong>製造記憶點</strong>。在玩家對遊戲留下印象的同時，體驗真的很差時仍會出手。</p>
     </section>
 
     <!-- 階段二 §1 -->
     <section id="p2-data">
       <h2><span class="sec">§1</span>前情提要</h2>
+      <ul>
+        <li><strong>玩到 401 轉以上的玩家，隔日留存約 60%</strong>：隔天基本上會回來玩，這一段要解決的不是留存。</li>
+        <li><strong>我們的遊戲太平</strong>：玩家對遊戲缺乏印象點，需要主動製造記憶點，加深對這款遊戲的印象。</li>
+        <li><strong>體驗差時仍要出手</strong>：這段玩家還是可能遇到體驗很差的時期，此時不能放著不管。</li>
+      </ul>
     </section>
 
     <!-- 階段二 §2 -->
@@ -3098,177 +3108,91 @@
 
       <h3 id="p2-rule-flow"><span class="sec">2.1</span>運作方式</h3>
       <ul>
-        <li><strong>以天為循環</strong>：轉數與 RTP 跨日歸零重計（與主救援同一循環）。</li>
+        <li><strong>以天為循環</strong>：轉數與 RTP 跨日歸零重計。</li>
         <li><strong>自當日第 440 轉起每滿 40 轉判定一次</strong>（固定、不隨機），到第 1,000 轉為止。</li>
-        <li><strong>滾動窗口條件</strong>：往前抓 100 轉 RTP &lt; 75% <strong>且前 40 轉 RTP &lt; 50%</strong>（判定回合本身不納入）。</li>
-        <li>命中 → 送 <strong>10× BG 盤面</strong>；該轉最終得分取「自然得分」與「10× Bet」較高值，成本以增量記帳。</li>
-        <li>救援得分計入滾動窗口 RTP，被救玩家會脫離觸發區一段時間。</li>
+        <li><strong>觸發條件</strong>：須同時符合兩個條件（判定回合本身不納入）：
+          <ul>
+            <li>條件 1：往前抓 200 轉 RTP &lt; 50%</li>
+            <li>條件 2：前 40 轉 RTP &lt; 40%</li>
+          </ul>
+        </li>
+        <li><strong>救援倍數</strong>：命中救 <strong>50×</strong>；觸發後有一定機率升級為 <strong>500×</strong>，作為記憶點。</li>
+        <li>該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，成本以增量記帳；由 Card System 重骰產生，演出與自然大獎相同。</li>
       </ul>
 
-      <h3 id="p2-rule-table"><span class="sec">2.2</span>觸發點與模擬結果</h3>
+      <h3 id="p2-rule-table"><span class="sec">2.2</span>模擬結果</h3>
       <p>
-        第 440～1,000 轉共 15 個延伸觸發點。增量貢獻 = 該觸發點實際發放 ÷ 401–1,000 轉區段總押注
-        （c2-1.5 模擬，10,000 人 × 1,000 轉）：
+        c2-1.6 模擬：彩罐熱舞 10,000 人 × 1,000 轉，前 400 轉套主救援；增量 = 延伸救援增量 ÷ 401–1,000 轉區段總押注
+        （區段自然 RTP 91.92%）。
       </p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>觸發點</th><th class="num">觸發率</th><th class="num">增量貢獻</th></tr>
+            <tr><th>總體指標</th><th class="num">彩罐熱舞</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">第 440 轉</td><td class="num">24.10%</td><td class="num">+0.38%</td></tr>
-            <tr><td class="key">第 480 轉</td><td class="num">19.87%</td><td class="num">+0.31%</td></tr>
-            <tr><td class="key">第 520 轉</td><td class="num">20.72%</td><td class="num">+0.33%</td></tr>
-            <tr><td class="key">第 560 轉</td><td class="num">20.56%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 600 轉</td><td class="num">20.13%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 640 轉</td><td class="num">20.22%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 680 轉</td><td class="num">20.86%</td><td class="num">+0.33%</td></tr>
-            <tr><td class="key">第 720 轉</td><td class="num">19.53%</td><td class="num">+0.31%</td></tr>
-            <tr><td class="key">第 760 轉</td><td class="num">20.99%</td><td class="num">+0.33%</td></tr>
-            <tr><td class="key">第 800 轉</td><td class="num">20.40%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 840 轉</td><td class="num">20.86%</td><td class="num">+0.33%</td></tr>
-            <tr><td class="key">第 880 轉</td><td class="num">20.12%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 920 轉</td><td class="num">20.51%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 960 轉</td><td class="num">20.55%</td><td class="num">+0.32%</td></tr>
-            <tr><td class="key">第 1000 轉</td><td class="num">20.83%</td><td class="num">+0.33%</td></tr>
-            <tr><td class="key"><strong>小計</strong></td><td class="num">—</td><td class="num"><strong>+4.88%</strong></td></tr>
+            <tr><td class="key">觸發率（判定成功 ÷ 總判定）</td><td class="num">3.03%（4,539 / 150,000）</td></tr>
+            <tr><td class="key">用到延伸救援的玩家比例</td><td class="num">40.02%</td></tr>
+            <tr><td class="key">只救 50×（500× 機率 0%）時的增量</td><td class="num">+3.73%</td></tr>
           </tbody>
         </table>
       </div>
+      <p>各觸發點觸發率（與 500× 機率無關）：</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>總體指標（延伸救援，401–1,000 轉區段基準）</th><th class="num">彩罐熱舞</th></tr>
+            <tr><th>觸發點</th><th class="num">觸發率</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">區段 RTP（沒有機制）</td><td class="num">91.9230%</td></tr>
-            <tr><td class="key">延伸救援增量</td><td class="num">+4.8838%</td></tr>
-            <tr><td class="key">區段 RTP（含延伸救援）</td><td class="num">96.8068%</td></tr>
-            <tr><td class="key">用到延伸救援的玩家比例</td><td class="num">97.52%</td></tr>
-            <tr><td class="key">觸發率（判定成功 ÷ 總判定）</td><td class="num">20.68%（31,025 / 150,000）</td></tr>
-            <tr><td class="key">全日 1,000 轉總 RTP（主＋延伸）</td><td class="num">96.9592%</td></tr>
+            <tr><td class="key">第 440 轉</td><td class="num">3.51%</td></tr>
+            <tr><td class="key">第 480 轉</td><td class="num">3.03%</td></tr>
+            <tr><td class="key">第 520 轉</td><td class="num">3.20%</td></tr>
+            <tr><td class="key">第 560 轉</td><td class="num">2.97%</td></tr>
+            <tr><td class="key">第 600 轉</td><td class="num">2.87%</td></tr>
+            <tr><td class="key">第 640 轉</td><td class="num">2.91%</td></tr>
+            <tr><td class="key">第 680 轉</td><td class="num">2.84%</td></tr>
+            <tr><td class="key">第 720 轉</td><td class="num">3.01%</td></tr>
+            <tr><td class="key">第 760 轉</td><td class="num">2.83%</td></tr>
+            <tr><td class="key">第 800 轉</td><td class="num">3.07%</td></tr>
+            <tr><td class="key">第 840 轉</td><td class="num">2.80%</td></tr>
+            <tr><td class="key">第 880 轉</td><td class="num">3.09%</td></tr>
+            <tr><td class="key">第 920 轉</td><td class="num">3.11%</td></tr>
+            <tr><td class="key">第 960 轉</td><td class="num">2.96%</td></tr>
+            <tr><td class="key">第 1000 轉</td><td class="num">3.19%</td></tr>
           </tbody>
         </table>
       </div>
-      <p>發放分布：延伸救援全部為 10× BG 盤面（共 31,025 次）。</p>
-      <p>
-        敏感度測試：全員當日固定只玩 N 轉時，延伸增量（÷ 401–N 轉押注）與全日主＋延伸總 RTP。超過 97% 標黃：
-      </p>
+      <p>500× 升級機率與區段增量（每個機率取 5 組亂數平均）：</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>當日轉數</th><th class="num">延伸增量</th><th class="num">全日總 RTP</th></tr>
+            <tr><th>500× 機率</th><th class="num">區段增量</th></tr>
           </thead>
           <tbody>
-            <tr><td class="key">500 轉</td><td class="num">+4.15%</td><td class="num">96.94%</td></tr>
-            <tr><td class="key">600 轉</td><td class="num">+4.97%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.16%</span></td></tr>
-            <tr><td class="key">700 轉</td><td class="num">+4.61%</td><td class="num">96.93%</td></tr>
-            <tr><td class="key">800 轉</td><td class="num">+4.90%</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.03%</span></td></tr>
-            <tr><td class="key">900 轉</td><td class="num">+4.69%</td><td class="num">96.83%</td></tr>
-            <tr><td class="key">1,000 轉</td><td class="num">+4.88%</td><td class="num">96.96%</td></tr>
+            <tr><td class="key">0%</td><td class="num">+3.73%</td></tr>
+            <tr><td class="key">1%</td><td class="num">+4.01%</td></tr>
+            <tr><td class="key">2%</td><td class="num">+4.36%</td></tr>
+            <tr><td class="key">3%</td><td class="num">+4.68%</td></tr>
+            <tr><td class="key"><strong>3.8%（暫定）</strong></td><td class="num"><strong>+5.00%</strong></td></tr>
+            <tr><td class="key">5%</td><td class="num">+5.41%</td></tr>
+            <tr><td class="key">8%</td><td class="num">+6.45%</td></tr>
+            <tr><td class="key">10%</td><td class="num">+7.11%</td></tr>
           </tbody>
         </table>
       </div>
       <div class="note warn">
-        <span class="tag">預算檢核</span>
+        <span class="tag">待定</span>
         <p>
-          窗口縮短為 100 轉、門檻放寬至 &lt; 75% 後，延伸救援增量 +4.88%（401–1,000 轉區段），接近 5% 目標。
-          全日總 RTP 在各日轉數下落在 96.83%～97.16%，600、800 轉略超 97%。
-          觸發率約每點 20%、97.5% 的玩家當日至少被延伸救援一次——頻率偏高，屬「常態小額補償」性質。
+          500× 機率尚未定案。以區段增量 5% 反推約 <strong>3.8%</strong>（觸發約 26 次出現 1 次 500×），
+          10,000 人一天約 170 次 500×，約每 60 人有 1 人當天拿到。模擬器暫以 3.8% 計算。
         </p>
-      </div>
-      <h3 id="p2-rule-flowchart"><span class="sec">2.3</span>當日流程圖</h3>
-      <p>一天內各轉數階段在做什麼：</p>
-      <div class="timeline">
-        <div class="phase is-newbie">
-          <div class="phase-spins">1 – 400</div>
-          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
-          <div class="phase-body">
-            <div class="phase-name">主救援階段</div>
-            <p>見階段一；第 400 轉後主救援結束。</p>
-          </div>
-        </div>
-        <div class="phase">
-          <div class="phase-spins">401 – 1,000</div>
-          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
-          <div class="phase-body">
-            <div class="phase-name">延伸救援 · 10×</div>
-            <p>第 440 轉起每滿 40 轉判定：往前 100 轉 RTP &lt; 75% 且前 40 轉 RTP &lt; 50% → 送 10× BG 盤面。</p>
-          </div>
-        </div>
-        <div class="phase is-newbie">
-          <div class="phase-spins">&gt; 1,000</div>
-          <div class="phase-rail"><div class="phase-mark"></div><div class="phase-line"></div></div>
-          <div class="phase-body">
-            <div class="phase-name">停止判定</div>
-            <p>隔日留存已在 70% 以上，不再投入救援預算。跨日後轉數與 RTP 歸零，隔天重新開始。</p>
-          </div>
-        </div>
-      </div>
-
-      <p>單次判定的流程（第 440 轉起每滿 40 轉執行一次）：</p>
-      <div class="flow">
-        <div class="gate">
-          <div class="gate-rail"><div class="gate-dot">1</div><div class="gate-line"></div></div>
-          <div class="gate-body">
-            <div class="gate-title">到達觸發點</div>
-            <p>當日第 440 轉起每滿 40 轉，進入延伸判定。</p>
-          </div>
-        </div>
-        <div class="gate">
-          <div class="gate-rail"><div class="gate-dot">2</div><div class="gate-line"></div></div>
-          <div class="gate-body">
-            <div class="gate-title">檢查滾動 100 轉 RTP 與前 40 轉 RTP</div>
-            <div class="branch">
-              <div class="branch-row"><span class="pill ok">100 轉 &lt; 75% 且 40 轉 &lt; 50%</span><span>具備救援資格，進入發放</span></div>
-              <div class="branch-row"><span class="pill stop">任一未低於</span><span>本點結束，等下一個觸發點</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="gate">
-          <div class="gate-rail"><div class="gate-dot">3</div><div class="gate-line"></div></div>
-          <div class="gate-body">
-            <div class="gate-title">發放與記帳</div>
-            <p>Card System 重骰產生 10× BG 盤面；該轉最終得分取「自然得分」與「10× Bet」較高值，成本以增量記帳。</p>
-          </div>
-        </div>
       </div>
     </section>
 
     <!-- 階段二 §3 -->
     <section id="p2-arb">
       <h2><span class="sec">§3</span>套利檢查</h2>
-      <p>
-        情境：玩家已玩滿當日 400 轉（前段視為沉沒），從第 401 轉起決定怎麼玩才划算。
-        策略 RTP = 第 401 轉起到停手的總得分 ÷ 同區間總押注；括號為同一策略在沒有機制時的 RTP
-        （停手點依自然結果決定）。c2-1.5 規則、彩罐熱舞 10,000 人實測，超過 97% 標黃、超過 100% 標紅：
-      </p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>套利手法</th><th>情境</th><th class="num">平均停在</th><th class="num">RTP（有機制）<br>（無機制）</th><th class="num">EV／日（bet）</th></tr>
-          </thead>
-          <tbody>
-            <tr><td class="key">續玩到固定轉數就閃</td><td>續玩到第 440 轉就閃</td><td class="num">440 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.40%</span>（91.72%）</td><td class="num">-1.04</td></tr>
-            <tr><td class="key"></td><td>續玩到第 520 轉就閃</td><td class="num">520 轉</td><td class="num">96.89%（91.80%）</td><td class="num">-3.73</td></tr>
-            <tr><td class="key"></td><td>續玩到第 600 轉就閃</td><td class="num">600 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.10%</span>（92.13%）</td><td class="num">-5.79</td></tr>
-            <tr><td class="key"></td><td>續玩到第 800 轉就閃</td><td class="num">800 轉</td><td class="num">96.88%（91.98%）</td><td class="num">-12.50</td></tr>
-            <tr><td class="key"></td><td>續玩到第 1,000 轉就閃</td><td class="num">1,000 轉</td><td class="num">96.81%（91.92%）</td><td class="num">-19.16</td></tr>
-            <tr><td class="key">拿到就閃人</td><td>拿到 10× 就閃（否則玩到 1,000）</td><td class="num">573 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.36%</span>（91.92%）</td><td class="num">-4.57</td></tr>
-            <tr><td class="key">贏了就閃人</td><td>區段 RTP &gt; 100% 就閃（否則玩到 1,000）</td><td class="num">532 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.75%</span>（91.70%）</td><td class="num">-2.96</td></tr>
-            <tr><td class="key"></td><td>區段 RTP &gt; 100% 或拿到 10× 就閃</td><td class="num">438 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">99.37%</span>（91.70%）</td><td class="num">-0.24</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>固定轉數閃人的 15 個轉數（第 440～1,000 轉，每 40 轉一個）全部落在 96.67%～97.40%，表中列出代表點。</p>
-      <div class="note">
-        <span class="tag">結論</span>
-        <p>
-          所有情境皆低於 100%，最高為「區段 RTP &gt; 100% 或拿到 10× 就閃」的 99.37%（EV −0.24 bet／日），
-          無穩定套利空間。延伸救援固定 10×、金額小，贏家早走的效果不足以翻正；但已貼近 100%，門檻若再放寬需重驗。
-          日切刷量結構上不成立：延伸點最早在第 440 轉，須先玩滿 400 轉承擔前段損耗。
-        </p>
-      </div>
+      <p>待 500× 機率定案後補模擬。</p>
     </section>
 
     <!-- 附錄 -->
@@ -3297,7 +3221,7 @@
 
   <footer>
     <span>iGaming 機制報告 · 老手救援 C-2 版</span>
-    <span>模擬 c2-1.5 · rowdata 92% × 10,000 人（階段一 400 轉／階段二 1,000 轉）</span>
+    <span>模擬 c2-1.6 · rowdata 92% × 10,000 人（階段一 400 轉／階段二 1,000 轉）</span>
     <span>2026-09-23</span>
     <span>實際日轉數分布加權驗證待補</span>
   </footer>

@@ -19,8 +19,8 @@ C-2 規則（機制說明_老手救援C-2版.html）：
   倍數由 20× 隨落點遞增至 100×
 * 救援落在判定回合：該轉最終得分 = max(自然得分, 救援倍數 × Bet)，
   成本以增量記帳。
-* 延伸救援（當日 401 轉起）：每滿 40 轉判定，
-  前 100 轉 RTP < 75% 且前 40 轉 RTP < 50% → 送 10× BG 盤面。
+* 延伸救援（當日 401 轉起，方向「製造記憶點」）：每滿 40 轉判定，
+  前 200 轉 RTP < 50% 且前 40 轉 RTP < 40% → 救 50×，觸發後有 EXT_BIG_PROB 機率升級為 500×。
 * 尚未套用救援池／共同池上限（先量測機制的自然增量，供預算評估）。
 """
 
@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-1.5"
+SYSTEM_VERSION = "c2-1.6"
 
 
 def _locate_script_dir() -> Path:
@@ -92,11 +92,20 @@ CHECKPOINTS = sorted(CHECKPOINT_RULES)
 
 # ---- 延伸救援（當日 401–1,000 轉）----
 EXT_CHECKPOINTS = list(range(440, 1001, 40))  # 440 起每 40 轉，跑到當日轉數為止
-EXT_MID_WINDOW = 100                          # 往前抓 100 轉
-EXT_MID_THRESHOLD = 0.75
+EXT_MID_WINDOW = 200                          # 往前抓 200 轉
+EXT_MID_THRESHOLD = 0.50
 EXT_SHORT_WINDOW = 40                         # 前 40 轉
-EXT_SHORT_THRESHOLD = 0.50
-EXT_REWARD = 10.0                             # 送 10× BG 盤面
+EXT_SHORT_THRESHOLD = 0.40
+EXT_REWARD = 50.0                             # 救 50×
+EXT_BIG_REWARD = 500.0                        # 升級後 500×（記憶點）
+EXT_BIG_PROB = 0.038                          # 暫定：區段增量約 5% 的反推值，待定案
+EXT_SEED = 20261005
+
+
+def ext_rewards(hit: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """延伸救援倍數：觸發者以 EXT_BIG_PROB 機率升級為 500×，其餘 50×。"""
+    big = hit & (rng.random(hit.shape[0]) < EXT_BIG_PROB)
+    return np.where(big, EXT_BIG_REWARD, EXT_REWARD)
 
 
 def band_of(spin_no: int) -> tuple[float, float]:
@@ -186,6 +195,7 @@ def simulate(game: str) -> None:
 
     # ---- 延伸救援（401–1,000 轉）：滾動窗口判定 ----
     ext_rows = []
+    rng = np.random.default_rng(EXT_SEED)
     for cp in EXT_CHECKPOINTS:
         if cp > n_spins:
             break
@@ -197,12 +207,14 @@ def simulate(game: str) -> None:
         hit = (mid.sum(axis=1) / mid_bet < EXT_MID_THRESHOLD) & \
               (short.sum(axis=1) / short_bet < EXT_SHORT_THRESHOLD)
         natural_this = nat[:, i]
-        final_this = np.where(hit, np.maximum(natural_this, EXT_REWARD * bet[:, i]), natural_this)
+        reward = ext_rewards(hit, rng)
+        final_this = np.where(hit, np.maximum(natural_this, reward * bet[:, i]), natural_this)
         adj[:, i] = final_this
         n_trigger = int(hit.sum())
         total_triggers += n_trigger
         rescued_player |= hit
-        award_totals[EXT_REWARD] = award_totals.get(EXT_REWARD, 0) + n_trigger
+        for rw in (EXT_REWARD, EXT_BIG_REWARD):
+            award_totals[rw] = award_totals.get(rw, 0) + int((hit & (reward == rw)).sum())
         ext_rows.append({
             "checkpoint": cp,
             "triggered": n_trigger,
@@ -239,7 +251,7 @@ def simulate(game: str) -> None:
     main_up = sum(r["uplift"] for r in checkpoint_rows)
     ext_up = sum(r["uplift"] for r in ext_rows)
     if ext_rows:
-        print(f"延伸救援（401 轉起）：前 {EXT_MID_WINDOW} 轉 RTP <{EXT_MID_THRESHOLD * 100:.0f}% 且前 40 轉 RTP <{EXT_SHORT_THRESHOLD * 100:.0f}% → 送 {EXT_REWARD:g}× BG 盤面")
+        print(f"延伸救援（401 轉起）：前 {EXT_MID_WINDOW} 轉 RTP <{EXT_MID_THRESHOLD * 100:.0f}% 且前 40 轉 RTP <{EXT_SHORT_THRESHOLD * 100:.0f}% → 救 {EXT_REWARD:g}×（{EXT_BIG_PROB:.1%} 升級 {EXT_BIG_REWARD:g}×）")
         print("checkpoint   判定    觸發   觸發率     全日增量貢獻")
         for row in ext_rows:
             print(
