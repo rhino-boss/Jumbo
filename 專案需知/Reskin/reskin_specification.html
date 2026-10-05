@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reskin 開發規範</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}
+header.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}
+.toc{position:sticky; top:52px; width:236px; flex:none;
+  max-height:calc(100vh - 76px); overflow-y:auto;
+  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}
+.toc[hidden]{display:none}
+.toc a{display:block; color:var(--ink-3); text-decoration:none;
+  padding:3px 11px; border-left:2px solid var(--rule)}
+.toc a:hover{color:var(--s1); border-left-color:var(--s1)}
+.toc a.toc-3{padding-left:25px}
+main{flex:1; min-width:0}
+.panel[hidden]{display:none}
+.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
+h2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;
+  padding-bottom:7px; border-bottom:1px solid var(--rule)}
+h3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}
+p{margin:0 0 11px; max-width:86ch}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}
+li{margin:3px 0}
+li.check{list-style:none; margin-left:-20px}
+.cb{color:var(--s1); margin-right:4px}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+pre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;
+  padding:13px 16px; overflow-x:auto; margin:0 0 16px;
+  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}
+pre code{background:none; border:none; padding:0; font-size:inherit}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
+@media (max-width:900px){ .toc{display:none!important} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <div class="eyebrow">Slots · Reskin</div>
+  <h1 class="site">Reskin 開發規範</h1>
+  <p class="meta">由 <code>專案需知/Reskin/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-05</p>
+</header>
+<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-math" data-tab="math" aria-controls="panel-math" aria-selected="true" tabindex="0">數學模型規範</button></div>
+<div class="body-row">
+  <nav class="toc" id="toc-math"><a class="toc-2" href="#1-定位與範圍" data-tab="math">1. 定位與範圍</a><a class="toc-2" href="#2-押注結構" data-tab="math">2. 押注結構</a><a class="toc-3" href="#21-共用-bet-multiplier44-組" data-tab="math">2.1 共用 Bet Multiplier（44 組）</a><a class="toc-2" href="#3-各市場押注選項" data-tab="math">3. 各市場押注選項</a><a class="toc-3" href="#31-sweepstakes-scsweeps-coins" data-tab="math">3.1 Sweepstakes — SC（Sweeps Coins）</a><a class="toc-3" href="#32-sweepstakes-gcgold-coins" data-tab="math">3.2 Sweepstakes — GC（Gold Coins）</a><a class="toc-3" href="#33-vietnam" data-tab="math">3.3 Vietnam</a><a class="toc-3" href="#34-市場總覽" data-tab="math">3.4 市場總覽</a><a class="toc-2" href="#4-數學模型與-config-的要求" data-tab="math">4. 數學模型與 Config 的要求</a><a class="toc-2" href="#5-與-omniplay-的差異" data-tab="math">5. 與 Omniplay 的差異</a><a class="toc-2" href="#6-開發前檢查" data-tab="math">6. 開發前檢查</a><a class="toc-2" href="#7-待確認事項" data-tab="math">7. 待確認事項</a></nav>
+  <main><section class="panel" role="tabpanel" id="panel-math" aria-labelledby="tab-math"><h1 id="reskin-數學模型規範">Reskin 數學模型規範</h1>
+<p>本文件屬於 <code>專案需知/Reskin/</code>，適用於 <strong>Reskin 產線</strong>：以既有 Omniplay 遊戲數學為底，換皮輸出到 Sweepstakes（美國社交博弈，SC／GC 雙幣）與 Vietnam 等市場的版本。</p>
+<p>本文件採<strong>差異式</strong>撰寫：只列 Reskin 產線與 Omniplay 不同或新增的規則；<strong>凡本文件未覆寫的條款，一律沿用 Omniplay 的 <a href="../slot_development_specification.html#math">數學模型規範.md</a></strong>。兩者衝突時以本文件為準。</p>
+<p>目前的需求來源文件（<code>個人工作區/專案紀錄/Sweepstakes/</code>）：</p>
+<div class="tbl-wrap"><table><thead><tr><th>文件</th><th>日期</th><th>內容</th><th>狀態</th></tr></thead><tbody><tr><td><code>bet_currency_sweepstakes.xlsx</code></td><td>2026-08-13</td><td>工作表 <code>v2</code>（唯一未隱藏）：44 組 Bet Multiplier、SC／GC 的 Denom 與押注金額；<code>Sheet1</code>、<code>v1</code> 為隱藏的舊草稿</td><td><strong>現行版</strong></td></tr><tr><td><code>Bet Option規劃.pdf</code></td><td>2026-07-30</td><td>Bet Multiplier 44 組、Sweepstakes SC／GC、Vietnam 押注金額</td><td>較舊；GC 只列 16 檔，與 <code>v2</code> 不一致（第 6 節）</td></tr></tbody></table></div>
+<h2 id="1-定位與範圍">1. 定位與範圍</h2>
+<ul><li>Reskin 不重新設計數學：輪帶、Paytable、Feature 流程、倍率權重沿用來源遊戲的正式版本（ParSheet ID 不變），只調整<strong>押注結構、幣別與市場相關參數</strong>。</li><li>來源遊戲的數學版本必須記錄於 <code>Game Description</code> 工作表（ParSheet ID、基礎數學版本、RTP／Variant 四碼版本）；Reskin 版不得回頭修改來源數學。若市場需求迫使改數學（例如最大賠付限制），依 Omniplay 第 1.3 節升版並回寫來源遊戲，不得只在 Reskin 版分叉。</li><li>目前已定義的市場：Sweepstakes（SC／GC）、Vietnam。新增市場時在第 3 節補一節，並同步更新 Config。</li></ul>
+<h2 id="2-押注結構">2. 押注結構</h2>
+<p>押注金額由三個參數相乘，不直接列舉金額：</p>
+<pre><code>押注金額 = 最小押分（credits）× Denom × Bet Multiplier
+最小押分 = 100 credits（所有市場固定）</code></pre>
+<div class="tbl-wrap"><table><thead><tr><th>參數</th><th>定義</th><th>由誰決定</th></tr></thead><tbody><tr><td>最小押分</td><td>1 倍押注的 credit 數，固定 <code>100</code></td><td>產線共用</td></tr><tr><td>Denom</td><td>每 credit 的幣值，依市場／幣別不同</td><td>市場設定（第 3 節）</td></tr><tr><td>Bet Multiplier</td><td>押注倍數選項，<code>1</code>～<code>1000</code> 共 44 組</td><td>產線共用（第 2.1 節）</td></tr></tbody></table></div>
+<h3 id="21-共用-bet-multiplier44-組">2.1 共用 Bet Multiplier（44 組）</h3>
+<pre><code>1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+12, 14, 15, 16, 18, 20, 25, 30, 35, 40, 45, 50,
+60, 70, 80, 90, 100, 120, 140, 150, 160, 180, 200,
+250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000</code></pre>
+<ul><li>全部市場共用同一張倍數表；個別市場只能<strong>從中選用子集</strong>（如 Vietnam 36 組），不得新增表外倍數。</li><li>數學模型的 Bet Mode 成本（EB 倍數、BF／SF 價格倍數）以 1 倍押注為基準定義，與 Omniplay 相同；Reskin 不改這些倍數。</li></ul>
+<h2 id="3-各市場押注選項">3. 各市場押注選項</h2>
+<h3 id="31-sweepstakes-scsweeps-coins">3.1 Sweepstakes — SC（Sweeps Coins）</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>值</th></tr></thead><tbody><tr><td>Denom</td><td><code>0.002</code></td></tr><tr><td>1 倍押注</td><td><code>0.2 SC</code></td></tr><tr><td>選項數</td><td>44（倍數表全選）</td></tr><tr><td>最小／最大押注</td><td><code>0.2</code>／<code>200 SC</code></td></tr></tbody></table></div>
+<pre><code>0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.4, 2.8, 3, 3.2, 3.6, 4, 5, 6, 7, 8, 9, 10,
+12, 14, 16, 18, 20, 24, 28, 30, 32, 36, 40, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200</code></pre>
+<h3 id="32-sweepstakes-gcgold-coins">3.2 Sweepstakes — GC（Gold Coins）</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>值</th></tr></thead><tbody><tr><td>Denom</td><td><code>20</code></td></tr><tr><td>1 倍押注</td><td><code>2,000 GC</code></td></tr><tr><td>選項數</td><td>44（倍數表全選，依 <code>v2</code>）</td></tr><tr><td>最小／最大押注</td><td><code>2,000</code>／<code>2,000,000 GC</code></td></tr></tbody></table></div>
+<pre><code>2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000, 24000, 28000, 30000, 32000, 36000,
+40000, 50000, 60000, 70000, 80000, 90000, 100000, 120000, 140000, 160000, 180000, 200000, 240000, 280000,
+300000, 320000, 360000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000,
+1200000, 1400000, 1600000, 1800000, 2000000</code></pre>
+<ul><li>PDF（07-30）版只列 16 檔（<code>2000</code>～<code>100000</code>，倍數 1～10、15、20、30、35、40、50）；<code>v2</code>（08-13）改為 44 檔全選。以 <code>v2</code> 為準，差異待確認（第 7 節）。</li><li>GC 金額位數大：最大押注 <code>2,000,000</code> × Max Multiplier（例 20000x）= <code>4 × 10¹⁰</code>，Config、Simulator 報表、Demogame 顯示與後端欄位都必須確認不溢位、不被四捨五入。</li></ul>
+<h3 id="33-vietnam">3.3 Vietnam</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>值</th></tr></thead><tbody><tr><td>Denom</td><td><code>0.004</code></td></tr><tr><td>1 倍押注</td><td><code>0.4</code></td></tr><tr><td>選項數</td><td>36（倍數表子集）</td></tr><tr><td>最小／最大押注</td><td><code>0.4</code>／<code>400</code></td></tr></tbody></table></div>
+<pre><code>0.4, 0.8, 1.2, 1.6, 2, 2.4, 2.8, 3.2, 3.6, 4, 6, 8, 10, 12, 14, 16, 18, 20,
+24, 28, 32, 36, 40, 60, 80, 100, 120, 140, 160, 180, 200, 240, 280, 320, 360, 400</code></pre>
+<ul><li>對應倍數：<code>1</code>～<code>10</code>、<code>15</code>～<code>50</code>（步進 5）、<code>60</code>～<code>100</code>（步進 10）、<code>150</code>～<code>500</code>（步進 50）、<code>600</code>～<code>1000</code>（步進 100）；跳過 <code>12、14、16、18</code> 與 <code>120、140、160、180</code>。</li><li>來源為 PDF；<code>v2</code> 工作表沒有 Vietnam 列，<code>Sheet1</code> 舊草稿的 Vietnam（Denom <code>0.001</code>、20 組）已作廢。</li></ul>
+<h3 id="34-市場總覽">3.4 市場總覽</h3>
+<div class="tbl-wrap"><table><thead><tr><th>市場／幣別</th><th class="n">Denom</th><th class="n">1 倍押注</th><th class="n">選項數</th><th class="n">最大押注</th><th>來源</th></tr></thead><tbody><tr><td>Sweepstakes SC</td><td class="n">0.002</td><td class="n">0.2</td><td class="n">44</td><td class="n">200</td><td><code>v2</code></td></tr><tr><td>Sweepstakes GC</td><td class="n">20</td><td class="n">2,000</td><td class="n">44</td><td class="n">2,000,000</td><td><code>v2</code></td></tr><tr><td>Vietnam</td><td class="n">0.004</td><td class="n">0.4</td><td class="n">36</td><td class="n">400</td><td>PDF</td></tr><tr><td>（參考）Omniplay 現行</td><td class="n">0.002</td><td class="n">0.2</td><td class="n">30</td><td class="n">5,000</td><td><code>v1</code> 舊表</td></tr></tbody></table></div>
+<h2 id="4-數學模型與-config-的要求">4. 數學模型與 Config 的要求</h2>
+<ul><li>數學模型 XLSX 的押注相關工作表以 <strong>Bet Multiplier</strong> 為單位列示（1 倍、EB 倍數、BF／SF 價格倍數），不以任何一種幣值列金額；幣值金額只在 <code>Game Description</code> 以「Denom × 倍數」舉例。</li><li>Config 必須分開存放：<code>bet_multipliers</code>（44 組共用表）、各市場的 <code>denom</code> 與 <code>min_credits = 100</code>、各市場啟用的倍數子集；不得把 SC／GC／Vietnam 的金額清單各寫一份。</li><li>押注層級（Omniplay 第 1.4.3 節的 <code>bet_tier_amount</code>）在 Reskin 市場如何換算成美元門檻，待確認（第 7 節）；確認前 Config 不得寫死 <code>$2</code>／<code>$100</code> 門檻，須以參數提供。</li><li>GC 無現金價值，SC 可兌換；兩幣別是否共用同一套 RTP、Card System Profile 與 Link 資格，待確認；確認前模型對兩幣別使用相同數學，只有 Denom 不同。</li><li>系統最大賠付：以各市場最大押注 × Max Multiplier 驗算，超出該市場系統上限者調低倍率上限或裁掉高倍數選項，並在數學文件明記；各市場上限值待確認。</li><li>Simulator 的 <code>BATCH_RUNS</code> 押注檔位自動選組（模擬程式規範 §3.2.3）必須能依市場的 Denom 與倍數子集產生檔位；報表要標示市場與幣別。</li></ul>
+<h2 id="5-與-omniplay-的差異">5. 與 Omniplay 的差異</h2>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>Omniplay</th><th>Reskin</th></tr></thead><tbody><tr><td>數學</td><td>自行設計或競品衍生</td><td>沿用來源遊戲正式版本，不改數學</td></tr><tr><td>押注選項</td><td>30 組（倍數 1～25000，金額 0.2～5000）</td><td>44 組共用倍數表（1～1000），各市場選子集</td></tr><tr><td>Denom</td><td>單一 <code>0.002</code></td><td>依市場／幣別：SC 0.002、GC 20、Vietnam 0.004</td></tr><tr><td>幣別</td><td>單一現金幣</td><td>Sweepstakes 雙幣（SC 可兌換、GC 不可）</td></tr><tr><td>最大押注</td><td>5,000（H026 等）</td><td>SC 200、GC 2,000,000、Vietnam 400</td></tr><tr><td>押注層級門檻</td><td><code>$2</code>／<code>$100</code></td><td>待確認換算方式</td></tr></tbody></table></div>
+<h2 id="6-開發前檢查">6. 開發前檢查</h2>
+<ul><li class="check"><span class="cb">☐</span> 來源遊戲的 ParSheet ID 與數學版本已記錄於 <code>Game Description</code>，Reskin 版未改動輪帶、Paytable、權重。</li><li class="check"><span class="cb">☐</span> 押注以 <code>100 credits × Denom × Bet Multiplier</code> 計算；Config 存共用倍數表與各市場 Denom／子集，未寫死金額清單。</li><li class="check"><span class="cb">☐</span> SC／GC／Vietnam 的押注清單與第 3 節逐檔一致（GC 以 <code>v2</code> 44 檔為準）。</li><li class="check"><span class="cb">☐</span> 各市場 <code>最大押注 × Max Multiplier</code> 已驗算，GC 大數值的顯示與欄位不溢位。</li><li class="check"><span class="cb">☐</span> 押注層級門檻、Link 資格、系統上限等待確認項已取得答案或以參數保留。</li><li class="check"><span class="cb">☐</span> Omniplay 第 1.6 節其餘檢查項目全部通過。</li></ul>
+<h2 id="7-待確認事項">7. 待確認事項</h2>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>現況</th><th>需決定</th></tr></thead><tbody><tr><td>GC 選項數</td><td>PDF 16 檔、<code>v2</code> 44 檔</td><td>以哪一版上線；若 44 檔，高檔位（&gt;100,000 GC）是否全部開放</td></tr><tr><td>押注層級換算</td><td>Omniplay 以美元 <code>$2</code>／<code>$100</code> 分級</td><td>SC、GC、Vietnam 各自的分級門檻（或是否分級）</td></tr><tr><td>雙幣 RTP／機制</td><td>未定義</td><td>SC 與 GC 是否共用 RTP、新手體驗、Card System Profile；GC 是否有 Link／彩金</td></tr><tr><td>系統最大賠付</td><td>未定義</td><td>各市場單把派彩上限，以及超過時截斷或重骰</td></tr><tr><td>Vietnam 幣別</td><td>PDF 只給 Denom</td><td>幣別單位與是否另有彩金規則</td></tr><tr><td>Feature 購買上限</td><td><code>Sheet1</code> 舊草稿曾標示「Super Feature 可使用最大押注」「Buy Feature 可使用押注」</td><td>現行版是否仍限制 BF／SF 可用的押注檔位</td></tr></tbody></table></div></section></main>
+</div>
+</div>
+<script>
+var TAB_IDS = ['math'];
+function activate(tabId, anchor) {
+  document.querySelectorAll('.tab').forEach(function(b) {
+    var on = b.dataset.tab === tabId;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;
+  });
+  document.querySelectorAll('.panel').forEach(function(p) {
+    p.hidden = (p.id !== 'panel-' + tabId);
+  });
+  document.querySelectorAll('.toc').forEach(function(t) {
+    t.hidden = (t.id !== 'toc-' + tabId);
+  });
+  if (anchor) {
+    var el = document.getElementById(anchor);
+    if (el) el.scrollIntoView();
+  } else {
+    window.scrollTo(0, 0);
+  }
+}
+document.querySelectorAll('.tab').forEach(function(b) {
+  b.addEventListener('click', function() { activate(b.dataset.tab); });
+});
+(function() {
+  var h = decodeURIComponent(location.hash.slice(1));
+  if (!h) return;
+  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
+  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
+})();
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a');
+  if (!a) return;
+  if (a.classList.contains('tab-link')) {
+    e.preventDefault();
+    activate(a.dataset.tab, a.dataset.anchor || null);
+  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    var panel = el.closest('.panel');
+    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);
+  }
+});
+</script>
+</body>
+</html>

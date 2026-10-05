@@ -10,7 +10,7 @@
 |---|---|---|
 | `專案需知/`（根目錄各 .md） | **Omniplay** | 現行全部規範文件皆屬 Omniplay 產線 |
 | `專案需知/Landbase/` | Landbase | Landbase 轉製遊戲的規範；目前有 [數學模型規範.md](Landbase/數學模型規範.md)（差異式，未覆寫者沿用 Omniplay），彙整版為 `Landbase/landbase_specification.html` |
-| `專案需知/Reskin/` | Reskin | Reskin 產線的規範放這裡（尚未建立；建立後由 `_build_html.py` 自動產出 `Reskin/reskin_specification.html`） |
+| `專案需知/Reskin/` | Reskin | 既有遊戲換皮輸出到 Sweepstakes（SC／GC）、Vietnam 等市場；目前有 [數學模型規範.md](Reskin/數學模型規範.md)（差異式），彙整版為 `Reskin/reskin_specification.html` |
 | `專案需知/其他/` | — | 工具腳本（`_build_html.py`、`_check_xlsx_style.py`）與本總覽 |
 
 任何一份 .md（根目錄或產線資料夾）更新後，必須執行 `其他/_build_html.py`；腳本會同時重建根目錄的 `slot_development_specification.html` 與各產線資料夾的 HTML。產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用根目錄規範。
@@ -27,7 +27,9 @@
 | [Demogame規範.md](Demogame規範.md) | Demogame 用途與載入、共用／By Game 區域、補牌方式、Debug 與對帳、交付檢查。 |
 | [腳本規範.md](腳本規範.md) | 表演腳本（新手體驗、Buy Feature、Free Spin 系統）的清單結構、挑選規則、權重整合與交付檢查。 |
 | [壓測說明書.md](壓測說明書.md) | 後端壓測要壓哪些組合、報表怎麼讀、RTP 判定標準、常見異常與處置。 |
+| [後端報表筆記.md](後端報表筆記.md) | 後端 SPS（RTP Validator）逐分支 TXT 的命名、Coin in／WTIdx 對應、區段內容、指標換算、倍率權重核對方法與檢查清單。 |
 | [Landbase/數學模型規範.md](Landbase/數學模型規範.md) | **Landbase 產線**：轉製遊戲的數學調性、RTP 配置（Link + Game + 新手體驗、低／高注兩級）、Link 彩金參數、系統限制（新手／低注不拉 Link、最大賠付 $10,000,000）；未覆寫者沿用 Omniplay 數學模型規範。 |
+| [Reskin/數學模型規範.md](Reskin/數學模型規範.md) | **Reskin 產線**：沿用來源遊戲數學，只改押注結構（100 credits × Denom × 44 組 Bet Multiplier）、各市場押注選項（Sweepstakes SC／GC、Vietnam）與 Config 要求；未覆寫者沿用 Omniplay 數學模型規範。 |
 | [提案報告規範.md](提案報告規範.md) | 遊戲提案說明簡報（.pptx）的命名、固定章節結構、頁面版式、色彩字型、內容規則與交付檢查。 |
 
 ## 開新專案必讀流程
@@ -44,6 +46,7 @@
 8. [腳本規範.md](腳本規範.md)：製作表演腳本前必讀。
 9. [提案報告規範.md](提案報告規範.md)：製作提案報告（提案說明簡報）前必讀。
 10. [壓測說明書.md](壓測說明書.md)：安排後端壓測與判讀壓測報表前必讀。
+11. [後端報表筆記.md](後端報表筆記.md)：核對後端 SPS 報表（倍率權重、Card System）前必讀。
 
 只執行部分工作時，至少要讀完本 README 與該工作對應的文件。
 
