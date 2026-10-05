@@ -62,6 +62,9 @@ h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
   padding:3px 11px; border-left:2px solid var(--rule)}
 .toc a:hover{color:var(--s1); border-left-color:var(--s1)}
 .toc a.toc-3{padding-left:25px}
+.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}
+.toc a.toc-doc:not(:first-child){margin-top:8px}
+.toc a.toc-doc.on{color:var(--s1)}
 main{flex:1; min-width:0}
 .panel[hidden]{display:none}
 .panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
@@ -93,7 +96,14 @@ td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--panel-2)}
 hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
-@media (max-width:900px){ .toc{display:none!important} }
+@media (max-width:900px){
+  .body-row{flex-direction:column; gap:14px}
+  .toc{display:none!important}
+  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;
+    flex-wrap:wrap; gap:4px 16px; padding:0}
+  .toc a:not(.toc-doc){display:none}
+  .toc a.toc-doc{padding:0; margin:0!important}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -104,10 +114,10 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
   <h1 class="site">Reskin 開發規範</h1>
   <p class="meta">由 <code>專案需知/Reskin/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-05</p>
 </header>
-<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-math" data-tab="math" aria-controls="panel-math" aria-selected="true" tabindex="0">數學模型規範</button></div>
+<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="math" data-tabs="math" aria-selected="true" tabindex="0">數學模型規範</button></div>
 <div class="body-row">
   <nav class="toc" id="toc-math"><a class="toc-2" href="#1-定位與範圍" data-tab="math">1. 定位與範圍</a><a class="toc-2" href="#2-押注結構" data-tab="math">2. 押注結構</a><a class="toc-3" href="#21-共用-bet-multiplier44-組" data-tab="math">2.1 共用 Bet Multiplier（44 組）</a><a class="toc-2" href="#3-各市場押注選項" data-tab="math">3. 各市場押注選項</a><a class="toc-3" href="#31-reskin-sc" data-tab="math">3.1 Reskin — SC</a><a class="toc-3" href="#32-reskin-gc" data-tab="math">3.2 Reskin — GC</a><a class="toc-3" href="#33-vietnam" data-tab="math">3.3 Vietnam</a><a class="toc-3" href="#34-市場總覽" data-tab="math">3.4 市場總覽</a><a class="toc-2" href="#4-數學模型與-config-的要求" data-tab="math">4. 數學模型與 Config 的要求</a><a class="toc-2" href="#5-與-omniplay-的差異" data-tab="math">5. 與 Omniplay 的差異</a><a class="toc-2" href="#6-開發前檢查" data-tab="math">6. 開發前檢查</a><a class="toc-2" href="#7-待確認事項" data-tab="math">7. 待確認事項</a></nav>
-  <main><section class="panel" role="tabpanel" id="panel-math" aria-labelledby="tab-math"><h1 id="reskin-數學模型規範">Reskin 數學模型規範</h1>
+  <main><section class="panel" role="tabpanel" id="panel-math"><h1 id="reskin-數學模型規範">Reskin 數學模型規範</h1>
 <p>本文件屬於 <code>專案需知/Reskin/</code>，適用於 <strong>Reskin 產線</strong>：以既有 Omniplay 遊戲數學為底，換皮輸出到 Reskin（SC／GC 雙幣）與 Vietnam 等市場的版本。</p>
 <p>本文件採<strong>差異式</strong>撰寫：只列 Reskin 產線與 Omniplay 不同或新增的規則；<strong>凡本文件未覆寫的條款，一律沿用 Omniplay 的 <a href="../igaming_specification.html#math">數學模型規範.md</a></strong>。兩者衝突時以本文件為準。</p>
 <p>目前的需求來源文件（<code>個人工作區/專案紀錄/</code> 下的 Reskin 需求資料夾）：</p>
@@ -156,9 +166,11 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 </div>
 <script>
 var TAB_IDS = ['math'];
+var LAST = {};
 function activate(tabId, anchor) {
   document.querySelectorAll('.tab').forEach(function(b) {
-    var on = b.dataset.tab === tabId;
+    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;
+    if (on) LAST[b.id] = tabId;
     b.setAttribute('aria-selected', on ? 'true' : 'false');
     b.tabIndex = on ? 0 : -1;
     if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -177,7 +189,7 @@ function activate(tabId, anchor) {
   }
 }
 document.querySelectorAll('.tab').forEach(function(b) {
-  b.addEventListener('click', function() { activate(b.dataset.tab); });
+  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });
 });
 (function() {
   var bar = document.querySelector('.tabs');

@@ -62,6 +62,9 @@ h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
   padding:3px 11px; border-left:2px solid var(--rule)}
 .toc a:hover{color:var(--s1); border-left-color:var(--s1)}
 .toc a.toc-3{padding-left:25px}
+.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}
+.toc a.toc-doc:not(:first-child){margin-top:8px}
+.toc a.toc-doc.on{color:var(--s1)}
 main{flex:1; min-width:0}
 .panel[hidden]{display:none}
 .panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
@@ -93,7 +96,14 @@ td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--panel-2)}
 hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
-@media (max-width:900px){ .toc{display:none!important} }
+@media (max-width:900px){
+  .body-row{flex-direction:column; gap:14px}
+  .toc{display:none!important}
+  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;
+    flex-wrap:wrap; gap:4px 16px; padding:0}
+  .toc a:not(.toc-doc){display:none}
+  .toc a.toc-doc{padding:0; margin:0!important}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -104,21 +114,15 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
   <h1 class="site">Landbase 轉製 開發規範</h1>
   <p class="meta">由 <code>專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-05</p>
 </header>
-<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-導覽" data-tab="導覽" aria-controls="panel-導覽" aria-selected="true" tabindex="0">導覽</button><button class="tab" role="tab" id="tab-系統機制" data-tab="系統機制" aria-controls="panel-系統機制" aria-selected="false" tabindex="-1">系統機制</button><button class="tab" role="tab" id="tab-docs" data-tab="docs" aria-controls="panel-docs" aria-selected="false" tabindex="-1">數學文件規範</button><button class="tab" role="tab" id="tab-送驗規範" data-tab="送驗規範" aria-controls="panel-送驗規範" aria-selected="false" tabindex="-1">送驗規範</button></div>
+<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="導覽" data-tabs="導覽" aria-selected="true" tabindex="0">導覽</button><button class="tab" role="tab" id="tab-g1" data-tab="系統機制" data-tabs="系統機制" aria-selected="false" tabindex="-1">系統機制</button><button class="tab" role="tab" id="tab-g2" data-tab="docs" data-tabs="docs" aria-selected="false" tabindex="-1">數學文件規範</button><button class="tab" role="tab" id="tab-g3" data-tab="送驗規範" data-tabs="送驗規範" aria-selected="false" tabindex="-1">送驗規範</button></div>
 <div class="body-row">
-  <nav class="toc" id="toc-導覽"><a class="toc-2" href="#頁籤" data-tab="導覽">頁籤</a><a class="toc-2" href="#沿用-omniplay-的項目" data-tab="導覽">沿用 Omniplay 的項目</a><a class="toc-2" href="#待討論事項" data-tab="導覽">待討論事項</a></nav><nav class="toc" id="toc-系統機制" hidden><a class="toc-2" href="#1-link-彩金grandmajor" data-tab="系統機制">1. Link 彩金（Grand／Major）</a><a class="toc-2" href="#2-新手體驗" data-tab="系統機制">2. 新手體驗</a><a class="toc-2" href="#3-老手救援" data-tab="系統機制">3. 老手救援</a><a class="toc-2" href="#4-系統限制" data-tab="系統機制">4. 系統限制</a><a class="toc-2" href="#檢查清單" data-tab="系統機制">檢查清單</a></nav><nav class="toc" id="toc-docs" hidden><a class="toc-2" href="#1-數學調性" data-tab="docs">1. 數學調性</a><a class="toc-2" href="#2-rtp-配置" data-tab="docs">2. RTP 配置</a><a class="toc-3" href="#21-配置口徑" data-tab="docs">2.1 配置口徑</a><a class="toc-3" href="#22-nbeb-rtp-配置" data-tab="docs">2.2 NB／EB RTP 配置</a><a class="toc-3" href="#23-bfsf-rtp-配置" data-tab="docs">2.3 BF／SF RTP 配置</a><a class="toc-3" href="#24-與-omniplay-主流配置的差異" data-tab="docs">2.4 與 Omniplay 主流配置的差異</a><a class="toc-2" href="#3-card-system-的層級調整" data-tab="docs">3. Card System 的層級調整</a><a class="toc-2" href="#4-命名補充" data-tab="docs">4. 命名補充</a><a class="toc-2" href="#檢查清單-2" data-tab="docs">檢查清單</a></nav><nav class="toc" id="toc-送驗規範" hidden><a class="toc-2" href="#1-代號對應" data-tab="送驗規範">1. 代號對應</a><a class="toc-2" href="#2-送驗包與-op-遊戲的差異" data-tab="送驗規範">2. 送驗包與 OP 遊戲的差異</a><a class="toc-2" href="#3-模擬資產的歸屬" data-tab="送驗規範">3. 模擬資產的歸屬</a><a class="toc-2" href="#4-轉製後必須重新確認的內容" data-tab="送驗規範">4. 轉製後必須重新確認的內容</a><a class="toc-2" href="#檢查清單-3" data-tab="送驗規範">檢查清單</a></nav>
-  <main><section class="panel" role="tabpanel" id="panel-導覽" aria-labelledby="tab-導覽"><h1 id="landbase-轉製-導覽">Landbase 轉製 導覽</h1>
+  <nav class="toc" id="toc-導覽"><a class="toc-2" href="#頁籤" data-tab="導覽">頁籤</a></nav><nav class="toc" id="toc-系統機制" hidden><a class="toc-2" href="#1-link-彩金grandmajor" data-tab="系統機制">1. Link 彩金（Grand／Major）</a><a class="toc-2" href="#2-新手體驗" data-tab="系統機制">2. 新手體驗</a><a class="toc-2" href="#3-老手救援" data-tab="系統機制">3. 老手救援</a><a class="toc-2" href="#4-系統限制" data-tab="系統機制">4. 系統限制</a><a class="toc-2" href="#檢查清單" data-tab="系統機制">檢查清單</a></nav><nav class="toc" id="toc-docs" hidden><a class="toc-2" href="#1-數學調性" data-tab="docs">1. 數學調性</a><a class="toc-2" href="#2-rtp-配置" data-tab="docs">2. RTP 配置</a><a class="toc-3" href="#21-配置口徑" data-tab="docs">2.1 配置口徑</a><a class="toc-3" href="#22-nbeb-rtp-配置" data-tab="docs">2.2 NB／EB RTP 配置</a><a class="toc-3" href="#23-bfsf-rtp-配置" data-tab="docs">2.3 BF／SF RTP 配置</a><a class="toc-3" href="#24-與-omniplay-主流配置的差異" data-tab="docs">2.4 與 Omniplay 主流配置的差異</a><a class="toc-2" href="#3-card-system-的層級調整" data-tab="docs">3. Card System 的層級調整</a><a class="toc-2" href="#4-命名補充" data-tab="docs">4. 命名補充</a><a class="toc-2" href="#檢查清單-2" data-tab="docs">檢查清單</a></nav><nav class="toc" id="toc-送驗規範" hidden><a class="toc-2" href="#1-代號對應" data-tab="送驗規範">1. 代號對應</a><a class="toc-2" href="#2-送驗包與-op-遊戲的差異" data-tab="送驗規範">2. 送驗包與 OP 遊戲的差異</a><a class="toc-2" href="#3-模擬資產的歸屬" data-tab="送驗規範">3. 模擬資產的歸屬</a><a class="toc-2" href="#4-轉製後必須重新確認的內容" data-tab="送驗規範">4. 轉製後必須重新確認的內容</a><a class="toc-2" href="#檢查清單-3" data-tab="送驗規範">檢查清單</a></nav>
+  <main><section class="panel" role="tabpanel" id="panel-導覽"><h1 id="landbase-轉製-導覽">Landbase 轉製 導覽</h1>
 <p>本規範適用於 <strong>Landbase 轉製遊戲</strong>：實體機台數學轉製為線上版，Game List 備註「線上-Landbase轉製遊戲」者，例如 102xxx／105xxx。</p>
 <p>Landbase 規範採<strong>差異式</strong>撰寫：只列 Landbase 產線與 Omniplay 不同或新增的規則。<strong>凡未覆寫的條款，一律沿用 Omniplay 的規範</strong>（<a href="../igaming_specification.html#math">數學模型規範.md</a>、<a href="../igaming_specification.html#submission">送驗文件規範.md</a> 等）。兩者衝突時以 Landbase 規範為準。</p>
 <p>RTP 配置與系統機制的正式來源為 Google 試算表 <a href="https://docs.google.com/spreadsheets/d/1Qk66cM8iZqyEhr23nsnxiDXOHj8CGNji--sedOHF0F8/edit?gid=386193409">RTP 設定</a>（<code>數值設定</code>、<code>彩金參數</code> 兩頁）。目前引用 <strong>2026/05/14「全平台」版的「轉製遊戲」欄</strong>；試算表更新時必須同步修訂並記錄日期。</p>
 <h2 id="頁籤">頁籤</h2>
-<div class="tbl-wrap"><table><thead><tr><th>頁籤</th><th>內容</th></tr></thead><tbody><tr><td>導覽</td><td>適用範圍、沿用 Omniplay 的項目、待討論事項</td></tr><tr><td><a href="#" class="tab-link" data-tab="系統機制">系統機制</a></td><td>Link 彩金（Grand／Major）、新手體驗、老手救援、系統限制（新手／低注不拉 Link、最大賠付）</td></tr><tr><td><a href="#" class="tab-link" data-tab="docs">數學文件規範</a></td><td>數學調性、RTP 配置、Card System 層級調整、命名補充</td></tr><tr><td><a href="#" class="tab-link" data-tab="送驗規範">送驗規範</a></td><td>代號對應、送驗包與 OP 遊戲的差異、模擬資產歸屬、轉製後須重新確認的內容</td></tr></tbody></table></div>
-<h2 id="沿用-omniplay-的項目">沿用 Omniplay 的項目</h2>
-<p>下列章節沿用 Omniplay <a href="../igaming_specification.html#math">數學模型規範.md</a>，不另訂：</p>
-<ul><li>1.1 必要內容、1.2 模型命名與工作表命名、1.3 版本規則（含 1.3.1）。</li><li>1.4.3 押注層級的 <code>bet_tier_amount</code> 計算方式；判定門檻改為兩級，見<a href="#" class="tab-link" data-tab="docs">數學文件規範</a>。</li><li>1.5 卡片倍率區間、1.5.1 區間工作表；欄位依<a href="#" class="tab-link" data-tab="docs">數學文件規範</a>的 Card System 層級調整。</li><li>1.7 程式化修改 XLSX 的格式規則。</li><li>第 2 章 Card System 的定位、卡片判定、Retry 流程、倍率分母與必要監控。</li><li>PARsheet。</li><li>1.6 開發前檢查的其餘項目；Landbase 專屬的檢查項列在各頁籤最後。</li></ul>
-<p>送驗文件的製作沿用 Omniplay <a href="../igaming_specification.html#submission">送驗文件規範.md</a>；Landbase 轉製遊戲的差異見<a href="#" class="tab-link" data-tab="送驗規範">送驗規範</a>。</p>
-<h2 id="待討論事項">待討論事項</h2>
-<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>現況</th><th>需決定</th><th>相關頁籤</th></tr></thead><tbody><tr><td>數學調性</td><td>無明確方向</td><td>以原機為底或重新設計；波動度／Hit Rate 目標；是否啟用 Card System</td><td>數學文件規範</td></tr><tr><td>新手 BF／SF RTP</td><td>試算表為 0%</td><td>新手是否可購買 BF／SF；可購買時的 Game RTP</td><td>數學文件規範</td></tr><tr><td>超過系統最大賠付的處理</td><td>只定上限 <code>$10,000,000</code></td><td>截斷或整把重骰；Simulator 與 Demogame 須一致</td><td>系統機制</td></tr><tr><td>大注門檻</td><td>只有 <code>&gt;= $2</code> 一級</td><td>押注選項極大的遊戲是否需要額外上限層級</td><td>數學文件規範</td></tr></tbody></table></div></section><section class="panel" role="tabpanel" id="panel-系統機制" aria-labelledby="tab-系統機制" hidden><h1 id="landbase-轉製-系統機制">Landbase 轉製 系統機制</h1>
+<div class="tbl-wrap"><table><thead><tr><th>頁籤</th><th>內容</th></tr></thead><tbody><tr><td>導覽</td><td>適用範圍與各頁籤說明</td></tr><tr><td><a href="#" class="tab-link" data-tab="系統機制">系統機制</a></td><td>Link 彩金（Grand／Major）、新手體驗、老手救援、系統限制（新手／低注不拉 Link、最大賠付）</td></tr><tr><td><a href="#" class="tab-link" data-tab="docs">數學文件規範</a></td><td>數學調性、RTP 配置、Card System 層級調整、命名補充</td></tr><tr><td><a href="#" class="tab-link" data-tab="送驗規範">送驗規範</a></td><td>代號對應、送驗包與 OP 遊戲的差異、模擬資產歸屬、轉製後須重新確認的內容</td></tr></tbody></table></div></section><section class="panel" role="tabpanel" id="panel-系統機制" hidden><h1 id="landbase-轉製-系統機制">Landbase 轉製 系統機制</h1>
 <p>本頁說明 Landbase 轉製遊戲的系統機制與系統限制。RTP 數值見<a href="#" class="tab-link" data-tab="docs">數學文件規範</a>；未覆寫者沿用 Omniplay（見<a href="#" class="tab-link" data-tab="導覽">導覽</a>）。</p>
 <h2 id="1-link-彩金grandmajor">1. Link 彩金（Grand／Major）</h2>
 <p>Link 彩金為 Grand、Major 兩層累積彩池，參數依上線區域不同（試算表 <code>彩金參數</code> 頁，2026/05/14）：</p>
@@ -130,12 +134,12 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 <ul><li>Landbase 轉製遊戲<strong>不啟用</strong>老手救援，RTP 固定 0%（主流遊戲為 0.50%）。</li><li>Config、Simulator 與 Demogame 不得出現老手救援的設定或演出。</li></ul>
 <h2 id="4-系統限制">4. 系統限制</h2>
 <div class="tbl-wrap"><table><thead><tr><th>限制</th><th>規則</th></tr></thead><tbody><tr><td>新手標籤</td><td>玩家仍帶有新手標籤時，<strong>任何 Bet Mode（含 BF／SF）都不得拉 Link 彩金</strong>；不得因為購買 Feature 而繞過新手限制。</td></tr><tr><td>新手期</td><td>新手期不得拉彩金，Link RTP 必為 0%；<code>&gt;= $2</code> 時只滾 Inrc、不中彩。</td></tr><tr><td>低注</td><td><code>bet_tier_amount &lt; $2</code> 不得拉 Link 彩金，新手、老手皆同；NB／EB 以實際押注、BF／SF 以反推基礎押注判定。</td></tr><tr><td>系統最大賠付</td><td><strong>單把派彩上限 <code>$10,000,000</code></strong>。數學模型必須驗算 <code>Max Multiplier × 該遊戲最大押注 ≤ $10,000,000</code>，超出者調低倍率上限或最大押注，並在數學文件明記。</td></tr></tbody></table></div>
-<ul><li>Link 資格一律由系統依 Profile 與 <code>bet_tier_amount</code> 判定；<code>link_enabled = false</code> 時不得只把派彩改成 0，結果中不得出現已觸發但不派彩的 Link 事件或演出（同 Omniplay 數學模型規範第 2.3.1 節）。</li><li>超過系統最大賠付時的處理方式（截斷或整把重骰）待確認（見<a href="#" class="tab-link" data-tab="導覽">導覽</a>的待討論事項）；確認前模型以「不可能超過」為設計目標，而非依賴截斷。</li><li>Omniplay 數學模型規範第 1.4.5 節的 <code>$5,000,000</code>／<code>$1,000,000</code> 重骰上限<strong>不適用</strong>於 Landbase，以本節 <code>$10,000,000</code> 為準。</li></ul>
+<ul><li>Link 資格一律由系統依 Profile 與 <code>bet_tier_amount</code> 判定；<code>link_enabled = false</code> 時不得只把派彩改成 0，結果中不得出現已觸發但不派彩的 Link 事件或演出（同 Omniplay 數學模型規範第 2.3.1 節）。</li><li>超過系統最大賠付時的處理方式（截斷或整把重骰）待確認；確認前模型以「不可能超過」為設計目標，而非依賴截斷。</li><li>Omniplay 數學模型規範第 1.4.5 節的 <code>$5,000,000</code>／<code>$1,000,000</code> 重骰上限<strong>不適用</strong>於 Landbase，以本節 <code>$10,000,000</code> 為準。</li></ul>
 <h2 id="檢查清單">檢查清單</h2>
-<ul><li class="check"><span class="cb">☐</span> 新手（含 BF／SF）與低注的 Link RTP 為 0%，且結果中無已觸發但不派彩的 Link 事件。</li><li class="check"><span class="cb">☐</span> 老手救援未啟用，Config 無相關設定。</li><li class="check"><span class="cb">☐</span> <code>Max Multiplier × 最大押注 ≤ $10,000,000</code> 已驗算並記錄。</li><li class="check"><span class="cb">☐</span> 採用的 Link 彩金 Area 參數版本已記錄；數學模型未寫死彩金參數。</li></ul></section><section class="panel" role="tabpanel" id="panel-docs" aria-labelledby="tab-docs" hidden><h1 id="landbase-轉製-數學文件規範">Landbase 轉製 數學文件規範</h1>
+<ul><li class="check"><span class="cb">☐</span> 新手（含 BF／SF）與低注的 Link RTP 為 0%，且結果中無已觸發但不派彩的 Link 事件。</li><li class="check"><span class="cb">☐</span> 老手救援未啟用，Config 無相關設定。</li><li class="check"><span class="cb">☐</span> <code>Max Multiplier × 最大押注 ≤ $10,000,000</code> 已驗算並記錄。</li><li class="check"><span class="cb">☐</span> 採用的 Link 彩金 Area 參數版本已記錄；數學模型未寫死彩金參數。</li></ul></section><section class="panel" role="tabpanel" id="panel-docs" hidden><h1 id="landbase-轉製-數學文件規範">Landbase 轉製 數學文件規範</h1>
 <p>本頁說明 Landbase 轉製遊戲的數學調性、RTP 配置與數學模型的調整。彩金、新手體驗與系統限制見<a href="#" class="tab-link" data-tab="系統機制">系統機制</a>；未覆寫者沿用 Omniplay <a href="../igaming_specification.html#math">數學模型規範.md</a>（見<a href="#" class="tab-link" data-tab="導覽">導覽</a>）。</p>
 <h2 id="1-數學調性">1. 數學調性</h2>
-<ul><li>目前<strong>沒有明確方向，由負責人自由發揮</strong>（見<a href="#" class="tab-link" data-tab="導覽">導覽</a>的待討論事項）。</li><li>自由發揮不代表免記錄。負責人決定調性後，必須在數學模型的 <code>Game Description</code> 工作表與 <code>game_rule.md</code> 寫明：<ul><li>以原機數學為底還是重新設計；若以原機為底，記錄原機 RTP（Game List 的「RTP 版本」欄，例：84%）與調整到線上目標 RTP 的方式（改輪帶、改 Paytable、Card System 或其他）。</li><li>波動度／最大倍數目標與 Hit Rate 目標。</li><li>是否啟用 Card System；啟用時依第 3 節。</li></ul></li><li>原機既有的 Bonus／Feature 玩法屬於 Game RTP 的一部分，不另拆 Bonus Game RTP（見第 2 節）。</li></ul>
+<ul><li>目前<strong>沒有明確方向，由負責人自由發揮</strong>（待討論）。</li><li>自由發揮不代表免記錄。負責人決定調性後，必須在數學模型的 <code>Game Description</code> 工作表與 <code>game_rule.md</code> 寫明：<ul><li>以原機數學為底還是重新設計；若以原機為底，記錄原機 RTP（Game List 的「RTP 版本」欄，例：84%）與調整到線上目標 RTP 的方式（改輪帶、改 Paytable、Card System 或其他）。</li><li>波動度／最大倍數目標與 Hit Rate 目標。</li><li>是否啟用 Card System；啟用時依第 3 節。</li></ul></li><li>原機既有的 Bonus／Feature 玩法屬於 Game RTP 的一部分，不另拆 Bonus Game RTP（見第 2 節）。</li></ul>
 <h2 id="2-rtp-配置">2. RTP 配置</h2>
 <h3 id="21-配置口徑">2.1 配置口徑</h3>
 <pre><code>Total RTP = Link RTP + Game RTP + 新手體驗 RTP</code></pre>
@@ -159,7 +163,7 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 <h2 id="4-命名補充">4. 命名補充</h2>
 <ul><li>Landbase 轉製遊戲的 ParSheet ID 仍為 <code>H&lt;三位數字&gt;1</code>；同一數學供多個 Game ID 使用時（如 <code>H0111</code> → 102001／102002），數學模型只建一份，Game ID 對應記錄於 <code>Game Description</code> 工作表與 Game List。</li></ul>
 <h2 id="檢查清單-2">檢查清單</h2>
-<ul><li class="check"><span class="cb">☐</span> 已確認數學調性並記錄於 <code>Game Description</code>（原機為底或重新設計、目標 RTP、波動度、是否啟用 Card System）。</li><li class="check"><span class="cb">☐</span> RTP 配置採第 2 節（Link + Game + 新手體驗），且與試算表「轉製遊戲」欄當前版本一致，已記錄引用日期。</li><li class="check"><span class="cb">☐</span> 押注層級只有 <code>&lt; $2</code>／<code>&gt;= $2</code> 兩級；Config、Simulator、Demogame 無小／中／大 Bet 殘留。</li><li class="check"><span class="cb">☐</span> Omniplay 數學模型規範第 1.6 節其餘檢查項目全部通過。</li></ul></section><section class="panel" role="tabpanel" id="panel-送驗規範" aria-labelledby="tab-送驗規範" hidden><h1 id="landbase-轉製-送驗規範">Landbase 轉製 送驗規範</h1>
+<ul><li class="check"><span class="cb">☐</span> 已確認數學調性並記錄於 <code>Game Description</code>（原機為底或重新設計、目標 RTP、波動度、是否啟用 Card System）。</li><li class="check"><span class="cb">☐</span> RTP 配置採第 2 節（Link + Game + 新手體驗），且與試算表「轉製遊戲」欄當前版本一致，已記錄引用日期。</li><li class="check"><span class="cb">☐</span> 押注層級只有 <code>&lt; $2</code>／<code>&gt;= $2</code> 兩級；Config、Simulator、Demogame 無小／中／大 Bet 殘留。</li><li class="check"><span class="cb">☐</span> Omniplay 數學模型規範第 1.6 節其餘檢查項目全部通過。</li></ul></section><section class="panel" role="tabpanel" id="panel-送驗規範" hidden><h1 id="landbase-轉製-送驗規範">Landbase 轉製 送驗規範</h1>
 <p>送驗文件的製作沿用 Omniplay <a href="../igaming_specification.html#submission">送驗文件規範.md</a>：該規範描述的是 <strong>OP 遊戲</strong>（線上自製，Game ID <code>101xxx</code>）的完整組合。<strong>Landbase 轉製遊戲</strong>（Game ID <code>102xxx</code>／<code>105xxx</code>）的數學與文件來自 Landbase 原機團隊，組合不同，本頁只列差異。</p>
 <p>本頁內容與送驗根目錄 <code>送驗規範.md</code> 的「Landbase 轉製遊戲」章相同，修改時兩邊同步。</p>
 <h2 id="1-代號對應">1. 代號對應</h2>
@@ -187,9 +191,11 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 </div>
 <script>
 var TAB_IDS = ['導覽', '系統機制', 'docs', '送驗規範'];
+var LAST = {};
 function activate(tabId, anchor) {
   document.querySelectorAll('.tab').forEach(function(b) {
-    var on = b.dataset.tab === tabId;
+    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;
+    if (on) LAST[b.id] = tabId;
     b.setAttribute('aria-selected', on ? 'true' : 'false');
     b.tabIndex = on ? 0 : -1;
     if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -208,7 +214,7 @@ function activate(tabId, anchor) {
   }
 }
 document.querySelectorAll('.tab').forEach(function(b) {
-  b.addEventListener('click', function() { activate(b.dataset.tab); });
+  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });
 });
 (function() {
   var bar = document.querySelector('.tabs');

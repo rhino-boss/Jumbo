@@ -34,6 +34,19 @@ TABS = [
     ("backend", "後端報表筆記", "後端報表筆記.md"),
 ]
 
+# 根 HTML 的頁籤分組：(大分類, [tab_id...])。一類多份文件時，左側導覽先列文件名。
+# 新增文件時要同時加進 TABS 與這裡，漏加會在建置時報錯。
+GROUPS = [
+    ("總覽", ["overview"]),
+    ("開發流程", ["flow"]),
+    ("提案", ["proposal"]),
+    ("數學設計", ["math"]),
+    ("數學文件", ["docs"]),
+    ("送驗相關", ["submission"]),
+    ("系統相關", ["script", "stress", "backend"]),
+    ("模擬程式＋Demogame", ["sim", "demo"]),
+]
+
 ROOT_OUTPUT_NAME = OUTPUT.name
 
 # 其他產線：資料夾內的 .md 各自彙整成該資料夾的 HTML。
@@ -278,34 +291,59 @@ def line_tabs(folder: Path):
     return [(tab_id_for(p.stem), p.stem, p.name) for p in sorted(mds, key=key)]
 
 
-def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict):
-    """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。"""
+def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict,
+               groups=None):
+    """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。
+
+    groups：[(大分類, [tab_id...])]；省略時每份文件自成一類。
+    """
     global LINKS
     LINKS = links
     _used_ids.clear()
-    panels = []
-    tabs_html = []
-    tocs = []
-    for idx, (tab_id, title, filename) in enumerate(tabs):
+    title_of = {t: title for t, title, _ in tabs}
+    if groups is None:
+        groups = [(title, [t]) for t, title, _ in tabs]
+    grouped = [t for _g, ids in groups for t in ids]
+    missing = [t for t in title_of if t not in grouped]
+    unknown = [t for t in grouped if t not in title_of]
+    assert not missing and not unknown, f"GROUPS 與 TABS 不一致：缺 {missing}、多 {unknown}"
+    group_of = {t: ids for _g, ids in groups for t in ids}
+
+    panels, toc_items = [], {}
+    first_tab = groups[0][1][0]
+    for tab_id, title, filename in tabs:
         md = (base / filename).read_text(encoding="utf-8")
         r = Renderer(tab_id)
         body = r.render(md)
-        toc_items = "".join(
+        toc_items[tab_id] = "".join(
             f'<a class="toc-{lvl}" href="#{hid}" data-tab="{tab_id}">{html.escape(text)}</a>'
             for lvl, hid, text in r.toc
         )
-        first = idx == 0
-        tocs.append(
-            f'<nav class="toc" id="toc-{tab_id}"{"" if first else " hidden"}>{toc_items}</nav>'
-        )
         panels.append(
-            f'<section class="panel" role="tabpanel" id="panel-{tab_id}" '
-            f'aria-labelledby="tab-{tab_id}"{"" if first else " hidden"}>{body}</section>'
+            f'<section class="panel" role="tabpanel" id="panel-{tab_id}"'
+            f'{"" if tab_id == first_tab else " hidden"}>{body}</section>'
         )
+
+    tocs = []
+    for tab_id, _title, _f in tabs:
+        ids = group_of[tab_id]
+        if len(ids) > 1:   # 一類多份文件：列文件名，目前這份底下展開章節
+            inner = "".join(
+                f'<a href="#" class="tab-link toc-doc{" on" if t == tab_id else ""}" data-tab="{t}">'
+                f'{html.escape(title_of[t])}</a>' + (toc_items[t] if t == tab_id else "")
+                for t in ids)
+        else:
+            inner = toc_items[tab_id]
+        tocs.append(f'<nav class="toc" id="toc-{tab_id}"'
+                    f'{"" if tab_id == first_tab else " hidden"}>{inner}</nav>')
+
+    tabs_html = []
+    for gi, (gname, ids) in enumerate(groups):
+        first = gi == 0
         tabs_html.append(
-            f'<button class="tab" role="tab" id="tab-{tab_id}" data-tab="{tab_id}" '
-            f'aria-controls="panel-{tab_id}" aria-selected="{"true" if first else "false"}" '
-            f'tabindex="{0 if first else -1}">{title}</button>'
+            f'<button class="tab" role="tab" id="tab-g{gi}" data-tab="{ids[0]}" '
+            f'data-tabs="{",".join(ids)}" aria-selected="{"true" if first else "false"}" '
+            f'tabindex="{0 if first else -1}">{gname}</button>'
         )
 
     today = date.today().strftime("%Y-%m-%d")
@@ -374,6 +412,9 @@ h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
   padding:3px 11px; border-left:2px solid var(--rule)}}
 .toc a:hover{{color:var(--s1); border-left-color:var(--s1)}}
 .toc a.toc-3{{padding-left:25px}}
+.toc a.toc-doc{{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}}
+.toc a.toc-doc:not(:first-child){{margin-top:8px}}
+.toc a.toc-doc.on{{color:var(--s1)}}
 main{{flex:1; min-width:0}}
 .panel[hidden]{{display:none}}
 .panel h1{{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}}
@@ -405,7 +446,14 @@ td.n,th.n{{text-align:right; white-space:nowrap; font-family:var(--font-mono);
 tbody tr:last-child td{{border-bottom:none}}
 tbody tr:hover{{background:var(--panel-2)}}
 hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
-@media (max-width:900px){{ .toc{{display:none!important}} }}
+@media (max-width:900px){{
+  .body-row{{flex-direction:column; gap:14px}}
+  .toc{{display:none!important}}
+  .toc:not([hidden]):has(.toc-doc){{display:flex!important; position:static; width:auto; max-height:none;
+    flex-wrap:wrap; gap:4px 16px; padding:0}}
+  .toc a:not(.toc-doc){{display:none}}
+  .toc a.toc-doc{{padding:0; margin:0!important}}
+}}
 @media (prefers-reduced-motion:reduce){{*{{transition:none!important}}}}
 </style>
 </head>
@@ -424,9 +472,11 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 </div>
 <script>
 var TAB_IDS = {[t[0] for t in tabs]!r};
+var LAST = {{}};
 function activate(tabId, anchor) {{
   document.querySelectorAll('.tab').forEach(function(b) {{
-    var on = b.dataset.tab === tabId;
+    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;
+    if (on) LAST[b.id] = tabId;
     b.setAttribute('aria-selected', on ? 'true' : 'false');
     b.tabIndex = on ? 0 : -1;
     if (on && b.scrollIntoView) b.scrollIntoView({{ block: 'nearest', inline: 'nearest' }});
@@ -445,7 +495,7 @@ function activate(tabId, anchor) {{
   }}
 }}
 document.querySelectorAll('.tab').forEach(function(b) {{
-  b.addEventListener('click', function() {{ activate(b.dataset.tab); }});
+  b.addEventListener('click', function() {{ activate(LAST[b.id] || b.dataset.tab); }});
 }});
 (function() {{
   var bar = document.querySelector('.tabs');
@@ -492,7 +542,7 @@ def build():
     for folder, out_name, _ in PRODUCT_LINES:
         for tab_id, _, filename in line_tabs(HERE / folder):
             links[f"{folder}/{filename}"] = ("ext", f"{folder}/{out_name}#{tab_id}")
-    build_site(HERE, TABS, OUTPUT, "iGaming 開發規範", "iGaming · 開發規範", links)
+    build_site(HERE, TABS, OUTPUT, "iGaming 開發規範", "iGaming · 開發規範", links, GROUPS)
 
     # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成根 HTML 的頁籤
     for folder, out_name, site_title in PRODUCT_LINES:
