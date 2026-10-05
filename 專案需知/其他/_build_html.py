@@ -327,10 +327,10 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
     tocs = []
     for tab_id, _title, _f in tabs:
         ids = group_of[tab_id]
-        if len(ids) > 1:   # 一類多份文件：列文件名，目前這份底下展開章節
+        if len(ids) > 1:   # 一類多份文件：列文件名，每份底下都展開章節
             inner = "".join(
                 f'<a href="#" class="tab-link toc-doc{" on" if t == tab_id else ""}" data-tab="{t}">'
-                f'{html.escape(title_of[t])}</a>' + (toc_items[t] if t == tab_id else "")
+                f'{html.escape(title_of[t])}</a>' + toc_items[t]
                 for t in ids)
         else:
             inner = toc_items[tab_id]

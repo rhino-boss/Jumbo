@@ -20,8 +20,8 @@
 | 文件 | 內容 |
 |---|---|
 | [開發流程.md](開發流程.md) | 數學開發流程、必要產出文件、製作順序、階段關卡、各階段操作方式、重跑範圍、禁止事項與數學完成條件。 |
-| [數學模型規範.md](數學模型規範.md) | 數學模型必要內容、命名、版本規則、RTP 與 Bet Mode、卡片倍率區間、開發前檢查；Card System；PARsheet。 |
-| [數學文件規範.md](數學文件規範.md) | Game Rule、Help、Game Description、Game List 的內容與交付規範。 |
+| [數學模型規範.md](數學模型規範.md) | 數學模型必要內容、命名、版本規則、RTP 與 Bet Mode、卡片倍率區間、開發前檢查；Card System。 |
+| [數學文件規範.md](數學文件規範.md) | Game Rule、Help、Game Description、PARsheet、Game List 的內容與交付規範。 |
 | [送驗文件規範.md](送驗文件規範.md) | 送驗交付物（Game Description DOCX、Math Document Description、數學模型送驗版）的命名、格式來源、內容規則、禁止內容與交付前檢查。 |
 | [模擬程式規範.md](模擬程式規範.md) | Simulator 程式架構、`BATCH_RUNS`、Console 輸出、報表格式、驗證清單；Config 的轉檔、資料、驗證與版本規範。 |
 | [Demogame規範.md](Demogame規範.md) | Demogame 用途與載入、共用／By Game 區域、補牌方式、Debug 與對帳、交付檢查。 |
@@ -31,6 +31,31 @@
 | [Landbase/導覽.md](Landbase/導覽.md) | **Landbase 產線**：分「系統機制」（Link 彩金參數、新手體驗、系統限制：新手／低注不拉 Link、最大賠付 $10,000,000）、「數學文件規範」（數學調性、RTP 配置 Link + Game + 新手體驗、低／高注兩級）、「送驗規範」（代號對應、與 OP 遊戲的送驗包差異）三頁；未覆寫者沿用 Omniplay。 |
 | [Reskin/數學模型規範.md](Reskin/數學模型規範.md) | **Reskin 產線**：沿用來源遊戲數學，只改押注結構（100 credits × Denom × 44 組 Bet Multiplier）、各市場押注選項（Reskin SC／GC、Vietnam）與 Config 要求；未覆寫者沿用 Omniplay 數學模型規範。 |
 | [提案報告規範.md](提案報告規範.md) | 遊戲提案說明簡報（.pptx）的命名、固定章節結構、頁面版式、色彩字型、內容規則與交付檢查。 |
+
+## 文件存放位置
+
+本節只說明各文件**做好之後放在哪裡**；每份文件怎麼製作，見表中對應的規範。
+
+遊戲專案的 `文件/` 資料夾統一存放對外文件：
+
+```text
+文件/
+├─ {GameID}_Help.xlsx
+├─ {GameID}_Game Description.docx
+├─ PARsheet/
+└─ {GameID}/
+```
+
+| 存放位置 | 放什麼 | 製作方式見 |
+|---|---|---|
+| `文件/{GameID}_Help.xlsx` | Help 正式檔 | [數學文件規範.md](數學文件規範.md) Help 節 |
+| `文件/{GameID}_Game Description.docx` | Game Description 完整版 | [數學文件規範.md](數學文件規範.md) Game Description 節 |
+| `文件/PARsheet/` | PARsheet 精簡規格文件 | [數學文件規範.md](數學文件規範.md) PARsheet 節 |
+| `文件/{GameID}/` | 送驗資料夾 | [送驗文件規範.md](送驗文件規範.md) 1.1 |
+
+- `game_rule.md`、`game_description.md`、`game_help_draft.md` 放在遊戲專案根目錄，不放 `文件/`。
+- `文件/{GameID}/` 只放送驗標的，外層文件不得複製進去。
+- 範例：`H026_彩罐熱舞 1000/文件/`。
 
 ## 開新專案必讀流程
 
