@@ -3015,10 +3015,6 @@
             <tr><td class="key"></td><td>固定玩 360 轉就閃</td><td class="num">360 轉</td><td class="num">96.95%（92.21%）</td><td class="num">-10.98</td></tr>
             <tr><td class="key"></td><td>固定玩 400 轉就閃</td><td class="num">400 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.19%</span>（92.12%）</td><td class="num">-11.25</td></tr>
             <tr><td class="key">拿到就閃人</td><td>拿到任何救援就閃（否則玩到 400）</td><td class="num">333 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.56%</span>（92.12%）</td><td class="num">-8.11</td></tr>
-            <tr><td class="key"></td><td>只等 100× 救援才閃（否則玩到 400）</td><td class="num">391 轉</td><td class="num"><span style="background:var(--warn-soft);color:var(--warn);font-weight:700;padding:.1em .45em;border-radius:2px">97.29%</span>（92.12%）</td><td class="num">-10.58</td></tr>
-            <tr><td class="key"></td><td>開出 ≥ 50× 單局就閃（自然或救援）</td><td class="num">232 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">100.51%</span>（92.25%）</td><td class="num">+1.18</td></tr>
-            <tr><td class="key">贏了就閃人</td><td>當日 RTP &gt; 100% 就閃（否則玩到 400）</td><td class="num">96 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">103.80%</span>（91.79%）</td><td class="num">+3.66</td></tr>
-            <tr><td class="key"></td><td>當日 RTP &gt; 100% 或拿到救援就閃</td><td class="num">70 轉</td><td class="num"><span style="background:var(--danger-soft);color:var(--danger);font-weight:700;padding:.1em .45em;border-radius:2px">105.94%</span>（91.79%）</td><td class="num">+4.15</td></tr>
           </tbody>
         </table>
       </div>
@@ -3031,7 +3027,7 @@
           <tbody>
             <tr><td class="key">RTP（有機制）</td><td>Σ 所有玩家停手前的總得分（含救援）÷ Σ 停手前的總押注。每天歸零重來，天天照同一策略玩的長期 RTP 就是這個值。</td></tr>
             <tr><td class="key">（無機制）</td><td>同一群玩家、同一套閃人條件，但遊戲沒有救援機制：停手點依自然結果決定，得分只算自然得分。代表「這個玩法本身」的 RTP。</td></tr>
-            <tr><td class="key">兩者差距</td><td>即救援機制對這個玩法的貢獻；有機制 &gt; 100% 而無機制 &lt; 100%，代表套利空間完全來自救援。</td></tr>
+            <tr><td class="key">兩者差距</td><td>即救援機制對這個玩法的貢獻。</td></tr>
             <tr><td class="key">平均停在</td><td>有機制時所有玩家停手轉數的平均。</td></tr>
             <tr><td class="key">EV／日（bet）</td><td>（Σ 停手前總得分 − Σ 停手前總押注）÷ 玩家數，即每人每天平均淨贏幾個 bet（有機制）。</td></tr>
           </tbody>
@@ -3046,21 +3042,8 @@
           <tbody>
             <tr><td class="key">固定玩 N 轉就閃</td><td>第 N 轉</td><td>第 N 轉（相同）</td></tr>
             <tr><td class="key">拿到任何救援就閃</td><td>第一次被救的那一轉；沒被救則第 400 轉</td><td>沒有救援可拿 → 第 400 轉</td></tr>
-            <tr><td class="key">只等 100× 救援才閃</td><td>第一次拿到 100× 救援的那一轉；沒有則第 400 轉</td><td>沒有救援可拿 → 第 400 轉</td></tr>
-            <tr><td class="key">開出 ≥ 50× 單局就閃</td><td>第一次單局 ≥ 50×（自然或救援）的那一轉；沒有則第 400 轉</td><td>第一次自然單局 ≥ 50× 的那一轉；沒有則第 400 轉</td></tr>
-            <tr><td class="key">當日 RTP &gt; 100% 就閃</td><td>當日累積 RTP（含救援）第一次 &gt; 100% 的那一轉；沒有則第 400 轉</td><td>自然累積 RTP 第一次 &gt; 100% 的那一轉；沒有則第 400 轉</td></tr>
-            <tr><td class="key">當日 RTP &gt; 100% 或拿到救援就閃</td><td>上面兩個條件先發生的那一轉；都沒有則第 400 轉</td><td>沒有救援可拿，只剩 RTP &gt; 100% 條件（與上一列相同）</td></tr>
           </tbody>
         </table>
-      </div>
-      <div class="note warn">
-        <span class="tag">套利風險</span>
-        <p>
-          <strong>「贏了就閃」類策略可穩定套利（RTP 103.80%～105.94%）</strong>：贏的時候提早離場、
-          輸的時候留下來等救援——救援只補到輸家、贏家不吐回去，救援增量占策略押注約 12 個百分點。
-          「開出 ≥ 50× 就閃」同理（100.51%）。固定轉數與單純「拿到救援就閃」皆為負期望，無套利空間。
-          需再調整門檻／倍數或增加救援資格條件，對策待討論。
-        </p>
       </div>
       <p>
         敏感度測試：全員當日固定只玩 N 轉時的整體 RTP（只計主救援）。
