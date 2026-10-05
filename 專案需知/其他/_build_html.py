@@ -33,6 +33,7 @@ TABS = [
     ("stress", "壓測說明書", "壓測說明書.md"),
     ("backend", "後端報表筆記", "後端報表筆記.md"),
     ("ceiling", "天花板說明", "天花板說明.md"),
+    ("mechanism", "機制", "機制說明.md"),
 ]
 
 # 根 HTML 的頁籤分組：(大分類, [tab_id...])。一類多份文件時，左側導覽先列文件名。
@@ -44,7 +45,7 @@ GROUPS = [
     ("數學設計", ["math"]),
     ("數學文件", ["docs"]),
     ("送驗相關", ["submission"]),
-    ("系統相關", ["ceiling", "script", "stress", "backend"]),
+    ("系統相關", ["mechanism", "ceiling", "script", "stress", "backend"]),
     ("模擬程式＋Demogame", ["sim", "demo"]),
 ]
 
