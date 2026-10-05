@@ -13,7 +13,7 @@
 | `專案需知/Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（SC／GC）、Vietnam 等市場；目前有 [數學模型規範.md](Reskin/數學模型規範.md)（差異式），彙整版為 `Reskin/reskin_specification.html` |
 | `專案需知/其他/` | — | 工具腳本（`_build_html.py`、`_check_xlsx_style.py`）與本總覽 |
 
-任何一份 .md（根目錄或產線資料夾）更新後，必須執行 `其他/_build_html.py`；腳本會同時重建根目錄的 `igaming_development_specification.html` 與各產線資料夾的 HTML。產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用根目錄規範。
+任何一份 .md（根目錄或產線資料夾）更新後，必須執行 `其他/_build_html.py`；腳本會同時重建根目錄的 `igaming_specification.html` 與各產線資料夾的 HTML。產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用根目錄規範。
 
 ## 文件清單
 
@@ -52,7 +52,7 @@
 
 ## 維護規則：HTML 同步
 
-本資料夾另提供彙整版 `igaming_development_specification.html`（根目錄全部規範合併、頁籤式），各產線資料夾另有自己的彙整版（如 `Landbase/landbase_specification.html`），皆由 `_build_html.py` 從 md 自動產生。
+本資料夾另提供彙整版 `igaming_specification.html`（根目錄全部規範合併、頁籤式），各產線資料夾另有自己的彙整版（如 `Landbase/landbase_specification.html`），皆由 `_build_html.py` 從 md 自動產生。
 
 - **任何一份 `.md` 更新後，必須在同一次修改中重跑產生器同步 HTML**：
 
