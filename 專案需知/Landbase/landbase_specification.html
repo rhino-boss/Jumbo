@@ -128,9 +128,9 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 <p>轉製遊戲沿用 Omniplay 的新手體驗 D 版，完整說明見 <a href="../igaming_specification.html#mechanism">機制說明.md</a>。轉製時要用到的規則如下。</p>
 <h3 id="11-救援倍數">1.1 救援倍數</h3>
 <p>新手體驗會給出下列倍數，轉製遊戲必須能產生這些結果：</p>
-<div class="tbl-wrap"><table><thead><tr><th>判定回合</th><th>救援倍數</th></tr></thead><tbody><tr><td>第 50 轉</td><td>15×、10×、0×</td></tr><tr><td>第 150 轉</td><td>30×、15×</td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>判定</th><th>救援倍數</th></tr></thead><tbody><tr><td>第一次</td><td>15×</td></tr><tr><td>第二次</td><td>強 30×／弱 15×</td></tr></tbody></table></div>
 <h3 id="12-轉製遊戲要注意的地方">1.2 轉製遊戲要注意的地方</h3>
-<ul><li>只給新手 Profile，RTP 預算 2.00%；老手為 0%。</li><li>新手 Total RTP 97.00% ＝ Game 95.00% ＋ 新手體驗 2.00%；數學模型只負責 Game RTP，新手體驗的派彩計算與驗證時必須和 Game RTP 分開統計。</li><li>遊戲必須能在判定回合產生 15×、10×、0×、30× 的結果，且演出與自然得分無法區分；做法依 Omniplay <a href="../igaming_specification.html#script">腳本規範.md</a> 的新手體驗腳本，或由 Card System 重骰產生。</li><li>新手期不得拉 Link 彩金（第 3 節），新手體驗給出的得分也不得觸發 Link 事件。</li></ul>
+<ul><li>只給新手 Profile，RTP 預算 2.00%；老手為 0%。</li><li>新手 Total RTP 97.00% ＝ Game 95.00% ＋ 新手體驗 2.00%；數學模型只負責 Game RTP，新手體驗的派彩計算與驗證時必須和 Game RTP 分開統計。</li><li>遊戲必須能在判定回合產生 15× 與 30× 的結果，且演出與自然得分無法區分；做法依 Omniplay <a href="../igaming_specification.html#script">腳本規範.md</a> 的新手體驗腳本，或由 Card System 重骰產生。</li><li>新手期不得拉 Link 彩金（第 3 節），新手體驗給出的得分也不得觸發 Link 事件。</li></ul>
 <h2 id="2-老手救援">2. 老手救援</h2>
 <ul><li>Landbase 轉製遊戲<strong>不啟用</strong>老手救援，RTP 固定 0%（主流遊戲為 0.50%）。</li><li>Config、Simulator 與 Demogame 不得出現老手救援的設定或演出。</li></ul>
 <h2 id="3-系統限制">3. 系統限制</h2>
