@@ -2690,7 +2690,7 @@
       <span class="eq-op">+</span>
       <div class="eq-term">
         <span class="eq-num is-accent">5%</span>
-        <span class="eq-label">救援提撥</span>
+        <span class="eq-label">救援預算</span>
       </div>
       <span class="eq-op">=</span>
       <div class="eq-term">
@@ -2744,7 +2744,7 @@
       <ul>
         <li><strong>補上缺席的大倍數體驗</strong>：好體驗定義為當日最大單局倍數——玩得夠久卻沒碰到大倍數的玩家，在流失發生前的當天由系統給出該倍數，演出與自然大獎無法區分。</li>
         <li><strong>短期體驗不好就救</strong>：以當日的短期體驗為判斷基準，體驗不好當天就出手，不等長期統計。</li>
-        <li><strong>RTP 精準可控</strong>：基礎 92% + 救援提撥 5% = 總 RTP 97%，救援支出由救援池結構把關。</li>
+        <li><strong>RTP 精準可控</strong>：基礎 92% + 救援預算 5% = 總 RTP 97%。</li>
         <li><strong>可直接落地</strong>：判定節奏對齊 SPS 每 40 轉的監測限制。</li>
       </ul>
     </section>
@@ -2868,26 +2868,12 @@
       <div class="note warn">
         <span class="tag">預算檢核</span>
         <p>
-          門檻已依「全員 400 轉」基準校準：最壞情境（日轉數 400）主救援增量 +5.07%，貼齊 5% 提撥上限；
+          門檻已依「全員 400 轉」基準校準：最壞情境（日轉數 400）主救援增量 +5.07%，貼齊 5% 預算；
           其餘日轉數均低於 5%（800 轉基準 +2.54%）。
-          400 轉附近貼線的部分由共同池硬上限把關；實際日轉數分布的加權驗證仍是定案前的必要步驟。
+          實際日轉數分布的加權驗證仍是定案前的必要步驟。
         </p>
       </div>
-      <h3 id="p1-rule-pool"><span class="sec">3.3</span>救援池運作</h3>
-      <p>
-        救援預算來自<strong>每轉提撥投注額的 5%</strong>（基礎 92% + 提撥 5% = 總 RTP 97%），
-        全部進入<strong>單一共同池</strong>，不設個人池：
-      </p>
-      <div class="formula">提撥額 <span class="c">=</span> 該轉 Total Bet <span class="c">×</span> 5%
-
-共同池餘額 <span class="c">=</span> Σ 全平台提撥 <span class="c">−</span> Σ 全平台已發救援成本</div>
-      <ul>
-        <li><strong>發放前檢查共同池</strong>：餘額不足一律不救援（硬性上限，總 RTP 結構上不超過 97%）。</li>
-        <li><strong>成本以增量記帳</strong>：救援成本 = 救援後最終得分 − 該轉自然得分；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，自然得分較高時增量為 0、不扣款。</li>
-        <li>共同池跨日累積；判定與觸發以天為循環，兩者分屬不同層。</li>
-      </ul>
-
-      <h3 id="p1-rule-flowchart"><span class="sec">3.4</span>當日流程圖</h3>
+      <h3 id="p1-rule-flowchart"><span class="sec">3.3</span>當日流程圖</h3>
       <p>一天內各轉數階段在做什麼（各救援點另須符合前 40 轉 RTP &lt; 50%）：</p>
       <div class="timeline">
         <div class="phase">
@@ -3002,7 +2988,7 @@
           <div class="gate-body">
             <div class="gate-title">檢查當日累積 RTP 與前 40 轉 RTP</div>
             <div class="branch">
-              <div class="branch-row"><span class="pill ok">兩者皆低於門檻</span><span>具備救援資格，進入池檢查</span></div>
+              <div class="branch-row"><span class="pill ok">兩者皆低於門檻</span><span>具備救援資格，進入發放</span></div>
               <div class="branch-row"><span class="pill stop">任一未低於</span><span>本點結束，等下一個觸發點</span></div>
             </div>
           </div>
@@ -3010,18 +2996,8 @@
         <div class="gate">
           <div class="gate-rail"><div class="gate-dot">3</div><div class="gate-line"></div></div>
           <div class="gate-body">
-            <div class="gate-title">共同池檢查</div>
-            <div class="branch">
-              <div class="branch-row"><span class="pill ok">餘額足</span><span>進入發放</span></div>
-              <div class="branch-row"><span class="pill stop">餘額不足</span><span>不救援（硬性上限）</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="gate">
-          <div class="gate-rail"><div class="gate-dot">4</div><div class="gate-line"></div></div>
-          <div class="gate-body">
             <div class="gate-title">發放與記帳</div>
-            <p>Card System 重骰產生該倍數結果；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，增量自共同池扣款，並計入當日累積 RTP。</p>
+            <p>Card System 重骰產生該倍數結果；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，成本以增量記帳，並計入當日累積 RTP。</p>
           </div>
         </div>
       </div>
@@ -3031,12 +3007,11 @@
     <section id="p1-risk">
       <h2><span class="sec">§4</span>風控機制</h2>
       <ul>
-        <li><strong>共同池把關</strong>：每轉提撥投注額 5% 進共同池，餘額不足一律不救援，總 RTP 結構上不超過 97%。</li>
         <li><strong>增量記帳</strong>：成本 = 救援後最終得分 − 自然得分，以實際最終得分計算，不用卡片目標倍數，避免低估支出。</li>
         <li><strong>重度玩家不吃主救援預算</strong>：主救援只涵蓋到當日第 400 轉。</li>
         <li><strong>自然收斂</strong>：救援得分計入當日 RTP，被救玩家自動脫離觸發區，同一人重複救援的機率快速下降。</li>
         <li><strong>演出不可辨識</strong>：救援由 Card System 重骰產生，玩家無法從畫面判斷是否為救援，機制不可被觀察學習。</li>
-        <li><strong>監控指標</strong>：各觸發點觸發率與增量貢獻（使用量）、用到救援的玩家比例、共同池餘額。</li>
+        <li><strong>監控指標</strong>：各觸發點觸發率與增量貢獻（使用量）、用到救援的玩家比例。</li>
       </ul>
     </section>
 
@@ -3206,25 +3181,11 @@
         <span class="tag">預算檢核</span>
         <p>
           窗口縮短為 100 轉、門檻放寬至 &lt; 75% 後，延伸救援增量 +4.88%（401–1,000 轉區段），接近 5% 目標。
-          全日總 RTP 在各日轉數下落在 96.83%～97.16%，600、800 轉略超 97%，由共同池硬上限把關。
+          全日總 RTP 在各日轉數下落在 96.83%～97.16%，600、800 轉略超 97%。
           觸發率約每點 20%、97.5% 的玩家當日至少被延伸救援一次——頻率偏高，屬「常態小額補償」性質。
         </p>
       </div>
-      <h3 id="p2-rule-pool"><span class="sec">2.3</span>救援池運作</h3>
-      <p>
-        救援預算來自<strong>每轉提撥投注額的 5%</strong>（基礎 92% + 提撥 5% = 總 RTP 97%），
-        全部進入<strong>單一共同池</strong>，不設個人池：
-      </p>
-      <div class="formula">提撥額 <span class="c">=</span> 該轉 Total Bet <span class="c">×</span> 5%
-
-共同池餘額 <span class="c">=</span> Σ 全平台提撥 <span class="c">−</span> Σ 全平台已發救援成本</div>
-      <ul>
-        <li><strong>發放前檢查共同池</strong>：餘額不足一律不救援（硬性上限，總 RTP 結構上不超過 97%）。</li>
-        <li><strong>成本以增量記帳</strong>：救援成本 = 救援後最終得分 − 該轉自然得分；該轉最終得分取「自然得分」與「救援倍數 × Bet」較高值，自然得分較高時增量為 0、不扣款。</li>
-        <li>共同池跨日累積；判定與觸發以天為循環，兩者分屬不同層。</li>
-      </ul>
-
-      <h3 id="p2-rule-flowchart"><span class="sec">2.4</span>當日流程圖</h3>
+      <h3 id="p2-rule-flowchart"><span class="sec">2.3</span>當日流程圖</h3>
       <p>一天內各轉數階段在做什麼：</p>
       <div class="timeline">
         <div class="phase is-newbie">
@@ -3267,7 +3228,7 @@
           <div class="gate-body">
             <div class="gate-title">檢查滾動 100 轉 RTP 與前 40 轉 RTP</div>
             <div class="branch">
-              <div class="branch-row"><span class="pill ok">100 轉 &lt; 75% 且 40 轉 &lt; 50%</span><span>具備救援資格，進入池檢查</span></div>
+              <div class="branch-row"><span class="pill ok">100 轉 &lt; 75% 且 40 轉 &lt; 50%</span><span>具備救援資格，進入發放</span></div>
               <div class="branch-row"><span class="pill stop">任一未低於</span><span>本點結束，等下一個觸發點</span></div>
             </div>
           </div>
@@ -3275,18 +3236,8 @@
         <div class="gate">
           <div class="gate-rail"><div class="gate-dot">3</div><div class="gate-line"></div></div>
           <div class="gate-body">
-            <div class="gate-title">共同池檢查</div>
-            <div class="branch">
-              <div class="branch-row"><span class="pill ok">餘額足</span><span>進入發放</span></div>
-              <div class="branch-row"><span class="pill stop">餘額不足</span><span>不救援（硬性上限）</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="gate">
-          <div class="gate-rail"><div class="gate-dot">4</div><div class="gate-line"></div></div>
-          <div class="gate-body">
             <div class="gate-title">發放與記帳</div>
-            <p>Card System 重骰產生 10× BG 盤面；該轉最終得分取「自然得分」與「10× Bet」較高值，增量自共同池扣款。</p>
+            <p>Card System 重骰產生 10× BG 盤面；該轉最終得分取「自然得分」與「10× Bet」較高值，成本以增量記帳。</p>
           </div>
         </div>
       </div>
