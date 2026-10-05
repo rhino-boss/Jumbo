@@ -2,7 +2,7 @@
 
 本文件屬於 `專案需知/` 專案需知文件集，總覽、共通原則與完成條件見 [_README.md](_README.md)。
 
-## 4.1 用途與載入
+## 1. 用途與載入
 
 Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不只是視覺展示。它必須能用單局結果證明 Config、Simulator 與遊戲規則一致。
 
@@ -12,7 +12,7 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 - 不得為演出方便另寫一套簡化數學邏輯。
 - Config 無法載入或欄位不完整時要顯示明確錯誤，不得靜默使用舊值。
 
-### 4.1.1 遊戲類型命名規則
+### 1.1 遊戲類型命名規則
 
 Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 
@@ -46,11 +46,11 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 
 目前正式遊戲沒有使用 `Cluster Pay`；日後只有實際採相鄰群集判獎的遊戲才能列入此類。
 
-## 4.2 共用區域與 By Game 區域
+## 2. 共用區域與 By Game 區域
 
 圖示中的遊戲顯示區域屬於 By Game 設計；除此之外的 Demogame 區域均為所有遊戲共用。
 
-### 4.2.1 By Game 區域
+### 2.1 By Game 區域
 
 下列區域依各遊戲盤面、Feature 與美術需求自行設計：
 
@@ -68,9 +68,9 @@ By Game 區域必須：
 - 只維護遊戲專屬 HTML、CSS、Render、動畫與狀態轉換。
 - 將共用操作需要的狀態與結果透過固定介面交給共用模組，不得複製整套共用控制邏輯。
 
-### 4.2.2 共用區域
+### 2.2 共用區域
 
-除第 4.2.1 節外，其餘區域與行為均由所有遊戲共用，包括：
+除第 2.1 節外，其餘區域與行為均由所有遊戲共用，包括：
 
 - Player：Credit、Bet、Win。
 - Stats／Simulation。
@@ -103,7 +103,7 @@ Project/Slots/
 - By Game 樣式與程式保留在該遊戲的 `index.html` 或遊戲專屬資源，不得放入共用檔案影響其他遊戲。
 - 遊戲專屬 CSS 不得覆寫共用區域，除非本規範明確提供可覆寫的 CSS Variable 或 Hook。
 
-### 4.2.3 符號顯示規則（所有遊戲）
+### 2.3 符號顯示規則（所有遊戲）
 
 盤面符號一律依下列規則顯示，樣式由 `demogame_common.css` 的 Symbol display standard 統一套用：
 
@@ -120,7 +120,7 @@ Project/Slots/
 - 中獎、轉換等**狀態**框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）不受此規則影響。
 - Hook：框線本身屬規則狀態、且沒有對應美術時（例如純 CSS 的金框），在該格加 `keep-symbol-frame` 保留框線。金框若已有美術（例如 Frame 圖或金框版符號圖），不得再疊加 CSS 框。
 
-## 4.3 補牌方式
+## 3. 補牌方式
 
 每款有消除機制的遊戲，必須在 Game Rule、Config 對應說明與 Demogame 中指定唯一補牌方式。Simulator 與 Demogame 必須使用相同邏輯。
 
@@ -141,7 +141,7 @@ Project/Slots/
 - 補牌後重新判獎的次數、盤面與得分必須可由 Debug 結果重現，並與 Simulator 對帳。
 - Symbol 轉 Wild、鎖定位置或不補牌的位置，必須先依遊戲規則處理，再執行選定的補牌方式。
 
-## 4.4 必要行為
+## 4. 必要行為
 
 - 支援 Normal Spin，以及遊戲實際存在的 Extra Bet、Buy Feature、Super Feature。
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。
@@ -150,7 +150,7 @@ Project/Slots/
 - Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。
 - Help 與 `game_help_draft.md` 一致，不在 HTML 另維護一份規則。
 
-## 4.5 Debug 與重現
+## 5. Debug 與重現
 
 Debug Mode 至少可查看：
 
@@ -162,13 +162,13 @@ Debug Mode 至少可查看：
 
 指定 Card Range 與 Reel RNG 必須互斥。指定值要檢查數量與範圍，且只作用於規格定義的下一個 Spin；不得因指定 RNG 或 Force FG 進入無限重跑。
 
-## 4.6 與 Simulator 對帳
+## 6. 與 Simulator 對帳
 
 至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Newbie、Oldhand 小／中／大 Bet、Link 可用／不可用、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。
 
 逐項確認盤面、RNG、各段得分、Total Win、Coin In、倍率、Feature 狀態與 Retry 計數一致。
 
-## 4.7 交付檢查
+## 7. 交付檢查
 
 每次修改 Demogame 的 `index.html`、共用 `demogame_common.css`／`demogame_common.js`，或任何會改變操作、顯示、動畫、Debug、Config／Version／Profile 選擇方式的程式時，必須在同一次修改中同步更新 Demogame 的「修改紀錄」。
 
@@ -183,7 +183,7 @@ Debug Mode 至少可查看：
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
-- [ ] 符號顯示符合 4.2.3：Image 開＝只顯示圖（無代號、無符號框），Image 關或無美術＝符號框＋代號；代號不粗體；有美術的遊戲已接共用 Image 開關。
+- [ ] 符號顯示符合 2.3：Image 開＝只顯示圖（無代號、無符號框），Image 關或無美術＝符號框＋代號；代號不粗體；有美術的遊戲已接共用 Image 開關。
 - [ ] 補牌方式已選定為原地、掉落或特殊補牌，並與 Game Rule、Config、Simulator 一致。
 - [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。
 - [ ] Config 切換後所有資料與顯示同步更新。

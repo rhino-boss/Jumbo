@@ -29,7 +29,7 @@ H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有
 
 使用範例：`其他/遊戲發想/賞金列車 2/index.html`（含逐輪停輪、中獎→消除→轉 Wild→倍數彈出→總贏分的完整編排）。
 
-符號顯示規則（Demogame規範 4.2.3）由共用模組統一處理：
+符號顯示規則（Demogame規範 2.3）由共用模組統一處理：
 
 - `demogame_common.js` 偵測到頁面定義 `window.DEMOGAME_IMAGE_TOGGLE` 時，在 Setting 產生 `Image` 開關並呼叫其 `setEnabled(enabled)`；狀態存 `localStorage` 的 `slotDemoSymbolImages`。
 - `demogame_common.css` 的 Symbol display standard：格子有 `has-symbol-art` 時只顯示符號圖，隱藏符號代號並移除符號框線與底色；狀態框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）與加了 `keep-symbol-frame` 的格子不受影響。
