@@ -21,7 +21,7 @@
 |---|---|
 | [開發流程.md](開發流程.md) | 數學開發流程、必要產出文件、製作順序、階段關卡、各階段操作方式、重跑範圍、禁止事項與數學完成條件。 |
 | [數學模型規範.md](數學模型規範.md) | 數學模型必要內容、命名、版本規則、RTP 與 Bet Mode、卡片倍率區間、開發前檢查；Card System。 |
-| [數學文件規範.md](數學文件規範.md) | Game Rule、Help、Game Description、PARsheet、Game List 的內容與交付規範。 |
+| [數學文件規範.md](數學文件規範.md) | Game Rule、Help、Game Description、PARsheet 的內容與交付規範。 |
 | [送驗文件規範.md](送驗文件規範.md) | 送驗交付物（Game Description DOCX、Math Document Description、數學模型送驗版）的命名、格式來源、內容規則、禁止內容與交付前檢查。 |
 | [模擬程式規範.md](模擬程式規範.md) | Simulator 程式架構、`BATCH_RUNS`、Console 輸出、報表格式、驗證清單；Config 的轉檔、資料、驗證與版本規範。 |
 | [Demogame規範.md](Demogame規範.md) | Demogame 用途與載入、共用／By Game 區域、補牌方式、Debug 與對帳、交付檢查。 |
