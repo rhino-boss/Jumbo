@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成單一 slot_development_specification.html。
+"""將 專案需知/ 的 Markdown 文件彙整成單一 igaming_development_specification.html。
 
 本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
 
@@ -17,7 +17,7 @@ from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent.parent  # 專案需知/（規範 .md 所在層）
-OUTPUT = HERE / "slot_development_specification.html"
+OUTPUT = HERE / "igaming_development_specification.html"
 
 # (tab_id, 頁籤名稱, 檔名)
 TABS = [
