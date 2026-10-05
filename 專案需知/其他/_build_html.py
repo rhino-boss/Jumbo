@@ -31,6 +31,7 @@ TABS = [
     ("script", "腳本規範", "腳本規範.md"),
     ("proposal", "提案報告規範", "提案報告規範.md"),
     ("stress", "壓測說明書", "壓測說明書.md"),
+    ("backend", "後端報表筆記", "後端報表筆記.md"),
 ]
 
 ROOT_OUTPUT_NAME = OUTPUT.name
@@ -42,7 +43,7 @@ PRODUCT_LINES = [
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
 ]
 TAB_ORDER_HINT = ["開發流程", "數學模型規範", "數學文件規範", "送驗文件規範",
-                  "模擬程式規範", "Demogame規範", "腳本規範", "提案報告規範", "壓測說明書"]
+                  "模擬程式規範", "Demogame規範", "腳本規範", "提案報告規範", "壓測說明書", "後端報表筆記"]
 
 # 目前正在建置的站台：md 相對路徑（如 md 內所寫、已去掉 ./）→ ("tab", tab_id) 或 ("ext", href)
 LINKS: dict = {}
@@ -354,7 +355,9 @@ h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
    頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
 .tabs{{display:flex; gap:3px; border-bottom:1px solid var(--rule);
   overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */
   position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}}
+.tabs::-webkit-scrollbar{{display:none}}
 .tab{{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
   background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
   padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}}
@@ -426,6 +429,7 @@ function activate(tabId, anchor) {{
     var on = b.dataset.tab === tabId;
     b.setAttribute('aria-selected', on ? 'true' : 'false');
     b.tabIndex = on ? 0 : -1;
+    if (on && b.scrollIntoView) b.scrollIntoView({{ block: 'nearest', inline: 'nearest' }});
   }});
   document.querySelectorAll('.panel').forEach(function(p) {{
     p.hidden = (p.id !== 'panel-' + tabId);
@@ -443,6 +447,15 @@ function activate(tabId, anchor) {{
 document.querySelectorAll('.tab').forEach(function(b) {{
   b.addEventListener('click', function() {{ activate(b.dataset.tab); }});
 }});
+(function() {{
+  var bar = document.querySelector('.tabs');
+  bar.addEventListener('wheel', function(e) {{
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {{
+      bar.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }}
+  }}, {{ passive: false }});
+}})();
 (function() {{
   var h = decodeURIComponent(location.hash.slice(1));
   if (!h) return;
@@ -479,7 +492,7 @@ def build():
     for folder, out_name, _ in PRODUCT_LINES:
         for tab_id, _, filename in line_tabs(HERE / folder):
             links[f"{folder}/{filename}"] = ("ext", f"{folder}/{out_name}#{tab_id}")
-    build_site(HERE, TABS, OUTPUT, "Slot 開發規範", "Slots · 開發規範", links)
+    build_site(HERE, TABS, OUTPUT, "iGaming 開發規範", "iGaming · 開發規範", links)
 
     # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成根 HTML 的頁籤
     for folder, out_name, site_title in PRODUCT_LINES:

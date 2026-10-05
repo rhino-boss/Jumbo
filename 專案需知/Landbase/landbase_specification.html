@@ -43,7 +43,9 @@ h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
    頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
 .tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
   overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */
   position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tabs::-webkit-scrollbar{display:none}
 .tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
   background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
   padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
@@ -100,7 +102,7 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 <header class="page">
   <div class="eyebrow">Slots · Landbase</div>
   <h1 class="site">Landbase 轉製 開發規範</h1>
-  <p class="meta">由 <code>專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-02</p>
+  <p class="meta">由 <code>專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-05</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-math" data-tab="math" aria-controls="panel-math" aria-selected="true" tabindex="0">數學模型規範</button></div>
 <div class="body-row">
@@ -162,6 +164,7 @@ function activate(tabId, anchor) {
     var on = b.dataset.tab === tabId;
     b.setAttribute('aria-selected', on ? 'true' : 'false');
     b.tabIndex = on ? 0 : -1;
+    if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   });
   document.querySelectorAll('.panel').forEach(function(p) {
     p.hidden = (p.id !== 'panel-' + tabId);
@@ -179,6 +182,15 @@ function activate(tabId, anchor) {
 document.querySelectorAll('.tab').forEach(function(b) {
   b.addEventListener('click', function() { activate(b.dataset.tab); });
 });
+(function() {
+  var bar = document.querySelector('.tabs');
+  bar.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {
+      bar.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();
 (function() {
   var h = decodeURIComponent(location.hash.slice(1));
   if (!h) return;
