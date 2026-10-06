@@ -2729,6 +2729,20 @@
       border-color:rgba(38,92,137,.28);background:#060d1a;
     }
     #board .cell.symbol-cleared > .mult-badge{animation:slot-symbol-clear 180ms ease-in forwards}
+    /* 分裂飛行體與中獎倍數演出 */
+    .slot-fx-layer .fly-ww{position:absolute;z-index:30;border-radius:8px;border:2px solid #39d6a2;
+      background:radial-gradient(circle,#1f9f86,#06342b);box-shadow:0 0 14px rgba(57,214,162,.7);pointer-events:none}
+    .slot-fx-layer .fly-ww .symbol-wrap{position:absolute;inset:0}
+    .slot-fx-layer .fly-ww .h019-glyph{display:grid;place-items:center;width:100%;height:100%;color:#d8e8f4;
+      font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;text-shadow:0 2px 3px rgba(0,0,0,.72)}
+    .slot-fx-layer .fly-ww .mult-badge{position:absolute;top:2px;right:3px;font:700 11px/15px system-ui,sans-serif;color:#0b1020;
+      background:linear-gradient(180deg,#ffe89a,#ffb347);border-radius:5px;padding:0 4px}
+    #board .cell.fx-split-source{animation:h045SplitSource 220ms ease-in-out infinite alternate}
+    @keyframes h045SplitSource{from{transform:scale(1);filter:brightness(1)}to{transform:scale(1.08);filter:brightness(1.5)}}
+    #board .cell.fx-mult-sum > .mult-badge{animation:h045MultSum 260ms ease-in-out infinite alternate}
+    @keyframes h045MultSum{from{transform:scale(1)}to{transform:scale(1.45);box-shadow:0 0 10px #ffe89a}}
+    #multiplierWindow .multiplier-step.fx-ladder-hit{animation:h045LadderHit 260ms ease-in-out infinite alternate}
+    @keyframes h045LadderHit{from{transform:scale(1)}to{transform:scale(1.25);filter:brightness(1.6)}}
     #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
     #board .h019-glyph{
       display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
@@ -2902,9 +2916,10 @@
     return { flipped, results, bigSources };
   }
 
+  // 回傳 { splitKeys, splits: [{ source, targets, value }] }，splits 供 Demo 畫「WW 複製飛出」動畫
   function splitBigGhosts(board, mults, tableName, bigSources) {
     const table = tables[tableName];
-    const splitKeys = [];
+    const splitKeys = [], splits = [];
     for (const [[sr, srow], value] of bigSources) {
       const count = Number(pickMap(table.split));
       const candidates = [];
@@ -2915,14 +2930,17 @@
         }
       }
       const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
+      const keys = [];
       for (const [reel, row] of targets) {
         // game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
         board[reel][row] = WW;
         mults[reel][row] = value > 1 ? value : 0;
-        splitKeys.push(`${reel},${row}`);
+        keys.push(`${reel},${row}`);
       }
+      splitKeys.push(...keys);
+      splits.push({ source: `${sr},${srow}`, targets: keys, value });
     }
-    return splitKeys;
+    return { splitKeys, splits };
   }
 
   function spin(tableName, freeGame = false, budget = 0) {
@@ -2998,9 +3016,10 @@
 
       // 3) 大鬼分裂（game_rule §5.6 步驟 5~6；落點依補牌後盤面）
       if (flip && flip.bigSources.length) {
-        const splitKeys = splitBigGhosts(board, mults, tableName, flip.bigSources);
+        const preBoard = cloneBoard(board), preMults = cloneBoard(mults);
+        const { splitKeys, splits } = splitBigGhosts(board, mults, tableName, flip.bigSources);
         if (splitKeys.length) {
-          snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
+          snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
       }
 
@@ -3156,6 +3175,75 @@
   }
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
+  function fxLayer() { return window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null; }
+  function cellAt(key) { const [reel, row] = key.split(",").map(Number); return $("board").children[(3 - row) * 5 + reel] || null; }
+
+  // 中獎演出：盤面 WILD 倍數先全部加總 → 乘上排階梯倍數 → 最後乘上贏分（game_rule §4／§5.3）
+  async function animateWildMath(snapshot) {
+    const values = [];
+    for (let reel = 0; reel < 5; reel++) for (let row = 0; row < 4; row++) {
+      const symbol = snapshot.board[reel][row];
+      if ((symbol === WW || symbol === W2) && snapshot.mults?.[reel]?.[row] > 1) values.push({ key: `${reel},${row}`, value: snapshot.mults[reel][row] });
+    }
+    if (!values.length) return;
+    const sum = values.reduce((total, item) => total + item.value, 0);
+    const ladder = Number(snapshot.multiplier) || 1;
+    const layer = fxLayer();
+    const step = Math.max(140, 520 / Number($("speedRange").value || 1));
+    // 1) WILD 倍數加總
+    values.forEach(item => cellAt(item.key)?.classList.add("fx-mult-sum"));
+    $("messageBar").textContent = `WILD ${values.map(item => `×${item.value}`).join(" + ")} = ×${sum}`;
+    window.slotFx?.multiPop?.(layer, `×${sum}`, { tag: "WILD SUM" });
+    await wait(step);
+    // 2) 乘上排階梯倍數
+    $("multiplierWindow").querySelector(".is-active")?.classList.add("fx-ladder-hit");
+    $("messageBar").textContent = `×${sum} × Cascade ×${ladder} = ×${sum * ladder}`;
+    window.slotFx?.multiPop?.(layer, `×${sum * ladder}`, { tag: `×${sum} × ×${ladder}`, jump: true });
+    await wait(step);
+    // 3) 乘上贏分
+    $("messageBar").textContent = snapshot.message || "WIN";
+    window.slotFx?.winFloat?.(layer, snapshot.message || "");
+  }
+
+  // 大鬼分裂演出：從本體複製出 WW 飛到每個落點，落地後該格變 WW
+  async function animateSplitCopies(snapshot, common) {
+    if (!snapshot.splits?.length || !snapshot.preBoard) return;
+    const speed = Number($("speedRange").value || 1);
+    const board = cloneBoard(snapshot.preBoard), mults = cloneBoard(snapshot.preMults || snapshot.mults);
+    renderBoard(board, [], { ...common, mults });
+    const layer = fxLayer();
+    if (!layer) return;
+    const layerRect = layer.getBoundingClientRect();
+    const flight = Math.max(90, 320 / speed), gap = Math.max(40, 110 / speed);
+    for (const split of snapshot.splits) {
+      const source = cellAt(split.source);
+      if (!source) continue;
+      const from = source.getBoundingClientRect();
+      source.classList.add("fx-split-source");
+      const flights = [];
+      split.targets.forEach((key, index) => {
+        const target = cellAt(key);
+        if (!target) return;
+        const to = target.getBoundingClientRect();
+        const ghost = document.createElement("div");
+        ghost.className = "cell symbol-ww fly-ww";
+        ghost.style.cssText = `left:${from.left - layerRect.left}px;top:${from.top - layerRect.top}px;width:${from.width}px;height:${from.height}px;`;
+        ghost.innerHTML = `<div class="symbol-wrap"><span class="h019-glyph">WW</span></div>${split.value > 1 ? `<span class="mult-badge">×${split.value}</span>` : ""}`;
+        layer.appendChild(ghost);
+        const animation = ghost.animate(
+          [{ transform: "translate(0,0) scale(.6)", opacity: .4 }, { transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(1)`, opacity: 1 }],
+          { duration: flight, delay: index * gap, easing: "cubic-bezier(.2,.7,.3,1.1)", fill: "forwards" });
+        flights.push(animation.finished.then(() => {
+          ghost.remove();
+          const [reel, row] = key.split(",").map(Number);
+          board[reel][row] = WW; mults[reel][row] = split.value > 1 ? split.value : 0;
+          renderBoard(board, [], { ...common, mults, marked: [key] });
+          cellAt(split.source)?.classList.add("fx-split-source");
+        }).catch(() => ghost.remove()));
+      });
+      await Promise.all(flights);
+    }
+  }
   async function animateReels(initialBoard, initialGold = null, initialMults = null) {
     // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
     // 金框與倍數跟著符號一起滾（同宙斯：滾動中就看得到金框）
@@ -3224,7 +3312,9 @@
           $("winValue").textContent = money(state.lastWin);
         }
         renderWinDetails(snapshot);
-        renderBoard(snapshot.board, snapshot.hits, common); await wait(delay());
+        renderBoard(snapshot.board, snapshot.hits, common);
+        await animateWildMath(snapshot);
+        await wait(delay());
       } else if (snapshot.type === "eliminate") {
         renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared || [], converted: snapshot.converted || [] });
         await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
@@ -3232,6 +3322,7 @@
         renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop || [] });
         await wait(Math.max(60, 180 / Number($("speedRange").value || 1)));
       } else if (snapshot.type === "wild-mark") {
+        await animateSplitCopies(snapshot, common);
         renderBoard(snapshot.board, [], { ...common, marked: snapshot.marked || [] });
         await wait(Math.max(160, 360 / Number($("speedRange").value || 1)));
       } else {
