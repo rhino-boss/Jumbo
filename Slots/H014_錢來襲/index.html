@@ -229,16 +229,14 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
-          <h4>2026-10-06：數學 2.0.0.0（Normal Bet 的 Bet1／Bet5／Bet10 調性對齊 JILI Money Coming）</h4>
+          <h4>2026-10-06：數學 2.2.0.0（V2：Normal Bet 的 Bet1／Bet5／Bet10 調性對齊 JILI Money Coming）</h4>
           <ul>
-            <li>只改 <code>H014192A.xlsx</code> 既有的權重格，架構不變（輪帶符號、R4 分組、卡片區間、規則、<code>Simulator.py</code> 都沒動）。</li>
-            <li><code>bet{n}p_A</code>：A／B／C 子表權重（K14:M14）、前三輪停輪權重（AC～AO）改為競品擬合值，數字分出現率對齊競品。</li>
-            <li><code>bet{n}p_A</code>：R4 依數字分 12 組的權重（AX～BI）改為競品實測比例——盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停在空白 61.4% → 82.2%）。</li>
-            <li><code>bet{n}p_A</code>：RESPIN 重轉輪權重（BV～BX）改為競品分布——觸發變少、重轉盤分數變大（Bet10 觸發 2.09% → 0.91%，重轉盤平均 3.9x → 14.5x）。</li>
-            <li><code>bet{n}p_A</code>：轉盤各格權重（CD）改為競品實測比例，200x 留極小機率。</li>
-            <li><code>Card_Bet{n}</code>：區間權重（T 欄）改為競品倍率線型，&lt;100x 照實測、≥100x 總量對齊競品，僅縮放 ≥20x 區間把 RTP 壓到 92%（方案 A）；使用表（L 欄）一律 A，<code>bet{n}p_B</code> 保留但卡片不再使用。</li>
-            <li>Bet50／Bet100 與 Extra Bet 沿用 1.0.0.2。10^6 驗證（卡片開）：Bet1 92.18%、Bet5 91.19%、Bet10 91.82%，皆在 2σ 內；Bet10 Hit Rate 12.54%（競品 12.61%）。</li>
-            <li>版本管理：1.0.0.2 與 2.0.0.0 存於 <code>Versions/</code>，Setting 的 Version 可切換（讀 <code>Versions/version_manifest.js</code>）。</li>
+            <li>只改 <code>H014192A.xlsx</code> 既有的權重格，架構不變（輪帶符號、R4 分組、卡片區間、規則、<code>Simulator.py</code> 都沒動）；Bet50／Bet100 與 Extra Bet 沿用 1.0.0.2。</li>
+            <li><code>bet{n}p_A</code>：子表權重、前三輪停輪權重、R4 依數字分 12 組的權重、RESPIN 重轉輪權重、轉盤各格權重改為競品擬合值——盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停在空白 61.4% → 82.2%），RESPIN 觸發變少、重轉盤分數變大。</li>
+            <li><code>Card_Bet{n}</code>：卡片權重以多目標非負最小平方擬合競品（RTP＝92% 為硬限制，同時逼近 Hit Rate、倍率門檻、R4 出現率、各獎項 RTP 貢獻、轉盤各格出現率、RESPIN 重轉盤分數與 &lt;20x 倍率線型）；≥200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 可開出 525x），A 表抽不到的區間改用 B 表，重試超限 0 次。</li>
+            <li>結果（Bet10）：Hit Rate 12.21%（競品 12.61%）、轉盤占 RTP 26.5%（26.2%）、RESPIN 21.6%（23.4%）。</li>
+            <li>驗證（模擬機）：10^6 Bet1 92.03%、Bet5 91.66%、Bet10 91.62%，皆在 2σ 內；Bet1 10^8 為 92.03%。</li>
+            <li>Setting 的 Version 可切換 1.0.0.2（原始）與 2.2.0.0（現行）。</li>
           </ul>
         </article>
         <article class="change-log-entry">

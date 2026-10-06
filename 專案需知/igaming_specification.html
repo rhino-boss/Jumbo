@@ -283,12 +283,13 @@ Math Document Description、PARsheet、數值報告）
 │        ├─ Simulator.py
 │        └─ config_9x.js
 ├─ 其他/
-│  └─ 數值報告.html
+│  ├─ 數值報告.html
+│  └─ 差異分析_&lt;遊戲名稱&gt;.md     ← 與對標競品的數學差異分析（有對標競品時）
 ├─ Record/
 └─ Versions/
    ├─ version_manifest.js
    └─ version_manifest.json</code></pre>
-<ul><li>A／B、92／94、Buy／Super Feature 只依產品實際需求增減。</li><li>目錄中的檔名、版本及報表命名必須符合現行規格，不以舊遊戲的歷史命名為準。</li><li><code>Source/</code> 內不放任何轉檔腳本；Excel↔Config 轉換由 AI 執行。</li></ul>
+<ul><li>A／B、92／94、Buy／Super Feature 只依產品實際需求增減。</li><li>目錄中的檔名、版本及報表命名必須符合現行規格，不以舊遊戲的歷史命名為準。</li><li><code>Source/</code> 內不放任何轉檔腳本；Excel↔Config 轉換由 AI 執行。</li><li>與競品的數學差異分析一律命名 <code>差異分析_&lt;遊戲名稱&gt;.md</code>（遊戲名稱用本作中文名，例：<code>差異分析_錢來襲.md</code>），放在專案 <code>其他/</code>；不再使用 <code>競品比較_H0xx.md</code>、<code>競品差異分析_&lt;競品名&gt;.md</code> 等舊檔名。</li></ul>
 <h2 id="7-異動時的重跑範圍">7. 異動時的重跑範圍</h2>
 <div class="tbl-wrap"><table><thead><tr><th>異動</th><th>必做流程</th></tr></thead><tbody><tr><td>Paytable、Reel、Table、Feature、Bet Mode、判獎</td><td>更新基礎 XLSX與版本 → 同步受影響 RTP／Variant → 轉 Config → 全部受影響批次重跑 → Demogame 對帳</td></tr><tr><td>Card System 區間或權重</td><td>更新受影響 RTP／Variant XLSX 第 2 碼 → 轉 Config → Card System On 批次重跑 → 檢查占比與 Retry</td></tr><tr><td>SCR</td><td>更新受影響 RTP／Variant XLSX 第 3 碼 → 轉 Config → 重跑 SCR 相關批次</td></tr><tr><td>文件、說明或排版</td><td>依規格更新第 4 碼；若不影響執行結果，不沿用舊版號產生新正式報表</td></tr><tr><td>Simulator 數學邏輯</td><td>修正程式 → 固定 Seed 回歸 → 小場次 → 所有受影響正式批次 → Demogame 對帳</td></tr><tr><td>報表或顯示邏輯</td><td>驗證統計來源未變 → 核對 Console 與 Excel → 依影響範圍重產報表</td></tr></tbody></table></div>
 <h2 id="8-禁止事項">8. 禁止事項</h2>

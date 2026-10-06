@@ -1,5 +1,5 @@
 {
-  "current": "2.0.0.0",
+  "current": "2.2.0.0",
   "base_version": "2",
   "next_version": "3.0.0.0",
   "versions": [
@@ -21,21 +21,22 @@
       ]
     },
     {
-      "version": "2.0.0.0",
-      "math_key": "2.0",
+      "version": "2.2.0.0",
+      "math_key": "2.2",
       "date": "2026-10-06",
       "competitor_initial_version": false,
-      "base_config": "Versions/2.0.0.0/config.js",
+      "base_config": "Versions/2.2.0.0/config.js",
       "configs": {
-        "92A": "Versions/2.0.0.0/config_92A.js"
+        "92A": "Versions/2.2.0.0/config_92A.js"
       },
       "workbooks": {
-        "92": "Versions/2.0.0.0/Source/H014192A.xlsx",
-        "92_Extra": "Versions/2.0.0.0/Source/H014192A_Extra.xlsx"
+        "92": "Versions/2.2.0.0/Source/H014192A.xlsx",
+        "92_Extra": "Versions/2.2.0.0/Source/H014192A_Extra.xlsx"
       },
       "changes": [
-        "Normal Bet 的 Bet1／Bet5／Bet10 調性對齊 JILI Money Coming 側錄：子表、R4 分組、Respin、轉盤權重改為競品擬合值；卡片權重改為競品倍率線型，≥20x 區間縮放至 RTP 92%。",
-        "Bet50／Bet100 與 Extra Bet 沿用 1.0.0.2。"
+        "Normal Bet 的 Bet1／Bet5／Bet10 調性對齊 JILI Money Coming 側錄：子表、R4 分組、Respin、轉盤權重改為競品擬合值。",
+        "卡片權重以多目標非負最小平方擬合競品（Hit Rate、倍率門檻、R4 出現率、各獎項 RTP 貢獻、轉盤各格、RESPIN 重轉盤分數、<20x 線型），RTP 固定 92%；≥200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 可開出 525x）。",
+        "Bet50／Bet100 與 Extra Bet 沿用 1.0.0.2（H014192A_Extra.xlsx 版本 2.0.0.0）。"
       ]
     }
   ]
