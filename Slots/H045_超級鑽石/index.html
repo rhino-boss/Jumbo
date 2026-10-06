@@ -2739,8 +2739,20 @@
       background:linear-gradient(180deg,#ffe89a,#ffb347);border-radius:5px;padding:0 4px}
     #board .cell.fx-split-source{animation:h045SplitSource 220ms ease-in-out infinite alternate}
     @keyframes h045SplitSource{from{transform:scale(1);filter:brightness(1)}to{transform:scale(1.08);filter:brightness(1.5)}}
-    #board .cell.fx-mult-sum > .mult-badge{animation:h045MultSum 260ms ease-in-out infinite alternate}
-    @keyframes h045MultSum{from{transform:scale(1)}to{transform:scale(1.45);box-shadow:0 0 10px #ffe89a}}
+    .slot-fx-layer .fx-fly-badge{position:absolute;z-index:40;display:grid;place-items:center;pointer-events:none;
+      font:800 14px/1 system-ui,sans-serif;color:#0b1020;background:linear-gradient(180deg,#ffe89a,#ffb347);
+      border-radius:6px;box-shadow:0 0 12px rgba(255,232,154,.8)}
+    .slot-fx-layer .fx-fly-badge.ladder{color:#eaf6ff;background:linear-gradient(180deg,#4aa8ff,#1b4fd8);box-shadow:0 0 14px rgba(74,168,255,.8)}
+    .slot-fx-layer .fx-fly-badge.result{font-size:18px;color:#0b1020;background:linear-gradient(180deg,#9dffd0,#2fd78f);box-shadow:0 0 16px rgba(47,215,143,.8)}
+    .slot-fx-layer .fx-math-bubble{position:absolute;z-index:35;transform:translate(-50%,-50%);min-width:96px;padding:8px 16px;
+      border-radius:14px;border:2px solid rgba(255,232,154,.9);background:rgba(6,13,26,.92);color:#ffe89a;text-align:center;
+      font:900 26px/1.1 system-ui,sans-serif;text-shadow:0 2px 6px #000;box-shadow:0 0 22px rgba(255,201,74,.45);opacity:0;pointer-events:none}
+    .slot-fx-layer .fx-math-bubble.show{opacity:1}
+    .slot-fx-layer .fx-math-bubble .fx-math-tag{display:block;font:700 11px/1.2 system-ui,sans-serif;color:#9fd8ff;letter-spacing:.08em;margin-bottom:2px}
+    .slot-fx-layer .fx-math-bubble.pulse{animation:h045BubblePulse 300ms ease-out}
+    @keyframes h045BubblePulse{from{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.8)}to{transform:translate(-50%,-50%) scale(1);filter:brightness(1)}}
+    #messageBar.fx-bar-hit{animation:h045BarHit 420ms ease-out}
+    @keyframes h045BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(47,215,143,.9)}to{transform:scale(1);filter:brightness(1)}}
     #multiplierWindow .multiplier-step.fx-ladder-hit{animation:h045LadderHit 260ms ease-in-out infinite alternate}
     @keyframes h045LadderHit{from{transform:scale(1)}to{transform:scale(1.25);filter:brightness(1.6)}}
     #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
@@ -3178,7 +3190,7 @@
   function fxLayer() { return window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null; }
   function cellAt(key) { const [reel, row] = key.split(",").map(Number); return $("board").children[(3 - row) * 5 + reel] || null; }
 
-  // 中獎演出：盤面 WILD 倍數先全部加總 → 乘上排階梯倍數 → 最後乘上贏分（game_rule §4／§5.3）
+  // 中獎演出（game_rule §4／§5.3）：① 盤面 WILD 倍數徽章飛到中央加總 → ② 上排階梯倍數掉下來相乘 → ③ 結果飛到贏分列乘上贏分
   async function animateWildMath(snapshot) {
     const values = [];
     for (let reel = 0; reel < 5; reel++) for (let row = 0; row < 4; row++) {
@@ -3186,23 +3198,77 @@
       if ((symbol === WW || symbol === W2) && snapshot.mults?.[reel]?.[row] > 1) values.push({ key: `${reel},${row}`, value: snapshot.mults[reel][row] });
     }
     if (!values.length) return;
+    const layer = fxLayer();
+    if (!layer) return;
+    const speed = Number($("speedRange").value || 1);
+    const flight = Math.max(120, 420 / speed), hold = Math.max(120, 380 / speed), gap = Math.max(40, 120 / speed);
+    const layerRect = layer.getBoundingClientRect();
+    const boardRect = $("board").getBoundingClientRect();
+    const center = { x: boardRect.left - layerRect.left + boardRect.width / 2, y: boardRect.top - layerRect.top + boardRect.height / 2 };
     const sum = values.reduce((total, item) => total + item.value, 0);
     const ladder = Number(snapshot.multiplier) || 1;
-    const layer = fxLayer();
-    const step = Math.max(140, 520 / Number($("speedRange").value || 1));
-    // 1) WILD 倍數加總
-    values.forEach(item => cellAt(item.key)?.classList.add("fx-mult-sum"));
-    $("messageBar").textContent = `WILD ${values.map(item => `×${item.value}`).join(" + ")} = ×${sum}`;
-    window.slotFx?.multiPop?.(layer, `×${sum}`, { tag: "WILD SUM" });
-    await wait(step);
-    // 2) 乘上排階梯倍數
-    $("multiplierWindow").querySelector(".is-active")?.classList.add("fx-ladder-hit");
-    $("messageBar").textContent = `×${sum} × Cascade ×${ladder} = ×${sum * ladder}`;
-    window.slotFx?.multiPop?.(layer, `×${sum * ladder}`, { tag: `×${sum} × ×${ladder}`, jump: true });
-    await wait(step);
-    // 3) 乘上贏分
+    const total = sum * ladder;
+    const base = (Number(snapshot.cascadePay) || 0) / total;
+
+    const bubble = document.createElement("div");
+    bubble.className = "fx-math-bubble";
+    bubble.style.left = `${center.x}px`; bubble.style.top = `${center.y}px`;
+    layer.appendChild(bubble);
+    const fly = (fromRect, toX, toY, html, className, delayMs = 0) => {
+      const ghost = document.createElement("div");
+      ghost.className = className;
+      ghost.innerHTML = html;
+      ghost.style.left = `${fromRect.left - layerRect.left}px`; ghost.style.top = `${fromRect.top - layerRect.top}px`;
+      ghost.style.width = `${fromRect.width}px`; ghost.style.height = `${fromRect.height}px`;
+      layer.appendChild(ghost);
+      const dx = toX - (fromRect.left - layerRect.left + fromRect.width / 2), dy = toY - (fromRect.top - layerRect.top + fromRect.height / 2);
+      const animation = ghost.animate(
+        [{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(1.3)`, opacity: .9 }],
+        { duration: flight, delay: delayMs, easing: "cubic-bezier(.3,.6,.3,1)", fill: "forwards" });
+      // 分頁在背景時 Web Animations 不會推進，finished 永遠不回來 → 以計時器保底，避免卡住整個回合
+      return Promise.race([animation.finished.catch(() => {}), wait(flight + delayMs + 60)]).then(() => ghost.remove());
+    };
+
+    // ① 倍數徽章逐顆飛到中央，中央數字累加
+    let running = 0;
+    const flights = [];
+    values.forEach((item, index) => {
+      const badge = cellAt(item.key)?.querySelector(".mult-badge");
+      if (!badge) return;
+      const rect = badge.getBoundingClientRect();
+      badge.style.visibility = "hidden";
+      flights.push(fly(rect, center.x, center.y, `×${item.value}`, "fx-fly-badge", index * gap).then(() => {
+        running += item.value;
+        bubble.innerHTML = `<span class="fx-math-tag">WILD</span>${values.slice(0, values.indexOf(item) + 1).map(v => `×${v.value}`).join(" + ")}${values.length > 1 ? ` = ×${running}` : ""}`;
+        bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse", "show");
+      }));
+    });
+    await Promise.all(flights);
+    bubble.innerHTML = `<span class="fx-math-tag">WILD SUM</span>×${sum}`;
+    await wait(hold);
+
+    // ② 上排階梯倍數掉下來相乘
+    const step = $("multiplierWindow").querySelector(".is-active");
+    if (step) {
+      step.classList.add("fx-ladder-hit");
+      await fly(step.getBoundingClientRect(), center.x, center.y, `×${ladder}`, "fx-fly-badge ladder");
+      step.classList.remove("fx-ladder-hit");
+    }
+    bubble.innerHTML = `<span class="fx-math-tag">×${sum} × CASCADE ×${ladder}</span>×${total}`;
+    bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse");
+    await wait(hold);
+
+    // ③ 結果飛到贏分列，贏分 = 基礎贏分 × 總倍數
+    const bar = $("messageBar").getBoundingClientRect();
+    $("messageBar").textContent = `WIN ${money(base)} × ${total}`;
+    bubble.remove();
+    const bubbleRect = { left: layerRect.left + center.x - 30, top: layerRect.top + center.y - 16, width: 60, height: 32 };
+    await fly(bubbleRect, bar.left - layerRect.left + bar.width / 2, bar.top - layerRect.top + bar.height / 2, `×${total}`, "fx-fly-badge result");
+    $("messageBar").textContent = `WIN ${money(base)} × ${total} = ${money(snapshot.cascadePay || 0)}`;
+    $("messageBar").classList.remove("fx-bar-hit"); void $("messageBar").offsetWidth; $("messageBar").classList.add("fx-bar-hit");
+    await wait(hold);
     $("messageBar").textContent = snapshot.message || "WIN";
-    window.slotFx?.winFloat?.(layer, snapshot.message || "");
+    values.forEach(item => { const badge = cellAt(item.key)?.querySelector(".mult-badge"); if (badge) badge.style.visibility = ""; });
   }
 
   // 大鬼分裂演出：從本體複製出 WW 飛到每個落點，落地後該格變 WW
@@ -3233,13 +3299,14 @@
         const animation = ghost.animate(
           [{ transform: "translate(0,0) scale(.6)", opacity: .4 }, { transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(1)`, opacity: 1 }],
           { duration: flight, delay: index * gap, easing: "cubic-bezier(.2,.7,.3,1.1)", fill: "forwards" });
-        flights.push(animation.finished.then(() => {
+        // 分頁在背景時 Web Animations 不會推進 → 以計時器保底
+        flights.push(Promise.race([animation.finished.catch(() => {}), wait(flight + index * gap + 60)]).then(() => {
           ghost.remove();
           const [reel, row] = key.split(",").map(Number);
           board[reel][row] = WW; mults[reel][row] = split.value > 1 ? split.value : 0;
           renderBoard(board, [], { ...common, mults, marked: [key] });
           cellAt(split.source)?.classList.add("fx-split-source");
-        }).catch(() => ghost.remove()));
+        }));
       });
       await Promise.all(flights);
     }
