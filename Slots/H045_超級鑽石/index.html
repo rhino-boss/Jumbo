@@ -3614,7 +3614,8 @@
     configSelect.innerHTML = "";
     const option = document.createElement("option");
     option.value = "base";
-    option.textContent = `H0451 · v${entry?.version || "1"}`;
+    // Demogame規範 §1：顯示格式 <Config>-<Profile>；尚無 RTP／Variant config 時以 Base 佔位（共用腳本會接上 -Off）
+    option.textContent = "Base";
     configSelect.appendChild(option);
     configSelect.value = "base";
     configSelect.disabled = true;
