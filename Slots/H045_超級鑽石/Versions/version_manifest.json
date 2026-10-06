@@ -51,10 +51,12 @@
       "date": "2026-10-05",
       "base_config": "Versions/3/config.js",
       "sources": {
-        "base": "Versions/3/Source/H0451.xlsx"
+        "base": "Versions/3/Source/H0451.xlsx",
+        "92A": "Versions/3/Source/H045192A.xlsx"
       },
       "configs": {
-        "base": "config.js"
+        "base": "config.js",
+        "92A": "config_92A.js"
       },
       "changes": [
         "得分改為「Cascade Multiplier × 線上 WILD 倍數總和」（相加，x1 不計，無倍數視為 x1）。",

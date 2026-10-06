@@ -320,15 +320,23 @@ class SuperDiamond:
         self.retry_limit_fg = 0
         self.card_draws: Counter = Counter()
 
-    def _card_multiplier_cap(self) -> float:
-        """取該 Profile 的 BG range 卡最大上限當 Max Win；Card System Off 回傳無限大。"""
+    def _card_section_cap(self, section: str) -> float:
+        """該 Profile 某卡組「最高有權重 range 卡」的上限；Card System Off 回傳無限大。"""
         if not self.card_enabled:
             return math.inf
         cards = ((self.rtp_config.get("card_system") or {}).get("profiles") or {}) \
-            .get(self.profile, {}).get("base_game") or []
+            .get(self.profile, {}).get(section) or []
         caps = [float(c["max"]) for c in cards
                 if str(c.get("type")) == "range" and float(c.get("weight", 0)) > 0 and "max" in c]
         return max(caps) if caps else math.inf
+
+    def _card_multiplier_cap(self) -> float:
+        """Max Win（單場 FG 上限）取 free_game 卡組的最高有權重區間上限（數學模型規範 §1.4.4）；
+        BG Trigger Cap 另由 base_game 卡組決定（§2.3），存於 self.bg_trigger_cap。"""
+        self.bg_trigger_cap = self._card_section_cap("base_game")
+        self.fg_cap = self._card_section_cap("free_game")
+        self.bf_cap = self._card_section_cap("buy_feature")
+        return self.fg_cap
 
     # --- 盤面 ---
 
@@ -580,7 +588,8 @@ class SuperDiamond:
         for _ in range(CARD_RETRY_LIMIT):
             spin = self.natural_base_spin()
             if want_fg:
-                if spin.scatter_count >= 3:
+                # 數學模型規範 §2.3：free_game 卡須同時滿足「觸發 FG」且 BG 得分 ≤ BG Trigger Cap，否則整把重骰
+                if spin.scatter_count >= 3 and spin.pay / self.bet <= self.bg_trigger_cap:
                     return spin
             elif spin.scatter_count < 3 and self.card_matches(card, spin.pay):
                 return spin
@@ -673,6 +682,8 @@ class SuperDiamond:
         target.fg_drop_symbols.update(source.fg_drop_symbols)
 
     def round(self, bet_mode: int) -> RoundResult:
+        if self.card_enabled:   # Max Win 依模式取 buy_feature／free_game 卡組上限
+            self.max_win = self.bf_cap if bet_mode == MODE_FEATUREBUY else self.fg_cap
         if bet_mode == MODE_FEATUREBUY:
             entry_symbols, _, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
@@ -1356,6 +1367,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--threads", type=int, default=None)
     parser.add_argument("--no-report", action="store_true")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--card-on", action="store_true", help="Card System On（需 config_rtp_file）")
+    parser.add_argument("--card-off", action="store_true", help="Card System Off")
+    parser.add_argument("--newbie", action="store_true", help="Profile 改為 Newbie")
+    parser.add_argument("--config-rtp", default=None, help="覆寫 config_rtp_file，例如 config_92A.js")
     return parser.parse_args()
 
 
@@ -1381,6 +1396,14 @@ def main() -> None:
             run["bet_mode"] = args.bet_mode
         if args.base_bet:
             run["base_bet"] = args.base_bet
+        if args.card_on:
+            run["card_system_enabled"] = True
+        if args.card_off:
+            run["card_system_enabled"] = False
+        if args.newbie:
+            run["card_system_is_newbie"] = True
+        if args.config_rtp:
+            run["config_rtp_file"] = args.config_rtp
 
     if args.debug or RUN_SINGLE_SPIN_DEBUG:
         load_batch_configs(runs[0])

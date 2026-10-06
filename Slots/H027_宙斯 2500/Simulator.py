@@ -54,6 +54,12 @@ CARD_SYSTEM_ENABLED = False
 CARD_SYSTEM_IS_NEWBIE = False
 THREADS = max(1, max(8, (os.cpu_count() or 2) - 2))
 RANDOM_SEED = None
+# OP Jackpot（Slots/OP Jackpot/JP0100A/B/C.xlsm × Parameter_List Option）：
+# JACKPOT_FILE = "" 關閉；"A"/"B"/"C" 指定；"AUTO" 依 Profile／押注層級（Newbie→A、Oldhand 小 Bet→C、中／大 Bet→B）。
+# 觸發機率以 RTP 工作簿 OP Jackpot 頁的 SCR 換算（每個出現 ≥1 顆 C1 的 Spin 判定一次）。
+# BATCH_RUNS 可用 "jackpot_file"／"jackpot_option" 逐批指定。
+JACKPOT_FILE = ""
+JACKPOT_OPTION = 28
 
 RUN_ALL_COMBINATIONS = True
 OUTPUT_REPORT = True
@@ -177,6 +183,10 @@ CARD_SYSTEM_ENABLED = parse_env_bool("H027_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENA
 CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H027_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
 THREADS = int(os.environ.get("H027_THREADS", THREADS))
 RANDOM_SEED = int(os.environ["H027_RANDOM_SEED"]) if os.environ.get("H027_RANDOM_SEED") else RANDOM_SEED
+JACKPOT_FILE = os.environ.get("H027_JACKPOT_FILE", JACKPOT_FILE).strip().upper()
+JACKPOT_OPTION = int(os.environ.get("H027_JACKPOT_OPTION", JACKPOT_OPTION))
+if JACKPOT_FILE not in ("", "A", "B", "C", "AUTO"):
+    raise ValueError(f"JACKPOT_FILE must be '', 'A', 'B', 'C' or 'AUTO', got {JACKPOT_FILE!r}")
 RUN_ALL_COMBINATIONS = parse_env_bool("H027_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
 OUTPUT_REPORT = parse_env_bool("H027_OUTPUT_REPORT", OUTPUT_REPORT)
 SHOW_CONSOLE_SUMMARY = parse_env_bool("H027_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
@@ -502,6 +512,90 @@ def build_bet_context(bet_mode, bet_multi):
     }
 
 
+# ========== OP Jackpot ==========
+# JP1／JP2（GRAND／MAJOR）：累進彩金，派彩 = 池底 + 累積 Increment，命中歸零；啟動 RTP = RTP − Increment。
+# JP3／JP4（MINOR／MINI）：固定倍數，派彩 = 倍數 × 實際押注。
+# 真實觸發率由各獎項啟動 RTP 反推，再除以 SCR（每付費局出現 ≥1 顆 C1 的 Spin 數）得到每次判定的條件機率。
+# 檔位（Parameter_List 的 Bet 欄）固定由押注模式的價格倍數決定：NB 1、EB 2、BF 100。
+# JP 派彩不計入 rtp_total（Game RTP），另列 rtp_jp_link／rtp_jp_bonus。
+def resolve_jackpot_file(bet_context):
+    if JACKPOT_FILE != "AUTO":
+        return JACKPOT_FILE
+    if CARD_SYSTEM_IS_NEWBIE:
+        return "A"
+    return "C" if bet_context["bet_tier"] == "small_bet" else "B"
+
+
+def load_jackpot_params(bet_mode, bet_multi):
+    off = (0, np.zeros(4), np.zeros(2), np.zeros(2), np.zeros(2), {})
+    jp_file = resolve_jackpot_file(build_bet_context(bet_mode, bet_multi))
+    if not jp_file:
+        return off
+    import openpyxl as _oxl
+
+    jp_path = BASE_DIR.parent / "OP Jackpot" / f"JP0100{jp_file}.xlsm"
+    if not jp_path.exists():
+        raise FileNotFoundError(f"Jackpot workbook not found: {jp_path}")
+    bet_key = float(FEATUREBUY if bet_mode == MODE_FEATUREBUY else (EXTRABET if bet_mode == MODE_EXTRABET else NORMALBET))
+    wb = _oxl.load_workbook(jp_path, read_only=True, data_only=True)
+    row_hit, available = None, []
+    for row in wb["Parameter_List"].iter_rows(values_only=True):
+        try:
+            opt, bet = int(row[0]), float(row[4])
+        except (TypeError, ValueError, IndexError):
+            continue
+        if opt == JACKPOT_OPTION:
+            available.append(bet)
+            if abs(bet - bet_key) < 1e-9:
+                row_hit = row
+                break
+    wb.close()
+    if row_hit is None:
+        raise ValueError(f"JP0100{jp_file} Parameter_List has no row for option {JACKPOT_OPTION} bet {bet_key:g}; available {sorted(set(available))}")
+    denom = float(row_hit[2])
+    rtp = [float(row_hit[5 + i] or 0.0) for i in range(4)]
+    incr = [float(row_hit[9 + i] or 0.0) for i in range(4)]
+    seeds_dollar = [float(row_hit[13] or 0.0), float(row_hit[14] or 0.0)]
+    x34 = [float(row_hit[15] or 0.0), float(row_hit[16] or 0.0)]
+    startup = [max(0.0, rtp[i] - incr[i]) for i in range(4)]
+
+    # SCR：RTP 工作簿 OP Jackpot 頁，依 Bet Mode／Profile 選列（BF 兩個 Profile 共用）
+    rtp_xlsx = BASE_DIR / "Source" / (Path(CONFIG_RTP_FILE).stem.replace("config_", "H0271") + ".xlsx")
+    wb = _oxl.load_workbook(rtp_xlsx, read_only=True, data_only=True)
+    scr_rows = {}
+    for row in wb["OP Jackpot"].iter_rows(values_only=True):
+        cells = [c for c in row if c is not None]
+        if len(cells) >= 2 and str(cells[0]) in ("NB_Newbie", "NB", "EB_Newbie", "EB", "BF"):
+            scr_rows[str(cells[0])] = float(cells[1])
+    wb.close()
+    if bet_mode == MODE_FEATUREBUY:
+        scr_key = "BF"
+    else:
+        scr_key = ("EB" if bet_mode == MODE_EXTRABET else "NB") + ("_Newbie" if CARD_SYSTEM_IS_NEWBIE else "")
+    if scr_rows.get(scr_key, 0) <= 0:
+        raise ValueError(f"OP Jackpot sheet in {rtp_xlsx.name} has no positive SCR row {scr_key!r}")
+    ssr = scr_rows[scr_key] / 10_000_000_000.0
+
+    bet_cr = float(calc_coin_in(bet_mode, bet_multi))
+    seed_cr = [seeds_dollar[0] / denom, seeds_dollar[1] / denom]
+    p_true = [
+        startup[0] * bet_cr / seed_cr[0] if seed_cr[0] > 0 else 0.0,
+        startup[1] * bet_cr / seed_cr[1] if seed_cr[1] > 0 else 0.0,
+        startup[2] / x34[0] if x34[0] > 0 else 0.0,
+        startup[3] / x34[1] if x34[1] > 0 else 0.0,
+    ]
+    p_cond = np.array([p / ssr for p in p_true], dtype=np.float64)
+    if p_cond.sum() > 1.0:
+        raise ValueError(f"Jackpot conditional probabilities exceed 1 (sum={p_cond.sum():.6f})")
+    info = {
+        "file": jp_file, "option": JACKPOT_OPTION, "bet_key": bet_key, "rtp": rtp, "increment": incr, "startup": startup,
+        "p_true": p_true, "p_cond": p_cond.tolist(), "scr_key": scr_key, "scr": scr_rows[scr_key],
+        "link_rtp_setting": rtp[0] + rtp[1], "link_startup_setting": startup[0] + startup[1], "bonus_rtp_setting": startup[2] + startup[3], "increment_rate": incr[0] + incr[1],
+    }
+    return (1, np.cumsum(p_cond), np.array(seed_cr, dtype=np.float64),
+            np.array([incr[0] * bet_cr, incr[1] * bet_cr], dtype=np.float64), np.array(x34, dtype=np.float64), info)
+
+
 def format_bet_mode_label(bet_mode):
     if bet_mode == MODE_EXTRABET:
         return "Extra Bet"
@@ -594,6 +688,15 @@ RA_BG_TRIGGER_FG_PAY = 27
 RA_SPECIAL_SYMBOL_SPINS = 28
 RA_FG_SESSION_MULTIPLIER_SUM = 29
 RA_FG_SESSION_COUNT = 30
+RA_JP1_PAY = 31
+RA_JP2_PAY = 32
+RA_JP3_PAY = 33
+RA_JP4_PAY = 34
+RA_JP1_HITS = 35
+RA_JP2_HITS = 36
+RA_JP3_HITS = 37
+RA_JP4_HITS = 38
+RA_JP_CONTRIB = 39
 
 
 @njit(nogil=True, cache=True)
@@ -1041,8 +1144,10 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
 
 
 @njit(nogil=True, cache=True)
-def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
+def simulator_chunk(total_round, bet_mode, bet_multi, random_seed, jp_enabled, jp_cum, jp_seed, jp_incr, jp_x34):
     np.random.seed(random_seed)
+    jp_pool1 = 0.0
+    jp_pool2 = 0.0
     record = np.zeros(RECORD_SIZE, dtype=np.float64)
     card_system_active = CARD_SYSTEM_ENABLED and CARD_MODE_ENABLED[bet_mode] == 1
     profile_index = 0
@@ -1088,6 +1193,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
         # statistics matrix here only burns memory bandwidth.  Keep the
         # snapshot exclusively for Card System retry rollback.
         record_before_attempt = record.copy() if card_system_active else record
+        special_spins_before = record[R_ALL, RA_SPECIAL_SYMBOL_SPINS]
         table_id = choose_base_table(profile_index)
         raw_bg, scatter_pay, scatter_count, bg_c2, bg_c2_count, bg_cascades, bg_hits, bg_raw_symbol_pay, bg_bucket_hits, bg_bucket_pay, bg_c2_hits = play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi)
         bg_multiplier = bg_c2 if bg_c2 > 0 else 1
@@ -1208,6 +1314,28 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
 
         accepted_rounds += 1
         retry_count = 0
+        if jp_enabled == 1:
+            # OP Jackpot 只對最終採用的局判定：每局累積 Increment，每個 ≥1 顆 C1 的 Spin 判定一次。
+            jp_pool1 += jp_incr[0]
+            jp_pool2 += jp_incr[1]
+            record[R_ALL, RA_JP_CONTRIB] += jp_incr[0] + jp_incr[1]
+            jp_checks = int(record[R_ALL, RA_SPECIAL_SYMBOL_SPINS] - special_spins_before)
+            for _ in range(jp_checks):
+                jp_draw = np.random.random()
+                if jp_draw < jp_cum[0]:
+                    record[R_ALL, RA_JP1_PAY] += jp_seed[0] + jp_pool1
+                    record[R_ALL, RA_JP1_HITS] += 1
+                    jp_pool1 = 0.0
+                elif jp_draw < jp_cum[1]:
+                    record[R_ALL, RA_JP2_PAY] += jp_seed[1] + jp_pool2
+                    record[R_ALL, RA_JP2_HITS] += 1
+                    jp_pool2 = 0.0
+                elif jp_draw < jp_cum[2]:
+                    record[R_ALL, RA_JP3_PAY] += jp_x34[0] * coin_in
+                    record[R_ALL, RA_JP3_HITS] += 1
+                elif jp_draw < jp_cum[3]:
+                    record[R_ALL, RA_JP4_PAY] += jp_x34[1] * coin_in
+                    record[R_ALL, RA_JP4_HITS] += 1
 
     record[R_ALL, RA_RETRY_TOTAL] += retry_total
     record[R_ALL, RA_RETRY_LIMIT_EXCEEDED] += retry_limit_exceeded
@@ -1231,10 +1359,15 @@ def merge_records(records):
     return merged
 
 
+JP_ARGS = load_jackpot_params(BET_MODE, BET_MULTI)
+JP_INFO = JP_ARGS[5]
+
+
 def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MULTI, threads=THREADS):
     if bet_mode not in PROFILE_BY_MODE:
         raise ValueError(f"Unsupported bet mode: {bet_mode}")
-    simulator_chunk(1, bet_mode, bet_multi, 0)
+    jp_args = JP_ARGS[:5]
+    simulator_chunk(1, bet_mode, bet_multi, 0, 0, jp_args[1], jp_args[2], jp_args[3], jp_args[4])
     chunks = split_rounds(total_round, threads)
     if RANDOM_SEED is None:
         root_seed = int.from_bytes(os.urandom(4), "little")
@@ -1243,10 +1376,10 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     worker_seeds = [int(sequence.generate_state(1, dtype=np.uint32)[0]) for sequence in np.random.SeedSequence(root_seed).spawn(len(chunks))]
     start = time.perf_counter()
     if len(chunks) == 1:
-        record = simulator_chunk(chunks[0], bet_mode, bet_multi, worker_seeds[0])
+        record = simulator_chunk(chunks[0], bet_mode, bet_multi, worker_seeds[0], *jp_args)
     else:
         with ThreadPoolExecutor(max_workers=len(chunks)) as executor:
-            futures = [executor.submit(simulator_chunk, rounds, bet_mode, bet_multi, seed) for rounds, seed in zip(chunks, worker_seeds)]
+            futures = [executor.submit(simulator_chunk, rounds, bet_mode, bet_multi, seed, *jp_args) for rounds, seed in zip(chunks, worker_seeds)]
             record = merge_records([future.result() for future in futures])
     return record, time.perf_counter() - start, calc_coin_in(bet_mode, bet_multi)
 
@@ -1321,6 +1454,23 @@ def build_overview_rows(summary, card_system_active):
         ("volatility_std", f"{float(summary['volatility_std']):.2f}"),
         ("standard_error", f"{float(summary['standard_error']):.2f}"),
     ]
+    if summary.get("jackpot", "off") != "off":
+        hits = summary["jp_hits"]
+        names = ("GRAND", "MAJOR", "MINOR", "MINI")
+        jp_rows = [
+            ("", ""),
+            ("jackpot", summary["jackpot"]),
+            ("jp_scr_used", f"{float(summary['jp_scr_used']):,.0f}"),
+            ("rtp_total_incl_jp", f"{(float(summary['rtp_total']) + float(summary['rtp_jp_link']) + float(summary['rtp_jp_bonus'])) * 100:.4f}%"),
+            ("rtp_jp_link", f"{float(summary['rtp_jp_link']) * 100:.4f}% (setting {float(summary['jp_link_rtp_setting']) * 100:.4f}% = startup {float(summary['jp_link_startup_setting']) * 100:.4f}% + increment {float(summary['jp_increment_rate']) * 100:.4f}%; startup 0 = contributes only)"),
+            ("rtp_jp_bonus", f"{float(summary['rtp_jp_bonus']) * 100:.4f}% (setting {float(summary['jp_bonus_rtp_setting']) * 100:.4f}%)"),
+            ("jp_contribution_rate", f"{float(summary['jp_contribution_rate']) * 100:.4f}%"),
+        ]
+        for i in range(4):
+            period = f", 1/{total_rounds / hits[i]:,.0f} rounds" if hits[i] else ""
+            jp_rows.append((f"jp{i + 1}_hits", f"{hits[i]:,} ({names[i]}{period})"))
+        jp_rows.append(("jp_p_cond", " / ".join(f"{x:.3e}" for x in summary["jp_p_cond"])))
+        rows.extend(jp_rows)
     if card_system_active:
         rows.extend(
             [
@@ -1435,6 +1585,17 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "bg_trigger_fg_pay": bg_trigger_fg_pay,
         "special_symbol_cnt": int(special_symbol_cnt),
         "SCR": scr,
+        "jackpot": f"JP0100{JP_INFO['file']} / option {JP_INFO['option']} / bet {JP_INFO['bet_key']:g} / SCR {JP_INFO['scr_key']}" if JP_INFO else "off",
+        "rtp_jp_link": (values[R_ALL, RA_JP1_PAY] + values[R_ALL, RA_JP2_PAY]) / coin_in_sum if coin_in_sum else 0,
+        "rtp_jp_bonus": (values[R_ALL, RA_JP3_PAY] + values[R_ALL, RA_JP4_PAY]) / coin_in_sum if coin_in_sum else 0,
+        "jp_contribution_rate": values[R_ALL, RA_JP_CONTRIB] / coin_in_sum if coin_in_sum else 0,
+        "jp_hits": [int(values[R_ALL, k]) for k in (RA_JP1_HITS, RA_JP2_HITS, RA_JP3_HITS, RA_JP4_HITS)],
+        "jp_scr_used": JP_INFO.get("scr", 0),
+        "jp_link_rtp_setting": JP_INFO.get("link_rtp_setting", 0),
+        "jp_link_startup_setting": JP_INFO.get("link_startup_setting", 0),
+        "jp_increment_rate": JP_INFO.get("increment_rate", 0),
+        "jp_bonus_rtp_setting": JP_INFO.get("bonus_rtp_setting", 0),
+        "jp_p_cond": JP_INFO.get("p_cond", []),
         "volatility_std": volatility_std,
         "standard_error": standard_error,
         "stddev_x": volatility_std,
@@ -1720,6 +1881,8 @@ def run_batch_runs():
         env["H027_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", CARD_SYSTEM_ENABLED) else "false"
         env["H027_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", CARD_SYSTEM_IS_NEWBIE) else "false"
         env["H027_BASE_BET"] = str(combo["base_bet"])
+        env["H027_JACKPOT_FILE"] = str(combo.get("jackpot_file", JACKPOT_FILE) or "")
+        env["H027_JACKPOT_OPTION"] = str(int(combo.get("jackpot_option", JACKPOT_OPTION)))
         env["H027_RUN_ALL_COMBINATIONS"] = "false"
         env["H027_BATCH_CHILD"] = "1"
         env["PYTHONUTF8"] = "1"
@@ -1760,6 +1923,7 @@ def main():
             "card_system_enabled": CARD_SYSTEM_ENABLED,
             "card_system_is_newbie": CARD_SYSTEM_IS_NEWBIE,
             "base_bet": BASE_BET,
+            "jackpot_file": JACKPOT_FILE,
         }
         print(f"=== Batch 1/1: {current_batch} ===\n", flush=True)
     record, duration, coin_in = run_simulation()

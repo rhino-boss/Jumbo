@@ -2177,6 +2177,20 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-06：整波相加、金框翻牌修正、演出重做、接上 config_92A（Card System）</h4>
+        <ul>
+          <li><strong>數學</strong>：WILD 倍數改為「整波一起加」——該次 Cascade 盤面所有帶倍 WILD 倍數相加，每條中獎連線乘同一總和（game_rule §4／§5.3）。
+            修正金框翻牌座標 bug：本體改在消除當下翻（隨重力落下），大鬼分裂改補牌後丟（§5.6）；與 <code>Simulator.py</code> 同步，自然 RTP 由 1726% 降為約 1335%。</li>
+          <li><strong>Card System</strong>：由版本清單 <code>configs</code> 載入 <code>config_92A.js</code>（<code>window.H045_CONFIG_RTP</code>），合併 <code>card_system</code> 進主 config；
+            Config 下拉為 <code>Base</code>／<code>92A</code>，Profile（Oldhand／Newbie）由共用控制選擇；free_game 卡須「觸發 FG 且 BG 得分 ≤ BG Trigger Cap」否則重骰；
+            Max Win ＝ free_game 卡組最高有權重區間上限（Card Off 不截斷）。</li>
+          <li><strong>演出</strong>：符號結構改同宙斯（<code>symbol-wrap + h019-glyph</code>）讓共用滾動模糊／消除淡出生效；M1～M4 與 A/K/Q/J 同為深色；
+            滾動中依 Gold Count Weight 期望值隨機塞金框（純表演，停輪後顯示真正結果）；消除整格縮小消失、空格透明；
+            大鬼分裂改為 WW 從本體飛出；中獎倍數演出三段（徽章飛到中央加總 → 階梯掉下相乘 → 結果飛到贏分列）；動畫加計時器保底避免背景分頁卡住。</li>
+          <li>未修改 XLSX／Config 的自然機率參數；新增 <code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（卡片權重，另見 其他/數值報告.html）。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-09-24：建立 H045 超級鑽石 Demogame（由 H016 幸運王牌 index.html 衍生）</h4>
         <ul>
           <li>以 H016 的 <code>index.html</code> 為底改寫，沿用其殼層、CSS、盤面 render、掉落動畫、
@@ -2217,6 +2231,13 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect"></select>
+        </label>
+        <label class="config-control" for="cardProfileSelect" hidden>
+          Profile
+          <select id="cardProfileSelect">
+            <option value="oldhand">Oldhand</option>
+            <option value="newbie">Newbie</option>
+          </select>
         </label>
         <label class="config-control" for="languageSelect">
           <span data-i18n="language">Language</span>
@@ -2664,8 +2685,30 @@
         throw new Error(`config.js 版本 ${cfg.excel_version} 與 manifest ${entry.version} 不一致`);
       }
       window.H045_VERSION_ENTRY = entry;
-      window.H045_ACTIVE_CONFIG = "base";
-      try { localStorage.setItem("h045MathVersion", entry.version); } catch (_) {}
+      // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
+      const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
+      const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
+      // 預設用第一個 RTP／Variant config（Card System 由勾選開關）；沒有任何 RTP config 才退回 base
+      const active = available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
+      window.H045_ACTIVE_CONFIG = active;
+      try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
+      if (active !== "base") {
+        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}"><\/script>`);
+        document.write(`<script>
+          (() => {
+            const base = window.H045_CONFIG, rtp = window.H045_CONFIG_RTP;
+            if (!rtp) throw new Error("H045 RTP config was not loaded.");
+            if (rtp.game_id !== base.game_id) throw new Error("H045 base/RTP config game_id mismatch.");
+            if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) {
+              throw new Error("RTP config 版本第 1 碼 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 不一致");
+            }
+            if (!rtp.card_system) throw new Error("H045 RTP config is missing card_system.");
+            base.card_system = rtp.card_system;
+            base.rtp_label = rtp.rtp_label || rtp.config_code;
+            base.rtp_config = rtp;
+          })();
+        <\/script>`);
+      }
     })();
   </script>
     <script>
@@ -2685,8 +2728,14 @@
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
   const LADDER = { bg: cfg.cascade_multiplier.bg, fg: cfg.cascade_multiplier.fg };
   const LADDER_LEN = Math.max(LADDER.bg.length, LADDER.fg.length);
-  // Max Win 由卡片系統的倍率上限決定；Card System Off 不截斷（game_rule §9.10）
-  const MAX_WIN = Infinity;
+  // Max Win 由卡片系統的倍率上限決定（free_game 卡組最高有權重區間上限）；Card System Off 不截斷（game_rule §9.10）
+  function cardSectionCap(section, profile) {
+    const cards = cfg.card_system?.profiles?.[profile]?.[section] || [];
+    const caps = cards.filter(card => card.type === "range" && Number(card.weight) > 0).map(card => Number(card.max));
+    return caps.length ? Math.max(...caps) : Infinity;
+  }
+  let MAX_WIN = Infinity;
+  function refreshMaxWin() { MAX_WIN = cardSystemActive() ? cardSectionCap("free_game", cardProfile()) : Infinity; }
   const MAX_FS = Number(cfg.max_free_spins);
   const SPLIT_REELS = cfg.split_target_reels.map(Number);
   const GOLD_REELS = cfg.gold_reels.map(Number);
@@ -3073,7 +3122,7 @@
   }
 
   // ===== Card System（本作尚未建立 config_92A.js，實際為 Off）=====
-  function cardProfile() { return "oldhand"; }
+  function cardProfile() { return $("cardProfileSelect")?.value === "newbie" ? "newbie" : "oldhand"; }
   function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
   function naturalBaseSpin() {
     const weights = cfg.table_weight.bg;
@@ -3097,10 +3146,12 @@
   function cardSpin(card) {
     if (!card) return naturalBaseSpin();
     if (card.type === "free_game") {
+      // 數學模型規範 §2.3：須同時「觸發 FG」且 BG 得分 ≤ BG Trigger Cap（base_game 卡組最高有權重區間上限）
+      const trigCap = cardSectionCap("base_game", cardProfile());
       let last = null;
       for (let retry = 0; retry < MAX_RETRY; retry++) {
         last = naturalBaseSpin();
-        if (last.scatter >= 3) return last;
+        if (last.scatter >= 3 && last.pay / betUnit() <= trigCap) return last;
       }
       if (last) return last;
     } else {
@@ -3366,7 +3417,7 @@
     const tier = BET_LEVELS[state.betIndex] * (state.mode === 2 ? BUY.cost_multiplier : 1);
     const tierName = tier < 2 ? "small_bet" : tier <= 100 ? "medium_bet" : "big_bet";
     $("rngList").innerHTML = `
-      <div class="rng-row"><span>Card System</span><span>${cardSystemActive() ? "On" : "Off (config_92A.js 未建立)"}</span></div>
+      <div class="rng-row"><span>Card System</span><span>${cardSystemActive() ? `On · ${cfg.rtp_label || window.H045_ACTIVE_CONFIG}-${cardProfile() === "newbie" ? "Newbie" : "Oldhand"}` : "Off"}</span></div>
       <div class="rng-row"><span>Source</span><span>${result.tableName} · weighted draw</span></div>
       <div class="rng-row"><span>Bet Mode</span><span>${state.mode === 2 ? `Buy Feature ${BUY.cost_multiplier}x` : "Normal Bet"}</span></div>
       <div class="rng-row"><span>bet_tier_amount</span><span>${format(BET_LEVELS[state.betIndex])} · ${tierName}</span></div>
@@ -3610,15 +3661,23 @@
       versionSelect.appendChild(option);
     }
     versionSelect.value = entry?.version || "";
-    // 只列實際存在的 Config；config_92A.js 尚未建立，故目前僅 base。
+    // 只列實際存在的 Config：base（卡片關）＋ manifest entry.configs 的 RTP／Variant（Demogame規範 §1：<Config>-<Profile>）
     configSelect.innerHTML = "";
-    const option = document.createElement("option");
-    option.value = "base";
-    // Demogame規範 §1：顯示格式 <Config>-<Profile>；尚無 RTP／Variant config 時以 Base 佔位（共用腳本會接上 -Off）
-    option.textContent = "Base";
-    configSelect.appendChild(option);
-    configSelect.value = "base";
-    configSelect.disabled = true;
+    const rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
+    for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = code === "base" ? "Base" : code;
+      configSelect.appendChild(option);
+    }
+    configSelect.value = window.H045_ACTIVE_CONFIG || "base";
+    configSelect.disabled = (configSelect.options?.length || 0) <= 1;
+    configSelect.onchange = () => { if (configSelect.value !== window.H045_ACTIVE_CONFIG) openVersion(entry?.version || "", configSelect.value); };
+    const profileSelect = $("cardProfileSelect");
+    try { profileSelect.value = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
+    profileSelect.onchange = () => { refreshMaxWin(); updateStats(); };
+    document.addEventListener?.("demogame:card-system-change", () => { refreshMaxWin(); updateStats(); });
+    refreshMaxWin();
   }
 
   $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2);
@@ -3635,8 +3694,8 @@
 })();
   </script>
   <script>
-  // 本作尚未建立 config_92A.js（卡片權重待 card-off 大場次校準）
-  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+  // 有載入 RTP／Variant config（card_system）時才支援 Card System；選 Base 則為 Off
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H045_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script src="../demogame_common.js?v=2"></script>
