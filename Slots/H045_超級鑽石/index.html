@@ -2717,11 +2717,14 @@
       background:radial-gradient(circle,#4a3a12,#1a1305)!important;
       box-shadow:inset 0 0 0 1px rgba(255,201,74,.45),0 0 10px rgba(255,201,74,.22)!important;
     }
-    #board .cell:not(.hit):not(.convert):not(.wild-mark):not(.gold){
-      border:2px solid #122a43!important;
-      border-radius:8px!important;
-      background:#07111f!important;
-      box-shadow:inset 0 0 0 1px rgba(3,9,18,.92),0 1px 2px rgba(0,0,0,.72)!important;
+    /* 符號樣式同宙斯（H027）：各符號底色沿用 .cell.symbol-* 定義，不再統一壓成深色 */
+    #board .cell{border-radius:8px;box-shadow:none}
+    #board .cell.symbol-empty{background:#060d1a!important;border-color:rgba(38,92,137,.18)!important}
+    #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
+    #board .h019-glyph{
+      display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
+      color:#d8e8f4;font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;
+      letter-spacing:.02em;text-shadow:0 2px 3px rgba(0,0,0,.72);
     }
     #board .mult-badge{
       position:absolute;top:2px;right:3px;z-index:3;
@@ -3110,12 +3113,13 @@
     root.innerHTML = "";
     for (let row = 3; row >= 0; row--) for (let reel = 0; reel < 5; reel++) {
       const symbol = board[reel][row];
-      const code = CODE[symbol] || `S${symbol}`;
+      const empty = !(symbol >= 0);                  // 消除後的空格（-1）：直接留空，不顯示任何代號
+      const code = empty ? "" : (CODE[symbol] || `S${symbol}`);
       const cell = document.createElement("div");
       const key = `${reel},${row}`;
       const motion = drop.get(key), speed = Number($("speedRange").value || 1);
-      const isGold = !!(gold[reel] && gold[reel][row]);
-      cell.className = `cell symbol-${String(code).toLowerCase()}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
+      const isGold = !empty && !!(gold[reel] && gold[reel][row]);
+      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
         const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
@@ -3123,31 +3127,39 @@
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
-      cell.innerHTML = `<span class="slot-symbol-label">${code}</span>`;
-      if (mults[reel] && mults[reel][row]) {
-        cell.insertAdjacentHTML("beforeend", `<span class="mult-badge">×${mults[reel][row]}</span>`);
+      // 結構同宙斯（symbol-wrap + h019-glyph）：共用的滾動模糊／消除淡出特效只認這組選擇器
+      cell.innerHTML = empty ? "" : `<div class="symbol-wrap"><span class="h019-glyph">${code}</span></div>`;
+      if (!empty && mults[reel] && mults[reel][row] > 1) {
+        cell.insertAdjacentHTML("beforeend", `<span class="mult-badge multi-badge">×${mults[reel][row]}</span>`);
       }
       root.append(cell);
     }
   }
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
-  async function animateReels(initialBoard) {
+  async function animateReels(initialBoard, initialGold = null, initialMults = null) {
     // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    // 金框與倍數跟著符號一起滾（同宙斯：滾動中就看得到金框）
     const speed = Number($("speedRange").value || 1);
     const baseFrames = Math.max(3, Math.round(9 / speed));
     const perReelExtra = Math.max(1, Math.round(3 / speed));
     const totalFrames = baseFrames + perReelExtra * 4 + 1;
+    const goldSrc = initialGold || zeroGold(), multSrc = initialMults || zeroMults();
     for (let frame = 0; frame < totalFrames; frame++) {
-      const rolling = cloneBoard(initialBoard);
+      const rolling = cloneBoard(initialBoard), rollingGold = cloneBoard(goldSrc), rollingMults = cloneBoard(multSrc);
       const rollingReels = new Set();
       for (let reel = 0; reel < 5; reel++) {
         if (frame >= baseFrames + perReelExtra * reel) continue; // 該輪已停，顯示最終符號
         rollingReels.add(reel);
         const offset = (totalFrames - frame + reel) % 4;
-        for (let row = 0; row < 4; row++) rolling[reel][row] = initialBoard[reel][(row + offset) % 4];
+        for (let row = 0; row < 4; row++) {
+          const src = (row + offset) % 4;
+          rolling[reel][row] = initialBoard[reel][src];
+          rollingGold[reel][row] = goldSrc[reel][src];
+          rollingMults[reel][row] = multSrc[reel][src];
+        }
       }
-      renderBoard(rolling, []);
+      renderBoard(rolling, [], { gold: rollingGold, mults: rollingMults });
       if (!rollingReels.size) break;
       const cells = [];
       Array.from($("board").children).forEach((node, index) => {
@@ -3182,7 +3194,7 @@
   async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
     state.snapshots = snapshots; state.snapshotIndex = -1;
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
-    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
+    if (snapshots[0]) { await animateReels(snapshots[0].board, snapshots[0].gold, snapshots[0].mults); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
       $("messageBar").textContent = snapshot.message || "Cascade";
