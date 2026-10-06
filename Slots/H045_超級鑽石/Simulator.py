@@ -47,10 +47,11 @@ BATCH_RUNS = [
     {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
      "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 階段 8：自然機率正式報表（卡片權重校準用）---
+    # 2026-10-06 使用者決議：純 Python 無 Numba（1e6≈76 秒），本機改跑 NB 1e8／BF 1e7（規範預設 1e9／1e8）
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
-    #  "total_rounds": 10**9, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
     #  "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
+    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
+    #  "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 THREADS = max(1, min(8, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -669,7 +670,8 @@ class SuperDiamond:
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
             if scatter < 3:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤至少 3 顆 C1")
-            spins = int(self.config["bet_modes"]["buy_feature"]["free_spins"])
+            # 進場盤的 C1 顆數決定初始局數，與自然觸發同一張 free_spins 表
+            spins = int(self.fs_table[min(scatter, max(self.fs_table))]["initial"])
             result = (self.card_feature("buy_feature", spins, 0.0)
                       if self.card_enabled else self.free_session(spins, 0.0))
             result.special_symbol_cnt += 1   # 進場盤本身含 SC
@@ -807,7 +809,8 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
         stats[key].update(getattr(result, key))
 
     if bet_mode == MODE_FEATUREBUY:
-        index = threshold_index(result.pay_fg / wager)
+        # 數學模型規範 §2.5：BF 的倍率判定分母是 Normal Bet 基準成本，不是購買價
+        index = threshold_index(result.pay_fg / base_bet)
         stats["bucket_bf_cnt"][index] += 1
         stats["bucket_bf_pay"][index] += result.pay_fg
     elif result.fg_triggered:

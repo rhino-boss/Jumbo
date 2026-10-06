@@ -3292,7 +3292,7 @@
         state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
         if (base.scatter >= 3 || mode === 2) {
-          const spins = mode === 2 ? Number(BUY.free_spins) : initialFreeSpins(base.scatter);
+          const spins = initialFreeSpins(base.scatter);   // BF 進場盤的 C1 顆數決定局數，同自然觸發
           const section = mode === 2 ? "buy_feature" : "free_game";
           activateFeature(cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay), mode);
         }
