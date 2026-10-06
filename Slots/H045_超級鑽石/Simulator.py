@@ -20,7 +20,7 @@ import re
 import sys
 import time
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -53,7 +53,7 @@ BATCH_RUNS = [
     # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
-THREADS = max(1, min(8, os.cpu_count() or 1))
+THREADS = max(1, min(12, os.cpu_count() or 1))   # 多程序；本機 i7-12700H 20 執行緒
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
 RUN_SINGLE_SPIN_DEBUG = False
@@ -916,6 +916,12 @@ def _simulate_chunk(rounds: int, bet_mode: int, base_bet: float, seed: int,
     return stats
 
 
+def _init_worker(cfg: dict[str, Any], cfg_rtp: dict[str, Any]) -> None:
+    """多程序 worker 初始化：Windows 以 spawn 啟動，需把主程序載入的 config 傳進來。"""
+    global CFG, CFG_RTP
+    CFG, CFG_RTP = cfg, cfg_rtp
+
+
 def run_simulation(total_rounds: int, bet_mode: int, base_bet: float, threads: int,
                    card_enabled: bool, newbie: bool) -> dict[str, Any]:
     per_thread = [total_rounds // threads] * threads
@@ -932,7 +938,8 @@ def run_simulation(total_rounds: int, bet_mode: int, base_bet: float, threads: i
     if threads == 1:
         merged = _simulate_chunk(total_rounds, bet_mode, base_bet, RNG_SEED, card_enabled, newbie)
     else:
-        with ThreadPoolExecutor(max_workers=threads) as pool:
+        # 2026-10-06：ThreadPool 受 GIL 限制實際只用 1 核（1e8 跑 3.5 小時）；改多程序，worker 以 initializer 接收 config
+        with ProcessPoolExecutor(max_workers=threads, initializer=_init_worker, initargs=(CFG, CFG_RTP)) as pool:
             futures = [
                 pool.submit(_simulate_chunk, count, bet_mode, base_bet,
                             RNG_SEED + index * 7919, card_enabled, newbie)

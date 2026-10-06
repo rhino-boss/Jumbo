@@ -2132,6 +2132,14 @@
     </div>
 
     <section id="controls" class="debug-off">
+      <div id="line-shape-panel" class="control-zone line-shape-zone">
+        <span class="zone-label">倍率線型（即時，64 區間）</span>
+        <div class="zone-body line-shape-body">
+          <div class="line-chart" id="lineChartBG"></div>
+          <div class="line-chart" id="lineChartFG"></div>
+          <div class="line-chart" id="lineChartBF"></div>
+        </div>
+      </div>
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
@@ -2801,6 +2809,12 @@
     .slot-fx-layer .fx-math-bubble.pulse{animation:h045BubblePulse 300ms ease-out}
     @keyframes h045BubblePulse{from{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.8)}to{transform:translate(-50%,-50%) scale(1);filter:brightness(1)}}
     #messageBar.fx-bar-hit{animation:h045BarHit 420ms ease-out}
+    /* 即時倍率線型 */
+    .zone-body.line-shape-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:stretch;min-height:0}
+    .line-chart{min-width:0;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:6px 8px 2px;background:rgba(6,13,26,.6)}
+    .line-chart .lc-title{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:2px}
+    .line-chart svg{display:block;width:100%;height:150px}
+    @media (max-width:900px){.zone-body.line-shape-body{grid-template-columns:1fr}}
     @keyframes h045BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(47,215,143,.9)}to{transform:scale(1);filter:brightness(1)}}
     #multiplierWindow .multiplier-step.fx-ladder-hit{animation:h045LadderHit 260ms ease-in-out infinite alternate}
     @keyframes h045LadderHit{from{transform:scale(1)}to{transform:scale(1.25);filter:brightness(1.6)}}
@@ -3238,6 +3252,52 @@
   }
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
+
+  // ===== 即時倍率線型（H026 標準 64 區間；NB-BG 每局（不含觸發局）、NB-FG 每場、BF 每場，皆 ÷ 底注）=====
+  const LINE_THRESH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200,
+    250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 2000, 3000, 4000, 5000, 6000,
+    7000, 8000, 9000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 9999999];
+  const LINE_LABELS = LINE_THRESH.map((upper, i) => `(${i ? LINE_THRESH[i - 1] : -1}, ${upper}]`);
+  function lineBucket(x) { for (let i = 0; i < LINE_THRESH.length; i++) if (x <= LINE_THRESH[i]) return i; return LINE_THRESH.length - 1; }
+  function emptyLine() { return { bg: new Array(64).fill(0), fg: new Array(64).fill(0), bf: new Array(64).fill(0) }; }
+  state.line = emptyLine();
+  function recordLine(mode, base, feature) {
+    const unit = betUnit();
+    if (mode === 2) state.line.bf[lineBucket((feature?.pay || 0) / unit)]++;
+    else if (feature) state.line.fg[lineBucket((feature.pay || 0) / unit)]++;
+    else state.line.bg[lineBucket((base?.pay || 0) / unit)]++;
+    renderLineCharts();
+  }
+  function lineChartSvg(counts, color) {
+    const W = 320, H = 150, L = 30, R = 6, T = 8, B = 30, n = counts.length;
+    const total = counts.reduce((a, b) => a + b, 0);
+    const shares = counts.map(c => total ? c / total * 100 : 0);
+    const ymax = Math.max(5, Math.ceil(Math.max(...shares) / 5) * 5);
+    const px = i => L + (W - L - R) * i / (n - 1), py = v => T + (H - T - B) * (1 - v / ymax);
+    let out = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+    for (let k = 0; k <= 4; k++) {
+      const v = ymax * k / 4, y = py(v);
+      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}" stroke="rgba(120,160,200,.18)"/><text x="${L - 3}" y="${(y + 3).toFixed(1)}" font-size="8" text-anchor="end" fill="#7f9bb8">${v}%</text>`;
+    }
+    for (const i of [0, 10, 18, 23, 28, 34, 44, 54, 63]) {
+      out += `<text x="${px(i).toFixed(1)}" y="${H - B + 10}" font-size="7" text-anchor="middle" fill="#7f9bb8">${i === 0 ? "0" : LINE_THRESH[i - 1]}</text>`;
+    }
+    let d = "", pen = false;
+    shares.forEach((v, i) => { if (v <= 0) { pen = false; return; } d += `${pen ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`; pen = true; });
+    out += `<path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/>`;
+    shares.forEach((v, i) => { if (v > 0) out += `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="1.6" fill="${color}"/>`; });
+    return out + "</svg>";
+  }
+  function renderLineCharts() {
+    const specs = [["lineChartBG", "NB-BG（每局）", state.line.bg, "#4aa8ff"], ["lineChartFG", "NB-FG（每場）", state.line.fg, "#39d6a2"], ["lineChartBF", "BF（每場）", state.line.bf, "#ffb347"]];
+    for (const [id, title, counts, color] of specs) {
+      const node = $(id); if (!node) continue;
+      const total = counts.reduce((a, b) => a + b, 0);
+      const nz = counts.map((c, i) => c ? i : -1).filter(i => i >= 0);
+      const range = nz.length ? `${LINE_LABELS[nz[0]]} ～ ${LINE_LABELS[nz[nz.length - 1]]}` : "—";
+      node.innerHTML = `<div class="lc-title"><span>${title}</span><span>n=${total.toLocaleString()} · ${range}</span></div>${lineChartSvg(counts, color)}`;
+    }
+  }
   function fxLayer() { return window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null; }
   function cellAt(key) { const [reel, row] = key.split(",").map(Number); return $("board").children[(3 - row) * 5 + reel] || null; }
 
@@ -3544,7 +3604,11 @@
         if (base.scatter >= 3 || mode === 2) {
           const spins = initialFreeSpins(base.scatter);   // BF 進場盤的 C1 顆數決定局數，同自然觸發
           const section = mode === 2 ? "buy_feature" : "free_game";
-          activateFeature(cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay), mode);
+          const feature = cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay);
+          activateFeature(feature, mode);
+          recordLine(mode, base, feature);
+        } else {
+          recordLine(mode, base, null);
         }
       }
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
@@ -3633,6 +3697,7 @@
   function reset() {
     Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
     $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
+    state.line = emptyLine(); renderLineCharts();
   }
   function buildBetMenu() {
     $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
