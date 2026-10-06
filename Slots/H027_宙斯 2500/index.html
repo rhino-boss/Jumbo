@@ -1514,6 +1514,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.balance += fg.win;
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
+    if (state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 一局含 FG
     state.selectedMode = MODE_NORMAL;
     refreshCardRangeOptions();
     document.body.classList.remove("fg-mode");
@@ -1739,6 +1740,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
+      if (!triggered && state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 未觸發局
       updateStats();
     } catch (error) {
       state.auto = false;
@@ -2042,7 +2044,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(data.card_system?.enabled);</script>
-  <script src="../demogame_common.js?v=2"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

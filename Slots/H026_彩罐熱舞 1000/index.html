@@ -2439,6 +2439,11 @@
       };
     }
     function runRoundWithReplay(betMode, forceFg, debugOverrides) {
+      const round = runRoundWithReplayInner(betMode, forceFg, debugOverrides);
+      if (betMode === Box.mode_normalbet) window.demogameLineChart?.record(Number(round.total_win) / Number(round.coin_in));   // 即時倍率線型：NB 含 FG
+      return round;
+    }
+    function runRoundWithReplayInner(betMode, forceFg, debugOverrides) {
       const reelStops = debugOverrides?.reels || null;
       const hasReelStops = Array.isArray(reelStops)
         && reelStops.some((value) => value !== null && value !== undefined);
@@ -4782,7 +4787,7 @@
     applyLanguage();
     appendLiveLog("Ready — press Spin", "result");
   </script>
-  <script src="../demogame_common.js?v=1"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
 </body>
 
 </html>

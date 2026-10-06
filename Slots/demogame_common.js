@@ -1616,3 +1616,89 @@
     }
   };
 })();
+
+// ===== 即時倍率線型（共用；Debug 模式才顯示，位置在 Set RNG 上方）=====
+// 各遊戲在「Normal Bet 一局（含該局觸發的 FG）結束」時呼叫：
+//   window.demogameLineChart?.record(該局總得分 ÷ 底注)
+// 區間為 H026 標準 64 區間 (Lower, Upper]；Reset 按鈕會清空；縱軸固定 0～20%，超過貼頂。
+(() => {
+  const THRESH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200,
+    250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 2000, 3000, 4000, 5000, 6000,
+    7000, 8000, 9000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 9999999];
+  const LABELS = THRESH.map((upper, i) => `(${i ? THRESH[i - 1] : -1}, ${upper}]`);
+  const YMAX = 20;
+  let counts = new Array(THRESH.length).fill(0);
+  let chart = null, panel = null;
+
+  function bucket(x) {
+    for (let i = 0; i < THRESH.length; i++) if (x <= THRESH[i]) return i;
+    return THRESH.length - 1;
+  }
+
+  function svg() {
+    const W = 900, H = 280, L = 44, R = 12, T = 10, B = 40, n = THRESH.length;
+    const total = counts.reduce((a, b) => a + b, 0);
+    const shares = counts.map(c => total ? c / total * 100 : 0);
+    const px = i => L + (W - L - R) * i / (n - 1), py = v => T + (H - T - B) * (1 - Math.min(v, YMAX) / YMAX);
+    let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="倍率線型">`;
+    for (let k = 0; k <= 4; k++) {
+      const v = YMAX * k / 4, y = py(v);
+      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}" stroke="rgba(120,160,200,.18)"/><text x="${L - 6}" y="${(y + 4).toFixed(1)}" font-size="12" text-anchor="end" fill="#7f9bb8">${v}%</text>`;
+    }
+    for (const i of [0, 5, 10, 14, 18, 23, 28, 32, 36, 44, 49, 54, 59, 63]) {
+      out += `<line x1="${px(i).toFixed(1)}" y1="${T}" x2="${px(i).toFixed(1)}" y2="${H - B}" stroke="rgba(120,160,200,.08)"/><text x="${px(i).toFixed(1)}" y="${H - B + 18}" font-size="11" text-anchor="middle" fill="#7f9bb8">${i === 0 ? "0" : THRESH[i - 1]}</text>`;
+    }
+    let d = "", pen = false;
+    shares.forEach((v, i) => { if (v <= 0) { pen = false; return; } d += `${pen ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`; pen = true; });
+    out += `<path d="${d}" fill="none" stroke="#4aa8ff" stroke-width="2"/>`;
+    shares.forEach((v, i) => { if (v > 0) out += `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3" fill="#4aa8ff"><title>${LABELS[i]} ${v.toFixed(3)}%（${counts[i]}）</title></circle>`; });
+    return out + "</svg>";
+  }
+
+  function render() {
+    if (!chart) return;
+    const total = counts.reduce((a, b) => a + b, 0);
+    const nz = counts.map((c, i) => c ? i : -1).filter(i => i >= 0);
+    const range = nz.length ? `${LABELS[nz[0]]} ～ ${LABELS[nz[nz.length - 1]]}` : "—";
+    chart.innerHTML = `<div class="dlc-title"><span>NB（每局總得分 ÷ 底注，含 FG）</span><span>n=${total.toLocaleString("en-US")} · ${range}</span></div>${svg()}`;
+  }
+
+  function mount() {
+    const anchor = document.getElementById("set-rng-panel");
+    if (!anchor || document.getElementById("demogame-line-chart")) return;
+    const style = document.createElement("style");
+    style.textContent = `
+      #demogame-line-chart .dlc-body{display:block;width:100%}
+      #demogame-line-chart .dlc-chart{width:100%;min-width:0;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:6px 8px 2px;background:rgba(6,13,26,.6)}
+      #demogame-line-chart .dlc-title{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--sub,#7f9bb8);margin-bottom:2px}
+      #demogame-line-chart svg{display:block;width:100%;height:auto}
+      #demogame-line-chart.debug-hidden{display:none!important}`;
+    document.head.appendChild(style);
+    panel = document.createElement("div");
+    panel.id = "demogame-line-chart";
+    panel.className = "control-zone line-shape-zone debug-hidden";
+    panel.innerHTML = `<span class="zone-label">倍率線型（即時，64 區間）</span><div class="dlc-body"><div class="dlc-chart"></div></div>`;
+    anchor.insertAdjacentElement("beforebegin", panel);
+    chart = panel.querySelector(".dlc-chart");
+    // 跟 Set RNG 同步顯示／隱藏（各遊戲 Debug Mode 都會切 #set-rng-panel 的 debug-hidden）
+    const sync = () => panel.classList.toggle("debug-hidden", anchor.classList.contains("debug-hidden") || anchor.hidden);
+    new MutationObserver(sync).observe(anchor, { attributes: true, attributeFilter: ["class", "hidden"] });
+    sync();
+    document.getElementById("resetBtn")?.addEventListener("click", () => window.demogameLineChart.reset());
+    render();
+  }
+
+  window.demogameLineChart = {
+    record(multiplier) {
+      const x = Number(multiplier);
+      if (!Number.isFinite(x)) return;
+      counts[bucket(Math.max(0, x))] += 1;
+      render();
+    },
+    reset() { counts = new Array(THRESH.length).fill(0); render(); },
+    counts: () => counts.slice()
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
+  else mount();
+})();

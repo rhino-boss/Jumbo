@@ -49,6 +49,13 @@
     @keyframes h014Glow { from{filter:brightness(1)} to{filter:brightness(1.45)} }
     #board .payline { position:absolute; left:4px; right:4px; top:calc(8px + var(--cell) * 0.5); height:var(--cell); z-index:4; pointer-events:none;
       border-top:2px solid rgba(255,216,106,.55); border-bottom:2px solid rgba(255,216,106,.55); }
+    /* 該押注沒有開放的數字輪（Bet1 的 R3）蓋上鎖鏈 */
+    #board .reel .reel-lock { position:absolute; inset:0; z-index:5; display:none; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+      background:rgba(6,10,18,.78); pointer-events:none; }
+    #board .reel.locked .reel-lock { display:flex; }
+    #board .reel .reel-lock svg { position:absolute; inset:0; width:100%; height:100%; }
+    #board .reel .reel-lock .lock-text { position:relative; margin-top:58%; padding:1px 6px; border-radius:999px; background:rgba(5,10,20,.85);
+      border:1px solid #8a8a8a; color:#d0d0d0; font-size:10px; font-weight:700; white-space:nowrap; }
     #board .reel.respin-flash { box-shadow:0 0 0 2px #33bbff, 0 0 18px rgba(51,187,255,.8); }
 
     .h014-wheel-overlay { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -114,7 +121,7 @@
         <div id="board" aria-label="Reels">
           <div class="reel" data-col="0"><div class="reel-strip"></div></div>
           <div class="reel" data-col="1"><div class="reel-strip"></div></div>
-          <div class="reel" data-col="2"><div class="reel-strip"></div></div>
+          <div class="reel" data-col="2"><div class="reel-strip"></div><div class="reel-lock" aria-hidden="true"></div></div>
           <div class="reel-gap" aria-hidden="true"></div>
           <div class="reel r4" data-col="3"><div class="reel-strip"></div></div>
           <div class="payline" aria-hidden="true"></div>
@@ -824,7 +831,31 @@
     }
     $("topWheelTitle").textContent = text;
   }
+  function reelLockSvg() {
+    const link = (x, y, rot) => `<rect x="${x - 9}" y="${y - 5}" width="18" height="10" rx="5" transform="rotate(${rot} ${x} ${y})" fill="none" stroke="#c9ccd2" stroke-width="3.2"/>`;
+    let html = "";
+    for (const [x0, y0, x1, y1] of [[4, 8, 96, 152], [96, 8, 4, 152]]) {
+      const n = 11, rot = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+      for (let i = 0; i <= n; i++) html += link(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n, rot + (i % 2 ? 90 : 0));
+    }
+    html += `<g transform="translate(50 78)"><path d="M-10 -4 v-7 a10 10 0 0 1 20 0 v7" fill="none" stroke="#e8d27a" stroke-width="4.5"/>`
+      + `<rect x="-16" y="-5" width="32" height="25" rx="4" fill="#d9a826" stroke="#7a5a0a" stroke-width="2"/>`
+      + `<circle cy="5" r="3.5" fill="#5a3a00"/><rect x="-1.5" y="6" width="3" height="7" fill="#5a3a00"/></g>`;
+    return `<svg viewBox="0 0 100 160" preserveAspectRatio="none">${html}</svg>`;
+  }
+  /** 該押注沒開的數字輪（Bet1 的 R3 權重全為空白）蓋鎖鏈，並標示解鎖押注。 */
+  function updateReelLocks() {
+    const has3 = (bet) => betFeatures(state.mode, bet).some((x) => x.key === "reels-3");
+    const locked = !has3(curBet());
+    const reel = reelEls[2];
+    reel.classList.toggle("locked", locked);
+    if (locked) {
+      const unlock = BET_LEVELS.find((b) => has3(b));
+      reel.querySelector(".reel-lock").innerHTML = reelLockSvg() + (unlock != null ? `<span class="lock-text">BET ${unlock} 解鎖</span>` : "");
+    }
+  }
   function updateTopWheel() {
+    updateReelLocks();
     const box = $("topWheel");
     const pk = PACK[state.mode][curBet()];
     let wheel = wheelOf(pk), unlockBet = null;
@@ -1102,6 +1133,7 @@
     if (res.respin) state.respins++;
     if (res.wheelIdx >= 0) state.wheels++;
     state.maxMultiplier = Math.max(state.maxMultiplier, res.win / bet);
+    if (mode === MODES[0]) window.demogameLineChart?.record(res.win / bet);   // 即時倍率線型：NB
     liveLog(`   R1-R3 [${res.stops.join(",")}] ${res.syms.map(code).join(" ")} s1=${res.s1} · R4 [${res.r4Pos}] ${code(res.r4Sym)}`
       + `${res.respin ? ` · respin [${res.respin.stops.join(",")}] s2=${res.respin.add} retry ${res.respin.reroll}${res.respin.fallback ? " fallback" : ""}` : ""}`
       + `${res.wheelIdx >= 0 ? ` · wheel[${res.wheelIdx}]=${res.wheelVal}×${bet}` : ""}`, "cascade");
@@ -1283,7 +1315,7 @@
   rebuildDebugSelects();
 })();
   </script>
-  <script src="../demogame_common.js?v=2"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

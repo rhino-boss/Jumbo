@@ -2132,12 +2132,6 @@
     </div>
 
     <section id="controls" class="debug-off">
-      <div id="line-shape-panel" class="control-zone line-shape-zone">
-        <span class="zone-label">倍率線型（即時，64 區間）</span>
-        <div class="zone-body line-shape-body">
-          <div class="line-chart" id="lineChartNB"></div>
-        </div>
-      </div>
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
@@ -2807,11 +2801,6 @@
     .slot-fx-layer .fx-math-bubble.pulse{animation:h045BubblePulse 300ms ease-out}
     @keyframes h045BubblePulse{from{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.8)}to{transform:translate(-50%,-50%) scale(1);filter:brightness(1)}}
     #messageBar.fx-bar-hit{animation:h045BarHit 420ms ease-out}
-    /* 即時倍率線型 */
-    #line-shape-panel .zone-body.line-shape-body{display:block!important;width:100%;min-height:0}
-    #line-shape-panel .line-chart{width:100%;min-width:0;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:6px 8px 2px;background:rgba(6,13,26,.6)}
-    #line-shape-panel .line-chart .lc-title{display:flex;justify-content:space-between;font-size:12.5px;color:var(--sub);margin-bottom:2px}
-    #line-shape-panel .line-chart svg{display:block;width:100%;height:auto}
     @keyframes h045BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(47,215,143,.9)}to{transform:scale(1);filter:brightness(1)}}
     #multiplierWindow .multiplier-step.fx-ladder-hit{animation:h045LadderHit 260ms ease-in-out infinite alternate}
     @keyframes h045LadderHit{from{transform:scale(1)}to{transform:scale(1.25);filter:brightness(1.6)}}
@@ -3250,48 +3239,10 @@
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
 
-  // ===== 即時倍率線型（H026 標準 64 區間；NB 每局總得分 ÷ 底注，BG 與該局觸發的 FG 合計；BF 不計）=====
-  const LINE_THRESH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200,
-    250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 2000, 3000, 4000, 5000, 6000,
-    7000, 8000, 9000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 9999999];
-  const LINE_LABELS = LINE_THRESH.map((upper, i) => `(${i ? LINE_THRESH[i - 1] : -1}, ${upper}]`);
-  function lineBucket(x) { for (let i = 0; i < LINE_THRESH.length; i++) if (x <= LINE_THRESH[i]) return i; return LINE_THRESH.length - 1; }
-  function emptyLine() { return { nb: new Array(64).fill(0) }; }
-  state.line = emptyLine();
+  // 即時倍率線型：共用 demogame_common.js（window.demogameLineChart），NB 每局 BG＋該局 FG 合計 ÷ 底注
   function recordLine(mode, base, feature) {
     if (mode !== 0) return;
-    state.line.nb[lineBucket(((base?.pay || 0) + (feature?.pay || 0)) / betUnit())]++;
-    renderLineCharts();
-  }
-  function lineChartSvg(counts, color) {
-    const W = 900, H = 280, L = 44, R = 12, T = 10, B = 40, n = counts.length;
-    const total = counts.reduce((a, b) => a + b, 0);
-    const shares = counts.map(c => total ? c / total * 100 : 0);
-    const ymax = 20;   // 縱軸固定 0～20%，超過的區間貼頂顯示
-    const px = i => L + (W - L - R) * i / (n - 1), py = v => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
-    let out = `<svg viewBox="0 0 ${W} ${H}">`;
-    for (let k = 0; k <= 4; k++) {
-      const v = ymax * k / 4, y = py(v);
-      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}" stroke="rgba(120,160,200,.18)"/><text x="${L - 6}" y="${(y + 4).toFixed(1)}" font-size="12" text-anchor="end" fill="#7f9bb8">${v}%</text>`;
-    }
-    for (const i of [0, 5, 10, 14, 18, 23, 28, 32, 36, 44, 49, 54, 59, 63]) {
-      out += `<line x1="${px(i).toFixed(1)}" y1="${T}" x2="${px(i).toFixed(1)}" y2="${H - B}" stroke="rgba(120,160,200,.08)"/><text x="${px(i).toFixed(1)}" y="${H - B + 18}" font-size="11" text-anchor="middle" fill="#7f9bb8">${i === 0 ? "0" : LINE_THRESH[i - 1]}</text>`;
-    }
-    let d = "", pen = false;
-    shares.forEach((v, i) => { if (v <= 0) { pen = false; return; } d += `${pen ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`; pen = true; });
-    out += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
-    shares.forEach((v, i) => { if (v > 0) out += `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3" fill="${color}"/>`; });
-    return out + "</svg>";
-  }
-  function renderLineCharts() {
-    const specs = [["lineChartNB", "NB（每局總得分，含 FG）", state.line.nb, "#4aa8ff"]];
-    for (const [id, title, counts, color] of specs) {
-      const node = $(id); if (!node) continue;
-      const total = counts.reduce((a, b) => a + b, 0);
-      const nz = counts.map((c, i) => c ? i : -1).filter(i => i >= 0);
-      const range = nz.length ? `${LINE_LABELS[nz[0]]} ～ ${LINE_LABELS[nz[nz.length - 1]]}` : "—";
-      node.innerHTML = `<div class="lc-title"><span>${title}</span><span>n=${total.toLocaleString()} · ${range}</span></div>${lineChartSvg(counts, color)}`;
-    }
+    window.demogameLineChart?.record(((base?.pay || 0) + (feature?.pay || 0)) / betUnit());
   }
   function fxLayer() { return window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null; }
   function cellAt(key) { const [reel, row] = key.split(",").map(Number); return $("board").children[(3 - row) * 5 + reel] || null; }
@@ -3692,7 +3643,6 @@
   function reset() {
     Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
     $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
-    state.line = emptyLine(); renderLineCharts();
   }
   function buildBetMenu() {
     $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
@@ -3758,7 +3708,7 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H045_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
-  <script src="../demogame_common.js?v=2"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
 </body>
 
 </html>

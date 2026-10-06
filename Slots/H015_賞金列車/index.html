@@ -2876,6 +2876,8 @@
       state.fg.remaining += award; state.fg.total += award; addLog(`${text("retrigger")} +${award}`);
     }
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier); addLog(`FG ${state.fg.played} · ${format(spin.total)}`);
+    state.fg.lineWin = (state.fg.lineWin || 0) + spin.total;
+    if (!state.fg.remaining && state.fg.mode === MODE_NORMAL) window.demogameLineChart?.record(state.fg.lineWin / coinIn(MODE_NORMAL));   // 即時倍率線型：NB FG 結束
     el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${format(spin.total)}`;
   }
 
@@ -2888,6 +2890,7 @@
     const spin = simulateScene("BG", mode, force); await animateSpin(spin);
     state.lastWin = spin.total; state.totalWin += spin.total; state.balance += spin.total;
     if (spin.total > 0) state.hitRounds++;
+    if (spin.scatter < 3 && mode === MODE_NORMAL) window.demogameLineChart?.record(spin.total / coinIn(MODE_NORMAL));   // 即時倍率線型：NB 未觸發局
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier);
     if (spin.scatter >= 3) {
       const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game);
@@ -2896,6 +2899,7 @@
         total: award,
         played: 0,
         mode,
+        lineWin: spin.total,   // 即時倍率線型：BG＋FG 合計
         guaranteedLightningSpin: cumulativeChoice(Box.weight_cum_must_appear_1_fg || [1])
       };
       if (mode === MODE_NORMAL) state.naturalFg++;
@@ -3112,7 +3116,7 @@
   buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=4"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
 </body>
 
 </html>

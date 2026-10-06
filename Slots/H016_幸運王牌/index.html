@@ -3082,6 +3082,8 @@
       state.fg.remaining += award; state.fg.total += award; addLog(`${text("retrigger")} +${award}`);
     }
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier); addLog(`FG ${state.fg.played} · ${format(spin.total)}`);
+    state.fg.lineWin = (state.fg.lineWin || 0) + spin.total;
+    if (!state.fg.remaining && state.fg.mode === MODE_NORMAL) window.demogameLineChart?.record(state.fg.lineWin / coinIn(MODE_NORMAL));   // 即時倍率線型：NB FG 結束
     el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${format(spin.total)}`;
   }
 
@@ -3094,6 +3096,7 @@
     const spin = simulateScene("BG", mode, force); await animateSpin(spin);
     state.lastWin = spin.total; state.totalWin += spin.total; state.balance += spin.total;
     if (spin.total > 0) state.hitRounds++;
+    if (spin.scatter < 3 && mode === MODE_NORMAL) window.demogameLineChart?.record(spin.total / coinIn(MODE_NORMAL));   // 即時倍率線型：NB 未觸發局
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier);
     if (spin.scatter >= 3) {
       const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game);
@@ -3103,6 +3106,7 @@
         played: 0,
         win: 0,
         mode,
+        lineWin: spin.total,   // 即時倍率線型：BG＋FG 合計
         guaranteedLightningSpin: cumulativeChoice(Box.weight_cum_must_appear_1_fg || [1])
       };
       state.lastWin = 0;
@@ -3868,7 +3872,11 @@
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
         if (base.scatter >= 3 || mode !== 0 || $("forceFgInput").checked) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
-          activateFeature(cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode), mode);
+          const feature = cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode);
+          activateFeature(feature, mode);
+          if (mode === 0) window.demogameLineChart?.record((base.pay + feature.spins.reduce((sum, item) => sum + Number(item.pay || 0), 0)) / cost);   // 即時倍率線型：NB 含 FG
+        } else if (mode === 0) {
+          window.demogameLineChart?.record(base.pay / cost);   // 即時倍率線型：NB 未觸發局
         }
       }
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
@@ -4012,7 +4020,7 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = true;
   window.DEMOGAME_VERSION_OVERRIDE = window.H016_CONFIG?.excel_version || H016_CURRENT_VERSION;
   </script>
-  <script src="../demogame_common.js?v=4"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
 </body>
 
 </html>

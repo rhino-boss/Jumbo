@@ -3190,6 +3190,7 @@
     state.balance += fg.win;
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
+    if (state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 一局含 FG
     state.selectedMode = MODE_NORMAL;
     document.body.classList.remove("fg-mode");
     updateFeatureBar();
@@ -3232,6 +3233,7 @@
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
+      if (!candidate.triggered && state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 未觸發局
       updateStats();
     } catch (error) {
       state.auto = false;
@@ -3575,7 +3577,7 @@
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
-  <script src="../demogame_common.js?v=4"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
   <script>
     (() => {
       "use strict";
