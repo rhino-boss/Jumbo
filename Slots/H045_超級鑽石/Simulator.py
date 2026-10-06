@@ -440,11 +440,12 @@ class SuperDiamond:
         result.mult_wild_values[value] += 1
         return value
 
-    def flip_golden(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
-                    gold_positions: list[tuple[int, int]], result: SpinResult,
-                    free_game: bool) -> None:
-        """game_rule §5.2～5.4（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數；
-        大鬼只在本體抽一次倍數，丟出的 WW 沿用同一值。"""
+    def flip_golden_body(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
+                         gold_positions: list[tuple[int, int]], result: SpinResult,
+                         free_game: bool) -> list[tuple[tuple[int, int], int]]:
+        """game_rule §5.2～5.3（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數。
+        在消除當下、補牌之前就把本體寫進原格（2026-10-06 修正：先前在補牌後才用補牌前的座標翻牌，
+        重力位移後會翻到錯的格子）。回傳大鬼本體清單供補牌後分裂。"""
         big_sources: list[tuple[tuple[int, int], int]] = []
         for reel, row in gold_positions:
             outcome = _pick(self.rng, table.gold_results, table.gold_cumulative, table.gold_total)
@@ -459,7 +460,11 @@ class SuperDiamond:
             if outcome == "W2":
                 result.big_ghost_used = True
                 big_sources.append(((reel, row), value))
+        return big_sources
 
+    def split_big_ghosts(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
+                         big_sources: list[tuple[tuple[int, int], int]], result: SpinResult) -> None:
+        """game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 WW（倍數同本體），落點依補牌後的盤面。"""
         for source, value in big_sources:
             count = int(_pick(self.rng, table.split_values, table.split_cumulative, table.split_total))
             candidates = [
@@ -508,13 +513,16 @@ class SuperDiamond:
             gold_positions: list[tuple[int, int]] = []
             for reel, row in hits:
                 if gold[reel][row]:
-                    gold_positions.append((reel, row))   # 金框不消除，補牌後翻牌
+                    gold_positions.append((reel, row))   # 金框不消除，當下翻成本體
                     gold[reel][row] = False
                 else:
                     symbols[reel][row] = EMPTY
                     mults[reel][row] = 0
 
-            # 先重力補牌，再翻金框（game_rule §5.6 步驟 3~6）
+            # 本體在補牌前翻（跟著重力一起落下）；大鬼分裂在補牌後丟
+            big_sources = (self.flip_golden_body(table, symbols, mults, gold_positions, result, free_game)
+                           if gold_positions else [])
+
             fresh_rows: dict[int, int] = {}
             for reel in range(5):
                 column = [(symbols[reel][row], mults[reel][row], gold[reel][row])
@@ -534,8 +542,8 @@ class SuperDiamond:
             # 補牌後重抽金框顆數（game_rule §9.1.11）
             self.topup_gold(scene, symbols, gold, fresh_rows)
 
-            if gold_positions:
-                self.flip_golden(table, symbols, mults, gold_positions, result, free_game)
+            if big_sources:
+                self.split_big_ghosts(table, symbols, mults, big_sources, result)
 
             if result.pay >= cap:
                 break

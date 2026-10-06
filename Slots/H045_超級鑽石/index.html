@@ -2882,10 +2882,11 @@
 
   // game_rule §5.2～5.4（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數；
   // 大鬼只在本體抽一次倍數，丟出的 WW 沿用同一值。
-  function flipGolden(board, mults, tableName, goldPositions, flipState) {
+  // 本體翻牌（小鬼／大鬼＋倍數）在消除當下就決定並顯示；大鬼分裂等補牌後再丟（落點依補牌後盤面）
+  function flipGoldenBody(board, mults, tableName, goldPositions, flipState) {
     const table = tables[tableName];
     if (!goldPositions.length || !Object.keys(table.gold).length) return null;
-    const flipped = [], splitKeys = [], bigSources = [];
+    const flipped = [], bigSources = [];
     const results = {};
     for (const [reel, row] of goldPositions) {
       let outcome = pickMap(table.gold);
@@ -2898,6 +2899,12 @@
       flipped.push(`${reel},${row}`);
       if (outcome === "W2") { flipState.bigGhostUsed = true; bigSources.push([[reel, row], value]); }
     }
+    return { flipped, results, bigSources };
+  }
+
+  function splitBigGhosts(board, mults, tableName, bigSources) {
+    const table = tables[tableName];
+    const splitKeys = [];
     for (const [[sr, srow], value] of bigSources) {
       const count = Number(pickMap(table.split));
       const candidates = [];
@@ -2915,7 +2922,7 @@
         splitKeys.push(`${reel},${row}`);
       }
     }
-    return { flipped, splitKeys, results };
+    return splitKeys;
   }
 
   function spin(tableName, freeGame = false, budget = 0) {
@@ -2937,14 +2944,27 @@
       snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [...win.hits], combo, multiplier, cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
       combo++;
 
-      // 1) 消除（金框不消除，留待補牌後翻牌）
+      // 1) 消除；中獎的金框不消除，當下直接翻成小鬼／大鬼本體（分裂等補牌後）
       const transitionBoard = cloneBoard(board), cleared = [], goldPositions = [];
       for (const key of win.hits) {
         const [reel, row] = key.split(",").map(Number);
         if (gold[reel][row]) { goldPositions.push([reel, row]); gold[reel][row] = false; }
         else { board[reel][row] = -1; mults[reel][row] = 0; transitionBoard[reel][row] = -1; cleared.push(key); }
       }
-      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], cleared, converted: [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Eliminate" });
+      let flip = null;
+      if (goldPositions.length) {
+        flip = flipGoldenBody(board, mults, tableName, goldPositions, flipState);
+        if (flip) {
+          golden += goldPositions.length;
+          for (const [key, value] of Object.entries(flip.results)) {
+            goldenTally[key] = (goldenTally[key] || 0) + value;
+            if (key.startsWith("W2")) w2Events += value;
+          }
+          for (const [reel, row] of goldPositions) { transitionBoard[reel][row] = board[reel][row]; if (mults[reel][row] > 1) multWild++; }
+        }
+      }
+      const flipLabel = flip ? ` · Golden flip ${Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ")}` : "";
+      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], cleared, converted: flip ? flip.flipped : [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Eliminate${flipLabel}` });
 
       // 2) 掉落補牌（game_rule §5.6 步驟 3；Demogame規範 4.3 第 2 類）
       const motion = [];
@@ -2976,21 +2996,11 @@
       }
       snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
 
-      // 3) 金框翻牌 + 分裂（game_rule §5.6 步驟 4~6）
-      if (goldPositions.length) {
-        const flip = flipGolden(board, mults, tableName, goldPositions, flipState);
-        if (flip) {
-          golden += goldPositions.length;
-          for (const [key, value] of Object.entries(flip.results)) {
-            goldenTally[key] = (goldenTally[key] || 0) + value;
-            if (key.endsWith("_M")) multWild += value;
-            if (key.startsWith("W2")) w2Events += value;
-          }
-          const label = Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ");
-          snapshots.push({ type: "convert", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], converted: flip.flipped, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Golden flip · ${label}` });
-          if (flip.splitKeys.length) {
-            snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: flip.splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${flip.splitKeys.length}` });
-          }
+      // 3) 大鬼分裂（game_rule §5.6 步驟 5~6；落點依補牌後盤面）
+      if (flip && flip.bigSources.length) {
+        const splitKeys = splitBigGhosts(board, mults, tableName, flip.bigSources);
+        if (splitKeys.length) {
+          snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
       }
 
