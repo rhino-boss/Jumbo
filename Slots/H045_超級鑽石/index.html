@@ -848,7 +848,8 @@
     }
 
     .cell.wild-mark::after {
-      content: "W2";
+      /* 分裂落點只做發光標記；格子本身已是 WW，不再疊「W2」字樣（分裂體是 WW，game_rule §5.4） */
+      content: "";
       position: absolute;
       inset: 5px;
       display: grid;
