@@ -2828,6 +2828,16 @@
   function evaluate(board, mults) {
     let rawPay = 0;
     const hits = new Set(), details = [];
+    // game_rule §5.3（2026-10-06）：整波一起加——盤面上所有帶倍 WILD 倍數相加（x1 不計入，
+    // 不論是否參與連線），每條中獎連線都乘同一個總和；總和為 0 視為 x1
+    let boardSum = 0;
+    for (let reel = 0; reel < 5; reel++) {
+      for (let row = 0; row < 4; row++) {
+        const symbol = board[reel][row];
+        if ((symbol === WW || symbol === W2) && mults[reel][row] > 1) boardSum += mults[reel][row];
+      }
+    }
+    const lineMult = boardSum > 0 ? boardSum : 1;
     for (const target of SCORE) {
       const counts = [], positions = [];
       for (let reel = 0; reel < 5; reel++) {
@@ -2844,16 +2854,6 @@
       const ways = counts.reduce((product, count) => product * count, 1);
       const unit = Number(cfg.pays[String(target)][counts.length - 3]);
       if (!(unit > 0)) continue;
-      // §5.3：該連線用到的所有帶倍 WILD 倍數連乘，每顆只計一次
-      // game_rule §5.3：該連線用到的帶倍 WILD 倍數相加（x1 不計入），總和為 0 視為 x1
-      let lineSum = 0;
-      for (const group of positions) {
-        for (const [reel, row] of group) {
-          const symbol = board[reel][row];
-          if ((symbol === WW || symbol === W2) && mults[reel][row] > 1) lineSum += mults[reel][row];
-        }
-      }
-      const lineMult = lineSum > 0 ? lineSum : 1;
       const pay = unit * ways * lineMult;
       rawPay += pay;
       positions.flat().forEach(([reel, row]) => hits.add(`${reel},${row}`));

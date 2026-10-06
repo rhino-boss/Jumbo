@@ -386,12 +386,20 @@ class SuperDiamond:
     def evaluate(self, symbols: list[list[int]], mults: list[list[int]]):
         """回傳 (raw_pay, hit_positions, details, max_line_mult)。
 
-        raw_pay 已含各連線的帶倍 WILD 乘積，但未套 Cascade Multiplier。
+        raw_pay 已含盤面 WILD 倍數總和，但未套 Cascade Multiplier。
         """
         total = 0.0
         hits: set[tuple[int, int]] = set()
         details: list[tuple[int, int, int, float, int]] = []
         best_line_mult = 1
+        # game_rule §5.3（2026-10-06）：整波一起加——該次 Cascade 盤面上所有帶倍 WILD 倍數相加
+        # （x1 不計入，不論是否參與連線），每條中獎連線都乘同一個總和；總和為 0 視為 x1
+        board_sum = sum(
+            mults[reel][row]
+            for reel in range(5) for row, symbol in enumerate(symbols[reel])
+            if symbol in (WW, W2) and mults[reel][row] > 1
+        )
+        line_mult = board_sum if board_sum > 0 else 1
         for target in SCORE_SYMBOLS:
             counts: list[int] = []
             positions: list[list[tuple[int, int]]] = []
@@ -415,13 +423,6 @@ class SuperDiamond:
             raw = float(self.pays[target][length - 3]) * ways
             if raw <= 0:
                 continue
-            # game_rule §5.3：該連線用到的帶倍 WILD 倍數相加（x1 不計入），總和為 0 視為 x1
-            line_sum = 0
-            for group in positions:
-                for reel, row in group:
-                    if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1:
-                        line_sum += mults[reel][row]
-            line_mult = line_sum if line_sum > 0 else 1
             total += raw * line_mult
             best_line_mult = max(best_line_mult, line_mult)
             for group in positions:
