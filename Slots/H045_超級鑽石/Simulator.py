@@ -234,9 +234,11 @@ class SpinResult:
     max_line_multiplier: int = 1
     big_ghost_used: bool = False
     initial_gold_count: int = 0
+    gold_appeared: int = 0                       # 初始＋補牌後補上的金框總數（金框使用率分母）
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     symbol_length_hits: Counter = field(default_factory=Counter)
+    symbol_length_pay: Counter = field(default_factory=Counter)
     initial_symbols: Counter = field(default_factory=Counter)
     drop_symbols: Counter = field(default_factory=Counter)
     initial_board: list[list[int]] = field(default_factory=list)
@@ -266,6 +268,8 @@ class RoundResult:
     fg_hit_spins: int = 0
     bg_gold_symbols: int = 0
     fg_gold_symbols: int = 0
+    bg_gold_appeared: int = 0
+    fg_gold_appeared: int = 0
     special_symbol_cnt: int = 0
     bg_trigger_fg_cnt: int = 0
     bg_trigger_fg_pay: float = 0.0
@@ -276,6 +280,8 @@ class RoundResult:
     symbol_pay: Counter = field(default_factory=Counter)
     bg_symbol_length_hits: Counter = field(default_factory=Counter)
     fg_symbol_length_hits: Counter = field(default_factory=Counter)
+    bg_symbol_length_pay: Counter = field(default_factory=Counter)
+    fg_symbol_length_pay: Counter = field(default_factory=Counter)
     bg_initial_symbols: Counter = field(default_factory=Counter)
     bg_drop_symbols: Counter = field(default_factory=Counter)
     fg_initial_symbols: Counter = field(default_factory=Counter)
@@ -348,8 +354,9 @@ class SuperDiamond:
         return min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
 
     def topup_gold(self, scene: str, symbols: list[list[int]],
-                   gold: list[list[bool]], fresh_rows: dict[int, int]) -> None:
-        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。"""
+                   gold: list[list[bool]], fresh_rows: dict[int, int]) -> int:
+        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。回傳新補上的金框數。"""
+        added = 0
         for reel in self.gold_reels:
             need = fresh_rows.get(reel, 0)
             if not need:
@@ -364,6 +371,8 @@ class SuperDiamond:
             self.rng.shuffle(spots)
             for row in spots[:short]:
                 gold[reel][row] = True
+                added += 1
+        return added
 
     def draw_gold(self, scene: str, symbols: list[list[int]]) -> list[list[bool]]:
         """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
@@ -501,6 +510,7 @@ class SuperDiamond:
         result.initial_symbols.update(
             (reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
         result.initial_gold_count = sum(sum(column) for column in gold)
+        result.gold_appeared = result.initial_gold_count
 
         cap = self.max_win * self.bet
         while True:
@@ -517,6 +527,7 @@ class SuperDiamond:
                 result.symbol_hits[symbol] += ways
                 result.symbol_pay[symbol] += symbol_raw * multiplier * self.bet
                 result.symbol_length_hits[(symbol, length)] += 1
+                result.symbol_length_pay[(symbol, length)] += symbol_raw * multiplier * self.bet
 
             gold_positions: list[tuple[int, int]] = []
             for reel, row in hits:
@@ -548,7 +559,7 @@ class SuperDiamond:
                 fresh_rows[reel] = need
 
             # 補牌後重抽金框顆數（game_rule §9.1.11）
-            self.topup_gold(scene, symbols, gold, fresh_rows)
+            result.gold_appeared += self.topup_gold(scene, symbols, gold, fresh_rows)
 
             if big_sources:
                 self.split_big_ghosts(table, symbols, mults, big_sources, result)
@@ -627,11 +638,13 @@ class SuperDiamond:
             result.max_line_multiplier = max(result.max_line_multiplier, spin.max_line_multiplier)
             result.fg_hit_spins += int(spin.pay > 0)
             result.fg_gold_symbols += spin.initial_gold_count
+            result.fg_gold_appeared += spin.gold_appeared
             result.special_symbol_cnt += int(spin.scatter_count > 0)
             result.combo_fg[min(spin.cascades, 5)] += 1
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
             result.fg_symbol_length_hits.update(spin.symbol_length_hits)
+            result.fg_symbol_length_pay.update(spin.symbol_length_pay)
             result.fg_initial_symbols.update(spin.initial_symbols)
             result.fg_drop_symbols.update(spin.drop_symbols)
             if budget + result.pay_fg >= cap:
@@ -672,12 +685,14 @@ class SuperDiamond:
         target.max_line_multiplier = max(target.max_line_multiplier, source.max_line_multiplier)
         target.fg_hit_spins += source.fg_hit_spins
         target.fg_gold_symbols += source.fg_gold_symbols
+        target.fg_gold_appeared += source.fg_gold_appeared
         target.special_symbol_cnt += source.special_symbol_cnt
         target.combo_fg.update(source.combo_fg)
         target.fg_pay_per_spin.extend(source.fg_pay_per_spin)
         target.symbol_hits.update(source.symbol_hits)
         target.symbol_pay.update(source.symbol_pay)
         target.fg_symbol_length_hits.update(source.fg_symbol_length_hits)
+        target.fg_symbol_length_pay.update(source.fg_symbol_length_pay)
         target.fg_initial_symbols.update(source.fg_initial_symbols)
         target.fg_drop_symbols.update(source.fg_drop_symbols)
 
@@ -710,10 +725,12 @@ class SuperDiamond:
         result.max_line_multiplier = spin.max_line_multiplier
         result.bg_hit_spins = int(spin.pay > 0)
         result.bg_gold_symbols = spin.initial_gold_count
+        result.bg_gold_appeared = spin.gold_appeared
         result.special_symbol_cnt = int(spin.scatter_count > 0)
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
         result.bg_symbol_length_hits.update(spin.symbol_length_hits)
+        result.bg_symbol_length_pay.update(spin.symbol_length_pay)
         result.bg_initial_symbols.update(spin.initial_symbols)
         result.bg_drop_symbols.update(spin.drop_symbols)
 
@@ -767,6 +784,9 @@ def _empty_stats() -> dict[str, Any]:
         "retriggers": 0, "cascades_bg": 0, "cascades_fg": 0,
         "special_symbol_cnt": 0, "bg_trigger_fg_cnt": 0, "bg_trigger_fg_pay": 0.0,
         "golden_converted": 0, "bg_gold_symbols": 0, "fg_gold_symbols": 0,
+        "bg_gold_appeared": 0, "fg_gold_appeared": 0,
+        "combo_bg": Counter(), "combo_fg": Counter(),
+        "bg_symbol_length_pay": Counter(), "fg_symbol_length_pay": Counter(),
         "bg_mult_wild": 0, "fg_mult_wild": 0, "max_line_multiplier": 1,
         "bg_golden_results": Counter(), "fg_golden_results": Counter(),
         "bg_split_counts": Counter(), "fg_split_counts": Counter(),
@@ -817,12 +837,18 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["golden_converted"] += result.golden_converted
     stats["bg_gold_symbols"] += result.bg_gold_symbols
     stats["fg_gold_symbols"] += result.fg_gold_symbols
+    stats["bg_gold_appeared"] += result.bg_gold_appeared
+    stats["fg_gold_appeared"] += result.fg_gold_appeared
+    if bet_mode != MODE_FEATUREBUY:
+        stats["combo_bg"][min(result.bg_cascade_count, 5)] += 1
+    stats["combo_fg"].update(result.combo_fg)
     stats["bg_mult_wild"] += result.bg_mult_wild
     stats["fg_mult_wild"] += result.fg_mult_wild
     stats["max_line_multiplier"] = max(stats["max_line_multiplier"], result.max_line_multiplier)
     for key in ("bg_golden_results", "fg_golden_results", "bg_split_counts",
                 "fg_split_counts", "mult_wild_values", "symbol_hits", "symbol_pay",
                 "bg_symbol_length_hits", "fg_symbol_length_hits",
+                "bg_symbol_length_pay", "fg_symbol_length_pay",
                 "bg_initial_symbols", "bg_drop_symbols",
                 "fg_initial_symbols", "fg_drop_symbols"):
         stats[key].update(getattr(result, key))
@@ -1173,6 +1199,10 @@ def feature_frame(result: dict[str, Any]) -> pd.DataFrame:
     rows = [
         ("golden_converted_total", s["golden_converted"]),
         ("golden_per_round", s["golden_converted"] / rounds),
+        ("gold_appeared_bg", s["bg_gold_appeared"]),
+        ("gold_appeared_fg", s["fg_gold_appeared"]),
+        ("gold_usage_bg", sum(s["bg_golden_results"].values()) / max(1, s["bg_gold_appeared"])),
+        ("gold_usage_fg", sum(s["fg_golden_results"].values()) / max(1, s["fg_gold_appeared"])),
         ("mult_wild_created_bg", s["bg_mult_wild"]),
         ("mult_wild_created_fg", s["fg_mult_wild"]),
         ("mult_wild_per_round", (s["bg_mult_wild"] + s["fg_mult_wild"]) / rounds),
@@ -1254,7 +1284,30 @@ def output_report(result: dict[str, Any], output_dir: Path | None = None) -> Pat
         multiplier_line_frame(result).to_excel(writer, sheet_name="Multiplier Line", index=False)
         feature_frame(result).to_excel(writer, sheet_name="Feature", index=False)
         symbol_frame(result).to_excel(writer, sheet_name="Symbol", index=False)
+        eliminate_frame(result).to_excel(writer, sheet_name="Eliminate", index=False)
+        symbol_length_frame(result).to_excel(writer, sheet_name="Symbol Length", index=False)
     return path
+
+
+def eliminate_frame(result: dict[str, Any]) -> pd.DataFrame:
+    """消除次數分布（同 H016 報表 Eliminate 頁）：BG 每局、FG 每次免費轉。"""
+    s = result["stats"]
+    rows = [(("5+" if k == 5 else str(k)), s["combo_bg"].get(k, 0), s["combo_fg"].get(k, 0)) for k in range(6)]
+    return pd.DataFrame(rows, columns=["combo", "BG", "FG"])
+
+
+def symbol_length_frame(result: dict[str, Any]) -> pd.DataFrame:
+    """各符號 3／4／5 連線命中數與派彩（同 H016 報表 Symbol Length 頁）。"""
+    s = result["stats"]
+    names = CFG["symbol_names"]
+    rows = []
+    for scene, hits_key, pay_key in (("BG", "bg_symbol_length_hits", "bg_symbol_length_pay"),
+                                     ("FG", "fg_symbol_length_hits", "fg_symbol_length_pay")):
+        for symbol in SCORE_SYMBOLS:
+            for length in (3, 4, 5):
+                rows.append((scene, names[str(symbol)], length,
+                             s[hits_key][(symbol, length)], s[pay_key][(symbol, length)]))
+    return pd.DataFrame(rows, columns=["scene", "symbol", "length", "hits", "pay"])
 
 
 # ===== Runner =====
