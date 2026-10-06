@@ -2135,9 +2135,7 @@
       <div id="line-shape-panel" class="control-zone line-shape-zone">
         <span class="zone-label">倍率線型（即時，64 區間）</span>
         <div class="zone-body line-shape-body">
-          <div class="line-chart" id="lineChartBG"></div>
-          <div class="line-chart" id="lineChartFG"></div>
-          <div class="line-chart" id="lineChartBF"></div>
+          <div class="line-chart" id="lineChartNB"></div>
         </div>
       </div>
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
@@ -2810,11 +2808,10 @@
     @keyframes h045BubblePulse{from{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.8)}to{transform:translate(-50%,-50%) scale(1);filter:brightness(1)}}
     #messageBar.fx-bar-hit{animation:h045BarHit 420ms ease-out}
     /* 即時倍率線型 */
-    .zone-body.line-shape-body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:stretch;min-height:0}
+    .zone-body.line-shape-body{display:grid;grid-template-columns:1fr;gap:8px;align-items:stretch;min-height:0}
     .line-chart{min-width:0;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:6px 8px 2px;background:rgba(6,13,26,.6)}
     .line-chart .lc-title{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:2px}
-    .line-chart svg{display:block;width:100%;height:150px}
-    @media (max-width:900px){.zone-body.line-shape-body{grid-template-columns:1fr}}
+    .line-chart svg{display:block;width:100%;height:170px}
     @keyframes h045BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(47,215,143,.9)}to{transform:scale(1);filter:brightness(1)}}
     #multiplierWindow .multiplier-step.fx-ladder-hit{animation:h045LadderHit 260ms ease-in-out infinite alternate}
     @keyframes h045LadderHit{from{transform:scale(1)}to{transform:scale(1.25);filter:brightness(1.6)}}
@@ -3253,27 +3250,25 @@
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
 
-  // ===== 即時倍率線型（H026 標準 64 區間；NB-BG 每局（不含觸發局）、NB-FG 每場、BF 每場，皆 ÷ 底注）=====
+  // ===== 即時倍率線型（H026 標準 64 區間；NB 每局總得分 ÷ 底注，BG 與該局觸發的 FG 合計；BF 不計）=====
   const LINE_THRESH = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200,
     250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 2000, 3000, 4000, 5000, 6000,
     7000, 8000, 9000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 9999999];
   const LINE_LABELS = LINE_THRESH.map((upper, i) => `(${i ? LINE_THRESH[i - 1] : -1}, ${upper}]`);
   function lineBucket(x) { for (let i = 0; i < LINE_THRESH.length; i++) if (x <= LINE_THRESH[i]) return i; return LINE_THRESH.length - 1; }
-  function emptyLine() { return { bg: new Array(64).fill(0), fg: new Array(64).fill(0), bf: new Array(64).fill(0) }; }
+  function emptyLine() { return { nb: new Array(64).fill(0) }; }
   state.line = emptyLine();
   function recordLine(mode, base, feature) {
-    const unit = betUnit();
-    if (mode === 2) state.line.bf[lineBucket((feature?.pay || 0) / unit)]++;
-    else if (feature) state.line.fg[lineBucket((feature.pay || 0) / unit)]++;
-    else state.line.bg[lineBucket((base?.pay || 0) / unit)]++;
+    if (mode !== 0) return;
+    state.line.nb[lineBucket(((base?.pay || 0) + (feature?.pay || 0)) / betUnit())]++;
     renderLineCharts();
   }
   function lineChartSvg(counts, color) {
     const W = 320, H = 150, L = 30, R = 6, T = 8, B = 30, n = counts.length;
     const total = counts.reduce((a, b) => a + b, 0);
     const shares = counts.map(c => total ? c / total * 100 : 0);
-    const ymax = Math.max(5, Math.ceil(Math.max(...shares) / 5) * 5);
-    const px = i => L + (W - L - R) * i / (n - 1), py = v => T + (H - T - B) * (1 - v / ymax);
+    const ymax = 20;   // 縱軸固定 0～20%，超過的區間貼頂顯示
+    const px = i => L + (W - L - R) * i / (n - 1), py = v => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
     let out = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
     for (let k = 0; k <= 4; k++) {
       const v = ymax * k / 4, y = py(v);
@@ -3289,7 +3284,7 @@
     return out + "</svg>";
   }
   function renderLineCharts() {
-    const specs = [["lineChartBG", "NB-BG（每局）", state.line.bg, "#4aa8ff"], ["lineChartFG", "NB-FG（每場）", state.line.fg, "#39d6a2"], ["lineChartBF", "BF（每場）", state.line.bf, "#ffb347"]];
+    const specs = [["lineChartNB", "NB（每局總得分，含 FG）", state.line.nb, "#4aa8ff"]];
     for (const [id, title, counts, color] of specs) {
       const node = $(id); if (!node) continue;
       const total = counts.reduce((a, b) => a + b, 0);
