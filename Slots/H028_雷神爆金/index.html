@@ -3202,7 +3202,7 @@
 | 規則說明 | 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
 
-  <script src="./Versions/version_manifest.js?v=20260924"></script>
+  <script src="./Versions/version_manifest.js?v=20261006"></script>
   <script>
   // Each manifest entry maps one base config and one RTP/card config.
   // Synchronous loading keeps double-click/offline use available.
@@ -3276,11 +3276,11 @@
   const SYMBOL_IMAGE_ROOT='./Source/Image/';
   // Thunder Boost 滿版素材（toz_ 前綴）：內部 base id 2~12 依序對應 toz_sym_M1~M11
   //（M1=雷神倍率、M2~M6=頭盔/盾牌/豎琴/聖杯/戒指、M7~M11=A/K/Q/J/10）；金框沿用 CSS 樣式
-  const TOZ_SYMBOL_ART={0:'toz_sym_WILD.png',1:'toz_sym_SC.png',2:'toz_sym_M1.png',3:'toz_sym_M2.png',4:'toz_sym_M3.png',5:'toz_sym_M4.png',6:'toz_sym_M5.png',7:'toz_sym_M6.png',8:'toz_sym_M7.png',9:'toz_sym_M8.png',10:'toz_sym_M9.png',11:'toz_sym_M10.png',12:'toz_sym_M11.png'};
+  const TOZ_SYMBOL_ART={0:'toz_sym_WILD.webp',1:'toz_sym_SC.webp',2:'toz_sym_M1.webp',3:'toz_sym_M2.webp',4:'toz_sym_M3.webp',5:'toz_sym_M4.webp',6:'toz_sym_M5.webp',7:'toz_sym_M6.webp',8:'toz_sym_M7.webp',9:'toz_sym_M8.webp',10:'toz_sym_M9.webp',11:'toz_sym_M10.webp',12:'toz_sym_M11.webp'};
   function symbolImage(path,className){return`<img class="symbol-art-layer ${className}" src="${SYMBOL_IMAGE_ROOT}${path}" alt="" draggable="false">`}
   // 1x2~1x4 大符號改用原遊戲的對應長圖（toz_sym_*_h2~h4），1x1 維持原圖
-  function symbolArt(id,height=1){if(!USE_SYMBOL_IMAGES)return'';let file=TOZ_SYMBOL_ART[base(id)];if(!file)return'';let h=Math.trunc(height)||1;if(h>=2&&h<=4)file=file.replace('.png',`_h${h}.png`);return`<span class="symbol-art">${symbolImage(file,'symbol-art-full')}</span>`}
-  window.DEMOGAME_IMAGE_TOGGLE={supported:true,defaultEnabled:true,setEnabled(enabled,{initial=false}={}){let next=Boolean(enabled),changed=next!==USE_SYMBOL_IMAGES;USE_SYMBOL_IMAGES=next;if(changed){if(next){if(state.historyIndex>=state.historyFloor&&state.history[state.historyIndex])showHistory(state.historyIndex);else makeIdleBoard()}else{document.querySelectorAll('.symbol-art').forEach(node=>node.remove());document.querySelectorAll('.cell').forEach(cell=>{cell.classList.remove('has-symbol-art');cell.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')})}}if(!initial)message('Image | '+(next?'On':'Off'),'mode')}};
+  function symbolArt(id,height=1){if(!USE_SYMBOL_IMAGES)return'';let file=TOZ_SYMBOL_ART[base(id)];if(!file)return'';let h=Math.trunc(height)||1;if(h>=2&&h<=4)file=file.replace('.webp',`_h${h}.webp`);return`<span class="symbol-art">${symbolImage(file,'symbol-art-full')}</span>`}
+  window.DEMOGAME_IMAGE_TOGGLE={supported:true,defaultEnabled:true,images:Object.values(TOZ_SYMBOL_ART).flatMap(f=>[f,f.replace('.webp','_h2.webp'),f.replace('.webp','_h3.webp'),f.replace('.webp','_h4.webp')]).map(f=>SYMBOL_IMAGE_ROOT+f),setEnabled(enabled,{initial=false}={}){let next=Boolean(enabled),changed=next!==USE_SYMBOL_IMAGES;USE_SYMBOL_IMAGES=next;if(changed){if(next){if(state.historyIndex>=state.historyFloor&&state.history[state.historyIndex])showHistory(state.historyIndex);else makeIdleBoard()}else{document.querySelectorAll('.symbol-art').forEach(node=>node.remove());document.querySelectorAll('.cell').forEach(cell=>{cell.classList.remove('has-symbol-art');cell.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')})}}if(!initial)message('Image | '+(next?'On':'Off'),'mode')}};
   function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,art=symbolArt(id,b?.h),m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),art?'has-symbol-art':'',isGold(id)?'gold keep-symbol-frame':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap">${art}<span class="symbol-code"${art?' style="display:none"':''}>${displayCode(id)}</span></div>${m1}`;d.querySelectorAll('.symbol-art-layer').forEach(image=>image.addEventListener('error',()=>{d.classList.remove('has-symbol-art');d.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')},{once:true}));return d}
   function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
   async function animateReels(finalScreen){
@@ -3369,6 +3369,6 @@
   set('gameId',B.game_id);set('gameName',B.display_name);renderVersionControls();el.profile.value=state.cardProfile;initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.');applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=2"></script>
+  <script src="../demogame_common.js?v=4"></script>
 </body>
 </html>

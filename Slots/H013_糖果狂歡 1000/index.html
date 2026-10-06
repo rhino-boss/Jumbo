@@ -2028,6 +2028,17 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
+        <ul>
+          <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（11 張）；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>
+          <li>載入失敗時自動關閉 Image 開關、改用文字顯示並提示失敗張數，不會停在載入畫面；背景分頁略過解碼，不會卡住。</li>
+          <li>符號圖改用 WebP（quality 90、保留透明）：552 KB → 87 KB；原 PNG 保留為美術原檔，Demo 不再引用。</li>
+          <li>共用 JS 版本參數 <code>demogame_common.js?v=4</code>。</li>
+          <li>驗證：本機伺服器開啟，預載 11／11 張完成、全部 naturalWidth &gt; 0、遮罩已消失、盤面圖片皆為 .webp；Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
         <ul>
           <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
@@ -2274,17 +2285,17 @@
   const C1 = Box.symbol_codes.indexOf("C1");
   const C2 = Box.symbol_codes.indexOf("C2");
   const SYMBOL_IMAGE_FILES = Object.freeze({
-    C1: "C1_Symbol.png",
-    C2: "C2_Symbol.png",
-    M1: "M1_Symbol.png",
-    M2: "M2_Symbol.png",
-    M3: "M3_Symbol.png",
-    M4: "M4_Symbol.png",
-    A: "M5_Symbol.png",
-    K: "M6_Symbol.png",
-    Q: "M7_Symbol.png",
-    J: "M8_Symbol.png",
-    TE: "M9_Symbol.png"
+    C1: "C1_Symbol.webp",
+    C2: "C2_Symbol.webp",
+    M1: "M1_Symbol.webp",
+    M2: "M2_Symbol.webp",
+    M3: "M3_Symbol.webp",
+    M4: "M4_Symbol.webp",
+    A: "M5_Symbol.webp",
+    K: "M6_Symbol.webp",
+    Q: "M7_Symbol.webp",
+    J: "M8_Symbol.webp",
+    TE: "M9_Symbol.webp"
   });
   window.H013_SYMBOL_IMAGE_FILES = SYMBOL_IMAGE_FILES;
   const DISPLAY_SYMBOL_IDS = Box.symbol_codes
@@ -2764,6 +2775,8 @@
   window.DEMOGAME_IMAGE_TOGGLE = {
     supported: true,
     defaultEnabled: true,
+    // 開局前由 demogame_common.js 預載並解碼（Demogame規範 圖片預載）
+    images: Object.keys(SYMBOL_IMAGE_FILES).map(symbolImageSource),
     setEnabled(enabled) {
       useSymbolImages = Boolean(enabled);
       if (lastBoardRender) renderBoard(lastBoardRender.board, { hitPositions: lastBoardRender.options.hitPositions });
@@ -3562,7 +3575,7 @@
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
-  <script src="../demogame_common.js?v=1"></script>
+  <script src="../demogame_common.js?v=4"></script>
   <script>
     (() => {
       "use strict";

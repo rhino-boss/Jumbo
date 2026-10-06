@@ -115,6 +115,12 @@ Project/Slots/
 - 符號代號（`M1`、`M2`、`A`、`C1`…）一律使用一般字重，**不得使用粗體**。
 - 有符號美術的遊戲必須接入共用 Image 開關：頁面在載入 `demogame_common.js` 前定義 `window.DEMOGAME_IMAGE_TOGGLE = { supported: true, defaultEnabled: true, setEnabled(enabled) { … } }`，`setEnabled` 內切換是否輸出符號圖並重繪目前盤面；不得自行另做圖片開關。共用模組會在 Setting 產生 `Image` 開關，選擇存於 `localStorage`（`slotDemoSymbolImages`）。
 - 有輸出符號圖的格子必須加上 `has-symbol-art`；圖片載入失敗時移除此 class 並改顯示代號。
+- **圖片預載（必做）**：放到網頁上時，圖片若等第一次用到才下載，盤面會先出現空白格。有符號美術的遊戲必須在 `DEMOGAME_IMAGE_TOGGLE` 加上 `images`：本遊戲會用到的**所有**圖片網址（陣列，或回傳陣列的函式），包含大符號長圖、金框等所有變體。共用模組會在開局前預載並解碼完成：
+  - 預載期間擋住點擊與鍵盤；超過 120 ms 才顯示「載入圖片 n / N」遮罩，避免已有快取時畫面閃一下。
+  - 解碼最多等 1.5 秒；分頁在背景時略過解碼（瀏覽器在背景分頁不會完成 `decode()`），不得因此卡住遮罩。
+  - 任一張載入失敗：關閉 Image 開關、改用文字顯示，並提示失敗張數；不得停在載入畫面。
+  - 預載邏輯只寫在 `demogame_common.js`，遊戲專屬程式只提供 `images` 清單，不得自行另寫預載。
+- **圖片格式**：Demo 使用的符號圖一律用 WebP（`quality 90`、保留透明），檔名與原 PNG 相同、副檔名改 `.webp`，放在 `Source/Image/`；原始 PNG 保留作為美術原檔，Demo 不引用。
 - 無美術時的代號可使用共用標籤 `<span class="slot-symbol-label">代號</span>`（置中、一般字重）。
 - 沒有任何符號美術的遊戲不接 Image 開關，固定顯示符號框＋代號。
 - 中獎、轉換等**狀態**框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）不受此規則影響。
@@ -184,6 +190,7 @@ Debug Mode 至少可查看：
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
 - [ ] 符號顯示符合 2.3：Image 開＝只顯示圖（無代號、無符號框），Image 關或無美術＝符號框＋代號；代號不粗體；有美術的遊戲已接共用 Image 開關。
+- [ ] 有符號美術時：`DEMOGAME_IMAGE_TOGGLE.images` 列出全部圖片（含大符號、金框等變體），以本機伺服器開啟確認 `window.__demogameImageCache` 張數等於清單、全部 `naturalWidth > 0`、載入遮罩已消失；Demo 引用的圖片皆為 `.webp`，無 `.png` 引用。
 - [ ] 補牌方式已選定為原地、掉落或特殊補牌，並與 Game Rule、Config、Simulator 一致。
 - [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。
 - [ ] Config 切換後所有資料與顯示同步更新。

@@ -35,7 +35,8 @@ window.H028_VERSION_MANIFEST = {
         "config_92A／94A／92A_Bet100：老手 normal_bet weight_bg/weight_fg 重生（每組整體縮放至精確 1e9）；新手與 BF 各組保留原值（維持與 88B/90B 系列 config 逐格一致）；excel_version → 3.5.0.3。",
         "PARsheet R 檔三份重產（0 殘留公式）；送驗包 文件/101016 更新：H028192/H028194 Overview 改前作送驗格式 RTP 主列（Base Bet｜Game RTP｜Bonus RTP｜Link RTP｜Total RTP｜Hit JP Symbol appear rate，Game RTP 顯示 6 位小數；92：0.920000+0.02+0.02=0.96、94：0.940000+0.02+0=0.96），Model 名改 H028192/H028194；Simulator config_92/config_94 重生並精簡。",
         "88B／90B／88B_Bet100 未配平（僅做 92/94 兩版，Bet100 因老手 BG 共用欄連動一併配平）：88B/90B 老手 Card-On 實跑將低於帳面約 0.35pp，已知限制。",
-        "2026-09-24 Demogame 介面：符號顯示規則統一（Demogame規範 4.2.3）——Image 開時有圖格不顯示符號代號與符號框，Image 關時顯示框＋代號，代號改一般字重；純 CSS 金框加 keep-symbol-frame 保留。未修改 XLSX／Config 數學參數。"
+        "2026-09-24 Demogame 介面：符號顯示規則統一（Demogame規範 4.2.3）——Image 開時有圖格不顯示符號代號與符號框，Image 關時顯示框＋代號，代號改一般字重；純 CSS 金框加 keep-symbol-frame 保留。未修改 XLSX／Config 數學參數。",
+        "2026-10-06 Demogame 介面：符號圖片開局前預載＋改用 WebP（Demogame規範 2.3 圖片預載）——DEMOGAME_IMAGE_TOGGLE 新增 images 清單（52 張，含 1x2～1x4 大符號長圖），由 demogame_common.js?v=4 開局前預載並解碼，期間擋住操作、超過 120 ms 顯示載入遮罩；載入失敗自動改文字顯示。符號圖 PNG 2,595 KB → WebP 490 KB，原 PNG 保留。驗證：本機伺服器 52／52 張預載完成、遮罩消失、Console 無例外。未修改 XLSX／Config 數學參數。"
       ]
     },
     {

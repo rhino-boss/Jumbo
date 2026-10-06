@@ -2096,6 +2096,17 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
+        <ul>
+          <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（12 張（含金框 Frame））；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>
+          <li>載入失敗時自動關閉 Image 開關、改用文字顯示並提示失敗張數，不會停在載入畫面；背景分頁略過解碼，不會卡住。</li>
+          <li>符號圖改用 WebP（quality 90、保留透明）：217 KB → 93 KB；原 PNG 保留為美術原檔，Demo 不再引用。</li>
+          <li>共用 JS 版本參數 <code>demogame_common.js?v=4</code>。</li>
+          <li>驗證：本機伺服器開啟，預載 12／12 張完成、全部 naturalWidth &gt; 0、遮罩已消失、盤面圖片皆為 .webp；Console 無例外。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
         <ul>
           <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
@@ -2307,19 +2318,19 @@
   const MODE_BUY = Box.mode_featurebuy;
   const MULTIPLIERS = Box.value_multiplier_range;
   const SYMBOL_ASSET_BY_CODE = Object.freeze({
-    M1: "./Source/Image/M1_Symbol.png",
-    M2: "./Source/Image/M2_Symbol.png",
-    M3: "./Source/Image/M3_Symbol.png",
-    M4: "./Source/Image/M4_Symbol.png",
-    A: "./Source/Image/M5_Symbol.png",
-    K: "./Source/Image/M6_Symbol.png",
-    Q: "./Source/Image/M7_Symbol.png",
-    J: "./Source/Image/M8_Symbol.png",
-    C1: "./Source/Image/C1_Symbol.png",
-    C2: "./Source/Image/C2_Symbol.png",
-    WW: "./Source/Image/WW_Symbol.png"
+    M1: "./Source/Image/M1_Symbol.webp",
+    M2: "./Source/Image/M2_Symbol.webp",
+    M3: "./Source/Image/M3_Symbol.webp",
+    M4: "./Source/Image/M4_Symbol.webp",
+    A: "./Source/Image/M5_Symbol.webp",
+    K: "./Source/Image/M6_Symbol.webp",
+    Q: "./Source/Image/M7_Symbol.webp",
+    J: "./Source/Image/M8_Symbol.webp",
+    C1: "./Source/Image/C1_Symbol.webp",
+    C2: "./Source/Image/C2_Symbol.webp",
+    WW: "./Source/Image/WW_Symbol.webp"
   });
-  const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.png";
+  const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.webp";
   const HELP_PATH = "./game_help_draft.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
@@ -2669,6 +2680,8 @@
   window.DEMOGAME_IMAGE_TOGGLE = {
     supported: true,
     defaultEnabled: true,
+    // 開局前由 demogame_common.js 預載並解碼（Demogame規範 圖片預載）
+    images: [...Object.values(SYMBOL_ASSET_BY_CODE), GOLD_FRAME_ASSET],
     setEnabled(enabled) {
       useSymbolImages = Boolean(enabled);
       if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.gold, lastBoardRender.hit);
@@ -3099,7 +3112,7 @@
   buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=1"></script>
+  <script src="../demogame_common.js?v=4"></script>
 </body>
 
 </html>

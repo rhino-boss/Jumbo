@@ -275,9 +275,143 @@
     return adapter;
   }
 
+  // ===== 符號圖片預載（Demogame規範：有圖片時，開局前必須預載並解碼完成）=====
+  // 各遊戲在 window.DEMOGAME_IMAGE_TOGGLE.images 提供本遊戲會用到的所有圖片網址（陣列或回傳陣列的函式）。
+  // 預載期間顯示進度遮罩並擋住點擊與鍵盤；Image 物件留在 window.__demogameImageCache，避免瀏覽器丟掉解碼結果。
+  // 任一張載入失敗：關閉圖片模式改用文字顯示，並提示失敗張數（不會卡在載入畫面）。
+  const imageLoadCache = new Map();
+  window.__demogameImageCache = window.__demogameImageCache || [];
+
+  function loadImageOnce(url) {
+    if (imageLoadCache.has(url)) return imageLoadCache.get(url);
+    const img = new Image();
+    img.decoding = "async";
+    const promise = new Promise((resolve) => {
+      img.onload = () => {
+        // decode() 在背景分頁（document.hidden）會一直等到分頁回到前景才完成：
+        // 背景時略過解碼，前景時最多等 1.5 秒，避免載入遮罩卡住。
+        if (typeof img.decode !== "function" || document.hidden) {
+          resolve(true);
+          return;
+        }
+        Promise.race([
+          img.decode().catch(() => {}),
+          new Promise((done) => setTimeout(done, 1500))
+        ]).then(() => resolve(true));
+      };
+      img.onerror = () => resolve(false);
+    });
+    img.src = url;
+    window.__demogameImageCache.push(img);
+    imageLoadCache.set(url, promise);
+    return promise;
+  }
+
+  let preloadOverlay = null;
+  let preloadOverlayTimer = 0;
+  let preloadActive = 0;
+
+  function blockInputWhileLoading(event) {
+    if (!preloadActive) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  function setPreloadOverlay(done, total) {
+    if (!preloadOverlay) return;
+    const text = preloadOverlay.querySelector(".demogame-preload-text");
+    const bar = preloadOverlay.querySelector(".demogame-preload-bar > span");
+    if (text) text.textContent = `載入圖片 Loading images ${done} / ${total}`;
+    if (bar) bar.style.width = `${total ? Math.round((done / total) * 100) : 100}%`;
+  }
+
+  function openPreloadOverlay(total) {
+    if (preloadOverlay) return;
+    preloadOverlay = document.createElement("div");
+    preloadOverlay.className = "demogame-preload";
+    preloadOverlay.setAttribute("role", "status");
+    preloadOverlay.setAttribute("aria-live", "polite");
+    preloadOverlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(8,10,16,.72);color:#fff;font:600 15px/1.4 system-ui,'Microsoft JhengHei',sans-serif;";
+    preloadOverlay.innerHTML = '<div style="min-width:240px;text-align:center"><div class="demogame-preload-text"></div>'
+      + '<div class="demogame-preload-bar" style="margin-top:10px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden">'
+      + '<span style="display:block;height:100%;width:0;background:#f5c542;transition:width .15s"></span></div></div>';
+    document.body.appendChild(preloadOverlay);
+    setPreloadOverlay(0, total);
+  }
+
+  function closePreloadOverlay() {
+    clearTimeout(preloadOverlayTimer);
+    preloadOverlay?.remove();
+    preloadOverlay = null;
+  }
+
+  function showPreloadNotice(message) {
+    const notice = document.createElement("div");
+    notice.className = "demogame-preload-notice";
+    notice.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483000;padding:8px 14px;border-radius:6px;background:rgba(160,40,40,.92);color:#fff;font:600 13px/1.4 system-ui,'Microsoft JhengHei',sans-serif;";
+    notice.textContent = message;
+    document.body.appendChild(notice);
+    setTimeout(() => notice.remove(), 4000);
+  }
+
+  function getAdapterImages(adapter) {
+    const source = typeof adapter?.images === "function" ? adapter.images() : adapter?.images;
+    return [...new Set((Array.isArray(source) ? source : []).filter(Boolean))];
+  }
+
+  async function preloadImages(urls) {
+    const list = [...new Set((urls || []).filter(Boolean))];
+    if (!list.length) return { failed: [] };
+    let done = 0;
+    const failed = [];
+    // 圖片已在快取時通常 100ms 內完成：延遲顯示遮罩避免畫面閃一下，但從一開始就擋住輸入。
+    preloadActive += 1;
+    if (preloadActive === 1) {
+      window.addEventListener("keydown", blockInputWhileLoading, true);
+      window.addEventListener("pointerdown", blockInputWhileLoading, true);
+      window.addEventListener("click", blockInputWhileLoading, true);
+    }
+    clearTimeout(preloadOverlayTimer);
+    preloadOverlayTimer = setTimeout(() => {
+      if (preloadActive) {
+        openPreloadOverlay(list.length);
+        setPreloadOverlay(done, list.length);
+      }
+    }, 120);
+    await Promise.all(list.map((url) => loadImageOnce(url).then((ok) => {
+      done += 1;
+      if (!ok) failed.push(url);
+      setPreloadOverlay(done, list.length);
+    })));
+    preloadActive -= 1;
+    if (!preloadActive) {
+      closePreloadOverlay();
+      window.removeEventListener("keydown", blockInputWhileLoading, true);
+      window.removeEventListener("pointerdown", blockInputWhileLoading, true);
+      window.removeEventListener("click", blockInputWhileLoading, true);
+    }
+    return { failed };
+  }
+
+  window.DemogameImagePreload = { preload: preloadImages };
+
+  async function preloadAdapterImages(adapter, onFailed) {
+    const result = await preloadImages(getAdapterImages(adapter));
+    if (result.failed.length) {
+      console.warn("[demogame] 圖片載入失敗，改用文字顯示：", result.failed);
+      showPreloadNotice(`有 ${result.failed.length} 張圖片載入失敗，已改用文字顯示`);
+      onFailed?.();
+    }
+    return result;
+  }
+
   function ensureImageToggle() {
     const adapter = getImageToggleAdapter();
     const settingsBody = document.querySelector("#settings-wrap > .setting-body");
+    if (adapter && !settingsBody && adapter.defaultEnabled !== false) {
+      preloadAdapterImages(adapter, () => adapter.setEnabled(false, { initial: false }));
+      return;
+    }
     if (!adapter || !settingsBody) return;
 
     let input = document.getElementById("symbolImageInput");
@@ -303,6 +437,12 @@
       document.dispatchEvent(new CustomEvent("demogame:image-change", {
         detail: { enabled: input.checked, initial }
       }));
+      if (input.checked) {
+        preloadAdapterImages(adapter, () => {
+          input.checked = false;
+          apply(false);
+        });
+      }
     };
 
     input.addEventListener("change", () => {
