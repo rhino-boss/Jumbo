@@ -2720,6 +2720,12 @@
     /* 符號樣式同宙斯（H027）：各符號底色沿用 .cell.symbol-* 定義，不再統一壓成深色 */
     #board .cell{border-radius:8px;box-shadow:none}
     #board .cell.symbol-empty{background:#060d1a!important;border-color:rgba(38,92,137,.18)!important}
+    /* 本作特別處理：M1～M4 不上色，與 A/K/Q/J 一樣深色 */
+    #board .cell.symbol-m1,#board .cell.symbol-m2,#board .cell.symbol-m3,#board .cell.symbol-m4,
+    #board .cell.symbol-a,#board .cell.symbol-k,#board .cell.symbol-q,#board .cell.symbol-j{
+      border-color:rgba(38,92,137,.28);background:#060d1a;
+    }
+    #board .cell.symbol-cleared > .mult-badge{animation:slot-symbol-clear 180ms ease-in forwards}
     #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
     #board .h019-glyph{
       display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
@@ -3130,7 +3136,7 @@
       // 結構同宙斯（symbol-wrap + h019-glyph）：共用的滾動模糊／消除淡出特效只認這組選擇器
       cell.innerHTML = empty ? "" : `<div class="symbol-wrap"><span class="h019-glyph">${code}</span></div>`;
       if (!empty && mults[reel] && mults[reel][row] > 1) {
-        cell.insertAdjacentHTML("beforeend", `<span class="mult-badge multi-badge">×${mults[reel][row]}</span>`);
+        cell.insertAdjacentHTML("beforeend", `<span class="mult-badge">×${mults[reel][row]}</span>`);
       }
       root.append(cell);
     }
