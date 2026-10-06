@@ -2719,7 +2719,9 @@
     }
     /* 符號樣式同宙斯（H027）：各符號底色沿用 .cell.symbol-* 定義，不再統一壓成深色 */
     #board .cell{border-radius:8px;box-shadow:none}
-    #board .cell.symbol-empty{background:#060d1a!important;border-color:rgba(38,92,137,.18)!important}
+    /* 消除：整格（含底板）一起縮小消失；消除後的空格完全透明 */
+    #board .cell.symbol-cleared{animation:slot-symbol-clear 180ms ease-in forwards}
+    #board .cell.symbol-empty{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
     /* 本作特別處理：M1～M4 不上色，與 A/K/Q/J 一樣深色 */
     #board .cell.symbol-m1,#board .cell.symbol-m2,#board .cell.symbol-m3,#board .cell.symbol-m4,
     #board .cell.symbol-a,#board .cell.symbol-k,#board .cell.symbol-q,#board .cell.symbol-j{
