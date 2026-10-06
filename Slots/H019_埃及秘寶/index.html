@@ -1976,6 +1976,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
+        <ul>
+          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
+          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
         <ul>
           <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（12 張）；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>

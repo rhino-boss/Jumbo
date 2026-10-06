@@ -2177,6 +2177,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
+        <ul>
+          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
+          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-06：整波相加、金框翻牌修正、演出重做、接上 config_92A（Card System）</h4>
         <ul>
           <li><strong>數學</strong>：WILD 倍數改為「整波一起加」——該次 Cascade 盤面所有帶倍 WILD 倍數相加，每條中獎連線乘同一總和（game_rule §4／§5.3）。

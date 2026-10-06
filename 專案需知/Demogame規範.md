@@ -165,6 +165,7 @@ Debug Mode 至少可查看：
 - Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
+- 即時倍率線型（共用，Set RNG 上方）：Normal Bet 每局總得分（含該局 FG）÷ 底注的 64 區間分布，縱軸固定 0～20%；由 `demogame_common.js` 自動建立並跟隨 Debug Mode 顯示，Reset 清空。各遊戲只需在 NB 一局（含 FG）結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫。
 
 指定 Card Range 與 Reel RNG 必須互斥。指定值要檢查數量與範圍，且只作用於規格定義的下一個 Spin；不得因指定 RNG 或 Force FG 進入無限重跑。
 

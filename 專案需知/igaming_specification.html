@@ -917,7 +917,7 @@ m1_bg_spin_rate        : 79.9233</code></pre>
 <ul><li>支援 Normal Spin，以及遊戲實際存在的 Extra Bet、Buy Feature、Super Feature。</li><li>Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。</li><li>Auto、Speed、Reset 不得改變 RNG、得分或統計結果。</li><li>BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。</li><li>Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。</li><li>Help 與 <code>game_help_draft.md</code> 一致，不在 HTML 另維護一份規則。</li></ul>
 <h2 id="5-debug-與重現">5. Debug 與重現</h2>
 <p>Debug Mode 至少可查看：</p>
-<ul><li>Config、Version、Profile、Bet Mode、Mode／Feature Price 倍數、base bet、實際模式押注、<code>bet_tier_amount</code>、押注層級、Link 資格、BG／FG Max Multiplier 與 Card System 狀態。</li><li>Card 抽獎值、卡片區間與 Retry 次數。</li><li>Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。</li><li>初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。</li><li>FG 觸發、局數、Retrigger、整包 Win 及即時 Log。</li></ul>
+<ul><li>Config、Version、Profile、Bet Mode、Mode／Feature Price 倍數、base bet、實際模式押注、<code>bet_tier_amount</code>、押注層級、Link 資格、BG／FG Max Multiplier 與 Card System 狀態。</li><li>Card 抽獎值、卡片區間與 Retry 次數。</li><li>Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。</li><li>初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。</li><li>FG 觸發、局數、Retrigger、整包 Win 及即時 Log。</li><li>即時倍率線型（共用，Set RNG 上方）：Normal Bet 每局總得分（含該局 FG）÷ 底注的 64 區間分布，縱軸固定 0～20%；由 <code>demogame_common.js</code> 自動建立並跟隨 Debug Mode 顯示，Reset 清空。各遊戲只需在 NB 一局（含 FG）結束時呼叫 <code>window.demogameLineChart?.record(該局總得分 ÷ 底注)</code>；批次模擬不得呼叫。</li></ul>
 <p>指定 Card Range 與 Reel RNG 必須互斥。指定值要檢查數量與範圍，且只作用於規格定義的下一個 Spin；不得因指定 RNG 或 Force FG 進入無限重跑。</p>
 <h2 id="6-與-simulator-對帳">6. 與 Simulator 對帳</h2>
 <p>至少準備下列可重現案例：無獎 BG、一般得分、Wild／Scatter、Cascade／Multiplier、FG Trigger／Retrigger、各 Bet Mode、Newbie、Oldhand 小／中／大 Bet、Link 可用／不可用、Card System range／free_game／Retry、Max Win 截斷及遊戲專屬 Feature。</p>

@@ -2239,6 +2239,13 @@
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
 <article class="change-log-entry">
+        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
+        <ul>
+          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
+          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
           <h4>2026-09-08：大 Bet 獨立數學模型（Bet100）</h4>
           <ul>
             <li>新增 <code>H028192A_Bet100.xlsx</code>／<code>H028188B_Bet100.xlsx</code> 與 <code>config_92A_Bet100.js</code>／<code>config_88B_Bet100.js</code>（大 Bet，bet_tier_amount &gt; $100）。FG 上限依規範為 <b>2000x</b> 而非 10000x；<code>Weight_BF</code> 依 H027 實務同步封頂。<code>_Bet100</code> 後綴沿用 H026／H027 實務。</li>
