@@ -235,6 +235,7 @@ class SpinResult:
     big_ghost_used: bool = False
     initial_gold_count: int = 0
     gold_appeared: int = 0                       # 初始＋補牌後補上的金框總數（金框使用率分母）
+    initial_gold_reel: Counter = field(default_factory=Counter)   # 初始盤面每輪金框數
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     symbol_length_hits: Counter = field(default_factory=Counter)
@@ -270,6 +271,10 @@ class RoundResult:
     fg_gold_symbols: int = 0
     bg_gold_appeared: int = 0
     fg_gold_appeared: int = 0
+    bg_gold_reel: Counter = field(default_factory=Counter)
+    fg_gold_reel: Counter = field(default_factory=Counter)
+    bg_gold_boards: int = 0
+    fg_gold_boards: int = 0
     special_symbol_cnt: int = 0
     bg_trigger_fg_cnt: int = 0
     bg_trigger_fg_pay: float = 0.0
@@ -511,6 +516,7 @@ class SuperDiamond:
             (reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
         result.initial_gold_count = sum(sum(column) for column in gold)
         result.gold_appeared = result.initial_gold_count
+        result.initial_gold_reel.update({reel: sum(column) for reel, column in enumerate(gold) if sum(column)})
 
         cap = self.max_win * self.bet
         while True:
@@ -639,6 +645,8 @@ class SuperDiamond:
             result.fg_hit_spins += int(spin.pay > 0)
             result.fg_gold_symbols += spin.initial_gold_count
             result.fg_gold_appeared += spin.gold_appeared
+            result.fg_gold_reel.update(spin.initial_gold_reel)
+            result.fg_gold_boards += int(spin.initial_gold_count > 0)
             result.special_symbol_cnt += int(spin.scatter_count > 0)
             result.combo_fg[min(spin.cascades, 5)] += 1
             result.symbol_hits.update(spin.symbol_hits)
@@ -686,6 +694,8 @@ class SuperDiamond:
         target.fg_hit_spins += source.fg_hit_spins
         target.fg_gold_symbols += source.fg_gold_symbols
         target.fg_gold_appeared += source.fg_gold_appeared
+        target.fg_gold_reel.update(source.fg_gold_reel)
+        target.fg_gold_boards += source.fg_gold_boards
         target.special_symbol_cnt += source.special_symbol_cnt
         target.combo_fg.update(source.combo_fg)
         target.fg_pay_per_spin.extend(source.fg_pay_per_spin)
@@ -726,6 +736,8 @@ class SuperDiamond:
         result.bg_hit_spins = int(spin.pay > 0)
         result.bg_gold_symbols = spin.initial_gold_count
         result.bg_gold_appeared = spin.gold_appeared
+        result.bg_gold_reel.update(spin.initial_gold_reel)
+        result.bg_gold_boards = int(spin.initial_gold_count > 0)
         result.special_symbol_cnt = int(spin.scatter_count > 0)
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
@@ -785,6 +797,7 @@ def _empty_stats() -> dict[str, Any]:
         "special_symbol_cnt": 0, "bg_trigger_fg_cnt": 0, "bg_trigger_fg_pay": 0.0,
         "golden_converted": 0, "bg_gold_symbols": 0, "fg_gold_symbols": 0,
         "bg_gold_appeared": 0, "fg_gold_appeared": 0,
+        "bg_gold_reel": Counter(), "fg_gold_reel": Counter(), "bg_gold_boards": 0, "fg_gold_boards": 0,
         "combo_bg": Counter(), "combo_fg": Counter(),
         "bg_symbol_length_pay": Counter(), "fg_symbol_length_pay": Counter(),
         "bg_mult_wild": 0, "fg_mult_wild": 0, "max_line_multiplier": 1,
@@ -839,6 +852,8 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["fg_gold_symbols"] += result.fg_gold_symbols
     stats["bg_gold_appeared"] += result.bg_gold_appeared
     stats["fg_gold_appeared"] += result.fg_gold_appeared
+    stats["bg_gold_boards"] += result.bg_gold_boards
+    stats["fg_gold_boards"] += result.fg_gold_boards
     if bet_mode != MODE_FEATUREBUY:
         stats["combo_bg"][min(result.bg_cascade_count, 5)] += 1
     stats["combo_fg"].update(result.combo_fg)
@@ -848,7 +863,7 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     for key in ("bg_golden_results", "fg_golden_results", "bg_split_counts",
                 "fg_split_counts", "mult_wild_values", "symbol_hits", "symbol_pay",
                 "bg_symbol_length_hits", "fg_symbol_length_hits",
-                "bg_symbol_length_pay", "fg_symbol_length_pay",
+                "bg_symbol_length_pay", "fg_symbol_length_pay", "bg_gold_reel", "fg_gold_reel",
                 "bg_initial_symbols", "bg_drop_symbols",
                 "fg_initial_symbols", "fg_drop_symbols"):
         stats[key].update(getattr(result, key))
@@ -1206,6 +1221,10 @@ def feature_frame(result: dict[str, Any]) -> pd.DataFrame:
     rows = [
         ("golden_converted_total", s["golden_converted"]),
         ("golden_per_round", s["golden_converted"] / rounds),
+        ("gold_board_rate_bg", s["bg_gold_boards"] / rounds),
+        ("gold_board_rate_fg", s["fg_gold_boards"] / fg_spins),
+        *[(f"gold_reel_bg_R{reel + 1}", s["bg_gold_reel"][reel] / rounds / 4) for reel in range(5)],
+        *[(f"gold_reel_fg_R{reel + 1}", s["fg_gold_reel"][reel] / fg_spins / 4) for reel in range(5)],
         ("gold_appeared_bg", s["bg_gold_appeared"]),
         ("gold_appeared_fg", s["fg_gold_appeared"]),
         ("gold_usage_bg", sum(s["bg_golden_results"].values()) / max(1, s["bg_gold_appeared"])),
