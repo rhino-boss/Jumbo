@@ -234,6 +234,8 @@ class SpinResult:
     mult_kind: Counter = field(default_factory=Counter)   # (WW/W2/SPLIT, 倍數) 次數
     max_line_multiplier: int = 1
     big_ghost_used: bool = False
+    mult_cells: int = 0                          # 帶倍數 Wild（×2 以上，含分裂體）出現顆數
+    mult_left: int = 0                           # 結算時仍留在盤面、沒被消除的帶倍數 Wild 顆數
     initial_gold_count: int = 0
     gold_appeared: int = 0                       # 初始＋補牌後補上的金框總數（金框使用率分母）
     initial_gold_reel: Counter = field(default_factory=Counter)   # 初始盤面每輪金框數
@@ -278,6 +280,12 @@ class RoundResult:
     fg_flip_spins: int = 0
     bg_mult_spins: int = 0      # 翻牌後出現帶倍數 Wild（×2 以上）的轉數
     fg_mult_spins: int = 0
+    bg_mult_cells: int = 0      # 帶倍數 Wild 出現顆數／結算時沒被消除顆數／出現倍數但一顆都沒消除的轉數
+    fg_mult_cells: int = 0
+    bg_mult_left: int = 0
+    fg_mult_left: int = 0
+    bg_mult_unused_spins: int = 0
+    fg_mult_unused_spins: int = 0
     bg_gold_reel: Counter = field(default_factory=Counter)
     fg_gold_reel: Counter = field(default_factory=Counter)
     bg_gold_boards: int = 0
@@ -466,6 +474,7 @@ class SuperDiamond:
         value = int(_pick(self.rng, values, cumulative, total))
         if value > 1:
             result.mult_wild_created += 1
+            result.mult_cells += 1
         result.mult_wild_values[value] += 1
         result.mult_kind[(outcome, value)] += 1
         return value
@@ -510,6 +519,7 @@ class SuperDiamond:
             placed = candidates[:count]
             for reel, row in placed:
                 result.mult_kind[("SPLIT", value)] += 1
+                result.mult_cells += int(value > 1)
                 # game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
                 symbols[reel][row] = WW
                 mults[reel][row] = value if value > 1 else 0
@@ -584,6 +594,8 @@ class SuperDiamond:
 
         result.scatter_count = sum(symbol == C1 for column in symbols for symbol in column)
         result.final_board = [reel[:] for reel in symbols]
+        result.mult_left = sum(1 for reel in range(5) for row in range(4)
+                               if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
         return result
 
     # --- Card System ---
@@ -657,6 +669,9 @@ class SuperDiamond:
             result.fg_gold_appeared += spin.gold_appeared
             result.fg_flip_spins += int(spin.golden_converted > 0)
             result.fg_mult_spins += int(spin.mult_wild_created > 0)
+            result.fg_mult_cells += spin.mult_cells
+            result.fg_mult_left += spin.mult_left
+            result.fg_mult_unused_spins += int(spin.mult_cells > 0 and spin.mult_left == spin.mult_cells)
             result.fg_gold_reel.update(spin.initial_gold_reel)
             result.fg_gold_boards += int(spin.initial_gold_count > 0)
             result.special_symbol_cnt += int(spin.scatter_count > 0)
@@ -709,6 +724,9 @@ class SuperDiamond:
         target.fg_gold_appeared += source.fg_gold_appeared
         target.fg_flip_spins += source.fg_flip_spins
         target.fg_mult_spins += source.fg_mult_spins
+        target.fg_mult_cells += source.fg_mult_cells
+        target.fg_mult_left += source.fg_mult_left
+        target.fg_mult_unused_spins += source.fg_mult_unused_spins
         target.fg_gold_reel.update(source.fg_gold_reel)
         target.fg_gold_boards += source.fg_gold_boards
         target.special_symbol_cnt += source.special_symbol_cnt
@@ -754,6 +772,9 @@ class SuperDiamond:
         result.bg_gold_appeared = spin.gold_appeared
         result.bg_flip_spins = int(spin.golden_converted > 0)
         result.bg_mult_spins = int(spin.mult_wild_created > 0)
+        result.bg_mult_cells = spin.mult_cells
+        result.bg_mult_left = spin.mult_left
+        result.bg_mult_unused_spins = int(spin.mult_cells > 0 and spin.mult_left == spin.mult_cells)
         result.bg_gold_reel.update(spin.initial_gold_reel)
         result.bg_gold_boards = int(spin.initial_gold_count > 0)
         result.special_symbol_cnt = int(spin.scatter_count > 0)
@@ -816,6 +837,8 @@ def _empty_stats() -> dict[str, Any]:
         "golden_converted": 0, "bg_gold_symbols": 0, "fg_gold_symbols": 0,
         "bg_gold_appeared": 0, "fg_gold_appeared": 0,
         "bg_flip_spins": 0, "fg_flip_spins": 0, "bg_mult_spins": 0, "fg_mult_spins": 0,
+        "bg_mult_cells": 0, "fg_mult_cells": 0, "bg_mult_left": 0, "fg_mult_left": 0,
+        "bg_mult_unused_spins": 0, "fg_mult_unused_spins": 0,
         "bg_gold_reel": Counter(), "fg_gold_reel": Counter(), "bg_gold_boards": 0, "fg_gold_boards": 0,
         "combo_bg": Counter(), "combo_fg": Counter(),
         "bg_symbol_length_pay": Counter(), "fg_symbol_length_pay": Counter(),
@@ -871,7 +894,9 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["fg_gold_symbols"] += result.fg_gold_symbols
     stats["bg_gold_appeared"] += result.bg_gold_appeared
     stats["fg_gold_appeared"] += result.fg_gold_appeared
-    for key in ("bg_flip_spins", "fg_flip_spins", "bg_mult_spins", "fg_mult_spins"):
+    for key in ("bg_flip_spins", "fg_flip_spins", "bg_mult_spins", "fg_mult_spins",
+                "bg_mult_cells", "fg_mult_cells", "bg_mult_left", "fg_mult_left",
+                "bg_mult_unused_spins", "fg_mult_unused_spins"):
         stats[key] += getattr(result, key)
     stats["bg_gold_boards"] += result.bg_gold_boards
     stats["fg_gold_boards"] += result.fg_gold_boards
@@ -1084,6 +1109,10 @@ def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     rows: list[tuple[str, Any]] = [
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
         ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
+        ("mult_left_rate_bg", s["bg_mult_left"] / max(1, s["bg_mult_cells"])),
+        ("mult_left_rate_fg", s["fg_mult_left"] / max(1, s["fg_mult_cells"])),
+        ("mult_unused_spin_rate_bg", s["bg_mult_unused_spins"] / max(1, s["bg_mult_spins"])),
+        ("mult_unused_spin_rate_fg", s["fg_mult_unused_spins"] / max(1, s["fg_mult_spins"])),
         ("avg_gold_frames_bg", s["bg_gold_symbols"] / rounds),
         ("avg_gold_frames_fg", s["fg_gold_symbols"] / fg_spins),
         ("golden_converted", s["golden_converted"]),
@@ -1247,6 +1276,13 @@ def feature_frame(result: dict[str, Any]) -> pd.DataFrame:
         ("golden_per_round", s["golden_converted"] / rounds),
         ("flip_spins_bg", s["bg_flip_spins"]), ("flip_spins_fg", s["fg_flip_spins"]),
         ("mult_spins_bg", s["bg_mult_spins"]), ("mult_spins_fg", s["fg_mult_spins"]),
+        ("mult_cells_bg", s["bg_mult_cells"]), ("mult_cells_fg", s["fg_mult_cells"]),
+        ("mult_left_bg", s["bg_mult_left"]), ("mult_left_fg", s["fg_mult_left"]),
+        ("mult_unused_spins_bg", s["bg_mult_unused_spins"]), ("mult_unused_spins_fg", s["fg_mult_unused_spins"]),
+        ("mult_left_rate_bg", s["bg_mult_left"] / max(1, s["bg_mult_cells"])),
+        ("mult_left_rate_fg", s["fg_mult_left"] / max(1, s["fg_mult_cells"])),
+        ("mult_unused_spin_rate_bg", s["bg_mult_unused_spins"] / max(1, s["bg_mult_spins"])),
+        ("mult_unused_spin_rate_fg", s["fg_mult_unused_spins"] / max(1, s["fg_mult_spins"])),
         ("gold_board_rate_bg", s["bg_gold_boards"] / rounds),
         ("gold_board_rate_fg", s["fg_gold_boards"] / fg_spins),
         *[(f"gold_reel_bg_R{reel + 1}", s["bg_gold_reel"][reel] / rounds / 4) for reel in range(5)],

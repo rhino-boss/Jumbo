@@ -2043,6 +2043,16 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-07：接上共用 Image 開關＋符號圖片開局前預載、改用 WebP</h4>
+        <ul>
+          <li>本作其實有符號美術（config <code>asset_map</code> 的 11 張符號圖與 2 張金框圖，盤面一直有畫圖）；2026-09-24 紀錄「本作無符號美術」有誤，本次更正。</li>
+          <li>新增 <code>DEMOGAME_IMAGE_TOGGLE</code>（含 <code>images</code> 清單 13 張）：Setting 出現 Image 開關；開局前由 <code>demogame_common.js?v=4</code> 預載並解碼，期間擋住操作、超過 120 ms 顯示載入遮罩；載入失敗自動改文字顯示。</li>
+          <li>依 Demogame規範 2.3：Image 開時有圖格加 <code>has-symbol-art</code>（不顯示代號）；Image 關時不畫符號圖與金框圖，顯示符號框＋代號。</li>
+          <li>符號圖改用 WebP：PNG 564 KB → WebP 151 KB；config 的 <code>asset_map</code> 仍記 PNG 檔名，由 Demo 讀取時換成 .webp，原 PNG 保留。</li>
+          <li>未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
         <ul>
           <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
@@ -3045,8 +3055,13 @@
           return `.${normalized.slice(sourceIndex)}`;
         }
       }
-      if (normalized.startsWith("Source/")) return `./${normalized}`;
-      return normalized;
+      if (normalized.startsWith("Source/")) return toDemoImage(`./${normalized}`);
+      return toDemoImage(normalized);
+    }
+
+    // Demogame規範 2.3：Demo 的符號圖一律用 WebP（config 的 asset_map 仍記原 PNG 檔名，數學交付檔不動）
+    function toDemoImage(path) {
+      return /\/Source\/Image\/[^/]+\.png$/i.test(path) ? path.replace(/\.png$/i, ".webp") : path;
     }
 
     function getAsset(symbolCode) {
@@ -4115,7 +4130,21 @@
       }
     }
 
+    // 共用 Image 開關＋開局前預載（Demogame規範 2.3 圖片預載）：images 列出 asset_map 全部符號圖與金框圖
+    let useSymbolImages = true;
+    let lastBoardRender = null;
+    window.DEMOGAME_IMAGE_TOGGLE = {
+      supported: true,
+      defaultEnabled: true,
+      images: () => [...new Set([...Object.values(Box.asset_map || {}), Box.frame_bg, Box.frame_top].filter(Boolean).map(normalizeAssetPath))],
+      setEnabled(enabled) {
+        useSymbolImages = Boolean(enabled);
+        if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.options);
+      }
+    };
+
     function renderBoard(board, options = {}) {
+      lastBoardRender = { board, options };
       const hitSet = new Set((options.hitPositions || []).map(([row, col]) => `${row}-${col}`));
       const convertSet = new Set((options.convertPositions || []).map((item) => `${item.row}-${item.col}`));
       const clearedSet = new Set((options.clearedPositions || []).map(([row, col]) => `${row}-${col}`));
@@ -4133,20 +4162,22 @@
           }
           const wrap = document.createElement("div");
           wrap.className = "symbol-wrap";
-          if (cell.is_gold) {
+          const showArt = useSymbolImages && Boolean(cell.image);
+          if (showArt) cellEl.classList.add("has-symbol-art");
+          if (useSymbolImages && cell.is_gold) {
             const frameBg = document.createElement("img");
             frameBg.className = "frame-bg";
             frameBg.src = normalizeAssetPath(Box.frame_bg);
             wrap.appendChild(frameBg);
           }
-          if (cell.image) {
+          if (showArt) {
             const img = document.createElement("img");
             img.className = "symbol-img";
             img.src = cell.image;
             img.alt = cell.symbol_name;
             wrap.appendChild(img);
           }
-          if (cell.is_gold) {
+          if (useSymbolImages && cell.is_gold) {
             const frameTop = document.createElement("img");
             frameTop.className = "frame-top";
             frameTop.src = normalizeAssetPath(Box.frame_top);
@@ -4794,7 +4825,7 @@
     applyLanguage();
     appendLiveLog("Ready — press Spin", "result");
   </script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script src="../demogame_common.js?v=4"></script>
 </body>
 
 </html>
