@@ -348,6 +348,12 @@ Max Multiplier = Round Total Win ÷ 該模式定義的基準成本</code></pre>
 <p>系統對派彩金額設有天花板，超過即整把重骰權重區間並產生一個新結果（重骰後該結果不會出現，非封頂截斷）。完整規則見<a href="#" class="tab-link" data-tab="ceiling">天花板說明.md</a>：</p>
 <div class="tbl-wrap"><table><thead><tr><th>範圍</th><th class="n">押注 <code>&lt;= $1,500</code></th><th class="n">押注 <code>&gt; $1,500</code></th></tr></thead><tbody><tr><td>單把 BG 派彩</td><td class="n"><code>$500,000</code></td><td class="n"><code>$1,000,000</code></td></tr><tr><td>單場 FG 派彩</td><td class="n"><code>$2,000,000</code></td><td class="n"><code>$5,000,000</code></td></tr><tr><td>系統賠付上限</td><td class="n"><code>$10,000,000</code></td><td class="n"><code>$10,000,000</code></td></tr></tbody></table></div>
 <ul><li>大 Bet 的倍率上限必須同時滿足：<code>FG 上限倍數 × 該遊戲最大押注 ≤ FG 上限</code>、<code>BG 上限倍數 × 該遊戲最大押注 ≤ BG 上限</code>（依最大押注所在層級取上表數值），確保大 Bet 玩家不會因重骰而 RTP 系統性偏低——這是大 Bet 獨立線型存在的原因。</li><li>例：H026 最大押注 <code>$5000</code> → 大 Bet FG 上限 <code>1000x</code>（最高可用區間 <code>(950, 1000]</code>，而非第 1.4.4 節預設的 <code>2000x</code>）、大 Bet BG 上限 <code>200x</code>（最高可用區間 <code>(180, 200]</code>）；均須於數學文件明記。</li><li>配線時以各區間上限驗算：區間上限 × 最大押注超過金額上限者不得配權重，否則高注玩家會實際踩到重骰、RTP 系統性偏低。</li></ul>
+<h4 id="146-demo-版-rtp120">1.4.6 Demo 版 RTP（120%）</h4>
+<p>上在 Demo 網頁（展示、試玩用）的版本，RTP 目標為 <strong>120%</strong>。以正式上線的權重為底，只調整卡片權重，不動輪帶、Paytable 與 Feature 規則。</p>
+<pre><code>差額    = 120% − 來源版本 RTP
+BG 補足 = 差額 × 1/2   → 加在 BG 的 (25, 30] 區間
+FG 補足 = 差額 × 1/2   → 縮短 FG 週期</code></pre>
+<ul><li><strong>BG</strong>：提高 <code>(25, 30]</code> 區間的權重，使 BG RTP 增加差額的一半。增加的權重從 <code>(-1, 0]</code> 區間扣除，其餘區間不動，各欄總和仍為 <code>1,000,000,000</code>。</li><li><strong>FG</strong>：提高 FG 觸發卡的權重、縮短 FG 週期，使 FG RTP 增加差額的一半；FG 的倍率區間權重不動，每場 FG 的平均倍數不變。增加的觸發權重同樣從 <code>(-1, 0]</code> 扣除。</li><li>新的 FG 週期：<code>新週期 = 原週期 × 原 FG RTP ÷（原 FG RTP ＋ 差額 ÷ 2）</code>。</li><li>例：來源版本 BG 72%、FG 20%、FG 週期 300，總計 92% → 差額 28%；BG 補 14% 到 86%，FG 補 14% 到 34%，新週期 ≈ 300 × 20 ÷ 34 ≈ 176.5。</li><li>計算 RTP 與驗證都以 Card On 實跑為準，模擬結果須在 120% 的 2σ 內。</li><li>Demo 版權重只用於 Demo 網頁，不得進入正式上線的 Config 或送驗文件；Demo 版的工作簿、Config 與報表要在檔名或版本註記清楚標示為 Demo。</li></ul>
 <h3 id="15-卡片倍率區間">1.5 卡片倍率區間</h3>
 <p>數學文件使用下列卡片倍率區間：</p>
 <pre><code>(-1, 0]
