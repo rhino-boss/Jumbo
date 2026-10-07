@@ -60,6 +60,20 @@ PRODUCT_LINES = [
 TAB_ORDER_HINT = ["導覽", "系統機制", "開發流程", "數學模型規範", "數學文件規範", "送驗文件規範", "送驗規範",
                   "模擬程式規範", "Demogame規範", "腳本規範", "提案報告規範", "壓測說明書", "後端報表筆記"]
 
+# 團隊版：只放給所有數學 follow 的規範，發佈到共享資料夾（個人文件不外放）
+TEAM_DIR = Path(r"\\192.168.139.6\Simulate\專案需知")
+TEAM_TAB_IDS = ["overview", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
+TEAM_GROUPS = [
+    ("總覽", ["overview"]),
+    ("數學設計", ["math"]),
+    ("數學文件", ["docs"]),
+    ("送驗相關", ["submission"]),
+    ("系統相關", ["mechanism", "ceiling", "script", "stress"]),
+]
+TEAM_README = "其他/_README_team.md"          # 團隊版總覽，發佈時改名為 其他/_README.md
+TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
+PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文件的 .md 連結只留文字
+
 # 目前正在建置的站台：md 相對路徑（如 md 內所寫、已去掉 ./）→ ("tab", tab_id) 或 ("ext", href)
 LINKS: dict = {}
 
@@ -105,6 +119,8 @@ def render_inline(text: str) -> str:
             )
         if target and target[0] == "ext":
             href = target[1] + (f"/{anchor}" if anchor else "")
+        elif PLAIN_UNKNOWN_MD and ".md" in base and not href.startswith("http"):
+            return label
         return f'<a href="{href}">{label}</a>'
 
     text = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, text)
@@ -349,7 +365,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         )
 
     today = date.today().strftime("%Y-%m-%d")
-    src_label = f"專案需知/{base.relative_to(HERE)}/*.md".replace("/./", "/")
+    src_label = f"專案需知/{rel_to_tree(base)}/*.md".replace("/./", "/")
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -534,29 +550,69 @@ document.addEventListener('click', function(e) {{
 </html>
 """
     output.write_text(page, encoding="utf-8")
-    print(f"OK: {output.relative_to(HERE)} 已更新（{output.stat().st_size:,} bytes）")
+    print(f"OK: {rel_to_tree(output)} 已更新（{output.stat().st_size:,} bytes）")
 
 
-def build():
+def rel_to_tree(path: Path) -> Path:
+    """顯示用路徑：相對於個人版（HERE）或團隊版（TEAM_DIR）的根。"""
+    for root in (HERE, TEAM_DIR):
+        try:
+            return path.relative_to(root)
+        except ValueError:
+            continue
+    return path
+
+
+def build_tree(root: Path, tabs, groups):
+    """建置一整套：根 HTML ＋ 各產線 HTML。"""
     # 根目錄（Omniplay）：根 .md 互連為頁籤；連到產線資料夾的 .md 轉成該產線 HTML
-    links = {filename: ("tab", tab_id) for tab_id, _, filename in TABS}
+    links = {filename: ("tab", tab_id) for tab_id, _, filename in tabs}
     links["_README.md"] = ("tab", "overview")  # 根 .md 內仍以 _README.md 連到總覽
     for folder, out_name, _ in PRODUCT_LINES:
-        for tab_id, _, filename in line_tabs(HERE / folder):
+        for tab_id, _, filename in line_tabs(root / folder):
             links[f"{folder}/{filename}"] = ("ext", f"{folder}/{out_name}#{tab_id}")
-    build_site(HERE, TABS, OUTPUT, "iGaming 開發規範", "iGaming · 開發規範", links, GROUPS)
+    build_site(root, tabs, root / ROOT_OUTPUT_NAME, "iGaming 開發規範", "iGaming · 開發規範", links, groups)
 
     # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成根 HTML 的頁籤
     for folder, out_name, site_title in PRODUCT_LINES:
-        tabs = line_tabs(HERE / folder)
-        if not tabs:
+        line = line_tabs(root / folder)
+        if not line:
             continue
-        links = {filename: ("tab", tab_id) for tab_id, _, filename in tabs}
-        for tab_id, _, filename in TABS:
+        links = {filename: ("tab", tab_id) for tab_id, _, filename in line}
+        for tab_id, _, filename in tabs:
             links[f"../{filename}"] = ("ext", f"../{ROOT_OUTPUT_NAME}#{tab_id}")
         links["../其他/_README.md"] = ("ext", f"../{ROOT_OUTPUT_NAME}#overview")
-        build_site(HERE / folder, tabs, HERE / folder / out_name, site_title,
+        build_site(root / folder, line, root / folder / out_name, site_title,
                    f"Slots · {folder}", links)
+
+
+def publish_team():
+    """把團隊規範複製到共享資料夾並建置 HTML；共享資料夾連不到時略過。"""
+    global PLAIN_UNKNOWN_MD
+    import shutil
+    if not TEAM_DIR.exists():
+        print(f"略過團隊版：連不到 {TEAM_DIR}")
+        return
+    tabs = [t for t in TABS if t[0] in TEAM_TAB_IDS]
+    files = [f for _, _, f in tabs if f != "其他/_README.md"] + TEAM_TOOLS
+    for folder, _, _ in PRODUCT_LINES:
+        files += [f"{folder}/{p.name}" for p in (HERE / folder).glob("*.md")]
+    for f in files:
+        (TEAM_DIR / f).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(HERE / f, TEAM_DIR / f)
+    (TEAM_DIR / "其他").mkdir(exist_ok=True)
+    shutil.copy2(HERE / TEAM_README, TEAM_DIR / "其他/_README.md")
+    print(f"團隊版：已複製 {len(files) + 1} 份到 {TEAM_DIR}")
+    PLAIN_UNKNOWN_MD = True
+    try:
+        build_tree(TEAM_DIR, tabs, TEAM_GROUPS)
+    finally:
+        PLAIN_UNKNOWN_MD = False
+
+
+def build():
+    build_tree(HERE, TABS, GROUPS)
+    publish_team()
 
 
 if __name__ == "__main__":
