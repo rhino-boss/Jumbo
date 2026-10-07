@@ -1,0 +1,341 @@
+<meta charset="utf-8">
+<title>遊戲數據 遊戲數據</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --bar:rgba(42,120,214,.16); --bar-hi:rgba(235,104,52,.20);
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --bar:rgba(57,135,229,.30); --bar-hi:rgba(217,89,38,.34);
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:38px 22px 80px}
+header{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:18px 0 26px}
+.stat{background:var(--panel); padding:12px 15px; display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:11.5px; color:var(--ink-3); font-family:var(--font-mono); letter-spacing:.04em}
+.stat .v{font-family:var(--font-mono); font-size:19px; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .n2{font-size:11.5px; color:var(--ink-3)}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+h3{margin:32px 0 10px; font-size:17.5px; font-weight:600; letter-spacing:-.008em;
+  padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.panel>h3:first-child{margin-top:0}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600}
+p{margin:0 0 11px; max-width:82ch}
+p.cap{color:var(--ink-2); font-size:13.5px}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:82ch}
+li{margin:3px 0}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+blockquote{margin:12px 0 16px; padding:10px 14px; background:var(--panel-2);
+  border-left:2px solid var(--s1); border-radius:0 3px 3px 0; color:var(--ink-2); font-size:13.5px; max-width:86ch}
+blockquote code{background:var(--panel)}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.bar{background-repeat:no-repeat; background-position:left center;
+  background-size:var(--w,0) 72%; background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)));
+  /* 限制在內容區：左右各留 padding 當欄間隔，相鄰欄的橫條才不會黏在一起 */
+  background-origin:content-box; background-clip:content-box}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.axisfix{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 18px}
+.pill{font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border:1px solid var(--rule);
+  border-radius:100px; color:var(--ink-2); background:var(--panel)}
+.warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
+.card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+.legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
+.lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
+.sw{width:22px; height:3px; border-radius:2px; flex:none}
+.plot{position:relative; width:100%}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
+  background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
+  white-space:nowrap; z-index:5; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tip b{font-weight:600; display:block; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">H014 錢來襲 · 數值報告</div>
+  <h1>遊戲數據</h1>
+
+</header>
+
+<div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">1. 結論</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">2. 基本指標</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">3. R4 特色轉輪</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">4. 獎項結構（RTP 占比／平均倍數）</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">5. RESPIN</button><button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1">6. 幸運轉盤</button><button class="tab" role="tab" id="tab-6" aria-controls="panel-6" aria-selected="false" tabindex="-1">7. 數字轉輪面額分布（每局初始盤）</button><button class="tab" role="tab" id="tab-7" aria-controls="panel-7" aria-selected="false" tabindex="-1">8. 原始版與現行版</button><button class="tab" role="tab" id="tab-8" aria-controls="panel-8" aria-selected="false" tabindex="-1">9. 五種押注對照（3.0.0.0）</button><button class="tab" role="tab" id="tab-9" aria-controls="panel-9" aria-selected="false" tabindex="-1">10. 後續可再調整</button></div>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><ol><li><strong>出現率類指標幾乎全部對上</strong>：Hit Rate、倍率門檻、R4 各符號出現率、盤面沒中時出現倍數、轉盤觸發率、數字轉輪面額分布，與競品差距多在 0.4pp 內。</li><li><strong>RTP 結構接近</strong>：Bet10 一般中獎／轉盤／RESPIN 占 RTP 為 26％／27％／22％，競品 23％／26％／23％。</li><li><strong>最大倍數與競品一致</strong>：Bet1 可開出 525x（理論上限），Bet5／Bet10 可到 550x。</li><li><strong>仍有落差的地方</strong>：</li></ol>
+<ul><li>Hit Rate 比競品低 0.3～0.5pp（Bet10 12.21% vs 12.61%）：競品實測 RTP 94～105%，要壓到 92% 又要保住特色獎金，只能少一點小獎。</li><li>Bet10 RESPIN 重轉盤平均 14.2x（競品 18.0x）、轉盤平均 15.5x（競品 17.8x）：受限於自然子表的組成，卡片權重補不滿。</li></ul></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">Bet1 我方</th><th class="n">Bet1 競品</th><th class="n">Bet5 我方</th><th class="n">Bet5 競品</th><th class="n">Bet10 我方</th><th class="n">Bet10 競品</th></tr></thead><tbody><tr><td>RTP</td><td class="n">91.58%（10^8：92.03%）</td><td class="n">104.8%（CI ±13pp）</td><td class="n">92.03%</td><td class="n">94.0%（±10pp）</td><td class="n">92.07%</td><td class="n">94.3%（±8.6pp）</td></tr><tr><td>Hit Rate</td><td class="n">13.34%</td><td class="n">13.80%</td><td class="n">12.91%</td><td class="n">13.22%</td><td class="n">12.21%</td><td class="n">12.61%</td></tr><tr><td>每把標準差</td><td class="n">5.39x</td><td class="n">7.05x</td><td class="n">5.05x</td><td class="n">4.81x</td><td class="n">5.23x</td><td class="n">4.83x</td></tr><tr><td>≥10x</td><td class="n">2.90%</td><td class="n">3.21%</td><td class="n">2.82%</td><td class="n">2.98%</td><td class="n">3.03%</td><td class="n">3.21%</td></tr><tr><td>≥20x</td><td class="n">1.44%</td><td class="n">1.66%</td><td class="n">1.66%</td><td class="n">1.80%</td><td class="n">1.29%</td><td class="n">1.37%</td></tr><tr><td>≥50x</td><td class="n">0.51%</td><td class="n">0.57%</td><td class="n">0.48%</td><td class="n">0.53%</td><td class="n">0.50%</td><td class="n">0.55%</td></tr><tr><td>≥100x</td><td class="n">0.033%</td><td class="n">0.036%</td><td class="n">0.011%</td><td class="n">0.011%</td><td class="n">0.016%</td><td class="n">0.017%</td></tr><tr><td>≥500x</td><td class="n">0.001%</td><td class="n">0.009%</td><td class="n">0.0003%</td><td class="n">0.000%</td><td class="n">0.0002%</td><td class="n">0.000%</td></tr><tr><td>最大倍數（本次樣本）</td><td class="n">525x</td><td class="n">525x</td><td class="n">550x</td><td class="n">100x</td><td class="n">555x</td><td class="n">101x</td></tr><tr><td>盤面 RTP</td><td class="n">91.58%</td><td class="n">104.8%</td><td class="n">67.10%</td><td class="n">65.56%</td><td class="n">74.15%</td><td class="n">72.87%</td></tr><tr><td>轉盤 RTP</td><td class="n">—</td><td class="n">—</td><td class="n">24.94%</td><td class="n">28.46%</td><td class="n">17.91%</td><td class="n">21.46%</td></tr></tbody></table></div>
+<blockquote>盤面 RTP＝轉盤獎金以外的所有派彩（含 RESPIN 兩盤）÷ 總押注；盤面 RTP＋轉盤 RTP＝總 RTP。<br>競品 RTP 的信賴區間 ±9～13pp，只能說與 92% 相容；Bet1 競品 104.8% 主要是 1.1 萬局內開出一次 525x。<br>Bet1 的 10^7 RTP 91.58% 偏低屬抽樣波動，加跑 10^8 為 92.03%（標準誤 0.05%）。</blockquote></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><h3>3.1 出現率（每局初始盤）</h3>
+<div class="tbl-wrap"><table><thead><tr><th>R4</th><th class="n">Bet1 我方</th><th class="n">Bet1 競品</th><th class="n">Bet5 我方</th><th class="n">Bet5 競品</th><th class="n">Bet10 我方</th><th class="n">Bet10 競品</th></tr></thead><tbody><tr><td>無效果</td><td class="n">86.99%</td><td class="n">86.49%</td><td class="n">78.43%</td><td class="n">78.29%</td><td class="n">82.20%</td><td class="n">82.22%</td></tr><tr><td>2X</td><td class="n">4.28%</td><td class="n">4.32%</td><td class="n">1.93%</td><td class="n">1.95%</td><td class="n">5.14%</td><td class="n">5.14%</td></tr><tr><td>5X</td><td class="n">7.54%</td><td class="n">7.80%</td><td class="n">17.50%</td><td class="n">17.39%</td><td class="n">5.16%</td><td class="n">5.36%</td></tr><tr><td>10X</td><td class="n">鎖</td><td class="n">鎖</td><td class="n">鎖</td><td class="n">鎖</td><td class="n">5.39%</td><td class="n">5.03%</td></tr><tr><td>RESPIN</td><td class="n">1.20%</td><td class="n">1.39%</td><td class="n">0.71%</td><td class="n">0.79%</td><td class="n">0.95%</td><td class="n">1.05%</td></tr><tr><td>BONUS（轉盤）</td><td class="n">鎖</td><td class="n">鎖</td><td class="n">1.42%</td><td class="n">1.58%</td><td class="n">1.16%</td><td class="n">1.20%</td></tr></tbody></table></div>
+<h3>3.2 依盤面有無得分拆開（Bet10）</h3>
+<div class="tbl-wrap"><table><thead><tr><th>R4</th><th class="n">盤面沒中・我方</th><th class="n">盤面沒中・競品</th><th class="n">盤面有中・我方</th><th class="n">盤面有中・競品</th></tr></thead><tbody><tr><td>無效果</td><td class="n">85.24%</td><td class="n">85.07%</td><td class="n">58.77%</td><td class="n">60.71%</td></tr><tr><td>2X</td><td class="n">4.56%</td><td class="n">4.55%</td><td class="n">9.65%</td><td class="n">9.61%</td></tr><tr><td>5X</td><td class="n">4.74%</td><td class="n">4.73%</td><td class="n">8.36%</td><td class="n">10.11%</td></tr><tr><td>10X</td><td class="n">4.61%</td><td class="n">4.60%</td><td class="n">11.36%</td><td class="n">8.27%</td></tr><tr><td>RESPIN</td><td class="n">0.43%</td><td class="n">0.59%</td><td class="n">5.00%</td><td class="n">4.52%</td></tr><tr><td>BONUS</td><td class="n">0.42%</td><td class="n">0.47%</td><td class="n">6.87%</td><td class="n">6.78%</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><div class="tbl-wrap"><table><thead><tr><th>獎項</th><th class="n">Bet10 我方 RTP 占比</th><th class="n">Bet10 競品 RTP 占比</th><th class="n">Bet10 我方平均倍數</th><th class="n">Bet10 競品平均倍數</th></tr></thead><tbody><tr><td>一般中獎</td><td class="n">26.39%</td><td class="n">22.62%</td><td class="n">3.61x</td><td class="n">3.01x</td></tr><tr><td>2X 中獎</td><td class="n">6.68%</td><td class="n">6.57%</td><td class="n">5.56x</td><td class="n">5.52x</td></tr><tr><td>5X 中獎</td><td class="n">12.13%</td><td class="n">14.08%</td><td class="n">11.66x</td><td class="n">11.26x</td></tr><tr><td>10X 中獎</td><td class="n">6.71%</td><td class="n">7.19%</td><td class="n">4.74x</td><td class="n">7.03x</td></tr><tr><td>轉盤</td><td class="n">26.51%</td><td class="n">26.15%</td><td class="n">21.07x</td><td class="n">20.47x</td></tr><tr><td>RESPIN</td><td class="n">21.58%</td><td class="n">23.39%</td><td class="n">20.85x</td><td class="n">21.05x</td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>獎項</th><th class="n">Bet1 我方</th><th class="n">Bet1 競品</th><th class="n">Bet5 我方</th><th class="n">Bet5 競品</th></tr></thead><tbody><tr><td>一般中獎 RTP 占比</td><td class="n">32.08%</td><td class="n">30.11%</td><td class="n">16.24%</td><td class="n">14.69%</td></tr><tr><td>2X 中獎</td><td class="n">14.72%</td><td class="n">13.77%</td><td class="n">3.11%</td><td class="n">3.06%</td></tr><tr><td>5X 中獎</td><td class="n">21.05%</td><td class="n">23.39%</td><td class="n">31.64%</td><td class="n">29.41%</td></tr><tr><td>轉盤</td><td class="n">鎖</td><td class="n">鎖</td><td class="n">30.87%</td><td class="n">33.94%</td></tr><tr><td>RESPIN</td><td class="n">32.16%</td><td class="n">32.74%</td><td class="n">18.13%</td><td class="n">18.90%</td></tr><tr><td>RESPIN 回合平均倍數</td><td class="n">24.53x</td><td class="n">24.68x</td><td class="n">23.46x</td><td class="n">22.44x</td></tr></tbody></table></div>
+<blockquote>「轉盤」與「RESPIN」列的平均倍數是整個回合（含盤面分數）；第 5、6 節另拆重轉盤與轉盤獎金本身。</blockquote></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">Bet1 我方</th><th class="n">Bet1 競品</th><th class="n">Bet5 我方</th><th class="n">Bet5 競品</th><th class="n">Bet10 我方</th><th class="n">Bet10 競品</th></tr></thead><tbody><tr><td>觸發率</td><td class="n">1.20%</td><td class="n">1.39%</td><td class="n">0.71%</td><td class="n">0.79%</td><td class="n">0.95%</td><td class="n">1.05%</td></tr><tr><td>第一盤平均倍數</td><td class="n">6.76x</td><td class="n">5.66x</td><td class="n">2.55x</td><td class="n">2.80x</td><td class="n">6.70x</td><td class="n">3.07x</td></tr><tr><td>重轉盤平均倍數</td><td class="n">17.76x</td><td class="n">19.02x</td><td class="n">20.91x</td><td class="n">19.63x</td><td class="n">14.15x</td><td class="n">17.99x</td></tr><tr><td>重轉盤 Hit Rate</td><td class="n">100%</td><td class="n">100%</td><td class="n">100%</td><td class="n">100%</td><td class="n">100%</td><td class="n">100%</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">Bet5 我方</th><th class="n">Bet5 競品</th><th class="n">Bet10 我方</th><th class="n">Bet10 競品</th></tr></thead><tbody><tr><td>觸發率</td><td class="n">1.42%</td><td class="n">1.58%</td><td class="n">1.16%</td><td class="n">1.20%</td></tr><tr><td>平均獎金</td><td class="n">17.55x</td><td class="n">17.96x</td><td class="n">15.46x</td><td class="n">17.81x</td></tr><tr><td>觸發時盤面同時有中</td><td class="n">42.3%</td><td class="n">43.6%</td><td class="n">67.9%</td><td class="n">65.8%</td></tr></tbody></table></div>
+<p>獎金分布（× 押注）：</p>
+<div class="tbl-wrap"><table><thead><tr><th>獎項</th><th class="n">Bet5 我方</th><th class="n">Bet5 競品</th><th class="n">Bet10 我方</th><th class="n">Bet10 競品</th></tr></thead><tbody><tr><td>5x</td><td class="n">33.15%</td><td class="n">34.3%</td><td class="n">28.80%</td><td class="n">25.3%</td></tr><tr><td>10x</td><td class="n">23.72%</td><td class="n">23.6%</td><td class="n">24.06%</td><td class="n">24.7%</td></tr><tr><td>15x</td><td class="n">6.62%</td><td class="n">6.4%</td><td class="n">20.71%</td><td class="n">17.1%</td></tr><tr><td>20x</td><td class="n">15.07%</td><td class="n">12.1%</td><td class="n">13.82%</td><td class="n">16.4%</td></tr><tr><td>30x</td><td class="n">6.71%</td><td class="n">6.4%</td><td class="n">3.35%</td><td class="n">3.4%</td></tr><tr><td>50x</td><td class="n">14.52%</td><td class="n">17.1%</td><td class="n">9.01%</td><td class="n">11.6%</td></tr><tr><td>100x</td><td class="n">0.18%</td><td class="n">0.0%</td><td class="n">0.23%</td><td class="n">1.4%</td></tr><tr><td>200x</td><td class="n">0.03%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">—</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-6" aria-labelledby="tab-6" hidden><div class="tbl-wrap"><table><thead><tr><th>面額</th><th class="n">Bet10 R1 我方</th><th class="n">Bet10 R1 競品</th><th class="n">Bet10 R2 我方</th><th class="n">Bet10 R2 競品</th><th class="n">Bet10 R3 我方</th><th class="n">Bet10 R3 競品</th></tr></thead><tbody><tr><td>空白</td><td class="n">92.38%</td><td class="n">92.23%</td><td class="n">48.60%</td><td class="n">48.49%</td><td class="n">49.51%</td><td class="n">49.14%</td></tr><tr><td>0</td><td class="n">—</td><td class="n">—</td><td class="n">45.61%</td><td class="n">45.94%</td><td class="n">45.38%</td><td class="n">45.89%</td></tr><tr><td>1</td><td class="n">5.35%</td><td class="n">4.92%</td><td class="n">3.71%</td><td class="n">3.60%</td><td class="n">2.55%</td><td class="n">2.45%</td></tr><tr><td>5</td><td class="n">1.64%</td><td class="n">1.91%</td><td class="n">2.08%</td><td class="n">1.97%</td><td class="n">2.55%</td><td class="n">2.53%</td></tr><tr><td>10</td><td class="n">0.63%</td><td class="n">0.94%</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td></tr></tbody></table></div>
+<ul><li>Bet1 R3 固定為空白（只有 R1、R2 兩輪），與競品底注 1 只開 2 輪一致；Bet1 理論最高 105 × 5X = 525x，兩邊相同。</li><li>面額分布是用競品每局的三輪面額擬合「子表權重」得到的，並非回推競品的真實輪帶：競品封包每輪只回傳中線 1 格，看不到上下相鄰的符號，無法還原輪帶排列；我方沿用 1.0.0.2 的輪帶符號排列，只調各位置權重。</li></ul></div><div class="panel" role="tabpanel" id="panel-7" aria-labelledby="tab-7" hidden><div class="tbl-wrap"><table><thead><tr><th>項目（Bet10）</th><th class="n">1.0.0.2（原始）</th><th class="n">3.0.0.0（現行）</th><th class="n">競品</th></tr></thead><tbody><tr><td>Hit Rate</td><td class="n">12.87%</td><td class="n">12.21%</td><td class="n">12.61%</td></tr><tr><td>R4 無效果</td><td class="n">61.41%</td><td class="n">82.20%</td><td class="n">82.22%</td></tr><tr><td>RESPIN 觸發率</td><td class="n">2.09%</td><td class="n">0.95%</td><td class="n">1.05%</td></tr><tr><td>RESPIN 占 RTP</td><td class="n">13.89%</td><td class="n">21.58%</td><td class="n">23.39%</td></tr><tr><td>轉盤占 RTP</td><td class="n">19.61%</td><td class="n">26.51%</td><td class="n">26.15%</td></tr><tr><td>一般中獎占 RTP</td><td class="n">33.35%</td><td class="n">26.39%</td><td class="n">22.62%</td></tr><tr><td>Bet1 最高倍數</td><td class="n">525x</td><td class="n">525x</td><td class="n">525x</td></tr></tbody></table></div>
+<ul><li><strong>3.0.0.0 的做法</strong>：子表、R4、RESPIN、轉盤權重改為競品擬合值；卡片權重以多目標最小平方擬合（RTP＝92% 為硬限制），≥200x 區間沿用 1.0.0.2 的權重與 B 表，A 表抽不到的區間改用 B 表。</li><li><strong>驗證</strong>：10^6（模擬機）Bet1 92.03%、Bet5 91.66%、Bet10 91.77%、Bet50 92.90%、Bet100 92.88%，皆在 2σ 內，重試超限 0 次；Bet1 另跑 10^8 為 92.03%。</li></ul></div><div class="panel" role="tabpanel" id="panel-8" aria-labelledby="tab-8" hidden><p>Bet50／Bet100 競品沒有資料，以 Bet10 為範本外推：R4 分組與 RESPIN 同 Bet10，保留 R2／R3 的 10／00 與紅轉盤；紅轉盤依金額對應 Bet10 綠轉盤機率，500x／1000x 沿用 1.0.0.2 占比；卡片用 Bet10 的競品目標擬合。</p>
+<div class="tbl-wrap"><table><thead><tr><th>指標（卡片開）</th><th class="n">Bet1</th><th class="n">Bet5</th><th class="n">Bet10</th><th class="n">Bet50</th><th class="n">Bet100</th></tr></thead><tbody><tr><td>R4 停在空白</td><td class="n">86.99%</td><td class="n">78.43%</td><td class="n">82.20%</td><td class="n">79.84%</td><td class="n">79.63%</td></tr><tr><td>盤面沒中時 2X／5X／10X</td><td class="n">3.83%／6.86%／鎖</td><td class="n">2.00%／14.27%／鎖</td><td class="n">4.56%／4.74%／4.61%</td><td class="n">4.56%／4.74%／4.61%</td><td class="n">4.52%／4.71%／4.59%</td></tr><tr><td>RESPIN 觸發率</td><td class="n">1.20%</td><td class="n">0.71%</td><td class="n">0.95%</td><td class="n">1.51%</td><td class="n">1.66%</td></tr><tr><td>RESPIN 重轉盤平均</td><td class="n">17.8x</td><td class="n">20.9x</td><td class="n">14.1x</td><td class="n">5.9x</td><td class="n">10.8x</td></tr><tr><td>RESPIN 占 RTP</td><td class="n">32.16%</td><td class="n">18.13%</td><td class="n">21.55%</td><td class="n">15.61%</td><td class="n">21.16%</td></tr><tr><td>轉盤觸發率</td><td class="n">鎖</td><td class="n">1.42%</td><td class="n">1.16%</td><td class="n">1.27%</td><td class="n">1.25%</td></tr><tr><td>轉盤平均獎金</td><td class="n">—</td><td class="n">17.5x</td><td class="n">15.5x</td><td class="n">20.9x</td><td class="n">20.5x</td></tr><tr><td>轉盤獎金占 RTP</td><td class="n">—</td><td class="n">27.10%</td><td class="n">19.52%</td><td class="n">28.63%</td><td class="n">27.80%</td></tr><tr><td>一般中獎占 RTP</td><td class="n">32.08%</td><td class="n">16.24%</td><td class="n">26.43%</td><td class="n">14.88%</td><td class="n">17.98%</td></tr><tr><td>Hit Rate</td><td class="n">13.34%</td><td class="n">12.91%</td><td class="n">12.21%</td><td class="n">13.02%</td><td class="n">13.46%</td></tr><tr><td>RTP（10^7）</td><td class="n">91.58%</td><td class="n">92.03%</td><td class="n">92.01%</td><td class="n">92.43%</td><td class="n">92.04%</td></tr><tr><td>樣本中最大倍數</td><td class="n">525x</td><td class="n">550x</td><td class="n">511x</td><td class="n">2021x</td><td class="n">1001x</td></tr></tbody></table></div>
+<blockquote>「轉盤獎金占 RTP」只算轉盤本身的獎金，不含同局盤面分數。</blockquote>
+<ul><li>盤面沒中時的近失倍數五個押注已一致（Bet10～Bet100 都約 4.6%），加壓不再出現手感斷層。</li><li>紅轉盤各格出現比例（Bet50）：10x 49.8%、20x 34.1%、30x 3.2%、50x 11.4%、100x 1.1%、200x 0.14%、500x 0.15%、1000x 0.02%，每一格都開得出來。</li><li>畫面元素檢查：Normal／Extra 各押注的 R4 符號、轉盤每一格、所有可組成的數字分，在卡片系統下都有機會得分。</li><li>仍偏離 Bet10 的地方：Bet50 RESPIN 重轉盤平均 5.9x（Bet10 14.1x），因為 Bet50 的 RESPIN 輪帶多了 10／00，加上「兩盤合計 ≥1 倍押注」門檻在高押注較容易過，小額重轉盤比例較高。</li></ul></div><div class="panel" role="tabpanel" id="panel-9" aria-labelledby="tab-9" hidden><div class="tbl-wrap"><table><thead><tr><th>項目</th><th>說明</th></tr></thead><tbody><tr><td>Hit Rate 差 0.3～0.5pp</td><td>若要完全貼齊，需接受轉盤／RESPIN 占比再降一些，或讓總 RTP 略高於 92%。</td></tr><tr><td>Bet10 RESPIN 重轉盤 14.2x（競品 18.0x）</td><td>需改 Bet10 RESPIN 重轉輪權重，讓重轉盤多出 100x 以上的數字；屬自然子表調整。</td></tr><tr><td>Bet10 轉盤 50x／100x 偏少</td><td>可提高 Bet10 轉盤 50x／100x 權重；競品 100x 樣本只有 2 次，參考性低。</td></tr><tr><td>最大獎宣傳值</td><td>競品宣稱 10,000x（底注 50 以上）；我方卡片上限 Bet1～Bet10 為 550～600x、Bet50／Bet100 為 2,000x，Help／宣傳不可沿用競品數字。</td></tr></tbody></table></div></div>
+</div>
+
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+const CHARTS=[];
+function activate(k,focus){
+  tabs.forEach((t,i)=>{
+    const on=i===k;
+    t.setAttribute('aria-selected',on?'true':'false');
+    t.tabIndex=on?0:-1;
+    document.getElementById('panel-'+i).hidden=!on;
+  });
+  if(focus) tabs[k].focus();
+  const p=document.getElementById('panel-'+k);
+  CHARTS.forEach(c=>{ if(p.contains(c.host)) c.draw(true); });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{
+    let k=null;
+    if(e.key==='ArrowRight')k=(i+1)%tabs.length;
+    else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')k=0; else if(e.key==='End')k=tabs.length-1;
+    if(k!==null){e.preventDefault(); activate(k,true);}
+  });
+});
+
+const CH=null;
+if(CH){
+  const R=CH.rows, SV=CH.sv, NB=R.length;
+  const DEF={bg:{n:'BG',c:'var(--s1)',hr:'bgH',cnt:'bgC'},
+             fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
+             bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
+  const KEYS=CH.series||['bg','fg','bf'];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=v=>v.toLocaleString('en-US');
+  const cn=document.getElementById('clipnote');
+  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
+    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
+    : '無區間超出 1% 上限。';
+  function legend(id,ks){
+    const e=document.getElementById(id); if(!e)return;
+    e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
+  }
+  function chart(hostId,cfg){
+    const host=document.getElementById(hostId); if(!host)return;
+    let lastW=-1;
+    function draw(force){
+      const W=Math.max(340,host.clientWidth||900);
+      if(!force && W===lastW) return;
+      lastW=W; host.innerHTML='';
+      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const iw=W-m.l-m.r, ih=H-m.t-m.b;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
+      const g=el('g',{transform:`translate(${m.l},${m.t})`});
+      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const X=i=>i/(NB-1)*iw;
+      cfg.yticks.forEach(t=>{
+        const yy=Y(t);
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
+        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
+        tx.textContent=t+'%'; g.appendChild(tx);
+      });
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+      for(let i=0;i<NB;i+=step){
+        const xx=X(i);
+        g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
+          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        tx.textContent=R[i].lab; g.appendChild(tx);
+      }
+      g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
+      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
+      const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
+        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
+      ay.textContent=cfg.ylabel; g.appendChild(ay);
+      cfg.series.forEach(s=>{
+        let run=[];
+        const flush=()=>{
+          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          run=[];
+        };
+        s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
+        flush();
+      });
+      const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+      g.appendChild(cross);
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
+      const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
+      hit.addEventListener('mousemove',ev=>{
+        const bb=svg.getBoundingClientRect();
+        const sx=(ev.clientX-bb.left)*(W/bb.width)-m.l;
+        let i=Math.round(sx/iw*(NB-1)); if(i<0)i=0; if(i>NB-1)i=NB-1;
+        const px=X(i);
+        cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity',1);
+        let html=`<b>${R[i].lab}</b>`;
+        cfg.series.forEach((s,k)=>{
+          const p=s.pts[i];
+          if(p&&p.v!==null){
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
+          }else{
+            dots[k].setAttribute('opacity',0);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>—</span></div>`;
+          }
+        });
+        tip.innerHTML=html; tip.style.opacity=1;
+        const tw=tip.offsetWidth, sc=bb.width/W;
+        let lx=(px+m.l)*sc+14; if(lx+tw>bb.width) lx=(px+m.l)*sc-tw-14;
+        tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
+      });
+      hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.appendChild(g); host.appendChild(svg);
+    }
+    draw(true);
+    const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
+    window.addEventListener('resize',()=>draw());
+    CHARTS.push({host,draw});
+  }
+  const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
+  if(KEYS.includes('bg'))
+    chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
+      aria:'BG 倍率線型，縱軸固定 0 至 1%',
+      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      tipVal:p=>fmt(p.v,5)+'%'});
+  const fgk=KEYS.filter(k=>k!=='bg');
+  if(fgk.length){
+    legend('lg2',fgk);
+    chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
+      aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
+      tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
+  }
+  legend('lg3',KEYS);
+  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
+    aria:'各場景累積機率曲線',
+    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
+    tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
+     把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
+  document.querySelectorAll('.card').forEach(card=>{
+    const plot=card.querySelector('.plot');
+    if(!plot || plot.querySelector('svg')) return;
+    let n=card.previousElementSibling;
+    card.remove();
+    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
+      const prev=n.previousElementSibling;
+      const stop=(n.tagName==='H4');
+      n.remove(); n=prev;
+      if(stop) break;
+    }
+  });
+}
+
+/* ---------- 百分比資料橫條（Excel 格式化條件風格） ----------
+   規則：
+     - 只處理「該欄全部資料格都是百分比」的欄位
+     - 同一張表共用一個刻度（跨欄可比），刻度取表內最大值
+     - 「合計 / 總計 / 小計」列不畫、也不納入取最大值
+     - 一張表至少要有 3 個可畫的格子才啟用                         */
+(function () {
+  function pct(el) {
+    var t = el.textContent.replace(/[*`,\s]/g, '');
+    if (!/^-?\d+(\.\d+)?%$/.test(t)) return null;
+    var v = parseFloat(t);
+    return isFinite(v) ? v : null;
+  }
+  function isTotal(tr) {
+    var c = tr.children[0];
+    return !!c && /合計|總計|小計|Total/i.test(c.textContent);
+  }
+  document.querySelectorAll('table').forEach(function (tb) {
+    var rows = Array.prototype.slice.call(tb.querySelectorAll('tbody tr'));
+    if (rows.length < 2) return;
+    var ncol = rows[0].children.length, cells = [], max = 0;
+    for (var c = 1; c < ncol; c++) {
+      var col = [], nPct = 0, nOther = 0;
+      rows.forEach(function (tr) {
+        var td = tr.children[c];
+        if (!td) { return; }
+        var txt = td.textContent.trim();
+        if (txt === '' || txt === '—') return;         // 空格不計入判定
+        var v = pct(td);
+        if (v === null) { nOther++; return; }          // 非百分比的列跳過，不否決整欄
+        nPct++;
+        if (!isTotal(tr)) col.push([td, v]);
+      });
+      // 該欄要以百分比為主（至少 2 格，且占非空格的六成以上）才畫
+      if (nPct < 2 || nPct < (nPct + nOther) * 0.6) continue;
+      col.forEach(function (p) { if (p[1] > max) max = p[1]; });
+      cells = cells.concat(col);
+    }
+    if (cells.length < 3 || max <= 0) return;
+    cells.forEach(function (p) {
+      var w = Math.max(0, Math.min(100, p[1] / max * 100));
+      if (w < 0.4) return;
+      p[0].classList.add('bar');
+      p[0].style.setProperty('--w', w.toFixed(2) + '%');
+      if (p[1] >= max * 0.999) p[0].style.setProperty('--bc', 'var(--bar-hi)');
+    });
+  });
+})();
+</script>
