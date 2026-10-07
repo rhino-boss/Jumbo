@@ -231,6 +231,7 @@ class SpinResult:
     split_counts: Counter = field(default_factory=Counter)
     mult_wild_created: int = 0
     mult_wild_values: Counter = field(default_factory=Counter)
+    mult_kind: Counter = field(default_factory=Counter)   # (WW/W2/SPLIT, 倍數) 次數
     max_line_multiplier: int = 1
     big_ghost_used: bool = False
     initial_gold_count: int = 0
@@ -264,6 +265,8 @@ class RoundResult:
     bg_mult_wild: int = 0
     fg_mult_wild: int = 0
     mult_wild_values: Counter = field(default_factory=Counter)
+    bg_mult_kind: Counter = field(default_factory=Counter)
+    fg_mult_kind: Counter = field(default_factory=Counter)
     max_line_multiplier: int = 1
     bg_hit_spins: int = 0
     fg_hit_spins: int = 0
@@ -460,6 +463,7 @@ class SuperDiamond:
         if value > 1:
             result.mult_wild_created += 1
         result.mult_wild_values[value] += 1
+        result.mult_kind[(outcome, value)] += 1
         return value
 
     def flip_golden_body(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
@@ -501,6 +505,7 @@ class SuperDiamond:
             self.rng.shuffle(candidates)
             placed = candidates[:count]
             for reel, row in placed:
+                result.mult_kind[("SPLIT", value)] += 1
                 # game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
                 symbols[reel][row] = WW
                 mults[reel][row] = value if value > 1 else 0
@@ -641,6 +646,7 @@ class SuperDiamond:
             result.fg_split_counts.update(spin.split_counts)
             result.fg_mult_wild += spin.mult_wild_created
             result.mult_wild_values.update(spin.mult_wild_values)
+            result.fg_mult_kind.update(spin.mult_kind)
             result.max_line_multiplier = max(result.max_line_multiplier, spin.max_line_multiplier)
             result.fg_hit_spins += int(spin.pay > 0)
             result.fg_gold_symbols += spin.initial_gold_count
@@ -690,6 +696,7 @@ class SuperDiamond:
         target.fg_split_counts.update(source.fg_split_counts)
         target.fg_mult_wild += source.fg_mult_wild
         target.mult_wild_values.update(source.mult_wild_values)
+        target.fg_mult_kind.update(source.fg_mult_kind)
         target.max_line_multiplier = max(target.max_line_multiplier, source.max_line_multiplier)
         target.fg_hit_spins += source.fg_hit_spins
         target.fg_gold_symbols += source.fg_gold_symbols
@@ -732,6 +739,7 @@ class SuperDiamond:
         result.bg_split_counts.update(spin.split_counts)
         result.bg_mult_wild = spin.mult_wild_created
         result.mult_wild_values.update(spin.mult_wild_values)
+        result.bg_mult_kind.update(spin.mult_kind)
         result.max_line_multiplier = spin.max_line_multiplier
         result.bg_hit_spins = int(spin.pay > 0)
         result.bg_gold_symbols = spin.initial_gold_count
@@ -803,7 +811,7 @@ def _empty_stats() -> dict[str, Any]:
         "bg_mult_wild": 0, "fg_mult_wild": 0, "max_line_multiplier": 1,
         "bg_golden_results": Counter(), "fg_golden_results": Counter(),
         "bg_split_counts": Counter(), "fg_split_counts": Counter(),
-        "mult_wild_values": Counter(),
+        "mult_wild_values": Counter(), "bg_mult_kind": Counter(), "fg_mult_kind": Counter(),
         "symbol_hits": Counter(), "symbol_pay": Counter(),
         "bg_symbol_length_hits": Counter(), "fg_symbol_length_hits": Counter(),
         "bg_initial_symbols": Counter(), "bg_drop_symbols": Counter(),
@@ -861,7 +869,7 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["fg_mult_wild"] += result.fg_mult_wild
     stats["max_line_multiplier"] = max(stats["max_line_multiplier"], result.max_line_multiplier)
     for key in ("bg_golden_results", "fg_golden_results", "bg_split_counts",
-                "fg_split_counts", "mult_wild_values", "symbol_hits", "symbol_pay",
+                "fg_split_counts", "mult_wild_values", "bg_mult_kind", "fg_mult_kind", "symbol_hits", "symbol_pay",
                 "bg_symbol_length_hits", "fg_symbol_length_hits",
                 "bg_symbol_length_pay", "fg_symbol_length_pay", "bg_gold_reel", "fg_gold_reel",
                 "bg_initial_symbols", "bg_drop_symbols",
@@ -1078,6 +1086,9 @@ def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     for value in sorted(s["mult_wild_values"]):
         total = max(1, sum(s["mult_wild_values"].values()))
         rows.append((f"mult_wild_x{value}_share", s["mult_wild_values"][value] / total))
+    for scene in ("bg", "fg"):
+        for kind, value in sorted(s[f"{scene}_mult_kind"]):
+            rows.append((f"mult_{scene}_{kind}_x{value}", s[f"{scene}_mult_kind"][(kind, value)]))
     for count in sorted(k for k in set(s["bg_split_counts"]) | set(s["fg_split_counts"]) if k):
         rows.append((f"split_{count}_bg_rate", s["bg_split_counts"][count] / rounds))
         rows.append((f"split_{count}_fg_rate", s["fg_split_counts"][count] / fg_spins))
@@ -1450,6 +1461,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--card-off", action="store_true", help="Card System Off")
     parser.add_argument("--newbie", action="store_true", help="Profile 改為 Newbie")
     parser.add_argument("--config-rtp", default=None, help="覆寫 config_rtp_file，例如 config_92A.js")
+    parser.add_argument("--config", default=None, help="覆寫 config_file（調參試驗用）")
     return parser.parse_args()
 
 
@@ -1483,6 +1495,8 @@ def main() -> None:
             run["card_system_is_newbie"] = True
         if args.config_rtp:
             run["config_rtp_file"] = args.config_rtp
+        if args.config:
+            run["config_file"] = args.config
 
     if args.debug or RUN_SINGLE_SPIN_DEBUG:
         load_batch_configs(runs[0])
