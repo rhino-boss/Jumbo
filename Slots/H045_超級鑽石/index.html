@@ -2177,6 +2177,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-07：WILD 倍數權重調整（版本維持 3）</h4>
+        <ul>
+          <li>BG 小鬼帶倍數 33.3% → 50%（<code>Multiplier_Wild_Weight_WW</code> ×1 權重 200 → 100）；FG 大鬼帶倍數 9.1% → 40%（<code>Multiplier_Wild_Weight_W2</code> ×1 權重 1000 → 150）。數值由 <code>config.js</code> 讀入，Help 內嵌 game_rule 同步更新。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（BG_Symbol／FG_Symbol 倍數表）、<code>config.js</code>、<code>config_92A.js</code>（卡片權重重解，自然發生率門檻 &gt; 0.1%）；版本號維持 3。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-07：調性調整 v10（版本維持 3）</h4>
         <ul>
           <li>賠率表全部 ×0.6（M1 150／90／30 … J 15／9／3）；FG Cascade Multiplier 改 ×1／×1／×2／×3／×5。數值由 <code>config.js</code> 讀入，Help 內嵌 game_rule 同步更新。</li>
@@ -2768,6 +2775,17 @@
 | FG Cascade Multiplier | ×2／×4／×6／×10／×20 | ×1／×1／×2／×3／×5（§5.5） |
 
 BG 階梯、金框顆數、翻牌與 WILD 倍數權重不變。92A Card-On 試驗結果：FG Hit 40.43%、金框使用率 BG 12.11%／FG 35.42%、連消 3 次以上 BG／FG 皆高於 Super Ace。影響章節：§4、§5.5、§6.2、§9.3.2、§9.3.3。
+
+### 2026-10-07 WILD 倍數權重調整（版本維持 3）
+
+使用者要求 BG 小鬼帶倍數提高到 50%、FG 大鬼帶倍數至少 30%，並讓 (10000, 20000] 區間自然發生率超過 0.1%（卡片才能配權重，Max Win 達 20,000x）：
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| BG `Multiplier_Wild_Weight_WW`（×1／×2／×3／×5） | 200／55／30／15（帶倍 33.3%） | **100**／55／30／15（帶倍 50%） |
+| FG `Multiplier_Wild_Weight_W2`（×1／×2／×3／×5） | 1000／55／30／15（帶倍 9.1%） | **150**／55／30／15（帶倍 40%） |
+
+FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過門檻；40% 為 0.119%，取最小可行值。BG `_W2`、FG `_WW` 不變。
 
 ### 與前端規格書的差異紀錄
 
