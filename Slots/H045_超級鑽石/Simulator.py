@@ -274,6 +274,10 @@ class RoundResult:
     fg_gold_symbols: int = 0
     bg_gold_appeared: int = 0
     fg_gold_appeared: int = 0
+    bg_flip_spins: int = 0      # 有金框被消除翻牌的轉數
+    fg_flip_spins: int = 0
+    bg_mult_spins: int = 0      # 翻牌後出現帶倍數 Wild（×2 以上）的轉數
+    fg_mult_spins: int = 0
     bg_gold_reel: Counter = field(default_factory=Counter)
     fg_gold_reel: Counter = field(default_factory=Counter)
     bg_gold_boards: int = 0
@@ -651,6 +655,8 @@ class SuperDiamond:
             result.fg_hit_spins += int(spin.pay > 0)
             result.fg_gold_symbols += spin.initial_gold_count
             result.fg_gold_appeared += spin.gold_appeared
+            result.fg_flip_spins += int(spin.golden_converted > 0)
+            result.fg_mult_spins += int(spin.mult_wild_created > 0)
             result.fg_gold_reel.update(spin.initial_gold_reel)
             result.fg_gold_boards += int(spin.initial_gold_count > 0)
             result.special_symbol_cnt += int(spin.scatter_count > 0)
@@ -701,6 +707,8 @@ class SuperDiamond:
         target.fg_hit_spins += source.fg_hit_spins
         target.fg_gold_symbols += source.fg_gold_symbols
         target.fg_gold_appeared += source.fg_gold_appeared
+        target.fg_flip_spins += source.fg_flip_spins
+        target.fg_mult_spins += source.fg_mult_spins
         target.fg_gold_reel.update(source.fg_gold_reel)
         target.fg_gold_boards += source.fg_gold_boards
         target.special_symbol_cnt += source.special_symbol_cnt
@@ -744,6 +752,8 @@ class SuperDiamond:
         result.bg_hit_spins = int(spin.pay > 0)
         result.bg_gold_symbols = spin.initial_gold_count
         result.bg_gold_appeared = spin.gold_appeared
+        result.bg_flip_spins = int(spin.golden_converted > 0)
+        result.bg_mult_spins = int(spin.mult_wild_created > 0)
         result.bg_gold_reel.update(spin.initial_gold_reel)
         result.bg_gold_boards = int(spin.initial_gold_count > 0)
         result.special_symbol_cnt = int(spin.scatter_count > 0)
@@ -805,6 +815,7 @@ def _empty_stats() -> dict[str, Any]:
         "special_symbol_cnt": 0, "bg_trigger_fg_cnt": 0, "bg_trigger_fg_pay": 0.0,
         "golden_converted": 0, "bg_gold_symbols": 0, "fg_gold_symbols": 0,
         "bg_gold_appeared": 0, "fg_gold_appeared": 0,
+        "bg_flip_spins": 0, "fg_flip_spins": 0, "bg_mult_spins": 0, "fg_mult_spins": 0,
         "bg_gold_reel": Counter(), "fg_gold_reel": Counter(), "bg_gold_boards": 0, "fg_gold_boards": 0,
         "combo_bg": Counter(), "combo_fg": Counter(),
         "bg_symbol_length_pay": Counter(), "fg_symbol_length_pay": Counter(),
@@ -860,6 +871,8 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["fg_gold_symbols"] += result.fg_gold_symbols
     stats["bg_gold_appeared"] += result.bg_gold_appeared
     stats["fg_gold_appeared"] += result.fg_gold_appeared
+    for key in ("bg_flip_spins", "fg_flip_spins", "bg_mult_spins", "fg_mult_spins"):
+        stats[key] += getattr(result, key)
     stats["bg_gold_boards"] += result.bg_gold_boards
     stats["fg_gold_boards"] += result.fg_gold_boards
     if bet_mode != MODE_FEATUREBUY:
@@ -1232,6 +1245,8 @@ def feature_frame(result: dict[str, Any]) -> pd.DataFrame:
     rows = [
         ("golden_converted_total", s["golden_converted"]),
         ("golden_per_round", s["golden_converted"] / rounds),
+        ("flip_spins_bg", s["bg_flip_spins"]), ("flip_spins_fg", s["fg_flip_spins"]),
+        ("mult_spins_bg", s["bg_mult_spins"]), ("mult_spins_fg", s["fg_mult_spins"]),
         ("gold_board_rate_bg", s["bg_gold_boards"] / rounds),
         ("gold_board_rate_fg", s["fg_gold_boards"] / fg_spins),
         *[(f"gold_reel_bg_R{reel + 1}", s["bg_gold_reel"][reel] / rounds / 4) for reel in range(5)],
