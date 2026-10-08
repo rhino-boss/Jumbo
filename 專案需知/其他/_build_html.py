@@ -142,7 +142,11 @@ def render_timeline(lines) -> str:
         if not text:
             continue
         if text.startswith("cols:"):
-            cols = [c.strip() for c in text[5:].split(",")]
+            # 區段可加「*權重」放寬該欄，例如 235～405*2
+            cols = []
+            for c in text[5:].split(","):
+                label, _, w = c.strip().partition("*")
+                cols.append((label.strip(), float(w) if w else 1.0))
             continue
         name, _, rest = text.partition("::")
         items = []
@@ -152,7 +156,7 @@ def render_timeline(lines) -> str:
             items.append((int(a), int(b or a), parts[1] if len(parts) > 1 else "", parts[2] if len(parts) > 2 else "event"))
         lanes.append((name.strip(), items))
     ncol = len(cols)
-    grid = f'grid-template-columns:7.5em repeat({ncol},minmax(4.6em,1fr))'
+    grid = "grid-template-columns:6.5em " + " ".join(f"minmax({3.2 * w:.1f}em,{w:g}fr)" for _, w in cols)
     parts = [f'<div class="tl-wrap"><div class="tl" style="{grid}">']
     for r, (name, items) in enumerate(lanes, 1):
         parts.append(f'<div class="tl-lane" style="grid-row:{r};grid-column:1">{render_inline(name)}</div>')
@@ -162,7 +166,7 @@ def render_timeline(lines) -> str:
                          f'{render_inline(label)}</div>')
     r = len(lanes) + 1
     parts.append(f'<div class="tl-axis-name" style="grid-row:{r};grid-column:1">轉數</div>')
-    for k, c in enumerate(cols, 2):
+    for k, (c, _w) in enumerate(cols, 2):
         parts.append(f'<div class="tl-tick" style="grid-row:{r};grid-column:{k}">{render_inline(c)}</div>')
     parts.append("</div></div>")
     return "".join(parts)
@@ -567,7 +571,7 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 :is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a){{margin:0 .3em}}
 :is(strong,.tune,a) :is(strong,.tune,code){{margin:0}}
 .tl-wrap{{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 14px 10px}}
-.tl{{display:grid; gap:8px 3px; min-width:820px; align-items:stretch}}
+.tl{{display:grid; gap:8px 3px; min-width:640px; align-items:stretch}}
 .tl-lane,.tl-axis-name{{font-size:12.5px; font-weight:600; color:var(--ink-2); align-self:center; padding-right:8px}}
 .tl-axis-name{{color:var(--ink-3); font-weight:500}}
 .tl-track{{border-bottom:1px dashed var(--grid); align-self:center; height:0}}
