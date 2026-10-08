@@ -1550,14 +1550,25 @@
       padding: 8px 12px;
     }
 
-    .live-log-header {
+    #rng-wrap #rngList {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    #rng-wrap .history-summary {
+      padding: 8px 12px 0;
+    }
+
+    .live-log-header,
+    .history-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
     }
 
-    #clearLogBtn {
+    #clearLogBtn,
+    #clearHistoryBtn {
       padding: 5px 10px;
       border: 0;
       border-radius: 5px;
@@ -2152,7 +2163,8 @@
     </section>
 
     <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
-      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
+      <div class="diagnostic-header history-header"><span>歷史紀錄 · FG 最終倍數</span><button id="clearHistoryBtn" type="button">Clear</button></div>
+      <div class="history-summary" id="historySummary"></div>
       <div class="rng-list" id="rngList"></div>
     </section>
 
@@ -2176,6 +2188,13 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-08：Reel RNG 面板改為「歷史紀錄」</h4>
+        <ul>
+          <li>移除 Debug 的 Reel RNG 資訊面板（Card System／Source／Bet Mode／bet_tier_amount／Golden flips／Mult Wild／Max Win cap）。</li>
+          <li>同位置改為「歷史紀錄 · FG 最終倍數」：每一場 FG 結束時記錄 NB／BF、局數、FG 總贏分與最終倍數（÷ 底注，不含觸發盤 BG 得分）；上方顯示 NB／BF 各自場數、平均與最高倍數，Clear 清空。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-10-08：Buy Feature 價格 250x → 50x（版本維持 3）</h4>
         <ul>
@@ -3567,17 +3586,23 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
     $("carryMultiValue").textContent = snapshot.combo;
   }
 
-  function renderRngSource(result) {
-    const tier = BET_LEVELS[state.betIndex] * (state.mode === 2 ? BUY.cost_multiplier : 1);
-    const tierName = tier < 2 ? "small_bet" : tier <= 100 ? "medium_bet" : "big_bet";
-    $("rngList").innerHTML = `
-      <div class="rng-row"><span>Card System</span><span>${cardSystemActive() ? `On · ${cfg.rtp_label || window.H045_ACTIVE_CONFIG}-${cardProfile() === "newbie" ? "Newbie" : "Oldhand"}` : "Off"}</span></div>
-      <div class="rng-row"><span>Source</span><span>${result.tableName} · weighted draw</span></div>
-      <div class="rng-row"><span>Bet Mode</span><span>${state.mode === 2 ? `Buy Feature ${BUY.cost_multiplier}x` : "Normal Bet"}</span></div>
-      <div class="rng-row"><span>bet_tier_amount</span><span>${format(BET_LEVELS[state.betIndex])} · ${tierName}</span></div>
-      <div class="rng-row"><span>Golden flips</span><span>${JSON.stringify(result.goldenTally || {})}</span></div>
-      <div class="rng-row"><span>Mult Wild</span><span>${result.multWild || 0}</span></div>
-      <div class="rng-row"><span>Max Win cap</span><span>${result.capped ? `capped at ${MAX_WIN}x` : `${MAX_WIN}x`}</span></div>`;
+  // 歷史紀錄：每一場 FG（NB 觸發／BF 購買）結束時記錄最終倍數＝該場 FG 總贏分 ÷ 底注（不含觸發盤 BG 得分）
+  const fgHistory = [];
+  function renderHistory() {
+    const stat = mode => {
+      const list = fgHistory.filter(item => item.mode === mode);
+      const avg = list.length ? list.reduce((sum, item) => sum + item.multi, 0) / list.length : 0;
+      const max = list.length ? Math.max(...list.map(item => item.multi)) : 0;
+      return `${mode} ${list.length} 場 · 平均 ${avg.toFixed(2)}x · 最高 ${max.toFixed(2)}x`;
+    };
+    $("historySummary").innerHTML = `<div class="rng-row"><span>${stat("NB")}</span><span>${stat("BF")}</span></div>`;
+    $("rngList").innerHTML = fgHistory.length
+      ? fgHistory.slice().reverse().map(item => `<div class="rng-row"><span>#${item.no} · ${item.mode} · ${item.spins} 轉 · 贏分 ${format(item.win)}</span><span>${item.multi.toFixed(2)}x</span></div>`).join("")
+      : '<div class="rng-row"><span>尚無 FG 紀錄</span><span>—</span></div>';
+  }
+  function recordFgHistory(fg) {
+    fgHistory.push({ no: fgHistory.length + 1, mode: fg.mode === 2 ? "BF" : "NB", spins: fg.total, win: fg.win, multi: fg.win / betUnit() });
+    renderHistory();
   }
 
   async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
@@ -3673,7 +3698,7 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
     state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
     state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
-    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
+    if (state.fg.index >= state.fg.spins.length) { recordFgHistory(state.fg); $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
   }
 
   async function play(mode = 0) {
@@ -3690,7 +3715,7 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
         const base = mode === 0
           ? ($("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
           : buyEntry();
-        await animateSnapshots(base.snapshots, false); renderRngSource(base);
+        await animateSnapshots(base.snapshots, false);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
         state.hitRounds += base.pay > 0 ? 1 : 0;
         state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
@@ -3845,7 +3870,7 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
   $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
-  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("clearHistoryBtn").onclick=()=>{fgHistory.length=0;renderHistory();}; renderHistory(); $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
   
   document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
