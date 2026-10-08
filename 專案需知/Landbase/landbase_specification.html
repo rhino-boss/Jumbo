@@ -12,7 +12,7 @@
   --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
   --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
   --rule:#e3e6ea; --grid:#edf0f3;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b;
   --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
 }
@@ -21,14 +21,14 @@
     --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
     --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
     --rule:#33353a; --grid:#2a2c30;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060;
   }
 }
 :root[data-theme="dark"]{
   --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
   --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
   --rule:#33353a; --grid:#2a2c30;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060;
 }
 *{box-sizing:border-box}
 body{margin:0; background:var(--surface); color:var(--ink);
@@ -96,9 +96,8 @@ td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--panel-2)}
 hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
-.tune{color:var(--s2); font-weight:600; border-bottom:1.5px dashed var(--s2); padding:0 1px; white-space:nowrap}
-.tune::before{content:"⚙"; font-size:.78em; margin-right:2px}
-.tune code{color:inherit}
+.tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}
+.tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}
 .flow{margin:6px 0 20px; max-width:86ch}
 .step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}
 .step-rail{display:flex; flex-direction:column; align-items:center}
