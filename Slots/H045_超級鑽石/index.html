@@ -2144,17 +2144,24 @@
 
     <section id="controls" class="debug-off">
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
-        <span class="zone-label">Set RNG</span>
-        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+        <span class="zone-label">腳本</span>
+        <div class="zone-body set-rng-controls" aria-label="Scripted outcomes">
           <label class="debug-rng-field" for="cardRangeSelect">
             Card BG Range
             <select id="cardRangeSelect">
               <option value="">Auto</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="reelRngInput">
-            Reel RNG
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
+          <label class="debug-rng-field" for="scriptSelect">
+            腳本
+            <select id="scriptSelect">
+              <option value="">無</option>
+              <option value="combo5">連消 5 次以上</option>
+              <option value="bigghost">有大鬼</option>
+              <option value="flip">金框有消除</option>
+              <option value="fg">有觸發 FG</option>
+              <option value="fgbig">FG 100x 以上</option>
+            </select>
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2188,6 +2195,14 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-08：Set RNG 移除 Reel RNG，新增「腳本」；Card BG Range 接上功能</h4>
+        <ul>
+          <li>移除 Reel RNG 輸入。新增腳本下拉選單：連消 5 次以上、有大鬼、金框有消除、有觸發 FG、FG 100x 以上；以自然機率反覆重抽直到符合條件，不改任何權重。</li>
+          <li>Card BG Range 列出目前 Profile 的 base_game 有權重卡（含 Free Game 卡），選定後每轉都用該卡重抽（同 Card System retry）。</li>
+          <li>腳本優先於 Card BG Range；兩者只作用於 Normal Bet，選定後每轉都套用，Reset 解除；腳本／指定區間局不計入即時倍率線型。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-10-08：Reel RNG 面板改為「歷史紀錄」</h4>
         <ul>
@@ -3334,6 +3349,45 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
     }
     return naturalBaseSpin();
   }
+  // 腳本：用自然機率反覆重抽，直到結果符合指定條件（只改「抽到哪一把」，不改任何權重）
+  const SCRIPT_RULES = {
+    combo5: r => r.scatter < 3 && r.combo >= 5,
+    flip: r => r.scatter < 3 && r.golden > 0,
+    bigghost: r => r.scatter < 3 && r.w2Events > 0,
+    fg: r => r.scatter >= 3,
+    fgbig: r => r.scatter >= 3,
+  };
+  const SCRIPT_TRIES = 300000;
+  function buildCardRangeOptions() {
+    const select = $("cardRangeSelect"); if (!select) return;
+    const keep = select.value;
+    const cards = cfg.card_system?.profiles?.[cardProfile()]?.base_game || [];
+    select.innerHTML = '<option value="">Auto</option>' + cards.map((card, index) => Number(card.weight) > 0
+      ? `<option value="${index}">${card.type === "free_game" ? `Free Game（BG ≤ ${card.max}x）` : `(${card.min}, ${card.max}]`}</option>` : "").join("");
+    if ([...select.options].some(option => option.value === keep)) select.value = keep;
+  }
+  function selectedCardRange() {
+    const value = $("cardRangeSelect")?.value;
+    if (value === "" || value == null) return null;
+    return cfg.card_system?.profiles?.[cardProfile()]?.base_game?.[Number(value)] || null;
+  }
+  function activeScript() { return $("scriptSelect")?.value || ""; }
+  function scriptedSpin(key) {
+    const rule = SCRIPT_RULES[key];
+    let last = null;
+    for (let tries = 0; tries < SCRIPT_TRIES; tries++) { last = naturalBaseSpin(); if (rule(last)) return last; }
+    console.warn(`腳本 ${key} 超過 ${SCRIPT_TRIES} 次未抽到，改用最後一把`);
+    return last;
+  }
+  function scriptedFeature(initialSpins, budget, minMulti) {
+    let best = null;
+    for (let tries = 0; tries < 20000; tries++) {
+      const result = freeSession(initialSpins, budget);
+      if (result.pay / betUnit() >= minMulti) return result;
+      if (!best || result.pay > best.pay) best = result;
+    }
+    return best;
+  }
   function cardFeature(section, initialSpins, budget) {
     const card = pickCard(section);
     if (!card) return freeSession(initialSpins, budget);
@@ -3712,8 +3766,9 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
         const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
+        const script = mode === 0 ? activeScript() : "";
         const base = mode === 0
-          ? ($("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
+          ? (script ? scriptedSpin(script) : selectedCardRange() ? cardSpin(selectedCardRange()) : $("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
           : buyEntry();
         await animateSnapshots(base.snapshots, false);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
@@ -3723,10 +3778,11 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
         if (base.scatter >= 3 || mode === 2) {
           const spins = initialFreeSpins(base.scatter);   // BF 進場盤的 C1 顆數決定局數，同自然觸發
           const section = mode === 2 ? "buy_feature" : "free_game";
-          const feature = cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay);
+          const feature = script === "fgbig" ? scriptedFeature(spins, base.pay, 100)
+            : cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay);
           activateFeature(feature, mode);
-          recordLine(mode, base, feature);
-        } else {
+          if (!script && !selectedCardRange()) recordLine(mode, base, feature);   // 腳本／指定區間局不計入倍率線型
+        } else if (!script && !selectedCardRange()) {
           recordLine(mode, base, null);
         }
       }
@@ -3858,8 +3914,8 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
     configSelect.onchange = () => { if (configSelect.value !== window.H045_ACTIVE_CONFIG) openVersion(entry?.version || "", configSelect.value); };
     const profileSelect = $("cardProfileSelect");
     try { profileSelect.value = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
-    profileSelect.onchange = () => { refreshMaxWin(); updateStats(); };
-    document.addEventListener?.("demogame:card-system-change", () => { refreshMaxWin(); updateStats(); });
+    profileSelect.onchange = () => { refreshMaxWin(); buildCardRangeOptions(); updateStats(); };
+    document.addEventListener?.("demogame:card-system-change", () => { refreshMaxWin(); buildCardRangeOptions(); updateStats(); });
     refreshMaxWin();
   }
 
@@ -3870,7 +3926,7 @@ FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過�
   $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
-  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("clearHistoryBtn").onclick=()=>{fgHistory.length=0;renderHistory();}; renderHistory(); $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("clearHistoryBtn").onclick=()=>{fgHistory.length=0;renderHistory();}; renderHistory(); $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
   
   document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
