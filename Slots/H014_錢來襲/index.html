@@ -243,16 +243,17 @@
         </ul>
       </article>
       <article class="change-log-entry">
-          <h4>2026-10-06：數學 2.2.0.0（V2：Normal Bet 的 Bet1／Bet5／Bet10 調性對齊 JILI Money Coming）</h4>
-          <ul>
-            <li>只改 <code>H014192A.xlsx</code> 既有的權重格，架構不變（輪帶符號、R4 分組、卡片區間、規則、<code>Simulator.py</code> 都沒動）；Bet50／Bet100 與 Extra Bet 沿用 1.0.0.2。</li>
-            <li><code>bet{n}p_A</code>：子表權重、前三輪停輪權重、R4 依數字分 12 組的權重、RESPIN 重轉輪權重、轉盤各格權重改為競品擬合值——盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停在空白 61.4% → 82.2%），RESPIN 觸發變少、重轉盤分數變大。</li>
-            <li><code>Card_Bet{n}</code>：卡片權重以多目標非負最小平方擬合競品（RTP＝92% 為硬限制，同時逼近 Hit Rate、倍率門檻、R4 出現率、各獎項 RTP 貢獻、轉盤各格出現率、RESPIN 重轉盤分數與 &lt;20x 倍率線型）；≥200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 可開出 525x），A 表抽不到的區間改用 B 表，重試超限 0 次。</li>
-            <li>結果（Bet10）：Hit Rate 12.21%（競品 12.61%）、轉盤占 RTP 26.5%（26.2%）、RESPIN 21.6%（23.4%）。</li>
-            <li>驗證（模擬機）：10^6 Bet1 92.03%、Bet5 91.66%、Bet10 91.62%，皆在 2σ 內；Bet1 10^8 為 92.03%。</li>
-            <li>Setting 的 Version 可切換 1.0.0.2（原始）與 2.2.0.0（現行）。</li>
-          </ul>
-        </article>
+        <h4>2026-10-07：數學 3.0.0.0（V2：Normal Bet 全部押注對齊 JILI Money Coming 調性）</h4>
+        <ul>
+          <li>只改 <code>H014192A.xlsx</code> 既有的權重格，架構不變（輪帶符號、R4 分組、卡片區間、規則、<code>Simulator.py</code> 都沒動）；Extra Bet 沿用 1.0.0.2。改到輪帶權重，依規範升第 1 碼。</li>
+          <li>Bet1／Bet5／Bet10：子表、前三輪停輪、R4 分組、RESPIN、轉盤權重改為競品擬合值——盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停在空白 61.4% → 82.2%），RESPIN 觸發變少、重轉盤分數變大。</li>
+          <li>Bet50／Bet100：競品無資料，以 Bet10 為範本外推；保留 R2／R3 的 10／00 與紅轉盤，紅轉盤依金額對應 Bet10 綠轉盤機率，500x／1000x 沿用 1.0.0.2 占比。Bet50 重轉輪另行擬合，壓低小額重轉盤，RESPIN 占 RTP 21.3%（Bet10 21.6%）。</li>
+          <li>卡片權重以多目標非負最小平方擬合（RTP＝92% 為硬限制）；≥200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 可開出 525x、Bet50 可到 2,000x）；機率太低的區間改用 B 表或不給權重，重試超限 0 次。</li>
+          <li>畫面元素檢查：NB／EB 各押注的 R4 符號、轉盤每一格、所有可組成的數字分都有機會得分（修正 Bet10 綠轉盤 200x 原本開不出來）。</li>
+          <li>驗證（模擬機）：10^6 Bet1 92.03%、Bet5 91.66%、Bet10 91.77%、Bet50 92.60%、Bet100 92.88%，皆在 2σ 內；10^7 為 91.58%／92.03%／92.01%／92.34%／92.04%。</li>
+          <li>Setting 的 Version 可切換 1.0.0.2（原始）與 3.0.0.0（現行）。</li>
+        </ul>
+      </article>
         <article class="change-log-entry">
           <h4>2026-10-06：畫面調整</h4>
           <ul>
