@@ -106,6 +106,9 @@ def render_inline(text: str) -> str:
     text = re.sub(r"\{\{(.+?)\}\}", r'<span class="tune">\1</span>', text)
     # 粗體
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
+    # 警示標記：==數值== 標黃（超過目標）、!!數值!! 標紅（超過 100%）
+    text = re.sub(r"!!(.+?)!!", r'<mark class="hl-danger">\1</mark>', text)
+    text = re.sub(r"==(.+?)==", r'<mark class="hl-warn">\1</mark>', text)
 
     # 連結：同站 .md 轉成頁籤切換（保留錨點）；他站 .md 轉成該站 HTML 的 #tab/anchor；其餘照常
     def link(m):
@@ -130,47 +133,62 @@ def render_inline(text: str) -> str:
 
 
 def render_timeline(lines) -> str:
-    """畫成分段時間軸。
+    """依轉數比例畫時間軸。
 
-    第一行 `cols: 區段1, 區段2, ...`（逗號後要有空白）定義欄位（依序排列的轉數區段）；
-    其餘每行一條軌道：`軌道名稱 :: 起欄-迄欄 :: 文字 :: 樣式 || 下一個項目 ...`，
-    欄位從 1 起算，樣式為 phase／phase2／event／stop。
+    scale: 0@0, 200@34, 1000@92, 1100@100   轉數→橫向位置（%）的分段對應，可放大前段
+    ticks: 1, 41, 60, 200, 1,000             軸上要標的轉數（逗號後要有空白）
+    軌道名稱 :: 起-迄, 起-迄 :: 文字 :: 樣式 || 下一個項目 ...
+      同一項目可列多個區間（重複事件畫在各自位置，文字只寫一次）；樣式 phase／phase2／event／stop。
     """
-    cols, lanes = [], []
+    scale, ticks, lanes = [(0.0, 0.0), (1000.0, 100.0)], [], []
+
+    def num(t):
+        return float(t.replace(",", "").strip())
+
     for raw in lines:
         text = raw.strip()
         if not text:
             continue
-        if text.startswith("cols:"):
-            # 區段可加「*權重」放寬該欄，例如 235～405*2
-            cols = []
-            # 區段之間以「逗號＋空白」分隔，區段內的千分位逗號（1,000）不受影響
-            for c in re.split(r",\s+", text[5:].strip()):
-                label, _, w = c.strip().partition("*")
-                cols.append((label.strip(), float(w) if w else 1.0))
+        if text.startswith("scale:"):
+            scale = [(num(a), float(b)) for a, b in (x.split("@") for x in re.split(r",\s+", text[6:].strip()))]
+            continue
+        if text.startswith("ticks:"):
+            ticks = [x.strip() for x in re.split(r",\s+", text[6:].strip())]
             continue
         name, _, rest = text.partition("::")
         items = []
         for chunk in rest.split("||"):
             parts = [x.strip() for x in chunk.split("::")]
-            a, _, b = parts[0].partition("-")
-            items.append((int(a), int(b or a), parts[1] if len(parts) > 1 else "", parts[2] if len(parts) > 2 else "event"))
+            spans = []
+            for rng in re.split(r",\s+", parts[0]):
+                lo, _, hi = rng.partition("-")
+                spans.append((num(lo), num(hi or lo)))
+            items.append((spans, parts[1] if len(parts) > 1 else "", parts[2] if len(parts) > 2 else "event"))
         lanes.append((name.strip(), items))
-    ncol = len(cols)
-    grid = "grid-template-columns:6.5em " + " ".join(f"minmax({3.2 * w:.1f}em,{w:g}fr)" for _, w in cols)
-    parts = [f'<div class="tl-wrap"><div class="tl" style="{grid}">']
-    for r, (name, items) in enumerate(lanes, 1):
-        parts.append(f'<div class="tl-lane" style="grid-row:{r};grid-column:1">{render_inline(name)}</div>')
-        parts.append(f'<div class="tl-track" style="grid-row:{r};grid-column:2/{ncol + 2}"></div>')
-        for a, b, label, kind in items:
-            parts.append(f'<div class="tl-item {kind}" style="grid-row:{r};grid-column:{a + 1}/{b + 2}">'
-                         f'{render_inline(label)}</div>')
-    r = len(lanes) + 1
-    parts.append(f'<div class="tl-axis-name" style="grid-row:{r};grid-column:1">轉數</div>')
-    for k, (c, _w) in enumerate(cols, 2):
-        parts.append(f'<div class="tl-tick" style="grid-row:{r};grid-column:{k}">{render_inline(c)}</div>')
-    parts.append("</div></div>")
-    return "".join(parts)
+
+    def pos(spin):
+        for (x0, p0), (x1, p1) in zip(scale, scale[1:]):
+            if spin <= x1:
+                return p0 + (p1 - p0) * (spin - x0) / (x1 - x0)
+        return scale[-1][1]
+
+    out = ['<div class="tl-wrap"><div class="tl">']
+    for name, items in lanes:
+        out.append(f'<div class="tl-row"><div class="tl-lane">{render_inline(name)}</div><div class="tl-track">')
+        for spans, label, kind in items:
+            for lo, hi in spans:
+                left = pos(lo - 1)
+                width = max(pos(hi) - left, 0.6)
+                inner = render_inline(label) if kind != "event" else ""
+                out.append(f'<div class="tl-bar {kind}" style="left:{left:.2f}%;width:{width:.2f}%">{inner}</div>')
+            if kind == "event" and label:
+                out.append(f'<div class="tl-label" style="left:{pos(spans[0][0] - 1):.2f}%">{render_inline(label)}</div>')
+        out.append("</div></div>")
+    out.append('<div class="tl-row"><div class="tl-lane tl-axis-name">轉數</div><div class="tl-track tl-axis">')
+    for t in ticks:
+        out.append(f'<div class="tl-tick" style="left:{pos(num(t)):.2f}%">{render_inline(t)}</div>')
+    out.append("</div></div></div></div>")
+    return "".join(out)
 
 
 def render_flow(lines) -> str:
@@ -479,7 +497,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
   --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
   --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
   --rule:#e3e6ea; --grid:#edf0f3;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;
   --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
 }}
@@ -488,14 +506,14 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
     --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
     --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
     --rule:#33353a; --grid:#2a2c30;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
   }}
 }}
 :root[data-theme="dark"]{{
   --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
   --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
   --rule:#33353a; --grid:#2a2c30;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
 }}
 *{{box-sizing:border-box}}
 body{{margin:0; background:var(--surface); color:var(--ink);
@@ -569,21 +587,29 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tune{{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}}
 .tune code{{color:inherit; background:none; border:none; padding:0; font-size:inherit}}
 /* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
-:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a){{margin:0 .3em}}
+:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){{margin:0 .3em}}
 :is(strong,.tune,a) :is(strong,.tune,code){{margin:0}}
-.tl-wrap{{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 14px 10px}}
-.tl{{display:grid; gap:8px 3px; min-width:640px; align-items:stretch}}
-.tl-lane,.tl-axis-name{{font-size:12.5px; font-weight:600; color:var(--ink-2); align-self:center; padding-right:8px}}
-.tl-axis-name{{color:var(--ink-3); font-weight:500}}
-.tl-track{{border-bottom:1px dashed var(--grid); align-self:center; height:0}}
-.tl-item{{font-size:12px; line-height:1.4; padding:6px 8px; border-radius:3px; z-index:1}}
-.tl-item.phase{{background:color-mix(in srgb,var(--s1) 16%,transparent); color:var(--ink); font-weight:600; text-align:center}}
-.tl-item.phase2{{background:color-mix(in srgb,var(--s3) 18%,transparent); color:var(--ink); font-weight:600; text-align:center}}
-.tl-item.stop{{background:var(--panel-2); color:var(--ink-3); text-align:center; border:1px dashed var(--rule)}}
-.tl-item.event{{border:1.5px solid var(--s2); color:var(--ink);
-  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--s2) 14%,transparent) 0 6px,transparent 6px 12px)}}
-.tl-tick{{font-family:var(--font-mono); font-size:11px; color:var(--ink-3); text-align:center;
-  border-top:1.5px solid var(--ink-3); padding-top:4px; white-space:nowrap}}
+.tl-wrap{{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}}
+.tl{{min-width:620px; display:flex; flex-direction:column; gap:4px}}
+.tl-row{{display:grid; grid-template-columns:6em 1fr; align-items:start}}
+.tl-lane{{font-size:12.5px; font-weight:600; color:var(--ink-2); padding-top:5px}}
+.tl-axis-name{{color:var(--ink-3); font-weight:500; padding-top:2px}}
+.tl-track{{position:relative; height:46px; border-bottom:1px dashed var(--grid)}}
+.tl-row:first-child .tl-track{{height:34px}}
+.tl-bar{{position:absolute; top:4px; height:24px; border-radius:3px; font-size:12px; line-height:24px;
+  text-align:center; white-space:nowrap; overflow:hidden}}
+.tl-bar.phase{{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}}
+.tl-bar.phase2{{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}}
+.tl-bar.stop{{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}}
+.tl-bar.event{{background:var(--s2); opacity:.85; height:16px; top:6px}}
+.tl-label{{position:absolute; top:25px; font-size:12px; color:var(--ink); white-space:nowrap}}
+.tl-axis{{height:26px; border-bottom:none; border-top:1.5px solid var(--ink-3)}}
+.tl-tick{{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:11px;
+  color:var(--ink-3); padding-top:5px; white-space:nowrap}}
+.tl-tick::before{{content:""; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}}
+mark{{font-weight:600; padding:1px 6px; border-radius:3px}}
+mark.hl-warn{{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}}
+mark.hl-danger{{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}}
 .flow{{margin:6px 0 20px; max-width:86ch}}
 .step{{display:grid; grid-template-columns:30px 1fr; gap:0 14px}}
 .step-rail{{display:flex; flex-direction:column; align-items:center}}

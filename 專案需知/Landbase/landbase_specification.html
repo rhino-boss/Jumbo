@@ -12,7 +12,7 @@
   --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
   --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
   --rule:#e3e6ea; --grid:#edf0f3;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;
   --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
 }
@@ -21,14 +21,14 @@
     --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
     --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
     --rule:#33353a; --grid:#2a2c30;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
   }
 }
 :root[data-theme="dark"]{
   --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
   --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
   --rule:#33353a; --grid:#2a2c30;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
 }
 *{box-sizing:border-box}
 body{margin:0; background:var(--surface); color:var(--ink);
@@ -102,21 +102,29 @@ hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
 .tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}
 .tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}
 /* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
-:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a){margin:0 .3em}
+:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){margin:0 .3em}
 :is(strong,.tune,a) :is(strong,.tune,code){margin:0}
-.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 14px 10px}
-.tl{display:grid; gap:8px 3px; min-width:640px; align-items:stretch}
-.tl-lane,.tl-axis-name{font-size:12.5px; font-weight:600; color:var(--ink-2); align-self:center; padding-right:8px}
-.tl-axis-name{color:var(--ink-3); font-weight:500}
-.tl-track{border-bottom:1px dashed var(--grid); align-self:center; height:0}
-.tl-item{font-size:12px; line-height:1.4; padding:6px 8px; border-radius:3px; z-index:1}
-.tl-item.phase{background:color-mix(in srgb,var(--s1) 16%,transparent); color:var(--ink); font-weight:600; text-align:center}
-.tl-item.phase2{background:color-mix(in srgb,var(--s3) 18%,transparent); color:var(--ink); font-weight:600; text-align:center}
-.tl-item.stop{background:var(--panel-2); color:var(--ink-3); text-align:center; border:1px dashed var(--rule)}
-.tl-item.event{border:1.5px solid var(--s2); color:var(--ink);
-  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--s2) 14%,transparent) 0 6px,transparent 6px 12px)}
-.tl-tick{font-family:var(--font-mono); font-size:11px; color:var(--ink-3); text-align:center;
-  border-top:1.5px solid var(--ink-3); padding-top:4px; white-space:nowrap}
+.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}
+.tl{min-width:620px; display:flex; flex-direction:column; gap:4px}
+.tl-row{display:grid; grid-template-columns:6em 1fr; align-items:start}
+.tl-lane{font-size:12.5px; font-weight:600; color:var(--ink-2); padding-top:5px}
+.tl-axis-name{color:var(--ink-3); font-weight:500; padding-top:2px}
+.tl-track{position:relative; height:46px; border-bottom:1px dashed var(--grid)}
+.tl-row:first-child .tl-track{height:34px}
+.tl-bar{position:absolute; top:4px; height:24px; border-radius:3px; font-size:12px; line-height:24px;
+  text-align:center; white-space:nowrap; overflow:hidden}
+.tl-bar.phase{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}
+.tl-bar.phase2{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}
+.tl-bar.stop{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}
+.tl-bar.event{background:var(--s2); opacity:.85; height:16px; top:6px}
+.tl-label{position:absolute; top:25px; font-size:12px; color:var(--ink); white-space:nowrap}
+.tl-axis{height:26px; border-bottom:none; border-top:1.5px solid var(--ink-3)}
+.tl-tick{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:11px;
+  color:var(--ink-3); padding-top:5px; white-space:nowrap}
+.tl-tick::before{content:""; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}
+mark{font-weight:600; padding:1px 6px; border-radius:3px}
+mark.hl-warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}
+mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}
 .flow{margin:6px 0 20px; max-width:86ch}
 .step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}
 .step-rail{display:flex; flex-direction:column; align-items:center}
