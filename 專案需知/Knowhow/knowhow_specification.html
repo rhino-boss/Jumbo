@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowhow 知識庫</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}
+header.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}
+.toc{position:sticky; top:52px; width:236px; flex:none;
+  max-height:calc(100vh - 76px); overflow-y:auto;
+  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}
+.toc[hidden]{display:none}
+/* 目錄過長時仍可滾動，但不顯示拉條 */
+.toc{scrollbar-width:none; -ms-overflow-style:none}
+.toc::-webkit-scrollbar{display:none}
+.toc a{display:block; color:var(--ink-3); text-decoration:none;
+  padding:3px 11px; border-left:2px solid var(--rule)}
+.toc a:hover{color:var(--s1); border-left-color:var(--s1)}
+.toc a.toc-3{padding-left:25px}
+.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}
+.toc a.toc-doc:not(:first-child){margin-top:8px}
+.toc a.toc-doc.on{color:var(--s1)}
+main{flex:1; min-width:0}
+.panel[hidden]{display:none}
+.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
+h2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;
+  padding-bottom:7px; border-bottom:1px solid var(--rule)}
+h3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}
+p{margin:0 0 11px; max-width:86ch}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}
+li{margin:3px 0}
+li.check{list-style:none; margin-left:-20px}
+.cb{color:var(--s1); margin-right:4px}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+pre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;
+  padding:13px 16px; overflow-x:auto; margin:0 0 16px;
+  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}
+pre code{background:none; border:none; padding:0; font-size:inherit}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:1em}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;
+  letter-spacing:.03em; white-space:nowrap}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:1em}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
+.tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}
+.tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}
+/* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
+:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){margin:0 .3em}
+:is(strong,.tune,a) :is(strong,.tune,code){margin:0}
+.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}
+.tl{min-width:620px; display:flex; flex-direction:column; gap:4px}
+.tl-row{display:grid; grid-template-columns:6em 1fr; align-items:start}
+.tl-lane{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}
+.tl-axis-name{color:var(--ink-3); font-weight:500; padding-top:2px}
+.tl-track{position:relative; height:52px; border-bottom:1px dashed var(--grid)}
+.tl-row:first-child .tl-track{height:36px}
+.tl-bar{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;
+  text-align:center; white-space:nowrap; overflow:hidden}
+.tl-bar.phase{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}
+.tl-bar.phase2{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}
+.tl-bar.stop{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}
+.tl-bar.event{background:var(--s2); opacity:.85; height:16px; top:6px}
+.tl-label{position:absolute; top:24px; font-size:1em; color:var(--ink); white-space:nowrap}
+.tl-axis{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}
+.tl-tick{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
+  color:var(--ink-3); padding-top:5px; white-space:nowrap}
+.tl-tick::before{content:""; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}
+mark{font-weight:600; padding:1px 6px; border-radius:3px}
+mark.hl-warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}
+mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}
+.flow{margin:6px 0 20px; max-width:86ch}
+.step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}
+.step-rail{display:flex; flex-direction:column; align-items:center}
+.step-dot{width:28px; height:28px; border-radius:50%; border:1.5px solid var(--s1); color:var(--s1);
+  display:grid; place-items:center; font-family:var(--font-mono); font-size:12.5px; font-weight:600; background:var(--panel)}
+.step-line{flex:1; width:1.5px; background:var(--rule); min-height:12px}
+.step:last-child .step-line{background:transparent}
+.step-body{padding:3px 0 18px; min-width:0}
+.step-title{font-weight:600}
+.step-desc{color:var(--ink-2); font-size:1em; margin-top:2px}
+.branches{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}
+.branch{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:1em}
+.pill{font-size:1em; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}
+.pill.ok{color:var(--s3); background:color-mix(in srgb,var(--s3) 15%,transparent)}
+.pill.stop{color:var(--s2); background:color-mix(in srgb,var(--s2) 15%,transparent)}
+@media (max-width:900px){
+  .body-row{flex-direction:column; gap:14px}
+  .toc{display:none!important}
+  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;
+    flex-wrap:wrap; gap:4px 16px; padding:0}
+  .toc a:not(.toc-doc){display:none}
+  .toc a.toc-doc{padding:0; margin:0!important}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page">
+  <div class="eyebrow">Slots · Knowhow</div>
+  <h1 class="site">Knowhow 知識庫</h1>
+  <p class="meta">由 <code>專案需知/Knowhow/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-08</p>
+</header>
+<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="大獎看板" data-tabs="大獎看板" aria-selected="true" tabindex="0">大獎看板</button></div>
+<div class="body-row">
+  <nav class="toc" id="toc-大獎看板"><a class="toc-2" href="#各遊戲門檻一覽" data-tab="大獎看板">各遊戲門檻一覽</a><a class="toc-2" href="#中文標籤對照zeus-2500-定案版" data-tab="大獎看板">中文標籤對照（Zeus 2500 定案版）</a><a class="toc-2" href="#注意事項" data-tab="大獎看板">注意事項</a><a class="toc-2" href="#來源" data-tab="大獎看板">來源</a></nav>
+  <main><section class="panel" role="tabpanel" id="panel-大獎看板"><h1 id="大獎看板門檻big-win-tiers">大獎看板門檻（Big Win Tiers）</h1>
+<p>&gt; 彙整各遊戲大獎看板（BIG / MEGA / SUPER / JUMBO WIN）的階數與觸發門檻（× 總注）。 &gt; 字眼走家族公版：<code>BIG WIN</code> 起跳、<code>JUMBO WIN</code> 為最高階（Jumbo 品牌字眼）；階數與門檻<strong>每款各自定案</strong>。 &gt; 更新日期：2026-10-08</p>
+<h2 id="各遊戲門檻一覽">各遊戲門檻一覽</h2>
+<div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>階數</th><th>BIG</th><th>MEGA</th><th>SUPER</th><th>JUMBO</th><th>狀態</th></tr></thead><tbody><tr><td>Zeus 2500（101027）</td><td>4 階</td><td>≥ 15×</td><td>≥ 30×</td><td>≥ 45×</td><td>≥ 60×</td><td><strong>定案</strong>（文案 v1.17，2026-10-01 Andrew 拍板）</td></tr><tr><td>Thunder Boost（101016）</td><td>4 階</td><td>≥ 10×</td><td>≥ 25×</td><td>≥ 50×</td><td>≥ 100×</td><td>建議值，待 math 校準</td></tr><tr><td>SRR 奪寶魔怪（101025）</td><td>3 階</td><td>≥ 15×</td><td>—</td><td>≥ 30×</td><td>≥ 50×</td><td>待 math 校準</td></tr><tr><td>Super Neko（101026）</td><td>3 階</td><td>待 math</td><td>—</td><td>待 math</td><td>待 math</td><td>未定</td></tr><tr><td>Super Gems 1000 Gold（101020）</td><td>3 階</td><td>≥ 6×</td><td>≥ 18×</td><td>≥ 40×</td><td>—</td><td>demo 規格</td></tr></tbody></table></div>
+<h2 id="中文標籤對照zeus-2500-定案版">中文標籤對照（Zeus 2500 定案版）</h2>
+<div class="tbl-wrap"><table><thead><tr><th>階</th><th>看板</th><th>繁中</th><th>簡中</th></tr></thead><tbody><tr><td>Tier 1</td><td>BIG WIN</td><td>大獎</td><td>大奖</td></tr><tr><td>Tier 2</td><td>MEGA WIN</td><td>巨獎</td><td>巨奖</td></tr><tr><td>Tier 3</td><td>SUPER WIN</td><td>超級巨獎</td><td>超级巨奖</td></tr><tr><td>Tier 4</td><td>JUMBO WIN</td><td>尊爵巨獎</td><td>尊爵巨奖</td></tr></tbody></table></div>
+<h2 id="注意事項">注意事項</h2>
+<ul><li>Tier 1 的 15× 與公司範本《Pinata Beat 1000》一致，可沿用該版音檔與 4.7s 演出時長（Zeus 2500、SRR 皆採此值）。</li><li>SRR 刻意<strong>不用 MEGA WIN</strong>：「MEGA」是其三特色全開 FG 模式專名，撞名會混淆，故維持 3 階。</li><li>Max Win 封頂命中時不另做獨立演出，直接顯示最高階看板（Zeus 2500 定案）。</li><li>各遊戲門檻定案前以該遊戲文案 SSOT 的「大獎分階」章節為準；本頁僅做跨遊戲彙整，更新文案後請同步本頁。</li></ul>
+<h2 id="來源">來源</h2>
+<ul><li><code>game_spec/101027_Zeus 2500/06_文案/Zeus2500_文案.md</code> §6.5（v1.17）</li><li><code>game_spec/101016_Thunder Boost/01_遊戲規格/ThunderBoost_文案.md</code> §5.4</li><li><code>game_spec/已上線遊戲/101025_SRR/06_文案/SRR_文案.md</code> §6.5</li><li><code>game_spec/101026_Super Neko/06_文案/NEKO_文案.md</code></li><li><code>game_spec/101020_Super Gems 1000 Gold/01_遊戲規格/SG_遊戲規格.md</code></li></ul></section></main>
+</div>
+</div>
+<script>
+var TAB_IDS = ['大獎看板'];
+var LAST = {};
+function activate(tabId, anchor) {
+  document.querySelectorAll('.tab').forEach(function(b) {
+    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;
+    if (on) LAST[b.id] = tabId;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;
+    if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  document.querySelectorAll('.panel').forEach(function(p) {
+    p.hidden = (p.id !== 'panel-' + tabId);
+  });
+  document.querySelectorAll('.toc').forEach(function(t) {
+    t.hidden = (t.id !== 'toc-' + tabId);
+  });
+  if (anchor) {
+    var el = document.getElementById(anchor);
+    if (el) el.scrollIntoView();
+  } else {
+    window.scrollTo(0, 0);
+  }
+}
+document.querySelectorAll('.tab').forEach(function(b) {
+  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });
+});
+(function() {
+  var bar = document.querySelector('.tabs');
+  bar.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {
+      bar.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();
+(function() {
+  var h = decodeURIComponent(location.hash.slice(1));
+  if (!h) return;
+  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
+  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
+})();
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a');
+  if (!a) return;
+  if (a.classList.contains('tab-link')) {
+    e.preventDefault();
+    activate(a.dataset.tab, a.dataset.anchor || null);
+  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    var panel = el.closest('.panel');
+    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);
+  }
+});
+</script>
+</body>
+</html>
