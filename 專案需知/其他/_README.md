@@ -119,4 +119,10 @@
 3. Simulator 已完成所有支援組合的統計驗證。
 4. Card System 的權重、區間、Retry 與失敗監控通過。
 5. Demogame 的代表性單局可與 Simulator 對帳。
-6. [開發流程.md](開發流程.md) 第 2 節的必要產出文件（`game_rule.md`、`game_help_draft.md`／`{GameID}_Help.xlsx`、`game_description.md`、數學模型／PARsheet、`config.js`、`Simulator.py`、`index.html`、`數值報告.html`、`{GameID}_Game Description.docx`、`{GameID}_Math Document Description.md`＋`_EN.md`）全部齊備，與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。
+6. [開發流程.md](開發流程.md) 第 2 節的必要產出文件（`game_rule.md`、`game_help_draft.md`／`{GameID}_Help.xlsx`、`game_description.md`、數學模型／PARsheet、`config.js`、`Simulator.py`、`index.html`、`數值報告_<遊戲中文名>.md`＋`.html`、`{GameID}_Game Description.docx`、`{GameID}_Math Document Description.md`＋`_EN.md`）全部齊備，與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。
+
+## 8. 專有名詞
+
+| 名詞 | 意義 | 說明 |
+|---|---|---|
+| 後端報表 | 後端 SPS（RTP Validator）依分支壓測後輸出的 TXT 報表，以壓縮檔交付（例：`JHS101027-RTP-Validator-Mode-6-By-Branch-On-Cloud-876.zip`）；每個分支一個資料夾、一份 TXT，內含 RTP 拆解、救援／JP RTP、符號命中、倍率分桶等。口頭說「SPS 的表格」「SPS 報表」都指這個。 | 讀法、指標換算與核對方法見 [後端報表筆記.md](後端報表筆記.md)；壓測要壓哪些組合與判定標準見 [壓測說明書.md](壓測說明書.md)。 |
