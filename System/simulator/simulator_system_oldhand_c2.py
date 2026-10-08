@@ -13,7 +13,8 @@
 
 C-2 規則（機制說明_老手救援C-2版.html）：
 * 以天為循環；本模擬以每人 800 轉為一日（SPINS_PER_DAY）。
-* 每滿 40 轉判定一次「當日累積 RTP」，且須同時符合前 40 轉 RTP < 50%；
+* 每 40 轉一個觸發區間（觸發點前後 5 轉，例如 35–45、75–85），每人每天在區間內
+  均勻隨機挑一轉判定「當日累積 RTP」，且須同時符合前 40 轉 RTP < 50%；
   判定回合本身不納入統計（沿用 C 版口徑）。
 * 10 個觸發點各訂 RTP 門檻與救援倍數（見 CHECKPOINT_RULES），
   倍數由 20× 隨落點遞增至 100×
@@ -33,7 +34,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-SYSTEM_VERSION = "c2-1.6"
+SYSTEM_VERSION = "c2-1.7"
 
 
 def _locate_script_dir() -> Path:
@@ -55,7 +56,7 @@ def _locate_script_dir() -> Path:
     for candidate in candidates:
         for base in (candidate, candidate.parent):
             rowdata = base / "rowdata"
-            if rowdata.is_dir() and any(rowdata.glob("*_1000人_1000轉.csv.gz")):
+            if rowdata.is_dir() and any(rowdata.glob("*人_1000轉.csv.gz")):
                 return base.resolve()
 
     raise FileNotFoundError("找不到 System/rowdata/；請將工作目錄切到 工作區 或 System 底下")
@@ -91,6 +92,8 @@ CHECKPOINT_RULES: dict[int, tuple[float, float]] = {
     400: (0.65, 100.0),
 }
 CHECKPOINTS = sorted(CHECKPOINT_RULES)
+CHECKPOINT_JITTER = 5                         # 觸發點前後 5 轉內隨機挑一轉判定
+MAIN_SEED = 20261008
 
 # ---- 延伸救援（當日 401–1,000 轉）----
 EXT_CHECKPOINTS = list(range(440, 1001, 40))  # 440 起每 40 轉，跑到當日轉數為止
@@ -112,6 +115,43 @@ def ext_rewards(hit: np.ndarray, rng: np.random.Generator) -> np.ndarray:
 
 def band_of(spin_no: int) -> tuple[float, float]:
     return CHECKPOINT_RULES[spin_no]
+
+
+def judge_spins(n_players: int, rng: np.random.Generator) -> dict[int, np.ndarray]:
+    """每人每個觸發點的判定轉數（1-based），在 [觸發點 − 5, 觸發點 + 5] 均勻隨機。"""
+    return {cp: cp + rng.integers(-CHECKPOINT_JITTER, CHECKPOINT_JITTER + 1, n_players) for cp in CHECKPOINTS}
+
+
+def apply_main(nat: np.ndarray, bet: np.ndarray, spins: dict[int, np.ndarray],
+               skip: tuple[int, ...] = ()) -> tuple[np.ndarray, np.ndarray]:
+    """套用主救援，回傳 (adj, reward_at)。
+
+    adj 為套機制後每轉得分；reward_at[p, i] 為該轉觸發的救援倍數（0 = 未觸發）。
+    判定轉超出資料長度（玩家當天沒玩到）就不判定；skip 內的觸發點停用。
+    觸發區間彼此不重疊，所以依序處理即可。
+    """
+    n, length = nat.shape
+    rows = np.arange(n)
+    adj = nat.copy()
+    reward_at = np.zeros_like(nat)
+    zeros = np.zeros((n, 1))
+    cs_b = np.concatenate([zeros, np.cumsum(bet, axis=1)], axis=1)
+    for cp in CHECKPOINTS:
+        if cp in skip:
+            continue
+        threshold, reward = CHECKPOINT_RULES[cp]
+        s = spins[cp]
+        played = s <= length
+        k = np.minimum(s, length) - 1              # 判定轉之前已玩的轉數，也是判定轉的 0-based index
+        lo = np.maximum(0, k - MAIN_SHORT_WINDOW)
+        cs_a = np.concatenate([zeros, np.cumsum(adj, axis=1)], axis=1)
+        cum_rtp = cs_a[rows, k] / cs_b[rows, k]
+        short_rtp = (cs_a[rows, k] - cs_a[rows, lo]) / (cs_b[rows, k] - cs_b[rows, lo])
+        hit = played & (cum_rtp < threshold) & (short_rtp < MAIN_SHORT_THRESHOLD)
+        natural = nat[rows, k]
+        adj[rows, k] = np.where(hit, np.maximum(natural, reward * bet[rows, k]), natural)
+        reward_at[rows[hit], k[hit]] = reward
+    return adj, reward_at
 
 
 def load_rowdata(game: str) -> tuple[np.ndarray, np.ndarray]:
@@ -136,48 +176,24 @@ def simulate(game: str) -> None:
     n_players, n_spins = nat.shape
     assert n_spins >= CHECKPOINTS[-1], "Row Data 轉數不足以涵蓋所有觸發點"
 
-    adj = nat.copy()                       # 套用機制後的每轉最終得分
     rescued_player = np.zeros(n_players, dtype=bool)
     total_bet_all = bet.sum()              # 全日總押注（增量貢獻的分母）
-
-    cum_nat = np.zeros(n_players)          # 判定用：前 c-1 轉累積（自然）
-    cum_adj = np.zeros(n_players)          # 判定用：前 c-1 轉累積（套機制）
-    cum_bet = np.zeros(n_players)
 
     checkpoint_rows = []
     total_triggers = 0
     award_totals: dict[float, int] = {}
 
-    prev = 0
+    spins = judge_spins(n_players, np.random.default_rng(MAIN_SEED))
+    adj, reward_at = apply_main(nat, bet, spins)
+    rows = np.arange(n_players)
     for cp in CHECKPOINTS:
-        # 累積到判定回合前一轉（判定回合本身不納入）
-        seg = slice(prev, cp - 1)
-        cum_nat += nat[:, seg].sum(axis=1)
-        cum_adj += adj[:, seg].sum(axis=1)
-        cum_bet += bet[:, seg].sum(axis=1)
-
         threshold, reward = band_of(cp)
-        rtp_now = cum_adj / cum_bet
-        short_start = max(0, cp - 1 - MAIN_SHORT_WINDOW)
-        short_rtp = adj[:, short_start:cp - 1].sum(axis=1) / bet[:, short_start:cp - 1].sum(axis=1)
-        hit = (rtp_now < threshold) & (short_rtp < MAIN_SHORT_THRESHOLD)   # 判定成功（觸發）
-
-        spin_idx = cp - 1
-        natural_this = nat[:, spin_idx]
-        rescue_payout = reward * bet[:, spin_idx]
-        final_this = np.where(hit, np.maximum(natural_this, rescue_payout), natural_this)
-        adj[:, spin_idx] = final_this
-
-        # 統計
+        k = spins[cp] - 1
+        hit = reward_at[rows, k] > 0
         n_trigger = int(hit.sum())
         total_triggers += n_trigger
         rescued_player |= hit
         award_totals[reward] = award_totals.get(reward, 0) + n_trigger
-
-        # 當下原來 RTP%（統計至第 c 轉）；增量 = 該觸發點發放 ÷ 全日總押注
-        bet_to_cp = cum_bet.sum() + bet[:, spin_idx].sum()
-        base_rtp = (cum_nat.sum() + natural_this.sum()) / bet_to_cp
-        uplift = (final_this - natural_this).sum() / total_bet_all
         checkpoint_rows.append({
             "checkpoint": cp,
             "threshold": threshold,
@@ -185,15 +201,9 @@ def simulate(game: str) -> None:
             "judged": n_players,
             "triggered": n_trigger,
             "trigger_rate": n_trigger / n_players,
-            "base_rtp": base_rtp,
-            "uplift": uplift,
+            "base_rtp": nat[:, :cp].sum() / bet[:, :cp].sum(),
+            "uplift": (adj[rows, k] - nat[rows, k]).sum() / total_bet_all,
         })
-
-        # 判定回合本身納入後續累積
-        cum_nat += natural_this
-        cum_adj += final_this
-        cum_bet += bet[:, spin_idx]
-        prev = cp
 
     # ---- 延伸救援（401–1,000 轉）：滾動窗口判定 ----
     ext_rows = []
@@ -244,7 +254,7 @@ def simulate(game: str) -> None:
     print("checkpoint  band門檻   預定   判定    觸發   觸發率     原RTP(+全日增量貢獻)")
     for row in checkpoint_rows:
         print(
-            f"第 {row['checkpoint']:>3} 轉   <{row['threshold'] * 100:>2.0f}%     "
+            f"第 {row['checkpoint'] - CHECKPOINT_JITTER:>3}–{row['checkpoint'] + CHECKPOINT_JITTER:<3} 轉 <{row['threshold'] * 100:>2.0f}%   "
             f"{row['reward']:>4.0f}x  {row['judged']:>5,}  {row['triggered']:>5,}  "
             f"{row['trigger_rate'] * 100:>6.2f}%   "
             f"{row['base_rtp'] * 100:>7.4f}% (+{row['uplift'] * 100:.4f}%)"

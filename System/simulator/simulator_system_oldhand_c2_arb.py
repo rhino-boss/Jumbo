@@ -21,7 +21,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from simulator_system_oldhand_c2 import (  # noqa: E402
-    CHECKPOINT_RULES, CHECKPOINTS, MAIN_SHORT_THRESHOLD, MAIN_SHORT_WINDOW,
+    CHECKPOINT_RULES, CHECKPOINTS, MAIN_SEED, MAIN_SHORT_THRESHOLD, MAIN_SHORT_WINDOW,
+    apply_main, judge_spins,
     SYSTEM_VERSION, load_rowdata,
 )
 
@@ -31,28 +32,10 @@ BIG_WIN = 50.0           # 「開出大獎就閃」的門檻倍數
 
 
 def apply_mechanism(nat: np.ndarray, bet: np.ndarray):
-    """回傳 (adj, reward_at)：adj 為套機制後每轉得分；reward_at[p, i] 為該轉救援倍數（0=未救）。"""
-    adj = nat.copy()
-    reward_at = np.zeros_like(nat)
-    n = nat.shape[0]
-    cum_adj = np.zeros(n)
-    cum_bet = np.zeros(n)
-    prev = 0
-    for cp in CHECKPOINTS:
-        seg = slice(prev, cp - 1)
-        cum_adj += adj[:, seg].sum(axis=1)
-        cum_bet += bet[:, seg].sum(axis=1)
-        th, rw = CHECKPOINT_RULES[cp]
-        i = cp - 1
-        ss = max(0, i - MAIN_SHORT_WINDOW)
-        short = adj[:, ss:i].sum(axis=1) / bet[:, ss:i].sum(axis=1)
-        hit = (cum_adj / cum_bet < th) & (short < MAIN_SHORT_THRESHOLD)
-        adj[:, i] = np.where(hit, np.maximum(nat[:, i], rw * bet[:, i]), nat[:, i])
-        reward_at[hit, i] = rw
-        cum_adj += adj[:, i]
-        cum_bet += bet[:, i]
-        prev = cp
-    return adj, reward_at
+    """回傳 (adj, reward_at)：adj 為套機制後每轉得分；reward_at[p, i] 為該轉救援倍數（0=未救）。
+    觸發點在前後 5 轉內隨機判定，與主模擬共用同一組亂數種子。"""
+    spins = judge_spins(nat.shape[0], np.random.default_rng(MAIN_SEED))
+    return apply_main(nat, bet, spins)
 
 
 def first_true(mask: np.ndarray, default: int) -> np.ndarray:
