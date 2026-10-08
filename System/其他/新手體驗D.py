@@ -50,11 +50,11 @@ weights_prob = weights / weights.sum()
 JP_prob = JP_weights / JP_weights.sum()
 
 # 救援獎勵
-raise1 = np.array([1500, 1000, 0], dtype=np.float64)  # 第1次救援的獎勵
+raise1 = np.array([1500, 1000], dtype=np.float64)  # 第1次救援的獎勵（數值為範例，依遊戲調整）
 raise2 = np.array([3000, 1500], dtype=np.float64)  # 第2次救援的獎勵
 
 # 救援觸發閾值（RTP百分比）
-tet1 = np.array([50, 70, 100], dtype=np.float64)  # 第1次救援的RTP閾值
+tet1 = np.array([50, 70], dtype=np.float64)  # 第1次救援的RTP閾值；≥ 70% 不處理
 tet2 = np.array([65, 85], dtype=np.float64)  # 第2次救援的RTP閾值 
 #%%
 @njit
@@ -111,13 +111,12 @@ def simulate_mode1_with_rescue(n_players, n_rounds=200):
     根據前面局數的RTP決定救援分數
     
     救援條件：
-    - 第1次救援：使用 tet1 閾值 [60, 80, 100]
+    - 第1次救援：使用 tet1 閾值（範例 [50, 70]）
       * RTP% < tet1[0] → raise1[0]
       * tet1[0] ≤ RTP% < tet1[1] → raise1[1]
-      * tet1[1] ≤ RTP% < tet1[2] → raise1[2]
-      * RTP% ≥ tet1[2] → 不觸發
+      * RTP% ≥ tet1[1] → 不觸發
     
-    - 第2次救援：使用 tet2 閾值 [60, 80]
+    - 第2次救援：使用 tet2 閾值（範例 [65, 85]）
       * RTP% < tet2[0] → raise2[0]
       * tet2[0] ≤ RTP% < tet2[1] → raise2[1]
       * RTP% ≥ tet2[1] → 不觸發
@@ -157,8 +156,8 @@ def simulate_mode1_with_rescue(n_players, n_rounds=200):
     # 對每個玩家應用救援機制
     for player in range(n_players):
         # 隨機抽取兩個救援觸發局數（轉為0-based index）
-        rescue_round1 = np.random.randint(49, 50)  # 第41-60局，對應index 40-59
-        rescue_round2 = np.random.randint(149, 150)  # 第141-160局，對應index 139-159
+        rescue_round1 = np.random.randint(40, 60)  # 第41-60局，對應index 40-59
+        rescue_round2 = np.random.randint(139, 160)  # 第140-160局，對應index 139-159
         
         rescue_rounds[player, 0] = rescue_round1 + 1  # 記錄為1-based（第幾局）
         rescue_rounds[player, 1] = rescue_round2 + 1
@@ -180,11 +179,7 @@ def simulate_mode1_with_rescue(n_players, n_rounds=200):
                 results_with_rescue[player, rescue_round1] = raise1[1]
                 rescue_triggered[player, 0] = 1
                 rescue_rewards[player, 0] = raise1[1]
-            elif rtp_percent < tet1[2]:
-                results_with_rescue[player, rescue_round1] = raise1[2]
-                rescue_triggered[player, 0] = 1
-                rescue_rewards[player, 0] = raise1[2]
-            # rtp_percent >= tet1[2] 保持原本的隨機值，不觸發救援
+            # rtp_percent >= tet1[1] 保持原本的隨機值，不觸發救援
         
         # 第二次救援（raise2）
         if rescue_round2 < n_rounds:

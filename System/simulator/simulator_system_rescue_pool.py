@@ -5,7 +5,8 @@
 * 每轉提撥該轉押注的 5% 進池。
 * 判定成功時，救援成本（救援後得分 − 自然得分）從池扣款；
   池餘額不足以支付該筆成本 → 這次不救援（硬性上限）。
-* 池跨日累積，判定與觸發仍以天為循環。
+* 池每日刷新（台灣時間 04:00 歸零，DAILY_RESET=True）；判定與觸發同樣以天為循環。
+* 中辦、北辦的池與統計各自獨立，本模擬只代表單一辦公室的玩家群。
 
 模擬設定：
 * 每天 10,000 名玩家，每人當日固定玩 N 轉；每天從 rowdata（10,000 人 × 1,000 轉）
@@ -35,6 +36,8 @@ PLAYERS_PER_DAY = 10_000
 DAYS = 30
 SPIN_SCENARIOS = [400, 800, 1000]
 SEED = 20261005
+DAILY_RESET = True                                  # 每日 04:00 池餘額歸零
+START_BALANCE_PER_PLAYER = 0.0                      # 每日刷新時預存的起始額（每位當日玩家幾個 bet）
 
 
 def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.Generator) -> dict:
@@ -46,6 +49,8 @@ def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.G
     events = [(cp, "main") for cp in CHECKPOINTS] + [(cp, "ext") for cp in EXT_CHECKPOINTS]
 
     for day in range(DAYS):
+        if DAILY_RESET or day == 0:
+            balance = START_BALANCE_PER_PLAYER * n
         rows = rng.integers(0, nat_all.shape[0], n)
         nat = nat_all[rows, :n_spins]
         bet = bet_all[rows, :n_spins]
@@ -119,7 +124,7 @@ def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.G
 
 def main() -> None:
     nat_all, bet_all = load_rowdata(GAME)
-    print(f"=== 救援池模擬（{GAME}，{SYSTEM_VERSION}，每天 {PLAYERS_PER_DAY:,} 人 × {DAYS} 天，提撥 {LEVY:.0%}，起始餘額 0）===")
+    print(f"=== 救援池模擬（{GAME}，{SYSTEM_VERSION}，每天 {PLAYERS_PER_DAY:,} 人 × {DAYS} 天，提撥 {LEVY:.0%}，起始餘額 0，{'每日刷新' if DAILY_RESET else '跨日累積'}）===")
     print(f"{'當日轉數':>6}{'無機制RTP':>11}{'不設上限增量':>12}{'實際發放增量':>12}{'實際總RTP':>11}"
           f"{'首日不救率':>10}{'30天不救率':>11}{'期末餘額/人':>12}")
     for n_spins in SPIN_SCENARIOS:
