@@ -14,7 +14,7 @@ import pandas as pd
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = SCRIPT_DIR / "rowdata"
+DATA_DIR = SCRIPT_DIR / "simulator" / "rowdata"
 TARGET_RTP = 0.94
 GAMES = ("超級寶石", "彩罐熱舞")
 PAYOUT_COLUMNS = (

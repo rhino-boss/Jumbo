@@ -14,5 +14,5 @@
 /其他任務/260707_5G遊戲競品分析/spin_responses_pinata 1000 - 備份.xlsx
 
 # 10000 人 Row Data（檔案過大，由生成腳本＋seed 重現）
-/System/rowdata/*10000人*.parquet
-/System/rowdata/*10000人*.csv.gz
+/System/simulator/rowdata/*10000人*.parquet
+/System/simulator/rowdata/*10000人*.csv.gz

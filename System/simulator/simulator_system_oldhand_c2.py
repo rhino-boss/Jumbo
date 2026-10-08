@@ -51,10 +51,12 @@ def _locate_script_dir() -> Path:
     for base in (current, *current.parents):
         candidates.extend((base / "System", base))
 
+    # 程式放在 System/simulator/，rowdata 在上一層 System/rowdata/
     for candidate in candidates:
-        rowdata = candidate / "rowdata"
-        if rowdata.is_dir() and any(rowdata.glob("*_1000人_1000轉.csv.gz")):
-            return candidate.resolve()
+        for base in (candidate, candidate.parent):
+            rowdata = base / "rowdata"
+            if rowdata.is_dir() and any(rowdata.glob("*_1000人_1000轉.csv.gz")):
+                return base.resolve()
 
     raise FileNotFoundError("找不到 System/rowdata/；請將工作目錄切到 工作區 或 System 底下")
 

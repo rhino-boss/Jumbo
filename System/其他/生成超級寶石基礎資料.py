@@ -13,8 +13,8 @@ import pandas as pd
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-SIMULATOR_PATH = SCRIPT_DIR.parent / "simulator_system.py"
-OUTPUT_PATH = SCRIPT_DIR.parent / "rowdata" / "超級寶石_基礎遊戲_10000人_1000轉.parquet"
+SIMULATOR_PATH = SCRIPT_DIR.parent / "simulator" / "simulator_system.py"
+OUTPUT_PATH = SCRIPT_DIR.parent / "simulator" / "rowdata" / "超級寶石_基礎遊戲_10000人_1000轉.parquet"
 CSV_OUTPUT_PATH = OUTPUT_PATH.with_suffix(".csv.gz")
 METADATA_PATH = OUTPUT_PATH.with_suffix(".metadata.json")
 

@@ -93,7 +93,7 @@ def _locate_script_dir() -> Path:
 
     current = Path.cwd().resolve()
     for base in (current, *current.parents):
-        candidates.extend((base / "Project_AI" / "System", base / "System", base))
+        candidates.extend((base / "Project_AI" / "System", base / "System" / "simulator", base / "System", base))
 
     for candidate in candidates:
         if (candidate / "simulator_system.py").is_file():
@@ -103,7 +103,9 @@ def _locate_script_dir() -> Path:
 
 
 SCRIPT_DIR = _locate_script_dir()
-DEFAULT_REPORT_DIR = SCRIPT_DIR / "record"
+# 程式放在 System/simulator/，rowdata、record 在上一層 System/
+DATA_DIR = SCRIPT_DIR if (SCRIPT_DIR / "rowdata").is_dir() else SCRIPT_DIR.parent
+DEFAULT_REPORT_DIR = DATA_DIR / "record"
 RTP_PROFILE_CONFIGS: dict[str, dict[str, Any]] = {
     "92+2+2": {
         "label": "92% 基礎遊戲 + 2% JP1/JP2 + 2% JP3/JP4",
@@ -154,7 +156,7 @@ RTP_PROFILE_CONFIGS: dict[str, dict[str, Any]] = {
 if RTP_PROFILE_MODE not in RTP_PROFILE_CONFIGS:
     raise ValueError(f"不支援的 RTP_PROFILE_MODE：{RTP_PROFILE_MODE!r}；" f"可用值：{', '.join(RTP_PROFILE_CONFIGS)}")
 ACTIVE_RTP_PROFILE = RTP_PROFILE_CONFIGS[RTP_PROFILE_MODE]
-BASE_GAME_DATA = {game: SCRIPT_DIR / "rowdata" / filename for game, filename in ACTIVE_RTP_PROFILE["base_files"].items()}
+BASE_GAME_DATA = {game: DATA_DIR / "rowdata" / filename for game, filename in ACTIVE_RTP_PROFILE["base_files"].items()}
 DEFAULT_BASE_GAME = "超級寶石"
 SYSTEM_VERSION = "b08c.5"
 RTP_PROFILE = str(ACTIVE_RTP_PROFILE["label"])
