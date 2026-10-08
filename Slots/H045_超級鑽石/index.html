@@ -2177,6 +2177,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-08：Buy Feature 價格 250x → 50x（版本維持 3）</h4>
+        <ul>
+          <li>Buy Feature 按鈕、扣款、Bet Mode 顯示改為 50x（由 <code>config.js</code> 的 <code>cost_multiplier</code> 讀入）；Help 內嵌 game_rule 同步更新。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（Overview Buy Feature Price）、<code>config.js</code>、<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（BF 卡片權重以 50x 重解，RTP 92.5%）；版本號維持 3。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-07：WILD 倍數權重調整（版本維持 3）</h4>
         <ul>
           <li>BG 小鬼帶倍數 33.3% → 50%（<code>Multiplier_Wild_Weight_WW</code> ×1 權重 200 → 100）；FG 大鬼帶倍數 9.1% → 40%（<code>Multiplier_Wild_Weight_W2</code> ×1 權重 1000 → 150）。數值由 <code>config.js</code> 讀入，Help 內嵌 game_rule 同步更新。</li>
@@ -2319,7 +2326,7 @@
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
 | 中獎方式 | Way Game |
 | 最小 / 最大 Ways | 最大 1,024 Ways（`4 × 4 × 4 × 4 × 4`） |
-| 押注模式 | Normal Bet；Buy Feature `250 × Bet`；不提供 Extra Bet |
+| 押注模式 | Normal Bet；Buy Feature `50 × Bet`；不提供 Extra Bet |
 | Max Win | 由卡片系統的倍率上限決定，基礎數學模型不寫死（見 §9.10） |
 | 彩金 | OP Jackpot 四階（Grand / Major 連機累進，Minor / Mini 紅利），見 §5.7 |
 
@@ -2571,20 +2578,20 @@
 
 ### 8.2 Buy Feature（購買特色）
 
-* 價格：`250 × Bet`。
+* 價格：`50 × Bet`。
 * 購買後使用 `BF_Symbol` 專用物理輪帶與停點權重產生進場盤面，保證含 3 顆以上 `C1`。
 * 進場盤面只用於顯示觸發結果，**不進行 Ways 判獎、不執行 Cascade，也不產生任何得分**。
 * 顯示進場盤面後直接觸發 10 場 FG，進入後沿用 §6 的一般 FG 規則。
-* 可購買條件：`250 × Bet <= 錶底金額` 才可點擊；費用高於餘額時按鈕壓灰。
+* 可購買條件：`50 × Bet <= 錶底金額` 才可點擊；費用高於餘額時按鈕壓灰。
 * 本作**只提供這一檔** Buy Feature，不提供 40.5× 的一般 Buy Feature，也不提供 Super Free Game 專用權重。
-* 押注模式代號使用 `ExtraBet_BuyFreeGame`，Coin in 為 `25000`（250 × 100 Credit 基準）；
+* 押注模式代號使用 `ExtraBet_BuyFreeGame`，Coin in 為 `5000`（50 × 100 Credit 基準）；
   不使用前作的 `BuyFreeGame02`。程式端仍保留兩條分支以利沿用前作結構，但本作只會走
   `ExtraBet_BuyFreeGame` 這條，`keepIdx` 與 OP 彩金的 `hitPoolWeight` 亦依此分支取值。
 
 ### 8.3 批次購買操作
 
 * 最多可一次選擇 99 次，預設 1 次；達上下限時 ± 按鈕壓灰。
-* `總價 = 250 × Bet × 數量`，確認後依所選數量逐局執行。
+* `總價 = 50 × Bet × 數量`，確認後依所選數量逐局執行。
 * 第一局後，玩家可逐次按 Spin 繼續，或使用 Auto Spin 自動完成剩餘次數。
 * 剩餘購買次數完成前不可調整 Bet 或取消剩餘次數。
 * 網路中斷或瀏覽器關閉時，剩餘未執行次數取消；已完成局數依平台帳務結果結算。
@@ -2649,7 +2656,7 @@
 
 * **9.6.1 進場盤面不計分**：不判獎、不 Cascade、不推進倍數。
 * **9.6.2 進場盤面保證 `C1 >= 3`**，由 `BF_Symbol` 停點權重保證。
-* **9.6.3 餘額不足不可購買**：`250 × Bet > 餘額` 時按鈕壓灰。
+* **9.6.3 餘額不足不可購買**：`50 × Bet > 餘額` 時按鈕壓灰。
 
 ### 9.7 Ways 計算相關
 
@@ -2730,7 +2737,7 @@
 | Q3 | Max Win 由誰負責？ | **由卡片系統的倍率上限控制**，數學模型不寫死；程式不需自行截斷 | §9.10 |
 | Q4 | 金框可否落在 `C1`？ | **排除 `C1`**；合格格數不足時放多少算多少 | §5.2、§9.1.8、§9.1.9 |
 | Q5 | 大鬼分裂落點如何排除？ | **比照前作 101003**：排除 `C1`、既有 Wild、本次正在翻牌的金框；**未中獎的金框可被覆蓋** | §5.4 |
-| Q6 | Buy Feature 用哪個 ExtraBetType？ | 只用 **`ExtraBet_BuyFreeGame`**（Coin in 25000）；程式保留兩條分支但本作只走這條 | §8.2 |
+| Q6 | Buy Feature 用哪個 ExtraBetType？ | 只用 **`ExtraBet_BuyFreeGame`**（Coin in 5000）；程式保留兩條分支但本作只走這條 | §8.2 |
 | Q7 | 一把 Spin 能出幾次大鬼？ | **比照前作**：BG 一把最多一次，FG 不限 | §5.2、§9.1.10 |
 
 ### 2026-10-05 翻牌規則改版
@@ -2787,12 +2794,20 @@ BG 階梯、金框顆數、翻牌與 WILD 倍數權重不變。92A Card-On 試�
 
 FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過門檻；40% 為 0.119%，取最小可行值。BG `_W2`、FG `_WW` 不變。
 
+### 2026-10-08 Buy Feature 價格調整（版本維持 3）
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| Buy Feature 價格 | `250 × Bet`（Coin in 25000） | `50 × Bet`（Coin in 5000）（§1、§8.2、§9.6.3） |
+
+購買後的玩法與 FG 權重不變（自然分布同前）；92A BF 卡片權重以 50x 為分母重解，RTP 目標仍為 92.5%（平均 46.25x），倍率範圍 (10, 20000]。
+
 ### 與前端規格書的差異紀錄
 
 | 項目 | 規格書 | 本文件 | 原因 |
 | --- | --- | --- | --- |
 | 遊戲名稱 / 代號 | Lucky Ace Deluxe、101003、math 沿用 SVN H016 | 超級鑽石 / Super Diamond、101015、math 為本作專屬 H0451 | 依 `iGaming 遊戲代號一覽` 2026-09-23 版；規格書檔頭尚未更名 |
-| Buy Feature | 僅 250×（§9） | 僅 250×，明確排除 H016 的 40.5× 檔與 Super Free Game 權重 | 使用者 2026-09-23 決策 |
+| Buy Feature | 僅 250×（§9） | 僅 **50×**，明確排除 H016 的 40.5× 檔與 Super Free Game 權重 | 使用者 2026-09-23 決策單一檔；2026-10-08 價格 250× → 50× |
 | WILD 倍數池 | ×2 / ×3 / ×5，是否納入 ×10 待 math | ×1 / ×2 / ×3 / ×5（×1＝無倍數）| 使用者 2026-09-30 追加 ×1：抽中帶倍結果不代表一定有倍數 |
 | 盤面帶倍 WILD 數量 | 單一盤面最多一顆（Andrew 2026-09-09 為擋相乘而設） | **不設上限，同一連線多顆相乘** | 使用者 2026-09-23 決策；規格書 §5.3 原註明「放寬為兩顆以上須重跑 math 並設乘積上限」，該上限改由 Max Win `20,000 ×` 承擔 |
 | Max Win | 未定，建議參考 6,000× | 由卡片系統倍率上限決定，基礎模型不寫死 | 使用者 2026-09-30 決策（原 2026-09-23 定為 20,000× 已撤回）|
