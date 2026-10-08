@@ -2199,7 +2199,7 @@
         <h4>2026-10-08：版本 4（調性 v4a）</h4>
         <ul>
           <li>使用者指定升版為 4：BG 金框數量增加（權重 × 1.15^k）、FG 大鬼帶倍 30% → 50%；其餘同版本 3 最後狀態。Help 內嵌 game_rule 同步。</li>
-          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（版本 4；Parameter BG Gold Count Weight、FG_Symbol W2 倍數表）、<code>config.js</code>（excel_version 4）；<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code> 版本 4.0.0.0，以 v4a 試驗自然報表暫解；<code>Versions/version_manifest</code> current 4，版本 3 最後狀態封存於 <code>Versions/3</code>。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（版本 4；Parameter BG Gold Count Weight、FG_Symbol W2 倍數表）、<code>config.js</code>（excel_version 4）；<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code> 版本 4.0.0.0，以正式自然報表（NB 10⁸／BF 10⁷）重解，Card-On 驗證 Oldhand 92.47%／Newbie 92.41%／BF 93.22%（皆 ≤ 2σ）；<code>Versions/version_manifest</code> current 4，版本 3 最後狀態封存於 <code>Versions/3</code>。</li>
         </ul>
       </article>
       <article class="change-log-entry">
@@ -2873,7 +2873,7 @@ BG 階梯、BG 金框與 BG 倍數權重不變。92A Card-On 試驗（NB 自然 
 | BG `Gold Count Weight`（1～4 顆） | 原值 | 第 k 顆權重 × 1.15^k（BG 金框變多） |
 | FG `Multiplier_Wild_Weight_W2` ×1 權重 | 233（帶倍 30%） | **100**（帶倍 50%） |
 
-FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍、FG 金框、BG 倍數權重、Buy Feature 50x 皆同版本 3 最後狀態。試驗（NB 自然 5×10⁶ 解權重）Card-On：FG Hit 40.34%、金框消除 BG 每 9.36 局、FG 每 4.55 轉（快 SA 1.15 倍，FG 未達 1.2 倍；FG 金框再多會讓 FG Hit 低於 40%，使用者選定此組）。正式自然報表與 Card-On 驗證進行中。
+FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍、FG 金框、BG 倍數權重、Buy Feature 50x 皆同版本 3 最後狀態。FG 金框再多會讓 FG Hit 低於 40%，使用者選定此組。正式驗證（NB 自然 10⁸／BF 自然 10⁷ 解權重；(10000, 20000] 自然發生率 FG／BF 0.33%）：Card-On Oldhand 92.47%（10⁶，+0.5σ）、Newbie 92.41%（10⁶，−1.2σ）、BF 93.22%（3×10⁵，+0.9σ），Retry 超限 0；FG Hit 40.07%、金框消除 BG 每 9.32 局（快 SA 1.24 倍）、FG 每 4.56 轉（快 SA 1.15 倍）。
 
 ### 與前端規格書的差異紀錄
 
