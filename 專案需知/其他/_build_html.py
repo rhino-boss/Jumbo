@@ -510,6 +510,9 @@ tbody tr:hover{{background:var(--panel-2)}}
 hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tune{{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}}
 .tune code{{color:inherit; background:none; border:none; padding:0; font-size:inherit}}
+/* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
+:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a){{margin:0 .3em}}
+:is(strong,.tune,a) :is(strong,.tune,code){{margin:0}}
 .flow{{margin:6px 0 20px; max-width:86ch}}
 .step{{display:grid; grid-template-columns:30px 1fr; gap:0 14px}}
 .step-rail{{display:flex; flex-direction:column; align-items:center}}
