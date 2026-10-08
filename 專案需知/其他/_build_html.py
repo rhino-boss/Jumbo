@@ -102,6 +102,8 @@ def render_inline(text: str) -> str:
 
     # code span（escape 後反引號仍在）
     text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+    # 可調參數：{{數值}} → 後端可調整的參數標記
+    text = re.sub(r"\{\{(.+?)\}\}", r'<span class="tune">\1</span>', text)
     # 粗體
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
 
@@ -127,6 +129,37 @@ def render_inline(text: str) -> str:
     return text
 
 
+def render_flow(lines) -> str:
+    """把 flow 區塊畫成帶編號、直線串接的步驟圖；分支以綠（+）／橘（-）標籤呈現。"""
+    steps = []
+    for raw in lines:
+        if not raw.strip():
+            continue
+        text = raw.strip()
+        if raw[:1] in (" ", "\t") and text[:1] in "+-":
+            kind = "ok" if text[0] == "+" else "stop"
+            cond, _, result = text[1:].strip().partition("::")
+            if steps:
+                steps[-1]["branches"].append((kind, cond.strip(), result.strip()))
+            continue
+        title, _, desc = text.partition("::")
+        steps.append({"title": title.strip(), "desc": desc.strip(), "branches": []})
+    parts = ['<div class="flow">']
+    for k, st in enumerate(steps, 1):
+        body = f'<div class="step-title">{render_inline(st["title"])}</div>'
+        if st["desc"]:
+            body += f'<div class="step-desc">{render_inline(st["desc"])}</div>'
+        if st["branches"]:
+            body += '<div class="branches">' + "".join(
+                f'<div class="branch"><span class="pill {kind}">{render_inline(cond)}</span>'
+                f'<span>{render_inline(result)}</span></div>'
+                for kind, cond, result in st["branches"]) + "</div>"
+        parts.append(f'<div class="step"><div class="step-rail"><div class="step-dot">{k}</div>'
+                     f'<div class="step-line"></div></div><div class="step-body">{body}</div></div>')
+    parts.append("</div>")
+    return "".join(parts)
+
+
 class Renderer:
     def __init__(self, tab_id: str):
         self.tab_id = tab_id
@@ -143,6 +176,17 @@ class Renderer:
 
             if not stripped:
                 i += 1
+                continue
+
+            # 流程圖：```flow 區塊，每行「步驟 :: 說明」，縮排的「+ 條件 :: 結果」「- 條件 :: 結果」為分支
+            if stripped.startswith("```flow"):
+                buf = []
+                i += 1
+                while i < n and not lines[i].strip().startswith("```"):
+                    buf.append(lines[i])
+                    i += 1
+                i += 1
+                self.out.append(render_flow(buf))
                 continue
 
             # 圍欄程式碼
@@ -464,6 +508,24 @@ td.n,th.n{{text-align:right; white-space:nowrap; font-family:var(--font-mono);
 tbody tr:last-child td{{border-bottom:none}}
 tbody tr:hover{{background:var(--panel-2)}}
 hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
+.tune{{color:var(--s2); font-weight:600; border-bottom:1.5px dashed var(--s2); padding:0 1px; white-space:nowrap}}
+.tune::before{{content:"⚙"; font-size:.78em; margin-right:2px}}
+.tune code{{color:inherit}}
+.flow{{margin:6px 0 20px; max-width:86ch}}
+.step{{display:grid; grid-template-columns:30px 1fr; gap:0 14px}}
+.step-rail{{display:flex; flex-direction:column; align-items:center}}
+.step-dot{{width:28px; height:28px; border-radius:50%; border:1.5px solid var(--s1); color:var(--s1);
+  display:grid; place-items:center; font-family:var(--font-mono); font-size:12.5px; font-weight:600; background:var(--panel)}}
+.step-line{{flex:1; width:1.5px; background:var(--rule); min-height:12px}}
+.step:last-child .step-line{{background:transparent}}
+.step-body{{padding:3px 0 18px; min-width:0}}
+.step-title{{font-weight:600}}
+.step-desc{{color:var(--ink-2); font-size:13.5px; margin-top:2px}}
+.branches{{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}}
+.branch{{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:13.5px}}
+.pill{{font-size:11.5px; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}}
+.pill.ok{{color:var(--s3); background:color-mix(in srgb,var(--s3) 15%,transparent)}}
+.pill.stop{{color:var(--s2); background:color-mix(in srgb,var(--s2) 15%,transparent)}}
 @media (max-width:900px){{
   .body-row{{flex-direction:column; gap:14px}}
   .toc{{display:none!important}}

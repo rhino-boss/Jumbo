@@ -44,29 +44,6 @@ def main_stats(nat, bet, spins, skip=()):
     return adj, reward_at, per_cp
 
 
-def run_extension(base, nat, bet, p, seed):
-    rng = np.random.default_rng(seed)
-    adj = base.copy()
-    n = nat.shape[0]
-    hits_total, used = 0, np.zeros(n, bool)
-    rates = {}
-    for cp in sim.EXT_CHECKPOINTS:
-        i = cp - 1
-        w, sw = sim.EXT_MID_WINDOW, sim.EXT_SHORT_WINDOW
-        mid = adj[:, i - w:i].sum(1) / bet[:, i - w:i].sum(1)
-        short = adj[:, i - sw:i].sum(1) / bet[:, i - sw:i].sum(1)
-        hit = (mid < sim.EXT_MID_THRESHOLD) & (short < sim.EXT_SHORT_THRESHOLD)
-        big = hit & (rng.random(n) < p)
-        rw = np.where(big, sim.EXT_BIG_REWARD, sim.EXT_REWARD)
-        adj[:, i] = np.where(hit, np.maximum(nat[:, i], rw * bet[:, i]), nat[:, i])
-        rates[cp] = float(hit.mean())
-        hits_total += int(hit.sum())
-        used |= hit
-    seg = slice(DAY, 1000)
-    inc = (adj[:, seg] - base[:, seg]).sum() / bet[:, seg].sum()
-    return float(inc), hits_total, float(used.mean()), rates
-
-
 def main() -> None:
     nat_all, bet_all = sim.load_rowdata(GAME)
     n = nat_all.shape[0]
@@ -136,21 +113,34 @@ def main() -> None:
     arb["any_rescue"] = dict(stop=float(stop.mean()), rtp=float(rm), base=float(rb), ev=float(ev))
     out["arb"] = arb
 
-    # ---- 階段二：401–1,000 轉區段 ----
+    # ---- 階段二：延伸救援，401–1,000 轉區段 ----
     base_full, _, _ = main_stats(nat_all, bet_all, spins)
-    inc0, hits0, used0, rates0 = run_extension(base_full, nat_all, bet_all, 0.0, 0)
-    out["ext"] = dict(inc_p0=inc0, hits=hits0, judged=n * len(sim.EXT_CHECKPOINTS), used=used0, rates=rates0,
-                      seg_base=float(nat_all[:, DAY:].sum() / bet_all[:, DAY:].sum()))
-    ptab = {}
-    for p in EXT_PROBS:
-        ptab[p] = float(np.mean([run_extension(base_full, nat_all, bet_all, p, s)[0] for s in EXT_SEEDS]))
-    out["ext"]["p_table"] = ptab
-    lo, hi = 0.0, 0.2
-    for _ in range(20):
-        mid = (lo + hi) / 2
-        v = np.mean([run_extension(base_full, nat_all, bet_all, mid, s)[0] for s in EXT_SEEDS])
-        lo, hi = (mid, hi) if v < 0.05 else (lo, mid)
-    out["ext"]["p_for_5pct"] = lo
+    ext_spins = sim.judge_spins(n, np.random.default_rng(sim.EXT_SEED), sim.EXT_CHECKPOINTS)
+    adj_e, rw_e = sim.apply_ext(nat_all, bet_all, base_full, ext_spins)
+    seg = slice(DAY, 1000)
+    rates, hits_e, judged_e = {}, 0, 0
+    for cp in sim.EXT_CHECKPOINTS:
+        played = ext_spins[cp] <= 1000
+        k = np.minimum(ext_spins[cp], 1000) - 1
+        hit = played & (rw_e[rows, k] > 0)
+        rates[cp] = float(hit.mean())
+        hits_e += int(hit.sum())
+        judged_e += int(played.sum())
+    out["ext"] = dict(
+        inc=float((adj_e[:, seg] - base_full[:, seg]).sum() / bet_all[:, seg].sum()),
+        hits=hits_e, judged=judged_e, used=float((rw_e > 0).any(1).mean()), rates=rates,
+        seg_base=float(nat_all[:, seg].sum() / bet_all[:, seg].sum()),
+        seg_total=float(adj_e[:, seg].sum() / bet_all[:, seg].sum()),
+        day_total=float(adj_e.sum() / bet_all.sum()),
+    )
+    ext_sens = {}
+    for N in range(500, 1001, 100):
+        bm, _, _ = main_stats(nat_all[:, :N], bet_all[:, :N], spins)
+        be, _ = sim.apply_ext(nat_all[:, :N], bet_all[:, :N], bm, ext_spins)
+        b = bet_all[:, :N].sum()
+        ext_sens[N] = dict(ext_inc=float((be - bm)[:, DAY:].sum() / bet_all[:, DAY:N].sum()),
+                           total=float(be.sum() / b))
+    out["ext"]["sensitivity"] = ext_sens
 
     dest = Path(__file__).resolve().parent / "record" / "report_numbers.json"
     dest.parent.mkdir(exist_ok=True)

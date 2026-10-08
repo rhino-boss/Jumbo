@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from simulator_system_oldhand_c2 import (  # noqa: E402
     CHECKPOINT_RULES, CHECKPOINTS, EXT_CHECKPOINTS, EXT_MID_THRESHOLD, EXT_MID_WINDOW,
     EXT_SHORT_THRESHOLD, EXT_SHORT_WINDOW, MAIN_SHORT_THRESHOLD,
-    MAIN_SHORT_WINDOW, SYSTEM_VERSION, CHECKPOINT_JITTER, ext_rewards, judge_spins, load_rowdata,
+    MAIN_SHORT_WINDOW, SYSTEM_VERSION, CHECKPOINT_JITTER, EXT_REWARD, judge_spins, load_rowdata,
 )
 
 GAME = "彩罐熱舞"
@@ -56,12 +56,13 @@ def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.G
         bet = bet_all[rows, :n_spins]
         adj = nat.copy()
         spins = judge_spins(n, rng)
+        spins.update(judge_spins(n, rng, EXT_CHECKPOINTS))
         levied = 0                                       # 已入池的轉數（0-based，不含）
         day_hits = day_denied = 0
         for cp, kind in events:
-            # 判定區間開始前的提撥先入池；主救援區間為觸發點前後 5 轉
-            start = cp - CHECKPOINT_JITTER - 1 if kind == "main" else cp - 1
-            end = cp + CHECKPOINT_JITTER if kind == "main" else cp
+            # 判定區間開始前的提撥先入池；主救援、延伸救援都是觸發點前後 5 轉
+            start = cp - CHECKPOINT_JITTER - 1
+            end = cp + CHECKPOINT_JITTER
             if start >= n_spins:
                 break
             balance += LEVY * bet[:, levied:start].sum()
@@ -70,23 +71,21 @@ def run(nat_all: np.ndarray, bet_all: np.ndarray, n_spins: int, rng: np.random.G
             zeros = np.zeros((n, 1))
             cs_a = np.concatenate([zeros, np.cumsum(adj, axis=1)], axis=1)
             cs_b = np.concatenate([zeros, np.cumsum(bet, axis=1)], axis=1)
+            s_ = spins[cp]
+            played = s_ <= n_spins
+            k = np.minimum(s_, n_spins) - 1
+            short_lo = np.maximum(0, k - MAIN_SHORT_WINDOW)
+            short = (cs_a[idx, k] - cs_a[idx, short_lo]) / (cs_b[idx, k] - cs_b[idx, short_lo])
             if kind == "main":
                 th, reward = CHECKPOINT_RULES[cp]
-                s = spins[cp]
-                played = s <= n_spins
-                k = np.minimum(s, n_spins) - 1
-                lo = np.maximum(0, k - MAIN_SHORT_WINDOW)
-                cum = cs_a[idx, k] / cs_b[idx, k]
-                short = (cs_a[idx, k] - cs_a[idx, lo]) / (cs_b[idx, k] - cs_b[idx, lo])
-                hit = played & (cum < th) & (short < MAIN_SHORT_THRESHOLD)
-                rw = np.full(n, reward)
+                long_rtp = cs_a[idx, k] / cs_b[idx, k]                       # 當日累積 RTP
+                hit = played & (long_rtp < th) & (short < MAIN_SHORT_THRESHOLD)
             else:
-                k = np.full(n, cp - 1)
-                i = cp - 1
-                mid = (cs_a[:, i] - cs_a[:, i - EXT_MID_WINDOW]) / (cs_b[:, i] - cs_b[:, i - EXT_MID_WINDOW])
-                short = (cs_a[:, i] - cs_a[:, i - EXT_SHORT_WINDOW]) / (cs_b[:, i] - cs_b[:, i - EXT_SHORT_WINDOW])
-                hit = (mid < EXT_MID_THRESHOLD) & (short < EXT_SHORT_THRESHOLD)
-                rw = ext_rewards(hit, rng)
+                mid_lo = np.maximum(0, k - EXT_MID_WINDOW)
+                mid = (cs_a[idx, k] - cs_a[idx, mid_lo]) / (cs_b[idx, k] - cs_b[idx, mid_lo])   # 往前 400 轉
+                hit = played & (mid < EXT_MID_THRESHOLD) & (short < EXT_SHORT_THRESHOLD)
+                reward = EXT_REWARD
+            rw = np.full(n, reward)
 
             natural = nat[idx, k]
             inc = np.where(hit, np.maximum(natural, rw * bet[idx, k]) - natural, 0.0)
