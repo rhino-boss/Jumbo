@@ -129,6 +129,45 @@ def render_inline(text: str) -> str:
     return text
 
 
+def render_timeline(lines) -> str:
+    """畫成分段時間軸。
+
+    第一行 `cols: 區段1, 區段2, ...` 定義欄位（依序排列的轉數區段）；
+    其餘每行一條軌道：`軌道名稱 :: 起欄-迄欄 :: 文字 :: 樣式 || 下一個項目 ...`，
+    欄位從 1 起算，樣式為 phase／phase2／event／stop。
+    """
+    cols, lanes = [], []
+    for raw in lines:
+        text = raw.strip()
+        if not text:
+            continue
+        if text.startswith("cols:"):
+            cols = [c.strip() for c in text[5:].split(",")]
+            continue
+        name, _, rest = text.partition("::")
+        items = []
+        for chunk in rest.split("||"):
+            parts = [x.strip() for x in chunk.split("::")]
+            a, _, b = parts[0].partition("-")
+            items.append((int(a), int(b or a), parts[1] if len(parts) > 1 else "", parts[2] if len(parts) > 2 else "event"))
+        lanes.append((name.strip(), items))
+    ncol = len(cols)
+    grid = f'grid-template-columns:7.5em repeat({ncol},minmax(4.6em,1fr))'
+    parts = [f'<div class="tl-wrap"><div class="tl" style="{grid}">']
+    for r, (name, items) in enumerate(lanes, 1):
+        parts.append(f'<div class="tl-lane" style="grid-row:{r};grid-column:1">{render_inline(name)}</div>')
+        parts.append(f'<div class="tl-track" style="grid-row:{r};grid-column:2/{ncol + 2}"></div>')
+        for a, b, label, kind in items:
+            parts.append(f'<div class="tl-item {kind}" style="grid-row:{r};grid-column:{a + 1}/{b + 2}">'
+                         f'{render_inline(label)}</div>')
+    r = len(lanes) + 1
+    parts.append(f'<div class="tl-axis-name" style="grid-row:{r};grid-column:1">轉數</div>')
+    for k, c in enumerate(cols, 2):
+        parts.append(f'<div class="tl-tick" style="grid-row:{r};grid-column:{k}">{render_inline(c)}</div>')
+    parts.append("</div></div>")
+    return "".join(parts)
+
+
 def render_flow(lines) -> str:
     """把 flow 區塊畫成帶編號、直線串接的步驟圖；分支以綠（+）／橘（-）標籤呈現。"""
     steps = []
@@ -176,6 +215,17 @@ class Renderer:
 
             if not stripped:
                 i += 1
+                continue
+
+            # 時間軸：```timeline 區塊（格式見 render_timeline）
+            if stripped.startswith("```timeline"):
+                buf = []
+                i += 1
+                while i < n and not lines[i].strip().startswith("```"):
+                    buf.append(lines[i])
+                    i += 1
+                i += 1
+                self.out.append(render_timeline(buf))
                 continue
 
             # 流程圖：```flow 區塊，每行「步驟 :: 說明」，縮排的「+ 條件 :: 結果」「- 條件 :: 結果」為分支
@@ -470,6 +520,9 @@ h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
   max-height:calc(100vh - 76px); overflow-y:auto;
   font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}}
 .toc[hidden]{{display:none}}
+/* 目錄過長時仍可滾動，但不顯示拉條 */
+.toc{{scrollbar-width:none; -ms-overflow-style:none}}
+.toc::-webkit-scrollbar{{display:none}}
 .toc a{{display:block; color:var(--ink-3); text-decoration:none;
   padding:3px 11px; border-left:2px solid var(--rule)}}
 .toc a:hover{{color:var(--s1); border-left-color:var(--s1)}}
@@ -513,6 +566,19 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 /* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
 :is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a){{margin:0 .3em}}
 :is(strong,.tune,a) :is(strong,.tune,code){{margin:0}}
+.tl-wrap{{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 14px 10px}}
+.tl{{display:grid; gap:8px 3px; min-width:820px; align-items:stretch}}
+.tl-lane,.tl-axis-name{{font-size:12.5px; font-weight:600; color:var(--ink-2); align-self:center; padding-right:8px}}
+.tl-axis-name{{color:var(--ink-3); font-weight:500}}
+.tl-track{{border-bottom:1px dashed var(--grid); align-self:center; height:0}}
+.tl-item{{font-size:12px; line-height:1.4; padding:6px 8px; border-radius:3px; z-index:1}}
+.tl-item.phase{{background:color-mix(in srgb,var(--s1) 16%,transparent); color:var(--ink); font-weight:600; text-align:center}}
+.tl-item.phase2{{background:color-mix(in srgb,var(--s3) 18%,transparent); color:var(--ink); font-weight:600; text-align:center}}
+.tl-item.stop{{background:var(--panel-2); color:var(--ink-3); text-align:center; border:1px dashed var(--rule)}}
+.tl-item.event{{border:1.5px solid var(--s2); color:var(--ink);
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--s2) 14%,transparent) 0 6px,transparent 6px 12px)}}
+.tl-tick{{font-family:var(--font-mono); font-size:11px; color:var(--ink-3); text-align:center;
+  border-top:1.5px solid var(--ink-3); padding-top:4px; white-space:nowrap}}
 .flow{{margin:6px 0 20px; max-width:86ch}}
 .step{{display:grid; grid-template-columns:30px 1fr; gap:0 14px}}
 .step-rail{{display:flex; flex-direction:column; align-items:center}}
