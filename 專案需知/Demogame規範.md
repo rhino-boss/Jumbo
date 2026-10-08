@@ -2,6 +2,14 @@
 
 本文件屬於 `專案需知/` 專案需知文件集，總覽、共通原則與完成條件見 [_README.md](_README.md)。
 
+**存放位置**（路徑以遊戲專案資料夾 `Slots/H0xx_遊戲名稱/` 為準，總表見[總覽](_README.md#3-文件存放位置)）：
+
+| 檔案 | 存放位置 |
+|---|---|
+| `index.html` | 專案根目錄 |
+| Demo 用符號圖（WebP） | `Source/Image/` |
+| 共用樣式與程式 `demogame_common.css`／`.js` | `Slots/` |
+
 ## 1. 用途與載入
 
 Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不只是視覺展示。它必須能用單局結果證明 Config、Simulator 與遊戲規則一致。
@@ -80,10 +88,10 @@ By Game 區域必須：
 - Setting：Version、Config／Profile、Language、Help、Reset。
 - 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。
 
-共用資源固定放在 `Project/Slots/`：
+共用資源固定放在 `Slots/`：
 
 ```text
-Project/Slots/
+Slots/
 ├─ demogame_common.css
 ├─ demogame_common.js
 └─ H0xx_遊戲名稱/

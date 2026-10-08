@@ -35,25 +35,34 @@
 
 本節只說明各文件**做好之後放在哪裡**；每份文件怎麼製作，見表中對應的規範。
 
-遊戲專案的 `文件/` 資料夾統一存放對外文件：
+遊戲專案資料夾（`Slots/H0xx_遊戲名稱/`）的結構：
 
 ```text
-文件/
-├─ {GameID}_Help.xlsx
-├─ {GameID}_Game Description.docx
-├─ PARsheet/
-└─ {GameID}/
+H0xx_遊戲名稱/
+├─ game_rule.md、game_help_draft.md、game_description.md
+├─ config.js、config_<RTP><Variant>.js、Simulator.py、index.html
+├─ Source/        數學模型
+├─ 文件/          對外文件
+│  ├─ PARsheet/
+│  └─ {GameID}/   送驗資料夾
+├─ 其他/          數值報告等內部文件
+├─ Record/        模擬報表
+└─ Versions/      版本備份
 ```
 
 | 存放位置 | 放什麼 | 製作方式見 |
 |---|---|---|
-| `文件/{GameID}_Help.xlsx` | Help 正式檔 | [數學文件規範.md](數學文件規範.md) Help 節 |
-| `文件/{GameID}_Game Description.docx` | Game Description 完整版 | [數學文件規範.md](數學文件規範.md) Game Description 節 |
-| `文件/PARsheet/` | PARsheet 精簡規格文件 | [數學文件規範.md](數學文件規範.md) PARsheet 節 |
+| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[開發流程.md](開發流程.md)第 2 節） |
+| `Source/` | 數學模型 `H0xx1*.xlsx` | [數學模型規範.md](數學模型規範.md) |
+| `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md`、`game_setting.json` | [數學文件規範.md](數學文件規範.md)、[送驗文件規範.md](送驗文件規範.md) |
+| `文件/PARsheet/` | PARsheet（原檔名加 `R`） | [數學文件規範.md](數學文件規範.md) PARsheet 節 |
 | `文件/{GameID}/` | 送驗資料夾 | [送驗文件規範.md](送驗文件規範.md) 1.1 |
+| `其他/` | `數值報告_<遊戲中文名>.md`＋`.html` | [開發流程.md](開發流程.md) 5.9 |
+| `Record/` | 模擬報表 `.xlsx` | [模擬程式規範.md](模擬程式規範.md) |
+| `Versions/` | 各版本的 Source、Config、Simulator 備份與 `version_manifest` | [模擬程式規範.md](模擬程式規範.md) |
 
-- `game_rule.md`、`game_description.md`、`game_help_draft.md` 放在遊戲專案根目錄，不放 `文件/`。
 - `文件/{GameID}/` 只放送驗標的，外層文件不得複製進去。
+- 範例：`H026_彩罐熱舞 1000/`。
 
 ## 4. 共通原則
 
