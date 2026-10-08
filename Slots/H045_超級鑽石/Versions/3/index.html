@@ -848,7 +848,8 @@
     }
 
     .cell.wild-mark::after {
-      content: "W2";
+      /* 分裂落點只做發光標記；格子本身已是 WW，不再疊「W2」字樣（分裂體是 WW，game_rule §5.4） */
+      content: "";
       position: absolute;
       inset: 5px;
       display: grid;
@@ -1549,14 +1550,25 @@
       padding: 8px 12px;
     }
 
-    .live-log-header {
+    #rng-wrap #rngList {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    #rng-wrap .history-summary {
+      padding: 8px 12px 0;
+    }
+
+    .live-log-header,
+    .history-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
     }
 
-    #clearLogBtn {
+    #clearLogBtn,
+    #clearHistoryBtn {
       padding: 5px 10px;
       border: 0;
       border-radius: 5px;
@@ -2132,17 +2144,24 @@
 
     <section id="controls" class="debug-off">
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
-        <span class="zone-label">Set RNG</span>
-        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+        <span class="zone-label">腳本</span>
+        <div class="zone-body set-rng-controls" aria-label="Scripted outcomes">
           <label class="debug-rng-field" for="cardRangeSelect">
             Card BG Range
             <select id="cardRangeSelect">
               <option value="">Auto</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="reelRngInput">
-            Reel RNG
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5">
+          <label class="debug-rng-field" for="scriptSelect">
+            腳本
+            <select id="scriptSelect">
+              <option value="">無</option>
+              <option value="combo5">連消 5 次以上</option>
+              <option value="bigghost">有大鬼</option>
+              <option value="flip">金框有消除</option>
+              <option value="fg">有觸發 FG</option>
+              <option value="fgbig">FG 100x 以上</option>
+            </select>
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2151,7 +2170,8 @@
     </section>
 
     <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
-      <h3 class="diagnostic-header" data-i18n="reelRng">Reel RNG</h3>
+      <div class="diagnostic-header history-header"><span>歷史紀錄 · FG 最終倍數</span><button id="clearHistoryBtn" type="button">Clear</button></div>
+      <div class="history-summary" id="historySummary"></div>
       <div class="rng-list" id="rngList"></div>
     </section>
 
@@ -2175,6 +2195,70 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-08：FG 階梯回規格＋調性 s6（版本維持 3）</h4>
+        <ul>
+          <li>FG Cascade Multiplier 改回規格 ×2／×4／×6／×10／×20；賠率表改為規格 ×0.5（Q／J 3 連維持 0.05x）；FG 小鬼帶倍約 4.8%、大鬼帶倍 30%；FG 金框數量下修（權重 × 0.7^k）。Help 內嵌 game_rule 同步。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（Overview Pay Table、Parameter FG 階梯與 FG Gold Count Weight、FG_Symbol 倍數表）、<code>config.js</code>；<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code> 以 s6 試驗自然報表（NB 5e6／BF 1e6）暫解，正式 1e8 報表後重解；版本號維持 3。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-08：Set RNG 移除 Reel RNG，新增「腳本」；Card BG Range 接上功能</h4>
+        <ul>
+          <li>移除 Reel RNG 輸入。新增腳本下拉選單：連消 5 次以上、有大鬼、金框有消除、有觸發 FG、FG 100x 以上；以自然機率反覆重抽直到符合條件，不改任何權重。</li>
+          <li>Card BG Range 列出目前 Profile 的 base_game 有權重卡（含 Free Game 卡），選定後每轉都用該卡重抽（同 Card System retry）。</li>
+          <li>腳本優先於 Card BG Range；兩者只作用於 Normal Bet，選定後每轉都套用，Reset 解除；腳本／指定區間局不計入即時倍率線型。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-08：Reel RNG 面板改為「歷史紀錄」</h4>
+        <ul>
+          <li>移除 Debug 的 Reel RNG 資訊面板（Card System／Source／Bet Mode／bet_tier_amount／Golden flips／Mult Wild／Max Win cap）。</li>
+          <li>同位置改為「歷史紀錄 · FG 最終倍數」：每一場 FG 結束時記錄 NB／BF、局數、FG 總贏分與最終倍數（÷ 底注，不含觸發盤 BG 得分）；上方顯示 NB／BF 各自場數、平均與最高倍數，Clear 清空。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-08：Buy Feature 價格 250x → 50x（版本維持 3）</h4>
+        <ul>
+          <li>Buy Feature 按鈕、扣款、Bet Mode 顯示改為 50x（由 <code>config.js</code> 的 <code>cost_multiplier</code> 讀入）；Help 內嵌 game_rule 同步更新。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（Overview Buy Feature Price）、<code>config.js</code>、<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（BF 卡片權重以 50x 重解，RTP 92.5%）；版本號維持 3。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-07：WILD 倍數權重調整（版本維持 3）</h4>
+        <ul>
+          <li>BG 小鬼帶倍數 33.3% → 50%（<code>Multiplier_Wild_Weight_WW</code> ×1 權重 200 → 100）；FG 大鬼帶倍數 9.1% → 40%（<code>Multiplier_Wild_Weight_W2</code> ×1 權重 1000 → 150）。數值由 <code>config.js</code> 讀入，Help 內嵌 game_rule 同步更新。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（BG_Symbol／FG_Symbol 倍數表）、<code>config.js</code>、<code>config_92A.js</code>（卡片權重重解，自然發生率門檻 &gt; 0.1%）；版本號維持 3。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-07：調性調整 v10（版本維持 3）</h4>
+        <ul>
+          <li>賠率表全部 ×0.6（M1 150／90／30 … J 15／9／3）；FG Cascade Multiplier 改 ×1／×1／×2／×3／×5。數值由 <code>config.js</code> 讀入，Help 內嵌 game_rule 同步更新。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（Overview Pay Table、Parameter FG 階梯）、<code>config.js</code>；版本號維持 3。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
+        <ul>
+          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
+          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-06：整波相加、金框翻牌修正、演出重做、接上 config_92A（Card System）</h4>
+        <ul>
+          <li><strong>數學</strong>：WILD 倍數改為「整波一起加」——該次 Cascade 盤面所有帶倍 WILD 倍數相加，每條中獎連線乘同一總和（game_rule §4／§5.3）。
+            修正金框翻牌座標 bug：本體改在消除當下翻（隨重力落下），大鬼分裂改補牌後丟（§5.6）；與 <code>Simulator.py</code> 同步，自然 RTP 由 1726% 降為約 1335%。</li>
+          <li><strong>Card System</strong>：由版本清單 <code>configs</code> 載入 <code>config_92A.js</code>（<code>window.H045_CONFIG_RTP</code>），合併 <code>card_system</code> 進主 config；
+            Config 下拉為 <code>Base</code>／<code>92A</code>，Profile（Oldhand／Newbie）由共用控制選擇；free_game 卡須「觸發 FG 且 BG 得分 ≤ BG Trigger Cap」否則重骰；
+            Max Win ＝ free_game 卡組最高有權重區間上限（Card Off 不截斷）。</li>
+          <li><strong>演出</strong>：符號結構改同宙斯（<code>symbol-wrap + h019-glyph</code>）讓共用滾動模糊／消除淡出生效；M1～M4 與 A/K/Q/J 同為深色；
+            滾動中依 Gold Count Weight 期望值隨機塞金框（純表演，停輪後顯示真正結果）；消除整格縮小消失、空格透明；
+            大鬼分裂改為 WW 從本體飛出；中獎倍數演出三段（徽章飛到中央加總 → 階梯掉下相乘 → 結果飛到贏分列）；動畫加計時器保底避免背景分頁卡住。</li>
+          <li>未修改 XLSX／Config 的自然機率參數；新增 <code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（卡片權重，另見 其他/數值報告.html）。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-09-24：建立 H045 超級鑽石 Demogame（由 H016 幸運王牌 index.html 衍生）</h4>
         <ul>
@@ -2216,6 +2300,13 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect"></select>
+        </label>
+        <label class="config-control" for="cardProfileSelect" hidden>
+          Profile
+          <select id="cardProfileSelect">
+            <option value="oldhand">Oldhand</option>
+            <option value="newbie">Newbie</option>
+          </select>
         </label>
         <label class="config-control" for="languageSelect">
           <span data-i18n="language">Language</span>
@@ -2276,8 +2367,8 @@
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
 | 中獎方式 | Way Game |
 | 最小 / 最大 Ways | 最大 1,024 Ways（`4 × 4 × 4 × 4 × 4`） |
-| 押注模式 | Normal Bet；Buy Feature `250 × Bet`；不提供 Extra Bet |
-| Max Win | `20,000 × Bet`（單一 Spin 含所有 Cascade 與 FG 場次的累計上限，見 §9.10） |
+| 押注模式 | Normal Bet；Buy Feature `50 × Bet`；不提供 Extra Bet |
+| Max Win | 由卡片系統的倍率上限決定，基礎數學模型不寫死（見 §9.10） |
 | 彩金 | OP Jackpot 四階（Grand / Major 連機累進，Minor / Mini 紅利），見 §5.7 |
 
 補充說明：
@@ -2323,16 +2414,17 @@
 | 低分符號 | `A`、`K`、`Q`、`J` |
 
 * 所有一般符號皆為 1×1；本作沒有 Block / Fat Symbol。
-* `G1`~`G4`、`GA`、`GK`、`GQ`、`GJ` 為 `M1`~`M4`、`A`、`K`、`Q`、`J` 的金框版本（Symbol ID 11~18）。
-* 金框版本判獎時視為對應的一般符號，賠率不變。
-* 金框符號只會出現在 R2、R3、R4。
+* **金框不是獨立的符號**，而是停輪後套在一般符號上的旗標；Symbol ID 只有 `0`~`10`，
+  物理輪帶與 Cascade 補牌權重都不含金框。產生方式見 §5.2。
+* 帶金框的格子判獎時完全視為其底層的一般符號，賠率不變。
+* 金框只會套在 R2、R3、R4，且不會套在 `C1` 上。
 
 ### 3.2 特殊符號
 
 | 符號 | 出現位置 | 行為 |
 | --- | --- | --- |
 | **`WW` / 小鬼（一般 Wild）** | 不由一般權重自然產生；由中獎金框翻出 | 替代除 `C1` 外的所有一般符號；可參與後續 Ways，命中後可被消除；身上可帶倍數（§5.3） |
-| **`W2` / 大鬼（分裂 Wild）** | 由金框翻牌的大鬼結果產生 | 替代除 `C1` 外的所有一般符號；在原金框位置生成，並額外分裂 2～4 顆 `W2` 到盤面其他位置；本體身上可帶倍數（§5.3、§5.4） |
+| **`W2` / 大鬼（分裂 Wild）** | 由金框翻牌的大鬼結果產生 | 替代除 `C1` 外的所有一般符號；在原金框位置生成，抽倍數後再丟出 2～4 顆 `WW` 到盤面其他位置，丟出的 `WW` 帶與本體相同的倍數（§5.3、§5.4） |
 | **`C1` / Scatter** | R1～R5 均可出現；同一輪可超過 1 顆 | 不參與 Ways、不被一般中獎消除；用於觸發 FG（§6）與 OP Jackpot（§5.7） |
 
 * `WW` 與 `W2` **僅**由金框消除產生，盤面不會自然掉落 Wild。
@@ -2347,20 +2439,23 @@
 
 | 符號 | 5 連 | 4 連 | 3 連 |
 | --- | ---: | ---: | ---: |
-| `M1` | 250 | 150 | 50 |
-| `M2` | 200 | 120 | 40 |
-| `M3` | 150 | 90 | 30 |
-| `M4` | 100 | 60 | 20 |
-| `A` | 50 | 30 | 10 |
-| `K` | 50 | 30 | 10 |
-| `Q` | 25 | 15 | 5 |
-| `J` | 25 | 15 | 5 |
+| `M1` | 125 | 75 | 25 |
+| `M2` | 100 | 60 | 20 |
+| `M3` | 75 | 45 | 15 |
+| `M4` | 50 | 30 | 10 |
+| `A` | 25 | 15 | 5 |
+| `K` | 25 | 15 | 5 |
+| `Q` | 12.5 | 7.5 | 5 |
+| `J` | 12.5 | 7.5 | 5 |
 
 計算規則：
 
 * 單一符號該次 Cascade 的得分為：
-  `賠率 × 該符號 Ways 數量 × Bet 基準 × Cascade Multiplier × 該連線的 WILD 倍數乘積`
-* `WILD 倍數乘積` 定義見 §5.3：該連線用到的所有帶倍 WILD 倍數連乘，每顆只計一次；未使用到帶倍 WILD 的連線，該項為 `×1`。
+  `賠率 × 該符號 Ways 數量 × Bet 基準 × Cascade Multiplier × 盤面 WILD 倍數總和`
+* `盤面 WILD 倍數總和` 定義見 §5.3：該次 Cascade **盤面上所有**帶倍 WILD 倍數**相加**（整波一起加），
+  每顆只計一次，不論是否參與連線；無倍數（`×1`）的 Wild 不計入；盤面沒有任何帶倍 WILD 時，該項為 `×1`。
+* 同一次 Cascade 的每一條中獎連線都乘**同一個**總和。
+* 計算順序固定為：先把盤面上的 WILD 倍數相加，再乘上 Cascade Multiplier，最後才乘上賠率與 Ways。
 * 同一盤面若有多種符號同時中獎，各符號獨立計算後相加。
 * `C1` 不提供 Scatter Pay。
 
@@ -2377,41 +2472,61 @@
 * 同輪剩餘符號往下落到底部空格；空出的上方位置再依該輪權重逐格補牌。
 * Cascade 持續至新盤面沒有任何 3 輪以上 Ways 為止。
 
-### 5.2 金框翻牌的四種結果
+### 5.2 金框翻牌結果
 
-* 金框只存在於 R2、R3、R4 的一般符號。
+* 金框**不是符號**，而是套在一般符號上的旗標。Symbol ID 只有 `0`~`10`，物理輪帶與
+  Cascade 補牌權重都不含金框。
+* 每次停輪後，依 `Parameter` 的 `Gold Count Weight`（BG／FG 各一張）**逐輪抽出該輪的金框顆數**：
+  R2~R4 為 `0`~`4` 顆，R1、R5 固定 `0` 顆。
+* 抽出顆數後，在該輪的**合格格子**中隨機挑選落點。合格格子 = 該輪**非 `C1`** 的格子
+  （`C1` 沒有金框版）。合格格數少於本次抽中顆數時，以實際可放數為準。
 * 金框符號未參與本次中獎時保持原符號與金框，不會翻牌。
 * 金框符號參與中獎時，原位置不會變成待補空格，而是保留並翻成 Wild。
-* 翻牌結果依 `Golden_Result_Weight` 由四種中加權抽取：
+* 翻牌結果依 `Gold_Result_Weight` 由**兩種**中加權抽取：
 
 | # | 結果 | 內容 |
 | ---: | --- | --- |
-| 1 | 小鬼 | 原位置 1 顆 `WW`，**無倍數** |
-| 2 | 小鬼帶倍數 | 原位置 1 顆 `WW`，**本體帶倍數**（倍數依 §5.3 抽取） |
-| 3 | 大鬼 | 原位置 1 顆 `W2`，額外分裂 2～4 顆 `W2`，**全部無倍數** |
-| 4 | 大鬼帶倍數 | 原位置 1 顆 `W2`，額外分裂 2～4 顆 `W2`，**僅本體帶倍數** |
+| 1 | 小鬼 | 原位置 1 顆 `WW`；接著依 §5.3 以 `Multiplier_Wild_Weight_WW` 抽倍數（可抽到無倍數） |
+| 2 | 大鬼 | 原位置 1 顆 `W2`；先依 §5.3 以 `Multiplier_Wild_Weight_W2` 抽倍數（可抽到無倍數），再依 §5.4 丟出 2～4 顆 `WW`，**每顆帶與本體相同的倍數** |
 
-* **同一次 Cascade 若有多顆金框同時中獎，每顆金框各自獨立抽一次四種結果**，互不排擠。
-* 抽到「帶倍數」的兩種結果時**一律給予倍數**，不受盤面上既有帶倍 WILD 數量的限制；多顆金框同時中獎時可同時產生多顆帶倍 WILD。
+* 「有沒有倍數」**不再是獨立的翻牌結果**，而是翻出 Wild 之後的第二段抽取（§5.3）；
+  `×1` 就是無倍數。
+* **同一次 Cascade 若有多顆金框同時中獎，每顆金框各自獨立抽一次翻牌結果與倍數**，互不排擠。
+* **Base Game 同一把 Spin 最多成立一次大鬼事件**（比照前作 101003 的 `randomWildChance`）：
+  該把 Spin 已成立過大鬼後，後續金框再抽到大鬼一律改以**小鬼**處理（改用
+  `Multiplier_Wild_Weight_WW` 抽倍數，不丟出分裂體）。**Free Game 不設此限制**，同一場可多次成立。
 
 ### 5.3 帶倍數 WILD
 
-* 倍數池為 `×2`、`×3`、`×5`，依 `Multiplier_Wild_Weight` 加權抽取。
-* **盤面可同時存在多顆帶倍 WILD**，數量不設上限；每顆金框翻出的帶倍結果各自獨立抽取倍數。
-* 帶倍 WILD 參與中獎連線時，**該連線倍率 = Cascade Multiplier × 該連線用到的所有帶倍 WILD 倍數連乘**。
-  * 例：Cascade Multiplier 為 `×3`、該連線使用到一顆 `×5` 的 WILD → 該連線得分 `×15`。
-  * 例：Cascade Multiplier 為 `×3`、該連線同時使用到 `×2` 與 `×5` 兩顆 WILD → 該連線得分 `×30`（`3 × 2 × 5`）。
-* **同一連線的多顆帶倍 WILD 相乘**；同一顆 WILD 在單一連線中只計算一次，不因該連線的 Ways 數量重複相乘。
-* 未參與該次中獎連線的帶倍 WILD **不計入**該連線倍率。
+* 倍數池為 `×1`、`×2`、`×3`、`×5`；**`×1` 代表無倍數**。
+* **每一顆翻出的 Wild 都會進行倍數抽取**：小鬼用 `Multiplier_Wild_Weight_WW`，大鬼用
+  `Multiplier_Wild_Weight_W2`，兩張表各自設定。抽到 `×1` 即為一般 Wild。
+* 大鬼事件只在**本體**抽一次倍數；丟出的 `WW` 不另外抽，直接**沿用本體的倍數**（§5.4）。
+* **盤面可同時存在多顆帶倍 WILD**，數量不設上限。
+* 盤面有中獎時，**先把該次 Cascade 盤面上所有帶倍 WILD 倍數相加（整波一起加），再乘上 Cascade Multiplier**，
+  每一條中獎連線都乘同一個值：
+  `該波倍率 = Cascade Multiplier × (盤面 WILD 倍數總和)`
+  * 例：Cascade Multiplier 為 `×3`、盤面有一顆 `×5` 的 WILD → 所有連線得分 `×15`（`3 × 5`）。
+  * 例：Cascade Multiplier 為 `×3`、盤面有 `×2` 與 `×5` 兩顆 WILD → 所有連線得分 `×21`（`3 × (2 + 5)`）。
+  * 例：階梯 `×10`，盤面 4 顆 `×3` 大鬼（本體＋3 分裂）；連線 A 原贏分 100、B 50、C 20（C 沒用到任何 WILD）
+    → `(100 + 50 + 20) × (3 + 3 + 3 + 3) × 10 = 20,400`。
+* **盤面多顆帶倍 WILD 相加**（不相乘）；每顆 WILD 只計一次，不因連線數或 Ways 數量重複計算。
+* **無倍數（`×1`）的 Wild 不計入總和**；盤面沒有任何帶倍 WILD 時，總和視為 `×1`。
+* 帶倍 WILD **不論是否參與中獎連線**都計入總和；但盤面沒有任何中獎時沒有得分可乘。
 * 帶倍 WILD 參與中獎後與其他中獎符號一併消除，後續 Cascade 可再產生新的帶倍 WILD。
-* 乘積沒有獨立上限；單一 Spin 的總得分上限由 §9.10 的 Max Win（`20,000 × Bet`）約束。
+* 總和沒有獨立上限；單一 Spin 的總得分上限由 §9.10 的 Max Win 約束。
 
 ### 5.4 大鬼分裂
 
-* 大鬼（`W2`）在原金框位置翻出後，額外分裂 **2～4 顆 `W2`**，依 `Split_Count_Weight` 加權抽取顆數。
-* **分裂落點限制**：只取代 R2～R5 的合格一般符號；不落 R1、不覆蓋 `C1`、不覆蓋既有 `WW` 或 `W2`。
+* 大鬼（`W2`）在原金框位置翻出並抽完倍數後，依 `Split_Count_Weight` 抽取顆數，
+  **丟出 2～4 顆 `WW`**（分裂體是小鬼 `WW`，不是 `W2`）。
+* **分裂落點限制**：只取代 R2～R5 的合格一般符號；不落 R1、不覆蓋 `C1`、不覆蓋既有 `WW` 或 `W2`、
+  不覆蓋本次正在翻牌的其他金框位置。
+* **盤面上尚未中獎的金框可以被分裂覆蓋**（比照前作 101003 的一般模式；該作僅 Super Buy 分支
+  額外排除金框，本作無 Super Feature，不適用該分支）。
 * 合格位置少於本次抽中的顆數時，以實際可用位置數為準放置；一個合格位置都沒有時，本次只保留原位的 `W2` 本體。
-* **倍數固定在本體**：若本次為「大鬼帶倍數」，倍數一律蓋在原位翻出的 `W2` 本體上；**分裂出來的 `W2` 永不帶倍數**。
+* **分裂體倍數與本體一模一樣**：本體抽到 `×3`，丟出的每顆 `WW` 都是 `×3`；本體抽到 `×1`（無倍數），
+  丟出的每顆 `WW` 也都無倍數。分裂體**不另外抽倍數**。
 
 ### 5.5 Cascade Multiplier
 
@@ -2424,29 +2539,32 @@
 * 倍數只在同一 Spin 的 Cascade 期間推進；到達頂階後不再推進，停留至本次 Cascade 鏈結束。
 * 新 Spin 開始時，倍數回到該模式的第一階：BG 為 `×1`，FG 為 `×2`。
 * 上排倍數為固定階梯顯示，不做滾動抽取。
-* Cascade Multiplier 與 WILD 倍數為**相乘**關係（§5.3）。
+* 盤面上的 WILD 倍數先**相加**（整波一起加），再與 Cascade Multiplier **相乘**（§5.3）。
 
 ### 5.6 處理順序
 
 一次 Cascade 內的執行順序固定為：
 
-1. 結算本次所有成立的 Ways（套用 Cascade Multiplier 與該連線的 WILD 倍數）。
+1. 結算本次所有成立的 Ways（套用 Cascade Multiplier 與盤面 WILD 倍數總和）。
 2. 消除所有中獎的非金框符號（含中獎的 `WW` / `W2`）。
-3. 同輪符號下落並依權重補滿空格。
-4. 所有中獎金框位置逐一進行四種結果抽取（§5.2）。
-5. 每顆金框依抽中的結果，在原位置形成 `WW` 或 `W2`；抽中帶倍結果者依 §5.3 各自獨立抽取倍數並蓋上。
-6. 抽中大鬼的金框，接著依 §5.4 放置分裂出的 `W2`。
-7. 以完成後的新盤面進行下一次 Ways 判定。
+3. 所有中獎金框**在消除當下**逐一抽取翻牌結果（小鬼／大鬼，§5.2），在原格形成 `WW` 或 `W2`，
+   並依 §5.3 以對應的倍數表抽一次倍數（`×1` 為無倍數）蓋上；該格不消除。
+4. 同輪符號下落並依權重補滿空格；翻好的 `WW` / `W2` 隨重力一起落下。
+5. 抽中大鬼的本體，接著依 §5.4 丟出分裂的 `WW`（落點依補牌後的盤面），每顆帶與本體相同的倍數。
+6. 以完成後的新盤面進行下一次 Ways 判定。
+
+> 2026-10-06 修正：先前模擬器與 Demo 是「補牌後才用補牌前的座標翻牌」，重力位移後會翻到錯的格子
+> （且可能翻到剛補上的新金框造成重複翻牌），自然 RTP 因此被高估；改為消除當下翻本體後，自然 RTP 由 1726% 降為約 1335%。
 
 ### 5.7 OP Jackpot（彩金）
 
 * 彩金階級：**GRAND**、**MAJOR**（連機累進，Linked Progressive）、**MINOR**、**MINI**（紅利彩金，依押注選項變動）。
-* **觸發**：盤面出現 `C1` 時依 `Jackpot_Trigger_Weight` 隨機觸發，與 §6 的「3 顆以上 `C1` 觸發 FG」為**獨立判定**，同一把可同時成立。
+* **觸發**：由盤面出現的 `C1`（SC）觸發。數學模型**不定義彩金觸發機率**，只提供 `SCR`（含 1 顆以上 SC 的局數 ÷ 總局數 × 10¹⁰）供平台端計算；與 §6 的「3 顆以上 `C1` 觸發 FG」為**獨立判定**，同一把可同時成立。
 * 同一把同時成立時，**先結算 OP Jackpot，再進入 Free Game**。
 * **投注解鎖**：單場投注達門檻以上才有資格中 GRAND / MAJOR；未達門檻時該階級不列入抽取，UI 需標示未解鎖。
 * **選幣流程**：進入彩金畫面後出現 12 個幣，內容為四種彩金符號；玩家每次翻開 1 個，**集滿 3 個相同彩金符號**即獲得該階彩金並結束。
 * 彩金派彩顯示於獨立的 Jackpot 欄位，**不計入一般 win 欄位**，也**不計入 §9.10 的 Max Win 上限**。
-* 四階面額、種子值、累積比例、觸發率與投注解鎖門檻由 `Parameter` 提供，不寫死於程式。
+* 四階面額、種子值、累積比例、觸發率與投注解鎖門檻均由平台端（math／商務）提供，數學模型與 Simulator 都不定義，只負責輸出 SCR。
 
 ---
 
@@ -2461,7 +2579,7 @@
 
 ### 6.2 FG 玩法
 
-* FG 的盤面生成、Ways 判獎、Cascade、金框四種結果、帶倍數 WILD 與大鬼分裂規則**與 BG 完全相同**。
+* FG 的盤面生成、Ways 判獎、Cascade、金框翻牌、帶倍數 WILD 與大鬼分裂規則**與 BG 完全相同**（唯 BG 一把一次大鬼的限制不適用於 FG，見 §5.2）。
 * FG 進場盤面帶入 BG 最後一次 Cascade 結束後的盤面。
 * FG 的 Cascade Multiplier 每一場從 `×2` 開始，依中獎 Cascade 提升為 `×4`、`×6`、`×10`、`×20`（§5.5）。
 * FG 場次使用觸發時的 Bet，不可中途變更。
@@ -2481,15 +2599,15 @@
 2. 系統依 `Table Selection Weight` 抽取本局使用的 Base Game 盤面表。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪 × 4 列盤面。
 4. 本局 Cascade Multiplier 從 `×1` 開始。
-5. 依 `Jackpot_Trigger_Weight` 判定本局是否觸發 OP Jackpot（§5.7）；觸發則先完成彩金結算再繼續。
+5. 本局盤面若出現 `C1`，計入 SCR 統計；OP Jackpot 是否觸發由平台端依 SCR 決定（§5.7），觸發則先完成彩金結算再繼續。
 6. 系統由 R1 向右檢查所有可成立的 3～5 輪 Ways。
 7. 若沒有中獎，停止 Cascade，進入最終 `C1` 統計（第 12 步）。
-8. 若有中獎，依 §4 計算並累加本次 Cascade 得分（套用 Cascade Multiplier 與該連線的 WILD 倍數）。
+8. 若有中獎，依 §4 計算並累加本次 Cascade 得分（套用 Cascade Multiplier 與盤面 WILD 倍數總和）。
 9. 依 §5.6 的順序完成消除、下落補牌、金框翻牌、倍數判定與大鬼分裂。
 10. Cascade Multiplier 依 §5.5 推進一階。
 11. 回到第 6 步，以新盤面重新判獎，直到盤面沒有新的中獎。
 12. 所有 Cascade 結束後統計最終盤面 `C1` 總數；若 `C1 >= 3`，觸發 10 場 Free Game（§6）。
-13. 本局累計得分達 `20,000 × Bet` 時依 §9.10 截斷並結束本局。
+13. 本局累計得分達該 Profile／押注層級的倍率上限時依 §9.10 截斷並結束本局。
 
 ---
 
@@ -2501,17 +2619,20 @@
 
 ### 8.2 Buy Feature（購買特色）
 
-* 價格：`250 × Bet`。
+* 價格：`50 × Bet`。
 * 購買後使用 `BF_Symbol` 專用物理輪帶與停點權重產生進場盤面，保證含 3 顆以上 `C1`。
 * 進場盤面只用於顯示觸發結果，**不進行 Ways 判獎、不執行 Cascade，也不產生任何得分**。
 * 顯示進場盤面後直接觸發 10 場 FG，進入後沿用 §6 的一般 FG 規則。
-* 可購買條件：`250 × Bet <= 錶底金額` 才可點擊；費用高於餘額時按鈕壓灰。
+* 可購買條件：`50 × Bet <= 錶底金額` 才可點擊；費用高於餘額時按鈕壓灰。
 * 本作**只提供這一檔** Buy Feature，不提供 40.5× 的一般 Buy Feature，也不提供 Super Free Game 專用權重。
+* 押注模式代號使用 `ExtraBet_BuyFreeGame`，Coin in 為 `5000`（50 × 100 Credit 基準）；
+  不使用前作的 `BuyFreeGame02`。程式端仍保留兩條分支以利沿用前作結構，但本作只會走
+  `ExtraBet_BuyFreeGame` 這條，`keepIdx` 與 OP 彩金的 `hitPoolWeight` 亦依此分支取值。
 
 ### 8.3 批次購買操作
 
 * 最多可一次選擇 99 次，預設 1 次；達上下限時 ± 按鈕壓灰。
-* `總價 = 250 × Bet × 數量`，確認後依所選數量逐局執行。
+* `總價 = 50 × Bet × 數量`，確認後依所選數量逐局執行。
 * 第一局後，玩家可逐次按 Spin 繼續，或使用 Auto Spin 自動完成剩餘次數。
 * 剩餘購買次數完成前不可調整 Bet 或取消剩餘次數。
 * 網路中斷或瀏覽器關閉時，剩餘未執行次數取消；已完成局數依平台帳務結果結算。
@@ -2523,24 +2644,33 @@
 
 ### 9.1 金框 / Wild 相關
 
-* **9.1.1 金框只出現在 R2～R4**：R1、R5 不自然產生金框。
+* **9.1.1 金框只出現在 R2～R4**：R1、R5 的 `Gold Count Weight` 固定為 0 顆。
 * **9.1.2 金框未中獎不翻牌**：只有實際參與 Ways 的金框才翻成 Wild。
 * **9.1.3 金框位置不補牌**：翻成 Wild 的位置不是空格，不參與該次重力補位。
 * **9.1.4 Wild 不保留金框屬性**：翻牌完成後不會再次以金框身分觸發特色。
 * **9.1.5 Wild 可被後續中獎消除**：`WW` / `W2` 參與後續 Ways 時，與其他非金框中獎符號一樣消除。
-* **9.1.6 多顆金框各自獨立**：同一次 Cascade 有多顆金框中獎時，每顆各自抽一次四種結果，不互相排擠、不降級為單一來源。
+* **9.1.6 多顆金框各自獨立**：同一次 Cascade 有多顆金框中獎時，每顆各自抽一次翻牌結果與倍數，不互相排擠、不降級為單一來源。
 * **9.1.7 R1 永不落 Wild**：金框不出現在 R1，大鬼分裂的合格位置也排除 R1。
+* **9.1.8 `C1` 沒有金框版**：抽金框落點時，候選格只取該輪非 `C1` 的格子。
+* **9.1.9 合格格數不足時放多少算多少**：抽中顆數大於該輪可用格數時，以實際可放數為準，不重抽。
+* **9.1.10 BG 一把一次大鬼**：Base Game 同一把 Spin 已成立大鬼後，後續金框抽到大鬼改以小鬼處理；
+  Free Game 不受此限。
+* **9.1.11 Cascade 補牌也會產生金框**：補牌權重雖只含 Symbol ID `0`~`10`（金框不是符號），
+  但每次補牌後仍依 §5.2 重新決定該輪的金框顆數——**重抽顆數 `N`，保留存活下來的金框，
+  不足的部分從本次新補進來的格子中補上**；存活金框已達 `N` 時不再追加。
+  因此每次盤面落定後，各輪的金框顆數都服從 `Gold Count Weight` 的分布。
 
 ### 9.2 帶倍數 WILD 相關
 
-* **9.2.1 盤面帶倍 WILD 數量不設上限**：抽中帶倍結果即給予倍數，不因盤面上已有帶倍 WILD 而降級。
-* **9.2.2 每顆倍數獨立抽取**：同一次 Cascade 產生多顆帶倍 WILD 時，各自依 `Multiplier_Wild_Weight` 獨立抽取倍數。
-* **9.2.3 倍數只算參與連線者**：未參與該次中獎連線的帶倍 WILD 不計入該連線倍率。
-* **9.2.4 同一連線多顆帶倍 WILD 相乘**：該連線倍率 = Cascade Multiplier × 所有參與的帶倍 WILD 倍數連乘。
-* **9.2.5 同一顆 WILD 單線只計一次**：不因該連線的 Ways 數量重複相乘。
-* **9.2.6 不同連線各自計算**：同一次 Cascade 中，不同得分符號的連線各自認列自己用到的帶倍 WILD，互不影響。
-* **9.2.7 乘積無獨立上限**：僅受 §9.10 的 Max Win 約束。
-* **9.2.8 大鬼倍數固定在本體**：分裂出的 `W2` 永不帶倍數。
+* **9.2.1 盤面帶倍 WILD 數量不設上限**：倍數抽到幾就給幾，不因盤面上已有帶倍 WILD 而降級。
+* **9.2.2 每顆金框獨立抽倍數**：同一次 Cascade 有多顆金框翻牌時，每顆各自依 `Multiplier_Wild_Weight_WW` / `Multiplier_Wild_Weight_W2` 抽一次；大鬼事件只在本體抽一次，分裂體沿用。
+* **9.2.3 倍數整波一起加**：該次 Cascade 盤面上所有帶倍 WILD 都計入總和，不論是否參與中獎連線。
+* **9.2.4 盤面多顆帶倍 WILD 相加**：該波倍率 = Cascade Multiplier × (盤面所有帶倍 WILD 倍數總和)；無倍數的 Wild 不計入，總和為 0 時視為 `×1`。
+* **9.2.5 每顆 WILD 只計一次**：不因連線數或 Ways 數量重複計入總和。
+* **9.2.6 所有連線共用同一總和**：同一次 Cascade 中，不同得分符號的連線都乘同一個盤面總和。
+* **9.2.7 總和無獨立上限**：僅受 §9.10 的 Max Win 約束。
+* **9.2.8 分裂體沿用本體倍數**：大鬼事件只在本體抽一次倍數，丟出的每顆 `WW` 帶**完全相同**的倍數；
+  本體抽到 `×1` 則本體與分裂體全部無倍數。分裂體不另外抽。
 
 ### 9.3 倍率階梯相關
 
@@ -2567,7 +2697,7 @@
 
 * **9.6.1 進場盤面不計分**：不判獎、不 Cascade、不推進倍數。
 * **9.6.2 進場盤面保證 `C1 >= 3`**，由 `BF_Symbol` 停點權重保證。
-* **9.6.3 餘額不足不可購買**：`250 × Bet > 餘額` 時按鈕壓灰。
+* **9.6.3 餘額不足不可購買**：`50 × Bet > 餘額` 時按鈕壓灰。
 
 ### 9.7 Ways 計算相關
 
@@ -2590,14 +2720,15 @@
 
 ### 9.10 Max Win 相關
 
-* **9.10.1 上限為 `20,000 × Bet`**，統計範圍為單一 Spin 的所有 Cascade 得分；由 Buy Feature 或 Scatter 觸發的 FG，其全部場次得分併入觸發該次的 Spin 一併計算。
+* **9.10.1 上限由卡片系統決定**：Max Win 取該 Player Profile 與押注層級的倍率上限（`Multiplier_Weight` 的最大區間上限），基礎數學模型不寫死固定倍數。統計範圍為單一 Spin 的所有 Cascade 得分；由 Buy Feature 或 Scatter 觸發的 FG，其全部場次得分併入觸發該次的 Spin 一併計算。
 * **9.10.2 達上限即截斷**：累計得分達上限時，本局（含未進行完的 FG 場次）立即結束，派彩以上限值計。
-* **9.10.3 上限為自然可及**：不以人工方式壓低分布，倍率結構須讓 `20,000 ×` 在自然機率下可被開出。
+* **9.10.3 上限須為自然可及**：不以人工方式壓低分布，倍率結構須讓該上限在自然機率下可被開出。
 * **9.10.4 彩金不納入**：OP Jackpot 派彩獨立計算。
+* **9.10.5 Card System Off 時不套上限**：自然機率驗證不截斷，以便量測真實分布。
 
 ### 9.11 輪帶配置限制（數學前置條件）
 
-* **9.11.1 金框停點只存在於 R2～R4** 的物理輪帶。
+* **9.11.1 物理輪帶不含金框**：金框是停輪後套上的旗標，輪帶只配置 Symbol ID `0`~`10`。
 * **9.11.2 `WW` / `W2` 不得配置於任何物理輪帶**，只能由金框翻牌產生。
 * **9.11.3 `BF_Symbol` 必須保證進場盤面 `C1 >= 3`**。
 
@@ -2605,16 +2736,17 @@
 
 ## 附錄 A. 詞彙對照
 
-| 本文用語 | 程式 / 數學模型代號 | 前端 / 規格書用語 |
-| --- | --- | --- |
-| 小鬼（一般 Wild） | `WW` | 小鬼 / WW |
-| 大鬼（分裂 Wild） | `W2` | 大鬼 / W2 |
-| Scatter | `C1` | C1 |
-| 金框版本符號 | `G1`~`G4`、`GA`、`GK`、`GQ`、`GJ`（ID 11~18） | 金框符號（前端規格書寫作 `M1_G`~`M4_G` / `A_G` 等） |
-| Cascade Multiplier | `Cascade_Multiplier` | 連消倍率 / Win Multiplier |
-| 帶倍數 WILD 倍數 | `Multiplier_Wild` | WILD 倍數 |
-| 金框四結果權重 | `Golden_Result_Weight` | 金框翻牌權重 |
-| 大鬼分裂顆數權重 | `Split_Count_Weight` | 分裂顆數 |
+| 本文用語 | 程式 / 數學模型代號 | 英文 | 前端 / 規格書用語 |
+| --- | --- | --- | --- |
+| 小鬼（一般 Wild） | `WW`（ID 0） | Wild | 小鬼 / WW |
+| 大鬼（分裂 Wild） | `W2`（ID 1） | Split Wild | 大鬼 / W2 |
+| Scatter | `C1`（ID 2） | Scatter | C1 |
+| 金框 | 不是符號，為套在一般符號上的旗標 | gold frame | 金框符號（前端規格書寫作 `M1_G`~`M4_G` / `A_G` 等） |
+| 金框顆數權重 | `Gold Count Weight`（Parameter，BG／FG 各一張） | — | — |
+| 金框翻牌權重（小鬼／大鬼） | `Gold_Result_Weight` | — | 金框翻牌權重 |
+| 大鬼分裂顆數權重 | `Split_Count_Weight` | — | 分裂顆數 |
+| 帶倍數 WILD 倍數 | `Multiplier_Wild_Weight_WW`／`_W2`（兩張，含 ×1＝無倍數） | — | WILD 倍數 |
+| Cascade Multiplier | `Cascade_Multiplier` | — | 連消倍率 / Win Multiplier |
 
 ---
 
@@ -2626,6 +2758,8 @@
 | `Slots/H016_幸運王牌/game_rule.md` | 盤面、Ways 判獎、賠率表、Cascade 補位與 FG 基礎規則 |
 | `專案需知/數學文件規範.md` | 本文件的章節骨架與必要欄位 |
 | `Slots/其他/iGaming 遊戲代號一覽.xlsx` | Game ID 101015、ParSheet H0451、遊戲類別 |
+| `市場資訊/H5/遊戲資訊/JILI - Super Ace/輪帶還原_SuperAce.xlsx` | 物理輪帶、停輪權重、補牌權重、金框率（實機側錄 166,050 轉 BG／22,565 轉 FG 還原） |
+| 超級鑽石 AI Q&A（2026-10-02，程式端提問 + 使用者答覆） | §5.2 金框產生與 BG 大鬼上限、§5.4 分裂倍數歸屬與落點、§8.2 押注模式代號 |
 
 ### 來源優先級
 
@@ -2633,16 +2767,107 @@
 2. `Source/H0451*.xlsx`（數值正式來源）
 3. 前端遊戲規格書（演出與 UI）
 
+### 2026-10-02 AI Q&A 決策紀錄
+
+程式端就數學文件與前端規格書的矛盾提出七點，使用者答覆如下，本文件已依此更新：
+
+| # | 爭點 | 決策 | 影響章節 |
+| ---: | --- | --- | --- |
+| Q1 | 大鬼帶倍數時，倍數給本體還是分裂體？ | **每顆各自獨立抽倍數**（本體與每顆分裂體都抽），推翻原本「倍數固定在本體」 | §5.2 表格、§5.4、§9.2.8 |
+| Q2 | 盤面帶倍 WILD 有無數量上限？ | **不設上限，同一連線多顆相乘**；前端規格書的「盤面最多 1 顆、超過降級」不採用 | §5.3、§9.2.1 |
+| Q3 | Max Win 由誰負責？ | **由卡片系統的倍率上限控制**，數學模型不寫死；程式不需自行截斷 | §9.10 |
+| Q4 | 金框可否落在 `C1`？ | **排除 `C1`**；合格格數不足時放多少算多少 | §5.2、§9.1.8、§9.1.9 |
+| Q5 | 大鬼分裂落點如何排除？ | **比照前作 101003**：排除 `C1`、既有 Wild、本次正在翻牌的金框；**未中獎的金框可被覆蓋** | §5.4 |
+| Q6 | Buy Feature 用哪個 ExtraBetType？ | 只用 **`ExtraBet_BuyFreeGame`**（Coin in 5000）；程式保留兩條分支但本作只走這條 | §8.2 |
+| Q7 | 一把 Spin 能出幾次大鬼？ | **比照前作**：BG 一把最多一次，FG 不限 | §5.2、§9.1.10 |
+
+### 2026-10-05 翻牌規則改版
+
+使用者重新定義金框翻牌流程，**取代 2026-10-02 Q&A 的 Q1／Q8 決策**：
+
+| 項目 | 2026-10-02 版 | 2026-10-05 版 |
+| --- | --- | --- |
+| 翻牌結果 | 四種：WW／WW_M／W2／W2_M | **兩種：小鬼 `WW`／大鬼 `W2`** |
+| 倍數 | 「帶倍」是獨立結果，抽中後再抽倍數 | **每顆翻出的 Wild 都抽倍數**，`×1`＝無倍數；小鬼用 `Multiplier_Wild_Weight_WW`，大鬼用 `_W2` |
+| 分裂體符號 | `W2` | **`WW`** |
+| 分裂體倍數 | 每顆各自獨立抽 | **沿用本體**，一模一樣，不另外抽 |
+| 權重表 | `Gold_Result_Weight` 四列、`Multiplier_Wild_Weight_WW_M`／`_W2_M` | `Gold_Result_Weight` 兩列、`Multiplier_Wild_Weight_WW`／`_W2` |
+| 同線多顆帶倍 WILD | **相乘**（`3 × 2 × 5 = ×30`） | **相加後再乘階梯**（`3 × (2 + 5) = ×21`）；無倍數 Wild 不計入，無帶倍 WILD 時為 ×1 |
+
+未變動：BG 一把一次大鬼（Q7）、盤面帶倍 WILD 不設上限（Q2 的「不設上限」保留）、
+金框顆數機制（§5.2）、分裂落點（Q5）、Max Win 由卡片系統決定（Q3）。
+**Q2 的「同線相乘」已被本次改為「同線相加」取代**（見下表）。
+
+影響章節：§3.2、§5.2、§5.3、§5.4、§5.6、§6.2、§9.1.6、§9.2.1、§9.2.2、§9.2.8、附錄 A。
+數學模型（`Source/H0451.xlsx`）、`config.js`、`Simulator.py`、`index.html` 尚未同步，需另行更新。
+
+### 2026-10-06 倍數加總範圍
+
+使用者確認「相加」的範圍為**整波一起加**（取代 2026-10-05 版的「每組連線各自加」）：
+
+| 解讀 | 算法（階梯 ×10，盤面 4 顆 ×3 大鬼；連線 A 100、B 50、C 20，C 未用到 WILD） | 結果 | 採用 |
+| --- | --- | --- | --- |
+| (a) 每組連線各自加 | `100×(3+3) + 50×(3+3) + 20×1`，再 ×10 | 9,200 | 2026-10-05 版 |
+| (b) 整波一起加 | `(100+50+20) × (3+3+3+3) × 10` | 20,400 | **本版** |
+
+盤面上所有帶倍 WILD（不論是否參與連線）都計入總和。影響章節：§4、§5.3、§5.5、§5.6、§6.2、§9.2.3～9.2.6。
+`Simulator.py`、`index.html` 已同步；自然機率 RTP 需重掃。
+
+### 2026-10-07 調性調整（v10，版本維持 3）
+
+為對齊 Super Ace 的 FG Hit Rate（40%）、連消分布與金框使用率，經模擬機 10 組試驗後採用 v10：
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| 賠率表 | M1 250／150／50 … J 25／15／5 | 全部 ×0.6：M1 150／90／30 … J 15／9／3（§4） |
+| FG Cascade Multiplier | ×2／×4／×6／×10／×20 | ×1／×1／×2／×3／×5（§5.5） |
+
+BG 階梯、金框顆數、翻牌與 WILD 倍數權重不變。92A Card-On 試驗結果：FG Hit 40.43%、金框使用率 BG 12.11%／FG 35.42%、連消 3 次以上 BG／FG 皆高於 Super Ace。影響章節：§4、§5.5、§6.2、§9.3.2、§9.3.3。
+
+### 2026-10-07 WILD 倍數權重調整（版本維持 3）
+
+使用者要求 BG 小鬼帶倍數提高到 50%、FG 大鬼帶倍數至少 30%，並讓 (10000, 20000] 區間自然發生率超過 0.1%（卡片才能配權重，Max Win 達 20,000x）：
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| BG `Multiplier_Wild_Weight_WW`（×1／×2／×3／×5） | 200／55／30／15（帶倍 33.3%） | **100**／55／30／15（帶倍 50%） |
+| FG `Multiplier_Wild_Weight_W2`（×1／×2／×3／×5） | 1000／55／30／15（帶倍 9.1%） | **150**／55／30／15（帶倍 40%） |
+
+FG 大鬼試過 30%／40%／50%：30% 時 BF (10000, 20000] 為 0.084%，未過門檻；40% 為 0.119%，取最小可行值。BG `_W2`、FG `_WW` 不變。
+
+### 2026-10-08 Buy Feature 價格調整（版本維持 3）
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| Buy Feature 價格 | `250 × Bet`（Coin in 25000） | `50 × Bet`（Coin in 5000）（§1、§8.2、§9.6.3） |
+
+購買後的玩法與 FG 權重不變（自然分布同前）；92A BF 卡片權重以 50x 為分母重解，RTP 目標仍為 92.5%（平均 46.25x），倍率範圍 (10, 20000]。
+
+### 2026-10-08 FG 階梯回規格＋調性 s6（版本維持 3）
+
+FG Cascade Multiplier 是規格，v10 不應更動，改回 ×2／×4／×6／×10／×20。賠率表亦屬規格，本次經使用者同意可調整：最多砍半，且每格不得低於 0.05x。經模擬機 7 組試驗採用 s6：
+
+| 項目 | v10 | s6 |
+| --- | --- | --- |
+| FG Cascade Multiplier | ×1／×1／×2／×3／×5 | **×2／×4／×6／×10／×20**（規格，§5.5） |
+| 賠率表 | 規格 ×0.6（Q／J 3 連 3，低於 0.05x） | 規格 ×0.5：M1 125／75／25 … J 12.5／7.5／5（Q／J 3 連維持 5＝0.05x）（§4） |
+| FG `Multiplier_Wild_Weight_WW` ×1 權重 | 200（帶倍 33.3%） | 2000（帶倍約 4.8%） |
+| FG `Multiplier_Wild_Weight_W2` ×1 權重 | 150（帶倍 40%） | 233（帶倍 30%） |
+| FG `Gold Count Weight`（1～4 顆） | 原值 | 第 k 顆權重 × 0.7^k（FG 金框變少） |
+
+BG 階梯、BG 金框與 BG 倍數權重不變。92A Card-On 試驗（NB 自然 5×10⁶ 解權重）：FG Hit 40.54%、金框使用率 BG 12.61%／FG 29.73%、連消 3 次以上 BG／FG 皆高於 Super Ace；(10000, 20000] 自然發生率 FG 0.23%／BF 0.18%。正式自然報表與 Card-On 驗證進行中。
+
 ### 與前端規格書的差異紀錄
 
 | 項目 | 規格書 | 本文件 | 原因 |
 | --- | --- | --- | --- |
 | 遊戲名稱 / 代號 | Lucky Ace Deluxe、101003、math 沿用 SVN H016 | 超級鑽石 / Super Diamond、101015、math 為本作專屬 H0451 | 依 `iGaming 遊戲代號一覽` 2026-09-23 版；規格書檔頭尚未更名 |
-| Buy Feature | 僅 250×（§9） | 僅 250×，明確排除 H016 的 40.5× 檔與 Super Free Game 權重 | 使用者 2026-09-23 決策 |
-| WILD 倍數池 | ×2 / ×3 / ×5，是否納入 ×10 待 math | ×2 / ×3 / ×5 | 使用者 2026-09-23 決策 |
+| Buy Feature | 僅 250×（§9） | 僅 **50×**，明確排除 H016 的 40.5× 檔與 Super Free Game 權重 | 使用者 2026-09-23 決策單一檔；2026-10-08 價格 250× → 50× |
+| WILD 倍數池 | ×2 / ×3 / ×5，是否納入 ×10 待 math | ×1 / ×2 / ×3 / ×5（×1＝無倍數）| 使用者 2026-09-30 追加 ×1：抽中帶倍結果不代表一定有倍數 |
 | 盤面帶倍 WILD 數量 | 單一盤面最多一顆（Andrew 2026-09-09 為擋相乘而設） | **不設上限，同一連線多顆相乘** | 使用者 2026-09-23 決策；規格書 §5.3 原註明「放寬為兩顆以上須重跑 math 並設乘積上限」，該上限改由 Max Win `20,000 ×` 承擔 |
-| Max Win | 未定，建議參考 6,000× | `20,000 × Bet`，且須為自然機率可及 | 使用者 2026-09-23 決策 |
+| Max Win | 未定，建議參考 6,000× | 由卡片系統倍率上限決定，基礎模型不寫死 | 使用者 2026-09-30 決策（原 2026-09-23 定為 20,000× 已撤回）|
 | RTP / Variant | 未定 | 本階段僅 92A | 使用者 2026-09-23 決策 |
+
 
   </script>
   <script src="./Versions/version_manifest.js"></script>
@@ -2663,8 +2888,30 @@
         throw new Error(`config.js 版本 ${cfg.excel_version} 與 manifest ${entry.version} 不一致`);
       }
       window.H045_VERSION_ENTRY = entry;
-      window.H045_ACTIVE_CONFIG = "base";
-      try { localStorage.setItem("h045MathVersion", entry.version); } catch (_) {}
+      // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
+      const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
+      const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
+      // 預設用第一個 RTP／Variant config（Card System 由勾選開關）；沒有任何 RTP config 才退回 base
+      const active = available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
+      window.H045_ACTIVE_CONFIG = active;
+      try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
+      if (active !== "base") {
+        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}"><\/script>`);
+        document.write(`<script>
+          (() => {
+            const base = window.H045_CONFIG, rtp = window.H045_CONFIG_RTP;
+            if (!rtp) throw new Error("H045 RTP config was not loaded.");
+            if (rtp.game_id !== base.game_id) throw new Error("H045 base/RTP config game_id mismatch.");
+            if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) {
+              throw new Error("RTP config 版本第 1 碼 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 不一致");
+            }
+            if (!rtp.card_system) throw new Error("H045 RTP config is missing card_system.");
+            base.card_system = rtp.card_system;
+            base.rtp_label = rtp.rtp_label || rtp.config_code;
+            base.rtp_config = rtp;
+          })();
+        <\/script>`);
+      }
     })();
   </script>
     <script>
@@ -2684,8 +2931,14 @@
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
   const LADDER = { bg: cfg.cascade_multiplier.bg, fg: cfg.cascade_multiplier.fg };
   const LADDER_LEN = Math.max(LADDER.bg.length, LADDER.fg.length);
-  // Max Win 由卡片系統的倍率上限決定；Card System Off 不截斷（game_rule §9.10）
-  const MAX_WIN = Infinity;
+  // Max Win 由卡片系統的倍率上限決定（free_game 卡組最高有權重區間上限）；Card System Off 不截斷（game_rule §9.10）
+  function cardSectionCap(section, profile) {
+    const cards = cfg.card_system?.profiles?.[profile]?.[section] || [];
+    const caps = cards.filter(card => card.type === "range" && Number(card.weight) > 0).map(card => Number(card.max));
+    return caps.length ? Math.max(...caps) : Infinity;
+  }
+  let MAX_WIN = Infinity;
+  function refreshMaxWin() { MAX_WIN = cardSystemActive() ? cardSectionCap("free_game", cardProfile()) : Infinity; }
   const MAX_FS = Number(cfg.max_free_spins);
   const SPLIT_REELS = cfg.split_target_reels.map(Number);
   const GOLD_REELS = cfg.gold_reels.map(Number);
@@ -2717,11 +2970,48 @@
       background:radial-gradient(circle,#4a3a12,#1a1305)!important;
       box-shadow:inset 0 0 0 1px rgba(255,201,74,.45),0 0 10px rgba(255,201,74,.22)!important;
     }
-    #board .cell:not(.hit):not(.convert):not(.wild-mark):not(.gold){
-      border:2px solid #122a43!important;
-      border-radius:8px!important;
-      background:#07111f!important;
-      box-shadow:inset 0 0 0 1px rgba(3,9,18,.92),0 1px 2px rgba(0,0,0,.72)!important;
+    /* 符號樣式同宙斯（H027）：各符號底色沿用 .cell.symbol-* 定義，不再統一壓成深色 */
+    #board .cell{border-radius:8px;box-shadow:none}
+    /* 消除：整格（含底板）一起縮小消失；消除後的空格完全透明 */
+    #board .cell.symbol-cleared{animation:slot-symbol-clear 180ms ease-in forwards}
+    #board .cell.symbol-empty{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+    /* 本作特別處理：M1～M4 不上色，與 A/K/Q/J 一樣深色 */
+    #board .cell.symbol-m1,#board .cell.symbol-m2,#board .cell.symbol-m3,#board .cell.symbol-m4,
+    #board .cell.symbol-a,#board .cell.symbol-k,#board .cell.symbol-q,#board .cell.symbol-j{
+      border-color:rgba(38,92,137,.28);background:#060d1a;
+    }
+    #board .cell.symbol-cleared > .mult-badge{animation:slot-symbol-clear 180ms ease-in forwards}
+    /* 分裂飛行體與中獎倍數演出 */
+    .slot-fx-layer .fly-ww{position:absolute;z-index:30;border-radius:8px;border:2px solid #39d6a2;
+      background:radial-gradient(circle,#1f9f86,#06342b);box-shadow:0 0 14px rgba(57,214,162,.7);pointer-events:none}
+    .slot-fx-layer .fly-ww .symbol-wrap{position:absolute;inset:0}
+    .slot-fx-layer .fly-ww .h019-glyph{display:grid;place-items:center;width:100%;height:100%;color:#d8e8f4;
+      font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;text-shadow:0 2px 3px rgba(0,0,0,.72)}
+    .slot-fx-layer .fly-ww .mult-badge{position:absolute;top:2px;right:3px;font:700 11px/15px system-ui,sans-serif;color:#0b1020;
+      background:linear-gradient(180deg,#ffe89a,#ffb347);border-radius:5px;padding:0 4px}
+    #board .cell.fx-split-source{animation:h045SplitSource 220ms ease-in-out infinite alternate}
+    @keyframes h045SplitSource{from{transform:scale(1);filter:brightness(1)}to{transform:scale(1.08);filter:brightness(1.5)}}
+    .slot-fx-layer .fx-fly-badge{position:absolute;z-index:40;display:grid;place-items:center;pointer-events:none;
+      font:800 14px/1 system-ui,sans-serif;color:#0b1020;background:linear-gradient(180deg,#ffe89a,#ffb347);
+      border-radius:6px;box-shadow:0 0 12px rgba(255,232,154,.8)}
+    .slot-fx-layer .fx-fly-badge.ladder{color:#eaf6ff;background:linear-gradient(180deg,#4aa8ff,#1b4fd8);box-shadow:0 0 14px rgba(74,168,255,.8)}
+    .slot-fx-layer .fx-fly-badge.result{font-size:18px;color:#0b1020;background:linear-gradient(180deg,#9dffd0,#2fd78f);box-shadow:0 0 16px rgba(47,215,143,.8)}
+    .slot-fx-layer .fx-math-bubble{position:absolute;z-index:35;transform:translate(-50%,-50%);min-width:96px;padding:8px 16px;
+      border-radius:14px;border:2px solid rgba(255,232,154,.9);background:rgba(6,13,26,.92);color:#ffe89a;text-align:center;
+      font:900 26px/1.1 system-ui,sans-serif;text-shadow:0 2px 6px #000;box-shadow:0 0 22px rgba(255,201,74,.45);opacity:0;pointer-events:none}
+    .slot-fx-layer .fx-math-bubble.show{opacity:1}
+    .slot-fx-layer .fx-math-bubble .fx-math-tag{display:block;font:700 11px/1.2 system-ui,sans-serif;color:#9fd8ff;letter-spacing:.08em;margin-bottom:2px}
+    .slot-fx-layer .fx-math-bubble.pulse{animation:h045BubblePulse 300ms ease-out}
+    @keyframes h045BubblePulse{from{transform:translate(-50%,-50%) scale(1.35);filter:brightness(1.8)}to{transform:translate(-50%,-50%) scale(1);filter:brightness(1)}}
+    #messageBar.fx-bar-hit{animation:h045BarHit 420ms ease-out}
+    @keyframes h045BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(47,215,143,.9)}to{transform:scale(1);filter:brightness(1)}}
+    #multiplierWindow .multiplier-step.fx-ladder-hit{animation:h045LadderHit 260ms ease-in-out infinite alternate}
+    @keyframes h045LadderHit{from{transform:scale(1)}to{transform:scale(1.25);filter:brightness(1.6)}}
+    #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
+    #board .h019-glyph{
+      display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
+      color:#d8e8f4;font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;
+      letter-spacing:.02em;text-shadow:0 2px 3px rgba(0,0,0,.72);
     }
     #board .mult-badge{
       position:absolute;top:2px;right:3px;z-index:3;
@@ -2828,6 +3118,16 @@
   function evaluate(board, mults) {
     let rawPay = 0;
     const hits = new Set(), details = [];
+    // game_rule §5.3（2026-10-06）：整波一起加——盤面上所有帶倍 WILD 倍數相加（x1 不計入，
+    // 不論是否參與連線），每條中獎連線都乘同一個總和；總和為 0 視為 x1
+    let boardSum = 0;
+    for (let reel = 0; reel < 5; reel++) {
+      for (let row = 0; row < 4; row++) {
+        const symbol = board[reel][row];
+        if ((symbol === WW || symbol === W2) && mults[reel][row] > 1) boardSum += mults[reel][row];
+      }
+    }
+    const lineMult = boardSum > 0 ? boardSum : 1;
     for (const target of SCORE) {
       const counts = [], positions = [];
       for (let reel = 0; reel < 5; reel++) {
@@ -2844,16 +3144,6 @@
       const ways = counts.reduce((product, count) => product * count, 1);
       const unit = Number(cfg.pays[String(target)][counts.length - 3]);
       if (!(unit > 0)) continue;
-      // §5.3：該連線用到的所有帶倍 WILD 倍數連乘，每顆只計一次
-      // game_rule §5.3：該連線用到的帶倍 WILD 倍數相加（x1 不計入），總和為 0 視為 x1
-      let lineSum = 0;
-      for (const group of positions) {
-        for (const [reel, row] of group) {
-          const symbol = board[reel][row];
-          if ((symbol === WW || symbol === W2) && mults[reel][row] > 1) lineSum += mults[reel][row];
-        }
-      }
-      const lineMult = lineSum > 0 ? lineSum : 1;
       const pay = unit * ways * lineMult;
       rawPay += pay;
       positions.flat().forEach(([reel, row]) => hits.add(`${reel},${row}`));
@@ -2870,10 +3160,11 @@
 
   // game_rule §5.2～5.4（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數；
   // 大鬼只在本體抽一次倍數，丟出的 WW 沿用同一值。
-  function flipGolden(board, mults, tableName, goldPositions, flipState) {
+  // 本體翻牌（小鬼／大鬼＋倍數）在消除當下就決定並顯示；大鬼分裂等補牌後再丟（落點依補牌後盤面）
+  function flipGoldenBody(board, mults, tableName, goldPositions, flipState) {
     const table = tables[tableName];
     if (!goldPositions.length || !Object.keys(table.gold).length) return null;
-    const flipped = [], splitKeys = [], bigSources = [];
+    const flipped = [], bigSources = [];
     const results = {};
     for (const [reel, row] of goldPositions) {
       let outcome = pickMap(table.gold);
@@ -2886,6 +3177,13 @@
       flipped.push(`${reel},${row}`);
       if (outcome === "W2") { flipState.bigGhostUsed = true; bigSources.push([[reel, row], value]); }
     }
+    return { flipped, results, bigSources };
+  }
+
+  // 回傳 { splitKeys, splits: [{ source, targets, value }] }，splits 供 Demo 畫「WW 複製飛出」動畫
+  function splitBigGhosts(board, mults, tableName, bigSources) {
+    const table = tables[tableName];
+    const splitKeys = [], splits = [];
     for (const [[sr, srow], value] of bigSources) {
       const count = Number(pickMap(table.split));
       const candidates = [];
@@ -2896,14 +3194,17 @@
         }
       }
       const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
+      const keys = [];
       for (const [reel, row] of targets) {
         // game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
         board[reel][row] = WW;
         mults[reel][row] = value > 1 ? value : 0;
-        splitKeys.push(`${reel},${row}`);
+        keys.push(`${reel},${row}`);
       }
+      splitKeys.push(...keys);
+      splits.push({ source: `${sr},${srow}`, targets: keys, value });
     }
-    return { flipped, splitKeys, results };
+    return { splitKeys, splits };
   }
 
   function spin(tableName, freeGame = false, budget = 0) {
@@ -2925,14 +3226,27 @@
       snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [...win.hits], combo, multiplier, cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
       combo++;
 
-      // 1) 消除（金框不消除，留待補牌後翻牌）
+      // 1) 消除；中獎的金框不消除，當下直接翻成小鬼／大鬼本體（分裂等補牌後）
       const transitionBoard = cloneBoard(board), cleared = [], goldPositions = [];
       for (const key of win.hits) {
         const [reel, row] = key.split(",").map(Number);
         if (gold[reel][row]) { goldPositions.push([reel, row]); gold[reel][row] = false; }
         else { board[reel][row] = -1; mults[reel][row] = 0; transitionBoard[reel][row] = -1; cleared.push(key); }
       }
-      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], cleared, converted: [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Eliminate" });
+      let flip = null;
+      if (goldPositions.length) {
+        flip = flipGoldenBody(board, mults, tableName, goldPositions, flipState);
+        if (flip) {
+          golden += goldPositions.length;
+          for (const [key, value] of Object.entries(flip.results)) {
+            goldenTally[key] = (goldenTally[key] || 0) + value;
+            if (key.startsWith("W2")) w2Events += value;
+          }
+          for (const [reel, row] of goldPositions) { transitionBoard[reel][row] = board[reel][row]; if (mults[reel][row] > 1) multWild++; }
+        }
+      }
+      const flipLabel = flip ? ` · Golden flip ${Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ")}` : "";
+      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], cleared, converted: flip ? flip.flipped : [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Eliminate${flipLabel}` });
 
       // 2) 掉落補牌（game_rule §5.6 步驟 3；Demogame規範 4.3 第 2 類）
       const motion = [];
@@ -2964,21 +3278,12 @@
       }
       snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
 
-      // 3) 金框翻牌 + 分裂（game_rule §5.6 步驟 4~6）
-      if (goldPositions.length) {
-        const flip = flipGolden(board, mults, tableName, goldPositions, flipState);
-        if (flip) {
-          golden += goldPositions.length;
-          for (const [key, value] of Object.entries(flip.results)) {
-            goldenTally[key] = (goldenTally[key] || 0) + value;
-            if (key.endsWith("_M")) multWild += value;
-            if (key.startsWith("W2")) w2Events += value;
-          }
-          const label = Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ");
-          snapshots.push({ type: "convert", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], converted: flip.flipped, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Golden flip · ${label}` });
-          if (flip.splitKeys.length) {
-            snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: flip.splitKeys, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${flip.splitKeys.length}` });
-          }
+      // 3) 大鬼分裂（game_rule §5.6 步驟 5~6；落點依補牌後盤面）
+      if (flip && flip.bigSources.length) {
+        const preBoard = cloneBoard(board), preMults = cloneBoard(mults);
+        const { splitKeys, splits } = splitBigGhosts(board, mults, tableName, flip.bigSources);
+        if (splitKeys.length) {
+          snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
       }
 
@@ -3020,7 +3325,7 @@
   }
 
   // ===== Card System（本作尚未建立 config_92A.js，實際為 Off）=====
-  function cardProfile() { return "oldhand"; }
+  function cardProfile() { return $("cardProfileSelect")?.value === "newbie" ? "newbie" : "oldhand"; }
   function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
   function naturalBaseSpin() {
     const weights = cfg.table_weight.bg;
@@ -3044,10 +3349,12 @@
   function cardSpin(card) {
     if (!card) return naturalBaseSpin();
     if (card.type === "free_game") {
+      // 數學模型規範 §2.3：須同時「觸發 FG」且 BG 得分 ≤ BG Trigger Cap（base_game 卡組最高有權重區間上限）
+      const trigCap = cardSectionCap("base_game", cardProfile());
       let last = null;
       for (let retry = 0; retry < MAX_RETRY; retry++) {
         last = naturalBaseSpin();
-        if (last.scatter >= 3) return last;
+        if (last.scatter >= 3 && last.pay / betUnit() <= trigCap) return last;
       }
       if (last) return last;
     } else {
@@ -3062,6 +3369,45 @@
       if (nearest) return nearest;
     }
     return naturalBaseSpin();
+  }
+  // 腳本：用自然機率反覆重抽，直到結果符合指定條件（只改「抽到哪一把」，不改任何權重）
+  const SCRIPT_RULES = {
+    combo5: r => r.scatter < 3 && r.combo >= 5,
+    flip: r => r.scatter < 3 && r.golden > 0,
+    bigghost: r => r.scatter < 3 && r.w2Events > 0,
+    fg: r => r.scatter >= 3,
+    fgbig: r => r.scatter >= 3,
+  };
+  const SCRIPT_TRIES = 300000;
+  function buildCardRangeOptions() {
+    const select = $("cardRangeSelect"); if (!select) return;
+    const keep = select.value;
+    const cards = cfg.card_system?.profiles?.[cardProfile()]?.base_game || [];
+    select.innerHTML = '<option value="">Auto</option>' + cards.map((card, index) => Number(card.weight) > 0
+      ? `<option value="${index}">${card.type === "free_game" ? `Free Game（BG ≤ ${card.max}x）` : `(${card.min}, ${card.max}]`}</option>` : "").join("");
+    if ([...select.options].some(option => option.value === keep)) select.value = keep;
+  }
+  function selectedCardRange() {
+    const value = $("cardRangeSelect")?.value;
+    if (value === "" || value == null) return null;
+    return cfg.card_system?.profiles?.[cardProfile()]?.base_game?.[Number(value)] || null;
+  }
+  function activeScript() { return $("scriptSelect")?.value || ""; }
+  function scriptedSpin(key) {
+    const rule = SCRIPT_RULES[key];
+    let last = null;
+    for (let tries = 0; tries < SCRIPT_TRIES; tries++) { last = naturalBaseSpin(); if (rule(last)) return last; }
+    console.warn(`腳本 ${key} 超過 ${SCRIPT_TRIES} 次未抽到，改用最後一把`);
+    return last;
+  }
+  function scriptedFeature(initialSpins, budget, minMulti) {
+    let best = null;
+    for (let tries = 0; tries < 20000; tries++) {
+      const result = freeSession(initialSpins, budget);
+      if (result.pay / betUnit() >= minMulti) return result;
+      if (!best || result.pay > best.pay) best = result;
+    }
+    return best;
   }
   function cardFeature(section, initialSpins, budget) {
     const card = pickCard(section);
@@ -3110,12 +3456,13 @@
     root.innerHTML = "";
     for (let row = 3; row >= 0; row--) for (let reel = 0; reel < 5; reel++) {
       const symbol = board[reel][row];
-      const code = CODE[symbol] || `S${symbol}`;
+      const empty = !(symbol >= 0);                  // 消除後的空格（-1）：直接留空，不顯示任何代號
+      const code = empty ? "" : (CODE[symbol] || `S${symbol}`);
       const cell = document.createElement("div");
       const key = `${reel},${row}`;
       const motion = drop.get(key), speed = Number($("speedRange").value || 1);
-      const isGold = !!(gold[reel] && gold[reel][row]);
-      cell.className = `cell symbol-${String(code).toLowerCase()}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
+      const isGold = !empty && !!(gold[reel] && gold[reel][row]);
+      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
         const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
@@ -3123,8 +3470,9 @@
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
-      cell.innerHTML = `<span class="slot-symbol-label">${code}</span>`;
-      if (mults[reel] && mults[reel][row]) {
+      // 結構同宙斯（symbol-wrap + h019-glyph）：共用的滾動模糊／消除淡出特效只認這組選擇器
+      cell.innerHTML = empty ? "" : `<div class="symbol-wrap"><span class="h019-glyph">${code}</span></div>`;
+      if (!empty && mults[reel] && mults[reel][row] > 1) {
         cell.insertAdjacentHTML("beforeend", `<span class="mult-badge">×${mults[reel][row]}</span>`);
       }
       root.append(cell);
@@ -3132,22 +3480,169 @@
   }
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
-  async function animateReels(initialBoard) {
+
+  // 即時倍率線型：共用 demogame_common.js（window.demogameLineChart），NB 每局 BG＋該局 FG 合計 ÷ 底注
+  function recordLine(mode, base, feature) {
+    if (mode !== 0) return;
+    window.demogameLineChart?.record(((base?.pay || 0) + (feature?.pay || 0)) / betUnit());
+  }
+  function fxLayer() { return window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null; }
+  function cellAt(key) { const [reel, row] = key.split(",").map(Number); return $("board").children[(3 - row) * 5 + reel] || null; }
+
+  // 中獎演出（game_rule §4／§5.3）：① 盤面 WILD 倍數徽章飛到中央加總 → ② 上排階梯倍數掉下來相乘 → ③ 結果飛到贏分列乘上贏分
+  async function animateWildMath(snapshot) {
+    const values = [];
+    for (let reel = 0; reel < 5; reel++) for (let row = 0; row < 4; row++) {
+      const symbol = snapshot.board[reel][row];
+      if ((symbol === WW || symbol === W2) && snapshot.mults?.[reel]?.[row] > 1) values.push({ key: `${reel},${row}`, value: snapshot.mults[reel][row] });
+    }
+    if (!values.length) return;
+    const layer = fxLayer();
+    if (!layer) return;
+    const speed = Number($("speedRange").value || 1);
+    const flight = Math.max(120, 420 / speed), hold = Math.max(120, 380 / speed), gap = Math.max(40, 120 / speed);
+    const layerRect = layer.getBoundingClientRect();
+    const boardRect = $("board").getBoundingClientRect();
+    const center = { x: boardRect.left - layerRect.left + boardRect.width / 2, y: boardRect.top - layerRect.top + boardRect.height / 2 };
+    const sum = values.reduce((total, item) => total + item.value, 0);
+    const ladder = Number(snapshot.multiplier) || 1;
+    const total = sum * ladder;
+    const base = (Number(snapshot.cascadePay) || 0) / total;
+
+    const bubble = document.createElement("div");
+    bubble.className = "fx-math-bubble";
+    bubble.style.left = `${center.x}px`; bubble.style.top = `${center.y}px`;
+    layer.appendChild(bubble);
+    const fly = (fromRect, toX, toY, html, className, delayMs = 0) => {
+      const ghost = document.createElement("div");
+      ghost.className = className;
+      ghost.innerHTML = html;
+      ghost.style.left = `${fromRect.left - layerRect.left}px`; ghost.style.top = `${fromRect.top - layerRect.top}px`;
+      ghost.style.width = `${fromRect.width}px`; ghost.style.height = `${fromRect.height}px`;
+      layer.appendChild(ghost);
+      const dx = toX - (fromRect.left - layerRect.left + fromRect.width / 2), dy = toY - (fromRect.top - layerRect.top + fromRect.height / 2);
+      const animation = ghost.animate(
+        [{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(1.3)`, opacity: .9 }],
+        { duration: flight, delay: delayMs, easing: "cubic-bezier(.3,.6,.3,1)", fill: "forwards" });
+      // 分頁在背景時 Web Animations 不會推進，finished 永遠不回來 → 以計時器保底，避免卡住整個回合
+      return Promise.race([animation.finished.catch(() => {}), wait(flight + delayMs + 60)]).then(() => ghost.remove());
+    };
+
+    // ① 倍數徽章逐顆飛到中央，中央數字累加
+    let running = 0;
+    const flights = [];
+    values.forEach((item, index) => {
+      const badge = cellAt(item.key)?.querySelector(".mult-badge");
+      if (!badge) return;
+      const rect = badge.getBoundingClientRect();
+      badge.style.visibility = "hidden";
+      flights.push(fly(rect, center.x, center.y, `×${item.value}`, "fx-fly-badge", index * gap).then(() => {
+        running += item.value;
+        bubble.innerHTML = `<span class="fx-math-tag">WILD</span>${values.slice(0, values.indexOf(item) + 1).map(v => `×${v.value}`).join(" + ")}${values.length > 1 ? ` = ×${running}` : ""}`;
+        bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse", "show");
+      }));
+    });
+    await Promise.all(flights);
+    bubble.innerHTML = `<span class="fx-math-tag">WILD SUM</span>×${sum}`;
+    await wait(hold);
+
+    // ② 上排階梯倍數掉下來相乘
+    const step = $("multiplierWindow").querySelector(".is-active");
+    if (step) {
+      step.classList.add("fx-ladder-hit");
+      await fly(step.getBoundingClientRect(), center.x, center.y, `×${ladder}`, "fx-fly-badge ladder");
+      step.classList.remove("fx-ladder-hit");
+    }
+    bubble.innerHTML = `<span class="fx-math-tag">×${sum} × CASCADE ×${ladder}</span>×${total}`;
+    bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse");
+    await wait(hold);
+
+    // ③ 結果飛到贏分列，贏分 = 基礎贏分 × 總倍數
+    const bar = $("messageBar").getBoundingClientRect();
+    $("messageBar").textContent = `WIN ${money(base)} × ${total}`;
+    bubble.remove();
+    const bubbleRect = { left: layerRect.left + center.x - 30, top: layerRect.top + center.y - 16, width: 60, height: 32 };
+    await fly(bubbleRect, bar.left - layerRect.left + bar.width / 2, bar.top - layerRect.top + bar.height / 2, `×${total}`, "fx-fly-badge result");
+    $("messageBar").textContent = `WIN ${money(base)} × ${total} = ${money(snapshot.cascadePay || 0)}`;
+    $("messageBar").classList.remove("fx-bar-hit"); void $("messageBar").offsetWidth; $("messageBar").classList.add("fx-bar-hit");
+    await wait(hold);
+    $("messageBar").textContent = snapshot.message || "WIN";
+    values.forEach(item => { const badge = cellAt(item.key)?.querySelector(".mult-badge"); if (badge) badge.style.visibility = ""; });
+  }
+
+  // 大鬼分裂演出：從本體複製出 WW 飛到每個落點，落地後該格變 WW
+  async function animateSplitCopies(snapshot, common) {
+    if (!snapshot.splits?.length || !snapshot.preBoard) return;
+    const speed = Number($("speedRange").value || 1);
+    const board = cloneBoard(snapshot.preBoard), mults = cloneBoard(snapshot.preMults || snapshot.mults);
+    renderBoard(board, [], { ...common, mults });
+    const layer = fxLayer();
+    if (!layer) return;
+    const layerRect = layer.getBoundingClientRect();
+    const flight = Math.max(90, 320 / speed), gap = Math.max(40, 110 / speed);
+    for (const split of snapshot.splits) {
+      const source = cellAt(split.source);
+      if (!source) continue;
+      const from = source.getBoundingClientRect();
+      source.classList.add("fx-split-source");
+      const flights = [];
+      split.targets.forEach((key, index) => {
+        const target = cellAt(key);
+        if (!target) return;
+        const to = target.getBoundingClientRect();
+        const ghost = document.createElement("div");
+        ghost.className = "cell symbol-ww fly-ww";
+        ghost.style.cssText = `left:${from.left - layerRect.left}px;top:${from.top - layerRect.top}px;width:${from.width}px;height:${from.height}px;`;
+        ghost.innerHTML = `<div class="symbol-wrap"><span class="h019-glyph">WW</span></div>${split.value > 1 ? `<span class="mult-badge">×${split.value}</span>` : ""}`;
+        layer.appendChild(ghost);
+        const animation = ghost.animate(
+          [{ transform: "translate(0,0) scale(.6)", opacity: .4 }, { transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(1)`, opacity: 1 }],
+          { duration: flight, delay: index * gap, easing: "cubic-bezier(.2,.7,.3,1.1)", fill: "forwards" });
+        // 分頁在背景時 Web Animations 不會推進 → 以計時器保底
+        flights.push(Promise.race([animation.finished.catch(() => {}), wait(flight + index * gap + 60)]).then(() => {
+          ghost.remove();
+          const [reel, row] = key.split(",").map(Number);
+          board[reel][row] = WW; mults[reel][row] = split.value > 1 ? split.value : 0;
+          renderBoard(board, [], { ...common, mults, marked: [key] });
+          cellAt(split.source)?.classList.add("fx-split-source");
+        }));
+      });
+      await Promise.all(flights);
+    }
+  }
+  // 滾動中每輪金框的出現率：依 Gold Count Weight 的期望顆數 ÷ 4（純表演，不影響結果）
+  function rollingGoldRate(scene, reel) {
+    if (!GOLD_REELS.includes(reel)) return 0;
+    const list = (GOLD_COUNT[scene] || [])[reel] || [];
+    const total = list.reduce((sum, w) => sum + Number(w), 0);
+    if (!(total > 0)) return 0;
+    return list.reduce((sum, w, count) => sum + count * Number(w), 0) / total / 4;
+  }
+
+  async function animateReels(initialBoard, initialGold = null, initialMults = null, scene = "bg") {
     // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    // 滾動中的金框依權重比例隨機塞進輪帶做表演；該輪停下後才顯示真正抽出的金框與倍數，結果不變
     const speed = Number($("speedRange").value || 1);
     const baseFrames = Math.max(3, Math.round(9 / speed));
     const perReelExtra = Math.max(1, Math.round(3 / speed));
     const totalFrames = baseFrames + perReelExtra * 4 + 1;
+    const goldSrc = initialGold || zeroGold(), multSrc = initialMults || zeroMults();
+    const goldRate = [0, 1, 2, 3, 4].map(reel => rollingGoldRate(scene, reel));
     for (let frame = 0; frame < totalFrames; frame++) {
-      const rolling = cloneBoard(initialBoard);
+      const rolling = cloneBoard(initialBoard), rollingGold = cloneBoard(goldSrc), rollingMults = cloneBoard(multSrc);
       const rollingReels = new Set();
       for (let reel = 0; reel < 5; reel++) {
         if (frame >= baseFrames + perReelExtra * reel) continue; // 該輪已停，顯示最終符號
         rollingReels.add(reel);
         const offset = (totalFrames - frame + reel) % 4;
-        for (let row = 0; row < 4; row++) rolling[reel][row] = initialBoard[reel][(row + offset) % 4];
+        for (let row = 0; row < 4; row++) {
+          const src = (row + offset) % 4;
+          rolling[reel][row] = initialBoard[reel][src];
+          rollingGold[reel][row] = rolling[reel][row] !== C1 && Math.random() < goldRate[reel];   // 表演用金框
+          rollingMults[reel][row] = 0;
+        }
       }
-      renderBoard(rolling, []);
+      renderBoard(rolling, [], { gold: rollingGold, mults: rollingMults });
       if (!rollingReels.size) break;
       const cells = [];
       Array.from($("board").children).forEach((node, index) => {
@@ -3166,23 +3661,29 @@
     $("carryMultiValue").textContent = snapshot.combo;
   }
 
-  function renderRngSource(result) {
-    const tier = BET_LEVELS[state.betIndex] * (state.mode === 2 ? BUY.cost_multiplier : 1);
-    const tierName = tier < 2 ? "small_bet" : tier <= 100 ? "medium_bet" : "big_bet";
-    $("rngList").innerHTML = `
-      <div class="rng-row"><span>Card System</span><span>${cardSystemActive() ? "On" : "Off (config_92A.js 未建立)"}</span></div>
-      <div class="rng-row"><span>Source</span><span>${result.tableName} · weighted draw</span></div>
-      <div class="rng-row"><span>Bet Mode</span><span>${state.mode === 2 ? `Buy Feature ${BUY.cost_multiplier}x` : "Normal Bet"}</span></div>
-      <div class="rng-row"><span>bet_tier_amount</span><span>${format(BET_LEVELS[state.betIndex])} · ${tierName}</span></div>
-      <div class="rng-row"><span>Golden flips</span><span>${JSON.stringify(result.goldenTally || {})}</span></div>
-      <div class="rng-row"><span>Mult Wild</span><span>${result.multWild || 0}</span></div>
-      <div class="rng-row"><span>Max Win cap</span><span>${result.capped ? `capped at ${MAX_WIN}x` : `${MAX_WIN}x`}</span></div>`;
+  // 歷史紀錄：每一場 FG（NB 觸發／BF 購買）結束時記錄最終倍數＝該場 FG 總贏分 ÷ 底注（不含觸發盤 BG 得分）
+  const fgHistory = [];
+  function renderHistory() {
+    const stat = mode => {
+      const list = fgHistory.filter(item => item.mode === mode);
+      const avg = list.length ? list.reduce((sum, item) => sum + item.multi, 0) / list.length : 0;
+      const max = list.length ? Math.max(...list.map(item => item.multi)) : 0;
+      return `${mode} ${list.length} 場 · 平均 ${avg.toFixed(2)}x · 最高 ${max.toFixed(2)}x`;
+    };
+    $("historySummary").innerHTML = `<div class="rng-row"><span>${stat("NB")}</span><span>${stat("BF")}</span></div>`;
+    $("rngList").innerHTML = fgHistory.length
+      ? fgHistory.slice().reverse().map(item => `<div class="rng-row"><span>#${item.no} · ${item.mode} · ${item.spins} 轉 · 贏分 ${format(item.win)}</span><span>${item.multi.toFixed(2)}x</span></div>`).join("")
+      : '<div class="rng-row"><span>尚無 FG 紀錄</span><span>—</span></div>';
+  }
+  function recordFgHistory(fg) {
+    fgHistory.push({ no: fgHistory.length + 1, mode: fg.mode === 2 ? "BF" : "NB", spins: fg.total, win: fg.win, multi: fg.win / betUnit() });
+    renderHistory();
   }
 
   async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
     state.snapshots = snapshots; state.snapshotIndex = -1;
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
-    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
+    if (snapshots[0]) { await animateReels(snapshots[0].board, snapshots[0].gold, snapshots[0].mults, freeGame ? "fg" : "bg"); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
       $("messageBar").textContent = snapshot.message || "Cascade";
@@ -3193,7 +3694,9 @@
           $("winValue").textContent = money(state.lastWin);
         }
         renderWinDetails(snapshot);
-        renderBoard(snapshot.board, snapshot.hits, common); await wait(delay());
+        renderBoard(snapshot.board, snapshot.hits, common);
+        await animateWildMath(snapshot);
+        await wait(delay());
       } else if (snapshot.type === "eliminate") {
         renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared || [], converted: snapshot.converted || [] });
         await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
@@ -3201,6 +3704,7 @@
         renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop || [] });
         await wait(Math.max(60, 180 / Number($("speedRange").value || 1)));
       } else if (snapshot.type === "wild-mark") {
+        await animateSplitCopies(snapshot, common);
         renderBoard(snapshot.board, [], { ...common, marked: snapshot.marked || [] });
         await wait(Math.max(160, 360 / Number($("speedRange").value || 1)));
       } else {
@@ -3269,7 +3773,7 @@
     state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
     state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
-    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
+    if (state.fg.index >= state.fg.spins.length) { recordFgHistory(state.fg); $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
   }
 
   async function play(mode = 0) {
@@ -3283,18 +3787,24 @@
         const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
+        const script = mode === 0 ? activeScript() : "";
         const base = mode === 0
-          ? ($("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
+          ? (script ? scriptedSpin(script) : selectedCardRange() ? cardSpin(selectedCardRange()) : $("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
           : buyEntry();
-        await animateSnapshots(base.snapshots, false); renderRngSource(base);
+        await animateSnapshots(base.snapshots, false);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
         state.hitRounds += base.pay > 0 ? 1 : 0;
         state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
         if (base.scatter >= 3 || mode === 2) {
-          const spins = mode === 2 ? Number(BUY.free_spins) : initialFreeSpins(base.scatter);
+          const spins = initialFreeSpins(base.scatter);   // BF 進場盤的 C1 顆數決定局數，同自然觸發
           const section = mode === 2 ? "buy_feature" : "free_game";
-          activateFeature(cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay), mode);
+          const feature = script === "fgbig" ? scriptedFeature(spins, base.pay, 100)
+            : cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay);
+          activateFeature(feature, mode);
+          if (!script && !selectedCardRange()) recordLine(mode, base, feature);   // 腳本／指定區間局不計入倍率線型
+        } else if (!script && !selectedCardRange()) {
+          recordLine(mode, base, null);
         }
       }
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
@@ -3411,14 +3921,23 @@
       versionSelect.appendChild(option);
     }
     versionSelect.value = entry?.version || "";
-    // 只列實際存在的 Config；config_92A.js 尚未建立，故目前僅 base。
+    // 只列實際存在的 Config：base（卡片關）＋ manifest entry.configs 的 RTP／Variant（Demogame規範 §1：<Config>-<Profile>）
     configSelect.innerHTML = "";
-    const option = document.createElement("option");
-    option.value = "base";
-    option.textContent = `H0451 · v${entry?.version || "1"}`;
-    configSelect.appendChild(option);
-    configSelect.value = "base";
-    configSelect.disabled = true;
+    const rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
+    for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = code === "base" ? "Base" : code;
+      configSelect.appendChild(option);
+    }
+    configSelect.value = window.H045_ACTIVE_CONFIG || "base";
+    configSelect.disabled = (configSelect.options?.length || 0) <= 1;
+    configSelect.onchange = () => { if (configSelect.value !== window.H045_ACTIVE_CONFIG) openVersion(entry?.version || "", configSelect.value); };
+    const profileSelect = $("cardProfileSelect");
+    try { profileSelect.value = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
+    profileSelect.onchange = () => { refreshMaxWin(); buildCardRangeOptions(); updateStats(); };
+    document.addEventListener?.("demogame:card-system-change", () => { refreshMaxWin(); buildCardRangeOptions(); updateStats(); });
+    refreshMaxWin();
   }
 
   $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2);
@@ -3428,18 +3947,18 @@
   $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
-  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("clearHistoryBtn").onclick=()=>{fgHistory.length=0;renderHistory();}; renderHistory(); $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
   
   document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
 })();
   </script>
   <script>
-  // 本作尚未建立 config_92A.js（卡片權重待 card-off 大場次校準）
-  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+  // 有載入 RTP／Variant config（card_system）時才支援 Card System；選 Base 則為 Off
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H045_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
-  <script src="../demogame_common.js?v=2"></script>
+  <script src="../demogame_common.js?v=20261006"></script>
 </body>
 
 </html>
