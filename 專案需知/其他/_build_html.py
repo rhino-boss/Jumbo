@@ -132,7 +132,7 @@ def render_inline(text: str) -> str:
 def render_timeline(lines) -> str:
     """畫成分段時間軸。
 
-    第一行 `cols: 區段1, 區段2, ...` 定義欄位（依序排列的轉數區段）；
+    第一行 `cols: 區段1, 區段2, ...`（逗號後要有空白）定義欄位（依序排列的轉數區段）；
     其餘每行一條軌道：`軌道名稱 :: 起欄-迄欄 :: 文字 :: 樣式 || 下一個項目 ...`，
     欄位從 1 起算，樣式為 phase／phase2／event／stop。
     """
@@ -144,7 +144,8 @@ def render_timeline(lines) -> str:
         if text.startswith("cols:"):
             # 區段可加「*權重」放寬該欄，例如 235～405*2
             cols = []
-            for c in text[5:].split(","):
+            # 區段之間以「逗號＋空白」分隔，區段內的千分位逗號（1,000）不受影響
+            for c in re.split(r",\s+", text[5:].strip()):
                 label, _, w = c.strip().partition("*")
                 cols.append((label.strip(), float(w) if w else 1.0))
             continue
