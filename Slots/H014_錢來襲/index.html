@@ -251,6 +251,14 @@
         </ul>
       </article>
       <article class="change-log-entry">
+        <h4>2026-10-12：數學 4.0.0.0 補充（Extra Bet 卡片、RTP 精度）</h4>
+        <ul>
+          <li>Extra Bet 卡片改以 Normal Bet 4.0.0.0 為基礎：各得分區間權重 × (1 + k × Normal Bet 該區間 R4 有東西的比例)，R4 有特色比例越高的區間提高越多，RTP（÷1.5）92%；輪帶權重沿用 1.0.0.2。</li>
+          <li>EB Hit 約 15.3%～17.6%（舊 EB 17.7%～20.8%）；最大得分同 Normal（Bet5／10 1,055x、Bet50 2,021x、Bet100 10,101x）。</li>
+          <li>依規範 §1.4.7，Normal／Extra 卡片精算 RTP 皆精確到 92.0000%。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-12：數學 4.0.0.0 補充（補合格區間、Bet100 上限 5000 倍）</h4>
         <ul>
           <li>卡片：自然機率 ≥ 0.05% 但原本 0 權重的區間補上權重，彼此比例照自然機率、最小 1 ppm，其餘區間重擬，RTP 92%。Bet5／Bet10 最大得分 550x → 1,055x。</li>
