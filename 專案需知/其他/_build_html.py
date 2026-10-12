@@ -49,6 +49,24 @@ GROUPS = [
     ("模擬程式＋Demogame", ["sim", "demo"]),
 ]
 
+# 頁籤 icon：只有列在這裡的分類會顯示（線條圖示，顏色跟著文字）
+_SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{}</svg>')
+GROUP_ICONS = {
+    # 數學設計：Σ
+    "數學設計": _SVG.format('<path d="M18 4H6l6 8-6 8h12"/>'),
+    # 系統相關：齒輪
+    "系統相關": _SVG.format(
+        '<circle cx="12" cy="12" r="3"/>'
+        '<path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 '
+        '1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1'
+        'a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1'
+        'a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 '
+        '1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3'
+        'l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4'
+        'h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+}
+
 ROOT_OUTPUT_NAME = OUTPUT.name
 
 # 其他產線：資料夾內的 .md 各自彙整成該資料夾的 HTML。
@@ -478,7 +496,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         tabs_html.append(
             f'<button class="tab" role="tab" id="tab-g{gi}" data-tab="{ids[0]}" '
             f'data-tabs="{",".join(ids)}" aria-selected="{"true" if first else "false"}" '
-            f'tabindex="{0 if first else -1}">{gname}</button>'
+            f'tabindex="{0 if first else -1}">{GROUP_ICONS.get(gname, "")}{gname}</button>'
         )
 
     today = date.today().strftime("%Y-%m-%d")
@@ -535,6 +553,7 @@ h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
   background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
   padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}}
 .tab:hover{{color:var(--ink); background:var(--panel-2)}}
+.tab-ico{{width:14px; height:14px; vertical-align:-2px; margin-right:6px}}
 .tab[aria-selected="true"]{{color:var(--s1); font-weight:600; background:var(--panel);
   border-color:var(--rule); border-bottom-color:var(--panel)}}
 .tab:focus-visible{{outline:2px solid var(--s1); outline-offset:-2px}}
