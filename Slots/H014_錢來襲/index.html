@@ -24,7 +24,7 @@
 
     #grid-panel { position:relative; padding:12px; overflow:hidden; }
 
-    #board { --cell:78px; position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) 14px minmax(0,1.15fr); gap:6px;
+    #board { --cell:46px; position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) 14px minmax(0,1.15fr); gap:6px;
       padding:8px; border-radius:10px; background:#3a2a06; border:2px solid #b8892a; }
     #board .reel { position:relative; height:calc(var(--cell) * 2); overflow:hidden; border-radius:7px;
       background:linear-gradient(90deg,#0b5a2a,#14803e 50%,#0b5a2a); box-shadow:inset 0 0 14px rgba(0,0,0,.6); }
@@ -91,8 +91,8 @@
     #betMenu button { width:100% !important; }
     #betMenu button.is-active { background:#0077cc !important; }
     #helpSourceFrame { display:none; }
-    @media (max-width:760px) { #board { --cell:64px; } }
-    @media (max-width:420px) { #board { --cell:54px; } #board .cell .slot-symbol-label { font-size:24px; } #board .cell.sym-respin .slot-symbol-label { font-size:11px; } }
+    @media (max-width:760px) { #board { --cell:40px; } }
+    @media (max-width:420px) { #board { --cell:34px; } #board .cell .slot-symbol-label { font-size:24px; } #board .cell.sym-respin .slot-symbol-label { font-size:11px; } }
   </style>
 </head>
 
@@ -240,6 +240,14 @@
         <ul>
           <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
           <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-12：表演調整</h4>
+        <ul>
+          <li>停輪順序改為由右到左：R4 → R3 → R2 → R1（RESPIN 重轉時 R3 → R2 → R1）。</li>
+          <li>空輪 E 不顯示文字，只留空白底板。</li>
+          <li>上下符號間距縮為原本的 1/3：格高 78px → 46px（窄螢幕 64 → 40、54 → 34），中線與上下半格比例不變。</li>
         </ul>
       </article>
       <article class="change-log-entry">
@@ -707,7 +715,7 @@
 
   // ===== 盤面（By Game）=====
   const reelEls = [...document.querySelectorAll("#board .reel")];
-  const cellHtml = (id) => `<div class="cell ${symClass(id)}" data-sym="${id}"><span class="slot-symbol-label">${code(id)}</span></div>`;
+  const cellHtml = (id) => `<div class="cell ${symClass(id)}" data-sym="${id}"><span class="slot-symbol-label">${id === S_E ? "" : code(id)}</span></div>`;  // E＝空輪，不顯示文字
   function stripItems(strip, stop, override, extra) {
     const L = strip.length, items = [];
     for (let k = -1; k <= 1 + extra; k++) items.push(strip[((stop + k) % L + L) % L]);
@@ -724,7 +732,7 @@
   }
   async function spinReel(col, strip, stop, override, ms) {
     const reel = reelEls[col], inner = reel.querySelector(".reel-strip");
-    const extra = 10 + col * 3;
+    const extra = Math.max(6, Math.round(ms / 65));  // 捲動格數隨停輪時間
     const items = stripItems(strip, stop, override, extra);
     inner.style.transition = "none";
     inner.innerHTML = items.map(cellHtml).join("");
@@ -921,9 +929,10 @@
     setScore("", "Spinning…");
     setMessage("Spinning…");
     const base = 650 / sp, gap = 170 / sp;
-    const jobs = [0, 1, 2].map((c) => spinReel(c, sh.reels[c], res.stops[c], null, base + c * gap));
-    const r4Job = spinReel(3, sh.r4, res.r4Pos, null, base + 3 * gap + 380 / sp);
-    await Promise.all(jobs);
+    // 停輪順序由右到左：R4 → R3 → R2 → R1
+    const r4Job = spinReel(3, sh.r4, res.r4Pos, null, base);
+    const jobs = [0, 1, 2].map((c) => spinReel(c, sh.reels[c], res.stops[c], null, base + (3 - c) * gap));
+    await Promise.all([...jobs, r4Job]);
     setScore(fmt(res.s1), "Number Win（R1～R3 中線串接）", res.s1 > 0);
     if (res.s1 > 0) [0, 1, 2].forEach((c) => { if (res.syms[c] !== S_E) hitReel(c); });
     await r4Job;
@@ -953,7 +962,7 @@
       await wait(500 / sp);
       [0, 1, 2].forEach((c) => { hitReel(c, false); reelEls[c].classList.add("respin-flash"); });
       const overrides = [0, 1, 2].map((c) => (rs.syms[c] !== sh.rsReels[c][rs.stops[c]] ? rs.syms[c] : null));
-      await Promise.all([0, 1, 2].map((c) => spinReel(c, sh.rsReels[c], rs.stops[c], overrides[c], base + c * gap)));
+      await Promise.all([0, 1, 2].map((c) => spinReel(c, sh.rsReels[c], rs.stops[c], overrides[c], base + (2 - c) * gap)));  // 由右到左停
       [0, 1, 2].forEach((c) => { reelEls[c].classList.remove("respin-flash"); if (rs.syms[c] !== S_E) hitReel(c); });
       hitReel(3);
       $("respinValue").textContent = fmt(rs.add);
