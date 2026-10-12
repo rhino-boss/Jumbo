@@ -42,7 +42,7 @@
 
 ```text
 H0xx_遊戲名稱/
-├─ game_rule.md、game_help_draft.md、game_description.md
+├─ game_rule.md、game_help_draft.md、game_description.md、注意事項.md
 ├─ config.js、config_<RTP><Variant>.js、Simulator.py、index.html
 ├─ Source/        數學模型
 ├─ 文件/          對外文件
@@ -55,7 +55,7 @@ H0xx_遊戲名稱/
 
 | 存放位置 | 放什麼 | 製作方式見 |
 |---|---|---|
-| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[開發流程.md](開發流程.md)第 2 節） |
+| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`注意事項.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[開發流程.md](開發流程.md)第 2 節） |
 | `Source/` | 數學模型 `H0xx1*.xlsx` | [數學模型規範.md](數學模型規範.md) |
 | `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md` | [數學文件規範.md](數學文件規範.md)、[送驗文件規範.md](送驗文件規範.md) |
 | `文件/PARsheet/` | PARsheet（原檔名加 `R`） | [數學文件規範.md](數學文件規範.md) PARsheet 節 |
@@ -127,7 +127,7 @@ H0xx_遊戲名稱/
 3. Simulator 已完成所有支援組合的統計驗證。
 4. Card System 的權重、區間、Retry 與失敗監控通過。
 5. Demogame 的代表性單局可與 Simulator 對帳。
-6. [開發流程.md](開發流程.md) 第 2 節的必要產出文件（`game_rule.md`、`game_help_draft.md`／`{GameID}_Help.xlsx`、`game_description.md`、數學模型／PARsheet、`config.js`、`Simulator.py`、`index.html`、`數值報告_<遊戲中文名>.md`＋`.html`、`{GameID}_Game Description.docx`、`{GameID}_Math Document Description.md`＋`_EN.md`）全部齊備，與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。
+6. [開發流程.md](開發流程.md) 第 2 節的必要產出文件（`game_rule.md`、`game_help_draft.md`／`{GameID}_Help.xlsx`、`game_description.md`、數學模型／PARsheet、`config.js`、`Simulator.py`、`index.html`、`數值報告_<遊戲中文名>.md`＋`.html`、`注意事項.md`、`{GameID}_Game Description.docx`、`{GameID}_Math Document Description.md`＋`_EN.md`）全部齊備，與 Game List 均為同一正式版本，且必要的 Markdown 文件皆已同步更新。
 
 ## 8. 專有名詞
 

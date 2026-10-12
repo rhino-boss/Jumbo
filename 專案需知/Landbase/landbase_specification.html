@@ -156,7 +156,7 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <header class="page">
   <div class="eyebrow">Slots · Landbase</div>
   <h1 class="site">Landbase 轉製 開發規範</h1>
-  <p class="meta">由 <code>專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-08</p>
+  <p class="meta">由 <code>專案需知/Landbase/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-12</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="導覽" data-tabs="導覽" aria-selected="true" tabindex="0">導覽</button><button class="tab" role="tab" id="tab-g1" data-tab="系統機制" data-tabs="系統機制" aria-selected="false" tabindex="-1">系統機制</button><button class="tab" role="tab" id="tab-g2" data-tab="docs" data-tabs="docs" aria-selected="false" tabindex="-1">數學文件規範</button><button class="tab" role="tab" id="tab-g3" data-tab="送驗規範" data-tabs="送驗規範" aria-selected="false" tabindex="-1">送驗規範</button></div>
 <div class="body-row">
@@ -213,7 +213,7 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 ├─ extra_bet     → low_bet／high_bet → weight_bg／weight_fg
 ├─ buy_feature   → low_bet／high_bet → weight_fg
 └─ super_feature → low_bet／high_bet → weight_fg</code></pre>
-<ul><li><code>low_bet</code> 對應 <code>&lt; $2</code>，<code>high_bet</code> 對應 <code>&gt;= $2</code>；不得保留 <code>medium_bet</code>／<code>big_bet</code> 的空殼設定。</li><li>區間工作表（<code>Multiplier_Weight</code>、<code>Avg_Multi</code>、<code>Nature_Prob</code>）的 Oldhand 欄位依低／高注命名，例如 <code>NB_BG_Low</code>／<code>NB_BG_High</code>；Newbie 欄位不變。</li><li>倍率上限依<a href="#" class="tab-link" data-tab="系統機制">系統機制</a>的系統最大賠付反推，不直接套用 Omniplay 第 1.4.4 節的 <code>20000x</code>／<code>2000x</code> 預設；Newbie 的 <code>30x</code>／<code>120x</code> 上限沿用。</li><li>是否啟用 Card System 隨第 1 節數學調性決定；未啟用時不得建立空白權重欄或 Card System 設定。</li></ul>
+<ul><li><code>low_bet</code> 對應 <code>&lt; $2</code>，<code>high_bet</code> 對應 <code>&gt;= $2</code>；不得保留 <code>medium_bet</code>／<code>big_bet</code> 的空殼設定。</li><li>區間工作表（<code>Multiplier_Weight</code>、<code>Avg_Multi</code>、<code>Nature_Prob</code>）的 Oldhand 欄位依低／高注命名，例如 <code>NB_BG_Low</code>／<code>NB_BG_High</code>；Newbie 欄位不變。</li><li>倍率上限依<a href="#" class="tab-link" data-tab="系統機制">系統機制</a>的系統最大賠付反推，不直接套用 Omniplay 第 1.4.4 節的 <code>20000x</code>／<code>1000x</code> 預設；Newbie 的 <code>30x</code>／<code>120x</code> 上限沿用。</li><li>是否啟用 Card System 隨第 1 節數學調性決定；未啟用時不得建立空白權重欄或 Card System 設定。</li></ul>
 <h2 id="5-命名補充">5. 命名補充</h2>
 <ul><li>Landbase 轉製遊戲的 ParSheet ID 仍為 <code>H&lt;三位數字&gt;1</code>；同一數學供多個 Game ID 使用時（如 <code>H0111</code> → 102001／102002），數學模型只建一份，Game ID 對應記錄於 <code>Game Description</code> 工作表與 Game List。</li></ul>
 <h2 id="6-檢查清單">6. 檢查清單</h2>

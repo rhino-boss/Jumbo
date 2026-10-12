@@ -39,7 +39,7 @@
 
 ```text
 H0xx_遊戲名稱/
-├─ game_rule.md、game_help_draft.md、game_description.md
+├─ game_rule.md、game_help_draft.md、game_description.md、注意事項.md
 ├─ config.js、config_<RTP><Variant>.js、Simulator.py、index.html
 ├─ Source/        數學模型
 ├─ 文件/          對外文件
@@ -52,7 +52,7 @@ H0xx_遊戲名稱/
 
 | 存放位置 | 放什麼 | 製作方式見 |
 |---|---|---|
-| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[開發流程.md](開發流程.md)第 2 節） |
+| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`注意事項.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[開發流程.md](開發流程.md)第 2 節） |
 | `Source/` | 數學模型 `H0xx1*.xlsx` | [數學模型規範.md](數學模型規範.md) |
 | `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md` | [數學文件規範.md](數學文件規範.md)、[送驗文件規範.md](送驗文件規範.md) |
 | `文件/PARsheet/` | PARsheet（原檔名加 `R`） | [數學文件規範.md](數學文件規範.md) PARsheet 節 |
