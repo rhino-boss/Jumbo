@@ -1,7 +1,7 @@
 window.H027_VERSION_MANIFEST = {
-  current: "5.1.1.2",
-  base_version: "5",
-  next_version: "6.0.0.0",
+  current: "7.2.0.0",
+  base_version: "7",
+  next_version: "8.0.0.0",
   versions: [
     {
       version: "0.0.0.0",
@@ -249,6 +249,67 @@ window.H027_VERSION_MANIFEST = {
         "Rename the Range_Avg_Multi sheet to Avg_Multi and add a Nature_Prob sheet to all six weight workbooks: same layout as Multiplier_Weight, Nature_Prob_* headers, the natural probability of each interval (BG per non-trigger spin with the Free Game row holding the trigger probability; FG/BF per free-game session), formatted 0.0000%. Document-only change, so the fourth digit increments to 5.1.1.1 and the 5.1.1.0 snapshot is replaced.",
         "Update game_rule.md 6.1 to describe the C3 multiplier distribution and BG table-selection weights of both base-math families (A and B); the previous text described A only.",
         "Validation (spec 3.2.2 rounds, identical weight sets run once, no Newbie BF): 20 Card-On runs, all within 2 sigma of target with Retry Limit Exceeded at most 486 per 100,000,000 rounds. Bump to 5.1.0.0 per spec 1.3.1 (card weight change)."
+      ]
+    },
+    {
+      version: "7.1.1.0",
+      math_key: "7.1",
+      date: "2026-10-05",
+      competitor_initial_version: false,
+      configs: {
+        "92A": "Versions/7.1.1.0/config_92A.js",
+        "94A": "Versions/7.1.1.0/config_94A.js",
+        "92A_Bet100": "Versions/7.1.1.0/config_92A_Bet100.js",
+        "92B": "Versions/7.1.1.0/config_92B.js",
+        "94B": "Versions/7.1.1.0/config_94B.js",
+        "92B_Bet100": "Versions/7.1.1.0/config_92B_Bet100.js"
+      },
+      workbooks: {
+        base_a: "Versions/7.1.1.0/Source/H0271A.xlsx",
+        base_b: "Versions/7.1.1.0/Source/H0271B.xlsx",
+        92: "Versions/7.1.1.0/Source/H027192A.xlsx",
+        94: "Versions/7.1.1.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/7.1.1.0/Source/H027192A_Bet100.xlsx",
+        "92B": "Versions/7.1.1.0/Source/H027192B.xlsx",
+        "94B": "Versions/7.1.1.0/Source/H027194B.xlsx",
+        "92B_Bet100": "Versions/7.1.1.0/Source/H027192B_Bet100.xlsx"
+      },
+      frozen_base: "Versions/7.1.1.0",
+      changes: [
+        "Base math 7 (A/B). Buy Feature free spins follow the workbook free_game_table_setting 6:9 (was 5:10 in config); Weight_BF re-solved from the 6:9 natural reports (RTP 89.5% + 3% entry, win rate 30%, single interval <= 15%). NB/EB/Newbie weights unchanged since 7.0.0.0.",
+        "SCR filled per group (A/B separate, NB/EB/BF, Oldhand three tiers share the medium-bet value, Newbie separate); BF A 34,221,181,000 / B 34,216,240,000.",
+        "Simulator gains OP Jackpot simulation (JACKPOT_FILE / JACKPOT_OPTION). Detailed history for 6.x-7.1.x is in 修改紀錄.md; snapshots before 7.1.1.0 in the 7.x line were not kept (Versions/7.0.0.0, 7.0.1.0, 7.1.0.0 hold only their Record reports)."
+      ]
+    },
+    {
+      version: "7.2.0.0",
+      math_key: "7.2",
+      date: "2026-10-12",
+      competitor_initial_version: false,
+      configs: {
+        "92A": "Versions/7.2.0.0/config_92A.js",
+        "94A": "Versions/7.2.0.0/config_94A.js",
+        "92A_Bet100": "Versions/7.2.0.0/config_92A_Bet100.js",
+        "92B": "Versions/7.2.0.0/config_92B.js",
+        "94B": "Versions/7.2.0.0/config_94B.js",
+        "92B_Bet100": "Versions/7.2.0.0/config_92B_Bet100.js"
+      },
+      workbooks: {
+        base_a: "Versions/7.2.0.0/Source/H0271A.xlsx",
+        base_b: "Versions/7.2.0.0/Source/H0271B.xlsx",
+        92: "Versions/7.2.0.0/Source/H027192A.xlsx",
+        94: "Versions/7.2.0.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/7.2.0.0/Source/H027192A_Bet100.xlsx",
+        "92B": "Versions/7.2.0.0/Source/H027192B.xlsx",
+        "94B": "Versions/7.2.0.0/Source/H027194B.xlsx",
+        "92B_Bet100": "Versions/7.2.0.0/Source/H027192B_Bet100.xlsx"
+      },
+      frozen_base: "Versions/7.1.1.0",
+      changes: [
+        "Big bet (_Bet100) multiplier cap 1000x for BG and FG (math model spec 1.4.4). FG (NB/EB/BF) of A and B drops (1000,2000]; top interval (950,1000].",
+        "B big bet BG drops (1000,2000]; with max bet $1500 the BG ceiling $500,000 gives 333x, so the top interval is (250,300]. A big bet BG already topped at (200,250] and is unchanged. Targets and solver identical to 7.1.x; Newbie columns unchanged; SCR unchanged.",
+        "Validation (big bet, Oldhand, 10^7 each): A NB 91.67%, EB 91.52%, BF 92.52%; B NB 91.59%, EB 91.73%, BF 92.46%. A EB is -2.34 sigma from the BG low bias already present in 7.0.x (same BG weights).",
+        "Known exception recorded in 注意事項.md: the BG 2500x ball cannot score in A (all tiers, BG cap 250x) or B big bet (BG cap 300x); left as is per user instruction."
       ]
     }
   ]
