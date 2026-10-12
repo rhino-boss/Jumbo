@@ -2196,6 +2196,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-12：符號改用幸運王牌（H016）同一套圖片</h4>
+        <ul>
+          <li>新增 <code>Source/Image/*.webp</code>（自 H016 複製）：M1～M4、A／K／Q／J、C1、小鬼 <code>WW</code>（W1）、大鬼 <code>W2</code>；金框格改用 G1～G8 金框版圖。接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>，開局前預載），Image 關時回到文字代號。帶倍數徽章、金框滾動表演與分裂動畫不變。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-12：92A 卡片權重重解（分裂蓋金框修正後）</h4>
         <ul>
           <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（版本 4.0.0.0）以修正後正式自然報表（NB 10⁸／BF 10⁷）重解；(10000, 20000] 自然發生率 FG 0.25%／BF 0.26%。Card-On 驗證 Oldhand 92.71%（+0.8σ）、Newbie 92.65%（−0.7σ）、BF 93.28%（+1.1σ），Retry 超限 0；數值報告以新報表重出。</li>
@@ -2981,6 +2987,32 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   const WW = 0, W2 = 1, C1 = 2;
   const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
+  // 符號圖片沿用幸運王牌（H016）同一套：Source/Image/*.webp；金框格改用 G1～G8 金框版圖
+  const H045_IMAGE_ROOT = "./Source/Image/";
+  const SYMBOL_ASSET = {
+    WW: "W1_Symbol.webp", W2: "W2_Symbol.webp", C1: "C1_Symbol.webp",
+    M1: "M1_Symbol.webp", M2: "M2_Symbol.webp", M3: "M3_Symbol.webp", M4: "M4_Symbol.webp",
+    A: "M5_Symbol.webp", K: "M6_Symbol.webp", Q: "M7_Symbol.webp", J: "M8_Symbol.webp"
+  };
+  const GOLD_ASSET = { M1: "G1_Symbol.webp", M2: "G2_Symbol.webp", M3: "G3_Symbol.webp", M4: "G4_Symbol.webp",
+    A: "G5_Symbol.webp", K: "G6_Symbol.webp", Q: "G7_Symbol.webp", J: "G8_Symbol.webp" };
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    images: [...Object.values(SYMBOL_ASSET), ...Object.values(GOLD_ASSET)].map(file => H045_IMAGE_ROOT + file),
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.hitList, lastBoardRender.options);
+    }
+  };
+  function symbolInner(code, isGold) {
+    const asset = useSymbolImages ? (isGold && GOLD_ASSET[code]) || SYMBOL_ASSET[code] : "";
+    return asset
+      ? `<div class="symbol-wrap"><img class="symbol-img h015-symbol-img" src="${H045_IMAGE_ROOT}${asset}" alt="${code}" draggable="false"><span class="h019-glyph">${code}</span></div>`
+      : `<div class="symbol-wrap"><span class="h019-glyph">${code}</span></div>`;
+  }
   const LADDER = { bg: cfg.cascade_multiplier.bg, fg: cfg.cascade_multiplier.fg };
   const LADDER_LEN = Math.max(LADDER.bg.length, LADDER.fg.length);
   // Max Win 由卡片系統的倍率上限決定（free_game 卡組最高有權重區間上限）；Card System Off 不截斷（game_rule §9.10）
@@ -3502,6 +3534,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
   // 本作無符號美術 → 依 Demogame規範 4.2.3 固定顯示符號框＋代號，不接 Image 開關。
   function renderBoard(board, hitList = [], options = {}) {
+    lastBoardRender = { board, hitList, options };
     const mults = options.mults || zeroMults();
     const gold = options.gold || zeroGold();
     const hits = new Set(hitList), cleared = new Set(options.cleared || []), converted = new Set(options.converted || []), marked = new Set(options.marked || []), root = $("board");
@@ -3515,7 +3548,8 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       const key = `${reel},${row}`;
       const motion = drop.get(key), speed = Number($("speedRange").value || 1);
       const isGold = !empty && !!(gold[reel] && gold[reel][row]);
-      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${isGold ? " gold keep-symbol-frame" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
+      const art = !empty && useSymbolImages && !!SYMBOL_ASSET[code];
+      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${art ? " has-symbol-art" : ""}${isGold ? (art ? " gold" : " gold keep-symbol-frame") : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
         const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
@@ -3524,7 +3558,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
         if (motion.isNew) cell.style.setProperty("--refill-duration", `${dropDuration}ms`);
       }
       // 結構同宙斯（symbol-wrap + h019-glyph）：共用的滾動模糊／消除淡出特效只認這組選擇器
-      cell.innerHTML = empty ? "" : `<div class="symbol-wrap"><span class="h019-glyph">${code}</span></div>`;
+      cell.innerHTML = empty ? "" : symbolInner(code, isGold);
       if (!empty && mults[reel] && mults[reel][row] > 1) {
         cell.insertAdjacentHTML("beforeend", `<span class="mult-badge">×${mults[reel][row]}</span>`);
       }
@@ -3646,7 +3680,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
         const ghost = document.createElement("div");
         ghost.className = "cell symbol-ww fly-ww";
         ghost.style.cssText = `left:${from.left - layerRect.left}px;top:${from.top - layerRect.top}px;width:${from.width}px;height:${from.height}px;`;
-        ghost.innerHTML = `<div class="symbol-wrap"><span class="h019-glyph">WW</span></div>${split.value > 1 ? `<span class="mult-badge">×${split.value}</span>` : ""}`;
+        ghost.innerHTML = `${symbolInner("WW", false)}${split.value > 1 ? `<span class="mult-badge">×${split.value}</span>` : ""}`;
         layer.appendChild(ghost);
         const animation = ghost.animate(
           [{ transform: "translate(0,0) scale(.6)", opacity: .4 }, { transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(1)`, opacity: 1 }],
