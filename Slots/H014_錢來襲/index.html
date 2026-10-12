@@ -433,7 +433,10 @@
 | 規則說明 | ▪ 若玩家在特色游戏期间中断游戏，系统将会自动计算游戏结果，并将获奖金额加入至余额中。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FEATURE GAME, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
   </script>
 
-  <script src="./Versions/version_manifest.js"></script>
+  <script>
+    // 版本清單每次載入都抓最新（避免 GitHub Pages 快取 10 分鐘看到舊版本）
+    document.write(`<script src="./Versions/version_manifest.js?t=${Date.now()}"><\/script>`);
+  </script>
   <script>
     // Version 選單：現行版本讀根目錄 Config，其他版本讀 manifest 指定的 Versions/ 路徑（?ver=1.0.0.2）
     (() => {
@@ -443,7 +446,8 @@
       window.H014_ACTIVE_VERSION = entry ? entry.version : (m ? m.current : null);
       const base = entry ? entry.base_config : "./config.js";
       const rtp = entry ? entry.configs["92A"] : "./config_92A.js";
-      document.write(`<script src="${base}"><\/script><script src="${rtp}"><\/script>`);
+      const bust = `?v=${window.H014_ACTIVE_VERSION || ""}-${Date.now()}`;  // Config 也不吃快取
+      document.write(`<script src="${base}${bust}"><\/script><script src="${rtp}${bust}"><\/script>`);
     })();
   </script>
   <script>
