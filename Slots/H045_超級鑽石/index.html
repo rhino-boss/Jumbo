@@ -2198,7 +2198,7 @@
       <article class="change-log-entry">
         <h4>2026-10-12：92A 卡片權重重解（分裂蓋金框修正後）</h4>
         <ul>
-          <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（版本 4.0.0.0）以修正後正式自然報表（NB 10⁸／BF 10⁷）重解；(10000, 20000] 自然發生率 FG 0.25%／BF 0.26%。Card-On 驗證 Oldhand 92.71%（+0.8σ）、Newbie 92.65%（−0.7σ），Retry 超限 0；BF 驗證進行中。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（版本 4.0.0.0）以修正後正式自然報表（NB 10⁸／BF 10⁷）重解；(10000, 20000] 自然發生率 FG 0.25%／BF 0.26%。Card-On 驗證 Oldhand 92.71%（+0.8σ）、Newbie 92.65%（−0.7σ）、BF 93.28%（+1.1σ），Retry 超限 0；數值報告以新報表重出。</li>
         </ul>
       </article>
       <article class="change-log-entry">
@@ -2900,7 +2900,7 @@ BG 階梯、BG 金框與 BG 倍數權重不變。92A Card-On 試驗（NB 自然 
 | BG `Gold Count Weight`（1～4 顆） | 原值 | 第 k 顆權重 × 1.15^k（BG 金框變多） |
 | FG `Multiplier_Wild_Weight_W2` ×1 權重 | 233（帶倍 30%） | **100**（帶倍 50%） |
 
-FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍、FG 金框、BG 倍數權重、Buy Feature 50x 皆同版本 3 最後狀態。FG 金框再多會讓 FG Hit 低於 40%，使用者選定此組。正式驗證（NB 自然 10⁸／BF 自然 10⁷ 解權重；(10000, 20000] 自然發生率 FG／BF 0.33%）：Card-On Oldhand 92.47%（10⁶，+0.5σ）、Newbie 92.41%（10⁶，−1.2σ）、BF 93.22%（3×10⁵，+0.9σ），Retry 超限 0；FG Hit 40.07%、金框消除 BG 每 9.32 局（快 SA 1.24 倍）、FG 每 4.56 轉（快 SA 1.15 倍）。
+FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍、FG 金框、BG 倍數權重、Buy Feature 50x 皆同版本 3 最後狀態。FG 金框再多會讓 FG Hit 低於 40%，使用者選定此組。正式驗證（2026-10-12 分裂蓋金框修正後重跑；NB 自然 10⁸／BF 自然 10⁷ 解權重；(10000, 20000] 自然發生率 FG 0.25%／BF 0.26%）：Card-On Oldhand 92.71%（10⁶，+0.8σ）、Newbie 92.65%（10⁶，−0.7σ）、BF 93.28%（3×10⁵，+1.1σ），Retry 超限 0；FG Hit 40.81%、金框消除 BG 每 9.28 局（快 SA 1.25 倍）、FG 每 4.49 轉（快 SA 1.17 倍）。
 
 ### 與前端規格書的差異紀錄
 
