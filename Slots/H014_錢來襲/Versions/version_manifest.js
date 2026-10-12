@@ -1,7 +1,7 @@
 window.H014_VERSION_MANIFEST = {
-  "current": "3.0.0.0",
-  "base_version": "3",
-  "next_version": "4.0.0.0",
+  "current": "4.0.0.0",
+  "base_version": "4",
+  "next_version": "5.0.0.0",
   "versions": [
     {
       "version": "1.0.0.2",
@@ -21,21 +21,22 @@ window.H014_VERSION_MANIFEST = {
       ]
     },
     {
-      "version": "3.0.0.0",
-      "math_key": "3.0",
-      "date": "2026-10-07",
+      "version": "4.0.0.0",
+      "math_key": "4.0",
+      "date": "2026-10-12",
       "competitor_initial_version": false,
-      "base_config": "Versions/3.0.0.0/config.js",
+      "base_config": "Versions/4.0.0.0/config.js",
       "configs": {
-        "92A": "Versions/3.0.0.0/config_92A.js"
+        "92A": "Versions/4.0.0.0/config_92A.js"
       },
       "workbooks": {
-        "92": "Versions/3.0.0.0/Source/H014192A.xlsx",
-        "92_Extra": "Versions/3.0.0.0/Source/H014192A_Extra.xlsx"
+        "92": "Versions/4.0.0.0/Source/H014192A.xlsx",
+        "92_Extra": "Versions/4.0.0.0/Source/H014192A_Extra.xlsx"
       },
       "changes": [
         "V2：Normal Bet 全部押注改為對齊 JILI Money Coming 的調性（Bet1／Bet5／Bet10 以競品擬合，Bet50／Bet100 以 Bet10 為範本外推、保留 10／00 與紅轉盤）。",
         "卡片權重以多目標非負最小平方擬合（RTP 固定 92%），≥200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 可開出 525x、Bet50 可到 2,000x）；畫面元素皆可得分（含轉盤每一格）。",
+        "4.0.0.0：中線四格全空白（EEEE）出現率減半——R1 幾乎全空白的子表把 R2 部分空白權重改為 0（派彩不變），卡片非零區間等比微調維持 RTP 92%。3.0.0.0 存檔已移除（git 歷史保留）。",
         "Extra Bet 內容沿用 1.0.0.2，版本號同步第 1 碼。"
       ]
     }

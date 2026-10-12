@@ -243,6 +243,14 @@
         </ul>
       </article>
       <article class="change-log-entry">
+        <h4>2026-10-12：數學 4.0.0.0（降低 EEEE 畫面出現率）</h4>
+        <ul>
+          <li>中線四格全空白（E E E E）的出現率減半：Bet1 39.3%→19.7%、Bet5 18.6%→9.3%、Bet10 19.1%→9.6%、Bet50 15.4%→7.7%、Bet100 18.6%→9.3%。</li>
+          <li>做法：在 R1 幾乎全空白的子表（Bet1 為 A 表、其餘為 C 表）把 R2 的部分空白權重改成 0；R1 是空白時 R2 顯示空白或 0 分數相同，派彩與 Hit Rate 不變。卡片非零區間權重等比微調，RTP 維持 92.00%。</li>
+          <li>改到輪帶權重，依規範第 1 碼升為 4.0.0.0（Extra 模型同步）；Setting 的 Version 可切換 1.0.0.2（原始）與 4.0.0.0（現行）。驗證（模擬機）：10^6 五個押注皆在 2σ 內、重試超限 0 次；畫面元素檢查全部通過。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-07：數學 3.0.0.0（V2：Normal Bet 全部押注對齊 JILI Money Coming 調性）</h4>
         <ul>
           <li>只改 <code>H014192A.xlsx</code> 既有的權重格，架構不變（輪帶符號、R4 分組、卡片區間、規則、<code>Simulator.py</code> 都沒動）；Extra Bet 沿用 1.0.0.2。改到輪帶權重，依規範升第 1 碼。</li>
