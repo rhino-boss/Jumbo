@@ -384,6 +384,9 @@ Max Multiplier = Round Total Win ÷ 該模式定義的基準成本</code></pre>
 BG 補足 = 差額 × 1/2   → 加在 BG 的 (25, 30] 區間
 FG 補足 = 差額 × 1/2   → 縮短 FG 週期</code></pre>
 <ul><li><strong>BG</strong>：提高 <code>(25, 30]</code> 區間的權重，使 BG RTP 增加差額的一半。增加的權重從 <code>(-1, 0]</code> 區間扣除，其餘區間不動，各欄總和仍為 <code>1,000,000,000</code>。</li><li><strong>FG</strong>：提高 FG 觸發卡的權重、縮短 FG 週期，使 FG RTP 增加差額的一半；FG 的倍率區間權重不動，每場 FG 的平均倍數不變。增加的觸發權重同樣從 <code>(-1, 0]</code> 扣除。</li><li>新的 FG 週期：<code>新週期 = 原週期 × 原 FG RTP ÷（原 FG RTP ＋ 差額 ÷ 2）</code>。</li><li>例：來源版本 BG 72%、FG 20%、FG 週期 300，總計 92% → 差額 28%；BG 補 14% 到 86%，FG 補 14% 到 34%，新週期 ≈ 300 × 20 ÷ 34 ≈ 176.5。</li><li>計算 RTP 與驗證都以 Card On 實跑為準，模擬結果須在 120% 的 2σ 內。</li><li>Demo 版權重只用於 Demo 網頁，不得進入正式上線的 Config 或送驗文件；Demo 版的工作簿、Config 與報表要在檔名或版本註記清楚標示為 Demo。</li></ul>
+<h4 id="147-精確度容許誤差">1.4.7 精確度（容許誤差）</h4>
+<p><strong>所有目標 RTP 都要精確到小數點後 4 位（<code>0.0000%</code>）</strong>：</p>
+<ul><li>適用每一個目標：Total／Game／BG／FG／BF／SF RTP，以及每個 RTP 家族、Variant、Player Profile、押注層級與 Bet Mode 的組合。</li><li>由權重算出的解析 RTP（<code>Σ 權重占比 × Avg_Multi</code>，見第 1.5.1 節）四捨五入到 <code>0.0000%</code> 後，必須與目標完全相等；例：目標 <code>72.0000%</code>，解析值須落在 <code>71.99995%</code> 以上、<code>72.00005%</code> 以下。</li><li>數學模型、Overview、Config 與報表上的 RTP 一律以 <code>0.0000%</code> 格式顯示，不得只顯示到小數點後 2 位。</li><li>模擬結果有抽樣誤差，無法要求到小數點後 4 位；模擬驗證以實測與目標差 <code>≤ 2σ</code> 判定。</li></ul>
 <h3 id="15-卡片倍率區間">1.5 卡片倍率區間</h3>
 <p>數學文件使用下列卡片倍率區間：</p>
 <pre><code>(-1, 0]
