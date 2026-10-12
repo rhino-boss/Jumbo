@@ -49,10 +49,25 @@ GROUPS = [
     ("模擬程式＋Demogame", ["sim", "demo"]),
 ]
 
-# 頁籤 icon：只有列在這裡的分類會顯示（線條圖示，顏色跟著文字）
+# 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
 _SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
         'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{}</svg>')
+HIGHLIGHT_GROUPS = {"數學設計", "系統相關"}
 GROUP_ICONS = {
+    # 總覽：首頁
+    "總覽": _SVG.format('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'),
+    # 開發流程：分支流程
+    "開發流程": _SVG.format('<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/>'
+                            '<circle cx="18" cy="12" r="2"/><path d="M6 7v10"/><path d="M6 12h4a4 4 0 0 0 4-4V7"/>'
+                            '<path d="M16 12h-2"/>'),
+    # 提案：簡報
+    "提案": _SVG.format('<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M12 16v4"/><path d="M8 20h8"/>'),
+    # 數學文件：文件
+    "數學文件": _SVG.format('<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 12h6"/><path d="M9 16h6"/>'),
+    # 送驗相關：盾牌勾選
+    "送驗相關": _SVG.format('<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
+    # 模擬程式＋Demogame：播放
+    "模擬程式＋Demogame": _SVG.format('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/>'),
     # 數學設計：Σ
     "數學設計": _SVG.format('<path d="M18 4H6l6 8-6 8h12"/>'),
     # 系統相關：齒輪
@@ -494,7 +509,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
     for gi, (gname, ids) in enumerate(groups):
         first = gi == 0
         tabs_html.append(
-            f'<button class="tab" role="tab" id="tab-g{gi}" data-tab="{ids[0]}" '
+            f'<button class="tab{" tab-hi" if gname in HIGHLIGHT_GROUPS else ""}" role="tab" id="tab-g{gi}" data-tab="{ids[0]}" '
             f'data-tabs="{",".join(ids)}" aria-selected="{"true" if first else "false"}" '
             f'tabindex="{0 if first else -1}">{GROUP_ICONS.get(gname, "")}{gname}</button>'
         )
@@ -554,6 +569,7 @@ h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
   padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}}
 .tab:hover{{color:var(--ink); background:var(--panel-2)}}
 .tab-ico{{width:14px; height:14px; vertical-align:-2px; margin-right:6px}}
+.tab.tab-hi, .tab.tab-hi:hover, .tab.tab-hi[aria-selected="true"]{{color:var(--warn)}}
 .tab[aria-selected="true"]{{color:var(--s1); font-weight:600; background:var(--panel);
   border-color:var(--rule); border-bottom-color:var(--panel)}}
 .tab:focus-visible{{outline:2px solid var(--s1); outline-offset:-2px}}
