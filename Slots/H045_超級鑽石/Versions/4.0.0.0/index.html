@@ -2196,6 +2196,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-12：92A 卡片權重重解（分裂蓋金框修正後）</h4>
+        <ul>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（版本 4.0.0.0）以修正後正式自然報表（NB 10⁸／BF 10⁷）重解；(10000, 20000] 自然發生率 FG 0.25%／BF 0.26%。Card-On 驗證 Oldhand 92.71%（+0.8σ）、Newbie 92.65%（−0.7σ），Retry 超限 0；BF 驗證進行中。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-12：大鬼分裂蓋到金框時，金框消失</h4>
         <ul>
           <li>修正：分裂體 <code>WW</code> 蓋到尚未中獎的金框時，原本金框旗標沒有清掉，導致該 <code>WW</code> 中獎後又被當金框重翻；改為蓋到即變一般 <code>WW</code>、金框消失（game_rule §5.4）。Simulator 同步修正；未修改 XLSX／Config 數學參數。</li>
@@ -2914,8 +2920,8 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 
   </script>
-  <script src="./Versions/version_manifest.js?v=20261012-4000"></script>
-  <script src="./config.js?v=20261012-4000"></script>
+  <script src="./Versions/version_manifest.js?v=20261012b"></script>
+  <script src="./config.js?v=20261012b"></script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
@@ -2942,7 +2948,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       window.H045_ACTIVE_CONFIG = active;
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
       if (active !== "base") {
-        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}"><\/script>`);
+        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}-20261012b"><\/script>`);   // 權重更新時改尾碼避免快取
         document.write(`<script>
           (() => {
             const base = window.H045_CONFIG, rtp = window.H045_CONFIG_RTP;
