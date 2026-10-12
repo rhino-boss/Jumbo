@@ -2196,6 +2196,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-12：版本 5（啟用盤面表 2：高連消表）</h4>
+        <ul>
+          <li>使用者指定升版為 5：BG 選表 表 1 : 表 2 = 9 : 1、FG／Retrigger 2 : 8；表 2 補牌權重集中、輪帶 M1～M4 約一半換成低倍符號，表 2 的 3+ 連消約為表 1 的 3 倍。Help 內嵌 game_rule 同步。</li>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>（版本 5；BG_Symbol (2)／FG_Symbol (2) 輪帶、符號計數與補牌權重，Parameter 選表權重）、<code>config.js</code>（excel_version 5）；<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code> 版本 5.0.0.0 以正式自然報表重解，Card-On 驗證 Oldhand 91.70%／Newbie 93.08%／BF 92.39%（皆 ≤ 2σ）；manifest current 5.0.0.0，封存 <code>Versions/5.0.0.0</code>。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-12：符號改用幸運王牌（H016）同一套圖片</h4>
         <ul>
           <li>新增 <code>Source/Image/*.webp</code>（自 H016 複製）：M1～M4、A／K／Q／J、C1、小鬼 <code>WW</code>（W1）、大鬼 <code>W2</code>；金框格改用 G1～G8 金框版圖。接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>，開局前預載），Image 關時回到文字代號。帶倍數徽章、金框滾動表演與分裂動畫不變。未修改 XLSX／Config 數學參數。</li>
@@ -2636,7 +2643,7 @@
 ## §7. 核心遊戲流程（Base Game）
 
 1. 玩家選擇 Normal Bet 並開始 Spin。
-2. 系統依 `Table Selection Weight` 抽取本局使用的 Base Game 盤面表。
+2. 系統依 `Table Selection Weight` 抽取本局使用的 Base Game 盤面表（版本 5：表 1 : 表 2 = 9 : 1；表 2 為高連消表，見附錄 B 版本 5）。Free Game 每一轉各自依 FG 權重選表（表 1 : 表 2 = 2 : 8），Retrigger 後的 FG 同此權重。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪 × 4 列盤面。
 4. 本局 Cascade Multiplier 從 `×1` 開始。
 5. 本局盤面若出現 `C1`，計入 SCR 統計；OP Jackpot 是否觸發由平台端依 SCR 決定（§5.7），觸發則先完成彩金結算再繼續。
@@ -2908,6 +2915,19 @@ BG 階梯、BG 金框與 BG 倍數權重不變。92A Card-On 試驗（NB 自然 
 
 FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍、FG 金框、BG 倍數權重、Buy Feature 50x 皆同版本 3 最後狀態。FG 金框再多會讓 FG Hit 低於 40%，使用者選定此組。正式驗證（2026-10-12 分裂蓋金框修正後重跑；NB 自然 10⁸／BF 自然 10⁷ 解權重；(10000, 20000] 自然發生率 FG 0.25%／BF 0.26%）：Card-On Oldhand 92.71%（10⁶，+0.8σ）、Newbie 92.65%（10⁶，−0.7σ）、BF 93.28%（3×10⁵，+1.1σ），Retry 超限 0；FG Hit 40.81%、金框消除 BG 每 9.28 局（快 SA 1.25 倍）、FG 每 4.49 轉（快 SA 1.17 倍）。
 
+### 2026-10-12 版本 5（啟用盤面表 2：高連消表）
+
+使用者指定升版為 5。原本 BG／FG 都只用表 1（表 2、表 3 為與表 1 相同的佔位）。版本 5 啟用表 2，並讓表 2 的 3 次以上連消比例約為表 1 的 3 倍：
+
+| 項目 | 版本 4 | 版本 5 |
+| --- | --- | --- |
+| BG `Table Selection Weight`（表 1 : 表 2 : 表 3） | 1 : 0 : 0 | **9 : 1 : 0** |
+| FG／Retrigger `Table Selection Weight` | 1 : 0 : 0 | **2 : 8 : 0**（每一轉各自選表） |
+| 表 2（`BG_Symbol (2)`、`FG_Symbol (2)`）補牌權重 | 同表 1 | 一般符號改為五輪相同、依五輪平均占比 s 的 s⁶ 集中（A／K／Q／J 約占 85%）；`C1` 不變 |
+| 表 2 輪帶 | 同表 1 | M1～M4 停點約一半換成低倍符號（偏 J／Q），停點權重不變 |
+
+表 2 單表自然機率（各 10⁶ 局）：3 次以上連消 BG 35.7%（表 1 為 11.0%，3.2 倍）、FG 35.9%（表 1 為 12.1%，3.0 倍）；BG Hit 69.0%（表 1 為 35.6%）。表 1、表 3、賠率、階梯、金框與倍數權重皆同版本 4。正式驗證（NB 自然 10⁸／BF 自然 10⁷ 解權重；BG 過門檻區間給最低權重，BG Trigger Cap 350x；(10000, 20000] 自然發生率 FG 3.15%／BF 3.14%）：Card-On Oldhand 91.70%（10⁶，−0.3σ）、Newbie 93.08%（10⁶，+0.2σ）、BF 92.39%（3×10⁵，−0.1σ），Retry 超限 0；FG Hit 51.5%、金框消除 BG 每 10.13 局（快 SA 1.14 倍）、FG 每 3.68 轉（快 SA 1.43 倍）；BF 平均 Retry 101 次。
+
 ### 與前端規格書的差異紀錄
 
 | 項目 | 規格書 | 本文件 | 原因 |
@@ -2926,8 +2946,8 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 
   </script>
-  <script src="./Versions/version_manifest.js?v=20261012b"></script>
-  <script src="./config.js?v=20261012b"></script>
+  <script src="./Versions/version_manifest.js?v=20261012c"></script>
+  <script src="./config.js?v=20261012c"></script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
@@ -2954,7 +2974,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       window.H045_ACTIVE_CONFIG = active;
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
       if (active !== "base") {
-        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}-20261012b"><\/script>`);   // 權重更新時改尾碼避免快取
+        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}-20261012c"><\/script>`);   // 權重更新時改尾碼避免快取
         document.write(`<script>
           (() => {
             const base = window.H045_CONFIG, rtp = window.H045_CONFIG_RTP;
