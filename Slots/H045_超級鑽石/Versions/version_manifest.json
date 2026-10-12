@@ -1,16 +1,17 @@
 {
-  "current": "4",
+  "current": "4.0.0.0",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
-    "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。"
+    "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
+    "display": "Demogame／Versions 以 RTP／Variant 四碼版本（第 1 碼＝基礎數學 H0451.xlsx 版本）識別；config.js excel_version 為 1 碼，config_92A.js 為 4 碼。"
   },
   "versions": [
     {
-      "version": "1",
+      "version": "1.0.0.0",
       "date": "2026-09-23",
-      "base_config": "Versions/1/config.js",
+      "base_config": "Versions/1.0.0.0/config.js",
       "sources": {
-        "base": "Versions/1/Source/H0451.xlsx"
+        "base": "Versions/1.0.0.0/Source/H0451.xlsx"
       },
       "configs": {
         "base": "config.js"
@@ -28,11 +29,11 @@
       "math_key": "1"
     },
     {
-      "version": "2",
+      "version": "2.0.0.0",
       "date": "2026-10-02",
-      "base_config": "Versions/2/config.js",
+      "base_config": "Versions/2.0.0.0/config.js",
       "sources": {
-        "base": "Versions/2/Source/H0451.xlsx"
+        "base": "Versions/2.0.0.0/Source/H0451.xlsx"
       },
       "configs": {
         "base": "config.js"
@@ -47,12 +48,12 @@
       "math_key": "2"
     },
     {
-      "version": "3",
+      "version": "3.0.0.0",
       "date": "2026-10-05",
-      "base_config": "Versions/3/config.js",
+      "base_config": "Versions/3.0.0.0/config.js",
       "sources": {
-        "base": "Versions/3/Source/H0451.xlsx",
-        "92A": "Versions/3/Source/H045192A.xlsx"
+        "base": "Versions/3.0.0.0/Source/H0451.xlsx",
+        "92A": "Versions/3.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
         "base": "config.js",
@@ -70,12 +71,12 @@
       "math_key": "3"
     },
     {
-      "version": "4",
+      "version": "4.0.0.0",
       "date": "2026-10-08",
-      "base_config": "Versions/4/config.js",
+      "base_config": "Versions/4.0.0.0/config.js",
       "sources": {
-        "base": "Versions/4/Source/H0451.xlsx",
-        "92A": "Versions/4/Source/H045192A.xlsx"
+        "base": "Versions/4.0.0.0/Source/H0451.xlsx",
+        "92A": "Versions/4.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
         "base": "config.js",
