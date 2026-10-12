@@ -501,7 +501,7 @@ class SuperDiamond:
                 big_sources.append(((reel, row), value))
         return big_sources
 
-    def split_big_ghosts(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
+    def split_big_ghosts(self, table: Table, symbols: list[list[int]], mults: list[list[int]], gold: list[list[bool]],
                          big_sources: list[tuple[tuple[int, int], int]], result: SpinResult) -> None:
         """game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 WW（倍數同本體），落點依補牌後的盤面。"""
         for source, value in big_sources:
@@ -523,6 +523,7 @@ class SuperDiamond:
                 # game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
                 symbols[reel][row] = WW
                 mults[reel][row] = value if value > 1 else 0
+                gold[reel][row] = False   # game_rule §5.4（2026-10-12）：蓋到金框即變一般 WW，金框消失，之後不再翻牌
             result.split_counts[len(placed)] += 1
 
     def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
@@ -587,7 +588,7 @@ class SuperDiamond:
             result.gold_appeared += self.topup_gold(scene, symbols, gold, fresh_rows)
 
             if big_sources:
-                self.split_big_ghosts(table, symbols, mults, big_sources, result)
+                self.split_big_ghosts(table, symbols, mults, gold, big_sources, result)
 
             if result.pay >= cap:
                 break

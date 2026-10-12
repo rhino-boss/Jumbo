@@ -2196,6 +2196,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-12：大鬼分裂蓋到金框時，金框消失</h4>
+        <ul>
+          <li>修正：分裂體 <code>WW</code> 蓋到尚未中獎的金框時，原本金框旗標沒有清掉，導致該 <code>WW</code> 中獎後又被當金框重翻；改為蓋到即變一般 <code>WW</code>、金框消失（game_rule §5.4）。Simulator 同步修正；未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-12：game_rule 與前端規格書差異紀錄更新</h4>
         <ul>
           <li>對照 JB 工作區 <code>Lucky Ace Deluxe_遊戲規格.md</code> v2.2.0：修正「盤面帶倍 WILD」列（改為整波相加），補記金框翻牌結果、大鬼分裂體、BG 大鬼次數、金框出現方式、賠付表 5 項差異。Help 內嵌 game_rule 同步。未修改 XLSX／Config 數學參數。</li>
@@ -2543,6 +2549,9 @@
   不覆蓋本次正在翻牌的其他金框位置。
 * **盤面上尚未中獎的金框可以被分裂覆蓋**（比照前作 101003 的一般模式；該作僅 Super Buy 分支
   額外排除金框，本作無 Super Feature，不適用該分支）。
+* **被覆蓋的金框直接變成一般 `WW`，金框消失**：盤面符號只有三種——一般符號、金框符號、`WW`／`W2`；
+  只有金框符號被消除時才會翻成 Wild。被分裂體蓋到的格子就是普通 `WW`（帶本體倍數），之後參與中獎照一般 Wild 消除，
+  **不會再翻牌**，也不再計為金框（2026-10-12 使用者確認）。
 * 合格位置少於本次抽中的顆數時，以實際可用位置數為準放置；一個合格位置都沒有時，本次只保留原位的 `W2` 本體。
 * **分裂體倍數與本體一模一樣**：本體抽到 `×3`，丟出的每顆 `WW` 都是 `×3`；本體抽到 `×1`（無倍數），
   丟出的每顆 `WW` 也都無倍數。分裂體**不另外抽倍數**。
@@ -3218,7 +3227,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   }
 
   // 回傳 { splitKeys, splits: [{ source, targets, value }] }，splits 供 Demo 畫「WW 複製飛出」動畫
-  function splitBigGhosts(board, mults, tableName, bigSources) {
+  function splitBigGhosts(board, mults, gold, tableName, bigSources) {
     const table = tables[tableName];
     const splitKeys = [], splits = [];
     for (const [[sr, srow], value] of bigSources) {
@@ -3236,6 +3245,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
         // game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
         board[reel][row] = WW;
         mults[reel][row] = value > 1 ? value : 0;
+        gold[reel][row] = false;   // game_rule §5.4（2026-10-12）：蓋到金框即變一般 WW，金框消失
         keys.push(`${reel},${row}`);
       }
       splitKeys.push(...keys);
@@ -3318,7 +3328,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       // 3) 大鬼分裂（game_rule §5.6 步驟 5~6；落點依補牌後盤面）
       if (flip && flip.bigSources.length) {
         const preBoard = cloneBoard(board), preMults = cloneBoard(mults);
-        const { splitKeys, splits } = splitBigGhosts(board, mults, tableName, flip.bigSources);
+        const { splitKeys, splits } = splitBigGhosts(board, mults, gold, tableName, flip.bigSources);
         if (splitKeys.length) {
           snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
