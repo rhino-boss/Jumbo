@@ -132,7 +132,7 @@
           <div class="h014-wheel-box">
             <div class="h014-wheel-pointer" aria-hidden="true"></div>
             <div class="wheel-rotor" id="wheelRotor"><svg viewBox="-110 -110 220 220" id="wheelSvg" role="img" aria-label="Lucky wheel"></svg></div>
-            <svg class="wheel-hub" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="16" fill="#ffd86a"/><text y="1" fill="#5a3a00" font-size="9" text-anchor="middle" dominant-baseline="middle">×BET</text></svg>
+            <svg class="wheel-hub" viewBox="-110 -110 220 220" aria-hidden="true"><circle r="16" fill="#ffd86a"/><text y="1" fill="#5a3a00" font-size="9" text-anchor="middle" dominant-baseline="middle">WIN</text></svg>
           </div>
           <div class="h014-wheel-result" id="wheelResult"></div>
         </div>
@@ -240,6 +240,13 @@
         <ul>
           <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
           <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
+        <h4>2026-10-13：轉盤獎項改顯示總分</h4>
+        <ul>
+          <li>上方展示轉盤與開獎轉盤的每一格直接顯示「獎項 × 押注」的總分（Coin），中心改為 WIN；轉完直接給該格分數，不再顯示 × bet 的乘算。</li>
+          <li>只改演出文字，派彩不變（仍為獎項 × 押注）；未修改 XLSX／Config 數學參數。</li>
         </ul>
       </article>
       <article class="change-log-entry">
@@ -795,8 +802,8 @@
       const a0 = i * step - step / 2, a1 = i * step + step / 2;
       const [x0, y0] = pt(a0, 100), [x1, y1] = pt(a1, 100);
       html += `<path d="M0 0 L${x0.toFixed(2)} ${y0.toFixed(2)} A100 100 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z" fill="${i % 2 ? c2 : c1}" stroke="${rim}" stroke-width="1.5"/>`;
-      const [tx, ty] = pt(i * step, 68);
-      html += `<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" transform="rotate(${i * step} ${tx.toFixed(2)} ${ty.toFixed(2)})" fill="#fff" font-size="17" font-family="Consolas,monospace" text-anchor="middle" dominant-baseline="middle">${v}</text>`;
+      const [tx, ty] = pt(i * step, 68), fs = Math.min(17, 87 / String(v).length).toFixed(1);
+      html += `<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" transform="rotate(${i * step} ${tx.toFixed(2)} ${ty.toFixed(2)})" fill="#fff" font-size="${fs}" font-family="Consolas,monospace" text-anchor="middle" dominant-baseline="middle">${v}</text>`;
     });
     html += `</g>`;
     svg.innerHTML = html;
@@ -852,7 +859,7 @@
     const items = [];
     for (const sym of [symId("2x"), symId("5x"), symId("10x"), S_RESPIN, S_SC_G, S_SC_R]) {
       if (!r4.has(sym)) continue;
-      if (sym === S_SC_G || sym === S_SC_R) items.push({ key: `wheel-${sym}`, text: `${sym === S_SC_R ? "紅" : "綠"}轉盤（最高 ${Math.max(...(wheel?.values || [0]))}×）` });
+      if (sym === S_SC_G || sym === S_SC_R) items.push({ key: `wheel-${sym}`, text: `${sym === S_SC_R ? "紅" : "綠"}轉盤（最高 ${fmt(Math.max(...(wheel?.values || [0])) * bet)}）` });
       else items.push({ key: `r4-${sym}`, text: code(sym) });
     }
     if (!digits[2].size) items.push({ key: "reels-2", text: "R1～R2 兩輪" });
@@ -911,7 +918,8 @@
     updateUnlockInfo();
     box.classList.toggle("hidden", !wheel);
     if (!wheel) return;
-    buildWheel(wheel.values, wheel.sym, $("topWheelSvg"));
+    const wb = unlockBet ?? curBet();
+    buildWheel(wheel.values.map((v) => v * wb), wheel.sym, $("topWheelSvg"));
     box.classList.toggle("locked", unlockBet != null);
     if (unlockBet != null) $("topWheelLockSvg").innerHTML = chainSvg();
   }
@@ -989,9 +997,9 @@
       $("featureStatus").textContent = res.r4Sym === S_SC_R ? "紅 BONUS → LUCKY WHEEL" : "綠 BONUS → LUCKY WHEEL";
       setMessage(`${code(res.r4Sym)} BONUS — 進入幸運轉盤`);
       await wait(450 / sp);
-      await spinWheel(sh.wheel, res.r4Sym, res.wheelIdx);
+      await spinWheel(sh.wheel.map((v) => v * bet), res.r4Sym, res.wheelIdx);
       const prize = res.wheelVal * bet;
-      const text = `${res.wheelVal} × bet${bet} = ${fmt(prize)}`;
+      const text = fmt(prize);
       $("wheelResult").textContent = text;
       state.view.wheel.result = text;
       setScore(fmt(res.win), `數字分 ${fmt(res.s1)} ＋ 轉盤 ${text} = ${fmt(res.win)}`, true);
@@ -1068,8 +1076,8 @@
       rows.push(row("s2（Respin add）", fmt(rs.add)));
     }
     if (res.wheelIdx >= 0) {
-      rows.push(row("Wheel Index", `${res.wheelIdx} / ${sh.wheel.length}（${sh.wheel.join(",")}）`));
-      rows.push(row("Wheel Value", `${res.wheelVal} × bet${bet} = ${fmt(res.wheelVal * bet)}`));
+      rows.push(row("Wheel Index", `${res.wheelIdx} / ${sh.wheel.length}（${sh.wheel.map((v) => v * bet).join(",")}）`));
+      rows.push(row("Wheel Value", fmt(res.wheelVal * bet)));
     }
     rows.push(row("Total Win", `${fmt(res.win)} Coin ／ ${fmtX(res.win / bet)} × bet ／ ${fmtX(res.win / (bet * cost))} × cost`));
     $("rngList").innerHTML = rows.join("");
@@ -1078,7 +1086,7 @@
     lines.push(`<div class="line-row"><span>Number Win R1～R3：${res.syms.map(code).join(" ")}</span><span>${fmt(res.s1)}</span></div>`);
     if (MULT[res.r4Sym]) lines.push(`<div class="line-row"><span>R4 ${code(res.r4Sym)}：× ${MULT[res.r4Sym]}</span><span>${fmt(res.win - res.s1)}</span></div>`);
     if (res.respin) lines.push(`<div class="line-row"><span>R4 RESPIN：${res.respin.syms.map(code).join(" ")}</span><span>${fmt(res.respin.add)}</span></div>`);
-    if (res.wheelIdx >= 0) lines.push(`<div class="line-row"><span>R4 ${code(res.r4Sym)}：Lucky Wheel ${res.wheelVal} × bet</span><span>${fmt(res.wheelVal * bet)}</span></div>`);
+    if (res.wheelIdx >= 0) lines.push(`<div class="line-row"><span>R4 ${code(res.r4Sym)}：Lucky Wheel</span><span>${fmt(res.wheelVal * bet)}</span></div>`);
     $("lineList").innerHTML = lines.join("");
     $("spinResultList").innerHTML = `<div class="spin-result-row"><div class="spin-result-head"><span>Round ${state.rounds}</span><span>${fmt(res.win)}</span></div>`
       + `<pre class="spin-result-board">${RTPC.config_code}-${profileLabel(bet)} · ${BASE.bet_modes[String(ctx.mode)].name} · ${card ? `Card #${card.iv} ${card.sheet}` : `Natural ${res.sheet}`} · Sub ${SUB_TABLES[res.sub]}\n`
