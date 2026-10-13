@@ -374,19 +374,20 @@ class SuperDiamond:
         return min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
 
     def topup_gold(self, scene: str, symbols: list[list[int]],
-                   gold: list[list[bool]], fresh_rows: dict[int, int]) -> int:
-        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。回傳新補上的金框數。"""
+                   gold: list[list[bool]], fresh_rows: dict[int, list[int]]) -> int:
+        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。回傳新補上的金框數。
+        fresh_rows：各輪本次原地補牌的列。"""
         added = 0
         for reel in self.gold_reels:
-            need = fresh_rows.get(reel, 0)
-            if not need:
+            rows = fresh_rows.get(reel, [])
+            if not rows:
                 continue
             target = self.gold_target(scene, reel)
             alive = sum(gold[reel])
             short = target - alive
             if short <= 0:
                 continue
-            spots = [row for row in range(need)
+            spots = [row for row in rows
                      if not gold[reel][row] and symbols[reel][row] != C1]
             self.rng.shuffle(spots)
             for row in spots[:short]:
@@ -430,14 +431,7 @@ class SuperDiamond:
         hits: set[tuple[int, int]] = set()
         details: list[tuple[int, int, int, float, int]] = []
         best_line_mult = 1
-        # game_rule §5.3（2026-10-06）：整波一起加——該次 Cascade 盤面上所有帶倍 WILD 倍數相加
-        # （x1 不計入，不論是否參與連線），每條中獎連線都乘同一個總和；總和為 0 視為 x1
-        board_sum = sum(
-            mults[reel][row]
-            for reel in range(5) for row, symbol in enumerate(symbols[reel])
-            if symbol in (WW, W2) and mults[reel][row] > 1
-        )
-        line_mult = board_sum if board_sum > 0 else 1
+        lines: list[tuple[int, int, int, float]] = []
         for target in SCORE_SYMBOLS:
             counts: list[int] = []
             positions: list[list[tuple[int, int]]] = []
@@ -461,11 +455,19 @@ class SuperDiamond:
             raw = float(self.pays[target][length - 3]) * ways
             if raw <= 0:
                 continue
-            total += raw * line_mult
-            best_line_mult = max(best_line_mult, line_mult)
             for group in positions:
                 hits.update(group)
+            lines.append((target, length, ways, raw))
+        # game_rule §5.3（2026-10-13 使用者定案）：只有本次中獎被消除的帶倍 WILD 倍數相加（x1 不計入），
+        # 套用到該次 Cascade 的所有中獎連線；沒用到的帶倍 WILD 留在盤面不計入；總和為 0 視為 x1
+        used_sum = sum(mults[reel][row] for reel, row in hits
+                       if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
+        line_mult = used_sum if used_sum > 0 else 1
+        for target, length, ways, raw in lines:
+            total += raw * line_mult
             details.append((target, length, ways, raw * line_mult, line_mult))
+        if lines:
+            best_line_mult = line_mult
         return total, hits, details, best_line_mult
 
     def _draw_multiplier(self, table: Table, outcome: str, result: SpinResult) -> int:
@@ -564,25 +566,20 @@ class SuperDiamond:
                     symbols[reel][row] = EMPTY
                     mults[reel][row] = 0
 
-            # 本體在補牌前翻（跟著重力一起落下）；大鬼分裂在補牌後丟
+            # 金框在原位翻成本體；大鬼分裂在補牌後丟
             big_sources = (self.flip_golden_body(table, symbols, mults, gold_positions, result, free_game)
                            if gold_positions else [])
 
-            fresh_rows: dict[int, int] = {}
+            # game_rule §5.1（2026-10-13 使用者定案）：原地補牌——消除的格子直接在原位補新符號，其餘符號不移動
+            fresh_rows: dict[int, list[int]] = {}
             for reel in range(5):
-                column = [(symbols[reel][row], mults[reel][row], gold[reel][row])
-                          for row in range(4) if symbols[reel][row] != EMPTY]
-                need = 4 - len(column)
-                fresh = []
-                for _ in range(need):
+                rows = [row for row in range(4) if symbols[reel][row] == EMPTY]
+                for row in rows:
                     symbol = int(_pick(self.rng, table.drop_values[reel],
                                        table.drop_cumulative[reel], table.drop_total[reel]))
-                    fresh.append((symbol, 0, False))
+                    symbols[reel][row], mults[reel][row], gold[reel][row] = symbol, 0, False
                     result.drop_symbols[(reel, symbol)] += 1
-                merged = fresh + column
-                for row in range(4):
-                    symbols[reel][row], mults[reel][row], gold[reel][row] = merged[row]
-                fresh_rows[reel] = need
+                fresh_rows[reel] = rows
 
             # 補牌後重抽金框顆數（game_rule §9.1.11）
             result.gold_appeared += self.topup_gold(scene, symbols, gold, fresh_rows)
