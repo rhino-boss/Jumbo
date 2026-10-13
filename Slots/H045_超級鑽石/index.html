@@ -2209,6 +2209,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-13：版本 5 參數調整（版本維持 5.0.0.0）</h4>
+        <ul>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H0451.xlsx</code>／<code>config.js</code> Q／J 賠率 0.05／0.1／0.15、FG 小鬼帶倍 20%（WW ×1 權重 400）、BG 表 2 的 C1 只留 R2／R5 且補牌不補 C1（BG 表 2 不觸發 FG）。92A 卡片權重暫沿用，待新自然報表重解。Help 內嵌 game_rule 同步。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-13：表 2 標籤在進出 FG 時切換</h4>
         <ul>
           <li>BG 觸發 FG 時先清掉 BG 的「表 2」標籤；FG 每一轉依該轉用的表顯示（表 2 顯示、表 1 隱藏）；FG 結束回 BG 時再清掉，下一局 BG 依 BG 用的表顯示。未修改 XLSX／Config 數學參數。</li>
@@ -2532,8 +2538,8 @@
 | `M4` | 50 | 30 | 10 |
 | `A` | 25 | 15 | 5 |
 | `K` | 25 | 15 | 5 |
-| `Q` | 12.5 | 7.5 | 5 |
-| `J` | 12.5 | 7.5 | 5 |
+| `Q` | 15 | 10 | 5 |
+| `J` | 15 | 10 | 5 |
 
 計算規則：
 
@@ -2685,7 +2691,7 @@
 ## §7. 核心遊戲流程（Base Game）
 
 1. 玩家選擇 Normal Bet 並開始 Spin。
-2. 系統依 `Table Selection Weight` 抽取本局使用的 Base Game 盤面表（版本 5：表 1 : 表 2 = 9 : 1；表 2 為高連消表，見附錄 B 版本 5）。Free Game 每一轉各自依 FG 權重選表（表 1 : 表 2 = 2 : 8），Retrigger 後的 FG 同此權重。
+2. 系統依 `Table Selection Weight` 抽取本局使用的 Base Game 盤面表（版本 5：表 1 : 表 2 = 9 : 1；表 2 為高連消表，見附錄 B 版本 5）。Free Game 每一轉各自依 FG 權重選表（表 1 : 表 2 = 2 : 8），Retrigger 後的 FG 同此權重。**BG 表 2 不會觸發 FG**：BG 表 2 的 `C1` 只在 R2、R5 輪帶出現（同輪間隔 ≥ 4 格，盤面每輪最多 1 顆）、補牌不補 `C1`，盤面最多 2 顆 `C1`（看得到、不觸發）；FG 表 2 可正常 Retrigger。
 3. 每一輪依該表的 Symbol Weight 加權抽出 4 顆符號，組成初始 5 輪 × 4 列盤面。
 4. 本局 Cascade Multiplier 從 `×1` 開始。
 5. 本局盤面若出現 `C1`，計入 SCR 統計；OP Jackpot 是否觸發由平台端依 SCR 決定（§5.7），觸發則先完成彩金結算再繼續。
@@ -2984,6 +2990,17 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 版本號維持（使用者指定直接修改版本 4）。數學分布改變，需重跑自然報表、重解 92A 與 Card-On 驗證。
 
+### 2026-10-13 版本 5 參數調整（版本維持 5.0.0.0）
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| Q／J 賠率（3／4／5 連） | 0.05／0.075／0.125 | **0.05／0.1／0.15**（§4） |
+| FG 小鬼帶倍數（`Multiplier_Wild_Weight_WW` ×1 權重） | 2000（約 4.8%） | **400（20%）** |
+| FG 大鬼帶倍數 | 50% | 50%（不變；試驗 50%／35%／20% 中） |
+| BG 表 2 的 `C1` | 同表 1 | **只在 R2、R5，同輪間隔 ≥ 4 格，補牌不補 `C1`** → BG 表 2 不觸發 FG |
+
+另套用 2026-10-13 規則定案（原地補牌、倍數只加總被消除的 WILD、Retrigger 切齊 50 場）。92A 卡片權重暫沿用 5.0.0.0，待新自然報表重解。
+
 ### 與前端規格書的差異紀錄
 
 | 項目 | 規格書 | 本文件 | 原因 |
@@ -3002,7 +3019,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 
   </script>
-  <script src="./Versions/version_manifest.js?v=20261013a"></script>
+  <script src="./Versions/version_manifest.js?v=20261013b"></script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
@@ -3016,7 +3033,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
-      const stamp = `${encodeURIComponent(entry.version)}-20261013a`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261013b`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
