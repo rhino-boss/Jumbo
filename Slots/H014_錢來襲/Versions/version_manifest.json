@@ -1,5 +1,5 @@
 {
-  "current": "4.0.0.0",
+  "current": "4.1.0.0",
   "base_version": "4",
   "next_version": "5.0.0.0",
   "versions": [
@@ -58,6 +58,25 @@
         "Bet100 數字分上限 30000 分（300 倍）→ 500000 分（5000 倍），Normal／Extra 同步；最大得分 1,110x → 10,101x。",
         "Extra Bet 卡片：以 Normal Bet 卡片為基礎，各得分區間 × (1 + k × 該區間 R4 有東西的比例)，R4 有特色比例高的區間提高較多，RTP（÷1.5）92%；輪帶權重沿用 1.0.0.2。",
         "卡片 RTP 依規範 §1.4.7 精確到 92.0000%（Normal／Extra 全押注）。"
+      ]
+    },
+    {
+      "version": "4.1.0.0",
+      "math_key": "4.1",
+      "date": "2026-10-13",
+      "competitor_initial_version": false,
+      "base_config": "Versions/4.1.0.0/config.js",
+      "configs": {
+        "92A": "Versions/4.1.0.0/config_92A.js"
+      },
+      "workbooks": {
+        "92": "Versions/4.1.0.0/Source/H014192A.xlsx",
+        "92_Extra": "Versions/4.1.0.0/Source/H014192A_Extra.xlsx"
+      },
+      "changes": [
+        "相對 4.0.0.0（只改卡片）：自然機率 ≥0.05% 但 0 權重的區間補權重（Bet5 3x／120x、Bet10 7x／50x、Bet50 3x）；Bet100 (100,120] 子表 C→B，讓 1100～11010 搭配空白／2X 的盤面可出現。",
+        "Extra Bet 依新 Normal Bet 卡片以同規則重算，Bet10／50／100 的 (0,1] 子表 A→B（讓 1／5／10／11／15 × 2X／5X／10X 可出現）。RTP 皆 92.0000%。",
+        "自然機率 <0.05% 無法給權重的 6 組盤面 × R4 組合列為已知例外（見 注意事項.md）。"
       ]
     }
   ]
