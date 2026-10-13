@@ -165,9 +165,11 @@ Slots/
 
 - 支援 Normal Spin，以及遊戲實際存在的 Extra Bet、Buy Feature、Super Feature。
 - 押注選項依 Bet Currency：1～1500 加上最大押注 2000／3000／5000；押注層級由數學定義的遊戲（例如 H014 依押注各有自然表）以 Config 為準。
-- Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。
+- Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值與結算相同；觸發 FG 那局（含 BF 入場盤）的 BG 得分要累積進 FG，FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束時等於整局總得分；Debug 的 Previous／Next 逐步檢視時，Win 同步顯示該步的累計得分。
 - Auto、Speed、Reset 不得改變 RNG、得分或統計結果。
+- 每一轉（BG 局與每一轉 FG）算完分後固定停 0.5 秒（共用 `window.demogameRoundPause()`），才放行下一轉或 Auto；這段停頓不受 Speed 影響，Simulation 不停頓。
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
+- FG 結束回到 BG 時，盤面還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲。
 - Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。
 - Help 與 `game_help_draft.md` 一致，不在 HTML 另維護一份規則。
 
