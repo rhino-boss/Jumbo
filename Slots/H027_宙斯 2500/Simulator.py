@@ -20,9 +20,15 @@ import pandas as pd
 # silently reuse a kernel compiled with older math parameters.
 _cache_base_dir = Path(os.environ.get("H027_BASE_DIR", Path(__file__).resolve().parent))
 _cache_digest = hashlib.sha256()
+_cache_rtp_name = os.environ.get("H027_CONFIG_RTP_FILE", "config_92A.js")
+_cache_variant = re.search(r"config_\d+([A-Z])", _cache_rtp_name)
 for _cache_name in (
-    os.environ.get("H027_CONFIG_RTP_FILE", "config_92A.js"),
+    _cache_rtp_name,
+    # 基礎 Config（config_A.js／config_B.js）的輪帶與賠率也會被烤進核心，一併納入快取鍵
+    f"config_{_cache_variant.group(1)}.js" if _cache_variant else "",
 ):
+    if not _cache_name:
+        continue
     _cache_path = _cache_base_dir / _cache_name
     _cache_digest.update(str(_cache_path.resolve()).encode("utf-8"))
     if _cache_path.is_file():
@@ -42,9 +48,9 @@ from numba import njit
 
 # ===== User settings =====
 
-# 2026-09-24：取消 config.js（基礎 Config）。每個 RTP／Variant Config 自給自足，
-# 只載一份。CONFIG_FILE 保留為 CONFIG_RTP_FILE 的同義詞，維持報表既有欄位。
-CONFIG_FILE = "config_92A.js"
+# 2026-10-13：基礎 Config 依 Variant 拆成 config_A.js／config_B.js，由 RTP Config 的
+# base_config 欄位自動指定；CONFIG_FILE 在載入後改為實際使用的基礎 Config 檔名。
+CONFIG_FILE = "config_A.js"
 CONFIG_RTP_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
@@ -231,31 +237,36 @@ def load_js_config(path):
 
 CFG_RTP = load_js_config(CONFIG_RTP_PATH)
 
+# 2026-10-13：依模擬程式規範 2.1，基礎數學有 A／B 兩套時拆成 config_A.js／config_B.js，
+# RTP／Variant Config 只放卡片權重等 RTP 欄位，以 base_config 指向對應的基礎 Config。
+# 舊的合併格式（沒有 base_config）仍可直接載入。
+_base_name = CFG_RTP.get("base_config")
+CFG_BASE = load_js_config(BASE_DIR / _base_name) if _base_name else None
+if _base_name:
+    CONFIG_FILE = _base_name   # 報表的 config_file 欄位記錄實際使用的基礎 Config
 
-def validate_config(rtp):
-    """單一 Config 的自我檢查（取代原本的 base↔rtp 配對檢查）。
 
-    原先靠 config.js 提供基礎數學的 1 碼版本來比對；現在 config.js 已取消，
-    改由 Config 自身的 base_excel_version 欄位承擔——規範 1.3 要求
-    「所有 RTP／Variant 的第 1 碼必須與基礎數學 XLSX 版本相同」，
-    這條檢查不能因為少一個檔案就消失。
-    """
+def validate_config(rtp, base):
+    """RTP Config 與基礎 Config 的版本檢查（數學模型規範 1.3：RTP 第 1 碼＝基礎 1 碼版本）。"""
     if not str(rtp.get("game_id", "")).strip():
         raise ValueError(f"Config missing game_id: {CONFIG_RTP_FILE}")
     rtp_version = str(rtp.get("excel_version", "")).strip()
     rtp_parts = rtp_version.split(".")
     if len(rtp_parts) != 4 or any(not part.isdigit() for part in rtp_parts):
         raise ValueError(f"RTP config excel_version must have four numeric parts: {rtp_version!r}")
-    base_version = str(rtp.get("base_excel_version", "")).strip()
+    base_version = str((base or {}).get("excel_version") or rtp.get("base_excel_version", "")).strip()
     if not re.fullmatch(r"\d", base_version):
-        raise ValueError(f"Config base_excel_version must be exactly one digit: {base_version!r} ({CONFIG_RTP_FILE})")
+        raise ValueError(f"Base config excel_version must be exactly one digit: {base_version!r} ({CONFIG_FILE})")
     if rtp_parts[0] != base_version:
         raise ValueError(f"Config version mismatch: base {base_version!r}, RTP {rtp_version!r} ({CONFIG_RTP_FILE})")
+    if base and str(base.get("game_id")) != str(rtp.get("game_id")):
+        raise ValueError(f"Config game_id mismatch: {CONFIG_FILE} vs {CONFIG_RTP_FILE}")
 
 
-validate_config(CFG_RTP)
-# 2026-09-24：Config 已自給自足，不再有 base↔rtp 合併這一層。
-CFG = CFG_RTP
+validate_config(CFG_RTP, CFG_BASE)
+# 基礎欄位在下、RTP 欄位在上；識別欄位（config_type／config_code／excel_version）以 RTP 為準
+CFG = {**CFG_BASE, **CFG_RTP} if CFG_BASE else CFG_RTP
+CFG.pop("base_config", None)
 
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])
