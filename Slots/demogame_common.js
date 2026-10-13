@@ -1039,11 +1039,21 @@
 
   // 最後調性更新日期（共用，頁尾 .footer-note）：頁面在載入本檔前設 window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"。
   // 只看調性：數學模型或倍率（卡片）權重有改才更新；介面、文件修改不算。
+  // 另可設 window.DEMOGAME_LAST_CODE（程式最後調整：index／Simulator／共用程式）與
+  // window.DEMOGAME_LAST_UPDATE（任何東西最後調整），有設才多顯示一行。
   function syncLastTuning() {
     const date = window.DEMOGAME_LAST_TUNING;
     const note = document.querySelector(".footer-note");
     if (!date || !note) return;
-    note.textContent = isZhText() ? `最後調性更新：${date}` : `Last tuning update: ${date}`;
+    const zh = isZhText();
+    const lines = [zh ? `最後調性更新：${date}` : `Last tuning update: ${date}`];
+    if (window.DEMOGAME_LAST_CODE) lines.push(zh ? `程式最後調整：${window.DEMOGAME_LAST_CODE}` : `Last code update: ${window.DEMOGAME_LAST_CODE}`);
+    if (window.DEMOGAME_LAST_UPDATE) lines.push(zh ? `最後更新：${window.DEMOGAME_LAST_UPDATE}` : `Last update: ${window.DEMOGAME_LAST_UPDATE}`);
+    note.textContent = "";
+    lines.forEach((text, index) => {
+      if (index) note.appendChild(document.createElement("br"));
+      note.appendChild(document.createTextNode(text));
+    });
   }
   syncLastTuning();
   document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(syncLastTuning, 0));

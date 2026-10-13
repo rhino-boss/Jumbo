@@ -2207,6 +2207,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-13：第 2 次消除起演出階梯倍數乘到贏分；頁尾加程式與最後更新時間</h4>
+        <ul>
+          <li>連消階梯倍數 &gt; 1（BG 第 2 次消除起、FG 每次）時，就算沒有帶倍 WILD，也演出「階梯倍數飛下 → 乘到贏分」；有帶倍 WILD 時照舊先加總再乘。</li>
+          <li>頁尾在「最後調性更新」下方加「程式最後調整」「最後更新」兩行（共用 demogame_common.js：<code>DEMOGAME_LAST_CODE</code>／<code>DEMOGAME_LAST_UPDATE</code>，有設才顯示）。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-13：v5 92A 卡片權重重解</h4>
         <ul>
           <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（5.0.0.0）以新參數的正式自然報表（NB 10⁸／BF 10⁷）重解，BG Trigger Cap 450x。Card-On 驗證 Oldhand 92.89%（+0.8σ）、Newbie 93.51%（+1.1σ），Retry 超限 0。</li>
@@ -3622,7 +3629,9 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       const symbol = snapshot.board[reel][row];
       if (used.has(`${reel},${row}`) && (symbol === WW || symbol === W2) && snapshot.mults?.[reel]?.[row] > 1) values.push({ key: `${reel},${row}`, value: snapshot.mults[reel][row] });
     }
-    if (!values.length) return;
+    const ladder = Number(snapshot.multiplier) || 1;
+    // 第 2 次消除起階梯倍數 > 1：沒有帶倍 WILD 也要演出「階梯倍數 × 贏分」（2026-10-13）
+    if (!values.length && ladder <= 1) return;
     const layer = fxLayer();
     if (!layer) return;
     const speed = Number($("speedRange").value || 1);
@@ -3630,8 +3639,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
     const layerRect = layer.getBoundingClientRect();
     const boardRect = $("board").getBoundingClientRect();
     const center = { x: boardRect.left - layerRect.left + boardRect.width / 2, y: boardRect.top - layerRect.top + boardRect.height / 2 };
-    const sum = values.reduce((total, item) => total + item.value, 0);
-    const ladder = Number(snapshot.multiplier) || 1;
+    const sum = values.length ? values.reduce((total, item) => total + item.value, 0) : 1;
     const total = sum * ladder;
     const base = (Number(snapshot.cascadePay) || 0) / total;
 
@@ -3669,8 +3677,10 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       }));
     });
     await Promise.all(flights);
-    bubble.innerHTML = `<span class="fx-math-tag">WILD SUM</span>×${sum}`;
-    await wait(hold);
+    if (values.length) {
+      bubble.innerHTML = `<span class="fx-math-tag">WILD SUM</span>×${sum}`;
+      await wait(hold);
+    }
 
     // ② 上排階梯倍數掉下來相乘
     const step = $("multiplierWindow").querySelector(".is-active");
@@ -3679,8 +3689,10 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       await fly(step.getBoundingClientRect(), center.x, center.y, `×${ladder}`, "fx-fly-badge ladder");
       step.classList.remove("fx-ladder-hit");
     }
-    bubble.innerHTML = `<span class="fx-math-tag">×${sum} × CASCADE ×${ladder}</span>×${total}`;
-    bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse");
+    bubble.innerHTML = values.length
+      ? `<span class="fx-math-tag">×${sum} × CASCADE ×${ladder}</span>×${total}`
+      : `<span class="fx-math-tag">CASCADE</span>×${total}`;
+    bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse", "show");
     await wait(hold);
 
     // ③ 結果飛到贏分列，贏分 = 基礎贏分 × 總倍數
@@ -4144,6 +4156,8 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 13:13";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-13 15:42";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-13 15:42";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261013f"></script>
 </body>
 
