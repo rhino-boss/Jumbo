@@ -2209,6 +2209,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-13：表 2 標籤在進出 FG 時切換</h4>
+        <ul>
+          <li>BG 觸發 FG 時先清掉 BG 的「表 2」標籤；FG 每一轉依該轉用的表顯示（表 2 顯示、表 1 隱藏）；FG 結束回 BG 時再清掉，下一局 BG 依 BG 用的表顯示。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-13：原地補牌、倍數只加總被消除的 WILD</h4>
         <ul>
           <li>依使用者定案：消除後改為原地補牌（其餘符號不移動）；中獎倍數只加總本次被消除的帶倍 WILD，沒用到的留在盤面（加總演出同步只抓用到的）；FG Retrigger 超過 50 場切掉。Simulator 同步；Help 內嵌 game_rule 同步。</li>
@@ -3908,6 +3914,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   function activateFeature(feature, mode) {
     state.fg = { spins: feature.spins, index: 0, total: feature.spins.length, win: 0, mode };
     state.lastWin = 0; state.fgTriggers++;
+    showTable("");   // 進 FG：先清掉 BG 的表 2 標籤，第一把 Free Spin 起依 FG 當轉用的表顯示
     $("featureStatus").textContent = mode === 2 ? "Buy Feature" : "Free Game Triggered"; updateStats();
   }
 
@@ -3932,7 +3939,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
     state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
     state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
-    if (state.fg.index >= state.fg.spins.length) { recordFgHistory(state.fg); $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
+    if (state.fg.index >= state.fg.spins.length) { recordFgHistory(state.fg); showTable(""); $("featureStatus").textContent = "Feature complete"; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
   }
 
   async function play(mode = 0) {
