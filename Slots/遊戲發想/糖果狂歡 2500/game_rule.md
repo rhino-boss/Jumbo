@@ -228,7 +228,6 @@
 
 * `Source/H998192.xlsx`
 * `Source/H998194.xlsx`
-* `Source/xlsx_to_config.py`
 * `config_92.js`
 * `config_94.js`
 * `Simulator.py`
