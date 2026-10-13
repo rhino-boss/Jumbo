@@ -1,7 +1,7 @@
 window.H014_VERSION_MANIFEST = {
-  "current": "4.1.0.0",
-  "base_version": "4",
-  "next_version": "5.0.0.0",
+  "current": "5.0.0.0",
+  "base_version": "5",
+  "next_version": "6.0.0.0",
   "versions": [
     {
       "version": "1.0.0.2",
@@ -77,6 +77,26 @@ window.H014_VERSION_MANIFEST = {
         "相對 4.0.0.0（只改卡片）：自然機率 ≥0.05% 但 0 權重的區間補權重（Bet5 3x／120x、Bet10 7x／50x、Bet50 3x）；Bet100 (100,120] 子表 C→B，讓 1100～11010 搭配空白／2X 的盤面可出現。",
         "Extra Bet 依新 Normal Bet 卡片以同規則重算，Bet10／50／100 的 (0,1] 子表 A→B（讓 1／5／10／11／15 × 2X／5X／10X 可出現）。RTP 皆 92.0000%。",
         "自然機率 <0.05% 無法給權重的 6 組盤面 × R4 組合列為已知例外（見 注意事項.md）。"
+      ]
+    },
+    {
+      "version": "5.0.0.0",
+      "math_key": "5.0",
+      "date": "2026-10-13",
+      "competitor_initial_version": false,
+      "base_config": "Versions/5.0.0.0/config.js",
+      "configs": {
+        "92A": "Versions/5.0.0.0/config_92A.js"
+      },
+      "workbooks": {
+        "92": "Versions/5.0.0.0/Source/H014192A.xlsx",
+        "92_Extra": "Versions/5.0.0.0/Source/H014192A_Extra.xlsx"
+      },
+      "changes": [
+        "相對 4.1.0.0（依測試反饋，改 bet{n}p_A 權重）：沒得分畫面 00 放回空白——EEE／E0E／EE0／E00 取 4.1.0.0 與競品的中間值（Bet10 E00 31.2%→26.2%、EEE 14.3%→18.0%）。",
+        "Bet10 R1 空白子表 R2 的 1／5 權重 ×2.94：E X 0／1／5／空 合計 2.43%→3.13%（同競品）。",
+        "R4：沒得分時出倍數（每局）約 30%→16%；有得分時 R4 是倍數 Bet1 15.3%→21.5%、Bet5 41.2%→42.1%、Bet10 22.9%→28.0%（同競品）。",
+        "卡片等比調回 RTP 92.0000%；EB 卡片依新 NB 重算，EB 輪帶不變。"
       ]
     }
   ]
