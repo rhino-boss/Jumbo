@@ -1933,6 +1933,7 @@
           <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／RNG／重置），移除本遊戲覆蓋共用版面的 <code>.set-rng-controls</code>／<code>.debug-rng-field</code> CSS；重置同時清空 RNG 欄。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG 含再觸發相同）；BG＋整段 FG 改為開局在 <code>demogameRng.run()</code> 內一次算完、之後逐轉播放；碼的模式（NB／BF／SF）只套用該局，Config 不同時 Log 警告；本遊戲無卡片系統，card 固定 off，opts 為 <code>-</code>（Force FG 時為 <code>fg</code>）；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
           <li>驗證：inline script 皆過 <code>node --check</code>；NB 一般局 4 局、Buy Feature 1 局、Super Feature 1 局（含整段 FG）重跑，Log 結果行與最終盤面完全相同；Set RNG 三欄同列等寬；Simulation 10,000 局正常；Console 無錯誤。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-07-14」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -3313,7 +3314,8 @@
 })();
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-07-14";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../demogame_common.js?v=20261013f"></script>
 </body>
 
 </html>

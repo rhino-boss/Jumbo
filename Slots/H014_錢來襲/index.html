@@ -249,6 +249,7 @@
           <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／Natural Table／RNG／重置），重置同時清空 RNG 欄。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|EB/on|off/b押注[.r卡片區間][.tNatural表]/種子</code>），點一下複製並填入，貼回 RNG 欄按 Spin 整局重跑（卡片 Retry、RESPIN、轉盤相同）；碼上的押注模式與 Card on/off 只套用該局，押注不同時切到碼上押注；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
           <li>驗證：Debug Mode 下 Card on（NB bet10 一般／RESPIN／轉盤、EB、指定卡片區間 #45）與 Card off（Base、Natural B）各點 Log RNG 碼重跑，Log 結果行與 Spin Result 盤面皆相同；跨押注模式／押注、重新整理後重跑亦相同；Set RNG 四欄同列等寬；Simulation 正常、Console 無錯誤；inline script 皆通過 <code>node --check</code>。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-10-13」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -1409,7 +1410,8 @@
 })();
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../demogame_common.js?v=20261013f"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

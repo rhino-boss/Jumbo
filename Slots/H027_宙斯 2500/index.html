@@ -332,6 +332,7 @@
           <li>Set RNG 統一：欄位一列等寬（卡片 BG／BF 區間／RNG／重置）。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、卡片重骰相同）；碼內的模式（NB／EB／BF）、Card on／off 與 Card Range（<code>r&lt;序號&gt;</code>）只套用於該局，不改畫面選項，Config 不同時 Log 警告；原 Reel RNG 停輪欄改為 RNG 碼。未修改 XLSX／Config 數學參數。（10/13）</li>
           <li>驗證：Card On NB（含連消、指定 Card Range r3）、Card Off NB／EB、BF（Card On／Off，各 15 轉以上 FG）重跑，Log 結果行、最終盤面與 Spin 結果逐字相同；Card On 碼在畫面 Card Off 時重跑仍相同；Set RNG 三欄同列、兩欄等寬；Simulation 3,000 局正常、Console 無錯誤。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-10-12」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -2065,7 +2066,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(data.card_system?.enabled);</script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-12";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../demogame_common.js?v=20261013f"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

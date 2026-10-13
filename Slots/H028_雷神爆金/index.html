@@ -2174,6 +2174,7 @@
           <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／RNG／重置），移除本檔覆寫共用排版的 <code>.set-rng-controls</code>／<code>.debug-rng-field</code> 樣式；重置一併清空 RNG 欄。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|BF/on|off/r區間|-/種子</code>，點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG 含卡片重抽相同；BF 碼自動以購買特色重跑）；整局結果改為開局一次算完再播放，轉輪滾動表演不吃種子；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
           <li>驗證：<code>node --check</code> 通過、Console 無錯誤；Card On（92A）NB、指定 Card BG Range（FG 卡 r64，含 FG 10 場）、BF，與 Card Off（BaseA）NB×3、BF×2 重跑，Log 結果與最終盤面皆與原局相同；Simulation 正常。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-09-22」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
         </article>
 
@@ -2894,6 +2895,7 @@
 })();
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告.html";</script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-09-22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../demogame_common.js?v=20261013f"></script>
 </body>
 </html>

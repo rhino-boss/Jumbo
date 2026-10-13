@@ -1013,6 +1013,17 @@
 
   setupHistoryPanel();
 
+  // 最後調性更新日期（共用，頁尾 .footer-note）：頁面在載入本檔前設 window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD"。
+  // 只看調性：數學模型或倍率（卡片）權重有改才更新；介面、文件修改不算。
+  function syncLastTuning() {
+    const date = window.DEMOGAME_LAST_TUNING;
+    const note = document.querySelector(".footer-note");
+    if (!date || !note) return;
+    note.textContent = isZhText() ? `最後調性更新：${date}` : `Last tuning update: ${date}`;
+  }
+  syncLastTuning();
+  document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(syncLastTuning, 0));
+
   // 標題列右側按鈕（共用）：數值報告、說明、重置排在一起。
   // 數值報告：頁面在載入本檔前設 window.DEMOGAME_REPORT_URL（相對路徑）才出現；在同一分頁開啟，
   // 可用瀏覽器「上一頁」回到 Demo（報告頁另有「← 返回 Demo」）。說明／重置由設定列搬來，事件監聽沿用。
@@ -1038,9 +1049,9 @@
     if (getComputedStyle(bar).position === "static") bar.style.position = "relative";
     bar.appendChild(group);
     const style = document.createElement("style");
-    style.textContent = `#demogameTitleActions{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center}
+    style.textContent = `#demogameTitleActions{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:2px;align-items:center}
       #demogameTitleActions > a, #demogameTitleActions > button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
-        height:30px;min-height:0;min-width:64px;width:auto;margin:0;padding:0 16px;border-radius:7px;border:none;
+        height:30px;min-height:0;min-width:0;width:auto;margin:0;padding:0 8px;border-radius:7px;border:none;
         color:#6f8fae;background:transparent;font-family:inherit;font-size:var(--demogame-title-size,13px);font-weight:var(--demogame-title-weight,700);line-height:1;
         letter-spacing:0;white-space:nowrap;text-decoration:none;cursor:pointer}
       #demogameTitleActions > a:hover, #demogameTitleActions > button:hover{color:#dceeff;background:rgba(127,160,200,.14)}

@@ -180,6 +180,7 @@ Debug Mode 至少可查看：
 - Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
+- 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD"`，頁尾顯示「最後調性更新：日期」。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
 - 數值報告按鈕（共用）：有 `其他/數值報告_<遊戲中文名>.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL`，標題列右側出現「數值報告」按鈕（樣式同 Reset），另開分頁。
 - 歷史紀錄（共用）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；面板標題「歷史紀錄」，只顯示 BG 最大倍數與 FG 最大倍數，Clear／Reset 清空。
 - Log（共用）：帶時間的即時紀錄，記下 Config 載入、盤面訊息、押注模式切換、FG 觸發／Retrigger、Card System 抽卡與 Retry、錯誤；Clear 清空，最多保留 500 行。

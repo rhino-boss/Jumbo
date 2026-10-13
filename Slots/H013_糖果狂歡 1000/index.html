@@ -1990,6 +1990,7 @@
           <li>Set RNG 統一：欄位一列等寬（卡片系統／RNG／重置），拿掉本檔覆寫共用排版的 <code>.set-rng-controls</code>／<code>.debug-rng-field</code> CSS。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|EB|BF|SF/on|off/-/種子</code>，點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、Card 重抽相同）；碼內模式／卡片只套用該局、不改畫面選項，重跑局不計入即時線型；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
           <li>驗證：node --check 通過；點 Log RNG 行填入後重跑，Log 結果行與 Spin Result 盤面逐字相同——Card on：NB、BF（含整段 FG）；Card off：NB、EB、BF、SF（SF 含 FG）；Card on 碼在 Base 下重跑仍套用卡片並印 Config 不符警告；格式錯誤不扣款；Set RNG 三欄一列（兩欄等寬＋Reset 82px）；Simulation 10000 局正常、Console 無錯誤。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-08-03」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -3558,7 +3559,8 @@
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-08-03";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../demogame_common.js?v=20261013f"></script>
   <script>
     (() => {
       "use strict";

@@ -2055,6 +2055,8 @@
           <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／RNG／重置），拿掉本檔覆寫共用排版的 <code>.set-rng-controls</code>／<code>.debug-rng-field</code> CSS；卡片 BG 區間改為可選（Oldhand normal_bet.weight_bg 各區間＋Free Game），與 RNG 碼互斥；重置同時清空兩者。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、卡片 Retry 相同；碼內的模式 NB／BF、Card on／off、Profile 只套用該局，不改畫面選單）；選項欄 <code>r&lt;卡片區間索引&gt;</code>；原 Reel RNG 停輪欄改為 RNG 碼。整局（含整場 FG）開局時一次算完再播放，畫面局改走與 Simulation 相同的卡片流程（Config 92／94 卡片開、Base 自然機率）；指定區間與重跑局不計入即時倍率線型。（10/13）</li>
           <li>驗證：inline script 通過 <code>node --check</code>；Card 開 NB（含點 Log 填入）、Card 開 BF（FG 10／12 轉）、Card 關 NB／BF、Base 下自然觸發 FG、指定區間 (10, 15]／Free Game、Base 下重跑 92 Card 開碼（印 Config 警告），重跑結果 Log 與盤面皆與原局相同；Set RNG 三欄同列、兩欄等寬；Simulation 10,000 局正常且不影響種子重跑；Console 無錯誤。（10/13）</li>
+          <li>畫面局維持不走卡片：Spin／Buy 一律自然機率（RNG 碼 Card 欄為 off）；Card System 只用於 Simulation，指定 Card Range 時仍照該區間重抽。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-07-28」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -2876,7 +2878,7 @@
     state.balance -= cost; state.totalBet += cost; state.rounds++; if (mode === MODE_NORMAL) state.normalRounds++;
     if (mode === MODE_BUY) el.messageBar.textContent = text("buyStart");
     const seed = code ? code.seed : window.demogameRng.newSeed();
-    const card = code ? code.card : h015CardSystemActive();
+    const card = code ? code.card : false;   // 畫面局維持不走卡片（自然機率）；Card System 只用於 Simulation。指定 Card Range 仍照該區間重抽
     const profile = code ? (/newbie/i.test(code.config) ? "newbie" : "oldhand") : h015CardProfile();
     const configLabel = code ? code.config : (h015ConfigLabel() + (profile === "newbie" && !/newbie/i.test(h015ConfigLabel()) ? "-Newbie" : ""));
     // 選項欄：r<Card BG Range 索引>（只用於 NB）；重跑局用碼裡的值，不看畫面選單
@@ -3126,7 +3128,8 @@
   buildBetMenu(); buildCardRangeOptions(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-07-28";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../demogame_common.js?v=20261013f"></script>
 </body>
 
 </html>

@@ -194,7 +194,7 @@
       body.tc2 { --cell-size: min(52px, calc((100vw - 72px) / 7)); }
     }
   </style>
-  <link rel="stylesheet" href="../../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../../demogame_common.css?v=7">
 </head>
 
 <body class="tc2">
@@ -206,9 +206,9 @@
     <div id="strip-bar" aria-label="Feature status">
       <div class="feature-strip">
         <span id="modeText">Base Game</span>
-        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v" id="cascadeValue">0</span></span>
-        <span class="feature-pill" id="sumPill"><span class="k">全盤倍數和</span><span class="v" id="sumValue">0</span></span>
-        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v" id="fgLeftValue">0/0</span></span>
+        <span class="feature-pill" id="cascadePill"><span class="k" data-tc2-text="cascade">Cascade</span><span class="v" id="cascadeValue">0</span></span>
+        <span class="feature-pill" id="sumPill"><span class="k" data-tc2-text="boardSum">Board Multiplier Sum</span><span class="v" id="sumValue">0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k" data-tc2-text="fgLeft">FG Left</span><span class="v" id="fgLeftValue">0/0</span></span>
       </div>
     </div>
 
@@ -250,11 +250,6 @@
           <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
             <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
             <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
-            <span class="debug-divider" aria-hidden="true"></span>
-            <label class="debug-check force" for="forceFgInput">
-              <input id="forceFgInput" type="checkbox">
-              Force FG
-            </label>
           </div>
         </section>
 
@@ -287,10 +282,7 @@
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
-          <label class="debug-rng-field" for="rngInput">
-            RNG Seed
-            <input id="rngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="0 ~ 4294967295（只作用下一個 Spin）">
-          </label>
+          <label class="debug-rng-field" for="rngInput">RNG<input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="Base/NB/off/-/8f3a21b0"></label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
       </div>
@@ -321,90 +313,59 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
-        <div class="change-log-entry">
-          <div class="cl-date">2026-10-02 — v0.3.1.0 Extra Bet 費用定為 10 倍＋共用檔路徑修正</div>
-          <ul>
-            <li>目的：Extra Bet 費用定案為 10 倍押注；資料夾搬移後共用檔載不到。</li>
-            <li>變更：config.js <code>extrabet</code> 1.25 → 10、版本 0.3.0.0 → 0.3.1.0（config 載入參數同步）；Help 的 EXTRA BET 說明改為押注 10 倍。底板個數與倍數權重不變。</li>
-            <li>共用檔路徑由 <code>../../../</code> 改為 <code>../../</code>（遊戲發想資料夾已移到 Slots/遊戲發想/，原路徑載不到 demogame_common.css／.js，Debug、Bet Mode 與 Image 開關失效）。</li>
-            <li>驗證：Extra Bet 按鈕顯示「Extra Bet (10x)」；Console 無例外。</li>
-            <li>數值影響（demo 假權重，各 5 萬局）：Normal Bet RTP 401.2%（BG 329.1%、FG 1/198）；Extra Bet RTP 723.3%（BG 717.8%、FG 1/206、最大全盤和 2,550）——底板期望約 69 倍押注／把，10 倍費用仍偏低，底板權重待調。</li>
-          </ul>
-        </div>
-        <div class="change-log-entry">
-          <div class="cl-date">2026-10-02 — v0.3.0.0 Debug 對齊規範＋Extra Bet</div>
-          <ul>
-            <li>目的：Debug 與共用區依 Demogame規範 4.2.2／4.5 對齊標準結構（以 H027 為範本）；新增 Extra Bet。</li>
-            <li>Debug：新增逐幀 Previous／Next（Initial → 每段 Cascade 中獎／掉落 → Final）；新增 Set RNG 面板（RNG Seed，只作用下一個 Spin，格式錯誤明確報錯）；每局使用可指定種子的 RNG 並在 Reel RNG 顯示 seed，輸入同一 seed 可完整重現該局；Reel RNG 補上 Config、Version、Card System、Scene、Bet Mode／價格、Base Bet／實際押注、Table、Drop Mode、Extra Bet 底板等資訊；Log 分類著色。</li>
-            <li>共用區：Play／Bet Mode／Stats／Set RNG／Reel RNG／Spin Result／Log／Setting 改用標準 ID 與 class，樣式交由 demogame_common.css（頁面只保留 By Game 樣式，以 body.tc2 限定）；控制改走 slotBindCommonControls（含 Bet 選單、Space 鍵 Spin）；Config 由共用模組組成 DRAFT-Off。</li>
-            <li>Extra Bet（⏳ 數值待確認）：費用 1.25 倍；該次 BG Spin 開場時隨機 1～3 個位置出現 20／50／100／250／500／1000 倍數底板（個數各 1/3、倍數權重 50/25/12/7/4/2），為該格起始位置倍數，第一次消除即生效、之後照常 +1；FG 不帶底板。底板以粉紫徽章標示。config.js 新增 extrabet、extra_bet_plates，版本 0.2.1.0 → 0.3.0.0。</li>
-            <li>驗證：Debug 開啟後 7 個 Debug 區塊全部顯示；逐幀 6 格（Initial／Cascade 1 win／drop／Cascade 2 win／drop／Final）Previous／Next 正常；同一 seed（3996161068）重跑盤面、底板（r1c2 x50、r6c3 x50）與得分 82.40 完全一致，輸入值用後自動清除，格式錯誤顯示「RNG Seed 需為 0 ~ 4294967295 的整數」；Extra Bet 實扣 1.25，第一次消除即乘底板（A×6 賠率 0.4 × 全盤和 100 = 40.00）；Console 無例外。</li>
-            <li>數值影響（demo 假權重，各 2 萬局）：Normal Bet RTP 379.4%（BG 312.6%、Hit 41.2%、FG 1/200）；Extra Bet RTP 5,761.9%（BG 5,701.7%、最大全盤和 2,055、最大贏分 28,915x 費用）——底板平均 2 塊、每塊期望約 92 倍，費用 1.25 倍遠低於其價值，需重新定價或降低底板權重。</li>
-          </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-10-02 — 位置倍數固定在格位</div>
-        <ul>
-        <li>目的：位置倍數屬於格位而非符號，消除補牌時不應跟著符號往下掉。</li>
-        <li>變更：倍數徽章從符號格內移到獨立的固定層 <code>#multLayer</code>（與盤面同格線、疊在符號上方）；符號掉落時倍數留在原格，補牌後原地更新數值；倍數收集動畫的起點改用固定層格位。</li>
-        <li>驗證：固定層 49 格與符號格位置誤差 0px；掉落動畫進行中（41 格移動）徽章位置不變；Console 無例外。</li>
-        <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-10-02 — v0.2.1.0 連帶消除的格子不加倍數</div>
-        <ul>
-        <li>目的：確認規則——連帶消除的同符號格子不累加位置倍數。</li>
-        <li>變更：runSpin 只對 Cluster 本身的格子 +1，連帶消除格（chainSet）不 +1；config.js 版本 0.2.0.0 → 0.2.1.0；game_rule.md §3.3／§5.4／§7／§9 同步並移除對應待確認項。</li>
-        <li>驗證：單段連消局核對消 14 格（連帶 8）後最終全盤和＝6＝Cluster 格數，連帶格未加倍數。</li>
-        <li>數值影響（demo 假權重，2 萬局）：總 RTP 892.5% → 371.2%（BG 703.2% → 302.4%、FG 189.3% → 68.8%）、Hit 41.4%、FG 1/196、最大全盤和 492 → 159、最大贏分 8,463x → 1,323x。權重仍需重新調整。</li>
-        </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-10-02 — v0.2.0.0 同符號連帶消除與多組計分</div>
-        <ul>
-        <li>目的：加入三條規則——不論在哪消除得分一律乘全盤倍數加總；N 連 Cluster 成立時盤面所有同符號一併消除、只以 N 連計分；同段同符號多組 Cluster 每組都計分。</li>
-        <li>變更：config.js 新增 <code>same_symbol_clear: true</code>、英文名改 Candy Rush 2、版本 0.1.0.0 → 0.2.0.0（config 載入加版本參數）；runSpin 加入連帶消除（chainSet，不計分、位置倍數同樣 +1）；動畫中連帶消除格以藍光標示、訊息列與 Spin Result 顯示連帶格數；game_rule.md（原 game_rule_Turbo_Candy_2.md 改名，供 Omniplay 讀取）新增 §5.4 與對應流程／邊界條件；Help 同步。</li>
-        <li>驗證：17 段實際連消逐段核對「消除格數＝盤面該符號總數、計分只算 Cluster」全數通過；以人工盤面測試兩組 A 五連各自計分、3 顆零散 A 連帶消除不計分，得分＝2×0.3×全盤和，正確。</li>
-        <li>數值影響（demo 假權重，2 萬局）：總 RTP 73.4% → 892.5%（BG 約 60% → 703.2%、FG 189.3%）、Hit 42.0% → 41.7%、FG 1/282 → 1/174、最大全盤和 82 → 492、最大贏分 194x → 8,463x。對照（BG 3 萬局）：連帶格不 +1 時 BG RTP 312.1%。權重需重新調整。</li>
-        </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-09-24 — 倍數收集目標調整＋代號不粗體</div>
-        <ul>
-        <li>目的：倍數收集改飛向上方 Feature Status 的「全盤倍數和」；套用共用符號顯示規則。</li>
-        <li>變更：刪除盤面上方的大型全盤倍數和橫幅，收集 token 改飛向 #sumPill 並於抵達後重新加總；符號代號改一般字重（本作無符號美術，不顯示 Image 開關，維持框＋代號）；共用 CSS v=4。</li>
-        <li>驗證：收集動畫凍結截圖確認飛行目標；代號字重 400；Console 無例外。</li>
-        <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-09-24 — 規範補齊</div>
-        <ul>
-        <li>目的：使發想 demo 符合 Demogame規範（4.1／4.3／4.4／4.5／4.7）。</li>
-        <li>變更：抽出 config.js（盤面、賠率、權重、FG、Bet Mode 全由 Config 取得，載入失敗顯示錯誤）；新增 Debug Mode、Force FG（僅作用下一個 Spin）、Reel RNG（weighted draw）、Spin Result 盤面快照、Log、修改紀錄；補牌動畫區分既有符號 Settle 與新符號 Drop／Refill；新增 Help（內容與 game_help_draft.md 一致）。</li>
-        <li>驗證：離線開啟無 Console 例外；Spin／Auto／Buy／FG／Retrigger 流程完整；Debug 快照可重現每段 Cascade 盤面與得分。</li>
-        <li>未修改 XLSX／Config 數學參數（發想假值維持不變）。</li>
-        </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-09-24 — 動畫（滾動／倍數收集／重新加總）</div>
-        <ul>
-        <li>目的：比照賞金列車 2 的輪帶滾動；實作位置倍數收集演出。</li>
-        <li>變更：Spin 起始逐欄模糊滾動、左到右停輪；每段消除補牌後，盤面所有位置倍數以 ×N token 飛向「全盤倍數和」pill，從 0 跳動重新加總；共用 slotFx 效果（中獎爆閃、壓暗、金幣、中央大字、總贏分橫幅）。</li>
-        <li>驗證：凍結截圖確認滾動與收集動畫；動畫僅演出，不影響 RNG 與得分。</li>
-        <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-        </div>
-        <div class="change-log-entry">
-        <div class="cl-date">2026-09-24 — 初版建置</div>
-        <ul>
-        <li>目的：急速糖果 2 發想 demo（規則基底 H022 糖果轟炸 1000）。</li>
-        <li>變更：7×7 Cluster Pay（相連 ≥5）、位置倍數每次消除 +1（線性）、計分乘全盤倍數和、FG 3~7 顆 C1 → 10/12/15/20/30 局且倍數整場保留、移除 Mega 符號。</li>
-        <li>驗證：批次模擬 4,000 局 RTP 100.6%、Hit 41.7%、FG 1/160（demo 假權重）。</li>
-        <li>未修改 XLSX／Config 數學參數（發想假值）。</li>
-        </ul>
-        </div>
+        <article class="change-log-entry">
+          <h4>v0（0.3.1.0）</h4>
+          <ol>
+            <li>Extra Bet 費用定為 10 倍押注（config.js <code>extrabet</code> 1.25 → 10、版本 0.3.0.0 → 0.3.1.0）；Help 的 EXTRA BET 同步，底板個數與倍數權重不變。（10/02）</li>
+            <li>共用檔路徑 <code>../../../</code> → <code>../../</code>（資料夾移到 Slots/遊戲發想/ 後載不到 demogame_common.css／.js）。（10/02）</li>
+            <li>驗證：Extra Bet 按鈕顯示「Extra Bet (10x)」、Console 無例外；demo 假權重各 5 萬局 NB RTP 401.2%（FG 1/198）、EB 723.3%（FG 1/206），底板期望約 69 倍押注／把，權重待調。（10/02）</li>
+            <li>Simulation 面板新增押注模式選單（Normal Bet／Extra Bet／Buy Feature）；本檔宣告 <code>window.demogameSimulationModes</code>，<code>demogameSimulateRound({ mode })</code> 以參數套用該局模式，不改畫面押注模式與統計，Buy Feature 改為可模擬。（10/13）</li>
+            <li>倍率線型併入 Simulation（共用）：標準 64 區間、X 軸 (下限, 上限]、Y 軸 NB／EB 1%、BF 20%，超出上限或為 0 不畫點，標題置中「倍率線型 · 模式」；本檔回傳 <code>lineMultiplier</code>（BF ÷ 底注，其餘 ÷ 押注）。（10/13）</li>
+            <li>消除分布轉置為「消除次數 × BG／FG」並框成一區（共用；無消除機制的遊戲不顯示，本作有消除故顯示）。（10/13）</li>
+            <li>最高倍數＝單局總得分倍數、FG 觸發顯示「比例 (N 場)」（共用）。（10/13）</li>
+            <li>Start 執行中顯示「進行中」（English：Running）（共用）。（10/13）</li>
+            <li>Spin Result 面板、Force FG 拿掉（共用）；本檔移除 Force FG 勾選框與其判斷。（10/13）</li>
+            <li>共用區標籤隨語言切換中英（共用）；Language 新增 English，本作 By Game 文字（標題、Feature Status、Extra Bet／Buy Feature 按鈕、Spin／Next FG／Auto、盤面訊息、總贏分字樣）改由本檔中英切換。共用檔 <code>demogame_common.css?v=7</code>、<code>demogame_common.js?v=20261013d</code>。（10/13）</li>
+            <li>押注選項加 2000／3000／5000（Bet Currency 最大押注；config.js <code>bet_options</code> 不動，頁面附加）。（10/13）</li>
+            <li>Set RNG 一列等寬（RNG／重置）；可重現 RNG 改用共用 <code>demogameRng</code>：原 RNG Seed 欄改為 RNG 碼 <code>Base/NB|EB|BF/off/-/種子</code>，每局（BG＋消除＋整段 FG＋Retrigger）在 <code>demogameRng.run()</code> 內一次算完，Log 印一行可點的 RNG 碼；RNG 欄填了一直沿用、按重置才清；碼內模式只套用該局，Config 不同或 Card on 時 Log 警告。原自帶種子 RNG 與單 Spin seed 移除。（10/13）</li>
+            <li>Log 上限 120 → 500 行。（10/13）</li>
+            <li>驗證：點 Log RNG 行重跑 NB、EB、BF（含 FG）局，Log 結果行與最終盤面逐字相同；Set RNG 欄位同列；Simulation 三模式可跑；語言 繁中→English→繁中 可正確切回；Console 無錯誤。（10/13）</li>
+            <li>未修改 XLSX／Config 數學參數。（10/13）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v0（0.3.0.0）</h4>
+          <ol>
+            <li>Debug 依規範對齊 H027：逐幀 Previous／Next（Initial → 每段 Cascade 中獎／掉落 → Final）；Set RNG 面板（RNG Seed）；Reel RNG 補上 Config、Version、Card System、Scene、Bet Mode／價格、Base Bet／實際押注、Table、Drop Mode、Extra Bet 底板；Log 分類著色。（10/02）</li>
+            <li>共用區改用標準 ID 與 class，樣式交由 demogame_common.css（頁面只保留 body.tc2 By Game 樣式）；控制改走 slotBindCommonControls；Config 由共用模組組成。（10/02）</li>
+            <li>新增 Extra Bet：BG Spin 開場隨機 1～3 格出現 20／50／100／250／500／1000 倍數底板（個數各 1/3、倍數權重 50/25/12/7/4/2），第一次消除即生效、之後照常 +1；FG 不帶底板；config.js 新增 <code>extrabet</code>、<code>extra_bet_plates</code>，版本 0.2.1.0 → 0.3.0.0。（10/02）</li>
+            <li>驗證：逐幀 6 格 Previous／Next 正常；同 seed 重跑盤面、底板與得分一致；Console 無例外。demo 假權重各 2 萬局 NB RTP 379.4%（FG 1/200）、EB（1.25 倍費用）5,761.9%，費用需重新定價。（10/02）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v0（0.2.1.0）</h4>
+          <ol>
+            <li>連帶消除的同符號格子不累加位置倍數（runSpin 只對 Cluster 本身 +1）；config.js 版本 0.2.0.0 → 0.2.1.0；game_rule.md §3.3／§5.4／§7／§9 同步。驗證最終全盤和＝Cluster 格數。（10/02）</li>
+            <li>數值影響（demo 假權重 2 萬局）：總 RTP 892.5% → 371.2%、Hit 41.4%、FG 1/196、最大贏分 8,463x → 1,323x，權重仍需重調。（10/02）</li>
+            <li>位置倍數固定在格位：徽章移到獨立固定層 <code>#multLayer</code>，掉落時留在原格、補牌後原地更新，收集動畫起點改用固定層。驗證 49 格位置誤差 0px；未修改 XLSX／Config 數學參數。（10/02）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v0（0.2.0.0）</h4>
+          <ol>
+            <li>新增規則：得分一律乘全盤倍數加總；N 連 Cluster 成立時盤面同符號一併消除（不計分）；同段同符號多組 Cluster 各自計分。config.js 新增 <code>same_symbol_clear</code>、英文名 Candy Rush 2、版本 0.1.0.0 → 0.2.0.0；連帶消除格藍光標示；game_rule.md 改名並新增 §5.4；Help 同步。（10/02）</li>
+            <li>驗證：17 段連消逐段核對消除格數與計分正確；人工盤面兩組 A 五連各自計分。demo 假權重 2 萬局總 RTP 73.4% → 892.5%、FG 1/282 → 1/174，權重需重調。（10/02）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v0（0.1.0.0）</h4>
+          <ol>
+            <li>初版：急速糖果 2 發想 demo（規則基底 H022）；7×7 Cluster Pay（≥5）、位置倍數每次消除 +1、計分乘全盤倍數和、FG 3～7 顆 C1 → 10/12/15/20/30 局且倍數整場保留。批次 4,000 局 RTP 100.6%、Hit 41.7%、FG 1/160（假權重）。（09/24）</li>
+            <li>動畫：逐欄模糊滾動、左到右停輪；每段補牌後位置倍數以 token 飛向「全盤倍數和」並重新加總；共用 slotFx 效果。動畫不影響 RNG 與得分。（09/24）</li>
+            <li>規範補齊：抽出 config.js（載入失敗顯示錯誤）；新增 Debug Mode、Force FG、Reel RNG、Spin Result、Log、修改紀錄；補牌區分 Settle 與 Drop／Refill；新增 Help。驗證 Spin／Auto／Buy／FG／Retrigger 完整、Console 無例外。（09/24）</li>
+            <li>倍數收集改飛向 Feature Status 的「全盤倍數和」（移除盤面上方橫幅）；符號代號改一般字重（無符號美術，不顯示 Image 開關）；共用 CSS v=4。未修改 XLSX／Config 數學參數。（09/24）</li>
+          </ol>
+        </article>
       </div>
     </section>
 
@@ -427,6 +388,7 @@
           <span>Language</span>
           <select id="languageSelect">
             <option value="zh">繁中</option>
+            <option value="en">English</option>
           </select>
         </label>
         <button id="helpBtn" type="button">Help</button>
@@ -476,7 +438,7 @@
       // ── 由 Config 取得的遊戲參數 ───────────────────────────────────────────
       const SIZE = CFG.board_size;
       const MIN_CLUSTER = CFG.min_cluster;
-      const BET_LEVELS = CFG.bet_options;
+      const BET_LEVELS = [...new Set([...CFG.bet_options, 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
       const BUY_MULT = CFG.featurebuy;
       const EXTRA_MULT = CFG.extrabet;
       const FG_AWARD = Object.fromEntries(Object.entries(CFG.fg_awards).map(([k, v]) => [Number(k), v]));
@@ -497,27 +459,48 @@
 
       const fgAward = (n) => FG_AWARD[Math.min(n, FG_MAXKEY)] || 0;
 
+      // ── By Game 文字（中英）：共用區標籤由 demogame_common.js 翻譯，這裡只放本作專屬文字 ──
+      const TC2_TEXT = {
+        en: {
+          baseGame: "Base Game", freeGame: "Free Game", cascade: "Cascade", boardSum: "Board Multiplier Sum", fgLeft: "FG Left",
+          spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", extraBet: "Extra Bet", buyFeature: "Buy Feature",
+          ready: "Ready — press Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared",
+          insufficient: "Insufficient balance", buyEnter: "Buy Feature — entering Free Game", baseRule: "base rule",
+          chain: "chain cleared", cells: "cells", sum: "board sum", totalWin: "TOTAL WIN", spinWin: "SPIN WIN",
+          fgTrigger: (n, award) => `🎉 ${n} Scatter → Free Game ${award} spins!`
+        },
+        zh: {
+          baseGame: "基礎遊戲", freeGame: "免費遊戲", cascade: "連消", boardSum: "全盤倍數和", fgLeft: "FG 剩餘",
+          spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", extraBet: "額外押注", buyFeature: "購買特色",
+          ready: "準備完成 — 請按 Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置",
+          insufficient: "餘額不足", buyEnter: "購買特色 — 直接進入免費遊戲", baseRule: "規則基底",
+          chain: "連帶消除", cells: "格", sum: "全盤和", totalWin: "總贏分", spinWin: "本局贏分",
+          fgTrigger: (n, award) => `🎉 ${n} 顆 Scatter → 免費遊戲 ${award} 局！`
+        }
+      };
+      const lang = () => (/^zh/i.test($("languageSelect")?.value || "") ? "zh" : "en");
+      const tr = (key) => TC2_TEXT[lang()][key] ?? TC2_TEXT.en[key] ?? key;
+      // 盤面訊息：記住產生函式，切換語言時重新產生
+      let messageBuild = null;
+      function say(build) {
+        messageBuild = typeof build === "function" ? build : () => build;
+        $("messageBar").textContent = messageBuild();
+      }
+
       // ── 狀態 ──────────────────────────────────────────────────────────────
       const st = {
         balance: CFG.initial_balance, betIndex: 0, mode: MODE_NORMAL, busy: false, auto: false, autoTimer: null,
-        rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, normalRounds: 0, naturalFg: 0, maxSum: 0,
-        fg: { remaining: 0, total: 0, played: 0, mult: null, mode: MODE_NORMAL },
+        rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, normalRounds: 0, naturalFg: 0, maxSum: 0, roundCode: "",
+        fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, spins: [] },
         lastWin: 0, frames: [], frameIndex: -1, lastSpin: null,
       };
       const bet = () => BET_LEVELS[st.betIndex];
       // 實際模式押注（規範 4.4：Bet 顯示與扣款使用實際模式成本；派彩以原始押注計算）
       const modeCost = (mode = st.mode) => bet() * (mode === MODE_EXTRA ? EXTRA_MULT : mode === MODE_BUY ? BUY_MULT : 1);
 
-      // ── 可指定種子的 RNG：每個 Spin 一個 seed，同 seed 可完整重現該局（規範 4.5）─
-      let rngState = 0;
-      function rand() {
-        rngState = (rngState + 0x6D2B79F5) >>> 0;
-        let t = rngState;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      }
-      const freshSeed = () => Math.floor(Math.random() * 4294967296) >>> 0;
+      // ── 數學抽樣一律用 Math.random：每局在共用 demogameRng.run(seed, …) 內一次算完（BG＋整段 FG），
+      //    期間 Math.random 換成種子序列，同一 RNG 碼可完整重現整局（規範 §5 可重現 RNG）。
+      const rand = () => Math.random();
 
       const rngW = (w) => {
         const total = w.reduce((a, b) => a + b, 0);
@@ -600,10 +583,8 @@
       }
 
       // ── runSpin：一次 Spin 的完整計算 ───────────────────────────────────────
-      // multGrid：位置倍數（BG 每把歸零；FG 跨局保留）；opts.extraPlates／forceScatters／seed
+      // multGrid：位置倍數（BG 每把歸零；FG 跨局保留）；opts.extraPlates／forceScatters
       function runSpin(multGrid, opts = {}) {
-        const seed = opts.seed ?? freshSeed();
-        rngState = seed >>> 0;
         const scChance = SC_CHANCE_INIT;
         const forceScatters = opts.forceScatters || 0;
         const board = randomBoard(scChance, forceScatters);
@@ -675,7 +656,7 @@
         board.flat().forEach((s) => { if (s === SC) scatterCount++; });
 
         return {
-          seed, scChance, forceScatters, plates, initialBoard, initialMult,
+          scChance, forceScatters, plates, initialBoard, initialMult,
           board: clone2(board), mult: clone2(multGrid), steps, total, cascadeCount, scatterCount, finalSum: sumOf(multGrid),
         };
       }
@@ -870,8 +851,7 @@
           ["Drop Mode", CFG.refill_mode],
           ["C1 機率／輪", spin.scChance],
           ["Extra Bet 底板", spin.plates.length ? spin.plates.map((p) => `r${Math.floor(p.key / SIZE) + 1}c${p.key % SIZE + 1} x${p.value}`).join("、") : "無"],
-          ["RNG Seed", `${spin.seed}（輸入此值於 Set RNG 可重現本局${scene === "FG" ? "；FG 需相同的起始倍數" : ""}）`],
-          ["Force FG", spin.forceScatters ? "是（本 Spin 強制 ≥3 C1）" : "否"],
+          ["RNG", `${st.roundCode || "—"}（整局碼：BG＋整段 FG，填入 Set RNG 按 Spin 重跑）`],
           ["起始全盤倍數和", sumOf(spin.initialMult)],
         ];
         $("rngList").innerHTML = rows.map(([k, v]) => `<div class="rng-row"><span>${k}</span><span>${v}</span></div>`).join("") + scCols.join("");
@@ -900,7 +880,7 @@
         line.className = `live-log-line ${kind}`.trim();
         line.textContent = `${new Date().toLocaleTimeString()}  ${message}`;
         $("liveLogBody").prepend(line);
-        while ($("liveLogBody").children.length > 120) $("liveLogBody").lastChild.remove();
+        while ($("liveLogBody").children.length > 500) $("liveLogBody").lastChild.remove();
       }
 
       // 逐幀：Initial → 每段 Cascade（中獎／掉落）→ Final，可用 Previous／Next 回看
@@ -931,7 +911,7 @@
         fxMark(f.board, f.removeSet || null, f.chainSet || null);
         $("cascadeValue").textContent = f.cascade;
         setSum(sumOf(f.mult));
-        $("messageBar").textContent = `${f.label} | Step ${st.frameIndex + 1}/${st.frames.length} | ${f.info}`;
+        say(`${f.label} | Step ${st.frameIndex + 1}/${st.frames.length} | ${f.info}`);
         updateStepButtons();
       }
 
@@ -954,15 +934,15 @@
         $("maxMultiplierValue").textContent = `x${st.maxSum}`;
         $("fgLeftPill").classList.toggle("hidden", st.fg.remaining <= 0);
         $("fgLeftValue").textContent = `${st.fg.remaining}/${st.fg.total}`;
-        $("modeText").textContent = st.fg.remaining ? "Free Game" : "Base Game";
-        $("spinBtn").textContent = st.fg.remaining ? "Next FG" : "Spin";
+        $("modeText").textContent = tr(st.fg.remaining ? "freeGame" : "baseGame");
+        $("spinBtn").textContent = tr(st.fg.remaining ? "nextFg" : "spin");
         document.body.classList.toggle("fg-mode", st.fg.remaining > 0);
       }
 
       function updateControls() {
         const inFg = st.fg.remaining > 0;
         $("spinBtn").disabled = st.busy;
-        $("autoBtn").textContent = st.auto ? "Stop" : "Auto";
+        $("autoBtn").textContent = tr(st.auto ? "stop" : "auto");
         $("buyFeatureBtn").disabled = st.busy || inFg;
         $("normalBetBtn").disabled = st.busy || inFg;
         $("extraBetBtn").disabled = st.busy || inFg;
@@ -1018,8 +998,7 @@
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
           if (step.effSum > 1) window.slotFx?.multiPop(fxLayer, `X${step.effSum}`, {});
           window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
-          $("messageBar").textContent =
-            `Cascade ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | 連帶消除 ${step.chainSet.size} 格` : ""} | 全盤和 x${step.effSum} | +${fmt(step.pay)}`;
+          say(() => `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""} | ${tr("sum")} x${step.effSum} | +${fmt(step.pay)}`);
           await wait(760);
 
           const popCells = [], coinItems = [];
@@ -1043,31 +1022,53 @@
         fxMark(spin.board);
         setSum(spin.finalSum);
         if (spin.scatterCount >= 3) {
-          $("messageBar").textContent = `🎉 ${spin.scatterCount} Scatter → Free Game ${fgAward(spin.scatterCount)} 局!`;
+          const n = spin.scatterCount;
+          say(() => tr("fgTrigger")(n, fgAward(n)));
           await wait(700);
         }
       }
 
-      // ── Set RNG 與 Force FG：只作用於下一個 Spin（規範 4.5）────────────────
-      function consumeSeed() {
-        const raw = $("rngInput").value.trim();
-        if (!raw) return null;
-        const value = Number(raw);
-        if (!/^\d+$/.test(raw) || !Number.isSafeInteger(value) || value > 4294967295) {
-          throw new Error("RNG Seed 需為 0 ~ 4294967295 的整數");
-        }
-        $("rngInput").value = "";
-        return value;
-      }
-
-      function consumeForceFg() {
-        if (!$("forceFgInput").checked) return 0;
-        $("forceFgInput").checked = false;
-        return 3;
-      }
-
       // ── 回合流程 ──────────────────────────────────────────────────────────
       const zeroGrid = () => Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+
+      // 一局完整數學結果（BG＋整段 FG，含 Retrigger）；同步、只用 Math.random，供 demogameRng.run() 與 Simulation 共用。
+      // Buy Feature 沒有 BG Spin，直接進 3 顆 C1 的 FG；FG 位置倍數整場保留，Extra Bet 底板只作用於 BG。
+      function computeRound(mode) {
+        const isBuy = mode === MODE_BUY;
+        const bg = isBuy ? null : runSpin(zeroGrid(), { extraPlates: mode === MODE_EXTRA });
+        const award = isBuy ? fgAward(3) : (bg.scatterCount >= 3 ? fgAward(bg.scatterCount) : 0);
+        const fgSpins = [];
+        const mult = zeroGrid();
+        let left = award, played = 0;
+        while (left > 0 && played < FG_CAP) {
+          const spin = runSpin(mult);
+          left--; played++;
+          spin.retrigger = 0;
+          if (spin.scatterCount >= 3 && played + left < FG_CAP) {
+            spin.retrigger = Math.min(fgAward(spin.scatterCount), FG_CAP - played - left);
+            left += spin.retrigger;
+          }
+          fgSpins.push(spin);
+        }
+        const bgWin = bg ? bg.total : 0;
+        const fgWin = fgSpins.reduce((a, s) => a + s.total, 0);
+        return { mode, bg, award, fgSpins, bgWin, fgWin, total: bgWin + fgWin };
+      }
+
+      // ── 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）────────────────
+      // 碼：<Config>/<NB|EB|BF>/off/-/<種子>；本作無卡片系統（card 恆為 off）、無遊戲專屬選項（opts 為 -）。
+      // 碼內模式只套用於該局，不改畫面押注模式；Config 不同或碼為 Card on 時 Log 警告。
+      const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
+      const configLabel = () => ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
+        || $("configSelect")?.selectedOptions?.[0]?.textContent || CFG.rtp_label || CFG.config_code).trim().replace(/\s+/g, "");
+      function takeRngCode() {
+        const code = window.demogameRng.takeInput();   // 格式錯誤會丟 Error；填了一直沿用，按重置才清
+        if (!code) return null;
+        const modeValue = Object.keys(RNG_MODE_TOKEN).find((m) => RNG_MODE_TOKEN[m] === code.mode);
+        if (!modeValue) throw new Error(lang() === "zh" ? `RNG 模式 ${code.mode} 本作不支援` : `RNG mode ${code.mode} not supported`);
+        if (code.opts) throw new Error(lang() === "zh" ? `RNG 選項 ${code.opts} 本作不支援` : `RNG opts ${code.opts} not supported`);
+        return { ...code, modeValue };
+      }
 
       function finishSpin(spin, scene, mode) {
         renderRng(spin, scene, mode);
@@ -1078,57 +1079,61 @@
       }
 
       async function playPaid(isBuy) {
-        const mode = isBuy ? MODE_BUY : st.mode;
+        const code = takeRngCode();
+        const mode = code ? code.modeValue : (isBuy ? MODE_BUY : st.mode);
         const cost = modeCost(mode);
-        if (st.balance < cost) throw new Error("餘額不足");
-        const seed = consumeSeed();
+        if (st.balance < cost) throw new Error(tr("insufficient"));
+        if (code && code.config !== configLabel()) addLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        if (code?.card) addLog("RNG Card on → 本作無卡片系統，以 off 計算", "error");
+        const seed = code ? code.seed : window.demogameRng.newSeed();
+        const round = window.demogameRng.run(seed, () => computeRound(mode));   // 整局（BG＋消除＋整段 FG）一次算完
+        st.roundCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[mode], card: false, opts: "", seed });
         st.balance -= cost; st.totalBet += cost; st.rounds++;
-        if (!isBuy) st.normalRounds++;
+        if (mode !== MODE_BUY) st.normalRounds++;
+        addLog(`#${st.rounds} ${RNG_MODE_TOKEN[mode]} | Bet ${fmt(cost)}${code ? " | Replay" : ""}`, "mode");
+        addLog(`RNG ${st.roundCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
         updateStats();
 
-        if (isBuy) {
-          st.fg = { remaining: fgAward(3), total: fgAward(3), played: 0, mult: zeroGrid(), mode: MODE_NORMAL, pendingSeed: seed };
-          $("messageBar").textContent = "Buy Feature — 直接進入 Free Game";
+        if (mode === MODE_BUY) {
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins };
+          say(() => tr("buyEnter"));
           addLog(`Buy Feature（${BUY_MULT}x）→ FG ${st.fg.total} 局`, "mode");
           st.lastWin = 0;
           return;
         }
 
-        const forced = consumeForceFg();
-        const spin = runSpin(zeroGrid(), { extraPlates: mode === MODE_EXTRA, forceScatters: forced, seed: seed ?? undefined });
+        const spin = round.bg;
         finishSpin(spin, "BG", mode);
         st.busy = true;
         await playSpin(spin);
         const win = spin.total;
         st.lastWin = win; st.totalWin += win; st.balance += win;
         if (win > 0) st.hitRounds++;
-        addLog(`BG ${modeLabel(mode)} · seed ${spin.seed} · ${fmt(win)}${spin.cascadeCount ? ` · ${spin.cascadeCount} cascade` : ""}`, "result");
-        if (spin.scatterCount >= 3) {
-          const award = fgAward(spin.scatterCount);
-          st.fg = { remaining: award, total: award, played: 0, mult: zeroGrid(), mode };
+        addLog(`BG ${modeLabel(mode)} · ${fmt(win)}${spin.cascadeCount ? ` · ${spin.cascadeCount} cascade` : ""} · 全盤和 ${spin.finalSum}`, "result");
+        if (round.award > 0) {
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins };
           st.naturalFg++;
-          addLog(`FG 觸發 · ${spin.scatterCount} C1 · ${award} 局`, "mode");
+          addLog(`FG 觸發 · ${spin.scatterCount} C1 · ${round.award} 局`, "mode");
         }
-        if (win > 0) { window.slotFx?.totalWin(fxLayer, "總贏分", fmt(win)); await wait(1100); }
+        if (win > 0) { window.slotFx?.totalWin(fxLayer, tr("totalWin"), fmt(win)); await wait(1100); }
       }
 
       async function playFreeSpin() {
-        const seed = st.fg.pendingSeed ?? consumeSeed();
-        st.fg.pendingSeed = null;
-        // FG：位置倍數跨局保留；Extra Bet 底板只作用於觸發前的 BG Spin
-        const spin = runSpin(st.fg.mult, { seed: seed ?? undefined });
+        // FG 每局結果已在觸發當局的 demogameRng.run() 內算好，這裡只播放
+        const spin = st.fg.spins[st.fg.played];
         finishSpin(spin, "FG", st.fg.mode);
         await playSpin(spin);
         st.fg.remaining--; st.fg.played++;
         st.lastWin = spin.total; st.totalWin += spin.total; st.balance += spin.total;
-        if (spin.scatterCount >= 3 && st.fg.played + st.fg.remaining < FG_CAP) {
-          const add = Math.min(fgAward(spin.scatterCount), FG_CAP - st.fg.played - st.fg.remaining);
-          st.fg.remaining += add; st.fg.total += add;
-          addLog(`FG Retrigger +${add}`, "mode");
+        if (spin.retrigger) {
+          st.fg.remaining += spin.retrigger; st.fg.total += spin.retrigger;
+          addLog(`FG Retrigger +${spin.retrigger}`, "mode");
         }
-        addLog(`FG ${st.fg.played}/${st.fg.total} · seed ${spin.seed} · ${fmt(spin.total)} · 全盤和 ${spin.finalSum}`, "result");
-        $("messageBar").textContent = `FG ${st.fg.played}/${st.fg.total} · ${fmt(spin.total)} · 全盤和 ${spin.finalSum}`;
-        if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, "本局贏分", fmt(spin.total)); await wait(900); }
+        addLog(`FG ${st.fg.played}/${st.fg.total} · ${fmt(spin.total)} · 全盤和 ${spin.finalSum}`, "result");
+        const played = st.fg.played, total = st.fg.total;
+        say(() => `FG ${played}/${total} · ${fmt(spin.total)} · ${tr("sum")} ${spin.finalSum}`);
+        if (st.fg.remaining <= 0) st.fg.spins = [];
+        if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
       }
 
       async function play(isBuy = false) {
@@ -1138,7 +1143,7 @@
           if (st.fg.remaining) await playFreeSpin();
           else await playPaid(isBuy);
         } catch (err) {
-          $("messageBar").textContent = err.message;
+          say(err.message);
           $("messageBar").classList.add("error");
           setTimeout(() => $("messageBar").classList.remove("error"), 2500);
           addLog(`Error · ${err.message}`, "error");
@@ -1149,34 +1154,29 @@
         }
       }
 
-      // ── 批次模擬介面（共用 Simulation 用；不播動畫、不動主 Stats）──────────
-      window.demogameSimulateRound = () => {
-        const mode = st.mode === MODE_EXTRA ? MODE_EXTRA : MODE_NORMAL;
-        const cost = modeCost(mode);
-        const bg = runSpin(zeroGrid(), { extraPlates: mode === MODE_EXTRA });
-        let total = bg.total, fgSpins = 0, maxSum = bg.finalSum;
-        const fgCascades = [];
-        if (bg.scatterCount >= 3) {
-          const mult = zeroGrid();
-          let left = fgAward(bg.scatterCount), played = 0;
-          while (left > 0 && played < FG_CAP) {
-            const fg = runSpin(mult);
-            total += fg.total; left--; played++;
-            fgCascades.push(fg.cascadeCount);
-            if (fg.finalSum > maxSum) maxSum = fg.finalSum;
-            if (fg.scatterCount >= 3 && played + left < FG_CAP) left += fgAward(fg.scatterCount);
-          }
-          fgSpins = played;
-        }
-        return {
-          multiplier: total / cost,
-          bgMultiplier: bg.total / cost,
-          fgMultiplier: (total - bg.total) / cost,
-          fgTriggered: fgSpins > 0,
+      // ── 批次模擬介面（共用 Simulation 用；不播動畫、不動主 Stats、不碰種子序列）────
+      // mode 只作用於該局模擬（computeRound 以參數接收），畫面押注模式不變。
+      window.demogameSimulationModes = [
+        { value: MODE_NORMAL, label: "Normal Bet" },
+        { value: MODE_EXTRA, label: "Extra Bet" },
+        { value: MODE_BUY, label: "Buy Feature" }
+      ];
+      window.demogameSimulateRound = ({ mode } = {}) => {
+        const useMode = [MODE_NORMAL, MODE_EXTRA, MODE_BUY].includes(mode) ? mode : (st.mode === MODE_EXTRA ? MODE_EXTRA : MODE_NORMAL);
+        const round = computeRound(useMode);
+        const cost = modeCost(useMode);
+        const maxSum = Math.max(round.bg ? round.bg.finalSum : 0, ...round.fgSpins.map((s) => s.finalSum));
+        const result = {
+          multiplier: round.total / cost,                                     // 總得分（含 FG）÷ 實際押注
+          lineMultiplier: round.total / (useMode === MODE_BUY ? bet() : cost),  // 線型口徑：BF ÷ 底注，其餘 ÷ 押注
+          fgTriggered: round.fgSpins.length > 0,
           maxMultiplier: maxSum,
-          bgCascade: bg.cascadeCount,
-          fgCascades, retries: 0, retryLimitExceeded: 0,
+          retryLimitExceeded: 0,
+          retryCount: 0,
+          fgCascades: round.fgSpins.map((s) => s.cascadeCount)
         };
+        if (round.bg) result.bgCascade = round.bg.cascadeCount;
+        return result;
       };
 
       // ── Help（內容以 game_help_draft.md 為準；離線 fallback 用內嵌副本）────
@@ -1218,19 +1218,33 @@
         updateStepButtons();
       }
 
+      // By Game 文字切換（標題、Feature Status、Bet Mode 按鈕價格、Spin／Auto、盤面訊息）；共用區標籤由共用模組處理
+      function applyLanguage() {
+        const zh = lang() === "zh";
+        document.documentElement.lang = zh ? "zh-Hant" : "en";
+        $("gameId").textContent = `${CFG.game_id}（${tr("baseRule")} ${CFG.base_game_source || "—"}）`;
+        $("gameName").textContent = zh ? CFG.game_name_zh : CFG.display_name;
+        document.querySelectorAll("[data-tc2-text]").forEach((node) => { node.textContent = tr(node.dataset.tc2Text); });
+        $("extraBetBtn").textContent = `${tr("extraBet")} (${EXTRA_MULT}x)`;
+        $("buyFeatureBtn").textContent = `${tr("buyFeature")} (${BUY_MULT}x)`;
+        if (messageBuild) $("messageBar").textContent = messageBuild();
+        updateStats(); updateControls();
+      }
+
       function resetSession() {
         if (st.busy) return;
         clearTimeout(st.autoTimer);
         Object.assign(st, {
           balance: CFG.initial_balance, auto: false, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0,
           normalRounds: 0, naturalFg: 0, maxSum: 0, lastWin: 0, frames: [], frameIndex: -1, lastSpin: null,
-          fg: { remaining: 0, total: 0, played: 0, mult: null, mode: MODE_NORMAL },
+          fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, spins: [] },
         });
         $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = $("rngList").innerHTML = "";
-        rngState = freshSeed();
+        st.roundCode = "";
+        $("rngInput").value = "";
         plateKeys = new Set();
         renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
-        $("messageBar").textContent = "Reset. Press Spin to start";
+        say(() => tr("resetDone"));
         $("cascadeValue").textContent = "0"; setSum(0);
         updateStats(); updateControls();
       }
@@ -1262,10 +1276,10 @@
           rngChanged: updateControls,
           resetRng: () => {
             $("rngInput").value = "";
-            $("forceFgInput").checked = false;
-            $("messageBar").textContent = "Set RNG 已重置";
+            say(() => tr("rngReset"));
           },
           clearLog: () => { $("liveLogBody").innerHTML = ""; },
+          languageChange: applyLanguage,
           reset: resetSession,
           openHelp: () => { $("helpDialog").showModal(); loadHelp(); },
           closeHelp: () => $("helpDialog").close(),
@@ -1274,17 +1288,13 @@
 
       // ── 初始化（名稱／Version／Config 由 Config 取得）──────────────────────
       document.title = `${CFG.display_name} — Demo Game`;
-      $("gameId").textContent = `${CFG.game_id}（規則基底 ${CFG.base_game_source || "—"}）`;
-      $("gameName").textContent = CFG.game_name_zh;
       $("versionSelect").innerHTML = `<option selected>${CFG.excel_version}</option>`;
       $("configSelect").innerHTML = `<option value="config.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
-      $("extraBetBtn").textContent = `Extra Bet (${EXTRA_MULT}x)`;
-      $("buyFeatureBtn").textContent = `Buy Feature (${BUY_MULT}x)`;
-      rngState = freshSeed();
       buildBetMenu();
       toggleDebug(false);
       renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
-      updateStats(); updateControls();
+      applyLanguage();
+      say(() => tr("ready"));
     })();
   </script>
   <script id="embeddedGameHelpMarkdown" type="text/plain">
@@ -1322,7 +1332,7 @@
 
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
-  <script src="../../demogame_common.js?v=2"></script>
+  <script src="../../demogame_common.js?v=20261013d"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 
