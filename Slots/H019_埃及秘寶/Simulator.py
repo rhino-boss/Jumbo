@@ -15,7 +15,7 @@ from numba import njit
 
 # ===== User settings =====
 
-CONFIG_FILE = "config_92.js"
+CONFIG_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**5
 BET_MODE = 0
 BET_MULTI = 1
@@ -31,20 +31,20 @@ RUN_SINGLE_SPIN_DEBUG = False
 
 BATCH_COMBINATIONS = [
     # Test
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
-    {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**5, "card_system_enabled": True, "card_system_is_newbie": False},
     # # H019192：NB Newbie／NB Oldhand／BF／SF
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # # H019194：NB Newbie／NB Oldhand／BF／SF
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -189,6 +189,10 @@ def load_js_config(path):
 
 
 CFG = load_js_config(CONFIG_PATH)
+# 模擬程式規範 2.1：RTP Config 以 base_config 指向基礎 config.js；基礎在下、RTP 在上
+if CFG.get("base_config"):
+    CFG = {**load_js_config(CONFIG_PATH.parent / CFG["base_config"]), **CFG}
+    CFG.pop("base_config")
 
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])

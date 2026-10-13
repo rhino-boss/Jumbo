@@ -20,7 +20,7 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 # Single-run settings. Used when RUN_ALL_COMBINATIONS = False.
-CONFIG_FILE = "config_92.js"
+CONFIG_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0  # 0 Normal, 1 Extra, 2 Feature Buy, 3 Super Feature Buy
@@ -34,23 +34,23 @@ PARAMETER_TABLE = "AUTO"  # AUTO is official; A/B are diagnostic overrides only.
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # config_92: Newbie NB / EB
-    {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
+    {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**6, "card_system_enabled": True, "card_system_is_newbie": False},
     # # config_92: Newbie NB / EB
-    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
     # # config_92: Oldhand NB / EB / BF / SF
-    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_92.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_92A.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
     # # config_94: Newbie NB / EB
-    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
-    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
+    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": True},
     # # config_94: Oldhand NB / EB / BF / SF
-    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
-    # {"config_file": "config_94.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 1, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 2, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
+    # {"config_file": "config_94A.js", "parameter_table": "AUTO", "bet_mode": 3, "total_rounds": 10**8, "card_system_enabled": True, "card_system_is_newbie": False},
 ]
 
 OUTPUT_REPORT = True
@@ -213,6 +213,10 @@ def _load_config(path):
 
 
 CFG = _load_config(CONFIG_PATH)
+# 模擬程式規範 2.1：RTP Config 以 base_config 指向基礎 config.js；基礎在下、RTP 在上
+if CFG.get("base_config"):
+    CFG = {**_load_config(CONFIG_PATH.parent / CFG["base_config"]), **CFG}
+    CFG.pop("base_config")
 GAME_ID = str(CFG["game_id"])
 PARSHEET_ID = str(CFG["parsheet_id"])
 GAME_NAME = str(CFG["display_name"])

@@ -288,11 +288,6 @@
       </div>
     </section>
 
-    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
-      <h3 class="diagnostic-header">Reel RNG</h3>
-      <div class="rng-list" id="rngList"></div>
-    </section>
-
     <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div id="log-header" class="diagnostic-header">Spin Result</div>
       <div id="log-body">
@@ -329,8 +324,12 @@
             <li>押注選項加 2000／3000／5000（Bet Currency 最大押注；config.js <code>bet_options</code> 不動，頁面附加）。（10/13）</li>
             <li>Set RNG 一列等寬（RNG／重置）；可重現 RNG 改用共用 <code>demogameRng</code>：原 RNG Seed 欄改為 RNG 碼 <code>Base/NB|EB|BF/off/-/種子</code>，每局（BG＋消除＋整段 FG＋Retrigger）在 <code>demogameRng.run()</code> 內一次算完，Log 印一行可點的 RNG 碼；RNG 欄填了一直沿用、按重置才清；碼內模式只套用該局，Config 不同或 Card on 時 Log 警告。原自帶種子 RNG 與單 Spin seed 移除。（10/13）</li>
             <li>Log 上限 120 → 500 行。（10/13）</li>
-            <li>驗證：點 Log RNG 行重跑 NB、EB、BF（含 FG）局，Log 結果行與最終盤面逐字相同；Set RNG 欄位同列；Simulation 三模式可跑；語言 繁中→English→繁中 可正確切回；Console 無錯誤。（10/13）</li>
+            <li>驗證：點 Log RNG 行重跑 NB（含 2 連消得分 14.80）、EB、BF（10 局 FG 含 361.75 大獎）局，Log 結果行與最終盤面（含位置倍數）逐字相同，畫面押注模式不變；格式錯誤明確報錯、Config 不同與 Card on 有 Log 警告；Set RNG 欄位同列；Simulation NB 2 萬局 RTP 365.58%（FG 1/233）、EB 2 萬局 767.73%（FG 1/187）、BF 3,000 局 134.52%（demo 假權重，Card System 無）；語言 繁中→English→繁中 可正確切回；Console 無錯誤。（10/13）</li>
             <li>未修改 XLSX／Config 數學參數。（10/13）</li>
+            <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
+            <li>Log 統一：改用共用 demogameLog，行格式同 H045，不記演出過程。（10/13）</li>
+            <li>頁尾改顯示「最後調性更新：2026-10-02 15:44」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
+            <li>驗證：Debug 開啟跑 NB 4 局、EB 2 局、Buy Feature 1 局（10 局 FG，Total 506.10 = 506.10x），Log 行格式同 H045（Config Base loaded｜#n 模式｜RNG｜BG｜Buy Feature／Free Game triggered｜FG i/n｜FG complete）；歷史紀錄 BG／FG 最大倍數正確，Clear 與重置歸零；點 RNG 行重跑 BF 局，FG 各行逐字相同；頁尾繁中「最後調性更新：2026-10-02 15:44」、English「Last tuning update: 2026-10-02」；Console 無錯誤。共用檔 <code>demogame_common.js?v=20261013f</code>。（10/13）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -396,7 +395,7 @@
       </div>
     </section>
 
-    <div class="footer-note">Double-click to play offline. No server needed.</div>
+    <div class="footer-note"></div>
   </main>
 
   <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
@@ -823,38 +822,13 @@
         sumPill.classList.add("pulse");
       }
 
-      // ── Debug：Reel RNG／Spin Result／Log／逐幀 ─────────────────────────────
+      // ── Debug：Spin Result／Log／逐幀 ─────────────────────────────
       const modeLabel = (mode) => mode === MODE_EXTRA ? "Extra Bet" : mode === MODE_BUY ? "Buy Feature" : "Normal Bet";
 
       function boardText(board) {
         return board.map((row, r) =>
           `${String(r + 1).padStart(2, "0")} ${row.map((s) => String(s >= 0 ? SYM_CODE[s] : "--").padStart(3, " ")).join(" ")}`
         ).join("\n");
-      }
-
-      function renderRng(spin, scene, mode) {
-        const scCols = [];
-        for (let c = 0; c < SIZE; c++) {
-          let at = "—";
-          for (let r = 0; r < SIZE; r++) if (spin.initialBoard[r][c] === SC) at = `C1 @ 列${r + 1}`;
-          scCols.push(`<div class="rng-row"><span>R${c + 1}</span><span>${at}</span></div>`);
-        }
-        const rows = [
-          ["Config", `${CFG.config_code}-${CFG.profile}`],
-          ["Version", CFG.excel_version],
-          ["Card System", "Off（本作未實作卡片模型）"],
-          ["Scene", scene],
-          ["Bet Mode", `${modeLabel(mode)}（價格 ${mode === MODE_EXTRA ? EXTRA_MULT : mode === MODE_BUY ? BUY_MULT : 1}x）`],
-          ["Base Bet／實際押注", `${fmt(bet())}／${fmt(modeCost(mode))}`],
-          ["抽取方式", "weighted draw（逐格加權，無 reel stop）"],
-          ["Table", `symbol_weights_init／symbol_weights_drop`],
-          ["Drop Mode", CFG.refill_mode],
-          ["C1 機率／輪", spin.scChance],
-          ["Extra Bet 底板", spin.plates.length ? spin.plates.map((p) => `r${Math.floor(p.key / SIZE) + 1}c${p.key % SIZE + 1} x${p.value}`).join("、") : "無"],
-          ["RNG", `${st.roundCode || "—"}（整局碼：BG＋整段 FG，填入 Set RNG 按 Spin 重跑）`],
-          ["起始全盤倍數和", sumOf(spin.initialMult)],
-        ];
-        $("rngList").innerHTML = rows.map(([k, v]) => `<div class="rng-row"><span>${k}</span><span>${v}</span></div>`).join("") + scCols.join("");
       }
 
       function renderSpinResult(spin) {
@@ -875,13 +849,18 @@
           </div>`).join("");
       }
 
-      function addLog(message, kind = "") {
-        const line = document.createElement("div");
-        line.className = `live-log-line ${kind}`.trim();
-        line.textContent = `${new Date().toLocaleTimeString()}  ${message}`;
-        $("liveLogBody").prepend(line);
-        while ($("liveLogBody").children.length > 500) $("liveLogBody").lastChild.remove();
+      // Debug Log：一律走共用 window.demogameLog（行格式同 H045，不記演出過程；Log 文字只用英文）
+      // 共用模組在本 script 之後才載入，載入前的行先排隊，DOMContentLoaded 時補寫
+      const pendingLog = [];
+      function appendLog(text, type = "info") {
+        if (window.demogameLog) window.demogameLog(text, type);
+        else pendingLog.push([text, type]);
       }
+      document.addEventListener("DOMContentLoaded", () => {
+        pendingLog.splice(0).forEach(([text, type]) => window.demogameLog?.(text, type));
+      });
+      // 錯誤訊息：畫面依語言，Log 一律英文（err.logMessage）
+      const gameError = (key) => Object.assign(new Error(tr(key)), { logMessage: TC2_TEXT.en[key] });
 
       // 逐幀：Initial → 每段 Cascade（中獎／掉落）→ Final，可用 Previous／Next 回看
       function captureFrames(spin) {
@@ -978,7 +957,6 @@
       function selectMode(mode) {
         if (st.busy || st.fg.remaining) return;
         st.mode = mode;
-        addLog(`Bet Mode → ${modeLabel(mode)}（${fmt(modeCost(mode))}）`, "mode");
         updateStats(); updateControls();
       }
 
@@ -1065,13 +1043,12 @@
         const code = window.demogameRng.takeInput();   // 格式錯誤會丟 Error；填了一直沿用，按重置才清
         if (!code) return null;
         const modeValue = Object.keys(RNG_MODE_TOKEN).find((m) => RNG_MODE_TOKEN[m] === code.mode);
-        if (!modeValue) throw new Error(lang() === "zh" ? `RNG 模式 ${code.mode} 本作不支援` : `RNG mode ${code.mode} not supported`);
-        if (code.opts) throw new Error(lang() === "zh" ? `RNG 選項 ${code.opts} 本作不支援` : `RNG opts ${code.opts} not supported`);
+        if (!modeValue) throw Object.assign(new Error(lang() === "zh" ? `RNG 模式 ${code.mode} 本作不支援` : `RNG mode ${code.mode} not supported`), { logMessage: `RNG mode ${code.mode} not supported` });
+        if (code.opts) throw Object.assign(new Error(lang() === "zh" ? `RNG 選項 ${code.opts} 本作不支援` : `RNG opts ${code.opts} not supported`), { logMessage: `RNG opts ${code.opts} not supported` });
         return { ...code, modeValue };
       }
 
-      function finishSpin(spin, scene, mode) {
-        renderRng(spin, scene, mode);
+      function finishSpin(spin) {
         renderSpinResult(spin);
         captureFrames(spin);
         st.lastSpin = spin;
@@ -1082,57 +1059,68 @@
         const code = takeRngCode();
         const mode = code ? code.modeValue : (isBuy ? MODE_BUY : st.mode);
         const cost = modeCost(mode);
-        if (st.balance < cost) throw new Error(tr("insufficient"));
-        if (code && code.config !== configLabel()) addLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
-        if (code?.card) addLog("RNG Card on → 本作無卡片系統，以 off 計算", "error");
+        if (st.balance < cost) throw gameError("insufficient");
+        if (code && code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        if (code?.card) appendLog("RNG Card on → no card system, computed as off", "error");
         const seed = code ? code.seed : window.demogameRng.newSeed();
         const round = window.demogameRng.run(seed, () => computeRound(mode));   // 整局（BG＋消除＋整段 FG）一次算完
         st.roundCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[mode], card: false, opts: "", seed });
         st.balance -= cost; st.totalBet += cost; st.rounds++;
         if (mode !== MODE_BUY) st.normalRounds++;
-        addLog(`#${st.rounds} ${RNG_MODE_TOKEN[mode]} | Bet ${fmt(cost)}${code ? " | Replay" : ""}`, "mode");
-        addLog(`RNG ${st.roundCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
+        appendLog(`#${st.rounds} ${modeLabel(mode)} | Bet ${fmt(cost)}${code ? " | Replay" : ""}`, "mode");
+        appendLog(`RNG ${st.roundCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
         updateStats();
 
         if (mode === MODE_BUY) {
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins };
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0 };
           say(() => tr("buyEnter"));
-          addLog(`Buy Feature（${BUY_MULT}x）→ FG ${st.fg.total} 局`, "mode");
+          appendLog(fgStartLine("Buy Feature", round), "mode");
           st.lastWin = 0;
           return;
         }
 
         const spin = round.bg;
-        finishSpin(spin, "BG", mode);
+        finishSpin(spin);
         st.busy = true;
         await playSpin(spin);
         const win = spin.total;
         st.lastWin = win; st.totalWin += win; st.balance += win;
         if (win > 0) st.hitRounds++;
-        addLog(`BG ${modeLabel(mode)} · ${fmt(win)}${spin.cascadeCount ? ` · ${spin.cascadeCount} cascade` : ""} · 全盤和 ${spin.finalSum}`, "result");
+        appendLog(`BG | ${mode === MODE_EXTRA ? "Extra" : "Base"} | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(win)} (${(win / bet()).toFixed(2)}x)`, win > 0 ? "result" : "info");
+        window.demogameHistory?.record({ bg: win / bet() });   // 共用歷史紀錄：BG 最大倍數（÷ 底注）
         if (round.award > 0) {
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins };
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins, win: 0 };
           st.naturalFg++;
-          addLog(`FG 觸發 · ${spin.scatterCount} C1 · ${round.award} 局`, "mode");
+          appendLog(fgStartLine("Free Game triggered", round), "mode");
         }
         if (win > 0) { window.slotFx?.totalWin(fxLayer, tr("totalWin"), fmt(win)); await wait(1100); }
+      }
+
+      // 「Free Game triggered|Buy Feature | <n> spins[ (Retrigger ×k)]」：n 為整段 FG 局數（含 Retrigger）
+      function fgStartLine(head, round) {
+        const retriggers = round.fgSpins.filter((s) => s.retrigger > 0).length;
+        return `${head} | ${round.fgSpins.length} spins${retriggers ? ` (Retrigger ×${retriggers})` : ""}`;
       }
 
       async function playFreeSpin() {
         // FG 每局結果已在觸發當局的 demogameRng.run() 內算好，這裡只播放
         const spin = st.fg.spins[st.fg.played];
-        finishSpin(spin, "FG", st.fg.mode);
+        finishSpin(spin);
         await playSpin(spin);
         st.fg.remaining--; st.fg.played++;
         st.lastWin = spin.total; st.totalWin += spin.total; st.balance += spin.total;
         if (spin.retrigger) {
           st.fg.remaining += spin.retrigger; st.fg.total += spin.retrigger;
-          addLog(`FG Retrigger +${spin.retrigger}`, "mode");
         }
-        addLog(`FG ${st.fg.played}/${st.fg.total} · ${fmt(spin.total)} · 全盤和 ${spin.finalSum}`, "result");
+        st.fg.win = (st.fg.win || 0) + spin.total;
+        appendLog(`FG ${st.fg.played}/${st.fg.spins.length} | Free | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(spin.total)}`, spin.cascadeCount ? "cascade" : "info");
         const played = st.fg.played, total = st.fg.total;
         say(() => `FG ${played}/${total} · ${fmt(spin.total)} · ${tr("sum")} ${spin.finalSum}`);
-        if (st.fg.remaining <= 0) st.fg.spins = [];
+        if (st.fg.remaining <= 0) {
+          appendLog(`FG complete | Total ${fmt(st.fg.win)} (${(st.fg.win / bet()).toFixed(2)}x)`, "result");
+          window.demogameHistory?.record({ fg: st.fg.win / bet() });   // 共用歷史紀錄：FG 最大倍數（÷ 底注）
+          st.fg.spins = [];
+        }
         if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
       }
 
@@ -1146,7 +1134,7 @@
           say(err.message);
           $("messageBar").classList.add("error");
           setTimeout(() => $("messageBar").classList.remove("error"), 2500);
-          addLog(`Error · ${err.message}`, "error");
+          appendLog(`Error | ${err.logMessage || err.message}`, "error");
           st.auto = false;
         } finally {
           st.busy = false; updateStats(); updateControls();
@@ -1211,7 +1199,7 @@
 
       // ── Debug 顯示切換（與 H027 相同的區塊清單）──────────────────────────────
       function toggleDebug(enabled) {
-        ["play-debug-controls", "set-rng-panel", "rng-wrap", "log-wrap", "live-log-wrap", "change-log-wrap", "batch-simulation"].forEach((id) => {
+        ["play-debug-controls", "set-rng-panel", "log-wrap", "live-log-wrap", "change-log-wrap", "batch-simulation"].forEach((id) => {
           $(id)?.classList.toggle("debug-hidden", !enabled);
         });
         $("controls").classList.toggle("debug-off", !enabled);
@@ -1237,9 +1225,9 @@
         Object.assign(st, {
           balance: CFG.initial_balance, auto: false, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0,
           normalRounds: 0, naturalFg: 0, maxSum: 0, lastWin: 0, frames: [], frameIndex: -1, lastSpin: null,
-          fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, spins: [] },
+          fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, spins: [], win: 0 },
         });
-        $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = $("rngList").innerHTML = "";
+        $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
         st.roundCode = "";
         $("rngInput").value = "";
         plateKeys = new Set();
@@ -1295,6 +1283,11 @@
       renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
       applyLanguage();
       say(() => tr("ready"));
+      // Config 名稱照畫面 Config 選單（共用模組組成的 #demogameConfigSelect），故等共用模組載入後再寫
+      document.addEventListener("DOMContentLoaded", () => {
+        const shown = ($("demogameConfigSelect") || $("configSelect"))?.selectedOptions?.[0]?.textContent?.trim() || CFG.config_code;
+        appendLog(`Config ${shown} loaded | Version ${CFG.excel_version} | Card System Off`, "result");
+      });
     })();
   </script>
   <script id="embeddedGameHelpMarkdown" type="text/plain">
@@ -1332,7 +1325,9 @@
 
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
-  <script src="../../demogame_common.js?v=20261013d"></script>
+  <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../../demogame_common.js?v=20261013f"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

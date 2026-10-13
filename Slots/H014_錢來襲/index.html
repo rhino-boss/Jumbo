@@ -204,11 +204,6 @@
       </div>
     </section>
 
-    <section id="rng-wrap" class="diagnostic-region debug-only debug-hidden">
-      <h3 class="diagnostic-header">Reel RNG</h3>
-      <div class="rng-list" id="rngList"></div>
-    </section>
-
     <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div id="log-header" class="diagnostic-header">Spin Result</div>
       <div id="log-body">
@@ -249,7 +244,10 @@
           <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／Natural Table／RNG／重置），重置同時清空 RNG 欄。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|EB/on|off/b押注[.r卡片區間][.tNatural表]/種子</code>），點一下複製並填入，貼回 RNG 欄按 Spin 整局重跑（卡片 Retry、RESPIN、轉盤相同）；碼上的押注模式與 Card on/off 只套用該局，押注不同時切到碼上押注；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
           <li>驗證：Debug Mode 下 Card on（NB bet10 一般／RESPIN／轉盤、EB、指定卡片區間 #45）與 Card off（Base、Natural B）各點 Log RNG 碼重跑，Log 結果行與 Spin Result 盤面皆相同；跨押注模式／押注、重新整理後重跑亦相同；Set RNG 四欄同列等寬；Simulation 正常、Console 無錯誤；inline script 皆通過 <code>node --check</code>。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-10-13」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-10-13 10:43」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
+          <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
+          <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
+          <li>驗證：Debug Mode 下 Base／92A、NB／EB 各玩數局，Console 無錯誤；歷史紀錄顯示 BG 最大倍數（本作無 FG，FG 恆為 x0），Clear 正常；Log 行格式同 H045，RNG 行可點並重跑同一局（含 Card Retry 次數、得分相同）；inline script 皆通過 <code>node --check</code>。（10/13）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -1008,16 +1006,11 @@
   }
 
   // ===== Debug 輸出 =====
-  function liveLog(text, cls = "") {
-    const line = document.createElement("div");
-    line.className = `live-log-line ${cls}`.trim();
-    line.textContent = text;
-    const body = $("liveLogBody");
-    body.appendChild(line);
-    while (body.children.length > 400) body.firstChild.remove();
-    body.scrollTop = body.scrollHeight;
+  // Log：一律經共用 window.demogameLog(text, type)（行格式照 H045）；共用模組尚未載入時延到 DOMContentLoaded 再寫
+  function liveLog(text, type = "info") {
+    if (window.demogameLog) window.demogameLog(text, type);
+    else window.addEventListener("DOMContentLoaded", () => window.demogameLog?.(text, type), { once: true });
   }
-  const row = (k, v) => `<div class="rng-row"><span>${k}</span><span>${v}</span></div>`;
   function intervalText(intervals, idx) {
     const lo = intervals[idx];
     if (lo === -1) return "Win = 0";
@@ -1025,40 +1018,7 @@
   }
   function renderDebug(round, ctx) {
     const { pk, res, card } = round;
-    const sh = pk.sheets[res.sheet];
-    const bet = pk.bet, cost = costMult(ctx.mode);
-    const rows = [];
-    rows.push(row("Config / Version", `${RTPC.config_code}-${profileLabel(bet)} / ${RTPC.excel_version}`));
-    rows.push(row("Bet Mode", `${BASE.bet_modes[String(ctx.mode)].name}（× ${cost}）`));
-    rows.push(row("base bet / bet amount", `${bet} / ${fmt(bet * cost)}`));
-    rows.push(row("bet_tier_amount / tier", `${fmt(bet * cost)} / bet${bet}`));
-    rows.push(row("Card System", round.cardOn ? "On" : "Off"));
-    if (card) {
-      const w = pk.card.weights[card.iv];
-      rows.push(row("Card Interval", `#${card.iv}：${intervalText(pk.card.intervals, card.iv)} ×bet ${card.forced ? "（指定）" : ""}`));
-      rows.push(row("Card Weight", `${w.toLocaleString()} / ${pk.card.total.toLocaleString()}（${(w / pk.card.total * 100).toFixed(4)}%）`));
-      rows.push(row("Card Retry", `${card.tries.toLocaleString()}${card.exceeded ? `（達上限 ${RETRY_LIMIT}，接受最後結果）` : ""}`));
-    }
-    rows.push(row("Table（使用表）", `${res.sheet}${card ? "（卡片指定）" : "（Natural）"}`));
-    rows.push(row("Sub Table（子表）", `${SUB_TABLES[res.sub]}（table_weight ${BASE.natural[String(ctx.mode)][String(bet)].sheets[res.sheet].table_weight.join("/")}）`));
-    [0, 1, 2].forEach((c) => rows.push(row(`R${c + 1} RNG`, `${res.stops[c]} / ${sh.reels[c].length} → ${code(res.syms[c])}`)));
-    if (pk.cap) rows.push(row("base_cap Reroll", `${res.capReroll}（cap ${pk.cap}）`));
-    rows.push(row("s1（Number Win）", fmt(res.s1)));
-    rows.push(row("R4 Bucket", `${res.bucket}（${BASE.r4_buckets?.[res.bucket] ?? ""}）`));
-    rows.push(row("R4 RNG", `${res.r4Pos} / ${sh.r4.length} → ${code(res.r4Sym)}`));
-    if (res.respin) {
-      const rs = res.respin;
-      rows.push(row("Respin RNG", `${rs.stops.join(" ")} → ${rs.syms.map(code).join(" ")}${rs.swapped ? "（R2/R3 switch）" : ""}`));
-      rows.push(row("Respin Retry / Fallback", `${rs.reroll} / ${rs.fallback ? "Yes（respin_fallback_rng）" : "No"}`));
-      rows.push(row("s2（Respin add）", fmt(rs.add)));
-    }
-    if (res.wheelIdx >= 0) {
-      rows.push(row("Wheel Index", `${res.wheelIdx} / ${sh.wheel.length}（${sh.wheel.map((v) => v * bet).join(",")}）`));
-      rows.push(row("Wheel Value", fmt(res.wheelVal * bet)));
-    }
-    rows.push(row("Total Win", `${fmt(res.win)} Coin ／ ${fmtX(res.win / bet)} × bet ／ ${fmtX(res.win / (bet * cost))} × cost`));
-    $("rngList").innerHTML = rows.join("");
-
+    const bet = pk.bet;
     const lines = [];
     lines.push(`<div class="line-row"><span>Number Win R1～R3：${res.syms.map(code).join(" ")}</span><span>${fmt(res.s1)}</span></div>`);
     if (MULT[res.r4Sym]) lines.push(`<div class="line-row"><span>R4 ${code(res.r4Sym)}：× ${MULT[res.r4Sym]}</span><span>${fmt(res.win - res.s1)}</span></div>`);
@@ -1118,6 +1078,7 @@
   // 每局以一組種子在 demogameRng.run() 內算完整局（含卡片 Retry、RESPIN、轉盤）；Log 印「RNG <碼>」。
   // 選項 opts：b<押注>[.r<卡片區間>][.t<Natural 表>]，例 92A/NB/on/b10.r3/8f3a21b0、Base/EB/off/b50.tB/0c1d2e3f。
   const MODE_CODE = { 0: "NB", 1: "EB" };
+  const MODE_NAME = { 0: "Normal Bet", 1: "Extra Bet" };
   const configLabel = () => { const sel = $("demogameConfigSelect"); return (sel?.selectedOptions[0]?.textContent || RTPC.config_code).replace(/\s+/g, ""); };
   function parseRngOpts(opts) {
     const out = { bet: null, iv: null, sheet: null };
@@ -1145,7 +1106,7 @@
         const codeMode = Number(Object.keys(MODE_CODE).find((k) => MODE_CODE[k] === code.mode));
         if (!Number.isInteger(codeMode) || !PACK[codeMode]) throw new Error(`RNG 模式 ${code.mode} 本作不支援（只有 NB／EB）`);
         if (opts.bet == null || !PACK[codeMode][opts.bet]) throw new Error(`RNG 押注 b${opts.bet ?? "?"} 不存在`);
-        if (code.config !== configLabel()) liveLog(`WARN RNG Config ${code.config} ≠ 目前 ${configLabel()}，以碼上的 Card ${code.card ? "on" : "off"} 重跑`, "error");
+        if (code.config !== configLabel()) liveLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
         if (opts.bet !== bet) { state.betIndex = BET_LEVELS.indexOf(opts.bet); changeBetOrMode(); bet = opts.bet; }
         mode = codeMode; cardActive = code.card;
         if (opts.iv != null) {
@@ -1170,7 +1131,7 @@
       round = window.demogameRng.run(seed, () => playRound(ctx));   // 整局結果在種子序列內一次算完
     } catch (error) {
       setMessage(error.message, "error");
-      liveLog(`ERROR ${error.message}`, "error");
+      liveLog(`Error | ${error.message}`, "error");
       state.auto = false; $("autoBtn").textContent = "Auto";
       return;
     }
@@ -1180,10 +1141,10 @@
     state.balance -= cost; state.totalBet += cost; state.rounds++; state.lastWin = 0;
     updateStats();
     const res = round.res;
-    liveLog(`#${state.rounds} ${RTPC.config_code}-${profileLabel(bet)} ${BASE.bet_modes[String(mode)].name} cost ${fmt(cost)}`
-      + ` · ${round.card ? `Card #${round.card.iv} ${intervalText(pk.card.intervals, round.card.iv)} sheet ${round.card.sheet} retry ${round.card.tries}` : `Natural ${res.sheet}`}`, "mode");
+    const retry = round.card ? ` | Card Retry ${round.card.tries}${round.card.exceeded ? " (limit)" : ""}` : "";
+    liveLog(`#${state.rounds} ${MODE_NAME[mode]} | Bet ${fmt(cost)}${ctx.forcedCard != null && !ctx.replay ? " | Card Range set" : ""}${ctx.replay ? " | Replay" : ""}${retry}`, "mode");
     const rngOpts = [`b${bet}`, ctx.forcedCard != null ? `r${ctx.forcedCard}` : "", ctx.cardOn ? "" : `t${ctx.naturalSheet}`].filter(Boolean).join(".");
-    liveLog(`   ${ctx.replay ? "Replay " : ""}RNG ${window.demogameRng.format({ config: ctx.config, mode: MODE_CODE[mode], card: ctx.cardOn, opts: rngOpts, seed })}`, "rng");
+    liveLog(`RNG ${window.demogameRng.format({ config: ctx.config, mode: MODE_CODE[mode], card: ctx.cardOn, opts: rngOpts, seed })}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
     try {
       await animateRound(round);
     } catch (error) { console.error(error); }
@@ -1193,10 +1154,8 @@
     if (res.wheelIdx >= 0) state.wheels++;
     state.maxMultiplier = Math.max(state.maxMultiplier, res.win / bet);
     if (mode === MODES[0]) window.demogameLineChart?.record(res.win / bet);   // 即時倍率線型：NB
-    liveLog(`   R1-R3 [${res.stops.join(",")}] ${res.syms.map(code).join(" ")} s1=${res.s1} · R4 [${res.r4Pos}] ${code(res.r4Sym)}`
-      + `${res.respin ? ` · respin [${res.respin.stops.join(",")}] s2=${res.respin.add} retry ${res.respin.reroll}${res.respin.fallback ? " fallback" : ""}` : ""}`
-      + `${res.wheelIdx >= 0 ? ` · wheel[${res.wheelIdx}]=${res.wheelVal}×${bet}` : ""}`, "cascade");
-    liveLog(`   WIN ${fmt(res.win)}（${fmtX(res.win / bet)} × bet）`, "result");
+    liveLog(`BG | ${res.sheet} | Win ${fmt(res.win)} (${(res.win / bet).toFixed(2)}x)`, res.win > 0 ? "result" : "info");
+    window.demogameHistory?.record({ bg: res.win / bet });   // 共用歷史紀錄：BG 最大倍數（本作無 FG）
     renderDebug(round, ctx);
     updateStats();
     setBusy(false);
@@ -1309,7 +1268,7 @@
   function reset() {
     Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hits: 0, respins: 0, wheels: 0, maxMultiplier: 0, lastWin: 0, auto: false });
     $("autoBtn").textContent = "Auto";
-    $("rngList").innerHTML = ""; $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
+    $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
     initialBoard();
     setMessage(["Ready — press Spin", "準備就緒，請按 Spin"]);
     updateStats();
@@ -1407,10 +1366,12 @@
   setDebug(false);
   reset();
   rebuildDebugSelects();
+  window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${RTPC.excel_version} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
 })();
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 10:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
   <script src="../demogame_common.js?v=20261013f"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位

@@ -2241,7 +2241,7 @@
           <li>Set RNG 統一：原「腳本」區改名 Set RNG（指定 RNG），卡片 BG 區間／腳本／RNG／重置排成一列等寬；腳本選單保留。（10/13）</li>
           <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|BF/on|off/腳本或 r區間/種子</code>），點一下複製並填入 RNG 欄，按 Spin 整局重跑（BG、消除、FG 相同），RNG 欄填了就一直沿用、按重置才清空；數學抽樣改走種子序列，表演用金框不受影響。（10/13）</li>
           <li>驗證：腳本 bigghost 局（27.55x）貼 RNG 重跑，Log 結果與盤面完全相同，Console 無例外。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-10-13」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
+          <li>頁尾改顯示「最後調性更新：2026-10-13 13:13」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -4143,7 +4143,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 13:13";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script src="../demogame_common.js?v=20261013f"></script>
 </body>
 

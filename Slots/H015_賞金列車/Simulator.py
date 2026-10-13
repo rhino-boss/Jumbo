@@ -18,7 +18,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # ===== User Settings =====
 
-CONFIG_FILE = "config_92.js"
+CONFIG_FILE = "config_92A.js"
 TOTAL_ROUNDS = 10**7
 BET_MULTI = 1
 BET_MODE = 0
@@ -29,18 +29,18 @@ CARD_SYSTEM_IS_NEWBIE = False  # True: Newbie, False: Oldhand
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # Test
-    {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
+    {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**6, "card_system_is_newbie": False, "card_system_enabled": True},
     # H015192: NB Newbie / NB Oldhand / BF
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_92.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_92A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_92A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
     # H015194: NB Newbie / NB Oldhand / BF
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
-    # {"config_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
-    # {"config_file": "config_94.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": True, "card_system_enabled": True},
+    # {"config_file": "config_94A.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_is_newbie": False, "card_system_enabled": True},
+    # {"config_file": "config_94A.js", "bet_mode": 2, "total_rounds": 10**8, "card_system_is_newbie": False, "card_system_enabled": True},
 ]
 
 # H015's card filtering can be memory-heavy. Keep the H026-style configurable
@@ -219,6 +219,10 @@ def _combo_map_to_array(raw_tables):
 
 
 CFG = _load_config(CONFIG_PATH)
+# 模擬程式規範 2.1：RTP Config 以 base_config 指向基礎 config.js；基礎在下、RTP 在上
+if CFG.get("base_config"):
+    CFG = {**_load_config(CONFIG_PATH.parent / CFG["base_config"]), **CFG}
+    CFG.pop("base_config")
 
 GAME_ID = CFG["game_id"]
 PARSHEET_ID = CFG.get("parsheet_id", "H0151")

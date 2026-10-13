@@ -89,7 +89,7 @@ By Game 區域必須：
 - Stats／Simulation。
 - Play：Spin、Auto、Bet Stepper、Speed。
 - Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。
-- Debug Mode、Set RNG、Reel RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏）。
+- Debug Mode、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用歷史紀錄，與 H045 一致）。
 - Setting：Version、Config／Profile、Language、Help、Reset。
 - Language：共用區的固定英文標籤由 `demogame_common.js` 依 `#languageSelect` 統一切換中英（整段完全相同才替換）；By Game 區域與遊戲專屬文字仍由各遊戲自行翻譯，切回 English 必須還原。
 - 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。
@@ -177,13 +177,19 @@ Debug Mode 至少可查看：
 
 - Config、Version、Profile、Bet Mode、Mode／Feature Price 倍數、base bet、實際模式押注、`bet_tier_amount`、押注層級、Link 資格、BG／FG Max Multiplier 與 Card System 狀態。
 - Card 抽獎值、卡片區間與 Retry 次數。
-- Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。
+- Table、Drop Mode 與盤面表（記在 Log）；停輪與整局抽樣以 RNG 碼重現（見下方「可重現 RNG」）。
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
-- 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD"`，頁尾顯示「最後調性更新：日期」。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
+- 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"`，頁尾顯示「最後調性更新：日期 時間」（24 小時制，到分鐘）。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
 - 數值報告按鈕（共用）：有 `其他/數值報告_<遊戲中文名>.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL`，標題列右側出現「數值報告」按鈕（樣式同 Reset），另開分頁。
 - 歷史紀錄（共用）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；面板標題「歷史紀錄」，只顯示 BG 最大倍數與 FG 最大倍數，Clear／Reset 清空。
-- Log（共用）：帶時間的即時紀錄，記下 Config 載入、盤面訊息、押注模式切換、FG 觸發／Retrigger、Card System 抽卡與 Retry、錯誤；Clear 清空，最多保留 500 行。
+- Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照 H045），不記演出過程：
+  - `Config <名稱> loaded | Version <版本> | Card System On|Off`
+  - `#<局號> Normal Bet|Extra Bet|Buy Feature|Super Feature | Bet <押注>[ | Card Range set][ | Replay]`
+  - `RNG <碼>`（可點，複製並填入 RNG 欄）
+  - `BG|BF Entry | <盤面表> | Cascade <n> | C1 <n> | Win <得分> (<倍數>x)`
+  - `Free Game triggered | <n> spins[ (Retrigger ×k)]`、`FG <i>/<n> | … | Win <得分>`、`FG complete | Total <得分> (<倍數>x)`
+  - `Error | <訊息>`
 - Simulation（共用，`#batch-simulation`）：N 局獨立數學模擬，Start 執行中只顯示「進行中」（English：Running），不跳局數。FG 觸發顯示「比例 (N 場)」；最高倍數為單局總得分倍數（BF ÷ 底注）；消除分布轉置為「消除次數 × BG／FG」，與倍率線型一樣各自框成一區並有標題。各遊戲提供：
   - `window.demogameSimulateRound({ mode })`：用與畫面相同的遊戲邏輯產生一局（不得另寫簡化數學），回傳 `multiplier`（總得分含 FG ÷ 實際押注）、`lineMultiplier`（BF ÷ 底注，其餘同 `multiplier`）、`fgTriggered`、`maxMultiplier`、`retryLimitExceeded`、`retryCount`、`bgCascade`、`fgCascades`；`mode` 只在該局暫時套用，不得改動畫面押注模式與統計。
   - `window.demogameSimulationModes = [{ value, label }]`：只列實際支援的押注模式，面板據此顯示押注模式選單。

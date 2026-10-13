@@ -711,7 +711,7 @@
       lastCounts = counts;
       const c = counts || new Array(buckets.labels.length).fill(0);
       const label = window.demogameSharedText ? window.demogameSharedText(modeLabel()) : modeLabel();
-      chart.innerHTML = `<div class="dlc-title">倍率線型 · ${label}</div>${simulationChartSvg(c, buckets, yMaxFor())}`;
+      chart.innerHTML = `<div class="dlc-title">${isZhText() ? "倍率線型" : "Multiplier Distribution"} · ${label}</div>${simulationChartSvg(c, buckets, yMaxFor())}`;
     };
     const renderEmpty = () => renderChart(null, SIMULATION_BUCKETS);
     modeSelect?.addEventListener("change", renderEmpty);
@@ -877,6 +877,30 @@
   };
   function isZhText() { return /^zh/i.test(document.getElementById("languageSelect")?.value || ""); }
 
+  // ===== Log（共用）=====
+  // window.demogameLog(text, type)：寫一行「[HH:MM:SS] text」到 #liveLogBody，最多 500 行。
+  // type：info（一般）／mode（局號、模式、FG 觸發）／rng／result（得分、載入、FG 結束）／cascade（有消除的 FG 轉）／error。
+  // 統一的行格式（照 H045）：
+  //   Config <名稱> loaded | Version <版本> | Card System On|Off
+  //   #<局號> Normal Bet|Extra Bet|Buy Feature|Super Feature | Bet <押注>[ | Card Range set][ | Replay]
+  //   RNG <碼>
+  //   BG|BF Entry | <盤面表> | Cascade <n> | C1 <n> | Win <得分> (<倍數>x)
+  //   Free Game triggered|Buy Feature | <n> spins[ (Retrigger ×k)]
+  //   FG <i>/<n> | <盤面表> | Cascade <n> | C1 <n> | Win <得分>
+  //   FG complete | Total <得分> (<倍數>x)
+  //   Error | <訊息>
+  // 不記演出過程（轉輪中、逐步消除等）。
+  window.demogameLog = (text, type = "info") => {
+    const body = document.getElementById("liveLogBody");
+    if (!body) return;
+    const line = document.createElement("div");
+    line.className = `live-log-line ${type}`;
+    line.textContent = `[${new Date().toLocaleTimeString("en-GB", { hour12: false })}] ${text}`;
+    body.appendChild(line);
+    while (body.children.length > 500) body.firstElementChild.remove();
+    body.scrollTop = body.scrollHeight;
+  };
+
   // Log 裡的「RNG <碼>」行：點一下複製並填入 #rngInput
   function decorateRngLines(root) {
     root?.querySelectorAll?.(".live-log-line, div").forEach((line) => {
@@ -1013,7 +1037,7 @@
 
   setupHistoryPanel();
 
-  // 最後調性更新日期（共用，頁尾 .footer-note）：頁面在載入本檔前設 window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD"。
+  // 最後調性更新日期（共用，頁尾 .footer-note）：頁面在載入本檔前設 window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"。
   // 只看調性：數學模型或倍率（卡片）權重有改才更新；介面、文件修改不算。
   function syncLastTuning() {
     const date = window.DEMOGAME_LAST_TUNING;
