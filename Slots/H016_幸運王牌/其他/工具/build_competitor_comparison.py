@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import math
 import os
+import re
 import sys
 from collections import Counter
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -17,9 +20,21 @@ OUTPUT = H016_DIR / "其他" / "競品參考數值比較.md"
 RECORD_DIR = H016_DIR / "Record"
 MODEL_CONFIG = H016_DIR / "config.js"
 SIMULATOR = H016_DIR / "Simulator.py"
-SOURCE_APPLIER = H016_DIR / "其他" / "工具" / "apply_super_ace_claude.py"
 SOURCE_REELS = H016_DIR / "其他" / "參考資料" / "Super Ace_claude.txt"
 SIMULATION_ROUNDS = 100_000
+WEIGHT_SCALE = Decimal("10000")
+
+SYMBOL_IDS = {
+    "C1": 2,
+    "M1": 3,
+    "M2": 4,
+    "M3": 5,
+    "M4": 6,
+    "A": 7,
+    "K": 8,
+    "Q": 9,
+    "J": 10,
+}
 COMPETITOR_ROOT = Path(
     "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資源/JILI"
 )
@@ -931,24 +946,73 @@ def config_table_section(config: dict[str, Any]) -> str:
     return "\n".join(rows)
 
 
-def load_source_applier():
-    module_name = "h016_super_ace_claude_source_for_report"
-    spec = importlib.util.spec_from_file_location(module_name, SOURCE_APPLIER)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Cannot load {SOURCE_APPLIER}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    try:
-        spec.loader.exec_module(module)
-        return module
-    finally:
-        sys.modules.pop(module_name, None)
+# 原 apply_super_ace_claude.py 的來源輪帶解析（工具已移除，報告只需讀取）
+def parse_source(path: Path = SOURCE_REELS) -> dict[str, dict[str, list[list[int]]]]:
+    rows: dict[str, list[tuple[int, list[str], list[str]]]] = {"BG": [], "FG": []}
+    scene: str | None = None
+    reading_rows = False
+
+    for raw_line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = raw_line.strip()
+        if line in ("[BG]", "[FG]"):
+            scene = line[1:-1]
+            reading_rows = False
+            continue
+        if line.startswith("["):
+            scene = None
+            reading_rows = False
+            continue
+        if scene and line.startswith("Pos"):
+            reading_rows = True
+            continue
+        if not scene or not reading_rows or not line:
+            continue
+
+        parts = re.split(r"\s+", line)
+        if len(parts) != 11:
+            raise ValueError(f"{scene}: expected 11 columns, got {len(parts)}: {line}")
+        position = int(parts[0])
+        rows[scene].append((position, parts[1:6], parts[6:11]))
+
+    parsed: dict[str, dict[str, list[list[int]]]] = {}
+    for scene_name, scene_rows in rows.items():
+        expected_positions = list(range(200))
+        actual_positions = [row[0] for row in scene_rows]
+        if actual_positions != expected_positions:
+            raise ValueError(
+                f"{scene_name}: positions must be exactly 0..199; got {actual_positions[:5]}..."
+            )
+
+        reels = [[] for _ in range(5)]
+        weights = [[] for _ in range(5)]
+        for _, symbol_cells, weight_cells in scene_rows:
+            for reel, symbol in enumerate(symbol_cells):
+                if symbol not in SYMBOL_IDS:
+                    raise ValueError(f"{scene_name} R{reel + 1}: unsupported symbol {symbol!r}")
+                reels[reel].append(SYMBOL_IDS[symbol])
+            for reel, raw_weight in enumerate(weight_cells):
+                scaled = Decimal(raw_weight) * WEIGHT_SCALE
+                if scaled != scaled.to_integral_value() or scaled <= 0:
+                    raise ValueError(
+                        f"{scene_name} R{reel + 1}: weight {raw_weight!r} is not a positive 4dp value"
+                    )
+                weights[reel].append(int(scaled))
+
+        for reel in range(5):
+            if len(reels[reel]) != 200 or len(weights[reel]) != 200:
+                raise ValueError(f"{scene_name} R{reel + 1}: reel/weight length must be 200")
+            ratio = max(weights[reel]) / min(weights[reel])
+            if ratio > 10 + 1e-12:
+                raise ValueError(f"{scene_name} R{reel + 1}: positive stop ratio {ratio:.6f}x exceeds 10x")
+
+        parsed[scene_name] = {"reels": reels, "weights": weights}
+    return parsed
+
 
 
 def source_application_section(config: dict[str, Any]) -> str:
-    applier = load_source_applier()
-    parsed = applier.parse_source(SOURCE_REELS)
-    source_summary = applier.summary(config, parsed)
+    parsed = parse_source(SOURCE_REELS)
+    source_summary = {"source_sha256": hashlib.sha256(SOURCE_REELS.read_bytes()).hexdigest()}
     rows = [
         "| Scene | 主表底層輪帶 exact match | 主表 stopW ×10,000 exact match | Alias 對應正確 | 輪帶長度 | 倍數 |",
         "|---|---:|---:|---:|---|---|",
