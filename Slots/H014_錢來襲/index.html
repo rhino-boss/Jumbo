@@ -191,17 +191,15 @@
             Card BG Range
             <select id="cardRangeSelect"><option value="">Auto</option></select>
           </label>
-          <label class="debug-rng-field" for="reelRngInput">
-            Reel RNG（R1 R2 R3 [R4]）
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="0 1 2 3">
+          <label class="debug-rng-field" for="naturalSheetSelect">
+            Natural Table
+            <select id="naturalSheetSelect" title="Card Off 時使用"></select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/b1/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
-        </div>
-        <div class="zone-body set-rng-controls">
-          <label class="debug-rng-field" for="naturalSheetSelect">
-            Natural Table（Card Off／指定 Reel RNG 時使用）
-            <select id="naturalSheetSelect"></select>
-          </label>
         </div>
       </div>
     </section>
@@ -248,6 +246,9 @@
           <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
           <li>沒有消除機制的遊戲一開頁就隱藏消除分布（共用）。（10/13）</li>
           <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告_錢來襲.html</code>。（10/13）</li>
+          <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／Natural Table／RNG／重置），重置同時清空 RNG 欄。（10/13）</li>
+          <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|EB/on|off/b押注[.r卡片區間][.tNatural表]/種子</code>），點一下複製並填入，貼回 RNG 欄按 Spin 整局重跑（卡片 Retry、RESPIN、轉盤相同）；碼上的押注模式與 Card on/off 只套用該局，押注不同時切到碼上押注；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
+          <li>驗證：Debug Mode 下 Card on（NB bet10 一般／RESPIN／轉盤、EB、指定卡片區間 #45）與 Card off（Base、Natural B）各點 Log RNG 碼重跑，Log 結果行與 Spin Result 盤面皆相同；跨押注模式／押注、重新整理後重跑亦相同；Set RNG 四欄同列等寬；Simulation 正常、Console 無錯誤；inline script 皆通過 <code>node --check</code>。（10/13）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -608,31 +609,22 @@
     return 11;
   }
 
-  /** 單局（Simulator._spin）。forced = { stops:[i,j,k], r4:pos|null } 只用於 Debug 指定 Reel RNG。 */
-  function spinOnce(pk, sheetName, forced = null) {
+  /** 單局（Simulator._spin）。 */
+  function spinOnce(pk, sheetName) {
     const sh = pk.sheets[sheetName];
     const bet = pk.bet, cap = pk.cap;
     const t = draw(sh.tableCum);
     let capReroll = 0, i, j, k, s1;
     while (true) {
-      if (forced) { [i, j, k] = forced.stops; }
-      else {
-        i = draw(sh.reelCum[t][0]);
-        j = draw(sh.reelCum[t][1]);
-        k = draw(sh.reelCum[t][2]);
-      }
+      i = draw(sh.reelCum[t][0]);
+      j = draw(sh.reelCum[t][1]);
+      k = draw(sh.reelCum[t][2]);
       s1 = number(sh.reels[0][i], sh.reels[1][j], sh.reels[2][k]);
       if (cap === 0 || s1 <= cap) break;
-      if (forced) throw new Error(`指定停點的數字分 ${s1} 超過上限 ${cap}`);
       capReroll++;
     }
     const b = bucket(s1);
-    let pos;
-    if (forced && forced.r4 != null) {
-      const w = sh.r4Cum[b][forced.r4] - (forced.r4 ? sh.r4Cum[b][forced.r4 - 1] : 0);
-      if (!(w > 0)) throw new Error(`R4 停點 ${forced.r4} 在分組 ${BASE.r4_buckets?.[b] ?? b} 權重為 0，不可能出現`);
-      pos = forced.r4;
-    } else pos = draw(sh.r4Cum[b]);
+    const pos = draw(sh.r4Cum[b]);
     const sym = sh.r4[pos];
     let win = s1, respin = null, wheelIdx = -1, wheelVal = 0;
     if (MULT[sym]) {
@@ -677,12 +669,8 @@
     return true;
   }
   /** 一局（Simulator.run_worker 的單局部分）。 */
-  function playRound({ mode, bet, cardOn, naturalSheet, forcedCard = null, forcedReel = null }) {
+  function playRound({ mode, bet, cardOn, naturalSheet, forcedCard = null }) {
     const pk = PACK[mode][bet];
-    if (forcedReel) {
-      if (!pk.sheets[naturalSheet]) throw new Error(`bet${bet} 沒有 ${naturalSheet} 表`);
-      return { pk, cardOn: false, card: null, res: spinOnce(pk, naturalSheet, forcedReel) };
-    }
     if (cardOn) {
       const iv = forcedCard != null ? forcedCard : draw(pk.card.cum);
       const sheet = pk.card.sheets[iv];
@@ -1043,7 +1031,7 @@
     rows.push(row("Bet Mode", `${BASE.bet_modes[String(ctx.mode)].name}（× ${cost}）`));
     rows.push(row("base bet / bet amount", `${bet} / ${fmt(bet * cost)}`));
     rows.push(row("bet_tier_amount / tier", `${fmt(bet * cost)} / bet${bet}`));
-    rows.push(row("Card System", round.cardOn ? "On" : (ctx.forcedReel ? "Bypassed（指定 Reel RNG）" : "Off")));
+    rows.push(row("Card System", round.cardOn ? "On" : "Off"));
     if (card) {
       const w = pk.card.weights[card.iv];
       rows.push(row("Card Interval", `#${card.iv}：${intervalText(pk.card.intervals, card.iv)} ×bet ${card.forced ? "（指定）" : ""}`));
@@ -1123,36 +1111,62 @@
     const keepSheet = natSel.value || "A";
     natSel.innerHTML = pk.sheetNames.map((s) => `<option value="${s}">${s}</option>`).join("");
     natSel.value = pk.sheetNames.includes(keepSheet) ? keepSheet : pk.sheetNames[0];
-    natSel.disabled = cardOn() && !$("reelRngInput").value.trim();
+    natSel.disabled = cardOn();
   }
-  function parseReelRng(pk, sheetName) {
-    const text = $("reelRngInput").value.trim();
-    if (!text) return null;
-    const parts = text.split(/[\s,]+/).map(Number);
-    if (!(parts.length === 3 || parts.length === 4) || parts.some((v) => !Number.isInteger(v) || v < 0)) {
-      throw new Error(tr("Reel RNG needs 3 or 4 non-negative integers (R1 R2 R3 [R4])", "Reel RNG 需輸入 3 或 4 個非負整數（R1 R2 R3 [R4]）"));
+  // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+  // 每局以一組種子在 demogameRng.run() 內算完整局（含卡片 Retry、RESPIN、轉盤）；Log 印「RNG <碼>」。
+  // 選項 opts：b<押注>[.r<卡片區間>][.t<Natural 表>]，例 92A/NB/on/b10.r3/8f3a21b0、Base/EB/off/b50.tB/0c1d2e3f。
+  const MODE_CODE = { 0: "NB", 1: "EB" };
+  const configLabel = () => { const sel = $("demogameConfigSelect"); return (sel?.selectedOptions[0]?.textContent || RTPC.config_code).replace(/\s+/g, ""); };
+  function parseRngOpts(opts) {
+    const out = { bet: null, iv: null, sheet: null };
+    for (const tok of String(opts || "").split(".").filter(Boolean)) {
+      let m;
+      if ((m = /^b(\d+)$/.exec(tok))) out.bet = Number(m[1]);
+      else if ((m = /^r(\d+)$/.exec(tok))) out.iv = Number(m[1]);
+      else if ((m = /^t([A-Za-z0-9]+)$/.exec(tok))) out.sheet = m[1];
+      else throw new Error(`RNG 選項無法辨識：${tok}`);
     }
-    const sh = pk.sheets[sheetName];
-    for (let c = 0; c < 3; c++) if (parts[c] >= sh.reels[c].length) throw new Error(`R${c + 1} 停點需 < ${sh.reels[c].length}`);
-    if (parts.length === 4 && parts[3] >= sh.r4.length) throw new Error(`R4 停點需 < ${sh.r4.length}`);
-    return { stops: parts.slice(0, 3), r4: parts.length === 4 ? parts[3] : null };
+    return out;
   }
 
   async function play() {
     if (state.busy) return;
-    const bet = curBet(), mode = state.mode, cost = bet * costMult(mode);
-    const pk = PACK[mode][bet];
-    const ctx = { mode, bet, cardOn: cardOn(), naturalSheet: $("naturalSheetSelect").value || pk.sheetNames[0], forcedCard: null, forcedReel: null };
-    let round;
+    let bet = curBet(), mode = state.mode;
+    let round, ctx, seed, cost, pk;
     try {
-      ctx.forcedReel = parseReelRng(pk, ctx.naturalSheet);
+      const code = window.demogameRng.takeInput();   // 讀並清空 #rngInput；格式錯誤會丟 Error
+      let cardActive = cardOn(), naturalSheet = $("naturalSheetSelect").value, forcedCard = null;
       const cardValue = $("cardRangeSelect").value;
-      if (!ctx.forcedReel && cardValue !== "") {
-        if (!ctx.cardOn) throw new Error("指定 Card Range 需開啟 Card System");
-        ctx.forcedCard = Number(cardValue);
+      if (code) {
+        // 照碼重跑：押注模式、Card on/off 只套用這一局（不改畫面選項）；押注不同時切到碼上的押注
+        const opts = parseRngOpts(code.opts);
+        const codeMode = Number(Object.keys(MODE_CODE).find((k) => MODE_CODE[k] === code.mode));
+        if (!Number.isInteger(codeMode) || !PACK[codeMode]) throw new Error(`RNG 模式 ${code.mode} 本作不支援（只有 NB／EB）`);
+        if (opts.bet == null || !PACK[codeMode][opts.bet]) throw new Error(`RNG 押注 b${opts.bet ?? "?"} 不存在`);
+        if (code.config !== configLabel()) liveLog(`WARN RNG Config ${code.config} ≠ 目前 ${configLabel()}，以碼上的 Card ${code.card ? "on" : "off"} 重跑`, "error");
+        if (opts.bet !== bet) { state.betIndex = BET_LEVELS.indexOf(opts.bet); changeBetOrMode(); bet = opts.bet; }
+        mode = codeMode; cardActive = code.card;
+        if (opts.iv != null) {
+          if (!cardActive) throw new Error("RNG 指定卡片區間需 Card on");
+          if (!(PACK[mode][bet].card.weights[opts.iv] > 0)) throw new Error(`RNG 卡片區間 #${opts.iv} 不存在或權重為 0`);
+          forcedCard = opts.iv;
+        }
+        if (opts.sheet) naturalSheet = opts.sheet;
+        seed = code.seed;
+      } else {
+        if (cardValue !== "") {
+          if (!cardActive) throw new Error("指定 Card Range 需開啟 Card System");
+          forcedCard = Number(cardValue);
+        }
+        seed = window.demogameRng.newSeed();
       }
+      pk = PACK[mode][bet];
+      cost = bet * costMult(mode);
+      if (!naturalSheet || !pk.sheets[naturalSheet]) naturalSheet = pk.sheetNames[0];
+      ctx = { mode, bet, cardOn: cardActive, naturalSheet, forcedCard, seed, replay: !!code, config: code ? code.config : configLabel() };
       if (state.balance < cost) throw new Error(tr("Insufficient credit — press Reset", "Credit 不足，請按 Reset"));
-      round = playRound(ctx);
+      round = window.demogameRng.run(seed, () => playRound(ctx));   // 整局結果在種子序列內一次算完
     } catch (error) {
       setMessage(error.message, "error");
       liveLog(`ERROR ${error.message}`, "error");
@@ -1160,13 +1174,15 @@
       return;
     }
     // 指定值只作用於下一局
-    $("reelRngInput").value = ""; $("cardRangeSelect").value = ""; rebuildDebugSelects();
+    $("cardRangeSelect").value = ""; rebuildDebugSelects();
     setBusy(true);
     state.balance -= cost; state.totalBet += cost; state.rounds++; state.lastWin = 0;
     updateStats();
     const res = round.res;
     liveLog(`#${state.rounds} ${RTPC.config_code}-${profileLabel(bet)} ${BASE.bet_modes[String(mode)].name} cost ${fmt(cost)}`
       + ` · ${round.card ? `Card #${round.card.iv} ${intervalText(pk.card.intervals, round.card.iv)} sheet ${round.card.sheet} retry ${round.card.tries}` : `Natural ${res.sheet}`}`, "mode");
+    const rngOpts = [`b${bet}`, ctx.forcedCard != null ? `r${ctx.forcedCard}` : "", ctx.cardOn ? "" : `t${ctx.naturalSheet}`].filter(Boolean).join(".");
+    liveLog(`   ${ctx.replay ? "Replay " : ""}RNG ${window.demogameRng.format({ config: ctx.config, mode: MODE_CODE[mode], card: ctx.cardOn, opts: rngOpts, seed })}`, "rng");
     try {
       await animateRound(round);
     } catch (error) { console.error(error); }
@@ -1373,9 +1389,7 @@
   $("previousStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex - 1));
   $("nextStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
   $("debugModeInput").addEventListener("change", () => setDebug($("debugModeInput").checked));
-  $("reelRngInput").addEventListener("input", () => { if ($("reelRngInput").value.trim()) $("cardRangeSelect").value = ""; $("naturalSheetSelect").disabled = cardOn() && !$("reelRngInput").value.trim(); });
-  $("cardRangeSelect").addEventListener("change", () => { if ($("cardRangeSelect").value) $("reelRngInput").value = ""; });
-  $("setRngResetBtn").addEventListener("click", () => { $("reelRngInput").value = ""; $("cardRangeSelect").value = ""; rebuildDebugSelects(); });
+  $("setRngResetBtn").addEventListener("click", () => { $("rngInput").value = ""; $("cardRangeSelect").value = ""; rebuildDebugSelects(); });
   $("clearLogBtn").addEventListener("click", () => { $("liveLogBody").innerHTML = ""; });
   $("resetBtn").addEventListener("click", () => { if (!state.busy) reset(); });
   $("languageSelect").addEventListener("change", () => {

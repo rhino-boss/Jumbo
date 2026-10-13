@@ -947,52 +947,6 @@
       display: none;
     }
 
-    .set-rng-controls {
-      display: grid;
-      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
-      align-items: end;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .debug-rng-field {
-      min-width: 0;
-      display: grid;
-      gap: 5px;
-      color: var(--sub);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-    }
-
-    .debug-rng-field input,
-    .debug-rng-field select {
-      width: 100%;
-      min-width: 0;
-      height: 34px;
-      padding: 6px 8px;
-      border: 1px solid var(--surface-2);
-      border-radius: 5px;
-      color: var(--text);
-      background: var(--surface);
-      font: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: none;
-    }
-
-    .debug-rng-field input::placeholder {
-      color: var(--sub);
-      opacity: 0.7;
-    }
-
-    #setRngResetBtn {
-      width: 82px;
-      min-width: 82px;
-      align-self: end;
-    }
-
     .debug-check {
       display: inline-flex;
       align-items: center;
@@ -1188,10 +1142,6 @@
       align-items: center;
       gap: 6px;
       min-height: 34px;
-    }
-
-    .zone-body.set-rng-controls {
-      display: grid;
     }
 
     .action-zone .play-main-controls {
@@ -1797,10 +1747,6 @@
         flex-wrap: wrap;
       }
 
-      .set-rng-controls {
-        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
-      }
-
       #grid-panel {
         padding-inline: 16px;
         overflow-x: auto;
@@ -1872,16 +1818,6 @@
       }
     }
 
-    @media (max-width: 520px) {
-      .set-rng-controls {
-        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
-      }
-
-      #controls #setRngResetBtn {
-        grid-column: 1 / -1;
-        width: 100%;
-      }
-    }
   </style>
   <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
@@ -2016,9 +1952,9 @@
               <option value="">Auto</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="reelRngInput">
-            Reel Stop
-            <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="R1 R2 R3 R4 R5 Table RNG">
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2068,6 +2004,9 @@
           <li>驗證：inline script <code>node --check</code> 通過；92A-Oldhand Card On 模擬 NB 2,000 局 RTP 91.98%、EB 4,000 局 91.76%、BF 2,000 局 89.52%（面板另跑 BF 2,000 局 100.65%）；Card Off 為自然數學（NB 40,000 局約 1,763%、EB 約 935%）。模擬後局數、餘額、押注模式不變；中英切換與還原正確；Log、Clear 正常；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
           <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
           <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+          <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／RNG／重置），移除本檔覆寫共用排版的 Set RNG CSS。（10/13）</li>
+          <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、Card retry 相同；填了就沿用，按重置清空）；碼內模式（NB／EB／BF）、Card 開關、Profile、指定卡片區間（選項 <code>r&lt;索引&gt;</code>）只套用該局、不動畫面選單；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；Card On NB×2／EB／BF（含 FG 13 轉）、Card On＋卡片區間 r63（在 Card Off 畫面下重跑）、Card Off NB／BF×3 重跑，Log 結果行與最終盤面皆完全相同；Set RNG 三欄同列、兩欄等寬；Simulation 正常且不影響種子序列與餘額局數；格式錯誤會提示不扣款；Console 無錯誤。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -2425,52 +2364,53 @@
     const spinResultWrapEl = document.getElementById("log-wrap");
     const liveLogWrapEl = document.getElementById("live-log-wrap");
     const cardRangeSelectEl = document.getElementById("cardRangeSelect");
-    const reelRngInputEl = document.getElementById("reelRngInput");
+    const rngInputEl = document.getElementById("rngInput");
     const setRngResetBtn = document.getElementById("setRngResetBtn");
 
-    let replayRandom = null;
-
     function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
-    function randInt(max) { return Math.floor((replayRandom ? replayRandom() : Math.random()) * max); }
-    function createReplayRandom(seedText) {
-      let seed = 2166136261;
-      for (let index = 0; index < seedText.length; index += 1) {
-        seed ^= seedText.charCodeAt(index);
-        seed = Math.imul(seed, 16777619);
-      }
-      return () => {
-        seed += 0x6D2B79F5;
-        let value = seed;
-        value = Math.imul(value ^ (value >>> 15), value | 1);
-        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-      };
+    function randInt(max) { return Math.floor(Math.random() * max); }
+
+    // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+    // 每局（Spin／Buy）以一組種子在 demogameRng.run() 內同步算完整局 runRound（BG＋消除＋FG＋Card retry），
+    // Log 印「RNG <碼>」，點一下填入 #rngInput，下一局照碼重跑。滾輪動畫的亂數在 run() 之外。
+    // 本作選項欄：r<Card BG Range 索引>、f（Force FG），多項以「.」連接（例 r3、f、r3.f），無則「-」。
+    const RNG_MODE_OF = { [Box.mode_normalbet]: "NB", [Box.mode_extrabet]: "EB", [Box.mode_featurebuy]: "BF" };
+    const RNG_BET_MODE_OF = { NB: Box.mode_normalbet, EB: Box.mode_extrabet, BF: Box.mode_featurebuy };
+    function rngConfigLabel() {
+      const text = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
+        || document.getElementById("configSelect")?.selectedOptions?.[0]?.textContent
+        || "";
+      return text.trim().replace(/\s+/g, "");
     }
-    function runRoundWithReplay(betMode, forceFg, debugOverrides) {
-      const round = runRoundWithReplayInner(betMode, forceFg, debugOverrides);
+    function parseRngOpts(opts) {
+      const tokens = String(opts || "").split(".").filter(Boolean);
+      const range = tokens.find((token) => /^r\d+$/.test(token));
+      return { rangeIndex: range ? Number(range.slice(1)) : null, forceFg: tokens.includes("f") };
+    }
+    function runRoundRecorded(betMode, forceFg, debugOverrides) {
+      const round = runRound(betMode, forceFg, debugOverrides);
       if (betMode === Box.mode_normalbet) window.demogameLineChart?.record(Number(round.total_win) / Number(round.coin_in));   // 即時倍率線型：NB 含 FG
       return round;
     }
-    function runRoundWithReplayInner(betMode, forceFg, debugOverrides) {
-      const reelStops = debugOverrides?.reels || null;
-      const hasReelStops = Array.isArray(reelStops)
-        && reelStops.some((value) => value !== null && value !== undefined);
-      if (!hasReelStops) return runRound(betMode, forceFg, debugOverrides);
-
-      const previousRandom = replayRandom;
-      const seedText = [
-        Box.game_id,
-        betMode,
-        getBetMoney(),
-        state.extraBetEnabled ? 1 : 0,
-        reelStops.join(","),
-        debugOverrides?.table_rng ?? ""
-      ].join("|");
-      replayRandom = createReplayRandom(seedText);
+    // 算一整局：code 有值時暫時套用碼內的 Card System／Profile（不動畫面選單），結束還原
+    function runSeededRound(betMode, forceFg, cardIndex, code) {
+      const savedCard = CARD_SYSTEM_ENABLED;
+      const savedProfile = state.cardProfile;
+      if (code) {
+        CARD_SYSTEM_ENABLED = code.card && Boolean(Box.card_system?.enabled ?? true);
+        state.cardProfile = /newbie/i.test(code.config) ? "newbie" : "oldhand";
+      }
       try {
-        return runRound(betMode, forceFg, debugOverrides);
+        const useRange = CARD_SYSTEM_ENABLED && cardIndex !== null && betMode !== Box.mode_featurebuy;
+        const overrides = useRange ? { card_range: buildCardRangeOverride(cardIndex, betMode) } : null;
+        const opts = [useRange ? `r${cardIndex}` : "", forceFg ? "f" : ""].filter(Boolean).join(".");
+        const seed = code ? code.seed : window.demogameRng.newSeed();
+        const rngText = window.demogameRng.format({ config: rngConfigLabel(), mode: RNG_MODE_OF[betMode] || "NB", card: CARD_SYSTEM_ENABLED, opts, seed });
+        const round = window.demogameRng.run(seed, () => runRoundRecorded(betMode, forceFg, overrides));
+        return { round, rngText };
       } finally {
-        replayRandom = previousRandom;
+        CARD_SYSTEM_ENABLED = savedCard;
+        state.cardProfile = savedProfile;
       }
     }
     function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -2809,69 +2749,43 @@
       }
     }
 
-    function collectDebugOverrides() {
-      if (!state.debugEnabled) return null;
-      const rawReels = reelRngInputEl.value.trim();
-      const cardIndex = cardRangeSelectEl.value === "" ? null : Number(cardRangeSelectEl.value);
-      if (rawReels !== "" && cardIndex !== null) {
-        throw new Error("Card BG Range 與 Reel Stop／Table RNG 只能擇一指定");
-      }
-      let reels = Array(Box.reel_num).fill(null);
-      let tableRng = null;
-      if (rawReels !== "") {
-        const parts = rawReels.split(/\s+/);
-        const expectedCount = Box.reel_num + 1;
-        if (parts.length !== expectedCount) {
-          throw new Error(`Set RNG 請依序輸入 R1～R${Box.reel_num} Stop 與 Table RNG，共 ${expectedCount} 個數值`);
-        }
-        const values = parts.map((raw, index) => {
-          const value = Number(raw);
-          if (!Number.isInteger(value) || value < 0) {
-            const label = index < Box.reel_num ? `R${index + 1} Stop` : "Table RNG";
-            throw new Error(`${label} 必須是 0 以上的整數`);
-          }
-          return value;
-        });
-        reels = values.slice(0, Box.reel_num);
-        tableRng = values[Box.reel_num];
-      }
-      if (cardIndex === null && rawReels === "") return null;
-      let cardRange = null;
-      if (cardIndex !== null) {
-        const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
-        const cards = getCardSystemProfileCards("weight_bg", betMode);
-        const card = cards[cardIndex];
-        if (!card) throw new Error("指定的 Card BG Range 無效");
-        cardRange = {
-          profile_key: "set_rng",
-          card_index: cardIndex,
-          card_type: card.type || "range",
-          min: card.min ?? null,
-          max: card.max ?? null,
-          weight: 0,
-          label: card.type === "free_game"
-            ? "free_game"
-            : `${Number(card.min)}x ~ ${Number(card.max)}x`,
-          forced: true,
-          source: "set_rng"
-        };
-      }
-      return { card_range: cardRange, reels, table_rng: tableRng };
+    function selectedCardRangeIndex() {
+      if (!state.debugEnabled || cardRangeSelectEl.value === "") return null;
+      return Number(cardRangeSelectEl.value);
+    }
+
+    function buildCardRangeOverride(cardIndex, betMode) {
+      const cards = getCardSystemProfileCards("weight_bg", betMode);
+      const card = cards[cardIndex];
+      if (!card) throw new Error("指定的 Card BG Range 無效");
+      return {
+        profile_key: "set_rng",
+        card_index: cardIndex,
+        card_type: card.type || "range",
+        min: card.min ?? null,
+        max: card.max ?? null,
+        weight: 0,
+        label: card.type === "free_game"
+          ? "free_game"
+          : `${Number(card.min)}x ~ ${Number(card.max)}x`,
+        forced: true,
+        source: "set_rng"
+      };
     }
 
     function resetSetRng(writeLog = true) {
       cardRangeSelectEl.value = "";
-      reelRngInputEl.value = "";
+      rngInputEl.value = "";
       updateDebugControls();
       if (writeLog) writeMessage("Set RNG reset");
     }
 
     function updateSetRngAvailability(debugInputLocked) {
       const hasCardRange = cardRangeSelectEl.value !== "";
-      const hasReelRng = reelRngInputEl.value.trim() !== "";
-      cardRangeSelectEl.disabled = !CARD_SYSTEM_ENABLED || !state.debugEnabled || debugInputLocked || hasReelRng;
-      reelRngInputEl.disabled = !state.debugEnabled || debugInputLocked || hasCardRange;
-      setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasReelRng);
+      const hasRngCode = rngInputEl.value.trim() !== "";
+      cardRangeSelectEl.disabled = !CARD_SYSTEM_ENABLED || !state.debugEnabled || debugInputLocked;
+      rngInputEl.disabled = !state.debugEnabled || debugInputLocked;
+      setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasRngCode);
     }
 
     function renderStepSnapshot(index) {
@@ -3728,21 +3642,18 @@
       let retryCount = 0;
       let retryLimitExceeded = false;
       let retryFailReason = null;
-      const forcedReels = debugOverrides?.reels || null;
-      const hasForcedReels = Array.isArray(forcedReels) && forcedReels.some((value) => value !== null && value !== undefined);
-      const forcedTableRng = debugOverrides?.table_rng ?? null;
       const forcedCardRange = debugOverrides?.card_range || null;
       const hasForcedCard = CARD_SYSTEM_ENABLED && Boolean(forcedCardRange);
       const bgCardSystemInfo = hasForcedCard
         ? forcedCardRange
-        : !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy || hasForcedReels
+        : !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy
           ? null
           : pickCardSystemEntry("weight_bg", betMode);
       const runSpinCardSystemInfo = hasForcedCard ? null : bgCardSystemInfo;
       const fgCardSystemInfo = !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy || hasForcedCard
         ? null
         : pickCardSystemEntry("weight_fg", betMode);
-      const bfCardSystemInfo = CARD_SYSTEM_ENABLED && betMode === Box.mode_featurebuy && !hasForcedReels
+      const bfCardSystemInfo = CARD_SYSTEM_ENABLED && betMode === Box.mode_featurebuy
         ? pickCardSystemEntry("weight_bf", betMode)
         : null;
       const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
@@ -3758,9 +3669,8 @@
         if (bgCardSystemInfo?.card_type === "free_game") {
           let bgRerollCount = 0;
           while (true) {
-            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels, forcedTableRng);
+            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo);
             if (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
-              if (hasForcedReels) throw new Error("指定 Reel Stop 與 Card FG 區間衝突");
               bgRerollCount += 1;
               if (bgRerollCount >= retryLimit) {
                 markRetryLimitExceeded("bg_free_game", bgRerollCount);
@@ -3818,11 +3728,10 @@
         } else {
           let rerollCount = 0;
           while (true) {
-            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo, forcedReels, forcedTableRng);
+            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo);
             const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
 
             if (forceFg && !triggered) {
-              if (hasForcedReels) throw new Error("指定 Reel Stop 無法觸發 Force FG");
               rerollCount += 1;
               if (rerollCount > 5000) {
                 throw new Error("Force FG 重抽超過上限，請檢查 BG 觸發條件");
@@ -3832,7 +3741,6 @@
 
             if (!forceFg && bgCardSystemInfo) {
               if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
-                if (hasForcedReels) throw new Error("指定 Reel Stop 與 Card BG Range 衝突");
                 rerollCount += 1;
                 if (rerollCount >= retryLimit) {
                   markRetryLimitExceeded("bg_range", rerollCount);
@@ -3879,15 +3787,14 @@
       } else {
         let roundRetryCount = 0;
         while (true) {
-          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels, forcedTableRng);
+          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
           let triggerRetryCount = 0;
           while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
-            if (hasForcedReels) throw new Error("指定 Reel Stop 無法觸發 Buy Feature");
             triggerRetryCount += 1;
             if (triggerRetryCount > 5000) {
               throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
             }
-            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo, forcedReels, forcedTableRng);
+            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
           }
 
           const awarded = FG_TRIGGER_BASE_SPINS + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
@@ -3975,8 +3882,6 @@
         : state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
       const snapshot = {};
       SIMULATION_STATE_KEYS.forEach((key) => { snapshot[key] = state[key]; });
-      const previousRandom = replayRandom;
-      replayRandom = null;
       state.extraBetEnabled = betMode === Box.mode_extrabet;
       state.balance = Number.MAX_SAFE_INTEGER / 4;
       try {
@@ -3995,7 +3900,6 @@
           fgCascades: fgSpins.map((spin) => spin.board_steps.length)
         };
       } finally {
-        replayRandom = previousRandom;
         SIMULATION_STATE_KEYS.forEach((key) => { state[key] = snapshot[key]; });
       }
     };
@@ -4377,33 +4281,37 @@
     async function doSpin(betMode) {
       if (state.isBusy) return;
       let spinFailed = false;
-      let debugOverrides = null;
+      let rngCode = null;
+      let cardIndex = null;
+      let forceFgThisSpin = false;
       if (!state.pendingRound) {
         try {
-          debugOverrides = collectDebugOverrides();
+          rngCode = window.demogameRng.takeInput();   // 讀 #rngInput（填了就沿用，按 Reset 才清空）；格式錯誤會丟 Error
         } catch (error) {
           writeMessage(error.message, "error");
+          updateDebugControls();
           return;
         }
-      }
-      const forceFgThisSpin = state.forceFg
-        && !state.pendingRound
-        && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
-      if (forceFgThisSpin) {
-        state.forceFg = false;
-        forceFgInputEl.checked = false;
-        appendLiveLog("Force FG applied to this spin", "mode");
-      }
-      if (debugOverrides) {
-        const reelText = debugOverrides.reels
-          .map((value, index) => value === null ? null : `R${index + 1}=${value}`)
-          .filter(Boolean)
-          .join(", ");
-        const tableText = debugOverrides.table_rng === null || debugOverrides.table_rng === undefined
-          ? ""
-          : `Table RNG=${debugOverrides.table_rng}`;
-        const cardText = debugOverrides.card_range ? `BG Range ${debugOverrides.card_range.label}` : "";
-        appendLiveLog(`Set RNG replay | ${[cardText, reelText, tableText].filter(Boolean).join(" | ")}`, "mode");
+        if (rngCode) {
+          // 照碼重跑：模式、Card System、Profile、Card Range、Force FG 只套用這一局，不動畫面選單
+          const opts = parseRngOpts(rngCode.opts);
+          betMode = RNG_BET_MODE_OF[rngCode.mode] ?? betMode;
+          cardIndex = opts.rangeIndex;
+          forceFgThisSpin = opts.forceFg && betMode !== Box.mode_featurebuy;
+          appendLiveLog(`RNG replay | ${rngCode.mode} | Card ${rngCode.card ? "on" : "off"}${opts.rangeIndex !== null ? ` | Card BG Range #${opts.rangeIndex}` : ""}${forceFgThisSpin ? " | Force FG" : ""}`, "mode");
+          if (rngCode.config !== rngConfigLabel()) appendLiveLog(`RNG Config ${rngCode.config} ≠ ${rngConfigLabel()}`, "error");
+        } else {
+          cardIndex = selectedCardRangeIndex();
+          forceFgThisSpin = state.forceFg && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
+          if (forceFgThisSpin) {
+            state.forceFg = false;
+            forceFgInputEl.checked = false;
+            appendLiveLog("Force FG applied to this spin", "mode");
+          }
+          if (cardIndex !== null && CARD_SYSTEM_ENABLED && betMode !== Box.mode_featurebuy) {
+            appendLiveLog(`Set RNG | Card BG Range ${cardRangeSelectEl.selectedOptions[0]?.textContent || cardIndex}`, "mode");
+          }
+        }
       }
       state.isBusy = true;
       updateSpinButtonState();
@@ -4425,7 +4333,8 @@
           }
         } else {
           writeMessage("Reels spinning...");
-          const round = runRoundWithReplay(betMode, forceFgThisSpin, debugOverrides);   // 先算好結果，滾輪才能逐輪停在最終符號
+          const { round, rngText } = runSeededRound(betMode, forceFgThisSpin, cardIndex, rngCode);   // 先算好整局結果（含 FG），滾輪才能逐輪停在最終符號
+          appendLiveLog(`RNG ${rngText}`, "mode");   // 共用模組讓這行可點：複製並填入 #rngInput
           await animateReels(round.spins[0].board_init);
           syncDisplayForRoundStart(round);
           renderAll(round, round.spins[0]);
@@ -4600,21 +4509,13 @@
     });
 
     cardRangeSelectEl.addEventListener("change", () => {
-      if (cardRangeSelectEl.value !== "") reelRngInputEl.value = "";
       updateDebugControls();
       writeMessage(cardRangeSelectEl.value === ""
         ? "Card BG Range set to Auto"
         : `Card BG Range selected | ${cardRangeSelectEl.selectedOptions[0].textContent}`);
     });
 
-    reelRngInputEl.addEventListener("input", () => {
-      if (reelRngInputEl.value.trim() !== "") cardRangeSelectEl.value = "";
-      updateDebugControls();
-    });
-
-    reelRngInputEl.addEventListener("change", () => {
-      if (reelRngInputEl.value.trim() !== "") writeMessage(`Reel Stop / Table RNG set | ${reelRngInputEl.value.trim()}`);
-    });
+    rngInputEl.addEventListener("input", () => updateDebugControls());
 
     setRngResetBtn.addEventListener("click", () => resetSetRng(true));
 

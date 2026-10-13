@@ -830,6 +830,77 @@
 
   removeForceFg();
 
+  // ===== 可重現 RNG（共用）=====
+  // 每局用一組 32-bit 種子（mulberry32）驅動所有數學抽樣；Log 印一行「RNG <碼>」，點一下複製並填入 Set RNG 的 #rngInput，
+  // 下一局 Spin 照碼重跑出同一局（BG、消除、FG 全部相同）。
+  // RNG 碼：<Config-Profile>/<NB|EB|BF|SF>/<Card on|off>/<遊戲選項|->/<種子 8 碼 hex>，例 92A-Oldhand/NB/on/-/8f3a21b0。
+  // 遊戲用法：
+  //   const code = demogameRng.takeInput();            // 讀 #rngInput（不清空，按重置才清），格式錯誤會丟 Error；沒填回 null
+  //   const seed = code ? code.seed : demogameRng.newSeed();
+  //   const result = demogameRng.run(seed, () => 算出整局結果（BG＋FG，同步）);   // 期間 Math.random 換成種子序列
+  //   appendLog(`RNG ${demogameRng.format({ config, mode, card, opts, seed })}`);
+  // 表演用的亂數不要放進 run()；整局結果必須在 run() 內一次算完。
+  function seededRandom(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  window.demogameRng = {
+    newSeed: () => (crypto.getRandomValues(new Uint32Array(1))[0] >>> 0),
+    seeded: seededRandom,
+    run(seed, fn) {
+      const original = Math.random;
+      Math.random = seededRandom(seed);
+      try { return fn(); } finally { Math.random = original; }
+    },
+    format({ config = "", mode = "NB", card = false, opts = "", seed = 0 } = {}) {
+      return [String(config).replace(/\s+/g, "") || "-", mode, card ? "on" : "off", opts || "-", (seed >>> 0).toString(16).padStart(8, "0")].join("/");
+    },
+    parse(text) {
+      const parts = String(text || "").trim().replace(/^RNG\s+/i, "").split("/");
+      if (parts.length !== 5 || !/^(NB|EB|BF|SF)$/.test(parts[1]) || !/^(on|off)$/.test(parts[2]) || !/^[0-9a-f]{8}$/i.test(parts[4])) return null;
+      return { config: parts[0], mode: parts[1], card: parts[2] === "on", opts: parts[3] === "-" ? "" : parts[3], seed: parseInt(parts[4], 16) >>> 0 };
+    },
+    takeInput() {
+      const input = document.getElementById("rngInput");
+      const text = input?.value.trim() || "";
+      if (!text) return null;   // 填了就一直沿用，按重置才清空
+      const code = this.parse(text);
+      if (!code) throw new Error(isZhText() ? "RNG 格式錯誤：Config-Profile/NB|EB|BF|SF/on|off/選項|-/8 碼種子" : "Invalid RNG code: Config-Profile/NB|EB|BF|SF/on|off/opts|-/8-hex seed");
+      return code;
+    }
+  };
+  function isZhText() { return /^zh/i.test(document.getElementById("languageSelect")?.value || ""); }
+
+  // Log 裡的「RNG <碼>」行：點一下複製並填入 #rngInput
+  function decorateRngLines(root) {
+    root?.querySelectorAll?.(".live-log-line, div").forEach((line) => {
+      if (line.dataset.rngReady || line.children.length) return;
+      const match = /RNG\s+(\S+\/(?:NB|EB|BF|SF)\/(?:on|off)\/\S+\/[0-9a-f]{8})\s*$/i.exec(line.textContent);
+      if (!match) return;
+      line.dataset.rngReady = "1";
+      line.classList.add("demogame-rng-line");
+      line.title = "Click: copy + fill RNG";
+      line.addEventListener("click", () => {
+        navigator.clipboard?.writeText(match[1]).catch(() => {});
+        const input = document.getElementById("rngInput");
+        if (input) { input.value = match[1]; input.dispatchEvent(new Event("input", { bubbles: true })); }
+      });
+    });
+  }
+  const liveLog = document.getElementById("liveLogBody");
+  if (liveLog) {
+    new MutationObserver(() => decorateRngLines(liveLog)).observe(liveLog, { childList: true });
+    const style = document.createElement("style");
+    style.textContent = ".demogame-rng-line{cursor:pointer;color:#f0c060!important}.demogame-rng-line:hover{text-decoration:underline}";
+    document.head.appendChild(style);
+  }
+
   // 共用區語言切換：Language 選繁中時，把共用區（Player／Play／Bet Mode／Stats／Simulation／Set RNG／
   // Reel RNG／Log／Setting）仍是英文的固定標籤換成中文；切回 English 時還原。
   // 只比對「整段文字完全相同」的標籤，不碰盤面、Help、Log 內容與修改紀錄內文（By Game 由各遊戲自行翻譯）。

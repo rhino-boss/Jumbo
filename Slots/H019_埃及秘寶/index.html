@@ -886,52 +886,6 @@
       display: none;
     }
 
-    .set-rng-controls {
-      display: grid;
-      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
-      align-items: end;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .debug-rng-field {
-      min-width: 0;
-      display: grid;
-      gap: 5px;
-      color: var(--sub);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-    }
-
-    .debug-rng-field input,
-    .debug-rng-field select {
-      width: 100%;
-      min-width: 0;
-      height: 34px;
-      padding: 6px 8px;
-      border: 1px solid var(--surface-2);
-      border-radius: 5px;
-      color: var(--text);
-      background: var(--surface);
-      font: inherit;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: none;
-    }
-
-    .debug-rng-field input::placeholder {
-      color: var(--sub);
-      opacity: 0.7;
-    }
-
-    #setRngResetBtn {
-      width: 82px;
-      min-width: 82px;
-      align-self: end;
-    }
-
     .debug-check {
       display: inline-flex;
       align-items: center;
@@ -1126,10 +1080,6 @@
       align-items: center;
       gap: 6px;
       min-height: 34px;
-    }
-
-    .zone-body.set-rng-controls {
-      display: grid;
     }
 
     .action-zone .play-main-controls {
@@ -1677,10 +1627,6 @@
         flex-wrap: wrap;
       }
 
-      .set-rng-controls {
-        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
-      }
-
       #grid-panel {
         overflow-x: auto;
       }
@@ -1748,17 +1694,6 @@
 
       .setting-body .config-control {
         width: auto;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .set-rng-controls {
-        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
-      }
-
-      #controls #setRngResetBtn {
-        grid-column: 1 / -1;
-        width: 100%;
       }
     }
   </style>
@@ -1940,9 +1875,9 @@
               <option value="">Auto</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="reelRngInput">
-            Reel RNG
-              <input id="reelRngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5 6">
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92/NB/off/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -1995,6 +1930,9 @@
           <li>本頁無 Card System（Off），自然 RTP 遠高於目標（NB 約 4,600%～6,600%、Buy 約 3,000%、Super 約 700%），屬 Config 依賴卡片系統、Demo 未實作，非本次修改造成。未修改 XLSX／Config 數學參數。（10/13）</li>
           <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
           <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+          <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／RNG／重置），移除本遊戲覆蓋共用版面的 <code>.set-rng-controls</code>／<code>.debug-rng-field</code> CSS；重置同時清空 RNG 欄。（10/13）</li>
+          <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG 含再觸發相同）；BG＋整段 FG 改為開局在 <code>demogameRng.run()</code> 內一次算完、之後逐轉播放；碼的模式（NB／BF／SF）只套用該局，Config 不同時 Log 警告；本遊戲無卡片系統，card 固定 off，opts 為 <code>-</code>（Force FG 時為 <code>fg</code>）；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
+          <li>驗證：inline script 皆過 <code>node --check</code>；NB 一般局 4 局、Buy Feature 1 局、Super Feature 1 局（含整段 FG）重跑，Log 結果行與最終盤面完全相同；Set RNG 三欄同列等寬；Simulation 10,000 局正常；Console 無錯誤。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -2307,7 +2245,7 @@
     forceFg: byId("forceFgInput"),
     previous: byId("previousStepBtn"),
     next: byId("nextStepBtn"),
-    rngInput: byId("reelRngInput"),
+    rngInput: byId("rngInput"),
     cardRange: byId("cardRangeSelect"),
     rngReset: byId("setRngResetBtn"),
     rngList: byId("rngList"),
@@ -2400,17 +2338,7 @@
     return tableIndex(profile.base_reel_names[selected]);
   }
 
-  function parseForcedStops() {
-    const raw = el.rngInput.value.trim();
-    if (!raw) return null;
-    const values = raw.split(/\s+/).map(Number);
-    if (values.length !== Box.reel_num || values.some((value) => !Number.isInteger(value) || value < 0)) {
-      throw new Error(`Reel RNG 請輸入 ${Box.reel_num} 個非負整數，並以空格分隔`);
-    }
-    return values;
-  }
-
-  function generateBoard(tableId, forcedStops = null) {
+  function generateBoard(tableId) {
     const strip = Box.strips[tableId];
     const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
     const fromWild = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(false));
@@ -2420,7 +2348,7 @@
     for (let reel = 0; reel < Box.reel_num; reel += 1) {
       const length = strip.reel_lengths[reel];
       const weights = strip.weights.slice(0, length).map((row) => row[reel]);
-      const start = forcedStops ? forcedStops[reel] % length : pickWeighted(weights);
+      const start = pickWeighted(weights);
       starts.push(start);
       for (let row = 0; row < Box.window_size; row += 1) {
         board[row][reel] = strip.symbols[(start + row) % length][reel];
@@ -2549,8 +2477,8 @@
     return (Box.pay_table[C1][count - 4] || 0) * betMultiplier();
   }
 
-  function playSpin(tableId, scene, carriedMultiplier = 0, forcedStops = null) {
-    const spin = generateBoard(tableId, forcedStops);
+  function playSpin(tableId, scene, carriedMultiplier = 0) {
+    const spin = generateBoard(tableId);
     const c2Mode = chooseC2Mode(scene);
     initializeC2Values(spin, scene, c2Mode);
     const initialBoard = clone(spin.board);
@@ -2781,7 +2709,7 @@
     const multiplier = inFg ? state.pendingFg?.carry || 0 : spin?.effectiveMultiplier || 0;
     setText(el.multiplier, `x${multiplier || 1}`);
     el.fgPill.classList.toggle("hidden", !state.pendingFg);
-    if (state.pendingFg) setText(el.fgLeft, `${state.pendingFg.queue.length}/${state.pendingFg.total}`);
+    if (state.pendingFg) setText(el.fgLeft, `${state.pendingFg.total - state.pendingFg.played}/${state.pendingFg.total}`);
     setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
   }
 
@@ -2935,33 +2863,63 @@
     state.lastSpin = spin;
   }
 
-  function startFreeGame() {
+  // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+  // 每局開頭取種子，BG（含消除）＋整段 FG（含再觸發）在 demogameRng.run() 內一次算完，之後只播放；
+  // Log 印「RNG <碼>」，點一下複製並填入 #rngInput，按 Spin 重跑同一局。opts：fg＝Force FG（目前共用已停用），其餘為 -。
+  const RNG_MODE = { [MODE_NORMAL]: "NB", [MODE_BUY]: "BF", [MODE_SUPER]: "SF" };
+  const RNG_MODE_BACK = { NB: MODE_NORMAL, BF: MODE_BUY, SF: MODE_SUPER };
+  const rngConfigLabel = () => (el.config.selectedOptions[0]?.textContent || "").replace(/\s+/g, "");
+
+  function computeFreeGame() {
     const queue = buildFreeSchedule("initial");
-    state.pendingFg = { queue, total: queue.length, played: 0, carry: 0, win: 0 };
+    const initial = queue.length;
+    let total = initial;
+    let carry = 0;
+    const spins = [];
+    while (queue.length) {
+      const spin = playSpin(queue.shift(), "FG", carry);
+      carry += spin.c2.total;
+      let retrigger = 0;
+      if (spin.scatterCount >= 3 && total < Box.max_free_spins) {
+        const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - total);
+        queue.push(...extra);
+        total += extra.length;
+        retrigger = extra.length;
+      }
+      spins.push({ spin, carry, retrigger });
+    }
+    return { initial, spins };
+  }
+
+  function computeRound(forceFeature) {
+    const base = forceFeature ? forcedTriggerSpin() : playSpin(chooseBaseTable(), "BG", 0);
+    const triggered = base.scatterCount >= 4 || state.selectedMode !== MODE_NORMAL;
+    return { base, triggered, fg: triggered ? computeFreeGame() : null };
+  }
+
+  function startFreeGame(fgResult) {
+    state.pendingFg = { spins: fgResult.spins.slice(), total: fgResult.initial, played: 0, carry: 0, win: 0 };
     state.fgTriggerCount += 1;
-    appendLog(tr(`Free Game triggered | ${queue.length} spins`, `觸發免費遊戲 | ${queue.length} 次`), "result");
+    appendLog(tr(`Free Game triggered | ${fgResult.initial} spins`, `觸發免費遊戲 | ${fgResult.initial} 次`), "result");
     updateFeatureBar();
   }
 
   async function playFreeSpin() {
     const fg = state.pendingFg;
-    if (!fg || !fg.queue.length) return finishFreeGame();
-    const tableId = fg.queue.shift();
-    const spin = playSpin(tableId, "FG", fg.carry);
+    if (!fg || !fg.spins.length) return finishFreeGame();
+    const { spin, carry, retrigger } = fg.spins.shift();
     fg.played += 1;
-    fg.carry += spin.c2.total;
+    fg.carry = carry;
     fg.win += toMoney(spin.finalPay);
     state.maxMultiplier = Math.max(state.maxMultiplier, fg.carry);
 
-    if (spin.scatterCount >= 3 && fg.total < Box.max_free_spins) {
-      const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - fg.total);
-      fg.queue.push(...extra);
-      fg.total += extra.length;
-      appendLog(tr(`FG Retrigger | +${extra.length} spins`, `FG 再觸發 | +${extra.length} 次`), "result");
+    if (retrigger) {
+      fg.total += retrigger;
+      appendLog(tr(`FG Retrigger | +${retrigger} spins`, `FG 再觸發 | +${retrigger} 次`), "result");
     }
     await playback(spin);
     updateStats();
-    if (!fg.queue.length) finishFreeGame();
+    if (!fg.spins.length) finishFreeGame();
   }
 
   function finishFreeGame() {
@@ -2980,8 +2938,8 @@
     updateStats();
   }
 
-  function forcedTriggerSpin(forcedStops = null) {
-    return playSpin(tableIndex("BF_Symbol"), "BG", 0, forcedStops);
+  function forcedTriggerSpin() {
+    return playSpin(tableIndex("BF_Symbol"), "BG", 0);
   }
 
   async function doSpin() {
@@ -2994,6 +2952,18 @@
         return;
       }
 
+      const code = window.demogameRng.takeInput();   // 讀並清空 #rngInput；格式錯誤丟 Error
+      const seed = code ? code.seed : window.demogameRng.newSeed();
+      if (code) {
+        // 依碼暫時套用押注模式（只作用本局；FG 結束後照常回 Normal Bet，畫面選項不變）
+        if (!(code.mode in RNG_MODE_BACK)) throw new Error(tr(`RNG mode ${code.mode} is not supported in this game`, `本遊戲沒有 ${code.mode} 模式`));
+        state.selectedMode = RNG_MODE_BACK[code.mode];
+        if (code.card) appendLog(tr("RNG: this game has no Card System, card flag ignored", "RNG：本遊戲無卡片系統，忽略 card 設定"), "info");
+        if (code.config !== rngConfigLabel()) appendLog(tr(`RNG warning: code config ${code.config} ≠ current ${rngConfigLabel()}`, `RNG 警告：碼的 Config ${code.config} 與目前 ${rngConfigLabel()} 不同`), "error");
+      }
+      const forceFeature = (code ? code.opts.split(",").includes("fg") : el.forceFg.checked) || state.selectedMode !== MODE_NORMAL;
+      const optsToken = forceFeature && state.selectedMode === MODE_NORMAL ? "fg" : "";
+
       const wager = wagerMoney();
       if (state.balance < wager) throw new Error(tr("Insufficient balance", "餘額不足"));
       state.balance -= wager;
@@ -3002,10 +2972,10 @@
       state.lastWin = 0;
       updateStats();
 
-      const forcedStops = parseForcedStops();
-      const forceFeature = el.forceFg.checked || state.selectedMode !== MODE_NORMAL;
-      const tableId = forceFeature ? tableIndex("BF_Symbol") : chooseBaseTable();
-      const spin = forceFeature ? forcedTriggerSpin(forcedStops) : playSpin(tableId, "BG", 0, forcedStops);
+      const round = window.demogameRng.run(seed, () => computeRound(forceFeature));   // 整局（BG＋FG）一次算完，之後只播放
+      const rngCode = window.demogameRng.format({ config: rngConfigLabel(), mode: RNG_MODE[state.selectedMode], card: false, opts: optsToken, seed });
+      appendLog(`Round ${state.roundCount}${code ? " (replay)" : ""} | RNG ${rngCode}`, "mode");   // 共用模組讓這行可點：複製並填入 #rngInput
+      const spin = round.base;
       el.forceFg.checked = false;
       await playback(spin);
 
@@ -3013,9 +2983,9 @@
       state.balance += state.lastWin;
       state.totalWin += state.lastWin;
       state.maxMultiplier = Math.max(state.maxMultiplier, spin.c2.total);
-      const triggered = spin.scatterCount >= 4 || state.selectedMode !== MODE_NORMAL;
+      const triggered = round.triggered;
       if (triggered) {
-        startFreeGame();
+        startFreeGame(round.fg);
         writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
@@ -3301,8 +3271,9 @@
   el.rngInput.addEventListener("input", updateControls);
   el.rngReset.addEventListener("click", () => {
     el.rngInput.value = "";
+    el.cardRange.value = "";
     updateControls();
-    writeMessage(tr("Reel RNG reset", "輪帶 RNG 已重置"));
+    writeMessage(tr("Set RNG reset", "指定 RNG 已重置"));
   });
   el.clearLog.addEventListener("click", () => { el.liveLog.innerHTML = ""; });
   el.reset.addEventListener("click", resetSession);

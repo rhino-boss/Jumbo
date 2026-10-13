@@ -130,13 +130,17 @@ body.slot-simulator .zone-body {
   min-height: 34px;
 }
 
+/* Set RNG：所有欄位排成一列、等寬，Reset 固定寬度靠右 */
 body.slot-simulator .set-rng-controls {
-  display: grid;
-  grid-template-columns: minmax(112px, .8fr) minmax(150px, 1.35fr) 82px;
-  align-items: end;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
   gap: 10px;
   width: 100%;
 }
+body.slot-simulator .set-rng-controls > label,
+body.slot-simulator .set-rng-controls > .debug-rng-field { flex: 1 1 0; min-width: 0; }
+body.slot-simulator .set-rng-controls > button { flex: 0 0 82px; }
 
 body.slot-simulator .debug-rng-field {
   min-width: 0;
@@ -891,7 +895,8 @@ body.slot-simulator #helpContent table.paytable th { color: #77c7ff; font-weight
   body.slot-simulator .speed-control { flex: 1 1 180px; width: auto; grid-template-columns: auto minmax(90px, 1fr) auto; }
   body.slot-simulator .speed-control input { width: 100%; }
   body.slot-simulator .bet-stepper { width: 100%; }
-  body.slot-simulator .set-rng-controls { grid-template-columns: minmax(120px, .8fr) minmax(0, 1.4fr) 82px; }
+  body.slot-simulator .set-rng-controls { flex-wrap: wrap; }
+  body.slot-simulator .set-rng-controls > label { flex: 1 1 140px; }
   body.slot-simulator #settings-wrap > .setting-body,
   body.slot-simulator .setting-toggle-group,
   body.slot-simulator .setting-control-group { flex-wrap: wrap; }

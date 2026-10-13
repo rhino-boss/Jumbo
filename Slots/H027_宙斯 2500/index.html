@@ -284,10 +284,7 @@
               <option value="">Auto</option>
             </select>
           </label>
-          <label class="debug-rng-field" for="rngInput">
-            Reel RNG
-              <input id="rngInput" type="text" inputmode="numeric" autocomplete="off" placeholder="1 2 3 4 5 6">
-          </label>
+          <label class="debug-rng-field" for="rngInput">RNG<input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0"></label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
       </div>
@@ -332,6 +329,9 @@
           <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
           <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
           <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告_宙斯 2500.html</code>。（10/13）</li>
+          <li>Set RNG 統一：欄位一列等寬（卡片 BG／BF 區間／RNG／重置）。（10/13）</li>
+          <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、卡片重骰相同）；碼內的模式（NB／EB／BF）、Card on／off 與 Card Range（<code>r&lt;序號&gt;</code>）只套用於該局，不改畫面選項，Config 不同時 Log 警告；原 Reel RNG 停輪欄改為 RNG 碼。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>驗證：Card On NB（含連消、指定 Card Range r3）、Card Off NB／EB、BF（Card On／Off，各 15 轉以上 FG）重跑，Log 結果行、最終盤面與 Spin 結果逐字相同；Card On 碼在畫面 Card Off 時重跑仍相同；Set RNG 三欄同列、兩欄等寬；Simulation 3,000 局正常、Console 無錯誤。（10/13）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -656,7 +656,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     pendingFg: null,
     snapshots: [],
     snapshotIndex: -1,
-    lastSpin: null
+    lastSpin: null,
+    restoreMode: null
   };
 
   const byId = (id) => document.getElementById(id);
@@ -965,17 +966,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return tableIndex(profile.base_reel_names[selected]);
   }
 
-  function parseForcedStops() {
-    const raw = el.rngInput.value.trim();
-    if (!raw) return null;
-    const values = raw.split(/\s+/).map(Number);
-    if (values.length !== Box.reel_num || values.some((value) => !Number.isInteger(value) || value < 0)) {
-      throw new Error(`Reel RNG 需要 ${Box.reel_num} 個非負整數；實際上限依本局選中的 Table 驗證。`);
-    }
-    return values;
-  }
-
-  function generateBoard(tableId, forcedStops = null) {
+  function generateBoard(tableId) {
     const strip = Box.strips[tableId];
     const tableName = Box.strip_names[tableId];
     const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
@@ -987,7 +978,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     for (let reel = 0; reel < Box.reel_num; reel += 1) {
       const length = strip.reel_lengths[reel];
       const weights = strip.weights.slice(0, length).map((row) => row[reel]);
-      const selected = pickWeightedDetail(weights, forcedStops?.[reel] ?? null);
+      const selected = pickWeightedDetail(weights);
       const start = selected.index;
       starts.push(start);
       rngs.push({ value: selected.rng, total: selected.total });
@@ -1101,8 +1092,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return (PAY_TABLE_BY_ID[C1]?.[count - FG_TRIGGER_COUNT] || 0) * betMultiplier();
   }
 
-  function playSpin(tableId, scene, carriedMultiplier = 0, forcedStops = null) {
-    const spin = generateBoard(tableId, forcedStops);
+  function playSpin(tableId, scene, carriedMultiplier = 0) {
+    const spin = generateBoard(tableId);
     initializeMultiplierValues(spin);
     const initialBoard = clone(spin.board);
     const initialMultiplierValues = clone(spin.multiplierValues);
@@ -1364,16 +1355,16 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const wagerLocked = state.busy || Boolean(state.pendingFg);
     const cardEnabled = cardSystemActive();
     const forcedCard = el.cardRange.value !== "";
-    const forcedReels = el.rngInput.value.trim() !== "";
+    const rngCodeSet = el.rngInput.value.trim() !== "";
     el.normal.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_NORMAL);
     el.buy.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_EXTRA);
     el.super.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_BUY);
     el.betMinus.disabled = wagerLocked;
     el.betPlus.disabled = wagerLocked;
     el.betButton.disabled = wagerLocked;
-    el.cardRange.disabled = wagerLocked || !cardEnabled || forcedReels;
-    el.rngInput.disabled = wagerLocked || (cardEnabled && forcedCard);
-    el.rngReset.disabled = wagerLocked || (!forcedCard && !forcedReels);
+    el.cardRange.disabled = wagerLocked || !cardEnabled;
+    el.rngInput.disabled = wagerLocked;
+    el.rngReset.disabled = wagerLocked || (!forcedCard && !rngCodeSet);
     if (el.cardSystem) el.cardSystem.disabled = wagerLocked || !Boolean(Box.card_system?.enabled);
     if (el.version) el.version.disabled = wagerLocked;
     if (el.config) el.config.disabled = wagerLocked;
@@ -1481,7 +1472,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
     if (state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 一局含 FG
-    state.selectedMode = MODE_NORMAL;
+    state.selectedMode = state.restoreMode ?? MODE_NORMAL;   // RNG 重跑局：還原按 Spin 前的押注模式
+    state.restoreMode = null;
     refreshCardRangeOptions();
     document.body.classList.remove("fg-mode");
     updateFeatureBar();
@@ -1489,16 +1481,16 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     updateStats();
   }
 
-  function forcedTriggerSpin(forcedStops = null) {
+  function forcedTriggerSpin() {
     const tableId = chooseBaseTable();
-    return playSpin(tableId, "BG", 0, forcedStops);
+    return playSpin(tableId, "BG", 0);
   }
 
-  function regularSpin(forcedStops = null) {
-    if (state.selectedMode !== MODE_EXTRA) return playSpin(chooseBaseTable(), "BG", 0, forcedStops);
+  function regularSpin() {
+    if (state.selectedMode !== MODE_EXTRA) return playSpin(chooseBaseTable(), "BG", 0);
     const candidates = [];
     for (let attempt = 0; attempt < Box.extra_fg_probability_multiplier; attempt += 1) {
-      const spin = playSpin(chooseBaseTable(), "BG", 0, attempt === 0 ? forcedStops : null);
+      const spin = playSpin(chooseBaseTable(), "BG", 0);
       candidates.push(spin);
       if (spin.scatterCount >= FG_TRIGGER_COUNT) return spin;
     }
@@ -1509,7 +1501,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const mode = cardModeData();
     return Boolean(Box.card_system?.enabled)
       && mode?.enabled !== false
-      && window.DEMOGAME_CARD_SYSTEM_ENABLED !== false;
+      && (replay ? replay.card : window.DEMOGAME_CARD_SYSTEM_ENABLED !== false);
   }
 
   function cardModeData() {
@@ -1526,7 +1518,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   function selectedDebugCardIndex(cards) {
-    const raw = el.cardRange?.value;
+    const raw = replay ? replay.range : el.cardRange?.value;
     if (raw == null || raw === "") return null;
     const index = Number(raw);
     return Number.isInteger(index) && Number(cards?.[index]?.weight) > 0 ? index : null;
@@ -1595,18 +1587,18 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return { spins, total: spins.length, carry, winCredits };
   }
 
-  function naturalRound(forceFeature = false, forcedStops = null) {
+  function naturalRound(forceFeature = false) {
     const buy = state.selectedMode === MODE_BUY;
-    const base = buy || forceFeature ? forcedTriggerSpin(forcedStops) : regularSpin(forcedStops);
+    const base = buy || forceFeature ? forcedTriggerSpin() : regularSpin();
     const triggered = buy || base.scatterCount >= FG_TRIGGER_COUNT;
     return { base, session: triggered ? generateFreeSession() : null };
   }
 
-  function cardRound(forceFeature = false, forcedStops = null) {
+  function cardRound(forceFeature = false) {
     const modeData = cardModeData();
     const limit = Number(Box.card_system?.retry_limit || 10000);
-    if (!modeData || forceFeature || forcedStops) {
-      const natural = naturalRound(forceFeature, forcedStops);
+    if (!modeData || forceFeature) {
+      const natural = naturalRound(forceFeature);
       return { ...natural, card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
     }
 
@@ -1619,7 +1611,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const triggerCap = bgTriggerCap(bgCards);
     let last = null;
     for (let retry = 0; retry < limit; retry += 1) {
-      const result = naturalRound(false, null);
+      const result = naturalRound(false);
       last = result;
       if (buy) {
         const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
@@ -1638,10 +1630,32 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return { ...last, card: selectedCard, fgCard: selectedFgCard, retries: limit, retryLimitExceeded: 1 };
   }
 
-  function generateRound(forceFeature = false, forcedStops = null) {
+  function generateRound(forceFeature = false) {
     return cardSystemActive()
-      ? cardRound(forceFeature, forcedStops)
-      : { ...naturalRound(forceFeature, forcedStops), card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+      ? cardRound(forceFeature)
+      : { ...naturalRound(forceFeature), card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+  }
+
+  // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+  // 每局開始讀 RNG 碼（沒填就新抽種子），整局（BG＋消除＋整段 FG＋卡片重骰）在 demogameRng.run() 內一次算完，
+  // 之後只做播放；表演用亂數不在 run() 內。opts：r<卡片序號>＝指定 Card Range（BG 卡或 BF 卡依模式）。
+  let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range（只作用於本局計算）
+  const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
+  function configLabel() {
+    return (el.combinedConfig?.selectedOptions?.[0]?.textContent || H027_CONFIG_CODE).trim().replace(/\s+/g, "");
+  }
+  function takeRngCode() {
+    const taken = window.demogameRng.takeInput();   // 格式錯誤會丟 Error
+    if (!taken) return null;
+    const modeValue = Object.keys(RNG_MODE_TOKEN).map(Number).find((mode) => RNG_MODE_TOKEN[mode] === taken.mode);
+    if (modeValue === undefined || !SUPPORTED_BET_MODES.has(modeValue)) throw new Error(tr(`RNG mode ${taken.mode} not supported`, `RNG 模式 ${taken.mode} 本作不支援`));
+    if (taken.opts && !/^r\d+$/.test(taken.opts)) throw new Error(tr(`RNG opts ${taken.opts} not supported`, `RNG 選項 ${taken.opts} 本作不支援`));
+    return {
+      ...taken,
+      modeValue,
+      range: taken.opts ? taken.opts.slice(1) : "",
+      profile: /newbie/i.test(taken.config) ? "newbie" : "oldhand"   // 本作 Demo 無 Profile 選單，僅保留欄位
+    };
   }
 
   // Pure-math adapter for demogame_common's N-round simulator. It uses the
@@ -1683,6 +1697,13 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         return;
       }
 
+      const code = takeRngCode();
+      if (code) {
+        if (code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        state.restoreMode = state.selectedMode === MODE_BUY ? MODE_NORMAL : state.selectedMode;   // 本局結束後還原
+        state.selectedMode = code.modeValue;
+        replay = code;
+      }
       const wager = wagerMoney();
       if (state.balance < wager) throw new Error(tr("Insufficient balance", "餘額不足"));
       state.balance -= wager;
@@ -1691,12 +1712,22 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       state.lastWin = 0;
       updateStats();
 
-      const forcedStops = parseForcedStops();
       const forceFeature = el.forceFg.checked;
-      const result = generateRound(forceFeature, forcedStops);
+      const cardOn = cardSystemActive();
+      const rangeValue = cardOn ? String(replay ? replay.range : (el.cardRange.value || "")) : "";
+      const seed = code ? code.seed : window.demogameRng.newSeed();
+      const rngCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[state.selectedMode], card: cardOn, opts: rangeValue ? `r${rangeValue}` : "", seed });
+      appendLog(`#${state.roundCount} ${RNG_MODE_TOKEN[state.selectedMode]} | Bet ${money(wager)}${rangeValue ? " | Card Range set" : ""}${code ? " | Replay" : ""}`, "mode");
+      appendLog(`RNG ${rngCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
+      let result;
+      try {
+        result = window.demogameRng.run(seed, () => generateRound(forceFeature));   // 整局（BG＋FG）結果一次算完
+      } finally {
+        replay = null;
+      }
       const spin = result.base;
       spin.cardInfo = {
-        profile: cardSystemActive() ? (state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet") : "off",
+        profile: cardOn ? (state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet") : "off",
         card: cardLabel(result.card),
         fgCard: cardLabel(result.fgCard),
         retries: result.retries,
@@ -1704,7 +1735,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       };
       el.forceFg.checked = false;
       await playback(spin);
-      if (cardSystemActive()) {
+      if (cardOn) {
         appendLog(`Card ${spin.cardInfo.card} | FG ${spin.cardInfo.fgCard} | Retry ${result.retries}${result.retryLimitExceeded ? " | LIMIT" : ""}`, result.retryLimitExceeded ? "error" : "result");
       }
 
@@ -1720,12 +1751,20 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         state.hitCount += 1;
       }
       if (!triggered && state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 未觸發局
+      if (!triggered && state.restoreMode != null) {
+        state.selectedMode = state.restoreMode;
+        state.restoreMode = null;
+      }
       updateStats();
     } catch (error) {
       state.auto = false;
-      if (!state.pendingFg) state.selectedMode = MODE_NORMAL;
+      if (!state.pendingFg) {
+        state.selectedMode = state.restoreMode ?? MODE_NORMAL;
+        state.restoreMode = null;
+      }
       writeMessage(error.message, "error");
     } finally {
+      replay = null;
       state.busy = false;
       updateControls();
       if (state.auto) state.autoTimer = setTimeout(doSpin, Math.max(80, 650 / state.speed));
@@ -1736,7 +1775,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (state.busy || state.pendingFg) return;
     state.selectedMode = mode;
     el.cardRange.value = "";
-    el.rngInput.value = "";
     refreshCardRangeOptions();
     updateControls();
     updateStats();
@@ -1748,7 +1786,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (state.busy || state.pendingFg) return;
     state.selectedMode = mode;
     el.cardRange.value = "";
-    el.rngInput.value = "";
     refreshCardRangeOptions();
     updateControls();
     updateStats();
@@ -1792,7 +1829,8 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       pendingFg: null,
       snapshots: [],
       snapshotIndex: -1,
-      lastSpin: null
+      lastSpin: null,
+      restoreMode: null
     });
     document.body.classList.remove("fg-mode");
     el.rngInput.value = "";
@@ -1991,13 +2029,11 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         return;
       }
       el.cardRange.value = "";
-      el.rngInput.value = "";
       refreshCardRangeOptions();
       updateControls();
     });
     document.addEventListener("demogame:card-system-change", () => {
       el.cardRange.value = "";
-      el.rngInput.value = "";
       refreshCardRangeOptions();
       updateControls();
     });
