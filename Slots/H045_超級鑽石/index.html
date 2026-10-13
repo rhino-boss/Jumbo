@@ -2207,6 +2207,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-13：v5 92A 卡片權重重解</h4>
+        <ul>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（5.0.0.0）以新參數的正式自然報表（NB 10⁸／BF 10⁷）重解，BG Trigger Cap 450x。Card-On 驗證 Oldhand 92.89%（+0.8σ）、Newbie 93.51%（+1.1σ），Retry 超限 0。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>v5（5.0.0.0）</h4>
         <ol>
           <li>升 v5（使用者指定）：啟用盤面表 2（高連消表），BG 選表 9 : 1、FG／Retrigger 2 : 8；表 2 補牌權重集中、輪帶 M1～M4 約一半換低倍符號，3+ 連消約為表 1 的 3 倍。Help 內嵌 game_rule 同步。（10/12）</li>
@@ -2920,7 +2926,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 
   </script>
-  <script src="./Versions/version_manifest.js?v=20261013b"></script>
+  <script src="./Versions/version_manifest.js?v=20261013c"></script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
@@ -2934,7 +2940,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
-      const stamp = `${encodeURIComponent(entry.version)}-20261013b`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261013c`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
@@ -4136,7 +4142,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
-  <script src="../demogame_common.js?v=20261013d"></script>
+  <script src="../demogame_common.js?v=20261013e"></script>
 </body>
 
 </html>

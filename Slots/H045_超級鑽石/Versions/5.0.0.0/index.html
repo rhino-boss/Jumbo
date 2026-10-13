@@ -2063,7 +2063,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=7">
 </head>
 
 <body>
@@ -2157,8 +2157,8 @@
 
     <section id="controls" class="debug-off">
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
-        <span class="zone-label" data-h045-text="script">腳本</span>
-        <div class="zone-body set-rng-controls" aria-label="Scripted outcomes">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
           <label class="debug-rng-field" for="cardRangeSelect">
             Card BG Range
             <select id="cardRangeSelect">
@@ -2175,6 +2175,10 @@
               <option value="fg" data-h045-text="scriptFg">有觸發 FG</option>
               <option value="fgbig" data-h045-text="scriptFgbig">FG 100x 以上</option>
             </select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A-Oldhand/NB/on/-/8f3a21b0">
           </label>
           <button id="setRngResetBtn" type="button">Reset</button>
         </div>
@@ -2203,6 +2207,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-13：v5 92A 卡片權重重解</h4>
+        <ul>
+          <li>修改 XLSX／Config 數學參數：<code>Source/H045192A.xlsx</code>／<code>config_92A.js</code>（5.0.0.0）以新參數的正式自然報表（NB 10⁸／BF 10⁷）重解，BG Trigger Cap 450x。Card-On 驗證 Oldhand 92.89%（+0.8σ）、Newbie 93.51%（+1.1σ），Retry 超限 0。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>v5（5.0.0.0）</h4>
         <ol>
           <li>升 v5（使用者指定）：啟用盤面表 2（高連消表），BG 選表 9 : 1、FG／Retrigger 2 : 8；表 2 補牌權重集中、輪帶 M1～M4 約一半換低倍符號，3+ 連消約為表 1 的 3 倍。Help 內嵌 game_rule 同步。（10/12）</li>
@@ -2228,6 +2238,9 @@
           <li>歷史紀錄改用共用面板：標題「歷史紀錄」，只顯示 BG 最大倍數、FG 最大倍數（÷ 底注），舊的 FG 最終倍數清單拿掉。（10/13）</li>
           <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告_超級鑽石.html</code>。（10/13）</li>
           <li>歷史紀錄面板補上外框，樣式同 Set RNG／腳本區。（10/13）</li>
+          <li>Set RNG 統一：原「腳本」區改名 Set RNG（指定 RNG），卡片 BG 區間／腳本／RNG／重置排成一列等寬；腳本選單保留。（10/13）</li>
+          <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|BF/on|off/腳本或 r區間/種子</code>），點一下複製並填入 RNG 欄，按 Spin 整局重跑（BG、消除、FG 相同），RNG 欄填了就一直沿用、按重置才清空；數學抽樣改走種子序列，表演用金框不受影響。（10/13）</li>
+          <li>驗證：腳本 bigghost 局（27.55x）貼 RNG 重跑，Log 結果與盤面完全相同，Console 無例外。未修改 XLSX／Config 數學參數。（10/13）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2913,7 +2926,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 
   </script>
-  <script src="./Versions/version_manifest.js?v=20261013b"></script>
+  <script src="./Versions/version_manifest.js?v=20261013c"></script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
@@ -2927,7 +2940,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
-      const stamp = `${encodeURIComponent(entry.version)}-20261013b`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261013c`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
@@ -3124,10 +3137,19 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
     };
   }
 
+  // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+  // 數學抽樣一律走 rand()；play() 每局以種子驅動，Log 印「RNG <碼>」，貼回 #rngInput 按 Spin 重跑同一局。
+  // 本作的選項欄：腳本名稱（combo5／bigghost／flip／fg／fgbig）或 r<Card Range 索引>。表演用金框仍用 Math.random。
+  let rngNext = Math.random;
+  const rand = () => rngNext();
+  let replay = null;   // 重跑時暫時覆寫 Card System、Profile、腳本與 Card Range
+  function configLabel() {
+    return ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent || "").trim().replace(/\s+/g, "") || `${cfg.model || "H045"}-${cardProfile()}`;
+  }
   function pick(values, weights) {
     const total = weights.reduce((sum, weight) => sum + Math.max(0, Number(weight) || 0), 0);
     if (total <= 0) return values[0];
-    let target = Math.random() * total;
+    let target = rand() * total;
     for (let index = 0; index < values.length; index++) {
       target -= Math.max(0, Number(weights[index]) || 0);
       if (target < 0) return values[index];
@@ -3141,7 +3163,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
   function drawIndex(tableName, reel) {
     const cumulative = tables[tableName].cumulative[reel];
-    const target = Math.random() * cumulative.at(-1);
+    const target = rand() * cumulative.at(-1);
     let low = 0, high = cumulative.length - 1;
     while (low < high) { const mid = (low + high) >> 1; if (target < cumulative[mid]) high = mid; else low = mid + 1; }
     return low;
@@ -3149,7 +3171,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   function draw(tableName, reel) {
     const table = tables[tableName];
     const cumulative = table.dropCumulative[reel];
-    const target = Math.random() * cumulative.at(-1);
+    const target = rand() * cumulative.at(-1);
     let low = 0, high = cumulative.length - 1;
     while (low < high) { const mid = (low + high) >> 1; if (target < cumulative[mid]) high = mid; else low = mid + 1; }
     return Number(table.drop_values[reel][low]);
@@ -3174,7 +3196,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       const spots = [];
       for (let row = 0; row < 4; row++) if (board[reel][row] !== C1) spots.push(row);
       for (let i = spots.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(rand() * (i + 1));
         [spots[i], spots[j]] = [spots[j], spots[i]];
       }
       for (const row of spots.slice(0, count)) gold[reel][row] = true;
@@ -3268,7 +3290,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
           if (symbol !== WW && symbol !== W2 && symbol !== C1 && !(reel === sr && row === srow)) candidates.push([reel, row]);
         }
       }
-      const targets = candidates.sort(() => Math.random() - 0.5).slice(0, count);
+      const targets = candidates.sort(() => rand() - 0.5).slice(0, count);
       const keys = [];
       for (const [reel, row] of targets) {
         // game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
@@ -3341,7 +3363,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
           const short = target - gold[reel].filter(Boolean).length;
           if (short > 0) {
             const spots = rows.filter(row => !gold[reel][row] && board[reel][row] !== C1);
-            for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
+            for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
             for (const row of spots.slice(0, short)) gold[reel][row] = true;
           }
         }
@@ -3395,8 +3417,8 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   }
 
   // ===== Card System（本作尚未建立 config_92A.js，實際為 Off）=====
-  function cardProfile() { return $("cardProfileSelect")?.value === "newbie" ? "newbie" : "oldhand"; }
-  function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
+  function cardProfile() { if (replay) return replay.profile; return $("cardProfileSelect")?.value === "newbie" ? "newbie" : "oldhand"; }
+  function cardSystemActive() { if (replay) return replay.card && Boolean(cfg.card_system?.enabled); return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
   function naturalBaseSpin() {
     const weights = cfg.table_weight.bg;
     return spin(pick(Object.keys(weights), Object.values(weights)), false, 0);
@@ -3458,11 +3480,11 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
     if ([...select.options].some(option => option.value === keep)) select.value = keep;
   }
   function selectedCardRange() {
-    const value = $("cardRangeSelect")?.value;
+    const value = replay ? replay.range : $("cardRangeSelect")?.value;
     if (value === "" || value == null) return null;
     return cfg.card_system?.profiles?.[cardProfile()]?.base_game?.[Number(value)] || null;
   }
-  function activeScript() { return $("scriptSelect")?.value || ""; }
+  function activeScript() { return replay ? replay.script : ($("scriptSelect")?.value || ""); }
   function scriptedSpin(key) {
     const rule = SCRIPT_RULES[key];
     let last = null;
@@ -3885,16 +3907,44 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
       if (state.fg.index < state.fg.spins.length) {
         await playFeatureSpin();
       } else {
+        const taken = window.demogameRng.takeInput();   // 格式錯誤會丟 Error
+        const code = taken ? {
+          seed: taken.seed, mode: taken.mode === "BF" ? 2 : 0, card: taken.card, config: taken.config,
+          profile: /newbie/i.test(taken.config) ? "newbie" : "oldhand",
+          script: /^r\d+$/.test(taken.opts) ? "" : taken.opts, range: /^r\d+$/.test(taken.opts) ? taken.opts.slice(1) : ""
+        } : null;
+        if (code) {
+          mode = code.mode;
+          if (code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        }
         state.lastWin = 0;
         state.mode = mode;
         const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : 1);
         if (state.balance < cost) throw new Error(tr("insufficient"));
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
+        replay = code;
+        const seed = code ? code.seed : window.demogameRng.newSeed();
         const script = mode === 0 ? activeScript() : "";
-        appendLog(`#${state.rounds} ${mode === 2 ? "Buy Feature" : "Normal Bet"} | Bet ${money(cost)}${script ? ` | Script ${script}` : selectedCardRange() ? " | Card Range set" : ""}`, "mode");
-        const base = mode === 0
-          ? (script ? scriptedSpin(script) : selectedCardRange() ? cardSpin(selectedCardRange()) : $("forceFgInput").checked ? cardSpin({ type: "free_game" }) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
-          : buyEntry();
+        const rangeValue = mode === 0 && !script ? String(replay ? replay.range : ($("cardRangeSelect")?.value || "")) : "";
+        const rngCode = window.demogameRng.format({ config: configLabel(), mode: mode === 2 ? "BF" : "NB", card: cardSystemActive(), opts: script || (rangeValue ? `r${rangeValue}` : ""), seed });
+        appendLog(`#${state.rounds} ${mode === 2 ? "Buy Feature" : "Normal Bet"} | Bet ${money(cost)}${script ? ` | Script ${script}` : rangeValue ? " | Card Range set" : ""}${code ? " | Replay" : ""}`, "mode");
+        appendLog(`RNG ${rngCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
+        let base, feature = null;
+        rngNext = window.demogameRng.seeded(seed);
+        try {
+          base = mode === 0
+            ? (script ? scriptedSpin(script) : selectedCardRange() ? cardSpin(selectedCardRange()) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
+            : buyEntry();
+          if (base.scatter >= 3 || mode === 2) {
+            const spins = initialFreeSpins(base.scatter);   // BF 進場盤的 C1 顆數決定局數，同自然觸發
+            const section = mode === 2 ? "buy_feature" : "free_game";
+            feature = script === "fgbig" ? scriptedFeature(spins, base.pay, 100)
+              : cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay);
+          }
+        } finally {
+          rngNext = Math.random;   // 整局（BG＋FG）結果已定，之後的模擬／表演不吃這組種子
+          replay = null;
+        }
         showTable(base.tableName);
         await animateSnapshots(base.snapshots, false);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
@@ -3903,14 +3953,10 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
         appendLog(`${mode === 2 ? "BF Entry" : "BG"} | ${base.tableName} | Cascade ${base.combo} | C1 ${base.scatter} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });   // 共用歷史紀錄：BG 最大倍數
-        if (base.scatter >= 3 || mode === 2) {
-          const spins = initialFreeSpins(base.scatter);   // BF 進場盤的 C1 顆數決定局數，同自然觸發
-          const section = mode === 2 ? "buy_feature" : "free_game";
-          const feature = script === "fgbig" ? scriptedFeature(spins, base.pay, 100)
-            : cardSystemActive() ? cardFeature(section, spins, base.pay) : freeSession(spins, base.pay);
+        if (feature) {
           activateFeature(feature, mode);
-          if (!script && !selectedCardRange()) recordLine(mode, base, feature);   // 腳本／指定區間局不計入倍率線型
-        } else if (!script && !selectedCardRange()) {
+          if (!script && !rangeValue && !code) recordLine(mode, base, feature);   // 腳本／指定區間／重跑局不計入倍率線型
+        } else if (!script && !rangeValue && !code) {
           recordLine(mode, base, null);
         }
       }
@@ -4083,7 +4129,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
-  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;}; buildCardRangeOptions();
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;$("rngInput").value="";}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
   
   document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
@@ -4096,7 +4142,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
-  <script src="../demogame_common.js?v=20261013"></script>
+  <script src="../demogame_common.js?v=20261013e"></script>
 </body>
 
 </html>
