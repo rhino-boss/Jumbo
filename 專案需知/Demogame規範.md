@@ -15,7 +15,12 @@
 Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不只是視覺展示。它必須能用單局結果證明 Config、Simulator 與遊戲規則一致。
 
 - 主入口固定為 `index.html`，使用相對路徑，雙擊即可離線執行。
-- Demogame 的模型顯示格式為 `<Config>-<Profile>`，例如 `92A-Oldhand`。
+- Config 選單只列 Config 代號，不列 Profile，Demogame 不提供 Newbie：例如 `BaseA`、`BaseB`、`92A`、`94A`、`92A_BET100`、`92B`。
+- 卡片系統沒有獨立的開關，由 Config 選單決定：選 `Base` 為自然機率（卡片系統關），選 `92A` 等 Config 代號為卡片系統開（Oldhand）。
+- 自然機率只依基礎數學 Variant 區分，與 RTP 家族無關：只有一套時顯示 `Base`；有 A／B 兩套時顯示 `BaseA`、`BaseB`。
+- 標題列右側固定放「數值報告」（有報告時）、「說明」、「重置」三個文字按鈕（無底色、無外框，滑過才顯示底色），字型與標題相同，標題列高 44px；數值報告在同一分頁開啟。
+- 標題列樣式各遊戲一致：代號＋名稱 13px 粗體（由共用 CSS 統一），不得另寫遊戲專屬的標題樣式。
+- 盤面不得裁掉格子的特效：中獎放大、百搭彈出與外發光在最外側一欄／一列也要完整顯示（共用 CSS 對 `#board.board-grid` 保留 14px 外圍可見範圍）。
 - 遊戲名稱、盤面、輪帶、權重、Paytable、Bet Mode 與 Feature 參數從 Config 取得。
 - 不得為演出方便另寫一套簡化數學邏輯。
 - Config 無法載入或欄位不完整時要顯示明確錯誤，不得靜默使用舊值。
@@ -84,8 +89,9 @@ By Game 區域必須：
 - Stats／Simulation。
 - Play：Spin、Auto、Bet Stepper、Speed。
 - Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。
-- Debug Mode、Set RNG、Reel RNG、Spin Result、Log 與 History 控制。
+- Debug Mode、Set RNG、Reel RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏）。
 - Setting：Version、Config／Profile、Language、Help、Reset。
+- Language：共用區的固定英文標籤由 `demogame_common.js` 依 `#languageSelect` 統一切換中英（整段完全相同才替換）；By Game 區域與遊戲專屬文字仍由各遊戲自行翻譯，切回 English 必須還原。
 - 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。
 
 共用資源固定放在 `Slots/`：
@@ -158,6 +164,7 @@ Slots/
 ## 4. 必要行為
 
 - 支援 Normal Spin，以及遊戲實際存在的 Extra Bet、Buy Feature、Super Feature。
+- 押注選項依 Bet Currency：1～1500 加上最大押注 2000／3000／5000；押注層級由數學定義的遊戲（例如 H014 依押注各有自然表）以 Config 為準。
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程加入。
 - Auto、Speed、Reset 不得改變 RNG、得分或統計結果。
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
@@ -173,7 +180,13 @@ Debug Mode 至少可查看：
 - Table、Drop Mode、Reel RNG、總範圍、Stop Index 與 Reel Length。
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
-- 即時倍率線型（共用，Set RNG 上方）：Normal Bet 每局總得分（含該局 FG）÷ 底注的 64 區間分布，縱軸固定 0～20%；由 `demogame_common.js` 自動建立並跟隨 Debug Mode 顯示，Reset 清空。各遊戲只需在 NB 一局（含 FG）結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫。
+- 數值報告按鈕（共用）：有 `其他/數值報告_<遊戲中文名>.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL`，標題列右側出現「數值報告」按鈕（樣式同 Reset），另開分頁。
+- 歷史紀錄（共用）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；面板標題「歷史紀錄」，只顯示 BG 最大倍數與 FG 最大倍數，Clear／Reset 清空。
+- Log（共用）：帶時間的即時紀錄，記下 Config 載入、盤面訊息、押注模式切換、FG 觸發／Retrigger、Card System 抽卡與 Retry、錯誤；Clear 清空，最多保留 500 行。
+- Simulation（共用，`#batch-simulation`）：N 局獨立數學模擬，Start 執行中只顯示「進行中」（English：Running），不跳局數。FG 觸發顯示「比例 (N 場)」；最高倍數為單局總得分倍數（BF ÷ 底注）；消除分布轉置為「消除次數 × BG／FG」，與倍率線型一樣各自框成一區並有標題。各遊戲提供：
+  - `window.demogameSimulateRound({ mode })`：用與畫面相同的遊戲邏輯產生一局（不得另寫簡化數學），回傳 `multiplier`（總得分含 FG ÷ 實際押注）、`lineMultiplier`（BF ÷ 底注，其餘同 `multiplier`）、`fgTriggered`、`maxMultiplier`、`retryLimitExceeded`、`retryCount`、`bgCascade`、`fgCascades`；`mode` 只在該局暫時套用，不得改動畫面押注模式與統計。
+  - `window.demogameSimulationModes = [{ value, label }]`：只列實際支援的押注模式，面板據此顯示押注模式選單。
+- 倍率線型（共用，併入 Simulation 面板）：該次模擬每局 `lineMultiplier` 的標準 64 區間分布，X 軸逐一標出 (下限, 上限]，Y 軸 NB／EB 1%、BF 20%，超過上限或為 0 的區間不畫點、線在該處斷開。沒有 Simulation 面板的頁面才在 Set RNG 上方顯示即時線型（NB 一局含 FG 結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫）。
 
 指定 Card Range 與 Reel RNG 必須互斥。指定值要檢查數量與範圍，且只作用於規格定義的下一個 Spin；不得因指定 RNG 或 Force FG 進入無限重跑。
 
@@ -188,13 +201,15 @@ Debug Mode 至少可查看：
 每次修改 Demogame 的 `index.html`、共用 `demogame_common.css`／`demogame_common.js`，或任何會改變操作、顯示、動畫、Debug、Config／Version／Profile 選擇方式的程式時，必須在同一次修改中同步更新 Demogame 的「修改紀錄」。
 
 - 修改紀錄統一放在 `#change-log-wrap`，並於 Debug Mode 開啟時顯示。
-- 每筆紀錄至少包含日期、修改目的、實際變更內容與驗證結果。
+- 格式同 [開發流程 2.1](開發流程.md#21-修改紀錄格式)：**依版本分節、不以日期分節**，每個四碼版本一個 `<article class="change-log-entry">`，標題 `<h4>v<第 1 碼>（<四碼版本>）</h4>`，由新到舊；內文用 `<ol>` 編號清單，同一版本內由舊到新，一項一件事，句尾以全形括號附日期 `（MM/DD）`。項目歸到修改當時的目前版本。
+- 這裡記 Demogame 介面、演出、Debug、共用模組與文件的修改；數學調性記在專案根目錄 `修改紀錄.md`，不在此重複。
+- 每項寫出實際變更；驗證結果可寫在同一項或另立一項。
 - 若變更會影響數學、XLSX、Config、RTP、Hit Rate 或 Feature 行為，必須明確列出受影響檔案與數值；若未影響，也必須註明「未修改 XLSX／Config 數學參數」。
 - 修改紀錄必須描述目前實際完成的內容，不得只寫「調整」、「修正」或尚未執行的計畫。
 - 純介面或程式修正不需要因此提升數學版本，但仍必須留下修改紀錄。
 
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
-- [ ] 本次 Demogame 修改已同步更新 `#change-log-wrap`，內容包含日期、變更與驗證結果。
+- [ ] 本次 Demogame 修改已同步更新 `#change-log-wrap`（依版本分節、項目附日期），內容包含變更與驗證結果。
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。

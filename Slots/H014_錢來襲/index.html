@@ -4,15 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Money Boost — Demo Game</title>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
   <style id="h014-by-game">
     /* 文件層級 box-sizing 基準（與既有 Demogame 相同；共用 CSS 未宣告） */
     *, *::before, *::after { box-sizing: border-box; }
     /* ===== By Game：#feature-bar / #strip-bar / #grid-panel / #board ===== */
     #feature-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; }
-    #game-title { color:#ffd86a; font-size:18px; font-weight:800; letter-spacing:.3px; }
-    #game-title #gameId { color:#5a88aa; font-size:13px; font-weight:700; margin-right:6px; }
-    #feature-bar .h014-sub { color:#5a88aa; font-size:12px; }
     #strip-bar { margin-top:10px; padding:8px 12px; }
     .feature-strip { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12px; }
     #modeText { color:#33bbff; font-weight:800; }
@@ -99,8 +96,7 @@
 <body>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId"></span><span id="gameName"></span></span>
-      <span class="h014-sub" id="gameTypeText"></span>
+      <span id="game-title"><span id="gameId"></span> <span id="gameName"></span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -236,93 +232,69 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-13：數學 4.1.0.0（畫面組合都能出現）</h4>
-        <ul>
-          <li>卡片：自然機率 ≥0.05% 但 0 權重的區間補權重（Bet5 3x／120x、Bet10 7x／50x、Bet50 3x）；Bet100 (100,120] 子表 C→B；EB 依新 NB 卡片重算，Bet10／50／100 的 (0,1] 子表 A→B。</li>
-          <li>結果：各輪看得到的 R1～R3 組合、得分盤面 × R4 符號在 Card-On 下都出現得了；僅 6 組自然機率 <0.05% 的組合為已知例外（注意事項.md）。RTP 皆 92.0000%。</li>
-          <li>Setting 的 Version 可切換 4.1.0.0／4.0.0.0／3.0.0.0／1.0.0.2。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-13：轉盤獎項改顯示總分</h4>
-        <ul>
-          <li>上方展示轉盤與開獎轉盤的每一格直接顯示「獎項 × 押注」的總分（Coin），中心改為 WIN；轉完直接給該格分數，不再顯示 × bet 的乘算。</li>
-          <li>只改演出文字，派彩不變（仍為獎項 × 押注）；未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-12：表演調整</h4>
-        <ul>
-          <li>停輪順序改為由右到左：R4 → R3 → R2 → R1（RESPIN 重轉時 R3 → R2 → R1）。</li>
-          <li>空輪 E 不顯示文字，只留空白底板。</li>
-          <li>上下符號間距縮為原本的 1/3：格高 78px → 46px（窄螢幕 64 → 40、54 → 34），中線與上下半格比例不變。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-12：數學 4.0.0.0 補充（Extra Bet 卡片、RTP 精度）</h4>
-        <ul>
-          <li>Extra Bet 卡片改以 Normal Bet 4.0.0.0 為基礎：各得分區間權重 × (1 + k × Normal Bet 該區間 R4 有東西的比例)，R4 有特色比例越高的區間提高越多，RTP（÷1.5）92%；輪帶權重沿用 1.0.0.2。</li>
-          <li>EB Hit 約 15.3%～17.6%（舊 EB 17.7%～20.8%）；最大得分同 Normal（Bet5／10 1,055x、Bet50 2,021x、Bet100 10,101x）。</li>
-          <li>依規範 §1.4.7，Normal／Extra 卡片精算 RTP 皆精確到 92.0000%。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-12：數學 4.0.0.0 補充（補合格區間、Bet100 上限 5000 倍）</h4>
-        <ul>
-          <li>卡片：自然機率 ≥ 0.05% 但原本 0 權重的區間補上權重，彼此比例照自然機率、最小 1 ppm，其餘區間重擬，RTP 92%。Bet5／Bet10 最大得分 550x → 1,055x。</li>
-          <li>Bet100 數字分上限 30000（300 倍）→ 500000（5000 倍），Normal／Extra 同步；50000～101010 共 8 種數字分開放，最大得分 1,110x → 10,101x。</li>
-          <li>驗證（模擬機）：10^6／10^7 五個押注與 Extra Bet100 皆在 2σ 內、重試超限 0 次；畫面元素檢查通過。給 SPS 的差異說明：<code>文件/SPS改版說明_4.0.0.0.md</code>。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-12：數學 4.0.0.0（沒得分盤面演出調整）</h4>
-        <ul>
-          <li>相對 3.0.0.0：沒得分時 E 0 E、E E 0 各為 E E E 的 1.5 倍（E 0 0 約 2.2～2.9 倍；Bet1 為 E 0 _＝1.5 × E E _），做法是 R1 幾乎全空白的子表調整 R2、R3 的空白／0 比例。</li>
-          <li>沒得分時 R4 出現 2X／5X／10X 的占比加 20 個百分點（例：Bet10 14.0% → 34.0%；該盤面出現時 R4 空白 85% → 65%），倍數間比例與 RESPIN／BONUS 權重不變。</li>
-          <li>兩項都只影響演出，派彩不變；卡片非零區間等比微調，RTP 維持 92%。改到輪帶權重，第 1 碼升 4.0.0.0（Extra 同步）。</li>
-          <li>驗證（模擬機）：10^6 五個押注皆在 2σ 內、重試超限 0 次；畫面元素檢查全部通過。Setting 的 Version 可切換 4.0.0.0／3.0.0.0／1.0.0.2。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-07：數學 3.0.0.0（V2：Normal Bet 全部押注對齊 JILI Money Coming 調性）</h4>
-        <ul>
-          <li>只改 <code>H014192A.xlsx</code> 既有的權重格，架構不變（輪帶符號、R4 分組、卡片區間、規則、<code>Simulator.py</code> 都沒動）；Extra Bet 沿用 1.0.0.2。改到輪帶權重，依規範升第 1 碼。</li>
-          <li>Bet1／Bet5／Bet10：子表、前三輪停輪、R4 分組、RESPIN、轉盤權重改為競品擬合值——盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停在空白 61.4% → 82.2%），RESPIN 觸發變少、重轉盤分數變大。</li>
-          <li>Bet50／Bet100：競品無資料，以 Bet10 為範本外推；保留 R2／R3 的 10／00 與紅轉盤，紅轉盤依金額對應 Bet10 綠轉盤機率，500x／1000x 沿用 1.0.0.2 占比。Bet50 重轉輪另行擬合，壓低小額重轉盤，RESPIN 占 RTP 21.3%（Bet10 21.6%）。</li>
-          <li>卡片權重以多目標非負最小平方擬合（RTP＝92% 為硬限制）；≥200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 可開出 525x、Bet50 可到 2,000x）；機率太低的區間改用 B 表或不給權重，重試超限 0 次。</li>
-          <li>畫面元素檢查：NB／EB 各押注的 R4 符號、轉盤每一格、所有可組成的數字分都有機會得分（修正 Bet10 綠轉盤 200x 原本開不出來）。</li>
-          <li>驗證（模擬機）：10^6 Bet1 92.03%、Bet5 91.66%、Bet10 91.77%、Bet50 92.60%、Bet100 92.88%，皆在 2σ 內；10^7 為 91.58%／92.03%／92.01%／92.34%／92.04%。</li>
-          <li>Setting 的 Version 可切換 1.0.0.2（原始）與 3.0.0.0（現行）。</li>
-        </ul>
-      </article>
-        <article class="change-log-entry">
-          <h4>2026-10-06：畫面調整</h4>
-          <ul>
-            <li>移除盤面上方的數字分顯示板（下方訊息列已有相同資訊）。</li>
-            <li>盤面上下兩排只露出半格，中線置中。</li>
-            <li>盤面上方加入幸運轉盤，只露上半圈並慢速自轉展示獎項；Bet5／Bet10 為綠轉盤、Bet50／Bet100 為紅轉盤；沒有轉盤的押注（Bet1）轉盤變灰停轉並蓋上鎖鏈與鎖頭。</li>
-            <li>轉盤標籤改為一行「加壓至下一押注會增加的特色」，由 Config 權重自動判斷；Bet100 顯示「已解鎖全部特色」。</li>
-            <li>Setting 的 Config 只剩一個 <code>92A</code>（NB／EB 兩本 XLSX 綁成同一組），押注由下方押注按鈕切換。</li>
-          </ul>
+          <h4>v4（4.1.0.0）</h4>
+          <ol>
+            <li>數學 4.1.0.0（只改卡片）：自然機率 ≥0.05% 但 0 權重的區間補權重（Bet5 3x／120x、Bet10 7x／50x、Bet50 3x）；Bet100 (100,120] 子表 C→B；EB 依新 NB 卡片重算，Bet10／50／100 的 (0,1] 子表 A→B。（10/13）</li>
+            <li>各輪 R1～R3 組合、得分盤面 × R4 符號在 Card-On 下都出現得了；僅 6 組自然機率 &lt;0.05% 的組合為已知例外（注意事項.md）；RTP 皆 92.0000%。（10/13）</li>
+            <li>Setting 的 Version 可切換 4.1.0.0／4.0.0.0／3.0.0.0／1.0.0.2。（10/13）</li>
+            <li>Simulation 面板新增押注模式選單（本作只有 Normal Bet／Extra Bet，無 FG／Buy Feature）。（10/13）</li>
+            <li>本作 adapter：<code>demogameSimulateRound({ mode })</code> 只在該局暫時切換押注模式（try/finally 還原，不動畫面與統計），multiplier／lineMultiplier＝得分 ÷ 實際押注（EB 1.5 倍）。（10/13）</li>
+            <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」；原 Set RNG 上方的即時線型不再顯示。（10/13）</li>
+            <li>消除分布轉置成「消除次數 × BG／FG」並框成一區附標題；本作無消除機制，不顯示。（10/13）</li>
+            <li>最高倍數改為單局總得分倍數（本作為得分 ÷ 實際押注）；FG 觸發顯示「比例 (N 場)」（本作無 FG，恆為 0）。（10/13）</li>
+            <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用）；共用 JS 改 <code>../demogame_common.js?v=20261013</code>。（10/13）</li>
+            <li>本作中英切換：盤面 Message（轉動中／未中獎／得分／RESPIN／BONUS／押注切換／錯誤提示）與 Feature Status 改中英兩版，切換語言時重繪目前訊息；Extra Bet 按鈕文字改用共用字典。（10/13）</li>
+            <li>驗證：inline script 皆通過 <code>node --check</code>；Simulation NB／EB 各 2,000 局正常、Console 無錯誤；Card On 各 200,000 局 RTP NB 92.44%／EB 92.90%（目標 92%）；Log、Clear、語言 zh→en→zh 正常。Simulation 相關修改未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>沒有消除機制的遊戲一開頁就隱藏消除分布（共用）。（10/13）</li>
+          <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告_錢來襲.html</code>。（10/13）</li>
+        </ol>
         </article>
         <article class="change-log-entry">
-          <h4>2026-10-06：建立 H014 錢來襲（Money Boost）Demogame</h4>
-          <ul>
-            <li>新建 <code>index.html</code>；共用區域使用 <code>../demogame_common.css?v=4</code> 與 <code>../demogame_common.js?v=2</code>，By Game 只含標題、Feature Status、盤面（R1～R3 數字轉輪＋R4 特色轉輪）、動畫與 Message。</li>
-            <li>依使用者要求：空白符號 E（R1～R3 與 R4）改用與數字符號相同的字級、字重、顏色與底板；Feature Status 列移除「R4 特色清單」與「Number Win」兩個 chip，只保留 Bet Mode（RESPIN／BONUS 觸發時的狀態文字與 Respin 加分 chip 僅在該局演出中出現）。</li>
-            <li>數值全部由 <code>config.js</code>（<code>window.H014_CONFIG</code>，自然機率）與 <code>config_92A.js</code>（<code>window.H014_CONFIG_92A</code>，卡片權重）讀取，HTML 內不另存輪帶／權重／轉盤值；單局邏輯逐行對應 <code>Simulator.py</code> 的 <code>_spin</code>、<code>_in_interval</code>、<code>run_worker</code>（卡片系統，Retry 上限取 <code>card_retry_limit</code>）。</li>
-            <li>演出：四輪滾動停輪（R4 最後停）、中線 Payline、數字分顯示、2X／5X／10X 乘算動畫、RESPIN 重轉 R1～R3（顯示重轉前＋重轉後）、綠／紅幸運轉盤 8 格轉動並停在抽中格；Previous／Next 可逐段回看。</li>
-            <li>Config 顯示 <code>92A-bet{押注}</code>（本作無 Newbie／Oldhand）；Card System 開關沿用共用 Setting，關閉時於 Set RNG 選 Natural Table（A／B／C）。</li>
-            <li>未實作（Config／Simulator 無對應資料）：OP Jackpot、0換E、假表演、§9.3 初始盤面固定 RNG；初始盤面為隨機停點，僅供顯示。</li>
-            <li>驗證：見交付說明（瀏覽器 Console 無錯誤；頁內 20 萬局卡片系統 RTP，Normal Bet bet1／bet100）。未修改 XLSX／Config 數學參數。</li>
-          </ul>
+          <h4>v4（4.0.0.0）</h4>
+          <ol>
+            <li>數學 4.0.0.0（相對 3.0.0.0，只影響演出、派彩不變）：沒得分時 E 0 E、E E 0 各為 E E E 的 1.5 倍（E 0 0 約 2.2～2.9 倍；Bet1 為 E 0 _＝1.5 × E E _），以 R1 幾乎全空白的子表調整 R2、R3 的空白／0 比例。（10/12）</li>
+            <li>沒得分時 R4 出現 2X／5X／10X 的占比加 20 個百分點（例：Bet10 14.0% → 34.0%），倍數間比例與 RESPIN／BONUS 權重不變；卡片非零區間等比微調，RTP 維持 92%；改到輪帶權重，第 1 碼升 4.0.0.0（Extra 同步）。（10/12）</li>
+            <li>驗證（模擬機）：10^6 五個押注皆在 2σ 內、重試超限 0 次；畫面元素檢查通過；Setting 的 Version 可切換 4.0.0.0／3.0.0.0／1.0.0.2。（10/12）</li>
+            <li>卡片補合格區間：自然機率 ≥0.05% 但原本 0 權重的區間補權重（比例照自然機率、最小 1 ppm），其餘重擬維持 RTP 92%；Bet5／Bet10 最大得分 550x → 1,055x。（10/12）</li>
+            <li>Bet100 數字分上限 30000（300 倍）→ 500000（5000 倍），Normal／Extra 同步；50000～101010 共 8 種數字分開放，最大得分 1,110x → 10,101x。（10/12）</li>
+            <li>驗證（模擬機）：10^6／10^7 五個押注與 Extra Bet100 皆在 2σ 內、重試超限 0 次；畫面元素檢查通過；SPS 差異說明 <code>文件/SPS改版說明_4.0.0.0.md</code>。（10/12）</li>
+            <li>Extra Bet 卡片以 NB 4.0.0.0 為基礎：各得分區間 × (1 + k × NB 該區間 R4 有東西的比例)，RTP（÷1.5）92%；輪帶權重沿用 1.0.0.2；EB Hit 約 15.3%～17.6%（舊 17.7%～20.8%），最大得分同 NB（Bet5／10 1,055x、Bet50 2,021x、Bet100 10,101x）。（10/12）</li>
+            <li>依規範 §1.4.7，NB／EB 卡片精算 RTP 皆精確到 92.0000%。（10/12）</li>
+            <li>停輪順序改為由右到左：R4 → R3 → R2 → R1（RESPIN 重轉 R3 → R2 → R1）。（10/12）</li>
+            <li>空輪 E 不顯示文字，只留空白底板。（10/12）</li>
+            <li>上下符號間距縮為 1/3：格高 78px → 46px（窄螢幕 64 → 40、54 → 34），中線與上下半格比例不變。（10/12）</li>
+            <li>展示轉盤與開獎轉盤每格直接顯示「獎項 × 押注」總分（Coin），中心改 WIN，轉完不再顯示 × bet 乘算；派彩不變，未修改 XLSX／Config 數學參數。（10/13）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v3（3.0.0.0）</h4>
+          <ol>
+            <li>數學 3.0.0.0（V2）：Normal Bet 全部押注對齊 JILI Money Coming 調性；只改 <code>H014192A.xlsx</code> 既有權重格，架構與 <code>Simulator.py</code> 不變；Extra Bet 沿用 1.0.0.2；改到輪帶權重，升第 1 碼。（10/07）</li>
+            <li>Bet1／Bet5／Bet10：子表、前三輪停輪、R4 分組、RESPIN、轉盤權重改為競品擬合值，盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停空白 61.4% → 82.2%），RESPIN 觸發變少、重轉盤分數變大。（10/07）</li>
+            <li>Bet50／Bet100：以 Bet10 為範本外推，保留 R2／R3 的 10／00 與紅轉盤（依金額對應 Bet10 綠轉盤機率，500x／1000x 沿用 1.0.0.2 占比）；Bet50 重轉輪另行擬合，RESPIN 占 RTP 21.3%（Bet10 21.6%）。（10/07）</li>
+            <li>卡片權重以多目標非負最小平方擬合（RTP＝92% 為硬限制）；≥200x 區間沿用 1.0.0.2 權重與 B 表（Bet1 可開 525x、Bet50 可到 2,000x）；機率太低的區間改 B 表或不給權重，重試超限 0 次。（10/07）</li>
+            <li>畫面元素檢查：NB／EB 各押注 R4 符號、轉盤每一格、所有數字分都有機會得分（修正 Bet10 綠轉盤 200x 原本開不出來）。（10/07）</li>
+            <li>驗證（模擬機）：10^6 Bet1 92.03%、Bet5 91.66%、Bet10 91.77%、Bet50 92.60%、Bet100 92.88%，皆在 2σ 內；10^7 為 91.58%／92.03%／92.01%／92.34%／92.04%。（10/07）</li>
+            <li>Setting 的 Version 可切換 1.0.0.2（原始）與 3.0.0.0（現行）。（10/07）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v1（1.0.0.2）</h4>
+          <ol>
+            <li>新建 <code>index.html</code>；共用區使用 <code>../demogame_common.css?v=4</code>／<code>../demogame_common.js?v=2</code>，By Game 只含標題、Feature Status、盤面（R1～R3 數字轉輪＋R4 特色轉輪）、動畫與 Message。（10/06）</li>
+            <li>空白符號 E 改用與數字相同的字級、字重、顏色與底板；Feature Status 只保留 Bet Mode（移除 R4 特色清單、Number Win chip，RESPIN／BONUS 狀態與 Respin 加分 chip 只在演出中出現）。（10/06）</li>
+            <li>數值全由 <code>config.js</code>（<code>window.H014_CONFIG</code>）與 <code>config_92A.js</code>（<code>window.H014_CONFIG_92A</code>）讀取；單局邏輯對應 <code>Simulator.py</code> 的 <code>_spin</code>、<code>_in_interval</code>、<code>run_worker</code>（Retry 上限取 <code>card_retry_limit</code>）。（10/06）</li>
+            <li>演出：四輪滾動停輪、中線 Payline、數字分、2X／5X／10X 乘算動畫、RESPIN 重轉 R1～R3（顯示重轉前＋後）、綠／紅幸運轉盤 8 格；Previous／Next 可逐段回看。（10/06）</li>
+            <li>Config 顯示 <code>92A-bet{押注}</code>（無 Newbie／Oldhand）；Card System 關閉時於 Set RNG 選 Natural Table（A／B／C）。（10/06）</li>
+            <li>未實作（Config／Simulator 無資料）：OP Jackpot、0換E、假表演、§9.3 初始盤面固定 RNG；初始盤面為隨機停點。（10/06）</li>
+            <li>驗證：Console 無錯誤；頁內 20 萬局卡片系統 RTP（NB bet1／bet100）；未修改 XLSX／Config 數學參數。（10/06）</li>
+            <li>移除盤面上方數字分顯示板；盤面上下兩排只露半格，中線置中。（10/06）</li>
+            <li>盤面上方加入幸運轉盤（只露上半圈慢速自轉）：Bet5／10 綠、Bet50／100 紅；Bet1 轉盤變灰停轉並蓋鎖鏈與鎖頭。（10/06）</li>
+            <li>轉盤標籤改為一行「加壓至下一押注會增加的特色」（由 Config 權重判斷），Bet100 顯示「已解鎖全部特色」。（10/06）</li>
+            <li>Setting 的 Config 只剩 <code>92A</code>（NB／EB 兩本 XLSX 綁成一組），押注由押注按鈕切換。（10/06）</li>
+            <li>Debug Mode 新增即時倍率線型（共用，<code>window.demogameLineChart</code>）：Set RNG 上方 64 區間、NB 每局總得分 ÷ 底注、縱軸 0～20%，Reset 清空；本檔只在 NB 一局結束時呼叫 <code>record()</code>；未修改 XLSX／Config 數學參數（10/13 已併入 Simulation）。（10/06）</li>
+          </ol>
         </article>
       </div>
     </section>
@@ -784,10 +756,17 @@
   function setScore(main, sub, pop = false) {
     state.view.score = [main, sub];
   }
+  // By Game 文字中英切換：text 可為字串或 [英文, 中文]；view 存原始值，切換語言時重繪（en→zh→en 可還原）
+  const tr = (en, zh) => (state.language === "en" ? en : zh);
+  const langText = (t) => (Array.isArray(t) ? tr(t[0], t[1]) : (t ?? ""));
   function setMessage(text, cls = "") {
-    $("messageBar").textContent = text;
+    $("messageBar").textContent = langText(text);
     $("messageBar").className = `message-bar ${cls}`.trim();
     state.view.message = [text, cls];
+  }
+  function setStatus(text) {
+    $("featureStatus").textContent = langText(text);
+    state.view.status = text;
   }
   function newView() {
     state.view = { reels: [null, null, null, null], score: ["0", ""], message: ["", ""], wheel: null, status: "" };
@@ -958,9 +937,9 @@
     hideWheel();
     state.snapshots = []; state.snapshotIndex = -1;
     $("respinPill").classList.add("hidden");
-    $("featureStatus").textContent = "";
+    setStatus("");
     setScore("", "Spinning…");
-    setMessage("Spinning…");
+    setMessage(["Spinning…", "轉動中…"]);
     const base = 650 / sp, gap = 170 / sp;
     // 停輪順序由右到左：R4 → R3 → R2 → R1
     const r4Job = spinReel(3, sh.r4, res.r4Pos, null, base);
@@ -986,11 +965,11 @@
       snapshot(`× ${m}`);
     } else if (res.r4Sym === S_RESPIN) {
       const rs = res.respin;
-      $("featureStatus").textContent = "RESPIN";
+      setStatus("RESPIN");
       $("respinPill").classList.remove("hidden");
       $("respinValue").textContent = "…";
       setScore(fmt(res.s1), `RESPIN！重轉前數字分 ${fmt(res.s1)}，R1～R3 免費重轉`, true);
-      setMessage("RESPIN — R1～R3 重轉（R4 保留）");
+      setMessage(["RESPIN — R1～R3 respin (R4 held)", "RESPIN — R1～R3 重轉（R4 保留）"]);
       snapshot("Respin trigger");
       await wait(500 / sp);
       [0, 1, 2].forEach((c) => { hitReel(c, false); reelEls[c].classList.add("respin-flash"); });
@@ -1002,8 +981,8 @@
       setScore(fmt(res.win), `重轉前 ${fmt(res.s1)} ＋ 重轉後 ${fmt(rs.add)} = ${fmt(res.win)}${rs.fallback ? "（固定組合）" : ""}`, true);
       snapshot("Respin result");
     } else if (res.wheelIdx >= 0) {
-      $("featureStatus").textContent = res.r4Sym === S_SC_R ? "紅 BONUS → LUCKY WHEEL" : "綠 BONUS → LUCKY WHEEL";
-      setMessage(`${code(res.r4Sym)} BONUS — 進入幸運轉盤`);
+      setStatus(res.r4Sym === S_SC_R ? ["Red BONUS → LUCKY WHEEL", "紅 BONUS → LUCKY WHEEL"] : ["Green BONUS → LUCKY WHEEL", "綠 BONUS → LUCKY WHEEL"]);
+      setMessage([`${code(res.r4Sym)} BONUS — Lucky Wheel`, `${code(res.r4Sym)} BONUS — 進入幸運轉盤`]);
       await wait(450 / sp);
       await spinWheel(sh.wheel.map((v) => v * bet), res.r4Sym, res.wheelIdx);
       const prize = res.wheelVal * bet;
@@ -1015,14 +994,15 @@
       await wait(1100 / sp);
       hideWheel();
     }
-    setMessage(res.win > 0 ? `WIN ${fmt(res.win)}（${fmtX(res.win / bet)} × bet）` : "No Win", res.win > 0 ? "win" : "");
+    setMessage(res.win > 0 ? [`WIN ${fmt(res.win)} (${fmtX(res.win / bet)} × bet)`, `得分 ${fmt(res.win)}（${fmtX(res.win / bet)} × 底注）`] : ["No Win", "未中獎"], res.win > 0 ? "win" : "");
     snapshot("Result");
   }
 
   function renderView(view) {
     state.view = JSON.parse(JSON.stringify(view));
     view.reels.forEach((r, col) => { if (r) setReel(col, r.strip, r.stop, r.override, r.hit); });
-    $("messageBar").textContent = view.message[0];
+    $("messageBar").textContent = langText(view.message[0]);
+    $("featureStatus").textContent = langText(view.status);
     $("messageBar").className = `message-bar ${view.message[1]}`.trim();
     if (view.wheel) showWheel(view.wheel.values, view.wheel.sym, view.wheel.idx, view.wheel.rotation, view.wheel.result);
     else hideWheel();
@@ -1150,7 +1130,7 @@
     if (!text) return null;
     const parts = text.split(/[\s,]+/).map(Number);
     if (!(parts.length === 3 || parts.length === 4) || parts.some((v) => !Number.isInteger(v) || v < 0)) {
-      throw new Error("Reel RNG 需輸入 3 或 4 個非負整數（R1 R2 R3 [R4]）");
+      throw new Error(tr("Reel RNG needs 3 or 4 non-negative integers (R1 R2 R3 [R4])", "Reel RNG 需輸入 3 或 4 個非負整數（R1 R2 R3 [R4]）"));
     }
     const sh = pk.sheets[sheetName];
     for (let c = 0; c < 3; c++) if (parts[c] >= sh.reels[c].length) throw new Error(`R${c + 1} 停點需 < ${sh.reels[c].length}`);
@@ -1171,7 +1151,7 @@
         if (!ctx.cardOn) throw new Error("指定 Card Range 需開啟 Card System");
         ctx.forcedCard = Number(cardValue);
       }
-      if (state.balance < cost) throw new Error("Credit 不足，請按 Reset");
+      if (state.balance < cost) throw new Error(tr("Insufficient credit — press Reset", "Credit 不足，請按 Reset"));
       round = playRound(ctx);
     } catch (error) {
       setMessage(error.message, "error");
@@ -1206,12 +1186,27 @@
     if (state.auto) setTimeout(() => { if (state.auto) play(); }, 220 / speed());
   }
 
-  // ===== 共用模擬面板介面（#batch-simulation 的 Start 使用目前 Mode／Bet／Card 設定）=====
-  window.demogameSimulateRound = () => {
-    const mode = state.mode, bet = curBet();
-    const round = playRound({ mode, bet, cardOn: cardOn(), naturalSheet: $("naturalSheetSelect").value || "A" });
-    const m = round.res.win / (bet * costMult(mode));
-    return { multiplier: m, maxMultiplier: m, fgTriggered: false, retryLimitExceeded: round.card?.exceeded ? 1 : 0 };
+  // ===== 共用模擬面板介面（#batch-simulation：押注模式由面板選單指定，Bet／Card 沿用目前設定）=====
+  // 選定模式只在該局模擬期間暫時套用（try/finally 還原），不動畫面與統計。本作只有 NB／EB，無 FG／Buy Feature。
+  window.demogameSimulationModes = MODES.map((m) => ({ value: m, label: BASE.bet_modes[String(m)].name }));
+  window.demogameSimulateRound = ({ mode } = {}) => {
+    const previousMode = state.mode;
+    if (mode !== undefined && BASE.bet_modes[String(mode)]) state.mode = Number(mode);
+    try {
+      const bet = curBet();
+      const round = playRound({ mode: state.mode, bet, cardOn: cardOn(), naturalSheet: $("naturalSheetSelect").value || "A" });
+      const m = round.res.win / (bet * costMult(state.mode));   // 總得分 ÷ 實際押注（NB／EB 線型口徑相同）
+      return {
+        multiplier: m,
+        lineMultiplier: m,
+        fgTriggered: false,
+        maxMultiplier: m,
+        retryLimitExceeded: round.card?.exceeded ? 1 : 0,
+        retryCount: round.card?.tries || 0
+      };
+    } finally {
+      state.mode = previousMode;
+    }
   };
   // Debug／驗證用：頁內大量模擬（與畫面邏輯共用 playRound）
   window.H014Demo = {
@@ -1269,9 +1264,12 @@
   function applyLanguage() {
     $("gameId").textContent = BASE.online_game_id || BASE.game_id;
     $("gameName").textContent = state.language === "en" ? BASE.name_en : BASE.name_zh;
-    $("gameTypeText").textContent = `${BASE.parsheet_id} · ${RTPC.config_code}`;
-    $("extraBetBtn").textContent = `Extra Bet (${costMult(1)}x)`;
+    $("extraBetBtn").textContent = `${window.demogameSharedText?.("Extra Bet") || "Extra Bet"} (${costMult(1)}x)`;
     document.title = `${BASE.name_en} — Demo Game`;
+    if (state.view) {   // 目前盤面訊息與 Feature Status 依語言重繪
+      $("messageBar").textContent = langText(state.view.message[0]);
+      $("featureStatus").textContent = langText(state.view.status);
+    }
   }
   function setDebug(enabled) {
     $("controls").classList.toggle("debug-off", !enabled);
@@ -1286,7 +1284,7 @@
     setReel(3, sh.r4, Math.floor(Math.random() * sh.r4.length));
     setScore("0", "Number Win（R1～R3 中線串接）");
     $("respinPill").classList.add("hidden");
-    $("featureStatus").textContent = "";
+    setStatus("");
     hideWheel();
     updateTopWheel();
     state.snapshots = []; state.snapshotIndex = -1; updateStepButtons();
@@ -1296,13 +1294,14 @@
     $("autoBtn").textContent = "Auto";
     $("rngList").innerHTML = ""; $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
     initialBoard();
-    setMessage("Ready — press Spin");
+    setMessage(["Ready — press Spin", "準備就緒，請按 Spin"]);
     updateStats();
   }
   function changeBetOrMode() {
     initialBoard();
     rebuildDebugSelects();
-    setMessage(`${BASE.bet_modes[String(state.mode)].name} · bet${curBet()}（cost ${fmt(curBet() * costMult())}）`);
+    const modeName = BASE.bet_modes[String(state.mode)].name;
+    setMessage([`${modeName} · bet${curBet()} (cost ${fmt(curBet() * costMult())})`, `${window.demogameSharedText?.(modeName) || modeName} · bet${curBet()}（押注 ${fmt(curBet() * costMult())}）`]);
     updateStats();
     setBusy(false);
   }
@@ -1323,7 +1322,24 @@
     location.search = params.toString();
   });
   // Config 只有一組（NB／EB 兩本 XLSX 綁成同一個 92A），押注由下方押注按鈕切換
-  $("demogameConfigSelect").innerHTML = `<option value="${RTPC.config_code}">${RTPC.config_code}</option>`;
+  // 卡片系統開關由 Config 決定：Base＝自然機率（卡片關）、92A＝卡片開（本作無 Profile）
+  $("demogameConfigSelect").innerHTML = `<option value="base">Base</option><option value="${RTPC.config_code}">${RTPC.config_code}</option>`;
+  {
+    let saved = null;
+    try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
+    $("demogameConfigSelect").value = saved === "off" ? "base" : RTPC.config_code;
+  }
+  $("demogameConfigSelect").addEventListener("change", () => {
+    const on = $("demogameConfigSelect").value !== "base";
+    const input = $("cardSystemInput");
+    if (input && !input.disabled) {
+      if (input.checked !== on) { input.checked = on; input.dispatchEvent(new Event("change", { bubbles: true })); }
+    } else {
+      window.DEMOGAME_CARD_SYSTEM_ENABLED = on;
+      try { localStorage.setItem("slotDemoCardSystem", on ? "on" : "off"); } catch (_) {}
+      document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: on } }));
+    }
+  });
   // 讓共用 Card System 開關可用：由 config_92A.card 轉成共用模組可辨識的 card_system 結構（不另存數值）
   window.H014_CARD_SYSTEM_CONFIG = {
     card_system: {
@@ -1372,12 +1388,14 @@
   document.addEventListener("demogame:card-system-change", () => rebuildDebugSelects());
 
   applyLanguage();
+  setTimeout(applyLanguage, 0);   // 共用模組載入後再套一次（Extra Bet 按鈕用共用字典）
   setDebug(false);
   reset();
   rebuildDebugSelects();
 })();
   </script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
+  <script src="../demogame_common.js?v=20261013c"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

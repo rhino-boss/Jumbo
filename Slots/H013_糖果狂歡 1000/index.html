@@ -1888,7 +1888,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
 
 <body>
@@ -2028,32 +2028,28 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
-        <ul>
-          <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（11 張）；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>
-          <li>載入失敗時自動關閉 Image 開關、改用文字顯示並提示失敗張數，不會停在載入畫面；背景分頁略過解碼，不會卡住。</li>
-          <li>符號圖改用 WebP（quality 90、保留透明）：552 KB → 87 KB；原 PNG 保留為美術原檔，Demo 不再引用。</li>
-          <li>共用 JS 版本參數 <code>demogame_common.js?v=4</code>。</li>
-          <li>驗證：本機伺服器開啟，預載 11／11 張完成、全部 naturalWidth &gt; 0、遮罩已消失、盤面圖片皆為 .webp；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
-        <ul>
-          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
-          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
-          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
-          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
+        <h4>v2（2.0.0.0）</h4>
+        <ol>
+          <li>驗證：開圖時有圖格 0 框 0 代號、關圖時全顯示框＋代號且字重 400、Console 無例外；未修改 XLSX／Config 數學參數。（09/24）</li>
+          <li>符號代號一律一般字重（不粗體），由共用 CSS 套用；共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。（09/24）</li>
+          <li>接入共用 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）：開＝只顯示符號圖（無框無代號，格子標 <code>has-symbol-art</code>）；關＝符號框＋代號。（09/24）</li>
+          <li>驗證：預載 11／11 張、全部 naturalWidth &gt; 0、遮罩消失、盤面皆 .webp、Console 無例外；未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>符號圖改用 WebP（quality 90、保留透明）：552 KB → 87 KB，原 PNG 留作美術原檔、Demo 不再引用；共用 JS 版本參數 <code>demogame_common.js?v=4</code>。（10/06）</li>
+          <li>符號圖開局前預載：<code>DEMOGAME_IMAGE_TOGGLE.images</code> 列 11 張，載入期間擋操作、超過 120 ms 顯示「載入圖片 n / N」；失敗時自動關 Image 改文字並提示張數；背景分頁略過解碼。（10/06）</li>
+          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>）：NB 每局總得分（含 FG）÷ 底注、64 區間、縱軸 0～20%，Reset 清空；本檔只在 NB 局結束呼叫 <code>record()</code>（10/13 已併入 Simulation）。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>驗證：node --check 通過；四種模式各模擬 2000 局無 Console 例外、畫面押注模式與統計未變；Card Oldhand NB 72.7%、EB 52.0%、BF 50.6%、SF 93.8%（偏低來自既有 Card 重抽上限 250 次，BF 約 21% 局超限沿用最後結果，與實際遊玩相同，未改）；Card Off NB 92.4%（20000 局）；語言 zh→en→zh 一致、Log Clear 正常。（10/13）</li>
+          <li>共用 JS 版本參數改為 <code>demogame_common.js?v=20261013</code>。（10/13）</li>
+          <li>語言修正：Extra Bet 按鈕、Feature Bar 的 Extra Bet、Previous／Next 中文改為 額外押注、上一步／下一步，切回英文可還原。（10/13）</li>
+          <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用）。（10/13）</li>
+          <li>模擬口徑：<code>multiplier</code> 改為總得分 ÷ 實際押注（原本固定 NB 並 ÷ 底注）；<code>lineMultiplier</code> BF／SF ÷ 底注、NB／EB ÷ 押注；另回傳 <code>retryCount</code>。（10/13）</li>
+          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
+          <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題（adapter 回傳 <code>bgCascade</code>／<code>fgCascades</code>）。（10/13）</li>
+          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF／SF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」。Set RNG 上方的即時線型不再顯示。（10/13）</li>
+          <li>Simulation 面板新增押注模式選單（Normal Bet／Extra Bet／Buy Feature／Super Feature，<code>window.demogameSimulationModes</code>）；<code>demogameSimulateRound({ mode })</code> 只在模擬期間暫時套用所選模式，不動畫面押注模式與統計。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+        </ol>
       </article>
       </div>
     </section>
@@ -2283,7 +2279,7 @@
   const Box = adaptH013(window.H013_BOX_DATA);
   const DENOM = 0.002;
   const INITIAL_BALANCE = 10000;
-  const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
+  const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
   const MODE_NORMAL = Box.mode_normalbet;
   const MODE_EXTRA = Box.mode_extrabet;
   const MODE_BUY = Box.mode_featurebuy;
@@ -2881,7 +2877,7 @@
   function updateFeatureBar(spin = null) {
     const inFg = spin?.scene === "FG" || Boolean(state.pendingFg);
     document.body.classList.toggle("fg-mode", inFg);
-    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : state.selectedMode === MODE_EXTRA ? "Extra Bet" : t("baseGame"));
+    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : state.selectedMode === MODE_EXTRA ? tr("Extra Bet", "額外押注") : t("baseGame"));
     setText(el.cascade, String(spin?.steps.length || 0));
     const multiplier = spin?.scene === "FG" ? spin.effectiveMultiplier : 1;
     setText(el.multiplier, `x${multiplier || 1}`);
@@ -3131,30 +3127,41 @@
     return candidate;
   }
 
-  window.demogameSimulateRound = () => {
+  // 模擬面板的押注模式選單；選定模式只在該局模擬期間暫時套用，不改畫面上的押注模式。
+  window.demogameSimulationModes = [
+    { value: MODE_NORMAL, label: "Normal Bet" },
+    { value: MODE_EXTRA, label: "Extra Bet" },
+    { value: MODE_BUY, label: "Buy Feature" },
+    { value: MODE_SUPER, label: "Super Feature", yMax: 20 }
+  ];
+  window.demogameSimulateRound = ({ mode } = {}) => {
     const previousMode = state.selectedMode;
-    state.selectedMode = MODE_NORMAL;
+    if (mode !== undefined) state.selectedMode = mode;
     try {
-      const selection = prepareCardSelection(MODE_NORMAL);
+      const purchased = state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+      const selection = prepareCardSelection(state.selectedMode);
       const parameters = cardParameters(selection);
       let candidate = null;
       let retries = 0;
       let accepted = false;
       const retryLimit = 250;
       do {
-        candidate = simulateRoundCandidate(false, null, parameters);
+        candidate = simulateRoundCandidate(purchased, null, parameters);
         if (cardAccepts(selection, candidate)) { accepted = true; break; }
         retries += 1;
       } while (retries < retryLimit);
       const allSpins = [candidate.base, ...candidate.freeSpins];
+      const totalMoney = toMoney(candidate.totalPay);
       return {
-        multiplier: toMoney(candidate.totalPay) / betMoney(),
+        multiplier: totalMoney / wagerMoney(),   // RTP 口徑：總得分 ÷ 實際押注
+        lineMultiplier: totalMoney / (purchased ? betMoney() : wagerMoney()),   // 線型：BF／SF ÷ 底注，NB／EB ÷ 押注
         fgTriggered: candidate.triggered,
         maxMultiplier: Math.max(1, ...allSpins.map((spin) => Number(spin.effectiveMultiplier) || 1)),
         retryLimitExceeded: accepted ? 0 : 1,
         bgCascade: candidate.base.steps.filter((step) => step.wins?.length).length,
         fgCascades: candidate.freeSpins.map((spin) => spin.steps.filter((step) => step.wins?.length).length),
-        retries
+        retries,
+        retryCount: retries
       };
     } finally {
       state.selectedMode = previousMode;
@@ -3482,7 +3489,7 @@
     setText(document.querySelector("#play-panel .zone-label"), t("play"));
     setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
     setBetModeButtonLabel(el.normal, t("normalBet"), "NB");
-    setBetModeButtonLabel(el.extra, `Extra Bet (${Box.extrabet}x)`, `EX (${Box.extrabet}x)`);
+    setBetModeButtonLabel(el.extra, `${tr("Extra Bet", "額外押注")} (${Box.extrabet}x)`, `EX (${Box.extrabet}x)`);
     setBetModeButtonLabel(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
     setBetModeButtonLabel(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`, `SF (${Box.superfeaturebuy}x)`);
     refreshBetModeLabels();
@@ -3495,6 +3502,7 @@
     if (debugLabel?.lastChild) debugLabel.lastChild.textContent = ` ${t("debugMode")}`;
     const forceLabel = document.querySelector('label[for="forceFgInput"]');
     if (forceLabel?.lastChild) forceLabel.lastChild.textContent = ` ${t("forceFg")}`;
+    setText(el.previous, `◀◀ ${tr("Previous", "上一步")}`); setText(el.next, `${tr("Next", "下一步")} ▶▶`);
     const cardLabel = el.cardRange.closest("label");
     if (cardLabel?.firstChild) cardLabel.firstChild.textContent = ` ${tr("Card System", "卡片系統")} `;
     const speedLabel = document.querySelector('label[for="speedRange"]');
@@ -3584,7 +3592,7 @@
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script src="../demogame_common.js?v=20261013c"></script>
   <script>
     (() => {
       "use strict";

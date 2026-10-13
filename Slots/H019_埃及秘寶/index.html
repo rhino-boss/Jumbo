@@ -1839,7 +1839,7 @@
       #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
 
 <body>
@@ -1976,32 +1976,26 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
-        <ul>
-          <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（12 張）；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>
-          <li>載入失敗時自動關閉 Image 開關、改用文字顯示並提示失敗張數，不會停在載入畫面；背景分頁略過解碼，不會卡住。</li>
-          <li>符號圖改用 WebP（quality 90、保留透明）：385 KB → 87 KB；原 PNG 保留為美術原檔，Demo 不再引用。</li>
-          <li>共用 JS 版本參數 <code>demogame_common.js?v=4</code>。</li>
-          <li>驗證：本機伺服器開啟，預載 12／12 張完成、全部 naturalWidth &gt; 0、遮罩已消失、盤面圖片皆為 .webp；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
-        <ul>
-          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
-          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
-          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
-          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
+        <h4>v3（3.0.0.1）</h4>
+        <ol>
+          <li>符號顯示接共用 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）：開＝只顯示圖（無代號、無符號框，<code>has-symbol-art</code>），關＝符號框＋代號；代號改一般字重；<code>demogame_common.css?v=4</code>。（09/24）</li>
+          <li>驗證：開圖時有圖格 0 個框、0 個代號；關圖時全部框＋代號、字重 400；Console 無例外。未修改 XLSX／Config 數學參數。（09/24）</li>
+          <li>符號圖開局前預載：<code>DEMOGAME_IMAGE_TOGGLE.images</code> 列 12 張，由共用 JS 預載解碼，期間擋操作、超過 120 ms 顯示「載入圖片 n / N」；載入失敗自動關 Image 改文字；<code>demogame_common.js?v=4</code>。（10/06）</li>
+          <li>符號圖改用 WebP（quality 90、保留透明）：385 KB → 87 KB，Demo 不再引用 PNG。（10/06）</li>
+          <li>驗證：預載 12／12 張、naturalWidth 皆 &gt; 0、遮罩消失、盤面皆 .webp、Console 無例外。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>，64 區間）：NB 一局結束呼叫 <code>record()</code>，Reset 清空（10/13 起改併入 Simulation）。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>Simulation 面板新增押注模式選單（Normal Bet／Buy Feature／Super Feature）；<code>demogameSimulateRound({ mode })</code> 只在模擬該局暫時切換模式（try/finally 還原），不動畫面押注模式與統計；Buy／Super Feature 以 BF_Symbol 輪帶開 BG 後必進 FG。（10/13）</li>
+          <li>Adapter 口徑：RTP＝每局總得分（含 FG）÷ 實際押注；線型與最高倍數＝NB ÷ 押注、Buy／Super Feature ÷ 底注；回傳 BG／FG 消除次數。（10/13）</li>
+          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB 1%、Buy／Super Feature 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」；原 Set RNG 上方即時線型不再顯示。（10/13）</li>
+          <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題。（10/13）</li>
+          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
+          <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用）；<code>demogame_common.js?v=20261013</code>。（10/13）</li>
+          <li>本遊戲中英切換：Stats 標題改由共用統一（原本切回 English 停在「Simulation Stats」）；狀態列 Cascade／Mult／FG Left、Previous／Next、Simulation 選單 Super Feature 補中文並可切回英文。（10/13）</li>
+          <li>驗證：inline script 皆過 <code>node --check</code>；三種模式各模擬 2,000 局完成、顯示「進行中」、畫面統計維持 0、Console 無錯誤；Buy／Super Feature FG 觸發 100%；語言 en→zh→en→zh 完全還原；Log 可記錄、Clear 可清空。（10/13）</li>
+          <li>本頁無 Card System（Off），自然 RTP 遠高於目標（NB 約 4,600%～6,600%、Buy 約 3,000%、Super 約 700%），屬 Config 依賴卡片系統、Demo 未實作，非本次修改造成。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+        </ol>
       </article>
       </div>
     </section>
@@ -2202,7 +2196,7 @@
   const Box = data;
   const DENOM = 0.002;
   const INITIAL_BALANCE = 10000;
-  const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
+  const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
   const MODE_NORMAL = Box.mode_normalbet;
   const MODE_BUY = Box.mode_featurebuy;
   const MODE_SUPER = Box.mode_superfeaturebuy;
@@ -2239,7 +2233,8 @@
       betMode: "Bet Mode", normalBet: "Normal Bet", debugMode: "Debug Mode", forceFg: "Force FG", setting: "Setting",
       language: "Language", help: "Help", reset: "Reset", reelRng: "Reel RNG", spinResult: "Spin Result",
       clusterWins: "Cluster Wins", clear: "Clear", close: "Close", loading: "Loading game rules...",
-      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay"
+      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay",
+      previous: "Previous", next: "Next"
     },
     zh: {
       gameName: "埃及秘寶", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
@@ -2249,7 +2244,8 @@
       betMode: "押注模式", normalBet: "一般押注", debugMode: "除錯模式", forceFg: "強制 FG", setting: "設定",
       language: "語言", help: "Help", reset: "重置", reelRng: "輪帶 RNG", spinResult: "Spin 結果",
       clusterWins: "Cluster 得獎", clear: "清除", close: "關閉", loading: "正在載入遊戲規則…",
-      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Cluster 得獎", pay: "得分"
+      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Cluster 得獎", pay: "得分",
+      previous: "上一步", next: "下一步"
     }
   };
   function savedLanguage() {
@@ -2618,12 +2614,20 @@
     return schedule;
   }
 
-  window.demogameSimulateRound = () => {
+  // 模擬面板的押注模式選單；選定模式只在該局模擬期間暫時套用，不改畫面上的押注模式與統計。
+  // Buy／Super Feature 照實際遊玩：BF_Symbol 輪帶開一局 BG 後必進 FG（FG 用該模式的 profile）。
+  window.demogameSimulationModes = [
+    { value: MODE_NORMAL, label: "Normal Bet" },
+    { value: MODE_BUY, label: "Buy Feature" },
+    { value: MODE_SUPER, label: "Super Feature", yMax: 20 }
+  ];
+  window.demogameSimulateRound = ({ mode } = {}) => {
     const previousMode = state.selectedMode;
-    state.selectedMode = MODE_NORMAL;
+    if (mode !== undefined) state.selectedMode = mode;
     try {
-      const base = playSpin(chooseBaseTable(), "BG", 0);
-      const fgTriggered = base.scatterCount >= 4;
+      const bought = state.selectedMode !== MODE_NORMAL;
+      const base = bought ? forcedTriggerSpin() : playSpin(chooseBaseTable(), "BG", 0);
+      const fgTriggered = bought || base.scatterCount >= 4;
       const freeSpins = [];
       let totalWin = base.finalPay;
       let maxMultiplier = base.c2.total;
@@ -2644,11 +2648,14 @@
           }
         }
       }
+      const winMoney = toMoney(totalWin);
       return {
-        multiplier: toMoney(totalWin) / betMoney(),
+        multiplier: winMoney / wagerMoney(),                                // RTP 口徑：÷ 實際押注
+        lineMultiplier: winMoney / (bought ? betMoney() : wagerMoney()),    // 線型口徑：BF／SF ÷ 底注，NB ÷ 押注
         fgTriggered,
         maxMultiplier,
         retryLimitExceeded: 0,
+        retryCount: 0,
         bgCascade: base.steps.length,
         fgCascades: freeSpins.map((spin) => spin.steps.length)
       };
@@ -3217,6 +3224,12 @@
   }
   addEventListener("resize", refreshBetModeLabels);
 
+  // 共用 Simulation 押注模式選單：Super Feature 不在共用字典，由本檔依語言切換（共用模組載入後才有選單）。
+  function applySimulationModeLabels() {
+    const option = document.querySelector(`#batchSimulationMode option[value="${MODE_SUPER}"]`);
+    if (option) option.textContent = t("superFeature");
+  }
+
   function applyLanguage(showMessage = false) {
     document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
     el.language.value = state.language;
@@ -3224,7 +3237,11 @@
     setText(byId("gameName"), t("gameName"));
     const creditLabels = document.querySelectorAll("#credit-bar .i-label");
     [t("credit"), t("bet"), t("win")].forEach((value, index) => setText(creditLabels[index], value));
-    setText(document.querySelector("#simulation-stats h3"), t("stats"));
+    // Stats 標題由共用模組統一（"Stats"／統計），本檔不覆寫，切回 English 才能還原。
+    [["#cascadePill .k", "cascade"], ["#multPill .k", "multiplier"], ["#fgLeftPill .k", "fgLeft"]]
+      .forEach(([selector, key]) => setText(document.querySelector(selector), t(key)));
+    setText(el.previous, `◀◀ ${t("previous")}`); setText(el.next, `${t("next")} ▶▶`);
+    applySimulationModeLabels();
     const statLabels = document.querySelectorAll("#simulation-stats .s-label");
     [t("rounds"), "RTP", t("hitRate"), "FG Trigger", t("maxMultiplier")].forEach((value, index) => setText(statLabels[index], value));
     setText(document.querySelector("#play-panel .zone-label"), t("play"));
@@ -3320,11 +3337,12 @@
   updateControls();
   toggleDebug(false);
   applyLanguage();
+  setTimeout(applySimulationModeLabels, 0);   // 共用 Simulation 選單在 demogame_common.js 載入後才建立
   appendLog(`${Box.model} loaded | ${Box.excel_version}`, "result");
 })();
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script src="../demogame_common.js?v=20261013c"></script>
 </body>
 
 </html>

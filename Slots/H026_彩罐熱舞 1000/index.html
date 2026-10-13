@@ -1883,7 +1883,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
 
 <body>
@@ -1959,16 +1959,16 @@
         </section>
 
         <section id="simulation-stats">
-          <h3 data-i18n="simulationStats">Simulation Stats</h3>
-          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
               id="roundCountValue">0</span></div>
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
           </div>
-          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
               id="hitRateValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
               id="fgTriggerValue">0</span></div>
-          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
         </section>
 
@@ -1976,26 +1976,35 @@
     </div>
 
     <section id="controls" class="debug-off">
-      <section id="batch-simulation" class="control-zone debug-only debug-hidden">
-        <span class="zone-label" data-i18n="naturalSimulation">Simulation</span>
-        <div id="batchSimulationNote" class="batch-simulation-note">Current Card Profile</div>
+      <section id="batch-simulation" class="control-zone debug-only debug-hidden demogame-fallback-simulation">
+        <span class="zone-label">Simulation</span>
+        <div id="batchSimulationNote" class="batch-simulation-note">Independent math simulation · Current Bet</div>
         <div class="batch-simulation-controls">
           <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="10000"
             inputmode="numeric" aria-label="Simulation rounds">
-          <button id="batchSimulationStartBtn" type="button" data-i18n="startSimulation">Start</button>
+          <button id="batchSimulationStartBtn" type="button">Start</button>
         </div>
-        <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span
-            class="s-value" id="batchSimulationRoundCount">0</span></div>
+        <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+            id="batchSimulationRoundCount">0</span></div>
         <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value"
             id="batchSimulationRtp">0.00%</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+        <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
             id="batchSimulationHitRate">0.00%</span></div>
         <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
             id="batchSimulationFgTrigger">0.00% (-- rounds)</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span
-            class="s-value hi" id="batchSimulationMaxMultiplier">x0</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="retryLimitExceeded">Retry Limit Exceeded</span><span
-            class="s-value" id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
+        <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+            id="batchSimulationMaxMultiplier">x0</span></div>
+        <div class="simulation-row"><span class="s-label">Retry Limit Exceeded</span><span class="s-value"
+            id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
+        <table class="batch-cascade-table" aria-label="Cascade distribution">
+          <thead>
+            <tr><th>Scene</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5+</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>BG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+            <tr><th>FG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
@@ -2034,7 +2043,7 @@
     <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="live-log-header diagnostic-header">
         <span>Log</span>
-        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
+        <button id="clearLogBtn" type="button">Clear</button>
       </div>
       <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
     </section>
@@ -2043,37 +2052,29 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
-        <h4>2026-10-07：接上共用 Image 開關＋符號圖片開局前預載、改用 WebP</h4>
-        <ul>
-          <li>本作其實有符號美術（config <code>asset_map</code> 的 11 張符號圖與 2 張金框圖，盤面一直有畫圖）；2026-09-24 紀錄「本作無符號美術」有誤，本次更正。</li>
-          <li>新增 <code>DEMOGAME_IMAGE_TOGGLE</code>（含 <code>images</code> 清單 13 張）：Setting 出現 Image 開關；開局前由 <code>demogame_common.js?v=4</code> 預載並解碼，期間擋住操作、超過 120 ms 顯示載入遮罩；載入失敗自動改文字顯示。</li>
-          <li>依 Demogame規範 2.3：Image 開時有圖格加 <code>has-symbol-art</code>（不顯示代號）；Image 關時不畫符號圖與金框圖，顯示符號框＋代號。</li>
-          <li>符號圖改用 WebP：PNG 564 KB → WebP 151 KB；config 的 <code>asset_map</code> 仍記 PNG 檔名，由 Demo 讀取時換成 .webp，原 PNG 保留。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
-        <ul>
-          <li>本作無符號美術，不顯示 Image 開關，維持符號框＋代號。</li>
-          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
-          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
-          <li>驗證：代號字重 400，Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
+        <h4>v4（4.0.0.6）</h4>
+        <ol>
+          <li>符號代號（M1、M2…）改一般字重（不粗體），由共用 CSS（<code>demogame_common.css?v=4</code>）統一套用；驗證代號字重 400、Console 無例外。未修改 XLSX／Config 數學參數。（09/24）</li>
+          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>，64 區間）：NB 每局總得分（含 FG）÷ 底注，Reset 清空；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>接上共用 Image 開關：新增 <code>DEMOGAME_IMAGE_TOGGLE</code>（13 張：11 符號＋2 金框），由 <code>demogame_common.js?v=4</code> 開局前預載，超過 120 ms 顯示載入遮罩、失敗改文字顯示；更正 09/24「本作無符號美術」的誤記。（10/07）</li>
+          <li>依規範 2.3：Image 開時有圖格加 <code>has-symbol-art</code>、不顯示代號；Image 關時顯示符號框＋代號，不畫符號圖與金框圖。（10/07）</li>
+          <li>符號圖改用 WebP（564 KB → 151 KB）；config <code>asset_map</code> 仍記 PNG，由 Demo 讀取時換成 .webp，原 PNG 保留。未修改 XLSX／Config 數學參數。（10/07）</li>
+          <li>Simulation 改用共用面板（<code>demogame_common.js?v=20261013</code>），新增押注模式選單（Normal Bet／Extra Bet／Buy Feature）；移除本檔專屬模擬面板與 <code>runBatchSimulation</code>，改用 <code>window.demogameSimulateRound({ mode })</code> 跑實際的 <code>runRound</code>（含 Card System），結束還原押注模式、餘額與統計。（10/13）</li>
+          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」。RTP＝總得分（含 FG）÷ 實際押注。（10/13）</li>
+          <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題。（10/13）</li>
+          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」；中獎率改為共用口徑「有得分局數 ÷ 總局數」（原為 Spin 層級）。（10/13）</li>
+          <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用字典），本檔重複的共用標籤翻譯移除。（10/13）</li>
+          <li>押注模式按鈕帶倍數、共用字典比對不到，改由本檔提供中文「一般押注／額外押注 (2x)／購買特色 (75x)」，切回 English 還原。（10/13）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；92A-Oldhand Card On 模擬 NB 2,000 局 RTP 91.98%、EB 4,000 局 91.76%、BF 2,000 局 89.52%（面板另跑 BF 2,000 局 100.65%）；Card Off 為自然數學（NB 40,000 局約 1,763%、EB 約 935%）。模擬後局數、餘額、押注模式不變；中英切換與還原正確；Log、Clear 正常；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+        </ol>
       </article>
       </div>
     </section>
 
     <section id="settings-wrap" class="diagnostic-region">
-      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
+      <div class="setting-header diagnostic-header">Setting</div>
       <div class="setting-body">
         <label class="setting-toggle" for="debugModeInput">
           <input id="debugModeInput" type="checkbox">
@@ -2096,14 +2097,14 @@
           </select>
         </label>
         <label class="config-control" for="languageSelect">
-          <span data-i18n="language">Language</span>
+          <span>Language</span>
           <select id="languageSelect">
             <option value="zh">繁中</option>
             <option value="en">English</option>
           </select>
         </label>
         <button id="helpBtn" type="button">Help</button>
-        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
+        <button id="resetBtn" type="button">Reset</button>
       </div>
     </section>
 
@@ -2313,7 +2314,7 @@
     const FG_SPIN_CAP = 50;
     const FG_TRIGGER_BASE_SPINS = 12;
     const FG_EXTRA_SPINS_PER_SCATTER = 2;
-    const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
+    const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
     const SAVED_LANGUAGE = (() => {
       try {
         return localStorage.getItem("slotDemoLanguage") === "zh" ? "zh" : "en";
@@ -2365,7 +2366,6 @@
       liveLog: [],
       language: SAVED_LANGUAGE,
       cardProfile: SAVED_CARD_PROFILE,
-      batchSimulationRunning: false,
       lastMessage: "Ready — press Spin"
     };
 
@@ -2386,15 +2386,6 @@
     const roundCountValueEl = document.getElementById("roundCountValue");
     const maxMultiplierValueEl = document.getElementById("maxMultiplierValue");
     const batchSimulationPanelEl = document.getElementById("batch-simulation");
-    const batchSimulationNoteEl = document.getElementById("batchSimulationNote");
-    const batchSimulationRoundsEl = document.getElementById("batchSimulationRounds");
-    const batchSimulationStartBtn = document.getElementById("batchSimulationStartBtn");
-    const batchSimulationRoundCountEl = document.getElementById("batchSimulationRoundCount");
-    const batchSimulationRtpEl = document.getElementById("batchSimulationRtp");
-    const batchSimulationHitRateEl = document.getElementById("batchSimulationHitRate");
-    const batchSimulationFgTriggerEl = document.getElementById("batchSimulationFgTrigger");
-    const batchSimulationMaxMultiplierEl = document.getElementById("batchSimulationMaxMultiplier");
-    const batchSimulationRetryLimitExceededEl = document.getElementById("batchSimulationRetryLimitExceeded");
     const lineListEl = document.getElementById("lineList");
     const rngListEl = document.getElementById("rngList");
     const spinResultListEl = document.getElementById("spinResultList");
@@ -2497,21 +2488,10 @@
 
     const UI_TEXT = {
       en: {
-        simulationStats: "Simulation Stats",
-        naturalSimulation: "Simulation",
-        startSimulation: "Start",
-        totalRounds: "Total Rounds",
-        hitRate: "Hit Rate",
-        maxMultiplier: "Max Multiplier",
-        retryLimitExceeded: "Retry Limit Exceeded",
         reelRng: "Reel RNG",
         spinResult: "Spin Result",
         lineWins: "Line Wins",
-        clear: "Clear",
-        setting: "Setting",
         playerProfile: "Player",
-        language: "Language",
-        reset: "Reset",
         gameHelp: "Game Help",
         close: "Close",
         loadingRules: "Loading game rules...",
@@ -2520,21 +2500,10 @@
         noBoardResult: "No board result yet."
       },
       zh: {
-        simulationStats: "模擬統計",
-        naturalSimulation: "模擬",
-        startSimulation: "開始模擬",
-        totalRounds: "總局數",
-        hitRate: "命中率",
-        maxMultiplier: "最大 Multiplier",
-        retryLimitExceeded: "Retry Limit 超限",
         reelRng: "Reel RNG",
         spinResult: "Spin 結果",
         lineWins: "Line Wins",
-        clear: "清除",
-        setting: "設定",
         playerProfile: "玩家",
-        language: "語言",
-        reset: "重置",
         gameHelp: "遊戲 Help",
         close: "關閉",
         loadingRules: "正在載入遊戲規則...",
@@ -2772,16 +2741,17 @@
       });
       closeHelpBtn.setAttribute("aria-label", state.language === "zh" ? "關閉遊戲 Help" : "Close game help");
       setText(messageBarEl, localizeMessage(state.lastMessage));
-      setBetModeButtonLabel(normalBetBtn, "Normal Bet", "NB");
-      setBetModeButtonLabel(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`, `EX (${getExtraBetMultiplier()}x)`);
-      setBetModeButtonLabel(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
+      // 押注模式按鈕帶倍數，共用字典只比對整段文字，故中文標籤由本檔提供（切回 English 時還原）
+      const zhLabels = state.language === "zh";
+      setBetModeButtonLabel(normalBetBtn, zhLabels ? "一般押注" : "Normal Bet", "NB");
+      setBetModeButtonLabel(extraBetBtn, `${zhLabels ? "額外押注" : "Extra Bet"} (${getExtraBetMultiplier()}x)`, `EX (${getExtraBetMultiplier()}x)`);
+      setBetModeButtonLabel(buyFeatureBtn, `${zhLabels ? "購買特色" : "Buy Feature"} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
       refreshBetModeLabels();
       updateSpinButtonState();
       updateFeatureBar(state.activeSpin, state.activeRound);
       renderLineList(state.activeSpin);
       renderSpinResultList(state.activeSpin);
       renderRngList(state.activeSpin);
-      updateBatchSimulationContext();
       if (gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
       try {
         localStorage.setItem("slotDemoLanguage", state.language);
@@ -3989,146 +3959,46 @@
       };
     }
 
-    function summarizeBatchSimulationRound(round) {
-      return {
-        coin_in: round.coin_in,
-        total_win: round.total_win,
-        fg_triggered: Boolean(round.trigger_source),
-        retry_limit_exceeded: Boolean(round.retry_limit_exceeded),
-        spin_count: round.spins.length,
-        hit_count: round.spins.filter((spin) => spin.hit_any).length,
-        max_multiplier: round.spins.reduce(
-          (maximum, spin) => Math.max(maximum, Number(spin.multiplier_sum_after_spin || 0)),
-          0
-        )
-      };
-    }
-
-    function renderBatchSimulationStats(stats) {
-      const rounds = Number(stats.rounds || 0);
-      const triggerCount = Number(stats.fgTriggers || 0);
-      const triggerRate = rounds > 0 ? triggerCount / rounds : 0;
-      const triggerCycle = triggerCount > 0 ? Math.round(rounds / triggerCount) : "--";
-      const retryLimitExceeded = Number(stats.retryLimitExceeded || 0);
-      setText(batchSimulationRoundCountEl, rounds.toLocaleString("en-US"));
-      setText(batchSimulationRtpEl, formatPercent(stats.totalBet > 0 ? stats.totalWin / stats.totalBet : 0));
-      setText(batchSimulationHitRateEl, formatPercent(stats.totalSpins > 0 ? stats.hitSpins / stats.totalSpins : 0));
-      setText(
-        batchSimulationFgTriggerEl,
-        `${formatPercent(triggerRate)} (${triggerCycle}${state.language === "zh" ? "場" : " rounds"})`
-      );
-      setText(batchSimulationMaxMultiplierEl, `x${stats.maxMultiplier || 0}`);
-      setText(
-        batchSimulationRetryLimitExceededEl,
-        `${retryLimitExceeded.toLocaleString("en-US")} (${formatPercent(rounds > 0 ? retryLimitExceeded / rounds : 0)})`
-      );
-    }
-
-    function updateBatchSimulationContext() {
-      const configLabel = H026_ACTIVE_CONFIG
-        .replace(/^config_/, "")
-        .replace(/\.js$/i, "");
-      const modeLabel = state.extraBetEnabled ? `Extra Bet (${getExtraBetMultiplier()}x)` : "Normal Bet";
-      const playerLabel = state.cardProfile === "newbie" ? "Newbie" : "Oldhand";
-      const cardLabel = CARD_SYSTEM_ENABLED
-        ? `Card System ${playerLabel}`
-        : "Card System Off";
-      setText(
-        batchSimulationNoteEl,
-        `Config ${configLabel} · ${cardLabel} · ${modeLabel} · Bet ${formatBetMoney(getSelectedBetCostMoney())}`
-      );
-    }
-
-    async function runBatchSimulation() {
-      if (state.batchSimulationRunning) return;
-      const requestedRounds = Number(batchSimulationRoundsEl.value);
-      if (!Number.isInteger(requestedRounds) || requestedRounds < 1 || requestedRounds > 1000000) {
-        batchSimulationRoundsEl.setCustomValidity(
-          state.language === "zh" ? "請輸入 1～1,000,000 的整數" : "Enter an integer from 1 to 1,000,000"
-        );
-        batchSimulationRoundsEl.reportValidity();
-        return;
-      }
-      batchSimulationRoundsEl.setCustomValidity("");
-
-      clearTimeout(state.autoTimer);
-      state.autoEnabled = false;
-      state.batchSimulationRunning = true;
-      batchSimulationRoundsEl.disabled = true;
-      batchSimulationStartBtn.disabled = true;
-      setText(batchSimulationStartBtn, state.language === "zh" ? "模擬中…" : "Running…");
-      updateSpinButtonState();
-
-      const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
-      const liveStateSnapshot = {
-        balance: state.balance,
-        totalBet: state.totalBet,
-        totalWin: state.totalWin,
-        totalSpins: state.totalSpins,
-        hitSpins: state.hitSpins,
-        freegameTriggerCount: state.freegameTriggerCount,
-        normalTriggerCount: state.normalTriggerCount,
-        featurebuyTriggerCount: state.featurebuyTriggerCount,
-        forcedTriggerCount: state.forcedTriggerCount,
-        retriggerCount: state.retriggerCount,
-        roundCount: state.roundCount
-      };
-      Object.assign(state, {
-        balance: Number.MAX_SAFE_INTEGER / 4,
-        totalBet: 0,
-        totalWin: 0,
-        totalSpins: 0,
-        hitSpins: 0,
-        freegameTriggerCount: 0,
-        normalTriggerCount: 0,
-        featurebuyTriggerCount: 0,
-        forcedTriggerCount: 0,
-        retriggerCount: 0,
-        roundCount: 0
-      });
-      const stats = {
-        rounds: 0,
-        totalBet: 0,
-        totalWin: 0,
-        totalSpins: 0,
-        hitSpins: 0,
-        fgTriggers: 0,
-        retryLimitExceeded: 0,
-        maxMultiplier: 0
-      };
-      renderBatchSimulationStats(stats);
-
+    // 共用 Simulation 面板（demogame_common.js）的 N 局模擬介面：用與實際遊玩相同的 runRound（含 Card System），
+    // 選定押注模式只在該局模擬期間暫時套用，結束後還原押注模式、餘額與所有統計，不動畫面。
+    window.demogameSimulationModes = [
+      { value: Box.mode_normalbet, label: "Normal Bet" },
+      { value: Box.mode_extrabet, label: "Extra Bet" },
+      { value: Box.mode_featurebuy, label: "Buy Feature" }
+    ];
+    const SIMULATION_STATE_KEYS = [
+      "balance", "totalBet", "totalWin", "totalSpins", "hitSpins", "freegameTriggerCount", "normalTriggerCount",
+      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled"
+    ];
+    window.demogameSimulateRound = ({ mode } = {}) => {
+      const betMode = mode !== undefined ? Number(mode)
+        : state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
+      const snapshot = {};
+      SIMULATION_STATE_KEYS.forEach((key) => { snapshot[key] = state[key]; });
+      const previousRandom = replayRandom;
+      replayRandom = null;
+      state.extraBetEnabled = betMode === Box.mode_extrabet;
+      state.balance = Number.MAX_SAFE_INTEGER / 4;
       try {
-        for (let roundIndex = 0; roundIndex < requestedRounds; roundIndex += 1) {
-          const result = summarizeBatchSimulationRound(runRound(betMode, false, null));
-          stats.rounds += 1;
-          stats.totalBet += result.coin_in;
-          stats.totalWin += result.total_win;
-          stats.totalSpins += result.spin_count;
-          stats.hitSpins += result.hit_count;
-          stats.fgTriggers += result.fg_triggered ? 1 : 0;
-          stats.retryLimitExceeded += result.retry_limit_exceeded ? 1 : 0;
-          stats.maxMultiplier = Math.max(stats.maxMultiplier, result.max_multiplier);
-
-          if (stats.rounds % 250 === 0 || stats.rounds === requestedRounds) {
-            renderBatchSimulationStats(stats);
-            await sleep(0);
-          }
-        }
-        writeMessage(
-          `Simulation finished | ${requestedRounds.toLocaleString("en-US")} rounds | Retry Limit Exceeded ${stats.retryLimitExceeded.toLocaleString("en-US")}`
-        );
-      } catch (error) {
-        writeMessage(`Simulation failed | ${error.message}`, "error");
+        const round = runRound(betMode, false, null);
+        const totalWin = Number(round.total_win) || 0;
+        const fgSpins = round.spins.slice(1);
+        return {
+          multiplier: totalWin / round.coin_in,
+          // 線型口徑：BF ÷ 底注，其餘 ÷ 押注
+          lineMultiplier: totalWin / (betMode === Box.mode_featurebuy ? coinIn(Box.mode_normalbet) : round.coin_in),
+          fgTriggered: Boolean(round.trigger_source),
+          maxMultiplier: round.spins.reduce((maximum, spin) => Math.max(maximum, Number(spin.multiplier_sum_after_spin || 0)), 0),
+          retryLimitExceeded: round.retry_limit_exceeded ? 1 : 0,
+          retryCount: round.retry_count,
+          bgCascade: round.base_spin.board_steps.length,
+          fgCascades: fgSpins.map((spin) => spin.board_steps.length)
+        };
       } finally {
-        Object.assign(state, liveStateSnapshot);
-        state.batchSimulationRunning = false;
-        batchSimulationRoundsEl.disabled = false;
-        batchSimulationStartBtn.disabled = false;
-        setText(batchSimulationStartBtn, tr("startSimulation"));
-        updateSpinButtonState();
+        replayRandom = previousRandom;
+        SIMULATION_STATE_KEYS.forEach((key) => { state[key] = snapshot[key]; });
       }
-    }
+    };
 
     // 共用 Image 開關＋開局前預載（Demogame規範 2.3 圖片預載）：images 列出 asset_map 全部符號圖與金框圖
     let useSymbolImages = true;
@@ -4216,11 +4086,10 @@
       setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
       setText(fgTriggerValueEl, calcFgTriggerText());
       setText(maxMultiplierValueEl, `x${state.maxMultiplier}`);
-      updateBatchSimulationContext();
     }
 
     function updateSpinButtonState() {
-      const wagerLocked = state.isBusy || state.autoEnabled || state.batchSimulationRunning || Boolean(state.pendingRound);
+      const wagerLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
       const canQueueDebugSpin = state.debugEnabled && state.isBusy && !state.debugSpinQueued;
       setText(spinBtn, state.debugSpinQueued
         ? (state.language === "zh" ? "已排入" : "Queued")
@@ -4229,7 +4098,7 @@
           : state.pendingRound
             ? "Next FG"
             : "Spin");
-      spinBtn.disabled = state.batchSimulationRunning || state.autoEnabled || (state.isBusy && !canQueueDebugSpin);
+      spinBtn.disabled = state.autoEnabled || (state.isBusy && !canQueueDebugSpin);
       normalBetBtn.disabled = wagerLocked;
       extraBetBtn.disabled = wagerLocked;
       normalBetBtn.classList.toggle("is-active", !state.extraBetEnabled);
@@ -4238,11 +4107,7 @@
       betBtn.disabled = wagerLocked;
       betMinusBtn.disabled = wagerLocked || state.betIndex === 0;
       betPlusBtn.disabled = wagerLocked || state.betIndex === BET_OPTIONS_MONEY.length - 1;
-      autoBtn.disabled = state.batchSimulationRunning;
-      resetBtn.disabled = state.batchSimulationRunning;
-      debugModeInputEl.disabled = state.batchSimulationRunning;
-      configSelectEl.disabled = state.batchSimulationRunning;
-      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED || state.batchSimulationRunning;
+      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
       if (wagerLocked) closeBetMenu();
       autoBtn.classList.toggle("is-active", state.autoEnabled);
       setText(speedValueEl, `x${state.speedMultiplier}`);
@@ -4619,15 +4484,13 @@
       }
       renderCardRangeOptions();
       resetSetRng(false);
-      updateBatchSimulationContext();
       writeMessage(`Player Profile | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`);
     });
 
     document.addEventListener("demogame:card-system-change", (event) => {
       CARD_SYSTEM_ENABLED = Boolean(Box.card_system?.enabled) && Boolean(event.detail?.enabled);
       if (!CARD_SYSTEM_ENABLED) cardRangeSelectEl.value = "";
-      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED || state.batchSimulationRunning;
-      updateBatchSimulationContext();
+      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
       updateSpinButtonState();
       updateDebugControls();
       writeMessage(CARD_SYSTEM_ENABLED
@@ -4639,12 +4502,6 @@
       state.language = languageSelectEl.value === "zh" ? "zh" : "en";
       applyLanguage();
       writeMessage(`Language | ${state.language === "zh" ? "中文" : "English"}`);
-    });
-
-    batchSimulationStartBtn.addEventListener("click", runBatchSimulation);
-    batchSimulationRoundsEl.addEventListener("input", () => batchSimulationRoundsEl.setCustomValidity(""));
-    batchSimulationRoundsEl.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") runBatchSimulation();
     });
 
     betBtn.addEventListener("click", (event) => {
@@ -4825,7 +4682,7 @@
     applyLanguage();
     appendLiveLog("Ready — press Spin", "result");
   </script>
-  <script src="../demogame_common.js?v=4"></script>
+  <script src="../demogame_common.js?v=20261013c"></script>
 </body>
 
 </html>

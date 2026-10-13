@@ -1635,7 +1635,8 @@
       font-size: 11px;
     }
 
-    .change-log-entry ul {
+    .change-log-entry ul,
+    .change-log-entry ol {
       margin: 0;
       padding-left: 18px;
     }
@@ -1651,28 +1652,6 @@
       background: var(--surface);
       font-family: Consolas, monospace;
       font-size: 10px;
-    }
-
-    .cascade-dist-grid {
-      display: grid;
-      grid-template-columns: 34px repeat(6, minmax(38px, 1fr));
-      gap: 1px;
-      margin-top: 8px;
-      overflow-x: auto;
-      color: var(--text);
-      font-size: 10px;
-      text-align: center;
-    }
-
-    .cascade-dist-grid > span {
-      padding: 4px 2px;
-      background: var(--surface);
-      white-space: nowrap;
-    }
-
-    .cascade-dist-grid .cascade-dist-head {
-      color: var(--sub);
-      font-weight: 700;
     }
 
     #log-wrap {
@@ -2071,7 +2050,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
 
 <body class="h028">
@@ -2127,8 +2106,8 @@
             </label>
           </div>
           <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
-            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
-            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; <span>Previous</span></button>
+            <button id="nextStepBtn" type="button" disabled><span>Next</span> &#9654;&#9654;</button>
             <span class="debug-divider" aria-hidden="true"></span>
             <label class="debug-check force" for="forceFgInput">
               <input id="forceFgInput" type="checkbox">
@@ -2148,50 +2127,52 @@
 
         <section id="simulation-stats">
           <h3 data-i18n="simulationStats">Simulation Stats</h3>
-          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
               id="roundCountValue">0</span></div>
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
           </div>
-          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
               id="hitRateValue">0.00%</span></div>
-          <div class="simulation-row"><span class="s-label" data-i18n="observedFgTrigger">FG Trigger (Observed)</span><span class="s-value hi"
+          <div class="simulation-row"><span class="s-label">FG Trigger (Observed)</span><span class="s-value hi"
               id="fgTriggerValue">0</span></div>
           <div class="simulation-row"><span class="s-label" data-i18n="modelFgCycle">FG Cycle (Model)</span><span class="s-value hi"
               id="fgModelCycleValue">--</span></div>
-          <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
         </section>
       </aside>
     </div>
 
     <section id="controls" class="debug-off">
-      <section id="batch-simulation" class="control-zone debug-only debug-hidden">
-        <span class="zone-label" data-i18n="naturalSimulation">Simulation</span>
-        <div id="batchSimulationNote" class="batch-simulation-note">Current Card Profile</div>
+      <section id="batch-simulation" class="control-zone debug-only debug-hidden demogame-fallback-simulation">
+        <span class="zone-label">Simulation</span>
+        <div id="batchSimulationNote" class="batch-simulation-note">Independent math simulation · Current Bet</div>
         <div class="batch-simulation-controls">
           <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="10000"
             inputmode="numeric" aria-label="Simulation rounds">
-          <button id="batchSimulationStartBtn" type="button" data-i18n="startSimulation">Start</button>
+          <button id="batchSimulationStartBtn" type="button">Start</button>
         </div>
-        <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span
-            class="s-value" id="batchSimulationRoundCount">0</span></div>
+        <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+            id="batchSimulationRoundCount">0</span></div>
         <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value"
             id="batchSimulationRtp">0.00%</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span
-            class="s-value" id="batchSimulationHitRate">0.00%</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="observedFgTrigger">FG Trigger (Observed)</span><span class="s-value hi"
+        <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+            id="batchSimulationHitRate">0.00%</span></div>
+        <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
             id="batchSimulationFgTrigger">0.00% (-- rounds)</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="modelFgCycle">FG Cycle (Model)</span><span class="s-value hi"
-            id="batchSimulationFgModelCycle">--</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span
-            class="s-value hi" id="batchSimulationMaxMultiplier">x0</span></div>
-        <div class="simulation-row"><span class="s-label" data-i18n="retryLimitExceeded">Retry Limit Exceeded</span><span
-            class="s-value" id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
-        <div class="cascade-dist-grid" aria-label="Cascade distribution">
-          <span class="cascade-dist-head">Scene</span><span class="cascade-dist-head">0</span><span class="cascade-dist-head">1</span><span class="cascade-dist-head">2</span><span class="cascade-dist-head">3</span><span class="cascade-dist-head">4</span><span class="cascade-dist-head">5+</span>
-          <span class="cascade-dist-head">BG</span><span id="batchBgCascade0">0%</span><span id="batchBgCascade1">0%</span><span id="batchBgCascade2">0%</span><span id="batchBgCascade3">0%</span><span id="batchBgCascade4">0%</span><span id="batchBgCascade5">0%</span>
-          <span class="cascade-dist-head">FG</span><span id="batchFgCascade0">0%</span><span id="batchFgCascade1">0%</span><span id="batchFgCascade2">0%</span><span id="batchFgCascade3">0%</span><span id="batchFgCascade4">0%</span><span id="batchFgCascade5">0%</span>
-        </div>
+        <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+            id="batchSimulationMaxMultiplier">x0</span></div>
+        <div class="simulation-row"><span class="s-label">Retry Limit Exceeded</span><span class="s-value"
+            id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
+        <table class="batch-cascade-table" aria-label="Cascade distribution">
+          <thead>
+            <tr><th>Scene</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5+</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>BG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+            <tr><th>FG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
@@ -2238,712 +2219,304 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header" data-i18n="changeLog">修改紀錄</div>
       <div id="changeLogBody">
-<article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-          <h4>2026-09-08：大 Bet 獨立數學模型（Bet100）</h4>
-          <ul>
-            <li>新增 <code>H028192A_Bet100.xlsx</code>／<code>H028188B_Bet100.xlsx</code> 與 <code>config_92A_Bet100.js</code>／<code>config_88B_Bet100.js</code>（大 Bet，bet_tier_amount &gt; $100）。FG 上限依規範為 <b>2000x</b> 而非 10000x；<code>Weight_BF</code> 依 H027 實務同步封頂。<code>_Bet100</code> 後綴沿用 H026／H027 實務。</li>
-            <li>FG RTP、觸發週期、平均倍數與原模型一致（主體 20~200x 形狀不變、200~2000x 尾端等比配平）；SCR 沿用原模型值。</li>
-            <li>原 92A／88B 移除 <code>Weight_NB_FG_Big</code> 欄與 config <code>weight_fg_big</code>；模擬一律以 <code>config_rtp_file</code> 指定 Bet100，不做程式內自動切換。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：恢復固定 config 檔名</h4>
-          <ul>
-            <li>config 恢復為 config_92A.js／config_94A.js，index 與 Simulator 同步改回固定檔名。</li>
-            <li>瀏覽器若記住舊的 _20037 檔名，index 會自動轉換成固定檔名。</li>
-            <li>update.bat 與 model_sync.py 後續轉換不再替檔名加入版本尾碼。</li>
-            <li>版本仍保留在 excel_version；config 內容、XLSX 數值與數學模型不變。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：簡化 update.bat 雙向轉換操作</h4>
-          <ul>
-            <li>第一層只選 XLSX → config 或 config → XLSX；第二層只選 92A、94A，直接按 Enter 轉換全部。</li>
-            <li>畫面只顯示來源檔、目標檔與完成訊息；config → XLSX 直接更新原工作簿。</li>
-            <li>本次未修改 config、XLSX、模型參數或版本號。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：重建 92A、改用 109 報表並產生版本化 config</h4>
-          <ul>
-            <li>重新建立 H028192A.xlsx；92A／94A 的平均倍率統一使用 10 億場 H0281_20036_2608061341_betmode0_109.xlsx。</li>
-            <li>BG 使用 BG Count／Pay，FG 與 BF 使用同一報表的 FG Session Count／Pay，與 Detail 陣列公式一致。</li>
-            <li>新增 config_92A_20037.js、config_94A_20037.js；Simulator 與 index 已改載入帶版本號 config。</li>
-            <li>Excel 完整重算：92A Total 91.999976%、94A Total 93.999976%、BF 92.499987%、Oldhand 週期 300.000050。</li>
-            <li>XLSX ↔ config 全版本雙向檢查通過。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：修正 FG 遊戲週期的模型／實測口徑</h4>
-          <ul>
-            <li>數值來源是目前 H028192A／H028194A 的公式快取與 config，不是較早截圖中 FG Period 30001 的狀態。</li>
-            <li>週期公式鏈為 Detail H79 → I79／K79／L79 → F7 → G7；Multiplier_Weight D67 再引用 Detail K79。</li>
-            <li>模型週期公式為全部 BG 卡片權重 ÷ Free Game 卡片權重；Oldhand 為 300.00003，Newbie 為 279.50106。</li>
-            <li>Simulator 報表分開輸出模型與實測觸發率／週期；原 fg_trigger_rate 保留為實測值以維持相容。</li>
-            <li>index 將 FG Trigger 標示為實測，新增 FG 週期（模型），切換卡片與玩家時立即更新。</li>
-            <li>每組 10,000,000 場驗證：92A Oldhand／Newbie = 298.1248／279.9474；94A = 300.7790／281.0094。</li>
-            <li>本次顯示修正未再動 config／XLSX；但 2.0.0.37 前一個倍率校正步驟確實改過 Detail Fix Num 與推導權重。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：統一卡片邏輯、擴充雙向轉換並重校倍率權重</h4>
-          <ul>
-            <li>4 顆 SC 給 10 場 FG，每多 1 顆加 2 場；BF 卡片與 Simulator 統一，Hit Rate 只計 BG Spin。</li>
-            <li>雙向工具支援 H028 共用模型與 H0281&lt;RTP&gt;&lt;版型&gt; 工作簿，並可保留公式回填 92A／92B／94A 卡片資料。</li>
-            <li>依最新 1,000 萬場自然分布重校 Oldhand、Newbie、BF 倍率權重；理論 RTP 均校準至目標小數點後 4 位。</li>
-            <li>1,000,000 場實測：92A Oldhand／Newbie／BF = 90.97%／93.07%／92.46%；94A = 94.82%／93.26%／92.42%。</li>
-            <li>該次 1,000,000 場的實測週期：92A Oldhand／Newbie = 315.36／276.47，94A = 302.21／276.01；模型週期固定為 Oldhand 300.00003、Newbie 279.50106。</li>
-            <li>版本升為 2.0.0.37；92A、94A 及暫存 92B 雙向轉換檢查皆通過。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：完成模型一致性檢查並合併雙向映射文件</h4>
-          <ul>
-            <li>核對 Simulator／index 的 Normal Bet 核心遊戲、FG 與卡片流程。</li>
-            <li>92A／94A 的 config 與 XLSX export check 通過；config 回填映射 23,026 格、差異 0。</li>
-            <li>暫存副本雙向 round-trip 後 config 完全相同，正式 config／xlsx／版本號未修改。</li>
-            <li>兩份 usage mapping 合併為 xlsx_config_usage_mapping.md，刪除重複文件。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-10：修正 index 卡片模式未套用 FG 倍率權重</h4>
-          <ul>
-            <li>BG 抽中 Free Game 卡片後，改依相同玩家 Profile 的 weight_fg 抽取 FG 倍率區間。</li>
-            <li>完整 FG Session 未落在指定區間時會整場重骰，區間邊界與 Retry Limit 均與 Python 模擬器一致。</li>
-            <li>Debug 批次模擬與畫面實際遊玩共用相同 FG 卡片流程；RTP 顯示公式與 config／xlsx 參數不變。</li>
-            <li>Chrome 實跑 Oldhand Card On 10,000 場：RTP 97.00%、FG 週期 278 場、Retry Limit 超限 0。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：BG1／BG2 R2 指定符號再增加並提高 R2～R4 初始金框</h4>
-          <ul>
-            <li>BG1、BG2 的 R2 M4／M6／K／J 再各增加 4 顆，調整後均為 [19,16,16,14]。</li>
-            <li>R2～R4 初始金框各增加 10 顆；BG1 比例為 [33.5%,31.5%,25%]，BG2 為 [33%,31%,24.5%]。</li>
-            <li>每輪 200 格、M1、Golden M1 與全部掉落權重不變。</li>
-            <li>版本升為 2.0.0.36，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：調整 BG1／BG2 的 R1、R2 指定符號數量</h4>
-          <ul>
-            <li>BG1、BG2 的 R2：M4、M6、K、J 各增加 4 顆；R1：M4、M5 各增加 2 顆，A、Q 各增加 6 顆。</li>
-            <li>BG1 R1 的 M4／M5／A／Q 為 [12,12,17,17]，R2 的 M4／M6／K／J 為 [15,12,12,10]。</li>
-            <li>BG2 R1 的 M4／M5／A／Q 為 [12,12,16,16]，R2 的 M4／M6／K／J 為 [15,12,12,10]。</li>
-            <li>每輪 200 格、金框總數、M1、Golden M1 與掉落權重不變；版本升為 2.0.0.35 並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：BG1／BG2 金框掉落權重改為 2.0.0.31 的 5 倍</h4>
-          <ul>
-            <li>還原 2.0.0.31 的 BG1、BG2 Drop1～Drop5 基準，只將 Golden M2～Golden TE 權重乘以 5。</li>
-            <li>一般符號權重使用 2.0.0.31 原值；Golden M1 仍為 0，初始輪帶不變。</li>
-            <li>BG1 實際金框機率為 [0%,10.0841%,10.7387%,10.7003%,5.072%,2.6429%,0%]；BG2 為 [0%,10.3398%,11.0109%,11.0425%,5.226%,2.7516%,0%]。</li>
-            <li>版本升為 2.0.0.34，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：BG1／BG2 的 R2～R5 掉落金框再增加 3 個百分點</h4>
-          <ul>
-            <li>只修改 BG1、BG2 的 Drop1～Drop5；所有初始輪帶完全不變。</li>
-            <li>BG1 的 R2～R5 掉落金框改為 [7.1938%,7.3496%,7.3404%,6.0573%]。</li>
-            <li>BG2 的 R2～R5 掉落金框改為 [7.2544%,7.4149%,7.4226%,6.0908%]；Golden M1 仍為 0。</li>
-            <li>版本升為 2.0.0.33，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：BG1／BG2 的 R2～R5 金框比例增加 2 個百分點</h4>
-          <ul>
-            <li>依前文兩張 BG 表的比較需求，同時調整 BG_Symbol 與 BG_Symbol (2)。</li>
-            <li>R2～R5 初始輪帶各增加 4 顆金框；BG1 比例為 [28.5%,26.5%,20%,22%]，BG2 為 [28%,26%,19.5%,21.5%]。</li>
-            <li>Drop1～Drop5 的 R2～R5 也各增加 2 個百分點；R1、R6、R7及 Golden M1 規則不變。</li>
-            <li>版本升為 2.0.0.32，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：FG1／FG2 掉落金框比例還原為 10%</h4>
-          <ul>
-            <li>FG 選表率維持 40%／30%／30%，初始與 Retrigger 權重維持 [6000,4500,4500]。</li>
-            <li>FG1、FG2 的 Drop1～Drop5、R1～R7 金框權重全部改回 10%。</li>
-            <li>Golden M1 掉落權重仍為 0；各符號家族總權重、各列總權重及 FG3 掉落參數不變。</li>
-            <li>版本升為 2.0.0.31，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：所有 Table 移除 Golden M1</h4>
-          <ul>
-            <li>BG、BF、FG 全部 Table 的初始輪帶與 Drop1～Drop5 均移除 G1；G1 數量／權重併回一般 M1。</li>
-            <li>初始輪帶共轉換 11 顆 G1，掉落共重新分配 153,740 G1 權重；最終所有 Table 的 G1 均為 0。</li>
-            <li>移除的金框額度轉移給其他非 M1 符號，維持原本總金框比例及各符號家族總量／總權重。</li>
-            <li>FG 選表率仍為 40%／30%／30%；版本升為 2.0.0.30，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：FG1／FG2 掉落金框比例改為 15%／20%</h4>
-          <ul>
-            <li>FG 三張表的使用率維持 40%／30%／30%，初始與 Retrigger 權重維持 [6000,4500,4500]。</li>
-            <li>FG1 的 Drop1～Drop5、R1～R7 金框權重均改為 15%；FG2 均改為 20%。</li>
-            <li>普通／金框只在同一符號家族內重新分配，各家族總掉落率、各列總權重及 FG3 掉落參數不變。</li>
-            <li>版本升為 2.0.0.29，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：FG 選表改為 40%／30%／30% 並調整 FG1 金框與 FG3 M1</h4>
-          <ul>
-            <li>FreeReelWeight、FreeTriggerReel 均改為 [6000,4500,4500]，三張 FG 表使用率為 40%／30%／30%。</li>
-            <li>FG1 的 R1～R7 金框均改為 30/200，也就是 15%；符號家族合計與輪長不變。</li>
-            <li>FG3 的 R2、R3 M1 各改為 20 顆；R4、R5 各改為 12 顆，R1～R7 合計為 [3,20,20,12,12,4,4]。</li>
-            <li>FG3 原本金框數量不變；版本升為 2.0.0.28，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：新增 FG3 累積倍數表並改為 50%／30%／20%</h4>
-          <ul>
-            <li>FG_Symbol、FG_Symbol (2)、FG_Symbol (3) 分別作為競品表、連消表與累積倍數表。</li>
-            <li>FreeReelWeight、FreeTriggerReel 均改為 [7500,4500,3000]，初始與 Retrigger 都以 50%／30%／20% 選表。</li>
-            <li>FG3 的 R2、R3 M1 各由 5 顆增至 15 顆；R4、R5 各由 4 顆增至 8 顆，R1～R7 合計為 [3,15,15,8,8,4,4]。</li>
-            <li>FG3 各輪金框總數與每輪 200 格不變；版本升為 2.0.0.27，並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：FG 競品表／連消表改為 70%／30%</h4>
-          <ul>
-            <li>FG_Symbol 為競品表，FG_Symbol (2) 為連消表，FG_Symbol (3) 暫不使用。</li>
-            <li>FreeReelWeight、FreeTriggerReel 均改為 [10500,4500,0]，初始與 Retrigger 都以 70%／30% 選表。</li>
-            <li>FG_Symbol (2) 的 R1～R7 金框均改為 40/200，也就是 20%；符號家族總量與每輪 200 格不變。</li>
-            <li>版本升為 2.0.0.26，並同步原 XLSX 與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：FG1／FG2 以 FG3 為基準並改為 1:1 選表</h4>
-          <ul>
-            <li>FG1、FG2 的非輪帶差異參數全部複製 FG3，包括 Symbol Weight、MegaWay、MY、Post Scatter 與 Drop1～5。</li>
-            <li>FG1 M1 為 [2,3,3,2,2,2,2]，FG2 M1 為 [12,20,20,16,16,16,16]。</li>
-            <li>FG2 M2／M3 分別為 [9,18,21,24,15,12,12]／[12,15,27,18,15,15,15]；FG1、FG2 金框均為 20%。</li>
-            <li>FreeReelWeight、FreeTriggerReel 均改為 [7500,7500,0]，FG1／FG2 使用率為 1:1。</li>
-            <li>版本升為 2.0.0.25，並同步原 XLSX 與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-06：調整 FG1 的 M1／M2／M3 與金框比例</h4>
-          <ul>
-            <li>FG1 的 M1／Golden M1 顆數改為 [10,20,20,15,15,15,10]。</li>
-            <li>M2／Golden M2 改為 [9,18,21,24,15,12,12]，M3／Golden M3 改為 [12,12,24,18,12,15,12]。</li>
-            <li>七輪金框均為 40/200，也就是輪帶格數的 20%；每輪維持 200 格與 200 個 Symbol Weight。</li>
-            <li>版本升為 2.0.0.24，並同步原 XLSX 與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：FG 全面使用 Table 1，M1 放大 5 倍</h4>
-          <ul>
-            <li>FG 初始與 Retrigger 均改為只使用 FG_Symbol；FreeReelWeight、FreeTriggerReel 為 [15000,0,0]。</li>
-            <li>FG1 的 M1／Golden M1 顆數由 [3,5,5,4,4,4,4] 改為 [15,25,25,20,20,20,20]，每輪維持 200 格。</li>
-            <li>1,000,000 段 FG-only：平均 430.5531x、最大 22,561.35x；10,000x+ 42 次，20,000x+ 1 次。</li>
-            <li>最終平均／最大累積倍率為 x67.7196／x346，Retrigger Session Rate 為 3.6822%。</li>
-            <li>版本升為 2.0.0.23，並同步原 XLSX 與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：擴充 Base Info 與 Multiplier Line 區間指標</h4>
-          <ul>
-            <li>Base Info 依 H026 格式補入 BG／FG 區間統計口徑與新增指標。</li>
-            <li>Multiplier Line 分開顯示 BG、FG、Overall，並新增 Hit Rate、M1、2x1+ M1、連消 1～5+、Retrigger 及最終累積倍率。</li>
-            <li>FG 依完整 FG Session 總得分分區；區間內的 Hit、M1 與連消比例則以該區間 FG Spins 為分母。</li>
-            <li>版本升為 2.0.0.21，並同步原 XLSX 與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：修正 FG Table 2 各輪 M1 顆數</h4>
-          <ul>
-            <li>FG2 相對 FG1 的 M1 顆數改為 R1 ±0、R2 +1、R3 +1、R4 +2、R5 +2、R6 ±0、R7 −2。</li>
-            <li>FG2 最終 M1／Golden M1 顆數為 [3,6,6,6,6,4,2]。</li>
-            <li>各模擬 100,000 次後，Table 1／2 命中率為 42.5470%／40.4260%，平均連消為 0.906210／0.853150。</li>
-            <li>版本升為 2.0.0.20，並同步原 XLSX、映射文件與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：FG Table 2 改為 40% 低連線參數組</h4>
-          <ul>
-            <li>FreeReelWeight 改為 [9000,6000,0]，初始 FG 有 40% 使用 FG Table 2；Retrigger 仍只使用 Table 1。</li>
-            <li>FG Table 2 的初始輪帶、MY 權重及 Drop1～5 全部移除 MY／Golden MY，WW 維持原設定。</li>
-            <li>FG Table 2 的 M1／Golden M1 每輪增加 2 顆，R1～R7 為 [5,7,7,6,6,6,6]。</li>
-            <li>R4、R5 的前四種 MegaWay 版型權重提高 2 倍，接續六種提高 1.5 倍。</li>
-            <li>各模擬 100,000 次後，Table 1／2 命中率為 42.5470%／40.5960%，平均連消為 0.906210／0.845970。</li>
-            <li>版本升為 2.0.0.19，並同步原 XLSX、映射文件與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：BF 改為多組安全 RNG</h4>
-          <ul>
-            <li>取消 BF 每輪只保留一個 RNG 的限制，避免每次出現相同盤面。</li>
-            <li>只將可能造成 Ways 的 RNG 權重設為 0；R1～R7 保留 [48,43,200,200,200,200,96] 個非零 RNG。</li>
-            <li>使用多組 RNG 實跑 100,000 次 BF，得分次數與最大得分仍皆為 0。</li>
-            <li>Feature Buy 仍固定補入 4 顆 SC；版本升為 2.0.0.18 並同步原 XLSX。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：BG2 M1 再加倍、FG 參數統一並啟用 BF_Symbol</h4>
-          <ul>
-            <li>BG Table 2 的 M1／Golden M1 顆數再乘 2，R1～R7 改為 [8,4,4,8,8,8,8]。</li>
-            <li>FG Table 2、3 的全部數學參數完整複製 FG Table 1。</li>
-            <li>BF_Symbol 對應 BaseGame Table 3；除 Symbol Weight 外均複製 BG Table 1。</li>
-            <li>BF 七輪僅保留零 Ways 的停輪權重，實跑 10,000 次得分皆為 0；Feature Buy 固定用 BF 畫面補入 4 顆 SC。</li>
-            <li>固定種子模擬 100,000 場 BG，M1 出現率為 37.7320%；Lucky Neko 為 16.7661%，H028 高 20.9659 pp。</li>
-            <li>版本升為 2.0.0.17，並同步原 XLSX、映射文件與修改紀錄。</li>
-          </ul>
-        </article>
-
-        <article class="change-log-entry">
-          <h4>2026-08-05：BG Table 1 M1 掉落機率減半</h4>
-          <ul>
-            <li>Table 1 Drop1～5 的 M1／Golden M1 合計機率精確除以 2，每輪總權重維持 1,000,000。</li>
-            <li>目前 60% Table 1＋40% Table 2 模擬 100,000 場，M1 出現率為 29.2590%。</li>
-            <li>Lucky Neko 為 16.7661%，H028 仍高 12.4929 pp，主要受 Table 2 M1 加權設定影響。</li>
-            <li>版本升為 2.0.0.16，並更新競品比較與修改紀錄。</li>
-          </ul>
-        </article>
-
         <article class="change-log-entry">
-          <h4>2026-08-05：五組輪帶統一 200 格並禁止 BG Table 2 觸發 FG</h4>
-          <ul>
-            <li>五張 BG／FG Symbol 表的 R1～R7 全部統一為 200 格，Symbol、ID、Weight 完整對應。</li>
-            <li>BG Table 2 的 Post Scatter 最多 3 顆，Drop1～5 的 SC 權重全為 0，保證不觸發 FG。</li>
-            <li>固定種子實跑 100,000 次 Table 2，最終 SC 最大 3 顆、FG Trigger 0 次。</li>
-            <li>移除多餘 config_92.js，轉換工具預設輸出改為 config_92A.js。</li>
-            <li>版本升為 2.0.0.15，並同步原 XLSX、比較報告與修改紀錄。</li>
-          </ul>
+          <h4>v3（3.5.0.3）</h4>
+          <ol>
+            <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>）：NB 每局總得分（含 FG）÷ 底注、64 區間，Reset 清空；本檔只在 NB 一局結束時呼叫 <code>record()</code>（10/13 起併入 Simulation，不再另外顯示）。未修改 XLSX／Config 數學參數。（10/06）</li>
+            <li>Simulation 改用共用面板（<code>demogame-fallback-simulation</code>），新增押注模式選單（Normal Bet／Buy Feature；本作無 Extra Bet）；移除本檔原有批次模擬面板與程式（含「FG Cycle (Model)」列，該值仍見 Stats）。（10/13）</li>
+            <li>新增 <code>window.demogameSimulateRound({ mode })</code>：沿用實際遊戲邏輯（BG 卡片重抽、BF 入場盤、FG 整包含卡片），模擬時忽略 Set RNG、不改畫面與統計；RTP ＝ 總得分（含 FG）÷ 實際押注，並回傳 BG／FG 消除次數。（10/13）</li>
+            <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」；BF ÷ 底注、NB ÷ 押注。（10/13）</li>
+            <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題。（10/13）</li>
+            <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
+            <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用，<code>demogame_common.js?v=20261013</code>）。（10/13）</li>
+            <li>語言修正：Card System 原顯示 key 文字「cardSystem」，改由共用字典翻譯；Stats 的總局數／中獎率／FG 觸發（實測）／最高倍數改用共用字典；Previous／Next 可切換成上一步／下一步。（10/13）</li>
+            <li>修改紀錄改為依版本分節（Demogame 規範 §7）；Version Manifest 數學紀錄改依版本插入，不再清掉本區既有紀錄；開啟 Debug Mode 時 Log 立即顯示既有紀錄。（10/13）</li>
+            <li>驗證：inline script 皆通過 <code>node --check</code>、Console 無錯誤；各 2,000 局 Card Off NB 388.48%、BF 239.41%（自然盤）；Card On（92A-Oldhand）NB 77.42%（另跑 20,000 局 97.38%，FG 週期 303 對模型 300）、BF 93.62%；語言 zh／en 來回切換正常，Log Clear 正常。（10/13）</li>
+            <li>未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+          <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告.html</code>。（10/13）</li>
+        </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-05：新增 BG Table 2 特殊 M1／Post Scatter 設定</h4>
-          <ul>
-            <li>競品為 0 的 Post Scatter 顆數統一配置 0.01%；FG 5～7 顆均為 100／1,000,000。</li>
-            <li>BG Table 2 複製 Table 1，輪帶 M1 目標提高 2 倍；Drop 僅將 M1／Golden M1 權重乘 3，其他權重不變。</li>
-            <li>BG Table 2 Post Scatter 最多 3 顆；ReelWeight 改為 [6000, 4000]，使用率 40%。</li>
-            <li>版本升為 2.0.0.14，並同步 Config、原 XLSX、比較報告與修改紀錄。</li>
-          </ul>
+          <h4>v3（3.5.0.0）</h4>
+          <ol>
+            <li>大 Bet（bet_tier_amount &gt; $100）獨立數學模型：新增 <code>H028192A_Bet100.xlsx</code>／<code>H028188B_Bet100.xlsx</code> 與 <code>config_92A_Bet100.js</code>／<code>config_88B_Bet100.js</code>；FG 上限 2000x（非 10000x），<code>Weight_BF</code> 依 H027 實務同步封頂。（09/08）</li>
+            <li>Bet100 的 FG RTP、觸發週期、平均倍數與原模型一致（20～200x 形狀不變、200～2000x 尾端等比配平）；SCR 沿用原模型。（09/08）</li>
+            <li>原 92A／88B 移除 <code>Weight_NB_FG_Big</code> 欄與 config <code>weight_fg_big</code>；模擬一律以 <code>config_rtp_file</code> 指定 Bet100，不做程式內自動切換。（09/08）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-05：Drop SC 對齊 Lucky Neko，補入 Post Scatter 6／7 顆</h4>
-          <ul>
-            <li>初始輪帶維持無 SC；Drop1～5 的 SC 權重改採 Lucky Neko SymbolOcc_Drop／Extra Reel_Drop。</li>
-            <li>PostC1 的 6 顆與 7 顆各設定 100／1,000,000（0.01%）。</li>
-            <li>版本升為 2.0.0.13，並更新規則、Help、映射文件與競品比較報告。</li>
-          </ul>
+          <h4>v2（2.0.0.37）</h4>
+          <ol>
+            <li>升 2.0.0.37：4 顆 SC 給 10 場 FG、每多 1 顆加 2 場；BF 卡片與 Simulator 統一，Hit Rate 只計 BG Spin；依 1,000 萬場自然分布重校 Oldhand／Newbie／BF 倍率權重（理論 RTP 校至小數 4 位）。（08/10）</li>
+            <li>雙向工具支援 H028 共用模型與 H0281&lt;RTP&gt;&lt;版型&gt; 工作簿，可保留公式回填 92A／92B／94A 卡片資料；三者雙向檢查通過。（08/10）</li>
+            <li>1,000,000 場實測：92A Oldhand／Newbie／BF 90.97%／93.07%／92.46%，94A 94.82%／93.26%／92.42%；實測週期 92A 315.36／276.47、94A 302.21／276.01。（08/10）</li>
+            <li>FG 週期分模型／實測：模型＝全部 BG 卡片權重 ÷ Free Game 卡片權重（Detail H79 → K79 → F7／G7），Oldhand 300.00003、Newbie 279.50106；Simulator 報表分開輸出（fg_trigger_rate 保留為實測），index 新增「FG 週期（模型）」並把 FG Trigger 標為實測。（08/10）</li>
+            <li>FG 週期 10,000,000 場驗證：92A Oldhand／Newbie 298.1248／279.9474，94A 300.7790／281.0094；此項顯示修正未動 config／XLSX。（08/10）</li>
+            <li>重建 <code>H028192A.xlsx</code>；92A／94A 平均倍率統一用 10 億場報表 <code>H0281_20036_2608061341_betmode0_109.xlsx</code>（BG 用 BG Count／Pay，FG 與 BF 用 FG Session Count／Pay）。Excel 重算：92A 91.999976%、94A 93.999976%、BF 92.499987%、Oldhand 週期 300.000050；XLSX ↔ config 雙向檢查通過。（08/10）</li>
+            <li><code>update.bat</code> 簡化：第一層選 XLSX → config 或 config → XLSX，第二層選 92A／94A（Enter 轉全部），config → XLSX 直接更新原工作簿；未改 config／XLSX／版本號。（08/10）</li>
+            <li>config 恢復固定檔名 <code>config_92A.js</code>／<code>config_94A.js</code>（取代一度的 <code>_20037</code> 版本化檔名），index 與 Simulator 同步，瀏覽器記住的舊檔名自動轉換；版本仍記在 excel_version，數學內容不變。（08/10）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-05：SC 改由 Post Scatter 單一路徑產生</h4>
-          <ul>
-            <li>全部 BG／FG 初始輪帶與 Drop1～5 移除 SC，SC 僅由 PostC1 產生。</li>
-            <li>非 SC 符號依 Lucky Neko final 比例重新正規化，並同步 Config 與原 XLSX。</li>
-            <li>BG PostC1 的 4+ 權重合計 0.3078%；100 萬局實測 FG Trigger Rate 為 0.3105%。</li>
-            <li>版本升為 2.0.0.12；0～3 顆 SC 依平均顆數使用最大熵分布補齊。</li>
-          </ul>
+          <h4>v2（2.0.0.36）</h4>
+          <ol>
+            <li>升 2.0.0.36：BG1／BG2 R2 的 M4／M6／K／J 再各加 4 顆（均為 [19,16,16,14]），R2～R4 初始金框各加 10 顆（BG1 [33.5%,31.5%,25%]、BG2 [33%,31%,24.5%]）；每輪 200 格、M1、Golden M1 與掉落權重不變，同步原 XLSX。（08/06）</li>
+            <li>修正 index 卡片模式未套用 FG 倍率權重：BG 抽中 Free Game 卡後依同 Profile 的 weight_fg 抽 FG 區間，FG Session 未落在區間整場重骰（邊界與 Retry Limit 同 Python 模擬器）；Debug 批次模擬與實際遊玩共用此流程。Chrome Oldhand Card On 10,000 場：RTP 97.00%、FG 週期 278、Retry 超限 0。（08/10）</li>
+            <li>模型一致性檢查：核對 Simulator／index 的 NB 核心、FG 與卡片流程；92A／94A config ↔ XLSX 回填映射 23,026 格差異 0，round-trip 後 config 完全相同；兩份 usage mapping 合併為 <code>xlsx_config_usage_mapping.md</code>。正式 config／XLSX／版本號未改。（08/10）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-05：Overview 新增 FG 觸發局最大 BG 得分</h4>
-          <ul>
-            <li>Simulator 報表新增 trigger_fg_bg_max_pay，記錄成功觸發 FG 的單把最大 BG Pay。</li>
-            <li>數值包含 bet_multi，但不包含後續 FG Session 得分。</li>
-            <li>未修改 RTP 結算、config、xlsx 來源、遊戲權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.35）</h4>
+          <ol>
+            <li>BG1／BG2 R2 的 M4／M6／K／J 各加 4 顆，R1 的 M4／M5 各加 2 顆、A／Q 各加 6 顆；BG1 R1 M4／M5／A／Q＝[12,12,17,17]、BG2＝[12,12,16,16]，兩表 R2 M4／M6／K／J＝[15,12,12,10]；每輪 200 格、金框總數、M1、Golden M1 與掉落權重不變，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：Overview 新增 FG 觸發局 BG 得分</h4>
-          <ul>
-            <li>Simulator 報表比照 H026 新增 trigger_fg_bg_pay 與 trigger_fg_bg_count。</li>
-            <li>觸發局 BG 得分仍歸入 BG Pay／RTP，不改變既有 RTP 結算。</li>
-            <li>未修改 config、xlsx 來源、遊戲權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.34）</h4>
+          <ol>
+            <li>BG1／BG2 還原 2.0.0.31 的 Drop1～Drop5 基準，只把 Golden M2～Golden TE 權重 ×5（一般符號用原值、Golden M1 仍 0、初始輪帶不變）；實際金框機率 BG1 [0%,10.0841%,10.7387%,10.7003%,5.072%,2.6429%,0%]、BG2 [0%,10.3398%,11.0109%,11.0425%,5.226%,2.7516%,0%]，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：加亮金框符號底板</h4>
-          <ul>
-            <li>金框符號比照 C1 使用雙層漸層底板，提升上層亮黃色高光與底層金黃色。</li>
-            <li>保留原本金框邊線、符號配色與判定邏輯。</li>
-            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.33）</h4>
+          <ol>
+            <li>BG1／BG2 R2～R5 掉落金框再加 3 個百分點（只改 Drop1～Drop5，初始輪帶不變）：BG1 [7.1938%,7.3496%,7.3404%,6.0573%]、BG2 [7.2544%,7.4149%,7.4226%,6.0908%]；Golden M1 仍 0，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：關閉 Index Card 系統</h4>
-          <ul>
-            <li>一般 Spin 與頁面批次模擬改為直接使用自然結果，不再依 Card 區間重抽。</li>
-            <li>Player Profile 與 Card BG Range 選單停用，批次狀態顯示 Card System Off。</li>
-            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.32）</h4>
+          <ol>
+            <li>BG_Symbol 與 BG_Symbol (2) 的 R2～R5 初始各加 4 顆金框（BG1 [28.5%,26.5%,20%,22%]、BG2 [28%,26%,19.5%,21.5%]），Drop1～Drop5 的 R2～R5 也各加 2 個百分點；R1、R6、R7 與 Golden M1 不變，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：移除 H028 MegaWay1 權重表</h4>
-          <ul>
-            <li>競品比較報告移除 MegaWay1 版型順序及 BG／FG R1～R6 的 15 組權重表。</li>
-            <li>保留 SymbolSize／ReelHigh 說明與 Extra Reel 比較內容。</li>
-            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.31）</h4>
+          <ol>
+            <li>FG1／FG2 的 Drop1～Drop5、R1～R7 金框權重全部改回 10%；FG 選表 40%／30%／30%、權重 [6000,4500,4500] 不變，Golden M1 掉落仍 0，FG3 掉落參數不變，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：主輪符號比例拆成 R1～R6 欄位</h4>
-          <ul>
-            <li>四張主輪符號表改用 R1～R6 六個獨立欄位，不再以斜線串接。</li>
-            <li>每個 Symbol 分列 Lucky Neko 與 H028，保留原本 1,000,000 次模擬數值。</li>
-            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.30）</h4>
+          <ol>
+            <li>BG、BF、FG 所有 Table 的初始輪帶與 Drop1～Drop5 移除 Golden M1，併回一般 M1（初始 11 顆、掉落 153,740 權重）；金框額度轉給其他非 M1 符號，總金框比例與各家族總量不變；FG 選表仍 40%／30%／30%，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：主輪符號比例恢復四區塊顯示</h4>
-          <ul>
-            <li>主輪符號比例拆為 BG 初始、BG 掉落、FG 初始、FG 掉落四個獨立表格。</li>
-            <li>保留各 1,000,000 次實際模擬值，只調整報告顯示方式。</li>
-            <li>未修改 config、xlsx、Simulator、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.29）</h4>
+          <ol>
+            <li>FG1 Drop1～Drop5、R1～R7 金框權重改 15%，FG2 改 20%（只在同一符號家族內重分配）；FG 選表 40%／30%／30% 與 FG3 掉落參數不變，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：符號分布改用實際模擬值並合併初始／掉落</h4>
-          <ul>
-            <li>主輪符號分布改用目前模型各 1,000,000 次 BG／FG 初始盤面與掉落抽樣。</li>
-            <li>BG、FG 各一張表，依 Symbol 列出 R1→R6 的初始與掉落 Lucky／H028 實際比例。</li>
-            <li>Extra Reel 初始與掉落合併左右並列；M1 表移除結論欄與結論文字。</li>
-            <li>未修改 config、xlsx、Simulator、輪帶、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.28）</h4>
+          <ol>
+            <li>FreeReelWeight、FreeTriggerReel 改為 [6000,4500,4500]（三張 FG 表 40%／30%／30%）；FG1 R1～R7 金框改 30/200（15%）；FG3 R1～R7 M1 改為 [3,20,20,12,12,4,4]，金框數不變，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：競品比較改為數值表格並加入金框模擬比例</h4>
-          <ul>
-            <li>Overview 核心指標合併為單一比較表；Extra Reel 新增 Lucky Neko／H028／差異。</li>
-            <li>消除率拆成 BG、FG 兩張表，固定使用 0、1、2、3、4、5+。</li>
-            <li>金銀框改用比例比較；H028 各抽樣 1,000,000 次 BG／FG 初始盤面與掉落 Symbol。</li>
-            <li>Drop 金框比例接近競品，初始盤面主要在 BG R2～R5 偏低 4.5738～7.6386 pp。</li>
-            <li>未修改 config、xlsx、Simulator、輪帶、權重及版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.27）</h4>
+          <ol>
+            <li>FG_Symbol／(2)／(3) 分別為競品表、連消表、累積倍數表；FreeReelWeight、FreeTriggerReel 改為 [7500,4500,3000]（50%／30%／20%）；FG3 R1～R7 M1 改為 [3,15,15,8,8,4,4]，金框數與每輪 200 格不變，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：重整競品參考數值比較章節</h4>
-          <ul>
-            <li>依指定架構重整目錄、Overview、賠率、符號／消除／M1／金框／大小輪高與 Extra Reel 章節。</li>
-            <li>Overview 新增 Lucky Neko 與 H028 2.0.0.11 的 RTP、BG Hit Rate、FG 觸發週期比較。</li>
-            <li>H028 使用目前 BG 第一顆 M1 規則、Card 關閉、1,000,000 局 Normal Bet 抽樣。</li>
-            <li>只修改 Markdown 報告與 Debug 修改紀錄；config、xlsx、Simulator、輪帶、權重及版本號不變。</li>
-          </ul>
+          <h4>v2（2.0.0.26）</h4>
+          <ol>
+            <li>FG 競品表／連消表改 70%／30%：FreeReelWeight、FreeTriggerReel＝[10500,4500,0]（FG_Symbol (3) 暫不用）；FG_Symbol (2) R1～R7 金框改 40/200（20%），同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：區分 BG 第一顆 M1 與 FG 累加規則</h4>
-          <ul>
-            <li>BG 第一顆 M1 用大小建立倍數：1×1 為 x1→x2、2×1 為 x1→x3，依此類推。</li>
-            <li>BG 後續 M1 完整累加標示值；若初始沒有 M1，第一次掉落補入的 M1 視為第一顆。</li>
-            <li>FG 的初始與掉落 M1 都直接對目前倍數加上標示值，例如 x2 固定加 2。</li>
-            <li>本次只修正倍率算法；M1 出現率、config、xlsx、輪帶、權重與版本號不變。</li>
-          </ul>
+          <h4>v2（2.0.0.25）</h4>
+          <ol>
+            <li>FG1、FG2 的非輪帶參數全部複製 FG3（Symbol Weight、MegaWay、MY、Post Scatter、Drop1～5）；FG1 M1 [2,3,3,2,2,2,2]、FG2 M1 [12,20,20,16,16,16,16]，FG2 M2／M3 [9,18,21,24,15,12,12]／[12,15,27,18,15,15,15]，金框均 20%；FG1／FG2 選表 1 : 1（[7500,7500,0]），同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：M1 倍率校正、移除 Ways 狀態與新增連消分布顯示</h4>
-          <ul>
-            <li>此筆的 BG 第一顆完整加值規則已由上一筆修正。</li>
-            <li>移除主畫面狀態列的 <code>Ways N</code>；Debug 得分明細仍保留每筆 Ways。</li>
-            <li>M1 標示 <code>x2</code> 時固定加 <code>+2</code>：BG 基礎 x1 會變成 x3，FG 從當前倍數再加 2。</li>
-            <li>Debug 批次模擬與 Simulator 報表都新增 BG／FG 的 0、1、2、3、4、5+ 連消分布。</li>
-            <li>100 萬次抽樣顯示 H028 M1 出現率為 BG 23.9095%、FG 42.8957%；Lucky Neko 為 16.7661%、35.2864%，目前尚未對齊。</li>
-            <li>Normal Bet／Feature Buy 筆數守恆與 M1 最低 x3 驗證通過；config、xlsx 與版本號未變更。</li>
-          </ul>
+          <h4>v2（2.0.0.24）</h4>
+          <ol>
+            <li>FG1 的 M1 改為 [10,20,20,15,15,15,10]、M2 [9,18,21,24,15,12,12]、M3 [12,12,24,18,12,15,12]（含 Golden），七輪金框均 40/200（20%），每輪 200 格，同步原 XLSX。（08/06）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：H028 與 Lucky Neko 連續消除分布比較</h4>
-          <ul>
-            <li>目前 H028 以固定種子模擬 1,000,000 局，並與 Lucky Neko 的 ComboRate／Rounds 統一口徑比較。</li>
-            <li>H028 BG 的 2 次以上消除為 20.94%，Lucky Neko 為 8.34%；FG 分別為 23.09% 與 15.01%。</li>
-            <li>結論為分布不相同，H028 明顯偏向較長連消。</li>
-            <li>分析報告與可重跑工具存放於 <code>其他/分析報告/連續消除分布比較/</code>；未修改 config、xlsx 或版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.23）</h4>
+          <ol>
+            <li>FG 初始與 Retrigger 只用 FG_Symbol（[15000,0,0]）；FG1 M1 由 [3,5,5,4,4,4,4] 改為 [15,25,25,20,20,20,20]。1,000,000 段 FG-only：平均 430.5531x、最大 22,561.35x（10,000x+ 42 次、20,000x+ 1 次），最終累積倍率平均 x67.7196／最大 x346，Retrigger 3.6822%。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：大型符號在 Ways 中只計一個符號</h4>
-          <ul>
-            <li>大型符號無論覆蓋幾格，在單輪 Ways 數量中都只計 1 個符號。</li>
-            <li>同步修正 Simulator、index 算分與 Help 中英文規則說明。</li>
-            <li>截圖局面重新計算為 M4 2 Ways、M5 1 Way、K 4 Ways、J 1 Way，該次 Cascade 合計 2.35。</li>
-            <li>Numba 重新編譯及統計筆數守恆檢查通過；config、xlsx 與版本號未變更。</li>
-          </ul>
+          <h4>v2（2.0.0.21）</h4>
+          <ol>
+            <li>Base Info 依 H026 格式補 BG／FG 區間統計；Multiplier Line 分 BG／FG／Overall，新增 Hit Rate、M1、2x1+ M1、連消 1～5+、Retrigger 與最終累積倍率（FG 依整個 Session 總得分分區，區間內比例以該區 FG Spins 為分母）。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：完整主模擬迴圈改用 Numba</h4>
-          <ul>
-            <li>主模擬迴圈、參數抽選、Card 判斷、Free Game Session 與統計累加皆進入 nopython／nogil 路徑。</li>
-            <li>正式計時前先預熱完整主迴圈，首次 JIT 編譯時間不會混入模擬耗時。</li>
-            <li>100,000 局、Card 關閉：單執行緒約 214,412 局／秒，18 執行緒約 1,363,983 局／秒。</li>
-            <li>正確性與統計守恆檢查通過；未修改數學參數、config、xlsx 或版本號。</li>
-          </ul>
+          <h4>v2（2.0.0.20）</h4>
+          <ol>
+            <li>FG2 M1 相對 FG1 改為 R1 ±0、R2 +1、R3 +1、R4 +2、R5 +2、R6 ±0、R7 −2，最終 [3,6,6,6,6,4,2]；各 100,000 次 Table 1／2 命中率 42.5470%／40.4260%、平均連消 0.906210／0.853150。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：R7 重複群組分隔且最多四連</h4>
-          <ul>
-            <li>同一 Symbol 最多連續 4 格；兩段重複群組之間至少插入 1 格單獨 Symbol。</li>
-            <li>BG 14 段、FG 18 段獨立四同符；最大連續長度均為 4，相鄰重複群組為 0。</li>
-            <li>四同符維持 BG 7.0%、FG 9.0%；至少兩同符為 BG 35.0%、FG 46.5%。</li>
-            <li>版本升為 <code>2.0.0.11</code>，並直接覆寫原本的 xlsx。</li>
-          </ul>
+          <h4>v2（2.0.0.19）</h4>
+          <ol>
+            <li>FG Table 2 改為 40% 低連線組：FreeReelWeight [9000,6000,0]（Retrigger 仍只用 Table 1），移除 MY／Golden MY、M1 每輪 +2（[5,7,7,6,6,6,6]），R4、R5 前四種 MegaWay ×2、接續六種 ×1.5；Table 1／2 命中率 42.5470%／40.5960%、平均連消 0.906210／0.845970。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：增加 R7 四個相同符號相連</h4>
-          <ul>
-            <li>R7 各 Symbol 的 200 格總數不變，只再次調整排列。</li>
-            <li>BG 四同符由 6.5% 提高至 7.0%，FG 由 8.5% 提高至 9.0%。</li>
-            <li>至少兩同符維持 BG 29.5%、FG 45.0%，仍貼近 Lucky Neko。</li>
-            <li>config／xlsx 版本升為 <code>2.0.0.10</code>，並直接覆寫原本的 xlsx。</li>
-          </ul>
+          <h4>v2（2.0.0.18）</h4>
+          <ol>
+            <li>BF 取消每輪只留一個 RNG：只把可能造成 Ways 的 RNG 權重設 0，R1～R7 保留 [48,43,200,200,200,200,96] 個 RNG；100,000 次 BF 得分 0 次；Feature Buy 仍固定補 4 顆 SC。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：R7 排列校正 ExtraReelSame</h4>
-          <ul>
-            <li>保留 R7 的 200 格 Symbol 數量，只重新排列順序，同時校正四格全同符與至少兩格同符率。</li>
-            <li>BG 調整為 6.5%／29.5%，目標為 6.712378%／29.237693%。</li>
-            <li>FG 調整為 8.5%／45.0%，目標為 8.684211%／44.934211%。</li>
-            <li>config／xlsx 版本升為 <code>2.0.0.9</code>，並直接覆寫原本的 <code>H028192A.xlsx</code>。</li>
-          </ul>
+          <h4>v2（2.0.0.17）</h4>
+          <ol>
+            <li>BG Table 2 M1 再 ×2（[8,4,4,8,8,8,8]）；FG Table 2、3 完整複製 FG Table 1；BF_Symbol 對應 BaseGame Table 3（除 Symbol Weight 外複製 BG Table 1），只留零 Ways 停輪權重（10,000 次得分 0），Feature Buy 補 4 顆 SC。100,000 場 BG M1 出現率 37.7320%（Lucky Neko 16.7661%）。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：合併競品比例報告</h4>
-          <ul>
-            <li>將兩份 Lucky Neko 比例文件整合為 <code>其他/競品參考數值比較.md</code>。</li>
-            <li>目前 <code>2.0.0.8 / 200 格 / final</code> 正式結果與舊版 <code>2.0.0.5 / 150 格</code> 歷史比較分區呈現。</li>
-            <li>保留金框、Mega Way、驗證結果、歷史量化誤差與舊版 R7 資訊。</li>
-          </ul>
+          <h4>v2（2.0.0.16）</h4>
+          <ol>
+            <li>BG Table 1 Drop1～5 的 M1 合計機率減半（每輪總權重 1,000,000）；60% Table 1＋40% Table 2 模擬 100,000 場 M1 出現率 29.2590%，仍比 Lucky Neko 高 12.4929 pp（主因 Table 2）。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：改用 analysis_lucky_neko_final 完整同步比例</h4>
-          <ul>
-            <li>初始、掉落、Extra Reel 初始／補入與金框比例，全部改用 <code>analysis_lucky_neko_final.xlsx</code>。</li>
-            <li>每輪維持 200 格；來源比例非 0 的本體 Symbol 至少保留 1 顆非金框符號。</li>
-            <li>所有 Symbol 使用 symbol 12 的 <code>SymbolSize</code>，搭配 <code>ReelHigh_Init</code> 換算 BG／FG 的 15 組 Mega Way 權重。</li>
-            <li>Drop1～Drop5 的金框與 Symbol 分布相同；初始 R7 與消除補入 R7 分別使用對應 Extra Reel 分頁。</li>
-            <li>config／xlsx 版本為 <code>2.0.0.8</code>，雙向差異為 0，<code>calcChain.xml</code> 不存在。</li>
-          </ul>
+          <h4>v2（2.0.0.15）</h4>
+          <ol>
+            <li>五張 BG／FG Symbol 表 R1～R7 統一 200 格；BG Table 2 Post Scatter 最多 3 顆、Drop SC 權重全 0，100,000 次 FG Trigger 0；移除多餘 <code>config_92.js</code>，轉換工具預設輸出 <code>config_92A.js</code>。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-04：啟用中的 BG／FG 每輪擴充為 200 格</h4>
-          <ul>
-            <li><code>BaseGameSymbol1</code> 與 <code>FreeGameSymbol1</code> 的 R1～R7，以及對應權重，全部改為精確 200 格。</li>
-            <li>依 Lucky Neko 初始 Symbol、銀框與 R7 比例重新量化，Drop 權重維持上一版同步結果。</li>
-            <li><code>BG_Symbol</code>／<code>FG_Symbol</code> 的 Symbol、Symbol ID 公式與權重延伸至第 203 列。</li>
-            <li>config／xlsx 版本升為 <code>2.0.0.7</code>，雙向差異為 0，<code>calcChain.xml</code> 維持移除。</li>
-          </ul>
+          <h4>v2（2.0.0.14）</h4>
+          <ol>
+            <li>競品為 0 的 Post Scatter 顆數統一 0.01%（FG 5～7 顆 100／1,000,000）；新增 BG Table 2（複製 Table 1，輪帶 M1 ×2、Drop M1 權重 ×3、Post Scatter 最多 3 顆），ReelWeight [6000,4000]（40%）。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：同步 Lucky Neko 初始、掉落、銀框與 R7 比例</h4>
-          <ul>
-            <li>版本由 <code>2.0.0.5</code> 升為 <code>2.0.0.6</code>，並直接同步覆寫 <code>Source/H028192A.xlsx</code>。</li>
-            <li><code>SymbolOcc_Init</code>／<code>SymbolOcc_Drop</code> 的 BG、FG 比例已套用至啟用中的初始輪帶與 Drop1～Drop5。</li>
-            <li><code>Silver_Init</code>／<code>Silver_Drop</code> 已轉換為銀框 ID 13～23；<code>ExtraReelSame</code> 已正規化套用至 R7。</li>
-            <li>新增 <code>Source/apply_lucky_neko_ratios.py</code> 與 <code>Lucky_Neko_ratio_sync_report.md</code>。</li>
-            <li>config ↔ xlsx 雙向差異為 0，工作簿不含 <code>calcChain.xml</code>。</li>
-          </ul>
+          <h4>v2（2.0.0.13）</h4>
+          <ol>
+            <li>Drop1～5 的 SC 權重改採 Lucky Neko SymbolOcc_Drop／Extra Reel_Drop（初始輪帶仍無 SC）；PostC1 6 顆、7 顆各 0.01%；同步規則、Help、映射文件與競品報告。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：改回填 Symbol 並修正 calcChain</h4>
-          <ul>
-            <li>修正上一版錯誤：config 輪帶不再寫入 <code>U:AA</code> 的 Symbol ID／公式結果區。</li>
-            <li><code>config_to_xlsx.py</code> 會依各 Symbol 工作表 <code>A4:J29</code> 的 ID 對照，將 config 數字 ID 轉成符號名稱後寫入真正的輪帶區 <code>M:S</code>。</li>
-            <li><code>xlsx_to_config.py</code> 改從 <code>M:S</code> 讀取符號名稱並轉回數字 ID，不依賴公式快取值。</li>
-            <li>回填時會恢復 <code>U:AA</code> 的原始公式格式，移除失效的 <code>xl/calcChain.xml</code> 及其關聯，並設定 Excel 開啟時完整重算。</li>
-            <li>未調整的 <code>BG_Symbol (2)</code> 與三組 FG 輪帶已從現有 xlsx 的 <code>M:S</code> 重新同步至 config，避免被舊版錯誤 ID 資料覆蓋。</li>
-            <li>已重新直接覆寫 <code>H028192A.xlsx</code>；最終雙向差異為 0，<code>M:S</code> 150 格 Symbol 完整、<code>U:AA</code> 公式完整，OOXML 與 calcChain 清理檢查通過。</li>
-            <li>數學內容與 <code>config_92A.js</code> 版本維持 <code>2.0.0.5</code>。</li>
-          </ul>
+          <h4>v2（2.0.0.12）</h4>
+          <ol>
+            <li>SC 只由 PostC1 產生（BG／FG 初始與 Drop 移除 SC），非 SC 符號依 Lucky Neko final 比例正規化；BG PostC1 4+ 合計 0.3078%，100 萬局實測 FG Trigger 0.3105%；0～3 顆 SC 以最大熵分布補齊。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：config 150 格 BG 輪帶回填 xlsx</h4>
-          <ul>
-            <li>將目前 <code>config_92A.js</code> 直接回填至 <code>Source/H028192A.xlsx</code>，未建立另一份 xlsx。</li>
-            <li>xlsx 版本同步更新為 <code>2.0.0.5</code>。</li>
-            <li><code>BG_Symbol</code> 的 R1～R7 輪帶與權重均已寫入 150 格範圍。</li>
-            <li>同步寫入目前的參數組選擇權重，BG／FG／Retrigger 均只會使用第一組工作表。</li>
-            <li>共映射 14,399 格、實際變更 1,234 格，config → xlsx → config round-trip 驗證通過。</li>
-          </ul>
+          <h4>v2（2.0.0.11）</h4>
+          <ol>
+            <li>R7 同符號最多連 4 格、重複群組間至少隔 1 格：BG 14 段、FG 18 段四同符，四同符 BG 7.0%／FG 9.0%，至少兩同符 BG 35.0%／FG 46.5%；直接覆寫原 XLSX。（08/04）</li>
+            <li>Simulator 完整主模擬迴圈改用 Numba（nopython／nogil，計時前預熱）：100,000 局 Card Off 單執行緒約 214,412 局／秒、18 執行緒約 1,363,983 局／秒；正確性檢查通過，未改數學參數。（08/04）</li>
+            <li>大型符號在單輪 Ways 只計 1 個符號，同步 Simulator、index 算分與 Help 中英文；截圖局面重算 M4 2 Ways、M5 1 Way、K 4 Ways、J 1 Way，Cascade 合計 2.35。（08/04）</li>
+            <li>連續消除分布比較（1,000,000 局）：2 次以上消除 BG H028 20.94%／Lucky Neko 8.34%、FG 23.09%／15.01%，H028 偏長連消；報告在 <code>其他/分析報告/連續消除分布比較/</code>。（08/04）</li>
+            <li>主畫面移除 <code>Ways N</code>（Debug 得分明細保留）；Debug 批次模擬與 Simulator 報表新增 BG／FG 0～5+ 連消分布；100 萬次 M1 出現率 BG 23.9095%、FG 42.8957%（Lucky Neko 16.7661%、35.2864%）。（08/04）</li>
+            <li>M1 規則：BG 第一顆 M1 以大小建立倍數（1×1 x1→x2、2×1 x1→x3…），後續 M1 累加標示值，初始無 M1 時第一顆掉落 M1 視為第一顆；FG 的 M1 直接加標示值（x2 加 2）。只改倍率算法。（08/04）</li>
+            <li>競品報告：重整章節（Overview 加 Lucky Neko 與 H028 2.0.0.11 的 RTP、BG Hit Rate、FG 週期）、改數值表格並加金框模擬比例（初始盤面 BG R2～R5 偏低 4.5738～7.6386 pp）、符號分布改實際模擬值（各 1,000,000 次）、主輪比例分 BG／FG 初始／掉落四表且 R1～R6 分欄、移除 MegaWay1 權重表。只改報告。（08/04）</li>
+            <li>index 關閉 Card 系統：一般 Spin 與批次模擬直接用自然結果，Player Profile 與 Card BG Range 停用。（08/04）</li>
+            <li>金框符號比照 C1 改雙層漸層底板（亮黃高光＋金黃底），邊線、配色與判定不變。（08/04）</li>
+            <li>Simulator 報表比照 H026 新增 trigger_fg_bg_pay／trigger_fg_bg_count（觸發局 BG 得分仍歸 BG RTP）。（08/04）</li>
+            <li>Simulator 報表新增 trigger_fg_bg_max_pay（觸發局單把最大 BG Pay，含 bet_multi、不含 FG）。以上 2.0.0.11 期間各項皆未改 config／XLSX 與版本號（R7 項除外）。（08/05）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：BG 七輪長度統一為 150</h4>
-          <ul>
-            <li><code>BaseGameSymbol1</code> 的 R1～R7 全部調整為精確 150 格，對應的 <code>BaseGameSymbolWeight1</code> 也全部調整為 150 個權重。</li>
-            <li>R1～R6 重新依 Lucky Neko <code>SymbolOcc_Init</code>／BG 比例量化為 150 格，並以固定亂數種子 <code>20260803</code> 打亂。</li>
-            <li>R7／Extra Reel 沒有 Lucky Neko 直接比例，因此依修改前 R7 的有效加權符號比例量化為 150 格。</li>
-            <li>七輪位置權重全部統一為 1，確保輪帶格數比例等於實際抽取比例。</li>
-            <li>xlsx ↔ config 共用映射同步由 <code>U4:AA124</code>／<code>AC4:AI124</code> 延伸為 <code>U4:AA153</code>／<code>AC4:AI153</code>，讓 <code>update_xlsx.bat</code> 可直接回填 150 格輪帶。</li>
-            <li><code>config_92A.js</code> 版本由 <code>2.0.0.4</code> 升為 <code>2.0.0.5</code>。</li>
-          </ul>
+          <h4>v2（2.0.0.10）</h4>
+          <ol>
+            <li>R7 只重排：四同符 BG 6.5% → 7.0%、FG 8.5% → 9.0%，至少兩同符維持 BG 29.5%、FG 45.0%；直接覆寫原 XLSX。（08/04）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：BG 輪帶套用 Lucky Neko 符號比例</h4>
-          <ul>
-            <li>依 <code>其他/參考資料/analysis_lucky_neko.xlsx</code> 的 <code>SymbolOcc_Init</code>／BG／R1～R6 比例，重建 <code>config_92A.js</code> 的 <code>BaseGameSymbol1</code> 前六輪。</li>
-            <li>每輪維持 121 格，先以最大餘數法換算各 Symbol 數量，再使用固定亂數種子 <code>20260803</code> 打亂排列，結果可重現。</li>
-            <li><code>BaseGameSymbolWeight1</code> 前六輪統一設為 1，避免舊位置權重使實際抽取比例偏離新輪帶。</li>
-            <li>參考資料沒有 R7／Extra Reel 的直接符號比例，因此第七輪及其權重維持原值。</li>
-            <li>未修改 <code>BaseGameSymbol2</code>、FG 輪帶與 Drop 權重。</li>
-            <li><code>config_92A.js</code> 版本由 <code>2.0.0.3</code> 升為 <code>2.0.0.4</code>。</li>
-          </ul>
+          <h4>v2（2.0.0.9）</h4>
+          <ol>
+            <li>R7 重排校正 ExtraReelSame（200 格數量不變）：BG 四同符／至少兩同符 6.5%／29.5%（目標 6.712378%／29.237693%）、FG 8.5%／45.0%（目標 8.684211%／44.934211%）；直接覆寫 <code>H028192A.xlsx</code>。（08/04）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：update_xlsx.bat 改為直接覆寫 xlsx</h4>
-          <ul>
-            <li><code>update_xlsx.bat</code> 改用 <code>config_to_xlsx.py --in-place --overwrite-formulas</code>。</li>
-            <li>執行後直接更新所選 xlsx，不再建立 <code>*_from_config_*.xlsx</code>。</li>
-            <li>批次畫面會明確顯示原地覆寫警告，並提醒先關閉 Excel。</li>
-            <li>完成覆寫後仍會執行 config → xlsx → config round-trip 驗證。</li>
-            <li><code>config_to_xlsx.py</code> 直接執行時仍保留另存副本的預設行為。</li>
-          </ul>
+          <h4>v2（2.0.0.8）</h4>
+          <ol>
+            <li>初始、掉落、Extra Reel 與金框比例全部改用 <code>analysis_lucky_neko_final.xlsx</code>（每輪 200 格、非 0 符號至少 1 顆）；用 symbol 12 的 <code>SymbolSize</code>＋<code>ReelHigh_Init</code> 換算 BG／FG 15 組 Mega Way 權重；雙向差異 0。（08/04）</li>
+            <li>兩份 Lucky Neko 比例文件合併為 <code>其他/競品參考數值比較.md</code>（2.0.0.8／200 格正式結果與 2.0.0.5／150 格歷史分區）。（08/04）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：config 鎖定第一組 BG／FG 參數</h4>
-          <ul>
-            <li><code>config_92A.js</code> 版本由 <code>2.0.0.2</code> 升為 <code>2.0.0.3</code>。</li>
-            <li><code>ReelWeight</code> 由 <code>[2000, 2000]</code> 改為 <code>[4000, 0]</code>，只會選用 <code>BG_Symbol</code>。</li>
-            <li><code>FreeReelWeight</code> 由 <code>[8000, 3000, 4000]</code> 改為 <code>[15000, 0, 0]</code>，FG 初始場次只會選用 <code>FG_Symbol</code>。</li>
-            <li><code>FreeTriggerReel</code> 由 <code>[4000, 0, 8000]</code> 改為 <code>[12000, 0, 0]</code>，FG Retrigger 也只會選用 <code>FG_Symbol</code>。</li>
-            <li>各選擇器的原始總權重保持不變，未修改任何輪帶或掉落權重內容。</li>
-          </ul>
+          <h4>v2（2.0.0.7）</h4>
+          <ol>
+            <li><code>BaseGameSymbol1</code>／<code>FreeGameSymbol1</code> R1～R7 與權重擴充為 200 格，依 Lucky Neko 初始、銀框與 R7 比例重新量化（Drop 不變）；BG_Symbol／FG_Symbol 延伸至第 203 列；雙向差異 0。（08/04）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：修改紀錄改為 Debug Mode 顯示</h4>
-          <ul>
-            <li>修改紀錄面板預設隱藏。</li>
-            <li>只有開啟 Debug Mode 時才顯示，關閉 Debug Mode 後立即隱藏。</li>
-          </ul>
+          <h4>v2（2.0.0.6）</h4>
+          <ol>
+            <li>套用 Lucky Neko <code>SymbolOcc_Init</code>／<code>SymbolOcc_Drop</code> 到初始輪帶與 Drop1～5，<code>Silver_Init</code>／<code>Silver_Drop</code> 轉銀框 ID 13～23，<code>ExtraReelSame</code> 套用至 R7；新增 <code>apply_lucky_neko_ratios.py</code> 與同步報告；雙向差異 0。（08/03）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：index 新增修改紀錄區</h4>
-          <ul>
-            <li>將 <code>修改紀錄.md</code> 的內容完整嵌入 index。</li>
-            <li>顯示位置位於 Log 與設定區域之間。</li>
-            <li>內容使用固定高度的可捲動面板，避免影響主要操作區。</li>
-          </ul>
+          <h4>v2（2.0.0.5）</h4>
+          <ol>
+            <li><code>BaseGameSymbol1</code> R1～R7 統一 150 格（R1～R6 依 Lucky Neko 比例、種子 <code>20260803</code>；R7 依原有效比例），位置權重全 1；映射延伸至 <code>U4:AA153</code>／<code>AC4:AI153</code>。（08/03）</li>
+            <li><code>config_92A.js</code> 回填 <code>Source/H028192A.xlsx</code>（版本同步 2.0.0.5）：映射 14,399 格、變更 1,234 格，round-trip 通過。（08/03）</li>
+            <li>修正回填位置：config 輪帶改寫入真正的輪帶區 <code>M:S</code>（數字 ID 轉符號名），<code>xlsx_to_config.py</code> 改從 <code>M:S</code> 讀；恢復 <code>U:AA</code> 公式、移除失效 <code>calcChain.xml</code>；雙向差異 0。（08/03）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：重新校正 xlsx / config 雙向位置</h4>
-          <h5>問題原因</h5>
-          <ul>
-            <li>目前 <code>H028192A.xlsx</code> 已改為每組參數各自一張 Symbol 工作表，但工具仍使用舊版「同張表向右延伸」的位置。</li>
-            <li>輪帶 ID、輪帶權重、MegaWay、Mystery、Post Scatter 與五段 Drop 權重皆存在一欄或一列偏移。</li>
-            <li>參數組選擇權重已由 <code>Description</code> 移至 <code>Parameter</code>，舊工具仍讀寫原位置。</li>
-          </ul>
-          <h5>修正內容</h5>
-          <ul>
-            <li>BG 組 1／2 改對應 <code>BG_Symbol</code>、<code>BG_Symbol (2)</code>。</li>
-            <li>FG 組 1／2／3 改對應 <code>FG_Symbol</code>、<code>FG_Symbol (2)</code>、<code>FG_Symbol (3)</code>。</li>
-            <li>共用位置校正為：輪帶 ID <code>U4:AA124</code>、權重 <code>AC4:AI124</code>、MegaWay <code>C33:H47</code>、Mystery <code>C51:C63</code>、Post Scatter <code>B67:C74</code>。</li>
-            <li>Drop 1～5 校正為 <code>AL:AR</code>，起始列依序為 4、33、62、91、120，各 26 列。</li>
-            <li><code>ReelWeight</code>、<code>FreeReelWeight</code>、<code>FreeTriggerReel</code> 改讀寫 <code>Parameter!C5:C6</code>、<code>C11:C13</code>、<code>C18:C20</code>。</li>
-            <li><code>xlsx_to_config.py</code> 與 <code>config_to_xlsx.py</code> 改共用同一份映射常數，避免雙向工具日後各自漂移。</li>
-            <li>依校正後位置重新產生目前使用的 <code>config_92A.js</code>。</li>
-            <li>同步重寫 <code>xlsx_config_usage_mapping.md</code> 與 <code>config_xlsx_usage_mapping.md</code>。</li>
-          </ul>
-          <h5>驗證</h5>
-          <ul>
-            <li>Python 語法檢查通過。</li>
-            <li>xlsx → config 再次讀取比對通過。</li>
-            <li><code>config_92A.js</code> 的輪帶為 7×121、MegaWay 為 6×15、Drop 為 7×26，且三組參數選擇權重皆有正確數值。</li>
-            <li>config → xlsx → config 完整 round-trip 驗證通過，共映射 13,993 格。</li>
-          </ul>
+          <h4>v2（2.0.0.4）</h4>
+          <ol>
+            <li>依 <code>analysis_lucky_neko.xlsx</code> SymbolOcc_Init 重建 <code>BaseGameSymbol1</code> R1～R6（每輪 121 格、最大餘數法、種子 <code>20260803</code>），前六輪位置權重設 1；R7、BG2、FG 與 Drop 不變。（08/03）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：還原 Git 後改用系統預設符號</h4>
-          <h5>還原範圍</h5>
-          <ul>
-            <li>先將 <code>Project/Slots/H028_雷神爆金</code> 全部已追蹤檔案還原至目前 Git <code>HEAD</code>。</li>
-            <li>Git 追蹤的 <code>Source/Image</code> 圖片素材已恢復，但新版 index 不會使用或載入這些圖片。</li>
-            <li>未追蹤的 <code>config_92.js</code> 與 <code>config_92A_v1.js</code> 保留，未刪除或修改。</li>
-          </ul>
-          <h5>index 變更</h5>
-          <ul>
-            <li>新增固定設定 <code>USE_SYMBOL_IMAGES=false</code>。</li>
-            <li><code>symbolArt()</code> 在系統模式直接回傳空字串，不建立 <code>&lt;img&gt;</code> 元素，也不向 <code>Source/Image</code> 發出圖片請求。</li>
-            <li>所有有效符號使用 Git 版本原有的系統預設框、背景色與文字代碼。</li>
-            <li>無效、空值或負數符號 ID 顯示空白，不產生 <code>S-1</code>，也不套用 Mystery 系統框。</li>
-            <li>未修改 config、Simulator 或遊戲數學。</li>
-          </ul>
-          <h5>驗證</h5>
-          <ul>
-            <li>H028 主要 inline JavaScript 已通過 Node 語法解析。</li>
-            <li>已確認圖片開關固定為 <code>false</code>，且 <code>symbolArt()</code> 在任何圖片路徑建立前即返回。</li>
-          </ul>
+          <h4>v2（2.0.0.3）</h4>
+          <ol>
+            <li>config 鎖定第一組：ReelWeight [2000,2000] → [4000,0]、FreeReelWeight [8000,3000,4000] → [15000,0,0]、FreeTriggerReel [4000,0,8000] → [12000,0,0]，總權重與輪帶不變。（08/03）</li>
+            <li><code>update_xlsx.bat</code> 改用 <code>config_to_xlsx.py --in-place --overwrite-formulas</code> 直接覆寫 XLSX（顯示覆寫警告），完成後仍做 round-trip 驗證。（08/03）</li>
+          </ol>
         </article>
 
         <article class="change-log-entry">
-          <h4>2026-08-03：新增 update_xlsx.bat</h4>
-          <h5>工具內容</h5>
-          <ul>
-            <li>新增 <code>Source/update_xlsx.bat</code>，作為 <code>config_to_xlsx.py</code> 的雙擊入口。</li>
-            <li>預設 config 為專案根目錄的 <code>config_92A.js</code>，xlsx 為 <code>Source/H028192A.xlsx</code>。</li>
-            <li>雙擊執行時會列出並詢問 config 與來源 xlsx；直接按 Enter 使用預設值。</li>
-            <li>命令列亦可依序傳入 config 與 xlsx 路徑。</li>
-            <li>優先使用工作區 <code>.venv</code>，找不到時改用 <code>py -3</code>。</li>
-            <li>固定另存成 <code>*_from_config_*.xlsx</code>，不覆寫原始數學表。</li>
-            <li>同名輸出已存在時使用 <code>--force</code> 更新。</li>
-            <li>輸出後由 <code>config_to_xlsx.py</code> 自動執行 round-trip 驗證。</li>
-            <li><code>Source/config_xlsx_usage_mapping.md</code> 已補上雙擊與命令列使用方式。</li>
-          </ul>
+          <h4>v2（2.0.0.2）</h4>
+          <ol>
+            <li>新增 <code>Source/update_xlsx.bat</code>（<code>config_to_xlsx.py</code> 雙擊入口，預設 <code>config_92A.js</code>／<code>H028192A.xlsx</code>，另存 <code>*_from_config_*.xlsx</code> 並自動 round-trip）。（08/03）</li>
+            <li>還原 Git HEAD 後改用系統預設符號：<code>USE_SYMBOL_IMAGES=false</code>，<code>symbolArt()</code> 不建圖片、無效 ID 顯示空白；未改 config／Simulator／數學。（08/03）</li>
+            <li>重新校正 xlsx／config 雙向位置（每組一張 Symbol 工作表；輪帶 <code>U4:AA124</code>、權重 <code>AC4:AI124</code>、Drop <code>AL:AR</code>、選表權重改讀 <code>Parameter</code>），雙向工具共用映射常數；round-trip 13,993 格通過。（08/03）</li>
+            <li>index 新增修改紀錄區（嵌入 <code>修改紀錄.md</code>、固定高度可捲動），並改為只在 Debug Mode 顯示。（08/03）</li>
+          </ol>
         </article>
       </div>
     </section>
@@ -2957,7 +2530,7 @@
         </label>
         <label class="setting-toggle" for="cardSystemInput">
           <input id="cardSystemInput" type="checkbox">
-          <span data-i18n="cardSystem">Card System</span>
+          <span>Card System</span>
         </label>
         <label class="config-control" for="versionSelect">
           Version
@@ -3238,7 +2811,7 @@
   </script>
   <script>
 (()=>{"use strict";
-  const $=id=>document.getElementById(id), D=0.002, START_MONEY=10000, BETS=[1,2,3,4,5,6,8,10,12,16,20,30,40,60,100,200,300,600,1000,1500];
+  const $=id=>document.getElementById(id), D=0.002, START_MONEY=10000, BETS=[1,2,3,4,5,6,8,10,12,16,20,30,40,60,100,200,300,600,1000,1500,2000,3000,5000];
   let INDEX_CARD_SYSTEM_ENABLED=(()=>{try{return localStorage.getItem('slotDemoCardSystem')==='on'}catch(_){return false}})();
   const PATTERNS=[[4,1],[1,4],[3,2],[2,3],[3,1,1],[1,3,1],[1,1,3],[2,2,1],[2,1,2],[1,2,2],[2,1,1,1],[1,2,1,1],[1,1,2,1],[1,1,1,2],[1,1,1,1,1]];
   const CODES=["WW","SC","M1","M2","M3","M4","M5","M6","A","K","Q","J","10","G-M1","G-M2","G-M3","G-M4","G-M5","G-M6","G-A","G-K","G-Q","G-J","G-10","MY","G-MY"];
@@ -3249,20 +2822,20 @@
   }
   const B=NATURAL?Object.assign({},RTP,NATURAL,{excel_version:RTP.excel_version,card_system:RTP.card_system}):RTP;
   const FG_RULE=B.free_game_spins||{}, FG_TRIGGER_SCATTER=Math.max(1,Number(FG_RULE.trigger_scatter)||4), FG_BASE_SPINS=Math.max(1,Number(FG_RULE.base_spins)||10), FG_SPINS_PER_EXTRA_SCATTER=Math.max(0,Number(FG_RULE.spins_per_extra_scatter)||2), FG_MAX_SPINS=Math.max(FG_BASE_SPINS,Number(FG_RULE.max_spins)||50), freeSpinsForScatters=count=>FG_BASE_SPINS+Math.max(0,count-FG_TRIGGER_SCATTER)*FG_SPINS_PER_EXTRA_SCATTER;
-  const state={credit:START_MONEY/D,betIndex:0,busy:false,auto:false,debug:false,speed:3,rounds:0,totalBet:0,totalWin:0,hits:0,bgHits:0,naturalRounds:0,naturalFg:0,buyRounds:0,forcedRounds:0,maxMulti:1,logs:[],history:[],historyIndex:-1,historyFloor:0,queued:false,fg:null,awaitingFgSpin:false,fgSpinResolve:null,lastBoard:null,cardProfile:(()=>{try{return localStorage.getItem('slotDemoCardProfile')==='newbie'?'newbie':'oldhand'}catch(_){return'oldhand'}})(),batchSimulationRunning:false,language:(()=>{try{return localStorage.getItem('slotDemoLanguage')==='en'?'en':'zh'}catch(_){return'zh'}})(),lastMessage:'Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.'};
-  const el={board:$('board'),msg:$('messageBar'),spin:$('spinBtn'),auto:$('autoBtn'),betMinus:$('betMinusBtn'),betPlus:$('betPlusBtn'),betBtn:$('betBtn'),betMenu:$('betMenu'),normal:$('normalBetBtn'),buy:$('buyFeatureBtn'),speed:$('speedRange'),debug:$('debugModeInput'),card:$('cardRangeSelect'),profile:$('cardProfileSelect'),reel:$('reelRngInput'),force:$('forceFgInput'),batchPanel:$('batch-simulation'),batchNote:$('batchSimulationNote'),batchRounds:$('batchSimulationRounds'),batchStart:$('batchSimulationStartBtn')};
+  const state={credit:START_MONEY/D,betIndex:0,busy:false,auto:false,debug:false,speed:3,rounds:0,totalBet:0,totalWin:0,hits:0,bgHits:0,naturalRounds:0,naturalFg:0,buyRounds:0,forcedRounds:0,maxMulti:1,logs:[],history:[],historyIndex:-1,historyFloor:0,queued:false,fg:null,awaitingFgSpin:false,fgSpinResolve:null,lastBoard:null,cardProfile:(()=>{try{return localStorage.getItem('slotDemoCardProfile')==='newbie'?'newbie':'oldhand'}catch(_){return'oldhand'}})(),language:(()=>{try{return localStorage.getItem('slotDemoLanguage')==='en'?'en':'zh'}catch(_){return'zh'}})(),lastMessage:'Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.'};
+  const el={board:$('board'),msg:$('messageBar'),spin:$('spinBtn'),auto:$('autoBtn'),betMinus:$('betMinusBtn'),betPlus:$('betPlusBtn'),betBtn:$('betBtn'),betMenu:$('betMenu'),normal:$('normalBetBtn'),buy:$('buyFeatureBtn'),speed:$('speedRange'),debug:$('debugModeInput'),card:$('cardRangeSelect'),profile:$('cardProfileSelect'),reel:$('reelRngInput'),force:$('forceFgInput')};
   const clone=o=>JSON.parse(JSON.stringify(o)), sleep=ms=>new Promise(r=>setTimeout(r,Math.max(12,ms/state.speed))), money=c=>(c*D).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), compactMoney=c=>(c*D).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}), formatBetMoney=v=>Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), compactNumber=v=>Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}), pickInt=n=>Math.floor(Math.random()*n);
   function weighted(weights,forced=null){let total=weights.reduce((a,v)=>a+Math.max(0,+v||0),0);if(total<=0)return{index:pickInt(weights.length),rng:0,total:0};let rng=forced==null?pickInt(total):Math.trunc(forced);if(rng<0||rng>=total)throw Error(`RNG ${rng} outside 0-${total-1}`);let sum=0;for(let i=0;i<weights.length;i++){sum+=Math.max(0,+weights[i]||0);if(rng<sum)return{index:i,rng,total}}return{index:weights.length-1,rng,total}}
   function code(id){return Number.isInteger(id)&&id>=0?(CODES[id]||`S${id}`):''}function base(id){return id>=13&&id<=23?id-11:id}function isGold(id){return id>=13&&id<=23}function unframed(id){return id===25?24:isGold(id)?base(id):id}function displayCode(id){return isGold(id)?code(base(id)):code(id)}function betCoins(){return BETS[state.betIndex]/D}function betMultiplier(){return BETS[state.betIndex]/(B.default_coin_in*D*B.normalbet)}function delay(){return 520}
   function log(text,type=''){state.logs.push({text,type,time:new Date().toLocaleTimeString('en-GB',{hour12:false})});if(state.logs.length>500)state.logs.splice(0,state.logs.length-500);renderLog()}
   function message(text,type=false){let isError=type===true||type==='error';state.lastMessage=text;el.msg.textContent=localizeMessage(text);el.msg.style.color=isError?'var(--red)':'var(--accent)';log(text,typeof type==='string'?(type==='winValue'?'result':type):(isError?'error':''))}
-  function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','batch-simulation','set-rng-panel','rng-wrap','log-wrap','live-log-wrap','change-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);updateControls()}
+  function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','batch-simulation','set-rng-panel','rng-wrap','log-wrap','live-log-wrap','change-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);if(show)renderLog();updateControls()}
   function renderLog(){if(!state.debug)return;$('liveLogBody').innerHTML=state.logs.map(x=>`<div class="live-log-line ${x.type}">[${x.time}] ${esc(x.text)}</div>`).join('');$('liveLogBody').scrollTop=$('liveLogBody').scrollHeight}
   function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
   function renderVersionControls(){let manifest=window.H028_VERSION_MANIFEST||{versions:[]},entry=window.H028_VERSION_ENTRY||manifest.versions[0],versionSelect=$('versionSelect'),configSelect=$('configSelect');versionSelect.innerHTML='';for(const item of manifest.versions){let option=document.createElement('option');option.value=item.version;option.textContent=String(item.version);versionSelect.appendChild(option)}versionSelect.value=entry?.version||'';configSelect.innerHTML='';for(const code of Object.keys(entry?.configs||{})){let option=document.createElement('option');option.value=code;option.textContent=code;configSelect.appendChild(option)}configSelect.value=window.CONFIG_CODE||configSelect.options[0]?.value||'';renderVersionChangeLog(entry)}
-  function renderVersionChangeLog(entry){let root=$('changeLogBody');root.innerHTML='';let article=document.createElement('article'),title=document.createElement('h4');article.className='change-log-entry';title.textContent=`${entry?.date||''} · ${entry?.version||''}`;article.appendChild(title);let changes=Array.isArray(entry?.changes)?entry.changes:[];if(changes.length){let list=document.createElement('ul');for(const change of changes){let item=document.createElement('li');item.textContent=change;list.appendChild(item)}article.appendChild(list)}else{let note=document.createElement('p');note.textContent=state.language==='zh'?'此版本沒有可顯示的數學調整紀錄。':'No mathematical tuning was recorded for this version.';article.appendChild(note)}root.appendChild(article)}
+  function renderVersionChangeLog(entry){let root=$('changeLogBody');if(!root)return;root.querySelector('.version-change-log')?.remove();if(!entry)return;let ver=String(entry.version||''),nums=v=>(String(v).match(/\d+/g)||[]).map(Number),cmp=(a,b)=>{let x=nums(a),y=nums(b);for(let i=0;i<Math.max(x.length,y.length);i++){let d=(x[i]||0)-(y[i]||0);if(d)return d}return 0},md=String(entry.date||'').slice(5).replace('-','/'),article=document.createElement('article'),title=document.createElement('h4');article.className='change-log-entry version-change-log';title.textContent=`v${ver.split('.')[0]}（${ver}）· ${state.language==='zh'?'數學（Version Manifest）':'Math (Version Manifest)'}`;article.appendChild(title);let changes=Array.isArray(entry.changes)?entry.changes:[];if(changes.length){let list=document.createElement('ol');for(const change of changes){let item=document.createElement('li');item.textContent=md?`${change}（${md}）`:change;list.appendChild(item)}article.appendChild(list)}else{let note=document.createElement('p');note.textContent=state.language==='zh'?'此版本沒有可顯示的數學調整紀錄。':'No mathematical tuning was recorded for this version.';article.appendChild(note)}let before=[...root.querySelectorAll('.change-log-entry:not(.version-change-log)')].find(node=>{let m=(node.querySelector('h4')?.textContent||'').match(/（(\d+(?:\.\d+)+)）/);return m&&cmp(m[1],ver)<0});root.insertBefore(article,before||null)}
   function openVersion(version,code){let q=new URL(location.href);q.searchParams.set('version',version);q.searchParams.set('config',code);try{localStorage.setItem('slotDemoVersion',version);localStorage.setItem('slotDemoConfig',code)}catch(_){}location.href=q.href}
-  const UI_TEXT={en:{simulationStats:'Simulation Stats',naturalSimulation:'Simulation',startSimulation:'Start',totalRounds:'Total Rounds',hitRate:'Hit Rate',observedFgTrigger:'FG Trigger (Observed)',modelFgCycle:'FG Cycle (Model)',maxMultiplier:'Max Multiplier',retryLimitExceeded:'Retry Limit Exceeded',playerProfile:'Player',reelRng:'Reel RNG',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',changeLog:'Change Log',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',naturalSimulation:'模擬',startSimulation:'開始模擬',totalRounds:'總局數',hitRate:'命中率',observedFgTrigger:'FG 觸發（實測）',modelFgCycle:'FG 週期（模型）',maxMultiplier:'最大倍數',retryLimitExceeded:'Retry Limit 超限',playerProfile:'玩家',reelRng:'滾輪 RNG',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',changeLog:'修改紀錄',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
+  const UI_TEXT={en:{simulationStats:'Simulation Stats',modelFgCycle:'FG Cycle (Model)',playerProfile:'Player',reelRng:'Reel RNG',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',changeLog:'Change Log',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',modelFgCycle:'FG 週期（模型）',playerProfile:'玩家',reelRng:'滾輪 RNG',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',changeLog:'修改紀錄',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
   const tr=key=>UI_TEXT[state.language]?.[key]||UI_TEXT.en[key]||key;
   function localizeMessage(text){if(state.language!=='zh')return text;const exact={['Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.']:'Ready — 按下 Spin','Reels spinning...':'滾輪轉動中...','Session reset.':'遊戲已重置。','Auto started.':'自動遊戲已開啟。','Auto stopped.':'自動遊戲已關閉。','Set RNG reset.':'指定 RNG 已重置。','Insufficient credit.':'餘額不足。'};if(exact[text])return exact[text];return text.replace(/^Round complete · Win /,'本局完成 · 得分 ').replace(/^Free Game started: (\d+) spins$/,'免費遊戲開始：$1 場').replace(/^Free Game ready · (\d+) spins left · press Spin$/,'免費遊戲待命 · 剩餘 $1 場 · 請按 Spin').replace(/^Free Game complete · final /,'免費遊戲結束 · 最終 ').replace(/^FG retrigger \+(\d+)$/,'免費遊戲加局 +$1').replace(/^History /,'歷史畫面 ').replace(/Cascade (\d+) · evaluating/,'Cascade $1 · 判定').replace(/Cascade (\d+) · score /,'Cascade $1 · 得分 ')}
   let gameHelpMarkdown='';
@@ -3270,10 +2843,10 @@
   function setBetModeButtonLabel(button,fullLabel,shortLabel){if(!button)return;button.dataset.fullLabel=fullLabel;button.dataset.shortLabel=shortLabel}
   function refreshBetModeLabels(){let body=document.querySelector('#bet-mode-panel .zone-body');if(!body)return;let buttons=[...body.querySelectorAll('button[data-full-label]')];cancelAnimationFrame(betModeLayoutFrame);for(const button of buttons){button.style.minWidth='';button.style.flex='';button.textContent=button.dataset.fullLabel}betModeLayoutFrame=requestAnimationFrame(()=>{let visible=buttons.filter(button=>getComputedStyle(button).display!=='none'),firstTop=visible[0]?.offsetTop,compact=body.scrollWidth>body.clientWidth+1||visible.some(button=>button.offsetTop!==firstTop);for(const button of buttons){button.textContent=compact?button.dataset.shortLabel:button.dataset.fullLabel;button.style.minWidth=compact?'0':'';button.style.flex=compact?'0 1 auto':''}})}
   addEventListener('resize',refreshBetModeLabels);
-  function applyLanguage(){document.documentElement.lang=state.language==='zh'?'zh-Hant':'en';document.title='Thunder Boost — Demo Game';$('languageSelect').value=state.language;el.profile.value=state.cardProfile;set('gameName',state.language==='zh'?'雷神爆金':'Thunder Boost');document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=tr(node.dataset.i18n));set('spinBtn',state.language==='zh'?'旋轉':'SPIN');setBetModeButtonLabel($('normalBetBtn'),state.language==='zh'?'一般投注':'NORMAL BET','NB');setBetModeButtonLabel($('extraBetBtn'),`EXTRA BET (2X)`,`EX (2X)`);setBetModeButtonLabel($('buyFeatureBtn'),`${state.language==='zh'?'購買特色':'BUY FEATURE'} (${B.featurebuy}X)`,`BF (${B.featurebuy}X)`);refreshBetModeLabels();set('helpBtn',state.language==='zh'?'說明':'HELP');set('setRngResetBtn',state.language==='zh'?'重置':'RESET');if(!state.batchSimulationRunning)set('batchSimulationStartBtn',tr('startSimulation'));let playLabel=document.querySelector('#play-panel .zone-label'),modeLabel=document.querySelector('#bet-mode-panel .zone-label'),rngLabel=document.querySelector('#set-rng-panel .zone-label');if(playLabel)playLabel.textContent=state.language==='zh'?'操作':'PLAY';if(modeLabel)modeLabel.textContent=state.language==='zh'?'投注模式':'BET MODE';if(rngLabel)rngLabel.textContent=state.language==='zh'?'指定 RNG':'SET RNG';el.msg.textContent=localizeMessage(state.lastMessage);renderStats();renderFeature(state.fg?'FREE GAME':'BASE GAME',Number($('carryMultiValue').textContent)||0,Number($('spinMultiValue').textContent.replace('x',''))||1,($('featureStatus').textContent||'').replace('Ways ','')||'—');updateControls();if(gameHelpMarkdown)renderHelp(gameHelpMarkdown);try{localStorage.setItem('slotDemoLanguage',state.language)}catch(_){}}
+  function applyLanguage(){document.documentElement.lang=state.language==='zh'?'zh-Hant':'en';document.title='Thunder Boost — Demo Game';$('languageSelect').value=state.language;el.profile.value=state.cardProfile;set('gameName',state.language==='zh'?'雷神爆金':'Thunder Boost');document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=tr(node.dataset.i18n));set('spinBtn',state.language==='zh'?'旋轉':'SPIN');setBetModeButtonLabel($('normalBetBtn'),state.language==='zh'?'一般投注':'NORMAL BET','NB');setBetModeButtonLabel($('extraBetBtn'),`EXTRA BET (2X)`,`EX (2X)`);setBetModeButtonLabel($('buyFeatureBtn'),`${state.language==='zh'?'購買特色':'BUY FEATURE'} (${B.featurebuy}X)`,`BF (${B.featurebuy}X)`);refreshBetModeLabels();set('helpBtn',state.language==='zh'?'說明':'HELP');set('setRngResetBtn',state.language==='zh'?'重置':'RESET');let playLabel=document.querySelector('#play-panel .zone-label'),modeLabel=document.querySelector('#bet-mode-panel .zone-label'),rngLabel=document.querySelector('#set-rng-panel .zone-label');if(playLabel)playLabel.textContent=state.language==='zh'?'操作':'PLAY';if(modeLabel)modeLabel.textContent=state.language==='zh'?'投注模式':'BET MODE';if(rngLabel)rngLabel.textContent=state.language==='zh'?'指定 RNG':'SET RNG';el.msg.textContent=localizeMessage(state.lastMessage);renderStats();renderFeature(state.fg?'FREE GAME':'BASE GAME',Number($('carryMultiValue').textContent)||0,Number($('spinMultiValue').textContent.replace('x',''))||1,($('featureStatus').textContent||'').replace('Ways ','')||'—');updateControls();if(gameHelpMarkdown)renderHelp(gameHelpMarkdown);try{localStorage.setItem('slotDemoLanguage',state.language)}catch(_){}}
   function modelFgCycle(){if(!INDEX_CARD_SYSTEM_ENABLED||!B.card_system?.enabled)return null;let cards=profileCards(),total=cards.reduce((sum,card)=>sum+Math.max(0,Number(card.weight)||0),0),fg=cards.reduce((sum,card)=>sum+(card.type==='free_game'?Math.max(0,Number(card.weight)||0):0),0);return total>0&&fg>0?total/fg:null}
   function formatFgCycle(value){return Number.isFinite(value)?`${value.toFixed(2)}${state.language==='zh'?' 場／次':' rounds/session'}`:'--'}
-  function renderStats(displayWin=null){set('balanceValue',money(state.credit));set('betValue',formatBetMoney(BETS[state.betIndex]));set('winValue',money(displayWin==null?(state.currentWin||0):displayWin));set('roundCountValue',state.rounds.toLocaleString());set('rtpValue',state.totalBet?`${(state.totalWin/state.totalBet*100).toFixed(2)}%`:'0.00%');set('hitRateValue',state.naturalRounds?`${(state.bgHits/state.naturalRounds*100).toFixed(2)}%`:'0.00%');let rate=state.naturalRounds?state.naturalFg/state.naturalRounds:0,cycle=state.naturalFg?(state.naturalRounds/state.naturalFg).toFixed(2):'--';set('fgTriggerValue',`${(rate*100).toFixed(2)}% (${cycle}${state.language==='zh'?' 場／次':' rounds/session'})`);set('fgModelCycleValue',formatFgCycle(modelFgCycle()));set('maxMultiplierValue',`x${state.maxMulti}`);set('betBtn',`${state.language==='zh'?'投注':'BET'} ${formatBetMoney(BETS[state.betIndex])}`);updateBatchSimulationContext()}
+  function renderStats(displayWin=null){set('balanceValue',money(state.credit));set('betValue',formatBetMoney(BETS[state.betIndex]));set('winValue',money(displayWin==null?(state.currentWin||0):displayWin));set('roundCountValue',state.rounds.toLocaleString());set('rtpValue',state.totalBet?`${(state.totalWin/state.totalBet*100).toFixed(2)}%`:'0.00%');set('hitRateValue',state.naturalRounds?`${(state.bgHits/state.naturalRounds*100).toFixed(2)}%`:'0.00%');let rate=state.naturalRounds?state.naturalFg/state.naturalRounds:0,cycle=state.naturalFg?(state.naturalRounds/state.naturalFg).toFixed(2):'--';set('fgTriggerValue',`${(rate*100).toFixed(2)}% (${cycle}${state.language==='zh'?' 場／次':' rounds/session'})`);set('fgModelCycleValue',formatFgCycle(modelFgCycle()));set('maxMultiplierValue',`x${state.maxMulti}`);set('betBtn',`${state.language==='zh'?'投注':'BET'} ${formatBetMoney(BETS[state.betIndex])}`)}
   function set(id,v){let node=$(id);if(node)node.textContent=v}
   function renderFeature(scene='BASE GAME',cascade=0,multi=1,ways='—'){set('modeText',state.language==='zh'?(scene==='FREE GAME'?'免費遊戲':'主遊戲'):scene);set('carryMultiValue',cascade);set('spinMultiValue',`x${multi}`);set('featureStatus','');$('fgLeftPill').classList.toggle('hidden',!state.fg);if(state.fg)set('fgLeftValue',`${state.fg.left}/${state.fg.total}`);document.body.classList.toggle('fg-mode',scene==='FREE GAME')}
   function h028DropMotion(before,after,hits=[]){let hitSet=new Set(hits),motion={};for(let r=0;r<6;r++){let oldRow=2,survivors=[];before.main[r].forEach((block,index)=>{if(!hitSet.has(`m-${r}-${index}`)||isGold(block.id))survivors.push({row:oldRow});oldRow+=Math.max(1,Math.trunc(block.h)||1)});let newCount=Math.max(0,after.main[r].length-survivors.length),newRow=2;after.main[r].forEach((block,index)=>{let key=`m-${r}-${index}`;if(index<newCount)motion[key]={type:'new',rows:newCount,groupSize:newCount};else{let survivor=survivors[index-newCount];if(survivor&&newRow>survivor.row)motion[key]={type:'settle',rows:newRow-survivor.row}}newRow+=Math.max(1,Math.trunc(block.h)||1)})}let extraSurvivors=[];before.extra.forEach((block,index)=>{if(!hitSet.has(`e-${index}`)||isGold(block.id))extraSurvivors.push({oldIndex:index})});let extraNewCount=Math.max(0,after.extra.length-extraSurvivors.length);after.extra.forEach((block,index)=>{let key=`e-${index}`;if(index<extraSurvivors.length){let cols=extraSurvivors[index].oldIndex-index;if(cols>0)motion[key]={type:'extra-slide',cols}}else motion[key]={type:'extra-slide',cols:extraNewCount}});return motion}
@@ -3317,7 +2890,8 @@
   function evaluate(screen,multi,cascade){let wins=[],hit=[],total=0;for(let target=2;target<=12;target++){let counts=[],reels=0;for(let r=0;r<6;r++){let c=reelBlocks(screen,r).reduce((sum,b)=>{let x=base(b.id);return sum+(x===target||x===0?1:0)},0);if(c){counts.push(c);reels++}else break}if(reels>=3){let ways=counts.reduce((a,v)=>a*v,1),pay=(B.linkpoint[target-2]?.[reels-3]||0)*ways*betMultiplier(),totalPay=pay*multi;total+=totalPay;wins.push({symbol:code(target),length:reels,ways,cascade,pay:totalPay});for(let r=0;r<reels;r++){screen.main[r].forEach((b,i)=>{let x=base(b.id);if(x===target||x===0)hit.push(`m-${r}-${i}`)});if(r>=1&&r<=4){let x=base(screen.extra[r-1].id);if(x===target||x===0)hit.push(`e-${r-1}`)}}}}return{wins,hit,total,ways:wins.reduce((a,w)=>a+w.ways,0)}}
   function pickDrop(scene,suffix,dropIndex,reel){let key=`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}Drop${Math.min(5,dropIndex+1)}`,w=B[key][reel],p=weighted(w),id=p.index;return{id,rng:p}}
   function cascade(screen,evalResult,scene,suffix,dropIndex,mystery){let hit=new Set(evalResult.hit),events=[],newM1=[];for(let r=0;r<6;r++){let kept=[];screen.main[r].forEach((b,i)=>{if(!hit.has(`m-${r}-${i}`))kept.push(b);else if(isGold(b.id)){kept.push({id:0,h:b.h});events.push(`R${r+1} ${code(b.id)} → WW`)}});let height=kept.reduce((a,b)=>a+b.h,0);while(height<5){let p=pickDrop(scene,suffix,dropIndex,r),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};kept.unshift(block);if(base(id)===2)newM1.push(block);events.push(`R${r+1} drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`);height++}screen.main[r]=kept}let keptExtra=[];screen.extra.forEach((b,i)=>{if(!hit.has(`e-${i}`))keptExtra.push(b);else if(isGold(b.id)){keptExtra.push({id:0,h:1});events.push(`EXTRA ${code(b.id)} → WW`)}});while(keptExtra.length<4){let p=pickDrop(scene,suffix,dropIndex,6),id=p.id;id=id===24?mystery:id===25?mystery+11:id;let block={id,h:1};keptExtra.push(block);if(base(id)===2)newM1.push(block);events.push(`EXTRA drop ${code(id)} | RNG ${p.rng.rng}/${p.rng.total}`)}screen.extra=keptExtra;return{events,newM1}}
-  function parseOverrides(){let raw=el.reel.value.trim();if(!raw)return null;let a=raw.split(/\s+/).map(Number);if(a.length!==7||a.some(v=>!Number.isInteger(v)||v<0))throw Error('Reel RNG requires exactly 7 non-negative integers.');return a}
+  let SIMULATING=false;
+  function parseOverrides(){if(SIMULATING)return null;let raw=el.reel.value.trim();if(!raw)return null;let a=raw.split(/\s+/).map(Number);if(a.length!==7||a.some(v=>!Number.isInteger(v)||v<0))throw Error('Reel RNG requires exactly 7 non-negative integers.');return a}
   async function buildSpin(scene='BG',retrigger=false){let overrides=parseOverrides(),screen=makeScreen(scene,overrides,retrigger),multi=scene==='FG'?(state.fg?.multi||2):1,m1=collectM1(screen,scene==='BG');multi+=m1.add;let steps=[],wins=[],total=0;for(let c=0;c<50;c++){let e=evaluate(screen,multi,c);steps.push({screen:clone(screen),eval:e,multi});wins.push(...e.wins);if(!e.wins.length)break;total+=e.total;let dropped=cascade(screen,e,scene,screen.table.suffix,c,screen.mystery);for(const block of dropped.newM1){let bonus=block.h+1;if(scene==='BG'&&m1.count===0)bonus--;multi+=bonus;m1.count++}steps[steps.length-1].dropEvents=dropped.events}return{scene,screen,steps,wins,total,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
   function buildBuyFeatureTrigger(){let screen=makeScreen('BG',parseOverrides(),false,FG_TRIGGER_SCATTER,3),multi=1,m1=collectM1(screen,true);multi+=m1.add;let evalResult=evaluate(screen,multi,0);if(evalResult.total!==0)throw Error('BF_Symbol produced an unexpected payout');return{scene:'BG',screen,steps:[{screen:clone(screen),eval:evalResult,multi}],wins:[],total:0,multi,scatter:scatterCount(screen),rng:screen.rng,table:screen.table,postScatter:screen.postScatter}}
   async function playSpin(result){state.historyIndex=state.history.length-1;state.historyFloor=state.history.length;await animateReels(result.steps[0]?.screen||result.screen);for(let i=0;i<result.steps.length;i++){let s=result.steps[i],scene=result.scene==='FG'?'FREE GAME':'BASE GAME',ways=s.eval.ways||'—';renderFeature(scene,i,s.multi,ways);renderBoard(s.screen);message(`${result.scene} · Cascade ${i} · evaluating`);saveSnapshot(result,{screen:s.screen,step:s,phase:'evaluation',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · evaluating`});await sleep(delay());if(s.eval.wins.length){renderBoard(s.screen,s.eval.hit);state.currentWin+=s.eval.total;renderStats();message(`Cascade ${i} win ${money(s.eval.total)} · x${s.multi}`);saveSnapshot(result,{screen:s.screen,hits:s.eval.hit,step:s,phase:'score',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · score ${money(s.eval.total)}`});await sleep(delay());renderBoard(s.screen,[],false,{cleared:s.eval.hit});message(`Cascade ${i} · symbols cleared`);await sleep(Math.max(70,delay()*.45));let nextScreen=result.steps[i+1]?.screen||result.screen,dropMotion=h028DropMotion(s.screen,nextScreen,s.eval.hit);renderBoard(nextScreen,[],false,{dropMotion});message(`Cascade ${i} · drop complete`);await sleep((Math.max(320,640/state.speed)/2+180)*state.speed)}}renderBoard(result.screen);state.maxMulti=Math.max(state.maxMulti,result.multi);renderDebug(result);renderStats()}
@@ -3351,17 +2925,19 @@
   function profileCards(){return B.card_system?.[state.cardProfile]?.normal_bet?.weight_bg||[]}
   function profileFgCards(cardMode='normal_bet'){return cardMode==='buy_feature'?(B.card_system?.oldhand?.buy_feature?.weight_fg||[]):(B.card_system?.[state.cardProfile]?.normal_bet?.weight_fg||[])}
   function cardMatches(card,result){let mult=result.total/betCoins();return card?.type==='free_game'?result.scatter>=FG_TRIGGER_SCATTER:Boolean(card)&&mult>Number(card.min)&&mult<=Number(card.max)&&result.scatter<FG_TRIGGER_SCATTER}
-  async function buildProfiledBg(forcedIndex=null,quiet=false){let cards=profileCards();if(!INDEX_CARD_SYSTEM_ENABLED||(forcedIndex==null&&el.reel.value.trim())||!B.card_system?.enabled||!cards.length)return buildSpin('BG');let cardIndex=forcedIndex==null?weighted(cards.map(card=>card.weight||0)).index:Number(forcedIndex),card=cards[cardIndex],limit=Math.max(1,B.card_system?.retry_limit||10000),last=null;for(let retry=1;retry<=limit;retry++){last=await buildSpin('BG');if(cardMatches(card,last)){last.cardIndex=cardIndex;last.cardRequiresFg=card?.type==='free_game';last.cardRetryLimitExceeded=false;if(!quiet)log(`Card ${cardIndex} matched after ${retry} attempt(s).`,'mode');return last}}last.cardIndex=cardIndex;last.cardRequiresFg=card?.type==='free_game';last.cardRetryLimitExceeded=true;if(!quiet)log(`Card ${cardIndex} retry limit reached; last result used.`,'error');return last}
+  async function buildProfiledBg(forcedIndex=null,quiet=false){let cards=profileCards();if(!INDEX_CARD_SYSTEM_ENABLED||(forcedIndex==null&&!SIMULATING&&el.reel.value.trim())||!B.card_system?.enabled||!cards.length)return buildSpin('BG');let cardIndex=forcedIndex==null?weighted(cards.map(card=>card.weight||0)).index:Number(forcedIndex),card=cards[cardIndex],limit=Math.max(1,B.card_system?.retry_limit||10000),last=null;for(let retry=1;retry<=limit;retry++){last=await buildSpin('BG');if(cardMatches(card,last)){last.cardIndex=cardIndex;last.cardRetries=retry;last.cardRequiresFg=card?.type==='free_game';last.cardRetryLimitExceeded=false;if(!quiet)log(`Card ${cardIndex} matched after ${retry} attempt(s).`,'mode');return last}}last.cardIndex=cardIndex;last.cardRetries=limit;last.cardRequiresFg=card?.type==='free_game';last.cardRetryLimitExceeded=true;if(!quiet)log(`Card ${cardIndex} retry limit reached; last result used.`,'error');return last}
   async function buildFgSession(initial){let savedFg=state.fg,spins=[],total=0;state.fg={left:initial,total:initial,initialLeft:initial,multi:2};try{while(state.fg.left>0&&state.fg.total<=FG_MAX_SPINS){let useTriggerReels=state.fg.initialLeft<=0;state.fg.left--;if(state.fg.initialLeft>0)state.fg.initialLeft--;let spin=await buildSpin('FG',useTriggerReels),add=0;total+=spin.total;state.fg.multi=spin.multi;if(spin.scatter>=FG_TRIGGER_SCATTER){add=Math.min(freeSpinsForScatters(spin.scatter),FG_MAX_SPINS-state.fg.total);state.fg.left+=add;state.fg.total+=add}spins.push({spin,add})}return{spins,total,multi:state.fg.multi}}finally{state.fg=savedFg}}
-  async function buildProfiledFgSession(initial,useCard=false,quiet=false,cardMode='normal_bet'){let cards=profileFgCards(cardMode),enabled=INDEX_CARD_SYSTEM_ENABLED&&useCard&&B.card_system?.enabled&&cards.length;if(!enabled)return buildFgSession(initial);let cardIndex=weighted(cards.map(card=>card.weight||0)).index,card=cards[cardIndex],limit=Math.max(1,B.card_system?.retry_limit||10000),last=null;for(let retry=1;retry<=limit;retry++){last=await buildFgSession(initial);let mult=last.total/betCoins();if(card&&mult>Number(card.min)&&mult<=Number(card.max)){last.cardIndex=cardIndex;last.cardRetryLimitExceeded=false;if(!quiet)log(`${cardMode==='buy_feature'?'BF':'FG'} Card ${cardIndex} matched after ${retry} attempt(s).`,'mode');return last}}last.cardIndex=cardIndex;last.cardRetryLimitExceeded=true;if(!quiet)log(`${cardMode==='buy_feature'?'BF':'FG'} Card ${cardIndex} retry limit reached; last session used.`,'error');return last}
+  async function buildProfiledFgSession(initial,useCard=false,quiet=false,cardMode='normal_bet'){let cards=profileFgCards(cardMode),enabled=INDEX_CARD_SYSTEM_ENABLED&&useCard&&B.card_system?.enabled&&cards.length;if(!enabled)return buildFgSession(initial);let cardIndex=weighted(cards.map(card=>card.weight||0)).index,card=cards[cardIndex],limit=Math.max(1,B.card_system?.retry_limit||10000),last=null;for(let retry=1;retry<=limit;retry++){last=await buildFgSession(initial);let mult=last.total/betCoins();if(card&&mult>Number(card.min)&&mult<=Number(card.max)){last.cardIndex=cardIndex;last.cardRetries=retry;last.cardRetryLimitExceeded=false;if(!quiet)log(`${cardMode==='buy_feature'?'BF':'FG'} Card ${cardIndex} matched after ${retry} attempt(s).`,'mode');return last}}last.cardIndex=cardIndex;last.cardRetries=limit;last.cardRetryLimitExceeded=true;if(!quiet)log(`${cardMode==='buy_feature'?'BF':'FG'} Card ${cardIndex} retry limit reached; last session used.`,'error');return last}
   async function buildSelectedBg(){let selected=el.card.value;return buildProfiledBg(selected===''?null:Number(selected),false)}
-  function updateBatchSimulationContext(){set('batchSimulationNote',`Config ${window.CONFIG_LABEL||'92A'} · Card System ${INDEX_CARD_SYSTEM_ENABLED?'On':'Off'} · Normal Bet · Bet ${formatBetMoney(BETS[state.betIndex])}`)}
   function cascadeCount(result){return Math.min(5,(result.steps||[]).reduce((count,step)=>count+(step.eval?.wins?.length?1:0),0))}
-  function renderBatchSimulationStats(stats){let rounds=stats.rounds||0,fgSpins=Math.max(0,stats.totalSpins-rounds),fgRate=rounds?stats.fgTriggers/rounds:0,cycle=stats.fgTriggers?(rounds/stats.fgTriggers).toFixed(2):'--',retryRate=rounds?stats.retryLimitExceeded/rounds:0;set('batchSimulationRoundCount',rounds.toLocaleString('en-US'));set('batchSimulationRtp',stats.totalBet?`${(stats.totalWin/stats.totalBet*100).toFixed(2)}%`:'0.00%');set('batchSimulationHitRate',rounds?`${(stats.bgHits/rounds*100).toFixed(2)}%`:'0.00%');set('batchSimulationFgTrigger',`${(fgRate*100).toFixed(2)}% (${cycle}${state.language==='zh'?' 場／次':' rounds/session'})`);set('batchSimulationFgModelCycle',formatFgCycle(modelFgCycle()));set('batchSimulationMaxMultiplier',`x${stats.maxMultiplier||0}`);set('batchSimulationRetryLimitExceeded',`${stats.retryLimitExceeded.toLocaleString('en-US')} (${(retryRate*100).toFixed(2)}%)`);for(let i=0;i<6;i++){set(`batchBgCascade${i}`,rounds?`${(stats.bgCascades[i]/rounds*100).toFixed(2)}%`:'0%');set(`batchFgCascade${i}`,fgSpins?`${(stats.fgCascades[i]/fgSpins*100).toFixed(2)}%`:'0%')}}
-  async function simulateNaturalRound(){let bg=await buildProfiledBg(null,true),totalWin=bg.total,totalSpins=1,bgHit=bg.total>0?1:0,maxMultiplier=bg.multi,fgTriggered=bg.scatter>=FG_TRIGGER_SCATTER,retryLimitExceeded=bg.cardRetryLimitExceeded?1:0,bgCascade=cascadeCount(bg),fgCascades=Array(6).fill(0);if(fgTriggered){let initial=freeSpinsForScatters(bg.scatter),session=await buildProfiledFgSession(initial,!!bg.cardRequiresFg,true);retryLimitExceeded+=session.cardRetryLimitExceeded?1:0;for(const item of session.spins){let spin=item.spin;fgCascades[cascadeCount(spin)]++;totalWin+=spin.total;totalSpins++;maxMultiplier=Math.max(maxMultiplier,spin.multi)}}return{totalWin,totalSpins,bgHit,maxMultiplier,fgTriggered,retryLimitExceeded,bgCascade,fgCascades}}
-  async function runBatchSimulation(){if(state.batchSimulationRunning)return;let requested=Number(el.batchRounds.value);if(!Number.isInteger(requested)||requested<1||requested>1000000){el.batchRounds.setCustomValidity(state.language==='zh'?'請輸入 1～1,000,000 的整數':'Enter an integer from 1 to 1,000,000');el.batchRounds.reportValidity();return}el.batchRounds.setCustomValidity('');state.auto=false;state.batchSimulationRunning=true;let savedReel=el.reel.value,savedCard=el.card.value,savedFg=state.fg;el.reel.value='';el.card.value='';el.batchRounds.disabled=true;el.batchStart.disabled=true;set('batchSimulationStartBtn',state.language==='zh'?'模擬中…':'Running…');let stats={rounds:0,totalBet:0,totalWin:0,totalSpins:0,bgHits:0,fgTriggers:0,maxMultiplier:0,retryLimitExceeded:0,bgCascades:Array(6).fill(0),fgCascades:Array(6).fill(0)};updateControls();try{for(let index=0;index<requested;index++){let result=await simulateNaturalRound();stats.rounds++;stats.totalBet+=betCoins();stats.totalWin+=result.totalWin;stats.totalSpins+=result.totalSpins;stats.bgHits+=result.bgHit;stats.fgTriggers+=result.fgTriggered?1:0;stats.maxMultiplier=Math.max(stats.maxMultiplier,result.maxMultiplier);stats.retryLimitExceeded+=result.retryLimitExceeded;stats.bgCascades[result.bgCascade]++;for(let i=0;i<6;i++)stats.fgCascades[i]+=result.fgCascades[i];if(index%250===249||index===requested-1){renderBatchSimulationStats(stats);await new Promise(resolve=>setTimeout(resolve,0))}}message(`Simulation finished | ${requested.toLocaleString('en-US')} rounds | ${state.cardProfile==='newbie'?'Newbie':'Oldhand'}`,'result')}catch(error){message(`Simulation failed | ${error.message}`,'error')}finally{state.fg=savedFg;el.reel.value=savedReel;el.card.value=savedCard;state.batchSimulationRunning=false;el.batchRounds.disabled=false;el.batchStart.disabled=false;set('batchSimulationStartBtn',tr('startSimulation'));updateControls()}}
+  // 共用 Simulation 面板（demogame_common.js）的押注模式選單：本作只有 Normal Bet 與 Buy Feature（Extra Bet 未開放）。
+  window.demogameSimulationModes=[{value:'normal',label:'Normal Bet'},{value:'buy',label:'Buy Feature'}];
+  // 每局模擬沿用實際遊戲邏輯（buildProfiledBg／buildBuyFeatureTrigger／buildProfiledFgSession，含 Card System），
+  // 只在該局期間以 SIMULATING 忽略畫面上的 Set RNG；不改畫面、押注模式、統計與 Log。
+  // multiplier＝總得分（含 FG）÷ 實際押注（RTP 口徑）；lineMultiplier＝BF ÷ 底注、NB ÷ 押注（線型口徑）。
+  window.demogameSimulateRound=async({mode}={})=>{let previous=SIMULATING;SIMULATING=true;try{let buy=mode==='buy',baseBet=betCoins(),wager=baseBet*(buy?B.featurebuy:1),bg,session=null,retryLimitExceeded=0,retryCount=0;if(buy){bg=buildBuyFeatureTrigger();session=await buildProfiledFgSession(freeSpinsForScatters(bg.scatter),true,true,'buy_feature')}else{bg=await buildProfiledBg(null,true);retryLimitExceeded+=bg.cardRetryLimitExceeded?1:0;retryCount+=bg.cardRetries||0;if(bg.scatter>=FG_TRIGGER_SCATTER)session=await buildProfiledFgSession(freeSpinsForScatters(bg.scatter),!!bg.cardRequiresFg,true)}if(session){retryLimitExceeded+=session.cardRetryLimitExceeded?1:0;retryCount+=session.cardRetries||0}let fgSpins=session?session.spins.map(item=>item.spin):[],totalWin=bg.total+fgSpins.reduce((sum,spin)=>sum+spin.total,0);return{multiplier:totalWin/wager,lineMultiplier:totalWin/(buy?baseBet:wager),fgTriggered:!!session,maxMultiplier:fgSpins.reduce((max,spin)=>Math.max(max,spin.multi),bg.multi),retryLimitExceeded,retryCount,bgCascade:cascadeCount(bg),fgCascades:fgSpins.map(cascadeCount)}}finally{SIMULATING=previous}};
   async function round(kind='normal'){if(state.busy){if(state.debug&&kind==='normal'){state.queued=true;message('Next Spin queued; current playback fast-forwarded.')}return}state.historyIndex=state.history.length-1;let cost=betCoins()*(kind==='buy'?B.featurebuy:1),bgHit=false;if(state.credit<cost){message('Insufficient credit.',true);return}state.busy=true;state.currentWin=0;state.credit-=cost;renderStats();updateControls();try{if(kind==='buy'){state.buyRounds++;let trigger=buildBuyFeatureTrigger();await playSpin(trigger);message(`Buy Feature · ${trigger.scatter} SC · Free Game triggered`,'mode');await runFg(freeSpinsForScatters(trigger.scatter),true,'buy_feature')}else if(kind==='force'){state.forcedRounds++;await runFg(FG_BASE_SPINS,false)}else{state.naturalRounds++;let r=await buildSelectedBg();bgHit=r.total>0;await playSpin(r);if(r.scatter>=FG_TRIGGER_SCATTER){state.naturalFg++;await runFg(freeSpinsForScatters(r.scatter),!!r.cardRequiresFg)}}state.credit+=state.currentWin;state.rounds++;state.totalBet+=cost;state.totalWin+=state.currentWin;if(kind==='normal')window.demogameLineChart?.record(state.currentWin/betCoins());if(state.currentWin>0)state.hits++;if(kind==='normal'&&bgHit)state.bgHits++;renderStats();message(`Round complete · Win ${money(state.currentWin)}`,'winValue');el.reel.value='';if(el.card.value!=='')el.card.value=''}catch(e){message(e.message||String(e),true);console.error(e)}finally{state.busy=false;updateControls();if(state.queued){state.queued=false;setTimeout(()=>round('normal'),0)}else if(state.auto)setTimeout(()=>round('normal'),80)}}
-  function updateControls(){let featureLock=!!state.fg,lock=state.busy||state.auto||featureLock||state.batchSimulationRunning;el.spin.disabled=state.auto||(state.busy&&!state.debug)||state.batchSimulationRunning;el.auto.disabled=featureLock||state.batchSimulationRunning;el.auto.classList.toggle('active',state.auto);el.auto.textContent=state.language==='zh'?(state.auto?'自動開啟':'自動'):(state.auto?'AUTO ON':'AUTO');for(const x of [el.betMinus,el.betPlus,el.betBtn,el.normal,el.buy])x.disabled=lock;el.profile.disabled=lock||!INDEX_CARD_SYSTEM_ENABLED;el.card.disabled=lock||!INDEX_CARD_SYSTEM_ENABLED||!!el.reel.value.trim();el.reel.disabled=lock||(INDEX_CARD_SYSTEM_ENABLED&&el.card.value!=='');$('setRngResetBtn').disabled=lock;$('previousStepBtn').disabled=state.busy||state.historyIndex<=state.historyFloor;$('nextStepBtn').disabled=state.busy||state.historyIndex<state.historyFloor||state.historyIndex>=state.history.length-1;el.force.disabled=lock;$('resetBtn').disabled=state.busy||featureLock||state.batchSimulationRunning;if(!state.batchSimulationRunning)el.batchStart.disabled=state.busy||featureLock}
+  function updateControls(){let featureLock=!!state.fg,lock=state.busy||state.auto||featureLock;el.spin.disabled=state.auto||(state.busy&&!state.debug);el.auto.disabled=featureLock;el.auto.classList.toggle('active',state.auto);el.auto.textContent=state.language==='zh'?(state.auto?'自動開啟':'自動'):(state.auto?'AUTO ON':'AUTO');for(const x of [el.betMinus,el.betPlus,el.betBtn,el.normal,el.buy])x.disabled=lock;el.profile.disabled=lock||!INDEX_CARD_SYSTEM_ENABLED;el.card.disabled=lock||!INDEX_CARD_SYSTEM_ENABLED||!!el.reel.value.trim();el.reel.disabled=lock||(INDEX_CARD_SYSTEM_ENABLED&&el.card.value!=='');$('setRngResetBtn').disabled=lock;$('previousStepBtn').disabled=state.busy||state.historyIndex<=state.historyFloor;$('nextStepBtn').disabled=state.busy||state.historyIndex<state.historyFloor||state.historyIndex>=state.history.length-1;el.force.disabled=lock;$('resetBtn').disabled=state.busy||featureLock}
   function reset(){state.auto=false;Object.assign(state,{credit:START_MONEY/D,busy:false,rounds:0,totalBet:0,totalWin:0,hits:0,bgHits:0,naturalRounds:0,naturalFg:0,buyRounds:0,forcedRounds:0,maxMulti:1,currentWin:0,history:[],historyIndex:-1,historyFloor:0,queued:false,fg:null,awaitingFgSpin:false,fgSpinResolve:null});state.logs=[];el.reel.value='';el.card.value='';renderStats();renderFeature();makeIdleBoard();renderLog();message('Session reset.');updateControls()}
   function makeIdleBoard(){let main=Array.from({length:6},(_,r)=>Array.from({length:5},(_,i)=>({id:2+(r+i)%11,h:1}))),extra=Array.from({length:4},(_,i)=>({id:8+i,h:1}));renderBoard({main,extra})}
   function initCards(){el.card.innerHTML='<option value=\"\">Auto</option>';profileCards().forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.textContent=c.type==='free_game'?`Card ${i}: Free Game`:`Card ${i}: (${c.min}, ${c.max}]`;el.card.appendChild(o)})}
@@ -3372,10 +2948,11 @@
   function helpRule(parent,rule){let row=document.createElement('div'),cell=document.createElement('div');row.className='help-rule';cell.className=state.language==='zh'?'help-rule-zh':'help-rule-en';cell.textContent=state.language==='zh'?rule.zh:rule.en;row.appendChild(cell);parent.appendChild(row)}
   function renderHelp(md){gameHelpMarkdown=md;let root=$('helpContent'),sections=parseHelpData(md);root.innerHTML='';for(const section of sections){let card=document.createElement('section');card.className='help-section';helpTitle(card,'help-section-title',section.titleZh,section.titleEn);if(section.key==='PAYTABLE'){let note=document.createElement('div');note.className='help-rule';note.textContent=state.language==='zh'?`以下派彩金額依目前押注 ${BETS[state.betIndex]} 顯示。`:`Payouts below are shown for the current bet of ${BETS[state.betIndex]}.`;card.appendChild(note)}section.rules.forEach(rule=>helpRule(card,rule));for(const group of section.groups){let payouts=group.payouts.filter(x=>x.lang===state.language);if(!group.rules.length&&!payouts.length)continue;helpTitle(card,'help-group-title',group.titleZh||(state.language==='zh'?group.key:'PAYTABLE'),group.titleEn);group.rules.forEach(rule=>helpRule(card,rule));if(payouts.length){let table=document.createElement('div');table.className='help-payout-table';for(let rowIndex=0;rowIndex<payouts.length;rowIndex++){let payout=payouts[rowIndex],row=document.createElement('div');row.className='help-payout-row';for(let cellIndex=0;cellIndex<payout.cells.length;cellIndex++){let value=payout.cells[cellIndex],cell=document.createElement('div');cell.className='help-payout-cell';let clean=value.replace(/[{}]/g,'');cell.textContent=rowIndex>0&&cellIndex>0&&Number.isFinite(Number(clean))?compactNumber(Number(clean)*BETS[state.betIndex]):clean;row.appendChild(cell)}table.appendChild(row)}card.appendChild(table)}}root.appendChild(card)}if(!sections.length)root.textContent=state.language==='zh'?'無法載入遊戲規則。':'Unable to load game rules.'}
   async function openHelp(){let md=$('embeddedGameHelpMarkdown').textContent.trim();try{let r=await fetch('./game_help_draft.md',{cache:'no-store'});if(r.ok)md=await r.text()}catch(_){log('Offline Help fallback used.')}renderHelp(md);$('helpDialog').showModal()}
-  el.spin.onclick=()=>{if(state.awaitingFgSpin&&state.fgSpinResolve){let go=state.fgSpinResolve;state.fgSpinResolve=null;go();return}round('normal')};el.auto.onclick=()=>{state.auto=!state.auto;updateControls();message(state.auto?'Auto started.':'Auto stopped.','mode');if(state.auto&&!state.busy)round('normal')};el.buy.onclick=()=>round('buy');el.force.onchange=()=>{if(el.force.checked){el.force.checked=false;round('force')}};el.betMinus.onclick=()=>{state.betIndex=Math.max(0,state.betIndex-1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betPlus.onclick=()=>{state.betIndex=Math.min(BETS.length-1,state.betIndex+1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betBtn.onclick=()=>el.betMenu.classList.toggle('hidden');el.speed.oninput=()=>{state.speed=+el.speed.value;set('speedValue',`x${state.speed}`)};el.debug.onchange=()=>setDebug(el.debug.checked);$('cardSystemInput').checked=INDEX_CARD_SYSTEM_ENABLED;$('cardSystemInput').onchange=e=>{INDEX_CARD_SYSTEM_ENABLED=e.target.checked;try{localStorage.setItem('slotDemoCardSystem',INDEX_CARD_SYSTEM_ENABLED?'on':'off')}catch(_){}renderStats();updateControls();message('Card System | '+(INDEX_CARD_SYSTEM_ENABLED?'On ('+state.cardProfile+')':'Off'),'mode')};el.profile.onchange=()=>{state.cardProfile=el.profile.value==='newbie'?'newbie':'oldhand';try{localStorage.setItem('slotDemoCardProfile',state.cardProfile)}catch(_){}el.card.value='';el.reel.value='';initCards();renderStats();updateControls();message(`Player Profile | ${state.cardProfile==='newbie'?'Newbie':'Oldhand'}`,'mode')};el.card.onchange=updateControls;el.reel.oninput=updateControls;el.batchStart.onclick=runBatchSimulation;$('setRngResetBtn').onclick=()=>{el.card.value='';el.reel.value='';updateControls();message('Set RNG reset.')};$('previousStepBtn').onclick=()=>showHistory(state.historyIndex-1);$('nextStepBtn').onclick=()=>showHistory(state.historyIndex+1);$('clearLogBtn').onclick=()=>{state.logs=[];renderLog()};$('resetBtn').onclick=reset;$('helpBtn').onclick=openHelp;$('closeHelpBtn').onclick=()=>$('helpDialog').close();$('helpDialog').onclick=e=>{if(e.target===$('helpDialog'))$('helpDialog').close()};addEventListener('keydown',e=>{if(e.key==='Escape'&&$('helpDialog').open)$('helpDialog').close()});$('versionSelect').onchange=()=>{let version=$('versionSelect').value,entry=(window.H028_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version),code=entry?.configs?.[window.CONFIG_CODE]?window.CONFIG_CODE:Object.keys(entry?.configs||{})[0];openVersion(version,code)};$('configSelect').onchange=()=>openVersion(window.CONFIG_VERSION,$('configSelect').value);$('languageSelect').onchange=()=>{state.language=$('languageSelect').value;applyLanguage();renderVersionChangeLog(window.H028_VERSION_ENTRY)};
+  el.spin.onclick=()=>{if(state.awaitingFgSpin&&state.fgSpinResolve){let go=state.fgSpinResolve;state.fgSpinResolve=null;go();return}round('normal')};el.auto.onclick=()=>{state.auto=!state.auto;updateControls();message(state.auto?'Auto started.':'Auto stopped.','mode');if(state.auto&&!state.busy)round('normal')};el.buy.onclick=()=>round('buy');el.force.onchange=()=>{if(el.force.checked){el.force.checked=false;round('force')}};el.betMinus.onclick=()=>{state.betIndex=Math.max(0,state.betIndex-1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betPlus.onclick=()=>{state.betIndex=Math.min(BETS.length-1,state.betIndex+1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betBtn.onclick=()=>el.betMenu.classList.toggle('hidden');el.speed.oninput=()=>{state.speed=+el.speed.value;set('speedValue',`x${state.speed}`)};el.debug.onchange=()=>setDebug(el.debug.checked);$('cardSystemInput').checked=INDEX_CARD_SYSTEM_ENABLED;$('cardSystemInput').onchange=e=>{INDEX_CARD_SYSTEM_ENABLED=e.target.checked;try{localStorage.setItem('slotDemoCardSystem',INDEX_CARD_SYSTEM_ENABLED?'on':'off')}catch(_){}renderStats();updateControls();message('Card System | '+(INDEX_CARD_SYSTEM_ENABLED?'On ('+state.cardProfile+')':'Off'),'mode')};el.profile.onchange=()=>{state.cardProfile=el.profile.value==='newbie'?'newbie':'oldhand';try{localStorage.setItem('slotDemoCardProfile',state.cardProfile)}catch(_){}el.card.value='';el.reel.value='';initCards();renderStats();updateControls();message(`Player Profile | ${state.cardProfile==='newbie'?'Newbie':'Oldhand'}`,'mode')};el.card.onchange=updateControls;el.reel.oninput=updateControls;$('setRngResetBtn').onclick=()=>{el.card.value='';el.reel.value='';updateControls();message('Set RNG reset.')};$('previousStepBtn').onclick=()=>showHistory(state.historyIndex-1);$('nextStepBtn').onclick=()=>showHistory(state.historyIndex+1);$('clearLogBtn').onclick=()=>{state.logs=[];renderLog()};$('resetBtn').onclick=reset;$('helpBtn').onclick=openHelp;$('closeHelpBtn').onclick=()=>$('helpDialog').close();$('helpDialog').onclick=e=>{if(e.target===$('helpDialog'))$('helpDialog').close()};addEventListener('keydown',e=>{if(e.key==='Escape'&&$('helpDialog').open)$('helpDialog').close()});$('versionSelect').onchange=()=>{let version=$('versionSelect').value,entry=(window.H028_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version),code=entry?.configs?.[window.CONFIG_CODE]?window.CONFIG_CODE:Object.keys(entry?.configs||{})[0];openVersion(version,code)};$('configSelect').onchange=()=>openVersion(window.CONFIG_VERSION,$('configSelect').value);$('languageSelect').onchange=()=>{state.language=$('languageSelect').value;applyLanguage();renderVersionChangeLog(window.H028_VERSION_ENTRY)};
   set('gameId',B.game_id);set('gameName',B.display_name);renderVersionControls();el.profile.value=state.cardProfile;initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready. Config '+(window.CONFIG_LABEL||'92A')+' loaded.');applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告.html";</script>
+  <script src="../demogame_common.js?v=20261013c"></script>
 </body>
 </html>

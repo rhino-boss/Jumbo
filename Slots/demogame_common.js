@@ -52,7 +52,11 @@
     const source = `${option?.value || ""} ${option?.textContent || ""}`;
     const configMatch = source.match(/config[_-]?([0-9]+[A-Za-z]?)/i);
     if (configMatch) return configMatch[1].toUpperCase();
-    const compact = source.match(/(?:^|[^0-9])((?:9[0-9])(?:[A-Za-z])?)(?:[^0-9]|$)/);
+    // 完整模型代號（如 H016192A）優先：取出其中的 RTP＋Variant
+    const modelMatch = source.match(/H\d{3}1([89][0-9][A-Za-z]?(?:_bet\d+)?)(?![0-9A-Za-z])/i);
+    if (modelMatch) return modelMatch[1].toUpperCase();
+    // RTP 家族＋Variant，保留 _Bet100 這類後綴，避免 92A 與 92A_Bet100 顯示成同一個
+    const compact = source.match(/(?:^|[^0-9])([89][0-9][A-Za-z]?(?:_bet\d+)?)(?=[^0-9A-Za-z_]|$)/i);
     if (compact) return compact[1].toUpperCase();
     const mathConfig = getMathConfig();
     const parsheetMatch = String(mathConfig?.parsheet_id || mathConfig?.source_game_id || "").match(/(9[0-9][A-Za-z]?)$/);
@@ -137,14 +141,23 @@
     const rangeSelect = document.getElementById("cardRangeSelect");
     const configOptions = configSelect ? [...configSelect.options] : [new Option("Current", "")];
     const supportsCardSystem = cardSystemSupported();
+    // Config 選單同時決定卡片系統開關：「92A」＝自然機率（卡片關），「92A-Oldhand」「92A-Newbie」＝卡片開＋該 Profile
+    const offOption = { value: "off", name: "Off" };
     const profileOptions = !supportsCardSystem
-      ? [{ value: "off", name: "Off" }]
-      : profileSelect
+      ? [offOption]
+      : [offOption, ...(profileSelect
         ? [...profileSelect.options].map((option) => ({ value: option.value, name: normalizeProfileName(option.value || option.textContent) }))
         : [
-            { value: "newbie", name: "Newbie" },
-            { value: "oldhand", name: "Oldhand" }
-          ];
+            { value: "oldhand", name: "Oldhand" },
+            { value: "newbie", name: "Newbie" }
+          ])];
+    const cardOnAtStart = supportsCardSystem && document.getElementById("cardSystemInput")?.checked !== false;
+    // 不再提供 Newbie：頁面原生 Profile 選單若停在 newbie（舊的記憶值），改回 oldhand
+    if (profileSelect && [...profileSelect.options].some((option) => option.value === "oldhand") && profileSelect.value !== "oldhand") {
+      profileSelect.value = "oldhand";
+      profileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    try { localStorage.setItem("slotDemoCardProfile", "oldhand"); } catch (_) {}
 
     configSelect?.closest("label")?.classList.add("demogame-source-control");
     profileSelect?.closest("label")?.classList.add("demogame-source-control");
@@ -154,16 +167,33 @@
     combinedLabel.append("Config ");
     const combined = document.createElement("select");
     combined.id = "demogameConfigSelect";
-    for (const configOption of configOptions) {
-      for (const profile of profileOptions) {
-        const option = document.createElement("option");
-        option.value = JSON.stringify([configOption.value, profile.value]);
-        option.textContent = `${normalizeConfigName(configOption)}-${profile.name}`;
-        const selectedProfile = supportsCardSystem ? normalizeProfileName(profileSelect?.value || "oldhand") : "Off";
-        if ((!configSelect || configOption.selected) && profile.name === selectedProfile) {
-          option.selected = true;
-        }
-        combined.appendChild(option);
+    // 自然機率與 RTP 家族（92／94）無關，只依基礎數學 Variant 分：
+    // 只有一套 → 「Base」；有 A／B 兩套 → 「BaseA」「BaseB」。卡片開的選項仍是 <Config>-<Profile>。
+    let savedProfile = "oldhand";
+    try { savedProfile = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
+    const selectedProfile = cardOnAtStart ? normalizeProfileName(profileSelect?.value || savedProfile) : "Off";
+    const variantOf = (configOption) => (normalizeConfigName(configOption).match(/^\d+([A-Z])/) || ["", ""])[1];
+    const variants = [...new Set(configOptions.map(variantOf))].sort();
+    const currentConfig = configOptions.find((option) => option.selected) || configOptions[0];
+    const addOption = (configOption, profile, text, selected) => {
+      const option = document.createElement("option");
+      option.value = JSON.stringify([configOption.value, profile.value]);
+      option.textContent = text;
+      option.selected = selected;
+      combined.appendChild(option);
+    };
+    for (const variant of variants) {
+      const sameVariant = configOptions.filter((option) => variantOf(option) === variant);
+      const target = sameVariant.includes(currentConfig) ? currentConfig : sameVariant[0];
+      const text = variants.length > 1 ? `Base${variant}` : "Base";
+      addOption(target, offOption, text, selectedProfile === "Off" && target === currentConfig);
+    }
+    // 卡片開只用 Oldhand，不列 Newbie；選項只寫 Config 代號（例：92A、94A、92A_BET100）
+    const oldhand = profileOptions.find((profile) => profile.name === "Oldhand") || profileOptions.find((profile) => profile.value !== "off");
+    if (oldhand) {
+      for (const configOption of configOptions) {
+        addOption(configOption, oldhand, normalizeConfigName(configOption),
+          configOption === currentConfig && selectedProfile !== "Off");
       }
     }
     combinedLabel.appendChild(combined);
@@ -197,9 +227,16 @@
       if (profileValue !== "off") {
         try { localStorage.setItem("slotDemoCardProfile", normalizeProfileName(profileValue).toLowerCase()); } catch (_) {}
       }
-      if (profileSelect && profileSelect.value !== profileValue) {
+      if (profileValue !== "off" && profileSelect && profileSelect.value !== profileValue) {
         profileSelect.value = profileValue;
         profileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      // 卡片系統開關跟著 Config：選「92A」（Off）就關，選 Oldhand／Newbie 就開
+      const cardToggle = document.getElementById("cardSystemInput");
+      const cardOn = profileValue !== "off";
+      if (cardToggle && !cardToggle.disabled && cardToggle.checked !== cardOn) {
+        cardToggle.checked = cardOn;
+        cardToggle.dispatchEvent(new Event("change", { bubbles: true }));
       }
       if (rangeSelect) {
         const target = [...rangeSelect.options].find((option) => normalizeProfileName(option.value || option.textContent) === normalizeProfileName(profileValue));
@@ -249,7 +286,9 @@
     input.disabled = !supported;
     if (!supported) input.checked = false;
     label.classList.toggle("is-unavailable", !supported);
-    label.hidden = !supported;
+    // 勾選框不顯示：卡片系統開關改由 Config 選單決定（見 ensureCombinedConfigAndVersion）
+    label.hidden = true;
+    label.style.display = "none";
     label.title = "";
 
     const text = label.querySelector("span") || label.appendChild(document.createElement("span"));
@@ -501,13 +540,18 @@
       <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi" id="batchSimulationFgTrigger">0.00% (-- rounds)</span></div>
       <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="batchSimulationMaxMultiplier">x0</span></div>
       <div class="simulation-row"><span class="s-label">Retry Limit Exceeded</span><span class="s-value" id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
-      <table class="batch-cascade-table" aria-label="Cascade distribution">
-        <thead><tr><th>Scene</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5+</th></tr></thead>
-        <tbody>
-          <tr><th>BG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
-          <tr><th>FG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
-        </tbody>
-      </table>`;
+      ${cascadeListMarkup()}`;
+  }
+
+  // 消除分布：轉置成「Cascade 次數 × BG／FG」，與 Simulation 其他列相同的列樣式。
+  function cascadeListMarkup() {
+    const rows = ["0", "1", "2", "3", "4", "5+"].map((label, i) =>
+      `<div class="simulation-row batch-cascade-row"><span class="s-label">${label}</span><span class="s-value" id="batchCascadeBg${i}">0.00%</span><span class="s-value" id="batchCascadeFg${i}">0.00%</span></div>`).join("");
+    return `<div class="batch-cascade-list" aria-label="Cascade distribution">
+        <div class="batch-cascade-title">Cascade Distribution</div>
+        <div class="simulation-row batch-cascade-row batch-cascade-head"><span class="s-label">Cascades</span><span class="s-label">BG</span><span class="s-label">FG</span></div>
+        ${rows}
+      </div>`;
   }
 
   function ensureSimulationPanel() {
@@ -549,17 +593,104 @@
     write("batchSimulationRoundCount", rounds.toLocaleString("en-US"));
     write("batchSimulationRtp", pct(rounds ? stats.totalMultiplier / rounds : 0));
     write("batchSimulationHitRate", pct(rounds ? stats.hits / rounds : 0));
-    write("batchSimulationFgTrigger", `${pct(rounds ? stats.fgTriggers / rounds : 0)} (${stats.fgTriggers ? `1 / ${Math.round(rounds / stats.fgTriggers).toLocaleString("en-US")}` : "-- rounds"})`);
+    const roundUnit = /^zh/i.test(document.getElementById("languageSelect")?.value || "") ? "場" : "rounds";
+    write("batchSimulationFgTrigger", `${pct(rounds ? stats.fgTriggers / rounds : 0)} (${stats.fgTriggers ? Math.round(rounds / stats.fgTriggers).toLocaleString("en-US") : "--"} ${roundUnit})`);
     write("batchSimulationMaxMultiplier", `x${Number(stats.maxMultiplier.toFixed(2))}`);
     const retries = stats.retryLimitExceeded || 0;
     write("batchSimulationRetryLimitExceeded", `${retries.toLocaleString("en-US")} (${pct(rounds ? retries / rounds : 0)})`);
-    const renderCascades = (rowIndex, counts) => {
-      const cells = document.querySelectorAll(`.demogame-fallback-simulation .batch-cascade-table tbody tr:nth-child(${rowIndex}) td`);
+    const renderCascades = (prefix, counts) => {
       const total = (counts || []).reduce((sum, value) => sum + Number(value || 0), 0);
-      cells.forEach((cell, index) => { cell.textContent = pct(total ? Number(counts[index] || 0) / total : 0); });
+      for (let i = 0; i < 6; i++) write(`${prefix}${i}`, pct(total ? Number(counts[i] || 0) / total : 0));
     };
-    renderCascades(1, stats.bgCascades);
-    renderCascades(2, stats.fgCascades);
+    renderCascades("batchCascadeBg", stats.bgCascades);
+    renderCascades("batchCascadeFg", stats.fgCascades);
+    // 沒有消除機制的遊戲（adapter 不回傳 bgCascade／fgCascades）不顯示消除分布
+    const cascadeTotal = [...(stats.bgCascades || []), ...(stats.fgCascades || [])].reduce((a, b) => a + Number(b || 0), 0);
+    document.querySelector(".demogame-fallback-simulation .batch-cascade-list")?.classList.toggle("demogame-removed", rounds > 0 && cascadeTotal === 0);
+  }
+
+  // 押注模式選單：遊戲宣告 window.demogameSimulationModes = [{ value, label }] 時才顯示，
+  // 選定值以 demogameSimulateRound({ mode }) 傳給遊戲；未宣告則沿用目前押注模式。
+  // 倍率線型：模擬時每局 multiplier（總得分 ÷ 押注，含 FG）計入面板內的線型圖。
+  function ensureSimulationExtras(panel) {
+    const controls = panel.querySelector(".batch-simulation-controls");
+    let modeSelect = panel.querySelector("#batchSimulationMode");
+    if (!modeSelect && controls) {
+      modeSelect = document.createElement("select");
+      modeSelect.id = "batchSimulationMode";
+      modeSelect.setAttribute("aria-label", "Simulation bet mode");
+      controls.prepend(modeSelect);
+    }
+    const modes = Array.isArray(window.demogameSimulationModes) ? window.demogameSimulationModes : [];
+    if (modeSelect) {
+      modeSelect.innerHTML = modes.map((m) => `<option value="${m.value}">${m.label}</option>`).join("");
+      modeSelect.hidden = !modes.length;
+      controls?.classList.toggle("has-mode", modes.length > 0);
+    }
+    const oldTable = panel.querySelector(".batch-cascade-table");
+    if (oldTable && !panel.querySelector(".batch-cascade-list")) oldTable.outerHTML = cascadeListMarkup();
+    let chart = panel.querySelector(".batch-line-chart");
+    if (!chart) {
+      chart = document.createElement("div");
+      chart.className = "batch-line-chart";
+      panel.appendChild(chart);
+    }
+    if (!document.getElementById("batch-simulation-extras-style")) {
+      const style = document.createElement("style");
+      style.id = "batch-simulation-extras-style";
+      style.textContent = `
+        body.slot-simulator .batch-simulation-controls.has-mode{grid-template-columns:auto minmax(0,1fr) auto}
+        body.slot-simulator #batchSimulationMode{min-height:34px;padding:7px 8px;border:0;border-radius:6px;color:var(--sim-text);background:var(--sim-surface);font:700 12px/1 "Segoe UI",system-ui,sans-serif}
+        body.slot-simulator #batchSimulationMode[hidden]{display:none}
+        .batch-line-chart{margin-top:8px;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:6px 8px 2px;background:rgba(6,13,26,.6)}
+        .batch-line-chart .dlc-title{text-align:center;font-size:12.5px;color:var(--sim-sub,#7f9bb8);margin-bottom:2px}
+        body.slot-simulator .batch-cascade-list{margin-top:8px;border:1px solid rgba(38,92,137,.35);border-radius:8px;padding:2px 10px 4px;background:rgba(6,13,26,.6)}
+        body.slot-simulator .batch-cascade-title{padding:5px 0;color:var(--sim-sub);font-size:12px;font-weight:700;text-align:center;border-bottom:1px solid var(--sim-surface)}
+        body.slot-simulator .batch-cascade-row{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px;text-align:right}
+        body.slot-simulator .batch-cascade-row > :first-child{text-align:left}
+        body.slot-simulator .batch-cascade-list .simulation-row:last-child{border-bottom:0}
+        .batch-line-chart svg{display:block;width:100%;height:auto}`;
+      document.head.appendChild(style);
+    }
+    return { modeSelect, chart, modes };
+  }
+
+  // 模擬線型區間固定為 H026 標準 64 區間 (下限, 上限]，X 軸逐一標出區間文字。
+  // 縱軸：Buy Feature 20%，其餘 1%；超過上限或為 0 的區間不畫點。
+  const STANDARD_UPPERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200,
+    250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 2000, 3000, 4000, 5000, 6000,
+    7000, 8000, 9000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 9999999];
+  const SIMULATION_BUCKETS = {
+    labels: STANDARD_UPPERS.map((u, i) => `(${i ? STANDARD_UPPERS[i - 1] : -1}, ${u}]`),
+    index(x) { for (let i = 0; i < STANDARD_UPPERS.length; i++) if (x <= STANDARD_UPPERS[i]) return i; return STANDARD_UPPERS.length - 1; }
+  };
+
+  function simulationChartSvg(counts, buckets, ymax) {
+    const W = 900, H = 340, L = 44, R = 12, T = 10, B = 112, n = buckets.labels.length;
+    const total = counts.reduce((a, b) => a + b, 0);
+    const shares = counts.map((c) => (total ? c / total * 100 : 0));
+    const px = (i) => L + (W - L - R) * (n > 1 ? i / (n - 1) : 0.5);
+    const py = (v) => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
+    let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="倍率線型">`;
+    for (let k = 0; k <= 4; k++) {
+      const v = ymax * k / 4, y = py(v);
+      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}" stroke="rgba(120,160,200,.18)"/><text x="${L - 6}" y="${(y + 4).toFixed(1)}" font-size="12" text-anchor="end" fill="#7f9bb8">${Number(v.toFixed(2))}%</text>`;
+    }
+    buckets.labels.forEach((label, i) => {
+      const x = px(i).toFixed(1), y = H - B + 8;
+      out += `<line x1="${x}" y1="${T}" x2="${x}" y2="${H - B}" stroke="rgba(120,160,200,.08)"/><text x="${x}" y="${y}" font-size="10" text-anchor="end" dominant-baseline="middle" fill="#7f9bb8" transform="rotate(-90 ${x} ${y})">${label}</text>`;
+    });
+    // 只畫 0 < 值 ≤ 縱軸上限的點；超出上限或為 0 的區間不畫點、線在該處斷開。
+    const visible = (v) => v > 0 && v <= ymax;
+    let d = "", pen = false;
+    shares.forEach((v, i) => {
+      if (!visible(v)) { pen = false; return; }
+      d += `${pen ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`;
+      pen = true;
+    });
+    out += `<path d="${d}" fill="none" stroke="#4aa8ff" stroke-width="2"/>`;
+    shares.forEach((v, i) => { if (visible(v)) out += `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3" fill="#4aa8ff"><title>${buckets.labels[i]} ${v.toFixed(3)}%（${counts[i]}）</title></circle>`; });
+    return out + "</svg>";
   }
 
   function setupFallbackSimulation() {
@@ -567,22 +698,58 @@
     const start = panel?.querySelector("#batchSimulationStartBtn");
     const roundsInput = panel?.querySelector("#batchSimulationRounds");
     if (!panel || !start || !roundsInput) return;
+    const { modeSelect, chart, modes } = ensureSimulationExtras(panel);
+    const modeLabel = () => modes.find((m) => String(m.value) === modeSelect?.value)?.label || "Current Bet";
+    const selectedMode = () => (modes.length ? modes.find((m) => String(m.value) === modeSelect.value)?.value : undefined);
+    const yMaxFor = () => {
+      const entry = modes.find((m) => String(m.value) === modeSelect?.value);
+      if (Number(entry?.yMax) > 0) return Number(entry.yMax);
+      return /buy|^bf$/i.test(entry?.label || "") ? 20 : 1;
+    };
+    let lastCounts = null;
+    const renderChart = (counts, buckets) => {
+      lastCounts = counts;
+      const c = counts || new Array(buckets.labels.length).fill(0);
+      const label = window.demogameSharedText ? window.demogameSharedText(modeLabel()) : modeLabel();
+      chart.innerHTML = `<div class="dlc-title">倍率線型 · ${label}</div>${simulationChartSvg(c, buckets, yMaxFor())}`;
+    };
+    const renderEmpty = () => renderChart(null, SIMULATION_BUCKETS);
+    modeSelect?.addEventListener("change", renderEmpty);
+    document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(() => {
+      renderChart(lastCounts, SIMULATION_BUCKETS);
+      if (start.disabled && window.demogameSharedText) start.textContent = window.demogameSharedText("Running");
+    }, 0));
+    setTimeout(renderEmpty, 0);   // 等共用語言字典就緒
+    // 沒有消除機制的遊戲：試跑一局，adapter 沒回傳 bgCascade 就一開始就隱藏消除分布
+    setTimeout(async () => {
+      if (typeof window.demogameSimulateRound !== "function") return;
+      try {
+        const pending = window.demogameSimulateRound({ mode: selectedMode() });
+        const probe = pending && typeof pending.then === "function" ? await pending : (pending || {});
+        const hasCascade = Number.isFinite(Number(probe.bgCascade)) || (Array.isArray(probe.fgCascades) && probe.fgCascades.length > 0);
+        panel.querySelector(".batch-cascade-list")?.classList.toggle("demogame-removed", !hasCascade);
+      } catch (error) { /* 試跑失敗就維持顯示 */ }
+    }, 0);
 
     start.addEventListener("click", async () => {
       const requested = Math.min(1000000, Math.max(1, Math.trunc(Number(roundsInput.value) || 0)));
       roundsInput.value = String(requested);
       start.disabled = true;
       roundsInput.disabled = true;
-      const original = start.textContent;
+      if (modeSelect) modeSelect.disabled = true;
+      const mode = selectedMode();
+      const buckets = SIMULATION_BUCKETS;
+      const lineCounts = new Array(buckets.labels.length).fill(0);
       const simulateRound = typeof window.demogameSimulateRound === "function"
         ? window.demogameSimulateRound
         : null;
       if (!simulateRound) {
         const note = document.getElementById("batchSimulationNote");
         if (note) note.textContent = "Simulation adapter unavailable: this page cannot run the actual Demo Game logic yet.";
-        start.textContent = original;
+        start.textContent = window.demogameSharedText ? window.demogameSharedText("Start") : "Start";
         start.disabled = false;
         roundsInput.disabled = false;
+        if (modeSelect) modeSelect.disabled = false;
         return;
       }
       const stats = {
@@ -595,14 +762,17 @@
         bgCascades: Array(6).fill(0),
         fgCascades: Array(6).fill(0)
       };
+      start.textContent = window.demogameSharedText ? window.demogameSharedText("Running") : "Running";   // 中文顯示「進行中」
       try {
         while (stats.rounds < requested) {
           const sliceStarted = performance.now();
           let sliceRounds = 0;
           while (stats.rounds < requested && sliceRounds < 2000 && performance.now() - sliceStarted < 40) {
-            const pending = simulateRound();
+            const pending = simulateRound({ mode });
             const result = pending && typeof pending.then === "function" ? await pending : (pending || {});
             const multiplier = Math.max(0, Number(result.multiplier) || 0);
+            const lineValue = Number.isFinite(Number(result.lineMultiplier)) ? Number(result.lineMultiplier) : multiplier;
+            lineCounts[buckets.index(lineValue)] += 1;
             if (result.fgTriggered) stats.fgTriggers += 1;
             stats.retryLimitExceeded += Number(result.retryLimitExceeded) || 0;
             if (Number.isFinite(Number(result.bgCascade))) {
@@ -615,22 +785,206 @@
             sliceRounds += 1;
             stats.totalMultiplier += multiplier;
             if (multiplier > 0) stats.hits += 1;
-            stats.maxMultiplier = Math.max(stats.maxMultiplier, Number(result.maxMultiplier) || multiplier);
+            stats.maxMultiplier = Math.max(stats.maxMultiplier, lineValue);   // 最高倍數＝單局總得分倍數（BF ÷ 底注）
           }
           writeFallbackStats(stats);
-          start.textContent = `${stats.rounds.toLocaleString("en-US")} / ${requested.toLocaleString("en-US")}`;
+          renderChart(lineCounts, buckets);
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
       } finally {
-        start.textContent = original;
+        start.textContent = window.demogameSharedText ? window.demogameSharedText("Start") : "Start";
         start.disabled = false;
         roundsInput.disabled = false;
+        if (modeSelect) modeSelect.disabled = false;
       }
     });
     updateSharedSimulationContext();
   }
 
   setupFallbackSimulation();
+
+  // Spin Result 面板已停用（共用）：各遊戲仍可寫入 #lineList 等節點，不會報錯，只是不顯示。
+  function hideSpinResult() {
+    document.querySelectorAll("#log-wrap, .diagnostic-region").forEach((region) => {
+      const head = region.querySelector(".diagnostic-header, h3, #log-header")?.textContent?.trim() || "";
+      if (region.id === "log-wrap" || /^spin result$|^spin 結果$|^旋轉結果$/i.test(head)) region.classList.add("demogame-removed");
+    });
+    if (!document.getElementById("demogame-removed-style")) {
+      const style = document.createElement("style");
+      style.id = "demogame-removed-style";
+      style.textContent = ".demogame-removed{display:none!important}";
+      document.head.appendChild(style);
+    }
+  }
+
+  hideSpinResult();
+
+  // Force FG 已停用（共用）：隱藏勾選框並固定不勾，遊戲讀到的 checked 永遠是 false。
+  function removeForceFg() {
+    const input = document.getElementById("forceFgInput");
+    if (!input) return;
+    input.checked = false;
+    input.disabled = true;
+    (input.closest("label") || input).classList.add("demogame-removed");
+  }
+
+  removeForceFg();
+
+  // 共用區語言切換：Language 選繁中時，把共用區（Player／Play／Bet Mode／Stats／Simulation／Set RNG／
+  // Reel RNG／Log／Setting）仍是英文的固定標籤換成中文；切回 English 時還原。
+  // 只比對「整段文字完全相同」的標籤，不碰盤面、Help、Log 內容與修改紀錄內文（By Game 由各遊戲自行翻譯）。
+  const SHARED_ZH = {
+    "credit": "餘額", "bet": "押注", "win": "得分", "play": "遊戲", "auto": "自動", "speed": "速度",
+    "bet mode": "押注模式", "normal bet": "一般押注", "extra bet": "額外押注", "buy feature": "購買特色", "super feature": "超級特色", "buy super feature": "購買超級特色",
+    "stats": "統計", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
+    "fg trigger": "FG 觸發", "fg trigger (observed)": "FG 觸發（實測）", "max multiplier": "最高倍數",
+    "set rng": "指定 RNG", "card bg range": "卡片 BG 區間", "card bf range": "卡片 BF 區間", "reel rng": "輪帶 RNG",
+    "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始",
+    "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
+    "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
+    "help": "說明", "change log": "修改紀錄", "previous": "上一步", "next": "下一步",
+    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "數值報告", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
+  };
+  const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
+  const sharedOriginal = new WeakMap();
+  const isZh = () => /^zh/i.test(document.getElementById("languageSelect")?.value || document.documentElement.lang || "");
+  let sharedApplying = false;
+  function applySharedLanguage() {
+    if (sharedApplying) return;
+    sharedApplying = true;
+    const zh = isZh();
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => n.nodeType === 1
+        ? (n.matches(SHARED_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP)
+        : NodeFilter.FILTER_ACCEPT
+    });
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const raw = node.nodeValue;
+      const text = raw.trim();
+      if (!text) continue;
+      if (zh) {
+        const zhText = SHARED_ZH[text.toLowerCase()];
+        if (zhText) { sharedOriginal.set(node, text); node.nodeValue = raw.replace(text, zhText); }
+      } else if (sharedOriginal.has(node)) {
+        const original = sharedOriginal.get(node);
+        if (SHARED_ZH[original.toLowerCase()] === text) node.nodeValue = raw.replace(text, original);
+        sharedOriginal.delete(node);
+      }
+    }
+    sharedApplying = false;
+  }
+  window.demogameSharedText = (english) => (isZh() && SHARED_ZH[String(english).toLowerCase()]) || english;
+  document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(applySharedLanguage, 0));
+  let sharedQueued = false;
+  new MutationObserver(() => {
+    if (sharedApplying || sharedQueued || !isZh()) return;
+    sharedQueued = true;
+    requestAnimationFrame(() => { sharedQueued = false; applySharedLanguage(); });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  setTimeout(applySharedLanguage, 0);
+
+  // FG 觸發的單位隨語言切換：(N 場)／(N rounds)
+  const syncFgUnit = () => {
+    const node = document.getElementById("batchSimulationFgTrigger");
+    if (node) node.textContent = node.textContent.replace(/ (場|rounds)\)$/, isZh() ? " 場)" : " rounds)");
+  };
+  document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(syncFgUnit, 0));
+  setTimeout(syncFgUnit, 0);
+
+  // ===== 歷史紀錄（共用，Debug Mode 顯示）=====
+  // 頁面在載入本檔前設 window.DEMOGAME_HISTORY = true 才建立面板；
+  // 每局結束時呼叫 window.demogameHistory.record({ bg: BG 得分 ÷ 底注, fg: 該局 FG 總得分 ÷ 底注 })，沒有 FG 時 fg 給 0 或省略。
+  function setupHistoryPanel() {
+    if (!window.DEMOGAME_HISTORY || document.getElementById("demogame-history")) return;
+    const panel = document.createElement("section");
+    panel.id = "demogame-history";
+    panel.className = "control-zone debug-only debug-hidden demogame-history";
+    panel.innerHTML = `
+      <div class="demogame-history-header"><span class="zone-label">History</span><button id="clearHistoryBtn" type="button">Clear</button></div>
+      <div class="demogame-history-body">
+        <div class="simulation-row"><span class="s-label">BG Max Multiplier</span><span class="s-value hi" id="historyBgMax">x0</span></div>
+        <div class="simulation-row"><span class="s-label">FG Max Multiplier</span><span class="s-value hi" id="historyFgMax">x0</span></div>
+      </div>`;
+    const anchor = document.getElementById("live-log-wrap") || document.getElementById("rng-wrap");
+    if (anchor) anchor.insertAdjacentElement("afterend", panel);
+    else document.getElementById("settings-wrap")?.insertAdjacentElement("beforebegin", panel);
+    if (!document.getElementById("demogame-history-style")) {
+      const style = document.createElement("style");
+      style.id = "demogame-history-style";
+      style.textContent = `
+        body.slot-simulator #demogame-history{display:block;width:100%;margin-top:10px;padding:12px 14px;border:1px solid var(--sim-border)!important;border-radius:10px;background:var(--sim-panel);box-shadow:0 4px 14px rgba(0,0,0,.13)!important}
+        .demogame-history-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
+        #demogame-history #clearHistoryBtn{padding:5px 10px;border:0;border-radius:5px;color:var(--sim-sub);background:var(--sim-surface);font:700 11px/1 inherit;cursor:pointer}
+        #demogame-history.debug-hidden{display:none!important}`;
+      document.head.appendChild(style);
+    }
+    const debugInput = document.querySelector("#debugModeInput, #debugInput");
+    const sync = () => panel.classList.toggle("debug-hidden", !debugInput?.checked);
+    debugInput?.addEventListener("change", sync);
+    sync();
+    let bgMax = 0, fgMax = 0;
+    const fmt = (v) => `x${Number(v.toFixed(2))}`;
+    const render = () => {
+      document.getElementById("historyBgMax").textContent = fmt(bgMax);
+      document.getElementById("historyFgMax").textContent = fmt(fgMax);
+    };
+    window.demogameHistory = {
+      record({ bg = 0, fg = 0 } = {}) {
+        if (Number.isFinite(Number(bg))) bgMax = Math.max(bgMax, Number(bg));
+        if (Number.isFinite(Number(fg))) fgMax = Math.max(fgMax, Number(fg));
+        render();
+      },
+      reset() { bgMax = 0; fgMax = 0; render(); }
+    };
+    panel.querySelector("#clearHistoryBtn").addEventListener("click", () => window.demogameHistory.reset());
+    document.getElementById("resetBtn")?.addEventListener("click", () => window.demogameHistory.reset());
+  }
+
+  setupHistoryPanel();
+
+  // 標題列右側按鈕（共用）：數值報告、說明、重置排在一起。
+  // 數值報告：頁面在載入本檔前設 window.DEMOGAME_REPORT_URL（相對路徑）才出現；在同一分頁開啟，
+  // 可用瀏覽器「上一頁」回到 Demo（報告頁另有「← 返回 Demo」）。說明／重置由設定列搬來，事件監聽沿用。
+  function setupTitleActions() {
+    const title = document.getElementById("game-title");
+    const bar = title?.parentElement;
+    if (!bar || document.getElementById("demogameTitleActions")) return;
+    const group = document.createElement("div");
+    group.id = "demogameTitleActions";
+    const url = window.DEMOGAME_REPORT_URL;
+    if (url) {
+      const link = document.createElement("a");
+      link.id = "demogameReportBtn";
+      link.href = url;
+      link.textContent = "Report";
+      group.appendChild(link);
+    }
+    for (const id of ["helpBtn", "resetBtn"]) {
+      const button = document.getElementById(id);
+      if (button) group.appendChild(button);
+    }
+    if (!group.children.length) return;
+    if (getComputedStyle(bar).position === "static") bar.style.position = "relative";
+    bar.appendChild(group);
+    const style = document.createElement("style");
+    style.textContent = `#demogameTitleActions{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center}
+      #demogameTitleActions > a, #demogameTitleActions > button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
+        height:30px;min-height:0;min-width:64px;width:auto;margin:0;padding:0 16px;border-radius:7px;border:none;
+        color:#8fb3d4;background:transparent;font-family:inherit;font-size:var(--demogame-title-size,13px);font-weight:var(--demogame-title-weight,700);line-height:1;
+        letter-spacing:0;white-space:nowrap;text-decoration:none;cursor:pointer}
+      #demogameTitleActions > a:hover, #demogameTitleActions > button:hover{color:#dceeff;background:rgba(127,160,200,.14)}
+      #demogameTitleActions > a:focus-visible, #demogameTitleActions > button:focus-visible{outline:2px solid rgba(127,160,200,.6);outline-offset:1px}`;
+    const titleStyle = getComputedStyle(document.getElementById("gameName") || title);
+    group.style.setProperty("--demogame-title-size", titleStyle.fontSize);
+    group.style.setProperty("--demogame-title-weight", titleStyle.fontWeight);
+    group.style.fontFamily = titleStyle.fontFamily;
+    document.head.appendChild(style);
+    // 標題列右側若原本有其他文字，留出按鈕群寬度避免重疊
+    const pad = parseFloat(getComputedStyle(bar).paddingRight) || 0;
+    bar.style.paddingRight = `${pad + group.offsetWidth + 14}px`;
+  }
+
+  setupTitleActions();
 
   function placeSimulationAfterChangeLog() {
     const simulation = document.getElementById("batch-simulation");
@@ -1617,8 +1971,10 @@
   };
 })();
 
-// ===== 即時倍率線型（共用；Debug 模式才顯示，位置在 Set RNG 上方）=====
-// 各遊戲在「Normal Bet 一局（含該局觸發的 FG）結束」時呼叫：
+// ===== 倍率線型（共用；Debug 模式才顯示）=====
+// 有共用 Simulation 面板（.demogame-fallback-simulation）且遊戲有 demogameSimulateRound 時，
+// 線型併入 Simulation 面板（setupFallbackSimulation 內繪製，標準 64 區間），不再另外顯示即時面板。
+// 否則維持即時面板（Set RNG 上方）：各遊戲在 NB 一局（含 FG）結束時呼叫
 //   window.demogameLineChart?.record(該局總得分 ÷ 底注)
 // 區間為 H026 標準 64 區間 (Lower, Upper]；Reset 按鈕會清空；縱軸固定 0～20%，超過貼頂。
 (() => {
@@ -1635,7 +1991,7 @@
     return THRESH.length - 1;
   }
 
-  function svg() {
+  function svg(counts) {
     const W = 900, H = 280, L = 44, R = 12, T = 10, B = 40, n = THRESH.length;
     const total = counts.reduce((a, b) => a + b, 0);
     const shares = counts.map(c => total ? c / total * 100 : 0);
@@ -1660,10 +2016,11 @@
     const total = counts.reduce((a, b) => a + b, 0);
     const nz = counts.map((c, i) => c ? i : -1).filter(i => i >= 0);
     const range = nz.length ? `${LABELS[nz[0]]} ～ ${LABELS[nz[nz.length - 1]]}` : "—";
-    chart.innerHTML = `<div class="dlc-title"><span>NB（每局總得分 ÷ 底注，含 FG）</span><span>n=${total.toLocaleString("en-US")} · ${range}</span></div>${svg()}`;
+    chart.innerHTML = `<div class="dlc-title"><span>NB（每局總得分 ÷ 底注，含 FG）</span><span>n=${total.toLocaleString("en-US")} · ${range}</span></div>${svg(counts)}`;
   }
 
   function mount() {
+    if (document.querySelector(".demogame-fallback-simulation") && typeof window.demogameSimulateRound === "function") return;   // 已併入 Simulation 面板
     const anchor = document.getElementById("set-rng-panel");
     if (!anchor || document.getElementById("demogame-line-chart")) return;
     const style = document.createElement("style");

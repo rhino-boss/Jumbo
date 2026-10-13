@@ -1959,7 +1959,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
 
 <body>
@@ -2096,34 +2096,27 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
-        <ul>
-          <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（12 張（含金框 Frame））；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>
-          <li>載入失敗時自動關閉 Image 開關、改用文字顯示並提示失敗張數，不會停在載入畫面；背景分頁略過解碼，不會卡住。</li>
-          <li>符號圖改用 WebP（quality 90、保留透明）：217 KB → 93 KB；原 PNG 保留為美術原檔，Demo 不再引用。</li>
-          <li>共用 JS 版本參數 <code>demogame_common.js?v=4</code>。</li>
-          <li>驗證：本機伺服器開啟，預載 12／12 張完成、全部 naturalWidth &gt; 0、遮罩已消失、盤面圖片皆為 .webp；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
-        <ul>
-          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
-          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
-          <li>盤面各輪依有效高度垂直置中（3／4／5／5／4／3 對稱），取代頂端對齊；以 <code>top</code> 位移實作，不影響中獎、掉落與滾動動畫。</li>
-          <li>無美術時的 SVG 星形代號改為標準代號標籤 <code>slot-symbol-label</code>。</li>
-          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
-          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
+        <h4>v2（2.0.0.1）</h4>
+        <ol>
+          <li>驗證：開圖有圖格 0 框 0 代號、關圖全顯示框＋代號且字重 400，Console 無例外。未修改 XLSX／Config 數學參數。（09/24）</li>
+          <li>盤面各輪依有效高度垂直置中（3／4／5／5／4／3），以 <code>top</code> 位移實作，不影響中獎、掉落與滾動。（09/24）</li>
+          <li>符號代號一律一般字重；無美術時的 SVG 星形改為 <code>slot-symbol-label</code>；共用 CSS <code>demogame_common.css?v=4</code>。（09/24）</li>
+          <li>接入共用 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）：開圖只顯示符號圖（<code>has-symbol-art</code>，無框無代號），關圖顯示框＋代號。（09/24）</li>
+          <li>符號圖改用 WebP（quality 90、保留透明）：217 KB → 93 KB，原 PNG 留作美術原檔；共用 JS <code>demogame_common.js?v=4</code>。驗證：預載 12／12、naturalWidth 皆 &gt; 0、盤面皆 .webp，Console 無例外。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>符號圖開局前預載：<code>DEMOGAME_IMAGE_TOGGLE.images</code> 列 12 張（含金框 Frame），由共用 JS 預載解碼，期間擋操作，超過 120 ms 顯示「載入圖片 n / N」；失敗自動關 Image 改文字並提示張數。（10/06）</li>
+          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>，NB 每局總得分含 FG ÷ 底注，64 區間，Reset 清空；本檔只在 NB 一局結束呼叫 <code>record()</code>）；後於 10/13 併入 Simulation。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>驗證：inline script 通過 <code>node --check</code>；92 Card System 開：NB 50,000 局 RTP 91.28%、FG 1/215，BF 2,000 局 RTP 91.49%（FG 100%）；Card System 關（自然盤面）NB 約 430%、BF 約 283%；Language 中英切換、Log／Clear 正常，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>共用 JS 版本參數 <code>demogame_common.js?v=20261013</code>。（10/13）</li>
+          <li>Feature 列「Cascade」「FG Left」標籤隨 Language 切換（連消／FG 剩餘）。（10/13）</li>
+          <li>本檔 adapter：<code>window.demogameSimulationModes</code> 宣告 NB／BF；<code>window.demogameSimulateRound({ mode })</code> 依模式模擬一局（BF 以 strip_bf 開局、保證觸發 FG；Card System 開時同 Simulator.py 以 oldhand.buy_feature 卡片對整局 ÷ 底注重抽），回傳 <code>multiplier</code>（÷ 實際押注）與 <code>lineMultiplier</code>（BF ÷ 底注）；不改畫面押注、統計與盤面。（10/13）</li>
+          <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用）。（10/13）</li>
+          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
+          <li>消除分布：轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題（本檔 adapter 回傳 <code>bgCascade</code>／<code>fgCascades</code>）。（10/13）</li>
+          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」。（10/13）</li>
+          <li>Simulation 面板新增押注模式選單（Normal Bet／Buy Feature，本遊戲無 Extra Bet）。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+        </ol>
       </article>
       </div>
     </section>
@@ -2340,7 +2333,7 @@
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.webp";
   const HELP_PATH = "./game_help_draft.md";
   const STORAGE_KEY = "slotDemoLanguage";
-  const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
+  const BET_LEVELS = [...new Set([...(Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10]), 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
 
   const T = {
     en: {
@@ -2610,13 +2603,33 @@
     return multiplier > Number(card.min) && multiplier <= Number(card.max);
   }
 
-  function buildH015Round(base, freeSpins = null) {
-    const feature = freeSpins || (base.scatter >= 3 ? simulateFeaturePackage(MODE_NORMAL, base.scatter) : []);
+  function buildH015Round(base, mode = MODE_NORMAL, freeSpins = null) {
+    const feature = freeSpins || (base.scatter >= 3 ? simulateFeaturePackage(mode, base.scatter) : []);
     const totalWin = base.total + feature.reduce((sum, spin) => sum + spin.total, 0);
     return { base, freeSpins: feature, totalWin };
   }
 
-  function simulateH015AcceptedRound() {
+  // 與畫面 playPaid 相同：Buy Feature 的 BG 以 strip_bf 開局並保證觸發 FG。
+  function simulateH015Base(mode) {
+    return simulateScene("BG", mode, mode === MODE_BUY);
+  }
+
+  // Buy Feature 卡片（同 Simulator.py）：整局（BG＋FG）÷ 底注 落在 oldhand.buy_feature 卡片區間才收，否則整局重抽。
+  function simulateH015BuyRound() {
+    if (!h015CardSystemActive()) return { ...buildH015Round(simulateH015Base(MODE_BUY), MODE_BUY), retries: 0, retryLimitExceeded: false };
+    const cards = Box.card_system[h015CardProfile()]?.buy_feature?.weight_fg || Box.card_system.oldhand?.buy_feature?.weight_fg;
+    const card = h015WeightedCard(cards);
+    const retryLimit = Math.max(1, Number(Box.card_system.retry_limit) || 5000);
+    let last = null;
+    for (let retry = 0; retry < retryLimit; retry += 1) {
+      last = buildH015Round(simulateH015Base(MODE_BUY), MODE_BUY);
+      if (h015CardMatches(card, last.totalWin / coinIn(MODE_NORMAL))) return { ...last, retries: retry, retryLimitExceeded: false };
+    }
+    return { ...last, retries: retryLimit, retryLimitExceeded: true };
+  }
+
+  function simulateH015AcceptedRound(mode = MODE_NORMAL) {
+    if (mode === MODE_BUY) return simulateH015BuyRound();
     if (!h015CardSystemActive()) return { ...buildH015Round(simulateScene("BG", MODE_NORMAL, false)), retries: 0, retryLimitExceeded: false };
     const profile = Box.card_system[h015CardProfile()]?.normal_bet || Box.card_system.oldhand.normal_bet;
     const bgCard = h015WeightedCard(profile.weight_bg);
@@ -2629,10 +2642,10 @@
         lastBase = base;
         const bgMultiplier = base.total / coinIn(MODE_NORMAL);
         if (base.scatter < 3 && h015CardMatches(bgCard, bgMultiplier)) {
-          return { ...buildH015Round(base, []), retries: retry, retryLimitExceeded: false };
+          return { ...buildH015Round(base, MODE_NORMAL, []), retries: retry, retryLimitExceeded: false };
         }
       }
-      return { ...buildH015Round(lastBase, []), retries: retryLimit, retryLimitExceeded: true };
+      return { ...buildH015Round(lastBase, MODE_NORMAL, []), retries: retryLimit, retryLimitExceeded: true };
     }
 
     let bgRetries = 0;
@@ -2641,7 +2654,7 @@
       if (lastBase.scatter >= 3) break;
     }
     if (lastBase?.scatter < 3) {
-      return { ...buildH015Round(lastBase, []), retries: bgRetries, retryLimitExceeded: true };
+      return { ...buildH015Round(lastBase, MODE_NORMAL, []), retries: bgRetries, retryLimitExceeded: true };
     }
 
     let lastFreeSpins = [];
@@ -2649,33 +2662,40 @@
       lastFreeSpins = simulateFeaturePackage(MODE_NORMAL, lastBase.scatter);
       const fgMultiplier = lastFreeSpins.reduce((sum, spin) => sum + spin.total, 0) / coinIn(MODE_NORMAL);
       if (h015CardMatches(fgCard, fgMultiplier)) {
-        return { ...buildH015Round(lastBase, lastFreeSpins), retries: bgRetries + fgRetries, retryLimitExceeded: false };
+        return { ...buildH015Round(lastBase, MODE_NORMAL, lastFreeSpins), retries: bgRetries + fgRetries, retryLimitExceeded: false };
       }
     }
     return {
-      ...buildH015Round(lastBase, lastFreeSpins),
+      ...buildH015Round(lastBase, MODE_NORMAL, lastFreeSpins),
       retries: bgRetries + retryLimit,
       retryLimitExceeded: true
     };
   }
 
-  window.demogameSimulateRound = () => {
+  // 共用 Simulation 面板的押注模式選單；選定模式只傳給該局模擬，不改畫面上的押注、統計或盤面。
+  window.demogameSimulationModes = [
+    { value: MODE_NORMAL, label: "Normal Bet" },
+    { value: MODE_BUY, label: "Buy Feature" }
+  ];
+  window.demogameSimulateRound = ({ mode } = {}) => {
+    const simMode = Number(mode) === MODE_BUY ? MODE_BUY : MODE_NORMAL;
     const savedRng = el.reelRngInput.value;
-    el.reelRngInput.value = "";
+    el.reelRngInput.value = "";   // 模擬不套用指定 Reel RNG
     try {
-      const round = simulateH015AcceptedRound();
-      const bgMultiplier = round.base.total / coinIn(MODE_NORMAL);
-      const fgMultiplier = round.freeSpins.reduce((sum, spin) => sum + spin.total, 0) / coinIn(MODE_NORMAL);
+      const round = simulateH015AcceptedRound(simMode);
+      const fgWin = round.freeSpins.reduce((sum, spin) => sum + spin.total, 0);
+      const wager = coinIn(simMode);
       return {
-        multiplier: bgMultiplier + fgMultiplier,
-        bgMultiplier,
-        fgMultiplier,
+        multiplier: round.totalWin / wager,                                                    // RTP：÷ 實際押注
+        lineMultiplier: round.totalWin / (simMode === MODE_BUY ? coinIn(MODE_NORMAL) : wager), // 線型：BF ÷ 底注
+        bgMultiplier: round.base.total / wager,
+        fgMultiplier: fgWin / wager,
         fgTriggered: round.freeSpins.length > 0,
         maxMultiplier: Math.max(round.base.maxMultiplier, ...round.freeSpins.map((spin) => spin.maxMultiplier), 1),
         retryLimitExceeded: round.retryLimitExceeded ? 1 : 0,
+        retryCount: round.retries,
         bgCascade: round.base.steps.filter((step) => step.wins.length).length,
-        fgCascades: round.freeSpins.map((spin) => spin.steps.filter((step) => step.wins.length).length),
-        retries: round.retries
+        fgCascades: round.freeSpins.map((spin) => spin.steps.filter((step) => step.wins.length).length)
       };
     } finally {
       el.reelRngInput.value = savedRng;
@@ -2939,6 +2959,7 @@
     document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en"; el.languageSelect.value = state.language;
     try { localStorage.setItem(STORAGE_KEY, state.language); } catch (_) {}
     el.gameName.textContent = text("game"); el.modeText.textContent = state.fg.remaining ? text("free") : text("base");
+    document.querySelector("#cascadePill .k").textContent = text("cascade"); document.querySelector("#fgLeftPill .k").textContent = text("fgLeft");
     document.querySelector("#simulation-stats h3").textContent = text("stats");
     const statLabels = document.querySelectorAll("#simulation-stats .s-label"); [text("rounds"), "RTP", text("hit"), "FG Trigger", text("maxMult")].forEach((v, i) => { if (statLabels[i]) statLabels[i].textContent = v; });
     const creditLabels = document.querySelectorAll("#credit-bar .i-label"); [text("credit"), text("bet"), text("win")].forEach((v, i) => { if (creditLabels[i]) creditLabels[i].textContent = v; });
@@ -3123,7 +3144,7 @@
   buildBetMenu(); setDebug(false); const initial = generateBoard(0); const initialGold = normalizeGold(initial.board); renderBoard(initial.board, initialGold); renderMultiplierTrack(0); renderRng(initial.stops); applyLanguage();
 })();
   </script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script src="../demogame_common.js?v=20261013c"></script>
 </body>
 
 </html>

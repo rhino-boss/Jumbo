@@ -2041,7 +2041,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=4">
+  <link rel="stylesheet" href="../demogame_common.css?v=6">
 </head>
 
 <body>
@@ -2179,33 +2179,27 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
-        <h4>2026-10-06：Debug Mode 新增即時倍率線型（共用）</h4>
-        <ul>
-          <li>Set RNG 上方新增「倍率線型（即時，64 區間）」：Normal Bet 每局總得分（含該局 FG）÷ 底注，縱軸 0～20%；只在 Debug Mode 顯示，Reset 清空。</li>
-          <li>面板與繪圖在 <code>../demogame_common.js</code>（<code>window.demogameLineChart</code>）；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-10-06：符號圖片開局前預載＋改用 WebP（避免網頁上圖片未載入就開轉）</h4>
-        <ul>
-          <li><code>DEMOGAME_IMAGE_TOGGLE</code> 新增 <code>images</code> 清單（20 張）；由 <code>demogame_common.js</code> 在開局前預載並解碼，期間擋住點擊與鍵盤，超過 120 ms 顯示「載入圖片 n / N」遮罩。</li>
-          <li>載入失敗時自動關閉 Image 開關、改用文字顯示並提示失敗張數，不會停在載入畫面；背景分頁略過解碼，不會卡住。</li>
-          <li>符號圖改用 WebP（quality 90、保留透明）：786 KB → 149 KB；原 PNG 保留為美術原檔，Demo 不再引用。</li>
-          <li>共用 JS 版本參數 <code>demogame_common.js?v=4</code>。</li>
-          <li>驗證：本機伺服器開啟，預載 20／20 張完成、全部 naturalWidth &gt; 0、遮罩已消失、盤面圖片皆為 .webp；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
-      </article>
-      <article class="change-log-entry">
-        <h4>2026-09-24：符號顯示規則統一（Image 開關／有圖無框無字／代號不粗體）</h4>
-        <ul>
-          <li>接入 demogame_common 的 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）；Image 開：只顯示符號圖，不顯示符號代號、不畫符號框（格子標記 <code>has-symbol-art</code>，由 <code>demogame_common.css</code> 統一處理）；Image 關：顯示符號框＋符號代號。</li>
-          <li>符號代號（M1、M2…）一律改為一般字重（不粗體），由共用 CSS 統一套用。</li>
-          <li>無美術時改顯示標準代號標籤 <code>slot-symbol-label</code>（原 h016-face）。</li>
-          <li>共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。</li>
-          <li>開／關兩種模式逐格檢查：開圖時有圖格 0 個符號框、0 個代號；關圖時全部顯示框＋代號、字重 400；Console 無例外。</li>
-          <li>未修改 XLSX／Config 數學參數。</li>
-        </ul>
+        <h4>v8（8.0.0.0）</h4>
+        <ol>
+          <li>驗證：開圖時有圖格 0 個框、0 個代號；關圖時全部框＋代號、字重 400；Console 無例外。未修改 XLSX／Config 數學參數。（09/24）</li>
+          <li>符號代號一律一般字重（共用 CSS）；無美術改用標準標籤 <code>slot-symbol-label</code>（原 h016-face）；共用 CSS <code>?v=4</code>。（09/24）</li>
+          <li>接入共用 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）：開＝只顯示圖（無代號、無符號框，格子標 <code>has-symbol-art</code>）；關＝符號框＋代號。（09/24）</li>
+          <li>驗證：本機伺服器預載 20／20、naturalWidth 皆 &gt; 0、遮罩消失、盤面皆 .webp、Console 無例外。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>符號圖改用 WebP（quality 90、保留透明）：786 KB → 149 KB；PNG 留作美術原檔、Demo 不再引用；共用 JS <code>?v=4</code>。（10/06）</li>
+          <li>符號圖開局前預載：<code>DEMOGAME_IMAGE_TOGGLE.images</code> 列 20 張，由共用 JS 預載解碼，期間擋操作、超過 120 ms 顯示「載入圖片 n / N」；失敗時自動關 Image 改文字並提示張數，背景分頁略過解碼。（10/06）</li>
+          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>，本檔在 NB 一局結束時呼叫 <code>record()</code>）；後於 10/13 併入 Simulation。未修改 XLSX／Config 數學參數。（10/06）</li>
+          <li>驗證（92A、Card On）：NB 2 萬局 RTP 92.59%、FG 1/126；BF 2,000 局 94.67%；Super BF 2,000 局 93.51%；Retry 超限 0；畫面押注模式不變；實玩 NB＋BF 完整 FG、Log／Clear 正常；inline script <code>node --check</code> 通過、Console 無例外。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>共用 JS 版本參數 <code>demogame_common.js?v=20261013</code>。（10/13）</li>
+          <li>Debug Log 原本不寫入，改為記錄每局（押注模式、花費、BG 表、Cascade、C1 數、得分）、FG 觸發、每場 FG 與 Feature 總得分（新的在上，最多 200 筆）；Clear、Reset 會清空。（10/13）</li>
+          <li>本遊戲 Feature Status、Message、Cascade／FG Left 標籤、Next FG／Stop、Help 標題與關閉鈕隨語言切換，en→zh→en 可正確切回。（10/13）</li>
+          <li>Start 執行中顯示「進行中」（English：Running）。Spin Result 拿掉（共用）。共用區標籤（Credit、Setting、Simulation 等）中英切換（共用）。（10/13）</li>
+          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
+          <li>消除分布：轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題（adapter 回傳 <code>bgCascade</code>／<code>fgCascades</code>）。（10/13）</li>
+          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB 1%、BF／Super BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」；NB ÷ 押注、BF ÷ 底注（<code>lineMultiplier</code>）。Set RNG 上方的即時線型不再顯示。（10/13）</li>
+          <li>Simulation 面板新增押注模式選單（Normal Bet／Buy Feature／Buy Super Feature）；本檔宣告 <code>window.demogameSimulationModes</code>，<code>demogameSimulateRound({ mode })</code> 與實際遊玩同一套出局邏輯，只在該局模擬期間暫時套用選定模式，不改畫面押注模式與統計；回報 Retry Limit Exceeded／retryCount（只記錄，不改抽樣）。（10/13）</li>
+          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
+          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
+        </ol>
       </article>
       </div>
     </section>
@@ -2709,7 +2703,7 @@
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.webp";
   const HELP_PATH = "./game_rule.md";
   const STORAGE_KEY = "slotDemoLanguage";
-  const BET_LEVELS = Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10];
+  const BET_LEVELS = [...new Set([...(Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10]), 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
 
   const T = {
     en: {
@@ -3613,6 +3607,8 @@
     return {pay, played, retriggers, spins, snapshots, maxMultiplier: Math.max(1, ...spins.map(item => item.maxMultiplier))};
   }
 
+  // Retry 追蹤：只記錄卡片重抽次數與是否用完上限，不改變抽樣流程（供 Simulation 的 Retry Limit Exceeded）。
+  const retryTrace = {count: 0, exceeded: 0};
   function cardProfile() { return "weight_2"; }
   function cardSystemActive() { return window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled); }
   function bgTriggerCap(profile = cardProfile()) {
@@ -3653,8 +3649,9 @@
       let last = null;
       for (let retry = 0; retry < MAX_RETRY; retry++) {
         last = naturalBaseSpin();
-        if (last.scatter >= 3 && bgTriggerWithinCap(last)) return last;
+        if (last.scatter >= 3 && bgTriggerWithinCap(last)) { retryTrace.count += retry; return last; }
       }
+      retryTrace.count += MAX_RETRY; retryTrace.exceeded = 1;
       if (last) return last;
     } else {
       let nearest = null, nearestDistance = Infinity;
@@ -3663,10 +3660,11 @@
         // Table Selection; card.table is metadata and must not select a table.
         const result = naturalBaseSpin();
         if (result.scatter >= 3) continue;
-        if (cardMatches(card, result.pay)) return result;
+        if (cardMatches(card, result.pay)) { retryTrace.count += retry; return result; }
         const distance = cardDistance(card, result.pay);
         if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
       }
+      retryTrace.count += MAX_RETRY; retryTrace.exceeded = 1;
       if (nearest) return nearest;
     }
     return naturalBaseSpin();
@@ -3677,29 +3675,90 @@
     let nearest = null, nearestDistance = Infinity;
     for (let retry = 0; retry < MAX_RETRY; retry++) {
       const result = freeSession(superMode);
-      if (cardMatches(card, result.pay)) return result;
+      if (cardMatches(card, result.pay)) { retryTrace.count += retry; return result; }
       const distance = cardDistance(card, result.pay);
       if (distance < nearestDistance) { nearest = result; nearestDistance = distance; }
     }
+    retryTrace.count += MAX_RETRY; retryTrace.exceeded = 1;
     return nearest || freeSession(superMode);
   }
 
-  window.demogameSimulateRound = () => {
-    const base = cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
-    const fgTriggered = base.scatter >= 3;
-    const feature = fgTriggered
-      ? (cardSystemActive() ? cardFeature("free_game", false) : freeSession(false))
-      : null;
-    const totalWin = base.pay + Number(feature?.pay || 0);
-    return {
-      multiplier: totalWin / (BASE_BET * BET_LEVELS[state.betIndex]),
-      fgTriggered,
-      maxMultiplier: Math.max(base.maxMultiplier, Number(feature?.maxMultiplier || 1)),
-      retryLimitExceeded: 0,
-      bgCascade: base.combo,
-      fgCascades: feature?.spins?.map((spin) => spin.combo) || []
-    };
+  function modePrice(mode) { return mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1; }
+
+  // Simulation 面板的押注模式選單（demogame_common）；選定模式只在該局模擬期間暫時套用，不改畫面押注模式與統計。
+  window.demogameSimulationModes = [
+    { value: 0, label: "Normal Bet" },
+    { value: 2, label: "Buy Feature" },
+    { value: 3, label: "Buy Super Feature" }
+  ];
+  // 與 play() 同一套出局邏輯（Card System On／Off、BF 進場盤面、FG 卡片），不碰畫面與統計。
+  window.demogameSimulateRound = ({ mode } = {}) => {
+    const previousMode = state.mode;
+    if (mode !== undefined) state.mode = Number(mode);
+    retryTrace.count = 0; retryTrace.exceeded = 0;
+    try {
+      const simMode = state.mode === 2 || state.mode === 3 ? state.mode : 0;
+      const superMode = simMode === 3;
+      const base = simMode === 0
+        ? (cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
+        : buyEntry();
+      const fgTriggered = simMode !== 0 || base.scatter >= 3;
+      const section = simMode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
+      const feature = fgTriggered
+        ? (cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode))
+        : null;
+      const totalWin = base.pay + Number(feature?.pay || 0);
+      const baseBet = BASE_BET * BET_LEVELS[state.betIndex];
+      const wager = baseBet * modePrice(simMode);
+      return {
+        multiplier: totalWin / wager,                              // RTP 口徑：÷ 實際押注
+        lineMultiplier: totalWin / (simMode === 0 ? wager : baseBet), // 線型口徑：BF ÷ 底注，NB ÷ 押注
+        fgTriggered,
+        maxMultiplier: Math.max(base.maxMultiplier, Number(feature?.maxMultiplier || 1)),
+        retryLimitExceeded: retryTrace.exceeded,
+        retryCount: retryTrace.count,
+        bgCascade: base.combo,
+        fgCascades: feature?.spins?.map((spin) => spin.combo) || []
+      };
+    } finally {
+      state.mode = previousMode;
+    }
   };
+
+  // By Game 文字（Feature Status／Message／Pill）中英切換；先存英文原文，切語言時重畫，en→zh→en 可還原。
+  const ZH = {
+    "Base Game": "基礎遊戲", "Free Game": "免費遊戲", "Super Free Game": "超級免費遊戲",
+    "Free Game Triggered": "已觸發免費遊戲", "Super Feature": "超級特色", "Feature complete": "特色完成",
+    "Cascade": "連消", "FG Left": "FG 剩餘", "Next FG": "下一次 FG", "Stop": "停止",
+    "Game Help": "遊戲說明", "Close": "關閉"
+  };
+  const MSG_ZH = [
+    [/^Ready — press Spin$/, "準備完成 — 請按 Spin"], [/^No Win$/, "未得獎"], [/^WIN (.+)$/, "得分 $1"],
+    [/^Insufficient balance$/, "餘額不足"], [/^Source Golden → W2$/, "金框來源 → W2"],
+    [/^Mark random W2 area × (\d+)$/, "標記隨機 W2 區域 × $1"], [/^Random W2 × (\d+)$/, "隨機 W2 × $1"],
+    [/^Cascade$/, "連消"], [/^Eliminate \+ WW$/, "消除＋WW"], [/^Refill in place$/, "原地補牌"], [/^BF Entry · No Win$/, "BF 進場 · 未得獎"]
+  ];
+  const tr = english => (state.language === "zh" && ZH[english]) || english;
+  function trMessage(english) {
+    const value = String(english || "");
+    if (state.language !== "zh") return value;
+    const fg = value.match(/^FG (\d+\/\d+) · (.+)$/);
+    if (fg) return `FG ${fg[1]} · ${trMessage(fg[2])}`;
+    for (const [pattern, zh] of MSG_ZH) if (pattern.test(value)) return value.replace(pattern, zh);
+    return value;
+  }
+  let lastMessage = "Ready — press Spin", lastFeatureStatus = "";
+  function setMessage(english) { lastMessage = String(english || ""); $("messageBar").textContent = trMessage(lastMessage); }
+  function setFeatureStatus(english) { lastFeatureStatus = english; $("featureStatus").textContent = tr(english); }
+
+  // Debug Log：每局（押注模式、花費、BG 表、得分、C1 數）、FG 觸發與每場 FG 得分，新的在上，最多 200 筆。
+  const LOG_LIMIT = 200;
+  const MODE_NAME = {0: "Normal Bet", 2: "Buy Feature", 3: "Buy Super Feature"};
+  function appendLog(line) {
+    state.log.unshift(line);
+    if (state.log.length > LOG_LIMIT) state.log.length = LOG_LIMIT;
+    $("liveLogBody").innerHTML = state.log.map(item => `<div>${item}</div>`).join("");
+  }
 
   function renderMultiplier(freeGame, index = 0) {
     const values = freeGame ? [2,4,6,10] : [1,2,3,5];
@@ -3784,7 +3843,7 @@
     if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
-      $("messageBar").textContent = snapshot.message || "Cascade";
+      setMessage(snapshot.message || "Cascade");
       if (snapshot.type === "win") {
         if (freeGame) {
           state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
@@ -3828,8 +3887,8 @@
     $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers/state.rounds*100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)"; $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
     const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
     document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
-    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = remaining ? (state.fg.mode === 3 ? "Super Free Game" : "Free Game") : "Base Game";
-    $("spinBtn").textContent = remaining ? "Next FG" : "Spin";
+    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = tr(remaining ? (state.fg.mode === 3 ? "Super Free Game" : "Free Game") : "Base Game");
+    $("spinBtn").textContent = remaining ? tr("Next FG") : "Spin";
   }
   function setBusy(value) {
     state.busy = value;
@@ -3840,7 +3899,8 @@
 
   function activateFeature(feature, mode) {
     state.fg = {spins:feature.spins, index:0, total:feature.spins.length, win:0, mode}; state.lastWin = 0; state.fgTriggers++;
-    $("featureStatus").textContent = mode === 3 ? "Super Feature" : "Free Game Triggered"; updateStats();
+    setFeatureStatus(mode === 3 ? "Super Feature" : "Free Game Triggered"); updateStats();
+    appendLog(`FG triggered · ${MODE_NAME[mode] || "Normal Bet"} · ${feature.spins.length} spins`);
   }
 
   function buyEntry() {
@@ -3858,8 +3918,9 @@
     const fgWinBase = Number(state.fg.win || 0);
     await animateSnapshots(item.snapshots, true, fgWinBase); state.fg.index++;
     state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay; state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
-    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`;
-    if (state.fg.index >= state.fg.spins.length) { $("featureStatus").textContent = "Feature complete"; state.fg = {spins:[],index:0,total:0,win:0,mode:0}; }
+    setMessage(`FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`);
+    appendLog(`FG ${state.fg.index}/${state.fg.total} · ${item.tableName} · Cascade ${item.combo} · Win ${money(item.pay)}`);
+    if (state.fg.index >= state.fg.spins.length) { appendLog(`Feature complete · ${state.fg.total} spins · Feature win ${money(state.fg.win)}`); setFeatureStatus("Feature complete"); state.fg = {spins:[],index:0,total:0,win:0,mode:0}; }
   }
 
   async function play(mode = 0) {
@@ -3876,7 +3937,8 @@
         if (mode === 0) base = $("forceFgInput").checked ? cardSpin({type:"free_game"}) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin();
         else base = buyEntry();
         await animateSnapshots(base.snapshots, false); renderRngSource(base); state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay; state.hitRounds += base.pay > 0 ? 1 : 0; state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
-        $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win";
+        setMessage(base.pay > 0 ? `WIN ${money(base.pay)}` : "No Win");
+        appendLog(`#${state.rounds} ${MODE_NAME[mode] || "Normal Bet"} · Bet ${format(bet)} · Cost ${money(cost)} · ${base.tableName} · Cascade ${base.combo} · C1 ${base.scatter} · Win ${money(base.pay)}`);
         if (base.scatter >= 3 || mode !== 0 || $("forceFgInput").checked) {
           const superMode = mode === 3, section = mode === 0 ? "free_game" : superMode ? "super_feature" : "buy_feature";
           const feature = cardSystemActive() ? cardFeature(section, superMode) : freeSession(superMode);
@@ -3886,7 +3948,7 @@
           window.demogameLineChart?.record(base.pay / cost);   // 即時倍率線型：NB 未觸發局
         }
       }
-    } catch (error) { console.error(error); $("messageBar").textContent = error.message; }
+    } catch (error) { console.error(error); setMessage(error.message); }
     updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(0), 180);
   }
 
@@ -3967,11 +4029,17 @@
     $("gameId").textContent = cfg.game_id; $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
     $("buyFeatureBtn").textContent = state.language === "zh" ? "購買特色 (40.5x)" : "Buy Feature (40.5x)";
     $("buySuperFeatureBtn").textContent = state.language === "zh" ? "購買超級特色 (250x)" : "Buy Super Feature (250x)";
+    document.querySelector("#cascadePill .k").textContent = tr("Cascade");
+    document.querySelector("#fgLeftPill .k").textContent = tr("FG Left");
+    $("helpDialogTitle").textContent = tr("Game Help"); $("closeHelpBtn").textContent = tr("Close");
+    if (state.auto) $("autoBtn").textContent = tr("Stop");
+    setMessage(lastMessage); setFeatureStatus(lastFeatureStatus); updateStats();
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
     Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
-    $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_low")); renderMultiplier(false); $("messageBar").textContent = "Ready — press Spin"; updateStats();
+    $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_low")); renderMultiplier(false); setMessage("Ready — press Spin"); setFeatureStatus("");
+    state.log = []; $("liveLogBody").innerHTML = ""; updateStats();
   }
   function buildBetMenu() {
     $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
@@ -4011,13 +4079,13 @@
   }
 
   $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2); $("buySuperFeatureBtn").onclick = () => play(3);
-  $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=state.auto?"Stop":"Auto";if(state.auto&&!state.busy)play(0);};
+  $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=state.auto?tr("Stop"):"Auto";if(state.auto&&!state.busy)play(0);};
   $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);updateStats();};
   $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent=`x${$("speedRange").value}`;
   $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
   $("helpBtn").onclick = () => {$("helpContent").innerHTML=helpHtml();$("helpDialog").showModal();}; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
-  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
+  $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>{state.log=[];$("liveLogBody").innerHTML="";}; $("setRngResetBtn").onclick=()=>{$("reelRngInput").value="";$("forceFgInput").checked=false;};
   $("versionSelect").onchange=()=>{const version=$("versionSelect").value;const entry=(window.H016_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version);const current=window.H016_ACTIVE_CONFIG;const code=entry?.configs?.[current]?current:Object.keys(entry?.configs||{}).find(key=>key!=="base");openVersion(version,code);};
   $("configSelect").onchange=()=>openVersion(window.H016_VERSION_ENTRY.version,$("configSelect").value);
   document.title=`${cfg.name_en || "Lucky Ace"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
@@ -4027,7 +4095,7 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = true;
   window.DEMOGAME_VERSION_OVERRIDE = window.H016_CONFIG?.excel_version || H016_CURRENT_VERSION;
   </script>
-  <script src="../demogame_common.js?v=20261006"></script>
+  <script src="../demogame_common.js?v=20261013c"></script>
 </body>
 
 </html>
