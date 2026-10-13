@@ -919,10 +919,11 @@
     }
 
     .cell.gold .h015-symbol-img {
-      width: 76%;
-      height: 76%;
-      max-width: 76%;
-      max-height: 76%;
+      /* H045：金框格直接用 G1～G8 金色牌圖（不另外畫框），尺寸同一般符號 */
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
     }
 
     .h015-frame-img {
@@ -2195,6 +2196,12 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-13：金框符號圖尺寸修正</h4>
+        <ul>
+          <li>金框格的 G1～G8 圖原本沿用 H016 的 76% 縮小規則，比一般符號小；改為與一般符號相同的 94%。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-10-12：版本 5（啟用盤面表 2：高連消表）</h4>
         <ul>
