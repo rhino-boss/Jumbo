@@ -1,5 +1,7 @@
 # H026 xlsx -> config.js -> simulator/index 對照表
 
+> **2026-10-13 起**：`xlsx_to_config.py`、`update_config.bat` 已移除（專案內不放轉檔工具，模擬程式規範 2.1）。本文件的「執行轉檔」步驟作廢，下方 XLSX → Config 欄位對照仍可作為轉出 Config 時的參考。
+
 ## 範圍
 
 本文件對照目前專案中的：
