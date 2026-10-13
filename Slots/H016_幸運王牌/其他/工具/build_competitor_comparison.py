@@ -35,24 +35,15 @@ SYMBOL_IDS = {
     "Q": 9,
     "J": 10,
 }
-COMPETITOR_ROOT = Path(
-    "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資源/JILI"
-)
+# 競品遊玩資料：預設本機市場資訊；模擬機上以 H016_COMPETITOR_DIR 指定
+COMPETITOR_DIR = Path(os.environ.get(
+    "H016_COMPETITOR_DIR",
+    "C:/Users/rhinshen/Mine/個人工作區/市場資訊/H5/遊戲資訊/JILI - Super Ace/遊玩資料",
+))
 COMPETITOR_FILENAMES = (
     "SuperAce_BG_Combined_NoJP.jsonl",
     "SuperAce_BG_3.jsonl",
     "Super_Ace_BG_4.jsonl",
-)
-COMPETITOR_DIR = next(
-    (
-        candidate / "遊戲資料"
-        for candidate in (
-            COMPETITOR_ROOT / "JILI - Super Ace",
-            COMPETITOR_ROOT / "JILI - Super Ace - m",
-        )
-        if all((candidate / "遊戲資料" / name).is_file() for name in COMPETITOR_FILENAMES)
-    ),
-    COMPETITOR_ROOT / "JILI - Super Ace" / "遊戲資料",
 )
 FILES = [COMPETITOR_DIR / name for name in COMPETITOR_FILENAMES]
 SYMBOL_MAP = {
