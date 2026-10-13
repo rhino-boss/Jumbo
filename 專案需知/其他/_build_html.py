@@ -786,7 +786,12 @@ def publish_team():
     """把團隊規範複製到共享資料夾並建置 HTML；共享資料夾連不到時略過。"""
     global PLAIN_UNKNOWN_MD
     import shutil
-    if not TEAM_DIR.exists():
+    try:
+        reachable = TEAM_DIR.exists()
+    except OSError as err:   # 例：網路磁碟要求重新登入（WinError 1326）
+        reachable = False
+        print(f"略過團隊版：{TEAM_DIR} 無法存取（{err.strerror or err}）")
+    if not reachable:
         print(f"略過團隊版：連不到 {TEAM_DIR}")
         return
     tabs = [t for t in TABS if t[0] in TEAM_TAB_IDS]

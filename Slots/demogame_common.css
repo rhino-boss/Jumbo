@@ -961,24 +961,29 @@ body.slot-simulator #helpContent table.paytable th { color: #77c7ff; font-weight
 /* 標題列統一：遊戲代號＋名稱的字級、字重、顏色各遊戲一致；右側按鈕群（數值報告／說明／重置）
    的字型跟標題相同（見 demogame_common.js setupTitleActions），外框加高讓按鈕不貼邊。 */
 body.slot-simulator #game-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
   color: #5a88aa;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: .5px;
 }
-body.slot-simulator #game-title #gameId {
-  color: #5a88aa;
-  font-size: 13px;
-  font-weight: 700;
-  margin-right: 0;
-}
+body.slot-simulator #game-title #gameId,
 body.slot-simulator #game-title #gameName {
-  color: #b0d4f0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1;
+  margin: 0;
 }
+body.slot-simulator #game-title #gameId { color: #5a88aa; }
+body.slot-simulator #game-title #gameName { color: #b0d4f0; }
 body.slot-simulator #feature-bar:has(#demogameTitleActions) {
   box-sizing: border-box;
   min-height: 44px;
+  display: flex;
   align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
 }
