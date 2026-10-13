@@ -1,5 +1,7 @@
 # H013192 / H013194.xlsx → config JSON/JS 欄位對照
 
+> **2026-10-13 起**：`xlsx_to_config.py`、`update_config.bat` 已移除（專案內不放轉檔工具，模擬程式規範 2.1），Config 也已拆成基礎 `config.js` ＋ `config_92A.js`／`config_94A.js`。本文件的「執行轉檔」步驟作廢，下方 XLSX → Config 欄位對照仍可作為轉出 Config 時的參考。
+
 ## 來源與輸出
 
 - 唯一數學來源：`H013192.xlsx`、`H013194.xlsx`。

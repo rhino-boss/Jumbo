@@ -44,7 +44,7 @@ $env:H019_OUTPUT_REPORT='false'
 
 ## 資料流
 
-`Source/H019192.xlsx` 或 `H019194.xlsx` → `Source/xlsx_to_config.py` → `config_92.js` 或 `config_94.js` → `Simulator.py` → `Record/*.xlsx`
+`Source/H019192.xlsx` 或 `H019194.xlsx` → 轉出基礎 `config.js` ＋ `config_92A.js` 或 `config_94A.js` → `Simulator.py` → `Record/*.xlsx`
 
 報表檔名以前綴 `H0191`（PARsheet ID）命名；版本移除標點，例如 `3.0.0.1` 寫成 `3001`，10 的整數次方局數以 `10+指數` 表示，例如 `10**5` 寫成 `105`。範例：`H0191_3001_2607141633_betmode0_105_oldhand_card.xlsx`。程式可從檔案、終端機或 VS Code Interactive Window 執行，會自行尋找遊戲資料夾。
 

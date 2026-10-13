@@ -223,7 +223,7 @@
 
 * `Source/H013192.xlsx`
 * `Source/H013194.xlsx`
-* `Source/xlsx_to_config.py`
+* `config.js`（基礎數學）
 * `config_92A.js`
 * `config_94A.js`
 * `Simulator.py`

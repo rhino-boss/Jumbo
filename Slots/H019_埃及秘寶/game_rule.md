@@ -141,7 +141,7 @@ C2 可直接出現在輪帶，也可由參與中獎消除的 WW 轉換而來。�
 - Paytable、目標 RTP、模式成本：xlsx `Overview`。
 - BG／FG／BF／SF 輪帶、符號與權重：各 `*_Symbol` 工作表。
 - 選表權重、FG 場次、C2 類型與倍數權重：xlsx `Parameter`。
-- `config_92A.js`、`config_94A.js` 是由 `Source/xlsx_to_config.py` 生成的執行資料，不應手動維護數學值。
+- `config.js`（基礎數學）與 `config_92A.js`、`config_94A.js`（RTP Config）是由數學模型轉出的執行資料，不應手動維護數學值；專案內不放轉檔工具（模擬程式規範 2.1）。
 - 報表名稱使用 PARsheet ID `H0191`，不使用 Game ID 當檔名前綴。
 
 ---

@@ -1,5 +1,7 @@
 # H0151*.xlsx → config_*.js 欄位對照
 
+> **2026-10-13 起**：`xlsx_to_config.py`、`update_config.bat` 已移除（專案內不放轉檔工具，模擬程式規範 2.1），Config 也已拆成基礎 `config.js` ＋ `config_92A.js`／`config_94A.js`。本文件的「執行轉檔」步驟作廢，下方 XLSX → Config 欄位對照仍可作為轉出 Config 時的參考。
+
 `H015192.xlsx` 產生 `config_92.js`；`H015194.xlsx` 產生 `config_94.js`。來源檔名、模型 ID 與 RTP 會分別寫入 config，避免 94 版誤標為 92 版。
 
 ## Overview
