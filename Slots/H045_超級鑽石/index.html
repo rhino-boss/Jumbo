@@ -2197,6 +2197,12 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-13：切換舊版本時改讀該版本的封存 config</h4>
+        <ul>
+          <li>修正：Version 選舊版本（例如 4.0.0.0）時，原本仍讀根目錄（目前版本）的 config，版本檢查失敗導致 Version 選單空白、Config 退回 BASE-Off。改為目前版本讀根目錄、舊版本讀 <code>Versions/&lt;版本&gt;/config.js</code> 與 <code>config_92A.js</code>。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-13：金框符號圖尺寸修正</h4>
         <ul>
           <li>金框格的 G1～G8 圖原本沿用 H016 的 76% 縮小規則，比一般符號小；改為與一般符號相同的 94%。未修改 XLSX／Config 數學參數。</li>
@@ -2953,8 +2959,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 
   </script>
-  <script src="./Versions/version_manifest.js?v=20261012c"></script>
-  <script src="./config.js?v=20261012c"></script>
+  <script src="./Versions/version_manifest.js?v=20261013a"></script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
@@ -2965,38 +2970,39 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
         || (manifest.versions || []).find(item => item.version === manifest.current)
         || (manifest.versions || [])[0];
       if (!entry) throw new Error("H045 version manifest has no usable version.");
-      const cfg = window.H045_CONFIG;
-      if (!cfg) throw new Error("H045 config was not loaded.");
-      // 數學模型規範 1.3：config.js 為 1 碼（＝四碼版本的第 1 碼），RTP／Variant config 為完整四碼
-      const baseKey = String(entry.math_key || String(entry.version).split(".")[0]);
-      if (String(cfg.excel_version) !== baseKey) {
-        throw new Error(`config.js 版本 ${cfg.excel_version} 與 manifest ${entry.version} 第 1 碼不一致`);
-      }
       window.H045_VERSION_ENTRY = entry;
+      // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
+      const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
+      const stamp = `${encodeURIComponent(entry.version)}-20261013a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
-      // 預設用第一個 RTP／Variant config（Card System 由勾選開關）；沒有任何 RTP config 才退回 base
       const active = available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
       window.H045_ACTIVE_CONFIG = active;
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
-      if (active !== "base") {
-        document.write(`<script src="./${entry.configs[active]}?v=${encodeURIComponent(entry.version)}-20261012c"><\/script>`);   // 權重更新時改尾碼避免快取
-        document.write(`<script>
-          (() => {
-            const base = window.H045_CONFIG, rtp = window.H045_CONFIG_RTP;
-            if (!rtp) throw new Error("H045 RTP config was not loaded.");
-            if (rtp.game_id !== base.game_id) throw new Error("H045 base/RTP config game_id mismatch.");
-            if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) {
-              throw new Error("RTP config 版本第 1 碼 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 不一致");
-            }
-            if (!rtp.card_system) throw new Error("H045 RTP config is missing card_system.");
-            base.card_system = rtp.card_system;
-            base.rtp_label = rtp.rtp_label || rtp.config_code;
-            base.rtp_config = rtp;
-          })();
-        <\/script>`);
-      }
+      const fileOf = path => String(path).split("/").pop();
+      document.write(`<script src="${folder}config.js?v=${stamp}"><\/script>`);
+      if (active !== "base") document.write(`<script src="${folder}${fileOf(entry.configs[active])}?v=${stamp}"><\/script>`);
+      document.write(`<script>
+        (() => {
+          const entry = window.H045_VERSION_ENTRY, base = window.H045_CONFIG;
+          if (!base) throw new Error("H045 config was not loaded.");
+          // 數學模型規範 1.3：config.js 為 1 碼（＝四碼版本的第 1 碼），RTP／Variant config 為完整四碼
+          const baseKey = String(entry.math_key || String(entry.version).split(".")[0]);
+          if (String(base.excel_version) !== baseKey) throw new Error("config.js 版本 " + base.excel_version + " 與 manifest " + entry.version + " 第 1 碼不一致");
+          if (window.H045_ACTIVE_CONFIG === "base") return;
+          const rtp = window.H045_CONFIG_RTP;
+          if (!rtp) throw new Error("H045 RTP config was not loaded.");
+          if (rtp.game_id !== base.game_id) throw new Error("H045 base/RTP config game_id mismatch.");
+          if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) {
+            throw new Error("RTP config 版本第 1 碼 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 不一致");
+          }
+          if (!rtp.card_system) throw new Error("H045 RTP config is missing card_system.");
+          base.card_system = rtp.card_system;
+          base.rtp_label = rtp.rtp_label || rtp.config_code;
+          base.rtp_config = rtp;
+        })();
+      <\/script>`);
     })();
   </script>
     <script>
