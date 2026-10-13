@@ -331,6 +331,15 @@
           <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
           <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
           <li>驗證：Debug Mode 下 Normal Bet／Buy Feature 各玩數局（含 FG），歷史紀錄 BG／FG 最大倍數與 Clear 正常、Log 行格式符合、RNG 行可點且重跑同局結果一致，Console 無例外。（10/13）</li>
+          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
+          <li>驗證：最高 Speed 下 Auto 跑 BG 與 Buy Feature 整段 FG，量測算分到下一轉開始間隔皆 ≥ 100 ms；RNG 重跑結果相同、Simulation 仍即時、Console 無錯誤。（10/13）</li>
+          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
+          <li>驗證：BG 多連消局與 Buy Feature 整段 FG 取樣 Win，逐次消除遞增、FG 轉與轉之間不退回、局末等於 Log 結果；RNG 重跑結果相同、Console 無錯誤。（10/13）</li>
+          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
+          <li>驗證：BG 兩連消局（播放 0→0.90→1.15）逐步倒退 1.15→0.90→0（前進反之、末步 1.15）；Buy Feature 第 4 轉 FG（基底 3.00，播放 3.40→3.90→4.80）倒退回 3.00、前進回 4.80；Credit 與 Log 不變、Console 無錯誤。（10/13）</li>
+          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本檔原本已符合，含 Previous／Next 基底，僅驗證未改碼）。（10/13）</li>
+          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
+          <li>驗證：NB 自然觸發（Card FG 區間，RNG 92A/NB/on/r64/dea77932）BG 得分 3.00 → FG 第 1 轉起始 Win 3.00、逐消除 3.25…、結束 38.05＝3.00＋FG 35.05；Buy Feature 入場盤 3.00 → FG 起始 3.00、結束 26.60＝3.00＋23.60；Previous／Next 基底一致；FG 結束後盤面與觸發局（BF 入場盤）最終盤逐格相同、Feature Status 回 Base Game；RNG 重跑 Log 結果行與盤面相同、Console 無錯誤。（10/13）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -499,7 +508,7 @@
     </div>
   </dialog>
 
-  <script src="./Versions/version_manifest.js?v=20261012-v7200"></script>
+  <script src="./Versions/version_manifest.js?v=20261013-v7300"></script>
   <script>
     const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
     const H027_VISIBLE_VERSION_ENTRIES = Array.from(
@@ -1290,13 +1299,17 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     });
   }
 
-  function captureSnapshots(spin) {
-    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialMultiplierValues), hits: [] }];
+  function captureSnapshots(spin, winBase = 0) {
+    // 每步記下播放到該步時 Win 欄顯示的累計得分（與 playback 相同基底與算法），Previous／Next 只改顯示
+    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialMultiplierValues), hits: [], win: winBase }];
+    let liveRaw = 0;
     spin.steps.forEach((step) => {
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeMultiplierValues), hits: step.hitPositions });
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterMultiplierValues), hits: [] });
+      liveRaw += Number(step.pay) || 0;
+      const win = winBase + toMoney(liveRaw);
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeMultiplierValues), hits: step.hitPositions, win });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterMultiplierValues), hits: [], win });
     });
-    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.multiplier.values), hits: [] });
+    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.multiplier.values), hits: [], win: winBase + toMoney(spin.finalPay) });
     state.snapshotIndex = state.snapshots.length - 1;
     updateDebugButtons();
   }
@@ -1306,6 +1319,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
     const snapshot = state.snapshots[state.snapshotIndex];
     renderBoard(snapshot.board, { hitPositions: snapshot.hits });
+    if (Number.isFinite(snapshot.win)) setText(el.win, money(snapshot.win));   // 只改 Win 顯示，不動 Credit／統計／紀錄
     writeMessage(`${snapshot.label} | Step ${state.snapshotIndex + 1}/${state.snapshots.length}`);
     updateDebugButtons();
   }
@@ -1319,7 +1333,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function updateStats() {
     setText(el.balance, money(state.balance));
     setText(el.bet, money(wagerMoney()));
-    setText(el.win, money(state.lastWin));
+    setText(el.win, money(state.lastWin + (state.pendingFg ? state.pendingFg.win : 0)));   // FG 中顯示「觸發轉 + 本場 FG 累積」，每轉結束不退回觸發轉得分
     setText(el.rounds, String(state.roundCount));
     setText(el.rtp, state.totalBet > 0 ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%");
     setText(el.hitRate, state.roundCount > 0 ? `${(state.hitCount / state.roundCount * 100).toFixed(2)}%` : "0.00%");
@@ -1402,7 +1416,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`), spin.finalPay > 0 ? "win" : "");
     renderPayAnywhereWins(spin);
     renderResultStages(spin);
-    captureSnapshots(spin);
+    captureSnapshots(spin, winBase);
     state.lastSpin = spin;
   }
 
@@ -1410,7 +1424,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const queue = preparedSession ? [] : buildFreeSchedule("initial");
     const preparedSpins = preparedSession?.spins ? preparedSession.spins.slice() : null;
     const total = preparedSpins ? preparedSpins.length : queue.length;
-    state.pendingFg = { queue, preparedSpins, total, played: 0, carry: 0, win: 0 };
+    state.pendingFg = { queue, preparedSpins, total, played: 0, carry: 0, win: 0, triggerSpin: state.lastSpin };   // triggerSpin：觸發局 BG 最終盤（BF 為入場盤），FG 結束時還原
     state.fgTriggerCount += 1;
     const retriggers = preparedSpins ? preparedSpins.filter((spin) => spin.scatterCount >= FG_RETRIGGER_COUNT).length : 0;
     appendLog(`${state.selectedMode === MODE_BUY ? "Buy Feature" : "Free Game triggered"} | ${total} spins${retriggers ? ` (Retrigger ×${retriggers})` : ""}`, "mode");
@@ -1455,6 +1469,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.restoreMode = null;
     refreshCardRangeOptions();
     document.body.classList.remove("fg-mode");
+    if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard, fg.triggerSpin.multiplier.values));   // 回到 BG：盤面還原成觸發局最終盤面（只改顯示）
     updateFeatureBar();
     writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
     updateStats();
@@ -1671,9 +1686,11 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (state.busy) return;
     state.busy = true;
     updateControls();
+    let settled = false;   // 本轉分數已加完 → finally 先固定停 0.1 秒（共用 demogameRoundPause，不受 Speed 影響）再放行
     try {
       if (state.pendingFg) {
         await playFreeSpin();
+        settled = true;
         return;
       }
 
@@ -1736,6 +1753,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         state.restoreMode = null;
       }
       updateStats();
+      settled = true;
     } catch (error) {
       state.auto = false;
       if (!state.pendingFg) {
@@ -1746,6 +1764,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       appendLog(`Error | ${error.message}`, "error");
     } finally {
       replay = null;
+      if (settled) await window.demogameRoundPause?.();
       state.busy = false;
       updateControls();
       if (state.auto) state.autoTimer = setTimeout(doSpin, Math.max(80, 650 / state.speed));
@@ -2048,7 +2067,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261013f"></script>
+  <script src="../demogame_common.js?v=20261013i"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

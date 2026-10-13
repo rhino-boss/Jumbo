@@ -3945,7 +3945,7 @@ const data = {
   "rtp_label": 94,
   "source_multiplier_xlsx": "H027194A.xlsx",
   "bet_tier_scope": "small_bet",
-  "excel_version": "7.2.0.0",
+  "excel_version": "7.3.0.0",
   "base_excel_version": "7",
   "base_config": "config_A.js"
 };

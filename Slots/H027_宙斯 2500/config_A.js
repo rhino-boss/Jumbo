@@ -45,7 +45,10 @@ const baseData = {
     300,
     600,
     1000,
-    1500
+    1500,
+    2000,
+    3000,
+    5000
   ],
   "initial_balance": 10000,
   "drop_mode": "cascade_drop",

@@ -1,5 +1,5 @@
 window.H027_VERSION_MANIFEST = {
-  current: "7.2.0.0",
+  current: "7.3.0.0",
   base_version: "7",
   next_version: "8.0.0.0",
   versions: [
@@ -310,6 +310,41 @@ window.H027_VERSION_MANIFEST = {
         "B big bet BG drops (1000,2000]; with max bet $1500 the BG ceiling $500,000 gives 333x, so the top interval is (250,300]. A big bet BG already topped at (200,250] and is unchanged. Targets and solver identical to 7.1.x; Newbie columns unchanged; SCR unchanged.",
         "Validation (big bet, Oldhand, 10^7 each): A NB 91.67%, EB 91.52%, BF 92.52%; B NB 91.59%, EB 91.73%, BF 92.46%. A EB is -2.34 sigma from the BG low bias already present in 7.0.x (same BG weights).",
         "Known exception recorded in 注意事項.md: the BG 2500x ball cannot score in A (all tiers, BG cap 250x) or B big bet (BG cap 300x); left as is per user instruction."
+      ]
+    },
+    {
+      version: "7.3.0.0",
+      math_key: "7.3",
+      date: "2026-10-13",
+      competitor_initial_version: false,
+      base_configs: {
+        A: "Versions/7.3.0.0/config_A.js",
+        B: "Versions/7.3.0.0/config_B.js"
+      },
+      configs: {
+        "92A": "Versions/7.3.0.0/config_92A.js",
+        "94A": "Versions/7.3.0.0/config_94A.js",
+        "92A_Bet100": "Versions/7.3.0.0/config_92A_Bet100.js",
+        "92B": "Versions/7.3.0.0/config_92B.js",
+        "94B": "Versions/7.3.0.0/config_94B.js",
+        "92B_Bet100": "Versions/7.3.0.0/config_92B_Bet100.js"
+      },
+      workbooks: {
+        base_a: "Versions/7.3.0.0/Source/H0271A.xlsx",
+        base_b: "Versions/7.3.0.0/Source/H0271B.xlsx",
+        92: "Versions/7.3.0.0/Source/H027192A.xlsx",
+        94: "Versions/7.3.0.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/7.3.0.0/Source/H027192A_Bet100.xlsx",
+        "92B": "Versions/7.3.0.0/Source/H027192B.xlsx",
+        "94B": "Versions/7.3.0.0/Source/H027194B.xlsx",
+        "92B_Bet100": "Versions/7.3.0.0/Source/H027192B_Bet100.xlsx"
+      },
+      frozen_base: "Versions/7.1.1.0",
+      changes: [
+        "Bet options add $2000/$3000/$5000 (config_A/config_B). Bets above $1,500 are the super-big tier: same _Bet100 weights as big bet, system ceiling BG $1,000,000 / FG $5,000,000.",
+        "Big bet (_Bet100) BG cap 200x = stricter of $500,000 / $1500 = 333x and $1,000,000 / $5000 = 200x. A tops at (120,140] (natural rate of (140,200] below threshold), B at (180,200]; only the BG columns (F, H) are re-solved, FG/BF/Newbie unchanged, SCR unchanged.",
+        "Validation (10^7 each, 22 runs): 21 within 2 sigma; A big bet NB 91.42% (-2.58 sigma, BG low bias already present in 7.2).",
+        "Known exception (注意事項.md): BG 2500x and, for big bet, 1000x balls cannot score; left as is per user instruction."
       ]
     }
   ]
