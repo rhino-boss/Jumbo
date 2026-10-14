@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成單一 igaming_specification.html。
+"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁：Omniplay（igaming_specification.html）、Landbase、Reskin。
 
 本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
 
@@ -83,6 +83,7 @@ GROUP_ICONS = {
 }
 
 ROOT_OUTPUT_NAME = OUTPUT.name
+ROOT_TITLE = "Omniplay 開發規範"
 
 # 其他產線：資料夾內的 .md 各自彙整成該資料夾的 HTML。
 # (資料夾, 輸出檔名, 頁首名稱, 頁籤順序偏好)；資料夾內沒有 .md 時略過不產生。
@@ -460,7 +461,7 @@ def line_tabs(folder: Path):
 
 
 def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict,
-               groups=None):
+               groups=None, line_nav: str = ""):
     """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。
 
     groups：[(大分類, [tab_id...])]；省略時每份文件自成一類。
@@ -556,6 +557,10 @@ header.page{{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}}
 .eyebrow{{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}}
 h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
 .meta{{margin:0; color:var(--ink-2); font-size:13.5px}}
+.lines{{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0}}
+.lines a{{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:3px 13px; margin:0}}
+.lines a:hover{{color:var(--s1); border-color:var(--s1)}}
+.lines a.on{{color:var(--panel); background:var(--s1); border-color:var(--s1); font-weight:600}}
 .meta code{{font-family:var(--font-mono); font-size:12.5px}}
 /* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
    頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
@@ -676,6 +681,7 @@ mark.hl-danger{{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,tran
 <header class="page">
   <div class="eyebrow">{eyebrow}</div>
   <h1 class="site">{site_title}</h1>
+  {line_nav}
   <p class="meta">由 <code>{src_label}</code> 產生（<code>_build_html.py</code>）　|　{today}</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件">{''.join(tabs_html)}</div>
@@ -759,6 +765,18 @@ def rel_to_tree(path: Path) -> Path:
     return path
 
 
+def line_nav(root: Path, current) -> str:
+    """頁首產線切換：Omniplay／Landbase／Reskin 三站互連，目前所在站標示為 on。"""
+    up = "../" if current else ""
+    items = [(None, "Omniplay", f"{up}{ROOT_OUTPUT_NAME}")]
+    items += [(folder, folder, f"{up}{folder}/{out_name}")
+              for folder, out_name, _ in PRODUCT_LINES if line_tabs(root / folder)]
+    links = "".join(
+        f'<a href="{href}"{' class="on"' if key == current else ""}>{name}</a>'
+        for key, name, href in items)
+    return f'<nav class="lines" aria-label="產線">{links}</nav>'
+
+
 def build_tree(root: Path, tabs, groups):
     """建置一整套：根 HTML ＋ 各產線 HTML。"""
     # 根目錄（Omniplay）：根 .md 互連為頁籤；連到產線資料夾的 .md 轉成該產線 HTML
@@ -767,7 +785,8 @@ def build_tree(root: Path, tabs, groups):
     for folder, out_name, _ in PRODUCT_LINES:
         for tab_id, _, filename in line_tabs(root / folder):
             links[f"{folder}/{filename}"] = ("ext", f"{folder}/{out_name}#{tab_id}")
-    build_site(root, tabs, root / ROOT_OUTPUT_NAME, "iGaming 開發規範", "iGaming · 開發規範", links, groups)
+    build_site(root, tabs, root / ROOT_OUTPUT_NAME, ROOT_TITLE, "iGaming · Omniplay", links, groups,
+               line_nav=line_nav(root, None))
 
     # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成根 HTML 的頁籤
     for folder, out_name, site_title in PRODUCT_LINES:
@@ -779,7 +798,7 @@ def build_tree(root: Path, tabs, groups):
             links[f"../{filename}"] = ("ext", f"../{ROOT_OUTPUT_NAME}#{tab_id}")
         links["../其他/_README.md"] = ("ext", f"../{ROOT_OUTPUT_NAME}#overview")
         build_site(root / folder, line, root / folder / out_name, site_title,
-                   f"Slots · {folder}", links)
+                   f"iGaming · {folder}", links, line_nav=line_nav(root, folder))
 
 
 def publish_team():
