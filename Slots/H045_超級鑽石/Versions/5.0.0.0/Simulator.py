@@ -336,6 +336,11 @@ class SuperDiamond:
                     for per_reel in config["gold_count_weight"][scene]]
             for scene in ("bg", "fg")
         }
+        # 個別盤面表可自帶 gold_count_weight（例：v5 表 3 用競品原值），有設就覆蓋該場景的全域值
+        for name, raw in config["tables"].items():
+            if raw.get("gold_count_weight"):
+                self.gold_count[name] = [_cumulative([float(w) for w in per_reel])
+                                         for per_reel in raw["gold_count_weight"]]
         # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限（game_rule §9.10）
         self.max_win = self._card_multiplier_cap()
         self.fs_table = {int(k): v for k, v in config["free_spins"].items()}
@@ -365,6 +370,10 @@ class SuperDiamond:
         return self.fg_cap
 
     # --- 盤面 ---
+
+    def gold_key(self, table_name: str, scene: str) -> str:
+        """金框顆數權重的來源：盤面表自帶就用該表，否則用場景（bg／fg）全域值。"""
+        return table_name if table_name in self.gold_count else scene
 
     def gold_target(self, scene: str, reel: int) -> int:
         """抽出該輪這次要有幾顆金框（0~4）。"""
@@ -420,7 +429,7 @@ class SuperDiamond:
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
         mults = [[0] * 4 for _ in range(5)]
-        return symbols, mults, self.draw_gold(scene, symbols)
+        return symbols, mults, self.draw_gold(self.gold_key(table_name, scene), symbols)
 
     def evaluate(self, symbols: list[list[int]], mults: list[list[int]]):
         """回傳 (raw_pay, hit_positions, details, max_line_mult)。
@@ -582,7 +591,7 @@ class SuperDiamond:
                 fresh_rows[reel] = rows
 
             # 補牌後重抽金框顆數（game_rule §9.1.11）
-            result.gold_appeared += self.topup_gold(scene, symbols, gold, fresh_rows)
+            result.gold_appeared += self.topup_gold(self.gold_key(table_name, scene), symbols, gold, fresh_rows)
 
             if big_sources:
                 self.split_big_ghosts(table, symbols, mults, gold, big_sources, result)
