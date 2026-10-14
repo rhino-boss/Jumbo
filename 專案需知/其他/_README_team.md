@@ -10,7 +10,7 @@
 |---|---|---|
 | `Omniplay/` | **Omniplay** | 主流遊戲的規範 |
 | `Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](Landbase/導覽.md)、[系統機制](Landbase/系統機制.md)、[數學模型規範](Landbase/數學模型規範.md)、[送驗規範](Landbase/送驗規範.md)；彙整版為 `Landbase/landbase_specification.html` |
-| `Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（SC／GC）、Vietnam 等市場：[數學模型規範](Reskin/數學模型規範.md)；彙整版為 `Reskin/reskin_specification.html` |
+| `Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（GC／SC 雙幣）：[數學模型規範](Reskin/數學模型規範.md)；彙整版為 `Reskin/reskin_specification.html` |
 | `其他/` | — | 本總覽與 `_check_xlsx_style.py`（XLSX 格式檢查工具） |
 
 產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用 Omniplay 規範。
