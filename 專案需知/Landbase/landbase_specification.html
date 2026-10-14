@@ -206,7 +206,9 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <div class="tbl-wrap"><table><thead><tr><th>欄位</th><th>定義</th></tr></thead><tbody><tr><td>初始金額</td><td>彩池開出後重置的起始金額（Start Up Pool）</td></tr><tr><td>Startup%</td><td>押注中用來補足初始金額的比例；<code>Startup% = RTP − Increment</code></td></tr><tr><td>Increment</td><td>押注中滾入彩池、讓彩池累積上漲的比例（試算表的 Inrc）</td></tr><tr><td>RTP</td><td>該級距的彩金 RTP；<code>RTP = Startup% + Increment</code></td></tr></tbody></table></div>
 <ul><li>Grand ＋ Major RTP ＝ Link RTP 2.00%；表中兩種配置的 Increment 合計皆為 0.85%。</li><li>平均開出金額：<code>Average Jackpot Hit Value = 初始金額 ÷ Startup% × RTP</code>。例：Online Grand ＝ $500,000 ÷ 0.65% × 1.00% ≈ $769,231。</li><li>試算表只給初始金額、RTP 與 Increment，Startup% 依上式推得；試算表改版時三欄一起更新。</li><li>新手 <code>&gt;= $2</code> 的押注也會滾入 Increment，但新手不能中彩，所以新手的 Link RTP 為 0%。</li></ul>
 <h3 id="33-規則">3.3 規則</h3>
-<ul><li>「可滾 Inrc」表示該局押注會依 Increment 比例滾入彩池；「可拉 Link」表示該局有資格中 Grand／Major。兩者是不同的資格，對照見第 2.2 節與<a href="#" class="tab-link" data-tab="系統機制">系統機制</a>的系統限制。</li><li>Link RTP 與 Increment 由系統層依賭場設定，數學模型不得把彩金參數寫死在輪帶或 Paytable；模型只負責 Game RTP 與新手體驗，並在 <code>Game Description</code> 記錄採用的賭場與參數版本。</li><li>數學模型必須定義哪些派彩歸入 Link、哪些歸入 Game，不得重複計算。</li></ul>
+<ul><li>「可滾 Inrc」表示該局押注會依 Increment 比例滾入彩池；「可拉 Link」表示該局有資格中 Grand／Major。兩者是不同的資格：</li></ul>
+<div class="tbl-wrap"><table><thead><tr><th>狀態</th><th>押注</th><th>可拉 Link</th><th>可滾 Inrc</th></tr></thead><tbody><tr><td>新手</td><td><code>&lt; $2</code></td><td>否</td><td>否</td></tr><tr><td>新手</td><td><code>&gt;= $2</code></td><td>否</td><td>是</td></tr><tr><td>老手</td><td><code>&lt; $2</code></td><td>否</td><td>否</td></tr><tr><td>老手</td><td><code>&gt;= $2</code></td><td>是</td><td>是</td></tr></tbody></table></div>
+<ul><li>NB／EB 與 BF／SF 都適用上表；押注金額依 Omniplay 第 1.4.3 節判定（BF／SF 用購買價格反推的基礎押注）。系統限制另見<a href="#" class="tab-link" data-tab="系統機制">系統機制</a>。</li><li>Link RTP 與 Increment 由系統層依賭場設定，數學模型不得把彩金參數寫死在輪帶或 Paytable；模型只負責 Game RTP 與新手體驗，並在 <code>Game Description</code> 記錄採用的賭場與參數版本。</li><li>數學模型必須定義哪些派彩歸入 Link、哪些歸入 Game，不得重複計算。</li></ul>
 <h2 id="4-card-system-的層級調整">4. Card System 的層級調整</h2>
 <p>啟用 Card System 時，Oldhand 的押注層級只有兩套：</p>
 <pre><code>oldhand
