@@ -154,6 +154,11 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
   .toc a:not(.toc-doc){display:none}
   .toc a.toc-doc{padding:0; margin:0!important}
 }
+/* 表格、程式碼、時間軸：藏拉條，仍可橫向捲動（觸控板／觸控／滑鼠拖曳） */
+.tbl-wrap, pre, .tl-wrap{scrollbar-width:none; -ms-overflow-style:none}
+.tbl-wrap::-webkit-scrollbar, pre::-webkit-scrollbar, .tl-wrap::-webkit-scrollbar{display:none}
+.drag-x{cursor:grab}
+.drag-x.dragging{cursor:grabbing; user-select:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -294,6 +299,41 @@ document.querySelectorAll('.tab').forEach(function(b) {
   if (!h) return;
   var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
   if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
+})();
+// 寬表格／程式碼／時間軸：滑鼠按住左右拖曳捲動（拉條已隱藏）
+(function() {
+  var drag = null, moved = false;
+  function mark() {
+    document.querySelectorAll('.tbl-wrap, pre, .tl-wrap').forEach(function(el) {
+      el.classList.toggle('drag-x', el.scrollWidth > el.clientWidth + 1);
+    });
+  }
+  document.addEventListener('mousedown', function(e) {
+    var el = e.button === 0 && e.target.closest('.drag-x');
+    if (!el || e.target.closest('a')) return;
+    drag = { el: el, x: e.clientX, left: el.scrollLeft };
+    moved = false;
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.x;
+    if (!moved && Math.abs(dx) < 4) return;
+    moved = true;
+    drag.el.classList.add('dragging');
+    drag.el.scrollLeft = drag.left - dx;
+    e.preventDefault();
+  });
+  document.addEventListener('mouseup', function() {
+    if (drag) drag.el.classList.remove('dragging');
+    drag = null;
+  });
+  // 拖曳結束時不要觸發點擊
+  document.addEventListener('click', function(e) {
+    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+  window.addEventListener('resize', mark);
+  document.addEventListener('click', function() { setTimeout(mark, 0); });
+  mark();
 })();
 document.addEventListener('click', function(e) {
   var a = e.target.closest('a');
