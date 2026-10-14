@@ -1989,6 +1989,15 @@
           <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
           <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
           <li>驗證：inline script <code>node --check</code> 通過；Debug 開，NB×4、BF（12 轉 FG）、EB×40（Card On）後 Log 只剩載入／局號／RNG／BG（BF Entry）／Buy Feature／FG i/n／FG complete／Error 行；歷史紀錄 BG／FG 最大倍數正確、Clear 歸零；Log Clear 正常；RNG 行可點填入，BF 碼重跑 Log 逐行相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；Speed 最大（5），NB 手動 6 局、BF（12 轉 FG）每轉算分到 Spin 可按間隔 100.3～104.6 ms，Auto 每局間隔約 810 ms（0.1 秒＋原 Auto 間隔 700 ms）；BF RNG 碼重跑 Log 逐行相同；Simulation 10,000 局未觸發停頓、結果正常；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；NB 一局 Win 0.00→0.50→0.60（Log Win 0.60）；BF（12 轉 FG）Win 逐次消除累加、轉末套倍數後與每轉 Log 一致，最終 70.80＝FG complete Total；Credit 仍於轉末結算；BF RNG 碼重跑 Log 逐行相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；NB 一局（3 次消除）演出 Win 0.00→0.25→2.35→32.90，Previous 逐步 32.90→2.35→0.25→0.00、Next 逐步回到 32.90；Force FG 一轉 FG 演出 0.00→0.60→1.60→1.70→10.20，Previous／Next 逐步數值相同；Credit／Log 不受影響；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本作原本即如此，僅驗證未改程式）。（10/13）</li>
+          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回 Base Game；Previous／Next 多一步「Back to BG」，往前仍可看 FG 最後一轉。（10/13）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；NB 自然觸發（RNG 重跑）BG Win 0.25，FG 開始 0.25→第 1 轉 0.60→2.00，FG 結束 20.40＝整局總得分；BF 入場盤 Win 0.35，FG 開始 0.35，結束 20.75＝整局總得分；兩者 FG 結束盤面與觸發局最終盤面（BF 入場盤）一致、Feature Status＝Base Game；Previous／Next 逐步 20.40→Free Game 16.40→回 Base Game 20.40；下一局 Win 從 0.00 起；RNG 碼重跑結果相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -2665,7 +2674,7 @@
       setBetModeButtonLabel(buyFeatureBtn, `${zhLabels ? "購買特色" : "Buy Feature"} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
       refreshBetModeLabels();
       updateSpinButtonState();
-      updateFeatureBar(state.activeSpin, state.activeRound);
+      if (state.fgBoardRestored) updateFeatureBar(null); else updateFeatureBar(state.activeSpin, state.activeRound);   // FG 結束已回 BG 時維持 Base Game
       renderLineList(state.activeSpin);
       renderSpinResultList(state.activeSpin);
       if (gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
@@ -2759,6 +2768,7 @@
       if (!snapshot) return;
       state.stepViewIndex = index;
       snapshot.render();
+      if (Number.isFinite(snapshot.winValue)) setText(winValueEl, formatDisplayMoney(snapshot.winValue));   // Previous／Next：Win 顯示該步演出時的累計得分（只改顯示，不動 state.displayWin／Credit）
       updateDebugControls();
     }
 
@@ -2793,7 +2803,7 @@
 
     async function waitPlaybackStep(label, fallbackMs, snapshotRenderer = null) {
       if (typeof snapshotRenderer === "function") {
-        state.stepSnapshots.push({ label, render: snapshotRenderer });
+        state.stepSnapshots.push({ label, render: snapshotRenderer, winValue: Number(state.displayWin) || 0 });   // 記下演出到這步時 Win 的值
         state.stepViewIndex = state.stepSnapshots.length - 1;
         updateDebugControls();
       }
@@ -4075,6 +4085,7 @@
     }
 
     function renderAll(round = null, spin = null) {
+      state.fgBoardRestored = false;
       state.activeRound = round;
       state.activeSpin = spin;
       updateSessionCards();
@@ -4157,6 +4168,7 @@
         await waitPlaybackStep("Final", 16, renderFinal);
         return;
       }
+      let liveSpinPay = 0;   // 本轉已演出的消除得分（倍數於轉末套用）；只影響 Win 顯示，不動 Credit／結果
       for (let stepIndex = 0; stepIndex < spin.board_steps.length; stepIndex += 1) {
         const step = spin.board_steps[stepIndex];
         const beforeMultiplier = stepIndex === 0
@@ -4169,6 +4181,9 @@
           setText(messageBarEl, payMessage);
         };
         renderPay();
+        liveSpinPay += Number(step.cascade_pay) || 0;
+        state.displayWin = state.displayRoundWin + liveSpinPay;   // Win 即時累加：每次消除得分就加上去
+        setText(winValueEl, formatDisplayMoney(state.displayWin));
         writeMessage(payMessage);
         await waitPlaybackStep(`Cascade ${step.cascade_index} pay`, 360, renderPay);
         const multiplierMessage = `Cascade ${step.cascade_index} | +Multiplier x${step.added_multiplier}`;
@@ -4265,6 +4280,16 @@
             appendLiveLog(`FG complete | Total ${formatMoney(round.free_total_win)} (${(round.free_total_win / roundBaseBet(round)).toFixed(2)}x)`, "result");
             window.demogameHistory?.record({ fg: round.free_total_win / roundBaseBet(round) });   // 共用歷史紀錄：FG 最大倍數（整段 FG ÷ 底注）
             writeMessage(`FG finished | Total ${formatMoney(round.total_win)}`);
+            // 規範 §4：FG 結束回到 BG，盤面還原成觸發局 BG 最終盤面（BF 為入場盤），Feature Status 回 Base Game；只改顯示
+            const restoreMessage = `FG finished | Total ${formatMoney(round.total_win)}`;
+            const renderBgRestore = () => {
+              renderBoard(clone(round.spins[0].board_final));
+              updateFeatureBar(null);
+              setText(messageBarEl, restoreMessage);
+            };
+            state.fgBoardRestored = true;
+            renderBgRestore();
+            await waitPlaybackStep("Back to BG", 16, renderBgRestore);
           } else {
             const nextSpin = round.spins[state.pendingSpinIndex];
             renderAll(round, spin);
@@ -4300,6 +4325,7 @@
             state.pendingSpinIndex = 0;
           }
         }
+        await window.demogameRoundPause?.();   // 共用：每轉（BG 局／每轉 FG）算完分後固定停 0.1 秒，不受 Speed 影響，之後才放行下一轉／Auto
       } catch (error) {
         spinFailed = true;
         state.autoEnabled = false;
@@ -4533,7 +4559,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261013f"></script>
+  <script src="../demogame_common.js?v=20261013i"></script>
 </body>
 
 </html>

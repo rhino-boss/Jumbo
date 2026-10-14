@@ -231,6 +231,12 @@
             <li>Bet10：R1 空白子表 R2 停在 1／5 的權重提高，E X 0／E X 1／E X 5／E X 空 合計 2.43% → 3.13%（同競品），用 R1 有數字的小獎換，Hit 不變。（10/13）</li>
             <li>R4：沒得分時出倍數（每局）約 30% → 16%；有得分時 R4 是倍數 Bet1 15.3% → 21.5%、Bet5 41.2% → 42.1%、Bet10 22.9% → 28.0%（同競品）。卡片等比調回 RTP 92.0000%，EB 卡片依新 NB 重算、EB 輪帶不變。（10/13）</li>
             <li>Setting 的 Version 可切換 5.0.0.0／4.1.0.0／4.0.0.0／3.0.0.0／1.0.0.2；頁尾最後調性更新改為 2026-10-13 15:40。（10/13）</li>
+            <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
+            <li>驗證：最高 Speed＋Auto 量測算分到下一轉間隔 ≥ 100 ms；RNG 重跑結果相同、Simulation 仍即時、無 console 錯誤（本作無 FG）。（10/13）</li>
+            <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。本作無消除／FG：停輪揭曉數字分即顯示，R4 倍數／RESPIN／幸運轉盤揭曉後再更新為總分。（10/13）</li>
+            <li>驗證：取樣 Win 依演出分段上升、局末等於 Log 的 Win；Credit、統計、RNG 重跑結果不變，無 console 錯誤。（10/13）</li>
+            <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
+            <li>驗證：逐步回看 Win 依步驟升降、最後一步等於局末得分；Credit、統計、Log、RNG 不變，無 console 錯誤（本作無 FG／消除，步驟為停輪 → 倍數／RESPIN／轉盤 → 結果）。（10/13）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -749,6 +755,8 @@
     if (mid) mid.classList.toggle("h014-hit", on);
     if (state.view.reels[col]) state.view.reels[col].hit = on;
   }
+  // 得分（Win）即時顯示：演出每揭曉一段得分就更新顯示（只改顯示時機；Credit／統計仍在局末結算，局末 updateStats 以 state.lastWin 收尾）
+  function showLiveWin(v) { $("winValue").textContent = fmt(v); if (state.view) state.view.liveWin = v; }   // 同步記入 view，Previous／Next 逐步檢視時顯示該步累計得分
   function setScore(main, sub, pop = false) {
     state.view.score = [main, sub];
   }
@@ -932,6 +940,7 @@
     const sp = speed();
     hideWheel();
     state.snapshots = []; state.snapshotIndex = -1;
+    state.view.liveWin = 0;   // BG 局累計得分基準 0（只記入 view，不改顯示）
     $("respinPill").classList.add("hidden");
     setStatus("");
     setScore("", "Spinning…");
@@ -942,6 +951,7 @@
     const jobs = [0, 1, 2].map((c) => spinReel(c, sh.reels[c], res.stops[c], null, base + (3 - c) * gap));
     await Promise.all([...jobs, r4Job]);
     setScore(fmt(res.s1), "Number Win（R1～R3 中線串接）", res.s1 > 0);
+    showLiveWin(res.s1);
     if (res.s1 > 0) [0, 1, 2].forEach((c) => { if (res.syms[c] !== S_E) hitReel(c); });
     await r4Job;
     if (res.r4Sym !== S_E) hitReel(3);
@@ -955,6 +965,7 @@
         setScore(`${fmt(res.s1)} × ${m}`, `特色轉輪 ${code(res.r4Sym)}：數字分 × ${m}`, true);
         await wait(650 / sp);
         setScore(fmt(res.win), `${fmt(res.s1)} × ${m} = ${fmt(res.win)}`, true);
+        showLiveWin(res.win);
       } else {
         setScore("0", `${code(res.r4Sym)}：數字分為 0，倍數無效`);
       }
@@ -975,6 +986,7 @@
       hitReel(3);
       $("respinValue").textContent = fmt(rs.add);
       setScore(fmt(res.win), `重轉前 ${fmt(res.s1)} ＋ 重轉後 ${fmt(rs.add)} = ${fmt(res.win)}${rs.fallback ? "（固定組合）" : ""}`, true);
+      showLiveWin(res.win);
       snapshot("Respin result");
     } else if (res.wheelIdx >= 0) {
       setStatus(res.r4Sym === S_SC_R ? ["Red BONUS → LUCKY WHEEL", "紅 BONUS → LUCKY WHEEL"] : ["Green BONUS → LUCKY WHEEL", "綠 BONUS → LUCKY WHEEL"]);
@@ -986,11 +998,13 @@
       $("wheelResult").textContent = text;
       state.view.wheel.result = text;
       setScore(fmt(res.win), `數字分 ${fmt(res.s1)} ＋ 轉盤 ${text} = ${fmt(res.win)}`, true);
+      showLiveWin(res.win);
       snapshot("Lucky wheel");
       await wait(1100 / sp);
       hideWheel();
     }
     setMessage(res.win > 0 ? [`WIN ${fmt(res.win)} (${fmtX(res.win / bet)} × bet)`, `得分 ${fmt(res.win)}（${fmtX(res.win / bet)} × 底注）`] : ["No Win", "未中獎"], res.win > 0 ? "win" : "");
+    state.view.liveWin = res.win;   // 最後一步＝局末得分
     snapshot("Result");
   }
 
@@ -1002,6 +1016,7 @@
     $("messageBar").className = `message-bar ${view.message[1]}`.trim();
     if (view.wheel) showWheel(view.wheel.values, view.wheel.sym, view.wheel.idx, view.wheel.rotation, view.wheel.result);
     else hideWheel();
+    if (view.liveWin != null) $("winValue").textContent = fmt(view.liveWin);   // 只改 Win 顯示；Credit／統計不動
   }
   function showSnapshot(index) {
     if (!state.snapshots.length || state.busy) return;
@@ -1167,6 +1182,7 @@
     window.demogameHistory?.record({ bg: res.win / bet });   // 共用歷史紀錄：BG 最大倍數（本作無 FG）
     renderDebug(round, ctx);
     updateStats();
+    await window.demogameRoundPause?.();   // 算完分固定停 0.1 秒（共用，不受 Speed 影響）再放行下一轉／Auto
     setBusy(false);
     if (state.auto) setTimeout(() => { if (state.auto) play(); }, 220 / speed());
   }
@@ -1381,7 +1397,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261013f"></script>
+  <script src="../demogame_common.js?v=20261013i"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

@@ -798,15 +798,12 @@ const data = {
       "enabled": true
     },
     "multiplier_cap": {
-      "oldhand": {
-        "bg": 20000,
-        "fg": 20000
-      }
+      "bg": 20000,
+      "fg": 20000
     }
   },
   "rtp_label": 92,
   "source_multiplier_xlsx": "H027192.xlsx",
-  "bet_tier_scope": "medium_bet",
   "excel_version": "7.4.0.0",
   "base_excel_version": "7",
   "base_config": "config.js"

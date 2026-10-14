@@ -20,12 +20,11 @@ import pandas as pd
 # silently reuse a kernel compiled with older math parameters.
 _cache_base_dir = Path(os.environ.get("H027_BASE_DIR", Path(__file__).resolve().parent))
 _cache_digest = hashlib.sha256()
-_cache_rtp_name = os.environ.get("H027_CONFIG_RTP_FILE", "config_92A.js")
-_cache_variant = re.search(r"config_\d+([A-Z])", _cache_rtp_name)
+_cache_rtp_name = os.environ.get("H027_CONFIG_RTP_FILE", "config_92.js")
 for _cache_name in (
     _cache_rtp_name,
-    # 基礎 Config（config_A.js／config_B.js）的輪帶與賠率也會被烤進核心，一併納入快取鍵
-    f"config_{_cache_variant.group(1)}.js" if _cache_variant else "",
+    # 基礎 Config（config.js）的輪帶與賠率也會被烤進核心，一併納入快取鍵
+    "config.js",
 ):
     if not _cache_name:
         continue
@@ -33,23 +32,21 @@ for _cache_name in (
     _cache_digest.update(str(_cache_path.resolve()).encode("utf-8"))
     if _cache_path.is_file():
         _cache_digest.update(_cache_path.read_bytes())
-# Numba 會把模組層級的陣列（卡片權重、Profile 分流結果等）當成編譯期常數烤進核心，
-# 所以快取鍵也必須包含會改變這些陣列的執行參數；否則 Newbie 會沿用 Oldhand 編好的核心
-# （2026-09-29 實際發生：Newbie 驗證跑出 Oldhand 的 FG 分布）。
+# Numba 會把模組層級的陣列（卡片權重等）當成編譯期常數烤進核心，
+# 所以快取鍵也必須包含會改變這些陣列的執行參數，否則會沿用舊參數編好的核心。
 for _env_key in ("H027_CONFIG_FILE", "H027_BET_MODE", "H027_BASE_BET",
-                 "H027_CARD_SYSTEM_ENABLED", "H027_CARD_SYSTEM_IS_NEWBIE"):
+                 "H027_CARD_SYSTEM_ENABLED"):
     _cache_digest.update(f"{_env_key}={os.environ.get(_env_key, '')}".encode("utf-8"))
 # 一律覆寫、不用 setdefault：批次父程序會把自己的 NUMBA_CACHE_DIR 透過環境變數傳給子程序，
-# setdefault 會讓所有子程序共用父程序那一份快取，第一個子程序烤進去的卡片陣列就被後面所有批次沿用
-# （2026-09-29 實際發生：Newbie 跑成 Oldhand、BF Card-On 跑成 Card-Off）。
+# setdefault 會讓所有子程序共用父程序那一份快取，第一個子程序烤進去的卡片陣列就被後面所有批次沿用。
 os.environ["NUMBA_CACHE_DIR"] = str(Path(tempfile.gettempdir()) / "h027_numba" / _cache_digest.hexdigest()[:16])
 
 from numba import njit
 
 # ===== User settings =====
 
-# 2026-10-13：基礎 Config 依 Variant 拆成 config_A.js／config_B.js，由 RTP Config 的
-# base_config 欄位自動指定；CONFIG_FILE 在載入後改為實際使用的基礎 Config 檔名。
+# 基礎 Config 由 RTP Config 的 base_config 欄位指定（config.js）；
+# CONFIG_FILE 在載入後改為實際使用的基礎 Config 檔名。
 CONFIG_FILE = "config.js"
 CONFIG_RTP_FILE = "config_92.js"
 TOTAL_ROUNDS = 10**5
@@ -57,15 +54,8 @@ BET_MODE = 0
 BET_MULTI = 1
 BASE_BET = 1.0
 CARD_SYSTEM_ENABLED = True
-CARD_SYSTEM_IS_NEWBIE = False
 THREADS = max(1, max(8, (os.cpu_count() or 2) - 2))
 RANDOM_SEED = None
-# OP Jackpot（Slots/OP Jackpot/JP0100A/B/C.xlsm × Parameter_List Option）：
-# JACKPOT_FILE = "" 關閉；"A"/"B"/"C" 指定；"AUTO" 依 Profile／押注層級（Newbie→A、Oldhand 小 Bet→C、中／大 Bet→B）。
-# 觸發機率以 RTP 工作簿 OP Jackpot 頁的 SCR 換算（每個出現 ≥1 顆 C1 的 Spin 判定一次）。
-# BATCH_RUNS 可用 "jackpot_file"／"jackpot_option" 逐批指定。
-JACKPOT_FILE = ""
-JACKPOT_OPTION = 28
 
 RUN_ALL_COMBINATIONS = True
 OUTPUT_REPORT = True
@@ -74,9 +64,9 @@ SHOW_CONSOLE_DETAIL = False
 
 RUN_SINGLE_SPIN_DEBUG = False
 BATCH_RUNS = [
-    # 送驗：Normal Bet、卡片系統開啟（Oldhand）；92 以中 Bet（$2）、94 以小 Bet（$1）判定押注層級
-    {"config_file": "config.js", "config_rtp_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 2.0},
-    {"config_file": "config.js", "config_rtp_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "card_system_is_newbie": False, "base_bet": 1.0},
+    # Normal Bet，卡片系統開啟
+    {"config_file": "config.js", "config_rtp_file": "config_92.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "base_bet": 1.0},
+    {"config_file": "config.js", "config_rtp_file": "config_94.js", "bet_mode": 0, "total_rounds": 10**9, "card_system_enabled": True, "base_bet": 1.0},
 ]
 
 THRESHOLD_RECORD = np.array(
@@ -164,13 +154,8 @@ BET_MODE = int(os.environ.get("H027_BET_MODE", BET_MODE))
 BET_MULTI = float(os.environ.get("H027_BET_MULTI", BET_MULTI))
 BASE_BET = float(os.environ.get("H027_BASE_BET", BASE_BET))
 CARD_SYSTEM_ENABLED = parse_env_bool("H027_CARD_SYSTEM_ENABLED", CARD_SYSTEM_ENABLED)
-CARD_SYSTEM_IS_NEWBIE = parse_env_bool("H027_CARD_SYSTEM_IS_NEWBIE", CARD_SYSTEM_IS_NEWBIE)
 THREADS = int(os.environ.get("H027_THREADS", THREADS))
 RANDOM_SEED = int(os.environ["H027_RANDOM_SEED"]) if os.environ.get("H027_RANDOM_SEED") else RANDOM_SEED
-JACKPOT_FILE = os.environ.get("H027_JACKPOT_FILE", JACKPOT_FILE).strip().upper()
-JACKPOT_OPTION = int(os.environ.get("H027_JACKPOT_OPTION", JACKPOT_OPTION))
-if JACKPOT_FILE not in ("", "A", "B", "C", "AUTO"):
-    raise ValueError(f"JACKPOT_FILE must be '', 'A', 'B', 'C' or 'AUTO', got {JACKPOT_FILE!r}")
 RUN_ALL_COMBINATIONS = parse_env_bool("H027_RUN_ALL_COMBINATIONS", RUN_ALL_COMBINATIONS)
 OUTPUT_REPORT = parse_env_bool("H027_OUTPUT_REPORT", OUTPUT_REPORT)
 SHOW_CONSOLE_SUMMARY = parse_env_bool("H027_SHOW_CONSOLE_SUMMARY", SHOW_CONSOLE_SUMMARY)
@@ -215,9 +200,7 @@ def load_js_config(path):
 
 CFG_RTP = load_js_config(CONFIG_RTP_PATH)
 
-# 2026-10-13：依模擬程式規範 2.1，基礎數學有 A／B 兩套時拆成 config_A.js／config_B.js，
-# RTP／Variant Config 只放卡片權重等 RTP 欄位，以 base_config 指向對應的基礎 Config。
-# 舊的合併格式（沒有 base_config）仍可直接載入。
+# RTP Config 只放卡片權重等 RTP 欄位，以 base_config 指向基礎 Config。
 _base_name = CFG_RTP.get("base_config")
 CFG_BASE = load_js_config(BASE_DIR / _base_name) if _base_name else None
 if _base_name:
@@ -257,22 +240,13 @@ MODEL_STATUS = str(CFG.get("model_status", "unknown"))
 PENDING_MATH_ITEMS = tuple(str(item) for item in CFG.get("pending_math_items", []))
 
 MODE_NORMALBET = int(CFG["mode_normalbet"])
-MODE_EXTRABET = int(CFG["mode_extrabet"])
-MODE_FEATUREBUY = int(CFG["mode_featurebuy"])
 SUPPORTED_BET_MODES = tuple(int(value) for value in CFG["supported_bet_modes"])
 DEFAULT_COIN_IN = int(CFG["default_coin_in"])
 NORMALBET = int(CFG["normalbet"])
-EXTRABET = int(CFG["extrabet"])
-FEATUREBUY = int(CFG["featurebuy"])
 DENOM = float(CFG["denom"])
-BET_TIER_THRESHOLDS = CFG.get("bet_tier_thresholds", {"small_bet_lt": 2, "medium_bet_lte": 100})
-SMALL_BET_LT = float(BET_TIER_THRESHOLDS["small_bet_lt"])
-MEDIUM_BET_LTE = float(BET_TIER_THRESHOLDS["medium_bet_lte"])
-LINK_ENABLED_BY_CONFIG = bool(CFG.get("link", {}).get("enabled", False))
 if BASE_BET <= 0:
     raise ValueError(f"base_bet must be greater than zero, got {BASE_BET}")
 BET_MULTI = BASE_BET / (DEFAULT_COIN_IN * NORMALBET * DENOM)
-EXTRA_FG_PROBABILITY_MULTIPLIER = float(CFG["extra_fg_probability_multiplier"])
 WINDOW_SIZE = int(CFG["window_size"])
 REEL_NUM = int(CFG["reel_num"])
 MAX_FREE_SPINS = int(CFG["max_free_spins"])
@@ -306,9 +280,8 @@ REEL_LENGTHS = ORIGINAL_REEL_LENGTHS.copy()
 STRIP_NAMES = list(CFG["strip_names"])
 TABLE_BY_NAME = {name: index for index, name in enumerate(STRIP_NAMES)}
 
-PROFILE_NAMES = ["normal", "featurebuy"]
-PROFILE_BY_MODE = {MODE_NORMALBET: 0, MODE_EXTRABET: 0, MODE_FEATUREBUY: 1}
-FEATUREBUY_PROFILE_INDEX = 1
+PROFILE_NAMES = ["normal"]
+PROFILE_BY_MODE = {MODE_NORMALBET: 0}
 PARAMETER = CFG["parameter"]
 
 PROFILE_COUNT = len(PROFILE_NAMES)
@@ -365,7 +338,6 @@ for profile_index, profile_name in enumerate(PROFILE_NAMES):
             USE_SUPER_WEIGHT[profile_index, table_id] = USE_SUPER_WEIGHT[profile_index, fallback_table_id]
             DROP_SUPER_WEIGHT[profile_index, table_id] = DROP_SUPER_WEIGHT[profile_index, fallback_table_id]
 
-FEATUREBUY_TABLE_ID = BASE_REEL_TABLE_IDS[FEATUREBUY_PROFILE_INDEX, 0]
 
 CARD_SYSTEM = CFG.get("card_system", {})
 CARD_SYSTEM_ENABLED = CARD_SYSTEM_ENABLED and bool(CARD_SYSTEM.get("enabled", False))
@@ -376,30 +348,8 @@ CARD_TYPE_RANGE = 0
 CARD_TYPE_FREE_GAME = 1
 CARD_PROFILE_NB_BG = 0
 CARD_PROFILE_NB_FG = 1
-CARD_PROFILE_EB_BG = 2
-CARD_PROFILE_EB_FG = 3
-CARD_PROFILE_BUY_FEATURE = 4
 
-if BASE_BET < SMALL_BET_LT:
-    ACTIVE_CARD_BET_TIER = "small_bet"
-elif BASE_BET <= MEDIUM_BET_LTE:
-    ACTIVE_CARD_BET_TIER = "medium_bet"
-else:
-    ACTIVE_CARD_BET_TIER = "big_bet"
-
-
-def card_root(card_system):
-    """Player Profile 分流。Oldhand 的權重直接放在 card_system 底層；
-    Newbie 放在 card_system["newbie"]。舊 Config 沒有 newbie 區塊時退回 Oldhand。"""
-    if CARD_SYSTEM_IS_NEWBIE:
-        newbie = card_system.get("newbie")
-        if isinstance(newbie, dict) and newbie:
-            return newbie
-    return card_system
-
-
-CARD_ROOT = card_root(CARD_SYSTEM)
-ACTIVE_CARD_PROFILE = "newbie" if CARD_ROOT is not CARD_SYSTEM else "oldhand"
+CARD_ROOT = CARD_SYSTEM
 
 
 def get_card_profile_cards(mode, segment):
@@ -408,7 +358,7 @@ def get_card_profile_cards(mode, segment):
 
 
 def get_bg_trigger_cap(mode):
-    mode_data = card_root(CFG_RTP.get("card_system", {})).get(mode, {})
+    mode_data = CFG_RTP.get("card_system", {}).get(mode, {})
     cards = mode_data.get("weight_bg", []) if isinstance(mode_data, dict) else []
     caps = [float(card["max"]) for card in cards if card.get("type", "range") == "range" and float(card.get("weight", 0)) > 0]
     return max(caps) if caps else None
@@ -417,15 +367,10 @@ def get_bg_trigger_cap(mode):
 CARD_PROFILE_LISTS = [
     get_card_profile_cards("normal_bet", "weight_bg"),
     get_card_profile_cards("normal_bet", "weight_fg"),
-    get_card_profile_cards("extra_bet", "weight_bg"),
-    get_card_profile_cards("extra_bet", "weight_fg"),
-    get_card_profile_cards("buy_feature", "weight_fg"),
 ]
 CARD_MODE_ENABLED = np.array(
     [
         1 if CARD_ROOT.get("normal_bet", {}).get("enabled", True) else 0,
-        1 if CARD_ROOT.get("extra_bet", {}).get("enabled", True) else 0,
-        1 if CARD_ROOT.get("buy_feature", {}).get("enabled", True) else 0,
     ],
     dtype=np.int64,
 )
@@ -449,16 +394,16 @@ for card_profile_index, cards in enumerate(CARD_PROFILE_LISTS):
             CARD_BG_TRIGGER_CAP[card_profile_index] = max(CARD_BG_TRIGGER_CAP[card_profile_index], CARD_MAX[card_profile_index, card_index])
     CARD_COUNTS[card_profile_index] = len(cards)
 if os.environ.get("H027_DEBUG_CARDS") == "1":
-    # 診斷用：印出真正餵給模擬迴圈的卡片陣列，確認 Player Profile 分流生效。
-    print(f"[cards] config_rtp_file={CONFIG_RTP_FILE}  is_newbie={CARD_SYSTEM_IS_NEWBIE}" f"  active_profile={ACTIVE_CARD_PROFILE}  enabled={CARD_SYSTEM_ENABLED}")
-    for _i, _name in enumerate(("NB_BG", "NB_FG", "EB_BG", "EB_FG", "BF_FG")):
+    # 診斷用：印出真正餵給模擬迴圈的卡片陣列。
+    print(f"[cards] config_rtp_file={CONFIG_RTP_FILE}  enabled={CARD_SYSTEM_ENABLED}")
+    for _i, _name in enumerate(("NB_BG", "NB_FG")):
         _n = int(CARD_COUNTS[_i])
         _w = [int(CARD_WEIGHT_CUM[_i, _j] - (CARD_WEIGHT_CUM[_i, _j - 1] if _j else 0)) for _j in range(_n)]
         _nz = [_j for _j in range(_n) if _w[_j] > 0]
         print(f"[cards]   {_name}: 張數 {_n:>3}  非零 {len(_nz):>3}" f"  最高 max {max((CARD_MAX[_i, _j] for _j in _nz), default=0):>9.1f}" f"  總權重 {sum(_w):,}")
 
 if CARD_SYSTEM_ENABLED:
-    for profile_index in (CARD_PROFILE_NB_BG, CARD_PROFILE_EB_BG):
+    for profile_index in (CARD_PROFILE_NB_BG,):
         has_free_game = any(CARD_TYPES[profile_index, index] == CARD_TYPE_FREE_GAME and CARD_WEIGHT_CUM[profile_index, index] > (CARD_WEIGHT_CUM[profile_index, index - 1] if index else 0) for index in range(CARD_COUNTS[profile_index]))
         if has_free_game and CARD_BG_TRIGGER_CAP[profile_index] < 0:
             raise ValueError("Enabled free_game card requires a positive-weight BG range card for BG Trigger Cap")
@@ -467,32 +412,16 @@ if CARD_SYSTEM_ENABLED:
 def calc_coin_in(bet_mode, bet_multi):
     if bet_mode == MODE_NORMALBET:
         return DEFAULT_COIN_IN * NORMALBET * bet_multi
-    if bet_mode == MODE_EXTRABET:
-        return DEFAULT_COIN_IN * EXTRABET * bet_multi
-    if bet_mode == MODE_FEATUREBUY:
-        return DEFAULT_COIN_IN * FEATUREBUY * bet_multi
     raise ValueError(f"Unsupported bet mode: {bet_mode}")
 
 
 def build_bet_context(bet_mode, bet_multi):
     coin_in = float(calc_coin_in(bet_mode, bet_multi))
     bet_amount = coin_in * DENOM
-    feature_price_multiplier = FEATUREBUY if bet_mode == MODE_FEATUREBUY else None
-    bet_tier_amount = bet_amount / feature_price_multiplier if feature_price_multiplier else bet_amount
-    if bet_tier_amount < SMALL_BET_LT:
-        bet_tier = "small_bet"
-    elif bet_tier_amount <= MEDIUM_BET_LTE:
-        bet_tier = "medium_bet"
-    else:
-        bet_tier = "big_bet"
     return {
         "bet_multi": float(bet_multi),
-        "feature_price_multiplier": feature_price_multiplier,
         "base_bet": float(DEFAULT_COIN_IN * NORMALBET * bet_multi * DENOM),
         "bet_amount": bet_amount,
-        "bet_tier_amount": bet_tier_amount,
-        "bet_tier": bet_tier,
-        "link_enabled": LINK_ENABLED_BY_CONFIG and bet_tier != "small_bet",
         # H027 has no product Max Win cap. The 2500 value limits one C2/C3
         # ball, not the sum of a round, so the runtime cap is game-defined.
         "max_multiplier_bg": "by_game",
@@ -501,95 +430,7 @@ def build_bet_context(bet_mode, bet_multi):
     }
 
 
-# ========== OP Jackpot ==========
-# JP1／JP2（GRAND／MAJOR）：累進彩金，派彩 = 池底 + 累積 Increment，命中歸零；啟動 RTP = RTP − Increment。
-# JP3／JP4（MINOR／MINI）：固定倍數，派彩 = 倍數 × 實際押注。
-# 真實觸發率由各獎項啟動 RTP 反推，再除以 SCR（每付費局出現 ≥1 顆 C1 的 Spin 數）得到每次判定的條件機率。
-# 檔位（Parameter_List 的 Bet 欄）固定由押注模式的價格倍數決定：NB 1、EB 2、BF 100。
-# JP 派彩不計入 rtp_total（Game RTP），另列 rtp_jp_link／rtp_jp_bonus。
-def resolve_jackpot_file(bet_context):
-    if JACKPOT_FILE != "AUTO":
-        return JACKPOT_FILE
-    if CARD_SYSTEM_IS_NEWBIE:
-        return "A"
-    return "C" if bet_context["bet_tier"] == "small_bet" else "B"
-
-
-def load_jackpot_params(bet_mode, bet_multi):
-    off = (0, np.zeros(4), np.zeros(2), np.zeros(2), np.zeros(2), {})
-    jp_file = resolve_jackpot_file(build_bet_context(bet_mode, bet_multi))
-    if not jp_file:
-        return off
-    import openpyxl as _oxl
-
-    jp_path = BASE_DIR.parent / "OP Jackpot" / f"JP0100{jp_file}.xlsm"
-    if not jp_path.exists():
-        raise FileNotFoundError(f"Jackpot workbook not found: {jp_path}")
-    bet_key = float(FEATUREBUY if bet_mode == MODE_FEATUREBUY else (EXTRABET if bet_mode == MODE_EXTRABET else NORMALBET))
-    wb = _oxl.load_workbook(jp_path, read_only=True, data_only=True)
-    row_hit, available = None, []
-    for row in wb["Parameter_List"].iter_rows(values_only=True):
-        try:
-            opt, bet = int(row[0]), float(row[4])
-        except (TypeError, ValueError, IndexError):
-            continue
-        if opt == JACKPOT_OPTION:
-            available.append(bet)
-            if abs(bet - bet_key) < 1e-9:
-                row_hit = row
-                break
-    wb.close()
-    if row_hit is None:
-        raise ValueError(f"JP0100{jp_file} Parameter_List has no row for option {JACKPOT_OPTION} bet {bet_key:g}; available {sorted(set(available))}")
-    denom = float(row_hit[2])
-    rtp = [float(row_hit[5 + i] or 0.0) for i in range(4)]
-    incr = [float(row_hit[9 + i] or 0.0) for i in range(4)]
-    seeds_dollar = [float(row_hit[13] or 0.0), float(row_hit[14] or 0.0)]
-    x34 = [float(row_hit[15] or 0.0), float(row_hit[16] or 0.0)]
-    startup = [max(0.0, rtp[i] - incr[i]) for i in range(4)]
-
-    # SCR：RTP 工作簿 OP Jackpot 頁，依 Bet Mode／Profile 選列（BF 兩個 Profile 共用）
-    rtp_xlsx = BASE_DIR / "Source" / (Path(CONFIG_RTP_FILE).stem.replace("config_", "H0271") + ".xlsx")
-    wb = _oxl.load_workbook(rtp_xlsx, read_only=True, data_only=True)
-    scr_rows = {}
-    for row in wb["OP Jackpot"].iter_rows(values_only=True):
-        cells = [c for c in row if c is not None]
-        if len(cells) >= 2 and str(cells[0]) in ("NB_Newbie", "NB", "EB_Newbie", "EB", "BF"):
-            scr_rows[str(cells[0])] = float(cells[1])
-    wb.close()
-    if bet_mode == MODE_FEATUREBUY:
-        scr_key = "BF"
-    else:
-        scr_key = ("EB" if bet_mode == MODE_EXTRABET else "NB") + ("_Newbie" if CARD_SYSTEM_IS_NEWBIE else "")
-    if scr_rows.get(scr_key, 0) <= 0:
-        raise ValueError(f"OP Jackpot sheet in {rtp_xlsx.name} has no positive SCR row {scr_key!r}")
-    ssr = scr_rows[scr_key] / 10_000_000_000.0
-
-    bet_cr = float(calc_coin_in(bet_mode, bet_multi))
-    seed_cr = [seeds_dollar[0] / denom, seeds_dollar[1] / denom]
-    p_true = [
-        startup[0] * bet_cr / seed_cr[0] if seed_cr[0] > 0 else 0.0,
-        startup[1] * bet_cr / seed_cr[1] if seed_cr[1] > 0 else 0.0,
-        startup[2] / x34[0] if x34[0] > 0 else 0.0,
-        startup[3] / x34[1] if x34[1] > 0 else 0.0,
-    ]
-    p_cond = np.array([p / ssr for p in p_true], dtype=np.float64)
-    if p_cond.sum() > 1.0:
-        raise ValueError(f"Jackpot conditional probabilities exceed 1 (sum={p_cond.sum():.6f})")
-    info = {
-        "file": jp_file, "option": JACKPOT_OPTION, "bet_key": bet_key, "rtp": rtp, "increment": incr, "startup": startup,
-        "p_true": p_true, "p_cond": p_cond.tolist(), "scr_key": scr_key, "scr": scr_rows[scr_key],
-        "link_rtp_setting": rtp[0] + rtp[1], "link_startup_setting": startup[0] + startup[1], "bonus_rtp_setting": startup[2] + startup[3], "increment_rate": incr[0] + incr[1],
-    }
-    return (1, np.cumsum(p_cond), np.array(seed_cr, dtype=np.float64),
-            np.array([incr[0] * bet_cr, incr[1] * bet_cr], dtype=np.float64), np.array(x34, dtype=np.float64), info)
-
-
 def format_bet_mode_label(bet_mode):
-    if bet_mode == MODE_EXTRABET:
-        return "Extra Bet"
-    if bet_mode == MODE_FEATUREBUY:
-        return "Buy Feature"
     return "Normal Bet"
 
 
@@ -808,8 +649,6 @@ def generate_board(table_id, profile_index):
         starts[reel] = start
         for visible_row in range(WINDOW_SIZE):
             board[visible_row, reel] = STRIPS[table_id, (start + visible_row) % length, reel]
-    # Buy Feature entry is generated by BF_Symbol like every other reel table.
-    # Its stop weights expose one non-paying screen with one C1 on R1-R4.
     initial_ball_count = 0
     for row in range(WINDOW_SIZE):
         for reel in range(REEL_NUM):
@@ -914,40 +753,6 @@ def count_scatter(board):
 
 
 @njit(nogil=True, cache=True)
-def play_featurebuy_entry(table_id, profile_index, bet_multi):
-    board, multiplier_values, _starts, _drop_counts, _initial_ball_count = generate_board(table_id, profile_index)
-    scatter_count = count_scatter(board)
-    multiplier_total = 0
-    multiplier_count = 0
-    multiplier_value_hits = np.zeros(MULTIPLIER_LEVEL_COUNT, dtype=np.int64)
-    for row in range(WINDOW_SIZE):
-        for reel in range(REEL_NUM):
-            if board[row, reel] == C2 or board[row, reel] == C3:
-                multiplier_total += multiplier_values[row, reel]
-                multiplier_count += 1
-    # BF entry does not evaluate Pay Anywhere, does not build winning-symbol
-    # steps and does not cascade -- but it DOES pay Scatter for the entry C1
-    # (2026-09-04 rule change).  The entry board always shows exactly four C1,
-    # so this adds a fixed 3 x Bet to every purchase.
-    entry_scatter_pay = 0.0
-    if scatter_count >= FG_TRIGGER_COUNT:
-        entry_scatter_pay = PAY_TABLE[C1, scatter_count - FG_TRIGGER_COUNT] * bet_multi
-    return (
-        0.0,
-        entry_scatter_pay,
-        scatter_count,
-        multiplier_total,
-        multiplier_count,
-        0,
-        np.zeros(SYMBOL_COUNT, dtype=np.int64),
-        np.zeros(SYMBOL_COUNT, dtype=np.int64),
-        np.zeros((3, SYMBOL_COUNT), dtype=np.int64),
-        np.zeros((3, SYMBOL_COUNT), dtype=np.int64),
-        multiplier_value_hits,
-    )
-
-
-@njit(nogil=True, cache=True)
 def play_cluster_spin(table_id, profile_index, scene, bet_multi):
     board, multiplier_values, starts, drop_counts, initial_ball_count = generate_board(table_id, profile_index)
     total_raw_pay = 0
@@ -1004,22 +809,7 @@ def play_cluster_spin(table_id, profile_index, scene, bet_multi):
 
 @njit(nogil=True, cache=True)
 def play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi):
-    if bet_mode == MODE_FEATUREBUY:
-        return play_featurebuy_entry(table_id, profile_index, bet_multi)
-    result = play_cluster_spin(table_id, profile_index, 0, bet_multi)
-    if bet_mode != MODE_EXTRABET or result[2] >= FG_TRIGGER_COUNT:
-        return result
-
-    # Extra Bet gets five Normal-distribution trigger opportunities.  The first
-    # trigger screen is used; if none trigger, the original first result is kept.
-    # This stays tied to the current reel distribution while dedicated Extra
-    # Bet strips are still pending.
-    for _ in range(1, int(EXTRA_FG_PROBABILITY_MULTIPLIER)):
-        candidate_table_id = choose_base_table(profile_index)
-        candidate = play_cluster_spin(candidate_table_id, profile_index, 0, bet_multi)
-        if candidate[2] >= FG_TRIGGER_COUNT:
-            return candidate
-    return result
+    return play_cluster_spin(table_id, profile_index, 0, bet_multi)
 
 
 @njit(nogil=True, cache=True)
@@ -1117,10 +907,8 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
     record[R_ALL, RA_PAY_FG] += fg_session_pay
     record[R_ALL, RA_FG_SESSION_MULTIPLIER_SUM] += cumulative_multiplier
     record[R_ALL, RA_FG_SESSION_COUNT] += 1
-    # 數學模型規範 2.5：所有 Bet Mode 的 Card System 倍率判定成本一律是
-    # "Normal Bet 基準成本"，不是該模式的實際扣款（EB 的 2x、BF 的 100x 都不算）。
-    # 模擬程式規範 L146 又要求 Multiplier Line 的 X 分母與卡片判定口徑一致，
-    # 所以報表分桶也用同一個分母。
+    # Card System 倍率判定成本為 Normal Bet 基準成本；
+    # Multiplier Line 的 X 分母與卡片判定口徑一致，報表分桶也用同一個分母。
     fg_bucket_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
     fg_bucket = get_bucket(fg_session_pay, fg_bucket_coin_in)
     record[R_MULTI_CNT_FG, fg_bucket] += 1
@@ -1133,27 +921,17 @@ def run_free_game_session(record, profile_index, bet_mode, bet_multi, coin_in):
 
 
 @njit(nogil=True, cache=True)
-def simulator_chunk(total_round, bet_mode, bet_multi, random_seed, jp_enabled, jp_cum, jp_seed, jp_incr, jp_x34):
+def simulator_chunk(total_round, bet_mode, bet_multi, random_seed):
     np.random.seed(random_seed)
-    jp_pool1 = 0.0
-    jp_pool2 = 0.0
     record = np.zeros(RECORD_SIZE, dtype=np.float64)
     card_system_active = CARD_SYSTEM_ENABLED and CARD_MODE_ENABLED[bet_mode] == 1
     profile_index = 0
-    if bet_mode == MODE_FEATUREBUY:
-        profile_index = 1
 
     coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
-    if bet_mode == MODE_EXTRABET:
-        coin_in = DEFAULT_COIN_IN * EXTRABET * bet_multi
-    elif bet_mode == MODE_FEATUREBUY:
-        coin_in = DEFAULT_COIN_IN * FEATUREBUY * bet_multi
-    # 數學模型規範 2.5：卡片倍率判定成本 = Normal Bet 基準成本（三個模式都一樣）。
-    # EB 的 RTP 分母仍是加價後成本（2x），但那只影響 RTP 統計，不影響卡片區間。
+    # 卡片倍率判定成本 = Normal Bet 基準成本。
     card_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
-    bg_card_profile = CARD_PROFILE_NB_BG if bet_mode == MODE_NORMALBET else CARD_PROFILE_EB_BG
-    fg_card_profile = CARD_PROFILE_NB_FG if bet_mode == MODE_NORMALBET else CARD_PROFILE_EB_FG
-    package_card_profile = CARD_PROFILE_BUY_FEATURE
+    bg_card_profile = CARD_PROFILE_NB_BG
+    fg_card_profile = CARD_PROFILE_NB_FG
     accepted_rounds = 0
     retry_count = 0
     retry_total = 0
@@ -1163,26 +941,18 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed, jp_enabled, j
     retry_fail_fg = 0
     bg_card_index = -1
     fg_card_index = -1
-    package_card_index = -1
 
     while accepted_rounds < total_round:
         if retry_count == 0:
             fg_card_index = -1
             if card_system_active:
-                if bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET:
-                    bg_card_index = pick_card(bg_card_profile)
-                    package_card_index = -1
-                else:
-                    bg_card_index = -1
-                    package_card_index = pick_card(package_card_profile)
+                bg_card_index = pick_card(bg_card_profile)
             else:
                 bg_card_index = -1
-                package_card_index = -1
         # Card-Off never rejects an attempted round, so copying the full
         # statistics matrix here only burns memory bandwidth.  Keep the
         # snapshot exclusively for Card System retry rollback.
         record_before_attempt = record.copy() if card_system_active else record
-        special_spins_before = record[R_ALL, RA_SPECIAL_SYMBOL_SPINS]
         table_id = choose_base_table(profile_index)
         raw_bg, scatter_pay, scatter_count, bg_c2, bg_c2_count, bg_cascades, bg_hits, bg_raw_symbol_pay, bg_bucket_hits, bg_bucket_pay, bg_c2_hits = play_base_spin_for_mode(table_id, profile_index, bet_mode, bet_multi)
         bg_multiplier = bg_c2 if bg_c2 > 0 else 1
@@ -1233,7 +1003,7 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed, jp_enabled, j
 
         fg_session_pay = 0
         if scatter_count >= FG_TRIGGER_COUNT:
-            needs_fg_match = card_system_active and (bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET) and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
+            needs_fg_match = card_system_active and bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME
             if needs_fg_match and fg_card_index < 0:
                 fg_card_index = pick_card(fg_card_profile)
             record_after_bg = record.copy() if needs_fg_match else record
@@ -1270,22 +1040,14 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed, jp_enabled, j
         fail_reason = 0
         triggered_free_game = 1 if scatter_count >= FG_TRIGGER_COUNT else 0
         if card_system_active:
-            if bet_mode == MODE_NORMALBET or bet_mode == MODE_EXTRABET:
-                if bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME:
-                    trigger_cap = CARD_BG_TRIGGER_CAP[bg_card_profile]
-                    if triggered_free_game == 0 or trigger_cap < 0 or bg_pay / card_coin_in > trigger_cap:
-                        accepted = 0
-                        fail_reason = 2
-                elif triggered_free_game == 1 or not is_card_match(bg_card_profile, bg_card_index, bg_pay, card_coin_in, 0):
+            if bg_card_index >= 0 and CARD_TYPES[bg_card_profile, bg_card_index] == CARD_TYPE_FREE_GAME:
+                trigger_cap = CARD_BG_TRIGGER_CAP[bg_card_profile]
+                if triggered_free_game == 0 or trigger_cap < 0 or bg_pay / card_coin_in > trigger_cap:
                     accepted = 0
-                    fail_reason = 1
-            # Buy Feature：卡片管的是免費遊戲的結果，比對 fg_session_pay。
-            # 入場盤的 Scatter 給獎是定值（4 顆 C1 = 3 x Bet），不受卡片區間約束；
-            # 若把它併進 total_pay 比對，實際 FG RTP 會比權重目標低 3 pp。
-            # 報表分桶（get_bucket(fg_session_pay, ...)）也是用 fg_session_pay，兩邊一致。
-            elif not is_card_match(package_card_profile, package_card_index, fg_session_pay, card_coin_in, triggered_free_game):
+                    fail_reason = 2
+            elif triggered_free_game == 1 or not is_card_match(bg_card_profile, bg_card_index, bg_pay, card_coin_in, 0):
                 accepted = 0
-                fail_reason = 3
+                fail_reason = 1
 
         if accepted == 0:
             retry_total += 1
@@ -1303,28 +1065,6 @@ def simulator_chunk(total_round, bet_mode, bet_multi, random_seed, jp_enabled, j
 
         accepted_rounds += 1
         retry_count = 0
-        if jp_enabled == 1:
-            # OP Jackpot 只對最終採用的局判定：每局累積 Increment，每個 ≥1 顆 C1 的 Spin 判定一次。
-            jp_pool1 += jp_incr[0]
-            jp_pool2 += jp_incr[1]
-            record[R_ALL, RA_JP_CONTRIB] += jp_incr[0] + jp_incr[1]
-            jp_checks = int(record[R_ALL, RA_SPECIAL_SYMBOL_SPINS] - special_spins_before)
-            for _ in range(jp_checks):
-                jp_draw = np.random.random()
-                if jp_draw < jp_cum[0]:
-                    record[R_ALL, RA_JP1_PAY] += jp_seed[0] + jp_pool1
-                    record[R_ALL, RA_JP1_HITS] += 1
-                    jp_pool1 = 0.0
-                elif jp_draw < jp_cum[1]:
-                    record[R_ALL, RA_JP2_PAY] += jp_seed[1] + jp_pool2
-                    record[R_ALL, RA_JP2_HITS] += 1
-                    jp_pool2 = 0.0
-                elif jp_draw < jp_cum[2]:
-                    record[R_ALL, RA_JP3_PAY] += jp_x34[0] * coin_in
-                    record[R_ALL, RA_JP3_HITS] += 1
-                elif jp_draw < jp_cum[3]:
-                    record[R_ALL, RA_JP4_PAY] += jp_x34[1] * coin_in
-                    record[R_ALL, RA_JP4_HITS] += 1
 
     record[R_ALL, RA_RETRY_TOTAL] += retry_total
     record[R_ALL, RA_RETRY_LIMIT_EXCEEDED] += retry_limit_exceeded
@@ -1348,15 +1088,10 @@ def merge_records(records):
     return merged
 
 
-JP_ARGS = load_jackpot_params(BET_MODE, BET_MULTI)
-JP_INFO = JP_ARGS[5]
-
-
 def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MULTI, threads=THREADS):
     if bet_mode not in PROFILE_BY_MODE:
         raise ValueError(f"Unsupported bet mode: {bet_mode}")
-    jp_args = JP_ARGS[:5]
-    simulator_chunk(1, bet_mode, bet_multi, 0, 0, jp_args[1], jp_args[2], jp_args[3], jp_args[4])
+    simulator_chunk(1, bet_mode, bet_multi, 0)
     chunks = split_rounds(total_round, threads)
     if RANDOM_SEED is None:
         root_seed = int.from_bytes(os.urandom(4), "little")
@@ -1365,10 +1100,10 @@ def run_simulation(total_round=TOTAL_ROUNDS, bet_mode=BET_MODE, bet_multi=BET_MU
     worker_seeds = [int(sequence.generate_state(1, dtype=np.uint32)[0]) for sequence in np.random.SeedSequence(root_seed).spawn(len(chunks))]
     start = time.perf_counter()
     if len(chunks) == 1:
-        record = simulator_chunk(chunks[0], bet_mode, bet_multi, worker_seeds[0], *jp_args)
+        record = simulator_chunk(chunks[0], bet_mode, bet_multi, worker_seeds[0])
     else:
         with ThreadPoolExecutor(max_workers=len(chunks)) as executor:
-            futures = [executor.submit(simulator_chunk, rounds, bet_mode, bet_multi, seed, *jp_args) for rounds, seed in zip(chunks, worker_seeds)]
+            futures = [executor.submit(simulator_chunk, rounds, bet_mode, bet_multi, seed) for rounds, seed in zip(chunks, worker_seeds)]
             record = merge_records([future.result() for future in futures])
     return record, time.perf_counter() - start, calc_coin_in(bet_mode, bet_multi)
 
@@ -1411,12 +1146,8 @@ def build_overview_rows(summary, card_system_active):
         ("", ""),
         ("bet_mode", summary["bet_mode"]),
         ("bet_multi", summary["bet_multi"]),
-        ("feature_price_multiplier", summary["feature_price_multiplier"]),
         ("base_bet", f"{float(summary['base_bet']):.2f}"),
         ("bet_amount", f"{float(summary['bet_amount']):.2f}"),
-        ("bet_tier_amount", f"{float(summary['bet_tier_amount']):.2f}"),
-        ("bet_tier", summary["bet_tier"]),
-        ("link_enabled", str(bool(summary["link_enabled"])).lower()),
         ("max_multiplier_bg", summary["max_multiplier_bg"]),
         ("max_multiplier_fg", summary["max_multiplier_fg"]),
         ("coin_in", f"{float(summary['coin_in']):.1f}"),
@@ -1443,29 +1174,11 @@ def build_overview_rows(summary, card_system_active):
         ("volatility_std", f"{float(summary['volatility_std']):.2f}"),
         ("standard_error", f"{float(summary['standard_error']):.2f}"),
     ]
-    if summary.get("jackpot", "off") != "off":
-        hits = summary["jp_hits"]
-        names = ("GRAND", "MAJOR", "MINOR", "MINI")
-        jp_rows = [
-            ("", ""),
-            ("jackpot", summary["jackpot"]),
-            ("jp_scr_used", f"{float(summary['jp_scr_used']):,.0f}"),
-            ("rtp_total_incl_jp", f"{(float(summary['rtp_total']) + float(summary['rtp_jp_link']) + float(summary['rtp_jp_bonus'])) * 100:.4f}%"),
-            ("rtp_jp_link", f"{float(summary['rtp_jp_link']) * 100:.4f}% (setting {float(summary['jp_link_rtp_setting']) * 100:.4f}% = startup {float(summary['jp_link_startup_setting']) * 100:.4f}% + increment {float(summary['jp_increment_rate']) * 100:.4f}%; startup 0 = contributes only)"),
-            ("rtp_jp_bonus", f"{float(summary['rtp_jp_bonus']) * 100:.4f}% (setting {float(summary['jp_bonus_rtp_setting']) * 100:.4f}%)"),
-            ("jp_contribution_rate", f"{float(summary['jp_contribution_rate']) * 100:.4f}%"),
-        ]
-        for i in range(4):
-            period = f", 1/{total_rounds / hits[i]:,.0f} rounds" if hits[i] else ""
-            jp_rows.append((f"jp{i + 1}_hits", f"{hits[i]:,} ({names[i]}{period})"))
-        jp_rows.append(("jp_p_cond", " / ".join(f"{x:.3e}" for x in summary["jp_p_cond"])))
-        rows.extend(jp_rows)
     if card_system_active:
         rows.extend(
             [
                 ("", ""),
                 ("card_system_profile", summary["card_system_profile"]),
-                ("player_profile", summary["player_profile"]),
                 ("card_retry_limit", int(summary["card_retry_limit"])),
                 ("retry_total", f"{int(summary['retry_total']):,}"),
                 ("avg_retry", f"{float(summary['avg_retry']):.2f}"),
@@ -1503,7 +1216,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     fg_sessions = values[R_ALL, RA_FG_TRIGGER]
     fg_spins = values[R_ALL, RA_FG_SPINS]
     variance = values[R_ALL, RA_X_SQUARE] / total_round - (values[R_ALL, RA_X_SUM] / total_round) ** 2
-    mode_key = "normal_bet" if bet_mode == MODE_NORMALBET else "extra_bet" if bet_mode == MODE_EXTRABET else "buy_feature"
+    mode_key = "normal_bet"
     card_system_active = CARD_SYSTEM_ENABLED and bool(CARD_MODE_ENABLED[bet_mode])
     volatility_std = math.sqrt(max(0.0, variance))
     standard_error = volatility_std / math.sqrt(total_round) if total_round else 0.0
@@ -1511,8 +1224,7 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
     special_symbol_cnt = values[R_ALL, RA_SPECIAL_SYMBOL_SPINS]
     scr = special_symbol_cnt / total_round * 10_000_000_000 if total_round else 0.0
     bet_context = build_bet_context(bet_mode, bet_multi)
-    # 數學模型規範 1.1：Max Multiplier = Round Total Win ÷ 該模式定義的基準成本，
-    # 依 2.5 三個模式的基準成本都是 Normal Bet 基準成本。RTP 分母另用實際成本。
+    # Max Multiplier = Round Total Win ÷ Normal Bet 基準成本。
     card_coin_in = DEFAULT_COIN_IN * NORMALBET * bet_multi
     bg_trigger_cap = get_bg_trigger_cap(mode_key)
     bg_trigger_fg_pay = values[R_ALL, RA_BG_TRIGGER_FG_PAY]
@@ -1535,17 +1247,12 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "model_status": MODEL_STATUS,
         "wild_enabled": False,
         "jackpot_enabled": bool(CFG.get("has_jackpot", False)),
-        "extra_fg_probability_multiplier": EXTRA_FG_PROBABILITY_MULTIPLIER if bet_mode == MODE_EXTRABET else 1,
         "multiplier_levels": ",".join(str(int(value)) for value in MULTIPLIER_LEVELS),
         "bet_mode": format_bet_mode_label(bet_mode),
         "bet_mode_id": bet_mode,
         "bet_multi": bet_context["bet_multi"],
-        "feature_price_multiplier": bet_context["feature_price_multiplier"] if bet_context["feature_price_multiplier"] is not None else "n/a",
         "base_bet": bet_context["base_bet"],
         "bet_amount": bet_context["bet_amount"],
-        "bet_tier_amount": bet_context["bet_tier_amount"],
-        "bet_tier": bet_context["bet_tier"],
-        "link_enabled": bet_context["link_enabled"],
         "max_multiplier_bg": bet_context["max_multiplier_bg"],
         "max_multiplier_fg": bet_context["max_multiplier_fg"],
         "total_rounds": total_round,
@@ -1574,17 +1281,6 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "bg_trigger_fg_pay": bg_trigger_fg_pay,
         "special_symbol_cnt": int(special_symbol_cnt),
         "SCR": scr,
-        "jackpot": f"JP0100{JP_INFO['file']} / option {JP_INFO['option']} / bet {JP_INFO['bet_key']:g} / SCR {JP_INFO['scr_key']}" if JP_INFO else "off",
-        "rtp_jp_link": (values[R_ALL, RA_JP1_PAY] + values[R_ALL, RA_JP2_PAY]) / coin_in_sum if coin_in_sum else 0,
-        "rtp_jp_bonus": (values[R_ALL, RA_JP3_PAY] + values[R_ALL, RA_JP4_PAY]) / coin_in_sum if coin_in_sum else 0,
-        "jp_contribution_rate": values[R_ALL, RA_JP_CONTRIB] / coin_in_sum if coin_in_sum else 0,
-        "jp_hits": [int(values[R_ALL, k]) for k in (RA_JP1_HITS, RA_JP2_HITS, RA_JP3_HITS, RA_JP4_HITS)],
-        "jp_scr_used": JP_INFO.get("scr", 0),
-        "jp_link_rtp_setting": JP_INFO.get("link_rtp_setting", 0),
-        "jp_link_startup_setting": JP_INFO.get("link_startup_setting", 0),
-        "jp_increment_rate": JP_INFO.get("increment_rate", 0),
-        "jp_bonus_rtp_setting": JP_INFO.get("bonus_rtp_setting", 0),
-        "jp_p_cond": JP_INFO.get("p_cond", []),
         "volatility_std": volatility_std,
         "standard_error": standard_error,
         "stddev_x": volatility_std,
@@ -1600,9 +1296,6 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
         "card_system": "on" if card_system_active else "off",
         "pending_math_items": " | ".join(PENDING_MATH_ITEMS) if PENDING_MATH_ITEMS else "none",
         "card_system_profile": "off" if not card_system_active else mode_key,
-        # Player Profile（規範 §1.4）：newbie 用 card_system.newbie 的權重，
-        # oldhand 用 card_system 底層的權重。
-        "player_profile": "off" if not card_system_active else ACTIVE_CARD_PROFILE,
         "card_retry_limit": CARD_RETRY_LIMIT if card_system_active else 0,
         "retry_total": int(values[R_ALL, RA_RETRY_TOTAL]),
         "avg_retry": values[R_ALL, RA_RETRY_TOTAL] / total_round,
@@ -1631,9 +1324,6 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
 
     trigger_cnt_lte = np.cumsum(values[R_BG_TRIGGER_FG_CNT, : len(THRESHOLD_RECORD)]).astype(np.int64)
     trigger_pay_lte = np.cumsum(values[R_BG_TRIGGER_FG_PAY, : len(THRESHOLD_RECORD)])
-    is_feature_buy = bet_mode == MODE_FEATUREBUY
-    package_cnt = values[R_MULTI_CNT_OA, : len(THRESHOLD_RECORD)].astype(np.int64)
-    package_pay = values[R_MULTI_PAY_OA, : len(THRESHOLD_RECORD)]
     # 模擬程式規範 §3.1.4：第一欄 Interval 由 Interval_Upper 自動產生；上限 0 的第一列顯示 0，
     # 其餘為「<前一列上限> < X <= <本列上限>」，固定一位小數。
     interval_labels = [
@@ -1645,10 +1335,8 @@ def build_result_frames(record, total_round, duration, coin_in, bet_mode, bet_mu
             "Interval": interval_labels,
             "base_game_cnt": base_cnt,
             "base_game_pay": values[R_MULTI_PAY_BG, : len(THRESHOLD_RECORD)],
-            "free_game_cnt": np.zeros_like(free_cnt) if is_feature_buy else free_cnt,
-            "free_game_pay": np.zeros_like(free_pay) if is_feature_buy else free_pay,
-            "free_game_cnt_BF": package_cnt if is_feature_buy else np.zeros_like(package_cnt),
-            "free_game_pay_BF": package_pay if is_feature_buy else np.zeros_like(package_pay),
+            "free_game_cnt": free_cnt,
+            "free_game_pay": free_pay,
             "Interval_Upper": THRESHOLD_RECORD,
             "bg_trigger_fg_cnt_lte_upper": trigger_cnt_lte,
             "bg_trigger_fg_pay_lte_upper": trigger_pay_lte,
@@ -1797,14 +1485,9 @@ def output_report(frames, record, bet_mode, total_round):
     if card_system_active:
         report_game_id = str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
         version_tag = format_rtp_version_tag(CONFIG_VERSION)
-        # 模擬程式規範 §3.1.4：<rtp_tag>_<profile>[_<bet_tier>]；profile 為 newbie／oldhand，
-        # Oldhand 再接 small_bet／medium_bet／big_bet，Newbie 省略；檔名不加 card 後綴。
         parts = [report_game_id, version_tag, timestamp, f"betmode{bet_mode}", rounds_tag, format_rtp_tag(summary["rtp_total"])]
-        parts.append(str(summary["player_profile"]))
-        if str(summary["player_profile"]) == "oldhand":
-            parts.append(str(summary["bet_tier"]))
     else:
-        # Card-Off 是基礎數學的自然機率，檔名用基礎數學工作簿名（H0271A／H0271B），不用 variant model
+        # Card-Off 是基礎數學的自然機率，檔名用基礎數學工作簿名（H0271）
         report_game_id = Path(str(CFG_RTP.get("source_xlsx") or "")).stem or str(CFG_RTP.get("model") or CFG_RTP.get("parsheet_id") or GAME_ID)
         parts = [report_game_id, format_base_version_tag(BASE_CONFIG_VERSION), timestamp, f"betmode{bet_mode}", rounds_tag]
     filename = "_".join(parts) + ".xlsx"
@@ -1829,7 +1512,7 @@ def output_report(frames, record, bet_mode, total_round):
 
 def run_single_spin_debug():
     profile = PROFILE_BY_MODE[BET_MODE]
-    table_id = FEATUREBUY_TABLE_ID if BET_MODE == MODE_FEATUREBUY else BASE_REEL_TABLE_IDS[profile, 0]
+    table_id = BASE_REEL_TABLE_IDS[profile, 0]
     result = play_cluster_spin(table_id, profile, 0, BET_MULTI)
     print("Single spin result:")
     print(f"raw_cluster_pay={result[0]}, scatter_pay={result[1]}, scatter_count={result[2]}")
@@ -1843,13 +1526,12 @@ def validate_batch_run(combo):
         "bet_mode",
         "total_rounds",
         "card_system_enabled",
-        "card_system_is_newbie",
         "base_bet",
     }
     missing = sorted(required.difference(combo))
     if missing:
         raise ValueError(f"BATCH_RUNS entry missing fields: {', '.join(missing)}")
-    if not isinstance(combo["card_system_enabled"], bool) or not isinstance(combo["card_system_is_newbie"], bool):
+    if not isinstance(combo["card_system_enabled"], bool):
         raise TypeError("BATCH_RUNS card system fields must be Boolean")
     if int(combo["total_rounds"]) <= 0:
         raise ValueError("BATCH_RUNS total_rounds must be a positive integer")
@@ -1868,10 +1550,7 @@ def run_batch_runs():
         env["H027_BET_MODE"] = str(combo["bet_mode"])
         env["H027_TOTAL_ROUNDS"] = str(combo["total_rounds"])
         env["H027_CARD_SYSTEM_ENABLED"] = "true" if combo.get("card_system_enabled", CARD_SYSTEM_ENABLED) else "false"
-        env["H027_CARD_SYSTEM_IS_NEWBIE"] = "true" if combo.get("card_system_is_newbie", CARD_SYSTEM_IS_NEWBIE) else "false"
         env["H027_BASE_BET"] = str(combo["base_bet"])
-        env["H027_JACKPOT_FILE"] = str(combo.get("jackpot_file", JACKPOT_FILE) or "")
-        env["H027_JACKPOT_OPTION"] = str(int(combo.get("jackpot_option", JACKPOT_OPTION)))
         env["H027_RUN_ALL_COMBINATIONS"] = "false"
         env["H027_BATCH_CHILD"] = "1"
         env["PYTHONUTF8"] = "1"
@@ -1910,9 +1589,7 @@ def main():
             "bet_mode": BET_MODE,
             "total_rounds": TOTAL_ROUNDS,
             "card_system_enabled": CARD_SYSTEM_ENABLED,
-            "card_system_is_newbie": CARD_SYSTEM_IS_NEWBIE,
             "base_bet": BASE_BET,
-            "jackpot_file": JACKPOT_FILE,
         }
         print(f"=== Batch 1/1: {current_batch} ===\n", flush=True)
     record, duration, coin_in = run_simulation()

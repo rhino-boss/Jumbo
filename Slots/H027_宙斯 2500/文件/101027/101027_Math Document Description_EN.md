@@ -404,9 +404,9 @@ No C2 / C3 on the final screen:          Base Game win = R + S
 
 The Base Game multiplier applies to that spin only and is not carried to the next game.
 
-**Free Game (accumulated multiplier)**
+**Free Game (carrying multiplier)**
 
-Let `M_acc` be the accumulated multiplier, reset to 0 when the Free Game starts:
+Let `M_acc` be the carrying multiplier, reset to 0 when the Free Game starts:
 
 ```
 If R > 0 and M_now > 0:     M_acc = M_acc + M_now       (accumulates only on spins with a regular win)
@@ -429,7 +429,7 @@ Otherwise:                  spin win = R + S            (paid at 1×; M_acc is k
 
 **Spin limit**: at most **50 spins** per Free Game, including retriggers.
 
-**Accumulated multiplier**: reset to 0 when the Free Game starts and accumulated by 3-6 until the Free Game ends; a retrigger only adds spins and does not clear the multiplier.
+**Carrying multiplier**: reset to 0 when the Free Game starts and accumulated by 3-6 until the Free Game ends; a retrigger only adds spins and does not clear the multiplier.
 
 > `FG_Symbol (2)` holds no C1, so only `FG_Symbol` spins can retrigger.
 
@@ -443,7 +443,7 @@ Otherwise:                  spin win = R + S            (paid at 1×; M_acc is k
        award 15 spins (6 FG_Symbol + 9 FG_Symbol (2), shuffled)
        draw a Free Game card
        play the Free Game:
-           accumulated multiplier = 0
+           carrying multiplier = 0
            each spin: play on its allocated table → accumulate and pay by 3-6
                       → 3 or more C1 add 5 spins (limited to 50)
 5. Total game win = Base Game win + total Free Game win

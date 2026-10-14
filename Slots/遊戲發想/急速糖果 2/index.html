@@ -330,6 +330,15 @@
             <li>Log 統一：改用共用 demogameLog，行格式同 H045，不記演出過程。（10/13）</li>
             <li>頁尾改顯示「最後調性更新：2026-10-02 15:44」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
             <li>驗證：Debug 開啟跑 NB 4 局、EB 2 局、Buy Feature 1 局（10 局 FG，Total 506.10 = 506.10x），Log 行格式同 H045（Config Base loaded｜#n 模式｜RNG｜BG｜Buy Feature／Free Game triggered｜FG i/n｜FG complete）；歷史紀錄 BG／FG 最大倍數正確，Clear 與重置歸零；點 RNG 行重跑 BF 局，FG 各行逐字相同；頁尾繁中「最後調性更新：2026-10-02 15:44」、English「Last tuning update: 2026-10-02」；Console 無錯誤。共用檔 <code>demogame_common.js?v=20261013f</code>。（10/13）</li>
+            <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
+            <li>驗證：Speed 5 下 Buy Feature＋Auto 跑 FG，每轉 FG 結算後都呼叫停頓且請求 100 ms（不隨 Speed 縮短），停頓結束後才開始下一轉；Buy Feature 入場不停頓；RNG 碼重跑 BG 結果逐字相同；Simulation 2 萬局 1.2 秒、未呼叫停頓；Console 無錯誤。（10/13）</li>
+            <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
+            <li>驗證：BG 4 連消局 Win 依序 0.00→0.25→2.05→6.45→19.95，與 Log「Win 19.95」相同；Buy Feature 10 轉 FG 期間 Win 顯示本段 FG 累計並逐次消除往上加（如第 10 轉 69.20→86.80→112.30→123.70），結束＝Log「FG complete | Total 123.70」；Credit／統計／Log 不變；RNG 碼重跑 BG、BF 局結果逐字相同；Console 無錯誤。（10/13）</li>
+            <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
+            <li>驗證：BG 2 連消局播放 Win 0.00→0.20→2.70，Previous 逐步 2.70→2.70→2.70→0.20→0.20→0.00、Next 0.20→0.20→2.70→2.70→2.70（末步＝局末）；Buy Feature FG 第 5 轉以本段累計 0.40 為底，播放 0.40→5.65→9.05，回看／前進數值一致；逐步不動 Credit／RTP／Log，下一局 Win 從 0 重新累加；Console 無錯誤。（10/13）</li>
+            <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（原本 FG 從 0 起算；Buy Feature 無入場盤得分，底為 0；Previous／Next 逐步同底）。（10/13）</li>
+            <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤：購買當下畫面上的盤面），位置倍數／Extra Bet 底板、全盤倍數和、連消數一併還原，Feature Status 回到基礎遊戲。（10/13）</li>
+            <li>驗證：RNG Base/NB/off/-/000001e8 觸發局 BG 2 連消 Win 0.00→0.25→2.05，FG 每轉起點 2.05（第 7 轉以 2.30 為底播放 3.80→6.00→18.00→126.00，Previous／Next 逐步 126.00…2.30 與前進一致），FG 結束 Win 150.00＝BG 2.05＋Log「FG complete | Total 147.95」；結束後盤面（符號、倍數、全盤和、連消數）與觸發局最終盤完全相同、Feature Status 基礎遊戲；Buy Feature 10 轉起點 0.00、結束＝Total 11.25，盤面還原成入場盤；下一局 Win 從 0 開始；同碼重跑 Log 逐字相同；Console 無錯誤。（10/13）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -863,18 +872,21 @@
       const gameError = (key) => Object.assign(new Error(tr(key)), { logMessage: TC2_TEXT.en[key] });
 
       // 逐幀：Initial → 每段 Cascade（中獎／掉落）→ Final，可用 Previous／Next 回看
-      function captureFrames(spin) {
+      function captureFrames(spin, winBase = 0) {
+        let paid = 0;   // 與 playSpin 同順序累加：各幀 win＝播放到該步時 Win 的顯示值
         const spinPlates = new Set(spin.plates.map((p) => p.key));
-        const frames = [{ label: "Initial", board: spin.initialBoard, mult: spin.initialMult, cascade: 0, info: `起始全盤和 ${sumOf(spin.initialMult)}${spin.plates.length ? `（Extra Bet 底板 ${spin.plates.map((p) => `x${p.value}`).join("、")}）` : ""}` }];
+        const frames = [{ label: "Initial", board: spin.initialBoard, mult: spin.initialMult, cascade: 0, win: winBase, info: `起始全盤和 ${sumOf(spin.initialMult)}${spin.plates.length ? `（Extra Bet 底板 ${spin.plates.map((p) => `x${p.value}`).join("、")}）` : ""}` }];
         spin.steps.forEach((s) => {
+          paid += s.pay;
+          const win = winBase + paid;
           frames.push({
-            label: `Cascade ${s.cascadeIdx} win`, board: s.boardBefore, mult: s.multBefore, cascade: s.cascadeIdx,
+            win, label: `Cascade ${s.cascadeIdx} win`, board: s.boardBefore, mult: s.multBefore, cascade: s.cascadeIdx,
             removeSet: s.removeSet, chainSet: s.chainSet,
             info: `${s.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${s.chainSet.size ? ` · 連帶 ${s.chainSet.size} 格` : ""} · 全盤和 x${s.effSum} · +${fmt(s.pay)}`,
           });
-          frames.push({ label: `Cascade ${s.cascadeIdx} drop`, board: s.boardAfter, mult: s.multAfter, cascade: s.cascadeIdx, info: `補牌後全盤和 ${sumOf(s.multAfter)}` });
+          frames.push({ win, label: `Cascade ${s.cascadeIdx} drop`, board: s.boardAfter, mult: s.multAfter, cascade: s.cascadeIdx, info: `補牌後全盤和 ${sumOf(s.multAfter)}` });
         });
-        frames.push({ label: "Final", board: spin.board, mult: spin.mult, cascade: spin.cascadeCount, info: `Total ${fmt(spin.total)} · C1 × ${spin.scatterCount}` });
+        frames.push({ win: winBase + spin.total, label: "Final", board: spin.board, mult: spin.mult, cascade: spin.cascadeCount, info: `Total ${fmt(spin.total)} · C1 × ${spin.scatterCount}` });
         frames.forEach((f) => { f.plates = spinPlates; });
         st.frames = frames;
         st.frameIndex = frames.length - 1;
@@ -890,6 +902,7 @@
         fxMark(f.board, f.removeSet || null, f.chainSet || null);
         $("cascadeValue").textContent = f.cascade;
         setSum(sumOf(f.mult));
+        $("winValue").textContent = fmt(f.win || 0);   // 只改畫面 Win（該步累計），不動 st.winShown／Credit／統計
         say(`${f.label} | Step ${st.frameIndex + 1}/${st.frames.length} | ${f.info}`);
         updateStepButtons();
       }
@@ -905,7 +918,7 @@
         $("balanceValue").textContent = fmt(st.balance);
         $("betValue").textContent = fmt(modeCost(st.fg.remaining ? st.fg.mode : st.mode === MODE_BUY ? MODE_NORMAL : st.mode));
         $("betBtn").textContent = `Bet ${fmt(bet())}`;
-        $("winValue").textContent = fmt(st.lastWin);
+        $("winValue").textContent = fmt(st.winShown || 0);   // 畫面 Win：播放中逐次消除累加（setWinShown），局末＝該局 BG／本段 FG 累計
         $("roundCountValue").textContent = st.rounds;
         $("rtpValue").textContent = st.totalBet ? `${(st.totalWin / st.totalBet * 100).toFixed(2)}%` : "0.00%";
         $("hitRateValue").textContent = st.rounds ? `${(st.hitRounds / st.rounds * 100).toFixed(2)}%` : "0.00%";
@@ -961,7 +974,11 @@
       }
 
       // ── 動畫播放 ──────────────────────────────────────────────────────────
-      async function playSpin(spin) {
+      // 得分（Win）即時顯示：只改畫面數字，不動 Credit／統計／結果
+      function setWinShown(v) { st.winShown = v; $("winValue").textContent = fmt(v); }
+
+      async function playSpin(spin, winBase = 0) {
+        let paid = 0;
         plateKeys = new Set(spin.plates.map((p) => p.key));
         renderBoard(spin.initialBoard, spin.initialMult);
         fxMark(spin.initialBoard);
@@ -976,6 +993,7 @@
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
           if (step.effSum > 1) window.slotFx?.multiPop(fxLayer, `X${step.effSum}`, {});
           window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
+          paid += step.pay; setWinShown(winBase + paid);
           say(() => `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""} | ${tr("sum")} x${step.effSum} | +${fmt(step.pay)}`);
           await wait(760);
 
@@ -1048,9 +1066,21 @@
         return { ...code, modeValue };
       }
 
-      function finishSpin(spin) {
+      // FG 結束回到 BG 的盤面還原（只改畫面）：自然觸發用觸發局最終盤資料；Buy Feature 用入場時畫面上的盤面
+      function snapshotBoard() {
+        return { html: boardEl.innerHTML, multHtml: multLayerEl.innerHTML, plates: new Set(plateKeys),
+          sum: sumValueEl.textContent, cascade: $("cascadeValue").textContent };
+      }
+      function restoreBoard(r) {
+        plateKeys = r.plates;
+        if (r.html != null) { boardEl.innerHTML = r.html; multLayerEl.innerHTML = r.multHtml; }
+        else { renderBoard(r.board, r.mult); fxMark(r.board); }
+        setSum(r.sum); $("cascadeValue").textContent = r.cascade;
+      }
+
+      function finishSpin(spin, winBase = 0) {
         renderSpinResult(spin);
-        captureFrames(spin);
+        captureFrames(spin, winBase);
         st.lastSpin = spin;
         if (spin.finalSum > st.maxSum) st.maxSum = spin.finalSum;
       }
@@ -1065,6 +1095,7 @@
         const seed = code ? code.seed : window.demogameRng.newSeed();
         const round = window.demogameRng.run(seed, () => computeRound(mode));   // 整局（BG＋消除＋整段 FG）一次算完
         st.roundCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[mode], card: false, opts: "", seed });
+        st.winShown = 0;   // 新的一局 Win 從 0 開始
         st.balance -= cost; st.totalBet += cost; st.rounds++;
         if (mode !== MODE_BUY) st.normalRounds++;
         appendLog(`#${st.rounds} ${modeLabel(mode)} | Bet ${fmt(cost)}${code ? " | Replay" : ""}`, "mode");
@@ -1072,7 +1103,7 @@
         updateStats();
 
         if (mode === MODE_BUY) {
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0 };
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0, base: 0, restore: snapshotBoard() };   // BF 無入場得分；FG 結束還原入場盤
           say(() => tr("buyEnter"));
           appendLog(fgStartLine("Buy Feature", round), "mode");
           st.lastWin = 0;
@@ -1082,18 +1113,22 @@
         const spin = round.bg;
         finishSpin(spin);
         st.busy = true;
-        await playSpin(spin);
+        await playSpin(spin, 0);
         const win = spin.total;
+        setWinShown(win);
         st.lastWin = win; st.totalWin += win; st.balance += win;
         if (win > 0) st.hitRounds++;
         appendLog(`BG | ${mode === MODE_EXTRA ? "Extra" : "Base"} | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(win)} (${(win / bet()).toFixed(2)}x)`, win > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: win / bet() });   // 共用歷史紀錄：BG 最大倍數（÷ 底注）
         if (round.award > 0) {
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins, win: 0 };
+          // base：觸發局 BG 得分累積進 FG 的 Win 顯示；restore：FG 結束回到 BG 時還原的觸發局最終盤面
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins, win: 0, base: win,
+            restore: { board: spin.board, mult: spin.mult, plates: new Set(spin.plates.map((p) => p.key)), sum: spin.finalSum, cascade: spin.cascadeCount } };
           st.naturalFg++;
           appendLog(fgStartLine("Free Game triggered", round), "mode");
         }
         if (win > 0) { window.slotFx?.totalWin(fxLayer, tr("totalWin"), fmt(win)); await wait(1100); }
+        return true;   // BG 分數已結算（Buy Feature 入場無分數，回傳 undefined、不停頓）
       }
 
       // 「Free Game triggered|Buy Feature | <n> spins[ (Retrigger ×k)]」：n 為整段 FG 局數（含 Retrigger）
@@ -1105,14 +1140,16 @@
       async function playFreeSpin() {
         // FG 每局結果已在觸發當局的 demogameRng.run() 內算好，這裡只播放
         const spin = st.fg.spins[st.fg.played];
-        finishSpin(spin);
-        await playSpin(spin);
+        const fgBase = (st.fg.base || 0) + (st.fg.win || 0);   // FG 期間 Win＝觸發局 BG 得分＋FG 累計（只影響顯示）
+        finishSpin(spin, fgBase);
+        await playSpin(spin, fgBase);
         st.fg.remaining--; st.fg.played++;
         st.lastWin = spin.total; st.totalWin += spin.total; st.balance += spin.total;
         if (spin.retrigger) {
           st.fg.remaining += spin.retrigger; st.fg.total += spin.retrigger;
         }
         st.fg.win = (st.fg.win || 0) + spin.total;
+        setWinShown((st.fg.base || 0) + st.fg.win);   // FG 結束時＝整局總得分（BG＋FG）
         appendLog(`FG ${st.fg.played}/${st.fg.spins.length} | Free | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(spin.total)}`, spin.cascadeCount ? "cascade" : "info");
         const played = st.fg.played, total = st.fg.total;
         say(() => `FG ${played}/${total} · ${fmt(spin.total)} · ${tr("sum")} ${spin.finalSum}`);
@@ -1122,14 +1159,17 @@
           st.fg.spins = [];
         }
         if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
+        if (st.fg.remaining <= 0 && st.fg.restore) { restoreBoard(st.fg.restore); st.fg.restore = null; }   // 回到 BG：還原觸發局最終盤面（BF 為入場盤）
+        return true;   // 這一轉 FG 分數已結算
       }
 
       async function play(isBuy = false) {
         if (st.busy) return;
         st.busy = true; updateControls();
         try {
-          if (st.fg.remaining) await playFreeSpin();
-          else await playPaid(isBuy);
+          const settled = st.fg.remaining ? await playFreeSpin() : await playPaid(isBuy);
+          // 算分後停頓（共用）：分數加進 Credit／Win 並顯示後，固定停 0.1 秒（不受 Speed 影響）再放行下一轉／Auto
+          if (settled) { updateStats(); await window.demogameRoundPause?.(); }
         } catch (err) {
           say(err.message);
           $("messageBar").classList.add("error");
@@ -1224,7 +1264,7 @@
         clearTimeout(st.autoTimer);
         Object.assign(st, {
           balance: CFG.initial_balance, auto: false, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0,
-          normalRounds: 0, naturalFg: 0, maxSum: 0, lastWin: 0, frames: [], frameIndex: -1, lastSpin: null,
+          normalRounds: 0, naturalFg: 0, maxSum: 0, lastWin: 0, winShown: 0, frames: [], frameIndex: -1, lastSpin: null,
           fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, spins: [], win: 0 },
         });
         $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
@@ -1327,7 +1367,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261013f"></script>
+  <script src="../../demogame_common.js?v=20261013i"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

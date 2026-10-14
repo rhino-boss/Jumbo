@@ -2269,8 +2269,15 @@
           <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|BF/on|off/腳本或 r區間/種子</code>），點一下複製並填入 RNG 欄，按 Spin 整局重跑（BG、消除、FG 相同），RNG 欄填了就一直沿用、按重置才清空；數學抽樣改走種子序列，表演用金框不受影響。（10/13）</li>
           <li>驗證：腳本 bigghost 局（27.55x）貼 RNG 重跑，Log 結果與盤面完全相同，Console 無例外。未修改 XLSX／Config 數學參數。（10/13）</li>
           <li>頁尾改顯示「最後調性更新：2026-10-13 13:13」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
+          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
+          <li>驗證：Speed 5、Buy Feature＋Auto 22 轉（含 10 轉 FG），算分到 Spin 放行間隔 100.5～115 ms；RNG 重跑結果相同，Simulation 仍即時，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
           <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
           <li>驗證：BG 多連消局與 Buy Feature FG 取樣 Win 逐次消除遞增、局末與 Log 一致；RNG 重跑結果相同，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
+          <li>驗證：BG 多連消局與 FG 每轉 Previous 逐步遞減、Next 逐步遞增，各步數值與即時演出相同、最後一步等於局末；Credit／統計／Log 不變，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（原本 FG 從 0 起算，已修正；Previous／Next 同基準）。只改顯示，未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲；之後 Previous／Next 逐步檢視該 BG 局。（10/13）</li>
+          <li>驗證：自然觸發（Card Range Free Game）BG 180.60 → FG 第一次消除 180.90、FG 結束 210.70＝BG＋FG 30.10；腳本 fg 局 BG 0.30 → 結束 25.80（FG 25.50）；Buy Feature 入場盤 0.00 → 結束 19.30。FG 結束後盤面與觸發局 BG 最終盤面（BF 入場盤）逐格相同、Feature Status 回基礎遊戲；Credit／Log／歷史紀錄不變，BF RNG 重跑結果相同，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -3466,6 +3473,7 @@
 
   async function animateSnapshots(snapshots, freeGame = false, winBase = 0, payCap = Infinity) {
     state.snapshots = snapshots; state.snapshotIndex = -1;
+    state.stepWin = { base: Number(winBase), cap: Number(payCap) };   // Previous／Next 逐步檢視用：與即時更新同一基準
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
     if (snapshots[0]) { await animateReels(snapshots[0].board, snapshots[0].gold, snapshots[0].mults, freeGame ? "fg" : "bg"); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
@@ -3505,7 +3513,17 @@
     renderBoard(snapshot.board, snapshot.hits, { mults: snapshot.mults, gold: snapshot.gold, cleared: snapshot.cleared || [], converted: snapshot.converted || [], marked: snapshot.marked || [] });
     renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo);
     if (snapshot.type === "win") renderWinDetails(snapshot);
+    $("winValue").textContent = money(stepWinAt(state.snapshotIndex));   // 只改顯示，不動 state.lastWin／Credit／統計
     updateDebugButtons();
+  }
+  // 逐步檢視的累計得分：該步（含）以前最後一個得分步的 totalPay，基準同 animateSnapshots（BG＝0、FG＝本轉前 FG 累計）
+  function stepWinAt(index) {
+    const { base = 0, cap = Infinity } = state.stepWin || {};
+    for (let i = index; i >= 0; i--) {
+      const snap = state.snapshots[i];
+      if (snap && snap.type === "win") return base + Math.min(Number(snap.totalPay || 0), cap);
+    }
+    return base;
   }
   function updateDebugButtons() {
     $("previousStepBtn").disabled = state.snapshotIndex <= 0;
@@ -3543,10 +3561,11 @@
     while (body.children.length > 500) body.firstElementChild.remove();
     body.scrollTop = body.scrollHeight;
   }
-  function activateFeature(feature, mode) {
+  function activateFeature(feature, mode, base) {
     appendLog(`${mode === 2 ? "Buy Feature" : "Free Game triggered"} | ${feature.spins.length} spins${feature.retriggers ? ` (Retrigger ×${feature.retriggers})` : ""}${feature.capped ? " | Max Win cap" : ""}`, "mode");
-    state.fg = { spins: feature.spins, index: 0, total: feature.spins.length, win: 0, mode };
-    state.lastWin = 0; state.fgTriggers++;
+    // carry＝觸發局（含 BF 入場盤）BG 得分，只用於 Win 顯示；baseRound＝FG 結束時還原的 BG 最終盤面（BF 為入場盤）（10/13）
+    state.fg = { spins: feature.spins, index: 0, total: feature.spins.length, win: 0, mode, carry: Number(base?.pay || 0), baseRound: base || null };
+    state.lastWin = state.fg.carry; state.fgTriggers++;
     showTable("");   // 進 FG：先清掉 BG 的表 2 標籤，第一把 Free Spin 起依 FG 當轉用的表顯示
     setFeatureStatus(mode === 2 ? "buyFeature" : "fgTriggered"); updateStats();
   }
@@ -3576,12 +3595,23 @@
     const item = state.fg.spins[state.fg.index]; if (!item) return;
     showTable(item.tableName);
     const fgWinBase = Number(state.fg.win || 0);
-    await animateSnapshots(item.snapshots, true, fgWinBase, item.pay); state.fg.index++;
-    state.fg.win = fgWinBase + item.pay; state.lastWin = state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
+    const carry = Number(state.fg.carry || 0);   // Win 顯示＝觸發局 BG 得分＋FG 累計（即時與 Previous／Next 同基準）
+    await animateSnapshots(item.snapshots, true, carry + fgWinBase, item.pay); state.fg.index++;
+    state.fg.win = fgWinBase + item.pay; state.lastWin = carry + state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
     state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}`;
     appendLog(`FG ${state.fg.index}/${state.fg.total} | ${item.tableName} | Cascade ${item.combo} | C1 ${item.scatter} | Win ${money(item.pay)}`, item.combo ? "cascade" : "info");
-    if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); showTable(""); setFeatureStatus("featureComplete"); state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; }
+    if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound); }
+  }
+  // FG 結束回到 BG：盤面還原成觸發局 BG 最終盤面（BF 為入場盤）、Feature Status 回基礎遊戲；Previous／Next 改看該 BG 局（10/13）
+  function restoreBaseRound(base) {
+    document.body.classList.remove("fg-mode"); renderMultiplier(false, 0); setFeatureStatus("baseGame");
+    if (!base) { showTable(""); return; }
+    const last = base.snapshots?.at(-1); showTable(base.tableName);
+    if (last) renderBoard(last.board, [], { mults: last.mults, gold: last.gold });
+    state.snapshots = base.snapshots || []; state.snapshotIndex = state.snapshots.length - 1;
+    state.stepWin = { base: 0, cap: Number(base.pay || 0) };
+    $("carryMultiValue").textContent = String(base.combo || 0); updateDebugButtons();
   }
 
   async function play(mode = 0) {
@@ -3637,12 +3667,14 @@
         appendLog(`${mode === 2 ? "BF Entry" : "BG"} | ${base.tableName} | Cascade ${base.combo} | C1 ${base.scatter} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });   // 共用歷史紀錄：BG 最大倍數
         if (feature) {
-          activateFeature(feature, mode);
+          activateFeature(feature, mode, base);
           if (!script && !rangeValue && !code) recordLine(mode, base, feature);   // 腳本／指定區間／重跑局不計入倍率線型
         } else if (!script && !rangeValue && !code) {
           recordLine(mode, base, null);
         }
       }
+      updateStats();
+      await window.demogameRoundPause?.();   // 每轉（BG 局／每轉 FG）算完分後固定停 0.1 秒（共用，不受 Speed 影響）再放行下一轉／Auto
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; appendLog(`Error | ${error.message}`, "error"); }
     updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(0), 180);
   }
@@ -3833,7 +3865,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-14 12:20";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-14 12:20";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-14 12:20";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261013h"></script>
+  <script src="../demogame_common.js?v=20261013i"></script>
 </body>
 
 </html>

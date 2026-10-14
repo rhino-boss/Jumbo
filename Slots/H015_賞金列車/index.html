@@ -2038,6 +2038,16 @@
           <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
           <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
           <li>驗證：inline script 通過 <code>node --check</code>；Debug Mode 下 NB 多局與 Buy Feature（含 FG）Log 行格式同 H045、RNG 行可點並重跑出相同結果、歷史紀錄 BG／FG 最大倍數與 Clear 正常，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
+          <li>驗證：最高 Speed 下 Auto 與 Buy Feature（含 FG）每轉算分到下一轉開始間隔皆 ≥ 100 ms；RNG 重跑結果相同、Simulation 速度不變、Console 無錯誤、inline script 通過 <code>node --check</code>。（10/13）</li>
+          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。FG 期間 Win 顯示 FG 整場累計（原為單轉得分），FG 結束＝FG complete Total；Credit／統計／Log／RNG 不變。（10/13）</li>
+          <li>驗證：BG 多次消除局 Win 逐次遞增、局末＝Log BG Win；Buy Feature FG 每轉每次消除遞增、結束＝FG complete Total；RNG 重跑相同、Console 無錯誤、inline script 通過 <code>node --check</code>。（10/13）</li>
+          <li>修正：FG 每轉得分原本沒加進 Credit（餘額），現在每轉算完分就加入。（10/13）</li>
+          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
+          <li>驗證：BG 多次消除局 Previous 依序 5,570→1,730→1,410→610→10、Next 回到 5,570，與播放時逐次值相同；Buy Feature FG 轉同樣對齊（基準＝FG 已得分）；Credit／統計不變、Console 無錯誤、inline script 通過 <code>node --check</code>。（10/13）</li>
+          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計（每次消除即時、Previous／Next 同基準），FG 結束等於整局總得分；原本 FG 從 0 起算，已修正。Credit／統計／Log／RNG 不變。（10/13）</li>
+          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），金框與倍數條同步還原，Feature Status 回到 Base Game。（10/13）</li>
+          <li>驗證：卡片區間 Free Game 觸發局 BG 1,215 → FG 起始 Win 1,215、逐次 3,055→3,255→3,655→3,975＝BG 1,215＋FG complete 2,760；FG 結束盤面與觸發局最終盤面相同、Feature Status 回 Base Game；RNG 碼重跑 Win 序列與盤面完全相同；Buy Feature 入場盤 0 → FG 結束 880＝FG complete、盤面還原成入場盤；下一局 Win 從 0 起算；Console 無錯誤、inline script 通過 <code>node --check</code>。（10/13）</li>
         </ol>
       </article>
       </div>
@@ -2796,8 +2806,12 @@
     }
   }
 
-  async function animateSpin(spin) {
-    state.snapshots = spin.steps; state.snapshotIndex = -1;
+  // 得分（Win）即時顯示：只改 #winValue 文字，不動 state（Credit／統計／Log 仍在局末才結算）
+  function showLiveWin(value) { el.winValue.textContent = format(value); }
+
+  async function animateSpin(spin, winBase = 0) {
+    showLiveWin(winBase);   // BG 局從 0 起算；FG 從本場 FG 已得分起算
+    state.snapshots = spin.steps; state.snapshotIndex = -1; state.snapshotWinBase = winBase;   // Previous／Next 逐步檢視用同一個 Win 起算基準
     const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
     renderMultiplierTrack(startIndex);
     el.carryMultiValue.textContent = "0";
@@ -2810,6 +2824,7 @@
       const step = spin.steps[i];
       showSnapshot(i, false);
       await rollMultiplierTo(step.multiplier);
+      if (step.wins.length) showLiveWin(winBase + step.total);   // 每次消除得分就加上去（step.total 為本轉累計）
       await delay();
       if (step.wins.length) {
         renderBoard(step.board, step.gold, [], { cleared: step.hit });
@@ -2833,8 +2848,8 @@
   async function playFreeSpin() {
     const spin = state.fg.spins?.[state.fg.played];
     if (!spin) { state.fg.remaining = 0; return; }
-    await animateSpin(spin);
-    state.fg.remaining--; state.fg.played++; state.lastWin = spin.total; state.totalWin += spin.total;
+    await animateSpin(spin, (state.fg.bgWin || 0) + (state.fg.win || 0));   // Win＝觸發局 BG 得分＋FG 已得分（Previous／Next 同基準）
+    state.fg.remaining--; state.fg.played++; state.totalWin += spin.total; state.balance += spin.total;   // FG 每轉得分加進 Credit
     if (spin.scatter >= 3 && state.fg.played < Box.max_spin_free_game) {
       const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game - state.fg.played - state.fg.remaining);
       state.fg.remaining += award; state.fg.total += award;
@@ -2845,6 +2860,7 @@
     addLog(`FG ${state.fg.played}/${state.fg.spins.length} | ${tableName(spin.tableId)} | Cascade ${fgCascade} | C1 ${spin.scatter} | Win ${format(spin.total)}`, fgCascade ? "cascade" : "info");
     state.fg.lineWin = (state.fg.lineWin || 0) + spin.total;
     state.fg.win = (state.fg.win || 0) + spin.total;
+    state.lastWin = (state.fg.bgWin || 0) + state.fg.win;   // Win：觸發局 BG 得分＋FG 累計（FG 結束＝整局總得分）
     if (!state.fg.remaining) {
       const fgX = state.fg.win / coinIn(MODE_NORMAL);
       addLog(`FG complete | Total ${format(state.fg.win)} (${fgX.toFixed(2)}x)`, "result");
@@ -2908,6 +2924,8 @@
         mode,
         lineWin: spin.total,   // 即時倍率線型：BG＋FG 合計
         win: 0,   // FG 整場得分（Log／歷史紀錄）
+        bgWin: spin.total,   // 觸發局 BG 得分（含 BF 入場盤），只用於 Win 顯示
+        bgSpin: spin,   // 觸發局 BG 最終盤面（BF 為入場盤），FG 結束回 BG 時還原
         natural,
         spins: round.freeSpins
       };
@@ -2918,9 +2936,25 @@
     el.messageBar.textContent = `${spin.scene} ${text("complete")} · ${format(spin.total)}${state.fg.remaining ? ` · ${text("triggered")}` : ""}`;
   }
 
+  // FG 結束回到 BG：盤面、金框與倍數條還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤）；只改顯示
+  function restoreBaseBoard() {
+    const spin = state.fg.bgSpin;
+    if (!spin) return;
+    renderBoard(spin.board, spin.gold);
+    const last = spin.steps?.[spin.steps.length - 1];
+    renderMultiplierTrack(multiplierIndex(last?.multiplier ?? MULTIPLIERS[0]));
+    el.carryMultiValue.textContent = last?.combo ?? 0;
+  }
+
   async function play(mode = MODE_NORMAL) {
     if (state.busy) return; state.busy = true; updateControls();
-    try { if (state.fg.remaining) await playFreeSpin(); else await playPaid(mode); }
+    try {
+      const inFg = state.fg.remaining > 0;
+      if (inFg) await playFreeSpin(); else await playPaid(mode);
+      updateStats();   // 先把這轉的分數顯示到 Credit／Win
+      await window.demogameRoundPause?.();   // 算分後固定停 0.1 秒（共用，不受 Speed 影響）再放行下一轉／Auto
+      if (inFg && !state.fg.remaining) restoreBaseBoard();   // FG 結束回 BG：盤面還原成觸發局最終盤面
+    }
     catch (error) { el.messageBar.textContent = error.message; addLog(`Error | ${error.message}`, "error"); }
     finally { state.busy = false; updateStats(); updateControls(); }
   }
@@ -3113,7 +3147,14 @@
   // 指定 Card BG Range 與 RNG 碼互斥：填 RNG 碼就清區間，選區間就清 RNG 碼
   el.rngInput.addEventListener("input", () => { if (el.rngInput.value.trim()) el.cardRangeSelect.value = ""; });
   el.cardRangeSelect.addEventListener("change", () => { if (el.cardRangeSelect.value) el.rngInput.value = ""; });
-  el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
+  // Previous／Next：盤面跳到該步，Win 同步顯示該步累計得分（＝播放到該步時的即時值；只改顯示，不動 state）
+  function stepSnapshot(delta) {
+    if (!state.snapshots.length) return;
+    showSnapshot(state.snapshotIndex + delta);
+    const step = state.snapshots[state.snapshotIndex];
+    if (step) showLiveWin((state.snapshotWinBase || 0) + step.total);
+  }
+  el.previousStepBtn.addEventListener("click", () => stepSnapshot(-1)); el.nextStepBtn.addEventListener("click", () => stepSnapshot(1));
 
   document.title = `${Box.english_name || "Wild Train"} — Demo Game`;
   el.gameId.textContent = Box.game_id;
@@ -3132,7 +3173,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261013f"></script>
+  <script src="../demogame_common.js?v=20261013i"></script>
 </body>
 
 </html>

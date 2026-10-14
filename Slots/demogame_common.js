@@ -877,6 +877,11 @@
   };
   function isZhText() { return /^zh/i.test(document.getElementById("languageSelect")?.value || ""); }
 
+  // ===== 算分後停頓（共用）=====
+  // 每一轉（BG 局與每一轉 FG）分數加完後停 DEMOGAME_ROUND_PAUSE_MS 再放行下一轉／Auto；固定毫秒，不受 Speed 影響。
+  const DEMOGAME_ROUND_PAUSE_MS = 500;
+  window.demogameRoundPause = () => new Promise((resolve) => setTimeout(resolve, DEMOGAME_ROUND_PAUSE_MS));
+
   // ===== Log（共用）=====
   // window.demogameLog(text, type)：寫一行「[HH:MM:SS] text」到 #liveLogBody，最多 500 行。
   // type：info（一般）／mode（局號、模式、FG 觸發）／rng／result（得分、載入、FG 結束）／cascade（有消除的 FG 轉）／error。
