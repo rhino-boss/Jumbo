@@ -129,6 +129,8 @@ PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文�
 TREE_ROOT: Path = HERE
 MD_DIR: Path = HERE
 OUT_DIR: Path = HERE
+# 產線站（Landbase／Reskin）只能連自己站內的頁籤：連到其他站或其他檔案的連結只留文字
+LOCAL_ONLY = False
 
 # 目前正在建置的站台：規範 md（相對 專案需知/ 的路徑）→ ("tab", tab_id) 或 ("ext", href)
 LINKS: dict = {}
@@ -181,6 +183,8 @@ def render_inline(text: str) -> str:
                 f'<a href="#" class="tab-link" data-tab="{target[1]}"{extra}>'
                 f"{label}</a>"
             )
+        if LOCAL_ONLY and relative:
+            return label
         if target and target[0] == "ext":
             href = target[1] + (f"/{anchor}" if anchor else "")
         elif PLAIN_UNKNOWN_MD and ".md" in base and not href.startswith("http"):
@@ -915,7 +919,7 @@ show();
 
 def build_tree(root: Path, tabs, groups):
     """建置一整套：Omniplay／各產線網頁（文件互連）＋ 最外層入口。"""
-    global TREE_ROOT
+    global TREE_ROOT, LOCAL_ONLY
     TREE_ROOT = root
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
     sites = [("omniplay", "Omniplay", root, tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, groups)]
@@ -938,7 +942,11 @@ def build_tree(root: Path, tabs, groups):
             else:
                 href = Path(os.path.relpath(sites[j][4], output.parent)).as_posix()
                 links[doc] = ("ext", f"{href}#{tab_id}")
-        build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
+        LOCAL_ONLY = i > 0
+        try:
+            build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
+        finally:
+            LOCAL_ONLY = False
 
     build_hub(root, [(key, name, Path(os.path.relpath(output, root)).as_posix())
                      for key, name, _b, _t, output, _s, _g in sites])
