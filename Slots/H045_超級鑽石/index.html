@@ -2211,6 +2211,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>2026-10-14：v5 加入表 3（競品表）</h4>
+        <ul>
+          <li>表 3 全照 Super Ace 側錄（輪帶、停點、補牌、表內金框顆數、大鬼 BG 4.2%／FG 0%、WILD 不帶倍數），賠率與階梯沿用本作。BG 選表 4 : 1 : 5，只有表 3 能觸發 FG；BG 表 1 的 C1 只留 R1、R3。FG 選表維持 2 : 8 : 0。</li>
+          <li>Demogame 支援盤面表自帶金框顆數；用到表 3 時上方標「Table 3」。92A 卡片權重待新自然報表重解，試玩時 RTP 僅供參考。</li>
+        </ul>
+      </article>
+      <article class="change-log-entry">
         <h4>2026-10-13：Help 改讀 game_help_draft.md；連消倍數演出順序調整</h4>
         <ul>
           <li>Help 改為讀 <code>game_help_draft.md</code>（Lucky Ace Help 為底、格式同 H028，全繁中），不再顯示整份 game_rule.md；賠率表依目前押注換算。新增 <code>文件/101015_Help.xlsx</code>，內容與 md 一致。</li>
@@ -2584,7 +2591,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
-      const stamp = `${encodeURIComponent(entry.version)}-20261013c`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261014a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
@@ -2830,11 +2837,13 @@
     return Array.from({ length: 4 }, (_, row) => Number(symbols[(stop + row) % symbols.length]));
   });
 
+  /** 金框顆數權重：盤面表自帶 gold_count_weight（v5 表 3 用競品原值）就用該表，否則用場景全域值（2026-10-14） */
+  const goldCountFor = (tableName, scene) => cfg.tables[tableName]?.gold_count_weight || GOLD_COUNT[scene];
   /** 依 Gold Count Weight 逐輪抽金框顆數，再隨機挑格子。金框只在 R2~R4，且不套在 Scatter 上。 */
-  function drawGold(scene, board) {
+  function drawGold(goldCount, board) {
     const gold = zeroGold();
     for (const reel of GOLD_REELS) {
-      const list = GOLD_COUNT[scene][reel];
+      const list = goldCount[reel];
       const count = Number(pick(list.map((_, k) => k), list));
       if (!count) continue;
       const spots = [];
@@ -2953,7 +2962,8 @@
     const scene = freeGame ? "fg" : "bg";
     const multipliers = freeGame ? LADDER.fg : LADDER.bg;
     const board = makeBoard(tableName), mults = zeroMults(), snapshots = [];
-    const gold = drawGold(scene, board);
+    const goldCount = goldCountFor(tableName, scene);
+    const gold = drawGold(goldCount, board);
     const flipState = { freeGame, bigGhostUsed: false };
     const cap = MAX_WIN * betUnit();
     let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
@@ -3002,7 +3012,7 @@
         }
         // game_rule §9.1.11：補牌後重抽該輪金框顆數 N，保留存活金框，不足才從新補格子補上
         if (GOLD_REELS.includes(reel) && rows.length) {
-          const list = GOLD_COUNT[scene][reel];
+          const list = goldCount[reel];
           const target = Number(pick(list.map((_, k) => k), list));
           const short = target - gold[reel].filter(Boolean).length;
           if (short > 0) {
@@ -3551,7 +3561,15 @@
   }
 
   // H045：本轉用到盤面表 2 才標示（BG／FG 都標；表 1 不顯示）
-  function showTable(tableName) { $("tablePill").classList.toggle("hidden", !/_2$/.test(String(tableName || ""))); }
+  // 用到表 2（高連消表）或表 3（競品表，BG 唯一可觸發 FG）時標出；表 1 不顯示（2026-10-14 加表 3）
+  function showTable(tableName) {
+    const m = String(tableName || "").match(/_([23])$/);
+    $("tablePill").classList.toggle("hidden", !m);
+    if (m) {
+      $("tablePill").querySelector(".k").textContent = `Table ${m[1]}`;
+      $("tablePill").title = m[1] === "2" ? "This spin uses Table 2 (high-cascade table)" : "This spin uses Table 3 (Super Ace table, the only BG table that can trigger FG)";
+    }
+  }
 
   async function playFeatureSpin() {
     const item = state.fg.spins[state.fg.index]; if (!item) return;
@@ -3811,9 +3829,9 @@
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 13:13";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-13 16:16";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-13 16:16";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-14 10:26";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-14 10:26";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-14 10:26";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261013h"></script>
 </body>
 
