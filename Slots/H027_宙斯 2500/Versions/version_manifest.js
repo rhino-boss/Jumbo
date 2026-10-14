@@ -1,5 +1,5 @@
 window.H027_VERSION_MANIFEST = {
-  current: "7.3.0.0",
+  current: "7.4.0.0",
   base_version: "7",
   next_version: "8.0.0.0",
   versions: [
@@ -345,6 +345,40 @@ window.H027_VERSION_MANIFEST = {
         "Big bet (_Bet100) BG cap 200x = stricter of $500,000 / $1500 = 333x and $1,000,000 / $5000 = 200x. A tops at (120,140] (natural rate of (140,200] below threshold), B at (180,200]; only the BG columns (F, H) are re-solved, FG/BF/Newbie unchanged, SCR unchanged.",
         "Validation (10^7 each, 22 runs): 21 within 2 sigma; A big bet NB 91.42% (-2.58 sigma, BG low bias already present in 7.2).",
         "Known exception (注意事項.md): BG 2500x and, for big bet, 1000x balls cannot score; left as is per user instruction."
+      ]
+    },
+    {
+      version: "7.4.0.0",
+      math_key: "7.4",
+      date: "2026-10-14",
+      competitor_initial_version: false,
+      base_configs: {
+        A: "Versions/7.4.0.0/config_A.js",
+        B: "Versions/7.4.0.0/config_B.js"
+      },
+      configs: {
+        "92A": "Versions/7.4.0.0/config_92A.js",
+        "94A": "Versions/7.4.0.0/config_94A.js",
+        "92A_Bet100": "Versions/7.4.0.0/config_92A_Bet100.js",
+        "92B": "Versions/7.4.0.0/config_92B.js",
+        "94B": "Versions/7.4.0.0/config_94B.js",
+        "92B_Bet100": "Versions/7.4.0.0/config_92B_Bet100.js"
+      },
+      workbooks: {
+        base_a: "Versions/7.4.0.0/Source/H0271A.xlsx",
+        base_b: "Versions/7.4.0.0/Source/H0271B.xlsx",
+        92: "Versions/7.4.0.0/Source/H027192A.xlsx",
+        94: "Versions/7.4.0.0/Source/H027194A.xlsx",
+        "92_Bet100": "Versions/7.4.0.0/Source/H027192A_Bet100.xlsx",
+        "92B": "Versions/7.4.0.0/Source/H027192B.xlsx",
+        "94B": "Versions/7.4.0.0/Source/H027194B.xlsx",
+        "92B_Bet100": "Versions/7.4.0.0/Source/H027192B_Bet100.xlsx"
+      },
+      frozen_base: "Versions/7.1.1.0",
+      changes: [
+        "Card-On BG ran 0.15-0.4pp low in every 7.x version because a BG range card retries at most 10,000 times; intervals whose natural rate is near the 0.02% threshold miss about 13% of the time and the last (mostly low) natural spin is kept.",
+        "Oldhand BG columns (NB/EB) of all six workbooks re-solved with the effective mean e'_i = s_i*e_i + (1-s_i)*F, s_i = 1-(1-p_i)^10000; shape and trigger weight unchanged; FG/BF/Newbie unchanged; SCR unchanged.",
+        "Validation: oldhand NB/EB 12 runs at 10^8, BG within +/-0.08pp of target; Newbie/BF 10 runs at 10^7 all within 2 sigma."
       ]
     }
   ]
