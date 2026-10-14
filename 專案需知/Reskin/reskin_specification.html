@@ -162,7 +162,6 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <header class="page">
   <div class="eyebrow">iGaming · Reskin</div>
   <h1 class="site">Reskin 開發規範</h1>
-  <nav class="lines" aria-label="產線"><a href="../omniplay_specification.html">Omniplay</a><a href="../Landbase/landbase_specification.html">Landbase</a><a href="../Reskin/reskin_specification.html" class="on">Reskin</a></nav>
   <p class="meta">由 <code>專案需知/Reskin/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-14</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="knowhow" data-tabs="knowhow" aria-selected="true" tabindex="0"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Knowhow</button><button class="tab" role="tab" id="tab-g1" data-tab="math" data-tabs="math" aria-selected="false" tabindex="-1">數學模型規範</button></div>
@@ -172,9 +171,9 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <p>本頁記錄 Reskin 產線的市場與平台背景，作為數學設計的前提。</p>
 <h2 id="1-市場與平台要求">1. 市場與平台要求</h2>
 <div class="tbl-wrap"><table><thead><tr><th>項目</th><th>內容</th></tr></thead><tbody><tr><td>市場</td><td>歐美</td></tr><tr><td>平台 RTP 要求</td><td>須提供 <code>92%</code>、<code>94%</code>、<code>96%</code> 三個 RTP 版本</td></tr></tbody></table></div>
-<ul><li>據了解（未經平台正式確認），平台會在玩家<strong>第一次玩該遊戲時</strong>，依玩家過去的遊玩習慣指定 92／94／96 其中一個版本給該玩家。</li><li>因此三個版本都會在線上實際被玩到，皆須完整製作、模擬驗證與送驗，不能只做主版本。</li><li>其他產線見 <a href="../omniplay_specification.html#knowhow">Omniplay Knowhow</a>。</li></ul></section><section class="panel" role="tabpanel" id="panel-math" hidden><h1 id="reskin-數學模型規範">Reskin 數學模型規範</h1>
+<ul><li>據了解（未經平台正式確認），平台會在玩家<strong>第一次玩該遊戲時</strong>，依玩家過去的遊玩習慣指定 92／94／96 其中一個版本給該玩家。</li><li>因此三個版本都會在線上實際被玩到，皆須完整製作、模擬驗證與送驗，不能只做主版本。</li><li>其他產線見 <a href="../Omniplay/omniplay_specification.html#knowhow">Omniplay Knowhow</a>。</li></ul></section><section class="panel" role="tabpanel" id="panel-math" hidden><h1 id="reskin-數學模型規範">Reskin 數學模型規範</h1>
 <p>本文件屬於 <code>專案需知/Reskin/</code>，適用於 <strong>Reskin 產線</strong>：以既有 Omniplay 遊戲數學為底，換皮輸出到 Reskin（SC／GC 雙幣）與 Vietnam 等市場的版本。</p>
-<p>本文件採<strong>差異式</strong>撰寫：只列 Reskin 產線與 Omniplay 不同或新增的規則；<strong>凡本文件未覆寫的條款，一律沿用 Omniplay 的 <a href="../omniplay_specification.html#math">數學模型規範.md</a></strong>。兩者衝突時以本文件為準。</p>
+<p>本文件採<strong>差異式</strong>撰寫：只列 Reskin 產線與 Omniplay 不同或新增的規則；<strong>凡本文件未覆寫的條款，一律沿用 Omniplay 的 <a href="../Omniplay/omniplay_specification.html#math">數學模型規範.md</a></strong>。兩者衝突時以本文件為準。</p>
 <p>目前的需求來源文件（<code>個人工作區/專案紀錄/</code> 下的 Reskin 需求資料夾）：</p>
 <div class="tbl-wrap"><table><thead><tr><th>文件</th><th>日期</th><th>內容</th><th>狀態</th></tr></thead><tbody><tr><td>押注幣別工作簿（<code>bet_currency_*.xlsx</code>）</td><td>2026-08-13</td><td>工作表 <code>v2</code>（唯一未隱藏）：44 組 Bet Multiplier、SC／GC 的 Denom 與押注金額；<code>Sheet1</code>、<code>v1</code> 為隱藏的舊草稿</td><td><strong>現行版</strong></td></tr><tr><td><code>Bet Option規劃.pdf</code></td><td>2026-07-30</td><td>Bet Multiplier 44 組、Reskin SC／GC、Vietnam 押注金額</td><td>較舊；GC 只列 16 檔，與 <code>v2</code> 不一致（第 6 節）</td></tr></tbody></table></div>
 <h2 id="1-定位與範圍">1. 定位與範圍</h2>

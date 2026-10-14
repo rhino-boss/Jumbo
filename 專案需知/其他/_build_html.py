@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁：Omniplay（omniplay_specification.html）、Landbase、Reskin。
+"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin），
+再產生最外層入口 igaming_specification.html 切換三站。
 
 本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
 
@@ -12,12 +13,16 @@
 """
 
 import html
+import os
 import re
 from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent.parent  # 專案需知/（規範 .md 所在層）
-OUTPUT = HERE / "omniplay_specification.html"
+# Omniplay 規範 md 放在根目錄，網頁輸出到 Omniplay/ 資料夾（與 Landbase/、Reskin/ 並列）
+OMNI_DIR = "Omniplay"
+OMNI_FILE = "omniplay_specification.html"
+HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線切換
 
 # (tab_id, 頁籤名稱, 檔名)
 TABS = [
@@ -87,7 +92,6 @@ GROUP_ICONS = {
         'h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
 }
 
-ROOT_OUTPUT_NAME = OUTPUT.name
 ROOT_TITLE = "Omniplay 開發規範"
 
 # 其他產線：資料夾內的 .md 各自彙整成該資料夾的 HTML。
@@ -113,6 +117,10 @@ TEAM_GROUPS = [
 TEAM_README = "其他/_README_team.md"          # 團隊版總覽，發佈時改名為 其他/_README.md
 TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
 PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文件的 .md 連結只留文字
+
+# 未對應的相對連結：以 md 所在資料夾解析，再換算成相對於輸出 HTML 的路徑
+MD_DIR: Path | None = None
+OUT_DIR: Path | None = None
 
 # 目前正在建置的站台：md 相對路徑（如 md 內所寫、已去掉 ./）→ ("tab", tab_id) 或 ("ext", href)
 LINKS: dict = {}
@@ -166,6 +174,9 @@ def render_inline(text: str) -> str:
             href = target[1] + (f"/{anchor}" if anchor else "")
         elif PLAIN_UNKNOWN_MD and ".md" in base and not href.startswith("http"):
             return label
+        if not target and MD_DIR and OUT_DIR and base and not re.match(r"^([a-z]+:|#|/)", href):
+            target_path = os.path.normpath(MD_DIR / base)
+            href = Path(os.path.relpath(target_path, OUT_DIR)).as_posix() + (f"#{anchor}" if anchor else "")
         return f'<a href="{href}">{label}</a>'
 
     text = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, text)
@@ -467,13 +478,14 @@ def line_tabs(folder: Path):
 
 
 def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict,
-               groups=None, line_nav: str = ""):
+               groups=None):
     """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。
 
     groups：[(大分類, [tab_id...])]；省略時每份文件自成一類。
     """
-    global LINKS
+    global LINKS, MD_DIR, OUT_DIR
     LINKS = links
+    OUT_DIR = output.parent
     _used_ids.clear()
     title_of = {t: title for t, title, _ in tabs}
     if groups is None:
@@ -488,6 +500,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
     first_tab = groups[0][1][0]
     for tab_id, title, filename in tabs:
         md = (base / filename).read_text(encoding="utf-8")
+        MD_DIR = (base / filename).parent
         r = Renderer(tab_id)
         body = r.render(md)
         toc_items[tab_id] = "".join(
@@ -687,7 +700,6 @@ mark.hl-danger{{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,tran
 <header class="page">
   <div class="eyebrow">{eyebrow}</div>
   <h1 class="site">{site_title}</h1>
-  {line_nav}
   <p class="meta">由 <code>{src_label}</code> 產生（<code>_build_html.py</code>）　|　{today}</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件">{''.join(tabs_html)}</div>
@@ -757,6 +769,7 @@ document.addEventListener('click', function(e) {{
 </body>
 </html>
 """
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(page, encoding="utf-8")
     print(f"OK: {rel_to_tree(output)} 已更新（{output.stat().st_size:,} bytes）")
 
@@ -771,40 +784,95 @@ def rel_to_tree(path: Path) -> Path:
     return path
 
 
-def line_nav(root: Path, current) -> str:
-    """頁首產線切換：Omniplay／Landbase／Reskin 三站互連，目前所在站標示為 on。"""
-    up = "../" if current else ""
-    items = [(None, "Omniplay", f"{up}{ROOT_OUTPUT_NAME}")]
-    items += [(folder, folder, f"{up}{folder}/{out_name}")
-              for folder, out_name, _ in PRODUCT_LINES if line_tabs(root / folder)]
-    links = "".join(
-        f'<a href="{href}"{' class="on"' if key == current else ""}>{name}</a>'
-        for key, name, href in items)
-    return f'<nav class="lines" aria-label="產線">{links}</nav>'
+def build_hub(root: Path, sites):
+    """最外層入口：上方三產線按鈕，下方內嵌所選產線的網頁；網址 #omniplay／#landbase／#reskin 記住所選。"""
+    buttons = "".join(f'<a href="#{key}" data-key="{key}" data-src="{src}">{name}</a>'
+                      for key, name, src in sites)
+    page = f"""<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iGaming 開發規範</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Noto+Sans+TC:wght@400;600&display=swap">
+<style>
+:root{{--surface:#fcfcfb; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#e3e6ea; --s1:#2a78d6; --on:#ffffff;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif}}
+@media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{
+  --surface:#1a1a19; --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95; --rule:#33353a; --s1:#3987e5}}}}
+:root[data-theme="dark"]{{--surface:#1a1a19; --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95; --rule:#33353a; --s1:#3987e5}}
+*{{box-sizing:border-box}}
+html,body{{height:100%; margin:0}}
+body{{display:flex; flex-direction:column; background:var(--surface); color:var(--ink); font-family:var(--font-sans)}}
+header{{display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:12px 22px; border-bottom:1px solid var(--rule)}}
+h1{{margin:0; font-size:17px; font-weight:600}}
+nav{{display:flex; gap:6px; flex-wrap:wrap}}
+nav a{{font-size:13.5px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:4px 15px}}
+nav a:hover{{color:var(--s1); border-color:var(--s1)}}
+nav a.on{{color:var(--on); background:var(--s1); border-color:var(--s1); font-weight:600}}
+iframe{{flex:1; width:100%; border:0; display:block; background:var(--surface)}}
+@media (max-width:600px){{header{{padding:10px 16px; gap:10px}}}}
+</style>
+</head>
+<body>
+<header><h1>iGaming 開發規範</h1><nav aria-label="產線">{buttons}</nav></header>
+<iframe id="site" title="產線規範"></iframe>
+<script>
+var frame = document.getElementById('site');
+var btns = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+function mark(key) {{
+  btns.forEach(function (b) {{ b.classList.toggle('on', b.dataset.key === key); }});
+}}
+function show() {{
+  var h = decodeURIComponent(location.hash.slice(1));
+  var key = h.split('/')[0], sub = h.split('/').slice(1).join('/');
+  var b = btns.filter(function (x) {{ return x.dataset.key === key; }})[0] || btns[0];
+  frame.src = b.dataset.src + (sub ? '#' + sub : '');
+  mark(b.dataset.key);
+}}
+// 站內連到其他產線時，按鈕跟著 iframe 目前的網頁亮起
+frame.addEventListener('load', function () {{
+  try {{
+    var path = decodeURIComponent(frame.contentWindow.location.pathname);
+    btns.forEach(function (b) {{ if (path.indexOf(b.dataset.src) >= 0) mark(b.dataset.key); }});
+  }} catch (e) {{}}
+}});
+window.addEventListener('hashchange', show);
+show();
+</script>
+</body>
+</html>
+"""
+    out = root / HUB_NAME
+    out.write_text(page, encoding="utf-8")
+    print(f"OK: {rel_to_tree(out)} 已更新（{out.stat().st_size:,} bytes）")
 
 
 def build_tree(root: Path, tabs, groups):
-    """建置一整套：根 HTML ＋ 各產線 HTML。"""
-    # 根目錄（Omniplay）：根 .md 互連為頁籤；連到產線資料夾的 .md 轉成該產線 HTML
+    """建置一整套：Omniplay 網頁 ＋ 各產線網頁 ＋ 最外層入口。"""
+    omni_href = f"../{OMNI_DIR}/{OMNI_FILE}"
+    # Omniplay：根 .md 互連為頁籤；連到產線資料夾的 .md 轉成該產線 HTML
     links = {filename: ("tab", tab_id) for tab_id, _, filename in tabs}
     links["_README.md"] = ("tab", "overview")  # 根 .md 內仍以 _README.md 連到總覽
     for folder, out_name, _ in PRODUCT_LINES:
         for tab_id, _, filename in line_tabs(root / folder):
-            links[f"{folder}/{filename}"] = ("ext", f"{folder}/{out_name}#{tab_id}")
-    build_site(root, tabs, root / ROOT_OUTPUT_NAME, ROOT_TITLE, "iGaming · Omniplay", links, groups,
-               line_nav=line_nav(root, None))
+            links[f"{folder}/{filename}"] = ("ext", f"../{folder}/{out_name}#{tab_id}")
+    build_site(root, tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, "iGaming · Omniplay", links, groups)
+    sites = [("omniplay", "Omniplay", f"{OMNI_DIR}/{OMNI_FILE}")]
 
-    # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成根 HTML 的頁籤
+    # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成 Omniplay 網頁的頁籤
     for folder, out_name, site_title in PRODUCT_LINES:
         line = line_tabs(root / folder)
         if not line:
             continue
         links = {filename: ("tab", tab_id) for tab_id, _, filename in line}
         for tab_id, _, filename in tabs:
-            links[f"../{filename}"] = ("ext", f"../{ROOT_OUTPUT_NAME}#{tab_id}")
-        links["../其他/_README.md"] = ("ext", f"../{ROOT_OUTPUT_NAME}#overview")
+            links[f"../{filename}"] = ("ext", f"{omni_href}#{tab_id}")
+        links["../其他/_README.md"] = ("ext", f"{omni_href}#overview")
         build_site(root / folder, line, root / folder / out_name, site_title,
-                   f"iGaming · {folder}", links, line_nav=line_nav(root, folder))
+                   f"iGaming · {folder}", links)
+        sites.append((folder.lower(), folder, f"{folder}/{out_name}"))
+    build_hub(root, sites)
 
 
 def publish_team():

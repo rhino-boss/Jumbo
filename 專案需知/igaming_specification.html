@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iGaming 開發規範</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Noto+Sans+TC:wght@400;600&display=swap">
+<style>
+:root{--surface:#fcfcfb; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#e3e6ea; --s1:#2a78d6; --on:#ffffff;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+  --surface:#1a1a19; --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95; --rule:#33353a; --s1:#3987e5}}
+:root[data-theme="dark"]{--surface:#1a1a19; --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95; --rule:#33353a; --s1:#3987e5}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0}
+body{display:flex; flex-direction:column; background:var(--surface); color:var(--ink); font-family:var(--font-sans)}
+header{display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:12px 22px; border-bottom:1px solid var(--rule)}
+h1{margin:0; font-size:17px; font-weight:600}
+nav{display:flex; gap:6px; flex-wrap:wrap}
+nav a{font-size:13.5px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:4px 15px}
+nav a:hover{color:var(--s1); border-color:var(--s1)}
+nav a.on{color:var(--on); background:var(--s1); border-color:var(--s1); font-weight:600}
+iframe{flex:1; width:100%; border:0; display:block; background:var(--surface)}
+@media (max-width:600px){header{padding:10px 16px; gap:10px}}
+</style>
+</head>
+<body>
+<header><h1>iGaming 開發規範</h1><nav aria-label="產線"><a href="#omniplay" data-key="omniplay" data-src="Omniplay/omniplay_specification.html">Omniplay</a><a href="#landbase" data-key="landbase" data-src="Landbase/landbase_specification.html">Landbase</a><a href="#reskin" data-key="reskin" data-src="Reskin/reskin_specification.html">Reskin</a></nav></header>
+<iframe id="site" title="產線規範"></iframe>
+<script>
+var frame = document.getElementById('site');
+var btns = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+function mark(key) {
+  btns.forEach(function (b) { b.classList.toggle('on', b.dataset.key === key); });
+}
+function show() {
+  var h = decodeURIComponent(location.hash.slice(1));
+  var key = h.split('/')[0], sub = h.split('/').slice(1).join('/');
+  var b = btns.filter(function (x) { return x.dataset.key === key; })[0] || btns[0];
+  frame.src = b.dataset.src + (sub ? '#' + sub : '');
+  mark(b.dataset.key);
+}
+// 站內連到其他產線時，按鈕跟著 iframe 目前的網頁亮起
+frame.addEventListener('load', function () {
+  try {
+    var path = decodeURIComponent(frame.contentWindow.location.pathname);
+    btns.forEach(function (b) { if (path.indexOf(b.dataset.src) >= 0) mark(b.dataset.key); });
+  } catch (e) {}
+});
+window.addEventListener('hashchange', show);
+show();
+</script>
+</body>
+</html>
