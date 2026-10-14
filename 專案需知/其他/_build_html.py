@@ -2,7 +2,7 @@
 """將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin），
 再產生最外層入口 igaming_specification.html 切換三站。
 
-本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
+本腳本放在 專案需知/其他/；三產線的 md 與網頁各在 Omniplay/、Landbase/、Reskin/，入口在 專案需知/ 最外層。
 
 用法（在 其他/ 內執行）：
     py _build_html.py
@@ -18,28 +18,28 @@ import re
 from datetime import date
 from pathlib import Path
 
-HERE = Path(__file__).parent.parent  # 專案需知/（規範 .md 所在層）
-# Omniplay 規範 md 放在根目錄，網頁輸出到 Omniplay/ 資料夾（與 Landbase/、Reskin/ 並列）
+HERE = Path(__file__).parent.parent  # 專案需知/
+# Omniplay 規範 md 與網頁都在 Omniplay/ 資料夾（與 Landbase/、Reskin/ 並列）
 OMNI_DIR = "Omniplay"
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線切換
 
-# (tab_id, 頁籤名稱, 檔名)
+# (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
     ("overview", "總覽", "其他/_README.md"),
-    ("knowhow", "Knowhow", "Knowhow.md"),
-    ("flow", "開發流程", "開發流程.md"),
-    ("math", "數學模型規範", "數學模型規範.md"),
-    ("docs", "數學文件規範", "數學文件規範.md"),
-    ("submission", "送驗文件規範", "送驗文件規範.md"),
-    ("sim", "模擬程式規範", "模擬程式規範.md"),
-    ("demo", "Demogame規範", "Demogame規範.md"),
-    ("script", "腳本規範", "腳本規範.md"),
-    ("proposal", "提案報告規範", "提案報告規範.md"),
-    ("stress", "壓測說明書", "壓測說明書.md"),
-    ("backend", "後端報表筆記", "後端報表筆記.md"),
-    ("ceiling", "天花板說明", "天花板說明.md"),
-    ("mechanism", "系統機制", "機制說明.md"),
+    ("knowhow", "Knowhow", "Omniplay/Knowhow.md"),
+    ("flow", "開發流程", "Omniplay/開發流程.md"),
+    ("math", "數學模型規範", "Omniplay/數學模型規範.md"),
+    ("docs", "數學文件規範", "Omniplay/數學文件規範.md"),
+    ("submission", "送驗文件規範", "Omniplay/送驗文件規範.md"),
+    ("sim", "模擬程式規範", "Omniplay/模擬程式規範.md"),
+    ("demo", "Demogame規範", "Omniplay/Demogame規範.md"),
+    ("script", "腳本規範", "Omniplay/腳本規範.md"),
+    ("proposal", "提案報告規範", "Omniplay/提案報告規範.md"),
+    ("stress", "壓測說明書", "Omniplay/壓測說明書.md"),
+    ("backend", "後端報表筆記", "Omniplay/後端報表筆記.md"),
+    ("ceiling", "天花板說明", "Omniplay/天花板說明.md"),
+    ("mechanism", "系統機制", "Omniplay/機制說明.md"),
 ]
 
 # 根 HTML 的頁籤分組：(大分類, [tab_id...])。一類多份文件時，左側導覽先列文件名。
@@ -118,11 +118,13 @@ TEAM_README = "其他/_README_team.md"          # 團隊版總覽，發佈時改
 TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
 PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文件的 .md 連結只留文字
 
-# 未對應的相對連結：以 md 所在資料夾解析，再換算成相對於輸出 HTML 的路徑
-MD_DIR: Path | None = None
-OUT_DIR: Path | None = None
+# 相對連結一律以 md 所在資料夾解析（總覽 _README*.md 的慣例是相對 專案需知/ 根目錄），
+# 解析後是規範文件就轉成頁籤／他站，否則換算成相對輸出 HTML 的路徑
+TREE_ROOT: Path = HERE
+MD_DIR: Path = HERE
+OUT_DIR: Path = HERE
 
-# 目前正在建置的站台：md 相對路徑（如 md 內所寫、已去掉 ./）→ ("tab", tab_id) 或 ("ext", href)
+# 目前正在建置的站台：規範 md（相對 專案需知/ 的路徑）→ ("tab", tab_id) 或 ("ext", href)
 LINKS: dict = {}
 
 _used_ids = set()
@@ -162,8 +164,11 @@ def render_inline(text: str) -> str:
     def link(m):
         label, href = m.group(1), m.group(2)
         base, _, anchor = href.partition("#")
-        base = base.removeprefix("./")
-        target = LINKS.get(base)
+        target = None
+        relative = base and not re.match(r"^([a-z]+:|#|/)", href)
+        if relative:
+            resolved = os.path.normpath(MD_DIR / base)
+            target = LINKS.get(Path(os.path.relpath(resolved, TREE_ROOT)).as_posix())
         if target and target[0] == "tab":
             extra = f' data-anchor="{anchor}"' if anchor else ""
             return (
@@ -174,9 +179,8 @@ def render_inline(text: str) -> str:
             href = target[1] + (f"/{anchor}" if anchor else "")
         elif PLAIN_UNKNOWN_MD and ".md" in base and not href.startswith("http"):
             return label
-        if not target and MD_DIR and OUT_DIR and base and not re.match(r"^([a-z]+:|#|/)", href):
-            target_path = os.path.normpath(MD_DIR / base)
-            href = Path(os.path.relpath(target_path, OUT_DIR)).as_posix() + (f"#{anchor}" if anchor else "")
+        elif relative:
+            href = Path(os.path.relpath(resolved, OUT_DIR)).as_posix() + (f"#{anchor}" if anchor else "")
         return f'<a href="{href}">{label}</a>'
 
     text = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, text)
@@ -500,7 +504,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
     first_tab = groups[0][1][0]
     for tab_id, title, filename in tabs:
         md = (base / filename).read_text(encoding="utf-8")
-        MD_DIR = (base / filename).parent
+        MD_DIR = TREE_ROOT if Path(filename).name.startswith("_README") else (base / filename).parent
         r = Renderer(tab_id)
         body = r.render(md)
         toc_items[tab_id] = "".join(
@@ -535,7 +539,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         )
 
     today = date.today().strftime("%Y-%m-%d")
-    src_label = f"專案需知/{rel_to_tree(base)}/*.md".replace("/./", "/")
+    src_label = f"專案需知/{rel_to_tree(output.parent).as_posix()}/*.md"
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -849,30 +853,33 @@ show();
 
 
 def build_tree(root: Path, tabs, groups):
-    """建置一整套：Omniplay 網頁 ＋ 各產線網頁 ＋ 最外層入口。"""
-    omni_href = f"../{OMNI_DIR}/{OMNI_FILE}"
-    # Omniplay：根 .md 互連為頁籤；連到產線資料夾的 .md 轉成該產線 HTML
-    links = {filename: ("tab", tab_id) for tab_id, _, filename in tabs}
-    links["_README.md"] = ("tab", "overview")  # 根 .md 內仍以 _README.md 連到總覽
-    for folder, out_name, _ in PRODUCT_LINES:
-        for tab_id, _, filename in line_tabs(root / folder):
-            links[f"{folder}/{filename}"] = ("ext", f"../{folder}/{out_name}#{tab_id}")
-    build_site(root, tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, "iGaming · Omniplay", links, groups)
-    sites = [("omniplay", "Omniplay", f"{OMNI_DIR}/{OMNI_FILE}")]
-
-    # 各產線：資料夾內 .md 互連為頁籤；連回根目錄 .md 轉成 Omniplay 網頁的頁籤
+    """建置一整套：Omniplay／各產線網頁（文件互連）＋ 最外層入口。"""
+    global TREE_ROOT
+    TREE_ROOT = root
+    # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
+    sites = [("omniplay", "Omniplay", root, tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, groups)]
     for folder, out_name, site_title in PRODUCT_LINES:
         line = line_tabs(root / folder)
-        if not line:
-            continue
-        links = {filename: ("tab", tab_id) for tab_id, _, filename in line}
-        for tab_id, _, filename in tabs:
-            links[f"../{filename}"] = ("ext", f"{omni_href}#{tab_id}")
-        links["../其他/_README.md"] = ("ext", f"{omni_href}#overview")
-        build_site(root / folder, line, root / folder / out_name, site_title,
-                   f"iGaming · {folder}", links)
-        sites.append((folder.lower(), folder, f"{folder}/{out_name}"))
-    build_hub(root, sites)
+        if line:
+            sites.append((folder.lower(), folder, root / folder, line, root / folder / out_name, site_title, None))
+
+    docs = {}   # 規範 md（相對 root）→ (站台序號, tab_id)
+    for i, site in enumerate(sites):
+        for tab_id, _, filename in site[3]:
+            docs[Path(os.path.relpath(site[2] / filename, root)).as_posix()] = (i, tab_id)
+
+    for i, (_key, name, base, site_tabs, output, site_title, site_groups) in enumerate(sites):
+        links = {}
+        for doc, (j, tab_id) in docs.items():
+            if j == i:
+                links[doc] = ("tab", tab_id)
+            else:
+                href = Path(os.path.relpath(sites[j][4], output.parent)).as_posix()
+                links[doc] = ("ext", f"{href}#{tab_id}")
+        build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
+
+    build_hub(root, [(key, name, Path(os.path.relpath(output, root)).as_posix())
+                     for key, name, _b, _t, output, _s, _g in sites])
 
 
 def publish_team():

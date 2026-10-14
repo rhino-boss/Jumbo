@@ -10,4 +10,4 @@
 | 平台 RTP 要求 | Total RTP 須介於 `96.5%`～`97%` |
 
 - 平台要求指 Total RTP（Link＋Bonus Game＋Game，含新手體驗／老手救援等系統 RTP）；各 Profile、押注層級的拆分見[數學模型規範.md](數學模型規範.md)第 1.4 節。
-- 其他產線見 [Landbase Knowhow](Landbase/Knowhow.md)、[Reskin Knowhow](Reskin/Knowhow.md)。
+- 其他產線見 [Landbase Knowhow](../Landbase/Knowhow.md)、[Reskin Knowhow](../Reskin/Knowhow.md)。

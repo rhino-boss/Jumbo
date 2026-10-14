@@ -10,7 +10,7 @@ RESPIN／綠 BONUS／紅 BONUS／空白）。玩法定義見 ``game_rule.md``；
   報表檔名在 Profile 位置改寫押注，例如 ``_bet100``。
 - 0換E、假表演、初始盤面只影響演出，不影響派彩，不在本程式模擬。
 
-Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/模擬程式規範.md``。
+Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/Omniplay/模擬程式規範.md``。
 """
 
 from __future__ import annotations
