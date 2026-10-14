@@ -100,8 +100,14 @@ PRODUCT_LINES = [
     ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
 ]
-TAB_ORDER_HINT = ["導覽", "Knowhow", "系統機制", "開發流程", "數學模型規範", "數學文件規範", "送驗文件規範", "送驗規範",
-                  "模擬程式規範", "Demogame規範", "腳本規範", "提案報告規範", "壓測說明書", "後端報表筆記"]
+# 產線資料夾的 md（檔名）歸入與 Omniplay 相同的頁籤大分類，標題、icon、顏色、順序三站一致
+LINE_GROUP_OF = {
+    "導覽": "總覽", "Knowhow": "Knowhow", "開發流程": "開發流程", "提案報告規範": "提案",
+    "數學模型規範": "數學設計", "數學文件規範": "數學文件", "送驗文件規範": "送驗相關", "送驗規範": "送驗相關",
+    "系統機制": "系統相關", "機制說明": "系統相關", "天花板說明": "系統相關", "腳本規範": "系統相關",
+    "壓測說明書": "系統相關", "後端報表筆記": "系統相關", "模擬程式規範": "模擬程式＋Demogame",
+    "Demogame規範": "模擬程式＋Demogame",
+}
 
 # 團隊版：只放給所有數學 follow 的規範，發佈到共享資料夾（個人文件不外放）
 TEAM_DIR = Path(r"\\192.168.139.6\Simulate\專案需知")
@@ -470,15 +476,30 @@ def tab_id_for(stem: str) -> str:
     return re.sub(r"[^\w\-]", "-", stem.lower()) or "doc"
 
 
+GROUP_ORDER = [g for g, _ids in GROUPS]
+
+
 def line_tabs(folder: Path):
-    """列出產線資料夾的 md，依 TAB_ORDER_HINT 排序，其餘依檔名。"""
+    """列出產線資料夾的 md，依所屬大分類在 GROUPS 的順序排列，其餘依檔名。"""
     mds = [p for p in folder.glob("*.md") if not p.name.startswith("_")]
 
     def key(p):
-        stem = p.stem
-        return (TAB_ORDER_HINT.index(stem) if stem in TAB_ORDER_HINT else 99, stem)
+        g = LINE_GROUP_OF.get(p.stem)
+        return (GROUP_ORDER.index(g) if g in GROUP_ORDER else 99, p.stem)
 
     return [(tab_id_for(p.stem), p.stem, p.name) for p in sorted(mds, key=key)]
+
+
+def line_groups(line):
+    """產線頁籤分組：同一大分類的多份文件併成一個頁籤（左側導覽列文件名）。"""
+    groups = []
+    for tab_id, title, _f in line:
+        g = LINE_GROUP_OF.get(title, title)
+        if groups and groups[-1][0] == g:
+            groups[-1][1].append(tab_id)
+        else:
+            groups.append((g, [tab_id]))
+    return groups
 
 
 def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict,
@@ -861,7 +882,8 @@ def build_tree(root: Path, tabs, groups):
     for folder, out_name, site_title in PRODUCT_LINES:
         line = line_tabs(root / folder)
         if line:
-            sites.append((folder.lower(), folder, root / folder, line, root / folder / out_name, site_title, None))
+            sites.append((folder.lower(), folder, root / folder, line, root / folder / out_name, site_title,
+                          line_groups(line)))
 
     docs = {}   # 規範 md（相對 root）→ (站台序號, tab_id)
     for i, site in enumerate(sites):
