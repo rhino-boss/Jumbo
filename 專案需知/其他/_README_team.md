@@ -9,7 +9,7 @@
 | 位置 | 產線 | 內容 |
 |---|---|---|
 | `Omniplay/` | **Omniplay** | 主流遊戲的規範 |
-| `Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](Landbase/導覽.md)、[系統機制](Landbase/系統機制.md)、[數學文件規範](Landbase/數學文件規範.md)、[送驗規範](Landbase/送驗規範.md)；彙整版為 `Landbase/landbase_specification.html` |
+| `Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](Landbase/導覽.md)、[系統機制](Landbase/系統機制.md)、[數學模型規範](Landbase/數學模型規範.md)、[送驗規範](Landbase/送驗規範.md)；彙整版為 `Landbase/landbase_specification.html` |
 | `Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（SC／GC）、Vietnam 等市場：[數學模型規範](Reskin/數學模型規範.md)；彙整版為 `Reskin/reskin_specification.html` |
 | `其他/` | — | 本總覽與 `_check_xlsx_style.py`（XLSX 格式檢查工具） |
 
@@ -26,7 +26,7 @@
 | [天花板說明.md](Omniplay/天花板說明.md) | 系統派彩天花板：BG／FG／系統賠付上限，超過整把重骰；倍率上限驗算方式。 |
 | [腳本規範.md](Omniplay/腳本規範.md) | 表演腳本（新手體驗、Buy Feature、Free Spin 系統）的清單結構、挑選規則與交付檢查。 |
 | [壓測說明書.md](Omniplay/壓測說明書.md) | 後端壓測要壓哪些組合、報表怎麼讀、RTP 判定標準、常見異常與處置。 |
-| [Landbase/導覽.md](Landbase/導覽.md) | **Landbase 產線**：系統機制、數學文件規範（RTP 配置、Link 彩金）、送驗規範。 |
+| [Landbase/導覽.md](Landbase/導覽.md) | **Landbase 產線**：系統機制、數學模型規範（RTP 配置、Link 彩金）、送驗規範。 |
 | [Reskin/數學模型規範.md](Reskin/數學模型規範.md) | **Reskin 產線**：押注結構、各市場押注選項與 Config 要求。 |
 
 開始一項工作前，至少讀完本總覽與該工作對應的文件。

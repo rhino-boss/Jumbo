@@ -9,7 +9,7 @@
 | 位置 | 產線 | 內容 |
 |---|---|---|
 | `專案需知/Omniplay/` | **Omniplay** | 主流遊戲的完整規範，彙整版為 `Omniplay/omniplay_specification.html` |
-| `專案需知/Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](Landbase/導覽.md)、[系統機制](Landbase/系統機制.md)、[數學文件規範](Landbase/數學文件規範.md)、[送驗規範](Landbase/送驗規範.md)（差異式，未覆寫者沿用 Omniplay），彙整版為 `Landbase/landbase_specification.html` |
+| `專案需知/Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](Landbase/導覽.md)、[系統機制](Landbase/系統機制.md)、[數學模型規範](Landbase/數學模型規範.md)、[送驗規範](Landbase/送驗規範.md)（差異式，未覆寫者沿用 Omniplay），彙整版為 `Landbase/landbase_specification.html` |
 | `專案需知/Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（SC／GC）、Vietnam 等市場；目前有 [數學模型規範.md](Reskin/數學模型規範.md)（差異式），彙整版為 `Reskin/reskin_specification.html` |
 | `專案需知/其他/` | — | 工具腳本（`_build_html.py`、`_check_xlsx_style.py`）與本總覽 |
 
@@ -30,7 +30,7 @@
 | [後端報表筆記.md](Omniplay/後端報表筆記.md) | 後端 SPS（RTP Validator）逐分支 TXT 的命名、Coin in／WTIdx 對應、區段內容、指標換算、倍率權重核對方法與檢查清單。 |
 | [機制說明.md](Omniplay/機制說明.md) | 系統機制完整說明：新手體驗（D 版，第 50／150 轉判定）、老手救援（救援池 5% 提撥；救援機制 C-2：主救援 40～400 轉區間隨機判定、延伸救援 440～1,000 轉）；舊版本在附錄。 |
 | [天花板說明.md](Omniplay/天花板說明.md) | 系統派彩天花板：BG／FG／系統賠付上限（依押注是否超過 $1,500 分兩級），超過整把重骰；倍率上限驗算方式。 |
-| [Landbase/導覽.md](Landbase/導覽.md) | **Landbase 產線**：分「系統機制」（Link 彩金參數、新手體驗、系統限制：新手／低注不拉 Link、最大賠付 $10,000,000）、「數學文件規範」（數學調性、RTP 配置 Link + Game + 新手體驗、低／高注兩級）、「送驗規範」（代號對應、與 OP 遊戲的送驗包差異）三頁；未覆寫者沿用 Omniplay。 |
+| [Landbase/導覽.md](Landbase/導覽.md) | **Landbase 產線**：分「系統機制」（Link 彩金參數、新手體驗、系統限制：新手／低注不拉 Link、最大賠付 $10,000,000）、「數學模型規範」（數學調性、RTP 配置 Link + Game + 新手體驗、低／高注兩級）、「送驗規範」（代號對應、與 OP 遊戲的送驗包差異）三頁；未覆寫者沿用 Omniplay。 |
 | [Reskin/數學模型規範.md](Reskin/數學模型規範.md) | **Reskin 產線**：沿用來源遊戲數學，只改押注結構（100 credits × Denom × 44 組 Bet Multiplier）、各市場押注選項（Reskin SC／GC、Vietnam）與 Config 要求；未覆寫者沿用 Omniplay 數學模型規範。 |
 | [提案報告規範.md](Omniplay/提案報告規範.md) | 遊戲提案說明簡報（.pptx）的命名、固定章節結構、頁面版式、色彩字型、內容規則與交付檢查。 |
 
