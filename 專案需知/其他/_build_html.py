@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁：Omniplay（igaming_specification.html）、Landbase、Reskin。
+"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁：Omniplay（omniplay_specification.html）、Landbase、Reskin。
 
 本腳本放在 專案需知/其他/，規範 .md 與輸出 HTML 在上一層（專案需知/，Omniplay 產線）。
 
@@ -17,11 +17,12 @@ from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent.parent  # 專案需知/（規範 .md 所在層）
-OUTPUT = HERE / "igaming_specification.html"
+OUTPUT = HERE / "omniplay_specification.html"
 
 # (tab_id, 頁籤名稱, 檔名)
 TABS = [
     ("overview", "總覽", "其他/_README.md"),
+    ("knowhow", "Knowhow", "Knowhow.md"),
     ("flow", "開發流程", "開發流程.md"),
     ("math", "數學模型規範", "數學模型規範.md"),
     ("docs", "數學文件規範", "數學文件規範.md"),
@@ -40,6 +41,7 @@ TABS = [
 # 新增文件時要同時加進 TABS 與這裡，漏加會在建置時報錯。
 GROUPS = [
     ("總覽", ["overview"]),
+    ("Knowhow", ["knowhow"]),
     ("開發流程", ["flow"]),
     ("提案", ["proposal"]),
     ("數學設計", ["math"]),
@@ -56,6 +58,9 @@ HIGHLIGHT_GROUPS = {"數學設計", "系統相關"}
 GROUP_ICONS = {
     # 總覽：首頁
     "總覽": _SVG.format('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'),
+    # Knowhow：燈泡
+    "Knowhow": _SVG.format('<path d="M9 18h6"/><path d="M10 21h4"/>'
+                           '<path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
     # 開發流程：分支流程
     "開發流程": _SVG.format('<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/>'
                             '<circle cx="18" cy="12" r="2"/><path d="M6 7v10"/><path d="M6 12h4a4 4 0 0 0 4-4V7"/>'
@@ -91,14 +96,15 @@ PRODUCT_LINES = [
     ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
 ]
-TAB_ORDER_HINT = ["導覽", "系統機制", "開發流程", "數學模型規範", "數學文件規範", "送驗文件規範", "送驗規範",
+TAB_ORDER_HINT = ["導覽", "Knowhow", "系統機制", "開發流程", "數學模型規範", "數學文件規範", "送驗文件規範", "送驗規範",
                   "模擬程式規範", "Demogame規範", "腳本規範", "提案報告規範", "壓測說明書", "後端報表筆記"]
 
 # 團隊版：只放給所有數學 follow 的規範，發佈到共享資料夾（個人文件不外放）
 TEAM_DIR = Path(r"\\192.168.139.6\Simulate\專案需知")
-TEAM_TAB_IDS = ["overview", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
+TEAM_TAB_IDS = ["overview", "knowhow", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
 TEAM_GROUPS = [
     ("總覽", ["overview"]),
+    ("Knowhow", ["knowhow"]),
     ("數學設計", ["math"]),
     ("數學文件", ["docs"]),
     ("送驗相關", ["submission"]),
