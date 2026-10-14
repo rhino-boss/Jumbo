@@ -47,7 +47,6 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 賠率表 | PAYTABLE |
-| 規則說明 | ▪ 以下賠付值以投注 {100} 顯示。 | ▪ THE PAYOUT VALUES BELOW ARE SHOWN FOR A BET OF {100}. |
 
 | 繁中 | 繁中 | 繁中 |
 | --- | --- | --- |
