@@ -1,0 +1,16 @@
+101027 - Zeus 2500
+SHA1 Checksum List
+Generated: 2026-10-15
+Files: 9
+
+SHA1                                      FILE                                       SIZE  MODIFIED
+----------------------------------------  --------------------------------------  -------  ----------------
+16FF4685268F9387B2D065A4DF1B808F3CB4B70C  101027_Game Description.docx            2547171  2026-10-15 09:50
+6937E228D7164BD2DCD3675B9277C10DA5F7C858  101027_Math Document Description_EN.md    30715  2026-10-15 10:30
+9D524378B02E45DCE2E4EFFD8FE19180F978797A  PARsheet\H0271.xlsx                      473123  2026-10-15 09:51
+CD8087AF5144C2968E83844C471FC3F473A5E3A1  PARsheet\H027192.xlsx                    362439  2026-10-15 10:29
+BC66802D5ACC93B5666FBB2B5F0CF6A248F537EC  PARsheet\H027194.xlsx                    362464  2026-10-15 10:29
+AD00E3676F322D37D167FA0BFC5BF6C6F4B03F76  Simulator\config.js                       86738  2026-10-15 09:51
+AAB741F66A6B0B7F494A9FA83F083E31010C0556  Simulator\config_92.js                    17220  2026-10-15 09:51
+B1676ECAD08BFAC1EED820620661BD5611759ED7  Simulator\config_94.js                    17222  2026-10-15 09:51
+8C69F68CDCD5AF280BFFBD63F86EAA782007F642  Simulator\Simulator.py                    73287  2026-10-15 09:51
