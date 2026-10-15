@@ -258,6 +258,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再逐輪停輪（本作 1～4 階為由右到左 R4 → R1），Spin 後所有轉輪同時到位，RESPIN 重轉同樣同時到位。只改演出。（10/15）</li>
           <li>驗證：第 5 階四輪落定時間差 &lt; 1 ms（約 160 ms 同時到位，RESPIN 重轉三輪亦同時）；第 1 階仍逐輪停（約 680／850／1020／1200 ms）；RNG 重跑第 5 階與第 1 階得分相同，無 console 錯誤（本作無 FG）。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：NB 玩 10 局線型 n=10，切 EB 顯示 n=0、玩 5 局 n=5，切回 NB 仍 n=10；Simulation 不計入，重置清空，無 console 錯誤（本作無 FG／Buy Feature）。（10/15）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -1198,7 +1201,7 @@
     if (res.respin) state.respins++;
     if (res.wheelIdx >= 0) state.wheels++;
     state.maxMultiplier = Math.max(state.maxMultiplier, res.win / bet);
-    if (mode === MODES[0]) window.demogameLineChart?.record(res.win / bet);   // 即時倍率線型：NB
+    window.demogameLineChart?.record(res.win / cost, mode === 1 ? "EB" : "NB");   // 累積倍率線型：總得分 ÷ 實際押注，NB／EB 分開記（本作無 FG／BF）
     liveLog(`BG | ${res.sheet} | Win ${fmt(res.win)} (${(res.win / bet).toFixed(2)}x)`, res.win > 0 ? "result" : "info");
     window.demogameHistory?.record({ bg: res.win / bet });   // 共用歷史紀錄：BG 最大倍數（本作無 FG）
     renderDebug(round, ctx);
@@ -1419,7 +1422,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

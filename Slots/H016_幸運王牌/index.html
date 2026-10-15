@@ -2145,6 +2145,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed x5 BG／FG 五輪停輪時間差 0 ms（Spin 後約 62 ms 同時到位）；x1 約 0.5 秒後同時停輪（本作原本即五輪同時停，未加逐輪停輪）；RNG 重跑 NB／BF（含整場 FG）結果相同；Console 無例外；inline script <code>node --check</code> 通過。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>本作只有 NB：未觸發局結算時記一筆、觸發局改在整場 FG 結束才記一筆（BG＋FG ÷ 押注，原本觸發當下就記）；RNG 重跑／Card BG Range 指定局不記；購買鈕非切換式，BF／SF 開局呼叫 <code>setMode("BF")</code> 顯示「不記錄」，下一局 NB 與 Reset 回 Normal Bet。驗證：NB 10 局 n=10；BF 整場 FG 期間顯示購買特色、NB 仍 10、EB 0；再轉 NB n=11；NB 第 60 局觸發 FG，觸發時 n=59、FG 10 轉結束 n=60；Reset n=0；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -3903,6 +3906,8 @@
       const fgUnit = BASE_BET * BET_LEVELS[state.betIndex];   // FG 期間押注不可改
       appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / fgUnit).toFixed(2)}x)`, "result");
       window.demogameHistory?.record({ fg: state.fg.win / fgUnit });   // 共用歷史紀錄：FG 最大倍數（÷ 底注）
+      const lineRecord = state.fg.lineRecord;   // 累積倍率線型：NB 觸發局（BG＋整場 FG）÷ 押注，FG 結束才記
+      if (lineRecord) window.demogameLineChart?.record(lineRecord.pay / lineRecord.cost, "NB");
       // FG 結束回到 BG：盤面還原成觸發局最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲；只改顯示
       const restoreBoard = state.fg.restoreBoard, restoreCombo = state.fg.restoreCombo || 0;
       setFeatureStatus(""); state.fg = {spins:[],index:0,total:0,win:0,mode:0};
@@ -3924,6 +3929,7 @@
         } : null;
         if (code && code.mode === undefined) throw new Error(`RNG mode ${taken.mode} is not available in this game`);
         if (code) mode = code.mode;
+        window.demogameLineChart?.setMode(mode === 0 ? null : "BF");   // 購買鈕不是 is-active 切換：BF／SF 開局顯示「不記錄」，下一局 NB 回到 Normal Bet
         state.lastWin = 0;
         state.mode = mode; const bet = BET_LEVELS[state.betIndex], cost = BASE_BET * bet * (mode === 2 ? Number(cfg.buy_price) : mode === 3 ? Number(cfg.super_buy_price) : 1);
         if (state.balance < cost) throw new Error("Insufficient balance");
@@ -3963,9 +3969,9 @@
         const natural = !code && !rangeValue && !forceFg;   // 重跑局／指定區間不計入倍率線型
         if (feature) {
           activateFeature(feature, mode, base);
-          if (mode === 0 && natural) window.demogameLineChart?.record((base.pay + feature.spins.reduce((sum, item) => sum + Number(item.pay || 0), 0)) / cost);   // 即時倍率線型：NB 含 FG
+          if (mode === 0 && natural) state.fg.lineRecord = {pay:base.pay + feature.spins.reduce((sum, item) => sum + Number(item.pay || 0), 0), cost};   // 累積倍率線型：NB 觸發局待整場 FG 結束才記
         } else if (mode === 0 && natural) {
-          window.demogameLineChart?.record(base.pay / cost);   // 即時倍率線型：NB 未觸發局
+          window.demogameLineChart?.record(base.pay / cost, "NB");   // 累積倍率線型：NB 未觸發局（BF／SF 不記錄）
         }
         settled = true;
       }
@@ -4062,7 +4068,7 @@
   function reset() {
     Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
     $("autoBtn").textContent = "Auto"; renderBoard(makeBoard("bg_low")); renderMultiplier(false); setMessage("Ready — press Spin"); setFeatureStatus("");
-    state.log = []; $("liveLogBody").innerHTML = ""; updateStats();
+    state.log = []; $("liveLogBody").innerHTML = ""; updateStats(); window.demogameLineChart?.setMode(null);
   }
   function buildBetMenu() {
     $("betMenu").innerHTML = BET_LEVELS.map((value,index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
@@ -4120,7 +4126,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
 </body>
 
 </html>

@@ -357,6 +357,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed 5 下 BG 與 Buy Feature FG 各轉量測各輪停輪時間，所有轉輪同一幀到位；Speed 1 仍由左到右逐輪停；RNG 重跑結果相同、Console 無錯誤。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：NB 玩 10 局 → Normal Bet n=10；切 EB → n=0，玩 5 局 → n=5；切回 NB → n=10；Buy Feature 顯示不記錄、次數不變；Reset 清空；Console 無錯誤。（10/15）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -1473,6 +1476,12 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     if (hasPrepared ? !fg.preparedSpins.length : !fg.queue.length) finishFreeGame();
   }
 
+  function recordLineRound() {   // 累積倍率線型（共用）：整局總得分 ÷ 本局押注，NB／EB 分開記，BF 不記
+    const round = state.lineRound;
+    state.lineRound = null;
+    if (round && round.wager > 0) window.demogameLineChart?.record(state.lastWin / round.wager, round.mode);
+  }
+
   function finishFreeGame() {
     const fg = state.pendingFg;
     if (!fg) return;
@@ -1483,7 +1492,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     state.balance += fg.win;
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
-    if (state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 一局含 FG
+    recordLineRound();   // 累積倍率線型：觸發局（BG＋FG）結束
     state.selectedMode = state.restoreMode ?? MODE_NORMAL;   // RNG 重跑局：還原按 Spin 前的押注模式
     state.restoreMode = null;
     refreshCardRangeOptions();
@@ -1730,6 +1739,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       }
       const wager = wagerMoney();
       if (state.balance < wager) throw new Error(tr("Insufficient balance", "餘額不足"));
+      state.lineRound = state.selectedMode === MODE_BUY ? null : { wager, mode: state.selectedMode === MODE_EXTRA ? "EB" : "NB" };   // 累積倍率線型：本局押注與模式（BF 不記錄）
       state.balance -= wager;
       state.totalBet += wager;
       state.roundCount += 1;
@@ -1774,7 +1784,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
-      if (!triggered && state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 未觸發局
+      if (!triggered) recordLineRound();   // 累積倍率線型：未觸發局
       if (!triggered && state.restoreMode != null) {
         state.selectedMode = state.restoreMode;
         state.restoreMode = null;
@@ -2088,7 +2098,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

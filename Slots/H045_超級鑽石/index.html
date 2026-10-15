@@ -2335,6 +2335,7 @@
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed 5 BG 6 局、Buy Feature FG 22 轉，5 輪到位時間完全相同（Spin 後約 175～195 ms）；Speed 1 仍逐輪停（約 550／735／920／1105／1290 ms），Speed 3 亦逐輪；同一 RNG 碼 Speed 5／Speed 1 重跑結果相同，Console 無錯誤。只改表演，未修改 XLSX／Config 數學參數。（10/15）</li>
           <li>修正 RNG 重跑不一致：大鬼分裂落點原本用「亂數比較式 sort」洗牌，呼叫亂數的次數不固定，同一組 RNG 碼重跑會得到不同結果（例 28.20／28.80）；改為 Fisher–Yates 洗牌（同 Simulator），每局另依 RNG 碼重算 Max Win 上限。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -3344,10 +3345,11 @@
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
 
-  // 即時倍率線型：共用 demogame_common.js（window.demogameLineChart），NB 每局 BG＋該局 FG 合計 ÷ 底注
-  function recordLine(mode, base, feature) {
-    if (mode !== 0) return;
-    window.demogameLineChart?.record(((base?.pay || 0) + (feature?.pay || 0)) / betUnit());
+  // 累積倍率線型：共用 demogame_common.js（window.demogameLineChart），一局（BG＋該局 FG）結束才記一次，總得分 ÷ 實際押注；
+  // NB 記 NB、EB 記 EB，BF 不記錄（2026-10-15）
+  function recordLine(mode, totalWin, wager) {
+    if (mode !== 0 && mode !== 1) return;
+    window.demogameLineChart?.record(Number(totalWin || 0) / wager, mode === 1 ? "EB" : "NB");
   }
   function fxLayer() { return window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null; }
   function cellAt(key) { const [reel, row] = key.split(",").map(Number); return $("board").children[(3 - row) * 5 + reel] || null; }
@@ -3695,7 +3697,7 @@
     tallySpin(item);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}`;
     appendLog(`FG ${state.fg.index}/${state.fg.total} | ${item.tableName} | Cascade ${item.combo} | C1 ${item.scatter} | Win ${money(item.pay)}`, item.combo ? "cascade" : "info");
-    if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound); }
+    if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); if (state.fg.line) recordLine(state.fg.line.mode, state.fg.carry + state.fg.win, state.fg.line.wager); if (state.fg.mode === 2) window.demogameLineChart?.setMode?.(null); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound); }
   }
   // FG 結束回到 BG：盤面還原成觸發局 BG 最終盤面（BF 為入場盤）、Feature Status 回基礎遊戲；Previous／Next 改看該 BG 局（10/13）
   function restoreBaseRound(base) {
@@ -3726,6 +3728,7 @@
         }
         state.lastWin = 0;
         state.mode = mode;
+        window.demogameLineChart?.setMode?.(mode === 2 ? "BF" : null);   // Buy Feature 按鈕不掛 is-active：BF 局顯示「不記錄」，局末還原
         const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : mode === 1 ? Number(EB.cost_multiplier) : 1);
         if (state.balance < cost) throw new Error(tr("insufficient"));
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
@@ -3763,11 +3766,12 @@
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
         appendLog(`${mode === 2 ? "BF Entry" : "BG"} | ${base.tableName} | Cascade ${base.combo} | C1 ${base.scatter} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });   // 共用歷史紀錄：BG 最大倍數
+        const countLine = !script && !rangeValue && !code;   // 腳本／指定區間／重跑局不計入倍率線型
         if (feature) {
           activateFeature(feature, mode, base);
-          if (!script && !rangeValue && !code) recordLine(mode, base, feature);   // 腳本／指定區間／重跑局不計入倍率線型
-        } else if (!script && !rangeValue && !code) {
-          recordLine(mode, base, null);
+          state.fg.line = countLine ? { mode, wager: cost } : null;   // FG 結束（整局結算）才記錄
+        } else if (countLine) {
+          recordLine(mode, base.pay, cost);
         }
       }
       updateStats();
@@ -3946,6 +3950,7 @@
   function setBetMode(mode) {
     state.betMode = mode;
     $("normalBetBtn").classList.toggle("is-active", mode === 0); $("extraBetBtn").classList.toggle("is-active", mode === 1);
+    window.demogameLineChart?.setMode?.(null);   // 累積線型改依 is-active 自動判斷 NB／EB
     appendLog(`Bet Mode | ${mode === 1 ? `Extra Bet (${EB.cost_multiplier}x, FG ×5)` : "Normal Bet"}`, "mode");
   }
   $("normalBetBtn").onclick = () => setBetMode(0); $("extraBetBtn").onclick = () => setBetMode(1);
@@ -3971,7 +3976,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
 </body>
 
 </html>

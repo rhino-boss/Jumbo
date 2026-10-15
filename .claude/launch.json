@@ -34,6 +34,18 @@
         "C:/Users/rhinshen/Mine/AI 工作區/Jumbo_Output"
       ],
       "port": 8124
+    },
+    {
+      "name": "h020-static-8131",
+      "runtimeExecutable": "C:/Users/rhinshen/AppData/Local/Programs/Python/Python313/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8131",
+        "--directory",
+        "C:/Users/rhinshen/Mine/個人工作區/工作區"
+      ],
+      "port": 8131
     }
   ]
 }

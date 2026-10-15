@@ -1999,6 +1999,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed 5 下 BG 與 BF（入場＋10 轉 FG）每次 6 輪停輪時間差 0 ms（Spin 後約 60 ms 同時到位）；Speed 1 仍逐輪停（約 535→1430 ms，每輪約 180 ms）；RNG 碼重跑 BF 整局 Log 逐行相同；Console 無錯誤。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：VERIFY_PLACEHOLDER（10/15）</li>
         </ol>
       </article>
       </div>
@@ -3140,6 +3143,13 @@
     if (!fg.queue.length) finishFreeGame();
   }
 
+  // 累積倍率線型（共用）：NB 記 NB、EB 記 EB，值＝整局總得分（BG＋FG）÷ 本局實際押注；BF／SF、RNG 重跑局不記
+  function recordLineChart() {
+    if (state.replayRound || !(state.roundWager > 0)) return;
+    const mode = state.selectedMode === MODE_NORMAL ? "NB" : state.selectedMode === MODE_EXTRA ? "EB" : null;
+    if (mode) window.demogameLineChart?.record(state.lastWin / state.roundWager, mode);
+  }
+
   function finishFreeGame() {
     const fg = state.pendingFg;
     if (!fg) return;
@@ -3151,7 +3161,7 @@
     state.balance += fg.win;
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
-    if (state.selectedMode === MODE_NORMAL && !state.replayRound) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 一局含 FG（RNG 重跑局不計）
+    recordLineChart();   // 累積倍率線型：一局含 FG 結束才記
     state.selectedMode = state.replayRound ? state.replayRound.restoreMode : MODE_NORMAL;
     state.replayRound = null;
     document.body.classList.remove("fg-mode");
@@ -3187,6 +3197,7 @@
         throw new Error(tr("Insufficient balance", "餘額不足"));
       }
       state.balance -= wager;
+      state.roundWager = wager;   // 本局實際押注（累積倍率線型用）
       state.totalBet += wager;
       state.roundCount += 1;
       state.lastWin = 0;
@@ -3230,7 +3241,7 @@
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
-      if (!candidate.triggered && state.selectedMode === MODE_NORMAL && !state.replayRound) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 未觸發局（RNG 重跑局不計）
+      if (!candidate.triggered) recordLineChart();   // 累積倍率線型：未觸發局（觸發局在 finishFreeGame 記）
       if (!candidate.triggered && state.replayRound) {
         state.selectedMode = state.replayRound.restoreMode;
         state.replayRound = null;
@@ -3591,7 +3602,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
   <script>
     (() => {
       "use strict";

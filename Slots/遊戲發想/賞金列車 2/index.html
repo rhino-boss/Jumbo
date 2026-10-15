@@ -2073,6 +2073,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed 5 的 BG／Buy Feature 入場／FG 每轉，6 輪停輪時間差 0 ms（約 0.18～0.20 秒同時到位）；Speed 1 仍由左到右逐輪停（約 0.56→1.49 秒，每輪間隔約 0.185 秒）；RNG 碼重跑結果與盤面相同；Console 無 JS 錯誤；inline script 皆通過 node --check。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：本作無 EB，NB 每局（含 FG）結束記一次＝總得分 ÷ 押注；NB 10 局 → Normal Bet n=10；Buy Feature 局顯示「不記錄」提示，NB 仍 10、EB 0；再玩 NB → 切回 Normal Bet n=11；重置歸零；Console 無 JS 錯誤；inline script 皆通過 node --check。（10/15）</li>
         </ol>
         </article>
       </div>
@@ -3038,6 +3041,10 @@
       addLog(`FG complete | Total ${format(fgWin, 2)} (${(fgWin / baseBet).toFixed(2)}x)`, "result");
       window.demogameHistory?.record({ fg: fgWin / baseBet });   // 共用歷史紀錄：FG 最大倍數
     }
+    // 共用累積倍率線型：整局（BG＋FG）結束記一次，倍數＝總得分 ÷ 該局押注；只記 NB（本作無 EB），BF 不記錄
+    if (state.round && state.round.mode === MODE_NORMAL && state.round.cost > 0) {
+      window.demogameLineChart?.record((state.round.bgWin + state.round.fgWin) / state.round.cost, "NB");
+    }
     state.round = null;
   }
 
@@ -3073,6 +3080,8 @@
     const cost = coinIn(mode);
     if (state.balance < cost) throw new Error(text("insufficient"));
     state.balance -= cost; state.totalBet += cost; state.rounds++; if (mode === MODE_NORMAL) state.normalRounds++;
+    // 本作 Buy Feature 是單次按鈕（不切 is-active）：BF 局顯示線型的「不記錄」提示，下一個 NB 局切回 NB 累積圖
+    window.demogameLineChart?.setMode(mode === MODE_BUY ? "BF" : null);
     if (mode === MODE_BUY) el.messageBar.textContent = text("buyStart");
     let result; let cardOn; let rangeValue; let seed; let rngCode = "";
     // 畫面局維持不走卡片（自然機率，RNG 碼 Card 欄 off）；Card System 只用於 Simulation。貼上的碼照碼內 Card 欄；手動指定 Card BG Range 時仍照該區間重抽
@@ -3095,7 +3104,7 @@
     state.lastWin = spin.total; state.totalWin += spin.total; state.balance += spin.total;
     if (spin.total > 0) state.hitRounds++;
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier);
-    state.round = { bgWin: spin.total, fgWin: 0, spins: result.freeSpins.length, triggerBoard: { board: clone(spin.board), gold: clone(spin.gold) } };
+    state.round = { mode, cost, bgWin: spin.total, fgWin: 0, spins: result.freeSpins.length, triggerBoard: { board: clone(spin.board), gold: clone(spin.gold) } };
     addLog(`${mode === MODE_BUY ? "BF Entry" : "BG"} | ${tableNameOf(spin)} | Cascade ${cascadeCount(spin)} | C1 ${spin.scatter} | Win ${format(spin.total, 2)} (${xOf(spin.total)}x)`, spin.total > 0 ? "result" : "info");
     window.demogameHistory?.record({ bg: spin.total / coinIn(MODE_NORMAL) });   // 共用歷史紀錄：BG 最大倍數（BF 為入場盤面）
     if (result.freeSpins.length) {
@@ -3331,7 +3340,7 @@
 })();
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261015j"></script>
+  <script src="../../demogame_common.js?v=20261015n"></script>
 </body>
 
 </html>

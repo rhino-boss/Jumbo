@@ -1941,6 +1941,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed x5 量測 BG 2 局、Buy Feature FG 21 轉，6 輪皆在同一幀到位（Spin 後約 60 ms）；x1 仍逐輪停（約 0.55→1.48 秒）；同 RNG 碼 x1／x5 重跑 Log 結果行相同；Console 無錯誤；inline script 皆過 <code>node --check</code>。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>本遊戲無 Extra Bet（<code>#extraBetBtn</code> 實為 Buy Feature），只記 NB：一局（含整段 FG）結束記一次，值＝總得分 ÷ 實際押注；顯示模式改由 <code>setMode()</code> 指定（NB／BF）。驗證：NB 10 局 n=10、Buy Feature 顯示「不記錄」且計數不變、回 NB n=10、Reset 歸零；Console 無錯誤；inline script 皆過 <code>node --check</code>。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -2811,6 +2814,8 @@
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
     el.buy.classList.remove("is-active");
     el.super.classList.remove("is-active");
+    // 本遊戲 #extraBetBtn 實為 Buy Feature（無 Extra Bet），且購買鈕不掛 is-active，顯示模式由此明確指定
+    window.demogameLineChart?.setMode(state.selectedMode === MODE_NORMAL ? "NB" : "BF");
     setText(el.auto, state.auto ? t("stop") : t("auto"));
     updateDebugButtons();
   }
@@ -2941,7 +2946,7 @@
     state.balance += fg.win;
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
-    if (state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 一局含 FG
+    if (state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / wagerMoney(), "NB");   // 累積倍率線型：NB 觸發局（BG＋整段 FG）÷ 押注；BF／SF 不記錄
     appendLog(`FG complete | Total ${money(fg.win)} (${(fg.win / betMoney()).toFixed(2)}x)`, "result");
     window.demogameHistory?.record({ fg: fg.win / betMoney() });   // 共用歷史紀錄：整段 FG ÷ 底注
     state.selectedMode = MODE_NORMAL;
@@ -3008,7 +3013,7 @@
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
-      if (!triggered && state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / betMoney());   // 即時倍率線型：NB 未觸發局
+      if (!triggered && state.selectedMode === MODE_NORMAL) window.demogameLineChart?.record(state.lastWin / wager, "NB");   // 累積倍率線型：NB 未觸發局（觸發局於 FG 結束時記）
       updateStats();
       await window.demogameRoundPause?.();   // BG 局算完分後固定停 0.1 秒（不受 Speed 影響）
     } catch (error) {
@@ -3335,7 +3340,7 @@
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
 </body>
 
 </html>

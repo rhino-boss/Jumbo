@@ -2015,6 +2015,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：inline script <code>node --check</code> 通過；Speed 5 BG 3 局、FG 5 轉，5 輪皆在 Spin 後約 34～39 ms 同一時間到位；Speed 1 仍逐輪停（約 535→720→895→1070→1250 ms），FG 相同；RNG 碼重跑結果相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；NB 10 局 → 標題 Normal Bet n=10；切 EB → n=0，玩 5 局 → n=5；切回 NB → n=10；Buy Feature（含 FG）顯示「不記錄」、NB／EB 局數不變；Reset 歸零；Simulation 不記錄；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -2393,9 +2396,12 @@
       return { rangeIndex: range ? Number(range.slice(1)) : null, forceFg: tokens.includes("f") };
     }
     function runRoundRecorded(betMode, forceFg, debugOverrides) {
-      const round = runRound(betMode, forceFg, debugOverrides);
-      if (betMode === Box.mode_normalbet) window.demogameLineChart?.record(Number(round.total_win) / Number(round.coin_in));   // 即時倍率線型：NB 含 FG
-      return round;
+      return runRound(betMode, forceFg, debugOverrides);
+    }
+    // 累積倍率線型（共用）：畫面一局（含該局 FG）演完才記；NB 記 NB、EB 記 EB，BF 不記錄。值＝總得分 ÷ 實際押注
+    function recordLineChartRound(round) {
+      const mode = round.bet_mode === Box.mode_normalbet ? "NB" : round.bet_mode === Box.mode_extrabet ? "EB" : null;
+      if (mode) window.demogameLineChart?.record(Number(round.total_win) / Number(round.coin_in), mode);
     }
     // 算一整局：code 有值時暫時套用碼內的 Card System／Profile（不動畫面選單），結束還原
     function runSeededRound(betMode, forceFg, cardIndex, code) {
@@ -4298,6 +4304,7 @@
             state.pendingRound = null;
             appendLiveLog(`FG complete | Total ${formatMoney(round.free_total_win)} (${(round.free_total_win / roundBaseBet(round)).toFixed(2)}x)`, "result");
             window.demogameHistory?.record({ fg: round.free_total_win / roundBaseBet(round) });   // 共用歷史紀錄：FG 最大倍數（整段 FG ÷ 底注）
+            recordLineChartRound(round);   // 有 FG 的局：FG 結束才記
             writeMessage(`FG finished | Total ${formatMoney(round.total_win)}`);
             // 規範 §4：FG 結束回到 BG，盤面還原成觸發局 BG 最終盤面（BF 為入場盤），Feature Status 回 Base Game；只改顯示
             const restoreMessage = `FG finished | Total ${formatMoney(round.total_win)}`;
@@ -4317,6 +4324,7 @@
         } else {
           writeMessage("Reels spinning...");
           const { round, rngText } = runSeededRound(betMode, forceFgThisSpin, cardIndex, rngCode);   // 先算好整局結果（含 FG），滾輪才能逐輪停在最終符號
+          window.demogameLineChart?.setMode(betMode === Box.mode_featurebuy ? "BF" : null);   // Buy Feature 不是 is-active 切換，買的局顯示 BF（不記錄）；NB／EB 依按鈕
           const rangeSet = cardIndex !== null && (rngCode ? rngCode.card : CARD_SYSTEM_ENABLED) && betMode !== Box.mode_featurebuy;
           appendLiveLog(`#${state.roundCount} ${roundModeLabel(round)} | Bet ${formatMoney(round.coin_in)}${rangeSet ? " | Card Range set" : ""}${forceFgThisSpin ? " | Force FG" : ""}${round.retry_count ? ` | Card retry ${round.retry_count}` : ""}${round.retry_limit_exceeded ? " | Retry limit" : ""}${rngCode ? " | Replay" : ""}`, "mode");
           appendLiveLog(`RNG ${rngText}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
@@ -4342,6 +4350,7 @@
           } else {
             state.pendingRound = null;
             state.pendingSpinIndex = 0;
+            recordLineChartRound(round);   // 沒有 FG 的局：BG 演完就記
           }
         }
         await window.demogameRoundPause?.();   // 共用：每轉（BG 局／每轉 FG）算完分後固定停 0.1 秒，不受 Speed 影響，之後才放行下一轉／Auto
@@ -4531,6 +4540,7 @@
     normalBetBtn.addEventListener("click", () => {
       if (state.pendingRound) return;
       state.extraBetEnabled = false;
+      window.demogameLineChart?.setMode(null);   // 累積倍率線型回到依押注按鈕顯示
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
@@ -4540,6 +4550,7 @@
     extraBetBtn.addEventListener("click", () => {
       if (state.pendingRound) return;
       state.extraBetEnabled = true;
+      window.demogameLineChart?.setMode(null);   // 累積倍率線型回到依押注按鈕顯示
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
@@ -4579,7 +4590,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261015j"></script>
+  <script src="../demogame_common.js?v=20261015n"></script>
 </body>
 
 </html>

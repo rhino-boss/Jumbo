@@ -355,6 +355,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：RNG Base/NB/off/-/000001e8（BG＋10 轉 FG）量各輪停輪時間：Speed 5 每轉 7 輪同一幀到位（約 Spin 後 170 ms，輪間差 0 ms）；Speed 1 仍由左到右逐輪停（約 510→1530 ms，每輪約 170 ms）；兩種速度 Log 逐字相同（FG Total 147.95、Win 150.00）；Console 無錯誤。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：NB 10 局 n=10、切 EB n=0、EB 5 局 n=5、切回 NB n=10；Buy Feature FG 期間顯示「購買特色不記錄」，結束後 NB／EB 仍為 10／5；RNG Base/NB/off/-/000001e8 觸發局只在 FG 結束記一次 150.00x（BG 2.05＋FG 147.95）；Reset 後 NB／EB 皆 n=0；Console 無錯誤。（10/15）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -959,6 +962,8 @@
         $("extraBetBtn").classList.toggle("is-active", st.mode === MODE_EXTRA);
         $("normalBetBtn").setAttribute("aria-pressed", String(st.mode === MODE_NORMAL));
         $("extraBetBtn").setAttribute("aria-pressed", String(st.mode === MODE_EXTRA));
+        const lineView = inFg && st.fg.isBuy ? "BF" : null;   // 累積倍率線型：Buy Feature 的 FG 期間顯示 BF（不記錄），其餘依 NB／EB 按鈕
+        if (lineView !== st.lineView) { st.lineView = lineView; window.demogameLineChart?.setMode(lineView); }
         $("betMinusBtn").disabled = st.busy || inFg || st.betIndex === 0;
         $("betPlusBtn").disabled = st.busy || inFg || st.betIndex === BET_LEVELS.length - 1;
         $("betBtn").disabled = st.busy || inFg;
@@ -1120,7 +1125,7 @@
         updateStats();
 
         if (mode === MODE_BUY) {
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0, base: 0, restore: snapshotBoard() };   // BF 無入場得分；FG 結束還原入場盤
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0, base: 0, isBuy: true, restore: snapshotBoard() };   // BF 無入場得分；FG 結束還原入場盤
           say(() => tr("buyEnter"));
           appendLog(fgStartLine("Buy Feature", round), "mode");
           st.lastWin = 0;
@@ -1137,9 +1142,11 @@
         if (win > 0) st.hitRounds++;
         appendLog(`BG | ${mode === MODE_EXTRA ? "Extra" : "Base"} | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(win)} (${(win / bet()).toFixed(2)}x)`, win > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: win / bet() });   // 共用歷史紀錄：BG 最大倍數（÷ 底注）
+        const lineMode = mode === MODE_EXTRA ? "EB" : "NB";
+        if (round.award === 0) window.demogameLineChart?.record(win / cost, lineMode);   // 累積倍率線型：沒進 FG 的局在 BG 結算時記一次（總得分 ÷ 押注）
         if (round.award > 0) {
           // base：觸發局 BG 得分累積進 FG 的 Win 顯示；restore：FG 結束回到 BG 時還原的觸發局最終盤面
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins, win: 0, base: win,
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode, spins: round.fgSpins, win: 0, base: win, lineMode, wager: cost,
             restore: { board: spin.board, mult: spin.mult, plates: new Set(spin.plates.map((p) => p.key)), sum: spin.finalSum, cascade: spin.cascadeCount } };
           st.naturalFg++;
           appendLog(fgStartLine("Free Game triggered", round), "mode");
@@ -1173,6 +1180,7 @@
         if (st.fg.remaining <= 0) {
           appendLog(`FG complete | Total ${fmt(st.fg.win)} (${(st.fg.win / bet()).toFixed(2)}x)`, "result");
           window.demogameHistory?.record({ fg: st.fg.win / bet() });   // 共用歷史紀錄：FG 最大倍數（÷ 底注）
+          if (st.fg.lineMode) window.demogameLineChart?.record(((st.fg.base || 0) + st.fg.win) / st.fg.wager, st.fg.lineMode);   // 累積倍率線型：觸發局整局（BG＋FG）÷ 押注記一次；BF 無 lineMode 不記
           st.fg.spins = [];
         }
         if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
@@ -1383,7 +1391,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261015j"></script>
+  <script src="../../demogame_common.js?v=20261015n"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

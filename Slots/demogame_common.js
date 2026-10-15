@@ -525,6 +525,31 @@
 
   setupByGameStats();
 
+  // 版面（共用）：餘額／遊戲／押注模式三區一律放在盤面下方（左欄），右欄只留統計。只搬節點，id 與事件不變。
+  function setupPlayerUnderBoard() {
+    const shell = document.getElementById("app-shell");
+    const board = document.getElementById("grid-panel");
+    const right = document.getElementById("right-panel");
+    if (!shell || !board || !right) return;
+    const ids = ["credit-bar", "play-panel", "bet-mode-panel"];
+    const nodes = ids.map((id) => document.getElementById(id)).filter((node) => node && right.contains(node));
+    if (!nodes.length) return;
+    const under = document.createElement("div");
+    under.id = "demogame-under-board";
+    shell.appendChild(under);
+    const style = document.createElement("style");
+    style.textContent = `body.slot-simulator #app-shell.player-under-board #grid-panel{grid-column:1;grid-row:1}
+      body.slot-simulator #app-shell.player-under-board #right-panel{grid-column:2;grid-row:1 / span 2}
+      body.slot-simulator #demogame-under-board{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;min-width:0}
+      body.slot-simulator #app-shell:not(.player-under-board) #demogame-under-board{display:none}
+      @media (max-width: 760px){body.slot-simulator #app-shell.player-under-board #grid-panel{grid-column:1;grid-row:1}body.slot-simulator #demogame-under-board{grid-column:1;grid-row:2}body.slot-simulator #app-shell.player-under-board #right-panel{grid-column:1;grid-row:3}}`;
+    document.head.appendChild(style);
+    shell.classList.add("player-under-board");
+    nodes.forEach((node) => under.appendChild(node));
+  }
+
+  setupPlayerUnderBoard();
+
   function normalizeSettings() {
     const settings = document.getElementById("settings-wrap");
     const body = settings?.querySelector(":scope > .setting-body");
@@ -829,6 +854,67 @@
   }
 
   setupFallbackSimulation();
+
+  // ===== 累積倍率線型（共用，統計區下方）=====
+  // 畫面實際遊玩的局：NB 記在 NB、EB 記在 EB，BF／SF 不記錄；依目前押注模式顯示對應的累積圖（標準 64 區間，Y 軸 1%）。
+  // 遊戲在一局（含該局 FG）結束時呼叫 window.demogameLineChart.record(總得分 ÷ 押注, "NB"|"EB")；不給模式視為 NB。
+  // 顯示模式依押注模式按鈕自動判斷（#extraBetBtn／購買類按鈕 is-active），也可由遊戲呼叫 setMode("NB"|"EB"|"BF")。Reset 清空。
+  function setupCumulativeLineChart() {
+    const right = document.getElementById("right-panel");
+    if (!right || document.getElementById("demogame-cumulative-chart")) return;
+    const counts = { NB: new Array(SIMULATION_BUCKETS.labels.length).fill(0), EB: new Array(SIMULATION_BUCKETS.labels.length).fill(0) };
+    let forcedMode = null;
+    const panel = document.createElement("section");
+    panel.id = "demogame-cumulative-chart";
+    panel.innerHTML = `<div class="batch-line-chart"></div>`;
+    right.appendChild(panel);
+    const chart = panel.querySelector(".batch-line-chart");
+    const style = document.createElement("style");
+    style.textContent = "body.slot-simulator #demogame-cumulative-chart .batch-line-chart{margin-top:0;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
+      + "body.slot-simulator #demogame-cumulative-chart .dlc-empty{padding:18px 0;text-align:center;color:var(--sim-sub);font-size:12px}";
+    document.head.appendChild(style);
+    const detectMode = () => {
+      if (forcedMode) return forcedMode;
+      const active = document.querySelector("#bet-mode-panel .is-active, #bet-mode-panel .active");
+      const key = `${active?.id || ""} ${active?.textContent || ""}`;
+      if (/extra/i.test(key) || /額外/.test(key)) return "EB";
+      if (/buy|super|購買|超級/i.test(key)) return "BF";
+      return "NB";
+    };
+    const names = { NB: "Normal Bet", EB: "Extra Bet", BF: "Buy Feature" };
+    const render = () => {
+      const mode = detectMode();
+      const zh = isZhText();
+      const title = `${zh ? "倍率線型（累積）" : "Multiplier Distribution (Cumulative)"} · ${window.demogameSharedText ? window.demogameSharedText(names[mode]) : names[mode]}`;
+      if (mode === "BF") {
+        chart.innerHTML = `<div class="dlc-title">${title}</div><div class="dlc-empty">${zh ? "購買特色不記錄" : "Buy Feature is not recorded"}</div>`;
+        return;
+      }
+      const c = counts[mode];
+      const total = c.reduce((a, v) => a + v, 0);
+      chart.innerHTML = `<div class="dlc-title">${title} · n=${total.toLocaleString("en-US")}</div>${simulationChartSvg(c, SIMULATION_BUCKETS, 1)}`;
+    };
+    window.demogameLineChart = {
+      cumulative: true,
+      record(multiplier, mode = "NB") {
+        const x = Number(multiplier);
+        const key = String(mode).toUpperCase();
+        if (!Number.isFinite(x) || !counts[key]) return;   // BF／SF 不記錄
+        counts[key][SIMULATION_BUCKETS.index(Math.max(0, x))] += 1;
+        render();
+      },
+      setMode(mode) { forcedMode = mode ? String(mode).toUpperCase() : null; render(); },
+      reset() { counts.NB.fill(0); counts.EB.fill(0); render(); },
+      counts: (mode = "NB") => (counts[String(mode).toUpperCase()] || []).slice()
+    };
+    const modePanel = document.getElementById("bet-mode-panel");
+    if (modePanel) new MutationObserver(render).observe(modePanel, { attributes: true, subtree: true, attributeFilter: ["class"] });
+    document.getElementById("resetBtn")?.addEventListener("click", () => window.demogameLineChart.reset());
+    document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(render, 0));
+    setTimeout(render, 0);
+  }
+
+  setupCumulativeLineChart();
 
   // Spin Result 面板已停用（共用）：各遊戲仍可寫入 #lineList 等節點，不會報錯，只是不顯示。
   function hideSpinResult() {
@@ -2233,6 +2319,7 @@
     render();
   }
 
+  if (window.demogameLineChart?.cumulative) return;   // 已由統計區下方的累積倍率線型接手
   window.demogameLineChart = {
     record(multiplier) {
       const x = Number(multiplier);

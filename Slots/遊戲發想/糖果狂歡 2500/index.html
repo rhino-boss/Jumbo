@@ -1989,6 +1989,9 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed x5 時 NB 3 局、Buy Feature 整段 FG 10 轉，6 輪停輪時間差皆 0 ms（約 58 ms 同時到位）；Speed x1 仍逐輪停（約 551→1480 ms，每輪隔約 185 ms），FG 亦同；同碼 RNG 在 x1／x5 重跑結果逐字相同；Console 無錯誤。（10/15）</li>
+          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：NB 10 局圖表為 Normal Bet n=10；切 EB 為 n=0，再 5 局 n=5；切回 NB 仍 n=10；Buy Feature 顯示不記錄提示、NB／EB 次數不變；重置清空；Console 無錯誤。（10/15）</li>
         </ol>
         </article>
       </div>
@@ -3193,6 +3196,12 @@
     if (!fg.queue.length) finishFreeGame();
   }
 
+  function recordLineRound() {
+    const round = state.lineRound;
+    state.lineRound = null;
+    if (round && round.wager > 0) window.demogameLineChart?.record(state.lastWin / round.wager, round.mode);
+  }
+
   function finishFreeGame() {
     const fg = state.pendingFg;
     if (!fg) return;
@@ -3201,6 +3210,7 @@
     state.balance += fg.win;
     state.totalWin += fg.win;
     if (state.lastWin > 0) state.hitCount += 1;
+    recordLineRound();
     state.selectedMode = state.restoreMode ?? MODE_NORMAL;
     state.restoreMode = null;
     document.body.classList.remove("fg-mode");
@@ -3241,6 +3251,9 @@
       state.totalBet += wager;
       state.roundCount += 1;
       state.lastWin = 0;
+      // 累積倍率線型（共用）：只記 NB／EB，BF／SF 不記；押注與模式在開局時記下，整局（含 FG）結束才記一次
+      state.lineRound = state.selectedMode === MODE_NORMAL || state.selectedMode === MODE_EXTRA
+        ? { wager, mode: state.selectedMode === MODE_EXTRA ? "EB" : "NB" } : null;
       updateStats();
 
       const forceFeature = el.forceFg.checked || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
@@ -3281,8 +3294,9 @@
         state.fgReturnSpin = spin;   // FG 結束回到 BG 時還原觸發局最終盤面（BF／SF 為入場盤）
         startFreeGame(candidate.freeSpins);
         writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
-      } else if (state.lastWin > 0) {
-        state.hitCount += 1;
+      } else {
+        if (state.lastWin > 0) state.hitCount += 1;
+        recordLineRound();
       }
       if (!candidate.triggered && state.restoreMode != null) {
         state.selectedMode = state.restoreMode;
@@ -3363,6 +3377,7 @@
       restoreMode: null,
       auto: false,
       pendingFg: null,
+      lineRound: null,
       fgReturnSpin: null,
       snapshots: [],
       snapshotIndex: -1,
@@ -3633,7 +3648,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-05 12:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261015j"></script>
+  <script src="../../demogame_common.js?v=20261015n"></script>
   <script>
     (() => {
       "use strict";

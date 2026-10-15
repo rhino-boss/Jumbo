@@ -85,7 +85,7 @@ By Game 區域必須：
 
 除第 2.1 節外，其餘區域與行為均由所有遊戲共用，包括：
 
-- Player：Credit、Bet、Win。
+- Player：Credit、Bet、Win。Player／Play／Bet Mode 三區一律放在盤面下方（左欄），右欄只留統計；手機版（單欄）依序為盤面、這三區、統計（共用模組處理）。
 - Stats／Simulation。Stats 放共用項目（總局數、RTP、中獎率、FG 觸發、BG／FG 最大倍數；原「最高倍數」與其重複，不再顯示）；遊戲自訂的特殊指標（只放觀察玩法機制用的即時統計，例如金框使用率；FG 週期等遊戲數據已在報告中，不放這裡）放在下方獨立的「統計 (By Game)」區（共用模組自動把非共用列移入，也可在列上標 `data-by-game`），沒有特殊指標就不顯示這區。
 - Play：Spin、Auto、Bet Stepper、Speed。
 - Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。
@@ -196,6 +196,7 @@ Debug Mode 至少可查看：
 - Simulation（共用，`#batch-simulation`）：N 局獨立數學模擬，Start 執行中只顯示「進行中」（English：Running），不跳局數。FG 觸發顯示「比例 (N 場)」；最高倍數為單局總得分倍數（BF ÷ 底注）；消除分布轉置為「消除次數 × BG／FG」，與倍率線型一樣各自框成一區並有標題。各遊戲提供：
   - `window.demogameSimulateRound({ mode })`：用與畫面相同的遊戲邏輯產生一局（不得另寫簡化數學），回傳 `multiplier`（總得分含 FG ÷ 實際押注）、`lineMultiplier`（BF ÷ 底注，其餘同 `multiplier`）、`fgTriggered`、`maxMultiplier`、`retryLimitExceeded`、`retryCount`、`bgCascade`、`fgCascades`；`mode` 只在該局暫時套用，不得改動畫面押注模式與統計。
   - `window.demogameSimulationModes = [{ value, label }]`：只列實際支援的押注模式，面板據此顯示押注模式選單。
+- 累積倍率線型（共用，統計區下方）：畫面實際遊玩的局，NB 記在 NB、EB 記在 EB，BF／SF 不記錄；依目前押注模式顯示對應的累積圖（標準 64 區間、Y 軸 1%），重置清空。遊戲每局（含 FG）結束時呼叫 `window.demogameLineChart.record(總得分 ÷ 押注, "NB"|"EB")`；押注模式按鈕沒有 is-active 樣式時另呼叫 `setMode()`。
 - 倍率線型（共用，併入 Simulation 面板）：該次模擬每局 `lineMultiplier` 的標準 64 區間分布，X 軸逐一標出 (下限, 上限]，Y 軸 NB／EB 1%、BF 20%，超過上限或為 0 的區間不畫點、線在該處斷開。沒有 Simulation 面板的頁面才在 Set RNG 上方顯示即時線型（NB 一局含 FG 結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫）。
 
 Set RNG 的各欄位（卡片區間、遊戲專屬選單、RNG）互斥：設定其中一個時其他回到預設（共用模組處理）。所有設定都每局沿用，按重置才清空，遊戲不得在 Spin、FG、切換模式後自行清掉。指定值要檢查格式；不得因指定 RNG 進入無限重跑。
