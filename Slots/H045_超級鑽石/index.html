@@ -2167,6 +2167,7 @@
               id="fgTriggerValue">0</span></div>
           <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultSeen">倍數出現率</span><span class="s-value" id="multSeenValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultUsed">倍數出現並使用</span><span class="s-value" id="multUsedValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigGhost">大鬼出現率</span><span class="s-value" id="bigGhostValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigNoScore">大鬼出現沒得分</span><span class="s-value" id="bigNoScoreValue">0.00% (—)</span></div>
@@ -2226,6 +2227,12 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-15：統計 (By Game) 加「倍數出現率」</h4>
+        <ul>
+          <li>該轉盤面只要出現過帶倍 WILD（×2 以上，含大鬼分裂出的 WW）就計一次，不論有沒有被用到；分母同其他項（BG 局＋每轉 FG）。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-10-15：新增 Extra Bet（2 倍押注、FG 出現率 ×5）</h4>
         <ul>
@@ -2737,7 +2744,7 @@
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
     maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
     fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 },
-    spinStats: { spins: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
+    spinStats: { spins: 0, multSeen: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -3589,7 +3596,7 @@
 
   function tallySpin(result) {
     const s = state.spinStats;
-    s.spins++; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
+    s.spins++; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
     s.bigNoScore += result.bigNoScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
   }
   // 機率（週期）：例 12.34% (1/8.1)；沒發生顯示 0.00% (—)
@@ -3603,6 +3610,7 @@
     $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers / state.rounds * 100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)";
     $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
     const s = state.spinStats;
+    $("multSeenValue").textContent = rateCycle(s.multSeen, s.spins);
     $("multUsedValue").textContent = rateCycle(s.multUsed, s.spins);
     $("bigGhostValue").textContent = rateCycle(s.big, s.spins);
     $("bigNoScoreValue").textContent = s.big ? `${(s.bigNoScore / s.big * 100).toFixed(2)}% (${s.bigNoScore}/${s.big})` : "0.00% (—)";
@@ -3838,7 +3846,7 @@
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)",
       scriptFlip: "Gold frame cleared", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
-      statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
+      statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
@@ -3846,7 +3854,7 @@
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼",
       scriptFlip: "金框有消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
-      statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
+      statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
     }
   };
   function tr(key) { return (H045_TEXT[state.language] || H045_TEXT.en)[key] ?? H045_TEXT.en[key] ?? key; }
@@ -3869,7 +3877,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,multSeen:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
     $("autoBtn").textContent = tr("auto"); renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = tr("ready"); updateStats();
   }
   function buildBetMenu() {
@@ -3946,8 +3954,8 @@
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-15 13:22";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-15 13:22";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:21";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:21";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 
