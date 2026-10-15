@@ -202,6 +202,7 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <ul><li><strong>實際上 GC 上線後最大押注只會開到 10 萬（<code>100,000 GC</code>）</strong>：編號 23～44（<code>&gt; 100,000 GC</code>）的檔位不開放；編號 11、12、14、15 也同 SC 關閉。</li><li>GC 金額位數大：最大押注 <code>100,000</code> × Max Multiplier（例 20000x）= <code>2 × 10⁹</code>，Config、Simulator 報表、Demogame 顯示與後端欄位都必須確認不溢位、不被四捨五入。</li></ul>
 <h3 id="23-市場總覽">2.3 市場總覽</h3>
 <div class="tbl-wrap"><table><thead><tr><th>市場／幣別</th><th class="n">Denom</th><th class="n">1 倍押注</th><th class="n">選項數</th><th class="n">最大押注</th><th>來源</th></tr></thead><tbody><tr><td>Reskin SC</td><td class="n">0.002</td><td class="n">0.2</td><td class="n">44（上線 40）</td><td class="n">200</td><td><code>v2</code></td></tr><tr><td>Reskin GC</td><td class="n">20</td><td class="n">2,000</td><td class="n">44（上線 18）</td><td class="n">2,000,000（上線 100,000）</td><td><code>v2</code></td></tr></tbody></table></div>
+<ul><li><strong>上限以上不開的押注一律壓住</strong>：「開啟」列沒打勾的檔位上線不開放。若某檔位是因為數學調不出來（例如倍率上限、天花板或系統最大賠付壓不下來）才不開，須在文件備註該檔位與原因。</li></ul>
 <h2 id="3-rtp-與-link-彩金">3. RTP 與 Link 彩金</h2>
 <h3 id="31-rtp-配置">3.1 RTP 配置</h3>
 <p>平台要求提供 <strong>Total (+機制) 92%／94%／96%</strong> 三個 RTP 版本（見 <a href="#" class="tab-link" data-tab="knowhow">Knowhow</a>）。三版的彩金（Progressive）與新手體驗都一樣，只差在 Game RTP。</p>
