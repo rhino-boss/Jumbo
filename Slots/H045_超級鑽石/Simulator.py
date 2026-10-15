@@ -63,8 +63,9 @@ RNG_SEED = 45_045
 
 COIN_BASE = 100.0                      # Credit 基準，與 Overview!A7 一致
 MODE_NORMALBET = 0
+MODE_EXTRABET = 1                      # Extra Bet（2026-10-15）：押注 2 倍、FG 週期為 NB 的 1/5，卡組 eb_base_game／eb_free_game
 MODE_FEATUREBUY = 2
-SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_FEATUREBUY)
+SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_EXTRABET, MODE_FEATUREBUY)
 
 WW = 0
 W2 = 1
@@ -367,6 +368,10 @@ class SuperDiamond:
         self.bg_trigger_cap = self._card_section_cap("base_game")
         self.fg_cap = self._card_section_cap("free_game")
         self.bf_cap = self._card_section_cap("buy_feature")
+        # Extra Bet 卡組（eb_*）的 BG Trigger Cap 與 FG 上限；倍率分母同 NB 基準成本（數學模型規範 §2.5）
+        self.eb_bg_trigger_cap = self._card_section_cap("eb_base_game")
+        self.eb_fg_cap = self._card_section_cap("eb_free_game")
+        self.trigger_cap = self.bg_trigger_cap
         return self.fg_cap
 
     # --- 盤面 ---
@@ -634,7 +639,7 @@ class SuperDiamond:
             spin = self.natural_base_spin()
             if want_fg:
                 # 數學模型規範 §2.3：free_game 卡須同時滿足「觸發 FG」且 BG 得分 ≤ BG Trigger Cap，否則整把重骰
-                if spin.scatter_count >= 3 and spin.pay / self.bet <= self.bg_trigger_cap:
+                if spin.scatter_count >= 3 and spin.pay / self.bet <= self.trigger_cap:
                     return spin
             elif spin.scatter_count < 3 and self.card_matches(card, spin.pay):
                 return spin
@@ -747,8 +752,11 @@ class SuperDiamond:
         target.fg_drop_symbols.update(source.fg_drop_symbols)
 
     def round(self, bet_mode: int) -> RoundResult:
-        if self.card_enabled:   # Max Win 依模式取 buy_feature／free_game 卡組上限
-            self.max_win = self.bf_cap if bet_mode == MODE_FEATUREBUY else self.fg_cap
+        eb = bet_mode == MODE_EXTRABET
+        prefix = "eb_" if eb else ""   # Extra Bet 用 eb_base_game／eb_free_game 卡組；盤面與 NB 相同
+        if self.card_enabled:   # Max Win 依模式取 buy_feature／free_game（EB 為 eb_free_game）卡組上限
+            self.max_win = self.bf_cap if bet_mode == MODE_FEATUREBUY else (self.eb_fg_cap if eb else self.fg_cap)
+            self.trigger_cap = self.eb_bg_trigger_cap if eb else self.bg_trigger_cap
         if bet_mode == MODE_FEATUREBUY:
             entry_symbols, _, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
@@ -763,7 +771,7 @@ class SuperDiamond:
             return result
 
         result = RoundResult()
-        spin = self.card_spin(self.pick_card("base_game")) if self.card_enabled else self.natural_base_spin()
+        spin = self.card_spin(self.pick_card(prefix + "base_game")) if self.card_enabled else self.natural_base_spin()
         result.pay_bg = spin.pay
         result.cascades_bg = spin.cascades
         result.bg_cascade_count = spin.cascades
@@ -796,7 +804,7 @@ class SuperDiamond:
             result.bg_trigger_fg_cnt = 1
             result.bg_trigger_fg_pay = spin.pay
             initial = self.fs_table[min(spin.scatter_count, max(self.fs_table))]["initial"]
-            feature = (self.card_feature("free_game", initial, result.pay_bg)
+            feature = (self.card_feature(prefix + "free_game", initial, result.pay_bg)
                        if self.card_enabled else self.free_session(initial, result.pay_bg))
             self.merge(result, feature)
 
@@ -815,6 +823,8 @@ class SuperDiamond:
 def wager_for_mode(mode: int, base_bet: float) -> float:
     if mode == MODE_NORMALBET:
         return base_bet
+    if mode == MODE_EXTRABET:
+        return base_bet * float(CFG["bet_modes"]["extra_bet"]["cost_multiplier"])
     return base_bet * float(CFG["bet_modes"]["buy_feature"]["cost_multiplier"])
 
 
@@ -1022,7 +1032,7 @@ def run_simulation(total_rounds: int, bet_mode: int, base_bet: float, threads: i
 # ===== 報表 / Console =====
 
 def mode_name(mode: int) -> str:
-    return "Normal Bet" if mode == MODE_NORMALBET else "Buy Feature"
+    return {MODE_NORMALBET: "Normal Bet", MODE_EXTRABET: "Extra Bet"}.get(mode, "Buy Feature")
 
 
 def calculated_metrics(result: dict[str, Any]) -> dict[str, Any]:
@@ -1431,7 +1441,7 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
         "card_system_enabled": bool(combo["card_system_enabled"]) and bool(CFG_RTP),
         "card_system_profile": "newbie" if combo["card_system_is_newbie"] else "oldhand",
         "bet_mode": bet_mode,
-        "bet_multi": 1 if bet_mode == MODE_NORMALBET else int(CFG["bet_modes"]["buy_feature"]["cost_multiplier"]),
+        "bet_multi": int(round(bet_amount / base_bet)),
         "feature_price_multiplier": feature_price,
         "base_bet": base_bet,
         "bet_amount": bet_amount,

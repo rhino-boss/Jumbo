@@ -2150,6 +2150,7 @@
           <span class="zone-label">Bet Mode</span>
           <div class="zone-body">
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
             <button id="buyFeatureBtn" type="button">Buy Feature (250x)</button>
           </div>
         </section>
@@ -2225,6 +2226,13 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-15：新增 Extra Bet（2 倍押注、FG 出現率 ×5）</h4>
+        <ul>
+          <li>押注模式加 Extra Bet (2x)：點選後 Spin 以 2 倍扣款，盤面同 Normal Bet，卡片改用 <code>eb_base_game</code>／<code>eb_free_game</code>（Card-On FG 週期 1/30，Normal Bet 為 1/150）。RNG 碼模式 EB、Log 標 Extra Bet；Simulation 面板可選 Extra Bet。</li>
+          <li>倍率判定與 Card Range 以 Normal Bet 底注為分母；RTP 以 2 倍實際押注為分母。倍率線型只記 Normal Bet。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-10-15：統計 (By Game) 新增四項</h4>
         <ul>
@@ -2306,6 +2314,7 @@
           <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
           <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
           <li>驗證：Speed 5 BG 6 局、Buy Feature FG 22 轉，5 輪到位時間完全相同（Spin 後約 175～195 ms）；Speed 1 仍逐輪停（約 550／735／920／1105／1290 ms），Speed 3 亦逐輪；同一 RNG 碼 Speed 5／Speed 1 重跑結果相同，Console 無錯誤。只改表演，未修改 XLSX／Config 數學參數。（10/15）</li>
+          <li>修正 RNG 重跑不一致：大鬼分裂落點原本用「亂數比較式 sort」洗牌，呼叫亂數的次數不固定，同一組 RNG 碼重跑會得到不同結果（例 28.20／28.80）；改為 Fisher–Yates 洗牌（同 Simulator），每局另依 RNG 碼重算 Max Win 上限。（10/15）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2627,7 +2636,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
-      const stamp = `${encodeURIComponent(entry.version)}-20261014b`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261015a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
@@ -2980,7 +2989,9 @@
           if (symbol !== WW && symbol !== W2 && symbol !== C1 && !(reel === sr && row === srow)) candidates.push([reel, row]);
         }
       }
-      const targets = candidates.sort(() => rand() - 0.5).slice(0, count);
+      // 洗牌改用 Fisher–Yates（同 Simulator rng.shuffle）：亂數比較式的 sort 呼叫次數不固定，會讓同一組 RNG 碼重跑結果不同
+      for (let i = candidates.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]]; }
+      const targets = candidates.slice(0, count);
       const keys = [];
       for (const [reel, row] of targets) {
         // game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
@@ -3125,8 +3136,11 @@
     const weights = cfg.table_weight.bg;
     return spin(pick(Object.keys(weights), Object.values(weights)), false, 0);
   }
+  // Extra Bet（2026-10-15）：盤面同 NB，卡組改用 eb_base_game／eb_free_game（FG 週期為 NB 的 1/5）
+  const EB = cfg.bet_modes?.extra_bet || { cost_multiplier: 2 };
+  const cardSection = name => (state.mode === 1 && (name === "base_game" || name === "free_game") ? `eb_${name}` : name);
   function pickCard(section, profile = cardProfile()) {
-    const cards = cfg.card_system?.profiles?.[profile]?.[section];
+    const cards = cfg.card_system?.profiles?.[profile]?.[cardSection(section)];
     if (!cards?.length) return null;
     return pick(cards, cards.map(card => card.weight));
   }
@@ -3144,7 +3158,7 @@
     if (!card) return naturalBaseSpin();
     if (card.type === "free_game") {
       // 數學模型規範 §2.3：須同時「觸發 FG」且 BG 得分 ≤ BG Trigger Cap（base_game 卡組最高有權重區間上限）
-      const trigCap = cardSectionCap("base_game", cardProfile());
+      const trigCap = cardSectionCap(cardSection("base_game"), cardProfile());
       let last = null;
       for (let retry = 0; retry < MAX_RETRY; retry++) {
         last = naturalBaseSpin();
@@ -3215,20 +3229,22 @@
     return nearest || freeSession(initialSpins, budget);
   }
 
-  // 共用 Simulation 面板：押注模式選單（本作只有 Normal Bet 與 Buy Feature，無 Extra Bet）
+  // 共用 Simulation 面板：押注模式選單（2026-10-15 加 Extra Bet）
   window.demogameSimulationModes = [
     { value: 0, label: "Normal Bet" },
+    { value: 1, label: "Extra Bet" },
     { value: 2, label: "Buy Feature" }
   ];
   // 批次模擬一局：流程同 play(mode)（不含腳本／指定區間／Force FG），只暫時切換 state.mode，不動畫面與統計
   window.demogameSimulateRound = ({ mode } = {}) => {
     const previousMode = state.mode;
-    const simMode = Number(mode) === 2 ? 2 : 0;
+    const simMode = [0, 1, 2].includes(Number(mode)) ? Number(mode) : 0;
     state.mode = simMode;
+    refreshMaxWin();
     try {
       const buy = simMode === 2;
       const cardOn = cardSystemActive();
-      const wager = betUnit() * (buy ? Number(BUY.cost_multiplier) : 1);
+      const wager = betUnit() * (buy ? Number(BUY.cost_multiplier) : simMode === 1 ? Number(EB.cost_multiplier) : 1);
       let retryLimitExceeded = 0;
       let base;
       if (buy) base = buyEntry();
@@ -3236,7 +3252,7 @@
         const card = pickCard("base_game");
         base = cardSpin(card);
         if (card?.type === "free_game") {
-          if (!(base.scatter >= 3 && base.pay / betUnit() <= cardSectionCap("base_game", cardProfile()))) retryLimitExceeded = 1;
+          if (!(base.scatter >= 3 && base.pay / betUnit() <= cardSectionCap(cardSection("base_game"), cardProfile()))) retryLimitExceeded = 1;
         } else if (card && (base.scatter >= 3 || !cardMatches(card, base.pay))) retryLimitExceeded = 1;
       } else base = naturalBaseSpin();
       const fgTriggered = buy || base.scatter >= 3;
@@ -3600,6 +3616,7 @@
     state.busy = value;
     const inFeature = state.fg.index < state.fg.spins.length;
     $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature;
+    $("normalBetBtn").disabled = value || inFeature; $("extraBetBtn").disabled = value || inFeature;
     $("betMinusBtn").disabled = value || inFeature || state.betIndex === 0;
     $("betPlusBtn").disabled = value || inFeature || state.betIndex === BET_LEVELS.length - 1;
   }
@@ -3676,7 +3693,7 @@
       } else {
         const taken = window.demogameRng.takeInput();   // 格式錯誤會丟 Error
         const code = taken ? {
-          seed: taken.seed, mode: taken.mode === "BF" ? 2 : 0, card: taken.card, config: taken.config,
+          seed: taken.seed, mode: taken.mode === "BF" ? 2 : taken.mode === "EB" ? 1 : 0, card: taken.card, config: taken.config,
           profile: /newbie/i.test(taken.config) ? "newbie" : "oldhand",
           script: /^r\d+$/.test(taken.opts) ? "" : taken.opts, range: /^r\d+$/.test(taken.opts) ? taken.opts.slice(1) : ""
         } : null;
@@ -3686,20 +3703,21 @@
         }
         state.lastWin = 0;
         state.mode = mode;
-        const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : 1);
+        const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : mode === 1 ? Number(EB.cost_multiplier) : 1);
         if (state.balance < cost) throw new Error(tr("insufficient"));
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
         replay = code;
+        refreshMaxWin();   // Max Win 上限依本局（重跑時依 RNG 碼）的 Card／Profile 重算，避免沿用舊值讓同一組碼結果不同
         const seed = code ? code.seed : window.demogameRng.newSeed();
-        const script = mode === 0 ? activeScript() : "";
-        const rangeValue = mode === 0 && !script ? String(replay ? replay.range : ($("cardRangeSelect")?.value || "")) : "";
-        const rngCode = window.demogameRng.format({ config: configLabel(), mode: mode === 2 ? "BF" : "NB", card: cardSystemActive(), opts: script || (rangeValue ? `r${rangeValue}` : ""), seed });
-        appendLog(`#${state.rounds} ${mode === 2 ? "Buy Feature" : "Normal Bet"} | Bet ${money(cost)}${script ? ` | Script ${script}` : rangeValue ? " | Card Range set" : ""}${code ? " | Replay" : ""}`, "mode");
+        const script = mode !== 2 ? activeScript() : "";
+        const rangeValue = mode !== 2 && !script ? String(replay ? replay.range : ($("cardRangeSelect")?.value || "")) : "";
+        const rngCode = window.demogameRng.format({ config: configLabel(), mode: mode === 2 ? "BF" : mode === 1 ? "EB" : "NB", card: cardSystemActive(), opts: script || (rangeValue ? `r${rangeValue}` : ""), seed });
+        appendLog(`#${state.rounds} ${mode === 2 ? "Buy Feature" : mode === 1 ? "Extra Bet" : "Normal Bet"} | Bet ${money(cost)}${script ? ` | Script ${script}` : rangeValue ? " | Card Range set" : ""}${code ? " | Replay" : ""}`, "mode");
         appendLog(`RNG ${rngCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
         let base, feature = null;
         rngNext = window.demogameRng.seeded(seed);
         try {
-          base = mode === 0
+          base = mode !== 2
             ? (script ? scriptedSpin(script) : selectedCardRange() ? cardSpin(selectedCardRange()) : cardSystemActive() ? cardSpin(pickCard("base_game")) : naturalBaseSpin())
             : buyEntry();
           if (base.scatter >= 3 || mode === 2) {
@@ -3711,13 +3729,14 @@
         } finally {
           rngNext = Math.random;   // 整局（BG＋FG）結果已定，之後的模擬／表演不吃這組種子
           replay = null;
+          refreshMaxWin();
         }
         showTable(base.tableName);
         await animateSnapshots(base.snapshots, false, 0, base.pay);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
         state.hitRounds += base.pay > 0 ? 1 : 0;
         state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
-        if (mode === 0) tallySpin(base);   // BF 入場盤不計分、不算一轉
+        if (mode !== 2) tallySpin(base);   // BF 入場盤不計分、不算一轉
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
         appendLog(`${mode === 2 ? "BF Entry" : "BG"} | ${base.tableName} | Cascade ${base.combo} | C1 ${base.scatter} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });   // 共用歷史紀錄：BG 最大倍數
@@ -3899,7 +3918,14 @@
     refreshMaxWin();
   }
 
-  $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2);
+  $("spinBtn").onclick = () => play(state.betMode || 0); $("buyFeatureBtn").onclick = () => play(2);
+  // Normal Bet／Extra Bet 切換：Spin 依目前選的模式扣款（EB 2 倍）；Buy Feature 為單次購買
+  function setBetMode(mode) {
+    state.betMode = mode;
+    $("normalBetBtn").classList.toggle("is-active", mode === 0); $("extraBetBtn").classList.toggle("is-active", mode === 1);
+    appendLog(`Bet Mode | ${mode === 1 ? `Extra Bet (${EB.cost_multiplier}x, FG ×5)` : "Normal Bet"}`, "mode");
+  }
+  $("normalBetBtn").onclick = () => setBetMode(0); $("extraBetBtn").onclick = () => setBetMode(1);
   $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=tr(state.auto?"stop":"auto");if(state.auto&&!state.busy)play(0);};
   $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);updateStats();};
   $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent=`x${$("speedRange").value}`;
@@ -3919,9 +3945,9 @@
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-14 12:20";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-15 13:13";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-15 13:13";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-15 13:22";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-15 13:22";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 

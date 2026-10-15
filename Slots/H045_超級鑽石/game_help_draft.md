@@ -139,6 +139,17 @@
 
 ---
 
+## EXTRA BET
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 額外投注 | EXTRA BET |
+| 規則說明 | ▪ 額外投注的扣款為 {2} × 您所選的基礎投注。 | ▪ EXTRA BET COSTS {2} × THE BASE BET YOU SELECT. |
+| 規則說明 | ▪ 所有獎金仍依您所選的基礎投注計算。 | ▪ ALL WINS ARE STILL CALCULATED ON THE BASE BET YOU SELECT. |
+| 規則說明 | ▪ 免費遊戲的觸發機率提升為一般投注的 {5} 倍。 | ▪ THE CHANCE TO TRIGGER THE FREE GAME FEATURE IS {5} TIMES THAT OF THE NORMAL BET. |
+
+---
+
 ## BUY FEATURE
 
 | Item | 繁中 | 英文 |

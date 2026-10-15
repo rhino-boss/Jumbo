@@ -29,7 +29,7 @@
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
 | 中獎方式 | Way Game |
 | 最小 / 最大 Ways | 最大 1,024 Ways（`4 × 4 × 4 × 4 × 4`） |
-| 押注模式 | Normal Bet；Buy Feature `50 × Bet`；不提供 Extra Bet |
+| 押注模式 | Normal Bet；Extra Bet `2 × Bet`（FG 出現率為 Normal Bet 的 5 倍）；Buy Feature `50 × Bet` |
 | Max Win | 由卡片系統的倍率上限決定，基礎數學模型不寫死（見 §9.10） |
 | 彩金 | OP Jackpot 四階（Grand / Major 連機累進，Minor / Mini 紅利），見 §5.7 |
 
@@ -278,9 +278,12 @@
 
 ## §8. 押注模式
 
-### 8.1 Extra Bet
+### 8.1 Extra Bet（額外投注）
 
-* **不提供**。
+* 扣款 `2 × Bet`；盤面、選表、判獎與 FG 規則與 Normal Bet 完全相同，派彩仍以所選 Bet 計算。
+* FG 出現率為 Normal Bet 的 **5 倍**：由卡片系統的 `eb_base_game`／`eb_free_game` 卡組控制（Card-On FG 週期 1/30，Normal Bet 為 1/150）；FG 卡片與 Normal Bet 相同，BG 卡片壓低使總 RTP 不變（Oldhand 92%、Newbie 93%，以 `2 × Bet` 為分母）。
+* 卡片倍率判定以 Normal Bet 底注為分母（數學模型規範 §2.5）。
+* 押注模式代號 `ExtraBet`（bet mode 1），Coin in `200`（2 × 100 Credit 基準）。
 
 ### 8.2 Buy Feature（購買特色）
 
@@ -581,6 +584,15 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 | BG 表 1 的 `C1` | R1～R5 | **只留 R1、R3**（R2、R4、R5 的 `C1` 換成 J），補牌不補 `C1` → BG 表 1 不觸發 FG |
 
 表 3 單表自然機率（10⁶ 局，H045 賠率與階梯）：BG Hit 36.3%、FG 觸發 1/63.5；以 SA 原賠率與四階階梯驗算自然 RTP 408.7%，遠高於 SA 實機 94.2%，顯示實機另有結果控制，本作以卡片系統對應。Simulator、Demogame 新增「盤面表自帶金框顆數」支援。正式驗證（NB 自然 10⁸ 重解 92A；NB 自然 FG 週期 1/127、BG Trigger Cap 400x；BF 表與 FG 表未變，BF 權重與驗證沿用）：Card-On Oldhand 92.06%（10⁷，+0.1σ）、Newbie 93.29%（10⁶，+0.6σ）、BF 93.05%（3×10⁵，+0.7σ），Retry 超限 0。
+
+### 2026-10-15 新增 Extra Bet（版本維持 5.0.0.0）
+
+| 項目 | 調整前 | 調整後 |
+| --- | --- | --- |
+| 押注模式 | Normal Bet、Buy Feature | 加 **Extra Bet**：`2 × Bet`、FG 出現率 ×5（§8.1） |
+| 92A 卡片 | NB／BF | 加 `eb_base_game`／`eb_free_game`：EB FG 卡與 NB 逐格相同；EB BG 以 RTP 目標重解（Oldhand BG 29.5%／FG 62.5%、Newbie BG 28%／FG 65%，週期 1/30） |
+
+盤面、輪帶與選表不變；Simulator（bet mode 1）、Demogame（Extra Bet 按鈕）、Help 同步。
 
 ### 與前端規格書的差異紀錄
 
