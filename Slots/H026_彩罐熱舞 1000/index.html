@@ -2012,6 +2012,9 @@
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。本檔拿掉切 Player Profile、切 Card System Off、Session Reset 時自動清 Set RNG（選項重建後原值不存在才回 Auto）。（10/15）</li>
           <li>驗證：inline script <code>node --check</code> 通過；選卡片區間後 NB×3、切 EB 一局、切回 NB、切 Newbie 一局，卡片區間都保留且每局 RNG 碼帶 r2；貼 RNG 碼後卡片區間回 Auto，連 2 局照碼重跑且碼保留；再選卡片區間時 RNG 欄清空；按重置全部回預設、下一局不帶區間；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；Speed 5 BG 3 局、FG 5 轉，5 輪皆在 Spin 後約 34～39 ms 同一時間到位；Speed 1 仍逐輪停（約 535→720→895→1070→1250 ms），FG 相同；RNG 碼重跑結果相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -4126,12 +4129,14 @@
     }
 
     async function animateReels(finalBoard = null) {
-      // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+      // 逐輪停輪（左到右；Speed 5 改為同時到位），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
       const base = finalBoard || sampleBoard();
       const rows = base.length;
       const speed = state.speedMultiplier;
-      const baseFrames = Math.max(3, Math.round(9 / speed));
-      const perReelExtra = Math.max(1, Math.round(3 / speed));
+      // Speed 1～4 逐輪停輪；Speed 5（最高階）不逐輪停，短暫滾動後所有轉輪同時到位
+      const simultaneousLand = speed >= 5;
+      const baseFrames = simultaneousLand ? 2 : Math.max(3, Math.round(9 / speed));
+      const perReelExtra = simultaneousLand ? 0 : Math.max(1, Math.round(3 / speed));
       const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
       for (let frame = 0; frame < totalFrames; frame += 1) {
         if (state.debugSkipPlayback) break;
@@ -4574,7 +4579,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261015d"></script>
+  <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 
 </html>

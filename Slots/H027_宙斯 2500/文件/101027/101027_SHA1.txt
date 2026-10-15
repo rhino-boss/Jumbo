@@ -6,7 +6,7 @@ Files: 9
 SHA1                                      FILE                                       SIZE  MODIFIED
 ----------------------------------------  --------------------------------------  -------  ----------------
 16FF4685268F9387B2D065A4DF1B808F3CB4B70C  101027_Game Description.docx            2547171  2026-10-15 09:50
-6937E228D7164BD2DCD3675B9277C10DA5F7C858  101027_Math Document Description_EN.md    30715  2026-10-15 10:30
+0F3B460FBA257A8B58E9B71679202C275A55C51E  101027_Math Document Description_EN.md    31021  2026-10-15 11:00
 9D524378B02E45DCE2E4EFFD8FE19180F978797A  PARsheet\H0271.xlsx                      473123  2026-10-15 09:51
 CD8087AF5144C2968E83844C471FC3F473A5E3A1  PARsheet\H027192.xlsx                    362439  2026-10-15 10:29
 BC66802D5ACC93B5666FBB2B5F0CF6A248F537EC  PARsheet\H027194.xlsx                    362464  2026-10-15 10:29

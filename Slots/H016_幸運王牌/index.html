@@ -2142,6 +2142,9 @@
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：選 Card BG Range (1, 2] 連轉 3 局，選單保留且每局 BG 皆落在區間（1.10x／1.50x／1.40x）；貼 RNG 碼後 Card BG Range 回自動，連轉 3 局碼保留且每局重跑結果相同；再選區間時 RNG 欄清空；按 Reset 全部回預設；Console 無例外；inline script <code>node --check</code> 通過。（10/15）</li>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
+          <li>驗證：Speed x5 BG／FG 五輪停輪時間差 0 ms（Spin 後約 62 ms 同時到位）；x1 約 0.5 秒後同時停輪（本作原本即五輪同時停，未加逐輪停輪）；RNG 重跑 NB／BF（含整場 FG）結果相同；Console 無例外；inline script <code>node --check</code> 通過。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -3784,7 +3787,9 @@
 
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
   async function animateReels(initialBoard) {
-    const frames = Math.max(2, Math.round(8 / Number($("speedRange").value || 1)));
+    // 五輪同時滾動、同時停輪；Speed 第 5 階只滾 1 格後立即同時到位（不逐輪停輪）
+    const speed = Number($("speedRange").value || 1);
+    const frames = speed >= 5 ? 1 : Math.max(2, Math.round(8 / speed));
     for (let frame = 0; frame < frames; frame++) {
       const rolling = cloneBoard(initialBoard);
       for (let reel = 0; reel < 5; reel++) {
@@ -4115,7 +4120,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261015d"></script>
+  <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 
 </html>

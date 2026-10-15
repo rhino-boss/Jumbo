@@ -498,6 +498,33 @@
   syncNativeCardControl(document.getElementById("cardSystemInput")?.checked);
   normalizeStatsTitle();
 
+  // 統計 (By Game)（共用）：統計區只留共用五項（總局數、RTP、中獎率、FG 觸發、最高倍數）；
+  // 其他遊戲自訂的特殊指標列（或標了 data-by-game 的列）搬到下方獨立的「統計 (By Game)」區，沒有就不建立。
+  function setupByGameStats() {
+    const stats = document.getElementById("simulation-stats");
+    if (!stats || document.getElementById("by-game-stats")) return;
+    const SHARED = new Set(["roundCountValue", "rtpValue", "hitRateValue", "fgTriggerValue", "maxMultiplierValue"]);
+    const rows = [...stats.querySelectorAll(".simulation-row")].filter((row) =>
+      row.hasAttribute("data-by-game") || !SHARED.has(row.querySelector(".s-value")?.id || ""));
+    if (!rows.length) return;
+    const panel = document.createElement("section");
+    panel.id = "by-game-stats";
+    panel.className = stats.className;
+    const head = stats.querySelector("h3");
+    const title = document.createElement(head ? head.tagName : "h3");
+    if (head) title.className = head.className;
+    title.textContent = "Stats (By Game)";
+    panel.appendChild(title);
+    rows.forEach((row) => panel.appendChild(row));   // 搬移節點，id 不變，遊戲照原本方式更新數值
+    stats.insertAdjacentElement("afterend", panel);
+    const style = document.createElement("style");
+    style.textContent = "body.slot-simulator #by-game-stats{margin-top:0;padding:10px 14px;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
+      + "body.slot-simulator #by-game-stats h3{margin:0 0 7px;color:var(--sim-sub);font-size:12px!important;font-weight:700;letter-spacing:.5px;text-transform:none}";
+    document.head.appendChild(style);
+  }
+
+  setupByGameStats();
+
   function normalizeSettings() {
     const settings = document.getElementById("settings-wrap");
     const body = settings?.querySelector(":scope > .setting-body");
@@ -812,7 +839,9 @@
     if (!document.getElementById("demogame-removed-style")) {
       const style = document.createElement("style");
       style.id = "demogame-removed-style";
-      style.textContent = ".demogame-removed{display:none!important}";
+      style.textContent = ".demogame-removed{display:none!important}"
+        // 統計／統計 (By Game)／模擬的數值一律用白色字（不用強調綠）
+        + "body.slot-simulator #simulation-stats .s-value,body.slot-simulator #by-game-stats .s-value,body.slot-simulator #batch-simulation .s-value{color:var(--sim-text)!important}";
       document.head.appendChild(style);
     }
   }
@@ -988,7 +1017,7 @@
   const SHARED_ZH = {
     "credit": "餘額", "bet": "押注", "win": "得分", "play": "遊戲", "auto": "自動", "speed": "速度",
     "bet mode": "押注模式", "normal bet": "一般押注", "extra bet": "額外押注", "buy feature": "購買特色", "super feature": "超級特色", "buy super feature": "購買超級特色",
-    "stats": "統計", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
+    "stats": "統計", "stats (by game)": "統計 (By Game)", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
     "fg trigger": "FG 觸發", "fg trigger (observed)": "FG 觸發（實測）", "max multiplier": "最高倍數",
     "set rng": "指定 RNG", "card bg range": "卡片 BG 區間", "card bf range": "卡片 BF 區間", "reel rng": "輪帶 RNG",
     "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始",
@@ -1046,39 +1075,31 @@
   // ===== 歷史紀錄（共用，Debug Mode 顯示）=====
   // 頁面在載入本檔前設 window.DEMOGAME_HISTORY = true 才建立面板；
   // 每局結束時呼叫 window.demogameHistory.record({ bg: BG 得分 ÷ 底注, fg: 該局 FG 總得分 ÷ 底注 })，沒有 FG 時 fg 給 0 或省略。
+  // BG／FG 最大倍數（共用，併在「統計」區，取代原「最高倍數」列；原獨立的歷史紀錄面板已併入）。
+  // 頁面在載入本檔前設 window.DEMOGAME_HISTORY = true 才出現；每局呼叫
+  // window.demogameHistory.record({ bg: BG 得分 ÷ 底注, fg: 該局 FG 總得分 ÷ 底注 })，沒有 FG 的遊戲不顯示 FG 列；Reset 清空。
   function setupHistoryPanel() {
-    if (!window.DEMOGAME_HISTORY || document.getElementById("demogame-history")) return;
-    const panel = document.createElement("section");
-    panel.id = "demogame-history";
-    panel.className = "control-zone debug-only debug-hidden demogame-history";
-    panel.innerHTML = `
-      <div class="demogame-history-header"><span class="zone-label">History</span><button id="clearHistoryBtn" type="button">Clear</button></div>
-      <div class="demogame-history-body">
-        <div class="simulation-row"><span class="s-label">BG Max Multiplier</span><span class="s-value hi" id="historyBgMax">x0</span></div>
-        <div class="simulation-row"><span class="s-label">FG Max Multiplier</span><span class="s-value hi" id="historyFgMax">x0</span></div>
-      </div>`;
-    const anchor = document.getElementById("live-log-wrap") || document.getElementById("rng-wrap");
-    if (anchor) anchor.insertAdjacentElement("afterend", panel);
-    else document.getElementById("settings-wrap")?.insertAdjacentElement("beforebegin", panel);
-    if (!document.getElementById("demogame-history-style")) {
-      const style = document.createElement("style");
-      style.id = "demogame-history-style";
-      style.textContent = `
-        body.slot-simulator #demogame-history{display:block;width:100%;margin-top:10px;padding:12px 14px;border:1px solid var(--sim-border)!important;border-radius:10px;background:var(--sim-panel);box-shadow:0 4px 14px rgba(0,0,0,.13)!important}
-        .demogame-history-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
-        #demogame-history #clearHistoryBtn{padding:5px 10px;border:0;border-radius:5px;color:var(--sim-sub);background:var(--sim-surface);font:700 11px/1 inherit;cursor:pointer}
-        #demogame-history.debug-hidden{display:none!important}`;
-      document.head.appendChild(style);
-    }
-    const debugInput = document.querySelector("#debugModeInput, #debugInput");
-    const sync = () => panel.classList.toggle("debug-hidden", !debugInput?.checked);
-    debugInput?.addEventListener("change", sync);
-    sync();
+    if (!window.DEMOGAME_HISTORY || document.getElementById("historyBgMax")) return;
+    const stats = document.getElementById("simulation-stats");
+    if (!stats) return;
+    const hasFg = Boolean(document.getElementById("fgTriggerValue"));
+    const makeRow = (label, id) => {
+      const row = document.createElement("div");
+      row.className = "simulation-row";
+      row.innerHTML = `<span class="s-label">${label}</span><span class="s-value hi" id="${id}">x0</span>`;
+      return row;
+    };
+    const anchor = document.getElementById("maxMultiplierValue")?.closest(".simulation-row");
+    const rows = [makeRow("BG Max Multiplier", "historyBgMax")];
+    if (hasFg) rows.push(makeRow("FG Max Multiplier", "historyFgMax"));
+    if (anchor) anchor.after(...rows); else stats.append(...rows);
+    anchor?.classList.add("demogame-removed");   // 原「最高倍數」與 BG／FG 最大倍數重複，隱藏（遊戲仍可照常寫入）
     let bgMax = 0, fgMax = 0;
     const fmt = (v) => `x${Number(v.toFixed(2))}`;
     const render = () => {
-      document.getElementById("historyBgMax").textContent = fmt(bgMax);
-      document.getElementById("historyFgMax").textContent = fmt(fgMax);
+      const bg = document.getElementById("historyBgMax"), fg = document.getElementById("historyFgMax");
+      if (bg) bg.textContent = fmt(bgMax);
+      if (fg) fg.textContent = fmt(fgMax);
     };
     window.demogameHistory = {
       record({ bg = 0, fg = 0 } = {}) {
@@ -1088,7 +1109,6 @@
       },
       reset() { bgMax = 0; fgMax = 0; render(); }
     };
-    panel.querySelector("#clearHistoryBtn").addEventListener("click", () => window.demogameHistory.reset());
     document.getElementById("resetBtn")?.addEventListener("click", () => window.demogameHistory.reset());
   }
 

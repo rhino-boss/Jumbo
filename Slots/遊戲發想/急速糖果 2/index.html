@@ -352,7 +352,10 @@
             <li>驗證：RNG Base/NB/off/-/000001e8 觸發局 BG 2 連消 Win 0.00→0.25→2.05，FG 每轉起點 2.05（第 7 轉以 2.30 為底播放 3.80→6.00→18.00→126.00，Previous／Next 逐步 126.00…2.30 與前進一致），FG 結束 Win 150.00＝BG 2.05＋Log「FG complete | Total 147.95」；結束後盤面（符號、倍數、全盤和、連消數）與觸發局最終盤完全相同、Feature Status 基礎遊戲；Buy Feature 10 轉起點 0.00、結束＝Total 11.25，盤面還原成入場盤；下一局 Win 從 0 開始；同碼重跑 Log 逐字相同；Console 無錯誤。（10/13）</li>
             <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。本作 Set RNG 只有 RNG 欄（無卡片區間／遊戲專屬選單）；遊戲重置（統計 Reset）不再清空 RNG 欄，只有 Set RNG 的重置會清。（10/15）</li>
             <li>驗證：貼 RNG 碼後連 Spin 3 局，碼保留且每局皆以同碼 Replay；遊戲重置後 RNG 欄仍保留；按 Set RNG 重置清空，之後 Spin 為新種子；Console 無錯誤。（10/15）</li>
-          </ol>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
+          <li>驗證：RNG Base/NB/off/-/000001e8（BG＋10 轉 FG）量各輪停輪時間：Speed 5 每轉 7 輪同一幀到位（約 Spin 後 170 ms，輪間差 0 ms）；Speed 1 仍由左到右逐輪停（約 510→1530 ms，每輪約 170 ms）；兩種速度 Log 逐字相同（FG Total 147.95、Win 150.00）；Console 無錯誤。（10/15）</li>
+        </ol>
         </article>
         <article class="change-log-entry">
           <h4>v0（0.3.0.0）</h4>
@@ -742,7 +745,8 @@
       // ── 輪帶滾動：逐欄模糊滾動、左到右停輪 ─────────────────────────────────
       async function animateReels(finalBoard, finalMult) {
         const baseFrames = Math.max(3, Math.round(9 / speed()));
-        const perReel = Math.max(1, Math.round(3 / speed()));
+        // Speed 5：不逐輪停輪，所有轉輪同時到位（perReel＝0）
+        const perReel = speed() >= 5 ? 0 : Math.max(1, Math.round(3 / speed()));
         const totalFrames = baseFrames + perReel * (SIZE - 1) + 1;
         for (let frame = 0; frame < totalFrames; frame++) {
           const rolling = new Set();
@@ -1379,7 +1383,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261015d"></script>
+  <script src="../../demogame_common.js?v=20261015j"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

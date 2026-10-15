@@ -254,6 +254,10 @@
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：指定卡片 BG 區間連 Spin 3 局皆保留並套用；改設 Natural Table／貼 RNG 碼時其他欄回預設，RNG 碼連 Spin 皆重跑同一局；重置全部清回預設，無 console 錯誤。（10/15）</li>
+          <li>「特殊符號得分機率」移到統計下方新的「統計 (By Game)」區（共用：非共用五項的指標自動移入，沒有就不顯示）。（10/15）</li>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再逐輪停輪（本作 1～4 階為由右到左 R4 → R1），Spin 後所有轉輪同時到位，RESPIN 重轉同樣同時到位。只改演出。（10/15）</li>
+          <li>驗證：第 5 階四輪落定時間差 &lt; 1 ms（約 160 ms 同時到位，RESPIN 重轉三輪亦同時）；第 1 階仍逐輪停（約 680／850／1020／1200 ms）；RNG 重跑第 5 階與第 1 階得分相同，無 console 錯誤（本作無 FG）。（10/15）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -962,7 +966,7 @@
     setStatus("");
     setScore("", "Spinning…");
     setMessage(["Spinning…", "轉動中…"]);
-    const base = 650 / sp, gap = 170 / sp;
+    const base = 650 / sp, gap = sp >= 5 ? 0 : 170 / sp;   // 第 5 階（最高速）不逐輪停：所有轉輪同時到位
     // 停輪順序由右到左：R4 → R3 → R2 → R1
     const r4Job = spinReel(3, sh.r4, res.r4Pos, null, base);
     const jobs = [0, 1, 2].map((c) => spinReel(c, sh.reels[c], res.stops[c], null, base + (3 - c) * gap));
@@ -1415,7 +1419,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261015d"></script>
+  <script src="../demogame_common.js?v=20261015j"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

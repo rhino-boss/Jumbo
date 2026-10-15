@@ -86,10 +86,10 @@ By Game 區域必須：
 除第 2.1 節外，其餘區域與行為均由所有遊戲共用，包括：
 
 - Player：Credit、Bet、Win。
-- Stats／Simulation。
+- Stats／Simulation。Stats 放共用項目（總局數、RTP、中獎率、FG 觸發、BG／FG 最大倍數；原「最高倍數」與其重複，不再顯示）；遊戲自訂的特殊指標（只放觀察玩法機制用的即時統計，例如金框使用率；FG 週期等遊戲數據已在報告中，不放這裡）放在下方獨立的「統計 (By Game)」區（共用模組自動把非共用列移入，也可在列上標 `data-by-game`），沒有特殊指標就不顯示這區。
 - Play：Spin、Auto、Bet Stepper、Speed。
 - Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。
-- Debug Mode、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用歷史紀錄，與 H045 一致）。
+- Debug Mode、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用統計區的 BG／FG 最大倍數）。
 - Setting：Version、Config／Profile、Language、Help、Reset。
 - Language：共用區的固定英文標籤由 `demogame_common.js` 依 `#languageSelect` 統一切換中英（整段完全相同才替換）；By Game 區域與遊戲專屬文字仍由各遊戲自行翻譯，切回 English 必須還原。
 - 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。
@@ -167,6 +167,7 @@ Slots/
 - 押注選項依 Bet Currency：1～1500 加上最大押注 2000／3000／5000；押注層級由數學定義的遊戲（例如 H014 依押注各有自然表）以 Config 為準。
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值與結算相同；觸發 FG 那局（含 BF 入場盤）的 BG 得分要累積進 FG，FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束時等於整局總得分；Debug 的 Previous／Next 逐步檢視時，Win 同步顯示該步的累計得分。
 - Auto、Speed、Reset 不得改變 RNG、得分或統計結果。
+- Speed 為 1～5 五階：1～4 階轉輪由左到右逐輪停；第 5 階不逐輪停，Spin 後所有轉輪同時到位（BG、FG、Respin 皆同）。
 - 每一轉（BG 局與每一轉 FG）算完分後固定停 0.5 秒（共用 `window.demogameRoundPause()`），才放行下一轉或 Auto；這段停頓不受 Speed 影響，Simulation 不停頓。
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
 - FG 結束回到 BG 時，盤面還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲。
@@ -184,7 +185,7 @@ Debug Mode 至少可查看：
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
 - 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"`，頁尾顯示「最後調性更新：日期 時間」（24 小時制，到分鐘）。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
 - 數值報告按鈕（共用）：有 `其他/數值報告_<遊戲中文名>.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL`，標題列右側出現「報告」按鈕（英文 Report），與說明、重置排在一起。
-- 歷史紀錄（共用）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；面板標題「歷史紀錄」，只顯示 BG 最大倍數與 FG 最大倍數，Clear／Reset 清空。
+- BG／FG 最大倍數（共用，併在「統計」區，取代原「最高倍數」列）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；沒有 FG 的遊戲只顯示 BG 列，重置清空。
 - Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照 H045），不記演出過程：
   - `Config <名稱> loaded | Version <版本> | Card System On|Off`
   - `#<局號> Normal Bet|Extra Bet|Buy Feature|Super Feature | Bet <押注>[ | Card Range set][ | Replay]`

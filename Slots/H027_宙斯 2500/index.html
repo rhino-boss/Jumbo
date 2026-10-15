@@ -354,6 +354,9 @@
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：選 Card BG Range 後連轉 3 局都保留並套用；切 Extra Bet／押注、Buy Feature 後回 BG 仍保留；貼 RNG 碼後 Card Range 回 Auto、碼連轉保留並重跑同局；重置後全部回預設；Console 無錯誤。（10/15）</li>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
+          <li>驗證：Speed 5 下 BG 與 Buy Feature FG 各轉量測各輪停輪時間，所有轉輪同一幀到位；Speed 1 仍由左到右逐輪停；RNG 重跑結果相同、Console 無錯誤。（10/15）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -1239,8 +1242,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   async function animateReels(spin) {
     // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+    // Speed 第 5 階（最高）：不逐輪停，所有轉輪同一幀同時到位
+    const simultaneous = state.speed >= 5;
     const baseFrames = Math.max(3, Math.round(9 / state.speed));
-    const perReelExtra = Math.max(1, Math.round(3 / state.speed));
+    const perReelExtra = simultaneous ? 0 : Math.max(1, Math.round(3 / state.speed));
     const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
     for (let frame = 0; frame < totalFrames; frame += 1) {
       const rollingReels = new Set();
@@ -2083,7 +2088,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261015d"></script>
+  <script src="../demogame_common.js?v=20261015j"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

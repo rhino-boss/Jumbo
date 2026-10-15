@@ -2292,6 +2292,9 @@
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：Card BG Range 選 (1, 2] 連轉 3 局仍保留，3 局 BG 為 1.25x／1.95x／1.90x；改選腳本 combo5 後 Card Range 回 Auto，連轉 2 局腳本仍保留；貼 RNG 碼後 Card Range／腳本回預設，連轉 3 局碼仍在且結果完全相同（96.95x）；按 Reset 全部清回預設，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
+          <li>驗證：Speed 5 BG 6 局、Buy Feature FG 22 轉，5 輪到位時間完全相同（Spin 後約 175～195 ms）；Speed 1 仍逐輪停（約 550／735／920／1105／1290 ms），Speed 3 亦逐輪；同一 RNG 碼 Speed 5／Speed 1 重跑結果相同，Console 無錯誤。只改表演，未修改 XLSX／Config 數學參數。（10/15）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -3446,7 +3449,8 @@
     // 滾動中的金框依權重比例隨機塞進輪帶做表演；該輪停下後才顯示真正抽出的金框與倍數，結果不變
     const speed = Number($("speedRange").value || 1);
     const baseFrames = Math.max(3, Math.round(9 / speed));
-    const perReelExtra = Math.max(1, Math.round(3 / speed));
+    // Speed 1～4 逐輪停（左到右）；Speed 5 不錯開，Spin 後所有轉輪同一格到位
+    const perReelExtra = speed >= 5 ? 0 : Math.max(1, Math.round(3 / speed));
     const totalFrames = baseFrames + perReelExtra * 4 + 1;
     const goldSrc = initialGold || zeroGold(), multSrc = initialMults || zeroMults();
     const goldRate = [0, 1, 2, 3, 4].map(reel => rollingGoldRate(scene, reel));
@@ -3879,7 +3883,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-14 12:20";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-14 12:20";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-14 12:20";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261015d"></script>
+  <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 
 </html>

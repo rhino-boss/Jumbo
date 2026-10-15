@@ -1938,6 +1938,9 @@
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：本遊戲無卡片系統（Card BG Range 固定 Auto、停用），原本就沒有自動清除 Set RNG 的程式，僅把重置鈕改為任一欄有值即可按；貼入 RNG 碼後連續 Spin 3 局碼仍保留、每局 Log 結果行相同；重置清空 RNG 欄；Console 無錯誤；inline script 皆過 <code>node --check</code>。（10/15）</li>
+          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
+          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
+          <li>驗證：Speed x5 量測 BG 2 局、Buy Feature FG 21 轉，6 輪皆在同一幀到位（Spin 後約 60 ms）；x1 仍逐輪停（約 0.55→1.48 秒）；同 RNG 碼 x1／x5 重跑 Log 結果行相同；Console 無錯誤；inline script 皆過 <code>node --check</code>。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -2681,7 +2684,8 @@
   async function animateReels(spin) {
     // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
     const baseFrames = Math.max(3, Math.round(9 / state.speed));
-    const perReelExtra = Math.max(1, Math.round(3 / state.speed));
+    // 第 5 階（最高速）不逐輪停：所有轉輪同時到位
+    const perReelExtra = state.speed >= 5 ? 0 : Math.max(1, Math.round(3 / state.speed));
     const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
     for (let frame = 0; frame < totalFrames; frame += 1) {
       const rollingReels = new Set();
@@ -3331,7 +3335,7 @@
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261015d"></script>
+  <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 
 </html>
