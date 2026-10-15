@@ -186,6 +186,7 @@
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">Respin / Lucky Wheel</span><span class="s-value hi" id="featureRateValue">0.00% / 0.00%</span></div>
+          <div class="simulation-row" title="有得分且 R4 特殊符號有作用（倍數乘到分數、RESPIN、BONUS 轉盤）的局數 ÷ 有得分局數"><span class="s-label" id="specialWinLabel">特殊符號得分機率</span><span class="s-value hi" id="specialWinValue">0.00% (0/0)</span></div>
           <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
         </section>
       </aside>
@@ -247,6 +248,7 @@
             <li>驗證：逐步回看 Win 依步驟升降、最後一步等於局末得分；Credit、統計、Log、RNG 不變，無 console 錯誤（本作無 FG／消除，步驟為停輪 → 倍數／RESPIN／轉盤 → 結果）。（10/13）</li>
             <li>R4 停在 2X／5X／10X 但數字分為 0（倍數無效）時，R4 不亮得分框；有得分的倍數、RESPIN、BONUS 照舊亮框。只改演出，未修改 XLSX／Config。（10/15）</li>
             <li>開頁時共用 CSS 尚未載入或載入失敗（例如單獨開啟 index.html），不再顯示未套樣式的畫面，改顯示「Demo 載入中…」與網頁版網址。（10/15）</li>
+            <li>統計新增「特殊符號得分機率」＝有得分且 R4 特殊符號有作用（倍數乘到分數、RESPIN、BONUS 轉盤）的局數 ÷ 有得分局數，括號為次數；Reset 清空。只改介面，未修改 XLSX／Config。（10/15）</li>
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：指定卡片 BG 區間連 Spin 3 局皆保留並套用；改設 Natural Table／貼 RNG 碼時其他欄回預設，RNG 碼連 Spin 皆重跑同一局；重置全部清回預設，無 console 錯誤。（10/15）</li>
@@ -718,7 +720,7 @@
   const START_BALANCE = 100000;
   const state = {
     balance: START_BALANCE, betIndex: 0, mode: 0, busy: false, auto: false, language: "zh",
-    rounds: 0, totalBet: 0, totalWin: 0, hits: 0, respins: 0, wheels: 0, maxMultiplier: 0, lastWin: 0,
+    rounds: 0, totalBet: 0, totalWin: 0, hits: 0, specialHits: 0, respins: 0, wheels: 0, maxMultiplier: 0, lastWin: 0,
     snapshots: [], snapshotIndex: -1, view: null, wheelRot: 0
   };
   const curBet = () => BET_LEVELS[state.betIndex];
@@ -1081,6 +1083,7 @@
     $("hitRateValue").textContent = state.rounds ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
     $("featureRateValue").textContent = state.rounds
       ? `${(state.respins / state.rounds * 100).toFixed(2)}% / ${(state.wheels / state.rounds * 100).toFixed(2)}%` : "0.00% / 0.00%";
+    $("specialWinValue").textContent = `${state.hits ? (state.specialHits / state.hits * 100).toFixed(2) : "0.00"}% (${state.specialHits.toLocaleString()}/${state.hits.toLocaleString()})`;
     $("maxMultiplierValue").textContent = `x${fmtX(state.maxMultiplier)}`;
     $("modeText").textContent = BASE.bet_modes[String(state.mode)].name;
     $("normalBetBtn").classList.toggle("is-active", state.mode === 0);
@@ -1186,6 +1189,8 @@
     } catch (error) { console.error(error); }
     state.balance += res.win; state.totalWin += res.win; state.lastWin = res.win;
     if (res.win > 0) state.hits++;
+    // 特殊符號得分：有得分且 R4 有作用（倍數乘到非 0 數字分、RESPIN、BONUS 轉盤）
+    if (res.win > 0 && ((MULT[res.r4Sym] && res.s1 > 0) || res.respin || res.wheelIdx >= 0)) state.specialHits++;
     if (res.respin) state.respins++;
     if (res.wheelIdx >= 0) state.wheels++;
     state.maxMultiplier = Math.max(state.maxMultiplier, res.win / bet);
@@ -1279,6 +1284,7 @@
     $("gameName").textContent = state.language === "en" ? BASE.name_en : BASE.name_zh;
     $("extraBetBtn").textContent = `${window.demogameSharedText?.("Extra Bet") || "Extra Bet"} (${costMult(1)}x)`;
     document.title = `${BASE.name_en} — Demo Game`;
+    $("specialWinLabel").textContent = state.language === "en" ? "Special Symbol Win Rate" : "特殊符號得分機率";
     if (state.view) {   // 目前盤面訊息與 Feature Status 依語言重繪
       $("messageBar").textContent = langText(state.view.message[0]);
       $("featureStatus").textContent = langText(state.view.status);
@@ -1303,7 +1309,7 @@
     state.snapshots = []; state.snapshotIndex = -1; updateStepButtons();
   }
   function reset() {
-    Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hits: 0, respins: 0, wheels: 0, maxMultiplier: 0, lastWin: 0, auto: false });
+    Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hits: 0, specialHits: 0, respins: 0, wheels: 0, maxMultiplier: 0, lastWin: 0, auto: false });
     $("autoBtn").textContent = "Auto";
     $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
     initialBoard();
@@ -1409,7 +1415,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261015b"></script>
+  <script src="../demogame_common.js?v=20261015c"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
