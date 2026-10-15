@@ -4,7 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Money Boost — Demo Game</title>
-  <link rel="stylesheet" href="../demogame_common.css?v=7">
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="h014-boot">
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h014-by-game">
     /* 文件層級 box-sizing 基準（與既有 Demogame 相同；共用 CSS 未宣告） */
     *, *::before, *::after { box-sizing: border-box; }
@@ -94,6 +101,7 @@
 </head>
 
 <body>
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：rhino-boss.github.io/Jumbo/Slots/H014_錢來襲/</div>
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId"></span> <span id="gameName"></span></span>
@@ -238,7 +246,11 @@
             <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
             <li>驗證：逐步回看 Win 依步驟升降、最後一步等於局末得分；Credit、統計、Log、RNG 不變，無 console 錯誤（本作無 FG／消除，步驟為停輪 → 倍數／RESPIN／轉盤 → 結果）。（10/13）</li>
             <li>R4 停在 2X／5X／10X 但數字分為 0（倍數無效）時，R4 不亮得分框；有得分的倍數、RESPIN、BONUS 照舊亮框。只改演出，未修改 XLSX／Config。（10/15）</li>
-          </ol>
+            <li>開頁時共用 CSS 尚未載入或載入失敗（例如單獨開啟 index.html），不再顯示未套樣式的畫面，改顯示「Demo 載入中…」與網頁版網址。（10/15）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
+          <li>驗證：指定卡片 BG 區間連 Spin 3 局皆保留並套用；改設 Natural Table／貼 RNG 碼時其他欄回預設，RNG 碼連 Spin 皆重跑同一局；重置全部清回預設，無 console 錯誤。（10/15）</li>
+        </ol>
         </article>
         <article class="change-log-entry">
           <h4>v4（4.1.0.0）</h4>
@@ -1122,7 +1134,7 @@
     let bet = curBet(), mode = state.mode;
     let round, ctx, seed, cost, pk;
     try {
-      const code = window.demogameRng.takeInput();   // 讀並清空 #rngInput；格式錯誤會丟 Error
+      const code = window.demogameRng.takeInput();   // 讀 #rngInput（不清空，按 Reset 才清）；格式錯誤會丟 Error
       let cardActive = cardOn(), naturalSheet = $("naturalSheetSelect").value, forcedCard = null;
       const cardValue = $("cardRangeSelect").value;
       if (code) {
@@ -1160,8 +1172,7 @@
       state.auto = false; $("autoBtn").textContent = "Auto";
       return;
     }
-    // 指定值只作用於下一局
-    $("cardRangeSelect").value = ""; rebuildDebugSelects();
+    // Set RNG 設定一直保留到按 Reset 才清（不在每局後清除）
     setBusy(true);
     state.balance -= cost; state.totalBet += cost; state.rounds++; state.lastWin = 0;
     updateStats();
@@ -1375,7 +1386,7 @@
   $("previousStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex - 1));
   $("nextStepBtn").addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
   $("debugModeInput").addEventListener("change", () => setDebug($("debugModeInput").checked));
-  $("setRngResetBtn").addEventListener("click", () => { $("rngInput").value = ""; $("cardRangeSelect").value = ""; rebuildDebugSelects(); });
+  $("setRngResetBtn").addEventListener("click", () => { $("rngInput").value = ""; $("cardRangeSelect").value = ""; $("naturalSheetSelect").selectedIndex = 0; rebuildDebugSelects(); });
   $("clearLogBtn").addEventListener("click", () => { $("liveLogBody").innerHTML = ""; });
   $("resetBtn").addEventListener("click", () => { if (!state.busy) reset(); });
   $("languageSelect").addEventListener("change", () => {
@@ -1398,7 +1409,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
