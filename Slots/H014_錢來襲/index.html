@@ -237,6 +237,7 @@
             <li>驗證：取樣 Win 依演出分段上升、局末等於 Log 的 Win；Credit、統計、RNG 重跑結果不變，無 console 錯誤。（10/13）</li>
             <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
             <li>驗證：逐步回看 Win 依步驟升降、最後一步等於局末得分；Credit、統計、Log、RNG 不變，無 console 錯誤（本作無 FG／消除，步驟為停輪 → 倍數／RESPIN／轉盤 → 結果）。（10/13）</li>
+            <li>R4 停在 2X／5X／10X 但數字分為 0（倍數無效）時，R4 不亮得分框；有得分的倍數、RESPIN、BONUS 照舊亮框。只改演出，未修改 XLSX／Config。（10/15）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -954,7 +955,7 @@
     showLiveWin(res.s1);
     if (res.s1 > 0) [0, 1, 2].forEach((c) => { if (res.syms[c] !== S_E) hitReel(c); });
     await r4Job;
-    if (res.r4Sym !== S_E) hitReel(3);
+    if (res.r4Sym !== S_E && !(MULT[res.r4Sym] && res.s1 === 0)) hitReel(3);   // 數字分 0 時倍數無效，不亮得分框
     setMessage(`R4：${code(res.r4Sym)}`);
     snapshot("Reels stop");
     await wait(320 / sp);
