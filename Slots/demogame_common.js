@@ -995,7 +995,7 @@
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
     "help": "說明", "change log": "修改紀錄", "previous": "上一步", "next": "下一步",
-    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "數值報告", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
+    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
   const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
   const sharedOriginal = new WeakMap();
@@ -1140,9 +1140,9 @@
     if (getComputedStyle(bar).position === "static") bar.style.position = "relative";
     bar.appendChild(group);
     const style = document.createElement("style");
-    style.textContent = `#demogameTitleActions{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:2px;align-items:center}
+    style.textContent = `#demogameTitleActions{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:1px;align-items:center}
       #demogameTitleActions > a, #demogameTitleActions > button{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;
-        height:30px;min-height:0;min-width:0;width:auto;margin:0;padding:0 8px;border-radius:7px;border:none;
+        height:30px;min-height:0;min-width:0;width:auto;margin:0;padding:0 4px;border-radius:7px;border:none;
         color:#6f8fae;background:transparent;font-family:inherit;font-size:var(--demogame-title-size,13px);font-weight:var(--demogame-title-weight,700);line-height:1;
         letter-spacing:0;white-space:nowrap;text-decoration:none;cursor:pointer}
       #demogameTitleActions > a:hover, #demogameTitleActions > button:hover{color:#dceeff;background:rgba(127,160,200,.14)}
@@ -1862,14 +1862,9 @@
 
     const rngInput = byId("rngInput");
     const cardRange = byId("cardRangeSelect");
-    rngInput?.addEventListener("input", () => {
-      if (rngInput.value.trim() && cardRange) cardRange.value = "";
-      actions.rngChanged?.();
-    });
-    cardRange?.addEventListener("change", () => {
-      if (cardRange.value && rngInput) rngInput.value = "";
-      actions.rngChanged?.();
-    });
+    // 互斥清除交給「Set RNG 欄位互斥（共用）」：它會對被清的欄位發出 change／input 事件，遊戲才能同步狀態
+    rngInput?.addEventListener("input", () => actions.rngChanged?.());
+    cardRange?.addEventListener("change", () => actions.rngChanged?.());
 
     document.addEventListener("click", (event) => actions.documentClick?.(event));
     document.addEventListener("keydown", (event) => {

@@ -211,6 +211,8 @@ Check: `Σ(Weight_NB_BG × Avg_Multi_NB_BG) ÷ 10⁹` = 72.41% (the ideal value 
 
 ### 1-8 OP Jackpot
 
+Jackpot System Reference: Math Document Description_JP. The OP Jackpot prize levels, start-up pools and contribution rates are shared across all OP Jackpot games; refer to BMM's Certification Test Report "JUMBO.1038.A.02" dated on 4th August 2026 for details of the OP Jackpot Feature RTP % calculations.
+
 Records the SCR (Scatter spin rate) used by the platform jackpot module to convert "the theoretical trigger rate per game" into "the hit probability per spin that contains a Scatter".
 
 | Field | Content |
