@@ -830,6 +830,58 @@
 
   removeForceFg();
 
+  // ===== 卡片區間選單文字（共用）=====
+  // #cardRangeSelect 的選項只顯示區間：去掉前面的編號（#11、Card 11:）與後面的子表標記（（A）），
+  // 「a < x ≤ b」統一寫成「(a, b]」、「Win = 0」寫成「(-1, 0]」；option 的 value 不變。
+  function cardRangeLabel(text) {
+    let t = String(text || "").trim()
+      .replace(/^#\d+\s*/, "").replace(/^Card\s*\d+\s*[:：]\s*/i, "")
+      .replace(/\s*[（(][A-Z]{1,3}[）)]\s*$/, "").trim();
+    let m = /^(-?[\d.]+)\s*<\s*x\s*≤\s*(-?[\d.]+)$/.exec(t);
+    if (m) t = `(${m[1]}, ${m[2]}]`;
+    if (/^Win\s*=\s*0$/i.test(t)) t = "(-1, 0]";
+    return t;
+  }
+  function normalizeCardRangeOptions() {
+    const select = document.getElementById("cardRangeSelect");
+    if (!select) return;
+    for (const option of select.options) {
+      if (option.value === "") continue;   // Auto
+      const label = cardRangeLabel(option.textContent);
+      if (label && label !== option.textContent) option.textContent = label;
+    }
+  }
+  const cardRangeSelectNode = document.getElementById("cardRangeSelect");
+  if (cardRangeSelectNode) {
+    normalizeCardRangeOptions();
+    new MutationObserver(normalizeCardRangeOptions).observe(cardRangeSelectNode, { childList: true, subtree: true, characterData: true });
+  }
+
+  // ===== Set RNG 欄位互斥（共用）=====
+  // #set-rng-panel 內的設定（卡片區間、遊戲專屬選單、RNG 欄…）同時只會有一個作用：
+  // 設定其中一個時，其他欄位清回預設（選單回第一個／空值選項、輸入欄清空）。設定會一直保留，按重置才清。
+  function setupSetRngExclusive() {
+    const panel = document.getElementById("set-rng-panel");
+    if (!panel) return;
+    let syncing = false;
+    const fields = () => [...panel.querySelectorAll("select, input[type=text], input:not([type])")];
+    const isDefault = (el) => el.tagName === "SELECT" ? el.selectedIndex <= 0 : !el.value.trim();
+    const toDefault = (el) => {
+      if (isDefault(el)) return;
+      if (el.tagName === "SELECT") el.selectedIndex = 0; else el.value = "";
+      el.dispatchEvent(new Event(el.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
+    };
+    const onSet = (event) => {
+      const target = event.target;
+      if (syncing || !fields().includes(target) || isDefault(target)) return;
+      syncing = true;
+      try { fields().forEach((el) => { if (el !== target) toDefault(el); }); } finally { syncing = false; }
+    };
+    panel.addEventListener("change", onSet);
+    panel.addEventListener("input", onSet);
+  }
+  setupSetRngExclusive();
+
   // ===== 可重現 RNG（共用）=====
   // 每局用一組 32-bit 種子（mulberry32）驅動所有數學抽樣；Log 印一行「RNG <碼>」，點一下複製並填入 Set RNG 的 #rngInput，
   // 下一局 Spin 照碼重跑出同一局（BG、消除、FG 全部相同）。

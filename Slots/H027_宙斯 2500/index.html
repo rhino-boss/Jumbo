@@ -348,6 +348,9 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本檔原本已符合，含 Previous／Next 基底，僅驗證未改碼）。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
           <li>驗證：NB 自然觸發（Card FG 區間，RNG 92A/NB/on/r64/dea77932）BG 得分 3.00 → FG 第 1 轉起始 Win 3.00、逐消除 3.25…、結束 38.05＝3.00＋FG 35.05；Buy Feature 入場盤 3.00 → FG 起始 3.00、結束 26.60＝3.00＋23.60；Previous／Next 基底一致；FG 結束後盤面與觸發局（BF 入場盤）最終盤逐格相同、Feature Status 回 Base Game；RNG 重跑 Log 結果行與盤面相同、Console 無錯誤。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
+          <li>驗證：選 Card BG Range 後連轉 3 局都保留並套用；切 Extra Bet／押注、Buy Feature 後回 BG 仍保留；貼 RNG 碼後 Card Range 回 Auto、碼連轉保留並重跑同局；重置後全部回預設；Console 無錯誤。（10/15）</li>
         </ol>
         </article>
         <article class="change-log-entry">
@@ -1526,9 +1529,17 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return Number.isInteger(index) && Number(cards?.[index]?.weight) > 0 ? index : null;
   }
 
+  // Set RNG 的 Card Range 選擇會一直保留到按重置；BG／BF 清單不同，只在同一種清單上還原（Buy 期間用 Auto，回 BG 後還原原選擇）。
+  const cardRangeChoice = { kind: "bg", value: "" };
+  function rememberCardRange() {
+    cardRangeChoice.kind = state.selectedMode === MODE_BUY ? "bf" : "bg";
+    cardRangeChoice.value = el.cardRange.value;
+  }
+
   function refreshCardRangeOptions() {
     if (!el.cardRange) return;
-    const previous = el.cardRange.value;
+    const kind = state.selectedMode === MODE_BUY ? "bf" : "bg";
+    const previous = cardRangeChoice.kind === kind ? cardRangeChoice.value : "";
     const modeData = cardModeData();
     const cards = state.selectedMode === MODE_BUY ? modeData?.weight_fg : modeData?.weight_bg;
     el.cardRange.innerHTML = '<option value="">Auto</option>';
@@ -1541,7 +1552,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         : `Card ${index}: (${card.min}, ${card.max}]`;
       el.cardRange.appendChild(option);
     });
-    if ([...el.cardRange.options].some((option) => option.value === previous)) el.cardRange.value = previous;
+    el.cardRange.value = [...el.cardRange.options].some((option) => option.value === previous) ? previous : "";   // 原選項不存在才回 Auto
     const label = el.cardRange.closest("label");
     if (label?.firstChild) label.firstChild.textContent = state.selectedMode === MODE_BUY ? "Card BF Range " : "Card BG Range ";
   }
@@ -1782,7 +1793,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function selectMode(mode) {
     if (state.busy || state.pendingFg) return;
     state.selectedMode = mode;
-    el.cardRange.value = "";
     refreshCardRangeOptions();
     updateControls();
     updateStats();
@@ -1792,7 +1802,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function purchaseFeature(mode) {
     if (state.busy || state.pendingFg) return;
     state.selectedMode = mode;
-    el.cardRange.value = "";
     refreshCardRangeOptions();
     updateControls();
     updateStats();
@@ -1803,7 +1812,6 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   function setBetIndex(index) {
     if (state.busy || state.pendingFg) return;
     state.betIndex = Math.max(0, Math.min(index, BET_OPTIONS.length - 1));
-    el.cardRange.value = "";
     refreshCardRangeOptions();
     updateStats();
     renderBetMenu();
@@ -1839,9 +1847,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       restoreMode: null
     });
     document.body.classList.remove("fg-mode");
-    el.rngInput.value = "";
-    el.cardRange.value = "";
-    refreshCardRangeOptions();
+    refreshCardRangeOptions();   // Set RNG 設定不隨 Session Reset 清除，只有 Set RNG 的重置會清
     renderBoard(sampleBoard());
     updateFeatureBar();
     updateStats();
@@ -1999,10 +2005,11 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       previousStep: () => showSnapshot(state.snapshotIndex - 1),
       nextStep: () => showSnapshot(state.snapshotIndex + 1),
       debugChange: () => toggleDebug(el.debug.checked),
-      rngChanged: updateControls,
+      rngChanged: () => { rememberCardRange(); updateControls(); },   // Card Range／RNG 欄變動（含共用互斥清回預設）都記住目前選擇
       resetRng: () => {
         el.rngInput.value = "";
         el.cardRange.value = "";
+        rememberCardRange();
         updateControls();
         writeMessage(tr("Set RNG reset", "指定 RNG 已重置"));
       },
@@ -2033,12 +2040,10 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
         openVersion(H027_VERSION_ENTRY.version, code);
         return;
       }
-      el.cardRange.value = "";
       refreshCardRangeOptions();
       updateControls();
     });
     document.addEventListener("demogame:card-system-change", () => {
-      el.cardRange.value = "";
       refreshCardRangeOptions();
       updateControls();
     });
@@ -2075,7 +2080,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

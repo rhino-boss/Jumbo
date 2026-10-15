@@ -2136,6 +2136,9 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
           <li>驗證（92A、Card On、Speed x5）：Card Range Free Game 局 BG 11.40 → FG 開場 Win 11.40、結束 43.60（＝11.40＋FG 32.20）；Force FG 局 BG 5.25 → 結束 130.15；Buy Feature 入場 0 → 結束 15.00；FG 各轉 Previous 第一步＝前一轉累計、Next 最後一步＝該轉結束值；FG 結束盤面與觸發局最終盤面（BF 入場盤）逐格相同、Feature Status 回到基礎遊戲；下一局 Win 從 0 起；RNG 重跑 NB（Card Range）／BF 局 Log 完全相同；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
+          <li>驗證：選 Card BG Range (1, 2] 連轉 3 局，選單保留且每局 BG 皆落在區間（1.10x／1.50x／1.40x）；貼 RNG 碼後 Card BG Range 回自動，連轉 3 局碼保留且每局重跑結果相同；再選區間時 RNG 欄清空；按 Reset 全部回預設；Console 無例外；inline script <code>node --check</code> 通過。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -4109,7 +4112,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
 </body>
 
 </html>

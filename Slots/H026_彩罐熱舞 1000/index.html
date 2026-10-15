@@ -2006,6 +2006,9 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本作原本即如此，僅驗證未改程式）。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回 Base Game；Previous／Next 多一步「Back to BG」，往前仍可看 FG 最後一轉。（10/13）</li>
           <li>驗證：inline script <code>node --check</code> 通過；NB 自然觸發（RNG 重跑）BG Win 0.25，FG 開始 0.25→第 1 轉 0.60→2.00，FG 結束 20.40＝整局總得分；BF 入場盤 Win 0.35，FG 開始 0.35，結束 20.75＝整局總得分；兩者 FG 結束盤面與觸發局最終盤面（BF 入場盤）一致、Feature Status＝Base Game；Previous／Next 逐步 20.40→Free Game 16.40→回 Base Game 20.40；下一局 Win 從 0.00 起；RNG 碼重跑結果相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。本檔拿掉切 Player Profile、切 Card System Off、Session Reset 時自動清 Set RNG（選項重建後原值不存在才回 Auto）。（10/15）</li>
+          <li>驗證：inline script <code>node --check</code> 通過；選卡片區間後 NB×3、切 EB 一局、切回 NB、切 Newbie 一局，卡片區間都保留且每局 RNG 碼帶 r2；貼 RNG 碼後卡片區間回 Auto，連 2 局照碼重跑且碼保留；再選卡片區間時 RNG 欄清空；按重置全部回預設、下一局不帶區間；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -4371,14 +4374,14 @@
       } catch (_) {
         // Player profile still works for this session when storage is unavailable.
       }
-      renderCardRangeOptions();
-      resetSetRng(false);
+      renderCardRangeOptions();   // Set RNG 設定保留（選項不存在才回 Auto），按 Set RNG Reset 才清
+      updateDebugControls();
       writeMessage(`Player Profile | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`);
     });
 
     document.addEventListener("demogame:card-system-change", (event) => {
       CARD_SYSTEM_ENABLED = Boolean(Box.card_system?.enabled) && Boolean(event.detail?.enabled);
-      if (!CARD_SYSTEM_ENABLED) cardRangeSelectEl.value = "";
+      // Card System Off 時 Card BG Range 不生效（runSeededRound 已判斷），但選擇保留到按 Set RNG Reset
       cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
       updateSpinButtonState();
       updateDebugControls();
@@ -4442,8 +4445,7 @@
       speedRangeEl.value = "1";
       debugModeInputEl.checked = false;
       forceFgInputEl.checked = false;
-      renderCardRangeOptions();
-      resetSetRng(false);
+      renderCardRangeOptions();   // Set RNG 設定保留，按 Set RNG Reset 才清
       closeBetMenu();
       clearLiveLog();
       resetDisplayState();
@@ -4524,6 +4526,7 @@
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
+      updateDebugControls();
       writeMessage(`Normal Bet selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
     });
     extraBetBtn.addEventListener("click", () => {
@@ -4532,6 +4535,7 @@
       updateSessionCards();
       updateSpinButtonState();
       renderCardRangeOptions();
+      updateDebugControls();
       writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
     });
     buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
@@ -4567,7 +4571,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
 </body>
 
 </html>

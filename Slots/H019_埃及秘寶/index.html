@@ -1932,6 +1932,9 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本遊戲原已符合，僅驗證）。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
           <li>驗證：自然觸發局（RNG 92/NB/off/-/a2eebb94）BG 5.65，FG 首轉起點 5.65、結束 112.80（＝5.65＋FG 107.15）；Buy Feature 入場盤 3.00，FG 起點 3.00、結束 1,825.65（＝3.00＋FG 1,822.65），FG 中 Previous 逐步 3.75→3.25→3.25→3.00 以 BG 得分為底；兩者 FG 結束後盤面（符號、C2 倍數、圖片）與觸發局最終盤面／入場盤完全相同，Feature Status 回 Base Game；下一局 Win 由 0.00 起；RNG 重跑 Log 結果相同；Console 無錯誤；inline script 皆過 <code>node --check</code>。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
+          <li>驗證：本遊戲無卡片系統（Card BG Range 固定 Auto、停用），原本就沒有自動清除 Set RNG 的程式，僅把重置鈕改為任一欄有值即可按；貼入 RNG 碼後連續 Spin 3 局碼仍保留、每局 Log 結果行相同；重置清空 RNG 欄；Console 無錯誤；inline script 皆過 <code>node --check</code>。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -2796,7 +2799,7 @@
     el.betPlus.disabled = wagerLocked;
     el.betButton.disabled = wagerLocked;
     el.rngInput.disabled = state.busy;
-    el.rngReset.disabled = state.busy || !el.rngInput.value.trim();
+    el.rngReset.disabled = state.busy || (!el.rngInput.value.trim() && !el.cardRange.value);
     el.spin.disabled = state.busy;
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
     el.buy.classList.remove("is-active");
@@ -2957,7 +2960,7 @@
         return;
       }
 
-      const code = window.demogameRng.takeInput();   // 讀並清空 #rngInput；格式錯誤丟 Error
+      const code = window.demogameRng.takeInput();   // 讀 #rngInput（不清空，每局照碼重跑，按重置才清）；格式錯誤丟 Error
       const seed = code ? code.seed : window.demogameRng.newSeed();
       if (code) {
         // 依碼暫時套用押注模式（只作用本局；FG 結束後照常回 Normal Bet，畫面選項不變）
@@ -3277,6 +3280,7 @@
   el.next.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
   el.debug.addEventListener("change", () => toggleDebug(el.debug.checked));
   el.rngInput.addEventListener("input", updateControls);
+  el.cardRange.addEventListener("change", updateControls);
   el.rngReset.addEventListener("click", () => {
     el.rngInput.value = "";
     el.cardRange.value = "";
@@ -3324,7 +3328,7 @@
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
 </body>
 
 </html>

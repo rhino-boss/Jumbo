@@ -57,7 +57,7 @@
 
 ### 1-1 How the program uses the xlsx parameters
 
-The math documents are split into two kinds of workbooks: the **shared natural model** (`H0271.xlsx`: reels, stop weights, paytable, table selection, multiplier symbol settings and Free Game spin counts, shared by both RTP versions) and the **RTP version files** (`H027192.xlsx` / `H027194.xlsx`: version, card weights, SCR). Three points are needed to map worksheet fields to program behaviour:
+The math documents are split into two kinds of workbooks: the **shared natural model** (`H0271.xlsx`: reels, stop weights, paytable, table selection, multiplier symbol settings and Free Game spin counts, shared by both RTP versions) and the **RTP version files** (`H027192.xlsx` / `H027194.xlsx`: version, card weights, range mean multiples and natural probabilities, SCR). Three points are needed to map worksheet fields to program behaviour:
 
 1. **Only relative weight matters.**
    Every field labelled Weight is a relative weight; it need not be a probability or sum to 100%. The program draws a random value within the sum of the group and maps it to an item in proportion to its weight. **The sum of each group is its denominator**, so raising one item also dilutes the others. The exception is the C2→C3 conversion weights in 2-6 and 2-7, whose denominator is fixed at 10,000.
@@ -85,7 +85,9 @@ The math documents are split into two kinds of workbooks: the **shared natural m
 | --- | --- | --- | --- |
 | `Overview` | Version, RTP breakdown | Version check, output file name | ✅ version |
 | `Multiplier_Weight` | Base Game / Free Game card weights | Acceptance / retry of each game result | ✅ |
-| `OP Jackpot` | SCR (Scatter spin rate) | Probability conversion in the jackpot module | Only when jackpot simulation is enabled |
+| `Avg_Multi` | Natural mean multiple of each win-multiple range | Weight × mean multiple = pay contribution of each range | ❌ (for verification) |
+| `Nature_Prob` | Natural probability of each win-multiple range | Eligibility check of the card weights | ❌ (for verification) |
+| `OP Jackpot` | SCR (Scatter spin rate) | Probability conversion in the jackpot module | ❌ (used by the platform jackpot module) |
 
 ### 1-3 Overview (shared model)
 
@@ -190,10 +192,22 @@ The rows are 64 win multiple ranges (win ÷ Coin In, **left-open, right-closed**
 
 | Item | 92 version | 94 version |
 | --- | --- | --- |
-| `Weight_NB_BG` | Weighted ranges up to `(200, 250]`; `Free Game` card 2,218,131 | Identical to the 92 version |
+| `Weight_NB_BG` | Weighted ranges up to `(1000, 2000]`; `Free Game` card 2,218,131 | Identical to the 92 version |
 | `Weight_NB_FG` | Weighted ranges `(20, 25]` to `(10000, 20000]` (Free Game mean 90.17×) | Same span, Free Game mean 99.18× |
 
 **The two RTP versions differ only in the `Weight_NB_FG` column**, i.e. the Free Game pay distribution. `Weight_NB_BG` and the entire shared model are identical in both versions.
+
+**`Avg_Multi` sheet** (rows correspond to `Multiplier_Weight`; identical in both versions):
+
+| Column | Header | Content |
+| --- | --- | --- |
+| A | `Range` | Win-multiple range label |
+| B | `Avg_Multi_NB_BG` | Mean multiple (win ÷ Coin In) of Base Game games falling in the range in the natural simulation with the card system off, excluding games that trigger the Free Game; the `Free Game` row is the mean Base Game multiple of triggering games whose Base Game win does not exceed 2,000× |
+| C | `Avg_Multi_NB_FG` | Mean multiple of the whole Free Game falling in the range |
+
+Check: `Σ(Weight_NB_BG × Avg_Multi_NB_BG) ÷ 10⁹` = 72.41% (the ideal value before the retry limit, see [4-4](#4-4-retry-limit-and-weight-calibration)); `Σ(Weight_NB_FG × Avg_Multi_NB_FG) ÷ 10⁹` = Free Game mean multiple (90.17 for the 92 version, 99.18 for the 94 version); multiplied by the Free Game trigger rate 1/450.83 it gives the Free Game pay back.
+
+**`Nature_Prob` sheet** (rows correspond; identical in both versions): the natural probability of each range with the card system off. `Nature_Prob_NB_BG` is the probability that a game, excluding triggering games, falls in the range (the ranges sum to 100%); the `Free Game` row is the natural Free Game trigger rate (0.1682% per game). `Nature_Prob_NB_FG` is the probability that a whole Free Game falls in the range (sums to 100%). Ranges with a natural probability below 0.05% receive no card weight.
 
 ### 1-8 OP Jackpot
 
@@ -202,7 +216,7 @@ Records the SCR (Scatter spin rate) used by the platform jackpot module to conve
 | Field | Content |
 | --- | --- |
 | `Threshold` | 10,000,000,000 (SCR denominator) |
-| `NB` | SCR = 4,617,665,500 (same for the 92 and 94 versions) |
+| `NB` | SCR = 3,929,397,500 (same for the 92 and 94 versions) |
 
 SCR definition: **number of spins containing at least one C1 ÷ number of paid games × 10,000,000,000** (the Base Game spin and every Free Game spin each count as one spin), measured from 10⁸ games with the card system on.
 
@@ -229,9 +243,9 @@ Jackpot checks only happen on spins containing C1, so checking with `Phit` (scal
 
 | Sheet | Weight |
 | --- | ---: |
-| `BG_Symbol` | 9,698 |
-| `BG_Symbol (2)` | 19,298 |
-| `BG_Symbol (3)` | 6,110 |
+| `BG_Symbol` | 162,386 |
+| `BG_Symbol (2)` | 619,916 |
+| `BG_Symbol (3)` | 380,100 |
 
 **The first action of every Base Game spin** is to select the reel table with these weights. This decides whether the game is a regular game that can trigger the Free Game (first two tables) or a multiplier game (`BG_Symbol (3)`); it is the most upstream parameter for game feel and Free Game frequency.
 
@@ -265,7 +279,7 @@ When a C2 is generated, its value is drawn with the row of **its reel table** (c
 
 | Reel table | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 15 | 20 | 25 | 50 | 100 | 250 | 500 | 1000 | 2500 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `BG_Symbol` to `(3)` | 1143 | 961 | 1031 | 1430 | 1822 | 1544 | 935 | 478 | 152 | 205 | 100 | 100 | 75 | 25 | 75 | 75 | 0 |
+| `BG_Symbol` to `(3)` | 1143 | 961 | 1031 | 1430 | 1822 | 1544 | 935 | 478 | 152 | 205 | 100 | 100 | 75 | 25 | 75 | 75 | 75 |
 | `FG_Symbol`, `(2)` | 4340 | 2375 | 1393 | 1151 | 290 | 185 | 128 | 32 | 24 | 16 | 8 | 8 | 20 | 20 | 20 | 20 | 20 |
 
 Levels 18–25 (all 2500) have weight 0.
@@ -404,9 +418,9 @@ No C2 / C3 on the final screen:          Base Game win = R + S
 
 The Base Game multiplier applies to that spin only and is not carried to the next game.
 
-**Free Game (carrying multiplier)**
+**Free Game (accumulated multiplier)**
 
-Let `M_acc` be the carrying multiplier, reset to 0 when the Free Game starts:
+Let `M_acc` be the accumulated multiplier, reset to 0 when the Free Game starts:
 
 ```
 If R > 0 and M_now > 0:     M_acc = M_acc + M_now       (accumulates only on spins with a regular win)
@@ -429,7 +443,7 @@ Otherwise:                  spin win = R + S            (paid at 1×; M_acc is k
 
 **Spin limit**: at most **50 spins** per Free Game, including retriggers.
 
-**Carrying multiplier**: reset to 0 when the Free Game starts and accumulated by 3-6 until the Free Game ends; a retrigger only adds spins and does not clear the multiplier.
+**Accumulated multiplier**: reset to 0 when the Free Game starts and accumulated by 3-6 until the Free Game ends; a retrigger only adds spins and does not clear the multiplier.
 
 > `FG_Symbol (2)` holds no C1, so only `FG_Symbol` spins can retrigger.
 
@@ -443,7 +457,7 @@ Otherwise:                  spin win = R + S            (paid at 1×; M_acc is k
        award 15 spins (6 FG_Symbol + 9 FG_Symbol (2), shuffled)
        draw a Free Game card
        play the Free Game:
-           carrying multiplier = 0
+           accumulated multiplier = 0
            each spin: play on its allocated table → accumulate and pay by 3-6
                       → 3 or more C1 add 5 spins (limited to 50)
 5. Total game win = Base Game win + total Free Game win
@@ -485,7 +499,7 @@ Cards come from `Multiplier_Weight` in two groups:
 | Type | Condition |
 | --- | --- |
 | Range card (`range`) | The win ÷ Coin In must fall in the range (left-open, right-closed) |
-| Free Game card (`free_game`) | Ignores the amount and requires the game to trigger the Free Game; the Base Game win of the triggering spin must also not exceed the upper bound of the highest weighted Base Game range (250×) |
+| Free Game card (`free_game`) | Ignores the amount and requires the game to trigger the Free Game; the Base Game win of the triggering spin must also not exceed the upper bound of the highest weighted Base Game range (2,000×) |
 
 ### 4-3 Acceptance flow of one game
 
@@ -493,7 +507,7 @@ Cards come from `Multiplier_Weight` in two groups:
 Start of each game: draw one Base Game card (the card stays fixed during retries)
 
 If a free_game card is drawn:
-    repeat the Base Game spin until "final C1 ≥ 4" and "Base Game win ≤ 250×"
+    repeat the Base Game spin until "final C1 ≥ 4" and "Base Game win ≤ 2,000×"
     draw one Free Game card
     repeat the whole Free Game until its total win falls in the card's range
 
@@ -516,9 +530,9 @@ Key points:
 
 - Each card is retried at most **10,000 times**; at the limit, the last result is kept and counted in the statistics.
 - For a card on range `i`, each attempt hits with the range's natural probability `p_i`, so the chance of hitting within 10,000 attempts is `s_i = 1 − (1 − p_i)^10000`. For high-multiple Base Game ranges with low natural probability, `s_i` is clearly below 1, and the result kept on a miss is a natural result.
-- The calibration of `Weight_NB_BG` therefore includes this effect: the mean multiple of each range is taken as "`s_i` × range mean multiple + (1 − `s_i`) × natural mean multiple of one spin", so that the Base Game pay back **including the retry limit** equals 72%. Multiplying weights by range mean multiples directly gives a Base Game pay back slightly above 72% (about 72.21%); the difference is the effect of the retry limit.
+- The calibration of `Weight_NB_BG` therefore includes this effect: the mean multiple of each range is taken as "`s_i` × range mean multiple + (1 − `s_i`) × natural mean multiple of one spin", so that the Base Game pay back **including the retry limit** equals 72%. Multiplying weights by range mean multiples directly gives a Base Game pay back slightly above 72% (about 72.41%); the difference is the effect of the retry limit.
 - The Free Game card ranges have sufficiently high natural probabilities (`s_i ≈ 1`) and are not affected.
-- Simulation with the card system on (10⁸ games each): Base Game 71.96% (92 version) and 72.04% (94 version), both within statistical error.
+- Simulation with the card system on (10⁸ games each): Base Game 72.08% (92 version) and 71.99% (94 version), both within statistical error.
 
 ### 4-5 Notes
 

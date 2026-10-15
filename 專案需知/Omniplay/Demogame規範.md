@@ -197,7 +197,7 @@ Debug Mode 至少可查看：
   - `window.demogameSimulationModes = [{ value, label }]`：只列實際支援的押注模式，面板據此顯示押注模式選單。
 - 倍率線型（共用，併入 Simulation 面板）：該次模擬每局 `lineMultiplier` 的標準 64 區間分布，X 軸逐一標出 (下限, 上限]，Y 軸 NB／EB 1%、BF 20%，超過上限或為 0 的區間不畫點、線在該處斷開。沒有 Simulation 面板的頁面才在 Set RNG 上方顯示即時線型（NB 一局含 FG 結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫）。
 
-指定 Card Range 與 RNG 必須互斥。指定值要檢查格式；RNG 欄填了就每局沿用，按重置才清空；不得因指定 RNG 進入無限重跑。
+Set RNG 的各欄位（卡片區間、遊戲專屬選單、RNG）互斥：設定其中一個時其他回到預設（共用模組處理）。所有設定都每局沿用，按重置才清空，遊戲不得在 Spin、FG、切換模式後自行清掉。指定值要檢查格式；不得因指定 RNG 進入無限重跑。
 
 **Set RNG（共用，`#set-rng-panel`）**：欄位排成一列等寬（卡片 BG 區間、遊戲專屬選單、RNG `#rngInput`、重置 `#setRngResetBtn`）。
 

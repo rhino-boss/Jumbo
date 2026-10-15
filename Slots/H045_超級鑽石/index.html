@@ -2286,6 +2286,9 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（原本 FG 從 0 起算，已修正；Previous／Next 同基準）。只改顯示，未修改 XLSX／Config 數學參數。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲；之後 Previous／Next 逐步檢視該 BG 局。（10/13）</li>
           <li>驗證：自然觸發（Card Range Free Game）BG 180.60 → FG 第一次消除 180.90、FG 結束 210.70＝BG＋FG 30.10；腳本 fg 局 BG 0.30 → 結束 25.80（FG 25.50）；Buy Feature 入場盤 0.00 → 結束 19.30。FG 結束後盤面與觸發局 BG 最終盤面（BF 入場盤）逐格相同、Feature Status 回基礎遊戲；Credit／Log／歷史紀錄不變，BF RNG 重跑結果相同，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
+          <li>驗證：Card BG Range 選 (1, 2] 連轉 3 局仍保留，3 局 BG 為 1.25x／1.95x／1.90x；改選腳本 combo5 後 Card Range 回 Auto，連轉 2 局腳本仍保留；貼 RNG 碼後 Card Range／腳本回預設，連轉 3 局碼仍在且結果完全相同（96.95x）；按 Reset 全部清回預設，Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -3873,7 +3876,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-14 12:20";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-14 12:20";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-14 12:20";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
 </body>
 
 </html>

@@ -2064,6 +2064,9 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
           <li>驗證：自然觸發 FG（觸發局 BG 得分 &gt; 0）與 Buy Feature 局，FG 第一轉起始 Win＝觸發局 BG 得分、結束＝整局總得分，Previous／Next 同基準；FG 結束盤面與觸發局最終盤面相同、狀態回 Base Game；Credit／統計／Log／RNG 重跑不變，無 console 錯誤。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
+          <li>驗證：指定 Card BG Range 連轉 3 局仍保留且每局都套用；貼 RNG 碼時 Card BG Range 回自動、碼連轉保留並每局重跑；重置全部回預設；Console 無錯誤；inline script 皆通過 node --check。（10/15）</li>
         </ol>
         </article>
       </div>
@@ -3135,8 +3138,7 @@
       .join("");
     if ([...select.options].some((option) => option.value === current)) select.value = current;
     const on = h015CardSystemActive();
-    select.disabled = !on;
-    if (!on) select.value = "";
+    select.disabled = !on;   // 卡片關時停用且不套用（見 playPaid），但保留選擇，按 Set RNG 重置才清
   }
 
   function applyLanguage(logChange = false) {
@@ -3305,7 +3307,7 @@
   el.helpSourceFrame.addEventListener("load", () => { if (el.helpDialog.open && !state.helpMarkdown) loadHelp(); });
   el.resetBtn.addEventListener("click", reset); el.clearLogBtn.addEventListener("click", () => { el.liveLogBody.innerHTML = ""; });
   el.setRngResetBtn.addEventListener("click", () => { el.rngInput.value = ""; el.cardRangeSelect.value = ""; el.forceFgInput.checked = false; });
-  document.addEventListener("demogame:card-system-change", () => { el.cardRangeSelect.value = ""; refreshCardRangeOptions(); });
+  document.addEventListener("demogame:card-system-change", refreshCardRangeOptions);   // 只重建選項；原選項不存在才回預設
   el.previousStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1)); el.nextStepBtn.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
 
   document.title = "Wild Train 2 — Demo Game";
@@ -3322,7 +3324,7 @@
 })();
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261013i"></script>
+  <script src="../../demogame_common.js?v=20261015b"></script>
 </body>
 
 </html>

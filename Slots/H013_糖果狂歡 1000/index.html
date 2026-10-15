@@ -1989,6 +1989,10 @@
           <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（原本已符合，含 Previous／Next 同一基準，本次只驗證）。（10/13）</li>
           <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲；只改顯示。（10/13）</li>
           <li>驗證：NB 自然觸發（RNG <code>92A/NB/off/-/00000652</code>）BG 4.25 → FG 起始 4.25 → 結束 236.70（＝4.25＋FG 232.45）；BF（<code>92A/BF/off/-/00001388</code>）入場盤 3.25 → FG 首次消除 3.50 → 結束 15.95（＝3.25＋12.70）；兩局 FG 結束後盤面與觸發局最終盤面完全相同、Feature Status 為 Base Game；新局 Win 從 0.00 起；RNG 重跑 Log 逐行相同；Console 無錯誤。（10/13）</li>
+          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
+          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。重置同時把卡片系統清回載入時預設（依 Config）並清空 RNG 欄；任一欄偏離預設時重置鈕才可按。（10/15）</li>
+          <li>RNG 碼在卡片開時 Config 帶 Profile（如 <code>92A-Newbie/NB/on/-/…</code>），貼回重跑用同一套卡片；原本 Config 選單已無 Profile，Newbie 局重跑會變成 Oldhand。（10/15）</li>
+          <li>驗證：選 Newbie 連轉 3 局維持且每局 Log 套用 Card newbie；貼 RNG 碼卡片回 Off、碼連轉 2 局保留並以同 Profile 重播；重置後 RNG 清空、卡片回預設；無 console 錯誤。（10/15）</li>
         </ol>
       </article>
       </div>
@@ -2926,7 +2930,7 @@
     el.betPlus.disabled = wagerLocked;
     el.betButton.disabled = wagerLocked;
     el.rngInput.disabled = state.busy;
-    el.rngReset.disabled = state.busy || !el.rngInput.value.trim();
+    el.rngReset.disabled = state.busy || (!el.rngInput.value.trim() && el.cardRange.value === (state.cardRangeDefault ?? el.cardRange.value));   // 任一欄偏離預設才可重置
     el.cardRange.disabled = !el.debug.checked || wagerLocked || !Box.card_system?.enabled;
     el.spin.disabled = state.busy;
     el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
@@ -3168,7 +3172,7 @@
       if (code) {
         state.selectedMode = RNG_MODE_FROM_CODE[code.mode];
         state.replayRound = { restoreMode };
-        if (code.config !== rngConfigLabel()) appendLog(`RNG Config ${code.config} ≠ ${rngConfigLabel()}`, "error");
+        if (code.config.replace(/-(newbie|oldhand)$/i, "") !== rngConfigLabel()) appendLog(`RNG Config ${code.config} ≠ ${rngConfigLabel()}`, "error");
       }
       const wager = wagerMoney();
       if (state.balance < wager) {
@@ -3189,7 +3193,9 @@
       if (code) state.cardMode = code.card ? (/newbie/i.test(code.config) ? "newbie" : "oldhand") : "off";
       let candidate;
       try {
-        const rngCode = window.demogameRng.format({ config: rngConfigLabel(), mode: RNG_MODE_TOKEN[state.selectedMode] || "NB", card: cardSystemActive(), opts: "", seed });
+        // 卡片開時 Config 帶上 Profile（如 92A-Newbie），重跑才會用同一套卡片
+        const rngConfig = cardSystemActive() ? `${rngConfigLabel()}-${state.cardMode === "newbie" ? "Newbie" : "Oldhand"}` : rngConfigLabel();
+        const rngCode = window.demogameRng.format({ config: rngConfig, mode: RNG_MODE_TOKEN[state.selectedMode] || "NB", card: cardSystemActive(), opts: "", seed });
         state.cardSelectionUsed = false;
         candidate = window.demogameRng.run(seed, () => generateAcceptedRound(forceFeature));   // 整局（BG＋FG）在種子序列內一次算完
         const cardInfo = state.cardSelectionUsed
@@ -3532,7 +3538,11 @@
   });
   el.rngInput.addEventListener("input", updateControls);
   el.rngReset.addEventListener("click", () => {
+    // Set RNG 設定一直保留到按重置；重置把所有欄位清回預設
     el.rngInput.value = "";
+    el.cardRange.value = state.cardRangeDefault ?? "off";   // 卡片系統回到載入時的預設（共用模組依 Config 設定的值）
+    state.cardMode = ["newbie", "oldhand"].includes(el.cardRange.value) ? el.cardRange.value : "off";
+    state.cardProfileUsed = state.cardMode;
     updateControls();
     writeMessage(tr("RNG reset", "RNG 已重置"));
   });
@@ -3560,6 +3570,8 @@
   byId("gameName").textContent = t("gameName");
   el.config.value = H013_ACTIVE_CONFIG;
   el.cardRange.value = state.cardMode;
+  // 共用模組（本 script 之後載入）會依 Config 把卡片系統設成預設值；記下來給 Set RNG 重置用
+  document.addEventListener("DOMContentLoaded", () => { state.cardRangeDefault = el.cardRange.value; updateControls(); });
   document.title = `${Box.english_name || "Sugar Bonanza 1000"} — Demo Game`;
   renderBetMenu();
   renderBoard(sampleBoard());
@@ -3573,7 +3585,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261013i"></script>
+  <script src="../demogame_common.js?v=20261015b"></script>
   <script>
     (() => {
       "use strict";

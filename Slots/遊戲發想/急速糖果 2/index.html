@@ -347,6 +347,8 @@
             <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（原本 FG 從 0 起算；Buy Feature 無入場盤得分，底為 0；Previous／Next 逐步同底）。（10/13）</li>
             <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤：購買當下畫面上的盤面），位置倍數／Extra Bet 底板、全盤倍數和、連消數一併還原，Feature Status 回到基礎遊戲。（10/13）</li>
             <li>驗證：RNG Base/NB/off/-/000001e8 觸發局 BG 2 連消 Win 0.00→0.25→2.05，FG 每轉起點 2.05（第 7 轉以 2.30 為底播放 3.80→6.00→18.00→126.00，Previous／Next 逐步 126.00…2.30 與前進一致），FG 結束 Win 150.00＝BG 2.05＋Log「FG complete | Total 147.95」；結束後盤面（符號、倍數、全盤和、連消數）與觸發局最終盤完全相同、Feature Status 基礎遊戲；Buy Feature 10 轉起點 0.00、結束＝Total 11.25，盤面還原成入場盤；下一局 Win 從 0 開始；同碼重跑 Log 逐字相同；Console 無錯誤。（10/13）</li>
+            <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。本作 Set RNG 只有 RNG 欄（無卡片區間／遊戲專屬選單）；遊戲重置（統計 Reset）不再清空 RNG 欄，只有 Set RNG 的重置會清。（10/15）</li>
+            <li>驗證：貼 RNG 碼後連 Spin 3 局，碼保留且每局皆以同碼 Replay；遊戲重置後 RNG 欄仍保留；按 Set RNG 重置清空，之後 Spin 為新種子；Console 無錯誤。（10/15）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -1276,8 +1278,7 @@
           fg: { remaining: 0, total: 0, played: 0, mode: MODE_NORMAL, spins: [], win: 0 },
         });
         $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
-        st.roundCode = "";
-        $("rngInput").value = "";
+        st.roundCode = "";   // Set RNG 設定不在這裡清，只有 Set RNG 的重置才清
         plateKeys = new Set();
         renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
         say(() => tr("resetDone"));
@@ -1375,7 +1376,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261013i"></script>
+  <script src="../../demogame_common.js?v=20261015b"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

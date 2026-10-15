@@ -12,16 +12,16 @@
       "port": 8123
     },
     {
-      "name": "workspace-static-8125",
+      "name": "workspace-static-8127",
       "runtimeExecutable": "C:/Users/rhinshen/AppData/Local/Programs/Python/Python313/python.exe",
       "runtimeArgs": [
         "-m",
         "http.server",
-        "8125",
+        "8127",
         "--directory",
         "C:/Users/rhinshen/Mine/個人工作區/工作區"
       ],
-      "port": 8125
+      "port": 8127
     },
     {
       "name": "jumbo-portal",
