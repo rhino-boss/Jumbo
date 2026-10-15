@@ -2166,6 +2166,10 @@
               id="fgTriggerValue">0</span></div>
           <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultUsed">倍數出現並使用</span><span class="s-value" id="multUsedValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigGhost">大鬼出現率</span><span class="s-value" id="bigGhostValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigNoScore">大鬼出現沒得分</span><span class="s-value" id="bigNoScoreValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statScRate">SC 出現率</span><span class="s-value" id="scRateValue">0.00% (—)</span></div>
         </section>
       </aside>
     </div>
@@ -2221,6 +2225,13 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>2026-10-15：統計 (By Game) 新增四項</h4>
+        <ul>
+          <li>倍數出現並使用、大鬼出現率、SC 出現率：機率（週期），分母為每轉（BG 局＋每轉 FG，不含 BF 入場盤）。</li>
+          <li>大鬼出現沒得分：大鬼出現的轉次中，本體與分裂出的 WW 之後都沒參與中獎的比例（次數／大鬼轉數）。未修改 XLSX／Config 數學參數。</li>
+        </ul>
+      </article>
       <article class="change-log-entry">
         <h4>2026-10-14：v5 加入表 3（競品表）</h4>
         <ul>
@@ -2716,7 +2727,8 @@
     balance: START_BALANCE, betIndex: 0, busy: false, auto: false, language: "zh",
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
     maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
-    fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 }
+    fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 },
+    spinStats: { spins: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -2992,11 +3004,19 @@
     const flipState = { freeGame, bigGhostUsed: false };
     const cap = MAX_WIN * betUnit();
     let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
+    // By Game 統計（2026-10-15）：本轉是否用到帶倍 WILD；大鬼本體與分裂 WW 之後有沒有參與中獎
+    let multUsed = false, bigScored = false;
+    const bigCells = new Set();
     const goldenTally = {};
     snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
     while (true) {
       const win = evaluate(board, mults);
       if (!win.rawPay) break;
+      for (const key of win.hits) {
+        const [r, c] = key.split(",").map(Number);
+        if ((board[r][c] === WW || board[r][c] === W2) && mults[r][c] > 1) multUsed = true;
+        if (bigCells.has(key)) { bigScored = true; bigCells.delete(key); }
+      }
       const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
       const cascadePay = win.rawPay * multiplier * betUnit();
       pay += cascadePay;
@@ -3020,6 +3040,7 @@
             if (key.startsWith("W2")) w2Events += value;
           }
           for (const [reel, row] of goldPositions) { transitionBoard[reel][row] = board[reel][row]; if (mults[reel][row] > 1) multWild++; }
+          for (const [[reel, row]] of flip.bigSources) bigCells.add(`${reel},${row}`);
         }
       }
       const flipLabel = flip ? ` · Golden flip ${Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ")}` : "";
@@ -3053,6 +3074,7 @@
       if (flip && flip.bigSources.length) {
         const preBoard = cloneBoard(board), preMults = cloneBoard(mults);
         const { splitKeys, splits } = splitBigGhosts(board, mults, gold, tableName, flip.bigSources);
+        splitKeys.forEach(key => bigCells.add(key));
         if (splitKeys.length) {
           snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
@@ -3062,6 +3084,7 @@
     }
     return {
       pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, goldenTally, capped,
+      multUsed, bigNoScore: w2Events > 0 && !bigScored,
       board, mults, gold, snapshots, tableName,
       maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]
     };
@@ -3548,6 +3571,13 @@
     $("nextStepBtn").disabled = state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
   }
 
+  function tallySpin(result) {
+    const s = state.spinStats;
+    s.spins++; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
+    s.bigNoScore += result.bigNoScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
+  }
+  // 機率（週期）：例 12.34% (1/8.1)；沒發生顯示 0.00% (—)
+  const rateCycle = (count, total) => total && count ? `${(count / total * 100).toFixed(2)}% (1/${(total / count).toFixed(1)})` : "0.00% (—)";
   function updateStats() {
     const bet = BET_LEVELS[state.betIndex];
     $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
@@ -3556,6 +3586,11 @@
     $("hitRateValue").textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
     $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers / state.rounds * 100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)";
     $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
+    const s = state.spinStats;
+    $("multUsedValue").textContent = rateCycle(s.multUsed, s.spins);
+    $("bigGhostValue").textContent = rateCycle(s.big, s.spins);
+    $("bigNoScoreValue").textContent = s.big ? `${(s.bigNoScore / s.big * 100).toFixed(2)}% (${s.bigNoScore}/${s.big})` : "0.00% (—)";
+    $("scRateValue").textContent = rateCycle(s.sc, s.spins);
     const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
     document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
     $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = tr(remaining ? "freeGame" : "baseGame");
@@ -3617,6 +3652,7 @@
     await animateSnapshots(item.snapshots, true, carry + fgWinBase, item.pay); state.fg.index++;
     state.fg.win = fgWinBase + item.pay; state.lastWin = carry + state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
     state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
+    tallySpin(item);
     $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}`;
     appendLog(`FG ${state.fg.index}/${state.fg.total} | ${item.tableName} | Cascade ${item.combo} | C1 ${item.scatter} | Win ${money(item.pay)}`, item.combo ? "cascade" : "info");
     if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound); }
@@ -3681,6 +3717,7 @@
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
         state.hitRounds += base.pay > 0 ? 1 : 0;
         state.maxMultiplier = Math.max(state.maxMultiplier, base.maxMultiplier);
+        if (mode === 0) tallySpin(base);   // BF 入場盤不計分、不算一轉
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
         appendLog(`${mode === 2 ? "BF Entry" : "BG"} | ${base.tableName} | Cascade ${base.combo} | C1 ${base.scatter} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });   // 共用歷史紀錄：BG 最大倍數
@@ -3781,14 +3818,16 @@
       featureComplete: "Feature complete", ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)",
-      scriptFlip: "Gold frame cleared", scriptFg: "FG triggered", scriptFgbig: "FG 100x+"
+      scriptFlip: "Gold frame cleared", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
+      statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
       featureComplete: "免費遊戲結束", ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼",
-      scriptFlip: "金框有消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上"
+      scriptFlip: "金框有消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
+      statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
     }
   };
   function tr(key) { return (H045_TEXT[state.language] || H045_TEXT.en)[key] ?? H045_TEXT.en[key] ?? key; }
@@ -3811,7 +3850,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
     $("autoBtn").textContent = tr("auto"); renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = tr("ready"); updateStats();
   }
   function buildBetMenu() {
@@ -3881,8 +3920,8 @@
   </script>
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-14 12:20";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-14 12:20";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-14 12:20";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-15 13:13";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-15 13:13";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261015j"></script>
 </body>
 
