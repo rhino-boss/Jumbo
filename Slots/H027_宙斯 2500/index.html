@@ -183,10 +183,18 @@
     body.h027 .message-bar.error { color: #ff5f8a; }
     body.h027 .message-bar.win { color: #33ff99; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=7">
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="dg-boot">
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h027">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/Slots/H027_宙斯 2500/</div>
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">H027</span> <span id="gameName">宙斯 2500</span></span>

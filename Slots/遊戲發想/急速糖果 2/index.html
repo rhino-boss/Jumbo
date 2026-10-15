@@ -194,10 +194,18 @@
       body.tc2 { --cell-size: min(52px, calc((100vw - 72px) / 7)); }
     }
   </style>
-  <link rel="stylesheet" href="../../demogame_common.css?v=7">
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="dg-boot">
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="tc2">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/Slots/遊戲發想/急速糖果 2/</div>
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId"></span> <span id="gameName">Candy Rush 2</span></span>
