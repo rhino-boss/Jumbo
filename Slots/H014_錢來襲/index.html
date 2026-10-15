@@ -6,6 +6,9 @@
   <title>Money Boost — Demo Game</title>
   <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
   <style id="h014-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
     html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
     #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
@@ -185,7 +188,6 @@
           <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value" id="roundCountValue">0</span></div>
           <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span></div>
           <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
-          <div class="simulation-row"><span class="s-label">Respin / Lucky Wheel</span><span class="s-value hi" id="featureRateValue">0.00% / 0.00%</span></div>
           <div class="simulation-row" title="有得分且 R4 特殊符號有作用（倍數乘到分數、RESPIN、BONUS 轉盤）的局數 ÷ 有得分局數"><span class="s-label" id="specialWinLabel">特殊符號得分機率</span><span class="s-value hi" id="specialWinValue">0.00% (0/0)</span></div>
           <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
         </section>
@@ -248,7 +250,7 @@
             <li>驗證：逐步回看 Win 依步驟升降、最後一步等於局末得分；Credit、統計、Log、RNG 不變，無 console 錯誤（本作無 FG／消除，步驟為停輪 → 倍數／RESPIN／轉盤 → 結果）。（10/13）</li>
             <li>R4 停在 2X／5X／10X 但數字分為 0（倍數無效）時，R4 不亮得分框；有得分的倍數、RESPIN、BONUS 照舊亮框。只改演出，未修改 XLSX／Config。（10/15）</li>
             <li>開頁時共用 CSS 尚未載入或載入失敗（例如單獨開啟 index.html），不再顯示未套樣式的畫面，改顯示「Demo 載入中…」與網頁版網址。（10/15）</li>
-            <li>統計新增「特殊符號得分機率」＝有得分且 R4 特殊符號有作用（倍數乘到分數、RESPIN、BONUS 轉盤）的局數 ÷ 有得分局數，括號為次數；Reset 清空。只改介面，未修改 XLSX／Config。（10/15）</li>
+            <li>統計新增「特殊符號得分機率」＝有得分且 R4 特殊符號有作用（倍數乘到分數、RESPIN、BONUS 轉盤）的局數 ÷ 有得分局數，括號為次數；Reset 清空。統計拿掉「Respin / Lucky Wheel」。開頁載入中改深色底、載入提示 1.5 秒後才出現（各遊戲共用做法），避免白屏閃一下。只改介面，未修改 XLSX／Config。（10/15）</li>
           <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
           <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
           <li>驗證：指定卡片 BG 區間連 Spin 3 局皆保留並套用；改設 Natural Table／貼 RNG 碼時其他欄回預設，RNG 碼連 Spin 皆重跑同一局；重置全部清回預設，無 console 錯誤。（10/15）</li>
@@ -1081,8 +1083,6 @@
     $("roundCountValue").textContent = state.rounds.toLocaleString();
     $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
     $("hitRateValue").textContent = state.rounds ? `${(state.hits / state.rounds * 100).toFixed(2)}%` : "0.00%";
-    $("featureRateValue").textContent = state.rounds
-      ? `${(state.respins / state.rounds * 100).toFixed(2)}% / ${(state.wheels / state.rounds * 100).toFixed(2)}%` : "0.00% / 0.00%";
     $("specialWinValue").textContent = `${state.hits ? (state.specialHits / state.hits * 100).toFixed(2) : "0.00"}% (${state.specialHits.toLocaleString()}/${state.hits.toLocaleString()})`;
     $("maxMultiplierValue").textContent = `x${fmtX(state.maxMultiplier)}`;
     $("modeText").textContent = BASE.bet_modes[String(state.mode)].name;
