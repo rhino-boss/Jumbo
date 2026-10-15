@@ -592,7 +592,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 | 押注模式 | Normal Bet、Buy Feature | 加 **Extra Bet**：`2 × Bet`、FG 出現率 ×5（§8.1） |
 | 92A 卡片 | NB／BF | 加 `eb_base_game`／`eb_free_game`：EB FG 卡與 NB 逐格相同；EB BG 以 RTP 目標重解（Oldhand BG 29.5%／FG 62.5%、Newbie BG 28%／FG 65%，週期 1/30） |
 
-盤面、輪帶與選表不變；Simulator（bet mode 1）、Demogame（Extra Bet 按鈕）、Help 同步。
+盤面、輪帶與選表不變；Simulator（bet mode 1）、Demogame（Extra Bet 按鈕）、Help 同步。Card-On 驗證（各 10⁶）：EB Oldhand 92.16%（+0.1σ，FG 週期 1/30.1）、EB Newbie 92.44%（−1.2σ，120x 上限截斷 346 局），Retry 超限 0。
 
 ### 與前端規格書的差異紀錄
 
