@@ -573,10 +573,10 @@
     if (!document.getElementById("demogame-strip-pill-style")) {
       const pillStyle = document.createElement("style");
       pillStyle.id = "demogame-strip-pill-style";
-      pillStyle.textContent = `body #strip-bar .feature-pill:not(.hidden),body #strip-bar #demogame-phase,body #strip-bar #featureStatus:not(:empty){display:inline-flex!important;align-items:center;gap:6px;padding:4px 12px!important;border:1px solid rgba(255,196,61,.7)!important;border-radius:20px!important;background:rgba(255,196,61,.18)!important;box-shadow:none!important;color:#ffd36b!important;font:600 12px/1.3 "Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap}
+      pillStyle.textContent = `body #strip-bar .feature-pill:not(.hidden),body #strip-bar #demogame-phase,body #strip-bar #featureStatus:not(:empty){display:inline-flex!important;align-items:center;gap:6px;padding:4px 12px!important;border:0!important;border-radius:20px!important;background:rgba(255,196,61,.18)!important;box-shadow:none!important;color:#ffd36b!important;font:600 12px/1.3 "Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap}
         body #strip-bar .feature-pill .k,body #strip-bar .feature-pill .v{color:#ffd36b!important;font:inherit!important;text-shadow:none!important}
         body #strip-bar #featureStatus:empty{display:none!important}
-        body #strip-bar #demogame-phase,body #strip-bar #featureStatus.demogame-scene:not(:empty){border-color:rgba(119,199,255,.45)!important;background:#0c2240!important;color:#77c7ff!important}`;
+        body #strip-bar #demogame-phase,body #strip-bar #featureStatus.demogame-scene:not(:empty){background:#0c2240!important;color:#77c7ff!important}`;
       document.head.appendChild(pillStyle);
     }
     const modeText = document.getElementById("modeText");
@@ -2880,15 +2880,19 @@
 })();
 
 // 無圖符號樣式統一（共用，2026-10-16）：沒有符號美術或 Image 關閉時，所有遊戲的代號格同一款——
-// 深色底、細藍框、淺色代號；C1／C2／Scatter 金色、Wild 綠色。中獎、金框、轉換等狀態格不覆蓋。
+// 深色底、細藍框、淺色代號；C1／C2／Scatter 金色、Wild 綠色、金框格深金底金框；含 peek 列。中獎、轉換等狀態格不覆蓋。
 (() => {
   "use strict";
-  const base = "body #board .cell:not(.has-symbol-art):not(.peek-row):not(.hit):not(.gold):not(.special-gold):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.keep-symbol-frame):not(.empty):not(.symbol-empty):not(:has(> .tile))";
+  const base = "body #board .cell:not(.has-symbol-art):not(.hit):not(.gold):not(.special-gold):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.keep-symbol-frame):not(.empty):not(.symbol-empty):not(:has(> .tile))";
   const label = ":is(.slot-symbol-label, .symbol-code, .h019-glyph, .sym-code-label)";
+  // 金框格（無圖時）：各遊戲同一款深金底＋金框＋淡金代號
+  const gold = "body #board .cell:is(.gold,.special-gold):not(.has-symbol-art):not(.hit):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.convert):not(:has(> .tile))";
   const style = document.createElement("style");
   style.textContent = `${base}{background:#060d1a!important;border:1.6px solid rgba(56,120,175,.45)!important;border-radius:8px!important;box-shadow:none!important;color:#d8e8f4!important}
     ${base}:is(.symbol-c1,.symbol-c2,.sym-c1,.sym-c2,.symbol-scatter,.h019-scatter,.h019-c2){background:radial-gradient(circle at 50% 45%,#c98a35 0%,#9a5a18 62%,#6e3d0e 100%)!important;border-color:#ffd36b!important;color:#fff3d6!important}
     ${base}:is(.symbol-ww,.symbol-wild,.sym-ww){background:#0b3a3a!important;border-color:#00ddc0!important;color:#c8fff4!important}
+    ${gold}{background:linear-gradient(180deg,#3a2a08 0%,#1f1604 100%)!important;border:1.6px solid #ffd36b!important;border-radius:8px!important;box-shadow:inset 0 0 0 1px rgba(255,211,107,.22)!important;color:#ffe9a6!important}
+    ${gold} ${label}{color:inherit!important;font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important;text-shadow:none!important}
     ${base}:not(.sym-digit) ${label}{color:inherit!important;font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important;text-shadow:none!important}`;
   document.head.appendChild(style);
 })();

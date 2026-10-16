@@ -127,7 +127,7 @@ Slots/
 | Image 關閉，或該符號無美術 | 顯示**符號框＋符號代號** |
 
 - 符號代號（`M1`、`M2`、`A`、`C1`…）一律使用一般字重，**不得使用粗體**。
-- 符號框＋代號的樣式所有遊戲統一（共用 `demogame_common.js` 套用，各遊戲不另設等級配色）：深色底 `#060d1a`、細藍框、圓角 8px、淺色 Consolas 16px 代號；C1／C2／Scatter 為金色格、Wild 為綠色格。中獎、金框、轉換等狀態格維持各自的狀態樣式。
+- 符號框＋代號的樣式所有遊戲統一（共用 `demogame_common.js` 套用，各遊戲不另設等級配色）：深色底 `#060d1a`、細藍框、圓角 8px、淺色 Consolas 16px 代號；C1／C2／Scatter 為金色格、Wild 為綠色格、金框格為深金底金框（peek 列同樣套用）。中獎、轉換等狀態格維持各自的狀態樣式。
 - 有符號美術的遊戲必須接入共用 Image 開關：頁面在載入 `demogame_common.js` 前定義 `window.DEMOGAME_IMAGE_TOGGLE = { supported: true, defaultEnabled: true, setEnabled(enabled) { … } }`，`setEnabled` 內切換是否輸出符號圖並重繪目前盤面；不得自行另做圖片開關。共用模組會在 Setting 產生 `Image` 開關，選擇存於 `localStorage`（`slotDemoSymbolImages`）。
 - 有輸出符號圖的格子必須加上 `has-symbol-art`；圖片載入失敗時移除此 class 並改顯示代號。
 - **圖片預載（必做）**：放到網頁上時，圖片若等第一次用到才下載，盤面會先出現空白格。有符號美術的遊戲必須在 `DEMOGAME_IMAGE_TOGGLE` 加上 `images`：本遊戲會用到的**所有**圖片網址（陣列，或回傳陣列的函式），包含大符號長圖、金框等所有變體。共用模組會在開局前預載並解碼完成：
@@ -222,7 +222,7 @@ Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示
 - 每次 `修改紀錄.md` 新增或修改項目，同一次修改中同步更新 `#changeLogBody`。
 - 沒有任何調性紀錄時（`修改紀錄.md` 只有標題），`#changeLogBody` 留空，共用模組會把整個版本紀錄區隱藏；不得用「現行版本」「細節無紀錄」之類的佔位項目充數。
 - 通則：沒有內容的區域一律不顯示（特殊指標、版本紀錄、空的 Set RNG 容器等由共用模組自動隱藏）。
-- 盤面上方狀態列最前面固定顯示 Base Game／Free Game 標籤（中文：基礎遊戲／免費遊戲），由共用模組依 `body.fg-mode` 切換，所以狀態列一律顯示；遊戲進入 FG 時必須在 `body` 加上 `fg-mode`。狀態列由共用模組統一配色，各遊戲不另設：場景標籤（Base Game、Free Game、Buy Feature、Super Feature 等，含特色狀態顯示的場景名稱）用深藍底、淺藍字膠囊；其他資訊（連消、倍數、FG 剩餘、Table 等）一律用黃色膠囊（淡黃底、黃框、黃字 12px）。
+- 盤面上方狀態列最前面固定顯示 Base Game／Free Game 標籤（中文：基礎遊戲／免費遊戲），由共用模組依 `body.fg-mode` 切換，所以狀態列一律顯示；遊戲進入 FG 時必須在 `body` 加上 `fg-mode`。狀態列由共用模組統一配色，各遊戲不另設：場景標籤（Base Game、Free Game、Buy Feature、Super Feature 等，含特色狀態顯示的場景名稱）用深藍底、淺藍字膠囊；其他資訊（連消、倍數、FG 剩餘、Table 等）一律用黃色膠囊（淡黃底、黃字 12px）；膠囊都不加外框。
 - Demogame 介面、演出、Debug、共用模組與文件的修改**不記在頁面上**（以 git commit 訊息為準），也不寫進 `修改紀錄.md`。
 
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
