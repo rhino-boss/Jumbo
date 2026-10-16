@@ -2744,42 +2744,83 @@
     el.modeText.textContent = state.fg.remaining ? text("free") : text("base"); el.spinBtn.textContent = state.fg.remaining ? text("nextFg") : text("spin");
   }
 
+  // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
+  // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
+  // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
+  async function reelStripSpin(board, columns) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const pool = columns.flat().filter(Boolean);
+    if (!board || !pool.length) return;
+    const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyCell = (node, width, height, x, y) => {
+      const copy = node.cloneNode(true);
+      copy.classList.remove(...dropClasses);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+      return copy;
+    };
+    const offsetIn = (node, host) => {
+      let x = 0, y = 0, n = node;
+      while (n && n !== host) {
+        x += n.offsetLeft; y += n.offsetTop;
+        n = n.offsetParent;
+        if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+      }
+      return { x, y };
+    };
+    const windows = [];
+    const jobs = columns.map((list, reel) => {
+      const cells = (list || []).filter(Boolean);
+      if (!cells.length) return Promise.resolve();
+      const ms = spinMs + gapMs * reel;
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      const boxes = cells.map((cell) => ({ cell, ...offsetIn(cell, host), w: cell.offsetWidth, h: cell.offsetHeight }));
+      const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
+      const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+      const last = boxes[boxes.length - 1];
+      const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60));
+      const strip = document.createElement("div");
+      strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+      boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      for (let k = 1; k <= extra; k += 1) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
+      }
+      win.appendChild(strip);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+      strip.style.transform = `translateY(${-extra * pitch}px)`;
+      void strip.offsetHeight;
+      strip.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.22,1.03)`;
+      strip.style.transform = "translateY(0)";
+      return new Promise((resolve) => setTimeout(resolve, ms + 20));
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    pool.forEach((cell) => { cell.style.visibility = ""; });
+  }
+
   async function animateReels(spin) {
     const initial = spin.steps[0];
     if (!initial) return;
-    // 逐輪停輪（左到右），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
-    // Speed 第 5 階（最高）：不逐輪停，所有轉輪同一格同時到位
-    const speed = Number(el.speedRange.value || 1);
-    const simultaneous = speed >= Number(el.speedRange.max || 5);
-    const baseFrames = Math.max(3, Math.round(9 / speed));
-    const perReelExtra = simultaneous ? 0 : Math.max(1, Math.round(3 / speed));
-    const totalFrames = baseFrames + perReelExtra * (REELS - 1) + 1;
-    for (let frame = 0; frame < totalFrames; frame++) {
-      const rollingBoard = clone(initial.board);
-      const rollingGold = clone(initial.gold);
-      const rollingReels = new Set();
-      for (let reel = 0; reel < REELS; reel++) {
-        if (frame >= baseFrames + perReelExtra * reel) continue; // 該輪已停，顯示最終符號
-        rollingReels.add(reel);
-        const activeRows = [];
-        for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) activeRows.push(row);
-        const offset = (totalFrames - frame + reel) % activeRows.length;
-        for (let position = 0; position < activeRows.length; position++) {
-          const targetRow = activeRows[position];
-          const sourceRow = activeRows[(position + offset) % activeRows.length];
-          rollingBoard[targetRow][reel] = initial.board[sourceRow][reel];
-          rollingGold[targetRow][reel] = initial.gold[sourceRow][reel];
-        }
-      }
-      renderBoard(rollingBoard, rollingGold);
-      if (!rollingReels.size) break;
-      const cells = [];
-      Array.from(el.board.children).forEach((node, index) => {
-        if (rollingReels.has(index % REELS)) cells.push(node);
-      });
-      if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
-      await new Promise((resolve) => setTimeout(resolve, 55));
-    }
+    // 逐輪停輪（左到右）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion；只收有效格）
+    renderBoard(initial.board, initial.gold);
+    const nodes = Array.from(el.board.children);
+    const columns = Array.from({ length: REELS }, (_, reel) => {
+      const list = [];
+      for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) list.push(nodes[row * REELS + reel]);
+      return list;
+    });
+    await reelStripSpin(el.board, columns);
   }
 
   // 得分（Win）即時顯示：只改 #winValue 文字，不動 state（Credit／統計／Log 仍在局末才結算）
@@ -2809,15 +2850,15 @@
         renderBoard(step.board, step.gold, [], { cleared: step.hit });
         await new Promise((resolve) => setTimeout(resolve, Math.max(70, 120 / Number(el.speedRange.value || 1))));
         const next = spin.steps[i + 1];
-        const cleared = [];
+        // 原地補牌（座標不動，中獎格直接補掉落表新符號；金框轉 Wild 留原位）→ 新符號在原位長出來
+        renderBoard(next?.board || spin.board, next?.gold || spin.gold);
+        const nodes = Array.from(el.board.children);
+        const fresh = [];
         for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
-          if (step.hit[row]?.[reel]) cleared.push([row, reel]);
+          if (step.hit[row]?.[reel] === 1) fresh.push(nodes[row * REELS + reel]);
         }
-        const rowCounts = Array.from({ length: REELS }, (_, reel) => Box.score_area.reduce((count, row) => count + Number(Boolean(row[reel])), 0));
-        const dropMotion = window.slotBuildDropMotion?.(rowCounts, REELS, cleared) || {};
-        const dropDuration = Math.max(220, 620 / Number(el.speedRange.value || 1));
-        renderBoard(next?.board || spin.board, next?.gold || spin.gold, [], { dropMotion });
-        await new Promise((resolve) => setTimeout(resolve, dropDuration + REELS * 18 + 80));
+        const growMs = window.demogameMotion?.grow(fresh) ?? 380;
+        await new Promise((resolve) => setTimeout(resolve, growMs + 80));
       }
     }
     renderBoard(spin.board, spin.gold); renderSpinHistory(spin);
@@ -3156,7 +3197,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261017e"></script>
+  <script src="../demogame_common.js?v=20261017g"></script>
 </body>
 
 </html>

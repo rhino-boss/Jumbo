@@ -149,11 +149,12 @@ Slots/
 1. **消除後原地補牌**
    - 中獎符號消除後，只在原本的空格位置抽取並顯示新符號。
    - 盤面上未消除的符號維持原座標，不播放向下移動動畫。
-   - 新符號在空格原位播放 Refill 動畫。
+   - 新符號在空格原位「長出來」（縮放 0→1，共用 `demogameMotion.grow()`），**不得播放掉落動畫**。
 2. **消除後掉落補牌**
    - 中獎符號消除後，同一 Reel／Column 上方未消除的符號依重力向下補位。
    - 剩餘空格由新符號從盤面上方掉入。
    - 動畫必須區分既有符號的 Settle 與新符號的 Drop／Refill。
+   - 掉落整段時間＝一輪從滾動到滾停的時間（共用 `demogameMotion.dropMs()`）。
 3. **特殊補牌（By Game）**
    - 不符合前兩類的 Random、Parallel、跨欄移動、整盤替換或其他特殊補牌皆歸此類。
    - 必須在該遊戲的 `game_rule.md` 與數學模型的 `Game Description` 工作表中明確定義抽取來源、移動方向、補牌順序、保留位置及動畫。
@@ -170,6 +171,8 @@ Slots/
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值與結算相同；觸發 FG 那局（含 BF 入場盤）的 BG 得分要累積進 FG，FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束時等於整局總得分；Debug 的 Previous／Next 逐步檢視時，Win 同步顯示該步的累計得分。
 - Auto、Speed、Reset 不得改變 RNG、得分或統計結果。
 - Speed 為 1～5 五階：1～4 階轉輪由左到右逐輪停；第 5 階不逐輪停，Spin 後所有轉輪同時到位（BG、FG、Respin 皆同）。
+- 轉輪滾動一律照 H020 超級寶石的滾法：每輪是一條連續往下捲動的輪帶，由左到右依序停在結果上；不得用每一幀換一次符號的方式表現滾動。
+- 動畫時間統一由共用 `window.demogameMotion` 提供，各遊戲不得自訂：一輪滾動到滾停 `reelSpinMs()`＝700／520／380／260／180 ms（Speed 1～5），逐輪停錯開 `stopStaggerMs()`＝120／100／80／60／0 ms；掉落補牌 `dropMs()`、原地補牌長出來 `growMs()` 都等於 `reelSpinMs()`。
 - 每一轉（BG 局與每一轉 FG）算完分後固定停 0.5 秒（共用 `window.demogameRoundPause()`），才放行下一轉或 Auto；這段停頓不受 Speed 影響，Simulation 不停頓。
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
 - FG 結束回到 BG 時，盤面還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲。

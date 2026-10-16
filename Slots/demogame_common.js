@@ -2918,9 +2918,10 @@
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 
-  const free = ":not(.has-symbol-art):not(.hit):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
+  // 得分格（hit）照樣套底色，只由「得分框」規則換外框
+  const free = ":not(.has-symbol-art):not(.convert):not(.wild-mark):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
   // Help 賠率表的代號方格（沒圖時）與盤面同一套配色
-  const base = `:is(body #board .cell[data-dg-sym]${free}, body #board .cell:not(.has-symbol-art):not(.h020-hit):not(.hit) > .tile[data-dg-sym], body #helpDialog #helpContent .help-sym-tile[data-dg-sym]:not(.has-art))`;
+  const base = `:is(body #board .cell[data-dg-sym]${free}, body #board .cell:not(.has-symbol-art) > .tile[data-dg-sym], body #helpDialog #helpContent .help-sym-tile[data-dg-sym]:not(.has-art))`;
   const gold = `body #board .cell:is(.gold,.special-gold)${free}`;
   const label = `:is(${LABEL})`;
   // M 獎：同亮度、不同色相的低彩度漸層，字獎深藍；上緣一條淡高光，整體與金框同一套質感
@@ -2949,11 +2950,52 @@
 // 消除（symbol-cleared）與掉落動畫不受影響。
 (() => {
   "use strict";
-  const hit = "body #board .cell:is(.hit,.fx-win,.h014-hit,.h020-hit):not(.symbol-cleared)";
+  // 兩個 :not(#…) 只為提高優先權，蓋過無圖符號配色的外框
+  // 倍數格（例如 H020 右側 WIN MULTIPLIER 轉輪）連線時不加得分框
+  const hit = "body #board .cell:is(.hit,.fx-win,.h014-hit,.h020-hit):not(.symbol-cleared):not(.sym-mult):not(.reel.r4 .cell):not(#dg-x):not(#dg-y)";
   const style = document.createElement("style");
   style.textContent = `${hit},${hit} *{animation:none!important;transform:none!important;filter:none!important;transition:none!important}
     ${hit}{border:1.6px solid #ffe27a!important;outline:0!important;box-shadow:0 0 8px rgba(255,214,90,.45)!important;z-index:5}
     ${hit}::before,${hit}::after{box-shadow:none!important;border-color:transparent!important}
+    body #board :is(.reel.r4 .cell,.cell.sym-mult):is(.hit,.h020-hit)::after{display:none!important}
+    body #board :is(.reel.r4 .cell,.cell.sym-mult):is(.hit,.h020-hit) *{animation:none!important;filter:none!important}
+    ${hit}:has(> .tile){border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}
     ${hit} > .tile{border:1.6px solid #ffe27a!important;box-shadow:0 0 8px rgba(255,214,90,.45)!important}`;
   document.head.appendChild(style);
+})();
+
+// 動畫時間統一（共用，2026-10-17）：所有遊戲的轉輪與補牌都讀這裡，跟著 Speed 1～5 走。
+// - reelSpinMs：一輪從開始滾動到停下的時間；第一輪滾這麼久，之後每輪再錯開 stopStaggerMs（Speed 5 不錯開、同時停）。
+// - dropMs：掉落補牌（既有符號下移＋新符號落入）整段時間＝reelSpinMs。
+// - growMs：原地補牌不播掉落，新符號在原位「長出來」（縮放 0→1）的時間＝reelSpinMs。
+// - grow(cells)：替原地補牌的新符號套上長出來動畫。
+(() => {
+  "use strict";
+  const SPIN = [700, 520, 380, 260, 180];
+  const STAGGER = [120, 100, 80, 60, 0];
+  const level = () => Math.min(5, Math.max(1, Math.round(Number(document.getElementById("speedRange")?.value) || 1)));
+  const style = document.createElement("style");
+  style.textContent = `@keyframes demogame-grow{0%{transform:scale(0);opacity:0}70%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
+    #board .cell.demogame-grow > *{animation:demogame-grow var(--dg-grow-ms,380ms) cubic-bezier(.2,.8,.3,1) both}`;
+  document.head.appendChild(style);
+  const motion = {
+    level,
+    reelSpinMs: () => SPIN[level() - 1],
+    stopStaggerMs: () => STAGGER[level() - 1],
+    dropMs: () => SPIN[level() - 1],
+    growMs: () => SPIN[level() - 1],
+    grow(cells) {
+      const ms = motion.growMs();
+      for (const cell of cells || []) {
+        if (!cell) continue;
+        cell.classList.remove("demogame-grow");
+        void cell.offsetWidth;
+        cell.style.setProperty("--dg-grow-ms", `${ms}ms`);
+        cell.classList.add("demogame-grow");
+        setTimeout(() => cell.classList.remove("demogame-grow"), ms + 50);
+      }
+      return ms;
+    }
+  };
+  window.demogameMotion = motion;
 })();

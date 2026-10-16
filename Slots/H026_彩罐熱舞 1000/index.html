@@ -3953,7 +3953,7 @@
           cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", clearedSet.has(`${rowIndex}-${colIndex}`) ? "symbol-cleared" : "", dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
           if (dropMotion) {
             cellEl.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
-            cellEl.style.setProperty("--drop-duration", `${Math.max(320, 640 / state.speedMultiplier) / 2}ms`);
+            cellEl.style.setProperty("--drop-duration", `${window.demogameMotion?.dropMs() ?? 380}ms`);   // 掉落時間＝轉輪滾停時間
             cellEl.style.setProperty("--drop-delay", "0ms");
           }
           const wrap = document.createElement("div");
@@ -4158,34 +4158,82 @@
       return board;
     }
 
+    // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
+    // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
+    // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
+    async function reelStripSpin(board, columns) {
+      const motion = window.demogameMotion;
+      const spinMs = motion ? motion.reelSpinMs() : 380;
+      const gapMs = motion ? motion.stopStaggerMs() : 80;
+      const pool = columns.flat().filter(Boolean);
+      if (!board || !pool.length) return;
+      const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+      const copyCell = (node, width, height, x, y) => {
+        const copy = node.cloneNode(true);
+        copy.classList.remove(...dropClasses);
+        [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+        copy.removeAttribute("id");
+        copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+        return copy;
+      };
+      const offsetIn = (node, host) => {
+        let x = 0, y = 0, n = node;
+        while (n && n !== host) {
+          x += n.offsetLeft; y += n.offsetTop;
+          n = n.offsetParent;
+          if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+        }
+        return { x, y };
+      };
+      const windows = [];
+      const jobs = columns.map((list, reel) => {
+        const cells = (list || []).filter(Boolean);
+        if (!cells.length) return Promise.resolve();
+        const ms = spinMs + gapMs * reel;
+        const win = document.createElement("div");
+        win.className = "dg-reel-window";
+        win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+        board.appendChild(win);
+        windows.push(win);
+        const host = win.offsetParent || document.body;
+        const boxes = cells.map((cell) => ({ cell, ...offsetIn(cell, host), w: cell.offsetWidth, h: cell.offsetHeight }));
+        const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
+        const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
+        Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+        const last = boxes[boxes.length - 1];
+        const pitch = boxes.length > 1 ? last.y - boxes[boxes.length - 2].y : last.h;   // 頂端 peek-row 半高，間距取最後兩格
+        const extra = Math.max(boxes.length + 3, Math.round(ms / 60));
+        const strip = document.createElement("div");
+        strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+        boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+        for (let k = 1; k <= extra; k += 1) {
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          const copy = copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch);
+          copy.classList.remove("peek-row");   // 隨機格一律畫成完整格
+          strip.appendChild(copy);
+        }
+        win.appendChild(strip);
+        cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+        strip.style.transform = `translateY(${-extra * pitch}px)`;
+        void strip.offsetHeight;
+        strip.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.22,1.03)`;
+        strip.style.transform = "translateY(0)";
+        return new Promise((resolve) => setTimeout(resolve, ms + 20));
+      });
+      await Promise.all(jobs);
+      windows.forEach((win) => win.remove());
+      pool.forEach((cell) => { cell.style.visibility = ""; });
+    }
+
     async function animateReels(finalBoard = null) {
-      // 逐輪停輪（左到右；Speed 5 改為同時到位），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
+      // 逐輪停輪（左到右；Speed 5 同時停）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
       const base = finalBoard || sampleBoard();
-      const rows = base.length;
-      const speed = state.speedMultiplier;
-      // Speed 1～4 逐輪停輪；Speed 5（最高階）不逐輪停，短暫滾動後所有轉輪同時到位
-      const simultaneousLand = speed >= 5;
-      const baseFrames = simultaneousLand ? 2 : Math.max(3, Math.round(9 / speed));
-      const perReelExtra = simultaneousLand ? 0 : Math.max(1, Math.round(3 / speed));
-      const totalFrames = baseFrames + perReelExtra * (Box.reel_num - 1) + 1;
-      for (let frame = 0; frame < totalFrames; frame += 1) {
-        if (state.debugSkipPlayback) break;
-        const rollingReels = new Set();
-        const rollingBoard = base.map((row, rowIndex) => row.map((cell, col) => {
-          if (frame >= baseFrames + perReelExtra * col) return cell;   // 該輪已停
-          rollingReels.add(col);
-          const offset = (totalFrames - frame + col) % rows;
-          return base[(rowIndex + offset) % rows][col];
-        }));
-        renderBoard(rollingBoard);
-        if (!rollingReels.size) break;
-        const cells = [];
-        Array.from(boardEl.children).forEach((node, index) => {
-          if (rollingReels.has(index % Box.reel_num)) cells.push(node);
-        });
-        if (window.slotFx?.reelRoll) window.slotFx.reelRoll(cells); else cells.forEach((node) => node.classList.add("reel-spin"));
-        await sleep(getPlaybackDelay(55));
-      }
+      renderBoard(base);
+      if (state.debugSkipPlayback) return;   // Debug 快轉：直接到位
+      const nodes = Array.from(boardEl.children);
+      const columns = Array.from({ length: Box.reel_num }, (_, col) =>
+        base.map((_, row) => nodes[row * Box.reel_num + col]));
+      await reelStripSpin(boardEl, columns);
     }
 
     async function playbackSpin(round, spin) {
@@ -4271,7 +4319,7 @@
         };
         renderDrop();
         writeMessage(dropMessage);
-        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (Math.max(320, 640 / state.speedMultiplier) / 2 + 180) * state.speedMultiplier, renderDrop);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, ((window.demogameMotion?.dropMs() ?? 380) + 180) * state.speedMultiplier, renderDrop);
       }
       const finalMessage = `Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`;
       const renderFinal = () => {
@@ -4617,7 +4665,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261017e"></script>
+  <script src="../demogame_common.js?v=20261017g"></script>
 </body>
 
 </html>

@@ -912,7 +912,9 @@
     setStatus("");
     setScore("", "Spinning…");
     setMessage(["Spinning…", "轉動中…"]);
-    const base = 650 / sp, gap = sp >= 5 ? 0 : 170 / sp;   // 第 5 階（最高速）不逐輪停：所有轉輪同時到位
+    // 滾停時間統一走 demogameMotion（第 1 輪 reelSpinMs，之後每輪錯開 stopStaggerMs；第 5 階 stagger 0＝所有轉輪同時到位）
+    const motion = window.demogameMotion;
+    const base = motion ? motion.reelSpinMs() : 650 / sp, gap = motion ? motion.stopStaggerMs() : (sp >= 5 ? 0 : 170 / sp);
     // 停輪順序由右到左：R4 → R3 → R2 → R1
     const r4Job = spinReel(3, sh.r4, res.r4Pos, null, base);
     const jobs = [0, 1, 2].map((c) => spinReel(c, sh.reels[c], res.stops[c], null, base + (3 - c) * gap));
@@ -1365,7 +1367,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261017e"></script>
+  <script src="../demogame_common.js?v=20261017g"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

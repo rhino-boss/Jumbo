@@ -2807,7 +2807,7 @@
   function set(id,v){let node=$(id);if(node)node.textContent=v}
   function renderFeature(scene='BASE GAME',cascade=0,multi=1,ways='—'){set('modeText',state.language==='zh'?(scene==='FREE GAME'?'免費遊戲':'主遊戲'):scene);set('carryMultiValue',cascade);set('spinMultiValue',`x${multi}`);set('featureStatus','');$('fgLeftPill').classList.toggle('hidden',!state.fg);if(state.fg)set('fgLeftValue',`${state.fg.left}/${state.fg.total}`);document.body.classList.toggle('fg-mode',scene==='FREE GAME')}
   function h028DropMotion(before,after,hits=[]){let hitSet=new Set(hits),motion={};for(let r=0;r<6;r++){let oldRow=2,survivors=[];before.main[r].forEach((block,index)=>{if(!hitSet.has(`m-${r}-${index}`)||isGold(block.id))survivors.push({row:oldRow});oldRow+=Math.max(1,Math.trunc(block.h)||1)});let newCount=Math.max(0,after.main[r].length-survivors.length),newRow=2;after.main[r].forEach((block,index)=>{let key=`m-${r}-${index}`;if(index<newCount)motion[key]={type:'new',rows:newCount,groupSize:newCount};else{let survivor=survivors[index-newCount];if(survivor&&newRow>survivor.row)motion[key]={type:'settle',rows:newRow-survivor.row}}newRow+=Math.max(1,Math.trunc(block.h)||1)})}let extraSurvivors=[];before.extra.forEach((block,index)=>{if(!hitSet.has(`e-${index}`)||isGold(block.id))extraSurvivors.push({oldIndex:index})});let extraNewCount=Math.max(0,after.extra.length-extraSurvivors.length);after.extra.forEach((block,index)=>{let key=`e-${index}`;if(index<extraSurvivors.length){let cols=extraSurvivors[index].oldIndex-index;if(cols>0)motion[key]={type:'extra-slide',cols}}else motion[key]={type:'extra-slide',cols:extraNewCount}});return motion}
-  function renderBoard(screen,hits=[],rolling=false,options={}){if(!screen)return;let hitSet=new Set(hits),clearedSet=new Set(options.cleared||[]),dropDuration=Math.max(320,640/state.speed)/2;el.board.innerHTML='';for(let c=0;c<4;c++){let motion=options.dropMotion?.[`e-${c}`],node=symbolEl(screen.extra[c],`e-${c}`,hitSet,rolling,false,true,clearedSet,false);node.classList.toggle('symbol-extra-slide',motion?.type==='extra-slide');if(motion?.type==='extra-slide'){node.style.setProperty('--extra-start',`${motion.cols*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`)}node.style.gridColumn=String(c+2);node.style.gridRow='1';el.board.appendChild(node)}for(let r=0;r<6;r++){let row=2;screen.main[r].forEach((b,bi)=>{if(row>6)return;let motion=options.dropMotion?.[`m-${r}-${bi}`],h=Math.max(1,Math.min(6-row+1,Math.trunc(b.h)||1)),node=symbolEl(b,`m-${r}-${bi}`,hitSet,rolling,h>1,false,clearedSet,false);node.classList.toggle('symbol-drop',motion?.type==='new');node.classList.toggle('symbol-settle',motion?.type==='settle');node.style.gridColumn=String(r+1);node.style.gridRow=`${row} / span ${h}`;if(motion){node.style.setProperty('--drop-start',`${-motion.rows*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`);node.style.setProperty('--drop-delay','0ms')}el.board.appendChild(node);row+=h});while(row<=6){let node=symbolEl({id:-1,h:1},'',hitSet,rolling,false,false,clearedSet,false);node.style.gridColumn=String(r+1);node.style.gridRow=String(row++);el.board.appendChild(node)}}}
+  function renderBoard(screen,hits=[],rolling=false,options={}){if(!screen)return;let hitSet=new Set(hits),clearedSet=new Set(options.cleared||[]),dropDuration=window.demogameMotion?.dropMs()??380;/* 掉落時間＝轉輪滾停時間 */el.board.innerHTML='';for(let c=0;c<4;c++){let motion=options.dropMotion?.[`e-${c}`],node=symbolEl(screen.extra[c],`e-${c}`,hitSet,rolling,false,true,clearedSet,false);node.classList.toggle('symbol-extra-slide',motion?.type==='extra-slide');if(motion?.type==='extra-slide'){node.style.setProperty('--extra-start',`${motion.cols*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`)}node.style.gridColumn=String(c+2);node.style.gridRow='1';el.board.appendChild(node)}for(let r=0;r<6;r++){let row=2;screen.main[r].forEach((b,bi)=>{if(row>6)return;let motion=options.dropMotion?.[`m-${r}-${bi}`],h=Math.max(1,Math.min(6-row+1,Math.trunc(b.h)||1)),node=symbolEl(b,`m-${r}-${bi}`,hitSet,rolling,h>1,false,clearedSet,false);node.classList.toggle('symbol-drop',motion?.type==='new');node.classList.toggle('symbol-settle',motion?.type==='settle');node.style.gridColumn=String(r+1);node.style.gridRow=`${row} / span ${h}`;if(motion){node.style.setProperty('--drop-start',`${-motion.rows*105}%`);node.style.setProperty('--drop-duration',`${dropDuration}ms`);node.style.setProperty('--drop-delay','0ms')}el.board.appendChild(node);row+=h});while(row<=6){let node=symbolEl({id:-1,h:1},'',hitSet,rolling,false,false,clearedSet,false);node.style.gridColumn=String(r+1);node.style.gridRow=String(row++);el.board.appendChild(node)}}}
   function symbolClass(id){if(!Number.isInteger(id)||id<0)return'';let b=base(id);if(b===0)return'symbol-wild';if(b===1)return'symbol-scatter';if(b>=2&&b<=7)return`symbol-m${b-1}`;if(b>=8&&b<=12)return'symbol-low';return'symbol-mystery'}
   let USE_SYMBOL_IMAGES=true;
   const SYMBOL_IMAGE_ROOT='./Source/Image/';
@@ -2821,20 +2821,80 @@
   window.DEMOGAME_IMAGE_TOGGLE={supported:true,defaultEnabled:true,images:Object.values(TOZ_SYMBOL_ART).flatMap(f=>[f,f.replace('.webp','_h2.webp'),f.replace('.webp','_h3.webp'),f.replace('.webp','_h4.webp')]).map(f=>SYMBOL_IMAGE_ROOT+f),setEnabled(enabled,{initial=false}={}){let next=Boolean(enabled),changed=next!==USE_SYMBOL_IMAGES;USE_SYMBOL_IMAGES=next;if(changed){if(next){if(state.historyIndex>=state.historyFloor&&state.history[state.historyIndex])showHistory(state.historyIndex);else makeIdleBoard()}else{document.querySelectorAll('.symbol-art').forEach(node=>node.remove());document.querySelectorAll('.cell').forEach(cell=>{cell.classList.remove('has-symbol-art');cell.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')})}}if(!initial)message('Image | '+(next?'On':'Off'),'mode')}};
   function symbolEl(b,key,hits,rolling=false,jumbo=false,extra=false,cleared=new Set(),dropIn=false){let d=document.createElement('div'),id=b?.id??-1,art=symbolArt(id,b?.h),m1=base(id)===2?`<span class="m1-multiplier">x${Math.max(1,Math.trunc(b?.h)||1)+1}</span>`:'';d.className=['cell',extra?'peek-row':'',symbolClass(id),art?'has-symbol-art':'',isGold(id)?'gold keep-symbol-frame':'',hitSetHas(hits,key)?'hit':'',cleared.has(key)?'symbol-cleared':'',dropIn?'symbol-drop':'',rolling?(extra?'extra-reel-spin':'reel-spin'):'',jumbo?'jumbo':''].filter(Boolean).join(' ');d.innerHTML=`<div class="symbol-wrap">${art}<span class="symbol-code"${art?' style="display:none"':''}>${displayCode(id)}</span></div>${m1}`;d.querySelectorAll('.symbol-art-layer').forEach(image=>image.addEventListener('error',()=>{d.classList.remove('has-symbol-art');d.querySelectorAll('.symbol-code').forEach(codeNode=>codeNode.style.display='')},{once:true}));return d}
   function hitSetHas(hits,key){return hits instanceof Set?hits.has(key):hits.includes(key)}
+  // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
+  // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
+  // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）；opts.unit／pitch／pool：H028 大符號用（單格尺寸、列距、隨機格來源）
+  async function reelStripSpin(board, columns, opts = {}) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const pool = (opts.pool || columns.flat()).filter(Boolean);
+    if (!board || !pool.length) return;
+    const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyCell = (node, width, height, x, y) => {
+      const copy = node.cloneNode(true);
+      copy.classList.remove(...dropClasses);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+      return copy;
+    };
+    const offsetIn = (node, host) => {
+      let x = 0, y = 0, n = node;
+      while (n && n !== host) {
+        x += n.offsetLeft; y += n.offsetTop;
+        n = n.offsetParent;
+        if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+      }
+      return { x, y };
+    };
+    const windows = [];
+    const jobs = columns.map((list, reel) => {
+      const cells = (list || []).filter(Boolean);
+      if (!cells.length) return Promise.resolve();
+      const ms = spinMs + gapMs * reel;
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      const boxes = cells.map((cell) => ({ cell, ...offsetIn(cell, host), w: cell.offsetWidth, h: cell.offsetHeight }));
+      const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
+      const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+      const last = boxes[boxes.length - 1];
+      const unit = opts.unit || { w: last.w, h: last.h };
+      const pitch = opts.pitch || (boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h);
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60));
+      const strip = document.createElement("div");
+      strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+      boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      for (let k = 1; k <= extra; k += 1) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        strip.appendChild(copyCell(pick, unit.w, unit.h, last.x - left, last.y - top + last.h - unit.h + k * pitch));
+      }
+      win.appendChild(strip);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+      strip.style.transform = `translateY(${-extra * pitch}px)`;
+      void strip.offsetHeight;
+      strip.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.22,1.03)`;
+      strip.style.transform = "translateY(0)";
+      return new Promise((resolve) => setTimeout(resolve, ms + 20));
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    pool.forEach((cell) => { cell.style.visibility = ""; });
+  }
   async function animateReels(finalScreen){
-    // 逐輪停輪（左到右，Extra 輪最後；Speed 第 5 階 perReelExtra=0，所有轉輪含 Extra 同時到位），滾動中的輪帶套 slotFx.reelRoll 的模糊滾動效果（做法同 遊戲發想/賞金列車 2）
-    let fg=finalScreen?.table?.scene==='FG',spd=Math.max(1,Number(state.speed)||1),baseFrames=Math.max(3,Math.round(9/spd)),perReelExtra=spd>=5?0:Math.max(1,Math.round(3/spd)),totalFrames=baseFrames+perReelExtra*6+1;
-    for(let frame=0;frame<totalFrames;frame++){
-      let rolling=new Set();
-      let main=Array.from({length:6},(_,reel)=>{if(frame>=baseFrames+perReelExtra*reel)return finalScreen.main[reel];rolling.add(reel);return Array.from({length:5},()=>{let id=pickInt(26);if(fg&&reel===0)id=unframed(id);return{id,h:1}})});
-      let extraRolling=frame<baseFrames+perReelExtra*6;if(extraRolling)rolling.add(6);
-      let extra=extraRolling?Array.from({length:4},()=>({id:unframed(pickInt(26)),h:1})):finalScreen.extra;
-      renderBoard({main,extra},[],false);
-      if(!rolling.size)break;
-      let cells=Array.from(el.board.children).filter(node=>node.style.gridRow==='1'?rolling.has(6):rolling.has(Number(node.style.gridColumn)-1));
-      if(window.slotFx?.reelRoll)window.slotFx.reelRoll(cells);else cells.forEach(node=>node.classList.add(node.style.gridRow==='1'?'extra-reel-spin':'reel-spin'));
-      message('Reels spinning...');await sleep(55)}
-    renderBoard(finalScreen)}
+    // 逐輪停輪（左到右）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion；Speed 5 同時停）
+    // Extra Reel 四格併入其下方的第 2～5 輪（與判獎 reelBlocks 一致），跟著該輪一起捲動
+    renderBoard(finalScreen);message('Reels spinning...');
+    let nodes=Array.from(el.board.children),columns=Array.from({length:6},()=>[]);
+    nodes.forEach(node=>{let col=Number(node.style.gridColumn)-1;if(col>=0&&col<6)columns[col].push(node)});
+    columns.forEach(list=>list.sort((a,b)=>parseInt(a.style.gridRow)-parseInt(b.style.gridRow)));
+    let one=nodes.find(node=>!node.classList.contains('jumbo')&&!node.classList.contains('peek-row'))||nodes[0],gap=parseFloat(getComputedStyle(el.board).rowGap)||0;
+    await reelStripSpin(el.board,columns,{unit:{w:one.offsetWidth,h:one.offsetHeight},pitch:one.offsetHeight+gap,pool:nodes.filter(node=>!node.classList.contains('jumbo')&&node.querySelector('.symbol-code')?.textContent)})}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}
   function postWeights(scene,suffix){let v=B[`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}PostC1`];return Array.isArray(v[0])?v[1]:v}
   function makeScreen(scene='BG',overrides=null,retrigger=false,forcedScatterCount=null,forcedSuffix=null){let chosen=forcedSuffix==null?chooseParams(scene,retrigger):{suffix:forcedSuffix,rng:{index:forcedSuffix-1,rng:0,total:0}},prefix=scene==='BG'?'BaseGame':'FreeGame',s=chosen.suffix,symbols=B[`${prefix}Symbol${s}`],weights=B[`${prefix}SymbolWeight${s}`],mega=B[`${prefix}MegaWay${s}`],my=B[`${prefix}MY${s}`];let main=[],rng=[],mystery=weighted(my).index;
@@ -2855,7 +2915,7 @@
   // 金框使用率＝實際參與中獎並轉 WW 的金框數 ÷ 盤面出現過的金框數（初始盤＋每次掉落新出現，主盤＋Extra Reel，每個 block 算 1 個）。
   // BG M1 倍數得分率＝有任一次 Cascade 得分且該次判定倍數 > x1（BG 起始 x1，只有 M1 能加倍數）的 BG 局數 ÷ BG 局數。
   function tallyVisibleSpin(result,isBg){let seen=0,used=0,left=0,m1Hit=false;for(const s of result.steps||[]){let sc=s.screen,hit=new Set(s.eval?.hit||[]),g=0,u=0;sc.main.forEach((col,r)=>col.forEach((b,i)=>{if(isGold(b.id)){g++;if(hit.has(`m-${r}-${i}`))u++}}));sc.extra.forEach((b,i)=>{if(isGold(b.id)){g++;if(hit.has(`e-${i}`))u++}});seen+=Math.max(0,g-left);used+=u;left=g-u;if(isBg&&s.eval?.total>0&&s.multi>1)m1Hit=true}state.goldSeen+=seen;state.goldUsed+=used;if(m1Hit)state.bgM1MultiRounds++}
-  async function playSpin(result){state.historyIndex=state.history.length-1;state.historyFloor=state.history.length;await animateReels(result.steps[0]?.screen||result.screen);for(let i=0;i<result.steps.length;i++){let s=result.steps[i],scene=result.scene==='FG'?'FREE GAME':'BASE GAME',ways=s.eval.ways||'—';renderFeature(scene,i,s.multi,ways);renderBoard(s.screen);message(`${result.scene} · Cascade ${i} · evaluating`);saveSnapshot(result,{screen:s.screen,step:s,phase:'evaluation',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · evaluating`});await sleep(delay());if(s.eval.wins.length){renderBoard(s.screen,s.eval.hit);state.currentWin+=s.eval.total;renderStats();message(`Cascade ${i} win ${money(s.eval.total)} · x${s.multi}`);saveSnapshot(result,{screen:s.screen,hits:s.eval.hit,step:s,phase:'score',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · score ${money(s.eval.total)}`});await sleep(delay());renderBoard(s.screen,[],false,{cleared:s.eval.hit});message(`Cascade ${i} · symbols cleared`);await sleep(Math.max(70,delay()*.45));let nextScreen=result.steps[i+1]?.screen||result.screen,dropMotion=h028DropMotion(s.screen,nextScreen,s.eval.hit);renderBoard(nextScreen,[],false,{dropMotion});message(`Cascade ${i} · drop complete`);await sleep((Math.max(320,640/state.speed)/2+180)*state.speed)}}renderBoard(result.screen);state.maxMulti=Math.max(state.maxMulti,result.multi);renderDebug(result);renderStats()}
+  async function playSpin(result){state.historyIndex=state.history.length-1;state.historyFloor=state.history.length;await animateReels(result.steps[0]?.screen||result.screen);for(let i=0;i<result.steps.length;i++){let s=result.steps[i],scene=result.scene==='FG'?'FREE GAME':'BASE GAME',ways=s.eval.ways||'—';renderFeature(scene,i,s.multi,ways);renderBoard(s.screen);message(`${result.scene} · Cascade ${i} · evaluating`);saveSnapshot(result,{screen:s.screen,step:s,phase:'evaluation',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · evaluating`});await sleep(delay());if(s.eval.wins.length){renderBoard(s.screen,s.eval.hit);state.currentWin+=s.eval.total;renderStats();message(`Cascade ${i} win ${money(s.eval.total)} · x${s.multi}`);saveSnapshot(result,{screen:s.screen,hits:s.eval.hit,step:s,phase:'score',scene,cascade:i,multi:s.multi,ways,label:`Cascade ${i} · score ${money(s.eval.total)}`});await sleep(delay());renderBoard(s.screen,[],false,{cleared:s.eval.hit});message(`Cascade ${i} · symbols cleared`);await sleep(Math.max(70,delay()*.45));let nextScreen=result.steps[i+1]?.screen||result.screen,dropMotion=h028DropMotion(s.screen,nextScreen,s.eval.hit);renderBoard(nextScreen,[],false,{dropMotion});message(`Cascade ${i} · drop complete`);await sleep(((window.demogameMotion?.dropMs()??380)+180)*state.speed)}}renderBoard(result.screen);state.maxMulti=Math.max(state.maxMulti,result.multi);renderDebug(result);renderStats()}
   function appendDebugPair(list,className,left,right){let row=document.createElement('div'),leftText=document.createElement('span'),rightText=document.createElement('span');row.className=className;leftText.textContent=left;rightText.textContent=right;row.append(leftText,rightText);list.appendChild(row)}
   function debugBoardText(screen){if(!screen)return'—';let rows=Array.from({length:5},()=>Array(6).fill('--'));screen.main.forEach((reel,reelIndex)=>{let row=0;reel.forEach(block=>{let height=Math.max(1,Math.trunc(block.h)||1),symbol=displayCode(block.id);for(let i=0;i<height&&row<5;i++,row++)rows[row][reelIndex]=symbol})});let extra=['--',...screen.extra.map(block=>displayCode(block.id)),'--'];return`EX  ${extra.join(' ')}\n${rows.map((row,index)=>`${String(index+1).padStart(2,'0')}  ${row.join(' ')}`).join('\n')}`}
   function appendSpinResultStage(list,label,meta,screen){let row=document.createElement('div'),head=document.createElement('div'),stageLabel=document.createElement('span'),stageMeta=document.createElement('span'),board=document.createElement('pre');row.className='spin-result-row';head.className='spin-result-head';board.className='spin-result-board';stageLabel.textContent=label;stageMeta.textContent=meta;board.textContent=debugBoardText(screen);head.append(stageLabel,stageMeta);row.append(head,board);list.appendChild(row)}
@@ -2922,6 +2982,6 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261017e"></script>
+  <script src="../demogame_common.js?v=20261017g"></script>
 </body>
 </html>
