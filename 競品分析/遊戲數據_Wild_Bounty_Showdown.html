@@ -97,6 +97,24 @@ tbody tr:hover{background:var(--panel-2)}
 .sw{width:22px; height:3px; border-radius:2px; flex:none}
 .plot{position:relative; width:100%}
 svg{display:block; width:100%; height:auto; overflow:visible}
+/* 圖表放大：標題後的按鈕 + 全螢幕彈窗 */
+button.zoom{margin-left:10px; vertical-align:middle; font:500 11.5px/1 var(--font-sans);
+  color:var(--ink-2); background:var(--panel-2); border:1px solid var(--rule);
+  border-radius:6px; padding:4px 10px; cursor:pointer}
+button.zoom:hover{color:var(--ink); border-color:var(--ink-3)}
+button.zoom:focus-visible{outline:2px solid var(--s1); outline-offset:2px}
+.modal{position:fixed; inset:0; z-index:90; display:flex; align-items:center;
+  justify-content:center; padding:24px; background:rgba(16,20,24,.62)}
+.modal .box{background:var(--panel); border:1px solid var(--rule); border-radius:12px;
+  width:min(1680px,96vw); max-height:92vh; overflow:auto; padding:18px 20px 22px;
+  box-shadow:0 18px 60px rgba(0,0,0,.28)}
+.modal .bar{display:flex; align-items:center; justify-content:space-between; gap:16px;
+  margin-bottom:10px}
+.modal .bar h4{margin:0; font-size:15px}
+.modal .x{font:500 13px/1 var(--font-sans); color:var(--ink-2); background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:6px; padding:6px 12px; cursor:pointer}
+.modal .x:hover{color:var(--ink); border-color:var(--ink-3)}
+@media (max-width:700px){.modal{padding:8px} .modal .box{padding:12px}}
 .tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
   background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
   font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
@@ -109,7 +127,7 @@ svg{display:block; width:100%; height:auto; overflow:visible}
 
 <div class="wrap">
 <header>
-  <div class="eyebrow">PG · 競品分析</div>
+  <div class="eyebrow"></div>
   <h1>Wild Bounty Showdown</h1>
   <p class="meta">`spin_responses_wild_bounty_showdown.xlsx` 15,405 列 → 付費轉 10,463　|　FG 358 轉（35 場）　|　底注 1.0</p>
   <p class="meta">場景代號：<code>BG</code> 一般遊戲　<code>FG</code> 免費遊戲（本作無 Buy Feature）</p>
@@ -213,14 +231,14 @@ svg{display:block; width:100%; height:auto; overflow:visible}
   <span class="pill">FG Y 軸：固定 0–16%</span>
   <span class="pill">超出上限不繪製</span>
 </div>
-<h4>BG 倍率線型</h4>
+<h4>BG 倍率線型 <button class="zoom" type="button" data-plot="p1">放大</button></h4>
 <p class="cap">縱軸固定 0–1%。超過 1% 的低倍區間不繪製，以放大尾段細節。折線斷開處代表該區間為零，非插值。</p>
 <p class="warn" id="clipnote"></p>
 <div class="card"><div class="plot" id="p1"></div></div>
-<h4>FG 倍率線型</h4>
+<h4>FG 倍率線型 <button class="zoom" type="button" data-plot="p2" data-legend="lg2">放大</button></h4>
 <p class="cap">縱軸固定 0–16%。</p>
 <div class="card"><div class="legend" id="lg2"></div><div class="plot" id="p2"></div></div>
-<h4>尾段厚度：P(倍率 &gt; 區間上限)</h4>
+<h4>尾段厚度：P(倍率 &gt; 區間上限) <button class="zoom" type="button" data-plot="p3" data-legend="lg3">放大</button></h4>
 <p class="cap">各場景在自身樣本內的累積機率，縱軸固定 0–100%。曲線越早墜地，尾段越薄。</p>
 <div class="card"><div class="legend" id="lg3"></div><div class="plot" id="p3"></div></div>
 <h3>4.2 倍率線型分布</h3>
@@ -365,7 +383,7 @@ if(CH){
     draw(true);
     const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
     window.addEventListener('resize',()=>draw());
-    CHARTS.push({host,draw});
+    CHARTS.push({host,draw,cfg,id:hostId});
   }
   const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
   if(KEYS.includes('bg'))
@@ -385,6 +403,39 @@ if(CH){
     aria:'各場景累積機率曲線',
     series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
     tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* ---------- 圖表放大 ----------
+     點標題後的「放大」鈕，開一個全螢幕彈窗，用同一組 cfg 以更大的高度重畫，
+     所以放大後的圖一樣可以 hover 看數值。Esc 或點背景關閉。 */
+  function openBig(btn){
+    const ent=CHARTS.find(c=>c.id===btn.dataset.plot);
+    if(!ent) return;
+    const h4=btn.closest('h4');
+    const title=h4?h4.textContent.replace('放大','').trim():'倍率線型';
+    const ov=document.createElement('div');
+    ov.className='modal'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true');
+    const lg=btn.dataset.legend?document.getElementById(btn.dataset.legend):null;
+    ov.innerHTML='<div class="box"><div class="bar"><h4></h4>'
+      + '<button class="x" type="button">關閉</button></div>'
+      + (lg?'<div class="legend">'+lg.innerHTML+'</div>':'')
+      + '<div class="plot" id="__big"></div></div>';
+    ov.querySelector('.bar h4').textContent=title;
+    document.body.appendChild(ov);
+    const H=Math.max(420,Math.min(Math.round(window.innerHeight*0.74),860));
+    chart('__big',Object.assign({},ent.cfg,{h:H}));
+    const big=CHARTS.pop();                       // 彈窗自己的那筆，關掉時一起清
+    function close(){
+      if(big&&big.host&&big.host._ro) big.host._ro.disconnect();
+      ov.remove(); document.removeEventListener('keydown',onKey);
+    }
+    function onKey(e){ if(e.key==='Escape') close(); }
+    document.addEventListener('keydown',onKey);
+    ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+    ov.querySelector('.x').addEventListener('click',close);
+    ov.querySelector('.x').focus();
+  }
+  document.querySelectorAll('button.zoom').forEach(b=>
+    b.addEventListener('click',()=>openBig(b)));
 
   /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
      把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
