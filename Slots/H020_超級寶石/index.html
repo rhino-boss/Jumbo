@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Super Gems — Demo Game</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg transform='translate(2.7 7) scale(0.908)'%3E%3Cpolygon points='16%2C8 48%2C8 62%2C24 32%2C60 2%2C24' fill='%23c4102a'/%3E%3Cpolygon points='16%2C8 48%2C8 42%2C24 22%2C24' fill='%23ff5a6e'/%3E%3Cpolygon points='2%2C24 22%2C24 32%2C60' fill='%23e01e3c'/%3E%3Cpolygon points='62%2C24 42%2C24 32%2C60' fill='%238e0a1e'/%3E%3Cpolygon points='22%2C24 42%2C24 32%2C60' fill='%23d4142f'/%3E%3Cpolygon points='16%2C8 22%2C24 2%2C24' fill='%23ff8090'/%3E%3Cpolygon points='48%2C8 62%2C24 42%2C24' fill='%23b00d25'/%3E%3C/g%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg transform='translate%285.2 11.3%29 scale%280.837%29'%3E%3Cpolygon points='16%2C8 48%2C8 62%2C24 32%2C60 2%2C24' fill='%23c4102a'/%3E%3Cpolygon points='2%2C24 22%2C24 32%2C60' fill='%23b30c25'/%3E%3Cpolygon points='62%2C24 42%2C24 32%2C60' fill='%23b30c25'/%3E%3Cpolygon points='22%2C24 42%2C24 32%2C60' fill='%23e8243f'/%3E%3Cpolygon points='16%2C8 48%2C8 42%2C24 22%2C24' fill='%23ff6b7d'/%3E%3Cpolygon points='16%2C8 22%2C24 2%2C24' fill='%23ff8c99'/%3E%3Cpolygon points='48%2C8 62%2C24 42%2C24' fill='%23ff8c99'/%3E%3C/g%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
   <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
   <style id="dg-boot">
     html:not(.dg-css-ok) { background:#0b1424; }
@@ -201,6 +201,12 @@
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>v2（2.0.0.0）</h4>
+          <ol>
+            <li>數學 2.0.0.0（只改 Super Feature，NB／EB 不變）：SF 停輪權重偏重連線停點、R4 倍數以 2X～10X 為主、重轉以 3～4 次小倍數為主；Card-On 每轉 Hit 68.8%、每轉重轉 12.2%。Demo 直接讀新 Config，程式未改；Version 可切換 2.0.0.0／1.0.1.3；頁尾最後調性更新 2026-10-16 15:00。（10/16）</li>
+          </ol>
+        </article>
         <article class="change-log-entry">
           <h4>v1（1.0.1.3）</h4>
           <ol>
@@ -1157,9 +1163,9 @@
   window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${RTP["92A"].excel_version} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
 })();
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 00:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-16 15:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
-  <script src="../demogame_common.js?v=20261016zh"></script>
+  <script src="../demogame_common.js?v=20261016zj"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
   </script>

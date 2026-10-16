@@ -1,0 +1,410 @@
+<meta charset="utf-8">
+<title>超級寶石 Super Gems 遊戲數據</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
+  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
+  --rule:#e3e6ea; --grid:#edf0f3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --bar:rgba(42,120,214,.16); --bar-hi:rgba(235,104,52,.20);
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+    --rule:#33353a; --grid:#2a2c30;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --bar:rgba(57,135,229,.30); --bar-hi:rgba(217,89,38,.34);
+  }
+}
+:root[data-theme="dark"]{
+  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
+  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
+  --rule:#33353a; --grid:#2a2c30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--surface); color:var(--ink);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:38px 22px 80px}
+header{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
+.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+h1{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
+.meta{margin:0; color:var(--ink-2); font-size:13.5px}
+.meta code{font-family:var(--font-mono); font-size:12.5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:3px; overflow:hidden; margin:18px 0 26px}
+.stat{background:var(--panel); padding:12px 15px; display:flex; flex-direction:column; gap:2px}
+.stat .k{font-size:11.5px; color:var(--ink-3); font-family:var(--font-mono); letter-spacing:.04em}
+.stat .v{font-family:var(--font-mono); font-size:19px; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .n2{font-size:11.5px; color:var(--ink-3)}
+/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
+   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
+.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
+  overflow-x:auto; overflow-y:hidden;
+  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
+.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
+  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
+  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
+.tab:hover{color:var(--ink); background:var(--panel-2)}
+.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
+  border-color:var(--rule); border-bottom-color:var(--panel)}
+.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
+.panel{padding-top:26px}
+.panel[hidden]{display:none}
+h3{margin:32px 0 10px; font-size:17.5px; font-weight:600; letter-spacing:-.008em;
+  padding-bottom:6px; border-bottom:1px solid var(--rule)}
+.panel>h3:first-child{margin-top:0}
+h4{margin:24px 0 8px; font-size:14.5px; font-weight:600}
+p{margin:0 0 11px; max-width:82ch}
+p.cap{color:var(--ink-2); font-size:13.5px}
+ul,ol{margin:0 0 13px; padding-left:22px; max-width:82ch}
+li{margin:3px 0}
+code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
+  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
+blockquote{margin:12px 0 16px; padding:10px 14px; background:var(--panel-2);
+  border-left:2px solid var(--s1); border-radius:0 3px 3px 0; color:var(--ink-2); font-size:13.5px; max-width:86ch}
+blockquote code{background:var(--panel)}
+strong{font-weight:600; color:var(--ink)}
+a{color:var(--s1)}
+.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
+  background:var(--panel); margin:0 0 18px}
+table{border-collapse:collapse; width:100%; font-size:13px}
+th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
+th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:11.5px;
+  letter-spacing:.03em; white-space:nowrap}
+td.bar{background-repeat:no-repeat; background-position:left center;
+  background-size:var(--w,0) 72%; background-image:linear-gradient(var(--bc,var(--bar)),var(--bc,var(--bar)));
+  /* 限制在內容區：左右各留 padding 當欄間隔，相鄰欄的橫條才不會黏在一起 */
+  background-origin:content-box; background-clip:content-box}
+td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums; font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--panel-2)}
+.axisfix{display:flex; flex-wrap:wrap; gap:7px; margin:14px 0 18px}
+.pill{font-family:var(--font-mono); font-size:11.5px; padding:3px 9px; border:1px solid var(--rule);
+  border-radius:100px; color:var(--ink-2); background:var(--panel)}
+.warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
+  border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
+.card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+.legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
+.lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
+.sw{width:22px; height:3px; border-radius:2px; flex:none}
+.plot{position:relative; width:100%}
+svg{display:block; width:100%; height:auto; overflow:visible}
+.tip{position:absolute; pointer-events:none; opacity:0; transition:opacity .09s;
+  background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:8px 10px;
+  font-family:var(--font-mono); font-size:11.5px; line-height:1.55; box-shadow:0 5px 18px rgba(0,0,0,.13);
+  white-space:nowrap; z-index:5; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tip b{font-weight:600; display:block; margin-bottom:3px}
+.tip .r{display:flex; justify-content:space-between; gap:14px}
+.tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">H020 · 101007 · 自家遊戲數據</div>
+  <h1>超級寶石 Super Gems</h1>
+  <p class="meta">Simulator 同邏輯於模擬機產生 | 數學 1.0.1.3 | 卡片：92A／94A Oldhand | NB／EB 各 10⁶ 局、SF 10⁶ 次購買</p>
+  <p class="meta">BG 系列＝NB（92A）；BF 系列＝Super Feature（250x，5 轉）；本作無自然 FG</p>
+</header>
+<div class="stats"><div class="stat"><span class="k">NB RTP（92A）</span><span class="v">92.36%</span><span class="n2">10⁶ 局</span></div><div class="stat"><span class="k">NB RTP（94A）</span><span class="v">93.56%</span><span class="n2">10⁶ 局</span></div><div class="stat"><span class="k">SF RTP</span><span class="v">92.31%</span><span class="n2">10⁶ 次購買</span></div><div class="stat"><span class="k">NB Hit Rate</span><span class="v">11.39%</span><span class="n2">92A</span></div><div class="stat"><span class="k">SF 每轉用到重轉</span><span class="v">12.19%</span><span class="n2">Card-On</span></div><div class="stat"><span class="k">一場 SF 用到重轉</span><span class="v">46.43%</span><span class="n2">Card-On</span></div></div>
+<div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">1. 資料說明</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">2. 基本資料</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">3. 共同指標</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">4. 倍率線型</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">5. 特殊指標</button><button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1">6. 附錄</button></div>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><h3>1.1 檔案用途</h3>
+<div class="tbl-wrap"><table><thead><tr><th>檔名</th><th>類型</th><th>筆數</th><th>Bet</th><th>是否納入統計</th><th>用途說明</th></tr></thead><tbody><tr><td><code>config.js</code></td><td>基礎 Config（2）</td><td>—</td><td>全模式</td><td>✅</td><td>輪帶、賠率、5 線、各模式 R4／重轉權重</td></tr><tr><td><code>config_92A.js</code></td><td>RTP Config（2.0.0.0）</td><td>—</td><td>中／大 Bet</td><td>✅</td><td>Oldhand 卡片權重（NB／EB1／EB2／SF）</td></tr><tr><td><code>config_94A.js</code></td><td>RTP Config（2.0.0.0）</td><td>—</td><td>小 Bet</td><td>✅</td><td>Oldhand 卡片權重（NB／EB1／EB2；SF 與 92A 相同）</td></tr><tr><td>模擬 92A NB</td><td>Card-On</td><td>1,000,000 局</td><td>NB</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 92A EB1</td><td>Card-On</td><td>1,000,000 局</td><td>EB1（1.5x）</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 92A EB2</td><td>Card-On</td><td>1,000,000 局</td><td>EB2（8x）</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 94A NB</td><td>Card-On</td><td>1,000,000 局</td><td>NB</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 94A EB1</td><td>Card-On</td><td>1,000,000 局</td><td>EB1（1.5x）</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 94A EB2</td><td>Card-On</td><td>1,000,000 局</td><td>EB2（8x）</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 SF（92A／94A 共用）</td><td>Card-On</td><td>1,000,000 局</td><td>SF（250x）</td><td>✅</td><td>正式卡片權重</td></tr><tr><td>模擬 自然 NB</td><td>Card-Off</td><td>1,000,000 局</td><td>NB</td><td>✅</td><td>自然機率對照</td></tr><tr><td>模擬 自然 EB1</td><td>Card-Off</td><td>1,000,000 局</td><td>EB1（1.5x）</td><td>✅</td><td>自然機率對照</td></tr><tr><td>模擬 自然 EB2</td><td>Card-Off</td><td>1,000,000 局</td><td>EB2（8x）</td><td>✅</td><td>自然機率對照</td></tr><tr><td>模擬 自然 SF</td><td>Card-Off</td><td>10,000,000 局</td><td>SF（250x）</td><td>✅</td><td>自然機率對照</td></tr></tbody></table></div>
+<ul><li>樣本為快速驗證量級（每組 10⁶ 局，自然 SF 10⁷ 局），正式文件需以 10⁸ 局（SF 10⁷）重跑。</li><li>本作無消除、無自然觸發的免費遊戲（FG）；Super Feature（SF）為購買特色，5 次 Spin、倍數累積。</li></ul>
+<h3>1.2 資料欄位</h3>
+<div class="tbl-wrap"><table><thead><tr><th>層級</th><th>欄位</th><th>說明</th></tr></thead><tbody><tr><td>局（Round）</td><td>總得分</td><td>NB／EB 一局＝1 次 Spin；SF 一局＝5 次 Spin 總和</td></tr><tr><td>轉（Spin）</td><td>線獎</td><td>5 條線、3 連才得分，WW 替代</td></tr><tr><td>轉（Spin）</td><td>R4 結果</td><td>1X～500X 或重轉球；有線獎才生效</td></tr><tr><td>轉（Spin）</td><td>重轉</td><td>重轉次數 N 與 N 個倍數加總</td></tr><tr><td>卡片</td><td>區間／Retry</td><td>Card-On 依卡片抽區間，整局重轉至落入區間（上限 10,000 次）</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><h3>2.1 一般押注（NB／EB）</h3>
+<p>計次數</p>
+<div class="tbl-wrap"><table><thead><tr><th>組別</th><th>押注模式</th><th class="n">局數</th><th class="n">轉數</th><th class="n">有線獎轉數</th><th class="n">重轉觸發次數</th></tr></thead><tbody><tr><td>92A</td><td>NB</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">113,932</td><td class="n">4,966</td></tr><tr><td>92A</td><td>EB1（1.5x）</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">115,171</td><td class="n">8,530</td></tr><tr><td>92A</td><td>EB2（8x）</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">146,007</td><td class="n">7,960</td></tr><tr><td>94A</td><td>NB</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">116,567</td><td class="n">4,904</td></tr><tr><td>94A</td><td>EB1（1.5x）</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">117,791</td><td class="n">8,810</td></tr><tr><td>94A</td><td>EB2（8x）</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">149,059</td><td class="n">8,123</td></tr><tr><td>自然</td><td>NB</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">204,910</td><td class="n">41,947</td></tr><tr><td>自然</td><td>EB1（1.5x）</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">205,168</td><td class="n">54,344</td></tr><tr><td>自然</td><td>EB2（8x）</td><td class="n">1,000,000</td><td class="n">1,000,000</td><td class="n">205,248</td><td class="n">61,600</td></tr></tbody></table></div>
+<p>統計資料</p>
+<div class="tbl-wrap"><table><thead><tr><th>組別</th><th>押注模式</th><th class="n">RTP</th><th class="n">Hit Rate</th><th class="n">重轉觸發率</th><th class="n">線獎 RTP（未乘倍數）</th><th class="n">平均 Retry</th></tr></thead><tbody><tr><td>92A</td><td>NB</td><td class="n">92.36%</td><td class="n">11.39%</td><td class="n">0.497%</td><td class="n">32.84%</td><td class="n">11.07</td></tr><tr><td>92A</td><td>EB1（1.5x）</td><td class="n">91.96%</td><td class="n">11.52%</td><td class="n">0.853%</td><td class="n">22.53%</td><td class="n">12.90</td></tr><tr><td>92A</td><td>EB2（8x）</td><td class="n">93.08%</td><td class="n">14.60%</td><td class="n">0.796%</td><td class="n">3.62%</td><td class="n">46.84</td></tr><tr><td>94A</td><td>NB</td><td class="n">93.56%</td><td class="n">11.66%</td><td class="n">0.490%</td><td class="n">33.66%</td><td class="n">11.21</td></tr><tr><td>94A</td><td>EB1（1.5x）</td><td class="n">93.89%</td><td class="n">11.78%</td><td class="n">0.881%</td><td class="n">22.99%</td><td class="n">13.20</td></tr><tr><td>94A</td><td>EB2（8x）</td><td class="n">93.95%</td><td class="n">14.91%</td><td class="n">0.812%</td><td class="n">3.67%</td><td class="n">47.82</td></tr><tr><td>自然</td><td>NB</td><td class="n">2093.20%</td><td class="n">20.49%</td><td class="n">4.195%</td><td class="n">70.15%</td><td class="n">—</td></tr><tr><td>自然</td><td>EB1（1.5x）</td><td class="n">2057.33%</td><td class="n">20.52%</td><td class="n">5.434%</td><td class="n">46.85%</td><td class="n">—</td></tr><tr><td>自然</td><td>EB2（8x）</td><td class="n">2199.82%</td><td class="n">20.52%</td><td class="n">6.160%</td><td class="n">8.76%</td><td class="n">—</td></tr></tbody></table></div>
+<ul><li>目標：92A 92%、94A 94%；10⁶ 局 NB 的 1σ 約 0.45pp、EB1 約 0.52pp、EB2 約 1.0pp，表內皆在 2σ 內。</li><li>自然 RTP 遠高於 100% 是本作設計（R4 倍數與重轉），實際 RTP 由卡片控制。</li></ul>
+<h3>2.2 購買特色（Super Feature）</h3>
+<p>計次數</p>
+<div class="tbl-wrap"><table><thead><tr><th>組別</th><th class="n">購買次數</th><th class="n">轉數</th><th class="n">有線獎轉數</th><th class="n">重轉觸發次數</th></tr></thead><tbody><tr><td>Card-On</td><td class="n">1,000,000</td><td class="n">5,000,000</td><td class="n">3,440,455</td><td class="n">609,528</td></tr><tr><td>自然</td><td class="n">10,000,000</td><td class="n">50,000,000</td><td class="n">37,862,472</td><td class="n">9,842,104</td></tr></tbody></table></div>
+<p>統計資料</p>
+<div class="tbl-wrap"><table><thead><tr><th>組別</th><th class="n">購買價格</th><th class="n">平均得分（× 底注）</th><th class="n">SF RTP</th><th class="n">Hit Rate（每轉）</th></tr></thead><tbody><tr><td>Card-On</td><td class="n">250x</td><td class="n">230.77</td><td class="n">92.31%</td><td class="n">68.81%</td></tr><tr><td>自然</td><td class="n">250x</td><td class="n">488.19</td><td class="n">195.28%</td><td class="n">75.72%</td></tr></tbody></table></div>
+<ul><li>SF 目標 92.5%（數學模型規範 1.4.2，92A／94A 共用）；10⁶ 局 1σ 約 0.17pp。</li></ul></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><h3>3.1 賠率</h3>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">3 連（× 底注）</th><th class="n">企劃書（Credit）</th></tr></thead><tbody><tr><td>WW</td><td class="n">5</td><td class="n">500</td></tr><tr><td>M1</td><td class="n">4</td><td class="n">400</td></tr><tr><td>M2</td><td class="n">3</td><td class="n">300</td></tr><tr><td>M3</td><td class="n">2.4</td><td class="n">240</td></tr><tr><td>A</td><td class="n">2</td><td class="n">200</td></tr><tr><td>K</td><td class="n">1.6</td><td class="n">160</td></tr><tr><td>Q</td><td class="n">1</td><td class="n">100</td></tr><tr><td>J</td><td class="n">0.4</td><td class="n">40</td></tr></tbody></table></div>
+<ul><li>5 條固定線（上／中／下／兩條對角），每線取最高獎；WW 3 連 5x。單轉線獎上限 25x（全盤 WW）。</li></ul>
+<h3>3.2 符號分布</h3>
+<h4>3.2.1 初始轉輪</h4>
+<p>R1～R3 各模式共用同一組輪帶；NB／EB 每格權重 1，以下為精確值（輪帶張數 ÷ 輪帶長度）。Super Feature 另有停輪權重（2.0.0.0 起偏重連線停點），實際出現比例不同於下表。</p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th></tr></thead><tbody><tr><td>WW</td><td class="n">7.32%</td><td class="n">10.05%</td><td class="n">10.34%</td></tr><tr><td>M1</td><td class="n">11.38%</td><td class="n">11.48%</td><td class="n">11.33%</td></tr><tr><td>M2</td><td class="n">10.57%</td><td class="n">12.44%</td><td class="n">13.30%</td></tr><tr><td>M3</td><td class="n">11.38%</td><td class="n">11.96%</td><td class="n">13.79%</td></tr><tr><td>A</td><td class="n">14.63%</td><td class="n">14.35%</td><td class="n">11.33%</td></tr><tr><td>K</td><td class="n">15.45%</td><td class="n">13.40%</td><td class="n">13.30%</td></tr><tr><td>Q</td><td class="n">13.82%</td><td class="n">13.88%</td><td class="n">13.30%</td></tr><tr><td>J</td><td class="n">15.45%</td><td class="n">12.44%</td><td class="n">13.30%</td></tr><tr><td>輪帶長度</td><td class="n">123</td><td class="n">209</td><td class="n">203</td></tr></tbody></table></div>
+<h3>3.3 符號堆疊 RNG 比例</h3>
+<h4>3.3.1 分輪 / 分符號</h4>
+<p>每個停輪位置產生 3 格視窗；每個符號取最長連續段計 1 次（輪帶精確值，各停點等機率）。</p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th>堆疊</th><th class="n">R1</th><th class="n">R2</th><th class="n">R3</th></tr></thead><tbody><tr><td>WW</td><td>2 堆疊</td><td class="n">4.88%</td><td class="n">6.70%</td><td class="n">6.90%</td></tr><tr><td>WW</td><td>3 堆疊</td><td class="n">2.44%</td><td class="n">3.35%</td><td class="n">3.45%</td></tr><tr><td>M1</td><td>2 堆疊</td><td class="n">9.76%</td><td class="n">9.57%</td><td class="n">7.88%</td></tr><tr><td>M1</td><td>3 堆疊</td><td class="n">1.63%</td><td class="n">1.91%</td><td class="n">3.45%</td></tr><tr><td>M2</td><td>2 堆疊</td><td class="n">8.13%</td><td class="n">10.53%</td><td class="n">8.87%</td></tr><tr><td>M2</td><td>3 堆疊</td><td class="n">0.81%</td><td class="n">1.91%</td><td class="n">4.43%</td></tr><tr><td>M3</td><td>2 堆疊</td><td class="n">11.38%</td><td class="n">9.57%</td><td class="n">9.85%</td></tr><tr><td>M3</td><td>3 堆疊</td><td class="n">0.00%</td><td class="n">2.39%</td><td class="n">3.94%</td></tr><tr><td>A</td><td>2 堆疊</td><td class="n">13.01%</td><td class="n">12.44%</td><td class="n">7.88%</td></tr><tr><td>A</td><td>3 堆疊</td><td class="n">1.63%</td><td class="n">1.91%</td><td class="n">3.45%</td></tr><tr><td>K</td><td>2 堆疊</td><td class="n">13.01%</td><td class="n">10.53%</td><td class="n">8.87%</td></tr><tr><td>K</td><td>3 堆疊</td><td class="n">1.63%</td><td class="n">2.87%</td><td class="n">3.94%</td></tr><tr><td>Q</td><td>2 堆疊</td><td class="n">13.01%</td><td class="n">11.48%</td><td class="n">8.87%</td></tr><tr><td>Q</td><td>3 堆疊</td><td class="n">0.81%</td><td class="n">1.91%</td><td class="n">4.43%</td></tr><tr><td>J</td><td>2 堆疊</td><td class="n">14.63%</td><td class="n">10.53%</td><td class="n">8.87%</td></tr><tr><td>J</td><td>3 堆疊</td><td class="n">0.81%</td><td class="n">1.91%</td><td class="n">4.43%</td></tr></tbody></table></div>
+<h3>3.4 獎項 RTP / Hit Rate 占比</h3>
+<h4>3.4.1 依符號（只有 3 連）</h4>
+<p>RTP 占比＝該符號線獎×當轉倍數的合計 ÷ 場景總得分；次數占比＝該符號中獎線數 ÷ 總中獎線數。</p>
+<div class="tbl-wrap"><table><thead><tr><th>符號</th><th class="n">NB RTP 占比</th><th class="n">NB 次數占比</th><th class="n">SF RTP 占比</th><th class="n">SF 次數占比</th></tr></thead><tbody><tr><td>WW</td><td class="n">1.14%</td><td class="n">0.58%</td><td class="n">31.15%</td><td class="n">13.54%</td></tr><tr><td>M1</td><td class="n">15.26%</td><td class="n">8.37%</td><td class="n">11.16%</td><td class="n">6.08%</td></tr><tr><td>M2</td><td class="n">15.63%</td><td class="n">10.36%</td><td class="n">11.59%</td><td class="n">8.33%</td></tr><tr><td>M3</td><td class="n">16.18%</td><td class="n">12.55%</td><td class="n">10.21%</td><td class="n">9.11%</td></tr><tr><td>A</td><td class="n">15.63%</td><td class="n">14.01%</td><td class="n">14.57%</td><td class="n">15.75%</td></tr><tr><td>K</td><td class="n">15.69%</td><td class="n">16.77%</td><td class="n">10.83%</td><td class="n">14.42%</td></tr><tr><td>Q</td><td class="n">12.70%</td><td class="n">17.58%</td><td class="n">7.00%</td><td class="n">14.69%</td></tr><tr><td>J</td><td class="n">7.77%</td><td class="n">19.76%</td><td class="n">3.49%</td><td class="n">18.09%</td></tr><tr><td>合計</td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td><td class="n">100.00%</td></tr></tbody></table></div>
+<h4>3.4.2 每轉中獎線數</h4>
+<div class="tbl-wrap"><table><thead><tr><th>中獎線數</th><th class="n">NB（92A）</th><th class="n">SF（Card-On）</th><th class="n">自然</th></tr></thead><tbody><tr><td>0</td><td class="n">88.61%</td><td class="n">31.19%</td><td class="n">79.51%</td></tr><tr><td>1</td><td class="n">6.85%</td><td class="n">15.05%</td><td class="n">11.09%</td></tr><tr><td>2</td><td class="n">2.80%</td><td class="n">15.60%</td><td class="n">5.34%</td></tr><tr><td>3</td><td class="n">1.16%</td><td class="n">14.51%</td><td class="n">2.55%</td></tr><tr><td>4</td><td class="n">0.39%</td><td class="n">12.58%</td><td class="n">0.98%</td></tr><tr><td>5</td><td class="n">0.19%</td><td class="n">11.07%</td><td class="n">0.53%</td></tr></tbody></table></div>
+<h3>3.5 Hit Rate 彙總</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">樣本數</th><th class="n">中獎數</th><th class="n">Hit Rate</th></tr></thead><tbody><tr><td>NB（92A）</td><td>一次付費 Spin</td><td class="n">1,000,000</td><td class="n">113,932</td><td class="n">11.39%</td></tr><tr><td>EB1（92A）</td><td>一次付費 Spin</td><td class="n">1,000,000</td><td class="n">115,171</td><td class="n">11.52%</td></tr><tr><td>EB2（92A）</td><td>一次付費 Spin</td><td class="n">1,000,000</td><td class="n">146,007</td><td class="n">14.60%</td></tr><tr><td>SF</td><td>一次 SF 轉</td><td class="n">5,000,000</td><td class="n">3,440,455</td><td class="n">68.81%</td></tr></tbody></table></div>
+<ul><li>NB／EB 一局只有一轉，局與轉的 Hit Rate 相同；SF 以單轉計，與 NB 單位相同但 SF 有卡片下限（每局至少 50x 底注），不可直接比鬆緊。</li></ul>
+<h3>3.6 門檻機率</h3>
+<h4>SF 離場分布</h4>
+<p>百分比＝一次購買 5 轉總得分 ÷ 購買成本（250 × 底注）。</p>
+<p>表一　區間分布</p>
+<div class="tbl-wrap"><table><thead><tr><th>離場區間</th><th class="n">等同底注倍數</th><th class="n">次數</th><th class="n">區間機率</th><th class="n">累積</th></tr></thead><tbody><tr><td>&lt;20%</td><td class="n">&lt; 50x</td><td class="n">0</td><td class="n">0.00%</td><td class="n">0.00%</td></tr><tr><td>20~40%</td><td class="n">50~100x</td><td class="n">409,689</td><td class="n">40.97%</td><td class="n">40.97%</td></tr><tr><td>40~60%</td><td class="n">100~150x</td><td class="n">247,997</td><td class="n">24.80%</td><td class="n">65.77%</td></tr><tr><td>60~80%</td><td class="n">150~200x</td><td class="n">69,144</td><td class="n">6.91%</td><td class="n">72.68%</td></tr><tr><td>80~100%</td><td class="n">200~250x</td><td class="n">13,468</td><td class="n">1.35%</td><td class="n">74.03%</td></tr><tr><td>100~150%</td><td class="n">250~375x</td><td class="n">95,239</td><td class="n">9.52%</td><td class="n">83.55%</td></tr><tr><td>150~200%</td><td class="n">375~500x</td><td class="n">30,238</td><td class="n">3.02%</td><td class="n">86.58%</td></tr><tr><td>200~300%</td><td class="n">500~750x</td><td class="n">82,890</td><td class="n">8.29%</td><td class="n">94.87%</td></tr><tr><td>300~500%</td><td class="n">750~1,250x</td><td class="n">38,152</td><td class="n">3.82%</td><td class="n">98.68%</td></tr><tr><td>&gt;500%</td><td class="n">&gt; 1,250x</td><td class="n">13,183</td><td class="n">1.32%</td><td class="n">100.00%</td></tr><tr><td>合計</td><td class="n">—</td><td class="n">1,000,000</td><td class="n">100.00%</td><td class="n">—</td></tr></tbody></table></div>
+<p>表二　累積門檻</p>
+<div class="tbl-wrap"><table><thead><tr><th>門檻</th><th class="n">次數</th><th class="n">機率</th></tr></thead><tbody><tr><td>&lt;20%</td><td class="n">0</td><td class="n">0.00%</td></tr><tr><td>&lt;40%</td><td class="n">409,689</td><td class="n">40.97%</td></tr><tr><td>&lt;60%</td><td class="n">657,686</td><td class="n">65.77%</td></tr><tr><td>&lt;80%</td><td class="n">726,830</td><td class="n">72.68%</td></tr><tr><td>&lt;100%（賠錢）</td><td class="n">740,298</td><td class="n">74.03%</td></tr><tr><td>&gt;100%（贏錢率）</td><td class="n">259,702</td><td class="n">25.97%</td></tr><tr><td>&gt;150%</td><td class="n">164,463</td><td class="n">16.45%</td></tr><tr><td>&gt;200%</td><td class="n">134,225</td><td class="n">13.42%</td></tr><tr><td>&gt;300%</td><td class="n">51,335</td><td class="n">5.13%</td></tr><tr><td>&gt;500%</td><td class="n">13,183</td><td class="n">1.32%</td></tr></tbody></table></div>
+<ul><li>恰好回本（= 100%）的次數歸入 100~150% 區間；本作得分為 0.1 底注的整數倍，恰好 250x 的機率極低。</li></ul>
+<h3>3.7 最大倍數</h3>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th>統計單位</th><th class="n">實測最大（× 底注）</th><th class="n">換算成本倍數</th><th class="n">卡片上限（× 底注）</th></tr></thead><tbody><tr><td>NB</td><td>一次付費 Spin</td><td class="n">264.0</td><td class="n">264.0x</td><td class="n">2,000</td></tr><tr><td>EB1（1.5x）</td><td>一次付費 Spin</td><td class="n">1,076.0</td><td class="n">717.3x</td><td class="n">3,000</td></tr><tr><td>EB2（8x）</td><td>一次付費 Spin</td><td class="n">17,910.0</td><td class="n">2,238.8x</td><td class="n">20,000</td></tr><tr><td>SF</td><td>一次購買全程</td><td class="n">19,793.6</td><td class="n">79.2x</td><td class="n">20,000</td></tr><tr><td>SF</td><td>單一次 SF 轉</td><td class="n">13,025.0</td><td class="n">—</td><td class="n">—</td></tr></tbody></table></div>
+<ul><li>卡片上限換算成本：NB 2,000x、EB1 2,000x、EB2 2,500x、SF 80x（game_rule 附錄 B 已確認以卡片為準）。</li><li>10⁶ 局樣本下 NB 只到 264x，離 2,000x 上限甚遠；(1000, 2000] 區間卡片權重 222／10⁹，約需 10⁸ 局以上才會出現。</li></ul></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><h3>4.1 摘要</h3>
+<ul><li>區間：H026 標準 64 區間 (Lower, Upper]，倍率＝一局總得分 ÷ 底注。</li><li>圖一 BG＝NB（92A，Card-On）；圖二本作無自然 FG，只畫 <strong>BF 系列＝Super Feature 一次購買 5 轉總得分 ÷ 底注</strong>；圖三為兩者累積。</li><li>樣本：NB 1,000,000 局、SF 1,000,000 次購買；每組區間合計＝100%（已驗證）。</li><li>EB1／EB2 的分布列在 4.2 數值表。</li></ul>
+<div class="axisfix">
+  <span class="pill">X 軸：固定 64 區間（全部標出）</span>
+  <span class="pill">BG Y 軸：固定 0–1%</span>
+  <span class="pill">FG Y 軸：固定 0–16%</span>
+  <span class="pill">超出上限不繪製</span>
+</div>
+<h4>BG 倍率線型</h4>
+<p class="cap">縱軸固定 0–1%。超過 1% 的低倍區間不繪製，以放大尾段細節。折線斷開處代表該區間為零，非插值。</p>
+<p class="warn" id="clipnote"></p>
+<div class="card"><div class="plot" id="p1"></div></div>
+<h4>FG 倍率線型</h4>
+<p class="cap">縱軸固定 0–16%。</p>
+<div class="card"><div class="legend" id="lg2"></div><div class="plot" id="p2"></div></div>
+<h4>尾段厚度：P(倍率 &gt; 區間上限)</h4>
+<p class="cap">各場景在自身樣本內的累積機率，縱軸固定 0–100%。曲線越早墜地，尾段越薄。</p>
+<div class="card"><div class="legend" id="lg3"></div><div class="plot" id="p3"></div></div>
+<h3>4.2 倍率線型分布</h3>
+<div class="tbl-wrap"><table><thead><tr><th>區間</th><th class="n">NB（92A）</th><th class="n">EB1（92A）</th><th class="n">EB2（92A）</th><th class="n">SF</th></tr></thead><tbody><tr><td>(-1, 0]</td><td class="n">88.6068%</td><td class="n">88.4829%</td><td class="n">85.3993%</td><td class="n">0.0000%</td></tr><tr><td>(0, 1]</td><td class="n">1.1534%</td><td class="n">0.4033%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(1, 2]</td><td class="n">1.6650%</td><td class="n">1.1590%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(2, 3]</td><td class="n">1.1614%</td><td class="n">0.6053%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(3, 4]</td><td class="n">1.2268%</td><td class="n">1.1006%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(4, 5]</td><td class="n">1.0279%</td><td class="n">1.0496%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(5, 6]</td><td class="n">0.7961%</td><td class="n">0.9230%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(6, 7]</td><td class="n">0.1942%</td><td class="n">0.2023%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(7, 8]</td><td class="n">0.8343%</td><td class="n">0.9444%</td><td class="n">3.3842%</td><td class="n">0.0000%</td></tr><tr><td>(8, 9]</td><td class="n">0.3068%</td><td class="n">0.3478%</td><td class="n">0.0000%</td><td class="n">0.0000%</td></tr><tr><td>(9, 10]</td><td class="n">0.6307%</td><td class="n">0.8365%</td><td class="n">2.5229%</td><td class="n">0.0000%</td></tr><tr><td>(10, 15]</td><td class="n">0.9796%</td><td class="n">1.4614%</td><td class="n">0.4077%</td><td class="n">0.0000%</td></tr><tr><td>(15, 20]</td><td class="n">0.5793%</td><td class="n">0.9120%</td><td class="n">1.3921%</td><td class="n">0.0000%</td></tr><tr><td>(20, 25]</td><td class="n">0.2403%</td><td class="n">0.5081%</td><td class="n">0.8615%</td><td class="n">0.0000%</td></tr><tr><td>(25, 30]</td><td class="n">0.2140%</td><td class="n">0.3484%</td><td class="n">0.6964%</td><td class="n">0.0000%</td></tr><tr><td>(30, 35]</td><td class="n">0.0411%</td><td class="n">0.0655%</td><td class="n">0.4620%</td><td class="n">0.0000%</td></tr><tr><td>(35, 40]</td><td class="n">0.0958%</td><td class="n">0.2110%</td><td class="n">0.4091%</td><td class="n">0.0000%</td></tr><tr><td>(40, 45]</td><td class="n">0.0206%</td><td class="n">0.0722%</td><td class="n">0.8570%</td><td class="n">0.0000%</td></tr><tr><td>(45, 50]</td><td class="n">0.1198%</td><td class="n">0.1063%</td><td class="n">0.2998%</td><td class="n">0.0000%</td></tr><tr><td>(50, 60]</td><td class="n">0.0434%</td><td class="n">0.0957%</td><td class="n">0.3161%</td><td class="n">8.4434%</td></tr><tr><td>(60, 70]</td><td class="n">0.0044%</td><td class="n">0.0106%</td><td class="n">0.0889%</td><td class="n">6.7407%</td></tr><tr><td>(70, 80]</td><td class="n">0.0204%</td><td class="n">0.0364%</td><td class="n">0.1580%</td><td class="n">5.8879%</td></tr><tr><td>(80, 90]</td><td class="n">0.0091%</td><td class="n">0.0250%</td><td class="n">1.4878%</td><td class="n">7.1054%</td></tr><tr><td>(90, 100]</td><td class="n">0.0116%</td><td class="n">0.0357%</td><td class="n">0.2217%</td><td class="n">13.2758%</td></tr><tr><td>(100, 120]</td><td class="n">0.0093%</td><td class="n">0.0198%</td><td class="n">0.0617%</td><td class="n">14.7428%</td></tr><tr><td>(120, 140]</td><td class="n">0.0025%</td><td class="n">0.0036%</td><td class="n">0.0086%</td><td class="n">7.8136%</td></tr><tr><td>(140, 160]</td><td class="n">0.0021%</td><td class="n">0.0141%</td><td class="n">0.0169%</td><td class="n">3.6091%</td></tr><tr><td>(160, 180]</td><td class="n">0.0021%</td><td class="n">0.0033%</td><td class="n">0.5165%</td><td class="n">2.0642%</td></tr><tr><td>(180, 200]</td><td class="n">0.0004%</td><td class="n">0.0047%</td><td class="n">0.0071%</td><td class="n">3.0495%</td></tr><tr><td>(200, 250]</td><td class="n">0.0007%</td><td class="n">0.0052%</td><td class="n">0.0024%</td><td class="n">1.3056%</td></tr><tr><td>(250, 300]</td><td class="n">0.0001%</td><td class="n">0.0027%</td><td class="n">0.2224%</td><td class="n">7.6881%</td></tr><tr><td>(300, 350]</td><td class="n">0.0000%</td><td class="n">0.0003%</td><td class="n">0.0649%</td><td class="n">1.1582%</td></tr><tr><td>(350, 400]</td><td class="n">0.0000%</td><td class="n">0.0002%</td><td class="n">0.0000%</td><td class="n">1.3197%</td></tr><tr><td>(400, 450]</td><td class="n">0.0000%</td><td class="n">0.0004%</td><td class="n">0.0864%</td><td class="n">1.0559%</td></tr><tr><td>(450, 500]</td><td class="n">0.0000%</td><td class="n">0.0020%</td><td class="n">0.0000%</td><td class="n">1.3235%</td></tr><tr><td>(500, 550]</td><td class="n">0.0000%</td><td class="n">0.0002%</td><td class="n">0.0000%</td><td class="n">3.8188%</td></tr><tr><td>(550, 600]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">1.9646%</td></tr><tr><td>(600, 650]</td><td class="n">0.0000%</td><td class="n">0.0004%</td><td class="n">0.0000%</td><td class="n">1.3225%</td></tr><tr><td>(650, 700]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.6303%</td></tr><tr><td>(700, 750]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.5494%</td></tr><tr><td>(750, 800]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.8892%</td></tr><tr><td>(800, 850]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0275%</td><td class="n">0.4971%</td></tr><tr><td>(850, 900]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.4938%</td></tr><tr><td>(900, 950]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.3725%</td></tr><tr><td>(950, 1000]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.6839%</td></tr><tr><td>(1000, 2000]</td><td class="n">0.0000%</td><td class="n">0.0001%</td><td class="n">0.0000%</td><td class="n">1.7177%</td></tr><tr><td>(2000, 3000]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0101%</td><td class="n">0.1810%</td></tr><tr><td>(3000, 4000]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.1570%</td></tr><tr><td>(4000, 5000]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0067%</td><td class="n">0.1138%</td></tr><tr><td>(8000, 9000]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0033%</td><td class="n">0.0000%</td></tr><tr><td>(10000, 20000]</td><td class="n">0.0000%</td><td class="n">0.0000%</td><td class="n">0.0010%</td><td class="n">0.0250%</td></tr><tr><td>合計</td><td class="n">100.0000%</td><td class="n">100.0000%</td><td class="n">100.0000%</td><td class="n">100.0000%</td></tr></tbody></table></div>
+<ul><li>只列至少一欄非零的區間；未列出的區間四欄皆為 0。</li></ul>
+<h3>4.3 觀察</h3>
+<ul><li>NB 有 88.61% 的局不得分（卡片 (-1, 0] 區間），得分集中在 1x～20x。</li><li>SF 卡片最低區間為 (50, 60]，所以 SF 不會低於 50x 底注（0.2 倍購買價）；分布主體落在 100x～1,000x。</li></ul></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><h3>5.1 Super Feature 重轉指標</h3>
+<p>Card-On＝92A 正式卡片（10⁶ 次購買、500 萬轉）；自然＝卡片關閉（10⁷ 次購買）。</p>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">Card-On（2.0.0.0）</th><th class="n">Card-On（1.0.1.3，調整前）</th><th class="n">自然機率（2.0.0.0）</th></tr></thead><tbody><tr><td>Hit Rate（每轉）</td><td class="n">68.81%</td><td class="n">26.82%</td><td class="n">75.72%</td></tr><tr><td>用到重轉的機率（每轉）</td><td class="n">12.19%</td><td class="n">15.98%</td><td class="n">19.68%</td></tr><tr><td>一場 SF 用到重轉的機率</td><td class="n">46.43%</td><td class="n">72.05%</td><td class="n">66.60%</td></tr><tr><td>重轉平均次數</td><td class="n">3.42 次</td><td class="n">6.41 次</td><td class="n">3.50 次</td></tr><tr><td>重轉每一次的平均倍數</td><td class="n">×4.15</td><td class="n">×12.74</td><td class="n">×4.83</td></tr><tr><td>沒重轉時的平均倍數（有中獎才算）</td><td class="n">×3.0</td><td class="n">×25.5</td><td class="n">×4.2</td></tr><tr><td>用到重轉那一轉的平均得分</td><td class="n">127.2x 底注</td><td class="n">214.4x 底注</td><td class="n">193.6x 底注</td></tr><tr><td>沒重轉的中獎轉平均得分</td><td class="n">54.1x 底注</td><td class="n">111.2x 底注</td><td class="n">106.2x 底注</td></tr></tbody></table></div>
+<ul><li>得分＝線獎 × 到該轉為止的累積倍數（SF 倍數累積）。換成購買價倍數 ÷ 250。</li><li>2.0.0.0 調整目標：每轉 Hit ≥ 60%、每轉重轉最多砍 1/3（≥ 10.7%）、減少「極小線獎 × 超大倍數」。</li><li>自然值與模型一致：自然 RTP 195.3%（模型 Pay Combo 理論 195.4%）、中獎時平均線獎 6.87x（窮舉精確值 6.87x）。</li></ul>
+<h4>一場 SF 用到重轉的轉數分布</h4>
+<div class="tbl-wrap"><table><thead><tr><th>用到重轉的轉數</th><th class="n">Card-On</th><th class="n">自然</th></tr></thead><tbody><tr><td>0</td><td class="n">53.57%</td><td class="n">33.40%</td></tr><tr><td>1</td><td class="n">34.30%</td><td class="n">40.98%</td></tr><tr><td>2</td><td class="n">9.97%</td><td class="n">20.07%</td></tr><tr><td>3</td><td class="n">1.94%</td><td class="n">4.91%</td></tr><tr><td>4</td><td class="n">0.21%</td><td class="n">0.60%</td></tr><tr><td>5</td><td class="n">0.01%</td><td class="n">0.03%</td></tr></tbody></table></div>
+<h4>重轉次數分布（SF）</h4>
+<div class="tbl-wrap"><table><thead><tr><th>重轉次數 N</th><th class="n">Card-On</th><th class="n">自然</th></tr></thead><tbody><tr><td>3</td><td class="n">73.19%</td><td class="n">69.99%</td></tr><tr><td>4</td><td class="n">18.65%</td><td class="n">20.00%</td></tr><tr><td>5</td><td class="n">5.10%</td><td class="n">6.01%</td></tr><tr><td>6</td><td class="n">1.61%</td><td class="n">2.00%</td></tr><tr><td>7</td><td class="n">0.62%</td><td class="n">0.80%</td></tr><tr><td>8</td><td class="n">0.36%</td><td class="n">0.50%</td></tr><tr><td>9</td><td class="n">0.20%</td><td class="n">0.30%</td></tr><tr><td>10</td><td class="n">0.20%</td><td class="n">0.30%</td></tr><tr><td>20</td><td class="n">0.04%</td><td class="n">0.08%</td></tr><tr><td>50</td><td class="n">0.01%</td><td class="n">0.02%</td></tr></tbody></table></div>
+<h3>5.2 R4 結果（有線獎的轉）</h3>
+<p>各模式有線獎時，R4 停在各倍數／重轉球的比例（Card-On 92A）。</p>
+<div class="tbl-wrap"><table><thead><tr><th>R4 結果</th><th class="n">NB</th><th class="n">EB1</th><th class="n">EB2</th><th class="n">SF</th></tr></thead><tbody><tr><td>1X</td><td class="n">31.72%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">0.00%</td></tr><tr><td>2X</td><td class="n">28.17%</td><td class="n">39.77%</td><td class="n">0.00%</td><td class="n">60.88%</td></tr><tr><td>3X</td><td class="n">25.67%</td><td class="n">36.99%</td><td class="n">0.00%</td><td class="n">12.23%</td></tr><tr><td>5X</td><td class="n">6.86%</td><td class="n">10.53%</td><td class="n">0.00%</td><td class="n">5.68%</td></tr><tr><td>10X</td><td class="n">2.31%</td><td class="n">3.77%</td><td class="n">29.28%</td><td class="n">2.19%</td></tr><tr><td>15X</td><td class="n">0.53%</td><td class="n">0.95%</td><td class="n">19.22%</td><td class="n">0.57%</td></tr><tr><td>20X</td><td class="n">0.23%</td><td class="n">0.34%</td><td class="n">25.15%</td><td class="n">0.34%</td></tr><tr><td>25X</td><td class="n">0.09%</td><td class="n">0.14%</td><td class="n">15.33%</td><td class="n">0.20%</td></tr><tr><td>50X</td><td class="n">0.04%</td><td class="n">0.08%</td><td class="n">4.00%</td><td class="n">0.10%</td></tr><tr><td>100X</td><td class="n">0.01%</td><td class="n">0.02%</td><td class="n">1.52%</td><td class="n">0.09%</td></tr><tr><td>500X</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">0.05%</td><td class="n">0.02%</td></tr><tr><td>重轉球</td><td class="n">4.36%</td><td class="n">7.41%</td><td class="n">5.45%</td><td class="n">17.72%</td></tr></tbody></table></div>
+<h3>5.3 一般押注的重轉指標（Card-On 92A）</h3>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">NB</th><th class="n">EB1</th><th class="n">EB2</th></tr></thead><tbody><tr><td>用到重轉的機率（每轉）</td><td class="n">0.497%</td><td class="n">0.853%</td><td class="n">0.796%</td></tr><tr><td>重轉平均次數</td><td class="n">4.94</td><td class="n">4.79</td><td class="n">6.50</td></tr><tr><td>重轉每一次的平均倍數</td><td class="n">×5.77</td><td class="n">×6.24</td><td class="n">×32.84</td></tr><tr><td>沒重轉時的平均倍數（有中獎才算）</td><td class="n">×2.51</td><td class="n">×3.37</td><td class="n">×19.49</td></tr><tr><td>用到重轉那一轉的平均得分</td><td class="n">34.7x</td><td class="n">42.4x</td><td class="n">283.6x</td></tr><tr><td>沒重轉的中獎轉平均得分</td><td class="n">6.9x</td><td class="n">9.5x</td><td class="n">37.6x</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><h3>6.2 與規則文件對照</h3>
+<div class="tbl-wrap"><table><thead><tr><th>項目</th><th class="n">game_rule</th><th>實測</th><th>結果</th></tr></thead><tbody><tr><td>線獎（3 連、5 線、WW 替代）</td><td class="n">2.3、4</td><td>符號獎金加總＝總得分</td><td>✅</td></tr><tr><td>EB1 不出 1X</td><td class="n">8.1</td><td>EB1 有線獎時 1X 占比 0.00%</td><td>✅</td></tr><tr><td>EB2 只出 10X 以上</td><td class="n">8.1</td><td>EB2 1X～5X 占比 0.00%</td><td>✅</td></tr><tr><td>SF 5 次、倍數累積</td><td class="n">8.2</td><td>一次購買 5 轉</td><td>✅</td></tr><tr><td>SF 不出 1X</td><td class="n">5.1</td><td>SF 有線獎時 1X 占比 0.00%</td><td>✅</td></tr><tr><td>卡片 Retry 上限 10,000</td><td class="n">5.3</td><td>各組超限 0 次</td><td>✅</td></tr></tbody></table></div>
+<h3>6.4 資料使用建議</h3>
+<ul><li>本報告為 10⁶ 局量級的快速統計，高倍區間（≥ 1,000x）與最大倍數不可視為定論；正式數字以 10⁸ 局（SF 10⁷）重跑為準。</li><li>94A 的 SF 與 92A 共用卡片，SF 只跑一組。</li><li>自然機率欄僅供對照卡片影響，不代表玩家實際體驗。</li></ul></div>
+</div>
+
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+const CHARTS=[];
+function activate(k,focus){
+  tabs.forEach((t,i)=>{
+    const on=i===k;
+    t.setAttribute('aria-selected',on?'true':'false');
+    t.tabIndex=on?0:-1;
+    document.getElementById('panel-'+i).hidden=!on;
+  });
+  if(focus) tabs[k].focus();
+  const p=document.getElementById('panel-'+k);
+  CHARTS.forEach(c=>{ if(p.contains(c.host)) c.draw(true); });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{
+    let k=null;
+    if(e.key==='ArrowRight')k=(i+1)%tabs.length;
+    else if(e.key==='ArrowLeft')k=(i-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')k=0; else if(e.key==='End')k=tabs.length-1;
+    if(k!==null){e.preventDefault(); activate(k,true);}
+  });
+});
+
+const CH={"anchor": "### 4.2", "rows": [{"i": 0, "lab": "(-1, 0]", "bgH": 88.6068, "fgH": 0, "bfH": 0.0, "bgC": 886068, "fgC": 0, "bfC": 0}, {"i": 1, "lab": "(0, 1]", "bgH": 1.1534, "fgH": 0, "bfH": 0.0, "bgC": 11534, "fgC": 0, "bfC": 0}, {"i": 2, "lab": "(1, 2]", "bgH": 1.665, "fgH": 0, "bfH": 0.0, "bgC": 16650, "fgC": 0, "bfC": 0}, {"i": 3, "lab": "(2, 3]", "bgH": 1.1614, "fgH": 0, "bfH": 0.0, "bgC": 11614, "fgC": 0, "bfC": 0}, {"i": 4, "lab": "(3, 4]", "bgH": 1.2268, "fgH": 0, "bfH": 0.0, "bgC": 12268, "fgC": 0, "bfC": 0}, {"i": 5, "lab": "(4, 5]", "bgH": 1.0279, "fgH": 0, "bfH": 0.0, "bgC": 10279, "fgC": 0, "bfC": 0}, {"i": 6, "lab": "(5, 6]", "bgH": 0.7961, "fgH": 0, "bfH": 0.0, "bgC": 7961, "fgC": 0, "bfC": 0}, {"i": 7, "lab": "(6, 7]", "bgH": 0.1942, "fgH": 0, "bfH": 0.0, "bgC": 1942, "fgC": 0, "bfC": 0}, {"i": 8, "lab": "(7, 8]", "bgH": 0.8343, "fgH": 0, "bfH": 0.0, "bgC": 8343, "fgC": 0, "bfC": 0}, {"i": 9, "lab": "(8, 9]", "bgH": 0.3068, "fgH": 0, "bfH": 0.0, "bgC": 3068, "fgC": 0, "bfC": 0}, {"i": 10, "lab": "(9, 10]", "bgH": 0.6307, "fgH": 0, "bfH": 0.0, "bgC": 6307, "fgC": 0, "bfC": 0}, {"i": 11, "lab": "(10, 15]", "bgH": 0.9796, "fgH": 0, "bfH": 0.0, "bgC": 9796, "fgC": 0, "bfC": 0}, {"i": 12, "lab": "(15, 20]", "bgH": 0.5793, "fgH": 0, "bfH": 0.0, "bgC": 5793, "fgC": 0, "bfC": 0}, {"i": 13, "lab": "(20, 25]", "bgH": 0.2403, "fgH": 0, "bfH": 0.0, "bgC": 2403, "fgC": 0, "bfC": 0}, {"i": 14, "lab": "(25, 30]", "bgH": 0.214, "fgH": 0, "bfH": 0.0, "bgC": 2140, "fgC": 0, "bfC": 0}, {"i": 15, "lab": "(30, 35]", "bgH": 0.0411, "fgH": 0, "bfH": 0.0, "bgC": 411, "fgC": 0, "bfC": 0}, {"i": 16, "lab": "(35, 40]", "bgH": 0.0958, "fgH": 0, "bfH": 0.0, "bgC": 958, "fgC": 0, "bfC": 0}, {"i": 17, "lab": "(40, 45]", "bgH": 0.0206, "fgH": 0, "bfH": 0.0, "bgC": 206, "fgC": 0, "bfC": 0}, {"i": 18, "lab": "(45, 50]", "bgH": 0.1198, "fgH": 0, "bfH": 0.0, "bgC": 1198, "fgC": 0, "bfC": 0}, {"i": 19, "lab": "(50, 60]", "bgH": 0.0434, "fgH": 0, "bfH": 8.4434, "bgC": 434, "fgC": 0, "bfC": 84434}, {"i": 20, "lab": "(60, 70]", "bgH": 0.0044, "fgH": 0, "bfH": 6.7407, "bgC": 44, "fgC": 0, "bfC": 67407}, {"i": 21, "lab": "(70, 80]", "bgH": 0.0204, "fgH": 0, "bfH": 5.8879, "bgC": 204, "fgC": 0, "bfC": 58879}, {"i": 22, "lab": "(80, 90]", "bgH": 0.0091, "fgH": 0, "bfH": 7.1054, "bgC": 91, "fgC": 0, "bfC": 71054}, {"i": 23, "lab": "(90, 100]", "bgH": 0.0116, "fgH": 0, "bfH": 13.2758, "bgC": 116, "fgC": 0, "bfC": 132758}, {"i": 24, "lab": "(100, 120]", "bgH": 0.0093, "fgH": 0, "bfH": 14.7428, "bgC": 93, "fgC": 0, "bfC": 147428}, {"i": 25, "lab": "(120, 140]", "bgH": 0.0025, "fgH": 0, "bfH": 7.8136, "bgC": 25, "fgC": 0, "bfC": 78136}, {"i": 26, "lab": "(140, 160]", "bgH": 0.0021, "fgH": 0, "bfH": 3.6091, "bgC": 21, "fgC": 0, "bfC": 36091}, {"i": 27, "lab": "(160, 180]", "bgH": 0.0021, "fgH": 0, "bfH": 2.0642, "bgC": 21, "fgC": 0, "bfC": 20642}, {"i": 28, "lab": "(180, 200]", "bgH": 0.0004, "fgH": 0, "bfH": 3.0495, "bgC": 4, "fgC": 0, "bfC": 30495}, {"i": 29, "lab": "(200, 250]", "bgH": 0.0007, "fgH": 0, "bfH": 1.3056, "bgC": 7, "fgC": 0, "bfC": 13056}, {"i": 30, "lab": "(250, 300]", "bgH": 0.0001, "fgH": 0, "bfH": 7.6881, "bgC": 1, "fgC": 0, "bfC": 76881}, {"i": 31, "lab": "(300, 350]", "bgH": 0.0, "fgH": 0, "bfH": 1.1582, "bgC": 0, "fgC": 0, "bfC": 11582}, {"i": 32, "lab": "(350, 400]", "bgH": 0.0, "fgH": 0, "bfH": 1.3197, "bgC": 0, "fgC": 0, "bfC": 13197}, {"i": 33, "lab": "(400, 450]", "bgH": 0.0, "fgH": 0, "bfH": 1.0559, "bgC": 0, "fgC": 0, "bfC": 10559}, {"i": 34, "lab": "(450, 500]", "bgH": 0.0, "fgH": 0, "bfH": 1.3235, "bgC": 0, "fgC": 0, "bfC": 13235}, {"i": 35, "lab": "(500, 550]", "bgH": 0.0, "fgH": 0, "bfH": 3.8188, "bgC": 0, "fgC": 0, "bfC": 38188}, {"i": 36, "lab": "(550, 600]", "bgH": 0.0, "fgH": 0, "bfH": 1.9646, "bgC": 0, "fgC": 0, "bfC": 19646}, {"i": 37, "lab": "(600, 650]", "bgH": 0.0, "fgH": 0, "bfH": 1.3225, "bgC": 0, "fgC": 0, "bfC": 13225}, {"i": 38, "lab": "(650, 700]", "bgH": 0.0, "fgH": 0, "bfH": 0.6303, "bgC": 0, "fgC": 0, "bfC": 6303}, {"i": 39, "lab": "(700, 750]", "bgH": 0.0, "fgH": 0, "bfH": 0.5494, "bgC": 0, "fgC": 0, "bfC": 5494}, {"i": 40, "lab": "(750, 800]", "bgH": 0.0, "fgH": 0, "bfH": 0.8892, "bgC": 0, "fgC": 0, "bfC": 8892}, {"i": 41, "lab": "(800, 850]", "bgH": 0.0, "fgH": 0, "bfH": 0.4971, "bgC": 0, "fgC": 0, "bfC": 4971}, {"i": 42, "lab": "(850, 900]", "bgH": 0.0, "fgH": 0, "bfH": 0.4938, "bgC": 0, "fgC": 0, "bfC": 4938}, {"i": 43, "lab": "(900, 950]", "bgH": 0.0, "fgH": 0, "bfH": 0.3725, "bgC": 0, "fgC": 0, "bfC": 3725}, {"i": 44, "lab": "(950, 1000]", "bgH": 0.0, "fgH": 0, "bfH": 0.6839, "bgC": 0, "fgC": 0, "bfC": 6839}, {"i": 45, "lab": "(1000, 2000]", "bgH": 0.0, "fgH": 0, "bfH": 1.7177, "bgC": 0, "fgC": 0, "bfC": 17177}, {"i": 46, "lab": "(2000, 3000]", "bgH": 0.0, "fgH": 0, "bfH": 0.181, "bgC": 0, "fgC": 0, "bfC": 1810}, {"i": 47, "lab": "(3000, 4000]", "bgH": 0.0, "fgH": 0, "bfH": 0.157, "bgC": 0, "fgC": 0, "bfC": 1570}, {"i": 48, "lab": "(4000, 5000]", "bgH": 0.0, "fgH": 0, "bfH": 0.1138, "bgC": 0, "fgC": 0, "bfC": 1138}, {"i": 49, "lab": "(5000, 6000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 50, "lab": "(6000, 7000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 51, "lab": "(7000, 8000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 52, "lab": "(8000, 9000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 53, "lab": "(9000, 10000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 54, "lab": "(10000, 20000]", "bgH": 0.0, "fgH": 0, "bfH": 0.025, "bgC": 0, "fgC": 0, "bfC": 250}, {"i": 55, "lab": "(20000, 30000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 56, "lab": "(30000, 40000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 57, "lab": "(40000, 50000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 58, "lab": "(50000, 60000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 59, "lab": "(60000, 70000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 60, "lab": "(70000, 80000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 61, "lab": "(80000, 90000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 62, "lab": "(90000, 100000]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}, {"i": 63, "lab": "(100000, 9999999]", "bgH": 0.0, "fgH": 0, "bfH": 0.0, "bgC": 0, "fgC": 0, "bfC": 0}], "sv": {"bg": [11.3932, 10.2398, 8.5748, 7.4134, 6.1866, 5.1587, 4.3626, 4.1684, 3.3341, 3.0273, 2.3966, 1.417, 0.8377, 0.5974, 0.3834, 0.3423, 0.2465, 0.2259, 0.1061, 0.0627, 0.0583, 0.0379, 0.0288, 0.0172, 0.0079, 0.0054, 0.0033, 0.0012, 0.0008, 0.0001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0], "bf": [100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 91.5566, 84.8159, 78.928, 71.8226, 58.5468, 43.804, 35.9904, 32.3813, 30.3171, 27.2676, 25.962, 18.2739, 17.1157, 15.796, 14.7401, 13.4166, 9.5978, 7.6332, 6.3107, 5.6804, 5.131, 4.2418, 3.7447, 3.2509, 2.8784, 2.1945, 0.4768, 0.2958, 0.1388, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0]}, "clipped": [{"lab": "(-1, 0]", "v": 88.607}, {"lab": "(0, 1]", "v": 1.153}, {"lab": "(1, 2]", "v": 1.665}, {"lab": "(2, 3]", "v": 1.161}, {"lab": "(3, 4]", "v": 1.227}, {"lab": "(4, 5]", "v": 1.028}], "series": ["bg", "bf"]};
+if(CH){
+  const R=CH.rows, SV=CH.sv, NB=R.length;
+  const DEF={bg:{n:'BG',c:'var(--s1)',hr:'bgH',cnt:'bgC'},
+             fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
+             bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
+  const KEYS=CH.series||['bg','fg','bf'];
+  const NS='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num=v=>v.toLocaleString('en-US');
+  const cn=document.getElementById('clipnote');
+  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
+    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
+    : '無區間超出 1% 上限。';
+  function legend(id,ks){
+    const e=document.getElementById(id); if(!e)return;
+    e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
+  }
+  function chart(hostId,cfg){
+    const host=document.getElementById(hostId); if(!host)return;
+    let lastW=-1;
+    function draw(force){
+      const W=Math.max(340,host.clientWidth||900);
+      if(!force && W===lastW) return;
+      lastW=W; host.innerHTML='';
+      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const iw=W-m.l-m.r, ih=H-m.t-m.b;
+      const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
+      const g=el('g',{transform:`translate(${m.l},${m.t})`});
+      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const X=i=>i/(NB-1)*iw;
+      cfg.yticks.forEach(t=>{
+        const yy=Y(t);
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
+        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
+        tx.textContent=t+'%'; g.appendChild(tx);
+      });
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+      for(let i=0;i<NB;i+=step){
+        const xx=X(i);
+        g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
+          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        tx.textContent=R[i].lab; g.appendChild(tx);
+      }
+      g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
+      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
+      const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
+        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
+      ay.textContent=cfg.ylabel; g.appendChild(ay);
+      cfg.series.forEach(s=>{
+        let run=[];
+        const flush=()=>{
+          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          run=[];
+        };
+        s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
+        flush();
+      });
+      const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
+      g.appendChild(cross);
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
+      const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
+      hit.addEventListener('mousemove',ev=>{
+        const bb=svg.getBoundingClientRect();
+        const sx=(ev.clientX-bb.left)*(W/bb.width)-m.l;
+        let i=Math.round(sx/iw*(NB-1)); if(i<0)i=0; if(i>NB-1)i=NB-1;
+        const px=X(i);
+        cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity',1);
+        let html=`<b>${R[i].lab}</b>`;
+        cfg.series.forEach((s,k)=>{
+          const p=s.pts[i];
+          if(p&&p.v!==null){
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
+          }else{
+            dots[k].setAttribute('opacity',0);
+            html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>—</span></div>`;
+          }
+        });
+        tip.innerHTML=html; tip.style.opacity=1;
+        const tw=tip.offsetWidth, sc=bb.width/W;
+        let lx=(px+m.l)*sc+14; if(lx+tw>bb.width) lx=(px+m.l)*sc-tw-14;
+        tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
+      });
+      hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.appendChild(g); host.appendChild(svg);
+    }
+    draw(true);
+    const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
+    window.addEventListener('resize',()=>draw());
+    CHARTS.push({host,draw});
+  }
+  const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
+  if(KEYS.includes('bg'))
+    chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
+      aria:'BG 倍率線型，縱軸固定 0 至 1%',
+      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      tipVal:p=>fmt(p.v,5)+'%'});
+  const fgk=KEYS.filter(k=>k!=='bg');
+  if(fgk.length){
+    legend('lg2',fgk);
+    chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
+      aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
+      tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
+  }
+  legend('lg3',KEYS);
+  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
+    aria:'各場景累積機率曲線',
+    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
+    tipVal:p=>fmt(p.v,3)+'%'});
+
+  /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
+     把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
+  document.querySelectorAll('.card').forEach(card=>{
+    const plot=card.querySelector('.plot');
+    if(!plot || plot.querySelector('svg')) return;
+    let n=card.previousElementSibling;
+    card.remove();
+    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
+      const prev=n.previousElementSibling;
+      const stop=(n.tagName==='H4');
+      n.remove(); n=prev;
+      if(stop) break;
+    }
+  });
+}
+
+/* ---------- 百分比資料橫條（Excel 格式化條件風格） ----------
+   規則：
+     - 只處理「該欄全部資料格都是百分比」的欄位
+     - 同一張表共用一個刻度（跨欄可比），刻度取表內最大值
+     - 「合計 / 總計 / 小計」列不畫、也不納入取最大值
+     - 一張表至少要有 3 個可畫的格子才啟用                         */
+(function () {
+  function pct(el) {
+    var t = el.textContent.replace(/[*`,\s]/g, '');
+    if (!/^-?\d+(\.\d+)?%$/.test(t)) return null;
+    var v = parseFloat(t);
+    return isFinite(v) ? v : null;
+  }
+  function isTotal(tr) {
+    var c = tr.children[0];
+    return !!c && /合計|總計|小計|Total/i.test(c.textContent);
+  }
+  document.querySelectorAll('table').forEach(function (tb) {
+    var rows = Array.prototype.slice.call(tb.querySelectorAll('tbody tr'));
+    if (rows.length < 2) return;
+    var ncol = rows[0].children.length, cells = [], max = 0;
+    for (var c = 1; c < ncol; c++) {
+      var col = [], nPct = 0, nOther = 0;
+      rows.forEach(function (tr) {
+        var td = tr.children[c];
+        if (!td) { return; }
+        var txt = td.textContent.trim();
+        if (txt === '' || txt === '—') return;         // 空格不計入判定
+        var v = pct(td);
+        if (v === null) { nOther++; return; }          // 非百分比的列跳過，不否決整欄
+        nPct++;
+        if (!isTotal(tr)) col.push([td, v]);
+      });
+      // 該欄要以百分比為主（至少 2 格，且占非空格的六成以上）才畫
+      if (nPct < 2 || nPct < (nPct + nOther) * 0.6) continue;
+      col.forEach(function (p) { if (p[1] > max) max = p[1]; });
+      cells = cells.concat(col);
+    }
+    if (cells.length < 3 || max <= 0) return;
+    cells.forEach(function (p) {
+      var w = Math.max(0, Math.min(100, p[1] / max * 100));
+      if (w < 0.4) return;
+      p[0].classList.add('bar');
+      p[0].style.setProperty('--w', w.toFixed(2) + '%');
+      if (p[1] >= max * 0.999) p[0].style.setProperty('--bc', 'var(--bar-hi)');
+    });
+  });
+})();
+</script>

@@ -1,7 +1,7 @@
 window.H020_VERSION_MANIFEST = {
-  "current": "1.0.1.3",
-  "base_version": "1",
-  "next_version": "2.0.0.0",
+  "current": "2.0.0.0",
+  "base_version": "2",
+  "next_version": "3.0.0.0",
   "versions": [
     {
       "version": "1.0.1.3",
@@ -19,6 +19,26 @@ window.H020_VERSION_MANIFEST = {
       },
       "changes": [
         "自 SVN Slot/IGaming/H020 複製的 92／94 版數學（H020192／H020194 改名為 H020192A／H020194A），內容未改。"
+      ]
+    },
+    {
+      "version": "2.0.0.0",
+      "math_key": "2.0",
+      "date": "2026-10-16",
+      "competitor_initial_version": false,
+      "base_config": "Versions/2.0.0.0/config.js",
+      "configs": {
+        "92A": "Versions/2.0.0.0/config_92A.js",
+        "94A": "Versions/2.0.0.0/config_94A.js"
+      },
+      "workbooks": {
+        "92A": "Versions/2.0.0.0/Source/H020192A.xlsx",
+        "94A": "Versions/2.0.0.0/Source/H020194A.xlsx"
+      },
+      "changes": [
+        "只改 Super Feature（NB／EB 參數與卡片與 1.0.1.3 完全相同）：SF 停輪權重改為偏重連線停點，自然每轉 Hit 20.5% → 75.7%、中獎時平均線獎 3.4x → 6.9x；R4 倍數以 2X～10X 為主、重轉球 26%；重轉次數以 3～4 次為主；每次重轉倍數以 3X～10X 為主。",
+        "SF 卡片依新自然分布重解（維持原卡片形狀，只給自然機率 ≥ 0.1% 的區間），RTP 92.5%；Card-On 每轉 Hit 68.8%、每轉重轉 12.2%（原 16.0%）、最大約 80 倍購買價。",
+        "模型公式修正：Regular Symbol 頁 SF 的 WW＋符號合併張數（第 97～103 列）原本引用 NB 區塊，改為引用 SF 區塊。"
       ]
     }
   ]
