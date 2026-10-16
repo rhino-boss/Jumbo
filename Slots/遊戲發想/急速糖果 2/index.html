@@ -1201,6 +1201,42 @@
       };
 
       // ── Help（內容以 game_help_draft.md 為準；離線 fallback 用內嵌副本）────
+      // 版式同 H045：主要標題／副標題／規則說明依語言切換；賠率表一律由 Config 的 pay_table 依目前押注產生，md 沒寫也會顯示
+      function parseHelpSections(markdown) {
+        const sections = [];
+        let section = null, group = null;
+        for (const raw of String(markdown || "").split(/\r?\n/)) {
+          const line = raw.trim(); let m;
+          if ((m = line.match(/^##\s+(.+)/)) && !line.startsWith("###")) {
+            const key = m[1].trim();
+            section = /meta/i.test(key) ? null : { key, titleZh: key, titleEn: key, rules: [], groups: [] };
+            if (section) sections.push(section);
+            group = null; continue;
+          }
+          if (!section) continue;
+          if ((m = line.match(/^###\s+(.+)/))) { group = { key: m[1].trim(), titleZh: m[1].trim(), titleEn: m[1].trim(), rules: [] }; section.groups.push(group); continue; }
+          if (line.startsWith("|")) {
+            const cells = line.slice(1, -1).split("|").map((x) => x.trim());
+            if (cells.every((x) => /^:?-{3,}:?$/.test(x))) continue;
+            const [item, zh = "", en = ""] = cells;
+            if (item === "主要標題") { section.titleZh = zh; section.titleEn = en; }
+            else if (item === "副標題" && group) { group.titleZh = zh; group.titleEn = en; }
+            else if (item === "規則說明") (group || section).rules.push({ zh, en });
+            continue;
+          }
+          // 離線副本是純文字段落：直接當規則
+          if (line && line !== "---" && !line.startsWith("#") && !/^(繁中|简中|簡中|英文)[：:]$/.test(line)) (group || section).rules.push({ zh: line, en: line });
+        }
+        // 賠率表群組只放賠率，改由 Config 產生
+        sections.forEach((sec) => { sec.groups = sec.groups.filter((g) => !/賠率表|paytable/i.test(`${g.key} ${g.titleEn}`)); });
+        return sections.filter((sec) => sec.rules.length || sec.groups.some((g) => g.rules.length) || /paytable/i.test(sec.key));
+      }
+      function paytableHtml() {
+        const counts = PAY[0].map((_, index) => (index === PAY[0].length - 1 ? `${CFG.min_cluster + index}+` : String(CFG.min_cluster + index)));
+        const rows = CFG.symbol_codes.map((code, index) => (index === CFG.scatter_index || !PAY[index] ? ""
+          : `<tr><td>${code}</td>${PAY[index].map((value) => `<td>${fmt(value * bet())}</td>`).join("")}</tr>`)).join("");
+        return `<div class="help-paytable-wrap"><table class="help-paytable"><thead><tr><th>Symbol</th>${counts.map((c) => `<th>${c}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+      }
       async function loadHelp() {
         const target = $("helpContent");
         target.innerHTML = `<div class="help-loading">Loading game rules...</div>`;
@@ -1210,24 +1246,22 @@
           if (response.ok) markdown = await response.text();
         } catch (_) {}
         if (!markdown) markdown = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
-        if (!markdown) {
-          target.innerHTML = `<div class="help-load-error">無法載入 game_help_draft.md。</div>`;
-          return;
-        }
-        const html = markdown.split(/\r?\n/).map((line) => {
-          const t = line.trim();
-          if (t.startsWith("# ")) return `<h2>${t.slice(2)}</h2>`;
-          if (t.startsWith("## ")) return `<h3>${t.slice(3)}</h3>`;
-          if (t.startsWith("### ")) return `<h4>${t.slice(4)}</h4>`;
-          if (t === "---" || t === "") return "";
-          if (t.startsWith("|")) {
-            const cells = t.slice(1, -1).split("|").map((x) => x.trim());
-            if (cells.every((x) => /^:?-{3,}:?$/.test(x))) return "";
-            return `<div class="help-rule">${cells.map((x) => `<span>${x}</span>`).join(" ｜ ")}</div>`;
-          }
-          return `<p>${t}</p>`;
-        }).join("");
-        target.innerHTML = html;
+        const zh = lang() === "zh";
+        const esc = (text) => String(text).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+        const pick = (item) => esc(zh ? (item.zh || item.en) : (item.en || item.zh));
+        const titleOf = (item) => esc(zh ? (item.titleZh || item.titleEn) : (item.titleEn || item.titleZh));
+        const rules = (list) => list.map((rule) => `<div class="help-rule">${pick(rule)}</div>`).join("");
+        const sections = parseHelpSections(markdown);
+        let paytableDone = false;
+        const html = sections.map((sec) => {
+          const isPay = /paytable/i.test(sec.key);
+          if (isPay) paytableDone = true;
+          return `<section class="help-section"><h3 class="help-section-title">${titleOf(sec)}</h3>${rules(sec.rules)}`
+            + sec.groups.filter((g) => g.rules.length).map((g) => `<h4 class="help-group-title">${titleOf(g)}</h4>${rules(g.rules)}`).join("")
+            + (isPay ? paytableHtml() : "") + `</section>`;
+        });
+        if (!paytableDone) html.unshift(`<section class="help-section"><h3 class="help-section-title">Paytable</h3>${paytableHtml()}</section>`);
+        target.innerHTML = html.join("");
       }
 
       // ── Debug 顯示切換（與 H027 相同的區塊清單）──────────────────────────────
@@ -1359,7 +1393,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-16 16:46";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261016zr"></script>
+  <script src="../../demogame_common.js?v=20261016zs"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

@@ -2378,7 +2378,7 @@
         const groupTitles = [...card.querySelectorAll(".help-group-title")];
         const paytable = isPaytableTitle(sectionTitle.textContent)
           || groupTitles.some((heading) => isPaytableTitle(heading.textContent) || /symbol payouts?/i.test(heading.textContent))
-          || Boolean(card.querySelector("table.paytable"));
+          || Boolean(card.querySelector("table.paytable, table.help-paytable"));
         if (paytable) {
           const expected = `Paytable (Current Bet: ${currentBet()})`;
           if (sectionTitle.textContent !== expected) sectionTitle.textContent = expected;

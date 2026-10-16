@@ -174,6 +174,7 @@ Slots/
 - FG 結束回到 BG 時，盤面還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲。
 - Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。
 - Help 與 `game_help_draft.md` 一致，不在 HTML 另維護一份規則。
+- Help 至少要有賠率表：`game_help_draft.md` 沒有賠率（或讀不到、只剩離線副本）時，由 Config 的 Paytable 依目前押注產生。
 - Help 版式（共用 `demogame_common.js`）：標題由大到小（區塊標題 20px 置中 → 副標題 15px 置中 → 規則 13px），區塊之間用分隔線、規則前加方塊符號；賠率表顯示成兩欄符號卡片，每張是「符號＋由大到小的 `N - 派彩`」。有符號美術的遊戲要定義 `window.DEMOGAME_SYMBOL_ART = { 代號: 圖片網址 }`，卡片用該圖；沒美術或 Image 關閉時，顯示與盤面同款的深色代號方格（C1／SC 金色、WW 綠色）。
 - 連線（Line）遊戲有得分時要在盤面畫出得分線：呼叫共用 `window.demogameWinLines.draw(盤面容器, [[格子元素…], …])`，每條得分線要依線圖（paylines）整條畫出、連過每一輪的格子中心，不能只畫中獎的那幾連，顏色依序輪替；每次重畫盤面後要重新呼叫。
 
