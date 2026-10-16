@@ -2900,6 +2900,11 @@
       if ((cell.dataset.dgSym || "") !== code) {
         if (code) cell.dataset.dgSym = code; else delete cell.dataset.dgSym;
       }
+      // H020 這類格子內另有 .tile 底板：配色畫在 .tile 上
+      const tile = cell.querySelector(":scope > .tile");
+      if (tile && (tile.dataset.dgSym || "") !== code) {
+        if (code) tile.dataset.dgSym = code; else delete tile.dataset.dgSym;
+      }
     }
   };
   // MutationObserver 回呼在畫面重繪前執行：同步標記，避免 Spin 時先畫成原樣式再換色而閃爍
@@ -2915,7 +2920,7 @@
 
   const free = ":not(.has-symbol-art):not(.hit):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
   // Help 賠率表的代號方格（沒圖時）與盤面同一套配色
-  const base = `:is(body #board .cell[data-dg-sym]${free}, body #helpDialog #helpContent .help-sym-tile[data-dg-sym]:not(.has-art))`;
+  const base = `:is(body #board .cell[data-dg-sym]${free}, body #board .cell:not(.has-symbol-art):not(.h020-hit):not(.hit) > .tile[data-dg-sym], body #helpDialog #helpContent .help-sym-tile[data-dg-sym]:not(.has-art))`;
   const gold = `body #board .cell:is(.gold,.special-gold)${free}`;
   const label = `:is(${LABEL})`;
   // M 獎：同亮度、不同色相的低彩度漸層，字獎深藍；上緣一條淡高光，整體與金框同一套質感
@@ -2947,7 +2952,8 @@
   const hit = "body #board .cell:is(.hit,.fx-win,.h014-hit,.h020-hit):not(.symbol-cleared)";
   const style = document.createElement("style");
   style.textContent = `${hit},${hit} *{animation:none!important;transform:none!important;filter:none!important;transition:none!important}
-    ${hit}{border-color:#ffe27a!important;box-shadow:inset 0 0 0 2px #ffe27a,0 0 10px rgba(255,214,90,.45)!important;z-index:5}
-    ${hit} > .tile{border-color:#ffe27a!important;box-shadow:inset 0 0 0 2px #ffe27a,0 0 10px rgba(255,214,90,.45)!important}`;
+    ${hit}{border:1.6px solid #ffe27a!important;outline:0!important;box-shadow:0 0 8px rgba(255,214,90,.45)!important;z-index:5}
+    ${hit}::before,${hit}::after{box-shadow:none!important;border-color:transparent!important}
+    ${hit} > .tile{border:1.6px solid #ffe27a!important;box-shadow:0 0 8px rgba(255,214,90,.45)!important}`;
   document.head.appendChild(style);
 })();

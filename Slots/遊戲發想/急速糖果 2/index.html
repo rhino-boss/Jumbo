@@ -736,7 +736,8 @@
 
       // ── 掉落補牌動畫：既有符號 Settle、新符號 Drop／Refill 分開 ─────────────
       function applyDropAnim(removeSet) {
-        const dur = Math.max(140, 320 / speed());
+        // 5×5 格子較大、落差較長，掉落放慢（基準 620ms＋每格落差 60ms、欄間錯開 30ms，皆隨 Speed 縮放）
+        const dur = Math.max(260, 620 / speed());
         const removedByCol = Array.from({ length: SIZE }, () => new Set());
         removeSet.forEach((key) => removedByCol[key % SIZE].add(Math.floor(key / SIZE)));
         let maxTime = 0;
@@ -757,15 +758,15 @@
             const isNew = shifts[r] < 0;
             const dist = Math.abs(shifts[r]);
             const cell = cellEl(r, c);
-            const d = dur + dist * 24;
+            const d = dur + dist * 60 / speed();
             cell.style.setProperty("--dy-start", `-${dist * 104}%`);
             cell.style.setProperty("--drop-dur", `${Math.round(d)}ms`);
-            cell.style.setProperty("--drop-delay", `${Math.round(c * 14 / speed())}ms`);
+            cell.style.setProperty("--drop-delay", `${Math.round(c * 30 / speed())}ms`);
             cell.classList.add(isNew ? "tc-drop-new" : "tc-settle");
             if (d > maxTime) maxTime = d;
           }
         }
-        return maxTime + Math.round(6 * 14 / speed()) + 60;
+        return maxTime + Math.round((SIZE - 1) * 30 / speed()) + 60;
       }
 
       // ── 倍數收集：盤面上所有倍數飛向全盤倍數和 pill，從 0 重新加總 ──────────
@@ -814,9 +815,23 @@
         sumPill.classList.add("pulse");
       }
 
-      // ── 全盤倍數作用到得分：從上方 pill 飛一顆倍數到下方 Win ────────────
+      // ── 全盤倍數作用到得分：從上方 pill 飛一顆倍數到盤面訊息列的「+得分」──────
+      // 不飛到下方 Win：FG 期間 Win 會累積整段 FG 得分，飛過去會和本段得分混淆。
+      function scoreTextRect() {
+        const bar = $("messageBar"), node = bar.firstChild;
+        if (node && node.nodeType === Node.TEXT_NODE) {
+          const i = node.textContent.lastIndexOf("+");
+          if (i >= 0) {
+            const range = document.createRange();
+            range.setStart(node, i); range.setEnd(node, node.textContent.length);
+            const rect = range.getBoundingClientRect();
+            if (rect.width) return rect;
+          }
+        }
+        return bar.getBoundingClientRect();
+      }
       async function flySumToWin(text) {
-        const from = sumValueEl.getBoundingClientRect(), to = $("winValue").getBoundingClientRect();
+        const from = sumValueEl.getBoundingClientRect(), to = scoreTextRect();
         const flyMs = Math.max(220, 560 / speed());
         const tok = document.createElement("span");
         tok.className = "tc-plus-token";
@@ -995,7 +1010,7 @@
           renderBoard(step.boardBefore, step.multBefore);
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
           const winText = `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""}`;
-          // 計分順序：先顯示未乘倍數的得分 → 盤面倍數全部收集到上方「全盤倍數和」→ 全盤倍數飛到下方得分 → 才算最終得分
+          // 計分順序：先顯示未乘倍數的得分 → 盤面倍數全部收集到上方「全盤倍數和」→ 全盤倍數飛到訊息列的「+得分」→ 才算最終得分
           if (step.boardSum > 0) {
             const basePay = step.pay / step.effSum;
             say(() => `${winText} | +${fmt(basePay)}`);
@@ -1416,7 +1431,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-16 16:46";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261017c"></script>
+  <script src="../../demogame_common.js?v=20261017e"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 
