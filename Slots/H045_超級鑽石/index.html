@@ -2096,7 +2096,7 @@
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond</span></span>
-      <span id="ruleToggle" class="rule-toggle" role="group" aria-label="倍數規則"><button type="button" data-rule="mul">加乘版</button><button type="button" data-rule="add">相加版</button></span>
+      <span id="ruleToggle" class="rule-toggle" role="group" aria-label="倍數規則"><button type="button" data-rule="mul">加乘版</button><button type="button" data-rule="mul2">加乘版2</button><button type="button" data-rule="mul3">加乘版3</button><button type="button" data-rule="add">相加版</button></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2565,8 +2565,9 @@
     (() => {
       const query = new URLSearchParams(window.location.search);
       let mode = query.get("rule");
-      if (mode !== "add" && mode !== "mul") { try { mode = localStorage.getItem("h045RuleMode"); } catch (_) {} }
-      mode = mode === "add" ? "add" : "mul";
+      const RULES = ["mul", "mul2", "mul3", "add"];   // 加乘版／加乘版2／加乘版3（數學同加乘版，只差金框呈現）／相加版
+      if (!RULES.includes(mode)) { try { mode = localStorage.getItem("h045RuleMode"); } catch (_) {} }
+      mode = RULES.includes(mode) ? mode : "mul";
       try { localStorage.setItem("h045RuleMode", mode); } catch (_) {}
       window.H045_RULE_MODE = mode;
       window.H045_BASE_DIR = mode === "add" ? "../H045_超級鑽石_2/" : "./";
@@ -2624,7 +2625,11 @@
 
   const cfg = window.H045_CONFIG;
   if (!cfg) throw new Error("H045 config was not loaded.");
-  const RULE_ADD = window.H045_RULE_MODE === "add";   // 相加版（H045_超級鑽石_2）：該波倍率 = 階梯 ＋ 被消除的帶倍 WILD 總和
+  const RULE_ADD = window.H045_RULE_MODE === "add";
+  // 加乘版2／3（2026-10-16）：數學同加乘版；金框一出現就用同一組權重預抽小鬼／大鬼與倍數，消除時直接翻成預抽結果。
+  // 加乘版2：有倍數的金框畫成紅色牌；加乘版3：倍數直接寫在金框上。BG 一局出過大鬼後，其餘預抽成大鬼的金框立刻改抽小鬼倍數。
+  const RULE_MODE = window.H045_RULE_MODE || "mul";
+  const PRE_DRAW = RULE_MODE === "mul2" || RULE_MODE === "mul3";   // 相加版（H045_超級鑽石_2）：該波倍率 = 階梯 ＋ 被消除的帶倍 WILD 總和
   for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
     "gold_count_weight", "gold_reels", "free_spins", "bet_modes", "split_target_reels"]) {
     if (!cfg[key]) throw new Error("H045 config is missing field: " + key);
@@ -2699,6 +2704,10 @@
     #board .symbol-c1{background:radial-gradient(circle,#ffd75c,#8c3d08)!important}
     #board .symbol-code{display:none!important}
     #board .cell{position:relative}
+    /* 加乘版2：預抽有倍數的金框改紅色牌；加乘版3：預抽倍數寫在金框上 */
+    #board .cell.gold.gold-mult{border-color:#ff4a5a!important;background:radial-gradient(circle,#4a1218,#1a0508)!important;box-shadow:inset 0 0 0 1px rgba(255,74,90,.5),0 0 12px rgba(255,74,90,.35)!important}
+    #board .cell.gold.gold-mult .symbol-img{filter:hue-rotate(-42deg) saturate(1.8) brightness(.92)}
+    #board .cell .gold-pre-badge{background:#ffc94a;color:#2a1a00}
     #board .cell.gold{
       border:2px solid #ffc94a!important;
       background:radial-gradient(circle,#4a3a12,#1a1305)!important;
@@ -2910,21 +2919,40 @@
   // game_rule §5.2～5.4（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數；
   // 大鬼只在本體抽一次倍數，丟出的 WW 沿用同一值。
   // 本體翻牌（小鬼／大鬼＋倍數）在消除當下就決定並顯示；大鬼分裂等補牌後再丟（落點依補牌後盤面）
-  function flipGoldenBody(board, mults, tableName, goldPositions, flipState) {
+  // 加乘版2／3：預抽一格金框的翻牌結果（同 flipGoldenBody 的抽法與 BG 一局一次大鬼限制）
+  function predrawGold(tableName, flipState) {
+    const table = tables[tableName];
+    if (!Object.keys(table.gold).length) return null;
+    let outcome = pickMap(table.gold);
+    if (outcome === "W2" && !flipState.freeGame && flipState.bigGhostUsed) outcome = "WW";
+    return { outcome, value: drawMultiplier(table, outcome) };
+  }
+  function predrawAll(gold, goldPre, tableName, flipState) {
+    for (let reel = 0; reel < 5; reel++) for (let row = 0; row < 4; row++) goldPre[reel][row] = gold[reel][row] ? predrawGold(tableName, flipState) : null;
+  }
+  function flipGoldenBody(board, mults, tableName, goldPositions, flipState, goldPre = null) {
     const table = tables[tableName];
     if (!goldPositions.length || !Object.keys(table.gold).length) return null;
     const flipped = [], bigSources = [];
     const results = {};
     for (const [reel, row] of goldPositions) {
-      let outcome = pickMap(table.gold);
+      const pre = goldPre?.[reel]?.[row];
+      let outcome = pre ? pre.outcome : pickMap(table.gold);
       // game_rule §9.1.10：BG 一把 Spin 最多成立一次大鬼，之後改以小鬼處理
       if (outcome === "W2" && !flipState.freeGame && flipState.bigGhostUsed) outcome = "WW";
       results[outcome] = (results[outcome] || 0) + 1;
       board[reel][row] = outcome === "W2" ? W2 : WW;
-      const value = drawMultiplier(table, outcome);          // x1 代表無倍數
+      const value = pre && pre.outcome === outcome ? pre.value : drawMultiplier(table, outcome);   // x1 代表無倍數
+      if (goldPre) goldPre[reel][row] = null;
       mults[reel][row] = value > 1 ? value : 0;
       flipped.push(`${reel},${row}`);
-      if (outcome === "W2") { flipState.bigGhostUsed = true; bigSources.push([[reel, row], value]); }
+      if (outcome === "W2") {
+        flipState.bigGhostUsed = true; bigSources.push([[reel, row], value]);
+        // 加乘版2／3：BG 已出大鬼，盤面其餘預抽成大鬼的金框改抽小鬼倍數（畫面同步顯示）
+        if (goldPre && !flipState.freeGame) for (const column of goldPre) for (let r = 0; r < column.length; r++) {
+          if (column[r]?.outcome === "W2") column[r] = { outcome: "WW", value: drawMultiplier(table, "WW") };
+        }
+      }
     }
     return { flipped, results, bigSources };
   }
@@ -2968,13 +2996,15 @@
     let goldSeen = gold.some(column => column.some(Boolean));   // By Game：本轉盤面出現過金框（含補牌補上的）
     let goldAppeared = gold.reduce((total, column) => total + column.filter(Boolean).length, 0);   // 金框使用率分母：出現的金框顆數（含補牌補上的）
     const flipState = { freeGame, bigGhostUsed: false };
+    const goldPre = PRE_DRAW ? zeroGold().map(column => column.map(() => null)) : null;
+    if (goldPre) predrawAll(gold, goldPre, tableName, flipState);
     const cap = MAX_WIN * betUnit();
     let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
     // By Game 統計（2026-10-15）：本轉是否用到帶倍 WILD；大鬼本體與分裂 WW 之後有沒有參與中獎
     let multUsed = false, bigScored = false;
     const bigCells = new Set();
     const goldenTally = {};
-    snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
+    snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
     while (true) {
       const win = evaluate(board, mults);
       if (!win.rawPay) break;
@@ -2987,7 +3017,7 @@
       const multiplier = RULE_ADD ? step + win.usedSum : step;   // 相加版：階梯 ＋ 本次被消除的帶倍 WILD 倍數總和
       const cascadePay = win.rawPay * multiplier * betUnit();
       pay += cascadePay;
-      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [...win.hits], combo, multiplier: step, totalMult: RULE_ADD ? multiplier : step * Math.max(1, win.usedSum), cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
+      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [...win.hits], combo, multiplier: step, totalMult: RULE_ADD ? multiplier : step * Math.max(1, win.usedSum), cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
       combo++;
 
       // 1) 消除；中獎的金框不消除，當下直接翻成小鬼／大鬼本體（分裂等補牌後）
@@ -2999,7 +3029,7 @@
       }
       let flip = null;
       if (goldPositions.length) {
-        flip = flipGoldenBody(board, mults, tableName, goldPositions, flipState);
+        flip = flipGoldenBody(board, mults, tableName, goldPositions, flipState, goldPre);
         if (flip) {
           golden += goldPositions.length;
           for (const [key, value] of Object.entries(flip.results)) {
@@ -3011,7 +3041,7 @@
         }
       }
       const flipLabel = flip ? ` · Golden flip ${Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ")}` : "";
-      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], cleared, converted: flip ? flip.flipped : [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Eliminate${flipLabel}` });
+      snapshots.push({ type: "eliminate", board: transitionBoard, mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], cleared, converted: flip ? flip.flipped : [], combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Eliminate${flipLabel}` });
 
       // 2) 原地補牌（game_rule §5.1，2026-10-13 使用者定案）：消除的格子直接在原位補新符號，其餘符號不移動
       const motion = [];
@@ -3031,11 +3061,11 @@
           if (short > 0) {
             const spots = rows.filter(row => !gold[reel][row] && board[reel][row] !== C1);
             for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
-            for (const row of spots.slice(0, short)) { gold[reel][row] = true; goldSeen = true; goldAppeared++; }
+            for (const row of spots.slice(0, short)) { gold[reel][row] = true; goldSeen = true; goldAppeared++; if (goldPre) goldPre[reel][row] = predrawGold(tableName, flipState); }
           }
         }
       }
-      snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
+      snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
 
       // 3) 大鬼分裂（game_rule §5.6 步驟 5~6；落點依補牌後盤面）
       if (flip && flip.bigSources.length) {
@@ -3043,7 +3073,7 @@
         const { splitKeys, splits } = splitBigGhosts(board, mults, gold, tableName, flip.bigSources);
         splitKeys.forEach(key => bigCells.add(key));
         if (splitKeys.length) {
-          snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
+          snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
       }
 
@@ -3259,8 +3289,10 @@
       const key = `${reel},${row}`;
       const motion = drop.get(key), speed = Number($("speedRange").value || 1);
       const isGold = !empty && !!(gold[reel] && gold[reel][row]);
+      const pre = isGold ? options.pre?.[reel]?.[row] : null;   // 加乘版2／3 預抽結果
+      const preMult = pre && pre.value > 1 ? pre.value : 0;
       const art = !empty && useSymbolImages && !!SYMBOL_ASSET[code];
-      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${art ? " has-symbol-art" : ""}${isGold ? (art ? " gold" : " gold keep-symbol-frame") : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
+      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${art ? " has-symbol-art" : ""}${isGold ? (art ? " gold" : " gold keep-symbol-frame") : ""}${preMult && RULE_MODE === "mul2" ? " gold-mult" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}${marked.has(key) ? " wild-mark" : ""}${options.spinning ? " reel-spin" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
         const dropDuration = Math.max(28, 520 / speed / DROP_SPEED_MULTIPLIER);
@@ -3272,6 +3304,8 @@
       cell.innerHTML = empty ? "" : symbolInner(code, isGold);
       if (!empty && mults[reel] && mults[reel][row] > 1) {
         cell.insertAdjacentHTML("beforeend", `<span class="mult-badge">×${mults[reel][row]}</span>`);
+      } else if (preMult && RULE_MODE === "mul3") {
+        cell.insertAdjacentHTML("beforeend", `<span class="mult-badge gold-pre-badge">×${preMult}</span>`);
       }
       root.append(cell);
     }
@@ -3489,11 +3523,11 @@
     state.snapshots = snapshots; state.snapshotIndex = -1;
     state.stepWin = { base: Number(winBase), cap: Number(payCap) };   // Previous／Next 逐步檢視用：與即時更新同一基準
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
-    if (snapshots[0]) { await animateReels(snapshots[0].board, snapshots[0].gold, snapshots[0].mults, freeGame ? "fg" : "bg"); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold }); await wait(delay()); }
+    if (snapshots[0]) { await animateReels(snapshots[0].board, snapshots[0].gold, snapshots[0].mults, freeGame ? "fg" : "bg"); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold, pre: snapshots[0].pre }); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
       $("messageBar").textContent = snapshot.message || "Cascade";
-      const common = { mults: snapshot.mults, gold: snapshot.gold };
+      const common = { mults: snapshot.mults, gold: snapshot.gold, pre: snapshot.pre };
       if (snapshot.type === "win") {
         // 得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG）；只改顯示，局末仍以算好的 pay 為準
         state.lastWin = Number(winBase) + Math.min(Number(snapshot.totalPay || 0), Number(payCap));
@@ -3516,7 +3550,7 @@
         renderBoard(snapshot.board, [], { ...common, converted: snapshot.converted || [] }); await wait(delay());
       }
     }
-    const finalSnapshot = snapshots.at(-1); if (finalSnapshot) renderBoard(finalSnapshot.board, [], { mults: finalSnapshot.mults, gold: finalSnapshot.gold });
+    const finalSnapshot = snapshots.at(-1); if (finalSnapshot) renderBoard(finalSnapshot.board, [], { mults: finalSnapshot.mults, gold: finalSnapshot.gold, pre: finalSnapshot.pre });
     updateDebugButtons();
   }
 
@@ -3524,7 +3558,7 @@
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
     const snapshot = state.snapshots[state.snapshotIndex];
-    renderBoard(snapshot.board, snapshot.hits, { mults: snapshot.mults, gold: snapshot.gold, cleared: snapshot.cleared || [], converted: snapshot.converted || [], marked: snapshot.marked || [] });
+    renderBoard(snapshot.board, snapshot.hits, { mults: snapshot.mults, gold: snapshot.gold, pre: snapshot.pre, cleared: snapshot.cleared || [], converted: snapshot.converted || [], marked: snapshot.marked || [] });
     renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo);
     if (snapshot.type === "win") renderWinDetails(snapshot);
     $("winValue").textContent = money(stepWinAt(state.snapshotIndex));   // 只改顯示，不動 state.lastWin／Credit／統計
@@ -3640,7 +3674,7 @@
     document.body.classList.remove("fg-mode"); renderMultiplier(false, 0); setFeatureStatus("baseGame");
     if (!base) { showTable(""); return; }
     const last = base.snapshots?.at(-1); showTable(base.tableName);
-    if (last) renderBoard(last.board, [], { mults: last.mults, gold: last.gold });
+    if (last) renderBoard(last.board, [], { mults: last.mults, gold: last.gold, pre: last.pre });
     state.snapshots = base.snapshots || []; state.snapshotIndex = state.snapshots.length - 1;
     state.stepWin = { base: 0, cap: Number(base.pay || 0) };
     $("carryMultiValue").textContent = String(base.combo || 0); updateDebugButtons();
@@ -3899,9 +3933,9 @@
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;$("rngInput").value="";}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
   document.querySelectorAll("#ruleToggle button").forEach(button => {
-    button.classList.toggle("is-active", button.dataset.rule === (RULE_ADD ? "add" : "mul"));
+    button.classList.toggle("is-active", button.dataset.rule === RULE_MODE);
     button.onclick = () => {
-      if (button.dataset.rule === (RULE_ADD ? "add" : "mul")) return;
+      if (button.dataset.rule === RULE_MODE) return;
       const url = new URL(location.href);
       url.searchParams.set("rule", button.dataset.rule);
       url.searchParams.delete("version"); url.searchParams.delete("config");   // 兩版 manifest 不同，回到各自目前版本
