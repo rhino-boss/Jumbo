@@ -2879,20 +2879,57 @@
   document.head.appendChild(style);
 })();
 
-// 無圖符號樣式統一（共用，2026-10-16）：沒有符號美術或 Image 關閉時，所有遊戲的代號格同一款——
-// 深色底、細藍框、淺色代號；C1／C2／Scatter 金色、Wild 綠色、金框格深金底金框；含 peek 列。中獎、轉換等狀態格不覆蓋。
+// 無圖符號樣式統一（共用，2026-10-16）：沒有符號美術或 Image 關閉時，所有遊戲的代號格同一套——
+// M 獎與字獎（A／K／Q／J／10）都有底版，M1～M6 底色各不同、字獎深藍底；C1／C2／SC 金色、Wild 綠色；
+// 金框格一律改成亮金漸層並覆蓋原本底色。中獎、轉換等狀態格不覆蓋。
+// 依格子顯示的代號自動標 data-dg-sym（不靠各遊戲的 class 命名）。
 (() => {
   "use strict";
-  const base = "body #board .cell:not(.has-symbol-art):not(.hit):not(.gold):not(.special-gold):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.keep-symbol-frame):not(.empty):not(.symbol-empty):not(:has(> .tile))";
-  const label = ":is(.slot-symbol-label, .symbol-code, .h019-glyph, .sym-code-label)";
-  // 金框格（無圖時）：各遊戲同一款深金底＋金框＋淡金代號
-  const gold = "body #board .cell:is(.gold,.special-gold):not(.has-symbol-art):not(.hit):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.convert):not(:has(> .tile))";
+  const LABEL = ".slot-symbol-label, .symbol-code, .h019-glyph, .sym-code-label";
+  const codeOf = (cell) => {
+    const label = [...cell.querySelectorAll(LABEL)].find((node) => node.textContent.trim() && getComputedStyle(node).display !== "none");
+    const text = (label || cell).textContent.trim().toUpperCase();
+    const match = text.match(/^(M\d+|W\d|WW\d?|WILD|C\d|SC|TE|10|A|K|Q|J)/);
+    return match ? match[1].replace(/^WILD$/, "WW") : "";
+  };
+  const tag = () => {
+    for (const cell of document.querySelectorAll("#board .cell")) {
+      const code = cell.matches(".has-symbol-art, .sym-digit") ? "" : codeOf(cell);   // H014 數字格不套用
+      if ((cell.dataset.dgSym || "") !== code) {
+        if (code) cell.dataset.dgSym = code; else delete cell.dataset.dgSym;
+      }
+    }
+  };
+  let queued = false;
+  const schedule = () => { if (queued) return; queued = true; setTimeout(() => { queued = false; tag(); }, 0); };
+  const start = () => {
+    const board = document.getElementById("board");
+    if (!board) return;
+    tag();
+    new MutationObserver(schedule).observe(board, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+
+  const free = ":not(.has-symbol-art):not(.hit):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
+  const base = `body #board .cell[data-dg-sym]${free}`;
+  const gold = `body #board .cell:is(.gold,.special-gold)${free}`;
+  const label = `:is(${LABEL})`;
+  const tone = (code, bg, border) => `${base}[data-dg-sym="${code}"]:not(.gold):not(.special-gold){background:${bg}!important;border-color:${border}!important}`;
   const style = document.createElement("style");
   style.textContent = `${base}{background:#060d1a!important;border:1.6px solid rgba(56,120,175,.45)!important;border-radius:8px!important;box-shadow:none!important;color:#d8e8f4!important}
-    ${base}:is(.symbol-c1,.symbol-c2,.sym-c1,.sym-c2,.symbol-scatter,.h019-scatter,.h019-c2){background:radial-gradient(circle at 50% 45%,#c98a35 0%,#9a5a18 62%,#6e3d0e 100%)!important;border-color:#ffd36b!important;color:#fff3d6!important}
-    ${base}:is(.symbol-ww,.symbol-wild,.sym-ww){background:#0b3a3a!important;border-color:#00ddc0!important;color:#c8fff4!important}
-    ${gold}{background:linear-gradient(180deg,#3a2a08 0%,#1f1604 100%)!important;border:1.6px solid #ffd36b!important;border-radius:8px!important;box-shadow:inset 0 0 0 1px rgba(255,211,107,.22)!important;color:#ffe9a6!important}
-    ${gold} ${label}{color:inherit!important;font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important;text-shadow:none!important}
-    ${base}:not(.sym-digit) ${label}{color:inherit!important;font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important;text-shadow:none!important}`;
+    ${tone("M1", "#4a1622", "#c4566a")}
+    ${tone("M2", "#40122f", "#c95c9a")}
+    ${tone("M3", "#123a22", "#4fb06e")}
+    ${tone("M4", "#102c52", "#4f8fd6")}
+    ${tone("M5", "#33184f", "#9a6ad6")}
+    ${tone("M6", "#0e3c40", "#3fb3b8")}
+    ${tone("M7", "#3a2412", "#a8784a")}
+    ${tone("M8", "#2f3410", "#a6b04a")}
+    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]):not(.gold):not(.special-gold){background:radial-gradient(circle at 50% 45%,#c98a35 0%,#9a5a18 62%,#6e3d0e 100%)!important;border-color:#ffd36b!important;color:#fff3d6!important}
+    ${base}:is([data-dg-sym^="W"]):not(.gold):not(.special-gold){background:#0b3a3a!important;border-color:#00ddc0!important;color:#c8fff4!important}
+    ${gold}{background:linear-gradient(180deg,#f8dc8c 0%,#e2ac44 45%,#b67a16 100%)!important;border:1.6px solid #f1c35a!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,250,220,.55)!important;color:#fff6de!important}
+    ${gold} ${label}{color:inherit!important;text-shadow:0 1px 2px rgba(60,30,0,.55)!important}
+    :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important}
+    ${base}:not(.sym-digit) ${label}{color:inherit!important;text-shadow:none!important}`;
   document.head.appendChild(style);
 })();

@@ -127,7 +127,7 @@ Slots/
 | Image 關閉，或該符號無美術 | 顯示**符號框＋符號代號** |
 
 - 符號代號（`M1`、`M2`、`A`、`C1`…）一律使用一般字重，**不得使用粗體**。
-- 符號框＋代號的樣式所有遊戲統一（共用 `demogame_common.js` 套用，各遊戲不另設等級配色）：深色底 `#060d1a`、細藍框、圓角 8px、淺色 Consolas 16px 代號；C1／C2／Scatter 為金色格、Wild 為綠色格、金框格為深金底金框（peek 列同樣套用）。中獎、轉換等狀態格維持各自的狀態樣式。
+- 符號框＋代號的樣式所有遊戲統一（共用 `demogame_common.js` 依格子代號自動套用，各遊戲不另設；沒有特別要求就照這套）：M 獎與字獎（A／K／Q／J／10）都有底版，字獎深藍底，M1～M8 底色各不同（M1 紅、M2 洋紅、M3 綠、M4 藍、M5 紫、M6 青、M7 棕、M8 橄欖）；C1／C2／SC 金色、Wild 綠色；金框格一律用亮金漸層（淡金→深金、金框、淺色代號）並覆蓋原本底色；Consolas 16px 一般字重。中獎、轉換等狀態格維持各自的狀態樣式；H014 數字格不套用。
 - 有符號美術的遊戲必須接入共用 Image 開關：頁面在載入 `demogame_common.js` 前定義 `window.DEMOGAME_IMAGE_TOGGLE = { supported: true, defaultEnabled: true, setEnabled(enabled) { … } }`，`setEnabled` 內切換是否輸出符號圖並重繪目前盤面；不得自行另做圖片開關。共用模組會在 Setting 產生 `Image` 開關，選擇存於 `localStorage`（`slotDemoSymbolImages`）。
 - 有輸出符號圖的格子必須加上 `has-symbol-art`；圖片載入失敗時移除此 class 並改顯示代號。
 - **圖片預載（必做）**：放到網頁上時，圖片若等第一次用到才下載，盤面會先出現空白格。有符號美術的遊戲必須在 `DEMOGAME_IMAGE_TOGGLE` 加上 `images`：本遊戲會用到的**所有**圖片網址（陣列，或回傳陣列的函式），包含大符號長圖、金框等所有變體。共用模組會在開局前預載並解碼完成：
