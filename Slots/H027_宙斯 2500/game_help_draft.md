@@ -28,7 +28,7 @@
 | 副標題 | 散布符號 | SCATTER SYMBOL |
 | 規則說明 | ▪ [C1] 不參與中獎判定，出現後原地保留至該次旋轉的所有連消結束。 | ▪ [C1] DOES NOT TAKE PART IN WIN EVALUATION AND STAYS IN PLACE UNTIL ALL CASCADES OF THE SPIN ARE COMPLETE. |
 | 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {4} 個或以上 [C1]，將觸發免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, {4} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | ▪ {4}／{5}／{6} 個 [C1] 分別支付 {3}／{5}／{100} × 投注。{3} 個 [C1] 不支付獎金。 | ▪ {4} / {5} / {6} [C1] PAY {3} / {5} / {100} × BET RESPECTIVELY. {3} [C1] DO NOT PAY. |
+| 規則說明 | ▪ {4}／{5}／{6} 個 [C1] 分別支付 {3X}／{5X}／{100X} 投注。{3} 個 [C1] 不支付獎金。 | ▪ {4} / {5} / {6} [C1] PAY {3X} / {5X} / {100X} BET RESPECTIVELY. {3} [C1] DO NOT PAY. |
 | 規則說明 | ▪ 同一轉輪最多只會出現 {1} 個 [C1]。 | ▪ AT MOST {1} [C1] APPEARS ON EACH REEL. |
 
 ### MULTIPLIER SYMBOL
@@ -38,9 +38,9 @@
 | 副標題 | 倍數符號 | MULTIPLIER SYMBOL |
 | 規則說明 | ▪ [C2] 與 [C3] 不參與中獎判定，也不會被消除，會留在盤面直到該次旋轉結束。 | ▪ [C2] AND [C3] DO NOT TAKE PART IN WIN EVALUATION, ARE NEVER CLEARED, AND REMAIN ON THE REELS UNTIL THE SPIN ENDS. |
 | 規則說明 | ▪ [C2] 出現時即固定其倍數，之後不再改變。 | ▪ [C2] KEEPS THE VALUE IT APPEARS WITH. |
-| 規則說明 | ▪ [C3] 於每次中獎消除後提升一個倍數等級，單顆最高為 {2500}x。 | ▪ [C3] IS UPGRADED BY ONE LEVEL AFTER EACH WINNING CASCADE, UP TO {2500}X PER SYMBOL. |
+| 規則說明 | ▪ [C3] 於每次中獎消除後提升一個倍數等級，單顆最高為 {2500X}。 | ▪ [C3] IS UPGRADED BY ONE LEVEL AFTER EACH WINNING CASCADE, UP TO {2500X} PER SYMBOL. |
 | 規則說明 | ▪ 該次消除後才掉落進盤面的 [C3] 不追溯升級，須等下一次中獎消除。 | ▪ A [C3] THAT DROPS IN AFTER A CASCADE IS NOT UPGRADED FOR THAT CASCADE AND MUST WAIT FOR THE NEXT ONE. |
-| 規則說明 | ▪ 同一最終盤面出現多顆 [C2]／[C3] 時，所有倍數相加。 | ▪ WHEN SEVERAL [C2]／[C3] APPEAR ON THE SAME FINAL REELS, THEIR VALUES ARE ADDED TOGETHER. |
+| 規則說明 | ▪ 同一最終盤面出現多顆 [C2]／[C3] 時，所有倍數相加。 | ▪ WHEN SEVERAL [C2] / [C3] APPEAR ON THE SAME FINAL REELS, THEIR VALUES ARE ADDED TOGETHER. |
 
 ### 賠率表
 
@@ -80,7 +80,7 @@
 | 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
 | 規則說明 | ▪ 一般遊戲中，最終盤面所有 [C2]／[C3] 的倍數總和，於所有連消結束後對該次旋轉的一般符號總獎金套用一次。 | ▪ IN THE BASE GAME, THE SUM OF ALL [C2] / [C3] VALUES ON THE FINAL REELS IS APPLIED ONCE TO THE TOTAL REGULAR-SYMBOL WIN OF THAT SPIN AFTER ALL CASCADES ARE COMPLETE. |
 | 規則說明 | ▪ 一般遊戲的倍數只作用於該次旋轉，不累積至下一次旋轉。 | ▪ BASE GAME MULTIPLIERS APPLY ONLY TO THE CURRENT SPIN AND DO NOT CARRY OVER. |
-| 規則說明 | ▪ 免費遊戲的倍數會累積。 | ▪ IN THE FREE GAME FEATURE THE MULTIPLIERS ACCUMULATE. |
+| 規則說明 | ▪ 免費遊戲的倍數會累積。 | ▪ IN THE FREE GAME FEATURE, THE MULTIPLIERS ACCUMULATE. |
 | 規則說明 | ▪ 乘倍效果不作用於 [C1]。 | ▪ THE MULTIPLIER EFFECT DOES NOT APPLY TO [C1]. |
 
 ---
@@ -91,11 +91,11 @@
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
 | 規則說明 | ▪ 盤面任意位置出現 {4} 個或以上 [C1] 可觸發免費遊戲，獲得 {15} 場免費遊戲。 | ▪ {4} OR MORE [C1] APPEARING ANYWHERE ON THE REELS WILL TRIGGER THE FREE GAME FEATURE AND AWARD {15} FREE SPINS. |
-| 規則說明 | ▪ 免費遊戲期間再次出現 {3} 個或以上 [C1] 可觸發加局，額外獲得 {5} 場免費遊戲。 | ▪ DURING FREE GAME, {3} OR MORE [C1] WILL RETRIGGER ADDITIONAL {5} FREE SPINS. |
+| 規則說明 | ▪ 免費遊戲期間再次出現 {3} 個或以上 [C1] 可觸發加局，額外獲得 {5} 場免費遊戲。 | ▪ DURING THE FREE GAME FEATURE, {3} OR MORE [C1] AWARD {5} ADDITIONAL FREE SPINS. |
 | 規則說明 | ▪ 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | ▪ A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
 | 規則說明 | ▪ 當一次免費旋轉同時有一般符號得獎、且最終盤面出現 [C2]／[C3] 時，該次盤面的倍數總和加入累積倍數。 | ▪ WHEN A FREE SPIN HAS BOTH A REGULAR-SYMBOL WIN AND [C2] / [C3] ON THE FINAL REELS, THE SUM OF THOSE VALUES IS ADDED TO THE ACCUMULATED MULTIPLIER. |
 | 規則說明 | ▪ 只有 [C1] 得獎或沒有得獎的免費旋轉，倍數不累積。 | ▪ FREE SPINS WITH ONLY A [C1] WIN, OR WITH NO WIN, DO NOT ADD TO THE ACCUMULATED MULTIPLIER. |
-| 規則說明 | ▪ 累積倍數只在「該次最終盤面本身有 [C2]／[C3]」時作用。有一般符號得獎但盤面沒有倍數符號時，該次以 {1}x 結算，累積倍數保留不歸零。 | ▪ THE ACCUMULATED MULTIPLIER APPLIES ONLY ON A SPIN WHOSE OWN FINAL REELS CONTAIN [C2] / [C3]. IF A SPIN HAS A REGULAR-SYMBOL WIN BUT NO MULTIPLIER SYMBOL, IT IS PAID AT {1}X AND THE ACCUMULATED MULTIPLIER IS KEPT, NOT RESET. |
+| 規則說明 | ▪ 累積倍數只在「該次最終盤面本身有 [C2]／[C3]」時作用。有一般符號得獎但盤面沒有倍數符號時，該次以 {1X} 結算，累積倍數保留不歸零。 | ▪ THE ACCUMULATED MULTIPLIER APPLIES ONLY TO A SPIN WHOSE OWN FINAL REELS CONTAIN [C2] / [C3]. IF A SPIN HAS A REGULAR-SYMBOL WIN BUT NO MULTIPLIER SYMBOL, IT IS PAID AT {1X} AND THE ACCUMULATED MULTIPLIER IS KEPT, NOT RESET. |
 | 規則說明 | ▪ 倍數在所有連消結束後，對該次免費旋轉的一般符號總獎金一次套用。 | ▪ THE MULTIPLIER IS APPLIED ONCE TO THE TOTAL REGULAR-SYMBOL WIN OF THE FREE SPIN AFTER ALL CASCADES ARE COMPLETE. |
 | 規則說明 | ▪ 累積倍數保留至整場免費遊戲結束後才清除。 | ▪ THE ACCUMULATED MULTIPLIER IS KEPT UNTIL THE FREE GAME FEATURE ENDS. |
 
@@ -106,7 +106,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 額外投注 | EXTRA BET |
-| 規則說明 | ▪ 額外投注的扣款為 {2} × 您所選的基礎投注。 | ▪ EXTRA BET COSTS {2} × THE BASE BET YOU SELECT. |
+| 規則說明 | ▪ 額外投注的扣款為您所選基礎投注的 {2X}。 | ▪ EXTRA BET COSTS {2X} THE BASE BET YOU SELECT. |
 | 規則說明 | ▪ 所有獎金仍依您所選的基礎投注計算。 | ▪ ALL WINS ARE STILL CALCULATED ON THE BASE BET YOU SELECT. |
 | 規則說明 | ▪ 免費遊戲的觸發機率提升為一般投注的 {5} 倍。 | ▪ THE CHANCE TO TRIGGER THE FREE GAME FEATURE IS {5} TIMES THAT OF THE NORMAL BET. |
 
@@ -117,9 +117,9 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | ▪ 玩家可支付 {100}x 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {100}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | ▪ 玩家可支付 {100X} 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {100X} THE TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
 | 規則說明 | ▪ 完成購買後，將直接觸發一次免費遊戲特色。 | ▪ COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
-| 規則說明 | ▪ 進場盤面的 {4} 個 [C1] 依賠率表支付 {3} × 投注。 | ▪ THE {4} [C1] ON THE ENTRY REELS PAY {3} × BET ACCORDING TO THE PAYTABLE. |
+| 規則說明 | ▪ 進場盤面的 {4} 個 [C1] 依賠率表支付 {3X} 投注。 | ▪ THE {4} [C1] ON THE ENTRY REELS PAY {3X} BET ACCORDING TO THE PAYTABLE. |
 | 規則說明 | ▪ 進入後的免費遊戲規則與自然觸發完全相同。 | ▪ ONCE ENTERED, THE FREE GAME FEATURE FOLLOWS EXACTLY THE SAME RULES AS A NATURAL TRIGGER. |
 | 規則說明 | ▪ 免費遊戲的獎金依您所選的基礎投注計算，不依購買金額計算。 | ▪ FREE GAME WINS ARE CALCULATED ON THE BASE BET YOU SELECT, NOT ON THE PURCHASE AMOUNT. |
 
@@ -130,15 +130,15 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | ▪ 遊戲中，OP JACKPOT 特色由盤面上的 {1} 個或以上 [C1] 隨機觸發。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 與 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR], AND [MINI]. |
+| 規則說明 | ▪ 遊戲中，OP JACKPOT 特色由盤面上的 {1} 個或以上 [C1] 隨機觸發。 | ▪ THE OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 與 [MINI]。 | ▪ DURING THE OP JACKPOT FEATURE, THERE ARE {12} [COIN], WHICH CONSIST OF [GRAND], [MAJOR], [MINOR], AND [MINI]. |
 | 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
-| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE THE TOTAL WIN. |
-| 規則說明 | ▪ [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [GRAND] WILL BE UNLOCKED. |
-| 規則說明 | ▪ [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [MAJOR] WILL BE UNLOCKED. |
-| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
-| 規則說明 | ▪ 玩家投注越高觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF THE PLAYER REVEALS {3} OF THE SAME JACKPOT SYMBOL, THE PLAYER WINS THAT JACKPOT AND IT IS ADDED TO THE TOTAL WIN. |
+| 規則說明 | ▪ [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | ▪ [GRAND] IS A LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [GRAND] WILL BE UNLOCKED. |
+| 規則說明 | ▪ [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | ▪ [MAJOR] IS A LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [MAJOR] WILL BE UNLOCKED. |
+| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
 
 > **待確認**：僅剩 [GRAND]／[MAJOR] 的解鎖門檻金額。`{2.00}` 是 H019 的值，
 > H027 的實際門檻需向 JP 設定端（`JP optionID 28`）確認後回填本區塊與 `game_rule.md` §6.4。
@@ -153,7 +153,7 @@
 | 主要標題 | 中獎方式 | PAY ANYWHERE |
 | 規則說明 | ▪ 同一種一般符號在整個盤面合計出現 {8} 個或以上即可得獎，不要求相鄰或連線。 | ▪ {8} OR MORE OF THE SAME REGULAR SYMBOL ANYWHERE ON THE GRID FORM A WIN. THEY DO NOT NEED TO BE ADJACENT OR ON A LINE. |
 | 規則說明 | ▪ 同一盤面可有多種一般符號同時得獎，各自支付一次。 | ▪ SEVERAL REGULAR SYMBOL TYPES MAY WIN ON THE SAME GRID AND EACH IS PAID ONCE. |
-| 規則說明 | ▪ 一般符號獎金為「賠率 × 投注」。 | ▪ A REGULAR SYMBOL WIN IS CALCULATED AS THE PAYTABLE VALUE × BET. |
+| 規則說明 | ▪ 一般符號獎金依賠率表倍數乘以投注計算。 | ▪ A REGULAR SYMBOL WIN IS PAID AT THE PAYTABLE MULTIPLIER OF THE BET. |
 | 規則說明 | ▪ 本遊戲沒有百搭符號。 | ▪ THIS GAME HAS NO WILD SYMBOL. |
 
 ---
@@ -163,7 +163,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
+| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT THE BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY THE BET OPTION EXCEPT PROGRESSIVE BONUSES. |
 | 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
