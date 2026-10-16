@@ -38,10 +38,16 @@
     #board .r4-head { grid-column:5; text-align:center; align-self:center; padding:3px 2px; border-radius:6px; background:#4a0f18;
       border:1px solid #c4262f; color:#ffe9a6; font:800 10px/1.15 system-ui,sans-serif; letter-spacing:.3px; }
     #board .reel { position:relative; height:calc(var(--cell) * 3); overflow:hidden; }
-    #board .reel[data-col="3"] { grid-column:5; }
+    /* R4 欄：上方 WIN MULTIPLIER 標籤＋3 格（等比縮小），整欄高度與左側 3×3 相同 */
+    #board { --r4head:34px; --r4cell:calc((var(--cell) * 3 - var(--r4head) - 6px) / 3); }
+    #board .r4-col { grid-column:5; display:flex; flex-direction:column; gap:6px; height:calc(var(--cell) * 3); }
+    #board .r4-head { align-self:stretch; height:var(--r4head); display:grid; place-items:center; padding:0 4px; border-radius:6px; background:#4a0f18;
+      border:1px solid #c4262f; color:#ffe9a6; font:800 10px/1.15 system-ui,sans-serif; letter-spacing:.3px; text-align:center; }
+    #board .reel.r4 { height:calc(var(--r4cell) * 3); }
+    #board .reel.r4 .cell { height:var(--r4cell); }
     #board .reel-gap { grid-column:4; }
     #board .reel-strip { position:absolute; left:0; right:0; top:0; will-change:transform; }
-    #board .r4-frame { position:absolute; left:1px; right:1px; top:calc(var(--cell) + 1px); height:calc(var(--cell) - 2px); z-index:4; pointer-events:none;
+    #board .r4-frame { position:absolute; left:1px; right:1px; top:calc(var(--r4cell) + 1px); height:calc(var(--r4cell) - 2px); z-index:4; pointer-events:none;
       border:3px solid #5fe3a1; border-radius:12px; box-shadow:0 0 12px rgba(95,227,161,.6); }
     #board .cell { position:relative; height:var(--cell); padding:var(--pad); border:0; background:transparent; }
     #board .cell .tile { position:relative; width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
@@ -97,7 +103,7 @@
           <div class="reel" data-col="1"><div class="reel-strip"></div></div>
           <div class="reel" data-col="2"><div class="reel-strip"></div></div>
           <div class="reel-gap" aria-hidden="true"></div>
-          <div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div></div>
+          <div class="r4-col"><div class="r4-head">WIN MULTIPLIER</div><div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div></div></div>
           <svg class="lines-layer" id="linesLayer" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
         <div class="message-bar" id="messageBar">Loading…</div>
@@ -203,7 +209,7 @@
             <li>未實作：OP Jackpot（Config／Simulator 無資料）；Help 尚無 <code>game_help_draft.md</code>，Help 視窗先顯示提示。未修改 XLSX／Config 數學參數。（10/15）</li>
             <li>驗證：頁內同邏輯模擬 Card Off NB 30 萬局 RTP 2140%／Hit 20.55%（Simulator 10⁶ 2110%／20.52%）；Card On 92A NB 93.15%、94A NB 93.35%、EB1 90.87%、EB2 93.81%、SF 92.07%，皆在 2σ 內、Retry 超限 0；指定卡片區間、RNG 重跑（同 Retry 次數與得分）、SF 5 轉累積倍數、手機版面皆正常；Console 只有尚未製作的 game_help_draft.md 404。（10/15）</li>
             <li>Help 改讀 <code>game_help_draft.md</code>（離線雙擊用內嵌副本），版式同 H045：區塊標題、副標題、規則與賠率表依語言切換，賠率依目前押注換算（企劃書賠率以 100 Credit 為基準）。未修改 XLSX／Config 數學參數。（10/16）</li>
-            <li>盤面改為獨立方格（同其他 Demogame）：拿掉棕色輪框與漸層，每格一張圓角方塊、格間留縫；結構依遊戲畫面為 3×3＋右側 R4，R4 上下與左側盤面對齊（不加標題列），R4 中線保留綠框；符號圖不變。只改演出。（10/16）</li>
+            <li>盤面改為獨立方格（同其他 Demogame）：拿掉棕色輪框與漸層，每格一張圓角方塊、格間留縫；結構依遊戲畫面為 3×3＋右側 R4，R4 欄頂端放 WIN MULTIPLIER 標籤、R4 三格等比縮小塞入，整欄上下與左側盤面對齊，R4 中線保留綠框；符號圖不變。只改演出。（10/16）</li>
             <li>驗證：指定卡片區間 (9, 10] 開出 M2 兩線 × 2X＝9.6x，中獎格框與連線位置正確；無 console 錯誤。（10/16）</li>
           </ol>
         </article>
