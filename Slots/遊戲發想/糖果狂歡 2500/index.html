@@ -2205,6 +2205,7 @@
     TE: "M9_Symbol.png"
   });
   window.H998_SYMBOL_IMAGE_FILES = SYMBOL_IMAGE_FILES;
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_IMAGE_FILES).map(([c, f]) => [c, `./Source/Image/${f}`]));   // Help 賠率表符號圖（共用 demogame_common.js）
   const DISPLAY_SYMBOL_IDS = Box.symbol_codes
     .map((code, symbol) => ({ code, symbol }))
     .filter((item) => Boolean(SYMBOL_IMAGE_FILES[item.code]))
@@ -3608,7 +3609,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-05 12:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261016zc"></script>
+  <script src="../../demogame_common.js?v=20261016zf"></script>
   <script>
     (() => {
       "use strict";

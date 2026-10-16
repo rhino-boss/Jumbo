@@ -663,7 +663,7 @@
     const style = document.createElement("style");
     style.textContent = `#demogame-zoom{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:24px}
       #demogame-zoom.open{display:flex}
-      #demogame-zoom .dz-box{width:min(1200px,96vw);max-height:92vh;display:flex;flex-direction:column;border:1px solid var(--sim-border,#1d4668);border-radius:12px;background:var(--sim-panel,#071528);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+      #demogame-zoom .dz-box{width:min(1200px,96vw);height:92vh;max-height:92vh;display:flex;flex-direction:column;border:1px solid var(--sim-border,#1d4668);border-radius:12px;background:var(--sim-panel,#071528);box-shadow:0 12px 40px rgba(0,0,0,.5)}
       #demogame-zoom .dz-head{display:flex;align-items:center;justify-content:space-between;min-height:40px;padding:0 14px;border-bottom:1px solid var(--sim-surface,#0c2240);color:var(--sim-sub,#5a88aa);font:700 13px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.5px}
       #demogame-zoom .dz-close{border:0;background:transparent;color:var(--sim-sub,#5a88aa);font:700 16px/1 "Segoe UI",system-ui,sans-serif;cursor:pointer;padding:6px}
       #demogame-zoom .dz-close:hover,#demogame-zoom .dz-rotate:hover{color:#fff}
@@ -672,8 +672,12 @@
       #demogame-zoom{overflow:hidden}
       #demogame-zoom .dz-box{transition:transform .35s ease;transform-origin:center center}
       #demogame-zoom .dz-body{padding:14px;overflow:auto;flex:1;min-height:0}
+      /* 彈窗一開就是最大；紀錄／版本紀錄撐滿剩餘高度，沒資料處維持深色底 */
+      #demogame-zoom .dz-body{display:flex;flex-direction:column}
+      #demogame-zoom .dz-body > *{flex:0 0 auto}
+      #demogame-zoom .dz-body > #liveLogBody,#demogame-zoom .dz-body > #changeLogBody{flex:1 1 auto;min-height:0;overflow:auto}
       #demogame-zoom .dz-body .batch-line-chart svg,#demogame-zoom .dz-body svg{width:100%;height:auto}
-      #demogame-zoom .dz-body #liveLogBody,#demogame-zoom .dz-body #changeLogBody{max-height:none!important;height:auto!important}
+      #demogame-zoom .dz-body #liveLogBody,#demogame-zoom .dz-body #changeLogBody{max-height:none!important;height:auto!important;box-sizing:border-box}
       .demogame-zoom-btn{margin-left:auto;flex:0 0 auto;width:22px;height:22px;min-height:0!important;padding:0!important;border:0!important;border-radius:5px;background:var(--sim-surface,#0c2240)!important;color:var(--sim-sub,#5a88aa)!important;font:700 14px/22px "Segoe UI",system-ui,sans-serif!important;text-align:center;cursor:pointer}
       .demogame-zoom-btn:hover{color:#fff!important}
       .demogame-zoom-btn + *{margin-left:0}
@@ -1846,6 +1850,107 @@
         padding: 12px;
       }
     }
+
+    /* Help 版式（2026-10-16）：標題由大到小、區塊以分隔線區隔、規則前方塊符號、賠率表為符號卡片格 */
+    body #helpDialog #helpContent .help-section,
+    body #helpDialog #helpContent .help-card,
+    body #helpDialog #helpContent .help-standard-card {
+      margin: 0;
+      padding: 18px 8px;
+      border: 0;
+      border-bottom: 1px solid #1d4668;
+      border-radius: 0;
+      background: transparent;
+    }
+    body #helpDialog #helpContent > :last-child { border-bottom: 0; }
+    body #helpDialog #helpContent .help-section-title,
+    body #helpDialog #helpContent .help-card > h3 {
+      margin: 0 0 14px;
+      color: #00ddc0;
+      font: 700 20px/1.35 "Segoe UI", Arial, sans-serif;
+      text-align: center;
+    }
+    body #helpDialog #helpContent .help-group-title {
+      margin: 18px 0 10px;
+      color: #77c7ff;
+      font: 700 15px/1.35 "Segoe UI", Arial, sans-serif;
+      text-align: center;
+    }
+    body #helpDialog #helpContent .help-rule {
+      position: relative;
+      margin: 4px 0;
+      padding: 0 0 0 18px;
+      border-radius: 0;
+      background: transparent;
+      color: #9fd9ff;
+      font-size: 13px;
+    }
+    body #helpDialog #helpContent .help-rule::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: .62em;
+      width: 6px;
+      height: 6px;
+      background: #77c7ff;
+    }
+    body #helpDialog #helpContent .help-paytable-wrap { background: transparent; padding: 0; }
+    body #helpDialog #helpContent .help-sym-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px 16px;
+      margin: 16px 0 4px;
+    }
+    body #helpDialog #helpContent .help-sym-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-width: 0;
+    }
+    body #helpDialog #helpContent .help-sym-tile {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 72px;
+      height: 72px;
+      border: 1px solid #1d3a56;
+      border-radius: 8px;
+      background: #06101d;
+      color: #cfe6ff;
+      font: 700 14px/1 Consolas, "Segoe UI", monospace;
+    }
+    body #helpDialog #helpContent .help-sym-tile.has-art {
+      width: 88px;
+      height: 88px;
+      border: 0;
+      background: transparent;
+    }
+    body #helpDialog #helpContent .help-sym-tile img { width: 100%; height: 100%; object-fit: contain; }
+    body #helpDialog #helpContent .help-sym-tile.is-scatter {
+      border-color: #7fd8ff;
+      background: radial-gradient(circle at 50% 45%, #e8a542 0%, #b8681c 60%, #8a4a12 100%);
+      color: #fff3d6;
+    }
+    body #helpDialog #helpContent .help-sym-tile.is-wild {
+      border-color: #00ddc0;
+      background: #0b3a3a;
+      color: #c8fff4;
+    }
+    body #helpDialog #helpContent .help-sym-pays {
+      min-width: 92px;
+      font: 600 14px/1.5 "Segoe UI", Arial, sans-serif;
+      white-space: nowrap;
+    }
+    body #helpDialog #helpContent .help-sym-count { color: #9fd9ff; }
+    body #helpDialog #helpContent .help-sym-value { color: #ffd34d; }
+    @media (max-width: 640px) {
+      body #helpDialog #helpContent .help-sym-grid { gap: 16px 8px; }
+      body #helpDialog #helpContent .help-sym-card { gap: 8px; }
+      body #helpDialog #helpContent .help-sym-tile { width: 56px; height: 56px; font-size: 12px; }
+      body #helpDialog #helpContent .help-sym-tile.has-art { width: 64px; height: 64px; }
+      body #helpDialog #helpContent .help-sym-pays { min-width: 0; font-size: 12px; }
+    }
   `;
   document.head.appendChild(style);
 
@@ -2131,6 +2236,73 @@
     root.replaceChildren(card);
   }
 
+  // 賠率表改成「符號圖 + 由大到小的 N - 派彩」卡片格：有圖用遊戲提供的 window.DEMOGAME_SYMBOL_ART，
+  // 沒圖（或 Image 關閉）用盤面同款的代號方格（2026-10-16）
+  function symbolTile(code) {
+    const tile = document.createElement("div");
+    tile.className = "help-sym-tile";
+    const src = window.DEMOGAME_SYMBOL_IMAGES_ENABLED !== false ? window.DEMOGAME_SYMBOL_ART?.[code] : "";
+    if (src) {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = code;
+      img.draggable = false;
+      img.addEventListener("error", () => { tile.classList.remove("has-art"); img.replaceWith(document.createTextNode(code)); });
+      tile.classList.add("has-art");
+      tile.appendChild(img);
+    } else {
+      tile.textContent = code;
+      if (/^(C\d|SC)$/i.test(code)) tile.classList.add("is-scatter");
+      else if (/^(W\w*|WILD)$/i.test(code)) tile.classList.add("is-wild");
+    }
+    return tile;
+  }
+
+  function buildSymbolGrid(card) {
+    for (const table of card.querySelectorAll("table.help-paytable, table.paytable")) {
+      const data = readHtmlPaytable(table);
+      if (!data) continue;
+      const counts = data.headers.slice(1).map((header, index) => ({
+        index, label: header.replace(/\s*(連|连|oak|of a kind)\s*/gi, "").trim() || header
+      })).sort((a, b) => countOrder(b.label) - countOrder(a.label));
+      const grid = document.createElement("div");
+      grid.className = "help-sym-grid";
+      for (const row of data.rows) {
+        const code = row[0].replace(/[\[\]{}]/g, "").trim();
+        if (!code) continue;
+        const item = document.createElement("div");
+        item.className = "help-sym-card";
+        item.appendChild(symbolTile(code));
+        const list = document.createElement("div");
+        list.className = "help-sym-pays";
+        for (const count of counts) {
+          const value = String(row[count.index + 1] || "").trim();
+          if (!value || /^[—–-]$/.test(value)) continue;
+          const line = document.createElement("div");
+          line.innerHTML = `<span class="help-sym-count"></span> - <span class="help-sym-value"></span>`;
+          line.firstElementChild.textContent = count.label;
+          line.lastElementChild.textContent = value;
+          list.appendChild(line);
+        }
+        item.appendChild(list);
+        grid.appendChild(item);
+      }
+      const wrap = table.closest(".help-paytable-wrap") || table;
+      wrap.replaceWith(grid);
+    }
+  }
+
+  // 規則列前的 ▪／• 改由 CSS 方塊符號顯示，避免重複
+  function stripRuleBullets(card) {
+    for (const rule of card.querySelectorAll(".help-rule")) {
+      const target = rule.querySelector(".help-rule-zh, .help-rule-en") || rule;
+      if (target.children.length) continue;
+      const text = target.textContent;
+      const clean = text.replace(/^\s*[▪•·]\s*/, "");
+      if (clean !== text) target.textContent = clean;
+    }
+  }
+
   let applying = false;
   function standardize() {
     if (applying) return;
@@ -2159,6 +2331,7 @@
           replacePayoutDivTables(card);
           wrapBarePaytables(card);
           mergePaytables(card);
+          buildSymbolGrid(card);
           const table = card.querySelector("table.paytable");
           if (table) {
             const firstHeader = table.querySelector("th");
@@ -2168,6 +2341,7 @@
           if (firstGridCell && firstGridCell.textContent !== "Symbol") firstGridCell.textContent = "Symbol";
         }
         normalizeLooseRuleGrids(card);
+        stripRuleBullets(card);
       }
 
       for (const heading of root.querySelectorAll(".help-section-title, .help-group-title, .help-card > h3")) {
@@ -2188,6 +2362,8 @@
   const betValue = document.getElementById("betValue");
   if (betValue) new MutationObserver(() => standardize()).observe(betValue, { childList: true, subtree: true, characterData: true });
   document.getElementById("helpBtn")?.addEventListener("click", () => setTimeout(standardize));
+  // Image 開關切換時，若 Help 開著就重新開一次讓賠率表換圖／方格
+  document.addEventListener("demogame:image-change", () => { const d = document.getElementById("helpDialog"); if (d?.open) { d.close(); document.getElementById("helpBtn")?.click(); } });
   standardize();
 })();
 

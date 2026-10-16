@@ -2242,6 +2242,7 @@
     WW: "./Source/Image/WW_Symbol.webp"
   });
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.webp";
+  window.DEMOGAME_SYMBOL_ART = SYMBOL_ASSET_BY_CODE;   // Help 賠率表符號圖（共用 demogame_common.js）
   const HELP_PATH = "./game_help_draft.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = [...new Set([...(Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10]), 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
@@ -3148,7 +3149,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016zc"></script>
+  <script src="../demogame_common.js?v=20261016zf"></script>
 </body>
 
 </html>

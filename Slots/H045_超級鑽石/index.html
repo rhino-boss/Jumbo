@@ -2623,6 +2623,7 @@
   };
   const GOLD_ASSET = { M1: "G1_Symbol.webp", M2: "G2_Symbol.webp", M3: "G3_Symbol.webp", M4: "G4_Symbol.webp",
     A: "G5_Symbol.webp", K: "G6_Symbol.webp", Q: "G7_Symbol.webp", J: "G8_Symbol.webp" };
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ASSET).map(([c, f]) => [c, H045_IMAGE_ROOT + f]));   // Help 賠率表符號圖（共用 demogame_common.js）
   let useSymbolImages = true;
   let lastBoardRender = null;
   window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）
@@ -3886,7 +3887,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261016zc"></script>
+  <script src="../demogame_common.js?v=20261016zf"></script>
 </body>
 
 </html>

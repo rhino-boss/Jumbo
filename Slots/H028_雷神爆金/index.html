@@ -2814,6 +2814,7 @@
   // Thunder Boost 滿版素材（toz_ 前綴）：內部 base id 2~12 依序對應 toz_sym_M1~M11
   //（M1=雷神倍率、M2~M6=頭盔/盾牌/豎琴/聖杯/戒指、M7~M11=A/K/Q/J/10）；金框沿用 CSS 樣式
   const TOZ_SYMBOL_ART={0:'toz_sym_WILD.webp',1:'toz_sym_SC.webp',2:'toz_sym_M1.webp',3:'toz_sym_M2.webp',4:'toz_sym_M3.webp',5:'toz_sym_M4.webp',6:'toz_sym_M5.webp',7:'toz_sym_M6.webp',8:'toz_sym_M7.webp',9:'toz_sym_M8.webp',10:'toz_sym_M9.webp',11:'toz_sym_M10.webp',12:'toz_sym_M11.webp'};
+  window.DEMOGAME_SYMBOL_ART=Object.fromEntries(Object.entries(TOZ_SYMBOL_ART).map(([id,f])=>[CODES[id],SYMBOL_IMAGE_ROOT+f]));   // Help 賠率表符號圖（共用 demogame_common.js）
   function symbolImage(path,className){return`<img class="symbol-art-layer ${className}" src="${SYMBOL_IMAGE_ROOT}${path}" alt="" draggable="false">`}
   // 1x2~1x4 大符號改用原遊戲的對應長圖（toz_sym_*_h2~h4），1x1 維持原圖
   function symbolArt(id,height=1){if(!USE_SYMBOL_IMAGES)return'';let file=TOZ_SYMBOL_ART[base(id)];if(!file)return'';let h=Math.trunc(height)||1;if(h>=2&&h<=4)file=file.replace('.webp',`_h${h}.webp`);return`<span class="symbol-art">${symbolImage(file,'symbol-art-full')}</span>`}
@@ -2921,6 +2922,6 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016zc"></script>
+  <script src="../demogame_common.js?v=20261016zf"></script>
 </body>
 </html>
