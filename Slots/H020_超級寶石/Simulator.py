@@ -250,6 +250,10 @@ def run_worker(seed, rounds, spins, card_on, retry_limit, thresholds,
     bucket_pay = np.zeros(n_th, np.int64)
     card_draw = np.zeros(n_iv, np.int64)
     card_retry = np.zeros(n_iv, np.int64)
+    # 依一局總得分的區間：該區間內的轉數、中獎轉數、重轉轉數（SF 一局 5 轉；Multiplier Line 的 FG_Hit_Rate／FG_Spin_Count）
+    band_spins = np.zeros(n_th, np.int64)
+    band_hits = np.zeros(n_th, np.int64)
+    band_respins = np.zeros(n_th, np.int64)
     out = np.zeros(6, np.int64)
     s_r4 = np.zeros(spins, np.int64)
     s_pay = np.zeros(spins, np.int64)
@@ -317,8 +321,15 @@ def run_worker(seed, rounds, spins, card_on, retry_limit, thresholds,
             if total <= thresholds[h] * 10:
                 bucket_cnt[h] += 1
                 bucket_pay[h] += total
+                for k in range(spins):
+                    band_spins[h] += 1
+                    if s_line[k] > 0:
+                        band_hits[h] += 1
+                        if s_n[k] > 0:
+                            band_respins[h] += 1
                 break
-    return sc, sumsq, r4_win_cnt, r4_win_pay, rs_n_cnt, bucket_cnt, bucket_pay, card_draw, card_retry
+    return (sc, sumsq, r4_win_cnt, r4_win_pay, rs_n_cnt, bucket_cnt, bucket_pay, card_draw, card_retry,
+            band_spins, band_hits, band_respins)
 
 
 def _worker_entry(args):
@@ -340,7 +351,7 @@ def simulate(packed: dict[str, Any], rounds: int, card_on: bool, seed: int) -> t
         results = list(pool.map(_worker_entry, jobs))
         duration = time.perf_counter() - start
     keys = ("sc", "sumsq", "r4_win_cnt", "r4_win_pay", "rs_n_cnt", "bucket_cnt", "bucket_pay",
-            "card_draw", "card_retry")
+            "card_draw", "card_retry", "band_spins", "band_hits", "band_respins")
     merged = {k: sum(r[i] for r in results) for i, k in enumerate(keys)}
     merged["sc"][2] = max(int(r[0][2]) for r in results)
     merged["rounds"] = sum(parts)
@@ -461,8 +472,14 @@ def multiplier_line_frame(res: dict[str, Any]) -> pd.DataFrame:
     key_pay = "free_game_pay_SF" if res["bet_mode"] == 3 else "base_game_pay"
     for i, upper in enumerate(MULTIPLIER_THRESHOLDS):
         interval = "0" if i == 0 else f"{float(MULTIPLIER_THRESHOLDS[i - 1]):.1f} < X <= {float(upper):.1f}"
-        rows.append({"Interval": interval, key_cnt: int(st["bucket_cnt"][i]),
-                     key_pay: st["bucket_pay"][i] / PAY_SCALE, "Interval_Upper": upper})
+        row = {"Interval": interval, key_cnt: int(st["bucket_cnt"][i]),
+               key_pay: st["bucket_pay"][i] / PAY_SCALE, "Interval_Upper": upper}
+        if res["bet_mode"] == 3:   # SF：該區間（一局 5 轉總得分）內每一轉的中獎率與轉數；By Game：重轉率（每轉）
+            spins, hits = int(st["band_spins"][i]), int(st["band_hits"][i])
+            row["FG_Hit_Rate"] = hits / spins if spins else 0.0
+            row["FG_Spin_Count"] = spins
+            row["FG_Respin_Rate"] = int(st["band_respins"][i]) / spins if spins else 0.0
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
