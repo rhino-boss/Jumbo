@@ -2336,6 +2336,9 @@
           <li>驗證：Speed 5 BG 6 局、Buy Feature FG 22 轉，5 輪到位時間完全相同（Spin 後約 175～195 ms）；Speed 1 仍逐輪停（約 550／735／920／1105／1290 ms），Speed 3 亦逐輪；同一 RNG 碼 Speed 5／Speed 1 重跑結果相同，Console 無錯誤。只改表演，未修改 XLSX／Config 數學參數。（10/15）</li>
           <li>修正 RNG 重跑不一致：大鬼分裂落點原本用「亂數比較式 sort」洗牌，呼叫亂數的次數不固定，同一組 RNG 碼重跑會得到不同結果（例 28.20／28.80）；改為 Fisher–Yates 洗牌（同 Simulator），每局另依 RNG 碼重算 Max Win 上限。（10/15）</li>
           <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
+          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
+          <li>驗證：NB 10 局 → 標題 Normal Bet n=10；切 EB → n=0，玩 5 局 → n=5；切回 NB → n=10；Buy Feature（含 10 轉 FG）期間顯示「不記錄」，結束後 NB／EB 仍為 10／5；Reset 清空，Console 無錯誤。觸發 FG 的局改在 FG 結束時才記一次（BG＋FG ÷ 實際押注，EB 為 2 倍）。未修改 XLSX／Config 數學參數。（10/15）</li>
+          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -3976,7 +3979,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261015n"></script>
+  <script src="../demogame_common.js?v=20261016b"></script>
 </body>
 
 </html>

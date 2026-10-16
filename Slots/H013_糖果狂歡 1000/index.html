@@ -2001,7 +2001,8 @@
           <li>驗證：Speed 5 下 BG 與 BF（入場＋10 轉 FG）每次 6 輪停輪時間差 0 ms（Spin 後約 60 ms 同時到位）；Speed 1 仍逐輪停（約 535→1430 ms，每輪約 180 ms）；RNG 碼重跑 BF 整局 Log 逐行相同；Console 無錯誤。（10/15）</li>
           <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
           <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>驗證：VERIFY_PLACEHOLDER（10/15）</li>
+          <li>驗證：node --check 通過；NB 10 局 → Normal Bet n=10、切 EB → n=0、EB 5 局 → n=5、切回 NB → n=10；NB 自然觸發局（Card off，種子 00000652）只記 1 次、值 236.70x（BG＋FG）；Buy Feature 顯示不記錄、整局 FG 後計數不變；重置 NB／EB 皆歸零；Console 無錯誤。（10/15）</li>
+          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
         </ol>
       </article>
       </div>
@@ -3602,7 +3603,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261015n"></script>
+  <script src="../demogame_common.js?v=20261016b"></script>
   <script>
     (() => {
       "use strict";

@@ -927,7 +927,12 @@
       style.id = "demogame-removed-style";
       style.textContent = ".demogame-removed{display:none!important}"
         // 統計／統計 (By Game)／模擬的數值一律用白色字（不用強調綠）
-        + "body.slot-simulator #simulation-stats .s-value,body.slot-simulator #by-game-stats .s-value,body.slot-simulator #batch-simulation .s-value{color:var(--sim-text)!important}";
+        + "body.slot-simulator #simulation-stats .s-value,body.slot-simulator #by-game-stats .s-value,body.slot-simulator #batch-simulation .s-value{color:var(--sim-text)!important}"
+        // 遊戲區換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）
+        + "body.slot-simulator #app-shell #play-panel .play-main-controls{display:flex;flex-wrap:wrap}"
+        + "body.slot-simulator #app-shell #play-panel .play-main-controls>.bet-stepper{flex:1 1 200px}"
+        + "body.slot-simulator #app-shell #play-panel .play-main-controls>.speed-control{flex:1 1 116px;width:auto;grid-template-columns:auto minmax(48px,1fr) auto}"
+        + "body.slot-simulator #app-shell #play-panel .speed-control input{width:100%}";
       document.head.appendChild(style);
     }
   }

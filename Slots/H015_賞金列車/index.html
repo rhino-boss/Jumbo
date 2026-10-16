@@ -2068,6 +2068,7 @@
           <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
           <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
           <li>本檔無 Extra Bet，只記 NB：每局（含整場 FG）結束呼叫一次 <code>record(總得分 ÷ 底注, "NB")</code>，未觸發與 FG 結束兩條路互斥；指定 Card Range／RNG 重跑局、Simulation 不記錄；Buy Feature 為單次按鈕，開局時 <code>setMode("BF")</code> 顯示佔位，NB 開局與 Reset 回 NB。驗證：NB 10 局 n=10、Buy Feature 顯示佔位且計數不變、回 NB 仍 n=10、Reset 後 n=0，Console 無錯誤。（10/15）</li>
+          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
         </ol>
       </article>
       </div>
@@ -3197,7 +3198,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261015n"></script>
+  <script src="../demogame_common.js?v=20261016b"></script>
 </body>
 
 </html>
