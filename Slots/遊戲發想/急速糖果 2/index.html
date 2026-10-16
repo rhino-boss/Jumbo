@@ -814,6 +814,22 @@
         sumPill.classList.add("pulse");
       }
 
+      // ── 全盤倍數作用到得分：從上方 pill 飛一顆倍數到下方 Win ────────────
+      async function flySumToWin(text) {
+        const from = sumValueEl.getBoundingClientRect(), to = $("winValue").getBoundingClientRect();
+        const flyMs = Math.max(220, 560 / speed());
+        const tok = document.createElement("span");
+        tok.className = "tc-plus-token";
+        tok.textContent = text;
+        Object.assign(tok.style, { position: "fixed", left: `${from.left + from.width / 2 - 14}px`, top: `${from.top + from.height / 2 - 9}px`, zIndex: "9000" });
+        tok.style.setProperty("--fly", `${flyMs}ms`);
+        document.body.appendChild(tok);
+        void tok.offsetWidth;
+        tok.style.transform = `translate(${to.left + to.width / 2 - (from.left + from.width / 2)}px, ${to.top + to.height / 2 - (from.top + from.height / 2)}px) scale(1.25)`;
+        await sleep(flyMs + 40);
+        tok.remove();
+      }
+
       // ── Debug：Spin Result／Log／逐幀 ─────────────────────────────
       const modeLabel = (mode) => mode === MODE_EXTRA ? "Extra Bet" : mode === MODE_BUY ? "Buy Feature" : "Normal Bet";
 
@@ -978,10 +994,18 @@
           $("cascadeValue").textContent = step.cascadeIdx;
           renderBoard(step.boardBefore, step.multBefore);
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
-          if (step.effSum > 1) window.slotFx?.multiPop(fxLayer, `X${step.effSum}`, {});
+          const winText = `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""}`;
+          // 計分順序：先顯示未乘倍數的得分 → 盤面倍數全部收集到上方「全盤倍數和」→ 全盤倍數飛到下方得分 → 才算最終得分
+          if (step.boardSum > 0) {
+            const basePay = step.pay / step.effSum;
+            say(() => `${winText} | +${fmt(basePay)}`);
+            await wait(420);
+            await collectMultipliers(step.multBefore, step.effSum);
+            await flySumToWin(`x${step.effSum}`);
+          }
           window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
           paid += step.pay; setWinShown(winBase + paid);
-          say(() => `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""} | ${tr("sum")} x${step.effSum} | +${fmt(step.pay)}`);
+          say(() => `${winText} | ${tr("sum")} x${step.effSum} | +${fmt(step.pay)}`);
           markFrame(1 + stepIdx * 2); markFrame(2 + stepIdx * 2);   // 中獎幀與掉落幀同一句
           await wait(760);
 
@@ -997,8 +1021,7 @@
 
           renderBoard(step.boardAfter, step.multAfter);
           fxMark(step.boardAfter);
-          await sleep(applyDropAnim(step.removeSet));
-          await collectMultipliers(step.multAfter, sumOf(step.multAfter));
+          await sleep(applyDropAnim(step.removeSet));   // 新增的位置倍數留在盤面，下一次得分時才收集
           await wait(120);
         }
 
