@@ -1974,7 +1974,7 @@
       border-radius: 8px;
       background: #06101d;
       color: #cfe6ff;
-      font: 700 14px/1 Consolas, "Segoe UI", monospace;
+      font: 400 18px/1 Consolas, "Segoe UI", monospace;
     }
     body #helpDialog #helpContent .help-sym-tile.has-art {
       width: 88px;
@@ -2003,7 +2003,7 @@
     @media (max-width: 640px) {
       body #helpDialog #helpContent .help-sym-grid { gap: 16px 8px; }
       body #helpDialog #helpContent .help-sym-card { gap: 8px; }
-      body #helpDialog #helpContent .help-sym-tile { width: 56px; height: 56px; font-size: 12px; }
+      body #helpDialog #helpContent .help-sym-tile { width: 56px; height: 56px; font-size: 16px; }
       body #helpDialog #helpContent .help-sym-tile.has-art { width: 64px; height: 64px; }
       body #helpDialog #helpContent .help-sym-pays { min-width: 0; font-size: 12px; }
     }
@@ -2313,6 +2313,8 @@
       tile.appendChild(img);
     } else {
       tile.textContent = code;
+      const sym = String(code).toUpperCase().match(/^(M\d+|W\d|WW\d?|WILD|C\d|SC|TE|10|A|K|Q|J)/);
+      if (sym) tile.dataset.dgSym = sym[1].replace(/^WILD$/, "WW");   // 配色同盤面無圖符號（見「無圖符號樣式統一」）
       if (/^(C\d|SC)$/i.test(code)) tile.classList.add("is-scatter");
       else if (/^(W\w*|WILD)$/i.test(code)) tile.classList.add("is-wild");
     }
@@ -2887,7 +2889,7 @@
   "use strict";
   const LABEL = ".slot-symbol-label, .symbol-code, .h019-glyph, .sym-code-label";
   const codeOf = (cell) => {
-    const label = [...cell.querySelectorAll(LABEL)].find((node) => node.textContent.trim() && getComputedStyle(node).display !== "none");
+    const label = [...cell.querySelectorAll(LABEL)].find((node) => node.textContent.trim() && !node.hidden && node.style.display !== "none");
     const text = (label || cell).textContent.trim().toUpperCase();
     const match = text.match(/^(M\d+|W\d|WW\d?|WILD|C\d|SC|TE|10|A|K|Q|J)/);
     return match ? match[1].replace(/^WILD$/, "WW") : "";
@@ -2900,8 +2902,9 @@
       }
     }
   };
-  let queued = false;
-  const schedule = () => { if (queued) return; queued = true; setTimeout(() => { queued = false; tag(); }, 0); };
+  // MutationObserver 回呼在畫面重繪前執行：同步標記，避免 Spin 時先畫成原樣式再換色而閃爍
+  let tagging = false;
+  const schedule = () => { if (tagging) return; tagging = true; try { tag(); } finally { tagging = false; } };
   const start = () => {
     const board = document.getElementById("board");
     if (!board) return;
@@ -2911,7 +2914,8 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 
   const free = ":not(.has-symbol-art):not(.hit):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
-  const base = `body #board .cell[data-dg-sym]${free}`;
+  // Help 賠率表的代號方格（沒圖時）與盤面同一套配色
+  const base = `:is(body #board .cell[data-dg-sym]${free}, body #helpDialog #helpContent .help-sym-tile[data-dg-sym]:not(.has-art))`;
   const gold = `body #board .cell:is(.gold,.special-gold)${free}`;
   const label = `:is(${LABEL})`;
   // M 獎：同亮度、不同色相的低彩度漸層，字獎深藍；上緣一條淡高光，整體與金框同一套質感
@@ -2931,7 +2935,7 @@
     ${base}:is([data-dg-sym^="W"]):not(.gold):not(.special-gold){background:linear-gradient(180deg,#22706a 0%,#0f3d3a 100%)!important;border-color:#3fd6c4!important;color:#d6fff8!important}
     ${gold}{background:linear-gradient(180deg,#f8dc8c 0%,#e2ac44 45%,#b67a16 100%)!important;border:1.6px solid #f1c35a!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,250,220,.55)!important;color:#fff6de!important}
     ${gold} ${label}{color:inherit!important;text-shadow:0 1px 2px rgba(60,30,0,.55)!important}
-    :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important}
+    :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:21px!important;line-height:1!important}
     ${base}:not(.sym-digit) ${label}{color:inherit!important;text-shadow:none!important}`;
   document.head.appendChild(style);
 })();
