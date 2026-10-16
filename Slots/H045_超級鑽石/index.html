@@ -611,6 +611,11 @@
       color: var(--text);
     }
 
+    /* 倍數規則切換：加乘版（原版）／相加版（H045_超級鑽石_2） */
+    .rule-toggle { display: inline-flex; border: 1px solid var(--line, #2a3a55); border-radius: 999px; overflow: hidden; }
+    .rule-toggle button { border: 0; background: transparent; color: var(--sub); font-size: 12px; font-weight: 700; padding: 3px 10px; cursor: pointer; }
+    .rule-toggle button.is-active { background: #2c6bd6; color: #fff; }
+
     #modeText {
       color: var(--sub);
       font-size: 12px;
@@ -2091,6 +2096,7 @@
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond</span></span>
+      <span id="ruleToggle" class="rule-toggle" role="group" aria-label="倍數規則"><button type="button" data-rule="mul">加乘版</button><button type="button" data-rule="add">相加版</button></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2174,6 +2180,7 @@
           <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldSeen">金框出現率</span><span class="s-value" id="goldSeenValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldUsed">金框使用率</span><span class="s-value" id="goldUsedValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultSeen">倍數出現率</span><span class="s-value" id="multSeenValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultUsed">倍數出現並使用</span><span class="s-value" id="multUsedValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigGhost">大鬼出現率</span><span class="s-value" id="bigGhostValue">0.00% (—)</span></div>
@@ -2553,20 +2560,32 @@
 | 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
 | 規則說明 | ▪ 若玩家在免費遊戲期間中斷連線，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL COMPLETE THE RESULT AUTOMATICALLY AND ADD ANY WINNINGS TO THE BALANCE. |
   </script>
-  <script src="./Versions/version_manifest.js?v=20261013c"></script>
+  <script>
+    // 倍數規則切換（2026-10-16）：加乘版＝本專案（原版）；相加版＝讀 ../H045_超級鑽石_2/ 的 manifest 與 config
+    (() => {
+      const query = new URLSearchParams(window.location.search);
+      let mode = query.get("rule");
+      if (mode !== "add" && mode !== "mul") { try { mode = localStorage.getItem("h045RuleMode"); } catch (_) {} }
+      mode = mode === "add" ? "add" : "mul";
+      try { localStorage.setItem("h045RuleMode", mode); } catch (_) {}
+      window.H045_RULE_MODE = mode;
+      window.H045_BASE_DIR = mode === "add" ? "../H045_超級鑽石_2/" : "./";
+      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261016a"><\/script>`);
+    })();
+  </script>
   <script>
     (() => {
       const manifest = window.H045_VERSION_MANIFEST;
       if (!manifest) throw new Error("H045 version manifest was not loaded.");
       const query = new URLSearchParams(window.location.search);
-      const requested = query.get("version") || manifest.current;
+      const requested = query.get("version") || manifest.current;   // 相加版／加乘版各自的 manifest
       const entry = (manifest.versions || []).find(item => item.version === requested || item.math_key === requested)
         || (manifest.versions || []).find(item => item.version === manifest.current)
         || (manifest.versions || [])[0];
       if (!entry) throw new Error("H045 version manifest has no usable version.");
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
-      const folder = entry.version === manifest.current ? "./" : `./Versions/${entry.version}/`;
+      const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
       const stamp = `${encodeURIComponent(entry.version)}-20261015a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
@@ -2605,6 +2624,7 @@
 
   const cfg = window.H045_CONFIG;
   if (!cfg) throw new Error("H045 config was not loaded.");
+  const RULE_ADD = window.H045_RULE_MODE === "add";   // 相加版（H045_超級鑽石_2）：該波倍率 = 階梯 ＋ 被消除的帶倍 WILD 總和
   for (const key of ["tables", "table_weight", "pays", "cascade_multiplier", "symbol_names",
     "gold_count_weight", "gold_reels", "free_spins", "bet_modes", "split_target_reels"]) {
     if (!cfg[key]) throw new Error("H045 config is missing field: " + key);
@@ -2669,7 +2689,7 @@
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
     maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
     fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 },
-    spinStats: { spins: 0, goldSeen: 0, multSeen: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
+    spinStats: { spins: 0, goldSeen: 0, goldAppeared: 0, goldUsed: 0, multSeen: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -2871,13 +2891,14 @@
       const symbol = board[reel][row];
       if ((symbol === WW || symbol === W2) && mults[reel][row] > 1) usedSum += mults[reel][row];
     }
-    const lineMult = usedSum > 0 ? usedSum : 1;
+    // 相加版：WILD 總和改在 spin 迴圈與階梯相加，這裡不乘
+    const lineMult = RULE_ADD ? 1 : (usedSum > 0 ? usedSum : 1);
     for (const line of lines) {
       const pay = line.raw * lineMult;
       rawPay += pay;
-      details.push({ symbol: line.symbol, length: line.length, ways: line.ways, lineMult, pay });
+      details.push({ symbol: line.symbol, length: line.length, ways: line.ways, lineMult, wildSum: usedSum, pay });
     }
-    return { rawPay, hits, details };
+    return { rawPay, hits, details, usedSum };
   }
 
   // game_rule §5.2 / §5.4：每顆中獎金框各自獨立抽一次四種結果；大鬼倍數固定在本體
@@ -2945,6 +2966,7 @@
     const goldCount = goldCountFor(tableName, scene);
     const gold = drawGold(goldCount, board);
     let goldSeen = gold.some(column => column.some(Boolean));   // By Game：本轉盤面出現過金框（含補牌補上的）
+    let goldAppeared = gold.reduce((total, column) => total + column.filter(Boolean).length, 0);   // 金框使用率分母：出現的金框顆數（含補牌補上的）
     const flipState = { freeGame, bigGhostUsed: false };
     const cap = MAX_WIN * betUnit();
     let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
@@ -2961,10 +2983,11 @@
         if ((board[r][c] === WW || board[r][c] === W2) && mults[r][c] > 1) multUsed = true;
         if (bigCells.has(key)) { bigScored = true; bigCells.delete(key); }
       }
-      const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
+      const step = multipliers[Math.min(combo, multipliers.length - 1)];
+      const multiplier = RULE_ADD ? step + win.usedSum : step;   // 相加版：階梯 ＋ 本次被消除的帶倍 WILD 倍數總和
       const cascadePay = win.rawPay * multiplier * betUnit();
       pay += cascadePay;
-      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [...win.hits], combo, multiplier, cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
+      snapshots.push({ type: "win", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), hits: [...win.hits], combo, multiplier: step, totalMult: RULE_ADD ? multiplier : step * Math.max(1, win.usedSum), cascadePay, totalPay: pay, message: `WIN ${money(cascadePay)}`, details: win.details });
       combo++;
 
       // 1) 消除；中獎的金框不消除，當下直接翻成小鬼／大鬼本體（分裂等補牌後）
@@ -3008,7 +3031,7 @@
           if (short > 0) {
             const spots = rows.filter(row => !gold[reel][row] && board[reel][row] !== C1);
             for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
-            for (const row of spots.slice(0, short)) { gold[reel][row] = true; goldSeen = true; }
+            for (const row of spots.slice(0, short)) { gold[reel][row] = true; goldSeen = true; goldAppeared++; }
           }
         }
       }
@@ -3028,7 +3051,7 @@
     }
     return {
       pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, goldenTally, capped,
-      multUsed, bigNoScore: w2Events > 0 && !bigScored, goldSeen,
+      multUsed, bigNoScore: w2Events > 0 && !bigScored, goldSeen, goldAppeared,
       board, mults, gold, snapshots, tableName,
       maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]
     };
@@ -3283,8 +3306,8 @@
     const layerRect = layer.getBoundingClientRect();
     const boardRect = $("board").getBoundingClientRect();
     const center = { x: boardRect.left - layerRect.left + boardRect.width / 2, y: boardRect.top - layerRect.top + boardRect.height / 2 };
-    const sum = values.length ? values.reduce((total, item) => total + item.value, 0) : 1;
-    const total = sum * ladder;
+    const sum = values.length ? values.reduce((total, item) => total + item.value, 0) : (RULE_ADD ? 0 : 1);
+    const total = RULE_ADD ? sum + ladder : sum * ladder;   // 相加版：階梯 ＋ WILD 總和
     const base = (Number(snapshot.cascadePay) || 0) / total;
 
     const barEl = $("messageBar"), bar = barEl.getBoundingClientRect();
@@ -3316,7 +3339,7 @@
     await wait(hold);
     const step = $("multiplierWindow").querySelector(".is-active");
     const dropLadder = async (toX, toY) => {
-      if (ladder <= 1 || !step) return;
+      if ((ladder <= 1 && !RULE_ADD) || !step) return;
       step.classList.add("fx-ladder-hit");
       await fly(step.getBoundingClientRect(), toX, toY, `×${ladder}`, "fx-fly-badge ladder");
       step.classList.remove("fx-ladder-hit");
@@ -3351,9 +3374,9 @@
     await wait(hold);
 
     // ② 上方連消倍數向下作用到中央倍數（×1 不演）
-    if (ladder > 1) {
+    if (ladder > 1 || RULE_ADD) {   // 相加版 ×1 也要加
       await dropLadder(center.x, center.y);
-      bubble.innerHTML = `<span class="fx-math-tag">×${sum} × CASCADE ×${ladder}</span>×${total}`;
+      bubble.innerHTML = `<span class="fx-math-tag">×${sum} ${RULE_ADD ? "+" : "×"} CASCADE ×${ladder}</span>×${total}`;
       bubble.classList.remove("pulse"); void bubble.offsetWidth; bubble.classList.add("pulse", "show");
       await wait(hold);
     }
@@ -3454,9 +3477,9 @@
 
   function renderWinDetails(snapshot) {
     $("lineList").innerHTML = snapshot.details?.length
-      ? snapshot.details.map(win => `<div class="line-row"><span>${win.symbol} · ${win.length} reels · ${win.ways} ways${win.lineMult > 1 ? ` · wild ×${win.lineMult}` : ""}</span><span>${format(win.pay)}</span></div>`).join("")
+      ? snapshot.details.map(win => `<div class="line-row"><span>${win.symbol} · ${win.length} reels · ${win.ways} ways${RULE_ADD ? (win.wildSum > 0 ? ` · wild +${win.wildSum}` : "") : (win.lineMult > 1 ? ` · wild ×${win.lineMult}` : "")}</span><span>${format(win.pay)}</span></div>`).join("")
       : '<div class="line-row"><span>No Win</span><span>0.00</span></div>';
-    $("spinResultList").innerHTML = `<div class="spin-result-row">Run ${snapshot.combo + 1} · ×${snapshot.multiplier} · ${snapshot.message}</div>`;
+    $("spinResultList").innerHTML = `<div class="spin-result-row">Run ${snapshot.combo + 1} · ×${snapshot.totalMult ?? snapshot.multiplier} · ${snapshot.message}</div>`;
     $("carryMultiValue").textContent = snapshot.combo;
   }
 
@@ -3523,7 +3546,7 @@
 
   function tallySpin(result) {
     const s = state.spinStats;
-    s.spins++; s.goldSeen += result.goldSeen ? 1 : 0; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
+    s.spins++; s.goldSeen += result.goldSeen ? 1 : 0; s.goldAppeared += result.goldAppeared || 0; s.goldUsed += result.golden || 0; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
     s.bigNoScore += result.bigNoScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
   }
   // 機率（週期）：例 12.34% (1/8.1)；沒發生顯示 0.00% (—)
@@ -3538,6 +3561,8 @@
     $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
     const s = state.spinStats;
     $("goldSeenValue").textContent = rateCycle(s.goldSeen, s.spins);
+    // 金框使用率（2026-10-16）：中獎被消除而翻牌的金框 ÷ 出現的金框（同 Super Ace 金框轉換率口徑）
+    $("goldUsedValue").textContent = s.goldAppeared ? `${(s.goldUsed / s.goldAppeared * 100).toFixed(2)}% (${s.goldUsed.toLocaleString()}/${s.goldAppeared.toLocaleString()})` : "0.00% (—)";
     $("multSeenValue").textContent = rateCycle(s.multSeen, s.spins);
     $("multUsedValue").textContent = rateCycle(s.multUsed, s.spins);
     $("bigGhostValue").textContent = rateCycle(s.big, s.spins);
@@ -3776,7 +3801,7 @@
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)",
       scriptFlip: "Gold frame cleared", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
-      statGoldSeen: "Gold frame seen", statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
+      statGoldSeen: "Gold frame seen", statGoldUsed: "Gold frame used", statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
@@ -3784,7 +3809,7 @@
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼",
       scriptFlip: "金框有消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
-      statGoldSeen: "金框出現率", statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
+      statGoldSeen: "金框出現率", statGoldUsed: "金框使用率", statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
     }
   };
   function tr(key) { return (H045_TEXT[state.language] || H045_TEXT.en)[key] ?? H045_TEXT.en[key] ?? key; }
@@ -3807,7 +3832,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,goldSeen:0,multSeen:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,goldSeen:0,goldAppeared:0,goldUsed:0,multSeen:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
     $("autoBtn").textContent = tr("auto"); renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = tr("ready"); updateStats();
   }
   function buildBetMenu() {
@@ -3873,6 +3898,17 @@
   $("helpBtn").onclick = openHelp; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;$("rngInput").value="";}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
+  document.querySelectorAll("#ruleToggle button").forEach(button => {
+    button.classList.toggle("is-active", button.dataset.rule === (RULE_ADD ? "add" : "mul"));
+    button.onclick = () => {
+      if (button.dataset.rule === (RULE_ADD ? "add" : "mul")) return;
+      const url = new URL(location.href);
+      url.searchParams.set("rule", button.dataset.rule);
+      url.searchParams.delete("version"); url.searchParams.delete("config");   // 兩版 manifest 不同，回到各自目前版本
+      try { localStorage.setItem("h045RuleMode", button.dataset.rule); localStorage.removeItem("h045MathVersion"); } catch (_) {}
+      location.href = url.href;
+    };
+  });
   
   document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
   appendLog(`Config ${window.H045_ACTIVE_CONFIG || "base"} loaded | Version ${window.H045_VERSION_ENTRY?.version || cfg.excel_version || "--"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
@@ -3883,7 +3919,7 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H045_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
-  <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級鑽石.html";</script>
+  <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "其他/數值報告_超級鑽石.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>

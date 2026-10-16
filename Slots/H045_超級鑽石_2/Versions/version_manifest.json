@@ -1,0 +1,29 @@
+{
+  "current": "1.0.0.0",
+  "version_rule": {
+    "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
+    "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
+    "display": "Demogame／Versions 以 RTP／Variant 四碼版本（第 1 碼＝基礎數學 H0451.xlsx 版本）識別；config.js excel_version 為 1 碼，config_92A.js 為 4 碼。"
+  },
+  "versions": [
+    {
+      "version": "1.0.0.0",
+      "math_key": "1",
+      "date": "2026-10-16",
+      "base_config": "config.js",
+      "sources": {
+        "base": "Source/H0451.xlsx",
+        "92A": "Source/H045192A.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js"
+      },
+      "changes": [
+        "複製 H045 超級鑽石 v5（5.0.0.0）：盤面表、賠率、階梯、帶倍權重、Extra Bet 全部沿用。",
+        "規則改加法：該波倍率 = Cascade Multiplier ＋ 本次被消除的帶倍 WILD 倍數總和（原為相乘）。",
+        "以新規則重跑正式自然報表（NB 10^8／BF 10^7）並重解 92A。"
+      ]
+    }
+  ]
+}
