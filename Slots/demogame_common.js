@@ -258,7 +258,16 @@
     const title = document.querySelector("#simulation-stats h3");
     if (!title) return;
     title.removeAttribute("data-i18n");
-    title.textContent = "Stats";
+    title.textContent = "Basic Metrics";
+    // 有些遊戲切換語言時會把標題寫回「Simulation Stats／模擬統計」，一律改回基本指標（再由共用字典翻譯）
+    new MutationObserver(() => {
+      const textNode = [...title.childNodes].find((n) => n.nodeType === 3 && n.nodeValue.trim());
+      const text = textNode ? textNode.nodeValue.trim() : "";
+      if (text === "Basic Metrics" || text === "基本指標") return;
+      const btn = title.querySelector(".demogame-zoom-btn");
+      title.textContent = "Basic Metrics";
+      if (btn) title.appendChild(btn);   // 保留放大按鈕
+    }).observe(title, { childList: true, characterData: true, subtree: true });
   }
 
   function ensureCardSystemToggle() {
@@ -513,7 +522,7 @@
     const head = stats.querySelector("h3");
     const title = document.createElement(head ? head.tagName : "h3");
     if (head) title.className = head.className;
-    title.textContent = "Stats (By Game)";
+    title.textContent = "Special Metrics";
     panel.appendChild(title);
     rows.forEach((row) => panel.appendChild(row));   // 搬移節點，id 不變，遊戲照原本方式更新數值
     stats.insertAdjacentElement("afterend", panel);
@@ -538,9 +547,10 @@
     under.id = "demogame-under-board";
     shell.appendChild(under);
     const style = document.createElement("style");
-    style.textContent = `body.slot-simulator #app-shell.player-under-board #grid-panel{grid-column:1;grid-row:1}
+    style.textContent = `body.slot-simulator #app-shell.player-under-board{grid-template-rows:auto 1fr;align-items:start}
+      body.slot-simulator #app-shell.player-under-board #grid-panel{grid-column:1;grid-row:1}
       body.slot-simulator #app-shell.player-under-board #right-panel{grid-column:2;grid-row:1 / span 2}
-      body.slot-simulator #demogame-under-board{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:10px;min-width:0}
+      body.slot-simulator #demogame-under-board{grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:10px;min-width:0}
       body.slot-simulator #app-shell:not(.player-under-board) #demogame-under-board{display:none}
       @media (max-width: 760px){body.slot-simulator #app-shell.player-under-board #grid-panel{grid-column:1;grid-row:1}body.slot-simulator #demogame-under-board{grid-column:1;grid-row:2}body.slot-simulator #app-shell.player-under-board #right-panel{grid-column:1;grid-row:3}}`;
     document.head.appendChild(style);
@@ -549,6 +559,231 @@
   }
 
   setupPlayerUnderBoard();
+
+  // 狀態列（#strip-bar，共用）：拿掉前面的模式標題（#modeText，基礎遊戲／免費遊戲）；
+  // 剩下沒有任何要顯示的特色（連消、倍數、FG 剩餘等都沒顯示）時，整個狀態列隱藏。
+  function setupStripBar() {
+    const strip = document.getElementById("strip-bar");
+    if (!strip) return;
+    document.getElementById("modeText")?.classList.add("demogame-removed");
+    let busy = false;
+    const check = () => {
+      if (busy) return;
+      busy = true;
+      strip.classList.remove("demogame-removed");
+      const shown = [...strip.querySelectorAll("*")].some((el) => {
+        if (el.closest("#modeText, .demogame-removed") || el.children.length) return false;
+        const rects = el.getClientRects();
+        if (!rects.length || !rects[0].width) return false;
+        return Boolean(el.textContent.trim()) || /^(CANVAS|SVG|IMG)$/i.test(el.tagName);
+      });
+      strip.classList.toggle("demogame-removed", !shown);
+      requestAnimationFrame(() => { busy = false; });
+    };
+    check();
+    new MutationObserver(check).observe(strip, { attributes: true, subtree: true, childList: true, characterData: true, attributeFilter: ["class", "hidden", "style"] });
+    setTimeout(check, 0);
+  }
+
+  setupStripBar();
+
+  // #controls（Set RNG 等的外層容器）裡沒有可見內容時（例如關閉除錯模式），不佔上下間距
+  function setupEmptyZoneSpacing() {
+    const zone = document.getElementById("controls");
+    if (!zone) return;
+    const check = () => {
+      const visible = [...zone.children].some((k) => getComputedStyle(k).display !== "none" && !k.hidden);
+      zone.classList.toggle("demogame-empty-zone", !visible);
+    };
+    check();
+    new MutationObserver(check).observe(zone, { attributes: true, subtree: true, childList: true, attributeFilter: ["class", "hidden", "style"] });
+  }
+
+  setTimeout(setupEmptyZoneSpacing, 0);
+
+  // 押注模式按鈕樣式（共用）：NB／EB 為切換鈕（選取中用「自動」鈕的深綠底白字）；BF／SF 為購買鈕，改用 SPIN 的藍底白字；
+  // 所有按鈕字體、大小、字重一致。依按鈕文字判斷是否為購買鈕（含 Buy／Super／購買／超級／BF／SF）。
+  function setupBetModeButtonStyle() {
+    const panel = document.getElementById("bet-mode-panel");
+    if (!panel) return;
+    const classify = () => panel.querySelectorAll("button").forEach((btn) => {
+      const text = `${btn.textContent || ""}`.trim();
+      btn.classList.toggle("demogame-buy-btn", /buy|super|購買|超級|^(BF|SF)(?![A-Za-z])/i.test(text));
+    });
+    const style = document.createElement("style");
+    style.textContent = "body.slot-simulator #app-shell #bet-mode-panel button{font:700 12px/1 \"Segoe UI\",system-ui,sans-serif!important;text-transform:uppercase;letter-spacing:0;color:#fff!important}"
+      + "body.slot-simulator #app-shell #bet-mode-panel button.is-active:not(.demogame-buy-btn),body.slot-simulator #app-shell #bet-mode-panel button.active:not(.demogame-buy-btn){background:#007755!important;color:#fff!important;border:0!important;box-shadow:none!important}"
+      + "body.slot-simulator #app-shell #bet-mode-panel button.demogame-buy-btn{background:#0077cc!important;color:#fff!important;border:0!important}"
+      + "body.slot-simulator #app-shell #bet-mode-panel button.demogame-buy-btn:disabled{opacity:.45}";
+    document.head.appendChild(style);
+    classify();
+    new MutationObserver(classify).observe(panel, { childList: true, subtree: true, characterData: true });
+  }
+
+  setupBetModeButtonStyle();
+
+  // 區域標題（共用）：有標題的區域，標題下用一條線隔開（同紀錄區），標題列滿版；遊戲區不顯示標題。
+  function setupRegionTitleRule() {
+    const play = document.querySelector("#play-panel > .zone-label");
+    if (play) play.classList.add("demogame-removed");
+    const apply = () => document.querySelectorAll(".control-zone > .zone-label, #simulation-stats > h3, #by-game-stats > h3, #demogame-cumulative-chart > h3").forEach((title) => {
+      if (title.classList.contains("demogame-removed")) return;
+      const box = getComputedStyle(title.parentElement);
+      if (box.display === "none") return;
+      const flexGap = /flex|grid/.test(box.display) ? parseFloat(box.rowGap) || 0 : 0;
+      Object.assign(title.style, {
+        display: "flex", alignItems: "center", boxSizing: "border-box", minHeight: "36px",
+        margin: `-${box.paddingTop} -${box.paddingRight} ${Math.max(0, 8 - flexGap)}px -${box.paddingLeft}`,
+        padding: `0 ${box.paddingRight} 0 ${box.paddingLeft}`, borderBottom: "1px solid var(--sim-surface)"
+      });
+      title.dataset.ruled = "1";
+    });
+    apply();
+    const debugInput = document.querySelector("#debugModeInput, #debugInput");
+    debugInput?.addEventListener("change", () => setTimeout(apply, 0));
+    setTimeout(apply, 0);
+  }
+
+  setTimeout(setupRegionTitleRule, 0);
+
+  // 捲軸（共用）：所有區塊不顯示捲軸，但仍可用滑鼠滾輪／觸控上下捲動
+  (() => {
+    const style = document.createElement("style");
+    style.textContent = "*{scrollbar-width:none!important;-ms-overflow-style:none!important}*::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}";
+    document.head.appendChild(style);
+  })();
+
+  // 放大檢視（共用）：倍率線型（累積、模擬）、紀錄、修改紀錄的標題後加「+」，點下去用彈窗顯示完整內容（倍率線型為大圖）。
+  // 彈窗是把原區塊的內容暫時搬進來（數值、按鈕照常即時更新），關閉後搬回原位。
+  function setupZoomButtons() {
+    const overlay = document.createElement("div");
+    overlay.id = "demogame-zoom";
+    overlay.innerHTML = `<div class="dz-box" role="dialog" aria-modal="true"><div class="dz-head"><span class="dz-title"></span><span class="dz-actions"><button type="button" class="dz-rotate" aria-label="Rotate" title="旋轉 90°">⟳</button><button type="button" class="dz-close" aria-label="Close">✕</button></span></div><div class="dz-body"></div></div>`;
+    document.body.appendChild(overlay);
+    const style = document.createElement("style");
+    style.textContent = `#demogame-zoom{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);padding:24px}
+      #demogame-zoom.open{display:flex}
+      #demogame-zoom .dz-box{width:min(1200px,96vw);max-height:92vh;display:flex;flex-direction:column;border:1px solid var(--sim-border,#1d4668);border-radius:12px;background:var(--sim-panel,#071528);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+      #demogame-zoom .dz-head{display:flex;align-items:center;justify-content:space-between;min-height:40px;padding:0 14px;border-bottom:1px solid var(--sim-surface,#0c2240);color:var(--sim-sub,#5a88aa);font:700 13px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.5px}
+      #demogame-zoom .dz-close{border:0;background:transparent;color:var(--sim-sub,#5a88aa);font:700 16px/1 "Segoe UI",system-ui,sans-serif;cursor:pointer;padding:6px}
+      #demogame-zoom .dz-close:hover,#demogame-zoom .dz-rotate:hover{color:#fff}
+      #demogame-zoom .dz-actions{display:flex;align-items:center;gap:6px}
+      #demogame-zoom .dz-rotate{border:0;background:transparent;color:var(--sim-sub,#5a88aa);font:700 16px/1 "Segoe UI",system-ui,sans-serif;cursor:pointer;padding:6px}
+      #demogame-zoom{overflow:hidden}
+      #demogame-zoom .dz-box{transition:transform .35s ease;transform-origin:center center}
+      #demogame-zoom .dz-body{padding:14px;overflow:auto;flex:1;min-height:0}
+      #demogame-zoom .dz-body .batch-line-chart svg,#demogame-zoom .dz-body svg{width:100%;height:auto}
+      #demogame-zoom .dz-body #liveLogBody,#demogame-zoom .dz-body #changeLogBody{max-height:none!important;height:auto!important}
+      .demogame-zoom-btn{margin-left:auto;flex:0 0 auto;width:22px;height:22px;min-height:0!important;padding:0!important;border:0!important;border-radius:5px;background:var(--sim-surface,#0c2240)!important;color:var(--sim-sub,#5a88aa)!important;font:700 14px/22px "Segoe UI",system-ui,sans-serif!important;text-align:center;cursor:pointer}
+      .demogame-zoom-btn:hover{color:#fff!important}
+      .demogame-zoom-btn + *{margin-left:0}
+      .diagnostic-header:has(> .demogame-zoom-btn){column-gap:6px!important;gap:6px!important}
+      .diagnostic-header .demogame-zoom-btn{margin-left:0}
+      .batch-line-chart > .dlc-title{justify-content:center!important;position:relative;min-height:24px}
+      .batch-line-chart > .dlc-title > .demogame-zoom-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0}
+      .diagnostic-header > button:not(.demogame-zoom-btn):first-of-type{margin-left:auto}
+      .diagnostic-header:not(:has(> button:not(.demogame-zoom-btn))) .demogame-zoom-btn{margin-left:auto}`;
+    document.head.appendChild(style);
+    const body = overlay.querySelector(".dz-body");
+    const titleEl = overlay.querySelector(".dz-title");
+    let moved = null;   // { parent, nodes, markers }
+    // 旋轉 90°：整個彈窗區塊轉 90° 並等比放大到填滿畫面（有轉動動畫），再按一次轉回
+    const box = overlay.querySelector(".dz-box");
+    const fitRotation = () => {
+      if (!overlay.classList.contains("rotated")) { box.style.transform = ""; return; }
+      const prev = box.style.transform;
+      box.style.transition = "none"; box.style.transform = "";
+      const w = box.offsetWidth, h = box.offsetHeight;
+      box.style.transform = prev; void box.offsetWidth; box.style.transition = "";
+      const k = Math.min((window.innerWidth - 16) / h, (window.innerHeight - 16) / w);
+      box.style.transform = `rotate(90deg) scale(${k.toFixed(3)})`;
+    };
+    overlay.querySelector(".dz-rotate").addEventListener("click", () => { overlay.classList.toggle("rotated"); fitRotation(); });
+    window.addEventListener("resize", () => { if (overlay.classList.contains("rotated")) fitRotation(); });
+    const close = () => {
+      overlay.classList.remove("rotated");
+      box.style.transform = "";
+      if (moved) moved.nodes.forEach((node, i) => moved.markers[i].replaceWith(node));
+      moved = null;
+      overlay.classList.remove("open");
+      body.innerHTML = "";
+    };
+    const open = (label, nodes) => {
+      if (moved) close();
+      const markers = nodes.map((node) => { const m = document.createComment("zoom"); node.replaceWith(m); return m; });
+      nodes.forEach((node) => body.appendChild(node));
+      moved = { nodes, markers };
+      titleEl.textContent = label;
+      overlay.classList.add("open");
+    };
+    overlay.querySelector(".dz-close").addEventListener("click", close);
+    overlay.addEventListener("click", (event) => { if (event.target === overlay) close(); });
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape" && overlay.classList.contains("open")) close(); });
+    const titleText = (title) => [...title.childNodes].filter((n) => !(n.classList?.contains("demogame-zoom-btn")) && !(n.tagName === "BUTTON")).map((n) => n.textContent).join(" ").replace(/\s+/g, " ").trim();
+    const attach = () => {
+      const titles = document.querySelectorAll("#demogame-cumulative-chart > h3, #batch-simulation .batch-line-chart > .dlc-title, #live-log-wrap > .diagnostic-header, #change-log-wrap > .diagnostic-header");
+      titles.forEach((title) => {
+        if (title.querySelector(".demogame-zoom-btn") || title.classList.contains("demogame-removed") || title.closest("#demogame-zoom")) return;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "demogame-zoom-btn";
+        btn.textContent = "+";
+        btn.title = "Enlarge";
+        btn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          // 圖表子標題（模擬面板的倍率線型、消除分布）只放大該子區塊；其他標題放大整個區域內容
+          const sub = title.closest(".batch-line-chart, .batch-cascade-list");
+          const container = sub || title.parentElement;
+          const nodes = [...container.children].filter((node) => node !== title);
+          open(titleText(title), nodes);
+        });
+        title.appendChild(btn);
+        if (getComputedStyle(title).display === "block") Object.assign(title.style, { display: "flex", alignItems: "center" });
+      });
+    };
+    attach();
+    // 模擬面板的圖表標題會重畫，有變動時補上按鈕（每畫格最多一次）
+    let queued = false;
+    new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      setTimeout(() => { queued = false; attach(); }, 30);
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  setTimeout(setupZoomButtons, 0);
+
+  // 版本紀錄（共用，#change-log-wrap）：標題統一為「版本紀錄」；內容是專案根目錄 修改紀錄.md 的複本
+  // （依版本分節、新到舊、只記調性差異），設定區目前選的版本那一節會標示出來。
+  function setupVersionLog() {
+    const wrap = document.getElementById("change-log-wrap");
+    if (!wrap) return;
+    const head = wrap.querySelector(".diagnostic-header");
+    if (head) {
+      const textNode = [...head.childNodes].find((n) => n.nodeType === 3 && n.nodeValue.trim());
+      if (textNode) textNode.nodeValue = "Version Log"; else head.prepend(document.createTextNode("Version Log"));
+    }
+    const style = document.createElement("style");
+    style.textContent = "body.slot-simulator #changeLogBody .change-log-entry.demogame-current-version{border:1px solid var(--sim-accent,#00ddc0)!important}"
+      + "body.slot-simulator #changeLogBody .change-log-entry.demogame-current-version h4::after{content:'  ← Current';color:var(--sim-sub,#5a88aa);font-weight:400}";
+    document.head.appendChild(style);
+    const mark = () => {
+      const version = (document.getElementById("versionSelect")?.value || "").trim();
+      wrap.querySelectorAll("#changeLogBody .change-log-entry").forEach((entry) => {
+        const h = entry.querySelector("h4")?.textContent || "";
+        entry.classList.toggle("demogame-current-version", Boolean(version) && h.includes(version));
+      });
+    };
+    mark();
+    document.getElementById("versionSelect")?.addEventListener("change", () => setTimeout(mark, 0));
+    // 沒有任何調性紀錄就整區不顯示（沒有的東西不顯示）
+    const syncEmpty = () => wrap.classList.toggle("demogame-removed", !wrap.querySelector("#changeLogBody li"));
+    syncEmpty();
+    const body = document.getElementById("changeLogBody");
+    if (body) new MutationObserver(syncEmpty).observe(body, { childList: true, subtree: true });
+  }
+
+  setTimeout(setupVersionLog, 0);
 
   function normalizeSettings() {
     const settings = document.getElementById("settings-wrap");
@@ -718,7 +953,7 @@
   };
 
   function simulationChartSvg(counts, buckets, ymax) {
-    const W = 900, H = 340, L = 44, R = 12, T = 10, B = 112, n = buckets.labels.length;
+    const W = 900, H = 332, L = 44, R = 12, T = 10, B = 104, n = buckets.labels.length;
     const total = counts.reduce((a, b) => a + b, 0);
     const shares = counts.map((c) => (total ? c / total * 100 : 0));
     const px = (i) => L + (W - L - R) * (n > 1 ? i / (n - 1) : 0.5);
@@ -866,11 +1101,12 @@
     let forcedMode = null;
     const panel = document.createElement("section");
     panel.id = "demogame-cumulative-chart";
-    panel.innerHTML = `<div class="batch-line-chart"></div>`;
+    panel.innerHTML = `<h3 class="demogame-region-title">Multiplier Distribution</h3><div class="batch-line-chart"></div>`;
     right.appendChild(panel);
     const chart = panel.querySelector(".batch-line-chart");
     const style = document.createElement("style");
-    style.textContent = "body.slot-simulator #demogame-cumulative-chart .batch-line-chart{margin-top:0;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
+    style.textContent = "body.slot-simulator #demogame-cumulative-chart{padding:10px 14px 3px;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
+      + "body.slot-simulator #demogame-cumulative-chart .batch-line-chart{margin-top:0;border:0;padding:0;background:transparent}"
       + "body.slot-simulator #demogame-cumulative-chart .dlc-empty{padding:18px 0;text-align:center;color:var(--sim-sub);font-size:12px}";
     document.head.appendChild(style);
     const detectMode = () => {
@@ -885,14 +1121,19 @@
     const render = () => {
       const mode = detectMode();
       const zh = isZhText();
-      const title = `${zh ? "倍率線型（累積）" : "Multiplier Distribution (Cumulative)"} · ${window.demogameSharedText ? window.demogameSharedText(names[mode]) : names[mode]}`;
+      const modeName = window.demogameSharedText ? window.demogameSharedText(names[mode]) : names[mode];
+      // 區域標題：倍率線型 (押注模式)；圖內不再另放標題
+      const head = panel.querySelector(".demogame-region-title");
+      if (head) {
+        const label = `${zh ? "倍率線型" : "Multiplier Distribution"} (${modeName})`;
+        const textNode = [...head.childNodes].find((n) => n.nodeType === 3);
+        if (textNode) { if (textNode.nodeValue !== label) textNode.nodeValue = label; } else head.prepend(document.createTextNode(label));
+      }
       if (mode === "BF") {
-        chart.innerHTML = `<div class="dlc-title">${title}</div><div class="dlc-empty">${zh ? "購買特色不記錄" : "Buy Feature is not recorded"}</div>`;
+        chart.innerHTML = `<div class="dlc-empty">${zh ? "購買特色不記錄" : "Buy Feature is not recorded"}</div>`;
         return;
       }
-      const c = counts[mode];
-      const total = c.reduce((a, v) => a + v, 0);
-      chart.innerHTML = `<div class="dlc-title">${title} · n=${total.toLocaleString("en-US")}</div>${simulationChartSvg(c, SIMULATION_BUCKETS, 1)}`;
+      chart.innerHTML = simulationChartSvg(counts[mode], SIMULATION_BUCKETS, 1);
     };
     window.demogameLineChart = {
       cumulative: true,
@@ -929,6 +1170,18 @@
         // 統計／統計 (By Game)／模擬的數值一律用白色字（不用強調綠）
         + "body.slot-simulator #simulation-stats .s-value,body.slot-simulator #by-game-stats .s-value,body.slot-simulator #batch-simulation .s-value{color:var(--sim-text)!important}"
         // 遊戲區換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）
+        // 間距統一 10px：盤面左右欄間距、頁尾（置中）與上方區塊、空的區塊不佔間距
+        + "body.slot-simulator #app-shell{gap:10px!important}"
+        + "body.slot-simulator .footer-note{margin-top:10px!important;text-align:center!important;color:var(--sim-sub)!important}"
+        + "body.slot-simulator .demogame-empty-zone{margin:0!important;padding:0!important;border:0!important;height:0!important;overflow:hidden}"
+        // 字體統一：所有按鈕 12px 粗體；設定區的文字標籤同「版本」（12px 一般字重、說明色），下拉選項同按鈕；
+        // 有寫名稱的區域標題統一 12px 粗體、說明色、不轉大寫
+        + "body.slot-simulator main button,body.slot-simulator #demogameTitleActions>a,body.slot-simulator #demogameTitleActions>button{font-family:\"Segoe UI\",system-ui,sans-serif!important;font-size:12px!important;font-weight:700!important}"
+        + "body.slot-simulator #settings-wrap label,body.slot-simulator #settings-wrap .setting-toggle,body.slot-simulator #settings-wrap .setting-toggle span{font-family:\"Segoe UI\",system-ui,sans-serif!important;font-size:12px!important;font-weight:400!important;color:var(--sim-sub)!important}"
+        + "body.slot-simulator #settings-wrap select{font-family:\"Segoe UI\",system-ui,sans-serif!important;font-size:12px!important;font-weight:700!important}"
+        + "body.slot-simulator .zone-label,body.slot-simulator .diagnostic-header,body.slot-simulator #simulation-stats h3,body.slot-simulator #by-game-stats h3,body.slot-simulator .demogame-region-title,body.slot-simulator .dlc-title,body.slot-simulator .batch-cascade-title,body.slot-simulator .setting-header{font-family:\"Segoe UI\",system-ui,sans-serif!important;font-size:12px!important;font-weight:700!important;color:var(--sim-sub)!important;text-transform:none!important;letter-spacing:.5px!important}"
+        // 餘額與押注同樣式（淺色字），得分維持強調色
+        + "body.slot-simulator #credit-bar #balanceValue{color:var(--sim-text)!important}"
         + "body.slot-simulator #app-shell #play-panel .play-main-controls{display:flex;flex-wrap:wrap}"
         + "body.slot-simulator #app-shell #play-panel .play-main-controls>.bet-stepper{flex:1 1 200px}"
         + "body.slot-simulator #app-shell #play-panel .play-main-controls>.speed-control{flex:1 1 116px;width:auto;grid-template-columns:auto minmax(48px,1fr) auto}"
@@ -1108,14 +1361,14 @@
   const SHARED_ZH = {
     "credit": "餘額", "bet": "押注", "win": "得分", "play": "遊戲", "auto": "自動", "speed": "速度",
     "bet mode": "押注模式", "normal bet": "一般押注", "extra bet": "額外押注", "buy feature": "購買特色", "super feature": "超級特色", "buy super feature": "購買超級特色",
-    "stats": "統計", "stats (by game)": "統計 (By Game)", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
+    "stats": "統計", "basic metrics": "基本指標", "special metrics": "特殊指標", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
     "fg trigger": "FG 觸發", "fg trigger (observed)": "FG 觸發（實測）", "max multiplier": "最高倍數",
     "set rng": "指定 RNG", "card bg range": "卡片 BG 區間", "card bf range": "卡片 BF 區間", "reel rng": "輪帶 RNG",
     "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始",
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
-    "help": "說明", "change log": "修改紀錄", "previous": "上一步", "next": "下一步",
-    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
+    "help": "說明", "change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
+    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
   const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
   const sharedOriginal = new WeakMap();

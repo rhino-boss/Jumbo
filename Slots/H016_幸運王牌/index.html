@@ -2105,50 +2105,88 @@
       <article class="change-log-entry">
         <h4>v8（8.0.0.0）</h4>
         <ol>
-          <li>驗證：開圖時有圖格 0 個框、0 個代號；關圖時全部框＋代號、字重 400；Console 無例外。未修改 XLSX／Config 數學參數。（09/24）</li>
-          <li>符號代號一律一般字重（共用 CSS）；無美術改用標準標籤 <code>slot-symbol-label</code>（原 h016-face）；共用 CSS <code>?v=4</code>。（09/24）</li>
-          <li>接入共用 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）：開＝只顯示圖（無代號、無符號框，格子標 <code>has-symbol-art</code>）；關＝符號框＋代號。（09/24）</li>
-          <li>驗證：本機伺服器預載 20／20、naturalWidth 皆 &gt; 0、遮罩消失、盤面皆 .webp、Console 無例外。未修改 XLSX／Config 數學參數。（10/06）</li>
-          <li>符號圖改用 WebP（quality 90、保留透明）：786 KB → 149 KB；PNG 留作美術原檔、Demo 不再引用；共用 JS <code>?v=4</code>。（10/06）</li>
-          <li>符號圖開局前預載：<code>DEMOGAME_IMAGE_TOGGLE.images</code> 列 20 張，由共用 JS 預載解碼，期間擋操作、超過 120 ms 顯示「載入圖片 n / N」；失敗時自動關 Image 改文字並提示張數，背景分頁略過解碼。（10/06）</li>
-          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>，本檔在 NB 一局結束時呼叫 <code>record()</code>）；後於 10/13 併入 Simulation。未修改 XLSX／Config 數學參數。（10/06）</li>
-          <li>驗證（92A、Card On）：NB 2 萬局 RTP 92.59%、FG 1/126；BF 2,000 局 94.67%；Super BF 2,000 局 93.51%；Retry 超限 0；畫面押注模式不變；實玩 NB＋BF 完整 FG、Log／Clear 正常；inline script <code>node --check</code> 通過、Console 無例外。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>共用 JS 版本參數 <code>demogame_common.js?v=20261013</code>。（10/13）</li>
-          <li>Debug Log 原本不寫入，改為記錄每局（押注模式、花費、BG 表、Cascade、C1 數、得分）、FG 觸發、每場 FG 與 Feature 總得分（新的在上，最多 200 筆）；Clear、Reset 會清空。（10/13）</li>
-          <li>本遊戲 Feature Status、Message、Cascade／FG Left 標籤、Next FG／Stop、Help 標題與關閉鈕隨語言切換，en→zh→en 可正確切回。（10/13）</li>
-          <li>Start 執行中顯示「進行中」（English：Running）。Spin Result 拿掉（共用）。共用區標籤（Credit、Setting、Simulation 等）中英切換（共用）。（10/13）</li>
-          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
-          <li>消除分布：轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題（adapter 回傳 <code>bgCascade</code>／<code>fgCascades</code>）。（10/13）</li>
-          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB 1%、BF／Super BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」；NB ÷ 押注、BF ÷ 底注（<code>lineMultiplier</code>）。Set RNG 上方的即時線型不再顯示。（10/13）</li>
-          <li>Simulation 面板新增押注模式選單（Normal Bet／Buy Feature／Buy Super Feature）；本檔宣告 <code>window.demogameSimulationModes</code>，<code>demogameSimulateRound({ mode })</code> 與實際遊玩同一套出局邏輯，只在該局模擬期間暫時套用選定模式，不改畫面押注模式與統計；回報 Retry Limit Exceeded／retryCount（只記錄，不改抽樣）。（10/13）</li>
-          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
-          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
-          <li>Set RNG 統一（一列等寬）：Card BG Range、RNG、Reset 同一列（共用 CSS）；Card BG Range 的 Free Game 選項顯示 BG 觸發上限倍數（原顯示 undefined）。（10/13）</li>
-          <li>可重現 RNG（共用 <code>window.demogameRng</code>）：每局以種子一次算完整局（BG＋消除＋整場 FG＋卡片重抽），Log 印「RNG &lt;碼&gt;」，點一下填入 RNG 欄，貼回按 Spin 整局重跑（照碼套用押注模式、Card On／Off、Card BG Range，不改畫面選項）；RNG 欄填了一直沿用、按重置才清；選項欄 <code>r&lt;Card BG Range 索引&gt;</code>（只 Normal Bet），沒有則「-」；原 Reel RNG 停輪欄改為 RNG 碼。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>驗證（92A）：點 Log 的 RNG 行→填入 RNG 欄→Spin，重跑局的 Log 結果行與最終盤面完全相同（NB Card On／Off、NB 指定 Card BG Range Free Game、BF Card On／Off、Super BF Card On，含整場 FG）；重跑後 RNG 欄保留、按重置清空；Set RNG 三欄同一列；Simulation NB Card On 4 萬局 87.38%（FG 1/158）、Card Off 94.27%（1/136）、BF Card On 1,500 局 96.47%、Super BF Card On 600 局 91.51%，Retry 超限 0；Console 無例外。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-08-20 10:00」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
-          <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
-          <li>Log 統一：改用共用 demogameLog，行格式同 H045，不記演出過程。（10/13）</li>
-          <li>驗證（92A、Card On）：NB 4 局＋BF 整場 FG（64.60x）＋NB Card Range Free Game 整場 FG，Log 依序為 Config／#局號／RNG／BG 或 BF Entry／FG 觸發／每轉 FG／FG complete；點 RNG 行重跑 BF 局，Log 結果與原局完全相同；歷史紀錄 BG／FG 最大倍數正確，Clear 與 Reset 歸零；頁尾中英正確；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
-          <li>驗證（92A、Speed x5、Auto＋BF 整場 FG）：BG 48 局＋FG 10 轉，算分到 Spin 放行最短 101 ms、到下一轉開始最短 288 ms；RNG 重跑 NB／BF 局結果完全相同；Simulation 不受影響；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
-          <li>驗證：BG 多連消局與 Buy Feature 整場 FG，Win 逐次消除遞增、局末等於 Log Win；RNG 重跑結果一致；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
-          <li>驗證：BG 多段消除局與 FG 局按 Previous／Next，每步 Win 與即時播放序列一致、最後一步＝最終值；Credit／統計不變；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分。（10/13）</li>
-          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
-          <li>驗證（92A、Card On、Speed x5）：Card Range Free Game 局 BG 11.40 → FG 開場 Win 11.40、結束 43.60（＝11.40＋FG 32.20）；Force FG 局 BG 5.25 → 結束 130.15；Buy Feature 入場 0 → 結束 15.00；FG 各轉 Previous 第一步＝前一轉累計、Next 最後一步＝該轉結束值；FG 結束盤面與觸發局最終盤面（BF 入場盤）逐格相同、Feature Status 回到基礎遊戲；下一局 Win 從 0 起；RNG 重跑 NB（Card Range）／BF 局 Log 完全相同；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
-          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
-          <li>驗證：選 Card BG Range (1, 2] 連轉 3 局，選單保留且每局 BG 皆落在區間（1.10x／1.50x／1.40x）；貼 RNG 碼後 Card BG Range 回自動，連轉 3 局碼保留且每局重跑結果相同；再選區間時 RNG 欄清空；按 Reset 全部回預設；Console 無例外；inline script <code>node --check</code> 通過。（10/15）</li>
-          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
-          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
-          <li>驗證：Speed x5 BG／FG 五輪停輪時間差 0 ms（Spin 後約 62 ms 同時到位）；x1 約 0.5 秒後同時停輪（本作原本即五輪同時停，未加逐輪停輪）；RNG 重跑 NB／BF（含整場 FG）結果相同；Console 無例外；inline script <code>node --check</code> 通過。（10/15）</li>
-          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
-          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>本作只有 NB：未觸發局結算時記一筆、觸發局改在整場 FG 結束才記一筆（BG＋FG ÷ 押注，原本觸發當下就記）；RNG 重跑／Card BG Range 指定局不記；購買鈕非切換式，BF／SF 開局呼叫 <code>setMode("BF")</code> 顯示「不記錄」，下一局 NB 與 Reset 回 Normal Bet。驗證：NB 10 局 n=10；BF 整場 FG 期間顯示購買特色、NB 仍 10、EB 0；再轉 NB n=11；NB 第 60 局觸發 FG，觸發時 n=59、FG 10 轉結束 n=60；Reset n=0；Console 無例外；inline script <code>node --check</code> 通過。未修改 XLSX／Config 數學參數。（10/15）</li>
-          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
+          <li>SF_Symbol (3) 的 Random Wild 0/2/3/4 權重改為 0:1000:0:0，每次事件只抽 2 個 WW。（08/19）</li>
+          <li>SF 初始與 Retrigger 選表權重改為 sf_1:sf_2:sf_3 = 0:5500:4500。（08/19）</li>
+          <li>SF 卡片倍率權重依 v8 的 100 萬場自然報表與 Super Ace SF 倍率線型重算，92／94 共用同一組權重，目標 RTP 92.5%。（08/19）</li>
+          <li>SF 最小有權重區間改為 (100, 120]，自然機率需大於 0.07%。（08/19）</li>
+          <li>SF (350, 400] 與 (450, 500] 依競品平滑參考機率額外乘 1.5 倍，其餘區間維持競品遞減線型。（08/19）</li>
+          <li>OP Jackpot SCR 依 v8 Card-On 報表補齊 NB 新手、NB 老手、BF、SF。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v7（7.0.0.0）</h4>
+        <ol>
+          <li>SF_Symbol (3) 的 Random Wild 0/2/3/4 權重由 1:0:0:0 改為與 SF_Symbol 相同的 0:1000:300:100，SF 每次有金框消除時 sf_2 與 sf_3 都不會抽到 0 顆大鬼；輪帶、停輪、選表、掉落與倍率權重不變。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v6（6.4.0.1）</h4>
+        <ol>
+          <li>自然輪帶、老手 BG／FG、BF 與 SF 數學沿用 v6.3，只修正新手 Normal Bet 倍率權重。（08/19）</li>
+          <li>92A／94A 新手期統一為 BG 65%＋FG 28%＝Total 93%，FG 週期維持 130 場。（08/19）</li>
+          <li>新手 BG Cap 維持 30x、FG Cap 維持 120x，自然機率與競品相對 Hit Rate 規則不變。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v6（6.3.0.1）</h4>
+        <ol>
+          <li>自然輪帶與 BG／FG／BF 卡片倍率權重沿用 v6.2，只重算 SF 卡片倍率權重；SF 自然資料使用 Card-Off 1 億場報表（H0161_06_2608190046_betmode3_108.xlsx）。（08/19）</li>
+          <li>92A／94A SF 使用完全相同的整數權重，RTP 鎖定 92.5%，權重總和 1,000,000,000。（08/19）</li>
+          <li>SF 線型以 Super Ace 競品 Hit Rate 為基準，(350,400] 與 (450,500] 的基準 Hit Rate 額外乘 1.5。（08/19）</li>
+          <li>SF 最低有權重區間為 (50,60]，自然機率 ≤ 0.07% 的區間不配置權重，單一區間 RTP 占比不超過 15%。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v6（6.2.0.1）</h4>
+        <ol>
+          <li>修正卡片倍率區間 <code>(L, U]</code> 的下界判斷，下界相等不再算命中，BG／FG／BF／SF 卡片篩選同步生效。（08/19）</li>
+          <li>SF_Symbol 三張表的物理輪帶分別同步 FG_Symbol 三張表；SF 初始與 Retrigger 選表同步 FG 為 sf_1:sf_2:sf_3 = 0:6500:3500，停輪權重同步對應 FG，掉落、大鬼及金框參數不變。（08/19）</li>
+          <li>BG／FG 卡片權重以 Card-Off 10 億場資料（H0161_06_2608191134_betmode0_109.xlsx）重算，BF 沿用 v6.1 的 BF 原始資料。（08/19）</li>
+          <li>92A 新手／老手 BG 65%、FG 27%、Total 92%；94A 新手／老手修正為 BG 65%、FG 29%、Total 94%；BF 92.5%，FG 週期 130 場。（08/19）</li>
+          <li>BG／FG／BF 自然機率 ≤ 0.07% 的區間權重為 0；SF 卡片倍率權重沿用 v6.1。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v6（6.1.0.0）</h4>
+        <ol>
+          <li>自然數學沿用 v6.0，只重算 BG、FG 與 BF 卡片倍率區間權重。（08/19）</li>
+          <li>92／94、新手／老手 Normal 均為 BG 65%、FG 27%、Total 92%，Normal FG 週期 130 場。（08/19）</li>
+          <li>BF RTP 92.5%；SF 卡片權重沿用 v6.0。（08/19）</li>
+          <li>倍率權重使用 v6 Card-Off 1 億場 Normal 與 1 千萬場 BF 報表重算，保留自然機率 0.1% 門檻與競品相對 Hit Rate 線型。（08/19）</li>
+          <li>Card-On 100 萬場驗證 Normal RTP 約 91.90%、FG 週期約 129～130 場，Retry Limit Exceeded 0。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v6（6.0.0.0）</h4>
+        <ol>
+          <li>只調整 FG_Symbol (2)／FG_Symbol (3) 初始停輪權重及 FG 初始／Retrigger 選表權重；輪帶、掉落、大鬼、金框、BG、BF、SF 與卡片倍率權重不變。（08/19）</li>
+          <li>fg_2／fg_3 的堆疊可見停輪相對權重提高 6 倍，選表維持 fg_1:fg_2:fg_3 = 0:6500:3500。（08/19）</li>
+          <li>FG 綜合堆疊事件率 4.2103% → 20.8561%（Super Ace 46.7281% 的 44.63%）。（08/19）</li>
+          <li>Card-On 50 萬場驗證每 Free Spin Hit Rate 38.4992%，Retry Limit Exceeded 0。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v5（5.0.0.0）</h4>
+        <ol>
+          <li>FG 初始與 Retrigger 選表改為 fg_1:fg_2:fg_3 = 0:6500:3500。（08/19）</li>
+          <li>只調整 fg_2／fg_3 停輪權重，輪帶、掉落權重、BG 與 SF 參數不變。（08/19）</li>
+          <li>fg_3 啟用與 fg_2 相同的 Random Wild 0/2/3/4 權重 23656:1401:235:18。（08/19）</li>
+          <li>92A／94A 倍率區間及倍率權重沿用 v4。（08/19）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v4（4.0.0.0）</h4>
+        <ol>
+          <li>BG／FG 堆疊輪帶校準為不高於 Super Ace，並同步大鬼、金框與 FG 選表設定。（08/18）</li>
+          <li>92A／94A 只同步 v4 自然數學，卡片倍率區間與權重沿用 v3。（08/18）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v3（3.0.0.0）</h4>
+        <ol>
+          <li>新增 Super Feature：SF_Symbol、SF_Symbol (2)、SF_Symbol (3) 與 SF 初始／Retrigger 選表參數，依 JHS101003 使用獨立 SF 表，並套用 Super Buy 金框位置排除規則。（08/17）</li>
+          <li>Card Retry Limit 統一為 10,000。（08/17）</li>
+          <li>92A SF 卡片權重依 Super Ace SF 線型重配：RTP 92.5%、最低 50x、Hit Rate 隨倍率單調不增、贏錢率 30%、500x 以上 Hit Rate 6%、100x 以下 Hit Rate 不超過 50%、單區間 RTP 不超過 15%。（08/17）</li>
         </ol>
       </article>
       </div>
@@ -4127,7 +4165,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261016b"></script>
+  <script src="../demogame_common.js?v=20261016zc"></script>
 </body>
 
 </html>

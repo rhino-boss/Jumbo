@@ -1974,51 +1974,71 @@
     </section>
 
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
-      <div class="diagnostic-header">修改紀錄</div>
+      <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>v4（4.0.0.9）</h4>
+        <ol>
+          <li>新增 92A 大 Bet 專用權重：Source/H026192A_Bet100.xlsx → config_92A_Bet100.js（4.0.0.9）；92A／94A 一般押注仍為 4.0.0.6。（10/02）</li>
+          <li>Card-On 驗證（92A_Bet100）：Oldhand NB 10⁹ 92.00%、EB 10⁸ 92.01%，BF 10⁸ 92.49%；10⁶ 抽查 NB 91.86%、EB 92.82%、BF 92.51%。（10/02）</li>
+        </ol>
+      </article>
       <article class="change-log-entry">
         <h4>v4（4.0.0.6）</h4>
         <ol>
-          <li>符號代號（M1、M2…）改一般字重（不粗體），由共用 CSS（<code>demogame_common.css?v=4</code>）統一套用；驗證代號字重 400、Console 無例外。未修改 XLSX／Config 數學參數。（09/24）</li>
-          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>，64 區間）：NB 每局總得分（含 FG）÷ 底注，Reset 清空；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。（10/06）</li>
-          <li>接上共用 Image 開關：新增 <code>DEMOGAME_IMAGE_TOGGLE</code>（13 張：11 符號＋2 金框），由 <code>demogame_common.js?v=4</code> 開局前預載，超過 120 ms 顯示載入遮罩、失敗改文字顯示；更正 09/24「本作無符號美術」的誤記。（10/07）</li>
-          <li>依規範 2.3：Image 開時有圖格加 <code>has-symbol-art</code>、不顯示代號；Image 關時顯示符號框＋代號，不畫符號圖與金框圖。（10/07）</li>
-          <li>符號圖改用 WebP（564 KB → 151 KB）；config <code>asset_map</code> 仍記 PNG，由 Demo 讀取時換成 .webp，原 PNG 保留。未修改 XLSX／Config 數學參數。（10/07）</li>
-          <li>Simulation 改用共用面板（<code>demogame_common.js?v=20261013</code>），新增押注模式選單（Normal Bet／Extra Bet／Buy Feature）；移除本檔專屬模擬面板與 <code>runBatchSimulation</code>，改用 <code>window.demogameSimulateRound({ mode })</code> 跑實際的 <code>runRound</code>（含 Card System），結束還原押注模式、餘額與統計。（10/13）</li>
-          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」。RTP＝總得分（含 FG）÷ 實際押注。（10/13）</li>
-          <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題。（10/13）</li>
-          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」；中獎率改為共用口徑「有得分局數 ÷ 總局數」（原為 Spin 層級）。（10/13）</li>
-          <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用字典），本檔重複的共用標籤翻譯移除。（10/13）</li>
-          <li>押注模式按鈕帶倍數、共用字典比對不到，改由本檔提供中文「一般押注／額外押注 (2x)／購買特色 (75x)」，切回 English 還原。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；92A-Oldhand Card On 模擬 NB 2,000 局 RTP 91.98%、EB 4,000 局 91.76%、BF 2,000 局 89.52%（面板另跑 BF 2,000 局 100.65%）；Card Off 為自然數學（NB 40,000 局約 1,763%、EB 約 935%）。模擬後局數、餘額、押注模式不變；中英切換與還原正確；Log、Clear 正常；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
-          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
-          <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／RNG／重置），移除本檔覆寫共用排版的 Set RNG CSS。（10/13）</li>
-          <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、Card retry 相同；填了就沿用，按重置清空）；碼內模式（NB／EB／BF）、Card 開關、Profile、指定卡片區間（選項 <code>r&lt;索引&gt;</code>）只套用該局、不動畫面選單；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；Card On NB×2／EB／BF（含 FG 13 轉）、Card On＋卡片區間 r63（在 Card Off 畫面下重跑）、Card Off NB／BF×3 重跑，Log 結果行與最終盤面皆完全相同；Set RNG 三欄同列、兩欄等寬；Simulation 正常且不影響種子序列與餘額局數；格式錯誤會提示不扣款；Console 無錯誤。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-10-02 15:36」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
-          <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
-          <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；Debug 開，NB×4、BF（12 轉 FG）、EB×40（Card On）後 Log 只剩載入／局號／RNG／BG（BF Entry）／Buy Feature／FG i/n／FG complete／Error 行；歷史紀錄 BG／FG 最大倍數正確、Clear 歸零；Log Clear 正常；RNG 行可點填入，BF 碼重跑 Log 逐行相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；Speed 最大（5），NB 手動 6 局、BF（12 轉 FG）每轉算分到 Spin 可按間隔 100.3～104.6 ms，Auto 每局間隔約 810 ms（0.1 秒＋原 Auto 間隔 700 ms）；BF RNG 碼重跑 Log 逐行相同；Simulation 10,000 局未觸發停頓、結果正常；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；NB 一局 Win 0.00→0.50→0.60（Log Win 0.60）；BF（12 轉 FG）Win 逐次消除累加、轉末套倍數後與每轉 Log 一致，最終 70.80＝FG complete Total；Credit 仍於轉末結算；BF RNG 碼重跑 Log 逐行相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；NB 一局（3 次消除）演出 Win 0.00→0.25→2.35→32.90，Previous 逐步 32.90→2.35→0.25→0.00、Next 逐步回到 32.90；Force FG 一轉 FG 演出 0.00→0.60→1.60→1.70→10.20，Previous／Next 逐步數值相同；Credit／Log 不受影響；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本作原本即如此，僅驗證未改程式）。（10/13）</li>
-          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回 Base Game；Previous／Next 多一步「Back to BG」，往前仍可看 FG 最後一轉。（10/13）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；NB 自然觸發（RNG 重跑）BG Win 0.25，FG 開始 0.25→第 1 轉 0.60→2.00，FG 結束 20.40＝整局總得分；BF 入場盤 Win 0.35，FG 開始 0.35，結束 20.75＝整局總得分；兩者 FG 結束盤面與觸發局最終盤面（BF 入場盤）一致、Feature Status＝Base Game；Previous／Next 逐步 20.40→Free Game 16.40→回 Base Game 20.40；下一局 Win 從 0.00 起；RNG 碼重跑結果相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
-          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。本檔拿掉切 Player Profile、切 Card System Off、Session Reset 時自動清 Set RNG（選項重建後原值不存在才回 Auto）。（10/15）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；選卡片區間後 NB×3、切 EB 一局、切回 NB、切 Newbie 一局，卡片區間都保留且每局 RNG 碼帶 r2；貼 RNG 碼後卡片區間回 Auto，連 2 局照碼重跑且碼保留；再選卡片區間時 RNG 欄清空；按重置全部回預設、下一局不帶區間；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
-          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
-          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；Speed 5 BG 3 局、FG 5 轉，5 輪皆在 Spin 後約 34～39 ms 同一時間到位；Speed 1 仍逐輪停（約 535→720→895→1070→1250 ms），FG 相同；RNG 碼重跑結果相同；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
-          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
-          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>驗證：inline script <code>node --check</code> 通過；NB 10 局 → 標題 Normal Bet n=10；切 EB → n=0，玩 5 局 → n=5；切回 NB → n=10；Buy Feature（含 FG）顯示「不記錄」、NB／EB 局數不變；Reset 歸零；Simulation 不記錄；Console 無錯誤。未修改 XLSX／Config 數學參數。（10/15）</li>
-          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
+          <li>Card-On 驗證 92A Buy Feature 10⁸：92.46%。（07/24）</li>
+          <li>專案建立時匯入的數學版本：config_92A.js／config_94A.js 為 4.0.0.6（Source/H026192A.xlsx、H026194A.xlsx）。（09/02）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v4（4.0.0.3）</h4>
+        <ol>
+          <li>Card-On 驗證 10⁸：92A Oldhand NB 92.02%／EB 92.01%、Newbie NB 92.99%／EB 93.03%；94A Oldhand NB 93.95%／EB 93.98%、Newbie NB 92.98%／EB 93.00%；92B Newbie NB 92.91%／EB 92.98%。（07/23）</li>
+          <li>自然報表 92A Buy Feature 10⁹：RTP 743.02%。（07/24）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v4（4.0.0.1）</h4>
+        <ol>
+          <li>自然報表 92A NB 10⁹：RTP 1,193.85%、FG 觸發率 1.336%（2.0.0.0 為 2,196.52%）。（07/23）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v3（3.0.0.2）</h4>
+        <ol>
+          <li>Card-On 驗證 94B Newbie NB 10⁸：92.90%。（07/01）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v3（3.0.0.1）</h4>
+        <ol>
+          <li>Card-On 驗證 92B Newbie 10⁸：NB 93.00%、EB 93.02%。（07/02）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v2（2.0.0.5）</h4>
+        <ol>
+          <li>Card-On 驗證 94A Newbie NB 10⁸：93.09%。（07/01）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v2（2.0.0.4）</h4>
+        <ol>
+          <li>Card-On 驗證 94A：Oldhand NB 10⁸ 94.02%、EB 10⁸ 93.93%，BF 10⁷ 92.60%。（07/01）</li>
+          <li>Card-On 驗證 92A Buy Feature 10⁷：92.45%。（07/01）</li>
+          <li>Card-On 驗證 92A Newbie 10⁸：NB 93.05%、EB 92.96%。（07/02）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v2（2.0.0.3）</h4>
+        <ol>
+          <li>Card-On 驗證 92A Oldhand 10⁸：NB 92.01%、EB 91.87%。（06/30）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v2（2.0.0.0）</h4>
+        <ol>
+          <li>自然報表 92A NB 10⁹：RTP 2,196.52%、FG 觸發率 1.336%。（06/29）</li>
         </ol>
       </article>
       </div>
@@ -2814,6 +2834,7 @@
       controlsEl.classList.toggle("debug-off", !state.debugEnabled);
       spinResultWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
       liveLogWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      document.getElementById("change-log-wrap")?.classList.toggle("debug-hidden", !state.debugEnabled);   // 版本紀錄跟 Debug Mode 一起顯示
       batchSimulationPanelEl.classList.toggle("debug-hidden", !state.debugEnabled);
       debugModeInputEl.checked = state.debugEnabled;
       const hasStepHistory = state.debugEnabled && !state.isBusy && state.stepSnapshots.length > 0;
@@ -4591,7 +4612,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016b"></script>
+  <script src="../demogame_common.js?v=20261016zc"></script>
 </body>
 
 </html>

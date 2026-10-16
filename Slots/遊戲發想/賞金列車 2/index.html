@@ -2033,51 +2033,12 @@
         <article class="change-log-entry">
           <h4>v2（2.0.0.1）</h4>
           <ol>
-            <li>初版建置（發想）：複製 H015 index.html 微調；移除炸彈抽選；金框附帶倍數標記，倍數金框中獎時乘數階級直接跳階（只升不降、取最高、先跳再計分）；沿用 H015 config_92／94 數學模型。600 局批次模擬 RTP 86.7%、Hit 29.7%、跳階最高 x256。（09/24）</li>
-            <li>倍數金框調整：金框分一般／倍數兩種，無倍數金框在場時隨機挑一顆賦予（gold 值 -1／&gt;0），盤面同時間僅一顆帶倍數；金框倍數為 demo 假值。（09/24）</li>
-            <li>FX 動畫（中獎爆閃、壓暗、金幣、Wild 彈出、中央大倍數、贏分浮字、總贏分橫幅、輪帶滾動）移至 demogame_common.js 的 window.slotFx，本頁改呼叫共用；掉落／補牌動畫 620ms → 310ms。（09/24）</li>
-            <li>遊戲名稱統一顯示 Wild Train 2（頁面標題、標題列、中文介面），移除 WT2 FX 前綴。（09/24）</li>
-            <li>符號顯示規則統一：移除本頁 Symbol Img 開關，改接共用 Image 開關（Image 開＝只顯示圖、無代號無框；關＝符號框＋代號，一般字重）；盤面各輪依有效高度垂直置中（3/4/5/5/4/3 對稱）。驗證開圖 24 格 0 框 0 字、關圖字重 400。（09/24）</li>
-            <li>共用檔路徑由 ../../../ 改為 ../../（遊戲發想資料夾移到 Slots/遊戲發想/）。（10/02）</li>
-            <li>Simulation 改用共用 #batch-simulation 面板並新增押注模式選單（Normal Bet／Buy Feature）；本檔宣告 <code>window.demogameSimulationModes</code>，<code>demogameSimulateRound({ mode })</code> 用與畫面相同的遊戲邏輯（含卡片重骰）只在該局套用模式，不改畫面與統計。（10/13）</li>
-            <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中「倍率線型 · 模式」。NB 為總得分（含 FG）÷ 押注，BF ÷ 底注（<code>lineMultiplier</code>）。（10/13）</li>
-            <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題（共用；無消除機制的遊戲不顯示）。（10/13）</li>
-            <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
-            <li>Start 執行中顯示「進行中」（English：Running）。（10/13）</li>
-            <li>Spin Result 面板、Force FG 拿掉（共用）。（10/13）</li>
-            <li>共用區標籤隨語言切換中英（共用 <code>demogame_common.js?v=20261013d</code>、<code>.css?v=7</code>）；本頁移除自行翻譯共用區標籤的程式，只保留本作專屬文字（Buy Feature (75x)、上一步／下一步、Help 視窗、盤面訊息）。（10/13）</li>
-            <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
-            <li>Set RNG 一列等寬（卡片 BG 區間／RNG／重置）：移除本頁覆寫 .set-rng-controls／.debug-rng-field 的 CSS；Card BG Range 改為可用（列出 Oldhand NB weight_bg，Base 時停用）。（10/13）</li>
-            <li>可重現 RNG：原 Reel RNG 停輪欄改為 RNG 碼欄（填了一直沿用、按重置才清）；每局 Log 印 <code>RNG &lt;Config&gt;/&lt;NB|BF&gt;/&lt;on|off&gt;/&lt;r序號|-&gt;/&lt;種子&gt;</code>，點一下複製並填入；BG、消除、整段 FG 與卡片重骰在 <code>demogameRng.run()</code> 內開局一次算完，FG 改為播放預算結果；碼內模式／Card on-off／Card Range 只套用該局，Config 不同時 Log 警告。（10/13）</li>
-            <li>本作修正：實機 Spin 改套用卡片系統（原本只有模擬套用，Config 92／94＝卡片開、Base＝關），BF 卡片開時依 buy_feature weight_fg 重骰 FG；FG 每轉得分補記入 Credit（原本未加回餘額）；Debug Mode 關閉時 Set RNG 等區塊正確隱藏；Log 上限 80 → 500 行；啟用共用歷史紀錄面板。（10/13）</li>
-            <li>驗證：點 Log RNG 行重跑，Card On NB（得分局、指定 r64 FG 卡含 10 轉 FG）、Card On BF（12 轉 FG）、Card Off NB／BF，Log 結果行與最終盤面逐字相同；Card On 碼在畫面 Base 時重跑結果相同並警告 Config 不同；Set RNG 三欄同列；語言 en→zh→en 正確切回；Log Clear 正常；Simulation 正常、Console 無 JS 錯誤。模擬參考（Demo 金框倍數為假值）：Card On NB 96.62%（5 萬局）、BF 89.85%（3 千局）；Card Off NB 873%、BF 252%。（10/13）</li>
-            <li>未修改 XLSX／Config 數學參數。（10/13）</li>
-            <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
-            <li>Log 統一：改用共用 demogameLog，行格式同 H045，不記演出過程。（10/13）</li>
-            <li>頁尾改顯示「最後調性更新：2026-07-28 12:01」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
-            <li>驗證（共用 <code>demogame_common.js?v=20261013f</code>）：Debug 開，NB 3 局（含自然 FG 10 轉）＋BF 1 局（10 轉），Log 行格式同 H045；點 RNG 行重跑 NB FG 局，BG／每轉 FG／FG complete 逐行相同；歷史紀錄 BG x2／FG x88.4，Clear 與 Reset 歸零；Log Clear 正常、切語言不寫 Log；頁尾 zh「最後調性更新：2026-07-28 12:01」／en「Last tuning update: 2026-07-28」；Console 無 JS 錯誤；inline script 皆通過 node --check。（10/13）</li>
-            <li>畫面局改回不走卡片：Spin／Buy 一律自然機率（未貼 RNG 碼時 Card 欄為 off，同 H015）；貼上的 RNG 碼照碼內 Card 欄；手動指定 Card BG Range 時仍照該區間重抽；Card System 只用於 Simulation。（10/13）</li>
-            <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
-            <li>驗證：最高 Speed 下 Spin／Auto／Buy Feature（含 FG）算分到下一轉間隔 ≥ 100 ms；畫面局 RNG 碼 Card 欄 off，點 Log 重跑結果相同；Simulation 仍走卡片且速度正常；Console 無錯誤。（10/13）</li>
-            <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
-            <li>驗證：BG 多次消除局與 Buy Feature FG，Win 逐次消除遞增、每轉結束值與 Log Win 相同；Credit、統計、Log、RNG 重跑結果不變；Console 無錯誤；inline script 皆通過 node --check。（10/13）</li>
-          <li>FG 期間 Win 改顯示整場 FG 累計（與 H015 一致），FG 結束時等於 FG complete Total。（10/13）</li>
-          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分；局結束後 Previous／Next 按鈕改為可按（原本局後一直停用）。（10/13）</li>
-          <li>驗證：BG 多段消除與 FG 局按 Previous／Next，Win 逐步數值與即時演出一致、最後一步等於最終得分；Credit／統計／Log 不變，無 console 錯誤。（10/13）</li>
-          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分。（10/13）</li>
-          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
-          <li>驗證：自然觸發 FG（觸發局 BG 得分 &gt; 0）與 Buy Feature 局，FG 第一轉起始 Win＝觸發局 BG 得分、結束＝整局總得分，Previous／Next 同基準；FG 結束盤面與觸發局最終盤面相同、狀態回 Base Game；Credit／統計／Log／RNG 重跑不變，無 console 錯誤。（10/13）</li>
-          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
-          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
-          <li>驗證：指定 Card BG Range 連轉 3 局仍保留且每局都套用；貼 RNG 碼時 Card BG Range 回自動、碼連轉保留並每局重跑；重置全部回預設；Console 無錯誤；inline script 皆通過 node --check。（10/15）</li>
-          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
-          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
-          <li>驗證：Speed 5 的 BG／Buy Feature 入場／FG 每轉，6 輪停輪時間差 0 ms（約 0.18～0.20 秒同時到位）；Speed 1 仍由左到右逐輪停（約 0.56→1.49 秒，每輪間隔約 0.185 秒）；RNG 碼重跑結果與盤面相同；Console 無 JS 錯誤；inline script 皆通過 node --check。（10/15）</li>
-          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
-          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>驗證：本作無 EB，NB 每局（含 FG）結束記一次＝總得分 ÷ 押注；NB 10 局 → Normal Bet n=10；Buy Feature 局顯示「不記錄」提示，NB 仍 10、EB 0；再玩 NB → 切回 Normal Bet n=11；重置歸零；Console 無 JS 錯誤；inline script 皆通過 node --check。（10/15）</li>
-          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
-        </ol>
+            <li>初版（發想）：沿用 H015 config_92／94 數學模型；移除炸彈抽選，乘數推進改由消除次數與倍數金框驅動。（09/24）</li>
+            <li>倍數金框跳階：倍數金框中獎時乘數階級直接跳到該金框倍數（只升不降、同段多顆取最高、先跳再計分）。（09/24）</li>
+            <li>金框分一般／倍數兩種：盤面沒有倍數金框時從現有金框隨機挑一顆賦予倍數，盤面同時間僅一顆帶倍數；金框倍數為 demo 假值。（09/24）</li>
+            <li>600 局批次模擬：RTP 86.7%、Hit 29.7%、跳階最高 x256。（09/24）</li>
+            <li>模擬參考（金框倍數為 demo 假值）：Card On NB 96.62%（5 萬局）、BF 89.85%（3 千局）；Card Off NB 873%、BF 252%。（10/13）</li>
+          </ol>
         </article>
       </div>
     </section>
@@ -3341,7 +3302,7 @@
 })();
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261016b"></script>
+  <script src="../../demogame_common.js?v=20261016zc"></script>
 </body>
 
 </html>

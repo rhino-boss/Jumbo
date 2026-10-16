@@ -320,128 +320,155 @@
     </section>
 
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
-      <div class="diagnostic-header">修改紀錄</div>
+      <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>v7（7.4.0.0）</h4>
+          <ol>
+            <li>找出 Card-On BG 系統性偏低（7.0～7.3 各版 NB −0.2～−0.4pp、EB −0.15～−0.3pp，後端報表同樣偏低）的原因：卡片抽到 BG 區間後最多重抽 10,000 次，自然機率接近門檻 0.02% 的高倍區間約 13% 抽不到，失敗時採用最後一次自然結果（多為低倍）。以 s_i = 1 −（1 − p_i）^10000 建模，預測的 BG 與 Retry Limit Exceeded 次數和 7.0.0.0 的 10⁸ 報表吻合。（10/14）</li>
+            <li>六份工作簿的老手 BG 欄（NB／EB，F、H 欄）重解：RTP 約束改用有效均倍 e'_i = s_i·e_i +（1 − s_i）·F（F＝自然一轉 BG 均倍），形狀與觸發權重不變；FG、BF、Newbie 區間命中率 ≈ 1，不變。<code>Multiplier_Weight × Avg_Multi</code> 的理想 BG 因此比目標高 0.15～0.41pp，說明見 <code>注意事項.md</code> 第 5 項。（10/14）</li>
+            <li>六份工作簿 Overview!B3、六份 RTP Config <code>excel_version</code> 改 7.4.0.0；PARsheet 重出；SCR 不變。（10/14）</li>
+            <li>Card-On 驗證：老手 NB／EB 12 組各 10⁸，BG 全部在目標 ±0.08pp 內（7.3 為 −0.2～−0.5pp）；Game 11 組 ≤ 2σ；B 小 Bet EB 首筆 94.34%（+2.60σ），同權重複驗兩筆 10⁸ 為 94.02%（+0.17σ）、94.10%（+0.77σ），三筆 BG 平均 39.03%，判定首筆為抽樣尾端。Newbie、BF 10 組各 10⁷ 全部 ≤ 2σ。報表 <code>Record/*_07040000_*</code>（24 份，含複驗 2 份）；7.3.0.0 報表移到 <code>Versions/7.3.0.0/Record/</code>。（10/14）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v7（7.3.0.0）</h4>
+          <ol>
+            <li>押注選項正式加入 $2000／$3000／$5000（<code>config_A.js</code>／<code>config_B.js</code> 的 <code>bet_options</code>）；<code>x &gt; $1,500</code> 為超大 Bet，與大 Bet 共用 <code>_Bet100</code> 權重，天花板 BG $1,000,000／FG $5,000,000。（10/13）</li>
+            <li>大 Bet（<code>_Bet100</code>）BG 上限改 200x：取大 Bet <code>$500,000 ÷ $1500 = 333x</code> 與超大 Bet <code>$1,000,000 ÷ $5000 = 200x</code> 的較嚴者。A 版 BG 最高 (120,140]（(140,200] 自然機率不足）、B 版最高 (180,200]；NB 72%／EB 42% 目標不變，只有 F、H 欄（BG）重解，FG、BF、Newbie 逐格不變；Avg_Multi 觸發轉截斷平均同步。（10/13）</li>
+            <li>大 Bet 的 BG 2500x、1000x 球只會出現、不會得分，依使用者指示先不處理，記於 <code>注意事項.md</code>。（10/13）</li>
+            <li>六份工作簿 Overview!B3、六份 RTP Config <code>excel_version</code> 改 7.3.0.0；PARsheet 重出；SCR 不變（老手三層共用中 Bet）。（10/13）</li>
+            <li>Card-On 驗證（Oldhand 大 Bet NB 押注 $200、EB $100，其餘同 7.2.0.0；各 10⁷，σ = 標準差 ÷ 模式成本 ÷ √n）：22 組中 21 組在 2σ 內；A 大 Bet NB 91.42%（−2.58σ，BG 71.67%，同前版 BG 偏低）。B 大 Bet SCR 實測比填入值低 0.31%（NB）／0.37%（EB），對 Bonus 影響約 0.007pp，維持共用。報表 <code>Record/*_07030000_*</code>（22 份）；7.2.0.0 報表移到 <code>Versions/7.2.0.0/Record/</code>。（10/13）</li>
+          </ol>
+        </article>
         <article class="change-log-entry">
           <h4>v7（7.2.0.0）</h4>
           <ol>
-            <li>Simulation 面板新增押注模式選單（Normal Bet／Extra Bet／Buy Feature）；本檔宣告 <code>window.demogameSimulationModes</code>，<code>demogameSimulateRound({ mode })</code> 只在模擬期間暫套該模式，不改畫面押注模式與統計。（10/13）</li>
-            <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」。NB／EB 為每局總得分（含 FG）÷ 押注，BF ÷ 底注（<code>lineMultiplier</code>）；Set RNG 上方的即時線型不再顯示。（10/13）</li>
-            <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題。（10/13）</li>
-            <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
-            <li>Start 執行中顯示「進行中」（English：Running），不再跳局數。（10/13）</li>
-            <li>Spin Result 面板拿掉（共用）；共用區標籤（Credit、Setting、Simulation 等）隨語言切換中英（共用）；共用 JS 參數 <code>demogame_common.js?v=20261013</code>。（10/13）</li>
-            <li>驗證：Debug Mode 下三種模式各跑 2 萬局，選單切換正常、畫面押注模式不變、Console 無例外；語言 en→zh→en 可正確切回。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
-          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
-          <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告_宙斯 2500.html</code>。（10/13）</li>
-          <li>Set RNG 統一：欄位一列等寬（卡片 BG／BF 區間／RNG／重置）。（10/13）</li>
-          <li>可重現 RNG：每局 Log 印 RNG 碼（點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、卡片重骰相同）；碼內的模式（NB／EB／BF）、Card on／off 與 Card Range（<code>r&lt;序號&gt;</code>）只套用於該局，不改畫面選項，Config 不同時 Log 警告；原 Reel RNG 停輪欄改為 RNG 碼。未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>驗證：Card On NB（含連消、指定 Card Range r3）、Card Off NB／EB、BF（Card On／Off，各 15 轉以上 FG）重跑，Log 結果行、最終盤面與 Spin 結果逐字相同；Card On 碼在畫面 Card Off 時重跑仍相同；Set RNG 三欄同列、兩欄等寬；Simulation 3,000 局正常、Console 無錯誤。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-10-12 14:43」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
-          <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
-          <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
-          <li>驗證：Debug Mode 下 Normal Bet／Buy Feature 各玩數局（含 FG），歷史紀錄 BG／FG 最大倍數與 Clear 正常、Log 行格式符合、RNG 行可點且重跑同局結果一致，Console 無例外。（10/13）</li>
-          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
-          <li>驗證：最高 Speed 下 Auto 跑 BG 與 Buy Feature 整段 FG，量測算分到下一轉開始間隔皆 ≥ 100 ms；RNG 重跑結果相同、Simulation 仍即時、Console 無錯誤。（10/13）</li>
-          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
-          <li>驗證：BG 多連消局與 Buy Feature 整段 FG 取樣 Win，逐次消除遞增、FG 轉與轉之間不退回、局末等於 Log 結果；RNG 重跑結果相同、Console 無錯誤。（10/13）</li>
-          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
-          <li>驗證：BG 兩連消局（播放 0→0.90→1.15）逐步倒退 1.15→0.90→0（前進反之、末步 1.15）；Buy Feature 第 4 轉 FG（基底 3.00，播放 3.40→3.90→4.80）倒退回 3.00、前進回 4.80；Credit 與 Log 不變、Console 無錯誤。（10/13）</li>
-          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（本檔原本已符合，含 Previous／Next 基底，僅驗證未改碼）。（10/13）</li>
-          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤）。（10/13）</li>
-          <li>驗證：NB 自然觸發（Card FG 區間，RNG 92A/NB/on/r64/dea77932）BG 得分 3.00 → FG 第 1 轉起始 Win 3.00、逐消除 3.25…、結束 38.05＝3.00＋FG 35.05；Buy Feature 入場盤 3.00 → FG 起始 3.00、結束 26.60＝3.00＋23.60；Previous／Next 基底一致；FG 結束後盤面與觸發局（BF 入場盤）最終盤逐格相同、Feature Status 回 Base Game；RNG 重跑 Log 結果行與盤面相同、Console 無錯誤。（10/13）</li>
-          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
-          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
-          <li>驗證：選 Card BG Range 後連轉 3 局都保留並套用；切 Extra Bet／押注、Buy Feature 後回 BG 仍保留；貼 RNG 碼後 Card Range 回 Auto、碼連轉保留並重跑同局；重置後全部回預設；Console 無錯誤。（10/15）</li>
-          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
-          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
-          <li>驗證：Speed 5 下 BG 與 Buy Feature FG 各轉量測各輪停輪時間，所有轉輪同一幀到位；Speed 1 仍由左到右逐輪停；RNG 重跑結果相同、Console 無錯誤。（10/15）</li>
-          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
-          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>驗證：NB 玩 10 局 → Normal Bet n=10；切 EB → n=0，玩 5 局 → n=5；切回 NB → n=10；Buy Feature 顯示不記錄、次數不變；Reset 清空；Console 無錯誤。（10/15）</li>
-          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
-        </ol>
+            <li>大 Bet（<code>_Bet100</code>）BG、FG 倍率上限一律 1000x（數學模型規範 §1.4.4）：後端 878 報表 B 版大 Bet（押注 $2000）BG 配到 (1000,2000]，1000x × 押注超過 BG 單把天花板被整把重骰，BG RTP 約 67%。（10/12）</li>
+            <li>A、B 的 <code>_Bet100</code> FG（NB／EB／BF）拿掉 (1000,2000]，最高區間 (950,1000]（G、I、J 欄重解）。（10/12）</li>
+            <li>B 的 <code>_Bet100</code> BG（NB／EB）拿掉 (1000,2000]，最高區間 (250,300]（天花板 $500,000 ÷ $1500 = 333x，F、H 欄重解）；A 版 BG 原本最高 (200,250]，不變。目標與求解法同 7.1.x，Newbie 四欄逐格不變，SCR 不變。（10/12）</li>
+            <li>BG 2500x 球在 A 版（BG 上限 250x）與 B 大 Bet（BG 上限 300x）不會得分，依使用者指示不處理，記於 <code>注意事項.md</code>。（10/12）</li>
+            <li>Card-On 驗證（大 Bet Oldhand，各 10⁷）：A NB 91.67%（−1.43σ）、EB 91.52%（−2.34σ）、BF 92.52%（+0.61σ）；B NB 91.59%（−1.59σ）、EB 91.73%（−1.25σ）、BF 92.46%（−1.23σ）。A EB 偏低來自 BG 41.76%（目標 42%），為既有 BG 偏低（BG 權重這版未變），非本次上限修改造成；SCR 實測與填入值差 ≤ 0.27%。（10/12）</li>
+            <li>其餘 16 組補驗證（Newbie／小 Bet／中 Bet／BF，各 10⁷）：14 組 ≤ 2σ；B 中 Bet EB 91.40%（−2.09σ，BG 41.50%，同既有 BG 偏低）；B BF 小 Bet 92.35%（−2.86σ），同權重歷次 5 筆平均 92.45%，判定為抽樣尾端、在壓測容許 ±0.5pp 內不調整；SCR 實測與填入值差均 ≤ 0.2%。（10/13）</li>
+          </ol>
         </article>
         <article class="change-log-entry">
           <h4>v7（7.1.1.0）</h4>
           <ol>
-            <li>Debug Mode 新增即時倍率線型（共用，<code>window.demogameLineChart</code>）：NB 每局總得分（含 FG）÷ 底注、64 區間、縱軸 0～20%，Reset 清空；本檔只在 NB 一局結束時呼叫 <code>record()</code>。未修改 XLSX／Config 數學參數。（10/06）</li>
+            <li>SCR 重填：BF 改為 A 34,221,181,000、B 34,216,240,000（92 中 Bet 代表；Bet100 實測差 0.03%）；NB／EB／Newbie 不變。（10/05）</li>
+            <li>OP Jackpot 驗證（各 10⁷）：BF 小 Bet（JP0100C，無 Link）Bonus 4.02%／4.08%（設定 4%）；BF 中 Bet（JP0100B）Bonus 2.02%／2.00%（設定 2%）；NB／EB 16 組 Bonus 1.94～2.04%（設定 2%）。（10/05）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v7（7.1.0.0）</h4>
+          <ol>
+            <li>BF 免費轉場次改照 xlsx <code>free_game_table_setting</code> 的 FG_Symbol : FG_Symbol (2) = 6 : 9（原 config 5 : 10），重觸發 2 : 3 不變。5 : 10 每次免費轉出現 C1 的比例較低（13.25% vs 15.86%），使 BF SCR 低估約 13%、SPS 的 BF Bonus 偏高。（10/05）</li>
+            <li>BF 自然機率重跑（A、B 各 10⁸，自然 SCR 34.33e9），六份工作簿 <code>Weight_BF</code> 重解（RTP 89.5% ＋ 入場 3%、贏錢率 30%、單區間 ≤ 15%）；NB／EB／Newbie 逐格不變。（10/05）</li>
+            <li>BF Card-On 驗證（10⁷）：92A 92.44%、92A_Bet100 92.51%、92B 92.52%、92B_Bet100 92.56%（目標 92.5%）。（10/05）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v5（5.1.1.0）</h4>
+          <ol>
+            <li>SCR 填入六份工作簿的 OP Jackpot 工作表（NB_Newbie／NB／EB_Newbie／EB／BF），取 Card-On 正式報表量測值、同群共用代表值（群內差 &lt; 0.6%）：A NB 5,110,370,100、EB 5,347,849,900、BF 30,085,360,000；B NB 4,437,685,400、EB 4,688,244,300、BF 30,190,367,000。A、B 的 NB／EB 差 13%，不共用。（09/30）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
+          <h4>v5（5.1.0.0）</h4>
+          <ol>
+            <li>B 版卡片權重：以 B 版自然報表（NB／EB 10⁹、BF 10⁸）用與 A 版相同的最小失真投影法求解；目標同 A 版（Oldhand 92／94、Newbie 93、BF 92.5、BG 命中 28.193143%、FG 週期 1/450.83（EB 1/90.17）、FG 均倍 90.1660x／99.1826x、BF 贏錢率 30%）。（09/29）</li>
+            <li>B 版 BG 可配區間 22 桶（0～80x，A 版 15 桶 0～30x）、FG 40 桶（A 版 41）；Newbie 欄三份逐格相同，BF 92／94 相同、Bet100 另一套（FG 上限 2000x）。（09/29）</li>
+            <li>求解修正：BG 桶均倍排除觸發 FG 的那一轉（4 顆 Scatter 付 3x，落在 (2,3] 桶），A／B 六份工作簿 BG 欄重解；修正前 15 組 10⁸ 驗證 BG 全部落在 71.92～71.97%（目標 72%），修正後 71.93～72.05%、偏差雙向。（09/29）</li>
+            <li>A 版 FG／BF 欄改用 v5 自然報表（<code>H0271A_05_…</code>）重解；原權重對新報表驗算差 ≤ 0.01pp，只是換成可重現的樣本。（09/29）</li>
+            <li>Card-On 驗證（NB／EB 10⁸、BF 10⁷；相同權重只跑一筆、BF 不跑 Newbie）：20 組全部 ≤ 2σ，最大偏差 92A_Bet100 NB +1.74σ、94A Oldhand NB −1.58σ；Retry 超限每 10⁸ 局最多 486 次。（09/29）</li>
+            <li>A／B 對照（NB Oldhand 10⁸，92 家族）：倍數球出現率 A 3.95%／B 9.11%，BG 命中、FG 週期、RTP 兩版相同。（09/29）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v5（5.0.0.0）</h4>
           <ol>
-            <li>符號顯示規則統一：本作無符號美術，不顯示 Image 開關，維持符號框＋代號；代號改一般字重（共用 CSS <code>demogame_common.css?v=4</code>）。驗證字重 400、Console 無例外；未修改 XLSX／Config 數學參數。（09/24）</li>
+            <li>基礎數學拆 A／B 兩套：<code>H0271.xlsx</code> 改名 <code>H0271A.xlsx</code>（內容不變），新增 <code>H0271B.xlsx</code>；輪帶逐格相同，差異只在 Parameter 工作表。（09/24）</li>
+            <li>B 版倍數球每 10 轉一次：倍數球只由 <code>BG_Symbol (3)</code> 產生，三張 BG 表選表權重 9698／19298／2344 → 162386／619916／217698，倍數球出現率 3.4492% → 9.9282%，BG Hit Rate 28.31%（A 版 28.38%）。（09/24）</li>
+            <li>B 版 C3 平均倍數為 C2 的一半（BG 0.5014、FG 0.4993）：C3 擴到 2x～1000x 共 16 個、2500x 為 0，形狀取 C2 分布去掉 2500x 後以指數傾斜（BG −0.2057、FG −0.1962）壓弱高倍端。（09/24）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v4（4.0.0.0）</h4>
           <ol>
-            <li>BF 入場盤改為結構上不可能中獎：原入場輪帶有效停點 <code>15/15/15/15/162/162</code> 可讓 7 種一般符號達 8 格以上，SPS 判獎 BF <code>BaseGameRtp</code> 0.6936%。（09/09）</li>
-            <li><code>BF_Symbol</code> Stop Weight 改為有效停點 <code>9/12/9/9/71/28</code>（共 138），任一符號最多 7 格；入場盤恆為 4 顆 C1（R1～R4 各 1）、無 C2／C3，RNG 組合 17,391,024 種。（09/09）</li>
+            <li>BF 入場盤改為結構上不可能中獎：原入場輪帶有效停點 15/15/15/15/162/162 可讓 7 種一般符號達 8 格以上，SPS 判獎 BF <code>BaseGameRtp</code> 0.6936%。（09/09）</li>
+            <li><code>BF_Symbol</code> Stop Weight 改為有效停點 9/12/9/9/71/28（共 138），任一符號最多 7 格；入場盤恆為 4 顆 C1（R1～R4 各 1）、無 C2／C3，RNG 組合 17,391,024 種。（09/09）</li>
             <li>驗證：逐輪窮舉上界 M1 4、M2 6、M3 7、M4 6、A／K／Q／J／TE 7；30 萬盤蒙地卡羅最大同符號 7、Any-8 盤面 0、C1≠4 盤面 0。（09/09）</li>
             <li>卡片權重不變；Card-On BF 總 RTP 92.4933%（目標 92.5000%）＝入場 3.0000%＋FG 89.4933%，重抽超限 0。（09/09）</li>
-            <li>遊戲更名為宙斯 2500／Zeus 2500，資料夾改為 <code>H027_宙斯 2500</code>。（09/09）</li>
-            <li>BF 入場輪帶屬基礎數學，升 <code>4.0.0.0</code>：<code>H0271.xlsx</code> 版本 4、Variant 工作簿與 config 4.0.0.0，建立封存與 SHA256SUMS。（09/09）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v3（3.1.0.0）</h4>
           <ol>
             <li>修正 EB 卡片倍率分母（規範 §2.5）：原用 EB 加價成本（2 × 基礎投注），EB 實際 RTP 只有目標一半；SPS 實測 EB ex-JP 48.47～48.88%，以 SPS 口徑重算 25.00% 與 SPS FG 25.09% 吻合。（09/08）</li>
-            <li><code>Simulator.py</code> 的 <code>card_coin_in</code>、FG／BG／overall 分桶、<code>multiplier_x</code>、<code>max_win_x</code> 改用 Normal Bet 基準成本；RTP 分母維持該模式實際成本。（09/08）</li>
-            <li>EB 自然報表依新分母重跑 10 億局（H0271_03_2609081231_betmode1_109.xlsx），桶刻度診斷 1.99 → 1.00；EB 權重重解，FG 區間加權平均 45.162 → 90.1660，x50+ 仍命中競品 0.276820%。（09/08）</li>
+            <li>卡片分桶與倍數（<code>card_coin_in</code>、FG／BG／overall 分桶、<code>multiplier_x</code>、<code>max_win_x</code>）改用 Normal Bet 基準成本；RTP 分母維持該模式實際成本。（09/08）</li>
+            <li>EB 自然報表依新分母重跑 10 億局（<code>H0271_03_2609081231_betmode1_109.xlsx</code>），桶刻度診斷 1.99 → 1.00；EB 權重重解，FG 區間加權平均 45.162 → 90.1660，x50+ 仍命中競品 0.276820%。（09/08）</li>
             <li>Oldhand 依押注層級拆三套權重：小 Bet <code>&lt; $2</code> 走 94x、中 Bet <code>$2–$100</code> 與大 Bet <code>&gt; $100</code> 走 92x，各自獨立、不縮放不 fallback。（09/08）</li>
-            <li>新增 <code>H027192A_Bet100.xlsx</code>／<code>config_92A_Bet100.js</code>（大 Bet），FG 上限 2000x：可配區間 41 → 33、最小權重 13,647 → 307,424；<code>_Bet100</code> 後綴沿用 H026。（09/08）</li>
-            <li>各 config 加 <code>bet_tier_scope</code>（<code>small_bet</code>／<code>medium_bet</code>／<code>big_bet</code>）。（09/08）</li>
-            <li>卡片權重變更，升 3.1.0.0，config <code>excel_version</code> 同步，建立 <code>Versions/3.1.0.0/</code> 封存與 SHA256SUMS；彩金不處理，本版只建模 Game RTP。（09/08）</li>
+            <li>新增大 Bet 權重 <code>H027192A_Bet100.xlsx</code>，FG 上限 2000x：可配區間 41 → 33、最小權重 13,647 → 307,424。（09/08）</li>
+            <li>理論值：92A／Bet100 NB 72%＋20%、EB 42%＋50%；94A NB 72%＋22%、EB 39%＋55%；Newbie NB 72%＋21%、EB 40.5%＋52.5%；BF 3%＋89.5%＝92.5%。FG 均倍 92x 系列 90.1660x、94x 系列 99.1826x、Newbie 94.6743x。（09/08）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v3（3.0.0.7）</h4>
           <ol>
-            <li>FG Hit Rate 調至 44%：只改 FG_Symbol／FG_Symbol (2) 的 Stop Weight（實際 1～5），保留輪帶順序與輪長；Card-Off 1 億局 FG Hit Rate 43.9809%。（09/01）</li>
+            <li>FG Hit Rate 調至 44%：只改 FG_Symbol／FG_Symbol (2) 的 Stop Weight（實際 1～5），保留輪帶順序與輪長；Card-Off 1 億局 FG Hit Rate 43.9809%、FG RTP 64.4487%、Retrigger 週期 250.15 Free Spins。（09/01）</li>
+            <li><code>BG_Symbol</code> 的六輪符號順序、輪長及 Stop Weight 同步為 <code>FG_Symbol</code>；BF 入場取消盤面覆寫，改由 <code>BF_Symbol</code> 輪帶與 Stop Weight 產生，入場得分與 Cascade 固定為 0。（09/02）</li>
+            <li><code>BF_Symbol</code> 改用 <code>FG_Symbol</code> 的符號排列與輪長，正權重 Stop 依「R1～R4 視窗各 1 顆 C1、R5～R6 無 C1、無 C2／C3」啟用 5/5/5/5/54/54，共 128 個。（09/02）</li>
+            <li>倍率線型校準（3.0.0.1）：92A BG 72%／FG 20%、94A BG 74%／FG 20%；FG 週期 300、FG 50～80x 占 FG RTP 40%、Oldhand FG &gt; 200x RTP 2%；自然發生率門檻 0.1%、20,000x 上限、FG 20x 以下禁配、FG 單區間 ≤ Hit Rate 15%；BF 贏錢率 30%。（09/02）</li>
+            <li>BF 入場 RNG 擴充（3.0.0.6）：<code>BF_Symbol</code> 用 3 組與 <code>FG_Symbol</code> 符號數相同的輪帶區塊，R1～R4 可用 RNG 15/15/15/15、R5～R6 162/162，仍保證 R1～R4 各 1 顆 C1、R5～R6 無 C1。（09/02）</li>
             <li>BG_Symbol 還原為 v2 Reel Set 0（撤銷誤套 FG Reel Set 3），BG 選表恢復 Set 0／1／2；Card-Off 1,000 萬局 BG RTP 542.2847% → 133.9440%、倍數球率約 17.98% → 3.4221%。（09/02）</li>
             <li>依還原後報表重算 NB-BG 權重，自然率 &lt; 0.1% 區間歸零、BG Cap 120x → 20x；BG 理論 72%／74%，Card-On 100 萬局總 RTP 92.1027%／94.2089%，Retry 超限 0。（09/02）</li>
-            <li>依 10 億局報表 H0271_03_2609021651_betmode0_109.xlsx 重算 NB 權重：92A 92.0000%（BG 72%／FG 20%）、94A 94.0000%（74%／20%）；FG 週期 300、50～80x 占 FG RTP 40%、200x 以上 RTP 2%、單區間 ≤ 15%。（09/02）</li>
+            <li>依 10 億局報表 <code>H0271_03_2609021651_betmode0_109.xlsx</code> 重算 NB 權重：92A 92.0000%（BG 72%／FG 20%）、94A 94.0000%（74%／20%）；FG 週期 300、50～80x 占 FG RTP 40%、200x 以上 RTP 2%、單區間 ≤ 15%。（09/02）</li>
             <li>上述條件下 FG Hit Rate 最高 42.4163%（競品 43.5640%），採可行上限；Card-On 100 萬局 92A 92.3406%／週期 299.76、94A 93.9712%／296.30，Retry 超限 0。（09/02）</li>
+            <li>NB FG 改採競品 BF-FG 線型，移除 50～80x 占比條件；保留自然率、倍率範圍、單區間 15%、週期 300 與 200x 以上 RTP 2% 限制；EB 暫停用 Card System。（09/02）</li>
             <li>92A／94A 全押注區重校（來源 NB …021651_betmode0_109、EB …031614_betmode1_109、BF …031544_betmode2_108）：92／94 差異只放 FG，<code>Weight_NB_BG</code> 兩版逐格相同。（09/04）</li>
             <li>92A：NB 72%／20%、EB 42%／50%＝92.0000%，BF 92.5000%；94A：NB 72%／22%、EB 39%／55%＝94.0000%，BF 92.5000%。（09/04）</li>
-            <li>新增 Newbie Profile（93%）：NB 72%／21%、EB 40.5%／52.5%，BF 共用 92.5%；BG 與 Oldhand 逐格相同；BG 上限 30x、FG 30x～120x、10 區間（最高單區間 49.71%，FG 平均 94.6743x）；寫入 <code>Weight_*_Newbie</code> 與 <code>card_system.newbie</code>，Simulator 依 <code>card_system_is_newbie</code> 分流。（09/04）</li>
+            <li>新增 Newbie Profile（93%）：NB 72%／21%、EB 40.5%／52.5%，BF 共用 92.5%；BG 與 Oldhand 逐格相同；BG 上限 30x、FG 30x～120x、10 區間（最高單區間 49.71%，FG 平均 94.6743x）。（09/04）</li>
             <li>EB FG x50+ 對齊競品 0.27682%；NB 無法對齊，硬上限 0.22181%。NB FG 週期對標 1/450.83、EB 1/90.17；BG Hit Rate 鎖 28.193143%，加 FG 觸發後 28.414956% 與競品一致。（09/04）</li>
-            <li>合格區間保底 1 單位再微調回 RTP：NB-FG 41／EB-FG 39／BF 38 區間全部非零（最小 13,648／28／9,323），上限 20,000x；(9000, 10000] 自然率 0.0409% 不合格。自然率 &lt; 0.05%、FG 20x 以下不配權重，精度小數 4 位。（09/04）</li>
+            <li>自然率門檻 0.1% → 0.05%，保留 FG 20x 保底與 Oldhand 單區間 15% 上限；倍率天花板 (10000, 20000]，(9000, 10000] 自然率 0.0409% 不配權重。（09/04）</li>
             <li>EB Card System 啟用並填權重，EB FG 保底 44.94x（NB 22.49x 的兩倍）。（09/04）</li>
-            <li>BF 入場盤改為支付 Scatter：固定 4 顆 C1 付 3 × Bet（3.00 pp），仍不判 Pay Anywhere、不 Cascade；同步 <code>game_rule.md</code>、<code>Simulator.py</code> <code>play_featurebuy_entry()</code>、<code>playSpin()</code> 與 Help。（09/04）</li>
-            <li>BF 總計維持 92.5000%（入場 3%＋FG 89.5%），贏錢率（&gt;100x）30%；卡片比對改用 <code>fg_session_pay</code>。Card-On 100 萬局 92.6195%（+1.04σ），Retry 超限 0。（09/04）</li>
-            <li>Overview <code>Hit%</code>／<code>Pulls/Hit</code> 更正為 FG 觸發機率與週期：NB 0.22181%／450.83、EB 1.10907%／90.17、BF 100%／1.00。（09/04）</li>
-            <li>同步 H027192A／94A.xlsx、config_92A／94A.js、Simulator.py、數值報告；版本維持 3.0.0.7。（09/04）</li>
+            <li>BF 入場盤改為支付 Scatter：固定 4 顆 C1 付 3 × Bet（3.00 pp），仍不判 Pay Anywhere、不 Cascade。（09/04）</li>
+            <li>BF 總計維持 92.5000%（入場 3%＋FG 89.5%），贏錢率（&gt; 100x）30%；卡片比對改用 <code>fg_session_pay</code>。Card-On 100 萬局 92.6195%（+1.04σ），Retry 超限 0。（09/04）</li>
+            <li>Card-On 驗證 94A NB 500 萬局：總 RTP 94.3122%（目標 94%），差距可由單筆 19,887x 解釋，排除後 93.9145%；FG Hit Rate 42.8806%（自然 43.9564%）。（09/04）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v2（2.0.0.0）</h4>
           <ol>
+            <li>移除共用加權百分位（linked stop），六輪一律各自依 Symbol Weight 抽停點，與 SPS 一致；Card-Off 100 萬轉 BG Hit 29.1495% → 28.4398%、FG Hit 44.1342% → 39.0729%、總 RTP 239.17% → 206.20%（SPS 210.83%）。（08/31）</li>
             <li>FG 倍數統一：只有「一般符號得分＋最終盤面有 C2／C3」才收集球倍率並啟用累積倍數；有得分但無球以 1x 結算、累積保留；所有 Cascade 合計後套一次倍數，Scatter 不乘。（09/01）</li>
+            <li>驗證（Card-Off 100 萬轉）：總 RTP 206.2031% → 191.4129%、FG RTP 64.0686% → 49.2784%，BG RTP 與各頻率指標不變；Buy Feature 20 萬轉 204.72%。（09/01）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v1（1.0.0.0）</h4>
           <ol>
-            <li>C3 高可見度、低群聚曲線：初始 C2→C3 主曲線 40%／26%／19%／15%／13%／11%，至少一顆 C3 機率 40.00% → 50.30%；BG_Symbol (2) 用主曲線 1/5，掉落用初始第 1～5 欄的 1/2 並依 Combo 遞減。（08/28）</li>
-            <li>FG 倍數累積條件統一：FG Spin 有一般符號得分，最終盤面 C2／C3 才累積；只有 Scatter 或無得分不累積；Index、派彩、Simulator、Game Rule、Help 一致。（08/28）</li>
-            <li>C3 2x／3x／4x 權重改 0，其餘按比例重分配；C2 BG 500x／1000x／2500x 各 0.2%，C2 FG 100x～2500x 各 0.1%，BF C2 不變。（08/28）</li>
+            <li>自然模型 v1：BG Reel Set 0～2、FG Reel Set 3～4 保留競品輪長，依競品初始盤面反推各輪 stop 權重（FG 合併自然 FG 與 BF FG 樣本）；BG 的 C1 可見 stop 權重提高 4%；BG Set 選擇權重 9698／19298／2344。（08/26）</li>
+            <li>Buy Feature 初始盤面改為競品實機方式：R2～R5 各 1 個 C1，其餘 26 格均勻抽取 9 種一般符號。（08/26）</li>
+            <li>92A／94A 卡片依 v1 自然報告重新校準；Card-On oldhand small bet：92A NB 91.3528%、BF 91.8604%；94A NB 94.5282%、BF 93.9493%。（08/26）</li>
+            <li>輪帶改為競品實際輪長 63／64，有效停點 Symbol Weight 統一為 1，各輪循環位移讓 C1 不在 RNG 前後 5 格；Card-Off 100 萬轉 RTP 98.4847%、BG／FG Hit 29.0266%／44.0526%、FG 週期 1/452.69。（08/26）</li>
+            <li>C2／C3 改單一倍率池：依初始盤面 C2 總數決定每顆 C2 轉成 C3 的機率，掉落依 Combo 1～5+；BG／FG／BF 倍率權重重填 Gates of Olympus 1000 競品分布。Card-Off 100 萬場總 RTP 112.7074%、BF 20 萬場 173.1858%。（08/27）</li>
+            <li>C3 暫停出現：C2→C3 權重全部改 0；C3 預留倍率表複製 C2、100x 以上為 0。Card-Off 100 萬場總 RTP 110.4403%、BF 169.0202%。（08/27）</li>
+            <li>C3 初始／掉落轉換分離：初始盤面每顆 C2 依初始 C2 總數各自判定一次，掉落的新 C2 依 Combo 1～5+ 判定；已在場的 C3 每次得獎消除升一級。（08/27）</li>
+            <li>C3 固定 30%：初始與掉落每顆 C2 各以 3000/10000 轉成 C3；Card-Off 100 萬場總 RTP 150.8848%、BG／FG RTP 108.7855%／42.0993%，BF 20 萬場 211.3856%。（08/27）</li>
+            <li>減少 C3 落在低消除 BG 盤面：<code>BG_Symbol (2)</code>（消除 Hit 約 21.85%）的 C2→C3 機率 3000 → 1500/10000；Card-Off 100 萬場總 RTP 140.2511%。（08/28）</li>
+            <li>FG 倍數累積條件統一：FG Spin 有一般符號得分，最終盤面 C2／C3 才累積；只有 Scatter 或無得分不累積。（08/28）</li>
+            <li>C3 高可見度、低群聚曲線：初始 C2→C3 主曲線 40%／26%／19%／15%／13%／11%，至少一顆 C3 機率 40.00% → 50.30%；<code>BG_Symbol (2)</code> 用主曲線 1/5，掉落用初始第 1～5 欄的 1/2。Card-Off 100 萬場總 RTP 141.9187%。（08/28）</li>
+            <li>C3 2x／3x／4x 權重改 0，其餘按比例重分配；C2 BG 500x／1000x／2500x 各 0.2%，C2 FG 100x～2500x 各 0.1%，BF C2 不變。Card-Off 100 萬場總 RTP 231.9135%、BF 358.3801%。（08/28）</li>
             <li>FG C3 5x 權重 62.51% → 50%，移出的 12.51 pp 依其他正權重比例分配；C3 2x～4x 與 100x 以上維持 0。（08/28）</li>
-            <li>輪帶 RNG 區只留 Table、C2／C3 與 R1～R6 的 RNG／stop／length，移除重複的 Config、Version、Profile、Bet、Card 與 Drop Mode。（08/28）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v0（0.0.0.0）</h4>
           <ol>
-            <li>Version 只列該版本可用的 92A／94A Config，移除 Base-Off；Card Off 用原始自然機率，On 依 NB／EB／BF 套對應卡片權重。（08/25）</li>
-            <li>盤面固定 6×5 比例，符號格與間距隨寬度等比例縮放；自動檢查涵蓋 Config 選單、Card System、Spin、盤面比例與 Console。未修改 XLSX／Config 數學參數。（08/25）</li>
-            <li>自然模型與卡片線型對標競品：初始與掉落維持競品 R1～R6 邊際分布，加跨輪停點與掉落相關性；C2 只用 2x～8x，10x 以上由 C3／Super 產生。（08/25）</li>
-            <li>Card-Off 100 萬場 BG／FG RTP 84.9732%／107.2690%、FG Hit 46.0546%、週期 452.49、最大 59500x；92A Card-On NB 90.5175%、BF 92.0197%；94A NB 92.4898%、BF 94.7124%，Retry 超限 0。同步 Simulator、index、config 與 xlsx。（08/25）</li>
-            <li>改用 Gates of Olympus 1000 還原輪帶：BG Reel Set 0～2、FG／BF Reel Set 3～4；消除後沿同一環狀輪帶補入，移除 Symbol Drop Weight。Card-Off 100 萬場總 RTP 108.3942%、BG／FG Hit 28.4353%／38.8874%、週期 454.55；舊卡片結果待重校。（08/26）</li>
+            <li>自然模型對標競品：初始與掉落維持競品 R1～R6 邊際分布，加跨輪停點與掉落相關性；C2 只用 2x～8x，10x 以上由 C3／Super 產生。（08/25）</li>
+            <li>92A／94A 卡片的競品 64 區間倍率線型只投影至自然命中率 ≥ 0.1% 的區間。（08/25）</li>
+            <li>Card-Off 100 萬場 BG／FG RTP 84.9732%／107.2690%、FG Hit 46.0546%、週期 452.49、最大 59500x；92A Card-On NB 90.5175%、BF 92.0197%；94A NB 92.4898%、BF 94.7124%，Retry 超限 0。（08/25）</li>
+            <li>改用 Gates of Olympus 1000 還原輪帶：BG Reel Set 0～2、FG／BF Reel Set 3～4；消除後沿同一環狀輪帶補入，移除 Symbol Drop Weight。Card-Off 100 萬場總 RTP 108.3942%、BG／FG Hit 28.4353%／38.8874%、週期 454.55。（08/26）</li>
           </ol>
         </article>
       </div>
@@ -2099,7 +2126,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016b"></script>
+  <script src="../demogame_common.js?v=20261016zc"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

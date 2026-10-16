@@ -1952,59 +1952,8 @@
     </section>
 
     <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
-      <div class="diagnostic-header">修改紀錄</div>
+      <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
-      <article class="change-log-entry">
-        <h4>v2（2.0.0.0）</h4>
-        <ol>
-          <li>驗證：開圖時有圖格 0 框 0 代號、關圖時全顯示框＋代號且字重 400、Console 無例外；未修改 XLSX／Config 數學參數。（09/24）</li>
-          <li>符號代號一律一般字重（不粗體），由共用 CSS 套用；共用 CSS 版本參數 <code>demogame_common.css?v=4</code>。（09/24）</li>
-          <li>接入共用 Image 開關（<code>window.DEMOGAME_IMAGE_TOGGLE</code>）：開＝只顯示符號圖（無框無代號，格子標 <code>has-symbol-art</code>）；關＝符號框＋代號。（09/24）</li>
-          <li>驗證：預載 11／11 張、全部 naturalWidth &gt; 0、遮罩消失、盤面皆 .webp、Console 無例外；未修改 XLSX／Config 數學參數。（10/06）</li>
-          <li>符號圖改用 WebP（quality 90、保留透明）：552 KB → 87 KB，原 PNG 留作美術原檔、Demo 不再引用；共用 JS 版本參數 <code>demogame_common.js?v=4</code>。（10/06）</li>
-          <li>符號圖開局前預載：<code>DEMOGAME_IMAGE_TOGGLE.images</code> 列 11 張，載入期間擋操作、超過 120 ms 顯示「載入圖片 n / N」；失敗時自動關 Image 改文字並提示張數；背景分頁略過解碼。（10/06）</li>
-          <li>Debug Mode 新增即時倍率線型（共用 <code>window.demogameLineChart</code>）：NB 每局總得分（含 FG）÷ 底注、64 區間、縱軸 0～20%，Reset 清空；本檔只在 NB 局結束呼叫 <code>record()</code>（10/13 已併入 Simulation）。未修改 XLSX／Config 數學參數。（10/06）</li>
-          <li>未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>驗證：node --check 通過；四種模式各模擬 2000 局無 Console 例外、畫面押注模式與統計未變；Card Oldhand NB 72.7%、EB 52.0%、BF 50.6%、SF 93.8%（偏低來自既有 Card 重抽上限 250 次，BF 約 21% 局超限沿用最後結果，與實際遊玩相同，未改）；Card Off NB 92.4%（20000 局）；語言 zh→en→zh 一致、Log Clear 正常。（10/13）</li>
-          <li>共用 JS 版本參數改為 <code>demogame_common.js?v=20261013</code>。（10/13）</li>
-          <li>語言修正：Extra Bet 按鈕、Feature Bar 的 Extra Bet、Previous／Next 中文改為 額外押注、上一步／下一步，切回英文可還原。（10/13）</li>
-          <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用）。（10/13）</li>
-          <li>模擬口徑：<code>multiplier</code> 改為總得分 ÷ 實際押注（原本固定 NB 並 ÷ 底注）；<code>lineMultiplier</code> BF／SF ÷ 底注、NB／EB ÷ 押注；另回傳 <code>retryCount</code>。（10/13）</li>
-          <li>最高倍數改為單局總得分倍數（BF ÷ 底注）；FG 觸發顯示「比例 (N 場)」。（10/13）</li>
-          <li>消除分布轉置成「消除次數 × BG／FG」，與倍率線型一樣框成一區並有標題（adapter 回傳 <code>bgCascade</code>／<code>fgCascades</code>）。（10/13）</li>
-          <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF／SF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」。Set RNG 上方的即時線型不再顯示。（10/13）</li>
-          <li>Simulation 面板新增押注模式選單（Normal Bet／Extra Bet／Buy Feature／Super Feature，<code>window.demogameSimulationModes</code>）；<code>demogameSimulateRound({ mode })</code> 只在模擬期間暫時套用所選模式，不動畫面押注模式與統計。（10/13）</li>
-          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
-          <li>押注選項加入 2000／3000／5000（Bet Currency 最大押注）。（10/13）</li>
-          <li>Set RNG 統一：欄位一列等寬（卡片系統／RNG／重置），拿掉本檔覆寫共用排版的 <code>.set-rng-controls</code>／<code>.debug-rng-field</code> CSS。（10/13）</li>
-          <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|EB|BF|SF/on|off/-/種子</code>，點一下複製並填入），貼回 RNG 欄按 Spin 整局重跑（BG、消除、FG、Card 重抽相同）；碼內模式／卡片只套用該局、不改畫面選項，重跑局不計入即時線型；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
-          <li>驗證：node --check 通過；點 Log RNG 行填入後重跑，Log 結果行與 Spin Result 盤面逐字相同——Card on：NB、BF（含整段 FG）；Card off：NB、EB、BF、SF（SF 含 FG）；Card on 碼在 Base 下重跑仍套用卡片並印 Config 不符警告；格式錯誤不扣款；Set RNG 三欄一列（兩欄等寬＋Reset 82px）；Simulation 10000 局正常、Console 無錯誤。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-08-03 20:08」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
-          <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
-          <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
-          <li>驗證：node --check 通過；Debug Mode 下 NB／Card oldhand NB／BF（整段 10 轉 FG）各局 Log 依統一格式、局號行附卡片重抽次數，歷史紀錄 BG／FG 最大倍數正確且 Clear 歸零，Log Clear 正常；點 RNG 行填入重跑 BF 整局 Log 逐行相同（僅局號行多 Replay）；格式錯誤印 Error 行；Console 無錯誤。（10/13）</li>
-          <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
-          <li>驗證：Speed 5＋Auto 下 BG 與 BF 整段 10 轉 FG 每轉算分後停頓實測 101～123 ms；RNG 碼重跑 BF 整局 Log 逐行相同；Simulation 不經停頓（1 萬局停頓呼叫 0 次）；Console 無錯誤。（10/13）</li>
-          <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。（10/13）</li>
-          <li>驗證：Win 逐次消除遞增、BG 局末與 FG 結束值同 Log；Credit／統計／Log／RNG 重跑結果不變；Console 無錯誤。（10/13）</li>
-          <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
-          <li>驗證：BG 4 次消除局 Previous 依序 7.15→5.15→4.00→1.50→0.00、Next 反向回到 7.15，與即時播放序列相同；FG 每轉以 BG 得分＋前段 FG 累計為基準逐步一致；新局 Win 照常歸零；Credit／統計／Log 不變；Console 無錯誤。（10/13）</li>
-          <li>觸發 FG 那局的 BG 得分累積進 FG：FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束等於整局總得分（原本已符合，含 Previous／Next 同一基準，本次只驗證）。（10/13）</li>
-          <li>FG 結束回到 BG 時，盤面還原成觸發 FG 那局的最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲；只改顯示。（10/13）</li>
-          <li>驗證：NB 自然觸發（RNG <code>92A/NB/off/-/00000652</code>）BG 4.25 → FG 起始 4.25 → 結束 236.70（＝4.25＋FG 232.45）；BF（<code>92A/BF/off/-/00001388</code>）入場盤 3.25 → FG 首次消除 3.50 → 結束 15.95（＝3.25＋12.70）；兩局 FG 結束後盤面與觸發局最終盤面完全相同、Feature Status 為 Base Game；新局 Win 從 0.00 起；RNG 重跑 Log 逐行相同；Console 無錯誤。（10/13）</li>
-          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
-          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。重置同時把卡片系統清回載入時預設（依 Config）並清空 RNG 欄；任一欄偏離預設時重置鈕才可按。（10/15）</li>
-          <li>RNG 碼在卡片開時 Config 帶 Profile（如 <code>92A-Newbie/NB/on/-/…</code>），貼回重跑用同一套卡片；原本 Config 選單已無 Profile，Newbie 局重跑會變成 Oldhand。（10/15）</li>
-          <li>驗證：選 Newbie 連轉 3 局維持且每局 Log 套用 Card newbie；貼 RNG 碼卡片回 Off、碼連轉 2 局保留並以同 Profile 重播；重置後 RNG 清空、卡片回預設；無 console 錯誤。（10/15）</li>
-          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
-          <li>速度 1～5 五階；第 5 階不再由左到右逐輪停輪，Spin 後所有轉輪同時到位。（10/15）</li>
-          <li>驗證：Speed 5 下 BG 與 BF（入場＋10 轉 FG）每次 6 輪停輪時間差 0 ms（Spin 後約 60 ms 同時到位）；Speed 1 仍逐輪停（約 535→1430 ms，每輪約 180 ms）；RNG 碼重跑 BF 整局 Log 逐行相同；Console 無錯誤。（10/15）</li>
-          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
-          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>驗證：node --check 通過；NB 10 局 → Normal Bet n=10、切 EB → n=0、EB 5 局 → n=5、切回 NB → n=10；NB 自然觸發局（Card off，種子 00000652）只記 1 次、值 236.70x（BG＋FG）；Buy Feature 顯示不記錄、整局 FG 後計數不變；重置 NB／EB 皆歸零；Console 無錯誤。（10/15）</li>
-          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
-        </ol>
-      </article>
       </div>
     </section>
 
@@ -3291,7 +3240,7 @@
   }
 
   function toggleDebug(enabled) {
-    ["play-debug-controls", "set-rng-panel", "log-wrap", "live-log-wrap"].forEach((id) => {
+    ["play-debug-controls", "set-rng-panel", "log-wrap", "live-log-wrap", "change-log-wrap"].forEach((id) => {
       byId(id).classList.toggle("debug-hidden", !enabled);
     });
     byId("controls").classList.toggle("debug-off", !enabled);
@@ -3603,7 +3552,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261016b"></script>
+  <script src="../demogame_common.js?v=20261016zc"></script>
   <script>
     (() => {
       "use strict";

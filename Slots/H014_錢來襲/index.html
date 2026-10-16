@@ -238,102 +238,43 @@
         <article class="change-log-entry">
           <h4>v5（5.0.0.0）</h4>
           <ol>
-            <li>數學 5.0.0.0（依測試反饋，改 bet{n}p_A 權重）：沒得分畫面 00 放回空白，E E E／E 0 E／E E 0／E 0 0 取 4.1.0.0 與競品的中間值（Bet10 E 0 0 31.2% → 26.2%、E E E 14.3% → 18.0%）。（10/13）</li>
-            <li>Bet10：R1 空白子表 R2 停在 1／5 的權重提高，E X 0／E X 1／E X 5／E X 空 合計 2.43% → 3.13%（同競品），用 R1 有數字的小獎換，Hit 不變。（10/13）</li>
-            <li>R4：沒得分時出倍數（每局）約 30% → 16%；有得分時 R4 是倍數 Bet1 15.3% → 21.5%、Bet5 41.2% → 42.1%、Bet10 22.9% → 28.0%（同競品）。卡片等比調回 RTP 92.0000%，EB 卡片依新 NB 重算、EB 輪帶不變。（10/13）</li>
-            <li>Setting 的 Version 可切換 5.0.0.0／4.1.0.0／4.0.0.0／3.0.0.0／1.0.0.2；頁尾最後調性更新改為 2026-10-13 15:40。（10/13）</li>
-            <li>每一轉（BG 局與每轉 FG）算完分後固定停 0.5 秒再放行下一轉／Auto（共用 demogameRoundPause，不受 Speed 影響；同日由 0.1 秒、0.3 秒改為 0.5 秒）。（10/13）</li>
-            <li>驗證：最高 Speed＋Auto 量測算分到下一轉間隔 ≥ 100 ms；RNG 重跑結果相同、Simulation 仍即時、無 console 錯誤（本作無 FG）。（10/13）</li>
-            <li>得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值不變。本作無消除／FG：停輪揭曉數字分即顯示，R4 倍數／RESPIN／幸運轉盤揭曉後再更新為總分。（10/13）</li>
-            <li>驗證：取樣 Win 依演出分段上升、局末等於 Log 的 Win；Credit、統計、RNG 重跑結果不變，無 console 錯誤。（10/13）</li>
-            <li>Previous／Next 逐步檢視時，得分（Win）同步顯示該步的累計得分。（10/13）</li>
-            <li>驗證：逐步回看 Win 依步驟升降、最後一步等於局末得分；Credit、統計、Log、RNG 不變，無 console 錯誤（本作無 FG／消除，步驟為停輪 → 倍數／RESPIN／轉盤 → 結果）。（10/13）</li>
-            <li>R4 停在 2X／5X／10X 但數字分為 0（倍數無效）時，R4 不亮得分框；有得分的倍數、RESPIN、BONUS 照舊亮框。只改演出，未修改 XLSX／Config。（10/15）</li>
-            <li>開頁時共用 CSS 尚未載入或載入失敗（例如單獨開啟 index.html），不再顯示未套樣式的畫面，改顯示「Demo 載入中…」與網頁版網址。（10/15）</li>
-            <li>統計新增「特殊符號得分機率」＝R4 為 2X／5X／10X 且數字分 &gt; 0 的局數 ÷ 數字分 &gt; 0 且 R4 不是 RESPIN／BONUS 的局數（RESPIN、BONUS 局不列入），括號為次數；Reset 清空。統計拿掉「Respin / Lucky Wheel」。開頁載入中改深色底、載入提示 1.5 秒後才出現（各遊戲共用做法），避免白屏閃一下。只改介面，未修改 XLSX／Config。（10/15）</li>
-          <li>卡片 BG 區間選單只顯示區間（如 (10, 15]），拿掉前面的編號與子表標記（共用）。（10/15）</li>
-          <li>Set RNG 設定一直保留到按重置才清；各欄位互斥，設定其中一個時其他回到預設（共用）。（10/15）</li>
-          <li>驗證：指定卡片 BG 區間連 Spin 3 局皆保留並套用；改設 Natural Table／貼 RNG 碼時其他欄回預設，RNG 碼連 Spin 皆重跑同一局；重置全部清回預設，無 console 錯誤。（10/15）</li>
-          <li>「特殊符號得分機率」移到統計下方新的「統計 (By Game)」區（共用：非共用五項的指標自動移入，沒有就不顯示）。（10/15）</li>
-          <li>歷史紀錄併入「統計」區：最高倍數下方多 BG 最大倍數、FG 最大倍數兩列（無 FG 的遊戲只有 BG），獨立的歷史紀錄面板拿掉，原「最高倍數」列因資訊重複隱藏，按重置清空（共用）。（10/15）</li>
-          <li>速度 1～5 五階；第 5 階不再逐輪停輪（本作 1～4 階為由右到左 R4 → R1），Spin 後所有轉輪同時到位，RESPIN 重轉同樣同時到位。只改演出。（10/15）</li>
-          <li>驗證：第 5 階四輪落定時間差 &lt; 1 ms（約 160 ms 同時到位，RESPIN 重轉三輪亦同時）；第 1 階仍逐輪停（約 680／850／1020／1200 ms）；RNG 重跑第 5 階與第 1 階得分相同，無 console 錯誤（本作無 FG）。（10/15）</li>
-          <li>餘額／遊戲／押注模式三區一律放在盤面下方，右側只留統計；手機版依序為盤面、這三區、統計（共用）。（10/15）</li>
-          <li>統計下方新增累積倍率線型（共用）：NB 記在 NB、EB 記在 EB，BF／SF 不記錄，依押注模式顯示對應累積圖。（10/15）</li>
-          <li>驗證：NB 玩 10 局線型 n=10，切 EB 顯示 n=0、玩 5 局 n=5，切回 NB 仍 n=10；Simulation 不計入，重置清空，無 console 錯誤（本作無 FG／Buy Feature）。（10/15）</li>
-          <li>遊戲區按鈕換行時，速度列拉長到與上一列同寬（從左邊到 + 按鈕）（共用）。（10/16）</li>
-        </ol>
+            <li>升 v5（依測試反饋，改 bet{n}p_A 權重）：沒得分畫面 00 放回空白——R1 幾乎全空白的子表調 R2／R3 空白／0 比例，E E E／E 0 E／E E 0／E 0 0 取 4.1.0.0 與競品的中間值（Bet10 E 0 0 31.2% → 26.2%、E E E 14.3% → 18.0%）。（10/13）</li>
+            <li>Bet10：同一子表 R2 停在 1／5 的權重 ×2.94，E X 0／E X 1／E X 5／E X 空 合計 2.43% → 3.13%（同競品），用 R1 有數字的小獎換，Hit 不變。（10/13）</li>
+            <li>R4：沒得分時出倍數（每局）約 30% → 16%；有得分時 R4 是倍數 Bet1 15.3% → 21.5%、Bet5 41.2% → 42.1%、Bet10 22.9% → 28.0%（同競品），Bet50／Bet100 已約 40% 不動。（10/13）</li>
+            <li>卡片等比調回 RTP 92.0000%；EB 卡片依新 NB 卡片以同規則重算，EB 輪帶不變。（10/13）</li>
+          </ol>
         </article>
         <article class="change-log-entry">
           <h4>v4（4.1.0.0）</h4>
           <ol>
-            <li>數學 4.1.0.0（只改卡片）：自然機率 ≥0.05% 但 0 權重的區間補權重（Bet5 3x／120x、Bet10 7x／50x、Bet50 3x）；Bet100 (100,120] 子表 C→B；EB 依新 NB 卡片重算，Bet10／50／100 的 (0,1] 子表 A→B。（10/13）</li>
-            <li>各輪 R1～R3 組合、得分盤面 × R4 符號在 Card-On 下都出現得了；僅 6 組自然機率 &lt;0.05% 的組合為已知例外（注意事項.md）；RTP 皆 92.0000%。（10/13）</li>
-            <li>Setting 的 Version 可切換 4.1.0.0／4.0.0.0／3.0.0.0／1.0.0.2。（10/13）</li>
-            <li>Simulation 面板新增押注模式選單（本作只有 Normal Bet／Extra Bet，無 FG／Buy Feature）。（10/13）</li>
-            <li>本作 adapter：<code>demogameSimulateRound({ mode })</code> 只在該局暫時切換押注模式（try/finally 還原，不動畫面與統計），multiplier／lineMultiplier＝得分 ÷ 實際押注（EB 1.5 倍）。（10/13）</li>
-            <li>倍率線型併入 Simulation：標準 64 區間、X 軸逐一標 (下限, 上限]；Y 軸 NB／EB 1%、BF 20%；超出上限或為 0 的區間不畫點；標題置中只寫「倍率線型 · 模式」；原 Set RNG 上方的即時線型不再顯示。（10/13）</li>
-            <li>消除分布轉置成「消除次數 × BG／FG」並框成一區附標題；本作無消除機制，不顯示。（10/13）</li>
-            <li>最高倍數改為單局總得分倍數（本作為得分 ÷ 實際押注）；FG 觸發顯示「比例 (N 場)」（本作無 FG，恆為 0）。（10/13）</li>
-            <li>Start 執行中顯示「進行中」；Spin Result 拿掉（共用）；共用區標籤中英切換（共用）；共用 JS 改 <code>../demogame_common.js?v=20261013</code>。（10/13）</li>
-            <li>本作中英切換：盤面 Message（轉動中／未中獎／得分／RESPIN／BONUS／押注切換／錯誤提示）與 Feature Status 改中英兩版，切換語言時重繪目前訊息；Extra Bet 按鈕文字改用共用字典。（10/13）</li>
-            <li>驗證：inline script 皆通過 <code>node --check</code>；Simulation NB／EB 各 2,000 局正常、Console 無錯誤；Card On 各 200,000 局 RTP NB 92.44%／EB 92.90%（目標 92%）；Log、Clear、語言 zh→en→zh 正常。Simulation 相關修改未修改 XLSX／Config 數學參數。（10/13）</li>
-          <li>Force FG 拿掉（共用，勾選框隱藏並固定不勾）。（10/13）</li>
-          <li>沒有消除機制的遊戲一開頁就隱藏消除分布（共用）。（10/13）</li>
-          <li>標題列右側新增「數值報告」按鈕（共用，樣式同 Reset），另開 <code>其他/數值報告_錢來襲.html</code>。（10/13）</li>
-          <li>Set RNG 統一：欄位一列等寬（卡片 BG 區間／Natural Table／RNG／重置），重置同時清空 RNG 欄。（10/13）</li>
-          <li>可重現 RNG：每局 Log 印 RNG 碼（<code>Config/NB|EB/on|off/b押注[.r卡片區間][.tNatural表]/種子</code>），點一下複製並填入，貼回 RNG 欄按 Spin 整局重跑（卡片 Retry、RESPIN、轉盤相同）；碼上的押注模式與 Card on/off 只套用該局，押注不同時切到碼上押注；原 Reel RNG 停輪欄改為 RNG 碼。（10/13）</li>
-          <li>驗證：Debug Mode 下 Card on（NB bet10 一般／RESPIN／轉盤、EB、指定卡片區間 #45）與 Card off（Base、Natural B）各點 Log RNG 碼重跑，Log 結果行與 Spin Result 盤面皆相同；跨押注模式／押注、重新整理後重跑亦相同；Set RNG 四欄同列等寬；Simulation 正常、Console 無錯誤；inline script 皆通過 <code>node --check</code>。（10/13）</li>
-          <li>頁尾改顯示「最後調性更新：2026-10-13 10:43」（共用；只隨數學模型／倍率權重調整更新）。（10/13）</li>
-          <li>Reel RNG 面板拿掉，改用共用歷史紀錄（BG／FG 最大倍數），與 H045 一致。（10/13）</li>
-          <li>Log 統一：改用共用 demogameLog，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程。（10/13）</li>
-          <li>驗證：Debug Mode 下 Base／92A、NB／EB 各玩數局，Console 無錯誤；歷史紀錄顯示 BG 最大倍數（本作無 FG，FG 恆為 x0），Clear 正常；Log 行格式同 H045，RNG 行可點並重跑同一局（含 Card Retry 次數、得分相同）；inline script 皆通過 <code>node --check</code>。（10/13）</li>
-        </ol>
+            <li>畫面組合可出現：Normal Bet 自然機率 ≥ 0.05% 但卡片 0 權重的區間補權重（Bet5 3x／120x、Bet10 7x／50x、Bet50 3x）；Bet100 (100, 120] 子表 C → B，讓 1100～11010 搭配空白／2X 的盤面可出現。（10/13）</li>
+            <li>Extra Bet 依新 Normal Bet 卡片以同規則重算；Bet10／Bet50／Bet100 的 (0, 1] 子表 A → B，讓 1／5／10／11／15 × 2X／5X／10X 可出現。（10/13）</li>
+            <li>自然機率 &lt; 0.05% 無法給權重的 6 組盤面 × R4 組合列為已知例外（NB Bet10 1000 × 10X、Bet50 10000 × 2X、Bet100 151／155 × 2X、50000 × 10X、100000 × 5X）。（10/13）</li>
+            <li>精算 RTP Normal／Extra 全押注 92.0000%。模擬機 10⁶／10⁷ 皆在 2σ 內，Retry 超限 0：NB 10⁷ 92.07%／92.33%／91.96%／91.50%／91.32%，EB 10⁷ 91.95%／91.75%／91.99%／91.61%／92.06%（Bet1／5／10／50／100）。（10/13）</li>
+          </ol>
         </article>
         <article class="change-log-entry">
           <h4>v4（4.0.0.0）</h4>
           <ol>
-            <li>數學 4.0.0.0（相對 3.0.0.0，只影響演出、派彩不變）：沒得分時 E 0 E、E E 0 各為 E E E 的 1.5 倍（E 0 0 約 2.2～2.9 倍；Bet1 為 E 0 _＝1.5 × E E _），以 R1 幾乎全空白的子表調整 R2、R3 的空白／0 比例。（10/12）</li>
-            <li>沒得分時 R4 出現 2X／5X／10X 的占比加 20 個百分點（例：Bet10 14.0% → 34.0%），倍數間比例與 RESPIN／BONUS 權重不變；卡片非零區間等比微調，RTP 維持 92%；改到輪帶權重，第 1 碼升 4.0.0.0（Extra 同步）。（10/12）</li>
-            <li>驗證（模擬機）：10^6 五個押注皆在 2σ 內、重試超限 0 次；畫面元素檢查通過；Setting 的 Version 可切換 4.0.0.0／3.0.0.0／1.0.0.2。（10/12）</li>
-            <li>卡片補合格區間：自然機率 ≥0.05% 但原本 0 權重的區間補權重（比例照自然機率、最小 1 ppm），其餘重擬維持 RTP 92%；Bet5／Bet10 最大得分 550x → 1,055x。（10/12）</li>
-            <li>Bet100 數字分上限 30000（300 倍）→ 500000（5000 倍），Normal／Extra 同步；50000～101010 共 8 種數字分開放，最大得分 1,110x → 10,101x。（10/12）</li>
-            <li>驗證（模擬機）：10^6／10^7 五個押注與 Extra Bet100 皆在 2σ 內、重試超限 0 次；畫面元素檢查通過；SPS 差異說明 <code>文件/SPS改版說明_4.0.0.0.md</code>。（10/12）</li>
-            <li>Extra Bet 卡片以 NB 4.0.0.0 為基礎：各得分區間 × (1 + k × NB 該區間 R4 有東西的比例)，RTP（÷1.5）92%；輪帶權重沿用 1.0.0.2；EB Hit 約 15.3%～17.6%（舊 17.7%～20.8%），最大得分同 NB（Bet5／10 1,055x、Bet50 2,021x、Bet100 10,101x）。（10/12）</li>
-            <li>依規範 §1.4.7，NB／EB 卡片精算 RTP 皆精確到 92.0000%。（10/12）</li>
-            <li>停輪順序改為由右到左：R4 → R3 → R2 → R1（RESPIN 重轉 R3 → R2 → R1）。（10/12）</li>
-            <li>空輪 E 不顯示文字，只留空白底板。（10/12）</li>
-            <li>上下符號間距縮為 1/3：格高 78px → 46px（窄螢幕 64 → 40、54 → 34），中線與上下半格比例不變。（10/12）</li>
-            <li>展示轉盤與開獎轉盤每格直接顯示「獎項 × 押注」總分（Coin），中心改 WIN，轉完不再顯示 × bet 乘算；派彩不變，未修改 XLSX／Config 數學參數。（10/13）</li>
+            <li>升 v4：沒得分盤面調整——R1 幾乎全空白的子表調 R2、R3 的空白／0 比例，E 0 E、E E 0 各為 E E E 的 1.5 倍（Bet1 為 E 0 _＝1.5 × E E _）；沒得分時 R4 出現 2X／5X／10X 的占比加 20 個百分點；派彩不變，卡片等比微調維持 92%。（10/12）</li>
+            <li>補合格區間：自然機率 ≥ 0.05% 但卡片 0 權重的區間補權重，彼此比例照自然機率（取自然機率最高的子表）、最小 1 ppm，其餘區間以原目標重擬；Bet5／Bet10 最大得分 550x → 1,055x。（10/12）</li>
+            <li>Bet100 數字分上限 30000 分（300 倍）→ 500000 分（5000 倍），Normal／Extra 同步；50000～101010 共 8 種數字分開放，最大得分 1,110x → 10,101x。（10/12）</li>
+            <li>Extra Bet 卡片：以 Normal Bet 卡片為基礎，各得分區間 × (1 + k × Normal Bet 該區間 R4 有東西的比例)，k 使 RTP（÷1.5）＝92%；輪帶權重沿用 1.0.0.2。EB Hit 約 15.3%～17.6%。（10/12）</li>
+            <li>卡片 RTP 依數學模型規範 §1.4.7 精確到 92.0000%（Normal／Extra 全押注）。模擬機 10⁶／10⁷ 皆在 2σ 內，Retry 超限 0。（10/12）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v3（3.0.0.0）</h4>
           <ol>
-            <li>數學 3.0.0.0（V2）：Normal Bet 全部押注對齊 JILI Money Coming 調性；只改 <code>H014192A.xlsx</code> 既有權重格，架構與 <code>Simulator.py</code> 不變；Extra Bet 沿用 1.0.0.2；改到輪帶權重，升第 1 碼。（10/07）</li>
-            <li>Bet1／Bet5／Bet10：子表、前三輪停輪、R4 分組、RESPIN、轉盤權重改為競品擬合值，盤面沒中時的 2X／5X／10X 大幅減少（Bet10 R4 停空白 61.4% → 82.2%），RESPIN 觸發變少、重轉盤分數變大。（10/07）</li>
-            <li>Bet50／Bet100：以 Bet10 為範本外推，保留 R2／R3 的 10／00 與紅轉盤（依金額對應 Bet10 綠轉盤機率，500x／1000x 沿用 1.0.0.2 占比）；Bet50 重轉輪另行擬合，RESPIN 占 RTP 21.3%（Bet10 21.6%）。（10/07）</li>
-            <li>卡片權重以多目標非負最小平方擬合（RTP＝92% 為硬限制）；≥200x 區間沿用 1.0.0.2 權重與 B 表（Bet1 可開 525x、Bet50 可到 2,000x）；機率太低的區間改 B 表或不給權重，重試超限 0 次。（10/07）</li>
-            <li>畫面元素檢查：NB／EB 各押注 R4 符號、轉盤每一格、所有數字分都有機會得分（修正 Bet10 綠轉盤 200x 原本開不出來）。（10/07）</li>
-            <li>驗證（模擬機）：10^6 Bet1 92.03%、Bet5 91.66%、Bet10 91.77%、Bet50 92.60%、Bet100 92.88%，皆在 2σ 內；10^7 為 91.58%／92.03%／92.01%／92.34%／92.04%。（10/07）</li>
-            <li>Setting 的 Version 可切換 1.0.0.2（原始）與 3.0.0.0（現行）。（10/07）</li>
+            <li>升 v3（V2 調性）：Normal Bet 全押注對齊 JILI Money Coming——Bet1／Bet5／Bet10 的子表、前三輪、R4 分組、RESPIN、轉盤權重改為競品擬合值；Bet50／Bet100 以 Bet10 為範本外推，保留 10／00 與紅轉盤。（10/07）</li>
+            <li>卡片權重以多目標非負最小平方擬合（RTP 固定 92%），≥ 200x 區間沿用 1.0.0.2 的權重與 B 表（Bet1 525x、Bet5／Bet10 550x、Bet50 2,000x）；Bet10 綠轉盤 200x 修正為可開出。（10/07）</li>
+            <li>Extra Bet 沿用 1.0.0.2，版本號同步第 1 碼。（10/07）</li>
           </ol>
         </article>
         <article class="change-log-entry">
           <h4>v1（1.0.0.2）</h4>
           <ol>
-            <li>新建 <code>index.html</code>；共用區使用 <code>../demogame_common.css?v=4</code>／<code>../demogame_common.js?v=2</code>，By Game 只含標題、Feature Status、盤面（R1～R3 數字轉輪＋R4 特色轉輪）、動畫與 Message。（10/06）</li>
-            <li>空白符號 E 改用與數字相同的字級、字重、顏色與底板；Feature Status 只保留 Bet Mode（移除 R4 特色清單、Number Win chip，RESPIN／BONUS 狀態與 Respin 加分 chip 只在演出中出現）。（10/06）</li>
-            <li>數值全由 <code>config.js</code>（<code>window.H014_CONFIG</code>）與 <code>config_92A.js</code>（<code>window.H014_CONFIG_92A</code>）讀取；單局邏輯對應 <code>Simulator.py</code> 的 <code>_spin</code>、<code>_in_interval</code>、<code>run_worker</code>（Retry 上限取 <code>card_retry_limit</code>）。（10/06）</li>
-            <li>演出：四輪滾動停輪、中線 Payline、數字分、2X／5X／10X 乘算動畫、RESPIN 重轉 R1～R3（顯示重轉前＋後）、綠／紅幸運轉盤 8 格；Previous／Next 可逐段回看。（10/06）</li>
-            <li>Config 顯示 <code>92A-bet{押注}</code>（無 Newbie／Oldhand）；Card System 關閉時於 Set RNG 選 Natural Table（A／B／C）。（10/06）</li>
-            <li>未實作（Config／Simulator 無資料）：OP Jackpot、0換E、假表演、§9.3 初始盤面固定 RNG；初始盤面為隨機停點。（10/06）</li>
-            <li>驗證：Console 無錯誤；頁內 20 萬局卡片系統 RTP（NB bet1／bet100）；未修改 XLSX／Config 數學參數。（10/06）</li>
-            <li>移除盤面上方數字分顯示板；盤面上下兩排只露半格，中線置中。（10/06）</li>
-            <li>盤面上方加入幸運轉盤（只露上半圈慢速自轉）：Bet5／10 綠、Bet50／100 紅；Bet1 轉盤變灰停轉並蓋鎖鏈與鎖頭。（10/06）</li>
-            <li>轉盤標籤改為一行「加壓至下一押注會增加的特色」（由 Config 權重判斷），Bet100 顯示「已解鎖全部特色」。（10/06）</li>
-            <li>Setting 的 Config 只剩 <code>92A</code>（NB／EB 兩本 XLSX 綁成一組），押注由押注按鈕切換。（10/06）</li>
-            <li>Debug Mode 新增即時倍率線型（共用，<code>window.demogameLineChart</code>）：Set RNG 上方 64 區間、NB 每局總得分 ÷ 底注、縱軸 0～20%，Reset 清空；本檔只在 NB 一局結束時呼叫 <code>record()</code>；未修改 XLSX／Config 數學參數（10/13 已併入 Simulation）。（10/06）</li>
+            <li>原版：自 SVN <code>Slot/IGaming/H014</code> 複製的 92 版數學（H014192／H014192_Extra 改名為 H014192A／H014192A_Extra）。（10/06）</li>
           </ol>
         </article>
       </div>
@@ -1423,7 +1364,7 @@
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_錢來襲.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
-  <script src="../demogame_common.js?v=20261016b"></script>
+  <script src="../demogame_common.js?v=20261016zc"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
