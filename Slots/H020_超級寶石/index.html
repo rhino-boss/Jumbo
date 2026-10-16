@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Super Gems — Demo Game</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='16%2C8 48%2C8 62%2C24 32%2C60 2%2C24' fill='%23c4102a'/%3E%3Cpolygon points='16%2C8 48%2C8 42%2C24 22%2C24' fill='%23ff5a6e'/%3E%3Cpolygon points='2%2C24 22%2C24 32%2C60' fill='%23e01e3c'/%3E%3Cpolygon points='62%2C24 42%2C24 32%2C60' fill='%238e0a1e'/%3E%3Cpolygon points='22%2C24 42%2C24 32%2C60' fill='%23d4142f'/%3E%3Cpolygon points='16%2C8 22%2C24 2%2C24' fill='%23ff8090'/%3E%3Cpolygon points='48%2C8 62%2C24 42%2C24' fill='%23b00d25'/%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg transform='translate(2.7 7) scale(0.908)'%3E%3Cpolygon points='16%2C8 48%2C8 62%2C24 32%2C60 2%2C24' fill='%23c4102a'/%3E%3Cpolygon points='16%2C8 48%2C8 42%2C24 22%2C24' fill='%23ff5a6e'/%3E%3Cpolygon points='2%2C24 22%2C24 32%2C60' fill='%23e01e3c'/%3E%3Cpolygon points='62%2C24 42%2C24 32%2C60' fill='%238e0a1e'/%3E%3Cpolygon points='22%2C24 42%2C24 32%2C60' fill='%23d4142f'/%3E%3Cpolygon points='16%2C8 22%2C24 2%2C24' fill='%23ff8090'/%3E%3Cpolygon points='48%2C8 62%2C24 42%2C24' fill='%23b00d25'/%3E%3C/g%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
   <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
   <style id="dg-boot">
     html:not(.dg-css-ok) { background:#0b1424; }
@@ -29,9 +29,9 @@
     .feature-pill .v { color:#e8f4ff; font-weight:700; }
     .feature-pill.hidden { display:none; }
 
-    #grid-panel { position:relative; padding:12px; overflow:hidden; }
+    #grid-panel { position:relative; padding:12px; overflow:hidden; container-type:inline-size; }
     /* 方格盤面（同其他 Demogame 的獨立方格）：3×3 ＋ 右側 R4；上方標題列為遊戲名與 WIN MULTIPLIER */
-    #board { --cell:90px; --pad:5px; --rowh:calc((var(--cell) - var(--pad) * 2) * 0.78 + var(--pad) * 2); position:relative; display:grid; grid-template-columns:repeat(3,var(--cell)) 14px var(--cell);
+    #board { --cell:min(90px, calc((100cqw - 32px) / 4)); --pad:5px;   /* 依面板寬度縮放，盤面不超出面板 */ --rowh:calc((var(--cell) - var(--pad) * 2) * 0.78 + var(--pad) * 2); position:relative; display:grid; grid-template-columns:repeat(3,var(--cell)) 14px var(--cell);
       column-gap:0; justify-content:center; padding:10px 4px; }
     #board .board-title { grid-column:1 / 4; text-align:center; font:900 20px/1.2 system-ui,sans-serif; letter-spacing:1px; color:#ffd86a;
       text-shadow:0 2px 0 #7a4a00, 0 0 12px rgba(255,216,106,.35); }
@@ -46,7 +46,7 @@
     #board .reel.r4 { height:calc(var(--r4cell) * 3); }
     #board .reel.r4 .cell { height:var(--r4cell); }
     #board .reel.r4 .tile { overflow:visible; }
-    #board .reel.r4 img.sym-img { transform:scale(1.3); }   /* 倍數圓幣圖四周有透明留白，放大到與格高相當 */
+    #board .reel.r4 img.sym-img { transform:scale(1.2); }   /* 倍數圓幣圖四周有透明留白，放大到與格高相當 */
     #board .reel-gap { grid-column:4; }
     #board .reel-strip { position:absolute; left:0; right:0; top:0; will-change:transform; }
     #board .r4-frame { position:absolute; left:1px; right:1px; top:calc(var(--r4cell) + 1px); height:calc(var(--r4cell) - 2px); z-index:4; pointer-events:none;
@@ -78,8 +78,8 @@
     #betMenu { position:absolute; display:grid; gap:4px; }
     #betMenu button { width:100% !important; }
     #betMenu button.is-active { background:#0077cc !important; }
-    @media (max-width:760px) { #board { --cell:80px; } }
-    @media (max-width:420px) { #board { --cell:62px; --pad:3px; grid-template-columns:repeat(3,var(--cell)) 8px var(--cell); } #board .board-title { font-size:16px; } #board .r4-head { font-size:8px; } #board .cell .slot-symbol-label { font-size:16px; } }
+    
+    @media (max-width:420px) { #board { --pad:3px; grid-template-columns:repeat(3,var(--cell)) 8px var(--cell); } #board .board-title { font-size:16px; } #board .r4-head { font-size:8px; } #board .cell .slot-symbol-label { font-size:16px; } }
   </style>
 </head>
 
@@ -214,6 +214,7 @@
             <li>Help 改讀 <code>game_help_draft.md</code>（離線雙擊用內嵌副本），版式同 H045：區塊標題、副標題、規則與賠率表依語言切換，賠率依目前押注換算（企劃書賠率以 100 Credit 為基準）。未修改 XLSX／Config 數學參數。（10/16）</li>
             <li>盤面改為獨立方格（同其他 Demogame）：拿掉棕色輪框與漸層，每格一張圓角方塊、格間留縫；結構依遊戲畫面為 3×3＋右側 R4，R4 欄頂端放 WIN MULTIPLIER 標籤、R4 三格等比縮小塞入，整欄上下與左側盤面對齊，R4 中線保留綠框；符號圖不變。只改演出。（10/16）</li>
             <li>格子比例改照符號圖 200:156（原本正方形格讓長方形圖上下留白不一、WW 偏大，看起來歪）：三列等高等距；符號圖限制在格內；R4 圓幣圖四周有透明留白，放大 1.3 倍。只改演出。（10/16）</li>
+            <li>格子大小改依盤面面板寬度自動縮放（最大 90px），窄視窗時右側 WIN MULTIPLIER 不再被面板切掉；R4 圓幣放大改 1.2 倍。驗證：面板 440／400／360／320px 盤面左右留白對稱、標籤完整。只改演出。（10/16）</li>
             <li>驗證：指定卡片區間 (9, 10] 開出 M2 兩線 × 2X＝9.6x，中獎格框與連線位置正確；無 console 錯誤。（10/16）</li>
           </ol>
         </article>
@@ -1157,7 +1158,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 00:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
-  <script src="../demogame_common.js?v=20261016zf"></script>
+  <script src="../demogame_common.js?v=20261016zh"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
   </script>
