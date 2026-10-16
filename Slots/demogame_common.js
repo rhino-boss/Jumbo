@@ -2914,19 +2914,21 @@
   const base = `body #board .cell[data-dg-sym]${free}`;
   const gold = `body #board .cell:is(.gold,.special-gold)${free}`;
   const label = `:is(${LABEL})`;
-  const tone = (code, bg, border) => `${base}[data-dg-sym="${code}"]:not(.gold):not(.special-gold){background:${bg}!important;border-color:${border}!important}`;
+  // M 獎：同亮度、不同色相的低彩度漸層，字獎深藍；上緣一條淡高光，整體與金框同一套質感
+  const tone = (code, top, bottom, border) => `${base}[data-dg-sym="${code}"]:not(.gold):not(.special-gold){background:linear-gradient(180deg,${top} 0%,${bottom} 100%)!important;border-color:${border}!important}`;
   const style = document.createElement("style");
-  style.textContent = `${base}{background:#060d1a!important;border:1.6px solid rgba(56,120,175,.45)!important;border-radius:8px!important;box-shadow:none!important;color:#d8e8f4!important}
-    ${tone("M1", "#4a1622", "#c4566a")}
-    ${tone("M2", "#40122f", "#c95c9a")}
-    ${tone("M3", "#123a22", "#4fb06e")}
-    ${tone("M4", "#102c52", "#4f8fd6")}
-    ${tone("M5", "#33184f", "#9a6ad6")}
-    ${tone("M6", "#0e3c40", "#3fb3b8")}
-    ${tone("M7", "#3a2412", "#a8784a")}
-    ${tone("M8", "#2f3410", "#a6b04a")}
-    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]):not(.gold):not(.special-gold){background:radial-gradient(circle at 50% 45%,#c98a35 0%,#9a5a18 62%,#6e3d0e 100%)!important;border-color:#ffd36b!important;color:#fff3d6!important}
-    ${base}:is([data-dg-sym^="W"]):not(.gold):not(.special-gold){background:#0b3a3a!important;border-color:#00ddc0!important;color:#c8fff4!important}
+  style.textContent = `${base}{background:linear-gradient(180deg,#0c1828 0%,#060d1a 100%)!important;border:1.6px solid rgba(70,120,170,.42)!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;color:#d8e8f4!important}
+    ${tone("M1", "#5b2733", "#33141c", "#9c5664")}
+    ${tone("M2", "#3f2f68", "#221840", "#7c68b8")}
+    ${tone("M3", "#1f4d3e", "#112b23", "#4f957d")}
+    ${tone("M4", "#24426e", "#132643", "#5a85bf")}
+    ${tone("M5", "#1d4c55", "#0f2b31", "#4a959d")}
+    ${tone("M6", "#5a2f50", "#321a2d", "#a0628f")}
+    ${tone("M7", "#5a4024", "#322312", "#a07a50")}
+    ${tone("M8", "#3f4a2a", "#232a16", "#7f8f55")}
+    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]):not(.gold):not(.special-gold){background:linear-gradient(180deg,#f0b4ff 0%,#c060e8 45%,#7128a8 100%)!important;border:1.6px solid #e6a2ff!important;box-shadow:inset 0 1px 0 rgba(255,240,255,.55)!important;color:#fff6ff!important}
+    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]):not(.gold):not(.special-gold) ${label}{text-shadow:0 1px 2px rgba(50,0,70,.6)!important}
+    ${base}:is([data-dg-sym^="W"]):not(.gold):not(.special-gold){background:linear-gradient(180deg,#22706a 0%,#0f3d3a 100%)!important;border-color:#3fd6c4!important;color:#d6fff8!important}
     ${gold}{background:linear-gradient(180deg,#f8dc8c 0%,#e2ac44 45%,#b67a16 100%)!important;border:1.6px solid #f1c35a!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,250,220,.55)!important;color:#fff6de!important}
     ${gold} ${label}{color:inherit!important;text-shadow:0 1px 2px rgba(60,30,0,.55)!important}
     :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important}
