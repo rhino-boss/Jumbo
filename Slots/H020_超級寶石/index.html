@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Super Gems — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-size%3D%2756%27%20text-anchor%3D%27middle%27%3E%F0%9F%92%A0%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
   <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
   <style id="dg-boot">
     html:not(.dg-css-ok) { background:#0b1424; }
@@ -29,45 +30,47 @@
     .feature-pill.hidden { display:none; }
 
     #grid-panel { position:relative; padding:12px; overflow:hidden; }
-    #board { --cell:84px; position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) 10px minmax(0,1fr); gap:6px;
-      padding:10px; border-radius:12px; background:linear-gradient(180deg,#5b3b14,#3a250b); border:3px solid #c99a3c;
-      box-shadow:inset 0 0 18px rgba(0,0,0,.55); }
-    #board .reel { position:relative; height:calc(var(--cell) * 3); overflow:hidden; border-radius:8px;
-      background:linear-gradient(180deg,#4a3517,#6a4c22 50%,#4a3517); box-shadow:inset 0 0 14px rgba(0,0,0,.6); }
-    #board .reel.r4 { background:linear-gradient(180deg,#5a1218,#8a1f28 50%,#5a1218); }
-    #board .reel-gap { align-self:stretch; border-radius:4px; background:linear-gradient(180deg,#6b4e12,#d3a43b,#6b4e12); }
+    /* 方格盤面（同其他 Demogame 的獨立方格）：3×3 ＋ 右側 R4；上方標題列為遊戲名與 WIN MULTIPLIER */
+    #board { --cell:84px; --pad:5px; position:relative; display:grid; grid-template-columns:repeat(3,var(--cell)) 14px var(--cell);
+      column-gap:0; justify-content:center; padding:10px 4px; }
+    #board .board-title { grid-column:1 / 4; text-align:center; font:900 20px/1.2 system-ui,sans-serif; letter-spacing:1px; color:#ffd86a;
+      text-shadow:0 2px 0 #7a4a00, 0 0 12px rgba(255,216,106,.35); }
+    #board .r4-head { grid-column:5; text-align:center; align-self:center; padding:3px 2px; border-radius:6px; background:#4a0f18;
+      border:1px solid #c4262f; color:#ffe9a6; font:800 10px/1.15 system-ui,sans-serif; letter-spacing:.3px; }
+    #board .reel { position:relative; height:calc(var(--cell) * 3); overflow:hidden; }
+    #board .reel[data-col="3"] { grid-column:5; }
+    #board .reel-gap { grid-column:4; }
     #board .reel-strip { position:absolute; left:0; right:0; top:0; will-change:transform; }
-    #board .reel.r4 .reel-strip { top:calc(var(--cell) * 0); }
-    #board .r4-frame { position:absolute; left:2px; right:2px; top:calc(var(--cell) + 1px); height:calc(var(--cell) - 2px); z-index:4; pointer-events:none;
-      border:3px solid #5fe3a1; border-radius:10px; box-shadow:0 0 12px rgba(95,227,161,.6); }
-    #board .r4-title { position:absolute; left:0; right:0; top:-2px; z-index:5; text-align:center; font:800 9px/1.3 system-ui,sans-serif; color:#ffe9a6; letter-spacing:.5px; pointer-events:none; }
-    #board .cell { position:relative; height:var(--cell); display:grid; place-items:center; border:1px solid rgba(255,230,150,.12); border-radius:8px;
-      background:rgba(0,0,0,.12); }
-    #board .cell img.sym-img { width:92%; height:92%; object-fit:contain; pointer-events:none; user-select:none; }
-    #board .cell.has-symbol-art { border-color:transparent; background:transparent; }
-    #board .cell .slot-symbol-label { font-size:22px; color:#ffe9a6; font-family:Consolas,"Courier New",monospace; }
-    #board .cell.sym-ww:not(.has-symbol-art) { background:radial-gradient(circle,#e0353f 0,#5a0910 72%); }
-    #board .cell.sym-high:not(.has-symbol-art) { background:radial-gradient(circle,#c9902a 0,#4d3207 72%); }
-    #board .cell.sym-mult:not(.has-symbol-art) { background:radial-gradient(circle,#2f9e5a 0,#0d3d20 72%); }
-    #board .cell.sym-respin:not(.has-symbol-art) { background:radial-gradient(circle,#2380c8 0,#0c3358 72%); }
+    #board .r4-frame { position:absolute; left:1px; right:1px; top:calc(var(--cell) + 1px); height:calc(var(--cell) - 2px); z-index:4; pointer-events:none;
+      border:3px solid #5fe3a1; border-radius:12px; box-shadow:0 0 12px rgba(95,227,161,.6); }
+    #board .cell { position:relative; height:var(--cell); padding:var(--pad); border:0; background:transparent; }
+    #board .cell .tile { position:relative; width:100%; height:100%; display:grid; place-items:center; border-radius:10px;
+      background:#0c1d33; border:1px solid rgba(38,92,137,.45); box-shadow:inset 0 0 10px rgba(0,0,0,.35); overflow:hidden; }
+    #board .cell.has-symbol-art .tile { background:transparent; border-color:transparent; box-shadow:none; }
+    #board .cell img.sym-img { width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; }
+    #board .cell .slot-symbol-label { font-size:22px; color:#d8e8f4; font-family:Consolas,"Courier New",monospace; }
+    #board .cell.sym-ww:not(.has-symbol-art) .tile { background:radial-gradient(circle,#c4262f 0,#4a0910 75%); }
+    #board .cell.sym-high:not(.has-symbol-art) .tile { background:radial-gradient(circle,#8a6a1a 0,#2e2205 75%); }
+    #board .cell.sym-mult:not(.has-symbol-art) .tile { background:radial-gradient(circle,#1f7a45 0,#0b2e18 75%); }
+    #board .cell.sym-respin:not(.has-symbol-art) .tile { background:radial-gradient(circle,#2380c8 0,#0c3358 75%); }
     #board .cell.sym-respin .slot-symbol-label, #board .cell.sym-mult .slot-symbol-label { font-size:18px; color:#fff; }
-    #board .cell .g-badge { position:absolute; right:4px; bottom:4px; z-index:3; padding:0 5px; border-radius:6px; font:800 10px/15px system-ui,sans-serif;
+    #board .cell .g-badge { position:absolute; right:2px; bottom:2px; z-index:3; padding:0 5px; border-radius:6px; font:800 10px/15px system-ui,sans-serif;
       color:#fff; background:linear-gradient(180deg,#ff5fa2,#7a2bd6); box-shadow:0 1px 3px rgba(0,0,0,.55); }
-    #board .cell.h020-hit { z-index:2; animation:h020Glow .45s ease-in-out infinite alternate; }
-    #board .cell.h020-hit::after { content:""; position:absolute; inset:2px; border-radius:8px; box-shadow:0 0 0 2px #ffd86a, 0 0 16px rgba(255,216,106,.85) inset; }
+    #board .cell.h020-hit .tile { animation:h020Glow .45s ease-in-out infinite alternate; }
+    #board .cell.h020-hit::after { content:""; position:absolute; inset:calc(var(--pad) - 1px); border-radius:10px; pointer-events:none;
+      box-shadow:0 0 0 2px #ffd86a, 0 0 16px rgba(255,216,106,.85) inset; z-index:2; }
     @keyframes h020Glow { from{filter:brightness(1)} to{filter:brightness(1.4)} }
     #board .lines-layer { position:absolute; z-index:6; pointer-events:none; }
     #board .lines-layer polyline { fill:none; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 0 3px rgba(0,0,0,.8)); }
-    #board .reel.respin-flash { box-shadow:0 0 0 3px #ff5fa2, 0 0 18px rgba(255,95,162,.8); }
-    .message-bar { margin-top:10px; padding:8px 10px; border-radius:6px; background:#0c2240; color:#b0d4f0; font-size:13px; text-align:center; min-height:20px; }
+    #board .reel.respin-flash .r4-frame { border-color:#ff5fa2; box-shadow:0 0 18px rgba(255,95,162,.85); }    .message-bar { margin-top:10px; padding:8px 10px; border-radius:6px; background:#0c2240; color:#b0d4f0; font-size:13px; text-align:center; min-height:20px; }
     .message-bar.win { color:#ffd86a; font-weight:700; }
     .message-bar.error { color:#ff6f91; font-weight:700; }
     .footer-note { margin-top:10px; color:#5a88aa; font-size:11px; text-align:center; }
     #betMenu { position:absolute; display:grid; gap:4px; }
     #betMenu button { width:100% !important; }
     #betMenu button.is-active { background:#0077cc !important; }
-    @media (max-width:760px) { #board { --cell:70px; } }
-    @media (max-width:420px) { #board { --cell:58px; gap:4px; padding:6px; } #board .cell .slot-symbol-label { font-size:16px; } #board .r4-title { font-size:7px; white-space:nowrap; letter-spacing:0; } }
+    @media (max-width:760px) { #board { --cell:72px; } }
+    @media (max-width:420px) { #board { --cell:62px; --pad:3px; grid-template-columns:repeat(3,var(--cell)) 8px var(--cell); } #board .board-title { font-size:16px; } #board .r4-head { font-size:8px; } #board .cell .slot-symbol-label { font-size:16px; } }
   </style>
 </head>
 
@@ -94,7 +97,7 @@
           <div class="reel" data-col="1"><div class="reel-strip"></div></div>
           <div class="reel" data-col="2"><div class="reel-strip"></div></div>
           <div class="reel-gap" aria-hidden="true"></div>
-          <div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div><div class="r4-title">WIN MULTIPLIER</div></div>
+          <div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div></div>
           <svg class="lines-layer" id="linesLayer" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
         <div class="message-bar" id="messageBar">Loading…</div>
@@ -200,6 +203,8 @@
             <li>未實作：OP Jackpot（Config／Simulator 無資料）；Help 尚無 <code>game_help_draft.md</code>，Help 視窗先顯示提示。未修改 XLSX／Config 數學參數。（10/15）</li>
             <li>驗證：頁內同邏輯模擬 Card Off NB 30 萬局 RTP 2140%／Hit 20.55%（Simulator 10⁶ 2110%／20.52%）；Card On 92A NB 93.15%、94A NB 93.35%、EB1 90.87%、EB2 93.81%、SF 92.07%，皆在 2σ 內、Retry 超限 0；指定卡片區間、RNG 重跑（同 Retry 次數與得分）、SF 5 轉累積倍數、手機版面皆正常；Console 只有尚未製作的 game_help_draft.md 404。（10/15）</li>
             <li>Help 改讀 <code>game_help_draft.md</code>（離線雙擊用內嵌副本），版式同 H045：區塊標題、副標題、規則與賠率表依語言切換，賠率依目前押注換算（企劃書賠率以 100 Credit 為基準）。未修改 XLSX／Config 數學參數。（10/16）</li>
+            <li>盤面改為獨立方格（同其他 Demogame）：拿掉棕色輪框與漸層，每格一張圓角方塊、格間留縫；結構依遊戲畫面為 3×3＋右側 R4，R4 上下與左側盤面對齊（不加標題列），R4 中線保留綠框；符號圖不變。只改演出。（10/16）</li>
+            <li>驗證：指定卡片區間 (9, 10] 開出 M2 兩線 × 2X＝9.6x，中獎格框與連線位置正確；無 console 錯誤。（10/16）</li>
           </ol>
         </article>
       </div>
@@ -630,8 +635,8 @@
     const art = useImages && ART[id];
     const badge = id >= G_FIRST ? `<span class="g-badge">RESPIN</span>` : "";
     return art
-      ? `<div class="cell ${symClass(id)} has-symbol-art" data-sym="${id}"><img class="sym-img" src="${IMG}${art}.webp" alt="${label(id)}" draggable="false" onerror="this.parentNode.classList.remove('has-symbol-art');this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-symbol-label',textContent:'${label(id)}'}))">${badge}</div>`
-      : `<div class="cell ${symClass(id)}" data-sym="${id}"><span class="slot-symbol-label">${label(id)}</span>${badge}</div>`;
+      ? `<div class="cell ${symClass(id)} has-symbol-art" data-sym="${id}"><div class="tile"><img class="sym-img" src="${IMG}${art}.webp" alt="${label(id)}" draggable="false" onerror="this.closest('.cell').classList.remove('has-symbol-art');this.replaceWith(Object.assign(document.createElement('span'),{className:'slot-symbol-label',textContent:'${label(id)}'}))">${badge}</div></div>`
+      : `<div class="cell ${symClass(id)}" data-sym="${id}"><div class="tile"><span class="slot-symbol-label">${label(id)}</span>${badge}</div></div>`;
   }
 
   // ===== 盤面（By Game）=====
