@@ -569,13 +569,14 @@
     // 原模式標題的位置（沒有就放最前面）固定顯示 Base Game／Free Game 標籤（依 body.fg-mode，語言跟著 Language 切換）
     const phase = document.createElement("span");
     phase.id = "demogame-phase";
-    // 狀態列所有資訊一律用同一款黃色膠囊（同 H045 Table 標籤），覆蓋各遊戲原本的藍／紅配色
+    // 狀態列：場景標籤（Base Game／Free Game）用深藍底淺藍字膠囊，其他資訊一律黃色膠囊（同 H045 Table 標籤）
     if (!document.getElementById("demogame-strip-pill-style")) {
       const pillStyle = document.createElement("style");
       pillStyle.id = "demogame-strip-pill-style";
       pillStyle.textContent = `body #strip-bar .feature-pill:not(.hidden),body #strip-bar #demogame-phase,body #strip-bar #featureStatus:not(:empty){display:inline-flex!important;align-items:center;gap:6px;padding:4px 12px!important;border:1px solid rgba(255,196,61,.7)!important;border-radius:20px!important;background:rgba(255,196,61,.18)!important;box-shadow:none!important;color:#ffd36b!important;font:600 12px/1.3 "Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap}
         body #strip-bar .feature-pill .k,body #strip-bar .feature-pill .v{color:#ffd36b!important;font:inherit!important;text-shadow:none!important}
-        body #strip-bar #featureStatus:empty{display:none!important}`;
+        body #strip-bar #featureStatus:empty{display:none!important}
+        body #strip-bar #demogame-phase,body #strip-bar #featureStatus.demogame-scene:not(:empty){border-color:rgba(119,199,255,.45)!important;background:#0c2240!important;color:#77c7ff!important}`;
       document.head.appendChild(pillStyle);
     }
     const modeText = document.getElementById("modeText");
@@ -589,6 +590,11 @@
     };
     updatePhase();
     new MutationObserver(updatePhase).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    // 特色狀態若是場景名稱（FG、BF、Super Feature 等）也用藍色場景標籤
+    const status = document.getElementById("featureStatus");
+    const SCENE = /^(base game|free games?|buy feature|super feature|feature buy|bonus|基礎遊戲|主遊戲|免費遊戲|购买特色|購買特色|超級特色|超级特色|免费游戏)(\s*\d+\s*\/\s*\d+)?$/i;
+    const updateScene = () => { if (status) status.classList.toggle("demogame-scene", SCENE.test(status.textContent.trim())); };
+    if (status) { updateScene(); new MutationObserver(updateScene).observe(status, { childList: true, characterData: true, subtree: true }); }
     document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(updatePhase));
     let busy = false;
     const check = () => {
