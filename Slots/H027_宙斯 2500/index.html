@@ -1352,15 +1352,17 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
 
   function captureSnapshots(spin, winBase = 0) {
     // 每步記下播放到該步時 Win 欄顯示的累計得分（與 playback 相同基底與算法），Previous／Next 只改顯示
-    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialMultiplierValues), hits: [], win: winBase }];
+    const stopMsg = [tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`), ""];   // 訊息列文字同 playback（Previous／Next 還原用）
+    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialMultiplierValues), hits: [], win: winBase, msg: stopMsg }];
     let liveRaw = 0;
     spin.steps.forEach((step) => {
       liveRaw += Number(step.pay) || 0;
       const win = winBase + toMoney(liveRaw);
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeMultiplierValues), hits: step.hitPositions, win });
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterMultiplierValues), hits: [], win });
+      const msg = [tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win"];
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeMultiplierValues), hits: step.hitPositions, win, msg });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterMultiplierValues), hits: [], win, msg });
     });
-    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.multiplier.values), hits: [], win: winBase + toMoney(spin.finalPay) });
+    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.multiplier.values), hits: [], win: winBase + toMoney(spin.finalPay), msg: [tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2/C3 x${spin.multiplier.total}`), spin.finalPay > 0 ? "win" : ""] });
     state.snapshotIndex = state.snapshots.length - 1;
     updateDebugButtons();
   }
@@ -1371,7 +1373,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     const snapshot = state.snapshots[state.snapshotIndex];
     renderBoard(snapshot.board, { hitPositions: snapshot.hits });
     if (Number.isFinite(snapshot.win)) setText(el.win, money(snapshot.win));   // 只改 Win 顯示，不動 Credit／統計／紀錄
-    writeMessage(`${snapshot.label} | Step ${state.snapshotIndex + 1}/${state.snapshots.length}`);
+    if (snapshot.msg) writeMessage(...snapshot.msg);   // 訊息列跟著該步變化（同即時播放）
     updateDebugButtons();
   }
 
@@ -2127,7 +2129,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016zf"></script>
+  <script src="../demogame_common.js?v=20261016zj"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

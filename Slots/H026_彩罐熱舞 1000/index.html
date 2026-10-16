@@ -540,7 +540,7 @@
       --green: #33ff99;
       --blue: #33bbff;
       --mauve: #b06aff;
-      --cell-size: 78px;
+      --cell-size: 76px;   /* 格子上限；左欄變窄時格子跟著縮（見 .board-grid），最外側一欄不會被裁切 */
     }
 
     * {
@@ -738,15 +738,15 @@
 
     .board-grid {
       display: grid;
-      grid-template-columns: repeat(5, var(--cell-size));
+      grid-template-columns: repeat(5, minmax(0, var(--cell-size)));
       gap: 4px;
       justify-content: center;
     }
 
     .cell {
-      width: var(--cell-size);
-      height: var(--cell-size);
-      aspect-ratio: auto;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
       border: 2px solid transparent;
       border-radius: 8px;
       background: #060d1a;
@@ -755,7 +755,7 @@
     }
 
     .cell.peek-row {
-      width: var(--cell-size);
+      width: 100%;
       height: 36px;
       aspect-ratio: auto;
       border-radius: 8px;
@@ -4196,7 +4196,7 @@
       const renderReelStop = () => {
         updateFeatureBar(spin, round, { cascadeCount: 0, multiplier: spin.multiplier_sum_before_spin || 0 });
         renderBoard(clone(spin.board_init));
-        setText(messageBarEl, reelStopMessage);
+        setText(messageBarEl, localizeMessage(reelStopMessage));
       };
       renderReelStop();
       renderSpinResultList(spin);
@@ -4207,7 +4207,7 @@
         const renderFinal = () => {
           renderBoard(clone(spin.board_final));
           updateFeatureBar(spin, round);
-          setText(messageBarEl, finalMessage);
+          setText(messageBarEl, localizeMessage(finalMessage));
         };
         renderFinal();
         state.maxMultiplier = Math.max(state.maxMultiplier, Number(spin.multiplier_sum_after_spin || 0));
@@ -4226,8 +4226,11 @@
         const payMessage = `Cascade ${step.cascade_index} | Pay ${formatMoney(step.cascade_pay)}`;
         const renderPay = () => {
           renderBoard(clone(step.board_before), { hitPositions: step.hit_positions });
+          // 20 線：得分線整條畫在盤面上（共用 demogameWinLines，依 paylines 連過每一輪；格子依列優先排在 #board）
+          const columns = step.board_before[0]?.length || 5;
+          window.demogameWinLines?.draw(boardEl, (step.line_wins || []).map((win) => Box.paylines[win.line_index - 1].map((row, col) => boardEl.children[(row + SCORE_ROW_OFFSET) * columns + col])));
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index - 1, multiplier: beforeMultiplier });
-          setText(messageBarEl, payMessage);
+          setText(messageBarEl, localizeMessage(payMessage));
         };
         renderPay();
         liveSpinPay += Number(step.cascade_pay) || 0;
@@ -4239,7 +4242,7 @@
         const renderMultiplier = () => {
           renderBoard(clone(step.board_after_eliminate), { hitPositions: step.hit_positions, convertPositions: step.converted_gold_positions });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
-          setText(messageBarEl, multiplierMessage);
+          setText(messageBarEl, localizeMessage(multiplierMessage));
         };
         renderMultiplier();
         state.maxMultiplier = Math.max(state.maxMultiplier, Number(step.multiplier_sum_after_cascade || 0));
@@ -4254,7 +4257,7 @@
         const renderClear = () => {
           renderBoard(clone(step.board_after_eliminate), { clearedPositions });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
-          setText(messageBarEl, clearMessage);
+          setText(messageBarEl, localizeMessage(clearMessage));
         };
         renderClear();
         writeMessage(clearMessage);
@@ -4264,7 +4267,7 @@
           const dropMotion = window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {};
           renderBoard(clone(step.board_after_drop), { dropMotion });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
-          setText(messageBarEl, dropMessage);
+          setText(messageBarEl, localizeMessage(dropMessage));
         };
         renderDrop();
         writeMessage(dropMessage);
@@ -4274,7 +4277,7 @@
       const renderFinal = () => {
         renderBoard(clone(spin.board_final));
         updateFeatureBar(spin, round);
-        setText(messageBarEl, finalMessage);
+        setText(messageBarEl, localizeMessage(finalMessage));
       };
       renderFinal();
       applyDisplaySpinWin(round, spin.final_pay);
@@ -4335,7 +4338,7 @@
             const renderBgRestore = () => {
               renderBoard(clone(round.spins[0].board_final));
               updateFeatureBar(null);
-              setText(messageBarEl, restoreMessage);
+              setText(messageBarEl, localizeMessage(restoreMessage));
             };
             state.fgBoardRestored = true;
             renderBgRestore();
@@ -4614,7 +4617,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016zf"></script>
+  <script src="../demogame_common.js?v=20261016zj"></script>
 </body>
 
 </html>

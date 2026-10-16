@@ -2863,6 +2863,8 @@
     el.carryMultiValue.textContent = step.combo;
     if (syncMultiplier) renderMultiplierTrack(multiplierIndex(step.multiplier));
     el.winValue.textContent = format((state.snapshotWinBase || 0) + step.total);   // 逐步檢視：Win 顯示該步累計（基準同即時演出，只改顯示）
+    const message = state.snapshotMessages?.[state.snapshotIndex];
+    if (message) el.messageBar.textContent = message;   // 訊息列跟著該步變化（同即時播放）
     el.previousStepBtn.disabled = state.snapshotIndex <= 0; el.nextStepBtn.disabled = state.snapshotIndex >= state.snapshots.length - 1;
   }
   // Debug Log：一律走共用 window.demogameLog（行格式同 H045，不記演出過程）
@@ -2939,6 +2941,7 @@
 
   async function animateSpin(spin, winBase = 0) {
     state.snapshots = spin.steps; state.snapshotIndex = -1; state.snapshotWinBase = winBase;
+    state.snapshotMessages = [];   // 每步訊息列文字（Previous／Next 還原用）
     const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
     renderMultiplierTrack(startIndex);
     el.carryMultiValue.textContent = "0";
@@ -2955,6 +2958,8 @@
       state.snapshotIndex = i;
       el.carryMultiValue.textContent = step.combo;
       renderRng(step.stops); renderWins(step, false);
+      el.messageBar.textContent = `${spin.scene} | ${text("cascade")} ${step.combo} | ${text("win")} ${format(step.win)}`;   // 訊息列逐步顯示消除得分
+      state.snapshotMessages[i] = el.messageBar.textContent;
 
       // 1) 中獎強調：中獎金光爆閃、其餘壓暗
       renderBoard(step.board, step.gold, step.hit);
@@ -3027,6 +3032,7 @@
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier);
     addLog(`FG ${state.fg.played}/${state.fg.spins.length} | ${tableNameOf(spin)} | Cascade ${cascadeCount(spin)} | C1 ${spin.scatter} | Win ${format(spin.total, 2)}`, cascadeCount(spin) ? "cascade" : "info");
     el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${format(spin.total)}`;
+    state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本轉結束訊息
     if (!state.fg.remaining) {
       const trigger = state.round?.triggerBoard;
       finishRound();
@@ -3081,6 +3087,7 @@
       finishRound();
     }
     el.messageBar.textContent = `${spin.scene} ${text("complete")} · ${format(spin.total)}${state.fg.remaining ? ` · ${text("triggered")}` : ""}`;
+    state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本局結束訊息
   }
 
   async function play(mode = MODE_NORMAL) {
@@ -3304,7 +3311,7 @@
 })();
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261016zf"></script>
+  <script src="../../demogame_common.js?v=20261016zj"></script>
 </body>
 
 </html>

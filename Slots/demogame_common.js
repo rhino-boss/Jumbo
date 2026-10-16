@@ -674,6 +674,9 @@
       #demogame-zoom .dz-body{padding:14px;overflow:auto;flex:1;min-height:0}
       /* 彈窗一開就是最大；紀錄／版本紀錄撐滿剩餘高度，沒資料處維持深色底 */
       #demogame-zoom .dz-body{display:flex;flex-direction:column}
+      /* 彈窗內捲到底不帶動背景頁面 */
+      #demogame-zoom,#demogame-zoom .dz-body,#demogame-zoom .dz-body *{overscroll-behavior:contain}
+      html.demogame-zoom-open,html.demogame-zoom-open body{overflow:hidden!important}
       #demogame-zoom .dz-body > *{flex:0 0 auto}
       #demogame-zoom .dz-body > #liveLogBody,#demogame-zoom .dz-body > #changeLogBody{flex:1 1 auto;min-height:0;overflow:auto}
       #demogame-zoom .dz-body .batch-line-chart svg,#demogame-zoom .dz-body svg{width:100%;height:auto}
@@ -711,6 +714,7 @@
       moved = null;
       overlay.classList.remove("open");
       body.innerHTML = "";
+      document.documentElement.classList.remove("demogame-zoom-open");
     };
     const open = (label, nodes) => {
       if (moved) close();
@@ -719,8 +723,17 @@
       moved = { nodes, markers };
       titleEl.textContent = label;
       overlay.classList.add("open");
+      document.documentElement.classList.add("demogame-zoom-open");   // 鎖住背景捲動
     };
     overlay.querySelector(".dz-close").addEventListener("click", close);
+    // 滾輪落在遮罩（彈窗外）或內容已捲到頭時，不讓背景跟著捲
+    overlay.addEventListener("wheel", (event) => {
+      const scroller = event.target.closest?.("#liveLogBody, #changeLogBody, .dz-body");
+      if (!scroller || !overlay.contains(scroller)) { event.preventDefault(); return; }
+      const atTop = scroller.scrollTop <= 0 && event.deltaY < 0;
+      const atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1 && event.deltaY > 0;
+      if (atTop || atBottom) event.preventDefault();
+    }, { passive: false });
     overlay.addEventListener("click", (event) => { if (event.target === overlay) close(); });
     document.addEventListener("keydown", (event) => { if (event.key === "Escape" && overlay.classList.contains("open")) close(); });
     const titleText = (title) => [...title.childNodes].filter((n) => !(n.classList?.contains("demogame-zoom-btn")) && !(n.tagName === "BUTTON")).map((n) => n.textContent).join(" ").replace(/\s+/g, " ").trim();
@@ -2040,7 +2053,7 @@
     return table;
   }
 
-  function buildMatrixTable(items) {
+  function buildMatrixTable(items, headerText = "") {
     const rows = items.map((item) => item.textContent.split(/\s+·\s+/).map((cell) => cell.replace(/[\[\]{}]/g, "").trim()));
     if (rows.length < 2 || rows.some((row) => row.length < 3)) return null;
     const width = rows[0].length;
@@ -2049,7 +2062,10 @@
 
     const table = document.createElement("table");
     table.className = "help-paytable";
-    table.innerHTML = `<thead><tr><th>Symbol</th>${Array.from({ length: width - 1 }, (_, index) => `<th>${index + 3}</th>`).join("")}</tr></thead>`;
+    // 表頭沿用上一列標題（如「符號 · 5 連 · 4 連 · 3 連」）；沒有才預設 3、4、5…
+    const named = headerText.split(/\s+·\s+/).slice(1).map((cell) => cell.trim());
+    const heads = named.length === width - 1 ? named : Array.from({ length: width - 1 }, (_, index) => String(index + 3));
+    table.innerHTML = `<thead><tr><th>Symbol</th>${heads.map((head) => `<th>${head}</th>`).join("")}</tr></thead>`;
     const body = document.createElement("tbody");
     for (const cells of rows) {
       const row = document.createElement("tr");
@@ -2066,7 +2082,9 @@
   function replacePayoutGrids(card) {
     for (const grid of card.querySelectorAll(".help-payout-grid")) {
       const items = [...grid.querySelectorAll(".help-payout-item")];
-      const table = buildPivotTable(items) || buildMatrixTable(items);
+      const prev = grid.previousElementSibling;
+      const headerText = prev?.matches(".help-group-title") && prev.textContent.includes("·") ? prev.textContent : "";
+      const table = buildPivotTable(items) || buildMatrixTable(items, headerText);
       if (!table) continue;
       const wrap = document.createElement("div");
       wrap.className = "help-paytable-wrap";
@@ -2767,4 +2785,53 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();
+})();
+
+// 連線遊戲得分連線（共用，2026-10-16）：window.demogameWinLines.draw(容器, [[格子元素…], …])
+// 在容器上疊一層 SVG，依序連起每條得分線的格子中心；容器重畫（innerHTML）時圖層會跟著消失，每次 render 後重畫即可。
+(() => {
+  "use strict";
+  const COLORS = ["#ffd86a", "#5fe3a1", "#33bbff", "#ff7ad9", "#ff9f43", "#b48cff", "#ff6b6b", "#7ce8ff"];
+  const style = document.createElement("style");
+  style.textContent = `.demogame-win-lines{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:6;overflow:visible}
+    .demogame-win-lines polyline{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px rgba(0,0,0,.85))}`;
+  document.head.appendChild(style);
+  let last = null;
+  const draw = (container, lines) => {
+    if (!container) return;
+    container.querySelector(":scope > .demogame-win-lines")?.remove();
+    last = { container, lines };
+    const valid = (lines || []).map((cells) => (cells || []).filter(Boolean)).filter((cells) => cells.length >= 2);
+    if (!valid.length) return;
+    if (getComputedStyle(container).position === "static") container.style.position = "relative";
+    const box = container.getBoundingClientRect();
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "demogame-win-lines");
+    svg.setAttribute("viewBox", `0 0 ${container.clientWidth} ${container.clientHeight}`);
+    valid.forEach((cells, index) => {
+      const points = cells.map((cell) => {
+        const r = cell.getBoundingClientRect();
+        return `${(r.left + r.width / 2 - box.left - container.clientLeft).toFixed(1)},${(r.top + r.height / 2 - box.top - container.clientTop).toFixed(1)}`;
+      }).join(" ");
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      line.setAttribute("points", points);
+      line.setAttribute("stroke", COLORS[index % COLORS.length]);
+      svg.appendChild(line);
+    });
+    container.appendChild(svg);
+  };
+  window.addEventListener("resize", () => {
+    if (last?.container.querySelector(":scope > .demogame-win-lines")) draw(last.container, last.lines);
+  });
+  window.demogameWinLines = { draw, clear: (container) => draw(container, []) };
+})();
+
+// Previous／Next 樣式統一（共用，2026-10-16）：兩顆同款，覆蓋各遊戲原本一藍一綠的寫法
+(() => {
+  "use strict";
+  const style = document.createElement("style");
+  style.textContent = `body #previousStepBtn,body #nextStepBtn{height:34px!important;padding:0 12px!important;border:1px solid #1d4668!important;border-radius:6px!important;background:#102b49!important;color:#dceeff!important;box-shadow:none!important;font:700 12px/1 "Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap;cursor:pointer}
+    body #previousStepBtn:hover:not(:disabled),body #nextStepBtn:hover:not(:disabled){border-color:#59ddff!important;color:#fff!important}
+    body #previousStepBtn:disabled,body #nextStepBtn:disabled{opacity:.35!important;cursor:default}`;
+  document.head.appendChild(style);
 })();

@@ -2724,6 +2724,8 @@
     renderBoard(step.board, step.gold, step.hit); renderWins(step, false);
     el.carryMultiValue.textContent = step.combo;
     if (syncMultiplier) renderMultiplierTrack(multiplierIndex(step.multiplier));
+    const message = state.snapshotMessages?.[state.snapshotIndex];
+    if (message) el.messageBar.textContent = message;   // 訊息列跟著該步變化（同即時播放）
     el.previousStepBtn.disabled = state.snapshotIndex <= 0; el.nextStepBtn.disabled = state.snapshotIndex >= state.snapshots.length - 1;
   }
   // Log：一律走共用 window.demogameLog(text, type)，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程
@@ -2786,6 +2788,7 @@
   async function animateSpin(spin, winBase = 0) {
     showLiveWin(winBase);   // BG 局從 0 起算；FG 從本場 FG 已得分起算
     state.snapshots = spin.steps; state.snapshotIndex = -1; state.snapshotWinBase = winBase;   // Previous／Next 逐步檢視用同一個 Win 起算基準
+    state.snapshotMessages = [];   // 每步訊息列文字（Previous／Next 還原用）
     const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
     renderMultiplierTrack(startIndex);
     el.carryMultiValue.textContent = "0";
@@ -2797,6 +2800,8 @@
     for (let i = 0; i < spin.steps.length; i++) {
       const step = spin.steps[i];
       showSnapshot(i, false);
+      if (step.wins.length) el.messageBar.textContent = `${spin.scene} | ${text("cascade")} ${step.combo} | ${text("win")} ${format(step.win)}`;   // 訊息列逐步顯示消除得分
+      state.snapshotMessages[i] = el.messageBar.textContent;
       await rollMultiplierTo(step.multiplier);
       if (step.wins.length) showLiveWin(winBase + step.total);   // 每次消除得分就加上去（step.total 為本轉累計）
       await delay();
@@ -2842,6 +2847,7 @@
     }
     if (!state.fg.remaining && state.fg.mode === MODE_NORMAL && state.fg.natural !== false) window.demogameLineChart?.record(state.fg.lineWin / coinIn(MODE_NORMAL), "NB");   // 累積倍率線型：NB 觸發局（BG＋整場 FG）結束；BF 不記錄
     el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${format(spin.total)}`;
+    state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本轉結束訊息
   }
 
   // 可重現 RNG 的 Config 標籤：Setting 的 Config 選單顯示文字（去空白），例 92、94、Base
@@ -2909,6 +2915,7 @@
       addLog(`${mode === MODE_BUY ? "Buy Feature" : "Free Game triggered"} | ${round.freeSpins.length} spins${retriggers ? ` (Retrigger ×${retriggers})` : ""}`, "mode");
     }
     el.messageBar.textContent = `${spin.scene} ${text("complete")} · ${format(spin.total)}${state.fg.remaining ? ` · ${text("triggered")}` : ""}`;
+    state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本局結束訊息
   }
 
   // FG 結束回到 BG：盤面、金框與倍數條還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤）；只改顯示
@@ -3149,7 +3156,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261016zf"></script>
+  <script src="../demogame_common.js?v=20261016zj"></script>
 </body>
 
 </html>

@@ -2716,13 +2716,15 @@
   // win：該步在播放時 Win 欄顯示的累計得分（與 playback 相同算法；只供 Previous／Next 顯示用）
   function captureSnapshots(spin, winBase = 0) {
     let liveRaw = 0;
-    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialC2Values), hits: [], win: winBase }];
+    const stopMsg = [tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`), ""];   // 訊息列文字同 playback（Previous／Next 還原用）
+    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialC2Values), hits: [], win: winBase, msg: stopMsg }];
     spin.steps.forEach((step) => {
+      const msg = [tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win"];
       liveRaw += toMoney(step.pay);
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeC2Values), hits: step.hitPositions, win: winBase + liveRaw });
-      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterC2Values), hits: [], win: winBase + liveRaw });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeC2Values), hits: step.hitPositions, win: winBase + liveRaw, msg });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterC2Values), hits: [], win: winBase + liveRaw, msg });
     });
-    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.c2.values), hits: [], win: winBase + toMoney(spin.finalPay) });
+    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.c2.values), hits: [], win: winBase + toMoney(spin.finalPay), msg: [tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : ""] });
     state.snapshotIndex = state.snapshots.length - 1;
     updateDebugButtons();
   }
@@ -2733,7 +2735,7 @@
     const snapshot = state.snapshots[state.snapshotIndex];
     renderBoard(snapshot.board, { hitPositions: snapshot.hits });
     if (typeof snapshot.win === "number") setText(el.win, money(snapshot.win));   // 只改 Win 顯示；下次 updateStats／新一轉即恢復正常顯示
-    writeMessage(`${snapshot.label} | Step ${state.snapshotIndex + 1}/${state.snapshots.length}`);
+    if (snapshot.msg) writeMessage(...snapshot.msg);   // 訊息列跟著該步變化（同即時播放）
     updateDebugButtons();
   }
 
@@ -3295,7 +3297,7 @@
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261016zf"></script>
+  <script src="../demogame_common.js?v=20261016zj"></script>
 </body>
 
 </html>

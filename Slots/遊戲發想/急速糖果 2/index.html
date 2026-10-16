@@ -885,7 +885,7 @@
         $("cascadeValue").textContent = f.cascade;
         setSum(sumOf(f.mult));
         $("winValue").textContent = fmt(f.win || 0);   // 只改畫面 Win（該步累計），不動 st.winShown／Credit／統計
-        say(`${f.label} | Step ${st.frameIndex + 1}/${st.frames.length} | ${f.info}`);
+        say(f.say || `${f.label} | Step ${st.frameIndex + 1}/${st.frames.length} | ${f.info}`);   // 訊息列跟著該步變化（同即時播放）
         updateStepButtons();
       }
 
@@ -968,10 +968,12 @@
         fxMark(spin.initialBoard);
         $("cascadeValue").textContent = "0";
         setSum(sumOf(spin.initialMult));
+        const markFrame = (i) => { if (st.frames[i]) st.frames[i].say = messageBuild; };   // 記下該步訊息列（Previous／Next 還原用；st.frames 已由 finishSpin 建好）
+        markFrame(0);
         await animateReels(spin.initialBoard, spin.initialMult);
         await wait(200);
 
-        for (const step of spin.steps) {
+        for (const [stepIdx, step] of spin.steps.entries()) {
           $("cascadeValue").textContent = step.cascadeIdx;
           renderBoard(step.boardBefore, step.multBefore);
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
@@ -979,6 +981,7 @@
           window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
           paid += step.pay; setWinShown(winBase + paid);
           say(() => `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""} | ${tr("sum")} x${step.effSum} | +${fmt(step.pay)}`);
+          markFrame(1 + stepIdx * 2); markFrame(2 + stepIdx * 2);   // 中獎幀與掉落幀同一句
           await wait(760);
 
           const popCells = [], coinItems = [];
@@ -1006,6 +1009,7 @@
           say(() => tr("fgTrigger")(n, fgAward(n)));
           await wait(700);
         }
+        markFrame(st.frames.length - 1);
       }
 
       // ── 回合流程 ──────────────────────────────────────────────────────────
@@ -1139,6 +1143,7 @@
         appendLog(`FG ${st.fg.played}/${st.fg.spins.length} | Free | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(spin.total)}`, spin.cascadeCount ? "cascade" : "info");
         const played = st.fg.played, total = st.fg.total;
         say(() => `FG ${played}/${total} · ${fmt(spin.total)} · ${tr("sum")} ${spin.finalSum}`);
+        if (st.frames.length) st.frames[st.frames.length - 1].say = messageBuild;   // Final 幀＝本轉結束訊息
         if (st.fg.remaining <= 0) {
           appendLog(`FG complete | Total ${fmt(st.fg.win)} (${(st.fg.win / bet()).toFixed(2)}x)`, "result");
           window.demogameHistory?.record({ fg: st.fg.win / bet() });   // 共用歷史紀錄：FG 最大倍數（÷ 底注）
@@ -1353,7 +1358,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261016zf"></script>
+  <script src="../../demogame_common.js?v=20261016zj"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

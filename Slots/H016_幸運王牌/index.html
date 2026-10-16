@@ -2690,7 +2690,6 @@
     WW: "./Source/Image/WW_Symbol.webp"
   });
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.webp";
-  window.DEMOGAME_SYMBOL_ART = SYMBOL_ASSET_BY_CODE;   // Help 賠率表符號圖（共用 demogame_common.js）
   const HELP_PATH = "./game_rule.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = [...new Set([...(Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10]), 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
@@ -3331,6 +3330,7 @@
     M1G:"G1_Symbol.webp", M2G:"G2_Symbol.webp", M3G:"G3_Symbol.webp", M4G:"G4_Symbol.webp",
     AG:"G5_Symbol.webp", KG:"G6_Symbol.webp", QG:"G7_Symbol.webp", JG:"G8_Symbol.webp"
   };
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ASSET).map(([c, f]) => [c, H016_IMAGE_ROOT + f]));   // Help 賠率表符號圖（共用 demogame_common.js）
   const BASE_BET = 100;
   const START_BALANCE = 10000 * BASE_BET;
   const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500];
@@ -3887,6 +3887,7 @@
     if (!state.snapshots.length) return;
     state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
     const snapshot = state.snapshots[state.snapshotIndex]; renderBoard(snapshot.board, snapshot.hits, {cleared:snapshot.cleared || [], converted:snapshot.converted || [], marked:snapshot.marked || []}); renderMultiplier(document.body.classList.contains("fg-mode"), snapshot.combo); if (snapshot.type === "win") renderWinDetails(snapshot);
+    $("messageBar").textContent = snapshot.message || "Cascade";   // 訊息列跟著該步變化（同即時播放）
     // 得分（Win）同步顯示該步累計：取此步（含）之前最後一次消除得分的 totalPay＋起點，與即時播放一致；只改顯示，不動 state.lastWin／Credit／統計
     let stepPay = 0;
     for (let i = state.snapshotIndex; i >= 0; i--) { if (state.snapshots[i].type === "win") { stepPay = Number(state.snapshots[i].totalPay || 0); break; } }
@@ -4167,7 +4168,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261016zf"></script>
+  <script src="../demogame_common.js?v=20261016zj"></script>
 </body>
 
 </html>
