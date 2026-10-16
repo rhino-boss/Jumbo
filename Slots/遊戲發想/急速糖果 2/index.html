@@ -10,7 +10,8 @@
     /* By Game 樣式（規範 4.2.1）：標題、Feature Status、盤面、動畫、盤面訊息。共用區樣式由 demogame_common.css 提供。 */
     body.tc2,
     body.tc2 * { box-sizing: border-box; }
-    body.tc2 { --cell-size: 52px; }
+    /* 盤面寬度固定，格子依 config.board_size（JS 寫入 --board-size）平均分配 */
+    body.tc2 { --board-size: 7; --cell-size: calc((min(388px, 100vw - 48px) - (var(--board-size) - 1) * 4px) / var(--board-size)); }
 
     body.tc2 #feature-bar {
       display: flex;
@@ -62,7 +63,7 @@
     body.tc2 .board-shell { width: 100%; position: relative; }
     body.tc2 .board-grid {
       display: grid;
-      grid-template-columns: repeat(7, var(--cell-size));
+      grid-template-columns: repeat(var(--board-size), var(--cell-size));
       gap: 4px;
       justify-content: center;
     }
@@ -191,9 +192,6 @@
     }
     body.tc2 .message-bar.error { color: #ff8aa5; }
 
-    @media (max-width: 760px) {
-      body.tc2 { --cell-size: min(52px, calc((100vw - 72px) / 7)); }
-    }
   </style>
   <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
   <style id="dg-boot">
@@ -325,6 +323,8 @@
           <ol>
             <li>Extra Bet 費用 1.25 → 10 倍押注；底板個數與倍數權重不變。（10/02）</li>
             <li>模擬驗證（demo 假權重各 5 萬局）：NB RTP 401.2%（FG 1/198）、EB 723.3%（FG 1/206），底板期望約 69 倍押注／把，權重待調。（10/02）</li>
+            <li>盤面 7×7 → 5×5；所有獎項連線數 -1（Cluster 門檻 5 → 4，賠率欄 5～15+ → 4～14+）；賠率值採 Sugar Rush 賠率表（與原 H022 值相同）。（10/16）</li>
+            <li>抽樣驗證（demo 假權重各 2 萬局）：NB RTP 152.1%（Hit 43.2%、FG 1/606）、EB 571.6%（FG 1/571）；5×5 最多 5 顆 C1，6／7 顆觸發檔位不會出現。（10/16）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -427,6 +427,7 @@
       // ── 由 Config 取得的遊戲參數 ───────────────────────────────────────────
       const SIZE = CFG.board_size;
       const MIN_CLUSTER = CFG.min_cluster;
+      document.body.style.setProperty("--board-size", SIZE);   // 盤面欄數交給 CSS 排版
       const BET_LEVELS = [...new Set([...CFG.bet_options, 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
       const BUY_MULT = CFG.featurebuy;
       const EXTRA_MULT = CFG.extrabet;
@@ -1328,7 +1329,7 @@
 
 ## CLUSTER PAY
 
-盤面 7×7；相同符號上下左右相連 ≥5 個成立群集，各群集獨立計獎（同符號多組群集每組都計獎）。
+盤面 5×5；相同符號上下左右相連 ≥4 個成立群集，各群集獨立計獎（同符號多組群集每組都計獎）。
 
 群集中獎後，盤面上所有相同符號一併消除；只以相連群集的數量計分，連帶消除的符號不另計獎。
 
@@ -1357,8 +1358,8 @@
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:44";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261016zj"></script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-16 16:46";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../../demogame_common.js?v=20261016zo"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

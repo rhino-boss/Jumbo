@@ -566,6 +566,30 @@
     const strip = document.getElementById("strip-bar");
     if (!strip) return;
     document.getElementById("modeText")?.classList.add("demogame-removed");
+    // 原模式標題的位置（沒有就放最前面）固定顯示 Base Game／Free Game 標籤（依 body.fg-mode，語言跟著 Language 切換）
+    const phase = document.createElement("span");
+    phase.id = "demogame-phase";
+    // 狀態列所有資訊一律用同一款黃色膠囊（同 H045 Table 標籤），覆蓋各遊戲原本的藍／紅配色
+    if (!document.getElementById("demogame-strip-pill-style")) {
+      const pillStyle = document.createElement("style");
+      pillStyle.id = "demogame-strip-pill-style";
+      pillStyle.textContent = `body #strip-bar .feature-pill:not(.hidden),body #strip-bar #demogame-phase,body #strip-bar #featureStatus:not(:empty){display:inline-flex!important;align-items:center;gap:6px;padding:4px 12px!important;border:1px solid rgba(255,196,61,.7)!important;border-radius:20px!important;background:rgba(255,196,61,.18)!important;box-shadow:none!important;color:#ffd36b!important;font:600 12px/1.3 "Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap}
+        body #strip-bar .feature-pill .k,body #strip-bar .feature-pill .v{color:#ffd36b!important;font:inherit!important;text-shadow:none!important}
+        body #strip-bar #featureStatus:empty{display:none!important}`;
+      document.head.appendChild(pillStyle);
+    }
+    const modeText = document.getElementById("modeText");
+    if (modeText && strip.contains(modeText)) modeText.before(phase);
+    else strip.prepend(phase);
+    const updatePhase = () => {
+      const zh = /^zh/i.test(document.getElementById("languageSelect")?.value || document.documentElement.lang || "");
+      const fg = document.body.classList.contains("fg-mode");
+      const text = fg ? (zh ? "免費遊戲" : "Free Game") : (zh ? "基礎遊戲" : "Base Game");
+      if (phase.textContent !== text) phase.textContent = text;
+    };
+    updatePhase();
+    new MutationObserver(updatePhase).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(updatePhase));
     let busy = false;
     const check = () => {
       if (busy) return;
@@ -696,20 +720,23 @@
     let moved = null;   // { parent, nodes, markers }
     // 旋轉 90°：整個彈窗區塊轉 90° 並等比放大到填滿畫面（有轉動動畫），再按一次轉回
     const box = overlay.querySelector(".dz-box");
+    // 旋轉時把彈窗寬高對調成「螢幕高 × 螢幕寬」再轉 90°，直接滿版，不用縮小
     const fitRotation = () => {
-      if (!overlay.classList.contains("rotated")) { box.style.transform = ""; return; }
-      const prev = box.style.transform;
-      box.style.transition = "none"; box.style.transform = "";
-      const w = box.offsetWidth, h = box.offsetHeight;
-      box.style.transform = prev; void box.offsetWidth; box.style.transition = "";
-      const k = Math.min((window.innerWidth - 16) / h, (window.innerHeight - 16) / w);
-      box.style.transform = `rotate(90deg) scale(${k.toFixed(3)})`;
+      if (!overlay.classList.contains("rotated")) {
+        Object.assign(box.style, { position: "", left: "", top: "", width: "", height: "", maxHeight: "", transform: "" });
+        return;
+      }
+      Object.assign(box.style, {
+        position: "fixed", left: "50%", top: "50%",
+        width: `${window.innerHeight - 24}px`, height: `${window.innerWidth - 24}px`, maxHeight: "none",
+        transform: "translate(-50%, -50%) rotate(90deg)"
+      });
     };
     overlay.querySelector(".dz-rotate").addEventListener("click", () => { overlay.classList.toggle("rotated"); fitRotation(); });
     window.addEventListener("resize", () => { if (overlay.classList.contains("rotated")) fitRotation(); });
     const close = () => {
       overlay.classList.remove("rotated");
-      box.style.transform = "";
+      fitRotation();
       if (moved) moved.nodes.forEach((node, i) => moved.markers[i].replaceWith(node));
       moved = null;
       overlay.classList.remove("open");
@@ -723,6 +750,16 @@
       moved = { nodes, markers };
       titleEl.textContent = label;
       overlay.classList.add("open");
+      // 直式手機放大圖表：一開就轉成橫的（紀錄、版本紀錄維持直式）
+      const isChart = nodes.some((node) => node.matches?.("svg, canvas") || node.querySelector?.("svg, canvas"))
+        && !nodes.some((node) => node.matches?.("#liveLogBody, #changeLogBody") || node.querySelector?.("#liveLogBody, #changeLogBody"));
+      if (isChart && window.innerHeight > window.innerWidth && window.innerWidth < 700) {
+        overlay.classList.add("rotated");
+        box.style.transition = "none";
+        fitRotation();
+        void box.offsetWidth;
+        box.style.transition = "";
+      }
       document.documentElement.classList.add("demogame-zoom-open");   // 鎖住背景捲動
     };
     overlay.querySelector(".dz-close").addEventListener("click", close);
@@ -2833,5 +2870,19 @@
   style.textContent = `body #previousStepBtn,body #nextStepBtn{height:34px!important;padding:0 12px!important;border:1px solid #1d4668!important;border-radius:6px!important;background:#102b49!important;color:#dceeff!important;box-shadow:none!important;font:700 12px/1 "Segoe UI",system-ui,sans-serif!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap;cursor:pointer}
     body #previousStepBtn:hover:not(:disabled),body #nextStepBtn:hover:not(:disabled){border-color:#59ddff!important;color:#fff!important}
     body #previousStepBtn:disabled,body #nextStepBtn:disabled{opacity:.35!important;cursor:default}`;
+  document.head.appendChild(style);
+})();
+
+// 無圖符號樣式統一（共用，2026-10-16）：沒有符號美術或 Image 關閉時，所有遊戲的代號格同一款——
+// 深色底、細藍框、淺色代號；C1／C2／Scatter 金色、Wild 綠色。中獎、金框、轉換等狀態格不覆蓋。
+(() => {
+  "use strict";
+  const base = "body #board .cell:not(.has-symbol-art):not(.peek-row):not(.hit):not(.gold):not(.special-gold):not(.convert):not(.wild-mark):not(.h014-hit):not(.h020-hit):not(.symbol-cleared):not(.keep-symbol-frame):not(.empty):not(.symbol-empty):not(:has(> .tile))";
+  const label = ":is(.slot-symbol-label, .symbol-code, .h019-glyph, .sym-code-label)";
+  const style = document.createElement("style");
+  style.textContent = `${base}{background:#060d1a!important;border:1.6px solid rgba(56,120,175,.45)!important;border-radius:8px!important;box-shadow:none!important;color:#d8e8f4!important}
+    ${base}:is(.symbol-c1,.symbol-c2,.sym-c1,.sym-c2,.symbol-scatter,.h019-scatter,.h019-c2){background:radial-gradient(circle at 50% 45%,#c98a35 0%,#9a5a18 62%,#6e3d0e 100%)!important;border-color:#ffd36b!important;color:#fff3d6!important}
+    ${base}:is(.symbol-ww,.symbol-wild,.sym-ww){background:#0b3a3a!important;border-color:#00ddc0!important;color:#c8fff4!important}
+    ${base}:not(.sym-digit) ${label}{color:inherit!important;font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:16px!important;text-shadow:none!important}`;
   document.head.appendChild(style);
 })();
