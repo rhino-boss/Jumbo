@@ -45,6 +45,10 @@
       border:1px solid #c4262f; color:#ffe9a6; font:800 10px/1.15 system-ui,sans-serif; letter-spacing:.3px; text-align:center; }
     #board .reel.r4 { height:calc(var(--r4cell) * 3); }
     #board .reel.r4 .cell { height:var(--r4cell); }
+    #board .r4-head.is-acc { font:900 18px/1 system-ui,sans-serif; letter-spacing:0; color:#ffd86a; background:linear-gradient(180deg,#7a1420,#3d0910);
+      border-color:#ffd86a; text-shadow:0 1px 0 #7a4a00; }
+    #board .r4-head.pop { animation:h020AccPop .45s ease-out; }
+    @keyframes h020AccPop { 0%{transform:scale(1.35);filter:brightness(1.8)} 100%{transform:scale(1);filter:brightness(1)} }
     #board .reel.r4 .tile { overflow:visible; }
     #board .reel.r4 img.sym-img { transform:scale(1.2); }   /* 倍數圓幣圖四周有透明留白，放大到與格高相當 */
     #board .reel-gap { grid-column:4; }
@@ -106,7 +110,7 @@
           <div class="reel" data-col="1"><div class="reel-strip"></div></div>
           <div class="reel" data-col="2"><div class="reel-strip"></div></div>
           <div class="reel-gap" aria-hidden="true"></div>
-          <div class="r4-col"><div class="r4-head">WIN MULTIPLIER</div><div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div></div></div>
+          <div class="r4-col"><div class="r4-head" id="r4Head">WIN MULTIPLIER</div><div class="reel r4" data-col="3"><div class="reel-strip"></div><div class="r4-frame" aria-hidden="true"></div></div></div>
           <svg class="lines-layer" id="linesLayer" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
         <div class="message-bar" id="messageBar">Loading…</div>
@@ -205,6 +209,7 @@
           <h4>v2（2.0.0.0）</h4>
           <ol>
             <li>數學 2.0.0.0（只改 Super Feature，NB／EB 不變）：SF 停輪權重偏重連線停點、R4 倍數以 2X～10X 為主、重轉以 3～4 次小倍數為主；Card-On 每轉 Hit 68.8%、每轉重轉 12.2%。Demo 直接讀新 Config，程式未改；Version 可切換 2.0.0.0／1.0.1.3；頁尾最後調性更新 2026-10-16 15:00。（10/16）</li>
+            <li>Super Feature 累積倍數顯示在 R4 上方：有倍數時「WIN MULTIPLIER」標籤改為目前累積倍數（例：20x，金字），每次中獎累加時放大跳一下；累積為 0 或回到一般押注時恢復 WIN MULTIPLIER。Previous／Next 逐步檢視同步顯示該步的累積倍數。只改演出。驗證：一局 SF 標籤依序 WIN MULTIPLIER → 14x → 16x → 18x → 20x，與 Log 的累積倍數一致，無 console 錯誤。（10/16）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -718,7 +723,15 @@
     $(`${id}Value`).textContent = text ?? "—";
     state.view.pills[id] = text ?? null;
   }
-  function newView() { state.view = { reels: [null, null, null, null], lines: [], message: ["", ""], status: "", pills: { respin: null, sf: null }, liveWin: 0 }; }
+  // SF 累積倍數：有倍數時 R4 上方標籤改顯示累積倍數（例：20x），0 時顯示 WIN MULTIPLIER
+  function setR4Head(acc, pop = false) {
+    const el = $("r4Head");
+    el.textContent = acc > 0 ? `${acc}x` : "WIN MULTIPLIER";
+    el.classList.toggle("is-acc", acc > 0);
+    if (pop && acc > 0) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+    if (state.view) state.view.r4head = acc;
+  }
+  function newView() { state.view = { reels: [null, null, null, null], lines: [], message: ["", ""], status: "", pills: { respin: null, sf: null }, liveWin: 0, r4head: 0 }; setR4Head(0); }
   function snapshot(labelText) {
     state.snapshots.push({ label: labelText, view: JSON.parse(JSON.stringify(state.view)) });
     state.snapshotIndex = state.snapshots.length - 1;
@@ -733,6 +746,7 @@
     $("featureStatus").textContent = langText(view.status);
     for (const id of ["respin", "sf"]) { $(`${id}Pill`).classList.toggle("hidden", view.pills[id] == null); $(`${id}Value`).textContent = view.pills[id] ?? "—"; }
     if (view.liveWin != null) $("winValue").textContent = fmt(view.liveWin);
+    setR4Head(view.r4head || 0);
   }
   function showSnapshot(index) {
     if (!state.snapshots.length || state.busy) return;
@@ -751,7 +765,7 @@
     const base = 600 / sp, gap = sp >= 5 ? 0 : 160 / sp;   // 第 5 階不逐輪停
     drawLines([]);
     setPill("respin", null);
-    if (sf) setPill("sf", `${k + 1}/${pk.spins} · ×${s.acc - (s.line10 > 0 ? s.mult : 0)}`);
+    if (sf) { const before = s.acc - (s.line10 > 0 ? s.mult : 0); setPill("sf", `${k + 1}/${pk.spins} · ×${before}`); setR4Head(before); }
     setMessage(sf ? [`Super Feature ${k + 1}/${pk.spins}`, `超級特色 ${k + 1}/${pk.spins}`] : ["Spinning…", "轉動中…"]);
     await Promise.all([
       ...[0, 1, 2].map((c) => spinReel(c, BASE.reels[c], s.stops[c], null, base + c * gap)),
@@ -788,7 +802,7 @@
       reelEls[3].classList.remove("respin-flash");
       setStatus("");
     }
-    if (sf) setPill("sf", `${k + 1}/${pk.spins} · ×${s.acc}`);
+    if (sf) { setPill("sf", `${k + 1}/${pk.spins} · ×${s.acc}`); setR4Head(s.acc, true); }
     const m = sf ? s.acc : s.mult;
     const pay = s.pay10 / 10 * bet;
     showLiveWin(winBase + pay);
