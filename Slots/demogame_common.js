@@ -2939,3 +2939,15 @@
     ${base}:not(.sym-digit) ${label}{color:inherit!important;text-shadow:none!important}`;
   document.head.appendChild(style);
 })();
+
+// 得分符號只換外框顏色框起來（共用，2026-10-17）：不放大、不閃、不跳，各遊戲原本的中獎動畫一律停掉；
+// 消除（symbol-cleared）與掉落動畫不受影響。
+(() => {
+  "use strict";
+  const hit = "body #board .cell:is(.hit,.fx-win,.h014-hit,.h020-hit):not(.symbol-cleared)";
+  const style = document.createElement("style");
+  style.textContent = `${hit},${hit} *{animation:none!important;transform:none!important;filter:none!important;transition:none!important}
+    ${hit}{border-color:#ffe27a!important;box-shadow:inset 0 0 0 2px #ffe27a,0 0 10px rgba(255,214,90,.45)!important;z-index:5}
+    ${hit} > .tile{border-color:#ffe27a!important;box-shadow:inset 0 0 0 2px #ffe27a,0 0 10px rgba(255,214,90,.45)!important}`;
+  document.head.appendChild(style);
+})();
