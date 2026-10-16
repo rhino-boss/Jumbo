@@ -1572,7 +1572,7 @@ FG 倍率上限 × 該層最大押注 ≤ FG 上限</code></pre>
 <p>以下為建議做法，定案前需與企劃、前後端確認：</p>
 <ul><li><strong>不同押注</strong>：RTP 以實際得分 ÷ 實際押注計算；設定得分以判定回合的 Total Bet 計價。</li><li><strong>Extra Bet</strong>：以含加押的實際 Total Bet 計算 RTP 與設定得分。</li><li><strong>Buy Feature</strong>：BF 局不計入 RTP 統計範圍；判定回合落在 BF 局時順延到下一個非 BF 局。</li><li><strong>異常加押</strong>：設定得分以 min(判定回合押注, 新手期押注中位數) 計價，避免在可預期的判定區間突然加押套利。</li><li><strong>演出對應</strong>：Card System 重骰出一個總得分等於設定得分的完整結果；結果含 FG、Scatter Pay 或 Mini Game 時以整包總得分計算。</li><li><strong>Jackpot Game</strong>：判定回合不得觸發 Jackpot Game（互斥）。</li></ul>
 <h3 id="f2-救援池每日預存起始額">F.2 救援池：每日預存起始額</h3>
-<p>每天刷新時先放入一筆起始額，可以消除每天開頭的不救。下表為不同預存額下的不救率（c2-1.8，每天 10,000 人 × 10 天），以舊提撥比例 5% 模擬）：</p>
+<p>每天刷新時先放入一筆起始額，可以消除每天開頭的不救。下表為不同預存額下的不救率（c2-1.8，每天 10,000 人 × 10 天，以舊提撥比例 5% 模擬）：</p>
 <div class="tbl-wrap"><table><thead><tr><th>每日預存（bet／當日玩家）</th><th class="n">400 轉不救率</th><th class="n">800 轉不救率</th><th class="n">1,000 轉不救率</th></tr></thead><tbody><tr><td>0（不預存）</td><td class="n">12.65%</td><td class="n">31.57%</td><td class="n">35.76%</td></tr><tr><td>1</td><td class="n">0.14%</td><td class="n">23.41%</td><td class="n">30.38%</td></tr><tr><td>2</td><td class="n">0.00%</td><td class="n">19.40%</td><td class="n">27.54%</td></tr><tr><td>3</td><td class="n">0.00%</td><td class="n">15.69%</td><td class="n">24.96%</td></tr><tr><td>5</td><td class="n">0.00%</td><td class="n">8.76%</td><td class="n">19.08%</td></tr></tbody></table></div>
 <ul><li>代價是預存的錢也會被發掉，實際發放增量會略高於只靠提撥的情況。</li></ul>
 <h3 id="f3-延伸救援的成本">F.3 延伸救援的成本</h3>
