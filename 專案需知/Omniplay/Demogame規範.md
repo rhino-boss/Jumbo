@@ -68,7 +68,7 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 下列區域依各遊戲盤面、Feature 與美術需求自行設計：
 
 - Game Title：遊戲 ID、遊戲名稱及遊戲專屬標題樣式。
-- Feature Status：Base Game／Free Game、Cascade／Combo、FG Left、Multiplier 與其他遊戲狀態。
+- Feature Status：Cascade／Combo、FG Left、Multiplier 與其他遊戲狀態（不顯示 Base Game／Free Game 模式標題；沒有要顯示的特色時整列隱藏，由共用模組處理）。
 - Reel／Board：盤面尺寸、Reel、Symbol、框體、特殊符號及遊戲專屬資訊。
 - Board Animation：Spin、中獎、消除、補牌、掉落、轉換、Multiplier 與 Feature 動畫。
 - Board Message：盤面下方的局數、FG 進度、得分、No Win 與遊戲流程訊息。
@@ -86,13 +86,13 @@ By Game 區域必須：
 除第 2.1 節外，其餘區域與行為均由所有遊戲共用，包括：
 
 - Player：Credit、Bet、Win。Player／Play／Bet Mode 三區一律放在盤面下方（左欄），右欄只留統計；手機版（單欄）依序為盤面、這三區、統計（共用模組處理）。
-- Stats／Simulation。Stats 放共用項目（總局數、RTP、中獎率、FG 觸發、BG／FG 最大倍數；原「最高倍數」與其重複，不再顯示）；遊戲自訂的特殊指標（只放觀察玩法機制用的即時統計，例如金框使用率；FG 週期等遊戲數據已在報告中，不放這裡）放在下方獨立的「統計 (By Game)」區（共用模組自動把非共用列移入，也可在列上標 `data-by-game`），沒有特殊指標就不顯示這區。
+- Stats／Simulation。Stats（標題「基本指標」）放共用項目（總局數、RTP、中獎率、FG 觸發、BG／FG 最大倍數；原「最高倍數」與其重複，不再顯示）；遊戲自訂的特殊指標（只放觀察玩法機制用的即時統計，例如金框使用率；FG 週期等遊戲數據已在報告中，不放這裡）放在下方獨立的「特殊指標」區（共用模組自動把非共用列移入，也可在列上標 `data-by-game`），沒有特殊指標就不顯示這區。
 - Play：Spin、Auto、Bet Stepper、Speed。
-- Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。
+- Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。按鈕字體、大小一致、字一律白色：NB／EB 為切換鈕（選取中用「自動」鈕的深綠底白字），BF／SF 為購買鈕，用 SPIN 的藍底白字（共用模組依按鈕文字判斷）。
 - Debug Mode、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用統計區的 BG／FG 最大倍數）。
 - Setting：Version、Config／Profile、Language、Help、Reset。
 - Language：共用區的固定英文標籤由 `demogame_common.js` 依 `#languageSelect` 統一切換中英（整段完全相同才替換）；By Game 區域與遊戲專屬文字仍由各遊戲自行翻譯，切回 English 必須還原。
-- 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。
+- 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。各區塊上下、左右間距一律 10px（含盤面與右欄、頁尾與設定區），頁尾文字置中、用區域標題的說明色。字體統一：所有按鈕 12px 粗體；設定區文字標籤 12px 一般字重、下拉選項同按鈕；有名稱的區域標題 12px 粗體、說明色、不轉大寫，標題列滿版、下方加一條分隔線（同紀錄區）；遊戲區不顯示標題。倍率線型、紀錄、版本紀錄的標題後有「+」，點下去用彈窗顯示完整內容（倍率線型為大圖），彈窗可按 ⟳ 旋轉 90°（手機橫向看大圖），關閉後放回原位；所有捲軸隱藏但保留上下捲動。
 
 共用資源固定放在 `Slots/`：
 
@@ -196,7 +196,7 @@ Debug Mode 至少可查看：
 - Simulation（共用，`#batch-simulation`）：N 局獨立數學模擬，Start 執行中只顯示「進行中」（English：Running），不跳局數。FG 觸發顯示「比例 (N 場)」；最高倍數為單局總得分倍數（BF ÷ 底注）；消除分布轉置為「消除次數 × BG／FG」，與倍率線型一樣各自框成一區並有標題。各遊戲提供：
   - `window.demogameSimulateRound({ mode })`：用與畫面相同的遊戲邏輯產生一局（不得另寫簡化數學），回傳 `multiplier`（總得分含 FG ÷ 實際押注）、`lineMultiplier`（BF ÷ 底注，其餘同 `multiplier`）、`fgTriggered`、`maxMultiplier`、`retryLimitExceeded`、`retryCount`、`bgCascade`、`fgCascades`；`mode` 只在該局暫時套用，不得改動畫面押注模式與統計。
   - `window.demogameSimulationModes = [{ value, label }]`：只列實際支援的押注模式，面板據此顯示押注模式選單。
-- 累積倍率線型（共用，統計區下方）：畫面實際遊玩的局，NB 記在 NB、EB 記在 EB，BF／SF 不記錄；依目前押注模式顯示對應的累積圖（標準 64 區間、Y 軸 1%），重置清空。遊戲每局（含 FG）結束時呼叫 `window.demogameLineChart.record(總得分 ÷ 押注, "NB"|"EB")`；押注模式按鈕沒有 is-active 樣式時另呼叫 `setMode()`。
+- 累積倍率線型（共用，統計區下方，標題「倍率線型 (押注模式)」）：畫面實際遊玩的局，NB 記在 NB、EB 記在 EB，BF／SF 不記錄；依目前押注模式顯示對應的累積圖（標準 64 區間、Y 軸 1%），重置清空。遊戲每局（含 FG）結束時呼叫 `window.demogameLineChart.record(總得分 ÷ 押注, "NB"|"EB")`；押注模式按鈕沒有 is-active 樣式時另呼叫 `setMode()`。
 - 倍率線型（共用，併入 Simulation 面板）：該次模擬每局 `lineMultiplier` 的標準 64 區間分布，X 軸逐一標出 (下限, 上限]，Y 軸 NB／EB 1%、BF 20%，超過上限或為 0 的區間不畫點、線在該處斷開。沒有 Simulation 面板的頁面才在 Set RNG 上方顯示即時線型（NB 一局含 FG 結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫）。
 
 Set RNG 的各欄位（卡片區間、遊戲專屬選單、RNG）互斥：設定其中一個時其他回到預設（共用模組處理）。所有設定都每局沿用，按重置才清空，遊戲不得在 Spin、FG、切換模式後自行清掉。指定值要檢查格式；不得因指定 RNG 進入無限重跑。
@@ -213,18 +213,14 @@ Set RNG 的各欄位（卡片區間、遊戲專屬選單、RNG）互斥：設定
 
 ## 7. 交付檢查
 
-每次修改 Demogame 的 `index.html`、共用 `demogame_common.css`／`demogame_common.js`，或任何會改變操作、顯示、動畫、Debug、Config／Version／Profile 選擇方式的程式時，必須在同一次修改中同步更新 Demogame 的「修改紀錄」。
+Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示）是專案根目錄 `修改紀錄.md` 的複本，只說明各版本的**調性差異**：
 
-- 修改紀錄統一放在 `#change-log-wrap`，並於 Debug Mode 開啟時顯示。
-- 格式同 [開發流程 2.1](開發流程.md#21-修改紀錄格式)：**依版本分節、不以日期分節**，每個四碼版本一個 `<article class="change-log-entry">`，標題 `<h4>v<第 1 碼>（<四碼版本>）</h4>`，由新到舊；內文用 `<ol>` 編號清單，同一版本內由舊到新，一項一件事，句尾以全形括號附日期 `（MM/DD）`。項目歸到修改當時的目前版本。
-- 這裡記 Demogame 介面、演出、Debug、共用模組與文件的修改；數學調性記在專案根目錄 `修改紀錄.md`，不在此重複。
-- 每項寫出實際變更；驗證結果可寫在同一項或另立一項。
-- 若變更會影響數學、XLSX、Config、RTP、Hit Rate 或 Feature 行為，必須明確列出受影響檔案與數值；若未影響，也必須註明「未修改 XLSX／Config 數學參數」。
-- 修改紀錄必須描述目前實際完成的內容，不得只寫「調整」、「修正」或尚未執行的計畫。
-- 純介面或程式修正不需要因此提升數學版本，但仍必須留下修改紀錄。
+- 格式同 [開發流程 2.1](開發流程.md#21-修改紀錄格式)：依四碼版本分節、新到舊，列出全部版本；每個版本一個 `<article class="change-log-entry">`，標題 `<h4>v<第 1 碼>（<四碼版本>）</h4>`，內文 `<ol>` 編號清單，項目與 `修改紀錄.md` 相同（同一版本內由舊到新、句尾附 `（MM/DD）`）。設定區目前選的版本那一節由共用模組標示。
+- 每次 `修改紀錄.md` 新增或修改項目，同一次修改中同步更新 `#changeLogBody`。
+- Demogame 介面、演出、Debug、共用模組與文件的修改**不記在頁面上**（以 git commit 訊息為準），也不寫進 `修改紀錄.md`。
 
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
-- [ ] 本次 Demogame 修改已同步更新 `#change-log-wrap`（依版本分節、項目附日期），內容包含變更與驗證結果。
+- [ ] 「版本紀錄」（`#changeLogBody`）與 `修改紀錄.md` 內容一致（依版本分節、新到舊、只記調性）。
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
