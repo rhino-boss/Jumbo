@@ -2895,6 +2895,8 @@
     return match ? match[1].replace(/^WILD$/, "WW") : "";
   };
   const tag = () => {
+    // 盤面重畫（例如顯示得分框）時符號圖會重建：同步解碼，避免沒得分的符號空白一格畫面而閃一下
+    for (const img of document.querySelectorAll("#board img:not([decoding='sync'])")) img.decoding = "sync";
     for (const cell of document.querySelectorAll("#board .cell")) {
       const code = cell.matches(".has-symbol-art, .sym-digit") ? "" : codeOf(cell);   // H014 數字格不套用
       if ((cell.dataset.dgSym || "") !== code) {
