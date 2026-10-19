@@ -2946,6 +2946,7 @@
     new MutationObserver(schedule).observe(board, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class"] });
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+  window.demogameTagSymbols = () => schedule([]);   // 共用動畫重畫盤面後立即上色（不等觀察者），避免先以原樣式算版面
 
   // 得分格（hit）照樣套底色，只由「得分框」規則換外框
   const free = ":not(.has-symbol-art):not(.convert):not(.wild-mark):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
@@ -2957,7 +2958,9 @@
   // M 獎：同亮度、不同色相的低彩度漸層，字獎深藍；上緣一條淡高光，整體與金框同一套質感
   const tone = (code, top, bottom, border) => `${base}[data-dg-sym="${code}"]{background:linear-gradient(180deg,${top} 0%,${bottom} 100%)!important;border-color:${border}!important}`;
   const style = document.createElement("style");
-  style.textContent = `${base}{background:linear-gradient(180deg,#0c1828 0%,#060d1a 100%)!important;border:1.6px solid rgba(70,120,170,.42)!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;color:#d8e8f4!important}
+  // 盤面符號不做顏色／框線過渡：重畫時若先以原樣式算出版面再上色，過渡會讓整盤閃一下
+  style.textContent = `body #board .cell,body #board .cell > .tile{transition:none!important}
+    ${base}{background:linear-gradient(180deg,#0c1828 0%,#060d1a 100%)!important;border:1.6px solid rgba(70,120,170,.42)!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;color:#d8e8f4!important}
     ${tone("M1", "#5b2733", "#33141c", "#9c5664")}
     ${tone("M2", "#3f2f68", "#221840", "#7c68b8")}
     ${tone("M3", "#1f4d3e", "#112b23", "#4f957d")}
@@ -3065,6 +3068,7 @@
     const host0 = board.offsetParent || document.body;
     const oldCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean).map((cell) => ({ node: clone(cell, { ...offsetIn(cell, host0), w: cell.offsetWidth, h: cell.offsetHeight }, 0, 0), ...offsetIn(cell, host0), w: cell.offsetWidth, h: cell.offsetHeight })));
     render?.();
+    window.demogameTagSymbols?.();
     const newCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean));
     const windows = [], hidden = [];
     const jobs = newCols.map((cells, col) => {
@@ -3126,5 +3130,13 @@
     body #board .cell.fx-pop{animation:slot-fx-pop 300ms ease-in forwards!important}
     body #board .cell.fx-pop > *{animation:none!important}
     body #board .cell.tc-drop-new > *{animation:none!important}`;
+  document.head.appendChild(style);
+})();
+
+// 手機連點不放大（共用，2026-10-19）：關掉雙擊縮放（連點 Spin 等按鈕會觸發放大），雙指縮放仍可用
+(() => {
+  "use strict";
+  const style = document.createElement("style");
+  style.textContent = "html,body,button,select,input,label,#board,#board *{touch-action:manipulation}";
   document.head.appendChild(style);
 })();
