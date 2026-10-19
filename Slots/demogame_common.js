@@ -2891,6 +2891,7 @@
   const codeOf = (cell) => {
     const label = [...cell.querySelectorAll(LABEL)].find((node) => node.textContent.trim() && !node.hidden && node.style.display !== "none");
     const text = (label || cell).textContent.trim().toUpperCase();
+    if (/^SCATTER/.test(text)) return "C1";   // 代號統一：Scatter 顯示 C1、Wild 顯示 WW
     const match = text.match(/^(M\d+|W\d|WW\d?|WILD|C\d|SC|TE|10|A|K|Q|J)/);
     return match ? match[1].replace(/^WILD$/, "WW") : "";
   };
@@ -2900,6 +2901,14 @@
     for (const cell of document.querySelectorAll("#board .cell")) {
       const code = cell.matches(".has-symbol-art, .sym-digit") ? "" : codeOf(cell);   // H014 數字格不套用
       // 只露出一部分的格子（例如 H026 頂端 peek 列）：標 data-dg-cut，畫成「整顆符號被盤面上緣截斷」
+      // 沒圖時顯示的名稱統一成代號：Scatter → C1、Wild → WW（所有遊戲）
+      if (code && !cell.matches(".has-symbol-art")) {
+        for (const node of cell.querySelectorAll(LABEL)) {
+          const t = node.textContent.trim();
+          if (/^scatter$/i.test(t)) node.textContent = "C1";
+          else if (/^wild$/i.test(t)) node.textContent = "WW";
+        }
+      }
       const cut = cell.offsetHeight > 0 && cell.offsetHeight < cell.offsetWidth * 0.8;
       if (cut !== ("dgCut" in cell.dataset)) { if (cut) cell.dataset.dgCut = ""; else delete cell.dataset.dgCut; }
       if ((cell.dataset.dgSym || "") !== code) {
@@ -2976,6 +2985,7 @@
     ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]) ${label}{text-shadow:0 1px 2px rgba(80,25,0,.6)!important}
     ${base}:is([data-dg-sym^="W"]){background:linear-gradient(180deg,#22706a 0%,#0f3d3a 100%)!important;border-color:#3fd6c4!important;color:#d6fff8!important}
     ${gold}{border:1.6px solid #f1c35a!important;box-shadow:inset 0 0 0 1px rgba(241,195,90,.3)!important}
+    ${gold}[data-dg-cut]{border-top-width:0!important;border-top-left-radius:0!important;border-top-right-radius:0!important;box-shadow:none!important}
     :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:19px!important;line-height:1!important;margin:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important;text-align:center!important}
     ${base}:not(.sym-digit):not(:has(> .tile)){display:grid!important;place-items:center!important}
     ${base}:not(.sym-digit):not(:has(> .tile)) > *{grid-area:1/1}
@@ -2999,6 +3009,7 @@
   style.textContent = `${hit}{transform:none!important}
     ${hit},${hit} *{animation:none!important;filter:none!important;transition:none!important}
     ${hit}{border:1.6px solid #4fc3ff!important;outline:0!important;box-shadow:0 0 8px rgba(79,195,255,.45)!important;z-index:5}
+    ${hit}[data-dg-cut]{border-top-width:0!important;border-top-left-radius:0!important;border-top-right-radius:0!important}
     ${hit}:is(.gold,.special-gold){border-color:#f1c35a!important;box-shadow:0 0 0 2px #4fc3ff,0 0 8px rgba(79,195,255,.45)!important}
     ${hit}::before,${hit}::after{box-shadow:none!important;border-color:transparent!important}
     body #board :is(.reel.r4 .cell,.cell.sym-mult):is(.hit,.h020-hit)::after{display:none!important}
