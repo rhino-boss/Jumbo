@@ -3945,6 +3945,9 @@
       const convertSet = new Set((options.convertPositions || []).map((item) => `${item.row}-${item.col}`));
       const clearedSet = new Set((options.clearedPositions || []).map(([row, col]) => `${row}-${col}`));
       const reelSpin = Boolean(options.reelSpin);
+      // 掉落距離一律用「整格高＋列間距」換算（頂端 peek 列只露半格，若用自身高度的 % 會掉太短、跟下面的格子疊在一起）
+      const fullCell = boardEl.querySelector(".cell:not(.peek-row)");
+      const dropPitch = fullCell ? fullCell.getBoundingClientRect().height + (parseFloat(getComputedStyle(boardEl).rowGap) || 0) : 0;
       boardEl.innerHTML = "";
       board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
@@ -3952,7 +3955,7 @@
           const dropMotion = options.dropMotion?.[`${rowIndex}-${colIndex}`];
           cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", clearedSet.has(`${rowIndex}-${colIndex}`) ? "symbol-cleared" : "", dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
           if (dropMotion) {
-            cellEl.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
+            cellEl.style.setProperty("--drop-start", dropPitch ? `${-dropMotion.rows * dropPitch}px` : `${-dropMotion.rows * 105}%`);
             cellEl.style.setProperty("--drop-duration", `${window.demogameMotion?.dropMs() ?? 380}ms`);   // 掉落時間＝轉輪滾停時間
             cellEl.style.setProperty("--drop-delay", "0ms");
           }
