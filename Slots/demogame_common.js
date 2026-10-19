@@ -3081,3 +3081,21 @@
     hidden.forEach((cell) => { cell.style.visibility = ""; });
   };
 })();
+
+// 符號一體（共用，2026-10-19）：符號的字、框、底板是一體，動畫一律整格一起動，不能只有部分變化；
+// 顯示得分框時，沒得分的符號完全不變（不變暗、不變框）。
+(() => {
+  "use strict";
+  const style = document.createElement("style");
+  style.textContent = `body #board .cell.fx-dim{filter:none!important;opacity:1!important}
+    body #board .cell.demogame-grow{animation:demogame-grow var(--dg-grow-ms,380ms) cubic-bezier(.2,.8,.3,1) both!important}
+    body #board .cell.demogame-grow > *{animation:none!important}
+    body #board .cell.symbol-cleared{animation:slot-symbol-clear 180ms ease-in forwards!important}
+    body #board .cell.symbol-cleared > *{animation:none!important}
+    body #board .cell.symbol-refill:not(.symbol-drop):not(.symbol-settle):not(.tc-drop-new):not(.tc-settle){animation:slot-symbol-refill var(--refill-duration,420ms) cubic-bezier(.2,.75,.25,1) both!important}
+    body #board .cell.symbol-refill > *{animation:none!important}
+    body #board .cell.fx-pop{animation:slot-fx-pop 300ms ease-in forwards!important}
+    body #board .cell.fx-pop > *{animation:none!important}
+    body #board .cell.tc-drop-new > *{animation:none!important}`;
+  document.head.appendChild(style);
+})();
