@@ -2999,3 +2999,79 @@
   };
   window.demogameMotion = motion;
 })();
+
+// 掉落類 Spin（共用，2026-10-19）：沒有整條輪帶滾動，舊盤面整欄往下掉出、新符號整欄從上方掉入並輕微回彈；
+// 由左到右逐欄錯開（Speed 5 同時），每欄時間＝reelSpinMs。只做畫面，不動結果。
+// 用法：await demogameMotion.dropSpin(board, columnsOf, render)
+//   columnsOf()：回傳目前盤面每欄由上到下的 .cell 節點；render()：畫出結果盤面（同步）。
+(() => {
+  "use strict";
+  const motion = window.demogameMotion;
+  if (!motion) return;
+  const offsetIn = (node, host) => {
+    let x = 0, y = 0, n = node;
+    while (n && n !== host) {
+      x += n.offsetLeft; y += n.offsetTop;
+      n = n.offsetParent;
+      if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+    }
+    return { x, y };
+  };
+  const strip = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+  const clone = (cell, box, left, top) => {
+    const copy = cell.cloneNode(true);
+    copy.classList.remove(...strip);
+    [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+    copy.removeAttribute("id");
+    copy.style.cssText += `;position:absolute;margin:0;left:${box.x - left}px;top:${box.y - top}px;width:${box.w}px;height:${box.h}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+    return copy;
+  };
+  motion.dropSpin = async (board, columnsOf, render) => {
+    if (!board) { render?.(); return; }
+    const spinMs = motion.reelSpinMs(), gapMs = motion.stopStaggerMs();
+    // 舊盤面：先記下位置與複本
+    const host0 = board.offsetParent || document.body;
+    const oldCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean).map((cell) => ({ node: clone(cell, { ...offsetIn(cell, host0), w: cell.offsetWidth, h: cell.offsetHeight }, 0, 0), ...offsetIn(cell, host0), w: cell.offsetWidth, h: cell.offsetHeight })));
+    render?.();
+    const newCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean));
+    const windows = [], hidden = [];
+    const jobs = newCols.map((cells, col) => {
+      if (!cells.length) return Promise.resolve();
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      const boxes = cells.map((cell) => ({ cell, ...offsetIn(cell, host), w: cell.offsetWidth, h: cell.offsetHeight }));
+      const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
+      const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      const height = bottom - top;
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${height}px` });
+      const ms = spinMs + gapMs * col;
+      const delay = gapMs * col;
+      // 舊符號往下掉出
+      const outLayer = document.createElement("div");
+      outLayer.style.cssText = "position:absolute;inset:0";
+      (oldCols[col] || []).forEach((o) => { o.node.style.left = `${o.x - left}px`; o.node.style.top = `${o.y - top}px`; outLayer.appendChild(o.node); });
+      // 新符號從上方掉入
+      const inLayer = document.createElement("div");
+      inLayer.style.cssText = "position:absolute;inset:0";
+      boxes.forEach((b) => inLayer.appendChild(clone(b.cell, b, left, top)));
+      win.append(outLayer, inLayer);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; hidden.push(cell); });
+      const fall = Math.max(120, (ms - delay) * 0.45);
+      const out = outLayer.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }], { duration: fall, delay, easing: "cubic-bezier(.5,0,.9,.6)", fill: "both" });
+      const inStart = delay + fall * 0.55, inMs = Math.max(140, ms - inStart);
+      const drop = inLayer.animate([
+        { transform: `translateY(${-(height + 20)}px)`, easing: "cubic-bezier(.45,0,.85,.55)" },
+        { transform: `translateY(${Math.min(14, height * 0.05)}px)`, offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: inMs, delay: inStart, fill: "both" });
+      return new Promise((resolve) => { drop.onfinish = resolve; setTimeout(resolve, ms + 80); }).then(() => { out.cancel(); });
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    hidden.forEach((cell) => { cell.style.visibility = ""; });
+  };
+})();

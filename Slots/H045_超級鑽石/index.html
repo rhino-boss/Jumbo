@@ -3548,11 +3548,14 @@
   }
 
   async function animateReels(initialBoard, initialGold = null, initialMults = null, scene = "bg") {
-    // 逐輪停輪（左到右）：先畫好結果盤面（含真正的金框／倍數），再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion；Speed 5 同時停）
-    renderBoard(initialBoard, [], { gold: initialGold || zeroGold(), mults: initialMults || zeroMults() });
-    const nodes = Array.from($("board").children);   // DOM 順序：由上（row 3）到下、由左到右
-    const columns = [0, 1, 2, 3, 4].map(reel => [0, 1, 2, 3].map(line => nodes[line * 5 + reel]));
-    await reelStripSpin($("board"), columns);
+    // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+    const columnsOf = () => {
+      const nodes = Array.from($("board").children).filter(node => node.classList.contains("cell"));   // DOM 順序：由上（row 3）到下、由左到右
+      return [0, 1, 2, 3, 4].map(reel => [0, 1, 2, 3].map(line => nodes[line * 5 + reel]));
+    };
+    const render = () => renderBoard(initialBoard, [], { gold: initialGold || zeroGold(), mults: initialMults || zeroMults() });
+    if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin($("board"), columnsOf, render);
+    else { render(); await reelStripSpin($("board"), columnsOf()); }
   }
 
   function renderWinDetails(snapshot) {
@@ -4008,7 +4011,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261019a"></script>
+  <script src="../demogame_common.js?v=20261019b"></script>
 </body>
 
 </html>

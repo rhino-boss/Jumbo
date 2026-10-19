@@ -2833,12 +2833,15 @@
   }
 
   async function animateReels(spin) {
-    // 逐輪停輪（左到右）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
-    renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
-    const nodes = Array.from(el.board.children);
-    const columns = Array.from({ length: Box.reel_num }, (_, reel) =>
-      Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
-    await reelStripSpin(el.board, columns);
+    // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+    const columnsOf = () => {
+      const nodes = Array.from(el.board.children).filter((node) => node.classList.contains("cell"));
+      return Array.from({ length: Box.reel_num }, (_, reel) =>
+        Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
+    };
+    const render = () => renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
+    if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin(el.board, columnsOf, render);
+    else { render(); await reelStripSpin(el.board, columnsOf()); }
   }
 
   function updateFeatureBar(spin = null) {
@@ -3605,7 +3608,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261019a"></script>
+  <script src="../demogame_common.js?v=20261019b"></script>
   <script>
     (() => {
       "use strict";
