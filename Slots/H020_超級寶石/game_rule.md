@@ -71,7 +71,7 @@
 | R3 | 3 | 203 | 一般符號、WW |
 | R4 | 3（只看中線） | 85 | 倍數、重轉球 |
 
-- R1～R3 所有押注模式共用同一組輪帶。Normal Bet／Extra Bet 每格權重皆為 1（等機率停輪）；Super Feature 的停輪權重為「可視 3 格內有 WW 的停點 3、其餘 1」，數值見 `Source/H0201xxA.xlsx` → `Regular Symbol` 頁 BK～BM 欄（`Parameter` 頁 R～T 欄鏡像）。
+- R1～R3 所有押注模式共用同一組輪帶。Normal Bet／Extra Bet 每格權重皆為 1（等機率停輪）；Super Feature 的停輪權重為「可視 3 格內有 WW 的停點 5、其餘 1」，數值見 `Source/H0201xxA.xlsx` → `Regular Symbol` 頁 BK～BM 欄（`Parameter` 頁 R～T 欄鏡像）。
 - R4 輪帶只供演出；結果依各押注模式的權重抽出（§5.1），再停到輪帶上對應符號的位置。
 
 ### 2.3 得分方向
