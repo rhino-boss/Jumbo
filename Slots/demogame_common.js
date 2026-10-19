@@ -3069,7 +3069,9 @@
         { transform: `translateY(${Math.min(14, height * 0.05)}px)`, offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: inMs, delay: inStart, fill: "both" });
-      return new Promise((resolve) => { drop.onfinish = resolve; setTimeout(resolve, ms + 80); }).then(() => { out.cancel(); });
+      // 舊符號掉出後立刻移除圖層：不可 cancel 回原位，否則舊符號會在新符號落定後又出現
+      out.onfinish = () => outLayer.remove();
+      return new Promise((resolve) => { drop.onfinish = resolve; setTimeout(resolve, ms + 80); }).then(() => { outLayer.remove(); });
     });
     await Promise.all(jobs);
     windows.forEach((win) => win.remove());
