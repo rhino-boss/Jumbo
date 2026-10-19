@@ -3097,8 +3097,8 @@
       board.appendChild(win);
       windows.push(win);
       const boxes = cells.map((cell) => ({ cell, ...rectIn(cell) }));
-      const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
-      const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到
+      const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
       const height = bottom - top;
       Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${height}px` });
       const ms = spinMs + gapMs * col;
