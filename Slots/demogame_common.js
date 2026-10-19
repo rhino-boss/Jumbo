@@ -3167,4 +3167,18 @@
   const style = document.createElement("style");
   style.textContent = "html,body,button,select,input,label,#board,#board *{touch-action:manipulation}";
   document.head.appendChild(style);
+  // iPhone 有時不理 touch-action：再鎖縮放比例＝1，並擋掉 300ms 內的第二下點擊（雙擊放大）
+  let viewport = document.querySelector('meta[name="viewport"]');
+  if (!viewport) { viewport = document.createElement("meta"); viewport.name = "viewport"; document.head.appendChild(viewport); }
+  if (!/maximum-scale/.test(viewport.content || "")) viewport.content = `${viewport.content || "width=device-width, initial-scale=1"}, maximum-scale=1`;
+  let lastTouchEnd = 0;
+  document.addEventListener("touchend", (event) => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 300 && !event.target.closest?.("input, textarea, select")) {
+      event.preventDefault();
+      event.target.click?.();   // 被擋掉的那一下照樣算一次點擊（連點 Spin 不漏按）
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+  document.addEventListener("dblclick", (event) => event.preventDefault());
 })();
