@@ -3065,8 +3065,17 @@
     if (!board) { render?.(); return; }
     const spinMs = motion.reelSpinMs(), gapMs = motion.stopStaggerMs();
     // 舊盤面：先記下位置與複本
-    const host0 = board.offsetParent || document.body;
-    const oldCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean).map((cell) => ({ node: clone(cell, { ...offsetIn(cell, host0), w: cell.offsetWidth, h: cell.offsetHeight }, 0, 0), ...offsetIn(cell, host0), w: cell.offsetWidth, h: cell.offsetHeight })));
+    // 位置與尺寸一律用精確小數（getBoundingClientRect），複本與真格逐像素對齊，落定換回真格時不會跳 1px
+    const probe = document.createElement("div");
+    probe.style.position = "absolute";
+    board.appendChild(probe);
+    const host = probe.offsetParent || document.body;
+    probe.remove();
+    const rectIn = (node) => {
+      const r = node.getBoundingClientRect(), h = host.getBoundingClientRect();
+      return { x: r.left - h.left - host.clientLeft + host.scrollLeft, y: r.top - h.top - host.clientTop + host.scrollTop, w: r.width, h: r.height };
+    };
+    const oldCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean).map((cell) => { const box = rectIn(cell); return { node: clone(cell, box, 0, 0), ...box }; }));
     render?.();
     window.demogameTagSymbols?.();
     const newCols = (columnsOf() || []).map((list) => (list || []).filter(Boolean));
@@ -3078,8 +3087,7 @@
       win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
       board.appendChild(win);
       windows.push(win);
-      const host = win.offsetParent || document.body;
-      const boxes = cells.map((cell) => ({ cell, ...offsetIn(cell, host), w: cell.offsetWidth, h: cell.offsetHeight }));
+      const boxes = cells.map((cell) => ({ cell, ...rectIn(cell) }));
       const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
       const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
       const height = bottom - top;

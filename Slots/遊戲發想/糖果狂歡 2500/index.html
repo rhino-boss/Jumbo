@@ -2824,7 +2824,9 @@
       board.appendChild(win);
       windows.push(win);
       const host = win.offsetParent || document.body;
-      const boxes = cells.map((cell) => ({ cell, ...offsetIn(cell, host), w: cell.offsetWidth, h: cell.offsetHeight }));
+      // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
+      const hostRect = host.getBoundingClientRect();
+      const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
       const left = Math.min(...boxes.map((b) => b.x)), top = Math.min(...boxes.map((b) => b.y));
       const right = Math.max(...boxes.map((b) => b.x + b.w)), bottom = Math.max(...boxes.map((b) => b.y + b.h));
       Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
@@ -3661,7 +3663,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-05 12:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261019j"></script>
+  <script src="../../demogame_common.js?v=20261019k"></script>
   <script>
     (() => {
       "use strict";
