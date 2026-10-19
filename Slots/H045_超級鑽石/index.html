@@ -615,6 +615,13 @@
     .rule-toggle { display: inline-flex; border: 1px solid var(--line, #2a3a55); border-radius: 999px; overflow: hidden; }
     .rule-toggle button { border: 0; background: transparent; color: var(--sub); font-size: 12px; font-weight: 700; padding: 3px 10px; cursor: pointer; }
     .rule-toggle button.is-active { background: #2c6bd6; color: #fff; }
+    /* 手機版：標題、版本切換同一排不換行（共用程式右側預留 148px，實際按鈕只有約 98px → 改預留 114px，切換按鈕縮窄） */
+    @media (max-width: 760px) {
+      body.slot-simulator #feature-bar { flex-wrap: nowrap !important; gap: 6px !important; padding-right: 114px !important; }
+      body.slot-simulator #feature-bar #game-title { white-space: nowrap; flex: 0 1 auto; min-width: 0; }
+      body.slot-simulator #feature-bar .rule-toggle { flex: 0 0 auto; }
+      body.slot-simulator #feature-bar .rule-toggle button { padding: 3px 6px; }
+    }
 
     #modeText {
       color: var(--sub);
