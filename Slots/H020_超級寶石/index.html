@@ -684,7 +684,7 @@
   }
   async function spinReel(col, strip, stop, override, ms) {
     const inner = reelEls[col].querySelector(".reel-strip");
-    const extra = Math.max(6, Math.round(ms / 60));
+    const extra = Math.max(6, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
     const list = items(col, strip, stop, override, extra);
     inner.style.transition = "none";
     inner.innerHTML = list.map(cellHtml).join("");
@@ -1180,7 +1180,7 @@
   </script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-16 16:42";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
-  <script src="../demogame_common.js?v=20261017g"></script>
+  <script src="../demogame_common.js?v=20261019a"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
   </script>

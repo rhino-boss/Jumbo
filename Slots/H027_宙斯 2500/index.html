@@ -1316,7 +1316,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
       const last = boxes[boxes.length - 1];
       const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
-      const extra = Math.max(boxes.length + 3, Math.round(ms / 60));
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
       const strip = document.createElement("div");
       strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
       boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
@@ -2172,7 +2172,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_宙斯 2500.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script src="../demogame_common.js?v=20261017g"></script>
+  <script src="../demogame_common.js?v=20261019a"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

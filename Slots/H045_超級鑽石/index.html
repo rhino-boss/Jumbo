@@ -2207,6 +2207,7 @@
               <option value="combo5" data-h045-text="scriptCombo5">連消 5 次以上</option>
               <option value="bigghost" data-h045-text="scriptBigghost">有大鬼</option>
               <option value="flip" data-h045-text="scriptFlip">金框有消除</option>
+              <option value="flipmult" data-h045-text="scriptFlipMult">消除金框後有倍數</option>
               <option value="fg" data-h045-text="scriptFg">有觸發 FG</option>
               <option value="fgbig" data-h045-text="scriptFgbig">FG 100x 以上</option>
             </select>
@@ -3168,6 +3169,7 @@
   const SCRIPT_RULES = {
     combo5: r => r.scatter < 3 && r.combo >= 5,
     flip: r => r.scatter < 3 && r.golden > 0,
+    flipmult: r => r.scatter < 3 && r.multWild > 0,   // 金框消除翻牌後抽到帶倍數（×2 以上）的 WILD（2026-10-19）
     bigghost: r => r.scatter < 3 && r.w2Events > 0,
     fg: r => r.scatter >= 3,
     fgbig: r => r.scatter >= 3,
@@ -3518,7 +3520,7 @@
       Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
       const last = boxes[boxes.length - 1];
       const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
-      const extra = Math.max(boxes.length + 3, Math.round(ms / 60));
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
       const strip = document.createElement("div");
       strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
       boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
@@ -3877,7 +3879,7 @@
       featureComplete: "Feature complete", ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)",
-      scriptFlip: "Gold frame cleared", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
+      scriptFlip: "Gold frame cleared", scriptFlipMult: "Gold frame cleared with multiplier", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
       statGoldSeen: "Gold frame seen", statGoldUsed: "Gold frame used", statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
     },
     zh: {
@@ -3885,7 +3887,7 @@
       featureComplete: "免費遊戲結束", ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼",
-      scriptFlip: "金框有消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
+      scriptFlip: "金框有消除", scriptFlipMult: "消除金框後有倍數", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
       statGoldSeen: "金框出現率", statGoldUsed: "金框使用率", statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
     }
   };
@@ -4000,7 +4002,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>
-  <script src="../demogame_common.js?v=20261017g"></script>
+  <script src="../demogame_common.js?v=20261019a"></script>
 </body>
 
 </html>
