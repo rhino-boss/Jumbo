@@ -2910,8 +2910,35 @@
     }
   };
   // MutationObserver 回呼在畫面重繪前執行：同步標記，避免 Spin 時先畫成原樣式再換色而閃爍
+  // 盤面重畫時（例如顯示得分框）符號沒變的格子沿用原本的圖片元素：沒得分的符號不重畫、不閃，只有得分格改變
+  const reuseImages = (records, board) => {
+    const removed = [], added = [];
+    for (const record of records || []) {
+      if (record.type !== "childList" || record.target !== board) continue;
+      record.removedNodes.forEach((node) => { if (node.nodeType === 1 && node.classList.contains("cell")) removed.push(node); });
+      record.addedNodes.forEach((node) => { if (node.nodeType === 1 && node.classList.contains("cell") && node.isConnected) added.push(node); });
+    }
+    if (!removed.length || !added.length) return;
+    added.forEach((cell, index) => {
+      const old = removed[index];
+      if (!old) return;
+      const oldImgs = [...old.querySelectorAll("img")], newImgs = [...cell.querySelectorAll("img")];
+      if (!oldImgs.length || oldImgs.length !== newImgs.length) return;
+      newImgs.forEach((img, k) => {
+        const keep = oldImgs[k];
+        if (keep.getAttribute("src") !== img.getAttribute("src")) return;
+        keep.className = img.className;
+        keep.style.cssText = img.style.cssText;
+        img.replaceWith(keep);
+      });
+    });
+  };
   let tagging = false;
-  const schedule = () => { if (tagging) return; tagging = true; try { tag(); } finally { tagging = false; } };
+  const schedule = (records) => {
+    if (tagging) return;
+    tagging = true;
+    try { reuseImages(records, document.getElementById("board")); tag(); } finally { tagging = false; }
+  };
   const start = () => {
     const board = document.getElementById("board");
     if (!board) return;
