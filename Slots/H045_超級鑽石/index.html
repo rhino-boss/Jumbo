@@ -2696,7 +2696,7 @@
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
     maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
     fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 },
-    spinStats: { spins: 0, goldSeen: 0, goldAppeared: 0, goldUsed: 0, multSeen: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
+    spinStats: { spins: 0, goldSeen: 0, goldAppeared: 0, goldUsed: 0, goldUsedSpins: 0, multSeen: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -3634,7 +3634,7 @@
 
   function tallySpin(result) {
     const s = state.spinStats;
-    s.spins++; s.goldSeen += result.goldSeen ? 1 : 0; s.goldAppeared += result.goldAppeared || 0; s.goldUsed += result.golden || 0; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
+    s.spins++; s.goldSeen += result.goldSeen ? 1 : 0; s.goldAppeared += result.goldAppeared || 0; s.goldUsed += result.golden || 0; s.goldUsedSpins += result.golden > 0 ? 1 : 0; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
     s.bigNoScore += result.bigNoScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
   }
   // 機率（週期）：例 12.34% (1/8.1)；沒發生顯示 0.00% (—)
@@ -3649,8 +3649,8 @@
     $("maxMultiplierValue").textContent = `x${state.maxMultiplier}`;
     const s = state.spinStats;
     $("goldSeenValue").textContent = rateCycle(s.goldSeen, s.spins);
-    // 金框使用率（2026-10-16）：中獎被消除而翻牌的金框 ÷ 出現的金框（同 Super Ace 金框轉換率口徑）
-    $("goldUsedValue").textContent = s.goldAppeared ? `${(s.goldUsed / s.goldAppeared * 100).toFixed(2)}% (${s.goldUsed.toLocaleString()}/${s.goldAppeared.toLocaleString()})` : "0.00% (—)";
+    // 金框使用率（2026-10-19 改口徑）：有金框被消除翻牌的轉數 ÷ 有金框出現的轉數
+    $("goldUsedValue").textContent = s.goldSeen ? `${(s.goldUsedSpins / s.goldSeen * 100).toFixed(2)}% (${s.goldUsedSpins.toLocaleString()}/${s.goldSeen.toLocaleString()})` : "0.00% (—)";
     $("multSeenValue").textContent = rateCycle(s.multSeen, s.spins);
     $("multUsedValue").textContent = rateCycle(s.multUsed, s.spins);
     $("bigGhostValue").textContent = rateCycle(s.big, s.spins);
@@ -3920,7 +3920,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,goldSeen:0,goldAppeared:0,goldUsed:0,multSeen:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,goldSeen:0,goldAppeared:0,goldUsed:0,goldUsedSpins:0,multSeen:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
     $("autoBtn").textContent = tr("auto"); renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = tr("ready"); updateStats();
   }
   function buildBetMenu() {
