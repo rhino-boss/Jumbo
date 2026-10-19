@@ -1718,6 +1718,9 @@
       user-select: none;
       pointer-events: none;
     }
+    /* 符號圖素材四周留白多（寶石只佔約 65% 高）：放大顯示；C1／C2／WW 素材本來就大，只微放大 */
+    #board .cell .h019-symbol-image { padding: 0; transform: scale(1.45); }
+    #board .cell .h019-symbol-image:is([alt="C1"], [alt="C2"], [alt="WW"]) { transform: scale(1.1); }
     .cell .symbol-code { display: none; }
     .cell.symbol-a,
     .cell.symbol-k,
@@ -3350,7 +3353,7 @@
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../demogame_common.js?v=20261019k"></script>
+  <script src="../demogame_common.js?v=20261019l"></script>
 </body>
 
 </html>

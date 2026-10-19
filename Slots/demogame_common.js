@@ -2899,6 +2899,9 @@
     for (const img of document.querySelectorAll("#board img:not([decoding='sync'])")) img.decoding = "sync";
     for (const cell of document.querySelectorAll("#board .cell")) {
       const code = cell.matches(".has-symbol-art, .sym-digit") ? "" : codeOf(cell);   // H014 數字格不套用
+      // 只露出一部分的格子（例如 H026 頂端 peek 列）：標 data-dg-cut，畫成「整顆符號被盤面上緣截斷」
+      const cut = cell.offsetHeight > 0 && cell.offsetHeight < cell.offsetWidth * 0.8;
+      if (cut !== ("dgCut" in cell.dataset)) { if (cut) cell.dataset.dgCut = ""; else delete cell.dataset.dgCut; }
       if ((cell.dataset.dgSym || "") !== code) {
         if (code) cell.dataset.dgSym = code; else delete cell.dataset.dgSym;
       }
@@ -2975,6 +2978,10 @@
     ${gold}{border:1.6px solid #f1c35a!important;box-shadow:inset 0 0 0 1px rgba(241,195,90,.3)!important}
     :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:19px!important;line-height:1!important;margin:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important;text-align:center!important}
     ${base}:not(.sym-digit):not(:has(> .tile)){display:grid!important;place-items:center!important}
+    ${base}:not(.sym-digit):not(:has(> .tile)) > *{grid-area:1/1}
+    ${base}:not(.sym-digit) ${label}{position:static!important;left:auto!important;top:auto!important;transform:none!important}
+    ${base}[data-dg-cut]{display:block!important;overflow:hidden!important;border-top-width:0!important;border-top-left-radius:0!important;border-top-right-radius:0!important;background-position:bottom!important}
+    ${base}[data-dg-cut] > *:not(#dg-cut){position:absolute!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;aspect-ratio:1/1;height:auto!important;width:auto!important;display:grid!important;place-items:center!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important}
     ${base}:not(.sym-digit) > .symbol-wrap{display:grid!important;place-items:center!important}
     ${base}:not(.sym-digit) ${label}{color:inherit!important;text-shadow:none!important}`;
   document.head.appendChild(style);
@@ -2988,7 +2995,9 @@
   // 倍數格（例如 H020 右側 WIN MULTIPLIER 轉輪）連線時不加得分框
   const hit = "body #board .cell:is(.hit,.fx-win,.h014-hit,.h020-hit):not(.symbol-cleared):not(.sym-mult):not(.reel.r4 .cell):not(#dg-x):not(#dg-y)";
   const style = document.createElement("style");
-  style.textContent = `${hit},${hit} *{animation:none!important;transform:none!important;filter:none!important;transition:none!important}
+  // 得分格本身不放大；裡面的元素只停動畫，不清除靜態縮放（例如素材留白多而放大的符號圖），得分時符號大小不變
+  style.textContent = `${hit}{transform:none!important}
+    ${hit},${hit} *{animation:none!important;filter:none!important;transition:none!important}
     ${hit}{border:1.6px solid #4fc3ff!important;outline:0!important;box-shadow:0 0 8px rgba(79,195,255,.45)!important;z-index:5}
     ${hit}:is(.gold,.special-gold){border-color:#f1c35a!important;box-shadow:0 0 0 2px #4fc3ff,0 0 8px rgba(79,195,255,.45)!important}
     ${hit}::before,${hit}::after{box-shadow:none!important;border-color:transparent!important}
