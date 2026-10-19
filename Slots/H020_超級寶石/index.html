@@ -686,14 +686,20 @@
     const inner = reelEls[col].querySelector(".reel-strip");
     const extra = Math.max(6, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
     const list = items(col, strip, stop, override, extra);
+    // 最上面多墊一格輪帶上一個符號：停輪前多往下滾一點時，上方不會露出空白
+    const L = strip.length, above = strip[(((col === 3 ? stop - 2 : stop - 1)) % L + L) % L];
     inner.style.transition = "none";
-    inner.innerHTML = list.map(cellHtml).join("");
+    inner.innerHTML = [above, ...list].map(cellHtml).join("");
     const h = inner.children[0].offsetHeight;
-    inner.style.transform = `translateY(${-extra * h}px)`;
-    void inner.offsetHeight;
-    inner.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.22,1.03)`;
-    inner.style.transform = "translateY(0)";
-    await wait(ms + 20);
+    // 滾到停點後再多往下 18% 格高，然後回彈到正確位置（總時間不變）
+    const end = -h, over = -h + h * 0.18;
+    const anim = inner.animate([
+      { transform: `translateY(${-(extra + 1) * h}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+      { transform: `translateY(${over}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+      { transform: `translateY(${end}px)` }
+    ], { duration: ms, fill: "forwards" });
+    await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    anim.cancel();
     setReel(col, strip, stop, override, []);
   }
   function setHits(col, rows) {
