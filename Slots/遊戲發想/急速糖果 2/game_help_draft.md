@@ -35,13 +35,12 @@
 
 | 中文欄 | 中文欄 | 中文欄 |
 | --- | --- | --- |
-| [M1] 5 - 100 | [M1] 8 - 200 | [M1] 15+ - 15000 |
-| [M2] 5 - 75 | [M2] 8 - 150 | [M2] 15+ - 10000 |
-| [M3] 5 - 50 | [M3] 8 - 125 | [M3] 15+ - 6000 |
-| [M4] 5 - 40 | [M4] 8 - 100 | [M4] 15+ - 4000 |
-| [A] 5 - 30 | [A] 8 - 75 | [A] 15+ - 3000 |
-| [K] 5 - 25 | [K] 8 - 50 | [K] 15+ - 2500 |
-| [Q] 5 - 20 | [Q] 8 - 40 | [Q] 15+ - 2000 |
+| [M1] 4 - 100 | [M1] 7 - 200 | [M1] 14+ - 15000 |
+| [M2] 4 - 75 | [M2] 7 - 150 | [M2] 14+ - 10000 |
+| [M3] 4 - 50 | [M3] 7 - 125 | [M3] 14+ - 6000 |
+| [M4] 4 - 40 | [M4] 7 - 100 | [M4] 14+ - 4000 |
+| [M5] 4 - 30 | [M5] 7 - 75 | [M5] 14+ - 3000 |
+| [M6] 4 - 25 | [M6] 7 - 50 | [M6] 14+ - 2500 |
 
 ---
 
@@ -50,7 +49,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 群集派彩 | CLUSTER PAY |
-| 規則說明 | 盤面為 {7×7}；相同符號以上下左右相鄰連結達 {5} 個以上即中獎，每個群集各自計獎；同一符號同時有多組群集時，每一組都會計獎。 | THE GAME USES A {7×7} GRID. {5} OR MORE IDENTICAL SYMBOLS CONNECTED HORIZONTALLY OR VERTICALLY FORM A WINNING CLUSTER. EACH CLUSTER PAYS SEPARATELY, INCLUDING MULTIPLE CLUSTERS OF THE SAME SYMBOL. |
+| 規則說明 | 盤面為 {5×5}；相同符號以上下左右相鄰連結達 {4} 個以上即中獎，每個群集各自計獎；同一符號同時有多組群集時，每一組都會計獎。 | THE GAME USES A {5×5} GRID. {4} OR MORE IDENTICAL SYMBOLS CONNECTED HORIZONTALLY OR VERTICALLY FORM A WINNING CLUSTER. EACH CLUSTER PAYS SEPARATELY, INCLUDING MULTIPLE CLUSTERS OF THE SAME SYMBOL. |
 | 規則說明 | 群集中獎後，盤面上所有相同符號會一併消除；得分只以相連的群集數量計算，連帶消除的符號不另計獎。 | WHEN A CLUSTER WINS, ALL IDENTICAL SYMBOLS ON THE BOARD ARE REMOVED. ONLY THE CONNECTED CLUSTER PAYS; THE OTHER REMOVED SYMBOLS DO NOT PAY. |
 
 ---
@@ -91,7 +90,7 @@
 | --- | --- | --- |
 | 主要標題 | 額外押注 | EXTRA BET |
 | 規則說明 | 額外押注的費用為目前投注的 {10} 倍，派彩仍以原始投注計算。 | EXTRA BET COSTS {10} TIMES THE CURRENT BET. WINS ARE STILL CALCULATED ON THE ORIGINAL BET. |
-| 規則說明 | 該次旋轉開場時，盤面隨機 {1~3} 個位置出現 {20、50、100、250、500 或 1000} 的倍數底板，第一次消除即計入全盤倍數和。 | AT THE START OF THE SPIN, {1 TO 3} RANDOM POSITIONS RECEIVE A {20, 50, 100, 250, 500 OR 1000} MULTIPLIER PLATE THAT COUNTS TOWARD THE BOARD MULTIPLIER SUM FROM THE FIRST WIN. |
+| 規則說明 | 該次旋轉開場時，盤面隨機 {3} 個位置出現 {20、50、100、250、500 或 1000} 的倍數底板，第一次消除即計入全盤倍數和。 | AT THE START OF THE SPIN, {3} RANDOM POSITIONS RECEIVE A {20, 50, 100, 250, 500 OR 1000} MULTIPLIER PLATE THAT COUNTS TOWARD THE BOARD MULTIPLIER SUM FROM THE FIRST WIN. |
 
 ---
 
