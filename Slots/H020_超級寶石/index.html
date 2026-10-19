@@ -693,11 +693,12 @@
     const h = inner.children[0].offsetHeight;
     // 滾到停點後再多往下 18% 格高，然後回彈到正確位置（總時間不變）
     const end = -h, over = -h + h * 0.18;
+    inner.style.transform = `translateY(${-(extra + 1) * h}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果而閃一下
     const anim = inner.animate([
       { transform: `translateY(${-(extra + 1) * h}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
       { transform: `translateY(${over}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
       { transform: `translateY(${end}px)` }
-    ], { duration: ms, fill: "forwards" });
+    ], { duration: ms, fill: "both" });
     await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
     anim.cancel();
     setReel(col, strip, stop, override, []);

@@ -1890,6 +1890,11 @@
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
   <link rel="stylesheet" href="../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+  <style id="symbol-size-fix">
+    /* 符號圖放大（2026-10-19）：圖填滿整格；A／K／Q／J 素材留白多再放大 1.25 倍 */
+    #board .cell .h015-symbol-img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
+    #board .cell .h015-symbol-img:is([alt="A"], [alt="K"], [alt="Q"], [alt="J"]) { transform: scale(1.25); }
+  </style>
 </head>
 
 <body class="slot-simulator">
@@ -2803,11 +2808,12 @@
       // 停輪前多往下滾 18% 格高再回彈到正確位置（同 H020）；最上面墊一格，回彈時不露出空白
       const above = pool[Math.floor(Math.random() * pool.length)];
       strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+      strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
         { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
         { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
         { transform: "translateY(0)" }
-      ], { duration: ms, fill: "forwards" });
+      ], { duration: ms, fill: "both" });
       return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
     });
     await Promise.all(jobs);

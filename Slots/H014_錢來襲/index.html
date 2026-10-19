@@ -711,11 +711,12 @@
     // 最上面墊一格，停輪前多往下滾 18% 格高再回彈（同 H020）時不露出空白
     inner.innerHTML = [items[items.length - 1], ...items].map(cellHtml).join("");
     const h = inner.children[0].offsetHeight;  // 一格高度（上下兩排只露半格）
+    inner.style.transform = `translateY(${-(extra + 1) * h}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果而閃一下
     const anim = inner.animate([
       { transform: `translateY(${-(extra + 1) * h}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
       { transform: `translateY(${-h + h * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
       { transform: `translateY(${-h}px)` }
-    ], { duration: ms, fill: "forwards" });
+    ], { duration: ms, fill: "both" });
     await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
     anim.cancel();
     setReel(col, strip, stop, override, false);
