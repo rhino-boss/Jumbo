@@ -2206,6 +2206,7 @@
               <option value="" data-h045-text="scriptNone">無</option>
               <option value="combo5" data-h045-text="scriptCombo5">連消 5 次以上</option>
               <option value="bigghost" data-h045-text="scriptBigghost">有大鬼</option>
+              <option value="bigmult" data-h045-text="scriptBigMult">大鬼有倍數</option>
               <option value="flip" data-h045-text="scriptFlip">金框有消除</option>
               <option value="flipmult" data-h045-text="scriptFlipMult">消除金框後有倍數</option>
               <option value="fg" data-h045-text="scriptFg">有觸發 FG</option>
@@ -3000,7 +3001,7 @@
     const goldPre = PRE_DRAW ? zeroGold().map(column => column.map(() => null)) : null;
     if (goldPre) predrawAll(gold, goldPre, tableName, flipState);
     const cap = MAX_WIN * betUnit();
-    let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, capped = false;
+    let pay = 0, combo = 0, golden = 0, w2Events = 0, multWild = 0, bigMult = 0, capped = false;   // bigMult：翻出帶倍數的大鬼本體顆數（腳本 bigmult）
     // By Game 統計（2026-10-15）：本轉是否用到帶倍 WILD；大鬼本體與分裂 WW 之後有沒有參與中獎
     let multUsed = false, bigScored = false;
     const bigCells = new Set();
@@ -3037,7 +3038,7 @@
             goldenTally[key] = (goldenTally[key] || 0) + value;
             if (key.startsWith("W2")) w2Events += value;
           }
-          for (const [reel, row] of goldPositions) { transitionBoard[reel][row] = board[reel][row]; if (mults[reel][row] > 1) multWild++; }
+          for (const [reel, row] of goldPositions) { transitionBoard[reel][row] = board[reel][row]; if (mults[reel][row] > 1) { multWild++; if (board[reel][row] === W2) bigMult++; } }
           for (const [[reel, row]] of flip.bigSources) bigCells.add(`${reel},${row}`);
         }
       }
@@ -3081,7 +3082,7 @@
       if (budget + pay >= cap) { capped = true; break; }
     }
     return {
-      pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, goldenTally, capped,
+      pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, bigMult, goldenTally, capped,
       multUsed, bigNoScore: w2Events > 0 && !bigScored, goldSeen, goldAppeared,
       board, mults, gold, snapshots, tableName,
       maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]
@@ -3171,6 +3172,7 @@
     flip: r => r.scatter < 3 && r.golden > 0,
     flipmult: r => r.scatter < 3 && r.multWild > 0,   // 金框消除翻牌後抽到帶倍數（×2 以上）的 WILD（2026-10-19）
     bigghost: r => r.scatter < 3 && r.w2Events > 0,
+    bigmult: r => r.scatter < 3 && r.bigMult > 0,   // 金框翻出的大鬼本體帶 ×2 以上倍數（分裂 WW 同倍數）（2026-10-19）
     fg: r => r.scatter >= 3,
     fgbig: r => r.scatter >= 3,
   };
@@ -3684,7 +3686,7 @@
     const board = makeBoard(BUY.entry_table), scatter = scatterCount(board);
     if (scatter < Number(BUY.min_scatter)) throw new Error("BF_Symbol weights must guarantee at least 3 C1");
     return {
-      pay: 0, combo: 0, scatter, golden: 0, w2Events: 0, multWild: 0, goldenTally: {}, capped: false,
+      pay: 0, combo: 0, scatter, golden: 0, w2Events: 0, multWild: 0, bigMult: 0, goldenTally: {}, capped: false,
       board, mults: zeroMults(), gold: zeroGold(), tableName: BUY.entry_table, maxMultiplier: 1,
       snapshots: [{ type: "initial", board: cloneBoard(board), mults: zeroMults(), gold: zeroGold(), hits: [], combo: 0, multiplier: 1, message: "BF Entry · No Win" }]
     };
@@ -3878,7 +3880,7 @@
       baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", fgTriggered: "Free Game Triggered",
       featureComplete: "Feature complete", ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left",
-      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)",
+      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)", scriptBigMult: "Big Wild with multiplier",
       scriptFlip: "Gold frame cleared", scriptFlipMult: "Gold frame cleared with multiplier", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
       statGoldSeen: "Gold frame seen", statGoldUsed: "Gold frame used", statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
     },
@@ -3886,7 +3888,7 @@
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
       featureComplete: "免費遊戲結束", ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘",
-      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼",
+      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼", scriptBigMult: "大鬼有倍數",
       scriptFlip: "金框有消除", scriptFlipMult: "消除金框後有倍數", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
       statGoldSeen: "金框出現率", statGoldUsed: "金框使用率", statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
     }
