@@ -611,7 +611,7 @@
       color: var(--text);
     }
 
-    /* 倍數規則切換：加乘版（原版）／相加版（H045_超級鑽石_2） */
+    /* 倍數規則切換：加乘版／加乘版2／加乘版3 */
     .rule-toggle { display: inline-flex; border: 1px solid var(--line, #2a3a55); border-radius: 999px; overflow: hidden; }
     .rule-toggle button { border: 0; background: transparent; color: var(--sub); font-size: 12px; font-weight: 700; padding: 3px 10px; cursor: pointer; }
     .rule-toggle button.is-active { background: #2c6bd6; color: #fff; }
@@ -3998,7 +3998,7 @@
   $("helpBtn").onclick = openHelp; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;$("rngInput").value="";}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
-  // 版本切換：手機（≤640px）塞不下，改成 1 2 3 4（滑鼠移上去看完整名稱）；其他寬度顯示全名
+  // 版本切換：手機（≤640px）塞不下，改成依序編號 1 2 3（滑鼠移上去看完整名稱）；其他寬度顯示全名
   (() => {
     const buttons = [...document.querySelectorAll("#ruleToggle button")];
     buttons.forEach((button, index) => { button.dataset.full = button.textContent; button.title = button.textContent; button.dataset.short = String(index + 1); });
