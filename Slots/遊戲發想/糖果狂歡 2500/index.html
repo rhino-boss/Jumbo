@@ -2840,11 +2840,15 @@
       }
       win.appendChild(strip);
       cells.forEach((cell) => { cell.style.visibility = "hidden"; });
-      strip.style.transform = `translateY(${-extra * pitch}px)`;
-      void strip.offsetHeight;
-      strip.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.22,1.03)`;
-      strip.style.transform = "translateY(0)";
-      return new Promise((resolve) => setTimeout(resolve, ms + 20));
+      // 停輪前多往下滾 18% 格高再回彈到正確位置（同 H020）；最上面墊一格，回彈時不露出空白
+      const above = pool[Math.floor(Math.random() * pool.length)];
+      strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+      const anim = strip.animate([
+        { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: ms, fill: "forwards" });
+      return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
     });
     await Promise.all(jobs);
     windows.forEach((win) => win.remove());

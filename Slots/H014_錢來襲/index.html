@@ -708,13 +708,16 @@
     const extra = Math.max(6, Math.round(ms / 65), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);  // 捲動格數隨停輪時間；Speed 1～4 至少 10 格，Speed 5 維持
     const items = stripItems(strip, stop, override, extra);
     inner.style.transition = "none";
-    inner.innerHTML = items.map(cellHtml).join("");
+    // 最上面墊一格，停輪前多往下滾 18% 格高再回彈（同 H020）時不露出空白
+    inner.innerHTML = [items[items.length - 1], ...items].map(cellHtml).join("");
     const h = inner.children[0].offsetHeight;  // 一格高度（上下兩排只露半格）
-    inner.style.transform = `translateY(${-extra * h}px)`;
-    void inner.offsetHeight;
-    inner.style.transition = `transform ${ms}ms cubic-bezier(.15,.7,.22,1.03)`;
-    inner.style.transform = "translateY(0)";
-    await wait(ms + 20);
+    const anim = inner.animate([
+      { transform: `translateY(${-(extra + 1) * h}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+      { transform: `translateY(${-h + h * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+      { transform: `translateY(${-h}px)` }
+    ], { duration: ms, fill: "forwards" });
+    await new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    anim.cancel();
     setReel(col, strip, stop, override, false);
   }
   function hitReel(col, on = true) {
