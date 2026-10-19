@@ -2103,7 +2103,7 @@
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond</span></span>
-      <span id="ruleToggle" class="rule-toggle" role="group" aria-label="倍數規則"><button type="button" data-rule="mul">加乘版</button><button type="button" data-rule="mul2">加乘版2</button><button type="button" data-rule="mul3">加乘版3</button><button type="button" data-rule="add">相加版</button></span>
+      <span id="ruleToggle" class="rule-toggle" role="group" aria-label="倍數規則"><button type="button" data-rule="mul">加乘版</button><button type="button" data-rule="mul2">加乘版2</button><button type="button" data-rule="mul3">加乘版3</button></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2574,12 +2574,14 @@
     (() => {
       const query = new URLSearchParams(window.location.search);
       let mode = query.get("rule");
-      const RULES = ["mul", "mul2", "mul3", "add"];   // 加乘版／加乘版2／加乘版3（數學同加乘版，只差金框呈現）／相加版
+      // 加乘版／加乘版2／加乘版3（數學同加乘版，只差金框呈現）。相加版（H045_超級鑽石_2）10/19 決定不採用、資料夾已移除：
+      // 瀏覽器若還存著 "add" 會讀不到 config 整頁壞掉 → 一律回到加乘版
+      const RULES = ["mul", "mul2", "mul3"];
       if (!RULES.includes(mode)) { try { mode = localStorage.getItem("h045RuleMode"); } catch (_) {} }
       mode = RULES.includes(mode) ? mode : "mul";
       try { localStorage.setItem("h045RuleMode", mode); } catch (_) {}
       window.H045_RULE_MODE = mode;
-      window.H045_BASE_DIR = mode === "add" ? "../H045_超級鑽石_2/" : "./";
+      window.H045_BASE_DIR = "./";
       document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261016a"><\/script>`);
     })();
   </script>
