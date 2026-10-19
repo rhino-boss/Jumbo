@@ -815,9 +815,11 @@
 
       // ── 輪帶滾動：先畫好結果盤面，再由 reelStripSpin 蓋輪帶往下捲、左到右停輪（Speed 5 同時停）──
       async function animateReels(finalBoard, finalMult) {
-        renderBoard(finalBoard, finalMult);
-        const columns = Array.from({ length: SIZE }, (_, c) => Array.from({ length: SIZE }, (_, r) => cellEl(r, c)));
-        await reelStripSpin(boardEl, columns);
+        // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+        const columnsOf = () => Array.from({ length: SIZE }, (_, c) => Array.from({ length: SIZE }, (_, r) => cellEl(r, c)));
+        const render = () => renderBoard(finalBoard, finalMult);
+        if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin(boardEl, columnsOf, render);
+        else { render(); await reelStripSpin(boardEl, columnsOf()); }
       }
 
       // ── 掉落補牌動畫：既有符號 Settle、新符號 Drop／Refill 分開 ─────────────

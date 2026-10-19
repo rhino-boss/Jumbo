@@ -1342,12 +1342,15 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   }
 
   async function animateReels(spin) {
-    // 逐輪停輪（左到右）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion；Speed 5 同時停）
-    renderBoard(boardCells(spin.initialBoard, spin.initialMultiplierValues));
-    const nodes = Array.from(el.board.children);
-    const columns = Array.from({ length: Box.reel_num }, (_, reel) =>
-      Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
-    await reelStripSpin(el.board, columns);
+    // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+    const columnsOf = () => {
+      const nodes = Array.from(el.board.children).filter((node) => node.classList.contains("cell"));
+      return Array.from({ length: Box.reel_num }, (_, reel) =>
+        Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
+    };
+    const render = () => renderBoard(boardCells(spin.initialBoard, spin.initialMultiplierValues));
+    if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin(el.board, columnsOf, render);
+    else { render(); await reelStripSpin(el.board, columnsOf()); }
   }
 
   function updateFeatureBar(spin = null) {
