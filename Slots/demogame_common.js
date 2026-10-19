@@ -3060,9 +3060,10 @@
       boxes.forEach((b) => inLayer.appendChild(clone(b.cell, b, left, top)));
       win.append(outLayer, inLayer);
       cells.forEach((cell) => { cell.style.visibility = "hidden"; hidden.push(cell); });
-      const fall = Math.max(120, (ms - delay) * 0.45);
+      // 舊符號完全掉出後新符號才掉入（不重疊），同一格不會看到符號一直換
+      const fall = Math.max(100, (ms - delay) * 0.38);
       const out = outLayer.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }], { duration: fall, delay, easing: "cubic-bezier(.5,0,.9,.6)", fill: "both" });
-      const inStart = delay + fall * 0.55, inMs = Math.max(140, ms - inStart);
+      const inStart = delay + fall, inMs = Math.max(140, ms - inStart);
       const drop = inLayer.animate([
         { transform: `translateY(${-(height + 20)}px)`, easing: "cubic-bezier(.45,0,.85,.55)" },
         { transform: `translateY(${Math.min(14, height * 0.05)}px)`, offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
