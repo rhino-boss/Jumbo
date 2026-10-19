@@ -35,12 +35,12 @@
 
 | 中文欄 | 中文欄 | 中文欄 |
 | --- | --- | --- |
-| [M1] 4 - 100 | [M1] 7 - 200 | [M1] 14+ - 15000 |
-| [M2] 4 - 75 | [M2] 7 - 150 | [M2] 14+ - 10000 |
-| [M3] 4 - 50 | [M3] 7 - 125 | [M3] 14+ - 6000 |
-| [M4] 4 - 40 | [M4] 7 - 100 | [M4] 14+ - 4000 |
-| [M5] 4 - 30 | [M5] 7 - 75 | [M5] 14+ - 3000 |
-| [M6] 4 - 25 | [M6] 7 - 50 | [M6] 14+ - 2500 |
+| [M1] 4 - 100 | [M1] 8 - 750 | [M1] 10+ - 15000 |
+| [M2] 4 - 75 | [M2] 8 - 500 | [M2] 10+ - 10000 |
+| [M3] 4 - 50 | [M3] 8 - 450 | [M3] 10+ - 6000 |
+| [M4] 4 - 40 | [M4] 8 - 350 | [M4] 10+ - 4000 |
+| [M5] 4 - 30 | [M5] 8 - 250 | [M5] 10+ - 3000 |
+| [M6] 4 - 25 | [M6] 8 - 150 | [M6] 10+ - 2500 |
 
 ---
 
@@ -90,7 +90,7 @@
 | --- | --- | --- |
 | 主要標題 | 額外押注 | EXTRA BET |
 | 規則說明 | 額外押注的費用為目前投注的 {10} 倍，派彩仍以原始投注計算。 | EXTRA BET COSTS {10} TIMES THE CURRENT BET. WINS ARE STILL CALCULATED ON THE ORIGINAL BET. |
-| 規則說明 | 該次旋轉開場時，盤面隨機 {3} 個位置出現 {20、50、100、250、500 或 1000} 的倍數底板，第一次消除即計入全盤倍數和。 | AT THE START OF THE SPIN, {3} RANDOM POSITIONS RECEIVE A {20, 50, 100, 250, 500 OR 1000} MULTIPLIER PLATE THAT COUNTS TOWARD THE BOARD MULTIPLIER SUM FROM THE FIRST WIN. |
+| 規則說明 | 該次旋轉開場時，盤面隨機 {3} 個位置出現 {5、6、7、8、9、10、15、20、25、30、35、40、45 或 50} 的倍數底板，第一次消除即計入全盤倍數和。 | AT THE START OF THE SPIN, {3} RANDOM POSITIONS RECEIVE A {5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45 OR 50} MULTIPLIER PLATE THAT COUNTS TOWARD THE BOARD MULTIPLIER SUM FROM THE FIRST WIN. |
 
 ---
 

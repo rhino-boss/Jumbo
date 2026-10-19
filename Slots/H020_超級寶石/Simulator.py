@@ -4,12 +4,13 @@
 玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶或權重。
 
 - ``config.js``：自然機率（R1～R3 輪帶與權重、賠率、5 線、各押注模式的 R4／重轉次數／重轉倍數權重）。
-- ``config_92A.js``／``config_94A.js``：卡片系統（Oldhand NB／EB1／EB2／SF、Newbie NB／EB1／EB2）。
+- ``config_92A.js``／``config_94A.js``／``config_96A.js``：Reskin 92／94／96 版的卡片系統（Oldhand、Newbie 各含 NB／EB1／EB2／SF）。
 - 押注模式：0 Normal Bet（1x）、1 Extra Bet 1（1.5x）、2 Extra Bet 2（8x）、3 Super Feature（250x，5 次 Spin）。
 - 卡片區間與 Multiplier Line 的倍率分母都是 Normal Bet 押注（贏分 ÷ base_bet），EB／SF 不除成本倍數；
   RTP、volatility_std 以實際成本計。
-- Oldhand 依押注層級自動選 Config（``CONFIG_RTP_FILE = "AUTO"``）：小 Bet（< $2）→ 94A，中／大 Bet → 92A；
-  本作不分中／大 Bet 權重。Newbie 權重 92A／94A 共用；SF 無 Newbie 權重，Newbie SF 沿用 Oldhand SF（兩版相同）。
+- Reskin 產線：不分押注層級，依版本選 Config（``CONFIG_RTP_FILE = "AUTO"`` → ``config_<RESKIN_VERSION>A.js``，
+  batch 可用 ``reskin_version`` 指定 92／94／96）；Newbie、Oldhand 用同一份 Config 內各自的卡片。
+  老手 Game RTP ＝ 版本 − 2%（Progressive 2% 由系統負責），新手 NB／EB 同老手、新手 SF ＝ 版本 RTP。
 - OP Jackpot 不在本程式模擬；``special_symbol_cnt`` 統計 R4 停在重轉球的 Spin 數（OP Jackpot 觸發來源）。
 
 Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/Omniplay/模擬程式規範.md``。
@@ -38,7 +39,8 @@ if hasattr(sys.stdout, "reconfigure"):
 
 RUN_ALL_COMBINATIONS = True
 CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "AUTO"  # AUTO：依押注層級選 92A／94A；也可指定 "config_92A.js"
+CONFIG_RTP_FILE = "AUTO"  # AUTO：依 RESKIN_VERSION 選 config_<版本>A.js；也可指定 "config_96A.js"
+RESKIN_VERSION = "96"  # Reskin 版本：92／94／96
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 2
 BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet 1, 2 = Extra Bet 2, 3 = Super Feature
@@ -51,21 +53,14 @@ _SF = dict(_NB, bet_mode=3)
 _NEW = {"card_system_is_newbie": True}
 
 BATCH_RUNS = [
-    # --- 1. 測試：Card System On，10^5（$1 → 94A 小 Bet，$2 → 92A 中 Bet）---
-    *[dict(m, total_rounds=10**5, card_system_enabled=True, base_bet=b) for m in (_NB, _E1, _E2) for b in (1, 2)],
-    *[dict(m, **_NEW, total_rounds=10**5, card_system_enabled=True, base_bet=2) for m in (_NB, _E1, _E2)],
-    dict(_SF, total_rounds=10**5, card_system_enabled=True, base_bet=2),
-    # --- 2. 自然機率：Card System Off（NB 10^9、SF 10^8；跑哪些 Bet Mode 需先與使用者確認）---
-    # *[dict(m, total_rounds=10**9, card_system_enabled=False, base_bet=2) for m in (_NB, _E1, _E2)],
-    # dict(_SF, total_rounds=10**8, card_system_enabled=False, base_bet=2),
-    # --- 3. SCR：Card System On，彩金關 ---
-    # *[dict(m, total_rounds=10**8, card_system_enabled=True, base_bet=b) for m in (_NB, _E1, _E2) for b in (1, 2)],
-    # *[dict(m, **_NEW, total_rounds=10**8, card_system_enabled=True, base_bet=2) for m in (_NB, _E1, _E2)],
-    # dict(_SF, total_rounds=10**7, card_system_enabled=True, base_bet=2),
-    # --- 4. 正式模擬：Card System On（含押注層級邊界 $1.99／$2／$100／$100.01）---
-    # *[dict(m, total_rounds=10**8, card_system_enabled=True, base_bet=b) for m in (_NB, _E1, _E2) for b in (1.99, 2, 100, 100.01)],
-    # *[dict(m, **_NEW, total_rounds=10**8, card_system_enabled=True, base_bet=2) for m in (_NB, _E1, _E2)],
-    # *[dict(_SF, total_rounds=10**7, card_system_enabled=True, base_bet=b) for b in (1, 2)],
+    # --- 1. 測試：Card System On，10^5（Reskin 96 版，新手／老手）---
+    *[dict(m, reskin_version="96", total_rounds=10**5, card_system_enabled=True, base_bet=2) for m in (_NB, _E1, _E2, _SF)],
+    *[dict(m, **_NEW, reskin_version="96", total_rounds=10**5, card_system_enabled=True, base_bet=2) for m in (_NB, _E1, _E2, _SF)],
+    # --- 2. 自然機率：Card System Off（NB／EB／SF 10^9）---
+    # *[dict(m, total_rounds=10**9, card_system_enabled=False, base_bet=2) for m in (_NB, _E1, _E2, _SF)],
+    # --- 3. 正式模擬：Card System On，92／94／96 × 新手／老手 × 四模式，各 10^8 ---
+    # *[dict(m, **p, reskin_version=v, total_rounds=10**8, card_system_enabled=True, base_bet=2)
+    #   for v in ("96", "94", "92") for p in ({}, _NEW) for m in (_NB, _E1, _E2, _SF)],
 ]
 WORKERS = max(1, min(24, os.cpu_count() or 1))
 OUTPUT_REPORT = True
@@ -117,9 +112,7 @@ def resolve_rtp_file(combo: dict[str, Any], tier: str) -> str:
     name = combo["config_rtp_file"]
     if name != "AUTO":
         return name
-    if combo["card_system_is_newbie"]:
-        return "config_92A.js"  # Newbie 權重 92A／94A 共用
-    return "config_94A.js" if tier == "small_bet" else "config_92A.js"
+    return f"config_{combo.get('reskin_version', RESKIN_VERSION)}A.js"  # Reskin 不分押注層級
 
 
 def _cum(weights: list[int]) -> np.ndarray:
@@ -408,7 +401,7 @@ def common_rows(res: dict[str, Any]) -> list[list[tuple[str, str]]]:
          ("feature_price_multiplier", f"{cost:g}" if is_sf else "n/a"),
          ("base_bet", f"{bet:.2f}"), ("bet_amount", f"{bet * cost:.2f}"),
          ("bet_tier_amount", f"{tier_amount:.2f}"), ("bet_tier", res["tier"]),
-         ("link_enabled", "false" if res["card_profile"] == "newbie" or res["tier"] == "small_bet" else "true"),
+         ("link_enabled", "false" if res["card_profile"] == "newbie" else "true"),
          ("max_multiplier_bg", "n/a" if is_sf else max_bg), ("max_multiplier_fg", max_bg if is_sf else "n/a"),
          ("coin_in", f"{res['coin_in']:,.2f}"), ("total_rounds", _int(rounds)),
          ("duration", f"{res['duration']:05.2f} sec")],
@@ -517,7 +510,7 @@ def report_filename(res: dict[str, Any]) -> str:
     if not res["card_on"]:
         return f"H0201_{str(res['base_version']).zfill(2)}_{stamp}_betmode{res['bet_mode']}_{rounds_tag}.xlsx"
     rtp_tag = f"{res['rtp_total'] * 100:.4f}".replace(".", "")[:4]
-    tail = "newbie" if res["card_profile"] == "newbie" else f"oldhand_{res['tier']}"
+    tail = res["card_profile"]  # Reskin 不分押注層級
     return (f"{res['rtp_game_id']}_{format_rtp_version_tag(res['math_version'])}_{stamp}_betmode{res['bet_mode']}"
             f"_{rounds_tag}_{rtp_tag}_{tail}.xlsx")
 

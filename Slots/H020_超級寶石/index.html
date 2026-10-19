@@ -450,10 +450,11 @@
       const entry = m && want && want !== m.current ? m.versions.find((v) => v.version === want) : null;
       window.H020_ACTIVE_VERSION = entry ? entry.version : (m ? m.current : null);
       const base = entry ? entry.base_config : "./config.js";
-      const c92 = entry ? entry.configs["92A"] : "./config_92A.js";
-      const c94 = entry ? entry.configs["94A"] : "./config_94A.js";
+      // 現行版本（Reskin）有 92A／94A／96A；舊版本只載入 manifest 列出的 Config
+      const cfgs = entry ? entry.configs : { "92A": "./config_92A.js", "94A": "./config_94A.js", "96A": "./config_96A.js" };
+      window.H020_RTP_CODES = Object.keys(cfgs);
       const bust = `?v=${window.H020_ACTIVE_VERSION || ""}-${Date.now()}`;
-      document.write(`<script src="${base}${bust}"><\/script><script src="${c92}${bust}"><\/script><script src="${c94}${bust}"><\/script>`);
+      document.write(`<script src="${base}${bust}"><\/script>` + Object.values(cfgs).map((src) => `<script src="${src}${bust}"><\/script>`).join(""));
     })();
   </script>
   <script>
@@ -471,7 +472,7 @@
 
   // ===== Config 載入與檢查（不得靜默使用舊值）=====
   const BASE = window.H020_CONFIG;
-  const RTP = { "92A": window.H020_CONFIG_92A, "94A": window.H020_CONFIG_94A };
+  const RTP = Object.fromEntries((window.H020_RTP_CODES || ["92A", "94A"]).map((code) => [code, window[`H020_CONFIG_${code}`]]));
   if (!BASE) fatal("config.js（window.H020_CONFIG）未載入");
   for (const [code, c] of Object.entries(RTP)) {
     if (!c) fatal(`config_${code}.js 未載入`);
@@ -630,7 +631,7 @@
   };
   const curBet = () => BET_LEVELS[state.betIndex];
   const costMult = (mode = state.mode) => PACK[mode].cost;
-  const configCode = () => $("demogameConfigSelect").value;   // base／92A／94A
+  const configCode = () => $("demogameConfigSelect").value;   // base／92A／94A／96A
   const cardOn = () => {
     const input = $("cardSystemInput");
     const on = input ? input.checked && !input.disabled : window.DEMOGAME_CARD_SYSTEM_ENABLED !== false;
@@ -1107,7 +1108,7 @@
     updateStats();
   }
 
-  // Setting：Version／Config（Base＝卡片關；92A／94A＝卡片開 Oldhand）
+  // Setting：Version／Config（Base＝卡片關；92A／94A／96A＝卡片開 Oldhand）
   const MANIFEST = window.H020_VERSION_MANIFEST;
   const versions = MANIFEST ? MANIFEST.versions.map((v) => v.version).reverse() : [RTP["92A"].excel_version];
   $("versionSelect").innerHTML = versions.map((v) => `<option value="${v}">${v}</option>`).join("");
@@ -1121,7 +1122,7 @@
   {
     let saved = null, code = null;
     try { saved = localStorage.getItem("slotDemoCardSystem"); code = localStorage.getItem("h020ConfigCode"); } catch (_) {}
-    $("demogameConfigSelect").value = saved === "off" ? "base" : (RTP[code] ? code : "92A");
+    $("demogameConfigSelect").value = saved === "off" ? "base" : (RTP[code] ? code : (RTP["96A"] ? "96A" : "92A"));
   }
   $("demogameConfigSelect").addEventListener("change", () => {
     const value = $("demogameConfigSelect").value, on = value !== "base";
