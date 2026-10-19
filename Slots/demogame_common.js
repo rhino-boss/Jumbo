@@ -2922,10 +2922,11 @@
   const free = ":not(.has-symbol-art):not(.convert):not(.wild-mark):not(.symbol-cleared):not(.empty):not(.symbol-empty):not(:has(> .tile))";
   // Help 賠率表的代號方格（沒圖時）與盤面同一套配色
   const base = `:is(body #board .cell[data-dg-sym]${free}, body #board .cell:not(.has-symbol-art) > .tile[data-dg-sym], body #helpDialog #helpContent .help-sym-tile[data-dg-sym]:not(.has-art))`;
-  const gold = `body #board .cell:is(.gold,.special-gold)${free}`;
+  // 金框格：保留符號原底色，只把外框換成金色（兩個 :not(#…) 只為提高優先權）
+  const gold = `body #board .cell:is(.gold,.special-gold)${free}:not(#dg-g1):not(#dg-g2)`;
   const label = `:is(${LABEL})`;
   // M 獎：同亮度、不同色相的低彩度漸層，字獎深藍；上緣一條淡高光，整體與金框同一套質感
-  const tone = (code, top, bottom, border) => `${base}[data-dg-sym="${code}"]:not(.gold):not(.special-gold){background:linear-gradient(180deg,${top} 0%,${bottom} 100%)!important;border-color:${border}!important}`;
+  const tone = (code, top, bottom, border) => `${base}[data-dg-sym="${code}"]{background:linear-gradient(180deg,${top} 0%,${bottom} 100%)!important;border-color:${border}!important}`;
   const style = document.createElement("style");
   style.textContent = `${base}{background:linear-gradient(180deg,#0c1828 0%,#060d1a 100%)!important;border:1.6px solid rgba(70,120,170,.42)!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;color:#d8e8f4!important}
     ${tone("M1", "#5b2733", "#33141c", "#9c5664")}
@@ -2936,17 +2937,18 @@
     ${tone("M6", "#5a2f50", "#321a2d", "#a0628f")}
     ${tone("M7", "#5a4024", "#322312", "#a07a50")}
     ${tone("M8", "#3f4a2a", "#232a16", "#7f8f55")}
-    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]):not(.gold):not(.special-gold){background:linear-gradient(180deg,#ffc58a 0%,#f07a28 45%,#a8400c 100%)!important;border:1.6px solid #ffa860!important;box-shadow:inset 0 1px 0 rgba(255,240,220,.55)!important;color:#fff6ee!important}
-    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]):not(.gold):not(.special-gold) ${label}{text-shadow:0 1px 2px rgba(80,25,0,.6)!important}
-    ${base}:is([data-dg-sym^="W"]):not(.gold):not(.special-gold){background:linear-gradient(180deg,#22706a 0%,#0f3d3a 100%)!important;border-color:#3fd6c4!important;color:#d6fff8!important}
-    ${gold}{background:linear-gradient(180deg,#f8dc8c 0%,#e2ac44 45%,#b67a16 100%)!important;border:1.6px solid #f1c35a!important;border-radius:8px!important;box-shadow:inset 0 1px 0 rgba(255,250,220,.55)!important;color:#fff6de!important}
-    ${gold} ${label}{color:inherit!important;text-shadow:0 1px 2px rgba(60,30,0,.55)!important}
-    :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:21px!important;line-height:1!important}
+    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]){background:linear-gradient(180deg,#ffc58a 0%,#f07a28 45%,#a8400c 100%)!important;border:1.6px solid #ffa860!important;box-shadow:inset 0 1px 0 rgba(255,240,220,.55)!important;color:#fff6ee!important}
+    ${base}:is([data-dg-sym^="C"],[data-dg-sym="SC"]) ${label}{text-shadow:0 1px 2px rgba(80,25,0,.6)!important}
+    ${base}:is([data-dg-sym^="W"]){background:linear-gradient(180deg,#22706a 0%,#0f3d3a 100%)!important;border-color:#3fd6c4!important;color:#d6fff8!important}
+    ${gold}{border:1.6px solid #f1c35a!important;box-shadow:inset 0 0 0 1px rgba(241,195,90,.3)!important}
+    :is(${base},${gold}):not(.sym-digit) ${label}{font-family:Consolas,"Courier New",monospace!important;font-weight:400!important;font-size:19px!important;line-height:1!important;margin:0!important;padding:0!important;background:transparent!important;box-shadow:none!important;border:0!important;text-align:center!important}
+    ${base}:not(.sym-digit):not(:has(> .tile)){display:grid!important;place-items:center!important}
+    ${base}:not(.sym-digit) > .symbol-wrap{display:grid!important;place-items:center!important}
     ${base}:not(.sym-digit) ${label}{color:inherit!important;text-shadow:none!important}`;
   document.head.appendChild(style);
 })();
 
-// 得分符號只換外框顏色框起來（共用，2026-10-17）：不放大、不閃、不跳，各遊戲原本的中獎動畫一律停掉；
+// 得分符號只換外框顏色（藍框，2026-10-19 由金黃改藍）框起來（共用，2026-10-17）：不放大、不閃、不跳，各遊戲原本的中獎動畫一律停掉；
 // 消除（symbol-cleared）與掉落動畫不受影響。
 (() => {
   "use strict";
@@ -2955,12 +2957,13 @@
   const hit = "body #board .cell:is(.hit,.fx-win,.h014-hit,.h020-hit):not(.symbol-cleared):not(.sym-mult):not(.reel.r4 .cell):not(#dg-x):not(#dg-y)";
   const style = document.createElement("style");
   style.textContent = `${hit},${hit} *{animation:none!important;transform:none!important;filter:none!important;transition:none!important}
-    ${hit}{border:1.6px solid #ffe27a!important;outline:0!important;box-shadow:0 0 8px rgba(255,214,90,.45)!important;z-index:5}
+    ${hit}{border:1.6px solid #4fc3ff!important;outline:0!important;box-shadow:0 0 8px rgba(79,195,255,.45)!important;z-index:5}
+    ${hit}:is(.gold,.special-gold){border-color:#f1c35a!important;box-shadow:0 0 0 2px #4fc3ff,0 0 8px rgba(79,195,255,.45)!important}
     ${hit}::before,${hit}::after{box-shadow:none!important;border-color:transparent!important}
     body #board :is(.reel.r4 .cell,.cell.sym-mult):is(.hit,.h020-hit)::after{display:none!important}
     body #board :is(.reel.r4 .cell,.cell.sym-mult):is(.hit,.h020-hit) *{animation:none!important;filter:none!important}
     ${hit}:has(> .tile){border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important}
-    ${hit} > .tile{border:1.6px solid #ffe27a!important;box-shadow:0 0 8px rgba(255,214,90,.45)!important}`;
+    ${hit} > .tile{border:1.6px solid #4fc3ff!important;box-shadow:0 0 8px rgba(79,195,255,.45)!important}`;
   document.head.appendChild(style);
 })();
 

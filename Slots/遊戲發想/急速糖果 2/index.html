@@ -69,8 +69,8 @@
     }
     /* 計分群集：比共用 1.6px 細框更顯眼的亮金粗框（連帶消除的同符號不加框，只是不壓暗）。
        沿用共用「得分符號不放大、不閃」：只加粗框與光暈，不加動畫。 */
-    /* #board 重複三次：權重要高過共用無圖符號配色（其 :is(...) 取最高權重的參數，含 2 個 id） */
-    body.tc2 #board#board#board .cell.fx-win:not(.symbol-cleared) {
+    /* #board 重複四次：權重要高過共用無圖符號配色與共用得分外框（後者含 #board＋兩個 :not(#…)，共 3 個 id） */
+    body.tc2 #board#board#board#board .cell.fx-win:not(.symbol-cleared) {
       border: 3px solid #ffd84a !important;
       box-shadow: 0 0 14px rgba(255, 216, 74, 0.9), inset 0 0 10px rgba(255, 216, 74, 0.5) !important;
     }
@@ -1526,7 +1526,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-16 18:11";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../demogame_common.js?v=20261019d"></script>
+  <script src="../../demogame_common.js?v=20261019e"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 
