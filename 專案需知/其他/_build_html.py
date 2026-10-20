@@ -113,10 +113,8 @@ PRODUCT_LINES = [
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
 ]
 # 產線站直接沿用 Omniplay 的文件（不另寫 md）：{產線資料夾: [Omniplay tab_id...]}
-SHARED_TABS = {
-    "Reskin": ["mechanism", "ceiling", "script", "stress", "backend"],   # 系統相關同 Omniplay
-    "Landbase": ["ceiling", "script", "stress", "backend"],              # 系統機制用 Landbase 自己的，其餘同 Omniplay
-}
+# 目前不共用：各產線只放自己的文件與數值（三站分屬不同團隊，不得看到彼此的設定）
+SHARED_TABS = {}
 
 # 產線資料夾的 md（檔名）歸入與 Omniplay 相同的頁籤大分類，標題、icon、顏色、順序三站一致
 LINE_GROUP_OF = {
@@ -505,9 +503,18 @@ def line_tabs(folder: Path):
     """列出產線資料夾的 md，依所屬大分類在 GROUPS 的順序排列，其餘依檔名。"""
     mds = [p for p in folder.glob("*.md") if not p.name.startswith("_")]
 
+    # 同大分類內照 Omniplay 的文件順序（以頁籤名稱或檔名比對，例：系統機制、天花板說明、腳本規範…）
+    member = []
+    for _g, ids in GROUPS + DEV_GROUPS:
+        for i in ids:
+            for t, title, f in TABS:
+                if t == i:
+                    member += [title, Path(f).stem]
+
     def key(p):
         g = LINE_GROUP_OF.get(p.stem)
-        return (GROUP_ORDER.index(g) if g in GROUP_ORDER else 99, p.stem)
+        return (GROUP_ORDER.index(g) if g in GROUP_ORDER else 99,
+                member.index(p.stem) if p.stem in member else 99, p.stem)
 
     return [(tab_id_for(p.stem), p.stem, p.name) for p in sorted(mds, key=key)]
 
