@@ -24,4 +24,3 @@
 
 - 兩幣別共用同一張 44 組 Bet Multiplier，只有 Denom 不同；押注清單見[數學模型規範](數學模型規範.md)第 2 節。
 - 兩幣別是否共用同一套 RTP、Card System 與彩金資格尚待確認，確認前使用相同數學。
-- 其他產線見 [Omniplay Knowhow](../Omniplay/Knowhow.md)。
