@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin），
-再產生最外層入口 igaming_specification.html 切換三站。
+"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin）與「開發需知」網頁，
+再產生最外層入口 igaming_specification.html 切換。
 
-本腳本放在 專案需知/其他/；三產線的 md 與網頁各在 Omniplay/、Landbase/、Reskin/，入口在 專案需知/ 最外層。
+本腳本放在 專案需知/其他/；三產線的 md 與網頁各在 Omniplay/、Landbase/、Reskin/；
+開發流程類文件的 md 在 開發需知/，網頁輸出為 專案需知/開發需知.html；入口在 專案需知/ 最外層。
 
 用法（在 其他/ 內執行）：
     py _build_html.py
@@ -22,20 +23,24 @@ HERE = Path(__file__).parent.parent  # 專案需知/
 # Omniplay 規範 md 與網頁都在 Omniplay/ 資料夾（與 Landbase/、Reskin/ 並列）
 OMNI_DIR = "Omniplay"
 OMNI_FILE = "omniplay_specification.html"
-HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線切換
+HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋開發需知切換
+# 開發需知：開發流程、提案、數學文件、模擬程式、Demogame（md 在 開發需知/，網頁在 專案需知/ 最外層）
+DEV_TITLE = "開發需知"
+DEV_FILE = "開發需知.html"
+DEV_TAB_IDS = ["flow", "proposal", "docs", "sim", "demo"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
     ("overview", "總覽", "其他/_README.md"),
     ("knowhow", "Knowhow", "Omniplay/Knowhow.md"),
-    ("flow", "開發流程", "Omniplay/開發流程.md"),
+    ("flow", "開發流程", "開發需知/開發流程.md"),
     ("math", "數學模型規範", "Omniplay/數學模型規範.md"),
-    ("docs", "數學文件規範", "Omniplay/數學文件規範.md"),
+    ("docs", "數學文件規範", "開發需知/數學文件規範.md"),
     ("submission", "送驗文件規範", "Omniplay/送驗文件規範.md"),
-    ("sim", "模擬程式規範", "Omniplay/模擬程式規範.md"),
-    ("demo", "Demogame規範", "Omniplay/Demogame規範.md"),
+    ("sim", "模擬程式規範", "開發需知/模擬程式規範.md"),
+    ("demo", "Demogame規範", "開發需知/Demogame規範.md"),
     ("script", "腳本規範", "Omniplay/腳本規範.md"),
-    ("proposal", "提案報告規範", "Omniplay/提案報告規範.md"),
+    ("proposal", "提案報告規範", "開發需知/提案報告規範.md"),
     ("stress", "壓測說明書", "Omniplay/壓測說明書.md"),
     ("backend", "後端報表筆記", "Omniplay/後端報表筆記.md"),
     ("ceiling", "天花板說明", "Omniplay/天花板說明.md"),
@@ -47,12 +52,15 @@ TABS = [
 GROUPS = [
     ("總覽", ["overview"]),
     ("Knowhow", ["knowhow"]),
+    ("系統相關", ["mechanism", "ceiling", "script", "stress", "backend"]),
+    ("數學設計", ["math"]),
+    ("送驗相關", ["submission"]),
+]
+# 開發需知網頁的頁籤分組
+DEV_GROUPS = [
     ("開發流程", ["flow"]),
     ("提案", ["proposal"]),
-    ("數學設計", ["math"]),
     ("數學文件", ["docs"]),
-    ("送驗相關", ["submission"]),
-    ("系統相關", ["mechanism", "ceiling", "script", "stress", "backend"]),
     ("模擬程式＋Demogame", ["sim", "demo"]),
 ]
 
@@ -115,11 +123,11 @@ TEAM_TAB_IDS = ["overview", "knowhow", "math", "docs", "submission", "mechanism"
 TEAM_GROUPS = [
     ("總覽", ["overview"]),
     ("Knowhow", ["knowhow"]),
-    ("數學設計", ["math"]),
-    ("數學文件", ["docs"]),
-    ("送驗相關", ["submission"]),
     ("系統相關", ["mechanism", "ceiling", "script", "stress"]),
+    ("數學設計", ["math"]),
+    ("送驗相關", ["submission"]),
 ]
+TEAM_DEV_GROUPS = [("數學文件", ["docs"])]
 TEAM_README = "其他/_README_team.md"          # 團隊版總覽，發佈時改名為 其他/_README.md
 TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
 PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文件的 .md 連結只留文字
@@ -480,7 +488,7 @@ def tab_id_for(stem: str) -> str:
     return re.sub(r"[^\w\-]", "-", stem.lower()) or "doc"
 
 
-GROUP_ORDER = [g for g, _ids in GROUPS]
+GROUP_ORDER = [g for g, _ids in GROUPS + DEV_GROUPS]
 
 
 def line_tabs(folder: Path):
@@ -917,17 +925,22 @@ show();
     print(f"OK: {rel_to_tree(out)} 已更新（{out.stat().st_size:,} bytes）")
 
 
-def build_tree(root: Path, tabs, groups):
-    """建置一整套：Omniplay／各產線網頁（文件互連）＋ 最外層入口。"""
+def build_tree(root: Path, tabs, groups, dev_groups):
+    """建置一整套：Omniplay／各產線／開發需知網頁（文件互連）＋ 最外層入口。"""
     global TREE_ROOT, LOCAL_ONLY
     TREE_ROOT = root
+    omni_tabs = [t for t in tabs if t[0] not in DEV_TAB_IDS]
+    dev_tabs = [t for t in tabs if t[0] in DEV_TAB_IDS]
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
-    sites = [("omniplay", "Omniplay", root, tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, groups)]
+    sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, groups)]
     for folder, out_name, site_title in PRODUCT_LINES:
         line = line_tabs(root / folder)
         if line:
             sites.append((folder.lower(), folder, root / folder, line, root / folder / out_name, site_title,
                           line_groups(line)))
+    local_only = {key for key, *_ in sites[1:]}   # 產線站只連站內
+    if dev_tabs:
+        sites.append(("dev", DEV_TITLE, root, dev_tabs, root / DEV_FILE, DEV_TITLE, dev_groups))
 
     docs = {}   # 規範 md（相對 root）→ (站台序號, tab_id)
     for i, site in enumerate(sites):
@@ -942,7 +955,7 @@ def build_tree(root: Path, tabs, groups):
             else:
                 href = Path(os.path.relpath(sites[j][4], output.parent)).as_posix()
                 links[doc] = ("ext", f"{href}#{tab_id}")
-        LOCAL_ONLY = i > 0
+        LOCAL_ONLY = _key in local_only
         try:
             build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
         finally:
@@ -976,13 +989,13 @@ def publish_team():
     print(f"團隊版：已複製 {len(files) + 1} 份到 {TEAM_DIR}")
     PLAIN_UNKNOWN_MD = True
     try:
-        build_tree(TEAM_DIR, tabs, TEAM_GROUPS)
+        build_tree(TEAM_DIR, tabs, TEAM_GROUPS, TEAM_DEV_GROUPS)
     finally:
         PLAIN_UNKNOWN_MD = False
 
 
 def build():
-    build_tree(HERE, TABS, GROUPS)
+    build_tree(HERE, TABS, GROUPS, DEV_GROUPS)
     publish_team()
 
 

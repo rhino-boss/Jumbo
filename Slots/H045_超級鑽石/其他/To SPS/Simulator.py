@@ -5,7 +5,7 @@
 再乘 Cascade Multiplier（5 階）。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式
 內重複維護輪帶、權重、Paytable 或 Feature 參數。
 
-Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/Omniplay/模擬程式規範.md``。
+Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發需知/模擬程式規範.md``。
 """
 
 from __future__ import annotations

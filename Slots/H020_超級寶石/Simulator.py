@@ -10,10 +10,11 @@
   RTP、volatility_std 以實際成本計。
 - Reskin 產線：不分押注層級，依版本選 Config（``CONFIG_RTP_FILE = "AUTO"`` → ``config_<RESKIN_VERSION>A.js``，
   batch 可用 ``reskin_version`` 指定 92／94／96）；Newbie、Oldhand 用同一份 Config 內各自的卡片。
-  老手 Game RTP ＝ 版本 − 2%（Progressive 2% 由系統負責），新手 NB／EB 同老手、新手 SF ＝ 版本 RTP。
+  OP 轉製（Reskin 數學模型規範 §3.1.2）：卡片只負責 Game RTP ＝ 版本 − 4%（新手、老手、各模式相同）；
+  Bonus（OP Jackpot Minor／Mini）與 Progressive 由系統負責，不在本程式模擬。
 - OP Jackpot 不在本程式模擬；``special_symbol_cnt`` 統計 R4 停在重轉球的 Spin 數（OP Jackpot 觸發來源）。
 
-Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/Omniplay/模擬程式規範.md``。
+Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發需知/模擬程式規範.md``。
 """
 
 from __future__ import annotations
