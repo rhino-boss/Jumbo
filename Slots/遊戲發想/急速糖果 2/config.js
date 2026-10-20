@@ -45,9 +45,9 @@ const data = {
     fg_reset: "per_session"             // FG 整場保留
   },
 
-  // 同符號連帶消除：中獎 Cluster 成立時，盤面上其餘同符號一併消除；只以 Cluster 本身計分，
-  // 連帶消除的格子不計分、位置倍數也不 +1。同段同符號多組 Cluster 時每組各自計分。
-  same_symbol_clear: true,
+  // 同符號連帶消除：已移除（2026-10-20 提案後決定）。只消除成立的 Cluster；
+  // 連帶消除的格子不累積倍數框，玩家容易疑惑。同段同符號多組 Cluster 仍各自計分。
+  same_symbol_clear: false,
 
   // FG：最終盤面 C1 數量 → 局數；retrigger 同表
   fg_awards: { "3": 10, "4": 15, "5": 20 },   // 5×5 每輪最多 1 顆 C1 → 最多 5 顆，無 6/7 檔
