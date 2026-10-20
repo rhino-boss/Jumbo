@@ -313,7 +313,7 @@ R4 權重（92A／94A 相同）：
 | 2 | Super Feature 次數 | 模型與企劃書英文 5 次；SVN 舊 Python／GameSpec 10 次 | 5 次 |
 | 3 | Super Feature R2／R3 中央固定 WW | 只出現在 SVN 舊 Python／GameSpec | 不固定 |
 | 4 | Super Feature 倍數下限 | 企劃書中文「至少 20 倍」；模型 R4 有 2X～15X | 照模型 |
-| 5 | 94A 的 Super Feature RTP | 94A 卡片 SF 段 92.5% | 維持 92.5%（數學模型規範 §1.4.2：BF／SF Game RTP 一律 92.50%） |
+| 5 | 94A 的 Super Feature RTP | 94A 卡片 SF 段 92.5% | 維持 92.5%（數學模型規範 §1.5.2：BF／SF Game RTP 一律 92.50%） |
 | 6 | 最大倍數 | Game List 2,000x；卡片上限 NB／EB1 2,000x、EB2 2,500x、SF 80x | 以卡片為準 |
 | 7 | 卡片重轉上限 | SVN Python 10,000 次；模型 `Fixed Game` 欄 3,000 | 10,000 次 |
 | 8 | Oldhand 押注層級 | 模型只有一組 Oldhand 權重 | 不分小／中／大 Bet；`(bet100)` 等試算頁不使用 |
