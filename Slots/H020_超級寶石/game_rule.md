@@ -1,6 +1,6 @@
 # 超級寶石 (Super Gems) 遊戲規則說明
 
-> 文件版本：v0.3（2.0.0.0：Super Feature 停輪權重、R4 權重與每次重轉倍數權重調整，規則不變）
+> 文件版本：v0.4（2.2.1.0：轉 Reskin 產線，92／94／96 三版卡片與 SCR，規則不變）
 > 對標競品：JILI Fortune Gems 500
 > 撰寫日期：2026-10-15
 > 來源：SVN `Slot/IGaming/H020`（H020192／H020194，1.0.1.3）、企劃書 `其他/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx`
@@ -27,7 +27,7 @@
 | --- | --- |
 | 遊戲名稱（內部代號） | 超級寶石（H020） |
 | Game ID | 101007 |
-| PARsheet ID | H020192A（92%）、H020194A（94%） |
+| PARsheet ID | H020192A、H020194A、H020196A（Reskin 92／94／96 版） |
 | 遊戲中文名稱 | 超級寶石 |
 | 遊戲英文名 | Super Gems |
 | 遊戲類型 | Video Slot - 5 Lines / Feature Reel / Respin / OP Jackpot |
@@ -39,8 +39,8 @@
 
 | 項目 | 說明 |
 | --- | --- |
-| RTP | 92%（H020192A，彩金版）、94%（H020194A，無彩金版） |
-| 數學版本 | 2.0.0.0（1.0.1.3 自 SVN 搬入；2.0.0.0 只改 Super Feature 停輪權重、R4 權重與每次重轉倍數權重） |
+| RTP | Reskin 92／94／96 版（Total (+機制)）；卡片負責的 Game RTP 見 §5.3，Bonus（OP Jackpot Minor／Mini）、Progressive、機制由系統負責（Reskin 數學模型規範 §3.1.2） |
+| 數學版本 | 2.2.1.0（1.0.1.3 自 SVN 搬入；2.0.0.0 調 Super Feature；2.1.0.0 轉 Reskin 三版卡片；2.2.0.0 老手 NB／EB Game 降 1%；2.2.1.0 填 SCR） |
 | 彩金 | OP Jackpot 四階（Grand / Major 連機累進，Minor / Mini 紅利），見 §5.4 |
 | 最大倍數 | 卡片上限：NB 2,000x、EB1 2,000x、EB2 2,500x、SF 80x（以押注金額計，以卡片為準） |
 
@@ -212,8 +212,8 @@ R4 權重（92A／94A 相同）：
 - 區間共 58 段：(−1, 0]、(0, 1]、(1, 2] … (950, 1000]、(1000, 2000] … (30000, 100000]、(100000, 999999]。
 - Super Feature 以 5 次 Spin 的總贏分判斷區間（§8.2）。
 - 權重表：
-  - Oldhand：`Multiplier Weight` 工作表（NB／EB1／EB2／SF 四段，92A 目標 92%、94A 目標 94%；SF 92.5%，兩版相同）。SF 只給自然機率 ≥ 0.1% 的區間（避免 Retry 超限）。
-  - Newbie：`Multiplier Weight (new_player)` 工作表（NB／EB1／EB2，目標 93%；SF 不分 Newbie）。
+  - Oldhand：`Multiplier Weight` 工作表（NB／EB1／EB2／SF 四段）。Game RTP 目標：NB／EB1／EB2 為版本 − 5%（96／94／92 → 91／89／87%），SF 為版本 − 4%（92／90／88%）。自然機率 < 0.05%（SF < 0.1%）的區間不給權重。
+  - Newbie：`Multiplier Weight (new_player)` 工作表（NB／EB1／EB2／SF 四段），Game RTP 目標皆為版本 − 4%（92／90／88%）。不分押注層級。
 
 ### 5.4 OP Jackpot
 
@@ -313,7 +313,7 @@ R4 權重（92A／94A 相同）：
 | 2 | Super Feature 次數 | 模型與企劃書英文 5 次；SVN 舊 Python／GameSpec 10 次 | 5 次 |
 | 3 | Super Feature R2／R3 中央固定 WW | 只出現在 SVN 舊 Python／GameSpec | 不固定 |
 | 4 | Super Feature 倍數下限 | 企劃書中文「至少 20 倍」；模型 R4 有 2X～15X | 照模型 |
-| 5 | 94A 的 Super Feature RTP | 94A 卡片 SF 段 92.5% | 維持 92.5%（數學模型規範 §1.5.2：BF／SF Game RTP 一律 92.50%） |
+| 5 | 94A 的 Super Feature RTP | 94A 卡片 SF 段 92.5% | 2026-10-20 改 Reskin：SF Game ＝ 版本 − 4%（92／90／88%） |
 | 6 | 最大倍數 | Game List 2,000x；卡片上限 NB／EB1 2,000x、EB2 2,500x、SF 80x | 以卡片為準 |
 | 7 | 卡片重轉上限 | SVN Python 10,000 次；模型 `Fixed Game` 欄 3,000 | 10,000 次 |
-| 8 | Oldhand 押注層級 | 模型只有一組 Oldhand 權重 | 不分小／中／大 Bet；`(bet100)` 等試算頁不使用 |
+| 8 | Oldhand 押注層級 | 模型只有一組 Oldhand 權重 | 不分押注層級（Reskin 亦不分）；`(bet100)` 等試算頁不使用 |

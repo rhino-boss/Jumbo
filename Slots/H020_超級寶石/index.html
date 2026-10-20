@@ -206,6 +206,13 @@
       <div class="diagnostic-header">修改紀錄</div>
       <div id="changeLogBody">
         <article class="change-log-entry">
+          <h4>v2（2.2.1.0）</h4>
+          <ol>
+            <li>數學 2.1.0.0 → 2.2.1.0：轉 Reskin 產線（OP 轉製），Config 改為 92A／94A／96A 三版（卡片 Game 88／90／92%，老手 NB／EB 87／89／91%），新手 SF 有獨立卡片；2.2.1.0 補 SCR。Config 選單新增 96A，預設 96A；Version 可切換 2.2.1.0／2.2.0.0／2.1.0.0／2.0.0.0／1.0.1.3。頁尾最後調性更新 2026-10-20 16:59。（10/20）</li>
+            <li>新增數值報告按鈕：<code>其他/數值報告_超級寶石.html</code>（本作 92／94／96 對前作 1.0.1.3）。（10/20）</li>
+          </ol>
+        </article>
+        <article class="change-log-entry">
           <h4>v2（2.0.0.0）</h4>
           <ol>
             <li>數學 2.0.0.0（只改 Super Feature：停輪權重依可視 3 格的 WW 數分類：有 WW 的機率 R1 35%、R2／R3 55%，1 格：2 格：3 格全 WW = 30：25：10；R4 重轉球 73,000,000、R4 與每次重轉倍數權重往小倍數移；輪帶不變）：Card-On 每轉 Hit 26.8% → 45.2%、每轉重轉 16.0% → 12.7%、重轉每次 ×12.7 → ×7.0、沒重轉時 ×25.5 → ×9.9，最大獎仍可到 (10000, 20000]。Demo 直接讀新 Config，程式未改；Version 可切換 2.0.0.0／1.0.1.3；頁尾最後調性更新 2026-10-19 14:41。（10/19）</li>
@@ -1186,8 +1193,9 @@
   window.addEventListener("DOMContentLoaded", () => liveLog(`Config ${configLabel()} loaded | Version ${RTP["92A"].excel_version} | Card System ${cardOn() ? "On" : "Off"}`, "result"), { once: true });
 })();
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-19 14:41";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-20 16:59";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
+  <script>window.DEMOGAME_REPORT_URL = "./其他/數值報告_超級寶石.html";</script>
   <script src="../demogame_common.js?v=20261019o"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
