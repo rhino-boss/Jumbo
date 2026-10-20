@@ -1021,9 +1021,41 @@ def publish_team():
         PLAIN_UNKNOWN_MD = False
 
 
+# SVN 說明書：外團隊用的規範 md（使用者上傳 SVN 後分別開權限）。
+# 每個子資料夾依其 數學模型規範.md 的標題判斷是哪條產線；只更新資料夾內「已經有的」檔案，
+# 不自動新增（放哪些檔給外團隊由使用者決定），新出現的規範只列出提醒。
+SVN_DIR = Path(r"D:\SVN\Slot\IGaming\說明書")
+
+
+def sync_svn():
+    import shutil
+    if not SVN_DIR.exists():
+        print(f"略過 SVN 說明書：找不到 {SVN_DIR}")
+        return
+    for target in sorted(d for d in SVN_DIR.iterdir() if d.is_dir() and not d.name.startswith(".")):
+        probe = target / "數學模型規範.md"
+        title = probe.read_text(encoding="utf-8").split("\n", 1)[0] if probe.exists() else ""
+        line = next((f for f, _o, _t in PRODUCT_LINES if f in title), None)
+        if not line:
+            print(f"略過 SVN 說明書／{target.name}：判斷不出產線")
+            continue
+        src = HERE / SPEC_DIR / line
+        updated = []
+        for f in sorted(target.glob("*.md")):
+            if (src / f.name).exists() and (src / f.name).read_bytes() != f.read_bytes():
+                shutil.copy2(src / f.name, f)
+                updated.append(f.name)
+        extra = sorted(p.name for p in src.glob("*.md")
+                       if not p.name.startswith("_") and not (target / p.name).exists())
+        print(f"SVN 說明書／{target.name}（{line}）：更新 {len(updated)} 份"
+              + (f"：{'、'.join(updated)}" if updated else "")
+              + (f"；未放入的規範：{'、'.join(extra)}" if extra else ""))
+
+
 def build():
     build_tree(HERE, TABS, GROUPS, DEV_GROUPS)
     publish_team()
+    sync_svn()
 
 
 if __name__ == "__main__":
