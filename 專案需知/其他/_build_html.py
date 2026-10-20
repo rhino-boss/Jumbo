@@ -3,7 +3,7 @@
 再產生最外層入口 igaming_specification.html 切換。
 
 本腳本放在 專案需知/其他/；三產線的 md 與網頁各在 Omniplay/、Landbase/、Reskin/；
-開發流程類文件的 md 在 開發需知/，網頁輸出為 專案需知/開發需知.html；入口在 專案需知/ 最外層。
+開發流程類文件的 md 與網頁（開發需知.html）都在 開發需知/；入口在 專案需知/ 最外層。
 
 用法（在 其他/ 內執行）：
     py _build_html.py
@@ -21,36 +21,39 @@ from pathlib import Path
 
 HERE = Path(__file__).parent.parent  # 專案需知/
 # Omniplay 規範 md 與網頁都在 Omniplay/ 資料夾（與 Landbase/、Reskin/ 並列）
-OMNI_DIR = "Omniplay"
+SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料夾的上層
+OMNI_DIR = f"{SPEC_DIR}/Omniplay"
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋開發需知切換
-# 開發需知：開發流程、提案、數學文件、模擬程式、Demogame（md 在 開發需知/，網頁在 專案需知/ 最外層）
+# 開發需知：開發流程、提案、數學文件、模擬程式、Demogame（md 與網頁都在 開發需知/）
 DEV_TITLE = "開發需知"
+DEV_DIR = "開發需知"
 DEV_FILE = "開發需知.html"
-DEV_TAB_IDS = ["flow", "proposal", "docs", "sim", "demo"]
+DEV_TAB_IDS = ["overview", "flow", "proposal", "docs", "sim", "demo"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
+    ("guide", "總覽", "開發規範/Omniplay/導覽.md"),
     ("overview", "總覽", "其他/_README.md"),
-    ("knowhow", "Knowhow", "Omniplay/Knowhow.md"),
+    ("knowhow", "Knowhow", "開發規範/Omniplay/Knowhow.md"),
     ("flow", "開發流程", "開發需知/開發流程.md"),
-    ("math", "數學模型規範", "Omniplay/數學模型規範.md"),
+    ("math", "數學模型規範", "開發規範/Omniplay/數學模型規範.md"),
     ("docs", "數學文件規範", "開發需知/數學文件規範.md"),
-    ("submission", "送驗文件規範", "Omniplay/送驗文件規範.md"),
+    ("submission", "送驗文件規範", "開發規範/Omniplay/送驗文件規範.md"),
     ("sim", "模擬程式規範", "開發需知/模擬程式規範.md"),
     ("demo", "Demogame規範", "開發需知/Demogame規範.md"),
-    ("script", "腳本規範", "Omniplay/腳本規範.md"),
+    ("script", "腳本規範", "開發規範/Omniplay/腳本規範.md"),
     ("proposal", "提案報告規範", "開發需知/提案報告規範.md"),
-    ("stress", "壓測說明書", "Omniplay/壓測說明書.md"),
-    ("backend", "後端報表筆記", "Omniplay/後端報表筆記.md"),
-    ("ceiling", "天花板說明", "Omniplay/天花板說明.md"),
-    ("mechanism", "系統機制", "Omniplay/機制說明.md"),
+    ("stress", "壓測說明書", "開發規範/Omniplay/壓測說明書.md"),
+    ("backend", "後端報表", "開發規範/Omniplay/後端報表.md"),
+    ("ceiling", "天花板說明", "開發規範/Omniplay/天花板說明.md"),
+    ("mechanism", "系統機制", "開發規範/Omniplay/機制說明.md"),
 ]
 
 # 根 HTML 的頁籤分組：(大分類, [tab_id...])。一類多份文件時，左側導覽先列文件名。
 # 新增文件時要同時加進 TABS 與這裡，漏加會在建置時報錯。
 GROUPS = [
-    ("總覽", ["overview"]),
+    ("總覽", ["guide"]),
     ("Knowhow", ["knowhow"]),
     ("系統相關", ["mechanism", "ceiling", "script", "stress", "backend"]),
     ("數學設計", ["math"]),
@@ -58,6 +61,7 @@ GROUPS = [
 ]
 # 開發需知網頁的頁籤分組
 DEV_GROUPS = [
+    ("總覽", ["overview"]),
     ("開發流程", ["flow"]),
     ("提案", ["proposal"]),
     ("數學文件", ["docs"]),
@@ -67,7 +71,7 @@ DEV_GROUPS = [
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
 _SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
         'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{}</svg>')
-HIGHLIGHT_GROUPS = {"數學設計", "系統相關"}
+HIGHLIGHT_GROUPS: set[str] = set()  # 頁籤不另標顏色（2026-10-20 使用者指示）
 GROUP_ICONS = {
     # 總覽：首頁
     "總覽": _SVG.format('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'),
@@ -108,26 +112,31 @@ PRODUCT_LINES = [
     ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
     ("Reskin", "reskin_specification.html", "Reskin 開發規範"),
 ]
+# 產線站直接沿用 Omniplay 的文件（不另寫 md）：{產線資料夾: [Omniplay tab_id...]}
+SHARED_TABS = {
+    "Reskin": ["mechanism", "ceiling", "script", "stress", "backend"],   # 系統相關同 Omniplay
+}
+
 # 產線資料夾的 md（檔名）歸入與 Omniplay 相同的頁籤大分類，標題、icon、顏色、順序三站一致
 LINE_GROUP_OF = {
     "導覽": "總覽", "Knowhow": "Knowhow", "開發流程": "開發流程", "提案報告規範": "提案",
     "數學模型規範": "數學設計", "數學文件規範": "數學文件", "送驗文件規範": "送驗相關", "送驗規範": "送驗相關",
     "系統機制": "系統相關", "機制說明": "系統相關", "天花板說明": "系統相關", "腳本規範": "系統相關",
-    "壓測說明書": "系統相關", "後端報表筆記": "系統相關", "模擬程式規範": "模擬程式＋Demogame",
+    "壓測說明書": "系統相關", "後端報表": "系統相關", "模擬程式規範": "模擬程式＋Demogame",
     "Demogame規範": "模擬程式＋Demogame",
 }
 
 # 團隊版：只放給所有數學 follow 的規範，發佈到共享資料夾（個人文件不外放）
 TEAM_DIR = Path(r"\\192.168.139.6\Simulate\專案需知")
-TEAM_TAB_IDS = ["overview", "knowhow", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
+TEAM_TAB_IDS = ["guide", "overview", "knowhow", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
 TEAM_GROUPS = [
-    ("總覽", ["overview"]),
+    ("總覽", ["guide"]),
     ("Knowhow", ["knowhow"]),
     ("系統相關", ["mechanism", "ceiling", "script", "stress"]),
     ("數學設計", ["math"]),
     ("送驗相關", ["submission"]),
 ]
-TEAM_DEV_GROUPS = [("數學文件", ["docs"])]
+TEAM_DEV_GROUPS = [("總覽", ["overview"]), ("數學文件", ["docs"])]
 TEAM_README = "其他/_README_team.md"          # 團隊版總覽，發佈時改名為 其他/_README.md
 TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
 PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文件的 .md 連結只留文字
@@ -137,7 +146,7 @@ PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文�
 TREE_ROOT: Path = HERE
 MD_DIR: Path = HERE
 OUT_DIR: Path = HERE
-# 產線站（Landbase／Reskin）只能連自己站內的頁籤：連到其他站或其他檔案的連結只留文字
+# 各站只能連自己站內的頁籤：連到其他站或其他檔案的連結只留文字
 LOCAL_ONLY = False
 
 # 目前正在建置的站台：規範 md（相對 專案需知/ 的路徑）→ ("tab", tab_id) 或 ("ext", href)
@@ -934,18 +943,24 @@ def build_tree(root: Path, tabs, groups, dev_groups):
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
     sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, groups)]
     for folder, out_name, site_title in PRODUCT_LINES:
-        line = line_tabs(root / folder)
+        line = line_tabs(root / SPEC_DIR / folder)
+        shared = [(t, title, Path(os.path.relpath(root / f, root / SPEC_DIR / folder)).as_posix())
+                  for t, title, f in omni_tabs if t in SHARED_TABS.get(folder, [])]
+        if shared:   # 共用 Omniplay 文件併入後，依大分類順序重排
+            order = lambda x: GROUP_ORDER.index(LINE_GROUP_OF.get(x[1], x[1])) if LINE_GROUP_OF.get(x[1], x[1]) in GROUP_ORDER else 99
+            member = [i for _g, ids in GROUPS for i in ids]   # 同大分類內照 Omniplay 順序
+            line = sorted(line + shared, key=lambda x: (order(x), member.index(x[0]) if x[0] in member else 99))
         if line:
-            sites.append((folder.lower(), folder, root / folder, line, root / folder / out_name, site_title,
+            sites.append((folder.lower(), folder, root / SPEC_DIR / folder, line, root / SPEC_DIR / folder / out_name, site_title,
                           line_groups(line)))
     local_only = {key for key, *_ in sites[1:]}   # 產線站只連站內
     if dev_tabs:
-        sites.append(("dev", DEV_TITLE, root, dev_tabs, root / DEV_FILE, DEV_TITLE, dev_groups))
+        sites.append(("dev", DEV_TITLE, root, dev_tabs, root / DEV_DIR / DEV_FILE, DEV_TITLE, dev_groups))
 
     docs = {}   # 規範 md（相對 root）→ (站台序號, tab_id)
     for i, site in enumerate(sites):
         for tab_id, _, filename in site[3]:
-            docs[Path(os.path.relpath(site[2] / filename, root)).as_posix()] = (i, tab_id)
+            docs.setdefault(Path(os.path.relpath(site[2] / filename, root)).as_posix(), (i, tab_id))
 
     for i, (_key, name, base, site_tabs, output, site_title, site_groups) in enumerate(sites):
         links = {}
@@ -955,7 +970,9 @@ def build_tree(root: Path, tabs, groups, dev_groups):
             else:
                 href = Path(os.path.relpath(sites[j][4], output.parent)).as_posix()
                 links[doc] = ("ext", f"{href}#{tab_id}")
-        LOCAL_ONLY = _key in local_only
+        for tab_id, _, filename in site_tabs:   # 站內（含共用文件）一律連到本站頁籤
+            links[Path(os.path.relpath(base / filename, root)).as_posix()] = ("tab", tab_id)
+        LOCAL_ONLY = True   # 四站（Omniplay／Landbase／Reskin／開發需知）互不連結，只連站內頁籤
         try:
             build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
         finally:
@@ -980,7 +997,7 @@ def publish_team():
     tabs = [t for t in TABS if t[0] in TEAM_TAB_IDS]
     files = [f for _, _, f in tabs if f != "其他/_README.md"] + TEAM_TOOLS
     for folder, _, _ in PRODUCT_LINES:
-        files += [f"{folder}/{p.name}" for p in (HERE / folder).glob("*.md")]
+        files += [f"{SPEC_DIR}/{folder}/{p.name}" for p in (HERE / SPEC_DIR / folder).glob("*.md")]
     for f in files:
         (TEAM_DIR / f).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(HERE / f, TEAM_DIR / f)
