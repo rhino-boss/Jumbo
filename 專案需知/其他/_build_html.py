@@ -115,6 +115,7 @@ PRODUCT_LINES = [
 # 產線站直接沿用 Omniplay 的文件（不另寫 md）：{產線資料夾: [Omniplay tab_id...]}
 SHARED_TABS = {
     "Reskin": ["mechanism", "ceiling", "script", "stress", "backend"],   # 系統相關同 Omniplay
+    "Landbase": ["ceiling", "script", "stress", "backend"],              # 系統機制用 Landbase 自己的，其餘同 Omniplay
 }
 
 # 產線資料夾的 md（檔名）歸入與 Omniplay 相同的頁籤大分類，標題、icon、顏色、順序三站一致
@@ -948,8 +949,10 @@ def build_tree(root: Path, tabs, groups, dev_groups):
                   for t, title, f in omni_tabs if t in SHARED_TABS.get(folder, [])]
         if shared:   # 共用 Omniplay 文件併入後，依大分類順序重排
             order = lambda x: GROUP_ORDER.index(LINE_GROUP_OF.get(x[1], x[1])) if LINE_GROUP_OF.get(x[1], x[1]) in GROUP_ORDER else 99
-            member = [i for _g, ids in GROUPS for i in ids]   # 同大分類內照 Omniplay 順序
-            line = sorted(line + shared, key=lambda x: (order(x), member.index(x[0]) if x[0] in member else 99))
+            # 同大分類內照 Omniplay 順序；產線自己的同名文件（如 系統機制）排在 Omniplay 對應文件的位置
+            title_of = {t: title for t, title, _f in omni_tabs}
+            member = [title_of.get(i, i) for _g, ids in GROUPS for i in ids]
+            line = sorted(line + shared, key=lambda x: (order(x), member.index(x[1]) if x[1] in member else 99))
         if line:
             sites.append((folder.lower(), folder, root / SPEC_DIR / folder, line, root / SPEC_DIR / folder / out_name, site_title,
                           line_groups(line)))
