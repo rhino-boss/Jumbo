@@ -508,18 +508,18 @@ FG 倍率上限 × 該層最大押注 ≤ FG 上限</code></pre>
 <h3 id="41-新手體驗">4.1 新手體驗</h3>
 <ul><li>每支權重＝1、押注＝1；同名 A／B 兩支等權重擇一。</li><li>總倍率為體驗設計值，製作前與使用者確認（參考值：Free Game 12x、Jackpot Game 10x）。</li></ul>
 <h3 id="42-buy-feature">4.2 Buy Feature</h3>
-<ul><li>每個版型三支：高／中／低 RTP 各一，另配抽選權重；押注＝Buy Feature 價格倍數。</li><li><strong>加權整合必須等於 96.00%</strong>：<code>Σ(RTP × 權重) ÷ Σ(權重) = 96.00%</code>。</li><li>三檔 RTP 先定，權重由上式解出並整數化；解出後驗算到小數 2 位精確。</li><li>參考例（前作 92 版）：105.67%×800＋88.80%×200＋81.53%×435 → 加權 96.00%。</li></ul>
+<ul><li>每個版型三支：高／中／低 RTP 各一，另配抽選權重；押注＝Buy Feature 價格倍數。</li><li><strong>加權整合必須等於該遊戲 BF 的 RTP</strong>：<code>Σ(RTP × 權重) ÷ Σ(權重) = BF RTP</code>。BF RTP 依產線與版本取數學模型規範的 BF／SF RTP 配置：Omniplay、Landbase 為 96.50%；Reskin 依版本為 92.00%／94.00%／96.00%。</li><li>三檔 RTP 先定，權重由上式解出並整數化；解出後驗算到小數 2 位精確。</li><li>參考例（前作 92 版，當時 BF RTP 目標 96.00%）：105.67%×800＋88.80%×200＋81.53%×435 → 加權 96.00%。</li></ul>
 <h3 id="43-free-spin-系統">4.3 Free Spin 系統</h3>
 <ul><li>適用新手 NB 的免費遊戲段（一段 10 把）。</li><li>挑法：10 把中<strong>挑一把跑 <code>0-1x</code> 腳本、挑一把跑 <code>9x</code> 腳本</strong>，其餘各把不中獎。</li><li><code>9x</code> 腳本固定 <strong>10 支</strong>，<strong>抽選權重鎖死全部＝1</strong>（等權重擇一），不得調整。</li><li>整段合計約 10x（參考值：0-1x＝44%＋9x＝955.56% → 999.56%）。</li></ul>
 <h3 id="44-版型與共用">4.4 版型與共用</h3>
 <ul><li>腳本表依 RTP 版型分組（例：92 版一張）；同一支 RNG 序列若在多個 RTP 版可重放出相同結果，可跨版共用並註記。</li><li>大額投注使用獨立模型（<code>_Bet100</code>）的遊戲：腳本倍率不得超過該模型的倍率上限（例：大 Bet BG／FG 上限 1,000x）。</li></ul>
 <h2 id="5-製作前必須與使用者確認">5. 製作前必須與使用者確認</h2>
-<ol><li>新手體驗涵蓋哪些押注模式（NB 以外是否含 EB／BF 體驗）。</li><li>各體驗腳本的目標倍率（Free Game／Jackpot Game）。</li><li>腳本表做哪些 RTP 版型、是否跨版共用。</li><li>Buy Feature 三檔 RTP 的目標值（權重由 96% 約束解出）。</li></ol>
+<ol><li>新手體驗涵蓋哪些押注模式（NB 以外是否含 EB／BF 體驗）。</li><li>各體驗腳本的目標倍率（Free Game／Jackpot Game）。</li><li>腳本表做哪些 RTP 版型、是否跨版共用。</li><li>Buy Feature 三檔 RTP 的目標值（權重由「加權＝BF RTP」約束解出）。</li></ol>
 <h2 id="6-交付檢查">6. 交付檢查</h2>
-<ul><li class="check"><span class="cb">☐</span> 腳本清單依第 2 節結構建立，未支援的模式沒有腳本。</li><li class="check"><span class="cb">☐</span> 每支 RNG 序列已在正式 Config 下重放驗證，結果與表列 Multi 一致。</li><li class="check"><span class="cb">☐</span> Buy Feature 各版型加權整合＝96.00%（小數 2 位精確）。</li><li class="check"><span class="cb">☐</span> Free Spin 系統：<code>9x</code> 腳本 10 支、權重全部＝1；0-1x 與 9x 各佔一把、其餘不中獎。</li><li class="check"><span class="cb">☐</span> 腳本倍率未超出該模式（含 <code>_Bet100</code> 模型）的倍率上限。</li><li class="check"><span class="cb">☐</span> 輪帶／掉落改版後已重新驗證重放（或重錄）。</li></ul>
+<ul><li class="check"><span class="cb">☐</span> 腳本清單依第 2 節結構建立，未支援的模式沒有腳本。</li><li class="check"><span class="cb">☐</span> 每支 RNG 序列已在正式 Config 下重放驗證，結果與表列 Multi 一致。</li><li class="check"><span class="cb">☐</span> Buy Feature 各版型加權整合＝該遊戲 BF RTP（小數 2 位精確）。</li><li class="check"><span class="cb">☐</span> Free Spin 系統：<code>9x</code> 腳本 10 支、權重全部＝1；0-1x 與 9x 各佔一把、其餘不中獎。</li><li class="check"><span class="cb">☐</span> 腳本倍率未超出該模式（含 <code>_Bet100</code> 模型）的倍率上限。</li><li class="check"><span class="cb">☐</span> 輪帶／掉落改版後已重新驗證重放（或重錄）。</li></ul>
 <h2 id="7-範例h028-雷神爆金1000101016">7. 範例：H028 雷神爆金1000（101016）</h2>
 <p>支援 NB＋BF（無 Extra Bet），FG 觸發＝4 SC＝10 把：</p>
-<div class="tbl-wrap"><table><thead><tr><th>類別</th><th>腳本</th><th>支數</th></tr></thead><tbody><tr><td>新手體驗</td><td>NB Free Game A／B、NB Jackpot Game A／B</td><td>4</td></tr><tr><td>Buy Feature</td><td>BF A1～A3＋權重、BF B1～B3＋權重（押注 75；加權＝96.00%）</td><td>6</td></tr><tr><td>Free Spin 系統</td><td>0-1x ×1＋9x ×10（權重全鎖 1）</td><td>11</td></tr><tr><td>合計</td><td></td><td><strong>21</strong></td></tr></tbody></table></div>
+<div class="tbl-wrap"><table><thead><tr><th>類別</th><th>腳本</th><th>支數</th></tr></thead><tbody><tr><td>新手體驗</td><td>NB Free Game A／B、NB Jackpot Game A／B</td><td>4</td></tr><tr><td>Buy Feature</td><td>BF A1～A3＋權重、BF B1～B3＋權重（押注 75；加權＝當時 BF RTP 96.00%）</td><td>6</td></tr><tr><td>Free Spin 系統</td><td>0-1x ×1＋9x ×10（權重全鎖 1）</td><td>11</td></tr><tr><td>合計</td><td></td><td><strong>21</strong></td></tr></tbody></table></div>
 <p>無 Extra Bet，故不建立 EB 系列腳本；FG 觸發 10 把與 Free Spin 系統的「10 把挑法」一致。</p></section><section class="panel" role="tabpanel" id="panel-stress" hidden><h1 id="壓測說明書">壓測說明書</h1>
 <p>這份文件回答兩個問題：<strong>要壓什麼</strong>，以及<strong>壓出來的數字怎麼判</strong>。</p>
 <p>設定來源為 數學模型規範 第 1.5 節與 <a href="#" class="tab-link" data-tab="mechanism">機制說明.md</a>；本文件不重複定義設定本身。</p>
