@@ -28,7 +28,7 @@
 | 副標題 | 散布符號 | SCATTER SYMBOL |
 | 規則說明 | ▪ [C1] 不參與中獎判定，出現後原地保留至該次旋轉的所有連消結束。 | ▪ [C1] DOES NOT TAKE PART IN WIN EVALUATION AND STAYS IN PLACE UNTIL ALL CASCADES OF THE SPIN ARE COMPLETE. |
 | 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {4} 個或以上 [C1]，將觸發免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, {4} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | ▪ {4}／{5}／{6} 個 [C1] 分別支付 {3X}／{5X}／{100X} 投注。{3} 個 [C1] 不支付獎金。 | ▪ {4} / {5} / {6} [C1] PAY {3X} / {5X} / {100X} BET RESPECTIVELY. {3} [C1] DO NOT PAY. |
+| 規則說明 | ▪ {4}／{5}／{6} 個 [C1] 分別支付 {3}X／{5}X／{100}X 投注。{3} 個 [C1] 不支付獎金。 | ▪ {4} / {5} / {6} [C1] PAY {3}X / {5}X / {100}X BET RESPECTIVELY. {3} [C1] DO NOT PAY. |
 | 規則說明 | ▪ 同一轉輪最多只會出現 {1} 個 [C1]。 | ▪ AT MOST {1} [C1] APPEARS ON EACH REEL. |
 
 ### MULTIPLIER SYMBOL
@@ -37,8 +37,9 @@
 | --- | --- | --- |
 | 副標題 | 倍數符號 | MULTIPLIER SYMBOL |
 | 規則說明 | ▪ [C2] 與 [C3] 不參與中獎判定，也不會被消除，會留在盤面直到該次旋轉結束。 | ▪ [C2] AND [C3] DO NOT TAKE PART IN WIN EVALUATION, ARE NEVER CLEARED, AND REMAIN ON THE REELS UNTIL THE SPIN ENDS. |
+| 規則說明 | ▪ [C2] 或 [C3] 出現時會帶有隨機倍數，可能的倍數包括 {2}X、{3}X、{4}X、{5}X、{6}X、{8}X、{10}X、{12}X、{15}X、{20}X、{25}X、{50}X、{100}X、{250}X、{500}X、{1000}X 或 {2500}X。 | ▪ WHEN [C2] OR [C3] APPEARS, A RANDOM MULTIPLIER WILL BE APPLIED, INCLUDING VALUES SUCH AS {2}X, {3}X, {4}X, {5}X, {6}X, {8}X, {10}X, {12}X, {15}X, {20}X, {25}X, {50}X, {100}X, {250}X, {500}X, {1000}X OR {2500}X. |
 | 規則說明 | ▪ [C2] 出現時即固定其倍數，之後不再改變。 | ▪ [C2] KEEPS THE VALUE IT APPEARS WITH. |
-| 規則說明 | ▪ [C3] 於每次中獎消除後提升一個倍數等級，單顆最高為 {2500X}。 | ▪ [C3] IS UPGRADED BY ONE LEVEL AFTER EACH WINNING CASCADE, UP TO {2500X} PER SYMBOL. |
+| 規則說明 | ▪ [C3] 於每次中獎消除後提升一個倍數等級，單顆最高為 {2500}X。 | ▪ [C3] IS UPGRADED BY ONE LEVEL AFTER EACH WINNING CASCADE, UP TO {2500}X PER SYMBOL. |
 | 規則說明 | ▪ 該次消除後才掉落進盤面的 [C3] 不追溯升級，須等下一次中獎消除。 | ▪ A [C3] THAT DROPS IN AFTER A CASCADE IS NOT UPGRADED FOR THAT CASCADE AND MUST WAIT FOR THE NEXT ONE. |
 | 規則說明 | ▪ 同一最終盤面出現多顆 [C2]／[C3] 時，所有倍數相加。 | ▪ WHEN SEVERAL [C2] / [C3] APPEAR ON THE SAME FINAL REELS, THEIR VALUES ARE ADDED TOGETHER. |
 
@@ -95,7 +96,7 @@
 | 規則說明 | ▪ 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | ▪ A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
 | 規則說明 | ▪ 當一次免費旋轉同時有一般符號得獎、且最終盤面出現 [C2]／[C3] 時，該次盤面的倍數總和加入累積倍數。 | ▪ WHEN A FREE SPIN HAS BOTH A REGULAR-SYMBOL WIN AND [C2] / [C3] ON THE FINAL REELS, THE SUM OF THOSE VALUES IS ADDED TO THE ACCUMULATED MULTIPLIER. |
 | 規則說明 | ▪ 只有 [C1] 得獎或沒有得獎的免費旋轉，倍數不累積。 | ▪ FREE SPINS WITH ONLY A [C1] WIN, OR WITH NO WIN, DO NOT ADD TO THE ACCUMULATED MULTIPLIER. |
-| 規則說明 | ▪ 累積倍數只在「該次最終盤面本身有 [C2]／[C3]」時作用。有一般符號得獎但盤面沒有倍數符號時，該次以 {1X} 結算，累積倍數保留不歸零。 | ▪ THE ACCUMULATED MULTIPLIER APPLIES ONLY TO A SPIN WHOSE OWN FINAL REELS CONTAIN [C2] / [C3]. IF A SPIN HAS A REGULAR-SYMBOL WIN BUT NO MULTIPLIER SYMBOL, IT IS PAID AT {1X} AND THE ACCUMULATED MULTIPLIER IS KEPT, NOT RESET. |
+| 規則說明 | ▪ 累積倍數只在「該次最終盤面本身有 [C2]／[C3]」時作用。有一般符號得獎但盤面沒有倍數符號時，該次以 {1}X 結算，累積倍數保留不歸零。 | ▪ THE ACCUMULATED MULTIPLIER APPLIES ONLY TO A SPIN WHOSE OWN FINAL REELS CONTAIN [C2] / [C3]. IF A SPIN HAS A REGULAR-SYMBOL WIN BUT NO MULTIPLIER SYMBOL, IT IS PAID AT {1}X AND THE ACCUMULATED MULTIPLIER IS KEPT, NOT RESET. |
 | 規則說明 | ▪ 倍數在所有連消結束後，對該次免費旋轉的一般符號總獎金一次套用。 | ▪ THE MULTIPLIER IS APPLIED ONCE TO THE TOTAL REGULAR-SYMBOL WIN OF THE FREE SPIN AFTER ALL CASCADES ARE COMPLETE. |
 | 規則說明 | ▪ 累積倍數保留至整場免費遊戲結束後才清除。 | ▪ THE ACCUMULATED MULTIPLIER IS KEPT UNTIL THE FREE GAME FEATURE ENDS. |
 
@@ -106,7 +107,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 額外投注 | EXTRA BET |
-| 規則說明 | ▪ 額外投注的扣款為您所選基礎投注的 {2X}。 | ▪ EXTRA BET COSTS {2X} THE BASE BET YOU SELECT. |
+| 規則說明 | ▪ 額外投注的扣款為您所選基礎投注的 {2}X。 | ▪ EXTRA BET COSTS {2}X THE BASE BET YOU SELECT. |
 | 規則說明 | ▪ 所有獎金仍依您所選的基礎投注計算。 | ▪ ALL WINS ARE STILL CALCULATED ON THE BASE BET YOU SELECT. |
 | 規則說明 | ▪ 免費遊戲的觸發機率提升為一般投注的 {5} 倍。 | ▪ THE CHANCE TO TRIGGER THE FREE GAME FEATURE IS {5} TIMES THAT OF THE NORMAL BET. |
 
@@ -117,9 +118,9 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | ▪ 玩家可支付 {100X} 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {100X} THE TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | ▪ 玩家可支付 {100}X 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {100}X THE TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
 | 規則說明 | ▪ 完成購買後，將直接觸發一次免費遊戲特色。 | ▪ COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
-| 規則說明 | ▪ 進場盤面的 {4} 個 [C1] 依賠率表支付 {3X} 投注。 | ▪ THE {4} [C1] ON THE ENTRY REELS PAY {3X} BET ACCORDING TO THE PAYTABLE. |
+| 規則說明 | ▪ 進場盤面的 {4} 個 [C1] 依賠率表支付 {3}X 投注。 | ▪ THE {4} [C1] ON THE ENTRY REELS PAY {3}X BET ACCORDING TO THE PAYTABLE. |
 | 規則說明 | ▪ 進入後的免費遊戲規則與自然觸發完全相同。 | ▪ ONCE ENTERED, THE FREE GAME FEATURE FOLLOWS EXACTLY THE SAME RULES AS A NATURAL TRIGGER. |
 | 規則說明 | ▪ 免費遊戲的獎金依您所選的基礎投注計算，不依購買金額計算。 | ▪ FREE GAME WINS ARE CALCULATED ON THE BASE BET YOU SELECT, NOT ON THE PURCHASE AMOUNT. |
 
