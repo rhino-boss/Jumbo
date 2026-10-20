@@ -167,7 +167,7 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <header class="page">
   <div class="eyebrow">iGaming · Reskin</div>
   <h1 class="site">Reskin 開發規範</h1>
-  <p class="meta">由 <code>專案需知/Reskin/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-19</p>
+  <p class="meta">由 <code>專案需知/Reskin/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-20</p>
 </header>
 <div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="knowhow" data-tabs="knowhow" aria-selected="true" tabindex="0"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Knowhow</button><button class="tab tab-hi" role="tab" id="tab-g1" data-tab="math" data-tabs="math" aria-selected="false" tabindex="-1"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 4H6l6 8-6 8h12"/></svg>數學設計</button></div>
 <div class="body-row">
@@ -205,14 +205,18 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 <ul><li><strong>上限以上不開的押注一律壓住</strong>：「開啟」列沒打勾的檔位上線不開放。若某檔位是因為數學調不出來（例如倍率上限、天花板或系統最大賠付壓不下來）才不開，須在文件備註該檔位與原因。</li></ul>
 <h2 id="3-rtp-與-link-彩金">3. RTP 與 Link 彩金</h2>
 <h3 id="31-rtp-配置">3.1 RTP 配置</h3>
-<p>平台要求提供 <strong>Total (+機制) 92%／94%／96%</strong> 三個 RTP 版本（見 <a href="#" class="tab-link" data-tab="knowhow">Knowhow</a>）。三版的彩金（Progressive）與新手體驗都一樣，只差在 Game RTP。</p>
-<h4 id="96-版total-機制-96">96 版（Total (+機制) 96%）</h4>
+<p>平台要求提供 <strong>Total (+機制) 92%／94%／96%</strong> 三個 RTP 版本（見 <a href="#" class="tab-link" data-tab="knowhow">Knowhow</a>）。Reskin 的來源遊戲分 <strong>Landbase 轉製遊戲</strong>與 <strong>OP 遊戲</strong>兩種，RTP 配置各自不同。</p>
+<h4 id="311-landbase-轉製遊戲">3.1.1 Landbase 轉製遊戲</h4>
+<p>三版的彩金（Progressive）與新手體驗都一樣，只差在 Game RTP。</p>
+<h5 id="96-版total-機制-96">96 版（Total (+機制) 96%）</h5>
 <div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game</th><th class="n">Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">新手體驗</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">94.00%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">94.00%</td><td class="n">2.00%</td><td class="n">96.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">94.00%</td><td class="n">—</td><td class="n">2.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">96.00%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">94.00%</td><td class="n">—</td><td class="n">2.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr></tbody></table></div>
-<h4 id="94-版total-機制-94">94 版（Total (+機制) 94%）</h4>
+<h5 id="94-版total-機制-94">94 版（Total (+機制) 94%）</h5>
 <div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game</th><th class="n">Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">新手體驗</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">92.00%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">94.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">92.00%</td><td class="n">—</td><td class="n">2.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">94.00%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">92.00%</td><td class="n">—</td><td class="n">2.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr></tbody></table></div>
-<h4 id="92-版total-機制-92">92 版（Total (+機制) 92%）</h4>
+<h5 id="92-版total-機制-92">92 版（Total (+機制) 92%）</h5>
 <div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game</th><th class="n">Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">新手體驗</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">90.00%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">92.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">90.00%</td><td class="n">—</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">92.00%</td><td class="n">—</td><td class="n">0.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">90.00%</td><td class="n">—</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr></tbody></table></div>
 <ul><li>不拆 Bonus RTP，Bonus 派彩併入 Game（與 Landbase 相同）。</li><li>只分新手／老手，<strong>不分押注層級</strong>；老手不論押注大小 Progressive（Link）皆為 2%。</li><li>三版的彩金一樣插在遊戲裡：老手 Progressive 皆 2%，新手皆 0%；版本差異全部由 Game RTP 吸收（老手 Game ＝ 版本 − 2%）。</li><li>新手不能拉彩金：NB／EB 以新手體驗 2% 補足，BF／SF 以 Game 補足（Game ＝ 版本 RTP）。</li></ul>
+<h4 id="312-op-遊戲">3.1.2 OP 遊戲</h4>
+<p>待定。</p>
 <h3 id="32-link-彩金">3.2 Link 彩金</h3>
 <div class="tbl-wrap"><table><thead><tr><th>項目</th><th>規則</th></tr></thead><tbody><tr><td>級距</td><td>Grand、Major 兩層累積彩池</td></tr><tr><td>Link RTP</td><td><strong>2%</strong>，92／94／96 三版相同（第 3.1 節的 Progressive）</td></tr><tr><td>資格</td><td>見下表；<strong>不分押注大小</strong>，系統不依押注金額擋</td></tr><tr><td>幣別</td><td>GC、SC 是否各自一組彩池待確認（第 5 節）</td></tr></tbody></table></div>
 <div class="tbl-wrap"><table><thead><tr><th>狀態</th><th>可拉 Link</th><th>可滾 Inrc</th></tr></thead><tbody><tr><td>新手</td><td>否</td><td>是</td></tr><tr><td>老手</td><td>是</td><td>是</td></tr></tbody></table></div>
