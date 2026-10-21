@@ -2251,6 +2251,15 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v6（6.0.0.0）</h4>
+        <ol>
+          <li>升 v6：表 1、表 2 金框翻出倍數的機率拉到 80%（BG／FG、小鬼／大鬼的 ×1 權重皆改 25，×2：×3：×5 維持 55：30：15）；表 3 不變。原本 BG 約 46%、FG 約 22%。（10/21）</li>
+          <li>NB FG 老手：(1000, 2000] 砍半、(100, 120]、(200, 250] 提高，平均 37.5x 不變。EB FG 老手：(1000, 2000] 降低、只提高 (100, 120]、最小區間 (15, 20]，平均 37.5x 不變。（10/21）</li>
+          <li>新手改版（由老手 NB／EB 衍生，EB 用同一套區間）：BG 只留到 100x、FG 只留 (25, 30]～(45, 50]（平均 35.8x）；多出的 RTP 一半拉高 BG (10, 15]（NB 0.46% → 0.69%、EB 0.24% → 1.58%）、一半縮短 FG 週期（NB 150 → 134 轉，EB 已在 30 轉上限）。觸發把平均倍數待依新手 BG 上限重解。（10/21）</li>
+          <li>92A 卡片權重尚未依 v6 自然機率重解（試玩版）；Card-On NB 老手 2×10⁵：RTP 90.59%，FG 倍數出現率 4.8% → 14.6%。（10/21）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v5（5.1.0.0）</h4>
         <ol>
           <li>BF 卡片權重調整（只改 BF，NB／EB 不變）：BF 贏錢率（> 50x）14.6% → 30%，10～50x 的量挪到 50～100x；(1000, 2000] 砍半、(100, 120]、(200, 250] 提高約 35%；BF RTP 維持 92.5%（平均 46.25x），20,000x 仍有權重。（10/21）</li>
@@ -2604,7 +2613,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261021a`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261021b`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
@@ -2686,14 +2695,19 @@
   }
   const LADDER = { bg: cfg.cascade_multiplier.bg, fg: cfg.cascade_multiplier.fg };
   const LADDER_LEN = Math.max(LADDER.bg.length, LADDER.fg.length);
-  // Max Win 由卡片系統的倍率上限決定（free_game 卡組最高有權重區間上限）；Card System Off 不截斷（game_rule §9.10）
+  // Max Win 由卡片系統的倍率上限決定：BF 取 buy_feature 卡組，其餘取 base_game／free_game（EB 為 eb_*）最高有權重區間上限的較大者；Card System Off 不截斷（game_rule §9.10）
   function cardSectionCap(section, profile) {
     const cards = cfg.card_system?.profiles?.[profile]?.[section] || [];
     const caps = cards.filter(card => card.type === "range" && Number(card.weight) > 0).map(card => Number(card.max));
     return caps.length ? Math.max(...caps) : Infinity;
   }
   let MAX_WIN = Infinity;
-  function refreshMaxWin() { MAX_WIN = cardSystemActive() ? cardSectionCap("free_game", cardProfile()) : Infinity; }
+  function refreshMaxWin() {
+    if (!cardSystemActive()) { MAX_WIN = Infinity; return; }
+    const p = cardProfile();
+    MAX_WIN = state.mode === 2 ? cardSectionCap("buy_feature", p)
+      : Math.max(cardSectionCap(cardSection("free_game"), p), cardSectionCap(cardSection("base_game"), p));
+  }
   const MAX_FS = Number(cfg.max_free_spins);
   const SPLIT_REELS = cfg.split_target_reels.map(Number);
   const GOLD_REELS = cfg.gold_reels.map(Number);
@@ -3021,10 +3035,30 @@
     let multUsed = false, bigScored = false;
     const bigCells = new Set();
     const goldenTally = {};
+    // 2026-10-21 使用者定案：最後一次翻牌後若沒有再連線（連消結束），翻出來的一律改成原位無倍數小鬼（大鬼不分裂），
+    // 盤面與統計都以這個最終畫面為準（Simulator 同步）。lastFlip 記錄最近一次翻牌，供連消結束時還原。
+    let lastFlip = null;
+    const collapseLastFlip = () => {
+      const lf = lastFlip, n = lf.positions.length;
+      if (lf.pre) {
+        for (let r = 0; r < 5; r++) for (let c = 0; c < 4; c++) { board[r][c] = lf.pre.board[r][c]; mults[r][c] = lf.pre.mults[r][c]; gold[r][c] = lf.pre.gold[r][c]; }
+        if (lf.wildIdx >= 0) snapshots.splice(lf.wildIdx, 1);
+      }
+      for (const [r, c] of lf.positions) { board[r][c] = WW; mults[r][c] = 0; }
+      for (const idx of [lf.elimIdx, lf.cascIdx]) {
+        const s = snapshots[idx]; if (!s) continue;
+        for (const [r, c] of lf.positions) { s.board[r][c] = WW; s.mults[r][c] = 0; }
+      }
+      if (snapshots[lf.elimIdx]) snapshots[lf.elimIdx].message = `Eliminate · Golden flip WW×${n}`;
+      for (const [k, v] of Object.entries(lf.results)) { goldenTally[k] -= v; if (!goldenTally[k]) delete goldenTally[k]; if (k.startsWith("W2")) w2Events -= v; }
+      goldenTally.WW = (goldenTally.WW || 0) + n;
+      multWild -= lf.mw; bigMult -= lf.bm;
+      lastFlip = null;
+    };
     snapshots.push({ type: "initial", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], combo: 0, multiplier: multipliers[0], message: "Spin" });
     while (true) {
       const win = evaluate(board, mults);
-      if (!win.rawPay) break;
+      if (!win.rawPay) { if (lastFlip) collapseLastFlip(); break; }
       for (const key of win.hits) {
         const [r, c] = key.split(",").map(Number);
         if ((board[r][c] === WW || board[r][c] === W2) && mults[r][c] > 1) multUsed = true;
@@ -3045,6 +3079,7 @@
         else { board[reel][row] = -1; mults[reel][row] = 0; transitionBoard[reel][row] = -1; cleared.push(key); }
       }
       let flip = null;
+      lastFlip = null;
       if (goldPositions.length) {
         flip = flipGoldenBody(board, mults, tableName, goldPositions, flipState, goldPre);
         if (flip) {
@@ -3055,6 +3090,10 @@
           }
           for (const [reel, row] of goldPositions) { transitionBoard[reel][row] = board[reel][row]; if (mults[reel][row] > 1) { multWild++; if (board[reel][row] === W2) bigMult++; } }
           for (const [[reel, row]] of flip.bigSources) bigCells.add(`${reel},${row}`);
+          lastFlip = { positions: goldPositions.map(([r, c]) => [r, c]), results: { ...flip.results },
+            mw: goldPositions.filter(([r, c]) => mults[r][c] > 1).length,
+            bm: goldPositions.filter(([r, c]) => mults[r][c] > 1 && board[r][c] === W2).length,
+            elimIdx: snapshots.length, cascIdx: -1, wildIdx: -1, pre: null };
         }
       }
       const flipLabel = flip ? ` · Golden flip ${Object.entries(flip.results).map(([k, v]) => `${k}×${v}`).join(" ")}` : "";
@@ -3082,14 +3121,17 @@
           }
         }
       }
+      if (lastFlip) lastFlip.cascIdx = snapshots.length;
       snapshots.push({ type: "cascade", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], drop: motion, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: "Drop refill" });
 
       // 3) 大鬼分裂（game_rule §5.6 步驟 5~6；落點依補牌後盤面）
       if (flip && flip.bigSources.length) {
         const preBoard = cloneBoard(board), preMults = cloneBoard(mults);
+        if (lastFlip) lastFlip.pre = { board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold) };
         const { splitKeys, splits } = splitBigGhosts(board, mults, gold, tableName, flip.bigSources);
         splitKeys.forEach(key => bigCells.add(key));
         if (splitKeys.length) {
+          if (lastFlip) lastFlip.wildIdx = snapshots.length;
           snapshots.push({ type: "wild-mark", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], marked: splitKeys, splits, preBoard, preMults, combo, multiplier: multipliers[Math.min(combo, multipliers.length - 1)], message: `Split Wild × ${splitKeys.length}` });
         }
       }
@@ -4035,9 +4077,9 @@
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "其他/數值報告_超級鑽石.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-21 10:41";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-21 10:41";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-21 15:19";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-21 15:19";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-21 15:19";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261019o"></script>
 </body>
 
