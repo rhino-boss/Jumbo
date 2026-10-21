@@ -526,6 +526,14 @@
       color: #d7ccff;
       font-size: 0.8rem;
     }
+    /* 停輪不跳（2026-10-21）：最上排半格的符號、金框、倍數標籤一律照「整格」大小畫、底邊對齊，
+       與滾輪複本（整格、底邊對齊、上半截被盤面上緣遮住）一致；--full-cell-ph 由 renderBoard 寫入整格內高 */
+    #board .cell.peek-row .symbol-wrap { top: auto; bottom: calc(var(--full-cell-ph, 72px) * 0.03); height: calc(var(--full-cell-ph, 72px) * 0.94); }
+    #board .cell.peek-row .multi-badge { min-width: 28px; padding: 2px 5px; font-size: 11px; }
+    /* 最上排半格（2026-10-21）：不留上框線與上方圓角，裁切線就是盤面上緣，跟滾輪畫面一樣，停輪後不會被多蓋一點 */
+    #board .cell.peek-row { border-top-width: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+    /* 盤面只裁上緣：掉落中的符號不會超出盤面（左右下保留光暈） */
+    body #board.board-grid { clip-path: inset(0 -14px -14px -14px); }   /* 權重需高過共用 #board.board-grid { clip-path: inset(-14px) } */
   </style>
   <style id="h902-theme">
     :root {
@@ -3998,6 +4006,9 @@
           boardEl.appendChild(cellEl);
         });
       });
+      // 最上排半格照整格大小畫（見 CSS --full-cell-ph），停輪換回真格時才不會跳
+      const fullCellEl = boardEl.querySelector(".cell:not(.peek-row)");
+      if (fullCellEl) boardEl.style.setProperty("--full-cell-ph", `${fullCellEl.clientHeight}px`);
     }
 
     function updateSessionCards() {
@@ -4202,8 +4213,8 @@
         // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
         const hostRect = host.getBoundingClientRect();
         const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
-        const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到
-        const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+        const left = Math.floor(Math.min(...boxes.map((b) => b.x)) - 3), top = Math.floor(Math.min(...boxes.map((b) => b.y)));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到；視窗對齊整數像素（輪帶層會被瀏覽器對齊整數像素，視窗若在小數位置，停輪換回真格會偏移不到 1px）
+        const right = Math.ceil(Math.max(...boxes.map((b) => b.x + b.w)) + 3), bottom = Math.ceil(Math.max(...boxes.map((b) => b.y + b.h)));
         Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
         const last = boxes[boxes.length - 1];
         const pitch = boxes.length > 1 ? last.y - boxes[boxes.length - 2].y : last.h;   // 頂端 peek-row 半高，間距取最後兩格
@@ -4237,7 +4248,10 @@
           { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
           { transform: "translateY(0)" }
         ], { duration: ms, fill: "both" });
-        return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+        // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）：輪帶複本與真格的小數像素對位不同，若等最後一輪停才一起換，已停的輪會突然位移不到 1px
+        let settled = false;
+        const settle = () => { if (settled) return; settled = true; cells.forEach((cell) => { cell.style.visibility = ""; }); win.remove(); };
+        return new Promise((resolve) => { anim.onfinish = () => { settle(); resolve(); }; setTimeout(() => { settle(); resolve(); }, ms + 1000); });   // 以動畫實際播完為準；保險時間放寬，避免瀏覽器忙時輪帶還在回彈就被收掉而跳一下
       });
       await Promise.all(jobs);
       windows.forEach((win) => win.remove());
@@ -4390,6 +4404,7 @@
           const round = state.pendingRound;
           const spin = round.spins[state.pendingSpinIndex];
           writeMessage(`FG Spin ${spin.spin_index} rolling...`);
+          updateSceneTheme(spin);   // 進 FG 的每一轉（含第一轉）滾輪開始前就換 FG 背景
           await animateReels(spin.board_init);
           await playbackSpin(round, spin);
           appendLiveLog(`FG ${state.pendingSpinIndex}/${round.spins.length - 1} | ${spin.table_name} | Cascade ${spin.board_steps.length} | C1 ${spin.scatter_count} | Win ${formatMoney(spin.final_pay)}`, spin.board_steps.length ? "cascade" : "info");

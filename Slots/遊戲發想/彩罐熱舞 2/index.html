@@ -1,0 +1,4803 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinata Beat 2 — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='32' y='54' font-size='56' text-anchor='middle'%3E%F0%9F%AA%85%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+  <style>
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: inset 0 0 18px rgba(255, 210, 100, 0.32);
+      transform: none;
+      z-index: auto;
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow:
+        inset 0 0 0 2px rgba(126, 255, 199, 0.8),
+        inset 0 0 16px rgba(107, 255, 192, 0.3);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+    /* 彩罐熱舞 2：擴散射擊動畫（準星 → 開槍命中）；只疊在盤面上，不放大符號 */
+    .pb2-shot-layer { position: absolute; inset: 0; pointer-events: none; z-index: 40; overflow: visible; }
+    .pb2-crosshair { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border: 3px solid #ff3b3b; border-radius: 50%;
+      box-shadow: 0 0 10px rgba(255, 59, 59, 0.9), inset 0 0 6px rgba(255, 59, 59, 0.6); animation: pb2-aim var(--aim, 260ms) cubic-bezier(.2,.8,.3,1) forwards; }
+    .pb2-crosshair::before, .pb2-crosshair::after { content: ""; position: absolute; left: 50%; top: 50%; background: #ff3b3b; transform: translate(-50%, -50%); }
+    .pb2-crosshair::before { width: 84px; height: 2px; }
+    .pb2-crosshair::after { width: 2px; height: 84px; }
+    .pb2-crosshair.fired { animation: pb2-aim-out 180ms ease-out forwards; }
+    @keyframes pb2-aim { 0% { opacity: 0; transform: rotate(-90deg); width: 120px; height: 120px; margin: -60px 0 0 -60px; } 100% { opacity: 1; transform: rotate(0); } }
+    @keyframes pb2-aim-out { to { opacity: 0; } }
+    .pb2-flash { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, #fff3a0 22%, #ffb020 45%, rgba(255, 90, 0, 0) 70%); animation: pb2-flash 240ms ease-out forwards; }
+    @keyframes pb2-flash { 0% { opacity: 1; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.6); } }
+    .pb2-spark { position: absolute; width: 22px; height: 3px; margin: -1.5px 0 0 0; border-radius: 2px; background: linear-gradient(90deg, #fff6c0, #ffb020);
+      transform-origin: 0 50%; animation: pb2-spark 280ms ease-out forwards; }
+    @keyframes pb2-spark { 0% { opacity: 1; transform: rotate(var(--a)) translateX(6px) scaleX(0.4); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(42px) scaleX(1); } }
+    .pb2-hole { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+      background: radial-gradient(circle, #1a0d05 0%, #3a2410 45%, rgba(255, 200, 80, 0.85) 60%, rgba(255, 160, 40, 0) 75%);
+      box-shadow: 0 0 8px rgba(255, 170, 40, 0.9); animation: pb2-hole 900ms ease-out forwards; }
+    @keyframes pb2-hole { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+    /* 彩罐熱舞 2：金框擴散演出（不放大，只亮框＋提亮）——新金框＝金框、金框直接轉 Wild＝藍框 */
+    body #board#board#board#board .cell.spread-new { box-shadow: 0 0 0 3px #ffd86a, 0 0 18px rgba(255, 216, 106, 0.85) !important; animation: pb2-spread-flash 560ms ease-out both; z-index: 6; }
+    body #board#board#board#board .cell.spread-wild { box-shadow: 0 0 0 3px #7cf7ff, 0 0 20px rgba(124, 247, 255, 0.9) !important; animation: pb2-spread-flash 560ms ease-out both; z-index: 6; }
+    @keyframes pb2-spread-flash { 0% { filter: brightness(2.2); } 100% { filter: brightness(1); } }
+    /* 停輪不跳（2026-10-21）：最上排半格的符號、金框、倍數標籤一律照「整格」大小畫、底邊對齊，
+       與滾輪複本（整格、底邊對齊、上半截被盤面上緣遮住）一致；--full-cell-ph 由 renderBoard 寫入整格內高 */
+    #board .cell.peek-row .symbol-wrap { top: auto; bottom: calc(var(--full-cell-ph, 72px) * 0.03); height: calc(var(--full-cell-ph, 72px) * 0.94); }
+    #board .cell.peek-row .multi-badge { min-width: 28px; padding: 2px 5px; font-size: 11px; }
+    /* 金框（2026-10-21）：框放大 1.2 倍、符號縮成 0.9，框要完整框住符號；特殊金框不變色，一律原本的黃色金框 */
+    #board .cell.gold .frame-bg, #board .cell.gold .frame-top { transform: scale(1.2); }
+    #board .cell.gold .symbol-img { transform: scale(0.9); }
+    #board .cell.special-gold .frame-bg, #board .cell.special-gold .frame-top { filter: none; }
+    #board .cell.special-gold { border-color: rgba(255, 217, 92, 0.75); background: #101827; box-shadow: none; }
+    /* 最上排半格（2026-10-21）：不留上框線與上方圓角，裁切線就是盤面上緣，跟滾輪畫面一樣，停輪後不會被多蓋一點 */
+    #board .cell.peek-row { border-top-width: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+    /* 盤面只裁上緣：掉落中的符號不會超出盤面（左右下保留光暈） */
+    body #board.board-grid { clip-path: inset(0 -14px -14px -14px); }   /* 權重需高過共用 #board.board-grid { clip-path: inset(-14px) } */
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      --cell-size: 76px;   /* 格子上限；左欄變窄時格子跟著縮（見 .board-grid），最外側一欄不會被裁切 */
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 950px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    #modeText {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .feature-strip {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #multPill .v {
+      color: var(--blue);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 446px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #batch-simulation,
+    #play-panel,
+    #bet-mode-panel,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-shell {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, var(--cell-size)));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: 100%;
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.75);
+      background: #101827;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 12px rgba(0, 221, 192, 0.3);
+      transform: none;
+      z-index: auto;
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow:
+        inset 0 0 0 1px var(--green),
+        inset 0 0 10px rgba(51, 255, 153, 0.28);
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    #batch-simulation {
+      padding: 10px 14px;
+    }
+
+    .batch-simulation-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .batch-simulation-note {
+      margin: -2px 0 8px;
+      color: var(--sub);
+      font-size: 10px;
+    }
+
+    #batchSimulationRounds {
+      min-width: 0;
+      padding: 7px 9px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    #batchSimulationRounds::-webkit-inner-spin-button,
+    #batchSimulationRounds::-webkit-outer-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
+    }
+
+    #batchSimulationStartBtn {
+      padding: 7px 12px;
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      border-radius: 6px;
+      color: #001c19;
+      background: var(--accent);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #batchSimulationStartBtn:disabled {
+      cursor: wait;
+      opacity: 0.55;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3,
+    #batch-simulation h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .live-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      background: #06111f;
+    }
+
+    .help-loading,
+    .help-load-error {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--sub);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 14px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 9px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .help-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-2);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-section-title .help-en {
+      color: var(--blue);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .help-group-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 9px 12px 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .help-group-title .help-en {
+      color: var(--sub);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .help-rule {
+      display: block;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(17, 50, 82, 0.85);
+      line-height: 1.55;
+    }
+
+    .help-rule-zh,
+    .help-rule-en {
+      min-width: 0;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .help-rule-en {
+      color: #a9cce8;
+      font-size: 11px;
+    }
+
+    .help-lang-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--sub);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      padding: 8px 12px 12px;
+    }
+
+    .help-payout-item {
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    #helpSourceFrame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(16vw, 70px);
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      #grid-panel {
+        padding-inline: 16px;
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .help-payout-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+  </style>
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+</head>
+
+<body class="slot-simulator">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/Slots/遊戲發想/彩罐熱舞 2/</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameName">彩罐熱舞 2</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
+            id="carryMultiValue">0</span></span>
+        <span class="feature-pill" id="multPill"><span class="k">Mult</span><span class="v"
+            id="spinMultiValue">x0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (75x)</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+        </section>
+
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <section id="batch-simulation" class="control-zone debug-only debug-hidden demogame-fallback-simulation">
+        <span class="zone-label">Simulation</span>
+        <div id="batchSimulationNote" class="batch-simulation-note">Independent math simulation · Current Bet</div>
+        <div class="batch-simulation-controls">
+          <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="10000"
+            inputmode="numeric" aria-label="Simulation rounds">
+          <button id="batchSimulationStartBtn" type="button">Start</button>
+        </div>
+        <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+            id="batchSimulationRoundCount">0</span></div>
+        <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value"
+            id="batchSimulationRtp">0.00%</span></div>
+        <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+            id="batchSimulationHitRate">0.00%</span></div>
+        <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+            id="batchSimulationFgTrigger">0.00% (-- rounds)</span></div>
+        <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+            id="batchSimulationMaxMultiplier">x0</span></div>
+        <div class="simulation-row"><span class="s-label">Retry Limit Exceeded</span><span class="s-value"
+            id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
+        <table class="batch-cascade-table" aria-label="Cascade distribution">
+          <thead>
+            <tr><th>Scene</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5+</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>BG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+            <tr><th>FG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect">
+              <option value="">Auto</option>
+            </select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">版本紀錄</div>
+      <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>v0（0.1.0.0）</h4>
+        <ol>
+          <li>建立彩罐熱舞 2 發想 demo：複製 H026 彩罐熱舞 1000 的 index 與 config_92A.js（4.0.0.6）改成續作規則。（10/21）</li>
+          <li>移除 R3 整條金框：特殊輪帶 B2／F1／F2／F3 的第 3 軸改用 B1 的第 3 軸（200 格中 12 格金框），FG 不再保證 R3 整條金框。（10/21）</li>
+          <li>新增金框擴散：每用掉 1 個金框擴散 1 次，補位後在可視 15 格隨機選 1～3 格（權重暫定 50／35／15）；一般符號變金框（30% 帶倍數，暫定），已是金框則等於直接消除一次：轉 Wild、收集倍數、不計分、不連鎖。（10/21）</li>
+          <li>Card System 暫時關閉；符號、倍數權重沿用 H026，RTP 未調。（10/21）</li>
+          <li>抽樣（Card System 關閉、一般押注 2 萬局）：自然 RTP 12,869.8%（同條件 H026 為 1,902.9%）、FG 約 1/43；擴散讓金框與倍數大量增加，倍數權重需重訂。（10/21）</li>
+          <li>展示用調整（讓特色看得到，數值未調）：金框倍數權重只留 x2／x3／x5／x8／x10（40／25／18／10／7）；R2～R4 輪帶一般符號每 4 格改 1 格為金框（R3 金框 12 → 59／200），掉落權重一般符號各移 30% 給金框；擴散新金框帶倍數機率 30% → 50%。（10/21）</li>
+          <li>擴散格加射擊動畫：準星鎖定 → 開槍（閃光、火花、彈孔、盤面震動），之後亮出擴散結果；只做畫面、不改結果。（10/21）</li>
+          <li>抽樣（Card System 關閉、一般押注 2 萬局）：自然 RTP 202,971.1%、Hit 25.4%、FG 約 1/41；金框大增後 Wild 與連消暴增，數值需整體重訂。（10/21）</li>
+          <li>金框擴散不再選到 R1：只在 R2～R5 的 12 格中挑（R1 不會被瞄準）。（10/21）</li>
+        </ol>
+      </article>
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect">
+            <option value="config.js">DRAFT</option>
+          </select>
+        </label>
+        <label class="config-control" for="cardProfileSelect">
+          <span data-i18n="playerProfile">Player</span>
+          <select id="cardProfileSelect">
+            <option value="newbie">Newbie</option>
+            <option value="oldhand">Oldhand</option>
+          </select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span>Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+      </div>
+      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+  </dialog>
+
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# 彩罐熱舞 2 Game Help Draft（發想，基底 H026）
+
+這份 md 是 `其他/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx` 中 `7.Help` 分頁的前置確認稿。
+之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
+
+## Game Meta
+
+| Field | Value |
+| --- | --- |
+| game_id | ⏳（發想） |
+| parsheet_id | ⏳（發想） |
+| name_zh | 彩罐熱舞 2 |
+| name_en | Pinata Beat 2 |
+| game_type | Video Slot - 20 Lines / Cascade |
+
+---
+
+## PAYTABLE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符号赔付值 | SYMBOL PAYOUT VALUES |
+
+### WILD SYMBOL
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符号 | WILD SYMBOL |
+| 規則說明 | ▪ [WW] 可替代除 [Scatter] 外的所有符号。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
+
+### SCATTER SYMBOL
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 散布符号 | SCATTER SYMBOL |
+| 規則說明 | ▪ 當本次旋轉連消結束後，若最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
+
+### 賠率表
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+| 中文欄 | 中文欄 | 中文欄 |
+| --- | --- | --- |
+| [M1] 5 - 5000 | [M2] 5 - 2000 | [M3] 5 - 1000 |
+| [M1] 4 - 1250 | [M2] 4 - 500 | [M3] 4 - 250 |
+| [M1] 3 - 250 | [M2] 3 - 100 | [M3] 3 - 75 |
+| [M4] 5 - 750 | [M5] 5 - 500 | [A] 5 - 250 |
+| [M4] 4 - 200 | [M5] 4 - 100 | [A] 4 - 50 |
+| [M4] 3 - 50 | [M5] 3 - 25 | [A] 3 - 10 |
+| [K] 5 - 250 | [Q] 5 - 250 | [J] 5 - 250 |
+| [K] 4 - 50 | [Q] 4 - 50 | [J] 4 - 50 |
+| [K] 3 - 10 | [Q] 3 - 10 | [J] 3 - 10 |
+
+---
+
+## CASCADING FEATURE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 消除特色 | CASCADING FEATURE |
+| 規則說明 | ▪ 每輪結算後，中獎符號會被消除；消除後產生的空格由上方符號向下掉落補位。 | ▪ AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 補牌後會再次檢查新的中獎組合，直到不再形成新的中獎組合為止。 | ▪ AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
+
+---
+
+## MULTIPLIER FEATURE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 倍数特色 | MULTIPLIER FEATURE |
+| 規則說明 | ▪ 金框符号可能附带倍数。倍数等级为：{×2}, {×3}, {×5}, {×8}, {×10}, {×15}, {×20}, {×25}, {×50}, {×100}, {×500}, {×1000}。 | ▪ GOLDEN FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, X{1000}. |
+| 規則說明 | ▪ 僅當帶倍數的金框符號實際參與得分並被消除時，其倍數才會被收集並累積。 | ▪ THE MULTIPLIER IS ONLY COLLECTED AND ADDED TO THE ACCUMULATED TOTAL WHEN THE GOLDEN FRAMED SYMBOL WITH A MULTIPLIER ACTUALLY PARTICIPATES IN A WIN AND IS CLEARED. |
+| 規則說明 | ▪ 當本次旋轉無法再消除時，若本次旋轉有實際收集到倍數，則將當前累積總倍數乘上本次旋轉的總贏分。 | ▪ WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
+
+---
+
+## GOLDEN FRAMED FEATURE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金框特色 | GOLDEN FRAMED FEATURE |
+| 規則說明 | ▪ 第 {2}、{3}、{4} 輪的一般符號有機會帶有金框。 | ▪ GENERAL SYMBOLS ON REELS 2, 3, AND 4 MAY APPEAR WITH A GOLDEN FRAME. |
+| 規則說明 | ▪ 金框符号与原始符号具有相同的基础赔率。 | ▪ GOLDEN FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOL. |
+| 規則說明 | ▪ 若前一輪中獎組合中含有金框符號，該位置會保留並轉化為 [WW]。 | ▪ IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLDEN FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW]. |
+| 規則說明 | ▪ 每有 1 個金框符號轉化為 [WW]，補位完成後會在第 {2}～{5} 輪隨機選 {1}～{3} 個位置：一般符號變成金框符號（可能帶倍數）；已是金框符號的位置等同直接消除一次，轉化為 [WW] 並收集其倍數，但不計分、也不再觸發擴散。 | ▪ EACH TIME A GOLDEN FRAMED SYMBOL CHANGES INTO [WW], AFTER THE REFILL {1} TO {3} RANDOM POSITIONS ON REELS {2} TO {5} ARE SELECTED: A GENERAL SYMBOL BECOMES A GOLDEN FRAMED SYMBOL (WHICH MAY CARRY A MULTIPLIER); A GOLDEN FRAMED SYMBOL IS TREATED AS CLEARED ONCE, CHANGES INTO [WW] AND ITS MULTIPLIER IS COLLECTED, WITHOUT PAYING AND WITHOUT TRIGGERING ANOTHER SELECTION. |
+
+---
+
+## FREE GAME FEATURE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免费游戏特色 | FREE GAME FEATURE |
+| 規則說明 | ▪ 当本次旋转连消结束后，若最终盘面出现 {3}、{4} 或 {5} 个 [Scatter]，即可触发免费游戏，分别获得 {12}、{14} 或 {16} 场免费游戏。 | ▪ WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
+| 規則說明 | ▪ 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | ▪ DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
+| 規則說明 | ▪ 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | ▪ AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
+| 規則說明 | ▪ 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {12}、{14} 或 {16} 場免費遊戲。 | ▪ FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
+
+---
+
+## EXTRA BET
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 额外投注 | EXTRA BET |
+| 規則說明 | ▪ 玩家可選擇額外投注模式進行旋轉。 | ▪ THE PLAYER MAY SELECT THE EXTRA BET MODE. |
+| 規則說明 | ▪ 額外投注的投注金額為 {2}x 總投注，並可提高觸發免費遊戲的機會。 | ▪ EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
+
+---
+
+## BUY FEATURE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 购买特色 | BUY FEATURE |
+| 規則說明 | ▪ 玩家可支付 {75}x 投注，直接购买进入一次免费游戏。 | ▪ BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. |
+| 規則說明 | ▪ 购买后直接觸發免费游戏规格。 | ▪ PURCHASING THE BUY FEATURE GUARANTEES ENTRY INTO FREE GAME. |
+
+---
+
+## OP JACKPOT
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | OP JACKPOT | OP JACKPOT |
+| 規則說明 | ▪ 在游戏中，OP JACKPOT 特色由特色转轮上 [C1] 随机触发。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ OP JACKPOT 特色会在画面中出现 {12} 个 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | ▪ 选择 {1} 个 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR],OR [MINI]. |
+| 規則說明 | ▪ 当玩家获得 {3} 个相同的 OP JACKPOT 特色符号即可获得该 OP JACKPOT 并结算总奖金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | ▪  [GRAND] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
+| 規則說明 | ▪  [MAJOR] 为连机累进彩金。单场游戏中，投注选项选择 {2.00} 以上即可解锁 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
+| 規則說明 | ▪  [MINOR] 为红利彩金，依照投注选项改变。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪  [MINI] 为红利彩金，依照投注选项改变。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高触发 OP JACKPOT 特色的机会越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
+
+---
+
+## LINE GAME
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 赔线说明 | LINE GAME |
+| 規則說明 | ▪ 本游戏共有 {20} 条固定赔线。 | ▪ THE GAME HAS {20} FIXED PAY LINES. |
+| 規則說明 | ▪ 中獎組合必須由最左側開始，由左至右連續出現才算中獎。 | ▪ WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. |
+| 規則說明 | ▪ 单一赔线仅支付最高奖项。 | ▪ ONLY THE HIGHEST WIN PER LINE IS PAID. |
+| 規則說明 | ▪ [走線圖 20 LINE] | ▪ [走線圖 20 LINE] |
+
+---
+
+## GAME RULE
+
+| Item | 簡中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 游戏规则 | GAME RULES |
+| 規則說明 | ▪ 选择您想要玩的投注选项。 | ▪ SELECT BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 所有中奖金额均乘以投注选项，除非是累积奖。 | ▪ ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
+| 規則說明 | ▪ 游戏出现故障，所有赔付和游戏都视为无效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 若玩家在免费游戏特色期间中断游戏，系统将会自动计算游戏结果，并将获奖金额加入至余额中。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
+  </script>
+
+  <script>
+    const H026_CONFIG_FILES = ["config.js"];   // 彩罐熱舞 2 發想：單一 config
+    const configFromQuery = new URLSearchParams(window.location.search).get("config");
+    const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
+    document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
+  </script>
+  <script>
+    const Box = window.H026_BOX_DATA;
+    const DENOM = 0.002;
+    const INITIAL_BALANCE_MONEY = 10000;
+    const INITIAL_BALANCE = INITIAL_BALANCE_MONEY / DENOM;
+    const FEATURE_TRIGGER_SCATTER_MIN = 3;
+    let CARD_SYSTEM_ENABLED = (Box.card_system?.enabled ?? true) && (() => {
+      try { return localStorage.getItem("slotDemoCardSystem") !== "off"; } catch (_) { return true; }
+    })();
+    const SCORE_WINDOW_SIZE = Box.window_size;
+    const DISPLAY_WINDOW_SIZE = SCORE_WINDOW_SIZE + 1;
+    const SCORE_ROW_OFFSET = DISPLAY_WINDOW_SIZE - SCORE_WINDOW_SIZE;
+    const REEL3_SPECIAL_TABLE_IDS = new Set();   // 彩罐熱舞 2 移除 R3 整條金框：不再使用 R3 專屬倍數表
+    const FG_SPIN_CAP = 50;
+    const FG_TRIGGER_BASE_SPINS = 12;
+    const FG_EXTRA_SPINS_PER_SCATTER = 2;
+    const BET_OPTIONS_MONEY = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
+    const SAVED_LANGUAGE = (() => {
+      try {
+        return localStorage.getItem("slotDemoLanguage") === "zh" ? "zh" : "en";
+      } catch (_) {
+        return "en";
+      }
+    })();
+    const SAVED_CARD_PROFILE = (() => {
+      try {
+        return localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand";
+      } catch (_) {
+        return "oldhand";
+      }
+    })();
+    const state = {
+      balance: INITIAL_BALANCE,
+      totalBet: 0,
+      totalWin: 0,
+      totalSpins: 0,
+      hitSpins: 0,
+      freegameTriggerCount: 0,
+      normalTriggerCount: 0,
+      featurebuyTriggerCount: 0,
+      forcedTriggerCount: 0,
+      retriggerCount: 0,
+      roundCount: 0,
+      maxMultiplier: 0,
+      betIndex: 0,
+      activeRound: null,
+      activeSpin: null,
+      displayBalance: INITIAL_BALANCE,
+      displayWin: 0,
+      displayRoundWin: 0,
+      displayCoinIn: 0,
+      isBusy: false,
+      pendingRound: null,
+      pendingSpinIndex: 0,
+      autoEnabled: false,
+      extraBetEnabled: false,
+      speedMultiplier: 1,
+      autoDelayMs: 700,
+      debugEnabled: false,
+      stepSnapshots: [],
+      stepViewIndex: -1,
+      debugSpinQueued: false,
+      debugSkipPlayback: false,
+      forceFg: false,
+      autoTimer: null,
+      language: SAVED_LANGUAGE,
+      cardProfile: SAVED_CARD_PROFILE,
+      lastMessage: "Ready — press Spin"
+    };
+
+    const boardEl = document.getElementById("board");
+    const messageBarEl = document.getElementById("messageBar");
+    const modeTextEl = document.getElementById("modeText");
+    const featureStatusEl = document.getElementById("featureStatus");
+    const spinMultiValueEl = document.getElementById("spinMultiValue");
+    const carryMultiValueEl = document.getElementById("carryMultiValue");
+    const fgLeftPillEl = document.getElementById("fgLeftPill");
+    const fgLeftValueEl = document.getElementById("fgLeftValue");
+    const balanceValueEl = document.getElementById("balanceValue");
+    const betValueEl = document.getElementById("betValue");
+    const winValueEl = document.getElementById("winValue");
+    const rtpValueEl = document.getElementById("rtpValue");
+    const hitRateValueEl = document.getElementById("hitRateValue");
+    const fgTriggerValueEl = document.getElementById("fgTriggerValue");
+    const roundCountValueEl = document.getElementById("roundCountValue");
+    const maxMultiplierValueEl = document.getElementById("maxMultiplierValue");
+    const batchSimulationPanelEl = document.getElementById("batch-simulation");
+    const lineListEl = document.getElementById("lineList");
+    const spinResultListEl = document.getElementById("spinResultList");
+    const gameIdEl = document.getElementById("gameId");
+    const gameNameEl = document.getElementById("gameName");
+    const spinBtn = document.getElementById("spinBtn");
+    const normalBetBtn = document.getElementById("normalBetBtn");
+    const extraBetBtn = document.getElementById("extraBetBtn");
+    const buyFeatureBtn = document.getElementById("buyFeatureBtn");
+    const betBtn = document.getElementById("betBtn");
+    const betMinusBtn = document.getElementById("betMinusBtn");
+    const betPlusBtn = document.getElementById("betPlusBtn");
+    const betMenuEl = document.getElementById("betMenu");
+    const resetBtn = document.getElementById("resetBtn");
+    const autoBtn = document.getElementById("autoBtn");
+    const speedRangeEl = document.getElementById("speedRange");
+    const speedValueEl = document.getElementById("speedValue");
+    const configSelectEl = document.getElementById("configSelect");
+    const cardProfileSelectEl = document.getElementById("cardProfileSelect");
+    const languageSelectEl = document.getElementById("languageSelect");
+    const helpBtn = document.getElementById("helpBtn");
+    const helpDialogEl = document.getElementById("helpDialog");
+    const closeHelpBtn = document.getElementById("closeHelpBtn");
+    const helpContentEl = document.getElementById("helpContent");
+    const helpSourceFrameEl = document.getElementById("helpSourceFrame");
+    const embeddedGameHelpMarkdownEl = document.getElementById("embeddedGameHelpMarkdown");
+    const liveLogBodyEl = document.getElementById("liveLogBody");
+    const clearLogBtn = document.getElementById("clearLogBtn");
+    const previousStepBtn = document.getElementById("previousStepBtn");
+    const nextStepBtn = document.getElementById("nextStepBtn");
+    const forceFgInputEl = document.getElementById("forceFgInput");
+    const debugModeInputEl = document.getElementById("debugModeInput");
+    const playDebugControlsEl = document.getElementById("play-debug-controls");
+    const setRngPanelEl = document.getElementById("set-rng-panel");
+    const controlsEl = document.getElementById("controls");
+    const spinResultWrapEl = document.getElementById("log-wrap");
+    const liveLogWrapEl = document.getElementById("live-log-wrap");
+    const cardRangeSelectEl = document.getElementById("cardRangeSelect");
+    const rngInputEl = document.getElementById("rngInput");
+    const setRngResetBtn = document.getElementById("setRngResetBtn");
+
+    function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+    function randInt(max) { return Math.floor(Math.random() * max); }
+
+    // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+    // 每局（Spin／Buy）以一組種子在 demogameRng.run() 內同步算完整局 runRound（BG＋消除＋FG＋Card retry），
+    // Log 印「RNG <碼>」，點一下填入 #rngInput，下一局照碼重跑。滾輪動畫的亂數在 run() 之外。
+    // 本作選項欄：r<Card BG Range 索引>、f（Force FG），多項以「.」連接（例 r3、f、r3.f），無則「-」。
+    const RNG_MODE_OF = { [Box.mode_normalbet]: "NB", [Box.mode_extrabet]: "EB", [Box.mode_featurebuy]: "BF" };
+    const RNG_BET_MODE_OF = { NB: Box.mode_normalbet, EB: Box.mode_extrabet, BF: Box.mode_featurebuy };
+    function rngConfigLabel() {
+      const text = document.getElementById("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
+        || document.getElementById("configSelect")?.selectedOptions?.[0]?.textContent
+        || "";
+      return text.trim().replace(/\s+/g, "");
+    }
+    function parseRngOpts(opts) {
+      const tokens = String(opts || "").split(".").filter(Boolean);
+      const range = tokens.find((token) => /^r\d+$/.test(token));
+      return { rangeIndex: range ? Number(range.slice(1)) : null, forceFg: tokens.includes("f") };
+    }
+    function runRoundRecorded(betMode, forceFg, debugOverrides) {
+      return runRound(betMode, forceFg, debugOverrides);
+    }
+    // 累積倍率線型（共用）：畫面一局（含該局 FG）演完才記；NB 記 NB、EB 記 EB，BF 不記錄。值＝總得分 ÷ 實際押注
+    function recordLineChartRound(round) {
+      const mode = round.bet_mode === Box.mode_normalbet ? "NB" : round.bet_mode === Box.mode_extrabet ? "EB" : null;
+      if (mode) window.demogameLineChart?.record(Number(round.total_win) / Number(round.coin_in), mode);
+    }
+    // 算一整局：code 有值時暫時套用碼內的 Card System／Profile（不動畫面選單），結束還原
+    function runSeededRound(betMode, forceFg, cardIndex, code) {
+      const savedCard = CARD_SYSTEM_ENABLED;
+      const savedProfile = state.cardProfile;
+      if (code) {
+        CARD_SYSTEM_ENABLED = code.card && Boolean(Box.card_system?.enabled ?? true);
+        state.cardProfile = /newbie/i.test(code.config) ? "newbie" : "oldhand";
+      }
+      try {
+        const useRange = CARD_SYSTEM_ENABLED && cardIndex !== null && betMode !== Box.mode_featurebuy;
+        const overrides = useRange ? { card_range: buildCardRangeOverride(cardIndex, betMode) } : null;
+        const opts = [useRange ? `r${cardIndex}` : "", forceFg ? "f" : ""].filter(Boolean).join(".");
+        const seed = code ? code.seed : window.demogameRng.newSeed();
+        const rngText = window.demogameRng.format({ config: rngConfigLabel(), mode: RNG_MODE_OF[betMode] || "NB", card: CARD_SYSTEM_ENABLED, opts, seed });
+        const round = window.demogameRng.run(seed, () => runRoundRecorded(betMode, forceFg, overrides));
+        return { round, rngText };
+      } finally {
+        CARD_SYSTEM_ENABLED = savedCard;
+        state.cardProfile = savedProfile;
+      }
+    }
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+    function toMoney(value) { return Number(value) * DENOM; }
+    function formatMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatDisplayMoney(value) { return toMoney(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatCompactNumber(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+    function formatBetMoney(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatPercent(rate) { return `${(Number(rate) * 100).toFixed(2)}%`; }
+    function getBetMoney() { return BET_OPTIONS_MONEY[state.betIndex] || BET_OPTIONS_MONEY[0]; }
+    function getBetMulti() { return getBetMoney() / (Box.default_coin_in * DENOM * Box.normalbet); }
+    function getExtraBetMultiplier() { return Number(Box.extrabet || Box.normalbet) / Number(Box.normalbet || 1); }
+    function getSelectedBetCostMoney() { return getBetMoney() * (state.extraBetEnabled ? getExtraBetMultiplier() : 1); }
+    function setText(el, text) { if (el) el.textContent = text; }
+
+    const UI_TEXT = {
+      en: {
+        spinResult: "Spin Result",
+        lineWins: "Line Wins",
+        playerProfile: "Player",
+        gameHelp: "Game Help",
+        close: "Close",
+        loadingRules: "Loading game rules...",
+        noWinningLine: "No winning line",
+        awaitingSpin: "Awaiting Spin",
+        noBoardResult: "No board result yet."
+      },
+      zh: {
+        spinResult: "Spin 結果",
+        lineWins: "Line Wins",
+        playerProfile: "玩家",
+        gameHelp: "遊戲 Help",
+        close: "關閉",
+        loadingRules: "正在載入遊戲規則...",
+        noWinningLine: "沒有 Line Win",
+        awaitingSpin: "等待 Spin",
+        noBoardResult: "尚無盤面結果。"
+      }
+    };
+
+    function tr(key) {
+      return UI_TEXT[state.language]?.[key] || UI_TEXT.en[key] || key;
+    }
+
+    function localizeMessage(text) {
+      if (state.language !== "zh") return text;
+      const exact = {
+        "Ready — press Spin": "Ready — 按 Spin",
+        "Set RNG reset": "Set RNG 已重置",
+        "Force FG applied to this spin": "Force FG 已套用至本次 Spin",
+        "Reels spinning...": "Reel 轉動中...",
+        "Session reset": "Session 已重置",
+        "Auto enabled": "Auto 已開啟",
+        "Auto disabled": "Auto 已關閉",
+        "Next spin queued | Current playback fast-forwarded": "下一次 Spin 已排入 | 目前播放已快轉"
+      };
+      if (exact[text]) return exact[text];
+      return text
+        .replace(/^Spin (\d+) \| (.+) \| Reel stop ready$/, "Spin $1 | $2 | Reel 已停止")
+        .replace(/^Spin (\d+) finished \| No cascade$/, "Spin $1 完成 | 無 Cascade")
+        .replace(/^Spin (\d+) done \| Final (.+)$/, "Spin $1 完成 | Final $2")
+        .replace(/ \| Drop complete$/, " | Drop 完成")
+        .replace(/^FG Spin (\d+) rolling\.\.\.$/, "FG Spin $1 轉動中...")
+        .replace(/^FG finished \| Total (.+)$/, "FG 完成 | Total $1")
+        .replace(/^FG ready \| (\d+) spins left, press Spin$/, "FG 準備完成 | 剩餘 $1 場，按 Spin")
+        .replace(/^Feature Buy entered FG \| (\d+) spins left, press Spin$/, "Feature Buy 已進入 FG | 剩餘 $1 場，按 Spin")
+        .replace(/^Force FG triggered \| (\d+) spins left, press Spin$/, "Force FG 已觸發 | 剩餘 $1 場，按 Spin")
+        .replace(/^FG triggered \| (\d+) spins left, press Spin$/, "FG 已觸發 | 剩餘 $1 場，按 Spin")
+        .replace(/^Debug Mode enabled$/, "Debug Mode 已開啟")
+        .replace(/^Debug Mode disabled$/, "Debug Mode 已關閉")
+        .replace(/^Card BG Range set to Auto$/, "Card BG Range 已設為 Auto")
+        .replace(/^Card BG Range selected \| (.+)$/, "Card BG Range 已選擇 | $1")
+        .replace(/^Reel Stop \/ Table RNG set \| (.+)$/, "Reel Stop／Table RNG 已設定 | $1")
+        .replace(/^Force FG armed for next Normal\/Extra spin$/, "Force FG 已設定於下一次 Normal／Extra Spin")
+        .replace(/^Force FG cancelled$/, "Force FG 已取消")
+        .replace(/^Normal Bet selected \| Bet (.+)$/, "Normal Bet 已選擇 | Bet $1")
+        .replace(/^Extra Bet \((.+)x\) selected \| Bet (.+)$/, "Extra Bet ($1x) 已選擇 | Bet $2");
+    }
+
+    let gameHelpLoaded = false;
+    let gameHelpMarkdown = "";
+
+    function getMarkdownCells(line) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return null;
+      return trimmed.slice(1, -1).split("|").map((cell) => cell.trim());
+    }
+
+    function parseGameHelpRules(markdown) {
+      const sections = [];
+      let section = null;
+      let group = null;
+
+      for (const rawLine of markdown.split(/\r?\n/)) {
+        const line = rawLine.trim();
+        const sectionMatch = line.match(/^##\s+(.+)$/);
+        if (sectionMatch) {
+          const key = sectionMatch[1].trim();
+          section = key === "Game Meta" ? null : { key, titleZh: "", titleEn: key, rules: [], groups: [] };
+          group = null;
+          if (section) sections.push(section);
+          continue;
+        }
+
+        const groupMatch = line.match(/^###\s+(.+)$/);
+        if (groupMatch && section) {
+          group = { key: groupMatch[1].trim(), titleZh: "", titleEn: groupMatch[1].trim(), rules: [], payouts: [] };
+          section.groups.push(group);
+          continue;
+        }
+
+        if (!section) continue;
+        const cells = getMarkdownCells(line);
+        if (!cells || cells.every((cell) => /^:?-{3,}:?$/.test(cell))) continue;
+
+        const [item, zh = "", en = ""] = cells;
+        if (item === "主要標題") {
+          section.titleZh = zh;
+          section.titleEn = en;
+        } else if (item === "副標題" && group) {
+          group.titleZh = zh;
+          group.titleEn = en;
+        } else if (item === "規則說明") {
+          (group || section).rules.push({ zh, en });
+        } else if (section.key === "PAYTABLE" && group?.key === "賠率表" && item !== "中文欄") {
+          group.payouts.push(...cells.filter(Boolean));
+        }
+      }
+
+      return sections.filter((entry) => entry.rules.length || entry.groups.some((item) => item.rules.length || item.payouts.length));
+    }
+
+    function appendHelpTitle(parent, className, zh, en) {
+      const title = document.createElement(className === "help-section-title" ? "h3" : "h4");
+      title.className = className;
+      title.textContent = state.language === "zh" ? (zh || en) : en;
+      parent.appendChild(title);
+    }
+
+    function appendHelpRule(parent, rule) {
+      const row = document.createElement("div");
+      row.className = "help-rule";
+      const cell = document.createElement("div");
+      cell.className = state.language === "zh" ? "help-rule-zh" : "help-rule-en";
+      cell.textContent = state.language === "zh" ? rule.zh : rule.en;
+      row.appendChild(cell);
+      parent.appendChild(row);
+    }
+
+    function formatHelpPayout(payout) {
+      return payout.replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+        const amount = Number(rawValue) * getBetMulti() * DENOM;
+        return `${separator}${formatCompactNumber(amount)}`;
+      });
+    }
+
+    function renderGameHelpRules(markdown) {
+      const sections = parseGameHelpRules(markdown);
+      if (!sections.length) throw new Error("No game rules found");
+      gameHelpMarkdown = markdown;
+      helpContentEl.innerHTML = "";
+
+      for (const section of sections) {
+        const card = document.createElement("section");
+        card.className = "help-section";
+        appendHelpTitle(card, "help-section-title", section.titleZh, section.titleEn);
+        if (section.key === "PAYTABLE") {
+          const note = document.createElement("div");
+          note.className = "help-rule";
+          const baseBetText = formatCompactNumber(getBetMoney());
+          const extraBetText = formatCompactNumber(getSelectedBetCostMoney());
+          note.textContent = state.language === "zh"
+            ? `以下派彩金額依目前投注級距 ${baseBetText} 顯示。${state.extraBetEnabled ? `Extra Bet 的總成本為 ${extraBetText}，額外成本不會放大符號賠率。` : ""}`
+            : `Payouts below are shown for the current base bet of ${baseBetText}.${state.extraBetEnabled ? ` The total Extra Bet cost is ${extraBetText}; its additional cost does not multiply symbol payouts.` : ""}`;
+          card.appendChild(note);
+        }
+        section.rules.forEach((rule) => appendHelpRule(card, rule));
+
+        for (const group of section.groups) {
+          if (!group.rules.length && !group.payouts.length) continue;
+          appendHelpTitle(card, "help-group-title", group.titleZh || group.key, group.titleEn);
+          group.rules.forEach((rule) => appendHelpRule(card, rule));
+          if (group.payouts.length) {
+            const payoutGrid = document.createElement("div");
+            payoutGrid.className = "help-payout-grid";
+            for (const payout of group.payouts) {
+              const item = document.createElement("div");
+              item.className = "help-payout-item";
+              item.textContent = formatHelpPayout(payout);
+              payoutGrid.appendChild(item);
+            }
+            card.appendChild(payoutGrid);
+          }
+        }
+        helpContentEl.appendChild(card);
+      }
+      gameHelpLoaded = true;
+    }
+
+    async function loadGameHelpRules() {
+      if (gameHelpLoaded) {
+        renderGameHelpRules(gameHelpMarkdown);
+        return;
+      }
+      let markdown = "";
+      try {
+        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        if (response.ok) markdown = await response.text();
+      } catch (_) {
+        // file:// blocks fetch in some browsers; the same-folder iframe is the offline fallback.
+      }
+
+      if (!markdown) {
+        try {
+          markdown = helpSourceFrameEl.contentDocument?.body?.innerText || "";
+        } catch (_) {
+          markdown = "";
+        }
+      }
+
+      if (!markdown) markdown = embeddedGameHelpMarkdownEl.textContent.trim();
+
+      try {
+        renderGameHelpRules(markdown);
+      } catch (_) {
+        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help_draft.md is in the same folder as index.html.</div>';
+      }
+    }
+
+    let betModeLayoutFrame = 0;
+    function setBetModeButtonLabel(button, fullLabel, shortLabel) {
+      if (!button) return;
+      button.dataset.fullLabel = fullLabel;
+      button.dataset.shortLabel = shortLabel;
+    }
+    function refreshBetModeLabels() {
+      const body = document.querySelector("#bet-mode-panel .zone-body");
+      if (!body) return;
+      const buttons = [...body.querySelectorAll("button[data-full-label]")];
+      cancelAnimationFrame(betModeLayoutFrame);
+      for (const button of buttons) {
+        button.style.minWidth = "";
+        button.style.flex = "";
+        button.textContent = button.dataset.fullLabel;
+      }
+      betModeLayoutFrame = requestAnimationFrame(() => {
+        const visible = buttons.filter((button) => getComputedStyle(button).display !== "none");
+        const firstTop = visible[0]?.offsetTop;
+        const compact = body.scrollWidth > body.clientWidth + 1 || visible.some((button) => button.offsetTop !== firstTop);
+        for (const button of buttons) {
+          button.textContent = compact ? button.dataset.shortLabel : button.dataset.fullLabel;
+          button.style.minWidth = compact ? "0" : "";
+          button.style.flex = compact ? "0 1 auto" : "";
+        }
+      });
+    }
+    addEventListener("resize", refreshBetModeLabels);
+
+    function applyLanguage() {
+      document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
+      languageSelectEl.value = state.language;
+      cardProfileSelectEl.value = state.cardProfile;
+      setText(gameNameEl, state.language === "zh" ? "彩罐熱舞 2" : "Pinata Beat 2");
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        element.textContent = tr(element.dataset.i18n);
+      });
+      closeHelpBtn.setAttribute("aria-label", state.language === "zh" ? "關閉遊戲 Help" : "Close game help");
+      setText(messageBarEl, localizeMessage(state.lastMessage));
+      // 押注模式按鈕帶倍數，共用字典只比對整段文字，故中文標籤由本檔提供（切回 English 時還原）
+      const zhLabels = state.language === "zh";
+      setBetModeButtonLabel(normalBetBtn, zhLabels ? "一般押注" : "Normal Bet", "NB");
+      setBetModeButtonLabel(extraBetBtn, `${zhLabels ? "額外押注" : "Extra Bet"} (${getExtraBetMultiplier()}x)`, `EX (${getExtraBetMultiplier()}x)`);
+      setBetModeButtonLabel(buyFeatureBtn, `${zhLabels ? "購買特色" : "Buy Feature"} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
+      refreshBetModeLabels();
+      updateSpinButtonState();
+      if (state.fgBoardRestored) updateFeatureBar(null); else updateFeatureBar(state.activeSpin, state.activeRound);   // FG 結束已回 BG 時維持 Base Game
+      renderLineList(state.activeSpin);
+      renderSpinResultList(state.activeSpin);
+      if (gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
+      try {
+        localStorage.setItem("slotDemoLanguage", state.language);
+      } catch (_) {
+        // Language still works for this session when storage is unavailable.
+      }
+    }
+
+    // Log：一律經共用 window.demogameLog(text, type)，行格式同 H045（載入／局號／RNG／BG／FG 觸發／每轉 FG／FG 結束／Error），不記演出過程
+    function appendLiveLog(text, type = "info") {
+      window.demogameLog?.(text, type);
+    }
+    function clearLiveLog() {
+      liveLogBodyEl.innerHTML = "";
+    }
+    // 底注（credits）：倍數＝得分 ÷ 底注（EB／BF 也 ÷ 底注）
+    function roundBaseBet(round) { return Number(round.bet_multi) * Box.default_coin_in * Box.normalbet; }
+    function roundModeLabel(round) {
+      return round.bet_mode === Box.mode_featurebuy ? "Buy Feature" : round.bet_mode === Box.mode_extrabet ? "Extra Bet" : "Normal Bet";
+    }
+    function writeMessage(text, type) {
+      state.lastMessage = text;
+      messageBarEl.textContent = localizeMessage(text);
+      if (type === "error") appendLiveLog(`Error | ${text}`, "error");
+    }
+    function getPlaybackDelay(ms) { return Math.max(16, Math.round(ms / state.speedMultiplier)); }
+    function getReelSpinFrames() { return Math.max(2, Math.round(8 / state.speedMultiplier)); }
+    function getNaturalRoundCount() { return Math.max(0, state.roundCount - state.featurebuyTriggerCount - state.forcedTriggerCount); }
+
+    function renderCardRangeOptions() {
+      const current = cardRangeSelectEl.value;
+      const betMode = state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
+      const cards = getCardSystemProfileCards("weight_bg", betMode);
+      cardRangeSelectEl.innerHTML = '<option value="">Auto</option>';
+      cards.forEach((card, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = card.type === "free_game"
+          ? "Free Game"
+          : `${Number(card.min)}x ~ ${Number(card.max)}x`;
+        cardRangeSelectEl.appendChild(option);
+      });
+      if (Array.from(cardRangeSelectEl.options).some((option) => option.value === current)) {
+        cardRangeSelectEl.value = current;
+      }
+    }
+
+    function selectedCardRangeIndex() {
+      if (!state.debugEnabled || cardRangeSelectEl.value === "") return null;
+      return Number(cardRangeSelectEl.value);
+    }
+
+    function buildCardRangeOverride(cardIndex, betMode) {
+      const cards = getCardSystemProfileCards("weight_bg", betMode);
+      const card = cards[cardIndex];
+      if (!card) throw new Error("指定的 Card BG Range 無效");
+      return {
+        profile_key: "set_rng",
+        card_index: cardIndex,
+        card_type: card.type || "range",
+        min: card.min ?? null,
+        max: card.max ?? null,
+        weight: 0,
+        label: card.type === "free_game"
+          ? "free_game"
+          : `${Number(card.min)}x ~ ${Number(card.max)}x`,
+        forced: true,
+        source: "set_rng"
+      };
+    }
+
+    function resetSetRng(writeLog = true) {
+      cardRangeSelectEl.value = "";
+      rngInputEl.value = "";
+      updateDebugControls();
+      if (writeLog) writeMessage("Set RNG reset");
+    }
+
+    function updateSetRngAvailability(debugInputLocked) {
+      const hasCardRange = cardRangeSelectEl.value !== "";
+      const hasRngCode = rngInputEl.value.trim() !== "";
+      cardRangeSelectEl.disabled = !CARD_SYSTEM_ENABLED || !state.debugEnabled || debugInputLocked;
+      rngInputEl.disabled = !state.debugEnabled || debugInputLocked;
+      setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasRngCode);
+    }
+
+    function renderStepSnapshot(index) {
+      const snapshot = state.stepSnapshots[index];
+      if (!snapshot) return;
+      state.stepViewIndex = index;
+      snapshot.render();
+      if (Number.isFinite(snapshot.winValue)) setText(winValueEl, formatDisplayMoney(snapshot.winValue));   // Previous／Next：Win 顯示該步演出時的累計得分（只改顯示，不動 state.displayWin／Credit）
+      updateDebugControls();
+    }
+
+    function goPreviousStep() {
+      if (state.isBusy || state.stepViewIndex <= 0) return;
+      renderStepSnapshot(state.stepViewIndex - 1);
+    }
+
+    function goNextStep() {
+      if (state.isBusy || state.stepSnapshots.length === 0) return;
+      if (state.stepViewIndex < state.stepSnapshots.length - 1) {
+        renderStepSnapshot(state.stepViewIndex + 1);
+      }
+    }
+
+    function updateDebugControls() {
+      playDebugControlsEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      setRngPanelEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      controlsEl.classList.toggle("debug-off", !state.debugEnabled);
+      spinResultWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      liveLogWrapEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      document.getElementById("change-log-wrap")?.classList.toggle("debug-hidden", !state.debugEnabled);   // 版本紀錄跟 Debug Mode 一起顯示
+      batchSimulationPanelEl.classList.toggle("debug-hidden", !state.debugEnabled);
+      debugModeInputEl.checked = state.debugEnabled;
+      const hasStepHistory = state.debugEnabled && !state.isBusy && state.stepSnapshots.length > 0;
+      const latestStepIndex = state.stepSnapshots.length - 1;
+      previousStepBtn.disabled = !hasStepHistory || state.stepViewIndex <= 0;
+      nextStepBtn.disabled = !hasStepHistory || state.stepViewIndex >= latestStepIndex;
+      const debugInputLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
+      forceFgInputEl.disabled = !state.debugEnabled || state.isBusy;
+      updateSetRngAvailability(debugInputLocked);
+    }
+
+    async function waitPlaybackStep(label, fallbackMs, snapshotRenderer = null) {
+      if (typeof snapshotRenderer === "function") {
+        state.stepSnapshots.push({ label, render: snapshotRenderer, winValue: Number(state.displayWin) || 0 });   // 記下演出到這步時 Win 的值
+        state.stepViewIndex = state.stepSnapshots.length - 1;
+        updateDebugControls();
+      }
+      if (state.debugSkipPlayback) return;
+      await sleep(getPlaybackDelay(fallbackMs));
+    }
+
+    function closeBetMenu() {
+      betMenuEl.classList.add("hidden");
+      betBtn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleBetMenu() {
+      const willOpen = betMenuEl.classList.contains("hidden");
+      betMenuEl.classList.toggle("hidden", !willOpen);
+      betBtn.setAttribute("aria-expanded", String(willOpen));
+    }
+
+    function updateBetMenuSelection() {
+      Array.from(betMenuEl.children).forEach((option, index) => {
+        const isActive = index === state.betIndex;
+        option.classList.toggle("is-active", isActive);
+        option.setAttribute("aria-selected", String(isActive));
+      });
+    }
+
+    function setBetIndex(nextIndex) {
+      if (state.pendingRound) return;
+      state.betIndex = Math.min(BET_OPTIONS_MONEY.length - 1, Math.max(0, nextIndex));
+      updateSessionCards();
+      updateSpinButtonState();
+      updateBetMenuSelection();
+      if (helpDialogEl.open && gameHelpMarkdown) renderGameHelpRules(gameHelpMarkdown);
+      writeMessage(`Bet ${formatBetMoney(getSelectedBetCostMoney())}`);
+    }
+
+    function renderBetMenu() {
+      betMenuEl.innerHTML = "";
+      BET_OPTIONS_MONEY.forEach((amount, index) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "bet-option";
+        option.setAttribute("role", "option");
+        option.textContent = formatBetMoney(amount);
+        option.addEventListener("click", (event) => {
+          event.stopPropagation();
+          setBetIndex(index);
+          closeBetMenu();
+        });
+        betMenuEl.appendChild(option);
+      });
+      updateBetMenuSelection();
+    }
+
+    function calcFgTriggerText() {
+      const naturalRounds = getNaturalRoundCount();
+      const triggerCount = state.normalTriggerCount;
+      const rate = naturalRounds > 0 ? triggerCount / naturalRounds : 0;
+      const cycle = triggerCount > 0 ? Math.round(naturalRounds / triggerCount) : "--";
+      return `${formatPercent(rate)} (${cycle}${state.language === "zh" ? "場" : " rounds"})`;
+    }
+
+    function resetDisplayState() {
+      state.displayBalance = state.balance;
+      state.displayWin = 0;
+      state.displayRoundWin = 0;
+      state.displayCoinIn = 0;
+    }
+
+    function syncDisplayForRoundStart(round) {
+      state.displayCoinIn = round.coin_in;
+      state.displayBalance = state.balance - round.total_win;
+      state.displayWin = 0;
+      state.displayRoundWin = 0;
+    }
+
+    function applyDisplaySpinWin(round, amount) {
+      state.displayRoundWin += amount;
+      state.displayWin = state.displayRoundWin;
+      state.displayBalance = state.balance - round.total_win + state.displayRoundWin;
+    }
+
+    function queueAutoSpin() {
+      clearTimeout(state.autoTimer);
+      if (!state.autoEnabled || state.isBusy) return;
+      state.autoTimer = setTimeout(() => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet), state.autoDelayMs);
+    }
+
+    function coinIn(betMode) {
+      const base = getBetMulti() * Box.default_coin_in * Box.normalbet;
+      if (betMode === Box.mode_featurebuy) return base * Box.featurebuy;
+      if (betMode === Box.mode_extrabet) return getBetMulti() * Box.default_coin_in * Box.extrabet;
+      return base;
+    }
+
+    function cardSystemCoinIn(betMode) {
+      return getBetMulti() * Box.default_coin_in * Box.normalbet;
+    }
+
+    function normalizeAssetPath(path) {
+      if (!path) return "";
+      const normalized = String(path).replace(/\\/g, "/");
+      if (normalized.startsWith("./") || normalized.startsWith("../")) return normalized;
+      if (/^[A-Za-z]:\//.test(normalized) || normalized.startsWith("file:///")) {
+        const marker = "/Source/";
+        const sourceIndex = normalized.indexOf(marker);
+        if (sourceIndex >= 0) {
+          return `.${normalized.slice(sourceIndex)}`;
+        }
+      }
+      if (normalized.startsWith("Source/")) return toDemoImage(`./${normalized}`);
+      return toDemoImage(normalized);
+    }
+
+    // Demogame規範 2.3：Demo 的符號圖一律用 WebP（config 的 asset_map 仍記原 PNG 檔名，數學交付檔不動）
+    function toDemoImage(path) {
+      return /\/Source\/Image\/[^/]+\.png$/i.test(path) ? path.replace(/\.png$/i, ".webp") : path;
+    }
+
+    function getAsset(symbolCode) {
+      return normalizeAssetPath(Box.asset_map[symbolCode] || "");
+    }
+    window.DEMOGAME_SYMBOL_ART = new Proxy({}, { get: (_, code) => getAsset(String(code)) });   // Help 賠率表符號圖（共用 demogame_common.js）
+
+    function getCardSystemProfileCards(profileKey, betMode = Box.mode_normalbet) {
+      const cardSystem = Box.card_system || {};
+      if (cardSystem.profiles) {
+        const legacyKeyMap = {
+          weight_bg: "normal_bet",
+          weight_fg: "free_game",
+          weight_bf: "buy_feature"
+        };
+        const legacyKey = legacyKeyMap[profileKey] || profileKey;
+        return Array.isArray(cardSystem.profiles[legacyKey]) ? cardSystem.profiles[legacyKey] : [];
+      }
+      const segmentKey = state.cardProfile === "newbie" ? "newbie" : "oldhand";
+      const fallbackSegmentKey = segmentKey === "newbie" ? "oldhand" : "newbie";
+      const segment = cardSystem[segmentKey] || {};
+      const fallbackSegment = cardSystem[fallbackSegmentKey] || {};
+      const betProfileKey = betMode === Box.mode_extrabet ? "extra_bet" : "normal_bet";
+      const betProfile = segment[betProfileKey] || {};
+      const fallbackBetProfile = fallbackSegment[betProfileKey] || {};
+      if (profileKey === "weight_bg") {
+        const primary = Array.isArray(betProfile.weight_bg) ? betProfile.weight_bg : [];
+        if (primary.length) return primary;
+        return Array.isArray(fallbackBetProfile.weight_bg) ? fallbackBetProfile.weight_bg : [];
+      }
+      if (profileKey === "weight_fg") {
+        const primary = Array.isArray(betProfile.weight_fg) ? betProfile.weight_fg : [];
+        if (primary.length) return primary;
+        return Array.isArray(fallbackBetProfile.weight_fg) ? fallbackBetProfile.weight_fg : [];
+      }
+      if (profileKey === "weight_bf") {
+        const primary = Array.isArray(segment.buy_feature?.weight_fg) ? segment.buy_feature.weight_fg : [];
+        if (primary.length) return primary;
+        return Array.isArray(fallbackSegment.buy_feature?.weight_fg) ? fallbackSegment.buy_feature.weight_fg : [];
+      }
+      if (profileKey === "weight_bf" && Array.isArray(cardSystem.weight_bf)) {
+        return cardSystem.weight_bf;
+      }
+      return [];
+    }
+
+    function pickCardSystemEntry(profileKey, betMode = Box.mode_normalbet, forcedCardIndex = null) {
+      if (!CARD_SYSTEM_ENABLED) return null;
+      const cards = getCardSystemProfileCards(profileKey, betMode);
+      if (!cards.length) return null;
+      let running = 0;
+      const cum = cards.map((card) => {
+        running += Number(card.weight || 0);
+        return running;
+      });
+      if (running <= 0) return null;
+      let pick;
+      if (forcedCardIndex !== null && forcedCardIndex !== undefined) {
+        const index = Number(forcedCardIndex);
+        if (!Number.isInteger(index) || index < 0 || index >= cards.length) {
+          throw new Error("指定的 Card BG Range 無效");
+        }
+        pick = {
+          index,
+          rng_value: index === 0 ? 0 : cum[index - 1],
+          rng_total: running,
+          forced: true
+        };
+      } else {
+        pick = pickByCum(cum);
+      }
+      const card = cards[pick.index];
+      const label = card.type === "free_game"
+        ? "free_game"
+        : `${Number(card.min)}x ~ ${Number(card.max)}x`;
+      return {
+        profile_key: profileKey,
+        card_index: pick.index,
+        card_type: card.type || "range",
+        min: card.min ?? null,
+        max: card.max ?? null,
+        weight: Number(card.weight || 0),
+        label,
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total,
+        forced: Boolean(pick.forced)
+      };
+    }
+
+    function getCardSystemRetryLimit() {
+      return Number(Box.card_system?.retry_limit || 5000);
+    }
+
+    function isRangeMatch(cardInfo, score, targetCoinIn) {
+      if (!cardInfo || cardInfo.card_type !== "range" || targetCoinIn <= 0) return false;
+      const multiplier = score / targetCoinIn;
+      return multiplier > Number(cardInfo.min || 0) && multiplier <= Number(cardInfo.max || 0);
+    }
+
+    function isCardSystemMatch(cardInfo, score, targetCoinIn, triggeredFreeGame) {
+      if (!cardInfo) return true;
+      if (cardInfo.card_type === "free_game") return Boolean(triggeredFreeGame);
+      return isRangeMatch(cardInfo, score, targetCoinIn);
+    }
+
+    function symbolName(symbolId) {
+      const code = Box.symbol_str[String(symbolId)];
+      if (code === "WW") return "Wild";
+      if (code === "C1") return "Scatter";
+      return code;
+    }
+
+    function pickByCum(cumWeight, forcedRngValue = null) {
+      const total = cumWeight[cumWeight.length - 1];
+      if (total <= 0) return { index: 0, rng_value: 0, rng_total: total };
+      const rngValue = forcedRngValue === null || forcedRngValue === undefined
+        ? randInt(total)
+        : Number(forcedRngValue);
+      if (!Number.isInteger(rngValue) || rngValue < 0 || rngValue >= total) {
+        throw new Error(`指定 RNG ${forcedRngValue} 超出範圍 0-${total - 1}`);
+      }
+      for (let index = 0; index < cumWeight.length; index += 1) {
+        if (rngValue < cumWeight[index]) {
+          return { index, rng_value: rngValue, rng_total: total, forced: forcedRngValue !== null && forcedRngValue !== undefined };
+        }
+      }
+      return { index: cumWeight.length - 1, rng_value: rngValue, rng_total: total, forced: forcedRngValue !== null && forcedRngValue !== undefined };
+    }
+
+    function pickByStop(cumWeight, forcedStopIndex) {
+      const total = cumWeight[cumWeight.length - 1];
+      const stopIndex = Number(forcedStopIndex);
+      if (!Number.isInteger(stopIndex) || stopIndex < 0 || stopIndex >= cumWeight.length) {
+        throw new Error(`指定 Stop ${forcedStopIndex} 超出範圍 0-${cumWeight.length - 1}`);
+      }
+      const rngMin = stopIndex === 0 ? 0 : Number(cumWeight[stopIndex - 1]);
+      const rngMax = Number(cumWeight[stopIndex]) - 1;
+      if (rngMin > rngMax) {
+        throw new Error(`指定 Stop ${stopIndex} 的自然權重為 0，無法停在此位置`);
+      }
+      return {
+        index: stopIndex,
+        rng_value: rngMin,
+        rng_total: total,
+        forced: true,
+        forced_stop: true
+      };
+    }
+
+    function pickMultiplier(cumMatrix, stripIdx) {
+      const pick = pickByCum(cumMatrix.map((row) => row[stripIdx]));
+      return {
+        multiplier: Box.value_multiplier_range[pick.index],
+        multiplier_index: pick.index,
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total
+      };
+    }
+
+    function isScoringRow(row) {
+      return row >= SCORE_ROW_OFFSET;
+    }
+
+    function usesReel3MultiplierTable(tableId, col) {
+      return col === 2 && REEL3_SPECIAL_TABLE_IDS.has(tableId);
+    }
+
+    function pickInitialMultiplier(tableId, row, col) {
+      if (usesReel3MultiplierTable(tableId, col)) {
+        return isScoringRow(row)
+          ? pickMultiplier(Box.weight_cum_multiple_r3_before, tableId)
+          : pickMultiplier(Box.weight_cum_multiple_r3_after, tableId);
+      }
+      return isScoringRow(row)
+        ? pickMultiplier(Box.weight_cum_multiple_before, tableId)
+        : pickMultiplier(Box.weight_cum_multiple_after, tableId);
+    }
+
+    function pickDropMultiplier(tableId, col) {
+      return usesReel3MultiplierTable(tableId, col)
+        ? pickMultiplier(Box.weight_cum_multiple_r3_after, tableId)
+        : pickMultiplier(Box.weight_cum_multiple_after, tableId);
+    }
+
+    function serializeBoard(board, goldMask, multiMask, specialMask) {
+      return board.map((row, rowIndex) => row.map((symbol, colIndex) => {
+        if (symbol < 0) {
+          return { symbol_id: -1, symbol_code: "", symbol_name: "Empty", image: "", is_gold: false, is_wild: false, is_scatter: false, multiplier: 0, is_special_gold: false };
+        }
+        const code = Box.symbol_str[String(symbol)];
+        return {
+          symbol_id: symbol,
+          symbol_code: code,
+          symbol_name: symbolName(symbol),
+          image: getAsset(code),
+          is_gold: Boolean(goldMask[rowIndex][colIndex]),
+          is_wild: symbol === 0,
+          is_scatter: symbol === 1,
+          multiplier: multiMask[rowIndex][colIndex],
+          is_special_gold: Boolean(specialMask?.[rowIndex]?.[colIndex])
+        };
+      }));
+    }
+
+    function chooseTable(sceneMode, fgMultiplierSum = 0, forcedTableRng = null) {
+      let pick;
+      let tableId;
+      let weights;
+      if (sceneMode === Box.scene_bg) {
+        pick = pickByCum(Box.weight_cum_table_bg, forcedTableRng);
+        tableId = pick.index;
+        weights = Box.weight_table_bg;
+      } else if (sceneMode === Box.scene_fg) {
+        const matchedRule = (Box.fg_table_rule?.rules || []).find((rule) => {
+          const minMultiplier = Number(rule.min_multiplier || 0);
+          const maxExclusive = rule.max_exclusive;
+          if (fgMultiplierSum < minMultiplier) return false;
+          if (maxExclusive !== null && maxExclusive !== undefined && fgMultiplierSum >= Number(maxExclusive)) return false;
+          return true;
+        });
+        if (matchedRule) {
+          tableId = Number(matchedRule.table_id);
+          pick = { index: tableId - 3, rng_value: 0, rng_total: 1 };
+        } else {
+          tableId = 3;
+          pick = { index: 0, rng_value: 0, rng_total: 1 };
+        }
+        weights = [];
+      } else {
+        pick = { index: 0, rng_value: 0, rng_total: 1 };
+        tableId = 6;
+        weights = [];
+      }
+      return {
+        table_id: tableId,
+        table_name: Box.strip_name_map[tableId],
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total,
+        forced: Boolean(pick.forced),
+        weights
+      };
+    }
+
+    function chooseEliminateMode(sceneMode) {
+      const bg = Box.eliminate_table_weight_cum_bg || [1, 2];
+      const fg = Box.eliminate_table_weight_cum_fg || [1, 2];
+      const bf = Box.eliminate_table_weight_cum_bf || fg;
+      const cumWeight = sceneMode === Box.scene_bg ? bg : sceneMode === Box.scene_fg ? fg : bf;
+      const pick = pickByCum(cumWeight);
+      const useDropA = pick.index === 0;
+      return {
+        use_drop_a: useDropA,
+        rng_value: pick.rng_value,
+        rng_total: pick.rng_total,
+        drop_mode: useDropA ? "A" : "B"
+      };
+    }
+
+    function generateBoard(tableId, reelStopOverrides = null) {
+      const board = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const goldMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const multiMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const reelRng = [];
+
+      for (let col = 0; col < Box.reel_num; col += 1) {
+        const reelLength = Box.reels_len[tableId][col];
+        const forcedStop = reelStopOverrides?.[col] ?? null;
+        const reelCumWeight = Box.arr_reels_weight_cum[tableId]
+          .slice(0, reelLength)
+          .map((row) => row[col]);
+        const pick = forcedStop === null || forcedStop === undefined
+          ? pickByCum(reelCumWeight)
+          : pickByStop(reelCumWeight, forcedStop);
+        const visibleStartIndex = (pick.index - SCORE_ROW_OFFSET + reelLength) % reelLength;
+        reelRng.push({ reel_index: col + 1, rng_value: pick.rng_value, rng_total: pick.rng_total, stop_index: pick.index, reel_length: reelLength, forced: Boolean(pick.forced) });
+        for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
+          const symbol = Box.arr_reels[tableId][(visibleStartIndex + row) % reelLength][col];
+          const baseSymbol = Box.base_symbol_of[symbol];
+          board[row][col] = baseSymbol;
+          goldMask[row][col] = Box.is_gold_symbol[symbol];
+        }
+      }
+      return { board, goldMask, multiMask, reelRng };
+    }
+
+    function countScatter(board) {
+      let total = 0;
+      for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (board[row][col] === 1) total += 1;
+        }
+      }
+      return total;
+    }
+
+    function columnHasScatter(board, col) {
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        if (board[row][col] === 1) return true;
+      }
+      return false;
+    }
+
+    function pickDropSymbol(tableId, useDropA, col, columnHasC1) {
+      while (true) {
+        const cum = useDropA ? Box.drop_weight_a_cum[tableId].map((v) => v[col]) : Box.drop_weight_b_cum[tableId].map((v) => v[col]);
+        const picked = pickByCum(cum);
+        const dropSymbol = Box.symbol_id[picked.index];
+        const baseSymbol = Box.base_symbol_of[dropSymbol];
+        if (columnHasC1 && baseSymbol === 1) continue;
+        return { picked, dropSymbol, baseSymbol };
+      }
+    }
+
+    function assignInitialMultiplier(tableId, goldMask, multiMask, specialMask) {
+      const goldPositions = [];
+      const scoringGoldPositions = [];
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (goldMask[row][col] !== 1) continue;
+          goldPositions.push([row, col]);
+          if (isScoringRow(row)) scoringGoldPositions.push([row, col]);
+        }
+      }
+      const specialPool = {
+        gold_count: scoringGoldPositions.length,
+        candidate_weight: 0,
+        rng_value: null,
+        rng_total: Box.special_pool_weight_base,
+        triggered: false,
+        special_index: null
+      };
+      const assignments = [];
+      if (goldPositions.length === 0) return { special_pool: specialPool, assignments };
+
+      let specialIdx = -1;
+      if (scoringGoldPositions.length > 0) {
+        const poolRow = Math.min(scoringGoldPositions.length - 1, Box.weight_special_pool.length - 1);
+        const candidateWeight = Box.weight_special_pool[poolRow][tableId];
+        specialPool.candidate_weight = candidateWeight;
+        if (candidateWeight > 0) {
+          const poolRng = randInt(Box.special_pool_weight_base);
+          specialPool.rng_value = poolRng;
+          if (poolRng < candidateWeight) {
+            specialIdx = randInt(scoringGoldPositions.length);
+            specialPool.triggered = true;
+            specialPool.special_index = specialIdx;
+          }
+        }
+      }
+
+      goldPositions.forEach(([row, col], index) => {
+        const scoringIndex = scoringGoldPositions.findIndex(([goldRow, goldCol]) => goldRow === row && goldCol === col);
+        const picked = scoringIndex >= 0 && scoringIndex === specialIdx
+          ? pickMultiplier(Box.weight_cum_multiple_special, tableId)
+          : pickInitialMultiplier(tableId, row, col);
+        multiMask[row][col] = picked.multiplier;
+        specialMask[row][col] = scoringIndex >= 0 && scoringIndex === specialIdx ? 1 : 0;
+        assignments.push({
+          row,
+          col,
+          multiplier: picked.multiplier,
+          multiplier_index: picked.multiplier_index,
+          rng_value: picked.rng_value,
+          rng_total: picked.rng_total,
+          weight_source: specialMask[row][col] === 1
+            ? "special"
+            : usesReel3MultiplierTable(tableId, col)
+              ? isScoringRow(row) ? "reel3_before" : "reel3_after"
+              : isScoringRow(row) ? "before" : "after"
+        });
+      });
+
+      return { special_pool: specialPool, assignments };
+    }
+
+    function getPay(symbol, lineLen, betMulti) {
+      if (symbol < 0 || Box.is_score_symbol[symbol] === 0 || lineLen < 3) return 0;
+      return Box.pay_table[symbol][lineLen - 3] * betMulti;
+    }
+
+    function evaluateBoard(board, betMulti, cascadeIndex) {
+      const hitMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const lineWins = [];
+      let totalPay = 0;
+
+      for (let lineIndex = 0; lineIndex < Box.paylines.length; lineIndex += 1) {
+        let bestSymbol = -1;
+        let bestLen = 0;
+        let bestPay = 0;
+        let triggeredByWild = false;
+        // Line wins must start from the leftmost reel on the payline.
+        const firstRow = Box.paylines[lineIndex][0] + SCORE_ROW_OFFSET;
+        const firstSymbolRaw = board[firstRow][0];
+        if (firstSymbolRaw === 1) continue;
+        const firstSymbol = Box.base_symbol_of[firstSymbolRaw];
+
+        if (firstSymbolRaw === 0) {
+          Box.symbols_score.forEach((symbol) => {
+            let lineLen = 0;
+            let usedWild = false;
+            for (let reel = 0; reel < Box.reel_num; reel += 1) {
+              const row = Box.paylines[lineIndex][reel] + SCORE_ROW_OFFSET;
+              const symbolOnLine = board[row][reel];
+              if (symbolOnLine === 1) break;
+              if (Box.base_symbol_of[symbolOnLine] === symbol || symbolOnLine === 0) {
+                if (symbolOnLine === 0) usedWild = true;
+                lineLen += 1;
+              } else {
+                break;
+              }
+            }
+            const pay = getPay(symbol, lineLen, betMulti);
+            if (pay > bestPay) {
+              bestSymbol = symbol;
+              bestLen = lineLen;
+              bestPay = pay;
+              triggeredByWild = usedWild;
+            }
+          });
+        } else {
+          let lineLen = 0;
+          let usedWild = false;
+          for (let reel = 0; reel < Box.reel_num; reel += 1) {
+            const row = Box.paylines[lineIndex][reel] + SCORE_ROW_OFFSET;
+            const symbolOnLine = board[row][reel];
+            if (symbolOnLine === 1) break;
+            if (Box.base_symbol_of[symbolOnLine] === firstSymbol || symbolOnLine === 0) {
+              if (symbolOnLine === 0) usedWild = true;
+              lineLen += 1;
+            } else {
+              break;
+            }
+          }
+          bestSymbol = firstSymbol;
+          bestLen = lineLen;
+          bestPay = getPay(bestSymbol, bestLen, betMulti);
+          triggeredByWild = usedWild;
+        }
+
+        if (bestPay <= 0) continue;
+
+        const positions = [];
+        for (let reel = 0; reel < bestLen; reel += 1) {
+          const row = Box.paylines[lineIndex][reel] + SCORE_ROW_OFFSET;
+          hitMask[row][reel] = 1;
+          positions.push([row, reel]);
+        }
+        totalPay += bestPay;
+        lineWins.push({
+          line_index: lineIndex + 1,
+          symbol_id: bestSymbol,
+          symbol_code: Box.symbol_str[String(bestSymbol)],
+          symbol_name: symbolName(bestSymbol),
+          line_length: bestLen,
+          line_pay: bestPay,
+          positions,
+          cascade_index: cascadeIndex,
+          is_triggered_by_wild: triggeredByWild
+        });
+      }
+
+      return { total_pay: totalPay, hit_mask: hitMask, line_wins: lineWins };
+    }
+
+    function applyHitAndTransform(board, goldMask, multiMask, hitMask, multiplierSum) {
+      let addedMultiplier = 0;
+      const hitPositions = [];
+      const convertedGoldPositions = [];
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (hitMask[row][col] !== 1) continue;
+          hitPositions.push([row, col]);
+          if (goldMask[row][col] === 1) {
+            const gained = multiMask[row][col];
+            addedMultiplier += gained;
+            multiplierSum += gained;
+            convertedGoldPositions.push({ row, col, multiplier: gained });
+            hitMask[row][col] = 2;
+          } else {
+            board[row][col] = -1;
+            goldMask[row][col] = 0;
+            multiMask[row][col] = 0;
+          }
+        }
+      }
+      return { multiplier_sum: multiplierSum, hit_positions: hitPositions, converted_gold_positions: convertedGoldPositions, added_multiplier: addedMultiplier };
+    }
+
+    function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask) {
+      const dropEvents = [];
+      for (let col = 0; col < Box.reel_num; col += 1) {
+        const keep = [];
+        for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
+          if (hitMask[row][col] === 0) {
+            keep.push([board[row][col], goldMask[row][col], multiMask[row][col], specialMask[row][col]]);
+          } else if (hitMask[row][col] === 2) {
+            keep.push([0, 0, 0, 0]);
+            dropEvents.push({ row, col, event: "gold_to_wild", symbol_id: 0, symbol_code: "WW" });
+          }
+        }
+
+        let keepIndex = 0;
+        for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
+          if (keepIndex < keep.length) {
+            const [symbol, isGold, multiplier, isSpecial] = keep[keepIndex];
+            board[row][col] = symbol;
+            goldMask[row][col] = isGold;
+            multiMask[row][col] = multiplier;
+            specialMask[row][col] = isSpecial;
+            keepIndex += 1;
+          } else {
+            board[row][col] = -1;
+            goldMask[row][col] = 0;
+            multiMask[row][col] = 0;
+            specialMask[row][col] = 0;
+          }
+        }
+
+        let hasC1InCol = columnHasScatter(board, col);
+        for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
+          if (board[row][col] >= 0) continue;
+          let picked = null;
+          let dropSymbol;
+          let baseSymbol;
+          ({ picked, dropSymbol, baseSymbol } = pickDropSymbol(tableId, useDropA, col, hasC1InCol));
+          const dropSource = "weight";
+          const dropMode = useDropA ? "A" : "B";
+          board[row][col] = baseSymbol;
+          goldMask[row][col] = Box.is_gold_symbol[dropSymbol];
+          specialMask[row][col] = 0;
+          let multiplierInfo = null;
+          if (goldMask[row][col] === 1) {
+            const multiPicked = pickDropMultiplier(tableId, col);
+            multiMask[row][col] = multiPicked.multiplier;
+            multiplierInfo = multiPicked;
+          } else {
+            multiMask[row][col] = 0;
+          }
+          if (baseSymbol === 1 && row >= SCORE_ROW_OFFSET) hasC1InCol = true;
+          dropEvents.push({
+            row,
+            col,
+            event: "drop_fill",
+            drop_mode: dropMode,
+            drop_source: dropSource,
+            rng_value: picked.rng_value,
+            rng_total: picked.rng_total,
+            strip_index: null,
+            drop_symbol_id: dropSymbol,
+            symbol_id: baseSymbol,
+            symbol_code: Box.symbol_str[String(baseSymbol)],
+            is_gold: Boolean(goldMask[row][col]),
+            multiplier_info: multiplierInfo
+          });
+        }
+      }
+      return dropEvents;
+    }
+
+    // ── 金框擴散（彩罐熱舞 2，game_rule §6.2／§6.3）──────────────────────────
+    // 每用掉 1 個金框（中獎轉 Wild）擴散 1 次：補位完成後，在 R2～R5 可視 12 格中的一般符號或金框隨機選 1～3 格（同段不重複；R1 不選）。
+    //   一般符號 → 變金框，依 gold_spread.multiplier_chance 帶倍數（倍數值沿用 weight_multiple_after，排除 0）。
+    //   已是金框 → 等於直接消除一次：轉 Wild、收集倍數；不計分，也不再觸發擴散（不連鎖）。
+    function pickSpreadCount() {
+      const cfg = Box.gold_spread;
+      let acc = 0;
+      const cum = cfg.count_weights.map((w) => (acc += Number(w) || 0));
+      return Number(cfg.count_values[pickByCum(cum).index]) || 0;
+    }
+
+    function pickSpreadMultiplier(tableId) {
+      let acc = 0;
+      const cum = Box.weight_multiple_after.map((row, i) => (acc += Box.value_multiplier_range[i] > 0 ? Number(row[tableId]) || 0 : 0));
+      if (acc <= 0) return 0;
+      return Box.value_multiplier_range[pickByCum(cum).index];
+    }
+
+    function spreadGold(tableId, usedCount, board, goldMask, multiMask, specialMask) {
+      const picks = [];
+      let addedMultiplier = 0;
+      if (!Box.gold_spread || usedCount <= 0) return { picks, added_multiplier: 0 };
+      const taken = new Set();
+      for (let trigger = 1; trigger <= usedCount; trigger += 1) {
+        const want = pickSpreadCount();
+        for (let n = 0; n < want; n += 1) {
+          const candidates = [];
+          for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) {
+            for (let col = 1; col < Box.reel_num; col += 1) {   // R1 不選
+              if (board[row][col] >= 2 && !taken.has(`${row}-${col}`)) candidates.push([row, col]);   // 0＝Wild、1＝Scatter 不選
+            }
+          }
+          if (!candidates.length) break;
+          const [row, col] = candidates[randInt(candidates.length)];
+          taken.add(`${row}-${col}`);
+          if (goldMask[row][col] === 1) {
+            const gained = Number(multiMask[row][col]) || 0;
+            addedMultiplier += gained;
+            board[row][col] = 0;
+            goldMask[row][col] = 0;
+            multiMask[row][col] = 0;
+            specialMask[row][col] = 0;
+            picks.push({ row, col, type: "gold_to_wild", multiplier: gained, trigger });
+          } else {
+            const multiplier = Math.random() < Number(Box.gold_spread.multiplier_chance || 0) ? pickSpreadMultiplier(tableId) : 0;
+            goldMask[row][col] = 1;
+            multiMask[row][col] = multiplier;
+            specialMask[row][col] = 0;
+            picks.push({ row, col, type: "new_gold", multiplier, trigger });
+          }
+        }
+      }
+      return { picks, added_multiplier: addedMultiplier };
+    }
+
+    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelStopOverrides = null, forcedTableRng = null) {
+      const table = chooseTable(sceneMode, fgMultiplierSum, forcedTableRng);
+      const eliminateMode = chooseEliminateMode(sceneMode);
+      const useDropA = eliminateMode.use_drop_a;
+      const generated = generateBoard(table.table_id, reelStopOverrides);
+      const board = generated.board;
+      const goldMask = generated.goldMask;
+      const multiMask = generated.multiMask;
+      const specialMask = Array.from({ length: DISPLAY_WINDOW_SIZE }, () => Array(Box.reel_num).fill(0));
+      const initialMultiplierInfo = assignInitialMultiplier(table.table_id, goldMask, multiMask, specialMask);
+
+      let rawPay = 0;
+      let multiplierSum = fgMultiplierSum;
+      const boardSteps = [];
+      const lineWins = [];
+      let lineWinTotal = 0;
+      let hitAny = false;
+      let multiUsed = false;
+      let cascadeIndex = 0;
+      let latestHitPositions = [];
+      const boardInit = serializeBoard(board, goldMask, multiMask, specialMask);
+
+      while (true) {
+        cascadeIndex += 1;
+        const boardBefore = serializeBoard(board, goldMask, multiMask, specialMask);
+        const evaluated = evaluateBoard(board, betMulti, cascadeIndex);
+        if (evaluated.total_pay <= 0) break;
+
+        hitAny = true;
+        rawPay += evaluated.total_pay;
+        evaluated.line_wins.forEach((item) => lineWins.push(item));
+        lineWinTotal += evaluated.line_wins.reduce((sum, item) => sum + item.line_pay, 0);
+
+        const applied = applyHitAndTransform(board, goldMask, multiMask, evaluated.hit_mask, multiplierSum);
+        multiplierSum = applied.multiplier_sum;
+        if (applied.added_multiplier > 0) multiUsed = true;
+        latestHitPositions = applied.hit_positions;
+        const boardAfterEliminate = serializeBoard(board, goldMask, multiMask, specialMask);
+        const dropEvents = cascadeDrop(table.table_id, useDropA, board, goldMask, multiMask, specialMask, evaluated.hit_mask);
+        const boardAfterDrop = serializeBoard(board, goldMask, multiMask, specialMask);
+        // 金框擴散：每用掉 1 個金框擴散 1 次（補位完成後）；選到既有金框＝直接消除一次，倍數收集
+        const multiplierSumAfterEliminate = multiplierSum;
+        const spread = spreadGold(table.table_id, applied.converted_gold_positions.length, board, goldMask, multiMask, specialMask);
+        multiplierSum += spread.added_multiplier;
+        if (spread.added_multiplier > 0) multiUsed = true;
+        const boardAfterSpread = spread.picks.length ? serializeBoard(board, goldMask, multiMask, specialMask) : null;
+
+        boardSteps.push({
+          cascade_index: cascadeIndex,
+          board_before: boardBefore,
+          hit_positions: applied.hit_positions,
+          line_wins: evaluated.line_wins,
+          board_after_eliminate: boardAfterEliminate,
+          board_after_drop: boardAfterDrop,
+          added_multiplier: applied.added_multiplier,
+          multiplier_sum_after_eliminate: multiplierSumAfterEliminate,
+          spread_picks: spread.picks,
+          spread_added_multiplier: spread.added_multiplier,
+          board_after_spread: boardAfterSpread,
+          multiplier_sum_after_cascade: multiplierSum,
+          cascade_pay: evaluated.total_pay,
+          drop_events: dropEvents,
+          converted_gold_positions: applied.converted_gold_positions
+        });
+      }
+
+      const scatterCount = countScatter(board);
+      const finalMultiplier = multiUsed && multiplierSum > 0 ? multiplierSum : 1;
+      const finalPay = rawPay * finalMultiplier;
+      return {
+        scene_mode: sceneMode,
+        scene_name: sceneMode === Box.scene_bg ? "BG" : sceneMode === Box.scene_fg ? "FG" : "BF",
+        table_id: table.table_id,
+        table_name: table.table_name,
+        drop_mode: useDropA ? "A" : "B",
+        rng_info: {
+          table,
+          reels: generated.reelRng,
+          drop_mode: eliminateMode,
+          card_system: cardSystemInfo,
+          initial_multipliers: initialMultiplierInfo,
+          drop_events: boardSteps.flatMap((step) => step.drop_events)
+        },
+        scatter_count: scatterCount,
+        raw_pay: rawPay,
+        final_multiplier: finalMultiplier,
+        final_pay: finalPay,
+        multiplier_sum_before_spin: fgMultiplierSum,
+        multiplier_sum_after_spin: multiplierSum,
+        board_init: boardInit,
+        board_steps: boardSteps,
+        line_wins: lineWins,
+        line_win_total: lineWinTotal,
+        board_final: serializeBoard(board, goldMask, multiMask, specialMask),
+        hit_any: hitAny,
+        multi_used: multiUsed,
+        latest_hit_positions: latestHitPositions
+      };
+    }
+
+    function runFreeGameSequence(freeSpinsAwarded, fgCardSystemInfo = null) {
+      const spins = [];
+      let freeTotalWin = 0;
+      let freeSpinsPlayed = 0;
+      let fgMultiplierSum = 0;
+      let remainingFreespins = Math.min(freeSpinsAwarded, FG_SPIN_CAP);
+
+      while (remainingFreespins > 0) {
+        const before = remainingFreespins;
+        const spin = runSpin(Box.scene_fg, fgMultiplierSum, getBetMulti(), fgCardSystemInfo);
+        fgMultiplierSum = spin.multiplier_sum_after_spin;
+        remainingFreespins -= 1;
+        let retriggerAwarded = 0;
+        if (spin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+          retriggerAwarded = FG_TRIGGER_BASE_SPINS + (spin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
+          remainingFreespins = Math.min(remainingFreespins + retriggerAwarded, FG_SPIN_CAP);
+        }
+        freeSpinsPlayed += 1;
+        spin.remaining_free_spins_before = before;
+        spin.remaining_free_spins_after = remainingFreespins;
+        spin.retrigger_awarded = retriggerAwarded;
+        spins.push(spin);
+        freeTotalWin += spin.final_pay;
+      }
+
+      return {
+        spins,
+        free_total_win: freeTotalWin,
+        free_spins_played: freeSpinsPlayed,
+        final_fg_multiplier_sum: fgMultiplierSum
+      };
+    }
+
+    function runRound(betMode, forceFg = false, debugOverrides = null) {
+      const currentCoinIn = coinIn(betMode);
+      if (state.balance < currentCoinIn) throw new Error(`餘額不足，需 ${formatMoney(currentCoinIn)}`);
+
+      const spins = [];
+      let baseTotalWin = 0;
+      let freeTotalWin = 0;
+      let totalWin = 0;
+      let freeSpinsAwarded = 0;
+      let freeSpinsPlayed = 0;
+      let fgMultiplierSum = 0;
+      let triggerSource = null;
+      let retryCount = 0;
+      let retryLimitExceeded = false;
+      let retryFailReason = null;
+      const forcedCardRange = debugOverrides?.card_range || null;
+      const hasForcedCard = CARD_SYSTEM_ENABLED && Boolean(forcedCardRange);
+      const bgCardSystemInfo = hasForcedCard
+        ? forcedCardRange
+        : !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy
+          ? null
+          : pickCardSystemEntry("weight_bg", betMode);
+      const runSpinCardSystemInfo = hasForcedCard ? null : bgCardSystemInfo;
+      const fgCardSystemInfo = !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy || hasForcedCard
+        ? null
+        : pickCardSystemEntry("weight_fg", betMode);
+      const bfCardSystemInfo = CARD_SYSTEM_ENABLED && betMode === Box.mode_featurebuy
+        ? pickCardSystemEntry("weight_bf", betMode)
+        : null;
+      const roundCardSystemCoinIn = cardSystemCoinIn(betMode);
+      const retryLimit = getCardSystemRetryLimit();
+      const markRetryLimitExceeded = (reason, count) => {
+        retryLimitExceeded = true;
+        retryFailReason = reason;
+        retryCount = Math.max(retryCount, count);
+      };
+
+      let baseSpin = null;
+      if (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet) {
+        if (bgCardSystemInfo?.card_type === "free_game") {
+          let bgRerollCount = 0;
+          while (true) {
+            const triggerSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo);
+            if (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+              bgRerollCount += 1;
+              if (bgRerollCount >= retryLimit) {
+                markRetryLimitExceeded("bg_free_game", bgRerollCount);
+                baseSpin = triggerSpin;
+                baseSpin.spin_index = 1;
+                baseSpin.remaining_free_spins_before = 0;
+                baseSpin.remaining_free_spins_after = 0;
+                baseSpin.retrigger_awarded = 0;
+                spins.push(baseSpin);
+                baseTotalWin = baseSpin.final_pay;
+                totalWin = baseTotalWin;
+                break;
+              }
+              continue;
+            }
+
+            baseSpin = triggerSpin;
+            baseSpin.spin_index = 1;
+            baseSpin.remaining_free_spins_before = 0;
+            baseSpin.remaining_free_spins_after = 0;
+            baseSpin.retrigger_awarded = 0;
+            spins.push(baseSpin);
+            break;
+          }
+
+          if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+            const awarded = FG_TRIGGER_BASE_SPINS + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
+            let fgResult = null;
+            let fgRerollCount = 0;
+            while (true) {
+              fgResult = runFreeGameSequence(awarded, fgCardSystemInfo);
+              if (isCardSystemMatch(fgCardSystemInfo, fgResult.free_total_win, roundCardSystemCoinIn, true)) break;
+              fgRerollCount += 1;
+              if (fgRerollCount >= retryLimit) {
+                markRetryLimitExceeded("fg", bgRerollCount + fgRerollCount);
+                break;
+              }
+            }
+
+            fgResult.spins.forEach((spin, index) => {
+              spin.spin_index = index + 2;
+              spins.push(spin);
+            });
+            baseTotalWin = baseSpin.final_pay;
+            freeTotalWin = fgResult.free_total_win;
+            totalWin = baseTotalWin + freeTotalWin;
+            freeSpinsAwarded = awarded;
+            freeSpinsPlayed = fgResult.free_spins_played;
+            fgMultiplierSum = fgResult.final_fg_multiplier_sum;
+            triggerSource = forceFg ? "force_fg" : "normal_trigger";
+            if (forceFg) state.forcedTriggerCount += 1;
+            else state.normalTriggerCount += 1;
+            state.freegameTriggerCount += 1;
+          }
+        } else {
+          let rerollCount = 0;
+          while (true) {
+            const normalSpin = runSpin(Box.scene_bg, 0, getBetMulti(), runSpinCardSystemInfo);
+            const triggered = normalSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
+
+            if (forceFg && !triggered) {
+              rerollCount += 1;
+              if (rerollCount > 5000) {
+                throw new Error("Force FG 重抽超過上限，請檢查 BG 觸發條件");
+              }
+              continue;
+            }
+
+            if (!forceFg && bgCardSystemInfo) {
+              if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
+                rerollCount += 1;
+                if (rerollCount >= retryLimit) {
+                  markRetryLimitExceeded("bg_range", rerollCount);
+                } else {
+                  continue;
+                }
+              }
+            }
+
+            baseSpin = normalSpin;
+            baseSpin.spin_index = 1;
+            baseSpin.remaining_free_spins_before = 0;
+            baseSpin.remaining_free_spins_after = 0;
+            baseSpin.retrigger_awarded = 0;
+            spins.push(baseSpin);
+            baseTotalWin = baseSpin.final_pay;
+            totalWin = baseTotalWin;
+            break;
+          }
+
+          if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN && !(retryLimitExceeded && retryFailReason === "bg_range")) {
+            const awarded = FG_TRIGGER_BASE_SPINS + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
+            const fgResult = runFreeGameSequence(awarded, null);
+            freeSpinsAwarded = awarded;
+            freeSpinsPlayed = fgResult.free_spins_played;
+            fgMultiplierSum = fgResult.final_fg_multiplier_sum;
+            fgResult.spins.forEach((spin, index) => {
+              spin.spin_index = index + 2;
+              spins.push(spin);
+            });
+            freeTotalWin = fgResult.free_total_win;
+            totalWin += freeTotalWin;
+            triggerSource = forceFg ? "force_fg" : "normal_trigger";
+            if (forceFg) state.forcedTriggerCount += 1;
+            else state.normalTriggerCount += 1;
+            state.freegameTriggerCount += 1;
+          } else if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN) {
+            triggerSource = forceFg ? "force_fg" : "normal_trigger";
+            if (forceFg) state.forcedTriggerCount += 1;
+            else state.normalTriggerCount += 1;
+            state.freegameTriggerCount += 1;
+          }
+        }
+      } else {
+        let roundRetryCount = 0;
+        while (true) {
+          let triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
+          let triggerRetryCount = 0;
+          while (triggerSpin.scatter_count < FEATURE_TRIGGER_SCATTER_MIN) {
+            triggerRetryCount += 1;
+            if (triggerRetryCount > 5000) {
+              throw new Error("Buy Feature 重抽超過上限，請檢查 BF 觸發條件");
+            }
+            triggerSpin = runSpin(Box.scene_bf, 0, getBetMulti(), bfCardSystemInfo);
+          }
+
+          const awarded = FG_TRIGGER_BASE_SPINS + (triggerSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
+          const fgResult = runFreeGameSequence(awarded, null);
+          const roundTotalWin = triggerSpin.final_pay + fgResult.free_total_win;
+          if (CARD_SYSTEM_ENABLED && bfCardSystemInfo && !isCardSystemMatch(bfCardSystemInfo, roundTotalWin, roundCardSystemCoinIn, true)) {
+            roundRetryCount += 1;
+            if (roundRetryCount >= retryLimit) {
+              markRetryLimitExceeded("fg", roundRetryCount);
+            } else {
+              continue;
+            }
+          }
+
+          baseSpin = triggerSpin;
+          baseSpin.spin_index = 1;
+          baseSpin.remaining_free_spins_before = 0;
+          baseSpin.remaining_free_spins_after = 0;
+          baseSpin.retrigger_awarded = 0;
+          spins.push(baseSpin);
+          fgResult.spins.forEach((spin, index) => {
+            spin.spin_index = index + 2;
+            spins.push(spin);
+          });
+          baseTotalWin = baseSpin.final_pay;
+          freeTotalWin = fgResult.free_total_win;
+          totalWin = baseTotalWin + freeTotalWin;
+          freeSpinsAwarded = awarded;
+          freeSpinsPlayed = fgResult.free_spins_played;
+          fgMultiplierSum = fgResult.final_fg_multiplier_sum;
+          triggerSource = "feature_buy";
+          state.featurebuyTriggerCount += 1;
+          state.freegameTriggerCount += 1;
+          break;
+        }
+      }
+
+      state.retriggerCount += spins.reduce((sum, spin) => sum + (spin.retrigger_awarded > 0 ? 1 : 0), 0);
+
+      state.balance += totalWin - currentCoinIn;
+      state.totalBet += currentCoinIn;
+      state.totalWin += totalWin;
+      state.totalSpins += spins.length;
+      state.hitSpins += spins.filter((spin) => spin.hit_any).length;
+      state.roundCount += 1;
+
+      return {
+        bet_mode: betMode,
+        bet_mode_name: betMode === Box.mode_featurebuy ? "Feature Buy" : betMode === Box.mode_extrabet ? "Extra Bet" : "Normal Bet",
+        bet_multi: getBetMulti(),
+        coin_in: currentCoinIn,
+        base_spin: baseSpin,
+        free_spins_awarded: freeSpinsAwarded,
+        free_spins_played: freeSpinsPlayed,
+        total_win: totalWin,
+        base_total_win: baseTotalWin,
+        free_total_win: freeTotalWin,
+        final_fg_multiplier_sum: fgMultiplierSum,
+        card_system_coin_in: roundCardSystemCoinIn,
+        spins,
+        rtp_overall: state.totalBet > 0 ? state.totalWin / state.totalBet : 0,
+        hit_rate_overall: state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0,
+        freegame_trigger_count: state.freegameTriggerCount,
+        trigger_source: triggerSource,
+        retry_count: retryCount,
+        retry_limit_exceeded: retryLimitExceeded,
+        retry_fail_reason: retryFailReason,
+        display_spin: spins[spins.length - 1]
+      };
+    }
+
+    // 共用 Simulation 面板（demogame_common.js）的 N 局模擬介面：用與實際遊玩相同的 runRound（含 Card System），
+    // 選定押注模式只在該局模擬期間暫時套用，結束後還原押注模式、餘額與所有統計，不動畫面。
+    window.demogameSimulationModes = [
+      { value: Box.mode_normalbet, label: "Normal Bet" },
+      { value: Box.mode_extrabet, label: "Extra Bet" },
+      { value: Box.mode_featurebuy, label: "Buy Feature" }
+    ];
+    const SIMULATION_STATE_KEYS = [
+      "balance", "totalBet", "totalWin", "totalSpins", "hitSpins", "freegameTriggerCount", "normalTriggerCount",
+      "featurebuyTriggerCount", "forcedTriggerCount", "retriggerCount", "roundCount", "extraBetEnabled"
+    ];
+    window.demogameSimulateRound = ({ mode } = {}) => {
+      const betMode = mode !== undefined ? Number(mode)
+        : state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet;
+      const snapshot = {};
+      SIMULATION_STATE_KEYS.forEach((key) => { snapshot[key] = state[key]; });
+      state.extraBetEnabled = betMode === Box.mode_extrabet;
+      state.balance = Number.MAX_SAFE_INTEGER / 4;
+      try {
+        const round = runRound(betMode, false, null);
+        const totalWin = Number(round.total_win) || 0;
+        const fgSpins = round.spins.slice(1);
+        return {
+          multiplier: totalWin / round.coin_in,
+          // 線型口徑：BF ÷ 底注，其餘 ÷ 押注
+          lineMultiplier: totalWin / (betMode === Box.mode_featurebuy ? coinIn(Box.mode_normalbet) : round.coin_in),
+          fgTriggered: Boolean(round.trigger_source),
+          maxMultiplier: round.spins.reduce((maximum, spin) => Math.max(maximum, Number(spin.multiplier_sum_after_spin || 0)), 0),
+          retryLimitExceeded: round.retry_limit_exceeded ? 1 : 0,
+          retryCount: round.retry_count,
+          bgCascade: round.base_spin.board_steps.length,
+          fgCascades: fgSpins.map((spin) => spin.board_steps.length)
+        };
+      } finally {
+        SIMULATION_STATE_KEYS.forEach((key) => { state[key] = snapshot[key]; });
+      }
+    };
+
+    // 共用 Image 開關＋開局前預載（Demogame規範 2.3 圖片預載）：images 列出 asset_map 全部符號圖與金框圖
+    let useSymbolImages = true;
+    let lastBoardRender = null;
+    window.DEMOGAME_IMAGE_TOGGLE = {
+      supported: true,
+      defaultEnabled: true,
+      images: () => [...new Set([...Object.values(Box.asset_map || {}), Box.frame_bg, Box.frame_top].filter(Boolean).map(normalizeAssetPath))],
+      setEnabled(enabled) {
+        useSymbolImages = Boolean(enabled);
+        if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.options);
+      }
+    };
+
+    // 掉落速度＝停輪滾動速度（2026-10-21）：轉輪在 reelSpinMs 內滾過 extra 格（同 reelStripSpin 的算法），
+    // 每格時間＝reelSpinMs ÷ extra；每個掉落格的時間＝掉落格數 × 每格時間（等速），最短 90ms。
+    function dropRowMs() {
+      const ms = window.demogameMotion?.reelSpinMs() ?? 380;
+      const extra = Math.max(DISPLAY_WINDOW_SIZE + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);
+      return ms / extra;
+    }
+    function dropDurationMs(rows) { return Math.max(90, Math.round(Number(rows || 1) * dropRowMs())); }
+
+    function renderBoard(board, options = {}) {
+      lastBoardRender = { board, options };
+      const hitSet = new Set((options.hitPositions || []).map(([row, col]) => `${row}-${col}`));
+      const convertSet = new Set((options.convertPositions || []).map((item) => `${item.row}-${item.col}`));
+      const clearedSet = new Set((options.clearedPositions || []).map(([row, col]) => `${row}-${col}`));
+      const spreadNewSet = new Set((options.spreadNew || []).map((item) => `${item.row}-${item.col}`));
+      const spreadWildSet = new Set((options.spreadWild || []).map((item) => `${item.row}-${item.col}`));
+      const reelSpin = Boolean(options.reelSpin);
+      // 掉落距離一律用「整格高＋列間距」換算（頂端 peek 列只露半格，若用自身高度的 % 會掉太短、跟下面的格子疊在一起）
+      const fullCell = boardEl.querySelector(".cell:not(.peek-row)");
+      const dropPitch = fullCell ? fullCell.getBoundingClientRect().height + (parseFloat(getComputedStyle(boardEl).rowGap) || 0) : 0;
+      boardEl.innerHTML = "";
+      board.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+          const cellEl = document.createElement("div");
+          const dropMotion = options.dropMotion?.[`${rowIndex}-${colIndex}`];
+          cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", clearedSet.has(`${rowIndex}-${colIndex}`) ? "symbol-cleared" : "", spreadNewSet.has(`${rowIndex}-${colIndex}`) ? "spread-new" : "", spreadWildSet.has(`${rowIndex}-${colIndex}`) ? "spread-wild" : "", dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
+          if (dropMotion) {
+            cellEl.style.setProperty("--drop-start", dropPitch ? `${-dropMotion.rows * dropPitch}px` : `${-dropMotion.rows * 105}%`);
+            cellEl.style.setProperty("--drop-duration", `${dropDurationMs(dropMotion.rows)}ms`);   // 掉落速度＝停輪滾動速度（依掉落格數等速）
+            cellEl.style.setProperty("--drop-delay", "0ms");
+          }
+          const wrap = document.createElement("div");
+          wrap.className = "symbol-wrap";
+          const showArt = useSymbolImages && Boolean(cell.image);
+          if (showArt) cellEl.classList.add("has-symbol-art");
+          if (useSymbolImages && cell.is_gold) {
+            const frameBg = document.createElement("img");
+            frameBg.className = "frame-bg";
+            frameBg.src = normalizeAssetPath(Box.frame_bg);
+            wrap.appendChild(frameBg);
+          }
+          if (showArt) {
+            const img = document.createElement("img");
+            img.className = "symbol-img";
+            img.src = cell.image;
+            img.alt = cell.symbol_name;
+            wrap.appendChild(img);
+          }
+          if (useSymbolImages && cell.is_gold) {
+            const frameTop = document.createElement("img");
+            frameTop.className = "frame-top";
+            frameTop.src = normalizeAssetPath(Box.frame_top);
+            wrap.appendChild(frameTop);
+          }
+          const code = document.createElement("div");
+          code.className = "symbol-code";
+          cellEl.appendChild(wrap);
+          if (cell.symbol_id >= 0) {
+            code.textContent = cell.symbol_name || cell.symbol_code || "-";
+            cellEl.appendChild(code);
+          }
+          if (cell.is_gold && cell.multiplier > 0) {
+            const multi = document.createElement("div");
+            multi.className = "multi-badge";
+            multi.textContent = `x${cell.multiplier}`;
+            cellEl.appendChild(multi);
+          }
+          boardEl.appendChild(cellEl);
+        });
+      });
+      // 最上排半格照整格大小畫（見 CSS --full-cell-ph），停輪換回真格時才不會跳
+      const fullCellEl = boardEl.querySelector(".cell:not(.peek-row)");
+      if (fullCellEl) boardEl.style.setProperty("--full-cell-ph", `${fullCellEl.clientHeight}px`);
+    }
+
+    function updateSessionCards() {
+      const activeBetMode = state.pendingRound
+        ? state.pendingRound.bet_mode
+        : state.extraBetEnabled
+          ? Box.mode_extrabet
+          : Box.mode_normalbet;
+      setText(balanceValueEl, formatDisplayMoney(state.displayBalance));
+      setText(betValueEl, formatDisplayMoney(coinIn(activeBetMode)));
+      setText(winValueEl, formatDisplayMoney(state.displayWin));
+      setText(betBtn, `Bet ${formatBetMoney(getSelectedBetCostMoney())}`);
+      setText(roundCountValueEl, state.roundCount.toLocaleString("en-US"));
+      setText(rtpValueEl, formatPercent(state.totalBet > 0 ? state.totalWin / state.totalBet : 0));
+      setText(hitRateValueEl, formatPercent(state.totalSpins > 0 ? state.hitSpins / state.totalSpins : 0));
+      setText(fgTriggerValueEl, calcFgTriggerText());
+      setText(maxMultiplierValueEl, `x${state.maxMultiplier}`);
+    }
+
+    function updateSpinButtonState() {
+      const wagerLocked = state.isBusy || state.autoEnabled || Boolean(state.pendingRound);
+      const canQueueDebugSpin = state.debugEnabled && state.isBusy && !state.debugSpinQueued;
+      setText(spinBtn, state.debugSpinQueued
+        ? (state.language === "zh" ? "已排入" : "Queued")
+        : canQueueDebugSpin
+          ? "Next Spin"
+          : state.pendingRound
+            ? "Next FG"
+            : "Spin");
+      spinBtn.disabled = state.autoEnabled || (state.isBusy && !canQueueDebugSpin);
+      normalBetBtn.disabled = wagerLocked;
+      extraBetBtn.disabled = wagerLocked;
+      normalBetBtn.classList.toggle("is-active", !state.extraBetEnabled);
+      extraBetBtn.classList.toggle("is-active", state.extraBetEnabled);
+      buyFeatureBtn.disabled = wagerLocked;
+      betBtn.disabled = wagerLocked;
+      betMinusBtn.disabled = wagerLocked || state.betIndex === 0;
+      betPlusBtn.disabled = wagerLocked || state.betIndex === BET_OPTIONS_MONEY.length - 1;
+      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
+      if (wagerLocked) closeBetMenu();
+      autoBtn.classList.toggle("is-active", state.autoEnabled);
+      setText(speedValueEl, `x${state.speedMultiplier}`);
+      updateDebugControls();
+    }
+
+    function getVisibleSpins(round) {
+      if (!round) return [];
+      if (state.pendingRound === round) {
+        return round.spins.slice(0, Math.max(1, state.pendingSpinIndex));
+      }
+      return round.spins;
+    }
+
+    function updateSceneTheme(spin = null) {
+      document.body.classList.toggle("fg-mode", Boolean(spin && spin.scene_name === "FG"));
+    }
+
+    function updateFeatureBar(spin = null, round = null, progress = null) {
+      if (!spin || !round) {
+        setText(modeTextEl, "Base Game");
+        setText(featureStatusEl, "");
+        setText(spinMultiValueEl, "x0");
+        setText(carryMultiValueEl, "0");
+        fgLeftPillEl.classList.add("hidden");
+        setText(fgLeftValueEl, "0/0");
+        updateSceneTheme(null);
+        return;
+      }
+      const modeName = round.bet_mode === Box.mode_featurebuy && spin.scene_name === "BF" ? "Feature Buy" : spin.scene_name === "FG" ? "Free Game" : "Base Game";
+      const visibleSpins = getVisibleSpins(round);
+      const fgTotal = round.free_spins_awarded + visibleSpins.reduce((sum, item) => sum + (item.retrigger_awarded || 0), 0);
+      const cascadeCount = progress?.cascadeCount ?? spin.board_steps.length;
+      const multiplier = progress?.multiplier ?? spin.multiplier_sum_after_spin;
+      const fgLeft = spin.scene_name === "FG" ? `${spin.remaining_free_spins_after || 0}/${fgTotal}` : "";
+      setText(modeTextEl, modeName);
+      setText(featureStatusEl, "");
+      setText(spinMultiValueEl, `x${multiplier}`);
+      setText(carryMultiValueEl, String(cascadeCount));
+      fgLeftPillEl.classList.toggle("hidden", spin.scene_name !== "FG");
+      setText(fgLeftValueEl, fgLeft || "0/0");
+      updateSceneTheme(spin);
+    }
+
+    function renderLineList(spin) {
+      lineListEl.innerHTML = "";
+      if (!spin || spin.line_wins.length === 0) {
+        const emptyRow = document.createElement("div");
+        emptyRow.className = "line-row";
+        const emptyText = document.createElement("span");
+        const emptyPay = document.createElement("span");
+        emptyText.textContent = tr("noWinningLine");
+        emptyPay.textContent = "Pay 0.00";
+        emptyRow.append(emptyText, emptyPay);
+        lineListEl.appendChild(emptyRow);
+        return;
+      }
+      spin.line_wins.slice(0, 8).forEach((line) => {
+        const row = document.createElement("div");
+        row.className = "line-row";
+        row.innerHTML = `<span>L${String(line.line_index).padStart(2, "0")} | ${line.symbol_code} x${line.line_length} | C${line.cascade_index}</span><span>Pay ${formatMoney(line.line_pay)}</span>`;
+        lineListEl.appendChild(row);
+      });
+    }
+
+    function boardToText(board) {
+      return board.map((row) => row.map((cell) => cell.symbol_code || "--").join(" ")).join("\n");
+    }
+
+    function renderSpinResultList(spin) {
+      spinResultListEl.innerHTML = "";
+      if (!spin) {
+        const row = document.createElement("div");
+        row.className = "spin-result-row";
+        row.innerHTML = `<div class="spin-result-head"><span>${tr("awaitingSpin")}</span><span>-</span></div><pre class="spin-result-board">${tr("noBoardResult")}</pre>`;
+        spinResultListEl.appendChild(row);
+        return;
+      }
+      const stages = [{ label: "Init", board: spin.board_init, meta: `${spin.scene_name} | ${spin.table_name}` }];
+      spin.board_steps.forEach((step) => {
+        stages.push({
+          label: `Cascade ${step.cascade_index}`,
+          board: step.board_after_spread || step.board_after_drop,
+          meta: `Pay ${formatMoney(step.cascade_pay)} | Mult x${step.multiplier_sum_after_cascade}${step.spread_picks?.length ? ` | Spread ${step.spread_picks.length}` : ""}`
+        });
+      });
+      if (spin.board_steps.length === 0) {
+        stages.push({ label: "Final", board: spin.board_final, meta: `Final ${formatMoney(spin.final_pay)}` });
+      }
+      stages.forEach((stage) => {
+        const row = document.createElement("div");
+        row.className = "spin-result-row";
+        row.innerHTML = `<div class="spin-result-head"><span>${stage.label}</span><span>${stage.meta}</span></div><pre class="spin-result-board">${boardToText(stage.board)}</pre>`;
+        spinResultListEl.appendChild(row);
+      });
+    }
+
+    function renderAll(round = null, spin = null) {
+      state.fgBoardRestored = false;
+      state.activeRound = round;
+      state.activeSpin = spin;
+      updateSessionCards();
+      updateFeatureBar(spin, round);
+      renderSpinResultList(spin);
+      renderLineList(spin);
+      updateSpinButtonState();
+    }
+
+    function sampleBoard() {
+      const ids = Box.symbol_id.slice(0, 11);
+      const board = [];
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        const line = [];
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          const symbol = ids[randInt(ids.length)];
+          const base = Box.base_symbol_of[symbol];
+          const code = Box.symbol_str[String(base)];
+          line.push({ symbol_id: base, symbol_code: code, symbol_name: symbolName(base), image: getAsset(code), is_gold: false, is_wild: base === 0, is_scatter: base === 1, multiplier: 0 });
+        }
+        board.push(line);
+      }
+      return board;
+    }
+
+    // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
+    // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
+    // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
+    async function reelStripSpin(board, columns) {
+      const motion = window.demogameMotion;
+      const spinMs = motion ? motion.reelSpinMs() : 380;
+      const gapMs = motion ? motion.stopStaggerMs() : 80;
+      const pool = columns.flat().filter(Boolean);
+      if (!board || !pool.length) return;
+      const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+      const copyCell = (node, width, height, x, y) => {
+        const copy = node.cloneNode(true);
+        copy.classList.remove(...dropClasses);
+        [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+        copy.removeAttribute("id");
+        copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+        return copy;
+      };
+      const offsetIn = (node, host) => {
+        let x = 0, y = 0, n = node;
+        while (n && n !== host) {
+          x += n.offsetLeft; y += n.offsetTop;
+          n = n.offsetParent;
+          if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+        }
+        return { x, y };
+      };
+      const windows = [];
+      const jobs = columns.map((list, reel) => {
+        const cells = (list || []).filter(Boolean);
+        if (!cells.length) return Promise.resolve();
+        const ms = spinMs + gapMs * reel;
+        const win = document.createElement("div");
+        win.className = "dg-reel-window";
+        win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+        board.appendChild(win);
+        windows.push(win);
+        const host = win.offsetParent || document.body;
+        // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
+        const hostRect = host.getBoundingClientRect();
+        const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
+        const left = Math.floor(Math.min(...boxes.map((b) => b.x)) - 3), top = Math.floor(Math.min(...boxes.map((b) => b.y)));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到；視窗對齊整數像素（輪帶層會被瀏覽器對齊整數像素，視窗若在小數位置，停輪換回真格會偏移不到 1px）
+        const right = Math.ceil(Math.max(...boxes.map((b) => b.x + b.w)) + 3), bottom = Math.ceil(Math.max(...boxes.map((b) => b.y + b.h)));
+        Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+        const last = boxes[boxes.length - 1];
+        const pitch = boxes.length > 1 ? last.y - boxes[boxes.length - 2].y : last.h;   // 頂端 peek-row 半高，間距取最後兩格
+        const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
+        const strip = document.createElement("div");
+        strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+        // 同 H015 滾法：輪帶每格一樣大。頂端 peek 列也畫成整顆符號（底邊對齊、上半截被盤面上緣遮住），不再是一格矮的格子
+        boxes.forEach((b) => {
+          const cut = b.h < last.h * 0.8;
+          const copy = copyCell(b.cell, b.w, cut ? last.h : b.h, b.x - left, cut ? b.y + b.h - last.h - top : b.y - top);
+          if (cut) { copy.classList.remove("peek-row"); delete copy.dataset.dgCut; }
+          strip.appendChild(copy);
+        });
+        for (let k = 1; k <= extra; k += 1) {
+          const pick = pool[Math.floor(Math.random() * pool.length)];
+          const copy = copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch);
+          copy.classList.remove("peek-row");   // 隨機格一律畫成完整格
+          strip.appendChild(copy);
+        }
+        win.appendChild(strip);
+        cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+        // 停輪前多往下滾 18% 格高再回彈到正確位置（同 H020）；最上面墊一格，回彈時不露出空白
+        const above = pool[Math.floor(Math.random() * pool.length)];
+        const firstTop = boxes[0].h < last.h * 0.8 ? boxes[0].y + boxes[0].h - last.h : boxes[0].y;   // 頂端 peek 列換算成整格後的上緣
+        const aboveCopy = copyCell(above, last.w, last.h, boxes[0].x - left, firstTop - top - pitch);
+        aboveCopy.classList.remove("peek-row");
+        strip.appendChild(aboveCopy);
+        strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
+      const anim = strip.animate([
+          { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+          { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+          { transform: "translateY(0)" }
+        ], { duration: ms, fill: "both" });
+        // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）：輪帶複本與真格的小數像素對位不同，若等最後一輪停才一起換，已停的輪會突然位移不到 1px
+        let settled = false;
+        const settle = () => { if (settled) return; settled = true; cells.forEach((cell) => { cell.style.visibility = ""; }); win.remove(); };
+        return new Promise((resolve) => { anim.onfinish = () => { settle(); resolve(); }; setTimeout(() => { settle(); resolve(); }, ms + 1000); });   // 以動畫實際播完為準；保險時間放寬，避免瀏覽器忙時輪帶還在回彈就被收掉而跳一下
+      });
+      await Promise.all(jobs);
+      windows.forEach((win) => win.remove());
+      pool.forEach((cell) => { cell.style.visibility = ""; });
+    }
+
+    async function animateReels(finalBoard = null) {
+      // 逐輪停輪（左到右；Speed 5 同時停）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
+      const base = finalBoard || sampleBoard();
+      renderBoard(base);
+      if (state.debugSkipPlayback) return;   // Debug 快轉：直接到位
+      const nodes = Array.from(boardEl.children);
+      const columns = Array.from({ length: Box.reel_num }, (_, col) =>
+        base.map((_, row) => nodes[row * Box.reel_num + col]));
+      await reelStripSpin(boardEl, columns);
+    }
+
+    // ── 擴散射擊動畫（彩罐熱舞 2）：每個擴散格依序「準星鎖定 → 開槍（閃光、火花、彈孔、盤面震動）」──
+    // 只做畫面，不改結果；Debug 快轉時略過。回傳射擊層，呼叫端在亮出結果後移除。
+    async function playSpreadGunshots(picks) {
+      if (state.debugSkipPlayback || !picks?.length) return null;
+      const host = boardEl.parentElement;
+      if (getComputedStyle(host).position === "static") host.style.position = "relative";
+      const layer = document.createElement("div");
+      layer.className = "pb2-shot-layer";
+      host.appendChild(layer);
+      const hostRect = host.getBoundingClientRect();
+      const aimMs = getPlaybackDelay(260);
+      for (const pick of picks) {
+        const cell = boardEl.children[pick.row * Box.reel_num + pick.col];
+        if (!cell) continue;
+        const r = cell.getBoundingClientRect();
+        const x = r.left - hostRect.left + r.width / 2;
+        const y = r.top - hostRect.top + r.height / 2;
+        const place = (el) => { el.style.left = `${x}px`; el.style.top = `${y}px`; layer.appendChild(el); return el; };
+        const cross = place(Object.assign(document.createElement("div"), { className: "pb2-crosshair" }));
+        cross.style.setProperty("--aim", `${aimMs}ms`);
+        await sleep(aimMs);
+        cross.classList.add("fired");
+        place(Object.assign(document.createElement("div"), { className: "pb2-flash" }));
+        for (let i = 0; i < 7; i += 1) {
+          const spark = place(Object.assign(document.createElement("div"), { className: "pb2-spark" }));
+          spark.style.setProperty("--a", `${Math.round(i * (360 / 7) + Math.random() * 30)}deg`);
+        }
+        place(Object.assign(document.createElement("div"), { className: "pb2-hole" }));
+        boardEl.animate([{ transform: "translate(0,0)" }, { transform: "translate(-4px,2px)" }, { transform: "translate(3px,-2px)" }, { transform: "translate(0,0)" }], { duration: 140 });
+        await sleep(getPlaybackDelay(170));
+      }
+      return layer;
+    }
+
+    async function playbackSpin(round, spin) {
+      state.stepSnapshots = [];
+      state.stepViewIndex = -1;
+      renderAll(round, spin);
+      const reelStopMessage = `Spin ${spin.spin_index} | ${spin.scene_name} | Reel stop ready`;
+      const renderReelStop = () => {
+        updateFeatureBar(spin, round, { cascadeCount: 0, multiplier: spin.multiplier_sum_before_spin || 0 });
+        renderBoard(clone(spin.board_init));
+        setText(messageBarEl, localizeMessage(reelStopMessage));
+      };
+      renderReelStop();
+      renderSpinResultList(spin);
+      writeMessage(reelStopMessage);
+      await waitPlaybackStep("Reel stop", 280, renderReelStop);
+      if (spin.board_steps.length === 0) {
+        const finalMessage = `Spin ${spin.spin_index} finished | No cascade`;
+        const renderFinal = () => {
+          renderBoard(clone(spin.board_final));
+          updateFeatureBar(spin, round);
+          setText(messageBarEl, localizeMessage(finalMessage));
+        };
+        renderFinal();
+        state.maxMultiplier = Math.max(state.maxMultiplier, Number(spin.multiplier_sum_after_spin || 0));
+        applyDisplaySpinWin(round, spin.final_pay);
+        updateSessionCards();
+        writeMessage(finalMessage);
+        await waitPlaybackStep("Final", 16, renderFinal);
+        return;
+      }
+      let liveSpinPay = 0;   // 本轉已演出的消除得分（倍數於轉末套用）；只影響 Win 顯示，不動 Credit／結果
+      for (let stepIndex = 0; stepIndex < spin.board_steps.length; stepIndex += 1) {
+        const step = spin.board_steps[stepIndex];
+        const beforeMultiplier = stepIndex === 0
+          ? Number(spin.multiplier_sum_before_spin || 0)
+          : Number(spin.board_steps[stepIndex - 1].multiplier_sum_after_cascade || 0);
+        const payMessage = `Cascade ${step.cascade_index} | Pay ${formatMoney(step.cascade_pay)}`;
+        const renderPay = () => {
+          renderBoard(clone(step.board_before), { hitPositions: step.hit_positions });
+          // 20 線：得分線整條畫在盤面上（共用 demogameWinLines，依 paylines 連過每一輪；格子依列優先排在 #board）
+          const columns = step.board_before[0]?.length || 5;
+          window.demogameWinLines?.draw(boardEl, (step.line_wins || []).map((win) => Box.paylines[win.line_index - 1].map((row, col) => boardEl.children[(row + SCORE_ROW_OFFSET) * columns + col])));
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index - 1, multiplier: beforeMultiplier });
+          setText(messageBarEl, localizeMessage(payMessage));
+        };
+        renderPay();
+        liveSpinPay += Number(step.cascade_pay) || 0;
+        state.displayWin = state.displayRoundWin + liveSpinPay;   // Win 即時累加：每次消除得分就加上去
+        setText(winValueEl, formatDisplayMoney(state.displayWin));
+        writeMessage(payMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} pay`, 360, renderPay);
+        const multiplierMessage = `Cascade ${step.cascade_index} | +Multiplier x${step.added_multiplier}`;
+        const renderMultiplier = () => {
+          renderBoard(clone(step.board_after_eliminate), { hitPositions: step.hit_positions, convertPositions: step.converted_gold_positions });
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_eliminate ?? step.multiplier_sum_after_cascade });
+          setText(messageBarEl, localizeMessage(multiplierMessage));
+        };
+        renderMultiplier();
+        state.maxMultiplier = Math.max(state.maxMultiplier, Number(step.multiplier_sum_after_eliminate ?? step.multiplier_sum_after_cascade ?? 0));
+        updateSessionCards();
+        writeMessage(multiplierMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} multiplier`, 280, renderMultiplier);
+        const clearedPositions = [];
+        step.board_after_eliminate.forEach((row, rowIndex) => row.forEach((cell, colIndex) => {
+          if (Number(cell.symbol_id) < 0) clearedPositions.push([rowIndex, colIndex]);
+        }));
+        const clearMessage = `Cascade ${step.cascade_index} | Symbols cleared`;
+        const renderClear = () => {
+          renderBoard(clone(step.board_after_eliminate), { clearedPositions });
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_eliminate ?? step.multiplier_sum_after_cascade });
+          setText(messageBarEl, localizeMessage(clearMessage));
+        };
+        renderClear();
+        writeMessage(clearMessage);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} clear`, 180, renderClear);
+        const dropMessage = `Cascade ${step.cascade_index} | Drop complete`;
+        const renderDrop = () => {
+          const dropMotion = window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {};
+          renderBoard(clone(step.board_after_drop), { dropMotion });
+          updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_eliminate ?? step.multiplier_sum_after_cascade });
+          setText(messageBarEl, localizeMessage(dropMessage));
+        };
+        renderDrop();
+        writeMessage(dropMessage);
+        const maxDropRows = Math.max(1, ...Object.values(window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {}).map((m) => Number(m.rows) || 0));
+        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (dropDurationMs(maxDropRows) + 120) * state.speedMultiplier, renderDrop);
+        if (step.spread_picks?.length) {
+          // 金框擴散：補位後亮出本段選中的格子（金框＝新金框、藍框＝金框直接轉 Wild 並收集倍數）
+          const spreadNew = step.spread_picks.filter((item) => item.type === "new_gold");
+          const spreadWild = step.spread_picks.filter((item) => item.type === "gold_to_wild");
+          const spreadMessage = `Cascade ${step.cascade_index} | Gold spread ${step.spread_picks.length}` + (spreadWild.length ? ` | Gold to Wild ${spreadWild.length} | +Multiplier x${step.spread_added_multiplier}` : "");
+          const renderSpread = () => {
+            renderBoard(clone(step.board_after_spread), { spreadNew, spreadWild });
+            updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
+            setText(messageBarEl, localizeMessage(spreadMessage));
+          };
+          const shotLayer = await playSpreadGunshots(step.spread_picks);   // 射擊動畫打在補位後的盤面上，再亮出擴散結果
+          renderSpread();
+          if (shotLayer) setTimeout(() => shotLayer.remove(), 900);
+          state.maxMultiplier = Math.max(state.maxMultiplier, Number(step.multiplier_sum_after_cascade || 0));
+          writeMessage(spreadMessage);
+          await waitPlaybackStep(`Cascade ${step.cascade_index} spread`, 560, renderSpread);
+        }
+      }
+      const finalMessage = `Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`;
+      const renderFinal = () => {
+        renderBoard(clone(spin.board_final));
+        updateFeatureBar(spin, round);
+        setText(messageBarEl, localizeMessage(finalMessage));
+      };
+      renderFinal();
+      applyDisplaySpinWin(round, spin.final_pay);
+      updateSessionCards();
+      writeMessage(finalMessage);
+      await waitPlaybackStep("Final", 16, renderFinal);
+    }
+
+    async function doSpin(betMode) {
+      if (state.isBusy) return;
+      let spinFailed = false;
+      let rngCode = null;
+      let cardIndex = null;
+      let forceFgThisSpin = false;
+      if (!state.pendingRound) {
+        try {
+          rngCode = window.demogameRng.takeInput();   // 讀 #rngInput（填了就沿用，按 Reset 才清空）；格式錯誤會丟 Error
+        } catch (error) {
+          writeMessage(error.message, "error");
+          updateDebugControls();
+          return;
+        }
+        if (rngCode) {
+          // 照碼重跑：模式、Card System、Profile、Card Range、Force FG 只套用這一局，不動畫面選單
+          const opts = parseRngOpts(rngCode.opts);
+          betMode = RNG_BET_MODE_OF[rngCode.mode] ?? betMode;
+          cardIndex = opts.rangeIndex;
+          forceFgThisSpin = opts.forceFg && betMode !== Box.mode_featurebuy;
+          if (rngCode.config !== rngConfigLabel()) appendLiveLog(`RNG Config ${rngCode.config} ≠ ${rngConfigLabel()}`, "error");
+        } else {
+          cardIndex = selectedCardRangeIndex();
+          forceFgThisSpin = state.forceFg && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
+          if (forceFgThisSpin) {
+            state.forceFg = false;
+            forceFgInputEl.checked = false;
+          }
+        }
+      }
+      state.isBusy = true;
+      updateSpinButtonState();
+      try {
+        if (state.pendingRound && state.pendingSpinIndex < state.pendingRound.spins.length) {
+          const round = state.pendingRound;
+          const spin = round.spins[state.pendingSpinIndex];
+          writeMessage(`FG Spin ${spin.spin_index} rolling...`);
+          updateSceneTheme(spin);   // 進 FG 的每一轉（含第一轉）滾輪開始前就換 FG 背景
+          await animateReels(spin.board_init);
+          await playbackSpin(round, spin);
+          appendLiveLog(`FG ${state.pendingSpinIndex}/${round.spins.length - 1} | ${spin.table_name} | Cascade ${spin.board_steps.length} | C1 ${spin.scatter_count} | Win ${formatMoney(spin.final_pay)}`, spin.board_steps.length ? "cascade" : "info");
+          state.pendingSpinIndex += 1;
+          if (state.pendingSpinIndex >= round.spins.length) {
+            state.pendingRound = null;
+            appendLiveLog(`FG complete | Total ${formatMoney(round.free_total_win)} (${(round.free_total_win / roundBaseBet(round)).toFixed(2)}x)`, "result");
+            window.demogameHistory?.record({ fg: round.free_total_win / roundBaseBet(round) });   // 共用歷史紀錄：FG 最大倍數（整段 FG ÷ 底注）
+            recordLineChartRound(round);   // 有 FG 的局：FG 結束才記
+            writeMessage(`FG finished | Total ${formatMoney(round.total_win)}`);
+            // 規範 §4：FG 結束回到 BG，盤面還原成觸發局 BG 最終盤面（BF 為入場盤），Feature Status 回 Base Game；只改顯示
+            const restoreMessage = `FG finished | Total ${formatMoney(round.total_win)}`;
+            const renderBgRestore = () => {
+              renderBoard(clone(round.spins[0].board_final));
+              updateFeatureBar(null);
+              setText(messageBarEl, localizeMessage(restoreMessage));
+            };
+            state.fgBoardRestored = true;
+            renderBgRestore();
+            await waitPlaybackStep("Back to BG", 16, renderBgRestore);
+          } else {
+            const nextSpin = round.spins[state.pendingSpinIndex];
+            renderAll(round, spin);
+            writeMessage(`FG ready | ${nextSpin.remaining_free_spins_before} spins left, press Spin`);
+          }
+        } else {
+          writeMessage("Reels spinning...");
+          const { round, rngText } = runSeededRound(betMode, forceFgThisSpin, cardIndex, rngCode);   // 先算好整局結果（含 FG），滾輪才能逐輪停在最終符號
+          window.demogameLineChart?.setMode(betMode === Box.mode_featurebuy ? "BF" : null);   // Buy Feature 不是 is-active 切換，買的局顯示 BF（不記錄）；NB／EB 依按鈕
+          const rangeSet = cardIndex !== null && (rngCode ? rngCode.card : CARD_SYSTEM_ENABLED) && betMode !== Box.mode_featurebuy;
+          appendLiveLog(`#${state.roundCount} ${roundModeLabel(round)} | Bet ${formatMoney(round.coin_in)}${rangeSet ? " | Card Range set" : ""}${forceFgThisSpin ? " | Force FG" : ""}${round.retry_count ? ` | Card retry ${round.retry_count}` : ""}${round.retry_limit_exceeded ? " | Retry limit" : ""}${rngCode ? " | Replay" : ""}`, "mode");
+          appendLiveLog(`RNG ${rngText}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
+          await animateReels(round.spins[0].board_init);
+          syncDisplayForRoundStart(round);
+          renderAll(round, round.spins[0]);
+          await playbackSpin(round, round.spins[0]);
+          renderAll(round, round.spins[0]);
+          const baseSpin = round.spins[0];
+          appendLiveLog(`${round.bet_mode === Box.mode_featurebuy ? "BF Entry" : "BG"} | ${baseSpin.table_name} | Cascade ${baseSpin.board_steps.length} | C1 ${baseSpin.scatter_count} | Win ${formatMoney(baseSpin.final_pay)} (${(baseSpin.final_pay / roundBaseBet(round)).toFixed(2)}x)`, baseSpin.final_pay > 0 ? "result" : "info");
+          window.demogameHistory?.record({ bg: baseSpin.final_pay / roundBaseBet(round) });   // 共用歷史紀錄：BG 最大倍數（BF 進場盤面也算 BG）
+          if (round.spins.length > 1) {
+            const fgRetriggers = round.spins.slice(1).filter((item) => item.retrigger_awarded > 0).length;
+            appendLiveLog(`${round.bet_mode === Box.mode_featurebuy ? "Buy Feature" : "Free Game triggered"} | ${round.spins.length - 1} spins${fgRetriggers ? ` (Retrigger ×${fgRetriggers})` : ""}`, "mode");
+            state.pendingRound = round;
+            state.pendingSpinIndex = 1;
+            const triggerLabel = round.trigger_source === "feature_buy"
+              ? "Feature Buy entered FG"
+              : round.trigger_source === "force_fg"
+                ? "Force FG triggered"
+                : "FG triggered";
+            writeMessage(`${triggerLabel} | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
+          } else {
+            state.pendingRound = null;
+            state.pendingSpinIndex = 0;
+            recordLineChartRound(round);   // 沒有 FG 的局：BG 演完就記
+          }
+        }
+        await window.demogameRoundPause?.();   // 共用：每轉（BG 局／每轉 FG）算完分後固定停 0.1 秒，不受 Speed 影響，之後才放行下一轉／Auto
+      } catch (error) {
+        spinFailed = true;
+        state.autoEnabled = false;
+        clearTimeout(state.autoTimer);
+        writeMessage(error.message, "error");
+      } finally {
+        const queuedDebugSpin = state.debugSpinQueued;
+        state.debugSpinQueued = false;
+        state.debugSkipPlayback = false;
+        state.isBusy = false;
+        updateSessionCards();
+        updateSpinButtonState();
+        updateDebugControls();
+        if (queuedDebugSpin && state.debugEnabled && !state.autoEnabled && !spinFailed) {
+          queueMicrotask(() => doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet));
+        } else {
+          queueAutoSpin();
+        }
+      }
+    }
+
+    configSelectEl.value = H026_ACTIVE_CONFIG;
+    cardProfileSelectEl.value = state.cardProfile;
+    cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
+    configSelectEl.addEventListener("change", () => {
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("config", configSelectEl.value);
+      window.location.href = nextUrl.href;
+    });
+
+    cardProfileSelectEl.addEventListener("change", () => {
+      state.cardProfile = cardProfileSelectEl.value === "newbie" ? "newbie" : "oldhand";
+      try {
+        localStorage.setItem("slotDemoCardProfile", state.cardProfile);
+      } catch (_) {
+        // Player profile still works for this session when storage is unavailable.
+      }
+      renderCardRangeOptions();   // Set RNG 設定保留（選項不存在才回 Auto），按 Set RNG Reset 才清
+      updateDebugControls();
+      writeMessage(`Player Profile | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`);
+    });
+
+    document.addEventListener("demogame:card-system-change", (event) => {
+      CARD_SYSTEM_ENABLED = Boolean(Box.card_system?.enabled) && Boolean(event.detail?.enabled);
+      // Card System Off 時 Card BG Range 不生效（runSeededRound 已判斷），但選擇保留到按 Set RNG Reset
+      cardProfileSelectEl.disabled = !CARD_SYSTEM_ENABLED;
+      updateSpinButtonState();
+      updateDebugControls();
+      writeMessage(CARD_SYSTEM_ENABLED
+        ? `Card System On | ${state.cardProfile === "newbie" ? "Newbie" : "Oldhand"}`
+        : "Card System Off");
+    });
+
+    languageSelectEl.addEventListener("change", () => {
+      state.language = languageSelectEl.value === "zh" ? "zh" : "en";
+      applyLanguage();
+      writeMessage(`Language | ${state.language === "zh" ? "中文" : "English"}`);
+    });
+
+    betBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (state.pendingRound) return;
+      toggleBetMenu();
+    });
+
+    betMinusBtn.addEventListener("click", () => setBetIndex(state.betIndex - 1));
+    betPlusBtn.addEventListener("click", () => setBetIndex(state.betIndex + 1));
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".bet-stepper")) closeBetMenu();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeBetMenu();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      clearTimeout(state.autoTimer);
+      state.balance = INITIAL_BALANCE;
+      state.totalBet = 0;
+      state.totalWin = 0;
+      state.totalSpins = 0;
+      state.hitSpins = 0;
+      state.freegameTriggerCount = 0;
+      state.normalTriggerCount = 0;
+      state.featurebuyTriggerCount = 0;
+      state.forcedTriggerCount = 0;
+      state.retriggerCount = 0;
+      state.roundCount = 0;
+      state.maxMultiplier = 0;
+      state.betIndex = 0;
+      state.activeRound = null;
+      state.activeSpin = null;
+      state.pendingRound = null;
+      state.pendingSpinIndex = 0;
+      state.autoEnabled = false;
+      state.extraBetEnabled = false;
+      state.speedMultiplier = 1;
+      state.autoDelayMs = 700;
+      state.debugEnabled = false;
+      state.stepSnapshots = [];
+      state.stepViewIndex = -1;
+      state.debugSpinQueued = false;
+      state.debugSkipPlayback = false;
+      state.forceFg = false;
+      speedRangeEl.value = "1";
+      debugModeInputEl.checked = false;
+      forceFgInputEl.checked = false;
+      renderCardRangeOptions();   // Set RNG 設定保留，按 Set RNG Reset 才清
+      closeBetMenu();
+      clearLiveLog();
+      resetDisplayState();
+      renderBoard(sampleBoard());
+      renderAll(null, null);
+      updateDebugControls();
+      writeMessage("Session reset");
+    });
+
+    autoBtn.addEventListener("click", () => {
+      state.autoEnabled = !state.autoEnabled;
+      updateSpinButtonState();
+      writeMessage(state.autoEnabled ? "Auto enabled" : "Auto disabled");
+      if (state.autoEnabled) {
+        queueAutoSpin();
+      } else {
+        clearTimeout(state.autoTimer);
+      }
+    });
+
+    speedRangeEl.addEventListener("input", () => {
+      state.speedMultiplier = Math.min(5, Math.max(1, Number(speedRangeEl.value) || 1));
+      updateSpinButtonState();
+    });
+
+    speedRangeEl.addEventListener("change", () => {
+      writeMessage(`Speed x${state.speedMultiplier}`);
+    });
+
+    previousStepBtn.addEventListener("click", goPreviousStep);
+    nextStepBtn.addEventListener("click", goNextStep);
+
+    debugModeInputEl.addEventListener("change", () => {
+      state.debugEnabled = debugModeInputEl.checked;
+      if (!state.debugEnabled) {
+        state.debugSpinQueued = false;
+        state.debugSkipPlayback = false;
+        state.forceFg = false;
+        forceFgInputEl.checked = false;
+      }
+      updateDebugControls();
+      writeMessage(`Debug Mode ${state.debugEnabled ? "enabled" : "disabled"}`);
+    });
+
+    cardRangeSelectEl.addEventListener("change", () => {
+      updateDebugControls();
+      writeMessage(cardRangeSelectEl.value === ""
+        ? "Card BG Range set to Auto"
+        : `Card BG Range selected | ${cardRangeSelectEl.selectedOptions[0].textContent}`);
+    });
+
+    rngInputEl.addEventListener("input", () => updateDebugControls());
+
+    setRngResetBtn.addEventListener("click", () => resetSetRng(true));
+
+    forceFgInputEl.addEventListener("change", () => {
+      state.forceFg = forceFgInputEl.checked;
+      updateDebugControls();
+      writeMessage(state.forceFg
+        ? "Force FG armed for next Normal/Extra spin"
+        : "Force FG cancelled");
+    });
+
+    spinBtn.addEventListener("click", () => {
+      if (state.autoEnabled) return;
+      if (state.isBusy) {
+        if (!state.debugEnabled || state.debugSpinQueued) return;
+        state.debugSpinQueued = true;
+        state.debugSkipPlayback = true;
+        updateSpinButtonState();
+        return;
+      }
+      doSpin(state.extraBetEnabled ? Box.mode_extrabet : Box.mode_normalbet);
+    });
+    normalBetBtn.addEventListener("click", () => {
+      if (state.pendingRound) return;
+      state.extraBetEnabled = false;
+      window.demogameLineChart?.setMode(null);   // 累積倍率線型回到依押注按鈕顯示
+      updateSessionCards();
+      updateSpinButtonState();
+      renderCardRangeOptions();
+      updateDebugControls();
+      writeMessage(`Normal Bet selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+    });
+    extraBetBtn.addEventListener("click", () => {
+      if (state.pendingRound) return;
+      state.extraBetEnabled = true;
+      window.demogameLineChart?.setMode(null);   // 累積倍率線型回到依押注按鈕顯示
+      updateSessionCards();
+      updateSpinButtonState();
+      renderCardRangeOptions();
+      updateDebugControls();
+      writeMessage(`Extra Bet (${getExtraBetMultiplier()}x) selected | Bet ${formatCompactNumber(getSelectedBetCostMoney())}`);
+    });
+    buyFeatureBtn.addEventListener("click", () => doSpin(Box.mode_featurebuy));
+    clearLogBtn.addEventListener("click", clearLiveLog);
+    helpBtn.addEventListener("click", () => {
+      helpDialogEl.showModal();
+      loadGameHelpRules();
+    });
+    closeHelpBtn.addEventListener("click", () => helpDialogEl.close());
+    helpDialogEl.addEventListener("click", (event) => {
+      if (event.target === helpDialogEl) helpDialogEl.close();
+    });
+    helpSourceFrameEl.addEventListener("load", () => {
+      if (helpDialogEl.open && !gameHelpLoaded) loadGameHelpRules();
+    });
+
+    renderBetMenu();
+    renderCardRangeOptions();
+    setText(gameIdEl, Box.game_id);
+    setText(gameNameEl, Box.game_name);
+    setText(buyFeatureBtn, `Buy Feature (${Box.featurebuy}x)`);
+    setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
+    document.title = "Pinata Beat 2 — Demo Game";
+    resetDisplayState();
+    renderBoard(sampleBoard());
+    renderAll(null, null);
+    updateDebugControls();
+    applyLanguage();
+    // 載入行：共用 demogame_common.js 在本 script 之後載入，DOMContentLoaded 時 demogameLog 才存在
+    document.addEventListener("DOMContentLoaded", () => {
+      appendLiveLog(`Config ${Box.rtp_label || "DRAFT"} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
+    });
+  </script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-21 15:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
+  <script src="../../demogame_common.js?v=20261019o"></script>
+</body>
+
+</html>
