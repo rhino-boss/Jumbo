@@ -16,7 +16,7 @@
 | PARsheet ID | ⏳（發想階段，未指定） |
 | 遊戲中文名稱 | 急速糖果 2 |
 | 遊戲英文名 | Candy Rush 2 |
-| 遊戲類型 | Video Slot - Cluster Pay / Cascade / Position Multiplier（累加型） |
+| 遊戲類型 | Video Slot - Cluster Pay / Cascade / Position Multiplier (Cumulative) |
 | 盤面規格 | 5 Reels × 5 Rows（共 25 格） |
 | 中獎方式 | Cluster Pay |
 | 押注模式 | Normal Bet、Extra Bet、Buy Feature |
