@@ -2103,7 +2103,6 @@
   <main class="phone">
     <div id="feature-bar">
       <span id="game-title"><span id="gameId">101015</span> <span id="gameName">Super Diamond</span></span>
-      <span id="ruleToggle" class="rule-toggle" role="group" aria-label="倍數規則"><button type="button" data-rule="mul">加乘版</button><button type="button" data-rule="mul2">加乘版2</button><button type="button" data-rule="mul3">加乘版3</button></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2588,14 +2587,9 @@
     // 倍數規則切換（2026-10-16）：加乘版＝本專案（原版）；相加版＝讀 ../H045_超級鑽石_2/ 的 manifest 與 config
     (() => {
       const query = new URLSearchParams(window.location.search);
-      let mode = query.get("rule");
-      // 加乘版／加乘版2／加乘版3（數學同加乘版，只差金框呈現）。相加版（H045_超級鑽石_2）10/19 決定不採用、資料夾已移除：
-      // 瀏覽器若還存著 "add" 會讀不到 config 整頁壞掉 → 一律回到加乘版
-      const RULES = ["mul", "mul2", "mul3"];
-      if (!RULES.includes(mode)) { try { mode = localStorage.getItem("h045RuleMode"); } catch (_) {} }
-      mode = RULES.includes(mode) ? mode : "mul";
-      try { localStorage.setItem("h045RuleMode", mode); } catch (_) {}
-      window.H045_RULE_MODE = mode;
+      // 2026-10-21 使用者要求拿掉 加乘版／加乘版2／加乘版3 切換，一律用加乘版（舊的 rule 參數／localStorage 一律忽略）
+      try { localStorage.removeItem("h045RuleMode"); } catch (_) {}
+      window.H045_RULE_MODE = "mul";
       window.H045_BASE_DIR = "./";
       document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261016a"><\/script>`);
     })();
@@ -4046,26 +4040,6 @@
   $("helpBtn").onclick = openHelp; $("closeHelpBtn").onclick=()=>$("helpDialog").close();
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;$("rngInput").value="";}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
-  // 版本切換：手機（≤640px）塞不下，改成依序編號 1 2 3（滑鼠移上去看完整名稱）；其他寬度顯示全名
-  (() => {
-    const buttons = [...document.querySelectorAll("#ruleToggle button")];
-    buttons.forEach((button, index) => { button.dataset.full = button.textContent; button.title = button.textContent; button.dataset.short = String(index + 1); });
-    const phone = matchMedia("(max-width: 640px)");
-    const fit = () => buttons.forEach(button => { button.textContent = phone.matches ? button.dataset.short : button.dataset.full; });
-    fit();
-    phone.addEventListener("change", fit);
-  })();
-  document.querySelectorAll("#ruleToggle button").forEach(button => {
-    button.classList.toggle("is-active", button.dataset.rule === RULE_MODE);
-    button.onclick = () => {
-      if (button.dataset.rule === RULE_MODE) return;
-      const url = new URL(location.href);
-      url.searchParams.set("rule", button.dataset.rule);
-      url.searchParams.delete("version"); url.searchParams.delete("config");   // 兩版 manifest 不同，回到各自目前版本
-      try { localStorage.setItem("h045RuleMode", button.dataset.rule); localStorage.removeItem("h045MathVersion"); } catch (_) {}
-      location.href = url.href;
-    };
-  });
   
   document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
   appendLog(`Config ${window.H045_ACTIVE_CONFIG || "base"} loaded | Version ${window.H045_VERSION_ENTRY?.version || cfg.excel_version || "--"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
