@@ -2186,11 +2186,11 @@
           <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldSeen">金框出現率</span><span class="s-value" id="goldSeenValue">0.00% (—)</span></div>
-          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldUsed">金框使用率</span><span class="s-value" id="goldUsedValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldUsed">金框使用率</span><span class="s-value" id="goldUsedValue">0.00%</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultSeen">倍數出現率</span><span class="s-value" id="multSeenValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultUsed">倍數出現並使用</span><span class="s-value" id="multUsedValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigGhost">大鬼出現率</span><span class="s-value" id="bigGhostValue">0.00% (—)</span></div>
-          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigNoScore">大鬼出現沒得分</span><span class="s-value" id="bigNoScoreValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigScore">大鬼出現且有得分</span><span class="s-value" id="bigScoreValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statScRate">SC 出現率</span><span class="s-value" id="scRateValue">0.00% (—)</span></div>
         </section>
       </aside>
@@ -2719,7 +2719,7 @@
     rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
     maxMultiplier: 1, lastWin: 0, snapshots: [], snapshotIndex: -1, log: [], mode: 0,
     fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 },
-    spinStats: { spins: 0, goldSeen: 0, goldAppeared: 0, goldUsed: 0, goldUsedSpins: 0, multSeen: 0, multUsed: 0, big: 0, bigNoScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
+    spinStats: { spins: 0, goldSeen: 0, goldAppeared: 0, goldUsed: 0, goldUsedSpins: 0, multSeen: 0, multUsed: 0, big: 0, bigScore: 0, sc: 0 }   // By Game：每轉（BG 局＋FG 轉，不含 BF 入場盤）
   };
 
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -3134,7 +3134,7 @@
     }
     return {
       pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, bigMult, goldenTally, capped,
-      multUsed, bigNoScore: w2Events > 0 && !bigScored, goldSeen, goldAppeared,
+      multUsed, bigScore: w2Events > 0 && bigScored, goldSeen, goldAppeared,
       board, mults, gold, snapshots, tableName,
       maxMultiplier: multipliers[Math.min(Math.max(combo - 1, 0), multipliers.length - 1)]
     };
@@ -3689,7 +3689,7 @@
   function tallySpin(result) {
     const s = state.spinStats;
     s.spins++; s.goldSeen += result.goldSeen ? 1 : 0; s.goldAppeared += result.goldAppeared || 0; s.goldUsed += result.golden || 0; s.goldUsedSpins += result.golden > 0 ? 1 : 0; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
-    s.bigNoScore += result.bigNoScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
+    s.bigScore += result.bigScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
   }
   // 機率（週期）：例 12.34% (8.1場)＝平均幾場出現一次；10 場以上取整數；沒發生顯示 0.00% (—)（2026-10-21 使用者要求不用 1/xx 寫法）
   const rateCycle = (count, total) => {
@@ -3708,11 +3708,12 @@
     const s = state.spinStats;
     $("goldSeenValue").textContent = rateCycle(s.goldSeen, s.spins);
     // 金框使用率（2026-10-19 改口徑）：有金框被消除翻牌的轉數 ÷ 有金框出現的轉數
-    $("goldUsedValue").textContent = s.goldSeen ? `${(s.goldUsedSpins / s.goldSeen * 100).toFixed(2)}% (${s.goldUsedSpins.toLocaleString()}/${s.goldSeen.toLocaleString()})` : "0.00% (—)";
+    $("goldUsedValue").textContent = s.goldSeen ? `${(s.goldUsedSpins / s.goldSeen * 100).toFixed(2)}%` : "0.00%";
     $("multSeenValue").textContent = rateCycle(s.multSeen, s.spins);
     $("multUsedValue").textContent = rateCycle(s.multUsed, s.spins);
     $("bigGhostValue").textContent = rateCycle(s.big, s.spins);
-    $("bigNoScoreValue").textContent = s.big ? `${(s.bigNoScore / s.big * 100).toFixed(2)}% (${s.bigNoScore}/${s.big})` : "0.00% (—)";
+    // 大鬼出現且有得分（2026-10-21 由「沒得分」改）：大鬼本體或其分裂 WILD 有參與連線的轉 ÷ 大鬼出現的轉
+    $("bigScoreValue").textContent = s.big ? `${(s.bigScore / s.big * 100).toFixed(2)}% (${s.bigScore}/${s.big})` : "0.00% (—)";
     $("scRateValue").textContent = rateCycle(s.sc, s.spins);
     const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
     document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
@@ -3947,7 +3948,7 @@
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptBigghost: "Big Wild (W2)", scriptBigMult: "Big Wild with multiplier",
       scriptFlip: "Gold frame cleared", scriptFlipMult: "Gold frame cleared with multiplier", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
-      statGoldSeen: "Gold frame seen", statGoldUsed: "Gold frame used", statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigNoScore: "Big Wild, no score", statScRate: "SC rate"
+      statGoldSeen: "Gold frame seen", statGoldUsed: "Gold frame used", statMultSeen: "Multiplier seen", statMultUsed: "Multiplier used", statBigGhost: "Big Wild rate", statBigScore: "Big Wild scored", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
@@ -3955,7 +3956,7 @@
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptBigghost: "有大鬼", scriptBigMult: "大鬼有倍數",
       scriptFlip: "金框有消除", scriptFlipMult: "消除金框後有倍數", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
-      statGoldSeen: "金框出現率", statGoldUsed: "金框使用率", statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigNoScore: "大鬼出現沒得分", statScRate: "SC 出現率"
+      statGoldSeen: "金框出現率", statGoldUsed: "金框使用率", statMultSeen: "倍數出現率", statMultUsed: "倍數出現並使用", statBigGhost: "大鬼出現率", statBigScore: "大鬼出現且有得分", statScRate: "SC 出現率"
     }
   };
   function tr(key) { return (H045_TEXT[state.language] || H045_TEXT.en)[key] ?? H045_TEXT.en[key] ?? key; }
@@ -3978,7 +3979,7 @@
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
   function reset() {
-    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,goldSeen:0,goldAppeared:0,goldUsed:0,goldUsedSpins:0,multSeen:0,multUsed:0,big:0,bigNoScore:0,sc:0}});
+    Object.assign(state, {balance:START_BALANCE, rounds:0, totalBet:0, totalWin:0, hitRounds:0, fgTriggers:0, maxMultiplier:1, lastWin:0, auto:false, snapshots:[], snapshotIndex:-1, fg:{spins:[],index:0,total:0,win:0,mode:0}, spinStats:{spins:0,goldSeen:0,goldAppeared:0,goldUsed:0,goldUsedSpins:0,multSeen:0,multUsed:0,big:0,bigScore:0,sc:0}});
     $("autoBtn").textContent = tr("auto"); renderBoard(makeBoard("bg_1"), [], {mults: zeroMults(), gold: zeroGold()}); renderMultiplier(false); $("messageBar").textContent = tr("ready"); updateStats();
   }
   function buildBetMenu() {
