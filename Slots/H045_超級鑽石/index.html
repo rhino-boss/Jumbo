@@ -3691,8 +3691,12 @@
     s.spins++; s.goldSeen += result.goldSeen ? 1 : 0; s.goldAppeared += result.goldAppeared || 0; s.goldUsed += result.golden || 0; s.goldUsedSpins += result.golden > 0 ? 1 : 0; s.multSeen += result.multWild > 0 ? 1 : 0; s.multUsed += result.multUsed ? 1 : 0; s.big += result.w2Events > 0 ? 1 : 0;
     s.bigNoScore += result.bigNoScore ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
   }
-  // 機率（週期）：例 12.34% (1/8.1)；沒發生顯示 0.00% (—)
-  const rateCycle = (count, total) => total && count ? `${(count / total * 100).toFixed(2)}% (1/${(total / count).toFixed(1)})` : "0.00% (—)";
+  // 機率（週期）：例 12.34% (8.1場)＝平均幾場出現一次；10 場以上取整數；沒發生顯示 0.00% (—)（2026-10-21 使用者要求不用 1/xx 寫法）
+  const rateCycle = (count, total) => {
+    if (!total || !count) return "0.00% (—)";
+    const cycle = total / count;
+    return `${(count / total * 100).toFixed(2)}% (${cycle >= 10 ? Math.round(cycle).toLocaleString() : cycle.toFixed(1)}場)`;
+  };
   function updateStats() {
     const bet = BET_LEVELS[state.betIndex];
     $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
