@@ -931,6 +931,7 @@ def _empty_stats() -> dict[str, Any]:
         "bucket_bf_cnt": [0] * buckets, "bucket_bf_pay": [0.0] * buckets,
         "bucket_trigger_cnt": [0] * buckets, "bucket_trigger_pay": [0.0] * buckets,
         "bucket_fg_hit": [0] * buckets, "bucket_fg_spins": [0] * buckets,
+        "bucket_bg_mult": [0] * buckets, "bucket_fg_mult": [0] * buckets,   # 2026-10-21 各區間倍數出現轉數（最終畫面口徑）
         "bucket_bg_combo": [[0] * 5 for _ in range(buckets)],
         "bucket_fg_combo": [[0] * 5 for _ in range(buckets)],
         "bucket_bg_golden": [Counter() for _ in range(buckets)],
@@ -1002,6 +1003,7 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
         stats["bucket_fg_pay"][fg_index] += result.pay_fg
         stats["bucket_fg_spins"][fg_index] += result.fg_spins
         stats["bucket_fg_hit"][fg_index] += result.fg_hit_spins
+        stats["bucket_fg_mult"][fg_index] += result.fg_mult_spins
         stats["bucket_fg_gold_frames"][fg_index] += result.fg_gold_symbols
         stats["bucket_fg_golden"][fg_index].update(result.fg_golden_results)
         for combo, count in result.combo_fg.items():
@@ -1010,6 +1012,7 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
         index = threshold_index(result.pay_bg / base_bet)
         stats["bucket_bg_cnt"][index] += 1
         stats["bucket_bg_pay"][index] += result.pay_bg
+        stats["bucket_bg_mult"][index] += result.bg_mult_spins
         stats["bucket_bg_gold_frames"][index] += result.bg_gold_symbols
         stats["bucket_bg_golden"][index].update(result.bg_golden_results)
         stats["bucket_bg_combo"][index][min(max(result.bg_cascade_count, 1), 5) - 1] += 1
@@ -1320,6 +1323,9 @@ def multiplier_line_frame(result: dict[str, Any]) -> pd.DataFrame:
         fg_spins = s["bucket_fg_spins"][index]
         row["FG_Hit_Rate"] = s["bucket_fg_hit"][index] / fg_spins if fg_spins else 0.0
         row["FG_Spin_Count"] = fg_spins
+        # 各區間倍數出現率（同 Demogame：最後一次翻牌沒再連線改無倍數小鬼，看最終畫面）：BG＝該區間 BG 局數、FG＝該區間 FG 場的總轉數
+        row["BG_Mult_Seen_Rate"] = s["bucket_bg_mult"][index] / s["bucket_bg_cnt"][index] if s["bucket_bg_cnt"][index] else 0.0
+        row["FG_Mult_Seen_Rate"] = s["bucket_fg_mult"][index] / fg_spins if fg_spins else 0.0
 
         bg_combo_total = max(1, sum(s["bucket_bg_combo"][index]))
         for combo in range(5):

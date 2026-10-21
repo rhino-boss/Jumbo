@@ -3962,7 +3962,12 @@
     }
   };
   function tr(key) { return (H045_TEXT[state.language] || H045_TEXT.en)[key] ?? H045_TEXT.en[key] ?? key; }
-  function setFeatureStatus(key) { state.featureKey = key; $("featureStatus").textContent = key ? tr(key) : ""; }
+  // 基礎遊戲／免費遊戲已由 modeText 顯示，featureStatus 只顯示其他狀態（觸發免費遊戲、購買特色…），避免同一列出現兩個「基礎遊戲」（10/21）
+  function setFeatureStatus(key) {
+    state.featureKey = key;
+    const text = key && key !== "baseGame" && key !== "freeGame" ? tr(key) : "";
+    $("featureStatus").textContent = text; $("featureStatus").hidden = !text;
+  }
   function applyLanguage() {
     $("gameId").textContent = cfg.online_game_id || cfg.game_id;
     $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
