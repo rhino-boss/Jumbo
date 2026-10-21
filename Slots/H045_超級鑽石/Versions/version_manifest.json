@@ -1,5 +1,5 @@
 {
-  "current": "5.0.0.0",
+  "current": "5.1.0.0",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
@@ -109,6 +109,23 @@
         "2026-10-13 直接修改（不升版）：套用 10/13 規則定案、Q／J 賠率 0.05／0.1／0.15、FG 小鬼帶倍 20%、FG 大鬼帶倍 35%、BG 表 2 不觸發 FG；92A 重解（BG Trigger Cap 450x），Card-On Oldhand 92.89%／Newbie 93.51%／BF 93.05%。",
         "2026-10-14 直接修改（不升版）：加入表 3（競品表，全照 Super Ace：輪帶、停點、補牌、金框顆數、大鬼 BG 4.2%／FG 0%、WILD 不帶倍數），BG 選表 4:1:5、只有表 3 觸發 FG、BG 表 1 C1 只留 R1／R3；92A 重解（BG Trigger Cap 400x），Card-On Oldhand 92.06%（1e7）／Newbie 93.29%／BF 93.05%。",
         "2026-10-15 直接修改（不升版）：新增 Extra Bet（2 倍押注、Card-On FG 週期 1/30＝NB 的 5 倍；92A 加 eb_base_game／eb_free_game，FG 卡同 NB、BG 重解），Card-On EB Oldhand 92.16%／Newbie 92.44%。"
+      ]
+    },
+    {
+      "version": "5.1.0.0",
+      "math_key": "5",
+      "date": "2026-10-21",
+      "base_config": "Versions/5.1.0.0/config.js",
+      "sources": {
+        "base": "Versions/5.1.0.0/Source/H0451.xlsx",
+        "92A": "Versions/5.1.0.0/Source/H045192A.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js"
+      },
+      "changes": [
+        "BF 卡片權重調整（只改 BF，NB／EB 不變）：BF 贏錢率（> 50x）14.6% → 30%，10～50x 的量挪到 50～100x；(1000, 2000] 砍半、(100, 120]、(200, 250] 提高約 35%；BF RTP 維持 92.5%（平均 46.25x），20,000x 仍有權重。"
       ]
     }
   ]

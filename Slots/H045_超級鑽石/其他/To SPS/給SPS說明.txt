@@ -1,4 +1,14 @@
-H045 超級鑽石（Super Diamond，Game ID 101015）數學版本 v5（5.0.0.0）交付說明
+H045 超級鑽石（Super Diamond，Game ID 101015）交付說明
+
+【最新】v5.1.0.0（2026-10-21）：只更新 config_92A.js
+- 只改 Buy Feature 卡片權重（card_system.profiles.oldhand／newbie.buy_feature，兩組相同）；config.js、Simulator.py、NB／EB 卡片都與 v5.0.0.0 相同，不用重換。
+- BF 贏錢率（總贏分 > 購買價 50x）約 14.6% → 30%；BF RTP 目標維持 92.5%。
+- config_92A.js 內 excel_version 改為 5.1.0.0，請以此版取代先前收到的 v5.0.0.0 config_92A.js。
+- BF Card-On 驗證結果另行補上。
+
+────────────────────────────────────────
+以下為 v5.0.0.0 交付說明（config.js、Simulator.py 仍適用）
+
 
 附檔（取代先前的 v4）
 - config.js        基礎數學（excel_version 5）

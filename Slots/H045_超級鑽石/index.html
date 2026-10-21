@@ -2251,6 +2251,12 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v5（5.1.0.0）</h4>
+        <ol>
+          <li>BF 卡片權重調整（只改 BF，NB／EB 不變）：BF 贏錢率（> 50x）14.6% → 30%，10～50x 的量挪到 50～100x；(1000, 2000] 砍半、(100, 120]、(200, 250] 提高約 35%；BF RTP 維持 92.5%（平均 46.25x），20,000x 仍有權重。（10/21）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v5（5.0.0.0）</h4>
         <ol>
           <li>升 v5：啟用盤面表 2（高連消表），BG 選表 表 1 : 表 2 = 9 : 1、FG／Retrigger 2 : 8（每轉各自選表）。（10/12）</li>
@@ -2598,7 +2604,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261015a`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261021a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
@@ -4029,9 +4035,9 @@
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "其他/數值報告_超級鑽石.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-15 13:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-21 10:41";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-10-15 15:56";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-15 15:56";   // 任何東西最後調整（數學、程式、文件）</script>
+  window.DEMOGAME_LAST_UPDATE = "2026-10-21 10:41";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261019o"></script>
 </body>
 
