@@ -2186,7 +2186,7 @@
           <div class="simulation-row"><span class="s-label" data-i18n="maxMultiplier">Max Multiplier</span><span class="s-value hi"
               id="maxMultiplierValue">x0</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldSeen">金框出現率</span><span class="s-value" id="goldSeenValue">0.00% (—)</span></div>
-          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldUsed">金框使用率</span><span class="s-value" id="goldUsedValue">0.00%</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statGoldUsed">金框使用率</span><span class="s-value" id="goldUsedValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultSeen">倍數出現率</span><span class="s-value" id="multSeenValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statMultUsed">倍數出現並使用</span><span class="s-value" id="multUsedValue">0.00% (—)</span></div>
           <div class="simulation-row" data-by-game><span class="s-label" data-h045-text="statBigGhost">大鬼出現率</span><span class="s-value" id="bigGhostValue">0.00% (—)</span></div>
@@ -3708,7 +3708,7 @@
     const s = state.spinStats;
     $("goldSeenValue").textContent = rateCycle(s.goldSeen, s.spins);
     // 金框使用率（2026-10-19 改口徑）：有金框被消除翻牌的轉數 ÷ 有金框出現的轉數
-    $("goldUsedValue").textContent = s.goldSeen ? `${(s.goldUsedSpins / s.goldSeen * 100).toFixed(2)}%` : "0.00%";
+    $("goldUsedValue").textContent = rateCycle(s.goldUsedSpins, s.goldSeen);   // 括號＝平均幾場「有金框的轉」用到一次
     $("multSeenValue").textContent = rateCycle(s.multSeen, s.spins);
     $("multUsedValue").textContent = rateCycle(s.multUsed, s.spins);
     $("bigGhostValue").textContent = rateCycle(s.big, s.spins);
