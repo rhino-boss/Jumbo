@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minted Mike — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-size%3D%2756%27%20text-anchor%3D%27middle%27%3E%F0%9F%8E%A8%3C/text%3E%3C/svg%3E">
+  <style id="mm-by-game">
+    /* By Game 樣式（規範 4.2.1）：標題、Feature Status、盤面、動畫、盤面訊息。共用區樣式由 demogame_common.css 提供。 */
+    body.mm,
+    body.mm * { box-sizing: border-box; }
+    body.mm { --cols: 5; --cell-size: calc((min(388px, 100vw - 48px) - (var(--cols) - 1) * 4px) / var(--cols)); }
+
+    body.mm #feature-bar { display: flex; align-items: center; min-height: 38px; padding: 8px 12px; }
+    body.mm #game-title { color: #5a88aa; font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+    body.mm #gameName { color: #b0d4f0; }
+
+    body.slot-simulator.mm #strip-bar { height: 52px; margin-top: 10px; overflow: hidden; }
+    body.mm .feature-strip { min-width: max-content; height: 100%; display: flex; align-items: center; gap: 9px; padding: 8px 16px; }
+    body.mm #modeText { color: #5a88aa; font-size: 12px; }
+    body.mm .feature-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; background: #0c2240; }
+    body.mm .feature-pill .k,
+    body.mm .feature-pill .v { font-size: 13px; font-weight: 700; }
+    body.mm .feature-pill .k { color: #5a88aa; }
+    body.mm #hotPill .v { color: #ff6fd9; }
+    body.mm #multPill .v { color: #ffd75e; }
+    body.mm #fgLeftPill .v { color: #00ddc0; }
+    body.mm .feature-pill.hidden { display: none; }
+    body.mm .feature-pill.pulse { animation: mm-pulse 320ms ease; }
+    @keyframes mm-pulse { 50% { transform: scale(1.12); filter: brightness(1.6); } }
+
+    body.slot-simulator.mm #grid-panel { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px; }
+    body.mm .board-shell { width: 100%; position: relative; }
+    body.mm .board-grid { display: grid; grid-template-columns: repeat(var(--cols), var(--cell-size)); gap: 4px; justify-content: center; }
+    body.mm.fg-skater #board .cell { border-color: rgba(120, 230, 120, 0.35); }
+    body.mm.fg-ink #board .cell,
+    body.mm.fg-tag #board .cell { border-color: rgba(255, 111, 217, 0.35); }
+
+    body.mm .cell {
+      width: var(--cell-size); height: var(--cell-size); position: relative;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 2px solid rgba(38, 92, 137, 0.28); border-radius: 8px; background: #060d1a; overflow: hidden;
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+    body.mm .sym-code-label { font: 400 15px "Segoe UI", system-ui, sans-serif; color: #e8f4ff; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+    body.mm .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, .3); }
+    body.mm .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, .3); }
+    body.mm .cell.symbol-m3 { border-color: #38c9b8; background: rgba(20, 72, 70, .3); }
+    body.mm .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, .32); }
+    body.mm .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, .32); }   /* 共用 WW 配色 */
+    body.mm .cell.symbol-c1 { border-color: #4f8fff; background: rgba(30, 60, 170, .45); }  /* 藍貼紙 */
+    body.mm .cell.symbol-c2 { border-color: #ff4fd8; background: rgba(150, 25, 120, .42); } /* 粉貼紙 */
+    body.mm .cell.symbol-c3 { border-color: #6ad86a; background: rgba(30, 110, 40, .4); }   /* 綠貼紙 */
+
+    /* C1／C2 落下：格子彈一下 → 飛彈飛向累積條打擊（衝擊環＋累積條閃震） */
+    body.mm .cell.stk-hit { animation: mm-hit 260ms ease-out both; z-index: 7; }
+    @keyframes mm-hit {
+      0% { transform: scale(1); filter: none; }
+      50% { transform: scale(1.18); filter: brightness(2); }
+      100% { transform: scale(1); filter: brightness(1.4); }
+    }
+    body.mm .mm-shot {
+      position: fixed; z-index: 9000; width: 32px; height: 32px; border-radius: 50%; pointer-events: none;
+      display: flex; align-items: center; justify-content: center; font: 900 11px "Segoe UI", system-ui, sans-serif; color: #fff;
+      background: var(--c); border: 2px solid #fff; box-shadow: 0 0 16px var(--c), 0 0 30px var(--c);
+    }
+    body.mm .meter-seg.hit { animation: mm-bar-hit 380ms ease-out; }
+    @keyframes mm-bar-hit {
+      0% { transform: scale(1.1); filter: brightness(2.4); }
+      35% { transform: translateX(-4px) scale(1.04); }
+      65% { transform: translateX(3px); }
+      100% { transform: none; filter: none; }
+    }
+    /* 盤面中央說明橫幅（粉色挑線、倍數說明、藍色撒 WW） */
+    body.mm .mm-banner {
+      position: absolute; left: 50%; top: 50%; z-index: 45; min-width: 64%; padding: 10px 18px; border-radius: 12px;
+      transform: translate(-50%, -50%); text-align: center; pointer-events: none;
+      background: rgba(6, 10, 30, .9); border: 2px solid var(--c); box-shadow: 0 0 26px var(--c);
+      animation: mm-banner-in 280ms cubic-bezier(.2, 1.4, .4, 1) both;
+    }
+    body.mm .mm-banner .t { font: 900 28px "Segoe UI", system-ui, sans-serif; color: var(--c); letter-spacing: 1px; text-shadow: 0 0 12px var(--c); }
+    body.mm .mm-banner .s { margin-top: 4px; font: 700 13px "Microsoft JhengHei", "Segoe UI", sans-serif; color: #e8f4ff; }
+    body.mm .mm-banner.out { animation: mm-banner-out 200ms ease-in forwards; }
+    @keyframes mm-banner-in { from { transform: translate(-50%, -50%) scale(.3); opacity: 0; } }
+    @keyframes mm-banner-out { to { transform: translate(-50%, -50%) scale(1.2); opacity: 0; } }
+    .mm-ring {
+      position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%;
+      border: 4px solid var(--ring, #fff); box-shadow: 0 0 12px var(--ring, #fff);
+      animation: mm-ring 480ms ease-out forwards; pointer-events: none;
+    }
+    @keyframes mm-ring { from { transform: scale(.4); opacity: 1; } to { transform: scale(5.5); opacity: 0; } }
+
+    /* 盤面上方進度條：左粉（Pink Marker）、中綠（Green Sticker Roll）、右藍（Blue Spray Can）
+       C1／C2 打擊後累積（跨局保留）；觸發時衝滿亮起，機制演完清空 */
+    body.mm .mm-meter { width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; }
+    body.mm .meter-seg {
+      position: relative; height: 28px; border-radius: 14px; overflow: hidden;
+      background: #0c2240; border: 1px solid rgba(147, 212, 255, .18);
+    }
+    body.mm .meter-seg .fill {
+      position: absolute; top: 0; bottom: 0; left: 0; width: var(--fill, 0%);
+      transition: width var(--charge, 600ms) ease-out;
+    }
+    body.mm .meter-seg.pink .fill { background: linear-gradient(90deg, #6a1656, #ff4fd8); }
+    body.mm .meter-seg.blue .fill { left: auto; right: 0; background: linear-gradient(270deg, #1a2f7a, #4f8fff); }
+    body.mm .meter-seg.pink.on { box-shadow: 0 0 14px rgba(255, 79, 216, .85); border-color: #ff4fd8; }
+    body.mm .meter-seg.blue.on { box-shadow: 0 0 14px rgba(79, 143, 255, .85); border-color: #4f8fff; }
+    body.mm .meter-label {
+      position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center;
+      font: 900 13px "Segoe UI", system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+    }
+    body.mm .meter-center {
+      min-width: 58px; height: 36px; padding: 0 8px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      background: #0c2240; border: 2px solid rgba(106, 216, 106, .4); color: #9fe89f; font: 900 13px "Segoe UI", system-ui, sans-serif;
+      transition: background 200ms ease, box-shadow 200ms ease;
+    }
+    body.mm .meter-center.charging { animation: mm-pulse 420ms ease-in-out 2; }
+    body.mm .meter-center.on { background: #2b8a35; color: #fff; border-color: #6ad86a; box-shadow: 0 0 14px rgba(106, 216, 106, .85); }
+    body.mm .cell.stk-active { animation: mm-stk 520ms ease-in-out infinite alternate; z-index: 5; }
+    @keyframes mm-stk { from { box-shadow: 0 0 6px rgba(255, 255, 255, .5); } to { box-shadow: 0 0 22px rgba(255, 255, 255, .95); transform: scale(1.06); } }
+
+    /* Green Sticker Roll：FS／FS Upgrade 蓋在格子上 */
+    body.mm .fs-badge {
+      position: absolute; inset: 3px; z-index: 4; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font: 900 15px "Segoe UI", system-ui, sans-serif; color: #062006;
+      background: linear-gradient(160deg, #b6ff6a, #3ed14a); box-shadow: 0 0 10px rgba(110, 255, 110, .8);
+      animation: mm-fs-in 260ms ease-out both;
+    }
+    body.mm .fs-badge.up { background: linear-gradient(160deg, #fff27a, #f0b81e); box-shadow: 0 0 12px rgba(255, 220, 80, .9); }
+    @keyframes mm-fs-in { from { transform: scale(0); } to { transform: scale(1); } }
+
+    /* 線層：Hot Lines（粉紅）與中獎線（金） */
+    body.mm .line-layer { position: absolute; inset: 0; z-index: 8; pointer-events: none; overflow: visible; }
+    body.mm .line-layer .hot { fill: none; stroke: #ff4fd8; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .85;
+      filter: drop-shadow(0 0 4px rgba(255, 79, 216, .9)); }
+    body.mm .line-layer .hot.idle { opacity: .28; filter: none; }
+    body.mm .line-layer .hot.new { animation: mm-draw 520ms ease-out both; stroke-dasharray: 1400; }
+    @keyframes mm-draw { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
+    body.mm .line-layer .win { fill: none; stroke: #ffd84a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: .95;
+      filter: drop-shadow(0 0 4px rgba(255, 216, 74, .9)); }
+
+    body.mm .message-bar {
+      width: 100%; min-height: 30px; padding: 6px 10px; border-radius: 6px; color: #5a88aa; background: #0c2240;
+      font-family: Consolas, monospace; font-size: 12px; display: flex; align-items: center; justify-content: center; text-align: center;
+    }
+    body.mm .message-bar.error { color: #ff8aa5; }
+    body.mm #bet-mode-panel .zone-body { flex-wrap: wrap; }
+  </style>
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../../../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+</head>
+
+<body class="slot-simulator mm">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請確認 Slots/demogame_common.css 存在</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameName">Minted Mike</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip">
+        <span id="modeText">Base Game</span>
+        <span class="feature-pill" id="hotPill"><span class="k" data-mm-text="hotLines">Hot Lines</span><span class="v" id="hotValue">0</span></span>
+        <span class="feature-pill" id="multPill"><span class="k" data-mm-text="hotMult">Hot Line Multiplier</span><span class="v" id="multValue">—</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k" data-mm-text="fgLeft">FG Left</span><span class="v" id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="mm-meter" id="meter" aria-label="Sticker meter">
+          <div class="meter-seg pink" id="meterPink"><span class="fill"></span><span class="meter-label" id="meterPinkLabel"></span></div>
+          <div class="meter-center" id="meterGreen">FS</div>
+          <div class="meter-seg blue" id="meterBlue"><span class="fill"></span><span class="meter-label" id="meterBlueLabel"></span></div>
+        </div>
+        <div class="board-shell" id="boardShell">
+          <div class="board-grid" id="board"></div>
+          <svg class="line-layer" id="lineLayer" aria-hidden="true"></svg>
+          <div id="fxLayer" class="slot-fx-layer"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi" id="balanceValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">0</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="bonushuntBtn" type="button">Extra Bet</button>
+            <button class="mode-btn" id="sprayBtn" type="button">Extra Bet 2</button>
+            <button id="buySkaterBtn" type="button">Buy Feature</button>
+            <button id="buyInkBtn" type="button">Super Feature</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value" id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi" id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">Max Win</span><span class="s-value hi" id="maxWinValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="rngInput">RNG<input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="Demo/NB/off/-/8f3a21b0"></label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">修改紀錄</div>
+      <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>v0（0.1.0.0）</h4>
+          <ol>
+            <li>初版（克隆 Hacksaw Gaming Minted Mike）：5×4、26 線、Pink Marker／Blue Spray Can／Green Sticker Roll、三階可升級 FG、FeatureSpins 與 Buy Feature；權重為 demo 假值。（10/22）</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect"></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span>Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note"></div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading game rules...</div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="./config.js?v=0.1.0.0&c=20261022"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (id) => document.getElementById(id);
+
+      // ── Config 載入檢查（規範 4.1：缺欄位需明確報錯，不得靜默用舊值）────────
+      const REQUIRED_FIELDS = [
+        "game_id", "display_name", "game_name_zh", "excel_version", "config_code", "cols", "rows",
+        "symbol_codes", "pay_table", "wild_pay_5", "lines", "symbol_weights", "stickers", "hot_lines",
+        "wild_spray", "green_roll", "spray_mode", "fg_names", "max_win", "feature_spins", "featurebuy", "bet_options", "initial_balance"
+      ];
+      const CFG = typeof data !== "undefined" ? data : null;
+      const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
+      if (!CFG || missing.length) {
+        const bar = $("messageBar");
+        bar.textContent = !CFG ? "Config load failed: ./config.js" : `Config missing fields: ${missing.join(", ")}`;
+        bar.classList.add("error");
+        throw new Error(bar.textContent);
+      }
+      window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;   // 本作未實作卡片系統
+
+      // ── 由 Config 取得的遊戲參數 ───────────────────────────────────────────
+      const COLS = CFG.cols, ROWS = CFG.rows, CELLS = COLS * ROWS;
+      document.body.style.setProperty("--cols", COLS);
+      const BET_LEVELS = CFG.bet_options.map(Number);
+      const SYM_CODE = CFG.symbol_codes;
+      const FS = CFG.fs_index, UP = CFG.upgrade_index, WILD = CFG.wild_index;
+      const STK = CFG.sticker_index;                 // { pink, blue, green } → 符號索引
+      const COLORS = ["pink", "blue", "green"];       // 執行順序：Pink → Blue → Green
+      const PAY = CFG.pay_table, WILD5 = CFG.wild_pay_5;
+      const LINES = CFG.lines;
+      const W_SYM = CFG.symbol_weights;
+      const STICK = CFG.stickers, HOT = CFG.hot_lines, SPRAY_W = CFG.wild_spray, GREEN = CFG.green_roll, SPRAY_MODE = CFG.spray_mode;
+      const MAX_WIN = CFG.max_win;
+      const MODE_NORMAL = "normal", MODE_BH = "bonushunt", MODE_SPRAY = "spray", MODE_BUY_SS = "buy_skater", MODE_BUY_INK = "buy_ink";
+      const isBuyMode = (m) => m === MODE_BUY_SS || m === MODE_BUY_INK;
+      const isSub = (s) => s === WILD || s === STK.pink || s === STK.blue || s === STK.green;
+
+      // ── By Game 文字（中英）────────────────────────────────────────────────
+      const MM_TEXT = {
+        en: {
+          baseGame: "Base Game", hotLines: "Hot Lines", hotMult: "Hot Line Multiplier", fgLeft: "FG Left",
+          spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop",
+          normal: "Normal Bet", bonushunt: "Extra Bet", spray: "Extra Bet 2", buySkater: "Buy Feature", buyInk: "Super Feature",
+          ready: "Ready — press Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared", insufficient: "Insufficient balance",
+          pink: "Pink Marker", blue: "Blue Spray Can", green: "Green Sticker Roll", landed: "Sticker landed", activated: "activated",
+          wilds: (n) => `Blue Spray Can → ${n} Wild`, hot: (add, total, m) => `Pink Marker → +${add} Hot Lines (${total}) · x${m}`,
+          respin: "Respin", noWin: "No win", lines: "lines", totalWin: "TOTAL WIN", spinWin: "SPIN WIN",
+          fsMiss: (n) => `Green Sticker Roll → ${n} FS (no bonus)`,
+          fsAward: (n, u, name, spins) => `Green Sticker Roll → FS ${n}${u ? ` + Upgrade ${u}` : ""} → ${name} ${spins} spins!`,
+          fsExtra: (spins) => `Green Sticker Roll → +${spins} free spins`,
+          upgrade: (name) => `Upgrade → ${name}!`, buyEnter: (name, n) => `Buy Feature — ${name} ${n} spins`,
+          maxWin: "MAX WIN reached — round ends", fgDone: (name, w) => `${name} complete · ${w}`,
+          hotTitle: "HOT LINES!", hotSub: (n) => `${n} random lines painted`,
+          hotMultSub: (m, add) => `${add ? `+x${add} → ` : ""}Wins on Hot Lines are multiplied by x${m}`,
+          sprayTitle: "SPRAY!", spraySub: (n) => `${n} WW added at random positions`
+        },
+        zh: {
+          baseGame: "基礎遊戲", hotLines: "熱線", hotMult: "熱線乘數", fgLeft: "FG 剩餘",
+          spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止",
+          normal: "Normal Bet", bonushunt: "Extra Bet", spray: "Extra Bet 2", buySkater: "Buy Feature", buyInk: "Super Feature",
+          ready: "準備完成 — 請按 Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置", insufficient: "餘額不足",
+          pink: "粉紅麥克筆", blue: "藍色噴漆", green: "綠色貼紙滾輪", landed: "貼紙落下", activated: "啟動",
+          wilds: (n) => `藍色噴漆 → 加入 ${n} 個 Wild`, hot: (add, total, m) => `粉紅麥克筆 → 熱線 +${add}（共 ${total} 條）· x${m}`,
+          respin: "重轉", noWin: "未中獎", lines: "線", totalWin: "總贏分", spinWin: "本局贏分",
+          fsMiss: (n) => `綠色貼紙滾輪 → ${n} 個 FS（未觸發）`,
+          fsAward: (n, u, name, spins) => `綠色貼紙滾輪 → FS ${n}${u ? `＋升級 ${u}` : ""} → ${name} ${spins} 局！`,
+          fsExtra: (spins) => `綠色貼紙滾輪 → 追加 ${spins} 局`,
+          upgrade: (name) => `升級 → ${name}！`, buyEnter: (name, n) => `購買特色 — ${name} ${n} 局`,
+          maxWin: "達最大贏分，本局結束", fgDone: (name, w) => `${name} 結束 · ${w}`,
+          hotTitle: "HOT LINES!", hotSub: (n) => `隨機畫上 ${n} 條熱線`,
+          hotMultSub: (m, add) => `${add ? `+x${add} → ` : ""}熱線上的中獎得分 × ${m} 倍`,
+          sprayTitle: "SPRAY!", spraySub: (n) => `隨機位置加入 ${n} 個 WW`
+        }
+      };
+      const lang = () => (/^zh/i.test($("languageSelect")?.value || "") ? "zh" : "en");
+      const tr = (key) => MM_TEXT[lang()][key] ?? MM_TEXT.en[key] ?? key;
+      const symName = (s) => (lang() === "zh" ? CFG.symbol_names_zh : CFG.symbol_names_en)?.[s] ?? "";
+      let messageBuild = null;
+      function say(build) {
+        messageBuild = typeof build === "function" ? build : () => build;
+        $("messageBar").textContent = messageBuild();
+      }
+
+      // ── 狀態 ──────────────────────────────────────────────────────────────
+      const freshFg = () => ({ remaining: 0, total: 0, played: 0, type: null, spins: [], win: 0, base: 0, maxWin: false });
+      const st = {
+        balance: CFG.initial_balance, betIndex: 3, mode: MODE_NORMAL, busy: false, auto: false, autoTimer: null,
+        rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, normalRounds: 0, naturalFg: 0, maxWinX: 0, roundCode: "",
+        fg: freshFg(), winShown: 0, frames: [], frameIndex: -1,
+      };
+      const bet = () => BET_LEVELS[st.betIndex];
+      const modeMult = (mode) => mode === MODE_BH ? CFG.feature_spins.bonushunt : mode === MODE_SPRAY ? CFG.feature_spins.spray
+        : mode === MODE_BUY_SS ? CFG.featurebuy.skater : mode === MODE_BUY_INK ? CFG.featurebuy.ink : 1;
+      const modeCost = (mode = st.mode) => bet() * modeMult(mode);   // 規範 4.4：扣款用實際模式成本；派彩以原始押注計算
+
+      // ── 數學抽樣一律用 Math.random：整局在 demogameRng.run(seed, …) 內一次算完（BG＋整段 FG）──
+      const rand = () => Math.random();
+      const rngW = (w) => {
+        const total = w.reduce((a, b) => a + b, 0);
+        let r = rand() * total;
+        for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return i; }
+        return w.length - 1;
+      };
+      const pickW = (values, weights) => values[rngW(weights)];
+      const randInt = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+      function shuffled(list) {
+        const a = list.slice();
+        for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+        return a;
+      }
+      const clone2 = (g) => g.map((row) => row.slice());
+      const keyOf = (r, c) => r * COLS + c;
+      const fmt = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const speed = () => Number($("speedRange").value || 1);
+      const wait = (ms) => new Promise((r) => setTimeout(r, Math.max(30, ms / speed())));
+      const fgName = (type) => CFG.fg_names[type] || type;
+
+      // ── 盤面與判獎 ─────────────────────────────────────────────────────────
+      const randomBoard = () => Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => rngW(W_SYM)));
+
+      // 26 線由左至右；C3 Wild 與 C4～C6 Sticker 替代所有一般符號；全線皆替代符號時以 Wild 5 連計
+      function evalLines(board, hotSet = null, mult = 1) {
+        const wins = [];
+        LINES.forEach((line, li) => {
+          const syms = line.map((r, c) => board[r][c]);
+          let sym = syms.find((s) => !isSub(s));
+          let len = 0, base = 0;
+          if (sym === undefined) { sym = WILD; len = COLS; base = WILD5; }
+          else {
+            while (len < COLS && (syms[len] === sym || isSub(syms[len]))) len++;
+            if (len < 3) return;
+            base = PAY[sym][len - 3];
+          }
+          const m = hotSet && hotSet.has(li) ? mult : 1;
+          wins.push({ li, sym, len, base, mult: m, pay: base * m * bet(), cells: line.slice(0, len).map((r, c) => keyOf(r, c)) });
+        });
+        return wins;
+      }
+      const sumPay = (wins) => wins.reduce((a, w) => a + w.pay, 0);
+
+      // Blue Spray Can：Wild 只蓋在一般符號格上（不蓋 Sticker）
+      function sprayWilds(board, n) {
+        const pool = [];
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (board[r][c] < CFG.normal_count) pool.push(keyOf(r, c));
+        const added = shuffled(pool).slice(0, n);
+        added.forEach((k) => { board[Math.floor(k / COLS)][k % COLS] = WILD; });
+        return added;
+      }
+
+      function pickLines(n, exclude = new Set()) {
+        const pool = LINES.map((_, i) => i).filter((i) => !exclude.has(i));
+        return shuffled(pool).slice(0, n);
+      }
+
+      // ── runSpin：一次 Spin（含 Respin、Green Roll）的完整計算 ─────────────────
+      // ctx：{ mode（BG 押注模式）, fg（null | skater | ink | tag）, hot（INK／TAG 累進熱線 {lines:Set, mult}）}
+      function runSpin(ctx) {
+        const spray = !ctx.fg && ctx.mode === MODE_SPRAY;
+        const prof = ctx.fg === "ink" || ctx.fg === "tag" ? STICK.fg_progressive : ctx.fg ? STICK.fg : STICK.base;
+        const activate = spray ? { ...prof.activate, ...SPRAY_MODE.activate } : prof.activate;
+        const hotCountW = spray ? SPRAY_MODE.hot_count_weights : HOT.count_weights;
+        const hotMultW = spray ? SPRAY_MODE.hot_mult_weights : HOT.mult_weights;
+        const land = { ...prof.land };
+        if (!ctx.fg && ctx.mode === MODE_BH) land.green = Math.min(0.95, land.green * STICK.bonushunt_green_land_mult);
+        if (spray) { land.pink = 1; land.blue = 1; land.green = 0; }   // 保證粉＋藍；FS 不會出現
+        const board = randomBoard();
+        const landed = COLORS.filter((c) => rand() < land[c]);
+        if (ctx.fg === "tag" && !landed.length) {
+          const g = STICK.guaranteed_color_weights;
+          landed.push(pickW(COLORS, COLORS.map((c) => g[c])));
+        }
+        const stickerKeys = {};
+        shuffled([...Array(CELLS).keys()]).slice(0, landed.length).forEach((k, i) => {
+          stickerKeys[landed[i]] = k;
+          board[Math.floor(k / COLS)][k % COLS] = STK[landed[i]];
+        });
+        const active = new Set(landed.filter((c) => rand() < activate[c]));
+        if (spray && !active.has("pink") && !active.has("blue")) active.add(rand() < 0.5 ? "pink" : "blue");
+
+        const progressive = ctx.fg === "ink" || ctx.fg === "tag";
+        const idleHot = progressive ? [...ctx.hot.lines] : [];
+        const idleMult = progressive ? ctx.hot.mult : 0;
+        const steps = [{ type: "land", board: clone2(board), landed: landed.slice(), active: COLORS.filter((c) => active.has(c)), stickerKeys, hot: idleHot, mult: idleMult }];
+        let total = 0, finalBoard = board, hotLines = idleHot, hotMult = idleMult;
+        const wildN = active.has("blue") ? pickW(SPRAY_W.count_values, SPRAY_W.count_weights) : 0;
+
+        // Blue 單獨啟動：首轉判獎前加 Wild；Pink 也啟動時 Wild 加在 Respin 盤面（Pink → Blue 順序）⏳
+        if (active.has("blue") && !active.has("pink")) {
+          const added = sprayWilds(board, wildN);
+          steps.push({ type: "wild", board: clone2(board), added, n: added.length, hot: idleHot, mult: idleMult });
+        }
+        let wins = evalLines(board);
+        total += sumPay(wins);
+        steps.push({ type: "win", board: clone2(board), wins, pay: sumPay(wins), hot: idleHot, mult: idleMult, hotActive: false });
+
+        if (active.has("pink")) {
+          let added = [], multAdd = 0;
+          if (progressive) {
+            const h = ctx.hot;
+            const room = HOT.max_lines - h.lines.size;
+            const want = h.lines.size === 0 ? pickW(HOT.count_values, hotCountW) : randInt(HOT.progressive_add_min, HOT.progressive_add_max);
+            added = pickLines(Math.min(want, room), h.lines);
+            added.forEach((li) => h.lines.add(li));
+            multAdd = pickW(HOT.mult_values, hotMultW);
+            h.mult += multAdd;
+            hotLines = [...h.lines]; hotMult = h.mult;
+          } else {
+            added = pickLines(pickW(HOT.count_values, hotCountW));
+            multAdd = hotMult = pickW(HOT.mult_values, hotMultW);
+            hotLines = added.slice();
+          }
+          steps.push({ type: "hot", board: clone2(board), hot: hotLines, added, mult: hotMult, multAdd });
+          const rb = randomBoard();   // Respin：不出 Sticker
+          steps.push({ type: "respin", board: clone2(rb), hot: hotLines, mult: hotMult });
+          if (active.has("blue")) {
+            const addedW = sprayWilds(rb, wildN);
+            steps.push({ type: "wild", board: clone2(rb), added: addedW, n: addedW.length, hot: hotLines, mult: hotMult });
+          }
+          wins = evalLines(rb, new Set(hotLines), hotMult);
+          total += sumPay(wins);
+          steps.push({ type: "win", board: clone2(rb), wins, pay: sumPay(wins), hot: hotLines, mult: hotMult, hotActive: true });
+          finalBoard = rb;
+        }
+
+        let fs = null;
+        if (active.has("green")) {
+          let count, up = 0, award = true;
+          if (!ctx.fg && rand() >= GREEN.bg_award_chance) { count = randInt(3, 7); award = false; }
+          else {
+            count = pickW(GREEN.total_values, GREEN.total_weights);
+            up = ctx.fg === "tag" ? 0 : rngW(GREEN.upgrade_weights);   // TAG AND DASH 不出 C2
+            if (ctx.fg === "ink") up = Math.min(up, 1);
+          }
+          const fsCells = shuffled([...Array(CELLS).keys()]).slice(0, count).map((key, i) => ({ key, sym: i < up ? UP : FS }));
+          fs = { total: count, fsCount: count - up, up, award };
+          if (!ctx.fg && award) fs.type = up >= 2 ? "tag" : up === 1 ? "ink" : "skater";
+          if (ctx.fg) {
+            fs.extra = count;
+            fs.upgrade = ctx.fg === "skater" ? (up >= 2 ? "tag" : up === 1 ? "ink" : null) : ctx.fg === "ink" ? (up >= 1 ? "tag" : null) : null;
+          }
+          steps.push({ type: "green", board: clone2(finalBoard), fsCells, fs, hot: hotLines, mult: hotMult });
+        }
+        return { fgType: ctx.fg, steps, total, fs, landed, active: [...active], finalBoard: clone2(finalBoard), hot: hotLines, mult: hotMult, progressive };
+      }
+
+      // 一段完整 FG（含追加、升級、Max Win）；INK／TAG 的熱線與乘數整段保留，升級時一併帶入
+      function runFreeGames(type, spins, winBefore, cap) {
+        const hot = { lines: new Set(), mult: 0 };
+        const list = [];
+        let left = spins, win = 0, maxWin = false;
+        while (left > 0 && list.length < CFG.fg_safety_cap) {
+          const s = runSpin({ fg: type, hot });
+          left--;
+          if (s.fs?.extra) left += s.fs.extra;
+          if (s.fs?.upgrade) type = s.fs.upgrade;
+          s.fgTypeAfter = type;
+          if (winBefore + win + s.total >= cap) { s.total = cap - winBefore - win; s.maxWin = true; maxWin = true; }
+          win += s.total;
+          list.push(s);
+          if (maxWin) break;
+        }
+        return { spins: list, win, maxWin, startType: list[0]?.fgType ?? type };
+      }
+
+      // 一局完整數學結果（BG＋整段 FG）；同步、只用 rand()，供 demogameRng.run() 與 Simulation 共用
+      function computeRound(mode) {
+        const cap = MAX_WIN * bet();
+        if (isBuyMode(mode)) {
+          const type = mode === MODE_BUY_SS ? "skater" : "ink";
+          const spins = pickW(GREEN.total_values, GREEN.total_weights);
+          const fg = runFreeGames(type, spins, 0, cap);
+          return { mode, bg: null, fgType: type, fgSpinsInit: spins, fg, bgWin: 0, total: fg.win, maxWin: fg.maxWin };
+        }
+        const bg = runSpin({ mode });
+        let maxWin = false;
+        if (bg.total >= cap) { bg.total = cap; bg.maxWin = maxWin = true; }
+        const empty = { spins: [], win: 0, maxWin: false };
+        const fg = !maxWin && bg.fs?.award ? runFreeGames(bg.fs.type, bg.fs.total, bg.total, cap) : empty;
+        return { mode, bg, fgType: bg.fs?.award ? bg.fs.type : null, fgSpinsInit: bg.fs?.award ? bg.fs.total : 0, fg, bgWin: bg.total, total: bg.total + fg.win, maxWin: maxWin || fg.maxWin };
+      }
+
+      // ── Render ───────────────────────────────────────────────────────────
+      const boardEl = $("board"), shellEl = $("boardShell"), lineLayer = $("lineLayer"), fxLayer = $("fxLayer");
+      const cellEl = (k) => boardEl.children[k];
+
+      function fillCell(cell, sym, fsSym = null) {
+        cell.className = `cell symbol-${SYM_CODE[sym].toLowerCase()}`;
+        let label = cell.querySelector(".sym-code-label");
+        if (!label) {
+          cell.innerHTML = `<span class="sym-code-label code"></span>`;
+          label = cell.querySelector(".sym-code-label");
+        }
+        label.textContent = SYM_CODE[sym];
+        cell.querySelector(".fs-badge")?.remove();
+        if (fsSym != null) {
+          const b = document.createElement("span");
+          b.className = `fs-badge${fsSym === UP ? " up" : ""}`;
+          b.textContent = fsSym === UP ? "UP" : "FS";
+          cell.appendChild(b);
+        }
+      }
+      function renderBoard(board, fsCells = []) {
+        const fsMap = new Map(fsCells.map((f) => [f.key, f.sym]));
+        if (boardEl.children.length !== CELLS) {
+          boardEl.innerHTML = "";
+          for (let i = 0; i < CELLS; i++) boardEl.appendChild(document.createElement("div"));
+        }
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+          const k = keyOf(r, c);
+          const cell = cellEl(k);
+          cell.style.visibility = "";
+          fillCell(cell, board[r][c], fsMap.has(k) ? fsMap.get(k) : null);
+        }
+        void boardEl.offsetWidth;
+      }
+
+      // 線層：熱線（粉紅；未啟動時淡顯）與中獎線（金）
+      function cellCenter(k) {
+        const s = shellEl.getBoundingClientRect(), r = cellEl(k).getBoundingClientRect();
+        return [r.left - s.left + r.width / 2, r.top - s.top + r.height / 2];
+      }
+      function linePoints(li) {
+        return LINES[li].map((row, c) => cellCenter(keyOf(row, c)).map((v) => v.toFixed(1)).join(",")).join(" ");
+      }
+      function drawLines({ hot = [], hotActive = false, added = [], wins = [] } = {}) {
+        const s = shellEl.getBoundingClientRect();
+        lineLayer.setAttribute("viewBox", `0 0 ${s.width} ${s.height}`);
+        lineLayer.setAttribute("width", s.width);
+        lineLayer.setAttribute("height", s.height);
+        const addedSet = new Set(added);
+        const hotSvg = hot.map((li) => `<polyline class="hot${hotActive || addedSet.has(li) ? "" : " idle"}${addedSet.has(li) ? " new" : ""}" points="${linePoints(li)}"/>`).join("");
+        const winSvg = wins.map((w) => `<polyline class="win" points="${linePoints(w.li)}"/>`).join("");
+        lineLayer.innerHTML = hotSvg + winSvg;
+      }
+      function setHotPills(hot, mult, pulse = false) {
+        $("hotValue").textContent = hot.length;
+        $("multValue").textContent = mult > 0 ? `x${mult}` : "—";
+        if (pulse) ["hotPill", "multPill"].forEach((id) => { const p = $(id); p.classList.remove("pulse"); void p.offsetWidth; p.classList.add("pulse"); });
+      }
+
+      // ── 累積條（盤面上方）：左 C2 粉、中 C3 綠、右 C1 藍 ─────────────────────────
+      // C1／C2 落下時飛上去打擊對應累積條：沒觸發 → 進度可能增加（最多 90%，跨局保留）；觸發 → 衝滿亮起，機制演完清空。
+      // 只做畫面：觸發與否仍由數學結果（active）決定，進度增加量用表演亂數，不影響結果。
+      const meterSeg = { pink: $("meterPink"), blue: $("meterBlue") };
+      const meterLabel = { pink: $("meterPinkLabel"), blue: $("meterBlueLabel") };
+      const STK_COLOR = { pink: "#ff4fd8", blue: "#4f8fff" };
+      const meter = { pink: 0, blue: 0 };   // 累積進度（%）
+      function meterFill(c, pct, on = false) {
+        meter[c] = pct;
+        meterSeg[c].style.setProperty("--charge", `${Math.round(Math.max(120, 420 / speed()))}ms`);
+        meterSeg[c].style.setProperty("--fill", `${pct}%`);
+        meterSeg[c].classList.toggle("on", on);
+      }
+      function meterGreen(on = false, text = "FS") {
+        $("meterGreen").textContent = text;
+        $("meterGreen").classList.toggle("on", on);
+        $("meterGreen").classList.remove("charging");
+      }
+      // 局末／換場：保留累積進度，只關掉亮起；粉色標籤顯示 INK／TAG 累進乘數
+      function meterIdle(mult = 0) {
+        ["pink", "blue"].forEach((c) => meterFill(c, meter[c]));
+        meterLabel.pink.textContent = mult ? `x${mult}` : "";
+        meterLabel.blue.textContent = "";
+        meterGreen();
+      }
+      function meterReset() { meter.pink = meter.blue = 0; meterIdle(); }
+
+      // C1／C2 從格子飛向累積條打擊；同時落下時一起飛
+      async function stickerShots(items, active) {
+        const flyMs = Math.max(180, 520 / speed());
+        await Promise.all(items.map(async ({ cell, color }) => {
+          cell.classList.remove("stk-hit"); void cell.offsetWidth; cell.classList.add("stk-hit");
+          await wait(160);
+          const from = cell.getBoundingClientRect(), to = meterSeg[color].getBoundingClientRect();
+          const sx = from.left + from.width / 2, sy = from.top + from.height / 2;
+          const tx = color === "pink" ? to.left + to.width * 0.75 : to.left + to.width * 0.25, ty = to.top + to.height / 2;
+          const shot = document.createElement("span");
+          shot.className = "mm-shot";
+          shot.textContent = SYM_CODE[STK[color]];
+          shot.style.cssText = `left:${sx - 16}px;top:${sy - 16}px;--c:${STK_COLOR[color]}`;
+          document.body.appendChild(shot);
+          const anim = shot.animate([
+            { transform: "translate(0,0) scale(1.1)" },
+            { transform: `translate(${tx - sx}px,${ty - sy}px) scale(.7)` }
+          ], { duration: flyMs, easing: "cubic-bezier(.55,0,.85,.35)", fill: "forwards" });
+          // 分頁在背景時動畫會暫停，加計時保底，避免卡住整局
+          await Promise.race([anim.finished.catch(() => {}), new Promise((r) => setTimeout(r, flyMs + 80))]);
+          shot.remove();
+          cell.classList.remove("stk-hit");
+          // 打擊：衝擊環＋累積條閃震
+          const ring = document.createElement("span");
+          ring.className = "mm-ring";
+          ring.style.cssText = `position:fixed;z-index:9000;left:${tx}px;top:${ty}px;--ring:${STK_COLOR[color]}`;
+          document.body.appendChild(ring);
+          setTimeout(() => ring.remove(), 520);
+          const seg = meterSeg[color];
+          seg.classList.remove("hit"); void seg.offsetWidth; seg.classList.add("hit");
+          setTimeout(() => seg.classList.remove("hit"), 400);
+          if (active.includes(color)) meterFill(color, 100, true);
+          else if (Math.random() < 0.7) meterFill(color, Math.min(90, meter[color] + 8 + Math.floor(Math.random() * 25)));
+        }));
+      }
+
+      // 盤面中央說明橫幅（標題＋說明），停 ms 後淡出
+      async function banner(title, sub, color, ms) {
+        const b = document.createElement("div");
+        b.className = "mm-banner";
+        b.style.setProperty("--c", color);
+        b.innerHTML = `<div class="t"></div><div class="s"></div>`;
+        b.querySelector(".t").textContent = title;
+        b.querySelector(".s").textContent = sub;
+        shellEl.appendChild(b);
+        await wait(ms);
+        b.classList.add("out");
+        await new Promise((r) => setTimeout(r, 200));
+        b.remove();
+      }
+
+      // 藍色噴漆：WW 從藍色累積條逐顆飛向隨機格子，落地變 WW
+      async function sprayWildsAnim(keys) {
+        const from = meterSeg.blue.getBoundingClientRect();
+        const sx = from.left + from.width * 0.25, sy = from.top + from.height / 2;
+        const flyMs = Math.max(160, 420 / speed()), gap = Math.max(25, 110 / speed());
+        await Promise.all(keys.map(async (k, idx) => {
+          await new Promise((r) => setTimeout(r, idx * gap));
+          const cell = cellEl(k), to = cell.getBoundingClientRect();
+          const tx = to.left + to.width / 2, ty = to.top + to.height / 2;
+          const shot = document.createElement("span");
+          shot.className = "mm-shot";
+          shot.textContent = SYM_CODE[WILD];
+          shot.style.cssText = `left:${sx - 16}px;top:${sy - 16}px;--c:#39d6a2`;
+          document.body.appendChild(shot);
+          const lift = Math.min(sy, ty) - 40;   // 往上拋再落下
+          const anim = shot.animate([
+            { transform: "translate(0,0) scale(.6)" },
+            { transform: `translate(${(tx - sx) / 2}px,${lift - sy}px) scale(1.15)`, offset: 0.45 },
+            { transform: `translate(${tx - sx}px,${ty - sy}px) scale(1)` }
+          ], { duration: flyMs, easing: "ease-in", fill: "forwards" });
+          await Promise.race([anim.finished.catch(() => {}), new Promise((r) => setTimeout(r, flyMs + 80))]);
+          shot.remove();
+          fillCell(cell, WILD);
+          window.slotFx?.wildPop([cell]);
+        }));
+      }
+
+      // 轉輪滾動（同 急速糖果 2／H020 連續輪帶）：每輪蓋一條輪帶往下捲、停在結果格；只做畫面，不動結果
+      async function reelStripSpin(board, columns) {
+        const motion = window.demogameMotion;
+        const spinMs = motion ? motion.reelSpinMs() : 380;
+        const gapMs = motion ? motion.stopStaggerMs() : 80;
+        const pool = columns.flat().filter(Boolean);
+        if (!board || !pool.length) return;
+        const copyCell = (node, width, height, x, y) => {
+          const copy = node.cloneNode(true);
+          [...copy.classList].forEach((name) => { if (name.startsWith("fx-") || name === "stk-active") copy.classList.remove(name); });
+          copy.querySelector(".fs-badge")?.remove();
+          copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+          return copy;
+        };
+        const windows = [];
+        const jobs = columns.map((list, reel) => {
+          const cells = (list || []).filter(Boolean);
+          if (!cells.length) return Promise.resolve();
+          const ms = spinMs + gapMs * reel;
+          const win = document.createElement("div");
+          win.className = "dg-reel-window";
+          win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+          board.appendChild(win);
+          windows.push(win);
+          const host = win.offsetParent || document.body;
+          const hostRect = host.getBoundingClientRect();
+          const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
+          const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));
+          const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+          Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+          const last = boxes[boxes.length - 1];
+          const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
+          const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);
+          const strip = document.createElement("div");
+          strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+          boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+          for (let k = 1; k <= extra; k += 1) {
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
+          }
+          win.appendChild(strip);
+          cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+          const above = pool[Math.floor(Math.random() * pool.length)];
+          strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+          strip.style.transform = `translateY(${-extra * pitch}px)`;
+          const anim = strip.animate([
+            { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+            { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+            { transform: "translateY(0)" }
+          ], { duration: ms, fill: "both" });
+          return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+        });
+        await Promise.all(jobs);
+        windows.forEach((win) => win.remove());
+        pool.forEach((cell) => { cell.style.visibility = ""; });
+      }
+      const columnsOf = () => Array.from({ length: COLS }, (_, c) => Array.from({ length: ROWS }, (_, r) => cellEl(keyOf(r, c))));
+
+      // ── 步驟文字（播放與逐幀共用）─────────────────────────────────────────
+      const winText = (wins) => wins.length
+        ? wins.map((w) => `L${w.li + 1} ${SYM_CODE[w.sym]}×${w.len}${w.mult > 1 ? ` x${w.mult}` : ""}`).join(" · ")
+        : tr("noWin");
+      function stepSay(step, fgType) {
+        switch (step.type) {
+          case "land": return step.landed.length
+            ? `${tr("landed")}: ${step.landed.map((c) => `${tr(c)}${step.active.includes(c) ? ` ✔ ${tr("activated")}` : ""}`).join(" · ")}`
+            : fgType ? fgName(fgType) : tr("baseGame");
+          case "wild": return tr("wilds")(step.n);
+          case "win": return `${step.hotActive ? `${tr("respin")} | ` : ""}${winText(step.wins)}${step.pay ? ` | +${fmt(step.pay)}` : ""}`;
+          case "hot": return tr("hot")(step.added.length, step.hot.length, step.mult);
+          case "respin": return `${tr("respin")} — ${step.hot.length} ${tr("hotLines")} x${step.mult}`;
+          case "green": {
+            const f = step.fs;
+            if (fgType) return `${tr("fsExtra")(f.extra)}${f.upgrade ? ` · ${tr("upgrade")(fgName(f.upgrade))}` : ""}`;
+            return f.award ? tr("fsAward")(f.fsCount, f.up, fgName(f.type), f.total) : tr("fsMiss")(f.total);
+          }
+        }
+        return "";
+      }
+
+      // ── 動畫播放 ──────────────────────────────────────────────────────────
+      function setWinShown(v) { st.winShown = v; $("winValue").textContent = fmt(v); }
+
+      async function playSpin(spin, winBase = 0) {
+        let paid = 0;
+        for (const [i, step] of spin.steps.entries()) {
+          const frameSay = () => stepSay(step, spin.fgType);
+          if (st.frames[i]) st.frames[i].say = frameSay;
+          if (step.type === "land") {
+            drawLines({ hot: step.hot });
+            setHotPills(step.hot, step.mult);
+            renderBoard(step.board);
+            meterIdle(spin.progressive ? step.mult : 0);
+            await reelStripSpin(boardEl, columnsOf());
+            say(frameSay);
+            const shots = ["blue", "pink"].filter((c) => step.landed.includes(c)).map((c) => ({ cell: cellEl(step.stickerKeys[c]), color: c }));
+            if (step.landed.includes("green")) $("meterGreen").classList.add("charging");
+            if (shots.length) { await stickerShots(shots, step.active); await wait(300); }
+            if (step.active.includes("green")) meterGreen(true);
+            if (step.active.length) {
+              step.active.forEach((c) => cellEl(step.stickerKeys[c]).classList.add("stk-active"));
+              await wait(500);
+            } else await wait(120);
+          } else if (step.type === "wild") {
+            // 藍色：說明「隨機加入 N 個 WW」→ WW 從累積條逐顆撒到隨機格子
+            renderBoard(spin.steps[i - 1].board);
+            meterLabel.blue.textContent = `+${step.n} WW`;
+            say(frameSay);
+            await banner(tr("sprayTitle"), tr("spraySub")(step.n), "#39d6a2", 900);
+            await sprayWildsAnim(step.added);
+            renderBoard(step.board);
+            await wait(450);
+          } else if (step.type === "win") {
+            renderBoard(step.board);
+            drawLines({ hot: step.hot, hotActive: step.hotActive, wins: step.wins });
+            if (step.wins.length) {
+              const hitKeys = new Set(step.wins.flatMap((w) => w.cells));
+              const winCells = [], dimCells = [];
+              for (let k = 0; k < CELLS; k++) (hitKeys.has(k) ? winCells : dimCells).push(cellEl(k));
+              window.slotFx?.winGlow(winCells, dimCells);
+              window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
+              paid += step.pay;
+              setWinShown(winBase + Math.min(paid, spin.total));
+              say(frameSay);
+              await wait(1000);
+              renderBoard(step.board);
+              drawLines({ hot: step.hot, hotActive: step.hotActive });
+            } else { say(frameSay); await wait(200); }
+          } else if (step.type === "hot") {
+            // 粉色：「HOT LINES! N 條」→ 逐條挑線畫出 → 說明熱線中獎乘上倍數
+            say(frameSay);
+            const kept = step.hot.filter((li) => !step.added.includes(li));
+            if (step.added.length) {
+              await banner(tr("hotTitle"), tr("hotSub")(step.added.length), "#ff4fd8", 800);
+              const each = Math.max(60, Math.min(220, 2400 / step.added.length) / speed());
+              for (let n = 1; n <= step.added.length; n++) {
+                drawLines({ hot: [...kept, ...step.added.slice(0, n)], hotActive: true, added: [step.added[n - 1]] });
+                $("hotValue").textContent = kept.length + n;
+                await new Promise((r) => setTimeout(r, each));
+              }
+            } else drawLines({ hot: step.hot, hotActive: true });
+            setHotPills(step.hot, step.mult, true);
+            meterLabel.pink.textContent = `x${step.mult}`;
+            await banner(`x${step.mult}`, tr("hotMultSub")(step.mult, spin.progressive ? step.multAdd : 0), "#ffd84a", 1300);
+          } else if (step.type === "respin") {
+            renderBoard(step.board);
+            await reelStripSpin(boardEl, columnsOf());
+            say(frameSay);
+            await wait(200);
+          } else if (step.type === "green") {
+            renderBoard(step.board, step.fsCells);
+            meterGreen(true, step.fs.up ? `C4 ${step.fs.fsCount}+C5 ${step.fs.up}` : `C4 ${step.fs.fsCount}`);
+            say(frameSay);
+            await wait(1200);
+          }
+        }
+        if (!spin.progressive) { drawLines(); setHotPills([], 0); }
+        else drawLines({ hot: spin.hot });
+        spin.active.forEach((c) => { if (c in meter) meter[c] = 0; });   // 觸發的累積條等本次 Spin 結束才歸零
+        meterIdle(spin.progressive ? spin.mult : 0);
+        if (spin.maxWin) { say(() => tr("maxWin")); await wait(900); }
+      }
+
+      // ── Debug：Spin Result／Log／逐幀 ─────────────────────────────
+      const modeLabel = (mode) => tr({ [MODE_NORMAL]: "normal", [MODE_BH]: "bonushunt", [MODE_SPRAY]: "spray", [MODE_BUY_SS]: "buySkater", [MODE_BUY_INK]: "buyInk" }[mode]);
+      const boardText = (board) => board.map((row, r) => `${String(r + 1).padStart(2, "0")} ${row.map((s) => SYM_CODE[s].padStart(3, " ")).join(" ")}`).join("\n");
+
+      function renderSpinResult(spin) {
+        const rows = spin.steps.filter((s) => s.type === "win").flatMap((s) => s.wins.map((w) =>
+          `<div class="line-row"><span>${s.hotActive ? "Respin " : ""}L${w.li + 1} ${SYM_CODE[w.sym]} × ${w.len}</span><span>${fmt(w.base * bet())}${w.mult > 1 ? ` x${w.mult}` : ""} → ${fmt(w.pay)}</span></div>`));
+        $("lineList").innerHTML = rows.length ? rows.join("") : `<div class="line-row"><span>No win</span><span>0.00</span></div>`;
+        $("spinResultList").innerHTML = spin.steps.map((s) => `
+          <div class="spin-result-row">
+            <div class="spin-result-head"><strong>${s.type}</strong><span>${stepSay(s, spin.fgType)}</span></div>
+            <pre class="spin-result-board">${boardText(s.board)}</pre>
+          </div>`).join("") + `<div class="spin-result-row"><div class="spin-result-head"><strong>Total</strong><span>${fmt(spin.total)}${spin.maxWin ? " (Max Win)" : ""}</span></div></div>`;
+      }
+
+      // 逐幀：每個計算步驟一幀，可用 Previous／Next 回看
+      function captureFrames(spin, winBase = 0) {
+        let paid = 0;
+        st.frames = spin.steps.map((s) => {
+          if (s.type === "win") paid += s.pay;
+          return { step: s, fgType: spin.fgType, win: winBase + Math.min(paid, spin.total) };
+        });
+        st.frameIndex = st.frames.length - 1;
+        updateStepButtons();
+      }
+      function showFrame(index) {
+        if (!st.frames.length || st.busy) return;
+        st.frameIndex = Math.max(0, Math.min(index, st.frames.length - 1));
+        const f = st.frames[st.frameIndex], s = f.step;
+        renderBoard(s.board, s.fsCells || []);
+        drawLines({ hot: s.hot || [], hotActive: s.type === "hot" || s.hotActive, wins: s.wins || [] });
+        setHotPills(s.hot || [], s.mult || 0);
+        if (s.type === "land") s.active.forEach((c) => cellEl(s.stickerKeys[c]).classList.add("stk-active"));
+        // 回看只標示本局哪些機制觸發（累積進度是表演狀態，不回溯）
+        const act = st.frames.find((x) => x.step.type === "land")?.step.active || [];
+        ["pink", "blue"].forEach((c) => meterSeg[c].classList.toggle("on", act.includes(c)));
+        meterLabel.pink.textContent = s.mult ? `x${s.mult}` : "";
+        meterGreen(s.type === "green", s.type === "green" ? `C4 ${s.fs.fsCount}${s.fs.up ? `+C5 ${s.fs.up}` : ""}` : "FS");
+        $("winValue").textContent = fmt(f.win);
+        say(() => `Step ${st.frameIndex + 1}/${st.frames.length} | ${stepSay(s, f.fgType)}`);
+        updateStepButtons();
+      }
+      function updateStepButtons() {
+        const enabled = $("debugModeInput").checked && !st.busy && st.frames.length > 0;
+        $("previousStepBtn").disabled = !enabled || st.frameIndex <= 0;
+        $("nextStepBtn").disabled = !enabled || st.frameIndex >= st.frames.length - 1;
+      }
+
+      // Debug Log：共用 window.demogameLog（Log 文字只用英文）；共用模組載入前先排隊
+      const pendingLog = [];
+      function appendLog(text, type = "info") {
+        if (window.demogameLog) window.demogameLog(text, type);
+        else pendingLog.push([text, type]);
+      }
+      document.addEventListener("DOMContentLoaded", () => { pendingLog.splice(0).forEach(([text, type]) => window.demogameLog?.(text, type)); });
+      const gameError = (key) => Object.assign(new Error(tr(key)), { logMessage: MM_TEXT.en[key] });
+      const spinLogLine = (head, spin) => `${head} | Sticker ${spin.landed.join("+") || "-"} | Active ${spin.active.join("+") || "-"} | Hot ${spin.hot.length}${spin.mult ? ` x${spin.mult}` : ""}${spin.fs ? ` | FS ${spin.fs.fsCount}+UP ${spin.fs.up}` : ""} | Win ${fmt(spin.total)}`;
+
+      // ── UI 更新 ──────────────────────────────────────────────────────────
+      function updateStats() {
+        const inFg = st.fg.remaining > 0;
+        $("balanceValue").textContent = fmt(st.balance);
+        $("betValue").textContent = fmt(inFg ? 0 : modeCost(isBuyMode(st.mode) ? MODE_NORMAL : st.mode));
+        $("betBtn").textContent = `Bet ${fmt(bet())}`;
+        $("winValue").textContent = fmt(st.winShown || 0);
+        $("roundCountValue").textContent = st.rounds;
+        $("rtpValue").textContent = st.totalBet ? `${(st.totalWin / st.totalBet * 100).toFixed(2)}%` : "0.00%";
+        $("hitRateValue").textContent = st.rounds ? `${(st.hitRounds / st.rounds * 100).toFixed(2)}%` : "0.00%";
+        $("fgTriggerValue").textContent = st.normalRounds ? `${(st.naturalFg / st.normalRounds * 100).toFixed(3)}% (${st.naturalFg})` : "0.000% (0)";
+        $("maxWinValue").textContent = `x${st.maxWinX.toFixed(2)}`;
+        $("fgLeftPill").classList.toggle("hidden", !inFg);
+        $("fgLeftValue").textContent = `${st.fg.remaining}/${st.fg.total}`;
+        $("modeText").textContent = inFg ? fgName(st.fg.type) : tr("baseGame");
+        $("spinBtn").textContent = tr(inFg ? "nextFg" : "spin");
+        ["fg-skater", "fg-ink", "fg-tag"].forEach((c) => document.body.classList.remove(c));
+        if (inFg) document.body.classList.add(`fg-${st.fg.type}`);
+        document.body.classList.toggle("fg-mode", inFg);
+      }
+      function updateControls() {
+        const inFg = st.fg.remaining > 0, lock = st.busy || inFg;
+        $("spinBtn").disabled = st.busy;
+        $("autoBtn").textContent = tr(st.auto ? "stop" : "auto");
+        [["normalBetBtn", MODE_NORMAL], ["bonushuntBtn", MODE_BH], ["sprayBtn", MODE_SPRAY]].forEach(([id, m]) => {
+          $(id).disabled = lock;
+          $(id).classList.toggle("is-active", st.mode === m);
+        });
+        $("buySkaterBtn").disabled = lock;
+        $("buyInkBtn").disabled = lock;
+        $("betMinusBtn").disabled = lock || st.betIndex === 0;
+        $("betPlusBtn").disabled = lock || st.betIndex === BET_LEVELS.length - 1;
+        $("betBtn").disabled = lock;
+        updateStepButtons();
+      }
+      function buildBetMenu() {
+        const menu = $("betMenu");
+        menu.innerHTML = "";
+        BET_LEVELS.forEach((value, index) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = `bet-option${index === st.betIndex ? " is-active" : ""}`;
+          option.textContent = fmt(value);
+          option.addEventListener("click", () => { setBetIndex(index); menu.classList.add("hidden"); });
+          menu.appendChild(option);
+        });
+      }
+      function setBetIndex(index) {
+        if (st.busy || st.fg.remaining) return;
+        st.betIndex = Math.max(0, Math.min(index, BET_LEVELS.length - 1));
+        buildBetMenu(); updateStats(); updateControls();
+      }
+      // FeatureSpins：持續啟用直到切回 Normal Bet（再按一次同鈕也會關閉）
+      function selectMode(mode) {
+        if (st.busy || st.fg.remaining) return;
+        st.mode = st.mode === mode && mode !== MODE_NORMAL ? MODE_NORMAL : mode;
+        updateStats(); updateControls();
+      }
+
+      // ── 可重現 RNG：碼 <Config>/<NB|EB|BF|SF>/off/<EB2|->/<種子> ─────────────
+      const RNG_TOKEN = { [MODE_NORMAL]: ["NB", ""], [MODE_BH]: ["EB", ""], [MODE_SPRAY]: ["EB", "EB2"], [MODE_BUY_SS]: ["BF", ""], [MODE_BUY_INK]: ["SF", ""] };
+      const configLabel = () => ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
+        || $("configSelect")?.selectedOptions?.[0]?.textContent || CFG.config_code).trim().replace(/\s+/g, "");
+      function takeRngCode() {
+        const code = window.demogameRng.takeInput();
+        if (!code) return null;
+        const modeValue = Object.keys(RNG_TOKEN).find((m) => RNG_TOKEN[m][0] === code.mode && RNG_TOKEN[m][1] === code.opts);
+        if (!modeValue) throw Object.assign(new Error(`RNG mode ${code.mode}/${code.opts || "-"} not supported`), { logMessage: `RNG mode ${code.mode}/${code.opts || "-"} not supported` });
+        return { ...code, modeValue };
+      }
+
+      // ── 回合流程 ──────────────────────────────────────────────────────────
+      function finishSpin(spin, winBase = 0) {
+        renderSpinResult(spin);
+        captureFrames(spin, winBase);
+      }
+      function noteMaxWin(win) { const x = win / bet(); if (x > st.maxWinX) st.maxWinX = x; }
+
+      async function playPaid(mode) {
+        const code = takeRngCode();
+        if (code) mode = code.modeValue;
+        const cost = modeCost(mode);
+        if (st.balance < cost) throw gameError("insufficient");
+        if (code && code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        const seed = code ? code.seed : window.demogameRng.newSeed();
+        const round = window.demogameRng.run(seed, () => computeRound(mode));
+        st.roundCode = window.demogameRng.format({ config: configLabel(), mode: RNG_TOKEN[mode][0], card: false, opts: RNG_TOKEN[mode][1], seed });
+        st.winShown = 0;
+        st.balance -= cost; st.totalBet += cost; st.rounds++;
+        if (!isBuyMode(mode)) st.normalRounds++;
+        appendLog(`#${st.rounds} ${MM_TEXT.en[{ [MODE_NORMAL]: "normal", [MODE_BH]: "bonushunt", [MODE_SPRAY]: "spray", [MODE_BUY_SS]: "buySkater", [MODE_BUY_INK]: "buyInk" }[mode]]} | Bet ${fmt(cost)}${code ? " | Replay" : ""}`, "mode");
+        appendLog(`RNG ${st.roundCode}`, "rng");
+        if (round.total > 0) st.hitRounds++;
+        noteMaxWin(round.total);
+        updateStats();
+
+        const startFg = (base) => {
+          st.fg = { remaining: round.fgSpinsInit, total: round.fgSpinsInit, played: 0, type: round.fgType, spins: round.fg.spins, win: 0, base, lineMode: isBuyMode(mode) ? null : (mode === MODE_NORMAL ? "NB" : "EB"), wager: cost };
+          appendLog(`${mode === MODE_BUY_INK ? "Super Feature" : mode === MODE_BUY_SS ? "Buy Feature" : "Free Game triggered"} | ${fgName(round.fgType)} | ${round.fgSpinsInit} spins (session ${round.fg.spins.length})`, "mode");
+        };
+        if (isBuyMode(mode)) {
+          startFg(0);
+          say(() => tr("buyEnter")(fgName(round.fgType), round.fgSpinsInit));
+          drawLines(); setHotPills([], 0); meterIdle();
+          return false;
+        }
+
+        const spin = round.bg;
+        finishSpin(spin);
+        await playSpin(spin, 0);
+        const win = spin.total;
+        setWinShown(win);
+        st.totalWin += win; st.balance += win;
+        appendLog(spinLogLine(`BG | ${MM_TEXT.en[mode === MODE_NORMAL ? "normal" : mode]}`, spin), win > 0 ? "result" : "info");
+        window.demogameHistory?.record({ bg: win / bet() });
+        if (!round.fgType) window.demogameLineChart?.record(win / cost, mode === MODE_NORMAL ? "NB" : "EB");
+        else { st.naturalFg++; startFg(win); }
+        if (win > 0) { window.slotFx?.totalWin(fxLayer, tr("totalWin"), fmt(win)); await wait(1100); }
+        return true;
+      }
+
+      async function playFreeSpin() {
+        const spin = st.fg.spins[st.fg.played];
+        const fgBase = st.fg.base + st.fg.win;
+        finishSpin(spin, fgBase);
+        await playSpin(spin, fgBase);
+        st.fg.remaining--; st.fg.played++;
+        if (spin.fs?.extra) { st.fg.remaining += spin.fs.extra; st.fg.total += spin.fs.extra; }
+        const upgraded = spin.fgTypeAfter !== st.fg.type;
+        st.fg.type = spin.fgTypeAfter;
+        if (spin.maxWin) st.fg.remaining = 0;
+        st.fg.win += spin.total;
+        st.totalWin += spin.total; st.balance += spin.total;
+        setWinShown(st.fg.base + st.fg.win);
+        appendLog(spinLogLine(`FG ${st.fg.played}/${st.fg.spins.length} | ${fgName(spin.fgType)}`, spin), spin.total > 0 ? "cascade" : "info");
+        if (upgraded) {
+          appendLog(`Upgrade → ${fgName(st.fg.type)}`, "mode");
+          say(() => tr("upgrade")(fgName(st.fg.type)));
+          updateStats();
+          await wait(1100);
+        }
+        if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
+        if (st.fg.remaining <= 0) {
+          const name = fgName(st.fg.type), total = st.fg.win;
+          appendLog(`FG complete | ${name} | Total ${fmt(total)} (${(total / bet()).toFixed(2)}x)`, "result");
+          window.demogameHistory?.record({ fg: total / bet() });
+          if (st.fg.lineMode) window.demogameLineChart?.record((st.fg.base + total) / st.fg.wager, st.fg.lineMode);
+          say(() => tr("fgDone")(name, fmt(total)));
+          st.fg = freshFg();
+          drawLines(); setHotPills([], 0); meterIdle();
+        }
+        return true;
+      }
+
+      async function play(mode = null) {
+        if (st.busy) return;
+        st.busy = true; updateControls();
+        try {
+          const settled = st.fg.remaining ? await playFreeSpin() : await playPaid(mode || st.mode);
+          if (settled) { updateStats(); await window.demogameRoundPause?.(); }
+        } catch (err) {
+          say(err.message);
+          $("messageBar").classList.add("error");
+          setTimeout(() => $("messageBar").classList.remove("error"), 2500);
+          appendLog(`Error | ${err.logMessage || err.message}`, "error");
+          st.auto = false;
+        } finally {
+          st.busy = false; updateStats(); updateControls();
+          if (st.auto) st.autoTimer = setTimeout(() => play(), 400 / speed());
+        }
+      }
+
+      // ── 批次模擬介面（共用 Simulation 用；不播動畫、不動主 Stats）────────────
+      window.demogameSimulationModes = [
+        { value: MODE_NORMAL, label: "Normal Bet" },
+        { value: MODE_BH, label: "Extra Bet" },
+        { value: MODE_SPRAY, label: "Extra Bet 2" },
+        { value: MODE_BUY_SS, label: "Buy Feature" },
+        { value: MODE_BUY_INK, label: "Super Feature" }
+      ];
+      window.demogameSimulateRound = ({ mode } = {}) => {
+        const useMode = Object.keys(RNG_TOKEN).includes(mode) ? mode : st.mode;
+        const round = computeRound(useMode);
+        const cost = modeCost(useMode);
+        return {
+          multiplier: round.total / cost,
+          lineMultiplier: round.total / (isBuyMode(useMode) ? bet() : cost),
+          fgTriggered: round.fg.spins.length > 0,
+          maxMultiplier: round.total / bet(),
+          retryLimitExceeded: 0,
+          retryCount: 0,
+          bgMultiplier: round.bgWin / bet(),
+          fgMultiplier: round.fg.win / bet()
+        };
+      };
+
+      // ── Help（內嵌 game rule 摘要；賠率表由 Config 依目前押注產生）────────────
+      function paytableHtml() {
+        const rows = PAY.map((p, s) => `<tr><td>${SYM_CODE[s]}</td>${p.map((v) => `<td>${fmt(v * bet())}</td>`).join("")}</tr>`).join("")
+          + `<tr><td>${SYM_CODE[WILD]}</td><td>—</td><td>—</td><td>${fmt(WILD5 * bet())}</td></tr>`;
+        return `<div class="help-paytable-wrap"><table class="help-paytable"><thead><tr><th>Symbol</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      }
+      function loadHelp() {
+        const md = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
+        const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+        const sections = [];
+        for (const raw of md.split(/\r?\n/)) {
+          const line = raw.trim();
+          if (line.startsWith("## ")) sections.push({ title: line.slice(3), rules: [] });
+          else if (line && !line.startsWith("#") && sections.length) sections.at(-1).rules.push(line);
+        }
+        $("helpContent").innerHTML = `<section class="help-section"><h3 class="help-section-title">Paytable</h3>${paytableHtml()}</section>`
+          + sections.map((s) => `<section class="help-section"><h3 class="help-section-title">${esc(s.title)}</h3>${s.rules.map((r) => `<div class="help-rule">${esc(r)}</div>`).join("")}</section>`).join("");
+      }
+
+      function toggleDebug(enabled) {
+        ["play-debug-controls", "set-rng-panel", "log-wrap", "live-log-wrap", "change-log-wrap", "batch-simulation"].forEach((id) => {
+          $(id)?.classList.toggle("debug-hidden", !enabled);
+        });
+        $("controls").classList.toggle("debug-off", !enabled);
+        updateStepButtons();
+      }
+
+      function applyLanguage() {
+        const zh = lang() === "zh";
+        document.documentElement.lang = zh ? "zh-Hant" : "en";
+        $("gameName").textContent = zh ? CFG.game_name_zh : CFG.display_name;
+        document.querySelectorAll("[data-mm-text]").forEach((node) => { node.textContent = tr(node.dataset.mmText); });
+        $("normalBetBtn").textContent = tr("normal");
+        $("bonushuntBtn").textContent = `${tr("bonushunt")} (${CFG.feature_spins.bonushunt}x)`;
+        $("sprayBtn").textContent = `${tr("spray")} (${CFG.feature_spins.spray}x)`;
+        $("buySkaterBtn").textContent = `${tr("buySkater")} (${CFG.featurebuy.skater}x)`;
+        $("buyInkBtn").textContent = `${tr("buyInk")} (${CFG.featurebuy.ink}x)`;
+        if (messageBuild) $("messageBar").textContent = messageBuild();
+        updateStats(); updateControls();
+      }
+
+      function resetSession() {
+        if (st.busy) return;
+        clearTimeout(st.autoTimer);
+        Object.assign(st, {
+          balance: CFG.initial_balance, auto: false, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0,
+          normalRounds: 0, naturalFg: 0, maxWinX: 0, winShown: 0, frames: [], frameIndex: -1, fg: freshFg(), roundCode: ""
+        });
+        $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
+        renderBoard(randomBoard());
+        drawLines(); setHotPills([], 0); meterReset();
+        say(() => tr("resetDone"));
+        updateStats(); updateControls();
+      }
+
+      // ── 共用控制介面（demogame_common.js 載入後呼叫）────────────────────────
+      window.mmBindCommonControls = () => {
+        if (typeof window.slotBindCommonControls !== "function") throw new Error("demogame_common.js control API is unavailable");
+        window.slotBindCommonControls({
+          spin: () => play(),
+          toggleAuto: () => {
+            st.auto = !st.auto;
+            if (!st.auto) clearTimeout(st.autoTimer);
+            updateControls();
+            if (st.auto && !st.busy) play();
+          },
+          normalMode: () => selectMode(MODE_NORMAL),
+          betMinus: () => setBetIndex(st.betIndex - 1),
+          betPlus: () => setBetIndex(st.betIndex + 1),
+          toggleBetMenu: (event) => { event.stopPropagation(); $("betMenu").classList.toggle("hidden"); },
+          documentClick: (event) => {
+            if (!$("betMenu").contains(event.target) && event.target !== $("betBtn")) $("betMenu").classList.add("hidden");
+          },
+          speedChange: () => { $("speedValue").textContent = `x${$("speedRange").value}`; },
+          previousStep: () => showFrame(st.frameIndex - 1),
+          nextStep: () => showFrame(st.frameIndex + 1),
+          debugChange: () => toggleDebug($("debugModeInput").checked),
+          rngChanged: updateControls,
+          resetRng: () => { $("rngInput").value = ""; say(() => tr("rngReset")); },
+          clearLog: () => { $("liveLogBody").innerHTML = ""; },
+          languageChange: applyLanguage,
+          reset: resetSession,
+          openHelp: () => { $("helpDialog").showModal(); loadHelp(); },
+          closeHelp: () => $("helpDialog").close(),
+        });
+        // 本作專屬押注模式按鈕（共用 API 只綁 Normal／Extra／Buy 三顆）
+        $("bonushuntBtn").addEventListener("click", () => selectMode(MODE_BH));
+        $("sprayBtn").addEventListener("click", () => selectMode(MODE_SPRAY));
+        $("buySkaterBtn").addEventListener("click", () => { st.auto = false; play(MODE_BUY_SS); });
+        $("buyInkBtn").addEventListener("click", () => { st.auto = false; play(MODE_BUY_INK); });
+      };
+
+      // ── 初始化 ────────────────────────────────────────────────────────────
+      document.title = `${CFG.display_name} — Demo Game`;
+      $("versionSelect").innerHTML = `<option selected>${CFG.excel_version}</option>`;
+      $("configSelect").innerHTML = `<option value="config.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
+      buildBetMenu();
+      toggleDebug(false);
+      renderBoard(randomBoard());
+      applyLanguage();
+      say(() => tr("ready"));
+      window.addEventListener("resize", () => { if (!st.busy) drawLines({ hot: st.fg.remaining && st.fg.spins[st.fg.played - 1]?.progressive ? st.fg.spins[st.fg.played - 1].hot : [] }); });
+      document.addEventListener("DOMContentLoaded", () => {
+        appendLog(`Config ${configLabel()} loaded | Version ${CFG.excel_version} | Card System Off`, "result");
+      });
+    })();
+  </script>
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# Minted Mike Game Help（克隆 Demo）
+
+## LINES
+盤面 5×4、26 條固定線；由最左輪起、相鄰輪由左至右連續同符號 ≥3 即得分。WW 與三色貼紙（C1 藍、C2 粉、C3 綠）替代所有一般符號。
+
+## SPECIAL SYMBOLS
+C1（藍貼紙）：落下時有機率啟動 Blue Spray Can，在盤面加入 WW。可替代所有一般符號。
+C2（粉貼紙）：落下時有機率啟動 Pink Marker，畫上熱線與熱線乘數後重轉。可替代所有一般符號。
+C3（綠貼紙）：落下時有機率啟動 Green Sticker Roll，在盤面加入 C4／C5，可觸發免費遊戲。可替代所有一般符號。
+C1／C2／C3 每局每色最多 1 個；同局多個啟動時依 C2 → C1 → C3 執行。
+WW（Wild）：只由 C1 的 Blue Spray Can 加入，替代所有一般符號，5 連 50 倍。
+C4（FS）／C5（FS Upgrade）：只由 C3 的 Green Sticker Roll 加入，不參與連線；每個為 1 局免費遊戲，C5 決定免費遊戲種類或升級。
+
+## PINK MARKER
+派彩後在 26 線中隨機畫上 2／3／4／5／6／7／10／12／15／20／26 條熱線，共用一個熱線乘數（2x～183x），接著重轉一次（重轉不出 Sticker）；中獎線若為熱線，得分乘上熱線乘數。
+
+## BLUE SPRAY CAN
+判獎前在盤面加入 3／4／5／6／7／8／9／10／15／20 個 Wild。與粉紅同時啟動時，Wild 加在重轉後的盤面。
+
+## GREEN STICKER ROLL
+派彩後在盤面加入 FS 與 FS Upgrade：FS ≥8 → STEEZY SKATER；FS ≥7＋Upgrade 1 → INK THE CITY；FS ≥6＋Upgrade 2 → TAG AND DASH。每個 FS／Upgrade 為 1 局（8～20 局）。
+
+## FREE SPINS
+STEEZY SKATER：沿用 BG 機制，Sticker 出現率較高。INK THE CITY：熱線保留整段 FG，每次粉紅啟動時乘數累加、第 2 次起新增 1～24 條。TAG AND DASH：同 INK THE CITY，且每局保證 1 個 Sticker。FG 內綠色啟動追加 8～20 局，出現 Upgrade 時升級並帶入局數、熱線與乘數。
+
+## BET MODES
+Extra Bet（原 BonusHunt FeatureSpins）每局 3x，FG 觸發率約 5 倍。Extra Bet 2（原 Spray the System FeatureSpins）每局 60x，保證粉＋藍 Sticker 且至少 1 個機制啟動、不出 FS。Extra Bet／Extra Bet 2 持續啟用，再按一次或切回 Normal Bet 即關閉。
+Buy Feature（原 Buy Steezy Skater）50x；Super Feature（原 Buy Ink the City）200x。
+
+## MAX WIN
+單局（含 FG 全程）最大贏分 5,000 倍押注，達到即結束。
+
+## NOTE
+克隆 Demo：符號權重、Sticker 機率與各數值權重為示意假值，RTP 未校準（原廠 96.31%）。
+  </script>
+  <script>window.DEMOGAME_HISTORY = true;</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 10:43";   // 最後調性更新（數學模型／權重）；改調性時同步更新</script>
+  <script src="../../../demogame_common.js?v=20261019o"></script>
+  <script>window.mmBindCommonControls();</script>
+</body>
+
+</html>

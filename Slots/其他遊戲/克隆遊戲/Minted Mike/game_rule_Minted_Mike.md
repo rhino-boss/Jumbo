@@ -113,17 +113,17 @@ Row 3 │     │     │     │     │     │
 
 | 代號 | 符號 |
 | --- | --- |
-| C1 | FS（Scatter） |
-| C2 | FS Upgrade（黃色箭頭） |
-| C3 | Wild（藍色塗鴉 W） |
-| C4 | 粉紅貼紙（Pink Sticker） |
-| C5 | 藍色貼紙（Blue Sticker） |
-| C6 | 綠色貼紙（Green Sticker） |
+| C1 | 藍色貼紙（Blue Sticker） |
+| C2 | 粉紅貼紙（Pink Sticker） |
+| C3 | 綠色貼紙（Green Sticker） |
+| WW | Wild（藍色塗鴉 W） |
+| C4 | FS（Scatter） |
+| C5 | FS Upgrade（黃色箭頭） |
 
-- **C3 Wild**：替代所有一般符號；本身有 5 連賠率（見 §4）；只會由 Blue Spray Can 加到盤面上（見 §5.3），落在一般符號之上覆蓋該格。
-- **C4／C5／C6 Sticker**：自然落下；替代所有一般符號（可參與連線）；落下時有機率啟動對應機制：C4 → Pink Marker、C5 → Blue Spray Can、C6 → Green Sticker Roll。同一局每種顏色最多 1 個。
-- **C1 FS／C2 FS Upgrade**：只會由 Green Sticker Roll 加到盤面上（見 §5.4），可落在一般符號與 C6 之上；不參與連線、無直接派彩；依數量觸發或升級 Free Spins。
-- C2 不會出現在 TAG AND DASH；Spray the System FeatureSpins 模式中 C1 不會出現。
+- **WW Wild**：替代所有一般符號；本身有 5 連賠率（見 §4）；只會由 Blue Spray Can 加到盤面上（見 §5.3），落在一般符號之上覆蓋該格。
+- **C1／C2／C3 Sticker**：自然落下；替代所有一般符號（可參與連線）；落下時有機率啟動對應機制：C1 → Blue Spray Can、C2 → Pink Marker、C3 → Green Sticker Roll。同一局每種顏色最多 1 個。
+- **C4 FS／C5 FS Upgrade**：只會由 Green Sticker Roll 加到盤面上（見 §5.4），可落在一般符號與 C3 之上；不參與連線、無直接派彩；依數量觸發或升級 Free Spins。
+- C5 不會出現在 TAG AND DASH；Spray the System FeatureSpins 模式中 C4 不會出現。
 
 ---
 
@@ -133,7 +133,7 @@ Row 3 │     │     │     │     │     │
 
 | 符號 | 3 連 | 4 連 | 5 連 |
 | --- | ---: | ---: | ---: |
-| C3 Wild | — | — | 50x |
+| WW Wild | — | — | 50x |
 | M1 金色錢字 | 1.5x | 5x | 20x |
 | M2 球鞋 | 1x | 3x | 10x |
 | M3 貼紙包 | 0.8x | 2x | 7x |
@@ -143,7 +143,7 @@ Row 3 │     │     │     │     │     │
 | Q | 0.2x | 0.5x | 1x |
 | J | 0.2x | 0.5x | 1x |
 
-- C1／C2／C4／C5／C6 無賠率。
+- C4／C5／C2／C1／C3 無賠率。
 
 ---
 
@@ -151,13 +151,13 @@ Row 3 │     │     │     │     │     │
 
 ### 5.1 Sticker 觸發順序
 
-- C4／C5／C6 落下時各自獨立判定是否啟動機制。
+- C2／C1／C3 落下時各自獨立判定是否啟動機制。
 - 同一局多個機制同時啟動時，依序執行：**Pink Marker → Blue Spray Can → Green Sticker Roll**。
 - Sticker 的啟動動畫不影響機制是否啟動（表演與結果無關）。
 
 ### 5.2 Pink Marker（Hot Lines）
 
-- 時機：C4 落下並啟動，於本局得分**派彩後**執行。
+- 時機：C2 落下並啟動，於本局得分**派彩後**執行。
 - 從 26 條線中隨機挑選下列數量畫成 Hot Lines：2、3、4、5、6、7、10、12、15、20、26 條。盤面同時最多 26 條。
 - 所有 Hot Lines 共用一個 Hot Line Multiplier（顯示於上方乘數列粉紅區），值從下列抽出：2x、3x、4x、5x、6x、7x、8x、9x、10x、15x、20x、25x、50x、100x、150x、183x。
 - 畫線後觸發 1 次 **Respin**：全盤重新落下，Respin 中不會落下 Sticker。
@@ -172,9 +172,9 @@ Row 3 │     │     │     │     │     │
 
 ### 5.3 Blue Spray Can（Wild 噴漆）
 
-- 時機：C5 落下並啟動，於本局得分**判獎前**執行。
-- 隨機在盤面加入下列數量的 C3 Wild：3、4、5、6、7、8、9、10、15、20 個（覆蓋原有一般符號）。
-- C3 只會透過此機制出現。
+- 時機：C1 落下並啟動，於本局得分**判獎前**執行。
+- 隨機在盤面加入下列數量的 WW Wild：3、4、5、6、7、8、9、10、15、20 個（覆蓋原有一般符號）。
+- WW 只會透過此機制出現。
 
 | 參數 | 值 |
 | --- | --- |
@@ -183,19 +183,19 @@ Row 3 │     │     │     │     │     │
 
 ### 5.4 Green Sticker Roll（FS 貼紙滾輪）
 
-- 時機：C6 落下並啟動，於本局得分**派彩後**執行。
-- 在盤面加入 C1 FS 與 C2 FS Upgrade（可覆蓋一般符號與 C6）。
+- 時機：C3 落下並啟動，於本局得分**派彩後**執行。
+- 在盤面加入 C4 FS 與 C5 FS Upgrade（可覆蓋一般符號與 C3）。
 - 依加入結果判定 Free Spins（Base Game）：
 
 | 條件 | 獲得 |
 | --- | --- |
-| C1 ≥ 8 | STEEZY SKATER |
-| C1 ≥ 7 且 C2 = 1 | INK THE CITY |
-| C1 ≥ 6 且 C2 = 2 | TAG AND DASH（Hidden Epic Bonus） |
+| C4 ≥ 8 | STEEZY SKATER |
+| C4 ≥ 7 且 C5 = 1 | INK THE CITY |
+| C4 ≥ 6 且 C5 = 2 | TAG AND DASH（Hidden Epic Bonus） |
 
-- 免費局數 ＝ C1 數 ＋ C2 數（每個 1 局），範圍 8–20 局。
-- C1 + C2 未達上表門檻時不觸發 FG。⏳ 是否可能未達門檻
-- C1／C2 只會透過此機制出現。
+- 免費局數 ＝ C4 數 ＋ C5 數（每個 1 局），範圍 8–20 局。
+- C4 + C5 未達上表門檻時不觸發 FG。⏳ 是否可能未達門檻
+- C4／C5 只會透過此機制出現。
 
 ---
 
@@ -207,17 +207,17 @@ Row 3 │     │     │     │     │     │
 
 | FG | 觸發條件 | 初始局數 |
 | --- | --- | --- |
-| STEEZY SKATER | C1 ≥ 8 | 8–20 |
-| INK THE CITY | C1 ≥ 7 ＋ C2 × 1 | 8–20 |
-| TAG AND DASH | C1 ≥ 6 ＋ C2 × 2 | 8–20 |
+| STEEZY SKATER | C4 ≥ 8 | 8–20 |
+| INK THE CITY | C4 ≥ 7 ＋ C5 × 1 | 8–20 |
+| TAG AND DASH | C4 ≥ 6 ＋ C5 × 2 | 8–20 |
 
 ### 6.2 STEEZY SKATER
 
 - 沿用 Base Game 所有機制（§5.2–§5.4），Hot Lines 每局結束後清除。
-- C4／C5／C6 出現機率高於 Base Game。
-- Green Sticker Roll 啟動時：追加局數 ＝ 落下的 C1 ＋ C2 數，範圍 8–20 局。
-  - 落下 1 個 C2 → 升級為 INK THE CITY。
-  - 落下 2 個 C2 → 升級為 TAG AND DASH。
+- C2／C1／C3 出現機率高於 Base Game。
+- Green Sticker Roll 啟動時：追加局數 ＝ 落下的 C4 ＋ C5 數，範圍 8–20 局。
+  - 落下 1 個 C5 → 升級為 INK THE CITY。
+  - 落下 2 個 C5 → 升級為 TAG AND DASH。
   - 升級時，剩餘局數與本次追加局數一併帶入新 FG。
 
 ### 6.3 INK THE CITY
@@ -227,7 +227,7 @@ Row 3 │     │     │     │     │     │
   - 每次 Pink Marker 啟動：盤面既有 Hot Lines 啟動，並新增 Hot Lines；同時共用乘數**加上**一個隨機值（2x、3x、4x、5x、6x、7x、8x、9x、10x、15x、20x、25x、50x、100x、150x、183x）。
   - 第 2 次起每次新增 1–24 條 Hot Lines（上限 26 條）。
   - 盤面已滿 26 條時再啟動：只增加乘數，不新增線。
-- Green Sticker Roll 啟動時：追加局數 ＝ 落下的 C1 ＋ C2 數，範圍 8–20 局；落下 C2 → 升級為 TAG AND DASH，Hot Lines、共用乘數、剩餘局數連同追加局數一併帶入。
+- Green Sticker Roll 啟動時：追加局數 ＝ 落下的 C4 ＋ C5 數，範圍 8–20 局；落下 C5 → 升級為 TAG AND DASH，Hot Lines、共用乘數、剩餘局數連同追加局數一併帶入。
 
 | 參數 | 值 |
 | --- | --- |
@@ -239,8 +239,8 @@ Row 3 │     │     │     │     │     │
 ### 6.4 TAG AND DASH（Hidden Epic Bonus）
 
 - 沿用 INK THE CITY 全部規則。
-- 每局保證落下 1 個 Sticker（C4／C5／C6 其一）。⏳ 顏色權重
-- C2 不會出現；Green Sticker Roll 啟動時追加局數 ＝ 落下的 C1 數，範圍 8–20 局。
+- 每局保證落下 1 個 Sticker（C2／C1／C3 其一）。⏳ 顏色權重
+- C5 不會出現；Green Sticker Roll 啟動時追加局數 ＝ 落下的 C4 數，範圍 8–20 局。
 - 不可購買，只能由觸發或升級進入。
 
 ### 6.5 Retrigger 與結束
@@ -254,12 +254,12 @@ Row 3 │     │     │     │     │     │
 ## §7. 核心遊戲流程（Base Game）
 
 1. 扣除押注（Normal Bet ＝ 1x bet；FeatureSpins 依 §8.1 扣款）。
-2. 5×4 全盤落下一般符號與 C4／C5／C6（每色最多 1 個）。
+2. 5×4 全盤落下一般符號與 C2／C1／C3（每色最多 1 個）。
 3. 判定各 Sticker 是否啟動機制。
-4. 若 Blue Spray Can 啟動：加入 3–20 個 C3 Wild。
+4. 若 Blue Spray Can 啟動：加入 3–20 個 WW Wild。
 5. 依 26 條線判獎並派彩。
 6. 若 Pink Marker 啟動：畫上 Hot Lines 與乘數 → Respin（無 Sticker）→ 依 Hot Lines 規則判獎並派彩。
-7. 若 Green Sticker Roll 啟動：加入 C1／C2，依 §5.4 判定是否進入 FG。
+7. 若 Green Sticker Roll 啟動：加入 C4／C5，依 §5.4 判定是否進入 FG。
 8. 本局總得分 ＝ 步驟 5 ＋ 步驟 6，上限 5,000x。
 9. 若觸發 FG，進入 §6；否則本局結束，清除 Hot Lines。
 
@@ -276,7 +276,7 @@ FeatureSpins 啟用後每局固定加價，持續有效直到玩家按 DISABLE �
 | 模式 | 每局花費 | 效果 | RTP |
 | --- | ---: | --- | ---: |
 | BONUSHUNT FEATURESPINS | 3x bet | 觸發 FG 機率為 Normal Bet 的 5 倍 | 96.25% |
-| SPRAY THE SYSTEM FEATURESPINS | 60x bet | 每局保證落下 1 個 C4 與 1 個 C5，且保證至少 1 個機制啟動；C1 不會出現（不會觸發 FG） | 96.32% |
+| SPRAY THE SYSTEM FEATURESPINS | 60x bet | 每局保證落下 1 個 C2 與 1 個 C1，且保證至少 1 個機制啟動；C4 不會出現（不會觸發 FG） | 96.32% |
 
 - 線賠率仍以 1x bet 計算。
 
@@ -308,10 +308,10 @@ FeatureSpins 啟用後每局固定加價，持續有效直到玩家按 DISABLE �
 
 ### 9.3 Free Spins
 
-- C1 ＋ C2 合計恰為 8 為最少局數；上限 20。
-- STEEZY SKATER 中同時落下 2 個 C2：直接升級至 TAG AND DASH（不經 INK THE CITY）。
+- C4 ＋ C5 合計恰為 8 為最少局數；上限 20。
+- STEEZY SKATER 中同時落下 2 個 C5：直接升級至 TAG AND DASH（不經 INK THE CITY）。
 - 升級後所有累積（局數、Hot Lines、乘數）完整帶入。
-- TAG AND DASH 中不會再出現 C2。
+- TAG AND DASH 中不會再出現 C5。
 
 ### 9.4 Max Win
 
@@ -342,7 +342,7 @@ FeatureSpins 啟用後每局固定加價，持續有效直到玩家按 DISABLE �
 3. Pink Marker 首次畫線數、Hot Line Multiplier、INK THE CITY 後續新增線數（1–24）與乘數累加值的權重。
 4. Blue Spray Can 的 Wild 數權重；Wild 是否可覆蓋 Sticker。
 5. Blue Spray Can 作用在首轉或 Pink Respin 後的盤面（§7 執行順序）。
-6. Green Sticker Roll 的 C1／C2 數量分布；是否存在加入後未達觸發門檻的情況。
+6. Green Sticker Roll 的 C4／C5 數量分布；是否存在加入後未達觸發門檻的情況。
 7. INK THE CITY 乘數初始值（首次啟動是「設定為」還是「累加自 0」）。
 8. TAG AND DASH 保證 Sticker 的顏色權重。
 9. FG 內追加局數是否有總局數上限。
