@@ -2615,13 +2615,22 @@
       const stamp = `${encodeURIComponent(entry.version)}-20261022b`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
+      // 2026-10-22：有 94A／92A／92A_Bet100 三套時預設 AUTO＝依押注自動選（模擬程式規範 §1.2.3：小 Bet 94A、中 Bet 92A、大 Bet 92A_Bet100；新手共用 92A）
+      const tierSet = ["94A", "92A", "92A_Bet100"].every(code => available.includes(code));
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
-      const active = available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
+      const active = (tierSet && (!wanted || wanted === "AUTO" || !available.includes(String(wanted)))) ? "AUTO"
+        : available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
       window.H045_ACTIVE_CONFIG = active;
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
       const fileOf = path => String(path).split("/").pop();
       document.write(`<script src="${folder}config.js?v=${stamp}"><\/script>`);
-      if (active !== "base") document.write(`<script src="${folder}${fileOf(entry.configs[active])}?v=${stamp}"><\/script>`);
+      if (active === "AUTO") {
+        // 每份 config 都寫入 window.H045_CONFIG_RTP，讀完一份就存起來，最後以 92A 做版本檢查
+        for (const code of ["94A", "92A_Bet100", "92A"]) {
+          document.write(`<script src="${folder}${fileOf(entry.configs[code])}?v=${stamp}"><\/script>`);
+          document.write(`<script>(window.H045_RTP_BY_CODE = window.H045_RTP_BY_CODE || {})["${code}"] = window.H045_CONFIG_RTP;<\/script>`);
+        }
+      } else if (active !== "base") document.write(`<script src="${folder}${fileOf(entry.configs[active])}?v=${stamp}"><\/script>`);
       document.write(`<script>
         (() => {
           const entry = window.H045_VERSION_ENTRY, base = window.H045_CONFIG;
@@ -2701,6 +2710,22 @@
     return caps.length ? Math.max(...caps) : Infinity;
   }
   let MAX_WIN = Infinity;
+  // AUTO：依押注層級切換卡片（NB／EB 用實際押注、BF 用基礎押注判；small < $2 ≤ medium ≤ $100 < big）；新手各版共用 92A
+  function tierConfigCode(mode) {
+    const bet = BET_LEVELS[state.betIndex] * (mode === 1 ? Number(cfg.bet_modes?.extra_bet?.cost_multiplier || 2) : 1);
+    if (cardProfile() === "newbie") return "92A";
+    return bet < 2 ? "94A" : bet <= 100 ? "92A" : "92A_Bet100";
+  }
+  function applyTierConfig(mode = state.betMode || 0, forced = "") {
+    if (window.H045_ACTIVE_CONFIG !== "AUTO" || !window.H045_RTP_BY_CODE) return;
+    const code = forced && window.H045_RTP_BY_CODE[forced] ? forced : tierConfigCode(mode);
+    const rtp = window.H045_RTP_BY_CODE[code];
+    if (!rtp || window.H045_TIER_CONFIG === code) return;
+    cfg.card_system = rtp.card_system; cfg.rtp_label = code; cfg.rtp_config = rtp;
+    window.H045_TIER_CONFIG = code;
+    refreshMaxWin(); if (typeof buildCardRangeOptions === "function") buildCardRangeOptions();
+    appendLog?.(`Config AUTO → ${code}`, "mode");
+  }
   function refreshMaxWin() {
     if (!cardSystemActive()) { MAX_WIN = Infinity; return; }
     const p = cardProfile();
@@ -3814,6 +3839,7 @@
           mode = code.mode;
           if (code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
         }
+        applyTierConfig(mode, code ? String(code.config).split("-")[0] : "");
         state.lastWin = 0;
         state.mode = mode;
         window.demogameLineChart?.setMode?.(mode === 2 ? "BF" : null);   // Buy Feature 按鈕不掛 is-active：BF 局顯示「不記錄」，局末還原
@@ -4022,10 +4048,11 @@
     // 只列實際存在的 Config：base（卡片關）＋ manifest entry.configs 的 RTP／Variant（Demogame規範 §1：<Config>-<Profile>）
     configSelect.innerHTML = "";
     const rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
+    if (["94A", "92A", "92A_Bet100"].every(code => rtpCodes.includes(code))) rtpCodes.unshift("AUTO");
     for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
       const option = document.createElement("option");
       option.value = code;
-      option.textContent = code === "base" ? "Base" : code;
+      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "AUTO（依押注）" : code;
       configSelect.appendChild(option);
     }
     configSelect.value = window.H045_ACTIVE_CONFIG || "base";
@@ -4033,7 +4060,7 @@
     configSelect.onchange = () => { if (configSelect.value !== window.H045_ACTIVE_CONFIG) openVersion(entry?.version || "", configSelect.value); };
     const profileSelect = $("cardProfileSelect");
     try { profileSelect.value = localStorage.getItem("slotDemoCardProfile") === "newbie" ? "newbie" : "oldhand"; } catch (_) {}
-    profileSelect.onchange = () => { refreshMaxWin(); buildCardRangeOptions(); updateStats(); };
+    profileSelect.onchange = () => { window.H045_TIER_CONFIG = ""; applyTierConfig(); refreshMaxWin(); buildCardRangeOptions(); updateStats(); };
     document.addEventListener?.("demogame:card-system-change", () => { refreshMaxWin(); buildCardRangeOptions(); updateStats(); });
     refreshMaxWin();
   }
@@ -4042,13 +4069,14 @@
   // Normal Bet／Extra Bet 切換：Spin 依目前選的模式扣款（EB 2 倍）；Buy Feature 為單次購買
   function setBetMode(mode) {
     state.betMode = mode;
+    applyTierConfig(mode);
     $("normalBetBtn").classList.toggle("is-active", mode === 0); $("extraBetBtn").classList.toggle("is-active", mode === 1);
     window.demogameLineChart?.setMode?.(null);   // 累積線型改依 is-active 自動判斷 NB／EB
     appendLog(`Bet Mode | ${mode === 1 ? `Extra Bet (${EB.cost_multiplier}x, FG ×5)` : "Normal Bet"}`, "mode");
   }
   $("normalBetBtn").onclick = () => setBetMode(0); $("extraBetBtn").onclick = () => setBetMode(1);
   $("autoBtn").onclick = () => {state.auto=!state.auto;$("autoBtn").textContent=tr(state.auto?"stop":"auto");if(state.auto&&!state.busy)play(0);};
-  $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);updateStats();};
+  $("betMinusBtn").onclick = () => {state.betIndex=Math.max(0,state.betIndex-1);applyTierConfig();updateStats();}; $("betPlusBtn").onclick = () => {state.betIndex=Math.min(BET_LEVELS.length-1,state.betIndex+1);applyTierConfig();updateStats();};
   $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent=`x${$("speedRange").value}`;
   $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked); $("previousStepBtn").onclick=()=>showSnapshot(state.snapshotIndex-1); $("nextStepBtn").onclick=()=>showSnapshot(state.snapshotIndex+1);
   $("languageSelect").onchange = () => {state.language=$("languageSelect").value;applyLanguage();};
@@ -4056,7 +4084,7 @@
   $("resetBtn").onclick=reset; $("clearLogBtn").onclick=()=>$("liveLogBody").innerHTML=""; $("setRngResetBtn").onclick=()=>{$("scriptSelect").value="";$("cardRangeSelect").value="";$("forceFgInput").checked=false;$("rngInput").value="";}; buildCardRangeOptions();
   $("versionSelect").onchange=()=>openVersion($("versionSelect").value,"base");
   
-  document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset();
+  document.title=`${cfg.name_en || "Super Diamond"} — Demo Game`; buildBetMenu(); renderVersionControls(); applyLanguage(); setDebug(false); reset(); applyTierConfig();
   appendLog(`Config ${window.H045_ACTIVE_CONFIG || "base"} loaded | Version ${window.H045_VERSION_ENTRY?.version || cfg.excel_version || "--"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
 })();
   </script>

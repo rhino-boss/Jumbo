@@ -34,7 +34,11 @@ if hasattr(sys.stdout, "reconfigure"):
 # ===== User Settings =====
 
 CONFIG_FILE = "config.js"
-CONFIG_RTP_FILE = "config_92A.js"
+CONFIG_RTP_FILE = "AUTO"   # AUTO＝依押注檔位自動選（模擬程式規範 §1.2.3）；明寫檔名即 override
+# 檔位對應表（2026-10-22）：老手 小 Bet < $2 → 94A、中 Bet $2～$100 → 92A、大 Bet > $100 → 92A_Bet100；
+# NB／EB 用實際押注判、BF 用基礎押注判；Newbie 各版共用 → 固定 92A。最大押注 $5000。
+TIER_CONFIG = {"small_bet": "config_94A.js", "medium_bet": "config_92A.js", "big_bet": "config_92A_Bet100.js"}
+NEWBIE_CONFIG = "config_92A.js"
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
 BET_MODE = 0  # 0 = Normal Bet, 2 = Buy Feature
@@ -44,13 +48,13 @@ CARD_SYSTEM_IS_NEWBIE = False
 RUN_ALL_COMBINATIONS = True
 BATCH_RUNS = [
     # --- 階段 7：小場次 Debug ---
-    {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+    {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 0,
      "total_rounds": 10**5, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
     # --- 階段 8：自然機率正式報表（卡片權重校準用）---
     # 2026-10-06 使用者決議：純 Python 無 Numba（1e6≈76 秒），本機改跑 NB 1e8／BF 1e7（規範預設 1e9／1e8）
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 0,
+    # {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 0,
     #  "total_rounds": 10**8, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
-    # {"config_file": "config.js", "config_rtp_file": "config_92A.js", "bet_mode": 2,
+    # {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
 THREADS = max(1, min(12, os.cpu_count() or 1))   # 多程序；本機 i7-12700H 20 執行緒
@@ -1543,6 +1547,11 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
 def load_batch_configs(combo: dict[str, Any]) -> None:
     global CFG, CFG_RTP
     CFG = load_js_config(BASE_DIR / combo["config_file"])
+    if str(combo.get("config_rtp_file", "AUTO")).upper() == "AUTO":
+        mode, base_bet = int(combo["bet_mode"]), float(combo["base_bet"])
+        tier_amount = base_bet if mode == MODE_FEATUREBUY else wager_for_mode(mode, base_bet)
+        combo["config_rtp_file"] = NEWBIE_CONFIG if combo.get("card_system_is_newbie") else TIER_CONFIG[bet_tier_name(tier_amount)]
+        print(f"[auto] bet_mode {mode}、base_bet {base_bet:g}（檔位金額 ${tier_amount:g}）→ {combo['config_rtp_file']}")
     rtp_path = BASE_DIR / combo["config_rtp_file"]
     CFG_RTP = load_js_config(rtp_path) if rtp_path.exists() else {}
     validate_config_pair(CFG, CFG_RTP or None, combo["config_file"], combo["config_rtp_file"])
