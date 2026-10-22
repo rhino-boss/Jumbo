@@ -103,7 +103,6 @@
 | 規則說明 | ▪ [W2] 複製出的 [WW] 帶有與該 [W2] 相同的倍數。 | ▪ [WW] REPLICATED BY A [W2] CARRY THE SAME MULTIPLIER AS THAT [W2]. |
 | 規則說明 | ▪ 每次連線時，本次中獎並被消除的帶倍數百搭符號，其倍數會相加，再乘上當次的贏分倍數。 | ▪ ON EACH WIN, THE MULTIPLIERS OF ALL MULTIPLIER WILDS THAT ARE PART OF THE WIN AND REMOVED ARE ADDED TOGETHER, THEN MULTIPLIED BY THE CURRENT WIN MULTIPLIER. |
 | 規則說明 | ▪ 未參與中獎的帶倍數百搭符號會保留在盤面上，直到參與中獎時才計入。 | ▪ MULTIPLIER WILDS THAT ARE NOT PART OF A WIN STAY ON THE REELS AND COUNT ONLY WHEN THEY ARE PART OF A LATER WIN. |
-| 規則說明 | ▪ 例：贏分倍數 X{3}，本次中獎用到 X{2} 與 X{5} 的百搭符號，所有連線贏分乘以 X{21}（{3} × ({2} + {5})）。 | ▪ EXAMPLE: WITH A WIN MULTIPLIER OF X{3} AND MULTIPLIER WILDS OF X{2} AND X{5} IN THE WIN, ALL WINS ARE MULTIPLIED BY X{21} ({3} × ({2} + {5})). |
 
 ---
 
@@ -155,16 +154,8 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | ▪ 點擊「購買特色」按鈕，將開啟「購買特色」選單。 | ▪ BY TAPPING ON THE BUY FEATURE BUTTON, YOU WILL OPEN THE BUY FEATURE MENU. |
-| 規則說明 | ▪ 您可以按「+」或「-」按鈕調整投注額與數量。 | ▪ YOU CAN INCREASE OR DECREASE YOUR BET AND QUANTITY BY PRESSING THE "+" OR "-" BUTTONS. |
-| 規則說明 | ▪ 以所選投注額的 {50} 倍購買，直接觸發免費遊戲特色。 | ▪ THE FREE GAME FEATURE CAN BE TRIGGERED DIRECTLY BY BUYING IT FOR {50}X THE SELECTED BET. |
-| 規則說明 | ▪ 最多可一次購買 {99} 次。 | ▪ THE MAXIMUM SELECTED QUANTITY IS {99}. |
-| 規則說明 | ▪ 總價 = 價格 × 數量，顯示在「購買特色」選單中。 | ▪ TOTAL PRICE = PRICE × QUANTITY, WHICH IS DISPLAYED IN THE BUY FEATURE MENU. |
-| 規則說明 | ▪ 按下「旋轉」按鈕／「購買並開始遊戲」按鈕後，「購買特色」選單中顯示的價格將從玩家的餘額中扣除。 | ▪ AFTER PRESSING THE SPIN BUTTON / BUY BUTTON, THE PRICE DISPLAYED IN THE BUY FEATURE MENU IS DEDUCTED FROM THE PLAYER'S BALANCE. |
-| 規則說明 | ▪ 第一局之後，玩家需按「旋轉」按鈕逐次進行，或點選「自動旋轉」按鈕自動進行剩餘的「購買特色」；剩餘數量為 {0} 時自動旋轉停止。 | ▪ AFTER THE FIRST GAME, THE PLAYER PRESSES THE SPIN BUTTON TO PLAY EACH REMAINING BUY FEATURE, OR TAPS THE AUTO SPIN BUTTON TO PLAY THEM AUTOMATICALLY. AUTO SPIN STOPS WHEN THE REMAINING QUANTITY IS {0}. |
-| 規則說明 | ▪ 如果網路中斷／瀏覽器關閉，剩餘的「購買特色」數量將被取消。 | ▪ IN CASE OF NETWORK DISCONNECTION / BROWSER CLOSE, THE REMAINING BUY FEATURE QUANTITY WILL BE CANCELLED. |
-| 規則說明 | ▪ 在最後一個「購買特色」完成之前，無法調整投注，也無法取消剩餘的「購買特色」。 | ▪ THE BET CANNOT BE ADJUSTED AND THE REMAINING BUY FEATURE CANNOT BE CANCELLED BEFORE THE LAST BUY FEATURE IS COMPLETED. |
-| 規則說明 | ▪ 所有「購買特色」完成後，投注將切換回購買前的投注。 | ▪ AFTER ALL BUY FEATURE ROUNDS ARE COMPLETED, THE BET WILL SWITCH BACK TO THE BET BEFORE THE PURCHASE. |
+| 規則說明 | ▪ 玩家可支付 {50}x 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {50}X TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | ▪ 完成購買後，將直接觸發一次免費遊戲特色。 | ▪ COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
 
 ---
 
@@ -203,7 +194,6 @@
 | --- | --- | --- |
 | 主要標題 | 最多路數 | MAXIMUM WAYS |
 | 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS ARE FROM LEFTMOST TO RIGHT ONLY. |
-| 規則說明 | ▪ 當同一路有多種獲獎組合，僅會賠付最高的獲獎組合。 | ▪ ONLY THE HIGHEST WIN IS PAID WHEN THERE IS MORE THAN ONE WINNING COMBINATION WITH A CERTAIN SYMBOL. |
 | 規則說明 | ▪ 遊戲設定 = 最多 {1,024} 路。 | ▪ GAME SETTING = {1,024} MAXIMUM WAYS. |
 | 規則說明 | [走線圖- 1,024 MAX WAYS] | [走線圖- 1,024 MAX WAYS] |
 | 規則說明 | [走線圖-3 OF A KIND PAYS 2 WAYS] | [走線圖-3 OF A KIND PAYS 2 WAYS] |
