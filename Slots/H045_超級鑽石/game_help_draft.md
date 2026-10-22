@@ -21,7 +21,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
-| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS ARE FROM LEFTMOST TO RIGHT ONLY. |
+| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS MUST BE ON CONSECUTIVE REELS FROM LEFTMOST TO RIGHT. |
 
 ### WILD SYMBOL
 
@@ -29,14 +29,14 @@
 | --- | --- | --- |
 | 副標題 | 百搭符號 | WILD SYMBOL |
 | 規則說明 | ▪ [WW][W2] 可替代除 [C1] 以外的所有符號。 | ▪ [WW][W2] SUBSTITUTE FOR ALL SYMBOLS EXCEPT [C1]. |
-| 規則說明 | ▪ [WW][W2] 只會在金框符號被消除後產生。 | ▪ [WW][W2] ARE AWARDED ONLY AFTER A GOLDEN FRAMED SYMBOL IS REMOVED. |
+| 規則說明 | ▪ [WW][W2] 只會由參與中獎的金框符號轉換產生。 | ▪ [WW][W2] ARE CREATED ONLY FROM GOLDEN FRAMED SYMBOLS THAT ARE PART OF A WINNING COMBINATION. |
 
 ### SCATTER SYMBOL
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 免費遊戲獎賞 | FREE GAME BONUS |
-| 規則說明 | ▪ 當 {3} 個以上 [C1] 出現在任一位置，即可觸發免費遊戲特色，獲得 {10} 場免費遊戲。 | ▪ {3} OR MORE [C1] APPEARING IN ANY POSITION WILL TRIGGER THE FREE GAME FEATURE WITH {10} FREE SPINS. |
+| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {3} 個以上 [C1]，即可觸發免費遊戲特色，獲得 {10} 場免費遊戲。 | ▪ AFTER ALL CASCADES END, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE AND AWARD {10} FREE SPINS. |
 
 ### 賠率表
 
@@ -77,7 +77,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 消除特色 | CASCADING FEATURE |
-| 規則說明 | ▪ 遊戲中若達成連線，除金框符號外的中獎符號將被消除，並在原位置補上新的符號。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN FRAMED SYMBOLS, WILL BE REMOVED AND NEW SYMBOLS WILL FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 遊戲中若達成連線，除金框符號外的中獎符號將被消除，並在原位置補上新的符號。 | ▪ ALL SYMBOLS IN WINNING COMBINATIONS, EXCEPT GOLDEN FRAMED SYMBOLS, WILL BE REMOVED AND NEW SYMBOLS WILL FILL THE EMPTY POSITIONS IN PLACE. |
 | 規則說明 | ▪ 消除特色會持續發生，直到沒有新的連線為止。 | ▪ THE FEATURE CONTINUES UNTIL THERE ARE NO NEW WINNING COMBINATIONS. |
 
 ---
@@ -88,6 +88,7 @@
 | --- | --- | --- |
 | 主要標題 | 金框符號特色 | GOLDEN FRAMED FEATURE |
 | 規則說明 | ▪ 金框符號只會出現在第 {2}、{3}、{4} 輪。 | ▪ GOLDEN FRAMED SYMBOLS APPEAR ON REELS {2}, {3} AND {4} ONLY. |
+| 規則說明 | ▪ 金框符號與原符號的賠率相同。 | ▪ GOLDEN FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
 | 規則說明 | ▪ 金框符號參與中獎時不會被消除，而是在原位置隨機轉換為以下兩種模式之一。 | ▪ WHEN A GOLDEN FRAMED SYMBOL IS PART OF A WINNING COMBINATION, IT IS NOT REMOVED AND RANDOMLY TURNS INTO ONE OF THE FOLLOWING TWO MODES AT ITS ORIGINAL POSITION. |
 | 規則說明 | ▪ 第一種模式：在原位置變成一個 [WW]。 | ▪ FIRST MODE: THE GOLDEN FRAMED SYMBOL TURNS INTO A [WW]. |
 | 規則說明 | ▪ 第二種模式：在原位置變成一個 [W2]，並隨機複製 {2}～{4} 個 [WW] 取代第 {2}～{5} 輪的其他符號（不會取代 [C1] 與百搭符號）。 | ▪ SECOND MODE: THE GOLDEN FRAMED SYMBOL TURNS INTO A [W2] AND REPLICATES {2} TO {4} [WW] THAT RANDOMLY REPLACE OTHER SYMBOLS ON REELS {2} TO {5} ([C1] AND WILD SYMBOLS ARE NOT REPLACED). |
@@ -101,19 +102,20 @@
 | 主要標題 | 倍數百搭特色 | MULTIPLIER WILD FEATURE |
 | 規則說明 | ▪ 金框符號轉換出的 [WW][W2] 有機會帶有 X{2}、X{3} 或 X{5} 倍數。 | ▪ [WW][W2] TRANSFORMED FROM GOLDEN FRAMED SYMBOLS MAY CARRY AN X{2}, X{3} OR X{5} MULTIPLIER. |
 | 規則說明 | ▪ [W2] 複製出的 [WW] 帶有與該 [W2] 相同的倍數。 | ▪ [WW] REPLICATED BY A [W2] CARRY THE SAME MULTIPLIER AS THAT [W2]. |
-| 規則說明 | ▪ 每次連線時，本次中獎並被消除的帶倍數百搭符號，其倍數會相加，再乘上當次的贏分倍數。 | ▪ ON EACH WIN, THE MULTIPLIERS OF ALL MULTIPLIER WILDS THAT ARE PART OF THE WIN AND REMOVED ARE ADDED TOGETHER, THEN MULTIPLIED BY THE CURRENT WIN MULTIPLIER. |
+| 規則說明 | ▪ 每次連線時，本次中獎並被消除的帶倍數百搭符號，其倍數會相加，再乘上當次的連消倍數，最後作用於本次所有中獎組合的得分。 | ▪ ON EACH WIN, THE MULTIPLIERS OF ALL MULTIPLIER WILDS THAT ARE PART OF THE WIN AND REMOVED ARE ADDED TOGETHER, MULTIPLIED BY THE CURRENT CASCADE MULTIPLIER, AND APPLIED TO ALL WINNING COMBINATIONS OF THAT WIN. |
+| 規則說明 | ▪ 本次中獎沒有帶倍數百搭符號時，只乘上連消倍數。 | ▪ WITHOUT MULTIPLIER WILDS IN THE WIN, ONLY THE CASCADE MULTIPLIER APPLIES. |
 | 規則說明 | ▪ 未參與中獎的帶倍數百搭符號會保留在盤面上，直到參與中獎時才計入。 | ▪ MULTIPLIER WILDS THAT ARE NOT PART OF A WIN STAY ON THE REELS AND COUNT ONLY WHEN THEY ARE PART OF A LATER WIN. |
 
 ---
 
-## WIN MULTIPLIER FEATURE
+## CASCADE MULTIPLIER FEATURE
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 贏分倍數特色 | WIN MULTIPLIER FEATURE |
-| 規則說明 | ▪ 每次旋轉開始時，贏分倍數為 X{1}。 | ▪ AT THE START OF EACH SPIN, THE WIN MULTIPLIER IS X{1}. |
-| 規則說明 | ▪ 每次消除後若再達成連線，贏分倍數依序提升為 X{2}、X{3}、X{5}、X{10}。 | ▪ EACH TIME A NEW WINNING COMBINATION OCCURS AFTER A CASCADE, THE WIN MULTIPLIER INCREASES TO X{2}, X{3}, X{5} AND X{10} IN ORDER. |
-| 規則說明 | ▪ 贏分倍數達到 X{10} 後維持不變，直到本次旋轉結束。 | ▪ ONCE THE WIN MULTIPLIER REACHES X{10}, IT STAYS AT X{10} UNTIL THE SPIN ENDS. |
+| 主要標題 | 連消倍數特色 | CASCADE MULTIPLIER FEATURE |
+| 規則說明 | ▪ 每次旋轉開始時，連消倍數為 X{1}。 | ▪ AT THE START OF EACH SPIN, THE CASCADE MULTIPLIER IS X{1}. |
+| 規則說明 | ▪ 每次消除後若再達成連線，連消倍數依序提升為 X{2}、X{3}、X{5}、X{10}。 | ▪ EACH TIME A NEW WINNING COMBINATION OCCURS AFTER A CASCADE, THE CASCADE MULTIPLIER INCREASES TO X{2}, X{3}, X{5} AND X{10} IN ORDER. |
+| 規則說明 | ▪ 連消倍數達到 X{10} 後維持不變，直到本次旋轉結束。 | ▪ ONCE THE CASCADE MULTIPLIER REACHES X{10}, IT STAYS AT X{10} UNTIL THE SPIN ENDS. |
 
 ---
 
@@ -122,19 +124,17 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | ▪ 當 {3} 個以上 [C1] 出現在任一位置，即可獲得 {10} 場免費遊戲。 | ▪ {3} OR MORE [C1] APPEARING IN ANY POSITION AWARD {10} FREE SPINS. |
-| 規則說明 | ▪ 點擊開始啟動免費遊戲特色。 | ▪ CLICK THE START BUTTON TO START THE FREE GAME FEATURE. |
-| 規則說明 | ▪ 在免費遊戲中，{3} 個以上 [C1] 可再獲得 {5} 場免費遊戲，最多可獲得 {50} 場免費遊戲。 | ▪ DURING THE FREE GAME, {3} OR MORE [C1] AWARD {5} MORE FREE SPINS. THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
-| 規則說明 | ▪ 在免費遊戲中，投注與觸發免費遊戲特色時相同。 | ▪ DURING THE FREE GAME, BET PER SPIN REMAINS THE SAME AS WHEN THE FREE GAME FEATURE WAS TRIGGERED. |
+| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {3} 個以上 [C1]，即可獲得 {10} 場免費遊戲。 | ▪ AFTER ALL CASCADES END, {3} OR MORE [C1] ON THE FINAL REELS AWARD {10} FREE SPINS. |
+| 規則說明 | ▪ 在免費遊戲中，每次旋轉的連消結束後，若最終盤面出現 {3} 個以上 [C1]，可再獲得 {5} 場免費遊戲，最多可獲得 {50} 場免費遊戲。 | ▪ DURING THE FREE GAME, {3} OR MORE [C1] ON THE FINAL REELS AFTER ALL CASCADES OF A SPIN AWARD {5} MORE FREE SPINS, UP TO A MAXIMUM OF {50} FREE SPINS. |
 
-### WIN MULTIPLIER FEATURE
+### CASCADE MULTIPLIER FEATURE
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 副標題 | 贏分倍數特色 | WIN MULTIPLIER FEATURE |
-| 規則說明 | ▪ 免費遊戲每次旋轉開始時，贏分倍數為 X{2}。 | ▪ AT THE START OF EACH FREE SPIN, THE WIN MULTIPLIER IS X{2}. |
-| 規則說明 | ▪ 每次消除後若再達成連線，贏分倍數依序提升為 X{4}、X{6}、X{10}、X{20}。 | ▪ EACH TIME A NEW WINNING COMBINATION OCCURS AFTER A CASCADE, THE WIN MULTIPLIER INCREASES TO X{4}, X{6}, X{10} AND X{20} IN ORDER. |
-| 規則說明 | ▪ 贏分倍數達到 X{20} 後維持不變，直到本次旋轉結束。 | ▪ ONCE THE WIN MULTIPLIER REACHES X{20}, IT STAYS AT X{20} UNTIL THE SPIN ENDS. |
+| 副標題 | 連消倍數特色 | CASCADE MULTIPLIER FEATURE |
+| 規則說明 | ▪ 免費遊戲每次旋轉開始時，連消倍數為 X{2}。 | ▪ AT THE START OF EACH FREE SPIN, THE CASCADE MULTIPLIER IS X{2}. |
+| 規則說明 | ▪ 每次消除後若再達成連線，連消倍數依序提升為 X{4}、X{6}、X{10}、X{20}。 | ▪ EACH TIME A NEW WINNING COMBINATION OCCURS AFTER A CASCADE, THE CASCADE MULTIPLIER INCREASES TO X{4}, X{6}, X{10} AND X{20} IN ORDER. |
+| 規則說明 | ▪ 連消倍數達到 X{20} 後維持不變，直到本次旋轉結束。 | ▪ ONCE THE CASCADE MULTIPLIER REACHES X{20}, IT STAYS AT X{20} UNTIL THE SPIN ENDS. |
 
 ---
 
@@ -164,7 +164,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由盤面上的 [C1] 隨機觸發。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由盤面上的 {1} 個或以上 [C1] 隨機觸發。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
 | 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
 | 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
 | 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號，即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
@@ -181,7 +181,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 最多路數 | MAXIMUM WAYS |
-| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS ARE FROM LEFTMOST TO RIGHT ONLY. |
+| 規則說明 | ▪ 本遊戲為 {5} 輪 × {4} 列盤面，相同符號須出現在由左至右連續相鄰的轉輪上方可獲獎。 | ▪ THE GAME USES {5} REELS × {4} ROWS. MATCHING SYMBOLS MUST APPEAR ON CONSECUTIVE ADJACENT REELS FROM LEFT TO RIGHT TO WIN. |
 | 規則說明 | ▪ 遊戲設定 = 最多 {1,024} 路。 | ▪ GAME SETTING = {1,024} MAXIMUM WAYS. |
 | 規則說明 | [走線圖- 1,024 MAX WAYS] | [走線圖- 1,024 MAX WAYS] |
 | 規則說明 | [走線圖-3 OF A KIND PAYS 2 WAYS] | [走線圖-3 OF A KIND PAYS 2 WAYS] |
