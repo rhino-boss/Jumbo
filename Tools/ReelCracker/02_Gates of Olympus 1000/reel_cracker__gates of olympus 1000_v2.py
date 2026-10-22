@@ -15,6 +15,7 @@ import win32api
 import win32con
 import win32gui
 from openpyxl import Workbook
+from selenium.common.exceptions import SessionNotCreatedException
 from selenium.webdriver.chrome.service import Service
 from seleniumwire import webdriver
 from seleniumwire.utils import decode as decode_body
@@ -178,9 +179,16 @@ def save_click_points(points: list[dict[str, int | str]]) -> None:
 
 
 def create_driver() -> webdriver.Chrome:
-    if not DRIVER_PATH.is_file():
-        raise FileNotFoundError(f"找不到 ChromeDriver：{DRIVER_PATH}")
+    # Chrome 會自動更新，內附 ChromeDriver 版本對不上時改由 Selenium Manager 下載相符版本。
+    if DRIVER_PATH.is_file():
+        try:
+            return build_driver(Service(str(DRIVER_PATH)))
+        except SessionNotCreatedException:
+            print(f"內附 ChromeDriver {CHROME_DRIVER_VERSION} 與目前 Chrome 版本不符，改用 Selenium Manager。")
+    return build_driver(Service())
 
+
+def build_driver(service: Service) -> webdriver.Chrome:
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--force-device-scale-factor=1.0")
@@ -191,7 +199,7 @@ def create_driver() -> webdriver.Chrome:
         "request_storage_max_size": 20000,
     }
     browser = webdriver.Chrome(
-        service=Service(str(DRIVER_PATH)),
+        service=service,
         options=options,
         seleniumwire_options=seleniumwire_options,
     )

@@ -1,0 +1,330 @@
+<style>
+.zr{font-family:var(--font-anthropic-sans);display:flex;flex-direction:column;gap:var(--cds-gap-lg);font-variant-numeric:tabular-nums}
+.zr-head h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
+.zr-head p{margin:var(--cds-gap-xs) 0 0;color:var(--color-fg-muted);font-size:var(--cds-font-size-body);max-width:70ch}
+.zr-tabs{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs);border-bottom:1px solid var(--color-border-line)}
+.zr-tab{font:inherit;font-size:var(--cds-font-size-body);background:none;border:0;border-bottom:2px solid transparent;padding:var(--cds-pad-xs) var(--cds-pad-sm);color:var(--color-fg-muted);cursor:pointer}
+.zr-tab[aria-selected="true"]{color:var(--color-fg);border-bottom-color:var(--color-fg)}
+.zr-tab:focus-visible,.zr-seg button:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.zr-panel{display:flex;flex-direction:column;gap:var(--cds-gap-md)}
+.zr-panel[hidden],.zr-tip[hidden]{display:none}
+.zr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:var(--cds-gap-md)}
+.zr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:var(--cds-gap-md)}
+.zr-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);min-width:0;display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.zr-card h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0}
+.zr-note{margin:0;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.zr-kpi .lab{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.zr-kpi .val{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);line-height:1.1}
+.zr-kpi .sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.zr-tw{overflow-x:auto}
+.zr table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption)}
+.zr th,.zr td{padding:var(--cds-pad-xs) var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line);text-align:right;white-space:nowrap}
+.zr th{color:var(--color-fg-muted);font-weight:var(--cds-font-weight-medium)}
+.zr th:first-child,.zr td:first-child{text-align:left}
+.zr-seg{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs)}
+.zr-seg button{font:inherit;font-size:var(--cds-font-size-caption);background:none;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:2px var(--cds-pad-sm);color:var(--color-fg-muted);cursor:pointer}
+.zr-seg button[aria-pressed="true"]{color:var(--color-fg);border-color:var(--color-fg)}
+.zr-legend{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.zr-legend span{display:inline-flex;align-items:center;gap:6px}
+.zr-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.zr-chart{position:relative;min-height:260px}
+.zr-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);white-space:nowrap;z-index:2}
+.zr-tip .t{color:var(--cds-text-secondary)}
+.zr-tip i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:6px}
+.zr [data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+.zr [data-dash-source-state=empty]{color:transparent}
+.zr-fail{display:flex;align-items:center;justify-content:center;gap:6px;min-height:inherit;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.zr-fail::before{content:"";width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)}
+</style>
+
+<div class="zr">
+  <header class="zr-head">
+    <h1 id="top">Zeus 2500 數據報告</h1>
+    <p id="takeaway" class="dash-skeleton">B 版 NB 標準差 <span data-source="depth" data-field="std" data-where="row=NB Zeus 2500 B">—</span>、存活中位數 <span data-source="depth" data-field="surv_median" data-where="row=NB Zeus 2500 B">—</span> 把，A 版為 <span data-source="depth" data-field="std" data-where="row=NB Zeus 2500 A">—</span>／<span data-source="depth" data-field="surv_median" data-where="row=NB Zeus 2500 A">—</span> 把：兩版都屬「深」，B 版更深。對標競品 Gates of Olympus 1000（Pragmatic Play）。</p>
+  </header>
+
+  <nav class="zr-tabs" role="tablist" aria-label="章節">
+    <button class="zr-tab" role="tab" id="t-overview" aria-controls="p-overview" aria-selected="true">總覽</button>
+    <button class="zr-tab" role="tab" id="t-balls" aria-controls="p-balls" aria-selected="false">倍數球</button>
+    <button class="zr-tab" role="tab" id="t-fg" aria-controls="p-fg" aria-selected="false">FG／BF 門檻</button>
+    <button class="zr-tab" role="tab" id="t-combo" aria-controls="p-combo" aria-selected="false">連消分布</button>
+    <button class="zr-tab" role="tab" id="t-cluster" aria-controls="p-cluster" aria-selected="false">獎項占比</button>
+  </nav>
+
+  <section class="zr-panel" id="p-overview" role="tabpanel" aria-labelledby="t-overview">
+    <div class="zr-kpis">
+      <div class="zr-card zr-kpi"><span class="lab">NB RTP（A／B）</span><span class="val"><span data-source="depth" data-field="rtp" data-where="row=NB Zeus 2500 A">—</span></span><span class="sub">B 版 <span data-source="depth" data-field="rtp" data-where="row=NB Zeus 2500 B">—</span>，目標 92%</span></div>
+      <div class="zr-card zr-kpi"><span class="lab">NB 標準差（以押注計）</span><span class="val"><span data-source="depth" data-field="std" data-where="row=NB Zeus 2500 B">—</span></span><span class="sub">B 版；A 版 <span data-source="depth" data-field="std" data-where="row=NB Zeus 2500 A">—</span>，競品樣本 <span data-source="depth" data-field="std" data-where="row=NB Gates of Olympus 1000">—</span></span></div>
+      <div class="zr-card zr-kpi"><span class="lab">NB ≥1000x 週期</span><span class="val"><span data-source="depth" data-field="p1000" data-where="row=NB Zeus 2500 B">—</span></span><span class="sub">B 版每幾局一次；A 版 <span data-source="depth" data-field="p1000" data-where="row=NB Zeus 2500 A">—</span></span></div>
+      <div class="zr-card zr-kpi"><span class="lab">存活中位數（把）</span><span class="val"><span data-source="depth" data-field="surv_median" data-where="row=NB Zeus 2500 B">—</span></span><span class="sub">B 版；A 版 <span data-source="depth" data-field="surv_median" data-where="row=NB Zeus 2500 A">—</span></span></div>
+    </div>
+
+    <div class="zr-card">
+      <h2 id="survival">存活模擬</h2>
+      <p class="zr-note">1000 人各帶 1000 元、每把押 1 元玩 Normal Bet 到不夠下注。線段是最早死 10%（P10）到最晚死 10%（P90），圓點是中位數，短豎線是平均。</p>
+      <div class="zr-chart" id="c-surv" data-source="depth" style="min-height:150px"></div>
+    </div>
+
+    <div class="zr-grid">
+      <div class="zr-card">
+        <h2 id="depth">玩法深淺</h2>
+        <p class="zr-note">週期以底注計：NB 每局、BF 每次購買。BF 標準差以購買價（100 倍押注）計。「—」為樣本未出現或未計算。</p>
+        <div class="zr-tw"><table id="tb-depth" data-source="depth" data-row-key="row"><thead><tr>
+          <th data-field="row">模式／遊戲</th><th data-field="rtp">RTP</th><th data-field="std">標準差</th><th data-field="p1000">≥1000x</th><th data-field="p5000">≥5000x</th><th data-field="p10000">≥10000x</th><th data-field="max">實測最大</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="zr-card">
+        <h2 id="core">核心指標</h2>
+        <p class="zr-note">Zeus 2500 為 92 中 Bet Oldhand Card-On（NB 10⁸ 局、BF 10⁷ 次）；競品為實機側錄 3.1 萬局，RTP 為樣本值（官方 96.75%）。</p>
+        <div class="zr-tw"><table id="tb-core" data-source="core" data-row-key="metric"><thead><tr>
+          <th data-field="metric">指標</th><th data-field="goo">Gates of Olympus 1000</th><th data-field="a">Zeus 2500 A</th><th data-field="b">Zeus 2500 B</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="zr-panel" id="p-balls" role="tabpanel" aria-labelledby="t-balls" hidden>
+    <div class="zr-card">
+      <h2 id="ball-rate">倍數球出現率</h2>
+      <p class="zr-note">結算盤面上有倍數球的比例：BG 每局、FG／BF 每次免費轉。B 版 BG 倍數球較多，FG／BF 兩版相同。</p>
+      <div class="zr-legend lg"></div>
+      <div class="zr-chart" id="c-rate" data-source="balls"></div>
+    </div>
+    <div class="zr-card">
+      <h2 id="ball-dist">倍數值分布</h2>
+      <p class="zr-note">每顆出現的球的倍數占比（Zeus 2500 含 C2 與 C3）。縱軸為對數刻度，競品沒有的倍數不畫點。</p>
+      <div class="zr-seg" id="seg-dist"><button aria-pressed="true" data-v="BG">BG</button><button aria-pressed="false" data-v="FG">FG</button><button aria-pressed="false" data-v="BF">BF</button></div>
+      <div class="zr-legend lg"></div>
+      <div class="zr-chart" id="c-dist" data-source="balls"></div>
+    </div>
+  </section>
+
+  <section class="zr-panel" id="p-fg" role="tabpanel" aria-labelledby="t-fg" hidden>
+    <div class="zr-card">
+      <h2 id="fg-threshold">全程得分達門檻的機率</h2>
+      <p class="zr-note">NB-FG 為每場免費遊戲全程得分 ÷ 底注；BF 為每次購買全程得分 ÷ 底注。Zeus 2500 FG 有 20x 保底。縱軸為對數刻度，機率 0 不畫點。</p>
+      <div class="zr-seg" id="seg-fg"><button aria-pressed="true" data-v="fg">NB-FG</button><button aria-pressed="false" data-v="bf">BF</button></div>
+      <div class="zr-legend lg"></div>
+      <div class="zr-chart" id="c-fg" data-source="fg_threshold"></div>
+    </div>
+  </section>
+
+  <section class="zr-panel" id="p-combo" role="tabpanel" aria-labelledby="t-combo" hidden>
+    <div class="zr-card">
+      <h2 id="combo">消除次數分布</h2>
+      <p class="zr-note">BG 每局、FG／BF 每次免費轉的消除次數。「有球／無球」為該轉結算盤面上有沒有倍數球，是同一轉的聯合觀察。</p>
+      <div class="zr-seg" id="seg-scene"><button aria-pressed="true" data-v="BG">BG</button><button aria-pressed="false" data-v="FG">FG</button><button aria-pressed="false" data-v="BF">BF</button></div>
+      <div class="zr-seg" id="seg-cond"><button aria-pressed="true" data-v="全部">全部</button><button aria-pressed="false" data-v="有球">有球</button><button aria-pressed="false" data-v="無球">無球</button></div>
+      <div class="zr-legend lg"></div>
+      <div class="zr-chart" id="c-combo" data-source="combo"></div>
+    </div>
+  </section>
+
+  <section class="zr-panel" id="p-cluster" role="tabpanel" aria-labelledby="t-cluster" hidden>
+    <div class="zr-card">
+      <h2 id="cluster">獎項占比（依 Cluster 大小）</h2>
+      <p class="zr-note">所有中獎 Cluster 依顆數分 8-9／10-11／12+，左半為次數占比、右半為得分占比。</p>
+      <div class="zr-tw"><table id="tb-cluster" data-source="cluster" data-row-key="key"><thead><tr>
+        <th data-field="key">場景｜顆數</th><th data-field="goo_cnt">GoO 次數</th><th data-field="a_cnt">A 次數</th><th data-field="b_cnt">B 次數</th><th data-field="goo_pay">GoO 得分</th><th data-field="a_pay">A 得分</th><th data-field="b_pay">B 得分</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+</div>
+
+<script>
+window.ZR = (function () {
+  const pct = d3.format('.2%'), int = d3.format(','), dec = d3.format('.2f');
+  const SER = () => [
+    {k: 'goo', name: 'Gates of Olympus 1000', color: 'var(--cds-chart-muted)'},
+    {k: 'a', name: 'Zeus 2500 A', color: dash.colors[0]},
+    {k: 'b', name: 'Zeus 2500 B', color: dash.colors[1]}
+  ];
+  function legend(card) {
+    const el = card.querySelector('.lg'); if (!el) return;
+    el.replaceChildren(...SER().map(s => { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = s.color; sp.append(i, s.name); return sp; }));
+  }
+  function fail(el, msg) { el.replaceChildren(); const d = document.createElement('div'); d.className = 'zr-fail'; d.textContent = msg; el.append(d); }
+  function tip(box) {
+    let t = box.querySelector('.zr-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'zr-tip'; t.hidden = true; box.append(t); }
+    return {
+      show(ev, title, lines) {
+        t.replaceChildren();
+        const h = document.createElement('div'); h.className = 't'; h.textContent = title; t.append(h);
+        lines.forEach(([c, n, v]) => { const r = document.createElement('div'); const i = document.createElement('i'); i.style.background = c; r.append(i, `${n}  ${v}`); t.append(r); });
+        t.hidden = false;
+        const b = box.getBoundingClientRect(), [x, y] = [ev.clientX - b.left, ev.clientY - b.top];
+        const w = t.offsetWidth, hgt = t.offsetHeight;
+        t.style.left = Math.max(0, Math.min(b.width - w, x + 12)) + 'px';
+        t.style.top = Math.max(0, y - hgt - 8) + 'px';
+      },
+      hide() { t.hidden = true; }
+    };
+  }
+  function axisStyle(g) { g.attr('font-size', null).attr('font-family', null); g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'); g.selectAll('line,path').attr('stroke', 'var(--cds-chart-axis)'); }
+  // 分組長條：cats 類別、get(cat, key) 值（0–1）
+  function bars(box, cats, get, fmtTitle) {
+    box.querySelectorAll('svg').forEach(s => s.remove());
+    const W = box.clientWidth; if (!W) return;
+    const H = 260, m = {t: 10, r: 8, b: 26, l: 48};
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const ser = SER(), max = d3.max(cats, c => d3.max(ser, s => get(c, s.k) ?? 0)) || 1;
+    const y = d3.scaleLinear([0, max * 1.08], [H - m.b, m.t]).nice();
+    const yg = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.0%')).tickSize(-(W - m.l - m.r)));
+    axisStyle(yg); yg.select('.domain').remove(); yg.selectAll('line').attr('stroke', 'var(--cds-chart-grid)');
+    const x0 = d3.scaleBand(cats, [m.l, W - m.r]).paddingInner(0.25).paddingOuter(0.1);
+    const x1 = d3.scaleBand(ser.map(s => s.k), [0, x0.bandwidth()]).padding(0.12);
+    const xg = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x0).tickSize(0)); axisStyle(xg); xg.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    const tt = tip(box);
+    cats.forEach(c => ser.forEach(s => {
+      const v = get(c, s.k); if (v == null) return;
+      const bw = Math.min(32, x1.bandwidth()), bx = x0(c) + x1(s.k) + (x1.bandwidth() - bw) / 2;
+      svg.append('rect').attr('x', bx).attr('width', bw).attr('y', y(v)).attr('height', Math.max(0, y(0) - y(v))).attr('rx', 3).attr('fill', s.color)
+        .on('mousemove', ev => tt.show(ev, fmtTitle(c), ser.map(z => [z.color, z.name, get(c, z.k) == null ? '—' : pct(get(c, z.k))])))
+        .on('mouseleave', () => tt.hide());
+    }));
+  }
+  // 對數折線：cats 類別、get(cat,key)，0 或 null 不畫點
+  function logLines(box, cats, get, fmtTitle, floor) {
+    box.querySelectorAll('svg').forEach(s => s.remove());
+    const W = box.clientWidth; if (!W) return;
+    const H = 280, m = {t: 10, r: 10, b: 26, l: 54};
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const ser = SER();
+    const y = d3.scaleLog([floor, 1], [H - m.b, m.t]).clamp(true);
+    const ticks = [1, 0.1, 0.01, 0.001, 0.0001].filter(t => t >= floor);
+    const yg = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(d3.format('~%')).tickSize(-(W - m.l - m.r)));
+    axisStyle(yg); yg.select('.domain').remove(); yg.selectAll('line').attr('stroke', 'var(--cds-chart-grid)');
+    const x = d3.scalePoint(cats, [m.l + 10, W - m.r - 10]);
+    const every = Math.ceil(cats.length / Math.max(1, Math.floor((W - m.l) / 46)));
+    const xg = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickSize(0).tickValues(cats.filter((_, i) => i % every === 0))); axisStyle(xg); xg.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    ser.forEach(s => {
+      const pts = cats.map(c => [c, get(c, s.k)]).filter(([, v]) => v != null && v > 0);
+      svg.append('path').attr('d', d3.line().x(d => x(d[0])).y(d => y(d[1]))(pts)).attr('fill', 'none').attr('stroke', s.color).attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+      svg.selectAll(null).data(pts).join('circle').attr('cx', d => x(d[0])).attr('cy', d => y(d[1])).attr('r', 3).attr('fill', s.color);
+    });
+    const tt = tip(box), rule = svg.append('line').attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--cds-chart-reference)').attr('opacity', 0);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('mousemove', ev => {
+        const [mx] = d3.pointer(ev); const c = cats[d3.minIndex(cats, c => Math.abs(x(c) - mx))];
+        rule.attr('x1', x(c)).attr('x2', x(c)).attr('opacity', 1);
+        tt.show(ev, fmtTitle(c), ser.map(z => [z.color, z.name, get(c, z.k) == null ? '—' : pct(get(c, z.k))]));
+      })
+      .on('mouseleave', () => { rule.attr('opacity', 0); tt.hide(); });
+  }
+  return {pct, int, dec, SER, legend, fail, tip, axisStyle, bars, logLines};
+})();
+</script>
+
+<script>
+(function () {
+  const {pct, int, dec, fail} = ZR;
+  const per = (v, unit) => v == null ? '—' : int(v) + ' ' + unit;
+  function fillSpans() {
+    const d = dash.data('depth');
+    document.querySelectorAll('[data-source="depth"][data-where]').forEach(el => {
+      el.classList.remove('dash-skeleton');
+      if (d.status !== 'ok') { el.textContent = '—'; return; }
+      const row = d.data.find(r => r.row === el.dataset.where.slice(4)); const f = el.dataset.field, v = row ? row[f] : null;
+      el.textContent = v == null ? '—' : f === 'rtp' ? pct(v) : f === 'std' ? dec(v) : f.startsWith('p') ? int(v) + ' 局' : int(v);
+    });
+    document.getElementById('takeaway').classList.toggle('dash-skeleton', d.status === 'loading');
+  }
+  function depthTable() {
+    const d = dash.data('depth'), tb = document.querySelector('#tb-depth tbody'); tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    d.data.forEach(r => {
+      const tr = document.createElement('tr'); const u = r.mode === 'NB' ? '局' : '次';
+      [r.row, r.rtp == null ? '—' : pct(r.rtp), r.std == null ? '—' : dec(r.std), per(r.p1000, u), per(r.p5000, u), per(r.p10000, u), r.max == null ? '—' : d3.format(',.2f')(r.max) + 'x']
+        .forEach(t => { const td = document.createElement('td'); td.textContent = t; tr.append(td); });
+      tb.append(tr);
+    });
+  }
+  function coreTable() {
+    const d = dash.data('core'), tb = document.querySelector('#tb-core tbody'); tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    d.data.forEach(r => {
+      const tr = document.createElement('tr');
+      [r.metric, ...['goo', 'a', 'b'].map(k => r[k] == null ? '—' : r.fmt === 'pct' ? pct(r[k]) : r.fmt === 'period' ? '1/' + r[k] : d3.format(',.2f')(r[k]) + 'x')]
+        .forEach(t => { const td = document.createElement('td'); td.textContent = t; tr.append(td); });
+      tb.append(tr);
+    });
+  }
+  function survival() {
+    const box = document.getElementById('c-surv'), d = dash.data('depth');
+    box.querySelectorAll('svg').forEach(s => s.remove());
+    if (d.status === 'error') return fail(box, 'Failed to load');
+    if (d.status !== 'ok') return;
+    box.querySelectorAll('.zr-fail').forEach(e => e.remove());
+    const rows = d.data.filter(r => r.surv_median != null), W = box.clientWidth; if (!W) return;
+    const ser = ZR.SER(), H = 40 + rows.length * 46, m = {t: 8, r: 16, b: 26, l: 104};
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const x = d3.scaleLinear([0, d3.max(rows, r => r.surv_p90) * 1.05], [m.l, W - m.r]).nice();
+    const xg = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 110))).tickFormat(d3.format(',')).tickSize(-(H - m.t - m.b)));
+    ZR.axisStyle(xg); xg.select('.domain').remove(); xg.selectAll('line').attr('stroke', 'var(--cds-chart-grid)');
+    const tt = ZR.tip(box);
+    rows.forEach((r, i) => {
+      const s = ser.find(z => r.game.endsWith(z.name.slice(-1)) && z.k !== 'goo') || ser[1], cy = m.t + 20 + i * 46;
+      svg.append('text').attr('x', 0).attr('y', cy + 4).attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text(r.game);
+      const g = svg.append('g');
+      g.append('line').attr('x1', x(r.surv_p10)).attr('x2', x(r.surv_p90)).attr('y1', cy).attr('y2', cy).attr('stroke', s.color).attr('stroke-width', 6).attr('stroke-linecap', 'round').attr('opacity', .45);
+      g.append('line').attr('x1', x(r.surv_mean)).attr('x2', x(r.surv_mean)).attr('y1', cy - 9).attr('y2', cy + 9).attr('stroke', 'var(--color-fg)').attr('stroke-width', 1.5);
+      g.append('circle').attr('cx', x(r.surv_median)).attr('cy', cy).attr('r', 6).attr('fill', s.color).attr('stroke', 'var(--color-panel)').attr('stroke-width', 2);
+      g.append('rect').attr('x', m.l).attr('y', cy - 16).attr('width', W - m.l - m.r).attr('height', 32).attr('fill', 'transparent')
+        .on('mousemove', ev => tt.show(ev, r.game, [[s.color, 'P10', int(r.surv_p10)], [s.color, '中位數', int(r.surv_median)], [s.color, '平均', int(r.surv_mean)], [s.color, 'P90', int(r.surv_p90)]]))
+        .on('mouseleave', () => tt.hide());
+    });
+  }
+  window.ZR_overview = () => { fillSpans(); depthTable(); coreTable(); survival(); };
+  dash.onData(window.ZR_overview);
+})();
+</script>
+
+<script>
+(function () {
+  const st = {dist: 'BG', fg: 'fg', scene: 'BG', cond: '全部'};
+  function seg(id, key) {
+    document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => {
+      st[key] = b.dataset.v;
+      document.querySelectorAll(`#${id} button`).forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      draw();
+    }));
+  }
+  seg('seg-dist', 'dist'); seg('seg-fg', 'fg'); seg('seg-scene', 'scene'); seg('seg-cond', 'cond');
+  document.querySelectorAll('.zr-card').forEach(ZR.legend);
+  function guard(box, id) {
+    const d = dash.data(id);
+    if (d.status === 'error') { box.querySelectorAll('svg').forEach(s => s.remove()); ZR.fail(box, 'Failed to load'); return null; }
+    box.querySelectorAll('.zr-fail').forEach(e => e.remove());
+    if (d.status !== 'ok') { box.querySelectorAll('svg').forEach(s => s.remove()); return null; }
+    return d.data;
+  }
+  function draw() {
+    let b = document.getElementById('c-rate'), rows = guard(b, 'balls');
+    if (rows) { const r = rows.filter(x => x.kind === 'rate'); ZR.bars(b, r.map(x => x.scene), (c, k) => r.find(x => x.scene === c)[k], c => c); }
+    b = document.getElementById('c-dist'); rows = guard(b, 'balls');
+    if (rows) { const r = rows.filter(x => x.kind === 'dist' && x.scene === st.dist); ZR.logLines(b, r.map(x => x.mult), (c, k) => r.find(x => x.mult === c)[k], c => `${st.dist} ${c}`, 0.0001); }
+    b = document.getElementById('c-fg'); rows = guard(b, 'fg_threshold');
+    if (rows) ZR.logLines(b, rows.map(x => x.threshold), (c, k) => rows.find(x => x.threshold === c)[`${k}_${st.fg}`], c => `${st.fg === 'fg' ? 'NB-FG' : 'BF'} ${c}`, 0.00001);
+    b = document.getElementById('c-combo'); rows = guard(b, 'combo');
+    if (rows) { const r = rows.filter(x => x.scene === st.scene && x.cond === st.cond && x.combo !== 'Hit Rate'); ZR.bars(b, r.map(x => x.combo), (c, k) => r.find(x => x.combo === c)[k], c => `${st.scene}｜${st.cond}｜消除 ${c} 次`); }
+    const d = dash.data('cluster'), tb = document.querySelector('#tb-cluster tbody'); tb.replaceChildren();
+    if (d.status === 'ok') d.data.forEach(r => {
+      const tr = document.createElement('tr');
+      [r.key, ...['goo_cnt', 'a_cnt', 'b_cnt', 'goo_pay', 'a_pay', 'b_pay'].map(k => r[k] == null ? '—' : ZR.pct(r[k]))].forEach(t => { const td = document.createElement('td'); td.textContent = t; tr.append(td); });
+      tb.append(tr);
+    });
+  }
+  window.ZR_detail = draw;
+  dash.onData(draw);
+
+  const tabs = [...document.querySelectorAll('.zr-tab')];
+  function show(tab) {
+    tabs.forEach(t => { const on = t === tab; t.setAttribute('aria-selected', String(on)); document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+    dash.setLink(tab.id); window.ZR_overview(); draw();
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t)));
+  const named = document.getElementById(location.hash.slice(1));
+  if (named && named.classList.contains('zr-tab')) show(named);
+})();
+</script>

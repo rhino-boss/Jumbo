@@ -105,6 +105,7 @@ svg{display:block; width:100%; height:auto; overflow:visible}
 .tip .r{display:flex; justify-content:space-between; gap:14px}
 .tip .d{display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/*tabs-drag*/.tabs{scrollbar-width:none;-ms-overflow-style:none;cursor:grab;user-select:none}.tabs::-webkit-scrollbar{display:none}.tabs.dragging{cursor:grabbing}.tabs.dragging .tab{pointer-events:none}
 </style>
 
 <div class="wrap">
@@ -431,4 +432,6 @@ if(CH){
     });
   });
 })();
+
+/*tabs-drag*/(()=>{const t=document.querySelector('.tabs');if(!t)return;let x0=0,s0=0,down=false,moved=false;t.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;down=true;moved=false;x0=e.clientX;s0=t.scrollLeft;});addEventListener('pointermove',e=>{if(!down)return;const d=e.clientX-x0;if(!moved&&Math.abs(d)>4){moved=true;t.classList.add('dragging');}if(moved)t.scrollLeft=s0-d;});addEventListener('pointerup',()=>{down=false;t.classList.remove('dragging');});t.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopPropagation();moved=false;}},true);t.addEventListener('wheel',e=>{if(t.scrollWidth<=t.clientWidth||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;t.scrollLeft+=e.deltaY;e.preventDefault();},{passive:false});})();
 </script>
