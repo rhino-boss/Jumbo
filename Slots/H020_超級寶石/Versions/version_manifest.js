@@ -1,5 +1,5 @@
 window.H020_VERSION_MANIFEST = {
-  "current": "2.2.1.0",
+  "current": "2.2.2.0",
   "base_version": "2",
   "next_version": "3.0.0.0",
   "versions": [
@@ -100,6 +100,26 @@ window.H020_VERSION_MANIFEST = {
       },
       "changes": [
         "填 SCR：三個模型新增 OP Jackpot 工作表，各 8 個值（NB／EB1／EB2／SF × 新手／老手），取自 10⁸ 正式 Card-On 報表；卡片不變。已交付 SPS（101007_2210.zip）。"
+      ]
+    },
+    {
+      "version": "2.2.2.0",
+      "math_key": "2.2",
+      "date": "2026-10-21",
+      "competitor_initial_version": false,
+      "base_config": "Versions/2.2.2.0/config.js",
+      "configs": {
+        "92A": "Versions/2.2.2.0/config_92A.js",
+        "94A": "Versions/2.2.2.0/config_94A.js",
+        "96A": "Versions/2.2.2.0/config_96A.js"
+      },
+      "workbooks": {
+        "92A": "Versions/2.2.2.0/Source/H020192A.xlsx",
+        "94A": "Versions/2.2.2.0/Source/H020194A.xlsx",
+        "96A": "Versions/2.2.2.0/Source/H020196A.xlsx"
+      },
+      "changes": [
+        "SCR 改用 SPS 後端自行模擬的值（SC1 重轉球／SC2 重轉球底圖，畫面上出現就計）：三版相同，NB／EB1／EB2 分新手、老手，SF 一個值；卡片不變。"
       ]
     }
   ]
