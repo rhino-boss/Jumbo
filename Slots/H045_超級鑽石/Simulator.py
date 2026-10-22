@@ -1628,12 +1628,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--newbie", action="store_true", help="Profile 改為 Newbie")
     parser.add_argument("--config-rtp", default=None, help="覆寫 config_rtp_file，例如 config_92A.js")
     parser.add_argument("--config", default=None, help="覆寫 config_file（調參試驗用）")
+    parser.add_argument("--seed", type=int, default=None, help="覆寫 RNG_SEED（複驗用不同種子）")
     return parser.parse_args()
 
 
 def main() -> None:
+    global RNG_SEED
     global THREADS, OUTPUT_REPORT
     args = parse_args()
+    if args.seed is not None:
+        RNG_SEED = args.seed
     if args.threads:
         THREADS = max(1, args.threads)
     if args.no_report:
