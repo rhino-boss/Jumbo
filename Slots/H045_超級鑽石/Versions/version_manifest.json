@@ -1,5 +1,5 @@
 {
-  "current": "6.0.0.0",
+  "current": "6.0.0.1",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
@@ -135,15 +135,11 @@
       "base_config": "Versions/6.0.0.0/config.js",
       "sources": {
         "base": "Versions/6.0.0.0/Source/H0451.xlsx",
-        "92A": "Versions/6.0.0.0/Source/H045192A.xlsx",
-        "94A": "Versions/6.0.0.0/Source/H045194A.xlsx",
-        "92A_Bet100": "Versions/6.0.0.0/Source/H045192A_Bet100.xlsx"
+        "92A": "Versions/6.0.0.0/Source/H045192A.xlsx"
       },
       "configs": {
         "base": "config.js",
-        "92A": "config_92A.js",
-        "94A": "config_94A.js",
-        "92A_Bet100": "config_92A_Bet100.js"
+        "92A": "config_92A.js"
       },
       "changes": [
         "升 v6：表 1、表 2 金框翻出倍數的機率拉到 80%（BG／FG、小鬼／大鬼的 ×1 權重皆改 25，×2：×3：×5 維持 55：30：15）；表 3 不變。原本 BG 約 46%、FG 約 22%。",
@@ -153,8 +149,29 @@
         "表 1、表 2 金框比例 +20%（R2～R4 每格金框率 BG 16.9／12.8／8.6% → 20.3／15.4／10.4%、FG 15.7／13.5／11.2% → 18.9／16.2／13.4%）；小鬼 ×5 減半、帶倍數維持 80%（×1：×2：×3：×5＝50：120：65：15）；大鬼分裂 2／3／4 顆權重 1：1：1 → 4：2：1。",
         "BG 表 3 不出大鬼：金框翻牌 小鬼：大鬼 958：42 → 1000：0（表 3 不帶倍數、也不出大鬼）。",
         "NB 老手卡片調整以提高倍數出現率（Hit Rate、FG 週期、平均倍數不變，各區間變動 ≤ ±50%）：BG (0, 1] −28%、(1, 2]～(9, 10] +50%、(15, 20] 以上 −50%；FG (10, 20] −50%、(30, 35]～(60, 70] +50%、(80, 90] 以上 −50%。Card-On 2×10⁵：BG 倍數出現率 3.34% → 4.17%、FG 15.38% → 16.14%。",
-        "依 v6 自然機率（NB H0451_06_2610211143_betmode0_109、BF H0451_06_2610211757_betmode2_108）精確化 92A：老手 NB／EB／BF 形狀不變只對齊 RTP；新手依規則由老手衍生並計入觸發把平均（老手 BG 上限 400x：5.49x、新手 100x：5.00x）→ NB 新手 (10, 15] 0.56%、FG 週期 143.5 轉，EB 新手 (10, 15] 1.07%、FG 週期 30 轉。",
-        "新增 94A（小 Bet < $2）與 92A_Bet100（大／超大 Bet > $100，最大押注 $5000）：94A 老手 BG 不變、FG +2%（NB 平均 37.5x → 40.5x、EB 37.5x → 38.7x，總 94%）；Bet100 老手 BG 上限 400x → 200x、FG／BF 上限 20,000x → 1000x，RTP 不變（92%／BF 92.5%）；Newbie 三份逐格相同，BF 94A 同 92A。"
+        "依 v6 自然機率（NB H0451_06_2610211143_betmode0_109、BF H0451_06_2610211757_betmode2_108）精確化 92A：老手 NB／EB／BF 形狀不變只對齊 RTP；新手依規則由老手衍生並計入觸發把平均（老手 BG 上限 400x：5.49x、新手 100x：5.00x）→ NB 新手 (10, 15] 0.56%、FG 週期 143.5 轉，EB 新手 (10, 15] 1.07%、FG 週期 30 轉。"
+      ]
+    },
+    {
+      "version": "6.0.0.1",
+      "math_key": "6",
+      "date": "2026-10-22",
+      "base_config": "Versions/6.0.0.1/config.js",
+      "sources": {
+        "base": "Versions/6.0.0.1/Source/H0451.xlsx",
+        "92A": "Versions/6.0.0.1/Source/H045192A.xlsx",
+        "94A": "Versions/6.0.0.1/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/6.0.0.1/Source/H045192A_Bet100.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js"
+      },
+      "changes": [
+        "新增 94A（小 Bet < $2）與 92A_Bet100（大／超大 Bet > $100，最大押注 $5000）：94A 老手 BG 不變、FG +2%（NB 平均 37.5x → 40.5x、EB 37.5x → 38.7x，總 94%）；Bet100 老手 BG 上限 400x → 200x、FG／BF 上限 20,000x → 1000x，RTP 不變（92%／BF 92.5%）；Newbie 三份逐格相同，BF 94A 同 92A。",
+        "Simulator、Demogame 依押注自動選模型（模擬程式規範 §1.2.3）：老手小 Bet → 94A、中 Bet → 92A、大 Bet → 92A_Bet100，新手固定 92A；92A 權重不變。"
       ]
     }
   ]
