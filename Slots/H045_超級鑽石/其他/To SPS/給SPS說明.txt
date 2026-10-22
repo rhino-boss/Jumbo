@@ -1,52 +1,81 @@
 H045 超級鑽石（Super Diamond，Game ID 101015）交付說明
 
-【最新】v5.1.0.0（2026-10-21）：只更新 config_92A.js
-- 只改 Buy Feature 卡片權重（card_system.profiles.oldhand／newbie.buy_feature，兩組相同）；config.js、Simulator.py、NB／EB 卡片都與 v5.0.0.0 相同，不用重換。
-- BF 贏錢率（總贏分 > 購買價 50x）約 14.6% → 30%；BF RTP 目標維持 92.5%。
-- config_92A.js 內 excel_version 改為 5.1.0.0，請以此版取代先前收到的 v5.0.0.0 config_92A.js。
-- BF Card-On 驗證結果另行補上。
+【最新】v6.0.0.0（2026-10-22）：三個檔案都要換
+附檔：config.js（基礎數學 6）、config_92A.js（卡片權重 6.0.0.0）、Simulator.py。取代先前的 v5.0.0.0／v5.1.0.0。
+
+一、基礎數學 config.js（5 → 6）
+1. 金框翻出倍數 80%（tables.bg_1／bg_2／fg_1／fg_2 的 multiplier_wild_weight）
+   - WW：×1／×2／×3／×5 = 50／120／65／15（×5 比例減半，帶倍數維持 80%）
+   - W2：×1／×2／×3／×5 = 25／55／30／15
+2. 金框比例 +20%（全域 gold_count_weight.bg／fg，表 1、表 2 使用；表 3 用表內自帶值，不變）
+3. 大鬼分裂顆數 split_count_weight 2／3／4 = 4：2：1（原 1：1：1）
+4. 表 3 不出大鬼：tables.bg_3.gold_result_weight W2 = 0（WW 1000）
+
+二、規則／程式（Simulator.py 已實作，請後端同步）
+1. 翻牌後無法連線：只看「最後一次翻牌」。若這次翻牌後沒有再連線（連消結束），翻出來的東西一律以原位、無倍數的小鬼（WW ×1）呈現，大鬼不分裂；盤面與統計都以這個最終畫面為準。
+   - 得分不受影響（沒再連線＝倍數與分裂都沒被用到），只影響最終盤面呈現與統計。
+2. Max Win（單局上限）改為「base_game 與 free_game 卡組最高有權重區間上限」取較大者（Extra Bet 用 eb_base_game／eb_free_game；Buy Feature 仍用 buy_feature）。
+   - 原因：新手 BG 卡組到 100x、FG 卡組只到 50x，若只看 free_game 會把新手 BG 截在 50x。
+3. 報表新增欄位（不影響數學）：自然機率報表的 bg_trigger_fg_cnt_newbie／bg_trigger_fg_pay_newbie（依新手 BG Trigger Cap 統計觸發把）；By Game 的倍數／大鬼／金框出現率與使用率；Multiplier Line 的 BG_Mult_Seen_Rate／FG_Mult_Seen_Rate。
+
+三、卡片權重 config_92A.js（6.0.0.0，依 v6 自然機率 NB 10^9、BF 10^8 重解）
+1. Oldhand：NB BG／FG 調整分布以提高倍數出現率（Hit Rate、FG 週期 1/150、平均倍數不變）；NB／EB FG 高倍尾巴降低；BF 贏錢率約 30%。
+2. Newbie（Oldhand 衍生）：BG 只到 100x（BG Trigger Cap 100x，free_game 卡 max = 100）、FG 只有 (25, 50]；NB 新手 FG 週期 1/143.5、EB 新手 1/30。
+3. RTP 目標不變：Normal Bet／Extra Bet Oldhand 92%、Newbie 93%；Buy Feature 92.5%。
+
+四、驗證目標與我方 Card-On 結果（判定：|實測 − 目標| ≤ 1.96σ）
+（驗證進行中，結果另行補上）
 
 ────────────────────────────────────────
-以下為 v5.0.0.0 交付說明（config.js、Simulator.py 仍適用）
+以下為先前版本說明（僅供參考，v6 以上方為準）
 
-
-附檔（取代先前的 v4）
-- config.js        基礎數學（excel_version 5）
-- config_92A.js    卡片權重 5.0.0.0（Normal Bet／Extra Bet／Buy Feature）
-- Simulator.py     模擬程式（以此為準）
-
-一、跟 v4 的差異（請確認後端實作）
-1. 新增 Extra Bet（bet mode 1）
-   - 押注 2 倍（config.js bet_modes.extra_bet.cost_multiplier = 2），盤面、選表、判獎、FG 規則與 Normal Bet 完全相同。
-   - 卡片改用 eb_base_game／eb_free_game（Oldhand、Newbie 各一組）；FG 週期目標 1/30（Normal Bet 1/150 的 5 倍）。
-   - 卡片倍率判定的分母是 Normal Bet 底注（不是 2 倍押注）；RTP 分母是 2 倍實際押注。
-   - EB 的 BG Trigger Cap、Max Win 取 eb_base_game／eb_free_game 卡組的最高有權重區間上限。
-2. 新增盤面表 3（tables.bg_3／fg_3）
-   - BG 選表 表1 : 表2 : 表3 = 4 : 1 : 5；FG／Retrigger 維持 2 : 8 : 0（table_weight）。
-   - BG 只有表 3 會觸發 FG（表 1 的 C1 只在 R1、R3，表 2 只在 R2、R5，補牌不補 C1，盤面最多 2 顆）。
-   - 表 3 自帶 gold_count_weight：盤面表有這個欄位時，金框顆數（停輪與補牌後重抽）要用表內的值，沒有才用全域 gold_count_weight[bg|fg]。
-   - 表 3 沒有大鬼（gold_result_weight W2 = 0），WILD 不帶倍數（multiplier_wild_weight 只有 ×1）。
-3. 權重調整：FG 小鬼帶倍數 20%、FG 大鬼帶倍數 35%（tables.fg_*.multiplier_wild_weight）。
-
-二、沿用 v4 的規則（提醒）
-- 原地補牌：消除的格子原位補新符號，其餘符號不移動；補牌後依金框顆數權重補足金框。
-- 只有本次中獎並被消除的帶倍 WILD 倍數相加，再乘 Cascade 階梯倍數；沒用到的帶倍 WILD 留在盤面。
-- 大鬼分裂出 2～4 顆 WW（倍數同本體），落點只在 R2～R5，排除既有 WW、W2、C1；蓋到未中獎金框時金框消失、變一般 WW。
-- Retrigger +5 場，總場數最多 50，超過的切掉。
-
-三、驗證目標與我方 Card-On 結果（皆 ≤ 2σ，Retry Limit Exceeded 0）
-| 模式 | Profile | 目標 Game RTP | 我方結果 | 局數 |
-| Normal Bet | Oldhand | 92.0% | 92.06% | 1e7 |
-| Normal Bet | Newbie  | 93.0% | 93.29% | 1e6 |
-| Extra Bet  | Oldhand | 92.0% | 92.16% | 1e6 |
-| Extra Bet  | Newbie  | 93.0% | 92.44% | 1e6 |
-| Buy Feature| Oldhand | 92.5% | 93.05% | 3e5 |
-SCR（Card-On）：NB 3,079,821,000／NB Newbie 3,082,100,000／EB 4,099,620,000／EB Newbie 4,087,480,000／BF 41,170,800,000
-
-四、執行方式
-python Simulator.py --rounds 1000000 --bet-mode 0 --card-on --config config.js --config-rtp config_92A.js            （Normal Bet Oldhand）
-python Simulator.py --rounds 1000000 --bet-mode 1 --card-on --config config.js --config-rtp config_92A.js            （Extra Bet Oldhand）
-python Simulator.py --rounds 1000000 --bet-mode 1 --card-on --newbie --config config.js --config-rtp config_92A.js   （Extra Bet Newbie）
-python Simulator.py --rounds 300000  --bet-mode 2 --card-on --config config.js --config-rtp config_92A.js            （Buy Feature）
-
-有任何跟 Simulator 結果對不上的地方，請附後端報表（RTP Validator TXT）給我們比對。
+【最新】v5.1.0.0（2026-10-21）：只更新 config_92A.js
+- 只改 Buy Feature 卡片權重（card_system.profiles.oldhand／newbie.buy_feature，兩組相同）；config.js、Simulator.py、NB／EB 卡片都與 v5.0.0.0 相同，不用重換。
+- BF 贏錢率（總贏分 > 購買價 50x）約 14.6% → 30%；BF RTP 目標維持 92.5%。
+- config_92A.js 內 excel_version 改為 5.1.0.0，請以此版取代先前收到的 v5.0.0.0 config_92A.js。
+- BF Card-On 驗證結果另行補上。
+
+────────────────────────────────────────
+以下為 v5.0.0.0 交付說明（config.js、Simulator.py 仍適用）
+
+
+附檔（取代先前的 v4）
+- config.js        基礎數學（excel_version 5）
+- config_92A.js    卡片權重 5.0.0.0（Normal Bet／Extra Bet／Buy Feature）
+- Simulator.py     模擬程式（以此為準）
+
+一、跟 v4 的差異（請確認後端實作）
+1. 新增 Extra Bet（bet mode 1）
+   - 押注 2 倍（config.js bet_modes.extra_bet.cost_multiplier = 2），盤面、選表、判獎、FG 規則與 Normal Bet 完全相同。
+   - 卡片改用 eb_base_game／eb_free_game（Oldhand、Newbie 各一組）；FG 週期目標 1/30（Normal Bet 1/150 的 5 倍）。
+   - 卡片倍率判定的分母是 Normal Bet 底注（不是 2 倍押注）；RTP 分母是 2 倍實際押注。
+   - EB 的 BG Trigger Cap、Max Win 取 eb_base_game／eb_free_game 卡組的最高有權重區間上限。
+2. 新增盤面表 3（tables.bg_3／fg_3）
+   - BG 選表 表1 : 表2 : 表3 = 4 : 1 : 5；FG／Retrigger 維持 2 : 8 : 0（table_weight）。
+   - BG 只有表 3 會觸發 FG（表 1 的 C1 只在 R1、R3，表 2 只在 R2、R5，補牌不補 C1，盤面最多 2 顆）。
+   - 表 3 自帶 gold_count_weight：盤面表有這個欄位時，金框顆數（停輪與補牌後重抽）要用表內的值，沒有才用全域 gold_count_weight[bg|fg]。
+   - 表 3 沒有大鬼（gold_result_weight W2 = 0），WILD 不帶倍數（multiplier_wild_weight 只有 ×1）。
+3. 權重調整：FG 小鬼帶倍數 20%、FG 大鬼帶倍數 35%（tables.fg_*.multiplier_wild_weight）。
+
+二、沿用 v4 的規則（提醒）
+- 原地補牌：消除的格子原位補新符號，其餘符號不移動；補牌後依金框顆數權重補足金框。
+- 只有本次中獎並被消除的帶倍 WILD 倍數相加，再乘 Cascade 階梯倍數；沒用到的帶倍 WILD 留在盤面。
+- 大鬼分裂出 2～4 顆 WW（倍數同本體），落點只在 R2～R5，排除既有 WW、W2、C1；蓋到未中獎金框時金框消失、變一般 WW。
+- Retrigger +5 場，總場數最多 50，超過的切掉。
+
+三、驗證目標與我方 Card-On 結果（皆 ≤ 2σ，Retry Limit Exceeded 0）
+| 模式 | Profile | 目標 Game RTP | 我方結果 | 局數 |
+| Normal Bet | Oldhand | 92.0% | 92.06% | 1e7 |
+| Normal Bet | Newbie  | 93.0% | 93.29% | 1e6 |
+| Extra Bet  | Oldhand | 92.0% | 92.16% | 1e6 |
+| Extra Bet  | Newbie  | 93.0% | 92.44% | 1e6 |
+| Buy Feature| Oldhand | 92.5% | 93.05% | 3e5 |
+SCR（Card-On）：NB 3,079,821,000／NB Newbie 3,082,100,000／EB 4,099,620,000／EB Newbie 4,087,480,000／BF 41,170,800,000
+
+四、執行方式
+python Simulator.py --rounds 1000000 --bet-mode 0 --card-on --config config.js --config-rtp config_92A.js            （Normal Bet Oldhand）
+python Simulator.py --rounds 1000000 --bet-mode 1 --card-on --config config.js --config-rtp config_92A.js            （Extra Bet Oldhand）
+python Simulator.py --rounds 1000000 --bet-mode 1 --card-on --newbie --config config.js --config-rtp config_92A.js   （Extra Bet Newbie）
+python Simulator.py --rounds 300000  --bet-mode 2 --card-on --config config.js --config-rtp config_92A.js            （Buy Feature）
+
+有任何跟 Simulator 結果對不上的地方，請附後端報表（RTP Validator TXT）給我們比對。
