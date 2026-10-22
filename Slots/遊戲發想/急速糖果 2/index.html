@@ -368,6 +368,9 @@
             <li>Buy Feature 的 Super Free（起始倍數強化版）確定不保留。（10/19）</li>
             <li>移除同符號連帶消除（提案後決定）：只消除成立 Cluster 的格子，未相連的同符號留在盤面；原因是消除會累積倍數框，連帶消除的格子沒有倍數框，玩家容易疑惑。（10/20）</li>
             <li>抽樣驗證（demo 假權重各 2 萬局）：NB RTP 261.4%（Hit 54.7%、FG 1/667）、EB 225.3%（FG 1/800）。（10/20）</li>
+            <li>新增 Card System（同 H026：抽區間卡 → 重轉到結果落在區間，倍率以基礎押注為分母，retry 上限 5,000）；92 版只有 Oldhand 卡組，自然機率（符號權重、Scatter 機率、底板、賠率）不動。（10/22）</li>
+            <li>92 版卡片權重：依 Card Off 自然機率（NB／EB 各 4×10⁷ 局、BF 10⁶ 局）解，NB 照 H026 92A（BG 68%＋FG 24%、FG 週期 238.34、BG 中獎率 28.29%、BG ≤ 120x、FG 10x～20,000x）；EB（10x）BG 68%＋FG 24%（FG 100x 起、BG ≤ 1,200x）；BF（100x）92.5%（10x 起）。（10/22）</li>
+            <li>Card On 驗證：NB 92.73%（±1.45%，10⁶ 局）、FG 1/237、中獎率 28.6%；EB 92.19%（±1.14%，10⁶ 局）、FG 1/231；BF 92.53%（±0.62%，2×10⁵ 局）；重轉超過上限 NB 5 次、EB 9 次（每 10⁶ 局）。（10/22）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -443,7 +446,7 @@
     </div>
   </dialog>
 
-  <script src="./config.js?v=0.3.1.0&c=20261019"></script>
+  <script src="./config.js?v=0.3.1.0&c=20261022"></script>
   <script>
     (() => {
       "use strict";
@@ -1214,13 +1217,30 @@
       // ── 回合流程 ──────────────────────────────────────────────────────────
       const zeroGrid = () => Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
 
-      // 一局完整數學結果（BG＋整段 FG，含 Retrigger）；同步、只用 Math.random，供 demogameRng.run() 與 Simulation 共用。
-      // Buy Feature 沒有 BG Spin，直接進 3 顆 C1 的 FG；FG 位置倍數整場保留，Extra Bet 底板只作用於 BG。
-      function computeRound(mode) {
-        const isBuy = mode === MODE_BUY;
-        const bg = isBuy ? null : runSpin(zeroGrid(), { extraPlates: mode === MODE_EXTRA });
-        const award = isBuy ? fgAward(3) : (bg.scatterCount >= 3 ? fgAward(bg.scatterCount) : 0);
-        const fgSpins = [];
+      // ── Card System（同 H026：抽區間卡 → 重轉到結果落在該區間；倍率一律以基礎押注為分母）──────
+      // 卡組在 config.card_system.oldhand：normal_bet／extra_bet 各有 weight_bg（64 區間＋free_game 卡）與 weight_fg，
+      // buy_feature.weight_fg 為 BF 整局。BG 抽到 range 卡：重轉到「不觸發 FG 且得分落在區間」；抽到 free_game 卡：重轉到觸發，
+      // 再抽 FG 卡、重跑整段 FG 到 FG 總分落在區間。BF 以整局得分比對。重轉超過 retry_limit 就用最後一次結果。
+      const CARD = CFG.card_system?.enabled ? CFG.card_system : null;
+      const RETRY_LIMIT = Number(CARD?.retry_limit || 5000);
+      const cardOn = () => Boolean(CARD) && window.DEMOGAME_CARD_SYSTEM_ENABLED !== false;
+      function cardsFor(mode, key) {
+        const seg = CARD?.oldhand || {};
+        if (mode === MODE_BUY) return seg.buy_feature?.weight_fg || [];
+        return (mode === MODE_EXTRA ? seg.extra_bet : seg.normal_bet)?.[key] || [];
+      }
+      function drawCard(cards) {
+        const total = cards.reduce((a, c) => a + Number(c.weight || 0), 0);
+        if (total <= 0) return null;
+        let r = rand() * total;
+        for (const c of cards) { r -= Number(c.weight || 0); if (r < 0) return c; }
+        return cards[cards.length - 1];
+      }
+      const inRange = (card, x) => x > Number(card.min) && x <= Number(card.max);
+
+      // 一段完整 FG（含 Retrigger）；位置倍數整場保留
+      function runFreeGames(award) {
+        const spins = [];
         const mult = zeroGrid();
         let left = award, played = 0;
         while (left > 0 && played < FG_CAP) {
@@ -1231,16 +1251,61 @@
             spin.retrigger = Math.min(fgAward(spin.scatterCount), FG_CAP - played - left);
             left += spin.retrigger;
           }
-          fgSpins.push(spin);
+          spins.push(spin);
+        }
+        return { spins, win: spins.reduce((a, s) => a + s.total, 0) };
+      }
+
+      // 一局完整數學結果（BG＋整段 FG，含 Retrigger）；同步、只用 rand()，供 demogameRng.run() 與 Simulation 共用。
+      // Buy Feature 沒有 BG Spin，直接進 3 顆 C1 的 FG；FG 位置倍數整場保留，Extra Bet 底板只作用於 BG。
+      function computeRound(mode) {
+        const isBuy = mode === MODE_BUY;
+        const base = bet();
+        const useCard = cardOn();
+        let bg = null, award = 0, fg = { spins: [], win: 0 }, retry = 0, exceeded = false;
+        if (isBuy) {
+          award = fgAward(3);
+          const card = useCard ? drawCard(cardsFor(mode, "weight_fg")) : null;
+          for (;;) {
+            fg = runFreeGames(award);
+            if (!card || inRange(card, fg.win / base)) break;
+            if (++retry >= RETRY_LIMIT) { exceeded = true; break; }
+          }
+        } else {
+          const opts = { extraPlates: mode === MODE_EXTRA };
+          const card = useCard ? drawCard(cardsFor(mode, "weight_bg")) : null;
+          if (card?.type === "free_game") {
+            for (;;) {
+              bg = runSpin(zeroGrid(), opts);
+              if (bg.scatterCount >= 3) break;
+              if (++retry >= RETRY_LIMIT) { exceeded = true; break; }
+            }
+            if (bg.scatterCount >= 3) {
+              award = fgAward(bg.scatterCount);
+              const fgCard = drawCard(cardsFor(mode, "weight_fg"));
+              for (;;) {
+                fg = runFreeGames(award);
+                if (!fgCard || inRange(fgCard, fg.win / base)) break;
+                if (++retry >= RETRY_LIMIT) { exceeded = true; break; }
+              }
+            }
+          } else {
+            for (;;) {
+              bg = runSpin(zeroGrid(), opts);
+              if (!card || (bg.scatterCount < 3 && inRange(card, bg.total / base))) break;
+              if (++retry >= RETRY_LIMIT) { exceeded = true; break; }
+            }
+            award = bg.scatterCount >= 3 ? fgAward(bg.scatterCount) : 0;
+            if (award) fg = runFreeGames(award);
+          }
         }
         const bgWin = bg ? bg.total : 0;
-        const fgWin = fgSpins.reduce((a, s) => a + s.total, 0);
-        return { mode, bg, award, fgSpins, bgWin, fgWin, total: bgWin + fgWin };
+        return { mode, bg, award, fgSpins: fg.spins, bgWin, fgWin: fg.win, total: bgWin + fg.win, retryCount: retry, retryLimitExceeded: exceeded };
       }
 
       // ── 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）────────────────
-      // 碼：<Config>/<NB|EB|BF>/off/-/<種子>；本作無卡片系統（card 恆為 off）、無遊戲專屬選項（opts 為 -）。
-      // 碼內模式只套用於該局，不改畫面押注模式；Config 不同或碼為 Card on 時 Log 警告。
+      // 碼：<Config>/<NB|EB|BF>/<on|off>/-/<種子>；card 記錄該局是否套卡片系統，無遊戲專屬選項（opts 為 -）。
+      // 碼內模式只套用於該局，不改畫面押注模式；Config 或 Card 開關與目前不同時 Log 警告。
       const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
       const configLabel = () => ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent
         || $("configSelect")?.selectedOptions?.[0]?.textContent || CFG.rtp_label || CFG.config_code).trim().replace(/\s+/g, "");
@@ -1278,10 +1343,10 @@
         const cost = modeCost(mode);
         if (st.balance < cost) throw gameError("insufficient");
         if (code && code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
-        if (code?.card) appendLog("RNG Card on → no card system, computed as off", "error");
+        if (code && Boolean(code.card) !== cardOn()) appendLog(`RNG Card ${code.card ? "on" : "off"} ≠ current Card System ${cardOn() ? "On" : "Off"}`, "error");
         const seed = code ? code.seed : window.demogameRng.newSeed();
         const round = window.demogameRng.run(seed, () => computeRound(mode));   // 整局（BG＋消除＋整段 FG）一次算完
-        st.roundCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[mode], card: false, opts: "", seed });
+        st.roundCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[mode], card: cardOn(), opts: "", seed });
         st.winShown = 0;   // 新的一局 Win 從 0 開始
         st.balance -= cost; st.totalBet += cost; st.rounds++;
         if (mode !== MODE_BUY) st.normalRounds++;
@@ -1390,8 +1455,11 @@
           lineMultiplier: round.total / (useMode === MODE_BUY ? bet() : cost),  // 線型口徑：BF ÷ 底注，其餘 ÷ 押注
           fgTriggered: round.fgSpins.length > 0,
           maxMultiplier: maxSum,
-          retryLimitExceeded: 0,
-          retryCount: 0,
+          retryLimitExceeded: round.retryLimitExceeded ? 1 : 0,
+          retryCount: round.retryCount,
+          bgMultiplier: round.bgWin / bet(),                                  // 調權重用：BG／FG 得分 ÷ 底注（卡片口徑）
+          fgMultiplier: round.fgWin / bet(),
+          bgScatter: round.bg ? round.bg.scatterCount : 0,
           fgCascades: round.fgSpins.map((s) => s.cascadeCount)
         };
         if (round.bg) result.bgCascade = round.bg.cascadeCount;
@@ -1549,7 +1617,7 @@
       // Config 名稱照畫面 Config 選單（共用模組組成的 #demogameConfigSelect），故等共用模組載入後再寫
       document.addEventListener("DOMContentLoaded", () => {
         const shown = ($("demogameConfigSelect") || $("configSelect"))?.selectedOptions?.[0]?.textContent?.trim() || CFG.config_code;
-        appendLog(`Config ${shown} loaded | Version ${CFG.excel_version} | Card System Off`, "result");
+        appendLog(`Config ${shown} loaded | Version ${CFG.excel_version} | Card System ${cardOn() ? "On" : "Off"}`, "result");
       });
     })();
   </script>
@@ -1588,7 +1656,7 @@
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-20 14:22";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script src="../../demogame_common.js?v=20261019o"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>

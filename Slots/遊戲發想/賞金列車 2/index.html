@@ -2044,6 +2044,9 @@
             <li>金框分一般／倍數兩種：盤面沒有倍數金框時從現有金框隨機挑一顆賦予倍數，盤面同時間僅一顆帶倍數；金框倍數為 demo 假值。（09/24）</li>
             <li>600 局批次模擬：RTP 86.7%、Hit 29.7%、跳階最高 x256。（09/24）</li>
             <li>模擬參考（金框倍數為 demo 假值）：Card On NB 96.62%（5 萬局）、BF 89.85%（3 千局）；Card Off NB 873%、BF 252%。（10/13）</li>
+            <li>金框改為「推階」：金框上只顯示一個數字，代表倍數等級往後推進幾階（原為標倍數值、中獎時跳到該階）。盤面同時間維持只有 1 顆，推進只升不降。（10/21）</li>
+            <li>乘數階梯上限由 x1024 提高到 x2048（12 階）；config_92／94 的 value_multiplier_range 同步加入 2048。（10/21）</li>
+            <li>改版後批次模擬（金框推階數為 demo 假值）：NB RTP 98.74%、Hit 29.14%、FG 1/245、最大 791x（4 萬局）。（10/21）</li>
           </ol>
         </article>
       </div>
@@ -2216,8 +2219,8 @@
 | --- | --- | --- |
 | 主要標題 | 連消倍數 | CASCADE MULTIPLIER |
 | 規則說明 | 基礎遊戲每次旋轉由 x1 開始；免費遊戲每次旋轉由 x8 開始。 | EACH BASE GAME SPIN STARTS AT x1. EACH FREE GAME SPIN STARTS AT x8. |
-| 規則說明 | 每完成一次中獎連消，倍數等級向上提升一級。倍數等級為 x1、x2、x4、x8、x16、x32、x64、x128、x256、x512、x1024。 | AFTER EACH WINNING CASCADE, THE MULTIPLIER ADVANCES ONE LEVEL: x1, x2, x4, x8, x16, x32, x64, x128, x256, x512 AND x1024. |
-| 規則說明 | 當帶倍數的金框參與中獎，倍數等級直接跳至該金框倍數對應的等級（只升不降，同段多顆取最高）；本次連消的獎金乘以跳階後的倍數。 | WHEN A MULTIPLIER GOLDEN SYMBOL PARTICIPATES IN A WIN, THE MULTIPLIER LEVEL JUMPS DIRECTLY TO THAT TAG'S LEVEL (UPWARD ONLY, HIGHEST TAG APPLIES). THE CURRENT CASCADE WIN IS MULTIPLIED BY THE UPDATED VALUE. |
+| 規則說明 | 每完成一次中獎連消，倍數等級向上提升一級。倍數等級為 x1、x2、x4、x8、x16、x32、x64、x128、x256、x512、x1024、x2048。 | AFTER EACH WINNING CASCADE, THE MULTIPLIER ADVANCES ONE LEVEL: x1, x2, x4, x8, x16, x32, x64, x128, x256, x512, x1024 AND x2048. |
+| 規則說明 | 金框上的數字代表倍數等級往後推進幾級。當金框參與中獎，倍數等級往後推進該數字的級數（盤面同時只有一顆，最高 x2048）；本次連消的獎金乘以推進後的倍數。 | THE NUMBER ON A GOLDEN SYMBOL IS HOW MANY LEVELS THE MULTIPLIER ADVANCES. WHEN IT PARTICIPATES IN A WIN, THE MULTIPLIER ADVANCES BY THAT MANY LEVELS (ONE TAG ON THE BOARD AT A TIME, UP TO x2048). THE CURRENT CASCADE WIN IS MULTIPLIED BY THE UPDATED VALUE. |
 
 ---
 
@@ -2276,10 +2279,10 @@
   const MODE_NORMAL = Box.mode_normalbet;
   const MODE_BUY = Box.mode_featurebuy;
   const MULTIPLIERS = Box.value_multiplier_range;
-  // WT2：金框倍數池（值＝乘數階梯階級值；FG 分布高於 BG）⏳ demo 假值
+  // WT2：推階金框池（值＝「往後推進幾階」，不是倍數值；FG 分布高於 BG）⏳ demo 假值
   const WT2_FRAME_POOL = {
-    BG: { values: [2, 4, 8, 16, 32], weights: [46, 28, 16, 8, 2] },
-    FG: { values: [8, 16, 32, 64, 128], weights: [40, 28, 18, 10, 4] }
+    BG: { values: [1, 2, 3, 4, 5], weights: [46, 28, 16, 8, 2] },
+    FG: { values: [3, 4, 5, 6, 7], weights: [40, 28, 18, 10, 4] }
   };
   function wt2FrameMult(scene) {
     const pool = WT2_FRAME_POOL[scene === "FG" ? "FG" : "BG"];
@@ -2512,16 +2515,14 @@
     let level = scene === "BG" ? 0 : 3; let combo = 0; let total = 0; const steps = [];
     while (combo < 200) {
       const before = clone(board); const result = evaluate(board, gold);
-      // WT2：炸彈移除。倍數金框跳階 — 本段中獎的金框取最高階，只升不降，先跳階再計分
-      let jumpLevel = -1;
+      // WT2：炸彈移除。推階金框 — 金框上的數字＝往後推進幾階，先推階再計分
+      // 盤面同時間只會有 1 顆推階金框（見 wt2EnsureSingleMult），這裡的加總是防呆
+      let advance = 0;
       for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
-        if (result.hit[row][reel] === 2 && gold[row][reel] > 0) {
-          const idx = MULTIPLIERS.indexOf(Number(gold[row][reel]));
-          if (idx > jumpLevel) jumpLevel = idx;
-        }
+        if (result.hit[row][reel] === 2 && gold[row][reel] > 0) advance += Number(gold[row][reel]);
       }
-      const jumped = result.raw > 0 && jumpLevel > level;
-      if (jumped) level = jumpLevel;
+      const jumped = result.raw > 0 && advance > 0;
+      if (jumped) level = Math.min(MULTIPLIERS.length - 1, level + advance);
       const multiplier = MULTIPLIERS[level];
       level = Math.min(MULTIPLIERS.length - 1, level + 1);
       const win = payAmount(result.raw, multiplier); total += win;
@@ -2728,7 +2729,8 @@
     if (symbol === 99) return "";
     const code = CODE[symbol] || `S${symbol}`;
     const asset = symbolAsset(symbol);
-    const badge = isGold > 0 ? `<span class="multi-badge">x${isGold}</span>` : "";
+    // 推階金框：只顯示數字（＝往後推進幾階），不加 x 前綴
+    const badge = isGold > 0 ? `<span class="multi-badge">${isGold}</span>` : "";
     if (!asset) {
       return `<span class="slot-symbol-label">${code}</span><div class="symbol-wrap">${badge}</div>`;
     }

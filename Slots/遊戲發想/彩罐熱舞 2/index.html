@@ -2026,6 +2026,8 @@
           <li>擴散格加射擊動畫：準星鎖定 → 開槍（閃光、火花、彈孔、盤面震動），之後亮出擴散結果；只做畫面、不改結果。（10/21）</li>
           <li>抽樣（Card System 關閉、一般押注 2 萬局）：自然 RTP 202,971.1%、Hit 25.4%、FG 約 1/41；金框大增後 Wild 與連消暴增，數值需整體重訂。（10/21）</li>
           <li>金框擴散不再選到 R1：只在 R2～R5 的 12 格中挑（R1 不會被瞄準）。（10/21）</li>
+          <li>92 版（Oldhand）：開啟 Card System，依 Card Off 自然機率（NB／EB 各 4×10⁶ 局、BF 5×10⁵ 局）解卡片權重，目標照 H026 92A：NB BG 68%＋FG 24%（FG 週期 238.34、BG 中獎率 28.29%、BG ≤ 120x、FG 10x～20,000x）；EB BG 32.02%＋FG 59.98%（週期 47.69、FG 20x 起）；BF 92.5%（10x 起）。自然機率不動；Newbie 卡組移除（選 Newbie 沿用 Oldhand）。（10/22）</li>
+          <li>Card On 驗證：NB 90.32%（±2.22%，10⁶ 局）、FG 1/241、中獎率 28.6%；EB 90.92%（±1.93%，10⁶ 局）、FG 1/48；BF 94.06%（±3.48%，2×10⁴ 局）。自然 FG 平均約 1,600x，卡片要壓到低倍區間需重跑多次 FG，BF 每局約 0.35 秒。（10/22）</li>
         </ol>
       </article>
       </div>
@@ -2041,7 +2043,7 @@
         <label class="config-control" for="configSelect">
           Config
           <select id="configSelect">
-            <option value="config.js">DRAFT</option>
+            <option value="config.js">92</option>
           </select>
         </label>
         <label class="config-control" for="cardProfileSelect">
@@ -2246,7 +2248,7 @@
     const H026_CONFIG_FILES = ["config.js"];   // 彩罐熱舞 2 發想：單一 config
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
-    document.write(`<script src="./${H026_ACTIVE_CONFIG}"><\/script>`);
+    document.write(`<script src="./${H026_ACTIVE_CONFIG}?c=20261022"><\/script>`);   // c＝config 更新日，改權重時同步改，避免線上吃舊快取
   </script>
   <script>
     const Box = window.H026_BOX_DATA;
@@ -4795,7 +4797,7 @@
       appendLiveLog(`Config ${Box.rtp_label || "DRAFT"} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-21 15:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script src="../../demogame_common.js?v=20261019o"></script>
 </body>
