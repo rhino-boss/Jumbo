@@ -182,7 +182,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 最多路數 | MAXIMUM WAYS |
-| 規則說明 | ▪ 本遊戲為 {5} 輪 × {4} 列盤面，相同符號須出現在由左至右連續相鄰的轉輪上方可獲獎。 | ▪ THE GAME USES {5} REELS × {4} ROWS. MATCHING SYMBOLS MUST APPEAR ON CONSECUTIVE ADJACENT REELS FROM LEFT TO RIGHT TO WIN. |
+| 規則說明 | ▪ 本遊戲為 {5} 輪 × {4} 列盤面，相同符號須出現在由最左至右連續相鄰的轉輪上方可獲獎。 | ▪ THE GAME USES {5} REELS × {4} ROWS. MATCHING SYMBOLS MUST APPEAR ON CONSECUTIVE ADJACENT REELS FROM LEFTMOST TO RIGHT TO WIN. |
 | 規則說明 | ▪ 遊戲設定 = 最多 {1,024} 路。 | ▪ GAME SETTING = {1,024} MAXIMUM WAYS. |
 | 規則說明 | [走線圖- 1,024 MAX WAYS] | [走線圖- 1,024 MAX WAYS] |
 | 規則說明 | [走線圖-3 OF A KIND PAYS 2 WAYS] | [走線圖-3 OF A KIND PAYS 2 WAYS] |
