@@ -1,5 +1,5 @@
 window.H014_VERSION_MANIFEST = {
-  "current": "5.0.0.0",
+  "current": "5.0.1.0",
   "base_version": "5",
   "next_version": "6.0.0.0",
   "versions": [
@@ -97,6 +97,23 @@ window.H014_VERSION_MANIFEST = {
         "Bet10 R1 空白子表 R2 的 1／5 權重 ×2.94：E X 0／1／5／空 合計 2.43%→3.13%（同競品）。",
         "R4：沒得分時出倍數（每局）約 30%→16%；有得分時 R4 是倍數 Bet1 15.3%→21.5%、Bet5 41.2%→42.1%、Bet10 22.9%→28.0%（同競品）。",
         "卡片等比調回 RTP 92.0000%；EB 卡片依新 NB 重算，EB 輪帶不變。"
+      ]
+    },
+    {
+      "version": "5.0.1.0",
+      "math_key": "5.0.1",
+      "date": "2026-10-27",
+      "competitor_initial_version": false,
+      "base_config": "Versions/5.0.1.0/config.js",
+      "configs": {
+        "92A": "Versions/5.0.1.0/config_92A.js"
+      },
+      "workbooks": {
+        "92": "Versions/5.0.1.0/Source/H014192A.xlsx",
+        "92_Extra": "Versions/5.0.1.0/Source/H014192A_Extra.xlsx"
+      },
+      "changes": [
+        "相對 5.0.0.0（只改 SCR）：Normal／Extra 模型新增 OP Jackpot 頁，填入 SCR（SPS scatterComboRate：NB 118,010,000／201,409,333／206,075,333／260,128,333／292,382,000，EB 1,209,642,666／655,902,333／788,368,666／1,023,548,666／1,200,536,666）；權重與 RTP 不變。"
       ]
     }
   ]
