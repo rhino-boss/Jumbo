@@ -2254,6 +2254,7 @@
         <ol>
           <li>新增 94A（小 Bet < $2）與 92A_Bet100（大／超大 Bet > $100，最大押注 $5000）：94A 老手 BG 不變、FG +2%（NB 平均 37.5x → 40.5x、EB 37.5x → 38.7x，總 94%）；Bet100 老手 BG 上限 400x → 200x、FG／BF 上限 20,000x → 1000x，RTP 不變（92%／BF 92.5%）；Newbie 三份逐格相同，BF 94A 同 92A。（10/22）</li>
           <li>Simulator、Demogame 依押注自動選模型（模擬程式規範 §1.2.3）：老手小 Bet → 94A、中 Bet → 92A、大 Bet → 92A_Bet100，新手固定 92A；92A 權重不變。（10/22）</li>
+          <li>新增 B 版（92B／94B／92B_Bet100，比 A 版深）：老手 FG 週期 150 → 200 轉、平均 37.5x → 50x、保底 5x、(200, 1000] 0.29% → 2.08%（EB 週期 30 → 40）；BF 保底維持 10x、(200, 1000] 0.93% → 4.49%、贏錢率 30% → 15.5%；BG、新手同 A 版；Demogame 可選 AUTO B 版。（10/27）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2602,7 +2603,7 @@
       try { localStorage.removeItem("h045RuleMode"); } catch (_) {}
       window.H045_RULE_MODE = "mul";
       window.H045_BASE_DIR = "./";
-      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261016a"><\/script>`);
+      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261027a"><\/script>`);
     })();
   </script>
   <script>
@@ -2618,21 +2619,25 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261022c`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261027a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       // 2026-10-22：有 94A／92A／92A_Bet100 三套時預設 AUTO＝依押注自動選（模擬程式規範 §1.2.3：小 Bet 94A、中 Bet 92A、大 Bet 92A_Bet100；新手共用 92A）
-      const tierSet = ["94A", "92A", "92A_Bet100"].every(code => available.includes(code));
+      // 2026-10-27：加 B 版（AUTO_B＝94B／92B／92B_Bet100）
+      const tierOf = s => [`94${s}`, `92${s}`, `92${s}_Bet100`];
+      const hasSeries = s => tierOf(s).every(code => available.includes(code));
       const wanted = query.get("config") || (() => { try { return localStorage.getItem("h045ConfigCode"); } catch (_) { return ""; } })();
-      const active = (tierSet && (!wanted || wanted === "AUTO" || !available.includes(String(wanted)))) ? "AUTO"
+      const active = (wanted === "AUTO_B" && hasSeries("B")) ? "AUTO_B"
+        : (hasSeries("A") && (!wanted || wanted === "AUTO" || wanted === "AUTO_B" || !available.includes(String(wanted)))) ? "AUTO"
         : available.includes(String(wanted)) ? String(wanted) : (available[0] || "base");
       window.H045_ACTIVE_CONFIG = active;
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
       const fileOf = path => String(path).split("/").pop();
       document.write(`<script src="${folder}config.js?v=${stamp}"><\/script>`);
-      if (active === "AUTO") {
-        // 每份 config 都寫入 window.H045_CONFIG_RTP，讀完一份就存起來，最後以 92A 做版本檢查
-        for (const code of ["94A", "92A_Bet100", "92A"]) {
+      if (active === "AUTO" || active === "AUTO_B") {
+        // 每份 config 都寫入 window.H045_CONFIG_RTP，讀完一份就存起來，最後以 92A／92B 做版本檢查
+        const s = active === "AUTO_B" ? "B" : "A";
+        for (const code of [`94${s}`, `92${s}_Bet100`, `92${s}`]) {
           document.write(`<script src="${folder}${fileOf(entry.configs[code])}?v=${stamp}"><\/script>`);
           document.write(`<script>(window.H045_RTP_BY_CODE = window.H045_RTP_BY_CODE || {})["${code}"] = window.H045_CONFIG_RTP;<\/script>`);
         }
@@ -2721,11 +2726,12 @@
   function tierConfigCode(mode) {
     const base = BET_LEVELS[state.betIndex];
     const actual = base * (mode === 1 ? Number(cfg.bet_modes?.extra_bet?.cost_multiplier || 2) : 1);
-    if (cardProfile() === "newbie") return "92A";
-    return actual < 2 ? "94A" : base <= 100 ? "92A" : "92A_Bet100";
+    const s = window.H045_ACTIVE_CONFIG === "AUTO_B" ? "B" : "A";
+    if (cardProfile() === "newbie") return `92${s}`;
+    return actual < 2 ? `94${s}` : base <= 100 ? `92${s}` : `92${s}_Bet100`;
   }
   function applyTierConfig(mode = state.betMode || 0, forced = "") {
-    if (window.H045_ACTIVE_CONFIG !== "AUTO" || !window.H045_RTP_BY_CODE) return;
+    if (!String(window.H045_ACTIVE_CONFIG).startsWith("AUTO") || !window.H045_RTP_BY_CODE) return;
     const code = forced && window.H045_RTP_BY_CODE[forced] ? forced : tierConfigCode(mode);
     const rtp = window.H045_RTP_BY_CODE[code];
     if (!rtp || window.H045_TIER_CONFIG === code) return;
@@ -4056,11 +4062,12 @@
     // 只列實際存在的 Config：base（卡片關）＋ manifest entry.configs 的 RTP／Variant（Demogame規範 §1：<Config>-<Profile>）
     configSelect.innerHTML = "";
     const rtpCodes = Object.keys(entry?.configs || {}).filter(code => code !== "base");
+    if (["94B", "92B", "92B_Bet100"].every(code => rtpCodes.includes(code))) rtpCodes.unshift("AUTO_B");
     if (["94A", "92A", "92A_Bet100"].every(code => rtpCodes.includes(code))) rtpCodes.unshift("AUTO");
     for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
       const option = document.createElement("option");
       option.value = code;
-      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "AUTO（依押注）" : code;
+      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "AUTO A 版（依押注）" : code === "AUTO_B" ? "AUTO B 版（依押注）" : code;
       configSelect.appendChild(option);
     }
     configSelect.value = window.H045_ACTIVE_CONFIG || "base";
@@ -4102,9 +4109,9 @@
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "其他/數值報告_超級鑽石.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 13:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-22 13:40";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-22 13:40";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-10-27 16:38";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-27 16:38";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-27 16:38";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261019o"></script>
 </body>
 
