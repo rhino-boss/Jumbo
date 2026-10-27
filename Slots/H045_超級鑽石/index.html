@@ -2717,10 +2717,12 @@
   }
   let MAX_WIN = Infinity;
   // AUTO：依押注層級切換卡片（NB／EB 用實際押注、BF 用基礎押注判；small < $2 ≤ medium ≤ $100 < big）；新手各版共用 92A
+  // 小 Bet（< $2）看實際押注（EB × 2）；大 Bet（> $100）看基礎押注（對齊 SPS isHighBet()，2026-10-27）；BF 皆看基礎押注
   function tierConfigCode(mode) {
-    const bet = BET_LEVELS[state.betIndex] * (mode === 1 ? Number(cfg.bet_modes?.extra_bet?.cost_multiplier || 2) : 1);
+    const base = BET_LEVELS[state.betIndex];
+    const actual = base * (mode === 1 ? Number(cfg.bet_modes?.extra_bet?.cost_multiplier || 2) : 1);
     if (cardProfile() === "newbie") return "92A";
-    return bet < 2 ? "94A" : bet <= 100 ? "92A" : "92A_Bet100";
+    return actual < 2 ? "94A" : base <= 100 ? "92A" : "92A_Bet100";
   }
   function applyTierConfig(mode = state.betMode || 0, forced = "") {
     if (window.H045_ACTIVE_CONFIG !== "AUTO" || !window.H045_RTP_BY_CODE) return;

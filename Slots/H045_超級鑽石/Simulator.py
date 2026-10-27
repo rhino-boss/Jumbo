@@ -36,7 +36,7 @@ if hasattr(sys.stdout, "reconfigure"):
 CONFIG_FILE = "config.js"
 CONFIG_RTP_FILE = "AUTO"   # AUTO＝依押注檔位自動選（模擬程式規範 §1.2.3）；明寫檔名即 override
 # 檔位對應表（2026-10-22）：老手 小 Bet < $2 → 94A、中 Bet $2～$100 → 92A、大 Bet > $100 → 92A_Bet100；
-# NB／EB 用實際押注判、BF 用基礎押注判；Newbie 各版共用 → 固定 92A。最大押注 $5000。
+# 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 92A。最大押注 $5000。
 TIER_CONFIG = {"small_bet": "config_94A.js", "medium_bet": "config_92A.js", "big_bet": "config_92A_Bet100.js"}
 NEWBIE_CONFIG = "config_92A.js"
 TOTAL_ROUNDS = 100_000
@@ -885,10 +885,13 @@ def wager_for_mode(mode: int, base_bet: float) -> float:
     return base_bet * float(CFG["bet_modes"]["buy_feature"]["cost_multiplier"])
 
 
-def bet_tier_name(bet_tier_amount: float) -> str:
+def bet_tier_name(bet_tier_amount: float, big_amount: float | None = None) -> str:
+    """數學模型規範 §1.7.1（2026-10-27）：小 Bet（< $2）看 bet_tier_amount（NB／EB 實際押注、BF／SF 基礎押注）；
+    大 Bet（> $100）看基礎押注 big_amount（對齊 SPS isHighBet()）。未給 big_amount 時同 bet_tier_amount。"""
+    big_amount = bet_tier_amount if big_amount is None else big_amount
     if bet_tier_amount < 2.0:
         return "small_bet"
-    if bet_tier_amount <= 100.0:
+    if big_amount <= 100.0:
         return "medium_bet"
     return "big_bet"
 
@@ -1539,7 +1542,7 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
         "base_bet": base_bet,
         "bet_amount": bet_amount,
         "bet_tier_amount": bet_tier_amount,
-        "bet_tier": bet_tier_name(bet_tier_amount),
+        "bet_tier": bet_tier_name(bet_tier_amount, base_bet),
         "jackpot": "on" if jackpot_on else "off",
     }
 
@@ -1550,7 +1553,7 @@ def load_batch_configs(combo: dict[str, Any]) -> None:
     if str(combo.get("config_rtp_file", "AUTO")).upper() == "AUTO":
         mode, base_bet = int(combo["bet_mode"]), float(combo["base_bet"])
         tier_amount = base_bet if mode == MODE_FEATUREBUY else wager_for_mode(mode, base_bet)
-        combo["config_rtp_file"] = NEWBIE_CONFIG if combo.get("card_system_is_newbie") else TIER_CONFIG[bet_tier_name(tier_amount)]
+        combo["config_rtp_file"] = NEWBIE_CONFIG if combo.get("card_system_is_newbie") else TIER_CONFIG[bet_tier_name(tier_amount, base_bet)]
         print(f"[auto] bet_mode {mode}、base_bet {base_bet:g}（檔位金額 ${tier_amount:g}）→ {combo['config_rtp_file']}")
     rtp_path = BASE_DIR / combo["config_rtp_file"]
     CFG_RTP = load_js_config(rtp_path) if rtp_path.exists() else {}
