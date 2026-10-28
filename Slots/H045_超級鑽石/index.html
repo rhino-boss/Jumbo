@@ -3182,13 +3182,13 @@
 
       if (budget + pay >= cap) { capped = true; break; }
     }
-    // game_rule §9.1.12（2026-10-28）：本轉沒得分 → 金框輪隨機挑一格非金框、非 C1 加金框，滾輪停下時就直接是金框
+    // game_rule §9.1.12（2026-10-28）：本轉沒得分 → 金框輪隨機挑兩格非金框、非 C1 加金框，滾輪停下時就直接是金框
     // （沒得分只有初始盤面，金框不影響判獎；用 Math.random 不動 RNG 序列，也不計入金框統計，數學模型不變）
     if (!pay) {
       const spots = [];
       for (const reel of GOLD_REELS) for (let row = 0; row < 4; row++) if (!gold[reel][row] && board[reel][row] !== C1) spots.push([reel, row]);
-      if (spots.length) {
-        const [reel, row] = spots[Math.floor(Math.random() * spots.length)];
+      for (let n = 0; n < 2 && spots.length; n++) {   // 2 顆（不足就放多少算多少）
+        const [reel, row] = spots.splice(Math.floor(Math.random() * spots.length), 1)[0];
         gold[reel][row] = true;
         snapshots[0].gold[reel][row] = true;
       }
