@@ -1,5 +1,5 @@
 {
-  "current": "6.0.0.2",
+  "current": "6.0.0.3",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
@@ -200,6 +200,33 @@
       "changes": [
         "新增 B 版（92B／94B／92B_Bet100，比 A 版深）：老手 FG 週期 150 → 200 轉、平均 37.5x → 50x、保底 5x、(200, 1000] 0.29% → 2.08%（EB 週期 30 → 40）；BF 保底維持 10x、(200, 1000] 0.93% → 4.49%、贏錢率 30% → 15.5%；BG、新手同 A 版；Demogame 可選 AUTO B 版。",
         "押注層級：大 Bet（> $100）改看基礎押注（對齊 SPS isHighBet()），小 Bet（< $2）維持 NB／EB 實際押注；Simulator、Demogame 同步。"
+      ]
+    },
+    {
+      "version": "6.0.0.3",
+      "math_key": "6",
+      "date": "2026-10-28",
+      "base_config": "Versions/6.0.0.3/config.js",
+      "sources": {
+        "base": "Versions/6.0.0.3/Source/H0451.xlsx",
+        "92A": "Versions/6.0.0.3/Source/H045192A.xlsx",
+        "94A": "Versions/6.0.0.3/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/6.0.0.3/Source/H045192A_Bet100.xlsx",
+        "92B": "Versions/6.0.0.3/Source/H045192B.xlsx",
+        "94B": "Versions/6.0.0.3/Source/H045194B.xlsx",
+        "92B_Bet100": "Versions/6.0.0.3/Source/H045192B_Bet100.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js",
+        "92B": "config_92B.js",
+        "94B": "config_94B.js",
+        "92B_Bet100": "config_92B_Bet100.js"
+      },
+      "changes": [
+        "沒得分時金框輪（R2～R4）再加 2 顆金框，停輪即顯示（game_rule §9.1.12）；純表演，權重與 RTP 不變，Simulator 同步實作。"
       ]
     }
   ]

@@ -2250,6 +2250,12 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v6（6.0.0.3）</h4>
+        <ol>
+          <li>沒得分時金框輪（R2～R4）再加 2 顆金框，停輪即顯示（game_rule §9.1.12）；純表演，權重與 RTP 不變，Simulator 同步實作。（10/28）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v6（6.0.0.2）</h4>
         <ol>
           <li>新增 B 版（92B／94B／92B_Bet100，比 A 版深）：老手 FG 週期 150 → 200 轉、平均 37.5x → 50x、保底 5x、(200, 1000] 0.29% → 2.08%（EB 週期 30 → 40）；BF 保底維持 10x、(200, 1000] 0.93% → 4.49%、贏錢率 30% → 15.5%；BG、新手同 A 版；Demogame 可選 AUTO B 版。（10/27）</li>
@@ -2609,7 +2615,7 @@
       try { localStorage.removeItem("h045RuleMode"); } catch (_) {}
       window.H045_RULE_MODE = "mul";
       window.H045_BASE_DIR = "./";
-      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261028a"><\/script>`);
+      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261028b"><\/script>`);
     })();
   </script>
   <script>
@@ -2625,7 +2631,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261028a`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261028b`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       // 2026-10-22：有 94A／92A／92A_Bet100 三套時預設 AUTO＝依押注自動選（模擬程式規範 §1.2.3：小 Bet 94A、中 Bet 92A、大 Bet 92A_Bet100；新手共用 92A）
@@ -4127,8 +4133,8 @@
   </script>
   <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "其他/數值報告_超級鑽石.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-28 09:58";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-10-28 09:58";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-10-28 09:58";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-10-28 11:49";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-10-28 11:49";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261019o"></script>
 </body>
 

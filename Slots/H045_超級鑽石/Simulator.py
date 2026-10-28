@@ -80,6 +80,7 @@ EMPTY = -1
 
 # 金框不是符號，而是套在一般符號上的旗標（v2：依 Gold Count Weight 逐輪決定顆數）
 GOLD_RESULTS = ("WW", "W2")   # 小鬼 / 大鬼；倍數為翻牌後的第二段抽取
+NO_WIN_BONUS_GOLD = 2          # game_rule §9.1.12（2026-10-28）：本轉沒得分 → 金框輪再加 2 顆金框（停輪即顯示，不影響得分）
 
 MULTIPLIER_THRESHOLDS = (
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50,
@@ -254,6 +255,8 @@ class SpinResult:
     drop_symbols: Counter = field(default_factory=Counter)
     initial_board: list[list[int]] = field(default_factory=list)
     final_board: list[list[int]] = field(default_factory=list)
+    final_gold: list[list[bool]] = field(default_factory=list)
+    bonus_gold_cells: list[tuple[int, int]] = field(default_factory=list)   # §9.1.12 沒得分加的金框位置
 
 
 @dataclass
@@ -422,6 +425,16 @@ class SuperDiamond:
                 gold[reel][row] = True
                 added += 1
         return added
+
+    def add_no_win_gold(self, symbols: list[list[int]], gold: list[list[bool]]) -> list[tuple[int, int]]:
+        """game_rule §9.1.12：本轉沒得分時，在金框輪隨機挑 NO_WIN_BONUS_GOLD 格（不重複）非金框、非 C1 加金框；
+        不足就放多少算多少。沒得分代表盤面無連線，金框不改判獎 → 得分／RTP 不變；前端停輪時就要顯示這些金框。"""
+        spots = [(reel, row) for reel in self.gold_reels for row in range(4)
+                 if not gold[reel][row] and symbols[reel][row] != C1]
+        self.rng.shuffle(spots)
+        for reel, row in spots[:NO_WIN_BONUS_GOLD]:
+            gold[reel][row] = True
+        return spots[:NO_WIN_BONUS_GOLD]
 
     def draw_gold(self, scene: str, symbols: list[list[int]]) -> list[list[bool]]:
         """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
@@ -652,8 +665,11 @@ class SuperDiamond:
             if result.pay >= cap:
                 break
 
+        if result.pay <= 0:
+            result.bonus_gold_cells = self.add_no_win_gold(symbols, gold)
         result.scatter_count = sum(symbol == C1 for column in symbols for symbol in column)
         result.final_board = [reel[:] for reel in symbols]
+        result.final_gold = [reel[:] for reel in gold]
         result.mult_left = sum(1 for reel in range(5) for row in range(4)
                                if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
         return result
