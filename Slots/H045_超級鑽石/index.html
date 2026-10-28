@@ -3182,6 +3182,17 @@
 
       if (budget + pay >= cap) { capped = true; break; }
     }
+    // game_rule §9.1.12（2026-10-28）：本轉沒得分 → 金框輪隨機挑一格非金框、非 C1 補上金框（純表演：轉已結束、不判獎，
+    // 用 Math.random 不動 RNG 序列，也不計入金框統計，數學模型不變）
+    if (!pay) {
+      const spots = [];
+      for (const reel of GOLD_REELS) for (let row = 0; row < 4; row++) if (!gold[reel][row] && board[reel][row] !== C1) spots.push([reel, row]);
+      if (spots.length) {
+        const [reel, row] = spots[Math.floor(Math.random() * spots.length)];
+        gold[reel][row] = true;
+        snapshots.push({ type: "gold-add", board: cloneBoard(board), mults: cloneBoard(mults), gold: cloneBoard(gold), pre: goldPre && cloneBoard(goldPre), hits: [], converted: [`${reel},${row}`], combo, multiplier: multipliers[0], message: "Golden frame +1" });
+      }
+    }
     return {
       pay, combo, scatter: scatterCount(board), golden, w2Events, multWild, bigMult, goldenTally, capped,
       multUsed, bigScore: w2Events > 0 && bigScored, goldSeen, goldAppeared,
