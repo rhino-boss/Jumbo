@@ -112,6 +112,12 @@ def apply(path):
     for old in soup.select("#card-v2, #card-v2-js, #card-v2-font"):
         old.decompose()
     head = soup.head or soup
+    if not soup.find("meta", attrs={"name": "viewport"}):
+        # 少了這行，手機會以 980px 版面渲染再縮放，卡片寬度看起來會不一致
+        vp = soup.new_tag("meta")
+        vp.attrs["name"] = "viewport"
+        vp.attrs["content"] = "width=device-width, initial-scale=1"
+        head.insert(0, vp)
     head.append(BeautifulSoup(FONT, "html.parser"))
     st = soup.new_tag("style", id="card-v2")
     st.string = CSS
