@@ -165,7 +165,8 @@ html.embedded{scrollbar-width:none; -ms-overflow-style:none}
 html.embedded::-webkit-scrollbar{display:none}
 html.embedded body{background:transparent}
 html.embedded .wrap{max-width:none; padding:0}
-html.embedded header.page, html.embedded .tabs, html.embedded .toc{display:none!important}
+html.embedded header.page, html.embedded .tabs, html.embedded .toc,
+html.embedded .toc:not([hidden]):has(.toc-doc){display:none!important}
 html.embedded .body-row{display:block; padding:0}
 html.embedded main{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}
 html.embedded .panel h1{color:var(--accent); font-weight:500; font-size:30px}
