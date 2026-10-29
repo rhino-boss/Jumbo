@@ -946,7 +946,9 @@ def build_hub(root: Path, sites, embedded=None, metas=None):
     def js(obj):
         return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
 
-    info = {key: {"name": name, "src": "" if key in embedded else src, "meta": metas.get(key, {})}
+    from datetime import datetime
+    stamp = datetime.now().strftime("%Y%m%d%H%M")   # 網頁改版後避免吃到快取的舊 iframe
+    info = {key: {"name": name, "src": "" if key in embedded else f"{src}?v={stamp}", "meta": metas.get(key, {})}
             for key, name, src in sites}
     keys = [k for k in HUB_ORDER if k in info] + [k for k in info if k not in HUB_ORDER]
     top = [k for k in keys if k in HUB_TOP]
