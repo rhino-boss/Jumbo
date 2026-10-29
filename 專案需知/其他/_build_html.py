@@ -77,9 +77,9 @@ PRIVATE_SITES = [
 ]
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
 EMBED_KEYS = {"mine"}
-# 入口左側導覽：HUB_TOP 列在最上層，其餘歸「開發規範」；順序依 HUB_ORDER
-HUB_TOP = {"flow"}
-HUB_ORDER = ["flow", "mine", "omniplay", "landbase", "reskin"]
+# 入口左側導覽：(大標, [站 key...])，大標下列各站；沒列到的站歸最後一個大標
+HUB_SECTIONS = [("開發流程", ["flow"]), ("開發規範", ["mine", "omniplay", "landbase", "reskin"])]
+HUB_ORDER = [k for _t, ks in HUB_SECTIONS for k in ks]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
 _SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -958,13 +958,11 @@ def build_hub(root: Path, sites, embedded=None, metas=None):
     info = {key: {"name": name, "src": "" if key in embedded else f"{src}?v={stamp}", "meta": metas.get(key, {})}
             for key, name, src in sites}
     keys = [k for k in HUB_ORDER if k in info] + [k for k in info if k not in HUB_ORDER]
-    top = [k for k in keys if k in HUB_TOP]
-    spec = [k for k in keys if k not in HUB_TOP]
-    nav = "".join(f'<li><a class="top" href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in top)
-    if spec:
-        nav += ('<li><span class="top">開發規範</span><ul class="sub">'
-                + "".join(f'<li><a href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in spec)
-                + "</ul></li>")
+    sections = [(t, [k for k in ks if k in info]) for t, ks in HUB_SECTIONS]
+    sections[-1][1].extend(k for k in keys if k not in HUB_ORDER)
+    nav = "".join(f'<li><span class="top">{t}</span><ul class="sub">'
+                  + "".join(f'<li><a href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in ks)
+                  + "</ul></li>" for t, ks in sections if ks)
     docs = "".join(f'<script type="application/json" id="doc-{key}">{js(page)}</script>'
                    for key, page in embedded.items())
     page = f"""<!DOCTYPE html>
