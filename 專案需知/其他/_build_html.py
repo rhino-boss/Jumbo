@@ -70,8 +70,10 @@ FLOW_GROUPS = [("開發流程", ["flow"])]
 # 不同步出去的站
 PRIVATE_SITES = [
     ("mine", "Mine", MINE_TAB_IDS, "mine_specification.html", "Mine 開發規範", MINE_GROUPS),
-    ("flow", "開發流程", FLOW_TAB_IDS, "開發流程.html", "開發流程", FLOW_GROUPS),
+    ("flow", "開發流程", FLOW_TAB_IDS, "development_process.html", "開發流程", FLOW_GROUPS),
 ]
+# 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
+EMBED_KEYS = {"mine"}
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
 _SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -538,10 +540,11 @@ def line_groups(line):
 
 
 def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict,
-               groups=None):
+               groups=None, embed=False):
     """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。
 
     groups：[(大分類, [tab_id...])]；省略時每份文件自成一類。
+    embed：True 時不寫檔，回傳整頁 HTML（內嵌進入口用）。
     """
     global LINKS, MD_DIR, OUT_DIR
     LINKS = links
@@ -870,6 +873,8 @@ document.addEventListener('click', function(e) {{
 </body>
 </html>
 """
+    if embed:   # 不另存檔，整頁內嵌進入口
+        return page
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(page, encoding="utf-8")
     print(f"OK: {rel_to_tree(output)} 已更新（{output.stat().st_size:,} bytes）")
@@ -885,10 +890,18 @@ def rel_to_tree(path: Path) -> Path:
     return path
 
 
-def build_hub(root: Path, sites):
-    """最外層入口：上方三產線按鈕，下方內嵌所選產線的網頁；網址 #omniplay／#landbase／#reskin 記住所選。"""
-    buttons = "".join(f'<a href="#{key}" data-key="{key}" data-src="{src}">{name}</a>'
+def build_hub(root: Path, sites, embedded=None):
+    """最外層入口：上方各站按鈕，下方內嵌所選站的網頁；網址 #omniplay／#landbase／#reskin… 記住所選。
+
+    embedded：{key: 整頁 HTML}；這些站不另存檔，整頁放進入口、以 iframe srcdoc 顯示。
+    """
+    import json
+    embedded = embedded or {}
+    buttons = "".join(f'<a href="#{key}" data-key="{key}" data-src="{"" if key in embedded else src}">{name}</a>'
                       for key, name, src in sites)
+    docs = "".join(f'<script type="application/json" id="doc-{key}">'
+                   f'{json.dumps(page, ensure_ascii=False).replace("</", "<\\/")}</script>'
+                   for key, page in embedded.items())
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -918,6 +931,7 @@ iframe{{flex:1; width:100%; border:0; display:block; background:var(--surface)}}
 <body>
 <header><h1>iGaming 開發規範</h1><nav aria-label="產線">{buttons}</nav></header>
 <iframe id="site" title="產線規範"></iframe>
+{docs}
 <script>
 var frame = document.getElementById('site');
 var btns = Array.prototype.slice.call(document.querySelectorAll('nav a'));
@@ -928,14 +942,21 @@ function show() {{
   var h = decodeURIComponent(location.hash.slice(1));
   var key = h.split('/')[0], sub = h.split('/').slice(1).join('/');
   var b = btns.filter(function (x) {{ return x.dataset.key === key; }})[0] || btns[0];
-  frame.src = b.dataset.src + (sub ? '#' + sub : '');
+  var doc = document.getElementById('doc-' + b.dataset.key);
+  if (doc) {{   // 內嵌站：整頁放在入口裡
+    frame.removeAttribute('src');
+    frame.srcdoc = JSON.parse(doc.textContent);
+  }} else {{
+    frame.removeAttribute('srcdoc');
+    frame.src = b.dataset.src + (sub ? '#' + sub : '');
+  }}
   mark(b.dataset.key);
 }}
 // 站內連到其他產線時，按鈕跟著 iframe 目前的網頁亮起
 frame.addEventListener('load', function () {{
   try {{
     var path = decodeURIComponent(frame.contentWindow.location.pathname);
-    btns.forEach(function (b) {{ if (path.indexOf(b.dataset.src) >= 0) mark(b.dataset.key); }});
+    btns.forEach(function (b) {{ if (b.dataset.src && path.indexOf(b.dataset.src) >= 0) mark(b.dataset.key); }});
   }} catch (e) {{}}
 }});
 window.addEventListener('hashchange', show);
@@ -979,7 +1000,8 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
         for tab_id, _, filename in site[3]:
             docs.setdefault(Path(os.path.relpath(site[2] / filename, root)).as_posix(), (i, tab_id))
 
-    for i, (_key, name, base, site_tabs, output, site_title, site_groups) in enumerate(sites):
+    embedded = {}   # key → 整頁 HTML（內嵌進入口）
+    for i, (key, name, base, site_tabs, output, site_title, site_groups) in enumerate(sites):
         links = {}
         for doc, (j, tab_id) in docs.items():
             if j == i:
@@ -991,12 +1013,17 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
             links[Path(os.path.relpath(base / filename, root)).as_posix()] = ("tab", tab_id)
         LOCAL_ONLY = True   # 各站（Omniplay／Landbase／Reskin／Mine／開發流程）互不連結，只連站內頁籤
         try:
-            build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
+            page = build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups,
+                              embed=key in EMBED_KEYS)
+            if page:
+                embedded[key] = page
+                if output.exists():   # 舊版另存的檔案
+                    output.unlink()
         finally:
             LOCAL_ONLY = False
 
     build_hub(root, [(key, name, Path(os.path.relpath(output, root)).as_posix())
-                     for key, name, _b, _t, output, _s, _g in sites])
+                     for key, name, _b, _t, output, _s, _g in sites], embedded)
 
 
 def publish_team():

@@ -11,11 +11,11 @@
 | `專案需知/開發規範/Omniplay/` | **Omniplay** | 主流遊戲的規範（總覽、Knowhow、系統相關、數學設計、送驗相關），彙整版為 `omniplay_specification.html` |
 | `專案需知/開發規範/Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](開發規範/Landbase/導覽.md)、[系統機制](開發規範/Landbase/系統機制.md)、[數學模型規範](開發規範/Landbase/數學模型規範.md)、[送驗規範](開發規範/Landbase/送驗規範.md)（差異式，未覆寫者沿用 Omniplay），彙整版為 `landbase_specification.html` |
 | `專案需知/開發規範/Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（GC／SC 雙幣）；目前有 [數學模型規範.md](開發規範/Reskin/數學模型規範.md)（差異式），彙整版為 `reskin_specification.html` |
-| `專案需知/開發規範/`（直接放 md） | **Mine** | 只給自己用、不同步出去：[產出與紀錄規範](開發規範/產出與紀錄規範.md)、[數學文件規範](開發規範/數學文件規範.md)、[模擬程式規範](開發規範/模擬程式規範.md)、[Demogame規範](開發規範/Demogame規範.md)、[提案報告規範](開發規範/提案報告規範.md)，彙整版為 `mine_specification.html` |
-| `專案需知/開發流程/` | 開發流程 | 先做什麼、再做什麼：[開發流程.md](開發流程/開發流程.md)，彙整版為 `開發流程.html`；不同步出去 |
+| `專案需知/開發規範/`（直接放 md） | **Mine** | 只給自己用、不同步出去：[產出與紀錄規範](開發規範/產出與紀錄規範.md)、[數學文件規範](開發規範/數學文件規範.md)、[模擬程式規範](開發規範/模擬程式規範.md)、[Demogame規範](開發規範/Demogame規範.md)、[提案報告規範](開發規範/提案報告規範.md)，不另存網頁，只在入口 `igaming_specification.html` 裡看 |
+| `專案需知/開發流程/` | 開發流程 | 先做什麼、再做什麼：[開發流程.md](開發流程/開發流程.md)，彙整版為 `development_process.html`；不同步出去 |
 | `專案需知/其他/` | — | 工具腳本（`_build_html.py`、`_check_xlsx_style.py`）與本總覽 |
 
-任何一份 .md 更新後，必須執行 `其他/_build_html.py`；腳本會重建 `專案需知/` 最外層的全部 HTML：`omniplay_specification.html`、`landbase_specification.html`、`reskin_specification.html`、`mine_specification.html`、`開發流程.html`，以及入口 `igaming_specification.html`。Omniplay／Landbase／Reskin 三站會同步給對應產線，Mine 與開發流程不同步出去。產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用 Omniplay 規範。
+任何一份 .md 更新後，必須執行 `其他/_build_html.py`；腳本會重建 `專案需知/` 最外層的全部 HTML：`omniplay_specification.html`、`landbase_specification.html`、`reskin_specification.html`、`development_process.html`，以及入口（Mine 整頁內嵌在入口裡，不另存檔） `igaming_specification.html`。Omniplay／Landbase／Reskin 三站會同步給對應產線，Mine 與開發流程不同步出去。產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用 Omniplay 規範。
 
 ## 2. 文件清單
 
@@ -89,7 +89,7 @@ H0xx_遊戲名稱/
 
 ## 5. 維護規則：HTML 同步
 
-本資料夾最外層的 `igaming_specification.html` 是入口，上方切換 Omniplay／Landbase／Reskin／Mine／開發流程；各站網頁都放在 `專案需知/` 最外層：`omniplay_specification.html`、`landbase_specification.html`、`reskin_specification.html`、`mine_specification.html`、`開發流程.html`，皆由 `_build_html.py` 從 md 自動產生。
+本資料夾最外層的 `igaming_specification.html` 是入口，上方切換 Omniplay／Landbase／Reskin／Mine／開發流程；各站網頁都放在 `專案需知/` 最外層：`omniplay_specification.html`、`landbase_specification.html`、`reskin_specification.html`、`development_process.html`（Mine 內嵌在入口裡），皆由 `_build_html.py` 從 md 自動產生。
 
 - **任何一份 `.md` 更新後，必須在同一次修改中重跑產生器同步 HTML**：
 
