@@ -1053,7 +1053,7 @@ function renderToc() {{
   (m.groups || []).forEach(function (g) {{
     var ids = g[1], active = ids.indexOf(cur.tab) >= 0;
     out += '<li><a href="#" data-tab="' + ids[0] + '"' + (active ? ' class="on"' : '') + '>' + esc(g[0]) + '</a>';
-    if (active) {{
+    {{   // 全部展開，不折疊
       out += '<ul>';
       if (ids.length > 1) {{
         ids.forEach(function (t) {{
@@ -1061,7 +1061,7 @@ function renderToc() {{
         }});
       }} else {{
         ((m.toc || {{}})[ids[0]] || []).forEach(function (s) {{
-          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (s[1] === cur.anchor ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
+          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (active && s[1] === cur.anchor ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
         }});
       }}
       out += '</ul>';
