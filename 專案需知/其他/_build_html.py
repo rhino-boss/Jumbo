@@ -25,7 +25,7 @@ SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料�
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
-MINE_TAB_IDS = ["overview", "glossary", "outputs", "sim", "demo", "proposal", "report", "demoreport"]
+MINE_TAB_IDS = ["overview", "glossary", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
 FLOW_TAB_IDS = ["flow"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
@@ -33,6 +33,7 @@ TABS = [
     ("guide", "總覽", "開發規範/Omniplay/導覽.md"),
     ("overview", "總覽", "其他/_README.md"),
     ("glossary", "專有名詞", "開發規範/專有名詞.md"),
+    ("gamerule", "GameRule規範", "開發規範/GameRule規範.md"),
     ("report", "數值報告規範", "開發規範/數值報告規範.md"),
     ("demoreport", "Demo報告規範", "開發規範/Demo報告規範.md"),
     ("knowhow", "Knowhow", "開發規範/Omniplay/Knowhow.md"),
@@ -65,6 +66,7 @@ GROUPS = [
 MINE_GROUPS = [
     ("總覽", ["overview", "glossary"]),
     ("產出與紀錄", ["outputs"]),
+    ("Game Rule", ["gamerule"]),
     ("模擬程式＋Demogame", ["sim", "demo"]),
     ("報告", ["proposal", "report", "demoreport"]),
 ]
@@ -100,6 +102,8 @@ GROUP_ICONS = {
     # 產出與紀錄：清單
     "產出與紀錄": _SVG.format('<path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/>'
                               '<path d="M4 6l1 1 2-2"/><path d="M4 12l1 1 2-2"/><path d="M4 18l1 1 2-2"/>'),
+    # Game Rule：規則書
+    "Game Rule": _SVG.format('<path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h6"/><path d="M8 13h6"/>'),
     # 數學文件：文件
     "數學文件": _SVG.format('<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 12h6"/><path d="M9 16h6"/>'),
     # 送驗相關：盾牌勾選
