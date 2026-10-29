@@ -11,7 +11,7 @@
 | `專案需知/開發規範/Omniplay/` | **Omniplay** | 主流遊戲的規範（總覽、Knowhow、系統相關、數學設計、送驗相關），彙整版為 `omniplay_specification.html` |
 | `專案需知/開發規範/Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](開發規範/Landbase/導覽.md)、[系統機制](開發規範/Landbase/系統機制.md)、[數學模型規範](開發規範/Landbase/數學模型規範.md)、[送驗規範](開發規範/Landbase/送驗規範.md)（差異式，未覆寫者沿用 Omniplay），彙整版為 `landbase_specification.html` |
 | `專案需知/開發規範/Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（GC／SC 雙幣）；目前有 [數學模型規範.md](開發規範/Reskin/數學模型規範.md)（差異式），彙整版為 `reskin_specification.html` |
-| `專案需知/開發規範/`（直接放 md） | **Mine** | 只給自己用、不同步出去：[產出與紀錄規範](開發規範/產出與紀錄規範.md)、[數學文件規範](開發規範/數學文件規範.md)、[模擬程式規範](開發規範/模擬程式規範.md)、[Demogame規範](開發規範/Demogame規範.md)、[提案報告規範](開發規範/提案報告規範.md)，不另存網頁，只在入口 `igaming_specification.html` 裡看 |
+| `專案需知/開發規範/`（直接放 md） | **Mine** | 只給自己用、不同步出去：[產出與紀錄規範](開發規範/產出與紀錄規範.md)、[模擬程式規範](開發規範/模擬程式規範.md)、[Demogame規範](開發規範/Demogame規範.md)、[提案報告規範](開發規範/提案報告規範.md)，不另存網頁，只在入口 `igaming_specification.html` 裡看 |
 | `專案需知/開發流程/` | 開發流程 | 先做什麼、再做什麼：[開發流程.md](開發流程/開發流程.md)，彙整版為 `development_process.html`；不同步出去 |
 | `專案需知/其他/` | — | 工具腳本（`_build_html.py`、`_check_xlsx_style.py`）與本總覽 |
 
@@ -23,7 +23,7 @@
 |---|---|
 | [開發流程.md](開發流程/開發流程.md) | 數學開發流程、必要產出文件、製作順序、階段關卡、各階段操作方式、重跑範圍、禁止事項與數學完成條件。 |
 | [數學模型規範.md](開發規範/Omniplay/數學模型規範.md) | 數學模型必要內容、命名、版本規則、押注選項、RTP 配置、彩金配置、Bet Mode、卡片倍率區間；Card System 與合理性檢查。 |
-| [數學文件規範.md](開發規範/數學文件規範.md) | Game Rule、Help、Game Description、PARsheet 的內容與交付規範。 |
+| [數學文件規範.md](開發規範/Omniplay/數學文件規範.md) | Game Rule、Help、Game Description、PARsheet 的內容與交付規範。 |
 | [送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) | 送驗交付物（Game Description DOCX、Math Document Description、數學模型送驗版）的命名、格式來源、內容規則、禁止內容與交付前檢查。 |
 | [模擬程式規範.md](開發規範/模擬程式規範.md) | Simulator 程式架構、`BATCH_RUNS`、Console 輸出、報表格式、驗證清單；Config 的轉檔、資料、驗證與版本規範。 |
 | [Demogame規範.md](開發規範/Demogame規範.md) | Demogame 用途與載入、共用／By Game 區域、補牌方式、Debug 與對帳、交付檢查。 |
@@ -59,8 +59,8 @@ H0xx_遊戲名稱/
 |---|---|---|
 | 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`注意事項.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[產出與紀錄規範.md](開發規範/產出與紀錄規範.md)第 1 節） |
 | `Source/` | 數學模型 `H0xx1*.xlsx` | [數學模型規範.md](開發規範/Omniplay/數學模型規範.md) |
-| `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md` | [數學文件規範.md](開發規範/數學文件規範.md)、[送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) |
-| `文件/PARsheet/` | PARsheet（主檔名加 `R`，底線後綴在 `R` 之後） | [數學文件規範.md](開發規範/數學文件規範.md) PARsheet 節 |
+| `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md` | [數學文件規範.md](開發規範/Omniplay/數學文件規範.md)、[送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) |
+| `文件/PARsheet/` | PARsheet（主檔名加 `R`，底線後綴在 `R` 之後） | [數學文件規範.md](開發規範/Omniplay/數學文件規範.md) PARsheet 節 |
 | `文件/{GameID}/` | 送驗資料夾 | [送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) 1.1 |
 | `其他/` | `數值報告_<遊戲中文名>.md`＋`.html` | [開發流程.md](開發流程/開發流程.md) 5.9 |
 | `Record/` | 模擬報表 `.xlsx` | [模擬程式規範.md](開發規範/模擬程式規範.md) |
@@ -76,7 +76,7 @@ H0xx_遊戲名稱/
 1. 本 README：共通原則與完成條件。
 2. [開發流程.md](開發流程/開發流程.md)：整體流程、製作順序與階段關卡。
 3. [數學模型規範.md](開發規範/Omniplay/數學模型規範.md)：建立數學模型與 Card System 前必讀。
-4. [數學文件規範.md](開發規範/數學文件規範.md)：撰寫 Game Rule、Help 等文件前必讀。
+4. [數學文件規範.md](開發規範/Omniplay/數學文件規範.md)：撰寫 Game Rule、Help 等文件前必讀。
 5. [送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md)：製作 Game Description DOCX、Math Document Description 與數學模型送驗版前必讀。
 6. [模擬程式規範.md](開發規範/模擬程式規範.md)：撰寫 Simulator 與產生 Config 前必讀。
 7. [Demogame規範.md](開發規範/Demogame規範.md)：製作 Demogame 前必讀。

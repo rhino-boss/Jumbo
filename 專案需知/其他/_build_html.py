@@ -25,7 +25,7 @@ SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料�
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
-MINE_TAB_IDS = ["overview", "outputs", "docs", "sim", "demo", "proposal"]
+MINE_TAB_IDS = ["overview", "outputs", "sim", "demo", "proposal"]
 FLOW_TAB_IDS = ["flow"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
@@ -36,7 +36,7 @@ TABS = [
     ("flow", "開發流程", "開發流程/開發流程.md"),
     ("outputs", "產出與紀錄規範", "開發規範/產出與紀錄規範.md"),
     ("math", "數學模型規範", "開發規範/Omniplay/數學模型規範.md"),
-    ("docs", "數學文件規範", "開發規範/數學文件規範.md"),
+    ("docs", "數學文件規範", "開發規範/Omniplay/數學文件規範.md"),
     ("submission", "送驗文件規範", "開發規範/Omniplay/送驗文件規範.md"),
     ("sim", "模擬程式規範", "開發規範/模擬程式規範.md"),
     ("demo", "Demogame規範", "開發規範/Demogame規範.md"),
@@ -55,13 +55,13 @@ GROUPS = [
     ("Knowhow", ["knowhow"]),
     ("系統相關", ["mechanism", "ceiling", "script", "stress", "backend"]),
     ("數學設計", ["math"]),
+    ("數學文件", ["docs"]),
     ("送驗相關", ["submission"]),
 ]
 # Mine 網頁的頁籤分組
 MINE_GROUPS = [
     ("總覽", ["overview"]),
     ("產出與紀錄", ["outputs"]),
-    ("數學文件", ["docs"]),
     ("模擬程式＋Demogame", ["sim", "demo"]),
     ("提案", ["proposal"]),
 ]
@@ -137,12 +137,13 @@ LINE_GROUP_OF = {
 
 # 團隊版（Omniplay 團隊）：只放 Omniplay 站的規範，發佈到共享資料夾（Mine、開發流程、其他產線都不外放）
 TEAM_DIR = Path(r"\\192.168.139.6\Simulate\專案需知")
-TEAM_TAB_IDS = ["guide", "knowhow", "math", "submission", "mechanism", "ceiling", "script", "stress"]
+TEAM_TAB_IDS = ["guide", "knowhow", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
 TEAM_GROUPS = [
     ("總覽", ["guide"]),
     ("Knowhow", ["knowhow"]),
     ("系統相關", ["mechanism", "ceiling", "script", "stress"]),
     ("數學設計", ["math"]),
+    ("數學文件", ["docs"]),
     ("送驗相關", ["submission"]),
 ]
 TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
