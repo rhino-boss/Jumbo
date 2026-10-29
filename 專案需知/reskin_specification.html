@@ -4,378 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reskin 開發規範</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-:root{
-  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
-  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
-  --rule:#e3e6ea; --grid:#edf0f3;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;
-  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
-}
-@media (prefers-color-scheme:dark){
-  :root:where(:not([data-theme="light"])){
-    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
-    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
-    --rule:#33353a; --grid:#2a2c30;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
-  }
-}
-:root[data-theme="dark"]{
-  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
-  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
-  --rule:#33353a; --grid:#2a2c30;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
-}
+:root{--surface:#f6f5f1; --panel:#ffffff; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#dcdad3;
+  --accent:#c8501e; --brand:#f05133;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+  --surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}}
+:root[data-theme="dark"]{--surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}
 *{box-sizing:border-box}
-body{margin:0; background:var(--surface); color:var(--ink);
-  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
-.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}
-header.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
-.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
-h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
-.meta{margin:0; color:var(--ink-2); font-size:13.5px}
-.lines{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0}
-.lines a{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:3px 13px; margin:0}
-.lines a:hover{color:var(--s1); border-color:var(--s1)}
-.lines a.on{color:var(--panel); background:var(--s1); border-color:var(--s1); font-weight:600}
-.meta code{font-family:var(--font-mono); font-size:12.5px}
-/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
-   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
-.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
-  overflow-x:auto; overflow-y:hidden;
-  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */
-  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
-.tabs::-webkit-scrollbar{display:none}
-.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
-  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
-  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
-.tab:hover{color:var(--ink); background:var(--panel-2)}
-.tab-ico{width:14px; height:14px; vertical-align:-2px; margin-right:6px}
-.tab.tab-hi, .tab.tab-hi:hover, .tab.tab-hi[aria-selected="true"]{color:var(--warn)}
-.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
-  border-color:var(--rule); border-bottom-color:var(--panel)}
-.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
-.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}
-.toc{position:sticky; top:52px; width:236px; flex:none;
-  max-height:calc(100vh - 76px); overflow-y:auto;
-  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}
-.toc[hidden]{display:none}
-/* 目錄過長時仍可滾動，但不顯示拉條 */
-.toc{scrollbar-width:none; -ms-overflow-style:none}
-.toc::-webkit-scrollbar{display:none}
-.toc a{display:block; color:var(--ink-3); text-decoration:none;
-  padding:3px 11px; border-left:2px solid var(--rule)}
-.toc a:hover{color:var(--s1); border-left-color:var(--s1)}
-.toc a.toc-3{padding-left:25px}
-.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}
-.toc a.toc-doc:not(:first-child){margin-top:8px}
-.toc a.toc-doc.on{color:var(--s1)}
-main{flex:1; min-width:0}
-.panel[hidden]{display:none}
-.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
-h2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;
-  padding-bottom:7px; border-bottom:1px solid var(--rule)}
-h3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}
-h4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}
-p{margin:0 0 11px; max-width:86ch}
-ul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}
-li{margin:3px 0}
-li.check{list-style:none; margin-left:-20px}
-.cb{color:var(--s1); margin-right:4px}
-code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
-  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
-pre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;
-  padding:13px 16px; overflow-x:auto; margin:0 0 16px;
-  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}
-pre code{background:none; border:none; padding:0; font-size:inherit}
-strong{font-weight:600; color:var(--ink)}
-a{color:var(--s1)}
-.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
-  background:var(--panel); margin:0 0 18px}
-table{border-collapse:collapse; width:100%; font-size:1em}
-th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
-th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;
-  letter-spacing:.03em; white-space:nowrap}
-td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
-  font-variant-numeric:tabular-nums; font-size:1em}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:var(--panel-2)}
-hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
-.tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}
-.tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}
-/* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
-:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){margin:0 .3em}
-:is(strong,.tune,a) :is(strong,.tune,code){margin:0}
-.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}
-.tl{min-width:620px; display:flex; flex-direction:column; gap:4px}
-.tl-row{display:grid; grid-template-columns:6em 1fr; align-items:start}
-.tl-lane{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}
-.tl-axis-name{color:var(--ink-3); font-weight:500; padding-top:2px}
-.tl-track{position:relative; height:52px; border-bottom:1px dashed var(--grid)}
-.tl-row:first-child .tl-track{height:36px}
-.tl-bar{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;
-  text-align:center; white-space:nowrap; overflow:hidden}
-.tl-bar.phase{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}
-.tl-bar.phase2{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}
-.tl-bar.stop{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}
-.tl-bar.event{background:var(--s2); opacity:.85; height:16px; top:6px}
-.tl-label{position:absolute; top:24px; font-size:1em; color:var(--ink); white-space:nowrap}
-.tl-axis{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}
-.tl-tick{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
-  color:var(--ink-3); padding-top:5px; white-space:nowrap}
-.tl-tick::before{content:""; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}
-mark{font-weight:600; padding:1px 6px; border-radius:3px}
-mark.hl-warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}
-mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}
-.flow{margin:6px 0 20px; max-width:86ch}
-.step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}
-.step-rail{display:flex; flex-direction:column; align-items:center}
-.step-dot{width:28px; height:28px; border-radius:50%; border:1.5px solid var(--s1); color:var(--s1);
-  display:grid; place-items:center; font-family:var(--font-mono); font-size:12.5px; font-weight:600; background:var(--panel)}
-.step-line{flex:1; width:1.5px; background:var(--rule); min-height:12px}
-.step:last-child .step-line{background:transparent}
-.step-body{padding:3px 0 18px; min-width:0}
-.step-title{font-weight:600}
-.step-desc{color:var(--ink-2); font-size:1em; margin-top:2px}
-.branches{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}
-.branch{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:1em}
-.pill{font-size:1em; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}
-.pill.ok{color:var(--s3); background:color-mix(in srgb,var(--s3) 15%,transparent)}
-.pill.stop{color:var(--s2); background:color-mix(in srgb,var(--s2) 15%,transparent)}
-@media (max-width:900px){
-  .body-row{flex-direction:column; gap:14px}
-  .toc{display:none!important}
-  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;
-    flex-wrap:wrap; gap:4px 16px; padding:0}
-  .toc a:not(.toc-doc){display:none}
-  .toc a.toc-doc{padding:0; margin:0!important}
+html,body{height:100%; margin:0}
+body{display:flex; flex-direction:column; background:var(--surface); color:var(--ink); font-family:var(--font-sans)}
+/* 不顯示拉條，仍可上下捲動 */
+aside, iframe{scrollbar-width:none; -ms-overflow-style:none}
+aside::-webkit-scrollbar{display:none}
+header{display:flex; align-items:center; gap:12px; padding:18px 28px 14px}
+.logo{width:34px; height:34px; border-radius:6px; background:var(--brand); transform:rotate(45deg); flex:none;
+  display:grid; place-items:center}
+.logo span{transform:rotate(-45deg); color:#fff; font-weight:700; font-size:15px}
+h1{margin:0 0 0 6px; font-size:22px; font-weight:500; color:var(--ink-2); letter-spacing:-.01em}
+h1 b{color:var(--ink); font-weight:600}
+.layout{flex:1; min-height:0; display:flex; gap:26px; padding:0 28px 22px}
+aside{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}
+.nav{list-style:none; margin:0 0 22px; padding:0}
+.nav > li{margin:0 0 6px}
+.nav .top{display:block; font-size:17px; font-weight:500; color:var(--ink-2); text-decoration:none; padding:3px 0}
+.nav a.top:hover{color:var(--accent)}
+.nav .sub{list-style:none; margin:4px 0 0; padding:0 0 0 18px}
+.nav .sub a{display:block; font-size:14px; color:var(--ink-2); text-decoration:none; padding:3px 0}
+.nav .sub a:hover{color:var(--accent)}
+.nav a.on, .nav span.top.on{color:var(--accent); font-weight:600}
+.nav a:focus, .toc a:focus{outline:none}
+.nav a:focus-visible, .toc a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.toc{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}
+.toc-title{font-size:16px; font-weight:600; margin:0 0 8px}
+.toc ul{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}
+.toc li{margin:3px 0; font-size:13.5px; line-height:1.4}
+.toc ul ul{padding-left:14px; margin:3px 0 6px; list-style:none}
+.toc ul ul li{font-size:12.5px}
+.toc a{color:var(--ink-3); text-decoration:none}
+.toc a:hover{color:var(--accent)}
+.toc a.on{color:var(--accent); font-weight:600}
+.toc .doc{color:var(--ink-2)}
+main{flex:1; min-width:0; display:flex}
+iframe{flex:1; width:100%; height:100%; border:0; display:block; background:transparent}
+@media (max-width:760px){
+  header{padding:14px 16px 10px}
+  .layout{flex-direction:column; padding:0 16px 16px; gap:14px}
+  aside{width:auto; overflow:visible; padding:0}
+  main{height:80vh; flex:none}
 }
-/* 表格、程式碼、時間軸：藏拉條，仍可橫向捲動（觸控板／觸控／滑鼠拖曳） */
-.tbl-wrap, pre, .tl-wrap{scrollbar-width:none; -ms-overflow-style:none}
-.tbl-wrap::-webkit-scrollbar, pre::-webkit-scrollbar, .tl-wrap::-webkit-scrollbar{display:none}
-.drag-x{cursor:grab}
-.drag-x.dragging{cursor:grabbing; user-select:none}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
-/* 嵌入入口時：頁首、頁籤、左側目錄由入口負責，這裡只留內文；藏拉條、仍可上下捲動 */
-html.embedded{scrollbar-width:none; -ms-overflow-style:none}
-html.embedded::-webkit-scrollbar{display:none}
-html.embedded body{background:transparent}
-html.embedded .wrap{max-width:none; padding:0}
-html.embedded header.page, html.embedded .tabs, html.embedded .toc,
-html.embedded .toc:not([hidden]):has(.toc-doc){display:none!important}
-html.embedded .body-row{display:block; padding:0}
-html.embedded main{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}
-html.embedded .panel h1{color:var(--accent); font-weight:500; font-size:30px}
-html.embedded h2{color:var(--accent); border-bottom-color:var(--grid)}
-:root{--accent:#c8501e}
-@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--accent:#e9773d}}
-:root[data-theme="dark"]{--accent:#e9773d}
-@media (max-width:700px){html.embedded main{padding:18px 16px 40px}}
 </style>
-<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
 </head>
 <body>
-<div class="wrap">
-<header class="page">
-  <div class="eyebrow">iGaming · Reskin</div>
-  <h1 class="site">Reskin 開發規範</h1>
-  <p class="meta">由 <code>專案需知/開發規範/Reskin/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-29</p>
-</header>
-<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="guide" data-tabs="guide" aria-selected="true" tabindex="0"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>總覽</button><button class="tab" role="tab" id="tab-g1" data-tab="knowhow" data-tabs="knowhow" aria-selected="false" tabindex="-1"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Knowhow</button><button class="tab" role="tab" id="tab-g2" data-tab="math" data-tabs="math" aria-selected="false" tabindex="-1"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 4H6l6 8-6 8h12"/></svg>數學設計</button></div>
-<div class="body-row">
-  <nav class="toc" id="toc-guide"></nav><nav class="toc" id="toc-knowhow" hidden><a class="toc-2" href="#1-市場與平台要求" data-tab="knowhow">1. 市場與平台要求</a><a class="toc-2" href="#2-幣別" data-tab="knowhow">2. 幣別</a></nav><nav class="toc" id="toc-math" hidden><a class="toc-2" href="#1-數學模型" data-tab="math">1. 數學模型</a><a class="toc-3" href="#11-必要內容" data-tab="math">1.1 必要內容</a><a class="toc-3" href="#12-模型命名" data-tab="math">1.2 模型命名</a><a class="toc-3" href="#13-押注選項" data-tab="math">1.3 押注選項</a><a class="toc-3" href="#14-rtp-配置" data-tab="math">1.4 RTP 配置</a><a class="toc-3" href="#15-彩金配置" data-tab="math">1.5 彩金配置</a><a class="toc-3" href="#16-bet-mode" data-tab="math">1.6 Bet Mode</a><a class="toc-2" href="#2-待確認事項" data-tab="math">2. 待確認事項</a></nav>
-  <main><section class="panel" role="tabpanel" id="panel-guide"><h1 id="reskin-導覽">Reskin 導覽</h1>
-<p>本規範適用於 <strong>Reskin 遊戲</strong>：以既有遊戲（iGaming 遊戲或 Landbase 轉製遊戲）換皮，輸出到 GC／SC 雙幣市場。</p>
-<div class="tbl-wrap"><table><thead><tr><th>頁籤</th><th>內容</th></tr></thead><tbody><tr><td><a href="#" class="tab-link" data-tab="knowhow">Knowhow</a></td><td>市場、平台 RTP 要求、幣別</td></tr><tr><td>系統相關</td><td>系統機制、天花板說明、腳本規範、壓測說明書、後端報表（待定）</td></tr><tr><td><a href="#" class="tab-link" data-tab="math">數學設計</a></td><td>押注結構、GC／SC 押注選項、RTP 配置（92／94／96）、Link 彩金</td></tr></tbody></table></div></section><section class="panel" role="tabpanel" id="panel-knowhow" hidden><h1 id="reskin-knowhow">Reskin Knowhow</h1>
-<p>本頁記錄 Reskin 產線的市場與平台背景，作為數學設計的前提。</p>
-<h2 id="1-市場與平台要求">1. 市場與平台要求</h2>
-<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>內容</th></tr></thead><tbody><tr><td>市場</td><td>歐美</td></tr><tr><td>平台 RTP 要求</td><td>須提供總 RTP（Total (+機制)）<code>92%</code>、<code>94%</code>、<code>96%</code> 三個版本；彩金都一樣插在遊戲裡，只差 Game RTP</td></tr><tr><td>幣別</td><td>GC、SC 兩種</td></tr><tr><td>押注層級</td><td>不分 <code>&lt; $2</code>／<code>&gt;= $2</code>；系統機制不會依押注金額擋拉彩金</td></tr></tbody></table></div>
-<ul><li>據了解（未經平台正式確認），平台會在玩家<strong>第一次玩該遊戲時</strong>，依玩家過去的遊玩習慣指定 92／94／96 其中一個版本給該玩家。</li><li>因此三個版本都會在線上實際被玩到，皆須完整製作、模擬驗證與送驗，不能只做主版本。</li><li>各版本的 RTP 拆分見<a href="#" class="tab-link" data-tab="math">數學模型規範</a>第 1.4 節。</li></ul>
-<h2 id="2-幣別">2. 幣別</h2>
-<div class="tbl-wrap"><table><thead><tr><th>幣別</th><th>性質</th><th class="n">Denom</th><th class="n">1 倍押注</th><th>押注範圍</th></tr></thead><tbody><tr><td>GC</td><td>遊戲幣（無現金價值，不可兌換）</td><td class="n"><code>20</code></td><td class="n"><code>2,000 GC</code></td><td><code>2,000</code>～<code>100,000 GC</code>（上線 18 檔）</td></tr><tr><td>SC</td><td>錢（可兌換現金）</td><td class="n"><code>0.002</code></td><td class="n"><code>0.2 SC</code></td><td><code>0.2</code>～<code>200 SC</code>（上線 40 檔）</td></tr></tbody></table></div>
-<ul><li>兩幣別共用同一張 44 組 Bet Multiplier，只有 Denom 不同；押注清單見<a href="#" class="tab-link" data-tab="math">數學模型規範</a>第 1.3 節。</li><li>兩幣別是否共用同一套 RTP、Card System 與彩金資格尚待確認，確認前使用相同數學。</li></ul></section><section class="panel" role="tabpanel" id="panel-math" hidden><h1 id="reskin-數學模型規範">Reskin 數學模型規範</h1>
-<p>本頁說明 <strong>Reskin 遊戲</strong>的數學模型：以既有遊戲數學為底，換皮輸出到 GC／SC 雙幣市場的版本。</p>
-<p>目前的需求來源文件（<code>個人工作區/專案紀錄/</code> 下的 Reskin 需求資料夾）：</p>
-<div class="tbl-wrap"><table><thead><tr><th>文件</th><th>日期</th><th>內容</th><th>狀態</th></tr></thead><tbody><tr><td>押注幣別工作簿（<code>bet_currency_*.xlsx</code>）</td><td>2026-08-13</td><td>工作表 <code>v2</code>（唯一未隱藏）：44 組 Bet Multiplier、SC／GC 的 Denom 與押注金額；<code>Sheet1</code>、<code>v1</code> 為隱藏的舊草稿</td><td><strong>現行版</strong></td></tr><tr><td><code>Bet Option規劃.pdf</code></td><td>2026-07-30</td><td>Bet Multiplier 44 組、Reskin SC／GC 押注金額</td><td>較舊；GC 只列 16 檔</td></tr></tbody></table></div>
-<h2 id="1-數學模型">1. 數學模型</h2>
-<h3 id="11-必要內容">1.1 必要內容</h3>
-<ul><li>數學調性：待定。</li></ul>
-<h3 id="12-模型命名">1.2 模型命名</h3>
-<p>命名為 <code>H&lt;遊戲編號&gt;1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code>，<code>&lt;RTP&gt;</code> 填 Reskin 版本（Total (+機制)），<strong>不是 Game RTP</strong>：</p>
-<div class="tbl-wrap"><table><thead><tr><th>版本</th><th>RTP 模型</th><th>Overview 模型名稱</th><th>Config</th></tr></thead><tbody><tr><td>92 版</td><td><code>H0xx192A.xlsx</code></td><td><code>H0xx192-&lt;版本&gt;</code></td><td><code>config_92A.js</code></td></tr><tr><td>94 版</td><td><code>H0xx194A.xlsx</code></td><td><code>H0xx194-&lt;版本&gt;</code></td><td><code>config_94A.js</code></td></tr><tr><td>96 版</td><td><code>H0xx196A.xlsx</code></td><td><code>H0xx196-&lt;版本&gt;</code></td><td><code>config_96A.js</code></td></tr></tbody></table></div>
-<p>每個版本的模型檔都包含第 1.4 節的四組卡片，<strong>同一檔內分頁存放，不拆成多個檔</strong>：</p>
-<div class="tbl-wrap"><table><thead><tr><th>卡片</th><th>工作表</th><th>內容</th></tr></thead><tbody><tr><td>NB／EB 老手</td><td><code>Multiplier Weight</code></td><td>每個 NB／EB 模式一個區塊</td></tr><tr><td>BF／SF 老手</td><td><code>Multiplier Weight</code></td><td>BF／SF 區塊</td></tr><tr><td>NB／EB 新手</td><td><code>Multiplier Weight (new_player)</code></td><td>每個 NB／EB 模式一個區塊</td></tr><tr><td>BF／SF 新手</td><td><code>Multiplier Weight (new_player)</code></td><td>BF／SF 區塊；原作若沒有（BF／SF 不分新手），轉 Reskin 時要補</td></tr></tbody></table></div>
-<ul><li>卡片目標只看第 1.4 節表中的 Game（Landbase 轉製為 Game+Bonus）欄，依來源遊戲類型取用：<ul><li>iGaming（第 1.4.1 節），例 96 版：NB／EB 老手 Game 91%，其餘三組 Game 92%；Bonus 與 Progressive 不由卡片負責。</li><li>Landbase 轉製（第 1.4.2 節），例 96 版：NB／EB 新手與老手 94%、BF／SF 老手 94%、BF／SF 新手 96%。</li></ul></li><li>只有一套數學時只建 A，不建空白 B。</li><li>從原作轉來、檔名相同（如 <code>H0xx192A</code>、<code>H0xx194A</code>）時，以新版本覆蓋，原作版本保留在 <code>Versions/</code> 舊版資料夾。</li></ul>
-<h3 id="13-押注選項">1.3 押注選項</h3>
-<h4 id="131-押注結構">1.3.1 押注結構</h4>
-<p>押注金額由三個參數相乘，不直接列舉金額：</p>
-<pre><code>押注金額 = 最小押分（credits）× Denom × Bet Multiplier
-最小押分 = 100 credits（所有市場固定）</code></pre>
-<div class="tbl-wrap"><table><thead><tr><th>參數</th><th>定義</th><th>由誰決定</th></tr></thead><tbody><tr><td>最小押分</td><td>1 倍押注的 credit 數，固定 <code>100</code></td><td>產線共用</td></tr><tr><td>Denom</td><td>每 credit 的幣值，依市場／幣別不同</td><td>市場設定（第 1.3 節）</td></tr><tr><td>Bet Multiplier</td><td>押注倍數選項，<code>1</code>～<code>1000</code> 共 44 組</td><td>產線共用（第 1.3.1 節）</td></tr></tbody></table></div>
-<div class="tbl-wrap"><table><thead><tr><th>編號</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">6</th><th class="n">7</th><th class="n">8</th><th class="n">9</th><th class="n">10</th><th class="n">11</th><th class="n">12</th><th class="n">13</th><th class="n">14</th><th class="n">15</th><th class="n">16</th><th class="n">17</th><th class="n">18</th><th class="n">19</th><th class="n">20</th><th class="n">21</th><th class="n">22</th><th class="n">23</th><th class="n">24</th><th class="n">25</th><th class="n">26</th><th class="n">27</th><th class="n">28</th><th class="n">29</th><th class="n">30</th><th class="n">31</th><th class="n">32</th><th class="n">33</th><th class="n">34</th><th class="n">35</th><th class="n">36</th><th class="n">37</th><th class="n">38</th><th class="n">39</th><th class="n">40</th><th class="n">41</th><th class="n">42</th><th class="n">43</th><th class="n">44</th></tr></thead><tbody><tr><td>倍數</td><td class="n">1</td><td class="n">2</td><td class="n">3</td><td class="n">4</td><td class="n">5</td><td class="n">6</td><td class="n">7</td><td class="n">8</td><td class="n">9</td><td class="n">10</td><td class="n">12</td><td class="n">14</td><td class="n">15</td><td class="n">16</td><td class="n">18</td><td class="n">20</td><td class="n">25</td><td class="n">30</td><td class="n">35</td><td class="n">40</td><td class="n">45</td><td class="n">50</td><td class="n">60</td><td class="n">70</td><td class="n">80</td><td class="n">90</td><td class="n">100</td><td class="n">120</td><td class="n">140</td><td class="n">150</td><td class="n">160</td><td class="n">180</td><td class="n">200</td><td class="n">250</td><td class="n">300</td><td class="n">350</td><td class="n">400</td><td class="n">450</td><td class="n">500</td><td class="n">600</td><td class="n">700</td><td class="n">800</td><td class="n">900</td><td class="n">1000</td></tr></tbody></table></div>
-<ul><li>全部市場共用同一張倍數表；個別市場只能<strong>從中選用子集</strong>，不得新增表外倍數。</li></ul>
-<h4 id="132-sc">1.3.2 SC</h4>
-<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>值</th></tr></thead><tbody><tr><td>Denom</td><td><code>0.002</code></td></tr><tr><td>1 倍押注</td><td><code>0.2 SC</code></td></tr><tr><td>選項數</td><td>44（倍數表全選；上線開 40 檔）</td></tr><tr><td>最小／最大押注</td><td><code>0.2</code>／<code>200 SC</code></td></tr></tbody></table></div>
-<div class="tbl-wrap"><table><thead><tr><th>編號</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">6</th><th class="n">7</th><th class="n">8</th><th class="n">9</th><th class="n">10</th><th class="n">11</th><th class="n">12</th><th class="n">13</th><th class="n">14</th><th class="n">15</th><th class="n">16</th><th class="n">17</th><th class="n">18</th><th class="n">19</th><th class="n">20</th><th class="n">21</th><th class="n">22</th><th class="n">23</th><th class="n">24</th><th class="n">25</th><th class="n">26</th><th class="n">27</th><th class="n">28</th><th class="n">29</th><th class="n">30</th><th class="n">31</th><th class="n">32</th><th class="n">33</th><th class="n">34</th><th class="n">35</th><th class="n">36</th><th class="n">37</th><th class="n">38</th><th class="n">39</th><th class="n">40</th><th class="n">41</th><th class="n">42</th><th class="n">43</th><th class="n">44</th></tr></thead><tbody><tr><td>金額</td><td class="n">0.2</td><td class="n">0.4</td><td class="n">0.6</td><td class="n">0.8</td><td class="n">1</td><td class="n">1.2</td><td class="n">1.4</td><td class="n">1.6</td><td class="n">1.8</td><td class="n">2</td><td class="n">2.4</td><td class="n">2.8</td><td class="n">3</td><td class="n">3.2</td><td class="n">3.6</td><td class="n">4</td><td class="n">5</td><td class="n">6</td><td class="n">7</td><td class="n">8</td><td class="n">9</td><td class="n">10</td><td class="n">12</td><td class="n">14</td><td class="n">16</td><td class="n">18</td><td class="n">20</td><td class="n">24</td><td class="n">28</td><td class="n">30</td><td class="n">32</td><td class="n">36</td><td class="n">40</td><td class="n">50</td><td class="n">60</td><td class="n">70</td><td class="n">80</td><td class="n">90</td><td class="n">100</td><td class="n">120</td><td class="n">140</td><td class="n">160</td><td class="n">180</td><td class="n">200</td></tr><tr><td>開啟</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n"></td><td class="n"></td><td class="n">✓</td><td class="n"></td><td class="n"></td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td></tr></tbody></table></div>
-<ul><li>實際上線時編號 11、12、14、15（<code>2.4</code>、<code>2.8</code>、<code>3.2</code>、<code>3.6</code>）關閉，「開啟」列打勾的才會上線。</li></ul>
-<h4 id="133-gc">1.3.3 GC</h4>
-<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>值</th></tr></thead><tbody><tr><td>Denom</td><td><code>20</code></td></tr><tr><td>1 倍押注</td><td><code>2,000 GC</code></td></tr><tr><td>選項數</td><td>44（倍數表全選；上線開 18 檔）</td></tr><tr><td>最小／最大押注</td><td><code>2,000</code>／<code>2,000,000 GC</code>（上線只開到 <code>100,000</code>）</td></tr></tbody></table></div>
-<div class="tbl-wrap"><table><thead><tr><th>編號</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">6</th><th class="n">7</th><th class="n">8</th><th class="n">9</th><th class="n">10</th><th class="n">11</th><th class="n">12</th><th class="n">13</th><th class="n">14</th><th class="n">15</th><th class="n">16</th><th class="n">17</th><th class="n">18</th><th class="n">19</th><th class="n">20</th><th class="n">21</th><th class="n">22</th><th class="n">23</th><th class="n">24</th><th class="n">25</th><th class="n">26</th><th class="n">27</th><th class="n">28</th><th class="n">29</th><th class="n">30</th><th class="n">31</th><th class="n">32</th><th class="n">33</th><th class="n">34</th><th class="n">35</th><th class="n">36</th><th class="n">37</th><th class="n">38</th><th class="n">39</th><th class="n">40</th><th class="n">41</th><th class="n">42</th><th class="n">43</th><th class="n">44</th></tr></thead><tbody><tr><td>金額</td><td class="n">2,000</td><td class="n">4,000</td><td class="n">6,000</td><td class="n">8,000</td><td class="n">10,000</td><td class="n">12,000</td><td class="n">14,000</td><td class="n">16,000</td><td class="n">18,000</td><td class="n">20,000</td><td class="n">24,000</td><td class="n">28,000</td><td class="n">30,000</td><td class="n">32,000</td><td class="n">36,000</td><td class="n">40,000</td><td class="n">50,000</td><td class="n">60,000</td><td class="n">70,000</td><td class="n">80,000</td><td class="n">90,000</td><td class="n">100,000</td><td class="n">120,000</td><td class="n">140,000</td><td class="n">160,000</td><td class="n">180,000</td><td class="n">200,000</td><td class="n">240,000</td><td class="n">280,000</td><td class="n">300,000</td><td class="n">320,000</td><td class="n">360,000</td><td class="n">400,000</td><td class="n">500,000</td><td class="n">600,000</td><td class="n">700,000</td><td class="n">800,000</td><td class="n">900,000</td><td class="n">1,000,000</td><td class="n">1,200,000</td><td class="n">1,400,000</td><td class="n">1,600,000</td><td class="n">1,800,000</td><td class="n">2,000,000</td></tr><tr><td>開啟</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n"></td><td class="n"></td><td class="n">✓</td><td class="n"></td><td class="n"></td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n">✓</td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td></tr></tbody></table></div>
-<ul><li><strong>實際上 GC 上線後最大押注只會開到 10 萬（<code>100,000 GC</code>）</strong>：編號 23～44（<code>&gt; 100,000 GC</code>）的檔位不開放；編號 11、12、14、15 也同 SC 關閉。</li><li>GC 金額位數大：最大押注 <code>100,000</code> × Max Multiplier（例 20000x）= <code>2 × 10⁹</code>，Config、Simulator 報表、Demogame 顯示與後端欄位都必須確認不溢位、不被四捨五入。</li></ul>
-<h4 id="134-市場總覽">1.3.4 市場總覽</h4>
-<div class="tbl-wrap"><table><thead><tr><th>市場／幣別</th><th class="n">Denom</th><th class="n">1 倍押注</th><th class="n">選項數</th><th class="n">最大押注</th><th>來源</th></tr></thead><tbody><tr><td>Reskin SC</td><td class="n">0.002</td><td class="n">0.2</td><td class="n">44（上線 40）</td><td class="n">200</td><td><code>v2</code></td></tr><tr><td>Reskin GC</td><td class="n">20</td><td class="n">2,000</td><td class="n">44（上線 18）</td><td class="n">2,000,000（上線 100,000）</td><td><code>v2</code></td></tr></tbody></table></div>
-<ul><li><strong>上限以上不開的押注一律壓住</strong>：「開啟」列沒打勾的檔位上線不開放。若某檔位是因為數學調不出來（例如倍率上限、天花板或系統最大賠付壓不下來）才不開，須在文件備註該檔位與原因。</li></ul>
-<h3 id="14-rtp-配置">1.4 RTP 配置</h3>
-<p>平台要求提供 <strong>Total (+機制) 92%／94%／96%</strong> 三個 RTP 版本（見 <a href="#" class="tab-link" data-tab="knowhow">Knowhow</a>）。來源遊戲分 <strong>iGaming 遊戲</strong>與 <strong>Landbase 轉製遊戲</strong>兩種，RTP 配置各自不同。</p>
-<h4 id="141-igaming-遊戲">1.4.1 iGaming 遊戲</h4>
-<p>以原作的 RTP 配置為底調整：改成 92／94／96 三版，且<strong>不分押注層級</strong>（沒有 <code>&lt; $2</code> 小 Bet）。Game 與 Bonus 分開列；三版的 Bonus、彩金（Progressive）與機制都一樣，只差在 Game RTP。</p>
-<h5 id="96-版total-機制-96">96 版（Total (+機制) 96%）</h5>
-<div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game</th><th class="n">Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">機制</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">0.00%</td><td class="n">94.00%</td><td class="n">2.00%</td><td class="n">96.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">91.00%</td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">95.00%</td><td class="n">1.00%</td><td class="n">96.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">92.00%</td><td class="n">4.00%</td><td class="n">0.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr></tbody></table></div>
-<h5 id="94-版total-機制-94">94 版（Total (+機制) 94%）</h5>
-<div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game</th><th class="n">Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">機制</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">0.00%</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">94.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">89.00%</td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">93.00%</td><td class="n">1.00%</td><td class="n">94.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">90.00%</td><td class="n">4.00%</td><td class="n">0.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr></tbody></table></div>
-<h5 id="92-版total-機制-92">92 版（Total (+機制) 92%）</h5>
-<div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game</th><th class="n">Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">機制</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">88.00%</td><td class="n">2.00%</td><td class="n">0.00%</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">92.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">87.00%</td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">91.00%</td><td class="n">1.00%</td><td class="n">92.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">88.00%</td><td class="n">4.00%</td><td class="n">0.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">88.00%</td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr></tbody></table></div>
-<ul><li>沿用原作的 Bonus 拆分：NB／EB 2%；BF／SF 新手 4%、老手 2%。</li><li>不分押注層級：老手不論押注大小 Progressive（Link）皆為 2%，新手皆 0%。</li><li>機制：新手 NB／EB 為新手體驗 2%；老手 NB／EB 為 1%（自 Game 移出）；BF／SF 為 0%，新手以 Bonus 4% 補足。</li><li>版本差異全部由 Game RTP 吸收：老手 NB／EB 的 Game ＝ 版本 − 5%，其餘 Game ＝ 版本 − 4%。</li></ul>
-<h4 id="142-landbase-轉製遊戲">1.4.2 Landbase 轉製遊戲</h4>
-<p>三版的彩金（Progressive）與新手體驗都一樣，只差在 Game RTP。</p>
-<h5 id="96-版total-機制-96-2">96 版（Total (+機制) 96%）</h5>
-<div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game+Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">新手體驗</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td><td class="n">2.00%</td><td class="n">96.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">94.00%</td><td class="n">2.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">94.00%</td><td class="n">2.00%</td><td class="n">96.00%</td><td class="n">0.00%</td><td class="n">96.00%</td></tr></tbody></table></div>
-<h5 id="94-版total-機制-94-2">94 版（Total (+機制) 94%）</h5>
-<div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game+Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">新手體驗</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">94.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">92.00%</td><td class="n">2.00%</td><td class="n">94.00%</td><td class="n">0.00%</td><td class="n">94.00%</td></tr></tbody></table></div>
-<h5 id="92-版total-機制-92-2">92 版（Total (+機制) 92%）</h5>
-<div class="tbl-wrap"><table><thead><tr><th>押注模式</th><th>狀態</th><th class="n">Game+Bonus</th><th class="n">Progressive</th><th class="n">Total</th><th class="n">新手體驗</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>NB／EB</td><td>新手</td><td class="n">90.00%</td><td class="n">0.00%</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">92.00%</td></tr><tr><td>NB／EB</td><td>老手</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr><tr><td>BF／SF</td><td>新手</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr><tr><td>BF／SF</td><td>老手</td><td class="n">90.00%</td><td class="n">2.00%</td><td class="n">92.00%</td><td class="n">0.00%</td><td class="n">92.00%</td></tr></tbody></table></div>
-<ul><li>Landbase 轉製遊戲不拆 Bonus，表中 Game+Bonus 為合併值。</li><li>只分新手／老手，<strong>不分押注層級</strong>；老手不論押注大小 Progressive（Link）皆為 2%。</li><li>三版的彩金一樣插在遊戲裡：老手 Progressive 皆 2%，新手皆 0%；版本差異全部由 Game RTP 吸收（老手 Game ＝ 版本 − 2%）。</li><li>新手不能拉彩金：NB／EB 以新手體驗 2% 補足，BF／SF 以 Game 補足（Game ＝ 版本 RTP）。</li></ul>
-<h3 id="15-彩金配置">1.5 彩金配置</h3>
-<h4 id="151-link-資格">1.5.1 Link 資格</h4>
-<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>規則</th></tr></thead><tbody><tr><td>級距</td><td>Grand、Major 兩層累積彩池</td></tr><tr><td>Link RTP</td><td><strong>2%</strong>，92／94／96 三版相同（第 1.4 節的 Progressive）</td></tr><tr><td>資格</td><td>見下表；<strong>不分押注大小</strong>，系統不依押注金額擋</td></tr><tr><td>幣別</td><td>GC、SC 是否各自一組彩池待確認（第 2 章）</td></tr></tbody></table></div>
-<div class="tbl-wrap"><table><thead><tr><th>狀態</th><th>可拉 Link</th><th>可滾 Inrc</th></tr></thead><tbody><tr><td>新手</td><td>否</td><td>是</td></tr><tr><td>老手</td><td>是</td><td>是</td></tr></tbody></table></div>
-<ul><li>NB／EB 與 BF／SF 都適用上表；新手的押注照樣滾入彩池，但不能中彩，所以新手 Progressive 為 0%。</li><li>彩金參數由系統層設定，數學模型不得寫死在輪帶或 Paytable；模型只負責 Game RTP，並在 <code>Game Description</code> 記錄採用的彩金參數版本。</li></ul>
-<h4 id="152-link-彩金配置">1.5.2 Link 彩金配置</h4>
-<div class="tbl-wrap"><table><thead><tr><th>幣別</th><th>級距</th><th class="n">初始金額</th><th class="n">Startup%</th><th class="n">Increment</th><th class="n">RTP</th></tr></thead><tbody><tr><td>SC</td><td>Grand</td><td class="n">100,000 SC</td><td class="n">0.65%</td><td class="n">0.35%</td><td class="n">1.00%</td></tr><tr><td>SC</td><td>Major</td><td class="n">20,000 SC</td><td class="n">0.50%</td><td class="n">0.50%</td><td class="n">1.00%</td></tr><tr><td>GC</td><td>Grand</td><td class="n">10,000,000 GC</td><td class="n">0.65%</td><td class="n">0.35%</td><td class="n">1.00%</td></tr><tr><td>GC</td><td>Major</td><td class="n">2,000,000 GC</td><td class="n">0.50%</td><td class="n">0.50%</td><td class="n">1.00%</td></tr></tbody></table></div>
-<ul><li><strong>有 Link 的遊戲才依本表配置</strong>，沒有 Link 的遊戲不用此配置。</li><li>GC、SC 的彩金大小（初始金額）各自設定，見上表；Startup%、Increment、RTP 兩幣別相同。</li><li><strong>賭場線上線下串連的配置不列入本表</strong>：若要讓某賭場的線上與線下（實體機台）彩金串在一起，線上的配置必須與該賭場線下<strong>一模一樣</strong>；而每款遊戲在賭場的配置都不同，無法訂一套共用值。目前只有 MFB（Okada）一家賭場，所以真要串時先以 MFB 的配置為準（例：Grand <code>$1,000,000</code>／Startup 1.10%／Increment 0.20%／RTP 1.30%；Major <code>$100,000</code>／0.50%／0.20%／0.70%）；之後若不再有這需求就用不到，因此<strong>有要串時才依該遊戲、該賭場的配置另做</strong>。</li></ul>
-<div class="tbl-wrap"><table><thead><tr><th>欄位</th><th>定義</th></tr></thead><tbody><tr><td>初始金額</td><td>彩池開出後重置的起始金額（Start Up Pool）</td></tr><tr><td>Startup%</td><td>押注中用來補足初始金額的比例；<code>Startup% = RTP − Increment</code></td></tr><tr><td>Increment</td><td>押注中滾入彩池、讓彩池累積上漲的比例（試算表的 Inrc）</td></tr><tr><td>RTP</td><td>該級距的彩金 RTP；<code>RTP = Startup% + Increment</code></td></tr></tbody></table></div>
-<ul><li>Grand ＋ Major RTP ＝ Link RTP 2.00%；Increment 合計 0.85%。</li><li>平均開出金額：<code>Average Jackpot Hit Value = 初始金額 ÷ Startup% × RTP</code>。例：SC Grand ＝ 100,000 ÷ 0.65% × 1.00% ≈ 153,846 SC。</li><li>試算表只給初始金額、RTP 與 Increment，Startup% 依上式推得；試算表改版時三欄一起更新。</li></ul>
-<h3 id="16-bet-mode">1.6 Bet Mode</h3>
-<ul><li>Reskin <strong>不分押注層級</strong>：沒有 <code>&lt; $2</code>／<code>&gt;= $2</code>（小／中／大 Bet）之分，系統也不依押注金額擋拉彩金。</li><li>數學模型的 Bet Mode 成本（EB 倍數、BF／SF 價格倍數）以 1 倍押注為基準定義；Reskin 不改這些倍數。</li><li>Simulator 依版本指定 Config，不依押注金額自動選檔。</li></ul>
-<h2 id="2-待確認事項">2. 待確認事項</h2>
-<div class="tbl-wrap"><table><thead><tr><th>項目</th><th>現況</th><th>需決定</th></tr></thead><tbody><tr><td>雙幣 RTP／機制</td><td>未定義</td><td>GC 與 SC 是否共用 RTP、新手體驗、Card System Profile</td></tr><tr><td>彩金幣別</td><td>配置見第 1.5.2 節</td><td>GC、SC 是否各自一組彩池</td></tr><tr><td>系統最大賠付</td><td>未定義</td><td>各市場單把派彩上限，以及超過時截斷或重骰</td></tr><tr><td>Feature 購買上限</td><td><code>Sheet1</code> 舊草稿曾標示「Super Feature 可使用最大押注」「Buy Feature 可使用押注」</td><td>現行版是否仍限制 BF／SF 可用的押注檔位</td></tr></tbody></table></div></section></main>
+<header><div class="logo"><span>i</span></div><h1><b>Reskin</b> 開發規範</h1></header>
+<div class="layout">
+<aside>
+  
+  <nav class="toc" aria-label="Table of Contents"><div class="toc-title">Table of Contents</div><ul id="toc"></ul></nav>
+</aside>
+<main><iframe id="site" title="規範內文"></iframe></main>
 </div>
-</div>
+<script type="application/json" id="doc-reskin">"<!DOCTYPE html>\n<html lang=\"zh-Hant\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Reskin 開發規範<\/title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap\">\n<style>\n:root{\n  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;\n  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;\n  --rule:#e3e6ea; --grid:#edf0f3;\n  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;\n  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;\n  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;\n}\n@media (prefers-color-scheme:dark){\n  :root:where(:not([data-theme=\"light\"])){\n    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;\n    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;\n    --rule:#33353a; --grid:#2a2c30;\n    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;\n  }\n}\n:root[data-theme=\"dark\"]{\n  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;\n  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;\n  --rule:#33353a; --grid:#2a2c30;\n  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;\n}\n*{box-sizing:border-box}\nbody{margin:0; background:var(--surface); color:var(--ink);\n  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}\n.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}\nheader.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}\n.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}\nh1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}\n.meta{margin:0; color:var(--ink-2); font-size:13.5px}\n.lines{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0}\n.lines a{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:3px 13px; margin:0}\n.lines a:hover{color:var(--s1); border-color:var(--s1)}\n.lines a.on{color:var(--panel); background:var(--s1); border-color:var(--s1); font-weight:600}\n.meta code{font-family:var(--font-mono); font-size:12.5px}\n/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，\n   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */\n.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);\n  overflow-x:auto; overflow-y:hidden;\n  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */\n  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}\n.tabs::-webkit-scrollbar{display:none}\n.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;\n  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;\n  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}\n.tab:hover{color:var(--ink); background:var(--panel-2)}\n.tab-ico{width:14px; height:14px; vertical-align:-2px; margin-right:6px}\n.tab.tab-hi, .tab.tab-hi:hover, .tab.tab-hi[aria-selected=\"true\"]{color:var(--warn)}\n.tab[aria-selected=\"true\"]{color:var(--s1); font-weight:600; background:var(--panel);\n  border-color:var(--rule); border-bottom-color:var(--panel)}\n.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}\n.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}\n.toc{position:sticky; top:52px; width:236px; flex:none;\n  max-height:calc(100vh - 76px); overflow-y:auto;\n  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}\n.toc[hidden]{display:none}\n/* 目錄過長時仍可滾動，但不顯示拉條 */\n.toc{scrollbar-width:none; -ms-overflow-style:none}\n.toc::-webkit-scrollbar{display:none}\n.toc a{display:block; color:var(--ink-3); text-decoration:none;\n  padding:3px 11px; border-left:2px solid var(--rule)}\n.toc a:hover{color:var(--s1); border-left-color:var(--s1)}\n.toc a.toc-3{padding-left:25px}\n.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}\n.toc a.toc-doc:not(:first-child){margin-top:8px}\n.toc a.toc-doc.on{color:var(--s1)}\nmain{flex:1; min-width:0}\n.panel[hidden]{display:none}\n.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}\nh2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;\n  padding-bottom:7px; border-bottom:1px solid var(--rule)}\nh3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}\nh4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}\np{margin:0 0 11px; max-width:86ch}\nul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}\nli{margin:3px 0}\nli.check{list-style:none; margin-left:-20px}\n.cb{color:var(--s1); margin-right:4px}\ncode{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);\n  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}\npre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;\n  padding:13px 16px; overflow-x:auto; margin:0 0 16px;\n  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}\npre code{background:none; border:none; padding:0; font-size:inherit}\nstrong{font-weight:600; color:var(--ink)}\na{color:var(--s1)}\n.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;\n  background:var(--panel); margin:0 0 18px}\ntable{border-collapse:collapse; width:100%; font-size:1em}\nth,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}\nth{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;\n  letter-spacing:.03em; white-space:nowrap}\ntd.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);\n  font-variant-numeric:tabular-nums; font-size:1em}\ntbody tr:last-child td{border-bottom:none}\ntbody tr:hover{background:var(--panel-2)}\nhr{border:none; border-top:1px solid var(--rule); margin:34px 0}\n.tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}\n.tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}\n/* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */\n:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){margin:0 .3em}\n:is(strong,.tune,a) :is(strong,.tune,code){margin:0}\n.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}\n.tl{min-width:620px; display:flex; flex-direction:column; gap:4px}\n.tl-row{display:grid; grid-template-columns:6em 1fr; align-items:start}\n.tl-lane{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}\n.tl-axis-name{color:var(--ink-3); font-weight:500; padding-top:2px}\n.tl-track{position:relative; height:52px; border-bottom:1px dashed var(--grid)}\n.tl-row:first-child .tl-track{height:36px}\n.tl-bar{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;\n  text-align:center; white-space:nowrap; overflow:hidden}\n.tl-bar.phase{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}\n.tl-bar.phase2{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}\n.tl-bar.stop{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}\n.tl-bar.event{background:var(--s2); opacity:.85; height:16px; top:6px}\n.tl-label{position:absolute; top:24px; font-size:1em; color:var(--ink); white-space:nowrap}\n.tl-axis{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}\n.tl-tick{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;\n  color:var(--ink-3); padding-top:5px; white-space:nowrap}\n.tl-tick::before{content:\"\"; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}\nmark{font-weight:600; padding:1px 6px; border-radius:3px}\nmark.hl-warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}\nmark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}\n.flow{margin:6px 0 20px; max-width:86ch}\n.step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}\n.step-rail{display:flex; flex-direction:column; align-items:center}\n.step-dot{width:28px; height:28px; border-radius:50%; border:1.5px solid var(--s1); color:var(--s1);\n  display:grid; place-items:center; font-family:var(--font-mono); font-size:12.5px; font-weight:600; background:var(--panel)}\n.step-line{flex:1; width:1.5px; background:var(--rule); min-height:12px}\n.step:last-child .step-line{background:transparent}\n.step-body{padding:3px 0 18px; min-width:0}\n.step-title{font-weight:600}\n.step-desc{color:var(--ink-2); font-size:1em; margin-top:2px}\n.branches{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}\n.branch{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:1em}\n.pill{font-size:1em; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}\n.pill.ok{color:var(--s3); background:color-mix(in srgb,var(--s3) 15%,transparent)}\n.pill.stop{color:var(--s2); background:color-mix(in srgb,var(--s2) 15%,transparent)}\n@media (max-width:900px){\n  .body-row{flex-direction:column; gap:14px}\n  .toc{display:none!important}\n  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;\n    flex-wrap:wrap; gap:4px 16px; padding:0}\n  .toc a:not(.toc-doc){display:none}\n  .toc a.toc-doc{padding:0; margin:0!important}\n}\n/* 表格、程式碼、時間軸：藏拉條，仍可橫向捲動（觸控板／觸控／滑鼠拖曳） */\n.tbl-wrap, pre, .tl-wrap{scrollbar-width:none; -ms-overflow-style:none}\n.tbl-wrap::-webkit-scrollbar, pre::-webkit-scrollbar, .tl-wrap::-webkit-scrollbar{display:none}\n.drag-x{cursor:grab}\n.drag-x.dragging{cursor:grabbing; user-select:none}\n@media (prefers-reduced-motion:reduce){*{transition:none!important}}\n/* 嵌入入口時：頁首、頁籤、左側目錄由入口負責，這裡只留內文；藏拉條、仍可上下捲動 */\nhtml.embedded{scrollbar-width:none; -ms-overflow-style:none}\nhtml.embedded::-webkit-scrollbar{display:none}\nhtml.embedded body{background:transparent}\nhtml.embedded .wrap{max-width:none; padding:0}\nhtml.embedded header.page, html.embedded .tabs, html.embedded .toc,\nhtml.embedded .toc:not([hidden]):has(.toc-doc){display:none!important}\nhtml.embedded .body-row{display:block; padding:0}\nhtml.embedded main{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}\nhtml.embedded .panel h1{color:var(--accent); font-weight:500; font-size:30px}\nhtml.embedded h2{color:var(--accent); border-bottom-color:var(--grid)}\n:root{--accent:#c8501e}\n@media (prefers-color-scheme:dark){:root:where(:not([data-theme=\"light\"])){--accent:#e9773d}}\n:root[data-theme=\"dark\"]{--accent:#e9773d}\n@media (max-width:700px){html.embedded main{padding:18px 16px 40px}}\n<\/style>\n<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');<\/script>\n<\/head>\n<body>\n<div class=\"wrap\">\n<header class=\"page\">\n  <div class=\"eyebrow\">iGaming · Reskin<\/div>\n  <h1 class=\"site\">Reskin 開發規範<\/h1>\n  <p class=\"meta\">由 <code>專案需知/開發規範/Reskin/*.md<\/code> 產生（<code>_build_html.py<\/code>）　|　2026-10-29<\/p>\n<\/header>\n<div class=\"tabs\" role=\"tablist\" aria-label=\"規範文件\"><button class=\"tab\" role=\"tab\" id=\"tab-g0\" data-tab=\"guide\" data-tabs=\"guide\" aria-selected=\"true\" tabindex=\"0\"><svg class=\"tab-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 11l9-7 9 7\"/><path d=\"M5 10v10h14V10\"/><\/svg>總覽<\/button><button class=\"tab\" role=\"tab\" id=\"tab-g1\" data-tab=\"knowhow\" data-tabs=\"knowhow\" aria-selected=\"false\" tabindex=\"-1\"><svg class=\"tab-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 18h6\"/><path d=\"M10 21h4\"/><path d=\"M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/><\/svg>Knowhow<\/button><button class=\"tab\" role=\"tab\" id=\"tab-g2\" data-tab=\"math\" data-tabs=\"math\" aria-selected=\"false\" tabindex=\"-1\"><svg class=\"tab-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 4H6l6 8-6 8h12\"/><\/svg>數學設計<\/button><\/div>\n<div class=\"body-row\">\n  <nav class=\"toc\" id=\"toc-guide\"><\/nav><nav class=\"toc\" id=\"toc-knowhow\" hidden><a class=\"toc-2\" href=\"#1-市場與平台要求\" data-tab=\"knowhow\">1. 市場與平台要求<\/a><a class=\"toc-2\" href=\"#2-幣別\" data-tab=\"knowhow\">2. 幣別<\/a><\/nav><nav class=\"toc\" id=\"toc-math\" hidden><a class=\"toc-2\" href=\"#1-數學模型\" data-tab=\"math\">1. 數學模型<\/a><a class=\"toc-3\" href=\"#11-必要內容\" data-tab=\"math\">1.1 必要內容<\/a><a class=\"toc-3\" href=\"#12-模型命名\" data-tab=\"math\">1.2 模型命名<\/a><a class=\"toc-3\" href=\"#13-押注選項\" data-tab=\"math\">1.3 押注選項<\/a><a class=\"toc-3\" href=\"#14-rtp-配置\" data-tab=\"math\">1.4 RTP 配置<\/a><a class=\"toc-3\" href=\"#15-彩金配置\" data-tab=\"math\">1.5 彩金配置<\/a><a class=\"toc-3\" href=\"#16-bet-mode\" data-tab=\"math\">1.6 Bet Mode<\/a><a class=\"toc-2\" href=\"#2-待確認事項\" data-tab=\"math\">2. 待確認事項<\/a><\/nav>\n  <main><section class=\"panel\" role=\"tabpanel\" id=\"panel-guide\"><h1 id=\"reskin-導覽\">Reskin 導覽<\/h1>\n<p>本規範適用於 <strong>Reskin 遊戲<\/strong>：以既有遊戲（iGaming 遊戲或 Landbase 轉製遊戲）換皮，輸出到 GC／SC 雙幣市場。<\/p>\n<div class=\"tbl-wrap\"><table><thead><tr><th>頁籤<\/th><th>內容<\/th><\/tr><\/thead><tbody><tr><td><a href=\"#\" class=\"tab-link\" data-tab=\"knowhow\">Knowhow<\/a><\/td><td>市場、平台 RTP 要求、幣別<\/td><\/tr><tr><td>系統相關<\/td><td>系統機制、天花板說明、腳本規範、壓測說明書、後端報表（待定）<\/td><\/tr><tr><td><a href=\"#\" class=\"tab-link\" data-tab=\"math\">數學設計<\/a><\/td><td>押注結構、GC／SC 押注選項、RTP 配置（92／94／96）、Link 彩金<\/td><\/tr><\/tbody><\/table><\/div><\/section><section class=\"panel\" role=\"tabpanel\" id=\"panel-knowhow\" hidden><h1 id=\"reskin-knowhow\">Reskin Knowhow<\/h1>\n<p>本頁記錄 Reskin 產線的市場與平台背景，作為數學設計的前提。<\/p>\n<h2 id=\"1-市場與平台要求\">1. 市場與平台要求<\/h2>\n<div class=\"tbl-wrap\"><table><thead><tr><th>項目<\/th><th>內容<\/th><\/tr><\/thead><tbody><tr><td>市場<\/td><td>歐美<\/td><\/tr><tr><td>平台 RTP 要求<\/td><td>須提供總 RTP（Total (+機制)）<code>92%<\/code>、<code>94%<\/code>、<code>96%<\/code> 三個版本；彩金都一樣插在遊戲裡，只差 Game RTP<\/td><\/tr><tr><td>幣別<\/td><td>GC、SC 兩種<\/td><\/tr><tr><td>押注層級<\/td><td>不分 <code>&lt; $2<\/code>／<code>&gt;= $2<\/code>；系統機制不會依押注金額擋拉彩金<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>據了解（未經平台正式確認），平台會在玩家<strong>第一次玩該遊戲時<\/strong>，依玩家過去的遊玩習慣指定 92／94／96 其中一個版本給該玩家。<\/li><li>因此三個版本都會在線上實際被玩到，皆須完整製作、模擬驗證與送驗，不能只做主版本。<\/li><li>各版本的 RTP 拆分見<a href=\"#\" class=\"tab-link\" data-tab=\"math\">數學模型規範<\/a>第 1.4 節。<\/li><\/ul>\n<h2 id=\"2-幣別\">2. 幣別<\/h2>\n<div class=\"tbl-wrap\"><table><thead><tr><th>幣別<\/th><th>性質<\/th><th class=\"n\">Denom<\/th><th class=\"n\">1 倍押注<\/th><th>押注範圍<\/th><\/tr><\/thead><tbody><tr><td>GC<\/td><td>遊戲幣（無現金價值，不可兌換）<\/td><td class=\"n\"><code>20<\/code><\/td><td class=\"n\"><code>2,000 GC<\/code><\/td><td><code>2,000<\/code>～<code>100,000 GC<\/code>（上線 18 檔）<\/td><\/tr><tr><td>SC<\/td><td>錢（可兌換現金）<\/td><td class=\"n\"><code>0.002<\/code><\/td><td class=\"n\"><code>0.2 SC<\/code><\/td><td><code>0.2<\/code>～<code>200 SC<\/code>（上線 40 檔）<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>兩幣別共用同一張 44 組 Bet Multiplier，只有 Denom 不同；押注清單見<a href=\"#\" class=\"tab-link\" data-tab=\"math\">數學模型規範<\/a>第 1.3 節。<\/li><li>兩幣別是否共用同一套 RTP、Card System 與彩金資格尚待確認，確認前使用相同數學。<\/li><\/ul><\/section><section class=\"panel\" role=\"tabpanel\" id=\"panel-math\" hidden><h1 id=\"reskin-數學模型規範\">Reskin 數學模型規範<\/h1>\n<p>本頁說明 <strong>Reskin 遊戲<\/strong>的數學模型：以既有遊戲數學為底，換皮輸出到 GC／SC 雙幣市場的版本。<\/p>\n<p>目前的需求來源文件（<code>個人工作區/專案紀錄/<\/code> 下的 Reskin 需求資料夾）：<\/p>\n<div class=\"tbl-wrap\"><table><thead><tr><th>文件<\/th><th>日期<\/th><th>內容<\/th><th>狀態<\/th><\/tr><\/thead><tbody><tr><td>押注幣別工作簿（<code>bet_currency_*.xlsx<\/code>）<\/td><td>2026-08-13<\/td><td>工作表 <code>v2<\/code>（唯一未隱藏）：44 組 Bet Multiplier、SC／GC 的 Denom 與押注金額；<code>Sheet1<\/code>、<code>v1<\/code> 為隱藏的舊草稿<\/td><td><strong>現行版<\/strong><\/td><\/tr><tr><td><code>Bet Option規劃.pdf<\/code><\/td><td>2026-07-30<\/td><td>Bet Multiplier 44 組、Reskin SC／GC 押注金額<\/td><td>較舊；GC 只列 16 檔<\/td><\/tr><\/tbody><\/table><\/div>\n<h2 id=\"1-數學模型\">1. 數學模型<\/h2>\n<h3 id=\"11-必要內容\">1.1 必要內容<\/h3>\n<ul><li>數學調性：待定。<\/li><\/ul>\n<h3 id=\"12-模型命名\">1.2 模型命名<\/h3>\n<p>命名為 <code>H&lt;遊戲編號&gt;1&lt;RTP&gt;&lt;Variant&gt;.xlsx<\/code>，<code>&lt;RTP&gt;<\/code> 填 Reskin 版本（Total (+機制)），<strong>不是 Game RTP<\/strong>：<\/p>\n<div class=\"tbl-wrap\"><table><thead><tr><th>版本<\/th><th>RTP 模型<\/th><th>Overview 模型名稱<\/th><th>Config<\/th><\/tr><\/thead><tbody><tr><td>92 版<\/td><td><code>H0xx192A.xlsx<\/code><\/td><td><code>H0xx192-&lt;版本&gt;<\/code><\/td><td><code>config_92A.js<\/code><\/td><\/tr><tr><td>94 版<\/td><td><code>H0xx194A.xlsx<\/code><\/td><td><code>H0xx194-&lt;版本&gt;<\/code><\/td><td><code>config_94A.js<\/code><\/td><\/tr><tr><td>96 版<\/td><td><code>H0xx196A.xlsx<\/code><\/td><td><code>H0xx196-&lt;版本&gt;<\/code><\/td><td><code>config_96A.js<\/code><\/td><\/tr><\/tbody><\/table><\/div>\n<p>每個版本的模型檔都包含第 1.4 節的四組卡片，<strong>同一檔內分頁存放，不拆成多個檔<\/strong>：<\/p>\n<div class=\"tbl-wrap\"><table><thead><tr><th>卡片<\/th><th>工作表<\/th><th>內容<\/th><\/tr><\/thead><tbody><tr><td>NB／EB 老手<\/td><td><code>Multiplier Weight<\/code><\/td><td>每個 NB／EB 模式一個區塊<\/td><\/tr><tr><td>BF／SF 老手<\/td><td><code>Multiplier Weight<\/code><\/td><td>BF／SF 區塊<\/td><\/tr><tr><td>NB／EB 新手<\/td><td><code>Multiplier Weight (new_player)<\/code><\/td><td>每個 NB／EB 模式一個區塊<\/td><\/tr><tr><td>BF／SF 新手<\/td><td><code>Multiplier Weight (new_player)<\/code><\/td><td>BF／SF 區塊；原作若沒有（BF／SF 不分新手），轉 Reskin 時要補<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>卡片目標只看第 1.4 節表中的 Game（Landbase 轉製為 Game+Bonus）欄，依來源遊戲類型取用：<ul><li>iGaming（第 1.4.1 節），例 96 版：NB／EB 老手 Game 91%，其餘三組 Game 92%；Bonus 與 Progressive 不由卡片負責。<\/li><li>Landbase 轉製（第 1.4.2 節），例 96 版：NB／EB 新手與老手 94%、BF／SF 老手 94%、BF／SF 新手 96%。<\/li><\/ul><\/li><li>只有一套數學時只建 A，不建空白 B。<\/li><li>從原作轉來、檔名相同（如 <code>H0xx192A<\/code>、<code>H0xx194A<\/code>）時，以新版本覆蓋，原作版本保留在 <code>Versions/<\/code> 舊版資料夾。<\/li><\/ul>\n<h3 id=\"13-押注選項\">1.3 押注選項<\/h3>\n<h4 id=\"131-押注結構\">1.3.1 押注結構<\/h4>\n<p>押注金額由三個參數相乘，不直接列舉金額：<\/p>\n<pre><code>押注金額 = 最小押分（credits）× Denom × Bet Multiplier\n最小押分 = 100 credits（所有市場固定）<\/code><\/pre>\n<div class=\"tbl-wrap\"><table><thead><tr><th>參數<\/th><th>定義<\/th><th>由誰決定<\/th><\/tr><\/thead><tbody><tr><td>最小押分<\/td><td>1 倍押注的 credit 數，固定 <code>100<\/code><\/td><td>產線共用<\/td><\/tr><tr><td>Denom<\/td><td>每 credit 的幣值，依市場／幣別不同<\/td><td>市場設定（第 1.3 節）<\/td><\/tr><tr><td>Bet Multiplier<\/td><td>押注倍數選項，<code>1<\/code>～<code>1000<\/code> 共 44 組<\/td><td>產線共用（第 1.3.1 節）<\/td><\/tr><\/tbody><\/table><\/div>\n<div class=\"tbl-wrap\"><table><thead><tr><th>編號<\/th><th class=\"n\">1<\/th><th class=\"n\">2<\/th><th class=\"n\">3<\/th><th class=\"n\">4<\/th><th class=\"n\">5<\/th><th class=\"n\">6<\/th><th class=\"n\">7<\/th><th class=\"n\">8<\/th><th class=\"n\">9<\/th><th class=\"n\">10<\/th><th class=\"n\">11<\/th><th class=\"n\">12<\/th><th class=\"n\">13<\/th><th class=\"n\">14<\/th><th class=\"n\">15<\/th><th class=\"n\">16<\/th><th class=\"n\">17<\/th><th class=\"n\">18<\/th><th class=\"n\">19<\/th><th class=\"n\">20<\/th><th class=\"n\">21<\/th><th class=\"n\">22<\/th><th class=\"n\">23<\/th><th class=\"n\">24<\/th><th class=\"n\">25<\/th><th class=\"n\">26<\/th><th class=\"n\">27<\/th><th class=\"n\">28<\/th><th class=\"n\">29<\/th><th class=\"n\">30<\/th><th class=\"n\">31<\/th><th class=\"n\">32<\/th><th class=\"n\">33<\/th><th class=\"n\">34<\/th><th class=\"n\">35<\/th><th class=\"n\">36<\/th><th class=\"n\">37<\/th><th class=\"n\">38<\/th><th class=\"n\">39<\/th><th class=\"n\">40<\/th><th class=\"n\">41<\/th><th class=\"n\">42<\/th><th class=\"n\">43<\/th><th class=\"n\">44<\/th><\/tr><\/thead><tbody><tr><td>倍數<\/td><td class=\"n\">1<\/td><td class=\"n\">2<\/td><td class=\"n\">3<\/td><td class=\"n\">4<\/td><td class=\"n\">5<\/td><td class=\"n\">6<\/td><td class=\"n\">7<\/td><td class=\"n\">8<\/td><td class=\"n\">9<\/td><td class=\"n\">10<\/td><td class=\"n\">12<\/td><td class=\"n\">14<\/td><td class=\"n\">15<\/td><td class=\"n\">16<\/td><td class=\"n\">18<\/td><td class=\"n\">20<\/td><td class=\"n\">25<\/td><td class=\"n\">30<\/td><td class=\"n\">35<\/td><td class=\"n\">40<\/td><td class=\"n\">45<\/td><td class=\"n\">50<\/td><td class=\"n\">60<\/td><td class=\"n\">70<\/td><td class=\"n\">80<\/td><td class=\"n\">90<\/td><td class=\"n\">100<\/td><td class=\"n\">120<\/td><td class=\"n\">140<\/td><td class=\"n\">150<\/td><td class=\"n\">160<\/td><td class=\"n\">180<\/td><td class=\"n\">200<\/td><td class=\"n\">250<\/td><td class=\"n\">300<\/td><td class=\"n\">350<\/td><td class=\"n\">400<\/td><td class=\"n\">450<\/td><td class=\"n\">500<\/td><td class=\"n\">600<\/td><td class=\"n\">700<\/td><td class=\"n\">800<\/td><td class=\"n\">900<\/td><td class=\"n\">1000<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>全部市場共用同一張倍數表；個別市場只能<strong>從中選用子集<\/strong>，不得新增表外倍數。<\/li><\/ul>\n<h4 id=\"132-sc\">1.3.2 SC<\/h4>\n<div class=\"tbl-wrap\"><table><thead><tr><th>項目<\/th><th>值<\/th><\/tr><\/thead><tbody><tr><td>Denom<\/td><td><code>0.002<\/code><\/td><\/tr><tr><td>1 倍押注<\/td><td><code>0.2 SC<\/code><\/td><\/tr><tr><td>選項數<\/td><td>44（倍數表全選；上線開 40 檔）<\/td><\/tr><tr><td>最小／最大押注<\/td><td><code>0.2<\/code>／<code>200 SC<\/code><\/td><\/tr><\/tbody><\/table><\/div>\n<div class=\"tbl-wrap\"><table><thead><tr><th>編號<\/th><th class=\"n\">1<\/th><th class=\"n\">2<\/th><th class=\"n\">3<\/th><th class=\"n\">4<\/th><th class=\"n\">5<\/th><th class=\"n\">6<\/th><th class=\"n\">7<\/th><th class=\"n\">8<\/th><th class=\"n\">9<\/th><th class=\"n\">10<\/th><th class=\"n\">11<\/th><th class=\"n\">12<\/th><th class=\"n\">13<\/th><th class=\"n\">14<\/th><th class=\"n\">15<\/th><th class=\"n\">16<\/th><th class=\"n\">17<\/th><th class=\"n\">18<\/th><th class=\"n\">19<\/th><th class=\"n\">20<\/th><th class=\"n\">21<\/th><th class=\"n\">22<\/th><th class=\"n\">23<\/th><th class=\"n\">24<\/th><th class=\"n\">25<\/th><th class=\"n\">26<\/th><th class=\"n\">27<\/th><th class=\"n\">28<\/th><th class=\"n\">29<\/th><th class=\"n\">30<\/th><th class=\"n\">31<\/th><th class=\"n\">32<\/th><th class=\"n\">33<\/th><th class=\"n\">34<\/th><th class=\"n\">35<\/th><th class=\"n\">36<\/th><th class=\"n\">37<\/th><th class=\"n\">38<\/th><th class=\"n\">39<\/th><th class=\"n\">40<\/th><th class=\"n\">41<\/th><th class=\"n\">42<\/th><th class=\"n\">43<\/th><th class=\"n\">44<\/th><\/tr><\/thead><tbody><tr><td>金額<\/td><td class=\"n\">0.2<\/td><td class=\"n\">0.4<\/td><td class=\"n\">0.6<\/td><td class=\"n\">0.8<\/td><td class=\"n\">1<\/td><td class=\"n\">1.2<\/td><td class=\"n\">1.4<\/td><td class=\"n\">1.6<\/td><td class=\"n\">1.8<\/td><td class=\"n\">2<\/td><td class=\"n\">2.4<\/td><td class=\"n\">2.8<\/td><td class=\"n\">3<\/td><td class=\"n\">3.2<\/td><td class=\"n\">3.6<\/td><td class=\"n\">4<\/td><td class=\"n\">5<\/td><td class=\"n\">6<\/td><td class=\"n\">7<\/td><td class=\"n\">8<\/td><td class=\"n\">9<\/td><td class=\"n\">10<\/td><td class=\"n\">12<\/td><td class=\"n\">14<\/td><td class=\"n\">16<\/td><td class=\"n\">18<\/td><td class=\"n\">20<\/td><td class=\"n\">24<\/td><td class=\"n\">28<\/td><td class=\"n\">30<\/td><td class=\"n\">32<\/td><td class=\"n\">36<\/td><td class=\"n\">40<\/td><td class=\"n\">50<\/td><td class=\"n\">60<\/td><td class=\"n\">70<\/td><td class=\"n\">80<\/td><td class=\"n\">90<\/td><td class=\"n\">100<\/td><td class=\"n\">120<\/td><td class=\"n\">140<\/td><td class=\"n\">160<\/td><td class=\"n\">180<\/td><td class=\"n\">200<\/td><\/tr><tr><td>開啟<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\">✓<\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>實際上線時編號 11、12、14、15（<code>2.4<\/code>、<code>2.8<\/code>、<code>3.2<\/code>、<code>3.6<\/code>）關閉，「開啟」列打勾的才會上線。<\/li><\/ul>\n<h4 id=\"133-gc\">1.3.3 GC<\/h4>\n<div class=\"tbl-wrap\"><table><thead><tr><th>項目<\/th><th>值<\/th><\/tr><\/thead><tbody><tr><td>Denom<\/td><td><code>20<\/code><\/td><\/tr><tr><td>1 倍押注<\/td><td><code>2,000 GC<\/code><\/td><\/tr><tr><td>選項數<\/td><td>44（倍數表全選；上線開 18 檔）<\/td><\/tr><tr><td>最小／最大押注<\/td><td><code>2,000<\/code>／<code>2,000,000 GC<\/code>（上線只開到 <code>100,000<\/code>）<\/td><\/tr><\/tbody><\/table><\/div>\n<div class=\"tbl-wrap\"><table><thead><tr><th>編號<\/th><th class=\"n\">1<\/th><th class=\"n\">2<\/th><th class=\"n\">3<\/th><th class=\"n\">4<\/th><th class=\"n\">5<\/th><th class=\"n\">6<\/th><th class=\"n\">7<\/th><th class=\"n\">8<\/th><th class=\"n\">9<\/th><th class=\"n\">10<\/th><th class=\"n\">11<\/th><th class=\"n\">12<\/th><th class=\"n\">13<\/th><th class=\"n\">14<\/th><th class=\"n\">15<\/th><th class=\"n\">16<\/th><th class=\"n\">17<\/th><th class=\"n\">18<\/th><th class=\"n\">19<\/th><th class=\"n\">20<\/th><th class=\"n\">21<\/th><th class=\"n\">22<\/th><th class=\"n\">23<\/th><th class=\"n\">24<\/th><th class=\"n\">25<\/th><th class=\"n\">26<\/th><th class=\"n\">27<\/th><th class=\"n\">28<\/th><th class=\"n\">29<\/th><th class=\"n\">30<\/th><th class=\"n\">31<\/th><th class=\"n\">32<\/th><th class=\"n\">33<\/th><th class=\"n\">34<\/th><th class=\"n\">35<\/th><th class=\"n\">36<\/th><th class=\"n\">37<\/th><th class=\"n\">38<\/th><th class=\"n\">39<\/th><th class=\"n\">40<\/th><th class=\"n\">41<\/th><th class=\"n\">42<\/th><th class=\"n\">43<\/th><th class=\"n\">44<\/th><\/tr><\/thead><tbody><tr><td>金額<\/td><td class=\"n\">2,000<\/td><td class=\"n\">4,000<\/td><td class=\"n\">6,000<\/td><td class=\"n\">8,000<\/td><td class=\"n\">10,000<\/td><td class=\"n\">12,000<\/td><td class=\"n\">14,000<\/td><td class=\"n\">16,000<\/td><td class=\"n\">18,000<\/td><td class=\"n\">20,000<\/td><td class=\"n\">24,000<\/td><td class=\"n\">28,000<\/td><td class=\"n\">30,000<\/td><td class=\"n\">32,000<\/td><td class=\"n\">36,000<\/td><td class=\"n\">40,000<\/td><td class=\"n\">50,000<\/td><td class=\"n\">60,000<\/td><td class=\"n\">70,000<\/td><td class=\"n\">80,000<\/td><td class=\"n\">90,000<\/td><td class=\"n\">100,000<\/td><td class=\"n\">120,000<\/td><td class=\"n\">140,000<\/td><td class=\"n\">160,000<\/td><td class=\"n\">180,000<\/td><td class=\"n\">200,000<\/td><td class=\"n\">240,000<\/td><td class=\"n\">280,000<\/td><td class=\"n\">300,000<\/td><td class=\"n\">320,000<\/td><td class=\"n\">360,000<\/td><td class=\"n\">400,000<\/td><td class=\"n\">500,000<\/td><td class=\"n\">600,000<\/td><td class=\"n\">700,000<\/td><td class=\"n\">800,000<\/td><td class=\"n\">900,000<\/td><td class=\"n\">1,000,000<\/td><td class=\"n\">1,200,000<\/td><td class=\"n\">1,400,000<\/td><td class=\"n\">1,600,000<\/td><td class=\"n\">1,800,000<\/td><td class=\"n\">2,000,000<\/td><\/tr><tr><td>開啟<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\">✓<\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\">✓<\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><td class=\"n\"><\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li><strong>實際上 GC 上線後最大押注只會開到 10 萬（<code>100,000 GC<\/code>）<\/strong>：編號 23～44（<code>&gt; 100,000 GC<\/code>）的檔位不開放；編號 11、12、14、15 也同 SC 關閉。<\/li><li>GC 金額位數大：最大押注 <code>100,000<\/code> × Max Multiplier（例 20000x）= <code>2 × 10⁹<\/code>，Config、Simulator 報表、Demogame 顯示與後端欄位都必須確認不溢位、不被四捨五入。<\/li><\/ul>\n<h4 id=\"134-市場總覽\">1.3.4 市場總覽<\/h4>\n<div class=\"tbl-wrap\"><table><thead><tr><th>市場／幣別<\/th><th class=\"n\">Denom<\/th><th class=\"n\">1 倍押注<\/th><th class=\"n\">選項數<\/th><th class=\"n\">最大押注<\/th><th>來源<\/th><\/tr><\/thead><tbody><tr><td>Reskin SC<\/td><td class=\"n\">0.002<\/td><td class=\"n\">0.2<\/td><td class=\"n\">44（上線 40）<\/td><td class=\"n\">200<\/td><td><code>v2<\/code><\/td><\/tr><tr><td>Reskin GC<\/td><td class=\"n\">20<\/td><td class=\"n\">2,000<\/td><td class=\"n\">44（上線 18）<\/td><td class=\"n\">2,000,000（上線 100,000）<\/td><td><code>v2<\/code><\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li><strong>上限以上不開的押注一律壓住<\/strong>：「開啟」列沒打勾的檔位上線不開放。若某檔位是因為數學調不出來（例如倍率上限、天花板或系統最大賠付壓不下來）才不開，須在文件備註該檔位與原因。<\/li><\/ul>\n<h3 id=\"14-rtp-配置\">1.4 RTP 配置<\/h3>\n<p>平台要求提供 <strong>Total (+機制) 92%／94%／96%<\/strong> 三個 RTP 版本（見 <a href=\"#\" class=\"tab-link\" data-tab=\"knowhow\">Knowhow<\/a>）。來源遊戲分 <strong>iGaming 遊戲<\/strong>與 <strong>Landbase 轉製遊戲<\/strong>兩種，RTP 配置各自不同。<\/p>\n<h4 id=\"141-igaming-遊戲\">1.4.1 iGaming 遊戲<\/h4>\n<p>以原作的 RTP 配置為底調整：改成 92／94／96 三版，且<strong>不分押注層級<\/strong>（沒有 <code>&lt; $2<\/code> 小 Bet）。Game 與 Bonus 分開列；三版的 Bonus、彩金（Progressive）與機制都一樣，只差在 Game RTP。<\/p>\n<h5 id=\"96-版total-機制-96\">96 版（Total (+機制) 96%）<\/h5>\n<div class=\"tbl-wrap\"><table><thead><tr><th>押注模式<\/th><th>狀態<\/th><th class=\"n\">Game<\/th><th class=\"n\">Bonus<\/th><th class=\"n\">Progressive<\/th><th class=\"n\">Total<\/th><th class=\"n\">機制<\/th><th class=\"n\">Total (+機制)<\/th><\/tr><\/thead><tbody><tr><td>NB／EB<\/td><td>新手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><tr><td>NB／EB<\/td><td>老手<\/td><td class=\"n\">91.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">95.00%<\/td><td class=\"n\">1.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>新手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">4.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>老手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">96.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<h5 id=\"94-版total-機制-94\">94 版（Total (+機制) 94%）<\/h5>\n<div class=\"tbl-wrap\"><table><thead><tr><th>押注模式<\/th><th>狀態<\/th><th class=\"n\">Game<\/th><th class=\"n\">Bonus<\/th><th class=\"n\">Progressive<\/th><th class=\"n\">Total<\/th><th class=\"n\">機制<\/th><th class=\"n\">Total (+機制)<\/th><\/tr><\/thead><tbody><tr><td>NB／EB<\/td><td>新手<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><tr><td>NB／EB<\/td><td>老手<\/td><td class=\"n\">89.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">93.00%<\/td><td class=\"n\">1.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>新手<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">4.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>老手<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<h5 id=\"92-版total-機制-92\">92 版（Total (+機制) 92%）<\/h5>\n<div class=\"tbl-wrap\"><table><thead><tr><th>押注模式<\/th><th>狀態<\/th><th class=\"n\">Game<\/th><th class=\"n\">Bonus<\/th><th class=\"n\">Progressive<\/th><th class=\"n\">Total<\/th><th class=\"n\">機制<\/th><th class=\"n\">Total (+機制)<\/th><\/tr><\/thead><tbody><tr><td>NB／EB<\/td><td>新手<\/td><td class=\"n\">88.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><tr><td>NB／EB<\/td><td>老手<\/td><td class=\"n\">87.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">91.00%<\/td><td class=\"n\">1.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>新手<\/td><td class=\"n\">88.00%<\/td><td class=\"n\">4.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>老手<\/td><td class=\"n\">88.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>沿用原作的 Bonus 拆分：NB／EB 2%；BF／SF 新手 4%、老手 2%。<\/li><li>不分押注層級：老手不論押注大小 Progressive（Link）皆為 2%，新手皆 0%。<\/li><li>機制：新手 NB／EB 為新手體驗 2%；老手 NB／EB 為 1%（自 Game 移出）；BF／SF 為 0%，新手以 Bonus 4% 補足。<\/li><li>版本差異全部由 Game RTP 吸收：老手 NB／EB 的 Game ＝ 版本 − 5%，其餘 Game ＝ 版本 − 4%。<\/li><\/ul>\n<h4 id=\"142-landbase-轉製遊戲\">1.4.2 Landbase 轉製遊戲<\/h4>\n<p>三版的彩金（Progressive）與新手體驗都一樣，只差在 Game RTP。<\/p>\n<h5 id=\"96-版total-機制-96-2\">96 版（Total (+機制) 96%）<\/h5>\n<div class=\"tbl-wrap\"><table><thead><tr><th>押注模式<\/th><th>狀態<\/th><th class=\"n\">Game+Bonus<\/th><th class=\"n\">Progressive<\/th><th class=\"n\">Total<\/th><th class=\"n\">新手體驗<\/th><th class=\"n\">Total (+機制)<\/th><\/tr><\/thead><tbody><tr><td>NB／EB<\/td><td>新手<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><tr><td>NB／EB<\/td><td>老手<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">96.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>新手<\/td><td class=\"n\">96.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>老手<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">96.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">96.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<h5 id=\"94-版total-機制-94-2\">94 版（Total (+機制) 94%）<\/h5>\n<div class=\"tbl-wrap\"><table><thead><tr><th>押注模式<\/th><th>狀態<\/th><th class=\"n\">Game+Bonus<\/th><th class=\"n\">Progressive<\/th><th class=\"n\">Total<\/th><th class=\"n\">新手體驗<\/th><th class=\"n\">Total (+機制)<\/th><\/tr><\/thead><tbody><tr><td>NB／EB<\/td><td>新手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><tr><td>NB／EB<\/td><td>老手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>新手<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>老手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">94.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">94.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<h5 id=\"92-版total-機制-92-2\">92 版（Total (+機制) 92%）<\/h5>\n<div class=\"tbl-wrap\"><table><thead><tr><th>押注模式<\/th><th>狀態<\/th><th class=\"n\">Game+Bonus<\/th><th class=\"n\">Progressive<\/th><th class=\"n\">Total<\/th><th class=\"n\">新手體驗<\/th><th class=\"n\">Total (+機制)<\/th><\/tr><\/thead><tbody><tr><td>NB／EB<\/td><td>新手<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><tr><td>NB／EB<\/td><td>老手<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>新手<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><tr><td>BF／SF<\/td><td>老手<\/td><td class=\"n\">90.00%<\/td><td class=\"n\">2.00%<\/td><td class=\"n\">92.00%<\/td><td class=\"n\">0.00%<\/td><td class=\"n\">92.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>Landbase 轉製遊戲不拆 Bonus，表中 Game+Bonus 為合併值。<\/li><li>只分新手／老手，<strong>不分押注層級<\/strong>；老手不論押注大小 Progressive（Link）皆為 2%。<\/li><li>三版的彩金一樣插在遊戲裡：老手 Progressive 皆 2%，新手皆 0%；版本差異全部由 Game RTP 吸收（老手 Game ＝ 版本 − 2%）。<\/li><li>新手不能拉彩金：NB／EB 以新手體驗 2% 補足，BF／SF 以 Game 補足（Game ＝ 版本 RTP）。<\/li><\/ul>\n<h3 id=\"15-彩金配置\">1.5 彩金配置<\/h3>\n<h4 id=\"151-link-資格\">1.5.1 Link 資格<\/h4>\n<div class=\"tbl-wrap\"><table><thead><tr><th>項目<\/th><th>規則<\/th><\/tr><\/thead><tbody><tr><td>級距<\/td><td>Grand、Major 兩層累積彩池<\/td><\/tr><tr><td>Link RTP<\/td><td><strong>2%<\/strong>，92／94／96 三版相同（第 1.4 節的 Progressive）<\/td><\/tr><tr><td>資格<\/td><td>見下表；<strong>不分押注大小<\/strong>，系統不依押注金額擋<\/td><\/tr><tr><td>幣別<\/td><td>GC、SC 是否各自一組彩池待確認（第 2 章）<\/td><\/tr><\/tbody><\/table><\/div>\n<div class=\"tbl-wrap\"><table><thead><tr><th>狀態<\/th><th>可拉 Link<\/th><th>可滾 Inrc<\/th><\/tr><\/thead><tbody><tr><td>新手<\/td><td>否<\/td><td>是<\/td><\/tr><tr><td>老手<\/td><td>是<\/td><td>是<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>NB／EB 與 BF／SF 都適用上表；新手的押注照樣滾入彩池，但不能中彩，所以新手 Progressive 為 0%。<\/li><li>彩金參數由系統層設定，數學模型不得寫死在輪帶或 Paytable；模型只負責 Game RTP，並在 <code>Game Description<\/code> 記錄採用的彩金參數版本。<\/li><\/ul>\n<h4 id=\"152-link-彩金配置\">1.5.2 Link 彩金配置<\/h4>\n<div class=\"tbl-wrap\"><table><thead><tr><th>幣別<\/th><th>級距<\/th><th class=\"n\">初始金額<\/th><th class=\"n\">Startup%<\/th><th class=\"n\">Increment<\/th><th class=\"n\">RTP<\/th><\/tr><\/thead><tbody><tr><td>SC<\/td><td>Grand<\/td><td class=\"n\">100,000 SC<\/td><td class=\"n\">0.65%<\/td><td class=\"n\">0.35%<\/td><td class=\"n\">1.00%<\/td><\/tr><tr><td>SC<\/td><td>Major<\/td><td class=\"n\">20,000 SC<\/td><td class=\"n\">0.50%<\/td><td class=\"n\">0.50%<\/td><td class=\"n\">1.00%<\/td><\/tr><tr><td>GC<\/td><td>Grand<\/td><td class=\"n\">10,000,000 GC<\/td><td class=\"n\">0.65%<\/td><td class=\"n\">0.35%<\/td><td class=\"n\">1.00%<\/td><\/tr><tr><td>GC<\/td><td>Major<\/td><td class=\"n\">2,000,000 GC<\/td><td class=\"n\">0.50%<\/td><td class=\"n\">0.50%<\/td><td class=\"n\">1.00%<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li><strong>有 Link 的遊戲才依本表配置<\/strong>，沒有 Link 的遊戲不用此配置。<\/li><li>GC、SC 的彩金大小（初始金額）各自設定，見上表；Startup%、Increment、RTP 兩幣別相同。<\/li><li><strong>賭場線上線下串連的配置不列入本表<\/strong>：若要讓某賭場的線上與線下（實體機台）彩金串在一起，線上的配置必須與該賭場線下<strong>一模一樣<\/strong>；而每款遊戲在賭場的配置都不同，無法訂一套共用值。目前只有 MFB（Okada）一家賭場，所以真要串時先以 MFB 的配置為準（例：Grand <code>$1,000,000<\/code>／Startup 1.10%／Increment 0.20%／RTP 1.30%；Major <code>$100,000<\/code>／0.50%／0.20%／0.70%）；之後若不再有這需求就用不到，因此<strong>有要串時才依該遊戲、該賭場的配置另做<\/strong>。<\/li><\/ul>\n<div class=\"tbl-wrap\"><table><thead><tr><th>欄位<\/th><th>定義<\/th><\/tr><\/thead><tbody><tr><td>初始金額<\/td><td>彩池開出後重置的起始金額（Start Up Pool）<\/td><\/tr><tr><td>Startup%<\/td><td>押注中用來補足初始金額的比例；<code>Startup% = RTP − Increment<\/code><\/td><\/tr><tr><td>Increment<\/td><td>押注中滾入彩池、讓彩池累積上漲的比例（試算表的 Inrc）<\/td><\/tr><tr><td>RTP<\/td><td>該級距的彩金 RTP；<code>RTP = Startup% + Increment<\/code><\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>Grand ＋ Major RTP ＝ Link RTP 2.00%；Increment 合計 0.85%。<\/li><li>平均開出金額：<code>Average Jackpot Hit Value = 初始金額 ÷ Startup% × RTP<\/code>。例：SC Grand ＝ 100,000 ÷ 0.65% × 1.00% ≈ 153,846 SC。<\/li><li>試算表只給初始金額、RTP 與 Increment，Startup% 依上式推得；試算表改版時三欄一起更新。<\/li><\/ul>\n<h3 id=\"16-bet-mode\">1.6 Bet Mode<\/h3>\n<ul><li>Reskin <strong>不分押注層級<\/strong>：沒有 <code>&lt; $2<\/code>／<code>&gt;= $2<\/code>（小／中／大 Bet）之分，系統也不依押注金額擋拉彩金。<\/li><li>數學模型的 Bet Mode 成本（EB 倍數、BF／SF 價格倍數）以 1 倍押注為基準定義；Reskin 不改這些倍數。<\/li><li>Simulator 依版本指定 Config，不依押注金額自動選檔。<\/li><\/ul>\n<h2 id=\"2-待確認事項\">2. 待確認事項<\/h2>\n<div class=\"tbl-wrap\"><table><thead><tr><th>項目<\/th><th>現況<\/th><th>需決定<\/th><\/tr><\/thead><tbody><tr><td>雙幣 RTP／機制<\/td><td>未定義<\/td><td>GC 與 SC 是否共用 RTP、新手體驗、Card System Profile<\/td><\/tr><tr><td>彩金幣別<\/td><td>配置見第 1.5.2 節<\/td><td>GC、SC 是否各自一組彩池<\/td><\/tr><tr><td>系統最大賠付<\/td><td>未定義<\/td><td>各市場單把派彩上限，以及超過時截斷或重骰<\/td><\/tr><tr><td>Feature 購買上限<\/td><td><code>Sheet1<\/code> 舊草稿曾標示「Super Feature 可使用最大押注」「Buy Feature 可使用押注」<\/td><td>現行版是否仍限制 BF／SF 可用的押注檔位<\/td><\/tr><\/tbody><\/table><\/div><\/section><\/main>\n<\/div>\n<\/div>\n<script>\nvar TAB_IDS = ['guide', 'knowhow', 'math'];\nvar LAST = {};\nfunction activate(tabId, anchor) {\n  document.querySelectorAll('.tab').forEach(function(b) {\n    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;\n    if (on) LAST[b.id] = tabId;\n    b.setAttribute('aria-selected', on ? 'true' : 'false');\n    b.tabIndex = on ? 0 : -1;\n    if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });\n  });\n  document.querySelectorAll('.panel').forEach(function(p) {\n    p.hidden = (p.id !== 'panel-' + tabId);\n  });\n  document.querySelectorAll('.toc').forEach(function(t) {\n    t.hidden = (t.id !== 'toc-' + tabId);\n  });\n  if (anchor) {\n    var el = document.getElementById(anchor);\n    if (el) el.scrollIntoView();\n  } else {\n    window.scrollTo(0, 0);\n  }\n  // 嵌入入口時通知入口：左側目錄跟著亮起\n  if (window.self !== window.top) window.parent.postMessage({specTab: tabId, specAnchor: anchor || ''}, '*');\n}\n// 入口左側目錄點選 → 切到對應頁籤／章節\nwindow.addEventListener('message', function(e) {\n  var d = e.data || {};\n  if (d.goTab && TAB_IDS.indexOf(d.goTab) >= 0) activate(d.goTab, d.goAnchor || null);\n});\n// 嵌入時捲動內文，回報目前讀到的章節\nwindow.addEventListener('scroll', function() {\n  if (window.self === window.top) return;\n  clearTimeout(window._spy);\n  window._spy = setTimeout(function() {\n    var p = document.querySelector('.panel:not([hidden])');\n    if (!p) return;\n    var cur = '';\n    p.querySelectorAll('h2[id], h3[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });\n    window.parent.postMessage({specTab: p.id.slice(6), specAnchor: cur, spy: true}, '*');\n  }, 80);\n});\ndocument.querySelectorAll('.tab').forEach(function(b) {\n  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });\n});\n(function() {\n  var bar = document.querySelector('.tabs');\n  bar.addEventListener('wheel', function(e) {\n    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {\n      bar.scrollLeft += e.deltaY;\n      e.preventDefault();\n    }\n  }, { passive: false });\n})();\n(function() {\n  var h = decodeURIComponent(location.hash.slice(1));\n  if (!h) return;\n  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');\n  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);\n})();\n// 寬表格／程式碼／時間軸：滑鼠按住左右拖曳捲動（拉條已隱藏）\n(function() {\n  var drag = null, moved = false;\n  function mark() {\n    document.querySelectorAll('.tbl-wrap, pre, .tl-wrap').forEach(function(el) {\n      el.classList.toggle('drag-x', el.scrollWidth > el.clientWidth + 1);\n    });\n  }\n  document.addEventListener('mousedown', function(e) {\n    var el = e.button === 0 && e.target.closest('.drag-x');\n    if (!el || e.target.closest('a')) return;\n    drag = { el: el, x: e.clientX, left: el.scrollLeft };\n    moved = false;\n  });\n  document.addEventListener('mousemove', function(e) {\n    if (!drag) return;\n    var dx = e.clientX - drag.x;\n    if (!moved && Math.abs(dx) < 4) return;\n    moved = true;\n    drag.el.classList.add('dragging');\n    drag.el.scrollLeft = drag.left - dx;\n    e.preventDefault();\n  });\n  document.addEventListener('mouseup', function() {\n    if (drag) drag.el.classList.remove('dragging');\n    drag = null;\n  });\n  // 拖曳結束時不要觸發點擊\n  document.addEventListener('click', function(e) {\n    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }\n  }, true);\n  window.addEventListener('resize', mark);\n  document.addEventListener('click', function() { setTimeout(mark, 0); });\n  mark();\n})();\ndocument.addEventListener('click', function(e) {\n  var a = e.target.closest('a');\n  if (!a) return;\n  if (a.classList.contains('tab-link')) {\n    e.preventDefault();\n    activate(a.dataset.tab, a.dataset.anchor || null);\n  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {\n    var id = a.getAttribute('href').slice(1);\n    var el = document.getElementById(id);\n    if (!el) return;\n    e.preventDefault();\n    var panel = el.closest('.panel');\n    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);\n  }\n});\n<\/script>\n<\/body>\n<\/html>\n"</script>
 <script>
-var TAB_IDS = ['guide', 'knowhow', 'math'];
-var LAST = {};
-function activate(tabId, anchor) {
-  document.querySelectorAll('.tab').forEach(function(b) {
-    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;
-    if (on) LAST[b.id] = tabId;
-    b.setAttribute('aria-selected', on ? 'true' : 'false');
-    b.tabIndex = on ? 0 : -1;
-    if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  });
-  document.querySelectorAll('.panel').forEach(function(p) {
-    p.hidden = (p.id !== 'panel-' + tabId);
-  });
-  document.querySelectorAll('.toc').forEach(function(t) {
-    t.hidden = (t.id !== 'toc-' + tabId);
-  });
-  if (anchor) {
-    var el = document.getElementById(anchor);
-    if (el) el.scrollIntoView();
-  } else {
-    window.scrollTo(0, 0);
-  }
-  // 嵌入入口時通知入口：左側目錄跟著亮起
-  if (window.self !== window.top) window.parent.postMessage({specTab: tabId, specAnchor: anchor || ''}, '*');
+var SITES = {"reskin": {"name": "Reskin", "src": "", "meta": {"groups": [["總覽", ["guide"]], ["Knowhow", ["knowhow"]], ["數學設計", ["math"]]], "titles": {"guide": "導覽", "knowhow": "Knowhow", "math": "數學模型規範"}, "toc": {"guide": [], "knowhow": [[2, "1-市場與平台要求", "1. 市場與平台要求"], [2, "2-幣別", "2. 幣別"]], "math": [[2, "1-數學模型", "1. 數學模型"], [3, "11-必要內容", "1.1 必要內容"], [3, "12-模型命名", "1.2 模型命名"], [3, "13-押注選項", "1.3 押注選項"], [3, "14-rtp-配置", "1.4 RTP 配置"], [3, "15-彩金配置", "1.5 彩金配置"], [3, "16-bet-mode", "1.6 Bet Mode"], [2, "2-待確認事項", "2. 待確認事項"]]}}}};
+var KEYS = ["reskin"];
+var SINGLE = true;
+var frame = document.getElementById('site');
+var cur = { key: null, tab: null, anchor: '' };
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function setHash() {
+  var h = '#' + (SINGLE ? '' : cur.key + (cur.tab ? '/' : '')) + (cur.tab || '') + (cur.anchor ? '/' + cur.anchor : '');
+  if (location.hash !== h) history.replaceState(null, '', h);
 }
-// 入口左側目錄點選 → 切到對應頁籤／章節
-window.addEventListener('message', function(e) {
-  var d = e.data || {};
-  if (d.goTab && TAB_IDS.indexOf(d.goTab) >= 0) activate(d.goTab, d.goAnchor || null);
-});
-// 嵌入時捲動內文，回報目前讀到的章節
-window.addEventListener('scroll', function() {
-  if (window.self === window.top) return;
-  clearTimeout(window._spy);
-  window._spy = setTimeout(function() {
-    var p = document.querySelector('.panel:not([hidden])');
-    if (!p) return;
-    var cur = '';
-    p.querySelectorAll('h2[id], h3[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });
-    window.parent.postMessage({specTab: p.id.slice(6), specAnchor: cur, spy: true}, '*');
-  }, 80);
-});
-document.querySelectorAll('.tab').forEach(function(b) {
-  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });
-});
-(function() {
-  var bar = document.querySelector('.tabs');
-  bar.addEventListener('wheel', function(e) {
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {
-      bar.scrollLeft += e.deltaY;
-      e.preventDefault();
+// 目錄最多兩層：大類下只有一份文件時列章節；多份文件時只列文件名（章節看內文）
+// 文件名去掉「規範」、章節去掉編號，各站寫法一致
+var DOC_NAME = { 'GameRule規範': 'Game Rule', 'Demo報告規範': 'Demo 報告' };
+function docName(t) { return DOC_NAME[t] || t.replace(/規範$/, ''); }
+function secName(t) { return t.replace(/^\d+(\.\d+)*\.?\s*/, ''); }
+function secLink(t, s, on) {
+  return '<a href="#" data-tab="' + t + '" data-anchor="' + s[1] + '"' + (on ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a>';
+}
+// 整站只有一份文件（開發流程）：每章當一個大類、小節列在下面，與其他站同一種結構
+function renderFlat(m, t) {
+  var out = '', list = (m.toc || {})[t] || [], open = false;
+  // 目前讀到的小節所屬的章（第 2 層）
+  var curChap = '', last2 = '';
+  list.forEach(function (s) { if (s[0] === 2) last2 = s[1]; if (s[1] === cur.anchor) curChap = last2; });
+  list.forEach(function (s) {
+    if (s[0] === 2) {
+      if (open) out += '</ul></li>';
+      out += '<li>' + secLink(t, s, s[1] === curChap) + '<ul>';
+      open = true;
+    } else if (open) {
+      out += '<li>' + secLink(t, s, s[1] === cur.anchor) + '</li>';
     }
-  }, { passive: false });
-})();
-(function() {
-  var h = decodeURIComponent(location.hash.slice(1));
-  if (!h) return;
-  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
-  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
-})();
-// 寬表格／程式碼／時間軸：滑鼠按住左右拖曳捲動（拉條已隱藏）
-(function() {
-  var drag = null, moved = false;
-  function mark() {
-    document.querySelectorAll('.tbl-wrap, pre, .tl-wrap').forEach(function(el) {
-      el.classList.toggle('drag-x', el.scrollWidth > el.clientWidth + 1);
-    });
+  });
+  if (open) out += '</ul></li>';
+  return out.replace(/<ul><\/ul>/g, '');
+}
+function renderToc() {
+  var m = SITES[cur.key].meta, out = '';
+  var gs = m.groups || [];
+  if (gs.length === 1 && gs[0][1].length === 1) {
+    document.getElementById('toc').innerHTML = renderFlat(m, gs[0][1][0]);
+    return;
   }
-  document.addEventListener('mousedown', function(e) {
-    var el = e.button === 0 && e.target.closest('.drag-x');
-    if (!el || e.target.closest('a')) return;
-    drag = { el: el, x: e.clientX, left: el.scrollLeft };
-    moved = false;
+  gs.forEach(function (g) {
+    var ids = g[1], active = ids.indexOf(cur.tab) >= 0;
+    out += '<li><a href="#" data-tab="' + ids[0] + '"' + (active ? ' class="on"' : '') + '>' + esc(g[0]) + '</a>';
+    {   // 全部展開，不折疊
+      out += '<ul>';
+      if (ids.length > 1) {
+        ids.forEach(function (t) {
+          out += '<li><a href="#" data-tab="' + t + '"' + (t === cur.tab ? ' class="on"' : '') + '>' + esc(docName(m.titles[t])) + '</a></li>';
+        });
+      } else {
+        var lst = (m.toc || {})[ids[0]] || [], ch = '', l2 = '';
+        lst.forEach(function (s) { if (s[0] === 2) l2 = s[1]; if (s[1] === cur.anchor) ch = l2; });
+        lst.filter(function (s) { return s[0] === 2; }).forEach(function (s) {
+          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (active && s[1] === ch ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
+        });
+      }
+      out += '</ul>';
+    }
+    out += '</li>';
   });
-  document.addEventListener('mousemove', function(e) {
-    if (!drag) return;
-    var dx = e.clientX - drag.x;
-    if (!moved && Math.abs(dx) < 4) return;
-    moved = true;
-    drag.el.classList.add('dragging');
-    drag.el.scrollLeft = drag.left - dx;
-    e.preventDefault();
-  });
-  document.addEventListener('mouseup', function() {
-    if (drag) drag.el.classList.remove('dragging');
-    drag = null;
-  });
-  // 拖曳結束時不要觸發點擊
-  document.addEventListener('click', function(e) {
-    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
-  }, true);
-  window.addEventListener('resize', mark);
-  document.addEventListener('click', function() { setTimeout(mark, 0); });
-  mark();
-})();
-document.addEventListener('click', function(e) {
-  var a = e.target.closest('a');
+  document.getElementById('toc').innerHTML = out;
+}
+function markNav() {
+  document.querySelectorAll('.nav a').forEach(function (a) { a.classList.toggle('on', a.dataset.key === cur.key); });
+}
+function go(tab, anchor) {
+  cur.tab = tab; cur.anchor = anchor || '';
+  frame.contentWindow && frame.contentWindow.postMessage({ goTab: tab, goAnchor: anchor || '' }, '*');
+  renderToc(); setHash();
+}
+function openSite(key, tab, anchor) {
+  if (!SITES[key]) key = KEYS[0];
+  var groups = SITES[key].meta.groups || [];
+  cur = { key: key, tab: tab || (groups[0] ? groups[0][1][0] : null), anchor: anchor || '' };
+  frame.onload = function () { if (cur.tab) frame.contentWindow.postMessage({ goTab: cur.tab, goAnchor: cur.anchor }, '*'); };
+  var doc = document.getElementById('doc-' + key);
+  if (doc) { frame.removeAttribute('src'); frame.srcdoc = JSON.parse(doc.textContent); }
+  else { frame.removeAttribute('srcdoc'); frame.src = SITES[key].src; }
+  markNav(); renderToc(); setHash();
+}
+document.querySelector('.nav') && document.querySelector('.nav').addEventListener('click', function (e) {
+  var a = e.target.closest('a[data-key]');
   if (!a) return;
-  if (a.classList.contains('tab-link')) {
-    e.preventDefault();
-    activate(a.dataset.tab, a.dataset.anchor || null);
-  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {
-    var id = a.getAttribute('href').slice(1);
-    var el = document.getElementById(id);
-    if (!el) return;
-    e.preventDefault();
-    var panel = el.closest('.panel');
-    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);
-  }
+  e.preventDefault();
+  openSite(a.dataset.key);
 });
+document.getElementById('toc').addEventListener('click', function (e) {
+  var a = e.target.closest('a[data-tab]');
+  if (!a) return;
+  e.preventDefault();
+  go(a.dataset.tab, a.dataset.anchor || '');
+});
+// 內文切頁籤或捲動時，左側目錄跟著亮起
+window.addEventListener('message', function (e) {
+  var d = e.data || {};
+  if (!d.specTab || e.source !== frame.contentWindow) return;
+  if (d.spy && d.specTab !== cur.tab) return;
+  cur.tab = d.specTab; cur.anchor = d.specAnchor || '';
+  renderToc(); setHash();
+});
+(function () {
+  var p = decodeURIComponent(location.hash.slice(1)).split('/');
+  if (SINGLE) openSite(KEYS[0], p[0], p.slice(1).join('/'));
+  else openSite(p[0], p[1], p.slice(2).join('/'));
+})();
 </script>
 </body>
 </html>

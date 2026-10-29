@@ -4,383 +4,177 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>開發流程</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-:root{
-  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;
-  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;
-  --rule:#e3e6ea; --grid:#edf0f3;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;
-  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
-}
-@media (prefers-color-scheme:dark){
-  :root:where(:not([data-theme="light"])){
-    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
-    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
-    --rule:#33353a; --grid:#2a2c30;
-    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
-  }
-}
-:root[data-theme="dark"]{
-  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;
-  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;
-  --rule:#33353a; --grid:#2a2c30;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;
-}
+:root{--surface:#f6f5f1; --panel:#ffffff; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#dcdad3;
+  --accent:#c8501e; --brand:#f05133;
+  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+  --surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}}
+:root[data-theme="dark"]{--surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}
 *{box-sizing:border-box}
-body{margin:0; background:var(--surface); color:var(--ink);
-  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}
-.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}
-header.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}
-.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
-h1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}
-.meta{margin:0; color:var(--ink-2); font-size:13.5px}
-.lines{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0}
-.lines a{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:3px 13px; margin:0}
-.lines a:hover{color:var(--s1); border-color:var(--s1)}
-.lines a.on{color:var(--panel); background:var(--s1); border-color:var(--s1); font-weight:600}
-.meta code{font-family:var(--font-mono); font-size:12.5px}
-/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，
-   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */
-.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);
-  overflow-x:auto; overflow-y:hidden;
-  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */
-  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}
-.tabs::-webkit-scrollbar{display:none}
-.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;
-  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;
-  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}
-.tab:hover{color:var(--ink); background:var(--panel-2)}
-.tab-ico{width:14px; height:14px; vertical-align:-2px; margin-right:6px}
-.tab.tab-hi, .tab.tab-hi:hover, .tab.tab-hi[aria-selected="true"]{color:var(--warn)}
-.tab[aria-selected="true"]{color:var(--s1); font-weight:600; background:var(--panel);
-  border-color:var(--rule); border-bottom-color:var(--panel)}
-.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}
-.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}
-.toc{position:sticky; top:52px; width:236px; flex:none;
-  max-height:calc(100vh - 76px); overflow-y:auto;
-  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}
-.toc[hidden]{display:none}
-/* 目錄過長時仍可滾動，但不顯示拉條 */
-.toc{scrollbar-width:none; -ms-overflow-style:none}
-.toc::-webkit-scrollbar{display:none}
-.toc a{display:block; color:var(--ink-3); text-decoration:none;
-  padding:3px 11px; border-left:2px solid var(--rule)}
-.toc a:hover{color:var(--s1); border-left-color:var(--s1)}
-.toc a.toc-3{padding-left:25px}
-.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}
-.toc a.toc-doc:not(:first-child){margin-top:8px}
-.toc a.toc-doc.on{color:var(--s1)}
-main{flex:1; min-width:0}
-.panel[hidden]{display:none}
-.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}
-h2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;
-  padding-bottom:7px; border-bottom:1px solid var(--rule)}
-h3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}
-h4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}
-p{margin:0 0 11px; max-width:86ch}
-ul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}
-li{margin:3px 0}
-li.check{list-style:none; margin-left:-20px}
-.cb{color:var(--s1); margin-right:4px}
-code{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);
-  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}
-pre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;
-  padding:13px 16px; overflow-x:auto; margin:0 0 16px;
-  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}
-pre code{background:none; border:none; padding:0; font-size:inherit}
-strong{font-weight:600; color:var(--ink)}
-a{color:var(--s1)}
-.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
-  background:var(--panel); margin:0 0 18px}
-table{border-collapse:collapse; width:100%; font-size:1em}
-th,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}
-th{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;
-  letter-spacing:.03em; white-space:nowrap}
-td.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);
-  font-variant-numeric:tabular-nums; font-size:1em}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover{background:var(--panel-2)}
-hr{border:none; border-top:1px solid var(--rule); margin:34px 0}
-.tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}
-.tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}
-/* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
-:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){margin:0 .3em}
-:is(strong,.tune,a) :is(strong,.tune,code){margin:0}
-.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}
-.tl{min-width:620px; display:flex; flex-direction:column; gap:4px}
-.tl-row{display:grid; grid-template-columns:6em 1fr; align-items:start}
-.tl-lane{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}
-.tl-axis-name{color:var(--ink-3); font-weight:500; padding-top:2px}
-.tl-track{position:relative; height:52px; border-bottom:1px dashed var(--grid)}
-.tl-row:first-child .tl-track{height:36px}
-.tl-bar{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;
-  text-align:center; white-space:nowrap; overflow:hidden}
-.tl-bar.phase{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}
-.tl-bar.phase2{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}
-.tl-bar.stop{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}
-.tl-bar.event{background:var(--s2); opacity:.85; height:16px; top:6px}
-.tl-label{position:absolute; top:24px; font-size:1em; color:var(--ink); white-space:nowrap}
-.tl-axis{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}
-.tl-tick{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
-  color:var(--ink-3); padding-top:5px; white-space:nowrap}
-.tl-tick::before{content:""; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}
-mark{font-weight:600; padding:1px 6px; border-radius:3px}
-mark.hl-warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}
-mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}
-.flow{margin:6px 0 20px; max-width:86ch}
-.step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}
-.step-rail{display:flex; flex-direction:column; align-items:center}
-.step-dot{width:28px; height:28px; border-radius:50%; border:1.5px solid var(--s1); color:var(--s1);
-  display:grid; place-items:center; font-family:var(--font-mono); font-size:12.5px; font-weight:600; background:var(--panel)}
-.step-line{flex:1; width:1.5px; background:var(--rule); min-height:12px}
-.step:last-child .step-line{background:transparent}
-.step-body{padding:3px 0 18px; min-width:0}
-.step-title{font-weight:600}
-.step-desc{color:var(--ink-2); font-size:1em; margin-top:2px}
-.branches{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}
-.branch{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:1em}
-.pill{font-size:1em; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}
-.pill.ok{color:var(--s3); background:color-mix(in srgb,var(--s3) 15%,transparent)}
-.pill.stop{color:var(--s2); background:color-mix(in srgb,var(--s2) 15%,transparent)}
-@media (max-width:900px){
-  .body-row{flex-direction:column; gap:14px}
-  .toc{display:none!important}
-  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;
-    flex-wrap:wrap; gap:4px 16px; padding:0}
-  .toc a:not(.toc-doc){display:none}
-  .toc a.toc-doc{padding:0; margin:0!important}
+html,body{height:100%; margin:0}
+body{display:flex; flex-direction:column; background:var(--surface); color:var(--ink); font-family:var(--font-sans)}
+/* 不顯示拉條，仍可上下捲動 */
+aside, iframe{scrollbar-width:none; -ms-overflow-style:none}
+aside::-webkit-scrollbar{display:none}
+header{display:flex; align-items:center; gap:12px; padding:18px 28px 14px}
+.logo{width:34px; height:34px; border-radius:6px; background:var(--brand); transform:rotate(45deg); flex:none;
+  display:grid; place-items:center}
+.logo span{transform:rotate(-45deg); color:#fff; font-weight:700; font-size:15px}
+h1{margin:0 0 0 6px; font-size:22px; font-weight:500; color:var(--ink-2); letter-spacing:-.01em}
+h1 b{color:var(--ink); font-weight:600}
+.layout{flex:1; min-height:0; display:flex; gap:26px; padding:0 28px 22px}
+aside{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}
+.nav{list-style:none; margin:0 0 22px; padding:0}
+.nav > li{margin:0 0 6px}
+.nav .top{display:block; font-size:17px; font-weight:500; color:var(--ink-2); text-decoration:none; padding:3px 0}
+.nav a.top:hover{color:var(--accent)}
+.nav .sub{list-style:none; margin:4px 0 0; padding:0 0 0 18px}
+.nav .sub a{display:block; font-size:14px; color:var(--ink-2); text-decoration:none; padding:3px 0}
+.nav .sub a:hover{color:var(--accent)}
+.nav a.on, .nav span.top.on{color:var(--accent); font-weight:600}
+.nav a:focus, .toc a:focus{outline:none}
+.nav a:focus-visible, .toc a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.toc{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}
+.toc-title{font-size:16px; font-weight:600; margin:0 0 8px}
+.toc ul{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}
+.toc li{margin:3px 0; font-size:13.5px; line-height:1.4}
+.toc ul ul{padding-left:14px; margin:3px 0 6px; list-style:none}
+.toc ul ul li{font-size:12.5px}
+.toc a{color:var(--ink-3); text-decoration:none}
+.toc a:hover{color:var(--accent)}
+.toc a.on{color:var(--accent); font-weight:600}
+.toc .doc{color:var(--ink-2)}
+main{flex:1; min-width:0; display:flex}
+iframe{flex:1; width:100%; height:100%; border:0; display:block; background:transparent}
+@media (max-width:760px){
+  header{padding:14px 16px 10px}
+  .layout{flex-direction:column; padding:0 16px 16px; gap:14px}
+  aside{width:auto; overflow:visible; padding:0}
+  main{height:80vh; flex:none}
 }
-/* 表格、程式碼、時間軸：藏拉條，仍可橫向捲動（觸控板／觸控／滑鼠拖曳） */
-.tbl-wrap, pre, .tl-wrap{scrollbar-width:none; -ms-overflow-style:none}
-.tbl-wrap::-webkit-scrollbar, pre::-webkit-scrollbar, .tl-wrap::-webkit-scrollbar{display:none}
-.drag-x{cursor:grab}
-.drag-x.dragging{cursor:grabbing; user-select:none}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
-/* 嵌入入口時：頁首、頁籤、左側目錄由入口負責，這裡只留內文；藏拉條、仍可上下捲動 */
-html.embedded{scrollbar-width:none; -ms-overflow-style:none}
-html.embedded::-webkit-scrollbar{display:none}
-html.embedded body{background:transparent}
-html.embedded .wrap{max-width:none; padding:0}
-html.embedded header.page, html.embedded .tabs, html.embedded .toc,
-html.embedded .toc:not([hidden]):has(.toc-doc){display:none!important}
-html.embedded .body-row{display:block; padding:0}
-html.embedded main{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}
-html.embedded .panel h1{color:var(--accent); font-weight:500; font-size:30px}
-html.embedded h2{color:var(--accent); border-bottom-color:var(--grid)}
-:root{--accent:#c8501e}
-@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--accent:#e9773d}}
-:root[data-theme="dark"]{--accent:#e9773d}
-@media (max-width:700px){html.embedded main{padding:18px 16px 40px}}
 </style>
-<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
 </head>
 <body>
-<div class="wrap">
-<header class="page">
-  <div class="eyebrow">iGaming · 開發流程</div>
-  <h1 class="site">開發流程</h1>
-  <p class="meta">由 <code>專案需知/開發流程/*.md</code> 產生（<code>_build_html.py</code>）　|　2026-10-29</p>
-</header>
-<div class="tabs" role="tablist" aria-label="規範文件"><button class="tab" role="tab" id="tab-g0" data-tab="flow" data-tabs="flow" aria-selected="true" tabindex="0"><svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10"/><path d="M6 12h4a4 4 0 0 0 4-4V7"/><path d="M16 12h-2"/></svg>開發流程</button></div>
-<div class="body-row">
-  <nav class="toc" id="toc-flow"><a class="toc-2" href="#1-基本原則" data-tab="flow">1. 基本原則</a><a class="toc-2" href="#2-必要產出文件" data-tab="flow">2. 必要產出文件</a><a class="toc-2" href="#3-八個步驟總覽" data-tab="flow">3. 八個步驟總覽</a><a class="toc-2" href="#4-各步驟的產出與過關條件" data-tab="flow">4. 各步驟的產出與過關條件</a><a class="toc-3" href="#41-檔案確認與檢查" data-tab="flow">4.1 檔案確認與檢查</a><a class="toc-3" href="#42-工作進度表" data-tab="flow">4.2 工作進度表</a><a class="toc-2" href="#5-各步驟怎麼做" data-tab="flow">5. 各步驟怎麼做</a><a class="toc-3" href="#51-開案與數學目標確認" data-tab="flow">5.1 開案與數學目標確認</a><a class="toc-3" href="#52-建立基礎數學模型" data-tab="flow">5.2 建立基礎數學模型</a><a class="toc-3" href="#53-建立-rtpvariant-與-card-system" data-tab="flow">5.3 建立 RTP／Variant 與 Card System</a><a class="toc-3" href="#54-轉檔與-config-驗證" data-tab="flow">5.4 轉檔與 Config 驗證</a><a class="toc-3" href="#55-simulator-開發與-debug" data-tab="flow">5.5 Simulator 開發與 Debug</a><a class="toc-3" href="#56-模擬順序" data-tab="flow">5.6 模擬順序</a><a class="toc-3" href="#57-調參循環" data-tab="flow">5.7 調參循環</a><a class="toc-3" href="#58-對帳與交付" data-tab="flow">5.8 對帳與交付</a><a class="toc-2" href="#6-改了什麼要重跑什麼" data-tab="flow">6. 改了什麼要重跑什麼</a><a class="toc-2" href="#7-禁止事項" data-tab="flow">7. 禁止事項</a><a class="toc-2" href="#8-完成前檢查清單" data-tab="flow">8. 完成前檢查清單</a></nav>
-  <main><section class="panel" role="tabpanel" id="panel-flow"><h1 id="slot-數學開發流程">Slot 數學開發流程</h1>
-<p>本文件定義新 Slot 專案的<strong>數學開發流程、製作順序、操作方式、階段產物與完成條件</strong>。</p>
-<p>實作欄位、命名、版本、Card System、Simulator、Demogame、Config 與報表格式等細節，統一依照本資料夾的各規範文件（總覽見 _README.md）。本文件不重複定義實作規格；內容有差異時，以各規範文件為準。</p>
-<p>適用範圍：<code>Slots/H0xx_遊戲名稱/</code> 下的新遊戲數學模型、既有模型改版，以及 RTP、Card System、Feature 或 Bet Mode 參數調整。</p>
-<h2 id="1-基本原則">1. 基本原則</h2>
-<p>過往專案可看到數種演進中的做法：</p>
-<ul><li>H013、H015、H019 使用 RTP Config、Simulator 與 Record 的基本流程。</li><li>H016、H028 已拆分基礎 <code>config.js</code> 與 RTP／Variant Config，並保留 <code>Versions/</code>，較符合目前標準。</li><li>H026 同時存在 92／94 與 A／B Variant，適合作為多模型組合的參考。</li><li>早期專案（H013～H027）曾使用 <code>xlsx_to_config.py</code>、<code>model_sync.py</code> 等轉檔腳本同步 Source 與程式資料；此做法已淘汰，Excel 與 Config 之間的轉換一律由 AI 執行，專案內不建立、不維護轉檔工具。</li></ul>
-<p>新專案採用以下統一原則：</p>
-<ol><li><code>game_rule.md</code> 定義玩法，數學 XLSX／<code>Source/</code> 定義正式參數。</li><li>Config 必須由 Source 轉出（轉換由 AI 執行，不建立轉檔工具），不直接手改轉出的參數。</li><li>Simulator 與 Demogame 使用同一份 Config。</li><li>先驗證 Card System Off 的自然機率，再驗證 Card System On。</li><li>每次調參都依「Source → 版本 → Config → Simulator → Record → 對帳」完整重跑。</li><li>舊專案若與目前命名、版本或報表格式不同，不直接複製舊格式；依現行規格建立。</li><li><code>game_rule.md</code> 是遊戲規則的正式來源，要寫明玩法、判獎順序、倍率口徑、Feature 流程與例外；數學模型、程式與 Help 都要與它一致，程式不可補猜未定義的規則。</li><li>同一項資料出現在多個檔案時，修改要同步更新並完成對帳。</li><li>未支援的 RTP、Variant、Bet Mode、Profile 或 Feature，不得出現在 Config、Simulator 批次或 Demogame 選單。</li><li>會影響結果分布、RTP、觸發率、最大獎或 Retry 的修改，都要更新版本並重新模擬。</li></ol>
-<h2 id="2-必要產出文件">2. 必要產出文件</h2>
-<p>每個專案必須產出的文件與 <code>修改紀錄.md</code> 格式見產出與紀錄規範.md。</p>
-<h2 id="3-八個步驟總覽">3. 八個步驟總覽</h2>
-<p>八個大步驟，每一步的工作、產出與進入下一步的條件見第 4 節：</p>
-<div class="flow"><div class="step"><div class="step-rail"><div class="step-dot">1</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">提案</div><div class="step-desc">整理玩法、規格、特色與競品差異，製作提案簡報</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">2</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">開案</div><div class="step-desc">遊戲規格確認：Game Rule、數學目標、模型組合</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">3</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">數學開發</div><div class="step-desc">模型製作 → 模擬程式 → Demogame</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">4</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">調性調整</div><div class="step-desc">卡片權重校準、Card System 驗證、調參與正式模擬、數值報告</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">5</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">後端對接／報表驗證</div><div class="step-desc">SPS 設定交付、後端報表驗證、挑腳本</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">6</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">文件製作</div><div class="step-desc">數值文件、Help</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">7</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">文件檢查</div><div class="step-desc">所有要交付給其他人的檔案逐項檢查，版本凍結</div></div></div><div class="step"><div class="step-rail"><div class="step-dot">8</div><div class="step-line"></div></div><div class="step-body"><div class="step-title">Demo 報告</div><div class="step-desc">全部做完後整理設計重點、獨有巧思、製作困難與反饋</div></div></div></div>
-<h2 id="4-各步驟的產出與過關條件">4. 各步驟的產出與過關條件</h2>
-<p>不得因為某個程式可以先寫就跳過前置規則。上一階段的完成條件成立後，才進入下一階段。</p>
-<div class="tbl-wrap"><table><thead><tr><th class="n">順序</th><th>階段</th><th>主要工作</th><th>產出</th><th>進入下一階段的條件</th></tr></thead><tbody><tr><td class="n">1</td><td>提案</td><td>整理玩法、規格、特色與競品差異，製作提案簡報</td><td>提案簡報 <code>.pptx</code></td><td>提案通過、確定開案</td></tr><tr><td class="n">2</td><td>開案（遊戲規格確認）</td><td>確認 Game ID、盤面、判獎、Bet Mode、Feature、RTP 拆分、Link 資格、Hit Rate、Max Win、Profile、押注層級與 Variant；<strong>與使用者確認數學模型組合</strong>（預設 92A／92B／94A／94B，各含 Newbie／Oldhand 與對應押注區）</td><td>已確認的 <code>game_rule.md</code>、數學目標表</td><td>核心規則、計算口徑與模型組合無待確認項目</td></tr><tr><td class="n">3.1</td><td>數學開發：模型製作</td><td>基礎數學模型 → RTP／Variant 與 Card System 區間 → Mapping → 由 AI 轉出 Config</td><td><code>H0xx1.xlsx</code>、<code>H0xx1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code>、<code>config*.js</code></td><td>自然機率可計算、理論上限已確認；Source、Config、版本逐項一致</td></tr><tr><td class="n">3.2</td><td>數學開發：模擬程式</td><td>實作 Simulator；小場次 Debug 與單局驗證；Card System Off 大場次自然機率報表（NB 10⁹ 局、BF 10⁸ 局）</td><td><code>Simulator.py</code>、自然機率報表</td><td>固定 Seed 可重現；代表性案例符合 Game Rule；RTP Breakdown、Hit Rate、Feature 與分布合理</td></tr><tr><td class="n">3.3</td><td>數學開發：Demogame</td><td>依 Config 製作可操作的 Demo，與 Simulator 單局對帳</td><td><code>index.html</code></td><td>Config、Simulator、Demogame 單局結果一致</td></tr><tr><td class="n">4</td><td>調性調整</td><td>依自然機率報表校準卡片權重；Card System On 分 RTP／Variant／Profile／押注層級驗證；調參與正式大場次模擬；Max Win、Retry 與極值驗證；數值報告對標競品與前作</td><td>校準後的 <code>Multiplier_Weight</code> 與 Config、Card-On 報表、<code>數值報告_&lt;遊戲中文名&gt;</code></td><td>所有組合符合目標與誤差要求，調性經使用者確認</td></tr><tr><td class="n">5</td><td>後端對接／報表驗證</td><td>交付 SPS <strong>Config 與模擬程式</strong>（不交數學模型、PARsheet）；讀後端報表驗證 RTP；<strong>挑腳本</strong></td><td>交給 SPS 的 <code>config*.js</code>、<code>Simulator.py</code>，後端報表彙整、腳本</td><td>後端報表與 Simulator 一致，腳本挑選完成</td></tr><tr><td class="n">6</td><td>文件製作</td><td><strong>數值文件</strong>：<code>game_description.md</code>、PARsheet、Math Document Description；<strong>Help</strong>：<code>game_help_draft.md</code> → <code>{GameID}_Help.xlsx</code> → Game Description</td><td>各文件</td><td>文件內容與 Game Rule、數學模型一致</td></tr><tr><td class="n">7</td><td>文件檢查</td><td>檢查<strong>所有要交付給其他人的檔案</strong>（Help、Game Description、Math Document Description、PARsheet、數學模型、Config、Simulator、Demogame、腳本）；版本凍結、整理 Record</td><td>檢查紀錄、完整專案目錄</td><td>本文件第 8 節全部通過</td></tr><tr><td class="n">8</td><td>Demo 報告</td><td>全部做完後，整理這款遊戲的設計重點、跟競品不同的獨有巧思、製作過程的困難與反饋，並用數據佐證（見Demo報告規範）</td><td><code>demo_report_draft.md</code> → <code>其他/{英文遊戲名}_Demo報告_v01.pptx</code></td><td>使用者確認</td></tr></tbody></table></div>
-<h3 id="41-檔案確認與檢查">4.1 檔案確認與檢查</h3>
-<p><strong>每個階段結束前、每次把檔案交給其他人（SPS、PM、美術、送驗）前，都必須先做檔案確認與內容檢查</strong>；任一項不通過，不得進入下一階段，也不得交付。</p>
-<ul><li><strong>檔案確認</strong>：檔名、存放位置符合規範（見產出與紀錄規範第 3 節）；版本號與來源一致；是最新版，沒有舊版或暫存檔混在交付內容裡。</li><li><strong>內容檢查</strong>：依下表對應規範的檢查清單逐項確認，並把結果記在修改紀錄或交付說明。</li></ul>
-<div class="tbl-wrap"><table><thead><tr><th>階段</th><th>要確認的檔案</th><th>內容檢查依據</th></tr></thead><tbody><tr><td>1 提案</td><td>提案簡報 <code>.pptx</code></td><td>提案報告規範.md 5 製作與檢查</td></tr><tr><td>2 開案</td><td><code>game_rule.md</code>、數學目標表</td><td>GameRule規範.md 3 交付檢查</td></tr><tr><td>3.1 模型製作</td><td>數學模型 <code>.xlsx</code>、<code>config*.js</code></td><td>數學模型規範.md；xlsx 依 math-model-xlsx-edit skill 跑 <code>_check_xlsx_style.py</code>；Source、Config、版本逐項比對</td></tr><tr><td>3.2 模擬程式</td><td><code>Simulator.py</code>、自然機率報表</td><td>模擬程式規範.md 2.5 最終交付檢查</td></tr><tr><td>3.3 Demogame</td><td><code>index.html</code>、共用 css／js</td><td>Demogame規範.md 7 交付檢查</td></tr><tr><td>4 調性調整</td><td>校準後的數學模型與 Config、Card-On 報表、數值報告</td><td>數學模型規範.md 2.7 合理性檢查；模擬結果符合目標（判定方式見模擬程式規範 §1.2.2）</td></tr><tr><td>5 後端對接／報表驗證</td><td>給 SPS 的 Config 與模擬程式、後端報表彙整、腳本</td><td>模擬程式規範.md 2.5 最終交付檢查；壓測說明書.md 3.5、後端報表.md 6、腳本規範.md 6 檢查清單</td></tr><tr><td>6 文件製作</td><td>Help、Game Description、Math Document Description、PARsheet、<code>game_description.md</code></td><td>數學文件規範.md 1.5、2.3 交付檢查與 PARsheet 交付前檢查；送驗文件規範.md 7 送驗前檢查清單</td></tr><tr><td>7 文件檢查</td><td>所有要交付給其他人的檔案</td><td>以上各階段檢查全部重跑一次；本文件第 8 節完成前檢查清單</td></tr><tr><td>8 Demo 報告</td><td><code>demo_report_draft.md</code>、Demo 報告 <code>.pptx</code></td><td>Demo報告規範：每個設計點都有原因與數據佐證；反饋與線上數據註明來源與日期</td></tr></tbody></table></div>
-<p>各階段的實作要求請查閱：</p>
-<ul><li>提案：提案報告規範.md</li><li>後端對接／報表驗證：後端報表.md、壓測說明書.md；挑腳本：腳本規範.md</li><li>數學文件、模型命名、版本與 RTP：數學模型規範.md</li><li>Card System：數學模型規範.md</li><li>Simulator、BATCH_RUNS、Console 與 Record：模擬程式規範.md</li><li>Demogame 與單局對帳：Demogame規範.md</li><li>Config、轉檔與版本歷史：模擬程式規範.md</li><li>Game Rule：GameRule規範.md；Help、Game Description：數學文件規範.md；Game List：送驗文件規範.md</li><li>送驗文件（Game Description DOCX、Math Document Description、數學模型送驗版）：送驗文件規範.md</li></ul>
-<h3 id="42-工作進度表">4.2 工作進度表</h3>
-<p>每款遊戲在專案根目錄放 <code>進度.md</code>，記錄上表各階段工項的完成狀態；每次開啟該遊戲的工作 Session，先顯示進度條再開始工作。</p>
-<pre><code>py 專案需知/其他/progress.py H045</code></pre>
-<ul><li>遊戲還沒有 <code>進度.md</code> 時，腳本依預設工項建立（工項取自上表各階段的產出）；之後<strong>依遊戲自行增刪工項</strong>，以 <code>進度.md</code> 為準。</li><li>狀態欄：空白＝未完成；<strong><code>ok</code>＝使用者確認完成</strong>（只有使用者確認後才可標 ok）；完成後若再調整，同一列依序改為 <code>v2</code>、<code>v3</code>…。</li><li>紀錄欄依序附日期與內容，例：<code>ok 2026-10-16；v2 2026-10-20 調整 BG 權重</code>；不刪舊紀錄。</li><li>進度條＝有狀態的工項數 ÷ 全部工項數；腳本另列出下一個未完成的工項。</li></ul>
-<h2 id="5-各步驟怎麼做">5. 各步驟怎麼做</h2>
-<h3 id="51-開案與數學目標確認">5.1 開案與數學目標確認</h3>
-<ol><li>建立 <code>H0xx_遊戲名稱/</code> 專案資料夾。</li><li>讀取並確認 <code>game_rule.md</code>。</li><li><strong>與使用者確認本專案的數學模型組合</strong>——每款遊戲的數學模型都不一樣，不得逕自沿用他款設定。未特別說明時，預設組合為：<ul><li>A／B 兩個 Variant × 92／94 兩個 RTP，乘開共 <strong>4 個版本</strong>（92A、92B、94A、94B）。</li><li>每個版本都有 Newbie／Oldhand 兩種 Profile。</li><li>各版本依其支援內容有對應的押注區（Oldhand 小／中／大 Bet 層級）。</li></ul></li><li>列出所有正式支援組合：RTP、Variant、Profile、Oldhand 小／中／大 Bet、NB／EB 或 BF／SF 模式類別、Bet Mode、Card System Off／On。</li><li>為每個組合定義 Link／Bonus Game／Game RTP、Total RTP、Link 資格、Hit Rate、Feature Frequency、BG／FG Max Multiplier 與其他遊戲專屬指標。</li><li>將未決定的判獎順序、倍率分母、Feature 上限與例外退回確認；未確認前不製作正式模型。</li></ol>
-<h3 id="52-建立基礎數學模型">5.2 建立基礎數學模型</h3>
-<ol><li>先完成 Base Game，再依狀態順序完成 Feature。</li><li>建立 Symbol、Paytable、Reel Strip／Weight、Table 與 Bet Mode。</li><li>建立 BG、FG、Cascade、Multiplier、Retrigger、Jackpot 等流程。</li><li>計算 RTP Breakdown 與理論 Max Win，不只計算 Total RTP。</li><li>建立基礎數學 XLSX，版本依規格使用 1 碼。</li></ol>
-<h3 id="53-建立-rtpvariant-與-card-system">5.3 建立 RTP／Variant 與 Card System</h3>
-<ol><li>只建立 5.1 與使用者確認過的 92／94、A／B 組合（未特別說明時為 92A、92B、94A、94B 四版本，各含 Newbie／Oldhand 與對應押注區）。</li><li>A／B 表示數學 Variant，不表示 Newbie／Oldhand。</li><li>依 Profile、Oldhand 小／中／大 Bet 與 Bet Mode 建立 BG／FG 卡片區間及權重；NB／EB 以實際模式押注、BF／SF 以 Feature 基礎押注選擇層級。</li><li>確認每張正權重卡片的區間可達，並定義 Retry 行為。</li><li>建立 RTP／Variant XLSX，版本依規格使用四段格式。</li></ol>
-<h3 id="54-轉檔與-config-驗證">5.4 轉檔與 Config 驗證</h3>
-<ol><li>在數學模型的 <code>Game Description</code> 工作表記錄每項 Config 資料的來源。</li><li>由 AI 依 Source 與 Mapping 轉出 Config；專案內不建立、不維護 Excel↔Config 轉檔工具。</li><li>執行欄位、型別、陣列長度、ID、Weight、Min／Max、版本與模式驗證。</li><li>比較轉檔前後資料，確認 Config 可由 Source 重建且沒有非預期差異。</li><li>轉檔錯誤時修正 Source 或 Mapping 後重新轉出，不直接修改 Config 大型陣列。</li></ol>
-<h3 id="55-simulator-開發與-debug">5.5 Simulator 開發與 Debug</h3>
-<ol><li>先完成自然機率核心，再加入 Card System 篩選與 Retry。</li><li>讓 Simulator 直接讀取正式 Config，不另寫一份參數。</li><li>建立固定 Seed、單執行緒與逐局 Trace 模式。</li><li>建立強制／指定案例，驗證無獎、一般獎、Wild、Scatter、Feature、Retrigger、倍率與封頂。</li><li>小場次確認正確後，再加入 Numba、多執行緒、BATCH_RUNS 與 Excel 報表。</li></ol>
-<h3 id="56-模擬順序">5.6 模擬順序</h3>
-<p>模擬必須依下列順序執行：</p>
-<ol><li>小場次、Card System Off：驗證流程與報表。</li><li>中場次、Card System Off：確認自然機率 RTP 與分布。</li><li>大場次、Card System Off：以 NB 10⁹ 局（BF 為 10⁸ 局）產出自然機率正式報表。</li><li>卡片權重調性校準：依上一步報表分配各得分區間的卡片權重，使分布、RTP 拆分與 FG 週期符合目標遊戲調性；完成後才進入 Card System On。</li><li>小場次、Card System On：確認抽卡、Profile、Oldhand 押注層級、Link 資格、倍率上限、Mode 與 Retry。</li><li>中場次、Card System On：調整區間、權重與目標 RTP。</li><li>所有正式組合的大場次模擬。</li><li>Max Win、低機率 Feature 與 Retry 邊界的專項驗證。</li></ol>
-<p>最低批次矩陣：</p>
-<div class="tbl-wrap"><table><thead><tr><th>類型</th><th>RTP／Variant</th><th>Profile</th><th><code>bet_tier_amount</code></th><th>Bet Mode</th><th>Card System</th></tr></thead><tbody><tr><td>自然機率基準</td><td>基礎 Config</td><td>不適用</td><td>各門檻所需代表值</td><td>每個支援 Mode</td><td>Off</td></tr><tr><td>Newbie</td><td>每個正式 RTP／Variant</td><td>Newbie</td><td>不分層級，但仍記錄判定金額</td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr><tr><td>Oldhand 小 Bet</td><td>每個正式 <code>94x</code>／Variant</td><td>Oldhand</td><td><code>&lt; $2</code>，至少驗證 <code>$1.99</code></td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr><tr><td>Oldhand 中 Bet</td><td>每個正式 <code>92x</code>／Variant</td><td>Oldhand</td><td><code>$2～$100</code>，至少驗證 <code>$2</code>、<code>$100</code></td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr><tr><td>Oldhand 大 Bet</td><td>每個正式 <code>92x</code>／Variant</td><td>Oldhand</td><td><code>&gt; $100</code>，至少驗證 <code>$100.01</code></td><td>每個支援的 NB／EB／BF／SF</td><td>On</td></tr></tbody></table></div>
-<ul><li>NB／EB 的 <code>bet_tier_amount</code> 使用實際模式押注金額；BF／SF 使用 Feature 購買價格除以 Feature Price 倍數後的基礎押注。</li><li>若遊戲支援 EB 2x，至少驗證 base bet <code>$1</code> 會以 <code>$2</code> 判為中 Bet。</li><li>若遊戲支援 BF 75x，至少驗證購買 <code>$75</code> 判為小 Bet、購買 <code>$150</code> 判為中 Bet。</li></ul>
-<p>不存在的 Mode、Profile 或 Variant 不建立空批次，也不以全零結果冒充驗證完成。</p>
-<h3 id="57-調參循環">5.7 調參循環</h3>
-<p>每一次調參都執行完整循環：</p>
-<pre><code>確認差距與原因
-    ↓
-修改對應 Source XLSX
-    ↓
-依異動內容更新版本
-    ↓
-重新產生 Config
-    ↓
-執行轉檔與資料驗證
-    ↓
-先跑小場次確認流程
-    ↓
-再跑中／大場次確認統計
-    ↓
-保存新 Record 並與前版比較</code></pre>
-<p>調參時依序判斷：</p>
-<ol><li>先確認程式與統計口徑是否錯誤。</li><li>再檢查自然機率的 Paytable、Reel、Table、Feature。</li><li>最後才調整 Card System 區間與權重。</li><li>不得只為讓 Total RTP 接近目標而忽略 RTP Breakdown、Hit Rate、Feature Frequency、分布或 Retry。</li></ol>
-<h3 id="58-對帳與交付">5.8 對帳與交付</h3>
-<p>卡片權重完成後出數值報告（數值報告規範）；全部做完（第 7 步文件檢查通過）後出 Demo 報告（Demo報告規範）。</p>
-<ol><li>選定可重現的代表性 RNG／Seed。</li><li>逐項核對 Config、Simulator 與 Demogame 的盤面、判獎、Feature、倍率、Total Win、Coin In 與 Retry。</li><li>完成所有正式組合的最新 Record。</li><li>將正式 Config 與歷史版本關係寫入 <code>Versions/</code> 與 manifest。</li><li>確認產出與紀錄規範第 1 節的必要產出文件全部齊備且為同一正式版本。</li><li>清除暫存檔、舊測試輸出及不屬於正式交付的檔案。</li><li>依第 8 節完成最終驗收。</li></ol>
-<p><strong>交付 SPS 打包</strong>（第 5 步後端對接；2026-10-22，以 H020 超級寶石為範例）</p>
-<ul><li>放在 <code>其他/To SPS/</code>，每次交付打成<strong>一個 zip</strong>：<code>&lt;GameID&gt;_&lt;RTP／Variant 四碼版本去點&gt;.zip</code>（例：<code>101007_2220.zip</code>＝2.2.2.0、<code>101015_6000.zip</code>＝6.0.0.0）。</li><li>zip 內只放：<code>config.js</code>、該遊戲所有 <code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code>、<code>Simulator.py</code>、<code>給SPS說明_&lt;四碼版本&gt;.txt</code>；不放數學模型 XLSX、PARsheet、報表、json。</li><li><code>給SPS說明_&lt;版本&gt;.txt</code> 寫：與上一個交付版本的差異（基礎數學、規則／程式要後端同步的地方、卡片權重）、驗證目標與我方 Card-On 結果（判定見模擬程式規範 §1.2.2）。</li><li>舊版 zip 保留不刪（追溯用）；<code>To SPS/</code> 內不留散檔，只放各版 zip。</li><li>驗證結果確定後才打包；打包後重新交付須換新版本號，不得覆寫已交付的 zip。</li></ul>
-<p><strong>挑 BF 腳本：提供累積權重範圍</strong>（第 5 步挑腳本；2026-10-28，以 H045 超級鑽石為範例）</p>
-<ul><li>挑腳本階段<strong>不改數學模型</strong>，只讀現行 <code>config_&lt;RTP&gt;&lt;Variant&gt;.js</code> 的 Card System。</li><li>主動提供<strong>最接近 BF 平均倍數的兩個區間</strong>：BF 平均倍數 ≈ 購買價 × BF RTP 目標（例：H045 為 50 × 92.5% ≈ 46x → <code>(40, 45]</code>、<code>(45, 50]</code>）。</li><li>每個區間<strong>只給一個數字</strong>（骰 0～總權重 − 1 的累積權重值），<strong>數字不加千分位逗號</strong>。</li><li>數字的算法：依 config 卡片順序從 0 累加，某區間的範圍＝<code>[前面所有卡權重加總, 前面加總＋本格權重 − 1]</code>，骰到範圍內就開該區間（與 Simulator <code>pick_card</code> 相同）。</li><li>取同系列（例：A 版 92A／94A／92A_Bet100、B 版同理）各份範圍的<strong>交集中點</strong>，一個數字各份都開同一區間、一個腳本通用；沒有交集才分模型各給一個（取各自範圍中點），並註明。</li><li>新手卡片若與老手相同要註明。</li></ul>
-<div class="tbl-wrap"><table><thead><tr><th>系列</th><th><code>(40, 45]</code></th><th><code>(45, 50]</code></th></tr></thead><tbody><tr><td>A 版（92A／94A／92A_Bet100）</td><td>628507828</td><td>669663120</td></tr></tbody></table></div>
-<p>（H045 v6.0.0.3 老手 BF，總權重 10 億）</p>
-<h2 id="6-改了什麼要重跑什麼">6. 改了什麼要重跑什麼</h2>
-<div class="tbl-wrap"><table><thead><tr><th>異動</th><th>必做流程</th></tr></thead><tbody><tr><td>Paytable、Reel、Table、Feature、Bet Mode、判獎</td><td>更新基礎 XLSX與版本 → 同步受影響 RTP／Variant → 轉 Config → 全部受影響批次重跑 → Demogame 對帳</td></tr><tr><td>Card System 區間或權重</td><td>更新受影響 RTP／Variant XLSX 第 2 碼 → 轉 Config → Card System On 批次重跑 → 檢查占比與 Retry</td></tr><tr><td>SCR</td><td>更新受影響 RTP／Variant XLSX 第 3 碼 → 轉 Config → 重跑 SCR 相關批次</td></tr><tr><td>文件、說明或排版</td><td>依規格更新第 4 碼；若不影響執行結果，不沿用舊版號產生新正式報表</td></tr><tr><td>Simulator 數學邏輯</td><td>修正程式 → 固定 Seed 回歸 → 小場次 → 所有受影響正式批次 → Demogame 對帳</td></tr><tr><td>報表或顯示邏輯</td><td>驗證統計來源未變 → 核對 Console 與 Excel → 依影響範圍重產報表</td></tr></tbody></table></div>
-<h2 id="7-禁止事項">7. 禁止事項</h2>
-<ul><li>未確認 Game Rule 就自行補猜核心數學規則。</li><li>直接修改由 XLSX 產生的 Config 參數來避開轉檔。</li><li>建立或保留 Excel↔Config、Config↔Excel 的轉檔工具；轉換一律由 AI 執行。</li><li>Simulator、Demogame 與 Config 各維護一套參數。</li><li>只跑 Card System On，不保留自然機率基準。</li><li>只驗證 Total RTP，不驗證 RTP Breakdown、分布、Feature 與 Retry。</li><li>Card System Retry 時重抽目標卡、重複扣款或污染場次統計。</li><li>未升版就覆寫正式 XLSX、Config 或 Record。</li><li>建立產品未使用的空白 B Variant、Mode 或 Profile。</li><li>直接複製舊專案的不相容命名、版本、報表欄位或遊戲專屬統計。</li><li>用全零欄位表示不存在或尚未驗證的功能。</li></ul>
-<h2 id="8-完成前檢查清單">8. 完成前檢查清單</h2>
-<p>以下條件全部成立，數學開發才算完成：</p>
-<ul><li class="check"><span class="cb">☐</span> Game Rule 的核心流程、判獎、倍率、Feature 與例外均已確認。</li><li class="check"><span class="cb">☐</span> 每個正式 RTP、Variant、Profile、Oldhand 小／中／大 Bet 與 Bet Mode 都有明確目標。</li><li class="check"><span class="cb">☐</span> 每個付費遊戲組合均驗證 Link／Bonus Game／Game RTP、Total RTP、Link 資格及 BG／FG Max Multiplier。</li><li class="check"><span class="cb">☐</span> BF／SF 分開驗證 Newbie、Oldhand 小 Bet、Oldhand 中 Bet 與 Oldhand 大 Bet，Total RTP 均為 96.50%。</li><li class="check"><span class="cb">☐</span> 基礎與 RTP／Variant XLSX 的命名及版本正確。</li><li class="check"><span class="cb">☐</span> Config 可由 Source 完整重建，Mapping 可追溯。</li><li class="check"><span class="cb">☐</span> Source、Config、Simulator、Demogame 與 Record 使用同一正式版本。</li><li class="check"><span class="cb">☐</span> 固定 Seed 可重現相同結果。</li><li class="check"><span class="cb">☐</span> Card System Off 的自然機率基準已完成，且大場次正式報表為 NB 10⁹ 局（BF 10⁸ 局）。</li><li class="check"><span class="cb">☐</span> 卡片權重已依自然機率大場次報表校準至目標遊戲調性。</li><li class="check"><span class="cb">☐</span> Card System On 的所有正式組合已完成。</li><li class="check"><span class="cb">☐</span> RTP、RTP Breakdown、Hit Rate、Feature Frequency 與分布符合目標。</li><li class="check"><span class="cb">☐</span> Card 權重占比合理，Retry Limit Exceeded 為零或已有核准處理方式。</li><li class="check"><span class="cb">☐</span> Max Win、封頂及理論可達路徑已驗證。</li><li class="check"><span class="cb">☐</span> Console 與 Record 報表內容及統計口徑一致。</li><li class="check"><span class="cb">☐</span> 代表性單局已完成 Config、Simulator、Demogame 三方對帳。</li><li class="check"><span class="cb">☐</span> 最新正式 Record 已保存，歷史版本未被覆寫。</li><li class="check"><span class="cb">☐</span> 產出與紀錄規範第 1 節的必要產出文件全部齊備：<code>game_rule.md</code>、<code>game_help_draft.md</code>／<code>{GameID}_Help.xlsx</code>、<code>game_description.md</code>、數學模型／PARsheet、<code>config.js</code>、<code>Simulator.py</code>、<code>index.html</code>、<code>數值報告_&lt;遊戲中文名&gt;.md</code>＋<code>.html</code>、<code>注意事項.md</code>、<code>{GameID}_Game Description.docx</code>、<code>{GameID}_Math Document Description.md</code>。</li><li class="check"><span class="cb">☐</span> 暫存檔、快取與測試輸出未列入正式交付。</li></ul></section></main>
+<header><div class="logo"><span>i</span></div><h1><b>iGaming</b> 開發流程</h1></header>
+<div class="layout">
+<aside>
+  
+  <nav class="toc" aria-label="Table of Contents"><div class="toc-title">Table of Contents</div><ul id="toc"></ul></nav>
+</aside>
+<main><iframe id="site" title="規範內文"></iframe></main>
 </div>
-</div>
+<script type="application/json" id="doc-flow">"<!DOCTYPE html>\n<html lang=\"zh-Hant\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>開發流程<\/title>\n<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap\">\n<style>\n:root{\n  --surface:#fcfcfb; --panel:#ffffff; --panel-2:#f6f7f8;\n  --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794;\n  --rule:#e3e6ea; --grid:#edf0f3;\n  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#d23b3b; --warn:#a87400;\n  --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif;\n  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Consolas,monospace;\n}\n@media (prefers-color-scheme:dark){\n  :root:where(:not([data-theme=\"light\"])){\n    --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;\n    --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;\n    --rule:#33353a; --grid:#2a2c30;\n    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;\n  }\n}\n:root[data-theme=\"dark\"]{\n  --surface:#1a1a19; --panel:#212223; --panel-2:#1e1f20;\n  --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95;\n  --rule:#33353a; --grid:#2a2c30;\n  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#ef6060; --warn:#e3b341;\n}\n*{box-sizing:border-box}\nbody{margin:0; background:var(--surface); color:var(--ink);\n  font-family:var(--font-sans); font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased}\n.wrap{max-width:1200px; margin:0 auto; padding:38px 22px 80px}\nheader.page{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}\n.eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}\nh1.site{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}\n.meta{margin:0; color:var(--ink-2); font-size:13.5px}\n.lines{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0}\n.lines a{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:3px 13px; margin:0}\n.lines a:hover{color:var(--s1); border-color:var(--s1)}\n.lines a.on{color:var(--panel); background:var(--s1); border-color:var(--s1); font-weight:600}\n.meta code{font-family:var(--font-mono); font-size:12.5px}\n/* overflow-y 必須釘死：只設 overflow-x:auto 時 overflow-y 會算成 auto，\n   頁簽的 -1px margin 會製造 1px 垂直溢出 -> 冒出多餘滾動條 */\n.tabs{display:flex; gap:3px; border-bottom:1px solid var(--rule);\n  overflow-x:auto; overflow-y:hidden;\n  scrollbar-width:none; -ms-overflow-style:none;   /* 藏拉條，仍可橫向捲動（滾輪／觸控板／拖曳） */\n  position:sticky; top:0; background:var(--surface); z-index:20; padding-top:6px}\n.tabs::-webkit-scrollbar{display:none}\n.tab{appearance:none; font:inherit; font-size:13.5px; color:var(--ink-2); cursor:pointer;\n  background:transparent; border:1px solid transparent; border-bottom:none; margin-bottom:-1px;\n  padding:9px 17px; border-radius:3px 3px 0 0; white-space:nowrap; transition:color .12s,background .12s}\n.tab:hover{color:var(--ink); background:var(--panel-2)}\n.tab-ico{width:14px; height:14px; vertical-align:-2px; margin-right:6px}\n.tab.tab-hi, .tab.tab-hi:hover, .tab.tab-hi[aria-selected=\"true\"]{color:var(--warn)}\n.tab[aria-selected=\"true\"]{color:var(--s1); font-weight:600; background:var(--panel);\n  border-color:var(--rule); border-bottom-color:var(--panel)}\n.tab:focus-visible{outline:2px solid var(--s1); outline-offset:-2px}\n.body-row{display:flex; gap:30px; align-items:flex-start; padding-top:26px}\n.toc{position:sticky; top:52px; width:236px; flex:none;\n  max-height:calc(100vh - 76px); overflow-y:auto;\n  font-size:12.5px; line-height:1.5; padding:6px 8px 6px 0}\n.toc[hidden]{display:none}\n/* 目錄過長時仍可滾動，但不顯示拉條 */\n.toc{scrollbar-width:none; -ms-overflow-style:none}\n.toc::-webkit-scrollbar{display:none}\n.toc a{display:block; color:var(--ink-3); text-decoration:none;\n  padding:3px 11px; border-left:2px solid var(--rule)}\n.toc a:hover{color:var(--s1); border-left-color:var(--s1)}\n.toc a.toc-3{padding-left:25px}\n.toc a.toc-doc{color:var(--ink); font-weight:600; border-left-color:transparent; padding:7px 11px 3px}\n.toc a.toc-doc:not(:first-child){margin-top:8px}\n.toc a.toc-doc.on{color:var(--s1)}\nmain{flex:1; min-width:0}\n.panel[hidden]{display:none}\n.panel h1{margin:0 0 14px; font-size:24px; font-weight:600; letter-spacing:-.015em}\nh2{margin:34px 0 12px; font-size:19px; font-weight:600; letter-spacing:-.01em;\n  padding-bottom:7px; border-bottom:1px solid var(--rule)}\nh3{margin:28px 0 10px; font-size:16.5px; font-weight:600; letter-spacing:-.008em}\nh4{margin:24px 0 8px; font-size:14.5px; font-weight:600; color:var(--ink-2)}\np{margin:0 0 11px; max-width:86ch}\nul,ol{margin:0 0 13px; padding-left:22px; max-width:86ch}\nli{margin:3px 0}\nli.check{list-style:none; margin-left:-20px}\n.cb{color:var(--s1); margin-right:4px}\ncode{font-family:var(--font-mono); font-size:.88em; background:var(--panel-2);\n  border:1px solid var(--rule); border-radius:3px; padding:1px 4px}\npre{background:var(--panel-2); border:1px solid var(--rule); border-radius:3px;\n  padding:13px 16px; overflow-x:auto; margin:0 0 16px;\n  font-family:var(--font-mono); font-size:12.5px; line-height:1.6}\npre code{background:none; border:none; padding:0; font-size:inherit}\nstrong{font-weight:600; color:var(--ink)}\na{color:var(--s1)}\n.tbl-wrap{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;\n  background:var(--panel); margin:0 0 18px}\ntable{border-collapse:collapse; width:100%; font-size:1em}\nth,td{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}\nth{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;\n  letter-spacing:.03em; white-space:nowrap}\ntd.n,th.n{text-align:right; white-space:nowrap; font-family:var(--font-mono);\n  font-variant-numeric:tabular-nums; font-size:1em}\ntbody tr:last-child td{border-bottom:none}\ntbody tr:hover{background:var(--panel-2)}\nhr{border:none; border-top:1px solid var(--rule); margin:34px 0}\n.tune{color:var(--s4); font-weight:600; border-bottom:1.5px dashed var(--s4); padding:0 1px; white-space:nowrap}\n.tune code{color:inherit; background:none; border:none; padding:0; font-size:inherit}\n/* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */\n:is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){margin:0 .3em}\n:is(strong,.tune,a) :is(strong,.tune,code){margin:0}\n.tl-wrap{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}\n.tl{min-width:620px; display:flex; flex-direction:column; gap:4px}\n.tl-row{display:grid; grid-template-columns:6em 1fr; align-items:start}\n.tl-lane{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}\n.tl-axis-name{color:var(--ink-3); font-weight:500; padding-top:2px}\n.tl-track{position:relative; height:52px; border-bottom:1px dashed var(--grid)}\n.tl-row:first-child .tl-track{height:36px}\n.tl-bar{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;\n  text-align:center; white-space:nowrap; overflow:hidden}\n.tl-bar.phase{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}\n.tl-bar.phase2{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}\n.tl-bar.stop{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}\n.tl-bar.event{background:var(--s2); opacity:.85; height:16px; top:6px}\n.tl-label{position:absolute; top:24px; font-size:1em; color:var(--ink); white-space:nowrap}\n.tl-axis{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}\n.tl-tick{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;\n  color:var(--ink-3); padding-top:5px; white-space:nowrap}\n.tl-tick::before{content:\"\"; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}\nmark{font-weight:600; padding:1px 6px; border-radius:3px}\nmark.hl-warn{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}\nmark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,transparent)}\n.flow{margin:6px 0 20px; max-width:86ch}\n.step{display:grid; grid-template-columns:30px 1fr; gap:0 14px}\n.step-rail{display:flex; flex-direction:column; align-items:center}\n.step-dot{width:28px; height:28px; border-radius:50%; border:1.5px solid var(--s1); color:var(--s1);\n  display:grid; place-items:center; font-family:var(--font-mono); font-size:12.5px; font-weight:600; background:var(--panel)}\n.step-line{flex:1; width:1.5px; background:var(--rule); min-height:12px}\n.step:last-child .step-line{background:transparent}\n.step-body{padding:3px 0 18px; min-width:0}\n.step-title{font-weight:600}\n.step-desc{color:var(--ink-2); font-size:1em; margin-top:2px}\n.branches{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}\n.branch{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:1em}\n.pill{font-size:1em; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}\n.pill.ok{color:var(--s3); background:color-mix(in srgb,var(--s3) 15%,transparent)}\n.pill.stop{color:var(--s2); background:color-mix(in srgb,var(--s2) 15%,transparent)}\n@media (max-width:900px){\n  .body-row{flex-direction:column; gap:14px}\n  .toc{display:none!important}\n  .toc:not([hidden]):has(.toc-doc){display:flex!important; position:static; width:auto; max-height:none;\n    flex-wrap:wrap; gap:4px 16px; padding:0}\n  .toc a:not(.toc-doc){display:none}\n  .toc a.toc-doc{padding:0; margin:0!important}\n}\n/* 表格、程式碼、時間軸：藏拉條，仍可橫向捲動（觸控板／觸控／滑鼠拖曳） */\n.tbl-wrap, pre, .tl-wrap{scrollbar-width:none; -ms-overflow-style:none}\n.tbl-wrap::-webkit-scrollbar, pre::-webkit-scrollbar, .tl-wrap::-webkit-scrollbar{display:none}\n.drag-x{cursor:grab}\n.drag-x.dragging{cursor:grabbing; user-select:none}\n@media (prefers-reduced-motion:reduce){*{transition:none!important}}\n/* 嵌入入口時：頁首、頁籤、左側目錄由入口負責，這裡只留內文；藏拉條、仍可上下捲動 */\nhtml.embedded{scrollbar-width:none; -ms-overflow-style:none}\nhtml.embedded::-webkit-scrollbar{display:none}\nhtml.embedded body{background:transparent}\nhtml.embedded .wrap{max-width:none; padding:0}\nhtml.embedded header.page, html.embedded .tabs, html.embedded .toc,\nhtml.embedded .toc:not([hidden]):has(.toc-doc){display:none!important}\nhtml.embedded .body-row{display:block; padding:0}\nhtml.embedded main{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}\nhtml.embedded .panel h1{color:var(--accent); font-weight:500; font-size:30px}\nhtml.embedded h2{color:var(--accent); border-bottom-color:var(--grid)}\n:root{--accent:#c8501e}\n@media (prefers-color-scheme:dark){:root:where(:not([data-theme=\"light\"])){--accent:#e9773d}}\n:root[data-theme=\"dark\"]{--accent:#e9773d}\n@media (max-width:700px){html.embedded main{padding:18px 16px 40px}}\n<\/style>\n<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');<\/script>\n<\/head>\n<body>\n<div class=\"wrap\">\n<header class=\"page\">\n  <div class=\"eyebrow\">iGaming · 開發流程<\/div>\n  <h1 class=\"site\">開發流程<\/h1>\n  <p class=\"meta\">由 <code>專案需知/開發流程/*.md<\/code> 產生（<code>_build_html.py<\/code>）　|　2026-10-29<\/p>\n<\/header>\n<div class=\"tabs\" role=\"tablist\" aria-label=\"規範文件\"><button class=\"tab\" role=\"tab\" id=\"tab-g0\" data-tab=\"flow\" data-tabs=\"flow\" aria-selected=\"true\" tabindex=\"0\"><svg class=\"tab-ico\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"6\" cy=\"5\" r=\"2\"/><circle cx=\"6\" cy=\"19\" r=\"2\"/><circle cx=\"18\" cy=\"12\" r=\"2\"/><path d=\"M6 7v10\"/><path d=\"M6 12h4a4 4 0 0 0 4-4V7\"/><path d=\"M16 12h-2\"/><\/svg>開發流程<\/button><\/div>\n<div class=\"body-row\">\n  <nav class=\"toc\" id=\"toc-flow\"><a class=\"toc-2\" href=\"#1-基本原則\" data-tab=\"flow\">1. 基本原則<\/a><a class=\"toc-2\" href=\"#2-必要產出文件\" data-tab=\"flow\">2. 必要產出文件<\/a><a class=\"toc-2\" href=\"#3-八個步驟總覽\" data-tab=\"flow\">3. 八個步驟總覽<\/a><a class=\"toc-2\" href=\"#4-各步驟的產出與過關條件\" data-tab=\"flow\">4. 各步驟的產出與過關條件<\/a><a class=\"toc-3\" href=\"#41-檔案確認與檢查\" data-tab=\"flow\">4.1 檔案確認與檢查<\/a><a class=\"toc-3\" href=\"#42-工作進度表\" data-tab=\"flow\">4.2 工作進度表<\/a><a class=\"toc-2\" href=\"#5-各步驟怎麼做\" data-tab=\"flow\">5. 各步驟怎麼做<\/a><a class=\"toc-3\" href=\"#51-開案與數學目標確認\" data-tab=\"flow\">5.1 開案與數學目標確認<\/a><a class=\"toc-3\" href=\"#52-建立基礎數學模型\" data-tab=\"flow\">5.2 建立基礎數學模型<\/a><a class=\"toc-3\" href=\"#53-建立-rtpvariant-與-card-system\" data-tab=\"flow\">5.3 建立 RTP／Variant 與 Card System<\/a><a class=\"toc-3\" href=\"#54-轉檔與-config-驗證\" data-tab=\"flow\">5.4 轉檔與 Config 驗證<\/a><a class=\"toc-3\" href=\"#55-simulator-開發與-debug\" data-tab=\"flow\">5.5 Simulator 開發與 Debug<\/a><a class=\"toc-3\" href=\"#56-模擬順序\" data-tab=\"flow\">5.6 模擬順序<\/a><a class=\"toc-3\" href=\"#57-調參循環\" data-tab=\"flow\">5.7 調參循環<\/a><a class=\"toc-3\" href=\"#58-對帳與交付\" data-tab=\"flow\">5.8 對帳與交付<\/a><a class=\"toc-2\" href=\"#6-改了什麼要重跑什麼\" data-tab=\"flow\">6. 改了什麼要重跑什麼<\/a><a class=\"toc-2\" href=\"#7-禁止事項\" data-tab=\"flow\">7. 禁止事項<\/a><a class=\"toc-2\" href=\"#8-完成前檢查清單\" data-tab=\"flow\">8. 完成前檢查清單<\/a><\/nav>\n  <main><section class=\"panel\" role=\"tabpanel\" id=\"panel-flow\"><h1 id=\"slot-數學開發流程\">Slot 數學開發流程<\/h1>\n<p>本文件定義新 Slot 專案的<strong>數學開發流程、製作順序、操作方式、階段產物與完成條件<\/strong>。<\/p>\n<p>實作欄位、命名、版本、Card System、Simulator、Demogame、Config 與報表格式等細節，統一依照本資料夾的各規範文件（總覽見 _README.md）。本文件不重複定義實作規格；內容有差異時，以各規範文件為準。<\/p>\n<p>適用範圍：<code>Slots/H0xx_遊戲名稱/<\/code> 下的新遊戲數學模型、既有模型改版，以及 RTP、Card System、Feature 或 Bet Mode 參數調整。<\/p>\n<h2 id=\"1-基本原則\">1. 基本原則<\/h2>\n<p>過往專案可看到數種演進中的做法：<\/p>\n<ul><li>H013、H015、H019 使用 RTP Config、Simulator 與 Record 的基本流程。<\/li><li>H016、H028 已拆分基礎 <code>config.js<\/code> 與 RTP／Variant Config，並保留 <code>Versions/<\/code>，較符合目前標準。<\/li><li>H026 同時存在 92／94 與 A／B Variant，適合作為多模型組合的參考。<\/li><li>早期專案（H013～H027）曾使用 <code>xlsx_to_config.py<\/code>、<code>model_sync.py<\/code> 等轉檔腳本同步 Source 與程式資料；此做法已淘汰，Excel 與 Config 之間的轉換一律由 AI 執行，專案內不建立、不維護轉檔工具。<\/li><\/ul>\n<p>新專案採用以下統一原則：<\/p>\n<ol><li><code>game_rule.md<\/code> 定義玩法，數學 XLSX／<code>Source/<\/code> 定義正式參數。<\/li><li>Config 必須由 Source 轉出（轉換由 AI 執行，不建立轉檔工具），不直接手改轉出的參數。<\/li><li>Simulator 與 Demogame 使用同一份 Config。<\/li><li>先驗證 Card System Off 的自然機率，再驗證 Card System On。<\/li><li>每次調參都依「Source → 版本 → Config → Simulator → Record → 對帳」完整重跑。<\/li><li>舊專案若與目前命名、版本或報表格式不同，不直接複製舊格式；依現行規格建立。<\/li><li><code>game_rule.md<\/code> 是遊戲規則的正式來源，要寫明玩法、判獎順序、倍率口徑、Feature 流程與例外；數學模型、程式與 Help 都要與它一致，程式不可補猜未定義的規則。<\/li><li>同一項資料出現在多個檔案時，修改要同步更新並完成對帳。<\/li><li>未支援的 RTP、Variant、Bet Mode、Profile 或 Feature，不得出現在 Config、Simulator 批次或 Demogame 選單。<\/li><li>會影響結果分布、RTP、觸發率、最大獎或 Retry 的修改，都要更新版本並重新模擬。<\/li><\/ol>\n<h2 id=\"2-必要產出文件\">2. 必要產出文件<\/h2>\n<p>每個專案必須產出的文件與 <code>修改紀錄.md<\/code> 格式見產出與紀錄規範.md。<\/p>\n<h2 id=\"3-八個步驟總覽\">3. 八個步驟總覽<\/h2>\n<p>八個大步驟，每一步的工作、產出與進入下一步的條件見第 4 節：<\/p>\n<div class=\"flow\"><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">1<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">提案<\/div><div class=\"step-desc\">整理玩法、規格、特色與競品差異，製作提案簡報<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">2<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">開案<\/div><div class=\"step-desc\">遊戲規格確認：Game Rule、數學目標、模型組合<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">3<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">數學開發<\/div><div class=\"step-desc\">模型製作 → 模擬程式 → Demogame<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">4<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">調性調整<\/div><div class=\"step-desc\">卡片權重校準、Card System 驗證、調參與正式模擬、數值報告<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">5<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">後端對接／報表驗證<\/div><div class=\"step-desc\">SPS 設定交付、後端報表驗證、挑腳本<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">6<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">文件製作<\/div><div class=\"step-desc\">數值文件、Help<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">7<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">文件檢查<\/div><div class=\"step-desc\">所有要交付給其他人的檔案逐項檢查，版本凍結<\/div><\/div><\/div><div class=\"step\"><div class=\"step-rail\"><div class=\"step-dot\">8<\/div><div class=\"step-line\"><\/div><\/div><div class=\"step-body\"><div class=\"step-title\">Demo 報告<\/div><div class=\"step-desc\">全部做完後整理設計重點、獨有巧思、製作困難與反饋<\/div><\/div><\/div><\/div>\n<h2 id=\"4-各步驟的產出與過關條件\">4. 各步驟的產出與過關條件<\/h2>\n<p>不得因為某個程式可以先寫就跳過前置規則。上一階段的完成條件成立後，才進入下一階段。<\/p>\n<div class=\"tbl-wrap\"><table><thead><tr><th class=\"n\">順序<\/th><th>階段<\/th><th>主要工作<\/th><th>產出<\/th><th>進入下一階段的條件<\/th><\/tr><\/thead><tbody><tr><td class=\"n\">1<\/td><td>提案<\/td><td>整理玩法、規格、特色與競品差異，製作提案簡報<\/td><td>提案簡報 <code>.pptx<\/code><\/td><td>提案通過、確定開案<\/td><\/tr><tr><td class=\"n\">2<\/td><td>開案（遊戲規格確認）<\/td><td>確認 Game ID、盤面、判獎、Bet Mode、Feature、RTP 拆分、Link 資格、Hit Rate、Max Win、Profile、押注層級與 Variant；<strong>與使用者確認數學模型組合<\/strong>（預設 92A／92B／94A／94B，各含 Newbie／Oldhand 與對應押注區）<\/td><td>已確認的 <code>game_rule.md<\/code>、數學目標表<\/td><td>核心規則、計算口徑與模型組合無待確認項目<\/td><\/tr><tr><td class=\"n\">3.1<\/td><td>數學開發：模型製作<\/td><td>基礎數學模型 → RTP／Variant 與 Card System 區間 → Mapping → 由 AI 轉出 Config<\/td><td><code>H0xx1.xlsx<\/code>、<code>H0xx1&lt;RTP&gt;&lt;Variant&gt;.xlsx<\/code>、<code>config*.js<\/code><\/td><td>自然機率可計算、理論上限已確認；Source、Config、版本逐項一致<\/td><\/tr><tr><td class=\"n\">3.2<\/td><td>數學開發：模擬程式<\/td><td>實作 Simulator；小場次 Debug 與單局驗證；Card System Off 大場次自然機率報表（NB 10⁹ 局、BF 10⁸ 局）<\/td><td><code>Simulator.py<\/code>、自然機率報表<\/td><td>固定 Seed 可重現；代表性案例符合 Game Rule；RTP Breakdown、Hit Rate、Feature 與分布合理<\/td><\/tr><tr><td class=\"n\">3.3<\/td><td>數學開發：Demogame<\/td><td>依 Config 製作可操作的 Demo，與 Simulator 單局對帳<\/td><td><code>index.html<\/code><\/td><td>Config、Simulator、Demogame 單局結果一致<\/td><\/tr><tr><td class=\"n\">4<\/td><td>調性調整<\/td><td>依自然機率報表校準卡片權重；Card System On 分 RTP／Variant／Profile／押注層級驗證；調參與正式大場次模擬；Max Win、Retry 與極值驗證；數值報告對標競品與前作<\/td><td>校準後的 <code>Multiplier_Weight<\/code> 與 Config、Card-On 報表、<code>數值報告_&lt;遊戲中文名&gt;<\/code><\/td><td>所有組合符合目標與誤差要求，調性經使用者確認<\/td><\/tr><tr><td class=\"n\">5<\/td><td>後端對接／報表驗證<\/td><td>交付 SPS <strong>Config 與模擬程式<\/strong>（不交數學模型、PARsheet）；讀後端報表驗證 RTP；<strong>挑腳本<\/strong><\/td><td>交給 SPS 的 <code>config*.js<\/code>、<code>Simulator.py<\/code>，後端報表彙整、腳本<\/td><td>後端報表與 Simulator 一致，腳本挑選完成<\/td><\/tr><tr><td class=\"n\">6<\/td><td>文件製作<\/td><td><strong>數值文件<\/strong>：<code>game_description.md<\/code>、PARsheet、Math Document Description；<strong>Help<\/strong>：<code>game_help_draft.md<\/code> → <code>{GameID}_Help.xlsx<\/code> → Game Description<\/td><td>各文件<\/td><td>文件內容與 Game Rule、數學模型一致<\/td><\/tr><tr><td class=\"n\">7<\/td><td>文件檢查<\/td><td>檢查<strong>所有要交付給其他人的檔案<\/strong>（Help、Game Description、Math Document Description、PARsheet、數學模型、Config、Simulator、Demogame、腳本）；版本凍結、整理 Record<\/td><td>檢查紀錄、完整專案目錄<\/td><td>本文件第 8 節全部通過<\/td><\/tr><tr><td class=\"n\">8<\/td><td>Demo 報告<\/td><td>全部做完後，整理這款遊戲的設計重點、跟競品不同的獨有巧思、製作過程的困難與反饋，並用數據佐證（見Demo報告規範）<\/td><td><code>demo_report_draft.md<\/code> → <code>其他/{英文遊戲名}_Demo報告_v01.pptx<\/code><\/td><td>使用者確認<\/td><\/tr><\/tbody><\/table><\/div>\n<h3 id=\"41-檔案確認與檢查\">4.1 檔案確認與檢查<\/h3>\n<p><strong>每個階段結束前、每次把檔案交給其他人（SPS、PM、美術、送驗）前，都必須先做檔案確認與內容檢查<\/strong>；任一項不通過，不得進入下一階段，也不得交付。<\/p>\n<ul><li><strong>檔案確認<\/strong>：檔名、存放位置符合規範（見產出與紀錄規範第 3 節）；版本號與來源一致；是最新版，沒有舊版或暫存檔混在交付內容裡。<\/li><li><strong>內容檢查<\/strong>：依下表對應規範的檢查清單逐項確認，並把結果記在修改紀錄或交付說明。<\/li><\/ul>\n<div class=\"tbl-wrap\"><table><thead><tr><th>階段<\/th><th>要確認的檔案<\/th><th>內容檢查依據<\/th><\/tr><\/thead><tbody><tr><td>1 提案<\/td><td>提案簡報 <code>.pptx<\/code><\/td><td>提案報告規範.md 5 製作與檢查<\/td><\/tr><tr><td>2 開案<\/td><td><code>game_rule.md<\/code>、數學目標表<\/td><td>GameRule規範.md 3 交付檢查<\/td><\/tr><tr><td>3.1 模型製作<\/td><td>數學模型 <code>.xlsx<\/code>、<code>config*.js<\/code><\/td><td>數學模型規範.md；xlsx 依 math-model-xlsx-edit skill 跑 <code>_check_xlsx_style.py<\/code>；Source、Config、版本逐項比對<\/td><\/tr><tr><td>3.2 模擬程式<\/td><td><code>Simulator.py<\/code>、自然機率報表<\/td><td>模擬程式規範.md 2.5 最終交付檢查<\/td><\/tr><tr><td>3.3 Demogame<\/td><td><code>index.html<\/code>、共用 css／js<\/td><td>Demogame規範.md 7 交付檢查<\/td><\/tr><tr><td>4 調性調整<\/td><td>校準後的數學模型與 Config、Card-On 報表、數值報告<\/td><td>數學模型規範.md 2.7 合理性檢查；模擬結果符合目標（判定方式見模擬程式規範 §1.2.2）<\/td><\/tr><tr><td>5 後端對接／報表驗證<\/td><td>給 SPS 的 Config 與模擬程式、後端報表彙整、腳本<\/td><td>模擬程式規範.md 2.5 最終交付檢查；壓測說明書.md 3.5、後端報表.md 6、腳本規範.md 6 檢查清單<\/td><\/tr><tr><td>6 文件製作<\/td><td>Help、Game Description、Math Document Description、PARsheet、<code>game_description.md<\/code><\/td><td>數學文件規範.md 1.5、2.3 交付檢查與 PARsheet 交付前檢查；送驗文件規範.md 7 送驗前檢查清單<\/td><\/tr><tr><td>7 文件檢查<\/td><td>所有要交付給其他人的檔案<\/td><td>以上各階段檢查全部重跑一次；本文件第 8 節完成前檢查清單<\/td><\/tr><tr><td>8 Demo 報告<\/td><td><code>demo_report_draft.md<\/code>、Demo 報告 <code>.pptx<\/code><\/td><td>Demo報告規範：每個設計點都有原因與數據佐證；反饋與線上數據註明來源與日期<\/td><\/tr><\/tbody><\/table><\/div>\n<p>各階段的實作要求請查閱：<\/p>\n<ul><li>提案：提案報告規範.md<\/li><li>後端對接／報表驗證：後端報表.md、壓測說明書.md；挑腳本：腳本規範.md<\/li><li>數學文件、模型命名、版本與 RTP：數學模型規範.md<\/li><li>Card System：數學模型規範.md<\/li><li>Simulator、BATCH_RUNS、Console 與 Record：模擬程式規範.md<\/li><li>Demogame 與單局對帳：Demogame規範.md<\/li><li>Config、轉檔與版本歷史：模擬程式規範.md<\/li><li>Game Rule：GameRule規範.md；Help、Game Description：數學文件規範.md；Game List：送驗文件規範.md<\/li><li>送驗文件（Game Description DOCX、Math Document Description、數學模型送驗版）：送驗文件規範.md<\/li><\/ul>\n<h3 id=\"42-工作進度表\">4.2 工作進度表<\/h3>\n<p>每款遊戲在專案根目錄放 <code>進度.md<\/code>，記錄上表各階段工項的完成狀態；每次開啟該遊戲的工作 Session，先顯示進度條再開始工作。<\/p>\n<pre><code>py 專案需知/其他/progress.py H045<\/code><\/pre>\n<ul><li>遊戲還沒有 <code>進度.md<\/code> 時，腳本依預設工項建立（工項取自上表各階段的產出）；之後<strong>依遊戲自行增刪工項<\/strong>，以 <code>進度.md<\/code> 為準。<\/li><li>狀態欄：空白＝未完成；<strong><code>ok<\/code>＝使用者確認完成<\/strong>（只有使用者確認後才可標 ok）；完成後若再調整，同一列依序改為 <code>v2<\/code>、<code>v3<\/code>…。<\/li><li>紀錄欄依序附日期與內容，例：<code>ok 2026-10-16；v2 2026-10-20 調整 BG 權重<\/code>；不刪舊紀錄。<\/li><li>進度條＝有狀態的工項數 ÷ 全部工項數；腳本另列出下一個未完成的工項。<\/li><\/ul>\n<h2 id=\"5-各步驟怎麼做\">5. 各步驟怎麼做<\/h2>\n<h3 id=\"51-開案與數學目標確認\">5.1 開案與數學目標確認<\/h3>\n<ol><li>建立 <code>H0xx_遊戲名稱/<\/code> 專案資料夾。<\/li><li>讀取並確認 <code>game_rule.md<\/code>。<\/li><li><strong>與使用者確認本專案的數學模型組合<\/strong>——每款遊戲的數學模型都不一樣，不得逕自沿用他款設定。未特別說明時，預設組合為：<ul><li>A／B 兩個 Variant × 92／94 兩個 RTP，乘開共 <strong>4 個版本<\/strong>（92A、92B、94A、94B）。<\/li><li>每個版本都有 Newbie／Oldhand 兩種 Profile。<\/li><li>各版本依其支援內容有對應的押注區（Oldhand 小／中／大 Bet 層級）。<\/li><\/ul><\/li><li>列出所有正式支援組合：RTP、Variant、Profile、Oldhand 小／中／大 Bet、NB／EB 或 BF／SF 模式類別、Bet Mode、Card System Off／On。<\/li><li>為每個組合定義 Link／Bonus Game／Game RTP、Total RTP、Link 資格、Hit Rate、Feature Frequency、BG／FG Max Multiplier 與其他遊戲專屬指標。<\/li><li>將未決定的判獎順序、倍率分母、Feature 上限與例外退回確認；未確認前不製作正式模型。<\/li><\/ol>\n<h3 id=\"52-建立基礎數學模型\">5.2 建立基礎數學模型<\/h3>\n<ol><li>先完成 Base Game，再依狀態順序完成 Feature。<\/li><li>建立 Symbol、Paytable、Reel Strip／Weight、Table 與 Bet Mode。<\/li><li>建立 BG、FG、Cascade、Multiplier、Retrigger、Jackpot 等流程。<\/li><li>計算 RTP Breakdown 與理論 Max Win，不只計算 Total RTP。<\/li><li>建立基礎數學 XLSX，版本依規格使用 1 碼。<\/li><\/ol>\n<h3 id=\"53-建立-rtpvariant-與-card-system\">5.3 建立 RTP／Variant 與 Card System<\/h3>\n<ol><li>只建立 5.1 與使用者確認過的 92／94、A／B 組合（未特別說明時為 92A、92B、94A、94B 四版本，各含 Newbie／Oldhand 與對應押注區）。<\/li><li>A／B 表示數學 Variant，不表示 Newbie／Oldhand。<\/li><li>依 Profile、Oldhand 小／中／大 Bet 與 Bet Mode 建立 BG／FG 卡片區間及權重；NB／EB 以實際模式押注、BF／SF 以 Feature 基礎押注選擇層級。<\/li><li>確認每張正權重卡片的區間可達，並定義 Retry 行為。<\/li><li>建立 RTP／Variant XLSX，版本依規格使用四段格式。<\/li><\/ol>\n<h3 id=\"54-轉檔與-config-驗證\">5.4 轉檔與 Config 驗證<\/h3>\n<ol><li>在數學模型的 <code>Game Description<\/code> 工作表記錄每項 Config 資料的來源。<\/li><li>由 AI 依 Source 與 Mapping 轉出 Config；專案內不建立、不維護 Excel↔Config 轉檔工具。<\/li><li>執行欄位、型別、陣列長度、ID、Weight、Min／Max、版本與模式驗證。<\/li><li>比較轉檔前後資料，確認 Config 可由 Source 重建且沒有非預期差異。<\/li><li>轉檔錯誤時修正 Source 或 Mapping 後重新轉出，不直接修改 Config 大型陣列。<\/li><\/ol>\n<h3 id=\"55-simulator-開發與-debug\">5.5 Simulator 開發與 Debug<\/h3>\n<ol><li>先完成自然機率核心，再加入 Card System 篩選與 Retry。<\/li><li>讓 Simulator 直接讀取正式 Config，不另寫一份參數。<\/li><li>建立固定 Seed、單執行緒與逐局 Trace 模式。<\/li><li>建立強制／指定案例，驗證無獎、一般獎、Wild、Scatter、Feature、Retrigger、倍率與封頂。<\/li><li>小場次確認正確後，再加入 Numba、多執行緒、BATCH_RUNS 與 Excel 報表。<\/li><\/ol>\n<h3 id=\"56-模擬順序\">5.6 模擬順序<\/h3>\n<p>模擬必須依下列順序執行：<\/p>\n<ol><li>小場次、Card System Off：驗證流程與報表。<\/li><li>中場次、Card System Off：確認自然機率 RTP 與分布。<\/li><li>大場次、Card System Off：以 NB 10⁹ 局（BF 為 10⁸ 局）產出自然機率正式報表。<\/li><li>卡片權重調性校準：依上一步報表分配各得分區間的卡片權重，使分布、RTP 拆分與 FG 週期符合目標遊戲調性；完成後才進入 Card System On。<\/li><li>小場次、Card System On：確認抽卡、Profile、Oldhand 押注層級、Link 資格、倍率上限、Mode 與 Retry。<\/li><li>中場次、Card System On：調整區間、權重與目標 RTP。<\/li><li>所有正式組合的大場次模擬。<\/li><li>Max Win、低機率 Feature 與 Retry 邊界的專項驗證。<\/li><\/ol>\n<p>最低批次矩陣：<\/p>\n<div class=\"tbl-wrap\"><table><thead><tr><th>類型<\/th><th>RTP／Variant<\/th><th>Profile<\/th><th><code>bet_tier_amount<\/code><\/th><th>Bet Mode<\/th><th>Card System<\/th><\/tr><\/thead><tbody><tr><td>自然機率基準<\/td><td>基礎 Config<\/td><td>不適用<\/td><td>各門檻所需代表值<\/td><td>每個支援 Mode<\/td><td>Off<\/td><\/tr><tr><td>Newbie<\/td><td>每個正式 RTP／Variant<\/td><td>Newbie<\/td><td>不分層級，但仍記錄判定金額<\/td><td>每個支援的 NB／EB／BF／SF<\/td><td>On<\/td><\/tr><tr><td>Oldhand 小 Bet<\/td><td>每個正式 <code>94x<\/code>／Variant<\/td><td>Oldhand<\/td><td><code>&lt; $2<\/code>，至少驗證 <code>$1.99<\/code><\/td><td>每個支援的 NB／EB／BF／SF<\/td><td>On<\/td><\/tr><tr><td>Oldhand 中 Bet<\/td><td>每個正式 <code>92x<\/code>／Variant<\/td><td>Oldhand<\/td><td><code>$2～$100<\/code>，至少驗證 <code>$2<\/code>、<code>$100<\/code><\/td><td>每個支援的 NB／EB／BF／SF<\/td><td>On<\/td><\/tr><tr><td>Oldhand 大 Bet<\/td><td>每個正式 <code>92x<\/code>／Variant<\/td><td>Oldhand<\/td><td><code>&gt; $100<\/code>，至少驗證 <code>$100.01<\/code><\/td><td>每個支援的 NB／EB／BF／SF<\/td><td>On<\/td><\/tr><\/tbody><\/table><\/div>\n<ul><li>NB／EB 的 <code>bet_tier_amount<\/code> 使用實際模式押注金額；BF／SF 使用 Feature 購買價格除以 Feature Price 倍數後的基礎押注。<\/li><li>若遊戲支援 EB 2x，至少驗證 base bet <code>$1<\/code> 會以 <code>$2<\/code> 判為中 Bet。<\/li><li>若遊戲支援 BF 75x，至少驗證購買 <code>$75<\/code> 判為小 Bet、購買 <code>$150<\/code> 判為中 Bet。<\/li><\/ul>\n<p>不存在的 Mode、Profile 或 Variant 不建立空批次，也不以全零結果冒充驗證完成。<\/p>\n<h3 id=\"57-調參循環\">5.7 調參循環<\/h3>\n<p>每一次調參都執行完整循環：<\/p>\n<pre><code>確認差距與原因\n    ↓\n修改對應 Source XLSX\n    ↓\n依異動內容更新版本\n    ↓\n重新產生 Config\n    ↓\n執行轉檔與資料驗證\n    ↓\n先跑小場次確認流程\n    ↓\n再跑中／大場次確認統計\n    ↓\n保存新 Record 並與前版比較<\/code><\/pre>\n<p>調參時依序判斷：<\/p>\n<ol><li>先確認程式與統計口徑是否錯誤。<\/li><li>再檢查自然機率的 Paytable、Reel、Table、Feature。<\/li><li>最後才調整 Card System 區間與權重。<\/li><li>不得只為讓 Total RTP 接近目標而忽略 RTP Breakdown、Hit Rate、Feature Frequency、分布或 Retry。<\/li><\/ol>\n<h3 id=\"58-對帳與交付\">5.8 對帳與交付<\/h3>\n<p>卡片權重完成後出數值報告（數值報告規範）；全部做完（第 7 步文件檢查通過）後出 Demo 報告（Demo報告規範）。<\/p>\n<ol><li>選定可重現的代表性 RNG／Seed。<\/li><li>逐項核對 Config、Simulator 與 Demogame 的盤面、判獎、Feature、倍率、Total Win、Coin In 與 Retry。<\/li><li>完成所有正式組合的最新 Record。<\/li><li>將正式 Config 與歷史版本關係寫入 <code>Versions/<\/code> 與 manifest。<\/li><li>確認產出與紀錄規範第 1 節的必要產出文件全部齊備且為同一正式版本。<\/li><li>清除暫存檔、舊測試輸出及不屬於正式交付的檔案。<\/li><li>依第 8 節完成最終驗收。<\/li><\/ol>\n<p><strong>交付 SPS 打包<\/strong>（第 5 步後端對接；2026-10-22，以 H020 超級寶石為範例）<\/p>\n<ul><li>放在 <code>其他/To SPS/<\/code>，每次交付打成<strong>一個 zip<\/strong>：<code>&lt;GameID&gt;_&lt;RTP／Variant 四碼版本去點&gt;.zip<\/code>（例：<code>101007_2220.zip<\/code>＝2.2.2.0、<code>101015_6000.zip<\/code>＝6.0.0.0）。<\/li><li>zip 內只放：<code>config.js<\/code>、該遊戲所有 <code>config_&lt;RTP&gt;&lt;Variant&gt;.js<\/code>、<code>Simulator.py<\/code>、<code>給SPS說明_&lt;四碼版本&gt;.txt<\/code>；不放數學模型 XLSX、PARsheet、報表、json。<\/li><li><code>給SPS說明_&lt;版本&gt;.txt<\/code> 寫：與上一個交付版本的差異（基礎數學、規則／程式要後端同步的地方、卡片權重）、驗證目標與我方 Card-On 結果（判定見模擬程式規範 §1.2.2）。<\/li><li>舊版 zip 保留不刪（追溯用）；<code>To SPS/<\/code> 內不留散檔，只放各版 zip。<\/li><li>驗證結果確定後才打包；打包後重新交付須換新版本號，不得覆寫已交付的 zip。<\/li><\/ul>\n<p><strong>挑 BF 腳本：提供累積權重範圍<\/strong>（第 5 步挑腳本；2026-10-28，以 H045 超級鑽石為範例）<\/p>\n<ul><li>挑腳本階段<strong>不改數學模型<\/strong>，只讀現行 <code>config_&lt;RTP&gt;&lt;Variant&gt;.js<\/code> 的 Card System。<\/li><li>主動提供<strong>最接近 BF 平均倍數的兩個區間<\/strong>：BF 平均倍數 ≈ 購買價 × BF RTP 目標（例：H045 為 50 × 92.5% ≈ 46x → <code>(40, 45]<\/code>、<code>(45, 50]<\/code>）。<\/li><li>每個區間<strong>只給一個數字<\/strong>（骰 0～總權重 − 1 的累積權重值），<strong>數字不加千分位逗號<\/strong>。<\/li><li>數字的算法：依 config 卡片順序從 0 累加，某區間的範圍＝<code>[前面所有卡權重加總, 前面加總＋本格權重 − 1]<\/code>，骰到範圍內就開該區間（與 Simulator <code>pick_card<\/code> 相同）。<\/li><li>取同系列（例：A 版 92A／94A／92A_Bet100、B 版同理）各份範圍的<strong>交集中點<\/strong>，一個數字各份都開同一區間、一個腳本通用；沒有交集才分模型各給一個（取各自範圍中點），並註明。<\/li><li>新手卡片若與老手相同要註明。<\/li><\/ul>\n<div class=\"tbl-wrap\"><table><thead><tr><th>系列<\/th><th><code>(40, 45]<\/code><\/th><th><code>(45, 50]<\/code><\/th><\/tr><\/thead><tbody><tr><td>A 版（92A／94A／92A_Bet100）<\/td><td>628507828<\/td><td>669663120<\/td><\/tr><\/tbody><\/table><\/div>\n<p>（H045 v6.0.0.3 老手 BF，總權重 10 億）<\/p>\n<h2 id=\"6-改了什麼要重跑什麼\">6. 改了什麼要重跑什麼<\/h2>\n<div class=\"tbl-wrap\"><table><thead><tr><th>異動<\/th><th>必做流程<\/th><\/tr><\/thead><tbody><tr><td>Paytable、Reel、Table、Feature、Bet Mode、判獎<\/td><td>更新基礎 XLSX與版本 → 同步受影響 RTP／Variant → 轉 Config → 全部受影響批次重跑 → Demogame 對帳<\/td><\/tr><tr><td>Card System 區間或權重<\/td><td>更新受影響 RTP／Variant XLSX 第 2 碼 → 轉 Config → Card System On 批次重跑 → 檢查占比與 Retry<\/td><\/tr><tr><td>SCR<\/td><td>更新受影響 RTP／Variant XLSX 第 3 碼 → 轉 Config → 重跑 SCR 相關批次<\/td><\/tr><tr><td>文件、說明或排版<\/td><td>依規格更新第 4 碼；若不影響執行結果，不沿用舊版號產生新正式報表<\/td><\/tr><tr><td>Simulator 數學邏輯<\/td><td>修正程式 → 固定 Seed 回歸 → 小場次 → 所有受影響正式批次 → Demogame 對帳<\/td><\/tr><tr><td>報表或顯示邏輯<\/td><td>驗證統計來源未變 → 核對 Console 與 Excel → 依影響範圍重產報表<\/td><\/tr><\/tbody><\/table><\/div>\n<h2 id=\"7-禁止事項\">7. 禁止事項<\/h2>\n<ul><li>未確認 Game Rule 就自行補猜核心數學規則。<\/li><li>直接修改由 XLSX 產生的 Config 參數來避開轉檔。<\/li><li>建立或保留 Excel↔Config、Config↔Excel 的轉檔工具；轉換一律由 AI 執行。<\/li><li>Simulator、Demogame 與 Config 各維護一套參數。<\/li><li>只跑 Card System On，不保留自然機率基準。<\/li><li>只驗證 Total RTP，不驗證 RTP Breakdown、分布、Feature 與 Retry。<\/li><li>Card System Retry 時重抽目標卡、重複扣款或污染場次統計。<\/li><li>未升版就覆寫正式 XLSX、Config 或 Record。<\/li><li>建立產品未使用的空白 B Variant、Mode 或 Profile。<\/li><li>直接複製舊專案的不相容命名、版本、報表欄位或遊戲專屬統計。<\/li><li>用全零欄位表示不存在或尚未驗證的功能。<\/li><\/ul>\n<h2 id=\"8-完成前檢查清單\">8. 完成前檢查清單<\/h2>\n<p>以下條件全部成立，數學開發才算完成：<\/p>\n<ul><li class=\"check\"><span class=\"cb\">☐<\/span> Game Rule 的核心流程、判獎、倍率、Feature 與例外均已確認。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 每個正式 RTP、Variant、Profile、Oldhand 小／中／大 Bet 與 Bet Mode 都有明確目標。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 每個付費遊戲組合均驗證 Link／Bonus Game／Game RTP、Total RTP、Link 資格及 BG／FG Max Multiplier。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> BF／SF 分開驗證 Newbie、Oldhand 小 Bet、Oldhand 中 Bet 與 Oldhand 大 Bet，Total RTP 均為 96.50%。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 基礎與 RTP／Variant XLSX 的命名及版本正確。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Config 可由 Source 完整重建，Mapping 可追溯。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Source、Config、Simulator、Demogame 與 Record 使用同一正式版本。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 固定 Seed 可重現相同結果。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Card System Off 的自然機率基準已完成，且大場次正式報表為 NB 10⁹ 局（BF 10⁸ 局）。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 卡片權重已依自然機率大場次報表校準至目標遊戲調性。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Card System On 的所有正式組合已完成。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> RTP、RTP Breakdown、Hit Rate、Feature Frequency 與分布符合目標。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Card 權重占比合理，Retry Limit Exceeded 為零或已有核准處理方式。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Max Win、封頂及理論可達路徑已驗證。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> Console 與 Record 報表內容及統計口徑一致。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 代表性單局已完成 Config、Simulator、Demogame 三方對帳。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 最新正式 Record 已保存，歷史版本未被覆寫。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 產出與紀錄規範第 1 節的必要產出文件全部齊備：<code>game_rule.md<\/code>、<code>game_help_draft.md<\/code>／<code>{GameID}_Help.xlsx<\/code>、<code>game_description.md<\/code>、數學模型／PARsheet、<code>config.js<\/code>、<code>Simulator.py<\/code>、<code>index.html<\/code>、<code>數值報告_&lt;遊戲中文名&gt;.md<\/code>＋<code>.html<\/code>、<code>注意事項.md<\/code>、<code>{GameID}_Game Description.docx<\/code>、<code>{GameID}_Math Document Description.md<\/code>。<\/li><li class=\"check\"><span class=\"cb\">☐<\/span> 暫存檔、快取與測試輸出未列入正式交付。<\/li><\/ul><\/section><\/main>\n<\/div>\n<\/div>\n<script>\nvar TAB_IDS = ['flow'];\nvar LAST = {};\nfunction activate(tabId, anchor) {\n  document.querySelectorAll('.tab').forEach(function(b) {\n    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;\n    if (on) LAST[b.id] = tabId;\n    b.setAttribute('aria-selected', on ? 'true' : 'false');\n    b.tabIndex = on ? 0 : -1;\n    if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });\n  });\n  document.querySelectorAll('.panel').forEach(function(p) {\n    p.hidden = (p.id !== 'panel-' + tabId);\n  });\n  document.querySelectorAll('.toc').forEach(function(t) {\n    t.hidden = (t.id !== 'toc-' + tabId);\n  });\n  if (anchor) {\n    var el = document.getElementById(anchor);\n    if (el) el.scrollIntoView();\n  } else {\n    window.scrollTo(0, 0);\n  }\n  // 嵌入入口時通知入口：左側目錄跟著亮起\n  if (window.self !== window.top) window.parent.postMessage({specTab: tabId, specAnchor: anchor || ''}, '*');\n}\n// 入口左側目錄點選 → 切到對應頁籤／章節\nwindow.addEventListener('message', function(e) {\n  var d = e.data || {};\n  if (d.goTab && TAB_IDS.indexOf(d.goTab) >= 0) activate(d.goTab, d.goAnchor || null);\n});\n// 嵌入時捲動內文，回報目前讀到的章節\nwindow.addEventListener('scroll', function() {\n  if (window.self === window.top) return;\n  clearTimeout(window._spy);\n  window._spy = setTimeout(function() {\n    var p = document.querySelector('.panel:not([hidden])');\n    if (!p) return;\n    var cur = '';\n    p.querySelectorAll('h2[id], h3[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });\n    window.parent.postMessage({specTab: p.id.slice(6), specAnchor: cur, spy: true}, '*');\n  }, 80);\n});\ndocument.querySelectorAll('.tab').forEach(function(b) {\n  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });\n});\n(function() {\n  var bar = document.querySelector('.tabs');\n  bar.addEventListener('wheel', function(e) {\n    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {\n      bar.scrollLeft += e.deltaY;\n      e.preventDefault();\n    }\n  }, { passive: false });\n})();\n(function() {\n  var h = decodeURIComponent(location.hash.slice(1));\n  if (!h) return;\n  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');\n  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);\n})();\n// 寬表格／程式碼／時間軸：滑鼠按住左右拖曳捲動（拉條已隱藏）\n(function() {\n  var drag = null, moved = false;\n  function mark() {\n    document.querySelectorAll('.tbl-wrap, pre, .tl-wrap').forEach(function(el) {\n      el.classList.toggle('drag-x', el.scrollWidth > el.clientWidth + 1);\n    });\n  }\n  document.addEventListener('mousedown', function(e) {\n    var el = e.button === 0 && e.target.closest('.drag-x');\n    if (!el || e.target.closest('a')) return;\n    drag = { el: el, x: e.clientX, left: el.scrollLeft };\n    moved = false;\n  });\n  document.addEventListener('mousemove', function(e) {\n    if (!drag) return;\n    var dx = e.clientX - drag.x;\n    if (!moved && Math.abs(dx) < 4) return;\n    moved = true;\n    drag.el.classList.add('dragging');\n    drag.el.scrollLeft = drag.left - dx;\n    e.preventDefault();\n  });\n  document.addEventListener('mouseup', function() {\n    if (drag) drag.el.classList.remove('dragging');\n    drag = null;\n  });\n  // 拖曳結束時不要觸發點擊\n  document.addEventListener('click', function(e) {\n    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }\n  }, true);\n  window.addEventListener('resize', mark);\n  document.addEventListener('click', function() { setTimeout(mark, 0); });\n  mark();\n})();\ndocument.addEventListener('click', function(e) {\n  var a = e.target.closest('a');\n  if (!a) return;\n  if (a.classList.contains('tab-link')) {\n    e.preventDefault();\n    activate(a.dataset.tab, a.dataset.anchor || null);\n  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {\n    var id = a.getAttribute('href').slice(1);\n    var el = document.getElementById(id);\n    if (!el) return;\n    e.preventDefault();\n    var panel = el.closest('.panel');\n    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);\n  }\n});\n<\/script>\n<\/body>\n<\/html>\n"</script>
 <script>
-var TAB_IDS = ['flow'];
-var LAST = {};
-function activate(tabId, anchor) {
-  document.querySelectorAll('.tab').forEach(function(b) {
-    var on = b.dataset.tabs.split(',').indexOf(tabId) >= 0;
-    if (on) LAST[b.id] = tabId;
-    b.setAttribute('aria-selected', on ? 'true' : 'false');
-    b.tabIndex = on ? 0 : -1;
-    if (on && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  });
-  document.querySelectorAll('.panel').forEach(function(p) {
-    p.hidden = (p.id !== 'panel-' + tabId);
-  });
-  document.querySelectorAll('.toc').forEach(function(t) {
-    t.hidden = (t.id !== 'toc-' + tabId);
-  });
-  if (anchor) {
-    var el = document.getElementById(anchor);
-    if (el) el.scrollIntoView();
-  } else {
-    window.scrollTo(0, 0);
-  }
-  // 嵌入入口時通知入口：左側目錄跟著亮起
-  if (window.self !== window.top) window.parent.postMessage({specTab: tabId, specAnchor: anchor || ''}, '*');
+var SITES = {"flow": {"name": "開發流程", "src": "", "meta": {"groups": [["開發流程", ["flow"]]], "titles": {"flow": "開發流程"}, "toc": {"flow": [[2, "1-基本原則", "1. 基本原則"], [2, "2-必要產出文件", "2. 必要產出文件"], [2, "3-八個步驟總覽", "3. 八個步驟總覽"], [2, "4-各步驟的產出與過關條件", "4. 各步驟的產出與過關條件"], [3, "41-檔案確認與檢查", "4.1 檔案確認與檢查"], [3, "42-工作進度表", "4.2 工作進度表"], [2, "5-各步驟怎麼做", "5. 各步驟怎麼做"], [3, "51-開案與數學目標確認", "5.1 開案與數學目標確認"], [3, "52-建立基礎數學模型", "5.2 建立基礎數學模型"], [3, "53-建立-rtpvariant-與-card-system", "5.3 建立 RTP／Variant 與 Card System"], [3, "54-轉檔與-config-驗證", "5.4 轉檔與 Config 驗證"], [3, "55-simulator-開發與-debug", "5.5 Simulator 開發與 Debug"], [3, "56-模擬順序", "5.6 模擬順序"], [3, "57-調參循環", "5.7 調參循環"], [3, "58-對帳與交付", "5.8 對帳與交付"], [2, "6-改了什麼要重跑什麼", "6. 改了什麼要重跑什麼"], [2, "7-禁止事項", "7. 禁止事項"], [2, "8-完成前檢查清單", "8. 完成前檢查清單"]]}}}};
+var KEYS = ["flow"];
+var SINGLE = true;
+var frame = document.getElementById('site');
+var cur = { key: null, tab: null, anchor: '' };
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function setHash() {
+  var h = '#' + (SINGLE ? '' : cur.key + (cur.tab ? '/' : '')) + (cur.tab || '') + (cur.anchor ? '/' + cur.anchor : '');
+  if (location.hash !== h) history.replaceState(null, '', h);
 }
-// 入口左側目錄點選 → 切到對應頁籤／章節
-window.addEventListener('message', function(e) {
-  var d = e.data || {};
-  if (d.goTab && TAB_IDS.indexOf(d.goTab) >= 0) activate(d.goTab, d.goAnchor || null);
-});
-// 嵌入時捲動內文，回報目前讀到的章節
-window.addEventListener('scroll', function() {
-  if (window.self === window.top) return;
-  clearTimeout(window._spy);
-  window._spy = setTimeout(function() {
-    var p = document.querySelector('.panel:not([hidden])');
-    if (!p) return;
-    var cur = '';
-    p.querySelectorAll('h2[id], h3[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });
-    window.parent.postMessage({specTab: p.id.slice(6), specAnchor: cur, spy: true}, '*');
-  }, 80);
-});
-document.querySelectorAll('.tab').forEach(function(b) {
-  b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });
-});
-(function() {
-  var bar = document.querySelector('.tabs');
-  bar.addEventListener('wheel', function(e) {
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && bar.scrollWidth > bar.clientWidth) {
-      bar.scrollLeft += e.deltaY;
-      e.preventDefault();
+// 目錄最多兩層：大類下只有一份文件時列章節；多份文件時只列文件名（章節看內文）
+// 文件名去掉「規範」、章節去掉編號，各站寫法一致
+var DOC_NAME = { 'GameRule規範': 'Game Rule', 'Demo報告規範': 'Demo 報告' };
+function docName(t) { return DOC_NAME[t] || t.replace(/規範$/, ''); }
+function secName(t) { return t.replace(/^\d+(\.\d+)*\.?\s*/, ''); }
+function secLink(t, s, on) {
+  return '<a href="#" data-tab="' + t + '" data-anchor="' + s[1] + '"' + (on ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a>';
+}
+// 整站只有一份文件（開發流程）：每章當一個大類、小節列在下面，與其他站同一種結構
+function renderFlat(m, t) {
+  var out = '', list = (m.toc || {})[t] || [], open = false;
+  // 目前讀到的小節所屬的章（第 2 層）
+  var curChap = '', last2 = '';
+  list.forEach(function (s) { if (s[0] === 2) last2 = s[1]; if (s[1] === cur.anchor) curChap = last2; });
+  list.forEach(function (s) {
+    if (s[0] === 2) {
+      if (open) out += '</ul></li>';
+      out += '<li>' + secLink(t, s, s[1] === curChap) + '<ul>';
+      open = true;
+    } else if (open) {
+      out += '<li>' + secLink(t, s, s[1] === cur.anchor) + '</li>';
     }
-  }, { passive: false });
-})();
-(function() {
-  var h = decodeURIComponent(location.hash.slice(1));
-  if (!h) return;
-  var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
-  if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
-})();
-// 寬表格／程式碼／時間軸：滑鼠按住左右拖曳捲動（拉條已隱藏）
-(function() {
-  var drag = null, moved = false;
-  function mark() {
-    document.querySelectorAll('.tbl-wrap, pre, .tl-wrap').forEach(function(el) {
-      el.classList.toggle('drag-x', el.scrollWidth > el.clientWidth + 1);
-    });
+  });
+  if (open) out += '</ul></li>';
+  return out.replace(/<ul><\/ul>/g, '');
+}
+function renderToc() {
+  var m = SITES[cur.key].meta, out = '';
+  var gs = m.groups || [];
+  if (gs.length === 1 && gs[0][1].length === 1) {
+    document.getElementById('toc').innerHTML = renderFlat(m, gs[0][1][0]);
+    return;
   }
-  document.addEventListener('mousedown', function(e) {
-    var el = e.button === 0 && e.target.closest('.drag-x');
-    if (!el || e.target.closest('a')) return;
-    drag = { el: el, x: e.clientX, left: el.scrollLeft };
-    moved = false;
+  gs.forEach(function (g) {
+    var ids = g[1], active = ids.indexOf(cur.tab) >= 0;
+    out += '<li><a href="#" data-tab="' + ids[0] + '"' + (active ? ' class="on"' : '') + '>' + esc(g[0]) + '</a>';
+    {   // 全部展開，不折疊
+      out += '<ul>';
+      if (ids.length > 1) {
+        ids.forEach(function (t) {
+          out += '<li><a href="#" data-tab="' + t + '"' + (t === cur.tab ? ' class="on"' : '') + '>' + esc(docName(m.titles[t])) + '</a></li>';
+        });
+      } else {
+        var lst = (m.toc || {})[ids[0]] || [], ch = '', l2 = '';
+        lst.forEach(function (s) { if (s[0] === 2) l2 = s[1]; if (s[1] === cur.anchor) ch = l2; });
+        lst.filter(function (s) { return s[0] === 2; }).forEach(function (s) {
+          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (active && s[1] === ch ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
+        });
+      }
+      out += '</ul>';
+    }
+    out += '</li>';
   });
-  document.addEventListener('mousemove', function(e) {
-    if (!drag) return;
-    var dx = e.clientX - drag.x;
-    if (!moved && Math.abs(dx) < 4) return;
-    moved = true;
-    drag.el.classList.add('dragging');
-    drag.el.scrollLeft = drag.left - dx;
-    e.preventDefault();
-  });
-  document.addEventListener('mouseup', function() {
-    if (drag) drag.el.classList.remove('dragging');
-    drag = null;
-  });
-  // 拖曳結束時不要觸發點擊
-  document.addEventListener('click', function(e) {
-    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
-  }, true);
-  window.addEventListener('resize', mark);
-  document.addEventListener('click', function() { setTimeout(mark, 0); });
-  mark();
-})();
-document.addEventListener('click', function(e) {
-  var a = e.target.closest('a');
+  document.getElementById('toc').innerHTML = out;
+}
+function markNav() {
+  document.querySelectorAll('.nav a').forEach(function (a) { a.classList.toggle('on', a.dataset.key === cur.key); });
+}
+function go(tab, anchor) {
+  cur.tab = tab; cur.anchor = anchor || '';
+  frame.contentWindow && frame.contentWindow.postMessage({ goTab: tab, goAnchor: anchor || '' }, '*');
+  renderToc(); setHash();
+}
+function openSite(key, tab, anchor) {
+  if (!SITES[key]) key = KEYS[0];
+  var groups = SITES[key].meta.groups || [];
+  cur = { key: key, tab: tab || (groups[0] ? groups[0][1][0] : null), anchor: anchor || '' };
+  frame.onload = function () { if (cur.tab) frame.contentWindow.postMessage({ goTab: cur.tab, goAnchor: cur.anchor }, '*'); };
+  var doc = document.getElementById('doc-' + key);
+  if (doc) { frame.removeAttribute('src'); frame.srcdoc = JSON.parse(doc.textContent); }
+  else { frame.removeAttribute('srcdoc'); frame.src = SITES[key].src; }
+  markNav(); renderToc(); setHash();
+}
+document.querySelector('.nav') && document.querySelector('.nav').addEventListener('click', function (e) {
+  var a = e.target.closest('a[data-key]');
   if (!a) return;
-  if (a.classList.contains('tab-link')) {
-    e.preventDefault();
-    activate(a.dataset.tab, a.dataset.anchor || null);
-  } else if (a.getAttribute('href') && a.getAttribute('href')[0] === '#') {
-    var id = a.getAttribute('href').slice(1);
-    var el = document.getElementById(id);
-    if (!el) return;
-    e.preventDefault();
-    var panel = el.closest('.panel');
-    activate(a.dataset.tab || (panel ? panel.id.slice(6) : null) || 'overview', id);
-  }
+  e.preventDefault();
+  openSite(a.dataset.key);
 });
+document.getElementById('toc').addEventListener('click', function (e) {
+  var a = e.target.closest('a[data-tab]');
+  if (!a) return;
+  e.preventDefault();
+  go(a.dataset.tab, a.dataset.anchor || '');
+});
+// 內文切頁籤或捲動時，左側目錄跟著亮起
+window.addEventListener('message', function (e) {
+  var d = e.data || {};
+  if (!d.specTab || e.source !== frame.contentWindow) return;
+  if (d.spy && d.specTab !== cur.tab) return;
+  cur.tab = d.specTab; cur.anchor = d.specAnchor || '';
+  renderToc(); setHash();
+});
+(function () {
+  var p = decodeURIComponent(location.hash.slice(1)).split('/');
+  if (SINGLE) openSite(KEYS[0], p[0], p.slice(1).join('/'));
+  else openSite(p[0], p[1], p.slice(2).join('/'));
+})();
 </script>
 </body>
 </html>

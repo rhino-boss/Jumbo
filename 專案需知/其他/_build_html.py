@@ -940,12 +940,13 @@ def rel_to_tree(path: Path) -> Path:
     return path
 
 
-def build_hub(root: Path, sites, embedded=None, metas=None):
+def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, site_title=None):
     """最外層入口（git-scm Cheat Sheet 版型）：左側上方「開發流程」「開發規範（Mine／Omniplay／Landbase／Reskin）」，
     下方 Table of Contents 列所選站的頁籤與章節；右側內嵌所選站的內文。網址 #站/頁籤/章節 記住所選。
 
     embedded：{key: 整頁 HTML}；這些站不另存檔，整頁放進入口、以 iframe srcdoc 顯示。
     metas：{key: build_site 回傳的頁籤分組與章節}。
+    site_title：只放一個站時（各站單獨的網頁）給頁首名稱；不顯示站切換，網址為 #頁籤/章節。
     """
     import json
     embedded, metas = embedded or {}, metas or {}
@@ -960,7 +961,13 @@ def build_hub(root: Path, sites, embedded=None, metas=None):
     keys = [k for k in HUB_ORDER if k in info] + [k for k in info if k not in HUB_ORDER]
     sections = [(t, [k for k in ks if k in info]) for t, ks in HUB_SECTIONS]
     sections[-1][1].extend(k for k in keys if k not in HUB_ORDER)
-    nav = "".join(f'<li><span class="top">{t}</span><ul class="sub">'
+    single = site_title is not None
+    if single:
+        head, _sp, tail = site_title.partition(" ")
+        h1, title = (f"<b>{head}</b> {tail}" if tail else f"<b>iGaming</b> {head}"), site_title
+    else:
+        h1, title = "<b>iGaming</b> 開發需知", "iGaming 開發需知"
+    nav = "" if single else "".join(f'<li><span class="top">{t}</span><ul class="sub">'
                   + "".join(f'<li><a href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in ks)
                   + "</ul></li>" for t, ks in sections if ks)
     docs = "".join(f'<script type="application/json" id="doc-{key}">{js(page)}</script>'
@@ -970,7 +977,7 @@ def build_hub(root: Path, sites, embedded=None, metas=None):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iGaming 開發需知</title>
+<title>{title}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 :root{{--surface:#f6f5f1; --panel:#ffffff; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#dcdad3;
@@ -1024,10 +1031,10 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
 </style>
 </head>
 <body>
-<header><div class="logo"><span>i</span></div><h1><b>iGaming</b> 開發需知</h1></header>
+<header><div class="logo"><span>i</span></div><h1>{h1}</h1></header>
 <div class="layout">
 <aside>
-  <ul class="nav">{nav}</ul>
+  {'<ul class="nav">' + nav + '</ul>' if nav else ''}
   <nav class="toc" aria-label="Table of Contents"><div class="toc-title">Table of Contents</div><ul id="toc"></ul></nav>
 </aside>
 <main><iframe id="site" title="規範內文"></iframe></main>
@@ -1036,11 +1043,12 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
 <script>
 var SITES = {js(info)};
 var KEYS = {js(keys)};
+var SINGLE = {js(single)};
 var frame = document.getElementById('site');
 var cur = {{ key: null, tab: null, anchor: '' }};
 function esc(s) {{ return String(s).replace(/[&<>"]/g, function (c) {{ return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c]; }}); }}
 function setHash() {{
-  var h = '#' + cur.key + (cur.tab ? '/' + cur.tab : '') + (cur.anchor ? '/' + cur.anchor : '');
+  var h = '#' + (SINGLE ? '' : cur.key + (cur.tab ? '/' : '')) + (cur.tab || '') + (cur.anchor ? '/' + cur.anchor : '');
   if (location.hash !== h) history.replaceState(null, '', h);
 }}
 // 目錄最多兩層：大類下只有一份文件時列章節；多份文件時只列文件名（章節看內文）
@@ -1116,7 +1124,7 @@ function openSite(key, tab, anchor) {{
   else {{ frame.removeAttribute('srcdoc'); frame.src = SITES[key].src; }}
   markNav(); renderToc(); setHash();
 }}
-document.querySelector('.nav').addEventListener('click', function (e) {{
+document.querySelector('.nav') && document.querySelector('.nav').addEventListener('click', function (e) {{
   var a = e.target.closest('a[data-key]');
   if (!a) return;
   e.preventDefault();
@@ -1138,13 +1146,14 @@ window.addEventListener('message', function (e) {{
 }});
 (function () {{
   var p = decodeURIComponent(location.hash.slice(1)).split('/');
-  openSite(p[0], p[1], p.slice(2).join('/'));
+  if (SINGLE) openSite(KEYS[0], p[0], p.slice(1).join('/'));
+  else openSite(p[0], p[1], p.slice(2).join('/'));
 }})();
 </script>
 </body>
 </html>
 """
-    out = root / HUB_NAME
+    out = root / out_name
     out.write_text(page, encoding="utf-8")
     print(f"OK: {rel_to_tree(out)} 已更新（{out.stat().st_size:,} bytes）")
 
@@ -1194,11 +1203,14 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
         LOCAL_ONLY = True   # 各站（Omniplay／Landbase／Reskin／Mine／開發流程）互不連結，只連站內頁籤
         try:
             page, metas[key] = build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links,
-                                          site_groups, embed=key in EMBED_KEYS)
-            if page:
-                embedded[key] = page
+                                          site_groups, embed=True)
+            embedded[key] = page
+            if key in EMBED_KEYS:
                 if output.exists():   # 舊版另存的檔案
                     output.unlink()
+            else:   # 單獨的網頁也用入口的版型（左側目錄＋右側內文），只放本站
+                build_hub(root, [(key, name, "")], {key: page}, {key: metas[key]},
+                          out_name=output.name, site_title=site_title)
         finally:
             LOCAL_ONLY = False
 
