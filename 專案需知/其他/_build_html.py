@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin）與「開發需知」網頁，
+"""將 專案需知/ 的 Markdown 文件彙整成三個產線網頁（Omniplay／Landbase／Reskin）、Mine 與開發流程網頁，
 再產生最外層入口 igaming_specification.html 切換。
 
-本腳本放在 專案需知/其他/；三產線的 md 與網頁各在 Omniplay/、Landbase/、Reskin/；
-開發流程類文件的 md 與網頁（開發需知.html）都在 開發需知/；入口在 專案需知/ 最外層。
+本腳本放在 專案需知/其他/；三產線的 md 各在 開發規範/Omniplay/、Landbase/、Reskin/；
+Mine（自己用、不同步出去）的 md 直接放 開發規範/；開發流程的 md 在 開發流程/；
+所有網頁（含入口）都輸出到 專案需知/ 最外層。
 
 用法（在 其他/ 內執行）：
     py _build_html.py
@@ -20,30 +21,27 @@ from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent.parent  # 專案需知/
-# Omniplay 規範 md 與網頁都在 Omniplay/ 資料夾（與 Landbase/、Reskin/ 並列）
-SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料夾的上層
-OMNI_DIR = f"{SPEC_DIR}/Omniplay"
+SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料夾的上層；Mine 的 md 直接放這層
 OMNI_FILE = "omniplay_specification.html"
-HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋開發需知切換
-# 開發需知：開發流程、提案、數學文件、模擬程式、Demogame（md 與網頁都在 開發需知/）
-DEV_TITLE = "開發需知"
-DEV_DIR = "開發需知"
-DEV_FILE = "開發需知.html"
-DEV_TAB_IDS = ["overview", "flow", "proposal", "docs", "sim", "demo"]
+HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
+# 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
+MINE_TAB_IDS = ["overview", "outputs", "docs", "sim", "demo", "proposal"]
+FLOW_TAB_IDS = ["flow"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
     ("guide", "總覽", "開發規範/Omniplay/導覽.md"),
     ("overview", "總覽", "其他/_README.md"),
     ("knowhow", "Knowhow", "開發規範/Omniplay/Knowhow.md"),
-    ("flow", "開發流程", "開發需知/開發流程.md"),
+    ("flow", "開發流程", "開發流程/開發流程.md"),
+    ("outputs", "產出與紀錄規範", "開發規範/產出與紀錄規範.md"),
     ("math", "數學模型規範", "開發規範/Omniplay/數學模型規範.md"),
-    ("docs", "數學文件規範", "開發需知/數學文件規範.md"),
+    ("docs", "數學文件規範", "開發規範/數學文件規範.md"),
     ("submission", "送驗文件規範", "開發規範/Omniplay/送驗文件規範.md"),
-    ("sim", "模擬程式規範", "開發需知/模擬程式規範.md"),
-    ("demo", "Demogame規範", "開發需知/Demogame規範.md"),
+    ("sim", "模擬程式規範", "開發規範/模擬程式規範.md"),
+    ("demo", "Demogame規範", "開發規範/Demogame規範.md"),
     ("script", "腳本規範", "開發規範/Omniplay/腳本規範.md"),
-    ("proposal", "提案報告規範", "開發需知/提案報告規範.md"),
+    ("proposal", "提案報告規範", "開發規範/提案報告規範.md"),
     ("stress", "壓測說明書", "開發規範/Omniplay/壓測說明書.md"),
     ("backend", "後端報表", "開發規範/Omniplay/後端報表.md"),
     ("ceiling", "天花板說明", "開發規範/Omniplay/天花板說明.md"),
@@ -59,13 +57,20 @@ GROUPS = [
     ("數學設計", ["math"]),
     ("送驗相關", ["submission"]),
 ]
-# 開發需知網頁的頁籤分組
-DEV_GROUPS = [
+# Mine 網頁的頁籤分組
+MINE_GROUPS = [
     ("總覽", ["overview"]),
-    ("開發流程", ["flow"]),
-    ("提案", ["proposal"]),
+    ("產出與紀錄", ["outputs"]),
     ("數學文件", ["docs"]),
     ("模擬程式＋Demogame", ["sim", "demo"]),
+    ("提案", ["proposal"]),
+]
+# 開發流程網頁的頁籤分組
+FLOW_GROUPS = [("開發流程", ["flow"])]
+# 不同步出去的站
+PRIVATE_SITES = [
+    ("mine", "Mine", MINE_TAB_IDS, "mine_specification.html", "Mine 開發規範", MINE_GROUPS),
+    ("flow", "開發流程", FLOW_TAB_IDS, "開發流程.html", "開發流程", FLOW_GROUPS),
 ]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
@@ -84,6 +89,9 @@ GROUP_ICONS = {
                             '<path d="M16 12h-2"/>'),
     # 提案：簡報
     "提案": _SVG.format('<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M12 16v4"/><path d="M8 20h8"/>'),
+    # 產出與紀錄：清單
+    "產出與紀錄": _SVG.format('<path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/>'
+                              '<path d="M4 6l1 1 2-2"/><path d="M4 12l1 1 2-2"/><path d="M4 18l1 1 2-2"/>'),
     # 數學文件：文件
     "數學文件": _SVG.format('<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 12h6"/><path d="M9 16h6"/>'),
     # 送驗相關：盾牌勾選
@@ -106,7 +114,7 @@ GROUP_ICONS = {
 
 ROOT_TITLE = "Omniplay 開發規範"
 
-# 其他產線：資料夾內的 .md 各自彙整成該資料夾的 HTML。
+# 其他產線：開發規範/<資料夾> 內的 .md 各自彙整成一份 HTML（輸出到 專案需知/ 最外層）。
 # (資料夾, 輸出檔名, 頁首名稱, 頁籤順序偏好)；資料夾內沒有 .md 時略過不產生。
 PRODUCT_LINES = [
     ("Landbase", "landbase_specification.html", "Landbase 轉製 開發規範"),
@@ -118,16 +126,16 @@ SHARED_TABS = {}
 
 # 產線資料夾的 md（檔名）歸入與 Omniplay 相同的頁籤大分類，標題、icon、顏色、順序三站一致
 LINE_GROUP_OF = {
-    "導覽": "總覽", "Knowhow": "Knowhow", "開發流程": "開發流程", "提案報告規範": "提案",
+    "導覽": "總覽", "Knowhow": "Knowhow", "開發流程": "開發流程", "提案報告規範": "提案", "產出與紀錄規範": "產出與紀錄",
     "數學模型規範": "數學設計", "數學文件規範": "數學文件", "送驗文件規範": "送驗相關", "送驗規範": "送驗相關",
     "系統機制": "系統相關", "機制說明": "系統相關", "天花板說明": "系統相關", "腳本規範": "系統相關",
     "壓測說明書": "系統相關", "後端報表": "系統相關", "模擬程式規範": "模擬程式＋Demogame",
     "Demogame規範": "模擬程式＋Demogame",
 }
 
-# 團隊版：只放給所有數學 follow 的規範，發佈到共享資料夾（個人文件不外放）
+# 團隊版（Omniplay 團隊）：只放 Omniplay 站的規範，發佈到共享資料夾（Mine、開發流程、其他產線都不外放）
 TEAM_DIR = Path(r"\\192.168.139.6\Simulate\專案需知")
-TEAM_TAB_IDS = ["guide", "overview", "knowhow", "math", "docs", "submission", "mechanism", "ceiling", "script", "stress"]
+TEAM_TAB_IDS = ["guide", "knowhow", "math", "submission", "mechanism", "ceiling", "script", "stress"]
 TEAM_GROUPS = [
     ("總覽", ["guide"]),
     ("Knowhow", ["knowhow"]),
@@ -135,8 +143,6 @@ TEAM_GROUPS = [
     ("數學設計", ["math"]),
     ("送驗相關", ["submission"]),
 ]
-TEAM_DEV_GROUPS = [("總覽", ["overview"]), ("數學文件", ["docs"])]
-TEAM_README = "其他/_README_team.md"          # 團隊版總覽，發佈時改名為 其他/_README.md
 TEAM_TOOLS = ["其他/_check_xlsx_style.py"]
 PLAIN_UNKNOWN_MD = False                      # 團隊版：連到未發佈文件的 .md 連結只留文字
 
@@ -496,7 +502,7 @@ def tab_id_for(stem: str) -> str:
     return re.sub(r"[^\w\-]", "-", stem.lower()) or "doc"
 
 
-GROUP_ORDER = [g for g, _ids in GROUPS + DEV_GROUPS]
+GROUP_ORDER = [g for g, _ids in GROUPS + MINE_GROUPS + FLOW_GROUPS]
 
 
 def line_tabs(folder: Path):
@@ -505,7 +511,7 @@ def line_tabs(folder: Path):
 
     # 同大分類內照 Omniplay 的文件順序（以頁籤名稱或檔名比對，例：系統機制、天花板說明、腳本規範…）
     member = []
-    for _g, ids in GROUPS + DEV_GROUPS:
+    for _g, ids in GROUPS + MINE_GROUPS + FLOW_GROUPS:
         for i in ids:
             for t, title, f in TABS:
                 if t == i:
@@ -589,7 +595,8 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         )
 
     today = date.today().strftime("%Y-%m-%d")
-    src_label = f"專案需知/{rel_to_tree(output.parent).as_posix()}/*.md"
+    src_label = "、".join(f"專案需知/{d}/*.md" for d in
+                          sorted({rel_to_tree((base / f).parent).as_posix() for _t, _n, f in tabs}))
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -942,15 +949,14 @@ show();
     print(f"OK: {rel_to_tree(out)} 已更新（{out.stat().st_size:,} bytes）")
 
 
-def build_tree(root: Path, tabs, groups, dev_groups):
-    """建置一整套：Omniplay／各產線／開發需知網頁（文件互連）＋ 最外層入口。"""
+def build_tree(root: Path, tabs, groups, private_sites, lines=True):
+    """建置一整套：Omniplay／各產線（lines=True 時）／不外放的站（Mine、開發流程）＋ 最外層入口；網頁都在 root。"""
     global TREE_ROOT, LOCAL_ONLY
     TREE_ROOT = root
-    omni_tabs = [t for t in tabs if t[0] not in DEV_TAB_IDS]
-    dev_tabs = [t for t in tabs if t[0] in DEV_TAB_IDS]
+    omni_tabs = [t for t in tabs if t[0] not in MINE_TAB_IDS + FLOW_TAB_IDS]
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
-    sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_DIR / OMNI_FILE, ROOT_TITLE, groups)]
-    for folder, out_name, site_title in PRODUCT_LINES:
+    sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_FILE, ROOT_TITLE, groups)]
+    for folder, out_name, site_title in (PRODUCT_LINES if lines else []):
         line = line_tabs(root / SPEC_DIR / folder)
         shared = [(t, title, Path(os.path.relpath(root / f, root / SPEC_DIR / folder)).as_posix())
                   for t, title, f in omni_tabs if t in SHARED_TABS.get(folder, [])]
@@ -961,11 +967,12 @@ def build_tree(root: Path, tabs, groups, dev_groups):
             member = [title_of.get(i, i) for _g, ids in GROUPS for i in ids]
             line = sorted(line + shared, key=lambda x: (order(x), member.index(x[1]) if x[1] in member else 99))
         if line:
-            sites.append((folder.lower(), folder, root / SPEC_DIR / folder, line, root / SPEC_DIR / folder / out_name, site_title,
+            sites.append((folder.lower(), folder, root / SPEC_DIR / folder, line, root / out_name, site_title,
                           line_groups(line)))
-    local_only = {key for key, *_ in sites[1:]}   # 產線站只連站內
-    if dev_tabs:
-        sites.append(("dev", DEV_TITLE, root, dev_tabs, root / DEV_DIR / DEV_FILE, DEV_TITLE, dev_groups))
+    for key, name, ids, out_name, site_title, site_groups in private_sites:
+        site_tabs = [t for t in tabs if t[0] in ids]
+        if site_tabs:
+            sites.append((key, name, root, site_tabs, root / out_name, site_title, site_groups))
 
     docs = {}   # 規範 md（相對 root）→ (站台序號, tab_id)
     for i, site in enumerate(sites):
@@ -982,7 +989,7 @@ def build_tree(root: Path, tabs, groups, dev_groups):
                 links[doc] = ("ext", f"{href}#{tab_id}")
         for tab_id, _, filename in site_tabs:   # 站內（含共用文件）一律連到本站頁籤
             links[Path(os.path.relpath(base / filename, root)).as_posix()] = ("tab", tab_id)
-        LOCAL_ONLY = True   # 四站（Omniplay／Landbase／Reskin／開發需知）互不連結，只連站內頁籤
+        LOCAL_ONLY = True   # 各站（Omniplay／Landbase／Reskin／Mine／開發流程）互不連結，只連站內頁籤
         try:
             build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups)
         finally:
@@ -1005,18 +1012,14 @@ def publish_team():
         print(f"略過團隊版：連不到 {TEAM_DIR}")
         return
     tabs = [t for t in TABS if t[0] in TEAM_TAB_IDS]
-    files = [f for _, _, f in tabs if f != "其他/_README.md"] + TEAM_TOOLS
-    for folder, _, _ in PRODUCT_LINES:
-        files += [f"{SPEC_DIR}/{folder}/{p.name}" for p in (HERE / SPEC_DIR / folder).glob("*.md")]
+    files = [f for _, _, f in tabs] + TEAM_TOOLS
     for f in files:
         (TEAM_DIR / f).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(HERE / f, TEAM_DIR / f)
-    (TEAM_DIR / "其他").mkdir(exist_ok=True)
-    shutil.copy2(HERE / TEAM_README, TEAM_DIR / "其他/_README.md")
-    print(f"團隊版：已複製 {len(files) + 1} 份到 {TEAM_DIR}")
+    print(f"團隊版：已複製 {len(files)} 份到 {TEAM_DIR}")
     PLAIN_UNKNOWN_MD = True
     try:
-        build_tree(TEAM_DIR, tabs, TEAM_GROUPS, TEAM_DEV_GROUPS)
+        build_tree(TEAM_DIR, tabs, TEAM_GROUPS, [], lines=False)
     finally:
         PLAIN_UNKNOWN_MD = False
 
@@ -1053,7 +1056,7 @@ def sync_svn():
 
 
 def build():
-    build_tree(HERE, TABS, GROUPS, DEV_GROUPS)
+    build_tree(HERE, TABS, GROUPS, PRIVATE_SITES)
     publish_team()
     sync_svn()
 

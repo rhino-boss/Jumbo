@@ -9,8 +9,8 @@
 | 位置 | 產線 | 內容 |
 |---|---|---|
 | `開發規範/Omniplay/` | **Omniplay** | 主流遊戲的規範 |
-| `開發規範/Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](開發規範/Landbase/導覽.md)、[系統機制](開發規範/Landbase/系統機制.md)、[數學模型規範](開發規範/Landbase/數學模型規範.md)、[送驗規範](開發規範/Landbase/送驗規範.md)；彙整版為 `開發規範/Landbase/landbase_specification.html` |
-| `開發規範/Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（GC／SC 雙幣）：[數學模型規範](開發規範/Reskin/數學模型規範.md)；彙整版為 `開發規範/Reskin/reskin_specification.html` |
+| `開發規範/Landbase/` | Landbase | Landbase 轉製遊戲的規範，分四頁：[導覽](開發規範/Landbase/導覽.md)、[系統機制](開發規範/Landbase/系統機制.md)、[數學模型規範](開發規範/Landbase/數學模型規範.md)、[送驗規範](開發規範/Landbase/送驗規範.md)；彙整版為 `landbase_specification.html` |
+| `開發規範/Reskin/` | Reskin | 既有遊戲換皮輸出到 Reskin（GC／SC 雙幣）：[數學模型規範](開發規範/Reskin/數學模型規範.md)；彙整版為 `reskin_specification.html` |
 | `其他/` | — | 本總覽與 `_check_xlsx_style.py`（XLSX 格式檢查工具） |
 
 產線規範一律採差異式：只寫該產線與 Omniplay 不同的條款，未覆寫者沿用 Omniplay 規範。
@@ -20,7 +20,7 @@
 | 文件 | 內容 |
 |---|---|
 | [數學模型規範.md](開發規範/Omniplay/數學模型規範.md) | 數學模型必要內容、命名、版本規則、押注選項、RTP 配置、彩金配置、Bet Mode、卡片倍率區間；Card System 與合理性檢查。 |
-| [數學文件規範.md](開發需知/數學文件規範.md) | Game Rule、Help、Game Description、PARsheet 的內容與交付規範。 |
+| [數學文件規範.md](開發規範/數學文件規範.md) | Game Rule、Help、Game Description、PARsheet 的內容與交付規範。 |
 | [送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) | 送驗交付物的命名、格式來源、內容規則、禁止內容、SHA1 清單、Game List 更新與交付前檢查。 |
 | [機制說明.md](開發規範/Omniplay/機制說明.md) | 系統機制完整說明：新手體驗、老手救援（救援池、救援機制）；舊版本在附錄。 |
 | [天花板說明.md](開發規範/Omniplay/天花板說明.md) | 系統派彩天花板：BG／FG／系統賠付上限，超過整把重骰；倍率上限驗算方式。 |
@@ -52,14 +52,14 @@ H0xx_遊戲名稱/
 
 | 存放位置 | 放什麼 | 製作方式見 |
 |---|---|---|
-| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`注意事項.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[開發流程.md](開發需知/開發流程.md)第 2 節） |
+| 專案根目錄 | `game_rule.md`、`game_help_draft.md`、`game_description.md`、`注意事項.md`、`config.js`、`config_<RTP><Variant>.js`、`Simulator.py`、`index.html` | 各檔對應規範（見[產出與紀錄規範.md](開發規範/產出與紀錄規範.md)第 1 節） |
 | `Source/` | 數學模型 `H0xx1*.xlsx` | [數學模型規範.md](開發規範/Omniplay/數學模型規範.md) |
-| `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md` | [數學文件規範.md](開發需知/數學文件規範.md)、[送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) |
-| `文件/PARsheet/` | PARsheet（主檔名加 `R`，底線後綴在 `R` 之後） | [數學文件規範.md](開發需知/數學文件規範.md) PARsheet 節 |
+| `文件/` | `{GameID}_Help.xlsx`、`{GameID}_Game Description.docx`（完整版）、`{GameID}_Math Document Description.md`＋`_EN.md` | [數學文件規範.md](開發規範/數學文件規範.md)、[送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) |
+| `文件/PARsheet/` | PARsheet（主檔名加 `R`，底線後綴在 `R` 之後） | [數學文件規範.md](開發規範/數學文件規範.md) PARsheet 節 |
 | `文件/{GameID}/` | 送驗資料夾 | [送驗文件規範.md](開發規範/Omniplay/送驗文件規範.md) 1.1 |
-| `其他/` | `數值報告_<遊戲中文名>.md`＋`.html` | [開發流程.md](開發需知/開發流程.md) 5.9 |
-| `Record/` | 模擬報表 `.xlsx` | [模擬程式規範.md](開發需知/模擬程式規範.md) |
-| `Versions/` | 各版本的 Source、Config、Simulator 備份與 `version_manifest` | [模擬程式規範.md](開發需知/模擬程式規範.md) |
+| `其他/` | `數值報告_<遊戲中文名>.md`＋`.html` | [開發流程.md](開發流程/開發流程.md) 5.9 |
+| `Record/` | 模擬報表 `.xlsx` | [模擬程式規範.md](開發規範/模擬程式規範.md) |
+| `Versions/` | 各版本的 Source、Config、Simulator 備份與 `version_manifest` | [模擬程式規範.md](開發規範/模擬程式規範.md) |
 
 - `文件/{GameID}/` 只放送驗標的，外層文件不得複製進去。
 - 範例：`H026_彩罐熱舞 1000/`。
