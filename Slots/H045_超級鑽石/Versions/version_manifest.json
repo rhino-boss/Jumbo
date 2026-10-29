@@ -214,7 +214,8 @@
         "92A_Bet100": "Versions/6.0.0.3/Source/H045192A_Bet100.xlsx",
         "92B": "Versions/6.0.0.3/Source/H045192B.xlsx",
         "94B": "Versions/6.0.0.3/Source/H045194B.xlsx",
-        "92B_Bet100": "Versions/6.0.0.3/Source/H045192B_Bet100.xlsx"
+        "92B_Bet100": "Versions/6.0.0.3/Source/H045192B_Bet100.xlsx",
+        "120A_Demo": "Versions/6.0.0.3/Source/H0451120_Demo.xlsx"
       },
       "configs": {
         "base": "config.js",
