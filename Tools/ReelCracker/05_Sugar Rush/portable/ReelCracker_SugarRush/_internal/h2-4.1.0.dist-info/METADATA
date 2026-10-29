@@ -1,31 +1,29 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: h2
-Version: 4.4.1
-Summary: Pure-Python HTTP/2 protocol implementation
-Author-email: Cory Benfield <cory@lukasa.co.uk>
-Maintainer-email: Thomas Kriechbaumer <thomas@kriechbaumer.name>
-License-Expression: MIT
-Project-URL: Homepage, https://github.com/python-hyper/h2/
-Project-URL: Bug Reports, https://github.com/python-hyper/h2/issues
-Project-URL: Source, https://github.com/python-hyper/h2/
-Project-URL: Documentation, https://python-hyper.org/
+Version: 4.1.0
+Summary: HTTP/2 State-Machine based protocol implementation
+Home-page: https://github.com/python-hyper/h2
+Author: Cory Benfield
+Author-email: cory@lukasa.co.uk
+License: MIT License
+Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python
-Classifier: Programming Language :: Python :: 3 :: Only
 Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
-Classifier: Programming Language :: Python :: 3.11
-Classifier: Programming Language :: Python :: 3.12
-Classifier: Programming Language :: Python :: 3.13
-Classifier: Programming Language :: Python :: 3.14
 Classifier: Programming Language :: Python :: Implementation :: CPython
-Requires-Python: >=3.10
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Requires-Python: >=3.6.1
 Description-Content-Type: text/x-rst
 License-File: LICENSE
-Requires-Dist: hyperframe<7,>=6.1
-Requires-Dist: hpack<5,>=4.2
-Dynamic: license-file
+Requires-Dist: hyperframe (<7,>=6.0)
+Requires-Dist: hpack (<5,>=4.0)
 
 =========================
 h2: HTTP/2 Protocol Stack
@@ -91,7 +89,7 @@ to large feature requests and changes.
 Before you contribute (either by opening an issue or filing a pull request),
 please `read the contribution guidelines`_.
 
-.. _read the contribution guidelines: https://python-hyper.org/en/latest/contributing.html
+.. _read the contribution guidelines: http://python-hyper.org/en/latest/contributing.html
 
 License
 =======
@@ -104,3 +102,5 @@ Authors
 
 ``h2`` was authored by Cory Benfield and is maintained
 by the members of `python-hyper <https://github.com/orgs/python-hyper/people>`_.
+
+

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
@@ -17,6 +18,9 @@ import win32gui
 from openpyxl import Workbook
 from selenium.common.exceptions import SessionNotCreatedException
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.keys import Keys
 from seleniumwire import webdriver
 from seleniumwire.utils import decode as decode_body
 
@@ -32,9 +36,17 @@ DEMO_URL = (
     "?lang=en&cur=USD&gameSymbol={symbol}&jurisdiction=99"
 )
 GAMES = [
-    {"name": "Sugar Rush 1000", "symbol": "vs20sugarrushx"},
-    {"name": "Sugar Rush Super Scatter", "symbol": "vs20sugrushss"},
+    {"name": "Sugar Rush 1000", "symbol": "vs20sugarrushx", "intro": (0.844, 0.585)},
+    {"name": "Sugar Rush Super Scatter", "symbol": "vs20sugrushss", "intro": (0.80, 0.713)},
 ]
+
+# 自動模式固定畫面大小，點擊位置用畫面比例表示（在此尺寸下實測）。
+AUTO_VIEWPORT = (984, 649)
+AUTO_SPIN_POINT = (0.819, 0.901)
+AUTO_CENTER_POINT = (0.5, 0.5)
+AUTO_STALL_SECONDS = 8.0
+AUTO_RELOAD_SECONDS = 120.0
+AUTO_MIN_BALANCE = 1000.0
 
 # 只需點 Spin；座標依螢幕不同，第一次執行請重新校正。
 DEFAULT_CLICK_POINTS = [
@@ -78,6 +90,8 @@ else:
 
 DATA_DIR = SCRIPT_DIR / "data"
 SETTINGS_FILE = SCRIPT_DIR / "reel_cracker_settings.json"
+# 自動模式執行中建立這個檔就會保存並結束（SSH 遠端停止用）；下次啟動前要刪掉。
+STOP_FILE = SCRIPT_DIR / "STOP"
 
 # 保留瀏覽器物件，讓 VS Code Interactive Window 再次執行時仍可沿用 Session。
 if "ACTIVE_BROWSER" not in globals():
@@ -194,19 +208,30 @@ def save_click_points(points: list[dict[str, int | str]]) -> None:
 # %% 瀏覽器與視窗工具
 
 
-def create_driver() -> webdriver.Chrome:
+def create_driver(headless: bool = False) -> webdriver.Chrome:
     # Chrome 會自動更新，內附 ChromeDriver 版本對不上時改由 Selenium Manager 下載相符版本。
     if DRIVER_PATH.is_file():
         try:
-            return build_driver(Service(str(DRIVER_PATH)))
+            return build_driver(Service(str(DRIVER_PATH)), headless)
         except SessionNotCreatedException:
             print(f"內附 ChromeDriver {CHROME_DRIVER_VERSION} 與目前 Chrome 版本不符，改用 Selenium Manager。")
-    return build_driver(Service())
+    return build_driver(Service(), headless)
 
 
-def build_driver(service: Service) -> webdriver.Chrome:
+def build_driver(service: Service, headless: bool) -> webdriver.Chrome:
     options = webdriver.ChromeOptions()
-    options.add_argument("--start-maximized")
+    if headless:
+        # 無介面模式（SSH 遠端執行）：WebGL 改用軟體繪圖，背景分頁不降速。
+        options.add_argument("--headless=new")
+        options.add_argument(f"--window-size={AUTO_VIEWPORT[0]},{AUTO_VIEWPORT[1]}")
+        options.add_argument("--use-angle=swiftshader")
+        options.add_argument("--enable-unsafe-swiftshader")
+        options.add_argument("--mute-audio")
+    else:
+        options.add_argument("--start-maximized")
+    options.add_argument("--disable-background-timer-throttling")
+    options.add_argument("--disable-renderer-backgrounding")
+    options.add_argument("--disable-backgrounding-occluded-windows")
     options.add_argument("--force-device-scale-factor=1.0")
     options.add_argument("--ignore-certificate-errors")
 
@@ -534,6 +559,180 @@ def run_click_loop(
         save_records(records, excel_path)
 
 
+# %% 無介面自動模式（--auto）
+
+
+def parse_balance(value: object) -> float | None:
+    try:
+        return float(str(value).replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+
+
+def click_viewport(browser: webdriver.Chrome, point: tuple[float, float]) -> None:
+    """經 WebDriver 送出點擊，不需要桌面、滑鼠或座標校正。"""
+    width, height = AUTO_VIEWPORT
+    action = ActionBuilder(browser)
+    action.pointer_action.move_to_location(int(width * point[0]), int(height * point[1])).click()
+    action.perform()
+
+
+def fit_viewport(browser: webdriver.Chrome) -> None:
+    width, height = AUTO_VIEWPORT
+    browser.set_window_size(width, height)
+    inner_width, inner_height = browser.execute_script("return [innerWidth, innerHeight]")
+    if (inner_width, inner_height) != (width, height):
+        browser.set_window_size(2 * width - inner_width, 2 * height - inner_height)
+
+
+def load_game_auto(browser: webdriver.Chrome, game: dict[str, object]) -> None:
+    """開啟試玩、等 doInit 回應、點掉開場畫面。"""
+    with CAPTURED_LOCK:
+        CAPTURED.clear()
+    browser.get(DEMO_URL.format(symbol=game["symbol"]))
+    fit_viewport(browser)
+
+    deadline = time.time() + 90
+    while time.time() < deadline:
+        with CAPTURED_LOCK:
+            if any(record.get("req_action") == "doInit" for record in CAPTURED):
+                break
+        time.sleep(0.5)
+    else:
+        raise TimeoutError("90 秒內沒收到 doInit，遊戲沒有載入。")
+
+    time.sleep(8)  # 等開場動畫
+    click_viewport(browser, AUTO_CENTER_POINT)
+    time.sleep(2)
+    click_viewport(browser, game["intro"])
+    time.sleep(4)
+    with CAPTURED_LOCK:
+        CAPTURED.clear()
+    print("遊戲已載入。", flush=True)
+
+
+def hold_turbo(browser: webdriver.Chrome) -> None:
+    """按住空白鍵＝遊戲內建 Turbo Spin，會一直轉下去，比點 Spin 快約 2 倍。"""
+    ActionChains(browser).key_up(Keys.SPACE).key_down(Keys.SPACE).perform()
+
+
+def run_auto(
+    game: dict[str, object],
+    target_spins: int,
+    click_delay: float,
+    save_every: int,
+    headless: bool,
+    turbo: bool,
+    tag: str,
+) -> None:
+    run_started = datetime.now().strftime("%Y%m%d_%H%M%S")
+    game_dir = DATA_DIR / str(game["name"])
+    file_stem = f"game_responses_{game['name']}_{run_started}{'_' + tag if tag else ''}"
+    excel_path = game_dir / f"{file_stem}.xlsx"
+    jsonl_path = game_dir / f"{file_stem}.jsonl"
+
+    print(f"=== 自動模式：{game['name']}，目標 {target_spins} 局（付費轉數）===", flush=True)
+    print(f"輸出：{jsonl_path}", flush=True)
+
+    browser = create_driver(headless=headless)
+    records: list[dict[str, object]] = []
+    paid_spins = 0
+    next_save = save_every
+    last_balance: float | None = None
+    started = time.time()
+    try:
+        load_game_auto(browser, game)
+        if turbo:
+            hold_turbo(browser)
+        last_response = time.time()
+        last_nudge = 0.0
+        while paid_spins < target_spins:
+            if STOP_FILE.exists():
+                print("偵測到 STOP 檔，保存後結束。", flush=True)
+                break
+            if not turbo:
+                click_viewport(browser, AUTO_SPIN_POINT)
+            time.sleep(click_delay)
+
+            start_index = len(records)
+            if collect_game_responses(records, jsonl_path):
+                last_response = time.time()
+            for record in records[start_index:]:
+                balance = parse_balance(record.get("balance"))
+                if balance is None:
+                    continue
+                # 只有付費 spin 會扣款；連消與免費遊戲的 doSpin 餘額不變。
+                if (
+                    record.get("req_action") == "doSpin"
+                    and last_balance is not None
+                    and balance < last_balance - 1e-9
+                ):
+                    paid_spins += 1
+                last_balance = balance
+
+            idle = time.time() - last_response
+            if idle > AUTO_RELOAD_SECONDS:
+                print(f"{int(idle)} 秒沒有回應，重新載入遊戲。", flush=True)
+                load_game_auto(browser, game)
+                if turbo:
+                    hold_turbo(browser)
+                last_response = time.time()
+                continue
+            if idle > AUTO_STALL_SECONDS and time.time() - last_nudge > AUTO_STALL_SECONDS:
+                # 可能停在 FG 開始／結算彈窗，點畫面中央與開場按鈕位置把它關掉，再重新按住空白鍵。
+                click_viewport(browser, AUTO_CENTER_POINT)
+                time.sleep(0.5)
+                click_viewport(browser, game["intro"])
+                if turbo:
+                    hold_turbo(browser)
+                last_nudge = time.time()
+
+            if last_balance is not None and last_balance < AUTO_MIN_BALANCE:
+                print(f"試玩餘額剩 {last_balance:,.2f}，重新載入以重置餘額。", flush=True)
+                load_game_auto(browser, game)
+                if turbo:
+                    hold_turbo(browser)
+                last_balance = None
+                last_response = time.time()
+
+            if paid_spins >= next_save:
+                save_records(records, excel_path)
+                elapsed = time.time() - started
+                rate = paid_spins / elapsed * 3600 if elapsed else 0
+                print(
+                    f"[{datetime.now():%H:%M:%S}] {paid_spins}/{target_spins} 局，"
+                    f"約 {rate:,.0f} 局／小時",
+                    flush=True,
+                )
+                next_save += save_every
+    except KeyboardInterrupt:
+        print("\n收到中斷，保存後結束。", flush=True)
+    finally:
+        collect_game_responses(records, jsonl_path)
+        save_records(records, excel_path)
+        print(f"共 {paid_spins} 局付費轉數，{len(records)} 筆回應。", flush=True)
+        browser.quit()
+
+
+def parse_auto_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Sugar Rush 試玩封包自動擷取（無介面）")
+    parser.add_argument("--auto", action="store_true", help="無介面自動模式")
+    parser.add_argument(
+        "--game",
+        type=int,
+        default=1,
+        choices=range(1, len(GAMES) + 1),
+        help="1=Sugar Rush 1000，2=Sugar Rush Super Scatter",
+    )
+    parser.add_argument("--spins", type=int, default=5000, help="付費轉數")
+    parser.add_argument("--delay", type=float, default=0.5, help="檢查回應／點擊 Spin 的間隔秒數")
+    parser.add_argument("--save-every", type=int, default=200, help="每幾局保存 xlsx")
+    parser.add_argument("--show", action="store_true", help="顯示 Chrome 視窗（本機觀察用）")
+    parser.add_argument("--no-turbo", action="store_true", help="改用點 Spin，不按住空白鍵")
+    parser.add_argument("--tag", default="", help="檔名後綴；同時開多個程式時用來區分輸出")
+    return parser.parse_args(argv)
+
+
 def run_self_test() -> None:
     """供打包後驗證必要資源，不啟動瀏覽器或操作滑鼠。"""
     if not DRIVER_PATH.is_file():
@@ -703,6 +902,17 @@ def main() -> None:
 if __name__ == "__main__":
     if "--self-test" in sys.argv:
         run_self_test()
+    elif "--auto" in sys.argv:
+        args = parse_auto_args(sys.argv[1:])
+        run_auto(
+            game=GAMES[args.game - 1],
+            target_spins=args.spins,
+            click_delay=args.delay,
+            save_every=args.save_every,
+            headless=not args.show,
+            turbo=not args.no_turbo,
+            tag=args.tag,
+        )
     elif IS_FROZEN:
         try:
             main()
