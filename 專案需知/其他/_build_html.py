@@ -66,8 +66,7 @@ GROUPS = [
 MINE_GROUPS = [
     ("總覽", ["overview", "glossary"]),
     ("產出與紀錄", ["outputs"]),
-    ("Game Rule", ["gamerule"]),
-    ("模擬程式＋Demogame", ["sim", "demo"]),
+    ("遊戲製作", ["gamerule", "sim", "demo"]),
     ("報告", ["proposal", "report", "demoreport"]),
 ]
 # 開發流程網頁的頁籤分組
@@ -102,8 +101,8 @@ GROUP_ICONS = {
     # 產出與紀錄：清單
     "產出與紀錄": _SVG.format('<path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/>'
                               '<path d="M4 6l1 1 2-2"/><path d="M4 12l1 1 2-2"/><path d="M4 18l1 1 2-2"/>'),
-    # Game Rule：規則書
-    "Game Rule": _SVG.format('<path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h6"/><path d="M8 13h6"/>'),
+    # 遊戲製作：規則書
+    "遊戲製作": _SVG.format('<path d="M4 4h10a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h6"/><path d="M8 13h6"/>'),
     # 數學文件：文件
     "數學文件": _SVG.format('<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 12h6"/><path d="M9 16h6"/>'),
     # 送驗相關：盾牌勾選
