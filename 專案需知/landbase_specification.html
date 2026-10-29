@@ -334,7 +334,7 @@ window.addEventListener('scroll', function() {
     var p = document.querySelector('.panel:not([hidden])');
     if (!p) return;
     var cur = '';
-    p.querySelectorAll('h2[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });
+    p.querySelectorAll('h2[id], h3[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });
     window.parent.postMessage({specTab: p.id.slice(6), specAnchor: cur, spy: true}, '*');
   }, 80);
 });

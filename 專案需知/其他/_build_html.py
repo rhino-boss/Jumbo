@@ -577,7 +577,7 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         MD_DIR = TREE_ROOT if Path(filename).name.startswith("_README") else (base / filename).parent
         r = Renderer(tab_id)
         body = r.render(md)
-        toc_raw[tab_id] = [(lvl, hid, text) for lvl, hid, text in r.toc if lvl == 2]
+        toc_raw[tab_id] = list(r.toc)   # 第 2、3 層章節
         toc_items[tab_id] = "".join(
             f'<a class="toc-{lvl}" href="#{hid}" data-tab="{tab_id}">{html.escape(text)}</a>'
             for lvl, hid, text in r.toc
@@ -844,7 +844,7 @@ window.addEventListener('scroll', function() {{
     var p = document.querySelector('.panel:not([hidden])');
     if (!p) return;
     var cur = '';
-    p.querySelectorAll('h2[id]').forEach(function(h) {{ if (h.getBoundingClientRect().top < 90) cur = h.id; }});
+    p.querySelectorAll('h2[id], h3[id]').forEach(function(h) {{ if (h.getBoundingClientRect().top < 90) cur = h.id; }});
     window.parent.postMessage({{specTab: p.id.slice(6), specAnchor: cur, spy: true}}, '*');
   }}, 80);
 }});
@@ -1003,6 +1003,8 @@ aside{{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}}
 .nav .sub a{{display:block; font-size:14px; color:var(--ink-2); text-decoration:none; padding:3px 0}}
 .nav .sub a:hover{{color:var(--accent)}}
 .nav a.on, .nav span.top.on{{color:var(--accent); font-weight:600}}
+.nav a:focus, .toc a:focus{{outline:none}}
+.nav a:focus-visible, .toc a:focus-visible{{outline:2px solid var(--accent); outline-offset:2px}}
 .toc{{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}}
 .toc-title{{font-size:16px; font-weight:600; margin:0 0 8px}}
 .toc ul{{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}}
@@ -1048,9 +1050,35 @@ function setHash() {{
 var DOC_NAME = {{ 'GameRule規範': 'Game Rule', 'Demo報告規範': 'Demo 報告' }};
 function docName(t) {{ return DOC_NAME[t] || t.replace(/規範$/, ''); }}
 function secName(t) {{ return t.replace(/^\\d+(\\.\\d+)*\\.?\\s*/, ''); }}
+function secLink(t, s, on) {{
+  return '<a href="#" data-tab="' + t + '" data-anchor="' + s[1] + '"' + (on ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a>';
+}}
+// 整站只有一份文件（開發流程）：每章當一個大類、小節列在下面，與其他站同一種結構
+function renderFlat(m, t) {{
+  var out = '', list = (m.toc || {{}})[t] || [], open = false;
+  // 目前讀到的小節所屬的章（第 2 層）
+  var curChap = '', last2 = '';
+  list.forEach(function (s) {{ if (s[0] === 2) last2 = s[1]; if (s[1] === cur.anchor) curChap = last2; }});
+  list.forEach(function (s) {{
+    if (s[0] === 2) {{
+      if (open) out += '</ul></li>';
+      out += '<li>' + secLink(t, s, s[1] === curChap) + '<ul>';
+      open = true;
+    }} else if (open) {{
+      out += '<li>' + secLink(t, s, s[1] === cur.anchor) + '</li>';
+    }}
+  }});
+  if (open) out += '</ul></li>';
+  return out.replace(/<ul><\\/ul>/g, '');
+}}
 function renderToc() {{
   var m = SITES[cur.key].meta, out = '';
-  (m.groups || []).forEach(function (g) {{
+  var gs = m.groups || [];
+  if (gs.length === 1 && gs[0][1].length === 1) {{
+    document.getElementById('toc').innerHTML = renderFlat(m, gs[0][1][0]);
+    return;
+  }}
+  gs.forEach(function (g) {{
     var ids = g[1], active = ids.indexOf(cur.tab) >= 0;
     out += '<li><a href="#" data-tab="' + ids[0] + '"' + (active ? ' class="on"' : '') + '>' + esc(g[0]) + '</a>';
     {{   // 全部展開，不折疊
@@ -1060,8 +1088,10 @@ function renderToc() {{
           out += '<li><a href="#" data-tab="' + t + '"' + (t === cur.tab ? ' class="on"' : '') + '>' + esc(docName(m.titles[t])) + '</a></li>';
         }});
       }} else {{
-        ((m.toc || {{}})[ids[0]] || []).forEach(function (s) {{
-          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (active && s[1] === cur.anchor ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
+        var lst = (m.toc || {{}})[ids[0]] || [], ch = '', l2 = '';
+        lst.forEach(function (s) {{ if (s[0] === 2) l2 = s[1]; if (s[1] === cur.anchor) ch = l2; }});
+        lst.filter(function (s) {{ return s[0] === 2; }}).forEach(function (s) {{
+          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (active && s[1] === ch ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
         }});
       }}
       out += '</ul>';
