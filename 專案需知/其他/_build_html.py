@@ -74,6 +74,9 @@ PRIVATE_SITES = [
 ]
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
 EMBED_KEYS = {"mine"}
+# 入口左側導覽：HUB_TOP 列在最上層，其餘歸「開發規範」；順序依 HUB_ORDER
+HUB_TOP = {"flow"}
+HUB_ORDER = ["flow", "mine", "omniplay", "landbase", "reskin"]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
 _SVG = ('<svg class="tab-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -560,13 +563,14 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
     assert not missing and not unknown, f"GROUPS 與 TABS 不一致：缺 {missing}、多 {unknown}"
     group_of = {t: ids for _g, ids in groups for t in ids}
 
-    panels, toc_items = [], {}
+    panels, toc_items, toc_raw = [], {}, {}
     first_tab = groups[0][1][0]
     for tab_id, title, filename in tabs:
         md = (base / filename).read_text(encoding="utf-8")
         MD_DIR = TREE_ROOT if Path(filename).name.startswith("_README") else (base / filename).parent
         r = Renderer(tab_id)
         body = r.render(md)
+        toc_raw[tab_id] = [(lvl, hid, text) for lvl, hid, text in r.toc if lvl == 2]
         toc_items[tab_id] = "".join(
             f'<a class="toc-{lvl}" href="#{hid}" data-tab="{tab_id}">{html.escape(text)}</a>'
             for lvl, hid, text in r.toc
@@ -763,7 +767,22 @@ mark.hl-danger{{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,tran
 .drag-x{{cursor:grab}}
 .drag-x.dragging{{cursor:grabbing; user-select:none}}
 @media (prefers-reduced-motion:reduce){{*{{transition:none!important}}}}
+/* 嵌入入口時：頁首、頁籤、左側目錄由入口負責，這裡只留內文；藏拉條、仍可上下捲動 */
+html.embedded{{scrollbar-width:none; -ms-overflow-style:none}}
+html.embedded::-webkit-scrollbar{{display:none}}
+html.embedded body{{background:transparent}}
+html.embedded .wrap{{max-width:none; padding:0}}
+html.embedded header.page, html.embedded .tabs, html.embedded .toc{{display:none!important}}
+html.embedded .body-row{{display:block; padding:0}}
+html.embedded main{{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}}
+html.embedded .panel h1{{color:var(--accent); font-weight:500; font-size:30px}}
+html.embedded h2{{color:var(--accent); border-bottom-color:var(--grid)}}
+:root{{--accent:#c8501e}}
+@media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{--accent:#e9773d}}}}
+:root[data-theme="dark"]{{--accent:#e9773d}}
+@media (max-width:700px){{html.embedded main{{padding:18px 16px 40px}}}}
 </style>
+<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
 </head>
 <body>
 <div class="wrap">
@@ -801,7 +820,26 @@ function activate(tabId, anchor) {{
   }} else {{
     window.scrollTo(0, 0);
   }}
+  // 嵌入入口時通知入口：左側目錄跟著亮起
+  if (window.self !== window.top) window.parent.postMessage({{specTab: tabId, specAnchor: anchor || ''}}, '*');
 }}
+// 入口左側目錄點選 → 切到對應頁籤／章節
+window.addEventListener('message', function(e) {{
+  var d = e.data || {{}};
+  if (d.goTab && TAB_IDS.indexOf(d.goTab) >= 0) activate(d.goTab, d.goAnchor || null);
+}});
+// 嵌入時捲動內文，回報目前讀到的章節
+window.addEventListener('scroll', function() {{
+  if (window.self === window.top) return;
+  clearTimeout(window._spy);
+  window._spy = setTimeout(function() {{
+    var p = document.querySelector('.panel:not([hidden])');
+    if (!p) return;
+    var cur = '';
+    p.querySelectorAll('h2[id]').forEach(function(h) {{ if (h.getBoundingClientRect().top < 90) cur = h.id; }});
+    window.parent.postMessage({{specTab: p.id.slice(6), specAnchor: cur, spy: true}}, '*');
+  }}, 80);
+}});
 document.querySelectorAll('.tab').forEach(function(b) {{
   b.addEventListener('click', function() {{ activate(LAST[b.id] || b.dataset.tab); }});
 }});
@@ -874,11 +912,14 @@ document.addEventListener('click', function(e) {{
 </body>
 </html>
 """
+    # 給入口左側目錄用：頁籤分組、文件名、各文件的第 2 層章節
+    meta = {"groups": groups, "titles": title_of, "toc": toc_raw}
     if embed:   # 不另存檔，整頁內嵌進入口
-        return page
+        return page, meta
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(page, encoding="utf-8")
     print(f"OK: {rel_to_tree(output)} 已更新（{output.stat().st_size:,} bytes）")
+    return None, meta
 
 
 def rel_to_tree(path: Path) -> Path:
@@ -891,17 +932,30 @@ def rel_to_tree(path: Path) -> Path:
     return path
 
 
-def build_hub(root: Path, sites, embedded=None):
-    """最外層入口：上方各站按鈕，下方內嵌所選站的網頁；網址 #omniplay／#landbase／#reskin… 記住所選。
+def build_hub(root: Path, sites, embedded=None, metas=None):
+    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「開發流程」「開發規範（Mine／Omniplay／Landbase／Reskin）」，
+    下方 Table of Contents 列所選站的頁籤與章節；右側內嵌所選站的內文。網址 #站/頁籤/章節 記住所選。
 
     embedded：{key: 整頁 HTML}；這些站不另存檔，整頁放進入口、以 iframe srcdoc 顯示。
+    metas：{key: build_site 回傳的頁籤分組與章節}。
     """
     import json
-    embedded = embedded or {}
-    buttons = "".join(f'<a href="#{key}" data-key="{key}" data-src="{"" if key in embedded else src}">{name}</a>'
-                      for key, name, src in sites)
-    docs = "".join(f'<script type="application/json" id="doc-{key}">'
-                   f'{json.dumps(page, ensure_ascii=False).replace("</", "<\\/")}</script>'
+    embedded, metas = embedded or {}, metas or {}
+
+    def js(obj):
+        return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
+
+    info = {key: {"name": name, "src": "" if key in embedded else src, "meta": metas.get(key, {})}
+            for key, name, src in sites}
+    keys = [k for k in HUB_ORDER if k in info] + [k for k in info if k not in HUB_ORDER]
+    top = [k for k in keys if k in HUB_TOP]
+    spec = [k for k in keys if k not in HUB_TOP]
+    nav = "".join(f'<li><a class="top" href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in top)
+    if spec:
+        nav += ('<li><span class="top">開發規範</span><ul class="sub">'
+                + "".join(f'<li><a href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in spec)
+                + "</ul></li>")
+    docs = "".join(f'<script type="application/json" id="doc-{key}">{js(page)}</script>'
                    for key, page in embedded.items())
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -909,59 +963,147 @@ def build_hub(root: Path, sites, embedded=None):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>iGaming 開發規範</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Noto+Sans+TC:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
-:root{{--surface:#fcfcfb; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#e3e6ea; --s1:#2a78d6; --on:#ffffff;
+:root{{--surface:#f6f5f1; --panel:#ffffff; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#dcdad3;
+  --accent:#c8501e; --brand:#f05133;
   --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif}}
 @media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{
-  --surface:#1a1a19; --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95; --rule:#33353a; --s1:#3987e5}}}}
-:root[data-theme="dark"]{{--surface:#1a1a19; --ink:#f3f3f1; --ink-2:#b4b8be; --ink-3:#868c95; --rule:#33353a; --s1:#3987e5}}
+  --surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}}}}
+:root[data-theme="dark"]{{--surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}}
 *{{box-sizing:border-box}}
 html,body{{height:100%; margin:0}}
 body{{display:flex; flex-direction:column; background:var(--surface); color:var(--ink); font-family:var(--font-sans)}}
-header{{display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:12px 22px; border-bottom:1px solid var(--rule)}}
-h1{{margin:0; font-size:17px; font-weight:600}}
-nav{{display:flex; gap:6px; flex-wrap:wrap}}
-nav a{{font-size:13.5px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:4px 15px}}
-nav a:hover{{color:var(--s1); border-color:var(--s1)}}
-nav a.on{{color:var(--on); background:var(--s1); border-color:var(--s1); font-weight:600}}
-iframe{{flex:1; width:100%; border:0; display:block; background:var(--surface)}}
-@media (max-width:600px){{header{{padding:10px 16px; gap:10px}}}}
+/* 不顯示拉條，仍可上下捲動 */
+aside, iframe{{scrollbar-width:none; -ms-overflow-style:none}}
+aside::-webkit-scrollbar{{display:none}}
+header{{display:flex; align-items:center; gap:12px; padding:18px 28px 14px}}
+.logo{{width:34px; height:34px; border-radius:6px; background:var(--brand); transform:rotate(45deg); flex:none;
+  display:grid; place-items:center}}
+.logo span{{transform:rotate(-45deg); color:#fff; font-weight:700; font-size:15px}}
+h1{{margin:0 0 0 6px; font-size:22px; font-weight:500; color:var(--ink-2); letter-spacing:-.01em}}
+h1 b{{color:var(--ink); font-weight:600}}
+.layout{{flex:1; min-height:0; display:flex; gap:26px; padding:0 28px 22px}}
+aside{{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}}
+.nav{{list-style:none; margin:0 0 22px; padding:0}}
+.nav > li{{margin:0 0 6px}}
+.nav .top{{display:block; font-size:17px; font-weight:500; color:var(--ink-2); text-decoration:none; padding:3px 0}}
+.nav a.top:hover{{color:var(--accent)}}
+.nav .sub{{list-style:none; margin:4px 0 0; padding:0 0 0 18px}}
+.nav .sub a{{display:block; font-size:14px; color:var(--ink-2); text-decoration:none; padding:3px 0}}
+.nav .sub a:hover{{color:var(--accent)}}
+.nav a.on, .nav span.top.on{{color:var(--accent); font-weight:600}}
+.toc{{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}}
+.toc-title{{font-size:16px; font-weight:600; margin:0 0 8px}}
+.toc ul{{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}}
+.toc li{{margin:3px 0; font-size:13.5px; line-height:1.4}}
+.toc ul ul{{padding-left:14px; margin:3px 0 6px; list-style:none}}
+.toc ul ul li{{font-size:12.5px}}
+.toc a{{color:var(--ink-3); text-decoration:none}}
+.toc a:hover{{color:var(--accent)}}
+.toc a.on{{color:var(--accent); font-weight:600}}
+.toc .doc{{color:var(--ink-2)}}
+main{{flex:1; min-width:0; display:flex}}
+iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:transparent}}
+@media (max-width:760px){{
+  header{{padding:14px 16px 10px}}
+  .layout{{flex-direction:column; padding:0 16px 16px; gap:14px}}
+  aside{{width:auto; overflow:visible; padding:0}}
+  main{{height:80vh; flex:none}}
+}}
 </style>
 </head>
 <body>
-<header><h1>iGaming 開發規範</h1><nav aria-label="產線">{buttons}</nav></header>
-<iframe id="site" title="產線規範"></iframe>
+<header><div class="logo"><span>i</span></div><h1><b>iGaming</b> 開發規範</h1></header>
+<div class="layout">
+<aside>
+  <ul class="nav">{nav}</ul>
+  <nav class="toc" aria-label="Table of Contents"><div class="toc-title">Table of Contents</div><ul id="toc"></ul></nav>
+</aside>
+<main><iframe id="site" title="規範內文"></iframe></main>
+</div>
 {docs}
 <script>
+var SITES = {js(info)};
+var KEYS = {js(keys)};
 var frame = document.getElementById('site');
-var btns = Array.prototype.slice.call(document.querySelectorAll('nav a'));
-function mark(key) {{
-  btns.forEach(function (b) {{ b.classList.toggle('on', b.dataset.key === key); }});
+var cur = {{ key: null, tab: null, anchor: '' }};
+function esc(s) {{ return String(s).replace(/[&<>"]/g, function (c) {{ return {{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c]; }}); }}
+function setHash() {{
+  var h = '#' + cur.key + (cur.tab ? '/' + cur.tab : '') + (cur.anchor ? '/' + cur.anchor : '');
+  if (location.hash !== h) history.replaceState(null, '', h);
 }}
-function show() {{
-  var h = decodeURIComponent(location.hash.slice(1));
-  var key = h.split('/')[0], sub = h.split('/').slice(1).join('/');
-  var b = btns.filter(function (x) {{ return x.dataset.key === key; }})[0] || btns[0];
-  var doc = document.getElementById('doc-' + b.dataset.key);
-  if (doc) {{   // 內嵌站：整頁放在入口裡
-    frame.removeAttribute('src');
-    frame.srcdoc = JSON.parse(doc.textContent);
-  }} else {{
-    frame.removeAttribute('srcdoc');
-    frame.src = b.dataset.src + (sub ? '#' + sub : '');
-  }}
-  mark(b.dataset.key);
+function renderToc() {{
+  var m = SITES[cur.key].meta, out = '';
+  (m.groups || []).forEach(function (g) {{
+    var ids = g[1], active = ids.indexOf(cur.tab) >= 0;
+    out += '<li><a href="#" data-tab="' + ids[0] + '"' + (active ? ' class="on"' : '') + '>' + esc(g[0]) + '</a>';
+    if (active) {{
+      out += '<ul>';
+      if (ids.length > 1) {{
+        ids.forEach(function (t) {{
+          out += '<li><a href="#" class="doc' + (t === cur.tab ? ' on' : '') + '" data-tab="' + t + '">' + esc(m.titles[t]) + '</a>';
+          if (t === cur.tab) out += secs(m, t);
+          out += '</li>';
+        }});
+      }} else {{
+        out += secs(m, ids[0]).replace(/^<ul>|<\\/ul>$/g, '');
+      }}
+      out += '</ul>';
+    }}
+    out += '</li>';
+  }});
+  document.getElementById('toc').innerHTML = out;
 }}
-// 站內連到其他產線時，按鈕跟著 iframe 目前的網頁亮起
-frame.addEventListener('load', function () {{
-  try {{
-    var path = decodeURIComponent(frame.contentWindow.location.pathname);
-    btns.forEach(function (b) {{ if (b.dataset.src && path.indexOf(b.dataset.src) >= 0) mark(b.dataset.key); }});
-  }} catch (e) {{}}
+function secs(m, t) {{
+  var list = (m.toc || {{}})[t] || [];
+  if (!list.length) return '';
+  return '<ul>' + list.map(function (s) {{
+    return '<li><a href="#" data-tab="' + t + '" data-anchor="' + s[1] + '"' + (s[1] === cur.anchor ? ' class="on"' : '') + '>' + esc(s[2]) + '</a></li>';
+  }}).join('') + '</ul>';
+}}
+function markNav() {{
+  document.querySelectorAll('.nav a').forEach(function (a) {{ a.classList.toggle('on', a.dataset.key === cur.key); }});
+}}
+function go(tab, anchor) {{
+  cur.tab = tab; cur.anchor = anchor || '';
+  frame.contentWindow && frame.contentWindow.postMessage({{ goTab: tab, goAnchor: anchor || '' }}, '*');
+  renderToc(); setHash();
+}}
+function openSite(key, tab, anchor) {{
+  if (!SITES[key]) key = KEYS[0];
+  var groups = SITES[key].meta.groups || [];
+  cur = {{ key: key, tab: tab || (groups[0] ? groups[0][1][0] : null), anchor: anchor || '' }};
+  frame.onload = function () {{ if (cur.tab) frame.contentWindow.postMessage({{ goTab: cur.tab, goAnchor: cur.anchor }}, '*'); }};
+  var doc = document.getElementById('doc-' + key);
+  if (doc) {{ frame.removeAttribute('src'); frame.srcdoc = JSON.parse(doc.textContent); }}
+  else {{ frame.removeAttribute('srcdoc'); frame.src = SITES[key].src; }}
+  markNav(); renderToc(); setHash();
+}}
+document.querySelector('.nav').addEventListener('click', function (e) {{
+  var a = e.target.closest('a[data-key]');
+  if (!a) return;
+  e.preventDefault();
+  openSite(a.dataset.key);
 }});
-window.addEventListener('hashchange', show);
-show();
+document.getElementById('toc').addEventListener('click', function (e) {{
+  var a = e.target.closest('a[data-tab]');
+  if (!a) return;
+  e.preventDefault();
+  go(a.dataset.tab, a.dataset.anchor || '');
+}});
+// 內文切頁籤或捲動時，左側目錄跟著亮起
+window.addEventListener('message', function (e) {{
+  var d = e.data || {{}};
+  if (!d.specTab || e.source !== frame.contentWindow) return;
+  if (d.spy && d.specTab !== cur.tab) return;
+  cur.tab = d.specTab; cur.anchor = d.specAnchor || '';
+  renderToc(); setHash();
+}});
+(function () {{
+  var p = decodeURIComponent(location.hash.slice(1)).split('/');
+  openSite(p[0], p[1], p.slice(2).join('/'));
+}})();
 </script>
 </body>
 </html>
@@ -1002,6 +1144,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
             docs.setdefault(Path(os.path.relpath(site[2] / filename, root)).as_posix(), (i, tab_id))
 
     embedded = {}   # key → 整頁 HTML（內嵌進入口）
+    metas = {}      # key → 頁籤分組與章節（入口左側目錄用）
     for i, (key, name, base, site_tabs, output, site_title, site_groups) in enumerate(sites):
         links = {}
         for doc, (j, tab_id) in docs.items():
@@ -1014,8 +1157,8 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
             links[Path(os.path.relpath(base / filename, root)).as_posix()] = ("tab", tab_id)
         LOCAL_ONLY = True   # 各站（Omniplay／Landbase／Reskin／Mine／開發流程）互不連結，只連站內頁籤
         try:
-            page = build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links, site_groups,
-                              embed=key in EMBED_KEYS)
+            page, metas[key] = build_site(base, site_tabs, output, site_title, f"iGaming · {name}", links,
+                                          site_groups, embed=key in EMBED_KEYS)
             if page:
                 embedded[key] = page
                 if output.exists():   # 舊版另存的檔案
@@ -1024,7 +1167,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
             LOCAL_ONLY = False
 
     build_hub(root, [(key, name, Path(os.path.relpath(output, root)).as_posix())
-                     for key, name, _b, _t, output, _s, _g in sites], embedded)
+                     for key, name, _b, _t, output, _s, _g in sites], embedded, metas)
 
 
 def publish_team():

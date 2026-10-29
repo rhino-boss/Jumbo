@@ -160,7 +160,22 @@ mark.hl-danger{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,trans
 .drag-x{cursor:grab}
 .drag-x.dragging{cursor:grabbing; user-select:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* 嵌入入口時：頁首、頁籤、左側目錄由入口負責，這裡只留內文；藏拉條、仍可上下捲動 */
+html.embedded{scrollbar-width:none; -ms-overflow-style:none}
+html.embedded::-webkit-scrollbar{display:none}
+html.embedded body{background:transparent}
+html.embedded .wrap{max-width:none; padding:0}
+html.embedded header.page, html.embedded .tabs, html.embedded .toc{display:none!important}
+html.embedded .body-row{display:block; padding:0}
+html.embedded main{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}
+html.embedded .panel h1{color:var(--accent); font-weight:500; font-size:30px}
+html.embedded h2{color:var(--accent); border-bottom-color:var(--grid)}
+:root{--accent:#c8501e}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--accent:#e9773d}}
+:root[data-theme="dark"]{--accent:#e9773d}
+@media (max-width:700px){html.embedded main{padding:18px 16px 40px}}
 </style>
+<script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
 </head>
 <body>
 <div class="wrap">
@@ -306,7 +321,26 @@ function activate(tabId, anchor) {
   } else {
     window.scrollTo(0, 0);
   }
+  // 嵌入入口時通知入口：左側目錄跟著亮起
+  if (window.self !== window.top) window.parent.postMessage({specTab: tabId, specAnchor: anchor || ''}, '*');
 }
+// 入口左側目錄點選 → 切到對應頁籤／章節
+window.addEventListener('message', function(e) {
+  var d = e.data || {};
+  if (d.goTab && TAB_IDS.indexOf(d.goTab) >= 0) activate(d.goTab, d.goAnchor || null);
+});
+// 嵌入時捲動內文，回報目前讀到的章節
+window.addEventListener('scroll', function() {
+  if (window.self === window.top) return;
+  clearTimeout(window._spy);
+  window._spy = setTimeout(function() {
+    var p = document.querySelector('.panel:not([hidden])');
+    if (!p) return;
+    var cur = '';
+    p.querySelectorAll('h2[id]').forEach(function(h) { if (h.getBoundingClientRect().top < 90) cur = h.id; });
+    window.parent.postMessage({specTab: p.id.slice(6), specAnchor: cur, spy: true}, '*');
+  }, 80);
+});
 document.querySelectorAll('.tab').forEach(function(b) {
   b.addEventListener('click', function() { activate(LAST[b.id] || b.dataset.tab); });
 });
