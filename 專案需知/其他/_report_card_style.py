@@ -4,12 +4,15 @@
 - 保留原有樣式與內容，另加 <style id="card-v2"> 覆蓋：淺灰底＋白色圓角卡片（深色模式為深灰卡片）、膠囊頁簽、襯線大標題。
 - 每個頁簽（.panel）依 <h3> 分段，各段包成一張卡片；頁簽開頭沒有標題的說明文字，含表格／圖時也包成卡片，否則為說明列。
 - 倍率線型圖例：沒有切換按鈕的圖例（<span><i>…</i>名稱</span>）改成按鈕，點選依顏色開關該條線。
+- 倍率線型滑鼠提示：同時內嵌 chart_hover.js（見 _chart_hover.py）。
 - 可重複執行：舊的 card-v2 樣式與腳本會先移除，已包好的卡片不再重包。
 """
 import sys
 from pathlib import Path
 
 from bs4 import BeautifulSoup, NavigableString, Tag
+
+from _chart_hover import inject as inject_hover
 
 CSS = """
 /*card-v2：卡片版型，覆蓋原樣式*/
@@ -119,6 +122,7 @@ def apply(path):
     sc.string = JS
     (soup.body or soup).append(sc)
     p.write_text(str(soup), encoding="utf-8")
+    inject_hover(p)   # 倍率線型滑鼠提示
     print("card-v2", p, len(soup.select(".panel")), "panels", len(soup.select(".card")), "cards")
 
 
