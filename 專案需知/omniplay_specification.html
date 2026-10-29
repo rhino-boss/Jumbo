@@ -197,7 +197,7 @@ html.embedded h2{color:var(--accent); border-bottom-color:var(--grid)}
 <ul><li>平台要求指 Total RTP（Link＋Bonus Game＋Game，含新手體驗／老手救援等系統 RTP）；各 Profile、押注層級的拆分見<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>第 1.5 節。</li></ul></section><section class="panel" role="tabpanel" id="panel-math" hidden><h1 id="數學模型規範">數學模型規範</h1>
 <p>本文件屬於 <code>專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 _README.md。</p>
 <p>內容涵蓋：數學模型（第 1 章）、Card System（第 2 章）。PARsheet 規範見<a href="#" class="tab-link" data-tab="docs" data-anchor="4-parsheet">數學文件規範.md</a>。</p>
-<p><strong>存放位置</strong>（路徑以遊戲專案資料夾 <code>Slots/H0xx_遊戲名稱/</code> 為準，總表見總覽）：</p>
+<p><strong>存放位置</strong>（路徑以遊戲專案資料夾 <code>Slots/H0xx_遊戲名稱/</code> 為準）：</p>
 <div class="tbl-wrap"><table><thead><tr><th>檔案</th><th>存放位置</th></tr></thead><tbody><tr><td>基礎數學 <code>H0xx1.xlsx</code></td><td><code>Source/</code></td></tr><tr><td>RTP／Variant 模型 <code>H0xx1&lt;RTP&gt;&lt;Variant&gt;.xlsx</code>（含 <code>_Bet100</code>、<code>_Extra</code> 等押注版）</td><td><code>Source/</code></td></tr><tr><td>各版本的數學模型備份</td><td><code>Versions/&lt;版本&gt;/Source/</code></td></tr></tbody></table></div>
 <h2 id="1-數學模型">1. 數學模型</h2>
 <p>數學模型是包含公式、計算過程、輪帶、權重、參數與驗證依據的完整文件，也是產出 PARsheet 與 Config 的數學來源。</p>
@@ -243,7 +243,7 @@ Max Multiplier = Round Total Win ÷ 該模式定義的基準成本</code></pre>
 <div class="tbl-wrap"><table><thead><tr><th>Player Profile</th><th>押注層級</th><th class="n">押注層級判定金額</th><th class="n">Link RTP</th><th class="n">Bonus Game RTP</th><th class="n">Game RTP</th><th class="n">Total RTP</th><th class="n">新手體驗</th><th class="n">老手救援</th><th class="n">Total (+機制)</th></tr></thead><tbody><tr><td>Newbie</td><td>不分層級</td><td class="n">全部</td><td class="n">0.00%</td><td class="n">4.00%</td><td class="n">92.50%</td><td class="n">96.50%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">96.50%</td></tr><tr><td>Oldhand</td><td>小 Bet</td><td class="n"><code>&lt; $2</code></td><td class="n">0.00%</td><td class="n">4.00%</td><td class="n">92.50%</td><td class="n">96.50%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">96.50%</td></tr><tr><td>Oldhand</td><td>中 Bet</td><td class="n"><code>&gt;= $2</code> 且 <code>&lt;= $100</code></td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.50%</td><td class="n">96.50%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">96.50%</td></tr><tr><td>Oldhand</td><td>大 Bet</td><td class="n"><code>&gt; $100</code></td><td class="n">2.00%</td><td class="n">2.00%</td><td class="n">92.50%</td><td class="n">96.50%</td><td class="n">0.00%</td><td class="n">0.00%</td><td class="n">96.50%</td></tr></tbody></table></div>
 <ul><li>BF／SF 的 92.50% 是 Game RTP 分項，不是 Total RTP；Total RTP 固定為 96.50%。BF／SF 不吃新手體驗與老手救援，<code>Total (+機制)</code> 同為 96.50%。</li><li>Newbie 與 Oldhand 小 Bet 使用相同 RTP 拆分，但仍是不同 Player Profile，必須保留各自權重及模擬結果。</li><li>Oldhand 中 Bet 與大 Bet 的 RTP 拆分相同，但倍率上限與倍率權重仍分開設定。</li></ul>
 <h4 id="153-demo-版-rtp120">1.5.3 Demo 版 RTP（120%）</h4>
-<p>上在 Demo 網頁（展示、試玩用）的版本，RTP 目標為 <strong>120%</strong>。以<strong>老手中 Bet</strong>（92 版）的權重為底，只調整卡片權重，不動輪帶、Paytable 與 Feature 規則；不分大小 Bet、新老手、A／B 版（新手同老手）。操作方式見開發流程 §5.11。</p>
+<p>上在 Demo 網頁（展示、試玩用）的版本，RTP 目標為 <strong>120%</strong>。以<strong>老手中 Bet</strong>（92 版）的權重為底，只調整卡片權重，不動輪帶、Paytable 與 Feature 規則；不分大小 Bet、新老手、A／B 版（新手同老手）。操作方式見Demogame規範。</p>
 <pre><code>差額    = 120% − 來源版本 RTP
 BG 補足 = 差額 × 1/2   → 加在 BG 的 (25, 30] 區間
 FG 補足 = 差額 × 1/2   → 縮短 FG 週期</code></pre>
@@ -410,7 +410,7 @@ Oldhand 依 `&lt; $2`、`$2～$100`、`&gt; $100` 選擇小／中／大 Bet 權�
 <p>卡片權重（含倍率上限、天花板重骰）調整後，必須確認畫面會出現的元素在 Card System 開啟時都有機會得分，不得出現只出現、永遠不會得分的情況（例：盤面會出現 2500x 球，但倍率上限讓它永遠拿不到分）。</p>
 <ul><li><strong>檢查範圍</strong>：每個 RTP／Variant × Bet Mode × Profile／押注層級逐一檢查；凡該組合在畫面上看得到的元素都要列入，例如：<ul><li>規格或盤面會出現的倍數球、倍數 Wild、高倍符號（例：1000x／2500x 球）；</li><li>轉盤、Bonus 的每一格獎項；</li><li>特色符號（倍數、Respin、Bonus）在「有得分」情況下的出現；</li><li>盤面可組成的各種得分組合（例：數字串接遊戲的每種數字分）。</li></ul></li><li><strong>判定方式</strong>：以 Card-On 的實際分布計算（精算優先；無法精算時用模擬機 ≥ 10⁸ 局），每個元素「得分出現機率 &gt; 0」才算通過；只看到出現、但所在倍率區間權重為 0 或被倍率上限擋掉者，判為不通過。</li><li><strong>不通過時的處理</strong>（擇一，並在數值報告註明）：<ol><li>調整卡片權重，讓該元素所在區間有可抽到的正權重（區間在所用的表上自然機率要夠高，避免 Retry Limit Exceeded）；</li><li>若產品上就不該開出，改輪帶／權重讓該元素不在畫面出現，或在 Help 與規則中移除。</li></ol></li><li>檢查結果（各元素的得分機率或「通過／不通過」）列在數值報告；有任何不通過不得視為完成交付。</li><li>經使用者同意暫不處理的不通過項目，列為已知例外，寫進該遊戲的 <code>注意事項.md</code>（見產出與紀錄規範.md第 1 節），並在數值報告註明。</li></ul></section><section class="panel" role="tabpanel" id="panel-docs" hidden><h1 id="數學文件規範">數學文件規範</h1>
 <p>本文件屬於 <code>專案需知/</code> 專案需知文件集，總覽、共通原則與完成條件見 _README.md。</p>
-<p><strong>存放位置</strong>（路徑以遊戲專案資料夾 <code>Slots/H0xx_遊戲名稱/</code> 為準，總表見總覽）：</p>
+<p><strong>存放位置</strong>（路徑以遊戲專案資料夾 <code>Slots/H0xx_遊戲名稱/</code> 為準）：</p>
 <div class="tbl-wrap"><table><thead><tr><th>檔案</th><th>存放位置</th></tr></thead><tbody><tr><td><code>game_rule.md</code>、<code>game_help_draft.md</code>、<code>game_description.md</code></td><td>專案根目錄</td></tr><tr><td><code>{GameID}_Help.xlsx</code></td><td><code>文件/</code></td></tr><tr><td><code>{GameID}_Game Description.docx</code>（完整版）</td><td><code>文件/</code>；送驗版放 <code>文件/{GameID}/</code></td></tr><tr><td>PARsheet（主檔名加 <code>R</code>，底線後綴放在 <code>R</code> 之後）</td><td><code>文件/PARsheet/</code></td></tr></tbody></table></div>
 <p>內容涵蓋：Game Rule、Help、Game Description、PARsheet、Game List（含取得 Letter 後更新 RTP）。數學模型本體見<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>；送驗版文件（Game Description DOCX、Math Document Description、數學模型送驗版）的命名、格式與禁止內容見<a href="#" class="tab-link" data-tab="submission">送驗文件規範.md</a>。</p>
 <h2 id="1-game-rule">1. Game Rule</h2>
@@ -483,7 +483,7 @@ Oldhand 依 `&lt; $2`、`$2～$100`、`&gt; $100` 選擇小／中／大 Bet 權�
 <p>內容涵蓋送驗（BMM 等實驗室）交付物的命名、格式來源、內容規則、禁止內容與交付前檢查：<strong>Game Description</strong>、<strong>Math Document Description</strong>、<strong>數學模型送驗版</strong>、<strong>SHA1 清單</strong>。本文件適用 <strong>OP 遊戲</strong>（Game ID <code>101xxx</code>）。</p>
 <p>送驗<strong>流程面</strong>（歸檔、Draft／Letter 檢查、OP Jackpot 報告要求）另見送驗根目錄 <code>\\192.168.139.6\JIG_Certification\送驗\送驗規範\送驗規範.md</code>。該文件是送驗的完整版，第 1～4 章與第 5 章的「送驗文件檢查清單」即本文件內容，修改本文件時必須同步過去（該文件第 7 章 Game List 對應<a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a> 第 5 節）。</p>
 <ul><li>Game Rule、Help、<code>game_description.md</code> 的內容規範見<a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a>；Game List 見<a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a> 第 5 節；PARsheet 精簡文件見<a href="#" class="tab-link" data-tab="docs">數學文件規範.md</a>。本文件只規範送驗交付面的要求。</li><li>製作與檢查的操作流程由對應 skill 執行（製作 Game Description：<code>game-description-generator</code>；檢查送驗文件：<code>math-doc-checker</code>）；規範內容以本文件為準，skill 與本文件不一致時，先修正其一使兩者一致。</li></ul>
-<p><strong>存放位置</strong>（路徑以遊戲專案資料夾 <code>Slots/H0xx_遊戲名稱/</code> 為準，總表見總覽）：</p>
+<p><strong>存放位置</strong>（路徑以遊戲專案資料夾 <code>Slots/H0xx_遊戲名稱/</code> 為準）：</p>
 <div class="tbl-wrap"><table><thead><tr><th>檔案</th><th>存放位置</th></tr></thead><tbody><tr><td><code>{GameID}_Game Description.docx</code>（完整版）</td><td><code>文件/</code></td></tr><tr><td><code>{GameID}_Math Document Description.md</code>＋<code>_EN.md</code></td><td><code>文件/</code>（送驗時只把 <code>_EN.md</code> 複製進送驗資料夾，中文版不送）</td></tr><tr><td>送驗資料夾（送驗版 Game Description、<code>PARsheet/</code>、<code>Simulator/</code>）</td><td><code>文件/{GameID}/</code></td></tr><tr><td></td></tr></tbody></table></div>
 <h2 id="1-通用原則">1. 通用原則</h2>
 <h3 id="11-一款遊戲的送驗產出">1.1 一款遊戲的送驗產出</h3>
@@ -807,7 +807,7 @@ FG 倍率上限 × 該層最大押注 ≤ FG 上限</code></pre>
 <p>本文件是 iGaming 系統機制的完整說明：<strong>新手體驗</strong>與<strong>老手救援</strong>。正文是現行版本；可調參數、待討論事項與舊版本放在附錄。</p>
 <div class="tbl-wrap"><table><thead><tr><th>機制</th><th>現行版本</th><th>說明</th></tr></thead><tbody><tr><td>新手體驗</td><td><strong>D 版</strong></td><td>新手期分兩階段：新手體驗（第 41～60 轉）、新手救援（第 140～160 轉）各隨機判定一次，RTP 偏低就把該轉改成設定倍數。</td></tr><tr><td>老手救援</td><td><strong>C-2</strong></td><td>以天為單位（<strong>台灣時間 04:00</strong> 刷新）的保底救援：主救援 40～400 轉、延伸救援 440～1,000 轉，觸發點前後 5 轉隨機判定；救援成本由每日刷新的救援池支付（每轉提撥玩家押注的 <strong><span class="tune">1%</span></strong>）。</td></tr></tbody></table></div>
 <p>標示方式：<strong>粗體</strong>為重要數值；<span class="tune">紅色虛線</span>為後端要做成可調整的參數。兩個機制都由 Card System 重骰產生結果，演出與自然得分無法區分。各機制的 RTP 預算見<a href="#" class="tab-link" data-tab="math">數學模型規範.md</a>第 1.5 節；壓測時怎麼驗證見<a href="#" class="tab-link" data-tab="stress">壓測說明書.md</a>。模擬程式在 <code>System/simulator/</code>，一律到模擬機執行（<code>ssh sim</code>，<code>/root/Simulator/System_老手救援/</code>）。</p>
-<p><strong>存放位置</strong>（總表見總覽）：</p>
+<p><strong>存放位置</strong>：</p>
 <div class="tbl-wrap"><table><thead><tr><th>檔案</th><th>存放位置</th></tr></thead><tbody><tr><td>系統機制模擬程式（新手體驗、老手救援、救援池、套利）</td><td>工作區 <code>System/simulator/</code></td></tr><tr><td>模擬用 rowdata、模擬結果（<code>report_numbers.json</code> 等）</td><td><code>System/simulator/rowdata/</code>、<code>System/simulator/record/</code></td></tr><tr><td>給主管的機制報告</td><td><code>System/報告/</code></td></tr></tbody></table></div>
 <h3 id="12-流程圖">1.2 流程圖</h3>
 <p>一位新玩家第一天從第 1 轉玩到第 1,000 轉會遇到的事件（重複發生的事件只畫一次）：</p>

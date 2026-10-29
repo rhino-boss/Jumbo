@@ -2,7 +2,7 @@
 
 本文件屬於 `專案需知/` 專案需知文件集，總覽、共通原則與完成條件見 [_README.md](../其他/_README.md)。
 
-**存放位置**（路徑以遊戲專案資料夾 `Slots/H0xx_遊戲名稱/` 為準，總表見[總覽](../其他/_README.md#3-文件存放位置)）：
+**存放位置**（路徑以遊戲專案資料夾 `Slots/H0xx_遊戲名稱/` 為準，總表見[產出與紀錄規範](產出與紀錄規範.md#3-專案目錄與存放位置)）：
 
 | 檔案 | 存放位置 |
 |---|---|
@@ -246,3 +246,19 @@ Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示
 - [ ] Debug 資訊足以重現並與 Simulator 對帳。
 - [ ] Demo 統計口徑與模擬報表一致。
 - [ ] 不存在寫死的舊遊戲名稱、倍率、Table、輪帶或 Help。
+
+## 8. Demo 版 RTP 120%
+
+Demo 網頁（展示、試玩）用的卡片權重，RTP 120%。規則依[數學模型規範 §1.5.3](Omniplay/數學模型規範.md#153-demo-版-rtp120)，本節是操作方式。
+
+- **來源**：只用**老手中 Bet**（92A）一套衍生；**不分大小 Bet、新老手、A／B 版**，新手直接複製老手（含倍數上限）。
+- **NB／EB**：差額 `120% − 92%` 一半加在 BG `(25, 30]`、一半提高 FG 觸發卡權重（縮短 FG 週期），兩者都從 `(-1, 0]` 扣；FG 倍率區間不動。觸發把本身的 BG 得分會一起變多，要先從 BG 補足量扣掉。EB 以 NB 基準成本換算（EB 2x 時補足量 ×2）。
+- **BF／SF**：平均倍數拉到 `購買價 × 120%`；購買價以上（贏錢）的區間等比例升、以下（賠錢）的區間等比例降，各段形狀不變。
+- **不跑模擬驗證**：以卡片權重精算即可。
+- **不升版號、不記修改紀錄**：屬 Demo 用參數，不是數學調性。
+- **檔案**：出工作簿與 config，不做 PARsheet、報表。
+  - 工作簿 `Source/<MathID>1120_Demo.xlsx`（例 `H0451120_Demo.xlsx`）：複製 92A 工作簿改 Multiplier_Weight，新手欄＝老手欄（含 Avg_Multi、Nature_Prob），Overview 型號改同檔名、Pay Back 區塊重算；區間平均用 Avg_Multi 精算。存檔後跑 `_check_xlsx_style.py`。
+  - `config_120A_Demo.js` 由工作簿轉出，放遊戲根目錄；`config_code`／`rtp_label` 為 `120A_Demo`，並加 `demo_only` 註記。
+  - 兩者都複製一份到 `Versions/<目前版本>/`（工作簿放 `Source/`），並加進 `Versions/version_manifest.js／.json` 目前版本的 `sources`／`configs`，Demo 選單顯示「120A Demo（RTP 120%）」；改 manifest 後要升 `index.html` 的 `?v=` 尾碼。
+  - 不交 SPS、不進送驗文件。
+- 例：H045 v6.0.0.3 — NB FG 週期 150 → 96.2 轉、EB 30 → 24.5 轉；BF 平均 46.25x → 60x、贏錢率 30% → 48.9%。

@@ -25,13 +25,16 @@ SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料�
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
-MINE_TAB_IDS = ["overview", "outputs", "sim", "demo", "proposal"]
+MINE_TAB_IDS = ["overview", "glossary", "outputs", "sim", "demo", "proposal", "report", "demoreport"]
 FLOW_TAB_IDS = ["flow"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
     ("guide", "總覽", "開發規範/Omniplay/導覽.md"),
     ("overview", "總覽", "其他/_README.md"),
+    ("glossary", "專有名詞", "開發規範/專有名詞.md"),
+    ("report", "數值報告規範", "開發規範/數值報告規範.md"),
+    ("demoreport", "Demo報告規範", "開發規範/Demo報告規範.md"),
     ("knowhow", "Knowhow", "開發規範/Omniplay/Knowhow.md"),
     ("flow", "開發流程", "開發流程/開發流程.md"),
     ("outputs", "產出與紀錄規範", "開發規範/產出與紀錄規範.md"),
@@ -60,10 +63,10 @@ GROUPS = [
 ]
 # Mine 網頁的頁籤分組
 MINE_GROUPS = [
-    ("總覽", ["overview"]),
+    ("總覽", ["overview", "glossary"]),
     ("產出與紀錄", ["outputs"]),
     ("模擬程式＋Demogame", ["sim", "demo"]),
-    ("提案", ["proposal"]),
+    ("報告", ["proposal", "report", "demoreport"]),
 ]
 # 開發流程網頁的頁籤分組
 FLOW_GROUPS = [("開發流程", ["flow"])]
@@ -92,8 +95,8 @@ GROUP_ICONS = {
     "開發流程": _SVG.format('<circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/>'
                             '<circle cx="18" cy="12" r="2"/><path d="M6 7v10"/><path d="M6 12h4a4 4 0 0 0 4-4V7"/>'
                             '<path d="M16 12h-2"/>'),
-    # 提案：簡報
-    "提案": _SVG.format('<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M12 16v4"/><path d="M8 20h8"/>'),
+    # 報告：簡報
+    "報告": _SVG.format('<rect x="3" y="4" width="18" height="12" rx="1"/><path d="M12 16v4"/><path d="M8 20h8"/>'),
     # 產出與紀錄：清單
     "產出與紀錄": _SVG.format('<path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/>'
                               '<path d="M4 6l1 1 2-2"/><path d="M4 12l1 1 2-2"/><path d="M4 18l1 1 2-2"/>'),
@@ -131,7 +134,7 @@ SHARED_TABS = {}
 
 # 產線資料夾的 md（檔名）歸入與 Omniplay 相同的頁籤大分類，標題、icon、顏色、順序三站一致
 LINE_GROUP_OF = {
-    "導覽": "總覽", "Knowhow": "Knowhow", "開發流程": "開發流程", "提案報告規範": "提案", "產出與紀錄規範": "產出與紀錄",
+    "導覽": "總覽", "Knowhow": "Knowhow", "開發流程": "開發流程", "提案報告規範": "報告", "產出與紀錄規範": "產出與紀錄",
     "數學模型規範": "數學設計", "數學文件規範": "數學文件", "送驗文件規範": "送驗相關", "送驗規範": "送驗相關",
     "系統機制": "系統相關", "機制說明": "系統相關", "天花板說明": "系統相關", "腳本規範": "系統相關",
     "壓測說明書": "系統相關", "後端報表": "系統相關", "模擬程式規範": "模擬程式＋Demogame",
@@ -513,7 +516,9 @@ GROUP_ORDER = [g for g, _ids in GROUPS + MINE_GROUPS + FLOW_GROUPS]
 
 def line_tabs(folder: Path):
     """列出產線資料夾的 md，依所屬大分類在 GROUPS 的順序排列，其餘依檔名。"""
-    mds = [p for p in folder.glob("*.md") if not p.name.startswith("_")]
+    # 只寫「待定」的頁先不顯示，有內容再出現
+    mds = [p for p in folder.glob("*.md") if not p.name.startswith("_")
+           and re.sub(r"^#.*$|[\s。]", "", p.read_text(encoding="utf-8"), flags=re.M) != "待定"]
 
     # 同大分類內照 Omniplay 的文件順序（以頁籤名稱或檔名比對，例：系統機制、天花板說明、腳本規範…）
     member = []
