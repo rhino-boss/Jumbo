@@ -970,7 +970,7 @@ def build_hub(root: Path, sites, embedded=None, metas=None):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iGaming 開發規範</title>
+<title>iGaming 開發需知</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 :root{{--surface:#f6f5f1; --panel:#ffffff; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#dcdad3;
@@ -1024,7 +1024,7 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
 </style>
 </head>
 <body>
-<header><div class="logo"><span>i</span></div><h1><b>iGaming</b> 開發規範</h1></header>
+<header><div class="logo"><span>i</span></div><h1><b>iGaming</b> 開發需知</h1></header>
 <div class="layout">
 <aside>
   <ul class="nav">{nav}</ul>
