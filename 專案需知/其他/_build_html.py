@@ -25,14 +25,13 @@ SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料�
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
-MINE_TAB_IDS = ["overview", "glossary", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
+MINE_TAB_IDS = ["overview", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
 FLOW_TAB_IDS = ["flow"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
     ("guide", "總覽", "開發規範/Omniplay/導覽.md"),
     ("overview", "總覽", "其他/_README.md"),
-    ("glossary", "專有名詞", "開發規範/專有名詞.md"),
     ("gamerule", "GameRule規範", "開發規範/GameRule規範.md"),
     ("report", "數值報告規範", "開發規範/數值報告規範.md"),
     ("demoreport", "Demo報告規範", "開發規範/Demo報告規範.md"),
@@ -64,7 +63,7 @@ GROUPS = [
 ]
 # Mine 網頁的頁籤分組
 MINE_GROUPS = [
-    ("總覽", ["overview", "glossary"]),
+    ("總覽", ["overview"]),
     ("產出與紀錄", ["outputs"]),
     ("遊戲製作", ["gamerule", "sim", "demo"]),
     ("報告", ["proposal", "report", "demoreport"]),
@@ -1044,6 +1043,11 @@ function setHash() {{
   var h = '#' + cur.key + (cur.tab ? '/' + cur.tab : '') + (cur.anchor ? '/' + cur.anchor : '');
   if (location.hash !== h) history.replaceState(null, '', h);
 }}
+// 目錄最多兩層：大類下只有一份文件時列章節；多份文件時只列文件名（章節看內文）
+// 文件名去掉「規範」、章節去掉編號，各站寫法一致
+var DOC_NAME = {{ 'GameRule規範': 'Game Rule', 'Demo報告規範': 'Demo 報告' }};
+function docName(t) {{ return DOC_NAME[t] || t.replace(/規範$/, ''); }}
+function secName(t) {{ return t.replace(/^\\d+(\\.\\d+)*\\.?\\s*/, ''); }}
 function renderToc() {{
   var m = SITES[cur.key].meta, out = '';
   (m.groups || []).forEach(function (g) {{
@@ -1053,25 +1057,18 @@ function renderToc() {{
       out += '<ul>';
       if (ids.length > 1) {{
         ids.forEach(function (t) {{
-          out += '<li><a href="#" class="doc' + (t === cur.tab ? ' on' : '') + '" data-tab="' + t + '">' + esc(m.titles[t]) + '</a>';
-          if (t === cur.tab) out += secs(m, t);
-          out += '</li>';
+          out += '<li><a href="#" data-tab="' + t + '"' + (t === cur.tab ? ' class="on"' : '') + '>' + esc(docName(m.titles[t])) + '</a></li>';
         }});
       }} else {{
-        out += secs(m, ids[0]).replace(/^<ul>|<\\/ul>$/g, '');
+        ((m.toc || {{}})[ids[0]] || []).forEach(function (s) {{
+          out += '<li><a href="#" data-tab="' + ids[0] + '" data-anchor="' + s[1] + '"' + (s[1] === cur.anchor ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
+        }});
       }}
       out += '</ul>';
     }}
     out += '</li>';
   }});
   document.getElementById('toc').innerHTML = out;
-}}
-function secs(m, t) {{
-  var list = (m.toc || {{}})[t] || [];
-  if (!list.length) return '';
-  return '<ul>' + list.map(function (s) {{
-    return '<li><a href="#" data-tab="' + t + '" data-anchor="' + s[1] + '"' + (s[1] === cur.anchor ? ' class="on"' : '') + '>' + esc(s[2]) + '</a></li>';
-  }}).join('') + '</ul>';
 }}
 function markNav() {{
   document.querySelectorAll('.nav a').forEach(function (a) {{ a.classList.toggle('on', a.dataset.key === cur.key); }});
