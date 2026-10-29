@@ -2615,7 +2615,7 @@
       try { localStorage.removeItem("h045RuleMode"); } catch (_) {}
       window.H045_RULE_MODE = "mul";
       window.H045_BASE_DIR = "./";
-      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261028b"><\/script>`);
+      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261029a"><\/script>`);
     })();
   </script>
   <script>
@@ -2631,7 +2631,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261028b`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261029a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       // 2026-10-22：有 94A／92A／92A_Bet100 三套時預設 AUTO＝依押注自動選（模擬程式規範 §1.2.3：小 Bet 94A、中 Bet 92A、大 Bet 92A_Bet100；新手共用 92A）
@@ -4090,7 +4090,7 @@
     for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
       const option = document.createElement("option");
       option.value = code;
-      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "AUTO A 版（依押注）" : code === "AUTO_B" ? "AUTO B 版（依押注）" : code;
+      option.textContent = code === "base" ? "Base" : code === "AUTO" ? "AUTO A 版（依押注）" : code === "AUTO_B" ? "AUTO B 版（依押注）" : code === "120A_Demo" ? "120A Demo（RTP 120%）" : code;
       configSelect.appendChild(option);
     }
     configSelect.value = window.H045_ACTIVE_CONFIG || "base";

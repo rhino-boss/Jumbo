@@ -223,7 +223,8 @@
         "92A_Bet100": "config_92A_Bet100.js",
         "92B": "config_92B.js",
         "94B": "config_94B.js",
-        "92B_Bet100": "config_92B_Bet100.js"
+        "92B_Bet100": "config_92B_Bet100.js",
+        "120A_Demo": "config_120A_Demo.js"
       },
       "changes": [
         "沒得分時金框輪（R2～R4）再加 2 顆金框，停輪即顯示（game_rule §9.1.12）；純表演，權重與 RTP 不變，Simulator 同步實作。"
