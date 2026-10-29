@@ -1,5 +1,5 @@
 {
-  "current": "6.0.0.3",
+  "current": "6.0.1.0",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
@@ -229,6 +229,35 @@
       },
       "changes": [
         "沒得分時金框輪（R2～R4）再加 2 顆金框，停輪即顯示（game_rule §9.1.12）；純表演，權重與 RTP 不變，Simulator 同步實作。"
+      ]
+    },
+    {
+      "version": "6.0.1.0",
+      "math_key": "6",
+      "date": "2026-10-29",
+      "base_config": "Versions/6.0.1.0/config.js",
+      "sources": {
+        "base": "Versions/6.0.1.0/Source/H0451.xlsx",
+        "92A": "Versions/6.0.1.0/Source/H045192A.xlsx",
+        "94A": "Versions/6.0.1.0/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/6.0.1.0/Source/H045192A_Bet100.xlsx",
+        "92B": "Versions/6.0.1.0/Source/H045192B.xlsx",
+        "94B": "Versions/6.0.1.0/Source/H045194B.xlsx",
+        "92B_Bet100": "Versions/6.0.1.0/Source/H045192B_Bet100.xlsx",
+        "120A_Demo": "Versions/6.0.0.3/Source/H0451120_Demo.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js",
+        "92B": "config_92B.js",
+        "94B": "config_94B.js",
+        "92B_Bet100": "config_92B_Bet100.js",
+        "120A_Demo": "config_120A_Demo.js"
+      },
+      "changes": [
+        "OP Jackpot SCR 改填 SPS 101015 scatterComboRate：A／B 分版，新手獨立、92 與 Bet100 用老手 92、94 用 94% 列；BF 統一 40,632,000,000（A 版 40,713,600,000）；權重與 RTP 不變。"
       ]
     }
   ]
