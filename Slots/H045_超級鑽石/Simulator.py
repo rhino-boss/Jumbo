@@ -829,7 +829,10 @@ class SuperDiamond:
                             else max(self.eb_fg_cap, self.eb_bg_trigger_cap) if eb else max(self.fg_cap, self.bg_trigger_cap))
             self.trigger_cap = self.eb_bg_trigger_cap if eb else self.bg_trigger_cap
         if bet_mode == MODE_FEATUREBUY:
-            entry_symbols, _, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
+            # 進場盤＝用 BF_Symbol 照常轉一次 BG（含金框、照常判獎）；BF 表的設計保證任何停點都不得分、至少 3 顆 C1
+            entry_symbols, entry_mults, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
+            if self.evaluate(entry_symbols, entry_mults)[0] > 0:
+                raise RuntimeError("BF_Symbol 權重必須保證進場盤不得分")
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
             if scatter < 3:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤至少 3 顆 C1")

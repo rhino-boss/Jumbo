@@ -3830,12 +3830,15 @@
   }
 
   function buyEntry() {
+    // 進場盤＝用 BF_Symbol 照常轉一次 BG（含金框、照常判獎）；BF 表的設計保證任何停點都不得分、至少 3 顆 C1（同 Simulator）
     const board = makeBoard(BUY.entry_table), scatter = scatterCount(board);
+    const gold = drawGold(goldCountFor(BUY.entry_table, "bg"), board);
+    if (evaluate(board, zeroMults()).rawPay > 0) throw new Error("BF_Symbol weights must guarantee no win on the entry board");
     if (scatter < Number(BUY.min_scatter)) throw new Error("BF_Symbol weights must guarantee at least 3 C1");
     return {
       pay: 0, combo: 0, scatter, golden: 0, w2Events: 0, multWild: 0, bigMult: 0, goldenTally: {}, capped: false,
-      board, mults: zeroMults(), gold: zeroGold(), tableName: BUY.entry_table, maxMultiplier: 1,
-      snapshots: [{ type: "initial", board: cloneBoard(board), mults: zeroMults(), gold: zeroGold(), hits: [], combo: 0, multiplier: 1, message: "BF Entry · No Win" }]
+      board, mults: zeroMults(), gold, tableName: BUY.entry_table, maxMultiplier: 1,
+      snapshots: [{ type: "initial", board: cloneBoard(board), mults: zeroMults(), gold: cloneBoard(gold), hits: [], combo: 0, multiplier: 1, message: "BF Entry · No Win" }]
     };
   }
 
