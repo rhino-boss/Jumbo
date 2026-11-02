@@ -1,9 +1,9 @@
 {
-  "current": "6.0.1.0",
+  "current": "6.0.1.1",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
-    "display": "Demogame／Versions 以 RTP／Variant 四碼版本（第 1 碼＝基礎數學 H0451.xlsx 版本）識別；config.js excel_version 為 1 碼，config_92A.js 為 4 碼。"
+    "display": "全部檔案共用一個四碼版本（遊戲參數.卡片權重.SCR.其他文件），記在 Source/version.txt，不寫在工作簿內；config.js excel_version 為第 1 碼，config_<RTP><Variant>.js 為四碼。"
   },
   "versions": [
     {
@@ -258,6 +258,37 @@
       },
       "changes": [
         "OP Jackpot SCR 改填 SPS 101015 scatterComboRate：A／B 分版，新手獨立、92 與 Bet100 用老手 92、94 用 94% 列；BF 統一 40,632,000,000（A 版 40,713,600,000）；權重與 RTP 不變。"
+      ]
+    },
+    {
+      "version": "6.0.1.1",
+      "math_key": "6",
+      "date": "2026-11-02",
+      "base_config": "Versions/6.0.1.1/config.js",
+      "sources": {
+        "base": "Versions/6.0.1.1/Source/H0451.xlsx",
+        "92A": "Versions/6.0.1.1/Source/H045192A.xlsx",
+        "94A": "Versions/6.0.1.1/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/6.0.1.1/Source/H045192A_Bet100.xlsx",
+        "92B": "Versions/6.0.1.1/Source/H045192B.xlsx",
+        "94B": "Versions/6.0.1.1/Source/H045194B.xlsx",
+        "92B_Bet100": "Versions/6.0.1.1/Source/H045192B_Bet100.xlsx",
+        "120A_Demo": "Versions/6.0.1.1/Source/H0451120_Demo.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js",
+        "92B": "config_92B.js",
+        "94B": "config_94B.js",
+        "92B_Bet100": "config_92B_Bet100.js",
+        "120A_Demo": "config_120A_Demo.js"
+      },
+      "changes": [
+        "H0451 的 BG_Symbol (2)／FG_Symbol (2) Symbol ID 對照欄依 Symbol 重填（原為表 1 殘留；輪帶不變）。",
+        "大鬼分裂體由 WW 改為 W2（與本體一模一樣、倍數相同）；game_rule、Simulator、Demo、Help 同步，數值不變。",
+        "版本號移出數學模型工作簿，全部檔案共用一個版本，記在 Source/version.txt。"
       ]
     }
   ]
