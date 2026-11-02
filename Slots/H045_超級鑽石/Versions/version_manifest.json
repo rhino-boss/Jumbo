@@ -1,5 +1,5 @@
 {
-  "current": "6.0.1.1",
+  "current": "6.0.1.2",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
@@ -289,6 +289,36 @@
         "H0451 的 BG_Symbol (2)／FG_Symbol (2) Symbol ID 對照欄依 Symbol 重填（原為表 1 殘留；輪帶不變）。",
         "大鬼分裂體由 WW 改為 W2（與本體一模一樣、倍數相同）；game_rule、Simulator、Demo、Help 同步，數值不變。",
         "版本號移出數學模型工作簿，全部檔案共用一個版本，記在 Source/version.txt。"
+      ]
+    },
+    {
+      "version": "6.0.1.2",
+      "math_key": "6",
+      "date": "2026-11-02",
+      "base_config": "Versions/6.0.1.2/config.js",
+      "sources": {
+        "base": "Versions/6.0.1.2/Source/H0451.xlsx",
+        "92A": "Versions/6.0.1.2/Source/H045192A.xlsx",
+        "94A": "Versions/6.0.1.2/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/6.0.1.2/Source/H045192A_Bet100.xlsx",
+        "92B": "Versions/6.0.1.2/Source/H045192B.xlsx",
+        "94B": "Versions/6.0.1.2/Source/H045194B.xlsx",
+        "92B_Bet100": "Versions/6.0.1.2/Source/H045192B_Bet100.xlsx",
+        "120A_Demo": "Versions/6.0.1.2/Source/H0451120_Demo.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js",
+        "92B": "config_92B.js",
+        "94B": "config_94B.js",
+        "92B_Bet100": "config_92B_Bet100.js",
+        "120A_Demo": "config_120A_Demo.js"
+      },
+      "changes": [
+        "BF_Symbol 改為直接複製 H016 幸運王牌 BF_Symbol（金框符號換一般符號），進場盤任何停點都不得分、C1 ≥ 3（原表照常判獎有 28.6% 會中，靠程式跳過判獎）；Simulator／Demo 進場盤改照常判獎、得分即報錯。",
+        "BF_Symbol 加 Gold_Count_Weight（同 BG 表 1／表 2），進場盤照常出金框；數值不變。"
       ]
     }
   ]
