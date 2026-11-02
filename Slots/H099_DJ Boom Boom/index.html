@@ -2600,7 +2600,8 @@
       board, yellow, frames: clone(frames), snapshots, tableName };
   }
 
-  const pickTable = scene => pickMap(cfg.table_weight[scene]);
+  // Demo 沒有卡片系統：用 demo_table_weight 固定輪帶表（H045 原 table_weight 是自然機率，RTP 會到 500% 以上）
+  const pickTable = scene => pickMap((cfg.demo_table_weight || cfg.table_weight)[scene]);
   // FG：開場第 3 軸整條 4 格 1X 框，框整場保留；3 顆以上 C1 +5 場（上限 50 場）
   function freeSession(initialSpins = FG_INITIAL) {
     const frames = grid(0);

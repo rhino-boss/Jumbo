@@ -6,12 +6,13 @@
 | --- | --- |
 | 遊戲名稱（內部代號） | 致敬DJ Boom Boom（暫名）（H099） |
 | Game ID | 101099（暫用） |
-| PARsheet ID | H099（暫用；數學模型尚未建立） |
+| PARsheet ID | H099（暫用；`Source/H0991.xlsx` 等暫用 H045 數學模型原樣複製） |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade（掉落） / 倍數框 |
 | 盤面規格 | 5 軸 × 4 列 |
 | 押注模式 | Normal Bet；Buy Feature `50 × Bet`（暫用 H045 價格） |
 
 * 符號、賠率表、輪帶與補牌權重暫時沿用超級鑽石（H045）；黃底出現率與倍數權重為 Demo 假值。
+* 數學模型（`Source/H0991.xlsx`、`H099192A`／`92B`／`94A`／`94B`／`_Bet100` 變體）、`config*.js` 與 `Simulator.py` 暫時原樣沿用 H045 v6.0.1.1，只改識別資訊；模擬程式跑的是 H045 玩法（金框翻牌、帶倍 WILD、Cascade Multiplier），尚未實作黃底／倍數框。
 
 ## §2. 盤面與判獎
 
