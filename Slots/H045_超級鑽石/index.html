@@ -872,7 +872,7 @@
     }
 
     .cell.wild-mark::after {
-      /* 分裂落點只做發光標記；格子本身已是 WW，不再疊「W2」字樣（分裂體是 WW，game_rule §5.4） */
+      /* 分裂落點只做發光標記；格子本身已是 W2，不再疊字樣（分裂體是 W2，game_rule §5.4） */
       content: "";
       position: absolute;
       inset: 5px;
@@ -3044,7 +3044,7 @@
     return { flipped, results, bigSources };
   }
 
-  // 回傳 { splitKeys, splits: [{ source, targets, value }] }，splits 供 Demo 畫「WW 複製飛出」動畫
+  // 回傳 { splitKeys, splits: [{ source, targets, value }] }，splits 供 Demo 畫「W2 複製飛出」動畫
   function splitBigGhosts(board, mults, gold, tableName, bigSources) {
     const table = tables[tableName];
     const splitKeys = [], splits = [];
@@ -3062,10 +3062,10 @@
       const targets = candidates.slice(0, count);
       const keys = [];
       for (const [reel, row] of targets) {
-        // game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
-        board[reel][row] = WW;
+        // game_rule §5.4（2026-11-02）：分裂體是 W2，與本體一模一樣，倍數不另外抽
+        board[reel][row] = W2;
         mults[reel][row] = value > 1 ? value : 0;
-        gold[reel][row] = false;   // game_rule §5.4（2026-10-12）：蓋到金框即變一般 WW，金框消失
+        gold[reel][row] = false;   // game_rule §5.4（2026-10-12）：蓋到金框即變 W2，金框消失
         keys.push(`${reel},${row}`);
       }
       splitKeys.push(...keys);
@@ -3296,7 +3296,7 @@
     flip: r => r.scatter < 3 && r.golden > 0,
     flipmult: r => r.scatter < 3 && r.multWild > 0,   // 金框消除翻牌後抽到帶倍數（×2 以上）的 WILD（2026-10-19）
     bigghost: r => r.scatter < 3 && r.w2Events > 0,
-    bigmult: r => r.scatter < 3 && r.bigMult > 0,   // 金框翻出的大鬼本體帶 ×2 以上倍數（分裂 WW 同倍數）（2026-10-19）
+    bigmult: r => r.scatter < 3 && r.bigMult > 0,   // 金框翻出的大鬼本體帶 ×2 以上倍數（分裂 W2 同倍數）（2026-10-19）
     fg: r => r.scatter >= 3,
     fgbig: r => r.scatter >= 3,
   };
@@ -3553,7 +3553,7 @@
     values.forEach(item => { const badge = cellAt(item.key)?.querySelector(".mult-badge"); if (badge) badge.style.visibility = ""; });
   }
 
-  // 大鬼分裂演出：從本體複製出 WW 飛到每個落點，落地後該格變 WW
+  // 大鬼分裂演出：從本體複製出 W2 飛到每個落點，落地後該格變 W2
   async function animateSplitCopies(snapshot, common) {
     if (!snapshot.splits?.length || !snapshot.preBoard) return;
     const speed = Number($("speedRange").value || 1);
@@ -3576,7 +3576,7 @@
         const ghost = document.createElement("div");
         ghost.className = "cell symbol-ww fly-ww";
         ghost.style.cssText = `left:${from.left - layerRect.left}px;top:${from.top - layerRect.top}px;width:${from.width}px;height:${from.height}px;`;
-        ghost.innerHTML = `${symbolInner("WW", false)}${split.value > 1 ? `<span class="mult-badge">×${split.value}</span>` : ""}`;
+        ghost.innerHTML = `${symbolInner("W2", false)}${split.value > 1 ? `<span class="mult-badge">×${split.value}</span>` : ""}`;
         layer.appendChild(ghost);
         const animation = ghost.animate(
           [{ transform: "translate(0,0) scale(.6)", opacity: .4 }, { transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(1)`, opacity: 1 }],
@@ -3585,7 +3585,7 @@
         flights.push(Promise.race([animation.finished.catch(() => {}), wait(flight + index * gap + 60)]).then(() => {
           ghost.remove();
           const [reel, row] = key.split(",").map(Number);
-          board[reel][row] = WW; mults[reel][row] = split.value > 1 ? split.value : 0;
+          board[reel][row] = W2; mults[reel][row] = split.value > 1 ? split.value : 0;
           renderBoard(board, [], { ...common, mults, marked: [key] });
           cellAt(split.source)?.classList.add("fx-split-source");
         }));

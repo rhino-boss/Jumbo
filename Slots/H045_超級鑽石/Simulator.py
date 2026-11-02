@@ -1,7 +1,7 @@
 """H045 超級鑽石 (Super Diamond) simulator.
 
 盤面 5x4、1024 Ways、Cascade；金框中獎翻牌為小鬼／大鬼兩種，每顆翻出的 Wild
-再抽倍數（x1＝無倍數），大鬼丟出的 WW 沿用本體倍數；同一連線的 WILD 倍數相加後
+再抽倍數（x1＝無倍數），大鬼丟出的 W2 沿用本體倍數；同一連線的 WILD 倍數相加後
 再乘 Cascade Multiplier（5 階）。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式
 內重複維護輪帶、權重、Paytable 或 Feature 參數。
 
@@ -241,7 +241,7 @@ class SpinResult:
     mult_kind: Counter = field(default_factory=Counter)   # (WW/W2/SPLIT, 倍數) 次數
     max_line_multiplier: int = 1
     big_ghost_used: bool = False
-    big_ghost_scored: bool = False               # 大鬼本體有被消除（參與連線）
+    big_ghost_scored: bool = False               # 大鬼本體或分裂 W2 有被消除（參與連線）
     mult_cells: int = 0                          # 帶倍數 Wild（×2 以上，含分裂體）出現顆數
     mult_left: int = 0                           # 結算時仍留在盤面、沒被消除的帶倍數 Wild 顆數
     initial_gold_count: int = 0
@@ -570,7 +570,7 @@ class SuperDiamond:
 
     def split_big_ghosts(self, table: Table, symbols: list[list[int]], mults: list[list[int]], gold: list[list[bool]],
                          big_sources: list[tuple[tuple[int, int], int]], result: SpinResult) -> None:
-        """game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 WW（倍數同本體），落點依補牌後的盤面。"""
+        """game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 W2（倍數同本體），落點依補牌後的盤面。"""
         for source, value in big_sources:
             count = int(_pick(self.rng, table.split_values, table.split_cumulative, table.split_total))
             candidates = [
@@ -587,10 +587,10 @@ class SuperDiamond:
             for reel, row in placed:
                 result.mult_kind[("SPLIT", value)] += 1
                 result.mult_cells += int(value > 1)
-                # game_rule §5.4：分裂體是 WW，倍數與本體一模一樣，不另外抽
-                symbols[reel][row] = WW
+                # game_rule §5.4（2026-11-02）：分裂體是 W2，與本體一模一樣，倍數不另外抽
+                symbols[reel][row] = W2
                 mults[reel][row] = value if value > 1 else 0
-                gold[reel][row] = False   # game_rule §5.4（2026-10-12）：蓋到金框即變一般 WW，金框消失，之後不再翻牌
+                gold[reel][row] = False   # game_rule §5.4（2026-10-12）：蓋到金框即變 W2，金框消失，之後不再翻牌
             result.split_counts[len(placed)] += 1
 
     def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
