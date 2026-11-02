@@ -2240,7 +2240,7 @@
         <h4>v1（1.0.0.0）</h4>
         <ol>
           <li>由 H045 超級鑽石 Demogame 改建 H099 致敬DJ Boom Boom（暫名）：黃底倍數符號（R2～R5、1X～10X）、框（消一般符號 +1、黃底倍數直接加進框）、WILD 只由黃底產生、得分 × 盤面框倍數總和、掉落補牌；FG 開場第 3 軸整條 1X 框、框整場保留。輪帶與賠率暫用 H045，黃底權重為假值。（11/02）</li>
-          <li>補上亡靈節主題符號圖（Source/Image/*.svg，暫用 AI 繪製 SVG）：M1 糖骷髏、M2 萬壽菊、M3 吉他、M4 蠟燭、A／K／Q／J 字獎、WW 花冠骷髏、C1 聖心；黃底格用 *_Gold.svg 金色底版。（11/02）</li>
+          <li>符號改用亡靈節主題 emoji 圖示（比照 Sugar Rush 2：直接擺在盤面、無底板，字獎也換圖示）：M1 💀、M2 🌼、M3 🎸、M4 🕯️、A 🌶️、K 🌵、Q 🦋、J 🍬、WW 🎭、C1 🪦；黃底格保留金色底。（11/02）</li>
         </ol>
       </article>
       </div>
@@ -2374,23 +2374,23 @@
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
   window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）
   let lastBoardRender = null;
-  // 符號圖（亡靈節主題，Source/Image/*.svg）；黃底格改用 *_Gold.svg 金色底版
-  const IMAGE_ROOT = "./Source/Image/";
-  const SYMBOL_CODES = ["WW", "C1", "M1", "M2", "M3", "M4", "A", "K", "Q", "J"];
-  const SYMBOL_ASSET = Object.fromEntries(SYMBOL_CODES.map(c => [c, `${c}_Symbol.svg`]));
-  const GOLD_ASSET = Object.fromEntries(SYMBOL_CODES.filter(c => c !== "WW" && c !== "C1").map(c => [c, `${c}_Gold.svg`]));
+  // 符號圖示（亡靈節主題，系統內建 emoji，離線可用）：比照 Sugar Rush 2，符號直接擺在盤面上、不畫方框底板，字獎也用圖示
+  const SYMBOL_ICON = {
+    M1: "💀", M2: "🌼", M3: "🎸", M4: "🕯️",   // 糖骷髏、萬壽菊、吉他、蠟燭
+    A: "🌶️", K: "🌵", Q: "🦋", J: "🍬",         // 辣椒、仙人掌、帝王蝶、糖果
+    WW: "🎭", C1: "🪦"                           // WILD 面具、SCATTER 墓碑
+  };
   let useSymbolImages = true;
-  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ASSET).map(([c, f]) => [c, IMAGE_ROOT + f]));   // Help 賠率表符號圖
   window.DEMOGAME_IMAGE_TOGGLE = {
     supported: true,
     defaultEnabled: true,
-    images: [...Object.values(SYMBOL_ASSET), ...Object.values(GOLD_ASSET)].map(file => IMAGE_ROOT + file),
+    images: [],
     setEnabled(enabled) {
       useSymbolImages = Boolean(enabled);
       if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.hitList, lastBoardRender.options);
     }
   };
-  const symbolAsset = (code, yellow) => useSymbolImages ? (yellow && GOLD_ASSET[code]) || SYMBOL_ASSET[code] || "" : "";
+  const symbolIcon = code => useSymbolImages ? SYMBOL_ICON[code] || "" : "";
 
   const YELLOW_REELS = cfg.yellow_reels.map(Number);
   const BUY = cfg.bet_modes.buy_feature;
@@ -2419,16 +2419,22 @@
     @keyframes h099TotalHit{from{transform:scale(1.25);filter:brightness(1.8)}to{transform:scale(1);filter:brightness(1)}}
     #board .cell{position:relative;border-radius:8px;box-shadow:none}
     /* 一般符號／C1／WILD 配色用共用樣式（demogame_common.js 無圖符號統一配色）；黃底以下列規則覆蓋（多個 :not(#…) 只為提高優先權） */
-    /* 黃底：整格金色底，取代 M 系列／字獎原本的底色（格子另掛 .gold，外框與得分框沿用共用金框格規則） */
-    body #board .cell.yellow:not(.has-symbol-art):not(#h099-y1):not(#h099-y2):not(#h099-y3){background:linear-gradient(180deg,#ffe58a 0%,#f2b929 48%,#a8740f 100%)!important;color:#3a2400!important}
+    /* 黃底：金色底版，與倍數框同一套金色（斜面框線、圓角 8px）；取代 M 系列／字獎原本的底色。得分時外框交給共用得分框（藍） */
+    body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3){border-radius:8px!important;color:#3a2400!important;
+      background:radial-gradient(circle at 50% 40%,#fff1b8 0%,#f2c94c 45%,#b8860b 100%)!important}
+    body #board .cell.yellow:not(.hit):not(#h099-y1):not(#h099-y2):not(#h099-y3){border:2px solid!important;border-color:#ffe7a0 #9a6a08 #6e4a00 #e0b040!important;
+      box-shadow:0 1px 2px rgba(0,0,0,.75),inset 0 1px 0 rgba(255,250,220,.6)!important}
     body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3) .h019-glyph{color:#3a2400!important}
-    /* 符號圖自帶底板，鋪滿整格（Image 關閉時回到文字符號＋上方配色） */
-    #board .cell .symbol-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:none;filter:none;pointer-events:none;user-select:none}
+    /* 符號圖示：直接擺在盤面上、不畫底板（Image 關閉時回到文字符號＋共用配色）；黃底格仍保留金色底 */
+    #board .cell .sym-icon{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--cell-size,64px) * .62);line-height:1;
+      font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6));pointer-events:none;user-select:none}
+    #board .cell .sym-tag{position:absolute;left:50%;top:3px;transform:translateX(-50%);font:800 9px/12px system-ui,sans-serif;letter-spacing:.04em;
+      color:#fff;background:rgba(120,10,60,.85);border-radius:4px;padding:0 4px;pointer-events:none}
     /* 倍數徽章（同 H026 樣式）：黃底倍數在左上、框倍數在右下 */
-    #board .yellow-badge,#board .frame-badge{position:absolute;font:700 11px/15px system-ui,sans-serif;color:#0b1020;
-      background:linear-gradient(180deg,#ffe89a,#ffb347);border-radius:5px;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap}
+    #board .yellow-badge,#board .frame-badge{position:absolute;font:700 11px/15px system-ui,sans-serif;color:#1a1000;
+      background:linear-gradient(180deg,#e8b84a,#a8740f);border:1px solid #ffe7a0;border-radius:5px;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap}
     #board .yellow-badge{z-index:5;top:3px;left:3px}
-    #board .frame-badge{bottom:4px;right:4px;color:#1a1000;background:linear-gradient(180deg,#e8b84a,#a8740f)}
+    #board .frame-badge{bottom:4px;right:4px}
     /* 倍數框：最上層、細框、立體斜面；大小與符號格相同 */
     #board{position:relative}
     #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2px solid;border-radius:8px;
@@ -2684,14 +2690,14 @@
       const motion = drop.get(key);
       const y = empty ? 0 : yellow[reel][row];
       const cell = document.createElement("div");
-      const asset = empty ? "" : symbolAsset(code, y > 0);
-      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${asset ? " has-symbol-art" : ""}${y ? " yellow gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}`;
+      const icon = empty ? "" : symbolIcon(code);
+      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${icon ? " has-symbol-art" : ""}${y ? " yellow gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
         cell.style.setProperty("--drop-duration", `${Math.max(40, 320 / speed / DROP_SPEED_MULTIPLIER * Math.sqrt(Math.max(1, motion.rows)))}ms`);
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
       }
-      const art = asset ? `<img class="symbol-img" src="${IMAGE_ROOT}${asset}" alt="${code}" draggable="false">` : "";
+      const art = icon ? `<span class="sym-icon" aria-label="${code}">${icon}</span>${code === "WW" || code === "C1" ? `<span class="sym-tag">${code === "WW" ? "WILD" : "SCATTER"}</span>` : ""}` : "";
       cell.innerHTML = empty ? "" : `<div class="symbol-wrap">${art}<span class="h019-glyph">${code}</span></div>${y ? `<span class="yellow-badge">x${y}</span>` : ""}`;
       root.append(cell);
     }
