@@ -1,6 +1,6 @@
 # 101014 Game Help Draft
 
-這份 md 是 `其他/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx` 中 `7.Help` 分頁的前置確認稿。
+這份 md 是 `Else/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx` 中 `7.Help` 分頁的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 
 ## Game Meta

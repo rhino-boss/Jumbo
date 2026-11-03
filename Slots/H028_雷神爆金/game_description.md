@@ -54,7 +54,7 @@ Simulator 與 index 同時載入 base config 與 RTP config：自然機率以 ba
 - **天花板機制**：BG 觸發 FG 的那把，BG 得分必須 ≤ 該 Profile BG 卡組最高有權重區間的上限（新手 30x、老手 70x），超過就整把重骰；Detail 的 Free Game 列平均倍率採重骰後的截斷平均（新手 5.8091），Simulator 已實作相同重骰。
 - 目標 RTP（BG：FG）：88B 72:16、90B 72:18、92A 72:20、94A 72:22；Newbie 四版共用 72:21；BF 92.5%（全 FG）。
 - FG 模型週期＝`sum(weight_bg) ÷ free_game 卡權重`：92A/94A 1/300、90B 1/366.67、88B 1/375；Newbie 1/279.5。
-- **大 Bet（`bet_tier_amount > $100`，規範 §1.4.3）使用獨立模型**（H027 實務）：`H028192A_Bet100.xlsx`／`H028188B_Bet100.xlsx`＋`config_92A_Bet100.js`／`config_88B_Bet100.js`。與 92A／88B 的差異只在老手 FG 卡與 BF 卡：上限 2,000x（`(2000,3000]`、`(9000,10000]` 權重 0，最高權重區間 `(1000,2000]`），主體 20~200x 形狀不變、200~2,000x 尾端等比配平——FG RTP（20%／16%）、BF RTP（92.5%）、觸發週期與平均倍數與原模型一致，只有得分分布尾端形狀不同（詳《其他/數值報告_3.5.0.0_Bet100.html》）。批次模擬以 `config_rtp_file` 直接指定 Bet100 config，程式不做自動切換；90B／94A 為小 Bet 檔，無對應 Bet100 模型。SCR 沿用原模型值。
+- **大 Bet（`bet_tier_amount > $100`，規範 §1.4.3）使用獨立模型**（H027 實務）：`H028192A_Bet100.xlsx`／`H028188B_Bet100.xlsx`＋`config_92A_Bet100.js`／`config_88B_Bet100.js`。與 92A／88B 的差異只在老手 FG 卡與 BF 卡：上限 2,000x（`(2000,3000]`、`(9000,10000]` 權重 0，最高權重區間 `(1000,2000]`），主體 20~200x 形狀不變、200~2,000x 尾端等比配平——FG RTP（20%／16%）、BF RTP（92.5%）、觸發週期與平均倍數與原模型一致，只有得分分布尾端形狀不同（詳《Notes/數值報告_3.5.0.0_Bet100.html》）。批次模擬以 `config_rtp_file` 直接指定 Bet100 config，程式不做自動切換；90B／94A 為小 Bet 檔，無對應 Bet100 模型。SCR 沿用原模型值。
 
 ---
 
@@ -91,4 +91,4 @@ RTP 口徑：彩金派彩不入 `rtp_game`，另計 `rtp_link`（JP1+JP2）與 `
 | RTP 工作簿／config（含 Bet100） | `3.5.0.0` | `基礎.卡片.SCR.其他`：卡片權重→第 2 碼、SCR→第 3 碼 |
 | 歷史版本 | `Versions/<四碼>/`＋`version_manifest.js/.json` | 數學調整寫入 Change Log |
 
-相關文件：`game_rule.md`（完整規則）、`game_help_draft.md`／`文件/101016_Help.xlsx`（玩家文案）、`文件/101016_Math Document Description.md`＋`_EN.md`（數學文件說明）、`文件/PARsheet/`（base＋四版＋兩份 Bet100 的 R 值版）、`其他/數值報告*.html`（權重調整報告）。
+相關文件：`game_rule.md`（完整規則）、`game_help_draft.md`／`文件/101016_Help.xlsx`（玩家文案）、`文件/101016_Math Document Description.md`＋`_EN.md`（數學文件說明）、`文件/PARsheet/`（base＋四版＋兩份 Bet100 的 R 值版）、`Notes/數值報告*.html`（權重調整報告）。

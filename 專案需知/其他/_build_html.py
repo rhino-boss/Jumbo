@@ -295,7 +295,8 @@ def render_timeline(lines) -> str:
 
 
 def render_flow(lines) -> str:
-    """把 flow 區塊畫成帶編號、直線串接的步驟圖；分支以綠（+）／橘（-）標籤呈現。"""
+    """把 flow 區塊畫成帶編號、直線串接的步驟圖；分支以綠（+）／橘（-）標籤呈現。
+    縮排的 `> 標題 :: 說明` 是第二層子步驟；同一行用 ` | ` 隔開的多個子步驟為同時進行。"""
     steps = []
     for raw in lines:
         if not raw.strip():
@@ -307,8 +308,13 @@ def render_flow(lines) -> str:
             if steps:
                 steps[-1]["branches"].append((kind, cond.strip(), result.strip()))
             continue
+        if raw[:1] in (" ", "	") and text[:1] == ">":
+            if steps:
+                steps[-1]["subs"].append([tuple(x.strip() for x in part.partition("::")[::2])
+                                          for part in text[1:].split(" | ")])
+            continue
         title, _, desc = text.partition("::")
-        steps.append({"title": title.strip(), "desc": desc.strip(), "branches": []})
+        steps.append({"title": title.strip(), "desc": desc.strip(), "branches": [], "subs": []})
     parts = ['<div class="flow">']
     for k, st in enumerate(steps, 1):
         body = f'<div class="step-title">{render_inline(st["title"])}</div>'
@@ -319,6 +325,19 @@ def render_flow(lines) -> str:
                 f'<div class="branch"><span class="pill {kind}">{render_inline(cond)}</span>'
                 f'<span>{render_inline(result)}</span></div>'
                 for kind, cond, result in st["branches"]) + "</div>"
+        if st["subs"]:
+            rows = []
+            for row in st["subs"]:
+                boxes = "".join(
+                    f'<div class="sub"><div class="sub-title">{render_inline(t)}</div>'
+                    + (f'<div class="sub-desc">{render_inline(d)}</div>' if d else "") + "</div>"
+                    for t, d in row)
+                if len(row) > 1:
+                    rows.append(f'<div class="sub-row par"><div class="par-tag">同時開發</div>'
+                                f'<div class="par-boxes">{boxes}</div></div>')
+                else:
+                    rows.append(f'<div class="sub-row">{boxes}</div>')
+            body += '<div class="subs">' + '<div class="sub-arrow">↓</div>'.join(rows) + "</div>"
         parts.append(f'<div class="step"><div class="step-rail"><div class="step-dot">{k}</div>'
                      f'<div class="step-line"></div></div><div class="step-body">{body}</div></div>')
     parts.append("</div>")
@@ -760,6 +779,14 @@ mark.hl-danger{{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,tran
 .step-body{{padding:3px 0 18px; min-width:0}}
 .step-title{{font-weight:600}}
 .step-desc{{color:var(--ink-2); font-size:1em; margin-top:2px}}
+.subs{{display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin-top:8px}}
+.sub-arrow{{color:var(--ink-3); padding-left:14px; line-height:1.2}}
+.sub-row.par{{border:1px dashed var(--rule); border-radius:6px; padding:6px 8px 8px}}
+.par-tag{{font-size:.85em; color:var(--ink-3); margin-bottom:4px}}
+.par-boxes{{display:flex; gap:8px; flex-wrap:wrap}}
+.sub{{border:1px solid var(--rule); border-radius:5px; padding:4px 10px; background:var(--panel)}}
+.sub-title{{font-weight:600; font-size:.95em}}
+.sub-desc{{color:var(--ink-2); font-size:.88em}}
 .branches{{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}}
 .branch{{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; font-size:1em}}
 .pill{{font-size:1em; font-weight:600; padding:1px 8px; border-radius:3px; white-space:nowrap}}

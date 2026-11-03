@@ -3,7 +3,7 @@
 > 文件版本：v0.4（2.2.1.0：轉 Reskin 產線，92／94／96 三版卡片與 SCR，規則不變）
 > 對標競品：JILI Fortune Gems 500
 > 撰寫日期：2026-10-15
-> 來源：SVN `Slot/IGaming/H020`（H020192／H020194，1.0.1.3）、企劃書 `其他/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx`
+> 來源：SVN `Slot/IGaming/H020`（H020192／H020194，1.0.1.3）、企劃書 `Else/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx`
 
 ## 目錄
 

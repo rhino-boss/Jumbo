@@ -1,6 +1,6 @@
 # 101027 Demo Report Draft
 
-這份 md 是 `其他/ZEUS_2500_Demo報告_v01.pptx` 的前置確認稿（開發流程 5.10）。
+這份 md 是 `Output/ZEUS_2500_Demo報告_v01.pptx` 的前置確認稿（開發流程 5.10）。
 之後若要改簡報，應先確認並修改這份 md，再轉成 pptx。
 
 ## Game Meta
@@ -14,7 +14,7 @@
 | game_type | Video Slot - Pay Anywhere / Cascade |
 | 對標競品 | Gates of Olympus 1000（Pragmatic Play） |
 | 主推版本 | B 組（A 組為 AB Test 對照組，見第 2 節） |
-| 數據來源 | `其他/數值報告.md`（Card-On 正式報表）；線上轉數 `Slots/其他/一些記錄/基本資訊.md` |
+| 數據來源 | `Notes/數值報告.md`（Card-On 正式報表）；線上轉數 `Slots/其他/一些記錄/基本資訊.md` |
 | 草稿日期 | 2026-10-27 |
 
 ---

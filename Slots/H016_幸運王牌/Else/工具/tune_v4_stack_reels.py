@@ -453,7 +453,7 @@ def main() -> None:
     if args.write and not args.validate_current:
         atomic_write(CONFIG, render(
             "// H016 active 4.0 natural math; stack reels tuned by "
-            "其他/工具/tune_v4_stack_reels.py.", config
+            "Else/工具/tune_v4_stack_reels.py.", config
         ))
         rtp_audit = sync_rtp_configs(config)
     print(json.dumps({
