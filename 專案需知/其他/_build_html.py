@@ -25,8 +25,8 @@ SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料�
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
-MINE_TAB_IDS = ["overview", "outputs", "errors", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
-FLOW_TAB_IDS = ["flow", "ai"]
+MINE_TAB_IDS = ["overview", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
+FLOW_TAB_IDS = ["flow", "errors", "ai"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
@@ -66,12 +66,12 @@ GROUPS = [
 # Mine 網頁的頁籤分組
 MINE_GROUPS = [
     ("總覽", ["overview"]),
-    ("產出與紀錄", ["outputs", "errors"]),
+    ("產出與紀錄", ["outputs"]),
     ("遊戲製作", ["gamerule", "sim", "demo"]),
     ("報告", ["proposal", "report", "demoreport"]),
 ]
 # 開發流程網頁的頁籤分組
-FLOW_GROUPS = [("開發流程", ["flow"]), ("AI 製程", ["ai"])]
+FLOW_GROUPS = [("開發流程", ["flow", "errors"]), ("AI 製程", ["ai"])]
 # 不同步出去的站
 PRIVATE_SITES = [
     ("mine", "Mine", MINE_TAB_IDS, "mine_specification.html", "Mine 開發規範", MINE_GROUPS),
