@@ -5,6 +5,7 @@
 - 每個頁簽（.panel）依 <h3> 分段，各段包成一張卡片；頁簽開頭沒有標題的說明文字，含表格／圖時也包成卡片，否則為說明列。
 - 倍率線型圖例：沒有切換按鈕的圖例（<span><i>…</i>名稱</span>）改成按鈕，點選依顏色開關該條線。
 - 倍率線型滑鼠提示：同時內嵌 chart_hover.js（見 _chart_hover.py）。
+- Notes/ 的修改紀錄、注意事項、上線觀察：先併成頁簽（見 _report_notes.py）。
 - 可重複執行：舊的 card-v2 樣式與腳本會先移除，已包好的卡片不再重包。
 """
 import sys
@@ -13,6 +14,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 from _chart_hover import inject as inject_hover
+from _report_notes import inject as inject_notes
 
 CSS = """
 /*card-v2：卡片版型，覆蓋原樣式*/
@@ -108,6 +110,7 @@ def cardify(soup, panel):
 
 def apply(path):
     p = Path(path)
+    inject_notes(p)   # 修改紀錄／注意事項／上線觀察頁簽
     soup = BeautifulSoup(p.read_text(encoding="utf-8"), "html.parser")
     for old in soup.select("#card-v2, #card-v2-js, #card-v2-font"):
         old.decompose()
