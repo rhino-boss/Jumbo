@@ -24,9 +24,10 @@ HERE = Path(__file__).parent.parent  # 專案需知/
 SPEC_DIR = "開發規範"  # 三產線（Omniplay／Landbase／Reskin）資料夾的上層；Mine 的 md 直接放這層
 OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
-# 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS
+# 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS／ERRORS_GROUPS
 MINE_TAB_IDS = ["overview", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
-FLOW_TAB_IDS = ["flow", "errors", "ai"]
+FLOW_TAB_IDS = ["flow", "ai"]
+ERRORS_TAB_IDS = ["errors"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
@@ -71,16 +72,19 @@ MINE_GROUPS = [
     ("報告", ["proposal", "report", "demoreport"]),
 ]
 # 開發流程網頁的頁籤分組
-FLOW_GROUPS = [("開發流程", ["flow", "errors"]), ("AI 製程", ["ai"])]
+FLOW_GROUPS = [("開發流程", ["flow"]), ("AI 製程", ["ai"])]
+# 錯誤紀錄網頁的頁籤分組
+ERRORS_GROUPS = [("錯誤紀錄", ["errors"])]
 # 不同步出去的站
 PRIVATE_SITES = [
     ("mine", "Mine", MINE_TAB_IDS, "mine_specification.html", "Mine 開發規範", MINE_GROUPS),
     ("flow", "開發流程", FLOW_TAB_IDS, "development_process.html", "開發流程", FLOW_GROUPS),
+    ("errors", "錯誤紀錄", ERRORS_TAB_IDS, "error_list.html", "錯誤紀錄", ERRORS_GROUPS),
 ]
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
-EMBED_KEYS = {"mine"}
+EMBED_KEYS = {"mine", "errors"}
 # 入口左側導覽：(大標, [站 key...])，大標下列各站；沒列到的站歸最後一個大標
-HUB_SECTIONS = [("開發流程", ["flow"]), ("開發規範", ["mine", "omniplay", "landbase", "reskin"])]
+HUB_SECTIONS = [("我的製程", ["mine"]), ("開發規範", ["flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin"])]
 HUB_ORDER = [k for _t, ks in HUB_SECTIONS for k in ks]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
@@ -515,7 +519,7 @@ def tab_id_for(stem: str) -> str:
     return re.sub(r"[^\w\-]", "-", stem.lower()) or "doc"
 
 
-GROUP_ORDER = [g for g, _ids in GROUPS + MINE_GROUPS + FLOW_GROUPS]
+GROUP_ORDER = [g for g, _ids in GROUPS + MINE_GROUPS + FLOW_GROUPS + ERRORS_GROUPS]
 
 
 def line_tabs(folder: Path):
@@ -526,7 +530,7 @@ def line_tabs(folder: Path):
 
     # 同大分類內照 Omniplay 的文件順序（以頁籤名稱或檔名比對，例：系統機制、天花板說明、腳本規範…）
     member = []
-    for _g, ids in GROUPS + MINE_GROUPS + FLOW_GROUPS:
+    for _g, ids in GROUPS + MINE_GROUPS + FLOW_GROUPS + ERRORS_GROUPS:
         for i in ids:
             for t, title, f in TABS:
                 if t == i:
@@ -943,7 +947,7 @@ def rel_to_tree(path: Path) -> Path:
 
 
 def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, site_title=None):
-    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「開發流程」「開發規範（Mine／Omniplay／Landbase／Reskin）」，
+    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「我的製程（Mine）」「開發規範（開發流程／錯誤紀錄）」「產線須知（Omniplay／Landbase／Reskin）」，
     下方 Table of Contents 列所選站的頁籤與章節；右側內嵌所選站的內文。網址 #站/頁籤/章節 記住所選。
 
     embedded：{key: 整頁 HTML}；這些站不另存檔，整頁放進入口、以 iframe srcdoc 顯示。
@@ -1164,7 +1168,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
     """建置一整套：Omniplay／各產線（lines=True 時）／不外放的站（Mine、開發流程）＋ 最外層入口；網頁都在 root。"""
     global TREE_ROOT, LOCAL_ONLY
     TREE_ROOT = root
-    omni_tabs = [t for t in tabs if t[0] not in MINE_TAB_IDS + FLOW_TAB_IDS]
+    omni_tabs = [t for t in tabs if t[0] not in MINE_TAB_IDS + FLOW_TAB_IDS + ERRORS_TAB_IDS]
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
     sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_FILE, ROOT_TITLE, groups)]
     for folder, out_name, site_title in (PRODUCT_LINES if lines else []):
