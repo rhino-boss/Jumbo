@@ -10,9 +10,9 @@
       "math_key": "3.0",
       "date": "2026-08-17",
       "configs": {
-        "base": "Versions/3.0/config.js",
         "92": "Versions/3.0/config_92A.js",
-        "94": "Versions/3.0/config_94A.js"
+        "94": "Versions/3.0/config_94A.js",
+        "base": "Versions/3.0/config.js"
       },
       "changes": [
         "H0161 基底版號改為單碼 3；RTP/Variant 版號同步為 3.0.0.0。",
@@ -29,9 +29,9 @@
       "date": "2026-08-18",
       "working": false,
       "configs": {
-        "base": "Versions/4.0/config.js",
         "92": "Versions/4.0/config_92A.js",
-        "94": "Versions/4.0/config_94A.js"
+        "94": "Versions/4.0/config_94A.js",
+        "base": "Versions/4.0/config.js"
       },
       "changes": [
         "直接使用專案根目錄尚未封版的 H016 4.0 自然數學。",
@@ -46,9 +46,9 @@
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "base": "Versions/5.0/config.js",
         "92": "Versions/5.0/config_92A.js",
-        "94": "Versions/5.0/config_94A.js"
+        "94": "Versions/5.0/config_94A.js",
+        "base": "Versions/5.0/config.js"
       },
       "changes": [
         "v5 工作版使用專案根目錄 Config；v4 已固定封存在 Versions/4.0。",
@@ -59,87 +59,14 @@
       ]
     },
     {
-      "version": "6.0.0.0",
-      "math_key": "6.0",
-      "date": "2026-08-19",
-      "working": false,
-      "configs": {
-        "base": "Versions/6.0/config.js",
-        "92": "Versions/6.0/config_92A.js",
-        "94": "Versions/6.0/config_94A.js"
-      },
-      "changes": [
-        "只調整 FG_Symbol (2)／FG_Symbol (3) 初始停輪權重及 FG 初始／Retrigger 選表權重；輪帶、掉落、大鬼、金框、BG、BF、SF 與卡片倍率權重不變。",
-        "fg_2／fg_3 的堆疊可見停輪相對權重提高 6 倍；選表維持 fg_1:fg_2:fg_3 = 0:6500:3500。",
-        "FG 綜合堆疊事件率由 4.2103% 提升至 20.8561%，為 Super Ace 46.7281% 的 44.63%。",
-        "Card-On 500,000 場確認每 Free Spin Hit Rate 38.4992%，Retry Limit Exceeded 為 0。"
-      ]
-    },
-    {
-      "version": "6.1.0.0",
-      "math_key": "6.1",
-      "date": "2026-08-19",
-      "working": false,
-      "configs": {
-        "base": "Versions/6.1/config.js",
-        "92": "Versions/6.1/config_92A.js",
-        "94": "Versions/6.1/config_94A.js"
-      },
-      "changes": [
-        "自然數學完整沿用 v6.0；只重新計算 Card System 的 BG、FG 與 BF 倍率區間權重。",
-        "92／94、新手／老手 Normal 均設定為 BG 65%、FG 27%、Total 92%；Normal FG 進場週期設定為 130 場。",
-        "BF RTP 設定為 92.5%；SF 的 Excel 區塊與 Config 卡片陣列完整沿用 v6.0，不參與本次調整。",
-        "倍率權重使用 v6 Card-Off 1 億場 Normal 與 1 千萬場 BF 報表重算，並保留自然機率 0.1% 門檻與競品相對 Hit Rate 線型。",
-        "Card-On 1,000,000 場驗證 Normal RTP 約 91.90%、FG 週期約 129～130 場，Retry Limit Exceeded 為 0。"
-      ]
-    },
-    {
-      "version": "6.2.0.1",
-      "math_key": "6.2",
-      "date": "2026-08-19",
-      "working": false,
-      "configs": {
-        "base": "Versions/6.2/config.js",
-        "92": "Versions/6.2/config_92A.js",
-        "94": "Versions/6.2/config_94A.js"
-      },
-      "changes": [
-        "修正 Index 卡片倍率區間 `(L, U]` 的下界判斷；下界相等不再被誤判為命中，BG／FG／BF／SF 共用卡片篩選同步生效。",
-        "依使用者指示維持 v6 基礎版號；SF_Symbol 三張表的物理輪帶分別同步 FG_Symbol 三張表。",
-        "SF 初始與 Retrigger 選表權重同步 FG，均為 sf_1:sf_2:sf_3 = 0:6500:3500；SF 停輪權重同步對應 FG，掉落、大鬼及金框參數不變。",
-        "BG／FG 使用 H0161_06_2608191134_betmode0_109.xlsx 的 10 億場 Card-Off 資料重算；BF 使用 v6.1 封存的原始 BF count/pay。",
-        "92A 新手／老手維持 BG 65%、FG 27%、Total 92%；94A 新手／老手修正為 BG 65%、FG 29%、Total 94%；BF 92.5%，FG 週期 130 場。",
-        "BG／FG／BF 自然機率門檻改為小於等於 0.07% 時權重為 0；SF 卡片倍率權重暫時完整沿用 v6.1，等待新的 SF 10 億場報表。"
-      ]
-    },
-    {
-      "version": "6.3.0.1",
-      "math_key": "6.3",
-      "date": "2026-08-19",
-      "working": false,
-      "configs": {
-        "base": "Versions/6.3/config.js",
-        "92": "Versions/6.3/config_92A.js",
-        "94": "Versions/6.3/config_94A.js"
-      },
-      "changes": [
-        "統一玩法分類為 1,024 Ways／Cascade，並將連消倍數英文統一為 Cascade Multiplier；同步 Game Rule 與 Index Help。",
-        "自然輪帶與 BG／FG／BF 卡片倍率權重完整沿用 v6.2；本版只重算 SF 卡片倍率權重。",
-        "SF 自然資料使用 H0161_06_2608190046_betmode3_108.xlsx（Card System Off、100,000,000 場）。",
-        "92A／94A SF 使用完全相同的整數權重，RTP 硬鎖 92.5%，權重總和 1,000,000,000。",
-        "SF 線型以 Super_Ace_feature_buy_2.jsonl 的競品 Hit Rate 為基準；(350,400] 與 (450,500] 的基準 Hit Rate 額外乘 1.5。",
-        "SF 最低有權重區間為 (50,60]，H016 自然機率小於等於 0.07% 的區間不配置權重，單一區間 RTP 占比不超過 15%。"
-      ]
-    },
-    {
       "version": "6.4.0.1",
       "math_key": "6.4",
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "base": "Versions/6.4/config.js",
         "92": "Versions/6.4/config_92A.js",
-        "94": "Versions/6.4/config_94A.js"
+        "94": "Versions/6.4/config_94A.js",
+        "base": "Versions/6.4/config.js"
       },
       "changes": [
         "將 H016 連消倍數英文統一為 Cascade Multiplier；同步 Game Rule、Index Help 與共用玩法規範。",
@@ -151,32 +78,14 @@
       ]
     },
     {
-      "version": "7.0.0.0",
-      "math_key": "7.0",
-      "date": "2026-08-19",
-      "working": false,
-      "configs": {
-        "base": "Versions/7.0/config.js",
-        "92": "Versions/7.0/config_92A.js",
-        "94": "Versions/7.0/config_94A.js"
-      },
-      "changes": [
-        "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重由 1:0:0:0 改為與 SF_Symbol 相同的 0:1000:300:100。",
-        "SF 每次有金框消除時，啟用中的 sf_2 與 sf_3 都不會抽到 0 顆大鬼。",
-        "本版僅調整 SF_Symbol (3) 大鬼權重；輪帶、停輪權重、選表權重、掉落權重與倍率權重不變。",
-        "依版本規範將 H0161 升為 7，H016192A／H016194A 同步為 7.0.0.0。",
-        "v7 已封存至 Versions/7.0，供 Index 切換與追溯。"
-      ]
-    },
-    {
       "version": "8.0.0.0",
       "math_key": "8.0",
       "date": "2026-08-19",
       "working": false,
       "configs": {
-        "base": "Versions/8.0/config.js",
         "92": "Versions/8.0/config_92A.js",
-        "94": "Versions/8.0/config_94A.js"
+        "94": "Versions/8.0/config_94A.js",
+        "base": "Versions/8.0/config.js"
       },
       "changes": [
         "SF_Symbol (3) 的 Random Wild 0/2/3/4 權重調整為 0:1000:0:0，每次事件只抽 2 個 WW。",
