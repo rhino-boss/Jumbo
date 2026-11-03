@@ -16,7 +16,7 @@
    6. 產線規範：Omniplay 看 [導覽.md](../開發規範/Omniplay/導覽.md)，Landbase、Reskin 看各自資料夾
 2. 接手既有遊戲時，另外要做：
    - 先跑進度條：`py 專案需知/其他/progress.py H0xx`
-   - 讀該遊戲的 `進度.md`、`修改紀錄.md`、`注意事項.md`
+   - 讀該遊戲的 `進度.md`、`其他/修改紀錄.md`、`其他/注意事項.md`
 3. 被問到「之前怎麼決定的」時：
    - 先查 [工作紀錄.md](../../工作紀錄.md)。
    - 客戶與內部的反饋記在 `Slots/其他/一些記錄/反饋紀錄.md`。
@@ -107,8 +107,8 @@
 | 3.2 模擬 | 寫 Simulator；固定 Seed 單局驗證；Card-Off 自然機率大場次（模擬機） | [模擬程式規範](../開發規範/模擬程式規範.md) | `Simulator.py`、`Record/` 自然報表 | — |
 | 3.3 Demo | 依 Config 做可玩 Demo，與 Simulator 單局對帳 | `game-demo-generator`、[Demogame規範](../開發規範/Demogame規範.md) | `index.html` | — |
 | 4 調性 | 依自然報表校準卡片權重 → Card-On 全組合驗證 → 數值報告 | `multiplier-weight-tuner`、`multiplier-line-chart`、`_report_card_style.py`、[數值報告規範](../開發規範/數值報告規範.md) | 校準後的模型與 Config、Card-On 報表、`其他/數值報告_<中文名>.md`＋`.html` | 調性確認 |
-| 5 後端 | 打包給 SPS → 讀後端報表比對 → 挑 BF 腳本 | `backend-report`、[後端報表](../開發規範/Omniplay/後端報表.md)、[壓測說明書](../開發規範/Omniplay/壓測說明書.md)、[腳本規範](../開發規範/Omniplay/腳本規範.md) | `其他/To SPS/<GameID>_<版本>.zip`、後端報表彙整、腳本權重 | 報表一致 |
-| 6 文件 | Help → Game Description；PARsheet；Math Document Description（只出英文版） | `game-help-generator`、`game-description-generator`、[數學文件規範](../開發規範/Omniplay/數學文件規範.md) | `文件/` 下各檔、`文件/PARsheet/*R.xlsx` | — |
+| 5 後端 | 打包給 SPS → 讀後端報表比對 → 挑 BF 腳本 | `backend-report`、[後端報表](../開發規範/Omniplay/後端報表.md)、[壓測說明書](../開發規範/Omniplay/壓測說明書.md)、[腳本規範](../開發規範/Omniplay/腳本規範.md) | `Output/To SPS/<GameID>_<版本>.zip`、後端報表彙整、腳本權重 | 報表一致 |
+| 6 文件 | Help → Game Description；PARsheet；Math Document Description（只出英文版） | `game-help-generator`、`game-description-generator`、[數學文件規範](../開發規範/Omniplay/數學文件規範.md) | `Output/` 下各檔、`Output/PARsheet/*R.xlsx` | — |
 | 7 檢查 | 交付物全部逐項檢查；整理送驗包、產生 SHA1 清單 | `math-doc-checker`、`math-model-checker`、`submission-organizer-ctool`、[送驗文件規範](../開發規範/Omniplay/送驗文件規範.md) | 檢查紀錄、`文件/<GameID>/` 送驗包 | 版本凍結 |
 | 8 Demo 報告 | 整理設計重點、獨有巧思、困難與反饋，附數據佐證 | [Demo報告規範](../開發規範/Demo報告規範.md) | `demo_report_draft.md` → `.pptx` | 使用者確認 |
 | 送驗後 | 收到 Draft／Letter 時歸檔、檢查、更新狀態 | `submission-intake`（串 `inspection-report-checker`、`report-file-management-ctool`、`submission-status-overview`） | 檢查報告、狀態總覽 | 各關卡 |
@@ -132,9 +132,9 @@
 
 | 紀錄 | 位置 | 寫什麼 |
 |---|---|---|
-| 修改紀錄 | 各遊戲 `修改紀錄.md` | 只記數學調性；依四碼版本分節，句尾附日期（產出與紀錄規範 §2） |
+| 修改紀錄 | 各遊戲 `其他/修改紀錄.md` | 只記數學調性；依四碼版本分節，句尾附日期（產出與紀錄規範 §2） |
 | 進度 | 各遊戲 `進度.md` | 工項狀態：`ok`、`v2`、`v3`…（開發流程 §4.2） |
-| 注意事項 | 各遊戲 `注意事項.md` | 本遊戲的特別操作與已知例外 |
+| 注意事項 | 各遊戲 `其他/注意事項.md` | 本遊戲的特別操作與已知例外 |
 | 錯誤清單 | `專案需知/開發規範/錯誤清單.md` | 跨遊戲「做錯、後來修正」的事，新的在上 |
 | 工作紀錄 | `工作區/工作紀錄.md` | 討論與決議：日期、主題、參與人員、內容、決議、適用範圍，新的在上 |
 | 反饋紀錄 | `Slots/其他/一些記錄/反饋紀錄.md` | 客戶與內部反饋（客戶常嫌太平、高倍數太少、留存差，調性要參考） |
