@@ -26,7 +26,7 @@ OMNI_FILE = "omniplay_specification.html"
 HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine＋開發流程切換
 # 不同步出去的站：(key, 按鈕名稱, tab_id, 輸出檔名, 頁首名稱, 分組)；分組見下方 MINE_GROUPS／FLOW_GROUPS／ERRORS_GROUPS
 MINE_TAB_IDS = ["overview", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
-FLOW_TAB_IDS = ["flow", "ai"]
+FLOW_TAB_IDS = ["flow"]
 ERRORS_TAB_IDS = ["errors"]
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
@@ -38,7 +38,6 @@ TABS = [
     ("demoreport", "Demo報告規範", "開發規範/Demo報告規範.md"),
     ("knowhow", "Knowhow", "開發規範/Omniplay/Knowhow.md"),
     ("flow", "開發流程", "開發流程/開發流程.md"),
-    ("ai", "AI 製程", "開發流程/AI製程.md"),
     ("outputs", "產出與紀錄規範", "開發規範/產出與紀錄規範.md"),
     ("errors", "錯誤清單", "開發規範/錯誤清單.md"),
     ("math", "數學模型規範", "開發規範/Omniplay/數學模型規範.md"),
@@ -72,7 +71,7 @@ MINE_GROUPS = [
     ("報告", ["proposal", "report", "demoreport"]),
 ]
 # 開發流程網頁的頁籤分組
-FLOW_GROUPS = [("開發流程", ["flow"]), ("AI 製程", ["ai"])]
+FLOW_GROUPS = [("開發流程", ["flow"])]
 # 錯誤紀錄網頁的頁籤分組
 ERRORS_GROUPS = [("錯誤紀錄", ["errors"])]
 # 不同步出去的站
