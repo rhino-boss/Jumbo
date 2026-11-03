@@ -1,7 +1,7 @@
-"""H099 致敬DJ Boom Boom（暫名） simulator — 暫用 H045 超級鑽石 模擬程式。
+"""H032 亡靈派對 (Calavera Party) simulator — 暫用 H045 超級鑽石 模擬程式。
 
 目前原樣沿用 H045 玩法（金框翻牌小鬼／大鬼、帶倍 WILD、Cascade Multiplier 5 階），只改識別資訊；
-H099 的黃底／倍數框玩法尚未實作。執行參數一律來自 Config（config.js / config_92A.js 等）。
+H032 的黃底／倍數框玩法尚未實作。執行參數一律來自 Config（config.js / config_92A.js 等）。
 
 Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發需知/模擬程式規範.md``。
 """
@@ -35,7 +35,7 @@ CONFIG_FILE = "config.js"
 CONFIG_RTP_FILE = "AUTO"   # AUTO＝依押注檔位自動選（模擬程式規範 §1.2.3）；明寫檔名即 override
 # 檔位對應表（2026-10-22）：老手 小 Bet < $2 → 94A、中 Bet $2～$100 → 92A、大 Bet > $100 → 92A_Bet100；
 # 小 Bet：NB／EB 用實際押注判；大 Bet：一律用基礎押注判（對齊 SPS isHighBet()，2026-10-27）；BF 皆用基礎押注。Newbie 各版共用 → 固定 92A。最大押注 $5000。
-RTP_SERIES = os.environ.get("H099_RTP_SERIES", "A")   # A／B 版（2026-10-27 加 B 版）；--series 可覆寫
+RTP_SERIES = os.environ.get("H032_RTP_SERIES", "A")   # A／B 版（2026-10-27 加 B 版）；--series 可覆寫
 TIER_CONFIG = {"small_bet": "config_94{s}.js", "medium_bet": "config_92{s}.js", "big_bet": "config_92{s}_Bet100.js"}
 NEWBIE_CONFIG = "config_92{s}.js"
 TOTAL_ROUNDS = 100_000
@@ -104,7 +104,7 @@ def _env_bool(name: str, default: bool) -> bool:
 def resolve_base_dir() -> Path:
     base = Path(__file__).resolve().parent
     if not (base / CONFIG_FILE).exists():
-        raise FileNotFoundError(f"找不到 {CONFIG_FILE}，請在 H099 專案資料夾執行。")
+        raise FileNotFoundError(f"找不到 {CONFIG_FILE}，請在 H032 專案資料夾執行。")
     return base
 
 
@@ -124,8 +124,8 @@ def _version_major(value: Any) -> str:
 
 def validate_config_pair(natural: dict[str, Any], rtp: dict[str, Any] | None,
                          natural_name: str, rtp_name: str) -> None:
-    if natural.get("game_id") != "H099":
-        raise ValueError(f"{natural_name} 的 game_id 必須為 H099")
+    if natural.get("game_id") != "H032":
+        raise ValueError(f"{natural_name} 的 game_id 必須為 H032")
     version = str(natural.get("excel_version", ""))
     if not version.isdigit() or len(version) != 1:
         raise ValueError(f"{natural_name} 的 excel_version 必須為 1 碼，目前為 {version!r}")
@@ -328,7 +328,7 @@ class RoundResult:
 
 
 class SuperDiamond:
-    """H099（暫用 H045）遊戲核心。單一實例持有自己的 RNG，供單一 Worker 使用。"""
+    """H032（暫用 H045）遊戲核心。單一實例持有自己的 RNG，供單一 Worker 使用。"""
 
     def __init__(self, config: dict[str, Any], rtp_config: dict[str, Any] | None,
                  seed: int, bet_amount: float, card_enabled: bool, newbie: bool):
@@ -1635,7 +1635,7 @@ def run_batch(combo: dict[str, Any], index: int, total: int) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="H099 致敬DJ Boom Boom simulator")
+    parser = argparse.ArgumentParser(description="H032 亡靈派對 simulator")
     parser.add_argument("--rounds", type=int, default=None)
     parser.add_argument("--bet-mode", type=int, default=None)
     parser.add_argument("--base-bet", type=float, default=None)

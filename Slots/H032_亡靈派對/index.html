@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DJ Boom Boom — Demo Game</title>
+  <title>Calavera Party — Demo Game</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-size%3D%2756%27%20text-anchor%3D%27middle%27%3E%F0%9F%8E%A7%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
   <style>
     :root {
@@ -2102,7 +2102,7 @@
   <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請確認 ../demogame_common.css 與 ../demogame_common.js 存在。</div>
   <main class="phone">
     <div id="feature-bar">
-      <span id="game-title"><span id="gameId">101099</span> <span id="gameName">DJ Boom Boom</span></span>
+      <span id="game-title"><span id="gameId">101019</span> <span id="gameName">Calavera Party</span></span>
     </div>
 
     <div id="strip-bar" aria-label="Feature status">
@@ -2241,6 +2241,8 @@
         <ol>
           <li>由 H045 超級鑽石 Demogame 改建 H099 致敬DJ Boom Boom（暫名）：黃底倍數符號（R2～R5、1X～10X）、框（消一般符號 +1、黃底倍數直接加進框）、WILD 只由黃底產生、得分 × 盤面框倍數總和、掉落補牌；FG 開場第 3 軸整條 1X 框、框整場保留。輪帶與賠率暫用 H045，黃底權重為假值。（11/02）</li>
           <li>符號改用亡靈節主題 emoji 圖示（比照 Sugar Rush 2：直接擺在盤面、無底板，字獎也換圖示）：M1 💀、M2 🌼、M3 🎸、M4 🕯️、A 🌶️、K 🌵、Q 🦋、J 🍬、WW 🎭、C1 🪦；黃底格保留金色底。（11/02）</li>
+          <li>依 iGaming 遊戲代號一覽定案：Game ID 101019、ParSheet H0321（資料夾改 H032_亡靈派對）、Calavera Party／亡靈派對；Buy Feature 改 100x、無 Extra Bet。（11/03）</li>
+          <li>觸發 FG 跳出看板「免費遊戲 N 場」（Image 開啟時帶 C1 圖示；Auto 模式 1 秒後自動消失，非 Auto 要點盤面或按 Spin 關閉），看板消失後才開始 FG；Help 賠率表在 Image 開啟時顯示符號圖示；看板與 Help 彈窗開著時背景不能捲動。（11/03）</li>
         </ol>
       </article>
       </div>
@@ -2288,7 +2290,7 @@
     </div>
   </dialog>
   <script id="embeddedGameHelpMarkdown" type="text/plain">
-# 101099 Game Help Draft（Demo 暫用）
+# 101019 Game Help Draft（Demo 暫用）
 
 ## PAYTABLE
 
@@ -2357,15 +2359,15 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./config.js?v=20261102a"></script>
+  <script src="./config.js?v=20261103a"></script>
   <script>
 (() => {
   "use strict";
 
-  const cfg = window.H099_CONFIG;
-  if (!cfg) throw new Error("H099 config was not loaded.");
+  const cfg = window.H032_CONFIG;
+  if (!cfg) throw new Error("H032 config was not loaded.");
   for (const key of ["tables", "table_weight", "pays", "symbol_names", "yellow_reels", "yellow_rate", "yellow_value_weight", "bet_modes"]) {
-    if (!cfg[key]) throw new Error("H099 config is missing field: " + key);
+    if (!cfg[key]) throw new Error("H032 config is missing field: " + key);
   }
   const $ = id => document.getElementById(id);
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -2391,6 +2393,13 @@
     }
   };
   const symbolIcon = code => useSymbolImages ? SYMBOL_ICON[code] || "" : "";
+  // Help 賠率表符號圖（共用 demogame_common.js 讀 DEMOGAME_SYMBOL_ART）：emoji 包成 SVG，Image 開啟時與盤面同一套圖示
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ICON).map(([code, emoji]) => [code,
+    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="54" font-size="78" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif">${emoji}</text></svg>`)]));
+  // 彈窗（Help）開著時背景不能捲動
+  const helpDialogEl = document.getElementById("helpDialog");
+  if (helpDialogEl) new MutationObserver(() => document.documentElement.classList.toggle("h032-help-open", helpDialogEl.open))
+    .observe(helpDialogEl, { attributes: true, attributeFilter: ["open"] });
 
   const YELLOW_REELS = cfg.yellow_reels.map(Number);
   const BUY = cfg.bet_modes.buy_feature;
@@ -2415,6 +2424,16 @@
     #multiplierWindow{grid-template-columns:1fr!important;transform:none!important}
     /* 框倍數總和：格式同 H045 階梯倍數（單一顆 is-active 的 multiplier-step） */
     #multiplierWindow .multiplier-step .ft-k{font-weight:400;font-size:.8em;margin-right:4px}
+    /* 彈窗／FG 看板出現時背景不能捲動 */
+    html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
+    /* 觸發 FG 看板：蓋在盤面上；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉 */
+    #board .fg-banner{position:absolute;inset:0;z-index:80;display:grid;place-items:center;background:rgba(4,10,20,.62);border-radius:10px;cursor:pointer;animation:fg-banner-in .16s ease-out}
+    #board .fg-banner-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 28px;border-radius:12px;
+      background:linear-gradient(180deg,#ffe49a 0%,#e0a82a 45%,#9a6406 100%);border:1.6px solid #ffd468;box-shadow:inset 0 1px 0 rgba(255,248,220,.55),0 8px 24px rgba(0,0,0,.6);color:#fffaf0;text-shadow:0 1px 2px rgba(80,50,0,.6)}
+    #board .fg-banner-icon{font-size:44px;line-height:1;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+    #board .fg-banner-title{font:800 22px/1.2 system-ui,sans-serif;letter-spacing:.06em}
+    #board .fg-banner-count{font:800 30px/1.1 system-ui,sans-serif}
+    @keyframes fg-banner-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
     #multiplierWindow .multiplier-step.fx-hit{animation:h099TotalHit 320ms ease-out}
     @keyframes h099TotalHit{from{transform:scale(1.25);filter:brightness(1.8)}to{transform:scale(1);filter:brightness(1)}}
     #board .cell{position:relative;border-radius:8px;box-shadow:none}
@@ -2900,6 +2919,26 @@
     state.lastWin = state.fg.carry; state.fgTriggers++;
     setFeatureStatus(mode === 2 ? "buyFeature" : "fgTriggered"); updateStats();
   }
+  // 觸發 FG 看板：Auto 模式 1 秒後自動消失；非 Auto 要自己點掉（點盤面／看板或按 Spin）。期間背景不能捲動；看板消失後才開始 FG
+  function showFgBanner(spins) {
+    return new Promise(resolve => {
+      const board = $("board"), spinBtn = $("spinBtn");
+      const banner = document.createElement("div");
+      banner.className = "fg-banner";
+      const icon = symbolIcon("C1");
+      banner.innerHTML = `<div class="fg-banner-card">${icon ? `<span class="fg-banner-icon">${icon}</span>` : ""}<span class="fg-banner-title">${tr("freeGame")}</span><span class="fg-banner-count">${tr("fgBannerCount").replace("{n}", spins)}</span></div>`;
+      board.appendChild(banner);
+      document.documentElement.classList.add("h032-modal-open");
+      const wasDisabled = spinBtn.disabled; spinBtn.disabled = false;
+      let timer = 0;
+      const done = () => {
+        clearTimeout(timer); board.removeEventListener("click", done); spinBtn.removeEventListener("click", done, true);
+        spinBtn.disabled = wasDisabled; banner.remove(); document.documentElement.classList.remove("h032-modal-open"); resolve();
+      };
+      board.addEventListener("click", done); spinBtn.addEventListener("click", done, true);
+      if (state.auto) timer = setTimeout(done, 1000);
+    });
+  }
   async function playFeatureSpin() {
     const item = state.fg.spins[state.fg.index]; if (!item) return;
     const fgWinBase = Number(state.fg.win || 0), carry = Number(state.fg.carry || 0);
@@ -2969,6 +3008,7 @@
           // 主遊戲每轉結束框清空 → 進 FG 前先顯示開場第 3 軸 1X 框
           const first = feature.spins[0]?.snapshots?.[0];
           if (first) { renderFrameTotal(first.frameTotal, true); renderBoard(base.board, [], { yellow: base.yellow, frames: first.frames }); }
+          await showFgBanner(feature.spins.length);
         } else if (countLine) recordLine(mode, base.pay, cost);
       }
       updateStats();
@@ -3043,23 +3083,23 @@
   }
   function openHelp() { state.helpMarkdown = $("embeddedGameHelpMarkdown")?.textContent?.trim() || ""; renderHelp(state.helpMarkdown); $("helpDialog").showModal(); }
 
-  const H099_TEXT = {
+  const H032_TEXT = {
     en: {
       baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", fgTriggered: "Free Game Triggered",
       ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
-      spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL",
+      spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
       statMaxWin: "Max win (x bet)", statYellowSeen: "Yellow seen", statYellowUsed: "Yellow won", statFrameMax: "BG max frame total", statFgFrameAvg: "FG end frame total (avg)", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
       ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
-      spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和",
+      spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
       statMaxWin: "最大贏分倍數", statYellowSeen: "黃底出現率", statYellowUsed: "黃底消除率", statFrameMax: "BG 最大框總和", statFgFrameAvg: "FG 結束框總和（平均）", statScRate: "SC 出現率"
     }
   };
-  function tr(key) { return (H099_TEXT[state.language] || H099_TEXT.en)[key] ?? H099_TEXT.en[key] ?? key; }
+  function tr(key) { return (H032_TEXT[state.language] || H032_TEXT.en)[key] ?? H032_TEXT.en[key] ?? key; }
   function setFeatureStatus(key) {
     state.featureKey = key;
     const text = key && key !== "baseGame" && key !== "freeGame" ? tr(key) : "";
@@ -3074,7 +3114,7 @@
     if ($("helpDialog").open && state.helpMarkdown) renderHelp(state.helpMarkdown);
     $("autoBtn").textContent = tr(state.auto ? "stop" : "auto");
     const message = $("messageBar").textContent;
-    for (const key of ["ready", "noWin"]) if (message === H099_TEXT.en[key] || message === H099_TEXT.zh[key]) $("messageBar").textContent = tr(key);
+    for (const key of ["ready", "noWin"]) if (message === H032_TEXT.en[key] || message === H032_TEXT.zh[key]) $("messageBar").textContent = tr(key);
     renderFrameTotal(lastBoardRender ? frameSum(lastBoardRender.options.frames || grid(0)) : 0);
     updateStats();
   }
@@ -3105,7 +3145,7 @@
   $("setRngResetBtn").onclick = () => { $("scriptSelect").value = ""; $("forceFgInput").checked = false; $("rngInput").value = ""; };
 
   document.title = `${cfg.name_en} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
-  appendLog(`H099 Demo loaded | Version 1.0.0.0 | 輪帶／賠率暫用 H045，黃底權重為假值`, "result");
+  appendLog(`H032 Demo loaded | Version 1.0.0.0 | 輪帶／賠率暫用 H045，黃底權重為假值`, "result");
 })();
   </script>
   <script>

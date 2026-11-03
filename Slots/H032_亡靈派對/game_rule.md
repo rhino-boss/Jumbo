@@ -1,18 +1,21 @@
-# 致敬DJ Boom Boom（暫名）遊戲規則說明
+# 亡靈派對（Calavera Party）遊戲規則說明
 
 ## §1. 遊戲基本資訊
 
 | 項目 | 說明 |
 | --- | --- |
-| 遊戲名稱（內部代號） | 致敬DJ Boom Boom（暫名）（H099） |
-| Game ID | 101099（暫用） |
-| PARsheet ID | H099（暫用；`Source/H0991.xlsx` 等暫用 H045 數學模型原樣複製） |
+| 遊戲名稱（內部代號） | 亡靈派對 Calavera Party（H032） |
+| Game ID | 101019 |
+| PARsheet ID | H0321（`Source/H0321.xlsx` 等暫用 H045 數學模型原樣複製） |
+| 致敬遊戲 | FC - DJ Boom Boom |
+| 彩金群組 | OP（OmniPlay） |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade（掉落） / 倍數框 |
 | 盤面規格 | 5 軸 × 4 列 |
-| 押注模式 | Normal Bet；Buy Feature `50 × Bet`（暫用 H045 價格） |
+| 押注模式 | Normal Bet；Buy Feature `100 × Bet`；無 Extra Bet |
 
+* Game ID、ParSheet ID、遊戲名稱、致敬遊戲與押注選項依 `其他/iGaming 遊戲代號一覽.xlsx`（2026-11-03）。
 * 符號、賠率表、輪帶與補牌權重暫時沿用超級鑽石（H045）；黃底出現率與倍數權重為 Demo 假值。
-* 數學模型（`Source/H0991.xlsx`、`H099192A`／`92B`／`94A`／`94B`／`_Bet100` 變體）、`config*.js` 與 `Simulator.py` 暫時原樣沿用 H045 v6.0.1.1，只改識別資訊；模擬程式跑的是 H045 玩法（金框翻牌、帶倍 WILD、Cascade Multiplier），尚未實作黃底／倍數框。
+* 數學模型（`Source/H0321.xlsx`、`H032192A`／`92B`／`94A`／`94B`／`_Bet100` 變體）、`config*.js` 與 `Simulator.py` 暫時原樣沿用 H045 v6.0.1.1，只改識別資訊；模擬程式跑的是 H045 玩法（金框翻牌、帶倍 WILD、Cascade Multiplier），尚未實作黃底／倍數框。
 
 ## §2. 盤面與判獎
 
@@ -83,5 +86,5 @@
 | 3 | 黃底在框內消除時，除了加進倍數外是否再 +1？ | 不再 +1，只加黃底倍數 |
 | 4 | Scatter 觸發 FG 的判定時機 | 所有連消結束後的最終盤面 |
 | 5 | FG 場數上限 | 50 場（沿用 H045） |
-| 6 | Buy Feature 價格 | 50x（沿用 H045） |
-| 7 | 是否有 Extra Bet／彩金 | 無 |
+| 6 | Buy Feature 價格 | 已確定：100x（代號一覽 2026-11-03） |
+| 7 | 是否有 Extra Bet／彩金 | 已確定：無 Extra Bet；彩金群組 OP（OmniPlay），Demo 不做彩金 |
