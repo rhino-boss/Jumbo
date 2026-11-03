@@ -76,14 +76,14 @@ FLOW_GROUPS = [("開發流程", ["flow"])]
 ERRORS_GROUPS = [("錯誤紀錄", ["errors"])]
 # 不同步出去的站
 PRIVATE_SITES = [
-    ("mine", "Mine", MINE_TAB_IDS, "mine_specification.html", "Mine 開發規範", MINE_GROUPS),
+    ("mine", "開發規範", MINE_TAB_IDS, "mine_specification.html", "開發規範", MINE_GROUPS),
     ("flow", "開發流程", FLOW_TAB_IDS, "development_process.html", "開發流程", FLOW_GROUPS),
     ("errors", "錯誤紀錄", ERRORS_TAB_IDS, "error_list.html", "錯誤紀錄", ERRORS_GROUPS),
 ]
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
 EMBED_KEYS = {"mine", "errors"}
 # 入口左側導覽：(大標, [站 key...])，大標下列各站；沒列到的站歸最後一個大標
-HUB_SECTIONS = [("我的製程", ["mine"]), ("開發規範", ["flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin"])]
+HUB_SECTIONS = [("我的製程", ["mine", "flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin"])]
 HUB_ORDER = [k for _t, ks in HUB_SECTIONS for k in ks]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
@@ -946,7 +946,7 @@ def rel_to_tree(path: Path) -> Path:
 
 
 def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, site_title=None):
-    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「我的製程（Mine）」「開發規範（開發流程／錯誤紀錄）」「產線須知（Omniplay／Landbase／Reskin）」，
+    """最外層入口（git-scm Cheat Sheet 版型）：左側上方「我的製程（開發規範／開發流程／錯誤紀錄）」「產線須知（Omniplay／Landbase／Reskin）」，
     下方 Table of Contents 列所選站的頁籤與章節；右側內嵌所選站的內文。網址 #站/頁籤/章節 記住所選。
 
     embedded：{key: 整頁 HTML}；這些站不另存檔，整頁放進入口、以 iframe srcdoc 顯示。
@@ -1016,6 +1016,7 @@ aside{{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}}
 .nav a:focus, .toc a:focus{{outline:none}}
 .nav a:focus-visible, .toc a:focus-visible{{outline:2px solid var(--accent); outline-offset:2px}}
 .toc{{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}}
+.toc[hidden]{{display:none}}
 .toc-title{{font-size:16px; font-weight:600; margin:0 0 8px}}
 .toc ul{{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}}
 .toc li{{margin:3px 0; font-size:13.5px; line-height:1.4}}
@@ -1086,7 +1087,7 @@ function renderToc() {{
   var m = SITES[cur.key].meta, out = '';
   var gs = m.groups || [];
   if (gs.length === 1 && gs[0][1].length === 1) {{
-    document.getElementById('toc').innerHTML = renderFlat(m, gs[0][1][0]);
+    setToc(renderFlat(m, gs[0][1][0]));
     return;
   }}
   gs.forEach(function (g) {{
@@ -1109,7 +1110,13 @@ function renderToc() {{
     }}
     out += '</li>';
   }});
-  document.getElementById('toc').innerHTML = out;
+  setToc(out);
+}}
+// 沒有任何目錄項目時整個 Table of Contents 框拿掉
+function setToc(h) {{
+  var u = document.getElementById('toc');
+  u.innerHTML = h;
+  u.closest('.toc').hidden = !u.querySelector('a');
 }}
 function markNav() {{
   document.querySelectorAll('.nav a').forEach(function (a) {{ a.classList.toggle('on', a.dataset.key === cur.key); }});

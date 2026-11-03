@@ -37,6 +37,7 @@ aside{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}
 .nav a:focus, .toc a:focus{outline:none}
 .nav a:focus-visible, .toc a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 .toc{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}
+.toc[hidden]{display:none}
 .toc-title{font-size:16px; font-weight:600; margin:0 0 8px}
 .toc ul{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}
 .toc li{margin:3px 0; font-size:13.5px; line-height:1.4}
@@ -107,7 +108,7 @@ function renderToc() {
   var m = SITES[cur.key].meta, out = '';
   var gs = m.groups || [];
   if (gs.length === 1 && gs[0][1].length === 1) {
-    document.getElementById('toc').innerHTML = renderFlat(m, gs[0][1][0]);
+    setToc(renderFlat(m, gs[0][1][0]));
     return;
   }
   gs.forEach(function (g) {
@@ -130,7 +131,13 @@ function renderToc() {
     }
     out += '</li>';
   });
-  document.getElementById('toc').innerHTML = out;
+  setToc(out);
+}
+// 沒有任何目錄項目時整個 Table of Contents 框拿掉
+function setToc(h) {
+  var u = document.getElementById('toc');
+  u.innerHTML = h;
+  u.closest('.toc').hidden = !u.querySelector('a');
 }
 function markNav() {
   document.querySelectorAll('.nav a').forEach(function (a) { a.classList.toggle('on', a.dataset.key === cur.key); });
