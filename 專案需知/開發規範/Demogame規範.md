@@ -137,7 +137,7 @@ Slots/
   - 預載邏輯只寫在 `demogame_common.js`，遊戲專屬程式只提供 `images` 清單，不得自行另寫預載。
 - **圖片格式**：Demo 使用的符號圖一律用 WebP（`quality 90`、保留透明），檔名與原 PNG 相同、副檔名改 `.webp`，放在 `Source/Image/`；原始 PNG 保留作為美術原檔，Demo 不引用。
 - 無美術時的代號可使用共用標籤 `<span class="slot-symbol-label">代號</span>`（置中、一般字重）。
-- 沒有任何符號美術的遊戲不接 Image 開關，固定顯示符號框＋代號。
+- 沒有任何符號美術的遊戲，**預設用 icon（emoji）當符號圖**，同樣接共用 Image 開關（`defaultEnabled: true`、`images: []`），可切回符號框＋代號；icon 依符號主題挑（例：H027 皇冠 👑、H099 糖骷髏 💀），用 `.sym-icon` 疊在格子上並加 `has-symbol-art`（2026-11-03 起）。
 - 中獎、轉換等**狀態**框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）不受此規則影響。
 - 符號一體：符號的字、框、底板是一體，所有動畫（長出來、消除、補牌、掉落）都整格一起動，不能只有部分變化（例如框先出現、字才長出來）。顯示得分框時，沒得分的符號完全不變（不變暗、不換框）。
 - 得分符號只把外框換成藍色框起來（金框符號得分時保留金框、外圈加藍框）（共用 `demogame_common.js` 套用），不放大、不閃、不跳；各遊戲不得另做中獎動畫。消除與掉落動畫不受影響。
@@ -236,7 +236,7 @@ Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
 - [ ] By Game CSS／JavaScript 未覆寫或複製共用區域的版面與控制邏輯。
-- [ ] 符號顯示符合 2.3：Image 開＝只顯示圖（無代號、無符號框），Image 關或無美術＝符號框＋代號；代號不粗體；有美術的遊戲已接共用 Image 開關。
+- [ ] 符號顯示符合 2.3：Image 開＝只顯示圖（無代號、無符號框），Image 關＝符號框＋代號；代號不粗體；有美術的遊戲已接共用 Image 開關，沒美術的遊戲預設用 icon 並可切換。
 - [ ] 有符號美術時：`DEMOGAME_IMAGE_TOGGLE.images` 列出全部圖片（含大符號、金框等變體），以本機伺服器開啟確認 `window.__demogameImageCache` 張數等於清單、全部 `naturalWidth > 0`、載入遮罩已消失；Demo 引用的圖片皆為 `.webp`，無 `.png` 引用。
 - [ ] 補牌方式已選定為原地、掉落或特殊補牌，並與 Game Rule、Config、Simulator 一致。
 - [ ] 原地補牌不移動保留符號；掉落補牌正確區分 Settle 與新符號 Drop。

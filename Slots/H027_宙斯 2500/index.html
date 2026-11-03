@@ -93,6 +93,9 @@
       inset: 0;
       overflow: hidden;
     }
+    /* 符號圖示（無美術時的預設圖片）：直接擺在盤面上；Image 關閉時回到文字代號 */
+    #board .cell .sym-icon{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--cell-size,64px) * .58);line-height:1;
+      font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6));pointer-events:none;user-select:none}
     .h019-glyph {
       display: grid;
       place-items: center;
@@ -1230,7 +1233,26 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     return board.map((row, rowIndex) => row.map((symbol, reelIndex) => symbolCell(symbol, values?.[rowIndex]?.[reelIndex] || 0)));
   }
 
+  // 符號圖示：本作沒有美術圖，預設用 icon（emoji）顯示；設定的「圖片」可切回文字代號
+  const SYMBOL_ICON = {
+    M1: "👑", M2: "⏳", M3: "💍", M4: "🏆",                 // 皇冠、沙漏、戒指、聖杯
+    A: "🔴", K: "🟣", Q: "🟡", J: "🟢", TE: "🔵",          // 紅、紫、金、綠、藍寶石
+    C1: "⚡", C2: "✖️", C3: "🌟"                             // Scatter、倍數、超級倍數
+  };
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    images: [],
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(...lastBoardRender);
+    }
+  };
+
   function renderBoard(board, options = {}) {
+    lastBoardRender = [board, options];
     const hitSet = new Set((options.hitPositions || []).map(([row, reel]) => `${row}-${reel}`));
     const clearedSet = new Set((options.clearedPositions || []).map(([row, reel]) => `${row}-${reel}`));
     el.board.innerHTML = "";
@@ -1251,6 +1273,15 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       glyph.className = "h019-glyph";
       glyph.textContent = cell.glyph;
       wrap.appendChild(glyph);
+      const icon = useSymbolImages ? SYMBOL_ICON[cell.code] : "";
+      if (icon) {
+        node.classList.add("has-symbol-art");
+        const art = document.createElement("span");
+        art.className = "sym-icon";
+        art.setAttribute("aria-label", cell.code);
+        art.textContent = icon;
+        wrap.appendChild(art);
+      }
       node.appendChild(wrap);
       const code = document.createElement("div");
       code.className = "symbol-code";
