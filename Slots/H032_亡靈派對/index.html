@@ -2243,6 +2243,8 @@
           <li>符號改用亡靈節主題 emoji 圖示（比照 Sugar Rush 2：直接擺在盤面、無底板，字獎也換圖示）：M1 💀、M2 🌼、M3 🎸、M4 🕯️、A 🌶️、K 🌵、Q 🦋、J 🍬、WW 🎭、C1 🪦；黃底格保留金色底。（11/02）</li>
           <li>依 iGaming 遊戲代號一覽定案：Game ID 101019、ParSheet H0321（資料夾改 H032_亡靈派對）、Calavera Party／亡靈派對；Buy Feature 改 100x、無 Extra Bet。（11/03）</li>
           <li>觸發 FG 跳出看板「免費遊戲 N 場」（Image 開啟時帶 C1 圖示；Auto 模式 1 秒後自動消失，非 Auto 要點盤面或按 Spin 關閉），看板消失後才開始 FG；Help 賠率表在 Image 開啟時顯示符號圖示；看板與 Help 彈窗開著時背景不能捲動。（11/03）</li>
+          <li>待確認事項定案：得分改用本次消除「後」的框倍數總和（先更新框再計分，中獎演出收集的就是更新後的框）；WILD 在框內消除 +1、黃底在框內只加倍數不再 +1、Scatter 看最終盤面、FG 上限 50 場、Buy Feature 100x、目前無 Extra Bet／彩金。（11/03）</li>
+          <li>數學模型參數寫進 H0321.xlsx 並重轉 config：黃底參數改跟著輪帶表（初始／補牌機率、倍數權重、符號係數），抽表權重改用模型的 table_weight（拿掉 demo_table_weight，Demo 為自然機率）；FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、Frame Tier、優先順序）與 Simulator 同一套邏輯，BF 的 FG 用 bf_fg_* 權重。（11/03）</li>
         </ol>
       </article>
       </div>
@@ -2346,8 +2348,8 @@
 | 主要標題 | 黃底與倍數框 | YELLOW SYMBOLS & MULTIPLIER FRAMES |
 | 規則說明 | ▪ 黃底倍數符號只出現在第 2～5 軸，符號上方顯示倍數 1X～10X。 | ▪ YELLOW SYMBOLS ONLY APPEAR ON REELS 2 TO 5 AND SHOW A 1X TO 10X MULTIPLIER. |
 | 規則說明 | ▪ 黃底中獎消除後，原格留下同倍數的框，符號變成 [WW]。 | ▪ WHEN A YELLOW SYMBOL WINS, A FRAME WITH THE SAME MULTIPLIER STAYS IN ITS POSITION AND THE SYMBOL TURNS INTO [WW]. |
-| 規則說明 | ▪ 框會留在格子上，符號照常掉落；框內消除一般符號時框倍數 +1，黃底在框內消除時黃底倍數直接加進框。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. REMOVING A SYMBOL INSIDE A FRAME ADDS 1 TO IT; A YELLOW SYMBOL REMOVED INSIDE A FRAME ADDS ITS MULTIPLIER TO THE FRAME. |
-| 規則說明 | ▪ 每次連線得分 × 盤面所有框的倍數加總；盤面沒有框時 ×1。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID (X1 IF NO FRAMES). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
+| 規則說明 | ▪ 框會留在格子上，符號照常掉落；框內消除一般符號（含 [WW]）時框倍數 +1，黃底在框內消除時黃底倍數直接加進框。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. REMOVING A SYMBOL (INCLUDING [WW]) INSIDE A FRAME ADDS 1 TO IT; A YELLOW SYMBOL REMOVED INSIDE A FRAME ADDS ITS MULTIPLIER TO THE FRAME. |
+| 規則說明 | ▪ 每次連線得分 × 盤面所有框的倍數加總（含本次消除新增的倍數）；盤面沒有框時 ×1。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID, INCLUDING THOSE ADDED BY THAT WIN (X1 IF NO FRAMES). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
 
 ## FREE GAME
 
@@ -2359,14 +2361,14 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./config.js?v=20261103a"></script>
+  <script src="./config.js?v=20261103b"></script>
   <script>
 (() => {
   "use strict";
 
   const cfg = window.H032_CONFIG;
   if (!cfg) throw new Error("H032 config was not loaded.");
-  for (const key of ["tables", "table_weight", "pays", "symbol_names", "yellow_reels", "yellow_rate", "yellow_value_weight", "bet_modes"]) {
+  for (const key of ["tables", "table_weight", "pays", "symbol_names", "fg_good_slots", "retrigger_boost", "fg_frame_tier_weight", "fg_dead_streak_weight", "fg_weight_priority", "bet_modes"]) {
     if (!cfg[key]) throw new Error("H032 config is missing field: " + key);
   }
   const $ = id => document.getElementById(id);
@@ -2401,7 +2403,7 @@
   if (helpDialogEl) new MutationObserver(() => document.documentElement.classList.toggle("h032-help-open", helpDialogEl.open))
     .observe(helpDialogEl, { attributes: true, attributeFilter: ["open"] });
 
-  const YELLOW_REELS = cfg.yellow_reels.map(Number);
+  const FG_START_REEL = 2;   // game_rule §6：FG 開場第 3 軸整條 1X 框（規格）
   const BUY = cfg.bet_modes.buy_feature;
   const BASE_BET = Number(cfg.base_bet) || 100;
   const START_BALANCE = 10000 * BASE_BET;
@@ -2489,7 +2491,10 @@
       let sum = 0; dropCumulative.push(ids.map(id => sum += Number(dw[id][reel])));
     }
     const cumulative = raw.symbol_weight.map(list => { let sum = 0; return list.map(w => sum += Math.max(0, Number(w) || 0)); });
-    tables[name] = { reels: raw.reels, cumulative, drop_values: dropValues, dropCumulative };
+    // 黃底參數跟著輪帶表：初始／補牌機率（/100,000）、倍數權重、符號係數（100＝軸機率）
+    const yellow = { rate: raw.yellow_rate.map(v => Number(v) / 100000), drop: raw.yellow_drop_rate.map(v => Number(v) / 100000),
+      value: raw.yellow_value_weight, symbol: raw.yellow_symbol_weight };
+    tables[name] = { reels: raw.reels, cumulative, drop_values: dropValues, dropCumulative, yellow };
   }
 
   // ===== 可重現 RNG（共用 demogameRng）=====
@@ -2522,11 +2527,13 @@
     const stop = bsearch(tables[tableName].cumulative[reel]);
     return Array.from({ length: 4 }, (_, row) => Number(symbols[(stop + row) % symbols.length]));
   });
-  // 黃底：只在 R2～R5、只套在一般符號上（不套 C1／WILD），倍數 1X～10X
-  function rollYellow(scene, reel, symbol) {
-    if (!YELLOW_REELS.includes(reel) || symbol === C1 || symbol === WW) return 0;
-    if (rand() >= Number(cfg.yellow_rate[scene][reel] || 0)) return 0;
-    return Number(pickMap(cfg.yellow_value_weight[scene]));
+  // 黃底：只套在一般符號上（不套 C1／WILD）；機率＝該表該軸機率 × 符號係數（R1 機率為 0），倍數依該表 Yellow_Value_Weight
+  function rollYellow(tableName, reel, symbol, refill = false) {
+    if (symbol === C1 || symbol === WW) return 0;
+    const y = tables[tableName].yellow;
+    const rate = (refill ? y.drop : y.rate)[reel] * (Number(y.symbol[String(symbol)] ?? 0) / 100);
+    if (!(rate > 0) || rand() >= rate) return 0;
+    return Number(pickMap(y.value));
   }
   const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
   const frameSum = frames => frames.flat().reduce((sum, value) => sum + value, 0);
@@ -2559,9 +2566,8 @@
 
   // 一轉（BG 局或一場 FG）：frames 傳入時沿用（FG 整場保留），否則為主遊戲新的空盤
   function spin(tableName, freeGame = false, frames = grid(0)) {
-    const scene = freeGame ? "fg" : "bg";
     const board = makeBoard(tableName);
-    const yellow = board.map((column, reel) => column.map(symbol => rollYellow(scene, reel, symbol)));
+    const yellow = board.map((column, reel) => column.map(symbol => rollYellow(tableName, reel, symbol)));
     const snapshots = [];
     let pay = 0, combo = 0, yellowSeen = yellow.flat().some(Boolean), yellowUsed = 0, peakFrame = frameSum(frames);
     const snap = (type, extra) => snapshots.push({ type, board: clone(board), yellow: clone(yellow), frames: clone(frames), hits: [], combo, frameTotal: frameSum(frames), ...extra });
@@ -2569,25 +2575,25 @@
     while (true) {
       const win = evaluate(board);
       if (!win.rawPay) break;
-      // 得分：這一消的得分 × 盤面所有框的倍數加總（沒有框 ×1）；框以本次消除前的值計算
+      // 框更新：黃底 → 原格留框（已有框則倍數直接加進框，不再 +1）；其他中獎符號（含 WILD）在框內框 +1
+      const cleared = [], converted = [], bumped = [];
+      for (const key of win.hits) {
+        const [reel, row] = key.split(",").map(Number);
+        if (yellow[reel][row] > 0) { frames[reel][row] += yellow[reel][row]; converted.push(key); bumped.push(key); }
+        else if (frames[reel][row] > 0) { frames[reel][row] += 1; bumped.push(key); }
+      }
+      // 得分：這一消的得分 × 盤面所有框的倍數加總（沒有框 ×1）；框以本次消除「後」（已更新）的值計算
       const total = frameSum(frames);
       const mult = total > 0 ? total : 1;
       const cascadePay = win.rawPay * mult * betUnit();
       pay += cascadePay;
       snap("win", { hits: [...win.hits], mult, cascadePay, totalPay: pay, rawPay: win.rawPay * betUnit(), details: win.details.map(d => ({ ...d, pay: d.raw * mult })), message: `WIN ${money(cascadePay)}` });
 
-      // 消除：黃底 → 原格留框（已有框則倍數直接加進框）、符號變 WILD 不消除；其他中獎符號消除，若在框內框 +1
-      const cleared = [], converted = [], bumped = [];
+      // 消除：黃底符號變 WILD 不消除；其他中獎符號消除
       for (const key of win.hits) {
         const [reel, row] = key.split(",").map(Number);
-        if (yellow[reel][row] > 0) {
-          frames[reel][row] += yellow[reel][row];
-          yellow[reel][row] = 0; board[reel][row] = WW;
-          converted.push(key); bumped.push(key); yellowUsed++;
-        } else {
-          if (frames[reel][row] > 0) { frames[reel][row] += 1; bumped.push(key); }
-          board[reel][row] = -1; cleared.push(key);
-        }
+        if (yellow[reel][row] > 0) { yellow[reel][row] = 0; board[reel][row] = WW; yellowUsed++; }
+        else { board[reel][row] = -1; cleared.push(key); }
       }
       combo++;
       peakFrame = Math.max(peakFrame, frameSum(frames));
@@ -2607,7 +2613,7 @@
             if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 18 });
           } else {
             const symbol = draw(tableName, reel);
-            board[reel][row] = symbol; yellow[reel][row] = rollYellow(scene, reel, symbol);
+            board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true);
             if (yellow[reel][row]) yellowSeen = true;
             motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 18 });
           }
@@ -2619,25 +2625,51 @@
       board, yellow, frames: clone(frames), snapshots, tableName };
   }
 
-  // Demo 沒有卡片系統：用 demo_table_weight 固定輪帶表（H045 原 table_weight 是自然機率，RTP 會到 500% 以上）
-  const pickTable = scene => pickMap((cfg.demo_table_weight || cfg.table_weight)[scene]);
+  // 抽表權重一律用數學模型的 table_weight（Demo 沒有卡片系統，RTP 為自然機率）
+  const pickTable = group => pickMap(cfg.table_weight[group]);
+  // FG 隱性控制（同 Simulator.py）：進場抽好局位置（Good Spin Slots），每局依 fg_weight_priority 取第一個成立的規則決定抽表權重
+  function drawSlot(slot, total, after = 0) {
+    let lo = Number(slot.from), hi = Number(slot.to);
+    if (slot.anchor === "end") [lo, hi] = [total - hi + 1, total - lo + 1];
+    const candidates = [];
+    for (let i = Math.max(1, lo, after + 1); i <= Math.min(total, hi); i++) candidates.push(i);
+    for (let i = candidates.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]]; }
+    return candidates.slice(0, Number(slot.count));
+  }
+  const tierWeights = (rows, value) => rows.find(row => Number(row.min) <= value && value <= Number(row.max))?.weights || null;
+  function fgWeights(index, good, boostLeft, dead, frameTotal, buy) {
+    for (const rule of cfg.fg_weight_priority) {
+      if (rule === "good_slot" && good.has(index)) return { rule, weights: cfg.table_weight[buy ? "bf_fg_good" : "fg_good"] };
+      if (rule === "retrigger_boost" && boostLeft > 0) return { rule, weights: cfg.table_weight.fg_retrigger_boost };
+      if (rule === "dead_streak") { const weights = tierWeights(cfg.fg_dead_streak_weight, dead); if (weights) return { rule, weights }; }
+      if (rule === "frame_tier") { const weights = tierWeights(cfg.fg_frame_tier_weight, frameTotal); if (weights) return { rule, weights }; }
+      if (rule === "normal") break;
+    }
+    return { rule: "normal", weights: cfg.table_weight[buy ? "bf_fg_normal" : "fg_normal"] };
+  }
   // FG：開場第 3 軸整條 4 格 1X 框，框整場保留；3 顆以上 C1 +5 場（上限 50 場）
-  function freeSession(initialSpins = FG_INITIAL) {
+  function freeSession(initialSpins = FG_INITIAL, buy = false) {
     const frames = grid(0);
-    const start = cfg.fg_start_frames || { reel: 2, value: 1 };
-    for (let row = 0; row < 4; row++) frames[start.reel][row] = Number(start.value) || 1;
-    let remaining = Number(initialSpins), played = 0, pay = 0, retriggers = 0;
+    for (let row = 0; row < 4; row++) frames[FG_START_REEL][row] = 1;
+    let total = Math.min(Number(initialSpins), MAX_FS), index = 0, pay = 0, retriggers = 0, boostLeft = 0, dead = 0;
+    const good = new Set(cfg.fg_good_slots.flatMap(slot => drawSlot(slot, total)));
     const spins = [];
-    while (remaining > 0 && played < MAX_FS) {
-      remaining--; played++;
-      const result = spin(pickTable("fg"), true, frames);
+    while (index < total) {
+      index++;
+      const { rule, weights } = fgWeights(index, good, boostLeft, dead, frameSum(frames), buy);
+      boostLeft = Math.max(0, boostLeft - 1);
+      const result = spin(pickMap(weights), true, frames);
+      result.fgRule = rule;
       pay += result.pay; spins.push(result);
-      if (result.scatter >= MIN_SCATTER && played + remaining < MAX_FS) {
-        const add = Math.min(FG_RETRIGGER, MAX_FS - played - remaining);
-        if (add > 0) { remaining += add; retriggers++; result.retrigger = add; }
+      dead = result.pay > 0 ? 0 : dead + 1;
+      if (result.scatter >= MIN_SCATTER && total < MAX_FS) {
+        const add = Math.min(FG_RETRIGGER, MAX_FS - total);
+        total += add; retriggers++; result.retrigger = add;
+        boostLeft = Number(cfg.retrigger_boost.spins) || 0;
+        cfg.fg_good_slots.filter(slot => slot.anchor === "end").forEach(slot => drawSlot(slot, total, index).forEach(i => good.add(i)));
       }
     }
-    return { pay, played, retriggers, spins, endFrame: frameSum(frames) };
+    return { pay, played: index, retriggers, spins, endFrame: frameSum(frames) };
   }
   const naturalBaseSpin = () => spin(pickTable("bg"), false);
   function buyEntry() {
@@ -2663,10 +2695,10 @@
     console.warn(`腳本 ${key} 未抽到，改用最後一把`);
     return last;
   }
-  function scriptedFeature(minMulti) {
+  function scriptedFeature(minMulti, buy = false) {
     let best = null;
     for (let tries = 0; tries < 20000; tries++) {
-      const result = freeSession();
+      const result = freeSession(FG_INITIAL, buy);
       if (result.pay / betUnit() >= minMulti) return result;
       if (!best || result.pay > best.pay) best = result;
     }
@@ -2680,7 +2712,7 @@
     const wager = betUnit() * (buy ? Number(BUY.cost_multiplier) : 1);
     const base = buy ? buyEntry() : naturalBaseSpin();
     const fgTriggered = buy || base.scatter >= MIN_SCATTER;
-    const feature = fgTriggered ? freeSession() : null;
+    const feature = fgTriggered ? freeSession(FG_INITIAL, buy) : null;
     const totalWin = base.pay + Number(feature?.pay || 0);
     return {
       multiplier: totalWin / wager, lineMultiplier: buy ? totalWin / betUnit() : totalWin / wager, fgTriggered,
@@ -2991,7 +3023,7 @@
         if (seed != null && window.demogameRng?.seeded) rngNext = window.demogameRng.seeded(seed);
         try {
           base = mode === 2 ? buyEntry() : script ? scriptedSpin(script) : naturalBaseSpin();
-          if (mode === 2 || base.scatter >= MIN_SCATTER) feature = script === "fgbig" ? scriptedFeature(100) : freeSession();
+          if (mode === 2 || base.scatter >= MIN_SCATTER) feature = script === "fgbig" ? scriptedFeature(100, mode === 2) : freeSession(FG_INITIAL, mode === 2);
         } finally { rngNext = Math.random; }
         await animateSnapshots(base.snapshots, 0);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
@@ -3122,8 +3154,8 @@
   function reset() {
     Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0, maxMultiplier: 0, lastWin: 0, auto: false, snapshots: [], snapshotIndex: -1,
       fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 }, spinStats: { spins: 0, yellowSeen: 0, yellowUsed: 0, sc: 0, bgFrameMax: 0, fgSessions: 0, fgFrameSum: 0 } });
-    const board = makeBoard("bg_1");
-    $("autoBtn").textContent = tr("auto"); renderBoard(board, [], { yellow: board.map((c, r) => c.map(s => rollYellow("bg", r, s))), frames: grid(0) });
+    const startTable = pickTable("bg"), board = makeBoard(startTable);
+    $("autoBtn").textContent = tr("auto"); renderBoard(board, [], { yellow: board.map((c, r) => c.map(s => rollYellow(startTable, r, s))), frames: grid(0) });
     renderFrameTotal(0); $("messageBar").textContent = tr("ready"); setFeatureStatus("baseGame"); updateStats();
   }
   function buildBetMenu() {

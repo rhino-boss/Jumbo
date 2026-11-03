@@ -1,9 +1,12 @@
-"""H032 亡靈派對 (Calavera Party) simulator — 暫用 H045 超級鑽石 模擬程式。
+"""H032 亡靈派對 (Calavera Party) simulator.
 
-目前原樣沿用 H045 玩法（金框翻牌小鬼／大鬼、帶倍 WILD、Cascade Multiplier 5 階），只改識別資訊；
-H032 的黃底／倍數框玩法尚未實作。執行參數一律來自 Config（config.js / config_92A.js 等）。
+盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（R2~R5、1X~10X）中獎時原格留下同倍數框並變成 WW，
+框留在格子上、框內消除一般符號（含 WW）+1、黃底在框內只加倍數；每一消得分 × 消除後的框倍數總和（沒有框 ×1）。
+FG 開場第 3 軸 4 格 1X 框、框整場保留；每場 FG 依 FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、
+Frame Tier）決定抽表權重。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶、權重、
+Paytable 或 Feature 參數。
 
-Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發需知/模擬程式規範.md``。
+Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發規範/模擬程式規範.md``。
 """
 
 from __future__ import annotations
@@ -66,19 +69,19 @@ RNG_SEED = 45_045
 
 COIN_BASE = 100.0                      # Credit 基準，與 Overview!A7 一致
 MODE_NORMALBET = 0
-MODE_EXTRABET = 1                      # Extra Bet（2026-10-15）：押注 2 倍、FG 週期為 NB 的 1/5，卡組 eb_base_game／eb_free_game
+MODE_EXTRABET = 1                      # 本作目前無 Extra Bet（保留常數供共用欄位判斷）
 MODE_FEATUREBUY = 2
-SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_EXTRABET, MODE_FEATUREBUY)
+SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_FEATUREBUY)
 
 WW = 0
-W2 = 1
 C1 = 2
 SCORE_SYMBOLS = tuple(range(3, 11))
 EMPTY = -1
 
-# 金框不是符號，而是套在一般符號上的旗標（v2：依 Gold Count Weight 逐輪決定顆數）
-GOLD_RESULTS = ("WW", "W2")   # 小鬼 / 大鬼；倍數為翻牌後的第二段抽取
-NO_WIN_BONUS_GOLD = 2          # game_rule §9.1.12（2026-10-28）：本轉沒得分 → 金框輪再加 2 顆金框（停輪即顯示，不影響得分）
+YELLOW_RATE_SCALE = 100_000            # Yellow_Rate／Yellow_Drop_Rate 單位：/100,000
+FG_START_REEL = 2                      # game_rule §6：FG 開場第 3 軸整條 1X 框（規格）
+BIG_FRAME_TOTAL = 10                   # 觀察指標：開局框總和 ≥ 10 視為「大框」
+RETRIGGER_WATCH_SPINS = 2              # 觀察指標：retrigger 後幾局的得分
 
 MULTIPLIER_THRESHOLDS = (
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50,
@@ -166,14 +169,12 @@ class Table:
     drop_values: list[list[int]]
     drop_cumulative: list[list[float]]
     drop_total: list[float]
-    gold_results: list[str]
-    gold_cumulative: list[float]
-    gold_total: float
-    split_values: list[int]
-    split_cumulative: list[float]
-    split_total: float
-    # 倍數表依結果分開：WW_M 與 W2_M 各一張
-    mult: dict[str, tuple[list[int], list[float], float]]
+    yellow_rate: list[float]                 # 初始盤面每格成為黃底的機率（各軸）
+    yellow_drop_rate: list[float]            # 補牌符號成為黃底的機率（各軸）
+    yellow_values: list[int]
+    yellow_cumulative: list[float]
+    yellow_total: float
+    yellow_symbol_factor: dict[int, float]   # 各符號係數（1.0＝軸機率）
 
 
 def _cumulative(weights: list[float]) -> tuple[list[float], float]:
@@ -206,23 +207,13 @@ def prepare_table(raw: dict[str, Any]) -> Table:
         drop_cumulative.append(cumulative)
         drop_total.append(total)
 
-    grw = raw["gold_result_weight"]
-    g_values = [k for k in GOLD_RESULTS if k in grw]
-    g_cumulative, g_total = _cumulative([float(grw[k]) for k in g_values])
-
-    scw = {int(k): float(v) for k, v in raw["split_count_weight"].items()}
-    s_values = sorted(scw)
-    s_cumulative, s_total = _cumulative([scw[k] for k in s_values])
-
-    mult: dict[str, tuple[list[int], list[float], float]] = {}
-    for key, table in raw["multiplier_wild_weight"].items():
-        values = sorted(int(k) for k in table)
-        cumulative, total = _cumulative([float(table[str(v)]) for v in values])
-        mult[key] = (values, cumulative, total)
-
+    y_values = sorted(int(k) for k in raw["yellow_value_weight"])
+    y_cumulative, y_total = _cumulative([float(raw["yellow_value_weight"][str(v)]) for v in y_values])
     return Table(reels, drop_values, drop_cumulative, drop_total,
-                 g_values, g_cumulative, g_total,
-                 s_values, s_cumulative, s_total, mult)
+                 [float(v) / YELLOW_RATE_SCALE for v in raw["yellow_rate"]],
+                 [float(v) / YELLOW_RATE_SCALE for v in raw["yellow_drop_rate"]],
+                 y_values, y_cumulative, y_total,
+                 {int(k): float(v) / 100.0 for k, v in raw["yellow_symbol_weight"].items()})
 
 
 @dataclass
@@ -230,21 +221,12 @@ class SpinResult:
     pay: float = 0.0
     scatter_count: int = 0
     cascades: int = 0
-    max_cascade_multiplier: int = 1
-    golden_converted: int = 0
-    golden_results: Counter = field(default_factory=Counter)
-    split_counts: Counter = field(default_factory=Counter)
-    mult_wild_created: int = 0
-    mult_wild_values: Counter = field(default_factory=Counter)
-    mult_kind: Counter = field(default_factory=Counter)   # (WW/W2/SPLIT, 倍數) 次數
-    max_line_multiplier: int = 1
-    big_ghost_used: bool = False
-    big_ghost_scored: bool = False               # 大鬼本體或分裂 W2 有被消除（參與連線）
-    mult_cells: int = 0                          # 帶倍數 Wild（×2 以上，含分裂體）出現顆數
-    mult_left: int = 0                           # 結算時仍留在盤面、沒被消除的帶倍數 Wild 顆數
-    initial_gold_count: int = 0
-    gold_appeared: int = 0                       # 初始＋補牌後補上的金框總數（金框使用率分母）
-    initial_gold_reel: Counter = field(default_factory=Counter)   # 初始盤面每輪金框數
+    yellow_seen: bool = False                    # 初始或補牌出現過黃底
+    yellow_used: int = 0                         # 中獎留框、變 WILD 的黃底顆數
+    yellow_values: Counter = field(default_factory=Counter)   # 被使用黃底的倍數分布
+    peak_frame: int = 0                          # 本轉框倍數總和的最大值
+    end_frame: int = 0
+    max_mult: int = 1                            # 本轉計分用過的最大框總和
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     symbol_length_hits: Counter = field(default_factory=Counter)
@@ -253,8 +235,6 @@ class SpinResult:
     drop_symbols: Counter = field(default_factory=Counter)
     initial_board: list[list[int]] = field(default_factory=list)
     final_board: list[list[int]] = field(default_factory=list)
-    final_gold: list[list[bool]] = field(default_factory=list)
-    bonus_gold_cells: list[tuple[int, int]] = field(default_factory=list)   # §9.1.12 沒得分加的金框位置
 
 
 @dataclass
@@ -267,50 +247,35 @@ class RoundResult:
     cascades_bg: int = 0
     cascades_fg: int = 0
     capped: bool = False
-    golden_converted: int = 0
-    bg_golden_results: Counter = field(default_factory=Counter)
-    fg_golden_results: Counter = field(default_factory=Counter)
-    bg_split_counts: Counter = field(default_factory=Counter)
-    fg_split_counts: Counter = field(default_factory=Counter)
-    bg_mult_wild: int = 0
-    fg_mult_wild: int = 0
-    mult_wild_values: Counter = field(default_factory=Counter)
-    bg_mult_kind: Counter = field(default_factory=Counter)
-    fg_mult_kind: Counter = field(default_factory=Counter)
-    max_line_multiplier: int = 1
     bg_hit_spins: int = 0
     fg_hit_spins: int = 0
-    bg_gold_symbols: int = 0
-    fg_gold_symbols: int = 0
-    bg_gold_appeared: int = 0
-    fg_gold_appeared: int = 0
-    bg_flip_spins: int = 0      # 有金框被消除翻牌的轉數
-    fg_flip_spins: int = 0
-    bg_mult_spins: int = 0      # 翻牌後出現帶倍數 Wild（×2 以上）的轉數
-    fg_mult_spins: int = 0
-    bg_mult_cells: int = 0      # 帶倍數 Wild 出現顆數／結算時沒被消除顆數／出現倍數但一顆都沒消除的轉數
-    fg_mult_cells: int = 0
-    bg_mult_left: int = 0
-    fg_mult_left: int = 0
-    bg_mult_unused_spins: int = 0
-    fg_mult_unused_spins: int = 0
-    # 2026-10-21 By Game 指標（口徑同 Demogame）：大鬼出現／出現並使用、金框出現（含補牌）的轉數
-    bg_big_spins: int = 0
-    fg_big_spins: int = 0
-    bg_big_used_spins: int = 0
-    fg_big_used_spins: int = 0
-    bg_gold_seen_spins: int = 0
-    fg_gold_seen_spins: int = 0
-    bg_gold_reel: Counter = field(default_factory=Counter)
-    fg_gold_reel: Counter = field(default_factory=Counter)
-    bg_gold_boards: int = 0
-    fg_gold_boards: int = 0
+    bg_yellow_seen: int = 0
+    fg_yellow_seen: int = 0
+    bg_yellow_used: int = 0
+    fg_yellow_used: int = 0
+    yellow_values: Counter = field(default_factory=Counter)
+    bg_peak_frame: int = 0
+    fg_end_frame: int = 0                         # FG 結束時框總和
+    max_mult: int = 1
     special_symbol_cnt: int = 0
     bg_trigger_fg_cnt: int = 0
     bg_trigger_fg_pay: float = 0.0
     bg_cascade_count: int = 0
     combo_fg: Counter = field(default_factory=Counter)
-    fg_pay_per_spin: list[float] = field(default_factory=list)
+    # FG 隱性控制觀察（同一份統計輸出到 Console 與報表）
+    fg_index_spins: Counter = field(default_factory=Counter)   # 第 i 局（1 起算）
+    fg_index_hits: Counter = field(default_factory=Counter)
+    fg_index_pay: Counter = field(default_factory=Counter)
+    fg_rule_spins: Counter = field(default_factory=Counter)    # 本局採用的規則
+    fg_rule_hits: Counter = field(default_factory=Counter)
+    fg_rule_pay: Counter = field(default_factory=Counter)
+    fg_table_spins: Counter = field(default_factory=Counter)
+    fg_bigframe_spins: int = 0                    # 開局框總和 ≥ BIG_FRAME_TOTAL 的局
+    fg_bigframe_dead: int = 0
+    fg_dead_runs: Counter = field(default_factory=Counter)     # 連續未中的長度分布
+    fg_post_retrigger_spins: int = 0              # retrigger 後 RETRIGGER_WATCH_SPINS 局內
+    fg_post_retrigger_hits: int = 0
+    fg_post_retrigger_pay: float = 0.0
     symbol_hits: Counter = field(default_factory=Counter)
     symbol_pay: Counter = field(default_factory=Counter)
     bg_symbol_length_hits: Counter = field(default_factory=Counter)
@@ -327,8 +292,16 @@ class RoundResult:
         return self.pay_bg + self.pay_fg
 
 
-class SuperDiamond:
-    """H032（暫用 H045）遊戲核心。單一實例持有自己的 RNG，供單一 Worker 使用。"""
+def _grid(value: int = 0) -> list[list[int]]:
+    return [[value] * 4 for _ in range(5)]
+
+
+def _frame_sum(frames: list[list[int]]) -> int:
+    return sum(sum(column) for column in frames)
+
+
+class CalaveraParty:
+    """H032 遊戲核心。單一實例持有自己的 RNG，供單一 Worker 使用。"""
 
     def __init__(self, config: dict[str, Any], rtp_config: dict[str, Any] | None,
                  seed: int, bet_amount: float, card_enabled: bool, newbie: bool):
@@ -339,24 +312,18 @@ class SuperDiamond:
         self.card_enabled = bool(card_enabled and (self.rtp_config.get("card_system") or {}).get("enabled"))
         self.profile = "newbie" if newbie else "oldhand"
         self.tables = {name: prepare_table(raw) for name, raw in config["tables"].items()}
-        self.ladder_bg = list(map(int, config["cascade_multiplier"]["bg"]))
-        self.ladder_fg = list(map(int, config["cascade_multiplier"]["fg"]))
         self.pays = {int(k): v for k, v in config["pays"].items()}
         self.max_fs = int(config["max_free_spins"])
-        self.split_reels = list(map(int, config["split_target_reels"]))
-        self.gold_reels = list(map(int, config["gold_reels"]))
-        # 金框顆數分布：{scene: [(values, cumulative, total) per reel]}
-        self.gold_count = {
-            scene: [_cumulative([float(w) for w in per_reel])
-                    for per_reel in config["gold_count_weight"][scene]]
-            for scene in ("bg", "fg")
-        }
-        # 個別盤面表可自帶 gold_count_weight（例：v5 表 3 用競品原值），有設就覆蓋該場景的全域值
-        for name, raw in config["tables"].items():
-            if raw.get("gold_count_weight"):
-                self.gold_count[name] = [_cumulative([float(w) for w in per_reel])
-                                         for per_reel in raw["gold_count_weight"]]
-        # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限（game_rule §9.10）
+        self.fs_retrigger = int(config["free_spins_retrigger"])
+        self.min_scatter = int(config["min_scatter"])
+        self.weights = {group: (list(w), *_cumulative([float(w[n]) for n in w]))
+                        for group, w in config["table_weight"].items()}
+        self.good_slots = config["fg_good_slots"]
+        self.boost_spins = int(config["retrigger_boost"]["spins"])
+        self.frame_tiers = config["fg_frame_tier_weight"]
+        self.dead_tiers = config["fg_dead_streak_weight"]
+        self.priority = list(config["fg_weight_priority"])
+        # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限
         self.max_win = self._card_multiplier_cap()
         self.fs_table = {int(k): v for k, v in config["free_spins"].items()}
         self.retry_total = 0
@@ -377,110 +344,43 @@ class SuperDiamond:
         return max(caps) if caps else math.inf
 
     def _card_multiplier_cap(self) -> float:
-        """Max Win（單局上限）取 base_game／free_game 卡組最高有權重區間上限的較大者（數學模型規範 §1.4.4）；
-        BG Trigger Cap 另由 base_game 卡組決定（§2.3），存於 self.bg_trigger_cap。
-        2026-10-21：新手 BG 可到 100x、FG 只到 50x，若只看 free_game 會把 BG 截在 50x。"""
+        """Max Win（單局上限）取 base_game／free_game 卡組最高有權重區間上限的較大者；BG Trigger Cap 由 base_game 卡組決定。"""
         self.bg_trigger_cap = self._card_section_cap("base_game")
         self.fg_cap = self._card_section_cap("free_game")
         self.bf_cap = self._card_section_cap("buy_feature")
-        # Extra Bet 卡組（eb_*）的 BG Trigger Cap 與 FG 上限；倍率分母同 NB 基準成本（數學模型規範 §2.5）
-        self.eb_bg_trigger_cap = self._card_section_cap("eb_base_game")
-        self.eb_fg_cap = self._card_section_cap("eb_free_game")
         self.trigger_cap = self.bg_trigger_cap
         return max(self.fg_cap, self.bg_trigger_cap)
 
     # --- 盤面 ---
 
-    def gold_key(self, table_name: str, scene: str) -> str:
-        """金框顆數權重的來源：盤面表自帶就用該表，否則用場景（bg／fg）全域值。"""
-        return table_name if table_name in self.gold_count else scene
+    def _pick_table(self, group: str) -> str:
+        names, cumulative, total = self.weights[group]
+        return str(_pick(self.rng, names, cumulative, total))
 
-    def gold_target(self, scene: str, reel: int) -> int:
-        """抽出該輪這次要有幾顆金框（0~4）。"""
-        cumulative, total = self.gold_count[scene][reel]
-        if total <= 0:
+    def _pick_from(self, weights: dict[str, Any]) -> str:
+        names = list(weights)
+        cumulative, total = _cumulative([float(weights[n]) for n in names])
+        return str(_pick(self.rng, names, cumulative, total))
+
+    def roll_yellow(self, table: Table, reel: int, symbol: int, refill: bool) -> int:
+        """黃底只套在一般符號（不套 C1／WW）；機率＝該表該軸機率 × 符號係數，倍數依 Yellow_Value_Weight。"""
+        if symbol in (WW, C1):
             return 0
-        return min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
+        rate = (table.yellow_drop_rate if refill else table.yellow_rate)[reel] * table.yellow_symbol_factor.get(symbol, 0.0)
+        if rate <= 0 or self.rng.random() >= rate:
+            return 0
+        return int(_pick(self.rng, table.yellow_values, table.yellow_cumulative, table.yellow_total))
 
-    def topup_gold(self, scene: str, symbols: list[list[int]],
-                   gold: list[list[bool]], fresh_rows: dict[int, list[int]]) -> int:
-        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。回傳新補上的金框數。
-        fresh_rows：各輪本次原地補牌的列。"""
-        added = 0
-        for reel in self.gold_reels:
-            rows = fresh_rows.get(reel, [])
-            if not rows:
-                continue
-            target = self.gold_target(scene, reel)
-            alive = sum(gold[reel])
-            short = target - alive
-            if short <= 0:
-                continue
-            spots = [row for row in rows
-                     if not gold[reel][row] and symbols[reel][row] != C1]
-            self.rng.shuffle(spots)
-            for row in spots[:short]:
-                gold[reel][row] = True
-                added += 1
-        return added
-
-    def add_no_win_gold(self, symbols: list[list[int]], gold: list[list[bool]]) -> list[tuple[int, int]]:
-        """game_rule §9.1.12：本轉沒得分時，在金框輪隨機挑 NO_WIN_BONUS_GOLD 格（不重複）非金框、非 C1 加金框；
-        不足就放多少算多少。沒得分代表盤面無連線，金框不改判獎 → 得分／RTP 不變；前端停輪時就要顯示這些金框。"""
-        spots = [(reel, row) for reel in self.gold_reels for row in range(4)
-                 if not gold[reel][row] and symbols[reel][row] != C1]
-        self.rng.shuffle(spots)
-        for reel, row in spots[:NO_WIN_BONUS_GOLD]:
-            gold[reel][row] = True
-        return spots[:NO_WIN_BONUS_GOLD]
-
-    def draw_gold(self, scene: str, symbols: list[list[int]]) -> list[list[bool]]:
-        """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
-
-        金框只出現在 gold_reels（R2~R4），且不套在 Scatter 上（比照競品）。
-        """
-        gold = [[False] * 4 for _ in range(5)]
-        for reel in self.gold_reels:
-            cumulative, total = self.gold_count[scene][reel]
-            if total <= 0:
-                continue
-            count = min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
-            if count <= 0:
-                continue
-            spots = [row for row in range(4) if symbols[reel][row] != C1]
-            if not spots:
-                continue
-            self.rng.shuffle(spots)
-            for row in spots[:count]:
-                gold[reel][row] = True
-        return gold
-
-    def board(self, table_name: str, scene: str = "bg"):
-        table = self.tables[table_name]
-        symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
-        mults = [[0] * 4 for _ in range(5)]
-        return symbols, mults, self.draw_gold(self.gold_key(table_name, scene), symbols)
-
-    def evaluate(self, symbols: list[list[int]], mults: list[list[int]]):
-        """回傳 (raw_pay, hit_positions, details, max_line_mult)。
-
-        raw_pay 已含盤面 WILD 倍數總和，但未套 Cascade Multiplier。
-        """
+    def evaluate(self, symbols: list[list[int]]):
+        """1024 Ways：WW 替代除 C1 外所有符號。回傳 (raw_pay, hit_positions, details)。"""
         total = 0.0
         hits: set[tuple[int, int]] = set()
-        details: list[tuple[int, int, int, float, int]] = []
-        best_line_mult = 1
-        lines: list[tuple[int, int, int, float]] = []
+        details: list[tuple[int, int, int, float]] = []
         for target in SCORE_SYMBOLS:
             counts: list[int] = []
             positions: list[list[tuple[int, int]]] = []
             for reel in range(5):
-                # 金框是旗標不是符號，判獎一律用底層符號（game_rule §3.1）
-                matched = [
-                    (reel, row)
-                    for row, symbol in enumerate(symbols[reel])
-                    if symbol in (WW, W2) or symbol == target
-                ]
+                matched = [(reel, row) for row, symbol in enumerate(symbols[reel]) if symbol == WW or symbol == target]
                 if not matched:
                     break
                 counts.append(len(matched))
@@ -496,180 +396,72 @@ class SuperDiamond:
                 continue
             for group in positions:
                 hits.update(group)
-            lines.append((target, length, ways, raw))
-        # game_rule §5.3（2026-10-13 使用者定案）：只有本次中獎被消除的帶倍 WILD 倍數相加（x1 不計入），
-        # 套用到該次 Cascade 的所有中獎連線；沒用到的帶倍 WILD 留在盤面不計入；總和為 0 視為 x1
-        used_sum = sum(mults[reel][row] for reel, row in hits
-                       if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
-        line_mult = used_sum if used_sum > 0 else 1
-        for target, length, ways, raw in lines:
-            total += raw * line_mult
-            details.append((target, length, ways, raw * line_mult, line_mult))
-        if lines:
-            best_line_mult = line_mult
-        return total, hits, details, best_line_mult
+            total += raw
+            details.append((target, length, ways, raw))
+        return total, hits, details
 
-    def _draw_multiplier(self, table: Table, outcome: str, result: SpinResult) -> int:
-        """依結果對應的倍數表抽一次；回傳 1 代表無倍數（game_rule §5.3）。"""
-        values, cumulative, total = table.mult[outcome]
-        value = int(_pick(self.rng, values, cumulative, total))
-        if value > 1:
-            result.mult_wild_created += 1
-            result.mult_cells += 1
-        result.mult_wild_values[value] += 1
-        result.mult_kind[(outcome, value)] += 1
-        return value
+    def spin(self, table_name: str, frames: list[list[int]], free_game: bool = False) -> SpinResult:
+        """一轉（BG 局或一場 FG）。frames 由呼叫端傳入並就地更新（FG 整場保留、BG 每轉新的空盤）。
 
-    def flip_golden_body(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
-                         gold_positions: list[tuple[int, int]], result: SpinResult,
-                         free_game: bool) -> list[tuple[tuple[int, int], int]]:
-        """game_rule §5.2～5.3（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數。
-        在消除當下、補牌之前就把本體寫進原格（2026-10-06 修正：先前在補牌後才用補牌前的座標翻牌，
-        重力位移後會翻到錯的格子）。回傳大鬼本體清單供補牌後分裂。"""
-        big_sources: list[tuple[tuple[int, int], int]] = []
-        for reel, row in gold_positions:
-            outcome = _pick(self.rng, table.gold_results, table.gold_cumulative, table.gold_total)
-            # game_rule §9.1.10：BG 一把 Spin 最多成立一次大鬼，之後改以小鬼處理
-            if outcome == "W2" and not free_game and result.big_ghost_used:
-                outcome = "WW"
-            result.golden_results[outcome] += 1
-            result.golden_converted += 1
-            symbols[reel][row] = W2 if outcome == "W2" else WW
-            value = self._draw_multiplier(table, outcome, result)   # x1 代表無倍數
-            mults[reel][row] = value if value > 1 else 0
-            if outcome == "W2":
-                result.big_ghost_used = True
-                big_sources.append(((reel, row), value))
-        return big_sources
-
-    @staticmethod
-    def _flip_stats_mark(result: SpinResult) -> dict[str, Any]:
-        """翻牌前的統計快照（連消結束時用來改記成「全部無倍數小鬼」）。"""
-        return {"golden_results": Counter(result.golden_results), "golden_converted": result.golden_converted,
-                "mult_wild_created": result.mult_wild_created, "mult_cells": result.mult_cells,
-                "mult_wild_values": Counter(result.mult_wild_values), "mult_kind": Counter(result.mult_kind),
-                "split_counts": Counter(result.split_counts), "big_ghost_used": result.big_ghost_used}
-
-    @staticmethod
-    def _collapse_last_flip(result: SpinResult, symbols, mults, gold, mark, positions, pre_split) -> None:
-        """最後一次翻牌後沒有再連線：盤面還原成分裂前、翻出的位置改無倍數 WW；統計改記成 n 顆無倍數小鬼。"""
-        for key, value in mark.items():
-            setattr(result, key, value)
-        n = len(positions)
-        result.golden_results["WW"] += n
-        result.golden_converted += n
-        result.mult_wild_values[1] += n
-        result.mult_kind[("WW", 1)] += n
-        if pre_split:
-            for r in range(5):
-                symbols[r][:], mults[r][:], gold[r][:] = pre_split[0][r], pre_split[1][r], pre_split[2][r]
-        for r, c in positions:
-            symbols[r][c], mults[r][c] = WW, 0
-
-    def split_big_ghosts(self, table: Table, symbols: list[list[int]], mults: list[list[int]], gold: list[list[bool]],
-                         big_sources: list[tuple[tuple[int, int], int]], result: SpinResult) -> None:
-        """game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 W2（倍數同本體），落點依補牌後的盤面。"""
-        for source, value in big_sources:
-            count = int(_pick(self.rng, table.split_values, table.split_cumulative, table.split_total))
-            candidates = [
-                (reel, row)
-                for reel in self.split_reels
-                for row in range(4)
-                if symbols[reel][row] not in (WW, W2, C1) and (reel, row) != source
-            ]
-            if not candidates:
-                result.split_counts[0] += 1
-                continue
-            self.rng.shuffle(candidates)
-            placed = candidates[:count]
-            for reel, row in placed:
-                result.mult_kind[("SPLIT", value)] += 1
-                result.mult_cells += int(value > 1)
-                # game_rule §5.4（2026-11-02）：分裂體是 W2，與本體一模一樣，倍數不另外抽
-                symbols[reel][row] = W2
-                mults[reel][row] = value if value > 1 else 0
-                gold[reel][row] = False   # game_rule §5.4（2026-10-12）：蓋到金框即變 W2，金框消失，之後不再翻牌
-            result.split_counts[len(placed)] += 1
-
-    def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
+        game_rule §5：每一消先更新框（黃底留同倍數框、框內消除一般符號含 WW +1、黃底在框內只加倍數），
+        再以更新後的框總和計分；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
+        """
         table = self.tables[table_name]
-        scene = "fg" if free_game else "bg"
-        ladder = self.ladder_fg if free_game else self.ladder_bg
-        symbols, mults, gold = self.board(table_name, scene)
+        symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
+        yellow = [[self.roll_yellow(table, reel, symbols[reel][row], False) for row in range(4)] for reel in range(5)]
         result = SpinResult(initial_board=[reel[:] for reel in symbols])
-        result.initial_symbols.update(
-            (reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
-        result.initial_gold_count = sum(sum(column) for column in gold)
-        result.gold_appeared = result.initial_gold_count
-        result.initial_gold_reel.update({reel: sum(column) for reel, column in enumerate(gold) if sum(column)})
-
+        result.initial_symbols.update((reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
+        result.yellow_seen = any(any(column) for column in yellow)
+        result.peak_frame = _frame_sum(frames)
         cap = self.max_win * self.bet
-        last_flip = None   # 最近一次翻牌：(翻牌前統計, 金框位置, 分裂前盤面)
         while True:
-            raw_pay, hits, details, line_mult = self.evaluate(symbols, mults)
+            raw_pay, hits, details = self.evaluate(symbols)
             if raw_pay <= 0:
-                # 2026-10-21 使用者定案：最後一次翻牌後沒有再連線（連消結束），翻出來的一律以原位無倍數小鬼呈現（大鬼不分裂），
-                # 盤面與統計都以最終畫面為準。分裂體是 WILD，拿掉後換回原符號也不會成線；倍數未被使用 → 得分不變。
-                if last_flip:
-                    self._collapse_last_flip(result, symbols, mults, gold, *last_flip)
                 break
-            multiplier = ladder[min(result.cascades, len(ladder) - 1)]
-            gained = raw_pay * multiplier * self.bet
-            result.pay += gained
-            result.max_cascade_multiplier = max(result.max_cascade_multiplier, multiplier)
-            result.max_line_multiplier = max(result.max_line_multiplier, line_mult)
-            result.cascades += 1
-            for symbol, length, ways, symbol_raw, _ in details:
-                result.symbol_hits[symbol] += ways
-                result.symbol_pay[symbol] += symbol_raw * multiplier * self.bet
-                result.symbol_length_hits[(symbol, length)] += 1
-                result.symbol_length_pay[(symbol, length)] += symbol_raw * multiplier * self.bet
-
-            gold_positions: list[tuple[int, int]] = []
             for reel, row in hits:
-                if symbols[reel][row] == W2 and not gold[reel][row]:
-                    result.big_ghost_scored = True
-                if gold[reel][row]:
-                    gold_positions.append((reel, row))   # 金框不消除，當下翻成本體
-                    gold[reel][row] = False
+                if yellow[reel][row] > 0:
+                    frames[reel][row] += yellow[reel][row]
+                elif frames[reel][row] > 0:
+                    frames[reel][row] += 1
+            total_frame = _frame_sum(frames)
+            mult = total_frame if total_frame > 0 else 1
+            gained = raw_pay * mult * self.bet
+            result.pay += gained
+            result.max_mult = max(result.max_mult, mult)
+            result.cascades += 1
+            for symbol, length, ways, symbol_raw in details:
+                result.symbol_hits[symbol] += ways
+                result.symbol_pay[symbol] += symbol_raw * mult * self.bet
+                result.symbol_length_hits[(symbol, length)] += 1
+                result.symbol_length_pay[(symbol, length)] += symbol_raw * mult * self.bet
+            for reel, row in hits:
+                if yellow[reel][row] > 0:
+                    result.yellow_used += 1
+                    result.yellow_values[yellow[reel][row]] += 1
+                    yellow[reel][row] = 0
+                    symbols[reel][row] = WW
                 else:
                     symbols[reel][row] = EMPTY
-                    mults[reel][row] = 0
-
-            # 金框在原位翻成本體；大鬼分裂在補牌後丟
-            mark = self._flip_stats_mark(result) if gold_positions else None
-            big_sources = (self.flip_golden_body(table, symbols, mults, gold_positions, result, free_game)
-                           if gold_positions else [])
-
-            # game_rule §5.1（2026-10-13 使用者定案）：原地補牌——消除的格子直接在原位補新符號，其餘符號不移動
-            fresh_rows: dict[int, list[int]] = {}
+            result.peak_frame = max(result.peak_frame, total_frame)
+            # 重力掉落：row 0 在最下面（同 Demogame），剩下的符號連同黃底往下掉，上方補新符號；框留在原格
             for reel in range(5):
-                rows = [row for row in range(4) if symbols[reel][row] == EMPTY]
-                for row in rows:
-                    symbol = int(_pick(self.rng, table.drop_values[reel],
-                                       table.drop_cumulative[reel], table.drop_total[reel]))
-                    symbols[reel][row], mults[reel][row], gold[reel][row] = symbol, 0, False
-                    result.drop_symbols[(reel, symbol)] += 1
-                fresh_rows[reel] = rows
-
-            # 補牌後重抽金框顆數（game_rule §9.1.11）
-            result.gold_appeared += self.topup_gold(self.gold_key(table_name, scene), symbols, gold, fresh_rows)
-
-            pre_split = ([c[:] for c in symbols], [c[:] for c in mults], [c[:] for c in gold]) if big_sources else None
-            if big_sources:
-                self.split_big_ghosts(table, symbols, mults, gold, big_sources, result)
-            last_flip = (mark, list(gold_positions), pre_split) if gold_positions else None
-
+                keep = [(symbols[reel][row], yellow[reel][row]) for row in range(4) if symbols[reel][row] != EMPTY]
+                if len(keep) == 4:
+                    continue
+                for row in range(4):
+                    if row < len(keep):
+                        symbols[reel][row], yellow[reel][row] = keep[row]
+                    else:
+                        symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
+                        symbols[reel][row] = symbol
+                        yellow[reel][row] = self.roll_yellow(table, reel, symbol, True)
+                        result.yellow_seen |= yellow[reel][row] > 0
+                        result.drop_symbols[(reel, symbol)] += 1
             if result.pay >= cap:
                 break
-
-        if result.pay <= 0:
-            result.bonus_gold_cells = self.add_no_win_gold(symbols, gold)
         result.scatter_count = sum(symbol == C1 for column in symbols for symbol in column)
+        result.end_frame = _frame_sum(frames)
         result.final_board = [reel[:] for reel in symbols]
-        result.final_gold = [reel[:] for reel in gold]
-        result.mult_left = sum(1 for reel in range(5) for row in range(4)
-                               if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
         return result
 
     # --- Card System ---
@@ -689,10 +481,7 @@ class SuperDiamond:
     # --- Round ---
 
     def natural_base_spin(self) -> SpinResult:
-        weights = self.config["table_weight"]["bg"]
-        names = list(weights)
-        cumulative, total = _cumulative([float(weights[n]) for n in names])
-        return self.spin(str(_pick(self.rng, names, cumulative, total)))
+        return self.spin(self._pick_table("bg"), _grid(0))
 
     def card_spin(self, card: dict[str, Any]) -> SpinResult:
         want_fg = card.get("type") == "free_game"
@@ -701,9 +490,9 @@ class SuperDiamond:
             spin = self.natural_base_spin()
             if want_fg:
                 # 數學模型規範 §2.3：free_game 卡須同時滿足「觸發 FG」且 BG 得分 ≤ BG Trigger Cap，否則整把重骰
-                if spin.scatter_count >= 3 and spin.pay / self.bet <= self.trigger_cap:
+                if spin.scatter_count >= self.min_scatter and spin.pay / self.bet <= self.trigger_cap:
                     return spin
-            elif spin.scatter_count < 3 and self.card_matches(card, spin.pay):
+            elif spin.scatter_count < self.min_scatter and self.card_matches(card, spin.pay):
                 return spin
             self.retry_total += 1
         self.retry_limit_exceeded += 1
@@ -713,46 +502,92 @@ class SuperDiamond:
             self.retry_limit_bg_range += 1
         return spin
 
-    def _fg_table(self, group: str) -> str:
-        weights = self.config["table_weight"][group]
-        names = list(weights)
-        cumulative, total = _cumulative([float(weights[n]) for n in names])
-        return str(_pick(self.rng, names, cumulative, total))
+    def _draw_slot(self, slot: dict[str, Any], total: int, after: int = 0) -> set[int]:
+        """依 FG Good Spin Slots 抽好局位置（1 起算）；只抽 after 之後的局。"""
+        lo, hi = int(slot["from"]), int(slot["to"])
+        if slot["anchor"] == "end":
+            lo, hi = total - hi + 1, total - lo + 1
+        candidates = [i for i in range(max(1, lo, after + 1), min(total, hi) + 1)]
+        self.rng.shuffle(candidates)
+        return set(candidates[:int(slot["count"])])
 
-    def free_session(self, initial_spins: int, budget: float) -> RoundResult:
+    @staticmethod
+    def _tier(rows: list[dict[str, Any]], value: int) -> dict[str, Any] | None:
+        for row in rows:
+            if int(row["min"]) <= value <= int(row["max"]):
+                return row["weights"]
+        return None
+
+    def _fg_weights(self, index: int, good: set[int], boost_left: int, dead: int, frame_total: int,
+                    buy: bool) -> tuple[str, dict[str, Any] | str]:
+        """FG 隱性控制：依 fg_weight_priority 取第一個成立的規則；回傳 (規則, 權重群組名或權重表)。"""
+        for rule in self.priority:
+            if rule == "good_slot" and index in good:
+                return rule, "bf_fg_good" if buy else "fg_good"
+            if rule == "retrigger_boost" and boost_left > 0:
+                return rule, "fg_retrigger_boost"
+            if rule == "dead_streak":
+                weights = self._tier(self.dead_tiers, dead)
+                if weights:
+                    return rule, weights
+            if rule == "frame_tier":
+                weights = self._tier(self.frame_tiers, frame_total)
+                if weights:
+                    return rule, weights
+            if rule == "normal":
+                return rule, "bf_fg_normal" if buy else "fg_normal"
+        return "normal", "bf_fg_normal" if buy else "fg_normal"
+
+    def free_session(self, initial_spins: int, budget: float, buy: bool = False) -> RoundResult:
         result = RoundResult(fg_triggered=True)
-        remaining, played = int(initial_spins), 0
+        frames = _grid(0)
+        for row in range(4):                      # game_rule §6：開場第 3 軸整條 4 格 1X 框（規格，非參數）
+            frames[FG_START_REEL][row] = 1
+        total = min(int(initial_spins), self.max_fs)
+        good: set[int] = set()
+        for slot in self.good_slots:
+            good |= self._draw_slot(slot, total)
+        boost_left, dead, watch_left, index = 0, 0, 0, 0
         cap = self.max_win * self.bet
-        while remaining > 0 and played < self.max_fs:
-            remaining -= 1
-            played += 1
-            spin = self.spin(self._fg_table("fg"), free_game=True)
+        while index < total:
+            index += 1
+            frame_total = _frame_sum(frames)
+            rule, weights = self._fg_weights(index, good, boost_left, dead, frame_total, buy)
+            table_name = self._pick_table(weights) if isinstance(weights, str) else self._pick_from(weights)
+            boost_left = max(0, boost_left - 1)
+            spin = self.spin(table_name, frames, free_game=True)
+            hit = spin.pay > 0
             result.pay_fg += spin.pay
-            result.fg_pay_per_spin.append(spin.pay)
             result.fg_spins += 1
             result.cascades_fg += spin.cascades
-            result.golden_converted += spin.golden_converted
-            result.fg_golden_results.update(spin.golden_results)
-            result.fg_split_counts.update(spin.split_counts)
-            result.fg_mult_wild += spin.mult_wild_created
-            result.mult_wild_values.update(spin.mult_wild_values)
-            result.fg_mult_kind.update(spin.mult_kind)
-            result.max_line_multiplier = max(result.max_line_multiplier, spin.max_line_multiplier)
-            result.fg_hit_spins += int(spin.pay > 0)
-            result.fg_gold_symbols += spin.initial_gold_count
-            result.fg_gold_appeared += spin.gold_appeared
-            result.fg_flip_spins += int(spin.golden_converted > 0)
-            result.fg_mult_spins += int(spin.mult_wild_created > 0)
-            result.fg_mult_cells += spin.mult_cells
-            result.fg_mult_left += spin.mult_left
-            result.fg_mult_unused_spins += int(spin.mult_cells > 0 and spin.mult_left == spin.mult_cells)
-            result.fg_big_spins += int(spin.golden_results["W2"] > 0)
-            result.fg_big_used_spins += int(spin.golden_results["W2"] > 0 and spin.big_ghost_scored)
-            result.fg_gold_seen_spins += int(spin.gold_appeared > 0)
-            result.fg_gold_reel.update(spin.initial_gold_reel)
-            result.fg_gold_boards += int(spin.initial_gold_count > 0)
+            result.fg_hit_spins += int(hit)
+            result.fg_yellow_seen += int(spin.yellow_seen)
+            result.fg_yellow_used += spin.yellow_used
+            result.yellow_values.update(spin.yellow_values)
+            result.max_mult = max(result.max_mult, spin.max_mult)
             result.special_symbol_cnt += int(spin.scatter_count > 0)
             result.combo_fg[min(spin.cascades, 5)] += 1
+            result.fg_index_spins[index] += 1
+            result.fg_index_hits[index] += int(hit)
+            result.fg_index_pay[index] += spin.pay
+            result.fg_rule_spins[rule] += 1
+            result.fg_rule_hits[rule] += int(hit)
+            result.fg_rule_pay[rule] += spin.pay
+            result.fg_table_spins[table_name] += 1
+            if frame_total >= BIG_FRAME_TOTAL:
+                result.fg_bigframe_spins += 1
+                result.fg_bigframe_dead += int(not hit)
+            if watch_left > 0:
+                watch_left -= 1
+                result.fg_post_retrigger_spins += 1
+                result.fg_post_retrigger_hits += int(hit)
+                result.fg_post_retrigger_pay += spin.pay
+            if hit:
+                if dead:
+                    result.fg_dead_runs[dead] += 1
+                dead = 0
+            else:
+                dead += 1
             result.symbol_hits.update(spin.symbol_hits)
             result.symbol_pay.update(spin.symbol_pay)
             result.fg_symbol_length_hits.update(spin.symbol_length_hits)
@@ -762,18 +597,25 @@ class SuperDiamond:
             if budget + result.pay_fg >= cap:
                 result.capped = True
                 break
-            if spin.scatter_count >= 3 and played + remaining < self.max_fs:
-                add = min(5, self.max_fs - played - remaining)
-                if add > 0:
-                    remaining += add
-                    result.retriggers += 1
+            if spin.scatter_count >= self.min_scatter and total < self.max_fs:
+                add = min(self.fs_retrigger, self.max_fs - total)
+                total += add
+                result.retriggers += 1
+                boost_left = self.boost_spins
+                watch_left = RETRIGGER_WATCH_SPINS
+                late = [slot for slot in self.good_slots if slot["anchor"] == "end"]
+                for slot in late:                 # 新增的局數再抽一次尾段好局
+                    good |= self._draw_slot(slot, total, after=index)
+        if dead:
+            result.fg_dead_runs[dead] += 1
+        result.fg_end_frame = _frame_sum(frames)
         return result
 
-    def card_feature(self, section: str, initial_spins: int, budget: float) -> RoundResult:
+    def card_feature(self, section: str, initial_spins: int, budget: float, buy: bool = False) -> RoundResult:
         card = self.pick_card(section)
         result = None
         for _ in range(CARD_RETRY_LIMIT):
-            result = self.free_session(initial_spins, budget)
+            result = self.free_session(initial_spins, budget, buy)
             if self.card_matches(card, result.pay_fg):
                 return result
             self.retry_total += 1
@@ -783,87 +625,47 @@ class SuperDiamond:
 
     @staticmethod
     def merge(target: RoundResult, source: RoundResult) -> None:
-        target.pay_fg += source.pay_fg
+        for name in ("pay_fg", "fg_spins", "retriggers", "cascades_fg", "fg_hit_spins", "fg_yellow_seen", "fg_yellow_used",
+                     "special_symbol_cnt", "fg_bigframe_spins", "fg_bigframe_dead", "fg_post_retrigger_spins",
+                     "fg_post_retrigger_hits", "fg_post_retrigger_pay"):
+            setattr(target, name, getattr(target, name) + getattr(source, name))
         target.fg_triggered |= source.fg_triggered
-        target.fg_spins += source.fg_spins
-        target.retriggers += source.retriggers
-        target.cascades_fg += source.cascades_fg
         target.capped |= source.capped
-        target.golden_converted += source.golden_converted
-        target.fg_golden_results.update(source.fg_golden_results)
-        target.fg_split_counts.update(source.fg_split_counts)
-        target.fg_mult_wild += source.fg_mult_wild
-        target.mult_wild_values.update(source.mult_wild_values)
-        target.fg_mult_kind.update(source.fg_mult_kind)
-        target.max_line_multiplier = max(target.max_line_multiplier, source.max_line_multiplier)
-        target.fg_hit_spins += source.fg_hit_spins
-        target.fg_gold_symbols += source.fg_gold_symbols
-        target.fg_gold_appeared += source.fg_gold_appeared
-        target.fg_flip_spins += source.fg_flip_spins
-        target.fg_mult_spins += source.fg_mult_spins
-        target.fg_mult_cells += source.fg_mult_cells
-        target.fg_mult_left += source.fg_mult_left
-        target.fg_mult_unused_spins += source.fg_mult_unused_spins
-        target.fg_big_spins += source.fg_big_spins
-        target.fg_big_used_spins += source.fg_big_used_spins
-        target.fg_gold_seen_spins += source.fg_gold_seen_spins
-        target.fg_gold_reel.update(source.fg_gold_reel)
-        target.fg_gold_boards += source.fg_gold_boards
-        target.special_symbol_cnt += source.special_symbol_cnt
-        target.combo_fg.update(source.combo_fg)
-        target.fg_pay_per_spin.extend(source.fg_pay_per_spin)
-        target.symbol_hits.update(source.symbol_hits)
-        target.symbol_pay.update(source.symbol_pay)
-        target.fg_symbol_length_hits.update(source.fg_symbol_length_hits)
-        target.fg_symbol_length_pay.update(source.fg_symbol_length_pay)
-        target.fg_initial_symbols.update(source.fg_initial_symbols)
-        target.fg_drop_symbols.update(source.fg_drop_symbols)
+        target.max_mult = max(target.max_mult, source.max_mult)
+        target.fg_end_frame = source.fg_end_frame
+        for name in ("yellow_values", "combo_fg", "fg_index_spins", "fg_index_hits", "fg_index_pay", "fg_rule_spins",
+                     "fg_rule_hits", "fg_rule_pay", "fg_table_spins", "fg_dead_runs", "symbol_hits", "symbol_pay",
+                     "fg_symbol_length_hits", "fg_symbol_length_pay", "fg_initial_symbols", "fg_drop_symbols"):
+            getattr(target, name).update(getattr(source, name))
 
     def round(self, bet_mode: int) -> RoundResult:
-        eb = bet_mode == MODE_EXTRABET
-        prefix = "eb_" if eb else ""   # Extra Bet 用 eb_base_game／eb_free_game 卡組；盤面與 NB 相同
-        if self.card_enabled:   # Max Win 依模式取 buy_feature 卡組上限，或 base_game／free_game（EB 為 eb_*）兩者上限的較大者
-            self.max_win = (self.bf_cap if bet_mode == MODE_FEATUREBUY
-                            else max(self.eb_fg_cap, self.eb_bg_trigger_cap) if eb else max(self.fg_cap, self.bg_trigger_cap))
-            self.trigger_cap = self.eb_bg_trigger_cap if eb else self.bg_trigger_cap
+        if self.card_enabled:   # Max Win 依模式取 buy_feature 卡組上限，或 base_game／free_game 兩者上限的較大者
+            self.max_win = self.bf_cap if bet_mode == MODE_FEATUREBUY else max(self.fg_cap, self.bg_trigger_cap)
+            self.trigger_cap = self.bg_trigger_cap
         if bet_mode == MODE_FEATUREBUY:
-            entry_symbols, _, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
+            entry = self.tables[self.config["bet_modes"]["buy_feature"]["entry_table"]]
+            entry_symbols = [entry.reels[reel].window(self.rng, 4) for reel in range(5)]
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
-            if scatter < 3:
+            if scatter < self.min_scatter:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤至少 3 顆 C1")
-            # 進場盤的 C1 顆數決定初始局數，與自然觸發同一張 free_spins 表
             spins = int(self.fs_table[min(scatter, max(self.fs_table))]["initial"])
-            result = (self.card_feature("buy_feature", spins, 0.0)
-                      if self.card_enabled else self.free_session(spins, 0.0))
+            result = (self.card_feature("buy_feature", spins, 0.0, buy=True)
+                      if self.card_enabled else self.free_session(spins, 0.0, buy=True))
             result.special_symbol_cnt += 1   # 進場盤本身含 SC
             result.pay_fg = min(result.pay_fg, self.max_win * self.bet)
             return result
 
         result = RoundResult()
-        spin = self.card_spin(self.pick_card(prefix + "base_game")) if self.card_enabled else self.natural_base_spin()
+        spin = self.card_spin(self.pick_card("base_game")) if self.card_enabled else self.natural_base_spin()
         result.pay_bg = spin.pay
         result.cascades_bg = spin.cascades
         result.bg_cascade_count = spin.cascades
-        result.golden_converted = spin.golden_converted
-        result.bg_golden_results.update(spin.golden_results)
-        result.bg_split_counts.update(spin.split_counts)
-        result.bg_mult_wild = spin.mult_wild_created
-        result.mult_wild_values.update(spin.mult_wild_values)
-        result.bg_mult_kind.update(spin.mult_kind)
-        result.max_line_multiplier = spin.max_line_multiplier
         result.bg_hit_spins = int(spin.pay > 0)
-        result.bg_gold_symbols = spin.initial_gold_count
-        result.bg_gold_appeared = spin.gold_appeared
-        result.bg_flip_spins = int(spin.golden_converted > 0)
-        result.bg_mult_spins = int(spin.mult_wild_created > 0)
-        result.bg_mult_cells = spin.mult_cells
-        result.bg_mult_left = spin.mult_left
-        result.bg_mult_unused_spins = int(spin.mult_cells > 0 and spin.mult_left == spin.mult_cells)
-        result.bg_big_spins = int(spin.golden_results["W2"] > 0)
-        result.bg_big_used_spins = int(spin.golden_results["W2"] > 0 and spin.big_ghost_scored)
-        result.bg_gold_seen_spins = int(spin.gold_appeared > 0)
-        result.bg_gold_reel.update(spin.initial_gold_reel)
-        result.bg_gold_boards = int(spin.initial_gold_count > 0)
+        result.bg_yellow_seen = int(spin.yellow_seen)
+        result.bg_yellow_used = spin.yellow_used
+        result.yellow_values.update(spin.yellow_values)
+        result.bg_peak_frame = spin.peak_frame
+        result.max_mult = spin.max_mult
         result.special_symbol_cnt = int(spin.scatter_count > 0)
         result.symbol_hits.update(spin.symbol_hits)
         result.symbol_pay.update(spin.symbol_pay)
@@ -872,16 +674,16 @@ class SuperDiamond:
         result.bg_initial_symbols.update(spin.initial_symbols)
         result.bg_drop_symbols.update(spin.drop_symbols)
 
-        if spin.scatter_count >= 3:
+        if spin.scatter_count >= self.min_scatter:
             result.bg_trigger_fg_cnt = 1
             result.bg_trigger_fg_pay = spin.pay
             initial = self.fs_table[min(spin.scatter_count, max(self.fs_table))]["initial"]
-            feature = (self.card_feature(prefix + "free_game", initial, result.pay_bg)
+            feature = (self.card_feature("free_game", initial, result.pay_bg)
                        if self.card_enabled else self.free_session(initial, result.pay_bg))
             self.merge(result, feature)
 
         cap = self.max_win * self.bet
-        if result.pay > cap:                      # game_rule §9.10.2：達上限即截斷
+        if result.pay > cap:                      # 達上限即截斷
             overflow = result.pay - cap
             result.pay_fg = max(0.0, result.pay_fg - overflow)
             if result.pay > cap:
@@ -895,8 +697,6 @@ class SuperDiamond:
 def wager_for_mode(mode: int, base_bet: float) -> float:
     if mode == MODE_NORMALBET:
         return base_bet
-    if mode == MODE_EXTRABET:
-        return base_bet * float(CFG["bet_modes"]["extra_bet"]["cost_multiplier"])
     return base_bet * float(CFG["bet_modes"]["buy_feature"]["cost_multiplier"])
 
 
@@ -926,20 +726,15 @@ def _empty_stats() -> dict[str, Any]:
         "bg_hit_spins": 0, "fg_hit_spins": 0, "fg_spins": 0, "fg_triggers": 0,
         "retriggers": 0, "cascades_bg": 0, "cascades_fg": 0,
         "special_symbol_cnt": 0, "bg_trigger_fg_cnt": 0, "bg_trigger_fg_pay": 0.0,
-        "golden_converted": 0, "bg_gold_symbols": 0, "fg_gold_symbols": 0,
-        "bg_gold_appeared": 0, "fg_gold_appeared": 0,
-        "bg_flip_spins": 0, "fg_flip_spins": 0, "bg_mult_spins": 0, "fg_mult_spins": 0,
-        "bg_big_spins": 0, "fg_big_spins": 0, "bg_big_used_spins": 0, "fg_big_used_spins": 0,
-        "bg_gold_seen_spins": 0, "fg_gold_seen_spins": 0,
-        "bg_mult_cells": 0, "fg_mult_cells": 0, "bg_mult_left": 0, "fg_mult_left": 0,
-        "bg_mult_unused_spins": 0, "fg_mult_unused_spins": 0,
-        "bg_gold_reel": Counter(), "fg_gold_reel": Counter(), "bg_gold_boards": 0, "fg_gold_boards": 0,
+        "bg_yellow_seen": 0, "fg_yellow_seen": 0, "bg_yellow_used": 0, "fg_yellow_used": 0,
+        "yellow_values": Counter(), "bg_peak_frame_sum": 0, "bg_peak_frame_max": 0,
+        "fg_end_frame_sum": 0, "fg_end_frame_max": 0, "max_mult": 1,
+        "fg_index_spins": Counter(), "fg_index_hits": Counter(), "fg_index_pay": Counter(),
+        "fg_rule_spins": Counter(), "fg_rule_hits": Counter(), "fg_rule_pay": Counter(), "fg_table_spins": Counter(),
+        "fg_bigframe_spins": 0, "fg_bigframe_dead": 0, "fg_dead_runs": Counter(),
+        "fg_post_retrigger_spins": 0, "fg_post_retrigger_hits": 0, "fg_post_retrigger_pay": 0.0,
         "combo_bg": Counter(), "combo_fg": Counter(),
         "bg_symbol_length_pay": Counter(), "fg_symbol_length_pay": Counter(),
-        "bg_mult_wild": 0, "fg_mult_wild": 0, "max_line_multiplier": 1,
-        "bg_golden_results": Counter(), "fg_golden_results": Counter(),
-        "bg_split_counts": Counter(), "fg_split_counts": Counter(),
-        "mult_wild_values": Counter(), "bg_mult_kind": Counter(), "fg_mult_kind": Counter(),
         "symbol_hits": Counter(), "symbol_pay": Counter(),
         "bg_symbol_length_hits": Counter(), "fg_symbol_length_hits": Counter(),
         "bg_initial_symbols": Counter(), "bg_drop_symbols": Counter(),
@@ -953,13 +748,9 @@ def _empty_stats() -> dict[str, Any]:
         "bucket_bf_cnt": [0] * buckets, "bucket_bf_pay": [0.0] * buckets,
         "bucket_trigger_cnt": [0] * buckets, "bucket_trigger_pay": [0.0] * buckets,
         "bucket_fg_hit": [0] * buckets, "bucket_fg_spins": [0] * buckets,
-        "bucket_bg_mult": [0] * buckets, "bucket_fg_mult": [0] * buckets,   # 2026-10-21 各區間倍數出現轉數（最終畫面口徑）
+        "bucket_fg_end_frame": [0] * buckets, "bucket_bg_yellow": [0] * buckets,
         "bucket_bg_combo": [[0] * 5 for _ in range(buckets)],
         "bucket_fg_combo": [[0] * 5 for _ in range(buckets)],
-        "bucket_bg_golden": [Counter() for _ in range(buckets)],
-        "bucket_fg_golden": [Counter() for _ in range(buckets)],
-        "bucket_bg_gold_frames": [0] * buckets,
-        "bucket_fg_gold_frames": [0] * buckets,
     }
 
 
@@ -974,40 +765,24 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["win_x_square"] += win_x * win_x
     stats["max_win_x"] = max(stats["max_win_x"], win_x)
     stats["capped_rounds"] += int(result.capped)
-    stats["bg_hit_spins"] += result.bg_hit_spins
-    stats["fg_hit_spins"] += result.fg_hit_spins
-    stats["fg_spins"] += result.fg_spins
-    stats["fg_triggers"] += int(result.fg_triggered)
-    stats["retriggers"] += result.retriggers
-    stats["cascades_bg"] += result.cascades_bg
-    stats["cascades_fg"] += result.cascades_fg
-    stats["special_symbol_cnt"] += result.special_symbol_cnt
-    stats["bg_trigger_fg_cnt"] += result.bg_trigger_fg_cnt
-    stats["bg_trigger_fg_pay"] += result.bg_trigger_fg_pay
-    stats["golden_converted"] += result.golden_converted
-    stats["bg_gold_symbols"] += result.bg_gold_symbols
-    stats["fg_gold_symbols"] += result.fg_gold_symbols
-    stats["bg_gold_appeared"] += result.bg_gold_appeared
-    stats["fg_gold_appeared"] += result.fg_gold_appeared
-    for key in ("bg_flip_spins", "fg_flip_spins", "bg_mult_spins", "fg_mult_spins",
-                "bg_mult_cells", "fg_mult_cells", "bg_mult_left", "fg_mult_left",
-                "bg_mult_unused_spins", "fg_mult_unused_spins", "bg_big_spins", "fg_big_spins",
-                "bg_big_used_spins", "fg_big_used_spins", "bg_gold_seen_spins", "fg_gold_seen_spins"):
+    for key in ("bg_hit_spins", "fg_hit_spins", "fg_spins", "retriggers", "cascades_bg", "cascades_fg",
+                "special_symbol_cnt", "bg_trigger_fg_cnt", "bg_trigger_fg_pay", "bg_yellow_seen", "fg_yellow_seen",
+                "bg_yellow_used", "fg_yellow_used", "fg_bigframe_spins", "fg_bigframe_dead",
+                "fg_post_retrigger_spins", "fg_post_retrigger_hits", "fg_post_retrigger_pay"):
         stats[key] += getattr(result, key)
-    stats["bg_gold_boards"] += result.bg_gold_boards
-    stats["fg_gold_boards"] += result.fg_gold_boards
+    stats["fg_triggers"] += int(result.fg_triggered)
+    stats["max_mult"] = max(stats["max_mult"], result.max_mult)
     if bet_mode != MODE_FEATUREBUY:
         stats["combo_bg"][min(result.bg_cascade_count, 5)] += 1
-    stats["combo_fg"].update(result.combo_fg)
-    stats["bg_mult_wild"] += result.bg_mult_wild
-    stats["fg_mult_wild"] += result.fg_mult_wild
-    stats["max_line_multiplier"] = max(stats["max_line_multiplier"], result.max_line_multiplier)
-    for key in ("bg_golden_results", "fg_golden_results", "bg_split_counts",
-                "fg_split_counts", "mult_wild_values", "bg_mult_kind", "fg_mult_kind", "symbol_hits", "symbol_pay",
-                "bg_symbol_length_hits", "fg_symbol_length_hits",
-                "bg_symbol_length_pay", "fg_symbol_length_pay", "bg_gold_reel", "fg_gold_reel",
-                "bg_initial_symbols", "bg_drop_symbols",
-                "fg_initial_symbols", "fg_drop_symbols"):
+        stats["bg_peak_frame_sum"] += result.bg_peak_frame
+        stats["bg_peak_frame_max"] = max(stats["bg_peak_frame_max"], result.bg_peak_frame)
+    if result.fg_triggered:
+        stats["fg_end_frame_sum"] += result.fg_end_frame
+        stats["fg_end_frame_max"] = max(stats["fg_end_frame_max"], result.fg_end_frame)
+    for key in ("yellow_values", "combo_fg", "fg_index_spins", "fg_index_hits", "fg_index_pay", "fg_rule_spins",
+                "fg_rule_hits", "fg_rule_pay", "fg_table_spins", "fg_dead_runs", "symbol_hits", "symbol_pay",
+                "bg_symbol_length_hits", "fg_symbol_length_hits", "bg_symbol_length_pay", "fg_symbol_length_pay",
+                "bg_initial_symbols", "bg_drop_symbols", "fg_initial_symbols", "fg_drop_symbols"):
         stats[key].update(getattr(result, key))
 
     if bet_mode == MODE_FEATUREBUY:
@@ -1025,18 +800,14 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
         stats["bucket_fg_pay"][fg_index] += result.pay_fg
         stats["bucket_fg_spins"][fg_index] += result.fg_spins
         stats["bucket_fg_hit"][fg_index] += result.fg_hit_spins
-        stats["bucket_fg_mult"][fg_index] += result.fg_mult_spins
-        stats["bucket_fg_gold_frames"][fg_index] += result.fg_gold_symbols
-        stats["bucket_fg_golden"][fg_index].update(result.fg_golden_results)
+        stats["bucket_fg_end_frame"][fg_index] += result.fg_end_frame
         for combo, count in result.combo_fg.items():
             stats["bucket_fg_combo"][fg_index][min(max(combo, 1), 5) - 1] += count
     else:
         index = threshold_index(result.pay_bg / base_bet)
         stats["bucket_bg_cnt"][index] += 1
         stats["bucket_bg_pay"][index] += result.pay_bg
-        stats["bucket_bg_mult"][index] += result.bg_mult_spins
-        stats["bucket_bg_gold_frames"][index] += result.bg_gold_symbols
-        stats["bucket_bg_golden"][index].update(result.bg_golden_results)
+        stats["bucket_bg_yellow"][index] += result.bg_yellow_used
         stats["bucket_bg_combo"][index][min(max(result.bg_cascade_count, 1), 5) - 1] += 1
 
 
@@ -1044,7 +815,7 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
     for key, value in source.items():
         if isinstance(value, Counter):
             target[key].update(value)
-        elif key == "max_win_x" or key == "max_line_multiplier":
+        elif key in ("max_win_x", "max_mult", "bg_peak_frame_max", "fg_end_frame_max"):
             target[key] = max(target[key], value)
         elif isinstance(value, list):
             for index, item in enumerate(value):
@@ -1062,7 +833,7 @@ def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
 def _simulate_chunk(rounds: int, bet_mode: int, base_bet: float, seed: int,
                     card_enabled: bool, newbie: bool) -> dict[str, Any]:
     wager = wager_for_mode(bet_mode, base_bet)
-    engine = SuperDiamond(CFG, CFG_RTP or None, seed, base_bet, card_enabled, newbie)
+    engine = CalaveraParty(CFG, CFG_RTP or None, seed, base_bet, card_enabled, newbie)
     stats = _empty_stats()
     for _ in range(rounds):
         _accumulate(stats, engine.round(bet_mode), wager, base_bet, bet_mode)
@@ -1167,7 +938,7 @@ def common_summary_sections(result: dict[str, Any]) -> list[list[tuple[str, Any]
     trigger_rows: list[tuple[str, Any]] = [("bg_trigger_fg_cnt", s["bg_trigger_fg_cnt"]),
                                            ("bg_trigger_fg_pay", s["bg_trigger_fg_pay"])]
     if not result["card_system_enabled"] and result["bet_mode"] != MODE_FEATUREBUY:
-        section = "eb_base_game" if result["bet_mode"] == MODE_EXTRABET else "base_game"
+        section = "base_game"
         old_cnt, old_pay = _trigger_within_cap(s, "oldhand", section)
         new_cnt, new_pay = _trigger_within_cap(s, "newbie", section)
         trigger_rows = [("bg_trigger_fg_cnt", old_cnt), ("bg_trigger_fg_pay", old_pay),
@@ -1220,52 +991,37 @@ def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     s = result["stats"]
     rounds = max(1, s["rounds"])
     fg_spins = max(1, s["fg_spins"])
-    golden_total = max(1, sum(s["bg_golden_results"].values()) + sum(s["fg_golden_results"].values()))
+    fg_triggers = max(1, s["fg_triggers"])
     rows: list[tuple[str, Any]] = [
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
         ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
-        ("mult_left_rate_bg", s["bg_mult_left"] / max(1, s["bg_mult_cells"])),
-        ("mult_left_rate_fg", s["fg_mult_left"] / max(1, s["fg_mult_cells"])),
-        ("mult_unused_spin_rate_bg", s["bg_mult_unused_spins"] / max(1, s["bg_mult_spins"])),
-        ("mult_unused_spin_rate_fg", s["fg_mult_unused_spins"] / max(1, s["fg_mult_spins"])),
-        ("avg_gold_frames_bg", s["bg_gold_symbols"] / rounds),
-        ("avg_gold_frames_fg", s["fg_gold_symbols"] / fg_spins),
-        ("golden_converted", s["golden_converted"]),
+        ("yellow_seen_bg_rate", s["bg_yellow_seen"] / rounds),
+        ("yellow_seen_fg_rate", s["fg_yellow_seen"] / fg_spins),
+        ("yellow_used_per_spin_bg", s["bg_yellow_used"] / rounds),
+        ("yellow_used_per_spin_fg", s["fg_yellow_used"] / fg_spins),
+        ("avg_peak_frame_bg", s["bg_peak_frame_sum"] / rounds),
+        ("max_peak_frame_bg", s["bg_peak_frame_max"]),
+        ("avg_end_frame_fg", s["fg_end_frame_sum"] / fg_triggers),
+        ("max_end_frame_fg", s["fg_end_frame_max"]),
+        ("max_frame_multiplier", s["max_mult"]),
+        ("bigframe_dead_fg_rate", s["fg_bigframe_dead"] / max(1, s["fg_bigframe_spins"])),
+        ("post_retrigger_hit_rate", s["fg_post_retrigger_hits"] / max(1, s["fg_post_retrigger_spins"])),
+        ("post_retrigger_avg_win_x", s["fg_post_retrigger_pay"] / max(1, s["fg_post_retrigger_spins"]) / max(1e-12, result["base_bet"])),
+        ("fg_spin_avg_win_x", s["pay_fg"] / fg_spins / max(1e-12, result["base_bet"])),
     ]
-    # 2026-10-21 By Game 關注指標（每轉；BG＝每局 BG 轉、FG＝每 FG 轉）：出現率＝出現的轉 ÷ 總轉數；使用率＝有用到的轉 ÷ 出現的轉
-    for scene, spins in (("bg", rounds), ("fg", fg_spins)):
-        rows.extend([
-            (f"mult_seen_rate_{scene}", s[f"{scene}_mult_spins"] / spins),
-            (f"mult_used_rate_{scene}", 1 - s[f"{scene}_mult_unused_spins"] / max(1, s[f"{scene}_mult_spins"])),
-            (f"big_seen_rate_{scene}", s[f"{scene}_big_spins"] / spins),
-            (f"big_used_rate_{scene}", s[f"{scene}_big_used_spins"] / max(1, s[f"{scene}_big_spins"])),
-            (f"gold_seen_rate_{scene}", s[f"{scene}_gold_seen_spins"] / spins),
-            (f"gold_used_rate_{scene}", s[f"{scene}_flip_spins"] / max(1, s[f"{scene}_gold_seen_spins"])),
-        ])
-    for key in GOLD_RESULTS:
-        count = s["bg_golden_results"][key] + s["fg_golden_results"][key]
-        rows.append((f"golden_result_{key}_share", count / golden_total))
-    rows.extend([
-        ("mult_wild_bg_rate", s["bg_mult_wild"] / rounds),
-        ("mult_wild_fg_rate", s["fg_mult_wild"] / fg_spins),
-        ("max_line_multiplier", s["max_line_multiplier"]),
-    ])
-    for value in sorted(s["mult_wild_values"]):
-        total = max(1, sum(s["mult_wild_values"].values()))
-        rows.append((f"mult_wild_x{value}_share", s["mult_wild_values"][value] / total))
-    for scene in ("bg", "fg"):
-        for kind, value in sorted(s[f"{scene}_mult_kind"]):
-            rows.append((f"mult_{scene}_{kind}_x{value}", s[f"{scene}_mult_kind"][(kind, value)]))
-    for count in sorted(k for k in set(s["bg_split_counts"]) | set(s["fg_split_counts"]) if k):
-        rows.append((f"split_{count}_bg_rate", s["bg_split_counts"][count] / rounds))
-        rows.append((f"split_{count}_fg_rate", s["fg_split_counts"][count] / fg_spins))
+    short = {"good_slot": "good", "retrigger_boost": "boost", "dead_streak": "dead", "frame_tier": "tier", "normal": "normal"}
+    for rule, name in short.items():
+        spins = s["fg_rule_spins"][rule]
+        rows.append((f"fg_{name}_share", spins / fg_spins))
+        rows.append((f"fg_{name}_hit_rate", s["fg_rule_hits"][rule] / max(1, spins)))
+        rows.append((f"fg_{name}_avg_win_x", s["fg_rule_pay"][rule] / max(1, spins) / max(1e-12, result["base_bet"])))
     return rows
 
 
 COUNT_KEYS = {
     "total_rounds", "bg_trigger_fg_cnt", "bg_trigger_fg_cnt_newbie", "special_symbol_cnt", "SCR", "retry_total",
     "retry_limit_exceeded", "retry_limit_bg_range", "retry_limit_bg_freegame",
-    "retry_limit_fg", "golden_converted", "capped_rounds", "max_line_multiplier",
+    "retry_limit_fg", "capped_rounds", "max_peak_frame_bg", "max_end_frame_fg", "max_frame_multiplier",
 }
 
 
@@ -1293,7 +1049,7 @@ def _display_value(key: str, value: Any) -> str:
         return f"{float(value):.2f} spins"
     if key == "max_win_x":
         return f"{float(value):,.2f} x"
-    if key in {"avg_retry", "volatility_std", "standard_error"}:
+    if key in {"avg_retry", "volatility_std", "standard_error"} or key.endswith("_win_x") or key.startswith("avg_"):
         return f"{float(value):05.2f}"
     if isinstance(value, float):
         return f"{value:.6f}"
@@ -1345,9 +1101,9 @@ def multiplier_line_frame(result: dict[str, Any]) -> pd.DataFrame:
         fg_spins = s["bucket_fg_spins"][index]
         row["FG_Hit_Rate"] = s["bucket_fg_hit"][index] / fg_spins if fg_spins else 0.0
         row["FG_Spin_Count"] = fg_spins
-        # 各區間倍數出現率（同 Demogame：最後一次翻牌沒再連線改無倍數小鬼，看最終畫面）：BG＝該區間 BG 局數、FG＝該區間 FG 場的總轉數
-        row["BG_Mult_Seen_Rate"] = s["bucket_bg_mult"][index] / s["bucket_bg_cnt"][index] if s["bucket_bg_cnt"][index] else 0.0
-        row["FG_Mult_Seen_Rate"] = s["bucket_fg_mult"][index] / fg_spins if fg_spins else 0.0
+        bg_cnt = s["bucket_bg_cnt"][index]
+        row["BG_Avg_Yellow_Used"] = s["bucket_bg_yellow"][index] / bg_cnt if bg_cnt else 0.0
+        row["FG_Avg_End_Frame"] = s["bucket_fg_end_frame"][index] / s["bucket_fg_cnt"][index] if s["bucket_fg_cnt"][index] else 0.0
 
         bg_combo_total = max(1, sum(s["bucket_bg_combo"][index]))
         for combo in range(5):
@@ -1357,19 +1113,6 @@ def multiplier_line_frame(result: dict[str, Any]) -> pd.DataFrame:
         for combo in range(5):
             label = f"FG_Combo_{combo + 1}{'+' if combo == 4 else ''}_Rate"
             row[label] = s["bucket_fg_combo"][index][combo] / fg_combo_total
-
-        # --- By Game ---
-        bg_gold = s["bucket_bg_golden"][index]
-        bg_gold_total = max(1, sum(bg_gold.values()))
-        for key in GOLD_RESULTS:
-            row[f"BG_Golden_{key}_Rate"] = bg_gold[key] / bg_gold_total
-        fg_gold = s["bucket_fg_golden"][index]
-        fg_gold_total = max(1, sum(fg_gold.values()))
-        for key in GOLD_RESULTS:
-            row[f"FG_Golden_{key}_Rate"] = fg_gold[key] / fg_gold_total
-        bg_cnt = max(1, s["bucket_bg_cnt"][index])
-        row["BG_Avg_Gold_Frames"] = s["bucket_bg_gold_frames"][index] / bg_cnt
-        row["FG_Avg_Gold_Frames"] = s["bucket_fg_gold_frames"][index] / max(1, fg_spins)
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -1399,44 +1142,50 @@ def feature_frame(result: dict[str, Any]) -> pd.DataFrame:
     s = result["stats"]
     rounds = max(1, s["rounds"])
     fg_spins = max(1, s["fg_spins"])
+    used = max(1, sum(s["yellow_values"].values()))
     rows = [
-        ("golden_converted_total", s["golden_converted"]),
-        ("golden_per_round", s["golden_converted"] / rounds),
-        ("flip_spins_bg", s["bg_flip_spins"]), ("flip_spins_fg", s["fg_flip_spins"]),
-        ("mult_spins_bg", s["bg_mult_spins"]), ("mult_spins_fg", s["fg_mult_spins"]),
-        ("mult_cells_bg", s["bg_mult_cells"]), ("mult_cells_fg", s["fg_mult_cells"]),
-        ("mult_left_bg", s["bg_mult_left"]), ("mult_left_fg", s["fg_mult_left"]),
-        ("mult_unused_spins_bg", s["bg_mult_unused_spins"]), ("mult_unused_spins_fg", s["fg_mult_unused_spins"]),
-        ("mult_left_rate_bg", s["bg_mult_left"] / max(1, s["bg_mult_cells"])),
-        ("mult_left_rate_fg", s["fg_mult_left"] / max(1, s["fg_mult_cells"])),
-        ("mult_unused_spin_rate_bg", s["bg_mult_unused_spins"] / max(1, s["bg_mult_spins"])),
-        ("mult_unused_spin_rate_fg", s["fg_mult_unused_spins"] / max(1, s["fg_mult_spins"])),
-        ("gold_board_rate_bg", s["bg_gold_boards"] / rounds),
-        ("gold_board_rate_fg", s["fg_gold_boards"] / fg_spins),
-        *[(f"gold_reel_bg_R{reel + 1}", s["bg_gold_reel"][reel] / rounds / 4) for reel in range(5)],
-        *[(f"gold_reel_fg_R{reel + 1}", s["fg_gold_reel"][reel] / fg_spins / 4) for reel in range(5)],
-        ("gold_appeared_bg", s["bg_gold_appeared"]),
-        ("gold_appeared_fg", s["fg_gold_appeared"]),
-        ("gold_usage_bg", sum(s["bg_golden_results"].values()) / max(1, s["bg_gold_appeared"])),
-        ("gold_usage_fg", sum(s["fg_golden_results"].values()) / max(1, s["fg_gold_appeared"])),
-        ("mult_wild_created_bg", s["bg_mult_wild"]),
-        ("mult_wild_created_fg", s["fg_mult_wild"]),
-        ("mult_wild_per_round", (s["bg_mult_wild"] + s["fg_mult_wild"]) / rounds),
-        ("max_line_multiplier", s["max_line_multiplier"]),
-        ("max_win_x", s["max_win_x"]),
-        ("capped_rounds", s["capped_rounds"]),
-        ("avg_cascades_bg", s["cascades_bg"] / rounds),
-        ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
+        ("yellow_seen_spins_bg", s["bg_yellow_seen"]), ("yellow_seen_spins_fg", s["fg_yellow_seen"]),
+        ("yellow_used_bg", s["bg_yellow_used"]), ("yellow_used_fg", s["fg_yellow_used"]),
+        ("avg_peak_frame_bg", s["bg_peak_frame_sum"] / rounds), ("max_peak_frame_bg", s["bg_peak_frame_max"]),
+        ("avg_end_frame_fg", s["fg_end_frame_sum"] / max(1, s["fg_triggers"])), ("max_end_frame_fg", s["fg_end_frame_max"]),
+        ("max_frame_multiplier", s["max_mult"]),
+        ("bigframe_spins_fg", s["fg_bigframe_spins"]), ("bigframe_dead_fg", s["fg_bigframe_dead"]),
+        ("bigframe_dead_rate_fg", s["fg_bigframe_dead"] / max(1, s["fg_bigframe_spins"])),
+        ("post_retrigger_spins", s["fg_post_retrigger_spins"]), ("post_retrigger_hits", s["fg_post_retrigger_hits"]),
+        ("post_retrigger_pay", s["fg_post_retrigger_pay"]),
+        ("max_win_x", s["max_win_x"]), ("capped_rounds", s["capped_rounds"]),
+        ("avg_cascades_bg", s["cascades_bg"] / rounds), ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
     ]
-    for key in GOLD_RESULTS:
-        rows.append((f"golden_{key}_bg", s["bg_golden_results"][key]))
-        rows.append((f"golden_{key}_fg", s["fg_golden_results"][key]))
-    for value in sorted(s["mult_wild_values"]):
-        rows.append((f"mult_wild_x{value}", s["mult_wild_values"][value]))
-    for count in sorted(k for k in set(s["bg_split_counts"]) | set(s["fg_split_counts"])):
-        rows.append((f"split_{count}_bg", s["bg_split_counts"][count]))
-        rows.append((f"split_{count}_fg", s["fg_split_counts"][count]))
+    rows += [(f"yellow_used_x{v}_share", s["yellow_values"][v] / used) for v in sorted(s["yellow_values"])]
+    rows += [(f"fg_table_{name}_share", s["fg_table_spins"][name] / fg_spins) for name in sorted(s["fg_table_spins"])]
+    rows += [(f"fg_dead_run_{n}", s["fg_dead_runs"][n]) for n in sorted(s["fg_dead_runs"])]
     return pd.DataFrame(rows, columns=["Index", "Value"])
+
+
+def fg_spin_index_frame(result: dict[str, Any]) -> pd.DataFrame:
+    """FG 第 i 局的得分率與平均得分（看前 3 局、最後 5 局的好事節奏）。"""
+    s = result["stats"]
+    base = max(1e-12, result["base_bet"])
+    rows = []
+    for index in sorted(s["fg_index_spins"]):
+        spins = s["fg_index_spins"][index]
+        rows.append({"fg_spin": index, "spins": spins, "hit_rate": s["fg_index_hits"][index] / spins,
+                     "avg_win_x": s["fg_index_pay"][index] / spins / base})
+    return pd.DataFrame(rows, columns=["fg_spin", "spins", "hit_rate", "avg_win_x"])
+
+
+def fg_rule_frame(result: dict[str, Any]) -> pd.DataFrame:
+    """FG 隱性控制各規則的使用率、得分率與平均得分。"""
+    s = result["stats"]
+    base = max(1e-12, result["base_bet"])
+    total = max(1, s["fg_spins"])
+    rows = []
+    for rule in ("good_slot", "retrigger_boost", "dead_streak", "frame_tier", "normal"):
+        spins = s["fg_rule_spins"][rule]
+        rows.append({"rule": rule, "spins": spins, "share": spins / total,
+                     "hit_rate": s["fg_rule_hits"][rule] / spins if spins else 0.0,
+                     "avg_win_x": s["fg_rule_pay"][rule] / spins / base if spins else 0.0})
+    return pd.DataFrame(rows, columns=["rule", "spins", "share", "hit_rate", "avg_win_x"])
 
 
 # ===== 報表檔名 =====
@@ -1499,6 +1248,8 @@ def output_report(result: dict[str, Any], output_dir: Path | None = None) -> Pat
         overview.to_excel(writer, sheet_name="Overview", index=False)
         multiplier_line_frame(result).to_excel(writer, sheet_name="Multiplier Line", index=False)
         feature_frame(result).to_excel(writer, sheet_name="Feature", index=False)
+        fg_spin_index_frame(result).to_excel(writer, sheet_name="FG Spin Index", index=False)
+        fg_rule_frame(result).to_excel(writer, sheet_name="FG Rule", index=False)
         symbol_frame(result).to_excel(writer, sheet_name="Symbol", index=False)
         eliminate_frame(result).to_excel(writer, sheet_name="Eliminate", index=False)
         symbol_length_frame(result).to_excel(writer, sheet_name="Symbol Length", index=False)
@@ -1608,14 +1359,14 @@ def format_board(symbols: list[list[int]], mults: list[list[int]] | None = None)
 
 
 def run_single_spin_debug() -> None:
-    engine = SuperDiamond(CFG, CFG_RTP or None, RNG_SEED, 1.0, False, False)
+    engine = CalaveraParty(CFG, CFG_RTP or None, RNG_SEED, 1.0, False, False)
     for index in range(DEBUG_ROUNDS):
         result = engine.round(MODE_NORMALBET)
         print(f"--- debug round {index + 1} ---")
         print(f"pay_bg={result.pay_bg:.4f} pay_fg={result.pay_fg:.4f} "
               f"cascades_bg={result.cascades_bg} fg_spins={result.fg_spins} "
-              f"golden={result.golden_converted} mult_wild={result.bg_mult_wild + result.fg_mult_wild} "
-              f"max_line_mult={result.max_line_multiplier} capped={result.capped}")
+              f"yellow_used={result.bg_yellow_used + result.fg_yellow_used} max_mult={result.max_mult} "
+              f"fg_end_frame={result.fg_end_frame} capped={result.capped}")
 
 
 def run_batch(combo: dict[str, Any], index: int, total: int) -> None:
