@@ -880,13 +880,85 @@
         pool.forEach((cell) => { cell.style.visibility = ""; });
       }
 
-      // ── 輪帶滾動：先畫好結果盤面，再由 reelStripSpin 蓋輪帶往下捲、左到右停輪（Speed 5 同時停）──
+      // 掉落式 Spin（照 H027 宙斯 2500 實機效果，2026-11-04）：由左到右逐輪錯開。每輪舊符號逐顆往下掉出（最下排先掉），
+      // 該輪掉完後新符號逐顆從上方掉入（最下排先落定），由左到右依序停。時間依 demogameMotion（Speed 5 不隨機錯開），只做畫面，不動結果。
+      async function zeusDropSpin(columnsOf, render) {
+        const motion = window.demogameMotion;
+        const spinMs = motion ? motion.reelSpinMs() : 380;
+        const calm = (motion?.level() ?? 1) >= 5;
+        const board = boardEl;
+        const probe = document.createElement("div");
+        probe.style.position = "absolute";
+        board.appendChild(probe);
+        const host = probe.offsetParent || document.body;
+        probe.remove();
+        const rectIn = (node) => {
+          const r = node.getBoundingClientRect(), h = host.getBoundingClientRect();
+          return { x: r.left - h.left - host.clientLeft + host.scrollLeft, y: r.top - h.top - host.clientTop + host.scrollTop, w: r.width, h: r.height };
+        };
+        const strip = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+        const copyOf = (cell, box) => {
+          const copy = cell.cloneNode(true);
+          copy.classList.remove(...strip);
+          [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+          copy.removeAttribute("id");
+          copy.style.cssText += `;position:absolute;margin:0;left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;box-sizing:border-box;animation:none;transition:none;visibility:visible;will-change:transform`;
+          return copy;
+        };
+        const oldCopies = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean).map((cell) => { const box = rectIn(cell); return { box, node: copyOf(cell, box) }; }));
+        render();
+        const newCols = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean));
+        const all = newCols.flat();
+        if (!all.length) return;
+        const boxes = all.map(rectIn);
+        const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));
+        const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+        const height = bottom - top;
+        const win = document.createElement("div");
+        win.className = "dg-reel-window";
+        win.style.cssText = `position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent;left:${left}px;top:${top}px;width:${right - left}px;height:${height}px`;
+        board.appendChild(win);
+        const gapMs = motion ? motion.stopStaggerMs() : 80;   // 輪與輪由左到右錯開（Speed 5 為 0，同時停）
+        const rowStep = spinMs * 0.07;               // 同一輪相鄰兩排的錯開
+        const jitter = () => (calm ? 0 : Math.random() * spinMs * 0.05);   // 每顆的小幅隨機錯開
+        const fallMs = Math.max(90, spinMs * 0.38);  // 舊符號掉出
+        const landMs = Math.max(120, spinMs * 0.42); // 新符號落下
+        const anims = [];
+        const old0Len = () => (oldCopies[0] || []).length || 1;
+        let outEnd = 0;
+        oldCopies.forEach((list, col) => list.forEach((o, i) => {
+          o.node.style.left = `${o.box.x - left}px`;
+          o.node.style.top = `${o.box.y - top}px`;
+          win.appendChild(o.node);
+          const delay = col * gapMs + (list.length - 1 - i) * rowStep + jitter();
+          outEnd = Math.max(outEnd, delay + fallMs);
+          anims.push(o.node.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }],
+            { duration: fallMs, delay, easing: "cubic-bezier(.55,0,1,.6)", fill: "both" }));
+        }));
+        const inStart = Math.max(90, spinMs * 0.38) + (old0Len() - 1) * rowStep;   // 第 1 輪舊符號掉完才開始掉新符號；之後每輪再錯開 gapMs
+        newCols.forEach((cells, col) => cells.forEach((cell, i) => {
+          const b = rectIn(cell);
+          const copy = copyOf(cell, { ...b, x: b.x - left, y: b.y - top });
+          win.appendChild(copy);
+          cell.style.visibility = "hidden";
+          const dist = b.y - top + b.h + 20;
+          anims.push(copy.animate([
+            { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.8,.6)" },
+            { transform: `translateY(${Math.min(5, b.h * 0.05)}px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
+            { transform: "translateY(0)" }
+          ], { duration: landMs, delay: inStart + col * gapMs + (cells.length - 1 - i) * rowStep + jitter(), fill: "both" }));
+        }));
+        await Promise.race([Promise.all(anims.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, inStart + spinMs * 2 + 1500))]);
+        all.forEach((cell) => { cell.style.visibility = ""; });
+        win.remove();
+      }
+
       async function animateReels(finalBoard, finalMult) {
-        // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+        // 掉落式 Spin（2026-11-04 改照 H027 宙斯實機：由左到右逐輪、舊符號由下往上掉出、新符號由下往上落定；原為共用 dropSpin 整欄掉落）
         const columnsOf = () => Array.from({ length: SIZE }, (_, c) => Array.from({ length: SIZE }, (_, r) => cellEl(r, c)));
         const render = () => renderBoard(finalBoard, finalMult);
-        if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin(boardEl, columnsOf, render);
-        else { render(); await reelStripSpin(boardEl, columnsOf()); }
+        if (!boardEl.querySelector(".cell")) { render(); return; }
+        await zeusDropSpin(columnsOf, render);
       }
 
       // ── 掉落補牌動畫：既有符號 Settle、新符號 Drop／Refill 分開 ─────────────

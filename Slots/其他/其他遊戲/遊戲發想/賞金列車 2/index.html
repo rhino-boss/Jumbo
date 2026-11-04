@@ -2975,7 +2975,7 @@
       strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
         { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: `translateY(${pitch * 0.1}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: ms, fill: "both" });
       return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
@@ -3035,7 +3035,7 @@
       fxPopCells(step.hit);
       await fxWait(320);
 
-      // 3) 原地補牌（座標不動，中獎格直接補掉落表新符號）→ 新符號原位長出來；金框轉 Wild 彈出
+      // 3) 原地補牌（座標不動，中獎格直接補掉落表新符號）→ 新符號從盤面上方落進空格（照 H015 實機，2026-11-04；原為原地長出來）；金框轉 Wild 彈出
       const next = spin.steps[i + 1];
       const nextBoard = next?.board || spin.board;
       const nextGold = next?.gold || spin.gold;
@@ -3046,9 +3046,23 @@
         if (step.hit[row]?.[reel] === 2) wildPops.push(fxCell(row, reel));
         if (step.hit[row]?.[reel] === 1) fresh.push(fxCell(row, reel));
       }
-      const growMs = window.demogameMotion?.grow(fresh) ?? 380;
+      const dropMs = window.demogameMotion?.dropMs() ?? 380;
+      const gapMs = window.demogameMotion?.stopStaggerMs() ?? 80;
+      let lastEnd = 0;
+      for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
+        if (step.hit[row]?.[reel] !== 1) continue;
+        const cell = fxCell(row, reel);
+        if (!cell) continue;
+        const delay = reel * gapMs * 0.6 + (ROWS - 1 - row) * dropMs * 0.06;
+        lastEnd = Math.max(lastEnd, delay + dropMs);
+        cell.animate([
+          { transform: `translateY(${-(row + 1) * 112}%)`, easing: "cubic-bezier(.5,0,.85,.6)" },
+          { transform: "translateY(5%)", offset: 0.82, easing: "cubic-bezier(.3,0,.4,1)" },
+          { transform: "translateY(0)" }
+        ], { duration: dropMs, delay, fill: "backwards" });
+      }
       window.slotFx?.wildPop(wildPops);
-      await new Promise((resolve) => setTimeout(resolve, growMs + 80));
+      await new Promise((resolve) => setTimeout(resolve, lastEnd + 80));
     }
     renderBoard(spin.board, spin.gold); fxMarkBoard(spin.board);
     renderRng(spin.stops); renderSpinHistory(spin);

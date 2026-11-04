@@ -563,6 +563,35 @@
     #board .cell.peek-row { border-top-width: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
     /* 盤面只裁上緣：掉落中的符號不會超出盤面（左右下保留光暈） */
     body #board.board-grid { clip-path: inset(0 -14px -14px -14px); }   /* 權重需高過共用 #board.board-grid { clip-path: inset(-14px) } */
+    /* 消除與補牌（照 H026 彩罐熱舞實機效果，彩罐熱舞 2，2026-11-04）：得分符號先放大變亮、再縮小消失（不加外光暈，2026-11-04 使用者要求）；
+       補牌落下帶一次小回彈，新符號由下往上逐顆錯開（--drop-delay 由 renderBoard 寫入）。權重需高過共用 body #board 的 !important 規則 */
+    @keyframes h026-clear-pop {
+      0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+      30% { transform: scale(1.16); opacity: 1; filter: brightness(1.9); }
+      65% { transform: scale(.55); opacity: .85; filter: brightness(2.4); }
+      100% { transform: scale(.08); opacity: 0; filter: brightness(2.6); }
+    }
+    @keyframes h026-drop-bounce {
+      0% { transform: translateY(var(--drop-start, -105%)); }
+      78% { transform: translateY(8%); }
+      90% { transform: translateY(-2.5%); }
+      100% { transform: translateY(0); }
+    }
+    html body #board .cell.symbol-cleared { animation: h026-clear-pop 340ms cubic-bezier(.3,.6,.4,1) forwards !important; }
+    /* 得分格不要外光暈（2026-11-04 使用者要求）：只留共用的藍框；金框格只留 2px 藍環。權重需高過共用 body #board .cell:is(.hit…) 的 !important（三個 :not(#…) 只為提高優先權）*/
+    html body #board .cell:is(.hit,.fx-win):not(.symbol-cleared):not(#h026-a):not(#h026-b):not(#h026-c) { box-shadow: none !important; }
+    html body #board .cell:is(.hit,.fx-win):is(.gold,.special-gold):not(.symbol-cleared):not(#h026-a):not(#h026-b):not(#h026-c) { box-shadow: 0 0 0 2px #4fc3ff !important; }
+    /* 金框框住符號（照 H026 彩罐熱舞實機效果，彩罐熱舞 2，2026-11-04）：符號大小不變、金框放大到包住符號，框內墊藍色底 */
+    #board .cell.gold { overflow: visible; }
+    #board .cell.gold .frame-bg { opacity: 0; }   /* frame_bg 素材與金框同圖、沒有底色，改用下面的藍底 */
+    #board .cell.gold .frame-top { transform: scale(1.2); }
+    #board .cell.gold .symbol-wrap::before {
+      content: ""; position: absolute; inset: 5% 8.5%; z-index: 0; border-radius: 24%;   /* 圓角藏在波浪金框內，四角不外露 */
+      background: radial-gradient(120% 90% at 50% 35%, #5fe0ff 0%, #2b9cf0 45%, #1a57c8 100%);
+      box-shadow: inset 0 0 10px rgba(255, 255, 255, .35);
+    }
+    html body #board .cell.symbol-drop,
+    html body #board .cell.symbol-settle { animation: h026-drop-bounce var(--drop-duration, 380ms) cubic-bezier(.45,0,.6,1) var(--drop-delay, 0ms) both !important; }
   </style>
   <style id="h902-theme">
     :root {
@@ -4293,7 +4322,7 @@
         strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
           { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-          { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+          { transform: `translateY(${pitch * 0.1}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
           { transform: "translateY(0)" }
         ], { duration: ms, fill: "both" });
         // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）：輪帶複本與真格的小數像素對位不同，若等最後一輪停才一起換，已停的輪會突然位移不到 1px
@@ -4424,7 +4453,7 @@
         };
         renderClear();
         writeMessage(clearMessage);
-        await waitPlaybackStep(`Cascade ${step.cascade_index} clear`, 180, renderClear);
+        await waitPlaybackStep(`Cascade ${step.cascade_index} clear`, 340, renderClear);   // 等消除動畫（h026-clear-pop 340ms）播完
         const dropMessage = `Cascade ${step.cascade_index} | Drop complete`;
         const renderDrop = () => {
           const dropMotion = window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {};
