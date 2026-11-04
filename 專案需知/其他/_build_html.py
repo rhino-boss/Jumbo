@@ -28,6 +28,7 @@ HUB_NAME = "igaming_specification.html"     # 最外層入口：三產線＋Mine
 MINE_TAB_IDS = ["overview", "outputs", "gamerule", "sim", "demo", "proposal", "report", "demoreport"]
 FLOW_TAB_IDS = ["flow"]
 ERRORS_TAB_IDS = ["errors"]
+SPS_TAB_IDS = ["sps_oldhand"]   # 對外規格（給 SPS 實作）：獨立網頁，不併入 Omniplay 站
 
 # (tab_id, 頁籤名稱, 檔名：相對 專案需知/)
 TABS = [
@@ -51,6 +52,7 @@ TABS = [
     ("backend", "後端報表", "開發規範/Omniplay/後端報表.md"),
     ("ceiling", "天花板說明", "開發規範/Omniplay/天花板說明.md"),
     ("mechanism", "系統機制", "開發規範/Omniplay/機制說明.md"),
+    ("sps_oldhand", "老手救援實作規格", "開發規範/Omniplay/老手救援實作規格.md"),
 ]
 
 # 根 HTML 的頁籤分組：(大分類, [tab_id...])。一類多份文件時，左側導覽先列文件名。
@@ -74,16 +76,19 @@ MINE_GROUPS = [
 FLOW_GROUPS = [("開發流程", ["flow"])]
 # 錯誤紀錄網頁的頁籤分組
 ERRORS_GROUPS = [("錯誤紀錄", ["errors"])]
+# 對外規格網頁的頁籤分組
+SPS_GROUPS = [("系統相關", ["sps_oldhand"])]
 # 不同步出去的站
 PRIVATE_SITES = [
     ("mine", "開發規範", MINE_TAB_IDS, "mine_specification.html", "開發規範", MINE_GROUPS),
     ("flow", "開發流程", FLOW_TAB_IDS, "development_process.html", "開發流程", FLOW_GROUPS),
     ("errors", "錯誤紀錄", ERRORS_TAB_IDS, "error_list.html", "錯誤紀錄", ERRORS_GROUPS),
+    ("sps", "老手救援規格", SPS_TAB_IDS, "oldhand_rescue_spec.html", "老手救援 實作規格", SPS_GROUPS),
 ]
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
 EMBED_KEYS = {"mine", "errors"}
 # 入口左側導覽：(大標, [站 key...])，大標下列各站；沒列到的站歸最後一個大標
-HUB_SECTIONS = [("我的製程", ["mine", "flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin"])]
+HUB_SECTIONS = [("我的製程", ["mine", "flow", "errors"]), ("產線須知", ["omniplay", "landbase", "reskin"]), ("對外規格", ["sps"])]
 HUB_ORDER = [k for _t, ks in HUB_SECTIONS for k in ks]
 
 # 頁籤 icon（線條圖示，顏色跟著文字）；HIGHLIGHT_GROUPS 的文字另用黃色標示
@@ -1201,7 +1206,7 @@ def build_tree(root: Path, tabs, groups, private_sites, lines=True):
     """建置一整套：Omniplay／各產線（lines=True 時）／不外放的站（Mine、開發流程）＋ 最外層入口；網頁都在 root。"""
     global TREE_ROOT, LOCAL_ONLY
     TREE_ROOT = root
-    omni_tabs = [t for t in tabs if t[0] not in MINE_TAB_IDS + FLOW_TAB_IDS + ERRORS_TAB_IDS]
+    omni_tabs = [t for t in tabs if t[0] not in MINE_TAB_IDS + FLOW_TAB_IDS + ERRORS_TAB_IDS + SPS_TAB_IDS]
     # (key, 名稱, md 基準資料夾, tabs, 輸出, 頁首名稱, 分組)
     sites = [("omniplay", "Omniplay", root, omni_tabs, root / OMNI_FILE, ROOT_TITLE, groups)]
     for folder, out_name, site_title in (PRODUCT_LINES if lines else []):
