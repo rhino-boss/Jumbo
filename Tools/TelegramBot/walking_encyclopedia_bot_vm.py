@@ -30,6 +30,8 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     level=logging.INFO,
 )
+# httpx 的 INFO 會把含 token 的 API 網址整段印進 log
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger("tgbot")
 
 r"""
@@ -57,6 +59,7 @@ OUTPUT_DIR = BASE_DIR / "generated_reports"
 STRESS_PROGRESS_FILE = BASE_DIR / "stress_test_progress.json"
 STRESS_GAME_LIST_CANDIDATES = [
     BASE_DIR / "game_list.md",
+    BASE_DIR.parent.parent / "Slots" / "game_list.md",
     BASE_DIR.parent.parent / "Project" / "Slots" / "game_list.md",
 ]
 STRESS_GAMES_PER_PAGE = 8
@@ -74,6 +77,8 @@ STRESS_MODE_TO_COLUMN = {
     "BF": "押注-BF",
     "SF": "押注-SF",
 }
+# 新版 game_list.md 把五個押注欄合併成一欄，值如「NB 1 / BF 75」
+STRESS_MERGED_BET_COLUMN = "押注 (NB/EX1/EX2/BF/SF)"
 MAX_REPORT_FILES = 20
 ARCHIVE_EXTENSIONS = {".zip", ".rar"}
 REPORT_FILE_EXTENSIONS = ARCHIVE_EXTENSIONS | {".txt"}
@@ -1506,7 +1511,8 @@ def load_stress_games() -> list[dict]:
         if not line.lstrip().startswith("|"):
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if not headers and "Game ID" in cells and "遊戲中文名稱" in cells:
+        # 新版清單分中辦／北辦多張表、欄位不同，每遇到表頭就重新對應
+        if "Game ID" in cells and "遊戲中文名稱" in cells:
             headers = cells
             continue
         if not headers or len(cells) != len(headers) or all(set(cell) <= {"-", ":"} for cell in cells):
@@ -1521,12 +1527,25 @@ def load_stress_games() -> list[dict]:
             "parsheet_id": row.get("ParSheet ID", "").strip(),
             "english_name": row.get("遊戲英文名稱", "").strip(),
             "chinese_name": chinese_name,
-            "bets": {
-                mode: row.get(column, "").strip()
-                for mode, column in STRESS_MODE_TO_COLUMN.items()
-            },
+            "bets": parse_stress_bets(row),
         }
     return list(games_by_id.values())
+
+
+def parse_stress_bets(row: dict) -> dict[str, str]:
+    """同時支援舊版分欄（押注-NB…）與新版合併欄（NB 1 / BF 75）。"""
+    if STRESS_MERGED_BET_COLUMN not in row:
+        return {
+            mode: row.get(column, "").strip()
+            for mode, column in STRESS_MODE_TO_COLUMN.items()
+        }
+
+    bets = {mode: "" for mode in STRESS_MODE_TO_COLUMN}
+    for part in row[STRESS_MERGED_BET_COLUMN].split("/"):
+        tokens = part.split()
+        if len(tokens) == 2 and tokens[0].upper() in bets:
+            bets[tokens[0].upper()] = tokens[1]
+    return bets
 
 
 def parse_stress_multiplier(value: str) -> Decimal | None:
