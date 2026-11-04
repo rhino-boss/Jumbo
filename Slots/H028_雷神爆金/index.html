@@ -550,6 +550,9 @@
       height: auto;
       min-height: 0;
     }
+    /* 盤面高度跟著符號圖比例（素材 150×125＝6:5，2026-11-04）：格高＝格寬 × 5/6，符號不再被拉長；高符號 _h2～_h4 同比例 */
+    body.h028 .board-grid .cell:not(.jumbo) { aspect-ratio: 6 / 5; height: auto; }
+    body.h028 .board-grid .cell.peek-row { height: calc(var(--cell-size) * 5 / 6); aspect-ratio: auto; }
     body.h028 .cell .symbol-wrap,
     body.h028 .cell.peek-row .symbol-wrap { inset: 0; display: grid; place-items: center; overflow: hidden; }
     body.h028 .symbol-art,
