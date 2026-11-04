@@ -2484,6 +2484,24 @@
       font:800 14px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#e8b84a,#a8740f);
       border-radius:6px;box-shadow:0 0 12px rgba(232,184,74,.8)}
     .slot-fx-layer .fx-fly-badge.result{font-size:18px;color:#eaf6ff;background:linear-gradient(180deg,#4aa8ff,#1b4fd8);box-shadow:0 0 14px rgba(74,168,255,.8)}
+    /* 消除（照 H015 賞金列車實機效果，2026-11-04）：得分符號直接消失、原位炸出金色火光與碎屑（不畫圓圈） */
+    @keyframes h032-vanish { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes h032-boom {
+      0% { transform: scale(.3) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: scale(1.35) rotate(25deg) translateY(10%); opacity: 0; }
+    }
+    html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
+    html body #board .cell.symbol-cleared > * { animation: h032-vanish 90ms linear forwards !important; }
+    html body #board .cell.symbol-cleared::after {
+      content: ""; position: absolute; inset: -15%; pointer-events: none; z-index: 4;
+      background:
+        radial-gradient(closest-side at 50% 50%, rgba(255,248,200,.95), rgba(255,190,60,.75) 35%, rgba(255,120,20,.25) 60%, transparent 75%),
+        radial-gradient(circle at 18% 22%, #ffd75a 0 2.5px, transparent 3.5px), radial-gradient(circle at 80% 18%, #ffe68a 0 2px, transparent 3px),
+        radial-gradient(circle at 88% 62%, #f4a63a 0 2.5px, transparent 3.5px), radial-gradient(circle at 60% 90%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 22% 78%, #8a5a2b 0 2.5px, transparent 3.5px), radial-gradient(circle at 8% 50%, #ffe08a 0 2px, transparent 3px);
+      animation: h032-boom 480ms ease-out both !important;
+    }
   </style>`);
 
   // ===== Config → runtime tables =====
@@ -2774,14 +2792,85 @@
   function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
   function recordLine(mode, totalWin, wager) { if (mode === 0) window.demogameLineChart?.record(Number(totalWin || 0) / wager, "NB"); }
 
+  // 轉輪滾動：與 H015 賞金列車同一套（每輪蓋一條輪帶往下捲動、停在結果格）
+  async function reelStripSpin(board, columns) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const pool = columns.flat().filter(Boolean);
+    if (!board || !pool.length) return;
+    const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyCell = (node, width, height, x, y) => {
+      const copy = node.cloneNode(true);
+      copy.classList.remove(...dropClasses);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+      return copy;
+    };
+    const offsetIn = (node, host) => {
+      let x = 0, y = 0, n = node;
+      while (n && n !== host) {
+        x += n.offsetLeft; y += n.offsetTop;
+        n = n.offsetParent;
+        if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+      }
+      return { x, y };
+    };
+    const windows = [];
+    const jobs = columns.map((list, reel) => {
+      const cells = (list || []).filter(Boolean);
+      if (!cells.length) return Promise.resolve();
+      const ms = spinMs + gapMs * reel;
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
+      const hostRect = host.getBoundingClientRect();
+      const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
+      const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到
+      const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+      const last = boxes[boxes.length - 1];
+      const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
+      const strip = document.createElement("div");
+      strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+      boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      for (let k = 1; k <= extra; k += 1) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
+      }
+      win.appendChild(strip);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+      // 停輪前多往下滾 18% 格高再回彈到正確位置（同 H020）；最上面墊一格，回彈時不露出空白
+      const above = pool[Math.floor(Math.random() * pool.length)];
+      strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+      strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
+      const anim = strip.animate([
+        { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: ms, fill: "both" });
+      return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    pool.forEach((cell) => { cell.style.visibility = ""; });
+  }
+
   async function animateReels(snapshot) {
     const columnsOf = () => {
       const nodes = Array.from($("board").children).filter(node => node.classList.contains("cell"));
       return [0, 1, 2, 3, 4].map(reel => [0, 1, 2, 3].map(line => nodes[line * 5 + reel]));
     };
     const render = () => renderBoard(snapshot.board, [], { yellow: snapshot.yellow, frames: snapshot.frames });
-    if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin($("board"), columnsOf, render);
-    else render();
+    // 輪帶滾動、由左到右停輪（照 H015 賞金列車實機，2026-11-04；原為共用 demogameMotion.dropSpin 整欄掉落）
+    render();
+    await reelStripSpin($("board"), columnsOf());
   }
 
   // 中獎演出：基礎贏分 → 框總和閃爍 → 基礎贏分 × 框總和
@@ -2876,7 +2965,7 @@
         await wait(delay());
       } else if (snapshot.type === "eliminate") {
         renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared, converted: snapshot.converted, bumped: snapshot.bumped });
-        await wait(Math.max(200, 420 / Number($("speedRange").value || 1)));
+        await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等炸開火光（h032-boom 480ms）
       } else if (snapshot.type === "cascade") {
         renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop });
         await wait(Math.max(120, 520 / Number($("speedRange").value || 1)));

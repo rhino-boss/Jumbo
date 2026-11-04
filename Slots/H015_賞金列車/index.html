@@ -523,6 +523,24 @@
       color: #d7ccff;
       font-size: 0.8rem;
     }
+    /* 消除（仿 Wild Train 實機，2026-11-04）：得分符號直接消失、原位炸出金色火光與碎屑（不畫圓圈） */
+    @keyframes h015-vanish { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes h015-boom {
+      0% { transform: scale(.3) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: scale(1.35) rotate(25deg) translateY(10%); opacity: 0; }
+    }
+    html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
+    html body #board .cell.symbol-cleared > * { animation: h015-vanish 90ms linear forwards !important; }
+    html body #board .cell.symbol-cleared::after {
+      content: ""; position: absolute; inset: -15%; pointer-events: none; z-index: 4;
+      background:
+        radial-gradient(closest-side at 50% 50%, rgba(255,248,200,.95), rgba(255,190,60,.75) 35%, rgba(255,120,20,.25) 60%, transparent 75%),
+        radial-gradient(circle at 18% 22%, #ffd75a 0 2.5px, transparent 3.5px), radial-gradient(circle at 80% 18%, #ffe68a 0 2px, transparent 3px),
+        radial-gradient(circle at 88% 62%, #f4a63a 0 2.5px, transparent 3.5px), radial-gradient(circle at 60% 90%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 22% 78%, #8a5a2b 0 2.5px, transparent 3.5px), radial-gradient(circle at 8% 50%, #ffe08a 0 2px, transparent 3px);
+      animation: h015-boom 480ms ease-out both !important;
+    }
   </style>
   <style id="h902-theme">
     :root {
@@ -2860,17 +2878,28 @@
       await delay();
       if (step.wins.length) {
         renderBoard(step.board, step.gold, [], { cleared: step.hit });
-        await new Promise((resolve) => setTimeout(resolve, Math.max(70, 120 / Number(el.speedRange.value || 1))));
+        await new Promise((resolve) => setTimeout(resolve, Math.max(420, 520 / Number(el.speedRange.value || 1))));   // 等炸開火光（h015-boom 480ms）
         const next = spin.steps[i + 1];
-        // 原地補牌（座標不動，中獎格直接補掉落表新符號；金框轉 Wild 留原位）→ 新符號在原位長出來
+        // 原地補牌（座標不動，中獎格直接補掉落表新符號；金框轉 Wild 留原位）→ 新符號從盤面上方落進空格
+        // （仿 Wild Train 實機，2026-11-04；原為原地長出來），由左到右、同輪由下往上錯開，時間＝demogameMotion.dropMs
         renderBoard(next?.board || spin.board, next?.gold || spin.gold);
         const nodes = Array.from(el.board.children);
-        const fresh = [];
+        const dropMs = window.demogameMotion?.dropMs() ?? 380;
+        const gapMs = window.demogameMotion?.stopStaggerMs() ?? 80;
+        let lastEnd = 0;
         for (let row = 0; row < ROWS; row++) for (let reel = 0; reel < REELS; reel++) {
-          if (step.hit[row]?.[reel] === 1) fresh.push(nodes[row * REELS + reel]);
+          if (step.hit[row]?.[reel] !== 1) continue;
+          const cell = nodes[row * REELS + reel];
+          if (!cell) continue;
+          const delay = reel * gapMs * 0.6 + (ROWS - 1 - row) * dropMs * 0.06;
+          lastEnd = Math.max(lastEnd, delay + dropMs);
+          cell.animate([
+            { transform: `translateY(${-(row + 1) * 112}%)`, easing: "cubic-bezier(.5,0,.85,.6)" },
+            { transform: "translateY(5%)", offset: 0.82, easing: "cubic-bezier(.3,0,.4,1)" },
+            { transform: "translateY(0)" }
+          ], { duration: dropMs, delay, fill: "backwards" });
         }
-        const growMs = window.demogameMotion?.grow(fresh) ?? 380;
-        await new Promise((resolve) => setTimeout(resolve, growMs + 80));
+        await new Promise((resolve) => setTimeout(resolve, lastEnd + 80));
       }
     }
     renderBoard(spin.board, spin.gold); renderSpinHistory(spin);

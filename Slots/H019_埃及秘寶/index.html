@@ -523,6 +523,39 @@
       color: #d7ccff;
       font-size: 0.8rem;
     }
+    /* 消除與補牌（照 H027 宙斯 2500 實機效果，H019 埃及秘寶，2026-11-04）：得分符號直接消失、原位灑出金粉；補牌由下往上逐顆錯開落下。
+       權重需高過共用 body #board 的 !important 規則 */
+    @keyframes h027-burst {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes h027-sparkle {
+      0% { transform: scale(.4); opacity: 0; }
+      35% { opacity: 1; }
+      100% { transform: scale(1.7) translateY(18%); opacity: 0; }
+    }
+    @keyframes h027-drop {
+      0% { transform: translateY(var(--drop-start, -105%)); }
+      85% { transform: translateY(4%); }
+      100% { transform: translateY(0); }
+    }
+    html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
+    html body #board .cell.symbol-cleared > :not(.symbol-code) { animation: h027-burst 90ms linear forwards !important; }   /* 直接消失，不先變成別的樣子（2026-11-04 使用者要求） */
+    html body #board .cell.symbol-cleared::after {
+      content: ""; position: absolute; inset: -10%; pointer-events: none; z-index: 4;
+      background:
+        radial-gradient(circle at 20% 30%, #fff6c2 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 20%, #ffd75a 0 2px, transparent 3px),
+        radial-gradient(circle at 45% 55%, #fff 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 80% 65%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 80%, #ffe68a 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 60% 85%, #fff2a8 0 2px, transparent 3px),
+        radial-gradient(circle at 12% 60%, #ffd24d 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 88% 40%, #fff 0 1.5px, transparent 2.5px);
+      animation: h027-sparkle 520ms ease-out 120ms both !important;
+    }
+    html body #board .cell.symbol-drop,
+    html body #board .cell.symbol-settle { animation: h027-drop var(--drop-duration, 380ms) cubic-bezier(.45,0,.55,1) var(--drop-delay, 0ms) both !important; }
   </style>
   <style id="h902-theme">
     :root {
@@ -2598,7 +2631,10 @@
       if (dropMotion) {
         node.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
         node.style.setProperty("--drop-duration", `${window.demogameMotion?.dropMs() ?? 380}ms`);   // 掉落時間＝轉輪滾停時間
-        node.style.setProperty("--drop-delay", "0ms");
+        // 由下往上逐顆錯開（最下面那顆先落），每顆再加一點隨機錯開，像實機那樣不整齊落下（Speed 5 不錯開）
+        const dropStep = (window.demogameMotion?.dropMs() ?? 380) * 0.1;
+        const jitter = (window.demogameMotion?.level() ?? 1) < 5 ? Math.random() * dropStep : 0;
+        node.style.setProperty("--drop-delay", dropMotion.type === "new" ? `${Math.round((dropMotion.rows - 1 - rowIndex) * dropStep + jitter)}ms` : "0ms");
       }
       const wrap = document.createElement("div");
       wrap.className = "symbol-wrap";
@@ -2714,16 +2750,89 @@
     pool.forEach((cell) => { cell.style.visibility = ""; });
   }
 
+  // 掉落式 Spin（照 H027 宙斯 2500 實機效果，2026-11-04）：由左到右逐輪錯開。每輪舊符號逐顆往下掉出（最下排先掉），
+  // 該輪掉完後新符號逐顆從上方掉入（最下排先落定），由左到右依序停。時間依 demogameMotion（Speed 5 不隨機錯開），只做畫面，不動結果。
+  async function zeusDropSpin(columnsOf, render) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const calm = (motion?.level() ?? 1) >= 5;
+    const board = el.board;
+    const probe = document.createElement("div");
+    probe.style.position = "absolute";
+    board.appendChild(probe);
+    const host = probe.offsetParent || document.body;
+    probe.remove();
+    const rectIn = (node) => {
+      const r = node.getBoundingClientRect(), h = host.getBoundingClientRect();
+      return { x: r.left - h.left - host.clientLeft + host.scrollLeft, y: r.top - h.top - host.clientTop + host.scrollTop, w: r.width, h: r.height };
+    };
+    const strip = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyOf = (cell, box) => {
+      const copy = cell.cloneNode(true);
+      copy.classList.remove(...strip);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;box-sizing:border-box;animation:none;transition:none;visibility:visible;will-change:transform`;
+      return copy;
+    };
+    const oldCopies = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean).map((cell) => { const box = rectIn(cell); return { box, node: copyOf(cell, box) }; }));
+    render();
+    const newCols = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean));
+    const all = newCols.flat();
+    if (!all.length) return;
+    const boxes = all.map(rectIn);
+    const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));
+    const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+    const height = bottom - top;
+    const win = document.createElement("div");
+    win.className = "dg-reel-window";
+    win.style.cssText = `position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent;left:${left}px;top:${top}px;width:${right - left}px;height:${height}px`;
+    board.appendChild(win);
+    const gapMs = motion ? motion.stopStaggerMs() : 80;   // 輪與輪由左到右錯開（Speed 5 為 0，同時停）
+    const rowStep = spinMs * 0.07;               // 同一輪相鄰兩排的錯開
+    const jitter = () => (calm ? 0 : Math.random() * spinMs * 0.05);   // 每顆的小幅隨機錯開
+    const fallMs = Math.max(90, spinMs * 0.38);  // 舊符號掉出
+    const landMs = Math.max(120, spinMs * 0.42); // 新符號落下
+    const anims = [];
+    const old0Len = () => (oldCopies[0] || []).length || 1;
+    let outEnd = 0;
+    oldCopies.forEach((list, col) => list.forEach((o, i) => {
+      o.node.style.left = `${o.box.x - left}px`;
+      o.node.style.top = `${o.box.y - top}px`;
+      win.appendChild(o.node);
+      const delay = col * gapMs + (list.length - 1 - i) * rowStep + jitter();
+      outEnd = Math.max(outEnd, delay + fallMs);
+      anims.push(o.node.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }],
+        { duration: fallMs, delay, easing: "cubic-bezier(.55,0,1,.6)", fill: "both" }));
+    }));
+    const inStart = Math.max(90, spinMs * 0.38) + (old0Len() - 1) * rowStep;   // 第 1 輪舊符號掉完才開始掉新符號；之後每輪再錯開 gapMs
+    newCols.forEach((cells, col) => cells.forEach((cell, i) => {
+      const b = rectIn(cell);
+      const copy = copyOf(cell, { ...b, x: b.x - left, y: b.y - top });
+      win.appendChild(copy);
+      cell.style.visibility = "hidden";
+      const dist = b.y - top + b.h + 20;
+      anims.push(copy.animate([
+        { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.8,.6)" },
+        { transform: `translateY(${Math.min(5, b.h * 0.05)}px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: landMs, delay: inStart + col * gapMs + (cells.length - 1 - i) * rowStep + jitter(), fill: "both" }));
+    }));
+    await Promise.race([Promise.all(anims.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, inStart + spinMs * 2 + 1500))]);
+    all.forEach((cell) => { cell.style.visibility = ""; });
+    win.remove();
+  }
+
   async function animateReels(spin) {
-    // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+    // 掉落式 Spin（2026-11-04 改照 H027 宙斯 2500 實機，原為共用 demogameMotion.dropSpin 整欄掉落）
     const columnsOf = () => {
       const nodes = Array.from(el.board.children).filter((node) => node.classList.contains("cell"));
       return Array.from({ length: Box.reel_num }, (_, reel) =>
         Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
     };
     const render = () => renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
-    if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin(el.board, columnsOf, render);
-    else { render(); await reelStripSpin(el.board, columnsOf()); }
+    if (!el.board.querySelector(".cell")) { render(); return; }
+    await zeusDropSpin(columnsOf, render);
   }
 
   function updateFeatureBar(spin = null) {
@@ -2875,10 +2984,10 @@
       writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
       await sleep(360);
       renderBoard(boardCells(step.before, step.beforeC2Values), { clearedPositions: step.hitPositions });
-      await sleep(180);
+      await sleep(560);   // 等金粉播完（h027-sparkle 120＋520ms）
       const dropMotion = window.slotBuildDropMotion?.(step.before.length, step.before[0].length, step.hitPositions) || {};
       renderBoard(boardCells(step.after, step.afterC2Values), { dropMotion });
-      await sleep(((window.demogameMotion?.dropMs() ?? 380) + 180) * state.speed);
+      await sleep(((window.demogameMotion?.dropMs() ?? 380) * 1.5 + 180) * state.speed);   // ×1.5：含逐顆錯開
     }
 
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));

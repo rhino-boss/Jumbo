@@ -2874,6 +2874,18 @@
       82%{transform:translateY(3%)}
       to{transform:translateY(0)}
     }
+    /* 消除與補牌（仿 Super Diamond 實機，2026-11-04）：得分牌直接消失、原位灑出金色火花（不畫圓圈，2026-11-04 使用者要求）；
+       補牌的新牌從盤面上方落進空格（不再原地長出來），由左到右、同輪由下往上錯開 */
+    @keyframes h045-vanish{from{opacity:1}to{opacity:0}}
+    @keyframes h045-ring{0%{transform:scale(.35);opacity:0}25%{opacity:1}100%{transform:scale(1.25);opacity:0}}
+    html body #board .cell.symbol-cleared{animation:none!important;overflow:visible}
+    html body #board .cell.symbol-cleared > :not(.h045-ring){animation:h045-vanish 90ms linear forwards!important}
+    html body #board .cell.symbol-cleared::after{content:"";position:absolute;inset:-12%;border-radius:50%;pointer-events:none;z-index:4;
+      background:
+        radial-gradient(circle at 50% 8%, #fff6c2 0 2px, transparent 3px), radial-gradient(circle at 88% 30%, #ffd75a 0 2px, transparent 3px),
+        radial-gradient(circle at 92% 70%, #fff 0 1.5px, transparent 2.5px), radial-gradient(circle at 50% 94%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 10% 70%, #ffe68a 0 1.5px, transparent 2.5px), radial-gradient(circle at 12% 28%, #fff2a8 0 2px, transparent 3px);
+      animation:h045-ring 460ms ease-out both!important}
   </style>`);
 
   // ===== Config → runtime tables（欄位對應見數學模型的 Game Description 工作表）=====
@@ -3689,15 +3701,80 @@
     pool.forEach((cell) => { cell.style.visibility = ""; });
   }
 
+  // 掉落式 Spin（仿 Super Diamond 實機，2026-11-04）：舊牌整盤一起往下掉出；新牌由左到右逐輪落下，
+  // 同一輪由下往上逐張錯開、落定時輕微回彈。時間依 demogameMotion（Speed 5 同時），只做畫面，不動結果。
+  async function cardDropSpin(board, columnsOf, render) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const probe = document.createElement("div");
+    probe.style.position = "absolute";
+    board.appendChild(probe);
+    const host = probe.offsetParent || document.body;
+    probe.remove();
+    const rectIn = (node) => {
+      const r = node.getBoundingClientRect(), h = host.getBoundingClientRect();
+      return { x: r.left - h.left - host.clientLeft + host.scrollLeft, y: r.top - h.top - host.clientTop + host.scrollTop, w: r.width, h: r.height };
+    };
+    const strip = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyOf = (cell, box) => {
+      const copy = cell.cloneNode(true);
+      copy.classList.remove(...strip);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;box-sizing:border-box;animation:none;transition:none;visibility:visible;will-change:transform`;
+      return copy;
+    };
+    const oldCells = columnsOf().flat().filter(Boolean).map((cell) => { const box = rectIn(cell); return { box, node: copyOf(cell, box) }; });
+    render();
+    const newCols = columnsOf().map((cells) => cells.filter(Boolean));
+    const all = newCols.flat();
+    if (!all.length) return;
+    const boxes = all.map(rectIn);
+    const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));
+    const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+    const height = bottom - top;
+    const win = document.createElement("div");
+    win.className = "dg-reel-window";
+    win.style.cssText = `position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent;left:${left}px;top:${top}px;width:${right - left}px;height:${height}px`;
+    board.appendChild(win);
+    const fallMs = Math.max(80, spinMs * 0.3);     // 舊牌整盤掉出
+    const rowStep = spinMs * 0.07;                 // 同一輪相鄰兩張的錯開
+    const landMs = Math.max(120, spinMs * 0.45);   // 新牌落下＋回彈
+    const anims = [];
+    oldCells.forEach((o) => {
+      o.node.style.left = `${o.box.x - left}px`;
+      o.node.style.top = `${o.box.y - top}px`;
+      win.appendChild(o.node);
+      anims.push(o.node.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }],
+        { duration: fallMs, easing: "cubic-bezier(.55,0,1,.6)", fill: "both" }));
+    });
+    newCols.forEach((cells, col) => cells.forEach((cell, i) => {
+      const b = rectIn(cell);
+      const copy = copyOf(cell, { ...b, x: b.x - left, y: b.y - top });
+      win.appendChild(copy);
+      cell.style.visibility = "hidden";
+      const dist = b.y - top + b.h + 20;
+      anims.push(copy.animate([
+        { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.85,.6)" },
+        { transform: `translateY(${Math.min(8, b.h * 0.07)}px)`, offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: landMs, delay: fallMs * 0.8 + col * gapMs + (cells.length - 1 - i) * rowStep, fill: "both" }));
+    }));
+    await Promise.race([Promise.all(anims.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, spinMs * 3 + 1500))]);
+    all.forEach((cell) => { cell.style.visibility = ""; });
+    win.remove();
+  }
+
   async function animateReels(initialBoard, initialGold = null, initialMults = null, scene = "bg") {
-    // 掉落類 Spin：沒有輪帶滾動，舊盤面整欄掉出、新符號整欄掉入（共用 demogameMotion.dropSpin，左到右逐欄、Speed 5 同時）
+    // 掉落式 Spin（2026-11-04 改照實機，原為共用 demogameMotion.dropSpin 整欄掉落）
     const columnsOf = () => {
       const nodes = Array.from($("board").children).filter(node => node.classList.contains("cell"));   // DOM 順序：由上（row 3）到下、由左到右
       return [0, 1, 2, 3, 4].map(reel => [0, 1, 2, 3].map(line => nodes[line * 5 + reel]));
     };
     const render = () => renderBoard(initialBoard, [], { gold: initialGold || zeroGold(), mults: initialMults || zeroMults() });
-    if (window.demogameMotion?.dropSpin) await window.demogameMotion.dropSpin($("board"), columnsOf, render);
-    else { render(); await reelStripSpin($("board"), columnsOf()); }
+    if (!$("board").querySelector(".cell")) { render(); return; }
+    await cardDropSpin($("board"), columnsOf, render);
   }
 
   function renderWinDetails(snapshot) {
@@ -3729,14 +3806,28 @@
         await wait(delay());
       } else if (snapshot.type === "eliminate") {
         renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared || [], converted: snapshot.converted || [] });
-        await wait(Math.max(180, 320 / Number($("speedRange").value || 1)));
+        await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等金色火花（h045-ring 460ms）
       } else if (snapshot.type === "cascade") {
-        // 原地補牌：不播掉落，新補入的格子在原位「長出來」（時間＝demogameMotion.growMs）
+        // 原地補牌（結果不變）：新補入的牌從盤面上方落進空格（仿實機，2026-11-04；原為原地長出來），
+        // 由左到右逐輪、同輪由下往上錯開，時間＝demogameMotion.dropMs
         renderBoard(snapshot.board, [], common);
         const nodes = $("board").children;
-        const grown = (snapshot.drop || []).map(item => { const [reel, row] = item.key.split(",").map(Number); return nodes[(3 - row) * 5 + reel]; }).filter(Boolean);
-        const growMs = window.demogameMotion ? window.demogameMotion.grow(grown) : 0;
-        await wait(Math.max(60, growMs));
+        const dropMs = window.demogameMotion ? window.demogameMotion.dropMs() : 380;
+        const gapMs = window.demogameMotion ? window.demogameMotion.stopStaggerMs() : 80;
+        let lastEnd = 0;
+        (snapshot.drop || []).forEach(item => {
+          const [reel, row] = item.key.split(",").map(Number);
+          const line = 3 - row, cell = nodes[line * 5 + reel];
+          if (!cell) return;
+          const delay = reel * gapMs * 0.6 + row * dropMs * 0.08;
+          lastEnd = Math.max(lastEnd, delay + dropMs);
+          cell.animate([
+            { transform: `translateY(${-(line + 1) * 112}%)`, easing: "cubic-bezier(.5,0,.85,.6)" },
+            { transform: "translateY(5%)", offset: 0.82, easing: "cubic-bezier(.3,0,.4,1)" },
+            { transform: "translateY(0)" }
+          ], { duration: dropMs, delay, fill: "backwards" });
+        });
+        await wait(Math.max(60, lastEnd));
       } else if (snapshot.type === "wild-mark") {
         await animateSplitCopies(snapshot, common);
         renderBoard(snapshot.board, [], { ...common, marked: snapshot.marked || [] });
