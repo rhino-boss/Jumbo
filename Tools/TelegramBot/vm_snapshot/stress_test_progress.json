@@ -1,0 +1,81 @@
+{
+  "101014": {
+    "BF:large:old": {
+      "report_id": "9nVLtS1qni0Fli7c",
+      "time": "2026-07-29T22:09:10.851283201+08:00",
+      "bet": "75000.00"
+    },
+    "NB:small:new": {
+      "report_id": "4YAO9ZfHwQ8tPrKU",
+      "time": "2026-07-29T19:33:55.092808663+08:00",
+      "bet": "1.00"
+    },
+    "NB:large:old": {
+      "report_id": "cepw8NHeAcYg3Bf4",
+      "time": "2026-07-30T11:41:49.001341563+08:00",
+      "bet": "1500.00"
+    },
+    "BF:small:new": {
+      "report_id": "I7EYWoqSdzgpQuch",
+      "time": "2026-07-29T20:47:33.975237797+08:00",
+      "bet": "75.00"
+    },
+    "BF:small:old": {
+      "report_id": "4JjfWH4BuKBEVQ4K",
+      "time": "2026-07-29T21:29:19.347760965+08:00",
+      "bet": "75.00"
+    },
+    "NB:small:old": {
+      "report_id": "9zk5qkO85bD3mFch",
+      "time": "2026-07-28T15:34:47.587839439+08:00",
+      "bet": "1.00"
+    },
+    "NB:medium:old": {
+      "report_id": "5XTfoEWKtzRebi02",
+      "time": "2026-08-20T16:15:18.008184089+08:00",
+      "bet": "60.00"
+    },
+    "EX1:large:old": {
+      "report_id": "5S9IrlRf5g2LbFsD",
+      "time": "2026-08-20T16:36:09.405646540+08:00",
+      "bet": "3000.00"
+    }
+  },
+  "101003": {
+    "NB:small:old": {
+      "report_id": "uIotL2QEyLwx12kW",
+      "time": "2026-08-24T14:42:29.356336363+08:00",
+      "bet": "1.00"
+    },
+    "NB:medium:old": {
+      "report_id": "1njx2vXp0td7PBeb",
+      "time": "2026-08-24T14:56:15.220980946+08:00",
+      "bet": "60.00"
+    },
+    "NB:large:old": {
+      "report_id": "mjk0URdx1XC8BTgU",
+      "time": "2026-08-24T15:10:12.116110023+08:00",
+      "bet": "1500.00"
+    },
+    "SF:small:old": {
+      "report_id": "vLp1jUMeMoDIwcnZ",
+      "time": "2026-08-25T23:22:04.927104587+08:00",
+      "bet": "40.50"
+    },
+    "SF:medium:old": {
+      "report_id": "kWOEIRRH4Lxtdi6x",
+      "time": "2026-08-26T04:55:17.127028865+08:00",
+      "bet": "2430.00"
+    },
+    "SF:large:old": {
+      "report_id": "p0NHy2BaZfAWzwj1",
+      "time": "2026-08-26T10:27:22.737411591+08:00",
+      "bet": "60750.00"
+    },
+    "SF:small:new": {
+      "report_id": "FVz77TjHZQWz6PSD",
+      "time": "2026-08-24T18:12:07.115983068+08:00",
+      "bet": "40.50"
+    }
+  }
+}
