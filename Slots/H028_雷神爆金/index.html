@@ -2871,7 +2871,7 @@
       const last = boxes[boxes.length - 1];
       const unit = opts.unit || { w: last.w, h: last.h };
       const pitch = opts.pitch || (boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h);
-      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 24), (window.demogameMotion?.level() ?? 1) < 5 ? 26 : 0);   // 照 Thunder Boost 實機多滾很多格（2026-11-04）：Speed 1～4 至少滾 26 個符號，Speed 5 維持
       const strip = document.createElement("div");
       strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
       boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
