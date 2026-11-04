@@ -2245,6 +2245,7 @@
           <li>觸發 FG 跳出看板「免費遊戲 N 場」（Image 開啟時帶 C1 圖示；Auto 模式 1 秒後自動消失，非 Auto 要點盤面或按 Spin 關閉），看板消失後才開始 FG；Help 賠率表在 Image 開啟時顯示符號圖示；看板與 Help 彈窗開著時背景不能捲動。（11/03）</li>
           <li>待確認事項定案：得分改用本次消除「後」的框倍數總和（先更新框再計分，中獎演出收集的就是更新後的框）；WILD 在框內消除 +1、黃底在框內只加倍數不再 +1、Scatter 看最終盤面、FG 上限 50 場、Buy Feature 100x、目前無 Extra Bet／彩金。（11/03）</li>
           <li>數學模型參數寫進 H0321.xlsx 並重轉 config：黃底參數改跟著輪帶表（初始／補牌機率、倍數權重、符號係數），抽表權重改用模型的 table_weight（拿掉 demo_table_weight，Demo 為自然機率）；FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、Frame Tier、優先順序）與 Simulator 同一套邏輯，BF 的 FG 用 bf_fg_* 權重。（11/03）</li>
+          <li>同步超級鑽石：BF_Symbol 換成鑽石 11/02 新版（每輪 200 停點）；黃底機率改為鑽石金框每格平均機率（R5 比照 R4、補牌同初始）；BG 抽表權重 4/1/5、FG 一般局 2/8/0（BF 的 FG 同）。（11/03）</li>
         </ol>
       </article>
       </div>
@@ -2361,7 +2362,7 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./config.js?v=20261103b"></script>
+  <script src="./config.js?v=20261103c"></script>
   <script>
 (() => {
   "use strict";
