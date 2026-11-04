@@ -2248,6 +2248,8 @@
           <li>同步超級鑽石：BF_Symbol 換成鑽石 11/02 新版（每輪 200 停點）；黃底機率改為鑽石金框每格平均機率（R5 比照 R4、補牌同初始）；BG 抽表權重 4/1/5、FG 一般局 2/8/0（BF 的 FG 同）。（11/03）</li>
           <li>滾停黃底改為平均 4 顆：BG、FG 的初始黃底機率各自等比例放大（BG ×2.07、FG ×1.64，各軸與各表比例不變）；補牌黃底機率不變。（11/04）</li>
           <li>自然 RTP 壓到 500% 以內：重排 BG／FG 輪帶 R2～R5 的一般符號（相鄰軸偏重不同符號組：R2／R4 偏 M1、M3、A、Q，R3／R5 偏 M2、M4、K、J；BG 偏重 90%、FG 80%），補牌權重同方向調整，補牌黃底機率＝滾停的一半；C1 位置、輪長、停輪權重、R1、BF 進場表不動，滾停黃底維持平均 4 顆。（11/04）</li>
+          <li>中獎率與週期校準（BG Hit Rate 25%、FG Hit Rate 45%、FG 週期約 1/200）：輪帶相鄰軸偏重放寬為 BG 84.5%／FG 59%；BG 表 3 補牌 C1 權重 ×0.7；黃底倍數權重改為 1X 偏多（600/250/90/30/15/8/4/2/1/1，FG 好表同）；補牌黃底＝滾停 × 0.2（BG）／× 0.15（FG）；滾停黃底仍平均 4 顆。（11/04）</li>
+          <li>倍數框改為橘色發光框（2px 橘框＋外／內光暈、淡橘半透明底），框的倍數徽章改橘色；黃底維持金色。（11/04）</li>
         </ol>
       </article>
       </div>
@@ -2364,7 +2366,7 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./config.js?v=20261104b"></script>
+  <script src="./config.js?v=20261104c"></script>
   <script>
 (() => {
   "use strict";
@@ -2458,12 +2460,12 @@
     #board .yellow-badge,#board .frame-badge{position:absolute;font:700 11px/15px system-ui,sans-serif;color:#1a1000;
       background:linear-gradient(180deg,#e8b84a,#a8740f);border:1px solid #ffe7a0;border-radius:5px;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap}
     #board .yellow-badge{z-index:5;top:3px;left:3px}
-    #board .frame-badge{bottom:4px;right:4px}
-    /* 倍數框：最上層、細框、立體斜面；大小與符號格相同 */
+    #board .frame-badge{bottom:4px;right:4px;background:linear-gradient(180deg,#ffb04a,#d8640a);border-color:#ffd7a6}
+    /* 倍數框：最上層、橘色發光框（2px 橘框、外光暈＋內光暈、淡橘半透明底）；大小與符號格相同 */
     #board{position:relative}
-    #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2px solid;border-radius:8px;
-      border-color:#ffe7a0 #9a6a08 #6e4a00 #e0b040;
-      box-shadow:0 1px 2px rgba(0,0,0,.75),0 -1px 0 rgba(255,240,200,.35)}
+    #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2px solid #ffa23a;border-radius:8px;
+      background:linear-gradient(180deg,rgba(255,150,40,.18),rgba(255,105,20,.06));
+      box-shadow:0 0 12px rgba(255,135,30,.7),inset 0 0 14px rgba(255,150,40,.38)}
     #board .frame-layer.bump{animation:h099FrameBump 360ms ease-out}
     @keyframes h099FrameBump{from{transform:scale(1.18);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
     #board .frame-layer.score{animation:h099FrameScore 260ms ease-in-out infinite alternate}
