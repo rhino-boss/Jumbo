@@ -544,6 +544,8 @@
     }
     @keyframes h026-drop-bounce {
       0% { transform: translateY(var(--drop-start, -105%)); }
+      78% { transform: translateY(8%); }
+      90% { transform: translateY(-2.5%); }
       100% { transform: translateY(0); }
     }
     html body #board .cell.symbol-cleared { animation: h026-clear-pop 340ms cubic-bezier(.3,.6,.4,1) forwards !important; }
@@ -4274,7 +4276,7 @@
         strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
           { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-          { transform: `translateY(0px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+          { transform: `translateY(${pitch * 0.1}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
           { transform: "translateY(0)" }
         ], { duration: ms, fill: "both" });
         // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）：輪帶複本與真格的小數像素對位不同，若等最後一輪停才一起換，已停的輪會突然位移不到 1px

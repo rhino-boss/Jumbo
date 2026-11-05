@@ -2890,7 +2890,7 @@
       strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
         { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-        { transform: `translateY(0px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },   // 停輪回彈 10%（原 18%，2026-11-04 照 Thunder Boost 實機縮小）
+        { transform: `translateY(${pitch * 0.1}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },   // 停輪回彈 10%（原 18%，2026-11-04 照 Thunder Boost 實機縮小）
         { transform: "translateY(0)" }
       ], { duration: ms, fill: "both" });
       return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });

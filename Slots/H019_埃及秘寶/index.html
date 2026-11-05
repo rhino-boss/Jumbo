@@ -536,6 +536,7 @@
     }
     @keyframes h027-drop {
       0% { transform: translateY(var(--drop-start, -105%)); }
+      85% { transform: translateY(4%); }
       100% { transform: translateY(0); }
     }
     html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
@@ -2739,7 +2740,7 @@
       strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
         { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-        { transform: `translateY(0px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: ms, fill: "both" });
       return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
@@ -2813,7 +2814,7 @@
       const dist = b.y - top + b.h + 20;
       anims.push(copy.animate([
         { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.8,.6)" },
-        { transform: `translateY(0px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: `translateY(${Math.min(5, b.h * 0.05)}px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: landMs, delay: inStart + col * gapMs + (cells.length - 1 - i) * rowStep + jitter(), fill: "both" }));
     }));
