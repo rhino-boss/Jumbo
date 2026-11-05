@@ -280,14 +280,19 @@ def render_timeline(lines) -> str:
                 return p0 + (p1 - p0) * (spin - x0) / (x1 - x0)
         return scale[-1][1]
 
+    # 軌道高度（px，與 CSS .tl-track 一致；第一列 36、其餘 52，各含 1px 底線），用來畫事件起點到轉數軸的虛線
+    heights = [36 if i == 0 else 52 for i in range(len(lanes))]
     out = ['<div class="tl-wrap"><div class="tl">']
-    for name, items in lanes:
+    for row, (name, items) in enumerate(lanes):
         out.append(f'<div class="tl-row"><div class="tl-lane">{render_inline(name)}</div><div class="tl-track">')
+        guide = heights[row] - 22 + 1 + sum(h + 1 for h in heights[row + 1:])
         for spans, label, kind in items:
             for lo, hi in spans:
                 left = pos(lo - 1)
                 width = max(pos(hi) - left, 0.6)
                 inner = render_inline(label) if kind != "event" else ""
+                if kind == "event":
+                    out.append(f'<div class="tl-guide" style="left:{left:.2f}%;height:{guide}px"></div>')
                 out.append(f'<div class="tl-bar {kind}" style="left:{left:.2f}%;width:{width:.2f}%">{inner}</div>')
             if kind == "event" and label:
                 out.append(f'<div class="tl-label" style="left:{pos(spans[0][0] - 1):.2f}%">{render_inline(label)}</div>')
@@ -766,7 +771,8 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tl-bar.phase2{{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}}
 .tl-bar.stop{{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}}
 .tl-bar.event{{background:var(--s2); opacity:.85; height:16px; top:6px}}
-.tl-label{{position:absolute; top:24px; font-size:1em; color:var(--ink); white-space:nowrap}}
+.tl-label{{position:absolute; z-index:1; top:24px; padding:0 4px; background:var(--panel); font-size:1em; color:var(--ink); white-space:nowrap}}
+.tl-guide{{position:absolute; top:22px; border-left:1px dashed var(--ink-3); opacity:.55; pointer-events:none}}
 .tl-axis{{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}}
 .tl-tick{{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
   color:var(--ink-3); padding-top:5px; white-space:nowrap}}
