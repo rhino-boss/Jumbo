@@ -964,7 +964,7 @@
       // ── 掉落補牌動畫：既有符號 Settle、新符號 Drop／Refill 分開 ─────────────
       function applyDropAnim(removeSet) {
         // 掉落整段＝dropMs（＝轉輪滾停時間，依 Speed）；不再依落差加長、也不逐欄錯開
-        const dur = window.demogameMotion?.dropMs() ?? 380;
+        const dur = Math.max(40, Math.round(230 * (window.demogameMotion?.dropMs() ?? 700) / 700));   // 補牌落下時間照 H027 實機影片（Speed 1 為 230ms），2026-11-05
         const removedByCol = Array.from({ length: SIZE }, () => new Set());
         removeSet.forEach((key) => removedByCol[key % SIZE].add(Math.floor(key / SIZE)));
         let maxTime = 0;

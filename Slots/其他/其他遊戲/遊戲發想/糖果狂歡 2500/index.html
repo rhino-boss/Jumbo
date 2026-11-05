@@ -2759,6 +2759,8 @@
     }
   };
 
+  // 補牌落下到位時間：照實機影片量測（Speed 1 為 230ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  function refillMs() { return Math.max(40, Math.round(230 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
   function renderBoard(board, options = {}) {
     lastBoardRender = { board, options };
     const hitSet = new Set((options.hitPositions || []).map(([row, reel]) => `${row}-${reel}`));
@@ -2772,9 +2774,9 @@
       node.className = `cell ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${clearedSet.has(`${rowIndex}-${reelIndex}`) ? "symbol-cleared" : ""} ${dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : ""} ${options.spinning ? "reel-spin" : ""}`;
       if (dropMotion) {
         node.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
-        node.style.setProperty("--drop-duration", `${window.demogameMotion?.dropMs() ?? 380}ms`);   // 掉落時間＝轉輪滾停時間
+        node.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片
         // 由下往上逐顆錯開（最下面那顆先落），每顆再加一點隨機錯開，像實機那樣不整齊落下（Speed 5 不錯開）
-        const dropStep = (window.demogameMotion?.dropMs() ?? 380) * 0.1;
+        const dropStep = refillMs() * 0.1;
         const jitter = (window.demogameMotion?.level() ?? 1) < 5 ? Math.random() * dropStep : 0;
         node.style.setProperty("--drop-delay", dropMotion.type === "new" ? `${Math.round((dropMotion.rows - 1 - rowIndex) * dropStep + jitter)}ms` : "0ms");
       }
@@ -3131,7 +3133,7 @@
       await sleep(560);   // 等金色爆開＋金粉（h027-burst 460ms、h027-sparkle 120＋520ms）
       const dropMotion = window.slotBuildDropMotion?.(step.before.length, step.before[0].length, step.hitPositions) || {};
       renderBoard(boardCells(step.after, step.afterC2Values), { dropMotion });
-      await sleep(((window.demogameMotion?.dropMs() ?? 380) * 1.5 + 180) * state.speed);   // ×1.5：含逐顆錯開
+      await sleep((refillMs() * 1.5 + 120) * state.speed);   // ×1.5：含逐顆錯開
     }
 
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));

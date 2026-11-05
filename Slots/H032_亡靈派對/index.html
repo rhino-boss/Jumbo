@@ -2476,7 +2476,7 @@
     #board .h019-glyph{display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
       color:#d8e8f4;font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;letter-spacing:.02em;text-shadow:0 2px 3px rgba(0,0,0,.72)}
     #board .symbol-drop,#board .symbol-settle{animation:h099-symbol-drop var(--drop-duration,160ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;will-change:transform}
-    @keyframes h099-symbol-drop{from{transform:translateY(var(--drop-start,-112%))}82%{transform:translateY(3%)}to{transform:translateY(0)}}
+    @keyframes h099-symbol-drop{from{transform:translateY(var(--drop-start,-112%))}82%{transform:translateY(0)}to{transform:translateY(0)}}
     #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
     @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     /* 倍數收集飛行體（同 H045 中獎演出） */
@@ -2769,7 +2769,7 @@
       cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${icon ? " has-symbol-art" : ""}${y ? " yellow gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
-        cell.style.setProperty("--drop-duration", `${Math.max(40, 320 / speed / DROP_SPEED_MULTIPLIER * Math.sqrt(Math.max(1, motion.rows)))}ms`);
+        cell.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片（照 H015）
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
       }
       const art = icon ? `<span class="sym-icon" aria-label="${code}">${icon}</span>${code === "WW" || code === "C1" ? `<span class="sym-tag">${code === "WW" ? "WILD" : "SCATTER"}</span>` : ""}` : "";
@@ -2862,6 +2862,8 @@
     pool.forEach((cell) => { cell.style.visibility = ""; });
   }
 
+  // 補牌落下到位時間：照實機影片量測（Speed 1 為 280ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  function refillMs() { return Math.max(40, Math.round(280 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
   async function animateReels(snapshot) {
     const columnsOf = () => {
       const nodes = Array.from($("board").children).filter(node => node.classList.contains("cell"));
@@ -2968,7 +2970,7 @@
         await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等炸開火光（h032-boom 480ms）
       } else if (snapshot.type === "cascade") {
         renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop });
-        await wait(Math.max(120, 520 / Number($("speedRange").value || 1)));
+        await wait(refillMs() + 120);
       }
     }
     const last = snapshots.at(-1); if (last) renderBoard(last.board, [], { yellow: last.yellow, frames: last.frames });

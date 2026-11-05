@@ -3766,6 +3766,8 @@
     win.remove();
   }
 
+  // 補牌落下到位時間：照實機影片量測（Speed 1 為 160ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  function refillMs() { return Math.max(40, Math.round(160 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
   async function animateReels(initialBoard, initialGold = null, initialMults = null, scene = "bg") {
     // 掉落式 Spin（2026-11-04 改照實機，原為共用 demogameMotion.dropSpin 整欄掉落）
     const columnsOf = () => {
@@ -3812,7 +3814,7 @@
         // 由左到右逐輪、同輪由下往上錯開，時間＝demogameMotion.dropMs
         renderBoard(snapshot.board, [], common);
         const nodes = $("board").children;
-        const dropMs = window.demogameMotion ? window.demogameMotion.dropMs() : 380;
+        const dropMs = refillMs();
         const gapMs = window.demogameMotion ? window.demogameMotion.stopStaggerMs() : 80;
         let lastEnd = 0;
         (snapshot.drop || []).forEach(item => {

@@ -573,8 +573,6 @@
     }
     @keyframes h026-drop-bounce {
       0% { transform: translateY(var(--drop-start, -105%)); }
-      78% { transform: translateY(8%); }
-      90% { transform: translateY(-2.5%); }
       100% { transform: translateY(0); }
     }
     html body #board .cell.symbol-cleared { animation: h026-clear-pop 340ms cubic-bezier(.3,.6,.4,1) forwards !important; }
@@ -4020,7 +4018,7 @@
       const extra = Math.max(DISPLAY_WINDOW_SIZE + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);
       return ms / extra;
     }
-    function dropDurationMs(rows) { return Math.max(90, Math.round(Number(rows || 1) * dropRowMs())); }
+    function dropDurationMs(rows) { return Math.max(40, Math.round(180 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }   // 補牌落下時間照 H026 實機影片（Speed 1 為 180ms），2026-11-05
 
     function renderBoard(board, options = {}) {
       lastBoardRender = { board, options };

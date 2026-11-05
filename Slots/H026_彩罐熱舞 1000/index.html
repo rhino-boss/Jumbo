@@ -544,8 +544,6 @@
     }
     @keyframes h026-drop-bounce {
       0% { transform: translateY(var(--drop-start, -105%)); }
-      78% { transform: translateY(8%); }
-      90% { transform: translateY(-2.5%); }
       100% { transform: translateY(0); }
     }
     html body #board .cell.symbol-cleared { animation: h026-clear-pop 340ms cubic-bezier(.3,.6,.4,1) forwards !important; }
@@ -3976,6 +3974,8 @@
       }
     };
 
+    // 補牌落下到位時間：照實機影片量測（Speed 1 為 180ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+    function refillMs() { return Math.max(40, Math.round(180 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
     function renderBoard(board, options = {}) {
       lastBoardRender = { board, options };
       const hitSet = new Set((options.hitPositions || []).map(([row, col]) => `${row}-${col}`));
@@ -3993,9 +3993,9 @@
           cellEl.className = ["cell", board.length > Box.window_size && rowIndex === 0 ? "peek-row" : "", cell.is_gold ? "gold" : "", cell.is_special_gold ? "special-gold" : "", hitSet.has(`${rowIndex}-${colIndex}`) ? "hit" : "", convertSet.has(`${rowIndex}-${colIndex}`) ? "convert" : "", clearedSet.has(`${rowIndex}-${colIndex}`) ? "symbol-cleared" : "", dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : "", reelSpin ? "reel-spin" : ""].filter(Boolean).join(" ");
           if (dropMotion) {
             cellEl.style.setProperty("--drop-start", dropPitch ? `${-dropMotion.rows * dropPitch}px` : `${-dropMotion.rows * 105}%`);
-            cellEl.style.setProperty("--drop-duration", `${window.demogameMotion?.dropMs() ?? 380}ms`);   // 掉落時間＝轉輪滾停時間
+            cellEl.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片
             // 新符號由下往上逐顆錯開落下（最下面那顆先落），既有符號下移不錯開
-            const dropStep = (window.demogameMotion?.dropMs() ?? 380) * 0.08;
+            const dropStep = refillMs() * 0.08;
             cellEl.style.setProperty("--drop-delay", dropMotion.type === "new" ? `${Math.round((dropMotion.rows - 1 - rowIndex) * dropStep)}ms` : "0ms");
           }
           const wrap = document.createElement("div");
@@ -4383,7 +4383,7 @@
         };
         renderDrop();
         writeMessage(dropMessage);
-        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, ((window.demogameMotion?.dropMs() ?? 380) * 1.3 + 180) * state.speedMultiplier, renderDrop);   // ×1.3：含新符號逐顆錯開的時間
+        await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (refillMs() * 1.3 + 120) * state.speedMultiplier, renderDrop);   // ×1.3：含新符號逐顆錯開的時間
       }
       const finalMessage = `Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`;
       const renderFinal = () => {
