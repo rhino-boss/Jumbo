@@ -237,7 +237,38 @@ def render_inline(text: str) -> str:
         return f'<a href="{href}">{label}</a>'
 
     text = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", link, text)
-    return text
+    return trim_inline_margins(text)
+
+
+# 行內元素（粗體、code、連結…）左右各留 .3em 與文字隔開；
+# 但在段落開頭／結尾或緊鄰全形標點時不留，避免內容開頭出現空白、標點旁多一格。
+CJK_PUNCT = set("，。、；：！？（）「」『』【】《》〈〉…／～　")
+INLINE_ELEMENT = re.compile(r'<(strong|code|mark|a|span)\b([^>]*)>.*?</\1>', re.S)
+
+
+def trim_inline_margins(text: str) -> str:
+    def visible(s):
+        return re.sub(r"<[^>]+>", "", s)
+
+    def tag(m):
+        before = visible(text[:m.start()]).rstrip(" ")
+        after = visible(text[m.end():]).lstrip(" ")
+        inner = visible(m.group(0)).strip(" ")
+        classes = []
+        if not before or before[-1] in CJK_PUNCT or inner[:1] in CJK_PUNCT:
+            classes.append("nl")
+        if not after or after[0] in CJK_PUNCT or inner[-1:] in CJK_PUNCT:
+            classes.append("nr")
+        if not classes:
+            return m.group(0)
+        name, attrs = m.group(1), m.group(2)
+        if 'class="' in attrs:
+            attrs = attrs.replace('class="', f'class="{" ".join(classes)} ', 1)
+        else:
+            attrs += f' class="{" ".join(classes)}"'
+        return f"<{name}{attrs}>" + m.group(0)[len(f"<{name}{m.group(2)}>"):]
+
+    return INLINE_ELEMENT.sub(tag, text)
 
 
 def render_timeline(lines) -> str:
@@ -774,6 +805,8 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 /* 特殊標記（粗體、可調參數、行內程式碼、連結）前後各留約一格，與中文字拉開 */
 :is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){{margin:0 .3em}}
 :is(strong,.tune,a) :is(strong,.tune,code){{margin:0}}
+:is(strong,.tune,code,a,mark).nl{{margin-left:0}}
+:is(strong,.tune,code,a,mark).nr{{margin-right:0}}
 .tl-wrap{{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}}
 .tl{{min-width:760px; display:flex; flex-direction:column; gap:4px}}
 .tl-row{{display:grid; grid-template-columns:6em 1fr; align-items:start}}
