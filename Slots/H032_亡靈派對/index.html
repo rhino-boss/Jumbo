@@ -2476,7 +2476,7 @@
     #board .h019-glyph{display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
       color:#d8e8f4;font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;letter-spacing:.02em;text-shadow:0 2px 3px rgba(0,0,0,.72)}
     #board .symbol-drop,#board .symbol-settle{animation:h099-symbol-drop var(--drop-duration,160ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;will-change:transform}
-    @keyframes h099-symbol-drop{from{transform:translateY(var(--drop-start,-112%))}82%{transform:translateY(3%)}to{transform:translateY(0)}}
+    @keyframes h099-symbol-drop{from{transform:translateY(var(--drop-start,-112%))}82%{transform:translateY(0)}to{transform:translateY(0)}}
     #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
     @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     /* 倍數收集飛行體（同 H045 中獎演出） */
@@ -2852,7 +2852,7 @@
       strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
         { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: `translateY(0px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: ms, fill: "both" });
       return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
