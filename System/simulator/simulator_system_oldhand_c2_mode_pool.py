@@ -167,6 +167,42 @@ def tune(nat, judge, mode):
     return th11, r
 
 
+def shared():
+    """NB、EB 共用同一套門檻：以一半只玩 NB、一半只玩 EB 的玩家合計調到 1%，再看各群與切換玩家。"""
+    rng = np.random.default_rng(SEED)
+    nat = load_nat(rng)
+    judge = rng.integers(1, 6, size=(PLAYERS, len(TRIGGERS)))
+    mix = np.array(["NB"] * (PLAYERS // 2) + ["EB"] * (PLAYERS - PLAYERS // 2))
+
+    def rtp(th11, kind=mix):
+        return rescue_rtp(nat, {m: expand(th11) for m in MODES}, kind, judge)
+
+    grid = [(abs(rtp([round(x * f) for x in BASE_MAIN_TH] + [round(BASE_EXT_TH * f)]) - TARGET),
+             [round(x * f) for x in BASE_MAIN_TH] + [round(BASE_EXT_TH * f)]) for f in np.arange(0.20, 1.0001, 0.02)]
+    th11 = min(grid)[1]
+    r = rtp(th11)
+    for _ in range(30):
+        if abs(r - TARGET) <= TOL:
+            break
+        cands = [(abs(rtp(c) - TARGET), c) for i in range(11) for d in (-1, 1)
+                 for c in [th11[:i] + [th11[i] + d] + th11[i + 1:]] if c[i] > 0]
+        best = min(cands)
+        if best[0] >= abs(r - TARGET):
+            break
+        th11, r = best[1], rtp(best[1])
+    th = {m: expand(th11) for m in MODES}
+    out = {"main_th": th11[:10], "ext_th": th11[10], "mix_rescue_rtp": r,
+           "NB_only": rtp(th11, np.full(PLAYERS, "NB")), "EB_only": rtp(th11, np.full(PLAYERS, "EB")),
+           "window": rtp(th11, np.full(PLAYERS, "window")), "bucket": rtp(th11, np.full(PLAYERS, "bucket"))}
+    kind = np.array(["NB"] * 450 + ["EB"] * 450 + ["window"] * 50 + ["bucket"] * 50)
+    nat_p, inc_p, hits, denied = play(nat, th, kind, judge, pool=True, order_rng=np.random.default_rng(SEED + 1))
+    out["pool"] = {g: inc_p[kind == g].sum() / ((kind == g).sum() * DAY_SPINS) for g in ("NB", "EB", "window", "bucket")}
+    out["pool"]["all"] = inc_p.sum() / (PLAYERS * DAY_SPINS)
+    out["pool"]["deny_rate"] = denied / max(hits, 1)
+    (HERE / "record" / "mode_shared_宙斯.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(out, ensure_ascii=False))
+
+
 def main():
     rng = np.random.default_rng(SEED)
     nat = load_nat(rng)
@@ -202,4 +238,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    shared() if sys.argv[1:] == ["shared"] else main()
