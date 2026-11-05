@@ -773,7 +773,7 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 :is(p,li,td,th,.step-desc,.step-title,.branch) :is(strong,.tune,code,a,mark){{margin:0 .3em}}
 :is(strong,.tune,a) :is(strong,.tune,code){{margin:0}}
 .tl-wrap{{overflow-x:auto; margin:6px 0 18px; border:1px solid var(--rule); border-radius:3px; background:var(--panel); padding:14px 22px 8px 14px}}
-.tl{{min-width:620px; display:flex; flex-direction:column; gap:4px}}
+.tl{{min-width:760px; display:flex; flex-direction:column; gap:4px}}
 .tl-row{{display:grid; grid-template-columns:6em 1fr; align-items:start}}
 .tl-lane{{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}}
 .tl-axis-name{{color:var(--ink-3); font-weight:500; padding-top:2px}}
