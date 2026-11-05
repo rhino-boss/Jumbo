@@ -1,0 +1,196 @@
+{
+ "factor": 0.72,
+ "uncapped_1000": 1.0586,
+ "main_th": [
+  18,
+  22,
+  25,
+  29,
+  32,
+  36,
+  40,
+  40,
+  43,
+  47
+ ],
+ "ext_th": 47,
+ "pool": [
+  {
+   "spins": 405,
+   "players": 2400,
+   "natural_rtp": 91.7746,
+   "uncapped_increment": 0.8995,
+   "paid_increment": 0.7711,
+   "total_rtp": 92.5457,
+   "deny_rate": 43.5185,
+   "pool_usage": 77.8292,
+   "end_balance_per_player": 0.898
+  },
+  {
+   "spins": 800,
+   "players": 1250,
+   "natural_rtp": 91.5921,
+   "uncapped_increment": 0.924,
+   "paid_increment": 0.8776,
+   "total_rtp": 92.4697,
+   "deny_rate": 24.1611,
+   "pool_usage": 88.8,
+   "end_balance_per_player": 0.896
+  },
+  {
+   "spins": 1000,
+   "players": 1000,
+   "natural_rtp": 91.4689,
+   "uncapped_increment": 1.0356,
+   "paid_increment": 0.9469,
+   "total_rtp": 92.4158,
+   "deny_rate": 24.6753,
+   "pool_usage": 95.8,
+   "end_balance_per_player": 0.42
+  },
+  {
+   "spins": 2000,
+   "players": 500,
+   "natural_rtp": 91.7465,
+   "uncapped_increment": 0.9918,
+   "paid_increment": 0.9287,
+   "total_rtp": 92.6752,
+   "deny_rate": 16.8,
+   "pool_usage": 93.95,
+   "end_balance_per_player": 1.21
+  }
+ ],
+ "arb_max": 93.3637,
+ "arb": {
+  "main": [
+   {
+    "strategy": "固定玩 45 轉就閃",
+    "avg_stop": 45,
+    "rtp": 91.9185,
+    "rtp_none": 89.6476,
+    "ev": -3.637
+   },
+   {
+    "strategy": "固定玩 85 轉就閃",
+    "avg_stop": 85,
+    "rtp": 91.5605,
+    "rtp_none": 89.9455,
+    "ev": -7.174
+   },
+   {
+    "strategy": "固定玩 125 轉就閃",
+    "avg_stop": 125,
+    "rtp": 91.3792,
+    "rtp_none": 90.0714,
+    "ev": -10.776
+   },
+   {
+    "strategy": "固定玩 165 轉就閃",
+    "avg_stop": 165,
+    "rtp": 91.7779,
+    "rtp_none": 90.6062,
+    "ev": -13.566
+   },
+   {
+    "strategy": "固定玩 205 轉就閃",
+    "avg_stop": 205,
+    "rtp": 92.1668,
+    "rtp_none": 91.1142,
+    "ev": -16.058
+   },
+   {
+    "strategy": "固定玩 245 轉就閃",
+    "avg_stop": 245,
+    "rtp": 92.3616,
+    "rtp_none": 91.2773,
+    "ev": -18.714
+   },
+   {
+    "strategy": "固定玩 285 轉就閃",
+    "avg_stop": 285,
+    "rtp": 92.6109,
+    "rtp_none": 91.4605,
+    "ev": -21.059
+   },
+   {
+    "strategy": "固定玩 325 轉就閃",
+    "avg_stop": 325,
+    "rtp": 92.5657,
+    "rtp_none": 91.5185,
+    "ev": -24.162
+   },
+   {
+    "strategy": "固定玩 365 轉就閃",
+    "avg_stop": 365,
+    "rtp": 92.703,
+    "rtp_none": 91.7022,
+    "ev": -26.634
+   },
+   {
+    "strategy": "固定玩 405 轉就閃",
+    "avg_stop": 405,
+    "rtp": 92.7324,
+    "rtp_none": 91.7283,
+    "ev": -29.434
+   },
+   {
+    "strategy": "拿到任何救援就閃（否則玩到 405）",
+    "avg_stop": 382.9,
+    "rtp": 92.6384,
+    "rtp_none": 91.7283,
+    "ev": -28.19
+   }
+  ],
+  "ext": [
+   {
+    "strategy": "固定玩 445 轉就閃",
+    "avg_stop": 445,
+    "rtp": 92.7193,
+    "rtp_none": 91.7898,
+    "ev": -32.399
+   },
+   {
+    "strategy": "固定玩 605 轉就閃",
+    "avg_stop": 605,
+    "rtp": 93.3637,
+    "rtp_none": 92.3333,
+    "ev": -40.15
+   },
+   {
+    "strategy": "固定玩 805 轉就閃",
+    "avg_stop": 805,
+    "rtp": 92.8695,
+    "rtp_none": 91.8231,
+    "ev": -57.401
+   },
+   {
+    "strategy": "固定玩 1000 轉就閃",
+    "avg_stop": 1000,
+    "rtp": 92.5173,
+    "rtp_none": 91.4859,
+    "ev": -74.827
+   },
+   {
+    "strategy": "400 轉後拿到救援就閃（否則玩到 1,000）",
+    "avg_stop": 977.3,
+    "rtp": 92.6161,
+    "rtp_none": 91.4859,
+    "ev": -72.167
+   }
+  ],
+  "bet_up": {
+   "有押注檢查": {
+    "rtp": 91.7004,
+    "rtp_none": 91.7004,
+    "canceled": 311,
+    "rescues": 0
+   },
+   "沒有押注檢查": {
+    "rtp": 101.6991,
+    "rtp_none": 91.7455,
+    "canceled": 0,
+    "rescues": 190
+   }
+  }
+ }
+}

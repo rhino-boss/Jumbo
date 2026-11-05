@@ -267,7 +267,41 @@ def item_arb(pop, rng):
     return out
 
 
-ITEMS = {"main": item_main, "ext": item_ext, "long": item_long, "pool": item_pool, "arb": item_arb}
+def set_scale(f):
+    """門檻調法：主救援 10 段與延伸救援門檻乘同一係數後取整數 %，救援倍數不變。"""
+    global MAIN_TH, EXT_TH
+    MAIN_TH = [round(x * f * 100) / 100 for x in BASE_MAIN_TH]
+    EXT_TH = round(BASE_EXT_TH * f * 100) / 100
+
+
+def item_tuned(pop, rng):
+    """把不套救援池的救援 RTP 調到 1%（1,000 人 × 1,000 轉），再看套 1% 救援池的結果。"""
+    mult = draw(pop, 1_000, 1_000, rng)
+    bet = np.ones_like(mult)
+
+    def uncapped():
+        r = run_day(mult, bet, np.random.default_rng(SEED + 7))
+        return (r["final"] - r["nat"]).sum() / bet.sum()
+
+    best = None
+    for f in np.arange(0.30, 1.0001, 0.01):
+        set_scale(f)
+        inc = uncapped()
+        if best is None or abs(inc - 0.01) < abs(best[1] - 0.01):
+            best = (f, inc)
+    set_scale(best[0])
+    out = {"factor": round(float(best[0]), 2), "uncapped_1000": pct(best[1]),
+           "main_th": [round(x * 100) for x in MAIN_TH], "ext_th": round(EXT_TH * 100),
+           "pool": item_pool(pop, np.random.default_rng(SEED + 8))}
+    arb = item_arb(pop, np.random.default_rng(SEED + 9))
+    out["arb_max"] = max(x["rtp"] for x in arb["main"] + arb["ext"])
+    out["arb"] = arb
+    return out
+
+
+BASE_MAIN_TH = list(MAIN_TH)
+BASE_EXT_TH = EXT_TH
+ITEMS = {"main": item_main, "ext": item_ext, "long": item_long, "pool": item_pool, "arb": item_arb, "tuned": item_tuned}
 
 
 def main():
