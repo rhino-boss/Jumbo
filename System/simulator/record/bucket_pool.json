@@ -1,0 +1,46 @@
+[
+ {
+  "spins": 405,
+  "players": 2400,
+  "natural_rtp": 92.0574,
+  "uncapped_increment": 4.9377,
+  "paid_increment": 0.9811,
+  "total_rtp": 93.0385,
+  "deny_rate": 87.7926,
+  "pool_usage": 99.6399,
+  "end_balance_per_player": 0.015
+ },
+ {
+  "spins": 800,
+  "players": 1250,
+  "natural_rtp": 91.3127,
+  "uncapped_increment": 5.8907,
+  "paid_increment": 0.9458,
+  "total_rtp": 92.2585,
+  "deny_rate": 92.2136,
+  "pool_usage": 95.6,
+  "end_balance_per_player": 0.352
+ },
+ {
+  "spins": 1000,
+  "players": 1000,
+  "natural_rtp": 92.6529,
+  "uncapped_increment": 5.6867,
+  "paid_increment": 0.954,
+  "total_rtp": 93.6069,
+  "deny_rate": 92.1053,
+  "pool_usage": 96.5,
+  "end_balance_per_player": 0.35
+ },
+ {
+  "spins": 2000,
+  "players": 500,
+  "natural_rtp": 91.0445,
+  "uncapped_increment": 6.7778,
+  "paid_increment": 0.9672,
+  "total_rtp": 92.0117,
+  "deny_rate": 93.9189,
+  "pool_usage": 97.85,
+  "end_balance_per_player": 0.43
+ }
+]

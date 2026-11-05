@@ -1,0 +1,99 @@
+{
+ "segment_natural_rtp": 92.4676,
+ "ext_increment": 7.3373,
+ "ext_rescued_players": 42.1,
+ "ext_trigger_rate": 2.9143,
+ "ext_rescues": 408,
+ "ext_judged": 14000,
+ "day_total_rtp": 98.0454,
+ "windows": [
+  {
+   "t": 440,
+   "rate": 4.7
+  },
+  {
+   "t": 480,
+   "rate": 2.7
+  },
+  {
+   "t": 520,
+   "rate": 3.4
+  },
+  {
+   "t": 560,
+   "rate": 3.1
+  },
+  {
+   "t": 600,
+   "rate": 3.1
+  },
+  {
+   "t": 640,
+   "rate": 2.6
+  },
+  {
+   "t": 680,
+   "rate": 2.9
+  },
+  {
+   "t": 720,
+   "rate": 2.4
+  },
+  {
+   "t": 760,
+   "rate": 3.0
+  },
+  {
+   "t": 800,
+   "rate": 1.5
+  },
+  {
+   "t": 840,
+   "rate": 3.1
+  },
+  {
+   "t": 880,
+   "rate": 2.0
+  },
+  {
+   "t": 920,
+   "rate": 3.0
+  },
+  {
+   "t": 960,
+   "rate": 3.3
+  }
+ ],
+ "fixed_n": [
+  {
+   "n": 500,
+   "ext_increment": 10.8894,
+   "total_rtp": 96.6413
+  },
+  {
+   "n": 600,
+   "ext_increment": 8.6798,
+   "total_rtp": 97.3584
+  },
+  {
+   "n": 700,
+   "ext_increment": 8.6439,
+   "total_rtp": 97.9443
+  },
+  {
+   "n": 800,
+   "ext_increment": 7.8248,
+   "total_rtp": 97.9732
+  },
+  {
+   "n": 900,
+   "ext_increment": 7.5547,
+   "total_rtp": 98.1939
+  },
+  {
+   "n": 1000,
+   "ext_increment": 7.3373,
+   "total_rtp": 98.0454
+  }
+ ]
+}

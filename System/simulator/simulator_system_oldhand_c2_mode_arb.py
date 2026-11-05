@@ -8,7 +8,7 @@ NB 與 EB 在同一押注層級的總押注相同（$2），所以切換模式�
 判定規則（現行規格）：
 * 主救援觸發點 t = 40, 80, …, 400；判定轉在 t+1～t+5 均勻隨機。
 * 40 轉一桶：條件 1 看最近 1 桶 RTP < 50%；條件 2 看所有完成的桶（≤ 10 桶）RTP < 門檻。
-* 命中後最終得分 = max(自然得分, 救援倍數)；救援倍數取卡片區間上限（保守估計）。
+* 命中就強制換成救援結果（不取較高者）；救援倍數取卡片區間上限（保守估計）。
 * 一天 405 轉（含最後一個判定區間），不套救援池上限。
 
 各模式先各自調到救援 RTP（救援成本 ÷ 總押注）= 1.00% ± 0.02%，參數取實際可設定的值：
@@ -18,6 +18,8 @@ NB 與 EB 在同一押注層級的總押注相同（$2），所以切換模式�
 
 換模式玩家：平常玩 base 模式；每個觸發點後的 5 轉，先看已完成的桶，
 哪個模式的條件成立且救援倍數較大就玩那個模式（都不成立就照玩 base）。
+整桶切換玩家：另外在每桶開始時，若已完成的桶 RTP 已低於門檻最鬆模式的下一個門檻，整桶改玩該模式。
+換模式防法三種（DEFENSES）：最近 1 桶押注最多的模式／判定用 10 桶押注最多的模式／10 桶玩過的模式都要成立。
 """
 
 from __future__ import annotations
@@ -44,6 +46,9 @@ BASE_TH = np.array([0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.55, 0.60, 0.65])
 BASE_REWARD = np.array([25, 50, 70, 80, 90, 100, 100, 100, 100, 100], dtype=float)
 TARGET = 0.01
 SEED = 20261105
+# 換模式防法：last1＝最近 1 桶押注最多的模式；last10＝判定用 10 桶押注最多的模式；
+# all10＝判定用 10 桶玩過的模式條件都要成立、倍數取最小
+DEFENSES = ("last1", "last10", "all10")
 
 
 def load_modes():
@@ -56,58 +61,89 @@ def draw(values, probs, shape, rng):
     return values[np.minimum(idx, len(values) - 1)].astype(np.float32)
 
 
-def play(nat, judge, params, base, switch):
+def play(nat, judge, params, base, switch, mitigate=None, smart=False):
     """nat[mode] = (players, DAY_SPINS) 自然倍數；params[mode] = (th[10], reward[10])。
-    回傳 (總自然得分, 總救援成本)，押注每轉 1。"""
+    switch：觸發點後 5 轉挑條件成立且救援倍數較大的模式。
+    smart：另外整桶切換——每桶開始時若已完成的桶 RTP 低於某模式下一個門檻，整桶改玩門檻最鬆的模式。
+    mitigate（換模式防法，見 DEFENSES）：判定用的參數不看判定轉的模式。
+    命中就強制換成救援結果。回傳 (總自然得分, 總救援成本)，押注每轉 1。"""
     n = judge.shape[0]
-    rows = np.arange(n)
+    modes = list(nat)
     bucket_sum = np.zeros((n, DAY_SPINS // BUCKET + 1))
+    bucket_cnt = {m: np.zeros((n, DAY_SPINS // BUCKET + 1)) for m in modes}
     nat_total = 0.0
     cost_total = 0.0
     mode = np.full(n, base)
-    modes = list(nat)
+    bucket_mode = np.full(n, base)
     for s in range(1, DAY_SPINS + 1):
         j = (s - 1) // BUCKET  # 目前這轉所屬的桶（0-based）
         k = (s - 1) % BUCKET   # 桶內第幾轉（0-based）；k = 0..4 是觸發點後的 5 轉
         tidx = j - 1           # 對應的觸發點序號（觸發點 = 40 * j）
         in_window = 0 <= tidx < len(TRIGGERS) and k < 5
-        if in_window and k == 0:
+        if j >= 1:
             last = bucket_sum[:, j - 1] / BUCKET
             done = bucket_sum[:, max(0, j - 10):j].sum(axis=1) / (BUCKET * min(j, 10))
+        if smart and k == 5:
+            # 整桶切換：看下一個觸發點（序號 j）哪個模式門檻最鬆且目前 RTP 已低於它
+            bucket_mode = np.full(n, base)
+            if j >= 1 and j < len(TRIGGERS):
+                loose = max(modes, key=lambda m: params[m][0][j])
+                bucket_mode = np.where(done < params[loose][0][j], loose, base)
+        if in_window and k == 0:
             best = np.full(n, -1.0)
             choice = np.full(n, base)
-            cand = modes if switch else [base]
-            for m in cand:
+            for m in (modes if switch else [base]):
                 th, rw = params[m]
                 ok = (last < COND1) & (done < th[tidx])
                 better = ok & (rw[tidx] > best)
                 best = np.where(better, rw[tidx], best)
                 choice = np.where(better, m, choice)
             mode = choice
-        cur = mode if in_window else np.full(n, base)
+        cur = mode if in_window else (bucket_mode if smart else np.full(n, base))
         pay = np.zeros(n)
         for m in modes:
             sel = cur == m
             pay[sel] = nat[m][sel, s - 1]
+            bucket_cnt[m][sel, j] += 1
         nat_total += pay.sum()
         if in_window:
             hit_spin = judge[:, tidx] == k
-            reward = np.zeros(n)
-            last = bucket_sum[:, j - 1] / BUCKET
-            done = bucket_sum[:, max(0, j - 10):j].sum(axis=1) / (BUCKET * min(j, 10))
-            for m in modes:
-                th, rw = params[m]
-                ok = hit_spin & (cur == m) & (last < COND1) & (done < th[tidx])
-                reward = np.where(ok, rw[tidx], reward)
-            final = np.maximum(pay, reward)
+            lo = max(0, j - 10)
+            if mitigate in ("last1", "last10"):
+                # 參數看押注最多的模式：last1 只看最近 1 桶，last10 看判定用的 10 桶
+                span = slice(j - 1, j) if mitigate == "last1" else slice(lo, j)
+                rule_mode = np.full(n, modes[0])
+                most = bucket_cnt[modes[0]][:, span].sum(axis=1)
+                for m in modes[1:]:
+                    cnt = bucket_cnt[m][:, span].sum(axis=1)
+                    rule_mode = np.where(cnt > most, m, rule_mode)
+                    most = np.maximum(most, cnt)
+            else:
+                rule_mode = cur
+            if mitigate == "all10":
+                # 判定用的 10 桶裡玩過的每個模式條件都要成立，救援倍數取最小
+                reward = np.full(n, np.inf)
+                for m in modes:
+                    th, rw = params[m]
+                    played = bucket_cnt[m][:, lo:j].sum(axis=1) > 0
+                    ok = (last < COND1) & (done < th[tidx])
+                    reward = np.where(played & ~ok, 0.0, np.where(played, np.minimum(reward, rw[tidx]), reward))
+                reward = np.where(hit_spin & np.isfinite(reward), reward, 0.0)
+            else:
+                reward = np.zeros(n)
+                for m in modes:
+                    th, rw = params[m]
+                    ok = hit_spin & (rule_mode == m) & (last < COND1) & (done < th[tidx])
+                    reward = np.where(ok, rw[tidx], reward)
+            final = np.where(reward > 0, reward, pay)
             cost_total += (final - pay).sum()
             pay = final
         bucket_sum[:, j] += pay
     return nat_total, cost_total
 
 
-def rescue_rtp(nat, judge, params, base, switch=False):
-    nt, ct = play(nat, judge, params, base, switch)
+def rescue_rtp(nat, judge, params, base, switch=False, mitigate=None, smart=False):
+    nt, ct = play(nat, judge, params, base, switch, mitigate, smart)
     spins = judge.shape[0] * DAY_SPINS
     return ct / spins, nt / spins
 
@@ -187,7 +223,11 @@ def main():
         for base in ("NB", "EB"):
             only, only_nat = rescue_rtp({base: nat[base]}, judge, {base: params[base]}, base)
             sw, sw_nat = rescue_rtp(nat, judge, params, base, switch=True)
-            row[base] = {"only_rescue": only, "only_natural": only_nat, "switch_rescue": sw, "switch_natural": sw_nat}
+            row[base] = {"only_rescue": only, "only_natural": only_nat, "switch_rescue": sw, "switch_natural": sw_nat,
+                         "bucket_switch_rescue": rescue_rtp(nat, judge, params, base, switch=True, smart=True)[0]}
+            for d in DEFENSES:
+                row[base][f"window_{d}"] = rescue_rtp(nat, judge, params, base, switch=True, mitigate=d)[0]
+                row[base][f"bucket_{d}"] = rescue_rtp(nat, judge, params, base, switch=True, mitigate=d, smart=True)[0]
         result["scenarios"].append(row)
         print(name, json.dumps(row, ensure_ascii=False), flush=True)
     out = HERE / "record" / "mode_arb_宙斯.json"
