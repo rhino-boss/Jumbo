@@ -1222,13 +1222,13 @@
       async function playSpin(spin, winBase = 0) {
         let paid = 0;
         plateKeys = new Set(spin.plates.map((p) => p.key));
-        renderBoard(spin.initialBoard, spin.initialMult);
-        fxMark(spin.initialBoard);
+        // 不先畫新盤面：按下 Spin 後由舊盤面直接掉出（animateReels 內才換成新盤面）
         $("cascadeValue").textContent = "0";
         setSum(sumOf(spin.initialMult));
         const markFrame = (i) => { if (st.frames[i]) st.frames[i].say = messageBuild; };   // 記下該步訊息列（Previous／Next 還原用；st.frames 已由 finishSpin 建好）
         markFrame(0);
         await animateReels(spin.initialBoard, spin.initialMult);
+        fxMark(spin.initialBoard);
         await wait(200);
 
         for (const [stepIdx, step] of spin.steps.entries()) {
