@@ -52,7 +52,7 @@ TABS = [
     ("backend", "後端報表", "開發規範/Omniplay/後端報表.md"),
     ("ceiling", "天花板說明", "開發規範/Omniplay/天花板說明.md"),
     ("mechanism", "系統機制", "開發規範/Omniplay/機制說明.md"),
-    ("sps_oldhand", "老手救援 C2版", "開發規範/Omniplay/老手救援實作規格.md"),
+    ("sps_oldhand", "老手救援 C-2版", "開發規範/Omniplay/老手救援實作規格.md"),
 ]
 
 # 根 HTML 的頁籤分組：(大分類, [tab_id...])。一類多份文件時，左側導覽先列文件名。
@@ -83,7 +83,7 @@ PRIVATE_SITES = [
     ("mine", "開發規範", MINE_TAB_IDS, "mine_specification.html", "開發規範", MINE_GROUPS),
     ("flow", "開發流程", FLOW_TAB_IDS, "development_process.html", "開發流程", FLOW_GROUPS),
     ("errors", "錯誤紀錄", ERRORS_TAB_IDS, "error_list.html", "錯誤紀錄", ERRORS_GROUPS),
-    ("sps", "老手救援規格", SPS_TAB_IDS, "oldhand_rescue_spec.html", "老手救援 C2版", SPS_GROUPS),
+    ("sps", "老手救援 C-2版", SPS_TAB_IDS, "oldhand_rescue_spec.html", "老手救援 C-2版", SPS_GROUPS),
 ]
 # 不另存 HTML、整頁內嵌在入口裡的站（只在 igaming_specification.html 看）
 EMBED_KEYS = {"mine", "errors"}
