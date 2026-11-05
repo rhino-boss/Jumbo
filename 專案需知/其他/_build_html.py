@@ -247,7 +247,7 @@ def render_timeline(lines) -> str:
     ticks: 1, 41, 60, 200, 1,000             軸上要標的轉數（逗號後要有空白）
     軌道名稱 :: 起-迄, 起-迄 :: 文字 :: 樣式 || 下一個項目 ...
       同一項目可列多個區間（重複事件畫在各自位置，文字只寫一次）；樣式 phase／phase2／event／stop。
-      event 可加顏色 s1～s4（例 `event s3`）：文字標在上方，同一項目的區間用淡色底帶連起來，
+      event 可加顏色 s1～s4（例 `event s3`）：文字標在上方（`名稱 | 區間` 分兩行），同一項目的區間用淡色底帶連起來，
       只有第一個區間的起點畫虛線到轉數軸。
     """
     scale, ticks, lanes = [(0.0, 0.0), (1000.0, 100.0)], [], []
@@ -285,8 +285,8 @@ def render_timeline(lines) -> str:
     # 軌道高度（px，與 CSS .tl-track 一致；沒有事件的列 36、其餘 60，各含 1px 底線），用來畫事件起點到轉數軸的虛線
     is_event = lambda kind: kind.split()[0] == "event"
     short = [not any(is_event(kind) for _, _, kind in items) for _, items in lanes]
-    heights = [36 if s else 60 for s in short]
-    band_bottom = 46  # .tl-band top 28 + height 18
+    heights = [36 if s else 78 for s in short]
+    band_bottom = 64  # .tl-band top 46 + height 18
     out = ['<div class="tl-wrap"><div class="tl">']
     for row, (name, items) in enumerate(lanes):
         track = "tl-track short" if short[row] else "tl-track"
@@ -308,7 +308,9 @@ def render_timeline(lines) -> str:
                 left = pos(lo - 1)
                 out.append(f'<div class="tl-bar event" style="left:{left:.2f}%;width:{max(pos(hi) - left, 0.6):.2f}%"></div>')
             if label:
-                out.append(f'<div class="tl-label" style="left:{start:.2f}%">{render_inline(label)}</div>')
+                name_part, _, range_part = label.partition(" | ")
+                sub = f'<span class="tl-range">{render_inline(range_part)}</span>' if range_part else ""
+                out.append(f'<div class="tl-label" style="left:{start:.2f}%">{render_inline(name_part)}{sub}</div>')
             out.append("</div>")
         out.append("</div></div>")
     out.append('<div class="tl-row"><div class="tl-lane tl-axis-name">轉數</div><div class="tl-track tl-axis">')
@@ -777,20 +779,21 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tl-row{{display:grid; grid-template-columns:6em 1fr; align-items:start}}
 .tl-lane{{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}}
 .tl-axis-name{{color:var(--ink-3); font-weight:500; padding-top:2px}}
-.tl-track{{position:relative; height:60px; border-bottom:1px dashed var(--grid)}}
+.tl-track{{position:relative; height:78px; border-bottom:1px dashed var(--grid)}}
 .tl-track.short{{height:36px}}
 .tl-bar{{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;
   text-align:center; white-space:nowrap; overflow:hidden}}
 .tl-bar.phase{{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}}
 .tl-bar.phase2{{background:color-mix(in srgb,var(--s3) 20%,transparent); color:var(--ink); font-weight:600}}
 .tl-bar.stop{{background:var(--panel-2); color:var(--ink-3); border:1px dashed var(--rule); line-height:22px}}
-.tl-lane{{padding-top:26px}}
+.tl-lane{{padding-top:44px}}
 .tl-row:has(.tl-track.short) .tl-lane{{padding-top:5px}}
 .tl-lane.tl-axis-name{{padding-top:2px}}
-.tl-band{{position:absolute; top:28px; height:18px; border-radius:3px; background:color-mix(in srgb,var(--c) 16%,transparent)}}
-.tl-bar.event{{background:var(--c); height:14px; top:30px; border-radius:2px}}
-.tl-label{{position:absolute; top:3px; font-size:.95em; font-weight:600; color:var(--c); white-space:nowrap}}
-.tl-guide{{position:absolute; top:46px; border-left:1px dashed var(--c); opacity:.7; pointer-events:none}}
+.tl-band{{position:absolute; top:46px; height:18px; border-radius:3px; background:color-mix(in srgb,var(--c) 16%,transparent)}}
+.tl-bar.event{{background:var(--c); height:14px; top:48px; border-radius:2px}}
+.tl-label{{position:absolute; top:2px; font-size:.95em; font-weight:600; line-height:1.25; color:var(--c); white-space:nowrap}}
+.tl-range{{display:block; font-family:var(--font-mono); font-size:.85em; font-weight:500; color:var(--ink-2)}}
+.tl-guide{{position:absolute; top:64px; border-left:1px dashed var(--c); opacity:.7; pointer-events:none}}
 .tl-axis{{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}}
 .tl-tick{{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
   color:var(--ink-3); padding-top:5px; white-space:nowrap}}
