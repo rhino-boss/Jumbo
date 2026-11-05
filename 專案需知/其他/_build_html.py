@@ -280,11 +280,13 @@ def render_timeline(lines) -> str:
                 return p0 + (p1 - p0) * (spin - x0) / (x1 - x0)
         return scale[-1][1]
 
-    # 軌道高度（px，與 CSS .tl-track 一致；第一列 36、其餘 52，各含 1px 底線），用來畫事件起點到轉數軸的虛線
-    heights = [36 if i == 0 else 52 for i in range(len(lanes))]
+    # 軌道高度（px，與 CSS .tl-track 一致；沒有事件的列 36、其餘 52，各含 1px 底線），用來畫事件起點到轉數軸的虛線
+    short = [all(kind != "event" for _, _, kind in items) for _, items in lanes]
+    heights = [36 if s else 52 for s in short]
     out = ['<div class="tl-wrap"><div class="tl">']
     for row, (name, items) in enumerate(lanes):
-        out.append(f'<div class="tl-row"><div class="tl-lane">{render_inline(name)}</div><div class="tl-track">')
+        track = "tl-track short" if short[row] else "tl-track"
+        out.append(f'<div class="tl-row"><div class="tl-lane">{render_inline(name)}</div><div class="{track}">')
         guide = heights[row] - 22 + 1 + sum(h + 1 for h in heights[row + 1:])
         for spans, label, kind in items:
             for lo, hi in spans:
@@ -764,7 +766,7 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tl-lane{{font-size:1em; font-weight:600; color:var(--ink-2); padding-top:5px}}
 .tl-axis-name{{color:var(--ink-3); font-weight:500; padding-top:2px}}
 .tl-track{{position:relative; height:52px; border-bottom:1px dashed var(--grid)}}
-.tl-row:first-child .tl-track{{height:36px}}
+.tl-track.short{{height:36px}}
 .tl-bar{{position:absolute; top:4px; height:26px; border-radius:3px; font-size:1em; line-height:26px;
   text-align:center; white-space:nowrap; overflow:hidden}}
 .tl-bar.phase{{background:color-mix(in srgb,var(--s1) 18%,transparent); color:var(--ink); font-weight:600}}
