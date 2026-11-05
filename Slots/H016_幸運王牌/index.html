@@ -3363,7 +3363,7 @@
     }
     @keyframes h016-symbol-drop{
       from{transform:translateY(var(--drop-start,-112%))}
-      82%{transform:translateY(3%)}
+      82%{transform:translateY(0)}
       to{transform:translateY(0)}
     }
     /* 消除與補牌（照 H045 超級鑽石實機效果，2026-11-04）：得分牌直接消失、原位灑出金色火花（不畫圓圈，2026-11-04 使用者要求）；
@@ -3970,7 +3970,7 @@
       const dist = b.y - top + b.h + 20;
       anims.push(copy.animate([
         { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.85,.6)" },
-        { transform: `translateY(${Math.min(8, b.h * 0.07)}px)`, offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: `translateY(0px)`, offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: landMs, delay: fallMs * 0.8 + col * gapMs + (cells.length - 1 - i) * rowStep, fill: "both" }));
     }));
@@ -4030,7 +4030,7 @@
           lastEnd = Math.max(lastEnd, delay + dropMs);
           cell.animate([
             { transform: `translateY(${-(line + 1) * 112}%)`, easing: "cubic-bezier(.5,0,.85,.6)" },
-            { transform: "translateY(5%)", offset: 0.82, easing: "cubic-bezier(.3,0,.4,1)" },
+            { transform: "translateY(0)", offset: 0.82, easing: "cubic-bezier(.3,0,.4,1)" },
             { transform: "translateY(0)" }
           ], { duration: dropMs, delay, fill: "backwards" });
         });

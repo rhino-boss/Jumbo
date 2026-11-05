@@ -204,7 +204,6 @@
     }
     @keyframes h027-drop {
       0% { transform: translateY(var(--drop-start, -105%)); }
-      85% { transform: translateY(4%); }
       100% { transform: translateY(0); }
     }
     html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
@@ -1503,7 +1502,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       const dist = b.y - top + b.h + 20;
       anims.push(copy.animate([
         { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.8,.6)" },
-        { transform: `translateY(${Math.min(5, b.h * 0.05)}px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: `translateY(0px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
         { transform: "translateY(0)" }
       ], { duration: landMs, delay: inStart + col * gapMs + (cells.length - 1 - i) * rowStep + jitter(), fill: "both" }));
     }));
