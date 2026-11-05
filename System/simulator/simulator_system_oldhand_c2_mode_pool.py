@@ -71,6 +71,12 @@ def play(nat, th, kind, judge, *, defense=None, pool=False, order_rng=None):
     base = np.where(kind == "NB", "NB", "EB")
     switcher = (kind == "window") | (kind == "bucket")
     smart = kind == "bucket"
+    mixer = kind == "mixer"          # 一般混玩：每桶隨機玩 NB 或 EB
+    mix_rng = np.random.default_rng(SEED + 99)
+    mixer_mode = base.copy()
+    loose_mode = max(MODES, key=lambda m: th[m].mean())
+    prev = base.copy()
+    last_loose_switch = np.full(n, -10**9)   # 最近一次「嚴 → 鬆」切換發生在第幾轉
     nat_p = np.zeros(n)
     inc_p = np.zeros(n)
     window_mode = base.copy()
@@ -100,7 +106,12 @@ def play(nat, th, kind, judge, *, defense=None, pool=False, order_rng=None):
                 better = ok & (REWARD[ti] > best)
                 best = np.where(better, REWARD[ti], best)
                 window_mode = np.where(better, m, window_mode)
+        if k == 0:
+            mixer_mode = np.where(mix_rng.random(n) < 0.5, "NB", "EB")
         cur = window_mode if ti is not None else bucket_mode
+        cur = np.where(mixer, mixer_mode, cur)
+        last_loose_switch = np.where((prev != loose_mode) & (cur == loose_mode), s, last_loose_switch)
+        prev = cur
         pay = np.where(cur == "NB", nat["NB"][:, s - 1], nat["EB"][:, s - 1]).astype(np.float64)
         for m in MODES:
             bcnt[m][cur == m, j] += 1
@@ -117,6 +128,10 @@ def play(nat, th, kind, judge, *, defense=None, pool=False, order_rng=None):
                 rule = cur
             rule_th = np.where(rule == "NB", th["NB"][ti], th["EB"][ti])
             go = judged & (last < COND1) & (done < rule_th)
+            # 防法 D：判定前由嚴的模式切到鬆的模式就取消。D1 看最近 1 桶開始到判定轉；D10 看判定用 10 桶開始到判定轉
+            if defense in ("D1", "D10"):
+                since = BUCKET * (j - 1) + 1 if defense == "D1" else BUCKET * lo + 1
+                go &= last_loose_switch < since
             hits += int(go.sum())
             paid = go.copy()
             if pool:
@@ -203,6 +218,20 @@ def shared():
     print(json.dumps(out, ensure_ascii=False))
 
 
+def defense_d():
+    """防法 D（判定前由嚴切到鬆就取消）：各玩家群救援 RTP，含一般混玩玩家。"""
+    rng = np.random.default_rng(SEED)
+    nat = load_nat(rng)
+    judge = rng.integers(1, 6, size=(PLAYERS, len(TRIGGERS)))
+    tuned = json.loads(OUT.read_text(encoding="utf-8"))["tuned"]
+    th = {m: expand(list(tuned[m]["main_th"]) + [tuned[m]["ext_th"]]) for m in MODES}
+    out = {}
+    for k in ("NB", "EB", "window", "bucket", "mixer"):
+        out[k] = {d or "none": rescue_rtp(nat, th, np.full(PLAYERS, k), judge, defense=d) for d in (None, "B", "D1", "D10")}
+    (HERE / "record" / "mode_defense_d_宙斯.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(json.dumps(out, ensure_ascii=False))
+
+
 def main():
     rng = np.random.default_rng(SEED)
     nat = load_nat(rng)
@@ -239,4 +268,4 @@ def main():
 
 if __name__ == "__main__":
     import sys
-    shared() if sys.argv[1:] == ["shared"] else main()
+    {"shared": shared, "defense_d": defense_d}.get((sys.argv[1:] or [""])[0], main)()
