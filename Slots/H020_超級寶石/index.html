@@ -699,7 +699,7 @@
     inner.style.transition = "none";
     inner.innerHTML = [above, ...list].map(cellHtml).join("");
     const h = inner.children[0].offsetHeight;
-    // 滾到停點後再多往下 10% 格高，然後回彈到正確位置（總時間不變；原 18%，2026-11-04 照 Super Gems 實機縮小）
+    // 滾到停點後再多往下 14.0% 格高，然後回彈到正確位置（總時間不變；照實機影片量測，2026-11-05）
     const end = -h, over = -h + h * 0.14;
     inner.style.transform = `translateY(${-(extra + 1) * h}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果而閃一下
     const anim = inner.animate([

@@ -4267,7 +4267,7 @@
         }
         win.appendChild(strip);
         cells.forEach((cell) => { cell.style.visibility = "hidden"; });
-        // 停輪前多往下滾 10% 格高再回彈到正確位置（原同 H020 的 18%，2026-11-04 照 Piñata Wins 實機縮小）；最上面墊一格，回彈時不露出空白
+        // 停輪前多往下滾 6.5% 格高再回彈到正確位置（照實機影片量測，2026-11-05）；最上面墊一格，回彈時不露出空白
         const above = pool[Math.floor(Math.random() * pool.length)];
         const firstTop = boxes[0].h < last.h * 0.8 ? boxes[0].y + boxes[0].h - last.h : boxes[0].y;   // 頂端 peek 列換算成整格後的上緣
         const aboveCopy = copyCell(above, last.w, last.h, boxes[0].x - left, firstTop - top - pitch);
@@ -4276,7 +4276,7 @@
         strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
       const anim = strip.animate([
           { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
-          { transform: `translateY(${pitch * 0.1}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+          { transform: `translateY(${pitch * 0.065}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
           { transform: "translateY(0)" }
         ], { duration: ms, fill: "both" });
         // 該輪停輪當下就換回真格並收掉輪帶（不等其他輪）：輪帶複本與真格的小數像素對位不同，若等最後一輪停才一起換，已停的輪會突然位移不到 1px
