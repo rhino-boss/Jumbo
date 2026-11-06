@@ -1,4 +1,4 @@
-# 超級鑽石 (Super Diamond) 遊戲規則說明
+# 超級鑽石 (Lucky Diamond) 遊戲規則說明
 
 ## 目錄
 
@@ -24,7 +24,7 @@
 | Game ID | 101015 |
 | PARsheet ID | H045192A（本階段僅建立 92% A 版；其他 RTP／Variant 未建立） |
 | 遊戲中文名稱 | 超級鑽石 |
-| 遊戲英文名 | Super Diamond |
+| 遊戲英文名 | Lucky Diamond |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade / Cascade Multiplier / Multiplier Wild / OP Jackpot |
 | 盤面規格 | 5 輪盤、每輪 4 列固定盤面 |
 | 中獎方式 | Way Game |
@@ -428,7 +428,7 @@
 
 | 來源 | 內容 |
 | --- | --- |
-| `JB 工作區/game_spec/101015_ Super Diamond/01_遊戲規格/Lucky Ace Deluxe_遊戲規格.md` v2.2.0 | 前端玩法規格（金框四結果、帶倍數 WILD、5 階倍率、OP Jackpot、Buy Feature） |
+| `JB 工作區/game_spec/101015_ Lucky Diamond/01_遊戲規格/Lucky Ace Deluxe_遊戲規格.md` v2.2.0 | 前端玩法規格（金框四結果、帶倍數 WILD、5 階倍率、OP Jackpot、Buy Feature） |
 | `Slots/H016_幸運王牌/game_rule.md` | 盤面、Ways 判獎、賠率表、Cascade 補位與 FG 基礎規則 |
 | `專案需知/開發規範/GameRule規範.md` | 本文件的章節骨架與必要欄位 |
 | `Slots/其他/iGaming 遊戲代號一覽.xlsx` | Game ID 101015、ParSheet H0451、遊戲類別 |
@@ -629,7 +629,7 @@ FG 階梯（規格 2/4/6/10/20）、賠率（規格 ×0.5）、FG 小鬼帶倍�
 
 | 項目 | 規格書 | 本文件 | 原因 |
 | --- | --- | --- | --- |
-| 遊戲名稱 / 代號 | Lucky Ace Deluxe、101003、math 沿用 SVN H016 | 超級鑽石 / Super Diamond、101015、math 為本作專屬 H0451 | 依 `iGaming 遊戲代號一覽` 2026-09-23 版；規格書檔頭尚未更名 |
+| 遊戲名稱 / 代號 | Lucky Ace Deluxe、101003、math 沿用 SVN H016 | 超級鑽石 / Lucky Diamond、101015、math 為本作專屬 H0451 | 依 `iGaming 遊戲代號一覽` 2026-09-23 版；規格書檔頭尚未更名 |
 | Buy Feature | 僅 250×（§9） | 僅 **50×**，明確排除 H016 的 40.5× 檔與 Super Free Game 權重 | 使用者 2026-09-23 決策單一檔；2026-10-08 價格 250× → 50× |
 | WILD 倍數池 | ×2 / ×3 / ×5，是否納入 ×10 待 math | ×1 / ×2 / ×3 / ×5（×1＝無倍數）| 使用者 2026-09-30 追加 ×1：抽中帶倍結果不代表一定有倍數 |
 | 盤面帶倍 WILD 數量與計算 | 單一盤面最多一顆；只有參與該連線才計入，連線倍率 = 階梯 × WILD 倍數（§5.3） | **不設上限；只加總本次被消除的帶倍 WILD**：相加後再乘 Cascade Multiplier，套用到該次所有中獎連線；沒用到的保留在盤面（§5.3） | 使用者 2026-09-23 決策不設上限；2026-10-06 決策由「同一連線相乘」改為「整波相加」；2026-10-13 定案只加總被消除的 WILD；總得分由 Max Win（卡片上限 20,000×）約束 |

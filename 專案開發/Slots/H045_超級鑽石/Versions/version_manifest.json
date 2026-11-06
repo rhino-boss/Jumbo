@@ -320,6 +320,25 @@
         "BF_Symbol 改為直接複製 H016 幸運王牌 BF_Symbol（金框符號換一般符號），進場盤任何停點都不得分、C1 ≥ 3（原表照常判獎有 28.6% 會中，靠程式跳過判獎）；Simulator／Demo 進場盤改照常判獎、得分即報錯。",
         "BF_Symbol 加 Gold_Count_Weight（同 BG 表 1／表 2），進場盤照常出金框；數值不變。"
       ]
+    },
+    {
+      "version": "7.0.0.0",
+      "math_key": "7",
+      "date": "2026-11-06",
+      "trial": true,
+      "base_config": "Versions/7.0.0.0/config.js",
+      "sources": {},
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js"
+      },
+      "changes": [
+        "試玩版（未定版，只有 92A 老手卡片）：降低 FG 自然倍數以減少卡片重骰（BF 自然平均約 5,190x → 593x，BF 平均重骰 245 → 36）。",
+        "FG Wild 倍數權重（fg_1／fg_2）：×1 占比 20% → 12%，×2／×3／×5 維持原比例。",
+        "FG 金框顆數權重：k 顆權重 × 0.7^k（每盤金框 1.834 → 1.394）。",
+        "fg_2 R2 輪帶 32 格 J 換 K；fg_2 掉落權重改為與 fg_1 相同。",
+        "92A 老手 free_game／eb_free_game／buy_feature 卡片權重重解（>1,000x 不動）；FG Hit Rate 48% → 45%。"
+      ]
     }
   ]
 }

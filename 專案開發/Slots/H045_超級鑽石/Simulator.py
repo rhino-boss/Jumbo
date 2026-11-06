@@ -1,4 +1,4 @@
-"""H045 超級鑽石 (Lucky Diamond) simulator.
+"""H045 超級鑽石 (Lucky Diamond) simulator（Numba 版）.
 
 盤面 5x4、1024 Ways、Cascade；金框中獎翻牌為小鬼／大鬼兩種，每顆翻出的 Wild
 再抽倍數（x1＝無倍數），大鬼丟出的 W2 沿用本體倍數；同一連線的 WILD 倍數相加後
@@ -6,27 +6,33 @@
 內重複維護輪帶、權重、Paytable 或 Feature 參數。
 
 Runner、BATCH_RUNS、Console 欄位與 Excel 報表版面依 ``專案需知/開發需知/模擬程式規範.md``。
+
+2026-11-06：遊戲核心改寫為 Numba（@njit nogil，多執行緒），規則與 6.0.1.2 純 Python 版逐行對照移植；
+Config 一律以陣列參數傳入核心（不烤進編譯快取），報表版面、檔名、Console 欄位不變。
+RNG 改用 Numba 的 np.random（每執行緒獨立串流），與純 Python 版逐局不同、統計上一致。
 """
 
 from __future__ import annotations
 
 import argparse
-import bisect
 import json
 import math
 import os
-import random
-import re
 import sys
+import tempfile
 import time
-from collections import Counter
-from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass, field
+from collections import Counter, namedtuple
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# Numba 編譯快取放系統暫存資料夾，不在專案資料夾留 __pycache__；Config 以參數傳入，快取不會吃到舊參數
+os.environ["NUMBA_CACHE_DIR"] = str(Path(tempfile.gettempdir()) / "h045_numba")
+
+import numpy as np
 import pandas as pd
+from numba import njit
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
@@ -58,7 +64,7 @@ BATCH_RUNS = [
     # {"config_file": "config.js", "config_rtp_file": "AUTO", "bet_mode": 2,
     #  "total_rounds": 10**7, "card_system_enabled": False, "card_system_is_newbie": False, "base_bet": 1.0},
 ]
-THREADS = max(1, min(12, os.cpu_count() or 1))   # 多程序；本機 i7-12700H 20 執行緒
+THREADS = max(1, min(12, os.cpu_count() or 1))   # 多執行緒（Numba nogil）；本機 i7-12700H 20 執行緒
 OUTPUT_REPORT = True
 SHOW_CONSOLE_SUMMARY = True
 RUN_SINGLE_SPIN_DEBUG = False
@@ -77,6 +83,7 @@ W2 = 1
 C1 = 2
 SCORE_SYMBOLS = tuple(range(3, 11))
 EMPTY = -1
+NSYM = 11                      # 符號 ID 0~10
 
 # 金框不是符號，而是套在一般符號上的旗標（v2：依 Gold Count Weight 逐輪決定顆數）
 GOLD_RESULTS = ("WW", "W2")   # 小鬼 / 大鬼；倍數為翻牌後的第二段抽取
@@ -89,6 +96,7 @@ MULTIPLIER_THRESHOLDS = (
     2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
     20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 9999999,
 )
+NBUCKET = len(MULTIPLIER_THRESHOLDS)
 
 CFG: dict[str, Any] = {}
 CFG_RTP: dict[str, Any] = {}
@@ -144,755 +152,973 @@ def validate_config_pair(natural: dict[str, Any], rtp: dict[str, Any] | None,
             f"{rtp_name} 的版本第 1 碼 {parts[0]} 必須等於基礎模型版本 {version}")
 
 
-# ===== 遊戲核心 =====
+# ===== 遊戲核心（Numba）=====
+#
+# 每轉統計寫在一條 int64 向量（SI）＋ float64 向量（SF），欄位位置如下；
+# FG 一場（session）與 BG 一轉共用同一套版面，後面再接「每轉衍生」欄位（E_*）。
+# 卡片重骰時只重設這些暫存向量，被重骰掉的轉／場不會進統計（同純 Python 版）。
 
-@dataclass
-class Reel:
-    symbols: list[int]
-    cumulative: list[float]
-    total: float
+MVK = 16       # 倍數值種類上限（全域倍數值清單的索引；目前 x1/x2/x3/x5）
+SPK = 8        # 分裂顆數欄位（0~7）
+NKIND = 3      # mult_kind：0=WW、1=W2、2=SPLIT
+KIND_NAMES = ("WW", "W2", "SPLIT")
 
-    def stop(self, rng: random.Random) -> int:
-        position = rng.random() * self.total
-        return min(bisect.bisect_right(self.cumulative, position), len(self.cumulative) - 1)
+I_CASC, I_SCAT, I_MAXLM, I_GCONV, I_MWC, I_MCELLS, I_MLEFT = 0, 1, 2, 3, 4, 5, 6
+I_BIGUSED, I_BIGSCORED, I_INITGOLD, I_GOLDAPP = 7, 8, 9, 10
+O_GOLDEN = 11                       # [2]   WW／W2 翻牌數
+O_SPLIT = O_GOLDEN + 2              # [SPK] 分裂實際放置顆數分布
+O_MWV = O_SPLIT + SPK               # [MVK] 翻牌抽到的倍數分布
+O_MKIND = O_MWV + MVK               # [3*MVK] (WW/W2/SPLIT, 倍數)
+O_GREEL = O_MKIND + NKIND * MVK     # [5]   初始盤面每輪金框數
+O_SYMH = O_GREEL + 5                # [NSYM] 符號 ways 命中
+O_LENH = O_SYMH + NSYM              # [NSYM*6] (符號, 連線長度) 命中
+O_INITS = O_LENH + NSYM * 6         # [5*NSYM] 初始盤面符號
+O_DROPS = O_INITS + 5 * NSYM        # [5*NSYM] 補牌符號
+SPIN_I_LEN = O_DROPS + 5 * NSYM
+E_HIT = SPIN_I_LEN                  # 以下為 session（場）層級：每轉衍生計數
+E_FLIP = E_HIT + 1
+E_MULTSP = E_HIT + 2
+E_MUNUSED = E_HIT + 3
+E_BIG = E_HIT + 4
+E_BIGUSEDSP = E_HIT + 5
+E_GSEEN = E_HIT + 6
+E_GBOARDS = E_HIT + 7
+E_SPECIAL = E_HIT + 8
+E_COMBO = E_HIT + 9                 # [6] 0~5+
+E_SPINS = E_COMBO + 6
+E_RETRIG = E_SPINS + 1
+E_CAPPED = E_SPINS + 2
+SESS_I_LEN = E_SPINS + 3
 
-    def window(self, rng: random.Random, size: int) -> list[int]:
-        start = self.stop(rng)
-        length = len(self.symbols)
-        return [self.symbols[(start + offset) % length] for offset in range(size)]
+F_PAY = 0
+O_SYMPAY = 1                        # [NSYM]
+O_LENPAY = O_SYMPAY + NSYM          # [NSYM*6]
+SESS_F_LEN = O_LENPAY + NSYM * 6
 
+# 全域（局層級）計數
+G_ROUNDS, G_CAPPED, G_FGTRIG, G_TRIGCNT, G_RETRY, G_RLE, G_RLBGR, G_RLBGFG, G_RLFG = range(9)
+GI_LEN = 9
+H_COIN, H_PBG, H_PFG, H_WX, H_WX2, H_MAXWX, H_TRIGPAY = range(7)
+GF_LEN = 7
+# Multiplier Line 分桶
+B_BGCNT, B_FGCNT, B_BFCNT, B_TRIGCNT, B_FGHIT, B_FGSPINS, B_BGMULT, B_FGMULT, B_BGGF, B_FGGF = range(10)
+BI_LEN = 10
+B_BGPAY, B_FGPAY, B_BFPAY, B_TRIGPAY = range(4)
+BF_LEN = 4
 
-@dataclass
-class Table:
-    reels: list[Reel]
-    drop_values: list[list[int]]
-    drop_cumulative: list[list[float]]
-    drop_total: list[float]
-    gold_results: list[str]
-    gold_cumulative: list[float]
-    gold_total: float
-    split_values: list[int]
-    split_cumulative: list[float]
-    split_total: float
-    # 倍數表依結果分開：WW_M 與 W2_M 各一張
-    mult: dict[str, tuple[list[int], list[float], float]]
+# 卡組區段
+SEC_NAMES = ("base_game", "free_game", "eb_base_game", "eb_free_game", "buy_feature")
+SEC_BASE, SEC_FREE, SEC_EB_BASE, SEC_EB_FREE, SEC_BF = range(5)
 
+GameData = namedtuple("GameData", [
+    "reel_sym", "reel_cum", "reel_len", "reel_tot",
+    "drop_val", "drop_cum", "drop_n", "drop_tot",
+    "gres_cum", "gres_tot",
+    "split_val", "split_cum", "split_n", "split_tot",
+    "mult_val", "mult_gi", "mult_cum", "mult_n", "mult_tot",
+    "gcnt_cum", "gcnt_n", "gcnt_tot",
+    "pays", "ladder", "ladder_len", "gold_reels", "split_reels",
+    "twbg_id", "twbg_cum", "twbg_tot", "twfg_id", "twfg_cum", "twfg_tot",
+    "fs_init", "max_fs", "entry_table", "mv_one",
+    "card_cum", "card_n", "card_tot", "card_type", "card_min", "card_max",
+    "thresholds",
+])
 
-def _cumulative(weights: list[float]) -> tuple[list[float], float]:
-    out, running = [], 0.0
-    for weight in weights:
-        running += max(0.0, float(weight))
-        out.append(running)
-    return out, running
+Scratch = namedtuple("Scratch", [
+    "si", "sf", "snap", "sym", "mul", "gold", "pre_s", "pre_m", "pre_g",
+    "gpos", "bsrc", "cand", "fresh", "nfresh", "cnt", "hit",
+    "l_tg", "l_len", "l_ways", "l_raw",
+    "sess_i", "sess_f", "bg_i", "bg_f",
+])
 
-
-def _pick(rng: random.Random, values: list[Any], cumulative: list[float], total: float) -> Any:
-    if total <= 0:
-        raise ValueError("權重總和必須大於 0")
-    position = rng.random() * total
-    return values[min(bisect.bisect_right(cumulative, position), len(values) - 1)]
-
-
-def prepare_table(raw: dict[str, Any]) -> Table:
-    reels = []
-    for symbols, weights in zip(raw["reels"], raw["symbol_weight"]):
-        cumulative, total = _cumulative(weights)
-        reels.append(Reel(list(map(int, symbols)), cumulative, total))
-
-    drop_values, drop_cumulative, drop_total = [], [], []
-    drop = {int(k): v for k, v in raw["drop_weight"].items()}
-    for reel in range(5):
-        values = [sid for sid in sorted(drop) if float(drop[sid][reel]) > 0]
-        cumulative, total = _cumulative([float(drop[sid][reel]) for sid in values])
-        drop_values.append(values)
-        drop_cumulative.append(cumulative)
-        drop_total.append(total)
-
-    grw = raw["gold_result_weight"]
-    g_values = [k for k in GOLD_RESULTS if k in grw]
-    g_cumulative, g_total = _cumulative([float(grw[k]) for k in g_values])
-
-    scw = {int(k): float(v) for k, v in raw["split_count_weight"].items()}
-    s_values = sorted(scw)
-    s_cumulative, s_total = _cumulative([scw[k] for k in s_values])
-
-    mult: dict[str, tuple[list[int], list[float], float]] = {}
-    for key, table in raw["multiplier_wild_weight"].items():
-        values = sorted(int(k) for k in table)
-        cumulative, total = _cumulative([float(table[str(v)]) for v in values])
-        mult[key] = (values, cumulative, total)
-
-    return Table(reels, drop_values, drop_cumulative, drop_total,
-                 g_values, g_cumulative, g_total,
-                 s_values, s_cumulative, s_total, mult)
-
-
-@dataclass
-class SpinResult:
-    pay: float = 0.0
-    scatter_count: int = 0
-    cascades: int = 0
-    max_cascade_multiplier: int = 1
-    golden_converted: int = 0
-    golden_results: Counter = field(default_factory=Counter)
-    split_counts: Counter = field(default_factory=Counter)
-    mult_wild_created: int = 0
-    mult_wild_values: Counter = field(default_factory=Counter)
-    mult_kind: Counter = field(default_factory=Counter)   # (WW/W2/SPLIT, 倍數) 次數
-    max_line_multiplier: int = 1
-    big_ghost_used: bool = False
-    big_ghost_scored: bool = False               # 大鬼本體或分裂 W2 有被消除（參與連線）
-    mult_cells: int = 0                          # 帶倍數 Wild（×2 以上，含分裂體）出現顆數
-    mult_left: int = 0                           # 結算時仍留在盤面、沒被消除的帶倍數 Wild 顆數
-    initial_gold_count: int = 0
-    gold_appeared: int = 0                       # 初始＋補牌後補上的金框總數（金框使用率分母）
-    initial_gold_reel: Counter = field(default_factory=Counter)   # 初始盤面每輪金框數
-    symbol_hits: Counter = field(default_factory=Counter)
-    symbol_pay: Counter = field(default_factory=Counter)
-    symbol_length_hits: Counter = field(default_factory=Counter)
-    symbol_length_pay: Counter = field(default_factory=Counter)
-    initial_symbols: Counter = field(default_factory=Counter)
-    drop_symbols: Counter = field(default_factory=Counter)
-    initial_board: list[list[int]] = field(default_factory=list)
-    final_board: list[list[int]] = field(default_factory=list)
-    final_gold: list[list[bool]] = field(default_factory=list)
-    bonus_gold_cells: list[tuple[int, int]] = field(default_factory=list)   # §9.1.12 沒得分加的金框位置
-
-
-@dataclass
-class RoundResult:
-    pay_bg: float = 0.0
-    pay_fg: float = 0.0
-    fg_triggered: bool = False
-    fg_spins: int = 0
-    retriggers: int = 0
-    cascades_bg: int = 0
-    cascades_fg: int = 0
-    capped: bool = False
-    golden_converted: int = 0
-    bg_golden_results: Counter = field(default_factory=Counter)
-    fg_golden_results: Counter = field(default_factory=Counter)
-    bg_split_counts: Counter = field(default_factory=Counter)
-    fg_split_counts: Counter = field(default_factory=Counter)
-    bg_mult_wild: int = 0
-    fg_mult_wild: int = 0
-    mult_wild_values: Counter = field(default_factory=Counter)
-    bg_mult_kind: Counter = field(default_factory=Counter)
-    fg_mult_kind: Counter = field(default_factory=Counter)
-    max_line_multiplier: int = 1
-    bg_hit_spins: int = 0
-    fg_hit_spins: int = 0
-    bg_gold_symbols: int = 0
-    fg_gold_symbols: int = 0
-    bg_gold_appeared: int = 0
-    fg_gold_appeared: int = 0
-    bg_flip_spins: int = 0      # 有金框被消除翻牌的轉數
-    fg_flip_spins: int = 0
-    bg_mult_spins: int = 0      # 翻牌後出現帶倍數 Wild（×2 以上）的轉數
-    fg_mult_spins: int = 0
-    bg_mult_cells: int = 0      # 帶倍數 Wild 出現顆數／結算時沒被消除顆數／出現倍數但一顆都沒消除的轉數
-    fg_mult_cells: int = 0
-    bg_mult_left: int = 0
-    fg_mult_left: int = 0
-    bg_mult_unused_spins: int = 0
-    fg_mult_unused_spins: int = 0
-    # 2026-10-21 By Game 指標（口徑同 Demogame）：大鬼出現／出現並使用、金框出現（含補牌）的轉數
-    bg_big_spins: int = 0
-    fg_big_spins: int = 0
-    bg_big_used_spins: int = 0
-    fg_big_used_spins: int = 0
-    bg_gold_seen_spins: int = 0
-    fg_gold_seen_spins: int = 0
-    bg_gold_reel: Counter = field(default_factory=Counter)
-    fg_gold_reel: Counter = field(default_factory=Counter)
-    bg_gold_boards: int = 0
-    fg_gold_boards: int = 0
-    special_symbol_cnt: int = 0
-    bg_trigger_fg_cnt: int = 0
-    bg_trigger_fg_pay: float = 0.0
-    bg_cascade_count: int = 0
-    combo_fg: Counter = field(default_factory=Counter)
-    fg_pay_per_spin: list[float] = field(default_factory=list)
-    symbol_hits: Counter = field(default_factory=Counter)
-    symbol_pay: Counter = field(default_factory=Counter)
-    bg_symbol_length_hits: Counter = field(default_factory=Counter)
-    fg_symbol_length_hits: Counter = field(default_factory=Counter)
-    bg_symbol_length_pay: Counter = field(default_factory=Counter)
-    fg_symbol_length_pay: Counter = field(default_factory=Counter)
-    bg_initial_symbols: Counter = field(default_factory=Counter)
-    bg_drop_symbols: Counter = field(default_factory=Counter)
-    fg_initial_symbols: Counter = field(default_factory=Counter)
-    fg_drop_symbols: Counter = field(default_factory=Counter)
-
-    @property
-    def pay(self) -> float:
-        return self.pay_bg + self.pay_fg
+# Numba 核心收「一般 tuple」（namedtuple 的型別會綁模組名，快取換個執行方式就讀不回）；欄位位置常數如下
+_D_REEL_SYM = 0
+_D_REEL_CUM = 1
+_D_REEL_LEN = 2
+_D_REEL_TOT = 3
+_D_DROP_VAL = 4
+_D_DROP_CUM = 5
+_D_DROP_N = 6
+_D_DROP_TOT = 7
+_D_GRES_CUM = 8
+_D_GRES_TOT = 9
+_D_SPLIT_VAL = 10
+_D_SPLIT_CUM = 11
+_D_SPLIT_N = 12
+_D_SPLIT_TOT = 13
+_D_MULT_VAL = 14
+_D_MULT_GI = 15
+_D_MULT_CUM = 16
+_D_MULT_N = 17
+_D_MULT_TOT = 18
+_D_GCNT_CUM = 19
+_D_GCNT_N = 20
+_D_GCNT_TOT = 21
+_D_PAYS = 22
+_D_LADDER = 23
+_D_LADDER_LEN = 24
+_D_GOLD_REELS = 25
+_D_SPLIT_REELS = 26
+_D_TWBG_ID = 27
+_D_TWBG_CUM = 28
+_D_TWBG_TOT = 29
+_D_TWFG_ID = 30
+_D_TWFG_CUM = 31
+_D_TWFG_TOT = 32
+_D_FS_INIT = 33
+_D_MAX_FS = 34
+_D_ENTRY_TABLE = 35
+_D_MV_ONE = 36
+_D_CARD_CUM = 37
+_D_CARD_N = 38
+_D_CARD_TOT = 39
+_D_CARD_TYPE = 40
+_D_CARD_MIN = 41
+_D_CARD_MAX = 42
+_D_THRESHOLDS = 43
+_W_SI = 0
+_W_SF = 1
+_W_SNAP = 2
+_W_SYM = 3
+_W_MUL = 4
+_W_GOLD = 5
+_W_PRE_S = 6
+_W_PRE_M = 7
+_W_PRE_G = 8
+_W_GPOS = 9
+_W_BSRC = 10
+_W_CAND = 11
+_W_FRESH = 12
+_W_NFRESH = 13
+_W_CNT = 14
+_W_HIT = 15
+_W_L_TG = 16
+_W_L_LEN = 17
+_W_L_WAYS = 18
+_W_L_RAW = 19
+_W_SESS_I = 20
+_W_SESS_F = 21
+_W_BG_I = 22
+_W_BG_F = 23
 
 
-class SuperDiamond:
-    """H045 遊戲核心。單一實例持有自己的 RNG，供單一 Worker 使用。"""
+def _cum_array(weights) -> tuple[np.ndarray, float]:
+    """累積權重（負值視為 0），同純 Python 版 _cumulative。"""
+    out = np.cumsum([max(0.0, float(w)) for w in weights]).astype(np.float64)
+    return out, float(out[-1]) if len(out) else 0.0
 
-    def __init__(self, config: dict[str, Any], rtp_config: dict[str, Any] | None,
-                 seed: int, bet_amount: float, card_enabled: bool, newbie: bool):
-        self.config = config
-        self.rtp_config = rtp_config or {}
-        self.rng = random.Random(seed)
-        self.bet = bet_amount
-        self.card_enabled = bool(card_enabled and (self.rtp_config.get("card_system") or {}).get("enabled"))
-        self.profile = "newbie" if newbie else "oldhand"
-        self.tables = {name: prepare_table(raw) for name, raw in config["tables"].items()}
-        self.ladder_bg = list(map(int, config["cascade_multiplier"]["bg"]))
-        self.ladder_fg = list(map(int, config["cascade_multiplier"]["fg"]))
-        self.pays = {int(k): v for k, v in config["pays"].items()}
-        self.max_fs = int(config["max_free_spins"])
-        self.split_reels = list(map(int, config["split_target_reels"]))
-        self.gold_reels = list(map(int, config["gold_reels"]))
-        # 金框顆數分布：{scene: [(values, cumulative, total) per reel]}
-        self.gold_count = {
-            scene: [_cumulative([float(w) for w in per_reel])
-                    for per_reel in config["gold_count_weight"][scene]]
-            for scene in ("bg", "fg")
-        }
-        # 個別盤面表可自帶 gold_count_weight（例：v5 表 3 用競品原值），有設就覆蓋該場景的全域值
-        for name, raw in config["tables"].items():
-            if raw.get("gold_count_weight"):
-                self.gold_count[name] = [_cumulative([float(w) for w in per_reel])
-                                         for per_reel in raw["gold_count_weight"]]
-        # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限（game_rule §9.10）
-        self.max_win = self._card_multiplier_cap()
-        self.fs_table = {int(k): v for k, v in config["free_spins"].items()}
-        self.retry_total = 0
-        self.retry_limit_exceeded = 0
-        self.retry_limit_bg_range = 0
-        self.retry_limit_bg_freegame = 0
-        self.retry_limit_fg = 0
-        self.card_draws: Counter = Counter()
 
-    def _card_section_cap(self, section: str) -> float:
-        """該 Profile 某卡組「最高有權重 range 卡」的上限；Card System Off 回傳無限大。"""
-        if not self.card_enabled:
-            return math.inf
-        cards = ((self.rtp_config.get("card_system") or {}).get("profiles") or {}) \
-            .get(self.profile, {}).get(section) or []
-        caps = [float(c["max"]) for c in cards
-                if str(c.get("type")) == "range" and float(c.get("weight", 0)) > 0 and "max" in c]
-        return max(caps) if caps else math.inf
+def _section_cap(rtp_config: dict[str, Any], profile: str, section: str, card_enabled: bool) -> float:
+    """該 Profile 某卡組「最高有權重 range 卡」的上限；Card System Off 回傳無限大。"""
+    if not card_enabled:
+        return math.inf
+    cards = ((rtp_config.get("card_system") or {}).get("profiles") or {}).get(profile, {}).get(section) or []
+    caps = [float(c["max"]) for c in cards
+            if str(c.get("type")) == "range" and float(c.get("weight", 0)) > 0 and "max" in c]
+    return max(caps) if caps else math.inf
 
-    def _card_multiplier_cap(self) -> float:
-        """Max Win（單局上限）取 base_game／free_game 卡組最高有權重區間上限的較大者（數學模型規範 §1.4.4）；
-        BG Trigger Cap 另由 base_game 卡組決定（§2.3），存於 self.bg_trigger_cap。
-        2026-10-21：新手 BG 可到 100x、FG 只到 50x，若只看 free_game 會把 BG 截在 50x。"""
-        self.bg_trigger_cap = self._card_section_cap("base_game")
-        self.fg_cap = self._card_section_cap("free_game")
-        self.bf_cap = self._card_section_cap("buy_feature")
-        # Extra Bet 卡組（eb_*）的 BG Trigger Cap 與 FG 上限；倍率分母同 NB 基準成本（數學模型規範 §2.5）
-        self.eb_bg_trigger_cap = self._card_section_cap("eb_base_game")
-        self.eb_fg_cap = self._card_section_cap("eb_free_game")
-        self.trigger_cap = self.bg_trigger_cap
-        return max(self.fg_cap, self.bg_trigger_cap)
 
-    # --- 盤面 ---
+def build_game_data(config: dict[str, Any], rtp_config: dict[str, Any] | None, newbie: bool,
+                    card_enabled: bool) -> tuple[GameData, list[int], list[str]]:
+    """把 Config 轉成 Numba 核心用的陣列。回傳 (GameData, 全域倍數值清單, 表名清單)。"""
+    rtp_config = rtp_config or {}
+    names = list(config["tables"])
+    T = len(names)
+    tid = {n: i for i, n in enumerate(names)}
+    lmax = max(len(r) for raw in config["tables"].values() for r in raw["reels"])
+    reel_sym = np.zeros((T, 5, lmax), np.int64)
+    reel_cum = np.zeros((T, 5, lmax), np.float64)
+    reel_len = np.zeros((T, 5), np.int64)
+    reel_tot = np.zeros((T, 5), np.float64)
+    drop_val = np.zeros((T, 5, NSYM), np.int64)
+    drop_cum = np.zeros((T, 5, NSYM), np.float64)
+    drop_n = np.zeros((T, 5), np.int64)
+    drop_tot = np.zeros((T, 5), np.float64)
+    gres_cum = np.zeros((T, 2), np.float64)
+    gres_tot = np.zeros(T, np.float64)
+    split_val = np.zeros((T, 16), np.int64)
+    split_cum = np.zeros((T, 16), np.float64)
+    split_n = np.zeros(T, np.int64)
+    split_tot = np.zeros(T, np.float64)
+    mult_val = np.zeros((T, 2, MVK), np.int64)
+    mult_gi = np.zeros((T, 2, MVK), np.int64)
+    mult_cum = np.zeros((T, 2, MVK), np.float64)
+    mult_n = np.zeros((T, 2), np.int64)
+    mult_tot = np.zeros((T, 2), np.float64)
+    gcnt_cum = np.zeros((T, 2, 5, 8), np.float64)
+    gcnt_n = np.zeros((T, 2, 5), np.int64)
+    gcnt_tot = np.zeros((T, 2, 5), np.float64)
 
-    def gold_key(self, table_name: str, scene: str) -> str:
-        """金框顆數權重的來源：盤面表自帶就用該表，否則用場景（bg／fg）全域值。"""
-        return table_name if table_name in self.gold_count else scene
+    if len(config["symbol_names"]) != NSYM:
+        raise ValueError(f"符號數必須為 {NSYM}")
+    mvals = sorted({1} | {int(k) for raw in config["tables"].values()
+                          for tbl in raw["multiplier_wild_weight"].values() for k in tbl})
+    if len(mvals) > MVK:
+        raise ValueError(f"倍數值種類 {len(mvals)} 超過上限 {MVK}")
+    mgi = {v: i for i, v in enumerate(mvals)}
 
-    def gold_target(self, scene: str, reel: int) -> int:
-        """抽出該輪這次要有幾顆金框（0~4）。"""
-        cumulative, total = self.gold_count[scene][reel]
-        if total <= 0:
-            return 0
-        return min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
+    for t, name in enumerate(names):
+        raw = config["tables"][name]
+        for r, (symbols, weights) in enumerate(zip(raw["reels"], raw["symbol_weight"])):
+            cum, tot = _cum_array(weights)
+            n = len(symbols)
+            reel_sym[t, r, :n] = list(map(int, symbols))
+            reel_cum[t, r, :n] = cum
+            reel_len[t, r] = n
+            reel_tot[t, r] = tot
+        drop = {int(k): v for k, v in raw["drop_weight"].items()}
+        for r in range(5):
+            values = [sid for sid in sorted(drop) if float(drop[sid][r]) > 0]
+            cum, tot = _cum_array([float(drop[sid][r]) for sid in values])
+            drop_val[t, r, :len(values)] = values
+            drop_cum[t, r, :len(values)] = cum
+            drop_n[t, r] = len(values)
+            drop_tot[t, r] = tot
+        grw = raw["gold_result_weight"]
+        cum, tot = _cum_array([float(grw.get(k, 0)) for k in GOLD_RESULTS])
+        gres_cum[t] = cum
+        gres_tot[t] = tot
+        scw = {int(k): float(v) for k, v in raw["split_count_weight"].items()}
+        s_values = sorted(scw)
+        if max(s_values) >= SPK:
+            raise ValueError(f"分裂顆數上限 {SPK - 1}")
+        cum, tot = _cum_array([scw[k] for k in s_values])
+        split_val[t, :len(s_values)] = s_values
+        split_cum[t, :len(s_values)] = cum
+        split_n[t] = len(s_values)
+        split_tot[t] = tot
+        for o, key in enumerate(GOLD_RESULTS):
+            table = raw["multiplier_wild_weight"].get(key, {"1": 1})
+            values = sorted(int(k) for k in table)
+            cum, tot = _cum_array([float(table[str(v)]) for v in values])
+            mult_val[t, o, :len(values)] = values
+            mult_gi[t, o, :len(values)] = [mgi[v] for v in values]
+            mult_cum[t, o, :len(values)] = cum
+            mult_n[t, o] = len(values)
+            mult_tot[t, o] = tot
+        # 金框顆數：盤面表自帶 gold_count_weight 就用該表，否則用場景（bg／fg）全域值
+        for scene_index, scene in enumerate(("bg", "fg")):
+            per_reels = raw.get("gold_count_weight") or config["gold_count_weight"][scene]
+            for r, per_reel in enumerate(per_reels):
+                cum, tot = _cum_array(per_reel)
+                gcnt_cum[t, scene_index, r, :len(cum)] = cum
+                gcnt_n[t, scene_index, r] = len(cum)
+                gcnt_tot[t, scene_index, r] = tot
 
-    def topup_gold(self, scene: str, symbols: list[list[int]],
-                   gold: list[list[bool]], fresh_rows: dict[int, list[int]]) -> int:
-        """game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上。回傳新補上的金框數。
-        fresh_rows：各輪本次原地補牌的列。"""
-        added = 0
-        for reel in self.gold_reels:
-            rows = fresh_rows.get(reel, [])
-            if not rows:
+    pays = np.zeros((NSYM, 6), np.float64)
+    for k, v in config["pays"].items():
+        for i, p in enumerate(v):
+            pays[int(k), i + 3] = float(p)
+    ladder = np.zeros((2, 16), np.int64)
+    ladder_len = np.zeros(2, np.int64)
+    for i, scene in enumerate(("bg", "fg")):
+        lad = list(map(int, config["cascade_multiplier"][scene]))
+        ladder[i, :len(lad)] = lad
+        ladder_len[i] = len(lad)
+
+    def table_weight(group):
+        weights = config["table_weight"][group]
+        ids = np.array([tid[n] for n in weights], np.int64)
+        cum, tot = _cum_array([float(weights[n]) for n in weights])
+        return ids, cum, tot
+
+    twbg_id, twbg_cum, twbg_tot = table_weight("bg")
+    twfg_id, twfg_cum, twfg_tot = table_weight("fg")
+    fs_table = {int(k): v for k, v in config["free_spins"].items()}
+    fs_init = np.zeros(32, np.int64)
+    for s in range(3, 32):
+        key = min(s, max(fs_table))
+        fs_init[s] = int(fs_table[key]["initial"]) if key in fs_table else -1
+
+    # 卡片
+    profile = "newbie" if newbie else "oldhand"
+    prof = ((rtp_config.get("card_system") or {}).get("profiles") or {}).get(profile, {})
+    ncmax = max([1] + [len(prof.get(sec) or []) for sec in SEC_NAMES])
+    card_cum = np.zeros((5, ncmax), np.float64)
+    card_n = np.zeros(5, np.int64)
+    card_tot = np.zeros(5, np.float64)
+    card_type = np.zeros((5, ncmax), np.int64)
+    card_min = np.zeros((5, ncmax), np.float64)
+    card_max = np.zeros((5, ncmax), np.float64)
+    if card_enabled:
+        for i, sec in enumerate(SEC_NAMES):
+            cards = prof.get(sec) or []
+            if not cards:
                 continue
-            target = self.gold_target(scene, reel)
-            alive = sum(gold[reel])
+            cum, tot = _cum_array([float(c["weight"]) for c in cards])
+            card_cum[i, :len(cards)] = cum
+            card_n[i] = len(cards)
+            card_tot[i] = tot
+            for j, c in enumerate(cards):
+                card_type[i, j] = 1 if c.get("type") == "free_game" else 0
+                card_min[i, j] = float(c["min"])
+                card_max[i, j] = float(c["max"])
+
+    data = GameData(
+        reel_sym, reel_cum, reel_len, reel_tot,
+        drop_val, drop_cum, drop_n, drop_tot,
+        gres_cum, gres_tot,
+        split_val, split_cum, split_n, split_tot,
+        mult_val, mult_gi, mult_cum, mult_n, mult_tot,
+        gcnt_cum, gcnt_n, gcnt_tot,
+        pays, ladder, ladder_len,
+        np.array(list(map(int, config["gold_reels"])), np.int64),
+        np.array(list(map(int, config["split_target_reels"])), np.int64),
+        twbg_id, twbg_cum, twbg_tot, twfg_id, twfg_cum, twfg_tot,
+        fs_init, int(config["max_free_spins"]),
+        int(tid[config["bet_modes"]["buy_feature"]["entry_table"]]), int(mgi[1]),
+        card_cum, card_n, card_tot, card_type, card_min, card_max,
+        np.array(MULTIPLIER_THRESHOLDS, np.float64),
+    )
+    return data, mvals, names
+
+
+def mode_caps(rtp_config: dict[str, Any] | None, newbie: bool, card_enabled: bool,
+              bet_mode: int) -> tuple[float, float]:
+    """Max Win（單局上限）與 BG Trigger Cap（數學模型規範 §1.4.4／§2.3）；Card System Off 皆為無限大。
+    BF 取 buy_feature 卡組上限；NB 取 base_game／free_game 兩者上限較大者；EB 用 eb_* 卡組。"""
+    rtp_config = rtp_config or {}
+    profile = "newbie" if newbie else "oldhand"
+    cap = {sec: _section_cap(rtp_config, profile, sec, card_enabled) for sec in SEC_NAMES}
+    if bet_mode == MODE_FEATUREBUY:
+        return cap["buy_feature"], cap["base_game"]
+    if bet_mode == MODE_EXTRABET:
+        return max(cap["eb_free_game"], cap["eb_base_game"]), cap["eb_base_game"]
+    return max(cap["free_game"], cap["base_game"]), cap["base_game"]
+
+
+def new_scratch() -> Scratch:
+    return Scratch(
+        np.zeros(SESS_I_LEN, np.int64), np.zeros(SESS_F_LEN, np.float64), np.zeros(SESS_I_LEN, np.int64),
+        np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64),
+        np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64),
+        np.zeros((20, 2), np.int64), np.zeros((20, 4), np.int64), np.zeros(20, np.int64),
+        np.zeros((5, 4), np.int64), np.zeros(5, np.int64), np.zeros((5, NSYM), np.int64),
+        np.zeros((5, 4), np.int64),
+        np.zeros(8, np.int64), np.zeros(8, np.int64), np.zeros(8, np.int64), np.zeros(8, np.float64),
+        np.zeros(SESS_I_LEN, np.int64), np.zeros(SESS_F_LEN, np.float64),
+        np.zeros(SESS_I_LEN, np.int64), np.zeros(SESS_F_LEN, np.float64),
+    )
+
+
+@njit(nogil=True, cache=True)
+def _pick(cum, n, total):
+    """同 bisect.bisect_right(cumulative, random()*total)，結果上限 n-1。"""
+    pos = np.random.random() * total
+    lo = 0
+    hi = n
+    while lo < hi:
+        mid = (lo + hi) >> 1
+        if cum[mid] <= pos:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo if lo < n - 1 else n - 1
+
+
+@njit(nogil=True, cache=True)
+def _partial_shuffle(arr, k, m):
+    """等同 rng.shuffle(arr[:k]) 後取前 m 個（Fisher-Yates 只做前 m 步）。"""
+    for i in range(m):
+        j = i + int(np.random.random() * (k - i))
+        tmp = arr[i]
+        arr[i] = arr[j]
+        arr[j] = tmp
+
+
+@njit(nogil=True, cache=True)
+def _evaluate(D, W):
+    """1024 Ways 判獎。回傳 (連線數, line_mult)；各連線寫在 W[_W_L_]*，命中格寫在 W[_W_HIT]。
+    金框是旗標不是符號，判獎一律用底層符號（game_rule §3.1）。"""
+    sym = W[_W_SYM]
+    cnt = W[_W_CNT]
+    hit = W[_W_HIT]
+    cnt[:, :] = 0
+    hit[:, :] = 0
+    for r in range(5):
+        for c in range(4):
+            s = sym[r, c]
+            if s >= 0:
+                cnt[r, s] += 1
+    nlines = 0
+    for tg in range(3, NSYM):
+        ways = 1
+        length = 0
+        for r in range(5):
+            k = cnt[r, WW] + cnt[r, W2] + cnt[r, tg]
+            if k == 0:
+                break
+            ways *= k
+            length += 1
+        if length < 3:
+            continue
+        raw = D[_D_PAYS][tg, length] * ways
+        if raw <= 0:
+            continue
+        for r in range(length):
+            for c in range(4):
+                s = sym[r, c]
+                if s == WW or s == W2 or s == tg:
+                    hit[r, c] = 1
+        W[_W_L_TG][nlines] = tg
+        W[_W_L_LEN][nlines] = length
+        W[_W_L_WAYS][nlines] = ways
+        W[_W_L_RAW][nlines] = raw
+        nlines += 1
+    # game_rule §5.3：只有本次中獎被消除的帶倍 WILD 倍數相加（x1 不計入），總和為 0 視為 x1
+    used = 0
+    if nlines > 0:
+        for r in range(5):
+            for c in range(4):
+                if hit[r, c] == 1 and (sym[r, c] == WW or sym[r, c] == W2) and W[_W_MUL][r, c] > 1:
+                    used += W[_W_MUL][r, c]
+    return nlines, (used if used > 0 else 1)
+
+
+@njit(nogil=True, cache=True)
+def _draw_gold(D, W, t, scene):
+    """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
+    金框只出現在 gold_reels（R2~R4），且不套在 Scatter 上（比照競品）。"""
+    sym = W[_W_SYM]
+    gold = W[_W_GOLD]
+    cand = W[_W_CAND]
+    gold[:, :] = 0
+    for gr in D[_D_GOLD_REELS]:
+        tot = D[_D_GCNT_TOT][t, scene, gr]
+        if tot <= 0:
+            continue
+        count = _pick(D[_D_GCNT_CUM][t, scene, gr], D[_D_GCNT_N][t, scene, gr], tot)
+        if count <= 0:
+            continue
+        k = 0
+        for c in range(4):
+            if sym[gr, c] != C1:
+                cand[k] = c
+                k += 1
+        if k == 0:
+            continue
+        m = min(count, k)
+        _partial_shuffle(cand, k, m)
+        for i in range(m):
+            gold[gr, cand[i]] = 1
+
+
+@njit(nogil=True, cache=True)
+def _spin(D, W, t, scene, free_game, bet, cap):
+    """單轉（含連消）。結果寫入 W[_W_SI]／W[_W_SF]；W[_W_SYM]／W[_W_MUL]／W[_W_GOLD] 為最終盤面。"""
+    si = W[_W_SI]
+    sf = W[_W_SF]
+    sym = W[_W_SYM]
+    mul = W[_W_MUL]
+    gold = W[_W_GOLD]
+    si[:] = 0
+    sf[:] = 0.0
+    si[I_MAXLM] = 1
+    ladder_len = D[_D_LADDER_LEN][scene]
+    # --- 停輪 ---
+    for r in range(5):
+        n = D[_D_REEL_LEN][t, r]
+        st = _pick(D[_D_REEL_CUM][t, r], n, D[_D_REEL_TOT][t, r])
+        for c in range(4):
+            s = D[_D_REEL_SYM][t, r, (st + c) % n]
+            sym[r, c] = s
+            mul[r, c] = 0
+            gold[r, c] = 0
+            si[O_INITS + r * NSYM + s] += 1
+    _draw_gold(D, W, t, scene)
+    cand = W[_W_CAND]
+    ig = 0
+    for r in range(5):
+        g = 0
+        for c in range(4):
+            g += gold[r, c]
+        si[O_GREEL + r] += g
+        ig += g
+    si[I_INITGOLD] = ig
+    si[I_GOLDAPP] = ig
+
+    has_last = False
+    last_ng = 0
+    last_split = False
+    while True:
+        nlines, line_mult = _evaluate(D, W)
+        if nlines == 0:
+            # 2026-10-21 使用者定案：最後一次翻牌後沒有再連線，翻出來的一律以原位無倍數小鬼呈現（大鬼不分裂），
+            # 盤面與統計都以最終畫面為準
+            if has_last:
+                snap = W[_W_SNAP]
+                si[O_GOLDEN] = snap[O_GOLDEN]
+                si[O_GOLDEN + 1] = snap[O_GOLDEN + 1]
+                si[I_GCONV] = snap[I_GCONV]
+                si[I_MWC] = snap[I_MWC]
+                si[I_MCELLS] = snap[I_MCELLS]
+                si[I_BIGUSED] = snap[I_BIGUSED]
+                for i in range(SPK):
+                    si[O_SPLIT + i] = snap[O_SPLIT + i]
+                for i in range(MVK):
+                    si[O_MWV + i] = snap[O_MWV + i]
+                for i in range(NKIND * MVK):
+                    si[O_MKIND + i] = snap[O_MKIND + i]
+                si[O_GOLDEN] += last_ng
+                si[I_GCONV] += last_ng
+                si[O_MWV + D[_D_MV_ONE]] += last_ng
+                si[O_MKIND + 0 * MVK + D[_D_MV_ONE]] += last_ng
+                if last_split:
+                    for r in range(5):
+                        for c in range(4):
+                            sym[r, c] = W[_W_PRE_S][r, c]
+                            mul[r, c] = W[_W_PRE_M][r, c]
+                            gold[r, c] = W[_W_PRE_G][r, c]
+                for i in range(last_ng):
+                    sym[W[_W_GPOS][i, 0], W[_W_GPOS][i, 1]] = WW
+                    mul[W[_W_GPOS][i, 0], W[_W_GPOS][i, 1]] = 0
+            break
+        mlt = D[_D_LADDER][scene, min(si[I_CASC], ladder_len - 1)]
+        raw_pay = 0.0
+        for li in range(nlines):
+            raw_pay += W[_W_L_RAW][li] * line_mult
+        sf[F_PAY] += raw_pay * mlt * bet
+        if line_mult > si[I_MAXLM]:
+            si[I_MAXLM] = line_mult
+        si[I_CASC] += 1
+        for li in range(nlines):
+            tg = W[_W_L_TG][li]
+            ln = W[_W_L_LEN][li]
+            p = W[_W_L_RAW][li] * line_mult * mlt * bet
+            si[O_SYMH + tg] += W[_W_L_WAYS][li]
+            sf[O_SYMPAY + tg] += p
+            si[O_LENH + tg * 6 + ln] += 1
+            sf[O_LENPAY + tg * 6 + ln] += p
+
+        # 命中格：金框不消除（當下翻成本體），其餘清空
+        ng = 0
+        for r in range(5):
+            for c in range(4):
+                if W[_W_HIT][r, c] == 0:
+                    continue
+                if sym[r, c] == W2 and gold[r, c] == 0:
+                    si[I_BIGSCORED] = 1
+                if gold[r, c] == 1:
+                    W[_W_GPOS][ng, 0] = r
+                    W[_W_GPOS][ng, 1] = c
+                    ng += 1
+                    gold[r, c] = 0
+                else:
+                    sym[r, c] = EMPTY
+                    mul[r, c] = 0
+
+        # 翻牌前統計快照（連消結束時改記成「全部無倍數小鬼」）
+        nbig = 0
+        if ng > 0:
+            W[_W_SNAP][:SPIN_I_LEN] = si[:SPIN_I_LEN]
+            # game_rule §5.2～5.3：每顆中獎金框抽小鬼／大鬼，再抽倍數；補牌前寫進原格
+            for i in range(ng):
+                r = W[_W_GPOS][i, 0]
+                c = W[_W_GPOS][i, 1]
+                o = _pick(D[_D_GRES_CUM][t], 2, D[_D_GRES_TOT][t])
+                # game_rule §9.1.10：BG 一把 Spin 最多成立一次大鬼，之後改以小鬼處理
+                if o == 1 and not free_game and si[I_BIGUSED] == 1:
+                    o = 0
+                si[O_GOLDEN + o] += 1
+                si[I_GCONV] += 1
+                sym[r, c] = W2 if o == 1 else WW
+                k = _pick(D[_D_MULT_CUM][t, o], D[_D_MULT_N][t, o], D[_D_MULT_TOT][t, o])
+                v = D[_D_MULT_VAL][t, o, k]
+                gi = D[_D_MULT_GI][t, o, k]
+                if v > 1:
+                    si[I_MWC] += 1
+                    si[I_MCELLS] += 1
+                si[O_MWV + gi] += 1
+                si[O_MKIND + o * MVK + gi] += 1
+                mul[r, c] = v if v > 1 else 0
+                if o == 1:
+                    si[I_BIGUSED] = 1
+                    W[_W_BSRC][nbig, 0] = r
+                    W[_W_BSRC][nbig, 1] = c
+                    W[_W_BSRC][nbig, 2] = v
+                    W[_W_BSRC][nbig, 3] = gi
+                    nbig += 1
+
+        # game_rule §5.1：原地補牌——消除的格子直接在原位補新符號，其餘符號不移動
+        for r in range(5):
+            W[_W_NFRESH][r] = 0
+            for c in range(4):
+                W[_W_FRESH][r, c] = 0
+                if sym[r, c] == EMPTY:
+                    s = D[_D_DROP_VAL][t, r, _pick(D[_D_DROP_CUM][t, r], D[_D_DROP_N][t, r], D[_D_DROP_TOT][t, r])]
+                    sym[r, c] = s
+                    mul[r, c] = 0
+                    gold[r, c] = 0
+                    si[O_DROPS + r * NSYM + s] += 1
+                    W[_W_FRESH][r, c] = 1
+                    W[_W_NFRESH][r] += 1
+
+        # game_rule §9.1.11：補牌後重抽顆數 N，保留存活金框，不足才從新補格子補上
+        added = 0
+        for gr in D[_D_GOLD_REELS]:
+            if W[_W_NFRESH][gr] == 0:
+                continue
+            tot = D[_D_GCNT_TOT][t, scene, gr]
+            target = 0
+            if tot > 0:
+                target = _pick(D[_D_GCNT_CUM][t, scene, gr], D[_D_GCNT_N][t, scene, gr], tot)
+            alive = 0
+            for c in range(4):
+                alive += gold[gr, c]
             short = target - alive
             if short <= 0:
                 continue
-            spots = [row for row in rows
-                     if not gold[reel][row] and symbols[reel][row] != C1]
-            self.rng.shuffle(spots)
-            for row in spots[:short]:
-                gold[reel][row] = True
-                added += 1
-        return added
+            k = 0
+            for c in range(4):
+                if W[_W_FRESH][gr, c] == 1 and gold[gr, c] == 0 and sym[gr, c] != C1:
+                    cand[k] = c
+                    k += 1
+            m = min(short, k)
+            _partial_shuffle(cand, k, m)
+            for i in range(m):
+                gold[gr, cand[i]] = 1
+            added += m
+        si[I_GOLDAPP] += added
 
-    def add_no_win_gold(self, symbols: list[list[int]], gold: list[list[bool]]) -> list[tuple[int, int]]:
-        """game_rule §9.1.12：本轉沒得分時，在金框輪隨機挑 NO_WIN_BONUS_GOLD 格（不重複）非金框、非 C1 加金框；
-        不足就放多少算多少。沒得分代表盤面無連線，金框不改判獎 → 得分／RTP 不變；前端停輪時就要顯示這些金框。"""
-        spots = [(reel, row) for reel in self.gold_reels for row in range(4)
-                 if not gold[reel][row] and symbols[reel][row] != C1]
-        self.rng.shuffle(spots)
-        for reel, row in spots[:NO_WIN_BONUS_GOLD]:
-            gold[reel][row] = True
-        return spots[:NO_WIN_BONUS_GOLD]
-
-    def draw_gold(self, scene: str, symbols: list[list[int]]) -> list[list[bool]]:
-        """依 Gold Count Weight 逐輪抽出金框顆數，再隨機挑格子套上金框旗標。
-
-        金框只出現在 gold_reels（R2~R4），且不套在 Scatter 上（比照競品）。
-        """
-        gold = [[False] * 4 for _ in range(5)]
-        for reel in self.gold_reels:
-            cumulative, total = self.gold_count[scene][reel]
-            if total <= 0:
-                continue
-            count = min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cumulative) - 1)
-            if count <= 0:
-                continue
-            spots = [row for row in range(4) if symbols[reel][row] != C1]
-            if not spots:
-                continue
-            self.rng.shuffle(spots)
-            for row in spots[:count]:
-                gold[reel][row] = True
-        return gold
-
-    def board(self, table_name: str, scene: str = "bg"):
-        table = self.tables[table_name]
-        symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
-        mults = [[0] * 4 for _ in range(5)]
-        return symbols, mults, self.draw_gold(self.gold_key(table_name, scene), symbols)
-
-    def evaluate(self, symbols: list[list[int]], mults: list[list[int]]):
-        """回傳 (raw_pay, hit_positions, details, max_line_mult)。
-
-        raw_pay 已含盤面 WILD 倍數總和，但未套 Cascade Multiplier。
-        """
-        total = 0.0
-        hits: set[tuple[int, int]] = set()
-        details: list[tuple[int, int, int, float, int]] = []
-        best_line_mult = 1
-        lines: list[tuple[int, int, int, float]] = []
-        for target in SCORE_SYMBOLS:
-            counts: list[int] = []
-            positions: list[list[tuple[int, int]]] = []
-            for reel in range(5):
-                # 金框是旗標不是符號，判獎一律用底層符號（game_rule §3.1）
-                matched = [
-                    (reel, row)
-                    for row, symbol in enumerate(symbols[reel])
-                    if symbol in (WW, W2) or symbol == target
-                ]
-                if not matched:
-                    break
-                counts.append(len(matched))
-                positions.append(matched)
-            length = len(counts)
-            if length < 3:
-                continue
-            ways = 1
-            for count in counts:
-                ways *= count
-            raw = float(self.pays[target][length - 3]) * ways
-            if raw <= 0:
-                continue
-            for group in positions:
-                hits.update(group)
-            lines.append((target, length, ways, raw))
-        # game_rule §5.3（2026-10-13 使用者定案）：只有本次中獎被消除的帶倍 WILD 倍數相加（x1 不計入），
-        # 套用到該次 Cascade 的所有中獎連線；沒用到的帶倍 WILD 留在盤面不計入；總和為 0 視為 x1
-        used_sum = sum(mults[reel][row] for reel, row in hits
-                       if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
-        line_mult = used_sum if used_sum > 0 else 1
-        for target, length, ways, raw in lines:
-            total += raw * line_mult
-            details.append((target, length, ways, raw * line_mult, line_mult))
-        if lines:
-            best_line_mult = line_mult
-        return total, hits, details, best_line_mult
-
-    def _draw_multiplier(self, table: Table, outcome: str, result: SpinResult) -> int:
-        """依結果對應的倍數表抽一次；回傳 1 代表無倍數（game_rule §5.3）。"""
-        values, cumulative, total = table.mult[outcome]
-        value = int(_pick(self.rng, values, cumulative, total))
-        if value > 1:
-            result.mult_wild_created += 1
-            result.mult_cells += 1
-        result.mult_wild_values[value] += 1
-        result.mult_kind[(outcome, value)] += 1
-        return value
-
-    def flip_golden_body(self, table: Table, symbols: list[list[int]], mults: list[list[int]],
-                         gold_positions: list[tuple[int, int]], result: SpinResult,
-                         free_game: bool) -> list[tuple[tuple[int, int], int]]:
-        """game_rule §5.2～5.3（2026-10-05 版）：每顆中獎金框抽小鬼／大鬼，再抽倍數。
-        在消除當下、補牌之前就把本體寫進原格（2026-10-06 修正：先前在補牌後才用補牌前的座標翻牌，
-        重力位移後會翻到錯的格子）。回傳大鬼本體清單供補牌後分裂。"""
-        big_sources: list[tuple[tuple[int, int], int]] = []
-        for reel, row in gold_positions:
-            outcome = _pick(self.rng, table.gold_results, table.gold_cumulative, table.gold_total)
-            # game_rule §9.1.10：BG 一把 Spin 最多成立一次大鬼，之後改以小鬼處理
-            if outcome == "W2" and not free_game and result.big_ghost_used:
-                outcome = "WW"
-            result.golden_results[outcome] += 1
-            result.golden_converted += 1
-            symbols[reel][row] = W2 if outcome == "W2" else WW
-            value = self._draw_multiplier(table, outcome, result)   # x1 代表無倍數
-            mults[reel][row] = value if value > 1 else 0
-            if outcome == "W2":
-                result.big_ghost_used = True
-                big_sources.append(((reel, row), value))
-        return big_sources
-
-    @staticmethod
-    def _flip_stats_mark(result: SpinResult) -> dict[str, Any]:
-        """翻牌前的統計快照（連消結束時用來改記成「全部無倍數小鬼」）。"""
-        return {"golden_results": Counter(result.golden_results), "golden_converted": result.golden_converted,
-                "mult_wild_created": result.mult_wild_created, "mult_cells": result.mult_cells,
-                "mult_wild_values": Counter(result.mult_wild_values), "mult_kind": Counter(result.mult_kind),
-                "split_counts": Counter(result.split_counts), "big_ghost_used": result.big_ghost_used}
-
-    @staticmethod
-    def _collapse_last_flip(result: SpinResult, symbols, mults, gold, mark, positions, pre_split) -> None:
-        """最後一次翻牌後沒有再連線：盤面還原成分裂前、翻出的位置改無倍數 WW；統計改記成 n 顆無倍數小鬼。"""
-        for key, value in mark.items():
-            setattr(result, key, value)
-        n = len(positions)
-        result.golden_results["WW"] += n
-        result.golden_converted += n
-        result.mult_wild_values[1] += n
-        result.mult_kind[("WW", 1)] += n
-        if pre_split:
+        # game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 W2（倍數同本體），落點依補牌後的盤面
+        if nbig > 0:
             for r in range(5):
-                symbols[r][:], mults[r][:], gold[r][:] = pre_split[0][r], pre_split[1][r], pre_split[2][r]
-        for r, c in positions:
-            symbols[r][c], mults[r][c] = WW, 0
+                for c in range(4):
+                    W[_W_PRE_S][r, c] = sym[r, c]
+                    W[_W_PRE_M][r, c] = mul[r, c]
+                    W[_W_PRE_G][r, c] = gold[r, c]
+            for b in range(nbig):
+                r0 = W[_W_BSRC][b, 0]
+                c0 = W[_W_BSRC][b, 1]
+                v = W[_W_BSRC][b, 2]
+                gi = W[_W_BSRC][b, 3]
+                count = D[_D_SPLIT_VAL][t, _pick(D[_D_SPLIT_CUM][t], D[_D_SPLIT_N][t], D[_D_SPLIT_TOT][t])]
+                k = 0
+                for r in D[_D_SPLIT_REELS]:
+                    for c in range(4):
+                        s = sym[r, c]
+                        if s != WW and s != W2 and s != C1 and not (r == r0 and c == c0):
+                            cand[k] = r * 4 + c
+                            k += 1
+                if k == 0:
+                    si[O_SPLIT + 0] += 1
+                    continue
+                m = min(count, k)
+                _partial_shuffle(cand, k, m)
+                for i in range(m):
+                    r = cand[i] // 4
+                    c = cand[i] % 4
+                    si[O_MKIND + 2 * MVK + gi] += 1
+                    if v > 1:
+                        si[I_MCELLS] += 1
+                    # game_rule §5.4：分裂體是 W2，倍數同本體；蓋到金框即變 W2，金框消失
+                    sym[r, c] = W2
+                    mul[r, c] = v if v > 1 else 0
+                    gold[r, c] = 0
+                si[O_SPLIT + m] += 1
+        has_last = ng > 0
+        last_ng = ng
+        last_split = nbig > 0
 
-    def split_big_ghosts(self, table: Table, symbols: list[list[int]], mults: list[list[int]], gold: list[list[bool]],
-                         big_sources: list[tuple[tuple[int, int], int]], result: SpinResult) -> None:
-        """game_rule §5.4：補牌後，大鬼本體丟出 2～4 顆 W2（倍數同本體），落點依補牌後的盤面。"""
-        for source, value in big_sources:
-            count = int(_pick(self.rng, table.split_values, table.split_cumulative, table.split_total))
-            candidates = [
-                (reel, row)
-                for reel in self.split_reels
-                for row in range(4)
-                if symbols[reel][row] not in (WW, W2, C1) and (reel, row) != source
-            ]
-            if not candidates:
-                result.split_counts[0] += 1
-                continue
-            self.rng.shuffle(candidates)
-            placed = candidates[:count]
-            for reel, row in placed:
-                result.mult_kind[("SPLIT", value)] += 1
-                result.mult_cells += int(value > 1)
-                # game_rule §5.4（2026-11-02）：分裂體是 W2，與本體一模一樣，倍數不另外抽
-                symbols[reel][row] = W2
-                mults[reel][row] = value if value > 1 else 0
-                gold[reel][row] = False   # game_rule §5.4（2026-10-12）：蓋到金框即變 W2，金框消失，之後不再翻牌
-            result.split_counts[len(placed)] += 1
+        if sf[F_PAY] >= cap:
+            break
 
-    def spin(self, table_name: str, free_game: bool = False) -> SpinResult:
-        table = self.tables[table_name]
-        scene = "fg" if free_game else "bg"
-        ladder = self.ladder_fg if free_game else self.ladder_bg
-        symbols, mults, gold = self.board(table_name, scene)
-        result = SpinResult(initial_board=[reel[:] for reel in symbols])
-        result.initial_symbols.update(
-            (reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
-        result.initial_gold_count = sum(sum(column) for column in gold)
-        result.gold_appeared = result.initial_gold_count
-        result.initial_gold_reel.update({reel: sum(column) for reel, column in enumerate(gold) if sum(column)})
+    if sf[F_PAY] <= 0:
+        # game_rule §9.1.12：沒得分時在金框輪隨機挑 2 格非金框、非 C1 加金框（僅顯示，不影響得分）
+        k = 0
+        for gr in D[_D_GOLD_REELS]:
+            for c in range(4):
+                if gold[gr, c] == 0 and sym[gr, c] != C1:
+                    cand[k] = gr * 4 + c
+                    k += 1
+        m = min(NO_WIN_BONUS_GOLD, k)
+        _partial_shuffle(cand, k, m)
+        for i in range(m):
+            gold[cand[i] // 4, cand[i] % 4] = 1
+    sc = 0
+    left = 0
+    for r in range(5):
+        for c in range(4):
+            if sym[r, c] == C1:
+                sc += 1
+            if (sym[r, c] == WW or sym[r, c] == W2) and mul[r, c] > 1:
+                left += 1
+    si[I_SCAT] = sc
+    si[I_MLEFT] = left
 
-        cap = self.max_win * self.bet
-        last_flip = None   # 最近一次翻牌：(翻牌前統計, 金框位置, 分裂前盤面)
-        while True:
-            raw_pay, hits, details, line_mult = self.evaluate(symbols, mults)
-            if raw_pay <= 0:
-                # 2026-10-21 使用者定案：最後一次翻牌後沒有再連線（連消結束），翻出來的一律以原位無倍數小鬼呈現（大鬼不分裂），
-                # 盤面與統計都以最終畫面為準。分裂體是 WILD，拿掉後換回原符號也不會成線；倍數未被使用 → 得分不變。
-                if last_flip:
-                    self._collapse_last_flip(result, symbols, mults, gold, *last_flip)
-                break
-            multiplier = ladder[min(result.cascades, len(ladder) - 1)]
-            gained = raw_pay * multiplier * self.bet
-            result.pay += gained
-            result.max_cascade_multiplier = max(result.max_cascade_multiplier, multiplier)
-            result.max_line_multiplier = max(result.max_line_multiplier, line_mult)
-            result.cascades += 1
-            for symbol, length, ways, symbol_raw, _ in details:
-                result.symbol_hits[symbol] += ways
-                result.symbol_pay[symbol] += symbol_raw * multiplier * self.bet
-                result.symbol_length_hits[(symbol, length)] += 1
-                result.symbol_length_pay[(symbol, length)] += symbol_raw * multiplier * self.bet
 
-            gold_positions: list[tuple[int, int]] = []
-            for reel, row in hits:
-                if symbols[reel][row] == W2 and not gold[reel][row]:
-                    result.big_ghost_scored = True
-                if gold[reel][row]:
-                    gold_positions.append((reel, row))   # 金框不消除，當下翻成本體
-                    gold[reel][row] = False
-                else:
-                    symbols[reel][row] = EMPTY
-                    mults[reel][row] = 0
+@njit(nogil=True, cache=True)
+def _add_spin(dst_i, dst_f, si, sf):
+    """一轉的統計加進 session（場）：數值相加、max_line_multiplier 取大，並記每轉衍生計數。"""
+    for i in range(SPIN_I_LEN):
+        dst_i[i] += si[i]
+    dst_i[I_MAXLM] -= si[I_MAXLM]
+    if si[I_MAXLM] > dst_i[I_MAXLM]:
+        dst_i[I_MAXLM] = si[I_MAXLM]
+    for i in range(SESS_F_LEN):
+        dst_f[i] += sf[i]
+    dst_i[E_HIT] += 1 if sf[F_PAY] > 0 else 0
+    dst_i[E_FLIP] += 1 if si[I_GCONV] > 0 else 0
+    dst_i[E_MULTSP] += 1 if si[I_MWC] > 0 else 0
+    dst_i[E_MUNUSED] += 1 if (si[I_MCELLS] > 0 and si[I_MLEFT] == si[I_MCELLS]) else 0
+    big = si[O_GOLDEN + 1] > 0
+    dst_i[E_BIG] += 1 if big else 0
+    dst_i[E_BIGUSEDSP] += 1 if (big and si[I_BIGSCORED] == 1) else 0
+    dst_i[E_GSEEN] += 1 if si[I_GOLDAPP] > 0 else 0
+    dst_i[E_GBOARDS] += 1 if si[I_INITGOLD] > 0 else 0
+    dst_i[E_SPECIAL] += 1 if si[I_SCAT] > 0 else 0
+    dst_i[E_COMBO + min(si[I_CASC], 5)] += 1
+    dst_i[E_SPINS] += 1
 
-            # 金框在原位翻成本體；大鬼分裂在補牌後丟
-            mark = self._flip_stats_mark(result) if gold_positions else None
-            big_sources = (self.flip_golden_body(table, symbols, mults, gold_positions, result, free_game)
-                           if gold_positions else [])
 
-            # game_rule §5.1（2026-10-13 使用者定案）：原地補牌——消除的格子直接在原位補新符號，其餘符號不移動
-            fresh_rows: dict[int, list[int]] = {}
-            for reel in range(5):
-                rows = [row for row in range(4) if symbols[reel][row] == EMPTY]
-                for row in rows:
-                    symbol = int(_pick(self.rng, table.drop_values[reel],
-                                       table.drop_cumulative[reel], table.drop_total[reel]))
-                    symbols[reel][row], mults[reel][row], gold[reel][row] = symbol, 0, False
-                    result.drop_symbols[(reel, symbol)] += 1
-                fresh_rows[reel] = rows
+@njit(nogil=True, cache=True)
+def _free_session(D, W, initial, budget, bet, cap):
+    """FG 一場：結果寫入 W[_W_SESS_I]／W[_W_SESS_F]。Retrigger 固定 +5、上限 max_free_spins（同純 Python 版）。"""
+    sess_i = W[_W_SESS_I]
+    sess_f = W[_W_SESS_F]
+    sess_i[:] = 0
+    sess_f[:] = 0.0
+    remaining = initial
+    played = 0
+    max_fs = D[_D_MAX_FS]
+    while remaining > 0 and played < max_fs:
+        remaining -= 1
+        played += 1
+        t = D[_D_TWFG_ID][_pick(D[_D_TWFG_CUM], len(D[_D_TWFG_ID]), D[_D_TWFG_TOT])]
+        _spin(D, W, t, 1, True, bet, cap)
+        _add_spin(sess_i, sess_f, W[_W_SI], W[_W_SF])
+        if budget + sess_f[F_PAY] >= cap:
+            sess_i[E_CAPPED] = 1
+            break
+        if W[_W_SI][I_SCAT] >= 3 and played + remaining < max_fs:
+            add = min(5, max_fs - played - remaining)
+            if add > 0:
+                remaining += add
+                sess_i[E_RETRIG] += 1
 
-            # 補牌後重抽金框顆數（game_rule §9.1.11）
-            result.gold_appeared += self.topup_gold(self.gold_key(table_name, scene), symbols, gold, fresh_rows)
 
-            pre_split = ([c[:] for c in symbols], [c[:] for c in mults], [c[:] for c in gold]) if big_sources else None
-            if big_sources:
-                self.split_big_ghosts(table, symbols, mults, gold, big_sources, result)
-            last_flip = (mark, list(gold_positions), pre_split) if gold_positions else None
+@njit(nogil=True, cache=True)
+def _pick_card(D, sec, card_draws):
+    idx = _pick(D[_D_CARD_CUM][sec], D[_D_CARD_N][sec], D[_D_CARD_TOT][sec])
+    card_draws[sec, idx] += 1
+    return idx
 
-            if result.pay >= cap:
-                break
 
-        if result.pay <= 0:
-            result.bonus_gold_cells = self.add_no_win_gold(symbols, gold)
-        result.scatter_count = sum(symbol == C1 for column in symbols for symbol in column)
-        result.final_board = [reel[:] for reel in symbols]
-        result.final_gold = [reel[:] for reel in gold]
-        result.mult_left = sum(1 for reel in range(5) for row in range(4)
-                               if symbols[reel][row] in (WW, W2) and mults[reel][row] > 1)
-        return result
+@njit(nogil=True, cache=True)
+def _card_feature(D, W, sec, initial, budget, bet, cap, gi, card_draws):
+    """FG 卡：整場重跑直到 FG 得分落在卡片區間（min < x <= max），上限 CARD_RETRY_LIMIT。"""
+    idx = _pick_card(D, sec, card_draws)
+    lo = D[_D_CARD_MIN][sec, idx]
+    hi = D[_D_CARD_MAX][sec, idx]
+    for _ in range(CARD_RETRY_LIMIT):
+        _free_session(D, W, initial, budget, bet, cap)
+        ratio = W[_W_SESS_F][F_PAY] / bet
+        if lo < ratio and ratio <= hi:
+            return
+        gi[G_RETRY] += 1
+    gi[G_RLE] += 1
+    gi[G_RLFG] += 1
 
-    # --- Card System ---
 
-    def pick_card(self, section: str) -> dict[str, Any]:
-        cards = self.rtp_config["card_system"]["profiles"][self.profile][section]
-        weights = [float(card["weight"]) for card in cards]
-        cumulative, total = _cumulative(weights)
-        index = min(bisect.bisect_right(cumulative, self.rng.random() * total), len(cards) - 1)
-        self.card_draws[(self.profile, section, index)] += 1
-        return dict(cards[index])
+@njit(nogil=True, cache=True)
+def _natural_base_spin(D, W, bet, cap):
+    t = D[_D_TWBG_ID][_pick(D[_D_TWBG_CUM], len(D[_D_TWBG_ID]), D[_D_TWBG_TOT])]
+    _spin(D, W, t, 0, False, bet, cap)
 
-    def card_matches(self, card: dict[str, Any], pay: float) -> bool:
-        ratio = pay / self.bet
-        return float(card["min"]) < ratio <= float(card["max"])
 
-    # --- Round ---
-
-    def natural_base_spin(self) -> SpinResult:
-        weights = self.config["table_weight"]["bg"]
-        names = list(weights)
-        cumulative, total = _cumulative([float(weights[n]) for n in names])
-        return self.spin(str(_pick(self.rng, names, cumulative, total)))
-
-    def card_spin(self, card: dict[str, Any]) -> SpinResult:
-        want_fg = card.get("type") == "free_game"
-        spin = None
-        for _ in range(CARD_RETRY_LIMIT):
-            spin = self.natural_base_spin()
-            if want_fg:
-                # 數學模型規範 §2.3：free_game 卡須同時滿足「觸發 FG」且 BG 得分 ≤ BG Trigger Cap，否則整把重骰
-                if spin.scatter_count >= 3 and spin.pay / self.bet <= self.trigger_cap:
-                    return spin
-            elif spin.scatter_count < 3 and self.card_matches(card, spin.pay):
-                return spin
-            self.retry_total += 1
-        self.retry_limit_exceeded += 1
+@njit(nogil=True, cache=True)
+def _card_spin(D, W, sec, bet, cap, trig_cap, gi, card_draws):
+    """BG 卡：整把重骰直到符合。free_game 卡須同時「觸發 FG」且 BG 得分 ≤ BG Trigger Cap（數學模型規範 §2.3）。"""
+    idx = _pick_card(D, sec, card_draws)
+    want_fg = D[_D_CARD_TYPE][sec, idx] == 1
+    lo = D[_D_CARD_MIN][sec, idx]
+    hi = D[_D_CARD_MAX][sec, idx]
+    for _ in range(CARD_RETRY_LIMIT):
+        _natural_base_spin(D, W, bet, cap)
+        ratio = W[_W_SF][F_PAY] / bet
         if want_fg:
-            self.retry_limit_bg_freegame += 1
-        else:
-            self.retry_limit_bg_range += 1
-        return spin
+            if W[_W_SI][I_SCAT] >= 3 and ratio <= trig_cap:
+                return
+        elif W[_W_SI][I_SCAT] < 3 and lo < ratio and ratio <= hi:
+            return
+        gi[G_RETRY] += 1
+    gi[G_RLE] += 1
+    if want_fg:
+        gi[G_RLBGFG] += 1
+    else:
+        gi[G_RLBGR] += 1
 
-    def _fg_table(self, group: str) -> str:
-        weights = self.config["table_weight"][group]
-        names = list(weights)
-        cumulative, total = _cumulative([float(weights[n]) for n in names])
-        return str(_pick(self.rng, names, cumulative, total))
 
-    def free_session(self, initial_spins: int, budget: float) -> RoundResult:
-        result = RoundResult(fg_triggered=True)
-        remaining, played = int(initial_spins), 0
-        cap = self.max_win * self.bet
-        while remaining > 0 and played < self.max_fs:
-            remaining -= 1
-            played += 1
-            spin = self.spin(self._fg_table("fg"), free_game=True)
-            result.pay_fg += spin.pay
-            result.fg_pay_per_spin.append(spin.pay)
-            result.fg_spins += 1
-            result.cascades_fg += spin.cascades
-            result.golden_converted += spin.golden_converted
-            result.fg_golden_results.update(spin.golden_results)
-            result.fg_split_counts.update(spin.split_counts)
-            result.fg_mult_wild += spin.mult_wild_created
-            result.mult_wild_values.update(spin.mult_wild_values)
-            result.fg_mult_kind.update(spin.mult_kind)
-            result.max_line_multiplier = max(result.max_line_multiplier, spin.max_line_multiplier)
-            result.fg_hit_spins += int(spin.pay > 0)
-            result.fg_gold_symbols += spin.initial_gold_count
-            result.fg_gold_appeared += spin.gold_appeared
-            result.fg_flip_spins += int(spin.golden_converted > 0)
-            result.fg_mult_spins += int(spin.mult_wild_created > 0)
-            result.fg_mult_cells += spin.mult_cells
-            result.fg_mult_left += spin.mult_left
-            result.fg_mult_unused_spins += int(spin.mult_cells > 0 and spin.mult_left == spin.mult_cells)
-            result.fg_big_spins += int(spin.golden_results["W2"] > 0)
-            result.fg_big_used_spins += int(spin.golden_results["W2"] > 0 and spin.big_ghost_scored)
-            result.fg_gold_seen_spins += int(spin.gold_appeared > 0)
-            result.fg_gold_reel.update(spin.initial_gold_reel)
-            result.fg_gold_boards += int(spin.initial_gold_count > 0)
-            result.special_symbol_cnt += int(spin.scatter_count > 0)
-            result.combo_fg[min(spin.cascades, 5)] += 1
-            result.symbol_hits.update(spin.symbol_hits)
-            result.symbol_pay.update(spin.symbol_pay)
-            result.fg_symbol_length_hits.update(spin.symbol_length_hits)
-            result.fg_symbol_length_pay.update(spin.symbol_length_pay)
-            result.fg_initial_symbols.update(spin.initial_symbols)
-            result.fg_drop_symbols.update(spin.drop_symbols)
-            if budget + result.pay_fg >= cap:
-                result.capped = True
-                break
-            if spin.scatter_count >= 3 and played + remaining < self.max_fs:
-                add = min(5, self.max_fs - played - remaining)
-                if add > 0:
-                    remaining += add
-                    result.retriggers += 1
-        return result
+@njit(nogil=True, cache=True)
+def _threshold_index(thresholds, x):
+    for i in range(len(thresholds)):
+        if x <= thresholds[i]:
+            return i
+    return len(thresholds) - 1
 
-    def card_feature(self, section: str, initial_spins: int, budget: float) -> RoundResult:
-        card = self.pick_card(section)
-        result = None
-        for _ in range(CARD_RETRY_LIMIT):
-            result = self.free_session(initial_spins, budget)
-            if self.card_matches(card, result.pay_fg):
-                return result
-            self.retry_total += 1
-        self.retry_limit_exceeded += 1
-        self.retry_limit_fg += 1
-        return result
 
-    @staticmethod
-    def merge(target: RoundResult, source: RoundResult) -> None:
-        target.pay_fg += source.pay_fg
-        target.fg_triggered |= source.fg_triggered
-        target.fg_spins += source.fg_spins
-        target.retriggers += source.retriggers
-        target.cascades_fg += source.cascades_fg
-        target.capped |= source.capped
-        target.golden_converted += source.golden_converted
-        target.fg_golden_results.update(source.fg_golden_results)
-        target.fg_split_counts.update(source.fg_split_counts)
-        target.fg_mult_wild += source.fg_mult_wild
-        target.mult_wild_values.update(source.mult_wild_values)
-        target.fg_mult_kind.update(source.fg_mult_kind)
-        target.max_line_multiplier = max(target.max_line_multiplier, source.max_line_multiplier)
-        target.fg_hit_spins += source.fg_hit_spins
-        target.fg_gold_symbols += source.fg_gold_symbols
-        target.fg_gold_appeared += source.fg_gold_appeared
-        target.fg_flip_spins += source.fg_flip_spins
-        target.fg_mult_spins += source.fg_mult_spins
-        target.fg_mult_cells += source.fg_mult_cells
-        target.fg_mult_left += source.fg_mult_left
-        target.fg_mult_unused_spins += source.fg_mult_unused_spins
-        target.fg_big_spins += source.fg_big_spins
-        target.fg_big_used_spins += source.fg_big_used_spins
-        target.fg_gold_seen_spins += source.fg_gold_seen_spins
-        target.fg_gold_reel.update(source.fg_gold_reel)
-        target.fg_gold_boards += source.fg_gold_boards
-        target.special_symbol_cnt += source.special_symbol_cnt
-        target.combo_fg.update(source.combo_fg)
-        target.fg_pay_per_spin.extend(source.fg_pay_per_spin)
-        target.symbol_hits.update(source.symbol_hits)
-        target.symbol_pay.update(source.symbol_pay)
-        target.fg_symbol_length_hits.update(source.fg_symbol_length_hits)
-        target.fg_symbol_length_pay.update(source.fg_symbol_length_pay)
-        target.fg_initial_symbols.update(source.fg_initial_symbols)
-        target.fg_drop_symbols.update(source.fg_drop_symbols)
+@njit(nogil=True, cache=True)
+def simulate_chunk(D, rounds, bet_mode, bet, wager, card_on, max_win, trig_cap, seed):
+    """跑 rounds 局，回傳統計陣列。bet＝基礎押注（得分與卡片倍率分母），wager＝實際扣款。"""
+    np.random.seed(seed)
+    W = (
+        np.zeros(SESS_I_LEN, np.int64), np.zeros(SESS_F_LEN, np.float64), np.zeros(SESS_I_LEN, np.int64),
+        np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64),
+        np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64), np.zeros((5, 4), np.int64),
+        np.zeros((20, 2), np.int64), np.zeros((20, 4), np.int64), np.zeros(20, np.int64),
+        np.zeros((5, 4), np.int64), np.zeros(5, np.int64), np.zeros((5, NSYM), np.int64),
+        np.zeros((5, 4), np.int64),
+        np.zeros(8, np.int64), np.zeros(8, np.int64), np.zeros(8, np.int64), np.zeros(8, np.float64),
+        np.zeros(SESS_I_LEN, np.int64), np.zeros(SESS_F_LEN, np.float64),
+        np.zeros(SESS_I_LEN, np.int64), np.zeros(SESS_F_LEN, np.float64),
+    )
+    nb = len(D[_D_THRESHOLDS])
+    gi = np.zeros(GI_LEN, np.int64)
+    gf = np.zeros(GF_LEN, np.float64)
+    gs_i = np.zeros((2, SESS_I_LEN), np.int64)
+    gs_f = np.zeros((2, SESS_F_LEN), np.float64)
+    gs_i[0, I_MAXLM] = 1
+    gs_i[1, I_MAXLM] = 1
+    bi = np.zeros((BI_LEN, nb), np.int64)
+    bfl = np.zeros((BF_LEN, nb), np.float64)
+    bcombo = np.zeros((2, nb, 5), np.int64)
+    bgold = np.zeros((2, nb, 2), np.int64)
+    card_draws = np.zeros((5, D[_D_CARD_CUM].shape[1]), np.int64)
+    cap = max_win * bet
+    eb = bet_mode == 1
+    sec_base = SEC_EB_BASE if eb else SEC_BASE
+    sec_free = SEC_EB_FREE if eb else SEC_FREE
+    bg_i = W[_W_BG_I]
+    bg_f = W[_W_BG_F]
+    sess_i = W[_W_SESS_I]
+    sess_f = W[_W_SESS_F]
 
-    def round(self, bet_mode: int) -> RoundResult:
-        eb = bet_mode == MODE_EXTRABET
-        prefix = "eb_" if eb else ""   # Extra Bet 用 eb_base_game／eb_free_game 卡組；盤面與 NB 相同
-        if self.card_enabled:   # Max Win 依模式取 buy_feature 卡組上限，或 base_game／free_game（EB 為 eb_*）兩者上限的較大者
-            self.max_win = (self.bf_cap if bet_mode == MODE_FEATUREBUY
-                            else max(self.eb_fg_cap, self.eb_bg_trigger_cap) if eb else max(self.fg_cap, self.bg_trigger_cap))
-            self.trigger_cap = self.eb_bg_trigger_cap if eb else self.bg_trigger_cap
-        if bet_mode == MODE_FEATUREBUY:
-            # 進場盤＝用 BF_Symbol 照常轉一次 BG（含金框、照常判獎）；BF 表的設計保證任何停點都不得分、至少 3 顆 C1
-            entry_symbols, entry_mults, _ = self.board(self.config["bet_modes"]["buy_feature"]["entry_table"], "bg")
-            if self.evaluate(entry_symbols, entry_mults)[0] > 0:
+    for _ in range(rounds):
+        pay_bg = 0.0
+        pay_fg = 0.0
+        fg_on = False
+        trig = False
+        trig_pay = 0.0
+        capped = False
+        if bet_mode == 2:
+            # 進場盤＝用 BF_Symbol 照常轉一次 BG（含金框、照常判獎）；BF 表保證任何停點都不得分、至少 3 顆 C1
+            t = D[_D_ENTRY_TABLE]
+            for r in range(5):
+                n = D[_D_REEL_LEN][t, r]
+                st = _pick(D[_D_REEL_CUM][t, r], n, D[_D_REEL_TOT][t, r])
+                for c in range(4):
+                    W[_W_SYM][r, c] = D[_D_REEL_SYM][t, r, (st + c) % n]
+                    W[_W_MUL][r, c] = 0
+            _draw_gold(D, W, t, 0)   # 進場盤照常上金框（BF 表保證不得分，金框不影響結果）
+            nl, _lm = _evaluate(D, W)
+            if nl > 0:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤不得分")
-            scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
+            scatter = 0
+            for r in range(5):
+                for c in range(4):
+                    if W[_W_SYM][r, c] == C1:
+                        scatter += 1
             if scatter < 3:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤至少 3 顆 C1")
-            # 進場盤的 C1 顆數決定初始局數，與自然觸發同一張 free_spins 表
-            spins = int(self.fs_table[min(scatter, max(self.fs_table))]["initial"])
-            result = (self.card_feature("buy_feature", spins, 0.0)
-                      if self.card_enabled else self.free_session(spins, 0.0))
-            result.special_symbol_cnt += 1   # 進場盤本身含 SC
-            result.pay_fg = min(result.pay_fg, self.max_win * self.bet)
-            return result
+            spins = D[_D_FS_INIT][min(scatter, 31)]
+            if card_on:
+                _card_feature(D, W, SEC_BF, spins, 0.0, bet, cap, gi, card_draws)
+            else:
+                _free_session(D, W, spins, 0.0, bet, cap)
+            sess_i[E_SPECIAL] += 1   # 進場盤本身含 SC
+            fg_on = True
+            capped = sess_i[E_CAPPED] == 1
+            pay_fg = min(sess_f[F_PAY], cap)
+        else:
+            if card_on:
+                _card_spin(D, W, sec_base, bet, cap, trig_cap, gi, card_draws)
+            else:
+                _natural_base_spin(D, W, bet, cap)
+            bg_i[:] = 0
+            bg_f[:] = 0.0
+            _add_spin(bg_i, bg_f, W[_W_SI], W[_W_SF])
+            pay_bg = W[_W_SF][F_PAY]
+            scatter = W[_W_SI][I_SCAT]
+            if scatter >= 3:
+                trig = True
+                trig_pay = pay_bg
+                initial = D[_D_FS_INIT][min(scatter, 31)]
+                if card_on:
+                    _card_feature(D, W, sec_free, initial, pay_bg, bet, cap, gi, card_draws)
+                else:
+                    _free_session(D, W, initial, pay_bg, bet, cap)
+                fg_on = True
+                pay_fg = sess_f[F_PAY]
+                capped = sess_i[E_CAPPED] == 1
+            if pay_bg + pay_fg > cap:          # game_rule §9.10.2：達上限即截斷
+                overflow = pay_bg + pay_fg - cap
+                pay_fg = max(0.0, pay_fg - overflow)
+                if pay_bg + pay_fg > cap:
+                    pay_bg = min(pay_bg, cap)
+                capped = True
 
-        result = RoundResult()
-        spin = self.card_spin(self.pick_card(prefix + "base_game")) if self.card_enabled else self.natural_base_spin()
-        result.pay_bg = spin.pay
-        result.cascades_bg = spin.cascades
-        result.bg_cascade_count = spin.cascades
-        result.golden_converted = spin.golden_converted
-        result.bg_golden_results.update(spin.golden_results)
-        result.bg_split_counts.update(spin.split_counts)
-        result.bg_mult_wild = spin.mult_wild_created
-        result.mult_wild_values.update(spin.mult_wild_values)
-        result.bg_mult_kind.update(spin.mult_kind)
-        result.max_line_multiplier = spin.max_line_multiplier
-        result.bg_hit_spins = int(spin.pay > 0)
-        result.bg_gold_symbols = spin.initial_gold_count
-        result.bg_gold_appeared = spin.gold_appeared
-        result.bg_flip_spins = int(spin.golden_converted > 0)
-        result.bg_mult_spins = int(spin.mult_wild_created > 0)
-        result.bg_mult_cells = spin.mult_cells
-        result.bg_mult_left = spin.mult_left
-        result.bg_mult_unused_spins = int(spin.mult_cells > 0 and spin.mult_left == spin.mult_cells)
-        result.bg_big_spins = int(spin.golden_results["W2"] > 0)
-        result.bg_big_used_spins = int(spin.golden_results["W2"] > 0 and spin.big_ghost_scored)
-        result.bg_gold_seen_spins = int(spin.gold_appeared > 0)
-        result.bg_gold_reel.update(spin.initial_gold_reel)
-        result.bg_gold_boards = int(spin.initial_gold_count > 0)
-        result.special_symbol_cnt = int(spin.scatter_count > 0)
-        result.symbol_hits.update(spin.symbol_hits)
-        result.symbol_pay.update(spin.symbol_pay)
-        result.bg_symbol_length_hits.update(spin.symbol_length_hits)
-        result.bg_symbol_length_pay.update(spin.symbol_length_pay)
-        result.bg_initial_symbols.update(spin.initial_symbols)
-        result.bg_drop_symbols.update(spin.drop_symbols)
+        # --- 累計（同純 Python 版 _accumulate）---
+        gi[G_ROUNDS] += 1
+        gf[H_COIN] += wager
+        gf[H_PBG] += pay_bg
+        gf[H_PFG] += pay_fg
+        wx = (pay_bg + pay_fg) / wager
+        gf[H_WX] += wx
+        gf[H_WX2] += wx * wx
+        if wx > gf[H_MAXWX]:
+            gf[H_MAXWX] = wx
+        if capped:
+            gi[G_CAPPED] += 1
+        if fg_on:
+            gi[G_FGTRIG] += 1
+        if trig:
+            gi[G_TRIGCNT] += 1
+            gf[H_TRIGPAY] += trig_pay
+        if bet_mode != 2:
+            m = gs_i[0, I_MAXLM]
+            for i in range(SESS_I_LEN):
+                gs_i[0, i] += bg_i[i]
+            gs_i[0, I_MAXLM] = max(m, bg_i[I_MAXLM])
+            for i in range(SESS_F_LEN):
+                gs_f[0, i] += bg_f[i]
+        if fg_on:
+            m = gs_i[1, I_MAXLM]
+            for i in range(SESS_I_LEN):
+                gs_i[1, i] += sess_i[i]
+            gs_i[1, I_MAXLM] = max(m, sess_i[I_MAXLM])
+            for i in range(SESS_F_LEN):
+                gs_f[1, i] += sess_f[i]
 
-        if spin.scatter_count >= 3:
-            result.bg_trigger_fg_cnt = 1
-            result.bg_trigger_fg_pay = spin.pay
-            initial = self.fs_table[min(spin.scatter_count, max(self.fs_table))]["initial"]
-            feature = (self.card_feature(prefix + "free_game", initial, result.pay_bg)
-                       if self.card_enabled else self.free_session(initial, result.pay_bg))
-            self.merge(result, feature)
-
-        cap = self.max_win * self.bet
-        if result.pay > cap:                      # game_rule §9.10.2：達上限即截斷
-            overflow = result.pay - cap
-            result.pay_fg = max(0.0, result.pay_fg - overflow)
-            if result.pay > cap:
-                result.pay_bg = min(result.pay_bg, cap)
-            result.capped = True
-        return result
+        if bet_mode == 2:
+            # 數學模型規範 §2.5：BF 的倍率判定分母是 Normal Bet 基準成本，不是購買價
+            idx = _threshold_index(D[_D_THRESHOLDS], pay_fg / bet)
+            bi[B_BFCNT, idx] += 1
+            bfl[B_BFPAY, idx] += pay_fg
+        elif trig:
+            idx = _threshold_index(D[_D_THRESHOLDS], trig_pay / bet)
+            bi[B_TRIGCNT, idx] += 1
+            bfl[B_TRIGPAY, idx] += trig_pay
+            fi = _threshold_index(D[_D_THRESHOLDS], pay_fg / bet)
+            bi[B_FGCNT, fi] += 1
+            bfl[B_FGPAY, fi] += pay_fg
+            bi[B_FGSPINS, fi] += sess_i[E_SPINS]
+            bi[B_FGHIT, fi] += sess_i[E_HIT]
+            bi[B_FGMULT, fi] += sess_i[E_MULTSP]
+            bi[B_FGGF, fi] += sess_i[I_INITGOLD]
+            bgold[1, fi, 0] += sess_i[O_GOLDEN]
+            bgold[1, fi, 1] += sess_i[O_GOLDEN + 1]
+            for k in range(6):
+                bcombo[1, fi, min(max(k, 1), 5) - 1] += sess_i[E_COMBO + k]
+        else:
+            idx = _threshold_index(D[_D_THRESHOLDS], pay_bg / bet)
+            bi[B_BGCNT, idx] += 1
+            bfl[B_BGPAY, idx] += pay_bg
+            bi[B_BGMULT, idx] += bg_i[E_MULTSP]
+            bi[B_BGGF, idx] += bg_i[I_INITGOLD]
+            bgold[0, idx, 0] += bg_i[O_GOLDEN]
+            bgold[0, idx, 1] += bg_i[O_GOLDEN + 1]
+            bcombo[0, idx, min(max(bg_i[I_CASC], 1), 5) - 1] += 1
+    return gi, gf, gs_i, gs_f, bi, bfl, bcombo, bgold, card_draws
 
 
 # ===== 統計 =====
@@ -968,151 +1194,149 @@ def _empty_stats() -> dict[str, Any]:
     }
 
 
-def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
-                base_bet: float, bet_mode: int) -> None:
-    stats["rounds"] += 1
-    stats["coin_in"] += wager
-    stats["pay_bg"] += result.pay_bg
-    stats["pay_fg"] += result.pay_fg
-    win_x = result.pay / wager
-    stats["win_x_sum"] += win_x
-    stats["win_x_square"] += win_x * win_x
-    stats["max_win_x"] = max(stats["max_win_x"], win_x)
-    stats["capped_rounds"] += int(result.capped)
-    stats["bg_hit_spins"] += result.bg_hit_spins
-    stats["fg_hit_spins"] += result.fg_hit_spins
-    stats["fg_spins"] += result.fg_spins
-    stats["fg_triggers"] += int(result.fg_triggered)
-    stats["retriggers"] += result.retriggers
-    stats["cascades_bg"] += result.cascades_bg
-    stats["cascades_fg"] += result.cascades_fg
-    stats["special_symbol_cnt"] += result.special_symbol_cnt
-    stats["bg_trigger_fg_cnt"] += result.bg_trigger_fg_cnt
-    stats["bg_trigger_fg_pay"] += result.bg_trigger_fg_pay
-    stats["golden_converted"] += result.golden_converted
-    stats["bg_gold_symbols"] += result.bg_gold_symbols
-    stats["fg_gold_symbols"] += result.fg_gold_symbols
-    stats["bg_gold_appeared"] += result.bg_gold_appeared
-    stats["fg_gold_appeared"] += result.fg_gold_appeared
-    for key in ("bg_flip_spins", "fg_flip_spins", "bg_mult_spins", "fg_mult_spins",
-                "bg_mult_cells", "fg_mult_cells", "bg_mult_left", "fg_mult_left",
-                "bg_mult_unused_spins", "fg_mult_unused_spins", "bg_big_spins", "fg_big_spins",
-                "bg_big_used_spins", "fg_big_used_spins", "bg_gold_seen_spins", "fg_gold_seen_spins"):
-        stats[key] += getattr(result, key)
-    stats["bg_gold_boards"] += result.bg_gold_boards
-    stats["fg_gold_boards"] += result.fg_gold_boards
-    if bet_mode != MODE_FEATUREBUY:
-        stats["combo_bg"][min(result.bg_cascade_count, 5)] += 1
-    stats["combo_fg"].update(result.combo_fg)
-    stats["bg_mult_wild"] += result.bg_mult_wild
-    stats["fg_mult_wild"] += result.fg_mult_wild
-    stats["max_line_multiplier"] = max(stats["max_line_multiplier"], result.max_line_multiplier)
-    for key in ("bg_golden_results", "fg_golden_results", "bg_split_counts",
-                "fg_split_counts", "mult_wild_values", "bg_mult_kind", "fg_mult_kind", "symbol_hits", "symbol_pay",
-                "bg_symbol_length_hits", "fg_symbol_length_hits",
-                "bg_symbol_length_pay", "fg_symbol_length_pay", "bg_gold_reel", "fg_gold_reel",
-                "bg_initial_symbols", "bg_drop_symbols",
-                "fg_initial_symbols", "fg_drop_symbols"):
-        stats[key].update(getattr(result, key))
-
-    if bet_mode == MODE_FEATUREBUY:
-        # 數學模型規範 §2.5：BF 的倍率判定分母是 Normal Bet 基準成本，不是購買價
-        index = threshold_index(result.pay_fg / base_bet)
-        stats["bucket_bf_cnt"][index] += 1
-        stats["bucket_bf_pay"][index] += result.pay_fg
-    elif result.fg_triggered:
-        # 規範：觸發 FG 的局屬 FG 卡口徑，其 BG 得分只進 bg_trigger_fg_*_lte_upper
-        index = threshold_index(result.bg_trigger_fg_pay / base_bet)
-        stats["bucket_trigger_cnt"][index] += 1
-        stats["bucket_trigger_pay"][index] += result.bg_trigger_fg_pay
-        fg_index = threshold_index(result.pay_fg / base_bet)
-        stats["bucket_fg_cnt"][fg_index] += 1
-        stats["bucket_fg_pay"][fg_index] += result.pay_fg
-        stats["bucket_fg_spins"][fg_index] += result.fg_spins
-        stats["bucket_fg_hit"][fg_index] += result.fg_hit_spins
-        stats["bucket_fg_mult"][fg_index] += result.fg_mult_spins
-        stats["bucket_fg_gold_frames"][fg_index] += result.fg_gold_symbols
-        stats["bucket_fg_golden"][fg_index].update(result.fg_golden_results)
-        for combo, count in result.combo_fg.items():
-            stats["bucket_fg_combo"][fg_index][min(max(combo, 1), 5) - 1] += count
-    else:
-        index = threshold_index(result.pay_bg / base_bet)
-        stats["bucket_bg_cnt"][index] += 1
-        stats["bucket_bg_pay"][index] += result.pay_bg
-        stats["bucket_bg_mult"][index] += result.bg_mult_spins
-        stats["bucket_bg_gold_frames"][index] += result.bg_gold_symbols
-        stats["bucket_bg_golden"][index].update(result.bg_golden_results)
-        stats["bucket_bg_combo"][index][min(max(result.bg_cascade_count, 1), 5) - 1] += 1
+def _counter(pairs) -> Counter:
+    """只放有次數的鍵（同純 Python 版 Counter 只在 += 時產生鍵）。"""
+    out = Counter()
+    for key, value in pairs:
+        if value:
+            out[key] = value.item() if hasattr(value, "item") else value
+    return out
 
 
-def _merge_stats(target: dict[str, Any], source: dict[str, Any]) -> None:
-    for key, value in source.items():
-        if isinstance(value, Counter):
-            target[key].update(value)
-        elif key == "max_win_x" or key == "max_line_multiplier":
-            target[key] = max(target[key], value)
-        elif isinstance(value, list):
-            for index, item in enumerate(value):
-                if isinstance(item, Counter):
-                    target[key][index].update(item)
-                elif isinstance(item, list):
-                    for sub, subvalue in enumerate(item):
-                        target[key][index][sub] += subvalue
-                else:
-                    target[key][index] += item
-        else:
-            target[key] += value
+def arrays_to_stats(arrays, mvals: list[int]) -> dict[str, Any]:
+    """Numba 核心回傳的陣列 → 與純 Python 版相同結構的 stats dict（報表程式不必改）。"""
+    gi, gf, gs_i, gs_f, bi, bfl, bcombo, bgold, card_draws = arrays
+    s = _empty_stats()
+    s["rounds"] = int(gi[G_ROUNDS])
+    s["coin_in"] = float(gf[H_COIN])
+    s["pay_bg"] = float(gf[H_PBG])
+    s["pay_fg"] = float(gf[H_PFG])
+    s["win_x_sum"] = float(gf[H_WX])
+    s["win_x_square"] = float(gf[H_WX2])
+    s["max_win_x"] = float(gf[H_MAXWX])
+    s["capped_rounds"] = int(gi[G_CAPPED])
+    s["fg_triggers"] = int(gi[G_FGTRIG])
+    s["bg_trigger_fg_cnt"] = int(gi[G_TRIGCNT])
+    s["bg_trigger_fg_pay"] = float(gf[H_TRIGPAY])
+    s["retry_total"] = int(gi[G_RETRY])
+    s["retry_limit_exceeded"] = int(gi[G_RLE])
+    s["retry_limit_bg_range"] = int(gi[G_RLBGR])
+    s["retry_limit_bg_freegame"] = int(gi[G_RLBGFG])
+    s["retry_limit_fg"] = int(gi[G_RLFG])
+    s["fg_spins"] = int(gs_i[1, E_SPINS])
+    s["retriggers"] = int(gs_i[1, E_RETRIG])
+    s["special_symbol_cnt"] = int(gs_i[0, E_SPECIAL] + gs_i[1, E_SPECIAL])
+    s["golden_converted"] = int(gs_i[0, I_GCONV] + gs_i[1, I_GCONV])
+    s["max_line_multiplier"] = int(max(1, gs_i[0, I_MAXLM], gs_i[1, I_MAXLM]))
+    mwv = Counter()
+    sym_hits = Counter()
+    sym_pay = Counter()
+    for scene, p in ((0, "bg"), (1, "fg")):
+        S, F = gs_i[scene], gs_f[scene]
+        s[f"cascades_{p}"] = int(S[I_CASC])
+        s[f"{p}_hit_spins"] = int(S[E_HIT])
+        s[f"{p}_gold_symbols"] = int(S[I_INITGOLD])
+        s[f"{p}_gold_appeared"] = int(S[I_GOLDAPP])
+        s[f"{p}_flip_spins"] = int(S[E_FLIP])
+        s[f"{p}_mult_spins"] = int(S[E_MULTSP])
+        s[f"{p}_mult_cells"] = int(S[I_MCELLS])
+        s[f"{p}_mult_left"] = int(S[I_MLEFT])
+        s[f"{p}_mult_unused_spins"] = int(S[E_MUNUSED])
+        s[f"{p}_big_spins"] = int(S[E_BIG])
+        s[f"{p}_big_used_spins"] = int(S[E_BIGUSEDSP])
+        s[f"{p}_gold_seen_spins"] = int(S[E_GSEEN])
+        s[f"{p}_gold_boards"] = int(S[E_GBOARDS])
+        s[f"{p}_mult_wild"] = int(S[I_MWC])
+        s[f"{p}_gold_reel"] = _counter((r, int(S[O_GREEL + r])) for r in range(5))
+        s[f"combo_{p}"] = _counter((k, int(S[E_COMBO + k])) for k in range(6))
+        s[f"{p}_golden_results"] = _counter((GOLD_RESULTS[o], int(S[O_GOLDEN + o])) for o in range(2))
+        s[f"{p}_split_counts"] = _counter((k, int(S[O_SPLIT + k])) for k in range(SPK))
+        s[f"{p}_mult_kind"] = _counter(((KIND_NAMES[kd], mvals[g]), int(S[O_MKIND + kd * MVK + g]))
+                                       for kd in range(NKIND) for g in range(len(mvals)))
+        s[f"{p}_symbol_length_hits"] = _counter(((sy, ln), int(S[O_LENH + sy * 6 + ln]))
+                                                for sy in range(NSYM) for ln in range(6))
+        s[f"{p}_symbol_length_pay"] = _counter(((sy, ln), float(F[O_LENPAY + sy * 6 + ln]))
+                                               for sy in range(NSYM) for ln in range(6))
+        s[f"{p}_initial_symbols"] = _counter(((r, sy), int(S[O_INITS + r * NSYM + sy]))
+                                             for r in range(5) for sy in range(NSYM))
+        s[f"{p}_drop_symbols"] = _counter(((r, sy), int(S[O_DROPS + r * NSYM + sy]))
+                                          for r in range(5) for sy in range(NSYM))
+        mwv.update(_counter((mvals[g], int(S[O_MWV + g])) for g in range(len(mvals))))
+        sym_hits.update(_counter((sy, int(S[O_SYMH + sy])) for sy in range(NSYM)))
+        sym_pay.update(_counter((sy, float(F[O_SYMPAY + sy])) for sy in range(NSYM)))
+    s["mult_wild_values"] = mwv
+    s["symbol_hits"] = sym_hits
+    s["symbol_pay"] = sym_pay
+    profile = "newbie" if CARD_PROFILE_NEWBIE else "oldhand"
+    s["card_draws"] = _counter(((profile, SEC_NAMES[sec], i), int(card_draws[sec, i]))
+                               for sec in range(card_draws.shape[0]) for i in range(card_draws.shape[1]))
+    for key, row in (("bucket_bg_cnt", B_BGCNT), ("bucket_fg_cnt", B_FGCNT), ("bucket_bf_cnt", B_BFCNT),
+                     ("bucket_trigger_cnt", B_TRIGCNT), ("bucket_fg_hit", B_FGHIT),
+                     ("bucket_fg_spins", B_FGSPINS), ("bucket_bg_mult", B_BGMULT),
+                     ("bucket_fg_mult", B_FGMULT), ("bucket_bg_gold_frames", B_BGGF),
+                     ("bucket_fg_gold_frames", B_FGGF)):
+        s[key] = [int(v) for v in bi[row]]
+    for key, row in (("bucket_bg_pay", B_BGPAY), ("bucket_fg_pay", B_FGPAY),
+                     ("bucket_bf_pay", B_BFPAY), ("bucket_trigger_pay", B_TRIGPAY)):
+        s[key] = [float(v) for v in bfl[row]]
+    for scene, p in ((0, "bg"), (1, "fg")):
+        s[f"bucket_{p}_combo"] = [[int(v) for v in bcombo[scene, b]] for b in range(NBUCKET)]
+        s[f"bucket_{p}_golden"] = [_counter((GOLD_RESULTS[o], int(bgold[scene, b, o])) for o in range(2))
+                                   for b in range(NBUCKET)]
+    return s
 
 
-def _simulate_chunk(rounds: int, bet_mode: int, base_bet: float, seed: int,
-                    card_enabled: bool, newbie: bool) -> dict[str, Any]:
+def merge_arrays(results):
+    """多執行緒結果合併：相加；max_win_x、max_line_multiplier 取大。"""
+    merged = [np.array(a, copy=True) for a in results[0]]
+    for res in results[1:]:
+        for i, a in enumerate(res):
+            merged[i] += a
+    merged[1][H_MAXWX] = max(r[1][H_MAXWX] for r in results)
+    for scene in range(2):
+        merged[2][scene, I_MAXLM] = max(r[2][scene, I_MAXLM] for r in results)
+    return tuple(merged)
+
+
+CARD_PROFILE_NEWBIE = False
+
+
+def _chunk_args(bet_mode: int, base_bet: float, card_enabled: bool, newbie: bool):
+    card_on = bool(card_enabled and (CFG_RTP.get("card_system") or {}).get("enabled"))
+    data, mvals, _ = build_game_data(CFG, CFG_RTP or None, newbie, card_on)
+    max_win, trig_cap = mode_caps(CFG_RTP or None, newbie, card_on, bet_mode)
     wager = wager_for_mode(bet_mode, base_bet)
-    engine = SuperDiamond(CFG, CFG_RTP or None, seed, base_bet, card_enabled, newbie)
-    stats = _empty_stats()
-    for _ in range(rounds):
-        _accumulate(stats, engine.round(bet_mode), wager, base_bet, bet_mode)
-    stats["retry_total"] = engine.retry_total
-    stats["retry_limit_exceeded"] = engine.retry_limit_exceeded
-    stats["retry_limit_bg_range"] = engine.retry_limit_bg_range
-    stats["retry_limit_bg_freegame"] = engine.retry_limit_bg_freegame
-    stats["retry_limit_fg"] = engine.retry_limit_fg
-    stats["card_draws"].update(engine.card_draws)
-    return stats
-
-
-def _init_worker(cfg: dict[str, Any], cfg_rtp: dict[str, Any]) -> None:
-    """多程序 worker 初始化：Windows 以 spawn 啟動，需把主程序載入的 config 傳進來。"""
-    global CFG, CFG_RTP
-    CFG, CFG_RTP = cfg, cfg_rtp
+    return tuple(data), mvals, card_on, max_win, trig_cap, wager
 
 
 def run_simulation(total_rounds: int, bet_mode: int, base_bet: float, threads: int,
                    card_enabled: bool, newbie: bool) -> dict[str, Any]:
+    global CARD_PROFILE_NEWBIE
+    CARD_PROFILE_NEWBIE = bool(newbie)
+    threads = max(1, min(threads, total_rounds))
     per_thread = [total_rounds // threads] * threads
     for index in range(total_rounds % threads):
         per_thread[index] += 1
     assert sum(per_thread) == total_rounds
+    data, mvals, card_on, max_win, trig_cap, wager = _chunk_args(bet_mode, base_bet, card_enabled, newbie)
 
-    # Warm-up（不計時）
-    _simulate_chunk(min(200, max(1, total_rounds)), bet_mode, base_bet,
-                    RNG_SEED - 1, card_enabled, newbie)
+    # Warm-up（編譯／載入快取，不計時）
+    simulate_chunk(data, 50, bet_mode, base_bet, wager, card_on, max_win, trig_cap, RNG_SEED - 1)
 
     started = time.perf_counter()
-    merged = _empty_stats()
     if threads == 1:
-        merged = _simulate_chunk(total_rounds, bet_mode, base_bet, RNG_SEED, card_enabled, newbie)
+        arrays = simulate_chunk(data, total_rounds, bet_mode, base_bet, wager, card_on, max_win, trig_cap, RNG_SEED)
     else:
-        # 2026-10-06：ThreadPool 受 GIL 限制實際只用 1 核（1e8 跑 3.5 小時）；改多程序，worker 以 initializer 接收 config
-        with ProcessPoolExecutor(max_workers=threads, initializer=_init_worker, initargs=(CFG, CFG_RTP)) as pool:
+        # Numba nogil：多執行緒真平行（同 H026／H027）；各執行緒的 np.random 為獨立串流
+        with ThreadPoolExecutor(max_workers=threads) as pool:
             futures = [
-                pool.submit(_simulate_chunk, count, bet_mode, base_bet,
-                            RNG_SEED + index * 7919, card_enabled, newbie)
+                pool.submit(simulate_chunk, data, count, bet_mode, base_bet, wager, card_on,
+                            max_win, trig_cap, RNG_SEED + index * 7919)
                 for index, count in enumerate(per_thread) if count > 0
             ]
-            for future in futures:
-                _merge_stats(merged, future.result())
+            arrays = merge_arrays([future.result() for future in futures])
     duration = time.perf_counter() - started
-    return {"stats": merged, "duration": duration}
+    return {"stats": arrays_to_stats(arrays, mvals), "duration": duration}
 
 
 # ===== 報表 / Console =====
@@ -1613,14 +1837,16 @@ def format_board(symbols: list[list[int]], mults: list[list[int]] | None = None)
 
 
 def run_single_spin_debug() -> None:
-    engine = SuperDiamond(CFG, CFG_RTP or None, RNG_SEED, 1.0, False, False)
+    """逐局除錯：每局以獨立種子跑 1 局並印出主要結果（Numba 版不保留盤面物件）。"""
+    data, mvals, card_on, max_win, trig_cap, wager = _chunk_args(MODE_NORMALBET, 1.0, False, False)
     for index in range(DEBUG_ROUNDS):
-        result = engine.round(MODE_NORMALBET)
+        arrays = simulate_chunk(data, 1, MODE_NORMALBET, 1.0, wager, False, max_win, trig_cap, RNG_SEED + index)
+        s = arrays_to_stats(arrays, mvals)
         print(f"--- debug round {index + 1} ---")
-        print(f"pay_bg={result.pay_bg:.4f} pay_fg={result.pay_fg:.4f} "
-              f"cascades_bg={result.cascades_bg} fg_spins={result.fg_spins} "
-              f"golden={result.golden_converted} mult_wild={result.bg_mult_wild + result.fg_mult_wild} "
-              f"max_line_mult={result.max_line_multiplier} capped={result.capped}")
+        print(f"pay_bg={s['pay_bg']:.4f} pay_fg={s['pay_fg']:.4f} "
+              f"cascades_bg={s['cascades_bg']} fg_spins={s['fg_spins']} "
+              f"golden={s['golden_converted']} mult_wild={s['bg_mult_wild'] + s['fg_mult_wild']} "
+              f"max_line_mult={s['max_line_multiplier']} capped={bool(s['capped_rounds'])}")
 
 
 def run_batch(combo: dict[str, Any], index: int, total: int) -> None:

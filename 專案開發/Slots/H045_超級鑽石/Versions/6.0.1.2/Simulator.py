@@ -1,4 +1,4 @@
-"""H045 超級鑽石 (Super Diamond) simulator.
+"""H045 超級鑽石 (Lucky Diamond) simulator.
 
 盤面 5x4、1024 Ways、Cascade；金框中獎翻牌為小鬼／大鬼兩種，每顆翻出的 Wild
 再抽倍數（x1＝無倍數），大鬼丟出的 W2 沿用本體倍數；同一連線的 WILD 倍數相加後
