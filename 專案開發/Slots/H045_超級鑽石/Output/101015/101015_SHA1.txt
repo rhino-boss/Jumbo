@@ -1,0 +1,16 @@
+101015 - Lucky Diamond
+SHA1 Checksum List
+Generated: 2026-11-06
+Files: 9
+
+SHA1                                      FILE                                      SIZE  MODIFIED
+----------------------------------------  -------------------------------------  -------  ----------------
+C63C15DAED9119ADF506E6281CA4D6A8EE4C4DD7  101015_Game Description.docx           2546980  2026-11-06 10:26
+EC2BF1973E9D1FE8AAC1ADD26B4EC7C34AC9CFD5  101015_Math Document Description.docx    52608  2026-11-06 10:27
+0EACE8C6BA9C597F9DDC0722386533CF3229B78A  PARsheet\H0451.xlsx                     619054  2026-11-06 10:27
+C4813F6A71600A1A6B49D1043A1C623FC38A9B35  PARsheet\H045192.xlsx                   525623  2026-11-06 10:27
+BFAF36B245F98411FB0B7E2F1504C19CD796905D  PARsheet\H045194.xlsx                   524860  2026-11-06 10:27
+B7AF952B232DB9290E73FC24943C837D8EDAA93C  Simulator\config.js                      45319  2026-11-06 10:37
+79CF3F52C7E4F6F490232C3CA812D6B04E0E6E4D  Simulator\config_92.js                    7791  2026-11-06 10:36
+6D3F45C8F2D786E95D9BA450330EF08C175CFD2D  Simulator\config_94.js                    7797  2026-11-06 10:36
+9D0E7F78A6FC2C33AFAAC2CB41502D7D4EA89382  Simulator\Simulator.py                   77251  2026-11-06 10:36
