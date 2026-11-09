@@ -1,5 +1,5 @@
 {
-  "current": "6.0.1.2",
+  "current": "7.0.1.0",
   "version_rule": {
     "main_model": "H0451.xlsx 基礎數學（1 碼）：輪帶、Paytable、Feature、判獎變更時 +1。",
     "rtp_variant": "H0451<RTP><Variant>.xlsx 四碼：遊戲參數.卡片權重.SCR.其他文件。",
@@ -325,19 +325,64 @@
       "version": "7.0.0.0",
       "math_key": "7",
       "date": "2026-11-06",
-      "trial": true,
       "base_config": "Versions/7.0.0.0/config.js",
-      "sources": {},
+      "sources": {
+        "base": "Versions/7.0.0.0/Source/H0451.xlsx",
+        "92A": "Versions/7.0.0.0/Source/H045192A.xlsx",
+        "94A": "Versions/7.0.0.0/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/7.0.0.0/Source/H045192A_Bet100.xlsx",
+        "92B": "Versions/7.0.0.0/Source/H045192B.xlsx",
+        "94B": "Versions/7.0.0.0/Source/H045194B.xlsx",
+        "92B_Bet100": "Versions/7.0.0.0/Source/H045192B_Bet100.xlsx",
+        "120A_Demo": "Versions/7.0.0.0/Source/H0451120_Demo.xlsx"
+      },
       "configs": {
         "base": "config.js",
-        "92A": "config_92A.js"
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js",
+        "92B": "config_92B.js",
+        "94B": "config_94B.js",
+        "92B_Bet100": "config_92B_Bet100.js",
+        "120A_Demo": "config_120A_Demo.js"
       },
       "changes": [
-        "試玩版（未定版，只有 92A 老手卡片）：降低 FG 自然倍數以減少卡片重骰（BF 自然平均約 5,190x → 593x，BF 平均重骰 245 → 36）。",
-        "FG Wild 倍數權重（fg_1／fg_2）：×1 占比 20% → 12%，×2／×3／×5 維持原比例。",
-        "FG 金框顆數權重：k 顆權重 × 0.7^k（每盤金框 1.834 → 1.394）。",
-        "fg_2 R2 輪帶 32 格 J 換 K；fg_2 掉落權重改為與 fg_1 相同。",
-        "92A 老手 free_game／eb_free_game／buy_feature 卡片權重重解（>1,000x 不動）；FG Hit Rate 48% → 45%。"
+        "降低 FG 自然倍數以減少卡片重骰（BF 自然平均約 5,193x → 592x、FG 自然 Hit Rate 60.7% → 46.6%）；只改 FG，BG、賠率、Cascade 階梯、表 3、BF 進場盤不變。",
+        "FG Wild 倍數權重（fg_1／fg_2）：小鬼 ×1／×2／×3／×5 ＝ 120／528／286／66（原 50／120／65／15），大鬼 120／484／264／132（原 25／55／30／15）。",
+        "FG 金框顆數權重（Parameter Gold Count Weight - Free Game）R2～R4 降低（每盤金框約 1.94 → 1.43）。",
+        "fg_2 R2 輪帶 32 格 J 換 K（長度 169 不變）；fg_2 掉落權重改為與 fg_1 相同。",
+        "A 版與 Demo（92A／94A／92A_Bet100／120A_Demo）依 7.0.0.0 正式自然報表重解 FG／BF 卡片權重：平均倍數與各倍率帶占比（≤50x、≤100x、≤1000x、≤5000x、≤10000x）維持 6.0.1.2，各區間變動 ≤ 3.8%；BG 權重不變。Card-On 平均重骰 NB 14 → 13、EB 21 → 13、BF 245 → 36。",
+        "B 版（92B／94B／92B_Bet100）老手 NB FG、EB FG、BF 改由對應 A 版衍生：形狀同 A、多出的價值放到 (200, 5000]（>5000x 占比同 A），平均倍數維持 B 版原目標；BF (200, 5000] 占比 92B 3.00%、92B_Bet100 5.13%，BF 贏錢率約 17%；新手卡片 A／B 逐格相同。"
+      ]
+    },
+    {
+      "version": "7.0.1.0",
+      "math_key": "7",
+      "date": "2026-11-09",
+      "base_config": "Versions/7.0.1.0/config.js",
+      "sources": {
+        "base": "Versions/7.0.1.0/Source/H0451.xlsx",
+        "92A": "Versions/7.0.1.0/Source/H045192A.xlsx",
+        "94A": "Versions/7.0.1.0/Source/H045194A.xlsx",
+        "92A_Bet100": "Versions/7.0.1.0/Source/H045192A_Bet100.xlsx",
+        "92B": "Versions/7.0.1.0/Source/H045192B.xlsx",
+        "94B": "Versions/7.0.1.0/Source/H045194B.xlsx",
+        "92B_Bet100": "Versions/7.0.1.0/Source/H045192B_Bet100.xlsx",
+        "120A_Demo": "Versions/7.0.1.0/Source/H0451120_Demo.xlsx"
+      },
+      "configs": {
+        "base": "config.js",
+        "92A": "config_92A.js",
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js",
+        "92B": "config_92B.js",
+        "94B": "config_94B.js",
+        "92B_Bet100": "config_92B_Bet100.js",
+        "120A_Demo": "config_120A_Demo.js"
+      },
+      "changes": [
+        "OP Jackpot SCR 改填 SPS 101015 scatterComboRate（2026-11-09 FINAL）：A／B 分版，新手獨立、92 與 Bet100 用老手列、94 用 94% 列；Demo 複製 92A；權重與 RTP 不變。",
+        "新手 Max Win 改用老手上限（對齊 SPS）：新手不再截在新手卡組上限 100x，新手得分只由卡片區間控制；Simulator、Demogame、game_rule §9.10.1 同步。"
       ]
     }
   ]

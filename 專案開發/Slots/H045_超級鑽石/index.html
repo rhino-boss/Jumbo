@@ -2250,6 +2250,21 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v7（7.0.1.0）</h4>
+        <ol>
+          <li>OP Jackpot SCR 改填 SPS 101015 scatterComboRate（11/09 FINAL）：A／B 分版，新手獨立、92 與 Bet100 用老手列、94 用 94% 列；權重與 RTP 不變。（11/09）</li>
+          <li>新手 Max Win 改用老手上限（對齊 SPS）：新手不再截在新手卡組上限 100x，新手得分只由卡片區間控制；原本約 1% 的新手 FG 被截斷，新手 RTP 偏低約 0.2pp。（11/09）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v7（7.0.0.0）</h4>
+        <ol>
+          <li>降低 FG 自然倍數以減少卡片重骰（只改 FG；BG、賠率、Cascade 階梯、表 3、BF 進場盤不變）：FG Wild 倍數權重（表 1／表 2）小鬼 ×1／×2／×3／×5 ＝ 120／528／286／66（原 50／120／65／15）、大鬼 120／484／264／132（原 25／55／30／15）；FG 金框顆數權重 R2～R4 降低（每盤金框 1.94 → 1.43）；FG 表 2 R2 輪帶 32 格 J 換 K、補牌權重改為與 FG 表 1 相同。自然 BF 平均 5,193x → 592x、FG 自然 Hit Rate 60.7% → 46.6%。（11/06）</li>
+          <li>依 7.0.0.0 正式自然報表重解 A 版與 Demo（92A／94A／92A_Bet100／120A_Demo）FG／BF 卡片權重：平均倍數與各倍率帶占比（≤50x、≤100x、≤1000x、≤5000x、≤10000x）維持 6.0.1.2，各區間變動 ≤ 3.8%；BG 權重不變。Card-On 平均重骰 NB 14 → 13、EB 21 → 13、BF 245 → 36；FG 每轉 Hit Rate 48% → 45%。（11/06）</li>
+          <li>B 版（92B／94B／92B_Bet100）老手 NB FG、EB FG、BF 卡片改由對應 A 版衍生：形狀同 A，多出的價值放到 (200, 5000]（>5000x 占比同 A），平均倍數維持 B 版原目標；BF (200, 5000] 占比 92B 3.00%、92B_Bet100 5.13%，BF 贏錢率約 17%。新手卡片 A／B 逐格相同。（11/06）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v6（6.0.1.2）</h4>
         <ol>
           <li>BF_Symbol 改為直接複製 H016 幸運王牌 BF_Symbol（金框符號換一般符號），進場盤任何停點都不得分、C1 ≥ 3（原表照常判獎有 28.6% 會中，靠程式跳過判獎）；Simulator／Demo 進場盤改照常判獎、得分即報錯。（11/02）</li>
@@ -2418,7 +2433,7 @@
   <script id="embeddedGameHelpMarkdown" type="text/plain">
 # 101015 Game Help Draft
 
-這份 md 是 `Output/101015_Help.xlsx` 的前置確認稿。
+這份 md 是 `對外文件/101015_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 底稿：Lucky Ace（101003）企劃書 `7.Help`；格式比照 H027／H028 的 `game_help_draft.md`；規則以 `game_rule.md` 為準。
 
@@ -2636,7 +2651,7 @@
       try { localStorage.removeItem("h045RuleMode"); } catch (_) {}
       window.H045_RULE_MODE = "mul";
       window.H045_BASE_DIR = "./";
-      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261106a"><\/script>`);
+      document.write(`<script src="${window.H045_BASE_DIR}Versions/version_manifest.js?v=20261109a"><\/script>`);
     })();
   </script>
   <script>
@@ -2652,7 +2667,7 @@
       window.H045_VERSION_ENTRY = entry;
       // 目前版本讀根目錄；舊版本讀 Versions/<版本>/ 的封存 config（2026-10-13：選舊版本時不再讀到目前版本的 config）
       const folder = window.H045_BASE_DIR + (entry.version === manifest.current ? "" : `Versions/${entry.version}/`);
-      const stamp = `${encodeURIComponent(entry.version)}-20261102b`;   // 權重或 config 更新時改尾碼避免快取
+      const stamp = `${encodeURIComponent(entry.version)}-20261109a`;   // 權重或 config 更新時改尾碼避免快取
       // RTP／Variant config（卡片權重）：manifest entry.configs 列出的非 base 項目，由 query / localStorage 選擇
       const available = Object.keys(entry.configs || {}).filter(code => code !== "base");
       // 2026-10-22：有 94A／92A／92A_Bet100 三套時預設 AUTO＝依押注自動選（模擬程式規範 §1.2.3：小 Bet 94A、中 Bet 92A、大 Bet 92A_Bet100；新手共用 92A）
@@ -2775,7 +2790,7 @@
   }
   function refreshMaxWin() {
     if (!cardSystemActive()) { MAX_WIN = Infinity; return; }
-    const p = cardProfile();
+    const p = "oldhand";   // Max Win 一律用老手上限（2026-11-09 對齊 SPS）：新手不因新手卡組上限截斷
     MAX_WIN = state.mode === 2 ? cardSectionCap("buy_feature", p)
       : Math.max(cardSectionCap(cardSection("free_game"), p), cardSectionCap(cardSection("base_game"), p));
   }
@@ -4249,9 +4264,9 @@
   window.DEMOGAME_VERSION_OVERRIDE = window.H045_CONFIG?.excel_version || window.H045_VERSION_ENTRY?.version;
   </script>
   <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "report.html";</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-06 14:46";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_LAST_CODE = "2026-11-06 14:04";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-11-06 15:23";   // 任何東西最後調整（數學、程式、文件）</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-09 11:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_CODE = "2026-11-09 11:08";   // 程式最後調整（index／Simulator／共用程式）
+  window.DEMOGAME_LAST_UPDATE = "2026-11-09 11:08";   // 任何東西最後調整（數學、程式、文件）</script>
   <script src="../demogame_common.js?v=20261029a"></script>
 </body>
 

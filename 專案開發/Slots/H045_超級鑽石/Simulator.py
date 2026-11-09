@@ -480,11 +480,13 @@ def mode_caps(rtp_config: dict[str, Any] | None, newbie: bool, card_enabled: boo
     rtp_config = rtp_config or {}
     profile = "newbie" if newbie else "oldhand"
     cap = {sec: _section_cap(rtp_config, profile, sec, card_enabled) for sec in SEC_NAMES}
+    # Max Win 一律用老手上限（2026-11-09 對齊 SPS）：新手不因新手卡組上限截斷，新手得分只由卡片區間控制
+    old = {sec: _section_cap(rtp_config, "oldhand", sec, card_enabled) for sec in SEC_NAMES}
     if bet_mode == MODE_FEATUREBUY:
-        return cap["buy_feature"], cap["base_game"]
+        return old["buy_feature"], cap["base_game"]
     if bet_mode == MODE_EXTRABET:
-        return max(cap["eb_free_game"], cap["eb_base_game"]), cap["eb_base_game"]
-    return max(cap["free_game"], cap["base_game"]), cap["base_game"]
+        return max(old["eb_free_game"], old["eb_base_game"]), cap["eb_base_game"]
+    return max(old["free_game"], old["base_game"]), cap["base_game"]
 
 
 def new_scratch() -> Scratch:
