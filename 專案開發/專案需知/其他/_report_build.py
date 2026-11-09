@@ -88,7 +88,7 @@ def build(report, curves=None):
         name = name.strip()
         if name in AUTO:
             continue
-        body = re.sub(r"<!--CHART:(\w+)-->", r"@@CHART:\1@@", body)
+        body = re.sub(r"<!--CHART:(\w+)-->", r"\n\n@@CHART:\1@@\n\n", body)   # 前後補空行：相鄰的標記才不會併成同一段
         h = _bh.Renderer("report").render(body)
         h = re.sub(r"<p>@@CHART:(\w+)@@</p>", lambda m: chart_html(m.group(1), data[m.group(1)]) if m.group(1) in data else "", h)
         frag = BeautifulSoup(h, "html.parser")
@@ -102,6 +102,13 @@ def build(report, curves=None):
                 del e["id"]
         for e in frag.select("strong.nr"):
             del e["class"]
+        for h3 in frag.find_all("h3"):   # 基本指標是混合指標，不畫占比條
+            if h3.get_text(strip=True) == "基本指標":
+                for t in h3.find_all_next("table"):
+                    prev = t.find_previous("h3")
+                    if prev is not h3:
+                        break
+                    t["data-nobar"] = ""
         panels.append((name, str(frag)))
 
     # 移除舊頁簽（含自動頁簽，card_style 會重加）
@@ -125,6 +132,9 @@ def build(report, curves=None):
 
     # 頁首 KPI
     kp = soup.select_one("#hero-kpis")
+    if kp is None and soup.find("header") is not None:   # 舊報告沒有 KPI 容器就補在頁首後面
+        kp = soup.new_tag("div", attrs={"class": "kpis", "id": "hero-kpis"})
+        soup.find("header").insert_after(kp)
     tb = md_table(md, "基本指標")
     if kp is not None and tb:
         hdr, rows = tb

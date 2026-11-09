@@ -181,6 +181,12 @@ def apply(path):
     sc.string = JS + (Path(__file__).with_name("_chart_yzoom.js")).read_text(encoding="utf-8")
     # 報告內建的倍率線型提示與縱軸縮放共用同一份資料物件，縮放後提示圓點才會對位
     for s in soup.find_all("script"):
+        a = "document.querySelectorAll('table').forEach(function(tb){var rows"
+        b = "document.querySelectorAll('table').forEach(function (tb) {"
+        if s.string and b in s.string and "data-nobar" not in s.string:
+            s.string = s.string.replace(b, b + " if (tb.hasAttribute('data-nobar')) return;")
+        if s.string and a in s.string:   # 表格加 data-nobar 就不畫占比條
+            s.string = s.string.replace(a, "document.querySelectorAll('table').forEach(function(tb){if(tb.hasAttribute('data-nobar'))return;var rows")
         if s.string and "const d=JSON.parse(ch.dataset.hover)" in s.string:
             s.string = s.string.replace("const d=JSON.parse(ch.dataset.hover)", "const d=ch._hd||(ch._hd=JSON.parse(ch.dataset.hover))")
     (soup.body or soup).append(sc)
