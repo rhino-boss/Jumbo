@@ -1,8 +1,8 @@
 # 101007 Game Help Draft
 
-這份 md 是 `Output/101007_Help.xlsx` 的前置確認稿。
+這份 md 是 `對外文件/101007_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
-底稿：企劃書 `Else/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx` 的 `7.Help`；格式比照 H045 的 `game_help_draft.md`；規則以 `game_rule.md` 為準。
+底稿：企劃書 `其他/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx` 的 `7.Help`；格式比照 H045 的 `game_help_draft.md`；規則以 `game_rule.md` 為準。
 
 ## Game Meta
 

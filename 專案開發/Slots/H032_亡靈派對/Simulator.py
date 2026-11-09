@@ -323,6 +323,12 @@ class CalaveraParty:
         self.frame_tiers = config["fg_frame_tier_weight"]
         self.dead_tiers = config["fg_dead_streak_weight"]
         self.priority = list(config["fg_weight_priority"])
+        # FG 後段黃底：依盤面有框的格數，黃底機率乘上係數、倍數改抽這一段的權重（隱性控制）
+        self.late_yellow = []
+        for row in config.get("fg_late_yellow", []):
+            values = sorted(int(k) for k in row["value_weight"])
+            self.late_yellow.append((int(row["min"]), int(row["max"]), float(row["rate_scale"]) / 100.0, values,
+                                     *_cumulative([float(row["value_weight"][str(v)]) for v in values])))
         # Max Win 由卡片系統的倍率上限決定；Card System Off 時不套上限
         self.max_win = self._card_multiplier_cap()
         self.fs_table = {int(k): v for k, v in config["free_spins"].items()}
@@ -362,13 +368,26 @@ class CalaveraParty:
         cumulative, total = _cumulative([float(weights[n]) for n in names])
         return str(_pick(self.rng, names, cumulative, total))
 
-    def roll_yellow(self, table: Table, reel: int, symbol: int, refill: bool) -> int:
-        """黃底只套在一般符號（不套 C1／WW）；機率＝該表該軸機率 × 符號係數，倍數依 Yellow_Value_Weight。"""
+    def late_tier(self, frames: list[list[int]]):
+        """FG 後段黃底：盤面有框的格數落在哪一段；沒有對應段回傳 None。"""
+        cells = sum(value > 0 for column in frames for value in column)
+        for tier in self.late_yellow:
+            if tier[0] <= cells <= tier[1]:
+                return tier
+        return None
+
+    def roll_yellow(self, table: Table, reel: int, symbol: int, refill: bool, late=None) -> int:
+        """黃底只套在一般符號（不套 C1／WW）；機率＝該表該軸機率 × 符號係數，倍數依 Yellow_Value_Weight。
+        late（FG 後段段位）：機率再乘 rate_scale，倍數改抽該段的權重。"""
         if symbol in (WW, C1):
             return 0
         rate = (table.yellow_drop_rate if refill else table.yellow_rate)[reel] * table.yellow_symbol_factor.get(symbol, 0.0)
+        if late:
+            rate *= late[2]
         if rate <= 0 or self.rng.random() >= rate:
             return 0
+        if late:
+            return int(_pick(self.rng, late[3], late[4], late[5]))
         return int(_pick(self.rng, table.yellow_values, table.yellow_cumulative, table.yellow_total))
 
     def evaluate(self, symbols: list[list[int]]):
@@ -408,7 +427,8 @@ class CalaveraParty:
         """
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
-        yellow = [[self.roll_yellow(table, reel, symbols[reel][row], False) for row in range(4)] for reel in range(5)]
+        late = self.late_tier(frames) if free_game else None
+        yellow = [[self.roll_yellow(table, reel, symbols[reel][row], False, late) for row in range(4)] for reel in range(5)]
         result = SpinResult(initial_board=[reel[:] for reel in symbols])
         result.initial_symbols.update((reel, symbol) for reel, column in enumerate(symbols) for symbol in column)
         result.yellow_seen = any(any(column) for column in yellow)
@@ -443,6 +463,7 @@ class CalaveraParty:
                 else:
                     symbols[reel][row] = EMPTY
             result.peak_frame = max(result.peak_frame, total_frame)
+            late = self.late_tier(frames) if free_game else None
             # 重力掉落：row 0 在最下面（同 Demogame），剩下的符號連同黃底往下掉，上方補新符號；框留在原格
             for reel in range(5):
                 keep = [(symbols[reel][row], yellow[reel][row]) for row in range(4) if symbols[reel][row] != EMPTY]
@@ -454,7 +475,7 @@ class CalaveraParty:
                     else:
                         symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
                         symbols[reel][row] = symbol
-                        yellow[reel][row] = self.roll_yellow(table, reel, symbol, True)
+                        yellow[reel][row] = self.roll_yellow(table, reel, symbol, True, late)
                         result.yellow_seen |= yellow[reel][row] > 0
                         result.drop_symbols[(reel, symbol)] += 1
             if result.pay >= cap:

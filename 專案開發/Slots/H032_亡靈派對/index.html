@@ -2250,6 +2250,8 @@
           <li>自然 RTP 壓到 500% 以內：重排 BG／FG 輪帶 R2～R5 的一般符號（相鄰軸偏重不同符號組：R2／R4 偏 M1、M3、A、Q，R3／R5 偏 M2、M4、K、J；BG 偏重 90%、FG 80%），補牌權重同方向調整，補牌黃底機率＝滾停的一半；C1 位置、輪長、停輪權重、R1、BF 進場表不動，滾停黃底維持平均 4 顆。（11/04）</li>
           <li>中獎率與週期校準（BG Hit Rate 25%、FG Hit Rate 45%、FG 週期約 1/200）：輪帶相鄰軸偏重放寬為 BG 84.5%／FG 59%；BG 表 3 補牌 C1 權重 ×0.7；黃底倍數權重改為 1X 偏多（600/250/90/30/15/8/4/2/1/1，FG 好表同）；補牌黃底＝滾停 × 0.2（BG）／× 0.15（FG）；滾停黃底仍平均 4 顆。（11/04）</li>
           <li>倍數框改為橘色發光框（2px 橘框＋外／內光暈、淡橘半透明底），框的倍數徽章改橘色；黃底維持金色。（11/04）</li>
+          <li>金色符號（黃底）出現機率降為 2/3：滾停平均 4 顆 → 2.67 顆，補牌同比例。（11/06）</li>
+          <li>FG 後段（隱性）：盤面有框 8～11 格時黃底機率 ×50%、倍數只出 1X／2X；12 格以上 ×20%、只出 1X，框改靠消除 +1 慢慢長。新增後段表 FG_Symbol (4)（常中但得分小），框總和 ≥ 10 時多用它、連續 2 局以上未中只用它，讓大框時不常空轉（套卡片權重後也成立）。（11/06）</li>
         </ol>
       </article>
       </div>
@@ -2366,7 +2368,7 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./config.js?v=20261104c"></script>
+  <script src="./config.js?v=20261106a"></script>
   <script>
 (() => {
   "use strict";
@@ -2551,12 +2553,18 @@
     return Array.from({ length: 4 }, (_, row) => Number(symbols[(stop + row) % symbols.length]));
   });
   // 黃底：只套在一般符號上（不套 C1／WILD）；機率＝該表該軸機率 × 符號係數（R1 機率為 0），倍數依該表 Yellow_Value_Weight
-  function rollYellow(tableName, reel, symbol, refill = false) {
+  // FG 後段黃底（隱性）：盤面有框的格數落在 fg_late_yellow 某段時，黃底機率 × rate_scale、倍數改抽該段權重
+  function lateTier(frames) {
+    const cells = frames.flat().filter(value => value > 0).length;
+    return (cfg.fg_late_yellow || []).find(tier => cells >= tier.min && cells <= tier.max) || null;
+  }
+  function rollYellow(tableName, reel, symbol, refill = false, late = null) {
     if (symbol === C1 || symbol === WW) return 0;
     const y = tables[tableName].yellow;
-    const rate = (refill ? y.drop : y.rate)[reel] * (Number(y.symbol[String(symbol)] ?? 0) / 100);
+    let rate = (refill ? y.drop : y.rate)[reel] * (Number(y.symbol[String(symbol)] ?? 0) / 100);
+    if (late) rate *= Number(late.rate_scale) / 100;
     if (!(rate > 0) || rand() >= rate) return 0;
-    return Number(pickMap(y.value));
+    return Number(pickMap(late ? late.value_weight : y.value));
   }
   const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
   const frameSum = frames => frames.flat().reduce((sum, value) => sum + value, 0);
@@ -2590,7 +2598,8 @@
   // 一轉（BG 局或一場 FG）：frames 傳入時沿用（FG 整場保留），否則為主遊戲新的空盤
   function spin(tableName, freeGame = false, frames = grid(0)) {
     const board = makeBoard(tableName);
-    const yellow = board.map((column, reel) => column.map(symbol => rollYellow(tableName, reel, symbol)));
+    let late = freeGame ? lateTier(frames) : null;
+    const yellow = board.map((column, reel) => column.map(symbol => rollYellow(tableName, reel, symbol, false, late)));
     const snapshots = [];
     let pay = 0, combo = 0, yellowSeen = yellow.flat().some(Boolean), yellowUsed = 0, peakFrame = frameSum(frames);
     const snap = (type, extra) => snapshots.push({ type, board: clone(board), yellow: clone(yellow), frames: clone(frames), hits: [], combo, frameTotal: frameSum(frames), ...extra });
@@ -2623,6 +2632,7 @@
       snap("eliminate", { cleared, converted, bumped, message: `Eliminate${converted.length ? ` · Yellow → WILD ×${converted.length}` : ""}${bumped.length ? ` · Frame ×${frameSum(frames)}` : ""}` });
 
       // 掉落：每軸剩下的符號（含 WILD、黃底、C1）往下掉，上方補新符號；框留在原格
+      late = freeGame ? lateTier(frames) : null;
       const motion = [];
       for (let reel = 0; reel < 5; reel++) {
         const keep = [];
@@ -2636,7 +2646,7 @@
             if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 18 });
           } else {
             const symbol = draw(tableName, reel);
-            board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true);
+            board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true, late);
             if (yellow[reel][row]) yellowSeen = true;
             motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 18 });
           }

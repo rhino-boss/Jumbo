@@ -1,8 +1,8 @@
-"""把遊戲 Notes/ 的修改紀錄、注意事項、上線觀察併進數值報告 report.html，各成一個頁簽（2026-11-03 使用者定）。
+"""把遊戲 個人筆記/ 的修改紀錄、注意事項、上線觀察併進數值報告 report.html，各成一個頁簽（2026-11-03 使用者定）。
 
 用法：py -X utf8 _report_notes.py <專案>/report.html [...]
 - md 用 _build_html.py 的 Renderer 轉 HTML；每個 `##` 一張卡片，`#` 標題不放（頁簽名稱已說明）。
-- 頁簽接在既有頁簽後面、編號續排；Notes/ 沒有該檔就不加。
+- 頁簽接在既有頁簽後面、編號續排；個人筆記/ 沒有該檔就不加。
 - 可重複執行：先移除上次加的頁簽（data-notes），再依最新 md 重加。_report_card_style.py 會自動呼叫。
 """
 import importlib.util
@@ -55,7 +55,7 @@ def inject(path):
     last = panels[-1]
     added = []
     for name, fn in NOTES:
-        md_path = p.parent / "Notes" / fn
+        md_path = p.parent / "個人筆記" / fn
         if not md_path.exists():
             continue
         btn = soup.new_tag("button", attrs={

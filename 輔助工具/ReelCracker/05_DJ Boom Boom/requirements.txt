@@ -1,0 +1,15 @@
+# Python 3.12；selenium-wire 已停止維護，下面幾個版本要釘住才能跑
+selenium-wire==5.1.0
+selenium
+blinker==1.7.0
+setuptools<80
+pyOpenSSL==24.2.1
+cryptography<44
+packaging
+pandas
+openpyxl
+pyautogui
+keyboard
+pywinauto
+pywin32
+ipykernel

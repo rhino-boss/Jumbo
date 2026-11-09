@@ -14,12 +14,12 @@
 
 | 遊戲 | 廠商 | 付費轉 | 報告日期 | 格式版本 | 報告 | md 正本位置 |
 |---|---|---|---|---|---|---|
-| Super Ace | JILI | 166,050 | 2026-09-29 | 現行 | [開啟](遊戲數據_Super_Ace.html) | `H5\JILI - Super Ace\` |
-| Lucky Neko | PG | 47,068 | 2026-08-26 | 現行 | [開啟](遊戲數據_Lucky_Neko.html) | `H5\PG - Lucky Neko\` |
-| Pinata Wins | PG | 22,688 | 2026-09-30 | 現行 | [開啟](遊戲數據_Pinata_Wins.html) | `H5\PG - Pinata Wins\` |
-| Gates of Olympus 1000 | PP | 31,472 | 2026-08-26 | 現行 | [開啟](遊戲數據_Gates_of_Olympus_1000.html) | `H5\PP - Gates of Olympus 1000\` |
-| Wild Bounty Showdown | PG | 10,463 | 2026-08-27 | 現行 | [開啟](遊戲數據_Wild_Bounty_Showdown.html) | `H5\PG - Wild Bounty Showdown\` |
-| Money Coming | JILI | 32,030（底注 10：12,117） | 2026-09-30 | 現行 | [開啟](遊戲數據_Money_Coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
+| Super Ace | JILI | 166,050 | 2026-09-29 | 現行 | [開啟](report_super_ace.html) | `H5\JILI - Super Ace\` |
+| Lucky Neko | PG | 47,068 | 2026-08-26 | 現行 | [開啟](report_lucky_neko.html) | `H5\PG - Lucky Neko\` |
+| Pinata Wins | PG | 22,688 | 2026-09-30 | 現行 | [開啟](report_pinata_wins.html) | `H5\PG - Pinata Wins\` |
+| Gates of Olympus 1000 | PP | 31,472 | 2026-08-26 | 現行 | [開啟](report_gates_of_olympus_1000.html) | `H5\PP - Gates of Olympus 1000\` |
+| Wild Bounty Showdown | PG | 10,463 | 2026-08-27 | 現行 | [開啟](report_wild_bounty_showdown.html) | `H5\PG - Wild Bounty Showdown\` |
+| Money Coming | JILI | 32,030（底注 10：12,117） | 2026-09-30 | 現行 | [開啟](report_money_coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
 
 > 六份都是現行格式，章節與指標定義一致，可直接並排比較。
 >
