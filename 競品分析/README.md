@@ -14,6 +14,7 @@
 
 | 遊戲 | 廠商 | 付費轉 | 報告日期 | 格式版本 | 報告 | md 正本位置 |
 |---|---|---|---|---|---|---|
+| DJ Boom Boom | FA CHAI | 100,000 | 2026-11-09 | 現行 | [開啟](report_dj_boom_boom.html) | `H5\遊戲資訊\FC - DJ Boom Boom\其他\` |
 | Super Ace | JILI | 166,050 | 2026-09-29 | 現行 | [開啟](report_super_ace.html) | `H5\JILI - Super Ace\` |
 | Lucky Neko | PG | 47,068 | 2026-08-26 | 現行 | [開啟](report_lucky_neko.html) | `H5\PG - Lucky Neko\` |
 | Pinata Wins | PG | 22,688 | 2026-09-30 | 現行 | [開啟](report_pinata_wins.html) | `H5\PG - Pinata Wins\` |
@@ -21,7 +22,14 @@
 | Wild Bounty Showdown | PG | 10,463 | 2026-08-27 | 現行 | [開啟](report_wild_bounty_showdown.html) | `H5\PG - Wild Bounty Showdown\` |
 | Money Coming | JILI | 32,030（底注 10：12,117） | 2026-09-30 | 現行 | [開啟](report_money_coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
 
-> 六份都是現行格式，章節與指標定義一致，可直接並排比較。
+> 七份都是現行格式，章節與指標定義一致，可直接並排比較。
+>
+> **2026-11-09 新增 DJ Boom Boom**：FA CHAI 的 6 軸 3600 Ways 連消機台，金符號消除轉 WILD 並給倍數框。
+> **全報告指標統一取自 demo 側錄 10 萬局**，口徑一致、可內部交叉驗證。
+> ⚠️ 該 demo 端實測 Total RTP **140.25%**，正式環境（Acewin 996 萬局）為 **96.58%**，差 43.7pp ——
+> **本報告的 RTP 與金額類數值不代表正式版**，引用時務必註明；結構類結論（BG／FG 分配、
+> 獎項占比、消除率、倍數框權重、金符號行為、Retrigger 口徑）兩端一致，可直接採用。
+> 倍率線型另附 Acewin 正式環境的整局分布作對照線。**本份不含 BF 章節**（兩個來源皆無可用購買樣本）。
 >
 > **2026-09-30 新增 Money Coming**：3 主轉輪 × 1 列＋特別轉輪的數字串接遊戲，**無 FG／BF／連消**，
 > 堆疊、消除率、門檻機率等章節整段不適用；底注 1 / 5 / 10 是三套獨立設定（押注解鎖機制），
