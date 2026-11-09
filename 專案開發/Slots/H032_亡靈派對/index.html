@@ -2237,6 +2237,14 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
+        <h4>v2（2.0.0.0）</h4>
+        <ol>
+          <li>輪帶、停輪權重、補牌權重與賠率改用 JILI Super Ace（側錄還原輪帶，帶長 200；賠率 M1 50／150／250 起，100 Credit 基準）；FG 後段表 FG_Symbol (4) 由 Super Ace FG 輪帶依 v1 規則重排。（11/09）</li>
+          <li>金色符號（黃底）對標 DJ Boom Boom：只出現在第 2～4 軸，每格出現率比照 DJ Boom Boom 側錄各軸比例；倍數改為 1／2／3／5／10／20／30／50／100 九檔，分布比照 DJ Boom Boom（1X 約 94%）。（11/09）</li>
+          <li>校準（自然 RTP < 500%、BG Hit 25%、FG Hit 45%、FG 週期 1/200）：輪帶 R2～R5 一般符號改成相鄰軸偏重不同符號組（BG 85%、FG 72%），補牌同向；BG 含 C1 的停點權重 ×0.65；金色符號整體密度降為 DJ Boom Boom 的 80%（各軸比例與倍數分布不變；100% 時 RTP 壓不到 500% 以下）。結果 NB 約 420%、BF 約 205%、BG Hit 25.2%、FG Hit 46%、週期約 1/205。卡片權重未重算。（11/09）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
         <h4>v1（1.0.0.0）</h4>
         <ol>
           <li>由 H045 超級鑽石 Demogame 改建 H099 致敬DJ Boom Boom（暫名）：黃底倍數符號（R2～R5、1X～10X）、框（消一般符號 +1、黃底倍數直接加進框）、WILD 只由黃底產生、得分 × 盤面框倍數總和、掉落補牌；FG 開場第 3 軸整條 1X 框、框整場保留。輪帶與賠率暫用 H045，黃底權重為假值。（11/02）</li>
@@ -2266,7 +2274,7 @@
         </label>
         <label class="config-control" for="versionSelect">
           Version
-          <select id="versionSelect"><option value="1.0.0.0">1.0.0.0</option></select>
+          <select id="versionSelect"></select>
         </label>
         <label class="config-control" for="configSelect">
           Config
@@ -2353,7 +2361,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 黃底與倍數框 | YELLOW SYMBOLS & MULTIPLIER FRAMES |
-| 規則說明 | ▪ 黃底倍數符號只出現在第 2～5 軸，符號上方顯示倍數 1X～10X。 | ▪ YELLOW SYMBOLS ONLY APPEAR ON REELS 2 TO 5 AND SHOW A 1X TO 10X MULTIPLIER. |
+| 規則說明 | ▪ 黃底倍數符號只出現在第 2～4 軸，符號上方顯示倍數 1X、2X、3X、5X、10X、20X、30X、50X 或 100X。 | ▪ YELLOW SYMBOLS ONLY APPEAR ON REELS 2 TO 4 AND SHOW A 1X, 2X, 3X, 5X, 10X, 20X, 30X, 50X OR 100X MULTIPLIER. |
 | 規則說明 | ▪ 黃底中獎消除後，原格留下同倍數的框，符號變成 [WW]。 | ▪ WHEN A YELLOW SYMBOL WINS, A FRAME WITH THE SAME MULTIPLIER STAYS IN ITS POSITION AND THE SYMBOL TURNS INTO [WW]. |
 | 規則說明 | ▪ 框會留在格子上，符號照常掉落；框內消除一般符號（含 [WW]）時框倍數 +1，黃底在框內消除時黃底倍數直接加進框。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. REMOVING A SYMBOL (INCLUDING [WW]) INSIDE A FRAME ADDS 1 TO IT; A YELLOW SYMBOL REMOVED INSIDE A FRAME ADDS ITS MULTIPLIER TO THE FRAME. |
 | 規則說明 | ▪ 每次連線得分 × 盤面所有框的倍數加總（含本次消除新增的倍數）；盤面沒有框時 ×1。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID, INCLUDING THOSE ADDED BY THAT WIN (X1 IF NO FRAMES). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
@@ -2368,7 +2376,28 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./config.js?v=20261106a"></script>
+  <script src="./Versions/version_manifest.js?v=20261109b"></script>
+  <script>
+    // 數學版本：依 ?version= 從 Versions/version_manifest.js 選基礎 Config（預設 current）；切換版本時重新載入頁面
+    (() => {
+      const manifest = window.H032_VERSION_MANIFEST || { current: "2.0.0.0", versions: [{ version: "2.0.0.0", configs: { base: "config.js" } }] };
+      const asked = new URLSearchParams(location.search).get("version") || manifest.current;
+      const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
+        || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
+      window.H032_VERSION_ENTRY = entry;
+      document.write(`<script src="./${entry.configs.base}?v=20261109b-${encodeURIComponent(entry.version)}"><\/script>`);
+      document.addEventListener("DOMContentLoaded", () => {
+        const select = document.getElementById("versionSelect");
+        if (!select) return;
+        for (const v of manifest.versions) select.appendChild(new Option(v.version, v.version, false, v.version === entry.version));
+        select.addEventListener("change", () => {
+          const query = new URLSearchParams(location.search);
+          query.set("version", select.value);
+          location.search = query.toString();
+        });
+      });
+    })();
+  </script>
   <script>
 (() => {
   "use strict";

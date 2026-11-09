@@ -1,6 +1,6 @@
 """H032 亡靈派對 (Calavera Party) simulator.
 
-盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（R2~R5、1X~10X）中獎時原格留下同倍數框並變成 WW，
+盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（出現軸與倍數檔位依 Config；v2 為 R2~R4、1/2/3/5/10/20/30/50/100X）中獎時原格留下同倍數框並變成 WW，
 框留在格子上、框內消除一般符號（含 WW）+1、黃底在框內只加倍數；每一消得分 × 消除後的框倍數總和（沒有框 ×1）。
 FG 開場第 3 軸 4 格 1X 框、框整場保留；每場 FG 依 FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、
 Frame Tier）決定抽表權重。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶、權重、
