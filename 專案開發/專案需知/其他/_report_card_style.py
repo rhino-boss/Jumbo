@@ -42,11 +42,13 @@ header h1{margin:0;font-family:var(--font-sans);font-weight:600;font-size:32px;l
 .card blockquote,.intro blockquote,.subcard blockquote{background:var(--panel-2);border:0;border-radius:8px;padding:11px 14px;font-size:12.5px;display:block;width:100%;max-width:none;box-sizing:border-box;margin-left:0;margin-right:0;margin-block:10px}
 .card .tbl-wrap{border:0;border-radius:0;background:transparent;margin:6px 0 12px;overflow-x:auto}
 .card th{background:transparent;color:var(--ink-3);border-bottom:1px solid var(--rule)}
+/*表格淡格線*/
+.card table,.subcard table,.intro table{border-collapse:collapse}
+.card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{border:1px solid var(--grid)}
+.card table th,.subcard table th{border-bottom:1px solid var(--rule)}
+.card table tr:first-child th{border-top:1px solid var(--rule)}
+
 .card .chart{border:1px solid var(--rule);border-radius:10px;background:var(--chart-bg,var(--panel-2));padding:14px 16px 8px;margin:4px 0 16px}
-.card .subcard{border:1px solid var(--rule);border-radius:10px;background:var(--chart-bg,var(--panel-2));padding:14px 16px 8px;margin:4px 0 16px;width:100%;box-sizing:border-box}
-.card .subcard>h4{font-size:15px;margin:0 0 8px;text-align:left}
-.card .subcard .tbl-wrap{margin:6px 0 8px}
-.card .subcard>*:last-child{margin-bottom:0}
 .card>blockquote,.card .subcard>blockquote,.intro>blockquote{width:100%;box-sizing:border-box;margin-left:0;margin-right:0}
 .card>.chart{width:100%;box-sizing:border-box}
 .card .chart h4{font-size:15px;margin:0 0 8px}
@@ -134,33 +136,6 @@ def cardify(soup, panel):
             wrap.append(n.extract())
 
 
-def subcardify(soup, card):
-    """卡片內：每個 h4 連同其後的表格／說明包成內框（.subcard），寬度與表格齊。"""
-    kids = [k for k in card.children if not (isinstance(k, NavigableString) and not k.strip())]
-    groups, cur = [], []
-    for k in kids:
-        if isinstance(k, Tag) and set(k.get("class") or []) & {"chart", "subcard"}:
-            if cur:
-                groups.append(cur)
-            cur = []
-            continue
-        if isinstance(k, Tag) and k.name == "h4":
-            if cur:
-                groups.append(cur)
-            cur = [k]
-            continue
-        if cur:
-            cur.append(k)
-    if cur:
-        groups.append(cur)
-    for g in groups:
-        if not (isinstance(g[0], Tag) and g[0].name == "h4"):
-            continue
-        wrap = soup.new_tag("div", attrs={"class": "subcard"})
-        g[0].insert_before(wrap)
-        for n in g:
-            wrap.append(n.extract())
-
 
 def game_names(p):
     """中文名取專案資料夾名（去掉 H0xx_），英文名取 game_rule.md 的「遊戲英文名」；缺的回空字串。"""
@@ -214,8 +189,6 @@ def apply(path):
     fix_header(soup, p)
     for panel in soup.select(".panel"):
         cardify(soup, panel)
-        for card in panel.select('div.card'):
-            subcardify(soup, card)
     sc = soup.new_tag("script", id="card-v2-js")
     sc.string = JS + (Path(__file__).with_name("_chart_yzoom.js")).read_text(encoding="utf-8")
     # 報告內建的倍率線型提示與縱軸縮放共用同一份資料物件，縮放後提示圓點才會對位
