@@ -1378,8 +1378,34 @@ def sync_svn():
               + (f"；未放入的規範：{'、'.join(extra)}" if extra else ""))
 
 
+# 對外文件：專案開發/對外文件/<YYMMDD_主題>/*.md → 同資料夾同名 .html（單頁，入口站「專案須知」標「對外文件」）
+EXTERNAL_DIR = HERE.parent / "對外文件"
+
+
+def build_external():
+    global TREE_ROOT, LOCAL_ONLY
+    if not EXTERNAL_DIR.exists():
+        return
+    for md in sorted(EXTERNAL_DIR.glob("*/*.md")):
+        if md.name.startswith("_"):
+            continue
+        first = md.read_text(encoding="utf-8").lstrip().split("\n", 1)[0]
+        title = first.lstrip("#").strip() if first.startswith("#") else md.stem.replace("_", " ")
+        tab_id = "doc"
+        out = md.with_suffix(".html")
+        TREE_ROOT, LOCAL_ONLY = md.parent, True
+        try:
+            page, meta = build_site(md.parent, [(tab_id, title, md.name)], out, title, "iGaming · 對外文件",
+                                    {md.name: ("tab", tab_id)}, [(title, [tab_id])], embed=True)
+            build_hub(md.parent, [("ext", title, "")], {"ext": page}, {"ext": meta},
+                      out_name=out.name, site_title=title)
+        finally:
+            TREE_ROOT, LOCAL_ONLY = HERE, False
+
+
 def build():
     build_tree(HERE, TABS, GROUPS, PRIVATE_SITES)
+    build_external()
     publish_team()
     sync_svn()
 
