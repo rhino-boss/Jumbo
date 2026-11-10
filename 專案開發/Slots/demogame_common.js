@@ -1163,6 +1163,28 @@
     panel.id = "demogame-cumulative-chart";
     panel.innerHTML = `<h3 class="demogame-region-title">Multiplier Distribution</h3><div class="batch-line-chart"></div>`;
     right.appendChild(panel);
+    // 玩法簡介（共用，倍率線型上方，2026-11-10 使用者）：只寫競品與本作調整；詳細規則放標題列「說明」。
+    // 頁面在載入本檔前設 window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", changes: ["…", …] }；沒設不顯示。
+    // 遊戲發想以自家前作為基底時加 label: "base"，標籤顯示「前作」。
+    const ov = window.DEMOGAME_OVERVIEW;
+    if (ov && (ov.competitor || (ov.changes || []).length)) {
+      const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+      const box = document.createElement("section");
+      box.id = "demogame-overview";
+      const rows = (ov.changes || []).map((c) => `<li>${esc(c)}</li>`).join("");
+      box.innerHTML = `<h3 class="demogame-region-title">Game Overview</h3>`
+        + (ov.competitor ? `<div class="ov-row"><span class="ov-k">${ov.label === "base" ? "Previous Title" : "Competitor"}</span><span class="ov-v">${esc(ov.competitor)}</span></div>` : "")
+        + (rows ? `<div class="ov-row"><span class="ov-k">Changes</span><ul class="ov-v">${rows}</ul></div>` : "");
+      right.insertBefore(box, panel);
+      const st = document.createElement("style");
+      st.textContent = "body.slot-simulator #demogame-overview{padding:10px 14px;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
+        + "body.slot-simulator #demogame-overview .demogame-region-title{margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--sim-surface)}"
+        + "body.slot-simulator #demogame-overview .ov-row{display:flex;gap:10px;font:13px/1.6 \"Segoe UI\",system-ui,sans-serif;color:var(--sim-text)}"
+        + "body.slot-simulator #demogame-overview .ov-row+.ov-row{margin-top:6px}"
+        + "body.slot-simulator #demogame-overview .ov-k{flex:0 0 auto;color:var(--sim-sub);font-weight:700}"
+        + "body.slot-simulator #demogame-overview ul.ov-v{margin:0;padding-left:18px}";
+      document.head.appendChild(st);
+    }
     const chart = panel.querySelector(".batch-line-chart");
     const style = document.createElement("style");
     style.textContent = "body.slot-simulator #demogame-cumulative-chart{padding:10px 14px 3px;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
@@ -1216,6 +1238,42 @@
   }
 
   setupCumulativeLineChart();
+
+  // 右欄區域可摺疊（共用，2026-11-10 使用者）：#right-panel 底下有標題（h3）的區域，點標題收起／展開；
+  // 標題內的按鈕（如放大「+」）不觸發摺疊。倍率線型預設收起。
+  function setupCollapsibleRegions() {
+    const right = document.getElementById("right-panel");
+    if (!right) return;
+    if (!document.getElementById("dg-collapse-style")) {
+      const st = document.createElement("style");
+      st.id = "dg-collapse-style";
+      st.textContent = "body.slot-simulator .dg-collapsible>h3{cursor:pointer;user-select:none;display:flex;align-items:center}"
+        + "body.slot-simulator .dg-collapsible>h3::before{content:\"\";flex:0 0 auto;width:0;height:0;margin-right:7px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;transition:transform .15s}"
+        + "body.slot-simulator .dg-collapsed>h3::before{transform:rotate(-90deg)}"
+        + "body.slot-simulator .dg-collapsed>:not(h3){display:none!important}"
+        + "body.slot-simulator .dg-collapsed>h3{border-bottom:0!important;margin-bottom:0!important;padding-bottom:0!important}"
+        + "body.slot-simulator .dg-collapsed{padding-bottom:10px!important}";
+      document.head.appendChild(st);
+    }
+    for (const sec of right.children) {
+      if (!sec.querySelector(":scope > h3") || sec.classList.contains("dg-collapsible")) continue;
+      sec.classList.add("dg-collapsible");
+      if (sec.id === "demogame-cumulative-chart") sec.classList.add("dg-collapsed");
+    }
+    // 用事件委派：有些遊戲會重畫區域內容（含標題），直接綁在標題上會失效
+    if (!right.dataset.dgCollapse) {
+      right.dataset.dgCollapse = "1";
+      right.addEventListener("click", (e) => {
+        const head = e.target.closest("h3");
+        const sec = head?.parentElement;
+        if (!sec || sec.parentElement !== right || !sec.classList.contains("dg-collapsible")) return;
+        if (e.target.closest("button, a, input, select")) return;
+        sec.classList.toggle("dg-collapsed");
+      });
+    }
+  }
+  setupCollapsibleRegions();
+  setTimeout(setupCollapsibleRegions, 0);
 
   // Spin Result 面板已停用（共用）：各遊戲仍可寫入 #lineList 等節點，不會報錯，只是不顯示。
   function hideSpinResult() {
@@ -1428,7 +1486,7 @@
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
     "help": "說明", "change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
-    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
+    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "changes": "調整", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
   const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
   const sharedOriginal = new WeakMap();

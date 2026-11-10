@@ -2364,7 +2364,7 @@
 | 主要標題 | 黃底與倍數框 | YELLOW SYMBOLS & MULTIPLIER FRAMES |
 | 規則說明 | ▪ 黃底倍數符號只出現在第 2～4 軸，符號上方顯示倍數 1X、2X、3X、5X、10X、20X、30X、50X 或 100X。 | ▪ YELLOW SYMBOLS ONLY APPEAR ON REELS 2 TO 4 AND SHOW A 1X, 2X, 3X, 5X, 10X, 20X, 30X, 50X OR 100X MULTIPLIER. |
 | 規則說明 | ▪ 黃底中獎消除後，原格留下同倍數的框，符號變成 [WW]。 | ▪ WHEN A YELLOW SYMBOL WINS, A FRAME WITH THE SAME MULTIPLIER STAYS IN ITS POSITION AND THE SYMBOL TURNS INTO [WW]. |
-| 規則說明 | ▪ 框會留在格子上，符號照常掉落；框內消除一般符號（含 [WW]）時框倍數 +1，黃底在框內消除時黃底倍數直接加進框。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. REMOVING A SYMBOL (INCLUDING [WW]) INSIDE A FRAME ADDS 1 TO IT; A YELLOW SYMBOL REMOVED INSIDE A FRAME ADDS ITS MULTIPLIER TO THE FRAME. |
+| 規則說明 | ▪ 框會留在格子上，符號照常掉落；框內有任何符號消除（含 [WW]、黃底）時框倍數 +1；黃底在框內消除時再加上黃底倍數（例：4X 框＋黃底 5X＝10X）。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. REMOVING ANY SYMBOL (INCLUDING [WW] AND YELLOW SYMBOLS) INSIDE A FRAME ADDS 1 TO IT; A YELLOW SYMBOL REMOVED INSIDE A FRAME ALSO ADDS ITS MULTIPLIER (E.G. 4X FRAME + 5X YELLOW = 10X). |
 | 規則說明 | ▪ 每次連線得分 ×（1 ＋ 盤面所有框的倍數加總，含本次消除新增的倍數）；盤面沒有框時 ×1，一個 1X 框時 ×2。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY 1 PLUS THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID, INCLUDING THOSE ADDED BY THAT WIN (X1 IF NO FRAMES, X2 WITH ONE 1X FRAME). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
 
 ## FREE GAME
@@ -2536,6 +2536,9 @@
     #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2.5px solid #ff2e2e;border-radius:10px;
       background:linear-gradient(180deg,rgba(255,40,40,.12),rgba(255,20,20,.04));
       box-shadow:0 0 12px rgba(255,30,30,.75),inset 0 0 12px rgba(255,40,40,.35)}
+    /* 框內消除 +1 的跳字 */
+    .slot-fx-layer .fx-plus-one{position:absolute;z-index:62;pointer-events:none;white-space:nowrap;font:900 16px/1 system-ui,sans-serif;color:#fff;
+      text-shadow:0 0 6px rgba(255,40,40,.95),0 1px 2px rgba(0,0,0,.8)}
     /* 黃底倍數落入框的飛行體 */
     .slot-fx-layer .fx-gold-drop{position:absolute;z-index:61;display:grid;place-items:center;pointer-events:none;white-space:nowrap;
       font:800 13px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#ffe49a,#c8900f);border:1px solid #fff0b8;
@@ -2679,12 +2682,14 @@
     while (true) {
       const win = evaluate(board);
       if (!win.rawPay) break;
-      // 框更新：黃底 → 原格留框（已有框則倍數直接加進框，不再 +1）；其他中獎符號（含 WILD）在框內框 +1
+      // 框更新（2026-11-10）：框內任何消除 +1；黃底再加上黃底倍數（無框時黃底留下同倍數的新框）
       const cleared = [], converted = [], bumped = [], framesBefore = clone(frames);
       for (const key of win.hits) {
         const [reel, row] = key.split(",").map(Number);
-        if (yellow[reel][row] > 0) { if (frames[reel][row] > 0) goldIntoFrame++; frames[reel][row] += yellow[reel][row]; converted.push(key); bumped.push(key); }
-        else if (frames[reel][row] > 0) { frames[reel][row] += 1; bumped.push(key); }
+        const had = frames[reel][row] > 0;
+        if (had) frames[reel][row] += 1;
+        if (yellow[reel][row] > 0) { if (had) goldIntoFrame++; frames[reel][row] += yellow[reel][row]; converted.push(key); bumped.push(key); }
+        else if (had) bumped.push(key);
       }
       // 得分：這一消的得分 ×（1＋盤面所有框的倍數加總）（2026-11-10 對齊 DJ Boom Boom 實測）；框以本次消除「後」（已更新）的值計算
       const total = frameSum(frames);
@@ -2916,7 +2921,7 @@
       const frame = document.createElement("div");
       frame.className = `frame-layer${bumped.has(key) ? " bump" : ""}${scoring ? " score" : ""}`;
       frame.style.cssText = `left:${cell.offsetLeft}px;top:${cell.offsetTop}px;width:${cell.offsetWidth}px;height:${cell.offsetHeight}px`;
-      frame.dataset.value = frames[reel][row];
+      frame.dataset.value = frames[reel][row]; frame.dataset.key = key;
       frame.innerHTML = `<span class="frame-badge">x${frames[reel][row]}</span>`;
       root.append(frame);
     }
@@ -3069,13 +3074,39 @@
     await wait(hold * 1.4);
   }
 
-  // 中獎前置演出：先以「更新前」的框顯示中獎格 → 黃底符號上方的倍數往下落到框倍數位置 → 換成更新後的框（含框內 +1）並彈跳
+  // 中獎前置演出：① 以「更新前」的框顯示中獎格 → ② 框內有消除的格子跳「+1」、框倍數 +1 → ③ 黃底符號上方的倍數往下落進框 → ④ 換成最終框值並彈跳
   async function animateGoldToFrame(snapshot) {
     const converted = snapshot.converted || [], bumped = snapshot.bumped || [];
     const after = { yellow: snapshot.yellow, frames: snapshot.frames, bumped };
     if (!snapshot.framesBefore || !bumped.length) { renderBoard(snapshot.board, snapshot.hits, after); return; }
     renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: snapshot.framesBefore });
-    const layer = converted.length && window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
+    const fxLayer = window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
+    // ② 框內 +1
+    const plusKeys = snapshot.hits.filter(key => { const [reel, row] = key.split(",").map(Number); return snapshot.framesBefore[reel][row] > 0; });
+    if (plusKeys.length) {
+      const speed = Number($("speedRange").value || 1);
+      await wait(Math.max(80, 200 / speed));
+      const mid = clone(snapshot.framesBefore);
+      plusKeys.forEach(key => { const [reel, row] = key.split(",").map(Number); mid[reel][row] += 1; });
+      renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: mid, bumped: plusKeys });
+      renderFrameTotal(frameSum(mid), true);
+      if (fxLayer) {
+        const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(260, 620 / speed);
+        $("board").querySelectorAll(".frame-layer").forEach(frame => {
+          if (!plusKeys.includes(frame.dataset.key)) return;
+          const badge = frame.querySelector(".frame-badge").getBoundingClientRect();
+          const pop = document.createElement("div");
+          pop.className = "fx-plus-one"; pop.textContent = "+1";
+          pop.style.cssText = `left:${badge.left - layerRect.left + badge.width / 2}px;top:${badge.top - layerRect.top - 4}px`;
+          fxLayer.appendChild(pop);
+          const a = pop.animate([{ transform: "translate(-50%,0) scale(.7)", opacity: 0 }, { transform: "translate(-50%,-10px) scale(1.2)", opacity: 1, offset: .3 },
+            { transform: "translate(-50%,-22px) scale(1)", opacity: 0 }], { duration: dur, easing: "ease-out", fill: "forwards" });
+          Promise.race([a.finished.catch(() => {}), wait(dur + 60)]).then(() => pop.remove());
+        });
+      }
+      await wait(Math.max(160, 420 / speed));
+    }
+    const layer = converted.length ? fxLayer : null;
     if (layer) {
       const speed = Number($("speedRange").value || 1);
       const flight = Math.max(140, 460 / speed), gap = Math.max(30, 90 / speed);
@@ -3460,7 +3491,8 @@
   window.DEMOGAME_LAST_CODE = "2026-11-10 14:08";
   window.DEMOGAME_LAST_UPDATE = "2026-11-10 14:08";
   </script>
-  <script src="../demogame_common.js?v=20261029a"></script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "changes": ["輪帶、補牌與賠率表暫時改用 JILI Super Ace 的設定", "免費遊戲加入隱性好局權重：前 3 局抽 1 局、最後 5 局抽 2 局，比較容易有好事", "倍數框總和越大、連續沒中越久，下一局越容易抽到好表，改善框大卻沒得分的情況", "Retrigger 後 1～2 局提高好局機率", "Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金"]};</script>
+  <script src="../demogame_common.js?v=20261110d"></script>
 </body>
 
 </html>

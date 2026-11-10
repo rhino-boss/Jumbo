@@ -439,10 +439,11 @@ class CalaveraParty:
             if raw_pay <= 0:
                 break
             for reel, row in hits:
+                # 2026-11-10：框內任何消除 +1；黃底再加上黃底倍數（無框時黃底留下同倍數的新框）
+                if frames[reel][row] > 0:
+                    frames[reel][row] += 1
                 if yellow[reel][row] > 0:
                     frames[reel][row] += yellow[reel][row]
-                elif frames[reel][row] > 0:
-                    frames[reel][row] += 1
             total_frame = _frame_sum(frames)
             mult = 1 + total_frame          # 乘數＝1＋盤面所有框值總和（2026-11-10，對齊 DJ Boom Boom 實測）
             gained = raw_pay * mult * self.bet
