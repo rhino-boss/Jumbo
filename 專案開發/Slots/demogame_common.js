@@ -656,7 +656,7 @@
   function setupRegionTitleRule() {
     const play = document.querySelector("#play-panel > .zone-label");
     if (play) play.classList.add("demogame-removed");
-    const apply = () => document.querySelectorAll(".control-zone > .zone-label, #simulation-stats > h3, #by-game-stats > h3, #demogame-cumulative-chart > h3").forEach((title) => {
+    const apply = () => document.querySelectorAll(".control-zone > .zone-label, #simulation-stats > h3, #by-game-stats > h3, #demogame-overview > h3, #demogame-cumulative-chart > h3").forEach((title) => {
       if (title.classList.contains("demogame-removed")) return;
       const box = getComputedStyle(title.parentElement);
       if (box.display === "none") return;
@@ -702,7 +702,8 @@
       #demogame-zoom{overflow:hidden}
       #demogame-zoom .dz-box{transition:transform .35s ease;transform-origin:center center}
       #demogame-zoom .dz-body{padding:14px;overflow:auto;flex:1;min-height:0}
-      /* 彈窗一開就是最大；紀錄／版本紀錄撐滿剩餘高度，沒資料處維持深色底 */
+      #demogame-zoom:not(.rotated) .dz-box{height:auto}
+      /* 彈窗高度貼齊內容（最高 92vh）；內容超過時紀錄／版本紀錄在框內捲動 */
       #demogame-zoom .dz-body{display:flex;flex-direction:column}
       /* 彈窗內捲到底不帶動背景頁面 */
       #demogame-zoom,#demogame-zoom .dz-body,#demogame-zoom .dz-body *{overscroll-behavior:contain}
@@ -745,7 +746,7 @@
       fitRotation();
       if (moved) moved.nodes.forEach((node, i) => moved.markers[i].replaceWith(node));
       moved = null;
-      overlay.classList.remove("open");
+      overlay.classList.remove("open", "dz-chart");
       body.innerHTML = "";
       document.documentElement.classList.remove("demogame-zoom-open");
     };
@@ -759,6 +760,8 @@
       // 直式手機放大圖表：一開就轉成橫的（紀錄、版本紀錄維持直式）
       const isChart = nodes.some((node) => node.matches?.("svg, canvas") || node.querySelector?.("svg, canvas"))
         && !nodes.some((node) => node.matches?.("#liveLogBody, #changeLogBody") || node.querySelector?.("#liveLogBody, #changeLogBody"));
+      // 彈窗高度貼齊內容、最高 92vh，不留大片空白（2026-11-10 使用者，所有放大彈窗）
+      overlay.classList.toggle("dz-chart", isChart);
       if (isChart && window.innerHeight > window.innerWidth && window.innerWidth < 700) {
         overlay.classList.add("rotated");
         box.style.transition = "none";
@@ -1012,10 +1015,14 @@
     index(x) { for (let i = 0; i < STANDARD_UPPERS.length; i++) if (x <= STANDARD_UPPERS[i]) return i; return STANDARD_UPPERS.length - 1; }
   };
 
-  function simulationChartSvg(counts, buckets, ymax) {
-    const W = 900, H = 332, L = 44, R = 12, T = 10, B = 104, n = buckets.labels.length;
+  // compact（右欄小圖，2026-11-10 使用者選方案 C）：viewBox 貼近實際寬度讓字維持可讀、X 軸每 8 個區間標一次、
+  // 縱軸依 1x 以上區間自動縮放；完整 64 區間標籤看「+」放大圖。
+  function simulationChartSvg(counts, buckets, ymax, compact = false) {
+    const n = buckets.labels.length;
     const total = counts.reduce((a, b) => a + b, 0);
     const shares = counts.map((c) => (total ? c / total * 100 : 0));
+    if (compact) return compactChartSvg(shares, counts, buckets, ymax);
+    const W = 900, H = 332, L = 44, R = 12, T = 10, B = 104;
     const px = (i) => L + (W - L - R) * (n > 1 ? i / (n - 1) : 0.5);
     const py = (v) => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
     let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="倍率線型">`;
@@ -1037,6 +1044,41 @@
     });
     out += `<path d="${d}" fill="none" stroke="#4aa8ff" stroke-width="2"/>`;
     shares.forEach((v, i) => { if (visible(v)) out += `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3" fill="#4aa8ff"><title>${buckets.labels[i]} ${v.toFixed(3)}%（${counts[i]}）</title></circle>`; });
+    return out + "</svg>";
+  }
+
+  function compactChartSvg(shares, counts, buckets, ymax0) {
+    const W = 470, H = 230, L = 44, R = 10, T = 10, B = 62, n = buckets.labels.length, step = 8;
+    const nice = (x) => { const p = Math.pow(10, Math.floor(Math.log10(x))), m = x / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; };
+    // 縱軸依 1x 以上區間的最大值縮放（不設上限；還沒有 1x 以上的局就依全部區間）：0x、(0, 1] 占比太大會把尾端壓平，超出就裁掉；
+    // 局數少時各區間占比都很大，固定 1% 會整張空白、看起來像沒更新（2026-11-10 使用者回報）
+    const tail = shares.slice(2).filter((v) => v > 0);
+    const any = shares.filter((v) => v > 0);
+    const ymax = Math.min(100, nice(Math.max(...(tail.length ? tail : any.length ? any : [ymax0 / 1.1])) * 1.1));
+    const px = (i) => L + (W - L - R) * (n > 1 ? i / (n - 1) : 0.5);
+    const py = (v) => T + (H - T - B) * (1 - Math.min(v, ymax) / ymax);
+    let out = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="倍率線型">`;
+    for (let k = 0; k <= 4; k++) {
+      const v = ymax * k / 4, y = py(v);
+      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}" stroke="rgba(120,160,200,.18)"/><text x="${L - 6}" y="${(y + 4).toFixed(1)}" font-size="11" text-anchor="end" fill="#7f9bb8">${+v.toPrecision(4)}%</text>`;
+    }
+    buckets.labels.forEach((label, i) => {
+      const x = px(i).toFixed(1);
+      out += `<line x1="${x}" y1="${T}" x2="${x}" y2="${H - B}" stroke="rgba(120,160,200,${i % step === 0 ? ".16" : ".05"})"/>`;
+      if (i % step === 0 || i === n - 1) {
+        const y = H - B + 8;
+        out += `<text x="${x}" y="${y}" font-size="10.5" text-anchor="end" dominant-baseline="middle" fill="#7f9bb8" transform="rotate(-40 ${x} ${y})">${label}</text>`;
+      }
+    });
+    const visible = (v) => v > 0 && v <= ymax;
+    let d = "", pen = false;
+    shares.forEach((v, i) => {
+      if (!visible(v)) { pen = false; return; }
+      d += `${pen ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`;
+      pen = true;
+    });
+    out += `<path d="${d}" fill="none" stroke="#4aa8ff" stroke-width="1.8"/>`;
+    shares.forEach((v, i) => { if (visible(v)) out += `<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="2.4" fill="#4aa8ff"><title>${buckets.labels[i]} ${v.toFixed(3)}%（${counts[i]}）</title></circle>`; });
     return out + "</svg>";
   }
 
@@ -1176,13 +1218,14 @@
       box.innerHTML = `<h3 class="demogame-region-title">Game Overview</h3>`
         + (ov.competitor ? `<div class="ov-row"><span class="ov-k">${ov.label === "base" ? "Previous Title" : "Competitor"}</span><span class="ov-v">${esc(ov.competitor)}</span></div>` : "")
         + (ov.expect ? `<div class="ov-row"><span class="ov-k">Expectation</span><span class="ov-v">${esc(ov.expect)}</span></div>` : "")
-        + (rows ? `<div class="ov-row"><span class="ov-k">Changes / Gameplay</span><ul class="ov-v">${rows}</ul></div>` : "");
+        + (rows ? `<div class="ov-row"><span class="ov-k">Gameplay</span><ul class="ov-v">${rows}</ul></div>` : "");
       right.insertBefore(box, panel);
       const st = document.createElement("style");
       st.textContent = "body.slot-simulator #demogame-overview{padding:10px 14px;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
-        + "body.slot-simulator #demogame-overview .demogame-region-title{margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--sim-surface)}"
         + "body.slot-simulator #demogame-overview .ov-row{display:flex;gap:10px;font:13px/1.6 \"Segoe UI\",system-ui,sans-serif;color:var(--sim-text)}"
-        + "body.slot-simulator #demogame-overview .ov-row+.ov-row{margin-top:6px}"
+        + "body.slot-simulator #demogame-overview .ov-row{padding:7px 0}"
+        + "body.slot-simulator #demogame-overview .ov-row+.ov-row{border-top:1px solid var(--sim-surface)}"
+        + "body.slot-simulator #demogame-overview .ov-row:last-child{padding-bottom:0}"
         + "body.slot-simulator #demogame-overview .ov-k{flex:0 0 auto;min-width:5.5em;color:var(--sim-sub);font-weight:700}"
         + "body.slot-simulator #demogame-overview ul.ov-v{margin:0;padding-left:18px}";
       document.head.appendChild(st);
@@ -1217,8 +1260,11 @@
         chart.innerHTML = `<div class="dlc-empty">${zh ? "購買特色不記錄" : "Buy Feature is not recorded"}</div>`;
         return;
       }
-      chart.innerHTML = simulationChartSvg(counts[mode], SIMULATION_BUCKETS, 1);
+      // 在右欄是小圖（方案 C），搬進「+」放大彈窗後寬度變大就畫完整版
+      chart.innerHTML = simulationChartSvg(counts[mode], SIMULATION_BUCKETS, 1, !chart.closest("#demogame-zoom"));
     };
+    let lastZoomed = null;
+    new ResizeObserver(() => { const z = !!chart.closest("#demogame-zoom"); if (z !== lastZoomed) { lastZoomed = z; render(); } }).observe(chart);
     window.demogameLineChart = {
       cumulative: true,
       record(multiplier, mode = "NB") {
@@ -1254,7 +1300,7 @@
         + "body.slot-simulator .dg-collapsed>h3::before{transform:rotate(-90deg)}"
         + "body.slot-simulator .dg-collapsed>:not(h3){display:none!important}"
         + "body.slot-simulator .dg-collapsed>h3{border-bottom:0!important;margin-bottom:0!important;padding-bottom:0!important}"
-        + "body.slot-simulator .dg-collapsed{padding-bottom:10px!important}";
+        + "body.slot-simulator .dg-collapsed{padding-bottom:0!important}";
       document.head.appendChild(st);
     }
     for (const sec of right.children) {
@@ -1488,7 +1534,7 @@
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
     "help": "說明", "change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
-    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "changes / gameplay": "調整／玩法", "expectation": "期待", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
+    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "gameplay": "玩法", "expectation": "期待", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
   const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
   const sharedOriginal = new WeakMap();
