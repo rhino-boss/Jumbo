@@ -2365,7 +2365,7 @@
 | 規則說明 | ▪ 黃底倍數符號只出現在第 2～4 軸，符號上方顯示倍數 1X、2X、3X、5X、10X、20X、30X、50X 或 100X。 | ▪ YELLOW SYMBOLS ONLY APPEAR ON REELS 2 TO 4 AND SHOW A 1X, 2X, 3X, 5X, 10X, 20X, 30X, 50X OR 100X MULTIPLIER. |
 | 規則說明 | ▪ 黃底中獎消除後，原格留下同倍數的框，符號變成 [WW]。 | ▪ WHEN A YELLOW SYMBOL WINS, A FRAME WITH THE SAME MULTIPLIER STAYS IN ITS POSITION AND THE SYMBOL TURNS INTO [WW]. |
 | 規則說明 | ▪ 框會留在格子上，符號照常掉落；框內消除一般符號（含 [WW]）時框倍數 +1，黃底在框內消除時黃底倍數直接加進框。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. REMOVING A SYMBOL (INCLUDING [WW]) INSIDE A FRAME ADDS 1 TO IT; A YELLOW SYMBOL REMOVED INSIDE A FRAME ADDS ITS MULTIPLIER TO THE FRAME. |
-| 規則說明 | ▪ 每次連線得分 × 盤面所有框的倍數加總（含本次消除新增的倍數）；盤面沒有框時 ×1。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID, INCLUDING THOSE ADDED BY THAT WIN (X1 IF NO FRAMES). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
+| 規則說明 | ▪ 每次連線得分 ×（1 ＋ 盤面所有框的倍數加總，含本次消除新增的倍數）；盤面沒有框時 ×1，一個 1X 框時 ×2。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY 1 PLUS THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID, INCLUDING THOSE ADDED BY THAT WIN (X1 IF NO FRAMES, X2 WITH ONE 1X FRAME). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
 
 ## FREE GAME
 
@@ -2386,7 +2386,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261110a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261110b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = new URLSearchParams(location.search).get("config")
@@ -2686,9 +2686,9 @@
         if (yellow[reel][row] > 0) { if (frames[reel][row] > 0) goldIntoFrame++; frames[reel][row] += yellow[reel][row]; converted.push(key); bumped.push(key); }
         else if (frames[reel][row] > 0) { frames[reel][row] += 1; bumped.push(key); }
       }
-      // 得分：這一消的得分 × 盤面所有框的倍數加總（沒有框 ×1）；框以本次消除「後」（已更新）的值計算
+      // 得分：這一消的得分 ×（1＋盤面所有框的倍數加總）（2026-11-10 對齊 DJ Boom Boom 實測）；框以本次消除「後」（已更新）的值計算
       const total = frameSum(frames);
-      const mult = total > 0 ? total : 1;
+      const mult = 1 + total;
       const cascadePay = win.rawPay * mult * betUnit();
       pay += cascadePay;
       snap("win", { hits: [...win.hits], framesBefore, converted: [...converted], bumped: [...bumped], mult, cascadePay, totalPay: pay, rawPay: win.rawPay * betUnit(), details: win.details.map(d => ({ ...d, pay: d.raw * mult })), message: `WIN ${money(cascadePay)}` });
@@ -2878,7 +2878,7 @@
   };
 
   function renderFrameTotal(total, flash = false) {
-    $("multiplierWindow").innerHTML = `<span class="multiplier-step is-active${flash ? " fx-hit" : ""}"><span class="ft-k">${tr("frameTotal")}</span> x${total > 0 ? total : 1}</span>`;
+    $("multiplierWindow").innerHTML = `<span class="multiplier-step is-active${flash ? " fx-hit" : ""}"><span class="ft-k">${tr("frameTotal")}</span> x${1 + Number(total || 0)}</span>`;
   }
 
   function renderBoard(board, hitList = [], options = {}) {
@@ -3041,10 +3041,10 @@
     // ② 框倍數收集到上方倍數總和（由 0 開始累加）
     renderFrameTotal(0);
     const stepEl = () => $("multiplierWindow").querySelector(".multiplier-step");
-    stepEl().innerHTML = `<span class="ft-k">${tr("frameTotal")}</span> x0`;
+    stepEl().innerHTML = `<span class="ft-k">${tr("frameTotal")}</span> x1`;
     const target = centerOf(stepEl());
     const badges = [...$("board").querySelectorAll(".frame-layer")].map(frame => ({ frame, badge: frame.querySelector(".frame-badge"), value: Number(frame.dataset.value) || 0 }));
-    let running = 0;
+    let running = 1;
     await Promise.all(badges.map((item, index) => {
       const rect = item.badge.getBoundingClientRect();
       item.frame.classList.add("score");
@@ -3055,7 +3055,7 @@
         step.classList.remove("fx-hit"); void step.offsetWidth; step.classList.add("fx-hit");
       });
     }));
-    renderFrameTotal(snapshot.mult, true);
+    renderFrameTotal(snapshot.mult - 1, true);
     await wait(hold);
 
     // ③ 倍數總和飛到贏分列，贏分 = 基礎贏分 × 倍數總和
@@ -3456,9 +3456,9 @@
   // 有載入 RTP config（card_system）時才支援 Card System；選 Base 為自然機率
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
-  window.DEMOGAME_LAST_TUNING = "2026-11-10 09:46";
-  window.DEMOGAME_LAST_CODE = "2026-11-10 13:37";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-10 13:37";
+  window.DEMOGAME_LAST_TUNING = "2026-11-10 14:08";
+  window.DEMOGAME_LAST_CODE = "2026-11-10 14:08";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-10 14:08";
   </script>
   <script src="../demogame_common.js?v=20261029a"></script>
 </body>

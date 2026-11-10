@@ -444,7 +444,7 @@ class CalaveraParty:
                 elif frames[reel][row] > 0:
                     frames[reel][row] += 1
             total_frame = _frame_sum(frames)
-            mult = total_frame if total_frame > 0 else 1
+            mult = 1 + total_frame          # 乘數＝1＋盤面所有框值總和（2026-11-10，對齊 DJ Boom Boom 實測）
             gained = raw_pay * mult * self.bet
             result.pay += gained
             result.max_mult = max(result.max_mult, mult)
