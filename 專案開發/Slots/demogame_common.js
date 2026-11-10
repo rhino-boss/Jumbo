@@ -1164,24 +1164,26 @@
     panel.innerHTML = `<h3 class="demogame-region-title">Multiplier Distribution</h3><div class="batch-line-chart"></div>`;
     right.appendChild(panel);
     // 玩法簡介（共用，倍率線型上方，2026-11-10 使用者）：只寫競品與本作調整；詳細規則放標題列「說明」。
-    // 頁面在載入本檔前設 window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", changes: ["…", …] }；沒設不顯示。
+    // 頁面在載入本檔前設 window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", expect: "一句話期待過程", changes: ["…", …] }；沒設不顯示。
+    // changes 只寫規格上的變化（玩法、押注、上限），不寫隱性設計（權重、機率、調性）。
     // 遊戲發想以自家前作為基底時加 label: "base"，標籤顯示「前作」。
     const ov = window.DEMOGAME_OVERVIEW;
-    if (ov && (ov.competitor || (ov.changes || []).length)) {
+    if (ov && (ov.competitor || ov.expect || (ov.changes || []).length)) {
       const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
       const box = document.createElement("section");
       box.id = "demogame-overview";
       const rows = (ov.changes || []).map((c) => `<li>${esc(c)}</li>`).join("");
       box.innerHTML = `<h3 class="demogame-region-title">Game Overview</h3>`
         + (ov.competitor ? `<div class="ov-row"><span class="ov-k">${ov.label === "base" ? "Previous Title" : "Competitor"}</span><span class="ov-v">${esc(ov.competitor)}</span></div>` : "")
-        + (rows ? `<div class="ov-row"><span class="ov-k">Changes</span><ul class="ov-v">${rows}</ul></div>` : "");
+        + (ov.expect ? `<div class="ov-row"><span class="ov-k">Expectation</span><span class="ov-v">${esc(ov.expect)}</span></div>` : "")
+        + (rows ? `<div class="ov-row"><span class="ov-k">Changes / Gameplay</span><ul class="ov-v">${rows}</ul></div>` : "");
       right.insertBefore(box, panel);
       const st = document.createElement("style");
       st.textContent = "body.slot-simulator #demogame-overview{padding:10px 14px;border:1px solid var(--sim-border);border-radius:10px;background:var(--sim-panel)}"
         + "body.slot-simulator #demogame-overview .demogame-region-title{margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--sim-surface)}"
         + "body.slot-simulator #demogame-overview .ov-row{display:flex;gap:10px;font:13px/1.6 \"Segoe UI\",system-ui,sans-serif;color:var(--sim-text)}"
         + "body.slot-simulator #demogame-overview .ov-row+.ov-row{margin-top:6px}"
-        + "body.slot-simulator #demogame-overview .ov-k{flex:0 0 auto;color:var(--sim-sub);font-weight:700}"
+        + "body.slot-simulator #demogame-overview .ov-k{flex:0 0 auto;min-width:5.5em;color:var(--sim-sub);font-weight:700}"
         + "body.slot-simulator #demogame-overview ul.ov-v{margin:0;padding-left:18px}";
       document.head.appendChild(st);
     }
@@ -1486,7 +1488,7 @@
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
     "help": "說明", "change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
-    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "changes": "調整", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
+    "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "changes / gameplay": "調整／玩法", "expectation": "期待", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
   const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
   const sharedOriginal = new WeakMap();

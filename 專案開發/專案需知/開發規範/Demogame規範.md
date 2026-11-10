@@ -206,7 +206,7 @@ Debug Mode 至少可查看：
   - `window.demogameSimulateRound({ mode })`：用與畫面相同的遊戲邏輯產生一局（不得另寫簡化數學），回傳 `multiplier`（總得分含 FG ÷ 實際押注）、`lineMultiplier`（BF ÷ 底注，其餘同 `multiplier`）、`fgTriggered`、`maxMultiplier`、`retryLimitExceeded`、`retryCount`、`bgCascade`、`fgCascades`；`mode` 只在該局暫時套用，不得改動畫面押注模式與統計。
   - `window.demogameSimulationModes = [{ value, label }]`：只列實際支援的押注模式，面板據此顯示押注模式選單。
 - 右欄區域可摺疊（共用）：右欄有標題的區域（基本指標、特殊指標、玩法簡介、倍率線型等）點標題即可收起／展開，標題左側有箭頭；標題內的按鈕（放大「+」）不觸發摺疊。倍率線型預設收起。
-- 玩法簡介（共用，累積倍率線型上方，標題「玩法簡介」／Game Overview）：只寫**競品**（廠商＋遊戲名）與**調整**（本作相對競品改了哪些地方，3～6 點、每點一句）；詳細規則放標題列「說明」，不寫在這裡。頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", changes: ["…"] }`，沒設就不顯示。遊戲發想以自家前作為基底時加 `label: "base"`，標籤改顯示「前作」（competitor 填前作名稱與編號）。
+- 玩法簡介（共用，累積倍率線型上方，標題「玩法簡介」／Game Overview）：寫**競品**（廠商＋遊戲名）、**期待**（一句話說明這款遊戲玩家期待的過程）與**調整／玩法**（本作相對競品的規格變化，沒有競品就寫主要玩法，3～6 點、每點一句；只寫規格上的變化，不寫權重、機率、調性等隱性設計）；詳細規則放標題列「說明」，不寫在這裡。頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", expect: "…", changes: ["…"] }`，沒設就不顯示。遊戲發想以自家前作為基底時加 `label: "base"`，標籤改顯示「前作」（competitor 填前作名稱與編號）。
 - 累積倍率線型（共用，統計區下方，標題「倍率線型 (押注模式)」）：畫面實際遊玩的局，NB 記在 NB、EB 記在 EB，BF／SF 不記錄；依目前押注模式顯示對應的累積圖（標準 64 區間、Y 軸 1%），重置清空。遊戲每局（含 FG）結束時呼叫 `window.demogameLineChart.record(總得分 ÷ 押注, "NB"|"EB")`；押注模式按鈕沒有 is-active 樣式時另呼叫 `setMode()`。
 - 倍率線型（共用，併入 Simulation 面板）：該次模擬每局 `lineMultiplier` 的標準 64 區間分布，X 軸逐一標出 (下限, 上限]，Y 軸 NB／EB 1%、BF 20%，超過上限或為 0 的區間不畫點、線在該處斷開。沒有 Simulation 面板的頁面才在 Set RNG 上方顯示即時線型（NB 一局含 FG 結束時呼叫 `window.demogameLineChart?.record(該局總得分 ÷ 底注)`；批次模擬不得呼叫）。
 
