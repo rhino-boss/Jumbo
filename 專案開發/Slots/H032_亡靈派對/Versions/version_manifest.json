@@ -30,13 +30,14 @@
       "configs": {
         "base": "config.js",
         "92A": "config_92A.js",
-        "94A": "config_94A.js"
+        "94A": "config_94A.js",
+        "92A_Bet100": "config_92A_Bet100.js"
       },
       "changes": [
         "輪帶、停輪權重、補牌權重與賠率以 JILI Super Ace 為底（側錄還原）；R2～R5 一般符號重排（相鄰軸偏重不同符號組，BG 85%、FG 72%），BG 含 C1 停點權重 ×0.65。",
         "黃底只在 R2～R4，各軸比例與倍數分布（1/2/3/5/10/20/30/50/100）對標 DJ Boom Boom 側錄，整體密度為 DJ Boom Boom 的 80%。",
         "自然 RTP NB 約 420%、BF 約 205%，BG Hit 25.2%、FG Hit 46%、FG 週期約 1/205。",
-        "RTP／Variant Config 只同步版號為 2.0.0.0，卡片權重沿用 v1（未重算）。"
+        "卡片權重依 v2 自然機率報表重算（2026-11-10，A 版）：NB 老手 BG 67%＋FG 25%（94A FG 27%）、新手 BG 67%＋FG 26%、FG 週期 1/200、BG Hit 25%、FG 保底 5x；BF 價格 100x、RTP 92.5%；拿掉 Extra Bet。B 版未重算。"
       ]
     }
   ]

@@ -2203,6 +2203,7 @@
               <option value="combo5" data-h099-text="scriptCombo5">連消 5 次以上</option>
               <option value="yellow" data-h099-text="scriptYellow">黃底有消除</option>
               <option value="frame10" data-h099-text="scriptFrame10">框總和 10 以上</option>
+              <option value="goldframe" data-h099-text="scriptGoldFrame">金符號落入倍數框並消除</option>
               <option value="fg" data-h099-text="scriptFg">有觸發 FG</option>
               <option value="fgbig" data-h099-text="scriptFgbig">FG 100x 以上</option>
             </select>
@@ -2385,17 +2386,54 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      document.write(`<script src="./${entry.configs.base}?v=20261109b-${encodeURIComponent(entry.version)}"><\/script>`);
-      document.addEventListener("DOMContentLoaded", () => {
+      const stamp = `20261110a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
+      const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
+      const wanted = new URLSearchParams(location.search).get("config")
+        || (() => { try { return localStorage.getItem("h032ConfigCode"); } catch (_) { return ""; } })() || "base";
+      // 共用面板慣例：原生選單只列 RTP config，「Base」＝同一份 config 但卡片關（自然機率），所以有 RTP config 時一律載入其一
+      const active = codes.includes(String(wanted)) ? String(wanted) : (codes[0] || "base");
+      window.H032_ACTIVE_CONFIG = active;
+      try { localStorage.setItem("h032ConfigCode", active); } catch (_) {}
+      document.write(`<script src="./${entry.configs.base}?v=${stamp}"><\/script>`);
+      if (active !== "base") {
+        document.write(`<script src="./${entry.configs[active]}?v=${stamp}"><\/script>`);
+        document.write(`<script>
+          (() => {
+            const base = window.H032_CONFIG, rtp = window.H032_CONFIG_RTP;
+            if (!base || !rtp?.card_system) throw new Error("H032 RTP config 未載入或缺 card_system");
+            if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) throw new Error("RTP config 版本 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 第 1 碼不一致");
+            base.card_system = rtp.card_system; base.rtp_label = rtp.rtp_label || rtp.config_code; base.rtp_config = rtp;
+          })();
+        <\/script>`);
+      }
+      // 設定面板的 HTML 在本段之前，直接同步填選單（共用面板在 DOMContentLoaded 前就讀 #configSelect）
+      (() => {
         const select = document.getElementById("versionSelect");
         if (!select) return;
         for (const v of manifest.versions) select.appendChild(new Option(v.version, v.version, false, v.version === entry.version));
         select.addEventListener("change", () => {
           const query = new URLSearchParams(location.search);
           query.set("version", select.value);
+          query.delete("config");
           location.search = query.toString();
         });
-      });
+        // Config 選單：manifest 列出的 RTP config；共用面板再組成「Base（卡片關）／92A／94A／92A_BET100」
+        const configSelect = document.getElementById("configSelect");
+        if (configSelect) {
+          configSelect.innerHTML = "";
+          for (const code of (codes.length ? codes : ["base"])) configSelect.appendChild(new Option(code === "base" ? "Base" : code, code, false, code === active));
+          configSelect.disabled = codes.length <= 1;
+          configSelect.addEventListener("change", () => {
+            if (configSelect.value === active) return;
+            const query = new URLSearchParams(location.search);
+            query.set("version", entry.version);
+            query.set("config", configSelect.value);
+            try { localStorage.setItem("h032ConfigCode", configSelect.value); } catch (_) {}
+            location.search = query.toString();
+          });
+        }
+      })();
     })();
   </script>
   <script>
@@ -2487,16 +2525,21 @@
       font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6));pointer-events:none;user-select:none}
     #board .cell .sym-tag{position:absolute;left:50%;top:3px;transform:translateX(-50%);font:800 9px/12px system-ui,sans-serif;letter-spacing:.04em;
       color:#fff;background:rgba(120,10,60,.85);border-radius:4px;padding:0 4px;pointer-events:none}
-    /* 倍數徽章（同 H026 樣式）：黃底倍數在左上、框倍數在右下 */
-    #board .yellow-badge,#board .frame-badge{position:absolute;font:700 11px/15px system-ui,sans-serif;color:#1a1000;
-      background:linear-gradient(180deg,#e8b84a,#a8740f);border:1px solid #ffe7a0;border-radius:5px;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap}
-    #board .yellow-badge{z-index:5;top:3px;left:3px}
-    #board .frame-badge{bottom:4px;right:4px;background:linear-gradient(180deg,#ffb04a,#d8640a);border-color:#ffd7a6}
-    /* 倍數框：最上層、橘色發光框（2px 橘框、外光暈＋內光暈、淡橘半透明底）；大小與符號格相同 */
+    /* 倍數徽章（2026-11-10 改版）：黃底倍數在符號上方置中、框倍數在框下方置中（紅底白字） */
+    #board .yellow-badge,#board .frame-badge{position:absolute;left:50%;transform:translateX(-50%);font:800 11px/15px system-ui,sans-serif;color:#1a1000;
+      background:linear-gradient(180deg,#e8b84a,#a8740f);border:1px solid #ffe7a0;border-radius:5px;padding:0 5px;box-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap}
+    #board .yellow-badge{z-index:5;top:3px}
+    #board .frame-badge{bottom:-7px;font-size:13px;line-height:17px;color:#fff;background:linear-gradient(180deg,#ff5a4a,#c01414);border-color:#ffb0a6;
+      text-shadow:0 1px 1px rgba(80,0,0,.7);box-shadow:0 0 8px rgba(255,40,40,.7),0 1px 3px rgba(0,0,0,.6)}
+    /* 倍數框：最上層、紅色發光框（紅框、外光暈＋內光暈、淡紅半透明底）；大小與符號格相同 */
     #board{position:relative}
-    #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2px solid #ffa23a;border-radius:8px;
-      background:linear-gradient(180deg,rgba(255,150,40,.18),rgba(255,105,20,.06));
-      box-shadow:0 0 12px rgba(255,135,30,.7),inset 0 0 14px rgba(255,150,40,.38)}
+    #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2.5px solid #ff2e2e;border-radius:10px;
+      background:linear-gradient(180deg,rgba(255,40,40,.12),rgba(255,20,20,.04));
+      box-shadow:0 0 12px rgba(255,30,30,.75),inset 0 0 12px rgba(255,40,40,.35)}
+    /* 黃底倍數落入框的飛行體 */
+    .slot-fx-layer .fx-gold-drop{position:absolute;z-index:61;display:grid;place-items:center;pointer-events:none;white-space:nowrap;
+      font:800 13px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#ffe49a,#c8900f);border:1px solid #fff0b8;
+      border-radius:5px;box-shadow:0 0 12px rgba(255,210,90,.9)}
     #board .frame-layer.bump{animation:h099FrameBump 360ms ease-out}
     @keyframes h099FrameBump{from{transform:scale(1.18);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
     #board .frame-layer.score{animation:h099FrameScore 260ms ease-in-out infinite alternate}
@@ -2630,17 +2673,17 @@
     let late = freeGame ? lateTier(frames) : null;
     const yellow = board.map((column, reel) => column.map(symbol => rollYellow(tableName, reel, symbol, false, late)));
     const snapshots = [];
-    let pay = 0, combo = 0, yellowSeen = yellow.flat().some(Boolean), yellowUsed = 0, peakFrame = frameSum(frames);
+    let pay = 0, combo = 0, yellowSeen = yellow.flat().some(Boolean), yellowUsed = 0, goldIntoFrame = 0, peakFrame = frameSum(frames);
     const snap = (type, extra) => snapshots.push({ type, board: clone(board), yellow: clone(yellow), frames: clone(frames), hits: [], combo, frameTotal: frameSum(frames), ...extra });
     snap("initial", { message: freeGame ? "Free Spin" : "Spin" });
     while (true) {
       const win = evaluate(board);
       if (!win.rawPay) break;
       // 框更新：黃底 → 原格留框（已有框則倍數直接加進框，不再 +1）；其他中獎符號（含 WILD）在框內框 +1
-      const cleared = [], converted = [], bumped = [];
+      const cleared = [], converted = [], bumped = [], framesBefore = clone(frames);
       for (const key of win.hits) {
         const [reel, row] = key.split(",").map(Number);
-        if (yellow[reel][row] > 0) { frames[reel][row] += yellow[reel][row]; converted.push(key); bumped.push(key); }
+        if (yellow[reel][row] > 0) { if (frames[reel][row] > 0) goldIntoFrame++; frames[reel][row] += yellow[reel][row]; converted.push(key); bumped.push(key); }
         else if (frames[reel][row] > 0) { frames[reel][row] += 1; bumped.push(key); }
       }
       // 得分：這一消的得分 × 盤面所有框的倍數加總（沒有框 ×1）；框以本次消除「後」（已更新）的值計算
@@ -2648,7 +2691,7 @@
       const mult = total > 0 ? total : 1;
       const cascadePay = win.rawPay * mult * betUnit();
       pay += cascadePay;
-      snap("win", { hits: [...win.hits], mult, cascadePay, totalPay: pay, rawPay: win.rawPay * betUnit(), details: win.details.map(d => ({ ...d, pay: d.raw * mult })), message: `WIN ${money(cascadePay)}` });
+      snap("win", { hits: [...win.hits], framesBefore, converted: [...converted], bumped: [...bumped], mult, cascadePay, totalPay: pay, rawPay: win.rawPay * betUnit(), details: win.details.map(d => ({ ...d, pay: d.raw * mult })), message: `WIN ${money(cascadePay)}` });
 
       // 消除：黃底符號變 WILD 不消除；其他中獎符號消除
       for (const key of win.hits) {
@@ -2683,7 +2726,7 @@
       }
       snap("cascade", { drop: motion, message: "Drop refill" });
     }
-    return { pay, combo, scatter: scatterCount(board), yellowSeen, yellowUsed, peakFrame, endFrame: frameSum(frames),
+    return { pay, combo, scatter: scatterCount(board), yellowSeen, yellowUsed, goldIntoFrame, peakFrame, endFrame: frameSum(frames),
       board, yellow, frames: clone(frames), snapshots, tableName };
   }
 
@@ -2747,6 +2790,7 @@
     combo5: r => r.scatter < MIN_SCATTER && r.combo >= 5,
     yellow: r => r.scatter < MIN_SCATTER && r.yellowUsed > 0,
     frame10: r => r.scatter < MIN_SCATTER && r.peakFrame >= 10,
+    goldframe: r => r.scatter < MIN_SCATTER && r.goldIntoFrame > 0,
     fg: r => r.scatter >= MIN_SCATTER,
     fgbig: r => r.scatter >= MIN_SCATTER,
   };
@@ -2767,18 +2811,68 @@
     return best;
   }
 
+  // ===== Card System（同 Simulator.py：抽卡後以自然機率重轉到結果落進該區間；Demo 只用 Oldhand）=====
+  const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 10000));
+  const cardProfile = () => "oldhand";
+  const cardSystemActive = () => window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled);
+  function cardSectionCap(section) {   // 該卡組最高有權重 range 卡的上限（BG Trigger Cap／Max Win）
+    const cards = cfg.card_system?.profiles?.[cardProfile()]?.[section] || [];
+    const caps = cards.filter(card => card.type === "range" && Number(card.weight) > 0).map(card => Number(card.max));
+    return caps.length ? Math.max(...caps) : Infinity;
+  }
+  function pickCard(section) {
+    const cards = cfg.card_system?.profiles?.[cardProfile()]?.[section];
+    return cards?.length ? pick(cards, cards.map(card => card.weight)) : null;
+  }
+  function cardMatches(card, pay) { const ratio = pay / betUnit(); return Number(card.min) < ratio && ratio <= Number(card.max); }
+  function cardSpin(card) {
+    let last = null;
+    if (!card) return { result: naturalBaseSpin(), ok: true };
+    const trigCap = cardSectionCap("base_game");
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      last = naturalBaseSpin();
+      if (card.type === "free_game" ? (last.scatter >= MIN_SCATTER && last.pay / betUnit() <= trigCap)
+        : (last.scatter < MIN_SCATTER && cardMatches(card, last.pay))) return { result: last, ok: true };
+    }
+    return { result: last, ok: false };
+  }
+  function cardFeature(section, buy) {
+    const card = pickCard(section);
+    let last = null;
+    if (!card) return { result: freeSession(FG_INITIAL, buy), ok: true };
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      last = freeSession(FG_INITIAL, buy);
+      if (cardMatches(card, last.pay)) return { result: last, ok: true };
+    }
+    return { result: last, ok: false };
+  }
+  // 一局的 BG／FG 結果（Card System On／Off 共用）；回傳 retry 超限次數
+  function drawRound(buy, script = "") {
+    const cardOn = cardSystemActive() && !script;
+    let retryLimitExceeded = 0, base, feature = null;
+    if (buy) base = buyEntry();
+    else if (script) base = scriptedSpin(script);
+    else if (cardOn) { const r = cardSpin(pickCard("base_game")); base = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
+    else base = naturalBaseSpin();
+    if (buy || base.scatter >= MIN_SCATTER) {
+      if (script === "fgbig") feature = scriptedFeature(100, buy);
+      else if (cardOn) { const r = cardFeature(buy ? "buy_feature" : "free_game", buy); feature = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
+      else feature = freeSession(FG_INITIAL, buy);
+    }
+    return { base, feature, retryLimitExceeded, cardOn };
+  }
+
   // 共用 Simulation 面板（批次模擬，不動畫面）
   window.demogameSimulationModes = [{ value: 0, label: "Normal Bet" }, { value: 2, label: "Buy Feature" }];
   window.demogameSimulateRound = ({ mode } = {}) => {
     const buy = Number(mode) === 2;
     const wager = betUnit() * (buy ? Number(BUY.cost_multiplier) : 1);
-    const base = buy ? buyEntry() : naturalBaseSpin();
-    const fgTriggered = buy || base.scatter >= MIN_SCATTER;
-    const feature = fgTriggered ? freeSession(FG_INITIAL, buy) : null;
+    const { base, feature, retryLimitExceeded } = drawRound(buy);
+    const fgTriggered = Boolean(feature);
     const totalWin = base.pay + Number(feature?.pay || 0);
     return {
       multiplier: totalWin / wager, lineMultiplier: buy ? totalWin / betUnit() : totalWin / wager, fgTriggered,
-      maxMultiplier: Math.max(base.peakFrame, Number(feature?.endFrame || 0), 1), retryLimitExceeded: 0,
+      maxMultiplier: Math.max(base.peakFrame, Number(feature?.endFrame || 0), 1), retryLimitExceeded,
       bgCascade: base.combo, fgCascades: feature?.spins?.map(item => item.combo) || []
     };
   };
@@ -2975,6 +3069,48 @@
     await wait(hold * 1.4);
   }
 
+  // 中獎前置演出：先以「更新前」的框顯示中獎格 → 黃底符號上方的倍數往下落到框倍數位置 → 換成更新後的框（含框內 +1）並彈跳
+  async function animateGoldToFrame(snapshot) {
+    const converted = snapshot.converted || [], bumped = snapshot.bumped || [];
+    const after = { yellow: snapshot.yellow, frames: snapshot.frames, bumped };
+    if (!snapshot.framesBefore || !bumped.length) { renderBoard(snapshot.board, snapshot.hits, after); return; }
+    renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: snapshot.framesBefore });
+    const layer = converted.length && window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
+    if (layer) {
+      const speed = Number($("speedRange").value || 1);
+      const flight = Math.max(140, 460 / speed), gap = Math.max(30, 90 / speed);
+      await wait(Math.max(80, 220 / speed));
+      const layerRect = layer.getBoundingClientRect();
+      const cells = $("board").children;
+      await Promise.all(converted.map((key, index) => {
+        const [reel, row] = key.split(",").map(Number);
+        const cell = cells[(3 - row) * 5 + reel], badge = cell?.querySelector(".yellow-badge");
+        if (!badge) return Promise.resolve();
+        const from = badge.getBoundingClientRect(), box = cell.getBoundingClientRect();
+        const ghost = document.createElement("div");
+        ghost.className = "fx-gold-drop"; ghost.textContent = badge.textContent;
+        ghost.style.cssText = `left:${from.left - layerRect.left}px;top:${from.top - layerRect.top}px;width:${from.width}px;height:${from.height}px`;
+        layer.appendChild(ghost);
+        badge.style.visibility = "hidden";
+        // 終點：框倍數徽章的位置（格子下緣置中）
+        const dy = (box.bottom - from.height / 2 + 1) - (from.top + from.height / 2);
+        const animation = ghost.animate([
+          { transform: "translateY(0) scale(1)", offset: 0 },
+          { transform: "translateY(-6px) scale(1.25)", offset: 0.18 },
+          { transform: `translateY(${dy}px) scale(1.1)`, offset: 0.85 },
+          { transform: `translateY(${dy}px) scale(.6)`, opacity: 0, offset: 1 }
+        ], { duration: flight, delay: index * gap, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" });
+        return Promise.race([animation.finished.catch(() => {}), wait(flight + index * gap + 60)]).then(() => ghost.remove());
+      }));
+    }
+    // 黃底倍數已落入框：中獎格不再顯示黃底徽章，框換成更新後的值
+    const yellow = clone(snapshot.yellow);
+    converted.forEach(key => { const [reel, row] = key.split(",").map(Number); yellow[reel][row] = 0; });
+    renderBoard(snapshot.board, snapshot.hits, { ...after, yellow });
+    renderFrameTotal(snapshot.frameTotal, true);
+    await wait(Math.max(120, 360 / Number($("speedRange").value || 1)));
+  }
+
   function renderWinDetails(snapshot) {
     $("lineList").innerHTML = snapshot.details?.length
       ? snapshot.details.map(win => `<div class="line-row"><span>${win.symbol} · ${win.length} reels · ${win.ways} ways${snapshot.mult > 1 ? ` · frame ×${snapshot.mult}` : ""}</span><span>${format(win.pay)}</span></div>`).join("")
@@ -2996,12 +3132,12 @@
       const snapshot = snapshots[index]; state.snapshotIndex = index;
       $("messageBar").textContent = snapshot.message || "Cascade";
       const common = { yellow: snapshot.yellow, frames: snapshot.frames };
-      renderFrameTotal(snapshot.frameTotal, snapshot.type === "eliminate" && (snapshot.bumped || []).length > 0);
+      renderFrameTotal(snapshot.type === "win" && snapshot.framesBefore ? frameSum(snapshot.framesBefore) : snapshot.frameTotal, snapshot.type === "eliminate" && (snapshot.bumped || []).length > 0);
       if (snapshot.type === "win") {
         state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
         $("winValue").textContent = money(state.lastWin);
         renderWinDetails(snapshot);
-        renderBoard(snapshot.board, snapshot.hits, common);
+        await animateGoldToFrame(snapshot);
         await animateWin(snapshot);
         await wait(delay());
       } else if (snapshot.type === "eliminate") {
@@ -3152,13 +3288,14 @@
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
         const script = mode !== 2 ? (code ? code.script : ($("forceFgInput").checked && !$("scriptSelect").value ? "fg" : $("scriptSelect").value)) : "";
         const seed = code ? code.seed : (window.demogameRng?.newSeed?.() ?? null);
-        if (window.demogameRng?.format && seed != null) appendLog(`RNG ${window.demogameRng.format({ config: configLabel(), mode: mode === 2 ? "BF" : "NB", card: false, opts: script, seed })}`, "rng");
+        if (window.demogameRng?.format && seed != null) appendLog(`RNG ${window.demogameRng.format({ config: configLabel(), mode: mode === 2 ? "BF" : "NB", card: cardSystemActive(), opts: script, seed })}`, "rng");
         appendLog(`#${state.rounds} ${mode === 2 ? "Buy Feature" : "Normal Bet"} | Bet ${money(cost)}${script ? ` | Script ${script}` : ""}${code ? " | Replay" : ""}`, "mode");
         let base, feature = null;
         if (seed != null && window.demogameRng?.seeded) rngNext = window.demogameRng.seeded(seed);
         try {
-          base = mode === 2 ? buyEntry() : script ? scriptedSpin(script) : naturalBaseSpin();
-          if (mode === 2 || base.scatter >= MIN_SCATTER) feature = script === "fgbig" ? scriptedFeature(100, mode === 2) : freeSession(FG_INITIAL, mode === 2);
+          const drawn = drawRound(mode === 2, script);
+          base = drawn.base; feature = drawn.feature;
+          if (drawn.retryLimitExceeded) appendLog(`Card System | Retry 超過 ${MAX_RETRY} 次，採用最後一把`, "error");
         } finally { rngNext = Math.random; }
         await animateSnapshots(base.snapshots, 0);
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
@@ -3255,14 +3392,14 @@
       baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", fgTriggered: "Free Game Triggered",
       ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS",
-      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
+      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptGoldFrame: "Gold lands on a frame and wins", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
       statMaxWin: "Max win (x bet)", statYellowSeen: "Yellow seen", statYellowUsed: "Yellow won", statFrameMax: "BG max frame total", statFgFrameAvg: "FG end frame total (avg)", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
       ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場",
-      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
+      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptGoldFrame: "金符號落入倍數框並消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
       statMaxWin: "最大贏分倍數", statYellowSeen: "黃底出現率", statYellowUsed: "黃底消除率", statFrameMax: "BG 最大框總和", statFgFrameAvg: "FG 結束框總和（平均）", statScRate: "SC 出現率"
     }
   };
@@ -3312,15 +3449,16 @@
   $("setRngResetBtn").onclick = () => { $("scriptSelect").value = ""; $("forceFgInput").checked = false; $("rngInput").value = ""; };
 
   document.title = `${cfg.name_en} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
-  appendLog(`H032 Demo loaded | Version 1.0.0.0 | 輪帶／賠率暫用 H045，黃底權重為假值`, "result");
+  appendLog(`H032 Demo loaded | Version ${window.H032_VERSION_ENTRY?.version || "--"} | Config ${window.H032_ACTIVE_CONFIG || "base"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
 })();
   </script>
   <script>
-  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;
+  // 有載入 RTP config（card_system）時才支援 Card System；選 Base 為自然機率
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
-  window.DEMOGAME_LAST_TUNING = "2026-11-09 18:06";
-  window.DEMOGAME_LAST_CODE = "2026-11-09 18:06";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-09 18:06";
+  window.DEMOGAME_LAST_TUNING = "2026-11-10 09:46";
+  window.DEMOGAME_LAST_CODE = "2026-11-10 13:37";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-10 13:37";
   </script>
   <script src="../demogame_common.js?v=20261029a"></script>
 </body>
