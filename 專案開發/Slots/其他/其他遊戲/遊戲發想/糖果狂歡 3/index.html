@@ -1,0 +1,3836 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sugar Bonanza 3 — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-size%3D%2756%27%20text-anchor%3D%27middle%27%3E%F0%9F%8D%AD%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+  <style>
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+    /* 糖果狂歡 3：四角特殊區域（虛線金框標示，不隨符號掉落） */
+    #board .cell.tc3-corner::before { content: ""; position: absolute; inset: 2px; border: 2px dashed rgba(255, 214, 102, 0.85); border-radius: 10px; pointer-events: none; z-index: 3; }
+    /* 消除與補牌（照 H027 宙斯 2500 實機效果，H013 糖果狂歡 1000，2026-11-04）：得分符號直接消失、原位灑出金粉；補牌由下往上逐顆錯開落下。
+       權重需高過共用 body #board 的 !important 規則 */
+    @keyframes h027-burst {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes h027-sparkle {
+      0% { transform: scale(.4); opacity: 0; }
+      35% { opacity: 1; }
+      100% { transform: scale(1.7) translateY(18%); opacity: 0; }
+    }
+    @keyframes h027-drop {
+      0% { transform: translateY(var(--drop-start, -105%)); }
+      100% { transform: translateY(0); }
+    }
+    html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
+    html body #board .cell.symbol-cleared > :not(.symbol-code) { animation: h027-burst 90ms linear forwards !important; }   /* 直接消失，不先變成別的樣子（2026-11-04 使用者要求） */
+    html body #board .cell.symbol-cleared::after {
+      content: ""; position: absolute; inset: -10%; pointer-events: none; z-index: 4;
+      background:
+        radial-gradient(circle at 20% 30%, #fff6c2 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 20%, #ffd75a 0 2px, transparent 3px),
+        radial-gradient(circle at 45% 55%, #fff 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 80% 65%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 80%, #ffe68a 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 60% 85%, #fff2a8 0 2px, transparent 3px),
+        radial-gradient(circle at 12% 60%, #ffd24d 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 88% 40%, #fff 0 1.5px, transparent 2.5px);
+      animation: h027-sparkle 520ms ease-out 120ms both !important;
+    }
+    html body #board .cell.symbol-drop,
+    html body #board .cell.symbol-settle { animation: h027-drop var(--drop-duration, 380ms) cubic-bezier(.45,0,.55,1) var(--drop-delay, 0ms) both !important; }
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      --cell-size: 78px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 920px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    #modeText {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .feature-strip {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #multPill .v {
+      color: var(--blue);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-shell {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: var(--cell-size);
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    .cell.gold {
+      border-color: rgba(255, 217, 92, 0.75);
+      background: #101827;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
+      transform: scale(1.03);
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    #controls #setRngResetBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+    }
+
+    #controls #setRngResetBtn:disabled {
+      color: #87a7c1;
+      background: #102a49;
+      border-color: #315474;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .live-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      min-height: 0;
+      padding: 16px;
+      overflow-y: auto;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .help-section {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .help-section-title,
+    .help-group-title {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-group-title {
+      margin-top: 14px;
+      color: var(--blue);
+      font-size: 12px;
+    }
+
+    .help-rule,
+    .help-payout-item {
+      margin: 6px 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      line-height: 1.55;
+    }
+
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .help-loading,
+    .help-load-error {
+      padding: 20px;
+      color: var(--sub);
+      text-align: center;
+    }
+
+    #helpFrame {
+      display: none;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(17vw, 70px);
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      #grid-panel {
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      #controls {
+        grid-template-columns: 1fr;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+    }
+  </style>
+  <style id="h019-layout-adapter">
+    .board-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
+    .cell {
+      width: 100%;
+      height: auto;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border-color: rgba(38, 92, 137, 0.28);
+    }
+    .cell.peek-row { display: grid; }
+    .cell .symbol-wrap {
+      inset: 0;
+      overflow: hidden;
+    }
+    .h019-glyph {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 4px;
+      overflow: hidden;
+      color: #d8e8f4;
+      font: 800 clamp(0.82rem, 1.45vw, 1.12rem) / 1 Consolas, "Courier New", monospace;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.72);
+    }
+    .h019-glyph[hidden] {
+      display: none;
+    }
+    .h013-symbol-image {
+      position: absolute;
+      inset: 3%;
+      z-index: 1;
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
+      object-fit: contain;
+      object-position: center;
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.42));
+    }
+    .cell .symbol-code { display: none; }
+    .cell.symbol-a,
+    .cell.symbol-k,
+    .cell.symbol-q,
+    .cell.symbol-j,
+    .cell.symbol-te {
+      border-color: rgba(38, 92, 137, 0.28);
+      background: #060d1a;
+    }
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.h019-scatter {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.h019-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
+    }
+    .multiplier-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 5;
+      padding: 2px 6px;
+      border-radius: 999px;
+      color: #3b1d00;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 2px 8px rgba(16, 8, 28, 0.5);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+    .help-payout-item.with-symbol-image {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .help-symbol-image {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.36));
+    }
+    .help-payout-text {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    #helpContent .help-table-symbol {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 72px;
+    }
+    #helpContent .help-table-symbol-image {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.36));
+    }
+    #helpContent .help-table-symbol-code {
+      color: #00ddc0;
+      font-weight: 800;
+    }
+    @media (max-width: 1040px) {
+      .board-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      #grid-panel { --cell-size: min(64px, calc((100% - 20px) / 6)); }
+    }
+    @media (max-width: 520px) {
+      .help-payout-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .help-symbol-image {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+      }
+    }
+  </style>
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../../../../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+</head>
+
+<body class="slot-simulator">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/專案開發/Slots/其他/其他遊戲/遊戲發想/糖果狂歡 3/</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameName">糖果狂歡 3</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
+            id="carryMultiValue">0</span></span>
+        <span class="feature-pill" id="multPill"><span class="k">Mult</span><span class="v"
+            id="spinMultiValue">x0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (1.25x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (100x)</button>
+            <button id="superFeatureBtn" type="button">Super Feature (500x)</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card System
+            <select id="cardRangeSelect">
+              <option value="off">Off</option>
+              <option value="newbie">Newbie</option>
+              <option value="oldhand">Oldhand</option>
+            </select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92/NB/on/-/8f3a21b0">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">版本紀錄</div>
+      <div id="changeLogBody">
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect">
+            <option value="config_92A.js">DRAFT</option>
+            <option value="config_94A.js">H013194A</option>
+          </select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span>Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading game rules...</div>
+      </div>
+      <iframe id="helpFrame" title="Game Help content" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+    </div>
+  </dialog>
+
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# 糖果狂歡 3 Sugar Bonanza 3 — Help Draft（發想，基底 H013）
+
+本文件為 Demo Game 內遊戲說明的繁體中文／英文對照稿。賠率與模式成本以目前選擇的 `config_92A.js`／`config_94A.js` 及 `Simulator.py` 實際執行值為準；網頁會依玩家目前選擇的押注即時換算派彩金額。
+
+## Game Meta
+
+| Field | Value |
+| --- | --- |
+| game_id | ⏳ |
+| parsheet_id | ⏳ |
+| name_zh | 糖果狂歡 3 |
+| name_en | Sugar Bonanza 3 |
+| game_type | Video Slot - Pay Anywhere / Cascade / Multiplier |
+| board | 6 reels × 5 rows |
+| modes | Normal Bet / Extra Bet (1.25x) / Feature Buy (100x) / Super Feature (500x) |
+| runtime_note | Feature Buy 依主 Overview、目前 config 與 Simulator 的實際執行值顯示為 100x。 |
+
+---
+
+## PAYTABLE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+| 規則說明 | 同一個一般符號在盤面任意位置出現 8 個或以上即可得獎，符號不必相鄰或連線。 | EIGHT OR MORE MATCHING REGULAR SYMBOLS ANYWHERE ON THE GRID AWARD A WIN. SYMBOLS DO NOT NEED TO BE ADJACENT OR CONNECTED. |
+| 規則說明 | 以下派彩金額會依目前選擇的押注即時換算。 | THE PAYOUT AMOUNTS BELOW ARE CALCULATED FROM THE CURRENTLY SELECTED BET. |
+
+### 賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+| [M1] 12+ - 5000 | [M2] 12+ - 2500 | [M3] 12+ - 1500 |
+| [M1] 10–11 - 2500 | [M2] 10–11 - 1000 | [M3] 10–11 - 500 |
+| [M1] 8–9 - 1000 | [M2] 8–9 - 250 | [M3] 8–9 - 200 |
+| [M4] 12+ - 1200 | [A] 12+ - 1000 | [K] 12+ - 800 |
+| [M4] 10–11 - 200 | [A] 10–11 - 150 | [K] 10–11 - 120 |
+| [M4] 8–9 - 150 | [A] 8–9 - 100 | [K] 8–9 - 80 |
+| [Q] 12+ - 500 | [J] 12+ - 400 | [TE] 12+ - 200 |
+| [Q] 10–11 - 100 | [J] 10–11 - 90 | [TE] 10–11 - 75 |
+| [Q] 8–9 - 50 | [J] 8–9 - 40 | [TE] 8–9 - 25 |
+
+### SCATTER SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 分散符號 | SCATTER SYMBOL |
+| 規則說明 | [C1] 為分散符號。主遊戲的所有消除結束後，最終盤面出現 4、5 或 6 個 [C1] 時，分別支付 3x、5x 或 100x 押注。 | [C1] IS THE SCATTER SYMBOL. AFTER ALL BASE GAME CASCADES END, 4, 5, OR 6 [C1] ON THE FINAL GRID PAY 3X, 5X, OR 100X BET RESPECTIVELY. |
+| [C1] 6 - 10000 | [C1] 5 - 500 | [C1] 4 - 300 |
+
+---
+
+## CASCADING FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 消除掉落特色 | CASCADING FEATURE |
+| 規則說明 | 每次得獎後，得獎符號會被消除；其餘符號向下掉落，並由上方補入新符號。 | AFTER EACH WIN, WINNING SYMBOLS ARE REMOVED. THE REMAINING SYMBOLS DROP DOWN AND NEW SYMBOLS ENTER FROM ABOVE. |
+| 規則說明 | 只要新盤面再次形成得獎，消除掉落便會繼續，直到不再形成新得獎。 | CASCADES CONTINUE WHILE NEW WINS ARE FORMED AND END WHEN NO NEW WIN REMAINS. |
+
+---
+
+## CORNER FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 四角特色 | CORNER FEATURE |
+| 規則說明 | 每次旋轉開始時，盤面四個角會出現同一種一般符號；四個角不隨消除掉落，消除後只會補回同一種符號。 | AT THE START OF EACH SPIN, THE FOUR CORNERS OF THE GRID SHOW THE SAME REGULAR SYMBOL. CORNER POSITIONS DO NOT DROP DURING CASCADES AND ARE ONLY REFILLED WITH THAT SAME SYMBOL. |
+| 規則說明 | 當四個角的符號全部被消除時，四個角各出現 1 個 [C2]，並保留到本次旋轉結束；同一次旋轉只會觸發一次。 | WHEN ALL FOUR CORNER SYMBOLS ARE REMOVED, EACH CORNER BECOMES A [C2] THAT STAYS UNTIL THE END OF THE SPIN. THIS CAN HAPPEN ONLY ONCE PER SPIN. |
+| 規則說明 | 主遊戲四角出現的 [C2] 倍數為 X{1}、X{2}、X{3} 或 X{5}；免費遊戲中依該局倍數權重取得。 | IN THE BASE GAME, CORNER [C2] MULTIPLIERS ARE X{1}, X{2}, X{3}, OR X{5}; IN FREE GAMES THEY FOLLOW THAT FREE GAME'S MULTIPLIER WEIGHTS. |
+
+---
+
+## MULTIPLIER FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 倍數炸彈特色 | MULTIPLIER BOMB FEATURE |
+| 規則說明 | 免費遊戲中，每個 [C2] 會分別取得一個倍數值。 | DURING FREE GAMES, EACH [C2] RECEIVES A MULTIPLIER VALUE. |
+| 規則說明 | 可出現的倍數為 X{2}、X{3}、X{4}、X{5}、X{6}、X{8}、X{10}、X{12}、X{15}、X{20}、X{25}、X{50}、X{100} 或 X{1000}。 | AVAILABLE MULTIPLIERS ARE X{2}, X{3}, X{4}, X{5}, X{6}, X{8}, X{10}, X{12}, X{15}, X{20}, X{25}, X{50}, X{100}, OR X{1000}. |
+| 規則說明 | 每次旋轉（含主遊戲）所有消除結束後，最終盤面上的 [C2] 倍數會相加；該次旋轉的所有一般符號得獎均乘以倍數總和。若最終盤面沒有 [C2]，則使用 X{1}。 | AFTER ALL CASCADES IN A SPIN (INCLUDING THE BASE GAME) END, THE [C2] MULTIPLIERS ON THE FINAL GRID ARE ADDED TOGETHER. ALL REGULAR-SYMBOL WINS FROM THAT SPIN ARE MULTIPLIED BY THE TOTAL. IF NO [C2] REMAINS, X{1} APPLIES. |
+
+---
+
+## FREE GAME FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
+| 規則說明 | 主遊戲的所有消除結束後，最終盤面出現 4 個或以上 [C1]，即可觸發 10 次免費遊戲。 | AFTER ALL BASE GAME CASCADES END, 4 OR MORE [C1] ON THE FINAL GRID TRIGGER 10 FREE GAMES. |
+| 規則說明 | 每組 10 次免費遊戲由 8 次一般免費遊戲與 2 次高階免費遊戲組成，實際出現順序會隨機排列。 | EACH SET OF 10 FREE GAMES CONSISTS OF 8 REGULAR FREE GAMES AND 2 HIGH-TIER FREE GAMES, PRESENTED IN RANDOM ORDER. |
+| 規則說明 | 免費遊戲的所有消除結束後，最終盤面出現 3 個或以上 [C1]，會增加 5 次免費遊戲，其中包含 4 次一般免費遊戲與 1 次高階免費遊戲。 | AFTER ALL CASCADES IN A FREE GAME END, 3 OR MORE [C1] ON THE FINAL GRID ADD 5 FREE GAMES, CONSISTING OF 4 REGULAR FREE GAMES AND 1 HIGH-TIER FREE GAME. |
+| 規則說明 | 單次免費遊戲特色最多進行 50 次免費遊戲。 | A SINGLE FREE GAME FEATURE IS CAPPED AT 50 FREE GAMES. |
+
+---
+
+## BET OPTIONS
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 投注模式 | BET OPTIONS |
+| 規則說明 | 一般投注的成本為目前選擇押注的 1x。 | NORMAL BET COSTS 1X THE CURRENTLY SELECTED BET. |
+| 規則說明 | 額外投注的成本為目前選擇押注的 1.25x，並使用提高特色觸發機會的專用盤帶設定。 | EXTRA BET COSTS 1.25X THE CURRENTLY SELECTED BET AND USES DEDICATED REEL SETTINGS WITH A HIGHER FEATURE CHANCE. |
+| 規則說明 | 購買特色的成本為目前選擇押注的 100x，並直接進入免費遊戲特色。 | FEATURE BUY COSTS 100X THE CURRENTLY SELECTED BET AND ENTERS THE FREE GAME FEATURE DIRECTLY. |
+| 規則說明 | 超級特色的成本為目前選擇押注的 500x，並直接進入使用強化倍數權重的免費遊戲特色。 | SUPER FEATURE COSTS 500X THE CURRENTLY SELECTED BET AND ENTERS A FREE GAME FEATURE WITH ENHANCED MULTIPLIER WEIGHTS. |
+
+---
+
+## GAME RULE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 遊戲規則 | GAME RULES |
+| 規則說明 | 選擇押注與投注模式後，按下 Spin 開始遊戲。 | SELECT A BET AND BET MODE, THEN PRESS SPIN TO PLAY. |
+| 規則說明 | 同一局形成多個得獎時，所有得獎金額會加總。 | WHEN MULTIPLE WINS OCCUR IN THE SAME ROUND, ALL WIN AMOUNTS ARE ADDED TOGETHER. |
+| 規則說明 | 遊戲發生故障時，所有賠付與遊戲均視為無效。 | MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+  </script>
+
+  <script>
+    const H013_CONFIG_FILES = ["config_92A.js"];   // 糖果狂歡 3 發想：只有一套（Card System 關）
+    const configFromQuery = (new URLSearchParams(window.location.search).get("config") || "").replace(/^config_(9\d)\.js$/, "config_$1A.js");   // 舊檔名 config_92A.js 自動對應
+    const H013_ACTIVE_CONFIG = H013_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H013_CONFIG_FILES[0];
+    // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）
+    document.write(`<script src="./config.js"><\/script><script src="./${H013_ACTIVE_CONFIG}"><\/script>`);
+  </script>
+  <script>
+    // 基礎欄位補進 RTP Config（識別與版本欄位以 RTP 為準）
+    if (window.H013_BOX_DATA && window.H013_BOX_DATA.base_config) {
+      window.H013_BOX_DATA = Object.assign({}, window.H013_BASE_DATA || {}, window.H013_BOX_DATA);
+      delete window.H013_BOX_DATA.base_config;
+    }
+  </script>
+  <script>
+(() => {
+  "use strict";
+
+  function adaptH013(raw) {
+    const symbolCodes = Object.keys(raw.symbol_str)
+      .map(Number)
+      .sort((left, right) => left - right)
+      .map((key) => raw.symbol_str[String(key)]);
+    const strips = raw.arr_reels.map((symbols, tableId) => {
+      const lengths = raw.reels_len[tableId];
+      const previous = Array(raw.reel_num).fill(0);
+      const weights = raw.arr_reels_weight_cum[tableId].map((row, rowIndex) =>
+        row.map((value, reel) => {
+          if (rowIndex >= lengths[reel]) return 0;
+          const weight = Math.max(0, Number(value) - previous[reel]);
+          previous[reel] = Number(value);
+          return weight;
+        })
+      );
+      return { symbols, weights, reel_lengths: lengths };
+    });
+    const activeMix = (block, mode) => {
+      const choices = block.free_spin_mix.filter((item) => Number(item.weights[mode]) > 0);
+      if (choices.length !== 1) throw new Error(`Parameter ${block.name}: invalid ${mode} free-spin mix`);
+      return choices[0];
+    };
+    const freeTable = (low, high, block, mode) => {
+      const mix = activeMix(block, mode);
+      return {
+      names: [raw.strip_name_map[low], raw.strip_name_map[high]],
+      initial: [mix.low, mix.high],
+      retrigger: [raw.retrigger_free_spins_low, raw.retrigger_free_spins_high]
+      };
+    };
+    const profile = (block, baseIds, baseWeights, freeLow, freeHigh, mode) => ({
+      base_reel_names: baseIds.map((id) => raw.strip_name_map[id]),
+      base_reel_weights: baseWeights,
+      free_table: freeTable(freeLow, freeHigh, block, mode),
+      c2_mode_weights: { base: [1, 0, 0], free: [1, 0, 0] },
+      multiplier_weights: block.multiplier_sources.map((source) => block.multiplier_weights[source])
+    });
+    const parameterSet = (block) => ({
+      normal: profile(block, [0, 1, 2], block.table_weights.normal, 7, 8, "normal"),
+      extrabet: profile(block, [4, 5, 6], block.table_weights.extrabet, 7, 8, "normal"),
+      featurebuy: profile(block, [3], [1], 9, 10, "featurebuy"),
+      superfeaturebuy: profile(block, [3], [1], 11, 12, "superfeaturebuy")
+    });
+    const parameterTables = {
+      A: parameterSet(raw.parameter_blocks.A),
+      B: parameterSet(raw.parameter_blocks.B)
+    };
+    return {
+      ...raw,
+      symbol_codes: symbolCodes,
+      strip_names: raw.strip_name_map,
+      strips,
+      max_free_spins: raw.max_spin_free_game,
+      model: raw.source_game_id,
+      excel_version: raw.game_version,
+      parameter: parameterTables.A,
+      parameter_tables: parameterTables
+    };
+  }
+
+  const Box = adaptH013(window.H013_BOX_DATA);
+  const DENOM = 0.002;
+  const INITIAL_BALANCE = 10000;
+  const BET_OPTIONS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
+  const MODE_NORMAL = Box.mode_normalbet;
+  const MODE_EXTRA = Box.mode_extrabet;
+  const MODE_BUY = Box.mode_featurebuy;
+  const MODE_SUPER = Box.mode_superfeaturebuy;
+  const WW = Box.symbol_codes.indexOf("WW");
+  const C1 = Box.symbol_codes.indexOf("C1");
+  const C2 = Box.symbol_codes.indexOf("C2");
+  const SYMBOL_IMAGE_FILES = Object.freeze({
+    C1: "C1_Symbol.webp",
+    C2: "C2_Symbol.webp",
+    M1: "M1_Symbol.webp",
+    M2: "M2_Symbol.webp",
+    M3: "M3_Symbol.webp",
+    M4: "M4_Symbol.webp",
+    A: "M5_Symbol.webp",
+    K: "M6_Symbol.webp",
+    Q: "M7_Symbol.webp",
+    J: "M8_Symbol.webp",
+    TE: "M9_Symbol.webp"
+  });
+  window.H013_SYMBOL_IMAGE_FILES = SYMBOL_IMAGE_FILES;
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_IMAGE_FILES).map(([c, f]) => [c, `./Source/Image/${f}`]));   // Help 賠率表符號圖（共用 demogame_common.js）
+  const DISPLAY_SYMBOL_IDS = Box.symbol_codes
+    .map((code, symbol) => ({ code, symbol }))
+    .filter((item) => Boolean(SYMBOL_IMAGE_FILES[item.code]))
+    .map((item) => item.symbol);
+  const symbolImageSource = (code) => {
+    const filename = SYMBOL_IMAGE_FILES[code];
+    return filename ? `./Source/Image/${filename}` : "";
+  };
+  const PROFILE_NAMES = {
+    [MODE_NORMAL]: "normal",
+    [MODE_EXTRA]: "extrabet",
+    [MODE_BUY]: "featurebuy",
+    [MODE_SUPER]: "superfeaturebuy"
+  };
+  const LANGUAGE_STORAGE_KEY = "slotDemoLanguage";
+  const UI_TEXT = {
+    en: {
+      gameName: "Sugar Bonanza 3", baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
+      superFeature: "Super Feature", cascade: "Cascade", multiplier: "Mult", fgLeft: "FG Left", credit: "Credit",
+      bet: "Bet", win: "Win", stats: "Simulation Stats", rounds: "Total Rounds", hitRate: "Hit Rate",
+      maxMultiplier: "Max Multiplier", play: "Play", spin: "Spin", auto: "Auto", stop: "Stop", speed: "Speed",
+      betMode: "Bet Mode", normalBet: "Normal Bet", debugMode: "Debug Mode", forceFg: "Force FG", setting: "Setting",
+      language: "Language", help: "Help", reset: "Reset", spinResult: "Spin Result",
+      clusterWins: "Cluster Wins", clear: "Clear", close: "Close", loading: "Loading game rules...",
+      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No cluster win", pay: "Pay"
+    },
+    zh: {
+      gameName: "糖果狂歡 3", baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
+      superFeature: "超級特色", cascade: "連消", multiplier: "倍數", fgLeft: "FG 剩餘", credit: "餘額",
+      bet: "押注", win: "得分", stats: "模擬統計", rounds: "總局數", hitRate: "中獎率",
+      maxMultiplier: "最高倍數", play: "遊戲", spin: "Spin", auto: "自動", stop: "停止", speed: "速度",
+      betMode: "押注模式", normalBet: "一般押注", debugMode: "除錯模式", forceFg: "強制 FG", setting: "設定",
+      language: "語言", help: "Help", reset: "重置", spinResult: "Spin 結果",
+      clusterWins: "Cluster 得獎", clear: "清除", close: "關閉", loading: "正在載入遊戲規則…",
+      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Cluster 得獎", pay: "得分"
+    }
+  };
+  function savedLanguage() {
+    try { return localStorage.getItem(LANGUAGE_STORAGE_KEY) === "zh" ? "zh" : "en"; } catch (_) { return "en"; }
+  }
+  const state = {
+    language: savedLanguage(),
+    balance: INITIAL_BALANCE,
+    totalBet: 0,
+    totalWin: 0,
+    roundCount: 0,
+    hitCount: 0,
+    fgTriggerCount: 0,
+    maxMultiplier: 0,
+    betIndex: 0,
+    selectedMode: MODE_NORMAL,
+    speed: 1,
+    busy: false,
+    auto: false,
+    autoTimer: null,
+    lastWin: 0,
+    winDisplay: null,
+    cardMode: "off",
+    cardProfileUsed: "off",
+    cardRetries: 0,
+    pendingFg: null,
+    replayRound: null,   // RNG 重跑局：{ restoreMode }，該局（含 FG）結束後還原押注模式
+    snapshots: [],
+    snapshotIndex: -1,
+    lastSpin: null
+  };
+
+  const byId = (id) => document.getElementById(id);
+  const el = {
+    board: byId("board"),
+    message: byId("messageBar"),
+    mode: byId("modeText"),
+    featureStatus: byId("featureStatus"),
+    cascade: byId("carryMultiValue"),
+    multiplier: byId("spinMultiValue"),
+    fgPill: byId("fgLeftPill"),
+    fgLeft: byId("fgLeftValue"),
+    balance: byId("balanceValue"),
+    bet: byId("betValue"),
+    win: byId("winValue"),
+    rounds: byId("roundCountValue"),
+    rtp: byId("rtpValue"),
+    hitRate: byId("hitRateValue"),
+    fgTriggers: byId("fgTriggerValue"),
+    maxMultiplier: byId("maxMultiplierValue"),
+    spin: byId("spinBtn"),
+    auto: byId("autoBtn"),
+    normal: byId("normalBetBtn"),
+    extra: byId("extraBetBtn"),
+    buy: byId("buyFeatureBtn"),
+    super: byId("superFeatureBtn"),
+    betButton: byId("betBtn"),
+    betMinus: byId("betMinusBtn"),
+    betPlus: byId("betPlusBtn"),
+    betMenu: byId("betMenu"),
+    speed: byId("speedRange"),
+    speedValue: byId("speedValue"),
+    config: byId("configSelect"),
+    debug: byId("debugModeInput"),
+    forceFg: byId("forceFgInput"),
+    previous: byId("previousStepBtn"),
+    next: byId("nextStepBtn"),
+    rngInput: byId("rngInput"),
+    cardRange: byId("cardRangeSelect"),
+    rngReset: byId("setRngResetBtn"),
+    lineList: byId("lineList"),
+    resultList: byId("spinResultList"),
+    liveLog: byId("liveLogBody"),
+    clearLog: byId("clearLogBtn"),
+    reset: byId("resetBtn"),
+    help: byId("helpBtn"),
+    helpDialog: byId("helpDialog"),
+    closeHelp: byId("closeHelpBtn")
+  };
+  el.language = byId("languageSelect");
+  el.helpContent = byId("helpContent");
+  el.helpFrame = byId("helpFrame");
+  el.embeddedHelp = byId("embeddedGameHelpMarkdown");
+
+  const t = (key) => UI_TEXT[state.language][key] || UI_TEXT.en[key] || key;
+  const tr = (english, chinese) => state.language === "zh" ? chinese : english;
+
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(18, ms / state.speed)));
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const randomIndex = (length) => Math.floor(Math.random() * length);
+  const money = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const compactMoney = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const formatBetMoney = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const toMoney = (credit) => Number(credit) * DENOM;
+
+  function setText(node, value) {
+    if (node) node.textContent = value;
+  }
+
+  function pickWeighted(weights) {
+    const safe = weights.map((value) => Math.max(0, Number(value) || 0));
+    const total = safe.reduce((sum, value) => sum + value, 0);
+    if (total <= 0) return 0;
+    let target = Math.random() * total;
+    for (let index = 0; index < safe.length; index += 1) {
+      target -= safe[index];
+      if (target < 0) return index;
+    }
+    return safe.length - 1;
+  }
+
+  function pickCard(cards) {
+    if (!Array.isArray(cards) || !cards.length) return null;
+    return cards[pickWeighted(cards.map((card) => card.weight))] || null;
+  }
+
+  function cardSystemActive() {
+    return Boolean(Box.card_system?.enabled) && state.cardMode !== "off";
+  }
+
+  // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+  // RNG 碼：<Config>/<NB|EB|BF|SF>/<on|off>/-/<種子>；本作無額外選項（Card Profile 由 Config 決定）。
+  const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF", [MODE_SUPER]: "SF" };
+  const RNG_MODE_FROM_CODE = { NB: MODE_NORMAL, EB: MODE_EXTRA, BF: MODE_BUY, SF: MODE_SUPER };
+  function rngConfigLabel() {
+    return (byId("demogameConfigSelect")?.selectedOptions?.[0]?.textContent || el.config?.selectedOptions?.[0]?.textContent || Box.model || "H013").trim().replace(/\s+/g, "");
+  }
+
+  function cardModeKey(mode) {
+    return mode === MODE_EXTRA ? "extra_bet" : "normal_bet";
+  }
+
+  function prepareCardSelection(mode) {
+    if (!cardSystemActive()) return null;
+    const cards = Box.card_system;
+    if (mode === MODE_BUY) {
+      return { kind: "package", profile: "oldhand", card: pickCard(cards.oldhand?.buy_feature?.weight_fg) };
+    }
+    if (mode === MODE_SUPER) {
+      return { kind: "package", profile: "oldhand", card: pickCard(cards.oldhand?.super_feature?.weight_fg) };
+    }
+    const player = state.cardMode === "newbie" ? "newbie" : "oldhand";
+    const modeCards = cards[player]?.[cardModeKey(mode)] || {};
+    const bgCard = pickCard(modeCards.weight_bg);
+    return bgCard?.type === "free_game"
+      ? { kind: "free_game", profile: player, bgCard, fgCard: pickCard(modeCards.weight_fg) }
+      : { kind: "base", profile: player, card: bgCard };
+  }
+
+  function cardMatches(card, score, triggeredFreeGame) {
+    if (!card) return true;
+    if (card.type === "free_game") return triggeredFreeGame;
+    const cardCoinIn = Box.default_coin_in * Box.normalbet * betMultiplier();
+    const multiplier = cardCoinIn > 0 ? score / cardCoinIn : 0;
+    return multiplier > Number(card.min || 0) && multiplier <= Number(card.max || 0);
+  }
+
+  function cardAccepts(selection, candidate) {
+    if (!selection) return true;
+    if (selection.kind === "package") {
+      return cardMatches(selection.card, candidate.totalPay, candidate.triggered);
+    }
+    if (selection.kind === "free_game") {
+      return candidate.triggered && cardMatches(selection.fgCard, candidate.freePay, true);
+    }
+    return !candidate.triggered && cardMatches(selection.card, candidate.base.finalPay, false);
+  }
+
+  function writeMessage(text, type = "") {
+    setText(el.message, text);
+    el.message.className = `message-bar ${type}`;   // 訊息列只顯示（By Game），不寫 Log
+  }
+
+  // Log 一律走共用 window.demogameLog（行格式同 H045）；共用檔在本 script 之後載入，之前的行先排隊、載入後補寫
+  const pendingLog = [];
+  function appendLog(text, type = "info") {
+    if (window.demogameLog) window.demogameLog(text, type);
+    else pendingLog.push([text, type]);
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    pendingLog.splice(0).forEach(([text, type]) => window.demogameLog?.(text, type));
+  });
+  const LOG_MODE_NAMES = {
+    [MODE_NORMAL]: "Normal Bet",
+    [MODE_EXTRA]: "Extra Bet",
+    [MODE_BUY]: "Buy Feature",
+    [MODE_SUPER]: "Super Feature"
+  };
+  const cascadeCount = (spin) => spin.steps.filter((step) => step.wins?.length).length;
+  const spinLogFields = (spin) => `${spin.tableName} | Cascade ${cascadeCount(spin)} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`;
+
+  function parameterName(value) {
+    return String(value || "A").trim().toUpperCase() === "B" ? "B" : "A";
+  }
+
+  function currentProfile(selectedParameter = "A") {
+    return Box.parameter_tables[parameterName(selectedParameter)][PROFILE_NAMES[state.selectedMode]];
+  }
+
+  function betMoney() {
+    return BET_OPTIONS[state.betIndex];
+  }
+
+  function betMultiplier() {
+    return betMoney() / (Box.default_coin_in * DENOM * Box.normalbet);
+  }
+
+  function wagerMoney() {
+    const modeCost = state.selectedMode === MODE_BUY
+      ? Box.featurebuy
+      : state.selectedMode === MODE_SUPER
+        ? Box.superfeaturebuy
+        : state.selectedMode === MODE_EXTRA
+          ? Box.extrabet
+          : Box.normalbet;
+    return betMoney() * modeCost;
+  }
+
+  function tableIndex(name) {
+    return Box.strip_names.indexOf(name);
+  }
+
+  function chooseBaseTable(selectedParameter = "A") {
+    const profile = currentProfile(selectedParameter);
+    const selected = pickWeighted(profile.base_reel_weights);
+    return tableIndex(profile.base_reel_names[selected]);
+  }
+
+  function generateBoard(tableId) {
+    const strip = Box.strips[tableId];
+    const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+    const fromWild = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(false));
+    const starts = [];
+    const drops = Array(Box.reel_num).fill(0);
+
+    for (let reel = 0; reel < Box.reel_num; reel += 1) {
+      const length = strip.reel_lengths[reel];
+      const weights = strip.weights.slice(0, length).map((row) => row[reel]);
+      const start = pickWeighted(weights);
+      starts.push(start);
+      for (let row = 0; row < Box.window_size; row += 1) {
+        board[row][reel] = strip.symbols[(start + row) % length][reel];
+      }
+    }
+    return { tableId, board, fromWild, starts, drops };
+  }
+
+  function evaluateClusters(board) {
+    const flat = board.flat();
+    const wildCount = 0;
+    const wins = [];
+    const hitPositions = [];
+    let pay = 0;
+
+    for (let symbol = 0; symbol < Box.symbol_codes.length; symbol += 1) {
+      if (symbol === WW || symbol === C1 || symbol === C2) continue;
+      const count = flat.filter((item) => item === symbol).length + wildCount;
+      const payIndex = count >= 12 ? 5 : count >= 10 ? 4 : count >= 8 ? 3 : -1;
+      if (payIndex < 0) continue;
+      const symbolPay = (Box.pay_table[symbol][payIndex] || 0) * betMultiplier();
+      wins.push({ symbol, count, pay: symbolPay });
+      pay += symbolPay;
+      for (let row = 0; row < Box.window_size; row += 1) {
+        for (let reel = 0; reel < Box.reel_num; reel += 1) {
+          if (board[row][reel] === symbol || board[row][reel] === WW) hitPositions.push([row, reel]);
+        }
+      }
+    }
+    return { wins, hitPositions, pay };
+  }
+
+  function applyCascade(spin, wins, scene, c2Mode, selectedParameter) {
+    const winningSymbols = new Set(wins.map((win) => win.symbol));
+    const strip = Box.strips[spin.tableId];
+    // 四角符號得分 → 四角補出 C2（本轉只觸發一次）
+    let cornerTrigger = null;
+    if (!spin.corner.triggered && winningSymbols.has(spin.corner.symbol)) {
+      spin.corner.triggered = true;
+      cornerTrigger = CORNERS.map(([row, reel]) => {
+        const value = drawCornerC2Value(scene, spin.tableId, selectedParameter);
+        spin.board[row][reel] = C2;
+        spin.c2Values[row][reel] = value;
+        spin.fromWild[row][reel] = false;
+        return { row, reel, value };
+      });
+    }
+
+    for (let reel = 0; reel < Box.reel_num; reel += 1) {
+      const kept = [];
+      const keptWild = [];
+      const keptC2Values = [];
+      const openRows = [];   // 非四角的格子（由下往上），掉落只在這些格子間進行
+      let hasScatter = false;
+      let hasMultiplier = false;
+      for (let row = Box.window_size - 1; row >= 0; row -= 1) {
+        const symbol = spin.board[row][reel];
+        if (symbol === C1) hasScatter = true;
+        if (symbol === C2) hasMultiplier = true;
+        if (isCorner(row, reel)) continue;
+        openRows.push(row);
+        if (!winningSymbols.has(symbol)) {
+          kept.push(symbol);
+          keptWild.push(spin.fromWild[row][reel]);
+          keptC2Values.push(symbol === C2 ? spin.c2Values[row][reel] : 0);
+        }
+      }
+
+      let slot = 0;
+      for (let index = 0; index < kept.length; index += 1) {
+        const row = openRows[slot++];
+        spin.board[row][reel] = kept[index];
+        spin.fromWild[row][reel] = keptWild[index];
+        spin.c2Values[row][reel] = keptC2Values[index];
+      }
+
+      const length = strip.reel_lengths[reel];
+      while (slot < openRows.length) {
+        const row = openRows[slot++];
+        spin.drops[reel] += 1;
+        let stripIndex = (spin.starts[reel] - spin.drops[reel] + length) % length;
+        let symbol = strip.symbols[stripIndex][reel];
+        while ((symbol === C1 && hasScatter) || (symbol === C2 && hasMultiplier)) {
+          spin.drops[reel] += 1;
+          stripIndex = (spin.starts[reel] - spin.drops[reel] + length) % length;
+          symbol = strip.symbols[stripIndex][reel];
+        }
+        if (symbol === C1) hasScatter = true;
+        if (symbol === C2) hasMultiplier = true;
+        spin.board[row][reel] = symbol;
+        spin.fromWild[row][reel] = false;
+        spin.c2Values[row][reel] = symbol === C2 ? drawC2Value(scene, spin.tableId, selectedParameter) : 0;
+      }
+    }
+    return cornerTrigger;
+  }
+
+  function drawC2Value(scene, tableId, selectedParameter) {
+    if (scene !== "FG") return 0;
+    const tableToWeight = new Map([[7, 0], [8, 1], [9, 2], [10, 3], [11, 4], [12, 5]]);
+    const weightIndex = tableToWeight.get(tableId) ?? 0;
+    const weights = currentProfile(selectedParameter).multiplier_weights[weightIndex];
+    return Box.value_multiplier[pickWeighted(weights)] || 0;
+  }
+
+  function chooseC2Mode(scene, selectedParameter) {
+    const profile = currentProfile(selectedParameter);
+    const modeWeights = profile.c2_mode_weights[scene === "FG" ? "free" : "base"];
+    return pickWeighted(modeWeights);
+  }
+
+  function initializeC2Values(spin, scene, c2Mode, selectedParameter) {
+    spin.c2Values = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        if (spin.board[row][reel] === C2) {
+          spin.c2Values[row][reel] = drawC2Value(scene, spin.tableId, selectedParameter);
+        }
+      }
+    }
+  }
+
+  function summarizeC2Values(spin, c2Mode) {
+    let total = 0;
+    let count = 0;
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        if (spin.board[row][reel] !== C2) continue;
+        const value = spin.c2Values[row][reel];
+        total += value;
+        count += 1;
+      }
+    }
+    return { values: clone(spin.c2Values), total, count, mode: c2Mode };
+  }
+
+  function scatterPay(count) {
+    if (count < 4 || count > 6) return 0;
+    return (Box.pay_table[C1][count - 4] || 0) * betMultiplier();
+  }
+
+  // ===== 四角特殊區域（糖果狂歡 3，game_rule §5.2～§5.4）=====
+  // 四角每把同一種一般符號（依本轉輪帶的符號權重抽）；四角不參與掉落，消除後只補回四角符號。
+  // 四角符號得分（四角同時消除）→ 四角各補 1 個 C2（BG 用 FG 低表倍數權重、FG 用該局倍數權重），留到本轉結束、不再觸發。
+  const isCorner = (row, reel) => (row === 0 || row === Box.window_size - 1) && (reel === 0 || reel === Box.reel_num - 1);
+  const CORNERS = [[0, 0], [0, Box.reel_num - 1], [Box.window_size - 1, 0], [Box.window_size - 1, Box.reel_num - 1]];
+  function pickCornerSymbol(tableId) {
+    const strip = Box.strips[tableId];
+    const totals = new Map();
+    for (let reel = 0; reel < Box.reel_num; reel += 1) {
+      for (let index = 0; index < strip.reel_lengths[reel]; index += 1) {
+        const symbol = strip.symbols[index][reel];
+        if (symbol === WW || symbol === C1 || symbol === C2) continue;
+        totals.set(symbol, (totals.get(symbol) || 0) + (strip.weights[index][reel] || 0));
+      }
+    }
+    const symbols = [...totals.keys()];
+    return symbols[pickWeighted(symbols.map((symbol) => totals.get(symbol)))];
+  }
+  function drawCornerC2Value(scene, tableId, selectedParameter) {
+    if (scene === "FG") return drawC2Value(scene, tableId, selectedParameter);
+    const own = Box.corner_c2_bg;   // config 有給 BG 四角倍數表就用（values／weights），否則沿用 FG 低表
+    if (own?.values?.length) return Number(own.values[pickWeighted(own.weights)]) || 0;
+    const weights = currentProfile(selectedParameter).multiplier_weights[0];
+    return Box.value_multiplier[pickWeighted(weights)] || 0;
+  }
+
+  function playSpin(tableId, scene, selectedParameter = "A") {
+    selectedParameter = parameterName(selectedParameter);
+    const spin = generateBoard(tableId);
+    spin.corner = { symbol: pickCornerSymbol(tableId), triggered: false };
+    CORNERS.forEach(([row, reel]) => { spin.board[row][reel] = spin.corner.symbol; });
+    const c2Mode = chooseC2Mode(scene, selectedParameter);
+    initializeC2Values(spin, scene, c2Mode, selectedParameter);
+    const initialBoard = clone(spin.board);
+    const initialC2Values = clone(spin.c2Values);
+    const steps = [];
+    let rawPay = 0;
+
+    let index = 0;
+    while (true) {
+      const evaluated = evaluateClusters(spin.board);
+      if (!evaluated.wins.length) break;
+      const before = clone(spin.board);
+      const beforeC2Values = clone(spin.c2Values);
+      rawPay += evaluated.pay;
+      const cornerTrigger = applyCascade(spin, evaluated.wins, scene, c2Mode, selectedParameter);
+      steps.push({
+        cornerTrigger,
+        cascadeIndex: index + 1,
+        before,
+        after: clone(spin.board),
+        beforeC2Values,
+        afterC2Values: clone(spin.c2Values),
+        hitPositions: evaluated.hitPositions,
+        wins: evaluated.wins,
+        pay: evaluated.pay
+      });
+      index += 1;
+    }
+
+    const c2 = summarizeC2Values(spin, c2Mode);
+    const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
+    const scatterWin = scatterPay(scatterCount);
+    const effectiveMultiplier = Math.max(1, c2.total);   // BG 也乘（BG 的 C2 只來自四角）
+    const finalPay = rawPay * (effectiveMultiplier || 1) + scatterWin;
+    return {
+      scene,
+      selectedParameter,
+      tableId,
+      tableName: Box.strip_names[tableId],
+      initialBoard,
+      initialC2Values,
+      cornerSymbol: spin.corner.symbol,
+      cornerTriggered: spin.corner.triggered,
+      finalBoard: clone(spin.board),
+      starts: spin.starts,
+      steps,
+      c2,
+      scatterCount,
+      scatterWin,
+      rawPay,
+      effectiveMultiplier,
+      finalPay
+    };
+  }
+
+  function buildFreeSchedule(kind, selectedParameter = "A") {
+    const freeTable = currentProfile(selectedParameter).free_table;
+    const schedule = [];
+    freeTable[kind].forEach((count, index) => {
+      const selectedTable = tableIndex(freeTable.names[index]);
+      for (let repeat = 0; repeat < count; repeat += 1) schedule.push(selectedTable);
+    });
+    for (let index = schedule.length - 1; index > 0; index -= 1) {
+      const selected = randomIndex(index + 1);
+      [schedule[index], schedule[selected]] = [schedule[selected], schedule[index]];
+    }
+    return schedule;
+  }
+
+  function symbolCell(symbol, value = 0) {
+    const code = Box.symbol_codes[symbol] || "?";
+    return { symbol, code, glyph: code, value };
+  }
+
+  function boardCells(board, values = null) {
+    return board.map((row, rowIndex) => row.map((symbol, reelIndex) => symbolCell(symbol, values?.[rowIndex]?.[reelIndex] || 0)));
+  }
+
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    // 開局前由 demogame_common.js 預載並解碼（Demogame規範 圖片預載）
+    images: Object.keys(SYMBOL_IMAGE_FILES).map(symbolImageSource),
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(lastBoardRender.board, { hitPositions: lastBoardRender.options.hitPositions });
+    }
+  };
+
+  // 補牌落下到位時間：照實機影片量測（Speed 1 為 230ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  function refillMs() { return Math.max(40, Math.round(230 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
+  function renderBoard(board, options = {}) {
+    lastBoardRender = { board, options };
+    const hitSet = new Set((options.hitPositions || []).map(([row, reel]) => `${row}-${reel}`));
+    const clearedSet = new Set((options.clearedPositions || []).map(([row, reel]) => `${row}-${reel}`));
+    el.board.innerHTML = "";
+    board.forEach((row, rowIndex) => row.forEach((cell, reelIndex) => {
+      const node = document.createElement("div");
+      const dropMotion = options.dropMotion?.[`${rowIndex}-${reelIndex}`];
+      const special = cell.code === "C1" ? "h019-scatter" : cell.code === "C2" ? "h019-c2" : "";
+      const symbolClass = `symbol-${cell.code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
+      node.className = `cell ${isCorner(rowIndex, reelIndex) ? "tc3-corner" : ""} ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${clearedSet.has(`${rowIndex}-${reelIndex}`) ? "symbol-cleared" : ""} ${dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : ""} ${options.spinning ? "reel-spin" : ""}`;
+      if (dropMotion) {
+        node.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
+        node.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片
+        // 由下往上逐顆錯開（最下面那顆先落），每顆再加一點隨機錯開，像實機那樣不整齊落下（Speed 5 不錯開）
+        const dropStep = refillMs() * 0.1;
+        const jitter = (window.demogameMotion?.level() ?? 1) < 5 ? Math.random() * dropStep : 0;
+        node.style.setProperty("--drop-delay", dropMotion.type === "new" ? `${Math.round((dropMotion.rows - 1 - rowIndex) * dropStep + jitter)}ms` : "0ms");
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "symbol-wrap";
+      const glyph = document.createElement("span");
+      glyph.className = "h019-glyph";
+      glyph.textContent = cell.glyph;
+      const imageSource = useSymbolImages ? symbolImageSource(cell.code) : "";
+      if (imageSource) {
+        glyph.hidden = true;
+        node.classList.add("has-symbol-art");
+        const image = document.createElement("img");
+        image.className = "h013-symbol-image";
+        image.src = imageSource;
+        image.alt = cell.code;
+        image.draggable = false;
+        image.addEventListener("error", () => {
+          image.remove();
+          glyph.hidden = false;
+          node.classList.remove("has-symbol-art");
+        }, { once: true });
+        wrap.appendChild(image);
+      }
+      wrap.appendChild(glyph);
+      node.appendChild(wrap);
+      const code = document.createElement("div");
+      code.className = "symbol-code";
+      code.textContent = cell.code;
+      node.appendChild(code);
+      if (cell.value > 0) {
+        const multiplier = document.createElement("div");
+        multiplier.className = "multiplier-badge";
+        multiplier.textContent = `x${cell.value}`;
+        node.appendChild(multiplier);
+      }
+      el.board.appendChild(node);
+    }));
+  }
+
+  function sampleBoard() {
+    return Array.from({ length: Box.window_size }, () =>
+      Array.from({ length: Box.reel_num }, () => symbolCell(DISPLAY_SYMBOL_IDS[randomIndex(DISPLAY_SYMBOL_IDS.length)]))
+    );
+  }
+
+  // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
+  // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
+  // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
+  async function reelStripSpin(board, columns) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const pool = columns.flat().filter(Boolean);
+    if (!board || !pool.length) return;
+    const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyCell = (node, width, height, x, y) => {
+      const copy = node.cloneNode(true);
+      copy.classList.remove(...dropClasses);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+      return copy;
+    };
+    const offsetIn = (node, host) => {
+      let x = 0, y = 0, n = node;
+      while (n && n !== host) {
+        x += n.offsetLeft; y += n.offsetTop;
+        n = n.offsetParent;
+        if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+      }
+      return { x, y };
+    };
+    const windows = [];
+    const jobs = columns.map((list, reel) => {
+      const cells = (list || []).filter(Boolean);
+      if (!cells.length) return Promise.resolve();
+      const ms = spinMs + gapMs * reel;
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
+      const hostRect = host.getBoundingClientRect();
+      const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
+      const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到
+      const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+      const last = boxes[boxes.length - 1];
+      const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
+      const strip = document.createElement("div");
+      strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+      boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      for (let k = 1; k <= extra; k += 1) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
+      }
+      win.appendChild(strip);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+      // 停輪前多往下滾 18% 格高再回彈到正確位置（同 H020）；最上面墊一格，回彈時不露出空白
+      const above = pool[Math.floor(Math.random() * pool.length)];
+      strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+      strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
+      const anim = strip.animate([
+        { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: ms, fill: "both" });
+      return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    pool.forEach((cell) => { cell.style.visibility = ""; });
+  }
+
+  // 掉落式 Spin（照 H027 宙斯 2500 實機效果，2026-11-04）：由左到右逐輪錯開。每輪舊符號逐顆往下掉出（最下排先掉），
+  // 該輪掉完後新符號逐顆從上方掉入（最下排先落定），由左到右依序停。時間依 demogameMotion（Speed 5 不隨機錯開），只做畫面，不動結果。
+  async function zeusDropSpin(columnsOf, render) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const calm = (motion?.level() ?? 1) >= 5;
+    const board = el.board;
+    const probe = document.createElement("div");
+    probe.style.position = "absolute";
+    board.appendChild(probe);
+    const host = probe.offsetParent || document.body;
+    probe.remove();
+    const rectIn = (node) => {
+      const r = node.getBoundingClientRect(), h = host.getBoundingClientRect();
+      return { x: r.left - h.left - host.clientLeft + host.scrollLeft, y: r.top - h.top - host.clientTop + host.scrollTop, w: r.width, h: r.height };
+    };
+    const strip = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyOf = (cell, box) => {
+      const copy = cell.cloneNode(true);
+      copy.classList.remove(...strip);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;box-sizing:border-box;animation:none;transition:none;visibility:visible;will-change:transform`;
+      return copy;
+    };
+    const oldCopies = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean).map((cell) => { const box = rectIn(cell); return { box, node: copyOf(cell, box) }; }));
+    render();
+    const newCols = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean));
+    const all = newCols.flat();
+    if (!all.length) return;
+    const boxes = all.map(rectIn);
+    const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));
+    const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+    const height = bottom - top;
+    const win = document.createElement("div");
+    win.className = "dg-reel-window";
+    win.style.cssText = `position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent;left:${left}px;top:${top}px;width:${right - left}px;height:${height}px`;
+    board.appendChild(win);
+    const gapMs = motion ? motion.stopStaggerMs() : 80;   // 輪與輪由左到右錯開（Speed 5 為 0，同時停）
+    const rowStep = spinMs * 0.07;               // 同一輪相鄰兩排的錯開
+    const jitter = () => (calm ? 0 : Math.random() * spinMs * 0.05);   // 每顆的小幅隨機錯開
+    const fallMs = Math.max(90, spinMs * 0.38);  // 舊符號掉出
+    const landMs = Math.max(120, spinMs * 0.42); // 新符號落下
+    const anims = [];
+    const old0Len = () => (oldCopies[0] || []).length || 1;
+    let outEnd = 0;
+    oldCopies.forEach((list, col) => list.forEach((o, i) => {
+      o.node.style.left = `${o.box.x - left}px`;
+      o.node.style.top = `${o.box.y - top}px`;
+      win.appendChild(o.node);
+      const delay = col * gapMs + (list.length - 1 - i) * rowStep + jitter();
+      outEnd = Math.max(outEnd, delay + fallMs);
+      anims.push(o.node.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }],
+        { duration: fallMs, delay, easing: "cubic-bezier(.55,0,1,.6)", fill: "both" }));
+    }));
+    const inStart = Math.max(90, spinMs * 0.38) + (old0Len() - 1) * rowStep;   // 第 1 輪舊符號掉完才開始掉新符號；之後每輪再錯開 gapMs
+    newCols.forEach((cells, col) => cells.forEach((cell, i) => {
+      const b = rectIn(cell);
+      const copy = copyOf(cell, { ...b, x: b.x - left, y: b.y - top });
+      win.appendChild(copy);
+      cell.style.visibility = "hidden";
+      const dist = b.y - top + b.h + 20;
+      anims.push(copy.animate([
+        { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.8,.6)" },
+        { transform: `translateY(0px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: landMs, delay: inStart + col * gapMs + (cells.length - 1 - i) * rowStep + jitter(), fill: "both" }));
+    }));
+    await Promise.race([Promise.all(anims.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, inStart + spinMs * 2 + 1500))]);
+    all.forEach((cell) => { cell.style.visibility = ""; });
+    win.remove();
+  }
+
+  async function animateReels(spin) {
+    // 掉落式 Spin（2026-11-04 改照 H027 宙斯 2500 實機，原為共用 demogameMotion.dropSpin 整欄掉落）
+    const columnsOf = () => {
+      const nodes = Array.from(el.board.children).filter((node) => node.classList.contains("cell"));
+      return Array.from({ length: Box.reel_num }, (_, reel) =>
+        Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
+    };
+    const render = () => renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
+    if (!el.board.querySelector(".cell")) { render(); return; }
+    await zeusDropSpin(columnsOf, render);
+  }
+
+  function updateFeatureBar(spin = null) {
+    const inFg = spin?.scene === "FG" || Boolean(state.pendingFg);
+    document.body.classList.toggle("fg-mode", inFg);
+    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : state.selectedMode === MODE_EXTRA ? tr("Extra Bet", "額外押注") : t("baseGame"));
+    setText(el.cascade, String(spin?.steps.length || 0));
+    const multiplier = spin?.scene === "FG" ? spin.effectiveMultiplier : 1;
+    setText(el.multiplier, `x${multiplier || 1}`);
+    el.fgPill.classList.toggle("hidden", !state.pendingFg);
+    if (state.pendingFg) {
+      setText(el.fgLeft, `${Math.max(0, state.pendingFg.total - state.pendingFg.played)}/${state.pendingFg.total}`);
+    }
+    setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
+  }
+
+  function renderClusterWins(spin) {
+    el.lineList.innerHTML = "";
+    const allWins = spin.steps.flatMap((step) => step.wins.map((win) => ({ ...win, cascadeIndex: step.cascadeIndex })));
+    if (!allWins.length) {
+      el.lineList.innerHTML = `<div class="line-row"><span>${t("noWin")}</span><span>${t("pay")} 0.00</span></div>`;
+      return;
+    }
+    allWins.forEach((win) => {
+      const row = document.createElement("div");
+      row.className = "line-row";
+      row.innerHTML = `<span>C${win.cascadeIndex} | ${Box.symbol_codes[win.symbol]} × ${win.count}</span><span>${money(toMoney(win.pay))}</span>`;
+      el.lineList.appendChild(row);
+    });
+  }
+
+  function boardText(board) {
+    return board.map((row) => row.map((symbol) => Box.symbol_codes[symbol].padStart(2, " ")).join(" ")).join("\n");
+  }
+
+  function renderResultStages(spin) {
+    el.resultList.innerHTML = "";
+    const stages = [{ label: "Initial", board: spin.initialBoard, meta: `${spin.scene} | ${spin.tableName}` }];
+    spin.steps.forEach((step) => stages.push({ label: `Cascade ${step.cascadeIndex}`, board: step.after, meta: `Pay ${money(toMoney(step.pay))}` }));
+    stages.push({ label: "Final", board: spin.finalBoard, meta: `C1 ${spin.scatterCount} | C2 x${spin.c2.total} | Win ${money(toMoney(spin.finalPay))}` });
+    stages.forEach((stage) => {
+      const row = document.createElement("div");
+      row.className = "spin-result-row";
+      row.innerHTML = `<div><strong>${stage.label}</strong><span>${stage.meta}</span></div><pre>${boardText(stage.board)}</pre>`;
+      el.resultList.appendChild(row);
+    });
+  }
+
+  function captureSnapshots(spin, winBase = 0) {
+    // win：該步的累計得分（與 playback 即時顯示同一基準），只供 Previous／Next 顯示用
+    const stopMsg = [tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`), ""];   // 訊息列文字同 playback（Previous／Next 還原用）
+    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialC2Values), hits: [], win: winBase, msg: stopMsg }];
+    let stepPaySum = 0;
+    spin.steps.forEach((step) => {
+      const msg = [tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win"];
+      stepPaySum += Number(step.pay) || 0;
+      const win = winBase + toMoney(stepPaySum);
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeC2Values), hits: step.hitPositions, win, msg });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterC2Values), hits: [], win, msg });
+    });
+    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.c2.values), hits: [], win: winBase + toMoney(spin.finalPay), msg: [tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : ""] });
+    state.snapshotIndex = state.snapshots.length - 1;
+    updateDebugButtons();
+  }
+
+  function showSnapshot(index) {
+    if (!state.snapshots.length) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    const snapshot = state.snapshots[state.snapshotIndex];
+    renderBoard(snapshot.board, { hitPositions: snapshot.hits });
+    if (Number.isFinite(snapshot.win)) setText(el.win, money(snapshot.win));   // 只改 Win 顯示，不動 lastWin／Credit／統計
+    if (snapshot.msg) writeMessage(...snapshot.msg);   // 訊息列跟著該步變化（同即時播放）
+    updateDebugButtons();
+  }
+
+  function updateDebugButtons() {
+    const enabled = el.debug.checked && !state.busy && state.snapshots.length > 0;
+    el.previous.disabled = !enabled || state.snapshotIndex <= 0;
+    el.next.disabled = !enabled || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  function updateStats() {
+    setText(el.balance, money(state.balance));
+    setText(el.bet, formatBetMoney(wagerMoney()));
+    setText(el.win, money(state.winDisplay ?? state.lastWin));
+    setText(el.rounds, String(state.roundCount));
+    setText(el.rtp, state.totalBet > 0 ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%");
+    setText(el.hitRate, state.roundCount > 0 ? `${(state.hitCount / state.roundCount * 100).toFixed(2)}%` : "0.00%");
+    setText(el.fgTriggers, String(state.fgTriggerCount));
+    setText(el.maxMultiplier, `x${state.maxMultiplier}`);
+    setText(el.betButton, `${t("bet")} ${formatBetMoney(betMoney())}`);
+  }
+
+  function updateControls() {
+    const wagerLocked = state.busy || Boolean(state.pendingFg);
+    el.normal.disabled = wagerLocked;
+    el.extra.disabled = wagerLocked;
+    el.buy.disabled = wagerLocked;
+    el.super.disabled = wagerLocked;
+    el.betMinus.disabled = wagerLocked;
+    el.betPlus.disabled = wagerLocked;
+    el.betButton.disabled = wagerLocked;
+    el.rngInput.disabled = state.busy;
+    el.rngReset.disabled = state.busy || (!el.rngInput.value.trim() && el.cardRange.value === (state.cardRangeDefault ?? el.cardRange.value));   // 任一欄偏離預設才可重置
+    el.cardRange.disabled = !el.debug.checked || wagerLocked || !Box.card_system?.enabled;
+    el.spin.disabled = state.busy;
+    el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
+    el.extra.classList.toggle("is-active", state.selectedMode === MODE_EXTRA);
+    el.buy.classList.toggle("is-active", state.selectedMode === MODE_BUY);
+    el.super.classList.toggle("is-active", state.selectedMode === MODE_SUPER);
+    setText(el.auto, state.auto ? t("stop") : t("auto"));
+    updateDebugButtons();
+  }
+
+  function renderBetMenu() {
+    el.betMenu.innerHTML = "";
+    BET_OPTIONS.forEach((value, index) => {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.textContent = formatBetMoney(value);
+      option.className = index === state.betIndex ? "is-active" : "";
+      option.addEventListener("click", (event) => {
+        event.stopPropagation();
+        state.betIndex = index;
+        el.betMenu.classList.add("hidden");
+        updateStats();
+        renderBetMenu();
+      });
+      el.betMenu.appendChild(option);
+    });
+  }
+
+  // 得分（Win）即時顯示：只改顯示時機，不動 lastWin／balance／統計
+  function setWinDisplay(value) {
+    state.winDisplay = value;
+    setText(el.win, money(value));
+  }
+
+  async function playback(spin, winBase = 0) {
+    await animateReels(spin);
+    renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
+    updateFeatureBar({ ...spin, steps: [] });
+    writeMessage(tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`));
+    await sleep(260);
+
+    let stepPaySum = 0;
+    for (const step of spin.steps) {
+      renderBoard(boardCells(step.before, step.beforeC2Values), { hitPositions: step.hitPositions });
+      setText(el.cascade, String(step.cascadeIndex));
+      stepPaySum += Number(step.pay) || 0;
+      setWinDisplay(winBase + toMoney(stepPaySum));   // 每次消除得分即時加到 Win
+      writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
+      await sleep(360);
+      renderBoard(boardCells(step.before, step.beforeC2Values), { clearedPositions: step.hitPositions });
+      await sleep(560);   // 等金粉播完（h027-sparkle 120＋520ms）
+      // 四角不參與掉落：R1／R6 只在中間 3 格掉落，四角原位換成四角符號或 C2
+      const dropMotion = window.slotBuildDropMotion?.(step.before.length, step.before[0].length, step.hitPositions.filter(([row, reel]) => !isCorner(row, reel))) || {};
+      CORNERS.forEach(([row, reel]) => { delete dropMotion[`${row}-${reel}`]; });
+      renderBoard(boardCells(step.after, step.afterC2Values), { dropMotion });
+      if (step.cornerTrigger) {
+        writeMessage(tr(`Corners cleared → C2 ${step.cornerTrigger.map((item) => `x${item.value}`).join(" + ")}`, `四角消除 → C2 ${step.cornerTrigger.map((item) => `x${item.value}`).join(" + ")}`), "win");
+        await sleep(560 * state.speed);
+      }
+      await sleep((refillMs() * 1.5 + 120) * state.speed);   // ×1.5：含逐顆錯開
+    }
+
+    renderBoard(boardCells(spin.finalBoard, spin.c2.values));
+    setWinDisplay(winBase + toMoney(spin.finalPay));   // 結算（含 C2 倍數／C1 得分）＝本轉最終得分
+    updateFeatureBar(spin);
+    writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : "");
+    renderClusterWins(spin);
+    renderResultStages(spin);
+    captureSnapshots(spin, winBase);
+    state.lastSpin = spin;
+  }
+
+  function cardParameters(selection) {
+    if (!selection) return { base: "A", free: "A" };
+    if (selection.kind === "package") {
+      const selected = parameterName(selection.card?.table);
+      return { base: selected, free: selected };
+    }
+    if (selection.kind === "free_game") {
+      return {
+        base: parameterName(selection.bgCard?.table),
+        free: parameterName(selection.fgCard?.table)
+      };
+    }
+    return { base: parameterName(selection.card?.table), free: "A" };
+  }
+
+  function simulateFreePackage(selectedParameter) {
+    const queue = buildFreeSchedule("initial", selectedParameter);
+    const spins = [];
+    let total = queue.length;
+    let totalPay = 0;
+    while (queue.length) {
+      const tableId = queue.shift();
+      const spin = playSpin(tableId, "FG", selectedParameter);
+      spin.retriggerAdded = 0;
+      if (spin.scatterCount >= 3 && total < Box.max_free_spins) {
+        const extra = buildFreeSchedule("retrigger", selectedParameter).slice(0, Box.max_free_spins - total);
+        queue.push(...extra);
+        total += extra.length;
+        spin.retriggerAdded = extra.length;
+      }
+      totalPay += spin.finalPay;
+      spins.push(spin);
+    }
+    return { spins, totalPay };
+  }
+
+  function simulateRoundCandidate(forceFeature, parameters) {
+    const tableId = forceFeature ? tableIndex("BG_strip (4)") : chooseBaseTable(parameters.base);
+    const base = playSpin(tableId, "BG", parameters.base);
+    const purchased = state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+    const triggered = base.scatterCount >= 4 || forceFeature || purchased;
+    const freeGame = triggered ? simulateFreePackage(parameters.free) : { spins: [], totalPay: 0 };
+    return {
+      base,
+      freeSpins: freeGame.spins,
+      freePay: freeGame.totalPay,
+      totalPay: base.finalPay + freeGame.totalPay,
+      triggered
+    };
+  }
+
+  // 整局（BG＋消除＋整段 FG＋Card 重抽）同步算完，供 demogameRng.run() 以種子驅動。
+  function generateAcceptedRound(forceFeature) {
+    const selection = prepareCardSelection(state.selectedMode);
+    const parameters = cardParameters(selection);
+    state.cardProfileUsed = selection?.profile || "off";
+    let candidate = null;
+    let retries = 0;
+    let accepted = false;
+    const retryLimit = 250;
+    while (retries < retryLimit) {
+      candidate = simulateRoundCandidate(forceFeature, parameters);
+      if (cardAccepts(selection, candidate)) { accepted = true; break; }
+      retries += 1;
+    }
+    state.cardRetries = retries;
+    state.cardRetryLimitExceeded = !accepted;
+    state.cardSelectionUsed = Boolean(selection);   // 卡片重抽資訊附在局號行（Log）
+    return candidate;
+  }
+
+  // 模擬面板的押注模式選單；選定模式只在該局模擬期間暫時套用，不改畫面上的押注模式。
+  window.demogameSimulationModes = [
+    { value: MODE_NORMAL, label: "Normal Bet" },
+    { value: MODE_EXTRA, label: "Extra Bet" },
+    { value: MODE_BUY, label: "Buy Feature" },
+    { value: MODE_SUPER, label: "Super Feature", yMax: 20 }
+  ];
+  window.demogameSimulateRound = ({ mode } = {}) => {
+    const previousMode = state.selectedMode;
+    if (mode !== undefined) state.selectedMode = mode;
+    try {
+      const purchased = state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+      const selection = prepareCardSelection(state.selectedMode);
+      const parameters = cardParameters(selection);
+      let candidate = null;
+      let retries = 0;
+      let accepted = false;
+      const retryLimit = 250;
+      do {
+        candidate = simulateRoundCandidate(purchased, parameters);
+        if (cardAccepts(selection, candidate)) { accepted = true; break; }
+        retries += 1;
+      } while (retries < retryLimit);
+      const allSpins = [candidate.base, ...candidate.freeSpins];
+      const totalMoney = toMoney(candidate.totalPay);
+      return {
+        multiplier: totalMoney / wagerMoney(),   // RTP 口徑：總得分 ÷ 實際押注
+        lineMultiplier: totalMoney / (purchased ? betMoney() : wagerMoney()),   // 線型：BF／SF ÷ 底注，NB／EB ÷ 押注
+        fgTriggered: candidate.triggered,
+        maxMultiplier: Math.max(1, ...allSpins.map((spin) => Number(spin.effectiveMultiplier) || 1)),
+        retryLimitExceeded: accepted ? 0 : 1,
+        bgCascade: candidate.base.steps.filter((step) => step.wins?.length).length,
+        fgCascades: candidate.freeSpins.map((spin) => spin.steps.filter((step) => step.wins?.length).length),
+        retries,
+        retryCount: retries
+      };
+    } finally {
+      state.selectedMode = previousMode;
+    }
+  };
+
+  function startFreeGame(spins, triggerSpin = null) {
+    const queue = spins.slice();
+    const initialTotal = Number(Box.initial_free_spins_low) + Number(Box.initial_free_spins_high);
+    state.pendingFg = { queue, total: initialTotal, played: 0, win: 0, logTotal: spins.length, triggerSpin };   // triggerSpin：觸發 FG 那局的 BG（BF 為入場盤），FG 結束時還原盤面用
+    state.fgTriggerCount += 1;
+    const retriggers = spins.filter((spin) => spin.retriggerAdded > 0).length;
+    appendLog(`Free Game triggered | ${spins.length} spins${retriggers ? ` (Retrigger ×${retriggers})` : ""}`, "mode");
+    updateFeatureBar();
+  }
+
+  async function playFreeSpin() {
+    const fg = state.pendingFg;
+    if (!fg || !fg.queue.length) return finishFreeGame();
+    const spin = fg.queue.shift();
+    fg.played += 1;
+    fg.win += toMoney(spin.finalPay);
+    state.maxMultiplier = Math.max(state.maxMultiplier, spin.effectiveMultiplier);
+    if (spin.retriggerAdded > 0) fg.total += spin.retriggerAdded;
+    await playback(spin, state.lastWin + fg.win - toMoney(spin.finalPay));   // Win 顯示＝BG 得分＋本段 FG 累計
+    state.winDisplay = state.lastWin + fg.win;
+    appendLog(`FG ${fg.played}/${fg.logTotal} | ${spinLogFields(spin)} | Win ${money(toMoney(spin.finalPay))}`, cascadeCount(spin) ? "cascade" : "info");
+    updateStats();
+    if (!fg.queue.length) finishFreeGame();
+  }
+
+  // 累積倍率線型（共用）：NB 記 NB、EB 記 EB，值＝整局總得分（BG＋FG）÷ 本局實際押注；BF／SF、RNG 重跑局不記
+  function recordLineChart() {
+    if (state.replayRound || !(state.roundWager > 0)) return;
+    const mode = state.selectedMode === MODE_NORMAL ? "NB" : state.selectedMode === MODE_EXTRA ? "EB" : null;
+    if (mode) window.demogameLineChart?.record(state.lastWin / state.roundWager, mode);
+  }
+
+  function finishFreeGame() {
+    const fg = state.pendingFg;
+    if (!fg) return;
+    state.pendingFg = null;
+    state.winDisplay = null;
+    appendLog(`FG complete | Total ${money(fg.win)} (${(fg.win / betMoney()).toFixed(2)}x)`, "result");
+    window.demogameHistory?.record({ fg: fg.win / betMoney() });   // 共用歷史紀錄：FG 最大倍數（整段 FG ÷ 底注）
+    state.lastWin += fg.win;
+    state.balance += fg.win;
+    state.totalWin += fg.win;
+    if (state.lastWin > 0) state.hitCount += 1;
+    recordLineChart();   // 累積倍率線型：一局含 FG 結束才記
+    state.selectedMode = state.replayRound ? state.replayRound.restoreMode : MODE_NORMAL;
+    state.replayRound = null;
+    document.body.classList.remove("fg-mode");
+    if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard, fg.triggerSpin.c2.values));   // 回到 BG：盤面還原成觸發局最終盤面（只改顯示）
+    updateFeatureBar();
+    writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
+    updateStats();
+  }
+
+  async function doSpin() {
+    if (state.busy) return;
+    state.busy = true;
+    updateControls();
+    try {
+      if (state.pendingFg) {
+        await playFreeSpin();
+        await window.demogameRoundPause?.();   // 每轉 FG 算完分後固定停 0.1 秒（不受 Speed 影響）
+        return;
+      }
+
+      // 可重現 RNG：有填 #rngInput 就照碼重跑（模式／卡片／Profile 只套用這一局，不改畫面選項）
+      const code = window.demogameRng.takeInput();   // 格式錯誤會丟 Error（尚未扣款）
+      const restoreMode = state.selectedMode;
+      if (code) {
+        state.selectedMode = RNG_MODE_FROM_CODE[code.mode];
+        state.replayRound = { restoreMode };
+        if (code.config.replace(/-(newbie|oldhand)$/i, "") !== rngConfigLabel()) appendLog(`RNG Config ${code.config} ≠ ${rngConfigLabel()}`, "error");
+      }
+      const wager = wagerMoney();
+      if (state.balance < wager) {
+        state.selectedMode = restoreMode;
+        state.replayRound = null;
+        throw new Error(tr("Insufficient balance", "餘額不足"));
+      }
+      state.balance -= wager;
+      state.roundWager = wager;   // 本局實際押注（累積倍率線型用）
+      state.totalBet += wager;
+      state.roundCount += 1;
+      state.lastWin = 0;
+      state.winDisplay = null;
+      updateStats();
+
+      const seed = code ? code.seed : window.demogameRng.newSeed();
+      const forceFeature = el.forceFg.checked || state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+      const savedCardMode = state.cardMode;
+      if (code) state.cardMode = code.card ? (/newbie/i.test(code.config) ? "newbie" : "oldhand") : "off";
+      let candidate;
+      try {
+        // 卡片開時 Config 帶上 Profile（如 92A-Newbie），重跑才會用同一套卡片
+        const rngConfig = cardSystemActive() ? `${rngConfigLabel()}-${state.cardMode === "newbie" ? "Newbie" : "Oldhand"}` : rngConfigLabel();
+        const rngCode = window.demogameRng.format({ config: rngConfig, mode: RNG_MODE_TOKEN[state.selectedMode] || "NB", card: cardSystemActive(), opts: "", seed });
+        state.cardSelectionUsed = false;
+        candidate = window.demogameRng.run(seed, () => generateAcceptedRound(forceFeature));   // 整局（BG＋FG）在種子序列內一次算完
+        const cardInfo = state.cardSelectionUsed
+          ? (state.cardRetryLimitExceeded ? ` | Card ${state.cardProfileUsed} retry limit exceeded` : ` | Card ${state.cardProfileUsed} retries ${state.cardRetries}`)
+          : "";
+        appendLog(`#${state.roundCount} ${LOG_MODE_NAMES[state.selectedMode]} | Bet ${money(wager)}${cardInfo}${code ? " | Replay" : ""}`, "mode");
+        appendLog(`RNG ${rngCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
+      } finally {
+        state.cardMode = savedCardMode;
+      }
+      const spin = candidate.base;
+      el.forceFg.checked = false;
+      await playback(spin);
+
+      state.winDisplay = null;
+      state.lastWin = toMoney(spin.finalPay);
+      state.balance += state.lastWin;
+      state.totalWin += state.lastWin;
+      state.maxMultiplier = Math.max(state.maxMultiplier, spin.c2.total);
+      const purchasedRound = state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
+      appendLog(`${purchasedRound ? "BF Entry" : "BG"} | ${spinLogFields(spin)} | Win ${money(state.lastWin)} (${(state.lastWin / betMoney()).toFixed(2)}x)`, state.lastWin > 0 ? "result" : "info");
+      window.demogameHistory?.record({ bg: state.lastWin / betMoney() });   // 共用歷史紀錄：BG 最大倍數（BF 進場盤也算）
+      if (candidate.triggered) {
+        startFreeGame(candidate.freeSpins, spin);
+        writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
+      } else if (state.lastWin > 0) {
+        state.hitCount += 1;
+      }
+      if (!candidate.triggered) recordLineChart();   // 累積倍率線型：未觸發局（觸發局在 finishFreeGame 記）
+      if (!candidate.triggered && state.replayRound) {
+        state.selectedMode = state.replayRound.restoreMode;
+        state.replayRound = null;
+      }
+      updateStats();
+      await window.demogameRoundPause?.();   // BG 局算完分後固定停 0.1 秒再放行下一轉／Auto（不受 Speed 影響）
+    } catch (error) {
+      state.auto = false;
+      if (!state.pendingFg) {
+        state.winDisplay = null;
+        state.selectedMode = MODE_NORMAL;
+        state.replayRound = null;
+      }
+      writeMessage(error.message, "error");
+      appendLog(`Error | ${error.message}`, "error");
+    } finally {
+      state.busy = false;
+      updateControls();
+      if (state.auto) state.autoTimer = setTimeout(doSpin, Math.max(80, 650 / state.speed));
+    }
+  }
+
+  function selectMode(mode) {
+    if (state.busy || state.pendingFg) return;
+    state.selectedMode = mode;
+    updateControls();
+    updateStats();
+    updateFeatureBar();
+  }
+
+  function purchaseFeature(mode) {
+    if (state.busy || state.pendingFg) return;
+    state.selectedMode = mode;
+    updateControls();
+    updateStats();
+    updateFeatureBar();
+    doSpin();
+  }
+
+  function setBetIndex(index) {
+    if (state.busy || state.pendingFg) return;
+    state.betIndex = Math.max(0, Math.min(index, BET_OPTIONS.length - 1));
+    updateStats();
+    renderBetMenu();
+    if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
+  }
+
+  function toggleDebug(enabled) {
+    ["play-debug-controls", "set-rng-panel", "log-wrap", "live-log-wrap", "change-log-wrap"].forEach((id) => {
+      byId(id).classList.toggle("debug-hidden", !enabled);
+    });
+    byId("controls").classList.toggle("debug-off", !enabled);
+    updateDebugButtons();
+    updateControls();
+  }
+
+  function resetSession() {
+    if (state.busy) return;
+    clearTimeout(state.autoTimer);
+    Object.assign(state, {
+      balance: INITIAL_BALANCE,
+      totalBet: 0,
+      totalWin: 0,
+      roundCount: 0,
+      hitCount: 0,
+      fgTriggerCount: 0,
+      maxMultiplier: 0,
+      lastWin: 0,
+      winDisplay: null,
+      cardProfileUsed: state.cardMode,
+      cardRetries: 0,
+      selectedMode: MODE_NORMAL,
+      auto: false,
+      pendingFg: null,
+      replayRound: null,
+      snapshots: [],
+      snapshotIndex: -1,
+      lastSpin: null
+    });
+    document.body.classList.remove("fg-mode");
+    renderBoard(sampleBoard());
+    updateFeatureBar();
+    updateStats();
+    updateControls();
+    writeMessage(t("ready"), "result");
+  }
+
+  function parseHelp(markdown) {
+    const sections = [];
+    let section = null;
+    let group = null;
+    for (const rawLine of markdown.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (line.startsWith("## ")) {
+        section = { fallback: line.slice(3), titleZh: "", titleEn: "", groups: [] };
+        sections.push(section);
+        group = { titleZh: "", titleEn: "", rules: [], payouts: [] };
+        section.groups.push(group);
+      } else if (line.startsWith("### ") && section) {
+        group = { titleZh: line.slice(4), titleEn: line.slice(4), rules: [], payouts: [] };
+        section.groups.push(group);
+      } else if (line.startsWith("|") && section && group) {
+        const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+        if (!cells.length || cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
+        if (["Item", "Field", "中文欄", "符号"].includes(cells[0])) continue;
+        if (cells.length === 3 && cells[0] === "主要標題") {
+          section.titleZh = cells[1]; section.titleEn = cells[2];
+        } else if (cells.length === 3 && cells[0] === "副標題") {
+          group.titleZh = cells[1]; group.titleEn = cells[2];
+        } else if (cells.length === 3 && cells[0] === "規則說明") {
+          group.rules.push({ zh: cells[1], en: cells[2] });
+        } else if (cells.length === 3) {
+          group.payouts.push(...cells.filter(Boolean));
+        }
+      }
+    }
+    return sections.filter((item) => item.titleZh || item.titleEn || item.groups.some((itemGroup) => itemGroup.rules.length || itemGroup.payouts.length));
+  }
+
+  function renderHelp(markdown) {
+    el.helpContent.innerHTML = "";
+    for (const section of parseHelp(markdown)) {
+      const card = document.createElement("section");
+      card.className = "help-section";
+      const title = document.createElement("h3");
+      title.className = "help-section-title";
+      title.textContent = state.language === "zh" ? (section.titleZh || section.titleEn || section.fallback) : (section.titleEn || section.titleZh || section.fallback);
+      card.appendChild(title);
+      if (section.fallback === "PAYTABLE") {
+        const note = document.createElement("div");
+        note.className = "help-rule";
+        note.textContent = tr(
+          `Payouts below are shown for the current bet of ${compactMoney(betMoney())}.`,
+          `以下派彩金額依目前押注 ${compactMoney(betMoney())} 顯示。`
+        );
+        card.appendChild(note);
+      }
+      for (const group of section.groups) {
+        if ((group.titleZh || group.titleEn) && (group.rules.length || group.payouts.length)) {
+          const heading = document.createElement("h4");
+          heading.className = "help-group-title";
+          heading.textContent = state.language === "zh" ? (group.titleZh || group.titleEn) : (group.titleEn || group.titleZh);
+          card.appendChild(heading);
+        }
+        for (const rule of group.rules) {
+          const row = document.createElement("div");
+          row.className = "help-rule";
+          row.textContent = state.language === "zh" ? rule.zh : rule.en;
+          card.appendChild(row);
+        }
+        if (group.payouts.length) {
+          const grid = document.createElement("div");
+          grid.className = "help-payout-grid";
+          for (const payout of group.payouts) {
+            const item = document.createElement("div");
+            item.className = "help-payout-item";
+            const symbolMatch = payout.match(/^\[([^\]]+)\]\s*(.*)$/);
+            const payoutText = (symbolMatch ? symbolMatch[2] : payout.replaceAll("[", "").replaceAll("]", "")).replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+              const payoutCredits = Number(rawValue) * betMultiplier();
+              return `${separator}${compactMoney(toMoney(payoutCredits))}`;
+            });
+            const imageSource = symbolMatch ? symbolImageSource(symbolMatch[1]) : "";
+            if (imageSource) {
+              item.classList.add("with-symbol-image");
+              const image = document.createElement("img");
+              image.className = "help-symbol-image";
+              image.src = imageSource;
+              image.alt = symbolMatch[1];
+              image.loading = "lazy";
+              image.draggable = false;
+              const text = document.createElement("span");
+              text.className = "help-payout-text";
+              text.textContent = `${symbolMatch[1]} ${payoutText}`;
+              image.addEventListener("error", () => {
+                image.remove();
+              }, { once: true });
+              item.append(image, text);
+            } else {
+              item.textContent = symbolMatch ? `${symbolMatch[1]} ${payoutText}` : payoutText;
+            }
+            grid.appendChild(item);
+          }
+          card.appendChild(grid);
+        }
+      }
+      el.helpContent.appendChild(card);
+    }
+    if (!el.helpContent.children.length) el.helpContent.innerHTML = `<div class="help-load-error">${tr("Unable to load game rules.", "無法載入遊戲規則。")}</div>`;
+  }
+
+  async function loadHelp() {
+    el.helpContent.innerHTML = `<div class="help-loading">${t("loading")}</div>`;
+    let markdown = window.location.protocol === "file:" ? el.embeddedHelp.textContent.trim() : "";
+    if (!markdown) {
+      try {
+        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        if (response.ok) markdown = await response.text();
+      } catch (_) {}
+    }
+    if (!markdown) {
+      try { markdown = el.helpFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
+    }
+    if (!markdown) markdown = el.embeddedHelp.textContent.trim();
+    state.helpMarkdown = markdown;
+    renderHelp(markdown);
+  }
+
+  let betModeLayoutFrame = 0;
+  function setBetModeButtonLabel(button, fullLabel, shortLabel) {
+    if (!button) return;
+    button.dataset.fullLabel = fullLabel;
+    button.dataset.shortLabel = shortLabel;
+  }
+  function refreshBetModeLabels() {
+    const body = document.querySelector("#bet-mode-panel .zone-body");
+    if (!body) return;
+    const buttons = [...body.querySelectorAll("button[data-full-label]")];
+    cancelAnimationFrame(betModeLayoutFrame);
+    for (const button of buttons) {
+      button.style.minWidth = "";
+      button.style.flex = "";
+      button.textContent = button.dataset.fullLabel;
+    }
+    betModeLayoutFrame = requestAnimationFrame(() => {
+      const visible = buttons.filter((button) => getComputedStyle(button).display !== "none");
+      const firstTop = visible[0]?.offsetTop;
+      const compact = body.scrollWidth > body.clientWidth + 1
+        || visible.some((button) => button.offsetTop !== firstTop)
+        || visible.some((button) => button.scrollWidth > button.clientWidth + 1);
+      for (const button of buttons) {
+        button.textContent = compact ? button.dataset.shortLabel : button.dataset.fullLabel;
+        button.style.minWidth = compact ? "0" : "";
+        button.style.flex = compact ? "0 1 auto" : "";
+      }
+    });
+  }
+  addEventListener("resize", refreshBetModeLabels);
+
+  function applyLanguage(showMessage = false) {
+    document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
+    el.language.value = state.language;
+    try { localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language); } catch (_) {}
+    setText(byId("gameName"), t("gameName"));
+    const creditLabels = document.querySelectorAll("#credit-bar .i-label");
+    [t("credit"), t("bet"), t("win")].forEach((value, index) => setText(creditLabels[index], value));
+    setText(document.querySelector("#simulation-stats h3"), t("stats"));
+    const statLabels = document.querySelectorAll("#simulation-stats .s-label");
+    [t("rounds"), "RTP", t("hitRate"), "FG Trigger", t("maxMultiplier")].forEach((value, index) => setText(statLabels[index], value));
+    setText(document.querySelector("#play-panel .zone-label"), t("play"));
+    setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
+    setBetModeButtonLabel(el.normal, t("normalBet"), "NB");
+    setBetModeButtonLabel(el.extra, `${tr("Extra Bet", "額外押注")} (${Box.extrabet}x)`, `EX (${Box.extrabet}x)`);
+    setBetModeButtonLabel(el.buy, `${t("buyFeature")} (${Box.featurebuy}x)`, `BF (${Box.featurebuy}x)`);
+    setBetModeButtonLabel(el.super, `${t("superFeature")} (${Box.superfeaturebuy}x)`, `SF (${Box.superfeaturebuy}x)`);
+    refreshBetModeLabels();
+    setText(document.querySelector("#settings-wrap .setting-header"), t("setting"));
+    setText(document.querySelector('label[for="languageSelect"] span'), t("language"));
+    setText(el.help, t("help")); setText(el.reset, t("reset")); setText(byId("helpDialogTitle"), t("helpTitle")); setText(el.closeHelp, t("close"));
+    setText(byId("log-header"), t("spinResult")); setText(document.querySelector("#log-body .log-subheader"), t("clusterWins")); setText(el.clearLog, t("clear"));
+    const debugLabel = document.querySelector('label[for="debugModeInput"]');
+    if (debugLabel?.lastChild) debugLabel.lastChild.textContent = ` ${t("debugMode")}`;
+    const forceLabel = document.querySelector('label[for="forceFgInput"]');
+    if (forceLabel?.lastChild) forceLabel.lastChild.textContent = ` ${t("forceFg")}`;
+    setText(el.previous, `◀◀ ${tr("Previous", "上一步")}`); setText(el.next, `${tr("Next", "下一步")} ▶▶`);
+    const cardLabel = el.cardRange.closest("label");
+    if (cardLabel?.firstChild) cardLabel.firstChild.textContent = ` ${tr("Card System", "卡片系統")} `;
+    const speedLabel = document.querySelector('label[for="speedRange"]');
+    if (speedLabel?.firstChild) speedLabel.firstChild.textContent = `${t("speed")} `;
+    updateFeatureBar(state.lastSpin); updateStats(); updateControls();
+    if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
+    if (showMessage) writeMessage(tr("Language changed to English", "語言已切換為中文"), "result");
+  }
+
+  el.spin.addEventListener("click", doSpin);
+  el.auto.addEventListener("click", () => {
+    state.auto = !state.auto;
+    if (!state.auto) clearTimeout(state.autoTimer);
+    updateControls();
+    if (state.auto && !state.busy) doSpin();
+  });
+  el.normal.addEventListener("click", () => selectMode(MODE_NORMAL));
+  el.extra.addEventListener("click", () => selectMode(MODE_EXTRA));
+  el.buy.addEventListener("click", () => purchaseFeature(MODE_BUY));
+  el.super.addEventListener("click", () => purchaseFeature(MODE_SUPER));
+  el.betMinus.addEventListener("click", () => setBetIndex(state.betIndex - 1));
+  el.betPlus.addEventListener("click", () => setBetIndex(state.betIndex + 1));
+  el.betButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    el.betMenu.classList.toggle("hidden");
+  });
+  document.addEventListener("click", (event) => {
+    if (!el.betMenu.contains(event.target) && event.target !== el.betButton) el.betMenu.classList.add("hidden");
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.code === "Space" && !["INPUT", "SELECT", "BUTTON"].includes(event.target.tagName)) {
+      event.preventDefault();
+      doSpin();
+    }
+  });
+  el.speed.addEventListener("input", () => {
+    state.speed = Number(el.speed.value);
+    setText(el.speedValue, `x${state.speed}`);
+  });
+  el.previous.addEventListener("click", () => showSnapshot(state.snapshotIndex - 1));
+  el.next.addEventListener("click", () => showSnapshot(state.snapshotIndex + 1));
+  el.debug.addEventListener("change", () => toggleDebug(el.debug.checked));
+  el.cardRange.addEventListener("change", () => {
+    state.cardMode = ["newbie", "oldhand"].includes(el.cardRange.value) ? el.cardRange.value : "off";
+    state.cardProfileUsed = state.cardMode;
+    updateControls();
+  });
+  el.rngInput.addEventListener("input", updateControls);
+  el.rngReset.addEventListener("click", () => {
+    // Set RNG 設定一直保留到按重置；重置把所有欄位清回預設
+    el.rngInput.value = "";
+    el.cardRange.value = state.cardRangeDefault ?? "off";   // 卡片系統回到載入時的預設（共用模組依 Config 設定的值）
+    state.cardMode = ["newbie", "oldhand"].includes(el.cardRange.value) ? el.cardRange.value : "off";
+    state.cardProfileUsed = state.cardMode;
+    updateControls();
+    writeMessage(tr("RNG reset", "RNG 已重置"));
+  });
+  el.clearLog.addEventListener("click", () => { if (el.liveLog) el.liveLog.innerHTML = ""; });
+  el.reset.addEventListener("click", resetSession);
+  el.config.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("config", el.config.value);
+    window.location.href = url.href;
+  });
+  el.language.addEventListener("change", () => {
+    state.language = el.language.value === "zh" ? "zh" : "en";
+    applyLanguage(true);
+  });
+  el.help.addEventListener("click", () => { el.helpDialog.showModal(); loadHelp(); });
+  el.closeHelp.addEventListener("click", () => el.helpDialog.close());
+  el.helpDialog.addEventListener("click", (event) => {
+    if (event.target === el.helpDialog) el.helpDialog.close();
+  });
+  el.helpFrame.addEventListener("load", () => {
+    if (el.helpDialog.open && !state.helpMarkdown) loadHelp();
+  });
+
+  byId("gameName").textContent = t("gameName");
+  el.config.value = H013_ACTIVE_CONFIG;
+  el.cardRange.value = state.cardMode;
+  // 共用模組（本 script 之後載入）會依 Config 把卡片系統設成預設值；記下來給 Set RNG 重置用
+  document.addEventListener("DOMContentLoaded", () => { state.cardRangeDefault = el.cardRange.value; updateControls(); });
+  document.title = "Sugar Bonanza 3 — Demo Game";
+  renderBetMenu();
+  renderBoard(sampleBoard());
+  updateFeatureBar();
+  updateStats();
+  updateControls();
+  toggleDebug(false);
+  applyLanguage();
+  appendLog(`Config ${H013_ACTIVE_CONFIG} loaded | Version ${Box.excel_version || "--"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
+})();
+  </script>
+  <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-09 17:53";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script src="../../../../demogame_common.js?v=20261029a"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const root = document.getElementById("helpContent");
+      const files = window.H013_SYMBOL_IMAGE_FILES || {};
+      if (!root) return;
+
+      let scheduled = false;
+      function decorateHelpPaytable() {
+        scheduled = false;
+        for (const cell of root.querySelectorAll("table.help-paytable tbody td:first-child, table.paytable tbody td:first-child")) {
+          if (cell.querySelector(".help-table-symbol")) continue;
+          const code = cell.textContent.trim();
+          const filename = files[code];
+          if (!filename) continue;
+
+          const wrap = document.createElement("span");
+          wrap.className = "help-table-symbol";
+          const image = document.createElement("img");
+          image.className = "help-table-symbol-image";
+          image.src = `./Source/Image/${filename}`;
+          image.alt = code;
+          image.loading = "lazy";
+          image.draggable = false;
+          image.addEventListener("error", () => image.remove(), { once: true });
+          const label = document.createElement("span");
+          label.className = "help-table-symbol-code";
+          label.textContent = code;
+          wrap.append(image, label);
+          cell.replaceChildren(wrap);
+        }
+      }
+
+      function scheduleDecorate() {
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(decorateHelpPaytable);
+      }
+
+      new MutationObserver(scheduleDecorate).observe(root, { childList: true, subtree: true });
+      document.getElementById("helpBtn")?.addEventListener("click", () => setTimeout(scheduleDecorate));
+      scheduleDecorate();
+    })();
+  </script>
+</body>
+
+</html>

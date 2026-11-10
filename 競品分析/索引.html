@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>遊戲數據 遊戲數據</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,6 +93,7 @@ tbody tr:hover{background:var(--panel-2)}
 .warn{font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);
   border-left:2px solid var(--s1); padding:2px 0 2px 11px; margin:0 0 12px; max-width:none}
 .card{background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:16px 14px 8px; margin-bottom:20px}
+
 .legend{display:flex; flex-wrap:wrap; gap:16px; padding:0 4px 10px}
 .lg{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2)}
 .sw{width:22px; height:3px; border-radius:2px; flex:none}
@@ -117,13 +118,12 @@ svg{display:block; width:100%; height:auto; overflow:visible}
 </header>
 
 <div class="tabs" role="tablist" aria-label="章節"><button class="tab" role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0">報告清單</button><button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1">平台資料報告</button><button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1">專題比較</button><button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1">主要指標對照</button><button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1">資料修訂紀錄</button><button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1">讀這些數字前必須知道的事</button><button class="tab" role="tab" id="tab-6" aria-controls="panel-6" aria-selected="false" tabindex="-1">輪帶還原驗證</button><button class="tab" role="tab" id="tab-7" aria-controls="panel-7" aria-selected="false" tabindex="-1">已知的重複副本</button></div>
-<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>廠商</th><th class="n">付費轉</th><th class="n">報告日期</th><th>格式版本</th><th>報告</th><th>md 正本位置</th></tr></thead><tbody><tr><td>DJ Boom Boom</td><td>FA CHAI</td><td class="n">100,000</td><td class="n">2026-11-09</td><td>現行</td><td><a href="report_dj_boom_boom.html">開啟</a></td><td><code>H5\FA CHAI - DJ Boom Boom\</code></td></tr>
-<tr><td>Super Ace</td><td>JILI</td><td class="n">166,050</td><td class="n">2026-09-29</td><td>現行</td><td><a href="report_super_ace.html">開啟</a></td><td><code>H5\JILI - Super Ace\</code></td></tr><tr><td>Lucky Neko</td><td>PG</td><td class="n">47,068</td><td class="n">2026-08-26</td><td>現行</td><td><a href="report_lucky_neko.html">開啟</a></td><td><code>H5\PG - Lucky Neko\</code></td></tr><tr><td>Pinata Wins</td><td>PG</td><td class="n">22,688</td><td class="n">2026-09-30</td><td>現行</td><td><a href="report_pinata_wins.html">開啟</a></td><td><code>H5\PG - Pinata Wins\</code></td></tr><tr><td>Gates of Olympus 1000</td><td>PP</td><td class="n">31,472</td><td class="n">2026-08-26</td><td>現行</td><td><a href="report_gates_of_olympus_1000.html">開啟</a></td><td><code>H5\PP - Gates of Olympus 1000\</code></td></tr><tr><td>Wild Bounty Showdown</td><td>PG</td><td class="n">10,463</td><td class="n">2026-08-27</td><td>現行</td><td><a href="report_wild_bounty_showdown.html">開啟</a></td><td><code>H5\PG - Wild Bounty Showdown\</code></td></tr><tr><td>Money Coming</td><td>JILI</td><td class="n">32,030（底注 10：12,117）</td><td class="n">2026-09-30</td><td>現行</td><td><a href="report_money_coming.html">開啟</a></td><td><code>H5\遊戲資訊\JILI - Money Coming\</code></td></tr></tbody></table></div>
-<blockquote>六份都是現行格式，章節與指標定義一致，可直接並排比較。<br><br><strong>2026-09-30 新增 Money Coming</strong>：3 主轉輪 × 1 列＋特別轉輪的數字串接遊戲，<strong>無 FG／BF／連消</strong>，<br>堆疊、消除率、門檻機率等章節整段不適用；底注 1 / 5 / 10 是三套獨立設定（押注解鎖機制），<br>對照表一律取<strong>底注 10（完整機制版）</strong>。<br><br><strong>2026-09-29 Super Ace 改版</strong>：新增賠率表（由封包反推）與消除掉落分布，<br>比例類型表格全部轉成直式（場景為欄、各欄加總 100%），FG 全程得分門檻併入門檻機率。</blockquote></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><p>資料來源是<strong>平台匯出的真實玩家投注紀錄</strong>，不是實機側錄。樣本量大兩到三個數量級，</p>
+<div class="panel" role="tabpanel" id="panel-0" aria-labelledby="tab-0"><div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>廠商</th><th class="n">付費轉</th><th class="n">報告日期</th><th>格式版本</th><th>報告</th><th>md 正本位置</th></tr></thead><tbody><tr><td>Gates of Olympus Super Scatter</td><td>PP</td><td class="n">100,000</td><td class="n">2026-11-09</td><td>現行</td><td><a href="report_gates_of_olympus_super_scatter.html">開啟</a></td><td><code>H5\遊戲資訊\PP - Gates of Olympus Super Scatter\其他\</code></td></tr><tr><td>Sugar Rush</td><td>PP</td><td class="n">100,000</td><td class="n">2026-11-09</td><td>現行</td><td><a href="report_sugar_rush.html">開啟</a></td><td><code>H5\遊戲資訊\PP - Sugar Rush\其他\</code></td></tr><tr><td>Sweet Bonanza 1000</td><td>PP</td><td class="n">30,893</td><td class="n">2026-11-09</td><td>現行</td><td><a href="report_sweet_bonanza_1000.html">開啟</a></td><td><code>H5\遊戲資訊\PP - Sweet Bonanza 1000\其他\</code></td></tr><tr><td>Piñata 1000</td><td>5G GAMING</td><td class="n">NB 103,519 / EB 100,046</td><td class="n">2026-11-09</td><td>現行</td><td><a href="report_pinata_1000.html">開啟</a></td><td><code>H5\遊戲資訊\5G - Pinata 1000\其他\</code></td></tr><tr><td>DJ Boom Boom</td><td>FA CHAI</td><td class="n">100,000</td><td class="n">2026-11-09</td><td>現行</td><td><a href="report_dj_boom_boom.html">開啟</a></td><td><code>H5\遊戲資訊\FC - DJ Boom Boom\其他\</code></td></tr><tr><td>Super Ace</td><td>JILI</td><td class="n">166,050</td><td class="n">2026-09-29</td><td>現行</td><td><a href="report_super_ace.html">開啟</a></td><td><code>H5\JILI - Super Ace\</code></td></tr><tr><td>Lucky Neko</td><td>PG</td><td class="n">47,068</td><td class="n">2026-08-26</td><td>現行</td><td><a href="report_lucky_neko.html">開啟</a></td><td><code>H5\PG - Lucky Neko\</code></td></tr><tr><td>Pinata Wins</td><td>PG</td><td class="n">22,688</td><td class="n">2026-09-30</td><td>現行</td><td><a href="report_pinata_wins.html">開啟</a></td><td><code>H5\PG - Pinata Wins\</code></td></tr><tr><td>Gates of Olympus 1000</td><td>PP</td><td class="n">31,472</td><td class="n">2026-08-26</td><td>現行</td><td><a href="report_gates_of_olympus_1000.html">開啟</a></td><td><code>H5\PP - Gates of Olympus 1000\</code></td></tr><tr><td>Wild Bounty Showdown</td><td>PG</td><td class="n">10,463</td><td class="n">2026-08-27</td><td>現行</td><td><a href="report_wild_bounty_showdown.html">開啟</a></td><td><code>H5\PG - Wild Bounty Showdown\</code></td></tr><tr><td>Money Coming</td><td>JILI</td><td class="n">32,030（底注 10：12,117）</td><td class="n">2026-09-30</td><td>現行</td><td><a href="report_money_coming.html">開啟</a></td><td><code>H5\遊戲資訊\JILI - Money Coming\</code></td></tr></tbody></table></div>
+<blockquote>十一份都是現行格式，章節與指標定義一致，可直接並排比較。<br><br><strong>2026-11-09 新增四款</strong>：<br>- <strong>Gates of Olympus Super Scatter（PP）</strong> —— 6×5 Pay Anywhere，官方試玩端 10 萬局。<br>  本作相對原版的差異是 <strong>Super Scatter 符號</strong>：計為 1 個 Scatter，1 個付 100x、2 個付 500x，<br>  單項貢獻 <strong>5.10pp</strong> 的 RTP。另一個發現是 <strong>FG 轉輪全面 2 連堆疊</strong>（21,330 個視窗沒有一個是單格）。<br>- <strong>Sugar Rush（PP）</strong> —— 7×7 Cluster Pay，官方試玩端 10 萬局。<br>  <strong>七個輪共用同一張符號權重表</strong>（逐格差 ≤0.1pp），黏著乘數是嚴格的 2 的冪次（2 ~ 128x）。<br>  校驗 <code>combo 0 ＋ Hit Rate = 100.000%</code> 零誤差。<br>- <strong>Sweet Bonanza 1000（PP）</strong> —— 6×5 Pay Anywhere，panalok 付費平台 3 萬局 ＋ <strong>97 次 Super Buy</strong>。<br>  最大的結構發現：<strong>三個場景的轉輪都是 100% 2 連堆疊</strong>（0 / 195,750 個單格視窗），<br>  這是「1000」版相對原版的核心改動，也是它 BG Hit Rate 42.5%（最高）的原因。<br>  <strong>一般遊戲完全沒有乘數</strong>，BG 實測上限只有 31.20x。<br>- <strong>Piñata 1000（5G GAMING）</strong> —— 5×3 20 線 ＋ Cascade，playtime 付費平台 NB／EB 各 10 萬局。<br>  <strong>NB 與 EB 是兩套獨立設定且走向相反</strong>：NB 的 BG／FG 是 72.9%／24.5%，EB 是 26.7%／72.2%。<br>  原因是 EB 把一般遊戲的輪帶池從 pool 1 換成 pool 3（Scatter 多、單轉得分少 23%），<br>  換來 <strong>5.83 倍的 FG 觸發率</strong>。<br><br>⚠️ <strong>四款的 RTP 都不要當設定值引用</strong>，理由見下方「讀這些數字前必須知道的事」。<br><br><strong>2026-11-09 新增 DJ Boom Boom</strong>：FA CHAI 的 6 軸 3600 Ways 連消機台，金符號消除轉 WILD 並給倍數框。<br><strong>全報告指標統一取自 demo 側錄 10 萬局</strong>，口徑一致、可內部交叉驗證。<br>⚠️ 該 demo 端實測 Total RTP <strong>140.25%</strong>，正式環境（Acewin 996 萬局）為 <strong>96.58%</strong>，差 43.7pp ——<br><strong>本報告的 RTP 與金額類數值不代表正式版</strong>，引用時務必註明；結構類結論（BG／FG 分配、<br>獎項占比、消除率、倍數框權重、金符號行為、Retrigger 口徑）兩端一致，可直接採用。<br>倍率線型另附 Acewin 正式環境的整局分布作對照線。<strong>本份不含 BF 章節</strong>（兩個來源皆無可用購買樣本）。<br><br><strong>2026-09-30 新增 Money Coming</strong>：3 主轉輪 × 1 列＋特別轉輪的數字串接遊戲，<strong>無 FG／BF／連消</strong>，<br>堆疊、消除率、門檻機率等章節整段不適用；底注 1 / 5 / 10 是三套獨立設定（押注解鎖機制），<br>對照表一律取<strong>底注 10（完整機制版）</strong>。<br><br><strong>2026-09-29 Super Ace 改版</strong>：新增賠率表（由封包反推）與消除掉落分布，<br>比例類型表格全部轉成直式（場景為欄、各欄加總 100%），FG 全程得分門檻併入門檻機率。</blockquote></div><div class="panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><p>資料來源是<strong>平台匯出的真實玩家投注紀錄</strong>，不是實機側錄。樣本量大兩到三個數量級，</p>
 <p>但<strong>沒有盤面</strong>，所以賠率／符號分布／堆疊／消除率整段不適用。</p>
 <p>換來的是尾段機率可靠得多，而且可以<strong>逐玩家追蹤</strong>。</p>
 <div class="tbl-wrap"><table><thead><tr><th>報告</th><th>遊戲</th><th>平台</th><th>付費局數</th><th>報告日期</th><th>報告</th><th>md 正本位置</th></tr></thead><tbody></tbody></table></div>
-<blockquote>📝 <strong>Acewin 平台資料的報告已移到「其他報告」區</strong>，改名為 <strong>熱門遊戲數值分析</strong>：<br>HTML 在 <code>工作區\其他任務±028_三款遊戲數值分析\</code>，md 正本在 <code>H5\平台相關\Acewin\</code>。<br>內容是彩罐熱舞 1000（本作 Card-On）vs Acewin 三款的四欄對照；<br><strong>DJ Boom Boom 與 Wukong MoreWays 的數值尚未確認，報告中一律標 ⏳ 不出數字。</strong><br><br>舊的三款合一報告（<code>遊戲數據_Pinata_Boom_Wukong</code>）已退役，移到 <code>舊版\</code>。<br><br>⚠️ <strong>不要和側錄報告的 RTP 直接比。</strong> 側錄是自己刷出來的樣本，<br>平台資料是真實玩家的投注結果，兩者的押注分布完全不同。<br><br>⚠️ <strong>5G Pinata 1000 ≠ PG Pinata Wins</strong>，是不同廠商的不同遊戲，只是名字像。</blockquote>
+<blockquote>📝 <strong>Acewin 平台資料的報告已移到「其他報告」區</strong>，改名為 <strong>熱門遊戲數值分析</strong>：<br>HTML 在 <code>工作區\其他任務±028_三款遊戲數值分析\</code>，md 正本在 <code>H5\平台相關\Acewin\</code>。<br>內容是彩罐熱舞 1000（本作 Card-On）vs Acewin 三款的四欄對照；<br><strong>DJ Boom Boom 與 Wukong MoreWays 的數值尚未確認，報告中一律標 ⏳ 不出數字。</strong><br><br>舊的三款合一報告（<code>遊戲數據_Pinata_Boom_Wukong</code>）已退役，移到 <code>舊版\</code>。<br><br>⚠️ <strong>不要和側錄報告的 RTP 直接比。</strong> 側錄是自己刷出來的樣本，<br>平台資料是真實玩家的投注結果，兩者的押注分布完全不同。<br><br>⚠️ <strong>5G Piñata 1000 ≠ PG Pinata Wins</strong>，是不同廠商的不同遊戲，只是名字像。<br>2026-11-09 起<strong>兩款都有側錄報告</strong>（<code>report_pinata_1000.html</code> 是 5G、<code>report_pinata_wins.html</code> 是 PG），<br>引用前請先確認廠商欄。有趣的是<strong>兩款的賠率表逐格相同</strong>（骷髏 2.5／12.5／50、剪紙旗 0.1／0.5／2.5），<br>主題符號也高度重疊 —— 同一套數學骨架的不同實作。</blockquote>
 <h3>這份報告獨有的指標</h3>
 <div class="tbl-wrap"><table><thead><tr><th>指標</th><th>為什麼側錄做不到</th></tr></thead><tbody><tr><td><strong>單局分級</strong>（空手／小輸／持平／贏錢）</td><td>側錄也能算，但樣本不足以穩定估計「假贏」比例</td></tr><tr><td><strong>玩家維度</strong>（人均盈虧、滿 100 局者淨贏率）</td><td>側錄沒有玩家身分</td></tr><tr><td><strong>乾旱期</strong>（最長連續空手、防乾旱機制檢定）</td><td>同上，必須逐玩家串接</td></tr></tbody></table></div>
 <h3>主要結論</h3>
@@ -131,44 +131,68 @@ svg{display:block; width:100%; height:auto; overflow:visible}
 <blockquote><strong>三個可以直接拿來用的發現</strong><br><br>1. <strong>中獎率會騙人。</strong> Pinata 1000 中獎率最高（33.50%）但中十次只有約三次真的贏錢；<br>   Wukong 中獎最少（22.89%）卻有 56.4% 是真贏。只看中獎率排序會完全顛倒。<br>2. <strong>玩家淨贏率三款都是 17.6 ~ 19.5%</strong>，機制差異這麼大卻幾乎一樣 ——<br>   這是 RTP 94 ~ 97% 的自然收斂，和線型設計關係不大。<br>3. <strong>三款都沒有防乾旱機制。</strong> 實測最長連續空手除以獨立抽樣的理論值為 0.95 ~ 1.03，<br>   完全貼在理論線上。這是現成的差異化空間。</blockquote>
 <blockquote>⚠️ <strong>購買（BF）是用押注額反推的，不是欄位。</strong> 規則是「該押注額的中獎率 ≥ 98% 即判定為購買」。<br>DJ Boom Boom 與 Wukong 的中獎率是乾淨的兩群，判定可信；<br><strong>5G 有 6 個金額落在灰色地帶</strong>（60／120／150／240／300／600，同時是 75× 購買價與高額玩家的一般押注），<br>一律歸「混合」兩邊都不計，因此 5G 約 <strong>25% 的購買局無法歸屬</strong>。<br><br>連帶地，<strong>NB 的 FG 與 BF 的 FG 沒有獨立判據</strong> —— 只能靠 parent 的押注額區分，<br>free game 列本身沒有任何欄位標示。詳見報告 4.4。</blockquote></div><div class="panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><p>跨遊戲的單一議題比較，不套用標準報告格式。</p>
 <div class="tbl-wrap"><table><thead><tr><th>題目</th><th>對象</th><th>報告</th></tr></thead><tbody><tr><td>免費遊戲得分分布（NB-FG／BF）</td><td>Lucky Neko（PG）vs 雷神爆金 1000（H028，自家）</td><td><a href="FG%E5%BE%97%E5%88%86%E6%AF%94%E8%BC%83_LuckyNeko_vs_%E9%9B%B7%E7%A5%9E%E7%88%86%E9%87%911000.html">開啟</a></td></tr></tbody></table></div>
-<blockquote>⚠️ 自家遊戲要取<strong>成品模型</strong>（<code>H028192A.xlsx</code> 的 <code>Multiplier_Weight</code>），<br>不要用 <code>Record\</code> 的自然機率模擬檔 —— 後者 Card System 關閉、RTP 371.7%，<br>倍數分布與成品完全不同。詳見該報告 3.2。</blockquote></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">Super Ace</th><th class="n">Lucky Neko</th><th class="n">Pinata Wins</th><th class="n">Gates of Olympus 1000</th><th class="n">Wild Bounty Showdown</th><th>Money Coming</th></tr></thead><tbody><tr><td>廠商</td><td class="n">JILI</td><td class="n">PG</td><td class="n">PG</td><td class="n">PP</td><td class="n">PG</td><td>JILI</td></tr><tr><td>付費轉</td><td class="n"><strong>166,050</strong></td><td class="n">47,068</td><td class="n">22,688</td><td class="n">31,472</td><td class="n">10,463</td><td>12,117（底注 10；三底注共 32,030）</td></tr><tr><td>底注</td><td class="n">3.0 / 0.5 / 0.6</td><td class="n">1.0</td><td class="n">1.0（＋5x Ante）</td><td class="n">0.2</td><td class="n">1.0</td><td>10（另有 1 / 5，各為獨立設定）</td></tr><tr><td><strong>Total RTP</strong></td><td class="n"><strong>94.158%</strong></td><td class="n"><strong>100.932%</strong></td><td class="n"><strong>92.542%</strong></td><td class="n"><strong>90.748%</strong></td><td class="n"><strong>86.636%</strong></td><td><strong>94.328%</strong></td></tr><tr><td>官方 RTP</td><td class="n">96.50%</td><td class="n">96.72%</td><td class="n">⏳</td><td class="n">96.75%</td><td class="n">96.75%</td><td>92.00%（伺服器回傳）</td></tr><tr><td>差距</td><td class="n">−2.34pp</td><td class="n"><strong>+4.21pp</strong></td><td class="n">—</td><td class="n">−6.00pp</td><td class="n">−10.11pp</td><td>+2.33pp</td></tr><tr><td>BG RTP</td><td class="n">65.128%</td><td class="n">75.561%</td><td class="n">66.227%</td><td class="n">68.536%</td><td class="n">71.069%</td><td>94.328%（盤面 72.870% ＋ 幸運轉盤 21.457%）</td></tr><tr><td>FG RTP</td><td class="n">29.030%</td><td class="n">25.371%</td><td class="n">26.315%</td><td class="n">22.212%</td><td class="n">15.567%</td><td>—（無 FG）</td></tr><tr><td><strong>BG Hit Rate</strong></td><td class="n">23.770%</td><td class="n">27.643%</td><td class="n">27.548%</td><td class="n"><strong>28.721%</strong></td><td class="n">28.434%</td><td>12.610%</td></tr><tr><td>FG Hit Rate</td><td class="n">40.563%</td><td class="n">⏳</td><td class="n"><strong>43.567%</strong></td><td class="n">38.065%</td><td class="n">25.419%</td><td>—</td></tr><tr><td><strong>FG 週期</strong></td><td class="n"><strong>1/118.5</strong></td><td class="n">1/324.6</td><td class="n">1/270.1</td><td class="n">1/425.3</td><td class="n">1/298.9</td><td>—（幸運轉盤 1/83.0）</td></tr><tr><td>FG 觸發次數</td><td class="n">1,401</td><td class="n">145</td><td class="n">84</td><td class="n">68</td><td class="n">35</td><td>—（幸運轉盤 146）</td></tr><tr><td>FG 平均倍數</td><td class="n">35.53x</td><td class="n">82.35x</td><td class="n">72.97x</td><td class="n"><strong>94.47x</strong></td><td class="n">46.54x</td><td>—（幸運轉盤 17.81x）</td></tr><tr><td>Buy Feature</td><td class="n">✅ 40.5x</td><td class="n">❌</td><td class="n">❌</td><td class="n">✅ 100x</td><td class="n">❌</td><td>❌</td></tr><tr><td>BF RTP</td><td class="n">84.790%</td><td class="n">—</td><td class="n">—</td><td class="n">85.413%</td><td class="n">—</td><td>—</td></tr></tbody></table></div>
+<blockquote>⚠️ 自家遊戲要取<strong>成品模型</strong>（<code>H028192A.xlsx</code> 的 <code>Multiplier_Weight</code>），<br>不要用 <code>Record\</code> 的自然機率模擬檔 —— 後者 Card System 關閉、RTP 371.7%，<br>倍數分布與成品完全不同。詳見該報告 3.2。</blockquote></div><div class="panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><h3>2026-11-09 新增的四款</h3>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">Gates of Olympus Super Scatter</th><th class="n">Sugar Rush</th><th class="n">Sweet Bonanza 1000</th><th class="n">Piñata 1000（NB）</th><th class="n">Piñata 1000（EB）</th></tr></thead><tbody><tr><td>廠商</td><td class="n">PP</td><td class="n">PP</td><td class="n">PP</td><td class="n">5G GAMING</td><td class="n">5G GAMING</td></tr><tr><td>盤面</td><td class="n">6×5 Pay Anywhere</td><td class="n">7×7 Cluster</td><td class="n">6×5 Pay Anywhere</td><td class="n">5×3 20 線</td><td class="n">5×3 20 線</td></tr><tr><td>付費轉</td><td class="n"><strong>100,000</strong></td><td class="n"><strong>100,000</strong></td><td class="n">30,893</td><td class="n">103,519</td><td class="n">100,046</td></tr><tr><td>底注</td><td class="n">2.0</td><td class="n">2.0</td><td class="n">2.0</td><td class="n">20 win 單位</td><td class="n">40 win 單位</td></tr><tr><td><strong>Total RTP</strong></td><td class="n"><strong>93.283%</strong></td><td class="n"><strong>93.292%</strong></td><td class="n"><strong>104.131%</strong></td><td class="n"><strong>97.411%</strong></td><td class="n"><strong>98.905%</strong></td></tr><tr><td>官方 RTP</td><td class="n">⏳</td><td class="n">⏳</td><td class="n">⏳</td><td class="n">⏳</td><td class="n">⏳</td></tr><tr><td>BG RTP</td><td class="n">74.115%</td><td class="n">65.509%</td><td class="n">75.893%</td><td class="n">72.915%</td><td class="n"><strong>26.712%</strong></td></tr><tr><td>FG RTP</td><td class="n">19.168%</td><td class="n">27.782%</td><td class="n">28.237%</td><td class="n">24.496%</td><td class="n"><strong>72.193%</strong></td></tr><tr><td><strong>BG Hit Rate</strong></td><td class="n">27.820%</td><td class="n">33.922%</td><td class="n"><strong>42.547%</strong></td><td class="n">32.983%</td><td class="n">28.954%</td></tr><tr><td>FG Hit Rate</td><td class="n">38.790%</td><td class="n"><strong>54.126%</strong></td><td class="n">36.334%</td><td class="n">41.865%</td><td class="n">41.639%</td></tr><tr><td><strong>FG 週期</strong></td><td class="n">1/436.7</td><td class="n">1/309.6</td><td class="n">1/542.0</td><td class="n">1/239.1</td><td class="n"><strong>1/41.0</strong></td></tr><tr><td>FG 觸發次數</td><td class="n">229</td><td class="n">323</td><td class="n">57</td><td class="n">433</td><td class="n"><strong>2,438</strong></td></tr><tr><td>FG 平均倍數</td><td class="n">83.70x</td><td class="n">86.01x</td><td class="n"><strong>153.04x</strong></td><td class="n">58.56x</td><td class="n">29.63x</td></tr><tr><td>整局倍數標準差</td><td class="n">12.045</td><td class="n">10.384</td><td class="n"><strong>29.886</strong></td><td class="n">8.694</td><td class="n">7.793</td></tr><tr><td>Buy Feature</td><td class="n">✅ 100x／500x（無樣本）</td><td class="n">⏳</td><td class="n">✅ 100x／<strong>500x</strong></td><td class="n">✅ 75x／300x（無樣本）</td><td class="n">停用</td></tr><tr><td>BF RTP</td><td class="n">—</td><td class="n">—</td><td class="n"><strong>114.767%</strong>（97 次）</td><td class="n">—</td><td class="n">—</td></tr><tr><td>一般遊戲有無乘數</td><td class="n">✅ 乘數球</td><td class="n">✅ 黏著乘數</td><td class="n"><strong>❌ 完全沒有</strong></td><td class="n">✅ 金框倍率</td><td class="n">✅ 金框倍率</td></tr></tbody></table></div>
+<h3>既有六款</h3>
+<div class="tbl-wrap"><table><thead><tr><th>指標</th><th class="n">Super Ace</th><th class="n">Lucky Neko</th><th class="n">Pinata Wins</th><th class="n">Gates of Olympus 1000</th><th class="n">Wild Bounty Showdown</th><th>Money Coming</th></tr></thead><tbody><tr><td>廠商</td><td class="n">JILI</td><td class="n">PG</td><td class="n">PG</td><td class="n">PP</td><td class="n">PG</td><td>JILI</td></tr><tr><td>付費轉</td><td class="n"><strong>166,050</strong></td><td class="n">47,068</td><td class="n">22,688</td><td class="n">31,472</td><td class="n">10,463</td><td>12,117（底注 10；三底注共 32,030）</td></tr><tr><td>底注</td><td class="n">3.0 / 0.5 / 0.6</td><td class="n">1.0</td><td class="n">1.0（＋5x Ante）</td><td class="n">0.2</td><td class="n">1.0</td><td>10（另有 1 / 5，各為獨立設定）</td></tr><tr><td><strong>Total RTP</strong></td><td class="n"><strong>94.158%</strong></td><td class="n"><strong>100.932%</strong></td><td class="n"><strong>92.542%</strong></td><td class="n"><strong>90.748%</strong></td><td class="n"><strong>86.636%</strong></td><td><strong>94.328%</strong></td></tr><tr><td>官方 RTP</td><td class="n">96.50%</td><td class="n">96.72%</td><td class="n"><strong>96.75%</strong></td><td class="n">96.75%</td><td class="n">96.75%</td><td>92.00%（伺服器回傳）</td></tr><tr><td>差距</td><td class="n">−2.34pp</td><td class="n"><strong>+4.21pp</strong></td><td class="n">−4.21pp</td><td class="n">−6.00pp</td><td class="n">−10.11pp</td><td>+2.33pp</td></tr><tr><td>BG RTP</td><td class="n">65.128%</td><td class="n">75.561%</td><td class="n">66.227%</td><td class="n">68.536%</td><td class="n">71.069%</td><td>94.328%（盤面 72.870% ＋ 幸運轉盤 21.457%）</td></tr><tr><td>FG RTP</td><td class="n">29.030%</td><td class="n">25.371%</td><td class="n">26.315%</td><td class="n">22.212%</td><td class="n">15.567%</td><td>—（無 FG）</td></tr><tr><td><strong>BG Hit Rate</strong></td><td class="n">23.770%</td><td class="n">27.643%</td><td class="n">27.548%</td><td class="n"><strong>28.721%</strong></td><td class="n">28.434%</td><td>12.610%</td></tr><tr><td>FG Hit Rate</td><td class="n">40.563%</td><td class="n">⏳</td><td class="n"><strong>43.567%</strong></td><td class="n">38.065%</td><td class="n">25.419%</td><td>—</td></tr><tr><td><strong>FG 週期</strong></td><td class="n"><strong>1/118.5</strong></td><td class="n">1/324.6</td><td class="n">1/270.1</td><td class="n">1/425.3</td><td class="n">1/298.9</td><td>—（幸運轉盤 1/83.0）</td></tr><tr><td>FG 觸發次數</td><td class="n">1,401</td><td class="n">145</td><td class="n">84</td><td class="n">68</td><td class="n">35</td><td>—（幸運轉盤 146）</td></tr><tr><td>FG 平均倍數</td><td class="n">35.53x</td><td class="n">82.35x</td><td class="n">72.97x</td><td class="n"><strong>94.47x</strong></td><td class="n">46.54x</td><td>—（幸運轉盤 17.81x）</td></tr><tr><td>Buy Feature</td><td class="n">✅ 40.5x</td><td class="n">❌</td><td class="n">✅ 75x（無樣本）</td><td class="n">✅ 100x</td><td class="n">❌</td><td>❌</td></tr><tr><td>BF RTP</td><td class="n">84.790%</td><td class="n">—</td><td class="n">—</td><td class="n">85.413%</td><td class="n">—</td><td>—</td></tr></tbody></table></div>
+<blockquote>📝 <strong>Pinata Wins 的官方 RTP 已補上 96.75%</strong>（來自 <code>官方資源\Pinata_Wins_Gameinformation_EN.pdf</code> p4：<br>Overall 96.75%、Main Game 68.46%、Bonus Feature 28.29%、Medium 波動性、Max Win 5,000x），<br>實測 92.542% 低於官方 <strong>4.21pp</strong>。該款官方也<strong>有 Feature Buy（75x）</strong>，<br>舊報告的 <code>data.json</code> 寫「本作無 Buy Feature」是錯的（側錄沒有購買樣本而已）。</blockquote>
 <h3>最大倍數（實測，倍數＝得分 ÷ 底注）</h3>
-<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">Super Ace</th><th class="n">Lucky Neko</th><th class="n">Pinata Wins</th><th class="n">Gates of Olympus 1000</th><th class="n">Wild Bounty Showdown</th><th>Money Coming</th></tr></thead><tbody><tr><td>BG（未觸發 FG 的回合）</td><td class="n">200.85x</td><td class="n">196.30x</td><td class="n"><strong>235.00x</strong></td><td class="n">225.00x</td><td class="n">89.40x</td><td>101.1x（底注 10）；底注 1 為 <strong>525.0x</strong></td></tr><tr><td>FG（一場全程）</td><td class="n">761.70x</td><td class="n"><strong>911.80x</strong></td><td class="n">331.25x</td><td class="n">422.45x</td><td class="n">420.40x</td><td>—</td></tr><tr><td>BF（一次購買全程）</td><td class="n">382.60x</td><td class="n">—</td><td class="n">—</td><td class="n"><strong>591.10x</strong></td><td class="n">—</td><td>—</td></tr><tr><td>規則上限</td><td class="n">⏳</td><td class="n">⏳</td><td class="n">⏳</td><td class="n"><strong>15,000x</strong></td><td class="n"><strong>5,000x</strong></td><td><strong>1,055x</strong>（底注 1 為 525x）</td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><div class="tbl-wrap"><table><thead><tr><th>日期</th><th>遊戲</th><th>內容</th></tr></thead><tbody><tr><td>2026-09-30</td><td>Pinata Wins</td><td>改用 <code>si_st</code> 狀態機逐轉統計，重跑全部指標。補齊 FG 轉數（1,267）與 FG Hit Rate（43.567%）；修正 FG 觸發次數 71→84、BG／FG RTP 拆分 70.949/21.593→66.227/26.315、最大倍數 BG 331.35→235.00x、FG 273.45→331.25x。</td></tr><tr><td>2026-10-29</td><td>熱門遊戲數值分析</td><td>報告改名為 <strong>熱門遊戲數值分析</strong>並移入「其他報告」區（<code>工作區\其他任務±028_三款遊戲數值分析\</code>）。<strong>DJ Boom Boom 與 Wukong MoreWays 的數值全部收回待確認</strong>，報告中一律標 ⏳，先前誤填的數字已移除。</td></tr><tr><td>2026-10-29</td><td>彩罐熱舞 1000（本作）＋ Acewin 三款</td><td>報告更名為 <code>遊戲數據_彩罐熱舞_vs_Acewin三款</code>（原 <code>遊戲數據_Pinata_1000</code>，內容已是四欄對照，舊名不符）；三款合一的 <code>遊戲數據_Pinata_Boom_Wukong</code> 退役，md 與 HTML 均移入 <code>舊版\</code>。</td></tr><tr><td>2026-10-29</td><td>彩罐熱舞 1000（本作）＋ Acewin 三款</td><td>報告改為<strong>四欄對照</strong>並套用數值報告卡片版式；章節縮為 3 章（附錄內容併入第 1 章）。新增 <strong>2.13 門檻機率（FG &lt; 10x）</strong>與<strong>2.14 BF 離場分布</strong>；第 3 章倍率線型改為 <strong>BG／FG／BF 各兩張（主圖＋縱軸放大）</strong>，分母統一為底注。</td></tr><tr><td>2026-10-29</td><td>Pinata 1000（Acewin）</td><td>由三款合一報告拆出<strong>單款報告</strong> <code>遊戲數據_Pinata_1000</code>，章節 4 章制，數字與合一版一致。同時修正 ≥100x 週期的內文數字 1/928 → <strong>1/932</strong>（去重後重算，原為舊值）。</td></tr><tr><td>2026-10-29</td><td>Pinata 1000（Acewin）</td><td>章節結構由 6 章簡化為 <strong>4 章</strong>（1 資料說明／2 基本資料／3 倍率線型／4 附錄）。原「共同指標」與「特殊指標」整段併入第 2 章（2.5~2.12），內容與數字未變，僅編號調整。</td></tr><tr><td>2026-10-28</td><td>Pinata 1000（Acewin）</td><td>購買判定門檻由 80% 收緊至 50%：押注額 60／120／600 原誤判為一般局（中獎率 54.33%／64.23%／69.35%，實為 75× 底注的購買價），改歸「混合」。一般局 <strong>FG 週期 1/103.4→1/120.5</strong>、FG 平均倍數 32.86x→<strong>38.17x</strong>、BG／FG 拆分 56.467/41.555→<strong>59.062/38.416</strong>。新增 6.4 說明方法論限制。</td></tr><tr><td>2026-10-28</td><td>Pinata 1000（Acewin）</td><td>5G 的 <code>normal</code> 列有 108,614 列（3.8%）<code>betId</code> 重複，已去重：付費局數 2,846,869→<strong>2,738,255</strong>、Total RTP 97.59%→<strong>97.57%</strong>、一般局 RTP 98.07%→<strong>98.02%</strong>。結論不變。同時新增 BG／FG 拆分（5G 有 <code>betType</code> ＋ <code>parentBetId</code>，可直接拆）。</td></tr><tr><td>2026-09-30</td><td>Gates of Olympus 1000</td><td>3.4／3.5／3.7／5.2 重算：排除遺失 cascade 列的問題檔、修正 <code>rs_p=0</code> 被當成未中獎、把 <code>fs=1</code> 首列的 scatter 觸發獎金從免費轉得分剔除。三場景校驗全部通過。<strong>2 RTP 與 4 倍率線型仍為舊基準。</strong></td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><h3>RTP 都不能當設定值引用</h3>
-<p>沒有一款的樣本量足以讓 RTP 收斂。最極端的兩個方向：</p>
+<div class="tbl-wrap"><table><thead><tr><th>場景</th><th class="n">Gates SS</th><th class="n">Sugar Rush</th><th class="n">Sweet Bonanza 1000</th><th class="n">Piñata 1000 NB</th><th class="n">Piñata 1000 EB</th><th class="n">Super Ace</th><th class="n">Lucky Neko</th><th class="n">Pinata Wins</th><th class="n">Gates 1000</th><th class="n">Wild Bounty</th><th>Money Coming</th></tr></thead><tbody><tr><td>BG（未觸發 FG 的回合）</td><td class="n"><strong>1,570.80x</strong></td><td class="n">1,408.85x</td><td class="n">31.20x</td><td class="n">680.00x</td><td class="n">267.25x</td><td class="n">200.85x</td><td class="n">196.30x</td><td class="n">235.00x</td><td class="n">225.00x</td><td class="n">89.40x</td><td>101.1x（底注 10）</td></tr><tr><td>FG（一場全程）</td><td class="n">1,070.90x</td><td class="n">784.60x</td><td class="n"><strong>5,158.20x</strong></td><td class="n">1,267.25x</td><td class="n">608.60x</td><td class="n">761.70x</td><td class="n">911.80x</td><td class="n">331.25x</td><td class="n">422.45x</td><td class="n">420.40x</td><td>—</td></tr><tr><td>BF（一次購買全程）</td><td class="n">—</td><td class="n">—</td><td class="n"><strong>9,398.40x</strong></td><td class="n">—</td><td class="n">—</td><td class="n">382.60x</td><td class="n">—</td><td class="n">—</td><td class="n">591.10x</td><td class="n">—</td><td>—</td></tr><tr><td>規則上限</td><td class="n"><strong>50,000x</strong></td><td class="n">⏳</td><td class="n"><strong>25,000x</strong></td><td class="n"><strong>10,000x</strong></td><td class="n"><strong>10,000x</strong></td><td class="n">⏳</td><td class="n">⏳</td><td class="n"><strong>5,000x</strong></td><td class="n"><strong>15,000x</strong></td><td class="n"><strong>5,000x</strong></td><td><strong>1,055x</strong></td></tr></tbody></table></div>
+<blockquote>⚠️ <strong>沒有任何一款的樣本量足以驗證規則上限。</strong> 十款的 <code>≥1000x</code>／<code>≥5000x</code>／<code>≥10000x</code><br>三個門檻機率裡，只有四格不是「0%（未觀測到）」：<br>Gates SS ≥1000x（3 / 100,000）、Sugar Rush ≥1000x（1 / 100,000）、<br>Piñata 1000 NB ≥1000x（1 / 103,519）、Sweet Bonanza 1000 ≥1000x 與 ≥5000x（各 1 / 30,893）。<br><strong>「0%」的意思是「1 ~ 17 萬局的側錄樣本規模不足以觀測這個量級」，不是「這款開不出來」</strong> ——<br>規則上限明確寫著 5,000 ~ 50,000x，機制上也有空間（Gates SS 的 4 個 Super Scatter 直接達 50,000x、<br>Sweet Bonanza 1000 的單顆炸彈最高 1,000x）。要穩定估計 ≥5000x 的機率，<br>樣本量至少要再放大一到兩個數量級（百萬局以上）。</blockquote></div><div class="panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><div class="tbl-wrap"><table><thead><tr><th>日期</th><th>遊戲</th><th>內容</th></tr></thead><tbody><tr><td>2026-11-09</td><td>Gates of Olympus Super Scatter／Sugar Rush／Sweet Bonanza 1000／Piñata 1000</td><td>四款新報告。同時補上 <code>game_rule_*.md</code>（Money Coming／Pinata Wins／Sweet Bonanza 1000／Sugar Rush／Piñata 1000 五份）。</td></tr><tr><td>2026-11-09</td><td>Piñata 1000（5G）</td><td>發現工作簿自帶的 <code>統計-5G-*</code> 分頁把「輪」算成 <code>idx // 4</code>，正確是 <code>idx % 5</code>（用「R1 輪帶沒有 Wild」驗證）。<strong>該分頁的符號分布兩張表不可引用</strong>，報告已用正確口徑重算。</td></tr><tr><td>2026-11-09</td><td>Sweet Bonanza 1000</td><td><code>sf</code> 檔有兩個 game_data 分頁，<code>game_data</code>（39 回合）是 <code>game_data_1</code>（97 回合）的子集，只採後者。<code>nb</code> 檔沒有 <code>rid</code>，回合邊界以狀態機還原，與工作簿自帶統計差 37 回合（0.12%）。</td></tr><tr><td>2026-09-30</td><td>Pinata Wins</td><td>改用 <code>si_st</code> 狀態機逐轉統計，重跑全部指標。補齊 FG 轉數（1,267）與 FG Hit Rate（43.567%）；修正 FG 觸發次數 71→84、BG／FG RTP 拆分 70.949/21.593→66.227/26.315、最大倍數 BG 331.35→235.00x、FG 273.45→331.25x。</td></tr><tr><td>2026-10-29</td><td>熱門遊戲數值分析</td><td>報告改名為 <strong>熱門遊戲數值分析</strong>並移入「其他報告」區（<code>工作區\其他任務±028_三款遊戲數值分析\</code>）。<strong>DJ Boom Boom 與 Wukong MoreWays 的數值全部收回待確認</strong>，報告中一律標 ⏳，先前誤填的數字已移除。</td></tr><tr><td>2026-10-29</td><td>彩罐熱舞 1000（本作）＋ Acewin 三款</td><td>報告更名為 <code>遊戲數據_彩罐熱舞_vs_Acewin三款</code>（原 <code>遊戲數據_Pinata_1000</code>，內容已是四欄對照，舊名不符）；三款合一的 <code>遊戲數據_Pinata_Boom_Wukong</code> 退役，md 與 HTML 均移入 <code>舊版\</code>。</td></tr><tr><td>2026-10-29</td><td>彩罐熱舞 1000（本作）＋ Acewin 三款</td><td>報告改為<strong>四欄對照</strong>並套用數值報告卡片版式；章節縮為 3 章（附錄內容併入第 1 章）。新增 <strong>2.13 門檻機率（FG &lt; 10x）</strong>與<strong>2.14 BF 離場分布</strong>；第 3 章倍率線型改為 <strong>BG／FG／BF 各兩張（主圖＋縱軸放大）</strong>，分母統一為底注。</td></tr><tr><td>2026-10-29</td><td>Pinata 1000（Acewin）</td><td>由三款合一報告拆出<strong>單款報告</strong> <code>遊戲數據_Pinata_1000</code>，章節 4 章制，數字與合一版一致。同時修正 ≥100x 週期的內文數字 1/928 → <strong>1/932</strong>（去重後重算，原為舊值）。</td></tr><tr><td>2026-10-29</td><td>Pinata 1000（Acewin）</td><td>章節結構由 6 章簡化為 <strong>4 章</strong>（1 資料說明／2 基本資料／3 倍率線型／4 附錄）。原「共同指標」與「特殊指標」整段併入第 2 章（2.5~2.12），內容與數字未變，僅編號調整。</td></tr><tr><td>2026-10-28</td><td>Pinata 1000（Acewin）</td><td>購買判定門檻由 80% 收緊至 50%：押注額 60／120／600 原誤判為一般局（中獎率 54.33%／64.23%／69.35%，實為 75× 底注的購買價），改歸「混合」。一般局 <strong>FG 週期 1/103.4→1/120.5</strong>、FG 平均倍數 32.86x→<strong>38.17x</strong>、BG／FG 拆分 56.467/41.555→<strong>59.062/38.416</strong>。新增 6.4 說明方法論限制。</td></tr><tr><td>2026-10-28</td><td>Pinata 1000（Acewin）</td><td>5G 的 <code>normal</code> 列有 108,614 列（3.8%）<code>betId</code> 重複，已去重：付費局數 2,846,869→<strong>2,738,255</strong>、總 RTP 97.59%→<strong>97.57%</strong>、一般局 RTP 98.07%→<strong>98.02%</strong>。結論不變。同時新增 BG／FG 拆分（5G 有 <code>betType</code> ＋ <code>parentBetId</code>，可直接拆）。</td></tr><tr><td>2026-09-30</td><td>Gates of Olympus 1000</td><td>3.4／3.5／3.7／5.2 重算：排除遺失 cascade 列的問題檔、修正 <code>rs_p=0</code> 被當成未中獎、把 <code>fs=1</code> 首列的 scatter 觸發獎金從免費轉得分剔除。三場景校驗全部通過。<strong>2 RTP 與 4 倍率線型仍為舊基準。</strong></td></tr></tbody></table></div></div><div class="panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><h3>RTP 都不能當設定值引用</h3>
+<p>沒有一款的樣本量足以讓 RTP 收斂。最極端的四個方向：</p>
+<ul><li><strong>Sweet Bonanza 1000 104.13%</strong> —— 30,893 局裡有一局開出 5,161.20x，單這一筆就貢獻 <strong>16.70pp</strong>。</li></ul>
+<p>  <strong>剔除後是 87.43%。</strong> 它的 BF RTP 114.77% 同理（一筆 9,398.40x 貢獻 19.4pp，剔除後 96.38%）。</p>
 <ul><li><strong>Lucky Neko 100.93%，高於官方 4.21pp</strong> —— 正向變異。只有 145 次 FG 觸發，</li></ul>
 <p>  而 FG 貢獻 25.4% 的 RTP，一場 911.80x 的大 FG 就能把總數推高好幾個百分點。</p>
 <ul><li><strong>Wild Bounty Showdown 86.64%，低於官方 10.11pp</strong> —— 但它的 **BG RTP 71.069%</li></ul>
 <p>  對上官方 71.03%，只差 0.04pp**。缺口全在 FG（15.567% vs 官方 25.72%），</p>
 <p>  因為只抓到 35 場 FG。</p>
+<ul><li><strong>Piñata 1000 EB 98.91%</strong> —— 看起來最接近 100%，但它的 RTP 有 72.2% 來自 FG，</li></ul>
+<p>  而 FG 只有 2,438 場。</p>
 <p><strong>可以引用的是 BG Hit Rate 與連消分布</strong>（樣本都上萬，且都通過</p>
-<p>「combo 0 占比 ＋ Hit Rate = 100%」的校驗）。FG 相關指標一律附樣本數。</p>
+<p>「combo 0 占比 ＋ Hit Rate = 100%」的校驗，Gates SS 與 Sweet Bonanza 1000 因為 Scatter 會派彩，</p>
+<p>差 0.05 ~ 0.15%，已在各報告 1.2 說明）。FG 相關指標一律附樣本數。</p>
 <h3>FG 週期差異是真的</h3>
-<p>Super Ace <strong>1/118.5</strong> 比其他四款（1/299 ~ 1/425）密集約 2.5~3.6 倍，</p>
-<p>這個差距遠大於樣本誤差（Super Ace 有 1,401 次觸發）。</p>
-<p>但它的 FG 平均倍數 35.53x 也是最低的——高頻低倍 vs 低頻高倍的設計取向差異。</p>
-<h3>大獎幾乎全部來自免費遊戲</h3>
-<p>五款裡 BG 單回合最高只到 89~331x，而 FG／BF 一場可以到 273~911x。</p>
-<p>差距最大的是 <strong>Wild Bounty Showdown：BG 只有 89.40x，FG 卻到 420.40x（4.7 倍）</strong>。</p>
-<p><strong>Pinata Wins 的 BG 最大 235.00x 與 FG 最大 331.25x 差距只有 1.4 倍</strong>，是六款裡最小的 ——</p>
-<p>它的金框倍數在一般遊戲就會生效，不必進 FG 才拿得到，但 FG 只抓到 84 場，尾段本來就抽不滿。</p>
+<p>Piñata 1000 EB 的 <strong>1/41.0</strong> 與 Super Ace 的 <strong>1/118.5</strong> 比其他款（1/239 ~ 1/542）密集 2 ~ 13 倍，</p>
+<p>這個差距遠大於樣本誤差。但兩者的 FG 平均倍數（29.63x／35.53x）也是最低的 ——</p>
+<p><strong>高頻低倍 vs 低頻高倍是一條很清楚的設計取捨線</strong>，十一款沒有例外。</p>
+<h3>大獎幾乎全部來自免費遊戲 —— 但有兩個例外</h3>
+<p>多數款的 BG 單回合最高只到 89 ~ 331x，FG／BF 一場可以到 273 ~ 9,398x。</p>
+<p><strong>最極端的是 Sweet Bonanza 1000：BG 只有 31.20x，FG 到 5,158.20x（165 倍）</strong>，</p>
+<p>因為它的一般遊戲完全沒有乘數。</p>
+<p>兩個例外：</p>
+<ul><li><strong>Gates of Olympus Super Scatter 的 BG 最高 1,570.80x，比它的 FG（1,070.90x）還高。</strong></li></ul>
+<p>  乘數球在一般遊戲就會生效（單顆最高 500x，BG 專屬）。</p>
+<ul><li><strong>Sugar Rush 的 BG 最高 1,408.85x，也高於 FG（784.60x）。</strong> 黏著乘數在一般遊戲同樣會累積。</li></ul>
 <h3>Money Coming 不是同一類遊戲</h3>
 <p>3 個主轉輪 × 1 列，得分＝面額由左至右<strong>串接成的數字</strong> × 特別轉輪倍率，再加幸運轉盤獎金；</p>
-<p>沒有 FG、BF、連消。跟其他五款可比的只有 <strong>Total RTP、Hit Rate、最大倍數與 BG 倍率線型</strong>。</p>
+<p>沒有 FG、BF、連消。跟其他款可比的只有 <strong>總 RTP、Hit Rate、最大倍數與 BG 倍率線型</strong>。</p>
 <ul><li><strong>每個底注是一套獨立設定</strong>：底注 1 只有兩輪、鎖 SCATTER 與 10x；底注 5 開第三輪與 SCATTER；底注 10 才有 10x。</li></ul>
 <p>  對照表取底注 10。三個底注的 RTP 信賴區間都有 ±10pp，只能說「與宣告的 92% 相容」。</p>
-<ul><li><strong>Hit Rate 12.6% 是六款最低</strong>，但 RESPIN 重轉盤 100% 必中、幸運轉盤 1/83 且必定獲獎（平均 17.8x），</li></ul>
+<ul><li><strong>Hit Rate 12.6% 是十一款最低</strong>，但 RESPIN 重轉盤 100% 必中、幸運轉盤 1/83 且必定獲獎（平均 17.8x），</li></ul>
 <p>  這兩個機制合計貢獻約一半的 RTP，角色相當於其他遊戲的 FG。</p>
 <ul><li><strong>特別轉輪與主轉輪結果不獨立</strong>（主轉輪中獎時倍率／SCATTER 出現率高 2～15 倍），反推輪帶時不能把 4 輪當獨立抽樣。</li><li>資料來自 <code>uat-</code> 測試環境試玩模式，底注 50 / 100 未開放，<code>00</code> 面額與 10,000x 加強版 SCATTER 沒有資料。</li></ul>
+<h3>轉輪堆疊是 PP 的主要調節手段</h3>
+<p>「每個停輪視窗（一輪 N 格）最長連續段為 1」的比例，三款 6×5 PP 遊戲差異極大：</p>
+<div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th class="n">BG 單格視窗比例</th><th class="n">FG 單格視窗比例</th></tr></thead><tbody><tr><td>Gates of Olympus Super Scatter</td><td class="n">21.668%</td><td class="n"><strong>0.000%</strong></td></tr><tr><td>Sweet Bonanza 1000</td><td class="n"><strong>0.000%</strong></td><td class="n"><strong>0.000%</strong></td></tr><tr><td>Piñata 1000（5G，5×4 視窗）</td><td class="n">81.023%</td><td class="n">80.523%</td></tr></tbody></table></div>
+<blockquote>10 種符號獨立抽樣時，5 格視窗完全沒有相鄰同符號的機率約 66%。<br>**Sweet Bonanza 1000 把 2 連堆疊放進一般遊戲（BG Hit Rate 42.5%，最高）；<br>Gates SS 只放在 FG（BG 27.8% / FG 38.8%）。** 5G 那款則完全不用堆疊，<br>靠 20 條線 ＋ 連消 ＋ Wild 製造命中。</blockquote>
 <h3>各家的資料格式差很多</h3>
-<p>五種側錄格式、四種「一次付費 spin」的判定方式：</p>
-<div class="tbl-wrap"><table><thead><tr><th>來源</th><th>一次付費 spin</th><th>總得分口徑</th></tr></thead><tbody><tr><td>PP</td><td>相異 <code>rid</code></td><td><code>w</code> 欄整欄加總</td></tr><tr><td>PG · si_ 格式</td><td><code>si_tb</code> &gt; 0 的列</td><td>每回合<strong>最後一列</strong>的 <code>aw</code></td></tr><tr><td>PG · 已彙整</td><td>相異 <code>root_spin_id</code></td><td><code>total_win</code></td></tr><tr><td>JILI</td><td>一行 JSONL</td><td><code>win</code>（＝<code>sum(plate[i].win)</code>）</td></tr><tr><td>JILI · Money Coming</td><td>一行 JSONL</td><td><code>win</code>（＝<code>sum(PlateInfo[i].PlateWin)</code> ＋ <code>WheelWin</code>）</td></tr></tbody></table></div>
+<p>六種側錄格式、五種「一次付費 spin」的判定方式：</p>
+<div class="tbl-wrap"><table><thead><tr><th>來源</th><th>一次付費 spin</th><th>總得分口徑</th></tr></thead><tbody><tr><td>PP · jsonl</td><td>一行 JSONL（<code>steps[]</code> 為該回合所有 step）</td><td>該回合所有 step 的 <code>max(tw)</code></td></tr><tr><td>PP · 攤平 xlsx（有 <code>rid</code>）</td><td>相異 <code>rid</code></td><td>該 <code>rid</code> 的 <code>max(tw)</code></td></tr><tr><td>PP · 攤平 xlsx（無 <code>rid</code>）</td><td>以 <code>na</code>／<code>rs_p</code>／<code>rs_t</code>／<code>fs</code> 做狀態機還原</td><td>同上</td></tr><tr><td>PG · si_ 格式</td><td><code>si_tb</code> &gt; 0 的列</td><td>每回合<strong>最後一列</strong>的 <code>aw</code></td></tr><tr><td>PG · 已彙整</td><td>相異 <code>root_spin_id</code></td><td><code>total_win</code></td></tr><tr><td>JILI</td><td>一行 JSONL</td><td><code>win</code>（＝<code>sum(plate[i].win)</code>）</td></tr><tr><td>JILI · Money Coming</td><td>一行 JSONL</td><td><code>win</code>（＝<code>sum(PlateInfo[i].PlateWin)</code> ＋ <code>WheelWin</code>）</td></tr><tr><td>5G · protobuf 逐轉</td><td><code>marker = BS</code> 的列</td><td>該列 <code>win</code> ＋ 其後連續 <code>FS</code> 列的 <code>win</code></td></tr></tbody></table></div>
 <p>判定錯會讓整份 RTP 失真（實例：PG si_ 格式若把 <code>aw</code> 整欄加總，RTP 會算成 400.8%）。</p>
-<p>完整的踩坑紀錄在 <code>~/.claude/skills/game-data-report/references/data_sources.md</code>。</p></div><div class="panel" role="tabpanel" id="panel-6" aria-labelledby="tab-6" hidden><p>只有兩款做過（資料夾內有還原輪帶檔才做）：</p>
+<p>完整的踩坑紀錄在 <code>~/.claude/skills/game-data-report/references/data_sources.md</code>。</p>
+<h3>盤面方向（row-major vs column-major）錯了看不出來</h3>
+<p>PP 的 <code>s</code> 欄位是 <strong>row-major</strong>（<code>index = row × 輪數 + 輪</code>）。</p>
+<p>讀成 column-major 時，<strong>RTP／Hit Rate 類指標完全不會報錯</strong>，</p>
+<p>只有分輪統計（符號分布、堆疊、補牌）會全錯。</p>
+<p>判別法：取連續兩步，把前一步 <code>s_mark</code> 的位置挖掉，比對後一步同一輪的符號是否整體下移。</p>
+<p>5G 的盤面則是 <code>idx = col + 5 × row</code>（輪 = <code>idx % 5</code>），該款工作簿自帶的統計分頁算錯了。</p></div><div class="panel" role="tabpanel" id="panel-6" aria-labelledby="tab-6" hidden><p>只有兩款做過（資料夾內有還原輪帶檔才做）：</p>
 <div class="tbl-wrap"><table><thead><tr><th>遊戲</th><th>檔案</th><th class="n">BG</th><th class="n">FG</th><th class="n">BF</th></tr></thead><tbody><tr><td>Gates of Olympus 1000</td><td><code>還原輪帶_Gates_of_Olympus_1000.xlsx</code></td><td class="n"><strong>100.00%</strong></td><td class="n"><strong>100.00%</strong></td><td class="n"><strong>100.00%</strong></td></tr><tr><td>Super Ace</td><td><code>輪帶還原_SuperAce.xlsx</code></td><td class="n">97.45%</td><td class="n"><strong>100.00%</strong></td><td class="n"><strong>100.00%</strong></td></tr></tbody></table></div>
 <p>兩者的假陽性檢定（盤面洗牌後重測）都是 <strong>0.000%</strong>，所以 100% 不是比對條件太鬆。</p>
 <p>Super Ace 的 BG_Strip 缺 2.55%（R2~R5 各缺 14~20 個視窗），原因是還原時的重複度</p>
 <p>沒解出來，不是抄錯；要補齊需要 min-cost flow 解每個 3-gram 的重複次數。</p>
-<p>詳見該報告 6。</p></div><div class="panel" role="tabpanel" id="panel-7" aria-labelledby="tab-7" hidden><div class="tbl-wrap"><table><thead><tr><th>路徑</th><th>狀態</th></tr></thead><tbody><tr><td><code>Project\Slots\C027_宙斯 2500\其他\競品資料\遊戲數據_Gates_of_Olympus_1000.md</code> / <code>.html</code></td><td>✅ 2026-08-27 已同步為現行版本</td></tr></tbody></table></div>
+<p>詳見該報告 6。</p>
+<blockquote>📝 <strong>Piñata 1000（5G）的輪帶已經有現成的總表</strong>（<code>其他\輪帶總表.xlsx</code>，含各 pool 的完整輪帶與符號組成），<br>不需要還原。該款的 <code>pool</code> 欄位直接標示每一轉用的是哪一組輪帶。</blockquote></div><div class="panel" role="tabpanel" id="panel-7" aria-labelledby="tab-7" hidden><div class="tbl-wrap"><table><thead><tr><th>路徑</th><th>狀態</th></tr></thead><tbody><tr><td><code>Project\Slots\C027_宙斯 2500\其他\競品資料\遊戲數據_Gates_of_Olympus_1000.md</code> / <code>.html</code></td><td>✅ 2026-08-27 已同步為現行版本</td></tr></tbody></table></div>
 <blockquote>C027 專案自己留的參考副本。若本資料夾的 Gates of Olympus 報告再更新，記得一併同步。</blockquote></div>
 </div>
 
@@ -205,57 +229,63 @@ if(CH){
              fg:{n:'FG',c:'var(--s2)',hr:'fgH',cnt:'fgC'},
              bf:{n:'BF',c:'var(--s3)',hr:'bfH',cnt:'bfC'}};
   const KEYS=CH.series||['bg','fg','bf'];
+  if(CH.names) for(const k in CH.names){ if(DEF[k]) DEF[k].n=CH.names[k]; }
+  const BGK=(CH.bgKeys||['bg']).filter(k=>KEYS.includes(k));
   const NS='http://www.w3.org/2000/svg';
   const el=(t,a={})=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
   const fmt=(v,d=4)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
   const num=v=>v.toLocaleString('en-US');
-  const cn=document.getElementById('clipnote');
-  if(cn) cn.textContent=(CH.clipped&&CH.clipped.length)
-    ? '超出 1% 上限、圖上不顯示的區間：'+CH.clipped.map(c=>`${c.lab} = ${fmt(c.v,3)}%`).join('　/　')
-    : '無區間超出 1% 上限。';
   function legend(id,ks){
     const e=document.getElementById(id); if(!e)return;
     e.innerHTML=ks.map(k=>`<span class="lg"><span class="sw" style="background:${DEF[k].c}"></span>${DEF[k].n}</span>`).join('');
   }
   function chart(hostId,cfg){
+    /* 倍率線型（2026-11-09 使用者定，與數值報告同樣式）：外框＋置中標題、大字粗線、淡格線、
+       預設縱軸 cfg.ymax，滑鼠滾輪縮放縱軸、雙擊還原；超出縱軸的部分裁掉（往上縮放即可看到）。 */
     const host=document.getElementById(hostId); if(!host)return;
-    let lastW=-1;
+    let lastW=-1; const y0=cfg.ymax; let ym=y0;
+    const nice=x=>{const p=Math.pow(10,Math.floor(Math.log10(x))),m=x/p;return (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*p;};
     function draw(force){
       const W=Math.max(340,host.clientWidth||900);
       if(!force && W===lastW) return;
       lastW=W; host.innerHTML='';
-      const H=cfg.h, m={t:14,r:18,b:132,l:W<560?42:52};
+      const H=cfg.h+40, m={t:14,r:18,b:172,l:W<560?58:76};
       const iw=W-m.l-m.r, ih=H-m.t-m.b;
       const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':cfg.aria});
       const g=el('g',{transform:`translate(${m.l},${m.t})`});
-      const Y=v=>ih-Math.min(v,cfg.ymax)/cfg.ymax*ih;
+      const Y=v=>ih-v/ym*ih;
       const X=i=>i/(NB-1)*iw;
-      cfg.yticks.forEach(t=>{
+      const cid='clip'+hostId+Math.random().toString(36).slice(2,7);
+      const defs=el('defs'); const cp=el('clipPath',{id:cid}); cp.appendChild(el('rect',{x:-4,y:-4,width:iw+8,height:ih+8})); defs.appendChild(cp); svg.appendChild(defs);
+      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=13?11:(pitch>=10?10:8.5);
+      for(let i=0;i<NB;i++){const xx=X(i);g.appendChild(el('line',{x1:xx,x2:xx,y1:0,y2:ih,class:'gl'}));}
+      const st=nice(ym/5);
+      for(let t=0;t<=ym*1.0001;t+=st){
         const yy=Y(t);
-        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,stroke:'var(--grid)','stroke-width':1}));
-        const tx=el('text',{x:-9,y:yy+3.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':10.5,'font-family':'var(--font-mono)'});
-        tx.textContent=t+'%'; g.appendChild(tx);
-      });
-      const pitch=iw/(NB-1), step=pitch>=9.5?1:(pitch>=6?2:4), fs=pitch>=11?9:8;
+        g.appendChild(el('line',{x1:0,x2:iw,y1:yy,y2:yy,class:'gl'}));
+        const tx=el('text',{x:-9,y:yy+4.5,'text-anchor':'end',fill:'var(--ink-3)','font-size':9,'font-family':'var(--font-mono)'});
+        tx.textContent=(+t.toPrecision(6))+'%'; g.appendChild(tx);
+      }
       for(let i=0;i<NB;i+=step){
         const xx=X(i);
         g.appendChild(el('line',{x1:xx,x2:xx,y1:ih,y2:ih+4,stroke:'var(--rule)','stroke-width':1}));
-        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':fs,
-          'font-family':'var(--font-mono)',transform:`translate(${xx.toFixed(2)},${ih+8}) rotate(-90)`});
+        const tx=el('text',{'text-anchor':'end',fill:'var(--ink-3)','font-size':9,
+          'font-family':'var(--font-mono)',transform:`translate(${(xx+fs*0.35).toFixed(2)},${ih+8}) rotate(-90)`});
         tx.textContent=R[i].lab; g.appendChild(tx);
       }
       g.appendChild(el('line',{x1:0,x2:iw,y1:ih,y2:ih,stroke:'var(--rule)','stroke-width':1}));
-      const ax=el('text',{x:iw/2,y:ih+m.b-8,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
+      const ax=el('text',{x:iw/2,y:ih+m.b-10,'text-anchor':'middle',fill:'var(--ink-3)','font-size':11});
       ax.textContent='倍率區間（× 底注）'+(step>1?`　※ 窄版每 ${step} 個區間標一次`:''); g.appendChild(ax);
       const ay=el('text',{fill:'var(--ink-3)','font-size':11,'text-anchor':'middle',
-        transform:`translate(${-m.l+12},${ih/2}) rotate(-90)`});
-      ay.textContent=cfg.ylabel; g.appendChild(ay);
+        transform:`translate(${-m.l+14},${ih/2}) rotate(-90)`});
+      ay.textContent=String(cfg.ylabel).replace(/（固定[^）]*）/,''); g.appendChild(ay);
+      const sg=el('g',{'clip-path':`url(#${cid})`}); g.appendChild(sg);
       cfg.series.forEach(s=>{
         let run=[];
         const flush=()=>{
-          if(run.length>1) g.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
-            fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
-          else if(run.length===1) g.appendChild(el('circle',{cx:run[0].x,cy:run[0].y,r:2.6,fill:s.c}));
+          if(run.length>1) sg.appendChild(el('path',{d:'M'+run.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L'),
+            fill:'none',stroke:s.c,'stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round'}));
+          run.forEach(p=>sg.appendChild(el('circle',{cx:p.x,cy:p.y,r:3.2,fill:s.c})));
           run=[];
         };
         s.pts.forEach(p=>{ if(p.v===null) flush(); else run.push({x:X(p.x),y:Y(p.v)}); });
@@ -263,7 +293,7 @@ if(CH){
       });
       const cross=el('line',{x1:0,x2:0,y1:0,y2:ih,stroke:'var(--ink-3)','stroke-width':1,'stroke-dasharray':'3 3',opacity:0});
       g.appendChild(cross);
-      const dots=cfg.series.map(s=>{const c=el('circle',{r:4.5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
+      const dots=cfg.series.map(s=>{const c=el('circle',{r:5,fill:s.c,stroke:'var(--panel)','stroke-width':2,opacity:0});g.appendChild(c);return c;});
       const tip=document.createElement('div'); tip.className='tip'; host.appendChild(tip);
       const hit=el('rect',{x:0,y:0,width:iw,height:ih,fill:'transparent'}); g.appendChild(hit);
       hit.addEventListener('mousemove',ev=>{
@@ -276,7 +306,7 @@ if(CH){
         cfg.series.forEach((s,k)=>{
           const p=s.pts[i];
           if(p&&p.v!==null){
-            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',1);
+            dots[k].setAttribute('cx',px); dots[k].setAttribute('cy',Y(p.v)); dots[k].setAttribute('opacity',p.v<=ym?1:0);
             html+=`<div class="r"><span><span class="d" style="background:${s.c}"></span>${s.n}</span><span>${cfg.tipVal(p,i,s)}</span></div>`;
           }else{
             dots[k].setAttribute('opacity',0);
@@ -289,45 +319,42 @@ if(CH){
         tip.style.left=Math.max(2,lx)+'px'; tip.style.top=(m.t+ih*0.06)+'px';
       });
       hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);dots.forEach(d=>d.setAttribute('opacity',0));});
+      svg.addEventListener('wheel',ev=>{ev.preventDefault();ym=Math.min(100,Math.max(0.0005,ym*(ev.deltaY>0?1.25:0.8)));draw(true);},{passive:false});
+      svg.addEventListener('dblclick',()=>{ym=y0;draw(true);});
       svg.appendChild(g); host.appendChild(svg);
     }
     draw(true);
     const ro=new ResizeObserver(()=>draw()); ro.observe(host); host._ro=ro;
     window.addEventListener('resize',()=>draw());
     CHARTS.push({host,draw});
+    // 操作提示：每個頁簽只在最後一張圖下面放一次
+    const pn=host.closest('.panel');
+    if(pn){pn.querySelectorAll('.yz-hint').forEach(e=>e.remove());
+      const cs=pn.querySelectorAll('.chart');
+      if(cs.length){const hp=document.createElement('p');hp.className='yz-hint';hp.textContent='滾輪縮放縱軸．雙擊還原';cs[cs.length-1].after(hp);}}
   }
   const mk=k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:r[DEF[k].hr]})),key:k});
-  if(KEYS.includes('bg'))
+  if(BGK.length){
+    if(BGK.length>1) legend('lg1',BGK);
     chart('p1',{h:470,ymax:1,yticks:[0,0.2,0.4,0.6,0.8,1],ylabel:'Hit Rate（固定 0–1%）',
-      aria:'BG 倍率線型，縱軸固定 0 至 1%',
-      series:[{n:DEF.bg.n,c:DEF.bg.c,pts:R.map(r=>({x:r.i,v:(r.bgH>0&&r.bgH<=1)?r.bgH:null}))}],
+      aria:'倍率線型，縱軸固定 0 至 1%',
+      series:BGK.map(k=>({n:DEF[k].n,c:DEF[k].c,key:k,
+        pts:R.map(r=>{const v=r[DEF[k].hr];return {x:r.i,v:v>0?v:null};})})),
       tipVal:p=>fmt(p.v,5)+'%'});
-  const fgk=KEYS.filter(k=>k!=='bg');
+  }
+  const fgk=KEYS.filter(k=>!BGK.includes(k));
   if(fgk.length){
     legend('lg2',fgk);
     chart('p2',{h:470,ymax:16,yticks:[0,4,8,12,16],ylabel:'Hit Rate（固定 0–16%）',
       aria:'FG 倍率線型，縱軸固定 0 至 16%', series:fgk.map(mk),
       tipVal:(p,i,s)=>fmt(p.v,4)+'%  ('+num(R[i][DEF[s.key].cnt])+')'});
   }
-  legend('lg3',KEYS);
-  chart('p3',{h:440,ymax:100,yticks:[0,25,50,75,100],ylabel:'P(倍率 > 上限)',
-    aria:'各場景累積機率曲線',
-    series:KEYS.map(k=>({n:DEF[k].n,c:DEF[k].c,pts:R.map(r=>({x:r.i,v:SV[k][r.i]})),key:k})),
-    tipVal:p=>fmt(p.v,3)+'%'});
 
   /* 某場景沒資料時（例如只有 BG），對應的圖沒被畫出來 ——
      把留下的空卡片連同它的標題與說明一起移除，不要留空殼。 */
-  document.querySelectorAll('.card').forEach(card=>{
-    const plot=card.querySelector('.plot');
-    if(!plot || plot.querySelector('svg')) return;
-    let n=card.previousElementSibling;
-    card.remove();
-    while(n && (n.tagName==='P'&&n.classList.contains('cap') || n.tagName==='H4')){
-      const prev=n.previousElementSibling;
-      const stop=(n.tagName==='H4');
-      n.remove(); n=prev;
-      if(stop) break;
-    }
+  document.querySelectorAll('.chart').forEach(ch=>{
+    const plot=ch.querySelector('.plot');
+    if(plot && !plot.querySelector('svg')) ch.remove();
   });
 }
 
