@@ -1,7 +1,7 @@
 """H032 亡靈派對 (Calavera Party) simulator.
 
 盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（出現軸與倍數檔位依 Config；v2 為 R2~R4、1/2/3/5/10/20/30/50/100X）中獎時原格留下同倍數框並變成 WW，
-框留在格子上、框內消除一般符號（含 WW）+1、黃底在框內只加倍數；每一消得分 × 消除後的框倍數總和（沒有框 ×1）。
+框留在格子上、框內任何消除 +1、黃底在框上再加黃底倍數；每一消得分 ×（1 ＋ 消除前的框倍數總和），算完分才更新框。
 FG 開場第 3 軸 4 格 1X 框、框整場保留；每場 FG 依 FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、
 Frame Tier）決定抽表權重。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶、權重、
 Paytable 或 Feature 參數。
@@ -422,8 +422,8 @@ class CalaveraParty:
     def spin(self, table_name: str, frames: list[list[int]], free_game: bool = False) -> SpinResult:
         """一轉（BG 局或一場 FG）。frames 由呼叫端傳入並就地更新（FG 整場保留、BG 每轉新的空盤）。
 
-        game_rule §5：每一消先更新框（黃底留同倍數框、框內消除一般符號含 WW +1、黃底在框內只加倍數），
-        再以更新後的框總和計分；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
+        game_rule §5：每一消先以「更新前」的框總和計分（乘數＝1＋框總和），再更新框
+        （框內任何消除 +1、黃底再加上黃底倍數、無框時黃底留同倍數新框）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
         """
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
@@ -438,14 +438,15 @@ class CalaveraParty:
             raw_pay, hits, details = self.evaluate(symbols)
             if raw_pay <= 0:
                 break
+            # 2026-11-10：先算分再更新框（對齊 DJ Boom Boom 封包實測）——乘數＝1＋本消「更新前」的框總和
+            mult = 1 + _frame_sum(frames)
             for reel, row in hits:
-                # 2026-11-10：框內任何消除 +1；黃底再加上黃底倍數（無框時黃底留下同倍數的新框）
+                # 框內任何消除 +1；黃底再加上黃底倍數（無框時黃底留下同倍數的新框）
                 if frames[reel][row] > 0:
                     frames[reel][row] += 1
                 if yellow[reel][row] > 0:
                     frames[reel][row] += yellow[reel][row]
             total_frame = _frame_sum(frames)
-            mult = 1 + total_frame          # 乘數＝1＋盤面所有框值總和（2026-11-10，對齊 DJ Boom Boom 實測）
             gained = raw_pay * mult * self.bet
             result.pay += gained
             result.max_mult = max(result.max_mult, mult)
