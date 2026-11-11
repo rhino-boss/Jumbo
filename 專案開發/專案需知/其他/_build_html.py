@@ -340,7 +340,10 @@ def render_timeline(lines) -> str:
             color = kind.split()[1] if len(kind.split()) > 1 else "s2"
             start, end = pos(spans[0][0] - 1), pos(spans[-1][1])
             out.append(f'<div class="tl-group" style="--c:var(--{color})">')
-            out.append(f'<div class="tl-guide" style="left:{start:.2f}%;height:{guide}px"></div>')
+            # 每個區間起點都畫虛線到轉數軸；只有一個區間時（例：41～60 轉）起迄兩端都畫
+            marks = [pos(lo - 1) for lo, _ in spans] + ([pos(spans[0][1])] if len(spans) == 1 else [])
+            for x in marks:
+                out.append(f'<div class="tl-guide" style="left:{x:.2f}%;height:{guide}px"></div>')
             out.append(f'<div class="tl-band" style="left:{start:.2f}%;width:{max(end - start, 0.6):.2f}%"></div>')
             for lo, hi in spans:
                 left = pos(lo - 1)
@@ -351,7 +354,8 @@ def render_timeline(lines) -> str:
                 out.append(f'<div class="tl-label" style="left:{start:.2f}%">{render_inline(name_part)}{sub}</div>')
             out.append("</div>")
         out.append("</div></div>")
-    out.append('<div class="tl-row"><div class="tl-lane tl-axis-name">轉數</div><div class="tl-track tl-axis">')
+    dense = " dense" if len(ticks) > 12 else ""
+    out.append(f'<div class="tl-row"><div class="tl-lane tl-axis-name">轉數</div><div class="tl-track tl-axis{dense}">')
     for t in ticks:
         out.append(f'<div class="tl-tick" style="left:{pos(num(t)):.2f}%">{render_inline(t)}</div>')
     out.append("</div></div>")
@@ -844,6 +848,10 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tl-axis{{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}}
 .tl-tick{{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
   color:var(--ink-3); padding-top:5px; white-space:nowrap}}
+.tl-axis.dense{{height:40px}}
+.tl-axis.dense .tl-tick{{font-size:.78em}}
+.tl-axis.dense .tl-tick:nth-child(even){{top:15px}}
+.tl-axis.dense .tl-tick:nth-child(even)::before{{height:20px; top:-16px}}
 .tl-periods{{height:30px; border-bottom:none}}
 .tl-period{{position:absolute; top:2px; height:24px; line-height:24px; text-align:center; font-weight:600; font-size:.95em; color:var(--c);
   background:color-mix(in srgb,var(--c) 16%,transparent); border:1.5px solid var(--c); border-radius:3px; box-sizing:border-box}}
