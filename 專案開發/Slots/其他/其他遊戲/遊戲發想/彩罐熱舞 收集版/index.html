@@ -539,6 +539,7 @@
     .pbc-fly { position: fixed; z-index: 9999; pointer-events: none; padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 13px; white-space: nowrap; transform: translate(-50%, -50%); }
     .pbc-fly-multi { color: #5a3000; background: linear-gradient(180deg, #ffe08a, #ff9d2e); box-shadow: 0 0 12px rgba(255, 208, 90, 0.8); }
     .pbc-fly-total { font-size: 20px; padding: 4px 12px; color: #5a3000; background: linear-gradient(180deg, #fff1b8, #ffb52e); box-shadow: 0 0 22px 6px rgba(255, 208, 90, 0.85); }
+    #board .multi-badge.pbc-collect.pbc-collect-sum { background: linear-gradient(180deg, #fff1b8, #ffb52e) !important; color: #5a3000 !important; box-shadow: 0 0 14px 4px rgba(255, 208, 90, 0.85) !important; font-size: 14px; }
     #board .multi-badge.pbc-collect { background: linear-gradient(180deg, #8fe8ff, #2f7bff) !important; color: #fff !important; box-shadow: 0 0 10px rgba(80, 180, 255, 0.6) !important; }
     #board .cell.pbc-collected .multi-badge { animation: pbc-collect-pulse 0.38s ease-in-out 2; box-shadow: 0 0 12px 4px #8fe8ff !important; }
     @keyframes pbc-collect-pulse { 50% { transform: scale(1.4); } }
@@ -2032,6 +2033,7 @@
           <li>移除 R3 整條金框（BG 的 B2 與 FG 必定整條都拿掉），R3 金框改 35%；每轉停輪後得分盤面至少 2 個金框、至少 1 個帶倍數（不符整盤重抽）；消除「收集」時至少收到 1 個倍數（收到 0 整轉重抽）。（11/11）</li>
           <li>金框帶倍數比例提高：BG 80%、FG 85%（原約 15%／33%），騰出的權重給 x2～x8；總權重與 x500、x1000 權重不變。（11/11）</li>
           <li>結果（自然機率，收集 8%）：一般押注 247.5%（±13.0%，10⁶ 局）、Hit Rate 45.1%、FG 1/223；Extra Bet 128.1%（±8.0%，10⁶ 局）；Buy Feature 24.5%（±1.9%，5×10⁴ 局）。BG 單轉 Hit Rate 45.1%、FG 單轉約 45%；收集一次平均收 1.6 個倍數。（11/11）</li>
+          <li>盤面（含頂端半列）最多同時 1 個「收集」：已有收集時，新出現的金框只抽倍數或空金框，收集被消除用掉後才會再出現。結果（自然機率，收集 8%）：一般押注 240.6%（±11.1%，10⁶ 局）、Hit Rate 45.2%、FG 1/218；Extra Bet 122.7%（±6.6%，10⁶ 局）。（11/11）</li>
         </ol>
       </article>
       </div>
@@ -2160,7 +2162,7 @@
 | 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
 | 規則說明 | 金框符號可能附帶倍數或「收集」。倍數等級為：X{2}、X{3}、X{5}、X{8}、X{10}、X{15}、X{20}、X{25}、X{50}、X{100}、X{500}、X{1000}。 | GOLD FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE OR A COLLECT. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, AND X{1000}. |
 | 規則說明 | 帶倍數的金框符號被消除時，其倍數不會被收集。 | A MULTIPLIER ON A GOLD FRAMED SYMBOL IS NOT COLLECTED WHEN THAT SYMBOL IS CLEARED. |
-| 規則說明 | 帶「收集」的金框符號參與得分並被消除時，會收集消除當下盤面上所有倍數的總和並累積（至少收集到 {1} 個倍數）；同時消除多個「收集」時，每個各收集一次。 | WHEN A GOLD FRAMED SYMBOL WITH COLLECT PARTICIPATES IN A WIN AND IS CLEARED, THE SUM OF ALL MULTIPLIERS ON THE GRID AT THAT MOMENT IS COLLECTED AND ADDED TO THE ACCUMULATED TOTAL (AT LEAST {1} MULTIPLIER IS ALWAYS COLLECTED). IF SEVERAL COLLECT SYMBOLS ARE CLEARED AT ONCE, EACH ONE COLLECTS SEPARATELY. |
+| 規則說明 | 帶「收集」的金框符號參與得分並被消除時，會收集消除當下盤面上所有倍數的總和並累積（至少收集到 {1} 個倍數）。盤面上最多同時只有 {1} 個「收集」，它被消除後才會再出現新的「收集」。 | WHEN A GOLD FRAMED SYMBOL WITH COLLECT PARTICIPATES IN A WIN AND IS CLEARED, THE SUM OF ALL MULTIPLIERS ON THE GRID AT THAT MOMENT IS COLLECTED AND ADDED TO THE ACCUMULATED TOTAL (AT LEAST {1} MULTIPLIER IS ALWAYS COLLECTED). AT MOST {1} COLLECT CAN BE ON THE GRID AT A TIME; A NEW COLLECT CAN APPEAR ONLY AFTER THE CURRENT ONE IS CLEARED. |
 | 規則說明 | 被收集的倍數若未被消除會留在盤面，之後再消除「收集」時可再次被收集。 | COLLECTED MULTIPLIERS THAT ARE NOT CLEARED STAY ON THE GRID AND CAN BE COLLECTED AGAIN BY A LATER COLLECT. |
 | 規則說明 | 當本次旋轉無法再消除時，若本次旋轉有實際收集到倍數，則將當前累積總倍數乘上本次旋轉的總贏分。 | WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
 
@@ -3139,8 +3141,10 @@
       return Math.random() < rate ? { multiplier: COLLECT, multiplier_index: -1, rng_value: null, rng_total: null, collect: true } : picked;
     }
 
-    function pickInitialMultiplier(tableId, row, col) {
-      return maybeCollect(pickInitialMultiplierBase(tableId, row, col), tableId);
+    // 盤面（含頂端半列）最多同時 1 個「收集」：已有收集時新金框只抽倍數
+    function pickInitialMultiplier(tableId, row, col, allowCollect = true) {
+      const base = pickInitialMultiplierBase(tableId, row, col);
+      return allowCollect ? maybeCollect(base, tableId) : base;
     }
 
     function pickInitialMultiplierBase(tableId, row, col) {
@@ -3154,10 +3158,11 @@
         : pickMultiplier(Box.weight_cum_multiple_after, tableId);
     }
 
-    function pickDropMultiplier(tableId, col) {
-      return maybeCollect(usesReel3MultiplierTable(tableId, col)
+    function pickDropMultiplier(tableId, col, allowCollect = true) {
+      const base = usesReel3MultiplierTable(tableId, col)
         ? pickMultiplier(Box.weight_cum_multiple_r3_after, tableId)
-        : pickMultiplier(Box.weight_cum_multiple_after, tableId), tableId);
+        : pickMultiplier(Box.weight_cum_multiple_after, tableId);
+      return allowCollect ? maybeCollect(base, tableId) : base;
     }
 
     function serializeBoard(board, goldMask, multiMask, specialMask) {
@@ -3326,11 +3331,13 @@
         }
       }
 
+      let collectPlaced = false;
       goldPositions.forEach(([row, col], index) => {
         const scoringIndex = scoringGoldPositions.findIndex(([goldRow, goldCol]) => goldRow === row && goldCol === col);
         const picked = scoringIndex >= 0 && scoringIndex === specialIdx
           ? pickMultiplier(Box.weight_cum_multiple_special, tableId)
-          : pickInitialMultiplier(tableId, row, col);
+          : pickInitialMultiplier(tableId, row, col, !collectPlaced);
+        if (picked.multiplier === COLLECT) collectPlaced = true;
         multiMask[row][col] = picked.multiplier;
         specialMask[row][col] = scoringIndex >= 0 && scoringIndex === specialIdx ? 1 : 0;
         assignments.push({
@@ -3478,6 +3485,8 @@
 
     function cascadeDrop(tableId, useDropA, board, goldMask, multiMask, specialMask, hitMask) {
       const dropEvents = [];
+      // 留在盤面上的收集（沒被消除的）；有的話新掉下來的金框不會是收集
+      let collectOnBoard = multiMask.some((row, r) => row.some((value, c) => value === COLLECT && hitMask[r][c] === 0));
       for (let col = 0; col < Box.reel_num; col += 1) {
         const keep = [];
         for (let row = DISPLAY_WINDOW_SIZE - 1; row >= 0; row -= 1) {
@@ -3520,7 +3529,8 @@
           specialMask[row][col] = 0;
           let multiplierInfo = null;
           if (goldMask[row][col] === 1) {
-            const multiPicked = pickDropMultiplier(tableId, col);
+            const multiPicked = pickDropMultiplier(tableId, col, !collectOnBoard);
+            if (multiPicked.multiplier === COLLECT) collectOnBoard = true;
             multiMask[row][col] = multiPicked.multiplier;
             multiplierInfo = multiPicked;
           } else {
@@ -3709,7 +3719,6 @@
     const PBC_SCRIPTS = [
       { key: "combo5", zh: "連消 5 次以上", en: "5+ cascades", bg: (spin) => spin.board_steps.length >= 5 },
       { key: "collect", zh: "有收集", en: "Collect", bg: (spin) => collectSteps(spin).length > 0 },
-      { key: "collect2", zh: "同時消 2 個以上收集", en: "2+ Collects at once", bg: (spin) => collectSteps(spin).some((step) => step.collect_count >= 2) },
       { key: "recollect", zh: "收集 2 次以上", en: "Collect twice+", bg: (spin) => collectSteps(spin).length >= 2 },
       { key: "mult20", zh: "收集倍數 x20 以上", en: "Collected x20+", bg: (spin) => spin.multi_used && spin.final_multiplier >= 20 },
       { key: "fg", zh: "有觸發 FG", en: "FG trigger", fg: 0 },
@@ -4408,7 +4417,9 @@
       const multPill = document.getElementById("multPill");
       if (!collectCells.length || !multPill) return;
       const hub = rectCenter(collectCells[0]);
-      // 1) 每個盤面倍數複製一份飛到收集金框（原倍數留在盤面）
+      const collectBadge = collectCells[0].querySelector(".multi-badge.pbc-collect");
+      let running = 0;
+      // 1) 每個盤面倍數複製一份飛到收集金框（原倍數留在盤面），到了就加進收集框：「收集」字換成目前合計
       if (state.debugSkipPlayback) return;
       const flights = (step.collected_positions || []).map((item, index) => {
         const badge = cellAt(item.row, item.col)?.querySelector(".multi-badge");
@@ -4424,11 +4435,23 @@
           { transform: "translate(-50%, -50%) scale(1.25)", opacity: 1, offset: 0.2 },
           { transform: `translate(calc(-50% + ${hub.x - start.x}px), calc(-50% + ${hub.y - start.y}px)) scale(0.7)`, opacity: 0.9 }
         ], { duration: getPlaybackDelay(560), delay: getPlaybackDelay(index * 70), easing: "cubic-bezier(.5,0,.6,1)", fill: "forwards" })
-          .finished.catch(() => {}).then(() => chip.remove());
+          .finished.catch(() => {}).then(() => {
+            chip.remove();
+            running += Number(item.multiplier) || 0;
+            if (collectBadge) {
+              collectBadge.textContent = `x${running}`;
+              collectBadge.classList.add("pbc-collect-sum");
+              collectBadge.animate([{ transform: "scale(1)" }, { transform: "scale(1.45)" }, { transform: "scale(1)" }], { duration: getPlaybackDelay(220), easing: "ease-out" });
+            }
+          });
       }).filter(Boolean);
       await Promise.all(flights);
+      if (collectBadge) collectBadge.textContent = `x${step.added_multiplier}`;
       if (state.debugSkipPlayback) return;
-      // 2) 合併成 +xN，從收集金框飛進上方 Mult
+      await sleep(getPlaybackDelay(420));   // 收集框停在合計倍數上，讓玩家看清楚
+      if (state.debugSkipPlayback) return;
+      // 2) 收集框上的合計倍數飛進上方 Mult
+      if (collectBadge) collectBadge.style.visibility = "hidden";
       const total = makeFlyChip(`+x${step.added_multiplier}`, collectCells[0].getBoundingClientRect(), "pbc-fly-total");
       const target = rectCenter(multPill);
       await total.animate([
@@ -4892,9 +4915,9 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-11 10:38";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-11 10:53";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框自己被消除不收集，只有消到「收集」才把整個盤面的倍數收起來（至少收到 1 個）", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框自己被消除不收集，只有消到「收集」才把整個盤面的倍數收起來（至少收到 1 個）", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
   <script src="../../../../demogame_common.js?v=20261110j"></script>
 </body>
 

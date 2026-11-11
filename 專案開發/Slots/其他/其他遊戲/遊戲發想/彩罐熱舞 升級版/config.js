@@ -1,14 +1,14 @@
-// 彩罐熱舞 2（Pinata Beat 2）發想草稿 Config
+// 彩罐熱舞 升級版（Pinata Beat Plus）發想草稿 Config
 // 來源：H026 config_92A.js（4.0.0.6）。差異：特殊輪帶 B2／F1／F2／F3 的 R3 改用 B1 的 R3（移除 R3 整條金框）、
 // 新增 gold_spread（金框擴散）；展示用：倍數只留 x2～x10、R2～R4 金框約 +25%（自然機率未調）。
 // 92 版：Card System 開，只有 Oldhand 卡組（目標照 H026 92A），Newbie 未做（選 Newbie 會沿用 Oldhand）。
 window.H026_BOX_DATA = {
   "generated_at": "2026-10-21T06:54:24",
-  "source_box": "H026 config_92A.js（4.0.0.6）→ 彩罐熱舞 2 發想",
+  "source_box": "H026 config_92A.js（4.0.0.6）→ 彩罐熱舞 升級版 發想",
   "game_id": "PB2-DRAFT",
   "excel_version": "0.1.0.0",
-  "game_name": "彩罐熱舞 2",
-  "display_name": "彩罐熱舞 2",
+  "game_name": "彩罐熱舞 升級版",
+  "display_name": "彩罐熱舞 升級版",
   "bet_options": [
     1,
     2,

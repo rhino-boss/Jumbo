@@ -1,4 +1,4 @@
-# 彩罐熱舞 2 Game Help Draft（發想，基底 H026）
+# 彩罐熱舞 升級版 Game Help Draft（發想，基底 H026）
 
 這份 md 是 `其他/H5企劃書_101014_Pinata Beat 1000_彩罐熱舞.xlsx` 中 `7.Help` 分頁的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
@@ -9,8 +9,8 @@
 | --- | --- |
 | game_id | ⏳（發想） |
 | parsheet_id | ⏳（發想） |
-| name_zh | 彩罐熱舞 2 |
-| name_en | Pinata Beat 2 |
+| name_zh | 彩罐熱舞 升級版 |
+| name_en | Pinata Beat Plus |
 | game_type | Video Slot - 20 Lines / Cascade |
 
 ---
