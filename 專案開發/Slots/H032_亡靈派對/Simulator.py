@@ -422,8 +422,8 @@ class CalaveraParty:
     def spin(self, table_name: str, frames: list[list[int]], free_game: bool = False) -> SpinResult:
         """一轉（BG 局或一場 FG）。frames 由呼叫端傳入並就地更新（FG 整場保留、BG 每轉新的空盤）。
 
-        game_rule §5（2026-11-11 改版）：每一消依「消除 → 加倍數 → 算分」：先更新框
-        （全盤所有框 +1；黃底在沒有框的格子消除時留下 1X 新框，新框本消不 +1），再以更新後的框總和計分（乘數＝1＋框總和）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
+        game_rule §5：每一消先以「更新前」的框總和計分（乘數＝1＋框總和），再更新框
+        （全盤所有框 +1；黃底在沒有框的格子消除時留下 1X 新框，新框本消不 +1）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
         """
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
@@ -438,6 +438,8 @@ class CalaveraParty:
             raw_pay, hits, details = self.evaluate(symbols)
             if raw_pay <= 0:
                 break
+            # 2026-11-10：先算分再更新框（對齊 DJ Boom Boom 封包實測）——乘數＝1＋本消「更新前」的框總和
+            mult = 1 + _frame_sum(frames)
             # 2026-11-11 規則改版：每一段連消，全盤所有框 +1；
             # 黃底（不帶倍數）在沒有框的格子消除 → 留下 1X 新框（本消新留的框從下一消起才 +1）
             for reel in range(5):
@@ -448,8 +450,6 @@ class CalaveraParty:
                 if yellow[reel][row] > 0 and frames[reel][row] == 0:
                     frames[reel][row] = 1
             total_frame = _frame_sum(frames)
-            # 2026-11-11 使用者：流程「消除 → 加倍數 → 算分」——乘數＝1＋本消「更新後」的框總和
-            mult = 1 + total_frame
             gained = raw_pay * mult * self.bet
             result.pay += gained
             result.max_mult = max(result.max_mult, mult)
