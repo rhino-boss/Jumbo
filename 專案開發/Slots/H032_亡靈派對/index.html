@@ -2249,6 +2249,7 @@
           <li>金色符號出現率（初始盤面與補牌）BG／FG 都調為 1.5 倍；卡片權重依新自然機率重算。實際每盤金框 BG 約 2.5 → 3.7 顆、FG 約 1.5 → 2.3 顆。（11/11）</li>
           <li>演出：上方「倍數總和」只在算分時才收集盤面所有框的倍數，框 +1、新框出現時不再跟著跳動。（11/11）</li>
           <li>演出順序改為：消除符號 → 收集倍數 → 算分 → 補牌掉落時所有框同時 +1、金色符號留新框。計分規則不變。（11/11）</li>
+          <li>輪帶表改版：輪帶改回照 Super Ace 還原帶（只調權重）。BG 三張表：一般表、觸發表（只有這張能觸發 FG）、隱性好表（金色符號數差不多，但多落在容易連線的符號上）；FG 好表單轉約一般表 1.9 倍。卡片權重依新自然機率重算。（11/11）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2392,7 +2393,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261111c-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261111e-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = new URLSearchParams(location.search).get("config")
@@ -3465,9 +3466,9 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-11 16:30";
+  window.DEMOGAME_LAST_TUNING = "2026-11-11 20:30";
   window.DEMOGAME_LAST_CODE = "2026-11-11 18:30";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-11 18:30";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-11 20:30";
   </script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下 1X 框", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金"]};</script>
   <script src="../demogame_common.js?v=20261111h"></script>
