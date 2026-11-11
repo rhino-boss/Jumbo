@@ -2060,6 +2060,7 @@
           <li>92 版（Oldhand）：開啟 Card System，依 Card Off 自然機率（NB／EB 各 4×10⁶ 局、BF 5×10⁵ 局）解卡片權重，目標照 H026 92A：NB BG 68%＋FG 24%（FG 週期 238.34、BG 中獎率 28.29%、BG ≤ 120x、FG 10x～20,000x）；EB BG 32.02%＋FG 59.98%（週期 47.69、FG 20x 起）；BF 92.5%（10x 起）。自然機率不動；Newbie 卡組移除（選 Newbie 沿用 Oldhand）。（10/22）</li>
           <li>Card On 驗證：NB 90.32%（±2.22%，10⁶ 局）、FG 1/241、中獎率 28.6%；EB 90.92%（±1.93%，10⁶ 局）、FG 1/48；BF 94.06%（±3.48%，2×10⁴ 局）。自然 FG 平均約 1,600x，卡片要壓到低倍區間需重跑多次 FG，BF 每局約 0.35 秒。（10/22）</li>
           <li>Set RNG 加「腳本」下拉：連消 5 次以上／有擴散／一次擴散 3 格／擴散打中金框轉 Wild／擴散打中倍數金框／收集倍數 x20 以上／有觸發 FG／FG 100x 以上；NB／EB 以自然機率重抽到符合（不套 Card System），腳本局不計入倍率線型。（11/11）</li>
+          <li>擴散改逐格升級：每格準星消失後馬上變金框（或金框轉 Wild），不等全部射完才一起變。（11/11）</li>
         </ol>
       </article>
       </div>
@@ -4414,7 +4415,7 @@
 
     // ── 擴散射擊動畫（彩罐熱舞 2）：每個擴散格依序「準星鎖定 → 開槍（閃光、火花、彈孔、盤面震動）」──
     // 只做畫面，不改結果；Debug 快轉時略過。回傳射擊層，呼叫端在亮出結果後移除。
-    async function playSpreadGunshots(picks) {
+    async function playSpreadGunshots(picks, onHit = null) {
       if (state.debugSkipPlayback || !picks?.length) return null;
       const host = boardEl.parentElement;
       if (getComputedStyle(host).position === "static") host.style.position = "relative";
@@ -4442,6 +4443,7 @@
         place(Object.assign(document.createElement("div"), { className: "pb2-hole" }));
         boardEl.animate([{ transform: "translate(0,0)" }, { transform: "translate(-4px,2px)" }, { transform: "translate(3px,-2px)" }, { transform: "translate(0,0)" }], { duration: 140 });
         await sleep(getPlaybackDelay(170));
+        onHit?.(pick);   // 準星消失後這格馬上升級（變金框／金框轉 Wild），不等全部射完
       }
       return layer;
     }
@@ -4541,8 +4543,14 @@
             updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
             setText(messageBarEl, localizeMessage(spreadMessage));
           };
-          const shotLayer = await playSpreadGunshots(step.spread_picks);   // 射擊動畫打在補位後的盤面上，再亮出擴散結果
-          renderSpread();
+          // 逐格升級：每射完一格，就把該格從補位盤換成擴散後的結果（只亮新升級的這格）
+          const partialBoard = clone(step.board_after_drop);
+          const shotLayer = await playSpreadGunshots(step.spread_picks, (pick) => {
+            partialBoard[pick.row][pick.col] = clone(step.board_after_spread[pick.row][pick.col]);
+            renderBoard(clone(partialBoard), pick.type === "new_gold" ? { spreadNew: [pick] } : { spreadWild: [pick] });
+          });
+          if (!shotLayer) renderSpread();   // Debug 快轉沒有射擊動畫：直接亮出全部結果
+          else updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
           if (shotLayer) setTimeout(() => shotLayer.remove(), 900);
           state.maxMultiplier = Math.max(state.maxMultiplier, Number(step.multiplier_sum_after_cascade || 0));
           writeMessage(spreadMessage);
