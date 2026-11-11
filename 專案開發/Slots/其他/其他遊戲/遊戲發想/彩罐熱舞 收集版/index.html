@@ -535,6 +535,7 @@
     /* 盤面只裁上緣：掉落中的符號不會超出盤面（左右下保留光暈） */
     body #board.board-grid { clip-path: inset(0 -14px -14px -14px); }   /* 權重需高過共用 #board.board-grid { clip-path: inset(-14px) } */
     /* 彩罐熱舞 收集版：收集徽章（藍）、被收集的倍數閃光 */
+    #spinBtn { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
     .pbc-fly { position: fixed; z-index: 9999; pointer-events: none; padding: 2px 7px; border-radius: 6px; font-weight: 800; font-size: 13px; white-space: nowrap; transform: translate(-50%, -50%); }
     .pbc-fly-multi { color: #5a3000; background: linear-gradient(180deg, #ffe08a, #ff9d2e); box-shadow: 0 0 12px rgba(255, 208, 90, 0.8); }
     .pbc-fly-total { font-size: 20px; padding: 4px 12px; color: #5a3000; background: linear-gradient(180deg, #fff1b8, #ffb52e); box-shadow: 0 0 22px 6px rgba(255, 208, 90, 0.85); }
@@ -2027,6 +2028,10 @@
         <h4>v0（0.1.0.0）</h4>
         <ol>
           <li>建立彩罐熱舞 收集版發想 demo：以 H026 92A（4.0.0.6）改，金框帶倍數或「收集」；Card System 關。（11/10）</li>
+          <li>輪帶改用競品 5G Piñata 1000：BG 三表＝BS 池 1／2／3（權重 8289／1402／309），FG 三表＝FS 池 1；補牌照同輪帶組成；R2～R4 加 Wild（BG 7／8／7、FG 7／6／6）把 Hit Rate 調到約 45%。（11/11）</li>
+          <li>移除 R3 整條金框（BG 的 B2 與 FG 必定整條都拿掉），R3 金框改 35%；每轉停輪後得分盤面至少 2 個金框、至少 1 個帶倍數（不符整盤重抽）；消除「收集」時至少收到 1 個倍數（收到 0 整轉重抽）。（11/11）</li>
+          <li>金框帶倍數比例提高：BG 80%、FG 85%（原約 15%／33%），騰出的權重給 x2～x8；總權重與 x500、x1000 權重不變。（11/11）</li>
+          <li>結果（自然機率，收集 8%）：一般押注 247.5%（±13.0%，10⁶ 局）、Hit Rate 45.1%、FG 1/223；Extra Bet 128.1%（±8.0%，10⁶ 局）；Buy Feature 24.5%（±1.9%，5×10⁴ 局）。BG 單轉 Hit Rate 45.1%、FG 單轉約 45%；收集一次平均收 1.6 個倍數。（11/11）</li>
         </ol>
       </article>
       </div>
@@ -2155,7 +2160,7 @@
 | 主要標題 | 倍數特色 | MULTIPLIER FEATURE |
 | 規則說明 | 金框符號可能附帶倍數或「收集」。倍數等級為：X{2}、X{3}、X{5}、X{8}、X{10}、X{15}、X{20}、X{25}、X{50}、X{100}、X{500}、X{1000}。 | GOLD FRAMED SYMBOLS MAY CARRY A MULTIPLIER VALUE OR A COLLECT. THE MULTIPLIER LEVELS ARE: X{2}, X{3}, X{5}, X{8}, X{10}, X{15}, X{20}, X{25}, X{50}, X{100}, X{500}, AND X{1000}. |
 | 規則說明 | 帶倍數的金框符號被消除時，其倍數不會被收集。 | A MULTIPLIER ON A GOLD FRAMED SYMBOL IS NOT COLLECTED WHEN THAT SYMBOL IS CLEARED. |
-| 規則說明 | 帶「收集」的金框符號參與得分並被消除時，會收集消除當下盤面上所有倍數的總和並累積；同時消除多個「收集」時，每個各收集一次。 | WHEN A GOLD FRAMED SYMBOL WITH COLLECT PARTICIPATES IN A WIN AND IS CLEARED, THE SUM OF ALL MULTIPLIERS ON THE GRID AT THAT MOMENT IS COLLECTED AND ADDED TO THE ACCUMULATED TOTAL. IF SEVERAL COLLECT SYMBOLS ARE CLEARED AT ONCE, EACH ONE COLLECTS SEPARATELY. |
+| 規則說明 | 帶「收集」的金框符號參與得分並被消除時，會收集消除當下盤面上所有倍數的總和並累積（至少收集到 {1} 個倍數）；同時消除多個「收集」時，每個各收集一次。 | WHEN A GOLD FRAMED SYMBOL WITH COLLECT PARTICIPATES IN A WIN AND IS CLEARED, THE SUM OF ALL MULTIPLIERS ON THE GRID AT THAT MOMENT IS COLLECTED AND ADDED TO THE ACCUMULATED TOTAL (AT LEAST {1} MULTIPLIER IS ALWAYS COLLECTED). IF SEVERAL COLLECT SYMBOLS ARE CLEARED AT ONCE, EACH ONE COLLECTS SEPARATELY. |
 | 規則說明 | 被收集的倍數若未被消除會留在盤面，之後再消除「收集」時可再次被收集。 | COLLECTED MULTIPLIERS THAT ARE NOT CLEARED STAY ON THE GRID AND CAN BE COLLECTED AGAIN BY A LATER COLLECT. |
 | 規則說明 | 當本次旋轉無法再消除時，若本次旋轉有實際收集到倍數，則將當前累積總倍數乘上本次旋轉的總贏分。 | WHEN NO MORE CASCADES CAN OCCUR, IF ANY MULTIPLIER WAS COLLECTED DURING THIS SPIN, THE TOTAL ACCUMULATED MULTIPLIER IS APPLIED TO THE TOTAL WIN OF THIS SPIN. |
 
@@ -2168,7 +2173,7 @@
 | 主要標題 | 金框符號 | GOLDEN FRAMED FEATURE |
 | 規則說明 | 第 {2}、{3}、{4} 輪的一般符號有機會帶有金框。 | GENERAL SYMBOLS ON REELS {2}, {3}, AND {4} MAY APPEAR WITH A GOLD FRAME. |
 | 規則說明 | 金框符號與原始符號具有相同的基礎賠率。 | GOLD FRAMED SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOLS. |
-| 規則說明 | 主遊戲中，第 {3} 輪有機會隨機出現整列帶倍數或「收集」的金框符號。 | IN THE BASE GAME, REEL {3} MAY RANDOMLY APPEAR AS AN ENTIRE REEL OF GOLD FRAMED SYMBOLS WITH MULTIPLIERS OR COLLECT. |
+| 規則說明 | 每次旋轉停輪後，盤面至少有 {2} 個金框符號，且其中至少 {1} 個帶倍數。 | AFTER EVERY SPIN STOPS, THE GRID SHOWS AT LEAST {2} GOLD FRAMED SYMBOLS, AND AT LEAST {1} OF THEM CARRIES A MULTIPLIER. |
 | 規則說明 | 若前一輪中獎組合中含有金框符號，該位置會保留並轉化為 [WW]，因此不視為空格。 | IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLD FRAMED SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW], SO IT IS NOT TREATED AS AN EMPTY POSITION. |
 
 ---
@@ -2180,7 +2185,6 @@
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
 | 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [C1]，將觸發免費遊戲，並分別獲得 {12}、{14} 或 {16} 場免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
 | 規則說明 | 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
-| 規則說明 | 免費遊戲期間，第 {3} 輪的一般符號必定帶有金框（倍數或「收集」）。 | DURING FREE GAME, GENERAL SYMBOLS ON REEL {3} ARE GUARANTEED TO APPEAR WITH GOLD FRAMES CARRYING A MULTIPLIER OR COLLECT. |
 | 規則說明 | 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
 | 規則說明 | 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {12}、{14} 或 {16} 場免費遊戲。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
 
@@ -3558,7 +3562,17 @@
       return gold >= GOLD_MIN_COUNT && multi >= 1;
     }
 
-    function runSpin(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelStopOverrides = null, forcedTableRng = null) {
+    // 收集版：消到「收集」時盤面至少要有 1 個倍數可收；有一次收到 0 就整轉重抽
+    function runSpin(...args) {
+      let spin = null;
+      for (let redraw = 0; redraw < 1000; redraw += 1) {
+        spin = runSpinOnce(...args);
+        if (!spin.board_steps.some((step) => step.collect_count > 0 && step.board_sum <= 0)) return spin;
+      }
+      return spin;
+    }
+
+    function runSpinOnce(sceneMode, fgMultiplierSum, betMulti, cardSystemInfo = null, reelStopOverrides = null, forcedTableRng = null) {
       const table = chooseTable(sceneMode, fgMultiplierSum, forcedTableRng);
       const eliminateMode = chooseEliminateMode(sceneMode);
       const useDropA = eliminateMode.use_drop_a;
@@ -4349,6 +4363,16 @@
       pool.forEach((cell) => { cell.style.visibility = ""; });
     }
 
+    // 把盤面上進行中的 Web Animation（滾輪捲動、收集飛行、Mult 跳動）直接播到結尾並收掉
+    function finishRunningFx() {
+      document.getAnimations().forEach((anim) => {
+        const target = anim.effect?.target;
+        if (!target || !(boardEl.contains(target) || target.classList?.contains("pbc-fly") || target.id === "multPill")) return;
+        try { anim.finish(); } catch (_) { anim.cancel(); }
+      });
+      document.querySelectorAll(".pbc-fly").forEach((chip) => chip.remove());
+    }
+
     async function animateReels(finalBoard = null) {
       // 逐輪停輪（左到右；Speed 5 同時停）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
       const base = finalBoard || sampleBoard();
@@ -4385,20 +4409,25 @@
       if (!collectCells.length || !multPill) return;
       const hub = rectCenter(collectCells[0]);
       // 1) 每個盤面倍數複製一份飛到收集金框（原倍數留在盤面）
+      if (state.debugSkipPlayback) return;
       const flights = (step.collected_positions || []).map((item, index) => {
         const badge = cellAt(item.row, item.col)?.querySelector(".multi-badge");
         if (!badge) return null;
         const from = badge.getBoundingClientRect();
         const chip = makeFlyChip(`x${item.multiplier}`, from, "pbc-fly-multi");
+        const look = getComputedStyle(badge);   // 跟盤面倍數徽章同色
+        chip.style.background = look.backgroundImage !== "none" ? look.backgroundImage : look.backgroundColor;
+        chip.style.color = look.color;
         const start = rectCenter(badge);
         return chip.animate([
           { transform: "translate(-50%, -50%) scale(1)", opacity: 1 },
           { transform: "translate(-50%, -50%) scale(1.25)", opacity: 1, offset: 0.2 },
           { transform: `translate(calc(-50% + ${hub.x - start.x}px), calc(-50% + ${hub.y - start.y}px)) scale(0.7)`, opacity: 0.9 }
         ], { duration: getPlaybackDelay(560), delay: getPlaybackDelay(index * 70), easing: "cubic-bezier(.5,0,.6,1)", fill: "forwards" })
-          .finished.then(() => chip.remove());
+          .finished.catch(() => {}).then(() => chip.remove());
       }).filter(Boolean);
       await Promise.all(flights);
+      if (state.debugSkipPlayback) return;
       // 2) 合併成 +xN，從收集金框飛進上方 Mult
       const total = makeFlyChip(`+x${step.added_multiplier}`, collectCells[0].getBoundingClientRect(), "pbc-fly-total");
       const target = rectCenter(multPill);
@@ -4406,7 +4435,7 @@
         { transform: "translate(-50%, -50%) scale(0.6)", opacity: 0 },
         { transform: "translate(-50%, -50%) scale(1.5)", opacity: 1, offset: 0.3 },
         { transform: `translate(calc(-50% + ${target.x - hub.x}px), calc(-50% + ${target.y - hub.y}px)) scale(0.8)`, opacity: 1 }
-      ], { duration: getPlaybackDelay(620), easing: "cubic-bezier(.4,0,.5,1)", fill: "forwards" }).finished;
+      ], { duration: getPlaybackDelay(620), easing: "cubic-bezier(.4,0,.5,1)", fill: "forwards" }).finished.catch(() => {});
       total.remove();
     }
     function popMultPill() {
@@ -4807,6 +4836,7 @@
         if (!state.debugEnabled || state.debugSpinQueued) return;
         state.debugSpinQueued = true;
         state.debugSkipPlayback = true;
+        finishRunningFx();   // 連點：進行中的滾輪／收集動畫直接播完，下一轉才不會疊在舊動畫上
         updateSpinButtonState();
         return;
       }
@@ -4862,9 +4892,9 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-10 17:48";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-11 10:38";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框自己被消除不收集，只有消到「收集」才把整個盤面的倍數收起來", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框自己被消除不收集，只有消到「收集」才把整個盤面的倍數收起來（至少收到 1 個）", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
   <script src="../../../../demogame_common.js?v=20261110j"></script>
 </body>
 
