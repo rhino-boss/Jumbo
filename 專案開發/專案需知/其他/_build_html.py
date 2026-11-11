@@ -905,8 +905,8 @@ html.embedded header.page, html.embedded .tabs, html.embedded .toc,
 html.embedded .toc:not([hidden]):has(.toc-doc){{display:none!important}}
 html.embedded .body-row{{display:block; padding:0}}
 html.embedded main{{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}}
-html.embedded .panel h1{{color:var(--accent); font-weight:500; font-size:30px}}
-html.embedded h2{{color:var(--accent); border-bottom-color:var(--grid)}}
+html.embedded .panel h1{{color:var(--ink); font-weight:600; font-size:30px}}
+html.embedded h2{{color:var(--ink); border-bottom-color:var(--grid)}}
 :root{{--accent:#1b3a6b}}
 @media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{--accent:#6f97d8}}}}
 :root[data-theme="dark"]{{--accent:#6f97d8}}
