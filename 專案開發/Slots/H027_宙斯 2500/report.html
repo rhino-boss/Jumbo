@@ -115,6 +115,9 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
 .card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em}
+/*左右滑動時第一欄（指標名稱）固定在左邊，不跟著捲走（2026-11-11 使用者）*/
+.card table tr>:first-child,.subcard table tr>:first-child,.intro table tr>:first-child{position:sticky;left:0;z-index:2;background:var(--panel);box-shadow:inset -1px 0 0 var(--rule)}
+.card table tr>td:first-child.wrap,.subcard table tr>td:first-child.wrap{min-width:8em;max-width:12em}
 </style></head><body><div class="wrap">
 <a class="back" href="./index.html" id="backLink">← 返回 Demo</a><script>(function(){var a=document.getElementById("backLink");if(document.referrer&&/index\.html|\/H027_/.test(document.referrer)){a.addEventListener("click",function(e){e.preventDefault();history.back()})}})();</script><header><div class="eyebrow">Omniplay · 數值報告</div><h1>宙斯 2500 Zeus 2500</h1></header>
 <div class="kpis" id="hero-kpis"><div class="kpi"><span class="lab">總 RTP</span><span class="val">91.85%</span></div><div class="kpi"><span class="lab">BG RTP</span><span class="val">71.96%</span></div><div class="kpi"><span class="lab">FG RTP</span><span class="val">19.89%</span></div><div class="kpi"><span class="lab">BG Hit Rate</span><span class="val">28.19%</span></div><div class="kpi"><span class="lab">FG Hit Rate</span><span class="val">43.75%</span></div><div class="kpi"><span class="lab">FG 週期</span><span class="val">1/451.9</span></div><div class="kpi"><span class="lab">FG 平均倍數</span><span class="val">89.86x</span></div><div class="kpi"><span class="lab">BF RTP</span><span class="val">92.52%</span></div></div>
