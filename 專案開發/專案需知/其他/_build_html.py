@@ -17,6 +17,7 @@ Mine（自己用、不同步出去）的 md 直接放 開發規範/；開發流�
 import html
 import os
 import re
+import subprocess
 from datetime import date
 from pathlib import Path
 
@@ -649,6 +650,21 @@ def line_groups(line):
     return groups
 
 
+def last_updated(path: Path) -> str:
+    """文件最後更新日：有未 commit 的修改用檔案修改時間，否則用最後一次 commit 日期。"""
+    try:
+        dirty = subprocess.run(["git", "status", "--porcelain", "--", path.name], cwd=path.parent,
+                               capture_output=True, text=True, encoding="utf-8").stdout.strip()
+        if not dirty:
+            out = subprocess.run(["git", "log", "-1", "--format=%cs", "--", path.name], cwd=path.parent,
+                                 capture_output=True, text=True, encoding="utf-8").stdout.strip()
+            if out:
+                return out
+    except OSError:
+        pass
+    return date.fromtimestamp(path.stat().st_mtime).isoformat()
+
+
 def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, links: dict,
                groups=None, embed=False):
     """把 base 下的 tabs（tab_id, 頁籤名稱, 檔名）彙整成一份 HTML。
@@ -676,6 +692,8 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         MD_DIR = TREE_ROOT if Path(filename).name.startswith("_README") else (base / filename).parent
         r = Renderer(tab_id)
         body = r.render(md)
+        stamp = f'<p class="updated">最後更新：{last_updated(base / filename)}</p>'
+        body = body.replace("</h1>", "</h1>" + stamp, 1) if "</h1>" in body else stamp + body
         toc_raw[tab_id] = list(r.toc)   # 第 2、3 層章節
         toc_items[tab_id] = "".join(
             f'<a class="toc-{lvl}" href="#{hid}" data-tab="{tab_id}">{html.escape(text)}</a>'
@@ -908,6 +926,7 @@ html.embedded main{{background:var(--panel); border:1px solid var(--rule); borde
 html.embedded .panel h1{{color:var(--ink); font-weight:600; font-size:30px}}
 html.embedded h2{{color:var(--ink); border-bottom-color:var(--grid)}}
 html.embedded main{{max-width:1080px}}
+.updated{{margin:-6px 0 18px; font-size:12.5px; color:var(--ink-3)}}
 html.embedded a{{color:var(--accent); text-decoration:none}}
 html.embedded a:hover{{text-decoration:underline}}
 html.embedded td code, html.embedded li code{{background:transparent; border:0; padding:0; color:var(--ink)}}
