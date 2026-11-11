@@ -282,7 +282,7 @@ window.addEventListener('message', function (e) {
   var hdr = document.querySelector('.topnav') || document.querySelector('header');
   var box = document.createElement('div');
   box.className = 'pv-search';
-  box.innerHTML = '<span class="ico">⌕</span><input type="search" placeholder="搜尋所有規範…" aria-label="搜尋所有規範"><kbd>Ctrl K</kbd><div class="pv-res"></div>';
+  box.innerHTML = '<span class="ico">⌕</span><input type="search" placeholder="搜尋所有規範…" aria-label="搜尋所有規範"><div class="pv-res"></div>';
   hdr.appendChild(box);
   var input = box.querySelector('input'), res = box.querySelector('.pv-res'), hits = [], sel = 0;
   function e(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
