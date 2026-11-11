@@ -2005,6 +2005,10 @@
       <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
         <span class="zone-label">Set RNG</span>
         <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="scriptSelect">
+            <span id="scriptLabel">Script</span>
+            <select id="scriptSelect"></select>
+          </label>
           <label class="debug-rng-field" for="cardRangeSelect">
             Card BG Range
             <select id="cardRangeSelect">
@@ -2055,6 +2059,7 @@
           <li>金框擴散不再選到 R1：只在 R2～R5 的 12 格中挑（R1 不會被瞄準）。（10/21）</li>
           <li>92 版（Oldhand）：開啟 Card System，依 Card Off 自然機率（NB／EB 各 4×10⁶ 局、BF 5×10⁵ 局）解卡片權重，目標照 H026 92A：NB BG 68%＋FG 24%（FG 週期 238.34、BG 中獎率 28.29%、BG ≤ 120x、FG 10x～20,000x）；EB BG 32.02%＋FG 59.98%（週期 47.69、FG 20x 起）；BF 92.5%（10x 起）。自然機率不動；Newbie 卡組移除（選 Newbie 沿用 Oldhand）。（10/22）</li>
           <li>Card On 驗證：NB 90.32%（±2.22%，10⁶ 局）、FG 1/241、中獎率 28.6%；EB 90.92%（±1.93%，10⁶ 局）、FG 1/48；BF 94.06%（±3.48%，2×10⁴ 局）。自然 FG 平均約 1,600x，卡片要壓到低倍區間需重跑多次 FG，BF 每局約 0.35 秒。（10/22）</li>
+          <li>Set RNG 加「腳本」下拉：連消 5 次以上／有擴散／一次擴散 3 格／擴散打中金框轉 Wild／擴散打中倍數金框／收集倍數 x20 以上／有觸發 FG／FG 100x 以上；NB／EB 以自然機率重抽到符合（不套 Card System），腳本局不計入倍率線型。（11/11）</li>
         </ol>
       </article>
       </div>
@@ -2397,6 +2402,7 @@
     const debugModeInputEl = document.getElementById("debugModeInput");
     const playDebugControlsEl = document.getElementById("play-debug-controls");
     const setRngPanelEl = document.getElementById("set-rng-panel");
+    const scriptSelectEl = document.getElementById("scriptSelect");
     const controlsEl = document.getElementById("controls");
     const spinResultWrapEl = document.getElementById("log-wrap");
     const liveLogWrapEl = document.getElementById("live-log-wrap");
@@ -2410,7 +2416,7 @@
     // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
     // 每局（Spin／Buy）以一組種子在 demogameRng.run() 內同步算完整局 runRound（BG＋消除＋FG＋Card retry），
     // Log 印「RNG <碼>」，點一下填入 #rngInput，下一局照碼重跑。滾輪動畫的亂數在 run() 之外。
-    // 本作選項欄：r<Card BG Range 索引>、f（Force FG），多項以「.」連接（例 r3、f、r3.f），無則「-」。
+    // 本作選項欄：r<Card BG Range 索引>、f（Force FG）、腳本 key（例 spread、fgbig），多項以「.」連接（例 r3、f、spread），無則「-」。
     const RNG_MODE_OF = { [Box.mode_normalbet]: "NB", [Box.mode_extrabet]: "EB", [Box.mode_featurebuy]: "BF" };
     const RNG_BET_MODE_OF = { NB: Box.mode_normalbet, EB: Box.mode_extrabet, BF: Box.mode_featurebuy };
     function rngConfigLabel() {
@@ -2422,18 +2428,19 @@
     function parseRngOpts(opts) {
       const tokens = String(opts || "").split(".").filter(Boolean);
       const range = tokens.find((token) => /^r\d+$/.test(token));
-      return { rangeIndex: range ? Number(range.slice(1)) : null, forceFg: tokens.includes("f") };
+      return { rangeIndex: range ? Number(range.slice(1)) : null, forceFg: tokens.includes("f"), script: tokens.find((token) => PB2_SCRIPTS.some((s) => s.key === token)) || "" };
     }
     function runRoundRecorded(betMode, forceFg, debugOverrides) {
       return runRound(betMode, forceFg, debugOverrides);
     }
     // 累積倍率線型（共用）：畫面一局（含該局 FG）演完才記；NB 記 NB、EB 記 EB，BF 不記錄。值＝總得分 ÷ 實際押注
     function recordLineChartRound(round) {
+      if (round.script_key) return;   // 腳本局不計入倍率線型
       const mode = round.bet_mode === Box.mode_normalbet ? "NB" : round.bet_mode === Box.mode_extrabet ? "EB" : null;
       if (mode) window.demogameLineChart?.record(Number(round.total_win) / Number(round.coin_in), mode);
     }
     // 算一整局：code 有值時暫時套用碼內的 Card System／Profile（不動畫面選單），結束還原
-    function runSeededRound(betMode, forceFg, cardIndex, code) {
+    function runSeededRound(betMode, forceFg, cardIndex, code, scriptKey = "") {
       const savedCard = CARD_SYSTEM_ENABLED;
       const savedProfile = state.cardProfile;
       if (code) {
@@ -2441,12 +2448,14 @@
         state.cardProfile = /newbie/i.test(code.config) ? "newbie" : "oldhand";
       }
       try {
-        const useRange = CARD_SYSTEM_ENABLED && cardIndex !== null && betMode !== Box.mode_featurebuy;
-        const overrides = useRange ? { card_range: buildCardRangeOverride(cardIndex, betMode) } : null;
-        const opts = [useRange ? `r${cardIndex}` : "", forceFg ? "f" : ""].filter(Boolean).join(".");
+        const useRange = CARD_SYSTEM_ENABLED && cardIndex !== null && betMode !== Box.mode_featurebuy && !scriptKey;   // 腳本用自然機率，Card BG Range 不生效
+        const rangeOverrides = useRange ? { card_range: buildCardRangeOverride(cardIndex, betMode) } : null;
+        const overrides = scriptKey ? { ...(rangeOverrides || {}), script: scriptKey } : rangeOverrides;
+        const opts = [useRange ? `r${cardIndex}` : "", forceFg ? "f" : "", scriptKey].filter(Boolean).join(".");
         const seed = code ? code.seed : window.demogameRng.newSeed();
         const rngText = window.demogameRng.format({ config: rngConfigLabel(), mode: RNG_MODE_OF[betMode] || "NB", card: CARD_SYSTEM_ENABLED, opts, seed });
         const round = window.demogameRng.run(seed, () => runRoundRecorded(betMode, forceFg, overrides));
+        round.script_key = scriptKey || "";
         return { round, rngText };
       } finally {
         CARD_SYSTEM_ENABLED = savedCard;
@@ -2519,6 +2528,8 @@
         .replace(/^Feature Buy entered FG \| (\d+) spins left, press Spin$/, "Feature Buy 已進入 FG | 剩餘 $1 場，按 Spin")
         .replace(/^Force FG triggered \| (\d+) spins left, press Spin$/, "Force FG 已觸發 | 剩餘 $1 場，按 Spin")
         .replace(/^FG triggered \| (\d+) spins left, press Spin$/, "FG 已觸發 | 剩餘 $1 場，按 Spin")
+        .replace(/^Script off$/, "腳本：無")
+        .replace(/^Script (\w+)$/, (m, key) => `腳本：${PB2_SCRIPTS.find((s) => s.key === key)?.zh || key}`)
         .replace(/^Debug Mode enabled$/, "Debug Mode 已開啟")
         .replace(/^Debug Mode disabled$/, "Debug Mode 已關閉")
         .replace(/^Card BG Range set to Auto$/, "Card BG Range 已設為 Auto")
@@ -2713,6 +2724,7 @@
       document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
       languageSelectEl.value = state.language;
       cardProfileSelectEl.value = state.cardProfile;
+      renderScriptOptions();
       setText(gameNameEl, state.language === "zh" ? "彩罐熱舞 2" : "Pinata Beat 2");
       document.querySelectorAll("[data-i18n]").forEach((element) => {
         element.textContent = tr(element.dataset.i18n);
@@ -2803,6 +2815,7 @@
     function resetSetRng(writeLog = true) {
       cardRangeSelectEl.value = "";
       rngInputEl.value = "";
+      scriptSelectEl.value = "";
       updateDebugControls();
       if (writeLog) writeMessage("Set RNG reset");
     }
@@ -2812,7 +2825,8 @@
       const hasRngCode = rngInputEl.value.trim() !== "";
       cardRangeSelectEl.disabled = !CARD_SYSTEM_ENABLED || !state.debugEnabled || debugInputLocked;
       rngInputEl.disabled = !state.debugEnabled || debugInputLocked;
-      setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasRngCode);
+      scriptSelectEl.disabled = !state.debugEnabled || debugInputLocked;
+      setRngResetBtn.disabled = !state.debugEnabled || debugInputLocked || (!hasCardRange && !hasRngCode && !scriptSelectEl.value);
     }
 
     function renderStepSnapshot(index) {
@@ -3721,6 +3735,41 @@
       };
     }
 
+    // 腳本（Set RNG）：用自然機率反覆重抽（Card System 不套用），直到結果符合條件；BG 條件都要求不觸發 FG
+    const spreadPicks = (spin) => spin.board_steps.flatMap((step) => step.spread_picks || []);
+    const PB2_SCRIPTS = [
+      { key: "combo5", zh: "連消 5 次以上", en: "5+ cascades", bg: (spin) => spin.board_steps.length >= 5 },
+      { key: "spread", zh: "有擴散", en: "Spread", bg: (spin) => spreadPicks(spin).length > 0 },
+      { key: "spread3", zh: "一次擴散 3 格", en: "Spread 3 cells", bg: (spin) => spin.board_steps.some((step) => {
+        const perTrigger = {};
+        (step.spread_picks || []).forEach((pick) => { perTrigger[pick.trigger] = (perTrigger[pick.trigger] || 0) + 1; });
+        return Object.values(perTrigger).some((n) => n >= 3);
+      }) },
+      { key: "spreadwild", zh: "擴散打中金框轉 Wild", en: "Spread hits gold → Wild", bg: (spin) => spreadPicks(spin).some((pick) => pick.type === "gold_to_wild") },
+      { key: "spreadmulti", zh: "擴散打中倍數金框", en: "Spread collects multiplier", bg: (spin) => spreadPicks(spin).some((pick) => pick.type === "gold_to_wild" && pick.multiplier > 0) },
+      { key: "mult20", zh: "收集倍數 x20 以上", en: "Collected x20+", bg: (spin) => spin.multi_used && spin.final_multiplier >= 20 },
+      { key: "fg", zh: "有觸發 FG", en: "FG trigger", fg: 0 },
+      { key: "fgbig", zh: "FG 100x 以上", en: "FG 100x+", fg: 100 }
+    ];
+    const SCRIPT_RETRY_LIMIT = 300000;
+    function scriptMatchesBase(script, spin) {
+      const triggered = spin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN;
+      return script.fg !== undefined ? triggered : !triggered && script.bg(spin);
+    }
+    function renderScriptOptions() {
+      const current = scriptSelectEl.value;
+      const zh = state.language === "zh";
+      scriptSelectEl.innerHTML = "";
+      [{ key: "", zh: "無", en: "None" }, ...PB2_SCRIPTS].forEach((script) => {
+        const option = document.createElement("option");
+        option.value = script.key;
+        option.textContent = zh ? script.zh : script.en;
+        scriptSelectEl.appendChild(option);
+      });
+      scriptSelectEl.value = current;
+      setText(document.getElementById("scriptLabel"), zh ? "腳本" : "Script");
+    }
+
     function runRound(betMode, forceFg = false, debugOverrides = null) {
       const currentCoinIn = coinIn(betMode);
       if (state.balance < currentCoinIn) throw new Error(`餘額不足，需 ${formatMoney(currentCoinIn)}`);
@@ -3736,15 +3785,18 @@
       let retryCount = 0;
       let retryLimitExceeded = false;
       let retryFailReason = null;
+      const script = PB2_SCRIPTS.find((s) => s.key === debugOverrides?.script) || null;
+      let scriptMissed = false;
+      const cardOn = CARD_SYSTEM_ENABLED && !script;   // 腳本局用自然機率，不套 Card System
       const forcedCardRange = debugOverrides?.card_range || null;
-      const hasForcedCard = CARD_SYSTEM_ENABLED && Boolean(forcedCardRange);
+      const hasForcedCard = cardOn && Boolean(forcedCardRange);
       const bgCardSystemInfo = hasForcedCard
         ? forcedCardRange
-        : !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy
+        : !cardOn || betMode === Box.mode_featurebuy
           ? null
           : pickCardSystemEntry("weight_bg", betMode);
       const runSpinCardSystemInfo = hasForcedCard ? null : bgCardSystemInfo;
-      const fgCardSystemInfo = !CARD_SYSTEM_ENABLED || betMode === Box.mode_featurebuy || hasForcedCard
+      const fgCardSystemInfo = !cardOn || betMode === Box.mode_featurebuy || hasForcedCard
         ? null
         : pickCardSystemEntry("weight_fg", betMode);
       const bfCardSystemInfo = CARD_SYSTEM_ENABLED && betMode === Box.mode_featurebuy
@@ -3833,6 +3885,12 @@
               continue;
             }
 
+            if (script && !scriptMatchesBase(script, normalSpin)) {
+              rerollCount += 1;
+              if (rerollCount < SCRIPT_RETRY_LIMIT) continue;
+              scriptMissed = true;   // 抽不到就用最後一把
+            }
+
             if (!forceFg && bgCardSystemInfo) {
               if (triggered || !isCardSystemMatch(bgCardSystemInfo, normalSpin.final_pay, roundCardSystemCoinIn, false)) {
                 rerollCount += 1;
@@ -3857,7 +3915,16 @@
 
           if (baseSpin.scatter_count >= FEATURE_TRIGGER_SCATTER_MIN && !(retryLimitExceeded && retryFailReason === "bg_range")) {
             const awarded = FG_TRIGGER_BASE_SPINS + (baseSpin.scatter_count - FEATURE_TRIGGER_SCATTER_MIN) * FG_EXTRA_SPINS_PER_SCATTER;
-            const fgResult = runFreeGameSequence(awarded, null);
+            let fgResult = runFreeGameSequence(awarded, null);
+            if (script?.fg) {
+              const baseBet = getBetMulti() * Box.default_coin_in * Box.normalbet;
+              let best = fgResult;
+              for (let tries = 1; fgResult.free_total_win / baseBet < script.fg; tries += 1) {
+                if (tries >= 20000) { fgResult = best; scriptMissed = true; break; }
+                fgResult = runFreeGameSequence(awarded, null);
+                if (fgResult.free_total_win > best.free_total_win) best = fgResult;
+              }
+            }
             freeSpinsAwarded = awarded;
             freeSpinsPlayed = fgResult.free_spins_played;
             fgMultiplierSum = fgResult.final_fg_multiplier_sum;
@@ -3956,6 +4023,7 @@
         retry_count: retryCount,
         retry_limit_exceeded: retryLimitExceeded,
         retry_fail_reason: retryFailReason,
+        script_missed: scriptMissed,
         display_spin: spins[spins.length - 1]
       };
     }
@@ -4500,6 +4568,7 @@
       let rngCode = null;
       let cardIndex = null;
       let forceFgThisSpin = false;
+      let scriptThisSpin = "";
       if (!state.pendingRound) {
         try {
           rngCode = window.demogameRng.takeInput();   // 讀 #rngInput（填了就沿用，按 Reset 才清空）；格式錯誤會丟 Error
@@ -4514,10 +4583,12 @@
           betMode = RNG_BET_MODE_OF[rngCode.mode] ?? betMode;
           cardIndex = opts.rangeIndex;
           forceFgThisSpin = opts.forceFg && betMode !== Box.mode_featurebuy;
+          scriptThisSpin = betMode !== Box.mode_featurebuy ? opts.script : "";
           if (rngCode.config !== rngConfigLabel()) appendLiveLog(`RNG Config ${rngCode.config} ≠ ${rngConfigLabel()}`, "error");
         } else {
           cardIndex = selectedCardRangeIndex();
           forceFgThisSpin = state.forceFg && (betMode === Box.mode_normalbet || betMode === Box.mode_extrabet);
+          scriptThisSpin = state.debugEnabled && betMode !== Box.mode_featurebuy ? scriptSelectEl.value : "";
           if (forceFgThisSpin) {
             state.forceFg = false;
             forceFgInputEl.checked = false;
@@ -4559,10 +4630,10 @@
           }
         } else {
           writeMessage("Reels spinning...");
-          const { round, rngText } = runSeededRound(betMode, forceFgThisSpin, cardIndex, rngCode);   // 先算好整局結果（含 FG），滾輪才能逐輪停在最終符號
+          const { round, rngText } = runSeededRound(betMode, forceFgThisSpin, cardIndex, rngCode, scriptThisSpin);   // 先算好整局結果（含 FG），滾輪才能逐輪停在最終符號
           window.demogameLineChart?.setMode(betMode === Box.mode_featurebuy ? "BF" : null);   // Buy Feature 不是 is-active 切換，買的局顯示 BF（不記錄）；NB／EB 依按鈕
           const rangeSet = cardIndex !== null && (rngCode ? rngCode.card : CARD_SYSTEM_ENABLED) && betMode !== Box.mode_featurebuy;
-          appendLiveLog(`#${state.roundCount} ${roundModeLabel(round)} | Bet ${formatMoney(round.coin_in)}${rangeSet ? " | Card Range set" : ""}${forceFgThisSpin ? " | Force FG" : ""}${round.retry_count ? ` | Card retry ${round.retry_count}` : ""}${round.retry_limit_exceeded ? " | Retry limit" : ""}${rngCode ? " | Replay" : ""}`, "mode");
+          appendLiveLog(`#${state.roundCount} ${roundModeLabel(round)} | Bet ${formatMoney(round.coin_in)}${rangeSet ? " | Card Range set" : ""}${forceFgThisSpin ? " | Force FG" : ""}${scriptThisSpin ? ` | Script ${scriptThisSpin}` : ""}${round.script_missed ? " | Script 未抽到，用最後一把" : ""}${round.retry_count ? ` | Card retry ${round.retry_count}` : ""}${round.retry_limit_exceeded ? " | Retry limit" : ""}${rngCode ? " | Replay" : ""}`, "mode");
           appendLiveLog(`RNG ${rngText}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
           await animateReels(round.spins[0].board_init);
           syncDisplayForRoundStart(round);
@@ -4753,6 +4824,11 @@
     rngInputEl.addEventListener("input", () => updateDebugControls());
 
     setRngResetBtn.addEventListener("click", () => resetSetRng(true));
+
+    scriptSelectEl.addEventListener("change", () => {
+      updateDebugControls();
+      writeMessage(scriptSelectEl.value ? `Script ${scriptSelectEl.value}` : "Script off");
+    });
 
     forceFgInputEl.addEventListener("change", () => {
       state.forceFg = forceFgInputEl.checked;
