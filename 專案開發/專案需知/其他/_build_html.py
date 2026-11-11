@@ -899,9 +899,9 @@ html.embedded .body-row{{display:block; padding:0}}
 html.embedded main{{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}}
 html.embedded .panel h1{{color:var(--accent); font-weight:500; font-size:30px}}
 html.embedded h2{{color:var(--accent); border-bottom-color:var(--grid)}}
-:root{{--accent:#c8501e}}
-@media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{--accent:#e9773d}}}}
-:root[data-theme="dark"]{{--accent:#e9773d}}
+:root{{--accent:#1b3a6b}}
+@media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{--accent:#6f97d8}}}}
+:root[data-theme="dark"]{{--accent:#6f97d8}}
 @media (max-width:700px){{html.embedded main{{padding:18px 16px 40px}}}}
 </style>
 <script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
@@ -1095,11 +1095,11 @@ def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, s
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 :root{{--surface:#f6f5f1; --panel:#ffffff; --ink:#101418; --ink-2:#4a5462; --ink-3:#7d8794; --rule:#dcdad3;
-  --accent:#c8501e; --brand:#f05133;
+  --accent:#1b3a6b; --brand:#1b3a6b;
   --font-sans:'IBM Plex Sans','Noto Sans TC',system-ui,-apple-system,'Segoe UI',sans-serif}}
 @media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{
-  --surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}}}}
-:root[data-theme="dark"]{{--surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#e9773d}}
+  --surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#6f97d8}}}}
+:root[data-theme="dark"]{{--surface:#1b1b1a; --panel:#232322; --ink:#e9e8e4; --ink-2:#b9b7b0; --ink-3:#8d8b85; --rule:#3a3936; --accent:#6f97d8}}
 *{{box-sizing:border-box}}
 html,body{{height:100%; margin:0}}
 body{{display:flex; flex-direction:column; background:var(--surface); color:var(--ink); font-family:var(--font-sans)}}
