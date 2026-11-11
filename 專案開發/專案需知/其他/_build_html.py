@@ -907,6 +907,10 @@ html.embedded .body-row{{display:block; padding:0}}
 html.embedded main{{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}}
 html.embedded .panel h1{{color:var(--ink); font-weight:600; font-size:30px}}
 html.embedded h2{{color:var(--ink); border-bottom-color:var(--grid)}}
+html.embedded main{{max-width:1080px}}
+html.embedded a{{color:var(--accent); text-decoration:none}}
+html.embedded a:hover{{text-decoration:underline}}
+html.embedded td code, html.embedded li code{{background:transparent; border:0; padding:0; color:var(--ink)}}
 :root{{--accent:#1b3a6b}}
 @media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{--accent:#6f97d8}}}}
 :root[data-theme="dark"]{{--accent:#6f97d8}}
@@ -1151,6 +1155,26 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
   aside{{width:auto; overflow:visible; padding:0}}
   main{{height:80vh; flex:none}}
 }}
+/* 頂部搜尋框 */
+.pv-search{{position:relative; margin-left:auto; flex:0 1 420px; min-width:160px}}
+.pv-search input{{width:100%; box-sizing:border-box; padding:8px 12px 8px 34px; border-radius:8px; border:1px solid var(--rule);
+  background:var(--panel); color:var(--ink); font:inherit; font-size:14px; outline:none}}
+.pv-search input:focus{{border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}}
+.pv-search .ico{{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--ink-3); pointer-events:none; font-size:14px}}
+.pv-search kbd{{position:absolute; right:9px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--ink-3);
+  border:1px solid var(--rule); border-radius:4px; padding:0 5px; background:var(--surface)}}
+.pv-res{{position:absolute; top:calc(100% + 6px); right:0; width:min(560px,calc(100vw - 32px)); max-height:70vh; overflow:auto; z-index:50; display:none;
+  background:var(--panel); border:1px solid var(--rule); border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.35); padding:6px}}
+.pv-res.on{{display:block}}
+.pv-item{{display:block; padding:8px 10px; border-radius:7px; cursor:pointer; color:var(--ink); text-decoration:none}}
+.pv-item:hover,.pv-item.sel{{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
+.pv-path{{font-size:11.5px; color:var(--ink-3)}}
+.pv-title{{font-weight:600; font-size:14px; margin:1px 0}}
+.pv-snip{{font-size:12.5px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}}
+.pv-snip mark,.pv-title mark{{background:color-mix(in srgb,var(--accent) 45%,transparent); color:inherit; border-radius:2px}}
+.pv-empty{{padding:10px; color:var(--ink-3); font-size:13px}}
+header{{display:flex; align-items:center}}
+@media (min-width:900px){{aside{{position:sticky; top:12px; align-self:flex-start; max-height:calc(100vh - 24px)}}}}
 </style>
 </head>
 <body>
@@ -1273,6 +1297,73 @@ window.addEventListener('message', function (e) {{
   cur.tab = d.specTab; cur.anchor = d.specAnchor || '';
   renderToc(); setHash();
 }});
+(function () {{
+  // ===== 全站搜尋：標題＋內文，Ctrl+K 聚焦，結果直接跳到該節 =====
+  var idx = [];
+  KEYS.forEach(function (key) {{
+    var el = document.getElementById('doc-' + key);
+    if (!el) return;
+    var dom = new DOMParser().parseFromString(JSON.parse(el.textContent), 'text/html');
+    var site = SITES[key].name, titles = SITES[key].meta.titles || {{}};
+    dom.querySelectorAll('section.panel').forEach(function (sec) {{
+      var tab = sec.id.replace(/^panel-/, ''), doc = titles[tab] || '';
+      var cur = {{ key: key, tab: tab, anchor: '', title: doc, path: site + ' › ' + doc, text: '' }};
+      idx.push(cur);
+      var walker = dom.createTreeWalker(sec, NodeFilter.SHOW_ELEMENT);
+      for (var n = walker.nextNode(); n; n = walker.nextNode()) {{
+        if (/^H[1-4]$/.test(n.tagName) && n.id) {{
+          cur = {{ key: key, tab: tab, anchor: n.id, title: n.textContent.trim(), path: site + ' › ' + doc, text: '' }};
+          idx.push(cur);
+        }} else if (/^(P|LI|TD|TH|PRE|BLOCKQUOTE)$/.test(n.tagName)) {{
+          cur.text += ' ' + n.textContent.replace(/\s+/g, ' ');
+        }}
+      }}
+    }});
+  }});
+
+  var hdr = document.querySelector('header');
+  var box = document.createElement('div');
+  box.className = 'pv-search';
+  box.innerHTML = '<span class="ico">⌕</span><input type="search" placeholder="搜尋所有規範…" aria-label="搜尋所有規範"><kbd>Ctrl K</kbd><div class="pv-res"></div>';
+  hdr.appendChild(box);
+  var input = box.querySelector('input'), res = box.querySelector('.pv-res'), hits = [], sel = 0;
+  function e(s) {{ return String(s).replace(/[&<>"]/g, function (c) {{ return {{ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }}[c]; }}); }}
+  function hl(s, q) {{ var i = s.toLowerCase().indexOf(q); return i < 0 ? e(s) : e(s.slice(0, i)) + '<mark>' + e(s.slice(i, i + q.length)) + '</mark>' + e(s.slice(i + q.length)); }}
+  function snip(t, q) {{ var i = t.toLowerCase().indexOf(q); if (i < 0) return ''; var a = Math.max(0, i - 30); return (a ? '…' : '') + t.slice(a, i + q.length + 60); }}
+  function search() {{
+    var q = input.value.trim().toLowerCase();
+    if (!q) {{ res.classList.remove('on'); return; }}
+    hits = idx.map(function (r) {{
+      var t = r.title.toLowerCase().indexOf(q) >= 0, b = r.text.toLowerCase().indexOf(q) >= 0;
+      return {{ r: r, s: t ? 2 : b ? 1 : 0 }};
+    }}).filter(function (h) {{ return h.s; }}).sort(function (a, b) {{ return b.s - a.s; }}).slice(0, 30);
+    sel = 0;
+    res.innerHTML = hits.length ? hits.map(function (h, i) {{
+      return '<a class="pv-item' + (i === 0 ? ' sel' : '') + '" data-i="' + i + '"><div class="pv-path">' + e(h.r.path) + '</div><div class="pv-title">' + hl(h.r.title, q) + '</div>' +
+        (h.s === 1 || snip(h.r.text, q) ? '<div class="pv-snip">' + hl(snip(h.r.text, q), q) + '</div>' : '') + '</a>';
+    }}).join('') : '<div class="pv-empty">找不到「' + e(input.value) + '」</div>';
+    res.classList.add('on');
+  }}
+  function pick(i) {{
+    var r = hits[i] && hits[i].r; if (!r) return;
+    res.classList.remove('on'); input.blur();
+    if (cur.key === r.key) go(r.tab, r.anchor); else openSite(r.key, r.tab, r.anchor);
+  }}
+  input.addEventListener('input', search);
+  input.addEventListener('focus', search);
+  input.addEventListener('keydown', function (ev) {{
+    var items = res.querySelectorAll('.pv-item');
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {{
+      ev.preventDefault(); if (!items.length) return;
+      items[sel].classList.remove('sel'); sel = (sel + (ev.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
+      items[sel].classList.add('sel'); items[sel].scrollIntoView({{ block: 'nearest' }});
+    }} else if (ev.key === 'Enter') {{ ev.preventDefault(); pick(sel); }}
+    else if (ev.key === 'Escape') {{ res.classList.remove('on'); input.blur(); }}
+  }});
+  res.addEventListener('mousedown', function (ev) {{ var a = ev.target.closest('.pv-item'); if (a) {{ ev.preventDefault(); pick(+a.dataset.i); }} }});
+  document.addEventListener('click', function (ev) {{ if (!box.contains(ev.target)) res.classList.remove('on'); }});
+  document.addEventListener('keydown', function (ev) {{ if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'k') {{ ev.preventDefault(); input.focus(); input.select(); }} }});
+}})();
 (function () {{
   var p = decodeURIComponent(location.hash.slice(1)).split('/');
   if (SINGLE) openSite(KEYS[0], p[0], p.slice(1).join('/'));
