@@ -694,6 +694,9 @@ def build_site(base: Path, tabs, output: Path, site_title: str, eyebrow: str, li
         body = r.render(md)
         stamp = f'<p class="updated">最後更新：{last_updated(base / filename)}</p>'
         body = body.replace("</h1>", "</h1>" + stamp, 1) if "</h1>" in body else stamp + body
+        # 每個大標題（h2）一個區塊：標題前的內容是頁首，之後每段各自一個框
+        parts = re.split(r"(?=<h2[ >])", body)
+        body = f'<div class="sec-head">{parts[0]}</div>' + "".join(f'<div class="sec-card">{x}</div>' for x in parts[1:])
         toc_raw[tab_id] = list(r.toc)   # 第 2、3 層章節
         toc_items[tab_id] = "".join(
             f'<a class="toc-{lvl}" href="#{hid}" data-tab="{tab_id}">{html.escape(text)}</a>'
@@ -922,7 +925,11 @@ html.embedded .wrap{{max-width:none; padding:0}}
 html.embedded header.page, html.embedded .tabs, html.embedded .toc,
 html.embedded .toc:not([hidden]):has(.toc-doc){{display:none!important}}
 html.embedded .body-row{{display:block; padding:0}}
-html.embedded main{{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:26px 32px 60px}}
+html.embedded main{{background:transparent; border:0; padding:6px 0 60px}}
+.sec-head{{padding:0 2px 4px}}
+.sec-head > *:last-child{{margin-bottom:8px}}
+.sec-card{{background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:4px 32px 22px; margin:0 0 18px}}
+.sec-card > h2:first-child{{margin-top:20px}}
 html.embedded .panel h1{{color:var(--ink); font-weight:600; font-size:30px}}
 html.embedded h2{{color:var(--ink); border-bottom-color:var(--grid)}}
 html.embedded main{{max-width:1080px}}
@@ -933,7 +940,7 @@ html.embedded td code, html.embedded li code{{background:transparent; border:0; 
 :root{{--accent:#1b3a6b}}
 @media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])){{--accent:#6f97d8}}}}
 :root[data-theme="dark"]{{--accent:#6f97d8}}
-@media (max-width:700px){{html.embedded main{{padding:18px 16px 40px}}}}
+@media (max-width:700px){{html.embedded main{{padding:6px 0 40px}} .sec-card{{padding:4px 16px 16px}}}}
 </style>
 <script>if (window.self !== window.top) document.documentElement.classList.add('embedded');</script>
 </head>
