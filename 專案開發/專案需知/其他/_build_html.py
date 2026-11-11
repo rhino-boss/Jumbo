@@ -1622,9 +1622,42 @@ def build_external():
             TREE_ROOT, LOCAL_ONLY = HERE, False
 
 
+def write_updated():
+    """入口站卡片的「更新日期」：專案需知/_updated.json 記每份網頁（專案需知最外層＋對外文件）的內容雜湊與最後更新日。
+    內容有變才把日期改成今天；第一次記錄時用該檔最後一次 git commit 的日期（2026-11-11）。"""
+    import hashlib
+    import json
+    root = HERE.parent   # 專案開發/
+    path = HERE / "_updated.json"
+    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    pages = [p for p in HERE.glob("*.html") if not p.name.startswith("_")]
+    if EXTERNAL_DIR.exists():
+        pages += [p for p in EXTERNAL_DIR.glob("*/*.html") if not p.name.startswith("_")]
+    new = {}
+    for p in sorted(pages):
+        key = p.relative_to(root).as_posix()
+        h = hashlib.sha1(p.read_bytes()).hexdigest()[:12]
+        prev = old.get(key)
+        if prev and prev.get("sha") == h:
+            new[key] = prev
+            continue
+        d = date.today().isoformat()
+        if not prev:
+            try:
+                g = subprocess.run(["git", "log", "-1", "--format=%cs", "--", p.name], cwd=p.parent,
+                                   capture_output=True, text=True, encoding="utf-8").stdout.strip()
+                d = g or d
+            except OSError:
+                pass
+        new[key] = {"sha": h, "date": d}
+    if new != old:
+        path.write_text(json.dumps(new, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
 def build():
     build_tree(HERE, TABS, GROUPS, PRIVATE_SITES)
     build_external()
+    write_updated()
     publish_team()
     sync_svn()
 

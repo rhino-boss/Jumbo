@@ -1737,11 +1737,10 @@
   setTimeout(setupAddCredit, 0);
 
   // ===== 新手導覽（共用，2026-11-11 使用者）=====
-  // 第一次進 Demo 自動顯示一次（localStorage 記住看過），標題列「導覽」可再看。
+  // 每次進 Demo（含重新整理）都自動顯示，標題列「導覽」可再看。
   // 一次框出全部：Spin 鈕、餘額／押注／得分、除錯模式、指標區（找不到或不在畫面內的略過），點任意處關閉。
   function setupGuideTour() {
     // 2026-11-11 使用者改版：一次顯示全部說明（不用一直按下一步），說明框互不重疊，點任意處或按 Esc 關閉。
-    const KEY = "demogame-guide-v1";
     const STEPS = [
       { el: () => document.getElementById("spinBtn"),
         zh: "開始遊戲（也可以按空白鍵）", en: "Start a round (or press Space)" },
@@ -1819,7 +1818,6 @@
     function close() {
       if (!overlay) return;
       overlay.remove(); overlay = null;
-      try { localStorage.setItem(KEY, "1"); } catch (e) {}
       removeEventListener("resize", layout); removeEventListener("scroll", layout, true); removeEventListener("keydown", onKey, true);
     }
     function onKey(e) {
@@ -1848,9 +1846,8 @@
       btn.addEventListener("click", start);
       group.insertBefore(btn, document.getElementById("helpBtn") || group.firstChild);
     }
-    let seen = false;
-    try { seen = localStorage.getItem(KEY) === "1"; } catch (e) {}
-    if (!seen) {
+    // 2026-11-11 使用者：每次進入或重新整理都播（不記看過）
+    {
       // 等預載畫面與版面就緒再開始
       const wait = () => (document.querySelector(".demogame-preload:not(.done), #demogame-preload") ? setTimeout(wait, 300) : setTimeout(start, 600));
       if (document.readyState === "complete") wait(); else addEventListener("load", wait, { once: true });
