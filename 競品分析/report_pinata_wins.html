@@ -438,9 +438,6 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
 .card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em}
-/*左右滑動時第一欄（指標名稱）固定在左邊，不跟著捲走（2026-11-11 使用者）*/
-.card table tr>:first-child,.subcard table tr>:first-child,.intro table tr>:first-child{position:sticky;left:0;z-index:2;background:var(--panel);box-shadow:inset -1px 0 0 var(--rule)}
-.card table tr>td:first-child.wrap,.subcard table tr>td:first-child.wrap{min-width:8em;max-width:12em}
 </style><script id="card-v2-js">
 (function(){
   document.querySelectorAll('table').forEach(function(tb){
