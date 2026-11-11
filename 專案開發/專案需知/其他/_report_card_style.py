@@ -87,10 +87,20 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .card:not(:has(>.chart~.chart))>h3~.chart .legend{margin-bottom:6px}
 .card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
+/*表格不折行（2026-11-11 使用者）：寬度不夠就左右滑動，不要擠成一字一行變很高；長說明文字（.wrap）才折行*/
+.tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
+.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em}
 """
 
 # 沒有切換按鈕的圖例：span 改成按鈕，依圖例色塊的顏色開關 svg 內同色的線與點
 JS = """
+(function(){
+  document.querySelectorAll('table').forEach(function(tb){
+    if(!tb.closest('.tbl-wrap,.tbl-scroll')){var w=document.createElement('div');w.className='tbl-scroll';tb.parentNode.insertBefore(w,tb);w.appendChild(tb);}
+    tb.querySelectorAll('td').forEach(function(td){if(td.textContent.trim().length>28)td.classList.add('wrap');});
+  });
+})();
 (function(){
   var probe=document.createElement('i');document.body.appendChild(probe);
   function norm(c){probe.style.color='';probe.style.color=c;return getComputedStyle(probe).color}

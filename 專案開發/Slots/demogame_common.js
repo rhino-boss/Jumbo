@@ -1736,6 +1736,41 @@
 
   setTimeout(setupAddCredit, 0);
 
+  // ===== 空白鍵＝Spin（共用，2026-11-11 使用者）=====
+  // 空白鍵一律只觸發 Spin，鎖住瀏覽器預設（整頁往下捲、按到焦點所在的按鈕／勾選框）。
+  // 在 window 捕獲階段處理並 stopImmediatePropagation，各遊戲自己的空白鍵監聽不會再收到，避免重複 Spin。
+  // 例外：焦點在文字輸入欄／下拉選單／可編輯區時照常打字；說明視窗開著時不 Spin；導覽開著時空白鍵關閉導覽。
+  (() => {
+    const typing = (el) => {
+      if (!el || el === document.body) return false;
+      if (el.isContentEditable || el.tagName === "TEXTAREA" || el.tagName === "SELECT") return true;
+      return el.tagName === "INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/i.test(el.type);
+    };
+    const isSpace = (e) => e.code === "Space" || e.key === " ";
+    addEventListener("keydown", (e) => {
+      if (!isSpace(e) || e.ctrlKey || e.altKey || e.metaKey || typing(e.target)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (e.repeat) return;   // 按住不放不連發
+      const guide = document.getElementById("demogame-guide");
+      if (guide) { guide.click(); return; }
+      if (document.querySelector("dialog[open]")) return;
+      const spin = document.getElementById("spinBtn");
+      if (spin && !spin.disabled) spin.click();
+    }, true);
+    // 焦點在按鈕上時，瀏覽器會在 keyup 觸發該按鈕 —— 一併擋掉
+    addEventListener("keyup", (e) => {
+      if (!isSpace(e) || typing(e.target)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, true);
+    addEventListener("keypress", (e) => {
+      if (!isSpace(e) || typing(e.target)) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, true);
+  })();
+
   // ===== 新手導覽（共用，2026-11-11 使用者）=====
   // 每次進 Demo（含重新整理）都自動顯示，標題列「導覽」可再看。
   // 一次框出全部：Spin 鈕、餘額／押注／得分、除錯模式、指標區（找不到或不在畫面內的略過），點任意處關閉。

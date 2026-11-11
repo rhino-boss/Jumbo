@@ -71,6 +71,13 @@ header h1{margin:0;font-family:var(--font-sans);font-weight:600;font-size:32px;l
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{border:1px solid var(--grid)}
 .card table th,.subcard table th{border-bottom:1px solid var(--rule)}
 .card table tr:first-child th{border-top:1px solid var(--rule)}
+/*本作比競品好／差（md 儲存格結尾 {+}／{-}）*/
+:root{--good:#1f8a4c;--bad:#c8423b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--good:#4cc27a;--bad:#ef6b62}}
+:root[data-theme="dark"]{--good:#4cc27a;--bad:#ef6b62}
+td.good{color:var(--good);font-weight:600}td.bad{color:var(--bad);font-weight:600}
+.card table th.grp-start,.card table td.grp-start,.subcard table th.grp-start,.subcard table td.grp-start{border-left:22px solid var(--panel);box-shadow:inset 1px 0 0 var(--grid)}
+.card table th.grp-end,.card table td.grp-end,.subcard table th.grp-end,.subcard table td.grp-end{box-shadow:inset -1px 0 0 var(--grid)}
 
 .card .chart{border:1px solid var(--rule);border-radius:10px;background:var(--chart-bg,var(--panel-2));padding:14px 16px 8px;margin:4px 0 16px}
 .card>blockquote,.card .subcard>blockquote,.intro>blockquote{width:100%;box-sizing:border-box;margin-left:0;margin-right:0}
@@ -93,11 +100,21 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--chart-bg:#34342f;--chart-grid:rgba(255,255,255,.07)}}
 :root[data-theme="dark"]{--chart-bg:#34342f;--chart-grid:rgba(255,255,255,.07)}
 .chart svg line.gl{stroke:var(--chart-grid);stroke-width:1}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin:18px 0 26px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin:18px 0 26px}
 .kpi{background:var(--panel);padding:12px 15px;display:flex;flex-direction:column;gap:2px}
 .kpi .lab{font-size:11.5px;color:var(--ink-3);font-family:var(--font-mono);letter-spacing:.04em}
 .kpi .val{font-family:var(--font-mono);font-size:19px;font-weight:500;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/*倍率線型（2026-11-11）：一張卡只放一張圖時，卡片標題取代圖內標題、圖框不再疊一層外框；一張卡放多張圖（舊報告）維持原樣*/
+.card:not(:has(>.chart~.chart))>h3~.chart{border:0;padding:6px 0 0;margin:8px 0 0;background:transparent}
+.card:not(:has(>.chart~.chart))>h3~.chart h4{display:none}
+.card:not(:has(>.chart~.chart))>h3~.chart .legend{margin-bottom:6px}
+.card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
+/*表格不折行（2026-11-11 使用者）：寬度不夠就左右滑動，不要擠成一字一行變很高；長說明文字（.wrap）才折行*/
+.tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+.card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
+.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em}
 </style></head><body><div class="wrap">
 <a class="back" href="./index.html" id="backLink">← 返回 Demo</a><script>(function(){var a=document.getElementById("backLink");if(document.referrer&&/index\.html|\/H027_/.test(document.referrer)){a.addEventListener("click",function(e){e.preventDefault();history.back()})}})();</script><header><div class="eyebrow">Omniplay · 數值報告</div><h1>宙斯 2500 Zeus 2500</h1></header>
 <div class="kpis" id="hero-kpis"><div class="kpi"><span class="lab">總 RTP</span><span class="val">91.85%</span></div><div class="kpi"><span class="lab">BG RTP</span><span class="val">71.96%</span></div><div class="kpi"><span class="lab">FG RTP</span><span class="val">19.89%</span></div><div class="kpi"><span class="lab">BG Hit Rate</span><span class="val">28.19%</span></div><div class="kpi"><span class="lab">FG Hit Rate</span><span class="val">43.75%</span></div><div class="kpi"><span class="lab">FG 週期</span><span class="val">1/451.9</span></div><div class="kpi"><span class="lab">FG 平均倍數</span><span class="val">89.86x</span></div><div class="kpi"><span class="lab">BF RTP</span><span class="val">92.52%</span></div></div>
@@ -178,6 +195,12 @@ if(cells.length<3||max<=0)return;cells.forEach(function(p){var w=Math.max(0,Math
 </script>
 <script id="card-v2-js">
 (function(){
+  document.querySelectorAll('table').forEach(function(tb){
+    if(!tb.closest('.tbl-wrap,.tbl-scroll')){var w=document.createElement('div');w.className='tbl-scroll';tb.parentNode.insertBefore(w,tb);w.appendChild(tb);}
+    tb.querySelectorAll('td').forEach(function(td){if(td.textContent.trim().length>28)td.classList.add('wrap');});
+  });
+})();
+(function(){
   var probe=document.createElement('i');document.body.appendChild(probe);
   function norm(c){probe.style.color='';probe.style.color=c;return getComputedStyle(probe).color}
   document.querySelectorAll('.chart .legend').forEach(function(lg){
@@ -195,6 +218,17 @@ if(cells.length<3||max<=0)return;cells.forEach(function(p){var w=Math.max(0,Math
     });
   });
   probe.remove();
+})();
+/* 欄組間距（2026-11-11）：表頭寫成「BG · 名稱」「FG · 名稱」時，前綴換組的那一欄前面留空，BG／FG 分得開 */
+(function(){
+  document.querySelectorAll('table').forEach(function(tb){
+    var hr=tb.querySelector('tr');if(!hr)return;
+    var ths=[].slice.call(hr.children),prev=null,starts=[];
+    ths.forEach(function(th,i){var m=th.textContent.trim().match(/^(\S+)\s*·/);var g=m?m[1]:null;
+      if(i>0&&g&&prev&&g!==prev)starts.push(i);if(i>0)prev=g});
+    if(!starts.length)return;
+    tb.querySelectorAll('tr').forEach(function(tr){starts.forEach(function(i){var c=tr.children[i],e=tr.children[i-1];if(c)c.classList.add('grp-start');if(e)e.classList.add('grp-end')})});
+  });
 })();
 /* 倍率線型縱軸縮放（2026-11-09 使用者定）：每種線型只畫一張，滑鼠滾輪縮放縱軸、雙擊還原。
    作用在 .chart[data-hover] 的靜態 SVG：依 data-hover 的數值重畫各線、點與橫向格線。
