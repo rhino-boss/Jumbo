@@ -15,7 +15,7 @@
 | 押注模式 | Normal Bet；Buy Feature `100 × Bet`；目前無 Extra Bet、無彩金 |
 
 * Game ID、ParSheet ID、遊戲名稱、致敬遊戲與押注選項依 `其他/iGaming 遊戲代號一覽.xlsx`（2026-11-03）。
-* v2（2026-11-09）：輪帶、Symbol Weight、補牌權重與賠率表暫用 JILI Super Ace；金色符號（黃底）出現率與倍數分布對標 FC - DJ Boom Boom。v1（輪帶以超級鑽石 H045 為底）封存於 `Versions/1.0/`。
+* v2（2026-11-09）：輪帶、Symbol Weight、補牌權重與賠率表暫用 JILI Super Ace；金色符號（黃底）出現率對標 FC - DJ Boom Boom；倍數分布 2026-11-11 調大（1X 約 55%，隱性參數），框少但倍數大。v1（輪帶以超級鑽石 H045 為底）封存於 `Versions/1.0/`。
 * 數學模型 `Source/H0321.xlsx` 已改為 H032 玩法參數：黃底參數跟著輪帶表（初始／補牌機率、倍數權重、符號係數），FG 隱性控制寫在 Parameter（好局、Retrigger Boost、連續未中、框總和分段與優先順序），數值皆為暫定；`config.js` 由此轉出，`Simulator.py` 與 Demo 都已改跑 H032 玩法。RTP／Variant 模型（`H032192A` 等）的卡片權重仍是 H045 的，待調調性時重算。
 
 ## §2. 盤面與判獎

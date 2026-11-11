@@ -47,6 +47,11 @@ header h1{margin:0;font-family:var(--font-sans);font-weight:600;font-size:32px;l
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{border:1px solid var(--grid)}
 .card table th,.subcard table th{border-bottom:1px solid var(--rule)}
 .card table tr:first-child th{border-top:1px solid var(--rule)}
+/*本作比競品好／差（md 儲存格結尾 {+}／{-}）*/
+:root{--good:#1f8a4c;--bad:#c8423b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--good:#4cc27a;--bad:#ef6b62}}
+:root[data-theme="dark"]{--good:#4cc27a;--bad:#ef6b62}
+td.good{color:var(--good);font-weight:600}td.bad{color:var(--bad);font-weight:600}
 .card table th.grp-start,.card table td.grp-start,.subcard table th.grp-start,.subcard table td.grp-start{border-left:22px solid var(--panel);box-shadow:inset 1px 0 0 var(--grid)}
 .card table th.grp-end,.card table td.grp-end,.subcard table th.grp-end,.subcard table td.grp-end{box-shadow:inset -1px 0 0 var(--grid)}
 
@@ -71,10 +76,16 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--chart-bg:#34342f;--chart-grid:rgba(255,255,255,.07)}}
 :root[data-theme="dark"]{--chart-bg:#34342f;--chart-grid:rgba(255,255,255,.07)}
 .chart svg line.gl{stroke:var(--chart-grid);stroke-width:1}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin:18px 0 26px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin:18px 0 26px}
 .kpi{background:var(--panel);padding:12px 15px;display:flex;flex-direction:column;gap:2px}
 .kpi .lab{font-size:11.5px;color:var(--ink-3);font-family:var(--font-mono);letter-spacing:.04em}
 .kpi .val{font-family:var(--font-mono);font-size:19px;font-weight:500;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/*倍率線型（2026-11-11）：一張卡只放一張圖時，卡片標題取代圖內標題、圖框不再疊一層外框；一張卡放多張圖（舊報告）維持原樣*/
+.card:not(:has(>.chart~.chart))>h3~.chart{border:0;padding:6px 0 0;margin:8px 0 0;background:transparent}
+.card:not(:has(>.chart~.chart))>h3~.chart h4{display:none}
+.card:not(:has(>.chart~.chart))>h3~.chart .legend{margin-bottom:6px}
+.card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
 """
 

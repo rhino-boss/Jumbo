@@ -97,6 +97,15 @@ def build(report, curves=None):
                 c["class"] = ["num"]
             else:
                 del c["class"]
+        for c in frag.select("td"):   # 儲存格結尾 {+}／{-}：本作比競品好（綠）／差（紅），2026-11-11
+            s = c.get_text()
+            m = re.search(r"\s*\{([+-])\}\s*$", s)
+            if m:
+                for t in c.find_all(string=True)[::-1]:
+                    if "{" in t:
+                        t.replace_with(re.sub(r"\s*\{[+-]\}\s*$", "", str(t)))
+                        break
+                c["class"] = c.get("class", []) + ["good" if m.group(1) == "+" else "bad"]
         for e in frag.select("[id]"):
             if e.name in ("h3", "h4"):
                 del e["id"]
