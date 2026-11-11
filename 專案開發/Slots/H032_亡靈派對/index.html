@@ -2248,7 +2248,7 @@
           <li>規則改版：金色符號不再帶倍數，中獎後變 WW、所在位置沒框就留下 1X 框；每段連消全盤所有框 +1（新框從下一消起才 +1）；計分仍用消除前的框。FG 開場不再有第 3 軸 1X 框，框整場累積到 FG 結束。卡片權重依新規則重算。（11/11）</li>
           <li>金色符號出現率（初始盤面與補牌）BG／FG 都調為 1.5 倍；卡片權重依新自然機率重算。實際每盤金框 BG 約 2.5 → 3.7 顆、FG 約 1.5 → 2.3 顆。（11/11）</li>
           <li>演出：上方「倍數總和」只在算分時才收集盤面所有框的倍數，框 +1、新框出現時不再跟著跳動。（11/11）</li>
-          <li>演出順序改為：消除符號 → 算分（倍數總和收集後乘上去）→ 最後所有框 +1、金色符號留新框。計分規則不變。（11/11）</li>
+          <li>演出順序改為：消除符號 → 收集倍數 → 算分 → 補牌掉落時所有框同時 +1、金色符號留新框。計分規則不變。（11/11）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -3085,71 +3085,23 @@
     await wait(hold * 1.4);
   }
 
-  // 加倍數演出（消除、算分之後）：① 以「更新前」的框顯示 → ② 全盤所有框跳「+1」→ ③（舊規則）黃底倍數落進框 → ④ 換成最終框值
-  async function animateGoldToFrame(snapshot) {
-    const converted = snapshot.converted || [], bumped = snapshot.bumped || [];
-    const after = { yellow: snapshot.yellow, frames: snapshot.frames, bumped };
-    if (!snapshot.framesBefore || !bumped.length) { renderBoard(snapshot.board, snapshot.hits, after); return; }
-    renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: snapshot.framesBefore });
+  // 框倍數「+1」跳字（keys：要跳的格子）；不等待，與補牌同時進行
+  function popPlusOne(keys) {
     const fxLayer = window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
-    // ② 全盤所有框 +1（2026-11-11 規則改版：不限中獎格）
-    const plusKeys = [];
-    snapshot.framesBefore.forEach((col, reel) => col.forEach((v, row) => { if (v > 0) plusKeys.push(`${reel},${row}`); }));
-    if (plusKeys.length) {
-      const speed = Number($("speedRange").value || 1);
-      await wait(Math.max(80, 200 / speed));
-      const mid = clone(snapshot.framesBefore);
-      plusKeys.forEach(key => { const [reel, row] = key.split(",").map(Number); mid[reel][row] += 1; });
-      renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: mid, bumped: plusKeys });
-      if (fxLayer) {
-        const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(260, 620 / speed);
-        $("board").querySelectorAll(".frame-layer").forEach(frame => {
-          if (!plusKeys.includes(frame.dataset.key)) return;
-          const badge = frame.querySelector(".frame-badge").getBoundingClientRect();
-          const pop = document.createElement("div");
-          pop.className = "fx-plus-one"; pop.textContent = "+1";
-          pop.style.cssText = `left:${badge.left - layerRect.left + badge.width / 2}px;top:${badge.top - layerRect.top - 4}px`;
-          fxLayer.appendChild(pop);
-          const a = pop.animate([{ transform: "translate(-50%,0) scale(.7)", opacity: 0 }, { transform: "translate(-50%,-10px) scale(1.2)", opacity: 1, offset: .3 },
-            { transform: "translate(-50%,-22px) scale(1)", opacity: 0 }], { duration: dur, easing: "ease-out", fill: "forwards" });
-          Promise.race([a.finished.catch(() => {}), wait(dur + 60)]).then(() => pop.remove());
-        });
-      }
-      await wait(Math.max(160, 420 / speed));
-    }
-    const layer = converted.length ? fxLayer : null;
-    if (layer) {
-      const speed = Number($("speedRange").value || 1);
-      const flight = Math.max(140, 460 / speed), gap = Math.max(30, 90 / speed);
-      await wait(Math.max(80, 220 / speed));
-      const layerRect = layer.getBoundingClientRect();
-      const cells = $("board").children;
-      await Promise.all(converted.map((key, index) => {
-        const [reel, row] = key.split(",").map(Number);
-        const cell = cells[(3 - row) * 5 + reel], badge = cell?.querySelector(".yellow-badge");
-        if (!badge) return Promise.resolve();
-        const from = badge.getBoundingClientRect(), box = cell.getBoundingClientRect();
-        const ghost = document.createElement("div");
-        ghost.className = "fx-gold-drop"; ghost.textContent = badge.textContent;
-        ghost.style.cssText = `left:${from.left - layerRect.left}px;top:${from.top - layerRect.top}px;width:${from.width}px;height:${from.height}px`;
-        layer.appendChild(ghost);
-        badge.style.visibility = "hidden";
-        // 終點：框倍數徽章的位置（格子下緣置中）
-        const dy = (box.bottom - from.height / 2 + 1) - (from.top + from.height / 2);
-        const animation = ghost.animate([
-          { transform: "translateY(0) scale(1)", offset: 0 },
-          { transform: "translateY(-6px) scale(1.25)", offset: 0.18 },
-          { transform: `translateY(${dy}px) scale(1.1)`, offset: 0.85 },
-          { transform: `translateY(${dy}px) scale(.6)`, opacity: 0, offset: 1 }
-        ], { duration: flight, delay: index * gap, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" });
-        return Promise.race([animation.finished.catch(() => {}), wait(flight + index * gap + 60)]).then(() => ghost.remove());
-      }));
-    }
-    // 黃底倍數已落入框：中獎格不再顯示黃底徽章，框換成更新後的值
-    const yellow = clone(snapshot.yellow);
-    converted.forEach(key => { const [reel, row] = key.split(",").map(Number); yellow[reel][row] = 0; });
-    renderBoard(snapshot.board, snapshot.hits, { ...after, yellow });
-    await wait(Math.max(120, 360 / Number($("speedRange").value || 1)));
+    if (!fxLayer || !keys.length) return;
+    const speed = Number($("speedRange").value || 1);
+    const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(260, 620 / speed);
+    $("board").querySelectorAll(".frame-layer").forEach(frame => {
+      if (!keys.includes(frame.dataset.key)) return;
+      const badge = frame.querySelector(".frame-badge").getBoundingClientRect();
+      const pop = document.createElement("div");
+      pop.className = "fx-plus-one"; pop.textContent = "+1";
+      pop.style.cssText = `left:${badge.left - layerRect.left + badge.width / 2}px;top:${badge.top - layerRect.top - 4}px`;
+      fxLayer.appendChild(pop);
+      const a = pop.animate([{ transform: "translate(-50%,0) scale(.7)", opacity: 0 }, { transform: "translate(-50%,-10px) scale(1.2)", opacity: 1, offset: .3 },
+        { transform: "translate(-50%,-22px) scale(1)", opacity: 0 }], { duration: dur, easing: "ease-out", fill: "forwards" });
+      Promise.race([a.finished.catch(() => {}), wait(dur + 60)]).then(() => pop.remove());
+    });
   }
 
   function renderWinDetails(snapshot) {
@@ -3177,7 +3129,7 @@
         state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
         $("winValue").textContent = money(state.lastWin);
         renderWinDetails(snapshot);
-        // 2026-11-11 使用者：演出順序 消除符號 → 算分（收集倍數總和乘上去）→ 最後所有框 +1
+        // 2026-11-11 使用者：演出順序 消除符號 → 收集倍數 → 算分 → 所有框 +1 與補牌同時
         const before = snapshot.framesBefore || snapshot.frames;
         renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: before });
         await wait(Math.max(200, 420 / Number($("speedRange").value || 1)));
@@ -3188,16 +3140,18 @@
           await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等炸開火光（h032-boom 480ms）
           index++;
         }
-        // ② 算分：收集更新前的框倍數 → ③ 最後所有框 +1、金色符號留新框
-        const board = elim ? { ...snapshot, board: elim.board, yellow: elim.yellow, hits: [] } : snapshot;
+        // ② 收集更新前的框倍數並算分；③ 框 +1／新框留到下一步補牌時一起演
         await animateWin(snapshot);
-        await animateGoldToFrame(board);
-        await wait(delay());
+        state.pendingPlus = { bumped: (snapshot.bumped || []).slice(), grow: (snapshot.bumped || []).filter(key => { const [r, y] = key.split(",").map(Number); return before[r][y] > 0; }) };
+        await wait(Math.max(80, delay() / 2));
       } else if (snapshot.type === "eliminate") {
         renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared, converted: snapshot.converted, bumped: snapshot.bumped });
         await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等炸開火光（h032-boom 480ms）
       } else if (snapshot.type === "cascade") {
-        renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop });
+        // 補牌掉落的同時：所有框 +1、金色符號留下的新框出現
+        const plus = state.pendingPlus || { bumped: [], grow: [] }; state.pendingPlus = null;
+        renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop, bumped: plus.bumped });
+        popPlusOne(plus.grow);   // 原有的框跳 +1；新框直接以 1X 出現
         await wait(refillMs() + 120);
       }
     }
