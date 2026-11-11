@@ -280,8 +280,9 @@ def render_timeline(lines) -> str:
       同一項目可列多個區間（重複事件畫在各自位置，文字只寫一次）；樣式 phase／phase2／event／stop。
       event 可加顏色 s1～s4（例 `event s3`）：文字標在上方（`名稱 | 區間` 分兩行），同一項目的區間用淡色底帶連起來，
       只有第一個區間的起點畫虛線到轉數軸。
+    periods: 新手期 1-200 s4, 老手期 201-1100 s1   轉數軸下方的時期色帶（名稱 起-迄 顏色）
     """
-    scale, ticks, lanes = [(0.0, 0.0), (1000.0, 100.0)], [], []
+    scale, ticks, lanes, periods = [(0.0, 0.0), (1000.0, 100.0)], [], [], []
 
     def num(t):
         return float(t.replace(",", "").strip())
@@ -295,6 +296,12 @@ def render_timeline(lines) -> str:
             continue
         if text.startswith("ticks:"):
             ticks = [x.strip() for x in re.split(r",\s+", text[6:].strip())]
+            continue
+        if text.startswith("periods:"):
+            for x in re.split(r",\s+", text[8:].strip()):
+                pname, prng, pcolor = x.split()
+                lo, _, hi = prng.partition("-")
+                periods.append((pname, num(lo), num(hi), pcolor))
             continue
         name, _, rest = text.partition("::")
         items = []
@@ -347,7 +354,14 @@ def render_timeline(lines) -> str:
     out.append('<div class="tl-row"><div class="tl-lane tl-axis-name">轉數</div><div class="tl-track tl-axis">')
     for t in ticks:
         out.append(f'<div class="tl-tick" style="left:{pos(num(t)):.2f}%">{render_inline(t)}</div>')
-    out.append("</div></div></div></div>")
+    out.append("</div></div>")
+    if periods:
+        out.append('<div class="tl-row"><div class="tl-lane tl-axis-name">時期</div><div class="tl-track tl-periods">')
+        for pname, lo, hi, pcolor in periods:
+            left = pos(lo - 1)
+            out.append(f'<div class="tl-period" style="--c:var(--{pcolor});left:{left:.2f}%;width:{pos(hi) - left:.2f}%">{render_inline(pname)}</div>')
+        out.append("</div></div>")
+    out.append("</div></div>")
     return "".join(out)
 
 
@@ -830,6 +844,9 @@ hr{{border:none; border-top:1px solid var(--rule); margin:34px 0}}
 .tl-axis{{height:30px; border-bottom:none; border-top:1.5px solid var(--ink-3)}}
 .tl-tick{{position:absolute; top:0; transform:translateX(-50%); font-family:var(--font-mono); font-size:1em;
   color:var(--ink-3); padding-top:5px; white-space:nowrap}}
+.tl-periods{{height:30px; border-bottom:none}}
+.tl-period{{position:absolute; top:2px; height:24px; line-height:24px; text-align:center; font-weight:600; font-size:.95em; color:var(--c);
+  background:color-mix(in srgb,var(--c) 16%,transparent); border:1.5px solid var(--c); border-radius:3px; box-sizing:border-box}}
 .tl-tick::before{{content:""; position:absolute; top:-1px; left:50%; height:5px; border-left:1.5px solid var(--ink-3)}}
 mark{{font-weight:600; padding:1px 6px; border-radius:3px}}
 mark.hl-warn{{color:var(--warn); background:color-mix(in srgb,var(--warn) 18%,transparent)}}
