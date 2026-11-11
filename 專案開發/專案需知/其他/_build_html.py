@@ -1182,7 +1182,14 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
   header{{padding:14px 16px 10px}}
   .layout{{flex-direction:column; padding:0 16px 16px; gap:14px}}
   aside{{width:auto; overflow:visible; padding:0}}
-  main{{height:80vh; flex:none}}
+  /* 手機：整頁一起捲動（內文框高度跟著內容），只有標題列＋頁簽列固定在上方 */
+  html, body{{height:auto}}
+  body{{display:block}}
+  header{{position:sticky; top:0; z-index:80; background:var(--surface)}}
+  body .topnav{{position:sticky; top:var(--hh, 56px); z-index:79; background:var(--surface); margin:0; padding:0 16px; border-bottom:1px solid var(--rule)}}
+  .layout{{display:flex; padding-top:12px}}
+  main{{height:auto; flex:none}}
+  iframe{{height:600px}}
 }}
 /* 頂部搜尋框 */
 .pv-search{{position:relative; margin-left:auto; align-self:center; flex:0 1 340px; min-width:160px; padding-bottom:2px}}
@@ -1212,6 +1219,8 @@ header{{display:flex; align-items:center; flex-wrap:wrap; gap:12px}}
 .tn-btn:hover, .tn.open .tn-btn, .tn:hover .tn-btn{{color:var(--ink)}}
 .tn.on .tn-btn{{color:var(--ink); border-bottom-color:var(--accent); font-weight:600}}
 .tn-cur{{display:none}}
+.tn-btn{{white-space:nowrap; flex:none}}
+@media (max-width:700px){{.tn-btn{{padding:8px 10px 9px}} .pv-search{{display:none}}}}
 .tn-arrow{{font-size:10px; color:var(--ink-3)}}
 .tn-menu{{position:absolute; top:calc(100% + 1px); left:0; min-width:180px; z-index:60; display:none; flex-direction:column;
   padding:4px 0; background:var(--panel); border:1px solid var(--rule); border-radius:4px; box-shadow:0 8px 20px rgba(0,0,0,.3)}}
@@ -1441,6 +1450,22 @@ window.addEventListener('message', function (e) {{
   res.addEventListener('mousedown', function (ev) {{ var a = ev.target.closest('.pv-item'); if (a) {{ ev.preventDefault(); pick(+a.dataset.i); }} }});
   document.addEventListener('click', function (ev) {{ if (!box.contains(ev.target)) res.classList.remove('on'); }});
   document.addEventListener('keydown', function (ev) {{ if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'k') {{ ev.preventDefault(); input.focus(); input.select(); }} }});
+}})();
+// 手機版：內文框高度跟著內容，整頁一起捲動；標題列高度給頁簽列的固定位置用
+(function () {{
+  var mq = window.matchMedia('(max-width:760px)'), ro = null;
+  function hh() {{ var h = document.querySelector('header'); document.documentElement.style.setProperty('--hh', h.offsetHeight + 'px'); }}
+  function fit() {{
+    if (!mq.matches) {{ frame.style.height = ''; return; }}
+    try {{ var d = frame.contentDocument; frame.style.height = Math.max(d.documentElement.scrollHeight, d.body.scrollHeight) + 'px'; }} catch (e) {{}}
+  }}
+  frame.addEventListener('load', function () {{
+    fit();
+    try {{ if (ro) ro.disconnect(); ro = new ResizeObserver(fit); ro.observe(frame.contentDocument.body); }} catch (e) {{}}
+  }});
+  window.addEventListener('message', function () {{ setTimeout(fit, 50); }});
+  window.addEventListener('resize', function () {{ hh(); fit(); }});
+  hh();
 }})();
 (function () {{
   var p = decodeURIComponent(location.hash.slice(1)).split('/');
