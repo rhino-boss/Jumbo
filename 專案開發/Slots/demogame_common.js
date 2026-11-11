@@ -1775,6 +1775,8 @@
   // 每次進 Demo（含重新整理）都自動顯示，標題列「導覽」可再看。
   // 一次框出全部：Spin 鈕、餘額／押注／得分、除錯模式、指標區（找不到或不在畫面內的略過），點任意處關閉。
   function setupGuideTour() {
+    // 2026-11-11 使用者：手機版不要導覽（不自動播、標題列也不放「導覽」鈕）
+    if (window.matchMedia && matchMedia("(max-width: 760px), (hover: none) and (pointer: coarse)").matches) return;
     // 2026-11-11 使用者改版：一次顯示全部說明（不用一直按下一步），說明框互不重疊，點任意處或按 Esc 關閉。
     const STEPS = [
       { el: () => document.getElementById("spinBtn"),
