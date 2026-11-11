@@ -87,10 +87,14 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .card:not(:has(>.chart~.chart))>h3~.chart .legend{margin-bottom:6px}
 .card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
+.kpi-card .kpis{margin:10px 0 0}
 /*表格不折行（2026-11-11 使用者）：寬度不夠就左右滑動，不要擠成一字一行變很高；長說明文字（.wrap）才折行*/
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
-.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em}
+.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em;max-width:16em}
+/*表格版面固定（2026-11-11 使用者）：欄寬只看內容、不隨畫面寬度伸縮，相對位置不變；放不下就左右捲動，滑鼠可按住拖曳*/
+.card table,.subcard table,.intro table{width:max-content;max-width:none}
+.tbl-wrap.dragging,.tbl-scroll.dragging{cursor:grabbing;user-select:none}
 """
 
 # 沒有切換按鈕的圖例：span 改成按鈕，依圖例色塊的顏色開關 svg 內同色的線與點
@@ -99,6 +103,13 @@ JS = """
   document.querySelectorAll('table').forEach(function(tb){
     if(!tb.closest('.tbl-wrap,.tbl-scroll')){var w=document.createElement('div');w.className='tbl-scroll';tb.parentNode.insertBefore(w,tb);w.appendChild(tb);}
     tb.querySelectorAll('td').forEach(function(td){if(td.textContent.trim().length>28)td.classList.add('wrap');});
+  });
+  document.querySelectorAll('.tbl-wrap,.tbl-scroll').forEach(function(w){
+    var x0,s0,on=false,moved=false;
+    w.addEventListener('mousedown',function(e){if(e.button||w.scrollWidth<=w.clientWidth)return;on=true;moved=false;x0=e.clientX;s0=w.scrollLeft;});
+    addEventListener('mousemove',function(e){if(!on)return;var dx=e.clientX-x0;if(Math.abs(dx)>3){moved=true;w.classList.add('dragging');}if(moved){w.scrollLeft=s0-dx;e.preventDefault();}});
+    addEventListener('mouseup',function(){if(!on)return;on=false;w.classList.remove('dragging');});
+    w.addEventListener('click',function(e){if(moved){e.preventDefault();e.stopPropagation();moved=false;}},true);
   });
 })();
 (function(){
@@ -171,6 +182,20 @@ def cardify(soup, panel):
 
 
 
+def move_kpis(soup):
+    """頁首 KPI 方塊移到第一個頁簽（基本資訊）最前面，包成一張「主要指標」卡片（2026-11-11 使用者）。"""
+    kp = soup.select_one(".kpis")
+    panel = soup.select_one(".panel")
+    if kp is None or panel is None or kp.find_parent(class_="panel") is not None:
+        return
+    card = soup.new_tag("div", attrs={"class": "card kpi-card"})
+    h3 = soup.new_tag("h3")
+    h3.string = "主要指標"
+    card.append(h3)
+    card.append(kp.extract())
+    panel.insert(0, card)
+
+
 def game_names(p):
     """中文名取專案資料夾名（去掉 H0xx_），英文名取 game_rule.md 的「遊戲英文名」；缺的回空字串。"""
     import re
@@ -221,6 +246,7 @@ def apply(path):
     st.string = CSS
     head.append(st)
     fix_header(soup, p)
+    move_kpis(soup)
     for panel in soup.select(".panel"):
         cardify(soup, panel)
     sc = soup.new_tag("script", id="card-v2-js")
