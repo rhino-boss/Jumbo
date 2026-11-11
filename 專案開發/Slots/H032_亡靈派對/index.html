@@ -2247,6 +2247,7 @@
           <li>金色符號倍數調大（BG／FG 相同：1X 55%、2X 13%、3X 9%、5X 6.5%、10X 6.5%、20X 3.5%、30X 1.5%、50X 1%、100X 1.2%），停用 FG 後段黃底降倍；卡片權重依新自然機率重算。框數不變、每框倍數變大，FG 高倍尾端超過 DJ Boom Boom。（11/11）</li>
           <li>規則改版：金色符號不再帶倍數，中獎後變 WW、所在位置沒框就留下 1X 框；每段連消全盤所有框 +1（新框從下一消起才 +1）；計分仍用消除前的框。FG 開場不再有第 3 軸 1X 框，框整場累積到 FG 結束。卡片權重依新規則重算。（11/11）</li>
           <li>金色符號出現率（初始盤面與補牌）BG／FG 都調為 1.5 倍；卡片權重依新自然機率重算。實際每盤金框 BG 約 2.5 → 3.7 顆、FG 約 1.5 → 2.3 顆。（11/11）</li>
+          <li>演出：上方「倍數總和」只在算分時才收集盤面所有框的倍數，框 +1、新框出現時不再跟著跳動。（11/11）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2887,7 +2888,11 @@
     };
   };
 
+  // 2026-11-11 使用者：累積倍數只在算分作用時收集更新，其他時候（框 +1、新框、補牌）不變
+  let shownFrameTotal = 0;
+  function renderShownTotal(flash = false) { renderFrameTotal(shownFrameTotal, flash); }
   function renderFrameTotal(total, flash = false) {
+    shownFrameTotal = Number(total || 0);
     $("multiplierWindow").innerHTML = `<span class="multiplier-step is-active${flash ? " fx-hit" : ""}"><span class="ft-k">${tr("frameTotal")}</span> x${1 + Number(total || 0)}</span>`;
   }
 
@@ -3025,7 +3030,7 @@
     const hitBar = text => { barEl.textContent = text; barEl.classList.remove("fx-bar-hit"); void barEl.offsetWidth; barEl.classList.add("fx-bar-hit"); };
     const speed = Number($("speedRange").value || 1);
     const hold = Math.max(100, 360 / speed), flight = Math.max(120, 420 / speed), gap = Math.max(40, 110 / speed);
-    if (snapshot.mult <= 1) { hitBar(`WIN ${money(snapshot.cascadePay)}`); await wait(hold); return; }
+    if (snapshot.mult <= 1) { renderFrameTotal(0); hitBar(`WIN ${money(snapshot.cascadePay)}`); await wait(hold); return; }
     hitBar(`WIN ${money(snapshot.rawPay)}`);
     await wait(hold);
     const layer = window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
@@ -3095,7 +3100,6 @@
       const mid = clone(snapshot.framesBefore);
       plusKeys.forEach(key => { const [reel, row] = key.split(",").map(Number); mid[reel][row] += 1; });
       renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: mid, bumped: plusKeys });
-      renderFrameTotal(frameSum(mid), true);
       if (fxLayer) {
         const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(260, 620 / speed);
         $("board").querySelectorAll(".frame-layer").forEach(frame => {
@@ -3144,7 +3148,6 @@
     const yellow = clone(snapshot.yellow);
     converted.forEach(key => { const [reel, row] = key.split(",").map(Number); yellow[reel][row] = 0; });
     renderBoard(snapshot.board, snapshot.hits, { ...after, yellow });
-    renderFrameTotal(snapshot.frameTotal, true);
     await wait(Math.max(120, 360 / Number($("speedRange").value || 1)));
   }
 
@@ -3160,7 +3163,7 @@
     state.snapshots = snapshots; state.snapshotIndex = -1; state.stepWin = { base: Number(winBase) };
     $("carryMultiValue").textContent = "0";
     if (snapshots[0]) {
-      renderFrameTotal(snapshots[0].frameTotal);
+      if (!snapshots[0].frameTotal) renderFrameTotal(0); else renderShownTotal();
       await animateReels(snapshots[0]);
       renderBoard(snapshots[0].board, [], { yellow: snapshots[0].yellow, frames: snapshots[0].frames });
       await wait(delay());
@@ -3169,7 +3172,6 @@
       const snapshot = snapshots[index]; state.snapshotIndex = index;
       $("messageBar").textContent = snapshot.message || "Cascade";
       const common = { yellow: snapshot.yellow, frames: snapshot.frames };
-      renderFrameTotal(snapshot.type === "win" && snapshot.framesBefore ? frameSum(snapshot.framesBefore) : snapshot.frameTotal, snapshot.type === "eliminate" && (snapshot.bumped || []).length > 0);
       if (snapshot.type === "win") {
         state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
         $("winValue").textContent = money(state.lastWin);
@@ -3351,7 +3353,7 @@
           state.fg.line = countLine ? { mode, wager: cost } : null;
           // 主遊戲每轉結束框清空 → FG 開場沒有框（2026-11-11 起）
           const first = feature.spins[0]?.snapshots?.[0];
-          if (first) { renderFrameTotal(first.frameTotal, true); renderBoard(base.board, [], { yellow: base.yellow, frames: first.frames }); }
+          if (first) { renderFrameTotal(0); renderBoard(base.board, [], { yellow: base.yellow, frames: first.frames }); }
           await showFgBanner(feature.spins.length);
         } else if (countLine) recordLine(mode, base.pay, cost);
       }
@@ -3459,7 +3461,7 @@
     $("autoBtn").textContent = tr(state.auto ? "stop" : "auto");
     const message = $("messageBar").textContent;
     for (const key of ["ready", "noWin"]) if (message === H032_TEXT.en[key] || message === H032_TEXT.zh[key]) $("messageBar").textContent = tr(key);
-    renderFrameTotal(lastBoardRender ? frameSum(lastBoardRender.options.frames || grid(0)) : 0);
+    renderShownTotal();
     updateStats();
   }
   function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
@@ -3498,8 +3500,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-11 16:30";
-  window.DEMOGAME_LAST_CODE = "2026-11-11 14:30";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-11 16:30";
+  window.DEMOGAME_LAST_CODE = "2026-11-11 17:30";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-11 17:30";
   </script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下 1X 框", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金"]};</script>
   <script src="../demogame_common.js?v=20261111f"></script>
