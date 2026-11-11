@@ -1119,9 +1119,12 @@ def build_hub(root: Path, sites, embedded=None, metas=None, out_name=HUB_NAME, s
         h1, title = (f"<b>{head}</b> {tail}" if tail else f"<b>iGaming</b> {head}"), site_title
     else:
         h1, title = "<b>iGaming</b> 開發需知", "iGaming 開發需知"
-    nav = "" if single else "".join(f'<li><span class="top">{t}</span><ul class="sub">'
-                  + "".join(f'<li><a href="#{k}" data-key="{k}">{info[k]["name"]}</a></li>' for k in ks)
-                  + "</ul></li>" for t, ks in sections if ks)
+    # 頂部頁簽：每個大類一顆膠囊按鈕，滑鼠移過去或點選展開下拉選單（選單項目＝各站）
+    nav = "" if single else "".join(
+        f'<div class="tn"><button type="button" class="tn-btn"><span class="tn-name">{t}</span>'
+        f'<span class="tn-cur"></span><span class="tn-arrow">▾</span></button><div class="tn-menu">'
+        + "".join(f'<a href="#{k}" data-key="{k}">{info[k]["name"]}</a>' for k in ks)
+        + "</div></div>" for t, ks in sections if ks)
     docs = "".join(f'<script type="application/json" id="doc-{key}">{js(page)}</script>'
                    for key, page in embedded.items())
     page = f"""<!DOCTYPE html>
@@ -1199,15 +1202,33 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
 .pv-snip{{font-size:12.5px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}}
 .pv-snip mark,.pv-title mark{{background:color-mix(in srgb,var(--accent) 45%,transparent); color:inherit; border-radius:2px}}
 .pv-empty{{padding:10px; color:var(--ink-3); font-size:13px}}
-header{{display:flex; align-items:center}}
+header{{display:flex; align-items:center; flex-wrap:wrap; gap:12px}}
+.topnav{{display:flex; gap:6px; margin-left:22px}}
+.tn{{position:relative}}
+.toc-secs{{margin:2px 0 4px; padding-left:14px; list-style:none; border-left:1px solid var(--rule)}}
+.toc-secs a{{font-size:12.5px}}
+.tn-btn{{display:flex; align-items:center; gap:6px; font:inherit; font-size:14.5px; color:var(--ink-2); background:transparent;
+  border:1px solid transparent; border-radius:999px; padding:6px 14px; cursor:pointer}}
+.tn-btn:hover, .tn.open .tn-btn{{background:var(--panel); color:var(--ink)}}
+.tn.on .tn-btn{{color:var(--ink); background:var(--panel); border-color:var(--rule); font-weight:600}}
+.tn-cur{{color:var(--accent); font-weight:600}}
+.tn-cur:empty{{display:none}}
+.tn-cur::before{{content:"·"; margin:0 6px 0 0; color:var(--ink-3)}}
+.tn-arrow{{font-size:10px; color:var(--ink-3)}}
+.tn-menu{{position:absolute; top:calc(100% + 6px); left:0; min-width:180px; z-index:60; display:none; flex-direction:column; gap:4px;
+  padding:8px; background:var(--panel); border:1px solid var(--rule); border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.35)}}
+.tn-menu::before{{content:""; position:absolute; left:0; right:0; top:-8px; height:8px}}
+.tn:hover .tn-menu, .tn.open .tn-menu{{display:flex}}
+.tn-menu a{{display:block; padding:7px 12px; border-radius:999px; color:var(--ink); text-decoration:none; font-size:14px; white-space:nowrap}}
+.tn-menu a:hover{{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
+.tn-menu a.on{{background:color-mix(in srgb,var(--accent) 28%,transparent); font-weight:600}}
 @media (min-width:900px){{aside{{position:sticky; top:12px; align-self:flex-start; max-height:calc(100vh - 24px)}}}}
 </style>
 </head>
 <body>
-<header><div class="logo"><span>J</span></div><h1>{h1}</h1></header>
+<header><div class="logo"><span>J</span></div><h1>{h1}</h1>{'<nav class="nav topnav" aria-label="網站">' + nav + '</nav>' if nav else ''}</header>
 <div class="layout">
 <aside>
-  {'<ul class="nav">' + nav + '</ul>' if nav else ''}
   <nav class="toc" aria-label="Table of Contents"><div class="toc-title">Table of Contents</div><ul id="toc"></ul></nav>
 </aside>
 <main><iframe id="site" title="規範內文"></iframe></main>
@@ -1264,7 +1285,17 @@ function renderToc() {{
       out += '<ul>';
       if (ids.length > 1) {{
         ids.forEach(function (t) {{
-          out += '<li><a href="#" data-tab="' + t + '"' + (t === cur.tab ? ' class="on"' : '') + '>' + esc(docName(m.titles[t])) + '</a></li>';
+          out += '<li><a href="#" data-tab="' + t + '"' + (t === cur.tab ? ' class="on"' : '') + '>' + esc(docName(m.titles[t])) + '</a>';
+          // 正在看的文件：底下展開它的章節（第 2 層），長文件也能直接跳
+          if (t === cur.tab) {{
+            var lst = ((m.toc || {{}})[t] || []), ch = '', l2 = '';
+            lst.forEach(function (s) {{ if (s[0] === 2) l2 = s[1]; if (s[1] === cur.anchor) ch = l2; }});
+            var secs = lst.filter(function (s) {{ return s[0] === 2; }});
+            if (secs.length) out += '<ul class="toc-secs">' + secs.map(function (s) {{
+              return '<li><a href="#" data-tab="' + t + '" data-anchor="' + s[1] + '"' + (s[1] === ch ? ' class="on"' : '') + '>' + esc(secName(s[2])) + '</a></li>';
+            }}).join('') + '</ul>';
+          }}
+          out += '</li>';
         }});
       }} else {{
         var lst = (m.toc || {{}})[ids[0]] || [], ch = '', l2 = '';
@@ -1287,6 +1318,13 @@ function setToc(h) {{
 }}
 function markNav() {{
   document.querySelectorAll('.nav a').forEach(function (a) {{ a.classList.toggle('on', a.dataset.key === cur.key); }});
+  // 頂部頁簽：目前所在的大類亮起，按鈕上顯示目前的站名
+  document.querySelectorAll('.tn').forEach(function (t) {{
+    var on = t.querySelector('a.on');
+    t.classList.toggle('on', !!on);
+    t.querySelector('.tn-cur').textContent = on ? on.textContent : '';
+    t.classList.remove('open');
+  }});
 }}
 function go(tab, anchor) {{
   cur.tab = tab; cur.anchor = anchor || '';
@@ -1303,6 +1341,14 @@ function openSite(key, tab, anchor) {{
   else {{ frame.removeAttribute('srcdoc'); frame.src = SITES[key].src; }}
   markNav(); renderToc(); setHash();
 }}
+document.querySelectorAll('.tn-btn').forEach(function (b) {{
+  b.addEventListener('click', function () {{
+    var t = b.parentNode, o = !t.classList.contains('open');
+    document.querySelectorAll('.tn').forEach(function (x) {{ x.classList.remove('open'); }});
+    t.classList.toggle('open', o);
+  }});
+}});
+document.addEventListener('click', function (e) {{ if (!e.target.closest('.tn')) document.querySelectorAll('.tn').forEach(function (x) {{ x.classList.remove('open'); }}); }});
 document.querySelector('.nav') && document.querySelector('.nav').addEventListener('click', function (e) {{
   var a = e.target.closest('a[data-key]');
   if (!a) return;
