@@ -773,7 +773,7 @@ header.page{{display:flex; flex-direction:column; gap:9px; padding-bottom:20px}}
 h1.site{{margin:0; font-size:32px; font-weight:600; letter-spacing:-.02em}}
 .meta{{margin:0; color:var(--ink-2); font-size:13.5px}}
 .lines{{display:flex; gap:6px; flex-wrap:wrap; margin:2px 0}}
-.lines a{{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:999px; padding:3px 13px; margin:0}}
+.lines a{{font-size:13px; text-decoration:none; color:var(--ink-2); border:1px solid var(--rule); border-radius:4px; padding:3px 13px; margin:0}}
 .lines a:hover{{color:var(--s1); border-color:var(--s1)}}
 .lines a.on{{color:var(--panel); background:var(--s1); border-color:var(--s1); font-weight:600}}
 .meta code{{font-family:var(--font-mono); font-size:12.5px}}
@@ -892,10 +892,10 @@ mark.hl-danger{{color:var(--s4); background:color-mix(in srgb,var(--s4) 16%,tran
 .step-desc{{color:var(--ink-2); font-size:1em; margin-top:2px}}
 .subs{{display:flex; flex-direction:column; align-items:flex-start; gap:2px; margin-top:8px}}
 .sub-arrow{{color:var(--ink-3); padding-left:14px; line-height:1.2}}
-.sub-row.par{{border:1px dashed var(--rule); border-radius:6px; padding:6px 8px 8px}}
+.sub-row.par{{border:1px dashed var(--rule); border-radius:4px; padding:6px 8px 8px}}
 .par-tag{{font-size:.85em; color:var(--ink-3); margin-bottom:4px}}
 .par-boxes{{display:flex; gap:8px; flex-wrap:wrap}}
-.sub{{border:1px solid var(--rule); border-radius:5px; padding:4px 10px; background:var(--panel)}}
+.sub{{border:1px solid var(--rule); border-radius:4px; padding:4px 10px; background:var(--panel)}}
 .sub-title{{font-weight:600; font-size:.95em}}
 .sub-desc{{color:var(--ink-2); font-size:.88em}}
 .branches{{display:flex; flex-direction:column; gap:6px; margin-top:8px; padding-left:11px; border-left:2px solid var(--rule)}}
@@ -928,7 +928,7 @@ html.embedded .body-row{{display:block; padding:0}}
 html.embedded main{{background:transparent; border:0; padding:6px 0 60px}}
 .sec-head{{padding:0 2px 4px}}
 .sec-head > *:last-child{{margin-bottom:8px}}
-.sec-card{{background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:4px 32px 22px; margin:0 0 18px}}
+.sec-card{{background:var(--panel); border:1px solid var(--rule); border-radius:4px; padding:4px 32px 22px; margin:0 0 18px}}
 .sec-card > h2:first-child{{margin-top:20px}}
 html.embedded .panel h1{{color:var(--ink); font-weight:600; font-size:30px}}
 html.embedded h2{{color:var(--ink); border-bottom-color:var(--grid)}}
@@ -1165,7 +1165,7 @@ aside{{width:236px; flex:none; overflow-y:auto; padding:6px 2px 20px 0}}
 .nav a.on, .nav span.top.on{{color:var(--accent); font-weight:600}}
 .nav a:focus, .toc a:focus{{outline:none}}
 .nav a:focus-visible, .toc a:focus-visible{{outline:2px solid var(--accent); outline-offset:2px}}
-.toc{{border:1px solid var(--rule); border-radius:3px; padding:12px 12px 14px; background:var(--panel)}}
+.toc{{border:1px solid var(--rule); border-radius:4px; padding:12px 12px 14px; background:var(--panel)}}
 .toc[hidden]{{display:none}}
 .toc-title{{font-size:16px; font-weight:600; margin:0 0 8px}}
 .toc ul{{margin:0; padding-left:18px; list-style:square; color:var(--ink-3)}}
@@ -1185,48 +1185,47 @@ iframe{{flex:1; width:100%; height:100%; border:0; display:block; background:tra
   main{{height:80vh; flex:none}}
 }}
 /* 頂部搜尋框 */
-.pv-search{{position:relative; margin-left:auto; flex:0 1 420px; min-width:160px}}
-.pv-search input{{width:100%; box-sizing:border-box; padding:8px 12px 8px 34px; border-radius:8px; border:1px solid var(--rule);
+.pv-search{{position:relative; margin-left:auto; align-self:center; flex:0 1 340px; min-width:160px; padding-bottom:2px}}
+.pv-search input{{width:100%; box-sizing:border-box; padding:6px 12px 6px 32px; border-radius:4px; border:1px solid var(--rule);
   background:var(--panel); color:var(--ink); font:inherit; font-size:14px; outline:none}}
-.pv-search input:focus{{border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}}
+.pv-search input:focus{{border-color:var(--accent); box-shadow:none}}
 .pv-search .ico{{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--ink-3); pointer-events:none; font-size:14px}}
 .pv-search kbd{{position:absolute; right:9px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--ink-3);
   border:1px solid var(--rule); border-radius:4px; padding:0 5px; background:var(--surface)}}
-.pv-res{{position:absolute; top:calc(100% + 6px); right:0; width:min(560px,calc(100vw - 32px)); max-height:70vh; overflow:auto; z-index:50; display:none;
-  background:var(--panel); border:1px solid var(--rule); border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.35); padding:6px}}
+.pv-res{{position:absolute; top:calc(100% + 4px); right:0; width:min(560px,calc(100vw - 32px)); max-height:70vh; overflow:auto; z-index:70; display:none;
+  background:var(--panel); border:1px solid var(--rule); border-radius:4px; box-shadow:0 8px 20px rgba(0,0,0,.3); padding:4px 0}}
 .pv-res.on{{display:block}}
-.pv-item{{display:block; padding:8px 10px; border-radius:7px; cursor:pointer; color:var(--ink); text-decoration:none}}
-.pv-item:hover,.pv-item.sel{{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
+.pv-item{{display:block; padding:8px 14px; border-radius:0; cursor:pointer; color:var(--ink); text-decoration:none}}
+.pv-item:hover,.pv-item.sel{{background:rgba(255,255,255,.05)}}
 .pv-path{{font-size:11.5px; color:var(--ink-3)}}
 .pv-title{{font-weight:600; font-size:14px; margin:1px 0}}
 .pv-snip{{font-size:12.5px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}}
 .pv-snip mark,.pv-title mark{{background:color-mix(in srgb,var(--accent) 45%,transparent); color:inherit; border-radius:2px}}
 .pv-empty{{padding:10px; color:var(--ink-3); font-size:13px}}
 header{{display:flex; align-items:center; flex-wrap:wrap; gap:12px}}
-.topnav{{display:flex; gap:6px; margin-left:22px}}
+.topnav{{display:flex; gap:2px; margin:0 28px 14px; border-bottom:1px solid var(--rule)}}
 .tn{{position:relative}}
 .toc-secs{{margin:2px 0 4px; padding-left:14px; list-style:none; border-left:1px solid var(--rule)}}
 .toc-secs a{{font-size:12.5px}}
 .tn-btn{{display:flex; align-items:center; gap:6px; font:inherit; font-size:14.5px; color:var(--ink-2); background:transparent;
-  border:1px solid transparent; border-radius:999px; padding:6px 14px; cursor:pointer}}
-.tn-btn:hover, .tn.open .tn-btn{{background:var(--panel); color:var(--ink)}}
-.tn.on .tn-btn{{color:var(--ink); background:var(--panel); border-color:var(--rule); font-weight:600}}
-.tn-cur{{color:var(--accent); font-weight:600}}
-.tn-cur:empty{{display:none}}
-.tn-cur::before{{content:"·"; margin:0 6px 0 0; color:var(--ink-3)}}
+  border:0; border-bottom:2px solid transparent; border-radius:0; padding:8px 14px 9px; margin-bottom:-1px; cursor:pointer}}
+.tn-btn:hover, .tn.open .tn-btn, .tn:hover .tn-btn{{color:var(--ink)}}
+.tn.on .tn-btn{{color:var(--ink); border-bottom-color:var(--accent); font-weight:600}}
+.tn-cur{{display:none}}
 .tn-arrow{{font-size:10px; color:var(--ink-3)}}
-.tn-menu{{position:absolute; top:calc(100% + 6px); left:0; min-width:180px; z-index:60; display:none; flex-direction:column; gap:4px;
-  padding:8px; background:var(--panel); border:1px solid var(--rule); border-radius:12px; box-shadow:0 12px 28px rgba(0,0,0,.35)}}
-.tn-menu::before{{content:""; position:absolute; left:0; right:0; top:-8px; height:8px}}
+.tn-menu{{position:absolute; top:calc(100% + 1px); left:0; min-width:180px; z-index:60; display:none; flex-direction:column;
+  padding:4px 0; background:var(--panel); border:1px solid var(--rule); border-radius:4px; box-shadow:0 8px 20px rgba(0,0,0,.3)}}
+.tn-menu::before{{content:""; position:absolute; left:0; right:0; top:-6px; height:6px}}
 .tn:hover .tn-menu, .tn.open .tn-menu{{display:flex}}
-.tn-menu a{{display:block; padding:7px 12px; border-radius:999px; color:var(--ink); text-decoration:none; font-size:14px; white-space:nowrap}}
-.tn-menu a:hover{{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
-.tn-menu a.on{{background:color-mix(in srgb,var(--accent) 28%,transparent); font-weight:600}}
+.tn-menu a{{display:block; padding:7px 16px; color:var(--ink-2); text-decoration:none; font-size:14px; white-space:nowrap}}
+.tn-menu a:hover{{background:var(--panel-2, rgba(255,255,255,.04)); color:var(--ink)}}
+.tn-menu a.on{{color:var(--accent); font-weight:600}}
 @media (min-width:900px){{aside{{position:sticky; top:12px; align-self:flex-start; max-height:calc(100vh - 24px)}}}}
 </style>
 </head>
 <body>
-<header><div class="logo"><span>J</span></div><h1>{h1}</h1>{'<nav class="nav topnav" aria-label="網站">' + nav + '</nav>' if nav else ''}</header>
+<header><div class="logo"><span>J</span></div><h1>{h1}</h1></header>
+{'<nav class="nav topnav" aria-label="網站">' + nav + '</nav>' if nav else ''}
 <div class="layout">
 <aside>
   <nav class="toc" aria-label="Table of Contents"><div class="toc-title">Table of Contents</div><ul id="toc"></ul></nav>
@@ -1349,6 +1348,13 @@ document.querySelectorAll('.tn-btn').forEach(function (b) {{
   }});
 }});
 document.addEventListener('click', function (e) {{ if (!e.target.closest('.tn')) document.querySelectorAll('.tn').forEach(function (x) {{ x.classList.remove('open'); }}); }});
+// 同一時間只開一個選單：滑鼠移到別的頁簽時，關掉點開的那個；離開頁簽列也全部關閉
+document.querySelectorAll('.tn').forEach(function (t) {{
+  t.addEventListener('mouseenter', function () {{ document.querySelectorAll('.tn').forEach(function (x) {{ if (x !== t) x.classList.remove('open'); }}); }});
+}});
+document.querySelector('.topnav') && document.querySelector('.topnav').addEventListener('mouseleave', function () {{
+  document.querySelectorAll('.tn').forEach(function (x) {{ x.classList.remove('open'); }});
+}});
 document.querySelector('.nav') && document.querySelector('.nav').addEventListener('click', function (e) {{
   var a = e.target.closest('a[data-key]');
   if (!a) return;
@@ -1393,7 +1399,7 @@ window.addEventListener('message', function (e) {{
     }});
   }});
 
-  var hdr = document.querySelector('header');
+  var hdr = document.querySelector('.topnav') || document.querySelector('header');
   var box = document.createElement('div');
   box.className = 'pv-search';
   box.innerHTML = '<span class="ico">⌕</span><input type="search" placeholder="搜尋所有規範…" aria-label="搜尋所有規範"><kbd>Ctrl K</kbd><div class="pv-res"></div>';
