@@ -4155,6 +4155,7 @@
       if (fullCellEl) boardEl.style.setProperty("--full-cell-ph", `${fullCellEl.clientHeight}px`);
     }
 
+    window.demogameAddCredit = (n) => { state.balance += n / DENOM; state.displayBalance += n / DENOM; updateSessionCards(); };   // 餘額旁「＋」加錢（demogame_common.js）
     function updateSessionCards() {
       const activeBetMode = state.pendingRound
         ? state.pendingRound.bet_mode
@@ -4911,7 +4912,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "用掉的金框擴散出新金框，連續轉 Wild 收集倍數。", "changes": ["移除 R3 整條金框", "金框使用後，R2～R5 隨機 1～3 格變金框", "選到已是金框的位置等於直接消除一次：轉 Wild，帶倍數就收集倍數"]};</script>
-  <script src="../../../../demogame_common.js?v=20261110j"></script>
+  <script src="../../../../demogame_common.js?v=20261111e"></script>
 </body>
 
 </html>

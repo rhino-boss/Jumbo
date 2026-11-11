@@ -2975,6 +2975,7 @@
     el.liveLogBody.innerHTML = state.log.map((item) => `<div>${item}</div>`).join("");
   }
 
+  window.demogameAddCredit = (n) => { state.balance += n; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
   function updateStats() {
     document.body.classList.toggle("fg-mode", state.fg.remaining > 0);
     el.balanceValue.textContent = format(state.balance); el.betValue.textContent = formatBet(activeBet()); el.winValue.textContent = format(state.lastWin);
@@ -4064,6 +4065,7 @@
     $("nextStepBtn").disabled = state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
   }
 
+  window.demogameAddCredit = (n) => { state.balance += n * BASE_BET; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
   function updateStats() {
     const bet = BET_LEVELS[state.betIndex];
     $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
@@ -4334,7 +4336,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "金框中獎翻成大鬼，複製 Wild 帶出一波接一波的連消。", "changes": ["新增 Buy Super Feature（250 倍押注），金框轉換時一定觸發大鬼，多複製 2～4 顆 Wild", "免費遊戲中金框中獎也可能觸發大鬼（Super Ace 免費遊戲只有小鬼）"]};</script>
-  <script src="../demogame_common.js?v=20261110j"></script>
+  <script src="../demogame_common.js?v=20261111e"></script>
 </body>
 
 </html>

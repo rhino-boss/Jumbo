@@ -3057,6 +3057,7 @@
     el.next.disabled = !enabled || state.snapshotIndex >= state.snapshots.length - 1;
   }
 
+  window.demogameAddCredit = (n) => { state.balance += n; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
   function updateStats() {
     setText(el.balance, money(state.balance));
     setText(el.bet, formatBetMoney(wagerMoney()));
@@ -3774,7 +3775,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-05 12:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../../../demogame_common.js?v=20261110j"></script>
+  <script src="../../../../demogame_common.js?v=20261111e"></script>
   <script>
     (() => {
       "use strict";

@@ -1,8 +1,9 @@
 """H032 亡靈派對 (Calavera Party) simulator.
 
-盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（出現軸與倍數檔位依 Config；v2 為 R2~R4、1/2/3/5/10/20/30/50/100X）中獎時原格留下同倍數框並變成 WW，
-框留在格子上、框內任何消除 +1、黃底在框上再加黃底倍數；每一消得分 ×（1 ＋ 消除前的框倍數總和），算完分才更新框。
-FG 開場第 3 軸 4 格 1X 框、框整場保留；每場 FG 依 FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、
+盤面 5x4、1024 Ways、Cascade（重力掉落）；黃底（金色符號，出現軸依 Config；v2 為 R2~R4，不帶倍數）中獎時變成 WW，
+原格沒有框就留下 1X 框；框留在格子上，每一段連消全盤所有框 +1（本消新留的框從下一消起才 +1）；
+每一消得分 ×（1 ＋ 消除前的框倍數總和），算完分才更新框（2026-11-11 規則改版）。
+FG 開場沒有框、框整場保留到 FG 結束（BG 每轉清空）；每場 FG 依 FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、
 Frame Tier）決定抽表權重。玩法定義見 ``game_rule.md``；執行參數一律來自 Config，不在本程式內重複維護輪帶、權重、
 Paytable 或 Feature 參數。
 
@@ -79,7 +80,6 @@ SCORE_SYMBOLS = tuple(range(3, 11))
 EMPTY = -1
 
 YELLOW_RATE_SCALE = 100_000            # Yellow_Rate／Yellow_Drop_Rate 單位：/100,000
-FG_START_REEL = 2                      # game_rule §6：FG 開場第 3 軸整條 1X 框（規格）
 BIG_FRAME_TOTAL = 10                   # 觀察指標：開局框總和 ≥ 10 視為「大框」
 RETRIGGER_WATCH_SPINS = 2              # 觀察指標：retrigger 後幾局的得分
 
@@ -423,7 +423,7 @@ class CalaveraParty:
         """一轉（BG 局或一場 FG）。frames 由呼叫端傳入並就地更新（FG 整場保留、BG 每轉新的空盤）。
 
         game_rule §5：每一消先以「更新前」的框總和計分（乘數＝1＋框總和），再更新框
-        （框內任何消除 +1、黃底再加上黃底倍數、無框時黃底留同倍數新框）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
+        （全盤所有框 +1；黃底在沒有框的格子消除時留下 1X 新框，新框本消不 +1）；黃底符號變 WW 不消除，其餘中獎符號消除後重力掉落、上方補牌。
         """
         table = self.tables[table_name]
         symbols = [table.reels[reel].window(self.rng, 4) for reel in range(5)]
@@ -440,12 +440,15 @@ class CalaveraParty:
                 break
             # 2026-11-10：先算分再更新框（對齊 DJ Boom Boom 封包實測）——乘數＝1＋本消「更新前」的框總和
             mult = 1 + _frame_sum(frames)
+            # 2026-11-11 規則改版：每一段連消，全盤所有框 +1；
+            # 黃底（不帶倍數）在沒有框的格子消除 → 留下 1X 新框（本消新留的框從下一消起才 +1）
+            for reel in range(5):
+                for row in range(4):
+                    if frames[reel][row] > 0:
+                        frames[reel][row] += 1
             for reel, row in hits:
-                # 框內任何消除 +1；黃底再加上黃底倍數（無框時黃底留下同倍數的新框）
-                if frames[reel][row] > 0:
-                    frames[reel][row] += 1
-                if yellow[reel][row] > 0:
-                    frames[reel][row] += yellow[reel][row]
+                if yellow[reel][row] > 0 and frames[reel][row] == 0:
+                    frames[reel][row] = 1
             total_frame = _frame_sum(frames)
             gained = raw_pay * mult * self.bet
             result.pay += gained
@@ -563,9 +566,7 @@ class CalaveraParty:
 
     def free_session(self, initial_spins: int, budget: float, buy: bool = False) -> RoundResult:
         result = RoundResult(fg_triggered=True)
-        frames = _grid(0)
-        for row in range(4):                      # game_rule §6：開場第 3 軸整條 4 格 1X 框（規格，非參數）
-            frames[FG_START_REEL][row] = 1
+        frames = _grid(0)                         # game_rule §6：FG 開場沒有框（2026-11-11 起），框整場保留到結束
         total = min(int(initial_spins), self.max_fs)
         good: set[int] = set()
         for slot in self.good_slots:

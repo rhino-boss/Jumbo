@@ -1533,7 +1533,7 @@
     "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始",
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
-    "help": "說明", "change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
+    "help": "說明", "guide": "導覽","change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
     "cascade distribution": "消除分布", "cascades": "消除次數", "history": "歷史紀錄", "report": "報告", "game overview": "玩法簡介", "competitor": "競品", "previous title": "前作", "gameplay": "玩法", "expectation": "期待", "multiplier distribution": "倍率線型", "bg max multiplier": "BG 最大倍數", "fg max multiplier": "FG 最大倍數", "double-click to play offline. no server needed.": "雙擊即可離線遊玩，不需伺服器。"
   };
   const SHARED_SKIP = "#helpContent, #helpDialog .help-body, #changeLogBody, #liveLogBody, #rngList, #lineList, #spinResultList, script, style, svg";
@@ -1704,6 +1704,160 @@
   }
 
   placeSimulationAfterChangeLog();
+
+  // ===== 餘額「＋」（共用，2026-11-11 使用者）=====
+  // 餘額格右側放「＋」，按一下 +1000。各遊戲在自己的作用域設 window.demogameAddCredit(n)（改 state 後重畫）；沒設就不顯示。
+  function setupAddCredit() {
+    const value = document.getElementById("balanceValue");
+    const cell = value?.parentElement;
+    if (!cell || typeof window.demogameAddCredit !== "function" || document.getElementById("demogameAddCreditBtn")) return;
+    const style = document.createElement("style");
+    // 2026-11-11 使用者：「＋」緊貼「餘額」標籤右邊，純文字、不要外框
+    style.textContent = `#demogameAddCreditBtn{display:inline;box-sizing:content-box;width:auto;height:auto;min-width:0;min-height:0;margin:0 0 0 4px;padding:0 2px;
+        border:0;border-radius:0;background:none;box-shadow:none;color:inherit;font:inherit;font-weight:700;line-height:inherit;cursor:pointer;vertical-align:baseline}
+      #demogameAddCreditBtn:hover{color:#f0c060}`;
+    document.head.appendChild(style);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "demogameAddCreditBtn";
+    btn.textContent = "+";
+    btn.title = "+1000";
+    btn.setAttribute("aria-label", "+1000");
+    btn.addEventListener("click", (event) => { event.stopPropagation(); window.demogameAddCredit(1000); btn.blur(); });
+    const attach = () => {
+      if (btn.isConnected) return;
+      const label = [...cell.children].find((n) => n !== value && n !== btn && n.textContent.trim());
+      if (label) label.appendChild(btn); else value.insertAdjacentElement("beforebegin", btn);
+    };
+    attach();
+    // 遊戲切語言時可能整段改寫標籤文字，把「＋」洗掉 —— 洗掉就補回
+    new MutationObserver(attach).observe(cell, { childList: true, subtree: true });
+  }
+
+  setTimeout(setupAddCredit, 0);
+
+  // ===== 新手導覽（共用，2026-11-11 使用者）=====
+  // 第一次進 Demo 自動顯示一次（localStorage 記住看過），標題列「導覽」可再看。
+  // 一次框出全部：Spin 鈕、餘額／押注／得分、除錯模式、指標區（找不到或不在畫面內的略過），點任意處關閉。
+  function setupGuideTour() {
+    // 2026-11-11 使用者改版：一次顯示全部說明（不用一直按下一步），說明框互不重疊，點任意處或按 Esc 關閉。
+    const KEY = "demogame-guide-v1";
+    const STEPS = [
+      { el: () => document.getElementById("spinBtn"),
+        zh: "開始遊戲（也可以按空白鍵）", en: "Start a round (or press Space)" },
+      { el: () => document.getElementById("credit-bar") || document.getElementById("balanceValue")?.parentElement?.parentElement,
+        zh: "餘額・押注・得分；餘額旁「＋」加 1000", en: "Credit · Bet · Win; \"+\" next to Credit adds 1000" },
+      { el: () => document.querySelector("#debugModeInput, #debugInput")?.closest("label"),
+        zh: "除錯模式：用 RNG 碼重現同一局，或選腳本抽指定情境", en: "Debug: replay a round by RNG code, or pick a script scenario" },
+      { el: () => [document.getElementById("simulation-stats"), document.getElementById("by-game-stats")],
+        zh: "指標：依你玩的局數即時累計；標題可收合", en: "Metrics accumulate live as you play; click a title to collapse" }
+    ];
+    const style = document.createElement("style");
+    style.textContent = `#demogame-guide{position:fixed;inset:0;z-index:99990;cursor:pointer}
+      #demogame-guide svg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+      #demogame-guide .dgg-box{position:fixed;box-sizing:content-box;border:2px solid #f0c060;pointer-events:none}
+      #demogame-guide .dgg-tip{position:fixed;box-sizing:border-box;max-width:min(300px,calc(100vw - 24px));padding:6px 10px;border-radius:7px;
+        background:#1b2433;color:#e8eef6;border:2px solid #f0c060;box-shadow:0 6px 20px rgba(0,0,0,.45);
+        font:700 13px/1.45 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif;white-space:normal;pointer-events:none}
+      #demogame-guide .dgg-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:6px 14px;border-radius:999px;
+        background:rgba(240,192,96,.95);color:#1b2433;font:700 12px/1.4 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif;pointer-events:none}`;
+    document.head.appendChild(style);
+
+    let overlay = null;
+    const zh = () => isZhText();
+    const nodesOf = (step) => [].concat(step.el() || []).filter((n) => n && n.getClientRects().length && n.getBoundingClientRect().width > 0);
+    function rectOf(nodes) {
+      const rs = nodes.map((n) => n.getBoundingClientRect());
+      const x = Math.min(...rs.map((r) => r.left)), y = Math.min(...rs.map((r) => r.top));
+      return { x, y, w: Math.max(...rs.map((r) => r.right)) - x, h: Math.max(...rs.map((r) => r.bottom)) - y };
+    }
+    const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    function layout() {
+      if (!overlay) return;
+      // 框線緊貼目標外緣（不留空白）：洞＝目標本身，2px 框線畫在洞外，圓角跟目標一致
+      const vw = innerWidth, vh = innerHeight, bw = 2, gap = 10, m = 8;
+      const radiusOf = (nodes) => nodes.length === 1 ? (parseFloat(getComputedStyle(nodes[0]).borderTopLeftRadius) || 0) : 8;
+      const items = STEPS.map((s) => ({ s, nodes: nodesOf(s) })).filter((it) => it.nodes.length)
+        .map((it) => { const r = rectOf(it.nodes); return { ...it, rad: radiusOf(it.nodes), r: { x: r.x - bw, y: r.y - bw, w: r.w + bw * 2, h: r.h + bw * 2 } }; })
+        .filter((it) => it.r.y + it.r.h > 0 && it.r.y < vh && it.r.x + it.r.w > 0 && it.r.x < vw);   // 只畫在畫面內的
+      overlay.querySelectorAll(".dgg-box,.dgg-tip").forEach((n) => n.remove());
+      // 暗底挖洞（SVG mask：每個目標一個洞）
+      const holes = items.map((it) => `<rect x="${it.r.x + bw}" y="${it.r.y + bw}" width="${it.r.w - bw * 2}" height="${it.r.h - bw * 2}" rx="${it.rad}" fill="#000"/>`).join("");
+      overlay.querySelector("svg").innerHTML = `<defs><mask id="dgg-mask"><rect width="100%" height="100%" fill="#fff"/>${holes}</mask></defs>`
+        + `<rect width="100%" height="100%" fill="rgba(0,0,0,.62)" mask="url(#dgg-mask)"/>`;
+      const placed = items.map((it) => it.r);   // 說明框不能壓到任何框選區與已放好的說明框
+      for (const it of items) {
+        const box = document.createElement("div");
+        box.className = "dgg-box";
+        Object.assign(box.style, { left: `${it.r.x}px`, top: `${it.r.y}px`, width: `${it.r.w - bw * 2}px`, height: `${it.r.h - bw * 2}px`, borderRadius: `${it.rad + bw}px` });
+        overlay.appendChild(box);
+        const tip = document.createElement("div");
+        tip.className = "dgg-tip";
+        tip.textContent = zh() ? it.s.zh : it.s.en;
+        overlay.appendChild(tip);
+        const tw = tip.offsetWidth, th = tip.offsetHeight, r = it.r;
+        const cx = r.x + r.w / 2 - tw / 2, cy = r.y + r.h / 2 - th / 2;
+        const cands = [
+          { x: r.x, y: r.y + r.h + gap }, { x: cx, y: r.y + r.h + gap },          // 下
+          { x: r.x, y: r.y - gap - th }, { x: cx, y: r.y - gap - th },            // 上
+          { x: r.x + r.w + gap, y: r.y }, { x: r.x + r.w + gap, y: cy },          // 右
+          { x: r.x - gap - tw, y: r.y }, { x: r.x - gap - tw, y: cy },            // 左
+          { x: r.x + gap, y: r.y + gap }, { x: cx, y: cy }                         // 框內（大區塊）
+        ].map((p) => ({ x: Math.max(m, Math.min(p.x, vw - tw - m)), y: Math.max(m, Math.min(p.y, vh - th - m)), w: tw, h: th }));
+        const others = placed.filter((p) => p !== r);
+        const own = (c) => !hit(c, r) || cands.indexOf(c) >= 8;               // 前 8 個不能蓋住自己的目標
+        let pick = cands.find((c) => own(c) && !others.some((p) => hit(c, p)));
+        if (!pick) {   // 找不到完全不重疊的：往下推到不壓已放好的說明框
+          pick = { ...cands[0] };
+          for (let k = 0; k < 40 && placed.some((p) => p !== r && hit(pick, p)); k++) pick.y = Math.min(vh - th - m, pick.y + th + 4);
+        }
+        tip.style.left = `${pick.x}px`; tip.style.top = `${pick.y}px`;
+        placed.push(pick);
+      }
+      overlay.querySelector(".dgg-hint").textContent = zh() ? "點任意處關閉" : "Click anywhere to close";
+    }
+    function close() {
+      if (!overlay) return;
+      overlay.remove(); overlay = null;
+      try { localStorage.setItem(KEY, "1"); } catch (e) {}
+      removeEventListener("resize", layout); removeEventListener("scroll", layout, true); removeEventListener("keydown", onKey, true);
+    }
+    function onKey(e) {
+      if (e.key !== "Escape") return;
+      e.preventDefault(); e.stopPropagation(); close();
+    }
+    function start() {
+      if (overlay) return;
+      if (!STEPS.some((s) => nodesOf(s).length)) return;
+      overlay = document.createElement("div");
+      overlay.id = "demogame-guide";
+      overlay.setAttribute("role", "dialog");
+      overlay.innerHTML = '<svg aria-hidden="true"></svg><div class="dgg-hint"></div>';
+      overlay.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); close(); });
+      document.body.appendChild(overlay);
+      addEventListener("resize", layout); addEventListener("scroll", layout, true); addEventListener("keydown", onKey, true);
+      requestAnimationFrame(() => requestAnimationFrame(layout));
+      setTimeout(layout, 60);   // 背景分頁 rAF 可能不觸發，補一次
+    }
+    window.demogameGuide = start;
+    // 標題列「導覽」鈕（放在「說明」前）
+    const group = document.getElementById("demogameTitleActions");
+    if (group) {
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.id = "demogameGuideBtn"; btn.textContent = "Guide";
+      btn.addEventListener("click", start);
+      group.insertBefore(btn, document.getElementById("helpBtn") || group.firstChild);
+    }
+    let seen = false;
+    try { seen = localStorage.getItem(KEY) === "1"; } catch (e) {}
+    if (!seen) {
+      // 等預載畫面與版面就緒再開始
+      const wait = () => (document.querySelector(".demogame-preload:not(.done), #demogame-preload") ? setTimeout(wait, 300) : setTimeout(start, 600));
+      if (document.readyState === "complete") wait(); else addEventListener("load", wait, { once: true });
+    }
+  }
+
+  setupGuideTour();
 
   const root = document.getElementById("helpContent");
   if (!root) return;

@@ -810,6 +810,7 @@
       const spinLogLine = (head, spin) => `${head} | Grid ${spin.size}x${spin.size} | Clusters ${spin.wins.map((w) => `${SYM_CODE[w.sym]}x${w.size}${w.mult > 1 ? `*${w.mult}` : ""}`).join(" ") || "-"} | Colors ${spin.colors}${spin.blast ? " | Color Blast" : ""} | Win ${fmt(spin.total)}`;
 
       // ── UI 更新 ──────────────────────────────────────────────────────────
+      window.demogameAddCredit = (n) => { st.balance += n; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
       function updateStats() {
         const inFg = st.fg.remaining > 0;
         $("balanceValue").textContent = fmt(st.balance);
@@ -1098,7 +1099,7 @@ FG 中出現 70 顆以上的 Cluster，立即獲得 2,500 倍押注（每段 FG 
   <script>window.DEMOGAME_HISTORY = true;</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 11:51";   // 最後調性更新（數學模型／權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Hacksaw Gaming Cubes", "expect": "盤面從 5×5 一路擴展到 11×11，中央乘數越疊越大。", "changes": []};</script>
-  <script src="../../../../demogame_common.js?v=20261110j"></script>
+  <script src="../../../../demogame_common.js?v=20261111e"></script>
   <script>window.cbBindCommonControls();</script>
 </body>
 
