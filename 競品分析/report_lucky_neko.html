@@ -437,8 +437,8 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 /*表格不折行（2026-11-11／11-12 使用者）：所有格子都不換行、不壓縮；卡片放不下就左右拖曳捲動（不顯示捲軸）*/
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
-/*表格寬度（2026-11-12 使用者）：寬度依內容（內容少就比卡片小，不硬撐滿）；比卡片寬時不壓縮，滑鼠按住左右拖曳*/
-.card table,.subcard table,.intro table{width:max-content;min-width:0;max-width:none}
+/*表格寬度（2026-11-12 使用者）：至少撐滿卡片內寬；內容比卡片寬時不壓縮，滑鼠按住左右拖曳*/
+.card table,.subcard table,.intro table{width:max-content;min-width:100%;max-width:none}
 .tbl-wrap.dragging,.tbl-scroll.dragging{cursor:grabbing;user-select:none}
 /*不顯示捲軸（2026-11-11 使用者）：用拖曳／手指滑動／觸控板左右捲*/
 .tbl-wrap,.tbl-scroll{scrollbar-width:none;-ms-overflow-style:none}
