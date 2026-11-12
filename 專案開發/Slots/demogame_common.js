@@ -644,10 +644,33 @@
     style.textContent = "body.slot-simulator #app-shell #bet-mode-panel button{font:700 12px/1 \"Segoe UI\",system-ui,sans-serif!important;text-transform:uppercase;letter-spacing:0;color:#fff!important}"
       + "body.slot-simulator #app-shell #bet-mode-panel button.is-active:not(.demogame-buy-btn),body.slot-simulator #app-shell #bet-mode-panel button.active:not(.demogame-buy-btn){background:#007755!important;color:#fff!important;border:0!important;box-shadow:none!important}"
       + "body.slot-simulator #app-shell #bet-mode-panel button.demogame-buy-btn{background:#0077cc!important;color:#fff!important;border:0!important}"
-      + "body.slot-simulator #app-shell #bet-mode-panel button.demogame-buy-btn:disabled{opacity:.45}";
+      + "body.slot-simulator #app-shell #bet-mode-panel button.demogame-buy-btn:disabled{opacity:.45}"
+      // 2026-11-12 使用者：所有遊戲的押注模式按鈕統一跟 H032 一樣 —— 一排排開（每顆 88px、間距 6px、高 34px 同 SPIN），兩行字（名稱 11px＋倍數另起一行 9px）
+      + "body.slot-simulator #app-shell #bet-mode-panel .zone-body{display:flex!important;flex-wrap:nowrap!important;gap:6px!important}"
+      + "body.slot-simulator #app-shell #bet-mode-panel .zone-body button{flex:0 1 88px!important;min-width:0!important;width:88px!important;height:34px!important;min-height:0!important;padding:2px 4px!important;font-size:11px!important;line-height:1.3!important;text-transform:none!important;white-space:normal!important;overflow:hidden}"
+      + "body.slot-simulator #app-shell #bet-mode-panel .mode-price{display:block;margin-top:1px;font-size:9px;line-height:1.2;opacity:.85}"
+      // 未開放的模式：disabled＋.is-locked＋<span class=lock-chains>，兩條鎖鏈打叉、交點壓金色鎖頭（同 H032）；不半透明、不被購買鈕藍底蓋掉
+      + "body.slot-simulator #app-shell #bet-mode-panel button.is-locked,body.slot-simulator #app-shell #bet-mode-panel button.is-locked.demogame-buy-btn{position:relative;overflow:hidden;cursor:not-allowed;opacity:1!important;background:#121b28!important;color:#8d99a8!important;box-shadow:none!important}"
+      + "body.slot-simulator #app-shell #bet-mode-panel button.is-locked::before{content:'';position:absolute;left:50%;top:50%;width:15px;height:17px;margin:-8.5px 0 0 -7.5px;z-index:3;pointer-events:none;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cpath d='M4 8V5.5a4 4 0 0 1 8 0V8' fill='none' stroke='%23d8dee6' stroke-width='2'/%3E%3Crect x='1.5' y='7.5' width='13' height='10' rx='2' fill='%23f2c14e' stroke='%238a6a1c'/%3E%3Ccircle cx='8' cy='11.8' r='1.5' fill='%235a4510'/%3E%3Crect x='7.3' y='12.5' width='1.4' height='2.8' fill='%235a4510'/%3E%3C/svg%3E\") center/contain no-repeat;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.8))}"
+      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains{position:absolute;inset:0;pointer-events:none;z-index:1}"
+      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains::before,body.slot-simulator #app-shell #bet-mode-panel .lock-chains::after{content:'';position:absolute;left:-15%;right:-15%;top:50%;height:8px;margin-top:-4px;background:radial-gradient(ellipse 5.5px 3.4px at 50% 50%,transparent 50%,#e6ebf1 56%,#a9b4c2 80%,transparent 86%) 0 0/11px 8px repeat-x;filter:drop-shadow(0 0 1px #000) drop-shadow(0 1px 1px rgba(0,0,0,.9))}"
+      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains::before{transform:rotate(22deg)}"
+      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains::after{transform:rotate(-22deg)}";
     document.head.appendChild(style);
+    // 按鈕文字「名稱 (2x)」拆成名稱＋倍數小字（遊戲切語言重寫文字時會再拆一次）；已有 .mode-price 的不動
+    const splitPrice = () => panel.querySelectorAll(".zone-body button").forEach((btn) => {
+      if (btn.querySelector(".mode-price") || btn.children.length) return;
+      const m = (btn.textContent || "").trim().match(/^(.+?)\s*[(（]\s*([\d.,]+\s*[xX×])\s*[)）]$/);
+      if (!m) return;
+      btn.textContent = m[1];
+      const price = document.createElement("span");
+      price.className = "mode-price";
+      price.textContent = `(${m[2].replace(/\s+/g, "").replace(/X$/, "x")})`;
+      btn.appendChild(price);
+    });
     classify();
-    new MutationObserver(classify).observe(panel, { childList: true, subtree: true, characterData: true });
+    splitPrice();
+    new MutationObserver(() => { classify(); splitPrice(); }).observe(panel, { childList: true, subtree: true, characterData: true });
   }
 
   setupBetModeButtonStyle();
@@ -1790,38 +1813,6 @@
 
   setTimeout(setupAddCredit, 0);
 
-  // ===== FG 剩餘場次寫在得分（Win）格（共用，2026-11-12 使用者）=====
-  // 各遊戲狀態列的 #fgLeftPill（FG Left 7/12）不再放盤面上方，改在得分標籤右邊顯示「FG 7/12」；FG 沒在跑（膠囊隱藏）就不顯示。
-  function setupFgLeftInWin() {
-    const pill = document.getElementById("fgLeftPill");
-    const value = document.getElementById("winValue");
-    const cell = value?.parentElement;
-    if (!pill || !cell || document.getElementById("demogameFgLeft")) return;
-    const style = document.createElement("style");
-    style.textContent = `#demogameFgLeft{display:inline;margin:0 0 0 8px;padding:0;color:#ffd36b;font:inherit;font-weight:700;letter-spacing:0;white-space:nowrap}
-      #demogameFgLeft[hidden]{display:none}`;
-    document.head.appendChild(style);
-    const tag = document.createElement("span");
-    tag.id = "demogameFgLeft";
-    tag.hidden = true;
-    const attach = () => {
-      if (tag.isConnected) return;
-      const label = [...cell.children].find((n) => n !== value && n !== tag && n.textContent.trim());
-      if (label) label.appendChild(tag); else value.insertAdjacentElement("beforebegin", tag);
-    };
-    const sync = () => {
-      const on = !pill.classList.contains("hidden") && !pill.hidden && !pill.classList.contains("demogame-removed");   // 狀態列本身被隱藏，只看膠囊自己的開關
-      const v = (pill.querySelector(".v")?.textContent || "").trim();
-      tag.textContent = v ? `FG ${v}` : "";
-      tag.hidden = !(on && v);
-      attach();
-    };
-    sync();
-    new MutationObserver(sync).observe(pill, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] });
-    new MutationObserver(attach).observe(cell, { childList: true, subtree: true });
-  }
-
-  setTimeout(setupFgLeftInWin, 0);
 
   // ===== 空白鍵＝Spin（共用，2026-11-11 使用者）=====
   // 空白鍵一律只觸發 Spin，鎖住瀏覽器預設（整頁往下捲、按到焦點所在的按鈕／勾選框）。

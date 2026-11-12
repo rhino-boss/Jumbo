@@ -224,6 +224,8 @@
       text-align: center;
     }
     body.tc2 .message-bar.error { color: #ff8aa5; }
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
 
   </style>
   <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
@@ -536,7 +538,7 @@
         en: {
           baseGame: "Base Game", freeGame: "Free Game", cascade: "Cascade", boardSum: "Board Multiplier Sum", fgLeft: "FG Left",
           spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", extraBet: "Extra Bet", buyFeature: "Buy Feature",
-          ready: "Ready — press Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared",
+          ready: "Ready — press Spin", noWin: "No Win", freeSpin: "Free Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared",
           insufficient: "Insufficient balance", buyEnter: "Buy Feature — entering Free Game", baseRule: "base rule",
           chain: "chain cleared", cells: "cells", sum: "board sum", totalWin: "TOTAL WIN", spinWin: "SPIN WIN",
           fgTrigger: (n, award) => `🎉 ${n} Scatter → Free Game ${award} spins!`
@@ -544,7 +546,7 @@
         zh: {
           baseGame: "基礎遊戲", freeGame: "免費遊戲", cascade: "連消", boardSum: "全盤倍數和", fgLeft: "FG 剩餘",
           spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", extraBet: "額外押注", buyFeature: "購買特色",
-          ready: "準備完成 — 請按 Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置",
+          ready: "準備完成 — 請按 Spin", noWin: "未中獎", freeSpin: "Free Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置",
           insufficient: "餘額不足", buyEnter: "購買特色 — 直接進入免費遊戲", baseRule: "規則基底",
           chain: "連帶消除", cells: "格", sum: "全盤和", totalWin: "總贏分", spinWin: "本局贏分",
           fgTrigger: (n, award) => `🎉 ${n} 顆 Scatter → 免費遊戲 ${award} 局！`
@@ -557,6 +559,12 @@
       function say(build) {
         messageBuild = typeof build === "function" ? build : () => build;
         $("messageBar").textContent = messageBuild();
+      }
+      // 贏分訊息（同 H032）：寫入後閃一下訊息列
+      function sayHit(build) {
+        say(build);
+        const bar = $("messageBar");
+        bar.classList.remove("fx-bar-hit"); void bar.offsetWidth; bar.classList.add("fx-bar-hit");
       }
 
       // ── 狀態 ──────────────────────────────────────────────────────────────
@@ -1228,6 +1236,7 @@
         // 不先畫新盤面：按下 Spin 後由舊盤面直接掉出（animateReels 內才換成新盤面）
         $("cascadeValue").textContent = "0";
         setSum(sumOf(spin.initialMult));
+        say(() => tr(st.fg.remaining > 0 ? "freeSpin" : "spin"));   // 轉動開始（同 H032）
         const markFrame = (i) => { if (st.frames[i]) st.frames[i].say = messageBuild; };   // 記下該步訊息列（Previous／Next 還原用；st.frames 已由 finishSpin 建好）
         markFrame(0);
         await animateReels(spin.initialBoard, spin.initialMult);
@@ -1238,18 +1247,18 @@
           $("cascadeValue").textContent = step.cascadeIdx;
           updateBoard(step.boardBefore, step.multBefore);
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
-          const winText = `${tr("cascade")} ${step.cascadeIdx} | ${step.wins.map((w) => `${SYM_CODE[w.sym]}×${w.size}`).join(" ")}${step.chainSet.size ? ` | ${tr("chain")} ${step.chainSet.size} ${tr("cells")}` : ""}`;
           // 計分順序：先顯示未乘倍數的得分 → 盤面倍數全部收集到上方「全盤倍數和」→ 全盤倍數飛到訊息列的「+得分」→ 才算最終得分
           if (step.boardSum > 0) {
             const basePay = step.pay / step.effSum;
-            say(() => `${winText} | +${fmt(basePay)}`);
+            sayHit(() => `WIN ${fmt(basePay)}`);
             await wait(420);
             await collectMultipliers(step.multBefore, step.effSum);
             await flySumToWin(`x${step.effSum}`);
           }
           window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
           paid += step.pay; setWinShown(winBase + paid);
-          say(() => `${winText} | ${tr("sum")} x${step.effSum} | +${fmt(step.pay)}`);
+          if (step.boardSum > 0) { const basePay = step.pay / step.effSum; sayHit(() => `WIN ${fmt(basePay)} × ${step.effSum} = ${fmt(step.pay)}`); }
+          else sayHit(() => `WIN ${fmt(step.pay)}`);
           markFrame(1 + stepIdx * 2); markFrame(2 + stepIdx * 2);   // 中獎幀與掉落幀同一句
           await wait(760);
 
@@ -1443,6 +1452,8 @@
         await playSpin(spin, 0);
         const win = spin.total;
         setWinShown(win);
+        say(() => (win > 0 ? `WIN ${fmt(win)}` : tr("noWin")));   // BG 結束（同 H032）
+        if (st.frames.length) st.frames[st.frames.length - 1].say = messageBuild;
         st.lastWin = win; st.totalWin += win; st.balance += win;
         if (win > 0) st.hitRounds++;
         appendLog(`BG | ${mode === MODE_EXTRA ? "Extra" : "Base"} | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(win)} (${(win / bet()).toFixed(2)}x)`, win > 0 ? "result" : "info");
@@ -1481,7 +1492,8 @@
         setWinShown((st.fg.base || 0) + st.fg.win);   // FG 結束時＝整局總得分（BG＋FG）
         appendLog(`FG ${st.fg.played}/${st.fg.spins.length} | Free | Cascade ${spin.cascadeCount} | C1 ${spin.scatterCount} | Win ${fmt(spin.total)}`, spin.cascadeCount ? "cascade" : "info");
         const played = st.fg.played, total = st.fg.total;
-        say(() => `FG ${played}/${total} · ${fmt(spin.total)} · ${tr("sum")} ${spin.finalSum}`);
+        const retrig = spin.retrigger;
+        say(() => `FG ${played}/${total} · ${spin.total > 0 ? `WIN ${fmt(spin.total)}` : tr("noWin")}${retrig ? ` · +${retrig} FG` : ""}`);
         if (st.frames.length) st.frames[st.frames.length - 1].say = messageBuild;   // Final 幀＝本轉結束訊息
         if (st.fg.remaining <= 0) {
           appendLog(`FG complete | Total ${fmt(st.fg.win)} (${(st.fg.win / bet()).toFixed(2)}x)`, "result");
@@ -1638,7 +1650,7 @@
         st.roundCode = "";   // Set RNG 設定不在這裡清，只有 Set RNG 的重置才清
         plateKeys = new Set();
         renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
-        say(() => tr("resetDone"));
+        say(() => tr("ready"));
         $("cascadeValue").textContent = "0"; setSum(0);
         updateStats(); updateControls();
       }
@@ -1733,7 +1745,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script src="../demogame_common.js?v=20261112t"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

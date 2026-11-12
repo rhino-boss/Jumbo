@@ -317,7 +317,7 @@
     .symbol-img {
       transform: scale(1.08);
       transform-origin: center;
-      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
       z-index: 1;
     }
 
@@ -505,6 +505,8 @@
       color: #dff6ff;
     }
 
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     .message-bar {
       min-height: 34px;
       display: flex;
@@ -2489,7 +2491,8 @@
     function localizeMessage(text) {
       if (state.language !== "zh") return text;
       const exact = {
-        "Ready — press Spin": "Ready — 按 Spin",
+        "Ready — press Spin": "準備完成 — 請按 Spin",
+        "No Win": "未中獎",
         "Set RNG reset": "Set RNG 已重置",
         "Force FG applied to this spin": "Force FG 已套用至本次 Spin",
         "Reels spinning...": "Reel 轉動中...",
@@ -2500,6 +2503,7 @@
       };
       if (exact[text]) return exact[text];
       return text
+        .replace(/ · No Win/, " · 未中獎")
         .replace(/^Spin (\d+) \| (.+) \| Reel stop ready$/, "Spin $1 | $2 | Reel 已停止")
         .replace(/^Spin (\d+) finished \| No cascade$/, "Spin $1 完成 | 無 Cascade")
         .replace(/^Spin (\d+) done \| Final (.+)$/, "Spin $1 完成 | Final $2")
@@ -2742,6 +2746,19 @@
     function roundBaseBet(round) { return Number(round.bet_multi) * Box.default_coin_in * Box.normalbet; }
     function roundModeLabel(round) {
       return round.bet_mode === Box.mode_featurebuy ? "Buy Feature" : round.bet_mode === Box.mode_extrabet ? "Extra Bet" : "Normal Bet";
+    }
+    // 贏分區同 H032：WIN 文字＋閃一下（fx-bar-hit）
+    function flashBar(text) {
+      writeMessage(text);
+      messageBarEl.classList.remove("fx-bar-hit"); void messageBarEl.offsetWidth; messageBarEl.classList.add("fx-bar-hit");
+    }
+    function spinEndText(spin) {
+      if (!(spin.final_pay > 0)) return "No Win";
+      return spin.final_multiplier > 1 ? `WIN ${formatMoney(spin.raw_pay)} × ${spin.final_multiplier} = ${formatMoney(spin.final_pay)}` : `WIN ${formatMoney(spin.final_pay)}`;
+    }
+    function fgSpinText(round, index) {
+      const spin = round.spins[index];
+      return `FG ${index}/${round.spins.length - 1} · ${spin.final_pay > 0 ? `WIN ${formatMoney(spin.final_pay)}` : "No Win"}${spin.retrigger_awarded > 0 ? ` · +${spin.retrigger_awarded} FG` : ""}`;
     }
     function writeMessage(text, type) {
       state.lastMessage = text;
@@ -4520,14 +4537,12 @@
       const renderReelStop = () => {
         updateFeatureBar(spin, round, { cascadeCount: 0, multiplier: spin.multiplier_sum_before_spin || 0 });
         renderBoard(clone(spin.board_init));
-        setText(messageBarEl, localizeMessage(reelStopMessage));
       };
       renderReelStop();
       renderSpinResultList(spin);
-      writeMessage(reelStopMessage);
       await waitPlaybackStep("Reel stop", 280, renderReelStop);
       if (spin.board_steps.length === 0) {
-        const finalMessage = `Spin ${spin.spin_index} finished | No cascade`;
+        const finalMessage = spinEndText(spin);
         const renderFinal = () => {
           renderBoard(clone(spin.board_final));
           updateFeatureBar(spin, round);
@@ -4547,7 +4562,7 @@
         const beforeMultiplier = stepIndex === 0
           ? Number(spin.multiplier_sum_before_spin || 0)
           : Number(spin.board_steps[stepIndex - 1].multiplier_sum_after_cascade || 0);
-        const payMessage = `Cascade ${step.cascade_index} | Pay ${formatMoney(step.cascade_pay)}`;
+        const payMessage = `WIN ${formatMoney(step.cascade_pay)}`;
         const renderPay = () => {
           renderBoard(clone(step.board_before), { hitPositions: step.hit_positions });
           // 20 線：得分線整條畫在盤面上（共用 demogameWinLines，依 paylines 連過每一輪；格子依列優先排在 #board）
@@ -4560,7 +4575,7 @@
         liveSpinPay += Number(step.cascade_pay) || 0;
         state.displayWin = state.displayRoundWin + liveSpinPay;   // Win 即時累加：每次消除得分就加上去
         setText(winValueEl, formatDisplayMoney(state.displayWin));
-        writeMessage(payMessage);
+        flashBar(payMessage);
         await waitPlaybackStep(`Cascade ${step.cascade_index} pay`, 360, renderPay);
         const multiplierMessage = step.collect_count > 0
           ? `Cascade ${step.cascade_index} | Collect: board x${step.board_sum}${step.self_gain > 0 ? ` + cleared x${step.self_gain}` : ""} → +Multiplier x${step.added_multiplier}`
@@ -4569,13 +4584,11 @@
           // 收集：先在消除前盤面標出被收集的倍數（閃光），之後清除段再換成消除後盤面
           renderBoard(clone(step.collect_count > 0 ? step.board_before : step.board_after_eliminate), { hitPositions: step.hit_positions, convertPositions: step.collect_count > 0 ? [] : step.converted_gold_positions, collectedPositions: step.collected_positions || [] });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
-          setText(messageBarEl, localizeMessage(multiplierMessage));
         };
         const flyMultipliers = !state.debugSkipPlayback && (step.collect_count > 0 || (step.self_collected || []).length > 0);
         if (flyMultipliers) {
           renderBoard(clone(step.board_before), { hitPositions: step.hit_positions, collectedPositions: step.collected_positions || [] });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: beforeMultiplier });
-          setText(messageBarEl, localizeMessage(multiplierMessage));
           if (step.collect_count > 0) {
             await animateCollectFlight(step);   // 先收集：盤面倍數 → 收集框合計 → Mult
             if (!state.debugSkipPlayback) { setText(spinMultiValueEl, `x${beforeMultiplier + Number(step.collect_gain || 0)}`); popMultPill(); }
@@ -4586,7 +4599,6 @@
         if (flyMultipliers && !state.debugSkipPlayback) popMultPill();
         state.maxMultiplier = Math.max(state.maxMultiplier, Number(step.multiplier_sum_after_cascade || 0));
         updateSessionCards();
-        writeMessage(multiplierMessage);
         await waitPlaybackStep(`Cascade ${step.cascade_index} multiplier`, flyMultipliers ? 300 : 280, renderMultiplier);
         const clearedPositions = [];
         step.board_after_eliminate.forEach((row, rowIndex) => row.forEach((cell, colIndex) => {
@@ -4596,23 +4608,19 @@
         const renderClear = () => {
           renderBoard(clone(step.board_after_eliminate), { clearedPositions });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
-          setText(messageBarEl, localizeMessage(clearMessage));
         };
         renderClear();
-        writeMessage(clearMessage);
         await waitPlaybackStep(`Cascade ${step.cascade_index} clear`, 340, renderClear);   // 等消除爆開動畫（h026-clear-pop 340ms）播完
         const dropMessage = `Cascade ${step.cascade_index} | Drop complete`;
         const renderDrop = () => {
           const dropMotion = window.slotBuildDropMotion?.(step.board_after_eliminate.length, step.board_after_eliminate[0].length, clearedPositions) || {};
           renderBoard(clone(step.board_after_drop), { dropMotion });
           updateFeatureBar(spin, round, { cascadeCount: step.cascade_index, multiplier: step.multiplier_sum_after_cascade });
-          setText(messageBarEl, localizeMessage(dropMessage));
         };
         renderDrop();
-        writeMessage(dropMessage);
         await waitPlaybackStep(`Cascade ${step.cascade_index} drop`, (refillMs() * 1.3 + 120) * state.speedMultiplier, renderDrop);   // ×1.3：含新符號逐顆錯開的時間
       }
-      const finalMessage = `Spin ${spin.spin_index} done | Final ${formatMoney(spin.final_pay)}`;
+      const finalMessage = spinEndText(spin);
       const renderFinal = () => {
         renderBoard(clone(spin.board_final));
         updateFeatureBar(spin, round);
@@ -4621,7 +4629,7 @@
       renderFinal();
       applyDisplaySpinWin(round, spin.final_pay);
       updateSessionCards();
-      writeMessage(finalMessage);
+      if (spin.final_multiplier > 1 && spin.final_pay > 0) flashBar(finalMessage); else writeMessage(finalMessage);
       await waitPlaybackStep("Final", 16, renderFinal);
     }
 
@@ -4664,20 +4672,20 @@
         if (state.pendingRound && state.pendingSpinIndex < state.pendingRound.spins.length) {
           const round = state.pendingRound;
           const spin = round.spins[state.pendingSpinIndex];
-          writeMessage(`FG Spin ${spin.spin_index} rolling...`);
+          writeMessage("Free Spin");
           updateSceneTheme(spin);   // 進 FG 的每一轉（含第一轉）滾輪開始前就換 FG 背景
           await animateReels(spin.board_init);
           await playbackSpin(round, spin);
           appendLiveLog(`FG ${state.pendingSpinIndex}/${round.spins.length - 1} | ${spin.table_name} | Cascade ${spin.board_steps.length} | C1 ${spin.scatter_count} | Win ${formatMoney(spin.final_pay)}`, spin.board_steps.length ? "cascade" : "info");
+          writeMessage(fgSpinText(round, state.pendingSpinIndex));
           state.pendingSpinIndex += 1;
           if (state.pendingSpinIndex >= round.spins.length) {
             state.pendingRound = null;
             appendLiveLog(`FG complete | Total ${formatMoney(round.free_total_win)} (${(round.free_total_win / roundBaseBet(round)).toFixed(2)}x)`, "result");
             window.demogameHistory?.record({ fg: round.free_total_win / roundBaseBet(round) });   // 共用歷史紀錄：FG 最大倍數（整段 FG ÷ 底注）
             recordLineChartRound(round);   // 有 FG 的局：FG 結束才記
-            writeMessage(`FG finished | Total ${formatMoney(round.total_win)}`);
             // 規範 §4：FG 結束回到 BG，盤面還原成觸發局 BG 最終盤面（BF 為入場盤），Feature Status 回 Base Game；只改顯示
-            const restoreMessage = `FG finished | Total ${formatMoney(round.total_win)}`;
+            const restoreMessage = state.lastMessage;   // 留著最後一轉 FG 的結果（同 H032）
             const renderBgRestore = () => {
               renderBoard(clone(round.spins[0].board_final));
               updateFeatureBar(null);
@@ -4689,10 +4697,9 @@
           } else {
             const nextSpin = round.spins[state.pendingSpinIndex];
             renderAll(round, spin);
-            writeMessage(`FG ready | ${nextSpin.remaining_free_spins_before} spins left, press Spin`);
           }
         } else {
-          writeMessage("Reels spinning...");
+          writeMessage("Spin");
           const { round, rngText } = runSeededRound(betMode, forceFgThisSpin, cardIndex, rngCode, scriptThisSpin);   // 先算好整局結果（含 FG），滾輪才能逐輪停在最終符號
           window.demogameLineChart?.setMode(betMode === Box.mode_featurebuy ? "BF" : null);   // Buy Feature 不是 is-active 切換，買的局顯示 BF（不記錄）；NB／EB 依按鈕
           const rangeSet = cardIndex !== null && (rngCode ? rngCode.card : CARD_SYSTEM_ENABLED) && betMode !== Box.mode_featurebuy;
@@ -4716,7 +4723,6 @@
               : round.trigger_source === "force_fg"
                 ? "Force FG triggered"
                 : "FG triggered";
-            writeMessage(`${triggerLabel} | ${round.spins[1].remaining_free_spins_before} spins left, press Spin`);
           } else {
             state.pendingRound = null;
             state.pendingSpinIndex = 0;
@@ -4839,7 +4845,7 @@
       renderBoard(sampleBoard());
       renderAll(null, null);
       updateDebugControls();
-      writeMessage("Session reset");
+      writeMessage("Ready — press Spin");
     });
 
     autoBtn.addEventListener("click", () => {
@@ -4966,7 +4972,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-12 14:11";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來（至少收到 1 個）", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "FG 金框必定帶倍數或「收集」（不出空金框）", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
-  <script src="../../../../demogame_common.js?v=20261112p"></script>
+  <script src="../../../../demogame_common.js?v=20261112t"></script>
 </body>
 
 </html>

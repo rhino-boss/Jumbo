@@ -146,6 +146,8 @@
       font-family: Consolas, monospace; font-size: 12px; display: flex; align-items: center; justify-content: center; text-align: center;
     }
     body.mm .message-bar.error { color: #ff8aa5; }
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     body.mm #bet-mode-panel .zone-body { flex-wrap: wrap; }
   </style>
   <style id="dg-boot">
@@ -373,7 +375,7 @@
           ready: "Ready — press Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared", insufficient: "Insufficient balance",
           pink: "Pink Marker", blue: "Blue Spray Can", green: "Green Sticker Roll", landed: "Sticker landed", activated: "activated",
           wilds: (n) => `Blue Spray Can → ${n} Wild`, hot: (add, total, m) => `Pink Marker → +${add} Hot Lines (${total}) · x${m}`,
-          respin: "Respin", noWin: "No win", lines: "lines", totalWin: "TOTAL WIN", spinWin: "SPIN WIN",
+          respin: "Respin", noWin: "No Win", freeSpin: "Free Spin", lines: "lines", totalWin: "TOTAL WIN", spinWin: "SPIN WIN",
           fsMiss: (n) => `Green Sticker Roll → ${n} FS (no bonus)`,
           fsAward: (n, u, name, spins) => `Green Sticker Roll → FS ${n}${u ? ` + Upgrade ${u}` : ""} → ${name} ${spins} spins!`,
           fsExtra: (spins) => `Green Sticker Roll → +${spins} free spins`,
@@ -390,7 +392,7 @@
           ready: "準備完成 — 請按 Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置", insufficient: "餘額不足",
           pink: "粉紅麥克筆", blue: "藍色噴漆", green: "綠色貼紙滾輪", landed: "貼紙落下", activated: "啟動",
           wilds: (n) => `藍色噴漆 → 加入 ${n} 個 Wild`, hot: (add, total, m) => `粉紅麥克筆 → 熱線 +${add}（共 ${total} 條）· x${m}`,
-          respin: "重轉", noWin: "未中獎", lines: "線", totalWin: "總贏分", spinWin: "本局贏分",
+          respin: "重轉", noWin: "未中獎", freeSpin: "Free Spin", lines: "線", totalWin: "總贏分", spinWin: "本局贏分",
           fsMiss: (n) => `綠色貼紙滾輪 → ${n} 個 FS（未觸發）`,
           fsAward: (n, u, name, spins) => `綠色貼紙滾輪 → FS ${n}${u ? `＋升級 ${u}` : ""} → ${name} ${spins} 局！`,
           fsExtra: (spins) => `綠色貼紙滾輪 → 追加 ${spins} 局`,
@@ -408,6 +410,12 @@
       function say(build) {
         messageBuild = typeof build === "function" ? build : () => build;
         $("messageBar").textContent = messageBuild();
+      }
+      // 贏分訊息（同 H032）：寫入後閃一下訊息列
+      function sayHit(build) {
+        say(build);
+        const bar = $("messageBar");
+        bar.classList.remove("fx-bar-hit"); void bar.offsetWidth; bar.classList.add("fx-bar-hit");
       }
 
       // ── 狀態 ──────────────────────────────────────────────────────────────
@@ -865,8 +873,8 @@
             setHotPills(step.hot, step.mult);
             renderBoard(step.board);
             meterIdle(spin.progressive ? step.mult : 0);
+            say(() => tr(spin.fgType ? "freeSpin" : "spin"));   // 轉動開始（同 H032）
             await reelStripSpin(boardEl, columnsOf());
-            say(frameSay);
             const shots = ["blue", "pink"].filter((c) => step.landed.includes(c)).map((c) => ({ cell: cellEl(step.stickerKeys[c]), color: c }));
             if (step.landed.includes("green")) $("meterGreen").classList.add("charging");
             if (shots.length) { await stickerShots(shots, step.active); await wait(300); }
@@ -879,7 +887,6 @@
             // 藍色：說明「隨機加入 N 個 WW」→ WW 從累積條逐顆撒到隨機格子
             renderBoard(spin.steps[i - 1].board);
             meterLabel.blue.textContent = `+${step.n} WW`;
-            say(frameSay);
             await banner(tr("sprayTitle"), tr("spraySub")(step.n), "#39d6a2", 900);
             await sprayWildsAnim(step.added);
             renderBoard(step.board);
@@ -895,14 +902,17 @@
               window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
               paid += step.pay;
               setWinShown(winBase + Math.min(paid, spin.total));
-              say(frameSay);
+              // 贏分訊息（同 H032）：全部中獎線同一乘數時顯示「原始 × 乘數 = 得分」
+              const shown = Math.min(paid, spin.total) - Math.min(paid - step.pay, spin.total);
+              const m = step.wins[0].mult, raw = step.wins.reduce((a, w) => a + w.base * bet(), 0);
+              sayHit(() => (m > 1 && shown === step.pay && step.wins.every((w) => w.mult === m)
+                ? `WIN ${fmt(raw)} × ${m} = ${fmt(shown)}` : `WIN ${fmt(shown)}`));
               await wait(1000);
               renderBoard(step.board);
               drawLines({ hot: step.hot, hotActive: step.hotActive });
-            } else { say(frameSay); await wait(200); }
+            } else { await wait(200); }
           } else if (step.type === "hot") {
             // 粉色：「HOT LINES! N 條」→ 逐條挑線畫出 → 說明熱線中獎乘上倍數
-            say(frameSay);
             const kept = step.hot.filter((li) => !step.added.includes(li));
             if (step.added.length) {
               await banner(tr("hotTitle"), tr("hotSub")(step.added.length), "#ff4fd8", 800);
@@ -918,13 +928,13 @@
             await banner(`x${step.mult}`, tr("hotMultSub")(step.mult, spin.progressive ? step.multAdd : 0), "#ffd84a", 1300);
           } else if (step.type === "respin") {
             renderBoard(step.board);
+            say(() => tr("respin"));   // 重轉開始
             await reelStripSpin(boardEl, columnsOf());
-            say(frameSay);
             await wait(200);
           } else if (step.type === "green") {
             renderBoard(step.board, step.fsCells);
             meterGreen(true, step.fs.up ? `C4 ${step.fs.fsCount}+C5 ${step.fs.up}` : `C4 ${step.fs.fsCount}`);
-            say(frameSay);
+            if (spin.fgType ? step.fs.extra : step.fs.award) say(frameSay);   // 只留觸發／追加 FG 提示
             await wait(1200);
           }
         }
@@ -1106,6 +1116,7 @@
         await playSpin(spin, 0);
         const win = spin.total;
         setWinShown(win);
+        say(() => (win > 0 ? `WIN ${fmt(win)}` : tr("noWin")));   // BG 結束（同 H032）
         st.totalWin += win; st.balance += win;
         appendLog(spinLogLine(`BG | ${MM_TEXT.en[mode === MODE_NORMAL ? "normal" : mode]}`, spin), win > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: win / bet() });
@@ -1135,13 +1146,14 @@
           updateStats();
           await wait(1100);
         }
+        { const i = st.fg.played, n = st.fg.total, k = spin.fs?.extra || 0;   // FG 每局結束（同 H032）
+          say(() => `FG ${i}/${n} · ${spin.total > 0 ? `WIN ${fmt(spin.total)}` : tr("noWin")}${k ? ` · +${k} FG` : ""}`); }
         if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
         if (st.fg.remaining <= 0) {
           const name = fgName(st.fg.type), total = st.fg.win;
           appendLog(`FG complete | ${name} | Total ${fmt(total)} (${(total / bet()).toFixed(2)}x)`, "result");
           window.demogameHistory?.record({ fg: total / bet() });
           if (st.fg.lineMode) window.demogameLineChart?.record((st.fg.base + total) / st.fg.wager, st.fg.lineMode);
-          say(() => tr("fgDone")(name, fmt(total)));
           st.fg = freshFg();
           drawLines(); setHotPills([], 0); meterIdle();
         }
@@ -1241,7 +1253,7 @@
         $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
         renderBoard(randomBoard());
         drawLines(); setHotPills([], 0); meterReset();
-        say(() => tr("resetDone"));
+        say(() => tr("ready"));
         updateStats(); updateControls();
       }
 
@@ -1336,7 +1348,7 @@ Buy Feature（原 Buy Steezy Skater）50x；Super Feature（原 Buy Ink the City
   <script>window.DEMOGAME_HISTORY = true;</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 10:43";   // 最後調性更新（數學模型／權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Hacksaw Gaming Minted Mike", "expect": "貼紙觸發 Hot Line 與 Wild 噴漆，升級到更高階的 Free Spins。", "changes": []};</script>
-  <script src="../../../../demogame_common.js?v=20261112p"></script>
+  <script src="../../../../demogame_common.js?v=20261112t"></script>
   <script>window.mmBindCommonControls();</script>
 </body>
 

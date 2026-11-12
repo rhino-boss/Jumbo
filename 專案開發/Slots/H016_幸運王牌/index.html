@@ -314,7 +314,7 @@
     .symbol-img {
       transform: scale(1.08);
       transform-origin: center;
-      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
       z-index: 1;
     }
 
@@ -3371,6 +3371,8 @@
     }
     /* 消除與補牌（照 H045 超級鑽石實機效果，2026-11-04）：得分牌直接消失、原位灑出金色火花（不畫圓圈，2026-11-04 使用者要求）；
        補牌的新牌從盤面上方落進空格（不再原地長出來），由左到右、同輪由下往上錯開 */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     @keyframes h016-vanish{from{opacity:1}to{opacity:0}}
     @keyframes h016-ring{0%{transform:scale(.35);opacity:0}25%{opacity:1}100%{transform:scale(1.25);opacity:0}}
     html body #board .cell.symbol-cleared{animation:none!important;overflow:visible}
@@ -3547,7 +3549,7 @@
       const multiplier = multipliers[Math.min(combo, multipliers.length - 1)];
       const cascadePay = win.rawPay * multiplier * BASE_BET * BET_LEVELS[state.betIndex];
       pay += cascadePay;
-      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, cascadePay, totalPay:pay, message: `WIN ${money(cascadePay)}`, details: win.details});
+      snapshots.push({type:"win", board: cloneBoard(board), hits: [...win.hits], combo, multiplier, cascadePay, totalPay:pay, message: multiplier > 1 ? `WIN ${money(win.rawPay * BASE_BET * BET_LEVELS[state.betIndex])} × ${multiplier} = ${money(cascadePay)}` : `WIN ${money(cascadePay)}`, details: win.details});
       const transitionBoard = cloneBoard(board), cleared = [], converted = [];
       combo++;
       for (const key of win.hits) {
@@ -3604,7 +3606,7 @@
       pay += result.pay; spins.push(result); snapshots.push(...result.snapshots);
       if (result.scatter >= 3 && played + remaining < Number(cfg.free_spin_cap)) {
         const add = Math.min(Number(cfg.retrigger_spins), Number(cfg.free_spin_cap) - played - remaining);
-        remaining += add; retriggers += add > 0 ? 1 : 0;
+        remaining += add; retriggers += add > 0 ? 1 : 0; result.retrigger = add;   // 只供訊息列顯示「+k FG」
         const selection = cfg.table_selection?.[superMode ? "super_retrigger" : "retrigger"];
         if (selection?.length) {
           for (let index = 0; index < add; index++) queue.push(pick(selection.map(item => item.table), selection.map(item => item.weight)));
@@ -3764,7 +3766,7 @@
     "Game Help": "遊戲說明", "Close": "關閉"
   };
   const MSG_ZH = [
-    [/^Ready — press Spin$/, "準備完成 — 請按 Spin"], [/^No Win$/, "未得獎"], [/^WIN (.+)$/, "得分 $1"],
+    [/^Ready — press Spin$/, "準備完成 — 請按 Spin"], [/^No Win$/, "未中獎"], [/^WIN (.+)$/, "WIN $1"],
     [/^Insufficient balance$/, "餘額不足"], [/^Source Golden → W2$/, "金框來源 → W2"],
     [/^Mark random W2 area × (\d+)$/, "標記隨機 W2 區域 × $1"], [/^Random W2 × (\d+)$/, "隨機 W2 × $1"],
     [/^Cascade$/, "連消"], [/^Eliminate \+ WW$/, "消除＋WW"], [/^Refill in place$/, "原地補牌"], [/^BF Entry · No Win$/, "BF 進場 · 未得獎"]
@@ -3780,6 +3782,8 @@
   }
   let lastMessage = "Ready — press Spin", lastFeatureStatus = "";
   function setMessage(english) { lastMessage = String(english || ""); $("messageBar").textContent = trMessage(lastMessage); }
+  function flashBar() { const bar = $("messageBar"); bar.classList.remove("fx-bar-hit"); void bar.offsetWidth; bar.classList.add("fx-bar-hit"); }
+  function refillMs() { return Math.max(40, Math.round(160 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }   // 補牌落下時間（原只定義在前一段 script，這裡用不到 → refillMs is not defined）
   function setFeatureStatus(english) { lastFeatureStatus = english; $("featureStatus").textContent = tr(english); }
 
   // Debug Log：一律走共用 window.demogameLog（行格式同 H045，不記演出過程）
@@ -4004,11 +4008,11 @@
   async function animateSnapshots(snapshots, freeGame = false, winBase = 0) {
     state.snapshots = snapshots; state.snapshotIndex = -1; state.snapshotWinBase = Number(winBase) || 0;   // Previous／Next 逐步檢視用的得分起點（BG 0、FG 本場累計）
     renderMultiplier(freeGame, 0); $("carryMultiValue").textContent = "0";
-    if (snapshots[0]) { await animateReels(snapshots[0].board); renderBoard(snapshots[0].board); await wait(delay()); }
+    if (snapshots[0]) { setMessage(freeGame ? "Free Spin" : "Spin"); await animateReels(snapshots[0].board); renderBoard(snapshots[0].board); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
-      setMessage(snapshot.message || "Cascade");
       if (snapshot.type === "win") {
+        setMessage(snapshot.message); flashBar();   // 訊息列只顯示得分（消除／補牌等步驟維持上一句）
         // 得分（Win）即時更新：BG 局從 0、FG 從本場累計起，每次消除得分就加上去（只改顯示時機，Credit／統計不動）
         state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
         $("winValue").textContent = money(state.lastWin);
@@ -4109,7 +4113,7 @@
     const fgWinBase = Number(state.fg.win || 0), carry = Number(state.fg.carry || 0);
     await animateSnapshots(item.snapshots, true, carry + fgWinBase); state.fg.index++;   // Win 顯示＝觸發局 BG 得分＋FG 累計（Previous／Next 同一起點）
     state.fg.win = fgWinBase + item.pay; state.lastWin = carry + state.fg.win; state.totalWin += item.pay; state.balance += item.pay; state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
-    setMessage(`FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}`);
+    setMessage(`FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : "No Win"}${item.retrigger ? ` · +${item.retrigger} FG` : ""}`);
     appendLog(`FG ${state.fg.index}/${state.fg.total} | ${item.tableName} | Cascade ${item.combo} | C1 ${item.scatter} | Win ${money(item.pay)}`, item.combo ? "cascade" : "info");
     if (state.fg.index >= state.fg.spins.length) {
       const fgUnit = BASE_BET * BET_LEVELS[state.betIndex];   // FG 期間押注不可改
@@ -4336,7 +4340,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "金框中獎翻成大鬼，複製 Wild 帶出一波接一波的連消。", "changes": ["新增 Buy Super Feature（250 倍押注），金框轉換時一定觸發大鬼，多複製 2～4 顆 Wild", "免費遊戲中金框中獎也可能觸發大鬼（Super Ace 免費遊戲只有小鬼）"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script src="../demogame_common.js?v=20261112t"></script>
 </body>
 
 </html>

@@ -314,7 +314,7 @@
     .symbol-img {
       transform: scale(1.08);
       transform-origin: center;
-      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
       z-index: 1;
     }
 
@@ -523,6 +523,9 @@
       color: #d7ccff;
       font-size: 0.8rem;
     }
+    /* 訊息列每段 WIN 閃一下（同 H032） */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     /* 消除與補牌（照 H027 宙斯 2500 實機效果，糖果狂歡 2500，2026-11-04）：得分符號直接消失、原位灑出金粉；補牌由下往上逐顆錯開落下。
        權重需高過共用 body #board 的 !important 規則 */
     @keyframes h027-burst {
@@ -3027,16 +3030,16 @@
   }
 
   function captureSnapshots(spin, baseWin = 0) {   // 每步記下演出當下的累計 Win（與 playback 相同算法）
-    const stopMsg = [tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`), ""];   // 訊息列文字同 playback（Previous／Next 還原用）
+    const stopMsg = [spin.scene === "FG" ? "Free Spin" : "Spin", ""];   // 訊息列文字同 playback（Previous／Next 還原用）
     state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialC2Values), hits: [], win: baseWin, msg: stopMsg }];
     let liveRaw = 0;
     spin.steps.forEach((step) => {
-      const msg = [tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win"];
+      const msg = [`WIN ${money(toMoney(step.pay))}`, "win"];
       liveRaw += toMoney(step.pay);
       state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeC2Values), hits: step.hitPositions, win: baseWin + liveRaw, msg });
       state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterC2Values), hits: [], win: baseWin + liveRaw, msg });
     });
-    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.c2.values), hits: [], win: baseWin + toMoney(spin.finalPay), msg: [tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : ""] });
+    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard, spin.c2.values), hits: [], win: baseWin + toMoney(spin.finalPay), msg: [spinEndText(spin), spin.finalPay > 0 ? "win" : ""] });
     state.snapshotIndex = state.snapshots.length - 1;
     updateDebugButtons();
   }
@@ -3114,19 +3117,35 @@
     setText(el.win, money(value));
   }
 
+  // 訊息列（同 H032）：每段得分「WIN x」並閃一下；轉末 BG「WIN 總分／未中獎」、FG「FG i/n · WIN x」；FG 倍數在轉末作用時顯示「WIN 原始 × 倍數 = 最終」
+  function hitMessage(text) {
+    writeMessage(text, "win");
+    void el.message.offsetWidth;
+    el.message.classList.add("fx-bar-hit");
+  }
+  function spinEndText(spin) {
+    const raw = toMoney(spin.rawPay), final = toMoney(spin.finalPay), mult = Number(spin.effectiveMultiplier) || 0;
+    let text = `WIN ${money(final)}`;
+    if (final <= 0) text = tr("No Win", "未中獎");
+    else if (raw > 0 && mult > 1) text = `WIN ${money(raw)} × ${mult}${spin.scatterWin > 0 ? ` + ${money(toMoney(spin.scatterWin))}` : ""} = ${money(final)}`;
+    const fg = state.pendingFg;
+    if (spin.scene !== "FG" || !fg) return text;
+    return `FG ${fg.played}/${fg.total} · ${text}${spin.retriggerAdded > 0 ? ` · +${spin.retriggerAdded} FG` : ""}`;
+  }
+
   async function playback(spin, baseWin = 0) {
     setLiveWin(baseWin);
     let liveRaw = 0;
+    writeMessage(spin.scene === "FG" ? "Free Spin" : "Spin");
     await animateReels(spin);
     renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
     updateFeatureBar({ ...spin, steps: [] });
-    writeMessage(tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`));
     await sleep(260);
 
     for (const step of spin.steps) {
       renderBoard(boardCells(step.before, step.beforeC2Values), { hitPositions: step.hitPositions });
       setText(el.cascade, String(step.cascadeIndex));
-      writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
+      hitMessage(`WIN ${money(toMoney(step.pay))}`);
       liveRaw += toMoney(step.pay);
       setLiveWin(baseWin + liveRaw);   // 每次消除得分立即加到 Win
       await sleep(360);
@@ -3140,7 +3159,8 @@
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));
     updateFeatureBar(spin);
     setLiveWin(baseWin + toMoney(spin.finalPay));   // 套倍數／Scatter 後的本轉得分
-    writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : "");
+    if (spin.rawPay > 0 && Number(spin.effectiveMultiplier) > 1) hitMessage(spinEndText(spin));
+    else writeMessage(spinEndText(spin), spin.finalPay > 0 ? "win" : "");
     renderClusterWins(spin);
     renderResultStages(spin);
     captureSnapshots(spin, baseWin);
@@ -3349,7 +3369,6 @@
     } else {
       updateFeatureBar();
     }
-    writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
     appendLog(`FG complete | Total ${money(fg.win)} (${(fg.win / betMoney()).toFixed(2)}x)`, "result");
     window.demogameHistory?.record({ fg: fg.win / betMoney() });   // 共用歷史紀錄：FG 最大倍數（÷ 底注）
     updateStats();
@@ -3420,7 +3439,6 @@
       if (candidate.triggered) {
         state.fgReturnSpin = spin;   // FG 結束回到 BG 時還原觸發局最終盤面（BF／SF 為入場盤）
         startFreeGame(candidate.freeSpins);
-        writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
       } else {
         if (state.lastWin > 0) state.hitCount += 1;
         recordLineRound();
@@ -3775,7 +3793,7 @@
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-05 12:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script src="../../../../demogame_common.js?v=20261112p"></script>
+  <script src="../../../../demogame_common.js?v=20261112t"></script>
   <script>
     (() => {
       "use strict";

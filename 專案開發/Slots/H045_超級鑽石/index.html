@@ -325,7 +325,7 @@
     .symbol-img {
       transform: scale(1.08);
       transform-origin: center;
-      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
       z-index: 1;
     }
 
@@ -3278,7 +3278,7 @@
       if (result.capped || budget + pay >= cap) { capped = true; break; }
       if (result.scatter >= 3 && played + remaining < MAX_FS) {
         const add = Math.min(5, MAX_FS - played - remaining);
-        if (add > 0) { remaining += add; retriggers++; }
+        if (add > 0) { remaining += add; retriggers++; result.retrigger = add; }
       }
     }
     return { pay, played, retriggers, spins, snapshots, capped, maxMultiplier: Math.max(1, ...spins.map(item => item.maxMultiplier)) };
@@ -3812,7 +3812,7 @@
     if (snapshots[0]) { await animateReels(snapshots[0].board, snapshots[0].gold, snapshots[0].mults, freeGame ? "fg" : "bg"); renderBoard(snapshots[0].board, [], { mults: snapshots[0].mults, gold: snapshots[0].gold, pre: snapshots[0].pre }); await wait(delay()); }
     for (let index = 1; index < snapshots.length; index++) {
       const snapshot = snapshots[index]; state.snapshotIndex = index; renderMultiplier(freeGame, snapshot.combo);
-      $("messageBar").textContent = snapshot.message || "Cascade";
+      if (snapshot.type === "win") $("messageBar").textContent = snapshot.message || "WIN";   // 消除／掉落／分裂步驟不改訊息列（保留上一個 WIN）
       const common = { mults: snapshot.mults, gold: snapshot.gold, pre: snapshot.pre };
       if (snapshot.type === "win") {
         // 得分（Win）即時更新：每次消除得分就加上去（BG 局與每轉 FG）；只改顯示，局末仍以算好的 pay 為準
@@ -3979,7 +3979,7 @@
     state.fg.win = fgWinBase + item.pay; state.lastWin = carry + state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
     state.maxMultiplier = Math.max(state.maxMultiplier, item.maxMultiplier);
     tallySpin(item);
-    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}`;
+    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}${item.retrigger ? ` · +${item.retrigger} FG` : ""}`;
     appendLog(`FG ${state.fg.index}/${state.fg.total} | ${item.tableName} | Cascade ${item.combo} | C1 ${item.scatter} | Win ${money(item.pay)}`, item.combo ? "cascade" : "info");
     if (state.fg.index >= state.fg.spins.length) { appendLog(`FG complete | Total ${money(state.fg.win)} (${(state.fg.win / betUnit()).toFixed(2)}x)`, "result"); window.demogameHistory?.record({ fg: state.fg.win / betUnit() }); if (state.fg.line) recordLine(state.fg.line.mode, state.fg.carry + state.fg.win, state.fg.line.wager); if (state.fg.mode === 2) window.demogameLineChart?.setMode?.(null); const baseRound = state.fg.baseRound; state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 }; restoreBaseRound(baseRound); }
   }
@@ -4270,7 +4270,7 @@
   <script>window.DEMOGAME_LAST_CODE = "2026-11-09 11:08";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-11-12 14:26";   // 任何東西最後調整（數學、程式、文件）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "連消推高倍數階梯，金框翻出帶倍數的 Wild 接連得分。", "changes": ["連消倍數階梯多一階：主遊戲最高 ×10、免費遊戲最高 ×20", "翻出的 Wild 可帶 ×2／×3／×5 倍數（Super Ace 的 Wild 不帶倍數）", "免費遊戲也會翻出大鬼且不限次數（Super Ace 免費遊戲只有小鬼）", "Extra Bet 為 2 倍押注，免費遊戲出現率是一般押注的 5 倍", "Buy Feature 改為 50 倍押注（Super Ace 是 40.5 倍）", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script src="../demogame_common.js?v=20261112t"></script>
 </body>
 
 </html>

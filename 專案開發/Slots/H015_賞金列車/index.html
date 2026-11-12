@@ -314,7 +314,7 @@
     .symbol-img {
       transform: scale(1.08);
       transform-origin: center;
-      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
       z-index: 1;
     }
 
@@ -524,6 +524,8 @@
       font-size: 0.8rem;
     }
     /* 消除（仿 Wild Train 實機，2026-11-04）：得分符號直接消失、原位炸出金色火光與碎屑（不畫圓圈） */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     @keyframes h015-vanish { from { opacity: 1; } to { opacity: 0; } }
     @keyframes h015-boom {
       0% { transform: scale(.3) rotate(0deg); opacity: 0; }
@@ -2867,6 +2869,7 @@
     const startIndex = spin.scene === "FG" ? Math.min(3, MULTIPLIERS.length - 1) : 0;
     renderMultiplierTrack(startIndex);
     el.carryMultiValue.textContent = "0";
+    if (el.messageBar.textContent !== text("buyStart")) el.messageBar.textContent = spin.scene === "FG" ? "Free Spin" : "Spin";
     await animateReels(spin);
     if (spin.steps[0]) {
       renderBoard(spin.steps[0].board, spin.steps[0].gold);
@@ -2875,7 +2878,10 @@
     for (let i = 0; i < spin.steps.length; i++) {
       const step = spin.steps[i];
       showSnapshot(i, false);
-      if (step.wins.length) el.messageBar.textContent = `${spin.scene} | ${text("cascade")} ${step.combo} | ${text("win")} ${format(step.win)}`;   // 訊息列逐步顯示消除得分
+      if (step.wins.length) {   // 訊息列逐步顯示消除得分（同 H032：WIN 原始 × 倍數 = 得分），並閃一下
+        el.messageBar.textContent = step.multiplier > 1 ? `WIN ${format(step.win / step.multiplier)} × ${step.multiplier} = ${format(step.win)}` : `WIN ${format(step.win)}`;
+        el.messageBar.classList.remove("fx-bar-hit"); void el.messageBar.offsetWidth; el.messageBar.classList.add("fx-bar-hit");
+      }
       state.snapshotMessages[i] = el.messageBar.textContent;
       await rollMultiplierTo(step.multiplier);
       if (step.wins.length) showLiveWin(winBase + step.total);   // 每次消除得分就加上去（step.total 為本轉累計）
@@ -2915,9 +2921,10 @@
     if (!spin) { state.fg.remaining = 0; return; }
     await animateSpin(spin, (state.fg.bgWin || 0) + (state.fg.win || 0));   // Win＝觸發局 BG 得分＋FG 已得分（Previous／Next 同基準）
     state.fg.remaining--; state.fg.played++; state.totalWin += spin.total; state.balance += spin.total;   // FG 每轉得分加進 Credit
+    let retrigger = 0;
     if (spin.scatter >= 3 && state.fg.played < Box.max_spin_free_game) {
       const award = Math.min(freeAward(spin.scatter), Box.max_spin_free_game - state.fg.played - state.fg.remaining);
-      state.fg.remaining += award; state.fg.total += award;
+      state.fg.remaining += award; state.fg.total += award; retrigger = award;
     }
     if (state.fg.played >= state.fg.spins.length) state.fg.remaining = 0;   // 與預算結果對齊
     state.maxMultiplier = Math.max(state.maxMultiplier, spin.maxMultiplier);
@@ -2932,7 +2939,7 @@
       window.demogameHistory?.record({ fg: fgX });   // 共用歷史紀錄：FG 整場 ÷ 底注
     }
     if (!state.fg.remaining && state.fg.mode === MODE_NORMAL && state.fg.natural !== false) window.demogameLineChart?.record(state.fg.lineWin / coinIn(MODE_NORMAL), "NB");   // 累積倍率線型：NB 觸發局（BG＋整場 FG）結束；BF 不記錄
-    el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${format(spin.total)}`;
+    el.messageBar.textContent = `FG ${state.fg.played}/${state.fg.total} · ${spin.total > 0 ? `WIN ${format(spin.total)}` : (state.language === "zh" ? "未中獎" : "No Win")}${retrigger > 0 ? ` · +${retrigger} FG` : ""}`;
     state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本轉結束訊息
   }
 
@@ -3000,7 +3007,7 @@
       const retriggers = round.freeSpins.filter((fs, i) => fs.scatter >= 3 && i + 1 < Box.max_spin_free_game).length;
       addLog(`${mode === MODE_BUY ? "Buy Feature" : "Free Game triggered"} | ${round.freeSpins.length} spins${retriggers ? ` (Retrigger ×${retriggers})` : ""}`, "mode");
     }
-    el.messageBar.textContent = `${spin.scene} ${text("complete")} · ${format(spin.total)}${state.fg.remaining ? ` · ${text("triggered")}` : ""}`;
+    el.messageBar.textContent = spin.total > 0 ? `WIN ${format(spin.total)}` : (state.language === "zh" ? "未中獎" : "No Win");
     state.snapshotMessages[state.snapshots.length - 1] = el.messageBar.textContent;   // 最後一步＝本局結束訊息
   }
 
@@ -3243,7 +3250,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Wild Bounty Showdown", "expect": "金框中獎轉 Wild 接續連消，把乘數階梯一路推高。", "changes": ["3,600 Ways，6 輪 3-4-5-5-4-3 盤面，中獎消除掉落", "R3、R4 符號可帶金框，中獎後原位轉 Wild", "每段消除前抽炸彈推進乘數階梯，最高 x1024", "Buy Feature 為 75 倍押注"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script src="../demogame_common.js?v=20261112t"></script>
 </body>
 
 </html>

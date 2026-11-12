@@ -314,7 +314,7 @@
     .symbol-img {
       transform: scale(1.08);
       transform-origin: center;
-      filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24));
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
       z-index: 1;
     }
 
@@ -525,6 +525,8 @@
     }
     /* 消除與補牌（照 H027 宙斯 2500 實機效果，H013 糖果狂歡 1000，2026-11-04）：得分符號直接消失、原位灑出金粉；補牌由下往上逐顆錯開落下。
        權重需高過共用 body #board 的 !important 規則 */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     @keyframes h027-burst {
       0% { opacity: 1; }
       100% { opacity: 0; }
@@ -2453,6 +2455,7 @@
     setText(el.message, text);
     el.message.className = `message-bar ${type}`;   // 訊息列只顯示（By Game），不寫 Log
   }
+  function hitMessage(text) { writeMessage(text, "win"); void el.message.offsetWidth; el.message.classList.add("fx-bar-hit"); }   // 得分訊息閃一下（同 H032）
 
   // Log 一律走共用 window.demogameLog（行格式同 H045）；共用檔在本 script 之後載入，之前的行先排隊、載入後補寫
   const pendingLog = [];
@@ -3095,10 +3098,10 @@
   }
 
   async function playback(spin, winBase = 0) {
+    writeMessage(spin.scene === "FG" ? "Free Spin" : "Spin");
     await animateReels(spin);
     renderBoard(boardCells(spin.initialBoard, spin.initialC2Values));
     updateFeatureBar({ ...spin, steps: [] });
-    writeMessage(tr(`${spin.scene} | ${spin.tableName} | Reel stop`, `${spin.scene} | ${spin.tableName} | 停輪`));
     await sleep(260);
 
     let stepPaySum = 0;
@@ -3107,7 +3110,7 @@
       setText(el.cascade, String(step.cascadeIndex));
       stepPaySum += Number(step.pay) || 0;
       setWinDisplay(winBase + toMoney(stepPaySum));   // 每次消除得分即時加到 Win
-      writeMessage(tr(`Cascade ${step.cascadeIndex} | Pay ${money(toMoney(step.pay))}`, `連消 ${step.cascadeIndex} | 得分 ${money(toMoney(step.pay))}`), "win");
+      hitMessage(`WIN ${money(toMoney(step.pay))}`);
       await sleep(360);
       renderBoard(boardCells(step.before, step.beforeC2Values), { clearedPositions: step.hitPositions });
       await sleep(560);   // 等金粉播完（h027-sparkle 120＋520ms）
@@ -3119,7 +3122,10 @@
     renderBoard(boardCells(spin.finalBoard, spin.c2.values));
     setWinDisplay(winBase + toMoney(spin.finalPay));   // 結算（含 C2 倍數／C1 得分）＝本轉最終得分
     updateFeatureBar(spin);
-    writeMessage(tr(`Final ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`, `最終得分 ${money(toMoney(spin.finalPay))} | C1 ${spin.scatterCount} | C2 x${spin.c2.total}`), spin.finalPay > 0 ? "win" : "");
+    if (spin.rawPay > 0 && spin.effectiveMultiplier > 1) {   // FG 倍數球：WIN 原始 × 倍數 = 得分
+      hitMessage(`WIN ${money(toMoney(spin.rawPay))} × ${spin.effectiveMultiplier} = ${money(toMoney(spin.rawPay * spin.effectiveMultiplier))}`);
+      await sleep(360);
+    }
     renderClusterWins(spin);
     renderResultStages(spin);
     captureSnapshots(spin, winBase);
@@ -3258,6 +3264,7 @@
     if (spin.retriggerAdded > 0) fg.total += spin.retriggerAdded;
     await playback(spin, state.lastWin + fg.win - toMoney(spin.finalPay));   // Win 顯示＝BG 得分＋本段 FG 累計
     state.winDisplay = state.lastWin + fg.win;
+    writeMessage(`FG ${fg.played}/${fg.total} · ${spin.finalPay > 0 ? `WIN ${money(toMoney(spin.finalPay))}` : tr("No Win", "未中獎")}${spin.retriggerAdded > 0 ? ` · +${spin.retriggerAdded} FG` : ""}`, spin.finalPay > 0 ? "win" : "");
     appendLog(`FG ${fg.played}/${fg.logTotal} | ${spinLogFields(spin)} | Win ${money(toMoney(spin.finalPay))}`, cascadeCount(spin) ? "cascade" : "info");
     updateStats();
     if (!fg.queue.length) finishFreeGame();
@@ -3286,8 +3293,7 @@
     state.replayRound = null;
     document.body.classList.remove("fg-mode");
     if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard, fg.triggerSpin.c2.values));   // 回到 BG：盤面還原成觸發局最終盤面（只改顯示）
-    updateFeatureBar();
-    writeMessage(tr(`Free Game complete | Total ${money(fg.win)}`, `免費遊戲完成 | 總得分 ${money(fg.win)}`), "win");
+    updateFeatureBar();   // 訊息列維持最後一轉 FG 結果（同 H032）
     updateStats();
   }
 
@@ -3352,12 +3358,12 @@
       state.balance += state.lastWin;
       state.totalWin += state.lastWin;
       state.maxMultiplier = Math.max(state.maxMultiplier, spin.c2.total);
+      writeMessage(state.lastWin > 0 ? `WIN ${money(state.lastWin)}` : tr("No Win", "未中獎"), state.lastWin > 0 ? "win" : "");
       const purchasedRound = state.selectedMode === MODE_BUY || state.selectedMode === MODE_SUPER;
       appendLog(`${purchasedRound ? "BF Entry" : "BG"} | ${spinLogFields(spin)} | Win ${money(state.lastWin)} (${(state.lastWin / betMoney()).toFixed(2)}x)`, state.lastWin > 0 ? "result" : "info");
       window.demogameHistory?.record({ bg: state.lastWin / betMoney() });   // 共用歷史紀錄：BG 最大倍數（BF 進場盤也算）
       if (candidate.triggered) {
-        startFreeGame(candidate.freeSpins, spin);
-        writeMessage(`${state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_SUPER ? t("superFeature") : "C1"} ${tr("entered Free Game", "進入免費遊戲")}`, "win");
+        startFreeGame(candidate.freeSpins, spin);   // 訊息列顯示本轉 BG 結果（同 H032）
       } else if (state.lastWin > 0) {
         state.hitCount += 1;
       }
@@ -3632,6 +3638,7 @@
     if (speedLabel?.firstChild) speedLabel.firstChild.textContent = `${t("speed")} `;
     updateFeatureBar(state.lastSpin); updateStats(); updateControls();
     if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
+    if (!showMessage && [UI_TEXT.en.ready, UI_TEXT.zh.ready].includes(el.message.textContent)) writeMessage(t("ready"), "result");   // 待機訊息跟著語言（同 H032）
     if (showMessage) writeMessage(tr("Language changed to English", "語言已切換為中文"), "result");
   }
 
@@ -3723,7 +3730,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "免費遊戲中倍數糖果一次停出多顆，加總後把整局得分一起放大。", "changes": ["符號在盤面任意位置達到門檻顆數即得分，中獎後消除掉落", "免費遊戲每局連消結束後，依盤面倍數糖果加總倍數，乘上該局得分", "提供 Extra Bet、Buy Feature（100 倍押注）與 Super Feature（500 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script src="../demogame_common.js?v=20261112t"></script>
   <script>
     (() => {
       "use strict";

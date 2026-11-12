@@ -55,6 +55,9 @@
     #board .cell.h014-hit { border-color:#fff1a8; box-shadow:0 0 0 2px #ffd86a, 0 0 18px rgba(255,216,106,.85) inset;
       animation:h014Glow .45s ease-in-out infinite alternate; z-index:2; }
     @keyframes h014Glow { from{filter:brightness(1)} to{filter:brightness(1.45)} }
+    /* 訊息列每段 WIN 閃一下（同 H032） */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     #board .payline { position:absolute; left:4px; right:4px; top:calc(8px + var(--cell) * 0.5); height:var(--cell); z-index:4; pointer-events:none;
       border-top:2px solid rgba(255,216,106,.55); border-bottom:2px solid rgba(255,216,106,.55); }
     /* 該押注沒有開放的數字輪（Bet1 的 R3）蓋上鎖鏈 */
@@ -745,6 +748,12 @@
     $("messageBar").className = `message-bar ${cls}`.trim();
     state.view.message = [text, cls];
   }
+  // 訊息列每段得分「WIN x」並閃一下（同 H032）
+  function hitMessage(text) {
+    setMessage(text, "win");
+    void $("messageBar").offsetWidth;
+    $("messageBar").classList.add("fx-bar-hit");
+  }
   function setStatus(text) {
     $("featureStatus").textContent = langText(text);
     state.view.status = text;
@@ -921,7 +930,7 @@
     $("respinPill").classList.add("hidden");
     setStatus("");
     setScore("", "Spinning…");
-    setMessage(["Spinning…", "轉動中…"]);
+    setMessage("Spin");
     // 滾停時間統一走 demogameMotion（第 1 輪 reelSpinMs，之後每輪錯開 stopStaggerMs；第 5 階 stagger 0＝所有轉輪同時到位）
     const motion = window.demogameMotion;
     const base = motion ? motion.reelSpinMs() : 650 / sp, gap = motion ? motion.stopStaggerMs() : (sp >= 5 ? 0 : 170 / sp);
@@ -934,7 +943,7 @@
     if (res.s1 > 0) [0, 1, 2].forEach((c) => { if (res.syms[c] !== S_E) hitReel(c); });
     await r4Job;
     if (res.r4Sym !== S_E && !(MULT[res.r4Sym] && res.s1 === 0)) hitReel(3);   // 數字分 0 時倍數無效，不亮得分框
-    setMessage(`R4：${code(res.r4Sym)}`);
+    if (res.s1 > 0) hitMessage(`WIN ${fmt(res.s1)}`);
     snapshot("Reels stop");
     await wait(320 / sp);
 
@@ -944,6 +953,7 @@
         setScore(`${fmt(res.s1)} × ${m}`, `特色轉輪 ${code(res.r4Sym)}：數字分 × ${m}`, true);
         await wait(650 / sp);
         setScore(fmt(res.win), `${fmt(res.s1)} × ${m} = ${fmt(res.win)}`, true);
+        hitMessage(`WIN ${fmt(res.s1)} × ${m} = ${fmt(res.win)}`);
         showLiveWin(res.win);
       } else {
         setScore("0", `${code(res.r4Sym)}：數字分為 0，倍數無效`);
@@ -955,7 +965,6 @@
       $("respinPill").classList.remove("hidden");
       $("respinValue").textContent = "…";
       setScore(fmt(res.s1), `RESPIN！重轉前數字分 ${fmt(res.s1)}，R1～R3 免費重轉`, true);
-      setMessage(["RESPIN — R1～R3 respin (R4 held)", "RESPIN — R1～R3 重轉（R4 保留）"]);
       snapshot("Respin trigger");
       await wait(500 / sp);
       [0, 1, 2].forEach((c) => { hitReel(c, false); reelEls[c].classList.add("respin-flash"); });
@@ -965,11 +974,12 @@
       hitReel(3);
       $("respinValue").textContent = fmt(rs.add);
       setScore(fmt(res.win), `重轉前 ${fmt(res.s1)} ＋ 重轉後 ${fmt(rs.add)} = ${fmt(res.win)}${rs.fallback ? "（固定組合）" : ""}`, true);
+      if (rs.add > 0) hitMessage(`Respin 1/1 · WIN ${fmt(rs.add)}`);
+      else setMessage(["Respin 1/1 · No Win", "Respin 1/1 · 未中獎"]);
       showLiveWin(res.win);
       snapshot("Respin result");
     } else if (res.wheelIdx >= 0) {
       setStatus(res.r4Sym === S_SC_R ? ["Red BONUS → LUCKY WHEEL", "紅 BONUS → LUCKY WHEEL"] : ["Green BONUS → LUCKY WHEEL", "綠 BONUS → LUCKY WHEEL"]);
-      setMessage([`${code(res.r4Sym)} BONUS — Lucky Wheel`, `${code(res.r4Sym)} BONUS — 進入幸運轉盤`]);
       await wait(450 / sp);
       await spinWheel(sh.wheel.map((v) => v * bet), res.r4Sym, res.wheelIdx);
       const prize = res.wheelVal * bet;
@@ -977,12 +987,13 @@
       $("wheelResult").textContent = text;
       state.view.wheel.result = text;
       setScore(fmt(res.win), `數字分 ${fmt(res.s1)} ＋ 轉盤 ${text} = ${fmt(res.win)}`, true);
+      if (prize > 0) hitMessage(`WIN ${text}`);
       showLiveWin(res.win);
       snapshot("Lucky wheel");
       await wait(1100 / sp);
       hideWheel();
     }
-    setMessage(res.win > 0 ? [`WIN ${fmt(res.win)} (${fmtX(res.win / bet)} × bet)`, `得分 ${fmt(res.win)}（${fmtX(res.win / bet)} × 底注）`] : ["No Win", "未中獎"], res.win > 0 ? "win" : "");
+    setMessage(res.win > 0 ? `WIN ${fmt(res.win)}` : ["No Win", "未中獎"], res.win > 0 ? "win" : "");
     state.view.liveWin = res.win;   // 最後一步＝局末得分
     snapshot("Result");
   }
@@ -1276,7 +1287,7 @@
     $("autoBtn").textContent = "Auto";
     $("lineList").innerHTML = ""; $("spinResultList").innerHTML = "";
     initialBoard();
-    setMessage(["Ready — press Spin", "準備就緒，請按 Spin"]);
+    setMessage(["Ready — press Spin", "準備完成 — 請按 Spin"]);
     updateStats();
   }
   function changeBetOrMode() {
@@ -1379,7 +1390,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script src="../demogame_common.js?v=20261112t"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

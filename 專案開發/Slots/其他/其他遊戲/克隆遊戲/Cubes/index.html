@@ -143,6 +143,8 @@
       font-family: Consolas, monospace; font-size: 12px; display: flex; align-items: center; justify-content: center; text-align: center;
     }
     body.cb .message-bar.error { color: #ff8aa5; }
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
 
     /* 盤面中央說明橫幅 */
     body.cb .cb-banner {
@@ -374,7 +376,7 @@
           baseGame: "Base Game", freeGame: "Free Spins", grid: "Grid", sticky: "Sticky", fgLeft: "FG Left",
           spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", normal: "Normal Bet",
           ready: "Ready — press Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared", insufficient: "Insufficient balance",
-          land: (s) => `${s}×${s}`, expand: (s) => `Cluster connected → grid expands to ${s}×${s}`, noWin: "No win",
+          land: (s) => `${s}×${s}`, expand: (s) => `Cluster connected → grid expands to ${s}×${s}`, noWin: "No Win", freeSpin: "Free Spin",
           expandTitle: "EXPAND!", expandSub: (s) => `Grid expands to ${s}×${s}`,
           fgTitle: "FREE SPINS", fgSub: (n, code) => `${n} spins · sticky color ${code}`,
           blastTitle: "COLOR BLAST!", blastSub: (x) => `Cluster of 70+ → ${x}x bet`,
@@ -384,7 +386,7 @@
           baseGame: "基礎遊戲", freeGame: "免費遊戲", grid: "盤面", sticky: "黏著色", fgLeft: "FG 剩餘",
           spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", normal: "Normal Bet",
           ready: "準備完成 — 請按 Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置", insufficient: "餘額不足",
-          land: (s) => `${s}×${s}`, expand: (s) => `Cluster 相連 → 盤面擴展為 ${s}×${s}`, noWin: "未中獎",
+          land: (s) => `${s}×${s}`, expand: (s) => `Cluster 相連 → 盤面擴展為 ${s}×${s}`, noWin: "未中獎", freeSpin: "Free Spin",
           expandTitle: "EXPAND!", expandSub: (s) => `盤面擴展為 ${s}×${s}`,
           fgTitle: "FREE SPINS", fgSub: (n, code) => `${n} 局 · 黏著色 ${code}`,
           blastTitle: "COLOR BLAST!", blastSub: (x) => `70 顆以上 Cluster → ${x} 倍押注`,
@@ -397,6 +399,12 @@
       function say(build) {
         messageBuild = typeof build === "function" ? build : () => build;
         $("messageBar").textContent = messageBuild();
+      }
+      // 贏分訊息（同 H032）：寫入後閃一下訊息列
+      function sayHit(build) {
+        say(build);
+        const bar = $("messageBar");
+        bar.classList.remove("fx-bar-hit"); void bar.offsetWidth; bar.classList.add("fx-bar-hit");
       }
 
       // ── 狀態 ──────────────────────────────────────────────────────────────
@@ -734,15 +742,14 @@
             // 記下目前畫面顏色（翻轉起點）；盤面直接變回本局尺寸（不演縮回），再整盤一起翻
             clearAmounts();
             const prev = new Map([...cellMap].map(([k, el]) => [k, el.style.getPropertyValue("--c")]));
+            say(() => tr(spin.fg ? "freeSpin" : "spin"));   // 轉動開始（同 H032）
             renderBoard(step.board, step.size, { sticky: step.sticky });
             await cubeTumble(step.sticky, prev);
-            say(frameSay);
             striped = new Set(step.sticky);
             info = await revealClusters(step.board, step.size, striped, spin.fg);
           } else if (step.type === "expand") {
             // 有得分：先把 Cluster 以外壓暗，再擴展；新外圈方塊飛入後重新找相連
             dimOutside(striped);
-            say(frameSay);
             await wait(650);
             renderBoard(step.board, step.size, { sticky: step.sticky, striped: [...striped], newKeys: step.newKeys });
             if (!spin.fg && info) setBadge(midShown(info.midSize));   // 重畫盤面後保留目前中央乘數
@@ -753,11 +760,15 @@
             if (step.wins.length) {
               dimOutside(hit);
               step.wins.forEach(showAmount);
-              setWinShown(winBase + Math.min(step.pay, spin.total));
-              say(frameSay);
+              const pay = Math.min(step.pay, spin.total);
+              setWinShown(winBase + pay);
+              // 贏分訊息（同 H032）：只有一個 Cluster 且吃中央乘數時顯示「原始 × 乘數 = 得分」
+              const w0 = step.wins[0];
+              sayHit(() => (step.wins.length === 1 && w0.mult > 1 && !step.blast && pay === step.pay
+                ? `WIN ${fmt(w0.base * bet())} × ${w0.mult} = ${fmt(pay)}` : `WIN ${fmt(pay)}`));
               if (step.blast) await banner(tr("blastTitle"), tr("blastSub")(BLAST.award), "#aef8f6", 1300);
               await wait(1300);
-            } else { say(frameSay); await wait(250); }
+            } else { await wait(250); }
           }
         }
         if (spin.maxWin) { say(() => tr("maxWin")); await wait(900); }
@@ -897,6 +908,7 @@
         await playSpin(spin, 0);
         const win = spin.total;
         setWinShown(win);
+        say(() => (win > 0 ? `WIN ${fmt(win)}` : tr("noWin")));   // BG 結束（同 H032）
         st.totalWin += win; st.balance += win;
         appendLog(spinLogLine("BG", spin), win > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: win / bet() });
@@ -924,6 +936,7 @@
         st.fg.win += spin.total;
         st.totalWin += spin.total; st.balance += spin.total;
         setWinShown(st.fg.base + st.fg.win);
+        { const i = st.fg.played, n = st.fg.total; say(() => `FG ${i}/${n} · ${spin.total > 0 ? `WIN ${fmt(spin.total)}` : tr("noWin")}`); }   // FG 每局結束（同 H032）
         appendLog(spinLogLine(`FG ${st.fg.played}/${st.fg.spins.length}`, spin), spin.total > 0 ? "cascade" : "info");
         if (spin.total > 0) { window.slotFx?.totalWin(fxLayer, tr("spinWin"), fmt(spin.total)); await wait(900); }
         // 黏著方塊顯示在下一局開始前的盤面
@@ -933,7 +946,6 @@
           appendLog(`FG complete | Total ${fmt(total)} (${(total / bet()).toFixed(2)}x)`, "result");
           window.demogameHistory?.record({ fg: total / bet() });
           window.demogameLineChart?.record((st.fg.base + total) / bet(), "NB");
-          say(() => tr("fgDone")(fmt(total)));
           st.fg = freshFg();
         }
         return true;
@@ -1022,7 +1034,7 @@
         });
         $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
         idleBoard();
-        say(() => tr("resetDone"));
+        say(() => tr("ready"));
         updateStats(); updateControls();
       }
 
@@ -1099,7 +1111,7 @@ FG 中出現 70 顆以上的 Cluster，立即獲得 2,500 倍押注（每段 FG 
   <script>window.DEMOGAME_HISTORY = true;</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 11:51";   // 最後調性更新（數學模型／權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Hacksaw Gaming Cubes", "expect": "盤面從 5×5 一路擴展到 11×11，中央乘數越疊越大。", "changes": []};</script>
-  <script src="../../../../demogame_common.js?v=20261112p"></script>
+  <script src="../../../../demogame_common.js?v=20261112t"></script>
   <script>window.cbBindCommonControls();</script>
 </body>
 
