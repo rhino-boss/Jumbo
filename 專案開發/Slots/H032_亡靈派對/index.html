@@ -1448,6 +1448,15 @@
 
     #controls button:disabled,
     #play-panel button:disabled,
+    /* 2026-11-12：EB／SF 先放按鈕、鎖住不給玩（製作中） */
+    #bet-mode-panel button.is-locked { position: relative; cursor: not-allowed; }
+    #bet-mode-panel .lock-icon { margin-right: 4px; font-size: 12px; }
+    /* 2026-11-12：四顆押注模式按鈕壓在同一行 */
+    #bet-mode-panel .zone-body { flex-wrap: nowrap !important; gap: 4px !important; }
+    #bet-mode-panel .zone-body button { flex: 1 1 0 !important; min-width: 0 !important; height: 40px !important; padding: 3px 4px !important; font-size: 11px !important; line-height: 1.2 !important; overflow: hidden; }
+    #bet-mode-panel .mode-price { display: block; font-size: 10px; opacity: .85; }
+    #bet-mode-panel .zone-body button { text-transform: none !important; }
+    #bet-mode-panel .lock-icon { margin-right: 2px; font-size: 10px; }
     #bet-mode-panel button:disabled {
       opacity: 0.4;
       cursor: default;
@@ -2350,7 +2359,9 @@
           <span class="zone-label">Bet Mode</span>
           <div class="zone-body">
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn is-locked" id="extraBetBtn" type="button" disabled title="尚未開放"><span class="lock-icon" aria-hidden="true">🔒</span><span class="lock-label">特殊押注</span><span class="mode-price">(2x)</span></button>
             <button id="buyFeatureBtn" type="button">Buy Feature (50x)</button>
+            <button class="is-locked" id="superFeatureBtn" type="button" disabled title="尚未開放"><span class="lock-icon" aria-hidden="true">🔒</span><span class="lock-label">超級特色</span><span class="mode-price">(300x)</span></button>
           </div>
         </section>
 
@@ -2435,6 +2446,7 @@
           <li>輪帶表改版：輪帶改回照 Super Ace 還原帶（只調權重）。BG 三張表：一般表、觸發表（只有這張能觸發 FG）、隱性好表（金色符號數差不多，但多落在容易連線的符號上，約一般表 1.5 倍）；FG 好表單轉約一般表 2.3 倍。另用停輪／補牌權重讓相鄰軸偏重不同符號，自然 RTP 壓回約 700%（卡片重轉次數與之前相當）。卡片權重依新自然機率重算。（11/11）</li>
           <li>FG Hit 拉高：FG 各表前三軸偏重 Q、J 窗格、補牌分組傾斜加大、金色符號出現率 ×0.75（好表 fg_3 維持較多金色符號，單轉約一般表 2.4 倍），套卡後 FG Hit 約 39% → 49%。補牌新規則：同一軸已有 C1 時不補 C1；bg_1／bg_3 補牌也會出 C1（只在各自的 C1 軸），bg_3 的 C1 改到第 3、5 軸（bg_1 為第 1、2 軸），兩張都不會觸發；觸發表 bg_2 含 C1 停點權重 ×1.6。卡片權重依新自然機率重算（平均重轉與其他款相當）。（11/12）</li>
           <li>演出：框倍數 +1 跳字放大為 2 倍，從框倍數位置浮到該格符號正中間再淡出。（11/12）</li>
+          <li>新框帶初始倍數：金色符號消除後留下的框，倍數從 1／2／3／5／10／20／30／50／100X 隨機抽（權重對標 DJ Boom Boom，1X 約 94%），NB 卡片重算；新增特殊押注（2x）與超級特色（300x）按鈕，尚未開放先上鎖。（11/12）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2578,7 +2590,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261112a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261112b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = new URLSearchParams(location.search).get("config")
@@ -3623,7 +3635,9 @@
   function applyLanguage() {
     $("gameId").textContent = cfg.online_game_id;
     $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
-    $("buyFeatureBtn").textContent = (state.language === "zh" ? "購買特色 (" : "Buy Feature (") + BUY.cost_multiplier + "x)";
+    $("buyFeatureBtn").innerHTML = (state.language === "zh" ? "購買特色" : "Buy Feature") + `<span class="mode-price">(${BUY.cost_multiplier}x)</span>`;
+    $("extraBetBtn").querySelector(".lock-label").textContent = state.language === "zh" ? "特殊押注" : "Extra Bet";
+    $("superFeatureBtn").querySelector(".lock-label").textContent = state.language === "zh" ? "超級特色" : "Super Feature";
     document.querySelectorAll("[data-h099-text]").forEach(node => { node.textContent = tr(node.dataset.h099Text); });
     if (state.featureKey) setFeatureStatus(state.featureKey);
     if ($("helpDialog").open && state.helpMarkdown) renderHelp(state.helpMarkdown);
@@ -3674,13 +3688,13 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-12 10:53";
-  window.DEMOGAME_LAST_CODE = "2026-11-12 13:32";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-12 13:32";
+  window.DEMOGAME_LAST_TUNING = "2026-11-12 14:52";
+  window.DEMOGAME_LAST_CODE = "2026-11-12 14:52";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-12 14:52";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
-  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下 1X 框", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金"]};</script>
-  <script src="../demogame_common.js?v=20261112p"></script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 100 倍；特殊押注 2 倍、超級特色 300 倍尚未開放（按鈕先鎖住）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Buy Feature 100x; Extra Bet 2x and Super Feature 300x are not open yet (buttons locked); no jackpot"]}};</script>
+  <script src="../demogame_common.js?v=20261112q"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
     (function () {

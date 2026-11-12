@@ -1225,10 +1225,13 @@
       const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
       const box = document.createElement("section");
       box.id = "demogame-overview";
-      const rows = (ov.changes || []).map((c) => `<li>${esc(c)}</li>`).join("");
+      // 2026-11-12：可加 ov.en = { expect, changes } 提供英文版；英文介面顯示 ov.en，沒給就照中文
+      const dual = (zhText, enText) => enText ? `<span class="ov-zh">${esc(zhText)}</span><span class="ov-en">${esc(enText)}</span>` : esc(zhText);
+      const en = ov.en || {};
+      const rows = (ov.changes || []).map((c, i) => `<li>${dual(c, (en.changes || [])[i])}</li>`).join("");
       box.innerHTML = `<h3 class="demogame-region-title">Game Overview</h3>`
         + (ov.competitor ? `<div class="ov-row"><span class="ov-k">${ov.label === "base" ? "Previous Title" : "Competitor"}</span><span class="ov-v">${esc(ov.competitor)}</span></div>` : "")
-        + (ov.expect ? `<div class="ov-row"><span class="ov-k">Expectation</span><span class="ov-v">${esc(ov.expect)}</span></div>` : "")
+        + (ov.expect ? `<div class="ov-row"><span class="ov-k">Expectation</span><span class="ov-v">${dual(ov.expect, en.expect)}</span></div>` : "")
         + (rows ? `<div class="ov-row"><span class="ov-k">Gameplay</span><ul class="ov-v">${rows}</ul></div>` : "");
       right.insertBefore(box, panel);
       const st = document.createElement("style");
@@ -1594,6 +1597,7 @@
     if (sharedApplying) return;
     sharedApplying = true;
     const zh = isZh();
+    document.body.classList.toggle("demogame-en", !zh);
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
       acceptNode: (n) => n.nodeType === 1
         ? (n.matches(SHARED_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP)
@@ -2096,6 +2100,8 @@
         border: 0 !important; background: rgba(12, 34, 64, 0.55) !important;
       }
       html body.slot-simulator #demogame-overview .ov-row > .ov-k { flex: 0 0 45px !important; width: 45px !important; min-width: 0 !important; }
+      html body.slot-simulator.demogame-en #demogame-overview .ov-row > .ov-k { flex: 0 0 84px !important; width: 84px !important; }
+      html body.demogame-en #demogame-overview .ov-zh, html body:not(.demogame-en) #demogame-overview .ov-en { display: none; }
       html body.slot-simulator #change-log-wrap #changeLogBody .change-log-entry.demogame-current-version { border: 0 !important; background: #0c2240 !important; }
 
       html body.slot-simulator #batch-simulation .batch-cascade-list, html body.slot-simulator #batch-simulation .batch-line-chart {
