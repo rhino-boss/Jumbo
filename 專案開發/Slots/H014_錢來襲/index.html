@@ -974,8 +974,7 @@
       hitReel(3);
       $("respinValue").textContent = fmt(rs.add);
       setScore(fmt(res.win), `重轉前 ${fmt(res.s1)} ＋ 重轉後 ${fmt(rs.add)} = ${fmt(res.win)}${rs.fallback ? "（固定組合）" : ""}`, true);
-      if (rs.add > 0) hitMessage(`Respin 1/1 · WIN ${fmt(rs.add)}`);
-      else setMessage(["Respin 1/1 · No Win", "Respin 1/1 · 未中獎"]);
+      if (rs.add > 0) hitMessage(`Respin 1/1 · WIN ${fmt(res.s1)} + ${fmt(rs.add)} = ${fmt(res.win)}`);
       showLiveWin(res.win);
       snapshot("Respin result");
     } else if (res.wheelIdx >= 0) {
@@ -993,7 +992,8 @@
       await wait(1100 / sp);
       hideWheel();
     }
-    setMessage(res.win > 0 ? `WIN ${fmt(res.win)}` : ["No Win", "未中獎"], res.win > 0 ? "win" : "");
+    // 局末：BG「WIN 總分／未中獎」；R4 倍數作用時保留「WIN 數字分 × 倍數 = 總分」（同 H032 轉末套倍數）、Respin 有加分時保留「Respin 1/1 · WIN 前 + 後 = 總分」
+    if (!(MULT[res.r4Sym] && res.s1 > 0) && !(res.r4Sym === S_RESPIN && res.respin.add > 0)) setMessage(res.win > 0 ? `WIN ${fmt(res.win)}` : ["No Win", "未中獎"], res.win > 0 ? "win" : "");
     state.view.liveWin = res.win;   // 最後一步＝局末得分
     snapshot("Result");
   }
@@ -1390,7 +1390,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金"]};</script>
-  <script src="../demogame_common.js?v=20261112t"></script>
+  <script src="../demogame_common.js?v=20261112u"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

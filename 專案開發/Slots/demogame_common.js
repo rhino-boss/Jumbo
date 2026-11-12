@@ -649,13 +649,8 @@
       + "body.slot-simulator #app-shell #bet-mode-panel .zone-body{display:flex!important;flex-wrap:nowrap!important;gap:6px!important}"
       + "body.slot-simulator #app-shell #bet-mode-panel .zone-body button{flex:0 1 88px!important;min-width:0!important;width:88px!important;height:34px!important;min-height:0!important;padding:2px 4px!important;font-size:11px!important;line-height:1.3!important;text-transform:none!important;white-space:normal!important;overflow:hidden}"
       + "body.slot-simulator #app-shell #bet-mode-panel .mode-price{display:block;margin-top:1px;font-size:9px;line-height:1.2;opacity:.85}"
-      // 未開放的模式：disabled＋.is-locked＋<span class=lock-chains>，兩條鎖鏈打叉、交點壓金色鎖頭（同 H032）；不半透明、不被購買鈕藍底蓋掉
-      + "body.slot-simulator #app-shell #bet-mode-panel button.is-locked,body.slot-simulator #app-shell #bet-mode-panel button.is-locked.demogame-buy-btn{position:relative;overflow:hidden;cursor:not-allowed;opacity:1!important;background:#121b28!important;color:#8d99a8!important;box-shadow:none!important}"
-      + "body.slot-simulator #app-shell #bet-mode-panel button.is-locked::before{content:'';position:absolute;left:50%;top:50%;width:15px;height:17px;margin:-8.5px 0 0 -7.5px;z-index:3;pointer-events:none;background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'%3E%3Cpath d='M4 8V5.5a4 4 0 0 1 8 0V8' fill='none' stroke='%23d8dee6' stroke-width='2'/%3E%3Crect x='1.5' y='7.5' width='13' height='10' rx='2' fill='%23f2c14e' stroke='%238a6a1c'/%3E%3Ccircle cx='8' cy='11.8' r='1.5' fill='%235a4510'/%3E%3Crect x='7.3' y='12.5' width='1.4' height='2.8' fill='%235a4510'/%3E%3C/svg%3E\") center/contain no-repeat;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.8))}"
-      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains{position:absolute;inset:0;pointer-events:none;z-index:1}"
-      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains::before,body.slot-simulator #app-shell #bet-mode-panel .lock-chains::after{content:'';position:absolute;left:-15%;right:-15%;top:50%;height:8px;margin-top:-4px;background:radial-gradient(ellipse 5.5px 3.4px at 50% 50%,transparent 50%,#e6ebf1 56%,#a9b4c2 80%,transparent 86%) 0 0/11px 8px repeat-x;filter:drop-shadow(0 0 1px #000) drop-shadow(0 1px 1px rgba(0,0,0,.9))}"
-      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains::before{transform:rotate(22deg)}"
-      + "body.slot-simulator #app-shell #bet-mode-panel .lock-chains::after{transform:rotate(-22deg)}";
+      // 未開放的模式：disabled＋.is-locked，不能按、直接壓黑（2026-11-12 使用者，同 H032）；不半透明、不被購買鈕藍底蓋掉
+      + "body.slot-simulator #app-shell #bet-mode-panel button.is-locked,body.slot-simulator #app-shell #bet-mode-panel button.is-locked.demogame-buy-btn{cursor:not-allowed;opacity:1!important;background:#0b111a!important;color:#4a5563!important;box-shadow:none!important}";
     document.head.appendChild(style);
     // 按鈕文字「名稱 (2x)」拆成名稱＋倍數小字（遊戲切語言重寫文字時會再拆一次）；已有 .mode-price 的不動
     const splitPrice = () => panel.querySelectorAll(".zone-body button").forEach((btn) => {
