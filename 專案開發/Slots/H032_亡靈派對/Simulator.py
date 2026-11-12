@@ -474,11 +474,16 @@ class CalaveraParty:
                 keep = [(symbols[reel][row], yellow[reel][row]) for row in range(4) if symbols[reel][row] != EMPTY]
                 if len(keep) == 4:
                     continue
+                # 2026-11-12：該軸已有 C1 時補牌不補 C1（每軸最多一顆 C1）
+                has_c1 = any(symbol == C1 for symbol, _ in keep)
                 for row in range(4):
                     if row < len(keep):
                         symbols[reel][row], yellow[reel][row] = keep[row]
                     else:
                         symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
+                        while has_c1 and symbol == C1:
+                            symbol = int(_pick(self.rng, table.drop_values[reel], table.drop_cumulative[reel], table.drop_total[reel]))
+                        has_c1 |= symbol == C1
                         symbols[reel][row] = symbol
                         yellow[reel][row] = self.roll_yellow(table, reel, symbol, True, late)
                         result.yellow_seen |= yellow[reel][row] > 0
