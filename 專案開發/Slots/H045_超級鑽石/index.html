@@ -2732,15 +2732,16 @@
   const WW = 0, W2 = 1, C1 = 2;
   const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
-  // 符號圖片沿用幸運王牌（H016）同一套：Source/Image/*.webp；金框格改用 G1～G8 金框版圖
-  const H045_IMAGE_ROOT = "./Source/Image/";
+  // 符號圖片用超級鑽石正式美術（game_spec 101015 07_美術素材_GameView/01_符號_Symbols_滿版，2026-11-12 換上）：Source/Image/SuperDiamond/*.png；金框格用 *_G 金框版
+  // 舊版快照（Versions/*）仍引用 Source/Image/*.webp（H016 圖），不要刪
+  const H045_IMAGE_ROOT = "./Source/Image/SuperDiamond/";
   const SYMBOL_ASSET = {
-    WW: "W1_Symbol.webp", W2: "W2_Symbol.webp", C1: "C1_Symbol.webp",
-    M1: "M1_Symbol.webp", M2: "M2_Symbol.webp", M3: "M3_Symbol.webp", M4: "M4_Symbol.webp",
-    A: "M5_Symbol.webp", K: "M6_Symbol.webp", Q: "M7_Symbol.webp", J: "M8_Symbol.webp"
+    WW: "WW1.png", W2: "WW2.png", C1: "C1.png",
+    M1: "M1.png", M2: "M2.png", M3: "M3.png", M4: "M4.png",
+    A: "A.png", K: "K.png", Q: "Q.png", J: "J.png"
   };
-  const GOLD_ASSET = { M1: "G1_Symbol.webp", M2: "G2_Symbol.webp", M3: "G3_Symbol.webp", M4: "G4_Symbol.webp",
-    A: "G5_Symbol.webp", K: "G6_Symbol.webp", Q: "G7_Symbol.webp", J: "G8_Symbol.webp" };
+  const GOLD_ASSET = { M1: "M1_G.png", M2: "M2_G.png", M3: "M3_G.png", M4: "M4_G.png",
+    A: "A_G.png", K: "K_G.png", Q: "Q_G.png", J: "J_G.png" };
   window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ASSET).map(([c, f]) => [c, H045_IMAGE_ROOT + f]));   // Help 賠率表符號圖（共用 demogame_common.js）
   let useSymbolImages = true;
   let lastBoardRender = null;
@@ -4267,7 +4268,7 @@
   <script>window.DEMOGAME_REPORT_URL = (window.H045_BASE_DIR || "./") + "report.html";</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-09 11:08";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_LAST_CODE = "2026-11-09 11:08";   // 程式最後調整（index／Simulator／共用程式）
-  window.DEMOGAME_LAST_UPDATE = "2026-11-09 11:08";   // 任何東西最後調整（數學、程式、文件）</script>
+  window.DEMOGAME_LAST_UPDATE = "2026-11-12 14:26";   // 任何東西最後調整（數學、程式、文件）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "連消推高倍數階梯，金框翻出帶倍數的 Wild 接連得分。", "changes": ["連消倍數階梯多一階：主遊戲最高 ×10、免費遊戲最高 ×20", "翻出的 Wild 可帶 ×2／×3／×5 倍數（Super Ace 的 Wild 不帶倍數）", "免費遊戲也會翻出大鬼且不限次數（Super Ace 免費遊戲只有小鬼）", "Extra Bet 為 2 倍押注，免費遊戲出現率是一般押注的 5 倍", "Buy Feature 改為 50 倍押注（Super Ace 是 40.5 倍）", "加入 OP Jackpot"]};</script>
   <script src="../demogame_common.js?v=20261112p"></script>
 </body>
