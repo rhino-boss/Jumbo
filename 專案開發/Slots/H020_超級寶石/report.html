@@ -111,13 +111,15 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
 .kpi-card .kpis{margin:10px 0 0}
-/*表格不折行（2026-11-11 使用者）：寬度不夠就左右滑動，不要擠成一字一行變很高；長說明文字（.wrap）才折行*/
+/*表格不折行（2026-11-11／11-12 使用者）：所有格子都不換行、不壓縮；卡片放不下就左右拖曳捲動（不顯示捲軸）*/
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
-.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em;max-width:16em}
-/*表格版面固定（2026-11-11 使用者）：欄寬只看內容、不隨畫面寬度伸縮，相對位置不變；放不下就左右捲動，滑鼠可按住拖曳*/
-.card table,.subcard table,.intro table{width:max-content;max-width:none}
+/*表格寬度（2026-11-12 使用者）：寬度依內容（內容少就比卡片小，不硬撐滿）；比卡片寬時不壓縮，滑鼠按住左右拖曳*/
+.card table,.subcard table,.intro table{width:max-content;min-width:0;max-width:none}
 .tbl-wrap.dragging,.tbl-scroll.dragging{cursor:grabbing;user-select:none}
+/*不顯示捲軸（2026-11-11 使用者）：用拖曳／手指滑動／觸控板左右捲*/
+.tbl-wrap,.tbl-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.tbl-wrap::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{display:none}
 </style></head><body><div class="wrap">
 <a class="back" href="./index.html" id="backLink">← 返回 Demo</a><script>(function(){var a=document.getElementById("backLink");if(document.referrer&&/index\.html|\/H020_/.test(document.referrer)){a.addEventListener("click",function(e){e.preventDefault();history.back()})}})();</script><header><div class="eyebrow">Omniplay · 數值報告</div><h1>超級寶石 Super Gems</h1></header>
 <div aria-label="章節" class="tabs" role="tablist"><button aria-controls="panel-0" aria-selected="true" class="tab" id="tab-0" role="tab" tabindex="0">1. 基本資訊</button><button aria-controls="panel-1" aria-selected="false" class="tab" data-notes="1" id="tab-1" role="tab" tabindex="-1">2. 玩法說明</button><button aria-controls="panel-2" aria-selected="false" class="tab" id="tab-2" role="tab" tabindex="-1">3. 共同指標</button><button aria-controls="panel-3" aria-selected="false" class="tab" id="tab-3" role="tab" tabindex="-1">4. 特殊指標</button><button aria-controls="panel-4" aria-selected="false" class="tab" id="tab-4" role="tab" tabindex="-1">5. 倍率線型</button><button aria-controls="panel-5" aria-selected="false" class="tab" data-notes="1" id="tab-5" role="tab" tabindex="-1">6. 修改紀錄</button><button aria-controls="panel-6" aria-selected="false" class="tab" data-notes="1" id="tab-6" role="tab" tabindex="-1">7. 其他</button></div><section aria-labelledby="tab-0" class="panel" id="panel-0" role="tabpanel"><div class="card kpi-card"><h3>主要指標</h3><div class="kpis" id="hero-kpis"><div class="kpi"><span class="lab">總 RTP</span><span class="val">91.00%</span></div><div class="kpi"><span class="lab">BG Hit Rate</span><span class="val">11.29%</span></div><div class="kpi"><span class="lab">BF RTP</span><span class="val">91.98%</span></div></div></div><div class="card"><h3>遊戲簡介</h3><p>3×3 盤面、5 條固定線，同一條線 3 個相同符號才得分，WW（Wild）可替代所有符號。右側特色轉輪 R4 每轉停出一個倍數（最高 500X），有得分時線獎乘上倍數；停到重轉球且有得分時觸發重轉，連續停出 3～50 個倍數全部相加後再乘線獎。沒有免費遊戲；Super Feature 以 250 倍押注購買，一次 5 轉，每轉 R4 的倍數會累加到下一轉。另有 OP Jackpot，由轉輪上的重轉球隨機觸發。</p></div>
@@ -164,7 +166,7 @@ if(cells.length<3||max<=0)return;cells.forEach(function(p){var w=Math.max(0,Math
 (function(){
   document.querySelectorAll('table').forEach(function(tb){
     if(!tb.closest('.tbl-wrap,.tbl-scroll')){var w=document.createElement('div');w.className='tbl-scroll';tb.parentNode.insertBefore(w,tb);w.appendChild(tb);}
-    tb.querySelectorAll('td').forEach(function(td){if(td.textContent.trim().length>28)td.classList.add('wrap');});
+    tb.querySelectorAll('td.wrap').forEach(function(td){td.classList.remove('wrap');});   /*舊版加的 wrap 會吃到頁面外框 .wrap 樣式，一律拿掉*/
   });
   document.querySelectorAll('.tbl-wrap,.tbl-scroll').forEach(function(w){
     var x0,s0,on=false,moved=false;

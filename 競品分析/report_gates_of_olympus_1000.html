@@ -441,18 +441,20 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
 .kpi-card .kpis{margin:10px 0 0}
-/*表格不折行（2026-11-11 使用者）：寬度不夠就左右滑動，不要擠成一字一行變很高；長說明文字（.wrap）才折行*/
+/*表格不折行（2026-11-11／11-12 使用者）：所有格子都不換行、不壓縮；卡片放不下就左右拖曳捲動（不顯示捲軸）*/
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
-.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em;max-width:16em}
-/*表格版面固定（2026-11-11 使用者）：欄寬只看內容、不隨畫面寬度伸縮，相對位置不變；放不下就左右捲動，滑鼠可按住拖曳*/
-.card table,.subcard table,.intro table{width:max-content;max-width:none}
+/*表格寬度（2026-11-12 使用者）：寬度依內容（內容少就比卡片小，不硬撐滿）；比卡片寬時不壓縮，滑鼠按住左右拖曳*/
+.card table,.subcard table,.intro table{width:max-content;min-width:0;max-width:none}
 .tbl-wrap.dragging,.tbl-scroll.dragging{cursor:grabbing;user-select:none}
+/*不顯示捲軸（2026-11-11 使用者）：用拖曳／手指滑動／觸控板左右捲*/
+.tbl-wrap,.tbl-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.tbl-wrap::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{display:none}
 </style><script id="card-v2-js">
 (function(){
   document.querySelectorAll('table').forEach(function(tb){
     if(!tb.closest('.tbl-wrap,.tbl-scroll')){var w=document.createElement('div');w.className='tbl-scroll';tb.parentNode.insertBefore(w,tb);w.appendChild(tb);}
-    tb.querySelectorAll('td').forEach(function(td){if(td.textContent.trim().length>28)td.classList.add('wrap');});
+    tb.querySelectorAll('td.wrap').forEach(function(td){td.classList.remove('wrap');});   /*舊版加的 wrap 會吃到頁面外框 .wrap 樣式，一律拿掉*/
   });
   document.querySelectorAll('.tbl-wrap,.tbl-scroll').forEach(function(w){
     var x0,s0,on=false,moved=false;

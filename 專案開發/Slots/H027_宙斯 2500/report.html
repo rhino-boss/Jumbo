@@ -112,16 +112,17 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .card:has(>.chart):not(:has(>.chart~.chart))>h3+p{margin:0 0 4px;font-size:13px;color:var(--ink-3)}
 .kpi .sub{font-size:11.5px;color:var(--ink-3)}
 .kpi-card .kpis{margin:10px 0 0}
-/*表格不折行（2026-11-11 使用者）：寬度不夠就左右滑動，不要擠成一字一行變很高；長說明文字（.wrap）才折行*/
+/*表格不折行（2026-11-11／11-12 使用者）：所有格子都不換行、不壓縮；卡片放不下就左右拖曳捲動（不顯示捲軸）*/
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
-.card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em;max-width:16em}
-/*表格版面固定（2026-11-11 使用者）：欄寬只看內容、不隨畫面寬度伸縮，相對位置不變；放不下就左右捲動，滑鼠可按住拖曳*/
-.card table,.subcard table,.intro table{width:max-content;max-width:none}
+/*表格寬度（2026-11-12 使用者）：寬度依內容（內容少就比卡片小，不硬撐滿）；比卡片寬時不壓縮，滑鼠按住左右拖曳*/
+.card table,.subcard table,.intro table{width:max-content;min-width:0;max-width:none}
 .tbl-wrap.dragging,.tbl-scroll.dragging{cursor:grabbing;user-select:none}
+/*不顯示捲軸（2026-11-11 使用者）：用拖曳／手指滑動／觸控板左右捲*/
+.tbl-wrap,.tbl-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.tbl-wrap::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{display:none}
 </style></head><body><div class="wrap">
 <a class="back" href="./index.html" id="backLink">← 返回 Demo</a><script>(function(){var a=document.getElementById("backLink");if(document.referrer&&/index\.html|\/H027_/.test(document.referrer)){a.addEventListener("click",function(e){e.preventDefault();history.back()})}})();</script><header><div class="eyebrow">Omniplay · 數值報告</div><h1>宙斯 2500 Zeus 2500</h1></header>
-
 <div aria-label="章節" class="tabs" role="tablist"><button aria-controls="panel-0" aria-selected="true" class="tab" id="tab-0" role="tab" tabindex="0">1. 基本資訊</button><button aria-controls="panel-1" aria-selected="false" class="tab" data-notes="1" id="tab-1" role="tab" tabindex="-1">2. 玩法說明</button><button aria-controls="panel-2" aria-selected="false" class="tab" id="tab-2" role="tab" tabindex="-1">3. 共同指標</button><button aria-controls="panel-3" aria-selected="false" class="tab" id="tab-3" role="tab" tabindex="-1">4. 特殊指標</button><button aria-controls="panel-4" aria-selected="false" class="tab" id="tab-4" role="tab" tabindex="-1">5. 倍率線型</button><button aria-controls="panel-5" aria-selected="false" class="tab" data-notes="1" id="tab-5" role="tab" tabindex="-1">6. 修改紀錄</button><button aria-controls="panel-6" aria-selected="false" class="tab" data-notes="1" id="tab-6" role="tab" tabindex="-1">7. 其他</button></div>
 <section aria-labelledby="tab-0" class="panel" id="panel-0" role="tabpanel"><div class="card kpi-card"><h3>主要指標</h3><div class="kpis" id="hero-kpis"><div class="kpi"><span class="lab">總 RTP</span><span class="val">91.85%</span></div><div class="kpi"><span class="lab">BG RTP</span><span class="val">71.96%</span></div><div class="kpi"><span class="lab">FG RTP</span><span class="val">19.89%</span></div><div class="kpi"><span class="lab">BG Hit Rate</span><span class="val">28.19%</span></div><div class="kpi"><span class="lab">FG Hit Rate</span><span class="val">43.75%</span></div><div class="kpi"><span class="lab">FG 週期</span><span class="val">1/451.9</span></div><div class="kpi"><span class="lab">FG 平均倍數</span><span class="val">89.86x</span></div><div class="kpi"><span class="lab">BF RTP</span><span class="val">92.52%</span></div></div></div><div class="card"><h3>遊戲簡介</h3><p>6 輪 5 列 Pay Anywhere：同一符號全盤 8 個以上即中獎，中獎符號消除後掉落補位（Cascade）。倍數球 C2／C3 帶 2x～2500x，C3 每次消除升一級，結算時全盤倍數相加後乘一般符號總得分。4 個以上 Scatter 觸發 15 場免費遊戲，3 個以上加 5 場、最多 50 場，FG 倍數跨場累積。Buy Feature 100 倍押注；Extra Bet 2 倍押注。</p></div>
 <div class="card"><h3>比較對象</h3><div class="tbl-wrap"><table><thead><tr><th>類別</th><th>遊戲</th><th>為什麼比</th></tr></thead><tbody><tr><td>競品</td><td>Gates of Olympus 1000（Pragmatic Play）</td><td>本作的玩法原型（6×5 Pay Anywhere＋Cascade＋倍數球、FG 倍數跨場累積、Buy Feature 100 倍），調性與尾端以它為對標目標。</td></tr><tr><td>前作</td><td>—</td><td>目前沒有前作。</td></tr><tr><td>同系列</td><td>—</td><td>目前沒有同系列作品。</td></tr></tbody></table></div><p>本報告同時比較 Zeus 2500 的 A 版與 B 版（表頭 Zeus 2500＝A 版、Zeus 2500 B＝B 版）：兩版只差 BG 倍數球率與 BG 上限（FG／BF 相同），用來看 BG 調性差異；送驗送 B 版（見 <code>注意事項.md</code> 第 7 項）。</p></div>
@@ -201,7 +202,7 @@ if(cells.length<3||max<=0)return;cells.forEach(function(p){var w=Math.max(0,Math
 (function(){
   document.querySelectorAll('table').forEach(function(tb){
     if(!tb.closest('.tbl-wrap,.tbl-scroll')){var w=document.createElement('div');w.className='tbl-scroll';tb.parentNode.insertBefore(w,tb);w.appendChild(tb);}
-    tb.querySelectorAll('td').forEach(function(td){if(td.textContent.trim().length>28)td.classList.add('wrap');});
+    tb.querySelectorAll('td.wrap').forEach(function(td){td.classList.remove('wrap');});   /*舊版加的 wrap 會吃到頁面外框 .wrap 樣式，一律拿掉*/
   });
   document.querySelectorAll('.tbl-wrap,.tbl-scroll').forEach(function(w){
     var x0,s0,on=false,moved=false;
