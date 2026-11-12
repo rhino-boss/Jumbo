@@ -1786,6 +1786,39 @@
 
   setTimeout(setupAddCredit, 0);
 
+  // ===== FG 剩餘場次寫在得分（Win）格（共用，2026-11-12 使用者）=====
+  // 各遊戲狀態列的 #fgLeftPill（FG Left 7/12）不再放盤面上方，改在得分標籤右邊顯示「FG 7/12」；FG 沒在跑（膠囊隱藏）就不顯示。
+  function setupFgLeftInWin() {
+    const pill = document.getElementById("fgLeftPill");
+    const value = document.getElementById("winValue");
+    const cell = value?.parentElement;
+    if (!pill || !cell || document.getElementById("demogameFgLeft")) return;
+    const style = document.createElement("style");
+    style.textContent = `#demogameFgLeft{display:inline;margin:0 0 0 8px;padding:0;color:#ffd36b;font:inherit;font-weight:700;letter-spacing:0;white-space:nowrap}
+      #demogameFgLeft[hidden]{display:none}`;
+    document.head.appendChild(style);
+    const tag = document.createElement("span");
+    tag.id = "demogameFgLeft";
+    tag.hidden = true;
+    const attach = () => {
+      if (tag.isConnected) return;
+      const label = [...cell.children].find((n) => n !== value && n !== tag && n.textContent.trim());
+      if (label) label.appendChild(tag); else value.insertAdjacentElement("beforebegin", tag);
+    };
+    const sync = () => {
+      const on = !pill.classList.contains("hidden") && !pill.hidden && !pill.classList.contains("demogame-removed");   // 狀態列本身被隱藏，只看膠囊自己的開關
+      const v = (pill.querySelector(".v")?.textContent || "").trim();
+      tag.textContent = v ? `FG ${v}` : "";
+      tag.hidden = !(on && v);
+      attach();
+    };
+    sync();
+    new MutationObserver(sync).observe(pill, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] });
+    new MutationObserver(attach).observe(cell, { childList: true, subtree: true });
+  }
+
+  setTimeout(setupFgLeftInWin, 0);
+
   // ===== 空白鍵＝Spin（共用，2026-11-11 使用者）=====
   // 空白鍵一律只觸發 Spin，鎖住瀏覽器預設（整頁往下捲、按到焦點所在的按鈕／勾選框）。
   // 在 window 捕獲階段處理並 stopImmediatePropagation，各遊戲自己的空白鍵監聽不會再收到，避免重複 Spin。
@@ -1833,6 +1866,35 @@
       e.preventDefault();
       e.stopImmediatePropagation();
     }, true);
+
+    // 2026-11-12 使用者：長按 SPIN 鍵也一直 Spin（同空白鍵）—— 按住 0.4 秒進入連續 Spin，放開即停；短按照常只 Spin 一次。
+    // 進入連續模式時先由這裡按第一下，放開時瀏覽器補的那一下 click 擋掉（不會多轉一局）。
+    let pressTimer = 0, pressHold = false, swallowClick = false;
+    const endPress = () => { clearTimeout(pressTimer); pressTimer = 0; if (pressHold) { pressHold = false; swallowClick = true; setTimeout(() => { swallowClick = false; }, 400); stopHold(); } };
+    addEventListener("pointerdown", (e) => {
+      const spin = e.target.closest?.("#spinBtn");
+      if (!spin || spin.disabled || e.button !== 0) return;
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        pressTimer = 0;
+        if (blocked()) return;
+        pressHold = true;
+        const btn = document.getElementById("spinBtn");
+        if (btn && !btn.disabled) btn.click();
+        stopHold(); holding = true; window.demogameSpaceHolding = true; timer = setInterval(tick, 40);
+      }, 400);
+    }, true);
+    addEventListener("pointerup", endPress, true);
+    addEventListener("pointercancel", endPress, true);
+    addEventListener("mouseup", endPress, true);
+    // 保險：Spin 鈕轉動中是 disabled，部分瀏覽器不把放開事件送到 disabled 按鈕 —— 移動時發現已沒按著就停
+    addEventListener("pointermove", (e) => { if ((pressHold || pressTimer) && e.buttons === 0) endPress(); }, true);
+    document.addEventListener("mouseleave", endPress);
+    addEventListener("blur", endPress);
+    addEventListener("click", (e) => {
+      if (swallowClick && e.isTrusted && e.target.closest?.("#spinBtn")) { swallowClick = false; e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+    document.getElementById("spinBtn")?.addEventListener("contextmenu", (e) => e.preventDefault());   // 觸控長按不跳選單
   })();
 
   // ===== 除錯模式：← ＝ Previous、→ ＝ Next（共用，2026-11-12 使用者）=====
@@ -2124,7 +2186,7 @@
             && !p.classList.contains("demogame-removed") && p.textContent.trim());
           const items = pills.map((p) => {
             const k = p.querySelector(".k")?.textContent.trim() ?? "", v = p.querySelector(".v")?.textContent.trim() ?? p.textContent.trim();
-            return { k, v };
+            return { k, v, id: p.id };
           });
           const sig = items.map((i) => i.k).join("|"), vals = items.map((i) => i.v).join("|");
           if (sig !== lastSig) {
@@ -2134,6 +2196,7 @@
           bar.querySelectorAll(".dib-item").forEach((el, i) => {
             el.querySelector(".dib-k").textContent = items[i].k;
             el.querySelector(".dib-v").textContent = items[i].v;
+            el.dataset.src = items[i].id;
           });
           bar.hidden = !items.length;
           if (lastVals && vals !== lastVals && sig === lastSig) { bar.classList.remove("fx-bar-hit"); void bar.offsetWidth; bar.classList.add("fx-bar-hit"); }
@@ -2141,6 +2204,12 @@
         };
         sync();
         new MutationObserver(sync).observe(strip, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] });
+        // 2026-11-12：狀態列隱藏後，遊戲的飛行／跳動動畫要改對準上方資訊條裡的鏡射膠囊，否則會飛到畫面左上角
+        window.demogameFxTarget = (id) => {
+          const src = $id(id);
+          if (src && src.getClientRects().length) return src;
+          return bar.querySelector(`.dib-item[data-src="${id}"]`) || src;
+        };
       }
     }
 

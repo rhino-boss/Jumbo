@@ -589,6 +589,8 @@
       const sumPill = $("sumPill");
       const sumValueEl = $("sumValue");
       function setSum(v) { sumValueEl.textContent = v; }
+      // 2026-11-12：狀態列已隱藏，飛行動畫對準上方資訊條裡鏡射的 Sum
+      const sumFxEl = () => window.demogameFxTarget?.("sumPill")?.querySelector?.(".dib-v") || sumValueEl;
 
       // ── 盤面生成：逐格加權抽取（無 reel stop）；同一輪最多 1 顆 C1 ─────────
       function randomBoard(scChance, forceScatters = 0) {
@@ -1003,7 +1005,7 @@
         }
         if (!sources.length) { setSum(toSum); return; }
         const layerRect = fxLayer.getBoundingClientRect();
-        const bRect = sumValueEl.getBoundingClientRect();
+        const bRect = sumFxEl().getBoundingClientRect();
         const tx = bRect.left - layerRect.left + bRect.width / 2;
         const ty = bRect.top - layerRect.top + bRect.height / 2;
         const flyMs = Math.max(200, 520 / speed());
@@ -1057,7 +1059,7 @@
         return bar.getBoundingClientRect();
       }
       async function flySumToWin(text) {
-        const from = sumValueEl.getBoundingClientRect(), to = scoreTextRect();
+        const from = sumFxEl().getBoundingClientRect(), to = scoreTextRect();
         const flyMs = Math.max(220, 560 / speed());
         const tok = document.createElement("span");
         tok.className = "tc-plus-token";
@@ -1731,7 +1733,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除"]};</script>
-  <script src="../demogame_common.js?v=20261112m"></script>
+  <script src="../demogame_common.js?v=20261112p"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

@@ -2035,6 +2035,7 @@
           <li>結果（自然機率，收集 8%）：一般押注 247.5%（±13.0%，10⁶ 局）、Hit Rate 45.1%、FG 1/223；Extra Bet 128.1%（±8.0%，10⁶ 局）；Buy Feature 24.5%（±1.9%，5×10⁴ 局）。BG 單轉 Hit Rate 45.1%、FG 單轉約 45%；收集一次平均收 1.6 個倍數。（11/11）</li>
           <li>盤面（含頂端半列）最多同時 1 個「收集」：已有收集時，新出現的金框只抽倍數或空金框，收集被消除用掉後才會再出現。結果（自然機率，收集 8%）：一般押注 240.6%（±11.1%，10⁶ 局）、Hit Rate 45.2%、FG 1/218；Extra Bet 122.7%（±6.6%，10⁶ 局）。（11/11）</li>
           <li>倍數金框被消除時倍數也累積（同 H026）；同段也消到收集時，該倍數被收集算一次、自己消除再算一次。結果（自然機率，收集 8%）：一般押注 1,443.2%（±46.0%，10⁶ 局）、Extra Bet 697.0%（±20.3%，10⁶ 局）、Hit Rate 45.1%、FG 1/221；超過 500% 目標，待決定壓法。（11/11）</li>
+          <li>FG 金框必定帶倍數或「收集」：FG 三表空金框權重依比例分給 x2～x8（總權重、x500、x1000 不變）。結果（自然機率，收集 8%）：一般押注 1,406.3%（±39.7%，10⁶ 局，FG RTP 83.3%、FG 平均 179 倍）、Extra Bet 712.0%（±21.5%，10⁶ 局）、Hit Rate 45.2%、FG 1/215。（11/12）</li>
         </ol>
       </article>
       </div>
@@ -2188,6 +2189,7 @@
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
 | 規則說明 | 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [C1]，將觸發免費遊戲，並分別獲得 {12}、{14} 或 {16} 場免費遊戲。 | WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
 | 規則說明 | 免費遊戲期間，累積倍數不會重置，並會持續保留到整段免費遊戲結束。 | DURING FREE GAME, THE ACCUMULATED MULTIPLIER IS NOT RESET BETWEEN SPINS AND IS CARRIED OVER UNTIL THE ENTIRE FREE GAME ENDS. |
+| 規則說明 | 免費遊戲期間，金框必定帶有倍數或「收集」。 | DURING FREE GAME, EVERY GOLD FRAME CARRIES A MULTIPLIER OR COLLECT. |
 | 規則說明 | 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
 | 規則說明 | 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {12}、{14} 或 {16} 場免費遊戲。 | FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {12}, {14}, OR {16} FREE SPINS RESPECTIVELY. |
 
@@ -4386,7 +4388,7 @@
     function finishRunningFx() {
       document.getAnimations().forEach((anim) => {
         const target = anim.effect?.target;
-        if (!target || !(boardEl.contains(target) || target.classList?.contains("pbc-fly") || target.id === "multPill")) return;
+        if (!target || !(boardEl.contains(target) || target.classList?.contains("pbc-fly") || target.id === "multPill" || target.classList?.contains("dib-item"))) return;
         try { anim.finish(); } catch (_) { anim.cancel(); }
       });
       document.querySelectorAll(".pbc-fly").forEach((chip) => chip.remove());
@@ -4424,7 +4426,7 @@
         .filter(([row, col]) => step.board_before[row]?.[col]?.multiplier === COLLECT)
         .map(([row, col]) => cellAt(row, col))
         .filter(Boolean);
-      const multPill = document.getElementById("multPill");
+      const multPill = window.demogameFxTarget?.("multPill") || document.getElementById("multPill");   // 狀態列已隱藏，對準上方資訊條的 Mult
       if (!collectCells.length || !multPill) return;
       const hub = rectCenter(collectCells[0]);
       const collectBadge = collectCells[0].querySelector(".multi-badge.pbc-collect");
@@ -4474,7 +4476,7 @@
     // 倍數金框被消除：倍數直接飛進上方 Mult，每到一個 Mult 就加上去
     async function animateSelfFlight(step, startMultiplier) {
       const columns = step.board_before[0]?.length || Box.reel_num;
-      const multPill = document.getElementById("multPill");
+      const multPill = window.demogameFxTarget?.("multPill") || document.getElementById("multPill");   // 狀態列已隱藏，對準上方資訊條的 Mult
       if (!multPill || state.debugSkipPlayback) return;
       const target = rectCenter(multPill);
       let running = startMultiplier;
@@ -4503,7 +4505,7 @@
     }
 
     function popMultPill() {
-      document.getElementById("multPill")?.animate([
+      (window.demogameFxTarget?.("multPill") || document.getElementById("multPill"))?.animate([
         { transform: "scale(1)", boxShadow: "0 0 0 rgba(255,208,90,0)" },
         { transform: "scale(1.35)", boxShadow: "0 0 18px 6px rgba(255,208,90,0.85)" },
         { transform: "scale(1)", boxShadow: "0 0 0 rgba(255,208,90,0)" }
@@ -4961,10 +4963,10 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-11 11:14";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-12 14:11";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來（至少收到 1 個）", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
-  <script src="../../../../demogame_common.js?v=20261112m"></script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來（至少收到 1 個）", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "FG 金框必定帶倍數或「收集」（不出空金框）", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
+  <script src="../../../../demogame_common.js?v=20261112p"></script>
 </body>
 
 </html>
