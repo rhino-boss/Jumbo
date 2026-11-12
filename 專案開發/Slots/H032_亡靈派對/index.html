@@ -2251,6 +2251,7 @@
           <li>演出順序改為：消除符號 → 收集倍數 → 算分 → 補牌掉落時所有框同時 +1、金色符號留新框。計分規則不變。（11/11）</li>
           <li>輪帶表改版：輪帶改回照 Super Ace 還原帶（只調權重）。BG 三張表：一般表、觸發表（只有這張能觸發 FG）、隱性好表（金色符號數差不多，但多落在容易連線的符號上，約一般表 1.5 倍）；FG 好表單轉約一般表 2.3 倍。另用停輪／補牌權重讓相鄰軸偏重不同符號，自然 RTP 壓回約 700%（卡片重轉次數與之前相當）。卡片權重依新自然機率重算。（11/11）</li>
           <li>FG Hit 拉高：FG 各表前三軸偏重 Q、J 窗格、補牌分組傾斜加大、金色符號出現率 ×0.75（好表 fg_3 維持較多金色符號，單轉約一般表 2.4 倍），套卡後 FG Hit 約 39% → 49%。補牌新規則：同一軸已有 C1 時不補 C1；bg_1／bg_3 補牌也會出 C1（只在各自的 C1 軸），bg_3 的 C1 改到第 3、5 軸（bg_1 為第 1、2 軸），兩張都不會觸發；觸發表 bg_2 含 C1 停點權重 ×1.6。卡片權重依新自然機率重算（平均重轉與其他款相當）。（11/12）</li>
+          <li>演出：框倍數 +1 跳字放大為 2 倍，從框倍數位置浮到該格符號正中間再淡出。（11/12）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2544,8 +2545,8 @@
       background:linear-gradient(180deg,rgba(255,40,40,.12),rgba(255,20,20,.04));
       box-shadow:0 0 12px rgba(255,30,30,.75),inset 0 0 12px rgba(255,40,40,.35)}
     /* 框內消除 +1 的跳字 */
-    .slot-fx-layer .fx-plus-one{position:absolute;z-index:62;pointer-events:none;white-space:nowrap;font:900 16px/1 system-ui,sans-serif;color:#fff;
-      text-shadow:0 0 6px rgba(255,40,40,.95),0 1px 2px rgba(0,0,0,.8)}
+    .slot-fx-layer .fx-plus-one{position:absolute;z-index:62;pointer-events:none;white-space:nowrap;font:900 32px/1 system-ui,sans-serif;color:#fff;
+      text-shadow:0 0 10px rgba(255,40,40,.95),0 0 6px rgba(255,40,40,.95),0 1px 2px rgba(0,0,0,.8)}
     /* 黃底倍數落入框的飛行體 */
     .slot-fx-layer .fx-gold-drop{position:absolute;z-index:61;display:grid;place-items:center;pointer-events:none;white-space:nowrap;
       font:800 13px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#ffe49a,#c8900f);border:1px solid #fff0b8;
@@ -3095,16 +3096,23 @@
     const fxLayer = window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
     if (!fxLayer || !keys.length) return;
     const speed = Number($("speedRange").value || 1);
-    const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(260, 620 / speed);
+    // 2026-11-12：字放大 2 倍，從框倍數位置跳出後浮到該格符號正中間再淡出
+    const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(420, 1000 / speed);
     $("board").querySelectorAll(".frame-layer").forEach(frame => {
       if (!keys.includes(frame.dataset.key)) return;
       const badge = frame.querySelector(".frame-badge").getBoundingClientRect();
+      const cell = frame.getBoundingClientRect();
+      const cx = cell.left - layerRect.left + cell.width / 2, cy = cell.top - layerRect.top + cell.height / 2;
       const pop = document.createElement("div");
       pop.className = "fx-plus-one"; pop.textContent = "+1";
-      pop.style.cssText = `left:${badge.left - layerRect.left + badge.width / 2}px;top:${badge.top - layerRect.top - 4}px`;
+      const x = badge.left - layerRect.left + badge.width / 2, y = badge.top - layerRect.top;
+      pop.style.cssText = `left:${x}px;top:${y}px`;
       fxLayer.appendChild(pop);
-      const a = pop.animate([{ transform: "translate(-50%,0) scale(.7)", opacity: 0 }, { transform: "translate(-50%,-10px) scale(1.2)", opacity: 1, offset: .3 },
-        { transform: "translate(-50%,-22px) scale(1)", opacity: 0 }], { duration: dur, easing: "ease-out", fill: "forwards" });
+      const dx = cx - x, dy = cy - y;
+      const a = pop.animate([{ transform: "translate(-50%,-50%) scale(.5)", opacity: 0 },
+        { transform: "translate(-50%,-50%) scale(1.15)", opacity: 1, offset: .25 },
+        { transform: `translate(calc(-50% + ${dx * .85}px),calc(-50% + ${dy * .85}px)) scale(1)`, opacity: 1, offset: .8 },
+        { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.9)`, opacity: 0 }], { duration: dur, easing: "ease-in-out", fill: "forwards" });
       Promise.race([a.finished.catch(() => {}), wait(dur + 60)]).then(() => pop.remove());
     });
   }
@@ -3471,8 +3479,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-12 10:53";
-  window.DEMOGAME_LAST_CODE = "2026-11-12 10:53";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-12 10:53";
+  window.DEMOGAME_LAST_CODE = "2026-11-12 11:53";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-12 11:53";
   </script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下 1X 框", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金"]};</script>
   <script src="../demogame_common.js?v=20261111h"></script>
