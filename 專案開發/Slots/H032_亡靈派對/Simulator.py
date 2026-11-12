@@ -44,7 +44,7 @@ TIER_CONFIG = {"small_bet": "config_94{s}.js", "medium_bet": "config_92{s}.js", 
 NEWBIE_CONFIG = "config_92{s}.js"
 TOTAL_ROUNDS = 100_000
 BASE_BET_SETTING = 1.0
-BET_MODE = 0  # 0 = Normal Bet, 2 = Buy Feature
+BET_MODE = 0  # 0 = Normal Bet, 1 = Extra Bet, 2 = Buy Feature, 3 = Super Feature
 CARD_SYSTEM_ENABLED = False
 CARD_SYSTEM_IS_NEWBIE = False
 
@@ -70,9 +70,12 @@ RNG_SEED = 45_045
 
 COIN_BASE = 100.0                      # Credit 基準，與 Overview!A7 一致
 MODE_NORMALBET = 0
-MODE_EXTRABET = 1                      # 本作目前無 Extra Bet（保留常數供共用欄位判斷）
+MODE_EXTRABET = 1                      # Extra Bet（2026-11-12）：押注 2 倍、玩法同 NB，FG 週期由卡組 eb_base_game／eb_free_game 控制（NB 的 1/5）
 MODE_FEATUREBUY = 2
-SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_FEATUREBUY)
+MODE_SUPERFEATURE = 3                  # Super Feature（2026-11-12）：300 倍購買，FG 改用 sf_* 表（金色符號留下的框必定有倍數，至少 2X）
+SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_EXTRABET, MODE_FEATUREBUY, MODE_SUPERFEATURE)
+BUY_MODES = (MODE_FEATUREBUY, MODE_SUPERFEATURE)
+MODE_KEY = {MODE_NORMALBET: "normal", MODE_EXTRABET: "extra_bet", MODE_FEATUREBUY: "buy_feature", MODE_SUPERFEATURE: "super_feature"}
 
 WW = 0
 C1 = 2
@@ -354,6 +357,9 @@ class CalaveraParty:
         self.bg_trigger_cap = self._card_section_cap("base_game")
         self.fg_cap = self._card_section_cap("free_game")
         self.bf_cap = self._card_section_cap("buy_feature")
+        self.sf_cap = self._card_section_cap("super_feature")
+        self.eb_trigger_cap = self._card_section_cap("eb_base_game")
+        self.eb_fg_cap = self._card_section_cap("eb_free_game")
         self.trigger_cap = self.bg_trigger_cap
         return max(self.fg_cap, self.bg_trigger_cap)
 
@@ -441,14 +447,15 @@ class CalaveraParty:
             # 2026-11-10：先算分再更新框（對齊 DJ Boom Boom 封包實測）——乘數＝1＋本消「更新前」的框總和
             mult = 1 + _frame_sum(frames)
             # 2026-11-11 規則改版：每一段連消，全盤所有框 +1；
-            # 黃底（不帶倍數）在沒有框的格子消除 → 留下 1X 新框（本消新留的框從下一消起才 +1）
+            # 黃底在沒有框的格子消除 → 留下新框（本消新留的框從下一消起才 +1）
+            # 2026-11-12：新框帶初始倍數（1/2/3/5/10/20/30/50/100，依 Yellow_Value_Weight 隨機，對標 DJ Boom Boom）
             for reel in range(5):
                 for row in range(4):
                     if frames[reel][row] > 0:
                         frames[reel][row] += 1
             for reel, row in hits:
                 if yellow[reel][row] > 0 and frames[reel][row] == 0:
-                    frames[reel][row] = 1
+                    frames[reel][row] = yellow[reel][row]
             total_frame = _frame_sum(frames)
             gained = raw_pay * mult * self.bet
             result.pay += gained
@@ -569,7 +576,7 @@ class CalaveraParty:
                 return rule, "bf_fg_normal" if buy else "fg_normal"
         return "normal", "bf_fg_normal" if buy else "fg_normal"
 
-    def free_session(self, initial_spins: int, budget: float, buy: bool = False) -> RoundResult:
+    def free_session(self, initial_spins: int, budget: float, buy: bool = False, super_: bool = False) -> RoundResult:
         result = RoundResult(fg_triggered=True)
         frames = _grid(0)                         # game_rule §6：FG 開場沒有框（2026-11-11 起），框整場保留到結束
         total = min(int(initial_spins), self.max_fs)
@@ -583,6 +590,8 @@ class CalaveraParty:
             frame_total = _frame_sum(frames)
             rule, weights = self._fg_weights(index, good, boost_left, dead, frame_total, buy)
             table_name = self._pick_table(weights) if isinstance(weights, str) else self._pick_from(weights)
+            if super_:   # SF：FG 隱性控制照舊選 fg_N，實際改轉同編號的 sf_N（另一組自然機率參數）
+                table_name = "sf_" + table_name[3:]
             boost_left = max(0, boost_left - 1)
             spin = self.spin(table_name, frames, free_game=True)
             hit = spin.pay > 0
@@ -640,11 +649,12 @@ class CalaveraParty:
         result.fg_end_frame = _frame_sum(frames)
         return result
 
-    def card_feature(self, section: str, initial_spins: int, budget: float, buy: bool = False) -> RoundResult:
+    def card_feature(self, section: str, initial_spins: int, budget: float, buy: bool = False,
+                     super_: bool = False) -> RoundResult:
         card = self.pick_card(section)
         result = None
         for _ in range(CARD_RETRY_LIMIT):
-            result = self.free_session(initial_spins, budget, buy)
+            result = self.free_session(initial_spins, budget, buy, super_)
             if self.card_matches(card, result.pay_fg):
                 return result
             self.retry_total += 1
@@ -668,24 +678,30 @@ class CalaveraParty:
             getattr(target, name).update(getattr(source, name))
 
     def round(self, bet_mode: int) -> RoundResult:
-        if self.card_enabled:   # Max Win 依模式取 buy_feature 卡組上限，或 base_game／free_game 兩者上限的較大者
-            self.max_win = self.bf_cap if bet_mode == MODE_FEATUREBUY else max(self.fg_cap, self.bg_trigger_cap)
-            self.trigger_cap = self.bg_trigger_cap
-        if bet_mode == MODE_FEATUREBUY:
-            entry = self.tables[self.config["bet_modes"]["buy_feature"]["entry_table"]]
+        eb = bet_mode == MODE_EXTRABET
+        sec_bg, sec_fg = ("eb_base_game", "eb_free_game") if eb else ("base_game", "free_game")
+        if self.card_enabled:   # Max Win 依模式取 buy／super 卡組上限，或 base_game／free_game（EB 用 eb_*）兩者上限的較大者
+            if bet_mode in BUY_MODES:
+                self.max_win = self.sf_cap if bet_mode == MODE_SUPERFEATURE else self.bf_cap
+            else:
+                self.max_win = max(self.eb_fg_cap, self.eb_trigger_cap) if eb else max(self.fg_cap, self.bg_trigger_cap)
+            self.trigger_cap = self.eb_trigger_cap if eb else self.bg_trigger_cap
+        if bet_mode in BUY_MODES:
+            sup = bet_mode == MODE_SUPERFEATURE
+            entry = self.tables[self.config["bet_modes"][MODE_KEY[bet_mode]]["entry_table"]]
             entry_symbols = [entry.reels[reel].window(self.rng, 4) for reel in range(5)]
             scatter = sum(symbol == C1 for column in entry_symbols for symbol in column)
             if scatter < self.min_scatter:
                 raise RuntimeError("BF_Symbol 權重必須保證進場盤至少 3 顆 C1")
             spins = int(self.fs_table[min(scatter, max(self.fs_table))]["initial"])
-            result = (self.card_feature("buy_feature", spins, 0.0, buy=True)
-                      if self.card_enabled else self.free_session(spins, 0.0, buy=True))
+            result = (self.card_feature(MODE_KEY[bet_mode], spins, 0.0, buy=True, super_=sup)
+                      if self.card_enabled else self.free_session(spins, 0.0, buy=True, super_=sup))
             result.special_symbol_cnt += 1   # 進場盤本身含 SC
             result.pay_fg = min(result.pay_fg, self.max_win * self.bet)
             return result
 
         result = RoundResult()
-        spin = self.card_spin(self.pick_card("base_game")) if self.card_enabled else self.natural_base_spin()
+        spin = self.card_spin(self.pick_card(sec_bg)) if self.card_enabled else self.natural_base_spin()
         result.pay_bg = spin.pay
         result.cascades_bg = spin.cascades
         result.bg_cascade_count = spin.cascades
@@ -707,7 +723,7 @@ class CalaveraParty:
             result.bg_trigger_fg_cnt = 1
             result.bg_trigger_fg_pay = spin.pay
             initial = self.fs_table[min(spin.scatter_count, max(self.fs_table))]["initial"]
-            feature = (self.card_feature("free_game", initial, result.pay_bg)
+            feature = (self.card_feature(sec_fg, initial, result.pay_bg)
                        if self.card_enabled else self.free_session(initial, result.pay_bg))
             self.merge(result, feature)
 
@@ -724,9 +740,7 @@ class CalaveraParty:
 # ===== 統計 =====
 
 def wager_for_mode(mode: int, base_bet: float) -> float:
-    if mode == MODE_NORMALBET:
-        return base_bet
-    return base_bet * float(CFG["bet_modes"]["buy_feature"]["cost_multiplier"])
+    return base_bet * float(CFG["bet_modes"][MODE_KEY[mode]]["cost_multiplier"])
 
 
 def bet_tier_name(bet_tier_amount: float, big_amount: float | None = None) -> str:
@@ -801,7 +815,7 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
         stats[key] += getattr(result, key)
     stats["fg_triggers"] += int(result.fg_triggered)
     stats["max_mult"] = max(stats["max_mult"], result.max_mult)
-    if bet_mode != MODE_FEATUREBUY:
+    if bet_mode not in BUY_MODES:
         stats["combo_bg"][min(result.bg_cascade_count, 5)] += 1
         stats["bg_peak_frame_sum"] += result.bg_peak_frame
         stats["bg_peak_frame_max"] = max(stats["bg_peak_frame_max"], result.bg_peak_frame)
@@ -814,7 +828,7 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
                 "bg_initial_symbols", "bg_drop_symbols", "fg_initial_symbols", "fg_drop_symbols"):
         stats[key].update(getattr(result, key))
 
-    if bet_mode == MODE_FEATUREBUY:
+    if bet_mode in BUY_MODES:
         # 數學模型規範 §2.5：BF 的倍率判定分母是 Normal Bet 基準成本，不是購買價
         index = threshold_index(result.pay_fg / base_bet)
         stats["bucket_bf_cnt"][index] += 1
@@ -913,7 +927,7 @@ def run_simulation(total_rounds: int, bet_mode: int, base_bet: float, threads: i
 # ===== 報表 / Console =====
 
 def mode_name(mode: int) -> str:
-    return {MODE_NORMALBET: "Normal Bet", MODE_EXTRABET: "Extra Bet"}.get(mode, "Buy Feature")
+    return {MODE_NORMALBET: "Normal Bet", MODE_EXTRABET: "Extra Bet", MODE_SUPERFEATURE: "Super Feature"}.get(mode, "Buy Feature")
 
 
 def calculated_metrics(result: dict[str, Any]) -> dict[str, Any]:
@@ -966,8 +980,8 @@ def common_summary_sections(result: dict[str, Any]) -> list[list[tuple[str, Any]
     # 2026-10-21：自然機率報表的觸發 FG 那把依新老手 BG Trigger Cap 分開統計（新手上限 ≤ 老手，較多大倍數被擋）
     trigger_rows: list[tuple[str, Any]] = [("bg_trigger_fg_cnt", s["bg_trigger_fg_cnt"]),
                                            ("bg_trigger_fg_pay", s["bg_trigger_fg_pay"])]
-    if not result["card_system_enabled"] and result["bet_mode"] != MODE_FEATUREBUY:
-        section = "base_game"
+    if not result["card_system_enabled"] and result["bet_mode"] not in BUY_MODES:
+        section = "eb_base_game" if result["bet_mode"] == MODE_EXTRABET else "base_game"
         old_cnt, old_pay = _trigger_within_cap(s, "oldhand", section)
         new_cnt, new_pay = _trigger_within_cap(s, "newbie", section)
         trigger_rows = [("bg_trigger_fg_cnt", old_cnt), ("bg_trigger_fg_pay", old_pay),
@@ -1106,7 +1120,7 @@ def multiplier_line_frame(result: dict[str, Any]) -> pd.DataFrame:
     rows = []
     trigger_cnt_cum = 0
     trigger_pay_cum = 0.0
-    has_bf = result["bet_mode"] == MODE_FEATUREBUY
+    has_bf = result["bet_mode"] in BUY_MODES
     for index, upper in enumerate(MULTIPLIER_THRESHOLDS):
         if index == 0:
             interval = "0"
@@ -1312,8 +1326,8 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
     bet_mode = int(combo["bet_mode"])
     base_bet = float(combo["base_bet"])
     bet_amount = wager_for_mode(bet_mode, base_bet)
-    if bet_mode == MODE_FEATUREBUY:
-        price = float(CFG["bet_modes"]["buy_feature"]["cost_multiplier"])
+    if bet_mode in BUY_MODES:
+        price = float(CFG["bet_modes"][MODE_KEY[bet_mode]]["cost_multiplier"])
         bet_tier_amount = bet_amount / price
         feature_price = price
     else:
@@ -1347,7 +1361,7 @@ def load_batch_configs(combo: dict[str, Any]) -> None:
     CFG = load_js_config(BASE_DIR / combo["config_file"])
     if str(combo.get("config_rtp_file", "AUTO")).upper() == "AUTO":
         mode, base_bet = int(combo["bet_mode"]), float(combo["base_bet"])
-        tier_amount = base_bet if mode == MODE_FEATUREBUY else wager_for_mode(mode, base_bet)
+        tier_amount = base_bet if mode in BUY_MODES else wager_for_mode(mode, base_bet)
         tpl = NEWBIE_CONFIG if combo.get("card_system_is_newbie") else TIER_CONFIG[bet_tier_name(tier_amount, base_bet)]
         combo["config_rtp_file"] = tpl.format(s=RTP_SERIES)
         print(f"[auto] bet_mode {mode}、base_bet {base_bet:g}（檔位金額 ${tier_amount:g}）→ {combo['config_rtp_file']}")
@@ -1365,7 +1379,7 @@ def validate_batch_run(combo: dict[str, Any]) -> dict[str, Any]:
     if missing:
         raise ValueError(f"BATCH_RUNS 缺少必要欄位：{sorted(missing)}")
     if int(combo["bet_mode"]) not in SUPPORTED_BET_MODES:
-        raise ValueError(f"不支援的 bet_mode {combo['bet_mode']}；本作只有 0 / 2")
+        raise ValueError(f"不支援的 bet_mode {combo['bet_mode']}；本作只有 0 / 1 / 2 / 3")
     if int(combo["total_rounds"]) <= 0:
         raise ValueError("total_rounds 必須為正整數")
     if float(combo["base_bet"]) <= 0:

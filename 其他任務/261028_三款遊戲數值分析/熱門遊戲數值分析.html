@@ -431,9 +431,12 @@ td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .tbl-wrap,.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 .card table th,.card table td,.subcard table th,.subcard table td,.intro table th,.intro table td{white-space:nowrap}
 .card table td.wrap,.subcard table td.wrap,.intro table td.wrap{white-space:normal;min-width:16em;max-width:16em}
-/*表格版面固定（2026-11-11 使用者）：欄寬只看內容、不隨畫面寬度伸縮，相對位置不變；放不下就左右捲動，滑鼠可按住拖曳*/
-.card table,.subcard table,.intro table{width:max-content;max-width:none}
+/*表格（2026-11-11 使用者）：寬螢幕撐滿卡片、窄螢幕不擠壓（保持內容寬），放不下就左右捲動，滑鼠可按住拖曳*/
+.card table,.subcard table,.intro table{width:max-content;min-width:100%;max-width:none}
 .tbl-wrap.dragging,.tbl-scroll.dragging{cursor:grabbing;user-select:none}
+/*不顯示捲軸（2026-11-11 使用者）：用拖曳／手指滑動／觸控板左右捲*/
+.tbl-wrap,.tbl-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.tbl-wrap::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{display:none}
 </style><script id="card-v2-js">
 (function(){
   document.querySelectorAll('table').forEach(function(tb){

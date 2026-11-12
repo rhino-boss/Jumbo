@@ -223,7 +223,7 @@
         <article class="change-log-entry">
           <h4>v1（1.0.1.3）</h4>
           <ol>
-            <li>新建 <code>index.html</code>：共用區使用 <code>../demogame_common.css?v=7</code>／<code>../demogame_common.js?v=20261015n</code>；By Game 只含標題、Feature Status、盤面（R1～R3 3×3、5 線＋R4 特色轉輪）、動畫與 Message。版型沿用 H045，盤面與 R4 捲輪寫法參考 H014。（10/15）</li>
+            <li>新建 <code>index.html</code>：共用區使用 <code>../demogame_common.css?v=7</code>／<code>../demogame_common.js?v=20261112m</code>；By Game 只含標題、Feature Status、盤面（R1～R3 3×3、5 線＋R4 特色轉輪）、動畫與 Message。版型沿用 H045，盤面與 R4 捲輪寫法參考 H014。（10/15）</li>
             <li>數值全由 <code>config.js</code>（<code>H020_CONFIG</code>）、<code>config_92A.js</code>／<code>config_94A.js</code> 讀取；單局邏輯逐行對應 <code>Simulator.py</code> 的 <code>_spin</code>、<code>_in_interval</code>、<code>run_worker</code>（Retry 上限 <code>card_retry_limit</code> 10,000）。（10/15）</li>
             <li>Config 選單：Base（卡片關）、92A、94A（卡片開，Oldhand；Demo 不提供 Newbie）。押注模式：Normal Bet、Extra Bet 1（1.5x）、Extra Bet 2（8x）、Super Feature（250x，5 次 Spin、倍數累積）。（10/15）</li>
             <li>演出：R1～R3 捲輪停輪、中獎線與得分格高亮、R4 倍數揭曉；重轉時 R4 依序停 G 倍數（帶重轉球角標）、最後一次停一般倍數，逐次加總；SF 每轉顯示累積倍數。（10/15）</li>
@@ -1198,7 +1198,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
   <script>window.DEMOGAME_REPORT_URL = "./report.html";</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Fortune Gems 500", "expect": "中獎觸發重轉球，倍數一路累加後回頭乘上線獎。", "changes": ["押注分 Extra Bet 1（1.5 倍）和 Extra Bet 2（8 倍），押越高 R4 的倍數越大", "重轉球：有得分時觸發重轉，連續停出 3～50 個倍數，相加後再乘線獎", "Super Feature 用 250 倍押注購買，一次 5 轉，倍數逐轉累加", "加入 OP Jackpot，由重轉球隨機觸發"]};</script>
-  <script src="../demogame_common.js?v=20261111h"></script>
+  <script src="../demogame_common.js?v=20261112m"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
   </script>

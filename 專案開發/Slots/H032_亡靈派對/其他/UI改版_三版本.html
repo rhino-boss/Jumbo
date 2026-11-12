@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>亡靈派對 UI 改版</title>
+<style>
+  /* 配色完全沿用現行 h902 主題 */
+  :root {
+    --bg: #040e1a; --panel: #071528; --surface: #0c2240; --surface-2: #103052; --line: #13304f;
+    --text: #b0d4f0; --text-strong: #e6f2ff; --sub: #5a88aa;
+    --accent: #00ddc0; --red: #ff5f8a; --green: #33ff99; --blue: #33bbff; --mauve: #b06aff; --gold: #ffcf55;
+    --btn-blue: #1a7fd6; --btn-green: #0e7a52;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif; font-size: 14px; }
+  button { font: inherit; cursor: pointer; }
+
+  .picker { position: sticky; top: 0; z-index: 50; display: flex; gap: 8px; justify-content: center; align-items: center;
+    padding: 10px; background: #000d; border-bottom: 1px solid var(--line); }
+  .picker span { color: var(--sub); font-size: 12px; margin-right: 6px; }
+  .picker button { border: 1px solid var(--line); background: var(--panel); color: var(--text); padding: 6px 14px; border-radius: 999px; font-weight: 700; }
+  .picker button.on { background: var(--btn-blue); border-color: var(--btn-blue); color: #fff; }
+  .picker small { display: block; font-weight: 400; font-size: 11px; opacity: .75; }
+
+  .v { display: none; max-width: 920px; margin: 0 auto; padding: 12px; flex-direction: column; gap: 10px; }
+  .v.on { display: flex; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .cols { display: grid; grid-template-columns: 420px 1fr; gap: 10px; align-items: start; }
+  .col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+
+  /* 共用盤面 */
+  .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .cell { aspect-ratio: 1; display: grid; place-items: center; font-size: 40px; border-radius: 8px; position: relative; }
+  .cell.gold { background: linear-gradient(160deg, #ffd35c, #c9860c); box-shadow: inset 0 2px 0 #fff6; }
+  .cell.frame { box-shadow: inset 0 0 0 2px #ff3b4e, 0 0 12px #ff3b4e88; }
+  .cell .x { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #fff; background: #e0303f; padding: 0 5px; border-radius: 4px; }
+  .cell .tag { position: absolute; top: 0; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 800; color: #fff; background: #b0174a; padding: 0 5px; border-radius: 4px; }
+  @media (max-width: 460px) { .cell { font-size: 30px; } }
+
+  .lbl { color: var(--sub); font-size: 12px; }
+  .num { color: var(--text-strong); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  /* =================== A｜儀表板 =================== */
+  .a-head { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
+  .a-id { background: var(--surface); color: var(--sub); font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 6px; }
+  .a-title { font-weight: 800; font-size: 16px; color: var(--text-strong); }
+  .a-state { display: flex; gap: 6px; margin-left: 12px; }
+  .a-chip { padding: 3px 10px; border-radius: 20px; background: var(--surface); font-size: 12px; font-weight: 700; color: var(--blue); }
+  .a-chip.c { color: var(--gold); background: #2a2210; }
+  .a-nav { margin-left: auto; display: flex; gap: 4px; }
+  .a-nav button { border: 0; background: transparent; color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+  .a-nav button:hover { background: var(--surface); }
+
+  .a-board { padding: 12px; }
+  .a-mult { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 10px; }
+  .a-mult .big { font-size: 26px; color: var(--blue); font-weight: 900; }
+  .a-win { display: flex; justify-content: space-between; margin-top: 12px; padding: 10px 12px; border-radius: 6px; background: var(--surface); }
+  .a-win .num { color: var(--accent); }
+
+  .a-wallet { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1px; background: var(--line); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+  .a-wallet div { background: var(--panel); padding: 10px 12px; }
+  .a-wallet .num { display: block; font-size: 18px; margin-top: 2px; }
+  .a-wallet .gain { color: var(--accent); }
+
+  .a-ctrl { padding: 12px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+  .a-ctrl .left { display: flex; flex-direction: column; gap: 8px; }
+  .a-step { display: flex; align-items: center; background: var(--surface); border-radius: 8px; overflow: hidden; }
+  .a-step button { border: 0; background: transparent; color: var(--sub); width: 40px; height: 38px; font-size: 18px; }
+  .a-step span { flex: 1; text-align: center; font-weight: 800; color: var(--text-strong); }
+  .a-speed { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sub); }
+  .a-speed input { flex: 1; accent-color: var(--mauve); } .a-speed b { color: var(--mauve); }
+  .a-spin { width: 92px; border: 0; border-radius: 12px; background: var(--btn-blue); color: #fff; font-weight: 900; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .a-spin small { font-size: 11px; font-weight: 600; opacity: .8; }
+  .a-sub { grid-column: 1 / -1; display: flex; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .a-sub button { border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+  .a-sub .auto { background: var(--btn-green); border-color: var(--btn-green); color: #fff; margin-left: auto; }
+
+  .a-seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; gap: 4px; }
+  .a-seg button { border: 0; border-radius: 6px; padding: 10px; background: transparent; color: var(--sub); font-weight: 800; }
+  .a-seg button.on { background: var(--btn-green); color: #fff; }
+  .a-seg small { display: block; font-weight: 500; font-size: 11px; opacity: .8; }
+
+  .a-sec { padding: 12px; }
+  .a-sec h3 { margin: 0 0 10px; font-size: 13px; color: var(--text); display: flex; justify-content: space-between; }
+  .a-sec h3 small { color: var(--sub); font-weight: 500; }
+  .a-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .a-tile { background: var(--surface); border-radius: 6px; padding: 10px; }
+  .a-tile .num { display: block; font-size: 18px; margin-top: 2px; }
+  .a-tile .sub2 { color: var(--sub); font-size: 11px; }
+  .a-tile.hi .num { color: var(--accent); }
+  .a-intro { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.6; }
+  .a-intro .rowi { display: grid; grid-template-columns: 56px 1fr; gap: 10px; }
+  .a-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .a-tags span { background: var(--surface); border-radius: 4px; padding: 2px 8px; font-size: 12px; }
+
+  /* =================== B｜機台 HUD =================== */
+  .b-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
+  .b-head .t { font-weight: 800; color: var(--text-strong); font-size: 15px; } .b-head .t b { color: var(--sub); margin-right: 6px; }
+  .b-head nav { display: flex; gap: 14px; font-size: 13px; }
+  .b-machine { overflow: hidden; }
+  .b-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 12px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .b-top .mode { color: var(--blue); font-weight: 800; font-size: 12px; }
+  .b-top .mult { text-align: center; } .b-top .mult .lbl { display: block; }
+  .b-top .mult .num { font-size: 28px; color: var(--blue); line-height: 1; }
+  .b-cascade { justify-self: end; display: flex; gap: 3px; align-items: center; }
+  .b-cascade i { width: 8px; height: 14px; border-radius: 2px; background: var(--surface-2); }
+  .b-cascade i.on { background: var(--gold); }
+  .b-cascade span { margin-left: 6px; color: var(--gold); font-weight: 800; font-size: 12px; }
+  .b-grid { padding: 12px; }
+  .b-hud { display: grid; grid-template-columns: 1fr 1fr auto 1fr 1fr; align-items: center; gap: 6px; padding: 10px 12px; background: var(--surface); border-top: 1px solid var(--line); }
+  .b-hud .cell2 { text-align: center; }
+  .b-hud .num { display: block; font-size: 15px; }
+  .b-hud .gain { color: var(--accent); }
+  .b-spin { width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--surface-2); background: var(--btn-blue); color: #fff; font-weight: 900; font-size: 13px; box-shadow: 0 0 0 3px var(--panel); }
+  .b-hud .pm { display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .b-hud .pm button { border: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); color: var(--text); font-size: 13px; line-height: 1; }
+  .b-tools { display: flex; align-items: center; gap: 8px; padding: 10px 12px; flex-wrap: wrap; }
+  .b-tools button { border: 0; border-radius: 6px; padding: 7px 12px; background: var(--surface); color: var(--text); font-weight: 700; font-size: 12px; }
+  .b-tools .auto { background: var(--btn-green); color: #fff; }
+  .b-tools .sp { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 140px; font-size: 12px; color: var(--sub); }
+  .b-tools .sp input { flex: 1; accent-color: var(--mauve); } .b-tools .sp b { color: var(--mauve); }
+  .b-modes { display: flex; border-top: 1px solid var(--line); }
+  .b-modes button { flex: 1; border: 0; background: transparent; color: var(--sub); padding: 10px; font-weight: 800; border-bottom: 3px solid transparent; }
+  .b-modes button.on { color: var(--green); border-bottom-color: var(--btn-green); background: #0e7a5214; }
+
+  .b-panel { overflow: hidden; }
+  .b-panel h3 { margin: 0; padding: 10px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; color: var(--text-strong); border-left: 3px solid var(--k); background: var(--surface); }
+  .b-panel h3::after { content: "▾"; margin-left: auto; color: var(--sub); }
+  .b-panel.closed h3::after { content: "▸"; }
+  .b-list { padding: 4px 14px 8px; }
+  .b-list div { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 7px 0; font-size: 13px; align-items: center; }
+  .b-list div + div { border-top: 1px dashed var(--line); }
+  .b-list .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--surface); padding: 0; margin-top: -2px; }
+  .b-list .bar i { display: block; height: 100%; border-radius: 2px; background: var(--k); }
+  .b-intro { padding: 10px 14px; font-size: 13px; line-height: 1.6; }
+  .b-intro p { margin: 0 0 8px; } .b-intro ol { margin: 0; padding-left: 18px; }
+
+  /* =================== C｜分頁精簡 =================== */
+  .c-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; }
+  .c-head .t { font-weight: 800; color: var(--text-strong); font-size: 15px; } .c-head .t b { color: var(--sub); margin-right: 6px; }
+  .c-head .st { display: flex; gap: 6px; margin-left: auto; }
+  .c-head .st span { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: var(--surface); color: var(--blue); }
+  .c-head .st span.c { color: var(--gold); }
+  .c-menu { border: 0; background: var(--surface); color: var(--text); width: 34px; height: 30px; border-radius: 6px; }
+  .c-board { padding: 10px; position: relative; }
+  .c-float { position: absolute; top: 10px; left: 50%; transform: translate(-50%, -50%); background: var(--btn-blue); color: #fff; padding: 4px 16px; border-radius: 20px; font-weight: 900; font-size: 13px; box-shadow: 0 0 0 4px var(--panel); white-space: nowrap; }
+  .c-board .grid { margin-top: 14px; }
+  .c-bottom { display: flex; align-items: center; gap: 10px; padding: 10px; margin-top: 10px; border-top: 1px solid var(--line); }
+  .c-bottom .w { flex: 1; } .c-bottom .w .num { font-size: 22px; color: var(--accent); display: block; }
+  .c-bottom .bal { text-align: right; } .c-bottom .bal .num { display: block; }
+  .c-bar { display: flex; gap: 6px; padding: 10px; align-items: stretch; }
+  .c-bar button { border: 0; border-radius: 6px; background: var(--surface); color: var(--text); font-weight: 800; padding: 0 12px; height: 42px; }
+  .c-bar .spin { flex: 1; background: var(--btn-blue); color: #fff; font-size: 15px; }
+  .c-bar .auto { background: var(--btn-green); color: #fff; }
+  .c-bet { display: flex; align-items: center; background: var(--surface); border-radius: 6px; }
+  .c-bet button { background: transparent; width: 30px; padding: 0; color: var(--sub); }
+  .c-bet span { min-width: 54px; text-align: center; font-weight: 800; color: var(--text-strong); font-size: 13px; }
+  .c-sub { display: flex; gap: 8px; align-items: center; padding: 0 10px 10px; font-size: 12px; color: var(--sub); }
+  .c-sub input { flex: 1; accent-color: var(--mauve); } .c-sub b { color: var(--mauve); }
+  .c-sub button { border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 6px; padding: 4px 8px; font-size: 12px; }
+  .c-mode { display: flex; gap: 6px; padding: 0 10px 10px; }
+  .c-mode label { flex: 1; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--sub); }
+  .c-mode label.on { border-color: var(--btn-green); color: var(--text-strong); background: #0e7a5218; }
+  .c-mode i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; }
+  .c-mode label.on i { border-color: var(--green); background: radial-gradient(var(--green) 40%, transparent 45%); }
+
+  .c-tabs { display: flex; border-bottom: 1px solid var(--line); padding: 0 6px; }
+  .c-tabs button { border: 0; background: transparent; color: var(--sub); padding: 12px 12px 10px; font-weight: 700; font-size: 13px; border-bottom: 2px solid transparent; }
+  .c-tabs button.on { color: var(--text-strong); border-bottom-color: var(--accent); }
+  .c-kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); }
+  .c-kpi div { background: var(--panel); padding: 14px; }
+  .c-kpi .num { display: block; font-size: 24px; margin-top: 2px; }
+  .c-kpi .num.ac { color: var(--accent); }
+  .c-more { padding: 6px 14px 12px; }
+  .c-more div { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
+  .c-more div + div { border-top: 1px solid var(--line); }
+  .c-more h4 { margin: 10px 0 2px; font-size: 12px; color: var(--sub); font-weight: 600; }
+  .c-note { padding: 10px 14px; font-size: 12px; color: var(--sub); border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="picker">
+  <span>版本</span>
+  <button data-v="a" class="on">A 儀表板<small>指標改數字磚、控制分區</small></button>
+  <button data-v="b">B 機台 HUD<small>盤面＋得分＋SPIN 一體</small></button>
+  <button data-v="c">C 分頁精簡<small>右側收成分頁、左側緊湊</small></button>
+</div>
+
+<!-- ================= A ================= -->
+<div class="v on" id="v-a">
+  <div class="box a-head">
+    <span class="a-id">101019</span><span class="a-title">亡靈派對</span>
+    <div class="a-state"><span class="a-chip">基礎遊戲</span><span class="a-chip c">連消 2</span></div>
+    <div class="a-nav"><button>報告</button><button>導覽</button><button>說明</button><button>重置</button></div>
+  </div>
+  <div class="cols">
+    <div class="col">
+      <div class="box a-board">
+        <div class="a-mult"><span class="lbl">倍數總和</span><span class="big">x4</span></div>
+        <div class="grid g"></div>
+        <div class="a-win"><span class="lbl">本局得分</span><span class="num">7.50</span></div>
+      </div>
+      <div class="a-wallet">
+        <div><span class="lbl">餘額</span><span class="num">10,006.50</span></div>
+        <div><span class="lbl">押注</span><span class="num">1.00</span></div>
+        <div><span class="lbl">得分</span><span class="num gain">7.50</span></div>
+      </div>
+      <div class="box a-ctrl">
+        <div class="left">
+          <div class="a-step"><button>−</button><span>BET 1.00</span><button>＋</button></div>
+          <div class="a-speed">速度 <input type="range" value="75"> <b>x4</b></div>
+        </div>
+        <button class="a-spin">SPIN<small>空白鍵</small></button>
+        <div class="a-sub"><button>◀◀ Previous</button><button>Next ▶▶</button><button class="auto">自動</button></div>
+      </div>
+      <div class="box a-seg">
+        <button class="on">一般押注<small>1X</small></button>
+        <button>購買特色<small>100X</small></button>
+      </div>
+    </div>
+    <div class="col">
+      <div class="box a-sec">
+        <h3>基本指標 <small>總局數 1</small></h3>
+        <div class="a-tiles">
+          <div class="a-tile hi"><span class="lbl">RTP</span><span class="num">750.00%</span></div>
+          <div class="a-tile"><span class="lbl">中獎率</span><span class="num">100.00%</span></div>
+          <div class="a-tile"><span class="lbl">FG 觸發</span><span class="num">0.000%</span><span class="sub2">0 次</span></div>
+          <div class="a-tile"><span class="lbl">BG 最大倍數</span><span class="num">x7.5</span></div>
+          <div class="a-tile"><span class="lbl">FG 最大倍數</span><span class="num">x0</span></div>
+        </div>
+      </div>
+      <div class="box a-sec">
+        <h3>特殊指標</h3>
+        <div class="a-tiles">
+          <div class="a-tile"><span class="lbl">黃底出現率</span><span class="num">100.00%</span><span class="sub2">1.0 場</span></div>
+          <div class="a-tile"><span class="lbl">黃底消除率</span><span class="num">100.00%</span><span class="sub2">1.0 場</span></div>
+          <div class="a-tile"><span class="lbl">SC 出現率</span><span class="num">0.00%</span><span class="sub2">—</span></div>
+          <div class="a-tile"><span class="lbl">BG 最大框總和</span><span class="num">x6</span></div>
+          <div class="a-tile"><span class="lbl">FG 結束框總和</span><span class="num">—</span><span class="sub2">平均</span></div>
+        </div>
+      </div>
+      <div class="box a-sec">
+        <h3>玩法簡介 <small>競品 FC DJ Boom Boom</small></h3>
+        <div class="a-intro">
+          <div class="a-tags"><span>1,024 Ways</span><span>5×4</span><span>消除掉落</span><span>倍數框</span><span>BF 100X</span></div>
+          <div class="rowi"><span class="lbl">期待</span><span>金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。</span></div>
+          <div class="rowi"><span class="lbl">規則</span><span>金色符號中獎後變 WW，沒有框的位置留下 1X 框；每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束。目前沒有 Extra Bet 和彩金。</span></div>
+        </div>
+      </div>
+      <div class="box a-sec"><h3>▸ 倍率線型（一般押注）</h3></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="v" id="v-b">
+  <div class="box b-head"><span class="t"><b>101019</b>亡靈派對</span><nav><span>報告</span><span>導覽</span><span>說明</span><span>重置</span></nav></div>
+  <div class="cols">
+    <div class="col">
+      <div class="box b-machine">
+        <div class="b-top">
+          <span class="mode">● 基礎遊戲</span>
+          <div class="mult"><span class="lbl">倍數總和</span><span class="num">x4</span></div>
+          <div class="b-cascade"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><span>連消 2</span></div>
+        </div>
+        <div class="b-grid"><div class="grid g"></div></div>
+        <div class="b-hud">
+          <div class="cell2"><span class="lbl">餘額</span><span class="num">10,006.50</span></div>
+          <div class="cell2"><span class="lbl">押注</span><div class="pm"><button>−</button><span class="num">1.00</span><button>＋</button></div></div>
+          <button class="b-spin">SPIN</button>
+          <div class="cell2"><span class="lbl">得分</span><span class="num gain">7.50</span></div>
+          <div class="cell2"><span class="lbl">WIN</span><span class="num gain">7.50</span></div>
+        </div>
+        <div class="b-tools">
+          <button class="auto">自動</button><button>◀◀</button><button>▶▶</button>
+          <div class="sp">速度 <input type="range" value="75"> <b>x4</b></div>
+        </div>
+        <div class="b-modes"><button class="on">一般押注</button><button>購買特色 100X</button></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="box b-panel" style="--k: var(--accent)">
+        <h3>基本指標</h3>
+        <div class="b-list">
+          <div><span>總局數</span><b class="num">1</b></div>
+          <div><span>RTP</span><b class="num">750.00%</b><span class="bar"><i style="width:100%"></i></span></div>
+          <div><span>中獎率</span><b class="num">100.00%</b><span class="bar"><i style="width:100%"></i></span></div>
+          <div><span>FG 觸發</span><b class="num">0.000% (0)</b></div>
+          <div><span>BG 最大倍數</span><b class="num">x7.5</b></div>
+          <div><span>FG 最大倍數</span><b class="num">x0</b></div>
+        </div>
+      </div>
+      <div class="box b-panel" style="--k: var(--mauve)">
+        <h3>特殊指標</h3>
+        <div class="b-list">
+          <div><span>黃底出現率</span><b class="num">100.00% (1.0場)</b><span class="bar"><i style="width:100%"></i></span></div>
+          <div><span>黃底消除率</span><b class="num">100.00% (1.0場)</b><span class="bar"><i style="width:100%"></i></span></div>
+          <div><span>BG 最大框總和</span><b class="num">x6</b></div>
+          <div><span>FG 結束框總和（平均）</span><b class="num">—</b></div>
+          <div><span>SC 出現率</span><b class="num">0.00% (—)</b><span class="bar"><i style="width:0"></i></span></div>
+        </div>
+      </div>
+      <div class="box b-panel" style="--k: var(--blue)">
+        <h3>玩法簡介</h3>
+        <div class="b-intro">
+          <p><span class="lbl">競品</span>　FC DJ Boom Boom</p>
+          <p><span class="lbl">期待</span>　金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。</p>
+          <ol>
+            <li>1,024 Ways，5×4 盤面，中獎消除掉落</li>
+            <li>金色符號中獎後變 WW，沒有框的位置留下 1X 框</li>
+            <li>每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束</li>
+            <li>Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金</li>
+          </ol>
+        </div>
+      </div>
+      <div class="box b-panel closed" style="--k: var(--red)"><h3>倍率線型（一般押注）</h3></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= C ================= -->
+<div class="v" id="v-c">
+  <div class="box c-head">
+    <span class="t"><b>101019</b>亡靈派對</span>
+    <div class="st"><span>基礎遊戲</span><span class="c">連消 2</span></div>
+    <button class="c-menu" title="報告／導覽／說明／重置">☰</button>
+  </div>
+  <div class="cols">
+    <div class="col">
+      <div class="box">
+        <div class="c-board">
+          <span class="c-float">倍數總和 x4</span>
+          <div class="grid g"></div>
+          <div class="c-bottom">
+            <div class="w"><span class="lbl">本局得分</span><span class="num">7.50</span></div>
+            <div class="bal"><span class="lbl">餘額</span><span class="num">10,006.50</span></div>
+          </div>
+        </div>
+        <div class="c-bar">
+          <div class="c-bet"><button>−</button><span>1.00</span><button>＋</button></div>
+          <button class="spin">SPIN</button>
+          <button class="auto">自動</button>
+        </div>
+        <div class="c-sub">速度 <input type="range" value="75"> <b>x4</b><button>◀◀</button><button>▶▶</button></div>
+        <div class="c-mode">
+          <label class="on"><i></i>一般押注</label>
+          <label><i></i>購買特色 100X</label>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="box">
+        <div class="c-tabs"><button class="on">指標</button><button>玩法</button><button>倍率線型</button></div>
+        <div class="c-kpi">
+          <div><span class="lbl">RTP</span><span class="num ac">750.00%</span></div>
+          <div><span class="lbl">中獎率</span><span class="num">100.00%</span></div>
+          <div><span class="lbl">FG 觸發</span><span class="num">0.000%</span></div>
+          <div><span class="lbl">總局數</span><span class="num">1</span></div>
+        </div>
+        <div class="c-more">
+          <h4>倍數</h4>
+          <div><span>BG 最大倍數</span><b class="num">x7.5</b></div>
+          <div><span>FG 最大倍數</span><b class="num">x0</b></div>
+          <h4>特殊指標</h4>
+          <div><span>黃底出現率</span><b class="num">100.00% (1.0場)</b></div>
+          <div><span>黃底消除率</span><b class="num">100.00% (1.0場)</b></div>
+          <div><span>BG 最大框總和</span><b class="num">x6</b></div>
+          <div><span>FG 結束框總和（平均）</span><b class="num">—</b></div>
+          <div><span>SC 出現率</span><b class="num">0.00% (—)</b></div>
+        </div>
+        <div class="c-note">玩法、倍率線型改成分頁，右側不用一直往下捲。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cells = [
+    ["🦋"],["🌶️","gold"],["🍬","frame","x3"],["🦋"],["🕯️"],
+    ["🦋"],["💀","frame","x2"],["🌵","gold frame","x1"],["💀"],["🍬"],
+    ["🎸"],["🌶️"],["🕯️"],["🕯️","gold"],["🌼"],
+    ["🌵"],["💀"],["🎭","wild"],["💀"],["🍬"]];
+  const html = cells.map(([e, k, x]) =>
+    `<div class="cell ${k || ""}">${k === "wild" ? '<span class="tag">WILD</span>' : ""}${e}${x ? `<span class="x">${x}</span>` : ""}</div>`).join("");
+  document.querySelectorAll(".g").forEach(g => g.innerHTML = html);
+  document.querySelectorAll(".picker button").forEach(b => b.onclick = () => {
+    document.querySelectorAll(".picker button").forEach(x => x.classList.toggle("on", x === b));
+    document.querySelectorAll(".v").forEach(v => v.classList.toggle("on", v.id === "v-" + b.dataset.v));
+  });
+</script>
+</body>
+</html>

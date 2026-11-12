@@ -2096,6 +2096,189 @@
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
   <link rel="stylesheet" href="../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+  <style id="h032-no-border">
+    /* 2026-11-12 區域拿掉外框：區塊底色不變，改用更深的背景＋陰影把區塊和背景分開（放在共用 css 之後，只影響本款） */
+    body.slot-simulator, body.slot-simulator.fg-mode { background: #010409; }
+    body.slot-simulator #feature-bar,
+    body.slot-simulator #strip-bar,
+    body.slot-simulator #grid-panel,
+    body.slot-simulator #credit-bar,
+    body.slot-simulator .control-zone,
+    body.slot-simulator .diagnostic-region,
+    body.slot-simulator .dg-collapsible,
+    body.slot-simulator #batch-simulation,
+    body.slot-simulator #set-rng-panel,
+    body.slot-simulator #play-panel,
+    body.slot-simulator #bet-mode-panel,
+    body.slot-simulator #settings-wrap,
+    body.slot-simulator #rng-wrap,
+    body.slot-simulator #log-wrap,
+    body.slot-simulator #live-log-wrap,
+    body.slot-simulator #change-log-wrap {
+      border: 0 !important;
+      box-shadow: 0 1px 0 rgba(120, 180, 255, 0.05) inset, 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+    }
+    /* 區域內的小框（批次模擬的連消表、線型圖、版本紀錄卡）也拿掉框，改用內層底色區隔 */
+    body.slot-simulator .batch-cascade-list,
+    body.slot-simulator .batch-line-chart,
+    body.slot-simulator .change-log-entry {
+      border: 0 !important;
+      background: rgba(12, 34, 64, 0.55) !important;
+    }
+
+    /* 玩法簡介：標題欄和內容之間的空白減半（欄寬 72 → 45px） */
+    body.slot-simulator #demogame-overview .ov-row > .ov-k { flex: 0 0 45px !important; width: 45px !important; min-width: 0 !important; }
+
+    /* 版本紀錄的最新版不要綠框（共用 js 加的），改用稍亮的底色＋標題「← Current」辨識 */
+    body.slot-simulator #change-log-wrap #changeLogBody .change-log-entry.demogame-current-version {
+      border: 0 !important;
+      background: var(--surface) !important;
+    }
+
+    /* 模擬區的「消除分布」「倍率線型」＋右欄「倍率線型」（2026-11-12）：
+       圖表區一律純黑底（同「紀錄」），配色同模擬區倍率線型；消除分布改成 BG／FG 並排直條圖，縱軸固定 0～100% 不跳動 */
+    body.slot-simulator #batch-simulation .batch-cascade-list,
+    body.slot-simulator #batch-simulation .batch-line-chart {
+      margin-top: 12px !important;
+      padding: 12px 14px 10px !important;
+      border: 0 !important;
+      border-radius: 10px !important;
+      background: #030b17 !important;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.55) !important;
+    }
+    body.slot-simulator #batch-simulation .batch-cascade-title,
+    body.slot-simulator #batch-simulation .batch-line-chart > .dlc-title {
+      display: flex !important;
+      align-items: center;
+      justify-content: flex-start !important;
+      position: relative;
+      min-height: 24px;
+      margin: 0 0 8px !important;
+      padding: 0 30px 0 0 !important;
+      border: 0 !important;
+      text-align: left !important;
+      color: var(--text) !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+    }
+    /* ＋固定貼在標題列右側（不佔版面）：圖表重畫時標題高度不變，模擬中不會上下晃 */
+    body.slot-simulator #batch-simulation .batch-line-chart > .dlc-title > .demogame-zoom-btn {
+      position: absolute !important; right: 0; top: 50%; transform: translateY(-50%); margin: 0 !important;
+    }
+    /* 消除分布：原表格藏起來（數字仍由程式寫入，給直條圖讀），改畫直條圖 */
+    body.slot-simulator #batch-simulation .batch-cascade-list > .batch-cascade-row { display: none !important; }
+    body.slot-simulator #batch-simulation .h032-cascade-legend { margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 600; color: #7f9bb8; }
+    body.slot-simulator #batch-simulation .h032-cascade-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+    body.slot-simulator #batch-simulation .h032-cascade-chart svg { display: block; width: 100%; height: auto; }
+
+    /* 控制列（依控制區本身寬度切換）：
+       夠寬：上排 SPIN｜自動｜Bet −／＋，下排速度整排（最左到最右）
+       不夠寬（控制區 < 400px）：2×2，上排 SPIN｜自動、下排 Bet｜速度 */
+    body.slot-simulator #play-panel { container-type: inline-size; }
+    body.slot-simulator #play-panel .play-main-controls {
+      display: grid !important;
+      grid-template-columns: auto auto minmax(0, 1fr) !important;
+      gap: 6px !important;
+      align-items: stretch;
+    }
+    body.slot-simulator #play-panel .play-main-controls > * { min-width: 0; width: auto !important; }
+    body.slot-simulator #play-panel .play-main-controls > #spinBtn { grid-column: 1 !important; grid-row: 1 !important; min-width: 72px; }
+    body.slot-simulator #play-panel .play-main-controls > #autoBtn { grid-column: 2 !important; grid-row: 1 !important; min-width: 72px; }
+    body.slot-simulator #play-panel .play-main-controls .bet-stepper { grid-column: 3 !important; grid-row: 1 !important; }
+    body.slot-simulator #play-panel .play-main-controls .speed-control { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+    @container (max-width: 400px) {
+      body.slot-simulator #play-panel .play-main-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+      body.slot-simulator #play-panel .play-main-controls .bet-stepper { grid-column: 1 !important; grid-row: 2 !important; }
+      body.slot-simulator #play-panel .play-main-controls .speed-control { grid-column: 2 !important; grid-row: 2 !important; }
+    }
+
+    /* 右欄倍率線型重新設計：標題列下面整塊都是黑色圖表區（貼齊左右下緣、下方圓角），不再是框中框；座標字縮小變淡 */
+    body.slot-simulator #demogame-cumulative-chart { padding: 0 !important; overflow: hidden; }
+    body.slot-simulator #demogame-cumulative-chart > h3 { margin: 0 !important; padding: 0 14px !important; }   /* 標題列高度、內縮和其他區域一樣（36px） */
+    body.slot-simulator #demogame-cumulative-chart .batch-line-chart {
+      margin: 0 !important;
+      padding: 14px 12px 6px 4px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: #030b17 !important;
+      box-shadow: inset 0 6px 10px -6px rgba(0, 0, 0, 0.7) !important;
+    }
+    body.slot-simulator #demogame-cumulative-chart .batch-line-chart svg text { font-size: 9px; fill: #5f7d99; }
+
+    /* 2026-11-12 使用者：狀態列（基礎遊戲／免費遊戲／FG 剩餘）整條拿掉。
+       FG 進度看盤面下方訊息條（FG n/N · WIN），一般押注／購買特色看「押注模式」按鈕哪顆亮 */
+    html body.slot-simulator #strip-bar { display: none !important; }
+    /* 買進中「購買特色」按鈕亮起：跟亮著的「一般押注」同款綠色、不因 FG 中停用而變淡 */
+    html body.slot-simulator #app-shell #bet-mode-panel #buyFeatureBtn.is-active {
+      opacity: 1 !important; color: #fff !important; background: rgb(0, 119, 85) !important;
+      border: 0 !important; box-shadow: none !important; filter: none !important;
+    }
+    html body.slot-simulator #app-shell.player-under-board { grid-template-rows: auto 1fr; }
+    html body.slot-simulator #app-shell.player-under-board > #grid-panel { grid-column: 1; grid-row: 1; }
+    html body.slot-simulator #app-shell.player-under-board > #demogame-under-board { grid-column: 1; grid-row: 2; }
+    html body.slot-simulator #app-shell.player-under-board > #right-panel { grid-column: 2; grid-row: 1 / span 2; }
+    @media (max-width: 760px) {
+      html body.slot-simulator #app-shell.player-under-board > #right-panel { grid-column: 1; grid-row: 3; }
+    }
+    /* 狀態列重新設計：左邊場景（色點＋文字：基礎遊戲藍、免費遊戲綠、購買特色紫），右邊連消／FG 剩餘改成「小標＋大數字」，中間細分隔線，不用膠囊 */
+    html body.slot-simulator #strip-bar { height: auto !important; min-height: 48px; display: flex; align-items: center; }
+    html body.slot-simulator #strip-bar .feature-strip { width: 100%; height: auto !important; padding: 6px 16px !important; gap: 0 !important; display: flex; align-items: center; }
+    html body.slot-simulator #strip-bar #demogame-phase,
+    html body.slot-simulator #strip-bar #featureStatus.demogame-scene:not(:empty) {
+      margin-right: auto; padding: 5px 12px !important; border-radius: 7px !important; background: color-mix(in srgb, currentColor 14%, transparent) !important;
+      color: #77c7ff !important; font-size: 13px !important; font-weight: 700 !important; letter-spacing: 1px; gap: 8px !important;
+    }
+    html body.slot-simulator #strip-bar #demogame-phase::before,
+    html body.slot-simulator #strip-bar #featureStatus.demogame-scene:not(:empty)::before {
+      content: none !important; display: none !important;   /* 不要圓點 */
+    }
+    html body.slot-simulator.fg-mode #strip-bar #demogame-phase { color: #33ff99 !important; }
+    html body.slot-simulator #strip-bar #featureStatus.demogame-scene:not(:empty) { color: #c08cff !important; }
+    /* 右邊：連消拿掉；FG 剩餘改成同一行「小標＋數字」，字體跟左邊標籤一致，數字欄先留固定寬度（位數變化不推動） */
+    html body.slot-simulator #strip-bar #cascadePill { display: none !important; }
+    html body.slot-simulator #strip-bar .feature-pill:not(.hidden) {
+      flex-direction: row; align-items: baseline !important; gap: 8px !important;
+      padding: 0 !important; margin-left: 16px; border: 0 !important; border-radius: 0 !important; background: transparent !important;
+    }
+    html body.slot-simulator #strip-bar .feature-pill .k { color: #7f9bb8 !important; font-size: 12px !important; font-weight: 600 !important; letter-spacing: .5px; white-space: nowrap; }
+    html body.slot-simulator #strip-bar .feature-pill .v {
+      display: inline-block; min-width: 5ch; text-align: right; white-space: nowrap;
+      color: #e6f2ff !important; font-size: 16px !important; font-weight: 800 !important; font-variant-numeric: tabular-nums;
+    }
+    /* 購買特色時只顯示「購買特色」，不顯示「免費遊戲」（免費遊戲只在一般押注觸發 FG 時出現） */
+    body.slot-simulator #strip-bar .feature-strip:has(#featureStatus.demogame-scene:not(:empty)) #demogame-phase { display: none !important; }
+
+    /* 盤面上下兩條重新設計（2026-11-12 v2）：上下都是嵌進盤面框的黑色凹槽（同圖表黑底），文字置中
+       上：「倍數總和」小標＋藍色大數字（帶微光）；下：訊息跟「倍數總和」小標同款（13px 淡色），中獎也不放大（高度 36px） */
+    html body.slot-simulator #grid-panel .multiplier-track {
+      width: 100% !important; height: 36px !important; margin: 0 0 10px !important;
+      border-radius: 12px !important; background: #030b17 !important; mask-image: none !important; -webkit-mask-image: none !important;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(120, 180, 255, 0.06) !important;
+    }
+    html body.slot-simulator #grid-panel .multiplier-window { display: flex !important; align-items: center; height: 100%; }
+    html body.slot-simulator #grid-panel .multiplier-step.is-active {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 16px; position: relative; top: -1px;   /* 字形墨跡中心比條中心低約 1px，往上補齊 */
+      color: #33bbff !important; text-shadow: 0 0 12px rgba(51, 187, 255, 0.45) !important;
+      font: 800 20px/1 "Segoe UI", system-ui, sans-serif !important; font-variant-numeric: tabular-nums;
+    }
+    html body.slot-simulator #grid-panel .multiplier-step .ft-k { margin: 0 !important; color: var(--sub); font-size: 13px !important; font-weight: 700 !important; letter-spacing: 1px; }
+    /* 倍數有變化：整條播跟下方訊息條一樣的動畫（h099BarHit：放大、變亮、粉色光暈），數字本身不另外跳 */
+    html body.slot-simulator #grid-panel .multiplier-step.fx-hit { animation: none !important; }
+    html body.slot-simulator #grid-panel .multiplier-track.fx-bar-hit { animation: h099BarHit 420ms ease-out; }
+
+    /* 盤面跟著盤面區寬度縮放（2026-11-12）：格子大小＝(盤面區內寬 − 4 個 4px 間距) ÷ 5，最大 74px；
+       符號、框、倍數徽章都用 --cell-size，會一起縮。盤面區變窄時整區（上下兩條＋盤面）一起縮，不會擠出邊 */
+    html body.slot-simulator #grid-panel { container-type: inline-size; }
+    html body.slot-simulator #grid-panel .board-shell { --cell-size: min(74px, calc((100cqw - 16px) / 5)); }
+    html body.slot-simulator #grid-panel #messageBar {
+      min-height: 36px !important; margin-top: 2px !important; padding: 0 16px !important;   /* 2026-11-12：盤面到訊息條 10px（gap 8＋2），與上方倍數條到盤面相同 */
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px !important; background: #030b17 !important;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(120, 180, 255, 0.06) !important;
+      color: var(--sub) !important; font: 700 13px/1.3 "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif !important; letter-spacing: 1px;   /* 跟「倍數總和」小標同款：低調、不搶眼 */
+    }
+
+  </style>
 </head>
 
 <body class="slot-simulator">
@@ -2565,10 +2748,12 @@
     #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
     @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     /* 倍數收集飛行體（同 H045 中獎演出） */
+    /* 2026-11-12 使用者：只有數字飛，不帶底框（框倍數→倍數總和：白字紅光；倍數總和→贏分列：白字藍光） */
     .slot-fx-layer .fx-fly-badge{position:absolute;z-index:60;display:grid;place-items:center;pointer-events:none;
-      font:800 14px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#e8b84a,#a8740f);
-      border-radius:6px;box-shadow:0 0 12px rgba(232,184,74,.8)}
-    .slot-fx-layer .fx-fly-badge.result{font-size:18px;color:#eaf6ff;background:linear-gradient(180deg,#4aa8ff,#1b4fd8);box-shadow:0 0 14px rgba(74,168,255,.8)}
+      font:800 16px/1 "Segoe UI",system-ui,sans-serif;color:#fff;background:none;border-radius:0;box-shadow:none;
+      text-shadow:0 0 6px rgba(255,59,78,.95),0 0 14px rgba(255,59,78,.7),0 1px 2px rgba(0,0,0,.8)}
+    .slot-fx-layer .fx-fly-badge.result{font-size:20px;color:#eaf6ff;background:none;box-shadow:none;
+      text-shadow:0 0 6px rgba(51,187,255,.95),0 0 14px rgba(51,187,255,.7),0 1px 2px rgba(0,0,0,.8)}
     /* 消除（照 H015 賞金列車實機效果，2026-11-04）：得分符號直接消失、原位炸出金色火光與碎屑（不畫圓圈） */
     @keyframes h032-vanish { from { opacity: 1; } to { opacity: 0; } }
     @keyframes h032-boom {
@@ -2700,7 +2885,7 @@
         if (yellow[reel][row] > 0) {
           converted.push(key);
           if (framesBefore[reel][row] > 0) goldIntoFrame++;
-          else { frames[reel][row] = 1; bumped.push(key); }
+          else { frames[reel][row] = yellow[reel][row]; bumped.push(key); }   // 2026-11-12：新框帶初始倍數（依 Yellow_Value_Weight 隨機）
         }
       }
       // 得分：這一消的得分 ×（1＋盤面所有框「更新前」的倍數加總）——先算分再更新框（2026-11-10 對齊 DJ Boom Boom 封包實測）
@@ -3164,7 +3349,7 @@
         // 補牌掉落的同時：所有框 +1、金色符號留下的新框出現
         const plus = state.pendingPlus || { bumped: [], grow: [] }; state.pendingPlus = null;
         renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop, bumped: plus.bumped });
-        popPlusOne(plus.grow);   // 原有的框跳 +1；新框直接以 1X 出現
+        popPlusOne(plus.grow);   // 原有的框跳 +1；新框直接以初始倍數出現
         await wait(refillMs() + 120);
       }
     }
@@ -3427,8 +3612,13 @@
   function tr(key) { return (H032_TEXT[state.language] || H032_TEXT.en)[key] ?? H032_TEXT.en[key] ?? key; }
   function setFeatureStatus(key) {
     state.featureKey = key;
-    const text = key && key !== "baseGame" && key !== "freeGame" ? tr(key) : "";
+    // 「觸發免費遊戲」不顯示（2026-11-12 使用者：狀態列左邊已有「免費遊戲」，重複）；購買特色照常顯示
+    const text = key && key !== "baseGame" && key !== "freeGame" && key !== "fgTriggered" ? tr(key) : "";
     $("featureStatus").textContent = text; $("featureStatus").hidden = !text;
+    // 押注模式按鈕顯示這局怎麼進來：購買特色（買進到該場 FG 結束）亮「購買特色」，其他（含一般押注觸發 FG）亮「一般押注」
+    const buying = key === "buyFeature";
+    $("normalBetBtn").classList.toggle("is-active", !buying);
+    $("buyFeatureBtn").classList.toggle("is-active", buying);
   }
   function applyLanguage() {
     $("gameId").textContent = cfg.online_game_id;
@@ -3449,7 +3639,13 @@
       fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 }, spinStats: { spins: 0, yellowSeen: 0, yellowUsed: 0, sc: 0, bgFrameMax: 0, fgSessions: 0, fgFrameSum: 0 } });
     const startTable = pickTable("bg"), board = makeBoard(startTable);
     $("autoBtn").textContent = tr("auto"); renderBoard(board, [], { yellow: board.map((c, r) => c.map(s => rollYellow(startTable, r, s))), frames: grid(0) });
-    renderFrameTotal(0); $("messageBar").textContent = tr("ready"); setFeatureStatus("baseGame"); updateStats();
+    renderFrameTotal(0); $("messageBar").textContent = tr("ready"); setFeatureStatus("baseGame");
+    // 2026-11-12 使用者：重置連押注、紀錄、指定 RNG 一起清回預設（押注回第一檔；紀錄只留開頭那行載入資訊；腳本／RNG 碼清空）
+    state.betIndex = 0;
+    $("scriptSelect").value = ""; $("forceFgInput").checked = false; $("rngInput").value = "";
+    $("liveLogBody").innerHTML = "";
+    appendLog(`H032 Demo loaded | Version ${window.H032_VERSION_ENTRY?.version || "--"} | Config ${window.H032_ACTIVE_CONFIG || "base"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
+    updateStats();
   }
   function buildBetMenu() {
     $("betMenu").innerHTML = BET_LEVELS.map((value, index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
@@ -3479,11 +3675,32 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-12 10:53";
-  window.DEMOGAME_LAST_CODE = "2026-11-12 11:53";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-12 11:53";
+  window.DEMOGAME_LAST_CODE = "2026-11-12 13:32";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-12 13:32";
   </script>
+  <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下 1X 框", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 為 100 倍押注，目前沒有 Extra Bet 和彩金"]};</script>
-  <script src="../demogame_common.js?v=20261111h"></script>
+  <script src="../demogame_common.js?v=20261112m"></script>
+  <script>
+    // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
+    (function () {
+      const win = document.getElementById("multiplierWindow"), track = win?.closest(".multiplier-track");
+      if (!win || !track) return;
+      const val = () => (win.textContent.match(/x\s*([\d.]+)/) || [])[1];
+      let last = val();
+      new MutationObserver(() => {
+        const v = val();
+        if (v === undefined || v === last) return;
+        last = v;
+        track.classList.remove("fx-bar-hit"); void track.offsetWidth; track.classList.add("fx-bar-hit");
+      }).observe(win, { childList: true, characterData: true, subtree: true });
+    })();
+    // 狀態列搬進 #app-shell 盤面那一欄（排版見上方 css「狀態列搬進盤面那一欄」）
+    (function () {
+      const strip = document.getElementById("strip-bar"), shell = document.getElementById("app-shell");
+      if (strip && shell && strip.parentElement !== shell) shell.prepend(strip);
+    })();
+  </script>
 </body>
 
 </html>

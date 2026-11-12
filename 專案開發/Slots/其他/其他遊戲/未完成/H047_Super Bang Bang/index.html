@@ -2276,7 +2276,7 @@
         <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
       </div>
       <div id="helpContent" hidden></div>
-      <iframe id="helpSourceFrame" title="Game Help source" src="./game_rule.md"></iframe>
+      <iframe id="helpSourceFrame" title="Game Help source"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_rule.md";</script>
     </div>
   </dialog>
   <script src="../../H016_幸運王牌/config_92.js"></script>
@@ -3212,7 +3212,7 @@ setTimeout(initTrack,80);
 appendLog('H047 ready | H016 reel strips loaded | R1 golden disabled');
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
-  <script src="../../demogame_common.js?v=1"></script>
+  <script src="../../demogame_common.js?v=20261112m"></script>
 </body>
 
 </html>

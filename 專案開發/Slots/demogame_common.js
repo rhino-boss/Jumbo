@@ -703,6 +703,8 @@
       #demogame-zoom .dz-box{transition:transform .35s ease;transform-origin:center center}
       #demogame-zoom .dz-body{padding:14px;overflow:auto;flex:1;min-height:0}
       #demogame-zoom:not(.rotated) .dz-box{height:auto}
+      /* 紀錄彈窗一打開就固定高度（不隨行數慢慢長高），行數多時在框內捲動 */
+      #demogame-zoom:not(.rotated) .dz-box:has(#liveLogBody){height:min(640px,80vh)}
       /* 彈窗高度貼齊內容（最高 92vh）；內容超過時紀錄／版本紀錄在框內捲動 */
       #demogame-zoom .dz-body{display:flex;flex-direction:column}
       /* 彈窗內捲到底不帶動背景頁面 */
@@ -794,11 +796,13 @@
         btn.title = "Enlarge";
         btn.addEventListener("click", (event) => {
           event.stopPropagation();
+          // 按鈕可能被搬到重畫後的新標題（模擬中圖表重畫會保留同一顆按鈕），以按鈕當下所在的標題為準
+          const head = btn.parentElement || title;
           // 圖表子標題（模擬面板的倍率線型、消除分布）只放大該子區塊；其他標題放大整個區域內容
-          const sub = title.closest(".batch-line-chart, .batch-cascade-list");
-          const container = sub || title.parentElement;
-          const nodes = [...container.children].filter((node) => node !== title);
-          open(titleText(title), nodes);
+          const sub = head.closest(".batch-line-chart, .batch-cascade-list");
+          const container = sub || head.parentElement;
+          const nodes = [...container.children].filter((node) => node !== head);
+          open(titleText(head), nodes);
         });
         title.appendChild(btn);
         if (getComputedStyle(title).display === "block") Object.assign(title.style, { display: "flex", alignItems: "center" });
@@ -1100,7 +1104,14 @@
       lastCounts = counts;
       const c = counts || new Array(buckets.labels.length).fill(0);
       const label = window.demogameSharedText ? window.demogameSharedText(modeLabel()) : modeLabel();
+      // 模擬中會一直重畫：保留標題上的「+」放大鈕（同一顆搬到新標題），不要每次重畫都消失再補上而一直閃
+      const zoomBtn = chart.querySelector(":scope > .dlc-title > .demogame-zoom-btn");
       chart.innerHTML = `<div class="dlc-title">${isZhText() ? "倍率線型" : "Multiplier Distribution"} · ${label}</div>${simulationChartSvg(c, buckets, yMaxFor())}`;
+      if (zoomBtn) {
+        const t = chart.querySelector(":scope > .dlc-title");
+        t.appendChild(zoomBtn);
+        Object.assign(t.style, { display: "flex", alignItems: "center" });
+      }
     };
     const renderEmpty = () => renderChart(null, SIMULATION_BUCKETS);
     modeSelect?.addEventListener("change", renderEmpty);
@@ -1323,6 +1334,44 @@
   setupCollapsibleRegions();
   setTimeout(setupCollapsibleRegions, 0);
 
+  // 下方除錯區可摺疊（共用，2026-11-12 使用者）：版本紀錄／模擬／紀錄，點標題列收起／展開，預設展開；
+  // 標題列內的按鈕（Clear、放大「+」）不觸發摺疊。標題列是 .diagnostic-header 或 .zone-label。
+  const FOLD_IDS = ["change-log-wrap", "batch-simulation", "live-log-wrap"];
+  const foldHead = (sec) => sec.querySelector(":scope > .diagnostic-header, :scope > .zone-label");
+  function setupFoldRegions() {
+    if (!document.getElementById("dg-fold-style")) {
+      const st = document.createElement("style");
+      st.id = "dg-fold-style";
+      st.textContent = "body.slot-simulator .dg-fold>.dg-fold-head{cursor:pointer;user-select:none;display:flex!important;align-items:center}"
+        + "body.slot-simulator .dg-fold>.dg-fold-head::before{content:\"\";flex:0 0 auto;width:0;height:0;margin-right:7px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid currentColor;transition:transform .15s}"
+        + "body.slot-simulator .dg-fold.dg-folded>.dg-fold-head::before{transform:rotate(-90deg)}"
+        + "body.slot-simulator .dg-fold.dg-folded>:not(.dg-fold-head){display:none!important}"
+        + "body.slot-simulator .dg-fold.dg-folded>.dg-fold-head{border-bottom:0!important;margin-bottom:0!important}"
+        + "body.slot-simulator .dg-fold.dg-folded{padding-bottom:0!important}";
+      document.head.appendChild(st);
+    }
+    for (const id of FOLD_IDS) {
+      const sec = document.getElementById(id);
+      const head = sec && foldHead(sec);
+      if (!head || sec.classList.contains("dg-fold")) continue;
+      sec.classList.add("dg-fold");
+      head.classList.add("dg-fold-head");
+    }
+    if (!document.body.dataset.dgFold) {
+      document.body.dataset.dgFold = "1";
+      document.body.addEventListener("click", (e) => {
+        const head = e.target.closest(".dg-fold-head");
+        const sec = head?.parentElement;
+        if (!sec || !sec.classList.contains("dg-fold") || sec.closest("#demogame-zoom")) return;
+        if (e.target.closest("button, a, input, select")) return;
+        sec.classList.toggle("dg-folded");
+      });
+    }
+  }
+  setupFoldRegions();
+  setTimeout(setupFoldRegions, 0);
+  setTimeout(setupFoldRegions, 1000);
+
   // Spin Result 面板已停用（共用）：各遊戲仍可寫入 #lineList 等節點，不會報錯，只是不顯示。
   function hideSpinResult() {
     document.querySelectorAll("#log-wrap, .diagnostic-region").forEach((region) => {
@@ -1471,7 +1520,8 @@
   // ===== 算分後停頓（共用）=====
   // 每一轉（BG 局與每一轉 FG）分數加完後停 DEMOGAME_ROUND_PAUSE_MS 再放行下一轉／Auto；固定毫秒，不受 Speed 影響。
   const DEMOGAME_ROUND_PAUSE_MS = 500;
-  window.demogameRoundPause = () => new Promise((resolve) => setTimeout(resolve, DEMOGAME_ROUND_PAUSE_MS));
+  // 2026-11-12 使用者：長按空白鍵連續 Spin 時，局與局之間的停頓減半
+  window.demogameRoundPause = () => new Promise((resolve) => setTimeout(resolve, window.demogameSpaceHolding ? DEMOGAME_ROUND_PAUSE_MS / 2 : DEMOGAME_ROUND_PAUSE_MS));
 
   // ===== Log（共用）=====
   // window.demogameLog(text, type)：寫一行「[HH:MM:SS] text」到 #liveLogBody，最多 500 行。
@@ -1747,23 +1797,37 @@
       return el.tagName === "INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/i.test(el.type);
     };
     const isSpace = (e) => e.code === "Space" || e.key === " ";
+    // 2026-11-12 使用者：長按空白鍵一直 Spin —— 按住期間，Spin 鈕「變忙碌（disabled）→ 又可按」一輪結束就自動再按一次；放開即停。
+    // 只在看到 Spin 鈕先變 disabled 再恢復時才續按，Spin 鈕轉動中仍可按（按了會跳過演出）的遊戲不會被連點。
+    let holding = false, sawBusy = false, timer = 0;
+    const stopHold = () => { holding = false; sawBusy = false; clearInterval(timer); timer = 0; window.demogameSpaceHolding = false; };
+    const blocked = () => document.getElementById("demogame-guide") || document.querySelector("dialog[open]");
+    const tick = () => {
+      const spin = document.getElementById("spinBtn");
+      if (!holding || !spin) return stopHold();
+      if (spin.disabled) { sawBusy = true; return; }
+      if (sawBusy && !blocked()) { sawBusy = false; spin.click(); }
+    };
     addEventListener("keydown", (e) => {
       if (!isSpace(e) || e.ctrlKey || e.altKey || e.metaKey || typing(e.target)) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (e.repeat) return;   // 按住不放不連發
+      if (e.repeat) return;   // 按住的重複事件不另外處理，連續 Spin 由 tick 負責
       const guide = document.getElementById("demogame-guide");
       if (guide) { guide.click(); return; }
       if (document.querySelector("dialog[open]")) return;
       const spin = document.getElementById("spinBtn");
       if (spin && !spin.disabled) spin.click();
+      stopHold(); holding = true; window.demogameSpaceHolding = true; timer = setInterval(tick, 40);   // 長按中局間停頓減半（demogameRoundPause）
     }, true);
-    // 焦點在按鈕上時，瀏覽器會在 keyup 觸發該按鈕 —— 一併擋掉
+    // 焦點在按鈕上時，瀏覽器會在 keyup 觸發該按鈕 —— 一併擋掉；放開空白鍵停止連續 Spin
     addEventListener("keyup", (e) => {
+      if (isSpace(e)) stopHold();
       if (!isSpace(e) || typing(e.target)) return;
       e.preventDefault();
       e.stopImmediatePropagation();
     }, true);
+    addEventListener("blur", stopHold);   // 切到別的視窗時放開的 keyup 收不到，一併停止
     addEventListener("keypress", (e) => {
       if (!isSpace(e) || typing(e.target)) return;
       e.preventDefault();
@@ -1771,35 +1835,65 @@
     }, true);
   })();
 
+  // ===== 除錯模式：← ＝ Previous、→ ＝ Next（共用，2026-11-12 使用者）=====
+  // 只在除錯模式開啟、按鈕看得到且可按時作用；焦點在輸入欄／下拉選單／滑桿（速度）時不攔，彈窗或導覽開著時不作用。
+  (() => {
+    const skip = (el) => !!el && (el.isContentEditable || /^(TEXTAREA|SELECT)$/.test(el.tagName)
+      || (el.tagName === "INPUT" && !/^(checkbox|radio|button|submit|reset)$/i.test(el.type)));
+    addEventListener("keydown", (e) => {
+      const id = e.key === "ArrowLeft" ? "previousStepBtn" : e.key === "ArrowRight" ? "nextStepBtn" : "";
+      if (!id || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey || skip(e.target)) return;
+      if (!document.getElementById("debugModeInput")?.checked) return;
+      if (document.querySelector("dialog[open]") || document.getElementById("demogame-guide") || document.querySelector("#demogame-zoom.open")) return;
+      const btn = document.getElementById(id);
+      if (!btn || btn.disabled || !btn.getClientRects().length) return;
+      e.preventDefault();
+      if (!e.repeat) btn.click();
+    }, true);
+  })();
+
   // ===== 新手導覽（共用，2026-11-11 使用者）=====
   // 每次進 Demo（含重新整理）都自動顯示，標題列「導覽」可再看。
-  // 一次框出全部：Spin 鈕、餘額／押注／得分、除錯模式、指標區（找不到或不在畫面內的略過），點任意處關閉。
+  // 逐步導覽：一次一個區域（盤面、控制、餘額、押注模式、指標、玩法簡介、倍率線型、除錯模式），找不到的略過。
   function setupGuideTour() {
     // 2026-11-11 使用者：手機版不要導覽（不自動播、標題列也不放「導覽」鈕）
     if (window.matchMedia && matchMedia("(max-width: 760px), (hover: none) and (pointer: coarse)").matches) return;
-    // 2026-11-11 使用者改版：一次顯示全部說明（不用一直按下一步），說明框互不重疊，點任意處或按 Esc 關閉。
+    // 2026-11-12 使用者改版：一次一個區域（逐步導覽），說明框下方有「上一步／n/N／下一步」；
+    // 點空白處或「下一步」到下一個，最後一步「完成」關閉；Esc 關閉；← → 也可切換。找不到的區域自動略過。
     const STEPS = [
-      { el: () => document.getElementById("spinBtn"),
-        zh: "開始遊戲（也可以按空白鍵）", en: "Start a round (or press Space)" },
+      { el: () => document.getElementById("grid-panel"),
+        zh: "盤面：每一局轉出的符號與中獎結果", en: "Board: the symbols and wins of each round" },
+      { el: () => document.getElementById("play-panel") || document.getElementById("spinBtn"),
+        zh: "SPIN 開始遊戲（也可以按空白鍵）；自動、押注 −／＋、速度都在這裡", en: "SPIN starts a round (or press Space); Auto, bet −/+ and speed are here" },
       { el: () => document.getElementById("credit-bar") || document.getElementById("balanceValue")?.parentElement?.parentElement,
         zh: "餘額・押注・得分；餘額旁「＋」加 1000", en: "Credit · Bet · Win; \"+\" next to Credit adds 1000" },
-      { el: () => document.querySelector("#debugModeInput, #debugInput")?.closest("label"),
-        zh: "除錯模式：用 RNG 碼重現同一局，或選腳本抽指定情境", en: "Debug: replay a round by RNG code, or pick a script scenario" },
+      { el: () => document.getElementById("bet-mode-panel"),
+        zh: "押注模式：一般押注或購買特色", en: "Bet mode: Normal Bet or Buy Feature" },
       { el: () => [document.getElementById("simulation-stats"), document.getElementById("by-game-stats")],
-        zh: "指標：依你玩的局數即時累計；標題可收合", en: "Metrics accumulate live as you play; click a title to collapse" }
+        zh: "指標：依你玩的局數即時累計；標題可收合", en: "Metrics accumulate live as you play; click a title to collapse" },
+      { el: () => document.getElementById("demogame-overview"),
+        zh: "玩法簡介：競品與本作的玩法重點", en: "Overview: the competitor and this game's key rules" },
+      { el: () => document.getElementById("demogame-cumulative-chart"),
+        zh: "倍率線型：你玩過的局依倍數區間的分布；「＋」放大", en: "Multiplier distribution of the rounds you played; \"+\" to enlarge" },
+      { el: () => document.querySelector("#debugModeInput, #debugInput")?.closest("label"),
+        zh: "除錯模式：用 RNG 碼重現同一局，或選腳本抽指定情境", en: "Debug: replay a round by RNG code, or pick a script scenario" }
     ];
     const style = document.createElement("style");
     style.textContent = `#demogame-guide{position:fixed;inset:0;z-index:99990;cursor:pointer}
       #demogame-guide svg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
       #demogame-guide .dgg-box{position:fixed;box-sizing:content-box;border:2px solid #f0c060;pointer-events:none}
-      #demogame-guide .dgg-tip{position:fixed;box-sizing:border-box;max-width:min(300px,calc(100vw - 24px));padding:6px 10px;border-radius:7px;
-        background:#1b2433;color:#e8eef6;border:2px solid #f0c060;box-shadow:0 6px 20px rgba(0,0,0,.45);
-        font:700 13px/1.45 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif;white-space:normal;pointer-events:none}
-      #demogame-guide .dgg-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:6px 14px;border-radius:999px;
-        background:rgba(240,192,96,.95);color:#1b2433;font:700 12px/1.4 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif;pointer-events:none}`;
+      #demogame-guide .dgg-tip{position:fixed;box-sizing:border-box;width:max-content;max-width:min(320px,calc(100vw - 24px));padding:10px 12px 8px;border-radius:9px;
+        background:#1b2433;color:#e8eef6;border:2px solid #f0c060;box-shadow:0 6px 20px rgba(0,0,0,.45);cursor:default;
+        font:700 13px/1.5 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif;white-space:normal}
+      #demogame-guide .dgg-nav{display:flex;align-items:center;gap:8px;margin-top:8px}
+      #demogame-guide .dgg-nav button{border:0;border-radius:6px;padding:4px 12px;cursor:pointer;font:700 12px/1.4 "Segoe UI","Microsoft JhengHei",system-ui,sans-serif}
+      #demogame-guide .dgg-prev{background:#2a3a55;color:#cfe0f2}
+      #demogame-guide .dgg-prev:disabled{opacity:.35;cursor:default}
+      #demogame-guide .dgg-next{margin-left:auto;background:#f0c060;color:#1b2433}
+      #demogame-guide .dgg-count{color:#8fa6bf;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}`;
     document.head.appendChild(style);
 
-    let overlay = null;
+    let overlay = null, idx = 0, steps = [];
     const zh = () => isZhText();
     const nodesOf = (step) => [].concat(step.el() || []).filter((n) => n && n.getClientRects().length && n.getBoundingClientRect().width > 0);
     function rectOf(nodes) {
@@ -1810,47 +1904,46 @@
     const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
     function layout() {
       if (!overlay) return;
-      // 框線緊貼目標外緣（不留空白）：洞＝目標本身，2px 框線畫在洞外，圓角跟目標一致
+      const step = steps[idx], nodes = step ? nodesOf(step) : [];
+      if (!nodes.length) return;
+      // 框線緊貼目標外緣：洞＝目標本身，2px 框線畫在洞外，圓角跟目標一致（至少 8px）
       const vw = innerWidth, vh = innerHeight, bw = 2, gap = 10, m = 8;
-      const radiusOf = (nodes) => nodes.length === 1 ? (parseFloat(getComputedStyle(nodes[0]).borderTopLeftRadius) || 0) : 8;
-      const items = STEPS.map((s) => ({ s, nodes: nodesOf(s) })).filter((it) => it.nodes.length)
-        .map((it) => { const r = rectOf(it.nodes); return { ...it, rad: radiusOf(it.nodes), r: { x: r.x - bw, y: r.y - bw, w: r.w + bw * 2, h: r.h + bw * 2 } }; })
-        .filter((it) => it.r.y + it.r.h > 0 && it.r.y < vh && it.r.x + it.r.w > 0 && it.r.x < vw);   // 只畫在畫面內的
-      overlay.querySelectorAll(".dgg-box,.dgg-tip").forEach((n) => n.remove());
-      // 暗底挖洞（SVG mask：每個目標一個洞）
-      const holes = items.map((it) => `<rect x="${it.r.x + bw}" y="${it.r.y + bw}" width="${it.r.w - bw * 2}" height="${it.r.h - bw * 2}" rx="${it.rad}" fill="#000"/>`).join("");
-      overlay.querySelector("svg").innerHTML = `<defs><mask id="dgg-mask"><rect width="100%" height="100%" fill="#fff"/>${holes}</mask></defs>`
+      const rad = Math.max(8, nodes.length === 1 ? (parseFloat(getComputedStyle(nodes[0]).borderTopLeftRadius) || 0) : 8);
+      const t = rectOf(nodes), r = { x: t.x - bw, y: t.y - bw, w: t.w + bw * 2, h: t.h + bw * 2 };
+      overlay.querySelector("svg").innerHTML = `<defs><mask id="dgg-mask"><rect width="100%" height="100%" fill="#fff"/>`
+        + `<rect x="${t.x}" y="${t.y}" width="${t.w}" height="${t.h}" rx="${rad}" fill="#000"/></mask></defs>`
         + `<rect width="100%" height="100%" fill="rgba(0,0,0,.62)" mask="url(#dgg-mask)"/>`;
-      const placed = items.map((it) => it.r);   // 說明框不能壓到任何框選區與已放好的說明框
-      for (const it of items) {
-        const box = document.createElement("div");
-        box.className = "dgg-box";
-        Object.assign(box.style, { left: `${it.r.x}px`, top: `${it.r.y}px`, width: `${it.r.w - bw * 2}px`, height: `${it.r.h - bw * 2}px`, borderRadius: `${it.rad + bw}px` });
-        overlay.appendChild(box);
-        const tip = document.createElement("div");
-        tip.className = "dgg-tip";
-        tip.textContent = zh() ? it.s.zh : it.s.en;
-        overlay.appendChild(tip);
-        const tw = tip.offsetWidth, th = tip.offsetHeight, r = it.r;
-        const cx = r.x + r.w / 2 - tw / 2, cy = r.y + r.h / 2 - th / 2;
-        const cands = [
-          { x: r.x, y: r.y + r.h + gap }, { x: cx, y: r.y + r.h + gap },          // 下
-          { x: r.x, y: r.y - gap - th }, { x: cx, y: r.y - gap - th },            // 上
-          { x: r.x + r.w + gap, y: r.y }, { x: r.x + r.w + gap, y: cy },          // 右
-          { x: r.x - gap - tw, y: r.y }, { x: r.x - gap - tw, y: cy },            // 左
-          { x: r.x + gap, y: r.y + gap }, { x: cx, y: cy }                         // 框內（大區塊）
-        ].map((p) => ({ x: Math.max(m, Math.min(p.x, vw - tw - m)), y: Math.max(m, Math.min(p.y, vh - th - m)), w: tw, h: th }));
-        const others = placed.filter((p) => p !== r);
-        const own = (c) => !hit(c, r) || cands.indexOf(c) >= 8;               // 前 8 個不能蓋住自己的目標
-        let pick = cands.find((c) => own(c) && !others.some((p) => hit(c, p)));
-        if (!pick) {   // 找不到完全不重疊的：往下推到不壓已放好的說明框
-          pick = { ...cands[0] };
-          for (let k = 0; k < 40 && placed.some((p) => p !== r && hit(pick, p)); k++) pick.y = Math.min(vh - th - m, pick.y + th + 4);
-        }
-        tip.style.left = `${pick.x}px`; tip.style.top = `${pick.y}px`;
-        placed.push(pick);
-      }
-      overlay.querySelector(".dgg-hint").textContent = zh() ? "點任意處關閉" : "Click anywhere to close";
+      const box = overlay.querySelector(".dgg-box");
+      Object.assign(box.style, { left: `${r.x}px`, top: `${r.y}px`, width: `${t.w}px`, height: `${t.h}px`, borderRadius: `${rad + bw}px` });
+      const tip = overlay.querySelector(".dgg-tip");
+      tip.querySelector(".dgg-text").textContent = zh() ? step.zh : step.en;
+      tip.querySelector(".dgg-count").textContent = `${idx + 1} / ${steps.length}`;
+      tip.querySelector(".dgg-prev").textContent = zh() ? "上一步" : "Back";
+      tip.querySelector(".dgg-prev").disabled = idx === 0;
+      tip.querySelector(".dgg-next").textContent = idx === steps.length - 1 ? (zh() ? "完成" : "Done") : (zh() ? "下一步" : "Next");
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      const cx = r.x + r.w / 2 - tw / 2, cy = r.y + r.h / 2 - th / 2;
+      const cands = [
+        { x: r.x, y: r.y + r.h + gap }, { x: cx, y: r.y + r.h + gap },          // 下
+        { x: r.x, y: r.y - gap - th }, { x: cx, y: r.y - gap - th },            // 上
+        { x: r.x + r.w + gap, y: r.y }, { x: r.x + r.w + gap, y: cy },          // 右
+        { x: r.x - gap - tw, y: r.y }, { x: r.x - gap - tw, y: cy },            // 左
+        { x: r.x + gap, y: r.y + gap }, { x: cx, y: cy }                         // 框內（大區塊）
+      ].map((p) => ({ x: Math.max(m, Math.min(p.x, vw - tw - m)), y: Math.max(m, Math.min(p.y, vh - th - m)), w: tw, h: th }));
+      const pick = cands.find((c, i) => i >= 8 || !hit(c, r)) || cands[0];
+      tip.style.left = `${pick.x}px`; tip.style.top = `${pick.y}px`;
+    }
+    function go(i) {
+      if (!overlay) return;
+      if (i < 0) return;
+      if (i >= steps.length) { close(); return; }
+      idx = i;
+      const nodes = nodesOf(steps[idx]);
+      // 目標不在畫面內就捲過去（捲動會觸發 layout）
+      const t = nodes.length ? rectOf(nodes) : null;
+      if (t && (t.y < 0 || t.y + Math.min(t.h, innerHeight * 0.6) > innerHeight)) nodes[0].scrollIntoView({ block: t.h > innerHeight * 0.7 ? "start" : "center" });
+      layout();
+      setTimeout(layout, 60);
     }
     function close() {
       if (!overlay) return;
@@ -1858,21 +1951,33 @@
       removeEventListener("resize", layout); removeEventListener("scroll", layout, true); removeEventListener("keydown", onKey, true);
     }
     function onKey(e) {
-      if (e.key !== "Escape") return;
-      e.preventDefault(); e.stopPropagation(); close();
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
+      else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); go(idx + 1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); e.stopPropagation(); go(idx - 1); }
     }
     function start() {
       if (overlay) return;
-      if (!STEPS.some((s) => nodesOf(s).length)) return;
+      steps = STEPS.filter((s) => nodesOf(s).length);
+      if (!steps.length) return;
+      idx = 0;
       overlay = document.createElement("div");
       overlay.id = "demogame-guide";
       overlay.setAttribute("role", "dialog");
-      overlay.innerHTML = '<svg aria-hidden="true"></svg><div class="dgg-hint"></div>';
-      overlay.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); close(); });
+      overlay.innerHTML = '<svg aria-hidden="true"></svg><div class="dgg-box"></div>'
+        + '<div class="dgg-tip"><div class="dgg-text"></div><div class="dgg-nav">'
+        + '<button type="button" class="dgg-prev"></button><span class="dgg-count"></span><button type="button" class="dgg-next"></button></div></div>';
+      // 點空白處（含暗底與框選區）＝下一步；點說明框本身不動作，按鈕各自處理
+      overlay.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (e.target.closest(".dgg-prev")) return go(idx - 1);
+        if (e.target.closest(".dgg-next")) return go(idx + 1);
+        if (e.target.closest(".dgg-tip")) return;
+        go(idx + 1);
+      });
       document.body.appendChild(overlay);
       addEventListener("resize", layout); addEventListener("scroll", layout, true); addEventListener("keydown", onKey, true);
+      go(0);
       requestAnimationFrame(() => requestAnimationFrame(layout));
-      setTimeout(layout, 60);   // 背景分頁 rAF 可能不觸發，補一次
     }
     window.demogameGuide = start;
     // 標題列「導覽」鈕（放在「說明」前）
@@ -1883,15 +1988,296 @@
       btn.addEventListener("click", start);
       group.insertBefore(btn, document.getElementById("helpBtn") || group.firstChild);
     }
-    // 2026-11-11 使用者：每次進入或重新整理都播（不記看過）
+    // 2026-11-12 使用者：每台裝置第一次進遊戲才自動播（localStorage 記看過，所有遊戲共用）；之後要看按標題列「導覽」
     {
+      const SEEN_KEY = "demogameGuideSeen";
+      let seen = false;
+      try { seen = localStorage.getItem(SEEN_KEY) === "1"; } catch (_) {}
       // 等預載畫面與版面就緒再開始
-      const wait = () => (document.querySelector(".demogame-preload:not(.done), #demogame-preload") ? setTimeout(wait, 300) : setTimeout(start, 600));
-      if (document.readyState === "complete") wait(); else addEventListener("load", wait, { once: true });
+      const wait = () => (document.querySelector(".demogame-preload:not(.done), #demogame-preload") ? setTimeout(wait, 300) : setTimeout(() => {
+        try { localStorage.setItem(SEEN_KEY, "1"); } catch (_) {}
+        start();
+      }, 600));
+      if (!seen) {
+        if (document.readyState === "complete") wait(); else addEventListener("load", wait, { once: true });
+      }
     }
   }
 
   setupGuideTour();
+
+  // ===== 共通規格（共用，2026-11-12 使用者：以 H032 亡靈派對為準，所有遊戲統一）=====
+  // ① 區域拿掉外框，改用更深的背景＋陰影分層；區域內小框也拿掉
+  // ② 玩法簡介標題欄 45px；版本紀錄最新版不加綠框
+  // ③ 模擬區：消除分布改成 BG／FG 左右兩半直條圖、倍率線型黑底；右欄倍率線型黑底貼齊
+  // ④ 控制區：夠寬 SPIN｜自動｜Bet、速度整排；控制區 < 400px 改 2×2
+  // ⑤ 盤面下方訊息條：黑色凹槽、13px 淡色置中
+  // ⑥ 狀態列整條拿掉；只有倍數（multPill／sumPill）改放盤面上方資訊條（同 H032「倍數總和」條），其他資訊（連消、Respin、SF、Table、FG 剩餘…）不顯示
+  //    遊戲可設 window.DEMOGAME_INFO_BAR = false 不用資訊條（H032 有自己的倍數總和條）
+  // ⑦ 押注模式：按購買特色／超級特色後該鈕亮起，到那場特色結束再換回原本亮的模式鈕
+  // ⑧ 重置：押注回第一檔、紀錄只留載入那一行、指定 RNG（腳本／RNG 碼／強制 FG）清空
+  // ⑨ 盤面放不下時整個盤面等比縮小（CSS zoom），不擠出盤面區
+  function setupCommonSpec() {
+    const $id = (id) => document.getElementById(id);
+    const css = `
+      html body.slot-simulator, html body.slot-simulator.fg-mode { background: #010409; }
+      html body.slot-simulator #feature-bar, html body.slot-simulator #grid-panel, html body.slot-simulator #credit-bar,
+      html body.slot-simulator .control-zone, html body.slot-simulator .diagnostic-region, html body.slot-simulator .dg-collapsible,
+      html body.slot-simulator #batch-simulation, html body.slot-simulator #set-rng-panel, html body.slot-simulator #play-panel,
+      html body.slot-simulator #bet-mode-panel, html body.slot-simulator #settings-wrap, html body.slot-simulator #rng-wrap,
+      html body.slot-simulator #log-wrap, html body.slot-simulator #live-log-wrap, html body.slot-simulator #change-log-wrap,
+      html body.slot-simulator #demogame-overview, html body.slot-simulator #demogame-cumulative-chart {
+        border: 0 !important;
+        box-shadow: 0 1px 0 rgba(120, 180, 255, 0.05) inset, 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+      }
+      html body.slot-simulator .batch-cascade-list, html body.slot-simulator .batch-line-chart, html body.slot-simulator .change-log-entry {
+        border: 0 !important; background: rgba(12, 34, 64, 0.55) !important;
+      }
+      html body.slot-simulator #demogame-overview .ov-row > .ov-k { flex: 0 0 45px !important; width: 45px !important; min-width: 0 !important; }
+      html body.slot-simulator #change-log-wrap #changeLogBody .change-log-entry.demogame-current-version { border: 0 !important; background: #0c2240 !important; }
+
+      html body.slot-simulator #batch-simulation .batch-cascade-list, html body.slot-simulator #batch-simulation .batch-line-chart {
+        margin-top: 12px !important; padding: 12px 14px 10px !important; border: 0 !important; border-radius: 10px !important;
+        background: #030b17 !important; box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.55) !important;
+      }
+      html body.slot-simulator #batch-simulation .batch-cascade-title, html body.slot-simulator #batch-simulation .batch-line-chart > .dlc-title {
+        display: flex !important; align-items: center; justify-content: flex-start !important; position: relative; min-height: 24px;
+        margin: 0 0 8px !important; padding: 0 30px 0 0 !important; border: 0 !important; text-align: left !important;
+        color: var(--sim-text, #b0d4f0) !important; font-size: 13px !important; font-weight: 700 !important;
+      }
+      html body.slot-simulator #batch-simulation .batch-line-chart > .dlc-title > .demogame-zoom-btn {
+        position: absolute !important; right: 0; top: 50%; transform: translateY(-50%); margin: 0 !important;
+      }
+      html body.slot-simulator #batch-simulation .batch-cascade-list.dg-has-chart > .batch-cascade-row { display: none !important; }
+      html body.slot-simulator #batch-simulation .dg-cascade-chart svg { display: block; width: 100%; height: auto; }
+
+      html body.slot-simulator #demogame-cumulative-chart { padding: 0 !important; overflow: hidden; }
+      html body.slot-simulator #demogame-cumulative-chart > h3 { margin: 0 !important; padding: 0 14px !important; }
+      html body.slot-simulator #demogame-cumulative-chart .batch-line-chart {
+        margin: 0 !important; padding: 14px 12px 6px 4px !important; border: 0 !important; border-radius: 0 !important;
+        background: #030b17 !important; box-shadow: inset 0 6px 10px -6px rgba(0, 0, 0, 0.7) !important;
+      }
+      html body.slot-simulator #demogame-cumulative-chart .batch-line-chart svg text { font-size: 9px; fill: #5f7d99; }
+
+      html body.slot-simulator #play-panel { container-type: inline-size; }
+      html body.slot-simulator #play-panel .play-main-controls {
+        display: grid !important; grid-template-columns: auto auto minmax(0, 1fr) !important; gap: 6px !important; align-items: stretch;
+      }
+      html body.slot-simulator #play-panel .play-main-controls > * { min-width: 0; width: auto !important; }
+      html body.slot-simulator #play-panel .play-main-controls > #spinBtn { grid-column: 1 !important; grid-row: 1 !important; min-width: 72px; }
+      html body.slot-simulator #play-panel .play-main-controls > #autoBtn { grid-column: 2 !important; grid-row: 1 !important; min-width: 72px; }
+      html body.slot-simulator #play-panel .play-main-controls .bet-stepper { grid-column: 3 !important; grid-row: 1 !important; }
+      html body.slot-simulator #play-panel .play-main-controls .speed-control { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+      @container (max-width: 400px) {
+        html body.slot-simulator #play-panel .play-main-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+        html body.slot-simulator #play-panel .play-main-controls .bet-stepper { grid-column: 1 !important; grid-row: 2 !important; }
+        html body.slot-simulator #play-panel .play-main-controls .speed-control { grid-column: 2 !important; grid-row: 2 !important; }
+      }
+
+      html body.slot-simulator #grid-panel #messageBar {
+        min-height: 36px !important; padding: 0 16px !important; display: flex; align-items: center; justify-content: center;
+        border: 0 !important; border-radius: 12px !important; background: #030b17 !important;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(120, 180, 255, 0.06) !important;
+        color: var(--sim-sub, #5a88aa) !important; font: 700 13px/1.3 "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif !important; letter-spacing: 1px;
+      }
+
+      html body.slot-simulator #strip-bar { display: none !important; }
+      html body.slot-simulator #demogame-info-bar {
+        display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 22px;
+        width: 100%; align-self: stretch; min-height: 36px; margin: 0 0 10px; padding: 4px 16px; box-sizing: border-box; border-radius: 12px; background: #030b17;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(120, 180, 255, 0.06);
+      }
+      html body.slot-simulator #demogame-info-bar[hidden] { display: none !important; }
+      html body.slot-simulator #demogame-info-bar .dib-item { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+      html body.slot-simulator #demogame-info-bar .dib-k { color: var(--sim-sub, #5a88aa); font: 700 13px/1 "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif; letter-spacing: 1px; }
+      html body.slot-simulator #demogame-info-bar .dib-v {
+        color: #33bbff; text-shadow: 0 0 12px rgba(51, 187, 255, 0.45);
+        font: 800 20px/1 "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums;
+      }
+      html body.slot-simulator #demogame-info-bar.fx-bar-hit { animation: dgInfoBarHit 420ms ease-out; }
+      @keyframes dgInfoBarHit { from { transform: scale(1.08); filter: brightness(2); box-shadow: 0 0 18px rgba(255, 79, 216, .9); } to { transform: scale(1); filter: brightness(1); } }
+
+      html body.slot-simulator #app-shell #bet-mode-panel button.dg-buy-active {
+        opacity: 1 !important; color: #fff !important; background: rgb(0, 119, 85) !important;
+        border: 0 !important; box-shadow: none !important; filter: none !important;
+      }
+    `;
+    const addStyle = () => {
+      if ($id("dg-common-spec")) $id("dg-common-spec").remove();
+      const st = document.createElement("style");
+      st.id = "dg-common-spec"; st.textContent = css;
+      document.head.appendChild(st);   // 放在最後，蓋過各遊戲與共用的舊樣式
+    };
+    addStyle();
+    addEventListener("load", () => setTimeout(addStyle, 0), { once: true });
+
+    // ⑥ 盤面上方資訊條：只鏡射狀態列上的倍數膠囊（multPill、sumPill）；2026-11-12 使用者：沒說要留的資訊一律拿掉
+    if (window.DEMOGAME_INFO_BAR !== false) {
+      const strip = $id("strip-bar"), panel = $id("grid-panel");
+      if (strip && panel) {
+        const bar = document.createElement("div");
+        bar.id = "demogame-info-bar"; bar.hidden = true;
+        panel.prepend(bar);
+        let lastSig = "", lastVals = "";
+        const sync = () => {
+          const pills = [...strip.querySelectorAll("#multPill, #sumPill")].filter((p) => !p.classList.contains("hidden") && !p.hidden
+            && !p.classList.contains("demogame-removed") && p.textContent.trim());
+          const items = pills.map((p) => {
+            const k = p.querySelector(".k")?.textContent.trim() ?? "", v = p.querySelector(".v")?.textContent.trim() ?? p.textContent.trim();
+            return { k, v };
+          });
+          const sig = items.map((i) => i.k).join("|"), vals = items.map((i) => i.v).join("|");
+          if (sig !== lastSig) {
+            bar.innerHTML = items.map(() => '<span class="dib-item"><span class="dib-k"></span><span class="dib-v"></span></span>').join("");
+            lastSig = sig;
+          }
+          bar.querySelectorAll(".dib-item").forEach((el, i) => {
+            el.querySelector(".dib-k").textContent = items[i].k;
+            el.querySelector(".dib-v").textContent = items[i].v;
+          });
+          bar.hidden = !items.length;
+          if (lastVals && vals !== lastVals && sig === lastSig) { bar.classList.remove("fx-bar-hit"); void bar.offsetWidth; bar.classList.add("fx-bar-hit"); }
+          lastVals = vals;
+        };
+        sync();
+        new MutationObserver(sync).observe(strip, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] });
+      }
+    }
+
+    // ③ 消除分布：BG／FG 左右兩半直條圖（同一張圖，中間分隔線；縱軸固定 0～100%）
+    const setupCascadeChart = (n = 0) => {
+      const list = document.querySelector("#batch-simulation .batch-cascade-list");
+      const rows = list ? [...list.querySelectorAll(".batch-cascade-row:not(.batch-cascade-head)")] : [];
+      const ids = rows.map((r) => [...r.querySelectorAll(".s-value")].map((v) => v.id));
+      if (!list || !rows.length) { if (n < 30) setTimeout(() => setupCascadeChart(n + 1), 200); return; }   // 模擬區可能稍後才建好
+      if (list.classList.contains("dg-has-chart")) return;
+      if (ids.every((p) => p.length >= 2 && p[0] && p[1])) {
+        list.classList.add("dg-has-chart");
+        const labels = rows.map((r) => r.querySelector(".s-label")?.textContent.trim() ?? "");
+        const box = document.createElement("div");
+        box.className = "dg-cascade-chart";
+        list.appendChild(box);
+        const val = (id) => Math.max(0, Math.min(100, parseFloat($id(id)?.textContent) || 0));
+        const draw = () => {
+          const W = 900, H = 226, L = 44, R = 888, T = 34, B = 194, mid = (L + R) / 2, pad = 14, bw = Math.min(34, (mid - L - pad * 2) / labels.length * 0.6);
+          const y = (p) => B - (B - T) * p / 100;
+          let s = "";
+          [0, 25, 50, 75, 100].forEach((p) => {
+            s += `<line x1="${L}" y1="${y(p)}" x2="${R}" y2="${y(p)}" stroke="rgba(120,160,200,.18)"/>`
+              + `<text x="${L - 6}" y="${y(p) + 4}" font-size="12" text-anchor="end" fill="#7f9bb8">${p}%</text>`;
+          });
+          s += `<line x1="${mid}" y1="${T - 22}" x2="${mid}" y2="${B + 26}" stroke="rgba(120,160,200,.3)"/>`;
+          [[0, "BG", "#33bbff", L + pad, mid - pad], [1, "FG", "#b06aff", mid + pad, R - pad]].forEach(([col, name, color, x0, x1]) => {
+            const gw = (x1 - x0) / labels.length;
+            s += `<text x="${(x0 + x1) / 2}" y="${T - 14}" font-size="13" font-weight="700" text-anchor="middle" fill="${color}">${name}</text>`;
+            labels.forEach((lab, i) => {
+              const cx = x0 + gw * i + gw / 2, p = val(ids[i][col]), top = y(p);
+              s += `<rect x="${cx - bw / 2}" y="${top}" width="${bw}" height="${B - top}" rx="3" fill="${color}" fill-opacity=".85"/>`
+                + `<text x="${cx}" y="${top - 5}" font-size="11" text-anchor="middle" fill="#cfe3f5">${p.toFixed(1)}%</text>`
+                + `<text x="${cx}" y="${B + 20}" font-size="12" text-anchor="middle" fill="#7f9bb8">${lab}</text>`;
+            });
+          });
+          box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cascade distribution">${s}</svg>`;
+        };
+        draw();
+        const mo = new MutationObserver(draw);
+        rows.forEach((r) => r.querySelectorAll(".s-value").forEach((el) => mo.observe(el, { childList: true, characterData: true, subtree: true })));
+      }
+    };
+    setupCascadeChart();
+
+    // ⑦ 押注模式：買進中該購買鈕亮起，特色結束換回原本亮的模式鈕
+    {
+      const modeIds = ["normalBetBtn", "extraBetBtn", "extraBet2Btn"], buyIds = ["buyFeatureBtn", "buySuperFeatureBtn", "superFeatureBtn"];
+      let buying = null, prev = [], sawFg = false, idleTimer = 0;
+      const modes = () => modeIds.map($id).filter(Boolean);
+      const apply = () => {
+        if (!buying) return;
+        modes().forEach((b) => b.classList.remove("is-active", "active"));
+        buying.classList.add("dg-buy-active", "is-active");
+      };
+      const end = () => {
+        if (!buying) return;
+        buying.classList.remove("dg-buy-active", "is-active");
+        prev.forEach((b) => b.classList.add("is-active"));
+        buying = null; prev = []; sawFg = false; clearInterval(idleTimer);
+      };
+      buyIds.map($id).filter(Boolean).forEach((btn) => btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+        if (buying) end();
+        prev = modes().filter((b) => b.classList.contains("is-active"));
+        buying = btn; sawFg = document.body.classList.contains("fg-mode");
+        setTimeout(apply, 0);
+        clearInterval(idleTimer);
+        // 特色結束：進過 FG 又離開；或一直沒進 FG 而 Spin 已可再按（買進的局結束）
+        // 「在特色中」：body.fg-mode、FG 剩餘看得到、或 Spin 鈕寫著 FG／免費（有些遊戲買進後停在「Next FG」等玩家按）
+        let spinBusySeen = false, quietSince = 0;
+        const t0 = Date.now();
+        const inFeature = () => document.body.classList.contains("fg-mode")
+          || ($id("fgLeftPill") && !$id("fgLeftPill").classList.contains("hidden") && !$id("fgLeftPill").hidden)
+          || /FG|Free|免費/i.test($id("spinBtn")?.textContent || "");
+        idleTimer = setInterval(() => {
+          const fg = inFeature(), spin = $id("spinBtn");
+          if (fg) sawFg = true;
+          if (spin?.disabled) spinBusySeen = true;
+          // 剛買進先等一下；之後「Spin 可按且不在特色中」要連續 1.5 秒才算結束（特色局與局之間可能短暫看起來像一般局）
+          if (Date.now() - t0 < 1500 || !spin || spin.disabled || fg || !(sawFg || spinBusySeen)) { quietSince = 0; return; }
+          if (!quietSince) quietSince = Date.now();
+          if (Date.now() - quietSince >= 1500) end();
+        }, 200);
+      }, true));
+      const panel = $id("bet-mode-panel");
+      if (panel) new MutationObserver(() => { if (buying && (!buying.classList.contains("dg-buy-active") || modes().some((b) => b.classList.contains("is-active")))) apply(); })
+        .observe(panel, { attributes: true, subtree: true, attributeFilter: ["class"] });
+      $id("resetBtn")?.addEventListener("click", end);
+    }
+
+    // ⑧ 重置：押注回第一檔、紀錄只留載入那一行、指定 RNG 清空
+    {
+      const log = $id("liveLogBody");
+      let firstLine = null;
+      const grab = (n = 0) => { if (log?.firstElementChild) firstLine = log.firstElementChild.cloneNode(true); else if (n < 50) setTimeout(() => grab(n + 1), 100); };
+      grab();
+      $id("resetBtn")?.addEventListener("click", () => setTimeout(() => {
+        const sel = $id("scriptSelect");
+        if (sel && sel.value !== "") { sel.value = ""; sel.dispatchEvent(new Event("change", { bubbles: true })); }
+        const force = $id("forceFgInput");
+        if (force?.checked) { force.checked = false; force.dispatchEvent(new Event("change", { bubbles: true })); }
+        const rng = $id("rngInput");
+        if (rng && rng.value) { rng.value = ""; rng.dispatchEvent(new Event("input", { bubbles: true })); }
+        const minus = $id("betMinusBtn");
+        for (let i = 0; i < 80 && minus && !minus.disabled; i++) minus.click();
+        if (log && firstLine) {
+          const line = firstLine.cloneNode(true);
+          const now = new Date(), pad = (x) => String(x).padStart(2, "0");
+          line.textContent = line.textContent.replace(/^\[\d{2}:\d{2}:\d{2}\]/, `[${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}]`);
+          log.innerHTML = ""; log.appendChild(line);
+        }
+      }, 0));
+    }
+
+    // ⑨ 盤面放不下時整個盤面等比縮小
+    {
+      const panel = $id("grid-panel"), board = $id("board");
+      const target = board?.closest(".board-shell") || board;
+      if (panel && target && "zoom" in document.body.style) {
+        let lastW = -1;
+        const fit = () => {
+          const w = panel.clientWidth;
+          if (w === lastW) return;
+          lastW = w;
+          target.style.zoom = "";
+          const cs = getComputedStyle(panel), avail = w - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+          const need = Math.max(target.scrollWidth, board.scrollWidth);
+          const z = need > avail + 1 ? Math.max(0.5, avail / need) : 1;
+          if (z < 1) target.style.zoom = String(z);
+        };
+        new ResizeObserver(fit).observe(panel);
+        addEventListener("load", () => { lastW = -1; fit(); }, { once: true });
+      }
+    }
+  }
+  setupCommonSpec();
 
   const root = document.getElementById("helpContent");
   if (!root) return;
