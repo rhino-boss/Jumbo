@@ -2584,7 +2584,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261112b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261112c-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = new URLSearchParams(location.search).get("config")
@@ -3682,9 +3682,9 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-12 14:52";
-  window.DEMOGAME_LAST_CODE = "2026-11-12 14:52";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-12 14:52";
+  window.DEMOGAME_LAST_TUNING = "2026-11-12 16:07";
+  window.DEMOGAME_LAST_CODE = "2026-11-12 16:07";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-12 16:07";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 100 倍；額外押注 2 倍、超級特色 300 倍尚未開放（按鈕先鎖住）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Buy Feature 100x; Extra Bet 2x and Super Feature 300x are not open yet (buttons locked); no jackpot"]}};</script>
