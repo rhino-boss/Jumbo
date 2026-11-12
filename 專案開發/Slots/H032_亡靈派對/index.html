@@ -1448,18 +1448,8 @@
 
     #controls button:disabled,
     #play-panel button:disabled,
-    /* 2026-11-12：EB／SF 先放按鈕、鎖住不給玩（製作中） */
-    #bet-mode-panel button.is-locked { position: relative; cursor: not-allowed; }
-    /* 2026-11-12：四顆押注模式按鈕壓在同一行 */
-    html body.slot-simulator #app-shell #bet-mode-panel .zone-body, #bet-mode-panel .zone-body { flex-wrap: nowrap !important; gap: 6px !important; }
-    html body.slot-simulator #app-shell #bet-mode-panel .zone-body button, #bet-mode-panel .zone-body button { flex: 0 0 88px !important; width: 88px !important; min-width: 0 !important; height: 34px !important; padding: 2px 4px !important; font-size: 11px !important; line-height: 1.3 !important; overflow: hidden; }
-    #bet-mode-panel .mode-price { display: block; margin-top: 1px; font-size: 9px; line-height: 1.2; opacity: .85; }
+    /* 2026-11-12：押注模式按鈕樣式（一排、88px、未開放壓黑）改由 demogame_common.js 統一；這裡只留標題間距 */
     #bet-mode-panel .zone-label { display: block; margin-bottom: 8px; }
-    #bet-mode-panel .zone-body button { text-transform: none !important; }
-    /* 鎖住：按鈕上斜拉一條鎖鏈 */
-    #bet-mode-panel button.is-locked { overflow: hidden; opacity: 1 !important; color: #4a5563 !important; background: #0b111a !important; }
-    body.slot-simulator #app-shell #bet-mode-panel button.is-locked, body.slot-simulator #app-shell #bet-mode-panel button.is-locked.demogame-buy-btn { background: #0b111a !important; color: #4a5563 !important; box-shadow: none !important; }
-    /* 未開放：不能按，直接壓黑 */
     #bet-mode-panel button:disabled {
       opacity: 0.4;
       cursor: default;
@@ -3698,7 +3688,7 @@
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 100 倍；額外押注 2 倍、超級特色 300 倍尚未開放（按鈕先鎖住）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Buy Feature 100x; Extra Bet 2x and Super Feature 300x are not open yet (buttons locked); no jackpot"]}};</script>
-  <script src="../demogame_common.js?v=20261112t"></script>
+  <script src="../demogame_common.js?v=20261112u"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
     (function () {
