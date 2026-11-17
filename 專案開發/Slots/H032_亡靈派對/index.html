@@ -2913,10 +2913,10 @@
     #jpBar .jp-op{position:relative;justify-self:center;display:flex;align-items:center;justify-content:center;width:52px;height:52px}
     #jpBar .jp-op svg{display:block;width:50px;height:50px;overflow:visible}
     /* 上下置中：箱蓋打開後圖形往上長，整體下移補回（單位＝viewBox 48） */
-    /* 各階看得到的上下範圍（viewBox 48）：1 階 10～47、2 階 6～47（蓋子掀起）、3 階 9.6～47、4 階 3.5～47.5 → 各自移到中心 24 */
-    #jpBar .jp-op .root{transform:translateY(-4.5px);transition:transform .35s}
-    #jpBar .jp-op[data-lv="2"] .root{transform:translateY(-2.1px)}
-    #jpBar .jp-op[data-lv="3"] .root{transform:translateY(-4.3px)}
+    /* 各階看得到的箱體上下範圍置中（不算地面淡影；第 4 階含兩側落地金幣） */
+    #jpBar .jp-op .root{transform:translateY(-3px);transition:transform .35s}
+    #jpBar .jp-op[data-lv="2"] .root{transform:translateY(-0.5px)}
+    #jpBar .jp-op[data-lv="3"] .root{transform:translateY(-2.8px)}
     #jpBar .jp-op[data-lv="4"] .root{transform:translateY(-2px)}
     #jpBar .jp-op .lid-closed{transform-box:view-box;transform-origin:24px 24px;transition:transform .35s,opacity .25s}
     #jpBar .jp-op .lid-open{transform-box:fill-box;transform-origin:50% 100%;transition:transform .35s,opacity .25s}
@@ -3976,8 +3976,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 14:16";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:16";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 14:22";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:22";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
