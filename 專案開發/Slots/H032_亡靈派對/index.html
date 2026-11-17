@@ -1446,10 +1446,11 @@
       cursor: pointer;
     }
 
-    #controls button:disabled,
-    #play-panel button:disabled,
     /* 2026-11-12：押注模式按鈕樣式（一排、88px、未開放壓黑）改由 demogame_common.js 統一；這裡只留標題間距 */
     #bet-mode-panel .zone-label { display: block; margin-bottom: 8px; }
+    /* 2026-11-17：原本上面那行夾在選擇器清單中間，讓 SPIN／押注等按鈕停用時多出 margin，轉動時控制區上下跳 */
+    #controls button:disabled,
+    #play-panel button:disabled,
     #bet-mode-panel button:disabled {
       opacity: 0.4;
       cursor: default;
@@ -2946,8 +2947,13 @@
     #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
     #board .h019-glyph{display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
       color:#d8e8f4;font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;letter-spacing:.02em;text-shadow:0 2px 3px rgba(0,0,0,.72)}
-    #board .symbol-drop,#board .symbol-settle{animation:h099-symbol-drop var(--drop-duration,160ms) cubic-bezier(.18,.72,.28,1) var(--drop-delay,0ms) both;will-change:transform}
-    @keyframes h099-symbol-drop{from{transform:translateY(var(--drop-start,-112%))}82%{transform:translateY(0)}to{transform:translateY(0)}}
+    /* 2026-11-17：掉落改成「加速落下→觸底小回彈」，不再是一開始就最快、看起來直接出現 */
+    #board .symbol-drop,#board .symbol-settle{animation:h099-symbol-drop var(--drop-duration,300ms) linear var(--drop-delay,0ms) both;will-change:transform}
+    @keyframes h099-symbol-drop{
+      from{transform:translateY(var(--drop-start,-112%));animation-timing-function:cubic-bezier(.55,0,.9,.55)}
+      74%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.6,.4,1)}
+      86%{transform:translateY(-6%);animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+      to{transform:translateY(0)}}
     #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
     @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
     /* 倍數收集飛行體（同 H045 中獎演出） */
@@ -3120,14 +3126,14 @@
           if (row < keep.length) {
             const item = keep[row];
             board[reel][row] = item.symbol; yellow[reel][row] = item.y;
-            if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 18 });
+            if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 60 });
           } else {
             let symbol = draw(tableName, reel);
             while (hasC1 && symbol === 2) symbol = draw(tableName, reel);
             hasC1 = hasC1 || symbol === 2;
             board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true, late);
             if (yellow[reel][row]) yellowSeen = true;
-            motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 18 });
+            motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 60 });
           }
         }
       }
@@ -3317,7 +3323,7 @@
       cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${icon ? " has-symbol-art" : ""}${y ? " yellow gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}`;
       if (motion) {
         cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
-        cell.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片（照 H015）
+        cell.style.setProperty("--drop-duration", `${dropMs(motion.rows)}ms`);   // 2026-11-17：落下時間依掉落格數拉長，加速模式也保留掉落感
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
       }
       const art = icon ? `<span class="sym-icon" aria-label="${code}">${icon}</span>${code === "WW" || code === "C1" ? `<span class="sym-tag">${code === "WW" ? "WILD" : "SCATTER"}</span>` : ""}` : "";
@@ -3411,6 +3417,9 @@
   }
 
   // 補牌落下到位時間：照實機影片量測（Speed 1 為 280ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  // 掉落動畫：最少 240ms（加速也看得出掉落），掉越多格越久；cascade 等待時間取最慢那格
+  function dropMs(rows = 1) { return Math.round(Math.max(240, refillMs()) * (0.85 + 0.15 * Math.max(1, rows))); }
+  function dropWaitMs(drop = []) { return drop.reduce((m, d) => Math.max(m, dropMs(d.rows) + (d.delay || 0) / DROP_SPEED_MULTIPLIER), 0); }
   function refillMs() { return Math.max(40, Math.round(280 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
   async function animateReels(snapshot) {
     const columnsOf = () => {
@@ -3558,7 +3567,7 @@
         const plus = state.pendingPlus || { bumped: [], grow: [] }; state.pendingPlus = null;
         renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop, bumped: plus.bumped });
         popPlusOne(plus.grow);   // 原有的框跳 +1；新框直接以初始倍數出現
-        await wait(refillMs() + 120);
+        await wait(dropWaitMs(snapshot.drop) + 60);
       }
     }
     const last = snapshots.at(-1); if (last) renderBoard(last.board, [], { yellow: last.yellow, frames: last.frames });
@@ -3894,12 +3903,12 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 13:03";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 13:03";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 13:27";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 13:27";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
-  <script src="../demogame_common.js?v=20261112u"></script>
+  <script src="../demogame_common.js?v=20261117a"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
     (function () {
