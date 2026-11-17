@@ -196,7 +196,7 @@ Debug Mode 至少可查看：
 - 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"`，頁尾顯示「最後調性更新：日期 時間」（24 小時制，到分鐘）。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
 - 數值報告按鈕（共用）：有數值報告 `report.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL = "./report.html"`，標題列右側出現「報告」按鈕（英文 Report），與說明、重置排在一起。
 - BG／FG 最大倍數（共用，併在「統計」區，取代原「最高倍數」列）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；沒有 FG 的遊戲只顯示 BG 列，重置清空。
-- Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照 H045），不記演出過程：
+- Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，新的一行在最上面、舊的往下擠，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照 H045），不記演出過程：
   - `Config <名稱> loaded | Version <版本> | Card System On|Off`
   - `#<局號> Normal Bet|Extra Bet|Buy Feature|Super Feature | Bet <押注>[ | Card Range set][ | Replay]`
   - `RNG <碼>`（可點，複製並填入 RNG 欄）
@@ -211,6 +211,7 @@ Debug Mode 至少可查看：
 - 餘額加錢（共用）：「餘額」標籤右邊有純文字「+」（無外框），按一下餘額 +1000（顯示金額）。各遊戲在自己的作用域設 `window.demogameAddCredit = (n) => { 依內部單位換算後加進 state 餘額; 重畫; }`，沒設就不顯示「+」。
 - 訊息列（盤面下方，贏分區）一律照 H032：待命「準備完成 — 請按 Spin」；轉動「Spin」／「Free Spin」；每段得分「WIN x」，有倍數「WIN 原始 × 倍數 = 得分」（轉末才乘的遊戲在轉末顯示），每次閃一下（`#messageBar.fx-bar-hit`）；一轉結束「WIN 總分」或「未中獎」；FG 每轉「FG i/n · WIN x」或「FG i/n · 未中獎」，加局再接「 · +k FG」。除錯文字（Cascade／Pay／Drop／停輪等）只寫 Log，不上訊息列。
 - 押注模式按鈕（共用）：一排排開，每顆 88px（放不下才縮）、高 34px、間距 6px；名稱 11px＋倍數另起一行 9px；未開放的模式 disabled＋`.is-locked`，壓黑（底 #0b111a、字 #4a5563），不寫「製作中」。
+- 重置（RNG 區 `#setRngResetBtn`）與開始（批次模擬 `#batchSimulationStartBtn`）（共用）：跟 SPIN 同款藍色主按鈕（底 #0077cc、白字、高 34px、無外框光暈），disabled 壓暗（底 #102a49、字 #87a7c1）；各遊戲 index.html 不另寫顏色覆寫。
 - 飛行動畫目標（共用）：狀態列 `#strip-bar` 已隱藏、改由盤面上方資訊條鏡射倍數膠囊，倍數飛到 Mult／Sum 等動畫一律用 `window.demogameFxTarget("multPill")` 取得畫面上看得到的目標，不要直接量 `#multPill` 的位置（會飛到左上角）。
 - 新手導覽（共用）：每次進入或重新整理任何 Demo 都自動顯示（不記看過，2026-11-11 使用者），標題列「導覽」可再看；**一次顯示全部**（2026-11-11 使用者：不用一直按下一步）：Spin 鈕、餘額／押注／得分、除錯模式、指標區各一個框＋一句短說明，框線緊貼目標外緣不留空白、框線粗細一致，說明框互不重疊、不壓到其他框；點任意處或按 Esc 關閉。手機版（寬度 ≤760px 或觸控裝置）不顯示導覽，也不放「導覽」鈕（2026-11-11 使用者）。頁面缺的或不在畫面內的元素自動略過（捲動時重新排版），各遊戲不用另外寫。
 - 玩法簡介（共用，累積倍率線型上方，標題「玩法簡介」／Game Overview）：寫**競品**（廠商＋遊戲名）、**期待**（一句話說明這款遊戲玩家期待的過程）與**玩法**（本作相對競品的規格變化，沒有競品就寫主要玩法，3～6 點、每點一句；只寫規格上的變化，不寫權重、機率、調性等隱性設計）；詳細規則放標題列「說明」，不寫在這裡。頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_OVERVIEW = { competitor: "廠商 遊戲名", expect: "…", changes: ["…"] }`，沒設就不顯示。遊戲發想以自家前作為基底時加 `label: "base"`，標籤改顯示「前作」（competitor 填前作名稱與編號）。

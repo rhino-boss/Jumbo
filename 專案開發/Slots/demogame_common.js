@@ -1545,7 +1545,7 @@
   window.demogameRoundPause = () => new Promise((resolve) => setTimeout(resolve, window.demogameSpaceHolding ? DEMOGAME_ROUND_PAUSE_MS / 2 : DEMOGAME_ROUND_PAUSE_MS));
 
   // ===== Log（共用）=====
-  // window.demogameLog(text, type)：寫一行「[HH:MM:SS] text」到 #liveLogBody，最多 500 行。
+  // window.demogameLog(text, type)：寫一行「[HH:MM:SS] text」到 #liveLogBody 最上面（新的在上），最多 500 行。
   // type：info（一般）／mode（局號、模式、FG 觸發）／rng／result（得分、載入、FG 結束）／cascade（有消除的 FG 轉）／error。
   // 統一的行格式（照 H045）：
   //   Config <名稱> loaded | Version <版本> | Card System On|Off
@@ -1563,9 +1563,10 @@
     const line = document.createElement("div");
     line.className = `live-log-line ${type}`;
     line.textContent = `[${new Date().toLocaleTimeString("en-GB", { hour12: false })}] ${text}`;
-    body.appendChild(line);
-    while (body.children.length > 500) body.firstElementChild.remove();
-    body.scrollTop = body.scrollHeight;
+    // 新的一行在最上面、舊的往下擠（2026-11-17）
+    body.prepend(line);
+    while (body.children.length > 500) body.lastElementChild.remove();
+    body.scrollTop = 0;
   };
 
   // Log 裡的「RNG <碼>」行：點一下複製並填入 #rngInput
@@ -1748,7 +1749,10 @@
         color:#6f8fae;background:transparent;font-family:inherit;font-size:var(--demogame-title-size,13px);font-weight:var(--demogame-title-weight,700);line-height:1;
         letter-spacing:0;white-space:nowrap;text-decoration:none;cursor:pointer}
       #demogameTitleActions > a:hover, #demogameTitleActions > button:hover{color:#dceeff;background:rgba(127,160,200,.14)}
-      #demogameTitleActions > a:focus-visible, #demogameTitleActions > button:focus-visible{outline:2px solid rgba(127,160,200,.6);outline-offset:1px}`;
+      #demogameTitleActions > a:focus-visible, #demogameTitleActions > button:focus-visible{outline:2px solid rgba(127,160,200,.6);outline-offset:1px}
+      /* 按鈕之間加「•」分隔（2026-11-17）：點放在按鈕框外（absolute），不吃 hover 底色、點不到 */
+      #demogameTitleActions > * + *{position:relative;margin-left:14px}
+      #demogameTitleActions > * + *::before{content:"•";position:absolute;left:-10px;top:50%;transform:translateY(-50%);color:#6f8fae;opacity:.6;pointer-events:none;background:none}`;
     const titleStyle = getComputedStyle(document.getElementById("gameName") || title);
     group.style.setProperty("--demogame-title-size", titleStyle.fontSize);
     group.style.setProperty("--demogame-title-weight", titleStyle.fontWeight);
@@ -2297,7 +2301,8 @@
     {
       const log = $id("liveLogBody");
       let firstLine = null;
-      const grab = (n = 0) => { if (log?.firstElementChild) firstLine = log.firstElementChild.cloneNode(true); else if (n < 50) setTimeout(() => grab(n + 1), 100); };
+      // 新的在上：最舊的載入行在最下面（lastElementChild）
+      const grab = (n = 0) => { if (log?.lastElementChild) firstLine = log.lastElementChild.cloneNode(true); else if (n < 50) setTimeout(() => grab(n + 1), 100); };
       grab();
       $id("resetBtn")?.addEventListener("click", () => setTimeout(() => {
         const sel = $id("scriptSelect");

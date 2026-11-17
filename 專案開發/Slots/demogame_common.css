@@ -466,15 +466,33 @@ body.slot-simulator #batchSimulationRounds {
 
 body.slot-simulator #batchSimulationStartBtn {
   min-width: 56px;
+  cursor: pointer;
+}
+
+/* 重置（RNG 區）與開始（批次模擬）統一用 SPIN 同款藍色主按鈕（2026-11-17） */
+html body.slot-simulator #controls #setRngResetBtn,
+html body.slot-simulator #batchSimulationStartBtn {
   min-height: 34px;
+  height: 34px;
   padding: 8px 12px;
   border: 0;
   border-radius: 6px;
-  color: #031b18;
-  background: var(--sim-accent);
-  font: 800 12px/1 "Segoe UI", system-ui, sans-serif;
-  cursor: pointer;
+  box-shadow: none;
+  color: #fff;
+  background: #0077cc;
+  font: 700 12px/1 "Segoe UI", system-ui, sans-serif;
 }
+
+html body.slot-simulator #controls #setRngResetBtn:disabled,
+html body.slot-simulator #batchSimulationStartBtn:disabled {
+  color: #87a7c1;
+  background: #102a49;
+  box-shadow: none;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+html body.slot-simulator #batchSimulationStartBtn:disabled { cursor: wait; }
 
 body.slot-simulator .batch-cascade-table,
 body.slot-simulator #batch-simulation table {
