@@ -2753,7 +2753,7 @@
     if (!op || !board) return;
     const cells = Array.from($("board").children).filter(node => node.classList.contains("cell"));
     const targets = [];
-    board.forEach((col, reel) => col.forEach((symbol, line) => { if (symbol === C1 && cells[line * 5 + reel]) targets.push(cells[line * 5 + reel]); }));
+    board.forEach((col, reel) => col.forEach((symbol, line) => { const cell = cells[(3 - line) * 5 + reel]; if (symbol === C1 && cell) targets.push(cell); }));   // 盤面由上往下畫 row 3→0，格子 index＝(3−row)×5＋reel
     if (!targets.length) return;
     const speed = Number($("speedRange").value || 1), dur = Math.max(300, 680 / speed);
     const orc = op.getBoundingClientRect(), ox = orc.left + orc.width / 2, oy = orc.top + orc.height / 2;
@@ -2762,7 +2762,7 @@
       const r = cell.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
       const coin = document.createElement("div"); coin.className = "fx-jp-coin"; coin.style.cssText = `left:${x}px;top:${y}px`;
       document.body.appendChild(coin);
-      const a = coin.animate([{ transform: "translate(0,0) scale(.6)", opacity: 0 }, { transform: "translate(0,-12px) scale(1.1)", opacity: 1, offset: .2 },
+      const a = coin.animate([{ transform: "translate(0,0) scale(1)", opacity: 0 }, { transform: "translate(0,0) scale(1.15)", opacity: 1, offset: .12 }, { transform: "translate(0,-14px) scale(1)", opacity: 1, offset: .25 },
         { transform: `translate(${ox - x}px,${oy - y}px) scale(.8)`, opacity: 1 }], { duration: dur, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" });
       return Promise.race([a.finished.catch(() => {}), wait(dur + 80)]).then(() => {
         coin.remove();
@@ -2870,7 +2870,7 @@
     #jpBar .jp-op.is-struck{animation:jp-strike .32s ease-out}
     @keyframes jp-strike{0%{transform:scale(1)}35%{transform:scale(1.25);color:#fff;border-color:rgba(140,210,255,.9);box-shadow:0 0 16px rgba(95,194,255,.8)}100%{transform:scale(1)}}
     @keyframes jp-hit{50%{filter:brightness(1.6)}}
-    .fx-jp-coin{position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;z-index:90;pointer-events:none;
+    .fx-jp-coin{position:fixed;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;z-index:90;pointer-events:none;
       background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd23f 50%,#b77c00);box-shadow:0 0 8px rgba(255,210,60,.8)}
     /* 彩金遊戲：12 枚金幣，翻到 3 個相同即得該彩金 */
     #board .jp-game{position:absolute;inset:0;z-index:85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(3,11,23,.86);border-radius:10px;animation:fg-banner-in .16s ease-out}
@@ -3903,8 +3903,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 13:27";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 13:27";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 13:32";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 13:32";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
