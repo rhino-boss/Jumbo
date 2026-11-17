@@ -952,17 +952,6 @@
       -webkit-appearance: none;
     }
 
-    #batchSimulationStartBtn {
-      padding: 7px 12px;
-      border: 1px solid rgba(0, 221, 192, 0.45);
-      border-radius: 6px;
-      color: #001c19;
-      background: var(--accent);
-      font: inherit;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-    }
 
     #batchSimulationStartBtn:disabled {
       cursor: wait;
@@ -1374,20 +1363,7 @@
       background: var(--accent);
     }
 
-    #controls #setRngResetBtn {
-      color: #ffffff;
-      background: #0b88b5;
-      border: 1px solid #59ddff;
-      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
-    }
 
-    #controls #setRngResetBtn:disabled {
-      color: #87a7c1;
-      background: #102a49;
-      border-color: #315474;
-      box-shadow: none;
-      opacity: 1;
-    }
 
     .ctrl-sep {
       width: 1px;
@@ -1859,7 +1835,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../../../../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../../../../demogame_common.css?v=8" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -4972,7 +4948,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-12 14:11";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來（至少收到 1 個）", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "每轉停輪後至少 2 個金框、至少 1 個帶倍數", "FG 金框必定帶倍數或「收集」（不出空金框）", "移除 R3 整條金框", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
-  <script src="../../../../demogame_common.js?v=20261112u"></script>
+  <script src="../../../../demogame_common.js?v=20261117b"></script>
 </body>
 
 </html>

@@ -1456,20 +1456,7 @@
       background: var(--accent);
     }
 
-    #controls #setRngResetBtn {
-      color: #ffffff;
-      background: #0b88b5;
-      border: 1px solid #59ddff;
-      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
-    }
 
-    #controls #setRngResetBtn:disabled {
-      color: #87a7c1;
-      background: #102a49;
-      border-color: #315474;
-      box-shadow: none;
-      opacity: 1;
-    }
 
     .ctrl-sep {
       width: 1px;
@@ -2864,10 +2851,10 @@ function renderResultList(spin) {
 
 function appendLog(message) {
   const stamp=new Date().toLocaleTimeString('en-GB',{hour12:false});
-  st.liveLogs.push(`[${stamp}] ${message}`);
-  if(st.liveLogs.length>120) st.liveLogs.shift();
+  st.liveLogs.unshift(`[${stamp}] ${message}`);
+  if(st.liveLogs.length>120) st.liveLogs.pop();
   liveLogBody.textContent=st.liveLogs.join('\n');
-  liveLogBody.scrollTop=liveLogBody.scrollHeight;
+  liveLogBody.scrollTop=0;
 }
 
 function prepareDebugFrames(spin) {
@@ -3212,7 +3199,7 @@ setTimeout(initTrack,80);
 appendLog('H047 ready | H016 reel strips loaded | R1 golden disabled');
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
-  <script src="../../demogame_common.js?v=20261112u"></script>
+  <script src="../../demogame_common.js?v=20261117b"></script>
 </body>
 
 </html>
