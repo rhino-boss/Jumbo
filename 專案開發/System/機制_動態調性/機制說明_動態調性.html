@@ -1,0 +1,758 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>動態調性</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F8F9;
+    --surface:     #FFFFFF;
+    --surface-alt: #EFF3F4;
+    --ink:         #141B20;
+    --ink-mid:     #47555F;
+    --ink-soft:    #6D7C87;
+    --line:        #DCE3E7;
+    --line-soft:   #E8EDEF;
+    --accent:      #0C7480;
+    --accent-deep: #08525B;
+    --accent-soft: #E0EFF0;
+    --warn:        #9A6208;
+    --warn-soft:   #FBF0DC;
+    --danger:      #A63B3B;
+    --danger-soft: #F8E7E7;
+    --ok:          #3A7350;
+    --ok-soft:     #E3F0E7;
+
+    --serif: "Noto Serif TC", "Songti TC", Georgia, serif;
+    --sans:  "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+    --mono:  "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0E1418;
+      --surface:     #151D22;
+      --surface-alt: #1B252B;
+      --ink:         #E3E9EC;
+      --ink-mid:     #A3B0B9;
+      --ink-soft:    #7D8B95;
+      --line:        #27333A;
+      --line-soft:   #1F2A31;
+      --accent:      #4CBDC9;
+      --accent-deep: #7FD6DF;
+      --accent-soft: #113038;
+      --warn:        #D6A253;
+      --warn-soft:   #33280F;
+      --danger:      #D68282;
+      --danger-soft: #351D1D;
+      --ok:          #74B48C;
+      --ok-soft:     #16301F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0E1418;
+    --surface:     #151D22;
+    --surface-alt: #1B252B;
+    --ink:         #E3E9EC;
+    --ink-mid:     #A3B0B9;
+    --ink-soft:    #7D8B95;
+    --line:        #27333A;
+    --line-soft:   #1F2A31;
+    --accent:      #4CBDC9;
+    --accent-deep: #7FD6DF;
+    --accent-soft: #113038;
+    --warn:        #D6A253;
+    --warn-soft:   #33280F;
+    --danger:      #D68282;
+    --danger-soft: #351D1D;
+    --ok:          #74B48C;
+    --ok-soft:     #16301F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 2.5rem) 6rem;
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--line);
+    padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2rem, 4vw, 2.75rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.1rem;
+  }
+  .eyebrow b { color: var(--accent); font-weight: 500; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    line-height: 1.2;
+    letter-spacing: .01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--ink-mid);
+    font-size: 1.02rem;
+  }
+
+  /* the thesis: the RTP equation */
+  .equation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .55rem 1rem;
+    padding: 1.4rem 1.6rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+  }
+  .eq-term { display: flex; flex-direction: column; gap: .15rem; }
+  .eq-num {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3.6vw, 2rem);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .eq-num.is-accent { color: var(--accent); }
+  .eq-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .eq-op {
+    font-family: var(--serif);
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: var(--ink-soft);
+    line-height: 1;
+    position: relative;
+    top: -.15rem;
+  }
+
+  /* ---------- side nav ---------- */
+
+  nav.toc {
+    position: sticky;
+    top: 2rem;
+    font-size: .86rem;
+    line-height: 1.5;
+    border-left: 1px solid var(--line);
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+  nav.toc .toc-head {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: .3rem;
+  }
+  nav.toc a {
+    color: var(--ink-mid);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    width: fit-content;
+  }
+  nav.toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  nav.toc a.sub { padding-left: .85rem; font-size: .8rem; color: var(--ink-soft); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- body ---------- */
+
+  main { min-width: 0; max-width: 74ch; }
+
+  section { padding-top: clamp(1.5rem, 3vw, 2.1rem); scroll-margin-top: 1.5rem; }
+  section > * + * { margin-top: .6rem; }
+
+  /* tables & formula blocks: fixed breathing room against surrounding text */
+  section > .table-wrap,
+  section > .table-wrap + *,
+  section > .formula,
+  section > .formula + * { margin-top: .85rem; }
+  .gate-body .table-wrap { margin: .3rem 0; }
+
+  /* headings: clear separation from their body text, more above than below */
+  section > h2 + * { margin-top: .85rem; }
+  section > * + h3 { margin-top: 1.05rem; }
+  section > h3 + * { margin-top: .65rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.45rem, 3.2vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    text-wrap: balance;
+    display: flex;
+    align-items: baseline;
+    gap: .7rem;
+  }
+  h2 .sec {
+    font-family: var(--mono);
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: .04em;
+    position: relative;
+    top: -.2rem;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.06rem;
+    font-weight: 700;
+    margin: 0;
+    padding-top: .3rem;
+    letter-spacing: .01em;
+    text-wrap: balance;
+  }
+  h3 .sec {
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-right: .5rem;
+  }
+
+  p { margin: 0; max-width: 68ch; }
+
+  ul, ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: .4rem; max-width: 68ch; }
+  li::marker { color: var(--ink-soft); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: var(--surface-alt);
+    padding: .1em .38em;
+    border-radius: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  strong { font-weight: 700; }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: .9rem;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    white-space: pre;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .formula .c { color: var(--ink-soft); }
+
+  /* ---------- tables ---------- */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: .62rem .85rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  td.key { font-weight: 500; white-space: nowrap; }
+
+  /* ---------- callouts ---------- */
+
+  .note {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    padding: .95rem 1.15rem;
+    font-size: .92rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .note.warn   { border-left-color: var(--warn);   background: var(--warn-soft); }
+  .note .tag {
+    font-family: var(--mono);
+    font-size: .67rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 600;
+  }
+  .note.warn .tag { color: var(--warn); }
+  .note p, .note ul { max-width: none; font-size: .92rem; }
+
+  /* ---------- gate flow ---------- */
+
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .gate {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0 1rem;
+  }
+  .gate-rail { display: flex; flex-direction: column; align-items: center; }
+  .gate-dot {
+    width: 2.2rem; height: 2.2rem;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    flex: none;
+  }
+  .gate-line { flex: 1; width: 1px; background: var(--line); min-height: .9rem; }
+  .gate:last-child .gate-line { background: transparent; }
+  .gate-body { padding-bottom: .75rem; display: flex; flex-direction: column; gap: .3rem; }
+  .gate-title { font-weight: 700; font-size: .98rem; padding-top: .28rem; }
+  .gate-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  .branch {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    border-left: 2px solid var(--line);
+    padding-left: .85rem;
+  }
+  .branch-row { display: flex; gap: .6rem; align-items: baseline; font-size: .9rem; }
+  .pill {
+    font-family: var(--mono);
+    font-size: .66rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .12rem .45rem;
+    border-radius: 2px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: none;
+  }
+  .pill.ok     { background: var(--ok-soft);     color: var(--ok);     }
+  .pill.stop   { background: var(--danger-soft); color: var(--danger); }
+  .pill.check  { background: var(--warn-soft);   color: var(--warn);   }
+
+  /* ---------- timeline ---------- */
+
+  .timeline { display: flex; flex-direction: column; }
+  .phase {
+    display: grid;
+    grid-template-columns: 5.5rem 1.6rem minmax(0, 1fr);
+    gap: 0 .9rem;
+  }
+  .phase-spins {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--ink-soft);
+    text-align: right;
+    padding-top: .55rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-rail { display: flex; flex-direction: column; align-items: center; }
+  .phase-mark {
+    width: .7rem; height: .7rem;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: .95rem;
+    flex: none;
+  }
+  .phase.is-newbie .phase-mark { background: var(--surface); border: 2px solid var(--accent); }
+  .phase-line { flex: 1; width: 1px; background: var(--line); }
+  .phase:last-child .phase-line { background: transparent; }
+  .phase-body { padding: .25rem 0 .75rem; display: flex; flex-direction: column; gap: .2rem; }
+  .phase-detail {
+    margin-top: .35rem;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    max-width: 68ch;
+  }
+  .phase-detail summary {
+    cursor: pointer;
+    padding: .4rem .8rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    font-weight: 500;
+    user-select: none;
+  }
+  .phase-detail summary:hover { color: var(--accent); }
+  .phase-detail summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .phase-detail[open] summary { border-bottom: 1px solid var(--line-soft); }
+  .phase-detail ul {
+    padding: .55rem 1rem .65rem 2rem;
+    font-size: .88rem;
+    color: var(--ink-mid);
+    gap: .3rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .phase-name { font-weight: 700; font-size: 1rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .phase-rtp {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-soft);
+    letter-spacing: .04em;
+    font-weight: 400;
+  }
+  .phase-body p { font-size: .92rem; color: var(--ink-mid); }
+
+  /* ---------- step list ---------- */
+
+  ol.steps { list-style: none; padding: 0; counter-reset: s; gap: .65rem; }
+  ol.steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: 2.5rem;
+    font-size: .93rem;
+  }
+  ol.steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: .12rem;
+    width: 1.75rem;
+    height: 1.4rem;
+    font-family: var(--mono);
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 2px;
+    display: grid;
+    place-items: center;
+  }
+
+  /* ---------- pending block ---------- */
+
+  .pending {
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+    padding: 1.3rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+  }
+  .pending-head {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 4.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: .74rem;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.5rem;
+  }
+
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    nav.toc {
+      position: static;
+      border-left: none;
+      border-bottom: 1px solid var(--line);
+      padding: 0 0 1.4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+      gap: .45rem 1rem;
+      margin-top: 2rem;
+    }
+    nav.toc .toc-head { grid-column: 1 / -1; margin-bottom: 0; }
+    nav.toc a.sub { display: none; }
+    main { max-width: none; }
+    .phase { grid-template-columns: 4.2rem 1.4rem minmax(0, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>iGaming 機制說明</span>
+      <span><b>動態調性 · 提案方向</b></span>
+      <span>討論中</span>
+      <span>2026-11-17</span>
+    </div>
+    <h1>動態調性</h1>
+    <p class="standfirst">依玩家當下的遊戲狀態，換一張調性不同、RTP 相同的數學（倍率權重）給玩家。不增加 RTP，只改變玩起來的感覺。</p>
+    <div class="equation">
+      <div class="eq-term"><span class="eq-num">92%</span><span class="eq-label">原本的數學</span></div>
+      <span class="eq-op">=</span>
+      <div class="eq-term"><span class="eq-num is-accent">92%</span><span class="eq-label">換上的數學</span></div>
+      <span class="eq-op">→</span>
+      <div class="eq-term"><span class="eq-num">+0%</span><span class="eq-label">增加的 RTP</span></div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-head">目錄</div>
+    <a href="#direction">§1 提案方向</a>
+    <a href="#why">§2 為什麼這樣設計</a>
+    <a href="#data">§3 現有數據</a>
+    <a class="sub" href="#data-retention">3.1 大倍數與留存</a>
+    <a class="sub" href="#data-fg">3.2 連續沒進 FG</a>
+    <a class="sub" href="#data-flat">3.3 玩得很平</a>
+    <a class="sub" href="#data-overlap">3.4 兩種狀態大多重疊</a>
+    <a href="#ask">§4 需要數據幫忙觀察</a>
+    <a href="#open">§5 待討論</a>
+    <a href="#log">§6 討論紀錄</a>
+  </nav>
+
+  <main>
+
+    <section id="direction">
+      <h2><span class="sec">§1</span>提案方向</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>玩家狀態</th><th>換成的數學（倍率權重）</th><th>想改善的感受</th></tr></thead>
+          <tbody>
+            <tr><td class="key">連續沒進 FG</td><td>低週期（FG 比較容易進）、BG／FG 配比不同</td><td>等不到 FG、沒有期待感</td></tr>
+            <tr><td class="key">玩得很平、沒有起伏</td><td>高波動</td><td>節奏平淡、沒有高潮</td></tr>
+            <tr><td class="key">（待補）</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>所有數學的 RTP 都相同</strong>，只差在調性（FG 週期、BG／FG 配比、波動）。</li>
+        <li>狀態結束後換回原本的數學。</li>
+      </ul>
+    </section>
+
+    <section id="why">
+      <h2><span class="sec">§2</span>為什麼這樣設計</h2>
+      <ol class="steps">
+        <li><strong>客戶反映遊戲太平</strong>（2026-10-22）：節奏平淡、缺少高潮與大倍數，熱度下降快、留存差。</li>
+        <li><strong>有大倍數的那天，隔天比較會回來</strong>：線上 56 天資料顯示，當日最大倍數越高，隔日留存越高（§3.1）。</li>
+        <li><strong>這兩種狀態在自然遊戲裡很常見</strong>：彩罐熱舞玩 200 轉，有 43% 的人一次 FG 都沒進；沒進 FG 的人 RTP 只有約 68%（§3.2）。</li>
+        <li><strong>不花 RTP</strong>：老手救援是補錢，要從救援池出；動態調性只換分布、RTP 不變，不需要另外的預算。</li>
+        <li><strong>沒有期望值套利</strong>：每張數學的 RTP 相同，玩家不管被換到哪一張，每一轉的期望回報都一樣，刻意製造狀態也拿不到更多 RTP。</li>
+      </ol>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>比較</th><th>老手救援</th><th>動態調性</th></tr></thead>
+          <tbody>
+            <tr><td class="key">做法</td><td>RTP 太低時，一把給大倍數</td><td>狀態不好時，換一張調性不同的數學</td></tr>
+            <tr><td class="key">RTP</td><td>增加（救援池每轉提撥 1%）</td><td>不變</td></tr>
+            <tr><td class="key">玩家感受</td><td>一把直接拉回</td><td>接下來一段時間比較好玩</td></tr>
+            <tr><td class="key">期望值套利</td><td>要防（押注檢查、換模式）</td><td>同 RTP，沒有期望值套利</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>兩者可以互補：動態調性先改善過程，RTP 真的掉太低時再由老手救援補。這也呼應系統機制筆記裡「救援形式改成一段好玩的過程（換表）」的想法。</p>
+    </section>
+
+    <section id="data">
+      <h2><span class="sec">§3</span>現有數據</h2>
+
+      <h3 id="data-retention"><span class="sec">3.1</span>大倍數與留存（線上 56 天）</h3>
+      <figure style="margin:0;display:flex;flex-direction:column;gap:.5rem">
+        <img src="assets/retention_multiplier_table.png" alt="倍數留存效果表：依當日老手把數與當日最大倍數，列出留存拉抬倍率" style="width:100%;height:auto;border:1px solid var(--line);border-radius:2px">
+      </figure>
+      <ul>
+        <li>格內數字＝當日最大倍數 ≥ M 的人，隔日留存是 &lt; M 的人的幾倍。</li>
+        <li>例：當日玩 41～100 轉，有碰到 ≥ 80× 的人，隔日留存是沒碰到的人的 <strong>1.58 倍</strong>；101～200 轉碰到 ≥ 100× 是 <strong>1.43 倍</strong>。</li>
+        <li>對動態調性的意義：<strong>玩得很平（最大倍數低）的那天，隔日留存比較差</strong>。</li>
+      </ul>
+
+      <h3 id="data-fg"><span class="sec">3.2</span>自然遊戲：連續沒進 FG</h3>
+      <p>彩罐熱舞 rowdata（92% 基礎，10,000 人 × 1,000 轉，只讀資料統計）。FG 觸發率 0.418%（約 239 轉一次），FG 得分占總得分 26%。</p>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>前 N 轉</th><th class="num">一次 FG 都沒進的玩家</th><th class="num">沒進 FG 的人的 RTP</th><th class="num">有進 FG 的人的 RTP</th></tr></thead>
+          <tbody>
+            <tr><td class="key">100 轉</td><td class="num">65.6%</td><td class="num">67.8%</td><td class="num">137.7%</td></tr>
+            <tr><td class="key">200 轉</td><td class="num">42.7%</td><td class="num">68.3%</td><td class="num">109.7%</td></tr>
+            <tr><td class="key">300 轉</td><td class="num">28.2%</td><td class="num">68.1%</td><td class="num">101.6%</td></tr>
+            <tr><td class="key">400 轉</td><td class="num">18.3%</td><td class="num">—</td><td class="num">—</td></tr>
+            <tr><td class="key">600 轉</td><td class="num">7.8%</td><td class="num">—</td><td class="num">—</td></tr>
+            <tr><td class="key">1,000 轉</td><td class="num">1.4%</td><td class="num">—</td><td class="num">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>一天玩 1,000 轉，最長一段沒進 FG</th><th class="num">玩家比例</th></tr></thead>
+          <tbody>
+            <tr><td class="key">≥ 300 轉</td><td class="num">87.3%</td></tr>
+            <tr><td class="key">≥ 400 轉</td><td class="num">62.4%</td></tr>
+            <tr><td class="key">≥ 500 轉</td><td class="num">38.5%</td></tr>
+            <tr><td class="key">≥ 700 轉</td><td class="num">12.0%</td></tr>
+            <tr><td class="key">中位數</td><td class="num">448 轉</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>沒進 FG 的期間，玩家只拿得到 BG 的回報，RTP 約 <strong>68%</strong>，一直在輸。</li>
+        <li>玩得久的玩家幾乎都會遇到很長一段沒進 FG：一天 1,000 轉，<strong>62%</strong> 的人會連續 400 轉以上沒進 FG。</li>
+      </ul>
+
+      <h3 id="data-flat"><span class="sec">3.3</span>自然遊戲：玩得很平</h3>
+      <p>先用「最大單轉倍數」當作起伏的指標（和 §3.1 留存表同口徑）。</p>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>前 N 轉最大倍數</th><th class="num">100 轉</th><th class="num">200 轉</th><th class="num">400 轉</th></tr></thead>
+          <tbody>
+            <tr><td class="key">&lt; 10×</td><td class="num">18.9%</td><td class="num">3.6%</td><td class="num">0.1%</td></tr>
+            <tr><td class="key">&lt; 20×</td><td class="num">44.7%</td><td class="num">19.3%</td><td class="num">3.6%</td></tr>
+            <tr><td class="key">&lt; 30×</td><td class="num">60.1%</td><td class="num">35.9%</td><td class="num">12.8%</td></tr>
+            <tr><td class="key">&lt; 50×</td><td class="num">78.5%</td><td class="num">61.1%</td><td class="num">37.6%</td></tr>
+            <tr><td class="key">&lt; 100×</td><td class="num">93.5%</td><td class="num">87.7%</td><td class="num">76.6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>玩 200 轉，有 <strong>36%</strong> 的人最大倍數不到 30×；對照 §3.1，這群人的隔日留存比碰到 30× 的人低。</li>
+        <li>以 100 轉為一段看：最大倍數 &lt; 10× 的段落占 19%，這些段落的 RTP 只有 41%；&lt; 20× 占 44%，RTP 54%。</li>
+      </ul>
+
+      <h3 id="data-overlap"><span class="sec">3.4</span>兩種狀態大多重疊</h3>
+      <div class="table-wrap" style="width:fit-content;max-width:100%">
+        <table>
+          <thead><tr><th>前 200 轉</th><th class="num">玩家比例</th></tr></thead>
+          <tbody>
+            <tr><td class="key">沒進 FG</td><td class="num">42.7%</td></tr>
+            <tr><td class="key">最大倍數 &lt; 20×（很平）</td><td class="num">19.3%</td></tr>
+            <tr><td class="key">兩者都是</td><td class="num">18.5%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li>在彩罐熱舞，<strong>很平的人有 96% 也沒進 FG</strong>，因為大倍數主要來自 FG。</li>
+        <li>所以「很平」需要一個和 FG 無關的定義，才會和「連續沒進 FG」分開（例：有進 FG 但倍數都很小、BG 一直小贏小輸）。這點要討論（§5）。</li>
+        <li>沒有 FG 的遊戲（例：超級寶石），只會用到「很平」這一種。</li>
+      </ul>
+    </section>
+
+    <section id="ask">
+      <h2><span class="sec">§4</span>需要數據幫忙觀察</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>要觀察什麼</th><th>用來決定什麼</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>當日有沒有進 FG × 隔日留存（依當日把數分段，同倍數留存表格式）</td><td>「沒進 FG」是否真的影響留存</td></tr>
+            <tr><td class="num">2</td><td>當日最長一段沒進 FG 的轉數 × 隔日留存</td><td>連續幾轉沒進 FG 要換表</td></tr>
+            <tr><td class="num">3</td><td>玩家當天離開時，距離上次 FG 幾轉（和自然分布比）</td><td>久沒進 FG 的人是否比較早離開</td></tr>
+            <tr><td class="num">4</td><td>當日起伏指標（最大倍數、贏分標準差、≥ 10× 次數）× 隔日留存</td><td>怎麼定義「很平」、門檻多少</td></tr>
+            <tr><td class="num">5</td><td>不同調性遊戲（高波動／低波動、FG 週期長短）的留存與遊玩時長</td><td>要換成什麼調性</td></tr>
+            <tr><td class="num">6</td><td>上線後 A/B：換表組 vs 不換組的留存、遊玩時長、轉數、RTP</td><td>機制是否有效</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="open">
+      <h2><span class="sec">§5</span>待討論</h2>
+      <ul>
+        <li><strong>狀態怎麼判定</strong>：連續幾轉沒進 FG？「很平」用什麼指標、和沒進 FG 怎麼分開？</li>
+        <li><strong>換多久</strong>：換表後持續幾轉，或進到 FG／出現大倍數就換回？</li>
+        <li><strong>每款遊戲要多做幾張數學</strong>：每張都要調到相同 RTP、要做模擬驗證，開發量會增加。</li>
+        <li><strong>和新手體驗、老手救援的關係</strong>：同時成立時誰優先？換表期間救援照常判定嗎？</li>
+        <li><strong>長期 RTP</strong>：每張數學 RTP 相同，理論上長期 RTP 不變；仍要模擬確認換表規則不會讓實際 RTP 偏掉。</li>
+        <li><strong>送驗</strong>：多張數學與切換規則要怎麼送驗。</li>
+      </ul>
+    </section>
+
+    <section id="log">
+      <h2><span class="sec">§6</span>討論紀錄</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>日期</th><th>內容</th></tr></thead>
+          <tbody>
+            <tr><td class="key">2026-11-17</td><td>機制命名為「動態調性」；方向：連續沒進 FG 換低週期表、玩得很平換高波動表，所有數學 RTP 相同。整理設計理由、現有數據（倍數留存表、彩罐熱舞自然遊戲統計）與需要數據觀察的項目，準備跟老闆提案。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>iGaming 機制說明 · 動態調性</span>
+    <span>自然遊戲統計：彩罐熱舞 rowdata 92% × 10,000 人 × 1,000 轉（System/機制_動態調性/simulator/natural_state.py）</span>
+    <span>2026-11-17</span>
+  </footer>
+
+</div>
