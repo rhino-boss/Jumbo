@@ -2913,10 +2913,16 @@
     #jpBar .jp-box.is-locked .jp-v{text-shadow:none}
     #jpBar .jp-box.is-hit{animation:jp-hit .5s ease-in-out 4}
     /* OP 寶箱（2026-11-17）：箱蓋用 Gemini 版、透視金幣；依「距上次中彩金的押注次數」分 4 階，只有被 SC 金幣打中才換階；中彩金後回第 1 階
-       彩金列：中間那格加寬，寶箱放大到 62px，靠陰影凸顯（聚光放射 11/17 拿掉） */
-    #jpBar{grid-template-columns:1fr 1fr 84px 1fr 1fr !important}
+       彩金列：中間那格加寬，寶箱放大到 62px，後面聚光放射＋寶箱陰影 */
+    #jpBar{grid-template-columns:1fr 1fr 84px 1fr 1fr !important;background:linear-gradient(90deg,#030b17 0,#06152b 50%,#030b17 100%) !important}
     #jpBar .jp-op{position:relative;justify-self:center;display:flex;align-items:center;justify-content:center;width:84px;height:56px}
-    #jpBar .jp-op svg{position:relative;z-index:1;display:block;width:62px;height:62px;overflow:visible;transform-origin:50% 85%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.85)) drop-shadow(0 6px 10px rgba(0,0,0,.6))}   /* 2026-11-17：拿掉聚光，改用陰影讓寶箱浮出來 */
+    #jpBar .jp-op::before{content:"";position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+      background:radial-gradient(circle,rgba(95,180,255,.10) 0,rgba(95,180,255,.10) 34%,rgba(95,180,255,.28) 48%,rgba(95,180,255,.08) 62%,transparent 72%)}
+    #jpBar .jp-op::after{content:"";position:absolute;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+      background:repeating-conic-gradient(from 0deg,rgba(150,210,255,.2) 0 8deg,transparent 8deg 22deg);
+      -webkit-mask:radial-gradient(circle,transparent 46%,#000 56%,transparent 72%);mask:radial-gradient(circle,transparent 46%,#000 56%,transparent 72%);animation:jp-spot-spin 14s linear infinite}
+    @keyframes jp-spot-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    #jpBar .jp-op svg{position:relative;z-index:1;display:block;width:62px;height:62px;overflow:visible;transform-origin:50% 85%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.85)) drop-shadow(0 6px 10px rgba(0,0,0,.6))}   /* 2026-11-17：寶箱加深陰影，跟後面的聚光分開 */
     #jpBar .jp-op .lvp{display:none}
     #jpBar .jp-op[data-lv="1"] .l1,#jpBar .jp-op[data-lv="2"] :is(.l2,.c2),#jpBar .jp-op[data-lv="3"] :is(.l3,.c2,.c3),#jpBar .jp-op[data-lv="4"] :is(.l4,.c2,.c3,.c4){display:inline}
     /* 各階看得到的範圍上下置中（viewBox 48） */
@@ -2944,15 +2950,18 @@
     #board .jp-game{position:absolute;inset:0;z-index:85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(3,11,23,.86);border-radius:10px;animation:fg-banner-in .16s ease-out}
     #board .jp-game-title{font-weight:800;font-size:15px;letter-spacing:.16em;color:#dceeff}
     #board .jp-game-grid{display:grid;grid-template-columns:repeat(4,58px);gap:10px 14px;perspective:600px}
-    /* 金幣（2026-11-17 改簡單版）：平面金幣（金色漸層＋暗金邊＋一圈內環＋OP 字）；點了翻面，背面是彩金色細框＋彩金名稱 */
+    /* 金幣（2026-11-17）：金屬外圈＋凸起內盤＋左上高光＋OP 浮雕字；點了翻面，背面是彩金色細框＋彩金名稱 */
     #board .jp-coin{position:relative;width:58px;height:58px;cursor:pointer;user-select:none;transform-style:preserve-3d;transition:transform .4s ease}
     #board .jp-coin:not(.is-open):hover{transform:translateY(-2px)}
     #board .jp-coin.is-open{cursor:default;transform:rotateY(180deg)}
     #board .jp-coin .face{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-family:"Segoe UI",system-ui,sans-serif}
-    #board .jp-coin .front{background:linear-gradient(160deg,#ffe37a,#f5b82a 55%,#d38f0c);border:2px solid #b07400;box-shadow:0 3px 8px rgba(0,0,0,.5)}
-    #board .jp-coin .front::before{content:"";position:absolute;inset:6px;border-radius:50%;border:1.5px solid rgba(140,90,0,.45)}
+    #board .jp-coin .front{background:radial-gradient(circle at 34% 28%,#fff6c4 0,#ffd54a 30%,#eba516 68%,#a86c00 100%);
+      box-shadow:inset 0 0 0 2px #b97c06,inset 0 0 0 3px rgba(255,236,150,.85),inset 0 -4px 6px rgba(110,62,0,.45),0 4px 9px rgba(0,0,0,.55)}
+    #board .jp-coin .front::before{content:"";position:absolute;inset:9px;border-radius:50%;background:radial-gradient(circle at 40% 32%,#ffe68a,#f4b628 72%,#dc9a12);
+      box-shadow:inset 0 2px 3px rgba(120,70,0,.5),0 1px 0 rgba(255,248,205,.85)}
+    #board .jp-coin .front::after{content:"";position:absolute;left:14%;top:9%;width:38%;height:22%;border-radius:50%;background:rgba(255,255,255,.45);filter:blur(2px);transform:rotate(-25deg)}
     #board .jp-coin:not(.is-open):hover .front{filter:brightness(1.08)}
-    #board .jp-coin .front b{position:relative;font-size:15px;font-weight:900;letter-spacing:.04em;color:#7a4c00}
+    #board .jp-coin .front b{position:relative;z-index:1;font-size:15px;font-weight:900;letter-spacing:.03em;color:#8a5400;text-shadow:0 1px 0 rgba(255,244,196,.9),0 -1px 0 rgba(110,60,0,.35)}
     #board .jp-coin .back{--c:120,170,230;transform:rotateY(180deg);background:#0b1a2f;border:1.5px solid rgb(var(--c))}
     #board .jp-coin .back b{font-size:10px;font-weight:800;letter-spacing:.04em;color:rgb(var(--c))}
     #board .jp-coin.j0 .back{--c:255,122,132}#board .jp-coin.j1 .back{--c:197,151,255}#board .jp-coin.j2 .back{--c:98,185,255}#board .jp-coin.j3 .back{--c:108,228,156}
@@ -3968,8 +3977,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 14:55";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:55";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 14:57";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:57";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
