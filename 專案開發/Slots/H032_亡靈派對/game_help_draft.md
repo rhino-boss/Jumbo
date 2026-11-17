@@ -37,7 +37,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 散佈符號 | SCATTER SYMBOL |
-| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {3} 個或以上 [C1]，即可觸發免費遊戲特色，獲得 {10} 場免費遊戲。 | ▪ AFTER ALL CASCADES END, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE AND AWARD {10} FREE SPINS. |
+| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {3} 個或以上 [C1]，即可觸發免費遊戲特色。 | ▪ AFTER ALL CASCADES END, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
 
 ### 賠率表
 
