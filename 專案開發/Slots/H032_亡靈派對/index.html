@@ -1523,20 +1523,8 @@
       background: var(--accent);
     }
 
-    #controls #setRngResetBtn {
-      color: #ffffff;
-      background: #0b88b5;
-      border: 1px solid #59ddff;
-      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
-    }
+    /* 「重置」「開始」樣式（含 disabled）由 demogame_common.css 統一（2026-11-17） */
 
-    #controls #setRngResetBtn:disabled {
-      color: #87a7c1;
-      background: #102a49;
-      border-color: #315474;
-      box-shadow: none;
-      opacity: 1;
-    }
 
     .ctrl-sep {
       width: 1px;
@@ -2097,7 +2085,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=7" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=8" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h032-no-border">
     /* 2026-11-12 區域拿掉外框：區塊底色不變，改用更深的背景＋陰影把區塊和背景分開（放在共用 css 之後，只影響本款） */
     body.slot-simulator, body.slot-simulator.fg-mode { background: #010409; }
@@ -2302,6 +2290,13 @@
     </div>
 
     <div id="app-shell">
+      <div class="jp-bar" id="jpBar" aria-label="OP Jackpot">
+        <div class="jp-box jp-grand" data-jp="0"><span class="jp-k">GRAND</span><span class="jp-v" id="jpV0">0</span></div>
+        <div class="jp-box jp-major" data-jp="1"><span class="jp-k">MAJOR</span><span class="jp-v" id="jpV1">0</span></div>
+        <div class="jp-op" id="jpOp"><span>OP</span></div>
+        <div class="jp-box jp-minor" data-jp="2"><span class="jp-k">MINOR</span><span class="jp-v" id="jpV2">0</span></div>
+        <div class="jp-box jp-mini" data-jp="3"><span class="jp-k">MINI</span><span class="jp-v" id="jpV3">0</span></div>
+      </div>
       <section id="grid-panel">
         <div class="board-shell">
           <div class="multiplier-track" aria-label="Frame multiplier total">
@@ -2393,6 +2388,11 @@
               <option value="goldframe" data-h099-text="scriptGoldFrame">金符號落入倍數框並消除</option>
               <option value="fg" data-h099-text="scriptFg">有觸發 FG</option>
               <option value="fgbig" data-h099-text="scriptFgbig">FG 100x 以上</option>
+              <option value="jp" data-h099-text="scriptJp">觸發彩金（隨機）</option>
+              <option value="jp0" data-h099-text="scriptJp0">觸發 GRAND</option>
+              <option value="jp1" data-h099-text="scriptJp1">觸發 MAJOR</option>
+              <option value="jp2" data-h099-text="scriptJp2">觸發 MINOR</option>
+              <option value="jp3" data-h099-text="scriptJp3">觸發 MINI</option>
             </select>
           </label>
           <label class="debug-rng-field" for="rngInput">
@@ -2442,6 +2442,8 @@
           <li>新框帶初始倍數：金色符號消除後留下的框，倍數從 1／2／3／5／10／20／30／50／100X 隨機抽（權重對標 DJ Boom Boom，1X 約 94%），NB 卡片重算；新增額外押注（2x）與超級特色（300x）按鈕，尚未開放先上鎖。（11/12）</li>
           <li>金框對齊競品：BG 每格金框率拉到跟 DJ Boom Boom 一樣（約 21%），FG 拉高 1.2 倍（約 10%）；框初始倍數 2X 以上合計機率不變、往 10X～100X 移，累積倍數最高值超過競品；押注模式按鈕改成一排、未開放的額外押注與超級特色上鎖。（11/12）</li>
           <li>新增押注模式：額外押注 2x（FG 出現率是一般押注的 5 倍）、購買特色改 75x、超級特色 300x（FG 用另一組參數，新框必定有倍數、最少 2X）；四種模式卡片重算，按鈕全部開放。（11/12）</li>
+          <li>額外押注的 FG 線型改得比較平（平均倍數同一般押注，小獎變少、中獎變多，大獎機率維持），FG 保底改同一般押注 5x。（11/17）</li>
+          <li>新增 OP 彩金（JP0100 第 28 組）：盤面上方彩金列 GRAND／MAJOR／MINOR／MINI，每顆 SC 飛一顆金幣打到 OP；觸發後翻 12 枚金幣，湊 3 個相同得該彩金；未滿 $2（NB／EB 看實際押注、BF／SF 看底注）不開放 GRAND／MAJOR。劇本可選「觸發彩金」。（11/17）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2585,7 +2587,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261117a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261117b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = new URLSearchParams(location.search).get("config")
@@ -2700,10 +2702,199 @@
     spinStats: { spins: 0, yellowSeen: 0, yellowUsed: 0, sc: 0, bgFrameMax: 0, fgSessions: 0, fgFrameSum: 0 }
   };
 
+  // ===== OP Jackpot（2026-11-17）：JP0100 第 28 組；A 新手／未開卡片、B 老手中大 Bet（92A／Bet100）、C 老手小 Bet（94A）
+  // RTP 依押注模式的 Bet 欄（NB 1、EB 2、BF 75、SF 300）；GRAND／MAJOR 起始 $1,000／$200（500,000／100,000 credit × denom 0.002）並依 Increment 累積；
+  // MINOR／MINI 為底注倍數。各彩金每局機率 ＝ RTP × 押注 ÷ 獎金；只有盤面出現 C1 的局才能觸發（除以 C1 出現率換算）
+  const JP_NAMES = ["GRAND", "MAJOR", "MINOR", "MINI"];
+  const JP_SET = {
+    A: { inc: [0.0035, 0.005], rtp: { 1: [0.0035, 0.005, 0.008, 0.012], 2: [0.0035, 0.005, 0.008, 0.012], 75: [0.0035, 0.005, 0.016, 0.024], 300: [0.0035, 0.005, 0.02, 0.02] } },
+    B: { inc: [0.0035, 0.005], rtp: { 1: [0.01, 0.01, 0.008, 0.012], 2: [0.01, 0.01, 0.008, 0.012], 75: [0.01, 0.01, 0.008, 0.012], 300: [0.01, 0.01, 0.01, 0.01] } },
+    C: { inc: [0, 0], rtp: { 1: [0, 0, 0.008, 0.012], 2: [0, 0, 0.008, 0.012], 75: [0, 0, 0.016, 0.024], 300: [0, 0, 0.02, 0.02] } },
+  };
+  const JP_SEED = [1000, 200], JP_X = { 1: [50, 10], 2: [50, 10], 75: [75, 15], 300: [300, 60] }, JP_UNLOCK_BET = 2;
+  const JP_C1_RATE = { 0: 0.31, 1: 0.34, 2: 1, 3: 1 };   // 局內第一盤出現 C1 的比例（Demo 實測，見 jpMeasure）
+  state.jp = { pool: [JP_SEED[0] * BASE_BET, JP_SEED[1] * BASE_BET], wins: 0, hits: [0, 0, 0, 0] };
+  // 檔位同模擬程式規範 §1.2.3：NB／EB 用實際押注、BF／SF 用底注；< $2 → C（無 GRAND／MAJOR），≥ $2 → B；未開卡片系統 → A
+  const jpTierAmount = mode => isBuyMode(mode) ? BET_LEVELS[state.betIndex] : BET_LEVELS[state.betIndex] * modeCost(mode);
+  const jpSeries = (mode = state.extraBet ? 1 : 0) => !cardSystemActive() ? "A" : (jpTierAmount(mode) < JP_UNLOCK_BET ? "C" : "B");
+  const jpUnlocked = (mode = state.extraBet ? 1 : 0) => jpTierAmount(mode) >= JP_UNLOCK_BET;
+  const jpBetKey = mode => [1, 2, 75, 300][mode] ?? 1;
+  function jpPrizes(mode = 0) {
+    const x = JP_X[jpBetKey(mode)], b = betUnit();
+    return [state.jp.pool[0], state.jp.pool[1], x[0] * b, x[1] * b];
+  }
+  function renderJp() {
+    const m = state.jpView ?? (state.extraBet ? 1 : 0), prizes = jpPrizes(m), locked = !jpUnlocked(m);   // 按下 BF／SF 起到該局（含 FG）結束，顯示該模式的 MINOR／MINI
+    prizes.forEach((v, k) => { const el = $(`jpV${k}`); if (el) el.textContent = money(v); });
+    document.querySelectorAll("#jpBar .jp-box").forEach(box => box.classList.toggle("is-locked", locked && Number(box.dataset.jp) < 2));
+  }
+  function jpAccrue(wager) {
+    const inc = JP_SET[jpSeries(state.mode)].inc;
+    state.jp.pool[0] += wager * inc[0]; state.jp.pool[1] += wager * inc[1]; renderJp();
+  }
+  // 局結束時判定：有 C1 才可能觸發；回傳中的彩金 index 或 -1
+  function jpDraw(mode, wager, hasC1, force = false) {
+    if (typeof force === "number") return force;   // 腳本指定（測試用，未解鎖也照給）
+    if (force) { const ok = [0, 1, 2, 3].filter(k => k >= 2 || jpUnlocked(mode)); return ok[Math.floor(Math.random() * ok.length)]; }
+    if (!hasC1) return -1;
+    const rtp = JP_SET[jpSeries(mode)].rtp[jpBetKey(mode)], prizes = jpPrizes(mode);
+    const p = rtp.map((r, k) => (k < 2 && !jpUnlocked(mode)) ? 0 : r * wager / prizes[k]);
+    const total = p.reduce((a, b) => a + b, 0), cond = Math.min(1, total / (JP_C1_RATE[mode] || 1));
+    if (Math.random() >= cond) return -1;
+    let u = Math.random() * total;
+    for (let k = 0; k < 4; k++) { u -= p[k]; if (u < 0) return k; }
+    return 3;
+  }
+  const boardHasC1 = board => (board || []).flat().some(symbol => symbol === C1);
+  // C1 出現時金幣飛到 OP（不擋流程太久）
+  async function jpCoinFly(board) {
+    const op = $("jpOp");
+    if (!op || !board) return;
+    const cells = Array.from($("board").children).filter(node => node.classList.contains("cell"));
+    const targets = [];
+    board.forEach((col, reel) => col.forEach((symbol, line) => { if (symbol === C1 && cells[line * 5 + reel]) targets.push(cells[line * 5 + reel]); }));
+    if (!targets.length) return;
+    const speed = Number($("speedRange").value || 1), dur = Math.max(300, 680 / speed);
+    const orc = op.getBoundingClientRect(), ox = orc.left + orc.width / 2, oy = orc.top + orc.height / 2;
+    let struck = false;
+    await Promise.all(targets.map(cell => {
+      const r = cell.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const coin = document.createElement("div"); coin.className = "fx-jp-coin"; coin.style.cssText = `left:${x}px;top:${y}px`;
+      document.body.appendChild(coin);
+      const a = coin.animate([{ transform: "translate(0,0) scale(.6)", opacity: 0 }, { transform: "translate(0,-12px) scale(1.1)", opacity: 1, offset: .2 },
+        { transform: `translate(${ox - x}px,${oy - y}px) scale(.8)`, opacity: 1 }], { duration: dur, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" });
+      return Promise.race([a.finished.catch(() => {}), wait(dur + 80)]).then(() => {
+        coin.remove();
+        if (!struck) { struck = true; op.classList.remove("is-struck"); void op.offsetWidth; op.classList.add("is-struck"); }
+      });
+    }));
+  }
+  // 彩金遊戲：12 枚金幣，先湊滿 3 個的就是中的彩金（結果事先決定）；Auto 自動翻，非 Auto 點金幣翻
+  function jpPickOrder(win) {
+    const ok = k => k >= 2 || jpUnlocked(state.mode);
+    const pool = [0, 1, 2, 3].filter(k => k !== win && ok(k));
+    const others = [];
+    pool.forEach(k => { const n = Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) others.push(k); });
+    const head = [win, win, ...others].sort(() => Math.random() - 0.5);
+    const order = [...head, win];
+    // 沒翻到的金幣（結束時揭露）：用中獎以外的三種彩金輪流補滿 12 枚
+    const fill = [0, 1, 2, 3].filter(k => k !== win), rest = [];
+    for (let i = 0; order.length + rest.length < 12; i++) rest.push(fill[i % fill.length]);
+    return { order, rest: rest.sort(() => Math.random() - 0.5) };
+  }
+  // 彩金遊戲中空白鍵＝隨機翻一枚：要比共用的「空白鍵＝Spin」（demogame_common.js 較晚載入）先註冊，才攔得到
+  let jpSpaceHook = null;
+  window.addEventListener("keydown", e => {
+    if (!jpSpaceHook || (e.code !== "Space" && e.key !== " ")) return;
+    e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) jpSpaceHook();
+  }, true);
+  function playJackpotGame(win, prize) {
+    return new Promise(resolve => {
+      const board = $("board"), { order, rest } = jpPickOrder(win);
+      const wrap = document.createElement("div"); wrap.className = "jp-game";
+      wrap.innerHTML = `<div class="jp-game-title">OP JACKPOT</div><div class="jp-game-grid">${Array.from({ length: 12 }, (_, i) => `<div class="jp-coin" data-i="${i}"><span class="face front"><b>OP</b></span><span class="face back"><b></b></span></div>`).join("")}</div><div class="jp-game-msg">${state.language === "zh" ? "翻開金幣，集滿 3 個相同的彩金" : "PICK COINS — MATCH 3 TO WIN"}</div>`;
+      board.appendChild(wrap); document.documentElement.classList.add("h032-modal-open");
+      const coins = Array.from(wrap.querySelectorAll(".jp-coin"));
+      let step = 0, timer = 0, finished = false;
+      const open = (coin, k) => { coin.classList.add("is-open", `j${k}`); coin.querySelector(".back b").textContent = JP_NAMES[k]; coin.dataset.k = k; };
+      const finish = () => {
+        finished = true; clearInterval(timer); jpSpaceHook = null;
+        coins.filter(c => !c.classList.contains("is-open")).forEach((c, i) => { open(c, rest[i] ?? 3); c.classList.add("is-dim"); });
+        coins.filter(c => Number(c.dataset.k) === win && !c.classList.contains("is-dim")).forEach(c => c.classList.add("is-win"));
+        wrap.querySelector(".jp-game-msg").textContent = `${JP_NAMES[win]}  ${money(prize)}`;
+        document.querySelector(`#jpBar .jp-box[data-jp="${win}"]`)?.classList.add("is-hit");
+        setTimeout(() => {
+          wrap.remove(); document.documentElement.classList.remove("h032-modal-open");
+          document.querySelector(`#jpBar .jp-box[data-jp="${win}"]`)?.classList.remove("is-hit"); resolve();
+        }, state.auto ? 1400 : 1800);
+      };
+      const pick = coin => {
+        if (finished || coin.classList.contains("is-open")) return;
+        open(coin, order[step++]);
+        if (step >= order.length) finish();
+      };
+      coins.forEach(c => c.addEventListener("click", e => { e.stopPropagation(); pick(c); }));
+      // 按空白鍵或點盤面上金幣以外的地方 → 隨機幫忙翻一枚
+      const pickRandom = () => { const left = coins.filter(c => !c.classList.contains("is-open")); if (left.length) pick(left[Math.floor(Math.random() * left.length)]); };
+      wrap.addEventListener("click", () => pickRandom());
+      jpSpaceHook = pickRandom;
+      const speed = Number($("speedRange").value || 1);
+      if (state.auto) timer = setInterval(() => pick(coins.filter(c => !c.classList.contains("is-open"))[Math.floor(Math.random() * coins.filter(c => !c.classList.contains("is-open")).length)]), Math.max(120, 380 / speed));
+    });
+  }
+  async function jpSettle(mode, wager, hasC1, force = false) {
+    const k = jpDraw(mode, wager, hasC1, force);
+    if (k < 0) return 0;
+    const prize = jpPrizes(mode)[k];
+    appendLog(`OP Jackpot | ${JP_NAMES[k]} ${money(prize)} | JP0100${jpSeries(mode)}（第 28 組）`, "result");
+    await playJackpotGame(k, prize);
+    if (k < 2) state.jp.pool[k] = JP_SEED[k] * BASE_BET;
+    state.jp.wins += prize; state.jp.hits[k]++; state.totalWin += prize; state.balance += prize; state.lastWin += prize;
+    renderJp(); updateStats();
+    return prize;
+  }
+  window.jpMeasure = (n = 3000, mode = 0) => { let c = 0; for (let i = 0; i < n; i++) { const r = drawRound(mode, ""); if (boardHasC1(r.base.snapshots?.[0]?.board)) c++; } return c / n; };
+
   document.head.insertAdjacentHTML("beforeend", `<style>
     #multiplierWindow{grid-template-columns:1fr!important;transform:none!important}
     /* 框倍數總和：格式同 H045 階梯倍數（單一顆 is-active 的 multiplier-step） */
     #multiplierWindow .multiplier-step .ft-k{font-weight:400;font-size:.8em;margin-right:4px}
+    /* OP 彩金列（2026-11-17）：左至右 GRAND／MAJOR／OP／MINOR／MINI；C1 出現時金幣飛到 OP */
+    /* 彩金列（2026-11-17 v4）：一條黑色凹槽（同「倍數總和」），獨立放在盤面面板正上方、不另包面板；細線分隔，OP 是嵌在中間的藍色小圓章 */
+    /* 共用 JS 會把 #app-shell 排成 盤面(1)／盤面下方(2)／右欄(1~2)；彩金插在最上面，其餘往下推一列 */
+    html body.slot-simulator #app-shell:has(> #jpBar){grid-template-rows:auto auto 1fr}   /* 右欄跨三列時多出的高度只給最後一列，彩金與盤面之間不會被撐開 */
+    html body.slot-simulator #app-shell > #jpBar{grid-column:1 !important;grid-row:1 !important}
+    html body.slot-simulator #app-shell > #grid-panel{grid-column:1 !important;grid-row:2 !important}
+    html body.slot-simulator #app-shell > #demogame-under-board{grid-column:1 !important;grid-row:3 !important}
+    html body.slot-simulator #app-shell > #right-panel{grid-column:2 !important;grid-row:1 / span 3 !important}
+    @media (max-width:760px){html body.slot-simulator #app-shell > #right-panel{grid-column:1 !important;grid-row:4 !important}}
+    #jpBar{display:grid;grid-template-columns:1fr 1fr 52px 1fr 1fr;align-items:center;height:56px;padding:0 10px;border-radius:12px;
+      background:linear-gradient(180deg,rgba(120,170,230,.05),rgba(0,0,0,0) 45%),#030b17;border:1px solid rgba(120,170,230,.16);box-shadow:inset 0 2px 10px rgba(0,0,0,.7)}
+    #jpBar .jp-box{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:100%;line-height:1;transition:opacity .2s,filter .2s}
+    #jpBar .jp-major::before,#jpBar .jp-mini::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:1px;background:linear-gradient(180deg,transparent,rgba(120,170,230,.28),transparent)}
+    #jpBar .jp-k{font-size:11px;font-weight:800;letter-spacing:.14em}
+    #jpBar .jp-v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:#f2f7ff}
+    #jpBar .jp-grand .jp-k{color:#ff7a84}#jpBar .jp-grand .jp-v{text-shadow:0 0 10px rgba(255,110,120,.55)}
+    #jpBar .jp-major .jp-k{color:#c597ff}#jpBar .jp-major .jp-v{text-shadow:0 0 10px rgba(190,140,255,.55)}
+    #jpBar .jp-minor .jp-k{color:#62b9ff}#jpBar .jp-minor .jp-v{text-shadow:0 0 10px rgba(90,180,255,.55)}
+    #jpBar .jp-mini .jp-k{color:#6ce49c}#jpBar .jp-mini .jp-v{text-shadow:0 0 10px rgba(100,224,150,.5)}
+    #jpBar .jp-box.is-locked{opacity:.45;filter:grayscale(.85)}
+    #jpBar .jp-box.is-locked .jp-v{text-shadow:none}
+    #jpBar .jp-box.is-hit{animation:jp-hit .5s ease-in-out 4}
+    /* OP：雙圈藍色圓章（外圈細亮環＋內圈深藍底），帶微光 */
+    #jpBar .jp-op{position:relative;justify-self:center;width:42px;font-family:"Segoe UI",system-ui,sans-serif;height:42px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;letter-spacing:.04em;color:#e8f5ff;
+      background:radial-gradient(circle at 50% 30%,#1d4f8f,#0a1c36 70%);border:1px solid rgba(110,200,255,.75);
+      box-shadow:0 0 0 3px #030b17,0 0 0 4px rgba(110,200,255,.25),0 0 14px rgba(80,170,255,.45),inset 0 1px 0 rgba(255,255,255,.18);text-shadow:0 0 6px rgba(120,200,255,.9)}
+    #jpBar .jp-op span{position:relative}
+    @keyframes jp-op-shine{0%,55%{transform:translateX(-120%)}85%,100%{transform:translateX(120%)}}
+    #jpBar .jp-op.is-struck{animation:jp-strike .32s ease-out}
+    @keyframes jp-strike{0%{transform:scale(1)}35%{transform:scale(1.25);box-shadow:0 0 0 3px #030b17,0 0 0 4px rgba(110,200,255,.6),0 0 24px rgba(95,194,255,1)}100%{transform:scale(1)}}
+    @keyframes jp-hit{50%{filter:brightness(1.6)}}
+    .fx-jp-coin{position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;z-index:90;pointer-events:none;
+      background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd23f 50%,#b77c00);box-shadow:0 0 8px rgba(255,210,60,.8)}
+    /* 彩金遊戲：12 枚金幣，翻到 3 個相同即得該彩金 */
+    #board .jp-game{position:absolute;inset:0;z-index:85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(3,11,23,.86);border-radius:10px;animation:fg-banner-in .16s ease-out}
+    #board .jp-game-title{font-weight:800;font-size:16px;letter-spacing:.14em;color:#ffe9a6;text-shadow:0 0 10px rgba(255,200,80,.45)}
+    #board .jp-game-grid{display:grid;grid-template-columns:repeat(4,62px);gap:10px 14px;perspective:600px}
+    /* 金幣：正面同 OP 徽章（金屬環＋深金底＋刻字 OP），點了 3D 翻面；背面深色硬幣＋彩金色外圈 */
+    #board .jp-coin{position:relative;width:62px;height:62px;cursor:pointer;user-select:none;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,1.4,.5,1)}
+    #board .jp-coin:not(.is-open):hover{transform:translateY(-3px) scale(1.04)}
+    #board .jp-coin.is-open{cursor:default;transform:rotateY(180deg)}
+    #board .jp-coin .face{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+    #board .jp-coin .front{background:conic-gradient(from 210deg,#7a4a06,#ffe7a0,#c98a12,#fff2c4,#8a5a0a,#ffd76a,#7a4a06);box-shadow:0 4px 10px rgba(0,0,0,.6),0 0 12px rgba(255,196,60,.3)}
+    #board .jp-coin .front::before{content:"";position:absolute;inset:5px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#ffe9a8 0%,#f2b632 38%,#b8780a 78%,#7d4f05 100%);
+      box-shadow:inset 0 2px 3px rgba(255,255,255,.55),inset 0 -3px 5px rgba(80,40,0,.55)}
+    #board .jp-coin .front::after{content:"";position:absolute;inset:11px;border-radius:50%;border:1px dashed rgba(110,60,0,.45)}
+    #board .jp-coin .front b{position:relative;z-index:1;font-size:17px;font-weight:900;color:#5a3300;text-shadow:0 1px 0 rgba(255,240,190,.85),0 -1px 0 rgba(90,50,0,.6)}
+    #board .jp-coin .back{--c:120,170,230;transform:rotateY(180deg);background:conic-gradient(from 200deg,rgba(var(--c),.35),rgb(var(--c)),rgba(var(--c),.35),rgb(var(--c)),rgba(var(--c),.35));
+      box-shadow:0 4px 10px rgba(0,0,0,.6),0 0 14px rgba(var(--c),.45)}
+    #board .jp-coin .back::before{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 50% 30%,#1c3560,#060f1f 75%);box-shadow:inset 0 2px 6px rgba(0,0,0,.7)}
+    #board .jp-coin .back b{position:relative;z-index:1;font-size:10.5px;font-weight:900;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px rgba(var(--c),.9)}
+    #board .jp-coin.j0 .back{--c:255,96,110}#board .jp-coin.j1 .back{--c:184,128,255}#board .jp-coin.j2 .back{--c:70,172,255}#board .jp-coin.j3 .back{--c:70,214,132}
+    #board .jp-coin.is-dim{opacity:.4}
+    #board .jp-coin.is-win .back{animation:jp-coin-win .5s ease-in-out 3}
+    @keyframes jp-coin-win{50%{box-shadow:0 0 0 2px #fff,0 0 22px rgba(var(--c),1)}}
+    #board .jp-game-msg{min-height:22px;font-size:13px;color:rgba(220,232,250,.8)}
     /* 彈窗／FG 看板出現時背景不能捲動 */
     html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
     /* 觸發 FG 看板：蓋在盤面上；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉 */
@@ -3009,7 +3200,9 @@
     goldframe: r => r.scatter < MIN_SCATTER && r.goldIntoFrame > 0,
     fg: r => r.scatter >= MIN_SCATTER,
     fgbig: r => r.scatter >= MIN_SCATTER,
+    jp: r => r.scatter >= 1 && r.scatter < MIN_SCATTER,   // 盤面有 C1、不觸發 FG；局結束強制進彩金
   };
+  ["jp0", "jp1", "jp2", "jp3"].forEach(key => { SCRIPT_RULES[key] = SCRIPT_RULES.jp; });
   function scriptedSpin(key) {
     const rule = SCRIPT_RULES[key];
     let last = null;
@@ -3371,6 +3564,7 @@
     }
     const last = snapshots.at(-1); if (last) renderBoard(last.board, [], { yellow: last.yellow, frames: last.frames });
     updateDebugButtons();
+    if (last) await jpCoinFly(last.board);   // 消除全部結束後，盤面上的 SC 一起飛去打 OP
   }
 
   function showSnapshot(index) {
@@ -3404,7 +3598,7 @@
   window.demogameAddCredit = (n) => { state.balance += n * BASE_BET; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
   function updateStats() {
     const bet = BET_LEVELS[state.betIndex];
-    $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
+    renderJp(); $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
     $("roundCountValue").textContent = state.rounds.toLocaleString();
     $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
     $("hitRateValue").textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
@@ -3504,11 +3698,11 @@
         const taken = window.demogameRng?.takeInput?.();
         const code = taken ? { seed: taken.seed, mode: Math.max(0, ["NB", "EB", "BF", "SF"].indexOf(taken.mode)), script: taken.opts || "" } : null;
         if (code) mode = code.mode;
-        state.lastWin = 0; state.mode = mode;
+        state.lastWin = 0; state.mode = mode; state.jpView = mode; renderJp();
         window.demogameLineChart?.setMode?.(isBuyMode(mode) ? "BF" : null);
         const cost = betUnit() * modeCost(mode);
         if (state.balance < cost) throw new Error(tr("insufficient"));
-        state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
+        state.balance -= cost; state.totalBet += cost; state.rounds++; jpAccrue(cost); updateStats();
         const script = !isBuyMode(mode) ? (code ? code.script : ($("forceFgInput").checked && !$("scriptSelect").value ? "fg" : $("scriptSelect").value)) : "";
         const seed = code ? code.seed : (window.demogameRng?.newSeed?.() ?? null);
         if (window.demogameRng?.format && seed != null) appendLog(`RNG ${window.demogameRng.format({ config: configLabel(), mode: modeTag(mode), card: cardSystemActive(), opts: script, seed })}`, "rng");
@@ -3528,6 +3722,7 @@
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
         appendLog(`${isBuyMode(mode) ? modeTag(mode) + " Entry" : "BG"} | Cascade ${base.combo} | C1 ${base.scatter} | Peak frame ×${base.peakFrame} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });
+        await jpSettle(mode, cost, boardHasC1(base.snapshots?.[0]?.board), /^jp\d$/.test(script) ? Number(script[2]) : script === "jp");
         const countLine = !script && !code;
         if (feature) {
           activateFeature(feature, mode, base);
@@ -3541,6 +3736,7 @@
       updateStats();
       await window.demogameRoundPause?.();
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; appendLog(`Error | ${error.message}`, "error"); }
+    if (state.fg.index >= state.fg.spins.length) state.jpView = null;   // 整局結束才切回一般／額外押注的彩金顯示
     updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(state.extraBet ? 1 : 0), 180);
   }
 
@@ -3615,14 +3811,14 @@
       baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", superFeature: "Super Feature", fgTriggered: "Free Game Triggered",
       ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS",
-      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptGoldFrame: "Gold lands on a frame and wins", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
+      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptGoldFrame: "Gold lands on a frame and wins", scriptFg: "FG triggered", scriptFgbig: "FG 100x+", scriptJp: "OP Jackpot (random)", scriptJp0: "OP Jackpot GRAND", scriptJp1: "OP Jackpot MAJOR", scriptJp2: "OP Jackpot MINOR", scriptJp3: "OP Jackpot MINI",
       statMaxWin: "Max win (x bet)", statYellowSeen: "Yellow seen", statYellowUsed: "Yellow won", statFrameMax: "BG max frame total", statFgFrameAvg: "FG end frame total (avg)", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", superFeature: "超級特色", fgTriggered: "觸發免費遊戲",
       ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場",
-      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptGoldFrame: "金符號落入倍數框並消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
+      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptGoldFrame: "金符號落入倍數框並消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上", scriptJp: "觸發彩金（隨機）", scriptJp0: "觸發 GRAND", scriptJp1: "觸發 MAJOR", scriptJp2: "觸發 MINOR", scriptJp3: "觸發 MINI",
       statMaxWin: "最大贏分倍數", statYellowSeen: "黃底出現率", statYellowUsed: "黃底消除率", statFrameMax: "BG 最大框總和", statFgFrameAvg: "FG 結束框總和（平均）", statScRate: "SC 出現率"
     }
   };
@@ -3698,9 +3894,9 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-17 10:10";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 10:10";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 10:10";
+  window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 11:27";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 11:27";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>

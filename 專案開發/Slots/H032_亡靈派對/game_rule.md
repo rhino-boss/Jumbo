@@ -12,7 +12,7 @@
 | 彩金群組 | OP（OmniPlay） |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade（掉落） / 倍數框 |
 | 盤面規格 | 5 軸 × 4 列 |
-| 押注模式 | Normal Bet；Extra Bet `2 × Bet`；Buy Feature `75 × Bet`；Super Feature `300 × Bet`；無彩金（2026-11-12 起，見 §8） |
+| 押注模式 | Normal Bet；Extra Bet `2 × Bet`；Buy Feature `75 × Bet`；Super Feature `300 × Bet`；OP Jackpot（2026-11-17 起，見 §9） |
 
 * Game ID、ParSheet ID、遊戲名稱、致敬遊戲與押注選項依 `其他/iGaming 遊戲代號一覽.xlsx`（2026-11-03）。
 * v2（2026-11-09）：輪帶與賠率表以 JILI Super Ace 為底；2026-11-11 起輪帶照 Super Ace 還原帶不重排，各表只調權重（BG：一般表 bg_1（C1 只在第 1、2 軸）／觸發表 bg_2（唯一能觸發 FG，五軸都出 C1）／隱性好表 bg_3（C1 只在第 3、5 軸）；FG：一般表／好表／常中表，定位見 `Source/H0321.xlsx` Game Description）；金色符號（黃底）出現率對標 FC - DJ Boom Boom（2026-11-12：BG 每格金框率對齊競品，各表初始／補牌機率 ×1.137；FG ×1.2，約為競品的八成，避免 FG 自然倍數過高、重骰過多）；2026-11-11 規則改版後金色符號不帶倍數（見 §5）。v1（輪帶以超級鑽石 H045 為底）封存於 `Versions/1.0/`。
@@ -92,7 +92,7 @@
 | 4 | Scatter 觸發 FG 的判定時機 | 所有連消結束後的最終盤面 |
 | 5 | FG 場數上限 | 50 場（沿用 H045） |
 | 6 | Buy Feature 價格 | 75x（2026-11-12 由 100x 改） |
-| 7 | 是否有 Extra Bet／彩金 | 2026-11-12 新增 Extra Bet 2x 與 Super Feature 300x（§8）；彩金仍沒有 |
+| 7 | 是否有 Extra Bet／彩金 | 2026-11-12 新增 Extra Bet 2x 與 Super Feature 300x（§8）；2026-11-17 新增 OP Jackpot（§9） |
 | 8 | 框的成長方式？ | 每段連消全盤所有框 +1；新框本消不 +1；FG 開場無框、框累積到結束（2026-11-11 規則改版） |
 | 9 | 新框的倍數？ | 消除時從 1／2／3／5／10／20／30／50／100X 隨機抽，權重對標 DJ Boom Boom（2026-11-12 新增） |
 
@@ -106,5 +106,26 @@
 | Super Feature | `300 × Bet` | 直接進 FG 10 場；FG 改用 Super 專用的一組自然機率參數（`SF_Symbol`～`SF_Symbol (4)`），金色符號留下的新框必定有倍數（不會抽到 `1X`，最少 `2X`），其餘規則同一般 FG。 |
 
 * Extra Bet RTP 與 Normal Bet 相同（92A 老手 92%）：FG 每場平均倍數不變、週期縮成 1/40，差額由 BG 吸收（老手 BG 29.5%＋FG 62.5%，以 Extra Bet 押注為分母）。
-* Extra Bet 倍率區間依數學模型規範放大 2 倍：BG 上限、FG 下限與上限 ×2（全域上限 20,000x、大 Bet 1,000x 為頂）。
+* Extra Bet 倍率區間：BG 上限、FG 上限 ×2（全域上限 20,000x、大 Bet 1,000x 為頂）；FG 保底同 Normal Bet 5x（2026-11-17 起，原為 ×2）。
+* Extra Bet 的 FG 每場平均倍數（以底注計）與 Normal Bet 相同，但線型較平、保留大獎（2026-11-17）：5～10x 約砍半，10～30x、100～250x 增加，50～100x、250～1,000x 減少，1,000～2,000x 維持。
 * Buy Feature／Super Feature Game RTP 皆 92.5%；Super Feature 的 FG 隱性控制（好局、Retrigger Boost 等）照一般 FG 選表，實際轉同編號的 Super 表。
+
+## §9. OP Jackpot（2026-11-17 新增）
+
+* 彩金數學用 `Slots/OP Jackpot/JP0100A／B／C.xlsm` 的**第 28 組**。
+* 盤面出現 [C1] 時，每顆 [C1] 各飛一顆金幣到彩金列中間的 OP；只有出現 [C1] 的局才可能觸發 OP JACKPOT 特色。
+* 觸發後畫面出現 12 枚金幣，其中包括 GRAND、MAJOR、MINOR、MINI；翻到 3 個相同的即得該彩金。
+
+| 彩金 | 金額 |
+| --- | --- |
+| GRAND | 起始 $1,000，連機累進（Increment 0.35%） |
+| MAJOR | 起始 $200，連機累進（Increment 0.5%） |
+| MINOR | NB／EB 50 倍底注；BF 75 倍底注；SF 300 倍底注 |
+| MINI | NB／EB 10 倍底注；BF 15 倍底注；SF 60 倍底注 |
+
+* 檔位與 GRAND／MAJOR 解鎖都用同一條 $2 線（同模擬程式規範 §1.2.3）：NB／EB 看實際押注，BF／SF 看底注（購買價 ÷ 模式倍數）。
+  * 未滿 $2：用 JP0100C，GRAND／MAJOR 不開放（RTP 0），只能中 MINOR、MINI。
+  * $2 以上：用 JP0100B，四個彩金都可以中。
+  * 新手、卡片系統關閉時用 JP0100A。
+* 例：NB 押 $1、BF 押 $75 只能中 MINOR、MINI；EB 押 $2（底注 $1）、SF 押 $600（底注 $2）四個都可以中。
+* 各彩金 RTP 依押注模式取第 28 組的 Bet 欄（NB 1、EB 2、BF 75、SF 300）；每局機率 ＝ RTP × 押注 ÷ 獎金。
