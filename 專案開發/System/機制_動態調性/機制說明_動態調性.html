@@ -595,12 +595,16 @@
           <tbody>
             <tr><td class="key">表 A：FG 加強</td><td>BG RTP 下降，提高進 FG 的機率</td><td>比較快進 FG</td></tr>
             <tr><td class="key">表 B：中高倍數加強</td><td>BG Hit Rate 下降，提高中高倍數的中獎率</td><td>中獎次數少，但一中就比較大</td></tr>
+            <tr><td class="key">表 C：沒有 FG</td><td>FG RTP 0%，RTP 全部放在 BG</td><td>不會進 FG，BG 比較常中、比較大</td></tr>
+            <tr><td class="key">表 D：連續中獎</td><td>Hit Rate 100%，每轉都中獎</td><td>一直有中獎演出</td></tr>
+            <tr><td class="key">表 E：穩定 FG</td><td>FG 倍數集中，不會太爛也不會太大</td><td>進 FG 一定有一定的收穫</td></tr>
           </tbody>
         </table>
       </div>
       <ul>
         <li><strong>所有數學的 RTP 都和原本的數學相同</strong>，只差在調性。</li>
         <li>狀態結束後換回原本的數學。</li>
+        <li>表 D 要注意：RTP 92% 又每轉都中，大部分中獎會小於押注（中了但其實還是輸），玩家是否覺得好玩要確認。</li>
       </ul>
 
       <h3 id="dir-trigger"><span class="sec">1.2</span>可能換表的情境</h3>
@@ -608,13 +612,18 @@
         <table>
           <thead><tr><th>情境</th><th>玩家感受</th><th>建議換成（待確認）</th></tr></thead>
           <tbody>
-            <tr><td class="key">連續不得分</td><td>一直沒中</td><td>表 B：下一次中獎就是中高倍數。但表 B 的 Hit Rate 更低，不得分可能拖更久，要模擬確認</td></tr>
+            <tr><td class="key">連續不得分</td><td>一直沒中</td><td>表 D：馬上開始有中獎</td></tr>
             <tr><td class="key">連續不進 FG</td><td>等不到 FG</td><td>表 A</td></tr>
             <tr><td class="key">RTP 下滑速度太快</td><td>輸得很快</td><td>表 B：用一次中高倍數拉回</td></tr>
-            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>進了 FG 也沒拿到東西</td><td>表 A：再給一次進 FG 的機會</td></tr>
+            <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>進了 FG 也沒拿到東西</td><td>表 E：下一次 FG 不會太爛</td></tr>
+            <tr><td class="key">RTP 超過 100%</td><td>正在贏錢</td><td>表 C 或表 D：降低波動，避免再開出大獎，穩穩玩下去</td></tr>
           </tbody>
         </table>
       </div>
+      <ul>
+        <li>前四個情境是<strong>改善體驗</strong>；RTP 超過 100% 是<strong>控制波動</strong>。因為每張表 RTP 相同，換表不會讓玩家的期望值變少，只是讓贏錢的玩家不容易再開出大獎。</li>
+        <li>表 B（Hit Rate 更低）不適合「連續不得分」，會讓不得分拖更久。</li>
+      </ul>
     </section>
 
     <section id="why">
@@ -742,7 +751,8 @@
     <section id="open">
       <h2><span class="sec">§5</span>待討論</h2>
       <ul>
-        <li><strong>情境怎麼判定</strong>：連續幾轉不得分、幾轉沒進 FG、RTP 下滑多快算太快、連續幾次 FG 在 10× 以下？</li>
+        <li><strong>情境怎麼判定</strong>：連續幾轉不得分、幾轉沒進 FG、RTP 下滑多快算太快、連續幾次 FG 在 10× 以下、RTP 超過 100% 看多少轉？</li>
+        <li><strong>多個情境同時成立</strong>：例如連續不得分又連續不進 FG，換哪張表？</li>
         <li><strong>情境對應哪張表</strong>：§1.2 的「建議換成」是初步想法，要模擬確認效果。</li>
         <li><strong>換多久</strong>：換表後持續幾轉，或進到 FG／出現大倍數就換回？</li>
         <li><strong>每款遊戲要多做幾張數學</strong>：每張都要調到相同 RTP、要做模擬驗證，開發量會增加。</li>
@@ -760,6 +770,7 @@
           <tbody>
             <tr><td class="key">2026-11-17</td><td>機制命名為「動態調性」；方向：連續沒進 FG 換低週期表、玩得很平換高波動表，所有數學 RTP 相同。整理設計理由、現有數據（倍數留存表、彩罐熱舞自然遊戲統計）與需要數據觀察的項目，準備跟老闆提案。</td></tr>
             <tr><td class="key">2026-11-17</td><td>確定換上的數學有兩種：表 A（BG RTP 下降、提高進 FG 機率）、表 B（BG Hit Rate 下降、提高中高倍數中獎率）。可能換表的情境：連續不得分、連續不進 FG、RTP 下滑速度太快、連續 FG 太爛（10× 以下）。情境對應哪張表待確認。</td></tr>
+            <tr><td class="key">2026-11-17</td><td>換上的數學擴充為 5 張：表 A FG 加強、表 B 中高倍數加強、表 C 沒有 FG（FG RTP 0%）、表 D 連續中獎（Hit Rate 100%）、表 E 穩定 FG。情境新增「RTP 超過 100%」。初步對應：連續不得分→D、連續不進 FG→A、RTP 下滑太快→B、連續 FG 太爛→E、RTP 超過 100%→C 或 D（待確認）。</td></tr>
           </tbody>
         </table>
       </div>
