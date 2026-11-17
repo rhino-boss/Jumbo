@@ -27,7 +27,10 @@ import numpy as np
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
-ROWDATA = HERE / "rowdata" / "彩罐熱舞_基礎遊戲_10000人_1000轉.csv.gz"
+sys.path.insert(0, str(HERE))
+from simulator_system_oldhand_c2 import ROWDATA_DIR  # noqa: E402  共用 rowdata（System/Else/rowdata）
+
+ROWDATA = ROWDATA_DIR / "彩罐熱舞_基礎遊戲_10000人_1000轉.csv.gz"
 RECORD = HERE / "record"
 MAX_SPINS = 1_000_000
 SEED = 20261105

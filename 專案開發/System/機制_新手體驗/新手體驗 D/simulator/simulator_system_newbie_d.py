@@ -16,7 +16,10 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+_HERE = Path(__file__).resolve().parent
+# load_rowdata 沿用 老手救援 C-2（本機在 System/機制_老手救援/老手救援 C-2/simulator/；模擬機與本程式同層）
+sys.path.insert(0, str(_HERE))
+sys.path.insert(1, str(_HERE.parents[2] / "機制_老手救援" / "老手救援 C-2" / "simulator" / "simulator"))
 from simulator_system_oldhand_c2 import load_rowdata  # noqa: E402
 from simulator_system_oldhand_c2_arb import first_true, strategy_rtp  # noqa: E402
 

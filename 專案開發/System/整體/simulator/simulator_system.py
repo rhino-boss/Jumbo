@@ -93,7 +93,7 @@ def _locate_script_dir() -> Path:
 
     current = Path.cwd().resolve()
     for base in (current, *current.parents):
-        candidates.extend((base / "Project_AI" / "System", base / "System" / "simulator", base / "System", base))
+        candidates.extend((base / "Project_AI" / "System", base / "System" / "整體" / "simulator", base / "System" / "simulator", base / "System", base))
 
     for candidate in candidates:
         if (candidate / "simulator_system.py").is_file():
@@ -103,9 +103,12 @@ def _locate_script_dir() -> Path:
 
 
 SCRIPT_DIR = _locate_script_dir()
-# 程式放在 System/simulator/，rowdata、record 在上一層 System/
-DATA_DIR = SCRIPT_DIR if (SCRIPT_DIR / "rowdata").is_dir() else SCRIPT_DIR.parent
-DEFAULT_REPORT_DIR = DATA_DIR / "record"
+# 程式放在 System/整體/simulator/，共用 rowdata 在 System/Else/rowdata/（模擬機上與程式同層）；record 在程式同層
+DATA_DIR = next(
+    (d for base in (SCRIPT_DIR, *SCRIPT_DIR.parents) for d in (base, base / "Else") if (d / "rowdata").is_dir()),
+    SCRIPT_DIR,
+)
+DEFAULT_REPORT_DIR = SCRIPT_DIR / "record"
 RTP_PROFILE_CONFIGS: dict[str, dict[str, Any]] = {
     "92+2+2": {
         "label": "92% 基礎遊戲 + 2% JP1/JP2 + 2% JP3/JP4",

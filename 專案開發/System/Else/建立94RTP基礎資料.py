@@ -13,8 +13,8 @@ from pathlib import Path
 import pandas as pd
 
 
-SCRIPT_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = SCRIPT_DIR / "simulator" / "rowdata"
+SCRIPT_DIR = Path(__file__).resolve().parent
+DATA_DIR = SCRIPT_DIR / "rowdata"
 TARGET_RTP = 0.94
 GAMES = ("超級寶石", "彩罐熱舞")
 PAYOUT_COLUMNS = (
