@@ -2968,12 +2968,20 @@
     @keyframes jp-glint{0%,70%,100%{opacity:0;transform:scale(.4) rotate(0)}82%{opacity:1;transform:scale(1) rotate(45deg)}}
     #board .jp-coin:not(.is-open):hover .front{filter:brightness(1.08)}
     #board .jp-coin .front b{position:relative;z-index:1;font-size:15px;font-weight:900;letter-spacing:.03em;color:#8a5400;text-shadow:0 1px 0 rgba(255,244,196,.9),0 -1px 0 rgba(110,60,0,.35)}
-    #board .jp-coin .back{--c:120,170,230;transform:rotateY(180deg);background:#0b1a2f;border:1.5px solid rgb(var(--c))}
-    #board .jp-coin .back b{font-size:10px;font-weight:800;letter-spacing:.04em;color:rgb(var(--c))}
-    #board .jp-coin.j0 .back{--c:255,122,132}#board .jp-coin.j1 .back{--c:197,151,255}#board .jp-coin.j2 .back{--c:98,185,255}#board .jp-coin.j3 .back{--c:108,228,156}
+    /* 翻開的彩金幣（2026-11-17）：同一枚金幣的亮金外圈，內盤換成該彩金的寶石色＋白字 */
+    #board .jp-coin .back{--c1:#8fc8ff;--c2:#1d5fa8;--g:120,170,230;transform:rotateY(180deg);
+      background:linear-gradient(135deg,#fff7ae 0,#f8d132 30%,#d4a017 70%,#8b6508 100%);box-shadow:0 4px 8px rgba(0,0,0,.5)}
+    #board .jp-coin .back::before{content:"";position:absolute;inset:12%;border-radius:50%;
+      background:radial-gradient(circle at 38% 30%,var(--c1),var(--c2) 75%);box-shadow:inset 0 2px 4px rgba(255,255,255,.35),inset 0 -3px 5px rgba(0,0,0,.35),0 0 0 1px #b8860b}
+    #board .jp-coin .back::after{content:"";position:absolute;left:24%;top:17%;width:40%;height:16%;border-radius:50%;background:rgba(255,255,255,.35);filter:blur(1px)}
+    #board .jp-coin .back b{position:relative;z-index:1;font-size:10.5px;font-weight:900;letter-spacing:.03em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+    #board .jp-coin.j0 .back{--c1:#ff8a95;--c2:#b0152e;--g:255,96,110}
+    #board .jp-coin.j1 .back{--c1:#d2a8ff;--c2:#5e24ad;--g:184,128,255}
+    #board .jp-coin.j2 .back{--c1:#8fd0ff;--c2:#1666b8;--g:70,172,255}
+    #board .jp-coin.j3 .back{--c1:#8ff0b8;--c2:#138a4f;--g:70,214,132}
     #board .jp-coin.is-dim{opacity:.35}
     #board .jp-coin.is-win .back{animation:jp-coin-win .5s ease-in-out 3}
-    @keyframes jp-coin-win{50%{background:rgba(var(--c),.22);box-shadow:0 0 12px rgba(var(--c),.8)}}
+    @keyframes jp-coin-win{50%{box-shadow:0 0 0 2px rgba(var(--g),.9),0 0 16px rgba(var(--g),.9);filter:brightness(1.15)}}
     #board .jp-game-msg{min-height:22px;font-size:13px;color:rgba(220,232,250,.8)}
     /* 彈窗／FG 看板出現時背景不能捲動 */
     html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
@@ -3995,8 +4003,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 15:25";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 15:25";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 15:51";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 15:51";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
