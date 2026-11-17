@@ -2352,9 +2352,9 @@
           <span class="zone-label">Bet Mode</span>
           <div class="zone-body">
             <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
-            <button class="mode-btn is-locked" id="extraBetBtn" type="button" disabled title="尚未開放"><span class="lock-label">額外押注</span><span class="mode-price">(2x)</span></button>
+            <button class="mode-btn" id="extraBetBtn" type="button">額外押注<span class="mode-price">(2x)</span></button>
             <button id="buyFeatureBtn" type="button">Buy Feature (50x)</button>
-            <button class="is-locked" id="superFeatureBtn" type="button" disabled title="尚未開放"><span class="lock-label">超級特色</span><span class="mode-price">(300x)</span></button>
+            <button id="superFeatureBtn" type="button">超級特色<span class="mode-price">(300x)</span></button>
           </div>
         </section>
 
@@ -2441,6 +2441,7 @@
           <li>演出：框倍數 +1 跳字放大為 2 倍，從框倍數位置浮到該格符號正中間再淡出。（11/12）</li>
           <li>新框帶初始倍數：金色符號消除後留下的框，倍數從 1／2／3／5／10／20／30／50／100X 隨機抽（權重對標 DJ Boom Boom，1X 約 94%），NB 卡片重算；新增額外押注（2x）與超級特色（300x）按鈕，尚未開放先上鎖。（11/12）</li>
           <li>金框對齊競品：BG 每格金框率拉到跟 DJ Boom Boom 一樣（約 21%），FG 拉高 1.2 倍（約 10%）；框初始倍數 2X 以上合計機率不變、往 10X～100X 移，累積倍數最高值超過競品；押注模式按鈕改成一排、未開放的額外押注與超級特色上鎖。（11/12）</li>
+          <li>新增押注模式：額外押注 2x（FG 出現率是一般押注的 5 倍）、購買特色改 75x、超級特色 300x（FG 用另一組參數，新框必定有倍數、最少 2X）；四種模式卡片重算，按鈕全部開放。（11/12）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2584,7 +2585,7 @@
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
       window.H032_VERSION_ENTRY = entry;
-      const stamp = `20261112c-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      const stamp = `20261117a-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
       // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
       const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
       const wanted = new URLSearchParams(location.search).get("config")
@@ -2676,6 +2677,12 @@
     .observe(helpDialogEl, { attributes: true, attributeFilter: ["open"] });
 
   const BUY = cfg.bet_modes.buy_feature;
+  // 2026-11-12：押注模式 0 一般押注／1 額外押注（2x，FG 週期 1/5，卡組 eb_*）／2 購買特色／3 超級特色（300x，FG 轉 sf_* 表）
+  const EB = cfg.bet_modes.extra_bet || { cost_multiplier: 2 }, SUPER = cfg.bet_modes.super_feature || { cost_multiplier: 300 };
+  const isBuyMode = mode => mode === 2 || mode === 3;
+  const modeCost = mode => ({ 0: 1, 1: Number(EB.cost_multiplier), 2: Number(BUY.cost_multiplier), 3: Number(SUPER.cost_multiplier) })[mode] ?? 1;
+  const modeTag = mode => ["NB", "EB", "BF", "SF"][mode] || "NB";
+  const modeName = mode => ["Normal Bet", "Extra Bet", "Buy Feature", "Super Feature"][mode] || "Normal Bet";
   const BASE_BET = Number(cfg.base_bet) || 100;
   const START_BALANCE = 10000 * BASE_BET;
   const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
@@ -2963,7 +2970,7 @@
     return { rule: "normal", weights: cfg.table_weight[buy ? "bf_fg_normal" : "fg_normal"] };
   }
   // FG：開場沒有框（2026-11-11 起），框整場保留到 FG 結束；3 顆以上 C1 +5 場（上限 50 場）
-  function freeSession(initialSpins = FG_INITIAL, buy = false) {
+  function freeSession(initialSpins = FG_INITIAL, buy = false, sup = false) {
     const frames = grid(0);
     let total = Math.min(Number(initialSpins), MAX_FS), index = 0, pay = 0, retriggers = 0, boostLeft = 0, dead = 0;
     const good = new Set(cfg.fg_good_slots.flatMap(slot => drawSlot(slot, total)));
@@ -2972,7 +2979,7 @@
       index++;
       const { rule, weights } = fgWeights(index, good, boostLeft, dead, frameSum(frames), buy);
       boostLeft = Math.max(0, boostLeft - 1);
-      const result = spin(pickMap(weights), true, frames);
+      const result = spin(sup ? "sf_" + pickMap(weights).slice(3) : pickMap(weights), true, frames);   // 超級特色：同編號 sf_N（新框必定有倍數）
       result.fgRule = rule;
       pay += result.pay; spins.push(result);
       dead = result.pay > 0 ? 0 : dead + 1;
@@ -3034,10 +3041,10 @@
     return cards?.length ? pick(cards, cards.map(card => card.weight)) : null;
   }
   function cardMatches(card, pay) { const ratio = pay / betUnit(); return Number(card.min) < ratio && ratio <= Number(card.max); }
-  function cardSpin(card) {
+  function cardSpin(card, eb = false) {
     let last = null;
     if (!card) return { result: naturalBaseSpin(), ok: true };
-    const trigCap = cardSectionCap("base_game");
+    const trigCap = cardSectionCap(eb ? "eb_base_game" : "base_game");
     for (let retry = 0; retry < MAX_RETRY; retry++) {
       last = naturalBaseSpin();
       if (card.type === "free_game" ? (last.scatter >= MIN_SCATTER && last.pay / betUnit() <= trigCap)
@@ -3045,38 +3052,41 @@
     }
     return { result: last, ok: false };
   }
-  function cardFeature(section, buy) {
+  function cardFeature(section, buy, sup = false) {
     const card = pickCard(section);
     let last = null;
-    if (!card) return { result: freeSession(FG_INITIAL, buy), ok: true };
+    if (!card) return { result: freeSession(FG_INITIAL, buy, sup), ok: true };
     for (let retry = 0; retry < MAX_RETRY; retry++) {
-      last = freeSession(FG_INITIAL, buy);
+      last = freeSession(FG_INITIAL, buy, sup);
       if (cardMatches(card, last.pay)) return { result: last, ok: true };
     }
     return { result: last, ok: false };
   }
   // 一局的 BG／FG 結果（Card System On／Off 共用）；回傳 retry 超限次數
-  function drawRound(buy, script = "") {
+  function drawRound(mode, script = "") {
+    mode = mode === true ? 2 : (mode === false ? 0 : Number(mode) || 0);
+    const buy = isBuyMode(mode), sup = mode === 3, eb = mode === 1;
     const cardOn = cardSystemActive() && !script;
     let retryLimitExceeded = 0, base, feature = null;
     if (buy) base = buyEntry();
     else if (script) base = scriptedSpin(script);
-    else if (cardOn) { const r = cardSpin(pickCard("base_game")); base = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
+    else if (cardOn) { const r = cardSpin(pickCard(eb ? "eb_base_game" : "base_game"), eb); base = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
     else base = naturalBaseSpin();
     if (buy || base.scatter >= MIN_SCATTER) {
       if (script === "fgbig") feature = scriptedFeature(100, buy);
-      else if (cardOn) { const r = cardFeature(buy ? "buy_feature" : "free_game", buy); feature = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
-      else feature = freeSession(FG_INITIAL, buy);
+      else if (cardOn) { const r = cardFeature(sup ? "super_feature" : buy ? "buy_feature" : eb ? "eb_free_game" : "free_game", buy, sup); feature = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
+      else feature = freeSession(FG_INITIAL, buy, sup);
     }
     return { base, feature, retryLimitExceeded, cardOn };
   }
 
   // 共用 Simulation 面板（批次模擬，不動畫面）
-  window.demogameSimulationModes = [{ value: 0, label: "Normal Bet" }, { value: 2, label: "Buy Feature" }];
+  window.demogameSimulationModes = [{ value: 0, label: "Normal Bet" }, { value: 1, label: "Extra Bet" }, { value: 2, label: "Buy Feature" }, { value: 3, label: "Super Feature" }];
   window.demogameSimulateRound = ({ mode } = {}) => {
-    const buy = Number(mode) === 2;
-    const wager = betUnit() * (buy ? Number(BUY.cost_multiplier) : 1);
-    const { base, feature, retryLimitExceeded } = drawRound(buy);
+    mode = Number(mode) || 0;
+    const buy = isBuyMode(mode);
+    const wager = betUnit() * modeCost(mode);
+    const { base, feature, retryLimitExceeded } = drawRound(mode);
     const fgTriggered = Boolean(feature);
     const totalWin = base.pay + Number(feature?.pay || 0);
     return {
@@ -3414,7 +3424,8 @@
   function setBusy(value) {
     state.busy = value;
     const inFeature = state.fg.index < state.fg.spins.length;
-    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature;
+    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature; $("superFeatureBtn").disabled = value || inFeature;
+    $("normalBetBtn").disabled = value || inFeature; $("extraBetBtn").disabled = value || inFeature;
     $("betMinusBtn").disabled = value || inFeature || state.betIndex === 0;
     $("betPlusBtn").disabled = value || inFeature || state.betIndex === BET_LEVELS.length - 1;
   }
@@ -3429,10 +3440,10 @@
   }
 
   function activateFeature(feature, mode, base) {
-    appendLog(`${mode === 2 ? "Buy Feature" : "Free Game triggered"} | ${feature.spins.length} spins${feature.retriggers ? ` (Retrigger ×${feature.retriggers})` : ""}`, "mode");
+    appendLog(`${isBuyMode(mode) ? modeName(mode) : "Free Game triggered"} | ${feature.spins.length} spins${feature.retriggers ? ` (Retrigger ×${feature.retriggers})` : ""}`, "mode");
     state.fg = { spins: feature.spins, index: 0, total: feature.spins.length, win: 0, mode, carry: Number(base?.pay || 0), baseRound: base || null, endFrame: feature.endFrame };
     state.lastWin = state.fg.carry; state.fgTriggers++;
-    setFeatureStatus(mode === 2 ? "buyFeature" : "fgTriggered"); updateStats();
+    setFeatureStatus(mode === 3 ? "superFeature" : mode === 2 ? "buyFeature" : "fgTriggered"); updateStats();
   }
   // 觸發 FG 看板：Auto 模式 1 秒後自動消失；非 Auto 要自己點掉（點盤面／看板或按 Spin）。期間背景不能捲動；看板消失後才開始 FG
   function showFgBanner(spins) {
@@ -3491,21 +3502,21 @@
         await playFeatureSpin();
       } else {
         const taken = window.demogameRng?.takeInput?.();
-        const code = taken ? { seed: taken.seed, mode: taken.mode === "BF" ? 2 : 0, script: taken.opts || "" } : null;
+        const code = taken ? { seed: taken.seed, mode: Math.max(0, ["NB", "EB", "BF", "SF"].indexOf(taken.mode)), script: taken.opts || "" } : null;
         if (code) mode = code.mode;
         state.lastWin = 0; state.mode = mode;
-        window.demogameLineChart?.setMode?.(mode === 2 ? "BF" : null);
-        const cost = betUnit() * (mode === 2 ? Number(BUY.cost_multiplier) : 1);
+        window.demogameLineChart?.setMode?.(isBuyMode(mode) ? "BF" : null);
+        const cost = betUnit() * modeCost(mode);
         if (state.balance < cost) throw new Error(tr("insufficient"));
         state.balance -= cost; state.totalBet += cost; state.rounds++; updateStats();
-        const script = mode !== 2 ? (code ? code.script : ($("forceFgInput").checked && !$("scriptSelect").value ? "fg" : $("scriptSelect").value)) : "";
+        const script = !isBuyMode(mode) ? (code ? code.script : ($("forceFgInput").checked && !$("scriptSelect").value ? "fg" : $("scriptSelect").value)) : "";
         const seed = code ? code.seed : (window.demogameRng?.newSeed?.() ?? null);
-        if (window.demogameRng?.format && seed != null) appendLog(`RNG ${window.demogameRng.format({ config: configLabel(), mode: mode === 2 ? "BF" : "NB", card: cardSystemActive(), opts: script, seed })}`, "rng");
-        appendLog(`#${state.rounds} ${mode === 2 ? "Buy Feature" : "Normal Bet"} | Bet ${money(cost)}${script ? ` | Script ${script}` : ""}${code ? " | Replay" : ""}`, "mode");
+        if (window.demogameRng?.format && seed != null) appendLog(`RNG ${window.demogameRng.format({ config: configLabel(), mode: modeTag(mode), card: cardSystemActive(), opts: script, seed })}`, "rng");
+        appendLog(`#${state.rounds} ${modeName(mode)} | Bet ${money(cost)}${script ? ` | Script ${script}` : ""}${code ? " | Replay" : ""}`, "mode");
         let base, feature = null;
         if (seed != null && window.demogameRng?.seeded) rngNext = window.demogameRng.seeded(seed);
         try {
-          const drawn = drawRound(mode === 2, script);
+          const drawn = drawRound(mode, script);
           base = drawn.base; feature = drawn.feature;
           if (drawn.retryLimitExceeded) appendLog(`Card System | Retry 超過 ${MAX_RETRY} 次，採用最後一把`, "error");
         } finally { rngNext = Math.random; }
@@ -3513,9 +3524,9 @@
         state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
         state.hitRounds += base.pay > 0 ? 1 : 0;
         state.maxMultiplier = Math.max(state.maxMultiplier, base.pay / betUnit());
-        if (mode !== 2) tallySpin(base, false);
+        if (!isBuyMode(mode)) tallySpin(base, false);
         $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
-        appendLog(`${mode === 2 ? "BF Entry" : "BG"} | Cascade ${base.combo} | C1 ${base.scatter} | Peak frame ×${base.peakFrame} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
+        appendLog(`${isBuyMode(mode) ? modeTag(mode) + " Entry" : "BG"} | Cascade ${base.combo} | C1 ${base.scatter} | Peak frame ×${base.peakFrame} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
         window.demogameHistory?.record({ bg: base.pay / betUnit() });
         const countLine = !script && !code;
         if (feature) {
@@ -3530,7 +3541,7 @@
       updateStats();
       await window.demogameRoundPause?.();
     } catch (error) { console.error(error); $("messageBar").textContent = error.message; appendLog(`Error | ${error.message}`, "error"); }
-    updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(0), 180);
+    updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(state.extraBet ? 1 : 0), 180);
   }
 
   // Help：內嵌 md（版式同 H045）
@@ -3601,14 +3612,14 @@
 
   const H032_TEXT = {
     en: {
-      baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", fgTriggered: "Free Game Triggered",
+      baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", superFeature: "Super Feature", fgTriggered: "Free Game Triggered",
       ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
       spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptGoldFrame: "Gold lands on a frame and wins", scriptFg: "FG triggered", scriptFgbig: "FG 100x+",
       statMaxWin: "Max win (x bet)", statYellowSeen: "Yellow seen", statYellowUsed: "Yellow won", statFrameMax: "BG max frame total", statFgFrameAvg: "FG end frame total (avg)", statScRate: "SC rate"
     },
     zh: {
-      baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", fgTriggered: "觸發免費遊戲",
+      baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", superFeature: "超級特色", fgTriggered: "觸發免費遊戲",
       ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
       spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptGoldFrame: "金符號落入倍數框並消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上",
@@ -3622,16 +3633,18 @@
     const text = key && key !== "baseGame" && key !== "freeGame" && key !== "fgTriggered" ? tr(key) : "";
     $("featureStatus").textContent = text; $("featureStatus").hidden = !text;
     // 押注模式按鈕顯示這局怎麼進來：購買特色（買進到該場 FG 結束）亮「購買特色」，其他（含一般押注觸發 FG）亮「一般押注」
-    const buying = key === "buyFeature";
-    $("normalBetBtn").classList.toggle("is-active", !buying);
-    $("buyFeatureBtn").classList.toggle("is-active", buying);
+    const buying = key === "buyFeature" || key === "superFeature";
+    $("normalBetBtn").classList.toggle("is-active", !buying && !state.extraBet);
+    $("extraBetBtn").classList.toggle("is-active", !buying && Boolean(state.extraBet));
+    $("buyFeatureBtn").classList.toggle("is-active", key === "buyFeature");
+    $("superFeatureBtn").classList.toggle("is-active", key === "superFeature");
   }
   function applyLanguage() {
     $("gameId").textContent = cfg.online_game_id;
     $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
     $("buyFeatureBtn").innerHTML = (state.language === "zh" ? "購買特色" : "Buy Feature") + `<span class="mode-price">(${BUY.cost_multiplier}x)</span>`;
-    $("extraBetBtn").querySelector(".lock-label").textContent = state.language === "zh" ? "額外押注" : "Extra Bet";
-    $("superFeatureBtn").querySelector(".lock-label").textContent = state.language === "zh" ? "超級特色" : "Super Feature";
+    $("extraBetBtn").innerHTML = (state.language === "zh" ? "額外押注" : "Extra Bet") + `<span class="mode-price">(${EB.cost_multiplier}x)</span>`;
+    $("superFeatureBtn").innerHTML = (state.language === "zh" ? "超級特色" : "Super Feature") + `<span class="mode-price">(${SUPER.cost_multiplier}x)</span>`;
     document.querySelectorAll("[data-h099-text]").forEach(node => { node.textContent = tr(node.dataset.h099Text); });
     if (state.featureKey) setFeatureStatus(state.featureKey);
     if ($("helpDialog").open && state.helpMarkdown) renderHelp(state.helpMarkdown);
@@ -3660,9 +3673,12 @@
     $("betMenu").querySelectorAll("button").forEach(button => button.onclick = () => { state.betIndex = Number(button.dataset.index); $("betMenu").classList.add("hidden"); updateStats(); });
   }
 
-  $("spinBtn").onclick = () => play(0); $("buyFeatureBtn").onclick = () => play(2);
-  $("normalBetBtn").onclick = () => {};
-  $("autoBtn").onclick = () => { state.auto = !state.auto; $("autoBtn").textContent = tr(state.auto ? "stop" : "auto"); if (state.auto && !state.busy) play(0); };
+  // Spin／Auto 依目前選的押注模式（一般押注／額外押注）；購買特色、超級特色按了直接買一局
+  const spinMode = () => state.extraBet ? 1 : 0;
+  const selectBet = eb => { if (state.busy) return; state.extraBet = eb; setFeatureStatus(state.featureKey || "baseGame"); updateStats(); };
+  $("spinBtn").onclick = () => play(spinMode()); $("buyFeatureBtn").onclick = () => play(2); $("superFeatureBtn").onclick = () => play(3);
+  $("normalBetBtn").onclick = () => selectBet(false); $("extraBetBtn").onclick = () => selectBet(true);
+  $("autoBtn").onclick = () => { state.auto = !state.auto; $("autoBtn").textContent = tr(state.auto ? "stop" : "auto"); if (state.auto && !state.busy) play(spinMode()); };
   $("betMinusBtn").onclick = () => { state.betIndex = Math.max(0, state.betIndex - 1); updateStats(); };
   $("betPlusBtn").onclick = () => { state.betIndex = Math.min(BET_LEVELS.length - 1, state.betIndex + 1); updateStats(); };
   $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent = `x${$("speedRange").value}`;
@@ -3682,12 +3698,12 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-12 16:07";
-  window.DEMOGAME_LAST_CODE = "2026-11-12 16:07";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-12 16:07";
+  window.DEMOGAME_LAST_TUNING = "2026-11-17 10:10";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 10:10";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 10:10";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
-  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "Buy Feature 100 倍；額外押注 2 倍、超級特色 300 倍尚未開放（按鈕先鎖住）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Buy Feature 100x; Extra Bet 2x and Super Feature 300x are not open yet (buttons locked); no jackpot"]}};</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
   <script src="../demogame_common.js?v=20261112u"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫

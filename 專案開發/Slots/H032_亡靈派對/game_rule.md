@@ -12,7 +12,7 @@
 | 彩金群組 | OP（OmniPlay） |
 | 遊戲類型 | Video Slot - 1,024 Ways / Cascade（掉落） / 倍數框 |
 | 盤面規格 | 5 軸 × 4 列 |
-| 押注模式 | Normal Bet；Buy Feature `100 × Bet`；目前無 Extra Bet、無彩金 |
+| 押注模式 | Normal Bet；Extra Bet `2 × Bet`；Buy Feature `75 × Bet`；Super Feature `300 × Bet`；無彩金（2026-11-12 起，見 §8） |
 
 * Game ID、ParSheet ID、遊戲名稱、致敬遊戲與押注選項依 `其他/iGaming 遊戲代號一覽.xlsx`（2026-11-03）。
 * v2（2026-11-09）：輪帶與賠率表以 JILI Super Ace 為底；2026-11-11 起輪帶照 Super Ace 還原帶不重排，各表只調權重（BG：一般表 bg_1（C1 只在第 1、2 軸）／觸發表 bg_2（唯一能觸發 FG，五軸都出 C1）／隱性好表 bg_3（C1 只在第 3、5 軸）；FG：一般表／好表／常中表，定位見 `Source/H0321.xlsx` Game Description）；金色符號（黃底）出現率對標 FC - DJ Boom Boom（2026-11-12：BG 每格金框率對齊競品，各表初始／補牌機率 ×1.137；FG ×1.2，約為競品的八成，避免 FG 自然倍數過高、重骰過多）；2026-11-11 規則改版後金色符號不帶倍數（見 §5）。v1（輪帶以超級鑽石 H045 為底）封存於 `Versions/1.0/`。
@@ -80,7 +80,7 @@
 * 開場沒有框（2026-11-11 起；原為第 3 軸整條 4 格 `1X` 框）。
 * 免費遊戲中再出現 3 顆以上 `C1`（同樣看最終盤面）+5 場；場數上限 50 場。
 * 框不清空，倍數一路累積到 FG 結束（與主遊戲每轉清空的差別）。
-* 可用 Buy Feature（`100 × Bet`）直接購買進場。
+* 可用 Buy Feature（`75 × Bet`）或 Super Feature（`300 × Bet`）直接購買進場（見 §8）。
 
 ## §7. 確認事項（2026-11-03 已全部確認）
 
@@ -91,7 +91,20 @@
 | 3 | 金色符號在框內消除時怎麼算？ | 只變 WW，框照所有框 +1 的規則加 1，不另抽初始倍數；金色符號本身不顯示倍數（2026-11-11 改） |
 | 4 | Scatter 觸發 FG 的判定時機 | 所有連消結束後的最終盤面 |
 | 5 | FG 場數上限 | 50 場（沿用 H045） |
-| 6 | Buy Feature 價格 | 100x |
-| 7 | 是否有 Extra Bet／彩金 | 先沒有；之後要做會再另外說明 |
+| 6 | Buy Feature 價格 | 75x（2026-11-12 由 100x 改） |
+| 7 | 是否有 Extra Bet／彩金 | 2026-11-12 新增 Extra Bet 2x 與 Super Feature 300x（§8）；彩金仍沒有 |
 | 8 | 框的成長方式？ | 每段連消全盤所有框 +1；新框本消不 +1；FG 開場無框、框累積到結束（2026-11-11 規則改版） |
 | 9 | 新框的倍數？ | 消除時從 1／2／3／5／10／20／30／50／100X 隨機抽，權重對標 DJ Boom Boom（2026-11-12 新增） |
+
+## §8. 押注模式（2026-11-12 新增）
+
+| 模式 | 價格 | 內容 |
+| --- | ---: | --- |
+| Normal Bet | `1 × Bet` | 一般遊戲。 |
+| Extra Bet | `2 × Bet` | 盤面、輪帶、規則都同 Normal Bet；FG 出現率是 Normal Bet 的 5 倍（FG 週期 1/40），由卡片系統控制。 |
+| Buy Feature | `75 × Bet` | 直接進 FG 10 場，規則同一般 FG。 |
+| Super Feature | `300 × Bet` | 直接進 FG 10 場；FG 改用 Super 專用的一組自然機率參數（`SF_Symbol`～`SF_Symbol (4)`），金色符號留下的新框必定有倍數（不會抽到 `1X`，最少 `2X`），其餘規則同一般 FG。 |
+
+* Extra Bet RTP 與 Normal Bet 相同（92A 老手 92%）：FG 每場平均倍數不變、週期縮成 1/40，差額由 BG 吸收（老手 BG 29.5%＋FG 62.5%，以 Extra Bet 押注為分母）。
+* Extra Bet 倍率區間依數學模型規範放大 2 倍：BG 上限、FG 下限與上限 ×2（全域上限 20,000x、大 Bet 1,000x 為頂）。
+* Buy Feature／Super Feature Game RTP 皆 92.5%；Super Feature 的 FG 隱性控制（好局、Retrigger Boost 等）照一般 FG 選表，實際轉同編號的 Super 表。
