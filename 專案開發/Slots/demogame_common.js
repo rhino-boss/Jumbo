@@ -1750,9 +1750,9 @@
         letter-spacing:0;white-space:nowrap;text-decoration:none;cursor:pointer}
       #demogameTitleActions > a:hover, #demogameTitleActions > button:hover{color:#dceeff;background:rgba(127,160,200,.14)}
       #demogameTitleActions > a:focus-visible, #demogameTitleActions > button:focus-visible{outline:2px solid rgba(127,160,200,.6);outline-offset:1px}
-      /* 按鈕之間加「•」分隔（2026-11-17）：點放在按鈕框外（absolute），不吃 hover 底色、點不到 */
-      #demogameTitleActions > * + *{position:relative;margin-left:14px}
-      #demogameTitleActions > * + *::before{content:"•";position:absolute;left:-10px;top:50%;transform:translateY(-50%);color:#6f8fae;opacity:.6;pointer-events:none;background:none}`;
+      /* 按鈕之間加「•」分隔（2026-11-17；用 :is(a,button) 提高權重，否則被上方 margin:0 蓋掉）：點放在按鈕框外（absolute），不吃 hover 底色、點不到 */
+      #demogameTitleActions > :is(a,button) + :is(a,button){position:relative;margin-left:14px}
+      #demogameTitleActions > :is(a,button) + :is(a,button)::before{content:"•";position:absolute;left:-10px;top:50%;transform:translateY(-50%);color:#6f8fae;opacity:.6;pointer-events:none;background:none}`;
     const titleStyle = getComputedStyle(document.getElementById("gameName") || title);
     group.style.setProperty("--demogame-title-size", titleStyle.fontSize);
     group.style.setProperty("--demogame-title-weight", titleStyle.fontWeight);
