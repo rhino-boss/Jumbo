@@ -3237,13 +3237,13 @@
   const tierWeights = (rows, value) => rows.find(row => Number(row.min) <= value && value <= Number(row.max))?.weights || null;
   function fgWeights(index, good, boostLeft, dead, frameTotal, buy) {
     for (const rule of cfg.fg_weight_priority) {
-      if (rule === "good_slot" && good.has(index)) return { rule, weights: cfg.table_weight[buy ? "bf_fg_good" : "fg_good"] };
+      if (rule === "good_slot" && good.has(index)) return { rule, weights: cfg.table_weight.fg_good };   // BF／SF 的 FG 與 NB／EB 共用同一組權重（2026-11-17）
       if (rule === "retrigger_boost" && boostLeft > 0) return { rule, weights: cfg.table_weight.fg_retrigger_boost };
       if (rule === "dead_streak") { const weights = tierWeights(cfg.fg_dead_streak_weight, dead); if (weights) return { rule, weights }; }
       if (rule === "frame_tier") { const weights = tierWeights(cfg.fg_frame_tier_weight, frameTotal); if (weights) return { rule, weights }; }
       if (rule === "normal") break;
     }
-    return { rule: "normal", weights: cfg.table_weight[buy ? "bf_fg_normal" : "fg_normal"] };
+    return { rule: "normal", weights: cfg.table_weight.fg_normal };
   }
   // FG：開場沒有框（2026-11-11 起），框整場保留到 FG 結束；3 顆以上 C1 +5 場（上限 50 場）
   function freeSession(initialSpins = FG_INITIAL, buy = false, sup = false) {
@@ -3995,8 +3995,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 16:05";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:05";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 16:11";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:11";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>

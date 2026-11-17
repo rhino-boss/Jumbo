@@ -550,7 +550,7 @@ class CalaveraParty:
         """FG 隱性控制：依 fg_weight_priority 取第一個成立的規則；回傳 (規則, 權重群組名或權重表)。"""
         for rule in self.priority:
             if rule == "good_slot" and index in good:
-                return rule, "bf_fg_good" if buy else "fg_good"
+                return rule, "fg_good"            # BF／SF 的 FG 與 NB／EB 共用同一組權重（2026-11-17）
             if rule == "retrigger_boost" and boost_left > 0:
                 return rule, "fg_retrigger_boost"
             if rule == "dead_streak":
@@ -562,8 +562,8 @@ class CalaveraParty:
                 if weights:
                     return rule, weights
             if rule == "normal":
-                return rule, "bf_fg_normal" if buy else "fg_normal"
-        return "normal", "bf_fg_normal" if buy else "fg_normal"
+                return rule, "fg_normal"
+        return "normal", "fg_normal"
 
     def free_session(self, initial_spins: int, budget: float, buy: bool = False, super_: bool = False) -> RoundResult:
         result = RoundResult(fg_triggered=True)
