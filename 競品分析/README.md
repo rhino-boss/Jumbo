@@ -19,13 +19,13 @@
 | Sugar Rush | PP | 試玩平台 100,000 轉（PP 官方） | 2026-11-09 | 現行 | [開啟](report_sugar_rush.html) | `H5\遊戲資訊\PP - Sugar Rush\其他\` |
 | Sweet Bonanza 1000 | PP | 付費平台 30,893 轉（panalok） | 2026-11-09 | 現行 | [開啟](report_sweet_bonanza_1000.html) | `H5\遊戲資訊\PP - Sweet Bonanza 1000\其他\` |
 | Piñata 1000 | 5G GAMING | 付費平台 NB 103,519 / EB 100,046 轉（playtime） | 2026-11-09 | 現行 | [開啟](report_pinata_1000.html) | `H5\遊戲資訊\5G - Pinata 1000\其他\` |
-| DJ Boom Boom | FA CHAI | 試玩平台 100,000 轉（FC 官方）；平台資料 997 萬局（Acewin，僅倍率線型對照） | 2026-11-09 | 現行 | [開啟](report_dj_boom_boom.html) | `H5\遊戲資訊\FC - DJ Boom Boom\其他\` |
+| DJ Boom Boom | FA CHAI | 試玩平台 100,000 轉（FC 官方）；平台資料 997 萬局（Acewin） | 2026-11-09 | 現行 | [開啟](report_dj_boom_boom.html) | `H5\遊戲資訊\FC - DJ Boom Boom\其他\` |
 | Super Ace | JILI | 付費平台 166,050 轉（playtime） | 2026-09-29 | 現行 | [開啟](report_super_ace.html) | `H5\JILI - Super Ace\` |
 | Lucky Neko | PG | 付費平台 47,068 轉（panalok） | 2026-08-26 | 現行 | [開啟](report_lucky_neko.html) | `H5\PG - Lucky Neko\` |
 | Pinata Wins | PG | 付費平台 22,688 轉（panalok） | 2026-09-30 | 現行 | [開啟](report_pinata_wins.html) | `H5\PG - Pinata Wins\` |
 | Gates of Olympus 1000 | PP | 付費平台 31,472 轉（panalok） | 2026-08-26 | 現行 | [開啟](report_gates_of_olympus_1000.html) | `H5\PP - Gates of Olympus 1000\` |
 | Wild Bounty Showdown | PG | 付費平台 10,463 轉（panalok） | 2026-08-27 | 現行 | [開啟](report_wild_bounty_showdown.html) | `H5\PG - Wild Bounty Showdown\` |
-| Money Coming | JILI | 試玩平台 32,030 轉（JILI uat，底注 10：12,117）；試玩平台 6,092 轉（Tada uat，僅對照） | 2026-09-30 | 現行 | [開啟](report_money_coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
+| Money Coming | JILI | 試玩平台 32,030 轉（JILI uat，底注 10：12,117）；試玩平台 6,092 轉（Tada uat） | 2026-09-30 | 現行 | [開啟](report_money_coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
 
 > 十一份都是現行格式，章節與指標定義一致，可直接並排比較。
 >
@@ -335,7 +335,7 @@
 一份報告混用多種來源時**每種各寫一筆**，主來源在前，用 `；` 分隔：
 
 ```
-試玩平台 100,000 轉（FC 官方）；平台資料 997 萬局（Acewin，僅倍率線型對照）
+試玩平台 100,000 轉（FC 官方）；平台資料 997 萬局（Acewin）
 ```
 
 首頁卡片會把 `；` 拆成分行顯示。
