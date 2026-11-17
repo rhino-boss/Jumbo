@@ -2446,6 +2446,7 @@
           <li>額外押注的 FG 線型改得比較平（平均倍數同一般押注，小獎變少、中獎變多，大獎機率維持），FG 保底改同一般押注 5x。（11/17）</li>
           <li>新增 OP 彩金（JP0100 第 28 組）：盤面上方彩金列 GRAND／MAJOR／MINOR／MINI，每顆 SC 飛一顆金幣打到 OP；觸發後翻 12 枚金幣，湊 3 個相同得該彩金；未滿 $2（NB／EB 看實際押注、BF／SF 看底注）不開放 GRAND／MAJOR。劇本可選「觸發彩金」。（11/17）</li>
           <li>彩金列中間的 OP 改成寶箱：距上次中彩金的押注次數越多，箱蓋開得越大、金幣越多（4 階：0／150／400／800 次），中彩金後關回第 1 階；SC 金幣飛去打寶箱。（11/17）</li>
+          <li>金色符號改為第 2～5 軸都會出現（每盤平均顆數不變，平均分到 4 軸），A 版卡片權重依新的自然機率重算；彩金列改「聚光放射」款。（11/17）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2565,7 +2566,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 金色符號與倍數框 | GOLDEN SYMBOLS & MULTIPLIER FRAMES |
-| 規則說明 | ▪ 金色符號只出現在第 2～4 軸。 | ▪ GOLDEN SYMBOLS ONLY APPEAR ON REELS 2 TO 4. |
+| 規則說明 | ▪ 金色符號只出現在第 2～5 軸。 | ▪ GOLDEN SYMBOLS ONLY APPEAR ON REELS 2 TO 5. |
 | 規則說明 | ▪ 金色符號中獎後變成 [WW]；所在位置沒有倍數框時，留下一個 1X 框。 | ▪ A WINNING GOLDEN SYMBOL TURNS INTO [WW]; IF ITS POSITION HAS NO FRAME, A 1X FRAME IS LEFT THERE. |
 | 規則說明 | ▪ 框會留在格子上，符號照常掉落；每次有中獎消除，盤面上所有倍數框都 +1（這次新留下的框從下一次消除起才 +1）。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. EVERY WINNING CASCADE ADDS 1 TO ALL FRAMES ON THE GRID (A FRAME LEFT BY THAT CASCADE STARTS GROWING FROM THE NEXT ONE). |
 | 規則說明 | ▪ 每次連線得分 ×（1 ＋ 盤面所有框的倍數加總，以本次消除前的框計算；本次消除新增的倍數從下一次連線起生效）；盤面沒有框時 ×1，一個 1X 框時 ×2。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY 1 PLUS THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID BEFORE THAT WIN; MULTIPLIERS ADDED BY A WIN APPLY FROM THE NEXT WIN (X1 IF NO FRAMES, X2 WITH ONE 1X FRAME). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
@@ -3977,8 +3978,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 14:59";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:59";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 15:00";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 15:00";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
