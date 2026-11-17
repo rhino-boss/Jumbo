@@ -66,6 +66,7 @@ SHOW_CONSOLE_SUMMARY = True
 RUN_SINGLE_SPIN_DEBUG = False
 DEBUG_ROUNDS = 1
 CARD_RETRY_LIMIT = 10_000
+JACKPOT_ENABLED = True                 # OP 彩金（config 有 jackpot 區塊才生效）；False＝只算 Game RTP
 RNG_SEED = 45_045
 
 COIN_BASE = 100.0                      # Credit 基準，與 Overview!A7 一致
@@ -290,6 +291,10 @@ class RoundResult:
     fg_initial_symbols: Counter = field(default_factory=Counter)
     fg_drop_symbols: Counter = field(default_factory=Counter)
 
+    pay_jp: float = 0.0                           # OP 彩金（Link），不算進 Game RTP、不受 Max Win 截斷
+    jp_hit: int = -1                              # 中的彩金 index（0 GRAND／1 MAJOR／2 MINOR／3 MINI），-1＝沒中
+    jp_c1: bool = False                           # 初始盤面有 C1（彩金判定資格）
+
     @property
     def pay(self) -> float:
         return self.pay_bg + self.pay_fg
@@ -314,6 +319,11 @@ class CalaveraParty:
         self.bet = bet_amount
         self.card_enabled = bool(card_enabled and (self.rtp_config.get("card_system") or {}).get("enabled"))
         self.profile = "newbie" if newbie else "oldhand"
+        # OP 彩金（2026-11-17）：參數讀 config_9xA.js 的 jackpot（數學模型 OP Jackpot 頁，JP0100 第 28 組）
+        self.jp = (self.rtp_config.get("jackpot") or config.get("jackpot") or {}) if JACKPOT_ENABLED else {}
+        self.jp_on = bool(self.jp.get("enabled"))
+        if self.jp_on:
+            self.jp_pool = [float(v) for v in self.jp["seed"]]
         self.tables = {name: prepare_table(raw) for name, raw in config["tables"].items()}
         self.pays = {int(k): v for k, v in config["pays"].items()}
         self.max_fs = int(config["max_free_spins"])
@@ -698,6 +708,7 @@ class CalaveraParty:
                       if self.card_enabled else self.free_session(spins, 0.0, buy=True, super_=sup))
             result.special_symbol_cnt += 1   # 進場盤本身含 SC
             result.pay_fg = min(result.pay_fg, self.max_win * self.bet)
+            self.jackpot(result, bet_mode, True)
             return result
 
         result = RoundResult()
@@ -734,7 +745,56 @@ class CalaveraParty:
             if result.pay > cap:
                 result.pay_bg = min(result.pay_bg, cap)
             result.capped = True
+        self.jackpot(result, bet_mode, any(symbol == C1 for column in spin.initial_board for symbol in column))
         return result
+
+    # --- OP Jackpot ---
+
+    def jp_series(self, bet_mode: int) -> tuple[str, bool]:
+        """檔位同模擬程式規範 §1.2.3：NB／EB 看實際押注、BF／SF 看底注；新手或卡片系統關閉 → A，未滿 Unlock Bet → C，否則 B。"""
+        cost = float(self.config["bet_modes"][MODE_KEY[bet_mode]]["cost_multiplier"])
+        tier = self.bet if bet_mode in BUY_MODES else self.bet * cost
+        unlocked = tier >= float(self.jp["unlock_bet"])
+        if not self.card_enabled or self.profile == "newbie":
+            return "A", False                      # 數學模型規範 §1.6.1：新手不得觸發 Link（GRAND／MAJOR），Link RTP 0%
+        return ("B" if unlocked else "C"), unlocked
+
+    def jackpot(self, result: RoundResult, bet_mode: int, has_c1: bool) -> None:
+        """每局押注先累進 GRAND／MAJOR；初始盤面有 C1 才判定：P(k) ＝ RTP_k × 押注 ÷ 獎金_k，再除以 C1 Rate 換成條件機率。"""
+        if not self.jp_on:
+            return
+        jp = self.jp
+        cost = float(self.config["bet_modes"][MODE_KEY[bet_mode]]["cost_multiplier"])
+        wager = self.bet * cost
+        series, unlocked = self.jp_series(bet_mode)
+        cfg = jp["series"][series]
+        key = str(jp["bet_key"][bet_mode])
+        for k in (0, 1):
+            self.jp_pool[k] += wager * float(cfg["inc"][k])
+        result.jp_c1 = has_c1
+        if not has_c1:
+            return
+        fixed = jp["fixed_x"][key]
+        prizes = [self.jp_pool[0], self.jp_pool[1], fixed[0] * self.bet, fixed[1] * self.bet]
+        rtp = cfg["rtp"][key]
+        p = [0.0 if (k < 2 and not unlocked) else float(rtp[k]) * wager / prizes[k] for k in range(4)]
+        total = sum(p)
+        if total <= 0:
+            return
+        cond = min(1.0, total / float(jp["c1_rate"][bet_mode]))
+        if self.rng.random() >= cond:
+            return
+        u = self.rng.random() * total
+        k = 3
+        for i in range(4):
+            u -= p[i]
+            if u < 0:
+                k = i
+                break
+        result.pay_jp = prizes[k]
+        result.jp_hit = k
+        if k < 2:
+            self.jp_pool[k] = float(jp["seed"][k])
 
 
 # ===== 統計 =====
@@ -764,6 +824,7 @@ def threshold_index(multiplier: float) -> int:
 def _empty_stats() -> dict[str, Any]:
     buckets = len(MULTIPLIER_THRESHOLDS)
     return {
+        "pay_jp": 0.0, "jp_c1_rounds": 0, "jp_hits": [0, 0, 0, 0], "jp_pay_by": [0.0, 0.0, 0.0, 0.0],
         "rounds": 0, "coin_in": 0.0, "pay_bg": 0.0, "pay_fg": 0.0,
         "win_x_sum": 0.0, "win_x_square": 0.0, "max_win_x": 0.0, "capped_rounds": 0,
         "bg_hit_spins": 0, "fg_hit_spins": 0, "fg_spins": 0, "fg_triggers": 0,
@@ -803,6 +864,11 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["coin_in"] += wager
     stats["pay_bg"] += result.pay_bg
     stats["pay_fg"] += result.pay_fg
+    stats["pay_jp"] += result.pay_jp
+    stats["jp_c1_rounds"] += int(result.jp_c1)
+    if result.jp_hit >= 0:
+        stats["jp_hits"][result.jp_hit] += 1
+        stats["jp_pay_by"][result.jp_hit] += result.pay_jp
     win_x = result.pay / wager
     stats["win_x_sum"] += win_x
     stats["win_x_square"] += win_x * win_x
@@ -943,9 +1009,9 @@ def calculated_metrics(result: dict[str, Any]) -> dict[str, Any]:
     return {
         "rounds": s["rounds"],
         "coin_in_per_round": s["coin_in"] / rounds,
-        "rtp_total": pay_total / coin_in,
-        "rtp_link": 0.0,
-        "rtp_bonus": 0.0,
+        "rtp_total": (pay_total + s["pay_jp"]) / coin_in,
+        "rtp_link": (s["jp_pay_by"][0] + s["jp_pay_by"][1]) / coin_in,    # GRAND／MAJOR（連機累進）
+        "rtp_bonus": (s["jp_pay_by"][2] + s["jp_pay_by"][3]) / coin_in,   # MINOR／MINI（固定倍數）
         "rtp_game": pay_total / coin_in,
         "rtp_bg": s["pay_bg"] / coin_in,
         "rtp_fg": s["pay_fg"] / coin_in,
@@ -1035,7 +1101,11 @@ def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     rounds = max(1, s["rounds"])
     fg_spins = max(1, s["fg_spins"])
     fg_triggers = max(1, s["fg_triggers"])
+    coin = max(1e-12, s["coin_in"])
     rows: list[tuple[str, Any]] = [
+        ("jp_c1_round_rate", s["jp_c1_rounds"] / rounds),
+        ("jp_hits_G/M/m/mini", " / ".join(str(n) for n in s["jp_hits"])),
+        ("jp_rtp_G/M/m/mini", " / ".join(f"{v / coin * 100:.4f}%" for v in s["jp_pay_by"])),
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
         ("avg_cascades_fg", s["cascades_fg"] / fg_spins),
         ("yellow_seen_bg_rate", s["bg_yellow_seen"] / rounds),
@@ -1333,7 +1403,7 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
     else:
         bet_tier_amount = bet_amount
         feature_price = "n/a"
-    jackpot_on = bool((CFG.get("jackpot") or {}).get("enabled"))
+    jackpot_on = JACKPOT_ENABLED and bool(((CFG_RTP or {}).get("jackpot") or CFG.get("jackpot") or {}).get("enabled"))
     return {
         "stats": stats_bundle["stats"],
         "duration": stats_bundle["duration"],
