@@ -15,17 +15,17 @@
 
 | 遊戲 | 廠商 | 資料來源與樣本 | 報告日期 | 格式版本 | 報告 | md 正本位置 |
 |---|---|---|---|---|---|---|
-| Gates of Olympus Super Scatter | PP | 試玩平台 100,000 轉 | 2026-11-09 | 現行 | [開啟](report_gates_of_olympus_super_scatter.html) | `H5\遊戲資訊\PP - Gates of Olympus Super Scatter\其他\` |
-| Sugar Rush | PP | 試玩平台 100,000 轉 | 2026-11-09 | 現行 | [開啟](report_sugar_rush.html) | `H5\遊戲資訊\PP - Sugar Rush\其他\` |
-| Sweet Bonanza 1000 | PP | 付費平台 30,893 轉 | 2026-11-09 | 現行 | [開啟](report_sweet_bonanza_1000.html) | `H5\遊戲資訊\PP - Sweet Bonanza 1000\其他\` |
-| Piñata 1000 | 5G GAMING | 付費平台 NB 103,519 / EB 100,046 轉 | 2026-11-09 | 現行 | [開啟](report_pinata_1000.html) | `H5\遊戲資訊\5G - Pinata 1000\其他\` |
-| DJ Boom Boom | FA CHAI | 試玩平台 100,000 轉（另 Acewin 平台資料 997 萬局對照） | 2026-11-09 | 現行 | [開啟](report_dj_boom_boom.html) | `H5\遊戲資訊\FC - DJ Boom Boom\其他\` |
-| Super Ace | JILI | 付費平台 166,050 轉 | 2026-09-29 | 現行 | [開啟](report_super_ace.html) | `H5\JILI - Super Ace\` |
-| Lucky Neko | PG | 付費平台 47,068 轉 | 2026-08-26 | 現行 | [開啟](report_lucky_neko.html) | `H5\PG - Lucky Neko\` |
-| Pinata Wins | PG | 付費平台 22,688 轉 | 2026-09-30 | 現行 | [開啟](report_pinata_wins.html) | `H5\PG - Pinata Wins\` |
-| Gates of Olympus 1000 | PP | 付費平台 31,472 轉 | 2026-08-26 | 現行 | [開啟](report_gates_of_olympus_1000.html) | `H5\PP - Gates of Olympus 1000\` |
-| Wild Bounty Showdown | PG | 付費平台 10,463 轉 | 2026-08-27 | 現行 | [開啟](report_wild_bounty_showdown.html) | `H5\PG - Wild Bounty Showdown\` |
-| Money Coming | JILI | 試玩平台 32,030 轉（底注 10：12,117） | 2026-09-30 | 現行 | [開啟](report_money_coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
+| Gates of Olympus Super Scatter | PP | 試玩平台 100,000 轉（PP 官方） | 2026-11-09 | 現行 | [開啟](report_gates_of_olympus_super_scatter.html) | `H5\遊戲資訊\PP - Gates of Olympus Super Scatter\其他\` |
+| Sugar Rush | PP | 試玩平台 100,000 轉（PP 官方） | 2026-11-09 | 現行 | [開啟](report_sugar_rush.html) | `H5\遊戲資訊\PP - Sugar Rush\其他\` |
+| Sweet Bonanza 1000 | PP | 付費平台 30,893 轉（panalok） | 2026-11-09 | 現行 | [開啟](report_sweet_bonanza_1000.html) | `H5\遊戲資訊\PP - Sweet Bonanza 1000\其他\` |
+| Piñata 1000 | 5G GAMING | 付費平台 NB 103,519 / EB 100,046 轉（playtime） | 2026-11-09 | 現行 | [開啟](report_pinata_1000.html) | `H5\遊戲資訊\5G - Pinata 1000\其他\` |
+| DJ Boom Boom | FA CHAI | 試玩平台 100,000 轉（FC 官方）；平台資料 997 萬局（Acewin，僅倍率線型對照） | 2026-11-09 | 現行 | [開啟](report_dj_boom_boom.html) | `H5\遊戲資訊\FC - DJ Boom Boom\其他\` |
+| Super Ace | JILI | 付費平台 166,050 轉（playtime） | 2026-09-29 | 現行 | [開啟](report_super_ace.html) | `H5\JILI - Super Ace\` |
+| Lucky Neko | PG | 付費平台 47,068 轉（panalok） | 2026-08-26 | 現行 | [開啟](report_lucky_neko.html) | `H5\PG - Lucky Neko\` |
+| Pinata Wins | PG | 付費平台 22,688 轉（panalok） | 2026-09-30 | 現行 | [開啟](report_pinata_wins.html) | `H5\PG - Pinata Wins\` |
+| Gates of Olympus 1000 | PP | 付費平台 31,472 轉（panalok） | 2026-08-26 | 現行 | [開啟](report_gates_of_olympus_1000.html) | `H5\PP - Gates of Olympus 1000\` |
+| Wild Bounty Showdown | PG | 付費平台 10,463 轉（panalok） | 2026-08-27 | 現行 | [開啟](report_wild_bounty_showdown.html) | `H5\PG - Wild Bounty Showdown\` |
+| Money Coming | JILI | 試玩平台 32,030 轉（JILI uat，底注 10：12,117）；試玩平台 6,092 轉（Tada uat，僅對照） | 2026-09-30 | 現行 | [開啟](report_money_coming.html) | `H5\遊戲資訊\JILI - Money Coming\` |
 
 > 十一份都是現行格式，章節與指標定義一致，可直接並排比較。
 >
@@ -223,7 +223,7 @@
 |---|---|---|---|---|---|
 | 廠商 | PP | PP | PP | 5G GAMING | 5G GAMING |
 | 盤面 | 6×5 Pay Anywhere | 7×7 Cluster | 6×5 Pay Anywhere | 5×3 20 線 | 5×3 20 線 |
-| 資料來源 | 試玩平台 | 試玩平台 | 付費平台 | 付費平台 | 付費平台 |
+| 資料來源 | 試玩平台（PP 官方） | 試玩平台（PP 官方） | 付費平台（panalok） | 付費平台（playtime） | 付費平台（playtime） |
 | 付費轉 | **100,000** | **100,000** | 30,893 | 103,519 | 100,046 |
 | 底注 | 2.0 | 2.0 | 2.0 | 20 win 單位 | 40 win 單位 |
 | **Total RTP** | **93.283%** | **93.292%** | **104.131%** | **97.411%** | **98.905%** |
@@ -245,7 +245,7 @@
 | 指標 | Super Ace | Lucky Neko | Pinata Wins | Gates of Olympus 1000 | Wild Bounty Showdown | Money Coming |
 |---|---|---|---|---|---|---|
 | 廠商 | JILI | PG | PG | PP | PG | JILI |
-| 資料來源 | 付費平台 | 付費平台 | 付費平台 | 付費平台 | 付費平台 | 試玩平台 |
+| 資料來源 | 付費平台（playtime） | 付費平台（panalok） | 付費平台（panalok） | 付費平台（panalok） | 付費平台（panalok） | 試玩平台（JILI uat） |
 | 付費轉 | **166,050** | 47,068 | 22,688 | 31,472 | 10,463 | 12,117（底注 10；三底注共 32,030） |
 | 底注 | 3.0 / 0.5 / 0.6 | 1.0 | 1.0（＋5x Ante） | 0.2 | 1.0 | 10（另有 1 / 5，各為獨立設定） |
 | **Total RTP** | **94.158%** | **100.932%** | **92.542%** | **90.748%** | **86.636%** | **94.328%** |
@@ -330,6 +330,15 @@
 >
 > **平台資料沒有盤面**，所以算不出賠率、符號分布、堆疊、消除率；
 > 換來的是可以逐玩家追蹤，以及尾段機率與週期的可靠估計。
+
+**寫法**：每一筆來源都寫成「**來源別 ＋ 樣本數 ＋（平台名）**」，
+一份報告混用多種來源時**每種各寫一筆**，主來源在前，用 `；` 分隔：
+
+```
+試玩平台 100,000 轉（FC 官方）；平台資料 997 萬局（Acewin，僅倍率線型對照）
+```
+
+首頁卡片會把 `；` 拆成分行顯示。
 
 ### RTP 都不能當設定值引用
 
