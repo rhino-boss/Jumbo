@@ -471,7 +471,8 @@ body.slot-simulator #batchSimulationStartBtn {
 
 /* 重置（RNG 區）與開始（批次模擬）統一用 SPIN 同款藍色主按鈕（2026-11-17） */
 html body.slot-simulator #controls #setRngResetBtn,
-html body.slot-simulator #batchSimulationStartBtn {
+html body.slot-simulator #batchSimulationStartBtn,
+html body.slot-simulator #batchSimulationResetBtn {
   min-height: 34px;
   height: 34px;
   padding: 8px 12px;
@@ -484,7 +485,8 @@ html body.slot-simulator #batchSimulationStartBtn {
 }
 
 html body.slot-simulator #controls #setRngResetBtn:disabled,
-html body.slot-simulator #batchSimulationStartBtn:disabled {
+html body.slot-simulator #batchSimulationStartBtn:disabled,
+html body.slot-simulator #batchSimulationResetBtn:disabled {
   color: #87a7c1;
   background: #102a49;
   box-shadow: none;

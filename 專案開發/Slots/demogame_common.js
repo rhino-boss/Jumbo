@@ -1110,6 +1110,25 @@
     const roundsInput = panel?.querySelector("#batchSimulationRounds");
     if (!panel || !start || !roundsInput) return;
     const { modeSelect, chart, modes } = ensureSimulationExtras(panel);
+    // 2026-11-17 使用者：第一次按「開始」，之後按「繼續」接著往後累積；「重置」清空回到第一次
+    let resetBtn = panel.querySelector("#batchSimulationResetBtn");
+    if (!resetBtn) {
+      resetBtn = document.createElement("button");
+      resetBtn.type = "button"; resetBtn.id = "batchSimulationResetBtn"; resetBtn.textContent = "Reset";
+      start.after(resetBtn);
+    }
+    if (!document.getElementById("batch-sim-reset-style")) {
+      const st = document.createElement("style");
+      st.id = "batch-sim-reset-style";
+      st.textContent = "html body.slot-simulator .batch-simulation-controls{display:flex!important;align-items:center;gap:8px}"
+        + "html body.slot-simulator .batch-simulation-controls>#batchSimulationRounds{flex:1 1 auto;min-width:0;width:auto}"
+        + "html body.slot-simulator .batch-simulation-controls>button{flex:0 0 auto}";
+      document.head.appendChild(st);
+    }
+    const tx = (en) => (window.demogameSharedText ? window.demogameSharedText(en) : en);
+    const newStats = () => ({ rounds: 0, totalMultiplier: 0, hits: 0, fgTriggers: 0, maxMultiplier: 0, retryLimitExceeded: 0, bgCascades: Array(6).fill(0), fgCascades: Array(6).fill(0) });
+    let acc = null;   // 累積中的 { stats, lineCounts, mode }；null＝下一次是「開始」
+    const idleLabel = () => tx(acc && acc.stats.rounds ? "Continue" : "Start");
     const modeLabel = () => modes.find((m) => String(m.value) === modeSelect?.value)?.label || "Current Bet";
     const selectedMode = () => (modes.length ? modes.find((m) => String(m.value) === modeSelect.value)?.value : undefined);
     const yMaxFor = () => {
@@ -1132,10 +1151,18 @@
       }
     };
     const renderEmpty = () => renderChart(null, SIMULATION_BUCKETS);
-    modeSelect?.addEventListener("change", renderEmpty);
+    const resetSim = () => {
+      acc = null;
+      writeFallbackStats(newStats());
+      renderEmpty();
+      start.textContent = idleLabel();
+    };
+    resetBtn.addEventListener("click", () => { if (!start.disabled) resetSim(); });
+    // 換押注模式不能跟前面的資料混在一起，視同重置
+    modeSelect?.addEventListener("change", resetSim);
     document.getElementById("languageSelect")?.addEventListener("change", () => setTimeout(() => {
       renderChart(lastCounts, SIMULATION_BUCKETS);
-      if (start.disabled && window.demogameSharedText) start.textContent = window.demogameSharedText("Running");
+      start.textContent = start.disabled ? tx("Running") : idleLabel();
     }, 0));
     setTimeout(renderEmpty, 0);   // 等共用語言字典就緒
     // 沒有消除機制的遊戲：試跑一局，adapter 沒回傳 bgCascade 就一開始就隱藏消除分布
@@ -1153,39 +1180,35 @@
       const requested = Math.min(1000000, Math.max(1, Math.trunc(Number(roundsInput.value) || 0)));
       roundsInput.value = String(requested);
       start.disabled = true;
+      resetBtn.disabled = true;
       roundsInput.disabled = true;
       if (modeSelect) modeSelect.disabled = true;
       const mode = selectedMode();
       const buckets = SIMULATION_BUCKETS;
-      const lineCounts = new Array(buckets.labels.length).fill(0);
+      if (!acc || acc.mode !== mode) acc = { stats: newStats(), lineCounts: new Array(buckets.labels.length).fill(0), mode };
+      const lineCounts = acc.lineCounts;
+      // 這次要再跑 requested 局，接在前面累積的局數後面
+      const target = acc.stats.rounds + requested;
       const simulateRound = typeof window.demogameSimulateRound === "function"
         ? window.demogameSimulateRound
         : null;
       if (!simulateRound) {
         const note = document.getElementById("batchSimulationNote");
         if (note) note.textContent = "Simulation adapter unavailable: this page cannot run the actual Demo Game logic yet.";
-        start.textContent = window.demogameSharedText ? window.demogameSharedText("Start") : "Start";
+        start.textContent = idleLabel();
         start.disabled = false;
+        resetBtn.disabled = false;
         roundsInput.disabled = false;
         if (modeSelect) modeSelect.disabled = false;
         return;
       }
-      const stats = {
-        rounds: 0,
-        totalMultiplier: 0,
-        hits: 0,
-        fgTriggers: 0,
-        maxMultiplier: 0,
-        retryLimitExceeded: 0,
-        bgCascades: Array(6).fill(0),
-        fgCascades: Array(6).fill(0)
-      };
+      const stats = acc.stats;
       start.textContent = window.demogameSharedText ? window.demogameSharedText("Running") : "Running";   // 中文顯示「進行中」
       try {
-        while (stats.rounds < requested) {
+        while (stats.rounds < target) {
           const sliceStarted = performance.now();
           let sliceRounds = 0;
-          while (stats.rounds < requested && sliceRounds < 2000 && performance.now() - sliceStarted < 40) {
+          while (stats.rounds < target && sliceRounds < 2000 && performance.now() - sliceStarted < 40) {
             const pending = simulateRound({ mode });
             const result = pending && typeof pending.then === "function" ? await pending : (pending || {});
             const multiplier = Math.max(0, Number(result.multiplier) || 0);
@@ -1210,8 +1233,9 @@
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
       } finally {
-        start.textContent = window.demogameSharedText ? window.demogameSharedText("Start") : "Start";
+        start.textContent = idleLabel();
         start.disabled = false;
+        resetBtn.disabled = false;
         roundsInput.disabled = false;
         if (modeSelect) modeSelect.disabled = false;
       }
@@ -1355,7 +1379,7 @@
   setupCollapsibleRegions();
   setTimeout(setupCollapsibleRegions, 0);
 
-  // 下方除錯區可摺疊（共用，2026-11-12 使用者）：版本紀錄／模擬／紀錄，點標題列收起／展開，預設展開；
+  // 下方除錯區可摺疊（共用，2026-11-12 使用者）：版本紀錄／模擬／紀錄，點標題列收起／展開，版本紀錄預設折疊、其餘預設展開；
   // 標題列內的按鈕（Clear、放大「+」）不觸發摺疊。標題列是 .diagnostic-header 或 .zone-label。
   const FOLD_IDS = ["change-log-wrap", "batch-simulation", "live-log-wrap"];
   const foldHead = (sec) => sec.querySelector(":scope > .diagnostic-header, :scope > .zone-label");
@@ -1377,6 +1401,8 @@
       if (!head || sec.classList.contains("dg-fold")) continue;
       sec.classList.add("dg-fold");
       head.classList.add("dg-fold-head");
+      // 版本紀錄預設折疊（2026-11-17 使用者），模擬／紀錄維持預設展開
+      if (id === "change-log-wrap") sec.classList.add("dg-folded");
     }
     if (!document.body.dataset.dgFold) {
       document.body.dataset.dgFold = "1";
@@ -1602,7 +1628,7 @@
     "stats": "統計", "basic metrics": "基本指標", "special metrics": "特殊指標", "simulation stats": "模擬統計", "total rounds": "總局數", "hit rate": "中獎率",
     "fg trigger": "FG 觸發", "fg trigger (observed)": "FG 觸發（實測）", "max multiplier": "最高倍數",
     "set rng": "指定 RNG", "card bg range": "卡片 BG 區間", "card bf range": "卡片 BF 區間", "reel rng": "輪帶 RNG",
-    "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始",
+    "reset": "重置", "force fg": "強制 FG", "log": "紀錄", "clear": "清除", "simulation": "模擬", "start": "開始", "continue": "繼續",
     "running": "進行中", "retry limit exceeded": "Retry 超限", "scene": "場景", "setting": "設定",
     "debug mode": "除錯模式", "card system": "卡片系統", "image": "圖片", "version": "版本", "language": "語言",
     "help": "說明", "guide": "導覽","change log": "修改紀錄", "version log": "版本紀錄", "previous": "上一步", "next": "下一步",
