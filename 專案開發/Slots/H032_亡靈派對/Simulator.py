@@ -300,8 +300,8 @@ class RoundResult:
     fg_drop_symbols: Counter = field(default_factory=Counter)
 
     pay_jp: float = 0.0                           # OP 彩金（Link），不算進 Game RTP、不受 Max Win 截斷
-    jp_hit: int = -1                              # 中的彩金 index（0 GRAND／1 MAJOR／2 MINOR／3 MINI），-1＝沒中
-    jp_c1: bool = False                           # 初始盤面有 C1（彩金判定資格）
+    jp_hits: list = field(default_factory=list)   # 本局中的彩金（0 GRAND／1 MAJOR／2 MINOR／3 MINI，可能不只一個），(k, 獎金)
+    jp_events: int = 0                            # 本局彩金判定次數＝出現 C1 的轉數（BG／進場盤＋FG 各轉，同 SCR 口徑）
 
     @property
     def pay(self) -> float:
@@ -695,7 +695,7 @@ class CalaveraParty:
                       if self.card_enabled else self.free_session(spins, 0.0, buy=True, super_=sup))
             result.special_symbol_cnt += 1   # 進場盤本身含 SC
             result.pay_fg = min(result.pay_fg, self.max_win * self.bet)
-            self.jackpot(result, bet_mode, True)
+            self.jackpot(result, bet_mode)
             return result
 
         result = RoundResult()
@@ -732,7 +732,7 @@ class CalaveraParty:
             if result.pay > cap:
                 result.pay_bg = min(result.pay_bg, cap)
             result.capped = True
-        self.jackpot(result, bet_mode, any(symbol == C1 for column in spin.initial_board for symbol in column))
+        self.jackpot(result, bet_mode)
         return result
 
     # --- OP Jackpot ---
@@ -746,8 +746,9 @@ class CalaveraParty:
             return "A", False                      # 數學模型規範 §1.6.1：新手不得觸發 Link（GRAND／MAJOR），Link RTP 0%
         return ("B" if unlocked else "C"), unlocked
 
-    def jackpot(self, result: RoundResult, bet_mode: int, has_c1: bool) -> None:
-        """每局押注先累進 GRAND／MAJOR；初始盤面有 C1 才判定：P(k) ＝ RTP_k × 押注 ÷ 獎金_k，再除以 C1 Rate 換成條件機率。"""
+    def jackpot(self, result: RoundResult, bet_mode: int) -> None:
+        """每局押注先累進 GRAND／MAJOR；本局每一轉出現 C1（BG 或進場盤、FG 每轉，同 SCR 口徑）各判定一次：
+        每次中 k 的機率 ＝ RTP_k × 押注 ÷ 獎金_k ÷（SCR ÷ Threshold）；中 GRAND／MAJOR 後彩池回起始值。"""
         if not self.jp_on:
             return
         jp = self.jp
@@ -758,30 +759,27 @@ class CalaveraParty:
         key = str(jp["bet_key"][bet_mode])
         for k in (0, 1):
             self.jp_pool[k] += wager * float(cfg["inc"][k])
-        result.jp_c1 = has_c1
-        if not has_c1:
+        events = int(result.special_symbol_cnt)
+        result.jp_events = events
+        if events <= 0:
             return
+        name = ["NB", "EB", "BF", "SF"][bet_mode]
+        scr = jp["scr"].get(f"{name}_Newbie" if self.profile == "newbie" else name) or jp["scr"][name]
+        per_round = float(scr) / float(jp["threshold"])          # 每局平均判定次數
         fixed = jp["fixed_x"][key]
-        prizes = [self.jp_pool[0], self.jp_pool[1], fixed[0] * self.bet, fixed[1] * self.bet]
         rtp = cfg["rtp"][key]
-        p = [0.0 if (k < 2 and not unlocked) else float(rtp[k]) * wager / prizes[k] for k in range(4)]
-        total = sum(p)
-        if total <= 0:
-            return
-        cond = min(1.0, total / float(jp["c1_rate"][bet_mode]))
-        if self.rng.random() >= cond:
-            return
-        u = self.rng.random() * total
-        k = 3
-        for i in range(4):
-            u -= p[i]
-            if u < 0:
-                k = i
-                break
-        result.pay_jp = prizes[k]
-        result.jp_hit = k
-        if k < 2:
-            self.jp_pool[k] = float(jp["seed"][k])
+        for _ in range(events):
+            prizes = [self.jp_pool[0], self.jp_pool[1], fixed[0] * self.bet, fixed[1] * self.bet]
+            p = [0.0 if (k < 2 and not unlocked) else float(rtp[k]) * wager / prizes[k] / per_round for k in range(4)]
+            u = self.rng.random()
+            for k in range(4):
+                u -= p[k]
+                if u < 0:
+                    result.pay_jp += prizes[k]
+                    result.jp_hits.append((k, prizes[k]))
+                    if k < 2:
+                        self.jp_pool[k] = float(jp["seed"][k])
+                    break
 
 
 # ===== 統計 =====
@@ -811,7 +809,7 @@ def threshold_index(multiplier: float) -> int:
 def _empty_stats() -> dict[str, Any]:
     buckets = len(MULTIPLIER_THRESHOLDS)
     return {
-        "pay_jp": 0.0, "jp_c1_rounds": 0, "jp_hits": [0, 0, 0, 0], "jp_pay_by": [0.0, 0.0, 0.0, 0.0],
+        "pay_jp": 0.0, "jp_events": 0, "jp_hits": [0, 0, 0, 0], "jp_pay_by": [0.0, 0.0, 0.0, 0.0],
         "rounds": 0, "coin_in": 0.0, "pay_bg": 0.0, "pay_fg": 0.0,
         "win_x_sum": 0.0, "win_x_square": 0.0, "max_win_x": 0.0, "capped_rounds": 0,
         "bg_hit_spins": 0, "fg_hit_spins": 0, "fg_spins": 0, "fg_triggers": 0,
@@ -852,10 +850,10 @@ def _accumulate(stats: dict[str, Any], result: RoundResult, wager: float,
     stats["pay_bg"] += result.pay_bg
     stats["pay_fg"] += result.pay_fg
     stats["pay_jp"] += result.pay_jp
-    stats["jp_c1_rounds"] += int(result.jp_c1)
-    if result.jp_hit >= 0:
-        stats["jp_hits"][result.jp_hit] += 1
-        stats["jp_pay_by"][result.jp_hit] += result.pay_jp
+    stats["jp_events"] += result.jp_events
+    for k, prize in result.jp_hits:
+        stats["jp_hits"][k] += 1
+        stats["jp_pay_by"][k] += prize
     win_x = result.pay / wager
     stats["win_x_sum"] += win_x
     stats["win_x_square"] += win_x * win_x
@@ -1091,7 +1089,7 @@ def game_info_rows(result: dict[str, Any]) -> list[tuple[str, Any]]:
     fg_triggers = max(1, s["fg_triggers"])
     coin = max(1e-12, s["coin_in"])
     rows: list[tuple[str, Any]] = [
-        ("jp_c1_round_rate", s["jp_c1_rounds"] / rounds),
+        ("jp_events_per_round", s["jp_events"] / rounds),
         ("jp_hits_G/M/m/mini", " / ".join(str(n) for n in s["jp_hits"])),
         ("jp_rtp_G/M/m/mini", " / ".join(f"{v / coin * 100:.4f}%" for v in s["jp_pay_by"])),
         ("avg_cascades_bg", s["cascades_bg"] / rounds),
