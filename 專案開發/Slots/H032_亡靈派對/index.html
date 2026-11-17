@@ -2861,14 +2861,13 @@
     #jpBar .jp-box.is-locked{opacity:.45;filter:grayscale(.85)}
     #jpBar .jp-box.is-locked .jp-v{text-shadow:none}
     #jpBar .jp-box.is-hit{animation:jp-hit .5s ease-in-out 4}
-    /* OP：雙圈藍色圓章（外圈細亮環＋內圈深藍底），帶微光 */
-    #jpBar .jp-op{position:relative;justify-self:center;width:42px;font-family:"Segoe UI",system-ui,sans-serif;height:42px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;letter-spacing:.04em;color:#e8f5ff;
-      background:radial-gradient(circle at 50% 30%,#1d4f8f,#0a1c36 70%);border:1px solid rgba(110,200,255,.75);
-      box-shadow:0 0 0 3px #030b17,0 0 0 4px rgba(110,200,255,.25),0 0 14px rgba(80,170,255,.45),inset 0 1px 0 rgba(255,255,255,.18);text-shadow:0 0 6px rgba(120,200,255,.9)}
+    /* OP：單圈細框的平面小圓，不加外環與光暈 */
+    #jpBar .jp-op{position:relative;justify-self:center;width:42px;height:42px;font-family:"Segoe UI",system-ui,sans-serif;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:800;letter-spacing:.04em;color:#7cc8ff;
+      background:#0b1a2f;border:1px solid rgba(110,190,255,.45)}
     #jpBar .jp-op span{position:relative}
     @keyframes jp-op-shine{0%,55%{transform:translateX(-120%)}85%,100%{transform:translateX(120%)}}
     #jpBar .jp-op.is-struck{animation:jp-strike .32s ease-out}
-    @keyframes jp-strike{0%{transform:scale(1)}35%{transform:scale(1.25);box-shadow:0 0 0 3px #030b17,0 0 0 4px rgba(110,200,255,.6),0 0 24px rgba(95,194,255,1)}100%{transform:scale(1)}}
+    @keyframes jp-strike{0%{transform:scale(1)}35%{transform:scale(1.25);color:#fff;border-color:rgba(140,210,255,.9);box-shadow:0 0 16px rgba(95,194,255,.8)}100%{transform:scale(1)}}
     @keyframes jp-hit{50%{filter:brightness(1.6)}}
     .fx-jp-coin{position:fixed;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;z-index:90;pointer-events:none;
       background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd23f 50%,#b77c00);box-shadow:0 0 8px rgba(255,210,60,.8)}
@@ -3895,8 +3894,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 11:27";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 13:03";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 13:03";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
