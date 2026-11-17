@@ -2728,30 +2728,28 @@
     return `<svg viewBox="0 0 48 48" aria-hidden="true"><defs>
       <linearGradient id="jpcBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a5d9f"/><stop offset="1" stop-color="#0f2a52"/></linearGradient>
       <linearGradient id="jpcLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f66ad"/><stop offset="1" stop-color="#16376a"/></linearGradient>
-      <linearGradient id="jpcLidIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1d38"/><stop offset="1" stop-color="#132c55"/></linearGradient>
+      <linearGradient id="jpcIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1d38"/><stop offset="1" stop-color="#132c55"/></linearGradient>
+      <linearGradient id="jpcLock" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe66a"/><stop offset="1" stop-color="#b57e10"/></linearGradient>
       <linearGradient id="jpcCoin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#d99a00"/></linearGradient>
       <radialGradient id="jpcGlow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".95"/><stop offset=".5" stop-color="#ffc840" stop-opacity=".45"/><stop offset="1" stop-color="#ffc840" stop-opacity="0"/></radialGradient></defs><g class="root">
-      <ellipse cx="24" cy="44.5" rx="19" ry="2.6" fill="#000" fill-opacity=".35"/>
-      <ellipse class="glow" cx="24" cy="16" rx="22" ry="15" fill="url(#jpcGlow)"/>
-      <g class="lid-open"><path d="M6.5 19.5C6.5 9 11 3.5 24 3.5S41.5 9 41.5 19.5Z" fill="url(#jpcLidIn)" stroke="#5fb4ff" stroke-width="1"/>
-        <path d="M10 19C10 11 13.5 7 24 7S38 11 38 19" fill="none" stroke="#5fb4ff" stroke-opacity=".35" stroke-width=".8"/>
-        <rect x="12.5" y="5.6" width="2.4" height="13.6" fill="#3a86ff" opacity=".45"/><rect x="33.1" y="5.6" width="2.4" height="13.6" fill="#3a86ff" opacity=".45"/></g>
-      <path class="inside" d="M5 24.5L8.5 19H39.5L43 24.5Z" fill="#071227" stroke="#5fb4ff" stroke-opacity=".7" stroke-width=".8"/>
-      <g class="lv2">${flat(24, 22.4, 4.6, 2.1)}</g>
-      <g class="lv3">${flat(18.5, 22.6, 4.4, 2)}${flat(29.5, 22.6, 4.4, 2)}${flat(24, 20.6, 4.2, 1.9)}</g>
-      <g class="lv4">${mound.map(([x, y]) => flat(x, y, 4.1, 1.9)).join("")}</g>
-      <path d="M4 24H44V39C44 42 41.5 44 38.5 44H9.5C6.5 44 4 42 4 39Z" fill="url(#jpcBody)" stroke="#5fb4ff" stroke-width=".9"/>
-      <path d="M4 24H44V27H4Z" fill="#5fb4ff"/>
-      <rect x="11" y="27" width="3" height="17" fill="#3a86ff" opacity=".55"/><rect x="34" y="27" width="3" height="17" fill="#3a86ff" opacity=".55"/>
-      <path d="M5.5 29H42.5" stroke="#9fd3ff" stroke-opacity=".25" stroke-width=".6"/>
-      <rect x="20.5" y="27.5" width="7" height="8.5" rx="1.4" fill="#ffd23f" stroke="#7a5600" stroke-width=".6"/><circle cx="24" cy="30.8" r="1.2" fill="#7a5600"/><rect x="23.5" y="31.5" width="1" height="2.4" fill="#7a5600"/>
-      <g class="lv4">${flat(7.5, 25.5, 4, 1.9, -38)}${flat(40.5, 25.8, 4, 1.9, 40)}${stand(15.5, 27.8, 3, -12)}${stand(32.5, 28.3, 2.8, 14)}
+      <ellipse class="glow" cx="24" cy="17" rx="22" ry="14" fill="url(#jpcGlow)"/>
+      <g class="lvp l3"><path d="M6 18.5C6 7.5 11 3.5 24 3.5S42 7.5 42 18.5Z" fill="url(#jpcIn)"/><path d="M6 18.5C6 7.5 11 3.5 24 3.5S42 7.5 42 18.5" fill="none" stroke="#5fb4ff" stroke-width="1.2"/><path d="M11 4V19M34 4V19" stroke="#5fb4ff" stroke-width="2.5" opacity=".3"/></g>
+      <g class="lvp l4"><g transform="translate(0 3) scale(1 .9)"><path d="M7 21C7 12 12 9 24 9S41 12 41 21Z" fill="url(#jpcIn)"/><path d="M7 21C7 12 12 9 24 9S41 12 41 21" fill="none" stroke="#5fb4ff" stroke-width="1.2"/><path d="M12 10V21M33 10V21" stroke="#5fb4ff" stroke-width="2.5" opacity=".2"/></g></g>
+      <path d="M5 24.5L8.5 19H39.5L43 24.5Z" fill="#071227"/>
+      <g class="lvp l2"><path d="M8.5 19L5 24.5H43L39.5 19Z" fill="#ffd700" opacity=".4"/></g>
+      <g class="lvp c2">${flat(24, 22.4, 4.6, 2.1)}</g>
+      <g class="lvp c3">${flat(18.5, 22.6, 4.4, 2)}${flat(29.5, 22.6, 4.4, 2)}${flat(24, 20.6, 4.2, 1.9)}</g>
+      <g class="lvp c4">${mound.map(([x, y]) => flat(x, y, 4.1, 1.9)).join("")}</g>
+      <g class="lvp l3"><path d="M4 18.5Q24 21 44 18.5L44.5 19.5Q24 22.5 3.5 19.5Z" fill="#2f66ad"/></g>
+      <path d="M4 24H44V39C44 42 41.5 44 38.5 44H9.5C6.5 44 4 42 4 39Z" fill="url(#jpcBody)"/>
+      <path d="M4 24H44V27H4Z" fill="#5fb4ff"/><rect x="11" y="24" width="3" height="20" fill="#5fb4ff"/><rect x="34" y="24" width="3" height="20" fill="#5fb4ff"/>
+      <rect x="20.5" y="27.5" width="7" height="8.5" rx="1" fill="url(#jpcLock)"/><circle cx="24" cy="31.5" r="1.5" fill="#0f2a52"/>
+      <g class="lvp c4">${flat(7.5, 25.5, 4, 1.9, -38)}${flat(40.5, 25.8, 4, 1.9, 40)}${stand(15.5, 27.8, 3, -12)}${stand(32.5, 28.3, 2.8, 14)}
         ${flat(5, 43, 4, 1.8)}${flat(8.5, 45.3, 3.6, 1.6, -8)}${stand(3.3, 38.8, 3, -18)}${flat(43, 43.2, 4, 1.8)}${flat(39.5, 45.6, 3.4, 1.5, 10)}${stand(45, 38.5, 2.9, 20)}
         ${spark(41.5, 13, 2.4, "s1")}${spark(6, 15, 2, "s2")}${spark(34, 6, 1.8, "s3")}</g>
-      <g class="lid-closed"><path d="M4 22C4 14 8.5 10 24 10S44 14 44 22Z" fill="url(#jpcLid)" stroke="#5fb4ff" stroke-width=".9"/>
-        <path d="M4 22H44V24.4H4Z" fill="#5fb4ff"/>
-        <rect x="11" y="10.9" width="3" height="11.1" fill="#3a86ff" opacity=".55"/><rect x="34" y="10.9" width="3" height="11.1" fill="#3a86ff" opacity=".55"/>
-        <path d="M8 19C8 15 12 12.5 24 12.5" fill="none" stroke="#bfe3ff" stroke-opacity=".35" stroke-width=".8"/></g></g></svg>`;   // .root 依階層上下位移，讓看得到的部分維持置中
+      <g class="lvp l1"><path d="M4 24C4 14 8.5 10 24 10S44 14 44 24Z" fill="url(#jpcLid)"/><path d="M4 21.5H44V24.5H4Z" fill="#5fb4ff"/><path d="M11 10.5V24.5H14V10.5ZM34 10.5V24.5H37V10.5Z" fill="#5fb4ff"/></g>
+      <g class="lvp l2"><g transform="translate(0 -3)"><path d="M4 21C4 11 8.5 7 24 7S44 11 44 21Q24 23.5 4 21Z" fill="url(#jpcLid)"/><path d="M4 18.5Q24 21 44 18.5V21.5Q24 24 4 21.5Z" fill="#5fb4ff"/><path d="M11 7.5V21H14V7.5ZM34 7.5V21H37V7.5Z" fill="#5fb4ff"/></g></g>
+      </g></svg>`;   // .root 依階層上下位移，讓看得到的部分維持置中
   }
   // show＝true 才把畫面換成目前階層：平常押注只累計，等 SC 金幣打中寶箱（或中彩金歸零）時才變化
   function renderChest(show = false) {
@@ -2909,28 +2907,27 @@
     #jpBar .jp-box.is-locked{opacity:.45;filter:grayscale(.85)}
     #jpBar .jp-box.is-locked .jp-v{text-shadow:none}
     #jpBar .jp-box.is-hit{animation:jp-hit .5s ease-in-out 4}
-    /* OP 寶箱（2026-11-17）：固定 50px；依「距上次中彩金的押注次數」分 4 階，只靠箱蓋開合與金幣量區分；中彩金後回第 1 階 */
-    #jpBar .jp-op{position:relative;justify-self:center;display:flex;align-items:center;justify-content:center;width:52px;height:52px}
-    #jpBar .jp-op svg{display:block;width:50px;height:50px;overflow:visible}
-    /* 上下置中：箱蓋打開後圖形往上長，整體下移補回（單位＝viewBox 48） */
-    /* 各階看得到的箱體上下範圍置中（不算地面淡影；第 4 階含兩側落地金幣） */
-    #jpBar .jp-op .root{transform:translateY(-3px);transition:transform .35s}
-    #jpBar .jp-op[data-lv="2"] .root{transform:translateY(-0.5px)}
-    #jpBar .jp-op[data-lv="3"] .root{transform:translateY(-2.8px)}
-    #jpBar .jp-op[data-lv="4"] .root{transform:translateY(-2px)}
-    #jpBar .jp-op .lid-closed{transform-box:view-box;transform-origin:24px 24px;transition:transform .35s,opacity .25s}
-    #jpBar .jp-op .lid-open{transform-box:fill-box;transform-origin:50% 100%;transition:transform .35s,opacity .25s}
-    #jpBar .jp-op :is(.glow,.lv2,.lv3,.lv4,.lid-open){opacity:0;transition:opacity .3s}
-    #jpBar .jp-op[data-lv="1"] .inside{fill:#04080f}
-    #jpBar .jp-op[data-lv="2"] .lid-closed{transform:translateY(-4px) rotate(-3deg)}
+    /* OP 寶箱（2026-11-17）：箱蓋用 Gemini 版、透視金幣；依「距上次中彩金的押注次數」分 4 階，只有被 SC 金幣打中才換階；中彩金後回第 1 階
+       彩金列「聚光放射」：中間那格加寬，寶箱放大到 62px，後面一圈慢慢旋轉的放射光，整條中間比兩側亮 */
+    #jpBar{grid-template-columns:1fr 1fr 84px 1fr 1fr !important;background:linear-gradient(90deg,#030b17 0,#06152b 50%,#030b17 100%) !important}
+    #jpBar .jp-op{position:relative;justify-self:center;display:flex;align-items:center;justify-content:center;width:84px;height:56px}
+    #jpBar .jp-op::before{content:"";position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+      background:radial-gradient(circle,rgba(95,180,255,.45),rgba(95,180,255,.12) 45%,transparent 70%)}
+    #jpBar .jp-op::after{content:"";position:absolute;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+      background:repeating-conic-gradient(from 0deg,rgba(150,210,255,.22) 0 8deg,transparent 8deg 22deg);
+      -webkit-mask:radial-gradient(circle,transparent 30%,#000 45%,transparent 70%);mask:radial-gradient(circle,transparent 30%,#000 45%,transparent 70%);animation:jp-spot-spin 14s linear infinite}
+    @keyframes jp-spot-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    #jpBar .jp-op svg{position:relative;z-index:1;display:block;width:62px;height:62px;overflow:visible;transform-origin:50% 85%}
+    #jpBar .jp-op .lvp{display:none}
+    #jpBar .jp-op[data-lv="1"] .l1,#jpBar .jp-op[data-lv="2"] :is(.l2,.c2),#jpBar .jp-op[data-lv="3"] :is(.l3,.c2,.c3),#jpBar .jp-op[data-lv="4"] :is(.l4,.c2,.c3,.c4){display:inline}
+    /* 各階看得到的範圍上下置中（viewBox 48） */
+    #jpBar .jp-op .root{transform:translateY(-3.6px)}
+    #jpBar .jp-op[data-lv="2"] .root{transform:translateY(-0.6px)}
+    #jpBar .jp-op[data-lv="3"] .root{transform:translateY(-0.35px)}
+    #jpBar .jp-op[data-lv="4"] .root{transform:translateY(-2.9px)}
+    #jpBar .jp-op .glow{opacity:0;transition:opacity .3s}
     #jpBar .jp-op[data-lv="2"] .glow{opacity:.35}
-    #jpBar .jp-op[data-lv="2"] .lv2{opacity:1}
-    #jpBar .jp-op:is([data-lv="3"],[data-lv="4"]) .lid-closed{opacity:0}
-    #jpBar .jp-op[data-lv="3"] .lid-open{opacity:1;transform:scaleY(.62)}
     #jpBar .jp-op[data-lv="3"] .glow{opacity:.65}
-    #jpBar .jp-op[data-lv="3"] :is(.lv2,.lv3){opacity:1}
-    #jpBar .jp-op[data-lv="4"] .lid-open{opacity:1;transform:scaleY(1)}
-    #jpBar .jp-op[data-lv="4"] :is(.lv2,.lv3,.lv4){opacity:1}
     #jpBar .jp-op[data-lv="4"] .glow{opacity:1;animation:jp-chest-breath 1.8s ease-in-out infinite}
     #jpBar .jp-op .spark{transform-box:fill-box;transform-origin:center}
     #jpBar .jp-op[data-lv="4"] .spark{animation:jp-chest-spark 1.8s ease-in-out infinite}
@@ -2939,7 +2936,6 @@
     @keyframes jp-chest-breath{0%,100%{opacity:.65}50%{opacity:1}}
     @keyframes jp-chest-spark{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
     /* 被 SC 金幣打中：以底部為軸左右晃一下＋亮一下 */
-    #jpBar .jp-op svg{transform-origin:50% 85%}
     #jpBar .jp-op.is-struck svg{animation:jp-strike .5s ease-out}
     @keyframes jp-strike{0%{transform:rotate(0) scale(1)}15%{transform:rotate(-9deg) scale(1.1);filter:drop-shadow(0 0 10px rgba(120,200,255,1))}35%{transform:rotate(8deg) scale(1.06)}55%{transform:rotate(-5deg)}75%{transform:rotate(3deg)}100%{transform:rotate(0) scale(1)}}
     @keyframes jp-hit{50%{filter:brightness(1.6)}}
@@ -3975,13 +3971,13 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 14:22";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:22";
+  window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 14:47";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:47";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
-  <script src="../demogame_common.js?v=20261117b"></script>
+  <script src="../demogame_common.js?v=20261117c"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
     (function () {
