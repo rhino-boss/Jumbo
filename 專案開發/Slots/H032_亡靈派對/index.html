@@ -2426,7 +2426,7 @@
       <div class="diagnostic-header">版本紀錄</div>
       <div id="changeLogBody">
       <article class="change-log-entry">
-        <h4>v2（2.0.0.0）</h4>
+        <h4>v2（2.0.0.1）</h4>
         <ol>
           <li>輪帶、停輪權重、補牌權重與賠率改用 JILI Super Ace（側錄還原輪帶，帶長 200；賠率 M1 50／150／250 起，100 Credit 基準）；FG 後段表 FG_Symbol (4) 由 Super Ace FG 輪帶依 v1 規則重排。（11/09）</li>
           <li>金色符號（黃底）對標 DJ Boom Boom：只出現在第 2～4 軸，每格出現率比照 DJ Boom Boom 側錄各軸比例；倍數改為 1／2／3／5／10／20／30／50／100 九檔，分布比照 DJ Boom Boom（1X 約 94%）。（11/09）</li>
@@ -2585,7 +2585,7 @@
   <script>
     // 數學版本：依 ?version= 從 Versions/version_manifest.js 選基礎 Config（預設 current）；切換版本時重新載入頁面
     (() => {
-      const manifest = window.H032_VERSION_MANIFEST || { current: "2.0.0.0", versions: [{ version: "2.0.0.0", configs: { base: "config.js" } }] };
+      const manifest = window.H032_VERSION_MANIFEST || { current: "2.0.0.1", versions: [{ version: "2.0.0.1", configs: { base: "config.js" } }] };
       const asked = new URLSearchParams(location.search).get("version") || manifest.current;
       const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
         || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
@@ -4000,7 +4000,7 @@
   <script>
   // 有載入 RTP config（card_system）時才支援 Card System；選 Base 為自然機率
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
-  window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
+  window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.1";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
   window.DEMOGAME_LAST_CODE = "2026-11-17 16:47";
