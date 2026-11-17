@@ -2718,7 +2718,7 @@
   state.jp = { pool: [JP_SEED[0] * BASE_BET, JP_SEED[1] * BASE_BET], wins: 0, hits: [0, 0, 0, 0], spins: 0 };
   // OP 寶箱：距上次中彩金的押注次數門檻（第 1～4 階；NB $1 平均約 700 次中一次彩金）
   const JP_CHEST_LV = [0, 150, 400, 800];
-  const JP_CHEST_TEST = true;   // 測試用：每 Spin 一次跳一階，到第 4 階維持到中彩金；正式改回 false 依上面門檻
+  const JP_CHEST_TEST = true;   // 測試用：寶箱每被 SC 金幣打中一次跳一階，到第 4 階維持到中彩金；正式改回 false 依上面門檻
   function jpChestSvg() {
     const flat = (x, y, rx = 4.2, ry = 2, rot = 0) => `<g transform="rotate(${rot} ${x} ${y})"><ellipse cx="${x}" cy="${y + ry * .5}" rx="${rx}" ry="${ry}" fill="#a87800"/><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#jpcCoin)" stroke="#7a5600" stroke-width=".35"/><ellipse cx="${x - rx * .08}" cy="${y - ry * .05}" rx="${rx * .55}" ry="${ry * .5}" fill="none" stroke="#fff4b8" stroke-opacity=".7" stroke-width=".35"/></g>`;
     const stand = (x, y, r = 3.2, rot = 0) => `<g transform="rotate(${rot} ${x} ${y})"><circle cx="${x + r * .28}" cy="${y}" r="${r}" fill="#a87800"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#jpcCoin)" stroke="#7a5600" stroke-width=".35"/><circle cx="${x}" cy="${y}" r="${r * .6}" fill="none" stroke="#fff4b8" stroke-opacity=".7" stroke-width=".35"/></g>`;
@@ -2730,7 +2730,7 @@
       <linearGradient id="jpcLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f66ad"/><stop offset="1" stop-color="#16376a"/></linearGradient>
       <linearGradient id="jpcLidIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1d38"/><stop offset="1" stop-color="#132c55"/></linearGradient>
       <linearGradient id="jpcCoin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#d99a00"/></linearGradient>
-      <radialGradient id="jpcGlow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".95"/><stop offset=".5" stop-color="#ffc840" stop-opacity=".45"/><stop offset="1" stop-color="#ffc840" stop-opacity="0"/></radialGradient></defs><g transform="translate(0 -4)">
+      <radialGradient id="jpcGlow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".95"/><stop offset=".5" stop-color="#ffc840" stop-opacity=".45"/><stop offset="1" stop-color="#ffc840" stop-opacity="0"/></radialGradient></defs><g class="root">
       <ellipse cx="24" cy="44.5" rx="19" ry="2.6" fill="#000" fill-opacity=".35"/>
       <ellipse class="glow" cx="24" cy="16" rx="22" ry="15" fill="url(#jpcGlow)"/>
       <g class="lid-open"><path d="M6.5 19.5C6.5 9 11 3.5 24 3.5S41.5 9 41.5 19.5Z" fill="url(#jpcLidIn)" stroke="#5fb4ff" stroke-width="1"/>
@@ -2751,13 +2751,14 @@
       <g class="lid-closed"><path d="M4 22C4 14 8.5 10 24 10S44 14 44 22Z" fill="url(#jpcLid)" stroke="#5fb4ff" stroke-width=".9"/>
         <path d="M4 22H44V24.4H4Z" fill="#5fb4ff"/>
         <rect x="11" y="10.9" width="3" height="11.1" fill="#3a86ff" opacity=".55"/><rect x="34" y="10.9" width="3" height="11.1" fill="#3a86ff" opacity=".55"/>
-        <path d="M8 19C8 15 12 12.5 24 12.5" fill="none" stroke="#bfe3ff" stroke-opacity=".35" stroke-width=".8"/></g></g></svg>`;   // 整體上移 4（箱身＋關蓋的上下置中）
+        <path d="M8 19C8 15 12 12.5 24 12.5" fill="none" stroke="#bfe3ff" stroke-opacity=".35" stroke-width=".8"/></g></g></svg>`;   // .root 依階層上下位移，讓看得到的部分維持置中
   }
-  function renderChest() {
+  // show＝true 才把畫面換成目前階層：平常押注只累計，等 SC 金幣打中寶箱（或中彩金歸零）時才變化
+  function renderChest(show = false) {
     const op = $("jpOp"); if (!op) return;
-    if (!op.firstElementChild) op.innerHTML = jpChestSvg();
-    const lv = JP_CHEST_TEST ? Math.min(4, state.jp.spins + 1) : JP_CHEST_LV.filter(n => state.jp.spins >= n).length;   // 到第 4 階就維持，直到中彩金才歸零
-    if (op.dataset.lv !== String(lv)) op.dataset.lv = lv;
+    if (!op.firstElementChild) { op.innerHTML = jpChestSvg(); show = true; }
+    const lv = JP_CHEST_TEST ? Math.min(4, (state.jp.strikes || 0) + 1) : JP_CHEST_LV.filter(n => state.jp.spins >= n).length;   // 到第 4 階就維持，直到中彩金才歸零
+    if (show && op.dataset.lv !== String(lv)) op.dataset.lv = lv;
     op.title = `${state.language === "zh" ? "距上次彩金押注次數" : "Spins since last jackpot"}：${state.jp.spins}`;
   }
   // 檔位同模擬程式規範 §1.2.3：NB／EB 用實際押注、BF／SF 用底注；< $2 → C（無 GRAND／MAJOR），≥ $2 → B；未開卡片系統 → A
@@ -2811,7 +2812,7 @@
         { transform: `translate(${ox - x}px,${oy - y}px) scale(.8)`, opacity: 1 }], { duration: dur, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" });
       return Promise.race([a.finished.catch(() => {}), wait(dur + 80)]).then(() => {
         coin.remove();
-        if (!struck) { struck = true; op.classList.remove("is-struck"); void op.offsetWidth; op.classList.add("is-struck"); }
+        if (!struck) { struck = true; state.jp.strikes = (state.jp.strikes || 0) + 1; renderChest(true); op.classList.remove("is-struck"); void op.offsetWidth; op.classList.add("is-struck"); }   // 打中才更新階層，並晃一下
       });
     }));
   }
@@ -2875,7 +2876,7 @@
     appendLog(`OP Jackpot | ${JP_NAMES[k]} ${money(prize)} | JP0100${jpSeries(mode)}（第 28 組）`, "result");
     await playJackpotGame(k, prize);
     if (k < 2) state.jp.pool[k] = JP_SEED[k] * BASE_BET;
-    state.jp.spins = 0; renderChest();   // 中彩金 → 寶箱回第 1 階
+    state.jp.spins = 0; state.jp.strikes = 0; renderChest(true);   // 中彩金 → 寶箱回第 1 階
     state.jp.wins += prize; state.jp.hits[k]++; state.totalWin += prize; state.balance += prize; state.lastWin += prize;
     renderJp(); updateStats();
     return prize;
@@ -2911,6 +2912,10 @@
     /* OP 寶箱（2026-11-17）：固定 50px；依「距上次中彩金的押注次數」分 4 階，只靠箱蓋開合與金幣量區分；中彩金後回第 1 階 */
     #jpBar .jp-op{position:relative;justify-self:center;display:flex;align-items:center;justify-content:center;width:52px;height:52px}
     #jpBar .jp-op svg{display:block;width:50px;height:50px;overflow:visible}
+    /* 上下置中：箱蓋打開後圖形往上長，整體下移補回（單位＝viewBox 48） */
+    #jpBar .jp-op .root{transform:translateY(-4px);transition:transform .35s}
+    #jpBar .jp-op[data-lv="3"] .root{transform:translateY(-2.5px)}
+    #jpBar .jp-op[data-lv="4"] .root{transform:translateY(0)}
     #jpBar .jp-op .lid-closed{transform-box:view-box;transform-origin:24px 24px;transition:transform .35s,opacity .25s}
     #jpBar .jp-op .lid-open{transform-box:fill-box;transform-origin:50% 100%;transition:transform .35s,opacity .25s}
     #jpBar .jp-op :is(.glow,.lv2,.lv3,.lv4,.lid-open){opacity:0;transition:opacity .3s}
@@ -2931,8 +2936,10 @@
     #jpBar .jp-op[data-lv="4"] .spark.s3{animation-delay:1.2s}
     @keyframes jp-chest-breath{0%,100%{opacity:.65}50%{opacity:1}}
     @keyframes jp-chest-spark{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
-    #jpBar .jp-op.is-struck svg{animation:jp-strike .32s ease-out}
-    @keyframes jp-strike{0%{transform:scale(1)}35%{transform:scale(1.2);filter:drop-shadow(0 0 10px rgba(120,200,255,1))}100%{transform:scale(1)}}
+    /* 被 SC 金幣打中：以底部為軸左右晃一下＋亮一下 */
+    #jpBar .jp-op svg{transform-origin:50% 85%}
+    #jpBar .jp-op.is-struck svg{animation:jp-strike .5s ease-out}
+    @keyframes jp-strike{0%{transform:rotate(0) scale(1)}15%{transform:rotate(-9deg) scale(1.1);filter:drop-shadow(0 0 10px rgba(120,200,255,1))}35%{transform:rotate(8deg) scale(1.06)}55%{transform:rotate(-5deg)}75%{transform:rotate(3deg)}100%{transform:rotate(0) scale(1)}}
     @keyframes jp-hit{50%{filter:brightness(1.6)}}
     .fx-jp-coin{position:fixed;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;z-index:90;pointer-events:none;
       background:radial-gradient(circle at 35% 30%,#fff6c8,#ffd23f 50%,#b77c00);box-shadow:0 0 8px rgba(255,210,60,.8)}
@@ -3700,9 +3707,9 @@
     const line = document.createElement("div");
     line.className = `live-log-line ${type}`;
     line.textContent = `[${new Date().toLocaleTimeString("en-GB", { hour12: false })}] ${text}`;
-    body.appendChild(line);
-    while (body.children.length > 500) body.firstElementChild.remove();
-    body.scrollTop = body.scrollHeight;
+    body.prepend(line);   // 2026-11-17：新的紀錄在最上面，舊的往下擠
+    while (body.children.length > 500) body.lastElementChild.remove();
+    body.scrollTop = 0;
   }
 
   function activateFeature(feature, mode, base) {
@@ -3967,8 +3974,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 11:27";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 14:03";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:03";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 14:12";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 14:12";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
