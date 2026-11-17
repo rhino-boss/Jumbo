@@ -1,0 +1,4029 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calavera Party — Demo Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-size%3D%2756%27%20text-anchor%3D%27middle%27%3E%F0%9F%8E%A7%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+  <style>
+    :root {
+      --bg-a: #130722;
+      --bg-b: #28115f;
+      --bg-c: #0d295f;
+      --fg-bg-a: #102518;
+      --fg-bg-b: #176342;
+      --fg-bg-c: #0d4d69;
+      --panel: rgba(23, 17, 74, 0.84);
+      --cyan: #73efff;
+      --pink: #ff6fd9;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+      --white: #fff8fe;
+      --shadow: 0 0 28px rgba(131, 103, 255, 0.28);
+      --slot-shadow: 0 18px 36px rgba(7, 8, 34, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Franklin Gothic Medium", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(123, 232, 255, 0.2), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(255, 103, 218, 0.2), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(77, 169, 255, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--bg-a), var(--bg-b) 48%, var(--bg-c));
+      transition: background 220ms ease;
+    }
+
+    body.fg-mode {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(129, 255, 192, 0.24), transparent 20%),
+        radial-gradient(circle at 82% 10%, rgba(96, 255, 216, 0.22), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(89, 255, 203, 0.24), transparent 30%),
+        linear-gradient(180deg, var(--fg-bg-a), var(--fg-bg-b) 48%, var(--fg-bg-c));
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 100vh;
+      padding: 14px 14px 28px;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .card,
+    .board-shell,
+    .buy-button,
+    .control,
+    .spin-button {
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)), var(--panel);
+      border: 1px solid rgba(147, 212, 255, 0.22);
+      border-radius: 22px;
+    }
+
+    .title-card {
+      text-align: center;
+      padding: 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 117, 220, 0.36), rgba(116, 62, 255, 0.3)),
+        rgba(32, 18, 97, 0.9);
+      border: 2px solid rgba(255, 121, 231, 0.62);
+    }
+
+    .title-id {
+      font-size: 0.82rem;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #ffd4fd;
+      font-weight: 900;
+    }
+
+    .title-name {
+      margin-top: 4px;
+      font-size: 1.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #fff0b0;
+      text-shadow: 0 0 18px rgba(255, 196, 89, 0.5);
+    }
+
+    .title-sub {
+      margin-top: 4px;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #dff4ff;
+    }
+
+    .feature-pill.hidden {
+      display: none;
+    }
+
+    /* H045 專用：本轉使用盤面表 2 時顯示（game_rule 版本 5 高連消表） */
+    #tablePill.table2-pill:not(.hidden) {
+      background: rgba(255, 196, 61, 0.18);
+      border-color: rgba(255, 196, 61, 0.7);
+    }
+
+    #tablePill.table2-pill .k {
+      color: #ffd36b;
+      font-weight: 600;
+    }
+
+    .feature-card {
+      padding: 12px 14px;
+      background:
+        linear-gradient(180deg, rgba(189, 79, 255, 0.34), rgba(56, 28, 128, 0.92)),
+        rgba(40, 20, 117, 0.94);
+      border: 2px solid rgba(255, 106, 221, 0.58);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .feature-card {
+      background:
+        linear-gradient(180deg, rgba(106, 255, 186, 0.28), rgba(20, 103, 84, 0.92)),
+        rgba(14, 80, 74, 0.94);
+      border-color: rgba(130, 255, 204, 0.56);
+    }
+
+    .feature-top,
+    .feature-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .feature-top {
+      margin-bottom: 10px;
+    }
+
+    .feature-mode {
+      font-size: 0.98rem;
+      font-weight: 900;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: #ffe6ff;
+    }
+
+    .feature-status {
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #a9ffe1;
+    }
+
+    .feature-pill-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .player-grid,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .feature-pill,
+    .player-card,
+    .stat-card,
+    .detail-card {
+      padding: 10px 11px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(54, 90, 190, 0.64), rgba(20, 35, 96, 0.92));
+      border: 1px solid rgba(126, 220, 255, 0.24);
+    }
+
+    .feature-pill .k,
+    .player-card .k,
+    .stat-card .k,
+    .detail-title {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: #c0f6ff;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .feature-pill .v,
+    .player-card .v,
+    .stat-card .v {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff2ba;
+      word-break: break-word;
+    }
+
+    .board-shell {
+      padding: 10px;
+      border-radius: 28px;
+      border: 3px solid rgba(186, 122, 255, 0.54);
+      background:
+        linear-gradient(180deg, rgba(120, 76, 246, 0.3), rgba(41, 20, 105, 0.94)),
+        rgba(23, 12, 72, 0.96);
+      transition: background 220ms ease, border-color 220ms ease;
+    }
+
+    body.fg-mode .board-shell {
+      border-color: rgba(117, 255, 188, 0.56);
+      background:
+        linear-gradient(180deg, rgba(70, 255, 175, 0.2), rgba(17, 82, 74, 0.94)),
+        rgba(13, 67, 66, 0.96);
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(168, 239, 255, 0.26), rgba(77, 120, 255, 0.14)),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.08));
+      border: 2px solid rgba(149, 232, 255, 0.36);
+      box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.08), var(--slot-shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+    }
+
+    #board .cell.gold {
+      border-color: rgba(255, 217, 92, 0.9);
+      background:
+        linear-gradient(180deg, rgba(255, 220, 111, 0.26), rgba(255, 143, 80, 0.14)),
+        linear-gradient(180deg, rgba(168, 239, 255, 0.2), rgba(77, 120, 255, 0.14));
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 124, 228, 0.98);
+      background:
+        linear-gradient(180deg, rgba(255, 129, 230, 0.34), rgba(255, 78, 166, 0.18)),
+        linear-gradient(180deg, rgba(255, 220, 111, 0.22), rgba(255, 143, 80, 0.12));
+      box-shadow: 0 0 24px rgba(255, 111, 217, 0.44), inset 0 0 18px rgba(255, 255, 255, 0.1), var(--slot-shadow);
+    }
+
+    .cell.special-gold .frame-bg,
+    .cell.special-gold .frame-top {
+      filter: hue-rotate(310deg) saturate(1.7) brightness(1.08);
+    }
+
+    .cell.hit {
+      border-color: rgba(255, 233, 116, 0.96);
+      box-shadow: 0 0 18px rgba(255, 210, 100, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.16);
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .cell.convert {
+      border-color: rgba(126, 255, 199, 0.96);
+      box-shadow: 0 0 20px rgba(107, 255, 192, 0.48);
+    }
+
+    .cell.reel-spin {
+      animation: reelSpin 180ms linear infinite;
+    }
+
+    .cell.peek-row {
+      aspect-ratio: 2 / 1;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    @keyframes reelSpin {
+      0% {
+        transform: translateY(-12px);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .symbol-wrap {
+      position: absolute;
+      inset: 3%;
+    }
+
+    .cell.peek-row .symbol-wrap {
+      top: -91%;
+      right: 3%;
+      bottom: 3%;
+      left: 3%;
+    }
+
+    .symbol-img,
+    .frame-bg,
+    .frame-top {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .symbol-img {
+      transform: scale(1.08);
+      transform-origin: center;
+      filter: none;   /* 2026-11-12 使用者：拿掉符號陰影（轉輪滾動時會顯出淡淡的方格）*/
+      z-index: 1;
+    }
+
+    .frame-bg {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 0;
+    }
+
+    .frame-top {
+      inset: -6%;
+      width: 112%;
+      height: 112%;
+      z-index: 2;
+    }
+
+    .symbol-code,
+    .multi-badge,
+    .scatter-badge {
+      position: absolute;
+      z-index: 3;
+      font-weight: 900;
+      border-radius: 999px;
+    }
+
+    .symbol-code {
+      left: 6px;
+      top: 6px;
+      padding: 2px 7px;
+      background: rgba(14, 12, 50, 0.78);
+      border: 1px solid rgba(200, 242, 255, 0.24);
+      color: #f8fbff;
+      font-size: 0.7rem;
+    }
+
+    .multi-badge {
+      right: 6px;
+      bottom: 6px;
+      top: auto;
+      right: 6px;
+      min-width: 34px;
+      padding: 2px 6px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #5a3000;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 0 12px rgba(255, 208, 90, 0.46);
+    }
+
+    .scatter-badge {
+      top: 6px;
+      left: 6px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: #3f0061;
+      background: linear-gradient(180deg, #fff4ab, #ff9ef0);
+    }
+
+    .cell.peek-row .symbol-code,
+    .cell.peek-row .scatter-badge {
+      display: none;
+    }
+
+    .cell.peek-row .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 30px;
+      padding: 1px 5px;
+      font-size: 0.64rem;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff7ae2, #cf46b4);
+      color: white;
+      font-size: 1.34rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr 64px 64px;
+      align-items: end;
+      gap: 8px;
+    }
+
+    .reset-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .control,
+    .spin-button {
+      border: 0;
+      cursor: pointer;
+      color: #ffe1ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .control {
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(131, 62, 210, 0.88), rgba(63, 26, 126, 0.96));
+      font-size: 0.76rem;
+    }
+
+    .control.is-active {
+      color: #143d13;
+      background: linear-gradient(180deg, #baff87, #6ef08e);
+      box-shadow: 0 0 24px rgba(122, 255, 147, 0.36);
+    }
+
+    .control.disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .spin-button {
+      justify-self: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      color: #fff9ef;
+      font-size: 1.14rem;
+      background: radial-gradient(circle at 32% 30%, #ffe58b, #ffb33f 38%, #ff5dcc 84%);
+      box-shadow: 0 0 28px rgba(255, 188, 88, 0.48), inset 0 0 24px rgba(255, 255, 255, 0.18);
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-card {
+      background: linear-gradient(180deg, rgba(87, 194, 255, 0.22), rgba(33, 68, 176, 0.24));
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .line-row,
+    .rng-row,
+    .spin-result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(12, 13, 56, 0.48);
+      border: 1px solid rgba(177, 204, 255, 0.12);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .spin-result-row {
+      display: block;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff0b4;
+    }
+
+    .spin-result-board {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #dff6ff;
+    }
+
+    .message-bar {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 14px;
+      background: rgba(14, 12, 52, 0.5);
+      color: #dff4ff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      text-align: center;
+      color: #d7ccff;
+      font-size: 0.8rem;
+    }
+  </style>
+  <style id="h902-theme">
+    :root {
+      --bg: #040e1a;
+      --panel: #071528;
+      --surface: #0c2240;
+      --surface-2: #103052;
+      --text: #b0d4f0;
+      --sub: #5a88aa;
+      --accent: #00ddc0;
+      --red: #ff5f8a;
+      --green: #33ff99;
+      --blue: #33bbff;
+      --mauve: #b06aff;
+      /* Five reels fill the 420px game panel while keeping the board centered. */
+      --cell-size: 74px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    body.fg-mode {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+    }
+
+    body.fg-mode {
+      background: #020d16;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 920px;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .section {
+      margin: 0;
+    }
+
+    #feature-bar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    #game-title {
+      margin-right: 4px;
+      color: var(--sub);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    #game-title #gameName {
+      color: var(--text);
+    }
+
+    /* 倍數規則切換：加乘版／加乘版2／加乘版3 */
+    .rule-toggle { display: inline-flex; border: 1px solid var(--line, #2a3a55); border-radius: 999px; overflow: hidden; }
+    .rule-toggle button { border: 0; background: transparent; color: var(--sub); font-size: 12px; font-weight: 700; padding: 3px 10px; cursor: pointer; }
+    .rule-toggle button.is-active { background: #2c6bd6; color: #fff; }
+    /* 手機版：標題、版本切換同一排不換行（共用程式右側預留 148px，實際按鈕只有約 98px → 改預留 114px，切換按鈕縮窄） */
+    @media (max-width: 760px) {
+      body.slot-simulator #feature-bar { flex-wrap: nowrap !important; gap: 6px !important; padding-right: 114px !important; }
+      body.slot-simulator #feature-bar #game-title { white-space: nowrap; flex: 0 1 auto; min-width: 0; }
+      body.slot-simulator #feature-bar .rule-toggle { flex: 0 0 auto; }
+      body.slot-simulator #feature-bar .rule-toggle button { padding: 3px 6px; }
+    }
+
+    #modeText {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    #featureStatus {
+      display: none;
+    }
+
+    #strip-bar {
+      width: 100%;
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+      border: 1px solid var(--surface);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .feature-strip {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+
+    .feature-pill-group {
+      display: contents;
+    }
+
+    .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 20px;
+      background: var(--surface);
+    }
+
+    .feature-pill .k,
+    .feature-pill .v {
+      display: inline;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .feature-pill .k {
+      color: var(--sub);
+    }
+
+    .feature-pill .v {
+      color: var(--text);
+    }
+
+    #cascadePill .v {
+      color: var(--red);
+    }
+
+    #fgLeftPill .v {
+      color: var(--accent);
+    }
+
+    .config-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .config-control select {
+      min-width: 76px;
+      padding: 5px 22px 5px 7px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    #app-shell {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      align-items: start;
+    }
+
+    #grid-panel,
+    .info-box,
+    #credit-bar,
+    #simulation-stats,
+    #play-panel,
+    #bet-mode-panel,
+    #rng-wrap,
+    #controls,
+    #live-log-wrap,
+    #log-wrap,
+    #settings-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+    }
+
+    #grid-panel {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .board-shell {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .multiplier-track {
+      width: min(100%, 380px);
+      height: 36px;
+      margin: 0 auto 8px;
+      overflow: hidden;
+      border-radius: 7px;
+      background: linear-gradient(90deg, rgba(4, 14, 26, 0.92), rgba(12, 34, 64, 0.7), rgba(4, 14, 26, 0.92));
+      mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    }
+
+    .multiplier-window {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+      will-change: transform, opacity, filter;
+    }
+
+    .multiplier-window.roll-one {
+      animation: multiplierRollOne 180ms cubic-bezier(0.22, 0.72, 0.24, 1);
+    }
+
+    .multiplier-step {
+      min-width: 0;
+      color: var(--sub);
+      font: 800 clamp(0.68rem, 1.35vw, 0.92rem) / 1 Consolas, "Courier New", monospace;
+      text-align: center;
+      opacity: 0.22;
+      white-space: nowrap;
+    }
+
+    .multiplier-step.is-previous {
+      color: #876b35;
+      opacity: 0.42;
+    }
+
+    .multiplier-step.is-active {
+      color: var(--blue);
+      opacity: 1;
+      font-size: clamp(0.92rem, 1.8vw, 1.18rem);
+      text-shadow: 0 0 10px rgba(51, 187, 255, 0.58);
+    }
+
+    @keyframes multiplierRollOne {
+      from {
+        transform: translateX(20%);
+        opacity: 0.38;
+        filter: blur(2px);
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    body.fg-mode .board-shell {
+      border: 0;
+      background: transparent;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--cell-size));
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      aspect-ratio: auto;
+      display: grid;
+      place-items: center;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #060d1a;
+      box-shadow: none;
+      overflow: hidden;
+    }
+
+    .cell.peek-row {
+      width: var(--cell-size);
+      height: 36px;
+      aspect-ratio: auto;
+      border-radius: 8px;
+    }
+
+    #board .cell.gold {
+      border-color: #ffe078;
+      background:
+        linear-gradient(180deg, rgba(255, 244, 173, 0.35), transparent 42%),
+        linear-gradient(180deg, #d9a923, #7d4b06);
+      box-shadow: none;
+    }
+
+    .cell.special-gold {
+      border-color: rgba(255, 95, 138, 0.88);
+      background: #15152a;
+      box-shadow: 0 0 12px rgba(255, 95, 138, 0.28);
+    }
+
+    .cell.hit {
+      border-color: var(--accent);
+      box-shadow: 0 0 14px rgba(0, 221, 192, 0.45);
+      transform: scale(1.03);
+      filter: brightness(1.12);
+    }
+
+    .cell.convert {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.4);
+    }
+
+    .cell.wild-mark {
+      z-index: 3;
+      border-color: #ffe56b;
+      box-shadow: 0 0 10px rgba(255, 229, 107, 0.95), inset 0 0 18px rgba(255, 229, 107, 0.35);
+      animation: h045WildMark 180ms ease-in-out infinite alternate;
+    }
+
+    .cell.wild-mark::after {
+      /* 分裂落點只做發光標記；格子本身已是 W2，不再疊字樣（分裂體是 W2，game_rule §5.4） */
+      content: "";
+      position: absolute;
+      inset: 5px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 8px;
+      color: #fff4a6;
+      background: rgba(80, 38, 0, 0.28);
+      font-weight: 900;
+      font-size: 18px;
+      text-shadow: 0 1px 5px #000;
+      pointer-events: none;
+    }
+
+    @keyframes h045WildMark {
+      from { transform: scale(0.96); filter: brightness(1); }
+      to { transform: scale(1.05); filter: brightness(1.35); }
+    }
+
+    .symbol-code {
+      left: 4px;
+      top: 4px;
+      padding: 1px 5px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: rgba(4, 14, 26, 0.8);
+      font-size: 10px;
+    }
+
+    /* H016 symbol artwork is scaled into every cell without cropping. */
+    .cell .symbol-wrap {
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      padding: 3px;
+    }
+
+    .h015-symbol-img {
+      position: relative;
+      inset: auto;
+      display: block;
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
+      object-fit: contain;
+      object-position: center;
+      transform: none;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .h015-symbol-svg {
+      display: block;
+      width: 90%;
+      height: 90%;
+      overflow: visible;
+      filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .cell.gold .h015-symbol-img {
+      /* H045：金框格直接用 G1～G8 金色牌圖（不另外畫框），尺寸同一般符號 */
+      width: 94%;
+      height: 94%;
+      max-width: 94%;
+      max-height: 94%;
+    }
+
+    .h015-frame-img {
+      position: absolute;
+      inset: 1%;
+      z-index: 2;
+      display: block;
+      width: 98%;
+      height: 98%;
+      object-fit: contain;
+      object-position: center;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.58));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .cell.symbol-a,
+    .cell.symbol-k,
+    .cell.symbol-q,
+    .cell.symbol-j {
+      border-color: rgba(38, 92, 137, 0.28);
+      background: #060d1a;
+    }
+
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.symbol-c1 {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.symbol-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
+    }
+
+    .multi-badge {
+      right: 4px;
+      bottom: 4px;
+      min-width: 28px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #021710;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 221, 192, 0.4);
+      font-size: 11px;
+    }
+
+    .message-bar {
+      width: 100%;
+      min-height: 30px;
+      margin: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #right-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #credit-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+    }
+
+    .credit-cell {
+      min-width: 0;
+      padding: 12px 10px;
+      border-right: 1px solid var(--surface);
+      text-align: center;
+    }
+
+    .credit-cell:last-child {
+      border-right: 0;
+    }
+
+    .credit-cell .i-label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .credit-cell .i-value {
+      display: block;
+      min-width: 0;
+      color: var(--text);
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .credit-cell .i-value.hi {
+      color: var(--accent);
+    }
+
+    #simulation-stats {
+      padding: 10px 14px;
+    }
+
+    .play-debug-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding-top: 9px;
+      border-top: 1px solid var(--surface-2);
+    }
+
+    .play-debug-controls.debug-hidden,
+    #set-rng-panel.debug-hidden {
+      display: none;
+    }
+
+    .debug-only.debug-hidden {
+      display: none;
+    }
+
+    #controls.debug-off {
+      display: none;
+    }
+
+    .set-rng-controls {
+      display: grid;
+      grid-template-columns: minmax(112px, 0.8fr) minmax(150px, 1.35fr) 82px;
+      align-items: end;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .debug-rng-field {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .debug-rng-field input,
+    .debug-rng-field select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .debug-rng-field input::placeholder {
+      color: var(--sub);
+      opacity: 0.7;
+    }
+
+    #setRngResetBtn {
+      width: 82px;
+      min-width: 82px;
+      align-self: end;
+    }
+
+    .debug-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .debug-check input {
+      margin: 0;
+      accent-color: var(--blue);
+    }
+
+    .debug-check.force {
+      color: #ff5f86;
+      font-weight: 700;
+    }
+
+    #previousStepBtn,
+    #nextStepBtn {
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 6px;
+      color: #031b18;
+      background: var(--accent);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #previousStepBtn:disabled,
+    #nextStepBtn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    #previousStepBtn {
+      color: var(--blue);
+      background: var(--surface);
+    }
+
+    .debug-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-2);
+    }
+
+    #simulation-stats h3,
+    #rng-wrap h3 {
+      margin: 0 0 7px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .simulation-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .simulation-row:last-child {
+      border-bottom: 0;
+    }
+
+    .simulation-row .s-label {
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .simulation-row .s-value {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .simulation-row .s-value.hi {
+      color: var(--accent);
+    }
+
+    .info-box {
+      padding: 10px 14px;
+    }
+
+    .info-box h3,
+    .detail-title {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .i-label {
+      flex: 1;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .i-value {
+      min-width: 80px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .i-value.hi {
+      color: var(--accent);
+    }
+
+    .line-list,
+    .rng-list,
+    .spin-result-list {
+      display: block;
+      margin: 0;
+    }
+
+    .line-row,
+    .rng-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 3px;
+      padding: 3px 6px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    #controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .control-zone {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .zone-label {
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .zone-body {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+    }
+
+    .zone-body.set-rng-controls {
+      display: grid;
+    }
+
+    .action-zone .play-main-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(160px, 1fr) 116px;
+      gap: 6px;
+    }
+
+    /* 2026-10-15：視窗約 760～940px 時左欄只剩約 380px，共用的 4 欄 grid（最少 422px）會讓速度控制破框 → 改 flex，放不下就換行 */
+    body.slot-simulator #play-panel .play-main-controls { display: flex; flex-wrap: wrap; }
+    body.slot-simulator #play-panel .play-main-controls .bet-stepper { flex: 1 1 160px; }
+    body.slot-simulator #play-panel .play-main-controls .speed-control { flex: 0 0 116px; }
+
+    .bet-stepper {
+      position: relative;
+      display: grid;
+      grid-template-columns: 32px minmax(88px, 1fr) 32px;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    #controls #betMinusBtn,
+    #controls #betPlusBtn,
+    #play-panel #betMinusBtn,
+    #play-panel #betPlusBtn {
+      width: 32px;
+      min-width: 32px;
+      padding-inline: 0;
+      color: var(--blue);
+      font-size: 17px;
+    }
+
+    #controls #betBtn,
+    #play-panel #betBtn {
+      min-width: 88px;
+      color: var(--text);
+    }
+
+    .bet-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      z-index: 30;
+      width: 218px;
+      max-height: 218px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--surface-2);
+      border-radius: 8px;
+      background: #06172d;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .bet-menu.hidden {
+      display: none;
+    }
+
+    #controls .bet-option,
+    #play-panel .bet-option {
+      padding: 7px 6px;
+      color: var(--sub);
+      background: var(--surface);
+      text-align: right;
+    }
+
+    #controls .bet-option.is-active,
+    #play-panel .bet-option.is-active {
+      color: #041710;
+      background: var(--green);
+    }
+
+    .speed-control {
+      width: 116px;
+      height: 34px;
+      display: grid;
+      grid-template-columns: auto 48px auto;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--sub);
+      background: var(--surface);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .speed-control input[type="range"] {
+      width: 48px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--mauve);
+    }
+
+    #speedValue {
+      min-width: 20px;
+      color: var(--mauve);
+      font-weight: 800;
+    }
+
+    #controls button,
+    #play-panel button,
+    #bet-mode-panel button {
+      width: auto;
+      height: 34px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--surface);
+      box-shadow: none;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    /* 2026-11-12：押注模式按鈕樣式（一排、88px、未開放壓黑）改由 demogame_common.js 統一；這裡只留標題間距 */
+    #bet-mode-panel .zone-label { display: block; margin-bottom: 8px; }
+    /* 2026-11-17：原本上面那行夾在選擇器清單中間，讓 SPIN／押注等按鈕停用時多出 margin，轉動時控制區上下跳 */
+    #controls button:disabled,
+    #play-panel button:disabled,
+    #bet-mode-panel button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #controls button:not(:disabled):hover,
+    #play-panel button:not(:disabled):hover,
+    #bet-mode-panel button:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    #controls #spinBtn,
+    #play-panel #spinBtn {
+      min-width: 72px;
+      background: #0077cc;
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      min-width: 56px;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      color: var(--blue);
+    }
+
+    #controls #autoBtn,
+    #play-panel #autoBtn {
+      background: #007755;
+    }
+
+    #controls #normalBetBtn,
+    #controls #extraBetBtn,
+    #bet-mode-panel #normalBetBtn,
+    #bet-mode-panel #extraBetBtn {
+      min-width: 80px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      min-width: 110px;
+    }
+
+    #controls #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn,
+    #bet-mode-panel #buyFeatureBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.4);
+    }
+
+    #controls .is-active,
+    #bet-mode-panel .is-active {
+      color: #041710;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.24);
+    }
+
+    #play-panel #previousStepBtn {
+      color: #ffffff;
+      background: #0b88b5;
+      border: 1px solid #59ddff;
+      box-shadow: 0 0 12px rgba(0, 194, 255, 0.28);
+    }
+
+    #play-panel #nextStepBtn {
+      color: #031b18;
+      background: var(--accent);
+    }
+
+    /* 「重置」「開始」樣式（含 disabled）由 demogame_common.css 統一（2026-11-17） */
+
+
+    .ctrl-sep {
+      width: 1px;
+      height: 28px;
+      margin: 0 2px;
+      background: var(--surface-2);
+    }
+
+    #rng-wrap {
+      width: 100%;
+      margin-top: 10px;
+      padding: 0;
+    }
+
+    .diagnostic-region {
+      width: 100%;
+      margin-top: 10px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+
+    #rng-wrap .diagnostic-header,
+    #log-wrap .diagnostic-header,
+    #live-log-wrap .diagnostic-header,
+    #settings-wrap .diagnostic-header {
+      min-height: 36px;
+      height: 36px;
+      margin: 0;
+      padding: 4px 12px;
+      border-bottom: 1px solid var(--surface);
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    #rng-wrap .rng-list {
+      padding: 8px 12px;
+    }
+
+    #rng-wrap #rngList {
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    #rng-wrap .history-summary {
+      padding: 8px 12px 0;
+    }
+
+    .live-log-header,
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #clearLogBtn,
+    #clearHistoryBtn {
+      padding: 5px 10px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--sub);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #liveLogBody {
+      height: 170px;
+      overflow-y: auto;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #070714;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .live-log-line.cascade {
+      color: #d28cff;
+    }
+
+    .live-log-line.mode {
+      color: var(--blue);
+    }
+
+    .live-log-line.result {
+      color: var(--accent);
+    }
+
+    .live-log-line.error {
+      color: #ff6f91;
+    }
+
+    #log-wrap {
+      width: 100%;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    #log-header {
+      display: flex;
+      align-items: center;
+    }
+
+    #log-body {
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 6px 12px;
+    }
+
+    .log-subheader {
+      margin: 2px 4px 6px;
+      color: var(--sub);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    #lineList {
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--surface);
+    }
+
+    .setting-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .setting-body {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .setting-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: auto;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setting-toggle input {
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .setting-body button {
+      padding: 7px 12px;
+      border: 0;
+      border-radius: 6px;
+      color: var(--sub);
+      background: #2a3050;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .setting-body button:hover {
+      opacity: 0.85;
+    }
+
+    #helpBtn {
+      color: var(--accent);
+      border: 1px solid rgba(0, 221, 192, 0.45);
+      background: rgba(0, 119, 102, 0.28);
+    }
+
+    #helpDialog {
+      width: min(980px, calc(100vw - 32px));
+      height: min(82vh, 800px);
+      max-width: none;
+      max-height: none;
+      padding: 0;
+      border: 1px solid rgba(38, 92, 137, 0.85);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.62);
+      overflow: hidden;
+    }
+
+    #helpDialog::backdrop {
+      background: rgba(0, 8, 18, 0.78);
+      backdrop-filter: blur(2px);
+    }
+
+    .help-dialog-shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: 46px minmax(0, 1fr);
+    }
+
+    .help-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 12px 0 16px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+
+    .help-dialog-header h2 {
+      margin: 0;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #closeHelpBtn {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--surface-2);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .help-content {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 16px;
+      background: #06111f;
+    }
+
+    .help-loading,
+    .help-load-error {
+      display: grid;
+      min-height: 180px;
+      place-items: center;
+      color: var(--sub);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .help-section {
+      margin-bottom: 14px;
+      border: 1px solid rgba(38, 92, 137, 0.55);
+      border-radius: 9px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .help-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-2);
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .help-section-title .help-en {
+      color: var(--blue);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .help-group-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 9px 12px 5px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .help-group-title .help-en {
+      color: var(--sub);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .help-rule {
+      display: block;
+      padding: 9px 12px;
+      border-top: 1px solid rgba(17, 50, 82, 0.85);
+      line-height: 1.55;
+    }
+
+    .help-rule-zh,
+    .help-rule-en {
+      min-width: 0;
+      color: var(--text);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .help-rule-en {
+      color: #a9cce8;
+      font-size: 11px;
+    }
+
+    .help-lang-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--sub);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .help-payout-table { display: grid; gap: 4px; padding: 8px 12px 12px; overflow-x: auto; }
+    .help-payout-row { display: grid; grid-template-columns: minmax(90px, 1.2fr) repeat(3, minmax(72px, 1fr)); gap: 4px; min-width: 360px; }
+    .help-payout-cell { padding: 7px 8px; border-radius: 5px; color: var(--text); background: var(--surface); font: 12px/1.35 Consolas, monospace; text-align: center; }
+    .help-payout-cell:first-child { text-align: left; color: var(--accent); }
+    .help-payout-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+      padding: 8px 12px 12px;
+    }
+
+    .help-payout-item {
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .help-rule code,
+    .help-payout-item code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      color: #d9f5ff;
+      background: var(--surface);
+      font-family: Consolas, monospace;
+    }
+
+    .help-rule pre {
+      margin: 0;
+      overflow-x: auto;
+      color: #d9f5ff;
+      font: 11px/1.5 Consolas, monospace;
+      white-space: pre;
+    }
+
+    .game-rule-doc {
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .game-rule-doc h1,
+    .game-rule-doc h2,
+    .game-rule-doc h3 {
+      margin: 18px 0 8px;
+      color: var(--accent);
+      line-height: 1.35;
+    }
+
+    .game-rule-doc h1 { margin-top: 0; font-size: 19px; }
+    .game-rule-doc h2 { padding-bottom: 6px; border-bottom: 1px solid var(--surface-2); font-size: 16px; }
+    .game-rule-doc h3 { color: var(--blue); font-size: 13px; }
+    .game-rule-doc p { margin: 7px 0; }
+    .game-rule-doc .game-rule-note { padding: 8px 10px; border-left: 3px solid var(--blue); color: var(--sub); background: var(--surface); }
+    .game-rule-doc .game-rule-list-item { position: relative; margin: 5px 0; padding-left: 18px; }
+    .game-rule-doc .game-rule-list-item::before { content: "▪"; position: absolute; left: 3px; color: var(--accent); }
+    .game-rule-doc code { padding: 1px 4px; border-radius: 4px; color: #d9f5ff; background: var(--surface); font-family: Consolas, monospace; }
+    .game-rule-doc pre { overflow-x: auto; padding: 10px; border-radius: 6px; color: #d9f5ff; background: #030b15; font: 11px/1.5 Consolas, monospace; }
+    .game-rule-table-wrap { margin: 9px 0 14px; overflow-x: auto; }
+    .game-rule-doc table { width: 100%; border-collapse: collapse; background: var(--panel); }
+    .game-rule-doc th,
+    .game-rule-doc td { min-width: 92px; padding: 7px 9px; border: 1px solid var(--surface-2); text-align: left; vertical-align: top; }
+    .game-rule-doc th { color: var(--accent); background: var(--surface); }
+
+    #helpSourceFrame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #ffffff;
+    }
+
+    .spin-result-row {
+      display: block;
+      margin: 0;
+      padding: 5px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--surface);
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .spin-result-row:last-child {
+      border-bottom: 0;
+    }
+
+    .spin-result-head {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+      color: var(--accent);
+    }
+
+    .spin-result-board {
+      margin: 0;
+      color: var(--text);
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --cell-size: min(74px, calc((100vw - 60px) / 5));
+      }
+
+      #app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .play-debug-controls {
+        flex-wrap: wrap;
+      }
+
+      .set-rng-controls {
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.4fr) 82px;
+      }
+
+      #grid-panel {
+        overflow-x: auto;
+      }
+
+      .config-control {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #strip-bar {
+        overflow-x: auto;
+      }
+
+      .feature-strip {
+        min-width: max-content;
+      }
+
+      #controls button,
+      #play-panel button,
+      #bet-mode-panel button {
+        flex: 1 1 92px;
+      }
+
+      #controls {
+        grid-template-columns: 1fr;
+      }
+
+      .zone-body,
+      .action-zone .play-main-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .action-zone .play-main-controls {
+        display: flex;
+      }
+
+      .speed-control {
+        flex: 1 1 180px;
+        width: auto;
+        grid-template-columns: auto minmax(90px, 1fr) auto;
+      }
+
+      .speed-control input[type="range"] {
+        width: 100%;
+      }
+
+      .ctrl-sep {
+        display: none;
+      }
+
+      .bet-stepper {
+        width: 100%;
+        margin-left: 0;
+      }
+
+      #controls #betBtn,
+      #play-panel #betBtn {
+        flex: 1 1 auto;
+      }
+
+      .setting-body {
+        flex-wrap: wrap;
+      }
+
+      .help-payout-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .setting-body .config-control {
+        width: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .set-rng-controls {
+        grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      }
+
+      #controls #setRngResetBtn {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+    }
+  </style>
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+  <style id="h032-no-border">
+    /* 2026-11-12 區域拿掉外框：區塊底色不變，改用更深的背景＋陰影把區塊和背景分開（放在共用 css 之後，只影響本款） */
+    body.slot-simulator, body.slot-simulator.fg-mode { background: #010409; }
+    body.slot-simulator #feature-bar,
+    body.slot-simulator #strip-bar,
+    body.slot-simulator #grid-panel,
+    body.slot-simulator #credit-bar,
+    body.slot-simulator .control-zone,
+    body.slot-simulator .diagnostic-region,
+    body.slot-simulator .dg-collapsible,
+    body.slot-simulator #batch-simulation,
+    body.slot-simulator #set-rng-panel,
+    body.slot-simulator #play-panel,
+    body.slot-simulator #bet-mode-panel,
+    body.slot-simulator #settings-wrap,
+    body.slot-simulator #rng-wrap,
+    body.slot-simulator #log-wrap,
+    body.slot-simulator #live-log-wrap,
+    body.slot-simulator #change-log-wrap {
+      border: 0 !important;
+      box-shadow: 0 1px 0 rgba(120, 180, 255, 0.05) inset, 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+    }
+    /* 區域內的小框（批次模擬的連消表、線型圖、版本紀錄卡）也拿掉框，改用內層底色區隔 */
+    body.slot-simulator .batch-cascade-list,
+    body.slot-simulator .batch-line-chart,
+    body.slot-simulator .change-log-entry {
+      border: 0 !important;
+      background: rgba(12, 34, 64, 0.55) !important;
+    }
+
+    /* 玩法簡介：標題欄和內容之間的空白減半（欄寬 72 → 45px） */
+    body.slot-simulator #demogame-overview .ov-row > .ov-k { flex: 0 0 45px !important; width: 45px !important; min-width: 0 !important; }
+
+    /* 版本紀錄的最新版不要綠框（共用 js 加的），改用稍亮的底色＋標題「← Current」辨識 */
+    body.slot-simulator #change-log-wrap #changeLogBody .change-log-entry.demogame-current-version {
+      border: 0 !important;
+      background: var(--surface) !important;
+    }
+
+    /* 模擬區的「消除分布」「倍率線型」＋右欄「倍率線型」（2026-11-12）：
+       圖表區一律純黑底（同「紀錄」），配色同模擬區倍率線型；消除分布改成 BG／FG 並排直條圖，縱軸固定 0～100% 不跳動 */
+    body.slot-simulator #batch-simulation .batch-cascade-list,
+    body.slot-simulator #batch-simulation .batch-line-chart {
+      margin-top: 12px !important;
+      padding: 12px 14px 10px !important;
+      border: 0 !important;
+      border-radius: 10px !important;
+      background: #030b17 !important;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.55) !important;
+    }
+    body.slot-simulator #batch-simulation .batch-cascade-title,
+    body.slot-simulator #batch-simulation .batch-line-chart > .dlc-title {
+      display: flex !important;
+      align-items: center;
+      justify-content: flex-start !important;
+      position: relative;
+      min-height: 24px;
+      margin: 0 0 8px !important;
+      padding: 0 30px 0 0 !important;
+      border: 0 !important;
+      text-align: left !important;
+      color: var(--text) !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+    }
+    /* ＋固定貼在標題列右側（不佔版面）：圖表重畫時標題高度不變，模擬中不會上下晃 */
+    body.slot-simulator #batch-simulation .batch-line-chart > .dlc-title > .demogame-zoom-btn {
+      position: absolute !important; right: 0; top: 50%; transform: translateY(-50%); margin: 0 !important;
+    }
+    /* 消除分布：原表格藏起來（數字仍由程式寫入，給直條圖讀），改畫直條圖 */
+    body.slot-simulator #batch-simulation .batch-cascade-list > .batch-cascade-row { display: none !important; }
+    body.slot-simulator #batch-simulation .h032-cascade-legend { margin-left: auto; display: flex; gap: 12px; font-size: 11px; font-weight: 600; color: #7f9bb8; }
+    body.slot-simulator #batch-simulation .h032-cascade-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+    body.slot-simulator #batch-simulation .h032-cascade-chart svg { display: block; width: 100%; height: auto; }
+
+    /* 控制列（依控制區本身寬度切換）：
+       夠寬：上排 SPIN｜自動｜Bet −／＋，下排速度整排（最左到最右）
+       不夠寬（控制區 < 400px）：2×2，上排 SPIN｜自動、下排 Bet｜速度 */
+    body.slot-simulator #play-panel { container-type: inline-size; }
+    body.slot-simulator #play-panel .play-main-controls {
+      display: grid !important;
+      grid-template-columns: auto auto minmax(0, 1fr) !important;
+      gap: 6px !important;
+      align-items: stretch;
+    }
+    body.slot-simulator #play-panel .play-main-controls > * { min-width: 0; width: auto !important; }
+    body.slot-simulator #play-panel .play-main-controls > #spinBtn { grid-column: 1 !important; grid-row: 1 !important; min-width: 72px; }
+    body.slot-simulator #play-panel .play-main-controls > #autoBtn { grid-column: 2 !important; grid-row: 1 !important; min-width: 72px; }
+    body.slot-simulator #play-panel .play-main-controls .bet-stepper { grid-column: 3 !important; grid-row: 1 !important; }
+    body.slot-simulator #play-panel .play-main-controls .speed-control { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+    @container (max-width: 400px) {
+      body.slot-simulator #play-panel .play-main-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; }
+      body.slot-simulator #play-panel .play-main-controls .bet-stepper { grid-column: 1 !important; grid-row: 2 !important; }
+      body.slot-simulator #play-panel .play-main-controls .speed-control { grid-column: 2 !important; grid-row: 2 !important; }
+    }
+
+    /* 右欄倍率線型重新設計：標題列下面整塊都是黑色圖表區（貼齊左右下緣、下方圓角），不再是框中框；座標字縮小變淡 */
+    body.slot-simulator #demogame-cumulative-chart { padding: 0 !important; overflow: hidden; }
+    body.slot-simulator #demogame-cumulative-chart > h3 { margin: 0 !important; padding: 0 14px !important; }   /* 標題列高度、內縮和其他區域一樣（36px） */
+    body.slot-simulator #demogame-cumulative-chart .batch-line-chart {
+      margin: 0 !important;
+      padding: 14px 12px 6px 4px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: #030b17 !important;
+      box-shadow: inset 0 6px 10px -6px rgba(0, 0, 0, 0.7) !important;
+    }
+    body.slot-simulator #demogame-cumulative-chart .batch-line-chart svg text { font-size: 9px; fill: #5f7d99; }
+
+    /* 2026-11-12 使用者：狀態列（基礎遊戲／免費遊戲／FG 剩餘）整條拿掉。
+       FG 進度看盤面下方訊息條（FG n/N · WIN），一般押注／購買特色看「押注模式」按鈕哪顆亮 */
+    html body.slot-simulator #strip-bar { display: none !important; }
+    /* 買進中「購買特色」按鈕亮起：跟亮著的「一般押注」同款綠色、不因 FG 中停用而變淡 */
+    html body.slot-simulator #app-shell #bet-mode-panel #buyFeatureBtn.is-active {
+      opacity: 1 !important; color: #fff !important; background: rgb(0, 119, 85) !important;
+      border: 0 !important; box-shadow: none !important; filter: none !important;
+    }
+    html body.slot-simulator #app-shell.player-under-board { grid-template-rows: auto 1fr; }
+    html body.slot-simulator #app-shell.player-under-board > #grid-panel { grid-column: 1; grid-row: 1; }
+    html body.slot-simulator #app-shell.player-under-board > #demogame-under-board { grid-column: 1; grid-row: 2; }
+    html body.slot-simulator #app-shell.player-under-board > #right-panel { grid-column: 2; grid-row: 1 / span 2; }
+    @media (max-width: 760px) {
+      html body.slot-simulator #app-shell.player-under-board > #right-panel { grid-column: 1; grid-row: 3; }
+    }
+    /* 狀態列重新設計：左邊場景（色點＋文字：基礎遊戲藍、免費遊戲綠、購買特色紫），右邊連消／FG 剩餘改成「小標＋大數字」，中間細分隔線，不用膠囊 */
+    html body.slot-simulator #strip-bar { height: auto !important; min-height: 48px; display: flex; align-items: center; }
+    html body.slot-simulator #strip-bar .feature-strip { width: 100%; height: auto !important; padding: 6px 16px !important; gap: 0 !important; display: flex; align-items: center; }
+    html body.slot-simulator #strip-bar #demogame-phase,
+    html body.slot-simulator #strip-bar #featureStatus.demogame-scene:not(:empty) {
+      margin-right: auto; padding: 5px 12px !important; border-radius: 7px !important; background: color-mix(in srgb, currentColor 14%, transparent) !important;
+      color: #77c7ff !important; font-size: 13px !important; font-weight: 700 !important; letter-spacing: 1px; gap: 8px !important;
+    }
+    html body.slot-simulator #strip-bar #demogame-phase::before,
+    html body.slot-simulator #strip-bar #featureStatus.demogame-scene:not(:empty)::before {
+      content: none !important; display: none !important;   /* 不要圓點 */
+    }
+    html body.slot-simulator.fg-mode #strip-bar #demogame-phase { color: #33ff99 !important; }
+    html body.slot-simulator #strip-bar #featureStatus.demogame-scene:not(:empty) { color: #c08cff !important; }
+    /* 右邊：連消拿掉；FG 剩餘改成同一行「小標＋數字」，字體跟左邊標籤一致，數字欄先留固定寬度（位數變化不推動） */
+    html body.slot-simulator #strip-bar #cascadePill { display: none !important; }
+    html body.slot-simulator #strip-bar .feature-pill:not(.hidden) {
+      flex-direction: row; align-items: baseline !important; gap: 8px !important;
+      padding: 0 !important; margin-left: 16px; border: 0 !important; border-radius: 0 !important; background: transparent !important;
+    }
+    html body.slot-simulator #strip-bar .feature-pill .k { color: #7f9bb8 !important; font-size: 12px !important; font-weight: 600 !important; letter-spacing: .5px; white-space: nowrap; }
+    html body.slot-simulator #strip-bar .feature-pill .v {
+      display: inline-block; min-width: 5ch; text-align: right; white-space: nowrap;
+      color: #e6f2ff !important; font-size: 16px !important; font-weight: 800 !important; font-variant-numeric: tabular-nums;
+    }
+    /* 購買特色時只顯示「購買特色」，不顯示「免費遊戲」（免費遊戲只在一般押注觸發 FG 時出現） */
+    body.slot-simulator #strip-bar .feature-strip:has(#featureStatus.demogame-scene:not(:empty)) #demogame-phase { display: none !important; }
+
+    /* 盤面上下兩條重新設計（2026-11-12 v2）：上下都是嵌進盤面框的黑色凹槽（同圖表黑底），文字置中
+       上：「倍數總和」小標＋藍色大數字（帶微光）；下：訊息跟「倍數總和」小標同款（13px 淡色），中獎也不放大（高度 36px） */
+    html body.slot-simulator #grid-panel .multiplier-track {
+      width: 100% !important; height: 36px !important; margin: 0 0 10px !important;
+      border-radius: 12px !important; background: #030b17 !important; mask-image: none !important; -webkit-mask-image: none !important;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(120, 180, 255, 0.06) !important;
+    }
+    html body.slot-simulator #grid-panel .multiplier-window { display: flex !important; align-items: center; height: 100%; }
+    html body.slot-simulator #grid-panel .multiplier-step.is-active {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 16px; position: relative; top: -1px;   /* 字形墨跡中心比條中心低約 1px，往上補齊 */
+      color: #33bbff !important; text-shadow: 0 0 12px rgba(51, 187, 255, 0.45) !important;
+      font: 800 20px/1 "Segoe UI", system-ui, sans-serif !important; font-variant-numeric: tabular-nums;
+    }
+    html body.slot-simulator #grid-panel .multiplier-step .ft-k { margin: 0 !important; color: var(--sub); font-size: 13px !important; font-weight: 700 !important; letter-spacing: 1px; }
+    /* 倍數有變化：整條播跟下方訊息條一樣的動畫（h099BarHit：放大、變亮、粉色光暈），數字本身不另外跳 */
+    html body.slot-simulator #grid-panel .multiplier-step.fx-hit { animation: none !important; }
+    html body.slot-simulator #grid-panel .multiplier-track.fx-bar-hit { animation: h099BarHit 420ms ease-out; }
+
+    /* 盤面跟著盤面區寬度縮放（2026-11-12）：格子大小＝(盤面區內寬 − 4 個 4px 間距) ÷ 5，最大 74px；
+       符號、框、倍數徽章都用 --cell-size，會一起縮。盤面區變窄時整區（上下兩條＋盤面）一起縮，不會擠出邊 */
+    html body.slot-simulator #grid-panel { container-type: inline-size; }
+    html body.slot-simulator #grid-panel .board-shell { --cell-size: min(74px, calc((100cqw - 16px) / 5)); }
+    html body.slot-simulator #grid-panel #messageBar {
+      min-height: 36px !important; margin-top: 2px !important; padding: 0 16px !important;   /* 2026-11-12：盤面到訊息條 10px（gap 8＋2），與上方倍數條到盤面相同 */
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px !important; background: #030b17 !important;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(120, 180, 255, 0.06) !important;
+      color: var(--sub) !important; font: 700 13px/1.3 "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif !important; letter-spacing: 1px;   /* 跟「倍數總和」小標同款：低調、不搶眼 */
+    }
+
+  </style>
+</head>
+
+<body class="slot-simulator">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請確認 ../demogame_common.css 與 ../demogame_common.js 存在。</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId">101019</span> <span id="gameName">Calavera Party</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k" data-h099-text="cascade">Cascade</span><span class="v"
+            id="carryMultiValue">0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k" data-h099-text="fgLeft">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <div class="jp-bar" id="jpBar" aria-label="OP Jackpot">
+        <div class="jp-box jp-grand" data-jp="0"><span class="jp-k">GRAND</span><span class="jp-v" id="jpV0">0</span></div>
+        <div class="jp-box jp-major" data-jp="1"><span class="jp-k">MAJOR</span><span class="jp-v" id="jpV1">0</span></div>
+        <div class="jp-op" id="jpOp" data-lv="1"></div>
+        <div class="jp-box jp-minor" data-jp="2"><span class="jp-k">MINOR</span><span class="jp-v" id="jpV2">0</span></div>
+        <div class="jp-box jp-mini" data-jp="3"><span class="jp-k">MINI</span><span class="jp-v" id="jpV3">0</span></div>
+      </div>
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="multiplier-track" aria-label="Frame multiplier total">
+            <div class="multiplier-window" id="multiplierWindow"></div>
+          </div>
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">額外押注<span class="mode-price">(2x)</span></button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (50x)</button>
+            <button id="superFeatureBtn" type="button">超級特色<span class="mode-price">(300x)</span></button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3 data-i18n="simulationStats">Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label" data-i18n="totalRounds">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label" data-i18n="hitRate">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label" data-h099-text="statMaxWin">最大贏分倍數</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h099-text="statYellowSeen">黃底出現率</span><span class="s-value" id="yellowSeenValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h099-text="statYellowUsed">黃底消除率</span><span class="s-value" id="yellowUsedValue">0.00% (—)</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h099-text="statFrameMax">BG 最大框總和</span><span class="s-value" id="frameMaxValue">x0</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h099-text="statFgFrameAvg">FG 結束框總和（平均）</span><span class="s-value" id="fgFrameAvgValue">—</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label" data-h099-text="statScRate">SC 出現率</span><span class="s-value" id="scRateValue">0.00% (—)</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="scriptSelect">
+            <span data-h099-text="script">腳本</span>
+            <select id="scriptSelect">
+              <option value="" data-h099-text="scriptNone">無</option>
+              <option value="combo5" data-h099-text="scriptCombo5">連消 5 次以上</option>
+              <option value="yellow" data-h099-text="scriptYellow">黃底有消除</option>
+              <option value="frame10" data-h099-text="scriptFrame10">框總和 10 以上</option>
+              <option value="goldframe" data-h099-text="scriptGoldFrame">金符號落入倍數框並消除</option>
+              <option value="fg" data-h099-text="scriptFg">有觸發 FG</option>
+              <option value="fgbig" data-h099-text="scriptFgbig">FG 100x 以上</option>
+              <option value="jp" data-h099-text="scriptJp">觸發彩金（隨機）</option>
+              <option value="jp0" data-h099-text="scriptJp0">觸發 GRAND</option>
+              <option value="jp1" data-h099-text="scriptJp1">觸發 MAJOR</option>
+              <option value="jp2" data-h099-text="scriptJp2">觸發 MINOR</option>
+              <option value="jp3" data-h099-text="scriptJp3">觸發 MINI</option>
+            </select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">
+            RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="Base/NB/off/-/8f3a21b0">
+          </label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header" data-i18n="spinResult">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader" data-i18n="lineWins">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button" data-i18n="clear">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">版本紀錄</div>
+      <div id="changeLogBody">
+      <article class="change-log-entry">
+        <h4>v2（2.0.0.0）</h4>
+        <ol>
+          <li>輪帶、停輪權重、補牌權重與賠率改用 JILI Super Ace（側錄還原輪帶，帶長 200；賠率 M1 50／150／250 起，100 Credit 基準）；FG 後段表 FG_Symbol (4) 由 Super Ace FG 輪帶依 v1 規則重排。（11/09）</li>
+          <li>金色符號（黃底）對標 DJ Boom Boom：只出現在第 2～4 軸，每格出現率比照 DJ Boom Boom 側錄各軸比例；倍數改為 1／2／3／5／10／20／30／50／100 九檔，分布比照 DJ Boom Boom（1X 約 94%）。（11/09）</li>
+          <li>校準（自然 RTP < 500%、BG Hit 25%、FG Hit 45%、FG 週期 1/200）：輪帶 R2～R5 一般符號改成相鄰軸偏重不同符號組（BG 85%、FG 72%），補牌同向；BG 含 C1 的停點權重 ×0.65；金色符號整體密度降為 DJ Boom Boom 的 80%（各軸比例與倍數分布不變；100% 時 RTP 壓不到 500% 以下）。結果 NB 約 420%、BF 約 205%、BG Hit 25.2%、FG Hit 46%、週期約 1/205。卡片權重未重算。（11/09）</li>
+          <li>算分規則改版：乘數改為 1 ＋ 盤面框總和；框內任何消除 +1，黃底在框上消除再加上黃底倍數（無框時留同倍數新框）；計分改用本次消除「前」的框（先算分再更新框，對齊 DJ Boom Boom 封包實測），演出順序改為先收集倍數算分、再演框 +1 與黃底落框。倍數框改紅框、框倍數移到格子下緣置中。（11/10）</li>
+          <li>金色符號倍數調大（BG／FG 相同：1X 55%、2X 13%、3X 9%、5X 6.5%、10X 6.5%、20X 3.5%、30X 1.5%、50X 1%、100X 1.2%），停用 FG 後段黃底降倍；卡片權重依新自然機率重算。框數不變、每框倍數變大，FG 高倍尾端超過 DJ Boom Boom。（11/11）</li>
+          <li>規則改版：金色符號不再帶倍數，中獎後變 WW、所在位置沒框就留下 1X 框；每段連消全盤所有框 +1（新框從下一消起才 +1）；計分仍用消除前的框。FG 開場不再有第 3 軸 1X 框，框整場累積到 FG 結束。卡片權重依新規則重算。（11/11）</li>
+          <li>金色符號出現率（初始盤面與補牌）BG／FG 都調為 1.5 倍；卡片權重依新自然機率重算。實際每盤金框 BG 約 2.5 → 3.7 顆、FG 約 1.5 → 2.3 顆。（11/11）</li>
+          <li>演出：上方「倍數總和」只在算分時才收集盤面所有框的倍數，框 +1、新框出現時不再跟著跳動。（11/11）</li>
+          <li>演出順序改為：消除符號 → 收集倍數 → 算分 → 補牌掉落時所有框同時 +1、金色符號留新框。計分規則不變。（11/11）</li>
+          <li>輪帶表改版：輪帶改回照 Super Ace 還原帶（只調權重）。BG 三張表：一般表、觸發表（只有這張能觸發 FG）、隱性好表（金色符號數差不多，但多落在容易連線的符號上，約一般表 1.5 倍）；FG 好表單轉約一般表 2.3 倍。另用停輪／補牌權重讓相鄰軸偏重不同符號，自然 RTP 壓回約 700%（卡片重轉次數與之前相當）。卡片權重依新自然機率重算。（11/11）</li>
+          <li>FG Hit 拉高：FG 各表前三軸偏重 Q、J 窗格、補牌分組傾斜加大、金色符號出現率 ×0.75（好表 fg_3 維持較多金色符號，單轉約一般表 2.4 倍），套卡後 FG Hit 約 39% → 49%。補牌新規則：同一軸已有 C1 時不補 C1；bg_1／bg_3 補牌也會出 C1（只在各自的 C1 軸），bg_3 的 C1 改到第 3、5 軸（bg_1 為第 1、2 軸），兩張都不會觸發；觸發表 bg_2 含 C1 停點權重 ×1.6。卡片權重依新自然機率重算（平均重轉與其他款相當）。（11/12）</li>
+          <li>演出：框倍數 +1 跳字放大為 2 倍，從框倍數位置浮到該格符號正中間再淡出。（11/12）</li>
+          <li>新框帶初始倍數：金色符號消除後留下的框，倍數從 1／2／3／5／10／20／30／50／100X 隨機抽（權重對標 DJ Boom Boom，1X 約 94%），NB 卡片重算；新增額外押注（2x）與超級特色（300x）按鈕，尚未開放先上鎖。（11/12）</li>
+          <li>金框對齊競品：BG 每格金框率拉到跟 DJ Boom Boom 一樣（約 21%），FG 拉高 1.2 倍（約 10%）；框初始倍數 2X 以上合計機率不變、往 10X～100X 移，累積倍數最高值超過競品；押注模式按鈕改成一排、未開放的額外押注與超級特色上鎖。（11/12）</li>
+          <li>新增押注模式：額外押注 2x（FG 出現率是一般押注的 5 倍）、購買特色改 75x、超級特色 300x（FG 用另一組參數，新框必定有倍數、最少 2X）；四種模式卡片重算，按鈕全部開放。（11/12）</li>
+          <li>額外押注的 FG 線型改得比較平（平均倍數同一般押注，小獎變少、中獎變多，大獎機率維持），FG 保底改同一般押注 5x。（11/17）</li>
+          <li>新增 OP 彩金（JP0100 第 28 組）：盤面上方彩金列 GRAND／MAJOR／MINOR／MINI，每顆 SC 飛一顆金幣打到 OP；觸發後翻 12 枚金幣，湊 3 個相同得該彩金；未滿 $2（NB／EB 看實際押注、BF／SF 看底注）不開放 GRAND／MAJOR。劇本可選「觸發彩金」。（11/17）</li>
+          <li>彩金列中間的 OP 改成寶箱：距上次中彩金的押注次數越多，箱蓋開得越大、金幣越多（4 階：0／150／400／800 次），中彩金後關回第 1 階；SC 金幣飛去打寶箱。（11/17）</li>
+          <li>金色符號改為第 2～5 軸都會出現（每盤平均顆數不變，平均分到 4 軸），A 版卡片權重依新的自然機率重算；彩金列改「聚光放射」款。（11/17）</li>
+        </ol>
+      </article>
+      <article class="change-log-entry">
+        <h4>v1（1.0.0.0）</h4>
+        <ol>
+          <li>由 H045 超級鑽石 Demogame 改建 H099 致敬DJ Boom Boom（暫名）：黃底倍數符號（R2～R5、1X～10X）、框（消一般符號 +1、黃底倍數直接加進框）、WILD 只由黃底產生、得分 × 盤面框倍數總和、掉落補牌；FG 開場第 3 軸整條 1X 框、框整場保留。輪帶與賠率暫用 H045，黃底權重為假值。（11/02）</li>
+          <li>符號改用亡靈節主題 emoji 圖示（比照 Sugar Rush 2：直接擺在盤面、無底板，字獎也換圖示）：M1 💀、M2 🌼、M3 🎸、M4 🕯️、A 🌶️、K 🌵、Q 🦋、J 🍬、WW 🎭、C1 🪦；黃底格保留金色底。（11/02）</li>
+          <li>依 iGaming 遊戲代號一覽定案：Game ID 101019、ParSheet H0321（資料夾改 H032_亡靈派對）、Calavera Party／亡靈派對；Buy Feature 改 100x、無 Extra Bet。（11/03）</li>
+          <li>觸發 FG 跳出看板「免費遊戲 N 場」（Image 開啟時帶 C1 圖示；Auto 模式 1 秒後自動消失，非 Auto 要點盤面或按 Spin 關閉），看板消失後才開始 FG；Help 賠率表在 Image 開啟時顯示符號圖示；看板與 Help 彈窗開著時背景不能捲動。（11/03）</li>
+          <li>待確認事項定案：得分改用本次消除「後」的框倍數總和（先更新框再計分，中獎演出收集的就是更新後的框）；WILD 在框內消除 +1、黃底在框內只加倍數不再 +1、Scatter 看最終盤面、FG 上限 50 場、Buy Feature 100x、目前無 Extra Bet／彩金。（11/03）</li>
+          <li>數學模型參數寫進 H0321.xlsx 並重轉 config：黃底參數改跟著輪帶表（初始／補牌機率、倍數權重、符號係數），抽表權重改用模型的 table_weight（拿掉 demo_table_weight，Demo 為自然機率）；FG 隱性控制（Good Spin Slots、Retrigger Boost、Dead Streak、Frame Tier、優先順序）與 Simulator 同一套邏輯，BF 的 FG 用 bf_fg_* 權重。（11/03）</li>
+          <li>同步超級鑽石：BF_Symbol 換成鑽石 11/02 新版（每輪 200 停點）；黃底機率改為鑽石金框每格平均機率（R5 比照 R4、補牌同初始）；BG 抽表權重 4/1/5、FG 一般局 2/8/0（BF 的 FG 同）。（11/03）</li>
+          <li>滾停黃底改為平均 4 顆：BG、FG 的初始黃底機率各自等比例放大（BG ×2.07、FG ×1.64，各軸與各表比例不變）；補牌黃底機率不變。（11/04）</li>
+          <li>自然 RTP 壓到 500% 以內：重排 BG／FG 輪帶 R2～R5 的一般符號（相鄰軸偏重不同符號組：R2／R4 偏 M1、M3、A、Q，R3／R5 偏 M2、M4、K、J；BG 偏重 90%、FG 80%），補牌權重同方向調整，補牌黃底機率＝滾停的一半；C1 位置、輪長、停輪權重、R1、BF 進場表不動，滾停黃底維持平均 4 顆。（11/04）</li>
+          <li>中獎率與週期校準（BG Hit Rate 25%、FG Hit Rate 45%、FG 週期約 1/200）：輪帶相鄰軸偏重放寬為 BG 84.5%／FG 59%；BG 表 3 補牌 C1 權重 ×0.7；黃底倍數權重改為 1X 偏多（600/250/90/30/15/8/4/2/1/1，FG 好表同）；補牌黃底＝滾停 × 0.2（BG）／× 0.15（FG）；滾停黃底仍平均 4 顆。（11/04）</li>
+          <li>倍數框改為橘色發光框（2px 橘框＋外／內光暈、淡橘半透明底），框的倍數徽章改橘色；黃底維持金色。（11/04）</li>
+          <li>金色符號（黃底）出現機率降為 2/3：滾停平均 4 顆 → 2.67 顆，補牌同比例。（11/06）</li>
+          <li>FG 後段（隱性）：盤面有框 8～11 格時黃底機率 ×50%、倍數只出 1X／2X；12 格以上 ×20%、只出 1X，框改靠消除 +1 慢慢長。新增後段表 FG_Symbol (4)（常中但得分小），框總和 ≥ 10 時多用它、連續 2 局以上未中只用它，讓大框時不常空轉（套卡片權重後也成立）。（11/06）</li>
+        </ol>
+      </article>
+      </div>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header" data-i18n="setting">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control" for="configSelect">
+          Config
+          <select id="configSelect" disabled><option value="base">Base</option></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span data-i18n="language">Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button" data-i18n="reset">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle" data-i18n="gameHelp">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help" data-i18n="close">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
+      </div>
+    </div>
+  </dialog>
+  <script id="embeddedGameHelpMarkdown" type="text/plain">
+# 101019 Game Help Draft（Demo 暫用）
+
+## PAYTABLE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS ARE FROM LEFTMOST TO RIGHT ONLY. |
+
+### WILD SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | ▪ [WW] 可替代除 [C1] 以外的所有符號。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [C1]. |
+| 規則說明 | ▪ [WW] 只會在黃底符號中獎消除後產生，並會跟著掉落，再次中獎時消除。 | ▪ [WW] IS ONLY CREATED WHEN A YELLOW SYMBOL IS PART OF A WIN; IT FALLS WITH THE REELS AND IS REMOVED WHEN IT WINS AGAIN. |
+
+### 賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+繁中：
+
+| 符號 | {5} 連 | {4} 連 | {3} 連 |
+| --- | ---: | ---: | ---: |
+| [M1] | {125} | {75} | {25} |
+| [M2] | {100} | {60} | {20} |
+| [M3] | {75} | {45} | {15} |
+| [M4] | {50} | {30} | {10} |
+| [A] | {25} | {15} | {5} |
+| [K] | {25} | {15} | {5} |
+| [Q] | {15} | {10} | {5} |
+| [J] | {15} | {10} | {5} |
+
+英文：
+
+| SYMBOL | {5} OAK | {4} OAK | {3} OAK |
+| --- | ---: | ---: | ---: |
+| [M1] | {125} | {75} | {25} |
+| [M2] | {100} | {60} | {20} |
+| [M3] | {75} | {45} | {15} |
+| [M4] | {50} | {30} | {10} |
+| [A] | {25} | {15} | {5} |
+| [K] | {25} | {15} | {5} |
+| [Q] | {15} | {10} | {5} |
+| [J] | {15} | {10} | {5} |
+
+## FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金色符號與倍數框 | GOLDEN SYMBOLS & MULTIPLIER FRAMES |
+| 規則說明 | ▪ 金色符號只出現在第 2～5 軸。 | ▪ GOLDEN SYMBOLS ONLY APPEAR ON REELS 2 TO 5. |
+| 規則說明 | ▪ 金色符號中獎後變成 [WW]；所在位置沒有倍數框時，留下一個 1X 框。 | ▪ A WINNING GOLDEN SYMBOL TURNS INTO [WW]; IF ITS POSITION HAS NO FRAME, A 1X FRAME IS LEFT THERE. |
+| 規則說明 | ▪ 框會留在格子上，符號照常掉落；每次有中獎消除，盤面上所有倍數框都 +1（這次新留下的框從下一次消除起才 +1）。 | ▪ FRAMES STAY IN PLACE WHILE SYMBOLS FALL. EVERY WINNING CASCADE ADDS 1 TO ALL FRAMES ON THE GRID (A FRAME LEFT BY THAT CASCADE STARTS GROWING FROM THE NEXT ONE). |
+| 規則說明 | ▪ 每次連線得分 ×（1 ＋ 盤面所有框的倍數加總，以本次消除前的框計算；本次消除新增的倍數從下一次連線起生效）；盤面沒有框時 ×1，一個 1X 框時 ×2。主遊戲每轉結束時框清空。 | ▪ EACH WIN IS MULTIPLIED BY 1 PLUS THE SUM OF ALL FRAME MULTIPLIERS ON THE GRID BEFORE THAT WIN; MULTIPLIERS ADDED BY A WIN APPLY FROM THE NEXT WIN (X1 IF NO FRAMES, X2 WITH ONE 1X FRAME). FRAMES ARE CLEARED AFTER EACH BASE GAME SPIN. |
+
+## FREE GAME
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 免費遊戲 | FREE GAME |
+| 規則說明 | ▪ 當 {3} 個以上 [C1] 出現在任一位置，觸發 {10} 場免費遊戲。 | ▪ {3} OR MORE [C1] ANYWHERE TRIGGER {10} FREE SPINS. |
+| 規則說明 | ▪ 免費遊戲中倍數框不會清空，倍數一路累積到免費遊戲結束。 | ▪ IN THE FREE GAME, FRAMES ARE NOT CLEARED AND KEEP GROWING UNTIL THE FEATURE ENDS. |
+| 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
+| 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
+  </script>
+  <script src="./Versions/version_manifest.js?v=20261109b"></script>
+  <script>
+    // 數學版本：依 ?version= 從 Versions/version_manifest.js 選基礎 Config（預設 current）；切換版本時重新載入頁面
+    (() => {
+      const manifest = window.H032_VERSION_MANIFEST || { current: "2.0.0.0", versions: [{ version: "2.0.0.0", configs: { base: "config.js" } }] };
+      const asked = new URLSearchParams(location.search).get("version") || manifest.current;
+      const entry = manifest.versions.find(v => v.version === asked || v.math_key === asked)
+        || manifest.versions.find(v => v.version === manifest.current) || manifest.versions[0];
+      window.H032_VERSION_ENTRY = entry;
+      const stamp = `20261117b-${encodeURIComponent(entry.version)}`;   // 權重或 config 更新時改日期碼避免快取
+      // RTP／Variant config（卡片權重）：?config=92A／94A／92A_Bet100；base＝自然機率（卡片關）
+      const codes = Object.keys(entry.configs || {}).filter(code => code !== "base");
+      const wanted = new URLSearchParams(location.search).get("config")
+        || (() => { try { return localStorage.getItem("h032ConfigCode"); } catch (_) { return ""; } })() || "base";
+      // 共用面板慣例：原生選單只列 RTP config，「Base」＝同一份 config 但卡片關（自然機率），所以有 RTP config 時一律載入其一
+      const active = codes.includes(String(wanted)) ? String(wanted) : (codes[0] || "base");
+      window.H032_ACTIVE_CONFIG = active;
+      try { localStorage.setItem("h032ConfigCode", active); } catch (_) {}
+      document.write(`<script src="./${entry.configs.base}?v=${stamp}"><\/script>`);
+      if (active !== "base") {
+        document.write(`<script src="./${entry.configs[active]}?v=${stamp}"><\/script>`);
+        document.write(`<script>
+          (() => {
+            const base = window.H032_CONFIG, rtp = window.H032_CONFIG_RTP;
+            if (!base || !rtp?.card_system) throw new Error("H032 RTP config 未載入或缺 card_system");
+            if (String(rtp.excel_version).split(".")[0] !== String(base.excel_version)) throw new Error("RTP config 版本 " + rtp.excel_version + " 與基礎模型 " + base.excel_version + " 第 1 碼不一致");
+            base.card_system = rtp.card_system; base.rtp_label = rtp.rtp_label || rtp.config_code; base.rtp_config = rtp;
+          })();
+        <\/script>`);
+      }
+      // 設定面板的 HTML 在本段之前，直接同步填選單（共用面板在 DOMContentLoaded 前就讀 #configSelect）
+      (() => {
+        const select = document.getElementById("versionSelect");
+        if (!select) return;
+        for (const v of manifest.versions) select.appendChild(new Option(v.version, v.version, false, v.version === entry.version));
+        select.addEventListener("change", () => {
+          const query = new URLSearchParams(location.search);
+          query.set("version", select.value);
+          query.delete("config");
+          location.search = query.toString();
+        });
+        // Config 選單：manifest 列出的 RTP config；共用面板再組成「Base（卡片關）／92A／94A／92A_BET100」
+        const configSelect = document.getElementById("configSelect");
+        if (configSelect) {
+          configSelect.innerHTML = "";
+          for (const code of (codes.length ? codes : ["base"])) configSelect.appendChild(new Option(code === "base" ? "Base" : code, code, false, code === active));
+          configSelect.disabled = codes.length <= 1;
+          configSelect.addEventListener("change", () => {
+            if (configSelect.value === active) return;
+            const query = new URLSearchParams(location.search);
+            query.set("version", entry.version);
+            query.set("config", configSelect.value);
+            try { localStorage.setItem("h032ConfigCode", configSelect.value); } catch (_) {}
+            location.search = query.toString();
+          });
+        }
+      })();
+    })();
+  </script>
+  <script>
+(() => {
+  "use strict";
+
+  const cfg = window.H032_CONFIG;
+  if (!cfg) throw new Error("H032 config was not loaded.");
+  for (const key of ["tables", "table_weight", "pays", "symbol_names", "fg_good_slots", "retrigger_boost", "fg_frame_tier_weight", "fg_dead_streak_weight", "fg_weight_priority", "bet_modes"]) {
+    if (!cfg[key]) throw new Error("H032 config is missing field: " + key);
+  }
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  // 符號 ID 一律取自 config（2026-11-17 起 C1＝1、其餘依序），不寫死
+  const WW = Number(cfg.wild_ids[0]), C1 = Number(cfg.scatter_id);
+  const SCORE = Object.keys(cfg.symbol_names).map(Number).filter(id => id !== WW && id !== C1).sort((a, b) => a - b);
+  const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
+  window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）
+  let lastBoardRender = null;
+  // 符號圖示（亡靈節主題，系統內建 emoji，離線可用）：比照 Sugar Rush 2，符號直接擺在盤面上、不畫方框底板，字獎也用圖示
+  const SYMBOL_ICON = {
+    M1: "💀", M2: "🌼", M3: "🎸", M4: "🕯️",   // 糖骷髏、萬壽菊、吉他、蠟燭
+    A: "🌶️", K: "🌵", Q: "🦋", J: "🍬",         // 辣椒、仙人掌、帝王蝶、糖果
+    WW: "🎭", C1: "🪦"                           // WILD 面具、SCATTER 墓碑
+  };
+  let useSymbolImages = true;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    images: [],
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(lastBoardRender.board, lastBoardRender.hitList, lastBoardRender.options);
+    }
+  };
+  const symbolIcon = code => useSymbolImages ? SYMBOL_ICON[code] || "" : "";
+  // Help 賠率表符號圖（共用 demogame_common.js 讀 DEMOGAME_SYMBOL_ART）：emoji 包成 SVG，Image 開啟時與盤面同一套圖示
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ICON).map(([code, emoji]) => [code,
+    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="54" font-size="78" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif">${emoji}</text></svg>`)]));
+  // 彈窗（Help）開著時背景不能捲動
+  const helpDialogEl = document.getElementById("helpDialog");
+  if (helpDialogEl) new MutationObserver(() => document.documentElement.classList.toggle("h032-help-open", helpDialogEl.open))
+    .observe(helpDialogEl, { attributes: true, attributeFilter: ["open"] });
+
+  const BUY = cfg.bet_modes.buy_feature;
+  // 2026-11-12：押注模式 0 一般押注／1 額外押注（2x，FG 週期 1/5，卡組 eb_*）／2 購買特色／3 超級特色（300x，FG 轉 sf_* 表）
+  const EB = cfg.bet_modes.extra_bet || { cost_multiplier: 2 }, SUPER = cfg.bet_modes.super_feature || { cost_multiplier: 300 };
+  const isBuyMode = mode => mode === 2 || mode === 3;
+  const modeCost = mode => ({ 0: 1, 1: Number(EB.cost_multiplier), 2: Number(BUY.cost_multiplier), 3: Number(SUPER.cost_multiplier) })[mode] ?? 1;
+  const modeTag = mode => ["NB", "EB", "BF", "SF"][mode] || "NB";
+  const modeName = mode => ["Normal Bet", "Extra Bet", "Buy Feature", "Super Feature"][mode] || "Normal Bet";
+  const BASE_BET = Number(cfg.base_bet) || 100;
+  const START_BALANCE = 10000 * BASE_BET;
+  const BET_LEVELS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 40, 60, 100, 200, 300, 600, 1000, 1500, 2000, 3000, 5000];
+  const MAX_FS = Number(cfg.max_free_spins) || 50;
+  const FG_INITIAL = Number(cfg.free_spins_initial) || 10;
+  const FG_RETRIGGER = Number(cfg.free_spins_retrigger) || 5;
+  const MIN_SCATTER = Number(cfg.min_scatter) || 3;
+  const DROP_SPEED_MULTIPLIER = 2;
+  const tables = {};
+  const state = {
+    balance: START_BALANCE, betIndex: 0, busy: false, auto: false, language: "zh",
+    rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0,
+    maxMultiplier: 0, lastWin: 0, snapshots: [], snapshotIndex: -1, mode: 0,
+    fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 },
+    spinStats: { spins: 0, yellowSeen: 0, yellowUsed: 0, sc: 0, bgFrameMax: 0, fgSessions: 0, fgFrameSum: 0 }
+  };
+
+  // ===== OP Jackpot（2026-11-17）：JP0100 第 28 組；A 新手／未開卡片、B 老手中大 Bet（92A／Bet100）、C 老手小 Bet（94A）
+  // RTP 依押注模式的 Bet 欄（NB 1、EB 2、BF 75、SF 300）；GRAND／MAJOR 起始 $1,000／$200（500,000／100,000 credit × denom 0.002）並依 Increment 累積；
+  // MINOR／MINI 為底注倍數。各彩金每局機率 ＝ RTP × 押注 ÷ 獎金；只有盤面出現 C1 的局才能觸發（除以 C1 出現率換算）
+  const JP_NAMES = ["GRAND", "MAJOR", "MINOR", "MINI"];
+  // 2026-11-17：彩金參數全部讀 config（Source/H0321xxA.xlsx 的 OP Jackpot 頁 → config_9xA.js 的 jackpot）；Base（卡片關）沒有 RTP config 時不開彩金
+  const JPC = cfg.rtp_config?.jackpot || cfg.jackpot || null;
+  const JP_ON = Boolean(JPC?.enabled);
+  const numKeys = obj => Object.fromEntries(Object.entries(obj || {}).map(([k, v]) => [Number(k), v]));
+  const JP_ZERO = { inc: [0, 0], rtp: { 1: [0, 0, 0, 0], 2: [0, 0, 0, 0], 75: [0, 0, 0, 0], 300: [0, 0, 0, 0] } };
+  const JP_SET = JP_ON ? Object.fromEntries(Object.entries(JPC.series).map(([s, v]) => [s, { inc: v.inc, rtp: numKeys(v.rtp) }])) : { A: JP_ZERO, B: JP_ZERO, C: JP_ZERO };
+  const JP_SEED = JP_ON ? JPC.seed : [0, 0], JP_X = JP_ON ? numKeys(JPC.fixed_x) : { 1: [0, 0], 2: [0, 0], 75: [0, 0], 300: [0, 0] };
+  const JP_UNLOCK_BET = JP_ON ? Number(JPC.unlock_bet) : 2;
+  // 每局平均判定次數 ＝ SCR ÷ Threshold（遊戲 RTP 工作簿 OP Jackpot 頁）；每一轉出現 C1（BG／進場盤、FG 每轉）各判一次
+  const jpPerRound = mode => { if (!JP_ON) return 1; const name = ["NB", "EB", "BF", "SF"][mode] || "NB"; return Number((jpSeries(mode) === "A" && JPC.scr[name + "_Newbie"]) || JPC.scr[name]) / Number(JPC.threshold); };
+  const JP_BET_KEY = JP_ON ? JPC.bet_key : [1, 2, 75, 300];
+  state.jp = { pool: [JP_SEED[0] * BASE_BET, JP_SEED[1] * BASE_BET], wins: 0, hits: [0, 0, 0, 0], spins: 0 };
+  // OP 寶箱：距上次中彩金的押注次數門檻（第 1～4 階；NB $1 平均約 700 次中一次彩金）
+  const JP_CHEST_LV = [0, 150, 400, 800];
+  const JP_CHEST_TEST = true;   // 測試用：寶箱每被 SC 金幣打中一次跳一階，到第 4 階維持到中彩金；正式改回 false 依上面門檻
+  function jpChestSvg() {
+    const flat = (x, y, rx = 4.2, ry = 2, rot = 0) => `<g transform="rotate(${rot} ${x} ${y})"><ellipse cx="${x}" cy="${y + ry * .5}" rx="${rx}" ry="${ry}" fill="#a87800"/><ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#jpcCoin)" stroke="#7a5600" stroke-width=".35"/><ellipse cx="${x - rx * .08}" cy="${y - ry * .05}" rx="${rx * .55}" ry="${ry * .5}" fill="none" stroke="#fff4b8" stroke-opacity=".7" stroke-width=".35"/></g>`;
+    const stand = (x, y, r = 3.2, rot = 0) => `<g transform="rotate(${rot} ${x} ${y})"><circle cx="${x + r * .28}" cy="${y}" r="${r}" fill="#a87800"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#jpcCoin)" stroke="#7a5600" stroke-width=".35"/><circle cx="${x}" cy="${y}" r="${r * .6}" fill="none" stroke="#fff4b8" stroke-opacity=".7" stroke-width=".35"/></g>`;
+    const spark = (x, y, s, k) => `<path class="spark ${k}" d="M${x} ${y - s}L${x + s * .3} ${y - s * .3}L${x + s} ${y}L${x + s * .3} ${y + s * .3}L${x} ${y + s}L${x - s * .3} ${y + s * .3}L${x - s} ${y}L${x - s * .3} ${y - s * .3}Z" fill="#fffbe6"/>`;
+    const mound = [[10, 23], [16, 23.4], [22, 23.6], [28, 23.6], [34, 23.4], [40, 23], [13, 20.3], [19, 20.6], [25, 20.7], [31, 20.6], [37, 20.3],
+      [16, 17.6], [22, 17.9], [28, 17.9], [34, 17.6], [19, 15], [25, 15.2], [31, 15], [22, 12.4], [28, 12.4], [25, 9.8]];
+    return `<svg viewBox="0 0 48 48" aria-hidden="true"><defs>
+      <linearGradient id="jpcBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a5d9f"/><stop offset="1" stop-color="#0f2a52"/></linearGradient>
+      <linearGradient id="jpcLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f66ad"/><stop offset="1" stop-color="#16376a"/></linearGradient>
+      <linearGradient id="jpcIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1d38"/><stop offset="1" stop-color="#132c55"/></linearGradient>
+      <linearGradient id="jpcLock" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe66a"/><stop offset="1" stop-color="#b57e10"/></linearGradient>
+      <linearGradient id="jpcCoin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset=".45" stop-color="#ffd23f"/><stop offset="1" stop-color="#d99a00"/></linearGradient>
+      <radialGradient id="jpcGlow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".95"/><stop offset=".5" stop-color="#ffc840" stop-opacity=".45"/><stop offset="1" stop-color="#ffc840" stop-opacity="0"/></radialGradient></defs><g class="root">
+      <ellipse class="glow" cx="24" cy="17" rx="22" ry="14" fill="url(#jpcGlow)"/>
+      <g class="lvp l3"><path d="M6 18.5C6 7.5 11 3.5 24 3.5S42 7.5 42 18.5Z" fill="url(#jpcIn)"/><path d="M6 18.5C6 7.5 11 3.5 24 3.5S42 7.5 42 18.5" fill="none" stroke="#5fb4ff" stroke-width="1.2"/><path d="M11 4V19M34 4V19" stroke="#5fb4ff" stroke-width="2.5" opacity=".3"/></g>
+      <g class="lvp l4"><g transform="translate(0 3) scale(1 .9)"><path d="M7 21C7 12 12 9 24 9S41 12 41 21Z" fill="url(#jpcIn)"/><path d="M7 21C7 12 12 9 24 9S41 12 41 21" fill="none" stroke="#5fb4ff" stroke-width="1.2"/><path d="M12 10V21M33 10V21" stroke="#5fb4ff" stroke-width="2.5" opacity=".2"/></g></g>
+      <path d="M5 24.5L8.5 19H39.5L43 24.5Z" fill="#071227"/>
+      <g class="lvp l2"><path d="M8.5 19L5 24.5H43L39.5 19Z" fill="#ffd700" opacity=".4"/></g>
+      <g class="lvp c2">${flat(24, 22.4, 4.6, 2.1)}</g>
+      <g class="lvp c3">${flat(18.5, 22.6, 4.4, 2)}${flat(29.5, 22.6, 4.4, 2)}${flat(24, 20.6, 4.2, 1.9)}</g>
+      <g class="lvp c4">${mound.map(([x, y]) => flat(x, y, 4.1, 1.9)).join("")}</g>
+      <g class="lvp l3"><path d="M4 18.5Q24 21 44 18.5L44.5 19.5Q24 22.5 3.5 19.5Z" fill="#2f66ad"/></g>
+      <path d="M4 24H44V39C44 42 41.5 44 38.5 44H9.5C6.5 44 4 42 4 39Z" fill="url(#jpcBody)"/>
+      <path d="M4 24H44V27H4Z" fill="#5fb4ff"/><rect x="11" y="24" width="3" height="20" fill="#5fb4ff"/><rect x="34" y="24" width="3" height="20" fill="#5fb4ff"/>
+      <rect x="20.5" y="27.5" width="7" height="8.5" rx="1" fill="url(#jpcLock)"/><circle cx="24" cy="31.5" r="1.5" fill="#0f2a52"/>
+      <g class="lvp c4">${flat(7.5, 25.5, 4, 1.9, -38)}${flat(40.5, 25.8, 4, 1.9, 40)}${stand(15.5, 27.8, 3, -12)}${stand(32.5, 28.3, 2.8, 14)}
+        ${flat(5, 43, 4, 1.8)}${flat(8.5, 45.3, 3.6, 1.6, -8)}${stand(3.3, 38.8, 3, -18)}${flat(43, 43.2, 4, 1.8)}${flat(39.5, 45.6, 3.4, 1.5, 10)}${stand(45, 38.5, 2.9, 20)}
+        ${spark(41.5, 13, 2.4, "s1")}${spark(6, 15, 2, "s2")}${spark(34, 6, 1.8, "s3")}</g>
+      <g class="lvp l1"><path d="M4 24C4 14 8.5 10 24 10S44 14 44 24Z" fill="url(#jpcLid)"/><path d="M4 21.5H44V24.5H4Z" fill="#5fb4ff"/><path d="M11 10.5V24.5H14V10.5ZM34 10.5V24.5H37V10.5Z" fill="#5fb4ff"/></g>
+      <g class="lvp l2"><g transform="translate(0 -3)"><path d="M4 21C4 11 8.5 7 24 7S44 11 44 21Q24 23.5 4 21Z" fill="url(#jpcLid)"/><path d="M4 18.5Q24 21 44 18.5V21.5Q24 24 4 21.5Z" fill="#5fb4ff"/><path d="M11 7.5V21H14V7.5ZM34 7.5V21H37V7.5Z" fill="#5fb4ff"/></g></g>
+      </g></svg>`;   // .root 依階層上下位移，讓看得到的部分維持置中
+  }
+  // show＝true 才把畫面換成目前階層：平常押注只累計，等 SC 金幣打中寶箱（或中彩金歸零）時才變化
+  function renderChest(show = false) {
+    const op = $("jpOp"); if (!op) return;
+    if (!op.firstElementChild) { op.innerHTML = jpChestSvg(); show = true; }
+    const lv = JP_CHEST_TEST ? Math.min(4, (state.jp.strikes || 0) + 1) : JP_CHEST_LV.filter(n => state.jp.spins >= n).length;   // 到第 4 階就維持，直到中彩金才歸零
+    if (show && op.dataset.lv !== String(lv)) op.dataset.lv = lv;
+    op.title = `${state.language === "zh" ? "距上次彩金押注次數" : "Spins since last jackpot"}：${state.jp.spins}`;
+  }
+  // 檔位同模擬程式規範 §1.2.3：NB／EB 用實際押注、BF／SF 用底注；< $2 → C（無 GRAND／MAJOR），≥ $2 → B；未開卡片系統 → A
+  const jpTierAmount = mode => isBuyMode(mode) ? BET_LEVELS[state.betIndex] : BET_LEVELS[state.betIndex] * modeCost(mode);
+  const jpSeries = (mode = state.extraBet ? 1 : 0) => !cardSystemActive() ? "A" : (jpTierAmount(mode) < JP_UNLOCK_BET ? "C" : "B");
+  const jpUnlocked = (mode = state.extraBet ? 1 : 0) => jpSeries(mode) !== "A" && jpTierAmount(mode) >= JP_UNLOCK_BET;   // 新手／卡片關（A）不得中 GRAND／MAJOR（數學模型規範 §1.6.1）
+  const jpBetKey = mode => JP_BET_KEY[mode] ?? 1;
+  function jpPrizes(mode = 0, pool = state.jp.pool) {
+    const x = JP_X[jpBetKey(mode)], b = betUnit();
+    return [pool[0], pool[1], x[0] * b, x[1] * b];
+  }
+  function renderJp() {
+    if (!JP_ON) { const bar = $("jpBar"); if (bar) bar.style.display = "none"; return; }
+    const m = state.jpView ?? (state.extraBet ? 1 : 0), prizes = jpPrizes(m), locked = !jpUnlocked(m);   // 按下 BF／SF 起到該局（含 FG）結束，顯示該模式的 MINOR／MINI
+    prizes.forEach((v, k) => { const el = $(`jpV${k}`); if (el) el.textContent = money(v); });
+    document.querySelectorAll("#jpBar .jp-box").forEach(box => box.classList.toggle("is-locked", locked && Number(box.dataset.jp) < 2));
+  }
+  function jpAccrue(wager) {
+    const inc = JP_SET[jpSeries(state.mode)].inc;
+    state.jp.pool[0] += wager * inc[0]; state.jp.pool[1] += wager * inc[1]; state.jp.spins++; renderJp(); renderChest();
+  }
+  // 局結束時判定：有 C1 才可能觸發；回傳中的彩金 index 或 -1
+  function jpDraw(mode, wager, hasC1, force = false, pool = state.jp.pool) {
+    if (typeof force === "number") return force;   // 腳本指定（測試用，未解鎖也照給）
+    if (force) { const ok = [0, 1, 2, 3].filter(k => k >= 2 || jpUnlocked(mode)); return ok[Math.floor(Math.random() * ok.length)]; }
+    if (!hasC1) return -1;
+    if (!JP_ON) return -1;
+    const rtp = JP_SET[jpSeries(mode)].rtp[jpBetKey(mode)], prizes = jpPrizes(mode, pool);
+    const per = jpPerRound(mode);
+    const p = rtp.map((r, k) => (k < 2 && !jpUnlocked(mode)) ? 0 : r * wager / prizes[k] / per);
+    let u = Math.random();
+    for (let k = 0; k < 4; k++) { u -= p[k]; if (u < 0) return k; }
+    return -1;
+  }
+  document.body.insertAdjacentHTML("beforeend", '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="jpcoRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff7ae"/><stop offset=".3" stop-color="#f8d132"/><stop offset=".7" stop-color="#d4a017"/><stop offset="1" stop-color="#8b6508"/></linearGradient><radialGradient id="jpcoFace" cx=".5" cy=".5" r=".5"><stop offset=".6" stop-color="#e6b800"/><stop offset="1" stop-color="#997a00"/></radialGradient><linearGradient id="jpcoTxt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff280"/></linearGradient><symbol id="jpCoinArt" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="url(#jpcoRim)"/><circle cx="50" cy="50" r="38" fill="url(#jpcoFace)" stroke="#b8860b" stroke-width="1"/><g transform="translate(47.3 45.5) scale(.9)" fill="url(#jpcoTxt)"><path d="M-22,-18C-35,-18 -42,-8 -42,5C-42,18 -32,28 -20,28C-7,28 1,18 1,5C1,-8 -9,-18 -22,-18ZM-21,-8C-15,-8 -12,-3 -12,5C-12,13 -16,18 -21,18C-26,18 -29,13 -29,5C-29,-3 -26,-8 -21,-8Z"/><path d="M10,-18L32,-18C42,-18 48,-12 48,-3C48,6 42,12 32,12L22,12L22,28L8,28L10,-18ZM23,-8L23,2L30,2C34,2 36,0 36,-3C36,-6 34,-8 30,-8L23,-8Z"/></g></symbol></defs></svg>');   // 彩金金幣圖（12 選 3、飛向寶箱共用）
+  const boardHasC1 = board => (board || []).flat().some(symbol => symbol === C1);
+  // C1 出現時金幣飛到 OP（不擋流程太久）
+  async function jpCoinFly(board) {
+    const op = $("jpOp");
+    if (!JP_ON || !op || !board) return;
+    const cells = Array.from($("board").children).filter(node => node.classList.contains("cell"));
+    const targets = [];
+    board.forEach((col, reel) => col.forEach((symbol, line) => { const cell = cells[(3 - line) * 5 + reel]; if (symbol === C1 && cell) targets.push(cell); }));   // 盤面由上往下畫 row 3→0，格子 index＝(3−row)×5＋reel
+    if (!targets.length) return;
+    const speed = Number($("speedRange").value || 1), dur = Math.max(300, 680 / speed);
+    const orc = op.getBoundingClientRect(), ox = orc.left + orc.width / 2, oy = orc.top + orc.height / 2;
+    let struck = false;
+    await Promise.all(targets.map(cell => {
+      const r = cell.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const coin = document.createElement("div"); coin.className = "fx-jp-coin"; coin.style.cssText = `left:${x}px;top:${y}px`;
+      coin.innerHTML = '<svg viewBox="0 0 100 100"><use href="#jpCoinArt"/></svg>';
+      document.body.appendChild(coin);
+      const a = coin.animate([{ transform: "translate(0,0) scale(1)", opacity: 0 }, { transform: "translate(0,0) scale(1.15)", opacity: 1, offset: .12 }, { transform: "translate(0,-14px) scale(1)", opacity: 1, offset: .25 },
+        { transform: `translate(${ox - x}px,${oy - y}px) scale(.8)`, opacity: 1 }], { duration: dur, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" });
+      return Promise.race([a.finished.catch(() => {}), wait(dur + 80)]).then(() => {
+        coin.remove();
+        if (!struck) { struck = true; state.jp.strikes = (state.jp.strikes || 0) + 1; renderChest(true); op.classList.remove("is-struck"); void op.offsetWidth; op.classList.add("is-struck"); }   // 打中才更新階層，並晃一下
+      });
+    }));
+  }
+  // 彩金遊戲：12 枚金幣，先湊滿 3 個的就是中的彩金（結果事先決定）；Auto 自動翻，非 Auto 點金幣翻
+  // 翻牌腳本：照 Slots/OP Jackpot/Jackpot Game Script.xlsx（v1）。依中獎彩金從 4 種「籤箱」組合隨機挑一種
+  // （A 表＝GRAND／MAJOR 未開放，B 表＝四個都開放），整箱洗牌後依序翻開；中獎彩金翻到第 3 張即結束，箱內剩下的籤在結束時揭露
+  const JP_LOT_CASES = JP_ON ? Object.fromEntries(Object.entries(JPC.pick_lots).map(([s, v]) => [s, numKeys(v)])) : { A: {}, B: {} };
+  function jpPickOrder(win) {
+    const table = jpUnlocked(state.mode) ? JP_LOT_CASES.B : JP_LOT_CASES.A;
+    const cases = table[win] || JP_LOT_CASES.B[win];
+    const counts = cases[Math.floor(Math.random() * cases.length)];
+    const lots = counts.flatMap((n, k) => Array(n).fill(k));
+    for (let i = lots.length - 1; i > 0; i--) { const r = Math.floor(Math.random() * (i + 1)); [lots[i], lots[r]] = [lots[r], lots[i]]; }
+    let hit = 0, cut = lots.length;
+    for (let i = 0; i < lots.length; i++) if (lots[i] === win && ++hit === 3) { cut = i + 1; break; }
+    return { order: lots.slice(0, cut), rest: lots.slice(cut) };
+  }
+  // 彩金遊戲中空白鍵＝隨機翻一枚：要比共用的「空白鍵＝Spin」（demogame_common.js 較晚載入）先註冊，才攔得到
+  let jpSpaceHook = null;
+  window.addEventListener("keydown", e => {
+    if (!jpSpaceHook || (e.code !== "Space" && e.key !== " ")) return;
+    e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) jpSpaceHook();
+  }, true);
+  function playJackpotGame(win, prize) {
+    return new Promise(resolve => {
+      const board = $("board"), { order, rest } = jpPickOrder(win);
+      const wrap = document.createElement("div"); wrap.className = "jp-game";
+      wrap.innerHTML = `<div class="jp-game-title">OP JACKPOT</div><div class="jp-game-grid">${Array.from({ length: 12 }, (_, i) => `<div class="jp-coin" data-i="${i}" style="--d:${(i * 0.37) % 2.4}"><span class="face front"><svg viewBox="0 0 100 100"><use href="#jpCoinArt"/></svg><i class="glint"></i></span><span class="face back"><b></b></span></div>`).join("")}</div><div class="jp-game-msg">${state.language === "zh" ? "翻開金幣，集滿 3 個相同的彩金" : "PICK COINS — MATCH 3 TO WIN"}</div>`;
+      board.appendChild(wrap); document.documentElement.classList.add("h032-modal-open");
+      const coins = Array.from(wrap.querySelectorAll(".jp-coin"));
+      let step = 0, timer = 0, finished = false;
+      const open = (coin, k) => { coin.classList.add("is-open", `j${k}`); coin.querySelector(".back b").textContent = JP_NAMES[k]; coin.dataset.k = k; };
+      const finish = () => {
+        finished = true; clearInterval(timer); jpSpaceHook = null;
+        coins.filter(c => !c.classList.contains("is-open")).forEach((c, i) => { if (rest[i] != null) open(c, rest[i]); c.classList.add("is-dim"); });   // 籤箱剩下的籤揭露，超過籤數的金幣維持蓋著
+        coins.filter(c => Number(c.dataset.k) === win && !c.classList.contains("is-dim")).forEach(c => c.classList.add("is-win"));
+        wrap.querySelector(".jp-game-msg").textContent = `${JP_NAMES[win]}  ${money(prize)}`;
+        document.querySelector(`#jpBar .jp-box[data-jp="${win}"]`)?.classList.add("is-hit");
+        setTimeout(() => {
+          wrap.remove(); document.documentElement.classList.remove("h032-modal-open");
+          document.querySelector(`#jpBar .jp-box[data-jp="${win}"]`)?.classList.remove("is-hit"); resolve();
+        }, state.auto ? 1400 : 1800);
+      };
+      const pick = coin => {
+        if (finished || coin.classList.contains("is-open")) return;
+        open(coin, order[step++]);
+        if (step >= order.length) finish();
+      };
+      coins.forEach(c => c.addEventListener("click", e => { e.stopPropagation(); pick(c); }));
+      // 按空白鍵或點盤面上金幣以外的地方 → 隨機幫忙翻一枚
+      const pickRandom = () => { const left = coins.filter(c => !c.classList.contains("is-open")); if (left.length) pick(left[Math.floor(Math.random() * left.length)]); };
+      wrap.addEventListener("click", () => pickRandom());
+      jpSpaceHook = pickRandom;
+      const speed = Number($("speedRange").value || 1);
+      if (state.auto) timer = setInterval(() => pick(coins.filter(c => !c.classList.contains("is-open"))[Math.floor(Math.random() * coins.filter(c => !c.classList.contains("is-open")).length)]), Math.max(120, 380 / speed));
+    });
+  }
+  async function jpSettle(mode, wager, hasC1, force = false) {
+    const k = jpDraw(mode, wager, hasC1, force);
+    if (k < 0) return 0;
+    const prize = jpPrizes(mode)[k];
+    appendLog(`OP Jackpot | ${JP_NAMES[k]} ${money(prize)} | JP0100${jpSeries(mode)}（第 28 組）`, "result");
+    await playJackpotGame(k, prize);
+    if (k < 2) state.jp.pool[k] = JP_SEED[k] * BASE_BET;
+    state.jp.spins = 0; state.jp.strikes = 0; renderChest(true);   // 中彩金 → 寶箱回第 1 階
+    state.jp.wins += prize; state.jp.hits[k]++; state.totalWin += prize; state.balance += prize; state.lastWin += prize;
+    renderJp(); updateStats();
+    return prize;
+  }
+
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    #multiplierWindow{grid-template-columns:1fr!important;transform:none!important}
+    /* 框倍數總和：格式同 H045 階梯倍數（單一顆 is-active 的 multiplier-step） */
+    #multiplierWindow .multiplier-step .ft-k{font-weight:400;font-size:.8em;margin-right:4px}
+    /* OP 彩金列（2026-11-17）：左至右 GRAND／MAJOR／OP／MINOR／MINI；C1 出現時金幣飛到 OP */
+    /* 彩金列（2026-11-17 v4）：一條黑色凹槽（同「倍數總和」），獨立放在盤面面板正上方、不另包面板；細線分隔，OP 是嵌在中間的藍色小圓章 */
+    /* 共用 JS 會把 #app-shell 排成 盤面(1)／盤面下方(2)／右欄(1~2)；彩金插在最上面，其餘往下推一列 */
+    html body.slot-simulator #app-shell:has(> #jpBar){grid-template-rows:auto auto 1fr}   /* 右欄跨三列時多出的高度只給最後一列，彩金與盤面之間不會被撐開 */
+    html body.slot-simulator #app-shell > #jpBar{grid-column:1 !important;grid-row:1 !important}
+    html body.slot-simulator #app-shell > #grid-panel{grid-column:1 !important;grid-row:2 !important}
+    html body.slot-simulator #app-shell > #demogame-under-board{grid-column:1 !important;grid-row:3 !important}
+    html body.slot-simulator #app-shell > #right-panel{grid-column:2 !important;grid-row:1 / span 3 !important}
+    @media (max-width:760px){html body.slot-simulator #app-shell > #right-panel{grid-column:1 !important;grid-row:4 !important}}
+    #jpBar{display:grid;grid-template-columns:1fr 1fr 52px 1fr 1fr;align-items:center;height:56px;padding:0 10px;border-radius:12px;
+      background:linear-gradient(180deg,rgba(120,170,230,.05),rgba(0,0,0,0) 45%),#030b17;border:1px solid rgba(120,170,230,.16);box-shadow:inset 0 2px 10px rgba(0,0,0,.7)}
+    #jpBar .jp-box{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:100%;line-height:1;transition:opacity .2s,filter .2s}
+    #jpBar .jp-major::before,#jpBar .jp-mini::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:1px;background:linear-gradient(180deg,transparent,rgba(120,170,230,.28),transparent)}
+    #jpBar .jp-k{font-size:11px;font-weight:800;letter-spacing:.14em}
+    #jpBar .jp-v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:#f2f7ff}
+    #jpBar .jp-grand .jp-k{color:#ff7a84}#jpBar .jp-grand .jp-v{text-shadow:0 0 10px rgba(255,110,120,.55)}
+    #jpBar .jp-major .jp-k{color:#c597ff}#jpBar .jp-major .jp-v{text-shadow:0 0 10px rgba(190,140,255,.55)}
+    #jpBar .jp-minor .jp-k{color:#62b9ff}#jpBar .jp-minor .jp-v{text-shadow:0 0 10px rgba(90,180,255,.55)}
+    #jpBar .jp-mini .jp-k{color:#6ce49c}#jpBar .jp-mini .jp-v{text-shadow:0 0 10px rgba(100,224,150,.5)}
+    #jpBar .jp-box.is-locked{opacity:.45;filter:grayscale(.85)}
+    #jpBar .jp-box.is-locked .jp-v{text-shadow:none}
+    #jpBar .jp-box.is-hit{animation:jp-hit .5s ease-in-out 4}
+    /* OP 寶箱（2026-11-17）：箱蓋用 Gemini 版、透視金幣；依「距上次中彩金的押注次數」分 4 階，只有被 SC 金幣打中才換階；中彩金後回第 1 階
+       彩金列：中間那格加寬，寶箱放大到 62px，後面聚光放射＋寶箱陰影 */
+    #jpBar{grid-template-columns:1fr 1fr 84px 1fr 1fr !important;background:linear-gradient(90deg,#030b17 0,#06152b 50%,#030b17 100%) !important}
+    #jpBar .jp-op{position:relative;justify-self:center;display:flex;align-items:center;justify-content:center;width:84px;height:56px}
+    #jpBar .jp-op::before{content:"";position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+      background:radial-gradient(circle,rgba(95,180,255,.45),rgba(95,180,255,.12) 45%,transparent 70%)}   /* 2026-11-17：照預覽頁 C 款原樣 */
+    #jpBar .jp-op::after{content:"";position:absolute;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+      background:repeating-conic-gradient(from 0deg,rgba(150,210,255,.22) 0 8deg,transparent 8deg 22deg);
+      -webkit-mask:radial-gradient(circle,transparent 30%,#000 45%,transparent 70%);mask:radial-gradient(circle,transparent 30%,#000 45%,transparent 70%);animation:jp-spot-spin 14s linear infinite}
+    @keyframes jp-spot-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    #jpBar .jp-op svg{position:relative;z-index:1;display:block;width:62px;height:62px;overflow:visible;transform-origin:50% 85%}   /* 2026-11-17：寶箱不加陰影、不加立體邊 */
+    #jpBar .jp-op .lvp{display:none}
+    #jpBar .jp-op[data-lv="1"] .l1,#jpBar .jp-op[data-lv="2"] :is(.l2,.c2),#jpBar .jp-op[data-lv="3"] :is(.l3,.c2,.c3),#jpBar .jp-op[data-lv="4"] :is(.l4,.c2,.c3,.c4){display:inline}
+    /* 各階看得到的範圍上下置中（viewBox 48） */
+    #jpBar .jp-op .root{transform:translateY(-3.6px)}
+    #jpBar .jp-op[data-lv="2"] .root{transform:translateY(-0.6px)}
+    #jpBar .jp-op[data-lv="3"] .root{transform:translateY(-0.35px)}
+    #jpBar .jp-op[data-lv="4"] .root{transform:translateY(-2.9px)}
+    #jpBar .jp-op .glow{opacity:0;transition:opacity .3s}
+    #jpBar .jp-op[data-lv="2"] .glow{opacity:.35}
+    #jpBar .jp-op[data-lv="3"] .glow{opacity:.65}
+    #jpBar .jp-op[data-lv="4"] .glow{opacity:1;animation:jp-chest-breath 1.8s ease-in-out infinite}
+    #jpBar .jp-op .spark{transform-box:fill-box;transform-origin:center}
+    #jpBar .jp-op[data-lv="4"] .spark{animation:jp-chest-spark 1.8s ease-in-out infinite}
+    #jpBar .jp-op[data-lv="4"] .spark.s2{animation-delay:.6s}
+    #jpBar .jp-op[data-lv="4"] .spark.s3{animation-delay:1.2s}
+    @keyframes jp-chest-breath{0%,100%{opacity:.65}50%{opacity:1}}
+    @keyframes jp-chest-spark{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1)}}
+    /* 被 SC 金幣打中：以底部為軸左右晃一下＋亮一下 */
+    #jpBar .jp-op.is-struck svg{animation:jp-strike .5s ease-out}
+    @keyframes jp-strike{0%{transform:rotate(0) scale(1)}15%{transform:rotate(-9deg) scale(1.1);filter:drop-shadow(0 0 10px rgba(120,200,255,1))}35%{transform:rotate(8deg) scale(1.06)}55%{transform:rotate(-5deg)}75%{transform:rotate(3deg)}100%{transform:rotate(0) scale(1)}}
+    @keyframes jp-hit{50%{filter:brightness(1.6)}}
+    .fx-jp-coin{position:fixed;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;z-index:90;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,210,60,.8))}
+    .fx-jp-coin svg{display:block;width:100%;height:100%}
+    /* 彩金遊戲：12 枚金幣，翻到 3 個相同即得該彩金 */
+    #board .jp-game{position:absolute;inset:0;z-index:85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(3,11,23,.86);border-radius:10px;animation:fg-banner-in .16s ease-out}
+    #board .jp-game-title{font-weight:800;font-size:15px;letter-spacing:.16em;color:#dceeff}
+    #board .jp-game-grid{display:grid;grid-template-columns:repeat(4,58px);gap:10px 14px;perspective:600px}
+    /* 金幣（2026-11-17）：金屬外圈＋凸起內盤＋左上高光＋OP 浮雕字；點了翻面，背面是彩金色細框＋彩金名稱 */
+    #board .jp-coin{position:relative;width:58px;height:58px;cursor:pointer;user-select:none;transform-style:preserve-3d;transition:transform .4s ease}
+    #board .jp-coin:not(.is-open):hover{transform:translateY(-2px)}
+    #board .jp-coin.is-open{cursor:default;transform:rotateY(180deg)}
+    #board .jp-coin .face{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-family:"Segoe UI",system-ui,sans-serif}
+    /* 金幣正面（2026-11-17 Gemini 版，依使用者參考圖簡化）：亮金外圈＋凹盤＋置中 OP；Demo 深藍底上只加柔和金光，不加主題裝飾 */
+    #board .jp-coin .front{background:none;box-shadow:0 0 12px rgba(255,200,60,.35),0 4px 8px rgba(0,0,0,.5)}
+    #board .jp-coin .front svg{display:block;width:100%;height:100%}
+    #board .jp-coin .front .glint{position:absolute;right:12%;top:10%;width:12px;height:12px;pointer-events:none;
+      background:radial-gradient(circle,#fff 0 18%,transparent 22%),linear-gradient(#fff,#fff) center/1.6px 100% no-repeat,linear-gradient(#fff,#fff) center/100% 1.6px no-repeat;
+      opacity:0;animation:jp-glint 2.4s ease-in-out infinite;animation-delay:calc(var(--d,0) * 1s)}
+    @keyframes jp-glint{0%,70%,100%{opacity:0;transform:scale(.4) rotate(0)}82%{opacity:1;transform:scale(1) rotate(45deg)}}
+    #board .jp-coin:not(.is-open):hover .front{filter:brightness(1.08)}
+    #board .jp-coin .front b{position:relative;z-index:1;font-size:15px;font-weight:900;letter-spacing:.03em;color:#8a5400;text-shadow:0 1px 0 rgba(255,244,196,.9),0 -1px 0 rgba(110,60,0,.35)}
+    /* 翻開的彩金幣（2026-11-17）：同一枚金幣的亮金外圈，內盤換成該彩金的寶石色＋白字 */
+    #board .jp-coin .back{--c1:#8fc8ff;--c2:#1d5fa8;--g:120,170,230;transform:rotateY(180deg);
+      background:linear-gradient(135deg,#fff7ae 0,#f8d132 30%,#d4a017 70%,#8b6508 100%);box-shadow:0 4px 8px rgba(0,0,0,.5)}
+    #board .jp-coin .back::before{content:"";position:absolute;inset:12%;border-radius:50%;
+      background:radial-gradient(circle at 38% 30%,var(--c1),var(--c2) 75%);box-shadow:inset 0 2px 4px rgba(255,255,255,.35),inset 0 -3px 5px rgba(0,0,0,.35),0 0 0 1px #b8860b}
+    #board .jp-coin .back::after{content:"";position:absolute;left:24%;top:17%;width:40%;height:16%;border-radius:50%;background:rgba(255,255,255,.35);filter:blur(1px)}
+    #board .jp-coin .back b{position:relative;z-index:1;font-size:10.5px;font-weight:900;letter-spacing:.03em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+    #board .jp-coin.j0 .back{--c1:#ff8a95;--c2:#b0152e;--g:255,96,110}
+    #board .jp-coin.j1 .back{--c1:#d2a8ff;--c2:#5e24ad;--g:184,128,255}
+    #board .jp-coin.j2 .back{--c1:#8fd0ff;--c2:#1666b8;--g:70,172,255}
+    #board .jp-coin.j3 .back{--c1:#8ff0b8;--c2:#138a4f;--g:70,214,132}
+    #board .jp-coin.is-dim{opacity:.35}
+    #board .jp-coin.is-win .back{animation:jp-coin-win .5s ease-in-out 3}
+    @keyframes jp-coin-win{50%{box-shadow:0 0 0 2px rgba(var(--g),.9),0 0 16px rgba(var(--g),.9);filter:brightness(1.15)}}
+    #board .jp-game-msg{min-height:22px;font-size:13px;color:rgba(220,232,250,.8)}
+    /* 彈窗／FG 看板出現時背景不能捲動 */
+    html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
+    /* 觸發 FG 看板：蓋在盤面上；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉 */
+    #board .fg-banner{position:absolute;inset:0;z-index:80;display:grid;place-items:center;background:rgba(4,10,20,.62);border-radius:10px;cursor:pointer;animation:fg-banner-in .16s ease-out}
+    #board .fg-banner-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 28px;border-radius:12px;
+      background:linear-gradient(180deg,#ffe49a 0%,#e0a82a 45%,#9a6406 100%);border:1.6px solid #ffd468;box-shadow:inset 0 1px 0 rgba(255,248,220,.55),0 8px 24px rgba(0,0,0,.6);color:#fffaf0;text-shadow:0 1px 2px rgba(80,50,0,.6)}
+    #board .fg-banner-icon{font-size:44px;line-height:1;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+    #board .fg-banner-title{font:800 22px/1.2 system-ui,sans-serif;letter-spacing:.06em}
+    #board .fg-banner-count{font:800 30px/1.1 system-ui,sans-serif}
+    @keyframes fg-banner-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+    #multiplierWindow .multiplier-step.fx-hit{animation:h099TotalHit 320ms ease-out}
+    @keyframes h099TotalHit{from{transform:scale(1.25);filter:brightness(1.8)}to{transform:scale(1);filter:brightness(1)}}
+    #board .cell{position:relative;border-radius:8px;box-shadow:none}
+    /* 一般符號／C1／WILD 配色用共用樣式（demogame_common.js 無圖符號統一配色）；黃底以下列規則覆蓋（多個 :not(#…) 只為提高優先權） */
+    /* 黃底：與 C1（Scatter）同一套樣式（上亮下深三段漸層、1.6px 淺色框線、上緣高光、淺色字），只把橘色換成金色；取代 M 系列／字獎原本的底色。得分時外框交給共用得分框（藍） */
+    body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3){border-radius:8px!important;color:#fffaf0!important;
+      background:linear-gradient(180deg,#ffe49a 0%,#e0a82a 45%,#9a6406 100%)!important}
+    body #board .cell.yellow:not(.hit):not(#h099-y1):not(#h099-y2):not(#h099-y3){border:1.6px solid #ffd468!important;
+      box-shadow:inset 0 1px 0 rgba(255,248,220,.55)!important}
+    body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3) .h019-glyph{color:#fffaf0!important;text-shadow:0 1px 2px rgba(80,50,0,.6)!important}
+    /* 符號圖示：直接擺在盤面上、不畫底板（Image 關閉時回到文字符號＋共用配色）；黃底格仍保留金色底 */
+    #board .cell .sym-icon{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--cell-size,64px) * .62);line-height:1;
+      font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6));pointer-events:none;user-select:none}
+    #board .cell .sym-tag{position:absolute;left:50%;top:3px;transform:translateX(-50%);font:800 9px/12px system-ui,sans-serif;letter-spacing:.04em;
+      color:#fff;background:rgba(120,10,60,.85);border-radius:4px;padding:0 4px;pointer-events:none}
+    /* 倍數徽章（2026-11-10 改版）：黃底倍數在符號上方置中、框倍數在框下方置中（紅底白字） */
+    #board .yellow-badge,#board .frame-badge{position:absolute;left:50%;transform:translateX(-50%);font:800 11px/15px system-ui,sans-serif;color:#1a1000;
+      background:linear-gradient(180deg,#e8b84a,#a8740f);border:1px solid #ffe7a0;border-radius:5px;padding:0 5px;box-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap}
+    #board .yellow-badge{z-index:5;top:3px}
+    #board .frame-badge{bottom:-7px;font-size:13px;line-height:17px;color:#fff;background:linear-gradient(180deg,#ff5a4a,#c01414);border-color:#ffb0a6;
+      text-shadow:0 1px 1px rgba(80,0,0,.7);box-shadow:0 0 8px rgba(255,40,40,.7),0 1px 3px rgba(0,0,0,.6)}
+    /* 倍數框：最上層、紅色發光框（紅框、外光暈＋內光暈、淡紅半透明底）；大小與符號格相同 */
+    #board{position:relative}
+    #board .frame-layer{position:absolute;z-index:50;pointer-events:none;box-sizing:border-box;border:2.5px solid #ff2e2e;border-radius:10px;
+      background:linear-gradient(180deg,rgba(255,40,40,.12),rgba(255,20,20,.04));
+      box-shadow:0 0 12px rgba(255,30,30,.75),inset 0 0 12px rgba(255,40,40,.35)}
+    /* 框內消除 +1 的跳字 */
+    .slot-fx-layer .fx-plus-one{position:absolute;z-index:62;pointer-events:none;white-space:nowrap;font:900 32px/1 system-ui,sans-serif;color:#fff;
+      text-shadow:0 0 10px rgba(255,40,40,.95),0 0 6px rgba(255,40,40,.95),0 1px 2px rgba(0,0,0,.8)}
+    /* 黃底倍數落入框的飛行體 */
+    .slot-fx-layer .fx-gold-drop{position:absolute;z-index:61;display:grid;place-items:center;pointer-events:none;white-space:nowrap;
+      font:800 13px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#ffe49a,#c8900f);border:1px solid #fff0b8;
+      border-radius:5px;box-shadow:0 0 12px rgba(255,210,90,.9)}
+    #board .frame-layer.bump{animation:h099FrameBump 360ms ease-out}
+    @keyframes h099FrameBump{from{transform:scale(1.18);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
+    #board .frame-layer.score{animation:h099FrameScore 260ms ease-in-out infinite alternate}
+    @keyframes h099FrameScore{from{filter:brightness(1)}to{filter:brightness(1.9)}}
+    #board .cell.symbol-cleared{animation:slot-symbol-clear 180ms ease-in forwards}
+    #board .cell.symbol-empty{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+    #board .symbol-wrap{position:absolute;inset:0;overflow:hidden}
+    #board .h019-glyph{display:grid;place-items:center;width:100%;height:100%;padding:4px;overflow:hidden;
+      color:#d8e8f4;font:800 clamp(0.82rem,1.45vw,1.12rem)/1 Consolas,"Courier New",monospace;letter-spacing:.02em;text-shadow:0 2px 3px rgba(0,0,0,.72)}
+    /* 2026-11-17：掉落改成「加速落下→觸底小回彈」，不再是一開始就最快、看起來直接出現 */
+    #board .symbol-drop,#board .symbol-settle{animation:h099-symbol-drop var(--drop-duration,300ms) linear var(--drop-delay,0ms) both;will-change:transform}
+    @keyframes h099-symbol-drop{
+      from{transform:translateY(var(--drop-start,-112%));animation-timing-function:cubic-bezier(.55,0,.9,.55)}
+      74%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.6,.4,1)}
+      86%{transform:translateY(-6%);animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+      to{transform:translateY(0)}}
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
+    /* 倍數收集飛行體（同 H045 中獎演出） */
+    /* 2026-11-12 使用者：只有數字飛，不帶底框（框倍數→倍數總和：白字紅光；倍數總和→贏分列：白字藍光） */
+    .slot-fx-layer .fx-fly-badge{position:absolute;z-index:60;display:grid;place-items:center;pointer-events:none;
+      font:800 16px/1 "Segoe UI",system-ui,sans-serif;color:#fff;background:none;border-radius:0;box-shadow:none;
+      text-shadow:0 0 6px rgba(255,59,78,.95),0 0 14px rgba(255,59,78,.7),0 1px 2px rgba(0,0,0,.8)}
+    .slot-fx-layer .fx-fly-badge.result{font-size:20px;color:#eaf6ff;background:none;box-shadow:none;
+      text-shadow:0 0 6px rgba(51,187,255,.95),0 0 14px rgba(51,187,255,.7),0 1px 2px rgba(0,0,0,.8)}
+    /* 消除（照 H015 賞金列車實機效果，2026-11-04）：得分符號直接消失、原位炸出金色火光與碎屑（不畫圓圈） */
+    @keyframes h032-vanish { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes h032-boom {
+      0% { transform: scale(.3) rotate(0deg); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: scale(1.35) rotate(25deg) translateY(10%); opacity: 0; }
+    }
+    html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
+    html body #board .cell.symbol-cleared > * { animation: h032-vanish 90ms linear forwards !important; }
+    html body #board .cell.symbol-cleared::after {
+      content: ""; position: absolute; inset: -15%; pointer-events: none; z-index: 4;
+      background:
+        radial-gradient(closest-side at 50% 50%, rgba(255,248,200,.95), rgba(255,190,60,.75) 35%, rgba(255,120,20,.25) 60%, transparent 75%),
+        radial-gradient(circle at 18% 22%, #ffd75a 0 2.5px, transparent 3.5px), radial-gradient(circle at 80% 18%, #ffe68a 0 2px, transparent 3px),
+        radial-gradient(circle at 88% 62%, #f4a63a 0 2.5px, transparent 3.5px), radial-gradient(circle at 60% 90%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 22% 78%, #8a5a2b 0 2.5px, transparent 3.5px), radial-gradient(circle at 8% 50%, #ffe08a 0 2px, transparent 3px);
+      animation: h032-boom 480ms ease-out both !important;
+    }
+  </style>`);
+
+  // ===== Config → runtime tables =====
+  for (const [name, raw] of Object.entries(cfg.tables)) {
+    const dw = raw.drop_weight || {};
+    const dropValues = [], dropCumulative = [];
+    for (let reel = 0; reel < 5; reel++) {
+      const ids = Object.keys(dw).map(Number).filter(id => Number(dw[id][reel]) > 0).sort((a, b) => a - b);
+      dropValues.push(ids);
+      let sum = 0; dropCumulative.push(ids.map(id => sum += Number(dw[id][reel])));
+    }
+    const cumulative = raw.symbol_weight.map(list => { let sum = 0; return list.map(w => sum += Math.max(0, Number(w) || 0)); });
+    // 黃底參數跟著輪帶表：初始／補牌機率（/100,000）、倍數權重、符號係數（100＝軸機率）
+    const yellow = { rate: raw.yellow_rate.map(v => Number(v) / 100000), drop: raw.yellow_drop_rate.map(v => Number(v) / 100000),
+      value: raw.yellow_value_weight, symbol: raw.yellow_symbol_weight };
+    tables[name] = { reels: raw.reels, cumulative, drop_values: dropValues, dropCumulative, yellow };
+  }
+
+  // ===== 可重現 RNG（共用 demogameRng）=====
+  let rngNext = Math.random;
+  const rand = () => rngNext();
+  function configLabel() { return ($("demogameConfigSelect")?.selectedOptions?.[0]?.textContent || "").trim().replace(/\s+/g, "") || "Base"; }
+  function pick(values, weights) {
+    const total = weights.reduce((sum, weight) => sum + Math.max(0, Number(weight) || 0), 0);
+    if (total <= 0) return values[0];
+    let target = rand() * total;
+    for (let index = 0; index < values.length; index++) {
+      target -= Math.max(0, Number(weights[index]) || 0);
+      if (target < 0) return values[index];
+    }
+    return values.at(-1);
+  }
+  const pickMap = map => { const keys = Object.keys(map); return pick(keys, keys.map(k => map[k])); };
+  function bsearch(cumulative) {
+    const target = rand() * cumulative.at(-1);
+    let low = 0, high = cumulative.length - 1;
+    while (low < high) { const mid = (low + high) >> 1; if (target < cumulative[mid]) high = mid; else low = mid + 1; }
+    return low;
+  }
+  const draw = (tableName, reel) => Number(tables[tableName].drop_values[reel][bsearch(tables[tableName].dropCumulative[reel])]);
+
+  const grid = fill => Array.from({ length: 5 }, () => Array(4).fill(fill));
+  const clone = board => board.map(reel => reel.slice());
+  const makeBoard = tableName => Array.from({ length: 5 }, (_, reel) => {
+    const symbols = tables[tableName].reels[reel];
+    const stop = bsearch(tables[tableName].cumulative[reel]);
+    return Array.from({ length: 4 }, (_, row) => Number(symbols[(stop + row) % symbols.length]));
+  });
+  // 黃底：只套在一般符號上（不套 C1／WILD）；機率＝該表該軸機率 × 符號係數（R1 機率為 0），倍數依該表 Yellow_Value_Weight
+  function rollYellow(tableName, reel, symbol, refill = false) {
+    if (symbol === C1 || symbol === WW) return 0;
+    const y = tables[tableName].yellow;
+    let rate = (refill ? y.drop : y.rate)[reel] * (Number(y.symbol[String(symbol)] ?? 0) / 100);
+    if (!(rate > 0) || rand() >= rate) return 0;
+    return Number(pickMap(y.value));
+  }
+  const scatterCount = board => board.flat().filter(symbol => symbol === C1).length;
+  const frameSum = frames => frames.flat().reduce((sum, value) => sum + value, 0);
+  const format = value => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const money = credits => format(Number(credits) / BASE_BET);
+  const betUnit = () => BASE_BET * BET_LEVELS[state.betIndex];
+
+  // 1024 Ways：WILD 替代除 C1 外所有符號；黃底判獎視為底層符號
+  function evaluate(board) {
+    let rawPay = 0;
+    const hits = new Set(), details = [];
+    for (const target of SCORE) {
+      const counts = [], positions = [];
+      for (let reel = 0; reel < 5; reel++) {
+        const matched = [];
+        for (let row = 0; row < 4; row++) if (board[reel][row] === WW || board[reel][row] === target) matched.push([reel, row]);
+        if (!matched.length) break;
+        counts.push(matched.length); positions.push(matched);
+      }
+      if (counts.length < 3) continue;
+      const unit = Number(cfg.pays[String(target)]?.[counts.length - 3]);
+      if (!(unit > 0)) continue;
+      const ways = counts.reduce((product, count) => product * count, 1);
+      positions.flat().forEach(([reel, row]) => hits.add(`${reel},${row}`));
+      rawPay += unit * ways;
+      details.push({ symbol: CODE[target], length: counts.length, ways, raw: unit * ways });
+    }
+    return { rawPay, hits, details };
+  }
+
+  // 一轉（BG 局或一場 FG）：frames 傳入時沿用（FG 整場保留），否則為主遊戲新的空盤
+  function spin(tableName, freeGame = false, frames = grid(0)) {
+    const board = makeBoard(tableName);
+    const yellow = board.map((column, reel) => column.map(symbol => rollYellow(tableName, reel, symbol, false)));
+    const snapshots = [];
+    let pay = 0, combo = 0, yellowSeen = yellow.flat().some(Boolean), yellowUsed = 0, goldIntoFrame = 0, peakFrame = frameSum(frames);
+    const snap = (type, extra) => snapshots.push({ type, board: clone(board), yellow: clone(yellow), frames: clone(frames), hits: [], combo, frameTotal: frameSum(frames), ...extra });
+    snap("initial", { message: freeGame ? "Free Spin" : "Spin" });
+    while (true) {
+      const win = evaluate(board);
+      if (!win.rawPay) break;
+      // 框更新（2026-11-11 規則改版）：每一段連消，全盤所有框 +1；
+      // 金色符號（不帶倍數）在沒有框的格子消除 → 留下 1X 新框（本消新留的框從下一消起才 +1）
+      const cleared = [], converted = [], bumped = [], framesBefore = clone(frames);
+      for (let reel = 0; reel < 5; reel++) for (let row = 0; row < 4; row++)
+        if (frames[reel][row] > 0) { frames[reel][row] += 1; bumped.push(`${reel},${row}`); }
+      for (const key of win.hits) {
+        const [reel, row] = key.split(",").map(Number);
+        if (yellow[reel][row] > 0) {
+          converted.push(key);
+          if (framesBefore[reel][row] > 0) goldIntoFrame++;
+          else { frames[reel][row] = yellow[reel][row]; bumped.push(key); }   // 2026-11-12：新框帶初始倍數（依 Yellow_Value_Weight 隨機）
+        }
+      }
+      // 得分：這一消的得分 ×（1＋盤面所有框「更新前」的倍數加總）——先算分再更新框（2026-11-10 對齊 DJ Boom Boom 封包實測）
+      const mult = 1 + frameSum(framesBefore);
+      const cascadePay = win.rawPay * mult * betUnit();
+      pay += cascadePay;
+      snap("win", { hits: [...win.hits], framesBefore, converted: [...converted], bumped: [...bumped], mult, cascadePay, totalPay: pay, rawPay: win.rawPay * betUnit(), details: win.details.map(d => ({ ...d, pay: d.raw * mult })), message: `WIN ${money(cascadePay)}` });
+
+      // 消除：黃底符號變 WILD 不消除；其他中獎符號消除
+      for (const key of win.hits) {
+        const [reel, row] = key.split(",").map(Number);
+        if (yellow[reel][row] > 0) { yellow[reel][row] = 0; board[reel][row] = WW; yellowUsed++; }
+        else { board[reel][row] = -1; cleared.push(key); }
+      }
+      combo++;
+      peakFrame = Math.max(peakFrame, frameSum(frames));
+      snap("eliminate", { cleared, converted, bumped, message: `Eliminate${converted.length ? ` · Yellow → WILD ×${converted.length}` : ""}${bumped.length ? ` · Frame ×${frameSum(frames)}` : ""}` });
+
+      // 掉落：每軸剩下的符號（含 WILD、黃底、C1）往下掉，上方補新符號；框留在原格
+      const motion = [];
+      for (let reel = 0; reel < 5; reel++) {
+        const keep = [];
+        for (let row = 0; row < 4; row++) if (board[reel][row] !== -1) keep.push({ symbol: board[reel][row], y: yellow[reel][row], from: row });
+        const empties = 4 - keep.length;
+        if (!empties) continue;
+        let hasC1 = keep.some(item => item.symbol === C1);   // 2026-11-12：該軸已有 C1 時補牌不補 C1
+        for (let row = 0; row < 4; row++) {
+          if (row < keep.length) {
+            const item = keep[row];
+            board[reel][row] = item.symbol; yellow[reel][row] = item.y;
+            if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 60 });
+          } else {
+            let symbol = draw(tableName, reel);
+            while (hasC1 && symbol === C1) symbol = draw(tableName, reel);
+            hasC1 = hasC1 || symbol === C1;
+            board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true);
+            if (yellow[reel][row]) yellowSeen = true;
+            motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 60 });
+          }
+        }
+      }
+      snap("cascade", { drop: motion, message: "Drop refill" });
+    }
+    return { pay, combo, scatter: scatterCount(board), yellowSeen, yellowUsed, goldIntoFrame, peakFrame, endFrame: frameSum(frames),
+      board, yellow, frames: clone(frames), snapshots, tableName };
+  }
+
+  // 抽表權重一律用數學模型的 table_weight（Demo 沒有卡片系統，RTP 為自然機率）
+  const pickTable = group => pickMap(cfg.table_weight[group]);
+  // FG 隱性控制（同 Simulator.py）：進場抽好局位置（Good Spin Slots），每局依 fg_weight_priority 取第一個成立的規則決定抽表權重
+  function drawSlot(slot, total, after = 0) {
+    let lo = Number(slot.from), hi = Number(slot.to);
+    if (slot.anchor === "end") [lo, hi] = [total - hi + 1, total - lo + 1];
+    const candidates = [];
+    for (let i = Math.max(1, lo, after + 1); i <= Math.min(total, hi); i++) candidates.push(i);
+    for (let i = candidates.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]]; }
+    return candidates.slice(0, Number(slot.count));
+  }
+  const tierWeights = (rows, value) => rows.find(row => Number(row.min) <= value && value <= Number(row.max))?.weights || null;
+  function fgWeights(index, good, boostLeft, dead, frameTotal, buy) {
+    for (const rule of cfg.fg_weight_priority) {
+      if (rule === "good_slot" && good.has(index)) return { rule, weights: cfg.table_weight.fg_good };   // BF／SF 的 FG 與 NB／EB 共用同一組權重（2026-11-17）
+      if (rule === "retrigger_boost" && boostLeft > 0) return { rule, weights: cfg.table_weight.fg_retrigger_boost };
+      if (rule === "dead_streak") { const weights = tierWeights(cfg.fg_dead_streak_weight, dead); if (weights) return { rule, weights }; }
+      if (rule === "frame_tier") { const weights = tierWeights(cfg.fg_frame_tier_weight, frameTotal); if (weights) return { rule, weights }; }
+      if (rule === "normal") break;
+    }
+    return { rule: "normal", weights: cfg.table_weight.fg_normal };
+  }
+  // FG：開場沒有框（2026-11-11 起），框整場保留到 FG 結束；3 顆以上 C1 +5 場（上限 50 場）
+  function freeSession(initialSpins = FG_INITIAL, buy = false, sup = false) {
+    const frames = grid(0);
+    let total = Math.min(Number(initialSpins), MAX_FS), index = 0, pay = 0, retriggers = 0, boostLeft = 0, dead = 0;
+    const good = new Set(cfg.fg_good_slots.flatMap(slot => drawSlot(slot, total)));
+    const spins = [];
+    while (index < total) {
+      index++;
+      const { rule, weights } = fgWeights(index, good, boostLeft, dead, frameSum(frames), buy);
+      boostLeft = Math.max(0, boostLeft - 1);
+      const result = spin(sup ? "sf_" + pickMap(weights).slice(3) : pickMap(weights), true, frames);   // 超級特色：同編號 sf_N（新框必定有倍數）
+      result.fgRule = rule;
+      pay += result.pay; spins.push(result);
+      dead = result.pay > 0 ? 0 : dead + 1;
+      if (result.scatter >= MIN_SCATTER && total < MAX_FS) {
+        const add = Math.min(FG_RETRIGGER, MAX_FS - total);
+        total += add; retriggers++; result.retrigger = add;
+        boostLeft = Number(cfg.retrigger_boost.spins) || 0;
+        cfg.fg_good_slots.filter(slot => slot.anchor === "end").forEach(slot => drawSlot(slot, total, index).forEach(i => good.add(i)));
+      }
+    }
+    return { pay, played: index, retriggers, spins, endFrame: frameSum(frames) };
+  }
+  const naturalBaseSpin = () => spin(pickTable("bg"), false);
+  function buyEntry() {
+    let board = makeBoard(BUY.entry_table);
+    for (let tries = 0; scatterCount(board) < Number(BUY.min_scatter) && tries < 1000; tries++) board = makeBoard(BUY.entry_table);
+    return { pay: 0, combo: 0, scatter: scatterCount(board), yellowSeen: false, yellowUsed: 0, peakFrame: 0, endFrame: 0,
+      board, yellow: grid(0), frames: grid(0), tableName: BUY.entry_table,
+      snapshots: [{ type: "initial", board: clone(board), yellow: grid(0), frames: grid(0), hits: [], combo: 0, frameTotal: 0, message: "BF Entry · No Win" }] };
+  }
+
+  // 腳本：用自然機率反覆重抽，直到結果符合條件（不改權重）
+  const SCRIPT_RULES = {
+    combo5: r => r.scatter < MIN_SCATTER && r.combo >= 5,
+    yellow: r => r.scatter < MIN_SCATTER && r.yellowUsed > 0,
+    frame10: r => r.scatter < MIN_SCATTER && r.peakFrame >= 10,
+    goldframe: r => r.scatter < MIN_SCATTER && r.goldIntoFrame > 0,
+    fg: r => r.scatter >= MIN_SCATTER,
+    fgbig: r => r.scatter >= MIN_SCATTER,
+    jp: r => r.scatter >= 1 && r.scatter < MIN_SCATTER,   // 盤面有 C1、不觸發 FG；局結束強制進彩金
+  };
+  ["jp0", "jp1", "jp2", "jp3"].forEach(key => { SCRIPT_RULES[key] = SCRIPT_RULES.jp; });
+  function scriptedSpin(key) {
+    const rule = SCRIPT_RULES[key];
+    let last = null;
+    for (let tries = 0; tries < 300000; tries++) { last = naturalBaseSpin(); if (rule(last)) return last; }
+    console.warn(`腳本 ${key} 未抽到，改用最後一把`);
+    return last;
+  }
+  function scriptedFeature(minMulti, buy = false) {
+    let best = null;
+    for (let tries = 0; tries < 20000; tries++) {
+      const result = freeSession(FG_INITIAL, buy);
+      if (result.pay / betUnit() >= minMulti) return result;
+      if (!best || result.pay > best.pay) best = result;
+    }
+    return best;
+  }
+
+  // ===== Card System（同 Simulator.py：抽卡後以自然機率重轉到結果落進該區間；Demo 只用 Oldhand）=====
+  const MAX_RETRY = Math.max(1, Number(cfg.card_system?.retry_limit || 10000));
+  const cardProfile = () => "oldhand";
+  const cardSystemActive = () => window.DEMOGAME_CARD_SYSTEM_ENABLED !== false && Boolean(cfg.card_system?.enabled);
+  function cardSectionCap(section) {   // 該卡組最高有權重 range 卡的上限（BG Trigger Cap／Max Win）
+    const cards = cfg.card_system?.profiles?.[cardProfile()]?.[section] || [];
+    const caps = cards.filter(card => card.type === "range" && Number(card.weight) > 0).map(card => Number(card.max));
+    return caps.length ? Math.max(...caps) : Infinity;
+  }
+  function pickCard(section) {
+    const cards = cfg.card_system?.profiles?.[cardProfile()]?.[section];
+    return cards?.length ? pick(cards, cards.map(card => card.weight)) : null;
+  }
+  function cardMatches(card, pay) { const ratio = pay / betUnit(); return Number(card.min) < ratio && ratio <= Number(card.max); }
+  function cardSpin(card, eb = false) {
+    let last = null;
+    if (!card) return { result: naturalBaseSpin(), ok: true };
+    const trigCap = cardSectionCap(eb ? "eb_base_game" : "base_game");
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      last = naturalBaseSpin();
+      if (card.type === "free_game" ? (last.scatter >= MIN_SCATTER && last.pay / betUnit() <= trigCap)
+        : (last.scatter < MIN_SCATTER && cardMatches(card, last.pay))) return { result: last, ok: true };
+    }
+    return { result: last, ok: false };
+  }
+  function cardFeature(section, buy, sup = false) {
+    const card = pickCard(section);
+    let last = null;
+    if (!card) return { result: freeSession(FG_INITIAL, buy, sup), ok: true };
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      last = freeSession(FG_INITIAL, buy, sup);
+      if (cardMatches(card, last.pay)) return { result: last, ok: true };
+    }
+    return { result: last, ok: false };
+  }
+  // 一局的 BG／FG 結果（Card System On／Off 共用）；回傳 retry 超限次數
+  function drawRound(mode, script = "") {
+    mode = mode === true ? 2 : (mode === false ? 0 : Number(mode) || 0);
+    const buy = isBuyMode(mode), sup = mode === 3, eb = mode === 1;
+    const cardOn = cardSystemActive() && !script;
+    let retryLimitExceeded = 0, base, feature = null;
+    if (buy) base = buyEntry();
+    else if (script) base = scriptedSpin(script);
+    else if (cardOn) { const r = cardSpin(pickCard(eb ? "eb_base_game" : "base_game"), eb); base = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
+    else base = naturalBaseSpin();
+    if (buy || base.scatter >= MIN_SCATTER) {
+      if (script === "fgbig") feature = scriptedFeature(100, buy);
+      else if (cardOn) { const r = cardFeature(sup ? "super_feature" : buy ? "buy_feature" : eb ? "eb_free_game" : "free_game", buy, sup); feature = r.result; retryLimitExceeded += r.ok ? 0 : 1; }
+      else feature = freeSession(FG_INITIAL, buy, sup);
+    }
+    return { base, feature, retryLimitExceeded, cardOn };
+  }
+
+  // 共用 Simulation 面板（批次模擬，不動畫面）
+  window.demogameSimulationModes = [{ value: 0, label: "Normal Bet" }, { value: 1, label: "Extra Bet" }, { value: 2, label: "Buy Feature" }, { value: 3, label: "Super Feature" }];
+  window.demogameSimulateRound = ({ mode } = {}) => {
+    mode = Number(mode) || 0;
+    const buy = isBuyMode(mode);
+    const wager = betUnit() * modeCost(mode);
+    const { base, feature, retryLimitExceeded } = drawRound(mode);
+    const fgTriggered = Boolean(feature);
+    // 2026-11-17：批次模擬也算 OP 彩金（獨立彩池；GRAND／MAJOR 每局累進、中了回起始值）
+    let jpWin = 0;
+    if (JP_ON) {
+      const sim = window.__h032SimJp || (window.__h032SimJp = { pool: [JP_SEED[0] * BASE_BET, JP_SEED[1] * BASE_BET], hits: [0, 0, 0, 0], pay: [0, 0, 0, 0] });
+      const inc = JP_SET[jpSeries(mode)].inc;
+      sim.pool[0] += wager * inc[0]; sim.pool[1] += wager * inc[1];
+      const events = Number(boardHasC1(base.snapshots?.at(-1)?.board)) + (feature?.spins || []).filter(s => boardHasC1(s.snapshots?.at(-1)?.board)).length;
+      for (let e = 0; e < events; e++) {
+        const k = jpDraw(mode, wager, true, false, sim.pool);
+        if (k < 0) continue;
+        const prize = jpPrizes(mode, sim.pool)[k]; jpWin += prize; sim.hits[k]++; sim.pay[k] += prize;
+        if (k < 2) sim.pool[k] = JP_SEED[k] * BASE_BET;
+      }
+    }
+    const totalWin = base.pay + Number(feature?.pay || 0) + jpWin;
+    return {
+      multiplier: totalWin / wager, lineMultiplier: buy ? totalWin / betUnit() : totalWin / wager, fgTriggered,
+      maxMultiplier: Math.max(base.peakFrame, Number(feature?.endFrame || 0), 1), retryLimitExceeded,
+      bgCascade: base.combo, fgCascades: feature?.spins?.map(item => item.combo) || []
+    };
+  };
+
+  // 2026-11-11 使用者：累積倍數只在算分作用時收集更新，其他時候（框 +1、新框、補牌）不變
+  let shownFrameTotal = 0;
+  function renderShownTotal(flash = false) { renderFrameTotal(shownFrameTotal, flash); }
+  function renderFrameTotal(total, flash = false) {
+    shownFrameTotal = Number(total || 0);
+    $("multiplierWindow").innerHTML = `<span class="multiplier-step is-active${flash ? " fx-hit" : ""}"><span class="ft-k">${tr("frameTotal")}</span> x${1 + Number(total || 0)}</span>`;
+  }
+
+  function renderBoard(board, hitList = [], options = {}) {
+    lastBoardRender = { board, hitList, options };
+    const yellow = options.yellow || grid(0), frames = options.frames || grid(0);
+    const hits = new Set(hitList), cleared = new Set(options.cleared || []), converted = new Set(options.converted || []);
+    const bumped = new Set(options.bumped || []), scoring = !!options.scoring;
+    const drop = new Map((options.drop || []).map(item => [item.key, item]));
+    const speed = Number($("speedRange").value || 1);
+    const root = $("board");
+    root.innerHTML = "";
+    for (let row = 3; row >= 0; row--) for (let reel = 0; reel < 5; reel++) {
+      const symbol = board[reel][row];
+      const empty = !(symbol >= 0);
+      const code = empty ? "" : (CODE[symbol] || `S${symbol}`);
+      const key = `${reel},${row}`;
+      const motion = drop.get(key);
+      const y = empty ? 0 : yellow[reel][row];
+      const cell = document.createElement("div");
+      const icon = empty ? "" : symbolIcon(code);
+      cell.className = `cell ${empty ? "symbol-empty" : `symbol-${String(code).toLowerCase()}`}${icon ? " has-symbol-art" : ""}${y ? " yellow gold" : ""}${hits.has(key) ? " hit" : ""}${cleared.has(key) ? " symbol-cleared" : ""}${motion ? (motion.isNew ? " symbol-drop symbol-refill" : " symbol-settle") : ""}${converted.has(key) ? " convert" : ""}`;
+      if (motion) {
+        cell.style.setProperty("--drop-start", `${-Math.max(1, motion.rows) * 112}%`);
+        cell.style.setProperty("--drop-duration", `${dropMs(motion.rows)}ms`);   // 2026-11-17：落下時間依掉落格數拉長，加速模式也保留掉落感
+        cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
+      }
+      const art = icon ? `<span class="sym-icon" aria-label="${code}">${icon}</span>${code === "WW" || code === "C1" ? `<span class="sym-tag">${code === "WW" ? "WILD" : "SCATTER"}</span>` : ""}` : "";
+      cell.innerHTML = empty ? "" : `<div class="symbol-wrap">${art}<span class="h019-glyph">${code}</span></div>`;   // 金色符號不帶倍數（2026-11-11），不顯示倍數徽章
+      root.append(cell);
+    }
+    // 框是格子屬性：疊在盤面上的固定圖層（依格子位置定位），不跟符號掉落／消除動畫移動
+    for (let row = 3; row >= 0; row--) for (let reel = 0; reel < 5; reel++) {
+      if (!(frames[reel][row] > 0)) continue;
+      const key = `${reel},${row}`, cell = root.children[(3 - row) * 5 + reel];
+      const frame = document.createElement("div");
+      frame.className = `frame-layer${bumped.has(key) ? " bump" : ""}${scoring ? " score" : ""}`;
+      frame.style.cssText = `left:${cell.offsetLeft}px;top:${cell.offsetTop}px;width:${cell.offsetWidth}px;height:${cell.offsetHeight}px`;
+      frame.dataset.value = frames[reel][row]; frame.dataset.key = key;
+      frame.innerHTML = `<span class="frame-badge">x${frames[reel][row]}</span>`;
+      root.append(frame);
+    }
+  }
+
+  function delay() { return Math.max(45, 360 / Number($("speedRange").value || 1)); }
+  function recordLine(mode, totalWin, wager) { if (mode === 0) window.demogameLineChart?.record(Number(totalWin || 0) / wager, "NB"); }
+
+  // 轉輪滾動：與 H015 賞金列車同一套（每輪蓋一條輪帶往下捲動、停在結果格）
+  async function reelStripSpin(board, columns) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const pool = columns.flat().filter(Boolean);
+    if (!board || !pool.length) return;
+    const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyCell = (node, width, height, x, y) => {
+      const copy = node.cloneNode(true);
+      copy.classList.remove(...dropClasses);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+      return copy;
+    };
+    const offsetIn = (node, host) => {
+      let x = 0, y = 0, n = node;
+      while (n && n !== host) {
+        x += n.offsetLeft; y += n.offsetTop;
+        n = n.offsetParent;
+        if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+      }
+      return { x, y };
+    };
+    const windows = [];
+    const jobs = columns.map((list, reel) => {
+      const cells = (list || []).filter(Boolean);
+      if (!cells.length) return Promise.resolve();
+      const ms = spinMs + gapMs * reel;
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
+      const hostRect = host.getBoundingClientRect();
+      const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
+      const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到
+      const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+      const last = boxes[boxes.length - 1];
+      const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
+      const strip = document.createElement("div");
+      strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+      boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      for (let k = 1; k <= extra; k += 1) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
+      }
+      win.appendChild(strip);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+      // 停輪前多往下滾 4.0% 格高再回彈到正確位置（照實機影片量測，2026-11-05）；最上面墊一格，回彈時不露出空白
+      const above = pool[Math.floor(Math.random() * pool.length)];
+      strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+      strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
+      const anim = strip.animate([
+        { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+        { transform: `translateY(${pitch * 0.04}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: ms, fill: "both" });
+      return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    pool.forEach((cell) => { cell.style.visibility = ""; });
+  }
+
+  // 補牌落下到位時間：照實機影片量測（Speed 1 為 280ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  // 掉落動畫：最少 240ms（加速也看得出掉落），掉越多格越久；cascade 等待時間取最慢那格
+  function dropMs(rows = 1) { return Math.round(Math.max(240, refillMs()) * (0.85 + 0.15 * Math.max(1, rows))); }
+  function dropWaitMs(drop = []) { return drop.reduce((m, d) => Math.max(m, dropMs(d.rows) + (d.delay || 0) / DROP_SPEED_MULTIPLIER), 0); }
+  function refillMs() { return Math.max(40, Math.round(280 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
+  async function animateReels(snapshot) {
+    const columnsOf = () => {
+      const nodes = Array.from($("board").children).filter(node => node.classList.contains("cell"));
+      return [0, 1, 2, 3, 4].map(reel => [0, 1, 2, 3].map(line => nodes[line * 5 + reel]));
+    };
+    const render = () => renderBoard(snapshot.board, [], { yellow: snapshot.yellow, frames: snapshot.frames });
+    // 輪帶滾動、由左到右停輪（照 H015 賞金列車實機，2026-11-04；原為共用 demogameMotion.dropSpin 整欄掉落）
+    render();
+    await reelStripSpin($("board"), columnsOf());
+  }
+
+  // 中獎演出：基礎贏分 → 框總和閃爍 → 基礎贏分 × 框總和
+  // 中獎演出：① 先算基礎贏分 → ② 盤面所有框的倍數逐顆飛到上方「倍數總和」累加 → ③ 總和飛到贏分列，贏分 × 總和
+  async function animateWin(snapshot) {
+    const barEl = $("messageBar");
+    const hitBar = text => { barEl.textContent = text; barEl.classList.remove("fx-bar-hit"); void barEl.offsetWidth; barEl.classList.add("fx-bar-hit"); };
+    const speed = Number($("speedRange").value || 1);
+    const hold = Math.max(100, 360 / speed), flight = Math.max(120, 420 / speed), gap = Math.max(40, 110 / speed);
+    if (snapshot.mult <= 1) { renderFrameTotal(0); hitBar(`WIN ${money(snapshot.cascadePay)}`); await wait(hold); return; }
+    hitBar(`WIN ${money(snapshot.rawPay)}`);
+    await wait(hold);
+    const layer = window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
+    if (!layer) {
+      renderFrameTotal(snapshot.mult - 1, true);
+      hitBar(`WIN ${money(snapshot.rawPay)} × ${snapshot.mult} = ${money(snapshot.cascadePay)}`);
+      await wait(hold * 1.4); return;
+    }
+    const layerRect = layer.getBoundingClientRect();
+    const fly = (fromRect, toX, toY, html, className, delayMs = 0) => {
+      const ghost = document.createElement("div");
+      ghost.className = className; ghost.innerHTML = html;
+      ghost.style.cssText = `left:${fromRect.left - layerRect.left}px;top:${fromRect.top - layerRect.top}px;width:${fromRect.width}px;height:${fromRect.height}px`;
+      layer.appendChild(ghost);
+      const dx = toX - (fromRect.left - layerRect.left + fromRect.width / 2), dy = toY - (fromRect.top - layerRect.top + fromRect.height / 2);
+      const animation = ghost.animate([{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(1.3)`, opacity: .9 }],
+        { duration: flight, delay: delayMs, easing: "cubic-bezier(.3,.6,.3,1)", fill: "forwards" });
+      // 分頁在背景時 Web Animations 不會推進 → 以計時器保底
+      return Promise.race([animation.finished.catch(() => {}), wait(flight + delayMs + 60)]).then(() => ghost.remove());
+    };
+    const centerOf = el => { const r = el.getBoundingClientRect(); return { x: r.left - layerRect.left + r.width / 2, y: r.top - layerRect.top + r.height / 2 }; };
+
+    // ② 框倍數收集到上方倍數總和（由 0 開始累加）
+    renderFrameTotal(0);
+    const stepEl = () => $("multiplierWindow").querySelector(".multiplier-step");
+    stepEl().innerHTML = `<span class="ft-k">${tr("frameTotal")}</span> x1`;
+    const target = centerOf(stepEl());
+    const badges = [...$("board").querySelectorAll(".frame-layer")].map(frame => ({ frame, badge: frame.querySelector(".frame-badge"), value: Number(frame.dataset.value) || 0 }));
+    let running = 1;
+    await Promise.all(badges.map((item, index) => {
+      const rect = item.badge.getBoundingClientRect();
+      item.frame.classList.add("score");
+      item.badge.style.visibility = "hidden";
+      return fly(rect, target.x, target.y, `x${item.value}`, "fx-fly-badge", index * gap).then(() => {
+        running += item.value;
+        const step = stepEl(); step.innerHTML = `<span class="ft-k">${tr("frameTotal")}</span> x${running}`;
+        step.classList.remove("fx-hit"); void step.offsetWidth; step.classList.add("fx-hit");
+      });
+    }));
+    renderFrameTotal(snapshot.mult - 1, true);
+    await wait(hold);
+
+    // ③ 倍數總和飛到贏分列，贏分 = 基礎贏分 × 倍數總和
+    const bar = centerOf(barEl);
+    // 只打下倍數本身（小徽章從總和數字的位置落下），不是整條倍數框
+    const from = stepEl().getBoundingClientRect(), size = { w: 52, h: 28 };
+    const origin = { left: from.left + from.width / 2 - size.w / 2, top: from.top + from.height / 2 - size.h / 2, width: size.w, height: size.h };
+    await fly(origin, bar.x, bar.y, `x${snapshot.mult}`, "fx-fly-badge result");
+    hitBar(`WIN ${money(snapshot.rawPay)} × ${snapshot.mult} = ${money(snapshot.cascadePay)}`);
+    badges.forEach(item => { item.badge.style.visibility = ""; item.frame.classList.remove("score"); });
+    await wait(hold * 1.4);
+  }
+
+  // 框倍數「+1」跳字（keys：要跳的格子）；不等待，與補牌同時進行
+  function popPlusOne(keys) {
+    const fxLayer = window.slotFx?.ensureLayer ? window.slotFx.ensureLayer(document.querySelector(".board-shell")) : null;
+    if (!fxLayer || !keys.length) return;
+    const speed = Number($("speedRange").value || 1);
+    // 2026-11-12：字放大 2 倍，從框倍數位置跳出後浮到該格符號正中間再淡出
+    const layerRect = fxLayer.getBoundingClientRect(), dur = Math.max(420, 1000 / speed);
+    $("board").querySelectorAll(".frame-layer").forEach(frame => {
+      if (!keys.includes(frame.dataset.key)) return;
+      const badge = frame.querySelector(".frame-badge").getBoundingClientRect();
+      const cell = frame.getBoundingClientRect();
+      const cx = cell.left - layerRect.left + cell.width / 2, cy = cell.top - layerRect.top + cell.height / 2;
+      const pop = document.createElement("div");
+      pop.className = "fx-plus-one"; pop.textContent = "+1";
+      const x = badge.left - layerRect.left + badge.width / 2, y = badge.top - layerRect.top;
+      pop.style.cssText = `left:${x}px;top:${y}px`;
+      fxLayer.appendChild(pop);
+      const dx = cx - x, dy = cy - y;
+      const a = pop.animate([{ transform: "translate(-50%,-50%) scale(.5)", opacity: 0 },
+        { transform: "translate(-50%,-50%) scale(1.15)", opacity: 1, offset: .25 },
+        { transform: `translate(calc(-50% + ${dx * .85}px),calc(-50% + ${dy * .85}px)) scale(1)`, opacity: 1, offset: .8 },
+        { transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.9)`, opacity: 0 }], { duration: dur, easing: "ease-in-out", fill: "forwards" });
+      Promise.race([a.finished.catch(() => {}), wait(dur + 60)]).then(() => pop.remove());
+    });
+  }
+
+  function renderWinDetails(snapshot) {
+    $("lineList").innerHTML = snapshot.details?.length
+      ? snapshot.details.map(win => `<div class="line-row"><span>${win.symbol} · ${win.length} reels · ${win.ways} ways${snapshot.mult > 1 ? ` · frame ×${snapshot.mult}` : ""}</span><span>${format(win.pay)}</span></div>`).join("")
+      : '<div class="line-row"><span>No Win</span><span>0.00</span></div>';
+    $("spinResultList").innerHTML = `<div class="spin-result-row">Run ${snapshot.combo + 1} · ×${snapshot.mult ?? 1} · ${snapshot.message}</div>`;
+    $("carryMultiValue").textContent = snapshot.combo;
+  }
+
+  async function animateSnapshots(snapshots, winBase = 0) {
+    state.snapshots = snapshots; state.snapshotIndex = -1; state.stepWin = { base: Number(winBase) };
+    $("carryMultiValue").textContent = "0";
+    if (snapshots[0]) {
+      if (!snapshots[0].frameTotal) renderFrameTotal(0); else renderShownTotal();
+      await animateReels(snapshots[0]);
+      renderBoard(snapshots[0].board, [], { yellow: snapshots[0].yellow, frames: snapshots[0].frames });
+      await wait(delay());
+    }
+    for (let index = 1; index < snapshots.length; index++) {
+      const snapshot = snapshots[index]; state.snapshotIndex = index;
+      $("messageBar").textContent = snapshot.message || "Cascade";
+      const common = { yellow: snapshot.yellow, frames: snapshot.frames };
+      if (snapshot.type === "win") {
+        state.lastWin = Number(winBase) + Number(snapshot.totalPay || 0);
+        $("winValue").textContent = money(state.lastWin);
+        renderWinDetails(snapshot);
+        // 2026-11-11 使用者：演出順序 消除符號 → 收集倍數 → 算分 → 所有框 +1 與補牌同時
+        const before = snapshot.framesBefore || snapshot.frames;
+        renderBoard(snapshot.board, snapshot.hits, { yellow: snapshot.yellow, frames: before });
+        await wait(Math.max(200, 420 / Number($("speedRange").value || 1)));
+        const elim = snapshots[index + 1]?.type === "eliminate" ? snapshots[index + 1] : null;
+        if (elim) {   // ① 消除（框維持更新前的值）
+          state.snapshotIndex = index + 1;
+          renderBoard(elim.board, [], { yellow: elim.yellow, frames: before, cleared: elim.cleared, converted: elim.converted });
+          await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等炸開火光（h032-boom 480ms）
+          index++;
+        }
+        // ② 收集更新前的框倍數並算分；③ 框 +1／新框留到下一步補牌時一起演
+        await animateWin(snapshot);
+        state.pendingPlus = { bumped: (snapshot.bumped || []).slice(), grow: (snapshot.bumped || []).filter(key => { const [r, y] = key.split(",").map(Number); return before[r][y] > 0; }) };
+        await wait(Math.max(80, delay() / 2));
+      } else if (snapshot.type === "eliminate") {
+        renderBoard(snapshot.board, [], { ...common, cleared: snapshot.cleared, converted: snapshot.converted, bumped: snapshot.bumped });
+        await wait(Math.max(460, 560 / Number($("speedRange").value || 1)));   // 等炸開火光（h032-boom 480ms）
+      } else if (snapshot.type === "cascade") {
+        // 補牌掉落的同時：所有框 +1、金色符號留下的新框出現
+        const plus = state.pendingPlus || { bumped: [], grow: [] }; state.pendingPlus = null;
+        renderBoard(snapshot.board, [], { ...common, drop: snapshot.drop, bumped: plus.bumped });
+        popPlusOne(plus.grow);   // 原有的框跳 +1；新框直接以初始倍數出現
+        await wait(dropWaitMs(snapshot.drop) + 60);
+      }
+    }
+    const last = snapshots.at(-1); if (last) renderBoard(last.board, [], { yellow: last.yellow, frames: last.frames });
+    updateDebugButtons();
+    if (last) await jpCoinFly(last.board);   // 消除全部結束後，盤面上的 SC 一起飛去打 OP
+  }
+
+  function showSnapshot(index) {
+    if (!state.snapshots.length) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    const s = state.snapshots[state.snapshotIndex];
+    renderBoard(s.board, s.hits, { yellow: s.yellow, frames: s.frames, cleared: s.cleared, converted: s.converted, bumped: s.bumped });
+    renderFrameTotal(s.frameTotal);
+    $("messageBar").textContent = s.message || "Cascade";
+    if (s.type === "win") renderWinDetails(s);
+    let win = state.stepWin?.base || 0;
+    for (let i = state.snapshotIndex; i >= 0; i--) if (state.snapshots[i].type === "win") { win += state.snapshots[i].totalPay; break; }
+    $("winValue").textContent = money(win);
+    updateDebugButtons();
+  }
+  function updateDebugButtons() {
+    $("previousStepBtn").disabled = state.snapshotIndex <= 0;
+    $("nextStepBtn").disabled = state.snapshotIndex < 0 || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  function tallySpin(result, freeGame) {
+    const s = state.spinStats;
+    s.spins++; s.yellowSeen += result.yellowSeen ? 1 : 0; s.yellowUsed += result.yellowUsed > 0 ? 1 : 0; s.sc += result.scatter > 0 ? 1 : 0;
+    if (!freeGame) s.bgFrameMax = Math.max(s.bgFrameMax, result.peakFrame);
+  }
+  const rateCycle = (count, total) => {
+    if (!total || !count) return "0.00% (—)";
+    const cycle = total / count;
+    return `${(count / total * 100).toFixed(2)}% (${cycle >= 10 ? Math.round(cycle).toLocaleString() : cycle.toFixed(1)}場)`;
+  };
+  window.demogameAddCredit = (n) => { state.balance += n * BASE_BET; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
+  function updateStats() {
+    const bet = BET_LEVELS[state.betIndex];
+    renderJp(); renderChest(); $("balanceValue").textContent = money(state.balance); $("betValue").textContent = format(bet); $("betBtn").textContent = `Bet ${format(bet)}`; $("winValue").textContent = money(state.lastWin || 0);
+    $("roundCountValue").textContent = state.rounds.toLocaleString();
+    $("rtpValue").textContent = state.totalBet ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%";
+    $("hitRateValue").textContent = state.rounds ? `${(state.hitRounds / state.rounds * 100).toFixed(2)}%` : "0.00%";
+    $("fgTriggerValue").textContent = state.rounds ? `${(state.fgTriggers / state.rounds * 100).toFixed(3)}% (${state.fgTriggers})` : "0.000% (0)";
+    $("maxMultiplierValue").textContent = `x${state.maxMultiplier.toFixed(2)}`;
+    const s = state.spinStats;
+    $("yellowSeenValue").textContent = rateCycle(s.yellowSeen, s.spins);
+    $("yellowUsedValue").textContent = rateCycle(s.yellowUsed, s.spins);
+    $("frameMaxValue").textContent = `x${s.bgFrameMax}`;
+    $("fgFrameAvgValue").textContent = s.fgSessions ? `x${(s.fgFrameSum / s.fgSessions).toFixed(1)} (${s.fgSessions})` : "—";
+    $("scRateValue").textContent = rateCycle(s.sc, s.spins);
+    const remaining = Math.max(0, state.fg.spins.length - state.fg.index);
+    document.body.classList.toggle("fg-mode", remaining > 0); $("fgLeftPill").classList.toggle("hidden", remaining <= 0);
+    $("fgLeftValue").textContent = `${remaining}/${state.fg.total}`; $("modeText").textContent = tr(remaining ? "freeGame" : "baseGame");
+    $("spinBtn").textContent = tr(remaining ? "nextFg" : "spin");
+  }
+  function setBusy(value) {
+    state.busy = value;
+    const inFeature = state.fg.index < state.fg.spins.length;
+    $("spinBtn").disabled = value; $("buyFeatureBtn").disabled = value || inFeature; $("superFeatureBtn").disabled = value || inFeature;
+    $("normalBetBtn").disabled = value || inFeature; $("extraBetBtn").disabled = value || inFeature;
+    $("betMinusBtn").disabled = value || inFeature || state.betIndex === 0;
+    $("betPlusBtn").disabled = value || inFeature || state.betIndex === BET_LEVELS.length - 1;
+  }
+  function appendLog(text, type = "info") {
+    const body = $("liveLogBody"); if (!body) return;
+    const line = document.createElement("div");
+    line.className = `live-log-line ${type}`;
+    line.textContent = `[${new Date().toLocaleTimeString("en-GB", { hour12: false })}] ${text}`;
+    body.prepend(line);   // 2026-11-17：新的紀錄在最上面，舊的往下擠
+    while (body.children.length > 500) body.lastElementChild.remove();
+    body.scrollTop = 0;
+  }
+
+  function activateFeature(feature, mode, base) {
+    appendLog(`${isBuyMode(mode) ? modeName(mode) : "Free Game triggered"} | ${feature.spins.length} spins${feature.retriggers ? ` (Retrigger ×${feature.retriggers})` : ""}`, "mode");
+    state.fg = { spins: feature.spins, index: 0, total: feature.spins.length, win: 0, mode, carry: Number(base?.pay || 0), baseRound: base || null, endFrame: feature.endFrame };
+    state.lastWin = state.fg.carry; state.fgTriggers++;
+    setFeatureStatus(mode === 3 ? "superFeature" : mode === 2 ? "buyFeature" : "fgTriggered"); updateStats();
+  }
+  // 觸發 FG 看板：Auto 模式 1 秒後自動消失；非 Auto 要自己點掉（點盤面／看板或按 Spin）。期間背景不能捲動；看板消失後才開始 FG
+  function showFgBanner(spins) {
+    return new Promise(resolve => {
+      const board = $("board"), spinBtn = $("spinBtn");
+      const banner = document.createElement("div");
+      banner.className = "fg-banner";
+      const icon = symbolIcon("C1");
+      banner.innerHTML = `<div class="fg-banner-card">${icon ? `<span class="fg-banner-icon">${icon}</span>` : ""}<span class="fg-banner-title">${tr("freeGame")}</span><span class="fg-banner-count">${tr("fgBannerCount").replace("{n}", spins)}</span></div>`;
+      board.appendChild(banner);
+      document.documentElement.classList.add("h032-modal-open");
+      const wasDisabled = spinBtn.disabled; spinBtn.disabled = false;
+      let timer = 0;
+      const done = () => {
+        clearTimeout(timer); board.removeEventListener("click", done); spinBtn.removeEventListener("click", done, true);
+        spinBtn.disabled = wasDisabled; banner.remove(); document.documentElement.classList.remove("h032-modal-open"); resolve();
+      };
+      board.addEventListener("click", done); spinBtn.addEventListener("click", done, true);
+      if (state.auto) timer = setTimeout(done, 1000);
+    });
+  }
+  async function playFeatureSpin() {
+    const item = state.fg.spins[state.fg.index]; if (!item) return;
+    const fgWinBase = Number(state.fg.win || 0), carry = Number(state.fg.carry || 0);
+    await animateSnapshots(item.snapshots, carry + fgWinBase); state.fg.index++;
+    state.fg.win = fgWinBase + item.pay; state.lastWin = carry + state.fg.win; state.totalWin += item.pay; state.balance += item.pay;
+    if (boardHasC1(item.snapshots?.at(-1)?.board)) await jpSettle(state.fg.mode, betUnit() * modeCost(state.fg.mode), true);   // FG 每轉出現 C1 也判一次彩金
+    tallySpin(item, true);
+    $("messageBar").textContent = `FG ${state.fg.index}/${state.fg.total} · ${item.pay > 0 ? `WIN ${money(item.pay)}` : tr("noWin")}${item.retrigger ? ` · +${item.retrigger} FG` : ""}`;
+    appendLog(`FG ${state.fg.index}/${state.fg.total} | Cascade ${item.combo} | C1 ${item.scatter} | Frame ×${item.endFrame} | Win ${money(item.pay)}${item.retrigger ? ` | Retrigger +${item.retrigger}` : ""}`, item.combo ? "cascade" : "info");
+    if (state.fg.index >= state.fg.spins.length) {
+      const fgMulti = state.fg.win / betUnit();
+      appendLog(`FG complete | Total ${money(state.fg.win)} (${fgMulti.toFixed(2)}x) | Frame ×${state.fg.endFrame}`, "result");
+      window.demogameHistory?.record({ fg: fgMulti });
+      state.spinStats.fgSessions++; state.spinStats.fgFrameSum += state.fg.endFrame;
+      state.maxMultiplier = Math.max(state.maxMultiplier, (state.fg.carry + state.fg.win) / betUnit());
+      if (state.fg.line) recordLine(state.fg.line.mode, state.fg.carry + state.fg.win, state.fg.line.wager);
+      const baseRound = state.fg.baseRound;
+      state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 };
+      restoreBaseRound(baseRound);
+    }
+  }
+  // FG 結束回到 BG：主遊戲框清空，顯示觸發局最終盤面（不含框）
+  function restoreBaseRound(base) {
+    document.body.classList.remove("fg-mode"); renderFrameTotal(0); setFeatureStatus("baseGame");
+    if (!base) return;
+    const last = base.snapshots?.at(-1);
+    if (last) renderBoard(last.board, [], { yellow: last.yellow, frames: grid(0) });
+    state.snapshots = base.snapshots || []; state.snapshotIndex = state.snapshots.length - 1; state.stepWin = { base: 0 };
+    $("carryMultiValue").textContent = String(base.combo || 0); updateDebugButtons();
+  }
+
+  async function play(mode = 0) {
+    if (state.busy) return; setBusy(true);
+    try {
+      if (state.fg.index < state.fg.spins.length) {
+        await playFeatureSpin();
+      } else {
+        const taken = window.demogameRng?.takeInput?.();
+        const code = taken ? { seed: taken.seed, mode: Math.max(0, ["NB", "EB", "BF", "SF"].indexOf(taken.mode)), script: taken.opts || "" } : null;
+        if (code) mode = code.mode;
+        state.lastWin = 0; state.mode = mode; state.jpView = mode; renderJp();
+        window.demogameLineChart?.setMode?.(isBuyMode(mode) ? "BF" : null);
+        const cost = betUnit() * modeCost(mode);
+        if (state.balance < cost) throw new Error(tr("insufficient"));
+        state.balance -= cost; state.totalBet += cost; state.rounds++; jpAccrue(cost); updateStats();
+        const script = !isBuyMode(mode) ? (code ? code.script : ($("forceFgInput").checked && !$("scriptSelect").value ? "fg" : $("scriptSelect").value)) : "";
+        const seed = code ? code.seed : (window.demogameRng?.newSeed?.() ?? null);
+        if (window.demogameRng?.format && seed != null) appendLog(`RNG ${window.demogameRng.format({ config: configLabel(), mode: modeTag(mode), card: cardSystemActive(), opts: script, seed })}`, "rng");
+        appendLog(`#${state.rounds} ${modeName(mode)} | Bet ${money(cost)}${script ? ` | Script ${script}` : ""}${code ? " | Replay" : ""}`, "mode");
+        let base, feature = null;
+        if (seed != null && window.demogameRng?.seeded) rngNext = window.demogameRng.seeded(seed);
+        try {
+          const drawn = drawRound(mode, script);
+          base = drawn.base; feature = drawn.feature;
+          if (drawn.retryLimitExceeded) appendLog(`Card System | Retry 超過 ${MAX_RETRY} 次，採用最後一把`, "error");
+        } finally { rngNext = Math.random; }
+        await animateSnapshots(base.snapshots, 0);
+        state.lastWin = base.pay; state.totalWin += base.pay; state.balance += base.pay;
+        state.hitRounds += base.pay > 0 ? 1 : 0;
+        state.maxMultiplier = Math.max(state.maxMultiplier, base.pay / betUnit());
+        if (!isBuyMode(mode)) tallySpin(base, false);
+        $("messageBar").textContent = base.pay > 0 ? `WIN ${money(base.pay)}` : tr("noWin");
+        appendLog(`${isBuyMode(mode) ? modeTag(mode) + " Entry" : "BG"} | Cascade ${base.combo} | C1 ${base.scatter} | Peak frame ×${base.peakFrame} | Win ${money(base.pay)} (${(base.pay / betUnit()).toFixed(2)}x)`, base.pay > 0 ? "result" : "info");
+        window.demogameHistory?.record({ bg: base.pay / betUnit() });
+        await jpSettle(mode, cost, boardHasC1(base.snapshots?.at(-1)?.board), /^jp\d$/.test(script) ? Number(script[2]) : script === "jp");   // 每一轉出現 C1 都判一次（同 SCR 口徑）
+        const countLine = !script && !code;
+        if (feature) {
+          activateFeature(feature, mode, base);
+          state.fg.line = countLine ? { mode, wager: cost } : null;
+          // 主遊戲每轉結束框清空 → FG 開場沒有框（2026-11-11 起）
+          const first = feature.spins[0]?.snapshots?.[0];
+          if (first) { renderFrameTotal(0); renderBoard(base.board, [], { yellow: base.yellow, frames: first.frames }); }
+          await showFgBanner(feature.spins.length);
+        } else if (countLine) recordLine(mode, base.pay, cost);
+      }
+      updateStats();
+      if (state.auto) await wait(250); else await window.demogameRoundPause?.();   // 2026-11-17：Auto 局間停頓減半（共用 500ms → 250ms）
+    } catch (error) { console.error(error); $("messageBar").textContent = error.message; appendLog(`Error | ${error.message}`, "error"); }
+    if (state.fg.index >= state.fg.spins.length) state.jpView = null;   // 整局結束才切回一般／額外押注的彩金顯示
+    updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(state.extraBet ? 1 : 0), 90);
+  }
+
+  // Help：內嵌 md（版式同 H045）
+  function helpCells(line) { const t = line.trim(); return t.startsWith("|") && t.endsWith("|") ? t.slice(1, -1).split("|").map(x => x.trim()) : null; }
+  function parseHelpData(md) {
+    const sections = []; let section = null, group = null, payLang = "zh";
+    for (const raw of String(md || "").split(/\r?\n/)) {
+      const line = raw.trim(); let m;
+      if (/^(?:繁中|简中|簡中)[：:]$/.test(line)) { payLang = "zh"; continue; }
+      if (/^英文[：:]$/.test(line)) { payLang = "en"; continue; }
+      if ((m = line.match(/^##\s+(.+)/)) && !line.startsWith("###")) {
+        const key = m[1].trim();
+        section = /meta/i.test(key) ? null : { key, titleZh: "", titleEn: key, rules: [], groups: [] };
+        if (section) sections.push(section);
+        group = null; payLang = "zh"; continue;
+      }
+      if ((m = line.match(/^###\s+(.+)/)) && section) { group = { key: m[1].trim(), titleZh: "", titleEn: m[1].trim(), rules: [], payouts: [] }; section.groups.push(group); continue; }
+      if (!section) continue;
+      const cells = helpCells(line);
+      if (!cells || cells.every(x => /^:?-{3,}:?$/.test(x))) continue;
+      const [item, zh = "", en = ""] = cells;
+      if (item === "主要標題") { section.titleZh = zh; section.titleEn = en; }
+      else if (item === "副標題" && group) { group.titleZh = zh; group.titleEn = en; }
+      else if (item === "規則說明") (group || section).rules.push({ zh, en });
+      else if (group?.key === "賠率表" && cells.length >= 4) group.payouts.push({ lang: payLang, cells });
+    }
+    return sections.filter(s => s.rules.length || s.groups.some(g => g.rules.length || g.payouts.length));
+  }
+  function helpTitle(parent, className, zh, en) {
+    const h = document.createElement(className === "help-section-title" ? "h3" : "h4");
+    h.className = className; h.textContent = state.language === "zh" ? (zh || en) : (en || zh); parent.appendChild(h);
+  }
+  function helpRule(parent, rule) {
+    const row = document.createElement("div"), cell = document.createElement("div");
+    row.className = "help-rule"; cell.className = state.language === "zh" ? "help-rule-zh" : "help-rule-en";
+    cell.textContent = (state.language === "zh" ? rule.zh : rule.en).replace(/[{}]/g, ""); row.appendChild(cell); parent.appendChild(row);
+  }
+  function renderHelp(md) {
+    const root = $("helpContent"), sections = parseHelpData(md), bet = BET_LEVELS[state.betIndex];
+    root.innerHTML = "";
+    for (const section of sections) {
+      const card = document.createElement("section"); card.className = "help-section";
+      helpTitle(card, "help-section-title", section.titleZh, section.titleEn);
+      section.rules.forEach(rule => helpRule(card, rule));
+      for (const group of section.groups) {
+        const payouts = group.payouts.filter(x => x.lang === state.language);
+        if (!group.rules.length && !payouts.length) continue;
+        helpTitle(card, "help-group-title", group.titleZh || group.key, group.titleEn);
+        group.rules.forEach(rule => helpRule(card, rule));
+        if (!payouts.length) continue;
+        const table = document.createElement("div"); table.className = "help-payout-table";
+        payouts.forEach((payout, rowIndex) => {
+          const row = document.createElement("div"); row.className = "help-payout-row";
+          payout.cells.forEach((value, cellIndex) => {
+            const cell = document.createElement("div"), clean = value.replace(/[{}]/g, "");
+            cell.className = "help-payout-cell";
+            cell.textContent = rowIndex > 0 && cellIndex > 0 && Number.isFinite(Number(clean)) ? format(Number(clean) / BASE_BET * bet) : clean;
+            row.appendChild(cell);
+          });
+          table.appendChild(row);
+        });
+        card.appendChild(table);
+      }
+      root.appendChild(card);
+    }
+  }
+  function openHelp() { state.helpMarkdown = $("embeddedGameHelpMarkdown")?.textContent?.trim() || ""; renderHelp(state.helpMarkdown); $("helpDialog").showModal(); }
+
+  const H032_TEXT = {
+    en: {
+      baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", superFeature: "Super Feature", fgTriggered: "Free Game Triggered",
+      ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
+      spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS",
+      script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Yellow symbol won", scriptFrame10: "Frame total 10+", scriptGoldFrame: "Gold lands on a frame and wins", scriptFg: "FG triggered", scriptFgbig: "FG 100x+", scriptJp: "OP Jackpot (random)", scriptJp0: "OP Jackpot GRAND", scriptJp1: "OP Jackpot MAJOR", scriptJp2: "OP Jackpot MINOR", scriptJp3: "OP Jackpot MINI",
+      statMaxWin: "Max win (x bet)", statYellowSeen: "Yellow seen", statYellowUsed: "Yellow won", statFrameMax: "BG max frame total", statFgFrameAvg: "FG end frame total (avg)", statScRate: "SC rate"
+    },
+    zh: {
+      baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", superFeature: "超級特色", fgTriggered: "觸發免費遊戲",
+      ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
+      spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場",
+      script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "黃底有消除", scriptFrame10: "框總和 10 以上", scriptGoldFrame: "金符號落入倍數框並消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上", scriptJp: "觸發彩金（隨機）", scriptJp0: "觸發 GRAND", scriptJp1: "觸發 MAJOR", scriptJp2: "觸發 MINOR", scriptJp3: "觸發 MINI",
+      statMaxWin: "最大贏分倍數", statYellowSeen: "黃底出現率", statYellowUsed: "黃底消除率", statFrameMax: "BG 最大框總和", statFgFrameAvg: "FG 結束框總和（平均）", statScRate: "SC 出現率"
+    }
+  };
+  function tr(key) { return (H032_TEXT[state.language] || H032_TEXT.en)[key] ?? H032_TEXT.en[key] ?? key; }
+  function setFeatureStatus(key) {
+    state.featureKey = key;
+    // 「觸發免費遊戲」不顯示（2026-11-12 使用者：狀態列左邊已有「免費遊戲」，重複）；購買特色照常顯示
+    const text = key && key !== "baseGame" && key !== "freeGame" && key !== "fgTriggered" ? tr(key) : "";
+    $("featureStatus").textContent = text; $("featureStatus").hidden = !text;
+    // 押注模式按鈕顯示這局怎麼進來：購買特色（買進到該場 FG 結束）亮「購買特色」，其他（含一般押注觸發 FG）亮「一般押注」
+    const buying = key === "buyFeature" || key === "superFeature";
+    $("normalBetBtn").classList.toggle("is-active", !buying && !state.extraBet);
+    $("extraBetBtn").classList.toggle("is-active", !buying && Boolean(state.extraBet));
+    $("buyFeatureBtn").classList.toggle("is-active", key === "buyFeature");
+    $("superFeatureBtn").classList.toggle("is-active", key === "superFeature");
+  }
+  function applyLanguage() {
+    $("gameId").textContent = cfg.online_game_id;
+    $("gameName").textContent = state.language === "zh" ? cfg.name_zh : cfg.name_en;
+    $("buyFeatureBtn").innerHTML = (state.language === "zh" ? "購買特色" : "Buy Feature") + `<span class="mode-price">(${BUY.cost_multiplier}x)</span>`;
+    $("extraBetBtn").innerHTML = (state.language === "zh" ? "額外押注" : "Extra Bet") + `<span class="mode-price">(${EB.cost_multiplier}x)</span>`;
+    $("superFeatureBtn").innerHTML = (state.language === "zh" ? "超級特色" : "Super Feature") + `<span class="mode-price">(${SUPER.cost_multiplier}x)</span>`;
+    document.querySelectorAll("[data-h099-text]").forEach(node => { node.textContent = tr(node.dataset.h099Text); });
+    if (state.featureKey) setFeatureStatus(state.featureKey);
+    if ($("helpDialog").open && state.helpMarkdown) renderHelp(state.helpMarkdown);
+    $("autoBtn").textContent = tr(state.auto ? "stop" : "auto");
+    const message = $("messageBar").textContent;
+    for (const key of ["ready", "noWin"]) if (message === H032_TEXT.en[key] || message === H032_TEXT.zh[key]) $("messageBar").textContent = tr(key);
+    renderShownTotal();
+    updateStats();
+  }
+  function setDebug(enabled) { $("controls").classList.toggle("debug-off", !enabled); document.querySelectorAll(".debug-only, #set-rng-panel, #play-debug-controls").forEach(node => node.classList.toggle("debug-hidden", !enabled)); }
+  function reset() {
+    Object.assign(state, { balance: START_BALANCE, rounds: 0, totalBet: 0, totalWin: 0, hitRounds: 0, fgTriggers: 0, maxMultiplier: 0, lastWin: 0, auto: false, snapshots: [], snapshotIndex: -1,
+      fg: { spins: [], index: 0, total: 0, win: 0, mode: 0 }, spinStats: { spins: 0, yellowSeen: 0, yellowUsed: 0, sc: 0, bgFrameMax: 0, fgSessions: 0, fgFrameSum: 0 } });
+    const startTable = pickTable("bg"), board = makeBoard(startTable);
+    $("autoBtn").textContent = tr("auto"); renderBoard(board, [], { yellow: board.map((c, r) => c.map(s => rollYellow(startTable, r, s))), frames: grid(0) });
+    renderFrameTotal(0); $("messageBar").textContent = tr("ready"); setFeatureStatus("baseGame");
+    // 2026-11-12 使用者：重置連押注、紀錄、指定 RNG 一起清回預設（押注回第一檔；紀錄只留開頭那行載入資訊；腳本／RNG 碼清空）
+    state.betIndex = 0;
+    $("scriptSelect").value = ""; $("forceFgInput").checked = false; $("rngInput").value = "";
+    $("liveLogBody").innerHTML = "";
+    appendLog(`H032 Demo loaded | Version ${window.H032_VERSION_ENTRY?.version || "--"} | Config ${window.H032_ACTIVE_CONFIG || "base"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
+    updateStats();
+  }
+  function buildBetMenu() {
+    $("betMenu").innerHTML = BET_LEVELS.map((value, index) => `<button type="button" data-index="${index}">${format(value)}</button>`).join("");
+    $("betMenu").querySelectorAll("button").forEach(button => button.onclick = () => { state.betIndex = Number(button.dataset.index); $("betMenu").classList.add("hidden"); updateStats(); });
+  }
+
+  // Spin／Auto 依目前選的押注模式（一般押注／額外押注）；購買特色、超級特色按了直接買一局
+  const spinMode = () => state.extraBet ? 1 : 0;
+  const selectBet = eb => { if (state.busy) return; state.extraBet = eb; setFeatureStatus(state.featureKey || "baseGame"); updateStats(); };
+  $("spinBtn").onclick = () => play(spinMode()); $("buyFeatureBtn").onclick = () => play(2); $("superFeatureBtn").onclick = () => play(3);
+  $("normalBetBtn").onclick = () => selectBet(false); $("extraBetBtn").onclick = () => selectBet(true);
+  $("autoBtn").onclick = () => { state.auto = !state.auto; $("autoBtn").textContent = tr(state.auto ? "stop" : "auto"); if (state.auto && !state.busy) play(spinMode()); };
+  $("betMinusBtn").onclick = () => { state.betIndex = Math.max(0, state.betIndex - 1); updateStats(); };
+  $("betPlusBtn").onclick = () => { state.betIndex = Math.min(BET_LEVELS.length - 1, state.betIndex + 1); updateStats(); };
+  $("betBtn").onclick = () => $("betMenu").classList.toggle("hidden"); $("speedRange").oninput = () => $("speedValue").textContent = `x${$("speedRange").value}`;
+  $("debugModeInput").onchange = () => setDebug($("debugModeInput").checked);
+  $("previousStepBtn").onclick = () => showSnapshot(state.snapshotIndex - 1); $("nextStepBtn").onclick = () => showSnapshot(state.snapshotIndex + 1);
+  $("languageSelect").onchange = () => { state.language = $("languageSelect").value; applyLanguage(); };
+  $("helpBtn").onclick = openHelp; $("closeHelpBtn").onclick = () => $("helpDialog").close();
+  $("resetBtn").onclick = reset; $("clearLogBtn").onclick = () => $("liveLogBody").innerHTML = "";
+  $("setRngResetBtn").onclick = () => { $("scriptSelect").value = ""; $("forceFgInput").checked = false; $("rngInput").value = ""; };
+
+  document.title = `${cfg.name_en} — Demo Game`; buildBetMenu(); applyLanguage(); setDebug(false); reset();
+  appendLog(`H032 Demo loaded | Version ${window.H032_VERSION_ENTRY?.version || "--"} | Config ${window.H032_ACTIVE_CONFIG || "base"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
+})();
+  </script>
+  <script>
+  // 有載入 RTP config（card_system）時才支援 Card System；選 Base 為自然機率
+  window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
+  window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
+  window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
+  window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 16:34";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:34";
+  </script>
+  <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
+  <script src="../demogame_common.js?v=20261117d"></script>
+  <script>
+    // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
+    (function () {
+      const win = document.getElementById("multiplierWindow"), track = win?.closest(".multiplier-track");
+      if (!win || !track) return;
+      const val = () => (win.textContent.match(/x\s*([\d.]+)/) || [])[1];
+      let last = val();
+      new MutationObserver(() => {
+        const v = val();
+        if (v === undefined || v === last) return;
+        last = v;
+        track.classList.remove("fx-bar-hit"); void track.offsetWidth; track.classList.add("fx-bar-hit");
+      }).observe(win, { childList: true, characterData: true, subtree: true });
+    })();
+    // 狀態列搬進 #app-shell 盤面那一欄（排版見上方 css「狀態列搬進盤面那一欄」）
+    (function () {
+      const strip = document.getElementById("strip-bar"), shell = document.getElementById("app-shell");
+      if (strip && shell && strip.parentElement !== shell) shell.prepend(strip);
+    })();
+  </script>
+</body>
+
+</html>

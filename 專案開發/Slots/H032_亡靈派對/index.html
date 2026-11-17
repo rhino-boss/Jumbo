@@ -2658,11 +2658,10 @@
   window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）
   let lastBoardRender = null;
   // 符號圖示（亡靈節主題，系統內建 emoji，離線可用）：比照 Sugar Rush 2，符號直接擺在盤面上、不畫方框底板，字獎也用圖示
-  const SYMBOL_ICON = {
-    M1: "💀", M2: "🌼", M3: "🎸", M4: "🕯️",   // 糖骷髏、萬壽菊、吉他、蠟燭
-    A: "🌶️", K: "🌵", Q: "🦋", J: "🍬",         // 辣椒、仙人掌、帝王蝶、糖果
-    WW: "🎭", C1: "🪦"                           // WILD 面具、SCATTER 墓碑
-  };
+  // 2026-11-17：符號換正式美術（Source/Image/CalaveraParty/*.png，來源：公告區暫存「To 柚子／亡靈節／Symbol」）；emoji 版備份在 index_20261117_emoji.html
+  const H032_IMAGE_ROOT = "./Source/Image/CalaveraParty/";
+  const SYMBOL_ASSET = { WW: "WW.png", C1: "C1.png", M1: "M1.png", M2: "M2.png", M3: "M3.png", M4: "M4.png", A: "A.png", K: "K.png", Q: "Q.png", J: "J.png" };
+  const SYMBOL_ICON = Object.fromEntries(Object.entries(SYMBOL_ASSET).map(([code, file]) => [code, `<img src="${H032_IMAGE_ROOT}${file}" alt="${code}" draggable="false">`]));
   let useSymbolImages = true;
   window.DEMOGAME_IMAGE_TOGGLE = {
     supported: true,
@@ -2675,8 +2674,7 @@
   };
   const symbolIcon = code => useSymbolImages ? SYMBOL_ICON[code] || "" : "";
   // Help 賠率表符號圖（共用 demogame_common.js 讀 DEMOGAME_SYMBOL_ART）：emoji 包成 SVG，Image 開啟時與盤面同一套圖示
-  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ICON).map(([code, emoji]) => [code,
-    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="54" font-size="78" text-anchor="middle" dominant-baseline="middle" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif">${emoji}</text></svg>`)]));
+  window.DEMOGAME_SYMBOL_ART = Object.fromEntries(Object.entries(SYMBOL_ASSET).map(([code, file]) => [code, H032_IMAGE_ROOT + file]));
   // 彈窗（Help）開著時背景不能捲動
   const helpDialogEl = document.getElementById("helpDialog");
   if (helpDialogEl) new MutationObserver(() => document.documentElement.classList.toggle("h032-help-open", helpDialogEl.open))
@@ -3026,6 +3024,13 @@
     .slot-fx-layer .fx-gold-drop{position:absolute;z-index:61;display:grid;place-items:center;pointer-events:none;white-space:nowrap;
       font:800 13px/1 system-ui,sans-serif;color:#1a1000;background:linear-gradient(180deg,#ffe49a,#c8900f);border:1px solid #fff0b8;
       border-radius:5px;box-shadow:0 0 12px rgba(255,210,90,.9)}
+    /* 2026-11-17 正式美術：符號圖滿格、金色符號用 Gold_Frame_Bg、倍數框用 Gold_Frame、框倍數用 Gold_Frame_Multiplier（紫色膠囊） */
+    #board .cell .sym-icon img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none}
+    body #board .cell.yellow:not(#h099-y1):not(#h099-y2):not(#h099-y3){background:url("./Source/Image/CalaveraParty/Gold_Frame_Bg.png") center/118% 118% no-repeat!important}
+    body #board .cell.yellow:not(.hit):not(#h099-y1):not(#h099-y2):not(#h099-y3){border:0!important;box-shadow:none!important}
+    #board .frame-layer{border:0;border-radius:0;box-shadow:none;background:url("./Source/Image/CalaveraParty/Gold_Frame.png") center/122% 122% no-repeat}
+    #board .frame-badge{bottom:-6px;width:56px;height:17px;padding:0;border:0;border-radius:0;box-shadow:none;text-align:center;line-height:17px;font-size:12px;
+      background:url("./Source/Image/CalaveraParty/Gold_Frame_Multiplier.png") -23px -66.5px/102px 102px no-repeat;text-shadow:0 1px 2px rgba(30,0,60,.9)}
     #board .frame-layer.bump{animation:h099FrameBump 360ms ease-out}
     @keyframes h099FrameBump{from{transform:scale(1.18);filter:brightness(2)}to{transform:scale(1);filter:brightness(1)}}
     #board .frame-layer.score{animation:h099FrameScore 260ms ease-in-out infinite alternate}
@@ -3420,7 +3425,7 @@
         cell.style.setProperty("--drop-duration", `${dropMs(motion.rows)}ms`);   // 2026-11-17：落下時間依掉落格數拉長，加速模式也保留掉落感
         cell.style.setProperty("--drop-delay", `${(motion.delay || 0) / DROP_SPEED_MULTIPLIER}ms`);
       }
-      const art = icon ? `<span class="sym-icon" aria-label="${code}">${icon}</span>${code === "WW" || code === "C1" ? `<span class="sym-tag">${code === "WW" ? "WILD" : "SCATTER"}</span>` : ""}` : "";
+      const art = icon ? `<span class="sym-icon" aria-label="${code}">${icon}</span>` : "";
       cell.innerHTML = empty ? "" : `<div class="symbol-wrap">${art}<span class="h019-glyph">${code}</span></div>`;   // 金色符號不帶倍數（2026-11-11），不顯示倍數徽章
       root.append(cell);
     }
@@ -3998,8 +4003,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 16:34";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:34";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 16:44";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:44";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
