@@ -78,9 +78,17 @@ SUPPORTED_BET_MODES = (MODE_NORMALBET, MODE_EXTRABET, MODE_FEATUREBUY, MODE_SUPE
 BUY_MODES = (MODE_FEATUREBUY, MODE_SUPERFEATURE)
 MODE_KEY = {MODE_NORMALBET: "normal", MODE_EXTRABET: "extra_bet", MODE_FEATUREBUY: "buy_feature", MODE_SUPERFEATURE: "super_feature"}
 
-WW = 0
-C1 = 2
-SCORE_SYMBOLS = tuple(range(3, 11))
+WW = 0                                 # 實際值由 config 的 wild_ids／scatter_id／symbol_names 決定（bind_symbols）
+C1 = 1
+SCORE_SYMBOLS = tuple(range(2, 10))
+
+
+def bind_symbols(cfg: dict) -> None:
+    """符號 ID 一律取自 config（2026-11-17 起 C1＝1、其餘依序），程式不寫死。"""
+    global WW, C1, SCORE_SYMBOLS
+    WW = int(cfg["wild_ids"][0])
+    C1 = int(cfg["scatter_id"])
+    SCORE_SYMBOLS = tuple(sorted(int(k) for k in cfg["symbol_names"] if int(k) not in (WW, C1)))
 EMPTY = -1
 
 YELLOW_RATE_SCALE = 100_000            # Yellow_Rate／Yellow_Drop_Rate 單位：/100,000
@@ -938,6 +946,7 @@ def _init_worker(cfg: dict[str, Any], cfg_rtp: dict[str, Any]) -> None:
     """多程序 worker 初始化：Windows 以 spawn 啟動，需把主程序載入的 config 傳進來。"""
     global CFG, CFG_RTP
     CFG, CFG_RTP = cfg, cfg_rtp
+    bind_symbols(cfg)
 
 
 def run_simulation(total_rounds: int, bet_mode: int, base_bet: float, threads: int,
@@ -1408,6 +1417,7 @@ def build_result(stats_bundle: dict[str, Any], combo: dict[str, Any]) -> dict[st
 def load_batch_configs(combo: dict[str, Any]) -> None:
     global CFG, CFG_RTP
     CFG = load_js_config(BASE_DIR / combo["config_file"])
+    bind_symbols(CFG)
     if str(combo.get("config_rtp_file", "AUTO")).upper() == "AUTO":
         mode, base_bet = int(combo["bet_mode"]), float(combo["base_bet"])
         tier_amount = base_bet if mode in BUY_MODES else wager_for_mode(mode, base_bet)

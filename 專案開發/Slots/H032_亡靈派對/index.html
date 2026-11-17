@@ -2651,8 +2651,9 @@
   }
   const $ = id => document.getElementById(id);
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-  const WW = 0, C1 = 2;
-  const SCORE = [3, 4, 5, 6, 7, 8, 9, 10];
+  // 符號 ID 一律取自 config（2026-11-17 起 C1＝1、其餘依序），不寫死
+  const WW = Number(cfg.wild_ids[0]), C1 = Number(cfg.scatter_id);
+  const SCORE = Object.keys(cfg.symbol_names).map(Number).filter(id => id !== WW && id !== C1).sort((a, b) => a - b);
   const CODE = Object.fromEntries(Object.entries(cfg.symbol_names).map(([id, code]) => [Number(id), code]));
   window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）
   let lastBoardRender = null;
@@ -3201,7 +3202,7 @@
         for (let row = 0; row < 4; row++) if (board[reel][row] !== -1) keep.push({ symbol: board[reel][row], y: yellow[reel][row], from: row });
         const empties = 4 - keep.length;
         if (!empties) continue;
-        let hasC1 = keep.some(item => item.symbol === 2);   // 2026-11-12：該軸已有 C1 時補牌不補 C1
+        let hasC1 = keep.some(item => item.symbol === C1);   // 2026-11-12：該軸已有 C1 時補牌不補 C1
         for (let row = 0; row < 4; row++) {
           if (row < keep.length) {
             const item = keep[row];
@@ -3209,8 +3210,8 @@
             if (item.from !== row) motion.push({ key: `${reel},${row}`, isNew: false, rows: item.from - row, delay: row * 60 });
           } else {
             let symbol = draw(tableName, reel);
-            while (hasC1 && symbol === 2) symbol = draw(tableName, reel);
-            hasC1 = hasC1 || symbol === 2;
+            while (hasC1 && symbol === C1) symbol = draw(tableName, reel);
+            hasC1 = hasC1 || symbol === C1;
             board[reel][row] = symbol; yellow[reel][row] = rollYellow(tableName, reel, symbol, true);
             if (yellow[reel][row]) yellowSeen = true;
             motion.push({ key: `${reel},${row}`, isNew: true, rows: empties, delay: row * 60 });
@@ -3995,8 +3996,8 @@
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-17 14:47";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 16:11";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:11";
+  window.DEMOGAME_LAST_CODE = "2026-11-17 16:19";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-17 16:19";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 2X); no jackpot"]}};</script>
