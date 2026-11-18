@@ -16,3 +16,7 @@
 # 10000 人 Row Data（檔案過大，由生成腳本＋seed 重現）
 /專案開發/System/simulator/rowdata/*10000人*.parquet
 /專案開發/System/simulator/rowdata/*10000人*.csv.gz
+
+# Python 快取：用完要刪，不進 repo（2026-11-18）
+__pycache__/
+*.pyc
