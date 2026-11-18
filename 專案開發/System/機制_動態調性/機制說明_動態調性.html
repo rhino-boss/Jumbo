@@ -609,7 +609,7 @@
         <table>
           <thead><tr><th>時機</th><th>玩家感受</th><th>可以怎麼操作</th></tr></thead>
           <tbody>
-            <tr><td class="key">玩家體驗不錯</td><td>玩得順</td><td>給比較深的調性，拚一次大獎</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>剛拿到大獎，正開心</td><td>給中高倍數較多的調性，增加隔日留存</td></tr>
             <tr><td class="key">進 FG 特別多次</td><td>FG 一直來</td><td>給比較深的調性，拚一次大獎</td></tr>
             <tr><td class="key">RTP 超過 100%</td><td>正在贏錢</td><td>給比較深的調性，拚一次大獎</td></tr>
           </tbody>
@@ -650,7 +650,7 @@
             <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>表 F 或表 G</td><td>下一次 FG 不會太爛</td></tr>
             <tr><td class="key">RTP 下滑速度太快</td><td>表 E</td><td>用一次中高倍數拉回</td></tr>
             <tr><td class="key">玩得很平、沒有起伏</td><td>表 E 或表 B</td><td>製造一次比較大的倍數</td></tr>
-            <tr><td class="key">玩家體驗不錯</td><td>表 B、表 E 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>表 E</td><td>中高倍數比較多，增加隔日留存</td></tr>
             <tr><td class="key">進 FG 特別多次</td><td>表 C、表 B 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
             <tr><td class="key">RTP 超過 100%</td><td>表 B、表 E 或表 H</td><td>調性比較深，拚一次大獎</td></tr>
           </tbody>
@@ -696,7 +696,7 @@
             <tr><td class="key">連續 FG 太爛（10× 以下）</td><td>可補</td><td>要補</td></tr>
             <tr><td class="key">RTP 下滑速度太快</td><td>可補</td><td>要補</td></tr>
             <tr><td class="key">玩得很平、沒有起伏</td><td>已有（§3.4）</td><td>已有（§3.2 倍數留存表）</td></tr>
-            <tr><td class="key">玩家體驗不錯</td><td>要先定義</td><td>要補</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>可補</td><td>已有（§3.2 倍數留存表）</td></tr>
             <tr><td class="key">進 FG 特別多次</td><td>可補</td><td>要補</td></tr>
             <tr><td class="key">RTP 超過 100%</td><td>可補</td><td>要補</td></tr>
           </tbody>
@@ -712,6 +712,7 @@
         <li>格內數字＝當日最大倍數 ≥ M 的人，隔日留存是 &lt; M 的人的幾倍。</li>
         <li>例：當日玩 41～100 轉，有碰到 ≥ 80× 的人，隔日留存是沒碰到的人的 <strong>1.58 倍</strong>；101～200 轉碰到 ≥ 100× 是 <strong>1.43 倍</strong>。</li>
         <li>佐證「玩得很平」：<strong>最大倍數低的那天，隔日留存比較差</strong>。</li>
+        <li>佐證「一段時間內拿到過大倍數」：<strong>拿到大倍數的那天，隔日留存比較好</strong>；換中高倍數較多的表，讓玩家更容易再碰到大倍數。</li>
       </ul>
 
       <h3 id="data-fg"><span class="sec">3.3</span>自然遊戲：連續沒進 FG</h3>
@@ -789,7 +790,7 @@
             <tr><td class="key">連續 FG 太爛</td><td>FG 在 10× 以下的比例、連續兩次以上的比例</td><td>FG 倍數 × 隔日留存</td></tr>
             <tr><td class="key">RTP 下滑速度太快</td><td>近 40／100 轉 RTP 的分布</td><td>近期 RTP × 當天離場</td></tr>
             <tr><td class="key">玩得很平</td><td>已有</td><td>當日起伏指標（贏分標準差、≥ 10× 次數）× 隔日留存，找出定義與門檻</td></tr>
-            <tr><td class="key">玩家體驗不錯</td><td>先定義什麼叫體驗不錯</td><td>體驗不錯的玩家，換表前後的遊玩時長</td></tr>
+            <tr><td class="key">一段時間內拿到過大倍數</td><td>各轉數內拿到 ≥ 50×、≥ 100× 的比例</td><td>拿到大倍數之後，再拿到中高倍數 × 隔日留存</td></tr>
             <tr><td class="key">進 FG 特別多次</td><td>短時間內進 FG ≥ 2、3 次的比例</td><td>FG 次數 × 隔日留存（FG 多是否還會更好）</td></tr>
             <tr><td class="key">RTP 超過 100%</td><td>各轉數 RTP &gt; 100% 的玩家比例</td><td>贏錢玩家之後的 RTP、遊玩時長、隔日留存</td></tr>
             <tr><td class="key">整體</td><td>—</td><td>不同調性遊戲的留存與遊玩時長；上線後 A/B（換表組 vs 不換組）</td></tr>
@@ -801,7 +802,7 @@
     <section id="open">
       <h2><span class="sec">§4</span>待討論</h2>
       <ul>
-        <li><strong>時機怎麼判定</strong>：連續幾轉不得分、幾轉沒進 FG、RTP 下滑多快算太快、連續幾次 FG 在 10× 以下、怎麼算「體驗不錯」、FG 多少次算特別多、RTP 超過 100% 看多少轉？</li>
+        <li><strong>時機怎麼判定</strong>：連續幾轉不得分、幾轉沒進 FG、RTP 下滑多快算太快、連續幾次 FG 在 10× 以下、多少轉內拿到多少倍算「拿到過大倍數」、FG 多少次算特別多、RTP 超過 100% 看多少轉？</li>
         <li><strong>多個時機同時成立</strong>：例如連續不得分又連續不進 FG，換哪張表？</li>
         <li><strong>時機對應哪張表</strong>：§2.2 是初步想法，要模擬確認效果。</li>
         <li><strong>換多久</strong>：換表後持續幾轉，或進到 FG／出現大倍數就換回？</li>
@@ -827,6 +828,7 @@
             <tr><td class="key">2026-11-18</td><td>作法不分 BG、FG，換上的數學合成一組：表 A FG 加強、表 B 沒有 FG、表 C 連續中獎、表 D 中高倍數加強、表 E 穩定 FG（原 FG 表 B）、表 F 調性平 FG（原 FG 表 C）；原 FG 表 A 正常 FG 就是原本的數學，不列。對應表改用新代號。</td></tr>
             <tr><td class="key">2026-11-18</td><td>換上的數學改為表 A～G：A FG 週期加強、B FG 強度加強（提升 FG 平均倍數）、C 沒有 FG、D BG 連續中獎（Hit Rate 50%、倍數上限 100×）、E 中高倍數加強（BG 10×～100× 機率提升）、F 穩定 FG、G 調性較平的 FG（上限降低、低倍數同步降低；BG、FG RTP 不變）。對應重排：不得分→D、不進 FG→A、FG 太爛→F 或 G、RTP 下滑→E、很平→E 或 B、體驗不錯→B 或 E、進 FG 多次→C 或 B、RTP 超過 100%→B 或 E（待確認）。</td></tr>
             <tr><td class="key">2026-11-18</td><td>新增表 H 調性較深的 FG（BG、FG RTP 不變；FG 上限提高、高倍數變多，低倍數同步變多），跟表 G 相反。加進要拚大獎的時機：體驗不錯→B、E 或 H；進 FG 多次→C、B 或 H；RTP 超過 100%→B、E 或 H（待確認）。</td></tr>
+            <tr><td class="key">2026-11-18</td><td>拿掉時機「玩家體驗不錯」。有操作空間新增「一段時間內拿到過大倍數」：給中高倍數較多的調性（表 E），增加隔日留存；佐證是 §3.2 倍數留存表（拿到大倍數的人隔日留存較好）。</td></tr>
           </tbody>
         </table>
       </div>
