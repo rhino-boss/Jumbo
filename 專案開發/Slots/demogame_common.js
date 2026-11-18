@@ -2852,6 +2852,12 @@
       : "1.00";
   }
 
+  // 賠率表標題依語言：中文「賠率表（目前押注：x）」、英文「Paytable (Current Bet: x)」
+  function paytableTitle() {
+    const zh = /^zh/i.test(document.getElementById("languageSelect")?.value || document.documentElement.lang || "");
+    return zh ? `賠率表（目前押注：${currentBet()}）` : `Paytable (Current Bet: ${currentBet()})`;
+  }
+
   function isPaytableTitle(value) {
     return /pay\s*table|paytable|賠率表|赔率表/i.test(String(value || ""));
   }
@@ -3063,7 +3069,7 @@
 
     const card = document.createElement("section");
     card.className = "help-section";
-    card.innerHTML = `<h3 class="help-section-title">Paytable (Current Bet: ${currentBet()})</h3>`;
+    card.innerHTML = `<h3 class="help-section-title">${paytableTitle()}</h3>`;
     const wrap = document.createElement("div");
     wrap.className = "help-paytable-wrap";
     const table = document.createElement("table");
@@ -3235,7 +3241,7 @@
           || groupTitles.some((heading) => isPaytableTitle(heading.textContent) || /symbol payouts?/i.test(heading.textContent))
           || Boolean(card.querySelector("table.paytable, table.help-paytable"));
         if (paytable) {
-          const expected = `Paytable (Current Bet: ${currentBet()})`;
+          const expected = paytableTitle();
           if (sectionTitle.textContent !== expected) sectionTitle.textContent = expected;
           for (const note of card.querySelectorAll(":scope > .help-rule")) {
             if (/current.*bet|目前.*(?:押注|投注)/i.test(note.textContent)) note.remove();

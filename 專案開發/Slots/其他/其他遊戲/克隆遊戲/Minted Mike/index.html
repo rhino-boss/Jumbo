@@ -781,7 +781,7 @@
       }
 
       // 轉輪滾動（同 急速糖果 2／H020 連續輪帶）：每輪蓋一條輪帶往下捲、停在結果格；只做畫面，不動結果
-      async function reelStripSpin(board, columns) {
+      async function reelStripSpin(board, columns, prevColumns = null) {   // prevColumns：前一盤每輪由上到下的格子複本
         const motion = window.demogameMotion;
         const spinMs = motion ? motion.reelSpinMs() : 380;
         const gapMs = motion ? motion.stopStaggerMs() : 80;
@@ -817,7 +817,10 @@
           strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
           boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
           for (let k = 1; k <= extra; k += 1) {
-            const pick = pool[Math.floor(Math.random() * pool.length)];
+            // 輪帶最下面 boxes.length 格接前一個盤面：動畫起點就是舊盤面，先往下捲走，新盤面再從上方捲進來
+            const prevRow = k - (extra - boxes.length + 1);
+            const prevCell = prevRow >= 0 ? prevColumns?.[reel]?.[prevRow] : null;
+            const pick = prevCell || pool[Math.floor(Math.random() * pool.length)];
             strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
           }
           win.appendChild(strip);
@@ -871,10 +874,11 @@
           if (step.type === "land") {
             drawLines({ hot: step.hot });
             setHotPills(step.hot, step.mult);
+            const prevLand = columnsOf().map((list) => list.map((node) => node?.cloneNode(true)));   // 前一盤先捲走，不先變牌
             renderBoard(step.board);
             meterIdle(spin.progressive ? step.mult : 0);
             say(() => tr(spin.fgType ? "freeSpin" : "spin"));   // 轉動開始（同 H032）
-            await reelStripSpin(boardEl, columnsOf());
+            await reelStripSpin(boardEl, columnsOf(), prevLand);
             const shots = ["blue", "pink"].filter((c) => step.landed.includes(c)).map((c) => ({ cell: cellEl(step.stickerKeys[c]), color: c }));
             if (step.landed.includes("green")) $("meterGreen").classList.add("charging");
             if (shots.length) { await stickerShots(shots, step.active); await wait(300); }
@@ -927,9 +931,10 @@
             meterLabel.pink.textContent = `x${step.mult}`;
             await banner(`x${step.mult}`, tr("hotMultSub")(step.mult, spin.progressive ? step.multAdd : 0), "#ffd84a", 1300);
           } else if (step.type === "respin") {
+            const prevRespin = columnsOf().map((list) => list.map((node) => node?.cloneNode(true)));   // 前一盤先捲走，不先變牌
             renderBoard(step.board);
             say(() => tr("respin"));   // 重轉開始
-            await reelStripSpin(boardEl, columnsOf());
+            await reelStripSpin(boardEl, columnsOf(), prevRespin);
             await wait(200);
           } else if (step.type === "green") {
             renderBoard(step.board, step.fsCells);
@@ -1348,7 +1353,7 @@ Buy Feature（原 Buy Steezy Skater）50x；Super Feature（原 Buy Ink the City
   <script>window.DEMOGAME_HISTORY = true;</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 10:43";   // 最後調性更新（數學模型／權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Hacksaw Gaming Minted Mike", "expect": "貼紙觸發 Hot Line 與 Wild 噴漆，升級到更高階的 Free Spins。", "changes": []};</script>
-  <script src="../../../../demogame_common.js?v=20261118a"></script>
+  <script src="../../../../demogame_common.js?v=20261118b"></script>
   <script>window.mmBindCommonControls();</script>
 </body>
 

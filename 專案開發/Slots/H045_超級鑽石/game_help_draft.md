@@ -21,13 +21,13 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
-| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS MUST BE ON CONSECUTIVE REELS FROM LEFTMOST TO RIGHT. |
 
 ### WILD SYMBOL
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS MUST BE ON CONSECUTIVE REELS FROM LEFTMOST TO RIGHT. |
 | 規則說明 | ▪ [WW] 與 [W2] 可替代除 [C1] 以外的所有符號。 | ▪ [WW] AND [W2] SUBSTITUTE FOR ALL SYMBOLS EXCEPT [C1]. |
 | 規則說明 | ▪ [WW] 與 [W2] 只會由參與中獎的金框符號轉換產生。 | ▪ [WW] AND [W2] ARE CREATED ONLY FROM GOLDEN FRAMED SYMBOLS THAT ARE PART OF A WINNING COMBINATION. |
 

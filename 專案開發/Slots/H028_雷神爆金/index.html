@@ -2860,10 +2860,18 @@
       const strip = document.createElement("div");
       strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
       boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      // 前一個盤面：照每格實際位置與大小（含 Jumbo 大符號、Extra Reel 格）貼在輪帶的起點區，動畫一開始就是舊盤面，先往下捲走
+      const prevItems = opts.prevColumns?.[reel] || [];
+      const boardRect = board.getBoundingClientRect();
+      const boardTop = boardRect.top - hostRect.top - host.clientTop + host.scrollTop;
+      const startY = extra * pitch;   // 動畫起點時視窗頂端對到的輪帶位置
       for (let k = 1; k <= extra; k += 1) {
+        const y = last.y - top + last.h - unit.h + k * pitch;
+        if (prevItems.length && y + unit.h > startY - pitch * 0.5) continue;   // 起點區留給前一個盤面
         const pick = pool[Math.floor(Math.random() * pool.length)];
-        strip.appendChild(copyCell(pick, unit.w, unit.h, last.x - left, last.y - top + last.h - unit.h + k * pitch));
+        strip.appendChild(copyCell(pick, unit.w, unit.h, last.x - left, y));
       }
+      prevItems.forEach((item) => strip.appendChild(copyCell(item.node, item.w, item.h, last.x - left + (item.w < unit.w ? (unit.w - item.w) / 2 : 0), startY + boardTop + item.y - top)));
       win.appendChild(strip);
       cells.forEach((cell) => { cell.style.visibility = "hidden"; });
       // 停輪前多往下滾 5.0% 格高再回彈到正確位置（照實機影片量測，2026-11-05）；最上面墊一格，回彈時不露出空白
@@ -2884,12 +2892,14 @@
   async function animateReels(finalScreen){
     // 逐輪停輪（左到右）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion；Speed 5 同時停）
     // Extra Reel 四格併入其下方的第 2～5 輪（與判獎 reelBlocks 一致），跟著該輪一起捲動
+    // 先複製前一個盤面（依 grid 欄位分輪、由上到下），滾輪起點用它：前一盤先捲走，不先變牌
+    let prevColumns=null;{const old=Array.from(el.board.children).filter(node=>node.style.gridColumn),br=el.board.getBoundingClientRect();if(old.length){prevColumns=Array.from({length:6},()=>[]);old.forEach(node=>{let col=Number(node.style.gridColumn)-1;if(col<0||col>=6)return;const r=node.getBoundingClientRect();prevColumns[col].push({node:node.cloneNode(true),y:r.top-br.top,w:r.width,h:r.height})})}}   // 前一盤每格的複本與位置（相對盤面）
     renderBoard(finalScreen);message(state.fg?'Free Spin':'Spin');
     let nodes=Array.from(el.board.children),columns=Array.from({length:6},()=>[]);
     nodes.forEach(node=>{let col=Number(node.style.gridColumn)-1;if(col>=0&&col<6)columns[col].push(node)});
     columns.forEach(list=>list.sort((a,b)=>parseInt(a.style.gridRow)-parseInt(b.style.gridRow)));
     let one=nodes.find(node=>!node.classList.contains('jumbo')&&!node.classList.contains('peek-row'))||nodes[0],gap=parseFloat(getComputedStyle(el.board).rowGap)||0;
-    await reelStripSpin(el.board,columns,{unit:{w:one.offsetWidth,h:one.offsetHeight},pitch:one.offsetHeight+gap,pool:nodes.filter(node=>!node.classList.contains('jumbo')&&node.querySelector('.symbol-code')?.textContent)})}
+    await reelStripSpin(el.board,columns,{prevColumns,unit:{w:one.offsetWidth,h:one.offsetHeight},pitch:one.offsetHeight+gap,pool:nodes.filter(node=>!node.classList.contains('jumbo')&&node.querySelector('.symbol-code')?.textContent)})}
   function chooseParams(scene,retrigger=false){let weights,names;if(scene==='BG'){weights=B.ReelWeight;names=[1,2]}else{weights=retrigger?B.FreeTriggerReel:B.FreeReelWeight;names=[1,2,3]}let p=weighted(weights);return{suffix:names[p.index],rng:p}}
   function postWeights(scene,suffix){let v=B[`${scene==='BG'?'BaseGame':'FreeGame'}${suffix}PostC1`];return Array.isArray(v[0])?v[1]:v}
   function makeScreen(scene='BG',overrides=null,retrigger=false,forcedScatterCount=null,forcedSuffix=null){let chosen=forcedSuffix==null?chooseParams(scene,retrigger):{suffix:forcedSuffix,rng:{index:forcedSuffix-1,rng:0,total:0}},prefix=scene==='BG'?'BaseGame':'FreeGame',s=chosen.suffix,symbols=B[`${prefix}Symbol${s}`],weights=B[`${prefix}SymbolWeight${s}`],mega=B[`${prefix}MegaWay${s}`],my=B[`${prefix}MY${s}`];let main=[],rng=[],mystery=weighted(my).index;
@@ -2978,6 +2988,6 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Lucky Neko", "expect": "雷神帶倍數出現，多顆相加把得分乘大。", "changes": ["雷神（M1）兼倍數符號：主盤面依尺寸給 x2～x5，Extra Reel 上固定 x2，多顆相加（競品的 M1 只是最高分符號）", "最高獎上限 3000x", "Buy Feature 為 75 倍押注", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261118a"></script>
+  <script src="../demogame_common.js?v=20261118b"></script>
 </body>
 </html>

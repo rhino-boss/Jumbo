@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Three Little Pigs — Demo Game</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='32' y='54' font-size='56' text-anchor='middle'%3E%F0%9F%90%B7/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext x='32' y='54' font-size='56' text-anchor='middle'%3E%F0%9F%90%B7%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
   <style>
     :root {
       --bg-a: #130722;
@@ -1877,6 +1877,12 @@
       box-shadow:inset 0 0 0 2px rgba(255,248,210,.85),inset 0 -4px 8px rgba(120,70,0,.45),0 2px 6px rgba(0,0,0,.45) !important}
     #board .cell.gold{background:#101827 !important;border-color:rgba(255,214,90,.55) !important}
     #board .cell.gold .pig-icon{filter:drop-shadow(0 2px 2px rgba(90,50,0,.55))}
+    /* Scatter：深紫夜空底板＋金色光環＋SCATTER 標籤 */
+    #board .cell.pig-scatter .symbol-wrap::before{content:"";position:absolute;inset:6%;z-index:0;border-radius:50%;
+      background:radial-gradient(circle at 50% 42%,#6a3fd6 0%,#3a1d8c 55%,#1b0f45 100%);
+      box-shadow:0 0 0 2px #ffd54a,0 0 12px 3px rgba(255,213,74,.75),inset 0 0 10px rgba(255,255,255,.25)}
+    #board .cell.pig-scatter .pig-icon{transform:scale(1.08);filter:drop-shadow(0 0 6px rgba(255,236,150,.95))}
+    #board .cell .pig-wild-tag.pig-scatter-tag{background:linear-gradient(180deg,#8f5bff,#4b23b8);font-size:calc(var(--cell-size,72px) * .12)}
     #board .cell .pig-wild-tag{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);z-index:2;padding:0 6px;border-radius:6px;font-weight:900;
       font-size:calc(var(--cell-size,72px) * .15);color:#fff;background:linear-gradient(180deg,#ff5fa2,#c2185b);letter-spacing:.04em}
     #multPill.pig-bump,#demogame-info-bar .dib-item.pig-bump{animation:pigBump 260ms ease-out}
@@ -4124,6 +4130,13 @@
               tag.textContent = "WILD";
               wrap.appendChild(tag);
             }
+            if (cell.is_scatter) {   // Scatter：夜空底板＋光環＋SCATTER 標籤，比一般符號醒目
+              cellEl.classList.add("pig-scatter");
+              const tag = document.createElement("span");
+              tag.className = "pig-wild-tag pig-scatter-tag";
+              tag.textContent = "SCATTER";
+              wrap.appendChild(tag);
+            }
           }
           if (options.sway) {   // 大野狼的風經過這一輪時格子晃一下
             cellEl.classList.add("pig-sway");
@@ -4313,17 +4326,6 @@
       updateSpinButtonState();
     }
 
-    // 開場示意：R2 茅草、R3 木頭、R4 磚頭框（只是展示，不影響任何結果）
-    function showcaseFrames() {
-      const frames = emptyFrames();
-      [["straw", 1], ["wood", 2], ["brick", 3]].forEach(([key, col]) => {
-        const level = FRAME_KEYS.indexOf(key) + 1;
-        if (!level) return;
-        for (let row = SCORE_ROW_OFFSET; row < DISPLAY_WINDOW_SIZE; row += 1) frames[row][col] = level;
-      });
-      return frames;
-    }
-
     function sampleBoard() {
       const ids = Box.symbol_id.slice(0, 11);
       const board = [];
@@ -4343,7 +4345,7 @@
     // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
     // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
     // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
-    async function reelStripSpin(board, columns) {
+    async function reelStripSpin(board, columns, prevColumns = null) {   // prevColumns：前一個盤面每輪由上到下的格子複本（滾輪一開始先看到舊盤面捲走）
       const motion = window.demogameMotion;
       const spinMs = motion ? motion.reelSpinMs() : 380;
       const gapMs = motion ? motion.stopStaggerMs() : 80;
@@ -4397,7 +4399,10 @@
           strip.appendChild(copy);
         });
         for (let k = 1; k <= extra; k += 1) {
-          const pick = pool[Math.floor(Math.random() * pool.length)];
+          // 輪帶最下面 boxes.length 格接前一個盤面：動畫起點就是舊盤面，先往下捲走，新盤面再從上方捲進來
+          const prevRow = k - (extra - boxes.length + 1);
+          const prevCell = prevRow >= 0 ? prevColumns?.[reel]?.[prevRow] : null;
+          const pick = prevCell || pool[Math.floor(Math.random() * pool.length)];
           const copy = copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch);
           copy.classList.remove("peek-row");   // 隨機格一律畫成完整格
           strip.appendChild(copy);
@@ -4430,12 +4435,17 @@
       // 逐輪停輪（左到右；Speed 5 同時停）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
       // 三隻小豬：FG 的框整場保留，滾輪時框留在原位（框圖層在輪帶上面）
       const base = finalBoard || sampleBoard();
+      // 先複製前一個盤面（每輪由上到下），滾輪起點用它，前一盤先捲走、不先變牌
+      const prevNodes = Array.from(boardEl.children).filter((node) => node.classList.contains("cell"));
+      const prevColumns = prevNodes.length === base.length * Box.reel_num
+        ? Array.from({ length: Box.reel_num }, (_, col) => base.map((_, row) => prevNodes[row * Box.reel_num + col].cloneNode(true)))
+        : null;
       renderBoard(base, frames ? { frames } : {});
       if (state.debugSkipPlayback) return;   // Debug 快轉：直接到位
       const nodes = Array.from(boardEl.children);
       const columns = Array.from({ length: Box.reel_num }, (_, col) =>
         base.map((_, row) => nodes[row * Box.reel_num + col]));
-      await reelStripSpin(boardEl, columns);
+      await reelStripSpin(boardEl, columns, prevColumns);
     }
 
     // 連消結束：大野狼吹氣（狼頭探出鼓氣 → 旋風夾落葉由左往右捲過、格子晃一下）→ 風吹過的那一輪框中間轉出金幣
@@ -4840,7 +4850,7 @@
       closeBetMenu();
       clearLiveLog();
       resetDisplayState();
-      renderBoard(sampleBoard(), { frames: showcaseFrames() });
+      renderBoard(sampleBoard());
       renderAll(null, null);
       updateDebugControls();
       writeMessage("Ready — press Spin");
@@ -4953,7 +4963,7 @@
     setText(extraBetBtn, `Extra Bet (${getExtraBetMultiplier()}x)`);
     document.title = "Three Little Pigs — Demo Game";
     resetDisplayState();
-    renderBoard(sampleBoard(), { frames: showcaseFrames() });
+    renderBoard(sampleBoard());
     renderAll(null, null);
     updateDebugControls();
     applyLanguage();
@@ -4965,7 +4975,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-18 17:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞", "expect": "金色符號在同一格反覆中獎，框從茅草一路蓋成木頭、磚頭屋，框越堅固倍數越大。", "changes": ["金框改成金色符號：不帶倍數，中獎一樣在原位轉 Wild", "金色符號中獎的格子加茅草框，同一格再有金色符號中獎就升級：茅草 → 木頭 → 磚頭", "連消結束框開出倍數（茅草 1～2500x、木頭 3～2500x、磚頭 20～2500x，高倍數只是有機率），Mult＝1＋所有框倍數，乘該局得分", "BG 每局重置框；FG 框整場保留、可繼續升級", "FG 局數改 3／4／5 Scatter → 10／15／20 局", "輪帶改用 PG Piñata Wins，沒有第 3 輪整輪金色；BG 金框比例調高（停輪平均約 2.5 顆）"]};</script>
-  <script src="../../../../demogame_common.js?v=20261118a"></script>
+  <script src="../../../../demogame_common.js?v=20261118b"></script>
 </body>
 
 </html>

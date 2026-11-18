@@ -717,8 +717,14 @@
     const extra = Math.max(6, Math.round(ms / 65), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);  // 捲動格數隨停輪時間；Speed 1～4 至少 10 格，Speed 5 維持
     const items = stripItems(strip, stop, override, extra);
     inner.style.transition = "none";
+    const prev = Array.from(inner.children).map((node) => node.cloneNode(true));
     // 最上面墊一格，停輪前多往下滾 18% 格高再回彈（同 H020）時不露出空白
     inner.innerHTML = [items[items.length - 1], ...items].map(cellHtml).join("");
+    // 前一個盤面：輪帶起點畫面＝最後幾格，換成舊盤面複本，動畫一開始就是舊盤面先往下捲走（不先變牌）
+    if (prev.length && prev.length < inner.children.length) {
+      const kids = Array.from(inner.children).slice(-prev.length);
+      kids.forEach((node, i) => { prev[i].classList.remove("h014-hit"); node.replaceWith(prev[i]); });
+    }
     const h = inner.children[0].offsetHeight;  // 一格高度（上下兩排只露半格）
     inner.style.transform = `translateY(${-(extra + 1) * h}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果而閃一下
     const anim = inner.animate([
@@ -1390,7 +1396,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金"]};</script>
-  <script src="../demogame_common.js?v=20261118a"></script>
+  <script src="../demogame_common.js?v=20261118b"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

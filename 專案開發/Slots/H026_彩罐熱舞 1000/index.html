@@ -4200,7 +4200,7 @@
     // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
     // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
     // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
-    async function reelStripSpin(board, columns) {
+    async function reelStripSpin(board, columns, prevColumns = null) {   // prevColumns：前一個盤面每輪由上到下的格子複本（滾輪一開始先看到舊盤面捲走）
       const motion = window.demogameMotion;
       const spinMs = motion ? motion.reelSpinMs() : 380;
       const gapMs = motion ? motion.stopStaggerMs() : 80;
@@ -4254,7 +4254,10 @@
           strip.appendChild(copy);
         });
         for (let k = 1; k <= extra; k += 1) {
-          const pick = pool[Math.floor(Math.random() * pool.length)];
+          // 輪帶最下面 boxes.length 格接前一個盤面：動畫起點就是舊盤面，先往下捲走，新盤面再從上方捲進來
+          const prevRow = k - (extra - boxes.length + 1);
+          const prevCell = prevRow >= 0 ? prevColumns?.[reel]?.[prevRow] : null;
+          const pick = prevCell || pool[Math.floor(Math.random() * pool.length)];
           const copy = copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch);
           copy.classList.remove("peek-row");   // 隨機格一律畫成完整格
           strip.appendChild(copy);
@@ -4286,12 +4289,17 @@
     async function animateReels(finalBoard = null) {
       // 逐輪停輪（左到右；Speed 5 同時停）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
       const base = finalBoard || sampleBoard();
+      // 先複製前一個盤面（每輪由上到下），滾輪起點用它，前一盤先捲走、不先變牌
+      const prevNodes = Array.from(boardEl.children).filter((node) => node.classList.contains("cell"));
+      const prevColumns = prevNodes.length === base.length * Box.reel_num
+        ? Array.from({ length: Box.reel_num }, (_, col) => base.map((_, row) => prevNodes[row * Box.reel_num + col].cloneNode(true)))
+        : null;
       renderBoard(base);
       if (state.debugSkipPlayback) return;   // Debug 快轉：直接到位
       const nodes = Array.from(boardEl.children);
       const columns = Array.from({ length: Box.reel_num }, (_, col) =>
         base.map((_, row) => nodes[row * Box.reel_num + col]));
-      await reelStripSpin(boardEl, columns);
+      await reelStripSpin(boardEl, columns, prevColumns);
     }
 
     async function playbackSpin(round, spin) {
@@ -4715,7 +4723,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "消除到帶倍數的金框，倍數一路累積，Spin 結束時一次乘上總得分。", "changes": ["5×3、20 線，中獎消除掉落", "R2～R4 符號可帶金框，中獎後原位轉 Wild", "金框可帶 x2～x1000 倍數，消除時收集累積，Spin 結束乘上總得分", "提供 Extra Bet 與 Buy Feature（75 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261118a"></script>
+  <script src="../demogame_common.js?v=20261118b"></script>
 </body>
 
 </html>

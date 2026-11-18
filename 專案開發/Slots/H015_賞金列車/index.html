@@ -2761,7 +2761,7 @@
   // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
   // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
   // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
-  async function reelStripSpin(board, columns) {
+  async function reelStripSpin(board, columns, prevColumns = null) {   // prevColumns：前一盤每輪由上到下的格子複本
     const motion = window.demogameMotion;
     const spinMs = motion ? motion.reelSpinMs() : 380;
     const gapMs = motion ? motion.stopStaggerMs() : 80;
@@ -2809,7 +2809,10 @@
       strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
       boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
       for (let k = 1; k <= extra; k += 1) {
-        const pick = pool[Math.floor(Math.random() * pool.length)];
+        // 輪帶最下面 boxes.length 格接前一個盤面：動畫起點就是舊盤面，先往下捲走，新盤面再從上方捲進來
+        const prevRow = k - (extra - boxes.length + 1);
+        const prevCell = prevRow >= 0 ? prevColumns?.[reel]?.[prevRow] : null;
+        const pick = prevCell || pool[Math.floor(Math.random() * pool.length)];
         strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
       }
       win.appendChild(strip);
@@ -2836,6 +2839,13 @@
     const initial = spin.steps[0];
     if (!initial) return;
     // 逐輪停輪（左到右）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion；只收有效格）
+    // 先複製前一個盤面（同下方取格方式），滾輪起點用它：前一盤先捲走，不先變牌
+    const oldNodes = Array.from(el.board.children);
+    const prevColumns = oldNodes.length >= ROWS * REELS ? Array.from({ length: REELS }, (_, reel) => {
+      const list = [];
+      for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel] && oldNodes[row * REELS + reel]) list.push(oldNodes[row * REELS + reel].cloneNode(true));
+      return list;
+    }) : null;
     renderBoard(initial.board, initial.gold);
     const nodes = Array.from(el.board.children);
     const columns = Array.from({ length: REELS }, (_, reel) => {
@@ -2843,7 +2853,7 @@
       for (let row = 0; row < ROWS; row++) if (Box.score_area[row][reel]) list.push(nodes[row * REELS + reel]);
       return list;
     });
-    await reelStripSpin(el.board, columns);
+    await reelStripSpin(el.board, columns, prevColumns);
   }
 
   // 得分（Win）即時顯示：只改 #winValue 文字，不動 state（Credit／統計／Log 仍在局末才結算）
@@ -3237,7 +3247,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Wild Bounty Showdown", "expect": "金框中獎轉 Wild 接續連消，把乘數階梯一路推高。", "changes": ["3,600 Ways，6 輪 3-4-5-5-4-3 盤面，中獎消除掉落", "R3、R4 符號可帶金框，中獎後原位轉 Wild", "每段消除前抽炸彈推進乘數階梯，最高 x1024", "Buy Feature 為 75 倍押注"]};</script>
-  <script src="../demogame_common.js?v=20261118a"></script>
+  <script src="../demogame_common.js?v=20261118b"></script>
 </body>
 
 </html>

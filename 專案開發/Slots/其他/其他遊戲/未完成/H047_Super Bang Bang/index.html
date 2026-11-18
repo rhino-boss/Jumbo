@@ -2906,23 +2906,44 @@ function parseForcedStops() {
 }
 
 // ─── PLAYBACK ────────────────────────────────────────────────────────────────
+// 下一轉：前一個盤面先往下掉出、新盤面再從上方落入（逐欄由左到右錯開），不可先變牌再滾（Demogame 規範，2026-11-18）
+async function boardDropSpin(board, render, spinMs, gapMs) {
+  const cellsOf = () => Array.from(board.querySelectorAll(".cell"));
+  const br = board.getBoundingClientRect();
+  const old = cellsOf().map((n) => { const r = n.getBoundingClientRect(); return { node: n.cloneNode(true), sx: r.left, x: r.left - br.left - board.clientLeft, y: r.top - br.top - board.clientTop, w: r.width, h: r.height }; });
+  render();
+  const fresh = cellsOf();
+  if (!old.length || !fresh.length) return;
+  const keep = { position: board.style.position, overflow: board.style.overflow };
+  if (getComputedStyle(board).position === "static") board.style.position = "relative";
+  board.style.overflow = "hidden";
+  const H = board.clientHeight + 20;
+  const xs = [...new Set(fresh.map((n) => Math.round(n.getBoundingClientRect().left)))].sort((a, b) => a - b);
+  const col = (left) => xs.reduce((best, x, i) => (Math.abs(x - left) < Math.abs(xs[best] - left) ? i : best), 0);
+  const fall = Math.max(100, spinMs * 0.38), land = Math.max(140, spinMs * 0.62), anims = [];
+  old.forEach((o) => {
+    const n = o.node;
+    n.classList.remove("hit", "reel-spin", "symbol-cleared", "symbol-drop", "symbol-settle", "convert");
+    n.removeAttribute("id");
+    n.style.cssText += `;position:absolute;margin:0;left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;box-sizing:border-box;animation:none;transition:none;z-index:5;pointer-events:none`;
+    board.appendChild(n);
+    anims.push(n.animate([{ transform: "translateY(0)" }, { transform: `translateY(${H}px)` }], { duration: fall, delay: col(o.sx) * gapMs, easing: "cubic-bezier(.5,0,.9,.6)", fill: "both" }).finished.then(() => n.remove()));
+  });
+  fresh.forEach((n) => {
+    anims.push(n.animate([
+      { transform: `translateY(${-H}px)`, easing: "cubic-bezier(.45,0,.85,.55)" },
+      { transform: "translateY(6px)", offset: 0.8, easing: "cubic-bezier(.3,0,.4,1)" },
+      { transform: "translateY(0)" }
+    ], { duration: land, delay: col(Math.round(n.getBoundingClientRect().left)) * gapMs + fall, fill: "backwards" }).finished);
+  });
+  await Promise.all(anims.map((p) => p.catch(() => {})));
+  board.querySelectorAll(".cell").forEach((n) => { if (!fresh.includes(n)) n.remove(); });
+  board.style.position = keep.position; board.style.overflow = keep.overflow;
+}
 async function animateReels(initialBoard, isExtraReelDone) {
   boardEl.dataset.phase='rolling';
-  let frame=0;
-  do {
-    const rolling = cloneBoard(initialBoard);
-    for(let reel=0;reel<COLS;reel++) {
-      const offset = (frame + reel + 1) % ROWS;
-      for(let row=0;row<ROWS;row++) {
-        rolling[row][reel] = {...initialBoard[(row + offset) % ROWS][reel]};
-      }
-    }
-    renderBoard(rolling, null, null, true);
-    await new Promise(resolve=>setTimeout(resolve,55));
-    frame++;
-  } while(frame<2 || !isExtraReelDone());
-  // The stopping frame is the actual result, so no second symbol change occurs.
-  renderBoard(initialBoard);
+  await boardDropSpin(boardEl, () => renderBoard(initialBoard), st.turboOn ? 220 : 520, st.turboOn ? 25 : 80);
+  while (!isExtraReelDone()) await new Promise(resolve=>setTimeout(resolve,30));
 }
 
 async function playSpin(spin, fgLeft=null) {
@@ -3199,7 +3220,7 @@ setTimeout(initTrack,80);
 appendLog('H047 ready | H016 reel strips loaded | R1 golden disabled');
   </script>
   <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = false;</script>
-  <script src="../../demogame_common.js?v=20261118a"></script>
+  <script src="../../demogame_common.js?v=20261118b"></script>
 </body>
 
 </html>

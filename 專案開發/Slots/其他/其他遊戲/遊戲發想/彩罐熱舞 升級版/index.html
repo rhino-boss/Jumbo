@@ -2259,7 +2259,7 @@
     const H026_CONFIG_FILES = ["config.js"];   // 彩罐熱舞 升級版 發想：單一 config
     const configFromQuery = new URLSearchParams(window.location.search).get("config");
     const H026_ACTIVE_CONFIG = H026_CONFIG_FILES.includes(configFromQuery) ? configFromQuery : H026_CONFIG_FILES[0];
-    document.write(`<script src="./${H026_ACTIVE_CONFIG}?c=20261022"><\/script>`);   // c＝config 更新日，改權重時同步改，避免線上吃舊快取
+    document.write(`<script src="./${H026_ACTIVE_CONFIG}?c=20261118"><\/script>`);   // c＝config 更新日，改權重時同步改，避免線上吃舊快取
   </script>
   <script>
     const Box = window.H026_BOX_DATA;
@@ -4313,7 +4313,7 @@
     // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
     // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
     // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
-    async function reelStripSpin(board, columns) {
+    async function reelStripSpin(board, columns, prevColumns = null) {   // prevColumns：前一個盤面每輪由上到下的格子複本（滾輪一開始先看到舊盤面捲走）
       const motion = window.demogameMotion;
       const spinMs = motion ? motion.reelSpinMs() : 380;
       const gapMs = motion ? motion.stopStaggerMs() : 80;
@@ -4367,7 +4367,10 @@
           strip.appendChild(copy);
         });
         for (let k = 1; k <= extra; k += 1) {
-          const pick = pool[Math.floor(Math.random() * pool.length)];
+          // 輪帶最下面 boxes.length 格接前一個盤面：動畫起點就是舊盤面，先往下捲走，新盤面再從上方捲進來
+          const prevRow = k - (extra - boxes.length + 1);
+          const prevCell = prevRow >= 0 ? prevColumns?.[reel]?.[prevRow] : null;
+          const pick = prevCell || pool[Math.floor(Math.random() * pool.length)];
           const copy = copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch);
           copy.classList.remove("peek-row");   // 隨機格一律畫成完整格
           strip.appendChild(copy);
@@ -4399,12 +4402,17 @@
     async function animateReels(finalBoard = null) {
       // 逐輪停輪（左到右；Speed 5 同時停）：先畫好結果盤面，再由 reelStripSpin 蓋輪帶捲動到位（時間依 demogameMotion）
       const base = finalBoard || sampleBoard();
+      // 先複製前一個盤面（每輪由上到下），滾輪起點用它，前一盤先捲走、不先變牌
+      const prevNodes = Array.from(boardEl.children).filter((node) => node.classList.contains("cell"));
+      const prevColumns = prevNodes.length === base.length * Box.reel_num
+        ? Array.from({ length: Box.reel_num }, (_, col) => base.map((_, row) => prevNodes[row * Box.reel_num + col].cloneNode(true)))
+        : null;
       renderBoard(base);
       if (state.debugSkipPlayback) return;   // Debug 快轉：直接到位
       const nodes = Array.from(boardEl.children);
       const columns = Array.from({ length: Box.reel_num }, (_, col) =>
         base.map((_, row) => nodes[row * Box.reel_num + col]));
-      await reelStripSpin(boardEl, columns);
+      await reelStripSpin(boardEl, columns, prevColumns);
     }
 
     // ── 擴散射擊動畫（彩罐熱舞 升級版）：每個擴散格依序「準星鎖定 → 開槍（閃光、火花、彈孔、盤面震動）」──
@@ -4893,7 +4901,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "用掉的金框擴散出新金框，連續轉 Wild 收集倍數。", "changes": ["移除 R3 整條金框", "金框使用後，R2～R5 隨機 1～3 格變金框", "選到已是金框的位置等於直接消除一次：轉 Wild，帶倍數就收集倍數"]};</script>
-  <script src="../../../../demogame_common.js?v=20261118a"></script>
+  <script src="../../../../demogame_common.js?v=20261118b"></script>
 </body>
 
 </html>
