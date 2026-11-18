@@ -2306,7 +2306,7 @@
         const t0 = Date.now();
         const inFeature = () => document.body.classList.contains("fg-mode")
           || ($id("fgLeftPill") && !$id("fgLeftPill").classList.contains("hidden") && !$id("fgLeftPill").hidden)
-          || /FG|Free|免費/i.test($id("spinBtn")?.textContent || "");
+          || /\bFG\b|Free|免費/i.test($id("spinBtn")?.textContent || "");
         idleTimer = setInterval(() => {
           const fg = inFeature(), spin = $id("spinBtn");
           if (fg) sawFg = true;
@@ -2779,6 +2779,26 @@
       body #helpDialog #helpContent .help-sym-tile.has-art { width: 64px; height: 64px; }
       body #helpDialog #helpContent .help-sym-pays { min-width: 0; font-size: 12px; }
     }
+
+    /* Help 參考排版（2026-11-18 使用者）：內容窄欄置中、標題白色置中、圓點條列、派彩兩欄（張數白、派彩金）、
+       Wild／Scatter 為「符號圖＋金色名稱」卡片 */
+    body #helpDialog #helpContent > * { max-width: 600px; margin-left: auto !important; margin-right: auto !important; }
+    body #helpDialog #helpContent .help-section,
+    body #helpDialog #helpContent .help-card,
+    body #helpDialog #helpContent .help-standard-card { padding: 22px 8px; border-bottom-color: #22344a; }
+    body #helpDialog #helpContent .help-section-title,
+    body #helpDialog #helpContent .help-card > h3 { margin: 0 0 16px; color: #ffffff; font: 600 20px/1.35 "Segoe UI", Arial, sans-serif; text-align: center; }
+    body #helpDialog #helpContent .help-group-title { margin: 20px 0 12px; color: #ffffff; font: 600 16px/1.35 "Segoe UI", Arial, sans-serif; text-align: center; }
+    body #helpDialog #helpContent .help-rule { margin: 0 0 12px; padding: 0 0 0 22px; color: #c3cdd8; font: 14px/1.55 "Segoe UI", Arial, sans-serif; }
+    body #helpDialog #helpContent .help-rule::before { content: "•"; left: 4px; top: 0; width: auto; height: auto; background: none; color: #8d99a8; font-size: 15px; line-height: 1.45; }
+    body #helpDialog #helpContent .help-sym-grid { gap: 26px 12px; margin: 8px 0 18px; }
+    body #helpDialog #helpContent .help-sym-card { justify-content: center; gap: 14px; }
+    body #helpDialog #helpContent .help-sym-pays { min-width: 70px; font: 600 14px/1.6 "Segoe UI", Arial, sans-serif; }
+    body #helpDialog #helpContent .help-sym-pays > div { display: grid; grid-template-columns: 1.4em auto; column-gap: 14px; }
+    body #helpDialog #helpContent .help-sym-count { color: #d9e1ea; }
+    body #helpDialog #helpContent .help-sym-value { color: #f5c542; }
+    body #helpDialog #helpContent .help-sym-special.is-scatter { grid-column: 1 / -1; }
+    body #helpDialog #helpContent .help-sym-label { color: #f5c542; font: 600 15px/1.35 "Segoe UI", Arial, sans-serif; white-space: normal; max-width: 7em; }
   `;
   document.head.appendChild(style);
 
@@ -3114,7 +3134,7 @@
           const value = String(row[count.index + 1] || "").trim();
           if (!value || /^[—–-]$/.test(value)) continue;
           const line = document.createElement("div");
-          line.innerHTML = `<span class="help-sym-count"></span> - <span class="help-sym-value"></span>`;
+          line.innerHTML = `<span class="help-sym-count"></span><span class="help-sym-value"></span>`;
           line.firstElementChild.textContent = count.label;
           line.lastElementChild.textContent = value;
           list.appendChild(line);
@@ -3124,6 +3144,67 @@
       }
       const wrap = table.closest(".help-paytable-wrap") || table;
       wrap.replaceWith(grid);
+    }
+  }
+
+  // 2026-11-18 使用者：Help 照參考排版——賠率表的 Wild／Scatter 改成「符號圖＋金色名稱」卡片放在符號格最前面
+  // （Scatter 獨佔一列置中），原本的說明文字移到符號格下方。
+  const SPECIAL_CODES = { scatter: ["C1", "SC", "S1", "C"], wild: ["WW", "W", "WILD", "W1"] };
+  function specialCode(kind) {
+    const art = window.DEMOGAME_SYMBOL_ART || {};
+    return SPECIAL_CODES[kind].find((code) => { try { return Boolean(art[code]); } catch (_) { return false; } }) || SPECIAL_CODES[kind][0];
+  }
+  function buildSpecialCards(card) {
+    const heads = [...card.querySelectorAll(":scope > .help-group-title")]
+      .map((head) => ({ head, kind: /scatter|分散|散佈|散布|夺宝|奪寶/i.test(head.textContent) ? "scatter" : /wild|百搭/i.test(head.textContent) ? "wild" : "" }))
+      .filter((entry) => entry.kind);
+    if (!heads.length) return;
+    let grid = card.querySelector(".help-sym-grid");
+    if (!grid) { grid = document.createElement("div"); grid.className = "help-sym-grid"; card.appendChild(grid); }
+    const notes = document.createDocumentFragment();
+    const cards = [];
+    for (const { head, kind } of heads) {
+      // 標題後面到下一個標題／符號格之前的說明列，搬到符號格下方
+      let next = head.nextElementSibling;
+      while (next && next.matches(".help-rule")) { const cur = next; next = next.nextElementSibling; notes.appendChild(cur); }
+      const item = document.createElement("div");
+      item.className = `help-sym-card help-sym-special is-${kind}`;
+      item.appendChild(symbolTile(specialCode(kind)));
+      const label = document.createElement("div");
+      label.className = "help-sym-label";
+      label.textContent = titleCase(head.textContent.trim());
+      item.appendChild(label);
+      cards.push({ kind, item });
+      head.remove();
+    }
+    cards.sort((a, b) => (a.kind === "scatter" ? -1 : 0) - (b.kind === "scatter" ? -1 : 0));
+    for (const { item } of cards.reverse()) grid.prepend(item);
+    grid.after(notes);
+  }
+
+  // 全大寫的英文規則（Help.xlsx 原文）轉成句首大寫；[代號]、{數字}、縮寫（FG、RTP、C1…）維持原樣
+  const KEEP_UPPER = new Set(["FG", "BG", "RTP", "WW", "OP", "RNG", "BF", "SF", "NB", "EB", "JP", "GRAND", "MAJOR", "MINOR", "MINI", "MAX", "ID", "OK"]);
+  function sentenceCase(text) {
+    const bare = text.replace(/\[[^\]]*\]|\{[^}]*\}/g, "");
+    if (!/[A-Z]{2}/.test(bare) || /[a-z]/.test(bare)) return text;
+    const parts = text.split(/(\[[^\]]*\]|\{[^}]*\})/);
+    let out = parts.map((part, i) => (i % 2 ? part : part.replace(/[A-Za-z][A-Za-z0-9']*/g, (word) => {
+      if (KEEP_UPPER.has(word)) return word;
+      if (/^[A-WYZ]\d+$/.test(word)) return word;   // M1、C1 等符號代號（x2 倍數轉小寫）
+      return word.toLowerCase();
+    }))).join("");
+    out = out.replace(/(^\s*|[.!?]\s+)([a-z])/g, (m, lead, ch) => lead + ch.toUpperCase());
+    // 功能名稱維持首字大寫
+    out = out.replace(/\b(free games?|free spins?|extra bet|buy feature|super feature|op jackpot|wild|scatter)\b/gi, (m) => m.replace(/\b[a-z]/g, (c) => c.toUpperCase()));
+    return out;
+  }
+  function sentenceCaseRules(card) {
+    for (const rule of card.querySelectorAll(".help-rule")) {
+      for (const target of rule.querySelectorAll(".help-rule-en, .help-rule-zh").length ? rule.querySelectorAll(".help-rule-en, .help-rule-zh") : [rule]) {
+        if (target.children.length) continue;
+        const next = sentenceCase(target.textContent);
+        if (next !== target.textContent) target.textContent = next;
+      }
     }
   }
 
@@ -3167,6 +3248,7 @@
           wrapBarePaytables(card);
           mergePaytables(card);
           buildSymbolGrid(card);
+          buildSpecialCards(card);
           const table = card.querySelector("table.paytable");
           if (table) {
             const firstHeader = table.querySelector("th");
@@ -3177,6 +3259,7 @@
         }
         normalizeLooseRuleGrids(card);
         stripRuleBullets(card);
+        sentenceCaseRules(card);
       }
 
       for (const heading of root.querySelectorAll(".help-section-title, .help-group-title, .help-card > h3")) {

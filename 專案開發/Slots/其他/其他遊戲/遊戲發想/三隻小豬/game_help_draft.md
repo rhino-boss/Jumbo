@@ -1,6 +1,6 @@
 # 三隻小豬 Game Help Draft
 
-這份 md 是三隻小豬（發想）Help 的前置確認稿。
+這份 md 是三隻小豬（發想，以彩罐熱舞改）Help 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
 
 ## Game Meta
@@ -11,7 +11,7 @@
 | parsheet_id | — |
 | name_zh | 三隻小豬 |
 | name_en | Three Little Pigs |
-| game_type | Video Slot - Pay Anywhere / Cascade |
+| game_type | Video Slot - 20 Lines / Cascade |
 
 ---
 
@@ -21,15 +21,19 @@
 | --- | --- | --- |
 | 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
 
+### WILD SYMBOL
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | ▪ [WW] 可替代除 [Scatter] 外的所有符號。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [Scatter]. |
+
 ### SCATTER SYMBOL
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 副標題 | 散布符號 | SCATTER SYMBOL |
-| 規則說明 | ▪ [C1] 不參與中獎判定，出現後原地保留至該次旋轉的所有連消結束。 | ▪ [C1] DOES NOT TAKE PART IN WIN EVALUATION AND STAYS IN PLACE UNTIL ALL CASCADES OF THE SPIN ARE COMPLETE. |
-| 規則說明 | ▪ 所有連消結束後，若最終盤面出現 {4} 個或以上 [C1]，將觸發免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, {4} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
-| 規則說明 | ▪ {4}／{5}／{6} 個 [C1] 分別支付 {3}X／{5}X／{100}X 投注。{3} 個 [C1] 不支付獎金。 | ▪ {4} / {5} / {6} [C1] PAY {3}X / {5}X / {100}X BET RESPECTIVELY. {3} [C1] DO NOT PAY. |
-| 規則說明 | ▪ 同一轉輪最多只會出現 {1} 個 [C1]。 | ▪ AT MOST {1} [C1] APPEARS ON EACH REEL. |
+| 規則說明 | ▪ 當本次旋轉連消結束後，若最終盤面出現 {3} 個或以上 [C1]，將觸發免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, {3} OR MORE [C1] ON THE FINAL REELS WILL TRIGGER THE FREE GAME FEATURE. |
 
 ### 賠率表
 
@@ -37,17 +41,17 @@
 | --- | --- | --- |
 | 副標題 | 賠率表 | PAYTABLE |
 
-| 繁中 | 繁中 | 繁中 |
+| 中文欄 | 中文欄 | 中文欄 |
 | --- | --- | --- |
-| [M1] 12+ - 5000 | [M2] 12+ - 2500 | [M3] 12+ - 1500 |
-| [M1] 10–11 - 2500 | [M2] 10–11 - 1000 | [M3] 10–11 - 500 |
-| [M1] 8–9 - 1000 | [M2] 8–9 - 250 | [M3] 8–9 - 200 |
-| [M4] 12+ - 1200 | [A] 12+ - 1000 | [K] 12+ - 800 |
-| [M4] 10–11 - 200 | [A] 10–11 - 150 | [K] 10–11 - 120 |
-| [M4] 8–9 - 150 | [A] 8–9 - 100 | [K] 8–9 - 80 |
-| [Q] 12+ - 500 | [J] 12+ - 400 | [TE] 12+ - 200 |
-| [Q] 10–11 - 100 | [J] 10–11 - 90 | [TE] 10–11 - 75 |
-| [Q] 8–9 - 50 | [J] 8–9 - 40 | [TE] 8–9 - 25 |
+| [M1] 5 - 5000 | [M2] 5 - 2000 | [M3] 5 - 1000 |
+| [M1] 4 - 1250 | [M2] 4 - 500 | [M3] 4 - 250 |
+| [M1] 3 - 250 | [M2] 3 - 100 | [M3] 3 - 75 |
+| [M4] 5 - 750 | [M5] 5 - 500 | [A] 5 - 250 |
+| [M4] 4 - 200 | [M5] 4 - 100 | [A] 4 - 50 |
+| [M4] 3 - 50 | [M5] 3 - 25 | [A] 3 - 10 |
+| [K] 5 - 250 | [Q] 5 - 250 | [J] 5 - 250 |
+| [K] 4 - 50 | [Q] 4 - 50 | [J] 4 - 50 |
+| [K] 3 - 10 | [Q] 3 - 10 | [J] 3 - 10 |
 
 ---
 
@@ -55,10 +59,9 @@
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 連消特色 | CASCADING FEATURE |
-| 規則說明 | ▪ 每次結算後，中獎符號會被移除，剩餘符號會向下掉落並由新符號補滿空位。 | ▪ AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED, THE REMAINING SYMBOLS DROP DOWN, AND NEW SYMBOLS FILL THE EMPTY POSITIONS. |
-| 規則說明 | ▪ 盤面補滿後會再次結算新的中獎組合，直到不再形成新的中獎組合為止。 | ▪ AFTER THE REELS ARE REFILLED, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN UNTIL NO MORE WINNING COMBINATIONS ARE FORMED. |
-| 規則說明 | ▪ 同一次旋轉所有連消的一般符號獎金先相加，再一次套用倍數。 | ▪ ALL REGULAR-SYMBOL WINS FROM EVERY CASCADE OF A SPIN ARE ADDED TOGETHER FIRST, THEN THE MULTIPLIER IS APPLIED ONCE. |
+| 主要標題 | 消除特色 | CASCADING FEATURE |
+| 規則說明 | ▪ 每輪結算後，中獎符號會被消除；消除後產生的空格由上方符號向下掉落補位。 | ▪ AFTER EACH WIN EVALUATION, WINNING SYMBOLS ARE REMOVED AND THE SYMBOLS ABOVE FALL DOWN TO FILL THE EMPTY POSITIONS. |
+| 規則說明 | ▪ 補牌後會再次檢查新的中獎組合，直到不再形成新的中獎組合為止。 | ▪ AFTER THE SYMBOLS CASCADE DOWN, NEW WINNING COMBINATIONS ARE EVALUATED AGAIN. THIS PROCESS REPEATS UNTIL NO NEW WINNING COMBINATIONS ARE FORMED. |
 
 ---
 
@@ -67,12 +70,22 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 框倍數特色 | FRAME MULTIPLIER FEATURE |
-| 規則說明 | ▪ 每次中獎消除後，被消除符號所在的位置會加上一層框，依序為茅草框、木頭框、磚頭框，最多 {3} 層。 | ▪ AFTER EACH WINNING CASCADE, EVERY POSITION WHERE A SYMBOL WAS CLEARED GAINS ONE FRAME LAYER: STRAW, THEN WOOD, THEN BRICK, UP TO {3} LAYERS. |
-| 規則說明 | ▪ 框留在原位置，不隨符號掉落移動。 | ▪ FRAMES STAY ON THEIR POSITIONS AND DO NOT MOVE WITH FALLING SYMBOLS. |
-| 規則說明 | ▪ 所有連消結束後，每個框會出現隨機倍數：茅草框 {1}X～{5}X、木頭框 {5}X～{20}X、磚頭框 {20}X～{2500}X。 | ▪ WHEN ALL CASCADES ARE COMPLETE, EACH FRAME REVEALS A RANDOM MULTIPLIER: STRAW {1}X–{5}X, WOOD {5}X–{20}X, BRICK {20}X–{2500}X. |
-| 規則說明 | ▪ 所有框的倍數相加後，乘上該次旋轉所有一般符號的總獎金。 | ▪ THE SUM OF ALL FRAME MULTIPLIERS IS APPLIED TO THE TOTAL REGULAR-SYMBOL WIN OF THAT SPIN. |
-| 規則說明 | ▪ 框與倍數只作用於該次旋轉，下一次旋轉重新開始（免費遊戲亦同）。 | ▪ FRAMES AND MULTIPLIERS APPLY ONLY TO THE CURRENT SPIN AND RESET ON THE NEXT SPIN, INCLUDING DURING THE FREE GAME FEATURE. |
-| 規則說明 | ▪ 乘倍效果不作用於 [C1]。 | ▪ THE MULTIPLIER EFFECT DOES NOT APPLY TO [C1]. |
+| 規則說明 | ▪ 金色符號參與得分時，該位置會加上茅草框；同一位置之後再有金色符號參與得分，框依序升級為木頭框、磚頭框，最多 {3} 階。 | ▪ WHEN A GOLDEN SYMBOL TAKES PART IN A WIN, ITS POSITION GAINS A STRAW FRAME. EACH LATER GOLDEN SYMBOL WIN ON THE SAME POSITION UPGRADES IT TO WOOD, THEN BRICK, UP TO {3} LEVELS. |
+| 規則說明 | ▪ 框留在原位置，不隨符號消除或掉落移動。 | ▪ FRAMES STAY ON THEIR POSITIONS AND DO NOT MOVE WHEN SYMBOLS ARE CLEARED OR FALL. |
+| 規則說明 | ▪ 當本次旋轉無法再消除時，若本次旋轉有得分，每個框會出現隨機倍數：茅草框 {1}X～{2500}X、木頭框 {3}X～{2500}X、磚頭框 {20}X～{2500}X。 | ▪ WHEN NO MORE CASCADES CAN OCCUR AND THE SPIN HAS A WIN, EACH FRAME REVEALS A RANDOM MULTIPLIER: STRAW {1}X–{2500}X, WOOD {3}X–{2500}X, BRICK {20}X–{2500}X. |
+| 規則說明 | ▪ 本次旋轉的倍數為 {1} 加上所有框的倍數，乘上本次旋轉的總贏分；沒有框時為 {1}X。 | ▪ THE SPIN MULTIPLIER IS {1} PLUS THE SUM OF ALL FRAME MULTIPLIERS, APPLIED TO THE TOTAL WIN OF THIS SPIN; WITH NO FRAME IT IS {1}X. |
+| 規則說明 | ▪ 主遊戲中，框只作用於本次旋轉，下一次旋轉重新開始。 | ▪ IN THE BASE GAME, FRAMES APPLY ONLY TO THE CURRENT SPIN AND RESET ON THE NEXT SPIN. |
+
+---
+
+## GOLDEN SYMBOL FEATURE
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 金色符號特色 | GOLDEN SYMBOL FEATURE |
+| 規則說明 | ▪ 第 {2}、{3}、{4} 輪的一般符號有機會以金色符號出現。 | ▪ GENERAL SYMBOLS ON REELS 2, 3, AND 4 MAY APPEAR AS GOLDEN SYMBOLS. |
+| 規則說明 | ▪ 金色符號與原始符號具有相同的基礎賠率。 | ▪ GOLDEN SYMBOLS PAY THE SAME AS THEIR ORIGINAL SYMBOL. |
+| 規則說明 | ▪ 若前一輪中獎組閤中含有金色符號，該位置會保留並轉化為 [WW]。 | ▪ IF THE PREVIOUS WINNING COMBINATION INCLUDES A GOLDEN SYMBOL, THAT POSITION REMAINS ON THE REELS AND CHANGES INTO [WW]. |
 
 ---
 
@@ -81,9 +94,10 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 免費遊戲特色 | FREE GAME FEATURE |
-| 規則說明 | ▪ 盤面任意位置出現 {4} 個或以上 [C1] 可觸發免費遊戲，獲得 {15} 場免費遊戲。 | ▪ {4} OR MORE [C1] APPEARING ANYWHERE ON THE REELS WILL TRIGGER THE FREE GAME FEATURE AND AWARD {15} FREE SPINS. |
-| 規則說明 | ▪ 免費遊戲期間再次出現 {3} 個或以上 [C1] 可觸發加局，額外獲得 {5} 場免費遊戲。 | ▪ DURING THE FREE GAME FEATURE, {3} OR MORE [C1] AWARD {5} ADDITIONAL FREE SPINS. |
-| 規則說明 | ▪ 每次免費遊戲特色最多可進行 {50} 場免費遊戲。 | ▪ A MAXIMUM OF {50} FREE SPINS MAY BE PLAYED DURING EACH FREE GAME FEATURE. |
+| 規則說明 | ▪ 當本次旋轉連消結束後，若最終盤面出現 {3}、{4} 或 {5} 個 [Scatter]，即可觸發免費遊戲，分別獲得 {10}、{15} 或 {20} 場免費遊戲。 | ▪ WHEN ALL CASCADES ARE COMPLETE, IF THE FINAL REELS SHOW {3}, {4}, OR {5} [C1], THE FREE GAME FEATURE IS TRIGGERED WITH {10}, {15}, OR {20} FREE SPINS RESPECTIVELY. |
+| 規則說明 | ▪ 免費遊戲期間，框不會重置，保留到整段免費遊戲結束並可繼續升級；每次免費旋轉有得分時，所有框出現倍數並乘上該次旋轉的總贏分。 | ▪ DURING FREE GAME, FRAMES ARE NOT RESET AND CAN KEEP UPGRADING UNTIL THE FREE GAME ENDS. ON EACH WINNING FREE SPIN, ALL FRAMES REVEAL MULTIPLIERS THAT APPLY TO THAT SPIN'S TOTAL WIN. |
+| 規則說明 | ▪ 單次進入免費遊戲後，包含加局在內，最多進行 {50} 場。 | ▪ AFTER ENTERING THE FREE GAME, INCLUDING RETRIGGERING, THE MAXIMUM NUMBER OF FREE SPINS IS {50}. |
+| 規則說明 | ▪ 免費遊戲可加局。加局條件與一般觸發相同：{3}、{4} 或 {5} 個 [C1] 分別對應加 {10}、{15} 或 {20} 場免費遊戲。 | ▪ FREE GAME CAN BE RETRIGGERED. RETRIGGERING FOLLOWS THE SAME CONDITIONS: {3}, {4}, OR {5} [C1] WILL ADD {10}, {15}, OR {20} FREE SPINS RESPECTIVELY. |
 
 ---
 
@@ -92,9 +106,8 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 額外投注 | EXTRA BET |
-| 規則說明 | ▪ 額外投注的扣款為您所選基礎投注的 {2}X。 | ▪ EXTRA BET COSTS {2}X THE BASE BET YOU SELECT. |
-| 規則說明 | ▪ 所有獎金仍依您所選的基礎投注計算。 | ▪ ALL WINS ARE STILL CALCULATED ON THE BASE BET YOU SELECT. |
-| 規則說明 | ▪ 免費遊戲的觸發機率提升為一般投注的 {5} 倍。 | ▪ THE CHANCE TO TRIGGER THE FREE GAME FEATURE IS {5} TIMES THAT OF THE NORMAL BET. |
+| 規則說明 | ▪ 玩家可選擇額外投注模式進行旋轉。 | ▪ THE PLAYER MAY SELECT THE EXTRA BET MODE. |
+| 規則說明 | ▪ 額外投注的投注金額為 {2}x 總投注，並可提高觸發免費遊戲的機會。 | ▪ EXTRA BET COSTS {2}X TOTAL BET AND INCREASES THE CHANCE TO TRIGGER THE FREE GAME FEATURE. |
 
 ---
 
@@ -103,11 +116,8 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 購買特色 | BUY FEATURE |
-| 規則說明 | ▪ 玩家可支付 {100}X 總投注，直接購買一次免費遊戲進場機會。 | ▪ BUY FEATURE CAN BE PURCHASED FOR {100}X THE TOTAL BET TO ENTER THE FREE GAME FEATURE DIRECTLY. |
-| 規則說明 | ▪ 完成購買後，將直接觸發一次免費遊戲特色。 | ▪ COMPLETING THE PURCHASE WILL TRIGGER THE FREE GAME FEATURE DIRECTLY. |
-| 規則說明 | ▪ 進場盤面的 {4} 個 [C1] 依賠率表支付 {3}X 投注。 | ▪ THE {4} [C1] ON THE ENTRY REELS PAY {3}X BET ACCORDING TO THE PAYTABLE. |
-| 規則說明 | ▪ 進入後的免費遊戲規則與自然觸發完全相同。 | ▪ ONCE ENTERED, THE FREE GAME FEATURE FOLLOWS EXACTLY THE SAME RULES AS A NATURAL TRIGGER. |
-| 規則說明 | ▪ 免費遊戲的獎金依您所選的基礎投注計算，不依購買金額計算。 | ▪ FREE GAME WINS ARE CALCULATED ON THE BASE BET YOU SELECT, NOT ON THE PURCHASE AMOUNT. |
+| 規則說明 | ▪ 玩家可支付 {75}x 投注，直接購買進入一次免費遊戲。 | ▪ BUY FEATURE CAN BE PURCHASED BY USING A VALUE EQUAL TO {75}X TOTAL BET. |
+| 規則說明 | ▪ 購買後直接觸發免費遊戲規格。 | ▪ PURCHASING THE BUY FEATURE GUARANTEES ENTRY INTO FREE GAME. |
 
 ---
 
@@ -116,31 +126,27 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | OP JACKPOT | OP JACKPOT |
-| 規則說明 | ▪ 遊戲中，OP JACKPOT 特色由盤面上的 {1} 個或以上 [C1] 隨機觸發。 | ▪ THE OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
-| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 與 [MINI]。 | ▪ DURING THE OP JACKPOT FEATURE, THERE ARE {12} [COIN], WHICH CONSIST OF [GRAND], [MAJOR], [MINOR], AND [MINI]. |
-| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR], OR [MINI]. |
-| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF THE PLAYER REVEALS {3} OF THE SAME JACKPOT SYMBOL, THE PLAYER WINS THAT JACKPOT AND IT IS ADDED TO THE TOTAL WIN. |
-| 規則說明 | ▪ [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | ▪ [GRAND] IS A LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [GRAND] WILL BE UNLOCKED. |
-| 規則說明 | ▪ [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | ▪ [MAJOR] IS A LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, [MAJOR] WILL BE UNLOCKED. |
-| 規則說明 | ▪ [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
-| 規則說明 | ▪ [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS A DIFFERENT BET OPTION. |
-| 規則說明 | ▪ 玩家投注越高觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER THE BET, THE HIGHER THE CHANCE TO TRIGGER THE OP JACKPOT FEATURE. |
-
-> **待確認**：僅剩 [GRAND]／[MAJOR] 的解鎖門檻金額。`{2.00}` 是 H019 的值，
-> H027 的實際門檻需向 JP 設定端（`JP optionID 28`）確認後回填本區塊與 `game_rule.md` §6.4。
-> 其餘規則已於 2026-09-22 寫入 `game_rule.md` §6.4（OP／OmniPlay 為跨遊戲共用彩金模組，規則同 H019）。
+| 規則說明 | ▪ 在遊戲中，OP JACKPOT 特色由特色轉輪上 [C1] 隨機觸發。 | ▪ OP JACKPOT FEATURE IS TRIGGERED RANDOMLY BY {1} OR MORE [C1] ON THE REELS. |
+| 規則說明 | ▪ OP JACKPOT 特色會在畫面中出現 {12} 個 [幣]，其中包括 [GRAND]、[MAJOR]、[MINOR] 及 [MINI]。 | ▪ DURING OP JACKPOT FEATURE, THERE ARE {12} [COIN] WHICH CONSIST OF [GRAND], [MAJOR], [MINOR] AND [MINI]. |
+| 規則說明 | ▪ 選擇 {1} 個 [幣] 以揭示 [GRAND]、[MAJOR]、[MINOR] 或 [MINI]。 | ▪ SELECT A [COIN] TO REVEAL [GRAND], [MAJOR], [MINOR],OR [MINI]. |
+| 規則說明 | ▪ 當玩家獲得 {3} 個相同的 OP JACKPOT 特色符號即可獲得該 OP JACKPOT 並結算總獎金。 | ▪ IF PLAYER GETS {3} SAME JACKPOT SYMBOLS WILL WIN THE JACKPOT AND CALCULATE TOTAL WINNINGS. |
+| 規則說明 | ▪  [GRAND] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [GRAND]。 | ▪ [GRAND] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [GRAND]. |
+| 規則說明 | ▪  [MAJOR] 為連機累進彩金。單場遊戲中，投注選項選擇 {2.00} 以上即可解鎖 [MAJOR]。 | ▪ [MAJOR] IS LINKED PROGRESSIVE JACKPOT. IF THE SINGLE GAME BET OPTION IS {2.00} OR ABOVE, THE PLAYER WILL UNLOCK [MAJOR]. |
+| 規則說明 | ▪  [MINOR] 為紅利彩金，依照投注選項改變。 | ▪ [MINOR] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪  [MINI] 為紅利彩金，依照投注選項改變。 | ▪ [MINI] WILL CHANGE IF THE PLAYER SELECTS DIFFERENT BET OPTION. |
+| 規則說明 | ▪ 玩家投注越高觸發 OP JACKPOT 特色的機會越高。 | ▪ THE HIGHER BET, THE HIGHER CHANCES TO TRIGGER OP JACKPOT FEATURE. |
 
 ---
 
-## PAY ANYWHERE
+## LINE GAME
 
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
-| 主要標題 | 中獎方式 | PAY ANYWHERE |
-| 規則說明 | ▪ 同一種一般符號在整個盤面合計出現 {8} 個或以上即可得獎，不要求相鄰或連線。 | ▪ {8} OR MORE OF THE SAME REGULAR SYMBOL ANYWHERE ON THE GRID FORM A WIN. THEY DO NOT NEED TO BE ADJACENT OR ON A LINE. |
-| 規則說明 | ▪ 同一盤面可有多種一般符號同時得獎，各自支付一次。 | ▪ SEVERAL REGULAR SYMBOL TYPES MAY WIN ON THE SAME GRID AND EACH IS PAID ONCE. |
-| 規則說明 | ▪ 一般符號獎金依賠率表倍數乘以投注計算。 | ▪ A REGULAR SYMBOL WIN IS PAID AT THE PAYTABLE MULTIPLIER OF THE BET. |
-| 規則說明 | ▪ 本遊戲沒有百搭符號。 | ▪ THIS GAME HAS NO WILD SYMBOL. |
+| 主要標題 | 賠線說明 | LINE GAME |
+| 規則說明 | ▪ 本遊戲共有 {20} 條固定賠線。 | ▪ THE GAME HAS {20} FIXED PAY LINES. |
+| 規則說明 | ▪ 中獎組合必須由最左側開始，由左至右連續出現才算中獎。 | ▪ WINNING COMBINATIONS MUST START FROM THE LEFTMOST REEL AND RUN CONSECUTIVELY FROM LEFT TO RIGHT. |
+| 規則說明 | ▪ 單一賠線僅支付最高獎項。 | ▪ ONLY THE HIGHEST WIN PER LINE IS PAID. |
+| 規則說明 | ▪ [走線圖 20 LINE] | ▪ [走線圖 20 LINE] |
 
 ---
 
@@ -149,7 +155,7 @@
 | Item | 繁中 | 英文 |
 | --- | --- | --- |
 | 主要標題 | 遊戲規則 | GAME RULES |
-| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT THE BET OPTION YOU WISH TO PLAY. |
-| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY THE BET OPTION EXCEPT PROGRESSIVE BONUSES. |
-| 規則說明 | ▪ 遊戲出現故障時，所有賠付與遊戲結果均視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
-| 規則說明 | ▪ 若玩家在免費遊戲期間中斷連接，系統將自動完成該局結算，並將中獎金額加入餘額。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
+| 規則說明 | ▪ 選擇您想要玩的投注選項。 | ▪ SELECT BET OPTION YOU WISH TO PLAY. |
+| 規則說明 | ▪ 所有中獎金額均乘以投注選項，除非是累積獎。 | ▪ ALL WINS ARE MULTIPLIED BY BET OPTION EXCEPT PROGRESSIVES BONUSES. |
+| 規則說明 | ▪ 遊戲出現故障，所有賠付和遊戲都視為無效。 | ▪ MALFUNCTION VOIDS ALL PAYS AND PLAYS. |
+| 規則說明 | ▪ 若玩家在免費遊戲特色期間中斷遊戲，系統將會自動計算遊戲結果，並將獲獎金額加入至餘額中。 | ▪ IF THE PLAYER LOSES CONNECTION DURING THE FREE GAME FEATURE, THE SYSTEM WILL CALCULATE THE GAME RESULTS AUTOMATICALLY AND THE WINNING PRIZES WILL BE ADDED INTO THE BALANCE. |
