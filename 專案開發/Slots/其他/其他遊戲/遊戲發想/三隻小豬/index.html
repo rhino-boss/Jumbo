@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Three Little Pigs</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Ctext%20x%3D%2732%27%20y%3D%2754%27%20font-size%3D%2756%27%20text-anchor%3D%27middle%27%3E%F0%9F%90%B7%3C/text%3E%3C/svg%3E">   <!-- 分頁圖示（依遊戲主題） -->
+<style id="h027-by-game">
+    body.h027,
+    body.h027 * {
+      box-sizing: border-box;
+    }
+    body.h027 {
+      --cell-size: 62px;
+      --gold: #ffd86a;
+      --orange: #ff9f43;
+    }
+    body.h027 #feature-bar {
+      display: flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+    }
+    body.h027 #game-title {
+      color: #5a88aa;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    body.h027 #gameName { color: #b0d4f0; }
+    body.slot-simulator.h027 #strip-bar {
+      height: 52px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    body.h027 .feature-strip {
+      min-width: max-content;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+    }
+    body.h027 #modeText { color: #5a88aa; font-size: 12px; }
+    body.h027 #featureStatus { display: none; }
+    body.h027 .feature-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #0c2240;
+    }
+    body.h027 .feature-pill .k,
+    body.h027 .feature-pill .v { font-size: 13px; font-weight: 700; }
+    body.h027 .feature-pill .k { color: #5a88aa; }
+    body.h027 .feature-pill .v { color: #b0d4f0; }
+    body.h027 .feature-pill.hidden { display: none; }
+    body.slot-simulator.h027 #grid-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      overflow: hidden;
+    }
+    body.h027 .board-shell {
+      width: min(100%, 392px);
+      container-type: inline-size;
+    }
+    body.h027 .board-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 1.020408cqw;
+    }
+    .cell {
+      position: relative;
+      width: 100%;
+      height: auto;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border: 2px solid rgba(38, 92, 137, 0.28);
+      border-radius: 8px;
+      background: #060d1a;
+      border-color: rgba(38, 92, 137, 0.28);
+    }
+    .cell.peek-row { display: grid; }
+    .cell .symbol-wrap {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    /* 符號圖示（無美術時的預設圖片）：直接擺在盤面上；Image 關閉時回到文字代號 */
+    /* 符號美術圖（2026-11-04 接上 game_spec 101027 美術交付的滿版符號）：倍數數字由程式疊在圖上 */
+    #board .cell .sym-img{position:absolute;inset:3%;width:94%;height:94%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+    #board .cell.has-symbol-art:is(.symbol-c2,.symbol-c3) .multiplier-badge{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);padding:0;background:none;box-shadow:none;
+      color:#fff;font-size:calc(var(--cell-size,64px) * .26);text-shadow:0 0 3px #000,0 2px 4px rgba(0,0,0,.9);white-space:nowrap}
+    #board .cell.symbol-c1 .sym-img{transform:scale(1.45)}   /* SC 圖是寬圖，放大到跟 M 符號一樣高 */
+    #board .cell .sym-icon{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--cell-size,64px) * .58);line-height:1;
+      font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6));pointer-events:none;user-select:none}
+    .h019-glyph {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 4px;
+      overflow: hidden;
+      color: #d8e8f4;
+      font: 800 clamp(0.82rem, 1.45vw, 1.12rem) / 1 Consolas, "Courier New", monospace;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.72);
+    }
+    .cell .symbol-code { display: none; }
+    .cell.symbol-a { border-color: rgba(38, 92, 137, 0.28); background: rgba(28, 78, 48, 0.3); }
+    .cell.symbol-k { border-color: rgba(38, 92, 137, 0.28); background: rgba(26, 54, 94, 0.3); }
+    .cell.symbol-q { border-color: rgba(38, 92, 137, 0.28); background: rgba(78, 67, 25, 0.3); }
+    .cell.symbol-j { border-color: rgba(38, 92, 137, 0.28); background: rgba(75, 38, 72, 0.3); }
+    .cell.symbol-te { border-color: rgba(38, 92, 137, 0.28); background: rgba(38, 63, 73, 0.3); }
+    .cell.symbol-m1 { border-color: #e06c75; background: rgba(74, 25, 35, 0.3); }
+    .cell.symbol-m2 { border-color: #d99a4e; background: rgba(80, 52, 21, 0.3); }
+    .cell.symbol-m3 { border-color: #38a8c9; background: rgba(20, 67, 82, 0.32); }
+    .cell.symbol-m4 { border-color: #a879d6; background: rgba(57, 35, 82, 0.32); }
+    .cell.symbol-ww { border-color: #39d6a2; background: rgba(20, 75, 64, 0.32); }
+    .cell.h019-scatter {
+      border-color: rgba(115, 239, 255, 0.92);
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.92), rgba(9, 67, 96, 0.96));
+    }
+    .cell.h019-c2 {
+      border-color: rgba(255, 216, 106, 0.96);
+      background: rgba(87, 63, 23, 0.38);
+    }
+    .cell.h027-c3 {
+      border-color: rgba(218, 132, 255, 0.98);
+      background: linear-gradient(145deg, rgba(92, 32, 119, 0.58), rgba(43, 18, 72, 0.72));
+    }
+    body.h027.fg-mode .cell { background: #060d1a; }
+    body.h027.fg-mode .cell.symbol-a { background: #0b2118; }
+    body.h027.fg-mode .cell.symbol-k { background: #0a172a; }
+    body.h027.fg-mode .cell.symbol-q { background: #211d0c; }
+    body.h027.fg-mode .cell.symbol-j { background: #211222; }
+    body.h027.fg-mode .cell.symbol-te { background: #101d24; }
+    body.h027.fg-mode .cell.symbol-m1 { background: #281019; }
+    body.h027.fg-mode .cell.symbol-m2 { background: #2b1c0d; }
+    body.h027.fg-mode .cell.symbol-m3 { background: #0c2530; }
+    body.h027.fg-mode .cell.symbol-m4 { background: #21152f; }
+    body.h027.fg-mode .cell.symbol-ww { background: #0c2a23; }
+    body.h027.fg-mode .cell.h019-scatter {
+      background: linear-gradient(145deg, rgba(40, 174, 205, 0.96), rgba(9, 67, 96, 0.98));
+    }
+    body.h027.fg-mode .cell.h019-c2 { background: #332611; }
+    body.h027.fg-mode .cell.h027-c3 {
+      background: linear-gradient(145deg, #5c2077, #2b1248);
+    }
+    body.h027 .cell.hit {
+      border-color: var(--green);
+      box-shadow: 0 0 14px rgba(51, 255, 153, 0.46);
+    }
+    body.h027 .cell.reel-spin { animation: h027-reel-spin 180ms linear infinite; }
+    @keyframes h027-reel-spin {
+      from { transform: translateY(-10px); }
+      to { transform: translateY(10px); }
+    }
+    .multiplier-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 5;
+      padding: 2px 6px;
+      border-radius: 999px;
+      color: #3b1d00;
+      background: linear-gradient(180deg, var(--gold), var(--orange));
+      box-shadow: 0 2px 8px rgba(16, 8, 28, 0.5);
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+    body.h027 .message-bar {
+      width: 100%;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: #5a88aa;
+      background: #0c2240;
+      font: 12px/1.4 Consolas, monospace;
+      text-align: center;
+    }
+    body.h027 .message-bar.error { color: #ff5f8a; }
+    body.h027 .message-bar.win { color: #33ff99; }
+    /* 訊息列每段 WIN 閃一下（同 H032） */
+    #messageBar.fx-bar-hit{animation:h099BarHit 420ms ease-out}
+    @keyframes h099BarHit{from{transform:scale(1.08);filter:brightness(2);box-shadow:0 0 18px rgba(255,79,216,.9)}to{transform:scale(1);filter:brightness(1)}}
+    /* 消除與補牌（仿 Zeus 2500 實機，2026-11-04）：得分符號直接消失、原位灑出金粉；補牌由下往上逐顆錯開落下。
+       權重需高過共用 body #board 的 !important 規則 */
+    @keyframes h027-burst {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes h027-sparkle {
+      0% { transform: scale(.4); opacity: 0; }
+      35% { opacity: 1; }
+      100% { transform: scale(1.7) translateY(18%); opacity: 0; }
+    }
+    @keyframes h027-drop {
+      0% { transform: translateY(var(--drop-start, -105%)); }
+      100% { transform: translateY(0); }
+    }
+    html body #board .cell.symbol-cleared { animation: none !important; overflow: visible; }
+    html body #board .cell.symbol-cleared > :not(.symbol-code) { animation: h027-burst 90ms linear forwards !important; }   /* 直接消失，不先變成別的樣子（2026-11-04 使用者要求） */
+    html body #board .cell.symbol-cleared::after {
+      content: ""; position: absolute; inset: -10%; pointer-events: none; z-index: 4;
+      background:
+        radial-gradient(circle at 20% 30%, #fff6c2 0 2px, transparent 3px),
+        radial-gradient(circle at 70% 20%, #ffd75a 0 2px, transparent 3px),
+        radial-gradient(circle at 45% 55%, #fff 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 80% 65%, #ffcf3f 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 80%, #ffe68a 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 60% 85%, #fff2a8 0 2px, transparent 3px),
+        radial-gradient(circle at 12% 60%, #ffd24d 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 88% 40%, #fff 0 1.5px, transparent 2.5px);
+      animation: h027-sparkle 520ms ease-out 120ms both !important;
+    }
+    html body #board .cell.symbol-drop,
+    html body #board .cell.symbol-settle { animation: h027-drop var(--drop-duration, 380ms) cubic-bezier(.45,0,.55,1) var(--drop-delay, 0ms) both !important; }
+    /* 三隻小豬：消除過的格子加框（茅草 → 木頭 → 磚頭），連消結束刷出倍數 */
+    /* 框美術：Gemini（gemini-2.5-flash）設計的 SVG，層級 茅草 ≪ 木頭 ≪ 磚頭，2026-11-18 */
+    body.h027 #board{position:relative}   /* 框圖層、風圖層以盤面為定位基準 */
+    #board > .pig-frame{position:absolute;pointer-events:none;z-index:5;background:center/100% 100% no-repeat}
+    #board > .pig-frame.lv-1{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E %3Cdefs%3E %3ClinearGradient id=%22strawLinearGradient%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E %3Cstop offset=%220%25%22 style=%22stop-color:rgb(255,255,150);stop-opacity:1%22 /%3E %3Cstop offset=%22100%25%22 style=%22stop-color:rgb(200,180,50);stop-opacity:1%22 /%3E %3C/linearGradient%3E %3Cfilter id=%22strawFilter%22 x=%22-50%25%22 y=%22-50%25%22 width=%22200%25%22 height=%22200%25%22%3E %3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.03%22 numOctaves=%221%22 result=%22noise%22/%3E %3CfeDisplacementMap in=%22SourceGraphic%22 in2=%22noise%22 scale=%221.5%22 xChannelSelector=%22R%22 yChannelSelector=%22G%22/%3E %3C/filter%3E %3C/defs%3E %3Crect id=%22straw-main-rect%22 x=%223%22 y=%223%22 width=%2294%22 height=%2294%22 rx=%2210%22 ry=%2210%22 fill=%22none%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%223%22 stroke-opacity=%220.7%22/%3E %3C%21-- Corner strands --%3E %3C%21-- Top-left --%3E %3Cpath id=%22straw-tl-strand1%22 d=%22M13 10 Q8 7 7 13%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3Cpath id=%22straw-tl-strand2%22 d=%22M10 13 Q7 8 13 7%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3C%21-- Top-right --%3E %3Cpath id=%22straw-tr-strand1%22 d=%22M87 10 Q92 7 93 13%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3Cpath id=%22straw-tr-strand2%22 d=%22M90 13 Q93 8 87 7%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3C%21-- Bottom-left --%3E %3Cpath id=%22straw-bl-strand1%22 d=%22M13 90 Q8 93 7 87%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3Cpath id=%22straw-bl-strand2%22 d=%22M10 87 Q7 92 13 93%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3C%21-- Bottom-right --%3E %3Cpath id=%22straw-br-strand1%22 d=%22M87 90 Q92 93 93 87%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3Cpath id=%22straw-br-strand2%22 d=%22M90 87 Q93 92 87 93%22 stroke=%22url(%23strawLinearGradient)%22 stroke-width=%221.5%22 stroke-opacity=%220.8%22 fill=%22none%22/%3E %3C/svg%3E")}
+    #board > .pig-frame.lv-2{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E %3Cdefs%3E %3C%21-- Wood grain pattern --%3E %3Cpattern id=%22woodPattern%22 x=%220%22 y=%220%22 width=%2220%22 height=%2220%22 patternUnits=%22userSpaceOnUse%22%3E %3ClinearGradient id=%22woodGradient1%22 x1=%220%25%22 y1=%220%25%22 x2=%220%25%22 y2=%22100%25%22%3E %3Cstop offset=%220%25%22 stop-color=%22%238B4513%22 /%3E %3Cstop offset=%2250%25%22 stop-color=%22%23A0522D%22 /%3E %3Cstop offset=%22100%25%22 stop-color=%22%238B4513%22 /%3E %3C/linearGradient%3E %3Crect x=%220%22 y=%220%22 width=%2220%22 height=%225%22 fill=%22url(%23woodGradient1)%22/%3E %3Crect x=%220%22 y=%225%22 width=%2220%22 height=%225%22 fill=%22%23CD853F%22/%3E %3Crect x=%220%22 y=%2210%22 width=%2220%22 height=%225%22 fill=%22url(%23woodGradient1)%22/%3E %3Crect x=%220%22 y=%2215%22 width=%2220%22 height=%225%22 fill=%22%23CD853F%22/%3E %3C/pattern%3E %3C%21-- Mask to create the hollow border --%3E %3Cmask id=%22woodBorderMask%22%3E %3Crect x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 fill=%22white%22/%3E %3C%21-- Overall opaque area --%3E %3Crect x=%227%22 y=%227%22 width=%2286%22 height=%2286%22 rx=%229%22 ry=%229%22 fill=%22black%22/%3E %3C%21-- Inner transparent hole --%3E %3C/mask%3E %3C/defs%3E %3C%21-- Wood texture applied to the border area via mask --%3E %3Crect id=%22wood-textured-border%22 x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 rx=%2210%22 ry=%2210%22 fill=%22url(%23woodPattern)%22 mask=%22url(%23woodBorderMask)%22/%3E %3C%21-- Dark brown outline for the wood frame --%3E %3Crect id=%22wood-outer-outline%22 x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 rx=%2210%22 ry=%2210%22 fill=%22none%22 stroke=%22%235A2D0C%22 stroke-width=%222%22/%3E %3C%21-- Metal nails - 4 corners --%3E %3C%21-- cx, cy adjusted to be within the border area for the nails --%3E %3C%21-- Top-left --%3E %3Ccircle id=%22wood-nail-tl%22 cx=%2210%22 cy=%2210%22 r=%223%22 fill=%22%23C0C0C0%22 stroke=%22%23606060%22 stroke-width=%221%22/%3E %3Cpath id=%22wood-nail-tl-head%22 d=%22M9 10 L11 10 M10 9 L10 11%22 stroke=%22%23303030%22 stroke-width=%221%22/%3E %3C%21-- Top-right --%3E %3Ccircle id=%22wood-nail-tr%22 cx=%2290%22 cy=%2210%22 r=%223%22 fill=%22%23C0C0C0%22 stroke=%22%23606060%22 stroke-width=%221%22/%3E %3Cpath id=%22wood-nail-tr-head%22 d=%22M89 10 L91 10 M90 9 L90 11%22 stroke=%22%23303030%22 stroke-width=%221%22/%3E %3C%21-- Bottom-left --%3E %3Ccircle id=%22wood-nail-bl%22 cx=%2210%22 cy=%2290%22 r=%223%22 fill=%22%23C0C0C0%22 stroke=%22%23606060%22 stroke-width=%221%22/%3E %3Cpath id=%22wood-nail-bl-head%22 d=%22M9 90 L11 90 M10 89 L10 91%22 stroke=%22%23303030%22 stroke-width=%221%22/%3E %3C%21-- Bottom-right --%3E %3Ccircle id=%22wood-nail-br%22 cx=%2290%22 cy=%2290%22 r=%223%22 fill=%22%23C0C0C0%22 stroke=%22%23606060%22 stroke-width=%221%22/%3E %3Cpath id=%22wood-nail-br-head%22 d=%22M89 90 L91 90 M90 89 L90 91%22 stroke=%22%23303030%22 stroke-width=%221%22/%3E %3C/svg%3E")}
+    #board > .pig-frame.lv-3{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E %3Cdefs%3E %3C%21-- Brick pattern --%3E %3Cpattern id=%22brickPattern%22 x=%220%22 y=%220%22 width=%2220%22 height=%2210%22 patternUnits=%22userSpaceOnUse%22%3E %3Crect x=%220%22 y=%220%22 width=%2210%22 height=%229%22 fill=%22%23D32F2F%22/%3E %3C%21-- Red brick --%3E %3Crect x=%220%22 y=%229%22 width=%2220%22 height=%221%22 fill=%22%23FFFFFF%22/%3E %3C%21-- Mortar --%3E %3Crect x=%2210%22 y=%220%22 width=%2210%22 height=%229%22 fill=%22%23A00000%22/%3E %3C%21-- Darker red brick offset --%3E %3Crect x=%22-5%22 y=%225%22 width=%2210%22 height=%229%22 fill=%22%23D32F2F%22/%3E %3C%21-- Offset brick --%3E %3Crect x=%225%22 y=%225%22 width=%2210%22 height=%229%22 fill=%22%23A00000%22/%3E %3C%21-- Offset brick --%3E %3Crect x=%220%22 y=%225%22 width=%2220%22 height=%221%22 fill=%22%23FFFFFF%22/%3E %3C%21-- Mortar --%3E %3C/pattern%3E %3C%21-- Mask to create the hollow border --%3E %3Cmask id=%22brickBorderMask%22%3E %3Crect x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 fill=%22white%22/%3E %3C%21-- Overall opaque area --%3E %3Crect x=%2211%22 y=%2211%22 width=%2278%22 height=%2278%22 rx=%229%22 ry=%229%22 fill=%22black%22/%3E %3C%21-- Inner transparent hole, larger for wider border --%3E %3C/mask%3E %3C%21-- Orange-red glow filter --%3E %3Cfilter id=%22brickGlow%22 x=%22-50%25%22 y=%22-50%25%22 width=%22200%25%22 height=%22200%25%22%3E %3CfeGaussianBlur in=%22SourceAlpha%22 stdDeviation=%225%22 result=%22blur%22/%3E %3CfeFlood flood-color=%22rgba(255,120,0,0.8)%22 result=%22flood%22/%3E %3CfeComposite in=%22flood%22 in2=%22blur%22 operator=%22in%22 result=%22glow%22/%3E %3CfeMerge%3E %3CfeMergeNode in=%22glow%22/%3E %3CfeMergeNode in=%22SourceGraphic%22/%3E %3C/feMerge%3E %3C/filter%3E %3C/defs%3E %3C%21-- Brick texture applied to the border area via mask --%3E %3Crect id=%22brick-textured-border%22 x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 rx=%2210%22 ry=%2210%22 fill=%22url(%23brickPattern)%22 mask=%22url(%23brickBorderMask)%22/%3E %3C%21-- Inner subtle outline for definition --%3E %3Crect id=%22brick-inner-outline%22 x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 rx=%2210%22 ry=%2210%22 fill=%22none%22 stroke=%22%23900C3F%22 stroke-width=%221%22/%3E %3C%21-- Rect to apply the glow filter, slightly larger than the border --%3E %3Crect id=%22brick-glow-rect%22 x=%220%22 y=%220%22 width=%22100%22 height=%22100%22 rx=%2210%22 ry=%2210%22 fill=%22none%22 stroke=%22transparent%22 stroke-width=%2212%22/%3E %3C%21-- Gray stone blocks at corners --%3E %3C%21-- Top-left --%3E %3Crect id=%22brick-stone-tl%22 x=%220%22 y=%220%22 width=%2212%22 height=%2212%22 rx=%222%22 ry=%222%22 fill=%22%23808080%22 stroke=%22%23404040%22 stroke-width=%221%22/%3E %3C%21-- Top-right --%3E %3Crect id=%22brick-stone-tr%22 x=%2288%22 y=%220%22 width=%2212%22 height=%2212%22 rx=%222%22 ry=%222%22 fill=%22%23808080%22 stroke=%22%23404040%22 stroke-width=%221%22/%3E %3C%21-- Bottom-left --%3E %3Crect id=%22brick-stone-bl%22 x=%220%22 y=%2288%22 width=%2212%22 height=%2212%22 rx=%222%22 ry=%222%22 fill=%22%23808080%22 stroke=%22%23404040%22 stroke-width=%221%22/%3E %3C%21-- Bottom-right --%3E %3Crect id=%22brick-stone-br%22 x=%2288%22 y=%2288%22 width=%2212%22 height=%2212%22 rx=%222%22 ry=%222%22 fill=%22%23808080%22 stroke=%22%23404040%22 stroke-width=%221%22/%3E %3C/svg%3E")}
+    #board > .pig-frame.pig-up{animation:pigFrameUp 420ms ease-out both}
+    @keyframes pigFrameUp{0%{transform:scale(1.3);filter:brightness(2.2)}60%{transform:scale(.95)}100%{transform:scale(1);filter:brightness(1)}}
+    /* 框倍數＝符號正中間的金幣 */
+    .pig-coin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;width:62%;aspect-ratio:1;border-radius:50%;
+      display:grid;place-items:center;font-weight:900;color:#5a3300;font-size:calc(var(--cell-size,64px) * .2);letter-spacing:-.02em;white-space:nowrap;
+      background:radial-gradient(circle at 35% 30%,#fff6c4 0 12%,#ffd84d 38%,#e9a417 70%,#b9740a 100%);
+      border:2px solid #fff0a8;box-shadow:inset 0 0 0 2px rgba(150,90,0,.55),inset 0 -3px 5px rgba(120,60,0,.45),0 2px 7px rgba(0,0,0,.6);text-shadow:0 1px 0 rgba(255,250,210,.8)}
+    /* 風吹過後，框中間的金幣原地旋轉轉出來（先快後慢，最後停正面） */
+    #board .cell .pig-coin.pig-blow{animation:pigCoinSpin 700ms cubic-bezier(.15,.7,.3,1) var(--blow-delay,0ms) both}
+    @keyframes pigCoinSpin{0%{transform:translate(-50%,-50%) perspective(160px) rotateY(0) scale(0);opacity:0}15%{opacity:1}55%{transform:translate(-50%,-50%) perspective(160px) rotateY(900deg) scale(1.15)}100%{transform:translate(-50%,-50%) perspective(160px) rotateY(1080deg) scale(1);opacity:1}}
+    #board .cell .pig-coin.pig-gone{visibility:hidden}
+    .pig-fly-coin{position:fixed;z-index:9999;pointer-events:none;width:40px;height:40px;font-size:13px;margin:-20px 0 0 -20px}
+    .pig-fly-total{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap;font-weight:900;font-size:24px;color:#ffd84d;
+      text-shadow:0 0 6px rgba(0,0,0,.9),0 2px 3px rgba(0,0,0,.9),0 0 12px rgba(255,200,60,.6)}
+    /* 風吹過盤面：幾道白色氣流由左往右掃 */
+    /* 大野狼吹氣：狼頭從左邊探出鼓氣 → 一團旋風氣流＋落葉草屑由左往右捲過盤面，經過的格子被吹得一晃 → 框裡轉出金幣 */
+    #board .pig-wind{position:absolute;inset:-6px;z-index:8;pointer-events:none;overflow:hidden;border-radius:12px}
+    #board .pig-wind .wolf{position:absolute;left:-4px;top:50%;font-size:calc(var(--cell-size,64px) * 1.25);line-height:1;transform-origin:30% 50%;
+      filter:drop-shadow(0 4px 8px rgba(0,0,0,.7));animation:pigWolf var(--wind-ms) ease-out both}
+    @keyframes pigWolf{0%{transform:translate(-110%,-50%) rotate(-12deg)}18%{transform:translate(-8%,-50%) rotate(0)}30%{transform:translate(-8%,-50%) scale(1.18,1.1)}
+      42%{transform:translate(-8%,-50%) scale(.92,.95)}70%{transform:translate(-8%,-50%) scale(1);opacity:1}100%{transform:translate(-110%,-50%);opacity:0}}
+    #board .pig-wind svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+    #board .pig-wind .gust{fill:none;stroke:rgba(225,245,255,.9);stroke-linecap:round;stroke-width:3;filter:drop-shadow(0 0 3px rgba(160,220,255,.9));
+      stroke-dasharray:var(--len) var(--len);animation:pigGust var(--gust-ms) cubic-bezier(.3,.1,.4,1) var(--gd) both}
+    @keyframes pigGust{0%{stroke-dashoffset:var(--len);opacity:0}12%{opacity:1}60%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:calc(var(--len) * -1);opacity:0}}
+    #board .pig-wind .bit{position:absolute;left:0;font-size:calc(var(--cell-size,64px) * .32);animation:pigBit var(--gust-ms) cubic-bezier(.35,.05,.45,1) var(--gd) both}
+    @keyframes pigBit{0%{transform:translate(-20%,0) rotate(0);opacity:0}10%{opacity:1}35%{transform:translate(35cqw,-14px) rotate(220deg)}
+      65%{transform:translate(70cqw,12px) rotate(470deg)}100%{transform:translate(118cqw,-6px) rotate(720deg);opacity:0}}
+    #board .pig-wind{container-type:size}
+    /* 風經過時格子被吹得往右一晃 */
+    html body #board .cell.pig-sway{animation:pigSway 520ms ease-out var(--sway-delay,0ms) both !important}
+    @keyframes pigSway{0%{transform:none}30%{transform:skewX(-9deg) translateX(5px)}60%{transform:skewX(4deg) translateX(-2px)}100%{transform:none}}
+    #multPill.pig-bump,#demogame-info-bar .dib-item.pig-bump{animation:pigBump 260ms ease-out}
+    @keyframes pigBump{0%{transform:scale(1.25);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1)}}
+  </style>
+  <!-- 共用 CSS 載入前／載入失敗時不顯示未套樣式的畫面，只顯示載入提示 -->
+  <style id="dg-boot">
+    html:not(.dg-css-ok) { background:#0b1424; }
+    #dgBootMsg { animation:dgBootIn .2s 1.5s both; }
+    @keyframes dgBootIn { from { opacity:0; } to { opacity:1; } }
+    html:not(.dg-css-ok) body > *:not(#dgBootMsg) { visibility:hidden !important; }
+    #dgBootMsg { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:24px; text-align:center;
+      background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
+    html.dg-css-ok #dgBootMsg { display:none; }
+  </style>
+  <link rel="stylesheet" href="../../../../demogame_common.css?v=9" onload="document.documentElement.classList.add('dg-css-ok')">
+</head>
+
+<body class="slot-simulator h027">
+  <div id="dgBootMsg">Demo 載入中…<br>若一直停在這個畫面，請用瀏覽器開啟網頁版：https://rhino-boss.github.io/Jumbo/專案開發/Slots/其他/其他遊戲/遊戲發想/三隻小豬/</div>
+  <main class="phone">
+    <div id="feature-bar">
+      <span id="game-title"><span id="gameId" hidden></span><span id="gameName">三隻小豬</span></span>
+    </div>
+
+    <div id="strip-bar" aria-label="Feature status">
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill" id="cascadePill"><span class="k">Cascade</span><span class="v"
+            id="carryMultiValue">0</span></span>
+        <span class="feature-pill" id="multPill"><span class="k">Mult</span><span class="v"
+            id="spinMultiValue">x0</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v"
+            id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell">
+          <div class="board-grid" id="board"></div>
+        </div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+
+      <aside id="right-panel">
+        <section id="credit-bar" aria-label="Player values">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi"
+              id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button" aria-label="Decrease bet">&minus;</button>
+              <button id="betBtn" type="button" aria-haspopup="listbox" aria-expanded="false">Bet 1.00</button>
+              <button id="betPlusBtn" type="button" aria-label="Increase bet">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox" aria-label="Bet levels"></div>
+            </div>
+            <label class="speed-control" for="speedRange">
+              Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1">
+              <span id="speedValue">x1</span>
+            </label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+            <span class="debug-divider" aria-hidden="true"></span>
+            <label class="debug-check force" for="forceFgInput">
+              <input id="forceFgInput" type="checkbox">
+              Force FG
+            </label>
+          </div>
+        </section>
+
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature</button>
+          </div>
+        </section>
+
+        <section id="simulation-stats">
+          <h3>Simulation Stats</h3>
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+              id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span>
+          </div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+              id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+              id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+              id="maxMultiplierValue">x0</span></div>
+        </section>
+      </aside>
+    </div>
+
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls" aria-label="RNG overrides">
+          <label class="debug-rng-field" for="scriptSelect">
+            <span id="scriptLabel">腳本</span>
+            <select id="scriptSelect"></select>
+          </label>
+          <label class="debug-rng-field" for="cardRangeSelect">
+            Card BG Range
+            <select id="cardRangeSelect">
+              <option value="">Auto</option>
+            </select>
+          </label>
+          <label class="debug-rng-field" for="rngInput">RNG<input id="rngInput" type="text" autocomplete="off" spellcheck="false" placeholder="92A/NB/on/-/8f3a21b0"></label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div id="log-header" class="diagnostic-header">Spin Result</div>
+      <div id="log-body">
+        <div class="log-subheader">Line Wins</div>
+        <div class="line-list" id="lineList"></div>
+        <div class="spin-result-list" id="spinResultList"></div>
+      </div>
+    </section>
+
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header">
+        <span>Log</span>
+        <button id="clearLogBtn" type="button">Clear</button>
+      </div>
+      <div id="liveLogBody" role="log" aria-live="polite" aria-label="Game log"></div>
+    </section>
+
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">版本紀錄</div>
+      <div id="changeLogBody">
+        <article class="change-log-entry">
+          <h4>v0（0.1.0.0）</h4>
+          <ol>
+            <li>建立三隻小豬發想 demo：以宙斯 92A（7.4.0.0）改；移除 C2／C3（輪帶上的 C2 改成同輪上一格的一般符號）；賠率、輪帶、FG、Extra Bet、Buy Feature 其餘沿用；Card System 關。（11/18）</li>
+            <li>新增框標記：每次中獎消除，被消除的格子加一層框（茅草 → 木頭 → 磚頭，最多 3 層）；Spin 連消結束後每個框刷出倍數（茅草 1～5x、木頭 5～20x、磚頭 20～2500x），全部相加乘該次 Spin 的一般符號總得分；BG、FG 每局重置。（11/18）</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section id="batch-simulation" class="control-zone debug-only debug-hidden demogame-fallback-simulation">
+      <span class="zone-label">Simulation</span>
+      <div id="batchSimulationNote" class="batch-simulation-note">Independent math simulation · Current Bet</div>
+      <div class="batch-simulation-controls">
+        <input id="batchSimulationRounds" type="number" min="1" max="1000000" step="1" value="10000"
+          inputmode="numeric" aria-label="Simulation rounds">
+        <button id="batchSimulationStartBtn" type="button">Start</button>
+      </div>
+      <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value"
+          id="batchSimulationRoundCount">0</span></div>
+      <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value"
+          id="batchSimulationRtp">0.00%</span></div>
+      <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value"
+          id="batchSimulationHitRate">0.00%</span></div>
+      <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi"
+          id="batchSimulationFgTrigger">0.00% (-- rounds)</span></div>
+      <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi"
+          id="batchSimulationMaxMultiplier">x0</span></div>
+      <div class="simulation-row"><span class="s-label">Retry Limit Exceeded</span><span class="s-value"
+          id="batchSimulationRetryLimitExceeded">0 (0.00%)</span></div>
+      <table class="batch-cascade-table" aria-label="Cascade distribution">
+        <thead>
+          <tr><th>Scene</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5+</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>BG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+          <tr><th>FG</th><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput">
+          <input id="debugModeInput" type="checkbox">
+          Debug Mode
+        </label>
+        <label class="setting-toggle" for="cardSystemInput">
+          <input id="cardSystemInput" type="checkbox">
+          <span title="Off 使用目前 Config 的原始自然機率；On 套用所選 Profile 的卡片權重。">Card System</span>
+        </label>
+        <label class="config-control" for="versionSelect">
+          Version
+          <select id="versionSelect"></select>
+        </label>
+        <label class="config-control" for="demogameConfigSelect">
+          Config
+          <select id="demogameConfigSelect"></select>
+        </label>
+        <label class="config-control demogame-source-control" for="configSelect">
+          Config
+          <select id="configSelect"></select>
+        </label>
+        <label class="config-control" for="languageSelect">
+          <span>Language</span>
+          <select id="languageSelect">
+            <option value="zh">繁中</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <div class="footer-note">Double-click to play offline. No server needed.</div>
+  </main>
+
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header">
+        <h2 id="helpDialogTitle">Game Help</h2>
+        <button id="closeHelpBtn" type="button" aria-label="Close game help">Close</button>
+      </div>
+      <div id="helpContent" class="help-content">
+        <div class="help-loading">Loading game rules...</div>
+      </div>
+      <iframe id="helpFrame" title="Game Help content" aria-hidden="true" tabindex="-1"></iframe><script>if (location.protocol === "file:") document.getElementById("helpFrame").src = "./game_help_draft.md";</script>
+    </div>
+  </dialog>
+
+  <script src="./Versions/version_manifest.js?v=20261014-v7400"></script>
+  <script>
+    const H027_MANIFEST = window.H027_VERSION_MANIFEST || { current: "0.0.0.0", versions: [] };
+    const H027_VISIBLE_VERSION_ENTRIES = Array.from(
+      new Map(H027_MANIFEST.versions.map((item) => [item.math_key || item.version, item])).values()
+    );
+    const H027_QUERY = new URLSearchParams(window.location.search);
+    let H027_VERSION = H027_QUERY.get("version");
+    if (!H027_VERSION) try { H027_VERSION = localStorage.getItem("slotDemoVersion"); } catch (_) {}
+    const H027_REQUESTED_VERSION_ENTRY = H027_MANIFEST.versions.find((item) => item.version === H027_VERSION);
+    const H027_VERSION_ENTRY = H027_VISIBLE_VERSION_ENTRIES.find((item) => item.version === H027_VERSION)
+      || H027_VISIBLE_VERSION_ENTRIES.find((item) => item.math_key === H027_REQUESTED_VERSION_ENTRY?.math_key)
+      || H027_VISIBLE_VERSION_ENTRIES.find((item) => item.version === H027_MANIFEST.current)
+      || H027_VISIBLE_VERSION_ENTRIES[0];
+    if (!H027_VERSION_ENTRY) throw new Error("Version manifest has no usable entries.");
+    const H027_CONFIG_MAP = Object.fromEntries(Object.entries(H027_VERSION_ENTRY.configs || {}).map(([key, value]) => {
+      const rawCode = String(key).toUpperCase();
+      const code = /^(BASE|9[24][AB](_BET100)?)$/.test(rawCode) ? rawCode : `${rawCode}A`;
+      return [code, String(value).replace(/^\.\.\//, "")];
+    }));
+    let H027_CONFIG_CODE = H027_QUERY.get("config");
+    if (!H027_CONFIG_CODE) try { H027_CONFIG_CODE = localStorage.getItem("slotDemoConfig"); } catch (_) {}
+    const H027_CODE_MATCH = String(H027_CONFIG_CODE || "").match(/(?:config_)?(BASE|9[24][AB]?(?:_BET100)?)(?:\.js)?$/i);
+    H027_CONFIG_CODE = H027_CODE_MATCH ? H027_CODE_MATCH[1].toUpperCase() : "";
+    if (H027_CONFIG_CODE === "92") H027_CONFIG_CODE = "92A";
+    if (H027_CONFIG_CODE === "94") H027_CONFIG_CODE = "94A";
+    if (!H027_CONFIG_MAP[H027_CONFIG_CODE]) H027_CONFIG_CODE = Object.keys(H027_CONFIG_MAP)[0];
+    const H027_ACTIVE_CONFIG = H027_CONFIG_MAP[H027_CONFIG_CODE];
+    const H027_CONFIG_VERSION = H027_VERSION_ENTRY.version;
+    window.H027_VERSION_ENTRY = H027_VERSION_ENTRY;
+    window.H027_CONFIG_CODE = H027_CONFIG_CODE;
+    try {
+      localStorage.setItem("slotDemoVersion", H027_VERSION_ENTRY.version);
+      localStorage.setItem("slotDemoConfig", H027_CONFIG_CODE);
+    } catch (_) {}
+    window.h027ConfigLoadFailed = () => {
+      const message = document.getElementById("messageBar");
+      if (message) {
+        message.textContent = `Config load failed: ${H027_ACTIVE_CONFIG}`;
+        message.className = "message-bar error";
+      }
+    };
+    // 基礎 Config（模擬程式規範 2.1）：版本有 base_configs 時，先載入同 Variant 的 config_A.js／config_B.js
+    const H027_VARIANT = (H027_CONFIG_CODE.match(/^\d+([A-Z])/) || ["", ""])[1];
+    const H027_BASE_CONFIG = H027_VERSION_ENTRY.base_configs?.[H027_VARIANT];
+    if (H027_BASE_CONFIG) {
+      document.write(`<script src="./${String(H027_BASE_CONFIG).replace(/^\.\.\//, "")}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
+    }
+    document.write(`<script src="./${H027_ACTIVE_CONFIG}?v=${H027_CONFIG_VERSION}" onerror="h027ConfigLoadFailed()"><\/script>`);
+  </script>
+  <script>
+if (typeof data === "undefined") {
+  window.h027ConfigLoadFailed();
+  throw new Error(`Config load failed: ${H027_ACTIVE_CONFIG}`);
+}
+// 拆分格式：RTP Config 只有卡片權重等欄位，基礎數學從 baseData 補進來（識別欄位以 RTP 為準）
+if (data.base_config) {
+  if (typeof baseData === "undefined") {
+    window.h027ConfigLoadFailed();
+    throw new Error(`Base config load failed: ${data.base_config}`);
+  }
+  for (const [key, value] of Object.entries(baseData)) if (!(key in data)) data[key] = value;
+  delete data.base_config;
+}
+
+const H027_REQUIRED_CONFIG_FIELDS = [
+  "game_id", "display_name", "game_name_zh", "excel_version",
+  "reel_num", "window_size", "symbol_codes", "symbol_ids", "pay_table",
+  "strip_names", "strips", "parameter", "supported_bet_modes",
+  "default_coin_in", "normalbet", "extrabet", "featurebuy",
+  "denom", "bet_options", "initial_balance", "drop_mode",
+  "fg_trigger_count", "fg_retrigger_count", "cascade_limit",
+  "config_type", "config_code", "is_competitor_model",
+  "bet_tier_thresholds", "link", "rtp_accounting"
+];
+const H027_MISSING_CONFIG_FIELDS = H027_REQUIRED_CONFIG_FIELDS.filter((key) => data[key] == null);
+if (H027_MISSING_CONFIG_FIELDS.length) {
+  const detail = `Config incomplete: ${H027_MISSING_CONFIG_FIELDS.join(", ")}`;
+  const message = document.getElementById("messageBar");
+  if (message) {
+    message.textContent = detail;
+    message.className = "message-bar error";
+  }
+  throw new Error(detail);
+}
+
+(() => {
+  "use strict";
+
+  const Box = data;
+  const DENOM = Number(Box.denom);
+  const INITIAL_BALANCE = Number(Box.initial_balance);
+  const BET_OPTIONS = [...new Set([...Box.bet_options, 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
+  const MODE_NORMAL = Box.mode_normalbet;
+  const MODE_EXTRA = Box.mode_extrabet;
+  const MODE_BUY = Box.mode_featurebuy;
+  const SUPPORTED_BET_MODES = new Set(Box.supported_bet_modes.map(Number));
+  const FG_TRIGGER_COUNT = Number(Box.fg_trigger_count);
+  const FG_RETRIGGER_COUNT = Number(Box.fg_retrigger_count);
+  const CASCADE_LIMIT = Number(Box.cascade_limit);
+  const CODE_TO_ID = Object.fromEntries(Box.symbol_codes.map((code, index) => [code, Box.symbol_ids[index]]));
+  const ID_TO_CODE = Object.fromEntries(Box.symbol_ids.map((id, index) => [id, Box.symbol_codes[index]]));
+  const PAY_TABLE_BY_ID = Object.fromEntries(Box.symbol_ids.map((id, index) => [id, Box.pay_table[index]]));
+  const C1 = CODE_TO_ID.C1;
+  const C2 = CODE_TO_ID.C2;
+  const C3 = CODE_TO_ID.C3;
+  const PROFILE_NAMES = {
+    [MODE_NORMAL]: "normal",
+    [MODE_EXTRA]: "normal",
+    [MODE_BUY]: "featurebuy"
+  };
+  const LANGUAGE_STORAGE_KEY = "slotDemoLanguage";
+  const UI_TEXT = {
+    en: {
+      baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature",
+      superFeature: "Extra Bet", cascade: "Cascade", multiplier: "Mult", fgLeft: "FG Left", credit: "Credit",
+      bet: "Bet", win: "Win", stats: "Simulation Stats", rounds: "Total Rounds", hitRate: "Hit Rate",
+      maxMultiplier: "Max Multiplier", play: "Play", spin: "Spin", auto: "Auto", stop: "Stop", speed: "Speed",
+      betMode: "Bet Mode", normalBet: "Normal Bet", debugMode: "Debug Mode", forceFg: "Force FG", setting: "Setting",
+      language: "Language", help: "Help", reset: "Reset", reelRng: "Reel RNG", spinResult: "Spin Result",
+      payAnywhereWins: "Pay Anywhere Wins", clear: "Clear", close: "Close", loading: "Loading game rules...",
+      helpTitle: "Game Help", ready: "Ready — press Spin", noWin: "No Pay Anywhere win", pay: "Pay"
+    },
+    zh: {
+      baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色",
+      superFeature: "額外押注", cascade: "連消", multiplier: "倍數", fgLeft: "FG 剩餘", credit: "餘額",
+      bet: "押注", win: "得分", stats: "模擬統計", rounds: "總局數", hitRate: "中獎率",
+      maxMultiplier: "最高倍數", play: "遊戲", spin: "Spin", auto: "自動", stop: "停止", speed: "速度",
+      betMode: "押注模式", normalBet: "一般押注", debugMode: "除錯模式", forceFg: "強制 FG", setting: "設定",
+      language: "語言", help: "Help", reset: "重置", reelRng: "輪帶 RNG", spinResult: "Spin 結果",
+      payAnywhereWins: "Pay Anywhere 得獎", clear: "清除", close: "關閉", loading: "正在載入遊戲規則…",
+      helpTitle: "遊戲 Help", ready: "準備完成 — 請按 Spin", noWin: "沒有 Pay Anywhere 得獎", pay: "得分"
+    }
+  };
+  function savedLanguage() {
+    try { return localStorage.getItem(LANGUAGE_STORAGE_KEY) === "zh" ? "zh" : "en"; } catch (_) { return "en"; }
+  }
+  const state = {
+    language: savedLanguage(),
+    balance: INITIAL_BALANCE,
+    totalBet: 0,
+    totalWin: 0,
+    roundCount: 0,
+    hitCount: 0,
+    fgTriggerCount: 0,
+    maxMultiplier: 0,
+    betIndex: 0,
+    selectedMode: MODE_NORMAL,
+    speed: 1,
+    busy: false,
+    auto: false,
+    autoTimer: null,
+    lastWin: 0,
+    pendingFg: null,
+    snapshots: [],
+    snapshotIndex: -1,
+    lastSpin: null,
+    restoreMode: null
+  };
+
+  const byId = (id) => document.getElementById(id);
+  const el = {
+    board: byId("board"),
+    message: byId("messageBar"),
+    mode: byId("modeText"),
+    featureStatus: byId("featureStatus"),
+    cascade: byId("carryMultiValue"),
+    multiplier: byId("spinMultiValue"),
+    fgPill: byId("fgLeftPill"),
+    fgLeft: byId("fgLeftValue"),
+    balance: byId("balanceValue"),
+    bet: byId("betValue"),
+    win: byId("winValue"),
+    rounds: byId("roundCountValue"),
+    rtp: byId("rtpValue"),
+    hitRate: byId("hitRateValue"),
+    fgTriggers: byId("fgTriggerValue"),
+    maxMultiplier: byId("maxMultiplierValue"),
+    spin: byId("spinBtn"),
+    auto: byId("autoBtn"),
+    normal: byId("normalBetBtn"),
+    buy: byId("extraBetBtn"),
+    super: byId("buyFeatureBtn"),
+    betButton: byId("betBtn"),
+    betMinus: byId("betMinusBtn"),
+    betPlus: byId("betPlusBtn"),
+    betMenu: byId("betMenu"),
+    speed: byId("speedRange"),
+    speedValue: byId("speedValue"),
+    version: byId("versionSelect"),
+    combinedConfig: byId("demogameConfigSelect"),
+    config: byId("configSelect"),
+    cardSystem: byId("cardSystemInput"),
+    debug: byId("debugModeInput"),
+    forceFg: byId("forceFgInput"),
+    previous: byId("previousStepBtn"),
+    next: byId("nextStepBtn"),
+    rngInput: byId("rngInput"),
+    cardRange: byId("cardRangeSelect"),
+    rngReset: byId("setRngResetBtn"),
+    lineList: byId("lineList"),
+    resultList: byId("spinResultList"),
+    liveLog: byId("liveLogBody"),
+    clearLog: byId("clearLogBtn"),
+    reset: byId("resetBtn"),
+    help: byId("helpBtn"),
+    helpDialog: byId("helpDialog"),
+    closeHelp: byId("closeHelpBtn")
+  };
+  el.language = byId("languageSelect");
+  el.helpContent = byId("helpContent");
+  el.helpFrame = byId("helpFrame");
+
+  const t = (key) => key === "gameName"
+    ? (state.language === "zh" ? Box.game_name_zh : Box.display_name)
+    : (UI_TEXT[state.language][key] || UI_TEXT.en[key] || key);
+  const tr = (english, chinese) => state.language === "zh" ? chinese : english;
+
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(18, ms / state.speed)));
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const randomIndex = (length) => Math.floor(Math.random() * length);
+  const money = (value) => Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const toMoney = (credit) => Number(credit) * DENOM;
+
+  function setText(node, value) {
+    if (node) node.textContent = value;
+  }
+
+  function pickWeightedDetail(weights, forcedRng = null) {
+    const safe = weights.map((value) => Math.max(0, Number(value) || 0));
+    const total = safe.reduce((sum, value) => sum + value, 0);
+    if (total <= 0) return { index: 0, rng: 0, total: 0 };
+    const rng = forcedRng == null ? Math.floor(Math.random() * total) : Number(forcedRng);
+    if (!Number.isInteger(rng) || rng < 0 || rng >= total) {
+      throw new Error(`Reel RNG ${forcedRng} 超出範圍 0-${total - 1}`);
+    }
+    let target = rng;
+    for (let index = 0; index < safe.length; index += 1) {
+      target -= safe[index];
+      if (target < 0) return { index, rng, total };
+    }
+    return { index: safe.length - 1, rng, total };
+  }
+
+  function pickWeighted(weights) {
+    return pickWeightedDetail(weights).index;
+  }
+
+  function pickWeightedUnit(weights, unitPick, unitTotal = 1000000) {
+    const safe = weights.map((value) => Math.max(0, Number(value) || 0));
+    const total = safe.reduce((sum, value) => sum + value, 0);
+    if (total <= 0 || unitTotal <= 0) return 0;
+    const target = Math.min(total - 1, Math.floor(Number(unitPick) * total / unitTotal));
+    return pickWeightedDetail(safe, target).index;
+  }
+
+  function rngForStop(weights, stopIndex) {
+    return weights.slice(0, stopIndex).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+  }
+
+  function symbolCode(symbol) {
+    return ID_TO_CODE[symbol] || "?";
+  }
+
+  function tableWeight(block, tableName) {
+    const exactIndex = block.table_names.indexOf(tableName);
+    const index = exactIndex >= 0 ? exactIndex : 0;
+    return index >= 0 ? Number(block.weights[index] || 0) : 0;
+  }
+
+  function maybeUseC3(symbol, weight, denominator) {
+    if (symbol !== C2) return symbol;
+    return Math.random() * Number(denominator || 10000) < Number(weight || 0) ? C3 : C2;
+  }
+
+  function maybeUseInitialC3(symbol, tableName, initialBallCount) {
+    const useSuper = currentProfile().c2_to_c3;
+    const weights = useSuper.weights_by_initial_ball_count?.[tableName] || [];
+    const bucket = Math.min(6, Math.max(1, Number(initialBallCount) || 0)) - 1;
+    return maybeUseC3(symbol, weights[bucket], useSuper.denominator);
+  }
+
+  function maybeUseDropC3(symbol, tableName, comboCount) {
+    const useSuper = currentProfile().c2_to_c3;
+    const fallback = (useSuper.weights_by_initial_ball_count?.[tableName] || []).slice(0, 5);
+    const weights = useSuper.weights_by_drop_combo?.[tableName] || fallback;
+    const bucket = Math.min(5, Math.max(1, Number(comboCount) || 0)) - 1;
+    return maybeUseC3(symbol, weights[bucket], useSuper.denominator);
+  }
+
+  function drawMultiplierValue(symbol, tableName) {
+    const block = currentProfile().multiplier;
+    const source = symbol === C3 ? block.weights_c3 : block.weights_c2;
+    const weightKey = source[tableName] ? tableName : block.table_names[0];
+    const weights = source[weightKey] || [];
+    return block.multipliers[pickWeighted(weights)] || 0;
+  }
+
+  function upgradeC3Value(value) {
+    const levels = Box.multiplier_levels || [];
+    const index = levels.indexOf(value);
+    return index >= 0 && index < levels.length - 1 ? levels[index + 1] : Math.min(Number(value) || 0, Box.multiplier_max_value || 2500);
+  }
+
+  function writeMessage(text, type = "") {
+    setText(el.message, text);
+    el.message.className = `message-bar ${type}`;
+  }
+
+  // Debug Log：一律走共用 window.demogameLog（行格式同 H045，不記演出過程）
+  // 共用模組在本 script 之後才載入，載入前的行（Config loaded）先排隊，DOMContentLoaded 時補寫
+  const pendingLog = [];
+  function appendLog(text, type = "info") {
+    if (window.demogameLog) window.demogameLog(text, type);
+    else pendingLog.push([text, type]);
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    pendingLog.splice(0).forEach(([text, type]) => window.demogameLog?.(text, type));
+  });
+
+  function currentProfile() {
+    return Box.parameter[PROFILE_NAMES[state.selectedMode]];
+  }
+
+  function betMoney() {
+    return BET_OPTIONS[state.betIndex];
+  }
+
+  function betMultiplier() {
+    return betMoney() / (Box.default_coin_in * DENOM * Box.normalbet);
+  }
+
+  function wagerMoney() {
+    const modeCost = state.selectedMode === MODE_BUY
+      ? Box.featurebuy
+      : state.selectedMode === MODE_EXTRA
+        ? Box.extrabet
+        : Box.normalbet;
+    return betMoney() * modeCost;
+  }
+
+  function currentModeCost() {
+    return state.selectedMode === MODE_BUY
+      ? Number(Box.featurebuy)
+      : state.selectedMode === MODE_EXTRA
+        ? Number(Box.extrabet)
+        : Number(Box.normalbet);
+  }
+
+  function currentBetContext() {
+    const modeCost = currentModeCost();
+    const featurePriceMultiplier = state.selectedMode === MODE_BUY ? modeCost : null;
+    const betAmount = betMoney() * modeCost;
+    const betTierAmount = featurePriceMultiplier ? betAmount / featurePriceMultiplier : betAmount;
+    const smallLimit = Number(Box.bet_tier_thresholds.small_bet_lt);
+    const mediumLimit = Number(Box.bet_tier_thresholds.medium_bet_lte);
+    const betTier = betTierAmount < smallLimit ? "small_bet" : betTierAmount <= mediumLimit ? "medium_bet" : "big_bet";
+    const limits = currentCardLimits(betTier);
+    return {
+      modeCost,
+      featurePriceMultiplier,
+      baseBet: betMoney(),
+      betAmount,
+      betTierAmount,
+      betTier,
+      linkEnabled: Boolean(Box.link?.enabled) && betTier !== "small_bet",
+      maxMultiplierBg: limits.bg,
+      maxMultiplierFg: limits.fg
+    };
+  }
+
+  function positiveRangeMax(cards) {
+    const maxima = (cards || [])
+      .filter((card) => card?.type === "range" && Number(card.weight) > 0)
+      .map((card) => Number(card.max))
+      .filter(Number.isFinite);
+    return maxima.length ? Math.max(...maxima) : null;
+  }
+
+  function currentCardLimits(betTier) {
+    const naturalLimit = Number(Box.multiplier_max_value) || 2500;
+    if (!Box.card_system?.enabled) return { bg: naturalLimit, fg: naturalLimit };
+    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet";
+    const mode = Box.card_system?.[modeKey];
+    return {
+      bg: state.selectedMode === MODE_BUY ? 0 : positiveRangeMax(mode?.weight_bg) ?? naturalLimit,
+      fg: positiveRangeMax(mode?.weight_fg) ?? naturalLimit
+    };
+  }
+
+  function manifestConfigCodes(entry) {
+    return Object.keys(entry?.configs || {}).map((key) => {
+      const code = key.toUpperCase();
+      return /^(BASE|9[24][AB](_BET100)?)$/.test(code) ? code : `${code}A`;
+    });
+  }
+
+  function openVersion(version, configCode) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("version", version);
+    url.searchParams.set("config", configCode);
+    try {
+      localStorage.setItem("slotDemoVersion", version);
+      localStorage.setItem("slotDemoConfig", configCode);
+    } catch (_) {}
+    window.location.href = url.href;
+  }
+
+  function renderVersionControls() {
+    el.version.innerHTML = "";
+    for (const entry of H027_VISIBLE_VERSION_ENTRIES) {
+      const option = document.createElement("option");
+      option.value = entry.version;
+      option.textContent = entry.version;
+      el.version.appendChild(option);
+    }
+    el.version.value = H027_VERSION_ENTRY.version;
+    el.config.innerHTML = "";
+    for (const code of manifestConfigCodes(H027_VERSION_ENTRY)) {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = code;
+      el.config.appendChild(option);
+    }
+    el.config.value = H027_CONFIG_CODE;
+    // 卡片系統開關由 Config 決定：BaseA／BaseB＝自然機率（卡片關），其餘 Config＝卡片開
+    if (el.cardSystem) {
+      let saved = null;
+      try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
+      el.cardSystem.checked = saved !== "off";
+    }
+    const codes = manifestConfigCodes(H027_VERSION_ENTRY);
+    const variantOf = (code) => (String(code).match(/^\d+([A-Z])/) || ["", ""])[1];
+    const variants = [...new Set(codes.map(variantOf))];
+    const cardOn = el.cardSystem ? el.cardSystem.checked : true;
+    el.combinedConfig.innerHTML = "";
+    for (const variant of variants) {
+      const sameVariant = codes.filter((code) => variantOf(code) === variant);
+      const target = sameVariant.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : sameVariant[0];
+      const option = document.createElement("option");
+      option.value = `base:${target}`;
+      option.textContent = variants.length > 1 ? `Base${variant}` : "Base";
+      if (!cardOn && target === H027_CONFIG_CODE) option.selected = true;
+      el.combinedConfig.appendChild(option);
+    }
+    for (const code of codes) {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = code;
+      if (cardOn && code === H027_CONFIG_CODE) option.selected = true;
+      el.combinedConfig.appendChild(option);
+    }
+  }
+
+  function tableIndex(name) {
+    return Box.strip_names.indexOf(name);
+  }
+
+  function chooseBaseTable() {
+    const profile = currentProfile();
+    const selected = pickWeighted(profile.base_reel_weights);
+    return tableIndex(profile.base_reel_names[selected]);
+  }
+
+  function generateBoard(tableId) {
+    const strip = Box.strips[tableId];
+    const tableName = Box.strip_names[tableId];
+    const board = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+    const starts = [];
+    const rngs = [];
+    const drops = Array(Box.reel_num).fill(0);
+
+    // 每輪各自依自己的 Symbol Weight CDF 抽停點（與 SPS 的 screenGenerator 一致）。
+    for (let reel = 0; reel < Box.reel_num; reel += 1) {
+      const length = strip.reel_lengths[reel];
+      const weights = strip.weights.slice(0, length).map((row) => row[reel]);
+      const selected = pickWeightedDetail(weights);
+      const start = selected.index;
+      starts.push(start);
+      rngs.push({ value: selected.rng, total: selected.total });
+      for (let row = 0; row < Box.window_size; row += 1) {
+        board[row][reel] = strip.symbols[(start + row) % length][reel];
+      }
+    }
+    // BF_Symbol uses its reel stop weights directly; no post-generation board override.
+    const initialBallCount = board.flat().filter((symbol) => symbol === C2).length;
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        board[row][reel] = maybeUseInitialC3(board[row][reel], tableName, initialBallCount);
+      }
+    }
+    return { tableId, board, starts, rngs, drops, initialBallCount };
+  }
+
+  function evaluatePayAnywhere(board) {
+    const flat = board.flat();
+    const wins = [];
+    const hitPositions = [];
+    let pay = 0;
+
+    for (const symbol of Box.symbol_ids) {
+      if (symbol === C1 || symbol === C2 || symbol === C3) continue;
+      const count = flat.filter((item) => item === symbol).length;
+      const payIndex = count >= 12 ? 5 : count >= 10 ? 4 : count >= 8 ? 3 : -1;
+      if (payIndex < 0) continue;
+      const symbolPay = (PAY_TABLE_BY_ID[symbol]?.[payIndex] || 0) * betMultiplier();
+      wins.push({ symbol, count, pay: symbolPay });
+      pay += symbolPay;
+      for (let row = 0; row < Box.window_size; row += 1) {
+        for (let reel = 0; reel < Box.reel_num; reel += 1) {
+          if (board[row][reel] === symbol) hitPositions.push([row, reel]);
+        }
+      }
+    }
+    return { wins, hitPositions, pay };
+  }
+
+  function applyCascade(spin, wins, comboCount) {
+    const winningSymbols = new Set(wins.map((win) => win.symbol));
+    const strip = Box.strips[spin.tableId];
+    const tableName = Box.strip_names[spin.tableId];
+
+    for (let reel = 0; reel < Box.reel_num; reel += 1) {
+      const kept = [];
+      const keptMultiplierValues = [];
+      let hasScatter = false;
+      for (let row = Box.window_size - 1; row >= 0; row -= 1) {
+        const symbol = spin.board[row][reel];
+        if (symbol === C1) hasScatter = true;
+        if (!winningSymbols.has(symbol)) {
+          kept.push(symbol);
+          const currentValue = spin.multiplierValues[row][reel];
+          keptMultiplierValues.push(symbol === C3 ? upgradeC3Value(currentValue) : currentValue);
+        }
+      }
+
+      let outputRow = Box.window_size - 1;
+      for (let index = 0; index < kept.length; index += 1) {
+        spin.board[outputRow][reel] = kept[index];
+        spin.multiplierValues[outputRow][reel] = keptMultiplierValues[index];
+        outputRow -= 1;
+      }
+
+      while (outputRow >= 0) {
+        spin.drops[reel] += 1;
+        const length = strip.reel_lengths[reel];
+        const sourceIndex = (spin.starts[reel] - spin.drops[reel] + length) % length;
+        let symbol = strip.symbols[sourceIndex][reel];
+        symbol = maybeUseDropC3(symbol, tableName, comboCount);
+        if (symbol === C1) hasScatter = true;
+        spin.board[outputRow][reel] = symbol;
+        spin.multiplierValues[outputRow][reel] = symbol === C2 || symbol === C3 ? drawMultiplierValue(symbol, tableName) : 0;
+        outputRow -= 1;
+      }
+    }
+  }
+
+  function initializeMultiplierValues(spin) {
+    const tableName = Box.strip_names[spin.tableId];
+    spin.multiplierValues = Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0));
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        const symbol = spin.board[row][reel];
+        if (symbol === C2 || symbol === C3) spin.multiplierValues[row][reel] = drawMultiplierValue(symbol, tableName);
+      }
+    }
+  }
+
+  // 三隻小豬：框標記（0＝無、1＝茅草、2＝木頭、3＝磚頭），每次中獎消除被消除的格子 +1 層，最多 3 層
+  const FRAME_LEVEL_MAX = 3;
+  const FRAME_TABLES = [null, Box.frame_multiplier.straw, Box.frame_multiplier.wood, Box.frame_multiplier.brick];
+  function emptyGrid() { return Array.from({ length: Box.window_size }, () => Array(Box.reel_num).fill(0)); }
+  function addFrameLayer(marks, hitPositions) {
+    hitPositions.forEach(([row, reel]) => { marks[row][reel] = Math.min(FRAME_LEVEL_MAX, marks[row][reel] + 1); });
+  }
+  // 連消結束：每個框依層數抽倍數，全部相加
+  function revealFrameMultipliers(marks) {
+    const values = emptyGrid();
+    let total = 0, count = 0;
+    const levelCount = [0, 0, 0, 0];
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        const level = marks[row][reel];
+        if (!level) continue;
+        const table = FRAME_TABLES[level];
+        const value = Number(table.values[pickWeighted(table.weights)]);
+        values[row][reel] = value;
+        total += value;
+        count += 1;
+        levelCount[level] += 1;
+      }
+    }
+    return { values, total, count, c2Count: 0, c3Count: 0, levelCount, marks: clone(marks) };
+  }
+
+  function summarizeMultiplierValues(spin) {
+    let total = 0;
+    let c2Count = 0;
+    let c3Count = 0;
+    for (let row = 0; row < Box.window_size; row += 1) {
+      for (let reel = 0; reel < Box.reel_num; reel += 1) {
+        const symbol = spin.board[row][reel];
+        if (symbol !== C2 && symbol !== C3) continue;
+        const value = spin.multiplierValues[row][reel];
+        total += value;
+        if (symbol === C2) c2Count += 1;
+        else c3Count += 1;
+      }
+    }
+    return { values: clone(spin.multiplierValues), total, c2Count, c3Count, count: c2Count + c3Count };
+  }
+
+  function scatterPay(count) {
+    if (count < FG_TRIGGER_COUNT || count > 6) return 0;
+    return (PAY_TABLE_BY_ID[C1]?.[count - FG_TRIGGER_COUNT] || 0) * betMultiplier();
+  }
+
+  function playSpin(tableId, scene, carriedMultiplier = 0) {
+    const spin = generateBoard(tableId);
+    initializeMultiplierValues(spin);
+    const initialBoard = clone(spin.board);
+    const initialMultiplierValues = clone(spin.multiplierValues);
+    const steps = [];
+    let rawPay = 0;
+    const isBuyFeatureEntry = scene === "BG" && state.selectedMode === MODE_BUY;
+
+    const marks = emptyGrid();   // 框標記：每局（BG、FG 每一轉）重置
+    for (let index = 0; !isBuyFeatureEntry && index < CASCADE_LIMIT; index += 1) {
+      const evaluated = evaluatePayAnywhere(spin.board);
+      if (!evaluated.wins.length) break;
+      const before = clone(spin.board);
+      const beforeMultiplierValues = clone(spin.multiplierValues);
+      const marksBefore = clone(marks);
+      rawPay += evaluated.pay;
+      applyCascade(spin, evaluated.wins, index + 1);
+      addFrameLayer(marks, evaluated.hitPositions);   // 被消除的格子加一層框（框跟著格子位置，不隨符號掉落）
+      steps.push({
+        cascadeIndex: index + 1,
+        before,
+        after: clone(spin.board),
+        beforeMultiplierValues,
+        afterMultiplierValues: clone(spin.multiplierValues),
+        marksBefore,
+        marksAfter: clone(marks),
+        hitPositions: evaluated.hitPositions,
+        wins: evaluated.wins,
+        pay: evaluated.pay
+      });
+    }
+
+    const multiplier = revealFrameMultipliers(marks);   // 連消結束：框刷出倍數
+    const scatterCount = spin.board.flat().filter((symbol) => symbol === C1).length;
+    // BF 進場盤不判獎、不連消（上方 cascade 迴圈已被 isBuyFeatureEntry 跳過），
+    // 但 Scatter 照付（2026-09-04 規則變更）。
+    const scatterWin = scatterPay(scatterCount);
+    // 所有框的倍數相加，乘該次 Spin 的一般符號總得分；BG、FG 相同（FG 不累積）
+    const effectiveMultiplier = rawPay > 0 ? multiplier.total : 0;
+    // 進場盤 rawPay 恆為 0，所以這一行對進場盤就等於 scatterWin。
+    const finalPay = rawPay * (effectiveMultiplier || 1) + scatterWin;
+    return {
+      scene,
+      tableId,
+      tableName: Box.strip_names[tableId],
+      initialBoard,
+      initialMultiplierValues,
+      finalBoard: clone(spin.board),
+      starts: spin.starts,
+      rngs: spin.rngs,
+      steps,
+      multiplier,
+      scatterCount,
+      scatterWin,
+      rawPay,
+      effectiveMultiplier,
+      finalPay
+    };
+  }
+
+  function buildFreeSchedule(kind) {
+    const freeTable = currentProfile().free_table;
+    const schedule = [];
+    freeTable[kind].forEach((count, index) => {
+      const selectedTable = tableIndex(freeTable.names[index]);
+      for (let repeat = 0; repeat < count; repeat += 1) schedule.push(selectedTable);
+    });
+    for (let index = schedule.length - 1; index > 0; index -= 1) {
+      const selected = randomIndex(index + 1);
+      [schedule[index], schedule[selected]] = [schedule[selected], schedule[index]];
+    }
+    return schedule;
+  }
+
+  function symbolCell(symbol, value = 0) {
+    const code = symbolCode(symbol);
+    return { symbol, code, glyph: code, value };
+  }
+
+  function boardCells(board, values = null) {
+    return board.map((row, rowIndex) => row.map((symbol, reelIndex) => symbolCell(symbol, values?.[rowIndex]?.[reelIndex] || 0)));
+  }
+
+  // 三隻小豬：符號用主題 icon（emoji），尚無美術圖；設定的「圖片」可切回文字代號
+  const SYMBOL_IMAGE_DIR = "Source/Image/";
+  const multiplierTier = (value) => (value <= 8 ? "" : value <= 15 ? "_2" : value <= 50 ? "_3" : value <= 500 ? "_4" : "_5");
+  const symbolImageSrc = (code, value) => encodeURI(`${SYMBOL_IMAGE_DIR}zeus 2500_sym_${code}${code === "C2" || code === "C3" ? multiplierTier(value) : ""}.png`);
+  const SYMBOL_IMAGES = [];   // 本作只用 icon
+  const SYMBOL_ICON = {
+    M1: "🐺", M2: "🐷", M3: "🔨", M4: "🍎",                 // 大野狼、小豬、蓋房子的鐵鎚、蘋果
+    A: "🌻", K: "🍄", Q: "🌽", J: "🥕", TE: "🍀",          // 向日葵、蘑菇、玉米、紅蘿蔔、幸運草
+    C1: "🌕"                                                 // Scatter：滿月（大野狼出沒）
+  };
+  let useSymbolImages = true;
+  let lastBoardRender = null;
+  window.DEMOGAME_IMAGE_TOGGLE = {
+    supported: true,
+    defaultEnabled: true,
+    images: SYMBOL_IMAGES,
+    setEnabled(enabled) {
+      useSymbolImages = Boolean(enabled);
+      if (lastBoardRender) renderBoard(...lastBoardRender);
+    }
+  };
+
+  // 補牌落下到位時間：照實機影片量測（Speed 1 為 230ms，其他 Speed 依 demogameMotion.dropMs 等比例），2026-11-05
+  function refillMs() { return Math.max(40, Math.round(230 * (window.demogameMotion?.dropMs() ?? 700) / 700)); }
+  function renderBoard(board, options = {}) {
+    lastBoardRender = [board, options];
+    const hitSet = new Set((options.hitPositions || []).map(([row, reel]) => `${row}-${reel}`));
+    const clearedSet = new Set((options.clearedPositions || []).map(([row, reel]) => `${row}-${reel}`));
+    el.board.innerHTML = "";
+    board.forEach((row, rowIndex) => row.forEach((cell, reelIndex) => {
+      const node = document.createElement("div");
+      const dropMotion = options.dropMotion?.[`${rowIndex}-${reelIndex}`];
+      const special = cell.code === "C1" ? "h019-scatter" : cell.code === "C2" ? "h019-c2" : cell.code === "C3" ? "h027-c3" : "";
+      const symbolClass = `symbol-${cell.code.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
+      node.className = `cell ${symbolClass} ${special} ${hitSet.has(`${rowIndex}-${reelIndex}`) ? "hit" : ""} ${clearedSet.has(`${rowIndex}-${reelIndex}`) ? "symbol-cleared" : ""} ${dropMotion?.type === "new" ? "symbol-drop" : dropMotion?.type === "settle" ? "symbol-settle" : ""} ${options.spinning ? "reel-spin" : ""}`;
+      if (dropMotion) {
+        node.style.setProperty("--drop-start", `${-dropMotion.rows * 105}%`);
+        node.style.setProperty("--drop-duration", `${refillMs()}ms`);   // 補牌落下時間照實機影片
+        // 由下往上逐顆錯開（最下面那顆先落），每顆再加一點隨機錯開，像實機那樣不整齊落下（Speed 5 不錯開）
+        const dropStep = refillMs() * 0.1;
+        const jitter = (window.demogameMotion?.level() ?? 1) < 5 ? Math.random() * dropStep : 0;
+        node.style.setProperty("--drop-delay", dropMotion.type === "new" ? `${Math.round((dropMotion.rows - 1 - rowIndex) * dropStep + jitter)}ms` : "0ms");
+      }
+      if (options.sway) {   // 大野狼的風經過這一輪時，格子晃一下
+        node.classList.add("pig-sway");
+        node.style.setProperty("--sway-delay", `${Math.round(options.sway(reelIndex))}ms`);
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "symbol-wrap";
+      const glyph = document.createElement("span");
+      glyph.className = "h019-glyph";
+      glyph.textContent = cell.glyph;
+      wrap.appendChild(glyph);
+      const icon = useSymbolImages ? SYMBOL_ICON[cell.code] : "";
+      if (icon) {
+        node.classList.add("has-symbol-art");
+        const art = document.createElement("span");
+        art.className = "sym-icon";
+        art.setAttribute("aria-label", cell.code);
+        art.textContent = icon;
+        wrap.appendChild(art);
+      }
+      node.appendChild(wrap);
+      const frameLevel = options.marks?.[rowIndex]?.[reelIndex] || 0;
+      if (frameLevel) {   // 三隻小豬：框畫在盤面圖層（見下方），格子裡只放金幣倍數
+        const frameValue = options.frameValues?.[rowIndex]?.[reelIndex] || 0;
+        if (frameValue > 0) {   // 框倍數：符號正中間的金幣
+          const coin = document.createElement("div");
+          coin.className = `pig-coin lv-${frameLevel}${options.blow ? " pig-blow" : ""}${options.coinsGone ? " pig-gone" : ""}`;
+          if (options.blow) coin.style.setProperty("--blow-delay", `${Math.round(options.blow.delay(reelIndex))}ms`);
+          coin.dataset.pos = `${rowIndex}-${reelIndex}`;
+          coin.textContent = `x${frameValue}`;
+          node.appendChild(coin);
+        }
+      }
+      const code = document.createElement("div");
+      code.className = "symbol-code";
+      code.textContent = cell.code;
+      node.appendChild(code);
+      if (cell.value > 0 && (cell.code === "C2" || cell.code === "C3")) {
+        const multiplier = document.createElement("div");
+        multiplier.className = "multiplier-badge";
+        multiplier.textContent = `x${cell.value}`;
+        node.appendChild(multiplier);
+      }
+      el.board.appendChild(node);
+    }));
+    // 框圖層：固定在格子位置，不跟著符號消除或掉落；升級時在原位閃一下換成下一層
+    if (options.marks) {
+      const cells = [...el.board.children].filter((child) => child.classList.contains("cell"));
+      options.marks.forEach((row, rowIndex) => row.forEach((level, reelIndex) => {
+        if (!level) return;
+        const cell = cells[rowIndex * Box.reel_num + reelIndex];
+        if (!cell) return;
+        const frame = document.createElement("div");
+        frame.className = `pig-frame lv-${level}${options.upgraded?.has(`${rowIndex}-${reelIndex}`) ? " pig-up" : ""}`;
+        Object.assign(frame.style, { left: `${cell.offsetLeft}px`, top: `${cell.offsetTop}px`, width: `${cell.offsetWidth}px`, height: `${cell.offsetHeight}px` });
+        el.board.appendChild(frame);
+      }));
+    }
+  }
+
+  function sampleBoard() {
+    const spin = generateBoard(chooseBaseTable());
+    initializeMultiplierValues(spin);
+    return boardCells(spin.board, spin.multiplierValues);
+  }
+
+  // 轉輪滾動（仿 H020_超級寶石 連續輪帶，2026-10-17）：每輪蓋一條輪帶往下捲動、停在結果格；
+  // 第 1 輪滾 reelSpinMs，之後每輪再錯開 stopStaggerMs（Speed 5 同時停）。只做畫面，不動結果。
+  // columns：每輪由上到下的結果格（已渲染好的 .cell 節點）
+  async function reelStripSpin(board, columns) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const gapMs = motion ? motion.stopStaggerMs() : 80;
+    const pool = columns.flat().filter(Boolean);
+    if (!board || !pool.length) return;
+    const dropClasses = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyCell = (node, width, height, x, y) => {
+      const copy = node.cloneNode(true);
+      copy.classList.remove(...dropClasses);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${x}px;top:${y}px;width:${width}px;height:${height}px;box-sizing:border-box;animation:none;transition:none;visibility:visible`;
+      return copy;
+    };
+    const offsetIn = (node, host) => {
+      let x = 0, y = 0, n = node;
+      while (n && n !== host) {
+        x += n.offsetLeft; y += n.offsetTop;
+        n = n.offsetParent;
+        if (n && n !== host) { x += n.clientLeft; y += n.clientTop; }
+      }
+      return { x, y };
+    };
+    const windows = [];
+    const jobs = columns.map((list, reel) => {
+      const cells = (list || []).filter(Boolean);
+      if (!cells.length) return Promise.resolve();
+      const ms = spinMs + gapMs * reel;
+      const win = document.createElement("div");
+      win.className = "dg-reel-window";
+      win.style.cssText = "position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent";
+      board.appendChild(win);
+      windows.push(win);
+      const host = win.offsetParent || document.body;
+      // 精確小數位置與尺寸：輪帶複本與真格逐像素對齊，停輪換回真格時不跳 1px
+      const hostRect = host.getBoundingClientRect();
+      const boxes = cells.map((cell) => { const r = cell.getBoundingClientRect(); return { cell, x: r.left - hostRect.left - host.clientLeft + host.scrollLeft, y: r.top - hostRect.top - host.clientTop + host.scrollTop, w: r.width, h: r.height }; });
+      const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));   // 左右各留 3px，滾動時格子外框／光暈不被遮罩切到
+      const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+      Object.assign(win.style, { left: `${left}px`, top: `${top}px`, width: `${right - left}px`, height: `${bottom - top}px` });
+      const last = boxes[boxes.length - 1];
+      const pitch = boxes.length > 1 ? (last.y - boxes[0].y) / (boxes.length - 1) : last.h;
+      const extra = Math.max(boxes.length + 3, Math.round(ms / 60), (window.demogameMotion?.level() ?? 1) < 5 ? 10 : 0);   // Speed 1～4 至少滾 10 個符號，Speed 5 維持
+      const strip = document.createElement("div");
+      strip.style.cssText = `position:absolute;left:0;top:0;width:100%;height:${last.y - top + last.h + extra * pitch}px;will-change:transform`;
+      boxes.forEach((b) => strip.appendChild(copyCell(b.cell, b.w, b.h, b.x - left, b.y - top)));
+      for (let k = 1; k <= extra; k += 1) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        strip.appendChild(copyCell(pick, last.w, last.h, last.x - left, last.y - top + k * pitch));
+      }
+      win.appendChild(strip);
+      cells.forEach((cell) => { cell.style.visibility = "hidden"; });
+      // 停輪前多往下滾 18% 格高再回彈到正確位置（同 H020）；最上面墊一格，回彈時不露出空白
+      const above = pool[Math.floor(Math.random() * pool.length)];
+      strip.appendChild(copyCell(above, boxes[0].w, boxes[0].h, boxes[0].x - left, boxes[0].y - top - pitch));
+      strip.style.transform = `translateY(${-extra * pitch}px)`;   // 先放在起始位置：動畫第一格還沒套上時不會露出結果盤面而閃一下
+      const anim = strip.animate([
+        { transform: `translateY(${-extra * pitch}px)`, easing: "cubic-bezier(.2,.65,.35,1)" },
+        { transform: `translateY(${pitch * 0.18}px)`, offset: 0.82, easing: "cubic-bezier(.35,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: ms, fill: "both" });
+      return new Promise((resolve) => { anim.onfinish = resolve; setTimeout(resolve, ms + 60); });
+    });
+    await Promise.all(jobs);
+    windows.forEach((win) => win.remove());
+    pool.forEach((cell) => { cell.style.visibility = ""; });
+  }
+
+  // 掉落式 Spin（仿 Zeus 2500 實機，2026-11-04）：由左到右逐輪錯開。每輪舊符號逐顆往下掉出（最下排先掉），
+  // 該輪掉完後新符號逐顆從上方掉入（最下排先落定），由左到右依序停。時間依 demogameMotion（Speed 5 不隨機錯開），只做畫面，不動結果。
+  async function zeusDropSpin(columnsOf, render) {
+    const motion = window.demogameMotion;
+    const spinMs = motion ? motion.reelSpinMs() : 380;
+    const calm = (motion?.level() ?? 1) >= 5;
+    const board = el.board;
+    const probe = document.createElement("div");
+    probe.style.position = "absolute";
+    board.appendChild(probe);
+    const host = probe.offsetParent || document.body;
+    probe.remove();
+    const rectIn = (node) => {
+      const r = node.getBoundingClientRect(), h = host.getBoundingClientRect();
+      return { x: r.left - h.left - host.clientLeft + host.scrollLeft, y: r.top - h.top - host.clientTop + host.scrollTop, w: r.width, h: r.height };
+    };
+    const strip = ["hit", "symbol-cleared", "symbol-drop", "symbol-settle", "symbol-refill", "reel-spin", "demogame-grow"];
+    const copyOf = (cell, box) => {
+      const copy = cell.cloneNode(true);
+      copy.classList.remove(...strip);
+      [...copy.classList].forEach((name) => { if (name.startsWith("fx-")) copy.classList.remove(name); });
+      copy.removeAttribute("id");
+      copy.style.cssText += `;position:absolute;margin:0;left:${box.x}px;top:${box.y}px;width:${box.w}px;height:${box.h}px;box-sizing:border-box;animation:none;transition:none;visibility:visible;will-change:transform`;
+      return copy;
+    };
+    const oldCopies = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean).map((cell) => { const box = rectIn(cell); return { box, node: copyOf(cell, box) }; }));
+    render();
+    const newCols = (columnsOf() || []).map((cells) => (cells || []).filter(Boolean));
+    const all = newCols.flat();
+    if (!all.length) return;
+    const boxes = all.map(rectIn);
+    const left = Math.min(...boxes.map((b) => b.x)) - 3, top = Math.min(...boxes.map((b) => b.y));
+    const right = Math.max(...boxes.map((b) => b.x + b.w)) + 3, bottom = Math.max(...boxes.map((b) => b.y + b.h));
+    const height = bottom - top;
+    const win = document.createElement("div");
+    win.className = "dg-reel-window";
+    win.style.cssText = `position:absolute;overflow:hidden;z-index:6;pointer-events:none;margin:0;padding:0;border:0;background:transparent;left:${left}px;top:${top}px;width:${right - left}px;height:${height}px`;
+    board.appendChild(win);
+    const gapMs = motion ? motion.stopStaggerMs() : 80;   // 輪與輪由左到右錯開（Speed 5 為 0，同時停）
+    const rowStep = spinMs * 0.07;               // 同一輪相鄰兩排的錯開
+    const jitter = () => (calm ? 0 : Math.random() * spinMs * 0.05);   // 每顆的小幅隨機錯開
+    const fallMs = Math.max(90, spinMs * 0.38);  // 舊符號掉出
+    const landMs = Math.max(120, spinMs * 0.42); // 新符號落下
+    const anims = [];
+    const old0Len = () => (oldCopies[0] || []).length || 1;
+    let outEnd = 0;
+    oldCopies.forEach((list, col) => list.forEach((o, i) => {
+      o.node.style.left = `${o.box.x - left}px`;
+      o.node.style.top = `${o.box.y - top}px`;
+      win.appendChild(o.node);
+      const delay = col * gapMs + (list.length - 1 - i) * rowStep + jitter();
+      outEnd = Math.max(outEnd, delay + fallMs);
+      anims.push(o.node.animate([{ transform: "translateY(0)" }, { transform: `translateY(${height + 20}px)` }],
+        { duration: fallMs, delay, easing: "cubic-bezier(.55,0,1,.6)", fill: "both" }));
+    }));
+    const inStart = Math.max(90, spinMs * 0.38) + (old0Len() - 1) * rowStep;   // 第 1 輪舊符號掉完才開始掉新符號；之後每輪再錯開 gapMs
+    newCols.forEach((cells, col) => cells.forEach((cell, i) => {
+      const b = rectIn(cell);
+      const copy = copyOf(cell, { ...b, x: b.x - left, y: b.y - top });
+      win.appendChild(copy);
+      cell.style.visibility = "hidden";
+      const dist = b.y - top + b.h + 20;
+      anims.push(copy.animate([
+        { transform: `translateY(${-dist}px)`, easing: "cubic-bezier(.5,0,.8,.6)" },
+        { transform: `translateY(0px)`, offset: 0.86, easing: "cubic-bezier(.3,0,.4,1)" },
+        { transform: "translateY(0)" }
+      ], { duration: landMs, delay: inStart + col * gapMs + (cells.length - 1 - i) * rowStep + jitter(), fill: "both" }));
+    }));
+    await Promise.race([Promise.all(anims.map((a) => a.finished.catch(() => {}))), new Promise((r) => setTimeout(r, inStart + spinMs * 2 + 1500))]);
+    all.forEach((cell) => { cell.style.visibility = ""; });
+    win.remove();
+  }
+
+  async function animateReels(spin) {
+    // 掉落式 Spin（2026-11-04 改照實機，原為共用 demogameMotion.dropSpin 整欄掉落）
+    const columnsOf = () => {
+      const nodes = Array.from(el.board.children).filter((node) => node.classList.contains("cell"));
+      return Array.from({ length: Box.reel_num }, (_, reel) =>
+        Array.from({ length: Box.window_size }, (_, row) => nodes[row * Box.reel_num + reel]));
+    };
+    const render = () => renderBoard(boardCells(spin.initialBoard, spin.initialMultiplierValues));   // 新局：框清空
+    if (!el.board.querySelector(".cell")) { render(); return; }
+    await zeusDropSpin(columnsOf, render);
+  }
+
+  function updateFeatureBar(spin = null) {
+    const inFg = spin?.scene === "FG" || Boolean(state.pendingFg);
+    document.body.classList.toggle("fg-mode", inFg);
+    setText(el.mode, inFg ? t("freeGame") : state.selectedMode === MODE_BUY ? t("buyFeature") : state.selectedMode === MODE_EXTRA ? t("superFeature") : t("baseGame"));
+    setText(el.cascade, String(spin?.steps.length || 0));
+    const multiplier = spin?.effectiveMultiplier || 0;   // 本作 BG、FG 都只看本局框倍數
+    setText(el.multiplier, `x${multiplier}`);   // 本作：沒有框＝x0，結算時不變動（不觸發 Mult 跳動）
+    el.fgPill.classList.toggle("hidden", !state.pendingFg);
+    if (state.pendingFg) {
+      const remaining = state.pendingFg.preparedSpins?.length ?? state.pendingFg.queue.length;
+      setText(el.fgLeft, `${remaining}/${state.pendingFg.total}`);
+    }
+    setText(el.featureStatus, state.pendingFg ? `${t("freeGame")} ${t("win")} ${money(state.pendingFg.win)}` : "");
+  }
+
+  function renderPayAnywhereWins(spin) {
+    el.lineList.innerHTML = "";
+    const allWins = spin.steps.flatMap((step) => step.wins.map((win) => ({ ...win, cascadeIndex: step.cascadeIndex })));
+    if (!allWins.length) {
+      el.lineList.innerHTML = `<div class="line-row"><span>${t("noWin")}</span><span>${t("pay")} 0.00</span></div>`;
+      return;
+    }
+    allWins.forEach((win) => {
+      const row = document.createElement("div");
+      row.className = "line-row";
+      row.innerHTML = `<span>C${win.cascadeIndex} | ${symbolCode(win.symbol)} × ${win.count}</span><span>${money(toMoney(win.pay))}</span>`;
+      el.lineList.appendChild(row);
+    });
+  }
+
+  function boardText(board) {
+    return board.map((row) => row.map((symbol) => symbolCode(symbol).padStart(2, " ")).join(" ")).join("\n");
+  }
+
+  function renderResultStages(spin) {
+    el.resultList.innerHTML = "";
+    const stages = [{ label: "Initial", board: spin.initialBoard, meta: `${spin.scene} | ${spin.tableName}` }];
+    spin.steps.forEach((step) => stages.push({ label: `Cascade ${step.cascadeIndex}`, board: step.after, meta: `Pay ${money(toMoney(step.pay))}` }));
+    stages.push({ label: "Final", board: spin.finalBoard, meta: `C1 ${spin.scatterCount} | Frames ${spin.multiplier.levelCount.slice(1).join("/")} x${spin.multiplier.total} | Win ${money(toMoney(spin.finalPay))}` });
+    stages.forEach((stage) => {
+      const row = document.createElement("div");
+      row.className = "spin-result-row";
+      row.innerHTML = `<div class="spin-result-head"><strong>${stage.label}</strong><span>${stage.meta}</span></div><pre class="spin-result-board">${boardText(stage.board)}</pre>`;
+      el.resultList.appendChild(row);
+    });
+  }
+
+  function captureSnapshots(spin, winBase = 0) {
+    // 每步記下播放到該步時 Win 欄顯示的累計得分（與 playback 相同基底與算法），Previous／Next 只改顯示
+    const stopMsg = [spin.scene === "FG" ? "Free Spin" : "Spin", ""];   // 訊息列文字同 playback（Previous／Next 還原用）
+    state.snapshots = [{ label: "Initial", board: boardCells(spin.initialBoard, spin.initialMultiplierValues), hits: [], win: winBase, msg: stopMsg, marks: null }];
+    let liveRaw = 0;
+    spin.steps.forEach((step) => {
+      liveRaw += Number(step.pay) || 0;
+      const win = winBase + toMoney(liveRaw);
+      const msg = [`WIN ${money(toMoney(step.pay))}`, "win"];
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} win`, board: boardCells(step.before, step.beforeMultiplierValues), hits: step.hitPositions, win, msg, marks: step.marksBefore });
+      state.snapshots.push({ label: `Cascade ${step.cascadeIndex} drop`, board: boardCells(step.after, step.afterMultiplierValues), hits: [], win, msg, marks: step.marksAfter });
+    });
+    state.snapshots.push({ label: "Final", board: boardCells(spin.finalBoard), hits: [], win: winBase + toMoney(spin.finalPay), msg: [spinEndText(spin), spin.finalPay > 0 ? "win" : ""], marks: spin.multiplier.marks, frameValues: spin.multiplier.values });
+    state.snapshotIndex = state.snapshots.length - 1;
+    updateDebugButtons();
+  }
+
+  function showSnapshot(index) {
+    if (!state.snapshots.length) return;
+    state.snapshotIndex = Math.max(0, Math.min(index, state.snapshots.length - 1));
+    const snapshot = state.snapshots[state.snapshotIndex];
+    renderBoard(snapshot.board, { hitPositions: snapshot.hits, marks: snapshot.marks, frameValues: snapshot.frameValues });
+    if (Number.isFinite(snapshot.win)) setText(el.win, money(snapshot.win));   // 只改 Win 顯示，不動 Credit／統計／紀錄
+    if (snapshot.msg) writeMessage(...snapshot.msg);   // 訊息列跟著該步變化（同即時播放）
+    updateDebugButtons();
+  }
+
+  function updateDebugButtons() {
+    const enabled = el.debug.checked && !state.busy && state.snapshots.length > 0;
+    el.previous.disabled = !enabled || state.snapshotIndex <= 0;
+    el.next.disabled = !enabled || state.snapshotIndex >= state.snapshots.length - 1;
+  }
+
+  window.demogameAddCredit = (n) => { state.balance += n; updateStats(); };   // 餘額旁「＋」加錢（demogame_common.js）
+  function updateStats() {
+    setText(el.balance, money(state.balance));
+    setText(el.bet, money(wagerMoney()));
+    setText(el.win, money(state.lastWin + (state.pendingFg ? state.pendingFg.win : 0)));   // FG 中顯示「觸發轉 + 本場 FG 累積」，每轉結束不退回觸發轉得分
+    setText(el.rounds, String(state.roundCount));
+    setText(el.rtp, state.totalBet > 0 ? `${(state.totalWin / state.totalBet * 100).toFixed(2)}%` : "0.00%");
+    setText(el.hitRate, state.roundCount > 0 ? `${(state.hitCount / state.roundCount * 100).toFixed(2)}%` : "0.00%");
+    setText(el.fgTriggers, String(state.fgTriggerCount));
+    setText(el.maxMultiplier, `x${state.maxMultiplier}`);
+    setText(el.betButton, `${t("bet")} ${money(betMoney())}`);
+  }
+
+  function updateControls() {
+    const wagerLocked = state.busy || Boolean(state.pendingFg);
+    const cardEnabled = cardSystemActive();
+    const forcedCard = el.cardRange.value !== "";
+    const rngCodeSet = el.rngInput.value.trim() !== "";
+    el.normal.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_NORMAL);
+    el.buy.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_EXTRA);
+    el.super.disabled = wagerLocked || !SUPPORTED_BET_MODES.has(MODE_BUY);
+    el.betMinus.disabled = wagerLocked;
+    el.betPlus.disabled = wagerLocked;
+    el.betButton.disabled = wagerLocked;
+    el.cardRange.disabled = wagerLocked || !cardEnabled;
+    el.rngInput.disabled = wagerLocked;
+    el.rngReset.disabled = wagerLocked || (!forcedCard && !rngCodeSet);
+    if (el.cardSystem) el.cardSystem.disabled = wagerLocked || !Boolean(Box.card_system?.enabled);
+    if (el.version) el.version.disabled = wagerLocked;
+    if (el.config) el.config.disabled = wagerLocked;
+    if (el.combinedConfig) el.combinedConfig.disabled = wagerLocked;
+    el.spin.disabled = state.busy;
+    el.normal.classList.toggle("is-active", state.selectedMode === MODE_NORMAL);
+    el.buy.classList.toggle("is-active", state.selectedMode === MODE_EXTRA);
+    el.super.classList.toggle("is-active", state.selectedMode === MODE_BUY);
+    setText(el.auto, state.auto ? t("stop") : t("auto"));
+    updateDebugButtons();
+  }
+
+  function renderBetMenu() {
+    el.betMenu.innerHTML = "";
+    BET_OPTIONS.forEach((value, index) => {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.textContent = money(value);
+      option.className = index === state.betIndex ? "is-active" : "";
+      option.addEventListener("click", (event) => {
+        event.stopPropagation();
+        state.betIndex = index;
+        el.betMenu.classList.add("hidden");
+        updateStats();
+        renderBetMenu();
+      });
+      el.betMenu.appendChild(option);
+    });
+  }
+
+  // 訊息列（同 H032）：每段得分「WIN x」並閃一下；轉末 BG「WIN 總分／未中獎」、FG「FG i/n · WIN x」；倍數在轉末作用時顯示「WIN 原始 × 倍數 = 最終」
+  function hitMessage(text) {
+    writeMessage(text, "win");
+    void el.message.offsetWidth;
+    el.message.classList.add("fx-bar-hit");
+  }
+  function spinEndText(spin) {
+    const raw = toMoney(spin.rawPay), final = toMoney(spin.finalPay), mult = Number(spin.effectiveMultiplier) || 0;
+    let text = `WIN ${money(final)}`;
+    if (final <= 0) text = tr("No Win", "未中獎");
+    else if (raw > 0 && mult > 1) text = `WIN ${money(raw)} × ${mult}${spin.scatterWin > 0 ? ` + ${money(toMoney(spin.scatterWin))}` : ""} = ${money(final)}`;
+    const fg = state.pendingFg;
+    if (spin.scene !== "FG" || !fg) return text;
+    return `FG ${fg.played}/${fg.total} · ${text}${spin.retrigger ? ` · +${spin.retrigger} FG` : ""}`;
+  }
+
+  async function playback(spin) {
+    writeMessage(spin.scene === "FG" ? "Free Spin" : "Spin");
+    await animateReels(spin);
+    renderBoard(boardCells(spin.initialBoard, spin.initialMultiplierValues));
+    updateFeatureBar({ ...spin, steps: [], effectiveMultiplier: 0 });   // 框倍數揭曉前 Mult＝x0
+    setText(el.multiplier, "x0");   // 框倍數揭曉前 Mult 先歸零
+    await sleep(260);
+
+    // Win 即時刷新：FG 中以「觸發轉得分 + 本場 FG 已累積（不含本轉）」為基底，每次消除累加該段原始得分，最終改為套用倍數後的得分
+    const winBase = state.pendingFg ? state.lastWin + Math.max(0, state.pendingFg.win - toMoney(spin.finalPay)) : state.lastWin;
+    let liveRaw = 0;
+    for (const step of spin.steps) {
+      renderBoard(boardCells(step.before, step.beforeMultiplierValues), { hitPositions: step.hitPositions, marks: step.marksBefore });
+      setText(el.cascade, String(step.cascadeIndex));
+      liveRaw += Number(step.pay) || 0;
+      setText(el.win, money(winBase + toMoney(liveRaw)));
+      hitMessage(`WIN ${money(toMoney(step.pay))}`);
+      await sleep(360);
+      // 消除的同時，被消除的格子加一層框
+      const upgraded = new Set(step.hitPositions.map(([row, reel]) => `${row}-${reel}`));
+      renderBoard(boardCells(step.before, step.beforeMultiplierValues), { clearedPositions: step.hitPositions, marks: step.marksAfter, upgraded });
+      await sleep(560);   // 等金粉播完（h027-sparkle 120＋520ms）
+      const dropMotion = window.slotBuildDropMotion?.(step.before.length, step.before[0].length, step.hitPositions) || {};
+      renderBoard(boardCells(step.after, step.afterMultiplierValues), { dropMotion, marks: step.marksAfter });
+      await sleep((refillMs() * 1.5 + 120) * state.speed);   // ×1.5：含逐顆錯開
+    }
+
+    // 連消結束：風由左往右吹過，吹到哪一輪那一輪的框就露出金幣倍數
+    const finalMarks = spin.multiplier.marks;
+    const winText = () => {
+      setText(el.win, money(winBase + toMoney(spin.finalPay)));
+      if (spin.rawPay > 0 && Number(spin.effectiveMultiplier) > 1) hitMessage(spinEndText(spin));
+      else writeMessage(spinEndText(spin), spin.finalPay > 0 ? "win" : "");
+    };
+    if (spin.multiplier.count > 0) {
+      const ms = (value) => Math.max(40, value / state.speed);
+      const windMs = ms(1500);              // 整段吹氣（狼頭進場→鼓氣→退場）
+      const gustStart = windMs * 0.32;      // 鼓完氣才吹出風
+      const gustMs = windMs * 0.6;          // 風由左捲到右的時間
+      const passAt = (reel) => gustStart + gustMs * 0.5 * (reel + 0.5) / Box.reel_num;   // 風頭經過第 reel 輪的時間
+      setText(el.multiplier, "x0");
+      writeMessage(tr("The wolf huffs and puffs…", "大野狼吹氣…"), "win");
+      renderBoard(boardCells(spin.finalBoard), {
+        marks: finalMarks, frameValues: spin.multiplier.values,
+        sway: (reel) => passAt(reel),
+        blow: { delay: (reel) => passAt(reel) + ms(120) }   // 風吹過該輪之後，框中間轉出金幣
+      });
+      const wind = document.createElement("div");
+      wind.className = "pig-wind";
+      wind.style.setProperty("--wind-ms", `${windMs}ms`);
+      wind.style.setProperty("--gust-ms", `${gustMs}ms`);
+      const wolf = document.createElement("span");
+      wolf.className = "wolf";
+      wolf.textContent = "🐺";
+      wind.appendChild(wolf);
+      // 旋風氣流：幾道帶捲尾的弧線由左往右「畫」過去
+      const svgNs = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNs, "svg");
+      svg.setAttribute("viewBox", "0 0 600 500");
+      svg.setAttribute("preserveAspectRatio", "none");
+      [[90, 0], [170, 60], [250, 20], [330, 90], [410, 40]].forEach(([y, lag], k) => {
+        const path = document.createElementNS(svgNs, "path");
+        const amp = 18 + (k % 2) * 10;
+        path.setAttribute("d", `M -40 ${y} C 80 ${y - amp}, 160 ${y + amp}, 280 ${y} S 460 ${y - amp}, 540 ${y} q 40 -6 34 -34 q -6 -22 -30 -14 q -16 8 -6 22`);
+        path.setAttribute("class", "gust");
+        path.style.setProperty("--len", "900");
+        path.style.setProperty("--gd", `${Math.round(gustStart + lag / 600 * gustMs)}ms`);
+        path.style.strokeWidth = String(2.5 + (k % 3));
+        svg.appendChild(path);
+      });
+      wind.appendChild(svg);
+      // 被捲起的落葉、草屑
+      ["🍃", "🌾", "🍂", "🍃", "🌾", "🍃"].forEach((leaf, k) => {
+        const bit = document.createElement("span");
+        bit.className = "bit";
+        bit.textContent = leaf;
+        bit.style.top = `${10 + k * 15 + Math.random() * 6}%`;
+        bit.style.setProperty("--gd", `${Math.round(gustStart + Math.random() * gustMs * 0.2)}ms`);
+        wind.appendChild(bit);
+      });
+      el.board.appendChild(wind);
+      await new Promise((resolve) => setTimeout(resolve, windMs + 500 / state.speed));
+      wind.remove();
+      await new Promise((resolve) => setTimeout(resolve, ms(250)));
+
+      // 金幣（只有倍數）飛上 Mult，每到一枚 Mult 就加上去
+      const pill = window.demogameFxTarget?.("multPill") || byId("multPill");
+      const target = pill.getBoundingClientRect();
+      const tx = target.left + target.width / 2, ty = target.top + target.height / 2;
+      const coins = [...el.board.querySelectorAll(".pig-coin")];
+      let running = 0;
+      const step = Math.max(12, Math.min(60, 900 / coins.length)) / state.speed;
+      await Promise.all(coins.map((coin, index) => {
+        const box = coin.getBoundingClientRect();
+        const [r, c] = coin.dataset.pos.split("-").map(Number);
+        const value = spin.multiplier.values[r][c];
+        const fly = document.createElement("div");
+        fly.className = "pig-coin pig-fly-coin";
+        fly.textContent = `x${value}`;
+        fly.style.left = `${box.left + box.width / 2}px`;
+        fly.style.top = `${box.top + box.height / 2}px`;
+        document.body.appendChild(fly);
+        const delay = index * step;
+        setTimeout(() => { coin.classList.add("pig-gone"); }, delay);
+        return fly.animate([
+          { transform: "translate(0,0) scale(1)", opacity: 1 },
+          { transform: `translate(${(tx - box.left - box.width / 2) * 0.5}px, ${(ty - box.top - box.height / 2) * 0.5 - 30}px) scale(1.1)`, opacity: 1, offset: 0.55 },
+          { transform: `translate(${tx - box.left - box.width / 2}px, ${ty - box.top - box.height / 2}px) scale(.55)`, opacity: .9 }
+        ], { duration: ms(560), delay, easing: "cubic-bezier(.45,0,.55,1)", fill: "both" }).finished.catch(() => {}).then(() => {
+          fly.remove();
+          running += value;
+          setText(el.multiplier, `x${running}`);
+          pill.classList.remove("pig-bump"); void pill.offsetWidth; pill.classList.add("pig-bump");
+        });
+      }));
+      setText(el.multiplier, `x${spin.multiplier.total}`);
+      await new Promise((resolve) => setTimeout(resolve, ms(320)));
+
+      // Mult 總倍數往下作用到贏分（訊息列）
+      const bar = el.message.getBoundingClientRect();
+      const drop = document.createElement("div");
+      drop.className = "pig-fly-total";   // 只有倍數數字往下飛，沒有底框
+      drop.textContent = `x${spin.multiplier.total}`;
+      drop.style.left = `${tx}px`;
+      drop.style.top = `${ty}px`;
+      document.body.appendChild(drop);
+      await drop.animate([
+        { transform: "translate(-50%,-50%) scale(1)" },
+        { transform: `translate(calc(-50% + ${bar.left + bar.width / 2 - tx}px), calc(-50% + ${bar.top + bar.height / 2 - ty}px)) scale(1.35)` }
+      ], { duration: ms(520), easing: "cubic-bezier(.5,0,.75,0)", fill: "both" }).finished.catch(() => {});
+      drop.remove();
+      winText();
+      updateFeatureBar(spin);
+      renderBoard(boardCells(spin.finalBoard), { marks: finalMarks, frameValues: spin.multiplier.values, coinsGone: true });
+    } else {
+      renderBoard(boardCells(spin.finalBoard), { marks: finalMarks, frameValues: spin.multiplier.values });
+      winText();
+      updateFeatureBar(spin);
+    }
+    renderPayAnywhereWins(spin);
+    renderResultStages(spin);
+    captureSnapshots(spin, winBase);
+    state.lastSpin = spin;
+  }
+
+  function startFreeGame(preparedSession = null) {
+    const queue = preparedSession ? [] : buildFreeSchedule("initial");
+    const preparedSpins = preparedSession?.spins ? preparedSession.spins.slice() : null;
+    const total = preparedSpins ? preparedSpins.length : queue.length;
+    state.pendingFg = { queue, preparedSpins, total, played: 0, carry: 0, win: 0, triggerSpin: state.lastSpin };   // triggerSpin：觸發局 BG 最終盤（BF 為入場盤），FG 結束時還原
+    state.fgTriggerCount += 1;
+    const retriggers = preparedSpins ? preparedSpins.filter((spin) => spin.scatterCount >= FG_RETRIGGER_COUNT).length : 0;
+    appendLog(`${state.selectedMode === MODE_BUY ? "Buy Feature" : "Free Game triggered"} | ${total} spins${retriggers ? ` (Retrigger ×${retriggers})` : ""}`, "mode");
+    updateFeatureBar();
+  }
+
+  async function playFreeSpin() {
+    const fg = state.pendingFg;
+    const hasPrepared = Boolean(fg?.preparedSpins);
+    if (!fg || (hasPrepared ? !fg.preparedSpins.length : !fg.queue.length)) return finishFreeGame();
+    const spin = hasPrepared
+      ? fg.preparedSpins.shift()
+      : playSpin(fg.queue.shift(), "FG", fg.carry);
+    fg.played += 1;
+    fg.win += toMoney(spin.finalPay);
+    state.maxMultiplier = Math.max(state.maxMultiplier, Number(spin.effectiveMultiplier) || 0);   // 本作 FG 每局重置，不累積
+
+    if (!hasPrepared && spin.scatterCount >= FG_RETRIGGER_COUNT && fg.total < Box.max_free_spins) {
+      const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - fg.total);
+      fg.queue.push(...extra);
+      fg.total += extra.length;
+      spin.retrigger = extra.length;
+    }
+    await playback(spin);
+    appendLog(`FG ${fg.played}/${fg.total} | ${spin.tableName} | Cascade ${spin.steps.length} | C1 ${spin.scatterCount} | Multi x${spin.multiplier.total} | Win ${money(toMoney(spin.finalPay))}`, spin.steps.length ? "cascade" : "info");
+    updateStats();
+    if (hasPrepared ? !fg.preparedSpins.length : !fg.queue.length) finishFreeGame();
+  }
+
+  function recordLineRound() {   // 累積倍率線型（共用）：整局總得分 ÷ 本局押注，NB／EB 分開記，BF 不記
+    const round = state.lineRound;
+    state.lineRound = null;
+    if (round && round.wager > 0) window.demogameLineChart?.record(state.lastWin / round.wager, round.mode);
+  }
+
+  function finishFreeGame() {
+    const fg = state.pendingFg;
+    if (!fg) return;
+    state.pendingFg = null;
+    appendLog(`FG complete | Total ${money(fg.win)} (${(fg.win / betMoney()).toFixed(2)}x)`, "result");
+    window.demogameHistory?.record({ fg: fg.win / betMoney() });   // 共用歷史紀錄：FG 最大倍數（÷ 底注）
+    state.lastWin += fg.win;
+    state.balance += fg.win;
+    state.totalWin += fg.win;
+    if (state.lastWin > 0) state.hitCount += 1;
+    recordLineRound();   // 累積倍率線型：觸發局（BG＋FG）結束
+    state.selectedMode = state.restoreMode ?? MODE_NORMAL;   // RNG 重跑局：還原按 Spin 前的押注模式
+    state.restoreMode = null;
+    refreshCardRangeOptions();
+    document.body.classList.remove("fg-mode");
+    if (fg.triggerSpin) renderBoard(boardCells(fg.triggerSpin.finalBoard), { marks: fg.triggerSpin.multiplier.marks, frameValues: fg.triggerSpin.multiplier.values });   // 回到 BG：盤面還原成觸發局最終盤面（只改顯示）
+    updateFeatureBar();
+    updateStats();
+  }
+
+  function forcedTriggerSpin() {
+    const tableId = chooseBaseTable();
+    return playSpin(tableId, "BG", 0);
+  }
+
+  function regularSpin() {
+    if (state.selectedMode !== MODE_EXTRA) return playSpin(chooseBaseTable(), "BG", 0);
+    const candidates = [];
+    for (let attempt = 0; attempt < Box.extra_fg_probability_multiplier; attempt += 1) {
+      const spin = playSpin(chooseBaseTable(), "BG", 0);
+      candidates.push(spin);
+      if (spin.scatterCount >= FG_TRIGGER_COUNT) return spin;
+    }
+    return candidates[0];
+  }
+
+  function cardSystemActive() {
+    const mode = cardModeData();
+    return Boolean(Box.card_system?.enabled)
+      && mode?.enabled !== false
+      && (replay ? replay.card : window.DEMOGAME_CARD_SYSTEM_ENABLED !== false);
+  }
+
+  function cardModeData() {
+    const modeKey = state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet";
+    return Box.card_system?.[modeKey] || null;
+  }
+
+  function pickCard(cards, forcedIndex = null) {
+    if (!Array.isArray(cards) || !cards.length) return null;
+    if (Number.isInteger(forcedIndex) && forcedIndex >= 0 && forcedIndex < cards.length
+      && Number(cards[forcedIndex]?.weight) > 0) return cards[forcedIndex];
+    const index = pickWeighted(cards.map((card) => Number(card.weight) || 0));
+    return cards[index] || null;
+  }
+
+  function selectedDebugCardIndex(cards) {
+    const raw = replay ? replay.range : el.cardRange?.value;
+    if (raw == null || raw === "") return null;
+    const index = Number(raw);
+    return Number.isInteger(index) && Number(cards?.[index]?.weight) > 0 ? index : null;
+  }
+
+  // Set RNG 的 Card Range 選擇會一直保留到按重置；BG／BF 清單不同，只在同一種清單上還原（Buy 期間用 Auto，回 BG 後還原原選擇）。
+  const cardRangeChoice = { kind: "bg", value: "" };
+  function rememberCardRange() {
+    cardRangeChoice.kind = state.selectedMode === MODE_BUY ? "bf" : "bg";
+    cardRangeChoice.value = el.cardRange.value;
+  }
+
+  function refreshCardRangeOptions() {
+    if (!el.cardRange) return;
+    const kind = state.selectedMode === MODE_BUY ? "bf" : "bg";
+    const previous = cardRangeChoice.kind === kind ? cardRangeChoice.value : "";
+    const modeData = cardModeData();
+    const cards = state.selectedMode === MODE_BUY ? modeData?.weight_fg : modeData?.weight_bg;
+    el.cardRange.innerHTML = '<option value="">Auto</option>';
+    (cards || []).forEach((card, index) => {
+      if (Number(card?.weight) <= 0) return;
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = card.type === "free_game"
+        ? `Card ${index}: Free Game`
+        : `Card ${index}: (${card.min}, ${card.max}]`;
+      el.cardRange.appendChild(option);
+    });
+    el.cardRange.value = [...el.cardRange.options].some((option) => option.value === previous) ? previous : "";   // 原選項不存在才回 Auto
+    const label = el.cardRange.closest("label");
+    if (label?.firstChild) label.firstChild.textContent = state.selectedMode === MODE_BUY ? "Card BF Range " : "Card BG Range ";
+  }
+
+  function cardRatio(creditPay) {
+    const denominator = state.selectedMode === MODE_BUY ? betMoney() : wagerMoney();
+    return toMoney(creditPay) / denominator;
+  }
+
+  function cardMatches(card, creditPay) {
+    if (!card || card.type === "free_game") return false;
+    const ratio = cardRatio(creditPay);
+    return Number(card.min) < ratio && ratio <= Number(card.max);
+  }
+
+  function cardLabel(card) {
+    return !card ? "Off" : card.type === "free_game" ? "Free Game" : `(${card.min}, ${card.max}]`;
+  }
+
+  function bgTriggerCap(cards) {
+    const maxima = (cards || [])
+      .filter((card) => card.type !== "free_game" && Number(card.weight) > 0)
+      .map((card) => Number(card.max))
+      .filter(Number.isFinite);
+    return maxima.length ? Math.max(...maxima) : Infinity;
+  }
+
+  function generateFreeSession() {
+    const queue = buildFreeSchedule("initial");
+    const spins = [];
+    let total = queue.length;
+    let carry = 0;
+    let winCredits = 0;
+    while (queue.length && spins.length < Box.max_free_spins) {
+      const spin = playSpin(queue.shift(), "FG", carry);
+      spins.push(spin);
+      carry = Math.max(carry, Number(spin.effectiveMultiplier) || 0);   // 本作不累積：只記本場最大框倍數（模擬面板最大倍數用）
+      winCredits += spin.finalPay;
+      if (spin.scatterCount >= FG_RETRIGGER_COUNT && total < Box.max_free_spins) {
+        const extra = buildFreeSchedule("retrigger").slice(0, Box.max_free_spins - total);
+        queue.push(...extra);
+        total += extra.length;
+        spin.retrigger = extra.length;   // 訊息列「+k FG」用（只標記，不影響結果）
+      }
+    }
+    return { spins, total: spins.length, carry, winCredits };
+  }
+
+  function naturalRound(forceFeature = false) {
+    const buy = state.selectedMode === MODE_BUY;
+    const base = buy || forceFeature ? forcedTriggerSpin() : regularSpin();
+    const triggered = buy || base.scatterCount >= FG_TRIGGER_COUNT;
+    return { base, session: triggered ? generateFreeSession() : null };
+  }
+
+  function cardRound(forceFeature = false) {
+    const modeData = cardModeData();
+    const limit = Number(Box.card_system?.retry_limit || 10000);
+    if (!modeData || forceFeature) {
+      const natural = naturalRound(forceFeature);
+      return { ...natural, card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+    }
+
+    const buy = state.selectedMode === MODE_BUY;
+    const bgCards = modeData.weight_bg || [];
+    const fgCards = modeData.weight_fg || [];
+    const cardPool = buy ? fgCards : bgCards;
+    const selectedCard = pickCard(cardPool, selectedDebugCardIndex(cardPool));
+    const selectedFgCard = !buy && selectedCard?.type === "free_game" ? pickCard(fgCards) : null;
+    const triggerCap = bgTriggerCap(bgCards);
+    let last = null;
+    for (let retry = 0; retry < limit; retry += 1) {
+      const result = naturalRound(false);
+      last = result;
+      if (buy) {
+        const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
+        if (cardMatches(selectedCard, totalCredits)) {
+          return { ...result, card: selectedCard, fgCard: null, retries: retry, retryLimitExceeded: 0 };
+        }
+      } else if (selectedCard?.type === "free_game") {
+        if (result.session && cardRatio(result.base.finalPay) <= triggerCap
+          && cardMatches(selectedFgCard, result.session.winCredits)) {
+          return { ...result, card: selectedCard, fgCard: selectedFgCard, retries: retry, retryLimitExceeded: 0 };
+        }
+      } else if (!result.session && cardMatches(selectedCard, result.base.finalPay)) {
+        return { ...result, card: selectedCard, fgCard: null, retries: retry, retryLimitExceeded: 0 };
+      }
+    }
+    return { ...last, card: selectedCard, fgCard: selectedFgCard, retries: limit, retryLimitExceeded: 1 };
+  }
+
+  // 發想 demo 腳本（Set RNG）：用自然機率重抽到符合條件為止（不改權重）；腳本局不受 Card System 影響
+  const PIG_SCRIPTS = [
+    { key: "combo5", zh: "連消 5 次以上", en: "5+ cascades", bg: (s) => s.steps.length >= 5 },
+    { key: "wood", zh: "有木頭框", en: "Wood frame", bg: (s) => s.multiplier.levelCount[2] + s.multiplier.levelCount[3] > 0 },
+    { key: "brick", zh: "有磚頭框", en: "Brick frame", bg: (s) => s.multiplier.levelCount[3] > 0 },
+    { key: "mult100", zh: "框倍數 x100 以上", en: "Frames x100+", bg: (s) => s.effectiveMultiplier >= 100 },
+    { key: "fg", zh: "有觸發 FG", en: "FG trigger", fg: 0 },
+    { key: "fgbig", zh: "FG 100x 以上", en: "FG 100x+", fg: 100 }
+  ];
+  const SCRIPT_RETRY_LIMIT = 300000;
+  function scriptRound(key) {
+    const script = PIG_SCRIPTS.find((item) => item.key === key);
+    let last = null;
+    if (script.fg !== undefined) {   // FG 腳本：自然重抽到觸發 FG，且 FG 得分達標
+      for (let tries = 0; tries < SCRIPT_RETRY_LIMIT * 10; tries += 1) {
+        last = naturalRound(false);
+        if (last.session && toMoney(last.session.winCredits) / betMoney() >= script.fg) return last;
+      }
+      appendLog(`Script ${key} missed`, "error");
+      return last;
+    }
+    for (let tries = 0; tries < SCRIPT_RETRY_LIMIT; tries += 1) {
+      last = naturalRound(false);
+      if (!last.session && script.bg(last.base)) return last;
+    }
+    appendLog(`Script ${key} missed`, "error");
+    return last;
+  }
+
+  function generateRound(forceFeature = false, scriptKey = "") {
+    if (scriptKey && state.selectedMode !== MODE_BUY) return { ...scriptRound(scriptKey), card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+    return cardSystemActive()
+      ? cardRound(forceFeature)
+      : { ...naturalRound(forceFeature), card: null, fgCard: null, retries: 0, retryLimitExceeded: 0 };
+  }
+  function renderScriptOptions() {
+    const select = byId("scriptSelect");
+    if (!select) return;
+    const current = select.value;
+    const zh = state.language === "zh";
+    select.innerHTML = "";
+    [{ key: "", zh: "無", en: "None" }, ...PIG_SCRIPTS].forEach((script) => {
+      const option = document.createElement("option");
+      option.value = script.key;
+      option.textContent = zh ? script.zh : script.en;
+      select.appendChild(option);
+    });
+    select.value = current;
+    setText(byId("scriptLabel"), zh ? "腳本" : "Script");
+  }
+
+  // ===== 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）=====
+  // 每局開始讀 RNG 碼（沒填就新抽種子），整局（BG＋消除＋整段 FG＋卡片重骰）在 demogameRng.run() 內一次算完，
+  // 之後只做播放；表演用亂數不在 run() 內。opts：r<卡片序號>＝指定 Card Range（BG 卡或 BF 卡依模式）。
+  let replay = null;   // 重跑時暫時覆寫 Card System 與 Card Range（只作用於本局計算）
+  const RNG_MODE_TOKEN = { [MODE_NORMAL]: "NB", [MODE_EXTRA]: "EB", [MODE_BUY]: "BF" };
+  const MODE_LOG_NAME = { [MODE_NORMAL]: "Normal Bet", [MODE_EXTRA]: "Extra Bet", [MODE_BUY]: "Buy Feature" };
+  function configLabel() {
+    return (el.combinedConfig?.selectedOptions?.[0]?.textContent || H027_CONFIG_CODE).trim().replace(/\s+/g, "");
+  }
+  function takeRngCode() {
+    const taken = window.demogameRng.takeInput();   // 格式錯誤會丟 Error
+    if (!taken) return null;
+    const modeValue = Object.keys(RNG_MODE_TOKEN).map(Number).find((mode) => RNG_MODE_TOKEN[mode] === taken.mode);
+    if (modeValue === undefined || !SUPPORTED_BET_MODES.has(modeValue)) throw new Error(tr(`RNG mode ${taken.mode} not supported`, `RNG 模式 ${taken.mode} 本作不支援`));
+    const isScript = PIG_SCRIPTS.some((item) => item.key === taken.opts);
+    if (taken.opts && !isScript && !/^r\d+$/.test(taken.opts)) throw new Error(tr(`RNG opts ${taken.opts} not supported`, `RNG 選項 ${taken.opts} 本作不支援`));
+    return {
+      ...taken,
+      modeValue,
+      script: isScript ? taken.opts : "",
+      range: taken.opts && !isScript ? taken.opts.slice(1) : "",
+      profile: /newbie/i.test(taken.config) ? "newbie" : "oldhand"   // 本作 Demo 無 Profile 選單，僅保留欄位
+    };
+  }
+
+  // Pure-math adapter for demogame_common's N-round simulator. It uses the
+  // same Card System result generator as visible play without touching stats.
+  // 模擬面板的押注模式選單；選定模式只在該局模擬期間暫時套用，不改畫面上的押注模式。
+  window.demogameSimulationModes = [
+    { value: MODE_NORMAL, label: "Normal Bet" },
+    { value: MODE_EXTRA, label: "Extra Bet" },
+    { value: MODE_BUY, label: "Buy Feature" }
+  ];
+  window.demogameSimulateRound = ({ mode } = {}) => {
+    const previousMode = state.selectedMode;
+    if (mode !== undefined) state.selectedMode = mode;
+    try {
+      const result = generateRound(false, null);
+      const totalCredits = result.base.finalPay + Number(result.session?.winCredits || 0);
+      return {
+        multiplier: toMoney(totalCredits) / wagerMoney(),
+        lineMultiplier: cardRatio(totalCredits),   // 線型口徑：BF ÷ 底注，其餘 ÷ 押注
+        fgTriggered: Boolean(result.session),
+        maxMultiplier: Math.max(Number(result.base.effectiveMultiplier) || 0, Number(result.session?.carry || 0)),
+        retryLimitExceeded: result.retryLimitExceeded,
+        retryCount: result.retries,
+        bgCascade: result.base.steps.length,
+        fgCascades: result.session?.spins?.map((spin) => spin.steps.length) || []
+      };
+    } finally {
+      state.selectedMode = previousMode;
+    }
+  };
+
+  async function doSpin() {
+    if (state.busy) return;
+    state.busy = true;
+    updateControls();
+    let settled = false;   // 本轉分數已加完 → finally 先固定停 0.1 秒（共用 demogameRoundPause，不受 Speed 影響）再放行
+    try {
+      if (state.pendingFg) {
+        await playFreeSpin();
+        settled = true;
+        return;
+      }
+
+      const code = takeRngCode();
+      if (code) {
+        if (code.config !== configLabel()) appendLog(`RNG Config ${code.config} ≠ ${configLabel()}`, "error");
+        state.restoreMode = state.selectedMode === MODE_BUY ? MODE_NORMAL : state.selectedMode;   // 本局結束後還原
+        state.selectedMode = code.modeValue;
+        replay = code;
+      }
+      const wager = wagerMoney();
+      if (state.balance < wager) throw new Error(tr("Insufficient balance", "餘額不足"));
+      state.lineRound = state.selectedMode === MODE_BUY ? null : { wager, mode: state.selectedMode === MODE_EXTRA ? "EB" : "NB" };   // 累積倍率線型：本局押注與模式（BF 不記錄）
+      state.balance -= wager;
+      state.totalBet += wager;
+      state.roundCount += 1;
+      state.lastWin = 0;
+      updateStats();
+
+      const forceFeature = el.forceFg.checked;
+      const cardOn = cardSystemActive();
+      const scriptKey = state.selectedMode === MODE_BUY ? "" : (code ? code.script : (byId("scriptSelect")?.value || ""));
+      const rangeValue = cardOn && !scriptKey ? String(replay ? replay.range : (el.cardRange.value || "")) : "";
+      const seed = code ? code.seed : window.demogameRng.newSeed();
+      const rngCode = window.demogameRng.format({ config: configLabel(), mode: RNG_MODE_TOKEN[state.selectedMode], card: cardOn, opts: scriptKey || (rangeValue ? `r${rangeValue}` : ""), seed });
+      if (scriptKey) appendLog(`Script ${scriptKey}`, "mode");
+      let result;
+      try {
+        result = window.demogameRng.run(seed, () => generateRound(forceFeature, scriptKey));   // 整局（BG＋FG）結果一次算完
+      } finally {
+        replay = null;
+      }
+      const spin = result.base;
+      spin.cardInfo = {
+        profile: cardOn ? (state.selectedMode === MODE_BUY ? "buy_feature" : state.selectedMode === MODE_EXTRA ? "extra_bet" : "normal_bet") : "off",
+        card: cardLabel(result.card),
+        fgCard: cardLabel(result.fgCard),
+        retries: result.retries,
+        retryLimitExceeded: result.retryLimitExceeded
+      };
+      el.forceFg.checked = false;
+      const cardText = cardOn ? ` | Card ${spin.cardInfo.card} / FG ${spin.cardInfo.fgCard} | Retry ${result.retries}${result.retryLimitExceeded ? " LIMIT" : ""}` : "";
+      appendLog(`#${state.roundCount} ${MODE_LOG_NAME[state.selectedMode]} | Bet ${money(wager)}${rangeValue ? " | Card Range set" : ""}${code ? " | Replay" : ""}${cardText}`, result.retryLimitExceeded ? "error" : "mode");
+      appendLog(`RNG ${rngCode}`, "rng");   // 共用模組讓這行可點：複製並填入 #rngInput
+      await playback(spin);
+      appendLog(`${state.selectedMode === MODE_BUY ? "BF Entry" : "BG"} | ${spin.tableName} | Cascade ${spin.steps.length} | C1 ${spin.scatterCount} | Multi x${spin.multiplier.total} | Win ${money(toMoney(spin.finalPay))} (${(toMoney(spin.finalPay) / betMoney()).toFixed(2)}x)`, spin.finalPay > 0 ? "result" : "info");
+      window.demogameHistory?.record({ bg: toMoney(spin.finalPay) / betMoney() });   // 共用歷史紀錄：BG 最大倍數（÷ 底注；BF 入場盤面也算）
+
+      state.lastWin = toMoney(spin.finalPay);
+      state.balance += state.lastWin;
+      state.totalWin += state.lastWin;
+      state.maxMultiplier = Math.max(state.maxMultiplier, Number(spin.effectiveMultiplier) || 0);
+      const triggered = spin.scatterCount >= FG_TRIGGER_COUNT || state.selectedMode === MODE_BUY;
+      if (triggered) {
+        startFreeGame(result.session);
+      } else if (state.lastWin > 0) {
+        state.hitCount += 1;
+      }
+      if (!triggered) recordLineRound();   // 累積倍率線型：未觸發局
+      if (!triggered && state.restoreMode != null) {
+        state.selectedMode = state.restoreMode;
+        state.restoreMode = null;
+      }
+      updateStats();
+      settled = true;
+    } catch (error) {
+      state.auto = false;
+      if (!state.pendingFg) {
+        state.selectedMode = state.restoreMode ?? MODE_NORMAL;
+        state.restoreMode = null;
+      }
+      writeMessage(error.message, "error");
+      appendLog(`Error | ${error.message}`, "error");
+    } finally {
+      replay = null;
+      if (settled) await window.demogameRoundPause?.();
+      state.busy = false;
+      updateControls();
+      if (state.auto) state.autoTimer = setTimeout(doSpin, Math.max(80, 650 / state.speed));
+    }
+  }
+
+  function selectMode(mode) {
+    if (state.busy || state.pendingFg) return;
+    state.selectedMode = mode;
+    refreshCardRangeOptions();
+    updateControls();
+    updateStats();
+    updateFeatureBar();
+  }
+
+  function purchaseFeature(mode) {
+    if (state.busy || state.pendingFg) return;
+    state.selectedMode = mode;
+    refreshCardRangeOptions();
+    updateControls();
+    updateStats();
+    updateFeatureBar();
+    doSpin();
+  }
+
+  function setBetIndex(index) {
+    if (state.busy || state.pendingFg) return;
+    state.betIndex = Math.max(0, Math.min(index, BET_OPTIONS.length - 1));
+    refreshCardRangeOptions();
+    updateStats();
+    renderBetMenu();
+    if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
+  }
+
+  function toggleDebug(enabled) {
+    ["play-debug-controls", "set-rng-panel", "log-wrap", "live-log-wrap", "change-log-wrap", "batch-simulation"].forEach((id) => {
+      byId(id).classList.toggle("debug-hidden", !enabled);
+    });
+    byId("controls").classList.toggle("debug-off", !enabled);
+    updateDebugButtons();
+  }
+
+  function resetSession() {
+    if (state.busy) return;
+    clearTimeout(state.autoTimer);
+    Object.assign(state, {
+      balance: INITIAL_BALANCE,
+      totalBet: 0,
+      totalWin: 0,
+      roundCount: 0,
+      hitCount: 0,
+      fgTriggerCount: 0,
+      maxMultiplier: 0,
+      lastWin: 0,
+      selectedMode: MODE_NORMAL,
+      auto: false,
+      pendingFg: null,
+      snapshots: [],
+      snapshotIndex: -1,
+      lastSpin: null,
+      restoreMode: null
+    });
+    document.body.classList.remove("fg-mode");
+    refreshCardRangeOptions();   // Set RNG 設定不隨 Session Reset 清除，只有 Set RNG 的重置會清
+    renderBoard(sampleBoard());
+    updateFeatureBar();
+    updateStats();
+    updateControls();
+    writeMessage(t("ready"), "result");
+  }
+
+  function parseHelp(markdown) {
+    const sections = [];
+    let section = null;
+    let group = null;
+    for (const rawLine of markdown.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (line.startsWith("## ")) {
+        section = { fallback: line.slice(3), titleZh: "", titleEn: "", groups: [] };
+        sections.push(section);
+        group = { titleZh: "", titleEn: "", rules: [], payouts: [] };
+        section.groups.push(group);
+      } else if (line.startsWith("### ") && section) {
+        group = { titleZh: line.slice(4), titleEn: line.slice(4), rules: [], payouts: [] };
+        section.groups.push(group);
+      } else if (line.startsWith("|") && section && group) {
+        const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+        if (!cells.length || cells.every((cell) => /^:?-+:?$/.test(cell))) continue;
+        if (["Item", "Field", "中文欄", "符号"].includes(cells[0])) continue;
+        if (cells.length === 3 && cells[0] === "主要標題") {
+          section.titleZh = cells[1]; section.titleEn = cells[2];
+        } else if (cells.length === 3 && cells[0] === "副標題") {
+          group.titleZh = cells[1]; group.titleEn = cells[2];
+        } else if (cells.length === 3 && cells[0] === "規則說明") {
+          group.rules.push({ zh: cells[1], en: cells[2] });
+        } else if (cells.length === 3) {
+          group.payouts.push(...cells.filter(Boolean));
+        }
+      }
+    }
+    return sections.filter((item) => item.titleZh || item.titleEn || item.groups.some((itemGroup) => itemGroup.rules.length || itemGroup.payouts.length));
+  }
+
+  function renderHelp(markdown) {
+    el.helpContent.innerHTML = "";
+    for (const section of parseHelp(markdown)) {
+      const card = document.createElement("section");
+      card.className = "help-section";
+      const title = document.createElement("h3");
+      title.className = "help-section-title";
+      title.textContent = state.language === "zh" ? (section.titleZh || section.titleEn || section.fallback) : (section.titleEn || section.titleZh || section.fallback);
+      card.appendChild(title);
+      if (section.fallback === "PAYTABLE") {
+        const note = document.createElement("div");
+        note.className = "help-rule";
+        note.textContent = tr(
+          `Payouts below are shown for the current bet of ${money(betMoney() / DENOM)}.`,
+          `以下派彩金額依目前押注 ${money(betMoney() / DENOM)} 顯示。`
+        );
+        card.appendChild(note);
+      }
+      for (const group of section.groups) {
+        if ((group.titleZh || group.titleEn) && (group.rules.length || group.payouts.length)) {
+          const heading = document.createElement("h4");
+          heading.className = "help-group-title";
+          heading.textContent = state.language === "zh" ? (group.titleZh || group.titleEn) : (group.titleEn || group.titleZh);
+          card.appendChild(heading);
+        }
+        for (const rule of group.rules) {
+          const row = document.createElement("div");
+          row.className = "help-rule";
+          row.textContent = state.language === "zh" ? rule.zh : rule.en;
+          card.appendChild(row);
+        }
+        if (group.payouts.length) {
+          const grid = document.createElement("div");
+          grid.className = "help-payout-grid";
+          for (const payout of group.payouts) {
+            const item = document.createElement("div");
+            item.className = "help-payout-item";
+            item.textContent = payout.replaceAll("[", "").replaceAll("]", "").replace(/(-\s*)([\d.]+)\s*$/, (_, separator, rawValue) => {
+              const payoutCredits = Number(rawValue) * betMultiplier();
+              return `${separator}${money(payoutCredits)}`;
+            });
+            grid.appendChild(item);
+          }
+          card.appendChild(grid);
+        }
+      }
+      el.helpContent.appendChild(card);
+    }
+    if (!el.helpContent.children.length) el.helpContent.innerHTML = `<div class="help-load-error">${tr("Unable to load game rules.", "無法載入遊戲規則。")}</div>`;
+  }
+
+  async function loadHelp() {
+    el.helpContent.innerHTML = `<div class="help-loading">${t("loading")}</div>`;
+    let markdown = "";
+    try { markdown = el.helpFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
+    if (!markdown && location.protocol !== "file:") {
+      try {
+        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        if (response.ok) markdown = await response.text();
+      } catch (_) {}
+    }
+    state.helpMarkdown = markdown;
+    renderHelp(markdown);
+  }
+
+  function applyLanguage(showMessage = false) {
+    document.documentElement.lang = state.language === "zh" ? "zh-Hant" : "en";
+    el.language.value = state.language;
+    try { localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language); } catch (_) {}
+    setText(byId("gameName"), t("gameName"));
+    renderScriptOptions();
+    const creditLabels = document.querySelectorAll("#credit-bar .i-label");
+    [t("credit"), t("bet"), t("win")].forEach((value, index) => setText(creditLabels[index], value));
+    setText(document.querySelector("#simulation-stats h3"), t("stats"));
+    const statLabels = document.querySelectorAll("#simulation-stats .s-label");
+    [t("rounds"), "RTP", t("hitRate"), "FG Trigger", t("maxMultiplier")].forEach((value, index) => setText(statLabels[index], value));
+    setText(document.querySelector("#play-panel .zone-label"), t("play"));
+    setText(document.querySelector("#bet-mode-panel .zone-label"), t("betMode"));
+    setText(el.normal, t("normalBet"));
+    setText(el.buy, `${t("superFeature")} (${Box.extrabet}x)`);
+    setText(el.super, `${t("buyFeature")} (${Box.featurebuy}x)`);
+    setText(document.querySelector("#settings-wrap .setting-header"), t("setting"));
+    setText(document.querySelector('label[for="languageSelect"] span'), t("language"));
+    setText(el.help, t("help")); setText(el.reset, t("reset")); setText(byId("helpDialogTitle"), t("helpTitle")); setText(el.closeHelp, t("close"));
+    setText(byId("log-header"), t("spinResult")); setText(document.querySelector("#log-body .log-subheader"), t("payAnywhereWins")); setText(el.clearLog, t("clear"));
+    const debugLabel = document.querySelector('label[for="debugModeInput"]');
+    if (debugLabel?.lastChild) debugLabel.lastChild.textContent = ` ${t("debugMode")}`;
+    const forceLabel = document.querySelector('label[for="forceFgInput"]');
+    if (forceLabel?.lastChild) forceLabel.lastChild.textContent = ` ${t("forceFg")}`;
+    const speedLabel = document.querySelector('label[for="speedRange"]');
+    if (speedLabel?.firstChild) speedLabel.firstChild.textContent = `${t("speed")} `;
+    updateFeatureBar(state.lastSpin); updateStats(); updateControls();
+    if (state.helpMarkdown && el.helpDialog.open) renderHelp(state.helpMarkdown);
+    if (showMessage) writeMessage(tr("Language changed to English", "語言已切換為中文"), "result");
+  }
+
+  window.h027BindCommonControls = () => {
+    if (typeof window.slotBindCommonControls !== "function") throw new Error("demogame_common.js control API is unavailable");
+    window.slotBindCommonControls({
+      spin: doSpin,
+      toggleAuto: () => {
+        state.auto = !state.auto;
+        if (!state.auto) clearTimeout(state.autoTimer);
+        updateControls();
+        if (state.auto && !state.busy) doSpin();
+      },
+      normalMode: () => selectMode(MODE_NORMAL),
+      extraMode: () => selectMode(MODE_EXTRA),
+      buyFeatureMode: () => purchaseFeature(MODE_BUY),
+      betMinus: () => setBetIndex(state.betIndex - 1),
+      betPlus: () => setBetIndex(state.betIndex + 1),
+      toggleBetMenu: (event) => { event.stopPropagation(); el.betMenu.classList.toggle("hidden"); },
+      documentClick: (event) => {
+        if (!el.betMenu.contains(event.target) && event.target !== el.betButton) el.betMenu.classList.add("hidden");
+      },
+      speedChange: () => { state.speed = Number(el.speed.value); setText(el.speedValue, `x${state.speed}`); },
+      previousStep: () => showSnapshot(state.snapshotIndex - 1),
+      nextStep: () => showSnapshot(state.snapshotIndex + 1),
+      debugChange: () => toggleDebug(el.debug.checked),
+      rngChanged: () => { rememberCardRange(); updateControls(); },   // Card Range／RNG 欄變動（含共用互斥清回預設）都記住目前選擇
+      resetRng: () => {
+        el.rngInput.value = "";
+        el.cardRange.value = "";
+        rememberCardRange();
+        updateControls();
+        writeMessage(tr("Set RNG reset", "指定 RNG 已重置"));
+      },
+      clearLog: () => { el.liveLog.innerHTML = ""; },
+      reset: resetSession,
+      configChange: () => openVersion(H027_VERSION_ENTRY.version, el.config.value),
+      languageChange: () => {
+        state.language = el.language.value === "zh" ? "zh" : "en";
+        applyLanguage(true);
+      },
+      openHelp: () => { el.helpDialog.showModal(); loadHelp(); },
+      closeHelp: () => el.helpDialog.close(),
+      helpFrameLoad: () => { if (el.helpDialog.open && !state.helpMarkdown) loadHelp(); }
+    });
+    el.version.addEventListener("change", () => {
+      const entry = H027_MANIFEST.versions.find((item) => item.version === el.version.value);
+      const codes = manifestConfigCodes(entry);
+      openVersion(el.version.value, codes.includes(H027_CONFIG_CODE) ? H027_CONFIG_CODE : codes[0]);
+    });
+    el.combinedConfig.addEventListener("change", () => {
+      const isBase = el.combinedConfig.value.startsWith("base:");
+      const code = isBase ? el.combinedConfig.value.slice(5) : el.combinedConfig.value;
+      if (el.cardSystem && !el.cardSystem.disabled && el.cardSystem.checked === isBase) {
+        el.cardSystem.checked = !isBase;   // 共用模組的 change 監聽會記住選擇並同步 DEMOGAME_CARD_SYSTEM_ENABLED
+        el.cardSystem.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      if (code !== H027_CONFIG_CODE) {
+        openVersion(H027_VERSION_ENTRY.version, code);
+        return;
+      }
+      refreshCardRangeOptions();
+      updateControls();
+    });
+    document.addEventListener("demogame:card-system-change", () => {
+      refreshCardRangeOptions();
+      updateControls();
+    });
+    refreshCardRangeOptions();
+    updateControls();
+  };
+
+  byId("gameId").textContent = Box.game_id;
+  byId("gameName").textContent = t("gameName");
+  renderVersionControls();
+  el.normal.hidden = !SUPPORTED_BET_MODES.has(MODE_NORMAL);
+  el.buy.hidden = !SUPPORTED_BET_MODES.has(MODE_EXTRA);
+  el.super.hidden = !SUPPORTED_BET_MODES.has(MODE_BUY);
+  const cardRangeLabel = el.cardRange.closest("label");
+  cardRangeLabel.hidden = !Box.card_system?.enabled;
+  el.cardRange.disabled = !Box.card_system?.enabled;
+  document.title = `${Box.display_name} — Demo Game`;
+  renderBetMenu();
+  refreshCardRangeOptions();
+  renderBoard(sampleBoard());
+  updateFeatureBar();
+  updateStats();
+  updateControls();
+  toggleDebug(false);
+  applyLanguage();
+  // 載入行等共用模組套好 Config 選單／Card System 後再寫（與 RNG 碼的 Config 一致）
+  document.addEventListener("DOMContentLoaded", () => {
+    appendLog(`Config ${configLabel()} loaded | Version ${window.H027_VERSION_ENTRY?.version || Box.excel_version || "--"} | Card System ${cardSystemActive() ? "On" : "Off"}`, "result");
+  });
+})();
+
+  </script>
+  <script>window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(data.card_system?.enabled);</script>
+    <script>window.DEMOGAME_LAST_TUNING = "2026-11-18 11:32";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "宙斯", "expect": "消除過的格子一層層蓋成茅草、木頭、磚頭屋，連消越多框越硬、倍數越大。", "changes": ["移除 C2／C3 倍數球", "每次中獎消除，被消除的格子加一層框：茅草 → 木頭 → 磚頭（最多 3 層）", "連消結束後每個框刷出倍數：茅草 1～5x、木頭 5～20x、磚頭 20～2500x", "所有框的倍數相加，乘該次 Spin 的一般符號總得分", "BG、FG 每局重置框與倍數（FG 不累積）"]};</script>
+  <script src="../../../../demogame_common.js?v=20261117d"></script>
+  <script>window.h027BindCommonControls();</script>
+</body>
+
+</html>
