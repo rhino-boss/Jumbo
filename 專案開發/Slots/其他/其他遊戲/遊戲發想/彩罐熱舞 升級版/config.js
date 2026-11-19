@@ -34031,20 +34031,20 @@ window.H026_BOX_DATA = {
     "F3",
     "BF"
   ],
-  "frame_bg": "Source/Image/cowboy_symbol_s_frame_bg.png",
-  "frame_top": "Source/Image/cowboy_symbol_s_frame.png",
+  "frame_bg": "Source/Image/pinata-wins_symbol_s_frame_bg.png",
+  "frame_top": "Source/Image/pinata-wins_symbol_s_frame.png",
   "asset_map": {
-    "WW": "Source/Image/cowboy_symbol_s_wild.png",
-    "C1": "Source/Image/cowboy_symbol_s_scatter.png",
-    "M1": "Source/Image/cowboy_symbol_m1_revolver.png",
-    "M2": "Source/Image/cowboy_symbol_m2_hat.png",
-    "M3": "Source/Image/cowboy_symbol_m3_bullets.png",
-    "M4": "Source/Image/cowboy_symbol_m4_dynamite.png",
-    "M5": "Source/Image/cowboy_symbol_m5_cactus.png",
-    "A": "Source/Image/cowboy_symbol_l4_a.png",
-    "K": "Source/Image/cowboy_symbol_l3_k.png",
-    "Q": "Source/Image/cowboy_symbol_l2_q.png",
-    "J": "Source/Image/cowboy_symbol_l1_j.png"
+    "WW": "Source/Image/pinata-wins_symbol_s_wild.png",
+    "C1": "Source/Image/pinata-wins_symbol_s_scatter.png",
+    "M1": "Source/Image/pinata-wins_symbol_m1_skull.png",
+    "M2": "Source/Image/pinata-wins_symbol_m2_sombrero.png",
+    "M3": "Source/Image/pinata-wins_symbol_m3_maracas.png",
+    "M4": "Source/Image/pinata-wins_symbol_m4_taco.png",
+    "M5": "Source/Image/pinata-wins_symbol_m5_chilli.png",
+    "A": "Source/Image/pinata-wins_symbol_l4_a.png",
+    "K": "Source/Image/pinata-wins_symbol_l3_k.png",
+    "Q": "Source/Image/pinata-wins_symbol_l2_q.png",
+    "J": "Source/Image/pinata-wins_symbol_l1_j.png"
   },
   "card_system": {
     "enabled": true,

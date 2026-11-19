@@ -34,7 +34,7 @@ H015 的 Cascade 動畫使用共用 drop motion：中獎符號先消除、既有
 - `demogame_common.js` 偵測到頁面定義 `window.DEMOGAME_IMAGE_TOGGLE` 時，在 Setting 產生 `Image` 開關並呼叫其 `setEnabled(enabled)`；狀態存 `localStorage` 的 `slotDemoSymbolImages`。
 - `demogame_common.css` 的 Symbol display standard：格子有 `has-symbol-art` 時只顯示符號圖，隱藏符號代號並移除符號框線與底色；狀態框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）與加了 `keep-symbol-frame` 的格子不受影響。
 - 所有盤面符號代號（`.symbol-code`、`.h019-glyph`、`.slot-symbol-label` 等）一律一般字重；無美術時可用 `.slot-symbol-label` 作為置中代號標籤。
-- 目前接入 Image 開關的遊戲：H013、H015、H016、H019、H028，以及發想的糖果狂歡 2500；H026、H027、H099 急速糖果 2 無符號美術，固定顯示框＋代號。
+- 目前接入 Image 開關的遊戲：H013、H015、H016、H019、H028，以及發想的糖果狂歡 2500；H026、H027、H039 急速糖果 2 無符號美術，固定顯示框＋代號。
 
 H015 Card System 的 Normal Bet 採兩階段 retry：BG `free_game` 卡先固定並重抽至觸發，之後在同一 BG 上獨立重抽整包 FG，直到符合 `weight_fg` 或達到設定的 retry limit；不可把 BG 與 FG 綁成同一次重抽。
 

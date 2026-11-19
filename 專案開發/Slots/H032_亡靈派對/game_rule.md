@@ -101,12 +101,14 @@
 | 模式 | 價格 | 內容 |
 | --- | ---: | --- |
 | Normal Bet | `1 × Bet` | 一般遊戲。 |
-| Extra Bet | `2 × Bet` | 盤面、輪帶、規則都同 Normal Bet；FG 出現率是 Normal Bet 的 5 倍（FG 週期 1/40），由卡片系統控制。 |
+| Extra Bet | `2 × Bet` | 盤面、輪帶、規則都同 Normal Bet；FG 出現率是 Normal Bet 的 5 倍（FG 週期 1/48；2026-11-19 前為 1/40），由卡片系統控制。 |
 | Buy Feature | `75 × Bet` | 直接進 FG 10 場，規則同一般 FG。 |
 | Super Feature | `300 × Bet` | 直接進 FG 10 場；FG 改用 Super 專用的一組自然機率參數（`SF_Symbol`～`SF_Symbol (4)`），金色符號留下的新框必定有倍數（2026-11-18 起最少 `5X`：只從 `5X`／`10X`／`20X`／`30X`／`50X`／`100X` 抽），其餘規則同一般 FG。 |
 
-* Extra Bet RTP 與 Normal Bet 相同（92A 老手 92%）：FG 每場平均倍數不變、週期縮成 1/40，差額由 BG 吸收（老手 BG 29.5%＋FG 62.5%，以 Extra Bet 押注為分母）。
-* Extra Bet 倍率區間：BG 上限、FG 上限 ×2（全域上限 20,000x、大 Bet 1,000x 為頂）；FG 保底同 Normal Bet 5x（2026-11-17 起，原為 ×2）。
+* Extra Bet RTP 與 Normal Bet 相同（92A 老手 92%）：FG 每場平均倍數不變、週期縮成 1/48（2026-11-19 起，原 1/40），差額由 BG 吸收（老手 BG 29.5%＋FG 62.5%，以 Extra Bet 押注為分母）。
+* Extra Bet 倍率區間：BG 上限、FG 上限 ×2（全域上限 20,000x、大 Bet 1,000x 為頂）；FG 保底同 Normal Bet（2026-11-19 起 30x；原 5x）。
+* Normal Bet／Extra Bet FG 與 Buy Feature 保底 30x、Normal Bet FG 週期 1/240（2026-11-19 起；原保底 5x、週期 1/200），FG 表金色符號出現率（初始與補牌）×1.3：讓每場 FG 留下更多倍數框、不再出現整場沒有框。
+* Super Feature 保底 50x（2026-11-19 起，以底注計；原為 5x）：卡片區間下限 ≥ 50x，平均每場留下約 6 個新框。
 * Extra Bet 的 FG 每場平均倍數（以底注計）與 Normal Bet 相同，但線型較平、保留大獎（2026-11-17）：5～10x 約砍半，10～30x、100～250x 增加，50～100x、250～1,000x 減少，1,000～2,000x 維持。
 * Buy Feature／Super Feature Game RTP 皆 92.5%；Super Feature 的 FG 隱性控制（好局、Retrigger Boost 等）照一般 FG 選表，實際轉同編號的 Super 表。
 

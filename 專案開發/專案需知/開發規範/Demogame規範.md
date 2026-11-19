@@ -138,7 +138,7 @@ Slots/
   - 預載邏輯只寫在 `demogame_common.js`，遊戲專屬程式只提供 `images` 清單，不得自行另寫預載。
 - **圖片格式**：Demo 使用的符號圖一律用 WebP（`quality 90`、保留透明），檔名與原 PNG 相同、副檔名改 `.webp`，放在 `Source/Image/`；原始 PNG 保留作為美術原檔，Demo 不引用。
 - 無美術時的代號可使用共用標籤 `<span class="slot-symbol-label">代號</span>`（置中、一般字重）。
-- 沒有任何符號美術的遊戲，**預設用 icon（emoji）當符號圖**，同樣接共用 Image 開關（`defaultEnabled: true`、`images: []`），可切回符號框＋代號；icon 依符號主題挑（例：H027 皇冠 👑、H099 糖骷髏 💀），用 `.sym-icon` 疊在格子上並加 `has-symbol-art`（2026-11-03 起）。
+- 沒有任何符號美術的遊戲，**預設用 icon（emoji）當符號圖**，同樣接共用 Image 開關（`defaultEnabled: true`、`images: []`），可切回符號框＋代號；icon 依符號主題挑（例：H027 皇冠 👑、H032 糖骷髏 💀），用 `.sym-icon` 疊在格子上並加 `has-symbol-art`（2026-11-03 起）。
 - 中獎、轉換等**狀態**框線（`.hit`、`.convert`、`.wild-mark`、`.fx-win`）不受此規則影響。
 - 符號一體：符號的字、框、底板是一體，所有動畫（長出來、消除、補牌、掉落）都整格一起動，不能只有部分變化（例如框先出現、字才長出來）。顯示得分框時，沒得分的符號完全不變（不變暗、不換框）。
 - 得分符號只把外框換成藍色框起來（金框符號得分時保留金框、外圈加藍框）（共用 `demogame_common.js` 套用），不放大、不閃、不跳；各遊戲不得另做中獎動畫。消除與掉落動畫不受影響。

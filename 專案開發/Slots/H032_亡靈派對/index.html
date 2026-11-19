@@ -2448,6 +2448,8 @@
           <li>彩金列中間的 OP 改成寶箱：距上次中彩金的押注次數越多，箱蓋開得越大、金幣越多（4 階：0／150／400／800 次），中彩金後關回第 1 階；SC 金幣飛去打寶箱。（11/17）</li>
           <li>金色符號改為第 2～5 軸都會出現（每盤平均顆數不變，平均分到 4 軸），A 版卡片權重依新的自然機率重算；彩金列改「聚光放射」款。（11/17）</li>
           <li>超級特色金框加強：新框倍數最少 5X（不再出 2X、3X，以 5X 為主），金色符號出現率提高，平均每場免費遊戲留下約 6 個新框（原約 4 個）；超級特色卡片權重重算，RTP 不變。（11/18）</li>
+          <li>超級特色保底改 50 倍（原 5 倍），新框 5X 占比由 80% 降到 70%、10X 以上變多；卡片權重重算，RTP 不變。（11/19）</li>
+          <li>觸發免費遊戲看板修正：圖片版的 SC 圖原本撐滿盤面、蓋住文字，改成固定小圖，看板顯示「免費遊戲 N 場」。（11/19）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2982,15 +2984,16 @@
     #board .jp-coin.is-win .back{animation:jp-coin-win .5s ease-in-out 3}
     @keyframes jp-coin-win{50%{box-shadow:0 0 0 2px rgba(var(--g),.9),0 0 16px rgba(var(--g),.9);filter:brightness(1.15)}}
     #board .jp-game-msg{min-height:22px;font-size:13px;color:rgba(220,232,250,.8)}
-    /* 彈窗／FG 看板出現時背景不能捲動 */
-    html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
-    /* 觸發 FG 看板：蓋在盤面上；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉 */
+    /* 觸發 FG 看板：蓋在盤面上，顯示「免費遊戲 N 場」；Auto 1 秒後消失，非 Auto 點盤面或按 Spin 關閉。SC 圖固定 72px，不撐滿盤面 */
     #board .fg-banner{position:absolute;inset:0;z-index:80;display:grid;place-items:center;background:rgba(4,10,20,.62);border-radius:10px;cursor:pointer;animation:fg-banner-in .16s ease-out}
-    #board .fg-banner-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 28px;border-radius:12px;
+    #board .fg-banner-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 32px;border-radius:12px;max-width:80%;
       background:linear-gradient(180deg,#ffe49a 0%,#e0a82a 45%,#9a6406 100%);border:1.6px solid #ffd468;box-shadow:inset 0 1px 0 rgba(255,248,220,.55),0 8px 24px rgba(0,0,0,.6);color:#fffaf0;text-shadow:0 1px 2px rgba(80,50,0,.6)}
-    #board .fg-banner-icon{font-size:44px;line-height:1;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+    #board .fg-banner-icon{display:grid;place-items:center;width:72px;height:72px;font-size:44px;line-height:1;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+    #board .fg-banner-icon img,#board .fg-banner-icon svg{width:100%;height:100%;object-fit:contain}
     #board .fg-banner-title{font:800 22px/1.2 system-ui,sans-serif;letter-spacing:.06em}
     #board .fg-banner-count{font:800 30px/1.1 system-ui,sans-serif}
+    /* 彈窗／FG 看板出現時背景不能捲動 */
+    html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
     @keyframes fg-banner-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
     #multiplierWindow .multiplier-step.fx-hit{animation:h099TotalHit 320ms ease-out}
     @keyframes h099TotalHit{from{transform:scale(1.25);filter:brightness(1.8)}to{transform:scale(1);filter:brightness(1)}}
@@ -3751,7 +3754,7 @@
     state.lastWin = state.fg.carry; state.fgTriggers++;
     setFeatureStatus(mode === 3 ? "superFeature" : mode === 2 ? "buyFeature" : "fgTriggered"); updateStats();
   }
-  // 觸發 FG 看板：Auto 模式 1 秒後自動消失；非 Auto 要自己點掉（點盤面／看板或按 Spin）。期間背景不能捲動；看板消失後才開始 FG
+  // 觸發 FG 看板「免費遊戲 N 場」：Auto 模式 1 秒後自動消失；非 Auto 要自己點掉（點盤面／看板或按 Spin）。期間背景不能捲動；看板消失後才開始 FG
   function showFgBanner(spins) {
     return new Promise(resolve => {
       const board = $("board"), spinBtn = $("spinBtn");
@@ -4007,12 +4010,12 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "2.0.0.2";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-18 17:17";
-  window.DEMOGAME_LAST_CODE = "2026-11-17 17:35";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-18 17:17";
+  window.DEMOGAME_LAST_TUNING = "2026-11-19 14:58";
+  window.DEMOGAME_LAST_CODE = "2026-11-19 14:39";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-19 14:58";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
-  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 2X）；沒有彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); no jackpot"]}};</script>
+  <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
   <script src="../demogame_common.js?v=20261118b"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
