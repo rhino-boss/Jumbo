@@ -6,7 +6,7 @@ const data = {
   display_name: "Candy Rush 2",
   game_name_zh: "急速糖果 2",
   game_type: "Video Slot - Cluster Pay / Cascade / Position Multiplier",
-  excel_version: "0.3.1.0",
+  excel_version: "0.0.0.0",            // 試玩版（2026-11-19 使用者指定）
   config_code: "92",
   rtp_label: "92",                      // 92 版（Card System 開，Oldhand）
   profile: "Oldhand",                   // 只有 Oldhand 卡組（見 card_system）
@@ -31,8 +31,11 @@ const data = {
   ],
 
   // 逐格加權抽取（無 reel stop；Reel RNG 顯示 weighted draw）
-  symbol_weights_init: [6, 8, 10, 12, 15, 17],
-  symbol_weights_drop: [6, 8, 10, 12, 15, 17],
+  // 2026-11-19：權重改平、加直向疊塊，連消分布對齊 Sugar Rush Super Scatter（NB 10 萬局側錄）
+  symbol_weights_init: [10, 12, 13, 15, 16, 17],
+  symbol_weights_drop: [10, 12, 13, 15, 16, 17],
+  // 輪帶感：init／drop＝沿用正下方符號的機率（直向疊塊）；avoid_left＝抽到與左鄰同符號時重抽一次的機率
+  symbol_stack: { init: 0.17, drop: 0.40, avoid_left: 1.0 },
   scatter_chance_init: 0.055,           // 每輪出 1 顆 C1 的機率（同輪最多 1 顆）
   scatter_chance_drop: 0.0,             // 掉落不補 C1 ⏳
 
