@@ -2199,11 +2199,7 @@
     /* 2026-11-12 使用者：狀態列（基礎遊戲／免費遊戲／FG 剩餘）整條拿掉。
        FG 進度看盤面下方訊息條（FG n/N · WIN），一般押注／購買特色看「押注模式」按鈕哪顆亮 */
     html body.slot-simulator #strip-bar { display: none !important; }
-    /* 買進中「購買特色」按鈕亮起：跟亮著的「一般押注」同款綠色、不因 FG 中停用而變淡 */
-    html body.slot-simulator #app-shell #bet-mode-panel #buyFeatureBtn.is-active {
-      opacity: 1 !important; color: #fff !important; background: rgb(0, 119, 85) !important;
-      border: 0 !important; box-shadow: none !important; filter: none !important;
-    }
+    /* 購買特色／超級特色按鈕：藍色、買進中壓暗，樣式由共用 demogame_common.js 提供（Demogame規範 §押注模式按鈕），本頁不另寫 */
     html body.slot-simulator #app-shell.player-under-board { grid-template-rows: auto 1fr; }
     html body.slot-simulator #app-shell.player-under-board > #grid-panel { grid-column: 1; grid-row: 1; }
     html body.slot-simulator #app-shell.player-under-board > #demogame-under-board { grid-column: 1; grid-row: 2; }
@@ -2432,6 +2428,8 @@
           <li>超級特色保底改 50 倍（原 5 倍），新框 5X 占比由 80% 降到 70%、10X 以上變多；卡片權重重算，RTP 不變。（11/19）</li>
           <li>免費遊戲倍數框加多：免費遊戲金色符號出現率提高 1.3 倍，一般押注免費遊戲週期 1/200→1/240（額外押注 1/40→1/48），免費遊戲與購買特色保底改 20 倍，最大倍率區間保證約每 200 萬局出現一次；平均每場留下約 5 個新框（原約 3.5 個），不再出現整場沒有框。（11/19）</li>
           <li>觸發免費遊戲看板修正：圖片版的 SC 圖原本撐滿盤面、蓋住文字，改成固定小圖，看板顯示「免費遊戲 N 場」。（11/19）</li>
+          <li>新增免費遊戲結算看板：最後一場轉完後跳出「免費遊戲結束／總贏分」，顯示整場免費遊戲的總贏分與倍數；自動模式 1 秒後消失，非自動點盤面或按 Spin 關閉。（11/19）</li>
+          <li>購買特色、超級特色按鈕都改成藍色；按下去買進後壓暗，到這場免費遊戲結束才恢復。（11/19）</li>
         </ol>
       </article>
       <article class="change-log-entry">
@@ -2998,6 +2996,7 @@
     #board .fg-banner-icon img,#board .fg-banner-icon svg{width:100%;height:100%;object-fit:contain}
     #board .fg-banner-title{font:800 22px/1.2 system-ui,sans-serif;letter-spacing:.06em}
     #board .fg-banner-count{font:800 30px/1.1 system-ui,sans-serif}
+    #board .fg-banner-sub{font:700 14px/1.2 system-ui,sans-serif;opacity:.92}
     /* 彈窗／FG 看板出現時背景不能捲動 */
     html.h032-modal-open,html.h032-modal-open body,html.h032-help-open,html.h032-help-open body{overflow:hidden!important;overscroll-behavior:none}
     @keyframes fg-banner-in{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
@@ -3762,12 +3761,19 @@
   }
   // 觸發 FG 看板「免費遊戲 N 場」：Auto 模式 1 秒後自動消失；非 Auto 要自己點掉（點盤面／看板或按 Spin）。期間背景不能捲動；看板消失後才開始 FG
   function showFgBanner(spins) {
+    const icon = symbolIcon("C1");
+    return showBoardBanner(`${icon ? `<span class="fg-banner-icon">${icon}</span>` : ""}<span class="fg-banner-title">${tr("freeGame")}</span><span class="fg-banner-count">${tr("fgBannerCount").replace("{n}", spins)}</span>`);
+  }
+  // FG 結算看板（2026-11-19）：最後一場 FG 轉完後顯示整場 FG 總贏分與倍數；關閉方式同觸發看板
+  function showFgEndBanner(win) {
+    return showBoardBanner(`<span class="fg-banner-title">${tr("fgEndTitle")}</span><span class="fg-banner-sub">${tr("fgEndTotal")}</span><span class="fg-banner-count">${money(win)}</span><span class="fg-banner-sub">${(win / betUnit()).toFixed(2)}x</span>`);
+  }
+  function showBoardBanner(inner) {
     return new Promise(resolve => {
       const board = $("board"), spinBtn = $("spinBtn");
       const banner = document.createElement("div");
       banner.className = "fg-banner";
-      const icon = symbolIcon("C1");
-      banner.innerHTML = `<div class="fg-banner-card">${icon ? `<span class="fg-banner-icon">${icon}</span>` : ""}<span class="fg-banner-title">${tr("freeGame")}</span><span class="fg-banner-count">${tr("fgBannerCount").replace("{n}", spins)}</span></div>`;
+      banner.innerHTML = `<div class="fg-banner-card">${inner}</div>`;
       board.appendChild(banner);
       document.documentElement.classList.add("h032-modal-open");
       const wasDisabled = spinBtn.disabled; spinBtn.disabled = false;
@@ -3797,6 +3803,7 @@
       state.maxMultiplier = Math.max(state.maxMultiplier, (state.fg.carry + state.fg.win) / betUnit());
       if (state.fg.line) recordLine(state.fg.line.mode, state.fg.carry + state.fg.win, state.fg.line.wager);
       const baseRound = state.fg.baseRound;
+      await showFgEndBanner(state.fg.win);
       state.fg = { spins: [], index: 0, total: 0, win: 0, mode: 0 };
       restoreBaseRound(baseRound);
     }
@@ -3932,14 +3939,14 @@
     en: {
       baseGame: "Base Game", freeGame: "Free Game", buyFeature: "Buy Feature", superFeature: "Super Feature", fgTriggered: "Free Game Triggered",
       ready: "Ready — press Spin", noWin: "No Win", insufficient: "Insufficient balance",
-      spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS",
+      spin: "Spin", nextFg: "Next FG", auto: "Auto", stop: "Stop", cascade: "Cascade", fgLeft: "FG Left", frameTotal: "MULTIPLIER TOTAL", fgBannerCount: "{n} SPINS", fgEndTitle: "FREE GAME COMPLETE", fgEndTotal: "TOTAL WIN",
       script: "Script", scriptNone: "None", scriptCombo5: "5+ cascades", scriptYellow: "Golden symbol won", scriptFrame10: "Frame total 10+", scriptGoldFrame: "Gold lands on a frame and wins", scriptFg: "FG triggered", scriptFgbig: "FG 100x+", scriptJp: "OP Jackpot (random)", scriptJp0: "OP Jackpot GRAND", scriptJp1: "OP Jackpot MAJOR", scriptJp2: "OP Jackpot MINOR", scriptJp3: "OP Jackpot MINI",
       statMaxWin: "Max win (x bet)", statYellowSeen: "Golden symbol seen", statYellowUsed: "Golden symbol won", statFrameMax: "BG max frame total", statFgFrameAvg: "FG end frame total (avg)", statScRate: "SC rate"
     },
     zh: {
       baseGame: "基礎遊戲", freeGame: "免費遊戲", buyFeature: "購買特色", superFeature: "超級特色", fgTriggered: "觸發免費遊戲",
       ready: "準備完成 — 請按 Spin", noWin: "未中獎", insufficient: "餘額不足",
-      spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場",
+      spin: "Spin", nextFg: "下一局 FG", auto: "自動", stop: "停止", cascade: "連消", fgLeft: "FG 剩餘", frameTotal: "倍數總和", fgBannerCount: "{n} 場", fgEndTitle: "免費遊戲結束", fgEndTotal: "總贏分",
       script: "腳本", scriptNone: "無", scriptCombo5: "連消 5 次以上", scriptYellow: "金色符號有消除", scriptFrame10: "框總和 10 以上", scriptGoldFrame: "金符號落入倍數框並消除", scriptFg: "有觸發 FG", scriptFgbig: "FG 100x 以上", scriptJp: "觸發彩金（隨機）", scriptJp0: "觸發 GRAND", scriptJp1: "觸發 MAJOR", scriptJp2: "觸發 MINOR", scriptJp3: "觸發 MINI",
       statMaxWin: "最大贏分倍數", statYellowSeen: "金色符號出現率", statYellowUsed: "金色符號消除率", statFrameMax: "BG 最大框總和", statFgFrameAvg: "FG 結束框總和（平均）", statScRate: "SC 出現率"
     }
@@ -4018,12 +4025,12 @@
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
   window.DEMOGAME_LAST_TUNING = "2026-11-19 16:24";
   window.DEMOGAME_TUNING_CODE = "2Z2V58";
-  window.DEMOGAME_LAST_CODE = "2026-11-19 14:39";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-19 16:24";
+  window.DEMOGAME_LAST_CODE = "2026-11-19 16:47";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-19 16:47";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
-  <script src="../demogame_common.js?v=20261119b"></script>
+  <script src="../demogame_common.js?v=20261119c"></script>
   <script>
     // 倍數總和數值有變化時，上方倍數條播跟訊息條一樣的動畫
     (function () {

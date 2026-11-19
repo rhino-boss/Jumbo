@@ -2185,8 +2185,9 @@
       html body.slot-simulator #demogame-info-bar.fx-bar-hit { animation: dgInfoBarHit 420ms ease-out; }
       @keyframes dgInfoBarHit { from { transform: scale(1.08); filter: brightness(2); box-shadow: 0 0 18px rgba(255, 79, 216, .9); } to { transform: scale(1); filter: brightness(1); } }
 
+      /* 2026-11-19 使用者：購買類按鈕（購買特色／超級特色）一律藍色；按下去（買進中，到這場 FG 結束）壓暗，不變綠 */
       html body.slot-simulator #app-shell #bet-mode-panel button.dg-buy-active {
-        opacity: 1 !important; color: #fff !important; background: rgb(0, 119, 85) !important;
+        opacity: 1 !important; color: #87a7c1 !important; background: #102a49 !important;
         border: 0 !important; box-shadow: none !important; filter: none !important;
       }
     `;
