@@ -34,8 +34,9 @@ const data = {
   // 2026-11-19：權重改平、加直向疊塊，連消分布對齊 Sugar Rush Super Scatter（NB 10 萬局側錄）
   symbol_weights_init: [10, 12, 13, 15, 16, 17],
   symbol_weights_drop: [10, 12, 13, 15, 16, 17],
-  // 輪帶感：init／drop＝沿用正下方符號的機率（直向疊塊）；avoid_left＝抽到與左鄰同符號時重抽一次的機率
-  symbol_stack: { init: 0.17, drop: 0.40, avoid_left: 1.0 },
+  // 輪帶感：init／drop＝沿用正下方符號的機率（直向疊塊）；max_run＝最多疊幾格（競品為兩格一疊）；
+  //         avoid_left＝抽到與左鄰同符號時重抽一次的機率
+  symbol_stack: { init: 0.40, drop: 1.0, max_run: 2, avoid_left: 0.8 },
   scatter_chance_init: 0.055,           // 每輪出 1 顆 C1 的機率（同輪最多 1 顆）
   scatter_chance_drop: 0.0,             // 掉落不補 C1 ⏳
 

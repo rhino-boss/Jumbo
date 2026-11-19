@@ -357,6 +357,7 @@
           <h4>v0（0.0.0.0）試玩版</h4>
           <ol>
             <li>符號生成改為輪帶感（對齊 Sugar Rush Super Scatter 一般押注 10 萬局側錄）：一般符號權重 6／8／10／12／15／17 → 10／12／13／15／16／17；新增直向疊塊（沿用正下方符號機率：開場 17%、掉落 40%）與避開左鄰同符號（重抽一次）。自然盤面 10 萬局：BG 中獎率 55.7% → 31.8%；中獎時連消 1／2／3／4+ 次＝57.5%／22.2%／10.4%／9.9%、平均 1.84 次（競品 59.6%／21.7%／9.5%／9.1%、平均 1.71 次）。卡片權重是依舊自然機率解的，需重解。（11/19）</li>
+            <li>符號疊塊改為兩格一疊（對齊競品：競品直向同符號 2 格 31.6%、3 格 1.7%、4 格以上 0%，原設定會疊成整條）：疊塊上限 2 格；沿用正下方符號機率 開場 17% → 40%、掉落 40% → 100%（未達上限時）；左鄰同符號重抽 100% → 80%。自然盤面 10 萬局：BG 中獎率 37.9%；中獎時連消 1／2／3／4+ 次＝54.0%／22.3%／10.8%／12.9%、平均 1.98 次（競品平均 1.71 次）。（11/19）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -454,7 +455,7 @@
     </div>
   </dialog>
 
-  <script src="./config.js?v=0.0.0.0&c=20261119"></script>
+  <script src="./config.js?v=0.0.0.0&c=20261119b"></script>
   <script>
     (() => {
       "use strict";
@@ -609,11 +610,22 @@
 
       // ── 抽一般符號（輪帶感，config.symbol_stack）──────────────────────────
       // below：正下方符號，依 stackChance 直接沿用（直向疊塊）；否則依權重抽。
+      // belowRun：正下方已連續幾格同符號；達 max_run（競品為兩格一疊）就不再疊。
       // left：左邊同一列符號，抽到相同時依 avoid_left 機率重抽一次（減少橫向同符號）。C1 不參與疊塊與比對。
-      function drawSym(weights, stackChance, below, left) {
-        let sym = (below >= 0 && below !== SC && rand() < stackChance) ? below : rngW(weights);
+      function drawSym(weights, stackChance, below, left, belowRun = 1) {
+        const canStack = below >= 0 && below !== SC && belowRun < STACK.max_run;
+        let sym = (canStack && rand() < stackChance) ? below : rngW(weights);
         if (left >= 0 && left !== SC && sym === left && rand() < STACK.avoid_left) sym = rngW(weights);
         return sym;
+      }
+
+      // (r, c) 正下方連續同符號的格數（往下數到不同為止）
+      function runBelow(board, r, c) {
+        if (r + 1 >= SIZE) return 0;
+        const s = board[r + 1][c];
+        let n = 1;
+        for (let y = r + 2; y < SIZE && board[y][c] === s; y++) n++;
+        return n;
       }
 
       // ── 盤面生成：逐格加權抽取＋直向疊塊（無 reel stop）；同一輪最多 1 顆 C1 ─────
@@ -627,7 +639,7 @@
           // 由下往上生成，才能沿用正下方符號
           for (let r = SIZE - 1; r >= 0; r--) {
             board[r][c] = r === scRow ? SC
-              : drawSym(W_INIT, STACK.init, r + 1 < SIZE ? board[r + 1][c] : -1, c > 0 ? board[r][c - 1] : -1);
+              : drawSym(W_INIT, STACK.init, r + 1 < SIZE ? board[r + 1][c] : -1, c > 0 ? board[r][c - 1] : -1, runBelow(board, r, c));
           }
         }
         while (scCols.size < forceScatters) {
@@ -676,7 +688,7 @@
           for (let r = SIZE - 1; r >= 0; r--) {
             if (col.length) board[r][c] = col.shift();
             else {
-              let sym = drawSym(W_DROP, STACK.drop, r + 1 < SIZE ? board[r + 1][c] : -1, c > 0 ? board[r][c - 1] : -1);
+              let sym = drawSym(W_DROP, STACK.drop, r + 1 < SIZE ? board[r + 1][c] : -1, c > 0 ? board[r][c - 1] : -1, runBelow(board, r, c));
               if (!hasSc && SC_CHANCE_DROP > 0 && rand() < SC_CHANCE_DROP) { sym = SC; hasSc = true; }
               board[r][c] = sym;
             }
