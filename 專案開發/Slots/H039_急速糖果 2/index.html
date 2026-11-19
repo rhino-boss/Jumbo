@@ -168,6 +168,26 @@
       text-align: center;
     }
 
+    /* 掉落完成後才亮出的新倍數（+1）：彈跳一下，讓玩家看出是「消除後才加上」 */
+    body.tc2 .mult-badge.mult-new { animation: tc2-mult-new .5s ease-out both; }
+    @keyframes tc2-mult-new {
+      0% { transform: scale(0); opacity: 0; }
+      60% { transform: scale(1.6); opacity: 1; filter: brightness(1.8); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    /* 觸發 FG 看板（同 H032）：蓋在盤面上「免費遊戲／獲得 N 場」；Auto 1 秒後消失，非 Auto 點一下或按 Spin 關閉 */
+    .fg-banner { position: absolute; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(4, 10, 20, .62);
+      border-radius: 10px; cursor: pointer; animation: fg-banner-in .16s ease-out; }
+    .fg-banner-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 32px; border-radius: 12px; max-width: 80%;
+      background: linear-gradient(180deg, #ffe49a 0%, #e0a82a 45%, #9a6406 100%); border: 1.6px solid #ffd468;
+      box-shadow: inset 0 1px 0 rgba(255, 248, 220, .55), 0 8px 24px rgba(0, 0, 0, .6); color: #fffaf0; text-shadow: 0 1px 2px rgba(80, 50, 0, .6); }
+    .fg-banner-icon { display: grid; place-items: center; width: 72px; height: 72px; font-size: 44px; line-height: 1; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .5)); }
+    .fg-banner-icon img { width: 100%; height: 100%; object-fit: contain; }
+    .fg-banner-title { font: 800 22px/1.2 system-ui, sans-serif; letter-spacing: .06em; }
+    .fg-banner-count { font: 800 30px/1.1 system-ui, sans-serif; }
+    @keyframes fg-banner-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+
     /* Extra Bet 倍數底板 */
     body.tc2 .mult-badge.plate {
       min-width: 30px;
@@ -549,7 +569,10 @@
           ready: "Ready — press Spin", noWin: "No Win", freeSpin: "Free Spin", resetDone: "Reset. Press Spin to start", rngReset: "Set RNG cleared",
           insufficient: "Insufficient balance", buyEnter: "Buy Feature — entering Free Game", baseRule: "base rule",
           chain: "chain cleared", cells: "cells", sum: "board sum", totalWin: "TOTAL WIN", spinWin: "SPIN WIN",
-          fgTrigger: (n, award) => `🎉 ${n} Scatter → Free Game ${award} spins!`
+          fgTrigger: (n, award) => `🎉 ${n} Scatter → Free Game ${award} spins!`,
+          multUp: (s) => `Multipliers +1 — board sum x${s} applies from the next win`,
+          multCollect: (s) => `Collecting multipliers — x${s}`,
+          fgBannerCount: (n) => `${n} FREE SPINS WON`
         },
         zh: {
           baseGame: "基礎遊戲", freeGame: "免費遊戲", cascade: "連消", boardSum: "全盤倍數和", fgLeft: "FG 剩餘",
@@ -557,7 +580,10 @@
           ready: "準備完成 — 請按 Spin", noWin: "未中獎", freeSpin: "Free Spin", resetDone: "已重置，請按 Spin 開始", rngReset: "Set RNG 已重置",
           insufficient: "餘額不足", buyEnter: "購買特色 — 直接進入免費遊戲", baseRule: "規則基底",
           chain: "連帶消除", cells: "格", sum: "全盤和", totalWin: "總贏分", spinWin: "本局贏分",
-          fgTrigger: (n, award) => `🎉 ${n} 顆 Scatter → 免費遊戲 ${award} 局！`
+          fgTrigger: (n, award) => `🎉 ${n} 顆 Scatter → 免費遊戲 ${award} 局！`,
+          multUp: (s) => `消除格倍數 +1 — 全盤和 x${s}，下一次得分才生效`,
+          multCollect: (s) => `收集倍數 — 全盤和 x${s}`,
+          fgBannerCount: (n) => `獲得 ${n} 場`
         }
       };
       const lang = () => (/^zh/i.test($("languageSelect")?.value || "") ? "zh" : "en");
@@ -1279,21 +1305,18 @@
           $("cascadeValue").textContent = step.cascadeIdx;
           updateBoard(step.boardBefore, step.multBefore);
           fxMark(step.boardBefore, step.removeSet, step.chainSet);
-          // 計分順序：先顯示未乘倍數的得分 → 盤面倍數全部收集到上方「全盤倍數和」→ 全盤倍數飛到訊息列的「+得分」→ 才算最終得分
+          // 計分順序（2026-11-19 使用者指定）：消除前先把框上倍數收集到上方「全盤倍數和」（不先顯示未乘倍數的得分）
+          // → 消除時 Win 直接是乘完倍數的得分 → 消除後倍數框才 +1
           if (step.boardSum > 0) {
-            const basePay = step.pay / step.effSum;
-            sayHit(() => `WIN ${fmt(basePay)}`);
-            await wait(420);
+            say(() => tr("multCollect")(step.effSum));
+            await wait(300);
             await collectMultipliers(step.multBefore, step.effSum);
             await flySumToWin(`x${step.effSum}`);
           }
-          window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
-          paid += step.pay; setWinShown(winBase + paid);
-          if (step.boardSum > 0) { const basePay = step.pay / step.effSum; sayHit(() => `WIN ${fmt(basePay)} × ${step.effSum} = ${fmt(step.pay)}`); }
-          else sayHit(() => `WIN ${fmt(step.pay)}`);
           markFrame(1 + stepIdx * 2); markFrame(2 + stepIdx * 2);   // 中獎幀與掉落幀同一句
-          await wait(760);
 
+          // 2026-11-19 使用者指定流程：① 倍數收集（上方，已做完）→ ② 消除＋下方贏分累積 → ③ 倍數框 +1 → 掉落
+          // ② 消除：中獎格縮小淡出，同時贏分飄字、下方 Win 累加
           const popCells = [], coinItems = [];
           for (const key of step.removeSet) {
             const cell = cellEl(Math.floor(key / SIZE), key % SIZE);
@@ -1304,18 +1327,32 @@
           popCells.forEach((cell) => cell.classList.remove("fx-win", "tc-chain"));
           window.slotFx?.popCells(popCells);
           window.slotFx?.spawnCoins(fxLayer, coinItems, 40);
+          window.slotFx?.winFloat(fxLayer, `+${fmt(step.pay)}`);
+          paid += step.pay; setWinShown(winBase + paid);
+          if (step.boardSum > 0) { const basePay = step.pay / step.effSum; sayHit(() => `WIN ${fmt(basePay)} × ${step.effSum} = ${fmt(step.pay)}`); }
+          else sayHit(() => `WIN ${fmt(step.pay)}`);
           await wait(300);
 
-          // 消除畫面：被消除的格子先清空（含連帶消除），群集格的倍數 +1 顯示在原格；停一下再讓上方符號掉落
+          // 消除畫面：被消除的格子清空（含連帶消除），倍數仍是消除前的樣子
           const cleared = step.boardBefore.map((row) => row.slice());
           for (const key of step.removeSet) cleared[Math.floor(key / SIZE)][key % SIZE] = -1;
-          updateBoard(cleared, step.multAfter);   // 只把被消除的格子變空，其餘符號原地不動
+          updateBoard(cleared, step.multBefore);   // 只把被消除的格子變空，其餘符號原地不動
           fxMark(cleared);
-          await wait(420);
+          await wait(560);
+
+          // ③ 倍數框 +1：贏分算完後，空格上的倍數框才加上去（彈跳），全盤和跟著更新；新倍數下一次得分才生效
+          renderMultLayer(step.multAfter);
+          for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
+            if (step.multAfter[r][c] === step.multBefore[r][c]) continue;
+            multLayerEl.children[r * SIZE + c].querySelector(".mult-badge")?.classList.add("mult-new");
+          }
+          setSum(sumOf(step.multAfter));
+          say(() => tr("multUp")(sumOf(step.multAfter)));
+          await wait(620);
 
           updateBoard(step.boardAfter, step.multAfter);   // 原地換成掉落後的符號，再由 applyDropAnim 從上方滑下
           fxMark(step.boardAfter);
-          await sleep(applyDropAnim(step.removeSet));   // 新增的位置倍數留在盤面，下一次得分時才收集
+          await sleep(applyDropAnim(step.removeSet));
           await wait(120);
         }
 
@@ -1378,8 +1415,11 @@
         const isBuy = mode === MODE_BUY;
         const base = bet();
         const useCard = cardOn();
-        let bg = null, award = 0, fg = { spins: [], win: 0 }, retry = 0, exceeded = false;
+        let bg = null, award = 0, fg = { spins: [], win: 0 }, retry = 0, exceeded = false, entryBoard = null;
         if (isBuy) {
+          // BF 入場盤（Demogame規範：BF 也要先轉 BG 畫面滾出觸發盤面）：剛好 3 顆 C1、沒有成立的 Cluster，
+          // 只供畫面播放，不計分、不連消，所以 BF 數學（直接進 3 顆觸發的 FG）不變
+          for (;;) { entryBoard = randomBoard(0, 3); if (!findClusters(entryBoard).length) break; }
           award = fgAward(3);
           const card = useCard ? drawCard(cardsFor(mode, "weight_fg")) : null;
           for (;;) {
@@ -1416,7 +1456,7 @@
           }
         }
         const bgWin = bg ? bg.total : 0;
-        return { mode, bg, award, fgSpins: fg.spins, bgWin, fgWin: fg.win, total: bgWin + fg.win, retryCount: retry, retryLimitExceeded: exceeded };
+        return { mode, bg, entryBoard, award, fgSpins: fg.spins, bgWin, fgWin: fg.win, total: bgWin + fg.win, retryCount: retry, retryLimitExceeded: exceeded };
       }
 
       // ── 可重現 RNG（共用 demogameRng，Set RNG 的 #rngInput）────────────────
@@ -1471,8 +1511,18 @@
         updateStats();
 
         if (mode === MODE_BUY) {
-          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0, base: 0, isBuy: true, restore: snapshotBoard() };   // BF 無入場得分；FG 結束還原入場盤
+          // BF：先轉一個 BG 入場盤（3 顆 C1、無得分）→ 獲得 N 場 FG 看板 → 進 FG；FG 結束還原入場盤
+          st.busy = true;
           say(() => tr("buyEnter"));
+          plateKeys = new Set();
+          $("cascadeValue").textContent = "0"; setSum(0);
+          await animateReels(round.entryBoard, zeroGrid());
+          fxMark(round.entryBoard);
+          appendLog(`BF Entry | Cascade 0 | C1 3 | Win ${fmt(0)} (0.00x)`, "info");
+          say(() => tr("fgTrigger")(3, round.award));
+          await wait(400);
+          await showFgBanner(round.award);
+          st.fg = { remaining: round.award, total: round.award, played: 0, mode: MODE_NORMAL, spins: round.fgSpins, win: 0, base: 0, isBuy: true, restore: snapshotBoard() };   // BF 無入場得分；FG 結束還原入場盤
           appendLog(fgStartLine("Buy Feature", round), "mode");
           st.lastWin = 0;
           return;
@@ -1500,7 +1550,30 @@
           appendLog(fgStartLine("Free Game triggered", round), "mode");
         }
         if (win > 0) { window.slotFx?.totalWin(fxLayer, tr("totalWin"), fmt(win)); await wait(1100); }
+        if (round.award > 0) await showFgBanner(round.award);   // 自然觸發：BG 結算後顯示「獲得 N 場免費遊戲」看板
         return true;   // BG 分數已結算（Buy Feature 入場無分數，回傳 undefined、不停頓）
+      }
+
+      // 觸發 FG 看板「獲得 N 場免費遊戲」（同 H032）：Auto 1 秒後自動消失；非 Auto 點盤面／看板或按 Spin 關閉
+      function showFgBanner(spins) {
+        return new Promise((resolve) => {
+          const host = $("board").parentElement, spinBtn = $("spinBtn");
+          const banner = document.createElement("div");
+          banner.className = "fg-banner";
+          const icon = SYM_ART.C1 && useSymArt ? `<img src="${SYM_ART.C1}" alt="C1">` : "🍭";
+          banner.innerHTML = `<div class="fg-banner-card"><span class="fg-banner-icon">${icon}</span>`
+            + `<span class="fg-banner-title">${tr("freeGame")}</span><span class="fg-banner-count">${tr("fgBannerCount")(spins)}</span></div>`;
+          host.appendChild(banner);
+          const wasDisabled = spinBtn.disabled; spinBtn.disabled = false;
+          let timer = 0;
+          const done = (e) => {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            clearTimeout(timer); banner.removeEventListener("click", done); spinBtn.removeEventListener("click", done, true);
+            spinBtn.disabled = wasDisabled; banner.remove(); resolve();
+          };
+          banner.addEventListener("click", done); spinBtn.addEventListener("click", done, true);
+          if (st.auto) timer = setTimeout(done, 1000);
+        });
       }
 
       // 「Free Game triggered|Buy Feature | <n> spins[ (Retrigger ×k)]」：n 為整段 FG 局數（含 Retrigger）
@@ -1775,9 +1848,9 @@
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-10-22 03:04";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 15:49"; window.DEMOGAME_TUNING_CODE = "YFXBNN";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除", "符號直向疊塊＋避開左鄰同符號，連消分布對齊 Sugar Rush Super Scatter"]};</script>
-  <script src="../demogame_common.js?v=20261118b"></script>
+  <script src="../demogame_common.js?v=20261119b"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

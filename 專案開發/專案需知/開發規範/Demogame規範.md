@@ -195,6 +195,7 @@ Debug Mode 至少可查看：
 - 初始盤面、每段 Cascade、Line／Ways Win、Multiplier 與最終結果。
 - FG 觸發、局數、Retrigger、整包 Win 及即時 Log。
 - 最後調性更新（共用，頁尾 `.footer-note`）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_LAST_TUNING = "YYYY-MM-DD HH:MM"`，頁尾顯示「最後調性更新：日期 時間」（24 小時制，到分鐘）。**只有數學模型或倍率（卡片）權重調整才更新**（與 `修改紀錄.md` 最新一項同日）；介面、演出、文件修改不更新。
+- 唯一碼（共用，最後調性更新的下一行）：同一個 `<script>` 再設 `window.DEMOGAME_TUNING_CODE = "XXXXXX"`（6 碼隨機碼，大寫英文＋數字，不用 0／O／1／I），頁尾在「最後調性更新」下一行顯示「唯一碼：XXXXXX」。**每次調性更新（換 `DEMOGAME_LAST_TUNING` 時）一定要產生新的唯一碼**；所有遊戲（正式專案、發想、克隆、其他）都要有。**每次 Demo 更新完，回報給使用者時都要寫出目前的唯一碼**，讓使用者對照線上頁尾判斷是不是最新調性。
 - 數值報告按鈕（共用）：有數值報告 `report.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL = "./report.html"`，標題列右側出現「報告」按鈕（英文 Report），與說明、重置排在一起。
 - BG／FG 最大倍數（共用，併在「統計」區，取代原「最高倍數」列）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；沒有 FG 的遊戲只顯示 BG 列，重置清空。
 - Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，新的一行在最上面、舊的往下擠，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照 H045），不記演出過程：
