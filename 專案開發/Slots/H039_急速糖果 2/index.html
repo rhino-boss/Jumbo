@@ -115,7 +115,7 @@
        來源：H5企劃書_101008_Candy Blast 1000（糖果轟炸 1000）內嵌的正式符號圖，
        依該書 9.Animation 分頁的代號對照取用：M1 紅辣椒／M2 橘星星／M3 紫愛心／
        M4 綠檸檬／M5 粉軟糖／M6 橘軟糖／C1 Scatter（H022 的 M7 紫軟糖為本作移除的最低分符號）。
-       本作正式美術到位後只要換掉 symbols/sym_*.png，不需改程式。
+       本作正式美術到位後只要換掉 Source/Image/sym_*.png，不需改程式。
        用共用框架的 .has-symbol-art 約定，底色漸層會自動讓位給圖片。 */
     body.tc2 .cell .tc2-sym-img {
       position: absolute; inset: 0; margin: auto;
@@ -378,6 +378,7 @@
           <ol>
             <li>符號生成改為輪帶感（對齊 Sugar Rush Super Scatter 一般押注 10 萬局側錄）：一般符號權重 6／8／10／12／15／17 → 10／12／13／15／16／17；新增直向疊塊（沿用正下方符號機率：開場 17%、掉落 40%）與避開左鄰同符號（重抽一次）。自然盤面 10 萬局：BG 中獎率 55.7% → 31.8%；中獎時連消 1／2／3／4+ 次＝57.5%／22.2%／10.4%／9.9%、平均 1.84 次（競品 59.6%／21.7%／9.5%／9.1%、平均 1.71 次）。卡片權重是依舊自然機率解的，需重解。（11/19）</li>
             <li>符號疊塊改為兩格一疊（對齊競品：競品直向同符號 2 格 31.6%、3 格 1.7%、4 格以上 0%，原設定會疊成整條）：疊塊上限 2 格；沿用正下方符號機率 開場 17% → 40%、掉落 40% → 100%（未達上限時）；左鄰同符號重抽 100% → 80%。自然盤面 10 萬局：BG 中獎率 37.9%；中獎時連消 1／2／3／4+ 次＝54.0%／22.3%／10.8%／12.9%、平均 1.98 次（競品平均 1.71 次）。（11/19）</li>
+            <li>盤面改用輪帶（使用者決定）：BG、FG 各一組 5 軸 × 120 格，每軸 M1～M6＝14／17／19／22／23／24 張＋1 顆 C1；同色最多兩格一疊（BG 每軸 37 組、FG 42 組）。消除後由輪帶往上接著掉，輪到 C1 而該軸已有 C1 就跳過。BF 入場盤改由 BG 輪帶產生（3 軸停在 C1、無 Cluster）。原逐格抽（symbol_stack）移除。自然盤面 10 萬局：BG 輪帶中獎率 60.4%，中獎時連消 1／2／3／4+ 次＝52.2%／24.7%／12.1%／10.9%、平均 1.91 次，自然 FG 約 1/690；FG 輪帶中獎率 67.8%、平均連消 2.17 次。（11/19）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -475,7 +476,8 @@
     </div>
   </dialog>
 
-  <script src="./config.js?v=0.0.0.0&c=20261119b"></script>
+  <script src="./config.js?v=0.0.0.0&c=20261119c"></script>
+  <script src="./config_92A.js?v=0.0.0.0&c=20261119c"></script>
   <script>
     (() => {
       "use strict";
@@ -486,15 +488,19 @@
       const REQUIRED_FIELDS = [
         "game_id", "display_name", "game_name_zh", "game_type", "excel_version", "config_code", "profile",
         "board_size", "min_cluster", "refill_mode", "symbol_codes", "scatter_index", "pay_table",
-        "symbol_weights_init", "symbol_weights_drop", "scatter_chance_init", "scatter_chance_drop", "symbol_stack",
+        "reels",
         "extra_bet_plates", "position_multiplier", "same_symbol_clear", "fg_awards", "fg_cap",
         "supported_bet_modes", "extrabet", "featurebuy", "bet_options", "initial_balance"
       ];
-      const CFG = typeof data !== "undefined" ? data : null;
+      // 基礎 Config（config.js）＋ RTP／Variant Config（config_92A.js：卡片權重、四碼版本）合併成執行用的 CFG
+      const CFG = typeof data !== "undefined" && typeof data_92A !== "undefined"
+        ? { ...data, card_system: data_92A.card_system, config_code: data_92A.config_code, rtp_label: data_92A.rtp_label,
+            excel_version: data_92A.excel_version, profile: (data_92A.profiles || ["Oldhand"])[0] }
+        : null;
       const missing = CFG ? REQUIRED_FIELDS.filter((k) => !(k in CFG)) : REQUIRED_FIELDS;
       if (!CFG || missing.length) {
         const bar = $("messageBar");
-        bar.textContent = !CFG ? "Config load failed: ./config.js" : `Config missing fields: ${missing.join(", ")}`;
+        bar.textContent = !CFG ? "Config load failed: ./config.js / ./config_92A.js" : `Config missing fields: ${missing.join(", ")}`;
         bar.classList.add("error");
         throw new Error(bar.textContent);
       }
@@ -513,9 +519,9 @@
       const SC = CFG.scatter_index;
       const SYM_CLASS = SYM_CODE.map((c) => `symbol-${c.toLowerCase()}`);
       // 符號圖（佔位，來源見上方 CSS 註解）
-      const SYM_ART = { M1: "symbols/sym_M1.png", M2: "symbols/sym_M2.png", M3: "symbols/sym_M3.png",
-                        M4: "symbols/sym_M4.png", M5: "symbols/sym_M5.png", M6: "symbols/sym_M6.png",
-                        C1: "symbols/sym_C1.png" };
+      const SYM_ART = { M1: "Source/Image/sym_M1.png", M2: "Source/Image/sym_M2.png", M3: "Source/Image/sym_M3.png",
+                        M4: "Source/Image/sym_M4.png", M5: "Source/Image/sym_M5.png", M6: "Source/Image/sym_M6.png",
+                        C1: "Source/Image/sym_C1.png" };
       window.DEMOGAME_SYMBOL_ART = SYM_ART;         // 共用 demogame_common.js：Help 賠率表的符號圖
       let useSymArt = true;                         // Settings 的「Image」開關（見下方 DEMOGAME_IMAGE_TOGGLE）
 
@@ -549,12 +555,8 @@
         }
       };
       const PAY = CFG.pay_table;
-      const W_INIT = CFG.symbol_weights_init;
-      const W_DROP = CFG.symbol_weights_drop;
-      const SC_CHANCE_INIT = CFG.scatter_chance_init;
+      const REELS = CFG.reels;   // { bg: [5 條輪帶], fg: [5 條輪帶] }，內容為 symbol_codes 的索引
       const PLATES = CFG.extra_bet_plates;
-      const SC_CHANCE_DROP = CFG.scatter_chance_drop;
-      const STACK = CFG.symbol_stack;   // 輪帶感：直向疊符號＋避開左鄰同符號（對齊 Sugar Rush Super Scatter 連消分布）
       const MULT_STEP = CFG.position_multiplier.step;
       const SAME_SYMBOL_CLEAR = CFG.same_symbol_clear === true;
       const MODE_NORMAL = "normal", MODE_EXTRA = "extra", MODE_BUY = "buy";
@@ -634,47 +636,40 @@
       // 2026-11-12：狀態列已隱藏，飛行動畫對準上方資訊條裡鏡射的 Sum
       const sumFxEl = () => window.demogameFxTarget?.("sumPill")?.querySelector?.(".dib-v") || sumValueEl;
 
-      // ── 抽一般符號（輪帶感，config.symbol_stack）──────────────────────────
-      // below：正下方符號，依 stackChance 直接沿用（直向疊塊）；否則依權重抽。
-      // belowRun：正下方已連續幾格同符號；達 max_run（競品為兩格一疊）就不再疊。
-      // left：左邊同一列符號，抽到相同時依 avoid_left 機率重抽一次（減少橫向同符號）。C1 不參與疊塊與比對。
-      function drawSym(weights, stackChance, below, left, belowRun = 1) {
-        const canStack = below >= 0 && below !== SC && belowRun < STACK.max_run;
-        let sym = (canStack && rand() < stackChance) ? below : rngW(weights);
-        if (left >= 0 && left !== SC && sym === left && rand() < STACK.avoid_left) sym = rngW(weights);
-        return sym;
-      }
-
-      // (r, c) 正下方連續同符號的格數（往下數到不同為止）
-      function runBelow(board, r, c) {
-        if (r + 1 >= SIZE) return 0;
-        const s = board[r + 1][c];
-        let n = 1;
-        for (let y = r + 2; y < SIZE && board[y][c] === s; y++) n++;
-        return n;
-      }
-
-      // ── 盤面生成：逐格加權抽取＋直向疊塊（無 reel stop）；同一輪最多 1 顆 C1 ─────
-      function randomBoard(scChance, forceScatters = 0) {
+      // ── 盤面生成：輪帶（config.reels.bg／fg，每軸一條；2026-11-19 改用輪帶）──────────
+      // 停點 s：視窗第 r 列（0＝最上）顯示 strip[(s + r) % L]。消除後由輪帶往上接著掉：下一顆是 strip[s - 1]、再來 s - 2…
+      // reelPtr[c]＝該軸下一顆要掉下來的輪帶位置；curReels＝目前這一轉用的輪帶組（BG 或 FG）。
+      let curReels = REELS.bg, reelPtr = [];
+      const stripAt = (c, i) => { const s = curReels[c]; return s[((i % s.length) + s.length) % s.length]; };
+      function boardFromStops(stops) {
         const board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
-        const scCols = new Set();
-        for (let c = 0; c < SIZE; c++) {
-          const hasSc = rand() < scChance;
-          const scRow = hasSc ? Math.floor(rand() * SIZE) : -1;
-          if (hasSc) scCols.add(c);
-          // 由下往上生成，才能沿用正下方符號
-          for (let r = SIZE - 1; r >= 0; r--) {
-            board[r][c] = r === scRow ? SC
-              : drawSym(W_INIT, STACK.init, r + 1 < SIZE ? board[r + 1][c] : -1, c > 0 ? board[r][c - 1] : -1, runBelow(board, r, c));
-          }
-        }
-        while (scCols.size < forceScatters) {
-          const c = Math.floor(rand() * SIZE);
-          if (scCols.has(c)) continue;
-          board[Math.floor(rand() * SIZE)][c] = SC;
-          scCols.add(c);
-        }
+        for (let c = 0; c < SIZE; c++) for (let r = 0; r < SIZE; r++) board[r][c] = stripAt(c, stops[c] + r);
+        reelPtr = stops.map((s) => s - 1);
         return board;
+      }
+      function reelBoard(scene) {
+        curReels = REELS[scene];
+        return boardFromStops(curReels.map((s) => Math.floor(rand() * s.length)));
+      }
+      // BF 入場盤：BG 輪帶，隨機 3 軸停在看得到 C1 的位置、其餘 2 軸停在沒有 C1 的位置；有 Cluster 就整盤重抽
+      function buyEntryBoard() {
+        curReels = REELS.bg;
+        for (;;) {
+          const cols = [...Array(SIZE).keys()];
+          for (let i = cols.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [cols[i], cols[j]] = [cols[j], cols[i]]; }
+          const scCols = new Set(cols.slice(0, 3));
+          const stops = curReels.map((s, c) => {
+            const scPos = s.indexOf(SC);
+            if (scCols.has(c)) return (scPos - Math.floor(rand() * SIZE) + s.length) % s.length;
+            for (;;) {
+              const stop = Math.floor(rand() * s.length);
+              const d = (scPos - stop + s.length) % s.length;
+              if (scPos < 0 || d >= SIZE) return stop;
+            }
+          });
+          const board = boardFromStops(stops);
+          if (!findClusters(board).length) return board;
+        }
       }
 
       // ── Cluster 判定（BFS 上下左右，≥ min_cluster）────────────────────────
@@ -704,7 +699,8 @@
         return clusters;
       }
 
-      // ── 掉落補牌（規範 4.3 第 2 類）：C1 不消除、隨重力下移 ────────────────
+      // ── 掉落補牌（規範 4.3 第 2 類）：C1 不消除、隨重力下移；空位由輪帶往上接著掉 ─────
+      // 輪帶上輪到 C1 時，該軸已經有 C1 就跳過這顆（同一軸最多 1 顆 C1）
       function cascade(board, removeSet) {
         for (const key of removeSet) board[Math.floor(key / SIZE)][key % SIZE] = -1;
         for (let c = 0; c < SIZE; c++) {
@@ -712,22 +708,22 @@
           for (let r = SIZE - 1; r >= 0; r--) if (board[r][c] !== -1) col.push(board[r][c]);
           let hasSc = col.includes(SC);
           for (let r = SIZE - 1; r >= 0; r--) {
-            if (col.length) board[r][c] = col.shift();
-            else {
-              let sym = drawSym(W_DROP, STACK.drop, r + 1 < SIZE ? board[r + 1][c] : -1, c > 0 ? board[r][c - 1] : -1, runBelow(board, r, c));
-              if (!hasSc && SC_CHANCE_DROP > 0 && rand() < SC_CHANCE_DROP) { sym = SC; hasSc = true; }
-              board[r][c] = sym;
+            if (col.length) { board[r][c] = col.shift(); continue; }
+            let sym;
+            for (;;) {
+              sym = stripAt(c, reelPtr[c]--);
+              if (sym !== SC) break;
+              if (!hasSc) { hasSc = true; break; }
             }
+            board[r][c] = sym;
           }
         }
       }
 
       // ── runSpin：一次 Spin 的完整計算 ───────────────────────────────────────
-      // multGrid：位置倍數（BG 每把歸零；FG 跨局保留）；opts.extraPlates／forceScatters
+      // multGrid：位置倍數（BG 每把歸零；FG 跨局保留）；opts.extraPlates；opts.scene＝"bg"｜"fg"（用哪一組輪帶）
       function runSpin(multGrid, opts = {}) {
-        const scChance = SC_CHANCE_INIT;
-        const forceScatters = opts.forceScatters || 0;
-        const board = randomBoard(scChance, forceScatters);
+        const board = reelBoard(opts.scene || "bg");
         // Extra Bet：開場隨機 3 個位置出現倍數底板（個數依 config，目前固定 3；該格起始位置倍數，第一次消除即生效）
         const plates = [];
         if (opts.extraPlates) {
@@ -796,7 +792,7 @@
         board.flat().forEach((s) => { if (s === SC) scatterCount++; });
 
         return {
-          scChance, forceScatters, plates, initialBoard, initialMult,
+          plates, initialBoard, initialMult,
           board: clone2(board), mult: clone2(multGrid), steps, total, cascadeCount, scatterCount, finalSum: sumOf(multGrid),
         };
       }
@@ -1397,7 +1393,7 @@
         const mult = zeroGrid();
         let left = award, played = 0;
         while (left > 0 && played < FG_CAP) {
-          const spin = runSpin(mult);
+          const spin = runSpin(mult, { scene: "fg" });
           left--; played++;
           spin.retrigger = 0;
           if (spin.scatterCount >= 3 && played + left < FG_CAP) {
@@ -1419,7 +1415,7 @@
         if (isBuy) {
           // BF 入場盤（Demogame規範：BF 也要先轉 BG 畫面滾出觸發盤面）：剛好 3 顆 C1、沒有成立的 Cluster，
           // 只供畫面播放，不計分、不連消，所以 BF 數學（直接進 3 顆觸發的 FG）不變
-          for (;;) { entryBoard = randomBoard(0, 3); if (!findClusters(entryBoard).length) break; }
+          entryBoard = buyEntryBoard();
           award = fgAward(3);
           const card = useCard ? drawCard(cardsFor(mode, "weight_fg")) : null;
           for (;;) {
@@ -1754,7 +1750,7 @@
         $("liveLogBody").innerHTML = $("lineList").innerHTML = $("spinResultList").innerHTML = "";
         st.roundCode = "";   // Set RNG 設定不在這裡清，只有 Set RNG 的重置才清
         plateKeys = new Set();
-        renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
+        renderBoard(reelBoard("bg"), zeroGrid());
         say(() => tr("ready"));
         $("cascadeValue").textContent = "0"; setSum(0);
         updateStats(); updateControls();
@@ -1800,10 +1796,10 @@
       // ── 初始化（名稱／Version／Config 由 Config 取得）──────────────────────
       document.title = `${CFG.display_name} — Demo Game`;
       $("versionSelect").innerHTML = `<option selected>${CFG.excel_version}</option>`;
-      $("configSelect").innerHTML = `<option value="config.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
+      $("configSelect").innerHTML = `<option value="config_92A.js" selected>${CFG.rtp_label || CFG.config_code}</option>`;
       buildBetMenu();
       toggleDebug(false);
-      renderBoard(randomBoard(SC_CHANCE_INIT), zeroGrid());
+      renderBoard(reelBoard("bg"), zeroGrid());
       applyLanguage();
       say(() => tr("ready"));
       // Config 名稱照畫面 Config 選單（共用模組組成的 #demogameConfigSelect），故等共用模組載入後再寫
@@ -1848,8 +1844,8 @@
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 15:49"; window.DEMOGAME_TUNING_CODE = "YFXBNN";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除", "符號直向疊塊＋避開左鄰同符號，連消分布對齊 Sugar Rush Super Scatter"]};</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 16:44"; window.DEMOGAME_TUNING_CODE = "GU78V2";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除", "改用輪帶（同色兩格一疊），連消分布參考 Sugar Rush Super Scatter"]};</script>
   <script src="../demogame_common.js?v=20261119b"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
