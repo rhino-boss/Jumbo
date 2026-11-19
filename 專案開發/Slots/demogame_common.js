@@ -1862,6 +1862,8 @@
     const tick = () => {
       const spin = document.getElementById("spinBtn");
       if (!holding || !spin) return stopHold();
+      // 2026-11-19 使用者：FG 結算看板（[data-hold-stop]）出現時終止連續 Spin，看板不被長按關掉；要放開後重新長按才繼續
+      if (document.querySelector("[data-hold-stop]")) return stopHold();
       if (spin.disabled) { sawBusy = true; return; }
       if (sawBusy && !blocked()) { sawBusy = false; spin.click(); }
     };
@@ -2185,9 +2187,10 @@
       html body.slot-simulator #demogame-info-bar.fx-bar-hit { animation: dgInfoBarHit 420ms ease-out; }
       @keyframes dgInfoBarHit { from { transform: scale(1.08); filter: brightness(2); box-shadow: 0 0 18px rgba(255, 79, 216, .9); } to { transform: scale(1); filter: brightness(1); } }
 
-      /* 2026-11-19 使用者：購買類按鈕（購買特色／超級特色）一律藍色；按下去（買進中，到這場 FG 結束）壓暗，不變綠 */
+      /* 2026-11-19 使用者：購買類按鈕（購買特色／超級特色）一律藍色；按下去（買進中，到這場 FG 結束）壓暗，
+         壓暗的樣子跟另一顆被停用的購買按鈕完全相同（同藍底、opacity .45），不變綠也不另用深色 */
       html body.slot-simulator #app-shell #bet-mode-panel button.dg-buy-active {
-        opacity: 1 !important; color: #87a7c1 !important; background: #102a49 !important;
+        opacity: .45 !important; color: #fff !important; background: #0077cc !important;
         border: 0 !important; box-shadow: none !important; filter: none !important;
       }
     `;
