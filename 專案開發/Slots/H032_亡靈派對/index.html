@@ -2427,6 +2427,7 @@
           <li>超級特色金框加強：新框倍數最少 5X（不再出 2X、3X，以 5X 為主），金色符號出現率提高，平均每場免費遊戲留下約 6 個新框（原約 4 個）；超級特色卡片權重重算，RTP 不變。（11/18）</li>
           <li>超級特色保底改 50 倍（原 5 倍），新框 5X 占比由 80% 降到 70%、10X 以上變多；卡片權重重算，RTP 不變。（11/19）</li>
           <li>免費遊戲倍數框加多：免費遊戲金色符號出現率提高 1.3 倍，一般押注免費遊戲週期 1/200→1/240（額外押注 1/40→1/48），免費遊戲與購買特色保底改 20 倍，最大倍率區間保證約每 200 萬局出現一次；平均每場留下約 5 個新框（原約 3.5 個），不再出現整場沒有框。（11/19）</li>
+          <li>彩金觸發參數（SCR）依正式模擬實測更新；14 組正式驗證全部通過。（11/19）</li>
           <li>觸發免費遊戲看板修正：圖片版的 SC 圖原本撐滿盤面、蓋住文字，改成固定小圖，看板顯示「免費遊戲 N 場」。（11/19）</li>
           <li>新增免費遊戲結算看板：最後一場轉完後跳出「免費遊戲結束／總贏分」，顯示整場免費遊戲的總贏分與倍數；自動模式 1 秒後消失，非自動點盤面或按 Spin 關閉。（11/19）</li>
           <li>購買特色、超級特色按鈕都改成藍色；按下去買進後壓暗（跟另一顆停用的購買按鈕同樣子），到這場免費遊戲結束才恢復。長按 SPIN 連續轉時，結算看板不會被關掉，連續轉到這裡停止，要重新長按才繼續。（11/19）</li>
@@ -2588,7 +2589,7 @@
 | 規則說明 | ▪ 免費遊戲中再出現 {3} 個以上 [C1]，額外獲得 {5} 場。 | ▪ {3} OR MORE [C1] DURING THE FREE GAME AWARD {5} MORE FREE SPINS. |
 | 規則說明 | ▪ 可用 Buy Feature 直接購買進入免費遊戲。 | ▪ THE FREE GAME CAN BE PURCHASED WITH BUY FEATURE. |
   </script>
-  <script src="./Versions/version_manifest.js?v=20261119a"></script>
+  <script src="./Versions/version_manifest.js?v=20261119b"></script>
   <script>
     // 數學版本：依 ?version= 從 Versions/version_manifest.js 選基礎 Config（預設 current）；切換版本時重新載入頁面
     (() => {
@@ -4025,10 +4026,10 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "3.0.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-19 16:24";
-  window.DEMOGAME_TUNING_CODE = "2Z2V58";
-  window.DEMOGAME_LAST_CODE = "2026-11-19 16:53";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-19 16:53";
+  window.DEMOGAME_LAST_TUNING = "2026-11-19 18:51";
+  window.DEMOGAME_TUNING_CODE = "QK95C6";
+  window.DEMOGAME_LAST_CODE = "2026-11-19 18:51";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-19 18:51";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
