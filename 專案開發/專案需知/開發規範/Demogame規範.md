@@ -68,7 +68,7 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 | 名詞 | 定義 |
 | --- | --- |
 | BG／FG | Base Game（主遊戲）／Free Game（免費遊戲）。 |
-| NB／EB／BF／SF | 押注模式代號：Normal Bet（一般押注）、Extra Bet（額外押注，成本為底注 × `cost_multiplier`，例 2x）、Buy Feature（購買特色，直接進 FG，價格為底注 × 購買倍數）、Super Feature（超級特色，較高價的購買）。Log、RNG 碼、倍率線型都用這四個代號。有第二種額外押注時代號為 EB2。模式值固定 `0`＝NB、`1`＝EB、`2`＝EB2、`3`＝BF、`4`＝SF（2026-11-20 使用者；沒有的模式跳過不補位）。 |
+| NB／EB／BF／SF | 押注模式代號：Normal Bet（一般押注）、Extra Bet（額外押注，成本為底注 × `cost_multiplier`，例 2x）、Buy Feature（購買特色，直接進 FG，價格為底注 × 購買倍數）、Super Feature（超級特色，較高價的購買）。Log、RNG 碼、倍率線型都用這四個代號。有第二種額外押注時代號為 EB2。模式值固定 `0`＝NB、`1`＝EB、`2`＝EB2、`3`＝BF、`4`＝SF（2026-11-20 使用者；沒有的模式跳過不補位）；此代號僅新遊戲適用，既有遊戲維持原代號（例 H032、H045：`2`＝BF、`3`＝SF）（2026-11-20 使用者）。 |
 | 底注／實際押注 | 底注＝押注選單（Bet Stepper）上的金額；實際押注＝底注 × 該模式成本倍數。倍數一律＝得分 ÷ 實際押注，但 BF／SF 的倍率線型與 FG 看板用得分 ÷ 底注。 |
 | 自然機率 | 不經卡片系統、直接依 Config 的輪帶／權重抽出的結果（Config 選單的 `Base`）。 |
 | 卡片系統（Card System） | 先依 RTP config `card_system` 的卡片權重抽一張卡（一個倍率區間 `(min, max]`，或特殊類型），再以自然機率重抽整局直到倍數落在該區間；重抽上限為 `retry_limit`，超過記一次 Retry Limit Exceeded。細節以《模擬程式規範》為準，Demo 必須與 Simulator 同邏輯。 |
@@ -182,7 +182,7 @@ Slots/
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>H0xx 遊戲名稱 Demo</title>
-  <style>/* By Game 樣式：只寫盤面、符號、狀態膠囊、FG 看板等第 2.1 節範圍 */</style>
+  <style>/* By Game 樣式：只寫盤面、符號、狀態膠囊等第 2.1 節範圍（FG 看板樣式由共用 CSS 提供） */</style>
   <link rel="stylesheet" href="../demogame_common.css?v=YYYYMMDDa">
 </head>
 <body class="slot-simulator">
@@ -391,6 +391,11 @@ Slots/
 | `demogameGuide()` | — | 手動開始新手導覽。 |
 | `slotBindCommonControls(actions)` | `{ spin, toggleAuto, normalMode, extraMode, buyFeatureMode, betMinus, betPlus, toggleBetMenu, speedChange, previousStep, nextStep, debugChange, resetRng, clearLog, reset, configChange, languageChange, openHelp, closeHelp, rngChanged, documentClick }` | 選用：一次把骨架上的固定按鈕綁到遊戲函式。 |
 | `slotFx` | `ensureLayer`、`popCells`、`spawnCoins`、`multiPop`、`winFloat`、`totalWin`… | 選用特效圖層；不得用來做中獎強調（第 2.3 節）。 |
+| `demogameFgBanner.trigger({ spins, icon, auto })`、`end({ win, bet, format, auto })` | → Promise（看板關閉時 resolve） | FG 觸發／結算看板（第 5 節 FG 看板）。`trigger` 顯示「免費遊戲／N 場」（`icon` 預設 `C1`，取 `DEMOGAME_SYMBOL_ART`）；`end` 顯示「免費遊戲結束／總贏分／金額／倍數（`win ÷ bet`，2 位小數）」並自帶 `data-hold-stop`。`auto` 傳目前是否 Auto（布林或函式）。 |
+| `demogameFgBanner.show({ icon, title, sub, count, note, html, holdStop, auto, autoMs })`、`close()`、`isOpen()` | → Promise | 自訂內容的看板（卡片依序 icon／title／sub／count／note；`html` 整段取代）；`icon` 可給代號、圖片網址或 HTML。 |
+| `demogameHelp.render(md, { lang, bet, baseBet, format, config, configOptions })` | → `#helpContent` | 解析第 2.8 節格式的 md 輸出到 `#helpContent`：`lang`＝`zh`／`en`（預設讀 `#languageSelect`）、`bet`＝目前底注（數字或函式，預設讀 `#betValue`）、`baseBet`＝md 賠率數字的基準（預設 `config.base_bet`，再無則 100）、`format`＝金額格式函式。md 沒有賠率表且有給 `config` 時，自動用 `configPaytable` 補上；完全沒內容時輸出 `.help-load-error`。Help 開著時押注或語言改變會自動重畫。 |
+| `demogameHelp.load({ url, embeddedId })`、`open(opts)`、`parse(md)` | `load` → `Promise<md>`；`open` → 載入＋`render`＋開 `#helpDialog` | `load` 先 fetch `./game_help_draft.md`（`file://` 略過），讀不到用內嵌 `#embeddedGameHelpMarkdown`；`open(opts)` 一次做完，`#helpBtn` 直接綁它即可。 |
+| `demogameHelp.configPaytable(cfg, { type, bet, baseBet, format, counts, reels, skip })` | → `.help-payout-table` 元素或 `null` | 由 config 產生賠率表（之後共用版式排成每個符號一張「N - 派彩」卡片）。`type` 不給時自動判斷：有 `paylines`／`line_num`／`lines` → Lines；`pays` 是物件或有 `max_ways`／`ways` → Ways；其餘 → 全盤計數。派彩讀 `pay_table` → `pays` → `paytable`（陣列依符號 index，或物件 key＝index／代號）；符號名讀 `symbol_str` → `symbol_names` → `symbol_codes`。Ways／Lines 欄位＝(`reel_num` − 欄數 + 1)～`reel_num` 連；計數型依 `counts` → `count_labels` → `min_cluster` 起算（最後一欄加「+」）。派彩 ÷ `baseBet`（預設 `base_bet` → `default_coin_in` → 1）× 目前押注；全 0 的符號與欄略過。遊戲也可設 `window.DEMOGAME_HELP_CONFIG`（＋選用 `DEMOGAME_HELP_CONFIG_OPTIONS`），`#helpContent` 出現 `.help-load-error` 時共用模組自動補上。 |
 
 共用模組設定的唯讀狀態：`window.DEMOGAME_CARD_SYSTEM_ENABLED`（卡片系統是否開）、`window.DEMOGAME_SYMBOL_IMAGES_ENABLED`（符號圖是否在用）、`window.demogameSpaceHolding`（是否正在長按連續 Spin）、`window.__demogameImageCache`（已預載的 Image 物件）。
 
@@ -435,7 +440,7 @@ Help 原文＝專案的 `game_help_draft.md`，整份貼進 `<script id="embedde
 - 每列第一欄 `Item` 只有三種：`主要標題`（區塊標題）、`副標題`（小節標題）、`規則說明`（一條規則，前面的 `▪` 會被去掉改成共用圓點）。
 
 - `[代號]` 會換成符號小圖、`{數字}` 只是強調標記（顯示時去掉大括號）、`[走線圖-…]` 佔位列見第 4 節。賠率表數字是以 `base_bet` 為底的派彩，顯示時換算成目前押注（數字 ÷ `base_bet` × 目前底注），押注改變時重算。
-- 遊戲在按 `#helpBtn` 時解析上面的 md，依目前語言輸出到 `#helpContent`，DOM 結構固定如下，之後的版式（置中、特殊符號卡片、兩欄符號卡片、內嵌小圖、走線圖）都由共用模組自動套用：
+- 遊戲用共用 API 輸出 Help（第 2.7 節）：`#helpBtn` 綁 `demogameHelp.open({ baseBet, bet, format, config })`，或自己載入 md 後呼叫 `demogameHelp.render(md, opts)`；不要再自寫 md 解析。API 依目前語言輸出到 `#helpContent` 的 DOM 結構固定如下（舊遊戲自寫 renderer 也必須輸出同一結構），之後的版式（置中、特殊符號卡片、兩欄符號卡片、內嵌小圖、走線圖）都由共用模組自動套用：
 
 ```html
 <section class="help-section">
@@ -450,7 +455,7 @@ Help 原文＝專案的 `game_help_draft.md`，整份貼進 `<script id="embedde
 </section>
 ```
 
-- 讀不到 md 時（第 4 節「Help 至少要有賠率表」），遊戲要用 config 的賠率依目前押注自己組出上面的 `help-payout-table`；共用模組內建的備援（在 `#helpContent` 放 `.help-load-error` 且有 `window.data.pay_table` 時）只支援全盤計數型賠率表，不可依賴。
+- 讀不到 md 或 md 沒有賠率表時（第 4 節「Help 至少要有賠率表」），呼叫 `render`／`open` 時傳 `config`，由 `demogameHelp.configPaytable` 依目前押注產生賠率表（支援全盤計數型、Ways、Lines，依 config 的派彩結構自動判斷，必要時用 `configOptions.type`／`counts` 指定）；不用 API 的遊戲可設 `window.DEMOGAME_HELP_CONFIG`，`#helpContent` 出現 `.help-load-error` 時共用模組自動補上。
 
 ## 3. 補牌方式
 
@@ -541,8 +546,8 @@ Debug Mode 至少可查看：
   - 結算看板：最後一場 FG 轉完（含加局全部轉完）後顯示「免費遊戲結束／總贏分／金額／倍數（總贏分 ÷ 底注，2 位小數）」，金額為整場 FG 的總贏分，不含觸發那一把的 BG 得分。
   - 關閉方式兩者相同：Auto 模式 1 秒後自動消失；非 Auto 要點盤面／看板或按 Spin 關閉。看板顯示期間背景不可捲動，看板消失後才進下一步（開始 FG／回到 BG）。
   - 長按 SPIN／空白鍵連續 Spin 時：結算看板不可被長按關掉，連續 Spin 到結算看板就終止，操作者要放開後重新按才繼續（看板元素加 `data-hold-stop`，共用 `demogame_common.js` 看到就停止連續 Spin）；觸發看板不受此限，連續 Spin 會照常關掉並開始 FG。
-  - 參考實作：H032 `showFgBanner`／`showFgEndBanner`／`showBoardBanner`。
-  - 看板結構（遊戲自備樣式，共用 CSS 不提供）：在 `#board` 內 append `<div class="fg-banner" [data-hold-stop]><div class="fg-banner-card">…</div></div>`，卡片內依序放 `.fg-banner-icon`（觸發符號圖，可省略）、`.fg-banner-title`、`.fg-banner-sub`、`.fg-banner-count`；`.fg-banner` 蓋滿盤面置中。顯示函式回傳 Promise，點盤面、按 `#spinBtn`（顯示期間暫時解除 disabled，關閉後還原）或 Auto 1 秒後 resolve 並移除看板；遊戲 `await` 它之後才開始 FG／回到 BG。
+  - 用共用 API（第 2.7 節）：觸發看板 `await demogameFgBanner.trigger({ spins, icon: "C1", auto: state.auto })`，結算看板 `await demogameFgBanner.end({ win, bet: 底注, format: 金額格式, auto: state.auto })`（自帶 `data-hold-stop`）；遊戲 `await` 之後才開始 FG／回到 BG。樣式由 `demogame_common.css` 提供（外觀同 H032），遊戲不另寫看板樣式。
+  - API 產生的結構：在 `#board` 內 append `<div class="fg-banner dg-fg-banner" [data-hold-stop]><div class="fg-banner-card">…</div></div>`，卡片內依序 `.fg-banner-icon`（觸發符號圖，可省略）、`.fg-banner-title`、`.fg-banner-sub`、`.fg-banner-count`；點盤面、按 `#spinBtn`（顯示期間暫時解除 disabled，關閉後還原）或 Auto 1 秒後 resolve 並移除看板；期間 `<html>` 加 `dg-modal-open` 鎖背景捲動。舊遊戲（H026、H032、H039 等）自寫的 `.fg-banner` 不受共用樣式影響，可繼續使用。
 - 重置（RNG 區 `#setRngResetBtn`）與模擬區開始／重置（`#batchSimulationStartBtn`／`#batchSimulationResetBtn`）（共用）：跟 SPIN 同款藍色主按鈕（底 #0077cc、白字、高 34px、無外框光暈），disabled 壓暗（底 #102a49、字 #87a7c1）；各遊戲 index.html 不另寫顏色覆寫。
 - 模擬（共用）：第一次按「開始」，之後按鈕變「繼續」，每次再跑輸入的局數並接在前面累積（統計與倍率線型都累加）；按「重置」清空回到「開始」；累積依「押注模式＋押注大小」各自保存（見上方模擬條）。
 - 飛行動畫目標（共用）：狀態列 `#strip-bar` 已隱藏、改由盤面上方資訊條鏡射倍數膠囊，倍數飛到 Mult／Sum 等動畫一律用 `window.demogameFxTarget("multPill")` 取得畫面上看得到的目標，不要直接量 `#multPill` 的位置（會飛到左上角）。
