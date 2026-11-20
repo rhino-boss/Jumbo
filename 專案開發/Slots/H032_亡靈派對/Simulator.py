@@ -614,7 +614,8 @@ class CalaveraParty:
             if super_:   # SF：FG 隱性控制照舊選 fg_N，實際改轉同編號的 sf_N（另一組自然機率參數）
                 table_name = "sf_" + table_name[3:]
             boost_left = max(0, boost_left - 1)
-            self._fg_left = total - index + 1     # 剩餘場數（含這一把）：最後五把換新框倍數權重
+            # 剩餘場數（含這一把）：最後五把換新框倍數權重；再觸發之後的每一把一律用 Last 1（2026-11-20）
+            self._fg_left = 1 if result.retriggers else total - index + 1
             spin = self.spin(table_name, frames, free_game=True)
             hit = spin.pay > 0
             result.pay_fg += spin.pay

@@ -2426,7 +2426,7 @@
         <ol>
            <li>連消往 Super Ace 靠：免費遊戲不再那麼偏重小獎（每轉中獎率約五成降到約四成），補下來的牌比較容易再連成線，連消 3 次以上變多；主遊戲補牌也比較容易接續。（11/20）</li>
            <li>觸發免費遊戲那一把：新框倍數最多 5X，主遊戲得分平均壓在 5 倍以內。（11/20）</li>
-           <li>免費遊戲最後五把越來越容易出大倍數的框：出大倍數的機率依序是平常的 1.2、1.3、1.4、1.5、2 倍；再觸發加場後跟著往後移。超級特色也有。（11/20）</li>
+           <li>免費遊戲最後五把越來越容易出大倍數的框：出大倍數的機率依序是平常的 1.2、1.3、1.4、1.5、2 倍；再觸發加場之後的每一把都用最後一把的機率（2 倍）。超級特色也有。（11/20）</li>
            <li>好局（好表）的金色符號加倍：數量是一般局的 2 倍。超級特色的好表也一樣。（11/20）</li>
            <li>卡片權重已依新設定重算（目標不變：RTP、免費遊戲週期、保底、最高倍率上限、超級特色最高區間），快速驗證通過；超級特色的免費遊戲還沒套用連消調整。尚未正式進版。（11/20）</li>
         </ol>
@@ -3430,7 +3430,7 @@
       index++;
       const { rule, weights } = fgWeights(index, good, boostLeft, dead, frameSum(frames), buy);
       boostLeft = Math.max(0, boostLeft - 1);
-      fgLeft = total - index + 1;   // 剩餘場數（含這一把）
+      fgLeft = retriggers ? 1 : total - index + 1;   // 剩餘場數（含這一把）；再觸發之後的每一把一律用 Last 1
       const result = spin(sup ? "sf_" + pickMap(weights).slice(3) : pickMap(weights), true, frames);   // 超級特色：同編號 sf_N（新框必定有倍數）
       result.fgRule = rule;
       pay += result.pay; spins.push(result);
@@ -4215,10 +4215,10 @@
   window.DEMOGAME_CARD_SYSTEM_SUPPORTED = Boolean(window.H032_CONFIG?.card_system?.enabled);
   window.DEMOGAME_VERSION_OVERRIDE = (window.H032_VERSION_ENTRY || {}).version || "3.1.0.0";
   window.DEMOGAME_REPORT_URL = "./report.html";   // 標題列 Report 按鈕（共用 demogame_common.js）
-  window.DEMOGAME_LAST_TUNING = "2026-11-20 16:52";
-  window.DEMOGAME_TUNING_CODE = "BVTTBC";
-  window.DEMOGAME_LAST_CODE = "2026-11-20 16:52";
-  window.DEMOGAME_LAST_UPDATE = "2026-11-20 16:52";
+  window.DEMOGAME_LAST_TUNING = "2026-11-20 17:04";
+  window.DEMOGAME_TUNING_CODE = "NDPGR3";
+  window.DEMOGAME_LAST_CODE = "2026-11-20 17:04";
+  window.DEMOGAME_LAST_UPDATE = "2026-11-20 17:04";
   </script>
   <script>window.DEMOGAME_INFO_BAR = false;   // 本款盤面上方已有自己的「倍數總和」條，不用共用資訊條</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "FC DJ Boom Boom", "expect": "金色符號留下倍數框，每次消除全盤框一起長大，FG 一路累積到結束。", "changes": ["1,024 Ways，5×4 盤面，中獎消除掉落", "金色符號中獎後變 WW，沒有框的位置留下新框，倍數 1～100X 隨機（1X 約 94%）", "每次消除全盤框都 +1，得分 ×（1＋全盤框倍數總和）；FG 框累積到結束", "額外押注 2 倍（FG 出現率 5 倍）；購買特色 75 倍；超級特色 300 倍（新框必定有倍數，最少 5X）；有 OP 彩金"], "en": {"expect": "Golden symbols leave multiplier frames; every cascade grows all frames together, and in Free Game they keep building until the end.", "changes": ["1,024 Ways on a 5×4 grid; winning symbols are removed and new ones drop in", "A winning golden symbol turns into WILD and leaves a new frame on an empty cell, with a random 1–100X multiplier (1X about 94%)", "Every cascade adds +1 to all frames; each win × (1 + sum of all frames); in Free Game frames keep building until the end", "Extra Bet 2x (Free Game 5 times as often); Buy Feature 75x; Super Feature 300x (every new frame has a multiplier, at least 5X); with OP Jackpot"]}};</script>
