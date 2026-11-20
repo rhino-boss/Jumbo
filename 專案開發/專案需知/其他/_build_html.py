@@ -830,7 +830,7 @@ strong{{font-weight:600; color:var(--ink)}}
 a{{color:var(--s1)}}
 .tbl-wrap{{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
   background:var(--panel); margin:0 0 18px}}
-table{{border-collapse:collapse; width:100%; min-width:720px; font-size:1em}}
+table{{border-collapse:collapse; width:100%; min-width:576px; font-size:1em}}
 /* 第一欄（標題欄）一行顯示；超過表格 1/4 寬才換行（由 JS 加 fc-cap） */
 th:first-child,td:first-child{{white-space:nowrap}}
 table.fc-cap th:first-child,table.fc-cap td:first-child{{white-space:normal; width:25%}}

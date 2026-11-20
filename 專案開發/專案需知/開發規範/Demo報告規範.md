@@ -55,7 +55,7 @@
 ```markdown
 # <Game ID> Demo Report Draft
 
-這份 md 是 `對外文件/<英文名大寫>_Demo報告_v01.pptx` 的前置確認稿。
+這份 md 是 `對外文件/<英文名大寫>_Demo報告_v01.pptx` 的前置確認稿。Demo 報告一律放該遊戲專案的 `對外文件/`；`專案開發/對外文件/<YYMMDD_主題>/` 是跨專案的其他對外文件，不放 Demo 報告（2026-11-20 使用者）。
 之後若要改簡報，應先確認並修改這份 md，再轉成 pptx。
 
 ## Game Meta
