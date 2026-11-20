@@ -830,10 +830,12 @@ strong{{font-weight:600; color:var(--ink)}}
 a{{color:var(--s1)}}
 .tbl-wrap{{overflow-x:auto; overflow-y:hidden; border:1px solid var(--rule); border-radius:3px;
   background:var(--panel); margin:0 0 18px}}
-table{{border-collapse:collapse; width:100%; min-width:576px; font-size:1em}}
+table{{border-collapse:collapse; width:100%; font-size:1em}}
 /* 第一欄（標題欄）一行顯示；超過表格 1/4 寬才換行（由 JS 加 fc-cap） */
 th:first-child,td:first-child{{white-space:nowrap}}
 table.fc-cap th:first-child,table.fc-cap td:first-child{{white-space:normal; width:25%}}
+table.nw-measure{{width:max-content !important}}
+table.nw-measure th,table.nw-measure td{{white-space:nowrap !important}}
 th,td{{padding:7px 12px; text-align:left; border-bottom:1px solid var(--grid); vertical-align:top}}
 th{{background:var(--panel-2); color:var(--ink-2); font-weight:500; font-size:1em;
   letter-spacing:.03em; white-space:nowrap}}
@@ -1021,19 +1023,27 @@ document.querySelectorAll('.tab').forEach(function(b) {{
   var tab = h.split('/')[0], anchor = h.split('/').slice(1).join('/');
   if (TAB_IDS.indexOf(tab) >= 0) activate(tab, anchor || null);
 }})();
-// 表格第一欄：一行放得下（≤ 表格 1/4 寬）就不換行，否則固定 1/4 寬並換行
+// 表格：最小寬＝不換行寬（上限 1000px）；第一欄一行放得下（≤ 表格 1/4 寬）就不換行，否則固定 1/4 寬並換行
 (function() {{
   function cap() {{
     document.querySelectorAll('table').forEach(function(t) {{
       var r = t.rows[0];
-      if (!r || r.cells.length < 2 || !t.offsetWidth) return;
-      t.classList.remove('fc-cap');
+      if (!r || !t.offsetWidth) return;
+      // 表格寬度不隨框變窄：最小寬＝整列不換行的寬（上限 TABLE_MAX），框放不下就左右拖曳
+      t.classList.remove('fc-cap'); t.style.minWidth = ''; t.classList.add('nw-measure');
+      var nw = Math.ceil(t.getBoundingClientRect().width) + 2, colMax = 0;
+      for (var c = 0; c < r.cells.length; c++) colMax = Math.max(colMax, r.cells[c].offsetWidth);
+      t.classList.remove('nw-measure');
+      // 全是短欄（每欄 ≤ 400px）→ 一律不換行、整張左右拖曳；有長文字欄 → 最小寬上限 1000px，長文字才換行
+      t.style.minWidth = (colMax <= 400 ? nw : Math.min(nw, 1000)) + 'px';
+      if (r.cells.length < 2) return;
       var w = 0;
       for (var i = 0; i < t.rows.length; i++) w = Math.max(w, t.rows[i].cells[0] ? t.rows[i].cells[0].offsetWidth : 0);
       if (w > t.offsetWidth * 0.25) t.classList.add('fc-cap');
     }});
   }}
   cap();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(cap);
   window.addEventListener('load', cap);
   window.addEventListener('resize', cap);
   document.addEventListener('click', function() {{ setTimeout(cap, 0); }});
