@@ -71,6 +71,13 @@ td.good{color:var(--good);font-weight:600}td.bad{color:var(--bad);font-weight:60
 ul.rules{margin:0;padding-left:18px;max-width:none}ul.rules li{margin:2px 0}
 td.ver{white-space:nowrap;font-family:var(--font-mono)}
 .yz-hint{margin:0;font-size:13.5px;color:var(--ink-2);text-align:left}
+/*2026-11-20 使用者：手機版——表格字不被 iOS 自動放大（跟內文同字級）；觸控裝置顯示縱軸縮放按鈕*/
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.chart .plot{position:relative}
+.yz-btns{display:none;gap:8px;margin:10px 0 6px}
+.yz-btns button{min-width:38px;height:34px;padding:0 10px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);color:var(--ink-2);font:600 15px/1 inherit;-webkit-tap-highlight-color:transparent}
+.yz-btns button:active{background:var(--panel-2)}
+@media (hover:none),(pointer:coarse){.yz-btns{display:flex}.chart svg{touch-action:pan-x pan-y}}
 .chart h4{text-align:center}
 :root{--chart-bg:#fbfbf9;--chart-grid:rgba(0,0,0,.07)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--chart-bg:#34342f;--chart-grid:rgba(255,255,255,.07)}}
