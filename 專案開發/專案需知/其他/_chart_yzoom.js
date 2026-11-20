@@ -37,21 +37,17 @@
     draw(y0);
     svg.addEventListener('wheel',function(e){e.preventDefault();var k=e.deltaY>0?1.25:0.8;draw(Math.min(100,Math.max(0.0005,d.ymax*k)))},{passive:false});
     svg.addEventListener('dblclick',function(){draw(y0)});
-    // 2026-11-20 使用者：手機沒有滾輪——圖右上角放「＋ － 還原」按鈕（只在觸控裝置顯示），另支援兩指上下捏合縮放縱軸
+    // 2026-11-20 使用者：手機沒有滾輪——兩指捏合縮放縱軸、點兩下還原（不放 ＋／－／還原 按鈕）
     function zoom(k){draw(Math.min(100,Math.max(0.0005,d.ymax*k)))}
-    var plot=svg.parentNode;
-    if(plot&&!ch.querySelector('.yz-btns')){var bar=document.createElement('div');bar.className='yz-btns';
-      [['＋','放大縱軸',function(){zoom(0.5)}],['－','縮小縱軸',function(){zoom(2)}],['還原','還原縱軸',function(){draw(y0)}]].forEach(function(b){
-        var el=document.createElement('button');el.type='button';el.textContent=b[0];el.setAttribute('aria-label',b[1]);el.addEventListener('click',function(e){e.stopPropagation();b[2]()});bar.appendChild(el)});
-      plot.before(bar)}
     var pinch=null;
     function gap(e){return Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}
     svg.addEventListener('touchstart',function(e){if(e.touches.length===2)pinch={g:gap(e),y:d.ymax}},{passive:true});
     svg.addEventListener('touchmove',function(e){if(pinch&&e.touches.length===2){e.preventDefault();var g=gap(e);if(g>0)draw(Math.min(100,Math.max(0.0005,pinch.y*pinch.g/g)))}},{passive:false});
-    svg.addEventListener('touchend',function(e){if(e.touches.length<2)pinch=null},{passive:true});
+    var lastTap=0,moved=false;svg.addEventListener('touchstart',function(e){moved=e.touches.length>1},{passive:true});svg.addEventListener('touchmove',function(){moved=true},{passive:true});
+    svg.addEventListener('touchend',function(e){if(e.touches.length<2)pinch=null;if(e.touches.length||moved)return;var n=Date.now();if(n-lastTap<350){draw(y0);lastTap=0}else lastTap=n},{passive:true});
   });
   // 操作提示：每個頁簽只在最後一張圖下面放一次（2026-11-09 使用者）
   document.querySelectorAll('.panel').forEach(function(p){
     var cs=p.querySelectorAll('.chart[data-hover]');if(!cs.length||p.querySelector('.yz-hint'))return;
-    var s=document.createElement('p');s.className='yz-hint';s.textContent=(window.matchMedia&&matchMedia('(hover:none),(pointer:coarse)').matches)?'圖上方「＋／－」縮放縱軸（或兩指捏合）．「還原」回到預設':'滾輪縮放縱軸．雙擊還原';cs[cs.length-1].after(s)});
+    var s=document.createElement('p');s.className='yz-hint';s.textContent=(window.matchMedia&&matchMedia('(hover:none),(pointer:coarse)').matches)?'兩指捏合縮放縱軸．點兩下還原':'滾輪縮放縱軸．雙擊還原';cs[cs.length-1].after(s)});
 })();
