@@ -1008,3 +1008,15 @@ body.slot-simulator #feature-bar:has(#demogameTitleActions) {
   padding-bottom: 0;
 }
 
+
+/* FG 看板（window.demogameFgBanner，2026-11-20）：外觀照 H032；只套在 API 建立的 .dg-fg-banner，不影響遊戲自己的 .fg-banner */
+#board .fg-banner.dg-fg-banner { position: absolute; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(4, 10, 20, .62); border-radius: 10px; cursor: pointer; animation: dg-fg-banner-in .16s ease-out; }
+#board .dg-fg-banner .fg-banner-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 32px; border-radius: 12px; max-width: 80%;
+  background: linear-gradient(180deg, #ffe49a 0%, #e0a82a 45%, #9a6406 100%); border: 1.6px solid #ffd468; box-shadow: inset 0 1px 0 rgba(255, 248, 220, .55), 0 8px 24px rgba(0, 0, 0, .6); color: #fffaf0; text-shadow: 0 1px 2px rgba(80, 50, 0, .6); }
+#board .dg-fg-banner .fg-banner-icon { display: grid; place-items: center; width: 72px; height: 72px; font-size: 44px; line-height: 1; font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .5)); }
+#board .dg-fg-banner .fg-banner-icon img, #board .dg-fg-banner .fg-banner-icon svg { width: 100%; height: 100%; object-fit: contain; }
+#board .dg-fg-banner .fg-banner-title { font: 800 22px/1.2 system-ui, sans-serif; letter-spacing: .06em; }
+#board .dg-fg-banner .fg-banner-count { font: 800 30px/1.1 system-ui, sans-serif; }
+#board .dg-fg-banner .fg-banner-sub { font: 700 14px/1.2 system-ui, sans-serif; opacity: .92; }
+html.dg-modal-open, html.dg-modal-open body { overflow: hidden !important; overscroll-behavior: none; }
+@keyframes dg-fg-banner-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }

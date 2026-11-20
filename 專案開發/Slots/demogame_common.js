@@ -3214,6 +3214,18 @@
   }
 
   function buildConfigFallback() {
+    // 2026-11-20：遊戲宣告 window.DEMOGAME_HELP_CONFIG（config 物件）時改用 demogameHelp.configPaytable（全盤計數／Ways／Lines）
+    if (root.querySelector(".help-load-error") && window.DEMOGAME_HELP_CONFIG && window.demogameHelp?.configPaytable) {
+      const table = window.demogameHelp.configPaytable(window.DEMOGAME_HELP_CONFIG, window.DEMOGAME_HELP_CONFIG_OPTIONS || {});
+      if (table) {
+        const card = document.createElement("section");
+        card.className = "help-section";
+        card.innerHTML = `<h3 class="help-section-title">${paytableTitle()}</h3>`;
+        card.appendChild(table);
+        root.replaceChildren(card);
+        return;
+      }
+    }
     if (!root.querySelector(".help-load-error") || !window.data?.pay_table) return;
     const box = window.data;
     const scale = Number(box.default_coin_in || 100);
@@ -4640,3 +4652,351 @@
   window.addEventListener("scroll", function () { if (tip) tip.style.display = "none"; }, true);
 })();
 // ==== /chart-hover-auto ====
+
+// ==== fg-banner + help-render（2026-11-20 共用 API）====
+// window.demogameFgBanner：FG 觸發／結算看板（行為與外觀照 H032）。window.demogameHelp：game_help_draft.md 解析輸出到 #helpContent
+// （格式見 Demogame規範 §2.8），並可由 config 產生賠率表（全盤計數型／Ways／Lines）。舊遊戲自己的實作不受影響。
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const isZh = (lang) => /^zh/i.test(lang || $("languageSelect")?.value || document.documentElement.lang || "");
+  const resolve = (value) => (typeof value === "function" ? value() : value);
+
+  // ===== FG 看板 =====
+  // show({ icon, title, sub, count, note, html, holdStop, auto, autoMs, board }) → Promise（看板關閉時 resolve）
+  //   icon：符號代號（取 DEMOGAME_SYMBOL_ART）、圖片網址、HTML 字串或元素；可省略。固定 72px。
+  //   卡片內依序：.fg-banner-icon、.fg-banner-title、.fg-banner-sub、.fg-banner-count、.fg-banner-sub（note）；html 給了就整段取代。
+  //   holdStop：加 data-hold-stop（結算看板用；長按連續 Spin 到這張就停）。
+  //   auto：true（或回傳 true 的函式）時 autoMs（預設 1000）後自動關；不論 Auto 與否，點盤面／看板或按 #spinBtn 都會關
+  //   （顯示期間暫時解除 #spinBtn 的 disabled，關閉後還原）。期間 <html> 加 dg-modal-open（背景不可捲動）。
+  let current = null;
+  function iconNode(icon) {
+    if (!icon) return null;
+    if (icon instanceof Element) return icon;
+    const text = String(icon).trim();
+    if (!text) return null;
+    if (text.startsWith("<")) { const t = document.createElement("template"); t.innerHTML = text; return t.content; }
+    let src = "";
+    if (/^(data:|blob:|https?:)|[\/\\]|\.(png|jpe?g|gif|webp|svg)$/i.test(text)) src = text;
+    else if (/^[A-Za-z]+\d*$/.test(text)) {
+      if (window.DEMOGAME_SYMBOL_IMAGES_ENABLED === false) return null;
+      src = window.DEMOGAME_SYMBOL_ART?.[text] || "";
+      if (!src) return null;
+    } else return document.createTextNode(text);   // emoji 等文字
+    const img = document.createElement("img");
+    img.src = src; img.alt = ""; img.draggable = false;
+    img.addEventListener("error", () => img.remove(), { once: true });
+    return img;
+  }
+  function show(opts = {}) {
+    const board = opts.board || $("board");
+    if (current) current.close();
+    if (!board) return Promise.resolve();
+    return new Promise((done) => {
+      const spinBtn = $("spinBtn");
+      const banner = document.createElement("div");
+      banner.className = "fg-banner dg-fg-banner";
+      if (opts.holdStop) banner.dataset.holdStop = "1";
+      const card = document.createElement("div");
+      card.className = "fg-banner-card";
+      if (opts.html != null) card.innerHTML = String(opts.html);
+      else {
+        const icon = iconNode(opts.icon);
+        if (icon) { const box = document.createElement("span"); box.className = "fg-banner-icon"; box.appendChild(icon); card.appendChild(box); }
+        for (const [cls, value] of [["title", opts.title], ["sub", opts.sub], ["count", opts.count], ["sub", opts.note]]) {
+          if (value == null || value === "") continue;
+          const span = document.createElement("span");
+          span.className = `fg-banner-${cls}`;
+          span.textContent = String(value);
+          card.appendChild(span);
+        }
+      }
+      banner.appendChild(card);
+      const fixPosition = getComputedStyle(board).position === "static";
+      if (fixPosition) board.style.position = "relative";
+      board.appendChild(banner);
+      document.documentElement.classList.add("dg-modal-open");
+      const wasDisabled = spinBtn ? spinBtn.disabled : false;
+      if (spinBtn) spinBtn.disabled = false;
+      let timer = 0;
+      const close = () => {
+        if (current !== entry) return;
+        current = null;
+        clearTimeout(timer);
+        board.removeEventListener("click", close);
+        spinBtn?.removeEventListener("click", close, true);
+        if (spinBtn) spinBtn.disabled = wasDisabled;
+        banner.remove();
+        if (fixPosition) board.style.position = "";
+        if (!document.querySelector(".dg-fg-banner")) document.documentElement.classList.remove("dg-modal-open");
+        done();
+      };
+      const entry = { close, banner };
+      current = entry;
+      board.addEventListener("click", close);
+      spinBtn?.addEventListener("click", close, true);
+      if (resolve(opts.auto)) timer = setTimeout(close, Number(opts.autoMs) || 1000);
+    });
+  }
+  const BANNER_TEXT = {
+    zh: { title: "免費遊戲", count: "{n} 場", endTitle: "免費遊戲結束", endTotal: "總贏分" },
+    en: { title: "Free Game", count: "{n} SPINS", endTitle: "FREE GAME COMPLETE", endTotal: "TOTAL WIN" }
+  };
+  const bannerText = (lang) => BANNER_TEXT[isZh(lang) ? "zh" : "en"];
+  window.demogameFgBanner = {
+    show,
+    // 觸發看板：免費遊戲／N 場（icon 預設 C1）
+    trigger: ({ spins, icon = "C1", auto, lang, ...rest } = {}) => {
+      const t = bannerText(lang);
+      return show({ icon, title: t.title, count: t.count.replace("{n}", spins), auto, ...rest });
+    },
+    // 結算看板：免費遊戲結束／總贏分／金額／倍數（win ÷ bet，2 位小數）；預設 holdStop
+    end: ({ win = 0, bet, format, auto, lang, ...rest } = {}) => {
+      const t = bannerText(lang);
+      const money = typeof format === "function" ? format(win)
+        : Number(win).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const note = Number(bet) > 0 ? `${(Number(win) / Number(bet)).toFixed(2)}x` : "";
+      return show({ title: t.endTitle, sub: t.endTotal, count: money, note, holdStop: true, auto, ...rest });
+    },
+    close: () => current?.close(),
+    isOpen: () => Boolean(current)
+  };
+
+  // ===== Help =====
+  const LABEL_ZH = /^(?:繁中|简中|簡中|中文)[：:]$/;
+  const LABEL_EN = /^(?:英文|English)[：:]$/i;
+  const SKIP_HEAD = new Set(["Item", "Field", "中文欄", "符号"]);
+  const isPaytableName = (text) => /pay\s*table|賠率表|赔率表/i.test(String(text || ""));
+  const isSeparator = (cells) => cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+  const isFlatPayout = (cell) => /[-–]\s*\{?[\d.,]+\}?\s*x?$/i.test(cell);
+  function tableCells(line) {
+    const t = line.trim();
+    return t.startsWith("|") && t.endsWith("|") && t.length > 1 ? t.slice(1, -1).split("|").map((x) => x.trim()) : null;
+  }
+
+  // parse(md, { plainText }) → [{ key, titleZh, titleEn, rules:[{zh,en}], groups:[{ key, titleZh, titleEn, rules, tables:[{lang, rows}], items:[] }] }]
+  //   tables：新格式「繁中：／英文：」賠率表（第一列表頭）；items：舊格式「[M1] 5 - 50」平鋪派彩。
+  //   plainText：true 時表格外的純文字行也當規則（舊離線副本）。
+  function parse(md, opts = {}) {
+    const sections = [];
+    let section = null, group = null, payLang = "zh", table = null, prevTable = false;
+    for (const raw of String(md || "").split(/\r?\n/)) {
+      const line = raw.trim();
+      let m;
+      const cells = tableCells(line);
+      if (!cells) { if (prevTable) table = null; prevTable = false; }
+      if (LABEL_ZH.test(line)) { payLang = "zh"; table = null; continue; }
+      if (LABEL_EN.test(line)) { payLang = "en"; table = null; continue; }
+      if ((m = line.match(/^##\s+(.+)/)) && !line.startsWith("###")) {
+        const key = m[1].trim();
+        section = /meta/i.test(key) ? null : { key, titleZh: "", titleEn: "", rules: [], groups: [] };
+        if (section) sections.push(section);
+        group = null; payLang = "zh"; table = null; continue;
+      }
+      if (!section) continue;
+      if ((m = line.match(/^###\s+(.+)/))) {
+        group = { key: m[1].trim(), titleZh: "", titleEn: "", rules: [], tables: [], items: [] };
+        section.groups.push(group); payLang = "zh"; table = null; continue;
+      }
+      if (!cells) {
+        if (opts.plainText && line && line !== "---" && !/^(#|>|<!--|```)/.test(line)) (group || section).rules.push({ zh: line, en: line });
+        continue;
+      }
+      prevTable = true;
+      if (!cells.length || isSeparator(cells)) continue;
+      const [item, zh = "", en = ""] = cells;
+      if (item === "主要標題") { section.titleZh = zh; section.titleEn = en; table = null; continue; }
+      if (item === "副標題") { if (group) { group.titleZh = zh; group.titleEn = en; } else { section.titleZh ||= zh; section.titleEn ||= en; } table = null; continue; }
+      if (item === "規則說明") { (group || section).rules.push({ zh, en }); table = null; continue; }
+      if (SKIP_HEAD.has(item)) { table = null; continue; }
+      const owner = group && (isPaytableName(group.key) || isPaytableName(group.titleZh) || isPaytableName(group.titleEn)) ? group : null;
+      if (!owner || cells.length < 2) continue;
+      // 舊格式：每格一個「[M1] 5 - 50」
+      if (!table && cells.filter(Boolean).every(isFlatPayout)) { owner.items.push(...cells.filter(Boolean)); continue; }
+      if (!table) { table = { lang: payLang, rows: [] }; owner.tables.push(table); }
+      table.rows.push(cells);
+    }
+    return sections.filter((s) => s.rules.length || s.groups.some((g) => g.rules.length || g.tables.length || g.items.length));
+  }
+
+  const defaultFormat = (n) => Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function currentBetValue() {
+    const value = Number(String($("betValue")?.textContent || "").replace(/[^\d.\-]/g, ""));
+    return Number.isFinite(value) && value > 0 ? value : 1;
+  }
+  function scaler(opts, fallbackUnit) {
+    const bet = Number(resolve(opts.bet) ?? currentBetValue()) || currentBetValue();
+    const unit = Number(resolve(opts.baseBet) ?? fallbackUnit) || 1;
+    const format = typeof opts.format === "function" ? opts.format : defaultFormat;
+    return (n) => format(Number(n) / unit * bet);
+  }
+  const numberOf = (text) => {
+    const clean = String(text).replace(/[{}]/g, "").replace(/,/g, "").trim();
+    return clean !== "" && Number.isFinite(Number(clean)) ? Number(clean) : null;
+  };
+
+  // configPaytable(cfg, { type, bet, baseBet, format, counts, reels, skip }) → <div class="help-payout-table"> 或 null
+  //   type 不給時依 config 判斷：有 paylines／line_num／lines → "lines"；pays 是物件或有 max_ways／ways → "ways"；其餘 → "count"（全盤計數）。
+  //   派彩來源：pay_table → pays → paytable（陣列依符號 index，或物件 key＝符號 index／代號）；每列為依連線數（或計數）遞增的派彩。
+  //   符號名稱：symbol_str → symbol_names → symbol_codes → symbols（字串陣列）。
+  //   Ways／Lines：派彩欄＝(reel_num − 欄數 + 1)…reel_num 連；計數型：counts → count_labels → min_cluster 起算（最後一欄加「+」）。
+  //   單位：派彩 ÷ baseBet（預設 cfg.base_bet → cfg.default_coin_in → 1）× 目前押注。全 0 的符號與欄位略過；之後共用模組自動排成每個符號一張「N - 派彩」卡片。
+  function configPaytable(cfg, opts = {}) {
+    if (!cfg || typeof cfg !== "object") return null;
+    const source = cfg.pay_table || cfg.pays || cfg.paytable;
+    if (!source || typeof source !== "object") return null;
+    const type = opts.type
+      || (Array.isArray(cfg.paylines) || Number(cfg.line_num) > 0 || Number(cfg.lines) > 0 ? "lines"
+        : (!Array.isArray(source) || Number(cfg.max_ways) > 0 || Number(cfg.ways) > 0 ? "ways" : "count"));
+    const names = cfg.symbol_str || cfg.symbol_names || cfg.symbol_codes
+      || (Array.isArray(cfg.symbols) && cfg.symbols.every((s) => typeof s === "string") ? cfg.symbols : null) || {};
+    const nameOf = (key) => {
+      if (!/^\d+$/.test(String(key))) return String(key);
+      const n = names[key] ?? names[String(key)] ?? names[Number(key)];
+      return typeof n === "string" ? n : (n && typeof n === "object" && (n.code || n.name)) || `S${key}`;
+    };
+    const skip = new Set(opts.skip || []);
+    const entries = (Array.isArray(source) ? source.map((pays, i) => [i, pays]) : Object.entries(source))
+      .map(([key, pays]) => ({ code: nameOf(key), pays: Array.isArray(pays) ? pays.map(Number) : null }))
+      .filter((e) => e.pays && !skip.has(e.code) && e.pays.some((v) => v > 0));
+    if (!entries.length) return null;
+    const width = Math.max(...entries.map((e) => e.pays.length));
+    let labels;
+    if (Array.isArray(opts.counts) && opts.counts.length === width) labels = opts.counts.map(String);
+    else if (type === "count") {
+      if (Array.isArray(cfg.count_labels) && cfg.count_labels.length === width) labels = cfg.count_labels.map(String);
+      else if (Number.isFinite(Number(cfg.min_cluster))) labels = Array.from({ length: width }, (_, i) => `${Number(cfg.min_cluster) + i}${i === width - 1 ? "+" : ""}`);
+      else labels = Array.from({ length: width }, (_, i) => String(i + 1));
+    } else {
+      const reels = Number(opts.reels ?? cfg.reel_num ?? cfg.reels_num ?? cfg.reel_count ?? cfg.cols) || 5;
+      const start = width <= reels ? reels - width + 1 : 1;
+      labels = Array.from({ length: width }, (_, i) => String(start + i));
+    }
+    const used = labels.map((_, i) => entries.some((e) => e.pays[i] > 0));
+    const fmt = scaler(opts, cfg.base_bet ?? cfg.default_coin_in ?? 1);
+    const table = document.createElement("div");
+    table.className = "help-payout-table";
+    table.dataset.paytableType = type;
+    const addRow = (values) => {
+      const row = document.createElement("div");
+      row.className = "help-payout-row";
+      for (const v of values) { const cell = document.createElement("div"); cell.className = "help-payout-cell"; cell.textContent = v; row.appendChild(cell); }
+      table.appendChild(row);
+    };
+    addRow(["Symbol", ...labels.filter((_, i) => used[i])]);
+    for (const e of entries) addRow([e.code, ...labels.map((_, i) => i).filter((i) => used[i]).map((i) => (e.pays[i] > 0 ? fmt(e.pays[i]) : "—"))]);
+    return table;
+  }
+
+  // render(md, { lang, target, bet, baseBet, format, config, configOptions, plainText }) → 目標元素
+  //   lang：zh／en（預設讀 #languageSelect）；bet：目前底注（數字或函式，預設讀 #betValue）；baseBet：md 賠率數字的基準（預設 config.base_bet → 100）。
+  //   md 賠率表數字換算成「數字 ÷ baseBet × bet」；非數字原樣。md 沒有賠率表、而有給 config 時，用 configPaytable 補在賠率表區塊。
+  //   都沒有內容時輸出 .help-load-error。Help 開著時押注或語言改變會自動重畫（只限用本 API 畫的內容）。
+  let last = null;
+  const rendered = new WeakSet();
+  function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function render(md, opts = {}) {
+    const target = opts.target || $("helpContent");
+    if (!target) return null;
+    const zh = isZh(resolve(opts.lang));
+    const pick = (o) => (zh ? (o.zh || o.en) : (o.en || o.zh)) || "";
+    const unitFallback = opts.config?.base_bet ?? 100;
+    const fmt = scaler(opts, unitFallback);
+    const sections = parse(md, opts);
+    const frag = document.createDocumentFragment();
+    let hasPaytable = false, paytableCard = null;
+    const addRule = (parent, rule) => {
+      const row = el("div", "help-rule");
+      row.appendChild(el("div", zh ? "help-rule-zh" : "help-rule-en", pick(rule).replace(/[{}]/g, "")));
+      parent.appendChild(row);
+    };
+    for (const section of sections) {
+      const card = el("section", "help-section");
+      card.appendChild(el("h3", "help-section-title", pick({ zh: section.titleZh, en: section.titleEn }) || section.key));
+      section.rules.forEach((rule) => addRule(card, rule));
+      if (isPaytableName(section.key) || isPaytableName(section.titleEn) || isPaytableName(section.titleZh)) paytableCard ||= card;
+      for (const group of section.groups) {
+        const langTables = group.tables.filter((t) => t.lang === (zh ? "zh" : "en"));
+        const tables = langTables.length ? langTables : group.tables.filter((t) => t.lang === group.tables[0]?.lang);
+        if (!group.rules.length && !tables.length && !group.items.length) continue;
+        card.appendChild(el("h4", "help-group-title", pick({ zh: group.titleZh, en: group.titleEn }) || group.key));
+        group.rules.forEach((rule) => addRule(card, rule));
+        for (const t of tables) {
+          const box = el("div", "help-payout-table");
+          t.rows.forEach((cells, r) => {
+            const row = el("div", "help-payout-row");
+            cells.forEach((value, c) => {
+              const n = r > 0 && c > 0 ? numberOf(value) : null;
+              row.appendChild(el("div", "help-payout-cell", n != null ? fmt(n) : value.replace(/[{}]/g, "")));
+            });
+            box.appendChild(row);
+          });
+          card.appendChild(box);
+          hasPaytable = true;
+        }
+        if (group.items.length) {
+          const grid = el("div", "help-payout-grid");
+          for (const item of group.items) {
+            const text = item.replace(/[{}]/g, "").replace(/([-–]\s*)([\d.,]+)(\s*x?)\s*$/i, (all, sep, raw, x) => (x.trim() ? all : `${sep}${fmt(Number(raw.replace(/,/g, "")))}`));
+            grid.appendChild(el("div", "help-payout-item", text));
+          }
+          card.appendChild(grid);
+          hasPaytable = true;
+        }
+      }
+      frag.appendChild(card);
+    }
+    if (!hasPaytable && opts.config) {
+      const table = configPaytable(opts.config, { bet: opts.bet, format: opts.format, ...(opts.configOptions || {}) });
+      if (table) {
+        if (!paytableCard) {
+          paytableCard = el("section", "help-section");
+          paytableCard.appendChild(el("h3", "help-section-title", zh ? "賠率表" : "Paytable"));
+          frag.insertBefore(paytableCard, frag.firstChild);
+        }
+        paytableCard.appendChild(el("h4", "help-group-title", zh ? "賠率表" : "Paytable"));   // 讓共用版式認得這區是賠率表（標題會被換成「賠率表（目前押注：x）」）
+        paytableCard.appendChild(table);
+      }
+    }
+    target.replaceChildren(frag);
+    if (!target.children.length) target.appendChild(el("div", "help-load-error", zh ? "無法載入遊戲規則。" : "Unable to load game rules."));
+    for (const child of target.children) rendered.add(child);
+    last = { md, opts, target };
+    return target;
+  }
+
+  // load({ url, embeddedId }) → Promise<string>：先 fetch game_help_draft.md（file:// 略過），讀不到用內嵌 <script id="embeddedGameHelpMarkdown">
+  async function load({ url = "./game_help_draft.md", embeddedId = "embeddedGameHelpMarkdown" } = {}) {
+    let md = "";
+    if (location.protocol !== "file:" && url) {
+      try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) { /* 用內嵌 */ }
+    }
+    return md.trim() || $(embeddedId)?.textContent?.trim() || "";
+  }
+  // open(opts)：load → render → 開 #helpDialog
+  async function open(opts = {}) {
+    const md = opts.markdown ?? await load(opts);
+    render(md, opts);
+    const dialog = $("helpDialog");
+    if (dialog && !dialog.open) dialog.showModal?.();
+    return md;
+  }
+
+  let rerenderQueued = false;
+  function rerender() {
+    if (rerenderQueued || !last) return;
+    rerenderQueued = true;
+    setTimeout(() => {
+      rerenderQueued = false;
+      if (!last || !last.target.isConnected || !$("helpDialog")?.open) return;
+      if (!rendered.has(last.target.firstElementChild)) { last = null; return; }   // 之後被遊戲自己的 renderer 改寫過就不接手
+      render(last.md, last.opts);
+    });
+  }
+  const betValue = $("betValue");
+  if (betValue) new MutationObserver(rerender).observe(betValue, { childList: true, subtree: true, characterData: true });
+  $("languageSelect")?.addEventListener("change", rerender);
+
+  window.demogameHelp = { parse, render, load, open, configPaytable, close: () => $("helpDialog")?.close?.() };
+})();
+// ==== /fg-banner + help-render ====
