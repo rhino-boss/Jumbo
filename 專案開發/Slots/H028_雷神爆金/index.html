@@ -1963,7 +1963,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120u" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h028">
@@ -2744,7 +2744,7 @@
     try{localStorage.setItem('slotDemoVersion',entry.version);localStorage.setItem('slotDemoConfig',series)}catch(_){}
     window.DEMOGAME_PRODUCT_LINE='01';   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01／B-01
     window.DEMOGAME_SHARED_BASE=true;   // A／B 共用同一份自然機率（base_config 同一份 config.js，RTP config 只帶 card_system）→ 只列 A 的 Base
-    window.DEMOGAME_WAY_BOARD=[6,6];   // 走線圖盤面：6 軸，最高 6 列（R1／R6 5 列、R2～R5 5 列＋額外轉輪 1 格，近似成 6×6）
+    window.DEMOGAME_WAY_SHAPE={reels:6,rows:5,top:[2,5]};   // 走線圖盤面（Megaways）：6 軸、主盤面每軸最多 5 列、R2～R5 上方額外橫軸（共用 demogame_common.js）
     window.H028_VERSION_ENTRY=entry;
     window.H028_SERIES_LIST=seriesList;
     window.H028_RTP_TIERS=tiers;   // { small, mid, big } → config 代號
@@ -3029,6 +3029,6 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26"; window.DEMOGAME_TUNING_CODE = "LPSQSH";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Lucky Neko", "expect": "雷神帶倍數出現，多顆相加把得分乘大。", "changes": ["雷神（M1）兼倍數符號：主盤面依尺寸給 x2～x5，Extra Reel 上固定 x2，多顆相加（競品的 M1 只是最高分符號）", "最高獎上限 3000x", "Buy Feature 為 75 倍押注", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120s"></script>
+  <script src="../demogame_common.js?v=20261120u"></script>
 </body>
 </html>

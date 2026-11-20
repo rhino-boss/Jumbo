@@ -1835,7 +1835,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120s" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120u" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2017,6 +2017,7 @@
           <li>R3 整條金框加回（同 H026）：BG 每轉 10% 機率 R3 整條金框、FG 必定整條；整條時 R3 停輪與掉落改用 H026 全金框輪帶（BG 用 B2、FG 依 F1～F3），倍數用 H026 R3 倍數表（不出空金框，仍可抽到「收集」）。結果（自然機率，收集 8%）：一般押注 1,702.6%（±51.0%，10⁶ 局）、Extra Bet 838.2%（±23.7%，10⁶ 局）、FG 1/230。（11/19）</li>
           <li>數學模型改回 H026 92A 原設定＋收集框（輪帶、賠率、倍數權重、R3 整條、FG 規則同 H026；取消「至少 2 個金框」「收集至少收到 1 個」「FG 金框必帶倍數」），再壓自然機率：一般符號金框 BG 減 70%、FG 減 90%（R3 整條不動），BG Scatter 減半（FG 週期 1/216）；收集機率 BG 22%、FG 17%；B2（R3 整條）權重 1000 → 2200；隱性重抽：留著沒用到的收集 75% 重抽、BG R3 整條金框使用率不到 50% 時 90% 重抽；FG 新增常中表（F1～F3 的 R2／R4 一般符號 15% 換 Wild）：連續 2 轉沒中必用、累積倍數 ≥ 20 時一般表：常中表＝2：1。結果（自然機率，Card System 關）：一般押注約 466%（三次 10⁶ 局 479.4%／446.0%／471.5%，±26%）、Extra Bet 231.1%（±12.8%，10⁶ 局）、Buy Feature 519.4%（±9.5%，10⁵ 局）；BG Hit Rate 24.4%、FG 56.6%；BG R3 整條 1/21、金框使用率 50.0%；BG 收集 1/15.4、使用率 44.8%；FG 累積倍數 ≥ 20 的轉 Hit Rate 57.4%、連 2 轉沒中後 67.9%。（11/19）</li>
           <li>Card System 開啟：卡片權重以 H026 92A 為底，依新自然機率（BG 400 萬局、FG 30 萬場、BF 30 萬場）單參數傾斜對回目標（NB BG 68%＋FG 24%、FG 週期 238.34；EB、BF、新手同法，尚未驗證）；各區間調整幅度不到 1%，沒有區間因自然率 < 0.05% 被歸零。Card On 驗證（NB 老手，10⁶ 局）：92.17%（±1.10%）、BG 68.37%＋FG 23.81%、FG 1/240、局中獎率 28.28%、重抽達上限 14 局；BG 單轉 Hit 28.0%、R3 整條 1/23、金框使用率 44.5%、收集 1/16.2、使用率 41.9%；FG 單轉 Hit 44.4%、收集使用率 41.3%、整場沒用到收集 34.1%、累積倍數 ≥ 20 的轉 Hit 39.4%、連 2 轉沒中後 54.6%。（11/19）</li>
+          <li>收集改為「變異」：金框本身只抽倍數；盤面沒有收集、且帶倍數的金框有 2 個以上時，才有機會把其中一個變成收集（開局從全部倍數金框挑、掉落後從新掉下來的挑），所以收集出現時一定有其他倍數可收，盤面仍最多 1 個。變異機率 BG 100%、FG 50%；「收集沒用到就重抽」BG 取消、FG 維持 75%。結果（自然機率，一般押注，3×10⁵ 局，誤差大）：RTP 約 550%（超過 500% 目標，待壓）；BG Hit Rate 25.2%、R3 整條 1/16.6（使用率 48.9%）、收集 1/16.0（使用率 51.0%、平均 10.5x、≥20x 2.9%）；FG Hit Rate 60.8%、收集 1/3.0（使用率 59.6%、平均 6.7x）、整場沒用到收集 6.8%。卡片權重尚未依新自然機率重算。（11/20）</li>
         </ol>
       </article>
       </div>
@@ -3141,15 +3142,29 @@
 
     // ===== 彩罐熱舞 收集版：金框帶倍數或「收集」（COLLECT = -1）=====
     const COLLECT = -1;
-    function maybeCollect(picked, tableId) {
+    // 收集＝變異：盤面（得分列）沒有收集、且帶倍數的金框 ≥ 2 個時，依 collect_rate 抽一次，
+    // 抽中就把候選（開局＝所有帶倍數金框；掉落＝新掉下來的帶倍數金框）其中一個變成收集，所以出現當下至少還有 1 個倍數框
+    function mutateCollect(tableId, goldMask, multiMask, specialMask, candidates) {
+      let multi = 0;
+      for (let row = 0; row < DISPLAY_WINDOW_SIZE; row += 1) {
+        for (let col = 0; col < Box.reel_num; col += 1) {
+          if (multiMask[row][col] === COLLECT) return null;
+          if (isScoringRow(row) && goldMask[row][col] === 1 && multiMask[row][col] > 0) multi += 1;
+        }
+      }
+      const pool = candidates.filter(([row, col]) => isScoringRow(row) && goldMask[row][col] === 1 && multiMask[row][col] > 0 && specialMask[row][col] !== 1);
+      if (multi < 2 || !pool.length) return null;
       const rate = Number(Box.collect_rate?.by_table?.[tableId] || 0);
-      return Math.random() < rate ? { multiplier: COLLECT, multiplier_index: -1, rng_value: null, rng_total: null, collect: true } : picked;
+      if (!(Math.random() < rate)) return null;
+      const [row, col] = pool[randInt(pool.length)];
+      multiMask[row][col] = COLLECT;
+      return [row, col];
     }
 
     // 盤面（含頂端半列）最多同時 1 個「收集」：已有收集時新金框只抽倍數
     function pickInitialMultiplier(tableId, row, col, allowCollect = true) {
       const base = pickInitialMultiplierBase(tableId, row, col);
-      return allowCollect ? maybeCollect(base, tableId) : base;
+      return base;
     }
 
     function pickInitialMultiplierBase(tableId, row, col) {
@@ -3167,7 +3182,7 @@
       const base = usesReel3MultiplierTable(tableId, col)
         ? pickMultiplier(Box.weight_cum_multiple_r3_after, r3FullSrc)
         : pickMultiplier(Box.weight_cum_multiple_after, tableId);
-      return allowCollect ? maybeCollect(base, tableId) : base;
+      return base;
     }
 
     function serializeBoard(board, goldMask, multiMask, specialMask) {
@@ -3374,6 +3389,11 @@
         });
       });
 
+      const mutated = mutateCollect(tableId, goldMask, multiMask, specialMask, goldPositions);
+      if (mutated) {
+        const a = assignments.find((item) => item.row === mutated[0] && item.col === mutated[1]);
+        if (a) Object.assign(a, { multiplier: COLLECT, multiplier_index: -1, rng_value: null, rng_total: null, collect: true });
+      }
       return { special_pool: specialPool, assignments };
     }
 
@@ -3578,6 +3598,11 @@
           });
         }
       }
+      const mutated = mutateCollect(tableId, goldMask, multiMask, specialMask, dropEvents.filter((e) => e.event === "drop_fill" && e.is_gold).map((e) => [e.row, e.col]));
+      if (mutated) {
+        const e = dropEvents.find((item) => item.event === "drop_fill" && item.row === mutated[0] && item.col === mutated[1]);
+        if (e) e.multiplier_info = { multiplier: COLLECT, multiplier_index: -1, rng_value: null, rng_total: null, collect: true };
+      }
       return dropEvents;
     }
 
@@ -3602,10 +3627,10 @@
       let spin = null;
       for (let redraw = 0; redraw < 1000; redraw += 1) {
         spin = runSpinOnce(...args);
-        // 隱性重抽（config spin_reroll）：留著沒用到的收集、BG R3 整條用太少 → 依機率整轉重抽
+        // 隱性重抽（config spin_reroll）：留著沒用到的收集（BG／FG 分開：collect_left_bg／collect_left_fg）、BG R3 整條用太少 → 依機率整轉重抽
         const rr = Box.spin_reroll || {};
         const use = spin.use_stats;
-        let bad = use.collect_left > 0 && Math.random() < Number(rr.collect_left || 0);
+        let bad = use.collect_left > 0 && Math.random() < Number((spin.scene_name === "BG" ? rr.collect_left_bg : rr.collect_left_fg) ?? rr.collect_left ?? 0);
         if (!bad && use.r3_full && spin.scene_name === "BG" && use.r3_used / Math.max(1, use.r3_used + use.r3_left) < Number(rr.r3_use_min || 0)
           && Math.random() < Number(rr.r3_low_use || 0)) bad = true;
         if (!bad) return spin;
@@ -5008,10 +5033,10 @@
       appendLiveLog(`Config ${H026_ACTIVE_CONFIG.replace(/^config_|\.js$/g, "")} loaded | Version ${Box.excel_version || "--"} | Card System ${CARD_SYSTEM_ENABLED ? "On" : "Off"}`, "result");
     });
   </script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 17:18"; window.DEMOGAME_TUNING_CODE = "B4NJCH";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 13:31"; window.DEMOGAME_TUNING_CODE = "H5FZ2N";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框改帶倍數或「收集」", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "R3 整條金框同 H026：BG 隨機、FG 必定", "輪帶、賠率、倍數權重沿用 H026；金框與 Scatter 數量下修", "FG 連續沒中或累積倍數高時較容易中獎（隱性換表）", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
-  <script src="../demogame_common.js?v=20261120s"></script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞 1000（H026）", "expect": "盤面倍數越堆越多，等消到「收集」金框時一次全部收走。", "changes": ["金框帶倍數；盤面有 2 個以上倍數金框時，其中一個可能變成「收集」（不會單獨出現）", "倍數金框被消除時倍數累積（同 H026）；消到「收集」再把整個盤面的倍數收起來", "盤面最多同時 1 個「收集」，用掉後才會再出現", "被收集的倍數留在盤面，之後再消到「收集」可再收一次", "R3 整條金框同 H026：BG 隨機、FG 必定", "輪帶、賠率、倍數權重沿用 H026；金框與 Scatter 數量下修", "FG 連續沒中或累積倍數高時較容易中獎（隱性換表）", "收集到的倍數累積，Spin 結束乘總分（FG 不重置，同 H026）"]};</script>
+  <script src="../demogame_common.js?v=20261120u"></script>
 </body>
 
 </html>

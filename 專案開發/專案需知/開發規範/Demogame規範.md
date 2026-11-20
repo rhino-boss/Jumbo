@@ -17,7 +17,7 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 - 主入口固定為 `index.html`，使用相對路徑，雙擊即可離線執行。
 - Config 選單只列 Config 代號，不列 Profile，Demogame 不提供 Newbie：例如 `BaseA`、`BaseB`、`92A`、`94A`、`92A_BET100`、`92B`。
 - 卡片系統沒有獨立的開關，由 Config 選單決定：選 `Base` 為自然機率（卡片系統關），選 `92A` 等 Config 代號為卡片系統開（Oldhand）。
-- Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 的 RTP config（`94x`／`92x`／`92x_Bet100`）不放進選單，依玩家押注自動切換，規則同 Simulator 選 config：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲要把所選系列的全部 RTP config 都載入，換押注或換押注模式時立即換卡片權重（H032 為參考實作：`window.H032_RTP_SET`、`applyRtpTier()`）。上一條的 `92A`／`94A`／`92A_BET100` 寫法只適用還沒改的遊戲。
+- Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 的 RTP config（`94x`／`92x`／`92x_Bet100`）不放進選單，依玩家押注自動切換，規則同 Simulator 選 config：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲要把所選系列的全部 RTP config 都載入，換押注或換押注模式時立即換卡片權重（H032 為參考實作：`window.H032_RTP_SET`、`applyRtpTier()`；通用做法見第 2.5 節，每局開頭與押注／模式改變時依上述規則把對應 RTP config 的 `card_system` 套到基礎 config）。上一條的 `92A`／`94A`／`92A_BET100` 寫法只適用還沒改的遊戲。
 - Config 選單名稱帶產線編號（2026-11-20，所有遊戲適用）：產線編號依 `D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt`（`01` 菲律賓主流遊戲、`01_2` 菲律賓 landbase 轉製遊戲、`02` 美國、`03` 墨西哥）；**發想中的遊戲（還沒有市場）一律用 `99`**（例：`A-99-Base`、`A-99`，2026-11-20 使用者）。自然機率寫 `{A/B}-{產線編號}-Base`，卡片開寫 `{A/B}-{產線編號}`；依產線編號排序，同一產線內 Base 在前，例：`A-01-Base`、`B-01-Base`、`A-01`、`B-01`、`A-02-Base`、`A-02`…。Demo 用的 config（例 `120A_Demo`）寫 `{A/B}-{產線編號}-Demo`（例 `A-01-Demo`），排在最後（2026-11-20 使用者）。**A、B 共用同一份自然機率（只差卡片）時，B 的 Base 不列**，只留 `A-xx-Base`（遊戲宣告 `window.DEMOGAME_SHARED_BASE = true`）。遊戲宣告 `window.DEMOGAME_PRODUCT_LINE = "01"` 後共用 `demogame_common.js` 就照這個格式顯示；同一款有多條產線時，在原生 `#configSelect` 的 `<option>` 加 `data-line`。遊戲程式不可依選項文字判斷要載入哪份 config（用選項的 value）。
 - 自然機率只依基礎數學 Variant 區分，與 RTP 家族無關：只有一套時顯示 `Base`；有 A／B 兩套時顯示 `BaseA`、`BaseB`。
 - 標題列右側固定放「數值報告」（有報告時）、「說明」、「重置」三個文字按鈕（無底色、無外框，滑過才顯示底色），字型與標題相同，標題列高 44px；數值報告在同一分頁開啟。
@@ -61,6 +61,30 @@ Game Rule、Demogame 與 Help 的遊戲類型統一使用以下格式：
 
 目前正式遊戲沒有使用 `Cluster Pay`；日後只有實際採相鄰群集判獎的遊戲才能列入此類。
 
+### 1.2 名詞定義
+
+本規範提到某款遊戲（例：「參考實作 H032」）時只是範例，規則本身以本文件文字為準；沒有其他遊戲可參考時，照本文件的定義與第 2.4～2.8 節的介面即可做出 Demogame。
+
+| 名詞 | 定義 |
+| --- | --- |
+| BG／FG | Base Game（主遊戲）／Free Game（免費遊戲）。 |
+| NB／EB／BF／SF | 押注模式代號：Normal Bet（一般押注）、Extra Bet（額外押注，成本為底注 × `cost_multiplier`，例 2x）、Buy Feature（購買特色，直接進 FG，價格為底注 × 購買倍數）、Super Feature（超級特色，較高價的購買）。Log、RNG 碼、倍率線型都用這四個代號。遊戲內部的模式值建議 `0`＝NB、`1`＝EB、`2`＝BF、`3`＝SF。 |
+| 底注／實際押注 | 底注＝押注選單（Bet Stepper）上的金額；實際押注＝底注 × 該模式成本倍數。倍數一律＝得分 ÷ 實際押注，但 BF／SF 的倍率線型與 FG 看板用得分 ÷ 底注。 |
+| 自然機率 | 不經卡片系統、直接依 Config 的輪帶／權重抽出的結果（Config 選單的 `Base`）。 |
+| 卡片系統（Card System） | 先依 RTP config `card_system` 的卡片權重抽一張卡（一個倍率區間 `(min, max]`，或特殊類型），再以自然機率重抽整局直到倍數落在該區間；重抽上限為 `retry_limit`，超過記一次 Retry Limit Exceeded。細節以《模擬程式規範》為準，Demo 必須與 Simulator 同邏輯。 |
+| Profile（Oldhand／Newbie） | 卡片組：老手／新手。Demogame 只用 Oldhand，不提供 Newbie。 |
+| Config／RTP config | `config.js`＝基礎數學（輪帶、賠率、自然機率），全域變數名以 `_CONFIG` 結尾（例 `window.H0xx_CONFIG`）；`config_<RTP><Variant>[_Bet100].js`＝卡片權重（RTP config，例 `config_92A.js`），內含 `card_system`。欄位定義見《數學模型規範》。 |
+| 系列（Variant）A／B | 同一款遊戲的兩組卡片權重版本；Config 選單只讓操作者選系列。 |
+| 小／中／大 Bet | 依押注自動選的 RTP config：小 Bet＝`94x`、中 Bet＝`92x`、大 Bet＝`92x_Bet100`（判定規則見第 1 節）。 |
+| 版本（四碼） | `遊戲參數.卡片權重.SCR.其他文件`，例 `7.0.1.0`；版本清單在 `Versions/version_manifest.js`（`current`、`versions[].version`、`versions[].configs`）。 |
+| Cascade（連消） | 中獎符號消除、補牌後再判獎的流程；一局內的消除次數稱 Cascade 次數。 |
+| 輪帶類／掉落類遊戲 | 輪帶類＝Spin 時每輪是一條輪帶捲動停輪；掉落類＝Spin 時舊盤整欄掉出、新盤整欄掉入（通常是 Pay Anywhere 或消除掉落的遊戲）。新遊戲屬哪一類依 `game_rule.md` 的盤面表現決定，不確定時問使用者。 |
+| RNG 碼 | 可重現一局的字串 `<Config-Profile>/<NB|EB|BF|SF>/<on|off>/<選項|->/<8 碼十六進位種子>`，見第 5 節。 |
+| 腳本 | Set RNG 區的情境下拉（例：連消 5 次以上、有觸發 FG）；選了之後每局用自然機率重抽到符合條件。 |
+| 標準 64 區間 | 倍率分布用的 64 個 `(下限, 上限]` 區間；邊界定義在 `demogame_common.js`，遊戲只要傳倍數。 |
+| 產線編號 | `01` 菲律賓主流、`01_2` 菲律賓 landbase 轉製、`02` 美國、`03` 墨西哥、`99` 發想中（第 1 節）。 |
+| peek 列／Jumbo／Extra Reel | 遊戲專屬盤面元素：只露出一部分的格子列、占多格的大符號、主盤面外的額外輪；有才需要處理。 |
+
 ## 2. 共用區域與 By Game 區域
 
 圖示中的遊戲顯示區域屬於 By Game 設計；除此之外的 Demogame 區域均為所有遊戲共用。
@@ -92,7 +116,7 @@ By Game 區域必須：
 - Play：Spin、Auto、Bet Stepper、Speed。
 - Bet Mode 的容器、共用互動與狀態樣式；實際支援模式及倍率由 Config 決定。按鈕字體、大小一致、字一律白色：NB／EB 為切換鈕（選取中用「自動」鈕的深綠底白字），BF／SF 為購買鈕，用 SPIN 的藍底白字（共用模組依按鈕文字判斷）。
 - Debug Mode、Set RNG、Log 與歷史紀錄（Spin Result 面板與 Force FG 已停用，由共用模組隱藏；Reel RNG 停輪面板已拿掉，改用統計區的 BG／FG 最大倍數）。
-- 遊戲發想的 Demo 必須在 Set RNG 區最左邊加「腳本」下拉（同 H032／H045）：選項為「無」＋觸發本作特色的情境（例：連消 5 次以上、各新特色發生、有觸發 FG、FG 100x 以上），選了之後每次 Normal／Extra Spin 用自然機率重抽到符合條件（不改權重；BG 情境要求不觸發 FG；抽不到用最後一把並在 Log 註記），按 Reset 才清；腳本局不計入倍率線型；RNG 選項欄記腳本 key，照碼可重現。
+- 遊戲發想的 Demo 必須在 Set RNG 區最左邊加「腳本」下拉（`#scriptSelect`，第一個選項 value 為空字串；參考實作 H032／H045）：選項為「無」＋觸發本作特色的情境（例：連消 5 次以上、各新特色發生、有觸發 FG、FG 100x 以上），選了之後每次 Normal／Extra Spin 用自然機率重抽到符合條件（不改權重；BG 情境要求不觸發 FG；抽不到用最後一把並在 Log 註記），按 Reset 才清；腳本局不計入倍率線型；RNG 選項欄記腳本 key，照碼可重現。
 - Setting：Version、Config／Profile、Language、Help、Reset。
 - Language：共用區的固定英文標籤由 `demogame_common.js` 依 `#languageSelect` 統一切換中英（整段完全相同才替換）；By Game 區域與遊戲專屬文字仍由各遊戲自行翻譯，切回 English 必須還原。
 - 共用彈窗、按鈕狀態、欄位樣式、響應式版面、無障礙與錯誤顯示。各區塊上下、左右間距一律 10px（含盤面與右欄、頁尾與設定區），頁尾文字置中、用區域標題的說明色。字體統一：所有按鈕 12px 粗體；Debug 的 Previous／Next 兩顆同款（深藍底、細框、淺色字，共用 `demogame_common.js` 套用）；設定區文字標籤 12px 一般字重、下拉選項同按鈕；有名稱的區域標題 12px 粗體、說明色、不轉大寫，標題列滿版、下方加一條分隔線（同紀錄區）；遊戲區不顯示標題。倍率線型、紀錄、版本紀錄的標題後有「+」，點下去用彈窗顯示完整內容（倍率線型為大圖），彈窗高度貼齊內容（最高 92vh，超過在框內捲動），不留大片空白，可按 ⟳ 旋轉 90°（寬高對調後滿版）；直式手機放大倍率線型時一開就是橫的，紀錄與版本紀錄維持直式，關閉後放回原位；所有捲軸隱藏但保留上下捲動。
@@ -147,6 +171,287 @@ Slots/
 - 得分符號只把外框換成藍色框起來（金框符號得分時保留金框、外圈加藍框）（共用 `demogame_common.js` 套用），不放大、不閃、不跳；各遊戲不得另做中獎動畫。消除與掉落動畫不受影響。
 - Hook：框線本身屬規則狀態、且沒有對應美術時（例如純 CSS 的金框），在該格加 `keep-symbol-frame` 保留框線。金框若已有美術（例如 Frame 圖或金框版符號圖），不得再疊加 CSS 框。
 
+### 2.4 最小 index.html 骨架
+
+共用模組靠固定 id 找元素，**下列 id 不可改名**；其餘區塊可依遊戲增加。共用區的固定標籤一律寫英文（Credit、Spin、Bet Mode…），中文由共用模組依語言翻譯；By Game 文字由遊戲自己翻。範例中的 `H0xx`、文字與數值都是佔位。
+
+```html
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>H0xx 遊戲名稱 Demo</title>
+  <style>/* By Game 樣式：只寫盤面、符號、狀態膠囊、FG 看板等第 2.1 節範圍 */</style>
+  <link rel="stylesheet" href="../demogame_common.css?v=YYYYMMDDa">
+</head>
+<body class="slot-simulator">
+  <main class="phone">
+    <div id="feature-bar">                                   <!-- 標題列；共用模組把報告／說明／重置搬到右側 -->
+      <span id="game-title"><span id="gameId">線上 Game ID</span> <span id="gameName">英文名稱</span></span>
+    </div>
+    <div id="strip-bar">                                     <!-- 狀態列（共用模組隱藏，只把 #multPill／#sumPill 鏡射到盤面上方資訊條） -->
+      <div class="feature-strip" id="featureDisplay">
+        <span id="modeText">Base Game</span>
+        <span id="featureStatus"></span>
+        <span class="feature-pill hidden" id="multPill"><span class="k">Multiplier</span><span class="v" id="multValue">x1</span></span>
+        <span class="feature-pill hidden" id="fgLeftPill"><span class="k">FG Left</span><span class="v" id="fgLeftValue">0/0</span></span>
+      </div>
+    </div>
+    <div id="app-shell">
+      <section id="grid-panel">
+        <div class="board-shell"><div class="board-grid" id="board"><!-- 每格 <div class="cell">…</div> --></div></div>
+        <div class="message-bar" id="messageBar">Ready — press Spin</div>
+      </section>
+      <aside id="right-panel">                               <!-- 共用模組把下面三區搬到盤面下方 -->
+        <section id="credit-bar">
+          <div class="credit-cell"><span class="i-label">Credit</span><span class="i-value hi" id="balanceValue">10,000</span></div>
+          <div class="credit-cell"><span class="i-label">Bet</span><span class="i-value" id="betValue">1.00</span></div>
+          <div class="credit-cell"><span class="i-label">Win</span><span class="i-value hi" id="winValue">0</span></div>
+        </section>
+        <section id="play-panel" class="control-zone action-zone">
+          <span class="zone-label">Play</span>
+          <div class="zone-body play-main-controls">
+            <button id="spinBtn" type="button">Spin</button>
+            <button id="autoBtn" type="button">Auto</button>
+            <div class="bet-stepper">
+              <button id="betMinusBtn" type="button">&minus;</button>
+              <button id="betBtn" type="button">Bet 1.00</button>
+              <button id="betPlusBtn" type="button">+</button>
+              <div class="bet-menu hidden" id="betMenu" role="listbox"></div>
+            </div>
+            <label class="speed-control" for="speedRange">Speed
+              <input id="speedRange" type="range" min="1" max="5" step="1" value="1"><span id="speedValue">x1</span></label>
+          </div>
+          <div id="play-debug-controls" class="zone-body play-debug-controls debug-hidden">
+            <button id="previousStepBtn" type="button" disabled>&#9664;&#9664; Previous</button>
+            <button id="nextStepBtn" type="button" disabled>Next &#9654;&#9654;</button>
+          </div>
+        </section>
+        <section id="bet-mode-panel" class="control-zone mode-zone">
+          <span class="zone-label">Bet Mode</span>
+          <div class="zone-body">                            <!-- 只放遊戲實際有的模式 -->
+            <button class="mode-btn is-active" id="normalBetBtn" type="button">Normal Bet</button>
+            <button class="mode-btn" id="extraBetBtn" type="button">Extra Bet (2x)</button>
+            <button id="buyFeatureBtn" type="button">Buy Feature (50x)</button>
+            <button id="superFeatureBtn" type="button">Super Feature (200x)</button>
+          </div>
+        </section>
+        <section id="simulation-stats">
+          <h3>Simulation Stats</h3>                          <!-- 共用模組改名「基本指標」 -->
+          <div class="simulation-row"><span class="s-label">Total Rounds</span><span class="s-value" id="roundCountValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">RTP</span><span class="s-value" id="rtpValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">Hit Rate</span><span class="s-value" id="hitRateValue">0.00%</span></div>
+          <div class="simulation-row"><span class="s-label">FG Trigger</span><span class="s-value hi" id="fgTriggerValue">0</span></div>
+          <div class="simulation-row"><span class="s-label">Max Multiplier</span><span class="s-value hi" id="maxMultiplierValue">x0</span></div>
+          <div class="simulation-row" data-by-game><span class="s-label">特殊指標名稱</span><span class="s-value" id="xxxValue">0.00%</span></div>
+        </section>
+      </aside>
+    </div>
+    <section id="controls" class="debug-off">
+      <div id="set-rng-panel" class="control-zone set-rng-zone debug-hidden">
+        <span class="zone-label">Set RNG</span>
+        <div class="zone-body set-rng-controls">
+          <label class="debug-rng-field" for="cardRangeSelect">Card BG Range
+            <select id="cardRangeSelect"><option value="">Auto</option></select></label>   <!-- 有卡片系統才放 -->
+          <label class="debug-rng-field" for="scriptSelect">腳本
+            <select id="scriptSelect"><option value="">無</option></select></label>       <!-- 遊戲發想必放 -->
+          <label class="debug-rng-field" for="rngInput">RNG
+            <input id="rngInput" type="text" autocomplete="off" spellcheck="false"></label>
+          <button id="setRngResetBtn" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+    <section id="live-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="live-log-header diagnostic-header"><span>Log</span><button id="clearLogBtn" type="button">Clear</button></div>
+      <div id="liveLogBody" role="log" aria-live="polite"></div>
+    </section>
+    <section id="change-log-wrap" class="diagnostic-region debug-only debug-hidden">
+      <div class="diagnostic-header">版本紀錄</div>
+      <div id="changeLogBody"><!-- 第 7 節：<article class="change-log-entry"><h4>v1（1.0.0.0）</h4><ol><li>…（MM/DD）</li></ol></article> --></div>
+    </section>
+    <section id="settings-wrap" class="diagnostic-region">
+      <div class="setting-header diagnostic-header">Setting</div>
+      <div class="setting-body">
+        <label class="setting-toggle" for="debugModeInput"><input id="debugModeInput" type="checkbox"> Debug Mode</label>
+        <label class="config-control" for="versionSelect">Version <select id="versionSelect"></select></label>
+        <label class="config-control" for="configSelect">Config <select id="configSelect"></select></label>
+        <label class="config-control" for="languageSelect">Language
+          <select id="languageSelect"><option value="zh">繁中</option><option value="en">English</option></select></label>
+        <button id="helpBtn" type="button">Help</button>
+        <button id="resetBtn" type="button">Reset</button>
+      </div>
+    </section>
+    <div class="footer-note"></div>                          <!-- 共用模組寫入最後調性更新／唯一碼 -->
+  </main>
+  <dialog id="helpDialog">
+    <div class="help-dialog-shell">
+      <div class="help-dialog-header"><h2 id="helpDialogTitle">Game Help</h2><button id="closeHelpBtn" type="button">Close</button></div>
+      <div id="helpContent" class="help-content"></div>
+    </div>
+  </dialog>
+  <script id="embeddedGameHelpMarkdown" type="text/plain">（game_help_draft.md 全文，格式見 2.8）</script>
+  <script src="./Versions/version_manifest.js?v=YYYYMMDDa"></script>
+  <script>/* ① 選版本與系列、依序載入 config（見 2.5），同步填 #versionSelect／#configSelect */</script>
+  <script>/* ② 遊戲主程式：Render、動畫、狀態、共用介面（見 2.6） */</script>
+  <script>/* ③ window.DEMOGAME_* 宣告（見 2.6） */</script>
+  <script src="../demogame_common.js?v=YYYYMMDDa"></script>
+</body>
+</html>
+```
+
+- 共用模組會自行建立：Config 合併選單 `#demogameConfigSelect`、隱藏的卡片開關 `#cardSystemInput`、「顯示符號 ID」`#symbolIdInput`、特殊指標區 `#by-game-stats`、玩法簡介 `#demogame-overview`、累積倍率線型 `#demogame-cumulative-chart`、Simulation 面板 `#batch-simulation`、盤面上方資訊條 `#demogame-info-bar`、標題列按鈕 `#demogameTitleActions`、導覽、圖片預載遮罩。遊戲**不要**自己做這些元素。
+- 已停用、不必放的舊元素：Spin Result 面板 `#log-wrap`、Force FG `#forceFgInput`、Profile 選單 `#cardProfileSelect`（放了也會被共用模組隱藏）。
+- `#messageBar` 是 By Game 區域，但樣式由共用模組統一；`.debug-hidden`、`.hidden` 由共用 CSS 定義為隱藏。
+
+### 2.5 載入順序與生命週期
+
+1. `<head>` 先放 By Game `<style>`，再載入 `../demogame_common.css`。
+2. `<body>` 依序：骨架 HTML → Help 原文 → 版本清單 → config 載入 → 遊戲主程式 → `DEMOGAME_*` 宣告 → **最後一行**才載入 `../demogame_common.js`。共用模組載入當下就讀 DOM 與 `window.DEMOGAME_*`、`window.demogameSimulationModes` 等，所以這些都必須在它之前定義；`demogameSimulateRound`、`demogameAddCredit` 也要在它之前或同一個同步流程內定義。
+3. config 載入（同步，用 `document.write('<script src=…>')` 或直接 `<script src>`）：
+   - 讀 `Versions/version_manifest.js`，依網址 `?version=` 選版本（預設 `current`）；目前版本讀根目錄 config，舊版本讀 `Versions/<版本>/` 的封存 config。
+   - 依 `?config=`（或 localStorage 記憶）選系列 A／B；載入基礎 `config.js` 後，把該系列小／中／大 Bet 三份 RTP config 依序載入並存成一組（例 `window.H0xx_RTP_SET = { small, mid, big }`），先套中 Bet 的 `card_system` 到基礎 config。`Base` 只載基礎 config。
+   - 檢查：基礎 config 的 `excel_version` 必須等於版本第 1 碼、RTP config 版本第 1 碼與基礎 config 相同、`game_id` 一致、RTP config 有 `card_system`；不符就 `throw new Error(…)`（第 1 節：不得靜默使用舊值）。
+   - 同一段同步填 `#versionSelect`（每個版本一個 `<option value="四碼版本">`）與 `#configSelect`（每個系列一個 `<option value="A">A</option>`；有 Demo config 再加一個，value 含 `Demo`；多產線時加 `data-line`）；兩者的 `change` 都改網址參數後重新載入頁面。
+4. 遊戲主程式啟動時：檢查必要 config 欄位（缺就 `throw`）、畫初始盤面、寫第一行 Log `Config <名稱> loaded | Version <版本> | Card System On|Off`（重置時共用模組會只保留這一行）。
+5. 每一局（含 FG）流程：鎖住 `#spinBtn`（`disabled = true`）→ 取 RNG 碼 → 在 `demogameRng.run()` 內一次算完整局結果 → 播動畫（時間全部取 `demogameMotion`）→ 更新 Credit／Win／統計 → 呼叫 `demogameLineChart.record()`、`demogameHistory.record()` → `await demogameRoundPause()` → 解鎖 `#spinBtn`。長按 Spin、Auto 都靠 `#spinBtn.disabled` 判斷「這局結束了沒」，所以忙碌期間一定要 disabled。
+
+### 2.6 遊戲端必須提供的介面
+
+**全域宣告（在載入 `demogame_common.js` 前設定）**
+
+| 名稱 | 型別 | 必要性 | 說明 |
+| --- | --- | --- | --- |
+| `window.<ID>_CONFIG` | object | 必要 | 基礎 config；名稱以 `_CONFIG`（或 `_BOX_DATA`）結尾，共用模組從這裡找 `card_system`、`excel_version`、`rtp_label`、`reel_num`、`window_size`、`paylines`。選卡片開時把目前 RTP config 的 `card_system`、`rtp_label` 寫回這個物件。 |
+| `DEMOGAME_PRODUCT_LINE` | string | 必要 | 產線編號，例 `"01"`；發想中 `"99"`。 |
+| `DEMOGAME_SHARED_BASE` | boolean | A／B 共用自然機率時 | `true` 時 Config 選單只列 A 的 Base。 |
+| `DEMOGAME_CARD_SYSTEM_SUPPORTED` | boolean | 選用 | `false` 時強制沒有卡片系統（只列 Base）。 |
+| `DEMOGAME_VERSION_OVERRIDE` | string | 沒有 `#versionSelect` 選項時 | 版本選單顯示值；否則依序取 config 的 `excel_version`／`game_version`／`version`。 |
+| `DEMOGAME_IMAGE_TOGGLE` | object | 有符號圖（含 emoji）時必要 | `{ supported: true, defaultEnabled: true, images: [網址…] 或 () => [網址…], setEnabled(enabled, { initial }) }`；`setEnabled` 切換是否輸出符號圖並重繪目前盤面（第 2.3 節）。 |
+| `DEMOGAME_SYMBOL_ART` | `{ 代號: 網址 }` | 有符號美術時 | Help 賠率表、特殊符號卡片、內文 `[代號]` 小圖用。 |
+| `DEMOGAME_SYMBOL_ID` | `(cell) => string \| null` | 選用 | 「顯示符號 ID」取代號的自訂函式；不設就依第 2.3 節的順序找。 |
+| `DEMOGAME_HISTORY` | boolean | 必要 | `true` 時統計區出現 BG／FG 最大倍數。 |
+| `DEMOGAME_REPORT_URL` | string | 有 `report.html` 時 | 例 `"./report.html"`。 |
+| `DEMOGAME_LAST_TUNING`、`DEMOGAME_TUNING_CODE` | string | 必要 | 第 5 節。另可設 `DEMOGAME_LAST_CODE`（程式最後調整）、`DEMOGAME_LAST_UPDATE`（任何東西最後調整），有設才多顯示一行。 |
+| `DEMOGAME_OVERVIEW` | object | 必要 | `{ competitor, expect, changes: [...], label?: "base", en?: { expect, changes } }`（第 5 節玩法簡介）。 |
+| `DEMOGAME_INFO_BAR` | boolean | 選用 | 設 `false` 不用共用的盤面上方資訊條（遊戲自己有倍數條時）。 |
+| `DEMOGAME_WAY_BOARD`、`DEMOGAME_WAY_SHAPE`、`DEMOGAME_PAYLINES` | 見第 4 節 | config 讀不到盤面／賠付線時 | Help 走線圖用。 |
+| `demogameSimulationModes` | `[{ value, label }]` | 必要 | Simulation 面板的押注模式選單，只列實際支援的模式。 |
+| `demogameSimulationBets`、`demogameSimulationBetDefault` | `[{ value, label }]`、`() => value` | 有小中大 Bet 時 | Simulation 面板的押注大小選單與預設值。 |
+| `demogameSimulateRound` | `({ mode, bet }) => result \| Promise<result>` | 必要 | 第 5 節；`result` 欄位：`multiplier`、`lineMultiplier`、`fgTriggered`、`maxMultiplier`、`retryLimitExceeded`、`retryCount`、`bgCascade`、`fgCascades`（陣列）。沒有消除的遊戲不回 `bgCascade`／`fgCascades`，面板就隱藏消除分布。 |
+| `demogameAddCredit` | `(n) => void` | 必要 | 餘額加 n（顯示金額，依內部單位換算）並重畫。 |
+
+**DOM 狀態約定（遊戲要維持，共用模組靠這些判斷）**
+
+| 狀態 | 遊戲要做的事 |
+| --- | --- |
+| 盤面格子 | `#board` 底下每格一個 `.cell`；有符號圖的格子加 `has-symbol-art`；得分格加 `hit`（共用模組畫藍框）；純 CSS 金框加 `gold`（或 `special-gold`）與 `keep-symbol-frame`；無圖時代號放在 `.slot-symbol-label`（或 `.symbol-code`）裡。 |
+| FG 中 | 進 FG 時 `document.body.classList.add("fg-mode")`，回 BG 時移除。 |
+| 忙碌中 | 一局進行中 `#spinBtn.disabled = true`，結束才解除。 |
+| 押注模式 | 目前模式的按鈕加 `is-active`；不支援的模式按鈕 `disabled` 並加 `is-locked`。按鈕 id 固定：`normalBetBtn`、`extraBetBtn`（第二種 EB 用 `extraBet2Btn`）、`buyFeatureBtn`、`superFeatureBtn`（或 `buySuperFeatureBtn`）。 |
+| 特色結束 | FG 結算看板關閉、回到 BG 後 `document.dispatchEvent(new Event("dg-feature-end"))`。 |
+| 結算看板 | 看板元素加 `data-hold-stop` 屬性（第 5 節）。 |
+| Debug Mode | `#debugModeInput` 勾選時，移除 `.debug-only`、`#set-rng-panel`、`#play-debug-controls` 的 `debug-hidden`，並把 `#controls` 的 `debug-off` 拿掉；取消勾選時加回。 |
+| 倍數膠囊 | 有需要顯示在盤面上方的倍數時，放在 `#strip-bar` 裡的 `#multPill`（或 `#sumPill`）：`<span class="k">名稱</span><span class="v">值</span>`，不顯示時加 `hidden`。 |
+| 特殊指標 | 統計區的非共用列加 `data-by-game`（共用列只有 `roundCountValue`、`rtpValue`、`hitRateValue`、`fgTriggerValue`、`maxMultiplierValue` 五個）。 |
+
+**遊戲要監聽的事件**
+
+| 來源 | 遊戲要做的事 |
+| --- | --- |
+| `#configSelect` 的 `change` | 共用合併選單選了系列後，會把值寫回 `#configSelect` 並發出 `change`：遊戲改網址 `?config=` 重新載入，或直接換 config。不可依選項文字判斷。 |
+| `#cardSystemInput` 的 `change`／`document` 的 `demogame:card-system-change`（`detail.enabled`） | 卡片系統開關改變；也可在每局開頭讀 `window.DEMOGAME_CARD_SYSTEM_ENABLED`。 |
+| `#resetBtn` 的 `click` | 遊戲清自己的統計、餘額、盤面與 FG 狀態。共用模組同時會清倍率線型、BG／FG 最大倍數、腳本、RNG 欄、Simulation 累積，並連按 `#betMinusBtn` 把押注退回第一檔。 |
+| `#languageSelect` 的 `change`（值 `zh`／`en`） | 重寫 By Game 文字；共用區文字由共用模組處理。 |
+| `#rngInput` 的 `input`、`#cardRangeSelect`／`#scriptSelect` 的 `change` | 同步遊戲內的指定狀態（互斥清除由共用模組處理，被清的欄位也會發事件）。 |
+
+### 2.7 共用模組 API 一覽
+
+`demogame_common.js` 載入後提供下列 API（遊戲在執行期呼叫，建議寫成 `window.xxx?.()` 以免單獨開檔時出錯）：
+
+| API | 參數／回傳 | 用途與呼叫時機 |
+| --- | --- | --- |
+| `demogameMotion.level()` | → 1～5 | 目前 Speed（讀 `#speedRange`）。 |
+| `demogameMotion.reelSpinMs()`、`stopStaggerMs()`、`dropMs()`、`growMs()` | → 毫秒 | 動畫時間（第 4 節數值）；所有轉輪、掉落、長出來的時間都從這裡取。 |
+| `demogameMotion.grow(cells)` | 格子陣列 → 毫秒 | 原地補牌的新符號套「長出來」動畫。 |
+| `demogameMotion.dropSpin(board, columnsOf, render)` | → Promise | 掉落類遊戲的 Spin 動畫：`columnsOf()` 回傳每欄由上到下的 `.cell` 陣列，`render()` 同步畫出結果盤面；函式先複製舊盤、呼叫 `render()`，再播舊盤掉出、新盤掉入。 |
+| `slotBuildDropMotion(rows, cols, cleared)` | `rows`＝列數或每欄列數陣列，`cleared`＝`[[row, col], …]` → `{ "row-col": { type: "new", rows, groupSize } \| { type: "settle", rows } }` | 掉落補牌時算出每格是新符號（從上方掉入）還是既有符號下移幾格。 |
+| `demogameRoundPause()` | → Promise | 每一轉算完分後呼叫（500 ms；長按連續 Spin 時 250 ms）。 |
+| `demogameRng.takeInput()` | → `null` 或 `{ config, mode, card, opts, seed }`；格式錯誤會 `throw` | 每局開頭呼叫：有填 RNG 碼就用它的 `seed` 與 `opts`，沒有就 `demogameRng.newSeed()`。 |
+| `demogameRng.run(seed, fn)` | → `fn()` 的回傳 | 執行期間 `Math.random` 換成種子序列；整局結果（BG＋全部 FG）必須在 `fn` 內同步算完，表演用亂數放在外面。 |
+| `demogameRng.format({ config, mode, card, opts, seed })`、`parse(text)`、`seeded(seed)` | 字串／物件／亂數函式 | 產生 Log 的 `RNG <碼>`、解析碼、取得獨立的種子亂數。 |
+| `demogameLog(text, type)` | `type`＝`info`／`mode`／`rng`／`result`／`cascade`／`error` | 寫一行 Log（新的在上、最多 500 行）；行格式見第 5 節。`RNG <碼>` 行會自動變成可點。 |
+| `demogameLineChart.record(multiplier, "NB" \| "EB")`、`setMode(mode \| null)`、`reset()` | — | 每局（含 FG）結束記一次累積倍率線型；BF／SF 不記。押注模式按鈕沒有 `is-active` 時用 `setMode()` 告知目前模式。 |
+| `demogameHistory.record({ bg, fg })`、`reset()` | 倍數（÷ 底注） | BG 局結束記 `bg`、FG 結束記 `fg`。 |
+| `demogameWinLines.draw(container, lines)`、`clear(container)` | `lines`＝`[[cell, cell, …], …]` | 連線遊戲畫得分線（第 4 節）；盤面重畫後要重畫。 |
+| `demogameFxTarget(id)` | → 元素 | 飛行動畫的目標（第 5 節）。 |
+| `demogameSharedText(english)` | → 依語言的字串 | 取共用字典的翻譯（遊戲要顯示共用術語時用）。 |
+| `demogameTagSymbols()` | — | 遊戲自己的動畫重畫盤面後立即套用無圖符號配色。 |
+| `DemogameImagePreload.preload(urls)` | → `Promise<{ failed }>` | 額外圖片要預載時用（一般只要填 `DEMOGAME_IMAGE_TOGGLE.images`）。 |
+| `demogameGuide()` | — | 手動開始新手導覽。 |
+| `slotBindCommonControls(actions)` | `{ spin, toggleAuto, normalMode, extraMode, buyFeatureMode, betMinus, betPlus, toggleBetMenu, speedChange, previousStep, nextStep, debugChange, resetRng, clearLog, reset, configChange, languageChange, openHelp, closeHelp, rngChanged, documentClick }` | 選用：一次把骨架上的固定按鈕綁到遊戲函式。 |
+| `slotFx` | `ensureLayer`、`popCells`、`spawnCoins`、`multiPop`、`winFloat`、`totalWin`… | 選用特效圖層；不得用來做中獎強調（第 2.3 節）。 |
+
+共用模組設定的唯讀狀態：`window.DEMOGAME_CARD_SYSTEM_ENABLED`（卡片系統是否開）、`window.DEMOGAME_SYMBOL_IMAGES_ENABLED`（符號圖是否在用）、`window.demogameSpaceHolding`（是否正在長按連續 Spin）、`window.__demogameImageCache`（已預載的 Image 物件）。
+
+### 2.8 Help 資料格式
+
+Help 原文＝專案的 `game_help_draft.md`，整份貼進 `<script id="embeddedGameHelpMarkdown" type="text/plain">`（雙擊離線開啟時讀不到外部 .md）。格式：
+
+```markdown
+## PAYTABLE                      ← 區塊（## 開頭；名稱含 Meta 的區塊不顯示）
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 主要標題 | 符號賠付值 | SYMBOL PAYOUT VALUES |
+| 規則說明 | ▪ 所有符號必須由最左至右連續出現，方可獲獎。 | ▪ ALL WINS MUST BE ON CONSECUTIVE REELS FROM LEFTMOST TO RIGHT. |
+
+### WILD SYMBOL                  ← 小節（### 開頭）
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 百搭符號 | WILD SYMBOL |
+| 規則說明 | ▪ [WW] 可替代除 [C1] 以外的所有符號。 | ▪ [WW] SUBSTITUTES FOR ALL SYMBOLS EXCEPT [C1]. |
+
+### 賠率表                        ← 小節名稱固定「賠率表」；副標題表之後先「繁中：」再「英文：」各一張賠率表
+
+| Item | 繁中 | 英文 |
+| --- | --- | --- |
+| 副標題 | 賠率表 | PAYTABLE |
+
+繁中：
+
+| 符號 | {5} 連 | {4} 連 | {3} 連 |
+| --- | ---: | ---: | ---: |
+| [M1] | {250} | {150} | {50} |
+
+英文：
+
+| SYMBOL | {5} OF A KIND | {4} OF A KIND | {3} OF A KIND |
+| --- | ---: | ---: | ---: |
+| [M1] | {250} | {150} | {50} |
+```
+
+- 每列第一欄 `Item` 只有三種：`主要標題`（區塊標題）、`副標題`（小節標題）、`規則說明`（一條規則，前面的 `▪` 會被去掉改成共用圓點）。
+
+- `[代號]` 會換成符號小圖、`{數字}` 只是強調標記（顯示時去掉大括號）、`[走線圖-…]` 佔位列見第 4 節。賠率表數字是以 `base_bet` 為底的派彩，顯示時換算成目前押注（數字 ÷ `base_bet` × 目前底注），押注改變時重算。
+- 遊戲在按 `#helpBtn` 時解析上面的 md，依目前語言輸出到 `#helpContent`，DOM 結構固定如下，之後的版式（置中、特殊符號卡片、兩欄符號卡片、內嵌小圖、走線圖）都由共用模組自動套用：
+
+```html
+<section class="help-section">
+  <h3 class="help-section-title">區塊標題</h3>
+  <div class="help-rule"><div class="help-rule-zh">規則一條</div></div>   <!-- 英文用 help-rule-en -->
+  <h4 class="help-group-title">小節標題</h4>
+  <div class="help-rule"><div class="help-rule-zh">…</div></div>
+  <div class="help-payout-table">                                         <!-- 賠率表：第一列表頭，第一欄符號代號 -->
+    <div class="help-payout-row"><div class="help-payout-cell">Symbol</div><div class="help-payout-cell">5</div>…</div>
+    <div class="help-payout-row"><div class="help-payout-cell">M1</div><div class="help-payout-cell">5.00</div>…</div>
+  </div>
+</section>
+```
+
+- 讀不到 md 時（第 4 節「Help 至少要有賠率表」），遊戲要用 config 的賠率依目前押注自己組出上面的 `help-payout-table`；共用模組內建的備援（在 `#helpContent` 放 `.help-load-error` 且有 `window.data.pay_table` 時）只支援全盤計數型賠率表，不可依賴。
+
 ## 3. 補牌方式
 
 每款有消除機制的遊戲，必須在 Game Rule、Config 對應說明與 Demogame 中指定唯一補牌方式。Simulator 與 Demogame 必須使用相同邏輯。
@@ -176,7 +481,12 @@ Slots/
 - Bet 顯示與 Credit 扣款使用實際模式成本；Win 依流程即時更新：每次消除得分就加上去（BG 局與每轉 FG），局末數值與結算相同；觸發 FG 那局（含 BF 入場盤）的 BG 得分要累積進 FG，FG 期間 Win＝觸發局 BG 得分＋FG 累計，FG 結束時等於整局總得分；Debug 的 Previous／Next 逐步檢視時，Win 同步顯示該步的累計得分。
 - Auto、Speed、Reset 不得改變 RNG、得分或統計結果。
 - Speed 為 1～5 五階：1～4 階轉輪由左到右逐輪停；第 5 階不逐輪停，Spin 後所有轉輪同時到位（BG、FG、Respin 皆同）。
-- 轉輪滾動一律照 H020 超級寶石的滾法：每輪是一條連續往下捲動的輪帶，由左到右依序停在結果上；不得用每一幀換一次符號的方式表現滾動。轉輪類遊戲停輪前要多往下滾約 18% 格高再回彈到正確位置（總時間不變，輪帶上方墊一格避免露出空白）；Speed 1～4 每輪至少滾 10 個符號，Speed 5 維持。掉落類遊戲（H013、H019、H027、H045、急速糖果 2、糖果狂歡 2500）Spin 不播輪帶滾動：舊盤面整欄往下掉出、新符號整欄從上方掉入並輕微回彈，由左到右逐欄錯開（Speed 5 同時），每欄時間＝`reelSpinMs()`，用共用 `demogameMotion.dropSpin()`；連消後的補牌方式維持各遊戲原本規則。
+- 轉輪滾動一律照 H020 超級寶石的滾法（做法見下一條「輪帶滾動做法」，不需參考 H020）：每輪是一條連續往下捲動的輪帶，由左到右依序停在結果上；不得用每一幀換一次符號的方式表現滾動。轉輪類遊戲停輪前要多往下滾約 18% 格高再回彈到正確位置（總時間不變，輪帶上方墊一格避免露出空白）；Speed 1～4 每輪至少滾 10 個符號，Speed 5 維持。掉落類遊戲（H013、H019、H027、H045、急速糖果 2、糖果狂歡 2500）Spin 不播輪帶滾動：舊盤面整欄往下掉出、新符號整欄從上方掉入並輕微回彈，由左到右逐欄錯開（Speed 5 同時），每欄時間＝`reelSpinMs()`，用共用 `demogameMotion.dropSpin()`；連消後的補牌方式維持各遊戲原本規則。
+- 輪帶滾動做法（輪帶類遊戲，參考實作 H032 `reelStripSpin`）：結果在動畫前已算好並畫進 `#board`，動畫只是蓋在上面的表演，不得改結果。
+  1. 每一輪在該輪格子上方蓋一個 `overflow:hidden` 的視窗（`position:absolute`，左右各多留 3px，避免外框光暈被切），動畫期間該輪真格 `visibility:hidden`。
+  2. 視窗內放一條直的輪帶，由上到下：墊 1 格隨機符號（回彈時不露出空白）→ 結果盤面該輪各格的複本 → `extra` 格。`extra`＝max(列數＋3, round(該輪時間 ÷ 60), Speed 1～4 時 10)；`extra` 中最下面「列數」格放前一盤該輪各格的複本（下一條規則），其餘放從目前盤面隨機挑的符號複本。複本要清掉 `hit`、`fx-*` 等狀態 class。
+  3. 輪帶起點 `translateY(-extra × 格距)`（此時視窗顯示的正是前一盤），用 Web Animations 往下捲：前 82% 時間捲到「超過終點」（超捲量見上一條），再回彈到 `translateY(0)`；先把起點寫進 `style.transform`，避免第一格閃出結果盤面。
+  4. 第 n 輪（0 起算）時間＝`reelSpinMs() + stopStaggerMs() × n`，所以由左到右依序停；全部結束後移除視窗、恢復真格顯示。
 - 前一個盤面要被捲走（2026-11-18 使用者）：下一次 Spin（含 FG 每轉、Respin）動畫的第一格必須仍是前一個盤面，由舊盤面往下捲走（輪帶類）或整欄掉出（掉落類）後，新盤面才從上方進來；**不得先把盤面換成新符號再開始滾**，也不得逐格換符號假裝滾動。輪帶類做法：滾動輪帶在動畫起點對到視窗的那幾格放前一盤每格的複本（Jumbo 大符號、Extra Reel 照實際位置與大小，清掉得分框等狀態），其餘才放隨機輪帶符號；共用 `demogameMotion.dropSpin()` 與掉落類遊戲本來就符合。新遊戲交付前以凍結動畫第一格截圖比對前一盤確認。
 - 動畫時間統一由共用 `window.demogameMotion` 提供，各遊戲不得自訂：一輪滾動到滾停 `reelSpinMs()`＝700／520／380／260／180 ms（Speed 1～5），逐輪停錯開 `stopStaggerMs()`＝120／100／80／60／0 ms；掉落補牌 `dropMs()`、原地補牌長出來 `growMs()` 都等於 `reelSpinMs()`。
 - 每一轉（BG 局與每一轉 FG）算完分後固定停 0.5 秒（共用 `window.demogameRoundPause()`），才放行下一轉或 Auto；這段停頓不受 Speed 影響，Simulation 不停頓。
@@ -207,7 +517,7 @@ Debug Mode 至少可查看：
 - 唯一碼（共用，最後調性更新的下一行）：同一個 `<script>` 再設 `window.DEMOGAME_TUNING_CODE = "XXXXXX"`（6 碼隨機碼，大寫英文＋數字，不用 0／O／1／I），頁尾在「最後調性更新」下一行顯示「唯一碼：XXXXXX」。**每次調性更新（換 `DEMOGAME_LAST_TUNING` 時）一定要產生新的唯一碼**；所有遊戲（正式專案、發想、克隆、其他）都要有。**每次 Demo 更新完，回報給使用者時都要寫出目前的唯一碼**，讓使用者對照線上頁尾判斷是不是最新調性。
 - 數值報告按鈕（共用）：有數值報告 `report.html` 的遊戲，在載入 `demogame_common.js` 前設 `window.DEMOGAME_REPORT_URL = "./report.html"`，標題列右側出現「報告」按鈕（英文 Report），與說明、重置排在一起。
 - BG／FG 最大倍數（共用，併在「統計」區，取代原「最高倍數」列）：頁面在載入 `demogame_common.js` 前設 `window.DEMOGAME_HISTORY = true`，每局呼叫 `window.demogameHistory.record({ bg, fg })`（BG 得分、該局 FG 總得分，皆 ÷ 底注）；沒有 FG 的遊戲只顯示 BG 列，重置清空。
-- Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，新的一行在最上面、舊的往下擠，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照 H045），不記演出過程：
+- Log（共用 `window.demogameLog(text, type)`）：帶時間的即時紀錄，新的一行在最上面、舊的往下擠，Clear 清空，最多保留 500 行；所有遊戲行格式一致（照下列格式，參考實作 H045；`<盤面表>` 為該轉使用的 Table 名稱，沒有多張表的遊戲省略該欄），不記演出過程：
   - `Config <名稱> loaded | Version <版本> | Card System On|Off`
   - `#<局號> Normal Bet|Extra Bet|Buy Feature|Super Feature | Bet <押注>[ | Card Range set][ | Replay]`
   - `RNG <碼>`（可點，複製並填入 RNG 欄）
@@ -223,7 +533,7 @@ Debug Mode 至少可查看：
 - 下方除錯區可摺疊（共用）：版本紀錄／模擬／紀錄點標題列收起／展開；版本紀錄預設折疊，模擬、紀錄預設展開。
 - 空白鍵＝Spin（共用，鎖住預設）：空白鍵只觸發 Spin（按 `#spinBtn`），擋掉瀏覽器預設的整頁往下捲與按到焦點所在的按鈕／勾選框；按住不連發。焦點在文字輸入欄、下拉選單時照常打字；說明視窗開著不 Spin；導覽開著時空白鍵關閉導覽。由共用模組在 window 捕獲階段處理，各遊戲自己的空白鍵監聽不會再收到（不會重複 Spin），新遊戲不用另外寫。
 - 餘額加錢（共用）：「餘額」標籤右邊有純文字「+」（無外框），按一下餘額 +1000（顯示金額）。各遊戲在自己的作用域設 `window.demogameAddCredit = (n) => { 依內部單位換算後加進 state 餘額; 重畫; }`，沒設就不顯示「+」。
-- 訊息列（盤面下方，贏分區）一律照 H032：待命「準備完成 — 請按 Spin」；轉動「Spin」／「Free Spin」；每段得分「WIN x」，有倍數「WIN 原始 × 倍數 = 得分」（轉末才乘的遊戲在轉末顯示），每次閃一下（`#messageBar.fx-bar-hit`）；一轉結束「WIN 總分」或「未中獎」；FG 每轉「FG i/n · WIN x」或「FG i/n · 未中獎」，加局再接「 · +k FG」。除錯文字（Cascade／Pay／Drop／停輪等）只寫 Log，不上訊息列。
+- 訊息列（盤面下方，贏分區，`#messageBar`）一律用下列文字（參考實作 H032；「」內為中文顯示，English 依序為 `Ready — press Spin`、`Spin`、`Free Spin`、`WIN`、`No Win`）：待命「準備完成 — 請按 Spin」；轉動「Spin」／「Free Spin」；每段得分「WIN x」，有倍數「WIN 原始 × 倍數 = 得分」（轉末才乘的遊戲在轉末顯示），每次閃一下（`#messageBar.fx-bar-hit`）；一轉結束「WIN 總分」或「未中獎」；FG 每轉「FG i/n · WIN x」或「FG i/n · 未中獎」，加局再接「 · +k FG」。除錯文字（Cascade／Pay／Drop／停輪等）只寫 Log，不上訊息列。
 - 押注模式按鈕（共用）：一排排開，每顆 88px（放不下才縮）、高 34px、間距 6px；名稱 11px＋倍數另起一行 9px；未開放的模式 disabled＋`.is-locked`，壓黑（底 #0b111a、字 #4a5563），不寫「製作中」。
 - 購買類按鈕（購買特色／超級特色等，共用）：一律藍色（底 #0077cc、白字、無外框），不可用綠色或其他顏色區分；按下去買進後壓暗（class `dg-buy-active`），到這場 FG 結束才恢復；壓暗的樣子跟買進期間另一顆被停用的購買按鈕完全相同（同藍底 #0077cc、白字、opacity .45），兩顆看起來一樣，不另用深色或綠色。樣式由 `demogame_common.js` 提供，各遊戲 index.html 不另寫顏色覆寫。特色結束時遊戲要發 `document.dispatchEvent(new Event("dg-feature-end"))`（放在 FG 結算看板關閉、回到主遊戲之後），共用程式收到就立刻恢復購買鈕；沒發的話只靠輪詢，連續 Spin 時會一直壓暗（2026-11-20）。
 - FG 看板（蓋在盤面上，`#board .fg-banner`）：
@@ -232,6 +542,7 @@ Debug Mode 至少可查看：
   - 關閉方式兩者相同：Auto 模式 1 秒後自動消失；非 Auto 要點盤面／看板或按 Spin 關閉。看板顯示期間背景不可捲動，看板消失後才進下一步（開始 FG／回到 BG）。
   - 長按 SPIN／空白鍵連續 Spin 時：結算看板不可被長按關掉，連續 Spin 到結算看板就終止，操作者要放開後重新按才繼續（看板元素加 `data-hold-stop`，共用 `demogame_common.js` 看到就停止連續 Spin）；觸發看板不受此限，連續 Spin 會照常關掉並開始 FG。
   - 參考實作：H032 `showFgBanner`／`showFgEndBanner`／`showBoardBanner`。
+  - 看板結構（遊戲自備樣式，共用 CSS 不提供）：在 `#board` 內 append `<div class="fg-banner" [data-hold-stop]><div class="fg-banner-card">…</div></div>`，卡片內依序放 `.fg-banner-icon`（觸發符號圖，可省略）、`.fg-banner-title`、`.fg-banner-sub`、`.fg-banner-count`；`.fg-banner` 蓋滿盤面置中。顯示函式回傳 Promise，點盤面、按 `#spinBtn`（顯示期間暫時解除 disabled，關閉後還原）或 Auto 1 秒後 resolve 並移除看板；遊戲 `await` 它之後才開始 FG／回到 BG。
 - 重置（RNG 區 `#setRngResetBtn`）與模擬區開始／重置（`#batchSimulationStartBtn`／`#batchSimulationResetBtn`）（共用）：跟 SPIN 同款藍色主按鈕（底 #0077cc、白字、高 34px、無外框光暈），disabled 壓暗（底 #102a49、字 #87a7c1）；各遊戲 index.html 不另寫顏色覆寫。
 - 模擬（共用）：第一次按「開始」，之後按鈕變「繼續」，每次再跑輸入的局數並接在前面累積（統計與倍率線型都累加）；按「重置」清空回到「開始」；換押注模式視同重置。
 - 飛行動畫目標（共用）：狀態列 `#strip-bar` 已隱藏、改由盤面上方資訊條鏡射倍數膠囊，倍數飛到 Mult／Sum 等動畫一律用 `window.demogameFxTarget("multPill")` 取得畫面上看得到的目標，不要直接量 `#multPill` 的位置（會飛到左上角）。
@@ -264,6 +575,7 @@ Demogame 的「版本紀錄」（`#change-log-wrap`，Debug Mode 開啟時顯示
 - Demogame 介面、演出、Debug、共用模組與文件的修改**不記在頁面上**（以 git commit 訊息為準），也不寫進 `修改紀錄.md`。
 
 - [ ] 離線開啟無錯誤，Console 無未處理例外。
+- [ ] 第 2.4 節骨架的固定 id 都在（沒有的模式按鈕除外）、`demogame_common.js` 在 `</body>` 前最後載入，第 2.6 節標「必要」的全域宣告與 DOM 狀態都已提供。
 - [ ] 「版本紀錄」（`#changeLogBody`）與 `修改紀錄.md` 內容一致（依版本分節、新到舊、只記調性）。
 - [ ] `demogame_common.css` 與 `demogame_common.js` 由 `../` 相對路徑載入，且共用功能未複製進遊戲專屬程式。
 - [ ] 圖示範圍內的標題、Feature Status、盤面、動畫與 Message 屬 By Game；其餘 UI 使用共用資源。
