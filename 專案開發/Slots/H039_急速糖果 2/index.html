@@ -379,6 +379,7 @@
             <li>符號生成改為輪帶感（對齊 Sugar Rush Super Scatter 一般押注 10 萬局側錄）：一般符號權重 6／8／10／12／15／17 → 10／12／13／15／16／17；新增直向疊塊（沿用正下方符號機率：開場 17%、掉落 40%）與避開左鄰同符號（重抽一次）。自然盤面 10 萬局：BG 中獎率 55.7% → 31.8%；中獎時連消 1／2／3／4+ 次＝57.5%／22.2%／10.4%／9.9%、平均 1.84 次（競品 59.6%／21.7%／9.5%／9.1%、平均 1.71 次）。卡片權重是依舊自然機率解的，需重解。（11/19）</li>
             <li>符號疊塊改為兩格一疊（對齊競品：競品直向同符號 2 格 31.6%、3 格 1.7%、4 格以上 0%，原設定會疊成整條）：疊塊上限 2 格；沿用正下方符號機率 開場 17% → 40%、掉落 40% → 100%（未達上限時）；左鄰同符號重抽 100% → 80%。自然盤面 10 萬局：BG 中獎率 37.9%；中獎時連消 1／2／3／4+ 次＝54.0%／22.3%／10.8%／12.9%、平均 1.98 次（競品平均 1.71 次）。（11/19）</li>
             <li>盤面改用輪帶（使用者決定）：BG、FG 各一組 5 軸 × 120 格，每軸 M1～M6＝14／17／19／22／23／24 張＋1 顆 C1；同色最多兩格一疊（BG 每軸 37 組、FG 42 組）。消除後由輪帶往上接著掉，輪到 C1 而該軸已有 C1 就跳過。BF 入場盤改由 BG 輪帶產生（3 軸停在 C1、無 Cluster）。原逐格抽（symbol_stack）移除。自然盤面 10 萬局：BG 輪帶中獎率 60.4%，中獎時連消 1／2／3／4+ 次＝52.2%／24.7%／12.1%／10.9%、平均 1.91 次，自然 FG 約 1/690；FG 輪帶中獎率 67.8%、平均連消 2.17 次。（11/19）</li>
+            <li>補回同符號一併消除（使用者決定）：有得分的符號，盤面上所有同符號一起消除；只有連在一起得分的格子倍數框 +1，沒連在一起的格子只消除、不計分、倍數框不加。自然機率（一般押注 10⁶ 局）：BG 中獎率 60.5%、平均連消 1.91 → 2.82 次、FG 週期約 1/690 → 1/201；卡片權重尚未重解。（11/20）</li>
           </ol>
         </article>
         <article class="change-log-entry">
@@ -476,7 +477,7 @@
     </div>
   </dialog>
 
-  <script src="./config.js?v=0.0.0.0&c=20261119c"></script>
+  <script src="./config.js?v=0.0.0.0&c=20261120a"></script>
   <script src="./config_92A.js?v=0.0.0.0&c=20261119d"></script>
   <script>
     (() => {
@@ -762,7 +763,7 @@
           }
           total += stepPay;
 
-          // 同符號連帶消除（config.same_symbol_clear；本作 2026-10-20 已關閉）：盤面上與中獎 Cluster 同符號的其餘格子一併消除，不計分
+          // 同符號連帶消除（config.same_symbol_clear；2026-10-20 關閉、2026-11-20 補回）：盤面上與中獎 Cluster 同符號的其餘格子一併消除，不計分
           const chainSet = new Set();
           if (SAME_SYMBOL_CLEAR) {
             const winSyms = new Set(clusters.map((cl) => cl.sym));
@@ -1834,7 +1835,7 @@
 
 ## CLUSTER PAY
 
-盤面 5×5；相同符號上下左右相連 ≥4 個成立群集，各群集獨立計獎（同符號多組群集每組都計獎）。
+盤面 5×5；相同符號上下左右相連 ≥4 個成立群集，各群集獨立計獎（同符號多組群集每組都計獎）。中獎符號在盤面上的所有相同符號一併消除；未相連的位置不計獎、倍數不增加。
 
 
 ## CASCADING
@@ -1862,8 +1863,8 @@
 發想草稿：符號權重與購買價格為示意假值，RTP 未定義。
   </script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
-  <script>window.DEMOGAME_LAST_TUNING = "2026-11-19 16:44"; window.DEMOGAME_TUNING_CODE = "GU78V2";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
-  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "移除同符號連帶消除", "改用輪帶（同色兩格一疊），連消分布參考 Sugar Rush Super Scatter"]};</script>
+  <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 16:53"; window.DEMOGAME_TUNING_CODE = "JERP7Z";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
+  <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "得分符號全盤一併消除（未相連的格子倍數框不加）", "改用輪帶（同色兩格一疊），連消分布參考 Sugar Rush Super Scatter"]};</script>
   <script src="../demogame_common.js?v=20261120v"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>

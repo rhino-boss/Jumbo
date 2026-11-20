@@ -147,8 +147,6 @@ def validate_config_pair(natural: dict[str, Any], rtp: dict[str, Any] | None,
     if not version.isdigit() or len(version) != 1:
         raise ValueError(f"{natural_name} 的 excel_version 必須為 1 碼，目前為 {version!r}")
     # 本程式實作的玩法前提；Config 改了這些就必須先改程式，不得靜默照舊算
-    if natural.get("same_symbol_clear") is True:
-        raise ValueError("same_symbol_clear=true（同符號連帶消除）本程式未實作")
     if natural.get("refill_mode") != "drop":
         raise ValueError(f"refill_mode 只支援 drop，目前為 {natural.get('refill_mode')!r}")
     pm = natural.get("position_multiplier") or {}
@@ -233,7 +231,7 @@ CARD_RANGE, CARD_FREE = 0, 1
 (_D_STRIPS, _D_SLEN, _D_PAY, _D_PARAM, _D_FGAWARD, _D_PCV, _D_PCC, _D_PV, _D_PVC,
  _D_CARD_CUM, _D_CARD_N, _D_CARD_TOT, _D_CARD_TYPE, _D_CARD_MIN, _D_CARD_MAX,
  _D_THRESHOLDS, _D_SCPOS) = range(17)
-P_SIZE, P_MINC, P_SC, P_STEP, P_FGCAP, P_ENTRYSC = range(6)
+P_SIZE, P_MINC, P_SC, P_STEP, P_FGCAP, P_ENTRYSC, P_SAMECLEAR = range(7)
 (_W_BOARD, _W_MULT, _W_REM, _W_VIS, _W_STACK, _W_CELLS, _W_PTR, _W_STOPS,
  _W_CLSYM, _W_CLSIZE, _W_CLPAY, _W_BG_I, _W_BG_F, _W_SESS_I, _W_SESS_F, _W_PLATES, _W_COLS) = range(17)
 
@@ -279,7 +277,8 @@ def build_game_data(config: dict[str, Any], rtp_config: dict[str, Any] | None, b
     pcc, _ = _cum_array(plates["count_weights"])
     pvc, _ = _cum_array(plates["value_weights"])
     param = np.array([size, int(config["min_cluster"]), sc, int(config["position_multiplier"]["step"]),
-                      int(config["fg_cap"]), BUY_ENTRY_SCATTER], np.int64)
+                      int(config["fg_cap"]), BUY_ENTRY_SCATTER,
+                      1 if config.get("same_symbol_clear") is True else 0], np.int64)
     scpos = np.array([list(s).index(sc) for s in config["reels"]["bg"]], np.int64)
 
     sections = card_sections(rtp_config, bet_mode)
@@ -463,6 +462,16 @@ def _resolve(D, W, scene, bet, acc_i, acc_f, log, lp):
             acc_f[F_SYMPAY + sym * MAX_PAY + idx] += p
         total += step_pay
         casc += 1
+        # 同符號連帶消除（same_symbol_clear）：盤面上與得分 Cluster 同符號的其餘格子一併消除（rem=2），不計分、位置倍數不 +1
+        if P[P_SAMECLEAR] != 0:
+            for r in range(n):
+                for c in range(n):
+                    if rem[r, c] == 0:
+                        v = board[r, c]
+                        for i in range(ncl):
+                            if cl_sym[i] == v:
+                                rem[r, c] = 2
+                                break
         if tr:
             _lg(log, lp, T_STEP)
             _lg(log, lp, msum)
@@ -474,13 +483,14 @@ def _resolve(D, W, scene, bet, acc_i, acc_f, log, lp):
                 _lg(log, lp, cl_size[i])
                 _lg(log, lp, cl_pay[i])
             _lg_grid(log, lp, rem)
-        # 計分後，被消除的每一格位置倍數 +step
+        # 計分後，Cluster 本身的每一格位置倍數 +step（連帶消除的格子不加）
         for r in range(n):
             for c in range(n):
                 if rem[r, c] != 0:
-                    mult[r, c] += step
-                    msum += step
                     acc_i[A_REMOVED] += 1
+                    if rem[r, c] == 1:
+                        mult[r, c] += step
+                        msum += step
         # 掉落補牌：存活符號依重力下移（C1 不消除）；空位由輪帶往上接著掉，最下面的空位先補。
         # 輪帶讀到 C1 時該軸已有 C1 就跳過這顆。
         for c in range(n):

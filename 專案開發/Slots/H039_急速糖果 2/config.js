@@ -56,7 +56,7 @@ const data = {
     "bg_reset": "per_spin",
     "fg_reset": "per_session"
   },
-  "same_symbol_clear": false,
+  "same_symbol_clear": true,
   "fg_awards": {
     "3": 10,
     "4": 15,
