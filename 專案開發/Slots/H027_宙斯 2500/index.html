@@ -237,7 +237,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h027">
@@ -812,7 +812,7 @@
     window.H027_SERIES = H027_SERIES;
     window.H027_SERIES_LIST = H027_SERIES_LIST;
     window.H027_RTP_PATHS = Object.fromEntries(H027_SERIES_CODES.map((code) => [code, H027_CONFIG_MAP[code]]));   // 本系列全部 RTP Config（代號 → 檔案）
-    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；Config 選單顯示 A-01-Base／A-01（本頁自己組選單，見 renderVersionControls）
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；Config 選單顯示 01-A-Base／01-A（本頁自己組選單，見 renderVersionControls）
     window.DEMOGAME_SHARED_BASE = false;   // A／B 基礎數學不同（config_A.js／config_B.js 的 parameter 不同）→ Base 兩套都列
     try {
       localStorage.setItem("slotDemoVersion", H027_VERSION_ENTRY.version);
@@ -1215,7 +1215,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
       try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
       el.cardSystem.checked = saved !== "off";
     }
-    // 選項名稱同共用程式：自然機率「{A/B}-{產線}-Base」、卡片開「{A/B}-{產線}」（例 A-01-Base、A-01）；Base 在前
+    // 選項名稱同共用程式：自然機率「{產線}-{A/B}-Base」、卡片開「{產線}-{A/B}」（例 01-A-Base、01-A）；Base 在前
     const cardOn = el.cardSystem ? el.cardSystem.checked : true;
     const line = String(window.DEMOGAME_PRODUCT_LINE || "01");
     const baseSeries = window.DEMOGAME_SHARED_BASE ? H027_SERIES_LIST.slice(0, 1) : H027_SERIES_LIST;
@@ -1223,14 +1223,14 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     for (const series of baseSeries) {
       const option = document.createElement("option");
       option.value = `base:${series}`;
-      option.textContent = `${series}-${line}-Base`;
+      option.textContent = `${line}-${series}-Base`;
       if (!cardOn && series === H027_SERIES) option.selected = true;
       el.combinedConfig.appendChild(option);
     }
     for (const series of H027_SERIES_LIST) {
       const option = document.createElement("option");
       option.value = series;
-      option.textContent = `${series}-${line}`;
+      option.textContent = `${line}-${series}`;
       if (cardOn && series === H027_SERIES) option.selected = true;
       el.combinedConfig.appendChild(option);
     }
@@ -2643,7 +2643,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-12 14:43"; window.DEMOGAME_TUNING_CODE = "EQQN6H";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "Pragmatic Play Gates of Olympus 1000", "expect": "倍數球落下並在連消中升級，免費遊戲倍數越疊越高。", "changes": ["倍數球上限提高到 2500x（競品是 1000x）", "新增 C3 超級倍數球，每次中獎消除就升一級", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
   <script>window.h027BindCommonControls();</script>
 </body>
 

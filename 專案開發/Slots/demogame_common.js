@@ -177,7 +177,7 @@
     const selectedProfile = cardOnAtStart ? normalizeProfileName(profileSelect?.value || savedProfile) : "Off";
     // 2026-11-20 使用者：選項名稱帶產線編號（D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt：01 菲律賓主流、01_2 菲律賓 landbase 轉製、02 美國、03 墨西哥）。
     // 遊戲宣告 window.DEMOGAME_PRODUCT_LINE（例 "01"）才啟用；多產線的遊戲在原生 <option> 加 data-line。
-    // 啟用後：自然機率＝「{A/B}-{產線}-Base」、卡片開＝「{Config}-{產線}」（例 A-01、92A-01），依產線編號排序，同產線內 Base 在前（2026-11-20 改名）。
+    // 啟用後：自然機率＝「{產線}-{A/B}-Base」、卡片開＝「{產線}-{Config}」（例 01-A、01-92A），依產線編號排序，同產線內 Base 在前（2026-11-20 改名：產線編號放前面）。
     // A、B 共用同一份自然機率（只差卡片）時，遊戲宣告 window.DEMOGAME_SHARED_BASE = true，就只列 A 的 Base、不列 B 的 Base。
     // 沒宣告的遊戲維持舊名稱（Base／BaseA／92A…），避免還在讀選項文字的遊戲受影響。
     const lineDefault = String(window.DEMOGAME_PRODUCT_LINE || "").trim();
@@ -207,17 +207,17 @@
       for (const variant of variants) {
         const sameVariant = inLine.filter((option) => variantOf(option) === variant);
         const target = sameVariant.includes(currentConfig) ? currentConfig : sameVariant[0];
-        const text = useLine ? `${variant}-${line}-Base` : (variants.length > 1 ? `Base${variant}` : "Base");
+        const text = useLine ? `${line}-${variant}-Base` : (variants.length > 1 ? `Base${variant}` : "Base");
         addOption(target, offOption, text, selectedProfile === "Off" && target === currentConfig);
       }
       if (oldhand) {
         for (const configOption of inLine) {
           const name = normalizeConfigName(configOption);
-          // 帶產線時卡片開寫「{A/B}-{產線}」（例 92A 只有一份 → A-01）；同系列若還列了多份 RTP（92A／94A…）才保留完整代號避免同名
+          // 帶產線時卡片開寫「{產線}-{A/B}」（例 92A 只有一份 → 01-A）；同系列若還列了多份 RTP（92A／94A…）才保留完整代號避免同名
           const variant = variantOf(configOption);
-          const isDemo = /demo/i.test(`${configOption.value} ${configOption.textContent}`);   // 例 120A_Demo → A-01-Demo（2026-11-20 使用者）
+          const isDemo = /demo/i.test(`${configOption.value} ${configOption.textContent}`);   // 例 120A_Demo → 01-A-Demo（2026-11-20 使用者）
           const unique = inLine.filter((option) => variantOf(option) === variant && !/demo/i.test(`${option.value} ${option.textContent}`)).length === 1;
-          const lineText = isDemo ? `${variant || "A"}-${line}-Demo` : `${unique && variant ? variant : name}-${line}`;
+          const lineText = isDemo ? `${line}-${variant || "A"}-Demo` : `${line}-${unique && variant ? variant : name}`;
           addOption(configOption, oldhand, useLine ? lineText : name,
             configOption === currentConfig && selectedProfile !== "Off");
         }

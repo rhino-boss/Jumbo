@@ -15,7 +15,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h014-by-game">
     /* 文件層級 box-sizing 基準（與既有 Demogame 相同；共用 CSS 未宣告） */
     *, *::before, *::after { box-sizing: border-box; }
@@ -1099,7 +1099,7 @@
   // 選項 opts：b<押注>[.r<卡片區間>][.t<Natural 表>]，例 92A/NB/on/b10.r3/8f3a21b0、Base/EB/off/b50.tB/0c1d2e3f。
   const MODE_CODE = { 0: "NB", 1: "EB" };
   const MODE_NAME = { 0: "Normal Bet", 1: "Extra Bet" };
-  // RNG 碼／Log 的 Config＝實際 config 代號（92A／Base），不用選單文字（2026-11-20 選單改 A-02／A-02-Base）
+  // RNG 碼／Log 的 Config＝實際 config 代號（92A／Base），不用選單文字（2026-11-20 選單改 02-A／02-A-Base）
   const configLabel = () => ($("demogameConfigSelect")?.value === "base" ? "Base" : RTPC.config_code);
   function parseRngOpts(opts) {
     const out = { bet: null, iv: null, sheet: null };
@@ -1324,9 +1324,9 @@
   });
   // Config 只有一組（NB／EB 兩本 XLSX 綁成同一個 92A），押注由下方押注按鈕切換
   // 卡片系統開關由 Config 決定：Base＝自然機率（卡片關）、92A＝卡片開（本作無 Profile）
-  // 2026-11-20：名稱帶產線編號（02＝美國）：A-02-Base（卡片關）／A-02（卡片開＝92A）；本作只有一份 config，不分層
+  // 2026-11-20：名稱帶產線編號（02＝美國）：02-A-Base（卡片關）／02-A（卡片開＝92A）；本作只有一份 config，不分層
   window.DEMOGAME_PRODUCT_LINE = "02";
-  $("demogameConfigSelect").innerHTML = `<option value="base">A-02-Base</option><option value="${RTPC.config_code}">A-02</option>`;
+  $("demogameConfigSelect").innerHTML = `<option value="base">02-A-Base</option><option value="${RTPC.config_code}">02-A</option>`;
   {
     let saved = null;
     try { saved = localStorage.getItem("slotDemoCardSystem"); } catch (_) {}
@@ -1400,7 +1400,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40"; window.DEMOGAME_TUNING_CODE = "6K2USE";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

@@ -1792,7 +1792,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2114,7 +2114,7 @@
     // 只跑自然機率，92A／94A 的差別只在卡片權重 → 不必依押注分層；基礎欄位一律從 config_92A.js 補。舊網址 ?config=config_94A.js 一律對應到 A。
     const H019_SERIES = "A";
     const H019_ACTIVE_CONFIG = "config_92A.js";
-    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 A-01-Base
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base
     // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）
     document.write(`<script src="./config.js"><\/script><script src="./${H019_ACTIVE_CONFIG}"><\/script>`);
   </script>
@@ -3470,7 +3470,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16"; window.DEMOGAME_TUNING_CODE = "3M9V53";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": " Wild 中獎轉成倍數球，最終盤面倍數加總乘上整轉獎金。", "changes": ["6×5 盤面，符號任意位置達門檻即得分，中獎消除掉落", "倍數球可直接出現，也可由中獎的 Wild 轉成，倍數 2～1000x 相加後乘上整轉獎金", "4 顆以上 Scatter 觸發 15 場免費遊戲，倍數累積到該場結束，最多 50 場", "提供 Buy Feature（100 倍押注）與 Super Feature（500 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
 </body>
 
 </html>

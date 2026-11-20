@@ -15,7 +15,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h020-by-game">
     *, *::before, *::after { box-sizing: border-box; }
     /* ===== By Game：#feature-bar / #strip-bar / #grid-panel / #board ===== */
@@ -1164,13 +1164,13 @@
     location.search = params.toString();
   });
   // 2026-11-20 使用者：Config 只列系列——Base（卡片關）＋A（94A／92A 依押注自動切）；96A 先保留獨立選項（待使用者決定）。
-  // 名稱帶產線編號（02＝美國）：{A}-02-Base、A-02、96A-02（同共用 Config 選單命名；本作自帶選單，共用程式不重建）
+  // 名稱帶產線編號（02＝美國）：02-{A}-Base、02-A、02-96A（同共用 Config 選單命名；本作自帶選單，共用程式不重建）
   window.DEMOGAME_PRODUCT_LINE = "02";
   const TIERED = ["92A", "94A"];
   const LINE = window.DEMOGAME_PRODUCT_LINE;
-  $("demogameConfigSelect").innerHTML = `<option value="base">A-${LINE}-Base</option>`
-    + (TIERED.some((c) => RTP[c]) ? `<option value="A">A-${LINE}</option>` : "")
-    + Object.keys(RTP).filter((c) => !TIERED.includes(c)).map((c) => `<option value="${c}">${c}-${LINE}</option>`).join("");
+  $("demogameConfigSelect").innerHTML = `<option value="base">${LINE}-A-Base</option>`
+    + (TIERED.some((c) => RTP[c]) ? `<option value="A">${LINE}-A</option>` : "")
+    + Object.keys(RTP).filter((c) => !TIERED.includes(c)).map((c) => `<option value="${c}">${LINE}-${c}</option>`).join("");
   {
     let saved = null, code = null;
     try { saved = localStorage.getItem("slotDemoCardSystem"); code = localStorage.getItem("h020ConfigCode"); } catch (_) {}
@@ -1244,7 +1244,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
   <script>window.DEMOGAME_REPORT_URL = "./report.html";</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Fortune Gems 500", "expect": "中獎觸發重轉球，倍數一路累加後回頭乘上線獎。", "changes": ["押注分 Extra Bet 1（1.5 倍）和 Extra Bet 2（8 倍），押越高 R4 的倍數越大", "重轉球：有得分時觸發重轉，連續停出 3～50 個倍數，相加後再乘線獎", "Super Feature 用 250 倍押注購買，一次 5 轉，倍數逐轉累加", "加入 OP Jackpot，由重轉球隨機觸發"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
   </script>

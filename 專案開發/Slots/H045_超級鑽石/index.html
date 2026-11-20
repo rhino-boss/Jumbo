@@ -2082,7 +2082,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2666,7 +2666,7 @@
         : available.includes(wanted) ? wanted   // 120A_Demo，或舊版本沒有完整三檔時的單一 config
         : hasSeries("A") ? "AUTO" : (available[0] || "base");
       window.H045_ACTIVE_CONFIG = active;
-      window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 A-01-Base／A-01／B-01
+      window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base／01-A／01-B
       window.DEMOGAME_SHARED_BASE = true;    // A／B 共用同一份自然機率（config.js），只差卡片 → 只列 A 的 Base
       try { localStorage.setItem("h045MathVersion", entry.version); localStorage.setItem("h045ConfigCode", active); } catch (_) {}
       const fileOf = path => String(path).split("/").pop();
@@ -4229,7 +4229,7 @@
     for (const code of (rtpCodes.length ? rtpCodes : ["base"])) {   // 有 RTP config 時只列 RTP config，Off 由 Card System 勾選控制
       const option = document.createElement("option");
       option.value = code;
-      // 原生選單（隱藏）文字給共用 normalizeConfigName 辨識：AUTO→「A」、AUTO_B→「B」；120A_Demo 用 config_120A 讓共用選單顯示 120A-01
+      // 原生選單（隱藏）文字給共用 normalizeConfigName 辨識：AUTO→「A」、AUTO_B→「B」；120A_Demo 用 config_120A 讓共用選單顯示 01-120A
       option.textContent = code === "base" ? "Base" : code === "AUTO" ? "A" : code === "AUTO_B" ? "B" : code === "120A_Demo" ? "config_120A_Demo" : code;
       configSelect.appendChild(option);
     }
@@ -4276,7 +4276,7 @@
   <script>window.DEMOGAME_LAST_CODE = "2026-11-09 11:08";   // 程式最後調整（index／Simulator／共用程式）
   window.DEMOGAME_LAST_UPDATE = "2026-11-12 14:26";   // 任何東西最後調整（數學、程式、文件）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "連消推高倍數階梯，金框翻出帶倍數的 Wild 接連得分。", "changes": ["連消倍數階梯多一階：主遊戲最高 ×10、免費遊戲最高 ×20", "翻出的 Wild 可帶 ×2／×3／×5 倍數（Super Ace 的 Wild 不帶倍數）", "免費遊戲也會翻出大鬼且不限次數（Super Ace 免費遊戲只有小鬼）", "Extra Bet 為 2 倍押注，免費遊戲出現率是一般押注的 5 倍", "Buy Feature 改為 50 倍押注（Super Ace 是 40.5 倍）", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
 </body>
 
 </html>

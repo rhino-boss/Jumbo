@@ -16,9 +16,9 @@ Demogame 是模型邏輯、流程與 Debug 資訊的可操作驗證介面，不�
 
 - 主入口固定為 `index.html`，使用相對路徑，雙擊即可離線執行。
 - Config 選單不列 Profile，Demogame 不提供 Newbie。
-- 卡片系統沒有獨立的開關，由 Config 選單決定：選 `…-Base` 為自然機率（卡片系統關），選 `A-01` 這類系列代號為卡片系統開（Oldhand）。
+- 卡片系統沒有獨立的開關，由 Config 選單決定：選 `…-Base` 為自然機率（卡片系統關），選 `01-A` 這類系列代號為卡片系統開（Oldhand）。
 - Config 選單只讓操作者選系列（2026-11-20）：`Base`（卡片關）、`A`、`B`（沒有 B 版就只有 A）；小／中／大 Bet 的 RTP config（`94x`／`92x`／`92x_Bet100`）不放進選單，依玩家押注自動切換，規則同 Simulator 選 config：NB／EB 看實際押注、BF／SF 看底注，未滿 $2 用小 Bet、底注超過 $100 用大 Bet、其餘中 Bet。遊戲要把所選系列的全部 RTP config 都載入，換押注或換押注模式時立即換卡片權重（H032 為參考實作：`window.H032_RTP_SET`、`applyRtpTier()`；通用做法見第 2.5 節，每局開頭與押注／模式改變時依上述規則把對應 RTP config 的 `card_system` 套到基礎 config）。
-- Config 選單名稱帶產線編號（2026-11-20，所有遊戲適用）：產線編號依 `D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt`（`01` 菲律賓主流遊戲、`01_2` 菲律賓 landbase 轉製遊戲、`02` 美國、`03` 墨西哥）；**發想中的遊戲（還沒有市場）一律用 `99`**（例：`A-99-Base`、`A-99`，2026-11-20 使用者）。自然機率寫 `{A/B}-{產線編號}-Base`，卡片開寫 `{A/B}-{產線編號}`；依產線編號排序，同一產線內 Base 在前，例：`A-01-Base`、`B-01-Base`、`A-01`、`B-01`、`A-02-Base`、`A-02`…。Demo 用的 config（例 `120A_Demo`）寫 `{A/B}-{產線編號}-Demo`（例 `A-01-Demo`），排在最後（2026-11-20 使用者）。**A、B 共用同一份自然機率（只差卡片）時，B 的 Base 不列**，只留 `A-xx-Base`（遊戲宣告 `window.DEMOGAME_SHARED_BASE = true`）。遊戲宣告 `window.DEMOGAME_PRODUCT_LINE = "01"` 後共用 `demogame_common.js` 就照這個格式顯示；同一款有多條產線時，在原生 `#configSelect` 的 `<option>` 加 `data-line`。遊戲程式不可依選項文字判斷要載入哪份 config（用選項的 value）。
+- Config 選單名稱帶產線編號（2026-11-20，所有遊戲適用）：產線編號依 `D:\SVN\Math_Release\IGaming\說明書\ID對照表.txt`（`01` 菲律賓主流遊戲、`01_2` 菲律賓 landbase 轉製遊戲、`02` 美國、`03` 墨西哥）；**發想中的遊戲（還沒有市場）一律用 `99`**（例：`99-A-Base`、`99-A`，2026-11-20 使用者）。自然機率寫 `{產線編號}-{A/B}-Base`，卡片開寫 `{產線編號}-{A/B}`；產線編號放前面（2026-11-20 使用者改為 `01-A` 格式）；依產線編號排序，同一產線內 Base 在前，例：`01-A-Base`、`01-B-Base`、`01-A`、`01-B`、`02-A-Base`、`02-A`…。Demo 用的 config（例 `120A_Demo`）寫 `{產線編號}-{A/B}-Demo`（例 `01-A-Demo`），排在最後（2026-11-20 使用者）。**A、B 共用同一份自然機率（只差卡片）時，B 的 Base 不列**，只留 `xx-A-Base`（遊戲宣告 `window.DEMOGAME_SHARED_BASE = true`）。遊戲宣告 `window.DEMOGAME_PRODUCT_LINE = "01"` 後共用 `demogame_common.js` 就照這個格式顯示；同一款有多條產線時，在原生 `#configSelect` 的 `<option>` 加 `data-line`。遊戲程式不可依選項文字判斷要載入哪份 config（用選項的 value）。
 - 自然機率只依基礎數學 Variant 區分，與 RTP 家族無關（顯示名稱照上一條產線編號格式）。
 - 標題列右側固定放「數值報告」（有報告時）、「說明」、「重置」三個文字按鈕（無底色、無外框，滑過才顯示底色），字型與標題相同，標題列高 44px；數值報告在同一分頁開啟。
 - 標題列樣式各遊戲一致：代號＋名稱 15px 粗體、上下置中（由共用 CSS 統一），不得另寫遊戲專屬的標題樣式。

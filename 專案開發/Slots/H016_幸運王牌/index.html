@@ -1957,7 +1957,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2608,7 +2608,7 @@
       localStorage.setItem("h016MathVersion", H016_CURRENT_VERSION);
       localStorage.setItem("h016ConfigCode", H016_ACTIVE_SERIES);
     } catch (_) {}
-    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
     window.H016_VERSION_ENTRY = H016_VERSION_ENTRY;
     window.H016_ACTIVE_SERIES = H016_ACTIVE_SERIES;
     window.H016_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
@@ -4339,7 +4339,7 @@
     }
     versionSelect.value = entry?.version || "";
     configSelect.innerHTML = "";
-    // Config 選單只列系列（本作只有 A）；共用面板再組成 A-01-Base／A-01
+    // Config 選單只列系列（本作只有 A）；共用面板再組成 01-A-Base／01-A
     for (const series of ["A"]) configSelect.appendChild(new Option(series, series, false, series === window.H016_ACTIVE_SERIES));
     configSelect.value = window.H016_ACTIVE_SERIES;
   }
@@ -4364,7 +4364,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-20 10:00"; window.DEMOGAME_TUNING_CODE = "7DQTWV";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Super Ace", "expect": "金框中獎翻成大鬼，複製 Wild 帶出一波接一波的連消。", "changes": ["新增 Buy Super Feature（250 倍押注），金框轉換時一定觸發大鬼，多複製 2～4 顆 Wild", "免費遊戲中金框中獎也可能觸發大鬼（Super Ace 免費遊戲只有小鬼）"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
 </body>
 
 </html>

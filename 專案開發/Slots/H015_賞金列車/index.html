@@ -1897,7 +1897,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="symbol-size-fix">
     /* 符號圖放大（2026-10-19）：圖填滿整格；A／K／Q／J 素材留白多再放大 1.25 倍 */
     #board .cell .h015-symbol-img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
@@ -2210,7 +2210,7 @@
   <script>
     // 2026-11-20 使用者：Config 選單只選系列（本作只有 A）；小／中 Bet 依押注自動切換（本作沒有 Bet100：未滿 $2 用 94A，其餘 92A）。
     // 所以兩份 RTP config 都載入（window.H015_RTP_SET = { small, mid }），執行時依押注換卡片權重；舊網址 ?config=config_92A.js／94A 與 localStorage 舊值一律對應系列 A。
-    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A
     window.H015_ACTIVE_SERIES = "A";
     window.H015_ACTIVE_CONFIG = "92A";   // 目前套用的 RTP config（出局前依押注更新）
     window.H015_RTP_SET = {};
@@ -3290,7 +3290,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01"; window.DEMOGAME_TUNING_CODE = "HQHA4G";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Wild Bounty Showdown", "expect": "金框中獎轉 Wild 接續連消，把乘數階梯一路推高。", "changes": ["3,600 Ways，6 輪 3-4-5-5-4-3 盤面，中獎消除掉落", "R3、R4 符號可帶金框，中獎後原位轉 Wild", "每段消除前抽炸彈推進乘數階梯，最高 x1024", "Buy Feature 為 75 倍押注"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
 </body>
 
 </html>

@@ -1963,7 +1963,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h028">
@@ -2742,7 +2742,7 @@
     var want=entry.configs?.[code]||'config_92A.js';
     var baseWant=entry.base_config||'';
     try{localStorage.setItem('slotDemoVersion',entry.version);localStorage.setItem('slotDemoConfig',series)}catch(_){}
-    window.DEMOGAME_PRODUCT_LINE='01';   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01／B-01
+    window.DEMOGAME_PRODUCT_LINE='01';   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 01-A-Base／01-A／01-B
     window.DEMOGAME_SHARED_BASE=true;   // A／B 共用同一份自然機率（base_config 同一份 config.js，RTP config 只帶 card_system）→ 只列 A 的 Base
     window.DEMOGAME_WAY_SHAPE={reels:6,rows:5,top:[2,5]};   // 走線圖盤面（Megaways）：6 軸、主盤面每軸最多 5 列、R2～R5 上方額外橫軸（共用 demogame_common.js）
     window.H028_VERSION_ENTRY=entry;
@@ -2815,7 +2815,7 @@
   function setDebug(show){state.debug=show;for(const id of ['play-debug-controls','batch-simulation','set-rng-panel','log-wrap','live-log-wrap','change-log-wrap'])$(id).classList.toggle('debug-hidden',!show);$('controls').classList.toggle('debug-off',!show);updateControls()}
   function clearLog(){let body=$('liveLogBody');if(body)body.innerHTML=''}
   function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-  function renderVersionControls(){let manifest=window.H028_VERSION_MANIFEST||{versions:[]},entry=window.H028_VERSION_ENTRY||manifest.versions[0],versionSelect=$('versionSelect'),configSelect=$('configSelect');versionSelect.innerHTML='';for(const item of manifest.versions){let option=document.createElement('option');option.value=item.version;option.textContent=String(item.version);versionSelect.appendChild(option)}versionSelect.value=entry?.version||'';configSelect.innerHTML='';for(const series of window.H028_SERIES_LIST||['A']){let option=document.createElement('option');option.value=series;option.textContent=series;configSelect.appendChild(option)}configSelect.value=window.CONFIG_CODE||configSelect.options[0]?.value||''}   // Config 選單只列系列（A／B），共用面板組成 A-01-Base／A-01／B-01
+  function renderVersionControls(){let manifest=window.H028_VERSION_MANIFEST||{versions:[]},entry=window.H028_VERSION_ENTRY||manifest.versions[0],versionSelect=$('versionSelect'),configSelect=$('configSelect');versionSelect.innerHTML='';for(const item of manifest.versions){let option=document.createElement('option');option.value=item.version;option.textContent=String(item.version);versionSelect.appendChild(option)}versionSelect.value=entry?.version||'';configSelect.innerHTML='';for(const series of window.H028_SERIES_LIST||['A']){let option=document.createElement('option');option.value=series;option.textContent=series;configSelect.appendChild(option)}configSelect.value=window.CONFIG_CODE||configSelect.options[0]?.value||''}   // Config 選單只列系列（A／B），共用面板組成 01-A-Base／01-A／01-B
   function openVersion(version,code){let q=new URL(location.href);q.searchParams.set('version',version);q.searchParams.set('config',code);try{localStorage.setItem('slotDemoVersion',version);localStorage.setItem('slotDemoConfig',code)}catch(_){}location.href=q.href}
   const UI_TEXT={en:{simulationStats:'Simulation Stats',goldFrameUsage:'Gold Frame Usage',bgM1MultiHit:'BG M1 Multiplier Hit',playerProfile:'Player',spinResult:'Spin Result',lineWins:'Way Wins',clear:'Clear',changeLog:'Version Log',setting:'Setting',language:'Language',reset:'Reset',gameHelp:'Game Help',close:'Close',loadingRules:'Loading game rules...'},zh:{simulationStats:'模擬統計',goldFrameUsage:'金框使用率',bgM1MultiHit:'BG M1 倍數得分率',playerProfile:'玩家',spinResult:'Spin 結果',lineWins:'Ways 得分',clear:'清除',changeLog:'版本紀錄',setting:'設定',language:'語言',reset:'重置',gameHelp:'遊戲說明',close:'關閉',loadingRules:'正在載入遊戲規則...'}};
   const tr=key=>UI_TEXT[state.language]?.[key]||UI_TEXT.en[key]||key;
@@ -3029,6 +3029,6 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26"; window.DEMOGAME_TUNING_CODE = "LPSQSH";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Lucky Neko", "expect": "雷神帶倍數出現，多顆相加把得分乘大。", "changes": ["雷神（M1）兼倍數符號：主盤面依尺寸給 x2～x5，Extra Reel 上固定 x2，多顆相加（競品的 M1 只是最高分符號）", "最高獎上限 3000x", "Buy Feature 為 75 倍押注", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
 </body>
 </html>

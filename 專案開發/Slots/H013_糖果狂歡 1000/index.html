@@ -1841,7 +1841,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120x" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2134,7 +2134,7 @@
     // 所以把系列全部 RTP Config 都載入（window.H013_RTP_SET = { "92A", "94A" }）。舊網址 ?config=config_94A.js／舊記憶值一律對應到 A。
     const H013_SERIES = "A";
     const H013_RTP_FILES = { "92A": "config_92A.js", "94A": "config_94A.js" };
-    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 A-01-Base／A-01
+    window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（01＝菲律賓主流）；共用 Config 選單顯示 01-A-Base／01-A
     window.H013_RTP_SET = {};
     // 模擬程式規範 2.1：先載基礎 config.js，再載 RTP Config（只有卡片權重等 RTP 欄位）；每份載完先存起來（下一份會覆寫 H013_BOX_DATA）
     document.write(`<script src="./config.js"><\/script>` + Object.entries(H013_RTP_FILES)
@@ -3760,7 +3760,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代原 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-08-03 20:08"; window.DEMOGAME_TUNING_CODE = "JMEY8Q";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "免費遊戲中倍數糖果一次停出多顆，加總後把整局得分一起放大。", "changes": ["符號在盤面任意位置達到門檻顆數即得分，中獎後消除掉落", "免費遊戲每局連消結束後，依盤面倍數糖果加總倍數，乘上該局得分", "提供 Extra Bet、Buy Feature（100 倍押注）與 Super Feature（500 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261120w"></script>
+  <script src="../demogame_common.js?v=20261120x"></script>
   <script>
     (() => {
       "use strict";
