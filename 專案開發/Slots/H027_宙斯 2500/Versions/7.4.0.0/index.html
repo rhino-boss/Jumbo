@@ -504,7 +504,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading">Loading game rules...</div>
       </div>
-      <iframe id="helpFrame" title="Game Help content" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpFrame" title="Game Help content" src="./game_help.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
 
@@ -1930,7 +1930,7 @@ if (H027_MISSING_CONFIG_FIELDS.length) {
     try { markdown = el.helpFrame.contentDocument?.body?.innerText || ""; } catch (_) {}
     if (!markdown && location.protocol !== "file:") {
       try {
-        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        const response = await fetch("./game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {}
     }

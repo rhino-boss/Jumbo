@@ -4654,7 +4654,7 @@
 // ==== /chart-hover-auto ====
 
 // ==== fg-banner + help-render（2026-11-20 共用 API）====
-// window.demogameFgBanner：FG 觸發／結算看板（行為與外觀照 H032）。window.demogameHelp：game_help_draft.md 解析輸出到 #helpContent
+// window.demogameFgBanner：FG 觸發／結算看板（行為與外觀照 H032）。window.demogameHelp：game_help.md 解析輸出到 #helpContent
 // （格式見 Demogame規範 §2.8），並可由 config 產生賠率表（全盤計數型／Ways／Lines）。舊遊戲自己的實作不受影響。
 (() => {
   "use strict";
@@ -4965,8 +4965,8 @@
     return target;
   }
 
-  // load({ url, embeddedId }) → Promise<string>：先 fetch game_help_draft.md（file:// 略過），讀不到用內嵌 <script id="embeddedGameHelpMarkdown">
-  async function load({ url = "./game_help_draft.md", embeddedId = "embeddedGameHelpMarkdown" } = {}) {
+  // load({ url, embeddedId }) → Promise<string>：先 fetch game_help.md（file:// 略過），讀不到用內嵌 <script id="embeddedGameHelpMarkdown">
+  async function load({ url = "./game_help.md", embeddedId = "embeddedGameHelpMarkdown" } = {}) {
     let md = "";
     if (location.protocol !== "file:" && url) {
       try { const r = await fetch(url, { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) { /* 用內嵌 */ }

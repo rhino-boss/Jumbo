@@ -258,7 +258,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator tc2">
@@ -1667,7 +1667,7 @@
         return result;
       }
 
-      // ── Help（內容以 game_help_draft.md 為準；離線 fallback 用內嵌副本）────
+      // ── Help（內容以 game_help.md 為準；離線 fallback 用內嵌副本）────
       // 版式同 H045：主要標題／副標題／規則說明依語言切換；賠率表一律由 Config 的 pay_table 依目前押注產生，md 沒寫也會顯示
       function parseHelpSections(markdown) {
         const sections = [];
@@ -1709,7 +1709,7 @@
         target.innerHTML = `<div class="help-loading">Loading game rules...</div>`;
         let markdown = "";
         try {
-          const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+          const response = await fetch("./game_help.md", { cache: "no-store" });
           if (response.ok) markdown = await response.text();
         } catch (_) {}
         if (!markdown) markdown = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
@@ -1831,7 +1831,7 @@
   <script id="embeddedGameHelpMarkdown" type="text/plain">
 # Candy Rush 2 Game Help Draft（發想）
 
-內容以 game_help_draft.md 為準；此為離線 fallback 副本。
+內容以 game_help.md 為準；此為離線 fallback 副本。
 
 ## CLUSTER PAY
 
@@ -1865,7 +1865,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 16:53"; window.DEMOGAME_TUNING_CODE = "JERP7Z";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "糖果轟炸 1000（H022）", "expect": "同一格反覆消除讓位置倍數累加，整盤得分一起放大。", "changes": ["盤面改 5×5，連線門檻少 1 顆", "賠率改 7 級距加爆炸區", "Extra Bet 底板改 5～50", "FG 觸發改 3／4／5 顆給 10／15／20 場", "得分符號全盤一併消除（未相連的格子倍數框不加）", "改用輪帶（同色兩格一疊），連消分布參考 Sugar Rush Super Scatter"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
   <script>window.tc2BindCommonControls();</script>
 </body>
 

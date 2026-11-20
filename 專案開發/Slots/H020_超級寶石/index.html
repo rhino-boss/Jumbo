@@ -15,7 +15,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h020-by-game">
     *, *::before, *::after { box-sizing: border-box; }
     /* ===== By Game：#feature-bar / #strip-bar / #grid-panel / #board ===== */
@@ -231,9 +231,9 @@
             <li>Config 選單：Base（卡片關）、92A、94A（卡片開，Oldhand；Demo 不提供 Newbie）。押注模式：Normal Bet、Extra Bet 1（1.5x）、Extra Bet 2（8x）、Super Feature（250x，5 次 Spin、倍數累積）。（10/15）</li>
             <li>演出：R1～R3 捲輪停輪、中獎線與得分格高亮、R4 倍數揭曉；重轉時 R4 依序停 G 倍數（帶重轉球角標）、最後一次停一般倍數，逐次加總；SF 每轉顯示累積倍數。（10/15）</li>
             <li>符號圖：自企劃書 Google 試算表 8.GameView 取出（重轉球、Wild、11 種倍數、A／K／Q／J、M1～M3），存 <code>Source/Image/*.png</code>＋<code>*.webp</code>，Demo 只引用 WebP，接共用 Image 開關；G1～G500 無專屬美術，以一般倍數圖加重轉角標顯示。（10/15）</li>
-            <li>未實作：OP Jackpot（Config／Simulator 無資料）；Help 尚無 <code>game_help_draft.md</code>，Help 視窗先顯示提示。未修改 XLSX／Config 數學參數。（10/15）</li>
-            <li>驗證：頁內同邏輯模擬 Card Off NB 30 萬局 RTP 2140%／Hit 20.55%（Simulator 10⁶ 2110%／20.52%）；Card On 92A NB 93.15%、94A NB 93.35%、EB1 90.87%、EB2 93.81%、SF 92.07%，皆在 2σ 內、Retry 超限 0；指定卡片區間、RNG 重跑（同 Retry 次數與得分）、SF 5 轉累積倍數、手機版面皆正常；Console 只有尚未製作的 game_help_draft.md 404。（10/15）</li>
-            <li>Help 改讀 <code>game_help_draft.md</code>（離線雙擊用內嵌副本），版式同 H045：區塊標題、副標題、規則與賠率表依語言切換，賠率依目前押注換算（企劃書賠率以 100 Credit 為基準）。未修改 XLSX／Config 數學參數。（10/16）</li>
+            <li>未實作：OP Jackpot（Config／Simulator 無資料）；Help 尚無 <code>game_help.md</code>，Help 視窗先顯示提示。未修改 XLSX／Config 數學參數。（10/15）</li>
+            <li>驗證：頁內同邏輯模擬 Card Off NB 30 萬局 RTP 2140%／Hit 20.55%（Simulator 10⁶ 2110%／20.52%）；Card On 92A NB 93.15%、94A NB 93.35%、EB1 90.87%、EB2 93.81%、SF 92.07%，皆在 2σ 內、Retry 超限 0；指定卡片區間、RNG 重跑（同 Retry 次數與得分）、SF 5 轉累積倍數、手機版面皆正常；Console 只有尚未製作的 game_help.md 404。（10/15）</li>
+            <li>Help 改讀 <code>game_help.md</code>（離線雙擊用內嵌副本），版式同 H045：區塊標題、副標題、規則與賠率表依語言切換，賠率依目前押注換算（企劃書賠率以 100 Credit 為基準）。未修改 XLSX／Config 數學參數。（10/16）</li>
             <li>盤面改為獨立方格（同其他 Demogame）：拿掉棕色輪框與漸層，每格一張圓角方塊、格間留縫；結構依遊戲畫面為 3×3＋右側 R4，R4 欄頂端放 WIN MULTIPLIER 標籤、R4 三格等比縮小塞入，整欄上下與左側盤面對齊，R4 中線保留綠框；符號圖不變。只改演出。（10/16）</li>
             <li>格子比例改照符號圖 200:156（原本正方形格讓長方形圖上下留白不一、WW 偏大，看起來歪）：三列等高等距；符號圖限制在格內；R4 圓幣圖四周有透明留白，放大 1.3 倍。只改演出。（10/16）</li>
             <li>格子大小改依盤面面板寬度自動縮放（最大 90px），窄視窗時右側 WIN MULTIPLIER 不再被面板切掉；R4 圓幣放大改 1.2 倍。驗證：面板 440／400／360／320px 盤面左右留白對稱、標籤完整。只改演出。（10/16）</li>
@@ -286,13 +286,13 @@
     </div>
   </dialog>
 
-  <!-- game_help_draft.md 的內嵌副本（離線雙擊時使用；以 http 開啟時優先讀取同資料夾的 game_help_draft.md；md 改了要同步）-->
+  <!-- game_help.md 的內嵌副本（離線雙擊時使用；以 http 開啟時優先讀取同資料夾的 game_help.md；md 改了要同步）-->
   <script id="embeddedGameHelpMarkdown" type="text/plain">
 # 101007 Game Help Draft
 
 這份 md 是 `對外文件/101007_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
-底稿：企劃書 `其他/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx` 的 `7.Help`；格式比照 H045 的 `game_help_draft.md`；規則以 `game_rule.md` 為準。
+底稿：企劃書 `其他/企劃書/H5企劃書_101007_Super Gems 超級寶石.xlsx` 的 `7.Help`；格式比照 H045 的 `game_help.md`；規則以 `game_rule.md` 為準。
 
 ## Game Meta
 
@@ -1051,10 +1051,10 @@
     }
   };
 
-  // ===== Help（讀 game_help_draft.md；離線雙擊時用內嵌副本；版式同 H045，賠率表依目前押注換算）=====
+  // ===== Help（讀 game_help.md；離線雙擊時用內嵌副本；版式同 H045，賠率表依目前押注換算）=====
   let helpMarkdown = $("embeddedGameHelpMarkdown")?.textContent || "";
   if (/^https?:$/.test(location.protocol)) {
-    fetch("./game_help_draft.md", { cache: "no-store" }).then((r) => (r.ok ? r.text() : "")).then((t) => { if (t) helpMarkdown = t; }).catch(() => {});
+    fetch("./game_help.md", { cache: "no-store" }).then((r) => (r.ok ? r.text() : "")).then((t) => { if (t) helpMarkdown = t; }).catch(() => {});
   }
   const HELP_BASE_CREDIT = 100;   // 企劃書賠率以 100 Credit 押注表示：派彩 = 賠率 ÷ 100 × 押注
   const helpCells = (line) => { const t = line.trim(); return t.startsWith("|") && t.endsWith("|") ? t.slice(1, -1).split("|").map((x) => x.trim()) : null; };
@@ -1244,7 +1244,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；SF 記在 FG）</script>
   <script>window.DEMOGAME_REPORT_URL = "./report.html";</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "JILI Fortune Gems 500", "expect": "中獎觸發重轉球，倍數一路累加後回頭乘上線獎。", "changes": ["押注分 Extra Bet 1（1.5 倍）和 Extra Bet 2（8 倍），押越高 R4 的倍數越大", "重轉球：有得分時觸發重轉，連續停出 3～50 個倍數，相加後再乘線獎", "Super Feature 用 250 倍押注購買，一次 5 轉，倍數逐轉累加", "加入 OP Jackpot，由重轉球隨機觸發"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
   <script>
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));
   </script>

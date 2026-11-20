@@ -15,7 +15,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="h014-by-game">
     /* 文件層級 box-sizing 基準（與既有 Demogame 相同；共用 CSS 未宣告） */
     *, *::before, *::after { box-sizing: border-box; }
@@ -332,7 +332,7 @@
     </div>
   </dialog>
 
-  <!-- Help 內容（同 對外文件/101002_Help.xlsx 7.Help／game_help_draft.md，中文以 s2tw 轉繁體；Demo 一律用此副本） -->
+  <!-- Help 內容（同 對外文件/101002_Help.xlsx 7.Help／game_help.md，中文以 s2tw 轉繁體；Demo 一律用此副本） -->
   <script id="embeddedH014HelpMarkdown" type="text/plain">
 # 101002 Game Help Draft
 
@@ -1227,8 +1227,8 @@
     }
   };
 
-  // ===== Help（game_help_draft.md）=====
-  // 2026-11-20：一律用內嵌副本（文字同 101002_Help.xlsx，中文以 s2tw 轉繁體）；不再讀簡中的 game_help_draft.md
+  // ===== Help（game_help.md）=====
+  // 2026-11-20：一律用內嵌副本（文字同 101002_Help.xlsx，中文以 s2tw 轉繁體）；不再讀簡中的 game_help.md
   const helpMarkdown = $("embeddedH014HelpMarkdown").textContent;
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -1257,7 +1257,7 @@
       else if (text) out.push(`<div class="help-rule">${inline(text)}</div>`);
     }
     close();
-    return out.join("") || `<div class="help-load-error">game_help_draft.md 內容為空</div>`;
+    return out.join("") || `<div class="help-load-error">game_help.md 內容為空</div>`;
   }
 
   // ===== 介面 =====
@@ -1400,7 +1400,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-13 15:40"; window.DEMOGAME_TUNING_CODE = "6K2USE";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG 最大倍數；本作無 FG）</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "TaDa Gaming Money Coming", "expect": " R4 停在倍數或轉盤，把前三輪的數字分一口氣放大。", "changes": ["押注加開 Bet50／Bet100（競品只有底注 1／5／10），高押注加入 10、00 數字和紅轉盤", "Bet100 數字分上限放寬到 5000 倍押注，最高可開到約 1 萬倍", "Bet5／Bet10 最高倍數提高到約 1,055x", "Extra Bet 為 1.5 倍押注，R4 每把都有特色", "加入 OP Jackpot 四階彩金"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
   <script>
     // 共用模組載入後，依 Card System 開關狀態同步 Natural Table 欄位
     document.dispatchEvent(new CustomEvent("demogame:card-system-change", { detail: { enabled: document.getElementById("cardSystemInput")?.checked } }));

@@ -97,19 +97,19 @@
 
 ### 2.5 Help 資料
 
-- `game_help_draft.md`。
+- `game_help.md`。
 - 正式規則章節清單。
 - 简中及英文規則文字。
 - Paytable。
 - 不應顯示的內部內容，例如 Game Meta、來源說明、待確認事項及編輯備註。
-- English Help 必須使用 `game_help_draft.md` 的英文欄，不另外建立另一份英文規則。
+- English Help 必須使用 `game_help.md` 的英文欄，不另外建立另一份英文規則。
 
 ## 3. 建議檔案結構
 
 ```text
 <Game Folder>/
 ├─ index.html
-├─ game_help_draft.md
+├─ game_help.md
 ├─ config_*.js
 ├─ Simulator.py                 # 若專案有模擬器
 ├─ Assets/ 或 Image/
@@ -437,18 +437,18 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 ### 6.17 Help
 
 - Help 按鈕放在 Setting。
-- 點擊後使用彈窗顯示 `game_help_draft.md` 的規則內容。
-- 規則文字必須與 `game_help_draft.md` 完全相同，不可在 HTML 中另外改寫。
+- 點擊後使用彈窗顯示 `game_help.md` 的規則內容。
+- 規則文字必須與 `game_help.md` 完全相同，不可在 HTML 中另外改寫。
 - 只顯示正式規則與 Paytable。
 - 不顯示文件前言、Game Meta、來源說明、待確認事項或編輯備註。
 - Help 一次只顯示目前選擇的語言，不使用中英並排。
-- 中文模式使用 `game_help_draft.md` 的简中欄。
-- English 模式直接使用 `game_help_draft.md` 的英文欄，文字不可重新翻譯或改寫。
+- 中文模式使用 `game_help.md` 的简中欄。
+- English 模式直接使用 `game_help.md` 的英文欄，文字不可重新翻譯或改寫。
 - Language 切換時，已開啟的 Help 必須立即切換內容。
 - 規則以區域卡片整理，不直接顯示原始 Markdown 表格。
 - 必須支援 Close 按鈕、`Esc` 與點擊背景關閉。
 - 必須提供離線備援內容，確保雙擊 `index.html` 時仍可閱讀。
-- 若 Help 內容採內嵌備援，更新 `game_help_draft.md` 時必須同步更新內嵌內容並做文字一致性檢查。
+- 若 Help 內容採內嵌備援，更新 `game_help.md` 時必須同步更新內嵌內容並做文字一致性檢查。
 
 ## 7. 操作鎖定矩陣
 
@@ -600,7 +600,7 @@ Setting 永遠顯示，並固定在所有下方區域的最後。
 
 - [ ] Setting 中有 Help 按鈕。
 - [ ] Help 只顯示正式規則與 Paytable。
-- [ ] Help 文字與 `game_help_draft.md` 完全一致。
+- [ ] Help 文字與 `game_help.md` 完全一致。
 - [ ] Help 一次只顯示目前選擇的語言。
 - [ ] 中文使用 Markdown 简中欄；English 直接使用 Markdown 英文欄。
 - [ ] Help 開啟時切換 Language，內容會立即更新。

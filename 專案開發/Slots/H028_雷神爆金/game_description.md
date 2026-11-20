@@ -91,4 +91,4 @@ RTP 口徑：彩金派彩不入 `rtp_game`，另計 `rtp_link`（JP1+JP2）與 `
 | RTP 工作簿／config（含 Bet100） | `3.5.0.0` | `基礎.卡片.SCR.其他`：卡片權重→第 2 碼、SCR→第 3 碼 |
 | 歷史版本 | `Versions/<四碼>/`＋`version_manifest.js/.json` | 數學調整寫入 Change Log |
 
-相關文件：`game_rule.md`（完整規則）、`game_help_draft.md`／`文件/101016_Help.xlsx`（玩家文案）、`文件/101016_Math Document Description.md`＋`_EN.md`（數學文件說明）、`文件/PARsheet/`（base＋四版＋兩份 Bet100 的 R 值版）、`個人筆記/數值報告*.html`（權重調整報告）。
+相關文件：`game_rule.md`（完整規則）、`game_help.md`／`文件/101016_Help.xlsx`（玩家文案）、`文件/101016_Math Document Description.md`＋`_EN.md`（數學文件說明）、`文件/PARsheet/`（base＋四版＋兩份 Bet100 的 R 值版）、`個人筆記/數值報告*.html`（權重調整報告）。

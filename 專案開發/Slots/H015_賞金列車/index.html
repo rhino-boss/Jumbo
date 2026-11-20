@@ -1897,7 +1897,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
   <style id="symbol-size-fix">
     /* 符號圖放大（2026-10-19）：圖填滿整格；A／K／Q／J 素材留白多再放大 1.25 倍 */
     #board .cell .h015-symbol-img { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
@@ -2074,7 +2074,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help_draft.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
     </div>
   </dialog>
   <script id="embeddedH015GameHelpMarkdown" type="text/plain">
@@ -2263,7 +2263,7 @@
   });
   const GOLD_FRAME_ASSET = "./Source/Image/Frame_Symbol.webp";
   window.DEMOGAME_SYMBOL_ART = SYMBOL_ASSET_BY_CODE;   // Help 賠率表符號圖（共用 demogame_common.js）
-  const HELP_PATH = "./game_help_draft.md";
+  const HELP_PATH = "./game_help.md";
   const STORAGE_KEY = "slotDemoLanguage";
   const BET_LEVELS = [...new Set([...(Box.bet_options?.length ? Box.bet_options : [1, 2, 5, 10]), 2000, 3000, 5000].map(Number))];   // Bet Currency 最大押注 2000／3000／5000
 
@@ -2280,7 +2280,7 @@
       forceFg: "Force FG", buyStart: "Buy Feature paid — guaranteed FG trigger spin",
       insufficient: "Insufficient credit",
       noWin: "No win", complete: "complete", triggered: "Free Game triggered", retrigger: "Free Game retriggered",
-      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_help_draft.md.",
+      helpTitle: "Game Help", close: "Close", loading: "Loading game rules...", loadFail: "Unable to load game_help.md.",
       footer: "Double-click to play offline. No server needed.", configFixed: "H015192 (xlsx)",
       languageChanged: "Language changed to English", resetDone: "Game and statistics reset"
     },
@@ -2296,7 +2296,7 @@
       forceFg: "強制 FG", buyStart: "已支付購買特色費用 — 本局保證觸發 FG",
       insufficient: "餘額不足",
       noWin: "未得獎", complete: "完成", triggered: "已觸發免費遊戲", retrigger: "免費遊戲再觸發",
-      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_help_draft.md。",
+      helpTitle: "遊戲 Help", close: "關閉", loading: "正在載入遊戲規則…", loadFail: "無法載入 game_help.md。",
       footer: "可直接雙擊離線遊玩，不需要伺服器。", configFixed: "H015192（xlsx）",
       languageChanged: "語言已切換為中文", resetDone: "遊戲與統計已重置"
     }
@@ -3290,7 +3290,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-28 12:01"; window.DEMOGAME_TUNING_CODE = "HQHA4G";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Wild Bounty Showdown", "expect": "金框中獎轉 Wild 接續連消，把乘數階梯一路推高。", "changes": ["3,600 Ways，6 輪 3-4-5-5-4-3 盤面，中獎消除掉落", "R3、R4 符號可帶金框，中獎後原位轉 Wild", "每段消除前抽炸彈推進乘數階梯，最高 x1024", "Buy Feature 為 75 倍押注"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
 </body>
 
 </html>

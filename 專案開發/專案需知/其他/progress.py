@@ -40,7 +40,7 @@ DEFAULT_ITEMS = [
     ("6 文件製作", "`game_description.md`"),
     ("6 文件製作", "PARsheet"),
     ("6 文件製作", "Math Document Description（中英）"),
-    ("6 文件製作", "`game_help_draft.md` → Help.xlsx"),
+    ("6 文件製作", "`game_help.md` → Help.xlsx"),
     ("6 文件製作", "Game Description"),
     ("7 文件檢查", "交付檔案全部檢查、版本凍結"),
     ("7 文件檢查", "`修改紀錄.md`、`注意事項.md`"),

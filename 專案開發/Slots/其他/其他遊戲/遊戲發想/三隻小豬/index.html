@@ -1898,7 +1898,7 @@
     #multPill.pig-bump,#demogame-info-bar .dib-item.pig-bump{animation:pigBump 260ms ease-out}
     @keyframes pigBump{0%{transform:scale(1.25);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1)}}
   </style>
-  <link rel="stylesheet" href="../../../../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../../../../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2139,7 +2139,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help_draft.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
     </div>
   </dialog>
 
@@ -2742,7 +2742,7 @@
       }
       let markdown = "";
       try {
-        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        const response = await fetch("./game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {
         // file:// blocks fetch in some browsers; the same-folder iframe is the offline fallback.
@@ -2761,7 +2761,7 @@
       try {
         renderGameHelpRules(markdown);
       } catch (_) {
-        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help_draft.md is in the same folder as index.html.</div>';
+        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help.md is in the same folder as index.html.</div>';
       }
     }
 
@@ -5188,7 +5188,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-11-20 16:10"; window.DEMOGAME_TUNING_CODE = "NTUVRT";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"label": "base", "competitor": "彩罐熱舞", "expect": "金色符號在同一格反覆中獎，框從茅草一路蓋成木頭、磚頭屋，框越堅固倍數越大。", "changes": ["金框改成金色符號：不帶倍數，中獎一樣在原位轉 Wild", "金色符號中獎的格子加茅草框，同一格再有金色符號中獎就升級：茅草 → 木頭 → 磚頭", "連消結束框開出倍數（茅草 1～2500x、木頭 3～2500x、磚頭 20～2500x，高倍數只是有機率），Mult＝1＋所有框倍數，乘該局得分", "BG 每局重置框；FG 框整場保留、可繼續升級", "FG 局數改 3／4／5 Scatter → 10／15／20 局；FG 中再出 3 顆以上 Scatter 固定 +5 局", "輪帶改用 PG Piñata Wins（含 BF 進場盤），沒有第 3 輪整輪金色；BG 金框比例調高（停輪平均約 2.5 顆）", "BG 補牌金色比例 R2～R4 提高到 65%，磚頭約每 300 轉出現一次"]};</script>
-  <script src="../../../../demogame_common.js?v=20261120v"></script>
+  <script src="../../../../demogame_common.js?v=20261120w"></script>
 </body>
 
 </html>

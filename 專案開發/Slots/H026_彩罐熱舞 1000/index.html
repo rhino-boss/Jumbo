@@ -1838,7 +1838,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -2114,7 +2114,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help_draft.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
     </div>
   </dialog>
 
@@ -2288,20 +2288,24 @@
 
   <script>
     // 2026-11-20 使用者：Config 選單只列系列（A；B 版凍結、檔案不在），小／中／大 Bet 依押注自動切換（同 H032）。
-    // 三份 config 都寫 window.H026_BOX_DATA，逐份接進 H026_BOX_SET；執行時整份切換 Box（94A 連輪帶／drop weight 都不同）。
-    // 舊網址 ?config=config_92A.js 等一律視為 A 系列。
-    const H026_TIER_FILES = { mid: "config_92A.js", small: "config_94A.js", big: "config_92A_Bet100.js" };
+    // 一個市場一份 config（config_01A.json）：base 疊上 tiers[層級] 展開成 H026_BOX_SET；執行時整份切換 Box（94A 連輪帶／drop weight 都不同）。
+    // 網頁載入同內容的 config_01A.js（file:// 開網頁不能讀 .json）
     const H026_TIER_CODE = { mid: "92A", small: "94A", big: "92A_Bet100" };
     const H026_ACTIVE_CONFIG = "A";
     window.DEMOGAME_PRODUCT_LINE = "01";   // 產線編號（說明書 ID 對照表：01＝菲律賓主流遊戲）；Config 選單顯示 A-01-Base／A-01
-    window.H026_BOX_SET = {};
-    for (const [tier, file] of Object.entries(H026_TIER_FILES)) {
-      document.write(`<script src="./${file}"><\/script>`);
-      document.write(`<script>window.H026_BOX_SET.${tier} = window.H026_BOX_DATA; window.H026_BOX_DATA = undefined;<\/script>`);
-    }
+    document.write(`<script src="./config_01A.js"><\/script>`);
     document.write(`<script>
-      if (!window.H026_BOX_SET.mid) throw new Error("H026 config_92A.js 未載入");
-      window.H026_BOX_DATA = window.H026_BOX_SET.mid;
+      (() => {
+        const set = window.H026_CONFIG_01A;
+        if (!set || !set.tiers) throw new Error("H026 config_01A.js 未載入");
+        window.H026_BOX_SET = {};
+        for (const [tier, code] of Object.entries(H026_TIER_CODE)) {
+          if (!set.tiers[code]) throw new Error("config_01A.js 缺少押注層級 " + code);
+          const { source, ...override } = set.tiers[code];
+          window.H026_BOX_SET[tier] = { ...set.base, ...override };
+        }
+        window.H026_BOX_DATA = window.H026_BOX_SET.mid;
+      })();
     <\/script>`);
   </script>
   <script>
@@ -2722,7 +2726,7 @@
       }
       let markdown = "";
       try {
-        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        const response = await fetch("./game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {
         // file:// blocks fetch in some browsers; the same-folder iframe is the offline fallback.
@@ -2741,7 +2745,7 @@
       try {
         renderGameHelpRules(markdown);
       } catch (_) {
-        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help_draft.md is in the same folder as index.html.</div>';
+        helpContentEl.innerHTML = '<div class="help-load-error">Unable to load the rule text.<br>Please confirm game_help.md is in the same folder as index.html.</div>';
       }
     }
 
@@ -4834,7 +4838,7 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-10-02 15:36"; window.DEMOGAME_TUNING_CODE = "YASZYU";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": "消除到帶倍數的金框，倍數一路累積，Spin 結束時一次乘上總得分。", "changes": ["5×3、20 線，中獎消除掉落", "R2～R4 符號可帶金框，中獎後原位轉 Wild", "金框可帶 x2～x1000 倍數，消除時收集累積，Spin 結束乘上總得分", "提供 Extra Bet 與 Buy Feature（75 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
 </body>
 
 </html>

@@ -1792,7 +1792,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator">
@@ -1964,7 +1964,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading">Loading game rules...</div>
       </div>
-      <iframe id="helpFrame" title="Game Help content" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpFrame" title="Game Help content" src="./game_help.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
 
@@ -3304,7 +3304,7 @@
     let markdown = window.location.protocol === "file:" ? el.embeddedHelp.textContent.trim() : "";
     if (!markdown) {
       try {
-        const response = await fetch("./game_help_draft.md", { cache: "no-store" });
+        const response = await fetch("./game_help.md", { cache: "no-store" });
         if (response.ok) markdown = await response.text();
       } catch (_) {}
     }
@@ -3470,7 +3470,7 @@
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數）</script>
   <script>window.DEMOGAME_LAST_TUNING = "2026-07-14 16:16"; window.DEMOGAME_TUNING_CODE = "3M9V53";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_OVERVIEW={"expect": " Wild 中獎轉成倍數球，最終盤面倍數加總乘上整轉獎金。", "changes": ["6×5 盤面，符號任意位置達門檻即得分，中獎消除掉落", "倍數球可直接出現，也可由中獎的 Wild 轉成，倍數 2～1000x 相加後乘上整轉獎金", "4 顆以上 Scatter 觸發 15 場免費遊戲，倍數累積到該場結束，最多 50 場", "提供 Buy Feature（100 倍押注）與 Super Feature（500 倍押注）"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
 </body>
 
 </html>

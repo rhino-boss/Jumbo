@@ -13,7 +13,7 @@ Game Rule 用於設定遊戲玩法規則，是數學模型、Config、Simulator�
 - 每款遊戲必須提供 `game_rule.md`，並明確定義遊戲基礎設定、得分方式、Symbol 功能、判獎順序、Bet Mode、BG／FG 流程、Feature、Retrigger、Multiplier、Max Win、Jackpot 與例外處理。
 - Game Rule 必須沿用本節定義的固定章節骨架、標題層級、表格形式及規則表達方式。
 - 數學模型、Config、Simulator、Demogame 與 Help 不得自行補充或改寫 `game_rule.md` 未定義的玩法。
-- 規則變更時，必須同步檢查並更新數學文件、Config、Simulator、Demogame、`{GameID}_Help.xlsx`、`game_help_draft.md` 與測試案例。
+- 規則變更時，必須同步檢查並更新數學文件、Config、Simulator、Demogame、`{GameID}_Help.xlsx`、`game_help.md` 與測試案例。
 - Game Rule 與其他來源內容衝突時，必須先確認正式規則，不得由開發端自行選擇其中一種實作。
 
 Game Rule 必須保留下列基本結構：

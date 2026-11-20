@@ -308,7 +308,7 @@ RTP FG    = FG Pay / Coin In
 | `config.js` | `H0281.xlsx` 的執行版 | `excel_version` 必須為單一整數 |
 | `Source/H028188B.xlsx` / `H028190B.xlsx` / `H028192A.xlsx` / `H028194A.xlsx` | 卡片區間、Fix Num、RTP 權重、OP Jackpot SCR 權重 | 四碼 `基礎.卡片.SCR.其他`，目前 `3.3.0.0` |
 | `config_88B.js` / `config_90B.js` / `config_92A.js` / `config_94A.js` | RTP / Card 執行資料 | 必須與 RTP XLSX 四碼版本一致 |
-| `game_help_draft.md` | 玩家可見規則文案（Help.xlsx 前置確認稿） | 不得與本文件遊戲邏輯矛盾 |
+| `game_help.md` | 玩家可見規則文案（Help.xlsx 前置確認稿） | 不得與本文件遊戲邏輯矛盾 |
 
 Simulator 與 index 同時載入 base config 與 RTP config；自然機率以 base config 為準，版本及 Card System 以 RTP config 為準。載入時必須檢查 `game_id` 與主版本相同。
 

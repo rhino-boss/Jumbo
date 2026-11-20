@@ -290,7 +290,7 @@ Slots/
       <div id="helpContent" class="help-content"></div>
     </div>
   </dialog>
-  <script id="embeddedGameHelpMarkdown" type="text/plain">（game_help_draft.md 全文，格式見 2.8）</script>
+  <script id="embeddedGameHelpMarkdown" type="text/plain">（game_help.md 全文，格式見 2.8）</script>
   <script src="./Versions/version_manifest.js?v=YYYYMMDDa"></script>
   <script>/* ① 選版本與系列、依序載入 config（見 2.5），同步填 #versionSelect／#configSelect */</script>
   <script>/* ② 遊戲主程式：Render、動畫、狀態、共用介面（見 2.6） */</script>
@@ -394,14 +394,14 @@ Slots/
 | `demogameFgBanner.trigger({ spins, icon, auto })`、`end({ win, bet, format, auto })` | → Promise（看板關閉時 resolve） | FG 觸發／結算看板（第 5 節 FG 看板）。`trigger` 顯示「免費遊戲／N 場」（`icon` 預設 `C1`，取 `DEMOGAME_SYMBOL_ART`）；`end` 顯示「免費遊戲結束／總贏分／金額／倍數（`win ÷ bet`，2 位小數）」並自帶 `data-hold-stop`。`auto` 傳目前是否 Auto（布林或函式）。 |
 | `demogameFgBanner.show({ icon, title, sub, count, note, html, holdStop, auto, autoMs })`、`close()`、`isOpen()` | → Promise | 自訂內容的看板（卡片依序 icon／title／sub／count／note；`html` 整段取代）；`icon` 可給代號、圖片網址或 HTML。 |
 | `demogameHelp.render(md, { lang, bet, baseBet, format, config, configOptions })` | → `#helpContent` | 解析第 2.8 節格式的 md 輸出到 `#helpContent`：`lang`＝`zh`／`en`（預設讀 `#languageSelect`）、`bet`＝目前底注（數字或函式，預設讀 `#betValue`）、`baseBet`＝md 賠率數字的基準（預設 `config.base_bet`，再無則 100）、`format`＝金額格式函式。md 沒有賠率表且有給 `config` 時，自動用 `configPaytable` 補上；完全沒內容時輸出 `.help-load-error`。Help 開著時押注或語言改變會自動重畫。 |
-| `demogameHelp.load({ url, embeddedId })`、`open(opts)`、`parse(md)` | `load` → `Promise<md>`；`open` → 載入＋`render`＋開 `#helpDialog` | `load` 先 fetch `./game_help_draft.md`（`file://` 略過），讀不到用內嵌 `#embeddedGameHelpMarkdown`；`open(opts)` 一次做完，`#helpBtn` 直接綁它即可。 |
+| `demogameHelp.load({ url, embeddedId })`、`open(opts)`、`parse(md)` | `load` → `Promise<md>`；`open` → 載入＋`render`＋開 `#helpDialog` | `load` 先 fetch `./game_help.md`（`file://` 略過），讀不到用內嵌 `#embeddedGameHelpMarkdown`；`open(opts)` 一次做完，`#helpBtn` 直接綁它即可。 |
 | `demogameHelp.configPaytable(cfg, { type, bet, baseBet, format, counts, reels, skip })` | → `.help-payout-table` 元素或 `null` | 由 config 產生賠率表（之後共用版式排成每個符號一張「N - 派彩」卡片）。`type` 不給時自動判斷：有 `paylines`／`line_num`／`lines` → Lines；`pays` 是物件或有 `max_ways`／`ways` → Ways；其餘 → 全盤計數。派彩讀 `pay_table` → `pays` → `paytable`（陣列依符號 index，或物件 key＝index／代號）；符號名讀 `symbol_str` → `symbol_names` → `symbol_codes`。Ways／Lines 欄位＝(`reel_num` − 欄數 + 1)～`reel_num` 連；計數型依 `counts` → `count_labels` → `min_cluster` 起算（最後一欄加「+」）。派彩 ÷ `baseBet`（預設 `base_bet` → `default_coin_in` → 1）× 目前押注；全 0 的符號與欄略過。遊戲也可設 `window.DEMOGAME_HELP_CONFIG`（＋選用 `DEMOGAME_HELP_CONFIG_OPTIONS`），`#helpContent` 出現 `.help-load-error` 時共用模組自動補上。 |
 
 共用模組設定的唯讀狀態：`window.DEMOGAME_CARD_SYSTEM_ENABLED`（卡片系統是否開）、`window.DEMOGAME_SYMBOL_IMAGES_ENABLED`（符號圖是否在用）、`window.demogameSpaceHolding`（是否正在長按連續 Spin）、`window.__demogameImageCache`（已預載的 Image 物件）。
 
 ### 2.8 Help 資料格式
 
-Help 原文＝專案的 `game_help_draft.md`，整份貼進 `<script id="embeddedGameHelpMarkdown" type="text/plain">`（雙擊離線開啟時讀不到外部 .md）。格式：
+Help 原文＝專案根目錄的 `game_help.md`（固定檔名，舊名 `game_help_draft.md` 不再使用），整份貼進 `<script id="embeddedGameHelpMarkdown" type="text/plain">`（雙擊離線開啟時讀不到外部 .md）。格式：
 
 ```markdown
 ## PAYTABLE                      ← 區塊（## 開頭；名稱含 Meta 的區塊不顯示）
@@ -498,8 +498,8 @@ Help 原文＝專案的 `game_help_draft.md`，整份貼進 `<script id="embedde
 - BG、Cascade、FG、Retrigger 與 Feature 狀態按真實流程播放。
 - FG 結束回到 BG 時，盤面還原成觸發 FG 那局的 BG 最終盤面（BF 為入場盤），Feature Status 回到基礎遊戲。
 - Config、Version、Profile、押注層級、Card System 與 Language 只顯示實際支援的內容。
-- Help 與 `game_help_draft.md` 一致，不在 HTML 另維護一份規則。
-- Help 至少要有賠率表：`game_help_draft.md` 沒有賠率（或讀不到、只剩離線副本）時，由 Config 的 Paytable 依目前押注產生。
+- Help 與 `game_help.md` 一致，不在 HTML 另維護一份規則。
+- Help 至少要有賠率表：`game_help.md` 沒有賠率（或讀不到、只剩離線副本）時，由 Config 的 Paytable 依目前押注產生。
 - Help 版式（共用 `demogame_common.js`，2026-11-18 照參考排版）：內容窄欄（最寬 600px）置中；區塊標題白色 20px 置中、副標題白色 16px 置中、區塊之間用分隔線；規則 14px 淺灰、前面圓點「•」、條與條之間留空；全大寫的英文規則自動轉成句首大寫（[代號]、{數字}、FG／RTP／C1 等縮寫與 Free Game、Wild 等功能名稱維持大寫）。賠率表顯示成兩欄符號卡片，每張是「符號＋由大到小兩欄（張數白、派彩金色）」，每張卡片都框起來（淡底色＋細框、圓角 10px、卡片間距 10px，樣式同特殊符號卡片；2026-11-20）；特殊符號（WW／W2／C1／C2…）放在賠率表這一區、一般符號格前面，跟一般符號之間不畫分隔線（分隔線只用在區和區之間），不可排進一般符號的兩欄格裡（2026-11-20 照參考排版）：每個特殊符號一張滿欄寬、有淡底色與細框的卡片，「左圖右文」，由上到下排（先 Wild 後 Scatter）：左邊符號圖（有美術 76px），右邊先是金色名稱（正式 Help 的副標題，例：百搭符號）再是該符號的說明條列；說明跟其他區完全同一種排法（靠左、圓點、同字級行高），不可置中或拿掉圓點。Help 所有內文的字級、行高、條距一律相同（14px／1.55，特殊符號說明也一樣）。內文裡的 [代號]（[WW]、[C1]、[M1]…）一律換成內嵌符號小圖，小圖不可撐高行高；彩金名稱 [GRAND]／[MAJOR]／[MINOR]／[MINI] 換成彩金列同色的粗體字（紅／紫／藍／綠），不留中括號；其餘遊戲沒有那個代號的圖就維持 [代號] 文字，不硬換；沒美術時特殊符號的圖改用代號方格。有符號美術的遊戲要定義 `window.DEMOGAME_SYMBOL_ART = { 代號: 圖片網址 }`，卡片用該圖；沒美術時，顯示與盤面同款的深色代號方格（C1／SC 金色、WW 綠色）。
 - Help 走線圖（共用，2026-11-20）：正式 Help 的 `[走線圖-1,024 MAX WAYS]`、`[走線圖-3 OF A KIND PAYS 2 WAYS]`、`[走線圖-NO WIN]` 佔位列要原樣放進 Demo 的 Help 文字，共用程式會畫成盤面小圖（一格一格的盤面、金色圓點代表符號位置；NO WIN 把中斷的那一軸整軸標紅），三張排成一橫排、各自一張卡片、圖下寫說明。盤面大小讀 config 的 `reel_num`／`window_size`，讀不到的遊戲宣告 `window.DEMOGAME_WAY_BOARD = [軸數, 列數]`。
   - 三種遊戲類型的走線圖長相不同（2026-11-20 使用者提供正式 Help 的樣子），Demo 要照該類型畫，配色用 Demo 的深色樣式（淡底色卡片、金色標示、紅色標中斷軸），不照搬正式 Help 的底色：

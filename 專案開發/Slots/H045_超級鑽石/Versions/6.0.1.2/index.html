@@ -2412,7 +2412,7 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help_draft.md" aria-hidden="true" tabindex="-1"></iframe>
+      <iframe id="helpSourceFrame" title="Game Help source" src="./game_help.md" aria-hidden="true" tabindex="-1"></iframe>
     </div>
   </dialog>
   <script id="embeddedGameHelpMarkdown" type="text/plain">
@@ -2420,7 +2420,7 @@
 
 這份 md 是 `Output/101015_Help.xlsx` 的前置確認稿。
 之後若要重產 xlsx，應先確認並修改這份 md，再轉成結構化 spec / xlsx。
-底稿：Lucky Ace（101003）企劃書 `7.Help`；格式比照 H027／H028 的 `game_help_draft.md`；規則以 `game_rule.md` 為準。
+底稿：Lucky Ace（101003）企劃書 `7.Help`；格式比照 H027／H028 的 `game_help.md`；規則以 `game_rule.md` 為準。
 
 ## Game Meta
 
@@ -4048,7 +4048,7 @@
     updateStats(); setBusy(false); if (state.auto) setTimeout(() => play(0), 180);
   }
 
-  // Help：讀 game_help_draft.md（失敗時用內嵌備份），版式同 H028；賠率表依目前押注換算（2026-10-13）
+  // Help：讀 game_help.md（失敗時用內嵌備份），版式同 H028；賠率表依目前押注換算（2026-10-13）
   function helpCells(line) { const t = line.trim(); return t.startsWith("|") && t.endsWith("|") ? t.slice(1, -1).split("|").map(x => x.trim()) : null; }
   function parseHelpData(md) {
     const sections = []; let section = null, group = null, payLang = "zh";
@@ -4121,7 +4121,7 @@
   }
   async function openHelp() {
     let md = $("embeddedGameHelpMarkdown")?.textContent?.trim() || "";
-    try { const r = await fetch("./game_help_draft.md", { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) {}
+    try { const r = await fetch("./game_help.md", { cache: "no-store" }); if (r.ok) md = await r.text(); } catch (_) {}
     state.helpMarkdown = md; renderHelp(md); $("helpDialog").showModal();
   }
 

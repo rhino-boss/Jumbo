@@ -1,4 +1,4 @@
-"""數值報告 report.html 的自動頁簽（2026-11-09 使用者定章節）：玩法說明（game_help_draft.md）、修改紀錄、其他（上線觀察＋開發注意事項＋歷史錯誤紀錄）。
+"""數值報告 report.html 的自動頁簽（2026-11-09 使用者定章節）：玩法說明（game_help.md）、修改紀錄、其他（上線觀察＋開發注意事項＋歷史錯誤紀錄）。
 
 用法：py -X utf8 _report_notes.py <專案>/report.html [...]
 - md 用 _build_html.py 的 Renderer 轉 HTML；每個 `##` 一張卡片，`#` 標題不放（頁簽名稱已說明）。
@@ -60,7 +60,7 @@ def _section_cards(md: str, rename=None):
 
 
 def help_cards(md: str) -> str:
-    """game_help_draft.md → 玩法說明：每個 ## 一張卡片（標題＝主要標題中文），規則說明列成清單，賠率表取中文表；
+    """game_help.md → 玩法說明：每個 ## 一張卡片（標題＝主要標題中文），規則說明列成清單，賠率表取中文表；
     不放 Game Meta、GAME RULE（一般條款）。大括號 {} 拿掉、走線圖佔位不放。"""
     import re
     def clean(t):
@@ -170,7 +170,7 @@ def _new_tab(soup, name, html):
 
 
 def inject(path):
-    """玩法說明（第 2 頁，取 game_help_draft.md）、修改紀錄、其他（上線觀察＋注意事項）併成頁簽，最後重編頁簽號（2026-11-09 使用者定章節）。"""
+    """玩法說明（第 2 頁，取 game_help.md）、修改紀錄、其他（上線觀察＋注意事項）併成頁簽，最後重編頁簽號（2026-11-09 使用者定章節）。"""
     import re
     p = Path(path)
     soup = BeautifulSoup(p.read_text(encoding="utf-8"), "html.parser")
@@ -183,7 +183,7 @@ def inject(path):
         return
     notes = p.parent / "個人筆記"
     added = []
-    hp = p.parent / "game_help_draft.md"
+    hp = p.parent / "game_help.md"
     if hp.exists():
         h = help_cards(hp.read_text(encoding="utf-8"))
         if h:

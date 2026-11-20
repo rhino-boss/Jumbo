@@ -1963,7 +1963,7 @@
       background:#0b1424; color:#cfd8e3; font:14px/1.8 "Microsoft JhengHei",sans-serif; }
     html.dg-css-ok #dgBootMsg { display:none; }
   </style>
-  <link rel="stylesheet" href="../demogame_common.css?v=20261120v" onload="document.documentElement.classList.add('dg-css-ok')">
+  <link rel="stylesheet" href="../demogame_common.css?v=20261120w" onload="document.documentElement.classList.add('dg-css-ok')">
 </head>
 
 <body class="slot-simulator h028">
@@ -2517,12 +2517,12 @@
       <div id="helpContent" class="help-content">
         <div class="help-loading" data-i18n="loadingRules">Loading game rules...</div>
       </div>
-      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help_draft.md";</script>
+      <iframe id="helpSourceFrame" title="Game Help source" aria-hidden="true" tabindex="-1"></iframe><script>/* 只在 file:// 用 iframe 讀 Help；http 下 .md 會被當下載而跳存檔視窗 */if (location.protocol === "file:") document.getElementById("helpSourceFrame").src = "./game_help.md";</script>
     </div>
   </dialog>
 
     <script id="embeddedGameHelpMarkdown" type="text/plain">
-# 101016 Game Help（內容同 對外文件/101016_Help.xlsx／game_help_draft.md；簡中轉繁中；走線圖列由共用程式畫成盤面小圖）
+# 101016 Game Help（內容同 對外文件/101016_Help.xlsx／game_help.md；簡中轉繁中；走線圖列由共用程式畫成盤面小圖）
 
 ## Game Meta
 
@@ -3018,7 +3018,7 @@
   function helpTitle(parent,className,zh,en){let h=document.createElement(className==='help-section-title'?'h3':'h4');h.className=className;h.textContent=state.language==='zh'?(zh||en):(en||zh);parent.appendChild(h)}
   function helpRule(parent,rule){let row=document.createElement('div'),cell=document.createElement('div');row.className='help-rule';cell.className=state.language==='zh'?'help-rule-zh':'help-rule-en';cell.textContent=state.language==='zh'?rule.zh:rule.en;row.appendChild(cell);parent.appendChild(row)}
   function renderHelp(md){gameHelpMarkdown=md;let root=$('helpContent'),sections=parseHelpData(md);root.innerHTML='';for(const section of sections){let card=document.createElement('section');card.className='help-section';helpTitle(card,'help-section-title',section.titleZh,section.titleEn);if(section.key==='PAYTABLE'){let note=document.createElement('div');note.className='help-rule';note.textContent=state.language==='zh'?`以下派彩金額依目前押注 ${BETS[state.betIndex]} 顯示。`:`Payouts below are shown for the current bet of ${BETS[state.betIndex]}.`;card.appendChild(note)}section.rules.forEach(rule=>helpRule(card,rule));for(const group of section.groups){let payouts=group.payouts.filter(x=>x.lang===state.language);if(!group.rules.length&&!payouts.length)continue;helpTitle(card,'help-group-title',group.titleZh||(state.language==='zh'?group.key:'PAYTABLE'),group.titleEn);group.rules.forEach(rule=>helpRule(card,rule));if(payouts.length){let table=document.createElement('div');table.className='help-payout-table';for(let rowIndex=0;rowIndex<payouts.length;rowIndex++){let payout=payouts[rowIndex],row=document.createElement('div');row.className='help-payout-row';for(let cellIndex=0;cellIndex<payout.cells.length;cellIndex++){let value=payout.cells[cellIndex],cell=document.createElement('div');cell.className='help-payout-cell';let clean=value.replace(/[{}]/g,'');cell.textContent=rowIndex>0&&cellIndex>0&&Number.isFinite(Number(clean))?compactNumber(Number(clean)/(Number(B.default_coin_in)||100)*BETS[state.betIndex]):clean;row.appendChild(cell)}table.appendChild(row)}card.appendChild(table)}}root.appendChild(card)}if(!sections.length)root.textContent=state.language==='zh'?'無法載入遊戲規則。':'Unable to load game rules.'}
-  async function openHelp(){let md=$('embeddedGameHelpMarkdown').textContent.trim();renderHelp(md);$('helpDialog').showModal()}   // 2026-11-20：只用內嵌 Help（同 101016_Help.xlsx，賠率為底注 100 的點數、顯示時 ÷100×押注），不再讀 game_help_draft.md
+  async function openHelp(){let md=$('embeddedGameHelpMarkdown').textContent.trim();renderHelp(md);$('helpDialog').showModal()}   // 2026-11-20：只用內嵌 Help（同 101016_Help.xlsx，賠率為底注 100 的點數、顯示時 ÷100×押注），不再讀 game_help.md
   el.spin.onclick=()=>{if(state.awaitingFgSpin&&state.fgSpinResolve){let go=state.fgSpinResolve;state.fgSpinResolve=null;go();return}round('normal')};el.auto.onclick=()=>{state.auto=!state.auto;updateControls();message(state.auto?'Auto started.':'Auto stopped.','mode');if(state.auto&&!state.busy)round('normal')};el.buy.onclick=()=>round('buy');el.force.onchange=()=>{if(el.force.checked){el.force.checked=false;round('force')}};el.betMinus.onclick=()=>{state.betIndex=Math.max(0,state.betIndex-1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betPlus.onclick=()=>{state.betIndex=Math.min(BETS.length-1,state.betIndex+1);renderBetMenu();renderStats();if($('helpDialog').open&&gameHelpMarkdown)renderHelp(gameHelpMarkdown)};el.betBtn.onclick=()=>el.betMenu.classList.toggle('hidden');el.speed.oninput=()=>{state.speed=+el.speed.value;set('speedValue',`x${state.speed}`)};el.debug.onchange=()=>setDebug(el.debug.checked);$('cardSystemInput').checked=INDEX_CARD_SYSTEM_ENABLED;$('cardSystemInput').onchange=e=>{INDEX_CARD_SYSTEM_ENABLED=e.target.checked;try{localStorage.setItem('slotDemoCardSystem',INDEX_CARD_SYSTEM_ENABLED?'on':'off')}catch(_){}renderStats();updateControls();message('Card System | '+(INDEX_CARD_SYSTEM_ENABLED?'On ('+state.cardProfile+')':'Off'),'mode')};el.profile.onchange=()=>{state.cardProfile=el.profile.value==='newbie'?'newbie':'oldhand';try{localStorage.setItem('slotDemoCardProfile',state.cardProfile)}catch(_){}initCards();renderStats();updateControls();message(`Player Profile | ${state.cardProfile==='newbie'?'Newbie':'Oldhand'}`,'mode')};el.card.onchange=updateControls;el.rng.oninput=updateControls;$('setRngResetBtn').onclick=()=>{el.card.value='';el.rng.value='';updateControls();message('Set RNG reset.')};$('previousStepBtn').onclick=()=>showHistory(state.historyIndex-1);$('nextStepBtn').onclick=()=>showHistory(state.historyIndex+1);$('clearLogBtn').onclick=clearLog;$('resetBtn').onclick=reset;$('helpBtn').onclick=openHelp;$('closeHelpBtn').onclick=()=>$('helpDialog').close();$('helpDialog').onclick=e=>{if(e.target===$('helpDialog'))$('helpDialog').close()};addEventListener('keydown',e=>{if(e.key==='Escape'&&$('helpDialog').open)$('helpDialog').close()});$('versionSelect').onchange=()=>{let version=$('versionSelect').value,entry=(window.H028_VERSION_MANIFEST?.versions||[]).find(item=>item.version===version),code=window.CONFIG_CODE||'A';openVersion(version,code)};$('configSelect').onchange=()=>openVersion(window.CONFIG_VERSION,$('configSelect').value);$('languageSelect').onchange=()=>{state.language=$('languageSelect').value;applyLanguage()};
   set('gameId',B.game_id);set('gameName',B.display_name);renderVersionControls();el.profile.value=state.cardProfile;initCards();renderBetMenu();makeIdleBoard();renderStats();renderFeature();updateControls();message('Ready — press Spin');applyLanguage();
   // 載入行：demogame_common.js（demogameLog、Config 選單）在本段之後載入，等 DOMContentLoaded 再寫
@@ -3029,6 +3029,6 @@
   <script>window.DEMOGAME_LAST_TUNING = "2026-09-22 17:26"; window.DEMOGAME_TUNING_CODE = "LPSQSH";   // 最後調性更新（數學模型／倍率權重）；改調性時同步更新</script>
   <script>window.DEMOGAME_HISTORY = true;   // 共用歷史紀錄（BG／FG 最大倍數），取代 Reel RNG 面板</script>
   <script>window.DEMOGAME_OVERVIEW={"competitor": "PG Soft Lucky Neko", "expect": "雷神帶倍數出現，多顆相加把得分乘大。", "changes": ["雷神（M1）兼倍數符號：主盤面依尺寸給 x2～x5，Extra Reel 上固定 x2，多顆相加（競品的 M1 只是最高分符號）", "最高獎上限 3000x", "Buy Feature 為 75 倍押注", "加入 OP Jackpot"]};</script>
-  <script src="../demogame_common.js?v=20261120v"></script>
+  <script src="../demogame_common.js?v=20261120w"></script>
 </body>
 </html>
