@@ -1354,6 +1354,9 @@ def report_filename(result: dict[str, Any], timestamp: datetime | None = None) -
         version_tag = format_base_version_tag(CFG["excel_version"])
         return f"{game_id}_{version_tag}_{stamp}_betmode{bet_mode}_{rounds_tag}.xlsx"
     rtp_game_id = str(CFG_RTP.get("parsheet_id") or CFG_RTP.get("game_id"))
+    series = re.match(r"\d+([A-Za-z])", str(CFG_RTP.get("config_code") or ""))   # 2026-11-20：ID 帶 A／B 版（例 H032192A），_Bet100 不進 ID
+    if series:
+        rtp_game_id += series.group(1).upper()
     version_tag = format_rtp_version_tag(CFG_RTP["excel_version"])
     rtp_tag = format_rtp_tag(calculated_metrics(result)["rtp_total"])
     profile = result["card_system_profile"]
